@@ -41,22 +41,22 @@ using std::set;
 #include <CalPositionRow.h>
 #include <CalPositionTable.h>
 
-#include <CalReductionTable.h>
-#include <CalReductionRow.h>
-
 #include <CalDataTable.h>
 #include <CalDataRow.h>
+
+#include <CalReductionTable.h>
+#include <CalReductionRow.h>
 	
 
 using asdm::ASDM;
 using asdm::CalPositionRow;
 using asdm::CalPositionTable;
 
-using asdm::CalReductionTable;
-using asdm::CalReductionRow;
-
 using asdm::CalDataTable;
 using asdm::CalDataRow;
+
+using asdm::CalReductionTable;
+using asdm::CalReductionRow;
 
 
 #include <Parser.h>
@@ -113,7 +113,7 @@ namespace asdm {
 		
 			
 				
-		x->numAntenna = numAntenna;
+		x->atmPhaseCorrection = atmPhaseCorrection;
  				
  			
 		
@@ -136,6 +136,133 @@ namespace asdm {
 			
 		x->endValidTime = endValidTime.toIDLArrayTime();
 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->antennaPosition.length(antennaPosition.size());
+		for (unsigned int i = 0; i < antennaPosition.size(); ++i) {
+			
+			x->antennaPosition[i] = antennaPosition.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->stationName = CORBA::string_dup(stationName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->stationPosition.length(stationPosition.size());
+		for (unsigned int i = 0; i < stationPosition.size(); ++i) {
+			
+			x->stationPosition[i] = stationPosition.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->positionMethod = positionMethod;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->numAntenna = numAntenna;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->refAntennaNames.length(refAntennaNames.size());
+		for (unsigned int i = 0; i < refAntennaNames.size(); ++i) {
+			
+				
+			x->refAntennaNames[i] = CORBA::string_dup(refAntennaNames.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->axesOffset = axesOffset.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->axesOffsetErr = axesOffsetErr.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->axesOffsetFixed = axesOffsetFixed;
+ 				
+ 			
 		
 	
 
@@ -174,120 +301,35 @@ namespace asdm {
 		
 		
 			
-		x->delayRms = delayRms.toIDLInterval();
-			
+				
+		x->reducedChiSquared = reducedChiSquared;
+ 				
+ 			
 		
 	
 
 	
   		
+		
+		x->delayRmsExists = delayRmsExists;
+		
+		
+			
+				
+		x->delayRms = delayRms;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->phaseRmsExists = phaseRmsExists;
 		
 		
 			
 		x->phaseRms = phaseRms.toIDLAngle();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->axesOffset = axesOffset.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->axesOffsetFixed = axesOffsetFixed;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->axesOffsetErr = axesOffsetErr.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->positionMethod = positionMethod;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->refAntennaNames.length(refAntennaNames.size());
-		for (unsigned int i = 0; i < refAntennaNames.size(); ++i) {
-			
-				
-			x->refAntennaNames[i] = CORBA::string_dup(refAntennaNames.at(i).c_str());
-				
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->stationName = CORBA::string_dup(stationName.c_str());
-				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->antennaPosition.length(antennaPosition.size());
-		for (unsigned int i = 0; i < antennaPosition.size(); ++i) {
-			
-			x->antennaPosition[i] = antennaPosition.at(i).toIDLLength();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->stationPosition.length(stationPosition.size());
-		for (unsigned int i = 0; i < stationPosition.size(); ++i) {
-			
-			x->stationPosition[i] = stationPosition.at(i).toIDLLength();
-			
-	 	}
 			
 		
 	
@@ -335,7 +377,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalPositionRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalPositionRow::setFromIDL (CalPositionRowIDL x) throw(ConversionException) {
+	void CalPositionRow::setFromIDL (CalPositionRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -354,7 +396,7 @@ namespace asdm {
 		
 		
 			
-		setNumAntenna(x.numAntenna);
+		setAtmPhaseCorrection(x.atmPhaseCorrection);
   			
  		
 		
@@ -376,6 +418,121 @@ namespace asdm {
 			
 		setEndValidTime(ArrayTime (x.endValidTime));
 			
+ 		
+		
+	
+
+	
+		
+		
+			
+		antennaPosition .clear();
+		for (unsigned int i = 0; i <x.antennaPosition.length(); ++i) {
+			
+			antennaPosition.push_back(Length (x.antennaPosition[i]));
+			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setStationName(string (x.stationName));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		stationPosition .clear();
+		for (unsigned int i = 0; i <x.stationPosition.length(); ++i) {
+			
+			stationPosition.push_back(Length (x.stationPosition[i]));
+			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setPositionMethod(x.positionMethod);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setReceiverBand(x.receiverBand);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumAntenna(x.numAntenna);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		refAntennaNames .clear();
+		for (unsigned int i = 0; i <x.refAntennaNames.length(); ++i) {
+			
+			refAntennaNames.push_back(string (x.refAntennaNames[i]));
+			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setAxesOffset(Length (x.axesOffset));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setAxesOffsetErr(Length (x.axesOffsetErr));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setAxesOffsetFixed(x.axesOffsetFixed);
+  			
  		
 		
 	
@@ -414,13 +571,31 @@ namespace asdm {
 		
 		
 			
-		setDelayRms(Interval (x.delayRms));
-			
+		setReducedChiSquared(x.reducedChiSquared);
+  			
  		
 		
 	
 
 	
+		
+		delayRmsExists = x.delayRmsExists;
+		if (x.delayRmsExists) {
+		
+		
+			
+		setDelayRms(x.delayRms);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		phaseRmsExists = x.phaseRmsExists;
+		if (x.phaseRmsExists) {
 		
 		
 			
@@ -428,100 +603,7 @@ namespace asdm {
 			
  		
 		
-	
-
-	
-		
-		
-			
-		setAxesOffset(Length (x.axesOffset));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setAxesOffsetFixed(x.axesOffsetFixed);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setAxesOffsetErr(Length (x.axesOffsetErr));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setPositionMethod(x.positionMethod);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		refAntennaNames .clear();
-		for (unsigned int i = 0; i <x.refAntennaNames.length(); ++i) {
-			
-			refAntennaNames.push_back(string (x.refAntennaNames[i]));
-			
 		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		setStationName(string (x.stationName));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		antennaPosition .clear();
-		for (unsigned int i = 0; i <x.antennaPosition.length(); ++i) {
-			
-			antennaPosition.push_back(Length (x.antennaPosition[i]));
-			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		stationPosition .clear();
-		for (unsigned int i = 0; i <x.stationPosition.length(); ++i) {
-			
-			stationPosition.push_back(Length (x.stationPosition[i]));
-			
-		}
-			
-  		
 		
 	
 
@@ -555,7 +637,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalPosition");
+			throw ConversionException (err.getMessage(),"CalPosition");
 		}
 	}
 #endif
@@ -581,7 +663,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numAntenna, "numAntenna", buf);
+			buf.append(EnumerationParser::toXML("atmPhaseCorrection", atmPhaseCorrection));
 		
 		
 	
@@ -605,6 +687,86 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(antennaPosition, "antennaPosition", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(stationName, "stationName", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(stationPosition, "stationPosition", buf);
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("positionMethod", positionMethod));
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numAntenna, "numAntenna", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(refAntennaNames, "refAntennaNames", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(axesOffset, "axesOffset", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(axesOffsetErr, "axesOffsetErr", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(axesOffsetFixed, "axesOffsetFixed", buf);
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(positionOffset, "positionOffset", buf);
 		
 		
@@ -621,80 +783,32 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(delayRms, "delayRms", buf);
+		Parser::toXML(reducedChiSquared, "reducedChiSquared", buf);
 		
 		
 	
 
   	
  		
+		if (delayRmsExists) {
+		
+		
+		Parser::toXML(delayRms, "delayRms", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (phaseRmsExists) {
+		
 		
 		Parser::toXML(phaseRms, "phaseRms", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(axesOffset, "axesOffset", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(axesOffsetFixed, "axesOffsetFixed", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(axesOffsetErr, "axesOffsetErr", buf);
-		
-		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("positionMethod", positionMethod));
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(refAntennaNames, "refAntennaNames", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(stationName, "stationName", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(antennaPosition, "antennaPosition", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(stationPosition, "stationPosition", buf);
-		
+		}
 		
 	
 
@@ -733,7 +847,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalPositionRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalPositionRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -748,10 +862,12 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setNumAntenna(Parser::getInteger("numAntenna","CalPosition",rowDoc));
-			
+		
+		
+		
+		atmPhaseCorrection = EnumerationParser::getAtmPhaseCorrection("atmPhaseCorrection","CalPosition",rowDoc);
+		
+		
 		
 	
 
@@ -767,6 +883,96 @@ namespace asdm {
   		
 			
 	  	setEndValidTime(Parser::getArrayTime("endValidTime","CalPosition",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+					
+	  	setAntennaPosition(Parser::get1DLength("antennaPosition","CalPosition",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setStationName(Parser::getString("stationName","CalPosition",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+					
+	  	setStationPosition(Parser::get1DLength("stationPosition","CalPosition",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+		
+		
+		
+		positionMethod = EnumerationParser::getPositionMethod("positionMethod","CalPosition",rowDoc);
+		
+		
+		
+	
+
+	
+		
+		
+		
+		receiverBand = EnumerationParser::getReceiverBand("receiverBand","CalPosition",rowDoc);
+		
+		
+		
+	
+
+	
+  		
+			
+	  	setNumAntenna(Parser::getInteger("numAntenna","CalPosition",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+					
+	  	setRefAntennaNames(Parser::get1DString("refAntennaNames","CalPosition",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setAxesOffset(Parser::getLength("axesOffset","CalPosition",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setAxesOffsetErr(Parser::getLength("axesOffsetErr","CalPosition",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setAxesOffsetFixed(Parser::getBoolean("axesOffsetFixed","CalPosition",rowDoc));
 			
 		
 	
@@ -794,89 +1000,29 @@ namespace asdm {
 	
   		
 			
-	  	setDelayRms(Parser::getInterval("delayRms","CalPosition",rowDoc));
+	  	setReducedChiSquared(Parser::getDouble("reducedChiSquared","CalPosition",rowDoc));
 			
 		
 	
 
 	
   		
+        if (row.isStr("<delayRms>")) {
 			
-	  	setPhaseRms(Parser::getAngle("phaseRms","CalPosition",rowDoc));
+	  		setDelayRms(Parser::getDouble("delayRms","CalPosition",rowDoc));
 			
-		
+		}
+ 		
 	
 
 	
   		
+        if (row.isStr("<phaseRms>")) {
 			
-	  	setAxesOffset(Parser::getLength("axesOffset","CalPosition",rowDoc));
+	  		setPhaseRms(Parser::getAngle("phaseRms","CalPosition",rowDoc));
 			
-		
-	
-
-	
-  		
-			
-	  	setAxesOffsetFixed(Parser::getBoolean("axesOffsetFixed","CalPosition",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setAxesOffsetErr(Parser::getLength("axesOffsetErr","CalPosition",rowDoc));
-			
-		
-	
-
-	
-		
-		
-		
-		positionMethod = EnumerationParser::getPositionMethod("positionMethod","CalPosition",rowDoc);
-		
-		
-		
-	
-
-	
-  		
-			
-					
-	  	setRefAntennaNames(Parser::get1DString("refAntennaNames","CalPosition",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-			
-	  	setStationName(Parser::getString("stationName","CalPosition",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-					
-	  	setAntennaPosition(Parser::get1DLength("antennaPosition","CalPosition",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-			
-					
-	  	setStationPosition(Parser::get1DLength("stationPosition","CalPosition",rowDoc));
-	  			
-	  		
-		
+		}
+ 		
 	
 
 	
@@ -907,6 +1053,410 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"CalPosition");
 		}
+	}
+	
+	void CalPositionRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+						
+			eoss.writeString(antennaName);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(atmPhaseCorrection);
+				
+		
+	
+
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	Length::toBin(antennaPosition, eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(stationName);
+				
+		
+	
+
+	
+	
+		
+	Length::toBin(stationPosition, eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(positionMethod);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(receiverBand);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numAntenna);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) refAntennaNames.size());
+		for (unsigned int i = 0; i < refAntennaNames.size(); i++)
+				
+			eoss.writeString(refAntennaNames.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+	axesOffset.toBin(eoss);
+		
+	
+
+	
+	
+		
+	axesOffsetErr.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(axesOffsetFixed);
+				
+		
+	
+
+	
+	
+		
+	Length::toBin(positionOffset, eoss);
+		
+	
+
+	
+	
+		
+	Length::toBin(positionErr, eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeDouble(reducedChiSquared);
+				
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(delayRmsExists);
+	if (delayRmsExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(delayRms);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(phaseRmsExists);
+	if (phaseRmsExists) {
+	
+	
+	
+		
+	phaseRms.toBin(eoss);
+		
+	
+
+	}
+
+	}
+	
+	CalPositionRow* CalPositionRow::fromBin(EndianISStream& eiss, CalPositionTable& table) {
+		CalPositionRow* row = new  CalPositionRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->antennaName =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+			
+	
+	row->antennaPosition = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->stationName =  eiss.readString();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->stationPosition = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->positionMethod = CPositionMethod::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->numAntenna =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->refAntennaNames.clear();
+		
+		unsigned int refAntennaNamesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < refAntennaNamesDim1; i++)
+			
+			row->refAntennaNames.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	
+		
+		
+		row->axesOffset =  Length::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->axesOffsetErr =  Length::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->axesOffsetFixed =  eiss.readBoolean();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->positionOffset = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->positionErr = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->reducedChiSquared =  eiss.readDouble();
+			
+		
+	
+
+		
+		
+		
+	row->delayRmsExists = eiss.readBoolean();
+	if (row->delayRmsExists) {
+		
+	
+	
+		
+			
+		row->delayRms =  eiss.readDouble();
+			
+		
+	
+
+	}
+
+	row->phaseRmsExists = eiss.readBoolean();
+	if (row->phaseRmsExists) {
+		
+	
+		
+		
+		row->phaseRms =  Angle::fromBin(eiss);
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -953,29 +1503,33 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numAntenna.
- 	 * @return numAntenna as int
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
  	 */
- 	int CalPositionRow::getNumAntenna() const {
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection CalPositionRow::getAtmPhaseCorrection() const {
 	
-  		return numAntenna;
+  		return atmPhaseCorrection;
  	}
 
  	/**
- 	 * Set numAntenna with the specified int.
- 	 * @param numAntenna The int value to which numAntenna is to be set.
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void CalPositionRow::setNumAntenna (int numAntenna)  {
+ 	void CalPositionRow::setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("atmPhaseCorrection", "CalPosition");
+		
   		}
   	
- 		this->numAntenna = numAntenna;
+ 		this->atmPhaseCorrection = atmPhaseCorrection;
 	
  	}
 	
@@ -1049,6 +1603,326 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get antennaPosition.
+ 	 * @return antennaPosition as vector<Length >
+ 	 */
+ 	vector<Length > CalPositionRow::getAntennaPosition() const {
+	
+  		return antennaPosition;
+ 	}
+
+ 	/**
+ 	 * Set antennaPosition with the specified vector<Length >.
+ 	 * @param antennaPosition The vector<Length > value to which antennaPosition is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPositionRow::setAntennaPosition (vector<Length > antennaPosition)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->antennaPosition = antennaPosition;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get stationName.
+ 	 * @return stationName as string
+ 	 */
+ 	string CalPositionRow::getStationName() const {
+	
+  		return stationName;
+ 	}
+
+ 	/**
+ 	 * Set stationName with the specified string.
+ 	 * @param stationName The string value to which stationName is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPositionRow::setStationName (string stationName)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->stationName = stationName;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get stationPosition.
+ 	 * @return stationPosition as vector<Length >
+ 	 */
+ 	vector<Length > CalPositionRow::getStationPosition() const {
+	
+  		return stationPosition;
+ 	}
+
+ 	/**
+ 	 * Set stationPosition with the specified vector<Length >.
+ 	 * @param stationPosition The vector<Length > value to which stationPosition is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPositionRow::setStationPosition (vector<Length > stationPosition)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->stationPosition = stationPosition;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get positionMethod.
+ 	 * @return positionMethod as PositionMethodMod::PositionMethod
+ 	 */
+ 	PositionMethodMod::PositionMethod CalPositionRow::getPositionMethod() const {
+	
+  		return positionMethod;
+ 	}
+
+ 	/**
+ 	 * Set positionMethod with the specified PositionMethodMod::PositionMethod.
+ 	 * @param positionMethod The PositionMethodMod::PositionMethod value to which positionMethod is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPositionRow::setPositionMethod (PositionMethodMod::PositionMethod positionMethod)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->positionMethod = positionMethod;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 */
+ 	ReceiverBandMod::ReceiverBand CalPositionRow::getReceiverBand() const {
+	
+  		return receiverBand;
+ 	}
+
+ 	/**
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPositionRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->receiverBand = receiverBand;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numAntenna.
+ 	 * @return numAntenna as int
+ 	 */
+ 	int CalPositionRow::getNumAntenna() const {
+	
+  		return numAntenna;
+ 	}
+
+ 	/**
+ 	 * Set numAntenna with the specified int.
+ 	 * @param numAntenna The int value to which numAntenna is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPositionRow::setNumAntenna (int numAntenna)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numAntenna = numAntenna;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get refAntennaNames.
+ 	 * @return refAntennaNames as vector<string >
+ 	 */
+ 	vector<string > CalPositionRow::getRefAntennaNames() const {
+	
+  		return refAntennaNames;
+ 	}
+
+ 	/**
+ 	 * Set refAntennaNames with the specified vector<string >.
+ 	 * @param refAntennaNames The vector<string > value to which refAntennaNames is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPositionRow::setRefAntennaNames (vector<string > refAntennaNames)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->refAntennaNames = refAntennaNames;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get axesOffset.
+ 	 * @return axesOffset as Length
+ 	 */
+ 	Length CalPositionRow::getAxesOffset() const {
+	
+  		return axesOffset;
+ 	}
+
+ 	/**
+ 	 * Set axesOffset with the specified Length.
+ 	 * @param axesOffset The Length value to which axesOffset is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPositionRow::setAxesOffset (Length axesOffset)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->axesOffset = axesOffset;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get axesOffsetErr.
+ 	 * @return axesOffsetErr as Length
+ 	 */
+ 	Length CalPositionRow::getAxesOffsetErr() const {
+	
+  		return axesOffsetErr;
+ 	}
+
+ 	/**
+ 	 * Set axesOffsetErr with the specified Length.
+ 	 * @param axesOffsetErr The Length value to which axesOffsetErr is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPositionRow::setAxesOffsetErr (Length axesOffsetErr)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->axesOffsetErr = axesOffsetErr;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get axesOffsetFixed.
+ 	 * @return axesOffsetFixed as bool
+ 	 */
+ 	bool CalPositionRow::getAxesOffsetFixed() const {
+	
+  		return axesOffsetFixed;
+ 	}
+
+ 	/**
+ 	 * Set axesOffsetFixed with the specified bool.
+ 	 * @param axesOffsetFixed The bool value to which axesOffsetFixed is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPositionRow::setAxesOffsetFixed (bool axesOffsetFixed)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->axesOffsetFixed = axesOffsetFixed;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get positionOffset.
  	 * @return positionOffset as vector<Length >
  	 */
@@ -1113,42 +1987,101 @@ namespace asdm {
 
 	
  	/**
- 	 * Get delayRms.
- 	 * @return delayRms as Interval
+ 	 * Get reducedChiSquared.
+ 	 * @return reducedChiSquared as double
  	 */
- 	Interval CalPositionRow::getDelayRms() const {
+ 	double CalPositionRow::getReducedChiSquared() const {
 	
-  		return delayRms;
+  		return reducedChiSquared;
  	}
 
  	/**
- 	 * Set delayRms with the specified Interval.
- 	 * @param delayRms The Interval value to which delayRms is to be set.
+ 	 * Set reducedChiSquared with the specified double.
+ 	 * @param reducedChiSquared The double value to which reducedChiSquared is to be set.
  	 
  	
  		
  	 */
- 	void CalPositionRow::setDelayRms (Interval delayRms)  {
+ 	void CalPositionRow::setReducedChiSquared (double reducedChiSquared)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->delayRms = delayRms;
+ 		this->reducedChiSquared = reducedChiSquared;
 	
  	}
 	
 	
 
 	
+	/**
+	 * The attribute delayRms is optional. Return true if this attribute exists.
+	 * @return true if and only if the delayRms attribute exists. 
+	 */
+	bool CalPositionRow::isDelayRmsExists() const {
+		return delayRmsExists;
+	}
+	
 
 	
  	/**
- 	 * Get phaseRms.
- 	 * @return phaseRms as Angle
+ 	 * Get delayRms, which is optional.
+ 	 * @return delayRms as double
+ 	 * @throw IllegalAccessException If delayRms does not exist.
  	 */
- 	Angle CalPositionRow::getPhaseRms() const {
+ 	double CalPositionRow::getDelayRms() const  {
+		if (!delayRmsExists) {
+			throw IllegalAccessException("delayRms", "CalPosition");
+		}
+	
+  		return delayRms;
+ 	}
+
+ 	/**
+ 	 * Set delayRms with the specified double.
+ 	 * @param delayRms The double value to which delayRms is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalPositionRow::setDelayRms (double delayRms) {
+	
+ 		this->delayRms = delayRms;
+	
+		delayRmsExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark delayRms, which is an optional field, as non-existent.
+	 */
+	void CalPositionRow::clearDelayRms () {
+		delayRmsExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute phaseRms is optional. Return true if this attribute exists.
+	 * @return true if and only if the phaseRms attribute exists. 
+	 */
+	bool CalPositionRow::isPhaseRmsExists() const {
+		return phaseRmsExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get phaseRms, which is optional.
+ 	 * @return phaseRms as Angle
+ 	 * @throw IllegalAccessException If phaseRms does not exist.
+ 	 */
+ 	Angle CalPositionRow::getPhaseRms() const  {
+		if (!phaseRmsExists) {
+			throw IllegalAccessException("phaseRms", "CalPosition");
+		}
 	
   		return phaseRms;
  	}
@@ -1158,275 +2091,22 @@ namespace asdm {
  	 * @param phaseRms The Angle value to which phaseRms is to be set.
  	 
  	
- 		
  	 */
- 	void CalPositionRow::setPhaseRms (Angle phaseRms)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
+ 	void CalPositionRow::setPhaseRms (Angle phaseRms) {
+	
  		this->phaseRms = phaseRms;
 	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get axesOffset.
- 	 * @return axesOffset as Length
- 	 */
- 	Length CalPositionRow::getAxesOffset() const {
-	
-  		return axesOffset;
- 	}
-
- 	/**
- 	 * Set axesOffset with the specified Length.
- 	 * @param axesOffset The Length value to which axesOffset is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPositionRow::setAxesOffset (Length axesOffset)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->axesOffset = axesOffset;
+		phaseRmsExists = true;
 	
  	}
 	
 	
-
-	
-
-	
- 	/**
- 	 * Get axesOffsetFixed.
- 	 * @return axesOffsetFixed as bool
- 	 */
- 	bool CalPositionRow::getAxesOffsetFixed() const {
-	
-  		return axesOffsetFixed;
- 	}
-
- 	/**
- 	 * Set axesOffsetFixed with the specified bool.
- 	 * @param axesOffsetFixed The bool value to which axesOffsetFixed is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPositionRow::setAxesOffsetFixed (bool axesOffsetFixed)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->axesOffsetFixed = axesOffsetFixed;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get axesOffsetErr.
- 	 * @return axesOffsetErr as Length
- 	 */
- 	Length CalPositionRow::getAxesOffsetErr() const {
-	
-  		return axesOffsetErr;
- 	}
-
- 	/**
- 	 * Set axesOffsetErr with the specified Length.
- 	 * @param axesOffsetErr The Length value to which axesOffsetErr is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPositionRow::setAxesOffsetErr (Length axesOffsetErr)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->axesOffsetErr = axesOffsetErr;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get positionMethod.
- 	 * @return positionMethod as PositionMethodMod::PositionMethod
- 	 */
- 	PositionMethodMod::PositionMethod CalPositionRow::getPositionMethod() const {
-	
-  		return positionMethod;
- 	}
-
- 	/**
- 	 * Set positionMethod with the specified PositionMethodMod::PositionMethod.
- 	 * @param positionMethod The PositionMethodMod::PositionMethod value to which positionMethod is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPositionRow::setPositionMethod (PositionMethodMod::PositionMethod positionMethod)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->positionMethod = positionMethod;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get refAntennaNames.
- 	 * @return refAntennaNames as vector<string >
- 	 */
- 	vector<string > CalPositionRow::getRefAntennaNames() const {
-	
-  		return refAntennaNames;
- 	}
-
- 	/**
- 	 * Set refAntennaNames with the specified vector<string >.
- 	 * @param refAntennaNames The vector<string > value to which refAntennaNames is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPositionRow::setRefAntennaNames (vector<string > refAntennaNames)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->refAntennaNames = refAntennaNames;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get stationName.
- 	 * @return stationName as string
- 	 */
- 	string CalPositionRow::getStationName() const {
-	
-  		return stationName;
- 	}
-
- 	/**
- 	 * Set stationName with the specified string.
- 	 * @param stationName The string value to which stationName is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPositionRow::setStationName (string stationName)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->stationName = stationName;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get antennaPosition.
- 	 * @return antennaPosition as vector<Length >
- 	 */
- 	vector<Length > CalPositionRow::getAntennaPosition() const {
-	
-  		return antennaPosition;
- 	}
-
- 	/**
- 	 * Set antennaPosition with the specified vector<Length >.
- 	 * @param antennaPosition The vector<Length > value to which antennaPosition is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPositionRow::setAntennaPosition (vector<Length > antennaPosition)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->antennaPosition = antennaPosition;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get stationPosition.
- 	 * @return stationPosition as vector<Length >
- 	 */
- 	vector<Length > CalPositionRow::getStationPosition() const {
-	
-  		return stationPosition;
- 	}
-
- 	/**
- 	 * Set stationPosition with the specified vector<Length >.
- 	 * @param stationPosition The vector<Length > value to which stationPosition is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPositionRow::setStationPosition (vector<Length > stationPosition)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->stationPosition = stationPosition;
-	
- 	}
-	
+	/**
+	 * Mark phaseRms, which is an optional field, as non-existent.
+	 */
+	void CalPositionRow::clearPhaseRms () {
+		phaseRmsExists = false;
+	}
 	
 
 	
@@ -1516,14 +2196,14 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
-	 * @return a CalReductionRow*
+	 * Returns the pointer to the row in the CalData table having CalData.calDataId == calDataId
+	 * @return a CalDataRow*
 	 * 
 	 
 	 */
-	 CalReductionRow* CalPositionRow::getCalReductionUsingCalReductionId() {
+	 CalDataRow* CalPositionRow::getCalDataUsingCalDataId() {
 	 
-	 	return table.getContainer().getCalReduction().getRowByKey(calReductionId);
+	 	return table.getContainer().getCalData().getRowByKey(calDataId);
 	 }
 	 
 
@@ -1535,14 +2215,14 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the CalData table having CalData.calDataId == calDataId
-	 * @return a CalDataRow*
+	 * Returns the pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
+	 * @return a CalReductionRow*
 	 * 
 	 
 	 */
-	 CalDataRow* CalPositionRow::getCalDataUsingCalDataId() {
+	 CalReductionRow* CalPositionRow::getCalReductionUsingCalReductionId() {
 	 
-	 	return table.getContainer().getCalData().getRowByKey(calDataId);
+	 	return table.getContainer().getCalReduction().getRowByKey(calReductionId);
 	 }
 	 
 
@@ -1594,6 +2274,16 @@ namespace asdm {
 	
 
 	
+
+	
+		delayRmsExists = false;
+	
+
+	
+		phaseRmsExists = false;
+	
+
+	
 	
 
 	
@@ -1604,13 +2294,8 @@ namespace asdm {
 	
 
 	
-
-	
-
-	
-
-	
-
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+atmPhaseCorrection = CAtmPhaseCorrection::from_int(0);
 	
 
 	
@@ -1626,6 +2311,23 @@ namespace asdm {
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 positionMethod = CPositionMethod::from_int(0);
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+receiverBand = CReceiverBand::from_int(0);
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -1677,6 +2379,16 @@ positionMethod = CPositionMethod::from_int(0);
 	
 
 	
+
+	
+		delayRmsExists = false;
+	
+
+	
+		phaseRmsExists = false;
+	
+
+	
 	
 
 	
@@ -1685,56 +2397,86 @@ positionMethod = CPositionMethod::from_int(0);
 		else {
 	
 		
+			antennaName = row.antennaName;
+		
+			atmPhaseCorrection = row.atmPhaseCorrection;
+		
 			calDataId = row.calDataId;
 		
 			calReductionId = row.calReductionId;
 		
-			antennaName = row.antennaName;
 		
 		
-		
-		
-			numAntenna = row.numAntenna;
 		
 			startValidTime = row.startValidTime;
 		
 			endValidTime = row.endValidTime;
 		
+			antennaPosition = row.antennaPosition;
+		
+			stationName = row.stationName;
+		
+			stationPosition = row.stationPosition;
+		
+			positionMethod = row.positionMethod;
+		
+			receiverBand = row.receiverBand;
+		
+			numAntenna = row.numAntenna;
+		
+			refAntennaNames = row.refAntennaNames;
+		
+			axesOffset = row.axesOffset;
+		
+			axesOffsetErr = row.axesOffsetErr;
+		
+			axesOffsetFixed = row.axesOffsetFixed;
+		
 			positionOffset = row.positionOffset;
 		
 			positionErr = row.positionErr;
 		
-			delayRms = row.delayRms;
-		
-			phaseRms = row.phaseRms;
-		
-			axesOffset = row.axesOffset;
-		
-			axesOffsetFixed = row.axesOffsetFixed;
-		
-			axesOffsetErr = row.axesOffsetErr;
-		
-			positionMethod = row.positionMethod;
-		
-			refAntennaNames = row.refAntennaNames;
-		
-			stationName = row.stationName;
-		
-			antennaPosition = row.antennaPosition;
-		
-			stationPosition = row.stationPosition;
+			reducedChiSquared = row.reducedChiSquared;
 		
 		
 		
+		
+		if (row.delayRmsExists) {
+			delayRms = row.delayRms;		
+			delayRmsExists = true;
+		}
+		else
+			delayRmsExists = false;
+		
+		if (row.phaseRmsExists) {
+			phaseRms = row.phaseRms;		
+			phaseRmsExists = true;
+		}
+		else
+			phaseRmsExists = false;
 		
 		}	
 	}
 
 	
-	bool CalPositionRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, int numAntenna, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > positionOffset, vector<Length > positionErr, Interval delayRms, Angle phaseRms, Length axesOffset, bool axesOffsetFixed, Length axesOffsetErr, PositionMethodMod::PositionMethod positionMethod, vector<string > refAntennaNames, string stationName, vector<Length > antennaPosition, vector<Length > stationPosition) {
+	bool CalPositionRow::compareNoAutoInc(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > antennaPosition, string stationName, vector<Length > stationPosition, PositionMethodMod::PositionMethod positionMethod, ReceiverBandMod::ReceiverBand receiverBand, int numAntenna, vector<string > refAntennaNames, Length axesOffset, Length axesOffsetErr, bool axesOffsetFixed, vector<Length > positionOffset, vector<Length > positionErr, double reducedChiSquared) {
 		bool result;
 		result = true;
 		
+	
+		
+		result = result && (this->antennaName == antennaName);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->atmPhaseCorrection == atmPhaseCorrection);
+		
+		if (!result) return false;
+	
+
 	
 		
 		result = result && (this->calDataId == calDataId);
@@ -1745,20 +2487,6 @@ positionMethod = CPositionMethod::from_int(0);
 	
 		
 		result = result && (this->calReductionId == calReductionId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->antennaName == antennaName);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numAntenna == numAntenna);
 		
 		if (!result) return false;
 	
@@ -1779,6 +2507,76 @@ positionMethod = CPositionMethod::from_int(0);
 
 	
 		
+		result = result && (this->antennaPosition == antennaPosition);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->stationName == stationName);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->stationPosition == stationPosition);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->positionMethod == positionMethod);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->receiverBand == receiverBand);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numAntenna == numAntenna);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->refAntennaNames == refAntennaNames);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->axesOffset == axesOffset);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->axesOffsetErr == axesOffsetErr);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->axesOffsetFixed == axesOffsetFixed);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->positionOffset == positionOffset);
 		
 		if (!result) return false;
@@ -1793,70 +2591,7 @@ positionMethod = CPositionMethod::from_int(0);
 
 	
 		
-		result = result && (this->delayRms == delayRms);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->phaseRms == phaseRms);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->axesOffset == axesOffset);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->axesOffsetFixed == axesOffsetFixed);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->axesOffsetErr == axesOffsetErr);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->positionMethod == positionMethod);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->refAntennaNames == refAntennaNames);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->stationName == stationName);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->antennaPosition == antennaPosition);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->stationPosition == stationPosition);
+		result = result && (this->reducedChiSquared == reducedChiSquared);
 		
 		if (!result) return false;
 	
@@ -1866,20 +2601,56 @@ positionMethod = CPositionMethod::from_int(0);
 	
 	
 	
-	bool CalPositionRow::compareRequiredValue(int numAntenna, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > positionOffset, vector<Length > positionErr, Interval delayRms, Angle phaseRms, Length axesOffset, bool axesOffsetFixed, Length axesOffsetErr, PositionMethodMod::PositionMethod positionMethod, vector<string > refAntennaNames, string stationName, vector<Length > antennaPosition, vector<Length > stationPosition) {
+	bool CalPositionRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > antennaPosition, string stationName, vector<Length > stationPosition, PositionMethodMod::PositionMethod positionMethod, ReceiverBandMod::ReceiverBand receiverBand, int numAntenna, vector<string > refAntennaNames, Length axesOffset, Length axesOffsetErr, bool axesOffsetFixed, vector<Length > positionOffset, vector<Length > positionErr, double reducedChiSquared) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->numAntenna == numAntenna)) return false;
-	
-
 	
 		if (!(this->startValidTime == startValidTime)) return false;
 	
 
 	
 		if (!(this->endValidTime == endValidTime)) return false;
+	
+
+	
+		if (!(this->antennaPosition == antennaPosition)) return false;
+	
+
+	
+		if (!(this->stationName == stationName)) return false;
+	
+
+	
+		if (!(this->stationPosition == stationPosition)) return false;
+	
+
+	
+		if (!(this->positionMethod == positionMethod)) return false;
+	
+
+	
+		if (!(this->receiverBand == receiverBand)) return false;
+	
+
+	
+		if (!(this->numAntenna == numAntenna)) return false;
+	
+
+	
+		if (!(this->refAntennaNames == refAntennaNames)) return false;
+	
+
+	
+		if (!(this->axesOffset == axesOffset)) return false;
+	
+
+	
+		if (!(this->axesOffsetErr == axesOffsetErr)) return false;
+	
+
+	
+		if (!(this->axesOffsetFixed == axesOffsetFixed)) return false;
 	
 
 	
@@ -1891,43 +2662,7 @@ positionMethod = CPositionMethod::from_int(0);
 	
 
 	
-		if (!(this->delayRms == delayRms)) return false;
-	
-
-	
-		if (!(this->phaseRms == phaseRms)) return false;
-	
-
-	
-		if (!(this->axesOffset == axesOffset)) return false;
-	
-
-	
-		if (!(this->axesOffsetFixed == axesOffsetFixed)) return false;
-	
-
-	
-		if (!(this->axesOffsetErr == axesOffsetErr)) return false;
-	
-
-	
-		if (!(this->positionMethod == positionMethod)) return false;
-	
-
-	
-		if (!(this->refAntennaNames == refAntennaNames)) return false;
-	
-
-	
-		if (!(this->stationName == stationName)) return false;
-	
-
-	
-		if (!(this->antennaPosition == antennaPosition)) return false;
-	
-
-	
-		if (!(this->stationPosition == stationPosition)) return false;
+		if (!(this->reducedChiSquared == reducedChiSquared)) return false;
 	
 
 		return result;
@@ -1945,35 +2680,35 @@ positionMethod = CPositionMethod::from_int(0);
 	bool CalPositionRow::equalByRequiredValue(CalPositionRow* x) {
 		
 			
-		if (this->numAntenna != x->numAntenna) return false;
-			
 		if (this->startValidTime != x->startValidTime) return false;
 			
 		if (this->endValidTime != x->endValidTime) return false;
+			
+		if (this->antennaPosition != x->antennaPosition) return false;
+			
+		if (this->stationName != x->stationName) return false;
+			
+		if (this->stationPosition != x->stationPosition) return false;
+			
+		if (this->positionMethod != x->positionMethod) return false;
+			
+		if (this->receiverBand != x->receiverBand) return false;
+			
+		if (this->numAntenna != x->numAntenna) return false;
+			
+		if (this->refAntennaNames != x->refAntennaNames) return false;
+			
+		if (this->axesOffset != x->axesOffset) return false;
+			
+		if (this->axesOffsetErr != x->axesOffsetErr) return false;
+			
+		if (this->axesOffsetFixed != x->axesOffsetFixed) return false;
 			
 		if (this->positionOffset != x->positionOffset) return false;
 			
 		if (this->positionErr != x->positionErr) return false;
 			
-		if (this->delayRms != x->delayRms) return false;
-			
-		if (this->phaseRms != x->phaseRms) return false;
-			
-		if (this->axesOffset != x->axesOffset) return false;
-			
-		if (this->axesOffsetFixed != x->axesOffsetFixed) return false;
-			
-		if (this->axesOffsetErr != x->axesOffsetErr) return false;
-			
-		if (this->positionMethod != x->positionMethod) return false;
-			
-		if (this->refAntennaNames != x->refAntennaNames) return false;
-			
-		if (this->stationName != x->stationName) return false;
-			
-		if (this->antennaPosition != x->antennaPosition) return false;
-			
-		if (this->stationPosition != x->stationPosition) return false;
+		if (this->reducedChiSquared != x->reducedChiSquared) return false;
 			
 		
 		return true;

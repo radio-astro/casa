@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CSwitchingMode::version() {
+	return SwitchingModeMod::version;
+	}
+	
+string CSwitchingMode::revision () {
+	return SwitchingModeMod::revision;
+}
+
+unsigned int CSwitchingMode::size() {
+	return 7;
+	}
+	
 	
 const std::string& CSwitchingMode::sNO_SWITCHING = "NO_SWITCHING";
 	
@@ -52,7 +65,7 @@ const std::string& CSwitchingMode::sNUTATOR_SWITCHING = "NUTATOR_SWITCHING";
 	
 const std::string& CSwitchingMode::sCHOPPER_WHEEL = "CHOPPER_WHEEL";
 	
-const std::vector<std::string> CSwitchingMode::sSwitchingModeSet() {
+const std::vector<std::string> CSwitchingMode::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CSwitchingMode::sNO_SWITCHING);
@@ -71,45 +84,6 @@ const std::vector<std::string> CSwitchingMode::sSwitchingModeSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CSwitchingMode::hNO_SWITCHING = "No switching";
-	
-const std::string& CSwitchingMode::hLOAD_SWITCHING = "Receiver beam is switched between sky and load";
-	
-const std::string& CSwitchingMode::hPOSITION_SWITCHING = "Antenna (main reflector) pointing direction  is switched ";
-	
-const std::string& CSwitchingMode::hPHASE_SWITCHING = "90 degrees phase switching  (switching mode used for sideband separation or rejection with DSB receivers)";
-	
-const std::string& CSwitchingMode::hFREQUENCY_SWITCHING = "LO frequency is switched (definition context sensitive: fast if cycle shrorter than the integration duration, slow if e.g. step one step per subscan)";
-	
-const std::string& CSwitchingMode::hNUTATOR_SWITCHING = "Switching between different directions by nutating the sub-reflector";
-	
-const std::string& CSwitchingMode::hCHOPPER_WHEEL = "Switching using a chopper wheel";
-	
-const std::vector<std::string> CSwitchingMode::hSwitchingModeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CSwitchingMode::hNO_SWITCHING);
-    
-    enumSet.insert(enumSet.end(), CSwitchingMode::hLOAD_SWITCHING);
-    
-    enumSet.insert(enumSet.end(), CSwitchingMode::hPOSITION_SWITCHING);
-    
-    enumSet.insert(enumSet.end(), CSwitchingMode::hPHASE_SWITCHING);
-    
-    enumSet.insert(enumSet.end(), CSwitchingMode::hFREQUENCY_SWITCHING);
-    
-    enumSet.insert(enumSet.end(), CSwitchingMode::hNUTATOR_SWITCHING);
-    
-    enumSet.insert(enumSet.end(), CSwitchingMode::hCHOPPER_WHEEL);
-        
-    return enumSet;
-}
-   	
 
 std::string CSwitchingMode::name(const SwitchingModeMod::SwitchingMode& f) {
     switch (f) {
@@ -136,40 +110,9 @@ std::string CSwitchingMode::name(const SwitchingModeMod::SwitchingMode& f) {
       return CSwitchingMode::sCHOPPER_WHEEL;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CSwitchingMode::help(const SwitchingModeMod::SwitchingMode& f) {
-    switch (f) {
-    
-    case SwitchingModeMod::NO_SWITCHING:
-      return CSwitchingMode::hNO_SWITCHING;
-    
-    case SwitchingModeMod::LOAD_SWITCHING:
-      return CSwitchingMode::hLOAD_SWITCHING;
-    
-    case SwitchingModeMod::POSITION_SWITCHING:
-      return CSwitchingMode::hPOSITION_SWITCHING;
-    
-    case SwitchingModeMod::PHASE_SWITCHING:
-      return CSwitchingMode::hPHASE_SWITCHING;
-    
-    case SwitchingModeMod::FREQUENCY_SWITCHING:
-      return CSwitchingMode::hFREQUENCY_SWITCHING;
-    
-    case SwitchingModeMod::NUTATOR_SWITCHING:
-      return CSwitchingMode::hNUTATOR_SWITCHING;
-    
-    case SwitchingModeMod::CHOPPER_WHEEL:
-      return CSwitchingMode::hCHOPPER_WHEEL;
-    	
-    }
-    return std::string("");
-}
-   	
 
 SwitchingModeMod::SwitchingMode CSwitchingMode::newSwitchingMode(const std::string& name) {
 		
@@ -238,12 +181,10 @@ SwitchingModeMod::SwitchingMode CSwitchingMode::literal(const std::string& name)
 }
 
 SwitchingModeMod::SwitchingMode CSwitchingMode::from_int(unsigned int i) {
-	vector<string> names = sSwitchingModeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newSwitchingMode(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newSwitchingMode(names_.at(i));
 }
-
-	
 
 string CSwitchingMode::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'SwitchingMode'.";

@@ -182,30 +182,30 @@ namespace asdm {
 	
  	 * @param pressure. 
 	
- 	 * @param relHumidity. 
-	
- 	 * @param temperature. 
-	
- 	 * @param windDirection. 
-	
- 	 * @param windSpeed. 
-	
- 	 * @param windMax. 
-	
  	 * @param pressureFlag. 
+	
+ 	 * @param relHumidity. 
 	
  	 * @param relHumidityFlag. 
 	
+ 	 * @param temperature. 
+	
  	 * @param temperatureFlag. 
+	
+ 	 * @param windDirection. 
 	
  	 * @param windDirectionFlag. 
 	
+ 	 * @param windSpeed. 
+	
  	 * @param windSpeedFlag. 
+	
+ 	 * @param windMax. 
 	
  	 * @param windMaxFlag. 
 	
      */
-	WeatherRow* WeatherTable::newRow(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, Humidity relHumidity, Temperature temperature, Angle windDirection, Speed windSpeed, Speed windMax, bool pressureFlag, bool relHumidityFlag, bool temperatureFlag, bool windDirectionFlag, bool windSpeedFlag, bool windMaxFlag){
+	WeatherRow* WeatherTable::newRow(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag){
 		WeatherRow *row = new WeatherRow(*this);
 			
 		row->setStationId(stationId);
@@ -214,32 +214,32 @@ namespace asdm {
 			
 		row->setPressure(pressure);
 			
-		row->setRelHumidity(relHumidity);
-			
-		row->setTemperature(temperature);
-			
-		row->setWindDirection(windDirection);
-			
-		row->setWindSpeed(windSpeed);
-			
-		row->setWindMax(windMax);
-			
 		row->setPressureFlag(pressureFlag);
+			
+		row->setRelHumidity(relHumidity);
 			
 		row->setRelHumidityFlag(relHumidityFlag);
 			
+		row->setTemperature(temperature);
+			
 		row->setTemperatureFlag(temperatureFlag);
+			
+		row->setWindDirection(windDirection);
 			
 		row->setWindDirectionFlag(windDirectionFlag);
 			
+		row->setWindSpeed(windSpeed);
+			
 		row->setWindSpeedFlag(windSpeedFlag);
+			
+		row->setWindMax(windMax);
 			
 		row->setWindMaxFlag(windMaxFlag);
 	
 		return row;		
 	}	
 
-	WeatherRow* WeatherTable::newRowFull(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, Humidity relHumidity, Temperature temperature, Angle windDirection, Speed windSpeed, Speed windMax, bool pressureFlag, bool relHumidityFlag, bool temperatureFlag, bool windDirectionFlag, bool windSpeedFlag, bool windMaxFlag)	{
+	WeatherRow* WeatherTable::newRowFull(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag)	{
 		WeatherRow *row = new WeatherRow(*this);
 			
 		row->setStationId(stationId);
@@ -248,25 +248,25 @@ namespace asdm {
 			
 		row->setPressure(pressure);
 			
-		row->setRelHumidity(relHumidity);
-			
-		row->setTemperature(temperature);
-			
-		row->setWindDirection(windDirection);
-			
-		row->setWindSpeed(windSpeed);
-			
-		row->setWindMax(windMax);
-			
 		row->setPressureFlag(pressureFlag);
+			
+		row->setRelHumidity(relHumidity);
 			
 		row->setRelHumidityFlag(relHumidityFlag);
 			
+		row->setTemperature(temperature);
+			
 		row->setTemperatureFlag(temperatureFlag);
+			
+		row->setWindDirection(windDirection);
 			
 		row->setWindDirectionFlag(windDirectionFlag);
 			
+		row->setWindSpeed(windSpeed);
+			
 		row->setWindSpeedFlag(windSpeedFlag);
+			
+		row->setWindMax(windMax);
 			
 		row->setWindMaxFlag(windMaxFlag);
 	
@@ -347,7 +347,7 @@ WeatherRow* WeatherTable::newRowCopy(WeatherRow* row) {
 			
 			
 			
-	WeatherRow*  WeatherTable::checkAndAdd(WeatherRow* x) throw (DuplicateKey) {
+	WeatherRow*  WeatherTable::checkAndAdd(WeatherRow* x) {
 		string keystr = Key( 
 						x->getStationId() 
 					   ); 
@@ -501,7 +501,7 @@ WeatherRow* WeatherTable::newRowCopy(WeatherRow* row) {
 #endif
 	
 #ifndef WITHOUT_ACS
-	void WeatherTable::fromIDL(WeatherTableIDL x) throw(DuplicateKey,ConversionException) {
+	void WeatherTable::fromIDL(WeatherTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			WeatherRow *tmp = newRow();
@@ -512,28 +512,27 @@ WeatherRow* WeatherTable::newRowCopy(WeatherRow* row) {
 	}
 #endif
 
-	char *WeatherTable::toFITS() const throw(ConversionException) {
+	char *WeatherTable::toFITS() const  {
 		throw ConversionException("Not implemented","Weather");
 	}
 
-	void WeatherTable::fromFITS(char *fits) throw(ConversionException) {
+	void WeatherTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Weather");
 	}
 
-	string WeatherTable::toVOTable() const throw(ConversionException) {
+	string WeatherTable::toVOTable() const {
 		throw ConversionException("Not implemented","Weather");
 	}
 
-	void WeatherTable::fromVOTable(string vo) throw(ConversionException) {
+	void WeatherTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Weather");
 	}
 
-	string WeatherTable::toXML()  throw(ConversionException) {
+	
+	string WeatherTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<WeatherTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/WeatherTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<WeatherTable> ");
+		buf.append("<WeatherTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/WeatherTable\" xsi:schemaLocation=\"http://Alma/XASDM/WeatherTable http://almaobservatory.org/XML/XASDM/2/WeatherTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -549,8 +548,9 @@ WeatherRow* WeatherTable::newRowCopy(WeatherRow* row) {
 		buf.append("</WeatherTable> ");
 		return buf;
 	}
+
 	
-	void WeatherTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void WeatherTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<WeatherTable")) 
 			error();
@@ -592,20 +592,110 @@ WeatherRow* WeatherTable::newRowCopy(WeatherRow* row) {
 			error();
 	}
 
-	void WeatherTable::error() throw(ConversionException) {
+	
+	void WeatherTable::error()  {
 		throw ConversionException("Invalid xml document","Weather");
 	}
 	
+	
 	string WeatherTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void WeatherTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Weather");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			WeatherRow* aRow = WeatherRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Weather");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Weather");
+		} 		 	
+	}
+
 	
 	void WeatherTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -636,6 +726,7 @@ WeatherRow* WeatherTable::newRowCopy(WeatherRow* row) {
 				throw ConversionException("Could not close file " + fileName, "Weather");
 		}
 	}
+
 	
 	void WeatherTable::setFromFile(const string& directory) {
 		string tablename;
@@ -677,6 +768,11 @@ WeatherRow* WeatherTable::newRowCopy(WeatherRow* row) {
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 		

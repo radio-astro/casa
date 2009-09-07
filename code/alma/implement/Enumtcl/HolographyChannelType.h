@@ -38,17 +38,17 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<HolographyChannelType,EnumPar<void> >
-     (HolographyChannelTypeMod::Q2,ep((int)HolographyChannelTypeMod::Q2,"Q2","Quadrature channel auto-product")));
+     (HolographyChannelTypeMod::Q2,ep((int)HolographyChannelTypeMod::Q2,"Q2","un-documented")));
     m_.insert(pair<HolographyChannelType,EnumPar<void> >
-     (HolographyChannelTypeMod::QR,ep((int)HolographyChannelTypeMod::QR,"QR","Quadrature channel times Reference channel cross-product")));
+     (HolographyChannelTypeMod::QR,ep((int)HolographyChannelTypeMod::QR,"QR","un-documented")));
     m_.insert(pair<HolographyChannelType,EnumPar<void> >
-     (HolographyChannelTypeMod::QS,ep((int)HolographyChannelTypeMod::QS,"QS","Quadrature channel times Signal channel cross-product")));
+     (HolographyChannelTypeMod::QS,ep((int)HolographyChannelTypeMod::QS,"QS","un-documented")));
     m_.insert(pair<HolographyChannelType,EnumPar<void> >
-     (HolographyChannelTypeMod::R2,ep((int)HolographyChannelTypeMod::R2,"R2","Reference channel auto-product")));
+     (HolographyChannelTypeMod::R2,ep((int)HolographyChannelTypeMod::R2,"R2","un-documented")));
     m_.insert(pair<HolographyChannelType,EnumPar<void> >
-     (HolographyChannelTypeMod::RS,ep((int)HolographyChannelTypeMod::RS,"RS","Reference channel times Signal channel cross-product")));
+     (HolographyChannelTypeMod::RS,ep((int)HolographyChannelTypeMod::RS,"RS","un-documented")));
     m_.insert(pair<HolographyChannelType,EnumPar<void> >
-     (HolographyChannelTypeMod::S2,ep((int)HolographyChannelTypeMod::S2,"S2","Signal channel auto-product")));
+     (HolographyChannelTypeMod::S2,ep((int)HolographyChannelTypeMod::S2,"S2","un-documented")));
     return true;
   }
   static map<HolographyChannelType,EnumPar<void> > m_;

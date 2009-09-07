@@ -87,6 +87,17 @@ using namespace enumerations;
 	
 
 	
+#include "CDirectionReferenceCode.h"
+using namespace DirectionReferenceCodeMod;
+	
+
+	
+
+	
+
+	
+
+	
 
 	
 
@@ -103,6 +114,32 @@ using namespace enumerations;
 	
 #include "CSourceModel.h"
 using namespace SourceModelMod;
+	
+
+	
+#include "CFrequencyReferenceCode.h"
+using namespace FrequencyReferenceCodeMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+#include "CStokesParameter.h"
+using namespace StokesParameterMod;
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -149,135 +186,249 @@ class ASDM;
 class SourceRow;
 /**
  * The SourceTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Summary of astromomical source information.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Source </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> sourceId </I></TD> 
+ 		
+ * <TD><I> sourceId </I></TD>
+ 		 
  * <TD> int</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a collection of rows in the table. </TD>
  * </TR>
- 		
 	
- 		
  * <TR>
- * <TD> spectralWindowId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> timeInterval </TD>
+ 		 
+ * <TD> ArrayTimeInterval</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp; the time interval of validity of the row's content. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> timeInterval </TD> 
- * <TD> ArrayTimeInterval </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> spectralWindowId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in SpectralWindowTable. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> numLines </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> sourceName </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> code </TD> 
  * <TD> string </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;indicates the nature of the source. </TD>
  * </TR>
 	
  * <TR>
  * <TD> direction </TD> 
  * <TD> vector<Angle > </TD>
  * <TD>  2 </TD> 
+ * <TD> &nbsp;the direction of the source. </TD>
  * </TR>
 	
  * <TR>
  * <TD> properMotion </TD> 
  * <TD> vector<AngularRate > </TD>
  * <TD>  2 </TD> 
- * </TR>
-	
-
-
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
-	
- * <TR>
- * <TD> sourceParameterId </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp; </TD>
+ * <TD> &nbsp;the proper motion of the source. </TD>
  * </TR>
 	
  * <TR>
- * <TD> catalog </TD> 
+ * <TD> sourceName </TD> 
  * <TD> string </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the name of the source. </TD>
+ * </TR>
+	
+
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
+	
+ * <TR>
+ * <TD> directionCode </TD> 
+ * <TD> DirectionReferenceCodeMod::DirectionReferenceCode </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; identifies the direction reference frame associated to direction. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> directionEquinox </TD> 
+ * <TD> ArrayTime </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the equinox associated to the direction reference frame (if required). </TD>
  * </TR>
 	
  * <TR>
  * <TD> calibrationGroup </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the calibration group number. </TD>
  * </TR>
 	
  * <TR>
- * <TD> position </TD> 
- * <TD> vector<Length > </TD>
- * <TD>  3  </TD>
- * </TR>
-	
- * <TR>
- * <TD> transition </TD> 
- * <TD> vector<string > </TD>
- * <TD>  numLines  </TD>
- * </TR>
-	
- * <TR>
- * <TD> restFrequency </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>  numLines  </TD>
- * </TR>
-	
- * <TR>
- * <TD> sysVel </TD> 
- * <TD> vector<Speed > </TD>
- * <TD>  numLines  </TD>
- * </TR>
-	
- * <TR>
- * <TD> sourceModel </TD> 
- * <TD> SourceModelMod::SourceModel </TD>
+ * <TD> catalog </TD> 
+ * <TD> string </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the name of the catalog. </TD>
  * </TR>
 	
  * <TR>
  * <TD> deltaVel </TD> 
  * <TD> Speed </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the velocity resolution. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> position </TD> 
+ * <TD> vector<Length > </TD>
+ * <TD>  3  </TD>
+ * <TD>&nbsp; the position of the source. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numLines </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the number of line transitions. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> transition </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numLines  </TD>
+ * <TD>&nbsp; the names of the transitions. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> restFrequency </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  numLines  </TD>
+ * <TD>&nbsp; the rest frequencies (one value per transition line). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sysVel </TD> 
+ * <TD> vector<Speed > </TD>
+ * <TD>  numLines  </TD>
+ * <TD>&nbsp; the systemic velocity. </TD>
  * </TR>
 	
  * <TR>
  * <TD> rangeVel </TD> 
  * <TD> vector<Speed > </TD>
  * <TD>  2  </TD>
+ * <TD>&nbsp; the velocity range. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sourceModel </TD> 
+ * <TD> SourceModelMod::SourceModel </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; identifies the source model. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> frequencyRefCode </TD> 
+ * <TD> FrequencyReferenceCodeMod::FrequencyReferenceCode </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the frequency reference code. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numFreq </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the number of frequencies. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numStokes </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the number of Stokes parameters. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> frequency </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  numFreq  </TD>
+ * <TD>&nbsp; the array of frequencies (one value per frequency). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> frequencyInterval </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  numFreq  </TD>
+ * <TD>&nbsp; an array of frequency intervals (one value per interval). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> stokesParameter </TD> 
+ * <TD> vector<StokesParameterMod::StokesParameter > </TD>
+ * <TD>  numStokes  </TD>
+ * <TD>&nbsp; the array of Stokes parameters (one value per parameter). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> flux </TD> 
+ * <TD> vector<vector<Flux > > </TD>
+ * <TD>  numFreq, numStokes  </TD>
+ * <TD>&nbsp; the array of flux densities. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> fluxErr </TD> 
+ * <TD> vector<vector<Flux > > </TD>
+ * <TD>  numFreq, numStokes  </TD>
+ * <TD>&nbsp; the array of uncertainties on flux densities. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> positionAngle </TD> 
+ * <TD> vector<Angle > </TD>
+ * <TD>  numFreq  </TD>
+ * <TD>&nbsp; the major axis position angles (one value per frequency). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> positionAngleErr </TD> 
+ * <TD> vector<Angle > </TD>
+ * <TD>  numFreq  </TD>
+ * <TD>&nbsp; the uncertainties on major axis position angles. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> size </TD> 
+ * <TD> vector<vector<Angle > > </TD>
+ * <TD>  numFreq, 2  </TD>
+ * <TD>&nbsp; the sizes of source (one pair of values per frequency). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sizeErr </TD> 
+ * <TD> vector<vector<Angle > > </TD>
+ * <TD>  numFreq, 2  </TD>
+ * <TD>&nbsp; the uncertainties on the source sizes (one pair of value per frequency). </TD>
  * </TR>
 	
 
@@ -352,13 +503,9 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param spectralWindowId. 
-	
  	 * @param timeInterval. 
 	
- 	 * @param numLines. 
-	
- 	 * @param sourceName. 
+ 	 * @param spectralWindowId. 
 	
  	 * @param code. 
 	
@@ -366,14 +513,16 @@ public:
 	
  	 * @param properMotion. 
 	
+ 	 * @param sourceName. 
+	
      */
-	SourceRow *newRow(Tag spectralWindowId, ArrayTimeInterval timeInterval, int numLines, string sourceName, string code, vector<Angle > direction, vector<AngularRate > properMotion);
+	SourceRow *newRow(ArrayTimeInterval timeInterval, Tag spectralWindowId, string code, vector<Angle > direction, vector<AngularRate > properMotion, string sourceName);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	SourceRow *newRowFull(Tag spectralWindowId, ArrayTimeInterval timeInterval, int numLines, string sourceName, string code, vector<Angle > direction, vector<AngularRate > properMotion);
+	SourceRow *newRowFull(ArrayTimeInterval timeInterval, Tag spectralWindowId, string code, vector<Angle > direction, vector<AngularRate > properMotion, string sourceName);
 
 
 	/**
@@ -439,13 +588,13 @@ public:
 	
 	 * @param sourceId. 
 	
-	 * @param spectralWindowId. 
-	
 	 * @param timeInterval. 
+	
+	 * @param spectralWindowId. 
 	
  	 *
 	 */
- 	SourceRow* getRowByKey(int sourceId, Tag spectralWindowId, ArrayTimeInterval timeInterval);
+ 	SourceRow* getRowByKey(int sourceId, ArrayTimeInterval timeInterval, Tag spectralWindowId);
 
  	 	
  	
@@ -466,22 +615,20 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param spectralWindowId.
- 	 		
  	 * @param timeInterval.
  	 		
- 	 * @param numLines.
- 	 		
- 	 * @param sourceName.
+ 	 * @param spectralWindowId.
  	 		
  	 * @param code.
  	 		
  	 * @param direction.
  	 		
  	 * @param properMotion.
+ 	 		
+ 	 * @param sourceName.
  	 		 
  	 */
-	SourceRow* lookup(Tag spectralWindowId, ArrayTimeInterval timeInterval, int numLines, string sourceName, string code, vector<Angle > direction, vector<AngularRate > properMotion); 
+	SourceRow* lookup(ArrayTimeInterval timeInterval, Tag spectralWindowId, string code, vector<Angle > direction, vector<AngularRate > properMotion, string sourceName); 
 
 
 #ifndef WITHOUT_ACS
@@ -501,43 +648,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(SourceTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(SourceTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for Source (SourceTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a Source (SourceTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -612,8 +765,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	SourceRow* checkAndAdd(SourceRow* x) throw (DuplicateKey, UniquenessViolationException);
+	SourceRow* checkAndAdd(SourceRow* x) ;
 
 
 	
@@ -662,7 +819,7 @@ private:
 	
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

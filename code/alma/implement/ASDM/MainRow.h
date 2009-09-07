@@ -80,10 +80,14 @@ using namespace enumerations;
 	
 
 	
-
-	
 #include "CTimeSampling.h"
 using namespace TimeSamplingMod;
+	
+
+	
+
+	
+
 	
 
 	
@@ -117,7 +121,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Main.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -141,7 +145,7 @@ class ExecBlockRow;
 /**
  * The MainRow class is a row of a MainTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class MainRow {
@@ -168,8 +172,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct MainRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (MainRowIDL x) throw(ConversionException);
+	void setFromIDL (MainRowIDL x) ;
 #endif
 	
 	/**
@@ -182,8 +187,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the MainTable to which the row built by deserialization will be parented.
+	  */
+	 static MainRow* fromBin(EndianISStream& eiss, MainTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -215,6 +234,126 @@ public:
  	 		
  	 */
  	void setTime (ArrayTime time);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numAntenna
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numAntenna.
+ 	 * @return numAntenna as int
+ 	 */
+ 	int getNumAntenna() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numAntenna with the specified int.
+ 	 * @param numAntenna The int value to which numAntenna is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumAntenna (int numAntenna);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute timeSampling
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get timeSampling.
+ 	 * @return timeSampling as TimeSamplingMod::TimeSampling
+ 	 */
+ 	TimeSamplingMod::TimeSampling getTimeSampling() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set timeSampling with the specified TimeSamplingMod::TimeSampling.
+ 	 * @param timeSampling The TimeSamplingMod::TimeSampling value to which timeSampling is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setTimeSampling (TimeSamplingMod::TimeSampling timeSampling);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute interval
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get interval.
+ 	 * @return interval as Interval
+ 	 */
+ 	Interval getInterval() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set interval with the specified Interval.
+ 	 * @param interval The Interval value to which interval is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setInterval (Interval interval);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numIntegration
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numIntegration.
+ 	 * @return numIntegration as int
+ 	 */
+ 	int getNumIntegration() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numIntegration with the specified int.
+ 	 * @param numIntegration The int value to which numIntegration is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumIntegration (int numIntegration);
   		
 	
 	
@@ -282,59 +421,29 @@ public:
 
 
 	
-	// ===> Attribute timeSampling
+	// ===> Attribute dataSize
 	
 	
 	
 
 	
  	/**
- 	 * Get timeSampling.
- 	 * @return timeSampling as TimeSamplingMod::TimeSampling
+ 	 * Get dataSize.
+ 	 * @return dataSize as int
  	 */
- 	TimeSamplingMod::TimeSampling getTimeSampling() const;
+ 	int getDataSize() const;
 	
  
  	
  	
  	/**
- 	 * Set timeSampling with the specified TimeSamplingMod::TimeSampling.
- 	 * @param timeSampling The TimeSamplingMod::TimeSampling value to which timeSampling is to be set.
+ 	 * Set dataSize with the specified int.
+ 	 * @param dataSize The int value to which dataSize is to be set.
  	 
  		
  			
  	 */
- 	void setTimeSampling (TimeSamplingMod::TimeSampling timeSampling);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute numIntegration
-	
-	
-	
-
-	
- 	/**
- 	 * Get numIntegration.
- 	 * @return numIntegration as int
- 	 */
- 	int getNumIntegration() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numIntegration with the specified int.
- 	 * @param numIntegration The int value to which numIntegration is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumIntegration (int numIntegration);
+ 	void setDataSize (int dataSize);
   		
 	
 	
@@ -372,15 +481,22 @@ public:
 
 
 	
-	// ===> Attribute flagRow
+	// ===> Attribute flagRow, which is optional
 	
 	
+	
+	/**
+	 * The attribute flagRow is optional. Return true if this attribute exists.
+	 * @return true if and only if the flagRow attribute exists. 
+	 */
+	bool isFlagRowExists() const;
 	
 
 	
  	/**
- 	 * Get flagRow.
+ 	 * Get flagRow, which is optional.
  	 * @return flagRow as bool
+ 	 * @throws IllegalAccessException If flagRow does not exist.
  	 */
  	bool getFlagRow() const;
 	
@@ -392,42 +508,16 @@ public:
  	 * @param flagRow The bool value to which flagRow is to be set.
  	 
  		
- 			
  	 */
  	void setFlagRow (bool flagRow);
-  		
+		
 	
 	
 	
-
-
-	
-	// ===> Attribute interval
-	
-	
-	
-
-	
- 	/**
- 	 * Get interval.
- 	 * @return interval as Interval
- 	 */
- 	Interval getInterval() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set interval with the specified Interval.
- 	 * @param interval The Interval value to which interval is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setInterval (Interval interval);
-  		
-	
-	
+	/**
+	 * Mark flagRow, which is an optional field, as non-existent.
+	 */
+	void clearFlagRow ();
 	
 
 
@@ -668,12 +758,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this MainRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag configDescriptionId, Tag fieldId, ArrayTime time, Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, TimeSamplingMod::TimeSampling timeSampling, int numIntegration, EntityRef dataOid, bool flagRow, Interval interval);
+	bool compareNoAutoInc(ArrayTime time, Tag configDescriptionId, Tag fieldId, int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int dataSize, EntityRef dataOid, vector<Tag>  stateId, Tag execBlockId);
 	
 	
 
 	
-	bool compareRequiredValue(Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, TimeSamplingMod::TimeSampling timeSampling, int numIntegration, EntityRef dataOid, bool flagRow, Interval interval); 
+	bool compareRequiredValue(int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int dataSize, EntityRef dataOid, vector<Tag>  stateId, Tag execBlockId); 
 		 
 	
 	/**
@@ -745,6 +835,50 @@ private:
  	
 
 	
+	// ===> Attribute numAntenna
+	
+	
+
+	int numAntenna;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute timeSampling
+	
+	
+
+	TimeSamplingMod::TimeSampling timeSampling;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute interval
+	
+	
+
+	Interval interval;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numIntegration
+	
+	
+
+	int numIntegration;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute scanNumber
 	
 	
@@ -767,22 +901,11 @@ private:
  	
 
 	
-	// ===> Attribute timeSampling
+	// ===> Attribute dataSize
 	
 	
 
-	TimeSamplingMod::TimeSampling timeSampling;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numIntegration
-	
-	
-
-	int numIntegration;
+	int dataSize;
 
 	
 	
@@ -800,22 +923,13 @@ private:
  	
 
 	
-	// ===> Attribute flagRow
+	// ===> Attribute flagRow, which is optional
 	
+	
+	bool flagRowExists;
 	
 
 	bool flagRow;
-
-	
-	
- 	
-
-	
-	// ===> Attribute interval
-	
-	
-
-	Interval interval;
 
 	
 	

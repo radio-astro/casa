@@ -28,11 +28,11 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File SourceParameterTable.h
+ * File DelayModelTable.h
  */
  
-#ifndef SourceParameterTable_CLASS
-#define SourceParameterTable_CLASS
+#ifndef DelayModelTable_CLASS
+#define DelayModelTable_CLASS
 
 #include <string>
 #include <vector>
@@ -83,19 +83,6 @@ using namespace enumerations;
 	
 
 	
-#include "CStokesParameter.h"
-using namespace StokesParameterMod;
-	
-
-	
-
-	
-
-	
-
-	
-
-	
 
 	
 
@@ -110,7 +97,7 @@ using namespace StokesParameterMod;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::SourceParameterTableIDL;
+using asdmIDL::DelayModelTableIDL;
 #endif
 
 using asdm::Angle;
@@ -141,135 +128,119 @@ using asdm::DuplicateKey;
 namespace asdm {
 
 //class asdm::ASDM;
-//class asdm::SourceParameterRow;
+//class asdm::DelayModelRow;
 
 class ASDM;
-class SourceParameterRow;
+class DelayModelRow;
 /**
- * The SourceParameterTable class is an Alma table.
+ * The DelayModelTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Contains the delay model components.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
- * <CAPTION> Attributes of SourceParameter </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <CAPTION> Attributes of DelayModel </CAPTION>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> sourceParameterId </I></TD> 
- * <TD> int</TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in AntennaTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> sourceId </TD> 
- * <TD> int </TD>
+ 		
+ * <TD> timeInterval </TD>
+ 		 
+ * <TD> ArrayTimeInterval</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;time interval for which the row's content is valid. </TD>
  * </TR>
- 		
-	
- 		
- * <TR>
- * <TD> timeInterval </TD> 
- * <TD> ArrayTimeInterval </TD>
- * <TD> &nbsp; </TD>
- * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
- * <TD> numFreq </TD> 
+ * <TD> timeOrigin </TD> 
+ * <TD> ArrayTime </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;value used as the origin for the polynomials. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numPoly </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of coefficients of the polynomials. </TD>
  * </TR>
 	
  * <TR>
- * <TD> numStokes </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> atmDryDelay </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numPoly </TD> 
+ * <TD> &nbsp;the dry atmospheric delay component. </TD>
  * </TR>
 	
  * <TR>
- * <TD> numDep </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> atmWetDelay </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numPoly </TD> 
+ * <TD> &nbsp;the wet atmospheric delay. </TD>
  * </TR>
 	
  * <TR>
- * <TD> stokesParameter </TD> 
- * <TD> vector<StokesParameterMod::StokesParameter > </TD>
- * <TD>  numStokes </TD> 
+ * <TD> clockDelay </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numPoly </TD> 
+ * <TD> &nbsp;the electronic delay. </TD>
  * </TR>
 	
  * <TR>
- * <TD> flux </TD> 
- * <TD> vector<vector<Flux > > </TD>
- * <TD>  numFreq, numStokes </TD> 
- * </TR>
-	
- * <TR>
- * <TD> frequency </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>  numFreq </TD> 
- * </TR>
-	
- * <TR>
- * <TD> frequencyInterval </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>  numFreq </TD> 
- * </TR>
-	
- * <TR>
- * <TD> fluxErr </TD> 
- * <TD> vector<vector<Flux > > </TD>
- * <TD>  numFreq, numStokes </TD> 
+ * <TD> geomDelay </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numPoly </TD> 
+ * <TD> &nbsp;the geometric delay. </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
- * <TD> size </TD> 
- * <TD> vector<vector<Angle > > </TD>
- * <TD>  numFreq, 2  </TD>
+ * <TD> dispDelay </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numPoly  </TD>
+ * <TD>&nbsp; dispersive delay at 1m wavelength. </TD>
  * </TR>
 	
  * <TR>
- * <TD> positionAngle </TD> 
- * <TD> vector<Angle > </TD>
- * <TD>  numFreq  </TD>
+ * <TD> groupDelay </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numPoly  </TD>
+ * <TD>&nbsp; the group delay at 1m wavelength. </TD>
  * </TR>
 	
  * <TR>
- * <TD> sizeErr </TD> 
- * <TD> vector<vector<Angle > > </TD>
- * <TD>  numFreq, 2  </TD>
- * </TR>
-	
- * <TR>
- * <TD> positionAngleErr </TD> 
- * <TD> vector<Angle > </TD>
- * <TD>  numFreq  </TD>
- * </TR>
-	
- * <TR>
- * <TD> depSourceParameterId </TD> 
- * <TD> vector<int > </TD>
- * <TD>  numDep  </TD>
+ * <TD> phaseDelay </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numPoly  </TD>
+ * <TD>&nbsp; the phase delay at 1m wavelength. </TD>
  * </TR>
 	
 
  * </TABLE>
  */
-class SourceParameterTable : public Representable {
+class DelayModelTable : public Representable {
 	friend class asdm::ASDM;
 
 public:
@@ -283,7 +254,7 @@ public:
 	static vector<string> getKeyName();
 
 
-	virtual ~SourceParameterTable();
+	virtual ~DelayModelTable();
 	
 	/**
 	 * Return the container to which this table belongs.
@@ -323,89 +294,91 @@ public:
 	
 	/**
 	 * Create a new row with default values.
-	 * @return a pointer on a SourceParameterRow
+	 * @return a pointer on a DelayModelRow
 	 */
-	SourceParameterRow *newRow();
+	DelayModelRow *newRow();
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	SourceParameterRow* newRowEmpty();
+	DelayModelRow* newRowEmpty();
 
 	
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param sourceId. 
+ 	 * @param antennaId. 
 	
  	 * @param timeInterval. 
 	
- 	 * @param numFreq. 
+ 	 * @param timeOrigin. 
 	
- 	 * @param numStokes. 
+ 	 * @param numPoly. 
 	
- 	 * @param numDep. 
+ 	 * @param atmDryDelay. 
 	
- 	 * @param stokesParameter. 
+ 	 * @param atmWetDelay. 
 	
- 	 * @param flux. 
+ 	 * @param clockDelay. 
 	
- 	 * @param frequency. 
-	
- 	 * @param frequencyInterval. 
-	
- 	 * @param fluxErr. 
+ 	 * @param geomDelay. 
 	
      */
-	SourceParameterRow *newRow(int sourceId, ArrayTimeInterval timeInterval, int numFreq, int numStokes, int numDep, vector<StokesParameterMod::StokesParameter > stokesParameter, vector<vector<Flux > > flux, vector<Frequency > frequency, vector<Frequency > frequencyInterval, vector<vector<Flux > > fluxErr);
+	DelayModelRow *newRow(Tag antennaId, ArrayTimeInterval timeInterval, ArrayTime timeOrigin, int numPoly, vector<double > atmDryDelay, vector<double > atmWetDelay, vector<double > clockDelay, vector<double > geomDelay);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	SourceParameterRow *newRowFull(int sourceId, ArrayTimeInterval timeInterval, int numFreq, int numStokes, int numDep, vector<StokesParameterMod::StokesParameter > stokesParameter, vector<vector<Flux > > flux, vector<Frequency > frequency, vector<Frequency > frequencyInterval, vector<vector<Flux > > fluxErr);
+	DelayModelRow *newRowFull(Tag antennaId, ArrayTimeInterval timeInterval, ArrayTime timeOrigin, int numPoly, vector<double > atmDryDelay, vector<double > atmWetDelay, vector<double > clockDelay, vector<double > geomDelay);
 
 
 	/**
 	 * Create a new row using a copy constructor mechanism.
 	 * 
-	 * The method creates a new SourceParameterRow owned by this. Each attribute of the created row 
+	 * The method creates a new DelayModelRow owned by this. Each attribute of the created row 
 	 * is a (deep) copy of the corresponding attribute of row. The method does not add 
 	 * the created row to this, its simply parents it to this, a call to the add method
 	 * has to be done in order to get the row added (very likely after having modified
 	 * some of its attributes).
-	 * If row is null then the method returns a new SourceParameterRow with default values for its attributes. 
+	 * If row is null then the method returns a new DelayModelRow with default values for its attributes. 
 	 *
 	 * @param row the row which is to be copied.
 	 */
-	 SourceParameterRow *newRow(SourceParameterRow *row); 
+	 DelayModelRow *newRow(DelayModelRow *row); 
 
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	 SourceParameterRow *newRowCopy(SourceParameterRow *row); 
+	 DelayModelRow *newRowCopy(DelayModelRow *row); 
 
 	//
 	// ====> Append a row to its table.
 	//
-
+ 
 	
-	 
-	
-	
-	/** 
+	/**
 	 * Add a row.
-	 * If there table contains a row whose key's fields except² sourceParameterId are equal
-	 * to x's ones then return a pointer on this row (i.e. no actual insertion is performed) 
-	 * otherwise add x to the table and return x.
-	 * @param x. A pointer on the row to be added.
- 	 * @returns a SourceParameterRow pointer.
+	 * @param x a pointer to the DelayModelRow to be added.
+	 *
+	 * @return a pointer to a DelayModelRow. If the table contains a DelayModelRow whose attributes (key and mandatory values) are equal to x ones
+	 * then returns a pointer on that DelayModelRow, otherwise returns x.
+	 *
+	 * @throw DuplicateKey { thrown when the table contains a DelayModelRow with a key equal to the x one but having
+	 * and a value section different from x one }
+	 *
+	
+	 * @note The row is inserted in the table in such a way that all the rows having the same value of
+	 * ( antennaId ) are stored by ascending time.
+	 * @see method getByContext.
+	
 	 */
-	 
- 	 SourceParameterRow* add(SourceParameterRow* x) ;
+	DelayModelRow* add(DelayModelRow* x) ; 
+
+ 
 
 
 
@@ -415,127 +388,128 @@ public:
 		
 	/**
 	 * Get all rows.
-	 * @return Alls rows as a vector of pointers of SourceParameterRow. The elements of this vector are stored in the order 
-	 * in which they have been added to the SourceParameterTable.
+	 * @return Alls rows as a vector of pointers of DelayModelRow. The elements of this vector are stored in the order 
+	 * in which they have been added to the DelayModelTable.
 	 */
-	vector<SourceParameterRow *> get() ;
+	vector<DelayModelRow *> get() ;
 	
+
+	/**
+	 * Returns all the rows sorted by ascending startTime for a given context. 
+	 * The context is defined by a value of ( antennaId ).
+	 *
+	 * @return a pointer on a vector<DelayModelRow *>. A null returned value means that the table contains
+	 * no DelayModelRow for the given ( antennaId ).
+	 */
+	 vector <DelayModelRow*> *getByContext(Tag antennaId);
+	 
 
 
  
 	
 	/**
- 	 * Returns a SourceParameterRow* given a key.
+ 	 * Returns a DelayModelRow* given a key.
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
-	 * @param sourceParameterId. 
-	
-	 * @param sourceId. 
+	 * @param antennaId. 
 	
 	 * @param timeInterval. 
 	
  	 *
 	 */
- 	SourceParameterRow* getRowByKey(int sourceParameterId, int sourceId, ArrayTimeInterval timeInterval);
+ 	DelayModelRow* getRowByKey(Tag antennaId, ArrayTimeInterval timeInterval);
 
  	 	
- 	
-	/**
- 	 * Returns a vector of pointers on rows whose key element <<AutoIncrementableAttribute>> sourceParameterId 
-	 * is equal to the parameter <<AutoIncrementableAttribute>> sourceParameterId.
-	 * @return a vector of vector <SourceParameterRow *>. A returned vector of size 0 means that no row has been found.
-	 * @param sourceParameterId int contains the value of
-	 * the autoincrementable attribute that is looked up in the table.
-	 */
- 	vector <SourceParameterRow *>  getRowBySourceParameterId(int);
 
 
 
 	/**
- 	 * Look up the table for a row whose all attributes  except the autoincrementable one 
+ 	 * Look up the table for a row whose all attributes 
  	 * are equal to the corresponding parameters of the method.
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param sourceId.
+ 	 * @param antennaId.
  	 		
  	 * @param timeInterval.
  	 		
- 	 * @param numFreq.
+ 	 * @param timeOrigin.
  	 		
- 	 * @param numStokes.
+ 	 * @param numPoly.
  	 		
- 	 * @param numDep.
+ 	 * @param atmDryDelay.
  	 		
- 	 * @param stokesParameter.
+ 	 * @param atmWetDelay.
  	 		
- 	 * @param flux.
+ 	 * @param clockDelay.
  	 		
- 	 * @param frequency.
- 	 		
- 	 * @param frequencyInterval.
- 	 		
- 	 * @param fluxErr.
+ 	 * @param geomDelay.
  	 		 
  	 */
-	SourceParameterRow* lookup(int sourceId, ArrayTimeInterval timeInterval, int numFreq, int numStokes, int numDep, vector<StokesParameterMod::StokesParameter > stokesParameter, vector<vector<Flux > > flux, vector<Frequency > frequency, vector<Frequency > frequencyInterval, vector<vector<Flux > > fluxErr); 
+	DelayModelRow* lookup(Tag antennaId, ArrayTimeInterval timeInterval, ArrayTime timeOrigin, int numPoly, vector<double > atmDryDelay, vector<double > atmWetDelay, vector<double > clockDelay, vector<double > geomDelay); 
 
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
 	/**
-	 * Convert this table into a SourceParameterTableIDL CORBA structure.
+	 * Convert this table into a DelayModelTableIDL CORBA structure.
 	 *
-	 * @return a pointer to a SourceParameterTableIDL
+	 * @return a pointer to a DelayModelTableIDL
 	 */
-	SourceParameterTableIDL *toIDL() ;
+	DelayModelTableIDL *toIDL() ;
 #endif
 
 #ifndef WITHOUT_ACS
 	/**
-	 * Populate this table from the content of a SourceParameterTableIDL Corba structure.
+	 * Populate this table from the content of a DelayModelTableIDL Corba structure.
 	 *
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(SourceParameterTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(DelayModelTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
-	 * to the schema defined for SourceParameter (SourceParameterTable.xsd).
+	 * to the schema defined for DelayModel (DelayModelTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
-	 * be conform to the XML schema defined for a SourceParameter (SourceParameterTable.xsd).
+	 * be conform to the XML schema defined for a DelayModel (DelayModelTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -556,7 +530,7 @@ public:
 	  * Stores a representation (binary or XML) of this table into a file.
 	  *
 	  * Depending on the boolean value of its private field fileAsBin a binary serialization  of this (fileAsBin==true)  
-	  * will be saved in a file "SourceParameter.bin" or an XML representation (fileAsBin==false) will be saved in a file "SourceParameter.xml".
+	  * will be saved in a file "DelayModel.bin" or an XML representation (fileAsBin==false) will be saved in a file "DelayModel.xml".
 	  * The file is always written in a directory whose name is passed as a parameter.
 	 * @param directory The name of directory  where the file containing the table's representation will be saved.
 	  * 
@@ -564,7 +538,7 @@ public:
 	  void toFile(string directory);
 	  
 	/**
-	 * Reads and parses a file containing a representation of a SourceParameterTable as those produced  by the toFile method.
+	 * Reads and parses a file containing a representation of a DelayModelTable as those produced  by the toFile method.
 	 * This table is populated with the result of the parsing.
 	 * @param directory The name of the directory containing the file te be read and parsed.
 	 * @throws ConversionException If any error occurs while reading the 
@@ -576,14 +550,14 @@ public:
 private:
 
 	/**
-	 * Create a SourceParameterTable.
+	 * Create a DelayModelTable.
 	 * <p>
 	 * This constructor is private because only the
 	 * container can create tables.  All tables must know the container
 	 * to which they belong.
 	 * @param container The container to which this table belongs.
 	 */ 
-	SourceParameterTable (ASDM & container);
+	DelayModelTable (ASDM & container);
 
 	ASDM & container;
 	
@@ -610,27 +584,29 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	SourceParameterRow* checkAndAdd(SourceParameterRow* x) throw (DuplicateKey, UniquenessViolationException);
+	DelayModelRow* checkAndAdd(DelayModelRow* x) ;
 
 
 	
 	
 	/**
-	 * Insert a SourceParameterRow* in a vector of SourceParameterRow* so that it's ordered by ascending time.
+	 * Insert a DelayModelRow* in a vector of DelayModelRow* so that it's ordered by ascending time.
 	 *
-	 * @param SourceParameterRow* x . The pointer to be inserted.
-	 * @param vector <SourceParameterRow*>& row. A reference to the vector where to insert x.
+	 * @param DelayModelRow* x . The pointer to be inserted.
+	 * @param vector <DelayModelRow*>& row. A reference to the vector where to insert x.
 	 *
 	 */
-	 SourceParameterRow * insertByStartTime(SourceParameterRow* x, vector<SourceParameterRow* >& row);
+	 DelayModelRow * insertByStartTime(DelayModelRow* x, vector<DelayModelRow* >& row);
 	  
 
 
 // A data structure to store the pointers on the table's rows.
 
-// In all cases we maintain a private ArrayList of SourceParameterRow s.
-   vector<SourceParameterRow * > privateRows;
+// In all cases we maintain a private ArrayList of DelayModelRow s.
+   vector<DelayModelRow * > privateRows;
    
 
 	
@@ -638,16 +614,16 @@ private:
 	
 	
 		
+				
+	typedef vector <DelayModelRow* > TIME_ROWS;
+	map<string, TIME_ROWS > context;
 		
-	typedef vector <vector <SourceParameterRow* > > ID_TIME_ROWS;
-	map<string, ID_TIME_ROWS > context;
-	
 	/** 
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
 	 */
-	 string Key(int sourceId) ;
-	 	
+	 string Key(Tag antennaId) ;
+		 
 		
 	
 	
@@ -656,14 +632,14 @@ private:
 	 * whose attributes are equal to the corresponding parameters of the method.
 	 *
 	 */
-	void getByKeyNoAutoIncNoTime(vector <SourceParameterRow*>& vin, vector <SourceParameterRow*>& vout,  int sourceId);
+	void getByKeyNoAutoIncNoTime(vector <DelayModelRow*>& vin, vector <DelayModelRow*>& vout,  Tag antennaId);
 	
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 
 } // End namespace asdm
 
-#endif /* SourceParameterTable_CLASS */
+#endif /* DelayModelTable_CLASS */

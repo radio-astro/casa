@@ -38,11 +38,11 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<StationType,EnumPar<void> >
-     (StationTypeMod::ANTENNA_PAD,ep((int)StationTypeMod::ANTENNA_PAD,"ANTENNA_PAD","Astronomical Antenna station")));
+     (StationTypeMod::ANTENNA_PAD,ep((int)StationTypeMod::ANTENNA_PAD,"ANTENNA_PAD","un-documented")));
     m_.insert(pair<StationType,EnumPar<void> >
-     (StationTypeMod::MAINTENANCE_PAD,ep((int)StationTypeMod::MAINTENANCE_PAD,"MAINTENANCE_PAD","Maintenance antenna station")));
+     (StationTypeMod::MAINTENANCE_PAD,ep((int)StationTypeMod::MAINTENANCE_PAD,"MAINTENANCE_PAD","un-documented")));
     m_.insert(pair<StationType,EnumPar<void> >
-     (StationTypeMod::WEATHER_STATION,ep((int)StationTypeMod::WEATHER_STATION,"WEATHER_STATION","Weather station")));
+     (StationTypeMod::WEATHER_STATION,ep((int)StationTypeMod::WEATHER_STATION,"WEATHER_STATION","un-documented")));
     return true;
   }
   static map<StationType,EnumPar<void> > m_;

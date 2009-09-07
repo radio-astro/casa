@@ -164,15 +164,29 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param antennaId. 
+ 	 * @param startTime. 
+	
+ 	 * @param endTime. 
 	
  	 * @param execBlockNum. 
 	
- 	 * @param telescopeName. 
+ 	 * @param execBlockUID. 
+	
+ 	 * @param projectId. 
 	
  	 * @param configName. 
 	
- 	 * @param numAntenna. 
+ 	 * @param telescopeName. 
+	
+ 	 * @param observerName. 
+	
+ 	 * @param observingLog. 
+	
+ 	 * @param sessionReference. 
+	
+ 	 * @param sbSummary. 
+	
+ 	 * @param schedulerMode. 
 	
  	 * @param baseRangeMin. 
 	
@@ -184,41 +198,47 @@ namespace asdm {
 	
  	 * @param basePa. 
 	
- 	 * @param timeInterval. 
-	
- 	 * @param observerName. 
-	
- 	 * @param observingLog. 
-	
- 	 * @param schedulerMode. 
-	
- 	 * @param projectId. 
+ 	 * @param siteAltitude. 
 	
  	 * @param siteLongitude. 
 	
  	 * @param siteLatitude. 
 	
- 	 * @param siteAltitude. 
-	
- 	 * @param flagRow. 
-	
- 	 * @param execBlockUID. 
-	
  	 * @param aborted. 
 	
+ 	 * @param numAntenna. 
+	
+ 	 * @param antennaId. 
+	
+ 	 * @param sBSummaryId. 
+	
      */
-	ExecBlockRow* ExecBlockTable::newRow(vector<Tag>  antennaId, int execBlockNum, string telescopeName, string configName, int numAntenna, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, ArrayTimeInterval timeInterval, string observerName, vector<string > observingLog, vector<string > schedulerMode, EntityRef projectId, Angle siteLongitude, Angle siteLatitude, Length siteAltitude, bool flagRow, EntityRef execBlockUID, bool aborted){
+	ExecBlockRow* ExecBlockTable::newRow(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId){
 		ExecBlockRow *row = new ExecBlockRow(*this);
 			
-		row->setAntennaId(antennaId);
+		row->setStartTime(startTime);
+			
+		row->setEndTime(endTime);
 			
 		row->setExecBlockNum(execBlockNum);
 			
-		row->setTelescopeName(telescopeName);
+		row->setExecBlockUID(execBlockUID);
+			
+		row->setProjectId(projectId);
 			
 		row->setConfigName(configName);
 			
-		row->setNumAntenna(numAntenna);
+		row->setTelescopeName(telescopeName);
+			
+		row->setObserverName(observerName);
+			
+		row->setObservingLog(observingLog);
+			
+		row->setSessionReference(sessionReference);
+			
+		row->setSbSummary(sbSummary);
+			
+		row->setSchedulerMode(schedulerMode);
 			
 		row->setBaseRangeMin(baseRangeMin);
 			
@@ -230,43 +250,49 @@ namespace asdm {
 			
 		row->setBasePa(basePa);
 			
-		row->setTimeInterval(timeInterval);
-			
-		row->setObserverName(observerName);
-			
-		row->setObservingLog(observingLog);
-			
-		row->setSchedulerMode(schedulerMode);
-			
-		row->setProjectId(projectId);
+		row->setSiteAltitude(siteAltitude);
 			
 		row->setSiteLongitude(siteLongitude);
 			
 		row->setSiteLatitude(siteLatitude);
 			
-		row->setSiteAltitude(siteAltitude);
-			
-		row->setFlagRow(flagRow);
-			
-		row->setExecBlockUID(execBlockUID);
-			
 		row->setAborted(aborted);
+			
+		row->setNumAntenna(numAntenna);
+			
+		row->setAntennaId(antennaId);
+			
+		row->setSBSummaryId(sBSummaryId);
 	
 		return row;		
 	}	
 
-	ExecBlockRow* ExecBlockTable::newRowFull(vector<Tag>  antennaId, int execBlockNum, string telescopeName, string configName, int numAntenna, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, ArrayTimeInterval timeInterval, string observerName, vector<string > observingLog, vector<string > schedulerMode, EntityRef projectId, Angle siteLongitude, Angle siteLatitude, Length siteAltitude, bool flagRow, EntityRef execBlockUID, bool aborted)	{
+	ExecBlockRow* ExecBlockTable::newRowFull(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId)	{
 		ExecBlockRow *row = new ExecBlockRow(*this);
 			
-		row->setAntennaId(antennaId);
+		row->setStartTime(startTime);
+			
+		row->setEndTime(endTime);
 			
 		row->setExecBlockNum(execBlockNum);
 			
-		row->setTelescopeName(telescopeName);
+		row->setExecBlockUID(execBlockUID);
+			
+		row->setProjectId(projectId);
 			
 		row->setConfigName(configName);
 			
-		row->setNumAntenna(numAntenna);
+		row->setTelescopeName(telescopeName);
+			
+		row->setObserverName(observerName);
+			
+		row->setObservingLog(observingLog);
+			
+		row->setSessionReference(sessionReference);
+			
+		row->setSbSummary(sbSummary);
+			
+		row->setSchedulerMode(schedulerMode);
 			
 		row->setBaseRangeMin(baseRangeMin);
 			
@@ -278,27 +304,19 @@ namespace asdm {
 			
 		row->setBasePa(basePa);
 			
-		row->setTimeInterval(timeInterval);
-			
-		row->setObserverName(observerName);
-			
-		row->setObservingLog(observingLog);
-			
-		row->setSchedulerMode(schedulerMode);
-			
-		row->setProjectId(projectId);
+		row->setSiteAltitude(siteAltitude);
 			
 		row->setSiteLongitude(siteLongitude);
 			
 		row->setSiteLatitude(siteLatitude);
 			
-		row->setSiteAltitude(siteAltitude);
-			
-		row->setFlagRow(flagRow);
-			
-		row->setExecBlockUID(execBlockUID);
-			
 		row->setAborted(aborted);
+			
+		row->setNumAntenna(numAntenna);
+			
+		row->setAntennaId(antennaId);
+			
+		row->setSBSummaryId(sBSummaryId);
 	
 		return row;				
 	}
@@ -334,15 +352,29 @@ ExecBlockRow* ExecBlockTable::newRowCopy(ExecBlockRow* row) {
 			 
 		ExecBlockRow* aRow = lookup(
 				
-		x->getAntennaId()
+		x->getStartTime()
+				,
+		x->getEndTime()
 				,
 		x->getExecBlockNum()
 				,
-		x->getTelescopeName()
+		x->getExecBlockUID()
+				,
+		x->getProjectId()
 				,
 		x->getConfigName()
 				,
-		x->getNumAntenna()
+		x->getTelescopeName()
+				,
+		x->getObserverName()
+				,
+		x->getObservingLog()
+				,
+		x->getSessionReference()
+				,
+		x->getSbSummary()
+				,
+		x->getSchedulerMode()
 				,
 		x->getBaseRangeMin()
 				,
@@ -354,27 +386,19 @@ ExecBlockRow* ExecBlockTable::newRowCopy(ExecBlockRow* row) {
 				,
 		x->getBasePa()
 				,
-		x->getTimeInterval()
-				,
-		x->getObserverName()
-				,
-		x->getObservingLog()
-				,
-		x->getSchedulerMode()
-				,
-		x->getProjectId()
+		x->getSiteAltitude()
 				,
 		x->getSiteLongitude()
 				,
 		x->getSiteLatitude()
 				,
-		x->getSiteAltitude()
-				,
-		x->getFlagRow()
-				,
-		x->getExecBlockUID()
-				,
 		x->getAborted()
+				,
+		x->getNumAntenna()
+				,
+		x->getAntennaId()
+				,
+		x->getSBSummaryId()
 				
 		);
 		if (aRow) return aRow;
@@ -408,21 +432,39 @@ ExecBlockRow* ExecBlockTable::newRowCopy(ExecBlockRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	ExecBlockRow*  ExecBlockTable::checkAndAdd(ExecBlockRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	ExecBlockRow*  ExecBlockTable::checkAndAdd(ExecBlockRow* x)  {
 	 
 		 
 		if (lookup(
 			
-			x->getAntennaId()
+			x->getStartTime()
+		,
+			x->getEndTime()
 		,
 			x->getExecBlockNum()
 		,
-			x->getTelescopeName()
+			x->getExecBlockUID()
+		,
+			x->getProjectId()
 		,
 			x->getConfigName()
 		,
-			x->getNumAntenna()
+			x->getTelescopeName()
+		,
+			x->getObserverName()
+		,
+			x->getObservingLog()
+		,
+			x->getSessionReference()
+		,
+			x->getSbSummary()
+		,
+			x->getSchedulerMode()
 		,
 			x->getBaseRangeMin()
 		,
@@ -434,27 +476,19 @@ ExecBlockRow* ExecBlockTable::newRowCopy(ExecBlockRow* row) {
 		,
 			x->getBasePa()
 		,
-			x->getTimeInterval()
-		,
-			x->getObserverName()
-		,
-			x->getObservingLog()
-		,
-			x->getSchedulerMode()
-		,
-			x->getProjectId()
+			x->getSiteAltitude()
 		,
 			x->getSiteLongitude()
 		,
 			x->getSiteLatitude()
 		,
-			x->getSiteAltitude()
-		,
-			x->getFlagRow()
-		,
-			x->getExecBlockUID()
-		,
 			x->getAborted()
+		,
+			x->getNumAntenna()
+		,
+			x->getAntennaId()
+		,
+			x->getSBSummaryId()
 		
 		)) throw UniquenessViolationException("Uniqueness violation exception in table ExecBlockTable");
 		
@@ -521,15 +555,29 @@ ExecBlockRow* ExecBlockTable::newRowCopy(ExecBlockRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
- * @param antennaId.
+ * @param startTime.
+ 	 		
+ * @param endTime.
  	 		
  * @param execBlockNum.
  	 		
- * @param telescopeName.
+ * @param execBlockUID.
+ 	 		
+ * @param projectId.
  	 		
  * @param configName.
  	 		
- * @param numAntenna.
+ * @param telescopeName.
+ 	 		
+ * @param observerName.
+ 	 		
+ * @param observingLog.
+ 	 		
+ * @param sessionReference.
+ 	 		
+ * @param sbSummary.
+ 	 		
+ * @param schedulerMode.
  	 		
  * @param baseRangeMin.
  	 		
@@ -541,34 +589,26 @@ ExecBlockRow* ExecBlockTable::newRowCopy(ExecBlockRow* row) {
  	 		
  * @param basePa.
  	 		
- * @param timeInterval.
- 	 		
- * @param observerName.
- 	 		
- * @param observingLog.
- 	 		
- * @param schedulerMode.
- 	 		
- * @param projectId.
+ * @param siteAltitude.
  	 		
  * @param siteLongitude.
  	 		
  * @param siteLatitude.
  	 		
- * @param siteAltitude.
- 	 		
- * @param flagRow.
- 	 		
- * @param execBlockUID.
- 	 		
  * @param aborted.
+ 	 		
+ * @param numAntenna.
+ 	 		
+ * @param antennaId.
+ 	 		
+ * @param sBSummaryId.
  	 		 
  */
-ExecBlockRow* ExecBlockTable::lookup(vector<Tag>  antennaId, int execBlockNum, string telescopeName, string configName, int numAntenna, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, ArrayTimeInterval timeInterval, string observerName, vector<string > observingLog, vector<string > schedulerMode, EntityRef projectId, Angle siteLongitude, Angle siteLatitude, Length siteAltitude, bool flagRow, EntityRef execBlockUID, bool aborted) {
+ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId) {
 		ExecBlockRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(antennaId, execBlockNum, telescopeName, configName, numAntenna, baseRangeMin, baseRangeMax, baseRmsMinor, baseRmsMajor, basePa, timeInterval, observerName, observingLog, schedulerMode, projectId, siteLongitude, siteLatitude, siteAltitude, flagRow, execBlockUID, aborted)) return aRow;
+			if (aRow->compareNoAutoInc(startTime, endTime, execBlockNum, execBlockUID, projectId, configName, telescopeName, observerName, observingLog, sessionReference, sbSummary, schedulerMode, baseRangeMin, baseRangeMax, baseRmsMinor, baseRmsMajor, basePa, siteAltitude, siteLongitude, siteLatitude, aborted, numAntenna, antennaId, sBSummaryId)) return aRow;
 		}			
 		return 0;	
 } 
@@ -576,7 +616,6 @@ ExecBlockRow* ExecBlockTable::lookup(vector<Tag>  antennaId, int execBlockNum, s
  	 	
 
 	
-
 
 
 
@@ -597,7 +636,7 @@ ExecBlockRow* ExecBlockTable::lookup(vector<Tag>  antennaId, int execBlockNum, s
 #endif
 	
 #ifndef WITHOUT_ACS
-	void ExecBlockTable::fromIDL(ExecBlockTableIDL x) throw(DuplicateKey,ConversionException) {
+	void ExecBlockTable::fromIDL(ExecBlockTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			ExecBlockRow *tmp = newRow();
@@ -608,28 +647,27 @@ ExecBlockRow* ExecBlockTable::lookup(vector<Tag>  antennaId, int execBlockNum, s
 	}
 #endif
 
-	char *ExecBlockTable::toFITS() const throw(ConversionException) {
+	char *ExecBlockTable::toFITS() const  {
 		throw ConversionException("Not implemented","ExecBlock");
 	}
 
-	void ExecBlockTable::fromFITS(char *fits) throw(ConversionException) {
+	void ExecBlockTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","ExecBlock");
 	}
 
-	string ExecBlockTable::toVOTable() const throw(ConversionException) {
+	string ExecBlockTable::toVOTable() const {
 		throw ConversionException("Not implemented","ExecBlock");
 	}
 
-	void ExecBlockTable::fromVOTable(string vo) throw(ConversionException) {
+	void ExecBlockTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","ExecBlock");
 	}
 
-	string ExecBlockTable::toXML()  throw(ConversionException) {
+	
+	string ExecBlockTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<ExecBlockTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/ExecBlockTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<ExecBlockTable> ");
+		buf.append("<ExecBlockTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/ExecBlockTable\" xsi:schemaLocation=\"http://Alma/XASDM/ExecBlockTable http://almaobservatory.org/XML/XASDM/2/ExecBlockTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -645,8 +683,9 @@ ExecBlockRow* ExecBlockTable::lookup(vector<Tag>  antennaId, int execBlockNum, s
 		buf.append("</ExecBlockTable> ");
 		return buf;
 	}
+
 	
-	void ExecBlockTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void ExecBlockTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<ExecBlockTable")) 
 			error();
@@ -688,20 +727,110 @@ ExecBlockRow* ExecBlockTable::lookup(vector<Tag>  antennaId, int execBlockNum, s
 			error();
 	}
 
-	void ExecBlockTable::error() throw(ConversionException) {
+	
+	void ExecBlockTable::error()  {
 		throw ConversionException("Invalid xml document","ExecBlock");
 	}
 	
+	
 	string ExecBlockTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void ExecBlockTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "ExecBlock");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			ExecBlockRow* aRow = ExecBlockRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "ExecBlock");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "ExecBlock");
+		} 		 	
+	}
+
 	
 	void ExecBlockTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -732,6 +861,7 @@ ExecBlockRow* ExecBlockTable::lookup(vector<Tag>  antennaId, int execBlockNum, s
 				throw ConversionException("Could not close file " + fileName, "ExecBlock");
 		}
 	}
+
 	
 	void ExecBlockTable::setFromFile(const string& directory) {
 		string tablename;
@@ -773,6 +903,11 @@ ExecBlockRow* ExecBlockTable::lookup(vector<Tag>  antennaId, int execBlockNum, s
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

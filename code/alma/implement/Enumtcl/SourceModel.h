@@ -38,11 +38,11 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<SourceModel,EnumPar<void> >
-     (SourceModelMod::GAUSSIAN,ep((int)SourceModelMod::GAUSSIAN,"GAUSSIAN","Gaussian source")));
+     (SourceModelMod::GAUSSIAN,ep((int)SourceModelMod::GAUSSIAN,"GAUSSIAN","un-documented")));
     m_.insert(pair<SourceModel,EnumPar<void> >
-     (SourceModelMod::POINT,ep((int)SourceModelMod::POINT,"POINT","Point Source")));
+     (SourceModelMod::POINT,ep((int)SourceModelMod::POINT,"POINT","un-documented")));
     m_.insert(pair<SourceModel,EnumPar<void> >
-     (SourceModelMod::DISK,ep((int)SourceModelMod::DISK,"DISK","Uniform Disk")));
+     (SourceModelMod::DISK,ep((int)SourceModelMod::DISK,"DISK","un-documented")));
     return true;
   }
   static map<SourceModel,EnumPar<void> > m_;

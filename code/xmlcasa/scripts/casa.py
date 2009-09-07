@@ -162,6 +162,7 @@ from makemask import makemask
 from smoothcal import smoothcal
 from imval import imval
 from vishead import vishead
+from visstat import visstat
 
 
 ##

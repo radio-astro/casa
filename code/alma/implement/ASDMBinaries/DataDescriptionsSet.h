@@ -152,7 +152,14 @@ namespace sdmbin {
      * @exception ndd is too large for the number of dataDescriptions in the ConfigDescription 
      * @return Number of frequency channels (spectral points) for that dataDescription
      */
-    unsigned int      numChan(unsigned int ndd) throw (Error);      
+    unsigned int      numChan(unsigned int ndd) throw (Error);
+
+    /** Accessor to get the spwtral window identifier of a given dataDescription
+     * @param ndd The index of the dataDescription identifier in dataDescriptionIdArray
+     * @exception ndd is too large for the number of dataDescriptions in the ConfigDescription 
+     * @return The spectral window identifier
+     */
+    Tag               getSpwId(unsigned int ndd) throw (Error);
 
     /** Accessor to the total frequency bandwidth of a given dataDescription
      * @param ndd The index (zero-based) of the dataDescription identifier  dataDescriptionIdArray

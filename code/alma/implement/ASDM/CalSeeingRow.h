@@ -76,6 +76,13 @@ using namespace enumerations;
 
 
 	
+#include "CAtmPhaseCorrection.h"
+using namespace AtmPhaseCorrectionMod;
+	
+
+	
+
+	
 
 	
 
@@ -120,7 +127,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalSeeing.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -128,17 +135,17 @@ namespace asdm {
 //class asdm::CalSeeingTable;
 
 
-// class asdm::CalReductionRow;
-class CalReductionRow;
-
 // class asdm::CalDataRow;
 class CalDataRow;
+
+// class asdm::CalReductionRow;
+class CalReductionRow;
 	
 
 /**
  * The CalSeeingRow class is a row of a CalSeeingTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class CalSeeingRow {
@@ -165,8 +172,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalSeeingRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalSeeingRowIDL x) throw(ConversionException);
+	void setFromIDL (CalSeeingRowIDL x) ;
 #endif
 	
 	/**
@@ -179,37 +187,53 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalSeeingTable to which the row built by deserialization will be parented.
+	  */
+	 static CalSeeingRow* fromBin(EndianISStream& eiss, CalSeeingTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
 	
-	// ===> Attribute numBaseLength
+	// ===> Attribute atmPhaseCorrection
 	
 	
 	
 
 	
  	/**
- 	 * Get numBaseLength.
- 	 * @return numBaseLength as int
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
  	 */
- 	int getNumBaseLength() const;
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection getAtmPhaseCorrection() const;
 	
  
  	
  	
  	/**
- 	 * Set numBaseLength with the specified int.
- 	 * @param numBaseLength The int value to which numBaseLength is to be set.
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
  	 
  		
  			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setNumBaseLength (int numBaseLength);
+ 	void setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection);
   		
 	
 	
@@ -307,29 +331,29 @@ public:
 
 
 	
-	// ===> Attribute baseLength
+	// ===> Attribute integrationTime
 	
 	
 	
 
 	
  	/**
- 	 * Get baseLength.
- 	 * @return baseLength as vector<Length >
+ 	 * Get integrationTime.
+ 	 * @return integrationTime as Interval
  	 */
- 	vector<Length > getBaseLength() const;
+ 	Interval getIntegrationTime() const;
 	
  
  	
  	
  	/**
- 	 * Set baseLength with the specified vector<Length >.
- 	 * @param baseLength The vector<Length > value to which baseLength is to be set.
+ 	 * Set integrationTime with the specified Interval.
+ 	 * @param integrationTime The Interval value to which integrationTime is to be set.
  	 
  		
  			
  	 */
- 	void setBaseLength (vector<Length > baseLength);
+ 	void setIntegrationTime (Interval integrationTime);
   		
 	
 	
@@ -337,29 +361,29 @@ public:
 
 
 	
-	// ===> Attribute corrPhaseRms
+	// ===> Attribute numBaseLengths
 	
 	
 	
 
 	
  	/**
- 	 * Get corrPhaseRms.
- 	 * @return corrPhaseRms as vector<Angle >
+ 	 * Get numBaseLengths.
+ 	 * @return numBaseLengths as int
  	 */
- 	vector<Angle > getCorrPhaseRms() const;
+ 	int getNumBaseLengths() const;
 	
  
  	
  	
  	/**
- 	 * Set corrPhaseRms with the specified vector<Angle >.
- 	 * @param corrPhaseRms The vector<Angle > value to which corrPhaseRms is to be set.
+ 	 * Set numBaseLengths with the specified int.
+ 	 * @param numBaseLengths The int value to which numBaseLengths is to be set.
  	 
  		
  			
  	 */
- 	void setCorrPhaseRms (vector<Angle > corrPhaseRms);
+ 	void setNumBaseLengths (int numBaseLengths);
   		
 	
 	
@@ -367,29 +391,59 @@ public:
 
 
 	
-	// ===> Attribute uncorrPhaseRms
+	// ===> Attribute baselineLengths
 	
 	
 	
 
 	
  	/**
- 	 * Get uncorrPhaseRms.
- 	 * @return uncorrPhaseRms as vector<Angle >
+ 	 * Get baselineLengths.
+ 	 * @return baselineLengths as vector<Length >
  	 */
- 	vector<Angle > getUncorrPhaseRms() const;
+ 	vector<Length > getBaselineLengths() const;
 	
  
  	
  	
  	/**
- 	 * Set uncorrPhaseRms with the specified vector<Angle >.
- 	 * @param uncorrPhaseRms The vector<Angle > value to which uncorrPhaseRms is to be set.
+ 	 * Set baselineLengths with the specified vector<Length >.
+ 	 * @param baselineLengths The vector<Length > value to which baselineLengths is to be set.
  	 
  		
  			
  	 */
- 	void setUncorrPhaseRms (vector<Angle > uncorrPhaseRms);
+ 	void setBaselineLengths (vector<Length > baselineLengths);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute phaseRMS
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get phaseRMS.
+ 	 * @return phaseRMS as vector<Angle >
+ 	 */
+ 	vector<Angle > getPhaseRMS() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set phaseRMS with the specified vector<Angle >.
+ 	 * @param phaseRMS The vector<Angle > value to which phaseRMS is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setPhaseRMS (vector<Angle > phaseRMS);
   		
 	
 	
@@ -427,59 +481,29 @@ public:
 
 
 	
-	// ===> Attribute seeingFrequency
+	// ===> Attribute seeingError
 	
 	
 	
 
 	
  	/**
- 	 * Get seeingFrequency.
- 	 * @return seeingFrequency as Frequency
+ 	 * Get seeingError.
+ 	 * @return seeingError as Angle
  	 */
- 	Frequency getSeeingFrequency() const;
+ 	Angle getSeeingError() const;
 	
  
  	
  	
  	/**
- 	 * Set seeingFrequency with the specified Frequency.
- 	 * @param seeingFrequency The Frequency value to which seeingFrequency is to be set.
+ 	 * Set seeingError with the specified Angle.
+ 	 * @param seeingError The Angle value to which seeingError is to be set.
  	 
  		
  			
  	 */
- 	void setSeeingFrequency (Frequency seeingFrequency);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute seeingFreqBandwidth
-	
-	
-	
-
-	
- 	/**
- 	 * Get seeingFreqBandwidth.
- 	 * @return seeingFreqBandwidth as Frequency
- 	 */
- 	Frequency getSeeingFreqBandwidth() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set seeingFreqBandwidth with the specified Frequency.
- 	 * @param seeingFreqBandwidth The Frequency value to which seeingFreqBandwidth is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setSeeingFreqBandwidth (Frequency seeingFreqBandwidth);
+ 	void setSeeingError (Angle seeingError);
   		
 	
 	
@@ -504,7 +528,7 @@ public:
  	 * @return exponent as float
  	 * @throws IllegalAccessException If exponent does not exist.
  	 */
- 	float getExponent() const throw(IllegalAccessException);
+ 	float getExponent() const;
 	
  
  	
@@ -524,6 +548,88 @@ public:
 	 * Mark exponent, which is an optional field, as non-existent.
 	 */
 	void clearExponent ();
+	
+
+
+	
+	// ===> Attribute outerScale, which is optional
+	
+	
+	
+	/**
+	 * The attribute outerScale is optional. Return true if this attribute exists.
+	 * @return true if and only if the outerScale attribute exists. 
+	 */
+	bool isOuterScaleExists() const;
+	
+
+	
+ 	/**
+ 	 * Get outerScale, which is optional.
+ 	 * @return outerScale as Length
+ 	 * @throws IllegalAccessException If outerScale does not exist.
+ 	 */
+ 	Length getOuterScale() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set outerScale with the specified Length.
+ 	 * @param outerScale The Length value to which outerScale is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setOuterScale (Length outerScale);
+		
+	
+	
+	
+	/**
+	 * Mark outerScale, which is an optional field, as non-existent.
+	 */
+	void clearOuterScale ();
+	
+
+
+	
+	// ===> Attribute outerScaleRMS, which is optional
+	
+	
+	
+	/**
+	 * The attribute outerScaleRMS is optional. Return true if this attribute exists.
+	 * @return true if and only if the outerScaleRMS attribute exists. 
+	 */
+	bool isOuterScaleRMSExists() const;
+	
+
+	
+ 	/**
+ 	 * Get outerScaleRMS, which is optional.
+ 	 * @return outerScaleRMS as Angle
+ 	 * @throws IllegalAccessException If outerScaleRMS does not exist.
+ 	 */
+ 	Angle getOuterScaleRMS() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set outerScaleRMS with the specified Angle.
+ 	 * @param outerScaleRMS The Angle value to which outerScaleRMS is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setOuterScaleRMS (Angle outerScaleRMS);
+		
+	
+	
+	
+	/**
+	 * Mark outerScaleRMS, which is an optional field, as non-existent.
+	 */
+	void clearOuterScaleRMS ();
 	
 
 
@@ -604,21 +710,6 @@ public:
 	
 		
 	/**
-	 * calReductionId pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
-	 * @return a CalReductionRow*
-	 * 
-	 
-	 */
-	 CalReductionRow* getCalReductionUsingCalReductionId();
-	 
-
-	
-
-	
-
-	
-		
-	/**
 	 * calDataId pointer to the row in the CalData table having CalData.calDataId == calDataId
 	 * @return a CalDataRow*
 	 * 
@@ -630,18 +721,33 @@ public:
 	
 
 	
+
+	
+		
+	/**
+	 * calReductionId pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
+	 * @return a CalReductionRow*
+	 * 
+	 
+	 */
+	 CalReductionRow* getCalReductionUsingCalReductionId();
+	 
+
+	
+
+	
 	
 	
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this CalSeeingRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, int numBaseLength, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<Length > baseLength, vector<Angle > corrPhaseRms, vector<Angle > uncorrPhaseRms, Angle seeing, Frequency seeingFrequency, Frequency seeingFreqBandwidth);
+	bool compareNoAutoInc(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, Interval integrationTime, int numBaseLengths, vector<Length > baselineLengths, vector<Angle > phaseRMS, Angle seeing, Angle seeingError);
 	
 	
 
 	
-	bool compareRequiredValue(int numBaseLength, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<Length > baseLength, vector<Angle > corrPhaseRms, vector<Angle > uncorrPhaseRms, Angle seeing, Frequency seeingFrequency, Frequency seeingFreqBandwidth); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, Interval integrationTime, int numBaseLengths, vector<Length > baselineLengths, vector<Angle > phaseRMS, Angle seeing, Angle seeingError); 
 		 
 	
 	/**
@@ -702,11 +808,11 @@ private:
 	////////////////////////////////
 	
 	
-	// ===> Attribute numBaseLength
+	// ===> Attribute atmPhaseCorrection
 	
 	
 
-	int numBaseLength;
+	AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection;
 
 	
 	
@@ -746,33 +852,44 @@ private:
  	
 
 	
-	// ===> Attribute baseLength
+	// ===> Attribute integrationTime
 	
 	
 
-	vector<Length > baseLength;
-
-	
-	
- 	
-
-	
-	// ===> Attribute corrPhaseRms
-	
-	
-
-	vector<Angle > corrPhaseRms;
+	Interval integrationTime;
 
 	
 	
  	
 
 	
-	// ===> Attribute uncorrPhaseRms
+	// ===> Attribute numBaseLengths
 	
 	
 
-	vector<Angle > uncorrPhaseRms;
+	int numBaseLengths;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute baselineLengths
+	
+	
+
+	vector<Length > baselineLengths;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute phaseRMS
+	
+	
+
+	vector<Angle > phaseRMS;
 
 	
 	
@@ -790,22 +907,11 @@ private:
  	
 
 	
-	// ===> Attribute seeingFrequency
+	// ===> Attribute seeingError
 	
 	
 
-	Frequency seeingFrequency;
-
-	
-	
- 	
-
-	
-	// ===> Attribute seeingFreqBandwidth
-	
-	
-
-	Frequency seeingFreqBandwidth;
+	Angle seeingError;
 
 	
 	
@@ -819,6 +925,32 @@ private:
 	
 
 	float exponent;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute outerScale, which is optional
+	
+	
+	bool outerScaleExists;
+	
+
+	Length outerScale;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute outerScaleRMS, which is optional
+	
+	
+	bool outerScaleRMSExists;
+	
+
+	Angle outerScaleRMS;
 
 	
 	

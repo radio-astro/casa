@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include <vector>
+#include <map>
 #include <iostream>
 #include <string>
 
@@ -47,6 +48,7 @@ namespace sdmbin {
     es_ts_.flip();              // default: accept any time sampling when selecting the rows to be processed
     e_qcm_.set(CROSS_AND_AUTO); // default: select all data present in the BLOB (the HLA enum model being not set-based...)
     es_qapc_.flip();            // default: select all the full APC axis in the BLOB
+    ddfirst_=false;
   }
 
   SDMBinData::~SDMBinData(){
@@ -146,7 +148,7 @@ namespace sdmbin {
     if(!ok)return "no overlap with the scan intent set {"+es_si_.str()+"}";
 
     // the processor type:
-    if(!es_pt_[cdr->getProcessorUsingProcessorId()->getType()])
+    if(!es_pt_[cdr->getProcessorUsingProcessorId()->getProcessorType()])  
       return "no overlap with the processor type set {"+es_pt_.str()+"}";
 
 
@@ -190,6 +192,23 @@ namespace sdmbin {
     if(!ok)return "no overlap with the APC set {"+es_qapc_.str()+"}";
 
     return reason;
+  }
+
+  void SDMBinData::setPriorityDataDescription(){
+    ddfirst_=true;
+  }
+
+  bool SDMBinData::dataDescriptionFirst()const{
+    return ddfirst_;
+  }
+
+  void SDMBinData::applySysCal(){
+    syscal_=true;
+    return;
+  }
+
+  bool SDMBinData::sysCalApplied() const{
+    return syscal_;
   }
 
   bool SDMBinData::acceptMainRow( MainRow* const mainRowPtr){
@@ -265,7 +284,7 @@ namespace sdmbin {
       cout<<"Close "<<dataOID_<<" before opening "<<dataOID<<endl;
       detachDataObject();
     }
-
+    
     if(coutest)cout<<"attach BLOB "<<dataOID<<endl;
 
 
@@ -301,16 +320,33 @@ namespace sdmbin {
 //       dataObject.subscanNum();
 
       Enum<CorrelationMode>            e_cm;
+      Enum<ProcessorType>              e_pt;
+      Enum<CorrelatorType>             e_ct;
 
       unsigned int                     numTime=0;
 
       unsigned int                     numAnt              = dataObject.numAntenna();
       CorrelationMode                  correlationMode     = dataObject.correlationMode(); e_cm=correlationMode;
+      ProcessorType                    processorType       = dataObject.processorType();   e_pt=processorType;
+      CorrelatorType                   correlatorType;
 
       const SDMDataObject::DataStruct& dataStruct          = dataObject.dataStruct();
 
       vector<AtmPhaseCorrection>       v_apc               = dataStruct.apc();
       vector<SDMDataObject::Baseband>  v_baseband          = dataStruct.basebands();
+      SDMDataObject::ZeroLagsBinaryPart               zeroLagsParameters;
+
+      bool                             normalized=false;
+      if(e_pt[ProcessorTypeMod::CORRELATOR]){
+	if(e_cm[CorrelationModeMod::CROSS_ONLY])
+	  normalized =  dataStruct.autoData().normalized();
+	if(dataStruct.zeroLags().size()){
+	  zeroLagsParameters = dataStruct.zeroLags();
+	  correlatorType = zeroLagsParameters.correlatorType(); e_ct=correlatorType;
+	}
+      }
+	
+      
 
       unsigned int                     numApc              = v_apc.size();
       unsigned int                     numBaseband         = v_baseband.size();
@@ -491,13 +527,13 @@ namespace sdmbin {
 	  crossDataSize    = itf->second.first;
 	  es_crossDataAxes = itf->second.second;
 	  switch(dataSubset.crossDataType()){
-	  case SHORT_TYPE:
+	  case INT16_TYPE:
 	    numCrossData = dataSubset.crossData( crossShortDataPtr );
 	    break;
-	  case INT_TYPE:
+	  case INT32_TYPE:
 	    numCrossData = dataSubset.crossData( crossIntDataPtr );
 	    break;
-	  case FLOAT_TYPE:
+	  case FLOAT32_TYPE:
 	    numCrossData = dataSubset.crossData( crossFloatDataPtr );
 	    break;
 	  default:
@@ -704,7 +740,7 @@ namespace sdmbin {
 	    if(coutest)cout<<"CrossData have been declared in the main header ";
 	    unsigned long int numCrossData;
 	    switch(v_dataSubset[nt].crossDataType()){
-	    case SHORT_TYPE:
+	    case INT16_TYPE:
 	      { const short int* crossDataPtr;
 		numCrossData = v_dataSubset[nt].crossData( crossDataPtr );
 		if(numCrossData)dataDumpPtr->attachCrossData( itf->second.first, itf->second.second,
@@ -713,7 +749,7 @@ namespace sdmbin {
 	      if(coutest)cout<<"SHORT_TYPE"<<endl;
 	      if(coutest)cout<<"crossData attached,  const pointer:"<<dataDumpPtr->crossDataShort()<<endl;
 	      break;
-	    case INT_TYPE:
+	    case INT32_TYPE:
 	      { const int* crossDataPtr;
 		numCrossData = v_dataSubset[nt].crossData( crossDataPtr );
 		if(numCrossData)dataDumpPtr->attachCrossData( itf->second.first, itf->second.second,
@@ -722,7 +758,7 @@ namespace sdmbin {
 	      if(coutest)cout<<"INT_TYPE"<<endl;
 	      if(coutest)cout<<"crossData attached,  const pointer:"<<dataDumpPtr->crossDataLong()<<endl;
 	      break;
-	    case FLOAT_TYPE:
+	    case FLOAT32_TYPE:
 	      { const float* crossDataPtr;
 		numCrossData = v_dataSubset[nt].crossData( crossDataPtr );
 		if(numCrossData)dataDumpPtr->attachCrossData( itf->second.first, itf->second.second,
@@ -778,7 +814,7 @@ namespace sdmbin {
     catch (SDMDataObjectReaderException e) { cout << e.getMessage()          << endl; }
     catch (SDMDataObjectParserException e) { cout << e.getMessage()          << endl; }
     catch (SDMDataObjectException e)       { cout << e.getMessage()          << endl; }
-    catch (std::exception e)               { cout << e.what()                << endl; }
+    catch (exception e)                    { cout << e.what()                << endl; }
     catch (...)                            { cout << "Unexpected exception." << endl; }
     return 1;
   }
@@ -914,6 +950,50 @@ namespace sdmbin {
     for(unsigned int na=0; na<v_antSet.size(); na++)
       v_stateId.push_back(v_statePtr[na]->getStateId());
 
+    vector<vector<float> >                      vv_t; // dummy empty vector would there be no tsysSpectrum for a given syscal row
+    SysCalTable&                                sct = datasetPtr_->getSysCal();
+    vector<Tag>                                 v_spwid;
+    vector<pair<bool,vector<vector<float> > > > v_tsys;
+    vector<vector<pair<bool,vector<vector<float> > > > > vv_tsys;
+
+
+    if(SDMBinData::syscal_){
+      v_tsys.resize(v_antSet.size()*v_ddList.size()*numFeed);
+      for(unsigned int nt=0; nt<v_dataDump_.size(); nt++){
+	vector<pair<bool,vector<vector<float> > > > v_tsys;
+	timeCentroidOfDump= ArrayTime(v_dataDump_[nt]->timeCentroid());
+	unsigned int scn=0;
+	for(unsigned int na=0; na<v_antSet.size(); na++){
+	  for(unsigned int nfe=0; nfe<numFeed; nfe++){
+	    for(unsigned int nsw=0; nsw<v_ddList.size(); nsw++){
+	      SysCalRow* scr = sct.getRowByKey( v_antSet[na],
+						baselinesSet_->getSpwId(nsw),
+						ArrayTimeInterval(timeCentroidOfDump),
+						v_feedSet[na*numFeed+nfe]
+						);
+	      if(scr->isTsysSpectrumExists()){
+		vector<vector<float> > vv_flt;
+		v_tsys[scn].first  = scr->getTsysFlag();
+		vector<vector<Temperature> > vv=scr->getTsysSpectrum();
+		for(unsigned int np=0; np<vv.size(); np++){
+		  vector<float> v;
+		  for(unsigned int ns=0; ns<vv[np].size(); ns++)v.push_back(vv[np][ns].get());
+		  vv_flt.push_back(v);
+		}
+		v_tsys[scn].second = vv_flt;
+	      }else{
+		v_tsys[scn].first  = false;
+		v_tsys[scn].second = vv_t;
+	      }
+	      scn++;
+	    }
+	  }
+	}
+	vv_tsys.push_back(v_tsys);
+      }
+    }
+
+
     if(e_cm[CROSS_ONLY]==false && e_qcm_[CROSS_ONLY]==false ){       // retrieve only AUTO_DATA
       for(unsigned int nt=0; nt<v_dataDump_.size(); nt++){
 	timeOfDump        = ArrayTime(v_dataDump_[nt]->time());               if(coutest)cout<<timeOfDump<<" ns"<<endl;
@@ -940,30 +1020,41 @@ namespace sdmbin {
 // 	      <<" &toto["<<nd-1<<"]="<<&toto[nd-1]<<endl;
 // 	}
 
+
 	if(coutest)cout <<"ici BB"<<endl;
 
 	vector<AtmPhaseCorrection> v_uapc; v_uapc.push_back(AP_UNCORRECTED);
 
+	unsigned int scn=0;
 	for(unsigned int na=0; na<v_antSet.size(); na++){
 	  stateId = v_statePtr[na]->getStateId().getTagValue();
 	  for(unsigned int nfe=0; nfe<numFeed; nfe++){
 	    for(unsigned int ndd=0; ndd<v_ddList.size(); ndd++){
 	      numBin = baselinesSet_->numBin(ndd);
 	      numPol = baselinesSet_->numPol(baselinesSet_->getBasebandIndex(ndd));
-	      if(numPol==4)numPol=3;                                       // if XX,XY,YX,YY then auto XX,XY,YY 
-	      if(coutest)cout<<"numPol="<<numPol<<"  na="<<na<<" ant="<<v_antSet[na].getTagValue()<<endl;
+	      if(numPol==4)numPol=3;                                 // if XX,XY,YX,YY then auto XX,XY,YY 
+	      if(coutest)cout<<"numPol="<<numPol
+			     <<"  na="  <<na
+			     <<" ant="  <<v_antSet[na].getTagValue()
+			     <<endl;
 	      v_dataShape[0]=numPol;
 	      //	      if(complexData_)v_dataShape[0]*=2;
 	      v_dataShape[1]=baselinesSet_->numChan(ndd);
-	      v_dataShape[2]=1;                                            // auto-correlation never atm phase corrected
+	      v_dataShape[2]=1;                                      // auto-correlation never atm phase corrected
 	      for(unsigned int nbi=0; nbi<numBin; nbi++){
 		// the data and binary meta-data
-		msDataPtr_ = getData( na, nfe,
-				      ndd, nbi);
+		if(SDMBinData::syscal_)
+		  msDataPtr_ = getCalibratedData( na, nfe,
+						  ndd, nbi, 
+						  vv_tsys[nt][scn]);
+		else
+		  msDataPtr_ = getData( na, nfe,
+					ndd, nbi);
+		scn++;
 		msDataPtr_->timeCentroid   = 86400.*timeCentroidMJD; // default value would there be no bin actualTimes
 		msDataPtr_->exposure       = exposure;               // default value would there be no bin actualDurations
 		msDataPtr_->flag           = 0;                      // default value is "false"  would there be no bin flags
-		// the associated SDM meta-data
+		// calibrate and associate SDM meta-data
 		if(msDataPtr_->numData>0){
 		  msDataPtr_->processorId        = cdPtr->getProcessorId().getTagValue();
 		  msDataPtr_->antennaId1         = v_antSet[na].getTagValue();
@@ -1045,6 +1136,7 @@ namespace sdmbin {
 	else
 	  Error(FATAL,"Cross data typed float not yet supported");
 	if(coutest)cout<<"ici DD 2"<<endl;
+	unsigned int scn=0;
 	for(unsigned int na1=0; na1<v_antSet.size(); na1++){
 	  // we will assume that na2 has the same stateId (perhaps we should return a vector?)!
 	  stateId = v_statePtr[na1]->getStateId().getTagValue();
@@ -1064,9 +1156,15 @@ namespace sdmbin {
 		    cout<<timeCentroidMJD<<endl;
 		  }
 		  // the data and binary meta-data
-		  msDataPtr_ = getData( na1, nfe, na2, nfe,
-					ndd,  nbi, v_napc,
-					v_dataDump_[nt]->scaleFactor(ndd));
+		  if(SDMBinData::syscal_)
+		    msDataPtr_ = getCalibratedData( na1, nfe, na2, nfe,
+					  ndd,  nbi, v_napc,
+					  v_dataDump_[nt]->scaleFactor(ndd),
+					  vv_tsys[nt][scn]);
+		  else
+		    msDataPtr_ = getData( na1, nfe, na2, nfe,
+					  ndd,  nbi, v_napc,
+					  v_dataDump_[nt]->scaleFactor(ndd));
 		  msDataPtr_->timeCentroid  = 86400.*timeCentroidMJD; // default value would there be no bin actualTimes
 		  msDataPtr_->exposure      = exposure;               // default value would there be no bin actualDurations
 		  msDataPtr_->flag          = 0;                      // default value is "false"  would there be no bin flags
@@ -1098,7 +1196,7 @@ namespace sdmbin {
 		  // store in vector for export
 		  if(msDataPtr_->numData>0)v_msDataPtr_.push_back(msDataPtr_);
 		  if(coutest)cout << "A/ msDataPtr_->numData=" << msDataPtr_->numData << endl;
-
+		  scn++;
 		}
 	      }
 	    }
@@ -1192,6 +1290,124 @@ namespace sdmbin {
     /*
       This following in this method one needs is the location where one retrieve from the
       the actualTimes and actualDurations the timeCentroid and exposure.
+      In the current design of the TotalPower binary there is no way to know that these
+      container are not present. Idem for the baselineFlags. Hence we drop this part but this
+      will have to be recovered when we will support both total power and correlator data in
+      this method.
+      In this context, timeCentroid and exposure are set equal to time and interval; they are
+      retrieved from v_integration.
+      NB: fieldId is now retrieved in getData(queryCorrmode)
+          interval: idem, from v_integration_
+    */
+
+
+
+    if(coutest)cout << "Exit getData for SD" << endl;
+
+    return msDataPtr_;
+  }
+
+
+  MSData* SDMBinData::getCalibratedData( unsigned int na, unsigned int nfe,
+					 unsigned int ndd, unsigned int nbin,
+					 pair<bool,vector<vector<float> > > p_tsys) throw (Error)
+  {
+    bool coutest=false;
+    unsigned int numBin = baselinesSet_->numBin(ndd);                  if(coutest)cout << "numBin=" << numBin << endl;
+    if((nbin+1)>numBin)return 0;
+
+
+    msDataPtr_ = new MSData;
+
+
+    msDataPtr_->numData =  baselinesSet_->numAutoData(ndd)/numBin;  // number of measurements (NOT nb values)
+    msDataPtr_->v_data.resize(1);                                   // autoData have always an APC axis of 1
+
+    if(coutest)cout << "About to retrieve " <<  msDataPtr_->numData
+		    << " auto-correlation measurements (auto correlations) encoded in floats" << endl;
+    if(coutest)cout<<"SDMBinaryData::getData: Query for na="<<na<<" nfe="<<nfe<<" ndd="<<ndd<<" nbin="<<nbin<<endl;
+
+    // ff    const float* autoData =  &floatDataDumpPtr_[baselinesSet_->transferId(na,ndd,nbin)/sizeof(float)];
+    const float* autoData =  &floatDataDumpPtr_[baselinesSet_->transferId(na,ndd,nbin)];
+    if(coutest)cout <<"transferId(na,ndd,nbin)="<<baselinesSet_->transferId(na,ndd,nbin);
+    if(baselinesSet_->numAutoData(ndd)>2){
+      if(coutest)
+	cout <<" up to "<<baselinesSet_->transferId(na,ndd,nbin)+(4*msDataPtr_->numData)/3<<" float values"<<endl;
+    }else{
+      if(coutest)
+	cout <<" up to "<<baselinesSet_->transferId(na,ndd,nbin)+msDataPtr_->numData<<" float values"<<endl;
+    }
+//     if(baselinesSet_->transferId(na,ndd,nbin)+msDataPtr_->numData*sizeof(float)>autoCorrContainerSize_){
+//       Error(FATAL,"TOO MANY DATA for the Container");
+//       return 0;
+//     }
+
+    unsigned int numSdPol=baselinesSet_->numSdPol(ndd);
+    if(coutest)cout << "numData=" << msDataPtr_->numData << endl;
+    if(coutest)cout << "numSdPol("<<ndd<<")="<<baselinesSet_->numAutoData(ndd)<<endl;
+    if(numSdPol>2){        // shape in complex to have the same shape as the visibilities
+      int nmax=msDataPtr_->numData*2;     // {[(numdata*4)/3]*6}/4=numData*6/3=numData*2
+      msDataPtr_->v_data[0] = new float[nmax];
+      int k=0;
+      nmax=(msDataPtr_->numData*4)/3;
+      unsigned int nsp=0;
+      for(int n=0; n<nmax; n=n+4){
+	msDataPtr_->v_data[0][k++] = p_tsys.second[0][nsp]*autoData[n];                                // XX real
+	msDataPtr_->v_data[0][k++] = 0.0;                                                              // XX imaginary
+	msDataPtr_->v_data[0][k++] = sqrtf(p_tsys.second[0][nsp]*p_tsys.second[1][nsp])*autoData[n+1]; // XY real
+	msDataPtr_->v_data[0][k++] = sqrtf(p_tsys.second[0][nsp]*p_tsys.second[1][nsp])*autoData[n+2]; // XY imaginary
+	msDataPtr_->v_data[0][k++] = p_tsys.second[1][nsp]*autoData[n+3];                              // YY real
+	msDataPtr_->v_data[0][k++] = 0.0;                                                              // YY imaginary
+	nsp++;
+      }
+      if(coutest){
+	cout << "1st auto: r " << msDataPtr_->v_data[0][0] << " i " << msDataPtr_->v_data[0][1] << endl;
+	cout << "2nd auto: r " << msDataPtr_->v_data[0][2] << " i " << msDataPtr_->v_data[0][3] << endl;
+	cout << "3rd auto: r " << msDataPtr_->v_data[0][4] << " i " << msDataPtr_->v_data[0][5] << endl;
+	cout << "4th auto: r " << msDataPtr_->v_data[0][6] << " i " << msDataPtr_->v_data[0][7] << endl;
+	cout << "5th auto: r " << msDataPtr_->v_data[0][8] << " i " << msDataPtr_->v_data[0][9] << endl;
+	cout << "6th auto: r " << msDataPtr_->v_data[0][10]<< " i " << msDataPtr_->v_data[0][11]<< endl;
+      }
+      if(coutest)cout << "k=" << k << endl;
+    }else if(forceComplex_){                  // original was 100% real data, transform shape in complex to have shape of visibilities
+      msDataPtr_->v_data[0] = new float[2*msDataPtr_->numData];
+      if(numSdPol==1){
+	for(int n=0; n<msDataPtr_->numData; n++){
+	  msDataPtr_->v_data[0][2*n]   = p_tsys.second[0][n]*autoData[n];
+	  msDataPtr_->v_data[0][2*n+1] = 0.0;
+	}
+      }else{
+	for(int n=0; n<msDataPtr_->numData; n=n+2){
+	  msDataPtr_->v_data[0][2*n]   = p_tsys.second[0][n]*autoData[n];
+	  msDataPtr_->v_data[0][2*n+1] = 0.0;
+	  msDataPtr_->v_data[0][2*n+2] = p_tsys.second[1][n]*autoData[n+1];
+	  msDataPtr_->v_data[0][2*n+3] = 0.0;
+	}
+      }
+      if(coutest)cout << "1st auto: r " << msDataPtr_->v_data[0][0] << " i " << msDataPtr_->v_data[0][1] << endl;
+    }else{
+      msDataPtr_->v_data[0] = new float[msDataPtr_->numData];
+      if(numSdPol==1){
+	for(int n=0; n<msDataPtr_->numData; n++)
+	  msDataPtr_->v_data[0][n] = p_tsys.second[0][n]*autoData[n];
+      }else{
+	for(int n=0; n<msDataPtr_->numData; n+=2){
+	  msDataPtr_->v_data[0][n]   = p_tsys.second[0][n]*autoData[n];
+	  msDataPtr_->v_data[0][n+1] = p_tsys.second[1][n]*autoData[n+1];
+	}
+      }
+      if(coutest)cout << "1st auto: " <<(int) msDataPtr_->v_data[0][0] << " (a calibrated real value)" << endl;
+    }
+
+    if(coutest)
+      cout << " na="   << na
+	   << " ndd="  << ndd
+	   << " nbin=" << nbin
+	   << endl;
+
+    /*
+      This following in this method one needs is the location where one retrieve from the
+      the actualTimes and actualDurations the timeCentroid and exposure.
       In the current design of the TotalPower binary ther is no way to know that these
       container are not present. Idem for the baselineFlags. Hence we drop this part but this
       will have to be recovered when we will support both total power and correlator data in
@@ -1210,9 +1426,9 @@ namespace sdmbin {
   }
 
 
-  MSData*          SDMBinData::getData( unsigned int na1, unsigned int nfe1, unsigned int na2, unsigned int nfe2,
-					unsigned int ndd, unsigned int nbin, vector<unsigned int> v_napc,
-					float scaleFactor){
+  MSData* SDMBinData::getData( unsigned int na1, unsigned int nfe1, unsigned int na2, unsigned int nfe2,
+			       unsigned int ndd, unsigned int nbin, vector<unsigned int> v_napc,
+			       float scaleFactor){
 
 
     bool coutest = false;                                   // temporary: to check
@@ -1365,6 +1581,98 @@ namespace sdmbin {
     return msDataPtr_;
   }
 
+  MSData* SDMBinData::getCalibratedData( unsigned int na1, unsigned int nfe1, unsigned int na2, unsigned int nfe2,
+					 unsigned int ndd, unsigned int nbin, vector<unsigned int> v_napc,
+					 float scaleFactor,
+					 pair<bool,vector<vector<float> > > p_tsys){
+#if 1
+    return 0;
+#else
+    bool coutest = false;                                   // temporary: to check
+
+    if(coutest)cout<<"scaleFactor="<<scaleFactor<<endl;
+
+    // cout<<"v_napc.size()="<<v_napc.size()<<endl;
+
+    unsigned int nfe=nfe1;                                  // TODO multi-beam
+
+    unsigned int numBin = baselinesSet_->numBin(ndd);                            if(coutest)cout << "numBin=" << numBin << endl;
+    if((nbin+1)>numBin)return 0;
+
+    unsigned int numApc = baselinesSet_->numApc();                               if(coutest)cout << "numApc=" << numApc << endl;
+    for(unsigned int i=0; i<v_napc.size(); i++){
+      if((v_napc[i]+1)>numApc){
+	Error(FATAL,"error in the program: apc index exceeds  %d",numApc);
+	return 0;
+      }
+    }
+
+
+    msDataPtr_ = new MSData;
+
+    msDataPtr_->numData = baselinesSet_->numCrossData(ndd)/(numBin*numApc);  if(coutest)cout << "numCrossData="
+											     << baselinesSet_->numCrossData(ndd) << endl;
+    msDataPtr_->v_data.resize(v_napc.size());
+    // the data (visibilities)
+    if(coutest)cout << "About to retrieve " <<  msDataPtr_->numData << " visibilities per dump"<< endl;
+
+
+    for(unsigned int n=0; n<v_napc.size(); n++)
+      msDataPtr_->v_data[n] = new float[2*msDataPtr_->numData];               // a complex is composed of 2 floats
+
+    if(shortDataPtr_){                                                        // case 2 bytes
+      for(unsigned int i=0; i<v_napc.size(); i++){
+	if(coutest){
+	  cout << "2 bytes case: baselinesSet_->transferId(na1="<<na1
+	       <<",na2="<<na2<<",ndd="<<ndd<<",nbin="<<nbin<<",napc="<<v_napc[i]<<")="
+	       << baselinesSet_->transferId(na1,na2,ndd,nbin,v_napc[i])
+	       << endl;
+	  cout<<"msDataPtr_->numData="<<msDataPtr_->numData<<" scaleFactor="<<scaleFactor<<endl;
+	}
+	int np=0;
+	for(int n=0; n<2*msDataPtr_->numData; n++){
+	  msDataPtr_->v_data[i][n] = p_tsys.second[np%numPol][] *
+	    (1./scaleFactor) * (float)shortDataPtr_[baselinesSet_->transferId(na1,na2,nfe,ndd,nbin,v_napc[i])+n];
+	}
+      }
+    }else{   // case 4 bytes
+      for(unsigned int i=0; i<v_napc.size(); i++){
+	if(coutest)
+	  cout << "4 bytes case: baselinesSet_->transferId(na="<<na1<<",na2="<<na2
+	       <<",ndd="<<ndd<<",nbin="<<nbin<<",napc="<<v_napc[i]<<")="
+	       << baselinesSet_->transferId(na1,na2,ndd,nbin,v_napc[i])
+	       << endl;
+	if(longDataPtr_){
+	  for(int n=0; n<2*msDataPtr_->numData; n++){
+	    msDataPtr_->v_data[i][n] =
+	      (1./scaleFactor) * (float)longDataPtr_[baselinesSet_->transferId(na1,na2,nfe,ndd,nbin,v_napc[i])+n];
+	  }
+	}else{
+	  for(int n=0; n<2*msDataPtr_->numData; n++){
+	    msDataPtr_->v_data[i][n] =
+	      (1./scaleFactor) * floatDataPtr_[baselinesSet_->transferId(na1,na2,nfe,ndd,nbin,v_napc[i])+n];
+	  }
+	}
+      }
+    }
+    if(coutest){
+      cout << "numData=" << msDataPtr_->numData << endl;
+      for(unsigned int i=0; i<v_napc.size(); i++)
+	cout << "1st vis apc=v_napc[i]: re " << msDataPtr_->v_data[i][0]
+	     << " im " <<  msDataPtr_->v_data[i][1] << endl;
+      cout << " na1=" << na1
+	   << " na2=" << na2
+	   << " ndd=" << ndd
+	   << " napc="; for(unsigned int i=0; i< v_napc.size(); i++)cout<<v_napc[i]<<" ";
+      cout << " nbin=" << nbin
+	   << endl;
+    }
+    return msDataPtr_;
+#endif
+  }
+
+
+
   MSData*          SDMBinData::getData( Tag antId, int feedId,
 					Tag dataDescId,
 					AtmPhaseCorrection apc,
@@ -1378,6 +1686,10 @@ namespace sdmbin {
 					vector<AtmPhaseCorrection> v_apc,
 					unsigned int  binNum){
     return msDataPtr_;
+  }
+
+  vector<pair<unsigned int,double> > SDMBinData::timeSequence()const{
+    return v_tci_;
   }
 
   const VMSData* SDMBinData::getDataCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc){
@@ -1428,34 +1740,85 @@ namespace sdmbin {
     }
     if(coutest)cout<<"numApcMax="<<numApcMax<<endl;
 
-    // the baseline/dataDescription expansion
-    vector<float*> v_d0, vd1, vd2;
-    for(int n=0; n<numRows; n++){
+    multimap<int,unsigned int> mm_dd;
+    if(ddfirst_){
+      for(unsigned int n=0; n<v_msDataPtr_.size(); n++)
+	mm_dd.insert(make_pair(v_msDataPtr_[n]->dataDescId,n));
+    }
 
-      vmsDataPtr_->v_time.push_back(v_msDataPtr_[n]->time);
-      vmsDataPtr_->v_fieldId.push_back(v_msDataPtr_[n]->fieldId);
-      vmsDataPtr_->v_interval.push_back(v_msDataPtr_[0]->interval);
-      vmsDataPtr_->v_antennaId1.push_back(v_msDataPtr_[n]->antennaId1);
-      vmsDataPtr_->v_antennaId2.push_back(v_msDataPtr_[n]->antennaId2);
-      vmsDataPtr_->v_feedId1.push_back(v_msDataPtr_[n]->feedId1);
-      vmsDataPtr_->v_feedId2.push_back(v_msDataPtr_[n]->feedId2);
-      vmsDataPtr_->v_dataDescId.push_back(v_msDataPtr_[n]->dataDescId);
-      vmsDataPtr_->v_timeCentroid.push_back(v_msDataPtr_[n]->timeCentroid);
-      vmsDataPtr_->v_exposure.push_back(v_msDataPtr_[n]->exposure);
-      vmsDataPtr_->v_numData.push_back(v_msDataPtr_[n]->numData);
-      vmsDataPtr_->vv_dataShape.push_back(v_msDataPtr_[n]->v_dataShape);
-      vmsDataPtr_->v_phaseDir.push_back(v_msDataPtr_[n]->phaseDir);
-      vmsDataPtr_->v_stateId.push_back(v_msDataPtr_[n]->stateId);
-      vmsDataPtr_->v_msState.push_back(v_msDataPtr_[n]->msState);
-      vmsDataPtr_->v_flag.push_back(v_msDataPtr_[n]->flag);
+    v_tci_.clear();  
+    v_tci_.resize(numRows);
 
-      vmsDataPtr_->v_atmPhaseCorrection = v_msDataPtr_[n]->v_atmPhaseCorrection;
-      map<AtmPhaseCorrection,float*> m_vdata;
-      for(unsigned int napc=0; napc<vmsDataPtr_->v_atmPhaseCorrection.size(); napc++){
-	float* d=v_msDataPtr_[n]->v_data[napc];
-	m_vdata.insert(make_pair(vmsDataPtr_->v_atmPhaseCorrection[napc],d));
+    if(ddfirst_){   // the dataDescription/time/baseline expansion
+
+      unsigned int n, i=0;
+      multimap<int,unsigned int>::const_iterator it;
+      for(it=mm_dd.begin(); it!=mm_dd.end(); ++it){
+	n=it->second;
+	vmsDataPtr_->v_time.push_back(v_msDataPtr_[n]->time);
+	vmsDataPtr_->v_fieldId.push_back(v_msDataPtr_[n]->fieldId);
+	vmsDataPtr_->v_interval.push_back(v_msDataPtr_[0]->interval);
+	vmsDataPtr_->v_antennaId1.push_back(v_msDataPtr_[n]->antennaId1);
+	vmsDataPtr_->v_antennaId2.push_back(v_msDataPtr_[n]->antennaId2);
+	vmsDataPtr_->v_feedId1.push_back(v_msDataPtr_[n]->feedId1);
+	vmsDataPtr_->v_feedId2.push_back(v_msDataPtr_[n]->feedId2);
+	vmsDataPtr_->v_dataDescId.push_back(v_msDataPtr_[n]->dataDescId);
+	vmsDataPtr_->v_timeCentroid.push_back(v_msDataPtr_[n]->timeCentroid);
+	vmsDataPtr_->v_exposure.push_back(v_msDataPtr_[n]->exposure);
+	vmsDataPtr_->v_numData.push_back(v_msDataPtr_[n]->numData);
+	vmsDataPtr_->vv_dataShape.push_back(v_msDataPtr_[n]->v_dataShape);
+	vmsDataPtr_->v_phaseDir.push_back(v_msDataPtr_[n]->phaseDir);
+	vmsDataPtr_->v_stateId.push_back(v_msDataPtr_[n]->stateId);
+	vmsDataPtr_->v_msState.push_back(v_msDataPtr_[n]->msState);
+	vmsDataPtr_->v_flag.push_back(v_msDataPtr_[n]->flag);
+
+	vmsDataPtr_->v_atmPhaseCorrection = v_msDataPtr_[n]->v_atmPhaseCorrection;
+	map<AtmPhaseCorrection,float*> m_vdata;
+	for(unsigned int napc=0; napc<vmsDataPtr_->v_atmPhaseCorrection.size(); napc++){
+	  float* d=v_msDataPtr_[n]->v_data[napc];
+	  m_vdata.insert(make_pair(vmsDataPtr_->v_atmPhaseCorrection[napc],d));
+	}
+	vmsDataPtr_->v_m_data.push_back(m_vdata);
+	//cout<<"dataDescriptionId="<<it->first<<" row="<<it->second<<endl;
+
+	pair<unsigned int,double> p=make_pair(i++,v_msDataPtr_[n]->timeCentroid);
+	v_tci_[n]=p;
       }
-      vmsDataPtr_->v_m_data.push_back(m_vdata);
+
+    }else{    // the baseline/dataDescription expansion
+
+      
+      for(int n=0; n<numRows; n++){
+
+	vmsDataPtr_->v_time.push_back(v_msDataPtr_[n]->time);
+	vmsDataPtr_->v_fieldId.push_back(v_msDataPtr_[n]->fieldId);
+	vmsDataPtr_->v_interval.push_back(v_msDataPtr_[0]->interval);
+	vmsDataPtr_->v_antennaId1.push_back(v_msDataPtr_[n]->antennaId1);
+	vmsDataPtr_->v_antennaId2.push_back(v_msDataPtr_[n]->antennaId2);
+	vmsDataPtr_->v_feedId1.push_back(v_msDataPtr_[n]->feedId1);
+	vmsDataPtr_->v_feedId2.push_back(v_msDataPtr_[n]->feedId2);
+	vmsDataPtr_->v_dataDescId.push_back(v_msDataPtr_[n]->dataDescId);
+	vmsDataPtr_->v_timeCentroid.push_back(v_msDataPtr_[n]->timeCentroid);
+	vmsDataPtr_->v_exposure.push_back(v_msDataPtr_[n]->exposure);
+	vmsDataPtr_->v_numData.push_back(v_msDataPtr_[n]->numData);
+	vmsDataPtr_->vv_dataShape.push_back(v_msDataPtr_[n]->v_dataShape);
+	vmsDataPtr_->v_phaseDir.push_back(v_msDataPtr_[n]->phaseDir);
+	vmsDataPtr_->v_stateId.push_back(v_msDataPtr_[n]->stateId);
+	vmsDataPtr_->v_msState.push_back(v_msDataPtr_[n]->msState);
+	vmsDataPtr_->v_flag.push_back(v_msDataPtr_[n]->flag);
+
+	vmsDataPtr_->v_atmPhaseCorrection = v_msDataPtr_[n]->v_atmPhaseCorrection;
+	map<AtmPhaseCorrection,float*> m_vdata;
+	for(unsigned int napc=0; napc<vmsDataPtr_->v_atmPhaseCorrection.size(); napc++){
+	  float* d=v_msDataPtr_[n]->v_data[napc];
+	  m_vdata.insert(make_pair(vmsDataPtr_->v_atmPhaseCorrection[napc],d));
+	}
+	vmsDataPtr_->v_m_data.push_back(m_vdata);
+
+	v_tci_[n] = make_pair(n,v_msDataPtr_[n]->timeCentroid);
+
+      }
+
     }
 
     if(coutest)cout<<"Exit from getDataCols"<<endl;
@@ -1537,8 +1900,8 @@ namespace sdmbin {
 			     <<" spwId=" << v_spwId[n_s].toString()
 			     <<endl;
 	      v_calDev = *calDevices.getByContext( v_antennaId[n_a],
-						   (int) v_feedId[n_f],
-						   v_spwId[n_s]);
+						   v_spwId[n_s],
+						   (int) v_feedId[n_f]);
 	      vvvv_calDevice[n_a][n_f][n_s] = v_calDev;
 	    }
 	  }
@@ -1546,7 +1909,7 @@ namespace sdmbin {
       }
       int nt=-1;
       vector<CalDeviceRow*> v_ts=vvvv_calDevice[na][nfe][nspw];   // the time series
-
+      cout<<"timeOfDump="<<timeOfDump<<endl;
       if(!v_ts.size())Error(FATAL,"empty temporal series ");
       for(unsigned int n=0; n<v_ts.size(); n++){
 	if( nt==-1 && v_ts[n]->getTimeInterval().contains(timeOfDump) ){
@@ -1560,7 +1923,7 @@ namespace sdmbin {
 	       na,nfe,nspw);
 
       CalDeviceRow*             caldevr      = vvvv_calDevice[na][nfe][nspw][nt];
-      vector<CalibrationDevice> v_calDevice                                                                 = caldevr->getCalLoadName();
+      vector<CalibrationDevice> v_calDevice                                                                 = caldevr->getCalLoadNames();
       vector<double>            v_noiseCal;        if(caldevr->isNoiseCalExists())        v_noiseCal        = caldevr->getNoiseCal();
       vector<Temperature>       v_temperatureLoad; if(caldevr->isTemperatureLoadExists()) v_temperatureLoad = caldevr->getTemperatureLoad();
       vector<vector<float> >    v_calEff;          if(caldevr->isCalEffExists())          v_calEff          = caldevr->getCalEff();
@@ -1613,13 +1976,11 @@ namespace sdmbin {
   }
 
   bool  SDMBinData::isComplexData(){
-
+  
     if(mainRowPtr_){
 
       if(canSelect_){
-
 	return complexData_;    // the state of complexData_ is set in the method acceptMainRow(mainRowPtr)
-
       }else{
 
 	cerr<<"Forbidden to use the method isComplexData() in the context of a specific"<<endl;
@@ -1630,17 +1991,16 @@ namespace sdmbin {
       }
 
     }else{
-
       /*
 	 This part is intended to know if a DATA or FLOAT_DATA column has to be created before
+
 	 considering the SDM main table rows one by one when building a MS main table.
       */
 
       canSelect_    = false;
       forceComplex_ = true;
 
-      if(e_qcm_[CROSS_ONLY])return forceComplex_;
-      if(es_cm_[CROSS_ONLY])return forceComplex_;
+      if (e_qcm_[CROSS_ONLY] && es_cm_[CROSS_ONLY]) return forceComplex_;
 
       vector<MainRow*>            v_mr = datasetPtr_->getMain().get();
       vector<DataDescriptionRow*> v_ddr;
@@ -1695,5 +2055,6 @@ namespace sdmbin {
   bool             SDMBinData::coutDeleteInfo_=false;
   BaselinesSet*    SDMBinData::baselinesSet_  =0;
   bool             SDMBinData::baselineReverse_ = false;
-  bool             SDMBinData::autoTrailing_     = false;
+  bool             SDMBinData::autoTrailing_    = false;
+  bool             SDMBinData::syscal_          = false;
 }

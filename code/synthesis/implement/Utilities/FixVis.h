@@ -156,12 +156,9 @@ private:
   void convertFieldDirs(const MDirection::Types outType);
 
   // Private worker function for convertFieldDirs().
-  void convertFieldCols(ArrayMeasColumn<MDirection>& pdc,
+  void convertFieldCols(MSFieldColumns& msfcs,
                         const MDirection::Ref& newFrame,
-                        const Bool doAll3,
-                        ArrayMeasColumn<MDirection>& ddc,
-                        ArrayMeasColumn<MDirection>& rdc,
-                        uInt nrow);
+                        const Bool doAll3);
 
   Bool makeSelection(const Int selectedField);
   

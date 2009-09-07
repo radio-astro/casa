@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CAssociatedFieldNature::version() {
+	return AssociatedFieldNatureMod::version;
+	}
+	
+string CAssociatedFieldNature::revision () {
+	return AssociatedFieldNatureMod::revision;
+}
+
+unsigned int CAssociatedFieldNature::size() {
+	return 3;
+	}
+	
 	
 const std::string& CAssociatedFieldNature::sON = "ON";
 	
@@ -44,7 +57,7 @@ const std::string& CAssociatedFieldNature::sOFF = "OFF";
 	
 const std::string& CAssociatedFieldNature::sPHASE_REFERENCE = "PHASE_REFERENCE";
 	
-const std::vector<std::string> CAssociatedFieldNature::sAssociatedFieldNatureSet() {
+const std::vector<std::string> CAssociatedFieldNature::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CAssociatedFieldNature::sON);
@@ -55,48 +68,6 @@ const std::vector<std::string> CAssociatedFieldNature::sAssociatedFieldNatureSet
         
     return enumSet;
 }
-
-	
-	
-const int CAssociatedFieldNature::iON = 0;
-	
-const int CAssociatedFieldNature::iOFF = 1;
-	
-const int CAssociatedFieldNature::iPHASE_REFERENCE = 2;
-	
-const std::vector<int> CAssociatedFieldNature::iAssociatedFieldNatureSet() {
-    std::vector<int> enumSet;
-    
-    enumSet.insert(enumSet.end(), CAssociatedFieldNature::iON);
-    
-    enumSet.insert(enumSet.end(), CAssociatedFieldNature::iOFF);
-    
-    enumSet.insert(enumSet.end(), CAssociatedFieldNature::iPHASE_REFERENCE);
-        
-    return enumSet;
-}
-   	
-
-	
-	
-const std::string& CAssociatedFieldNature::hON = "The associated field is used as ON source data";
-	
-const std::string& CAssociatedFieldNature::hOFF = "The associated field is used as OFF source data";
-	
-const std::string& CAssociatedFieldNature::hPHASE_REFERENCE = "The associated field is used as Phase reference data";
-	
-const std::vector<std::string> CAssociatedFieldNature::hAssociatedFieldNatureSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CAssociatedFieldNature::hON);
-    
-    enumSet.insert(enumSet.end(), CAssociatedFieldNature::hOFF);
-    
-    enumSet.insert(enumSet.end(), CAssociatedFieldNature::hPHASE_REFERENCE);
-        
-    return enumSet;
-}
-   	
 
 std::string CAssociatedFieldNature::name(const AssociatedFieldNatureMod::AssociatedFieldNature& f) {
     switch (f) {
@@ -111,44 +82,9 @@ std::string CAssociatedFieldNature::name(const AssociatedFieldNatureMod::Associa
       return CAssociatedFieldNature::sPHASE_REFERENCE;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-int CAssociatedFieldNature::number(const AssociatedFieldNatureMod::AssociatedFieldNature& f) {
-    switch (f) {
-    
-    case AssociatedFieldNatureMod::ON:
-      return CAssociatedFieldNature::iON;
-    
-    case AssociatedFieldNatureMod::OFF:
-      return CAssociatedFieldNature::iOFF;
-    
-    case AssociatedFieldNatureMod::PHASE_REFERENCE:
-      return CAssociatedFieldNature::iPHASE_REFERENCE;
-    	
-    }
-    return -1;
-}
-   	
-
-	
-std::string CAssociatedFieldNature::help(const AssociatedFieldNatureMod::AssociatedFieldNature& f) {
-    switch (f) {
-    
-    case AssociatedFieldNatureMod::ON:
-      return CAssociatedFieldNature::hON;
-    
-    case AssociatedFieldNatureMod::OFF:
-      return CAssociatedFieldNature::hOFF;
-    
-    case AssociatedFieldNatureMod::PHASE_REFERENCE:
-      return CAssociatedFieldNature::hPHASE_REFERENCE;
-    	
-    }
-    return std::string("");
-}
-   	
 
 AssociatedFieldNatureMod::AssociatedFieldNature CAssociatedFieldNature::newAssociatedFieldNature(const std::string& name) {
 		
@@ -185,28 +121,10 @@ AssociatedFieldNatureMod::AssociatedFieldNature CAssociatedFieldNature::literal(
 }
 
 AssociatedFieldNatureMod::AssociatedFieldNature CAssociatedFieldNature::from_int(unsigned int i) {
-	vector<string> names = sAssociatedFieldNatureSet();
-	if (i >= names.size()) throw badInt(i);
-	return newAssociatedFieldNature(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newAssociatedFieldNature(names_.at(i));
 }
-
-	
-AssociatedFieldNatureMod::AssociatedFieldNature CAssociatedFieldNature::newAssociatedFieldNature(int number) {
-    switch(number) {
-    
-    case CAssociatedFieldNature::iON:
-        return AssociatedFieldNatureMod::ON;
-    
-    case CAssociatedFieldNature::iOFF:
-        return AssociatedFieldNatureMod::OFF;
-    
-    case CAssociatedFieldNature::iPHASE_REFERENCE:
-        return AssociatedFieldNatureMod::PHASE_REFERENCE;
-    
-    }
-    throw;
-}
-   	
 
 string CAssociatedFieldNature::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'AssociatedFieldNature'.";

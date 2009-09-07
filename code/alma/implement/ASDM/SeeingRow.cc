@@ -174,7 +174,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct SeeingRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void SeeingRow::setFromIDL (SeeingRowIDL x) throw(ConversionException) {
+	void SeeingRow::setFromIDL (SeeingRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -253,7 +253,7 @@ namespace asdm {
 	
 		
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Seeing");
+			throw ConversionException (err.getMessage(),"Seeing");
 		}
 	}
 #endif
@@ -329,7 +329,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void SeeingRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void SeeingRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -393,6 +393,130 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"Seeing");
 		}
+	}
+	
+	void SeeingRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	timeInterval.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numBaseLength);
+				
+		
+	
+
+	
+	
+		
+	Length::toBin(baseLength, eoss);
+		
+	
+
+	
+	
+		
+	Angle::toBin(phaseRms, eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeFloat(seeing);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeFloat(exponent);
+				
+		
+	
+
+
+	
+	
+	}
+	
+	SeeingRow* SeeingRow::fromBin(EndianISStream& eiss, SeeingTable& table) {
+		SeeingRow* row = new  SeeingRow(table);
+		
+		
+		
+	
+		
+		
+		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numBaseLength =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->baseLength = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->phaseRms = Angle::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->seeing =  eiss.readFloat();
+			
+		
+	
+
+	
+	
+		
+			
+		row->exponent =  eiss.readFloat();
+			
+		
+	
+
+		
+		
+		
+		
+		return row;
 	}
 	
 	////////////////////////////////

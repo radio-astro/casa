@@ -164,33 +164,33 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param almaCorrelatorModeId. 
+ 	 * @param modeId. 
 	
- 	 * @param type. 
+ 	 * @param processorType. 
 	
- 	 * @param subType. 
+ 	 * @param processorSubType. 
 	
      */
-	ProcessorRow* ProcessorTable::newRow(Tag almaCorrelatorModeId, ProcessorTypeMod::ProcessorType type, string subType){
+	ProcessorRow* ProcessorTable::newRow(Tag modeId, ProcessorTypeMod::ProcessorType processorType, ProcessorSubTypeMod::ProcessorSubType processorSubType){
 		ProcessorRow *row = new ProcessorRow(*this);
 			
-		row->setAlmaCorrelatorModeId(almaCorrelatorModeId);
+		row->setModeId(modeId);
 			
-		row->setType(type);
+		row->setProcessorType(processorType);
 			
-		row->setSubType(subType);
+		row->setProcessorSubType(processorSubType);
 	
 		return row;		
 	}	
 
-	ProcessorRow* ProcessorTable::newRowFull(Tag almaCorrelatorModeId, ProcessorTypeMod::ProcessorType type, string subType)	{
+	ProcessorRow* ProcessorTable::newRowFull(Tag modeId, ProcessorTypeMod::ProcessorType processorType, ProcessorSubTypeMod::ProcessorSubType processorSubType)	{
 		ProcessorRow *row = new ProcessorRow(*this);
 			
-		row->setAlmaCorrelatorModeId(almaCorrelatorModeId);
+		row->setModeId(modeId);
 			
-		row->setType(type);
+		row->setProcessorType(processorType);
 			
-		row->setSubType(subType);
+		row->setProcessorSubType(processorSubType);
 	
 		return row;				
 	}
@@ -226,11 +226,11 @@ ProcessorRow* ProcessorTable::newRowCopy(ProcessorRow* row) {
 			 
 		ProcessorRow* aRow = lookup(
 				
-		x->getAlmaCorrelatorModeId()
+		x->getModeId()
 				,
-		x->getType()
+		x->getProcessorType()
 				,
-		x->getSubType()
+		x->getProcessorSubType()
 				
 		);
 		if (aRow) return aRow;
@@ -264,17 +264,21 @@ ProcessorRow* ProcessorTable::newRowCopy(ProcessorRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	ProcessorRow*  ProcessorTable::checkAndAdd(ProcessorRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	ProcessorRow*  ProcessorTable::checkAndAdd(ProcessorRow* x)  {
 	 
 		 
 		if (lookup(
 			
-			x->getAlmaCorrelatorModeId()
+			x->getModeId()
 		,
-			x->getType()
+			x->getProcessorType()
 		,
-			x->getSubType()
+			x->getProcessorSubType()
 		
 		)) throw UniquenessViolationException("Uniqueness violation exception in table ProcessorTable");
 		
@@ -341,18 +345,18 @@ ProcessorRow* ProcessorTable::newRowCopy(ProcessorRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
- * @param almaCorrelatorModeId.
+ * @param modeId.
  	 		
- * @param type.
+ * @param processorType.
  	 		
- * @param subType.
+ * @param processorSubType.
  	 		 
  */
-ProcessorRow* ProcessorTable::lookup(Tag almaCorrelatorModeId, ProcessorTypeMod::ProcessorType type, string subType) {
+ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType processorType, ProcessorSubTypeMod::ProcessorSubType processorSubType) {
 		ProcessorRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(almaCorrelatorModeId, type, subType)) return aRow;
+			if (aRow->compareNoAutoInc(modeId, processorType, processorSubType)) return aRow;
 		}			
 		return 0;	
 } 
@@ -360,7 +364,6 @@ ProcessorRow* ProcessorTable::lookup(Tag almaCorrelatorModeId, ProcessorTypeMod:
  	 	
 
 	
-
 
 
 
@@ -381,7 +384,7 @@ ProcessorRow* ProcessorTable::lookup(Tag almaCorrelatorModeId, ProcessorTypeMod:
 #endif
 	
 #ifndef WITHOUT_ACS
-	void ProcessorTable::fromIDL(ProcessorTableIDL x) throw(DuplicateKey,ConversionException) {
+	void ProcessorTable::fromIDL(ProcessorTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			ProcessorRow *tmp = newRow();
@@ -392,28 +395,27 @@ ProcessorRow* ProcessorTable::lookup(Tag almaCorrelatorModeId, ProcessorTypeMod:
 	}
 #endif
 
-	char *ProcessorTable::toFITS() const throw(ConversionException) {
+	char *ProcessorTable::toFITS() const  {
 		throw ConversionException("Not implemented","Processor");
 	}
 
-	void ProcessorTable::fromFITS(char *fits) throw(ConversionException) {
+	void ProcessorTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Processor");
 	}
 
-	string ProcessorTable::toVOTable() const throw(ConversionException) {
+	string ProcessorTable::toVOTable() const {
 		throw ConversionException("Not implemented","Processor");
 	}
 
-	void ProcessorTable::fromVOTable(string vo) throw(ConversionException) {
+	void ProcessorTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Processor");
 	}
 
-	string ProcessorTable::toXML()  throw(ConversionException) {
+	
+	string ProcessorTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<ProcessorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/ProcessorTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<ProcessorTable> ");
+		buf.append("<ProcessorTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/ProcessorTable\" xsi:schemaLocation=\"http://Alma/XASDM/ProcessorTable http://almaobservatory.org/XML/XASDM/2/ProcessorTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -429,8 +431,9 @@ ProcessorRow* ProcessorTable::lookup(Tag almaCorrelatorModeId, ProcessorTypeMod:
 		buf.append("</ProcessorTable> ");
 		return buf;
 	}
+
 	
-	void ProcessorTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void ProcessorTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<ProcessorTable")) 
 			error();
@@ -472,20 +475,110 @@ ProcessorRow* ProcessorTable::lookup(Tag almaCorrelatorModeId, ProcessorTypeMod:
 			error();
 	}
 
-	void ProcessorTable::error() throw(ConversionException) {
+	
+	void ProcessorTable::error()  {
 		throw ConversionException("Invalid xml document","Processor");
 	}
 	
+	
 	string ProcessorTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void ProcessorTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Processor");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			ProcessorRow* aRow = ProcessorRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Processor");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Processor");
+		} 		 	
+	}
+
 	
 	void ProcessorTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -516,6 +609,7 @@ ProcessorRow* ProcessorTable::lookup(Tag almaCorrelatorModeId, ProcessorTypeMod:
 				throw ConversionException("Could not close file " + fileName, "Processor");
 		}
 	}
+
 	
 	void ProcessorTable::setFromFile(const string& directory) {
 		string tablename;
@@ -557,6 +651,11 @@ ProcessorRow* ProcessorTable::lookup(Tag almaCorrelatorModeId, ProcessorTypeMod:
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

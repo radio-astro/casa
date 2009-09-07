@@ -37,103 +37,37 @@
 #include <string>
 using namespace std;
 
+
+int CCorrelatorCalibration::version() {
+	return CorrelatorCalibrationMod::version;
+	}
+	
+string CCorrelatorCalibration::revision () {
+	return CorrelatorCalibrationMod::revision;
+}
+
+unsigned int CCorrelatorCalibration::size() {
+	return 3;
+	}
+	
 	
 const std::string& CCorrelatorCalibration::sNONE = "NONE";
 	
-const std::string& CCorrelatorCalibration::sACA_OBSERVE_CALIBATOR = "ACA_OBSERVE_CALIBATOR";
+const std::string& CCorrelatorCalibration::sCORRELATOR_CALIBRATION = "CORRELATOR_CALIBRATION";
 	
-const std::string& CCorrelatorCalibration::sACA_CALIBRATE_CALIBRATOR = "ACA_CALIBRATE_CALIBRATOR";
+const std::string& CCorrelatorCalibration::sREAL_OBSERVATION = "REAL_OBSERVATION";
 	
-const std::string& CCorrelatorCalibration::sACA_HFSC_REFRESH_CALIBRATOR = "ACA_HFSC_REFRESH_CALIBRATOR";
-	
-const std::string& CCorrelatorCalibration::sACA_OBSERVE_TARGET = "ACA_OBSERVE_TARGET";
-	
-const std::string& CCorrelatorCalibration::sACA_CALIBATE_TARGET = "ACA_CALIBATE_TARGET";
-	
-const std::string& CCorrelatorCalibration::sACA_HFSC_REFRESH_TARGET = "ACA_HFSC_REFRESH_TARGET";
-	
-const std::string& CCorrelatorCalibration::sACA_CORRELATOR_CALIBRATION = "ACA_CORRELATOR_CALIBRATION";
-	
-const std::string& CCorrelatorCalibration::sACA_REAL_OBSERVATION = "ACA_REAL_OBSERVATION";
-	
-const std::string& CCorrelatorCalibration::sBL_CALC_TFB_SCALING_FACTORS = "BL_CALC_TFB_SCALING_FACTORS";
-	
-const std::vector<std::string> CCorrelatorCalibration::sCorrelatorCalibrationSet() {
+const std::vector<std::string> CCorrelatorCalibration::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CCorrelatorCalibration::sNONE);
     
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::sACA_OBSERVE_CALIBATOR);
+    enumSet.insert(enumSet.end(), CCorrelatorCalibration::sCORRELATOR_CALIBRATION);
     
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::sACA_CALIBRATE_CALIBRATOR);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::sACA_HFSC_REFRESH_CALIBRATOR);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::sACA_OBSERVE_TARGET);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::sACA_CALIBATE_TARGET);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::sACA_HFSC_REFRESH_TARGET);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::sACA_CORRELATOR_CALIBRATION);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::sACA_REAL_OBSERVATION);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::sBL_CALC_TFB_SCALING_FACTORS);
+    enumSet.insert(enumSet.end(), CCorrelatorCalibration::sREAL_OBSERVATION);
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CCorrelatorCalibration::hNONE = "No internal correlator calibration";
-	
-const std::string& CCorrelatorCalibration::hACA_OBSERVE_CALIBATOR = "Specific ACA Correlator calibration";
-	
-const std::string& CCorrelatorCalibration::hACA_CALIBRATE_CALIBRATOR = "Specific ACA Correlator calibration";
-	
-const std::string& CCorrelatorCalibration::hACA_HFSC_REFRESH_CALIBRATOR = "Specific ACA Correlator calibration";
-	
-const std::string& CCorrelatorCalibration::hACA_OBSERVE_TARGET = "Specific ACA Correlator calibration";
-	
-const std::string& CCorrelatorCalibration::hACA_CALIBATE_TARGET = "Specific ACA Correlator calibration";
-	
-const std::string& CCorrelatorCalibration::hACA_HFSC_REFRESH_TARGET = "Specific ACA Correlator calibration";
-	
-const std::string& CCorrelatorCalibration::hACA_CORRELATOR_CALIBRATION = "Specific ACA Correlator calibration";
-	
-const std::string& CCorrelatorCalibration::hACA_REAL_OBSERVATION = "Specific ACA Correlator calibration";
-	
-const std::string& CCorrelatorCalibration::hBL_CALC_TFB_SCALING_FACTORS = "Specific ACA Correlator calibration";
-	
-const std::vector<std::string> CCorrelatorCalibration::hCorrelatorCalibrationSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::hNONE);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::hACA_OBSERVE_CALIBATOR);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::hACA_CALIBRATE_CALIBRATOR);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::hACA_HFSC_REFRESH_CALIBRATOR);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::hACA_OBSERVE_TARGET);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::hACA_CALIBATE_TARGET);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::hACA_HFSC_REFRESH_TARGET);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::hACA_CORRELATOR_CALIBRATION);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::hACA_REAL_OBSERVATION);
-    
-    enumSet.insert(enumSet.end(), CCorrelatorCalibration::hBL_CALC_TFB_SCALING_FACTORS);
-        
-    return enumSet;
-}
-   	
 
 std::string CCorrelatorCalibration::name(const CorrelatorCalibrationMod::CorrelatorCalibration& f) {
     switch (f) {
@@ -141,77 +75,16 @@ std::string CCorrelatorCalibration::name(const CorrelatorCalibrationMod::Correla
     case CorrelatorCalibrationMod::NONE:
       return CCorrelatorCalibration::sNONE;
     
-    case CorrelatorCalibrationMod::ACA_OBSERVE_CALIBATOR:
-      return CCorrelatorCalibration::sACA_OBSERVE_CALIBATOR;
+    case CorrelatorCalibrationMod::CORRELATOR_CALIBRATION:
+      return CCorrelatorCalibration::sCORRELATOR_CALIBRATION;
     
-    case CorrelatorCalibrationMod::ACA_CALIBRATE_CALIBRATOR:
-      return CCorrelatorCalibration::sACA_CALIBRATE_CALIBRATOR;
-    
-    case CorrelatorCalibrationMod::ACA_HFSC_REFRESH_CALIBRATOR:
-      return CCorrelatorCalibration::sACA_HFSC_REFRESH_CALIBRATOR;
-    
-    case CorrelatorCalibrationMod::ACA_OBSERVE_TARGET:
-      return CCorrelatorCalibration::sACA_OBSERVE_TARGET;
-    
-    case CorrelatorCalibrationMod::ACA_CALIBATE_TARGET:
-      return CCorrelatorCalibration::sACA_CALIBATE_TARGET;
-    
-    case CorrelatorCalibrationMod::ACA_HFSC_REFRESH_TARGET:
-      return CCorrelatorCalibration::sACA_HFSC_REFRESH_TARGET;
-    
-    case CorrelatorCalibrationMod::ACA_CORRELATOR_CALIBRATION:
-      return CCorrelatorCalibration::sACA_CORRELATOR_CALIBRATION;
-    
-    case CorrelatorCalibrationMod::ACA_REAL_OBSERVATION:
-      return CCorrelatorCalibration::sACA_REAL_OBSERVATION;
-    
-    case CorrelatorCalibrationMod::BL_CALC_TFB_SCALING_FACTORS:
-      return CCorrelatorCalibration::sBL_CALC_TFB_SCALING_FACTORS;
+    case CorrelatorCalibrationMod::REAL_OBSERVATION:
+      return CCorrelatorCalibration::sREAL_OBSERVATION;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CCorrelatorCalibration::help(const CorrelatorCalibrationMod::CorrelatorCalibration& f) {
-    switch (f) {
-    
-    case CorrelatorCalibrationMod::NONE:
-      return CCorrelatorCalibration::hNONE;
-    
-    case CorrelatorCalibrationMod::ACA_OBSERVE_CALIBATOR:
-      return CCorrelatorCalibration::hACA_OBSERVE_CALIBATOR;
-    
-    case CorrelatorCalibrationMod::ACA_CALIBRATE_CALIBRATOR:
-      return CCorrelatorCalibration::hACA_CALIBRATE_CALIBRATOR;
-    
-    case CorrelatorCalibrationMod::ACA_HFSC_REFRESH_CALIBRATOR:
-      return CCorrelatorCalibration::hACA_HFSC_REFRESH_CALIBRATOR;
-    
-    case CorrelatorCalibrationMod::ACA_OBSERVE_TARGET:
-      return CCorrelatorCalibration::hACA_OBSERVE_TARGET;
-    
-    case CorrelatorCalibrationMod::ACA_CALIBATE_TARGET:
-      return CCorrelatorCalibration::hACA_CALIBATE_TARGET;
-    
-    case CorrelatorCalibrationMod::ACA_HFSC_REFRESH_TARGET:
-      return CCorrelatorCalibration::hACA_HFSC_REFRESH_TARGET;
-    
-    case CorrelatorCalibrationMod::ACA_CORRELATOR_CALIBRATION:
-      return CCorrelatorCalibration::hACA_CORRELATOR_CALIBRATION;
-    
-    case CorrelatorCalibrationMod::ACA_REAL_OBSERVATION:
-      return CCorrelatorCalibration::hACA_REAL_OBSERVATION;
-    
-    case CorrelatorCalibrationMod::BL_CALC_TFB_SCALING_FACTORS:
-      return CCorrelatorCalibration::hBL_CALC_TFB_SCALING_FACTORS;
-    	
-    }
-    return std::string("");
-}
-   	
 
 CorrelatorCalibrationMod::CorrelatorCalibration CCorrelatorCalibration::newCorrelatorCalibration(const std::string& name) {
 		
@@ -219,40 +92,12 @@ CorrelatorCalibrationMod::CorrelatorCalibration CCorrelatorCalibration::newCorre
         return CorrelatorCalibrationMod::NONE;
     }
     	
-    if (name == CCorrelatorCalibration::sACA_OBSERVE_CALIBATOR) {
-        return CorrelatorCalibrationMod::ACA_OBSERVE_CALIBATOR;
+    if (name == CCorrelatorCalibration::sCORRELATOR_CALIBRATION) {
+        return CorrelatorCalibrationMod::CORRELATOR_CALIBRATION;
     }
     	
-    if (name == CCorrelatorCalibration::sACA_CALIBRATE_CALIBRATOR) {
-        return CorrelatorCalibrationMod::ACA_CALIBRATE_CALIBRATOR;
-    }
-    	
-    if (name == CCorrelatorCalibration::sACA_HFSC_REFRESH_CALIBRATOR) {
-        return CorrelatorCalibrationMod::ACA_HFSC_REFRESH_CALIBRATOR;
-    }
-    	
-    if (name == CCorrelatorCalibration::sACA_OBSERVE_TARGET) {
-        return CorrelatorCalibrationMod::ACA_OBSERVE_TARGET;
-    }
-    	
-    if (name == CCorrelatorCalibration::sACA_CALIBATE_TARGET) {
-        return CorrelatorCalibrationMod::ACA_CALIBATE_TARGET;
-    }
-    	
-    if (name == CCorrelatorCalibration::sACA_HFSC_REFRESH_TARGET) {
-        return CorrelatorCalibrationMod::ACA_HFSC_REFRESH_TARGET;
-    }
-    	
-    if (name == CCorrelatorCalibration::sACA_CORRELATOR_CALIBRATION) {
-        return CorrelatorCalibrationMod::ACA_CORRELATOR_CALIBRATION;
-    }
-    	
-    if (name == CCorrelatorCalibration::sACA_REAL_OBSERVATION) {
-        return CorrelatorCalibrationMod::ACA_REAL_OBSERVATION;
-    }
-    	
-    if (name == CCorrelatorCalibration::sBL_CALC_TFB_SCALING_FACTORS) {
-        return CorrelatorCalibrationMod::BL_CALC_TFB_SCALING_FACTORS;
+    if (name == CCorrelatorCalibration::sREAL_OBSERVATION) {
+        return CorrelatorCalibrationMod::REAL_OBSERVATION;
     }
     
     throw badString(name);
@@ -264,52 +109,22 @@ CorrelatorCalibrationMod::CorrelatorCalibration CCorrelatorCalibration::literal(
         return CorrelatorCalibrationMod::NONE;
     }
     	
-    if (name == CCorrelatorCalibration::sACA_OBSERVE_CALIBATOR) {
-        return CorrelatorCalibrationMod::ACA_OBSERVE_CALIBATOR;
+    if (name == CCorrelatorCalibration::sCORRELATOR_CALIBRATION) {
+        return CorrelatorCalibrationMod::CORRELATOR_CALIBRATION;
     }
     	
-    if (name == CCorrelatorCalibration::sACA_CALIBRATE_CALIBRATOR) {
-        return CorrelatorCalibrationMod::ACA_CALIBRATE_CALIBRATOR;
-    }
-    	
-    if (name == CCorrelatorCalibration::sACA_HFSC_REFRESH_CALIBRATOR) {
-        return CorrelatorCalibrationMod::ACA_HFSC_REFRESH_CALIBRATOR;
-    }
-    	
-    if (name == CCorrelatorCalibration::sACA_OBSERVE_TARGET) {
-        return CorrelatorCalibrationMod::ACA_OBSERVE_TARGET;
-    }
-    	
-    if (name == CCorrelatorCalibration::sACA_CALIBATE_TARGET) {
-        return CorrelatorCalibrationMod::ACA_CALIBATE_TARGET;
-    }
-    	
-    if (name == CCorrelatorCalibration::sACA_HFSC_REFRESH_TARGET) {
-        return CorrelatorCalibrationMod::ACA_HFSC_REFRESH_TARGET;
-    }
-    	
-    if (name == CCorrelatorCalibration::sACA_CORRELATOR_CALIBRATION) {
-        return CorrelatorCalibrationMod::ACA_CORRELATOR_CALIBRATION;
-    }
-    	
-    if (name == CCorrelatorCalibration::sACA_REAL_OBSERVATION) {
-        return CorrelatorCalibrationMod::ACA_REAL_OBSERVATION;
-    }
-    	
-    if (name == CCorrelatorCalibration::sBL_CALC_TFB_SCALING_FACTORS) {
-        return CorrelatorCalibrationMod::BL_CALC_TFB_SCALING_FACTORS;
+    if (name == CCorrelatorCalibration::sREAL_OBSERVATION) {
+        return CorrelatorCalibrationMod::REAL_OBSERVATION;
     }
     
     throw badString(name);
 }
 
 CorrelatorCalibrationMod::CorrelatorCalibration CCorrelatorCalibration::from_int(unsigned int i) {
-	vector<string> names = sCorrelatorCalibrationSet();
-	if (i >= names.size()) throw badInt(i);
-	return newCorrelatorCalibration(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newCorrelatorCalibration(names_.at(i));
 }
-
-	
 
 string CCorrelatorCalibration::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'CorrelatorCalibration'.";

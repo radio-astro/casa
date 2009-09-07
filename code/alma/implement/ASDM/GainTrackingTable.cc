@@ -82,11 +82,11 @@ namespace asdm {
 	
 		key.push_back("antennaId");
 	
-		key.push_back("feedId");
-	
 		key.push_back("spectralWindowId");
 	
 		key.push_back("timeInterval");
+	
+		key.push_back("feedId");
 	
 
 
@@ -182,79 +182,85 @@ namespace asdm {
 	
  	 * @param antennaId. 
 	
- 	 * @param feedId. 
-	
  	 * @param spectralWindowId. 
 	
  	 * @param timeInterval. 
 	
+ 	 * @param feedId. 
+	
  	 * @param attenuator. 
 	
- 	 * @param delayoff1. 
+ 	 * @param numLO. 
 	
- 	 * @param delayoff2. 
+ 	 * @param numReceptor. 
 	
- 	 * @param phaseoff1. 
+ 	 * @param cableDelay. 
 	
- 	 * @param phaseoff2. 
+ 	 * @param crossPolarizationDelay. 
 	
- 	 * @param rateoff1. 
+ 	 * @param loPropagationDelay. 
 	
- 	 * @param rateoff2. 
+ 	 * @param polarizationTypes. 
+	
+ 	 * @param receiverDelay. 
 	
      */
-	GainTrackingRow* GainTrackingTable::newRow(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, float attenuator, Interval delayoff1, Interval delayoff2, Angle phaseoff1, Angle phaseoff2, AngularRate rateoff1, AngularRate rateoff2){
+	GainTrackingRow* GainTrackingTable::newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, float attenuator, int numLO, int numReceptor, vector<double > cableDelay, double crossPolarizationDelay, vector<double > loPropagationDelay, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > receiverDelay){
 		GainTrackingRow *row = new GainTrackingRow(*this);
 			
 		row->setAntennaId(antennaId);
-			
-		row->setFeedId(feedId);
 			
 		row->setSpectralWindowId(spectralWindowId);
 			
 		row->setTimeInterval(timeInterval);
 			
+		row->setFeedId(feedId);
+			
 		row->setAttenuator(attenuator);
 			
-		row->setDelayoff1(delayoff1);
+		row->setNumLO(numLO);
 			
-		row->setDelayoff2(delayoff2);
+		row->setNumReceptor(numReceptor);
 			
-		row->setPhaseoff1(phaseoff1);
+		row->setCableDelay(cableDelay);
 			
-		row->setPhaseoff2(phaseoff2);
+		row->setCrossPolarizationDelay(crossPolarizationDelay);
 			
-		row->setRateoff1(rateoff1);
+		row->setLoPropagationDelay(loPropagationDelay);
 			
-		row->setRateoff2(rateoff2);
+		row->setPolarizationTypes(polarizationTypes);
+			
+		row->setReceiverDelay(receiverDelay);
 	
 		return row;		
 	}	
 
-	GainTrackingRow* GainTrackingTable::newRowFull(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, float attenuator, Interval delayoff1, Interval delayoff2, Angle phaseoff1, Angle phaseoff2, AngularRate rateoff1, AngularRate rateoff2)	{
+	GainTrackingRow* GainTrackingTable::newRowFull(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, float attenuator, int numLO, int numReceptor, vector<double > cableDelay, double crossPolarizationDelay, vector<double > loPropagationDelay, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > receiverDelay)	{
 		GainTrackingRow *row = new GainTrackingRow(*this);
 			
 		row->setAntennaId(antennaId);
-			
-		row->setFeedId(feedId);
 			
 		row->setSpectralWindowId(spectralWindowId);
 			
 		row->setTimeInterval(timeInterval);
 			
+		row->setFeedId(feedId);
+			
 		row->setAttenuator(attenuator);
 			
-		row->setDelayoff1(delayoff1);
+		row->setNumLO(numLO);
 			
-		row->setDelayoff2(delayoff2);
+		row->setNumReceptor(numReceptor);
 			
-		row->setPhaseoff1(phaseoff1);
+		row->setCableDelay(cableDelay);
 			
-		row->setPhaseoff2(phaseoff2);
+		row->setCrossPolarizationDelay(crossPolarizationDelay);
 			
-		row->setRateoff1(rateoff1);
+		row->setLoPropagationDelay(loPropagationDelay);
 			
-		row->setRateoff2(rateoff2);
+		row->setPolarizationTypes(polarizationTypes);
+			
+		row->setReceiverDelay(receiverDelay);
 	
 		return row;				
 	}
@@ -281,15 +287,15 @@ GainTrackingRow* GainTrackingTable::newRowCopy(GainTrackingRow* row) {
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
 	 */
-	 string GainTrackingTable::Key(Tag antennaId, int feedId, Tag spectralWindowId) {
+	 string GainTrackingTable::Key(Tag antennaId, Tag spectralWindowId, int feedId) {
 	 	ostringstream ostrstr;
 	 		ostrstr  
 			
 				<<  antennaId.toString()  << "_"
 			
-				<<   feedId  << "_"
-			
 				<<  spectralWindowId.toString()  << "_"
+			
+				<<   feedId  << "_"
 			
 			;
 		return ostrstr.str();	 	
@@ -307,9 +313,9 @@ GainTrackingRow* GainTrackingTable::newRowCopy(GainTrackingRow* row) {
 		string k = Key(
 						x->getAntennaId()
 					   ,
-						x->getFeedId()
-					   ,
 						x->getSpectralWindowId()
+					   ,
+						x->getFeedId()
 					   );
  
 		if (context.find(k) == context.end()) { 
@@ -341,13 +347,13 @@ GainTrackingRow* GainTrackingTable::newRowCopy(GainTrackingRow* row) {
 			
 			
 			
-	GainTrackingRow*  GainTrackingTable::checkAndAdd(GainTrackingRow* x) throw (DuplicateKey) {
+	GainTrackingRow*  GainTrackingTable::checkAndAdd(GainTrackingRow* x) {
 		string keystr = Key( 
 						x->getAntennaId() 
 					   , 
-						x->getFeedId() 
-					   , 
 						x->getSpectralWindowId() 
+					   , 
+						x->getFeedId() 
 					   ); 
 		if (context.find(keystr) == context.end()) {
 			vector<GainTrackingRow *> v;
@@ -393,8 +399,8 @@ GainTrackingRow* GainTrackingTable::newRowCopy(GainTrackingRow* row) {
 	 */
 	 }
 	 
-	 vector<GainTrackingRow *> *GainTrackingTable::getByContext(Tag antennaId, int feedId, Tag spectralWindowId) {
-	  	string k = Key(antennaId, feedId, spectralWindowId);
+	 vector<GainTrackingRow *> *GainTrackingTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
+	  	string k = Key(antennaId, spectralWindowId, feedId);
  
 	    if (context.find(k) == context.end()) return 0;
  	   else return &(context[k]);		
@@ -417,8 +423,8 @@ GainTrackingRow* GainTrackingTable::newRowCopy(GainTrackingRow* row) {
  */
  				
 				
-	GainTrackingRow* GainTrackingTable::getRowByKey(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval)  {
- 		string keystr = Key(antennaId, feedId, spectralWindowId);
+	GainTrackingRow* GainTrackingTable::getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId)  {
+ 		string keystr = Key(antennaId, spectralWindowId, feedId);
  		vector<GainTrackingRow *> row;
  		
  		if ( context.find(keystr)  == context.end()) return 0;
@@ -499,7 +505,7 @@ GainTrackingRow* GainTrackingTable::newRowCopy(GainTrackingRow* row) {
 #endif
 	
 #ifndef WITHOUT_ACS
-	void GainTrackingTable::fromIDL(GainTrackingTableIDL x) throw(DuplicateKey,ConversionException) {
+	void GainTrackingTable::fromIDL(GainTrackingTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			GainTrackingRow *tmp = newRow();
@@ -510,28 +516,27 @@ GainTrackingRow* GainTrackingTable::newRowCopy(GainTrackingRow* row) {
 	}
 #endif
 
-	char *GainTrackingTable::toFITS() const throw(ConversionException) {
+	char *GainTrackingTable::toFITS() const  {
 		throw ConversionException("Not implemented","GainTracking");
 	}
 
-	void GainTrackingTable::fromFITS(char *fits) throw(ConversionException) {
+	void GainTrackingTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","GainTracking");
 	}
 
-	string GainTrackingTable::toVOTable() const throw(ConversionException) {
+	string GainTrackingTable::toVOTable() const {
 		throw ConversionException("Not implemented","GainTracking");
 	}
 
-	void GainTrackingTable::fromVOTable(string vo) throw(ConversionException) {
+	void GainTrackingTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","GainTracking");
 	}
 
-	string GainTrackingTable::toXML()  throw(ConversionException) {
+	
+	string GainTrackingTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<GainTrackingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/GainTrackingTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<GainTrackingTable> ");
+		buf.append("<GainTrackingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/GainTrackingTable\" xsi:schemaLocation=\"http://Alma/XASDM/GainTrackingTable http://almaobservatory.org/XML/XASDM/2/GainTrackingTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -547,8 +552,9 @@ GainTrackingRow* GainTrackingTable::newRowCopy(GainTrackingRow* row) {
 		buf.append("</GainTrackingTable> ");
 		return buf;
 	}
+
 	
-	void GainTrackingTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void GainTrackingTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<GainTrackingTable")) 
 			error();
@@ -590,20 +596,110 @@ GainTrackingRow* GainTrackingTable::newRowCopy(GainTrackingRow* row) {
 			error();
 	}
 
-	void GainTrackingTable::error() throw(ConversionException) {
+	
+	void GainTrackingTable::error()  {
 		throw ConversionException("Invalid xml document","GainTracking");
 	}
 	
+	
 	string GainTrackingTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void GainTrackingTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "GainTracking");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			GainTrackingRow* aRow = GainTrackingRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "GainTracking");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "GainTracking");
+		} 		 	
+	}
+
 	
 	void GainTrackingTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -634,6 +730,7 @@ GainTrackingRow* GainTrackingTable::newRowCopy(GainTrackingRow* row) {
 				throw ConversionException("Could not close file " + fileName, "GainTracking");
 		}
 	}
+
 	
 	void GainTrackingTable::setFromFile(const string& directory) {
 		string tablename;
@@ -675,6 +772,11 @@ GainTrackingRow* GainTrackingTable::newRowCopy(GainTrackingRow* row) {
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 		

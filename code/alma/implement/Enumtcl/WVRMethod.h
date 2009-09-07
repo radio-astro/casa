@@ -38,9 +38,9 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<WVRMethod,EnumPar<void> >
-     (WVRMethodMod::ATM_MODEL,ep((int)WVRMethodMod::ATM_MODEL,"ATM_MODEL","WVR data reduction uses ATM model")));
+     (WVRMethodMod::ATM_MODEL,ep((int)WVRMethodMod::ATM_MODEL,"ATM_MODEL","un-documented")));
     m_.insert(pair<WVRMethod,EnumPar<void> >
-     (WVRMethodMod::EMPIRICAL,ep((int)WVRMethodMod::EMPIRICAL,"EMPIRICAL","WVR data reduction optimized using actual phase data")));
+     (WVRMethodMod::EMPIRICAL,ep((int)WVRMethodMod::EMPIRICAL,"EMPIRICAL","un-documented")));
     return true;
   }
   static map<WVRMethod,EnumPar<void> > m_;

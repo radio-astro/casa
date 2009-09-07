@@ -38,11 +38,11 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<ProcessorType,EnumPar<void> >
-     (ProcessorTypeMod::CORRELATOR,ep((int)ProcessorTypeMod::CORRELATOR,"CORRELATOR","A digital correlator")));
+     (ProcessorTypeMod::CORRELATOR,ep((int)ProcessorTypeMod::CORRELATOR,"CORRELATOR","un-documented")));
     m_.insert(pair<ProcessorType,EnumPar<void> >
-     (ProcessorTypeMod::RADIOMETER,ep((int)ProcessorTypeMod::RADIOMETER,"RADIOMETER","A radiometer")));
+     (ProcessorTypeMod::RADIOMETER,ep((int)ProcessorTypeMod::RADIOMETER,"RADIOMETER","un-documented")));
     m_.insert(pair<ProcessorType,EnumPar<void> >
-     (ProcessorTypeMod::SPECTROMETER,ep((int)ProcessorTypeMod::SPECTROMETER,"SPECTROMETER","An (analogue) multi-channel spectrometer")));
+     (ProcessorTypeMod::SPECTROMETER,ep((int)ProcessorTypeMod::SPECTROMETER,"SPECTROMETER","un-documented")));
     return true;
   }
   static map<ProcessorType,EnumPar<void> > m_;

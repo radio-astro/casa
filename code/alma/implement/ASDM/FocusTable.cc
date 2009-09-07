@@ -82,8 +82,6 @@ namespace asdm {
 	
 		key.push_back("antennaId");
 	
-		key.push_back("feedId");
-	
 		key.push_back("timeInterval");
 	
 
@@ -180,79 +178,43 @@ namespace asdm {
 	
  	 * @param antennaId. 
 	
- 	 * @param feedId. 
-	
  	 * @param timeInterval. 
-	
- 	 * @param focusModelId. 
-	
- 	 * @param xFocusPosition. 
-	
- 	 * @param yFocusPosition. 
-	
- 	 * @param zFocusPosition. 
 	
  	 * @param focusTracking. 
 	
- 	 * @param xFocusOffset. 
+ 	 * @param focusOffset. 
 	
- 	 * @param yFocusOffset. 
-	
- 	 * @param zFocusOffset. 
+ 	 * @param focusModelId. 
 	
      */
-	FocusRow* FocusTable::newRow(Tag antennaId, int feedId, ArrayTimeInterval timeInterval, Tag focusModelId, Length xFocusPosition, Length yFocusPosition, Length zFocusPosition, bool focusTracking, Length xFocusOffset, Length yFocusOffset, Length zFocusOffset){
+	FocusRow* FocusTable::newRow(Tag antennaId, ArrayTimeInterval timeInterval, bool focusTracking, vector<Length > focusOffset, int focusModelId){
 		FocusRow *row = new FocusRow(*this);
 			
 		row->setAntennaId(antennaId);
 			
-		row->setFeedId(feedId);
-			
 		row->setTimeInterval(timeInterval);
-			
-		row->setFocusModelId(focusModelId);
-			
-		row->setXFocusPosition(xFocusPosition);
-			
-		row->setYFocusPosition(yFocusPosition);
-			
-		row->setZFocusPosition(zFocusPosition);
 			
 		row->setFocusTracking(focusTracking);
 			
-		row->setXFocusOffset(xFocusOffset);
+		row->setFocusOffset(focusOffset);
 			
-		row->setYFocusOffset(yFocusOffset);
-			
-		row->setZFocusOffset(zFocusOffset);
+		row->setFocusModelId(focusModelId);
 	
 		return row;		
 	}	
 
-	FocusRow* FocusTable::newRowFull(Tag antennaId, int feedId, ArrayTimeInterval timeInterval, Tag focusModelId, Length xFocusPosition, Length yFocusPosition, Length zFocusPosition, bool focusTracking, Length xFocusOffset, Length yFocusOffset, Length zFocusOffset)	{
+	FocusRow* FocusTable::newRowFull(Tag antennaId, ArrayTimeInterval timeInterval, bool focusTracking, vector<Length > focusOffset, int focusModelId)	{
 		FocusRow *row = new FocusRow(*this);
 			
 		row->setAntennaId(antennaId);
 			
-		row->setFeedId(feedId);
-			
 		row->setTimeInterval(timeInterval);
-			
-		row->setFocusModelId(focusModelId);
-			
-		row->setXFocusPosition(xFocusPosition);
-			
-		row->setYFocusPosition(yFocusPosition);
-			
-		row->setZFocusPosition(zFocusPosition);
 			
 		row->setFocusTracking(focusTracking);
 			
-		row->setXFocusOffset(xFocusOffset);
+		row->setFocusOffset(focusOffset);
 			
-		row->setYFocusOffset(yFocusOffset);
-			
-		row->setZFocusOffset(zFocusOffset);
+		row->setFocusModelId(focusModelId);
 	
 		return row;				
 	}
@@ -279,13 +241,11 @@ FocusRow* FocusTable::newRowCopy(FocusRow* row) {
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
 	 */
-	 string FocusTable::Key(Tag antennaId, int feedId) {
+	 string FocusTable::Key(Tag antennaId) {
 	 	ostringstream ostrstr;
 	 		ostrstr  
 			
 				<<  antennaId.toString()  << "_"
-			
-				<<   feedId  << "_"
 			
 			;
 		return ostrstr.str();	 	
@@ -302,8 +262,6 @@ FocusRow* FocusTable::newRowCopy(FocusRow* row) {
 	 	 */
 		string k = Key(
 						x->getAntennaId()
-					   ,
-						x->getFeedId()
 					   );
  
 		if (context.find(k) == context.end()) { 
@@ -335,11 +293,9 @@ FocusRow* FocusTable::newRowCopy(FocusRow* row) {
 			
 			
 			
-	FocusRow*  FocusTable::checkAndAdd(FocusRow* x) throw (DuplicateKey) {
+	FocusRow*  FocusTable::checkAndAdd(FocusRow* x) {
 		string keystr = Key( 
 						x->getAntennaId() 
-					   , 
-						x->getFeedId() 
 					   ); 
 		if (context.find(keystr) == context.end()) {
 			vector<FocusRow *> v;
@@ -385,8 +341,8 @@ FocusRow* FocusTable::newRowCopy(FocusRow* row) {
 	 */
 	 }
 	 
-	 vector<FocusRow *> *FocusTable::getByContext(Tag antennaId, int feedId) {
-	  	string k = Key(antennaId, feedId);
+	 vector<FocusRow *> *FocusTable::getByContext(Tag antennaId) {
+	  	string k = Key(antennaId);
  
 	    if (context.find(k) == context.end()) return 0;
  	   else return &(context[k]);		
@@ -409,8 +365,8 @@ FocusRow* FocusTable::newRowCopy(FocusRow* row) {
  */
  				
 				
-	FocusRow* FocusTable::getRowByKey(Tag antennaId, int feedId, ArrayTimeInterval timeInterval)  {
- 		string keystr = Key(antennaId, feedId);
+	FocusRow* FocusTable::getRowByKey(Tag antennaId, ArrayTimeInterval timeInterval)  {
+ 		string keystr = Key(antennaId);
  		vector<FocusRow *> row;
  		
  		if ( context.find(keystr)  == context.end()) return 0;
@@ -491,7 +447,7 @@ FocusRow* FocusTable::newRowCopy(FocusRow* row) {
 #endif
 	
 #ifndef WITHOUT_ACS
-	void FocusTable::fromIDL(FocusTableIDL x) throw(DuplicateKey,ConversionException) {
+	void FocusTable::fromIDL(FocusTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			FocusRow *tmp = newRow();
@@ -502,28 +458,27 @@ FocusRow* FocusTable::newRowCopy(FocusRow* row) {
 	}
 #endif
 
-	char *FocusTable::toFITS() const throw(ConversionException) {
+	char *FocusTable::toFITS() const  {
 		throw ConversionException("Not implemented","Focus");
 	}
 
-	void FocusTable::fromFITS(char *fits) throw(ConversionException) {
+	void FocusTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Focus");
 	}
 
-	string FocusTable::toVOTable() const throw(ConversionException) {
+	string FocusTable::toVOTable() const {
 		throw ConversionException("Not implemented","Focus");
 	}
 
-	void FocusTable::fromVOTable(string vo) throw(ConversionException) {
+	void FocusTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Focus");
 	}
 
-	string FocusTable::toXML()  throw(ConversionException) {
+	
+	string FocusTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<FocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/FocusTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<FocusTable> ");
+		buf.append("<FocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/FocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/FocusTable http://almaobservatory.org/XML/XASDM/2/FocusTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -539,8 +494,9 @@ FocusRow* FocusTable::newRowCopy(FocusRow* row) {
 		buf.append("</FocusTable> ");
 		return buf;
 	}
+
 	
-	void FocusTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void FocusTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<FocusTable")) 
 			error();
@@ -582,20 +538,110 @@ FocusRow* FocusTable::newRowCopy(FocusRow* row) {
 			error();
 	}
 
-	void FocusTable::error() throw(ConversionException) {
+	
+	void FocusTable::error()  {
 		throw ConversionException("Invalid xml document","Focus");
 	}
 	
+	
 	string FocusTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void FocusTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Focus");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			FocusRow* aRow = FocusRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Focus");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Focus");
+		} 		 	
+	}
+
 	
 	void FocusTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -626,6 +672,7 @@ FocusRow* FocusTable::newRowCopy(FocusRow* row) {
 				throw ConversionException("Could not close file " + fileName, "Focus");
 		}
 	}
+
 	
 	void FocusTable::setFromFile(const string& directory) {
 		string tablename;
@@ -667,6 +714,11 @@ FocusRow* FocusTable::newRowCopy(FocusRow* row) {
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 		

@@ -89,7 +89,7 @@ namespace asdm {
 	}
 
 	string Entity::getXMLValue(string xml, string parm) const {
-		string::size_type n = xml.find(parm,0);
+		string::size_type n = xml.find(parm+"=",0);
 		if (n == string::npos)
 			return "";
 		string::size_type beg = xml.find("\"",n + parm.length());

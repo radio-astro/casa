@@ -76,6 +76,26 @@ using namespace enumerations;
 
 	
 
+	
+#include "CPolarizationType.h"
+using namespace PolarizationTypeMod;
+	
+
+	
+#include "CReceiverBand.h"
+using namespace ReceiverBandMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
@@ -116,24 +136,98 @@ class ASDM;
 class FocusModelRow;
 /**
  * The FocusModelTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Contains the focus model data (function of elevation and temperature).
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of FocusModel </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> focusModelId </I></TD> 
+ 		
+ * <TD> antennaId </TD>
+ 		 
  * <TD> Tag</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in AntennaTable. </TD>
  * </TR>
+	
+ * <TR>
  		
+ * <TD><I> focusModelId </I></TD>
+ 		 
+ * <TD> int</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a collection of rows in the table. </TD>
+ * </TR>
 	
 
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
+	
+ * <TR>
+ * <TD> polarizationType </TD> 
+ * <TD> PolarizationTypeMod::PolarizationType </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the polarization type. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> receiverBand </TD> 
+ * <TD> ReceiverBandMod::ReceiverBand </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the receiver band. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numCoeff </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of coefficients. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> coeffName </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numCoeff </TD> 
+ * <TD> &nbsp;the names of the coefficients (one string per coefficient). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> coeffFormula </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numCoeff </TD> 
+ * <TD> &nbsp;textual representations of the fitted functions (one string per coefficient). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> coeffVal </TD> 
+ * <TD> vector<float > </TD>
+ * <TD>  numCoeff </TD> 
+ * <TD> &nbsp;the values of the coefficients used (one value per coefficient). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> assocNature </TD> 
+ * <TD> string </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;nature of the association with the row refered to by associatedFocusModelId. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> assocFocusModelId </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;refers to a collection of rows in the table. </TD>
+ * </TR>
+	
 
 
  * </TABLE>
@@ -202,6 +296,37 @@ public:
 	  */
 	FocusModelRow* newRowEmpty();
 
+	
+	/**
+	 * Create a new row initialized to the specified values.
+	 * @return a pointer on the created and initialized row.
+	
+ 	 * @param antennaId. 
+	
+ 	 * @param polarizationType. 
+	
+ 	 * @param receiverBand. 
+	
+ 	 * @param numCoeff. 
+	
+ 	 * @param coeffName. 
+	
+ 	 * @param coeffFormula. 
+	
+ 	 * @param coeffVal. 
+	
+ 	 * @param assocNature. 
+	
+ 	 * @param assocFocusModelId. 
+	
+     */
+	FocusModelRow *newRow(Tag antennaId, PolarizationTypeMod::PolarizationType polarizationType, ReceiverBandMod::ReceiverBand receiverBand, int numCoeff, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffVal, string assocNature, int assocFocusModelId);
+	
+	/**
+	  * Has the same definition than the newRow method with the same signature.
+	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
+	  */
+	FocusModelRow *newRowFull(Tag antennaId, PolarizationTypeMod::PolarizationType polarizationType, ReceiverBandMod::ReceiverBand receiverBand, int numCoeff, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffVal, string assocNature, int assocFocusModelId);
 
 
 	/**
@@ -264,15 +389,53 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param antennaId. 
+	
 	 * @param focusModelId. 
 	
  	 *
 	 */
- 	FocusModelRow* getRowByKey(Tag focusModelId);
+ 	FocusModelRow* getRowByKey(Tag antennaId, int focusModelId);
 
  	 	
+ 	
+	/**
+ 	 * Returns a vector of pointers on rows whose key element <<AutoIncrementableAttribute>> focusModelId 
+	 * is equal to the parameter <<AutoIncrementableAttribute>> focusModelId.
+	 * @return a vector of vector <FocusModelRow *>. A returned vector of size 0 means that no row has been found.
+	 * @param focusModelId int contains the value of
+	 * the autoincrementable attribute that is looked up in the table.
+	 */
+ 	vector <FocusModelRow *>  getRowByFocusModelId(int);
 
 
+
+	/**
+ 	 * Look up the table for a row whose all attributes  except the autoincrementable one 
+ 	 * are equal to the corresponding parameters of the method.
+ 	 * @return a pointer on this row if any, null otherwise.
+ 	 *
+			
+ 	 * @param antennaId.
+ 	 		
+ 	 * @param polarizationType.
+ 	 		
+ 	 * @param receiverBand.
+ 	 		
+ 	 * @param numCoeff.
+ 	 		
+ 	 * @param coeffName.
+ 	 		
+ 	 * @param coeffFormula.
+ 	 		
+ 	 * @param coeffVal.
+ 	 		
+ 	 * @param assocNature.
+ 	 		
+ 	 * @param assocFocusModelId.
+ 	 		 
+ 	 */
+	FocusModelRow* lookup(Tag antennaId, PolarizationTypeMod::PolarizationType polarizationType, ReceiverBandMod::ReceiverBand receiverBand, int numCoeff, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffVal, string assocNature, int assocFocusModelId); 
 
 
 #ifndef WITHOUT_ACS
@@ -292,43 +455,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(FocusModelTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(FocusModelTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for FocusModel (FocusModelTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a FocusModel (FocusModelTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -407,8 +576,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	FocusModelRow* checkAndAdd(FocusModelRow* x) throw (DuplicateKey, UniquenessViolationException);
+	FocusModelRow* checkAndAdd(FocusModelRow* x) ;
 
 
 
@@ -422,7 +595,7 @@ private:
 	vector<FocusModelRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

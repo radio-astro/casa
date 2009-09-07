@@ -38,13 +38,13 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<ACAPolarization,EnumPar<void> >
-     (ACAPolarizationMod::ACA_STANDARD,ep((int)ACAPolarizationMod::ACA_STANDARD,"ACA_STANDARD","Data product is the standard way (it is a standard observed Stokes parameter)")));
+     (ACAPolarizationMod::ACA_STANDARD,ep((int)ACAPolarizationMod::ACA_STANDARD,"ACA_STANDARD","un-documented")));
     m_.insert(pair<ACAPolarization,EnumPar<void> >
-     (ACAPolarizationMod::ACA_XX_YY_SUM,ep((int)ACAPolarizationMod::ACA_XX_YY_SUM,"ACA_XX_YY_SUM","ACA has calculated I by averaging XX and YY")));
+     (ACAPolarizationMod::ACA_XX_YY_SUM,ep((int)ACAPolarizationMod::ACA_XX_YY_SUM,"ACA_XX_YY_SUM","un-documented")));
     m_.insert(pair<ACAPolarization,EnumPar<void> >
-     (ACAPolarizationMod::ACA_XX_50,ep((int)ACAPolarizationMod::ACA_XX_50,"ACA_XX_50","ACA has averaged XX and XX delayed by half a FFT period")));
+     (ACAPolarizationMod::ACA_XX_50,ep((int)ACAPolarizationMod::ACA_XX_50,"ACA_XX_50","un-documented")));
     m_.insert(pair<ACAPolarization,EnumPar<void> >
-     (ACAPolarizationMod::ACA_YY_50,ep((int)ACAPolarizationMod::ACA_YY_50,"ACA_YY_50","ACA has averaged YY and YY delayed by half a FFT period")));
+     (ACAPolarizationMod::ACA_YY_50,ep((int)ACAPolarizationMod::ACA_YY_50,"ACA_YY_50","un-documented")));
     return true;
   }
   static map<ACAPolarization,EnumPar<void> > m_;

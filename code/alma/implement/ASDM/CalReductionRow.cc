@@ -110,37 +110,27 @@ namespace asdm {
 		
 		
 			
-				
-		x->numParam = numParam;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->timeReduced = timeReduced.toIDLArrayTime();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->calAppliedArray.length(calAppliedArray.size());
-		for (unsigned int i = 0; i < calAppliedArray.size(); ++i) {
+		x->appliedCalibrations.length(appliedCalibrations.size());
+		for (unsigned int i = 0; i < appliedCalibrations.size(); ++i) {
 			
 				
-			x->calAppliedArray[i] = CORBA::string_dup(calAppliedArray.at(i).c_str());
+			x->appliedCalibrations[i] = CORBA::string_dup(appliedCalibrations.at(i).c_str());
 				
 	 		
 	 	}
 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->numParam = numParam;
+ 				
+ 			
 		
 	
 
@@ -157,6 +147,45 @@ namespace asdm {
 				
 	 		
 	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->numInvalidConditions = numInvalidConditions;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->invalidConditions.length(invalidConditions.size());
+		for (unsigned int i = 0; i < invalidConditions.size(); ++i) {
+			
+				
+			x->invalidConditions[i] = invalidConditions.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->timeReduced = timeReduced.toIDLArrayTime();
 			
 		
 	
@@ -198,35 +227,6 @@ namespace asdm {
 	
 
 	
-  		
-		
-		
-			
-				
-		x->numInvalidConditions = numInvalidConditions;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->invalidConditions.length(invalidConditions.size());
-		for (unsigned int i = 0; i < invalidConditions.size(); ++i) {
-			
-				
-			x->invalidConditions[i] = invalidConditions.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
 	
 		
 		
@@ -241,7 +241,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalReductionRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalReductionRow::setFromIDL (CalReductionRowIDL x) throw(ConversionException) {
+	void CalReductionRow::setFromIDL (CalReductionRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -270,34 +270,24 @@ namespace asdm {
 		
 		
 			
-		setNumParam(x.numParam);
-  			
- 		
-		
-	
-
-	
-		
-		
+		appliedCalibrations .clear();
+		for (unsigned int i = 0; i <x.appliedCalibrations.length(); ++i) {
 			
-		setTimeReduced(ArrayTime (x.timeReduced));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		calAppliedArray .clear();
-		for (unsigned int i = 0; i <x.calAppliedArray.length(); ++i) {
-			
-			calAppliedArray.push_back(string (x.calAppliedArray[i]));
+			appliedCalibrations.push_back(string (x.appliedCalibrations[i]));
 			
 		}
 			
   		
+		
+	
+
+	
+		
+		
+			
+		setNumParam(x.numParam);
+  			
+ 		
 		
 	
 
@@ -313,6 +303,41 @@ namespace asdm {
 		}
 			
   		
+		
+	
+
+	
+		
+		
+			
+		setNumInvalidConditions(x.numInvalidConditions);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		invalidConditions .clear();
+		for (unsigned int i = 0; i <x.invalidConditions.length(); ++i) {
+			
+			invalidConditions.push_back(x.invalidConditions[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setTimeReduced(ArrayTime (x.timeReduced));
+			
+ 		
 		
 	
 
@@ -347,35 +372,10 @@ namespace asdm {
 	
 
 	
-		
-		
-			
-		setNumInvalidConditions(x.numInvalidConditions);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		invalidConditions .clear();
-		for (unsigned int i = 0; i <x.invalidConditions.length(); ++i) {
-			
-			invalidConditions.push_back(x.invalidConditions[i]);
-  			
-		}
-			
-  		
-		
-	
-
-	
 	
 		
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalReduction");
+			throw ConversionException (err.getMessage(),"CalReduction");
 		}
 	}
 #endif
@@ -409,6 +409,14 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(appliedCalibrations, "appliedCalibrations", buf);
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(numParam, "numParam", buf);
 		
 		
@@ -417,23 +425,31 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(timeReduced, "timeReduced", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(calAppliedArray, "calAppliedArray", buf);
-		
-		
-	
-
-  	
- 		
-		
 		Parser::toXML(paramSet, "paramSet", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numInvalidConditions, "numInvalidConditions", buf);
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("invalidConditions", invalidConditions));
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(timeReduced, "timeReduced", buf);
 		
 		
 	
@@ -462,22 +478,6 @@ namespace asdm {
 		
 	
 
-  	
- 		
-		
-		Parser::toXML(numInvalidConditions, "numInvalidConditions", buf);
-		
-		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("invalidConditions", invalidConditions));
-		
-		
-	
-
 	
 	
 		
@@ -491,7 +491,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalReductionRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalReductionRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -516,26 +516,18 @@ namespace asdm {
 	
   		
 			
-	  	setNumParam(Parser::getInteger("numParam","CalReduction",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setTimeReduced(Parser::getArrayTime("timeReduced","CalReduction",rowDoc));
-			
-		
-	
-
-	
-  		
-			
 					
-	  	setCalAppliedArray(Parser::get1DString("calAppliedArray","CalReduction",rowDoc));
+	  	setAppliedCalibrations(Parser::get1DString("appliedCalibrations","CalReduction",rowDoc));
 	  			
 	  		
+		
+	
+
+	
+  		
+			
+	  	setNumParam(Parser::getInteger("numParam","CalReduction",rowDoc));
+			
 		
 	
 
@@ -546,6 +538,32 @@ namespace asdm {
 	  	setParamSet(Parser::get1DString("paramSet","CalReduction",rowDoc));
 	  			
 	  		
+		
+	
+
+	
+  		
+			
+	  	setNumInvalidConditions(Parser::getInteger("numInvalidConditions","CalReduction",rowDoc));
+			
+		
+	
+
+	
+		
+		
+		
+		invalidConditions = EnumerationParser::getInvalidatingCondition1D("invalidConditions","CalReduction",rowDoc);			
+		
+		
+		
+	
+
+	
+  		
+			
+	  	setTimeReduced(Parser::getArrayTime("timeReduced","CalReduction",rowDoc));
+			
 		
 	
 
@@ -574,29 +592,263 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setNumInvalidConditions(Parser::getInteger("numInvalidConditions","CalReduction",rowDoc));
-			
-		
-	
-
-	
-		
-		
-		
-		invalidConditions = EnumerationParser::getInvalidatingCondition1D("invalidConditions","CalReduction",rowDoc);			
-		
-		
-		
-	
-
-	
 	
 		
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"CalReduction");
 		}
+	}
+	
+	void CalReductionRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numApplied);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) appliedCalibrations.size());
+		for (unsigned int i = 0; i < appliedCalibrations.size(); i++)
+				
+			eoss.writeString(appliedCalibrations.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numParam);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) paramSet.size());
+		for (unsigned int i = 0; i < paramSet.size(); i++)
+				
+			eoss.writeString(paramSet.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numInvalidConditions);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) invalidConditions.size());
+		for (unsigned int i = 0; i < invalidConditions.size(); i++)
+				
+			eoss.writeInt(invalidConditions.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+	timeReduced.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(messages);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(software);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(softwareVersion);
+				
+		
+	
+
+
+	
+	
+	}
+	
+	CalReductionRow* CalReductionRow::fromBin(EndianISStream& eiss, CalReductionTable& table) {
+		CalReductionRow* row = new  CalReductionRow(table);
+		
+		
+		
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numApplied =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->appliedCalibrations.clear();
+		
+		unsigned int appliedCalibrationsDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < appliedCalibrationsDim1; i++)
+			
+			row->appliedCalibrations.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->numParam =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->paramSet.clear();
+		
+		unsigned int paramSetDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < paramSetDim1; i++)
+			
+			row->paramSet.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->numInvalidConditions =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->invalidConditions.clear();
+		
+		unsigned int invalidConditionsDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < invalidConditionsDim1; i++)
+			
+			row->invalidConditions.push_back(CInvalidatingCondition::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+		
+		
+		row->timeReduced =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->messages =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->software =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->softwareVersion =  eiss.readString();
+			
+		
+	
+
+		
+		
+		
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -675,6 +927,38 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get appliedCalibrations.
+ 	 * @return appliedCalibrations as vector<string >
+ 	 */
+ 	vector<string > CalReductionRow::getAppliedCalibrations() const {
+	
+  		return appliedCalibrations;
+ 	}
+
+ 	/**
+ 	 * Set appliedCalibrations with the specified vector<string >.
+ 	 * @param appliedCalibrations The vector<string > value to which appliedCalibrations is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalReductionRow::setAppliedCalibrations (vector<string > appliedCalibrations)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->appliedCalibrations = appliedCalibrations;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get numParam.
  	 * @return numParam as int
  	 */
@@ -707,70 +991,6 @@ namespace asdm {
 
 	
  	/**
- 	 * Get timeReduced.
- 	 * @return timeReduced as ArrayTime
- 	 */
- 	ArrayTime CalReductionRow::getTimeReduced() const {
-	
-  		return timeReduced;
- 	}
-
- 	/**
- 	 * Set timeReduced with the specified ArrayTime.
- 	 * @param timeReduced The ArrayTime value to which timeReduced is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalReductionRow::setTimeReduced (ArrayTime timeReduced)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->timeReduced = timeReduced;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get calAppliedArray.
- 	 * @return calAppliedArray as vector<string >
- 	 */
- 	vector<string > CalReductionRow::getCalAppliedArray() const {
-	
-  		return calAppliedArray;
- 	}
-
- 	/**
- 	 * Set calAppliedArray with the specified vector<string >.
- 	 * @param calAppliedArray The vector<string > value to which calAppliedArray is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalReductionRow::setCalAppliedArray (vector<string > calAppliedArray)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->calAppliedArray = calAppliedArray;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
  	 * Get paramSet.
  	 * @return paramSet as vector<string >
  	 */
@@ -794,6 +1014,102 @@ namespace asdm {
   		}
   	
  		this->paramSet = paramSet;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numInvalidConditions.
+ 	 * @return numInvalidConditions as int
+ 	 */
+ 	int CalReductionRow::getNumInvalidConditions() const {
+	
+  		return numInvalidConditions;
+ 	}
+
+ 	/**
+ 	 * Set numInvalidConditions with the specified int.
+ 	 * @param numInvalidConditions The int value to which numInvalidConditions is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalReductionRow::setNumInvalidConditions (int numInvalidConditions)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numInvalidConditions = numInvalidConditions;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get invalidConditions.
+ 	 * @return invalidConditions as vector<InvalidatingConditionMod::InvalidatingCondition >
+ 	 */
+ 	vector<InvalidatingConditionMod::InvalidatingCondition > CalReductionRow::getInvalidConditions() const {
+	
+  		return invalidConditions;
+ 	}
+
+ 	/**
+ 	 * Set invalidConditions with the specified vector<InvalidatingConditionMod::InvalidatingCondition >.
+ 	 * @param invalidConditions The vector<InvalidatingConditionMod::InvalidatingCondition > value to which invalidConditions is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalReductionRow::setInvalidConditions (vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->invalidConditions = invalidConditions;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get timeReduced.
+ 	 * @return timeReduced as ArrayTime
+ 	 */
+ 	ArrayTime CalReductionRow::getTimeReduced() const {
+	
+  		return timeReduced;
+ 	}
+
+ 	/**
+ 	 * Set timeReduced with the specified ArrayTime.
+ 	 * @param timeReduced The ArrayTime value to which timeReduced is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalReductionRow::setTimeReduced (ArrayTime timeReduced)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->timeReduced = timeReduced;
 	
  	}
 	
@@ -890,70 +1206,6 @@ namespace asdm {
   		}
   	
  		this->softwareVersion = softwareVersion;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numInvalidConditions.
- 	 * @return numInvalidConditions as int
- 	 */
- 	int CalReductionRow::getNumInvalidConditions() const {
-	
-  		return numInvalidConditions;
- 	}
-
- 	/**
- 	 * Set numInvalidConditions with the specified int.
- 	 * @param numInvalidConditions The int value to which numInvalidConditions is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalReductionRow::setNumInvalidConditions (int numInvalidConditions)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numInvalidConditions = numInvalidConditions;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get invalidConditions.
- 	 * @return invalidConditions as vector<InvalidatingConditionMod::InvalidatingCondition >
- 	 */
- 	vector<InvalidatingConditionMod::InvalidatingCondition > CalReductionRow::getInvalidConditions() const {
-	
-  		return invalidConditions;
- 	}
-
- 	/**
- 	 * Set invalidConditions with the specified vector<InvalidatingConditionMod::InvalidatingCondition >.
- 	 * @param invalidConditions The vector<InvalidatingConditionMod::InvalidatingCondition > value to which invalidConditions is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalReductionRow::setInvalidConditions (vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->invalidConditions = invalidConditions;
 	
  	}
 	
@@ -1071,23 +1323,23 @@ namespace asdm {
 		
 			numApplied = row.numApplied;
 		
+			appliedCalibrations = row.appliedCalibrations;
+		
 			numParam = row.numParam;
 		
-			timeReduced = row.timeReduced;
-		
-			calAppliedArray = row.calAppliedArray;
-		
 			paramSet = row.paramSet;
+		
+			numInvalidConditions = row.numInvalidConditions;
+		
+			invalidConditions = row.invalidConditions;
+		
+			timeReduced = row.timeReduced;
 		
 			messages = row.messages;
 		
 			software = row.software;
 		
 			softwareVersion = row.softwareVersion;
-		
-			numInvalidConditions = row.numInvalidConditions;
-		
-			invalidConditions = row.invalidConditions;
 		
 		
 		
@@ -1096,13 +1348,20 @@ namespace asdm {
 	}
 
 	
-	bool CalReductionRow::compareNoAutoInc(int numApplied, int numParam, ArrayTime timeReduced, vector<string > calAppliedArray, vector<string > paramSet, string messages, string software, string softwareVersion, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions) {
+	bool CalReductionRow::compareNoAutoInc(int numApplied, vector<string > appliedCalibrations, int numParam, vector<string > paramSet, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions, ArrayTime timeReduced, string messages, string software, string softwareVersion) {
 		bool result;
 		result = true;
 		
 	
 		
 		result = result && (this->numApplied == numApplied);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->appliedCalibrations == appliedCalibrations);
 		
 		if (!result) return false;
 	
@@ -1116,21 +1375,28 @@ namespace asdm {
 
 	
 		
-		result = result && (this->timeReduced == timeReduced);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->calAppliedArray == calAppliedArray);
-		
-		if (!result) return false;
-	
-
-	
-		
 		result = result && (this->paramSet == paramSet);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numInvalidConditions == numInvalidConditions);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->invalidConditions == invalidConditions);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->timeReduced == timeReduced);
 		
 		if (!result) return false;
 	
@@ -1156,26 +1422,12 @@ namespace asdm {
 		if (!result) return false;
 	
 
-	
-		
-		result = result && (this->numInvalidConditions == numInvalidConditions);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->invalidConditions == invalidConditions);
-		
-		if (!result) return false;
-	
-
 		return result;
 	}	
 	
 	
 	
-	bool CalReductionRow::compareRequiredValue(int numApplied, int numParam, ArrayTime timeReduced, vector<string > calAppliedArray, vector<string > paramSet, string messages, string software, string softwareVersion, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions) {
+	bool CalReductionRow::compareRequiredValue(int numApplied, vector<string > appliedCalibrations, int numParam, vector<string > paramSet, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions, ArrayTime timeReduced, string messages, string software, string softwareVersion) {
 		bool result;
 		result = true;
 		
@@ -1184,19 +1436,27 @@ namespace asdm {
 	
 
 	
+		if (!(this->appliedCalibrations == appliedCalibrations)) return false;
+	
+
+	
 		if (!(this->numParam == numParam)) return false;
 	
 
 	
-		if (!(this->timeReduced == timeReduced)) return false;
-	
-
-	
-		if (!(this->calAppliedArray == calAppliedArray)) return false;
-	
-
-	
 		if (!(this->paramSet == paramSet)) return false;
+	
+
+	
+		if (!(this->numInvalidConditions == numInvalidConditions)) return false;
+	
+
+	
+		if (!(this->invalidConditions == invalidConditions)) return false;
+	
+
+	
+		if (!(this->timeReduced == timeReduced)) return false;
 	
 
 	
@@ -1209,14 +1469,6 @@ namespace asdm {
 
 	
 		if (!(this->softwareVersion == softwareVersion)) return false;
-	
-
-	
-		if (!(this->numInvalidConditions == numInvalidConditions)) return false;
-	
-
-	
-		if (!(this->invalidConditions == invalidConditions)) return false;
 	
 
 		return result;
@@ -1236,23 +1488,23 @@ namespace asdm {
 			
 		if (this->numApplied != x->numApplied) return false;
 			
+		if (this->appliedCalibrations != x->appliedCalibrations) return false;
+			
 		if (this->numParam != x->numParam) return false;
 			
-		if (this->timeReduced != x->timeReduced) return false;
-			
-		if (this->calAppliedArray != x->calAppliedArray) return false;
-			
 		if (this->paramSet != x->paramSet) return false;
+			
+		if (this->numInvalidConditions != x->numInvalidConditions) return false;
+			
+		if (this->invalidConditions != x->invalidConditions) return false;
+			
+		if (this->timeReduced != x->timeReduced) return false;
 			
 		if (this->messages != x->messages) return false;
 			
 		if (this->software != x->software) return false;
 			
 		if (this->softwareVersion != x->softwareVersion) return false;
-			
-		if (this->numInvalidConditions != x->numInvalidConditions) return false;
-			
-		if (this->invalidConditions != x->invalidConditions) return false;
 			
 		
 		return true;

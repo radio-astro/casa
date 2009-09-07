@@ -86,21 +86,6 @@ using namespace enumerations;
 	
 
 	
-#include "CStokesParameter.h"
-using namespace StokesParameterMod;
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
 
 	
 #include "CFluxCalibrationMethod.h"
@@ -110,10 +95,32 @@ using namespace FluxCalibrationMethodMod;
 	
 
 	
-#include "CSourceModel.h"
-using namespace SourceModelMod;
+
+	
+#include "CStokesParameter.h"
+using namespace StokesParameterMod;
 	
 
+	
+
+	
+#include "CDirectionReferenceCode.h"
+using namespace DirectionReferenceCodeMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+#include "CSourceModel.h"
+using namespace SourceModelMod;
 	
 
 
@@ -139,7 +146,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalFlux.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -157,7 +164,7 @@ class CalReductionRow;
 /**
  * The CalFluxRow class is a row of a CalFluxTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class CalFluxRow {
@@ -184,8 +191,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalFluxRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalFluxRowIDL x) throw(ConversionException);
+	void setFromIDL (CalFluxRowIDL x) ;
 #endif
 	
 	/**
@@ -198,8 +206,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalFluxTable to which the row built by deserialization will be parented.
+	  */
+	 static CalFluxRow* fromBin(EndianISStream& eiss, CalFluxTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -231,66 +253,6 @@ public:
  	 		
  	 */
  	void setSourceName (string sourceName);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute numFrequency
-	
-	
-	
-
-	
- 	/**
- 	 * Get numFrequency.
- 	 * @return numFrequency as int
- 	 */
- 	int getNumFrequency() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numFrequency with the specified int.
- 	 * @param numFrequency The int value to which numFrequency is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumFrequency (int numFrequency);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute numStokes
-	
-	
-	
-
-	
- 	/**
- 	 * Get numStokes.
- 	 * @return numStokes as int
- 	 */
- 	int getNumStokes() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numStokes with the specified int.
- 	 * @param numStokes The int value to which numStokes is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumStokes (int numStokes);
   		
 	
 	
@@ -358,29 +320,119 @@ public:
 
 
 	
-	// ===> Attribute stokes
+	// ===> Attribute numFrequencyRanges
 	
 	
 	
 
 	
  	/**
- 	 * Get stokes.
- 	 * @return stokes as vector<StokesParameterMod::StokesParameter >
+ 	 * Get numFrequencyRanges.
+ 	 * @return numFrequencyRanges as int
  	 */
- 	vector<StokesParameterMod::StokesParameter > getStokes() const;
+ 	int getNumFrequencyRanges() const;
 	
  
  	
  	
  	/**
- 	 * Set stokes with the specified vector<StokesParameterMod::StokesParameter >.
- 	 * @param stokes The vector<StokesParameterMod::StokesParameter > value to which stokes is to be set.
+ 	 * Set numFrequencyRanges with the specified int.
+ 	 * @param numFrequencyRanges The int value to which numFrequencyRanges is to be set.
  	 
  		
  			
  	 */
- 	void setStokes (vector<StokesParameterMod::StokesParameter > stokes);
+ 	void setNumFrequencyRanges (int numFrequencyRanges);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numStokes
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numStokes.
+ 	 * @return numStokes as int
+ 	 */
+ 	int getNumStokes() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numStokes with the specified int.
+ 	 * @param numStokes The int value to which numStokes is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumStokes (int numStokes);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute frequencyRanges
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get frequencyRanges.
+ 	 * @return frequencyRanges as vector<vector<Frequency > >
+ 	 */
+ 	vector<vector<Frequency > > getFrequencyRanges() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set frequencyRanges with the specified vector<vector<Frequency > >.
+ 	 * @param frequencyRanges The vector<vector<Frequency > > value to which frequencyRanges is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setFrequencyRanges (vector<vector<Frequency > > frequencyRanges);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute fluxMethod
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get fluxMethod.
+ 	 * @return fluxMethod as FluxCalibrationMethodMod::FluxCalibrationMethod
+ 	 */
+ 	FluxCalibrationMethodMod::FluxCalibrationMethod getFluxMethod() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set fluxMethod with the specified FluxCalibrationMethodMod::FluxCalibrationMethod.
+ 	 * @param fluxMethod The FluxCalibrationMethodMod::FluxCalibrationMethod value to which fluxMethod is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setFluxMethod (FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod);
   		
 	
 	
@@ -448,84 +500,155 @@ public:
 
 
 	
-	// ===> Attribute size, which is optional
+	// ===> Attribute stokes
 	
 	
-	
-	/**
-	 * The attribute size is optional. Return true if this attribute exists.
-	 * @return true if and only if the size attribute exists. 
-	 */
-	bool isSizeExists() const;
 	
 
 	
  	/**
- 	 * Get size, which is optional.
- 	 * @return size as vector<vector<vector<Angle > > >
- 	 * @throws IllegalAccessException If size does not exist.
+ 	 * Get stokes.
+ 	 * @return stokes as vector<StokesParameterMod::StokesParameter >
  	 */
- 	vector<vector<vector<Angle > > > getSize() const throw(IllegalAccessException);
+ 	vector<StokesParameterMod::StokesParameter > getStokes() const;
 	
  
  	
  	
  	/**
- 	 * Set size with the specified vector<vector<vector<Angle > > >.
- 	 * @param size The vector<vector<vector<Angle > > > value to which size is to be set.
+ 	 * Set stokes with the specified vector<StokesParameterMod::StokesParameter >.
+ 	 * @param stokes The vector<StokesParameterMod::StokesParameter > value to which stokes is to be set.
  	 
  		
+ 			
  	 */
- 	void setSize (vector<vector<vector<Angle > > > size);
-		
+ 	void setStokes (vector<StokesParameterMod::StokesParameter > stokes);
+  		
 	
 	
-	
-	/**
-	 * Mark size, which is an optional field, as non-existent.
-	 */
-	void clearSize ();
 	
 
 
 	
-	// ===> Attribute sizeError, which is optional
+	// ===> Attribute direction, which is optional
 	
 	
 	
 	/**
-	 * The attribute sizeError is optional. Return true if this attribute exists.
-	 * @return true if and only if the sizeError attribute exists. 
+	 * The attribute direction is optional. Return true if this attribute exists.
+	 * @return true if and only if the direction attribute exists. 
 	 */
-	bool isSizeErrorExists() const;
+	bool isDirectionExists() const;
 	
 
 	
  	/**
- 	 * Get sizeError, which is optional.
- 	 * @return sizeError as vector<vector<vector<Angle > > >
- 	 * @throws IllegalAccessException If sizeError does not exist.
+ 	 * Get direction, which is optional.
+ 	 * @return direction as vector<Angle >
+ 	 * @throws IllegalAccessException If direction does not exist.
  	 */
- 	vector<vector<vector<Angle > > > getSizeError() const throw(IllegalAccessException);
+ 	vector<Angle > getDirection() const;
 	
  
  	
  	
  	/**
- 	 * Set sizeError with the specified vector<vector<vector<Angle > > >.
- 	 * @param sizeError The vector<vector<vector<Angle > > > value to which sizeError is to be set.
+ 	 * Set direction with the specified vector<Angle >.
+ 	 * @param direction The vector<Angle > value to which direction is to be set.
  	 
  		
  	 */
- 	void setSizeError (vector<vector<vector<Angle > > > sizeError);
+ 	void setDirection (vector<Angle > direction);
 		
 	
 	
 	
 	/**
-	 * Mark sizeError, which is an optional field, as non-existent.
+	 * Mark direction, which is an optional field, as non-existent.
 	 */
-	void clearSizeError ();
+	void clearDirection ();
+	
+
+
+	
+	// ===> Attribute directionCode, which is optional
+	
+	
+	
+	/**
+	 * The attribute directionCode is optional. Return true if this attribute exists.
+	 * @return true if and only if the directionCode attribute exists. 
+	 */
+	bool isDirectionCodeExists() const;
+	
+
+	
+ 	/**
+ 	 * Get directionCode, which is optional.
+ 	 * @return directionCode as DirectionReferenceCodeMod::DirectionReferenceCode
+ 	 * @throws IllegalAccessException If directionCode does not exist.
+ 	 */
+ 	DirectionReferenceCodeMod::DirectionReferenceCode getDirectionCode() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set directionCode with the specified DirectionReferenceCodeMod::DirectionReferenceCode.
+ 	 * @param directionCode The DirectionReferenceCodeMod::DirectionReferenceCode value to which directionCode is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setDirectionCode (DirectionReferenceCodeMod::DirectionReferenceCode directionCode);
+		
+	
+	
+	
+	/**
+	 * Mark directionCode, which is an optional field, as non-existent.
+	 */
+	void clearDirectionCode ();
+	
+
+
+	
+	// ===> Attribute directionEquinox, which is optional
+	
+	
+	
+	/**
+	 * The attribute directionEquinox is optional. Return true if this attribute exists.
+	 * @return true if and only if the directionEquinox attribute exists. 
+	 */
+	bool isDirectionEquinoxExists() const;
+	
+
+	
+ 	/**
+ 	 * Get directionEquinox, which is optional.
+ 	 * @return directionEquinox as Angle
+ 	 * @throws IllegalAccessException If directionEquinox does not exist.
+ 	 */
+ 	Angle getDirectionEquinox() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set directionEquinox with the specified Angle.
+ 	 * @param directionEquinox The Angle value to which directionEquinox is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setDirectionEquinox (Angle directionEquinox);
+		
+	
+	
+	
+	/**
+	 * Mark directionEquinox, which is an optional field, as non-existent.
+	 */
+	void clearDirectionEquinox ();
 	
 
 
@@ -547,7 +670,7 @@ public:
  	 * @return PA as vector<vector<Angle > >
  	 * @throws IllegalAccessException If PA does not exist.
  	 */
- 	vector<vector<Angle > > getPA() const throw(IllegalAccessException);
+ 	vector<vector<Angle > > getPA() const;
 	
  
  	
@@ -588,7 +711,7 @@ public:
  	 * @return PAError as vector<vector<Angle > >
  	 * @throws IllegalAccessException If PAError does not exist.
  	 */
- 	vector<vector<Angle > > getPAError() const throw(IllegalAccessException);
+ 	vector<vector<Angle > > getPAError() const;
 	
  
  	
@@ -612,73 +735,84 @@ public:
 
 
 	
-	// ===> Attribute fluxMethod
-	
-	
-	
-
-	
- 	/**
- 	 * Get fluxMethod.
- 	 * @return fluxMethod as FluxCalibrationMethodMod::FluxCalibrationMethod
- 	 */
- 	FluxCalibrationMethodMod::FluxCalibrationMethod getFluxMethod() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set fluxMethod with the specified FluxCalibrationMethodMod::FluxCalibrationMethod.
- 	 * @param fluxMethod The FluxCalibrationMethodMod::FluxCalibrationMethod value to which fluxMethod is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setFluxMethod (FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute direction, which is optional
+	// ===> Attribute size, which is optional
 	
 	
 	
 	/**
-	 * The attribute direction is optional. Return true if this attribute exists.
-	 * @return true if and only if the direction attribute exists. 
+	 * The attribute size is optional. Return true if this attribute exists.
+	 * @return true if and only if the size attribute exists. 
 	 */
-	bool isDirectionExists() const;
+	bool isSizeExists() const;
 	
 
 	
  	/**
- 	 * Get direction, which is optional.
- 	 * @return direction as vector<Angle >
- 	 * @throws IllegalAccessException If direction does not exist.
+ 	 * Get size, which is optional.
+ 	 * @return size as vector<vector<vector<Angle > > >
+ 	 * @throws IllegalAccessException If size does not exist.
  	 */
- 	vector<Angle > getDirection() const throw(IllegalAccessException);
+ 	vector<vector<vector<Angle > > > getSize() const;
 	
  
  	
  	
  	/**
- 	 * Set direction with the specified vector<Angle >.
- 	 * @param direction The vector<Angle > value to which direction is to be set.
+ 	 * Set size with the specified vector<vector<vector<Angle > > >.
+ 	 * @param size The vector<vector<vector<Angle > > > value to which size is to be set.
  	 
  		
  	 */
- 	void setDirection (vector<Angle > direction);
+ 	void setSize (vector<vector<vector<Angle > > > size);
 		
 	
 	
 	
 	/**
-	 * Mark direction, which is an optional field, as non-existent.
+	 * Mark size, which is an optional field, as non-existent.
 	 */
-	void clearDirection ();
+	void clearSize ();
+	
+
+
+	
+	// ===> Attribute sizeError, which is optional
+	
+	
+	
+	/**
+	 * The attribute sizeError is optional. Return true if this attribute exists.
+	 * @return true if and only if the sizeError attribute exists. 
+	 */
+	bool isSizeErrorExists() const;
+	
+
+	
+ 	/**
+ 	 * Get sizeError, which is optional.
+ 	 * @return sizeError as vector<vector<vector<Angle > > >
+ 	 * @throws IllegalAccessException If sizeError does not exist.
+ 	 */
+ 	vector<vector<vector<Angle > > > getSizeError() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set sizeError with the specified vector<vector<vector<Angle > > >.
+ 	 * @param sizeError The vector<vector<vector<Angle > > > value to which sizeError is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSizeError (vector<vector<vector<Angle > > > sizeError);
+		
+	
+	
+	
+	/**
+	 * Mark sizeError, which is an optional field, as non-existent.
+	 */
+	void clearSizeError ();
 	
 
 
@@ -700,7 +834,7 @@ public:
  	 * @return sourceModel as SourceModelMod::SourceModel
  	 * @throws IllegalAccessException If sourceModel does not exist.
  	 */
- 	SourceModelMod::SourceModel getSourceModel() const throw(IllegalAccessException);
+ 	SourceModelMod::SourceModel getSourceModel() const;
 	
  
  	
@@ -720,36 +854,6 @@ public:
 	 * Mark sourceModel, which is an optional field, as non-existent.
 	 */
 	void clearSourceModel ();
-	
-
-
-	
-	// ===> Attribute frequencyRange
-	
-	
-	
-
-	
- 	/**
- 	 * Get frequencyRange.
- 	 * @return frequencyRange as vector<Frequency >
- 	 */
- 	vector<Frequency > getFrequencyRange() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set frequencyRange with the specified vector<Frequency >.
- 	 * @param frequencyRange The vector<Frequency > value to which frequencyRange is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setFrequencyRange (vector<Frequency > frequencyRange);
-  		
-	
-	
 	
 
 
@@ -862,12 +966,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this CalFluxRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, string sourceName, int numFrequency, int numStokes, ArrayTime startValidTime, ArrayTime endValidTime, vector<StokesParameterMod::StokesParameter > stokes, vector<vector<double > > flux, vector<vector<double > > fluxError, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<Frequency > frequencyRange);
+	bool compareNoAutoInc(string sourceName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFrequencyRanges, int numStokes, vector<vector<Frequency > > frequencyRanges, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<vector<double > > flux, vector<vector<double > > fluxError, vector<StokesParameterMod::StokesParameter > stokes);
 	
 	
 
 	
-	bool compareRequiredValue(int numFrequency, int numStokes, ArrayTime startValidTime, ArrayTime endValidTime, vector<StokesParameterMod::StokesParameter > stokes, vector<vector<double > > flux, vector<vector<double > > fluxError, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<Frequency > frequencyRange); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, int numFrequencyRanges, int numStokes, vector<vector<Frequency > > frequencyRanges, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<vector<double > > flux, vector<vector<double > > fluxError, vector<StokesParameterMod::StokesParameter > stokes); 
 		 
 	
 	/**
@@ -939,28 +1043,6 @@ private:
  	
 
 	
-	// ===> Attribute numFrequency
-	
-	
-
-	int numFrequency;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numStokes
-	
-	
-
-	int numStokes;
-
-	
-	
- 	
-
-	
 	// ===> Attribute startValidTime
 	
 	
@@ -983,11 +1065,44 @@ private:
  	
 
 	
-	// ===> Attribute stokes
+	// ===> Attribute numFrequencyRanges
 	
 	
 
-	vector<StokesParameterMod::StokesParameter > stokes;
+	int numFrequencyRanges;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numStokes
+	
+	
+
+	int numStokes;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute frequencyRanges
+	
+	
+
+	vector<vector<Frequency > > frequencyRanges;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute fluxMethod
+	
+	
+
+	FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod;
 
 	
 	
@@ -1016,26 +1131,50 @@ private:
  	
 
 	
-	// ===> Attribute size, which is optional
+	// ===> Attribute stokes
 	
-	
-	bool sizeExists;
 	
 
-	vector<vector<vector<Angle > > > size;
+	vector<StokesParameterMod::StokesParameter > stokes;
 
 	
 	
  	
 
 	
-	// ===> Attribute sizeError, which is optional
+	// ===> Attribute direction, which is optional
 	
 	
-	bool sizeErrorExists;
+	bool directionExists;
 	
 
-	vector<vector<vector<Angle > > > sizeError;
+	vector<Angle > direction;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute directionCode, which is optional
+	
+	
+	bool directionCodeExists;
+	
+
+	DirectionReferenceCodeMod::DirectionReferenceCode directionCode;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute directionEquinox, which is optional
+	
+	
+	bool directionEquinoxExists;
+	
+
+	Angle directionEquinox;
 
 	
 	
@@ -1068,24 +1207,26 @@ private:
  	
 
 	
-	// ===> Attribute fluxMethod
+	// ===> Attribute size, which is optional
 	
+	
+	bool sizeExists;
 	
 
-	FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod;
+	vector<vector<vector<Angle > > > size;
 
 	
 	
  	
 
 	
-	// ===> Attribute direction, which is optional
+	// ===> Attribute sizeError, which is optional
 	
 	
-	bool directionExists;
+	bool sizeErrorExists;
 	
 
-	vector<Angle > direction;
+	vector<vector<vector<Angle > > > sizeError;
 
 	
 	
@@ -1099,17 +1240,6 @@ private:
 	
 
 	SourceModelMod::SourceModel sourceModel;
-
-	
-	
- 	
-
-	
-	// ===> Attribute frequencyRange
-	
-	
-
-	vector<Frequency > frequencyRange;
 
 	
 	

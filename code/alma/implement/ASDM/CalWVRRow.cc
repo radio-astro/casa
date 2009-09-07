@@ -100,42 +100,6 @@ namespace asdm {
 		
 		
 			
-				
-		x->antennaName = CORBA::string_dup(antennaName.c_str());
-				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->numPoly = numPoly;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->numChan = numChan;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
 		x->startValidTime = startValidTime.toIDLArrayTime();
 			
 		
@@ -168,11 +132,37 @@ namespace asdm {
 		
 		
 			
-		x->freqLimits.length(freqLimits.size());
-		for (unsigned int i = 0; i < freqLimits.size(); ++i) {
+				
+		x->antennaName = CORBA::string_dup(antennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
 			
-			x->freqLimits[i] = freqLimits.at(i).toIDLFrequency();
+				
+		x->numInputAntennas = numInputAntennas;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
 			
+		x->inputAntennaNames.length(inputAntennaNames.size());
+		for (unsigned int i = 0; i < inputAntennaNames.size(); ++i) {
+			
+				
+			x->inputAntennaNames[i] = CORBA::string_dup(inputAntennaNames.at(i).c_str());
+				
+	 		
 	 	}
 			
 		
@@ -183,23 +173,10 @@ namespace asdm {
 		
 		
 			
-		x->pathCoeff.length(pathCoeff.size());
-		for (unsigned int i = 0; i < pathCoeff.size(); i++) {
-			x->pathCoeff[i].length(pathCoeff.at(i).size());
-			for (unsigned int j = 0; j < pathCoeff.at(i).size(); j++) {
-				x->pathCoeff[i][j].length(pathCoeff.at(i).at(j).size());
-			}					 		
-		}
-		
-		for (unsigned int i = 0; i < pathCoeff.size() ; i++)
-			for (unsigned int j = 0; j < pathCoeff.at(i).size(); j++)
-				for (unsigned int k = 0; k < pathCoeff.at(i).at(j).size(); k++)
-					
-						
-					x->pathCoeff[i][j][k] = pathCoeff.at(i).at(j).at(k);
-		 				
-			 									
-			
+				
+		x->numChan = numChan;
+ 				
+ 			
 		
 	
 
@@ -238,8 +215,28 @@ namespace asdm {
 		
 		
 			
+		x->refTemp.length(refTemp.size());
+		for (unsigned int i = 0; i < refTemp.size(); i++) {
+			x->refTemp[i].length(refTemp.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < refTemp.size() ; i++)
+			for (unsigned int j = 0; j < refTemp.at(i).size(); j++)
+					
+				x->refTemp[i][j]= refTemp.at(i).at(j).toIDLTemperature();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
 				
-		x->numInputAntenna = numInputAntenna;
+		x->numPoly = numPoly;
  				
  			
 		
@@ -250,14 +247,22 @@ namespace asdm {
 		
 		
 			
-		x->inputAntennaNames.length(inputAntennaNames.size());
-		for (unsigned int i = 0; i < inputAntennaNames.size(); ++i) {
-			
-				
-			x->inputAntennaNames[i] = CORBA::string_dup(inputAntennaNames.at(i).c_str());
-				
-	 		
-	 	}
+		x->pathCoeff.length(pathCoeff.size());
+		for (unsigned int i = 0; i < pathCoeff.size(); i++) {
+			x->pathCoeff[i].length(pathCoeff.at(i).size());
+			for (unsigned int j = 0; j < pathCoeff.at(i).size(); j++) {
+				x->pathCoeff[i][j].length(pathCoeff.at(i).at(j).size());
+			}					 		
+		}
+		
+		for (unsigned int i = 0; i < pathCoeff.size() ; i++)
+			for (unsigned int j = 0; j < pathCoeff.at(i).size(); j++)
+				for (unsigned int k = 0; k < pathCoeff.at(i).at(j).size(); k++)
+					
+						
+					x->pathCoeff[i][j][k] = pathCoeff.at(i).at(j).at(k);
+		 				
+			 									
 			
 		
 	
@@ -273,6 +278,50 @@ namespace asdm {
 			x->polyFreqLimits[i] = polyFreqLimits.at(i).toIDLFrequency();
 			
 	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->wetPath.length(wetPath.size());
+		for (unsigned int i = 0; i < wetPath.size(); ++i) {
+			
+				
+			x->wetPath[i] = wetPath.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->dryPath.length(dryPath.size());
+		for (unsigned int i = 0; i < dryPath.size(); ++i) {
+			
+				
+			x->dryPath[i] = dryPath.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->water = water.toIDLLength();
 			
 		
 	
@@ -320,41 +369,11 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalWVRRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalWVRRow::setFromIDL (CalWVRRowIDL x) throw(ConversionException) {
+	void CalWVRRow::setFromIDL (CalWVRRowIDL x){
 		try {
 		// Fill the values from x.
 	
 		
-	
-		
-		
-			
-		setAntennaName(string (x.antennaName));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumPoly(x.numPoly);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumChan(x.numChan);
-  			
- 		
-		
-	
-
 	
 		
 		
@@ -389,10 +408,30 @@ namespace asdm {
 		
 		
 			
-		freqLimits .clear();
-		for (unsigned int i = 0; i <x.freqLimits.length(); ++i) {
+		setAntennaName(string (x.antennaName));
 			
-			freqLimits.push_back(Frequency (x.freqLimits[i]));
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumInputAntennas(x.numInputAntennas);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		inputAntennaNames .clear();
+		for (unsigned int i = 0; i <x.inputAntennaNames.length(); ++i) {
+			
+			inputAntennaNames.push_back(string (x.inputAntennaNames[i]));
 			
 		}
 			
@@ -404,25 +443,9 @@ namespace asdm {
 		
 		
 			
-		pathCoeff .clear();
-		vector< vector<float> > vv_aux_pathCoeff;
-		vector<float> v_aux_pathCoeff;
-		
-		for (unsigned int i = 0; i < x.pathCoeff.length(); ++i) {
-			vv_aux_pathCoeff.clear();
-			for (unsigned int j = 0; j < x.pathCoeff[0].length(); ++j) {
-				v_aux_pathCoeff.clear();
-				for (unsigned int k = 0; k < x.pathCoeff[0][0].length(); ++k) {
-					
-					v_aux_pathCoeff.push_back(x.pathCoeff[i][j][k]);
-		  			
-		  		}
-		  		vv_aux_pathCoeff.push_back(v_aux_pathCoeff);
-  			}
-  			pathCoeff.push_back(vv_aux_pathCoeff);
-		}
-			
-  		
+		setNumChan(x.numChan);
+  			
+ 		
 		
 	
 
@@ -460,7 +483,27 @@ namespace asdm {
 		
 		
 			
-		setNumInputAntenna(x.numInputAntenna);
+		refTemp .clear();
+		vector<Temperature> v_aux_refTemp;
+		for (unsigned int i = 0; i < x.refTemp.length(); ++i) {
+			v_aux_refTemp.clear();
+			for (unsigned int j = 0; j < x.refTemp[0].length(); ++j) {
+				
+				v_aux_refTemp.push_back(Temperature (x.refTemp[i][j]));
+				
+  			}
+  			refTemp.push_back(v_aux_refTemp);			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setNumPoly(x.numPoly);
   			
  		
 		
@@ -470,11 +513,22 @@ namespace asdm {
 		
 		
 			
-		inputAntennaNames .clear();
-		for (unsigned int i = 0; i <x.inputAntennaNames.length(); ++i) {
-			
-			inputAntennaNames.push_back(string (x.inputAntennaNames[i]));
-			
+		pathCoeff .clear();
+		vector< vector<float> > vv_aux_pathCoeff;
+		vector<float> v_aux_pathCoeff;
+		
+		for (unsigned int i = 0; i < x.pathCoeff.length(); ++i) {
+			vv_aux_pathCoeff.clear();
+			for (unsigned int j = 0; j < x.pathCoeff[0].length(); ++j) {
+				v_aux_pathCoeff.clear();
+				for (unsigned int k = 0; k < x.pathCoeff[0][0].length(); ++k) {
+					
+					v_aux_pathCoeff.push_back(x.pathCoeff[i][j][k]);
+		  			
+		  		}
+		  		vv_aux_pathCoeff.push_back(v_aux_pathCoeff);
+  			}
+  			pathCoeff.push_back(vv_aux_pathCoeff);
 		}
 			
   		
@@ -493,6 +547,46 @@ namespace asdm {
 		}
 			
   		
+		
+	
+
+	
+		
+		
+			
+		wetPath .clear();
+		for (unsigned int i = 0; i <x.wetPath.length(); ++i) {
+			
+			wetPath.push_back(x.wetPath[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		dryPath .clear();
+		for (unsigned int i = 0; i <x.dryPath.length(); ++i) {
+			
+			dryPath.push_back(x.dryPath[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setWater(Length (x.water));
+			
+ 		
 		
 	
 
@@ -526,7 +620,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalWVR");
+			throw ConversionException (err.getMessage(),"CalWVR");
 		}
 	}
 #endif
@@ -541,30 +635,6 @@ namespace asdm {
 		
 	
 		
-  	
- 		
-		
-		Parser::toXML(antennaName, "antennaName", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numPoly, "numPoly", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numChan, "numChan", buf);
-		
-		
-	
-
   	
  		
 		
@@ -592,7 +662,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(freqLimits, "freqLimits", buf);
+		Parser::toXML(antennaName, "antennaName", buf);
 		
 		
 	
@@ -600,7 +670,23 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(pathCoeff, "pathCoeff", buf);
+		Parser::toXML(numInputAntennas, "numInputAntennas", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(inputAntennaNames, "inputAntennaNames", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numChan, "numChan", buf);
 		
 		
 	
@@ -624,7 +710,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numInputAntenna, "numInputAntenna", buf);
+		Parser::toXML(refTemp, "refTemp", buf);
 		
 		
 	
@@ -632,7 +718,15 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(inputAntennaNames, "inputAntennaNames", buf);
+		Parser::toXML(numPoly, "numPoly", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(pathCoeff, "pathCoeff", buf);
 		
 		
 	
@@ -641,6 +735,30 @@ namespace asdm {
  		
 		
 		Parser::toXML(polyFreqLimits, "polyFreqLimits", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(wetPath, "wetPath", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(dryPath, "dryPath", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(water, "water", buf);
 		
 		
 	
@@ -680,36 +798,12 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalWVRRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalWVRRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
 	
 		
-	
-  		
-			
-	  	setAntennaName(Parser::getString("antennaName","CalWVR",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setNumPoly(Parser::getInteger("numPoly","CalWVR",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setNumChan(Parser::getInteger("numChan","CalWVR",rowDoc));
-			
-		
-	
-
 	
   		
 			
@@ -739,8 +833,24 @@ namespace asdm {
 	
   		
 			
+	  	setAntennaName(Parser::getString("antennaName","CalWVR",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setNumInputAntennas(Parser::getInteger("numInputAntennas","CalWVR",rowDoc));
+			
+		
+	
+
+	
+  		
+			
 					
-	  	setFreqLimits(Parser::get1DFrequency("freqLimits","CalWVR",rowDoc));
+	  	setInputAntennaNames(Parser::get1DString("inputAntennaNames","CalWVR",rowDoc));
 	  			
 	  		
 		
@@ -749,10 +859,8 @@ namespace asdm {
 	
   		
 			
-					
-	  	setPathCoeff(Parser::get3DFloat("pathCoeff","CalWVR",rowDoc));
-	  			
-	  		
+	  	setNumChan(Parser::getInteger("numChan","CalWVR",rowDoc));
+			
 		
 	
 
@@ -779,7 +887,17 @@ namespace asdm {
 	
   		
 			
-	  	setNumInputAntenna(Parser::getInteger("numInputAntenna","CalWVR",rowDoc));
+					
+	  	setRefTemp(Parser::get2DTemperature("refTemp","CalWVR",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setNumPoly(Parser::getInteger("numPoly","CalWVR",rowDoc));
 			
 		
 	
@@ -788,7 +906,7 @@ namespace asdm {
   		
 			
 					
-	  	setInputAntennaNames(Parser::get1DString("inputAntennaNames","CalWVR",rowDoc));
+	  	setPathCoeff(Parser::get3DFloat("pathCoeff","CalWVR",rowDoc));
 	  			
 	  		
 		
@@ -801,6 +919,34 @@ namespace asdm {
 	  	setPolyFreqLimits(Parser::get1DFrequency("polyFreqLimits","CalWVR",rowDoc));
 	  			
 	  		
+		
+	
+
+	
+  		
+			
+					
+	  	setWetPath(Parser::get1DFloat("wetPath","CalWVR",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+					
+	  	setDryPath(Parser::get1DFloat("dryPath","CalWVR",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setWater(Parser::getLength("water","CalWVR",rowDoc));
+			
 		
 	
 
@@ -834,110 +980,406 @@ namespace asdm {
 		}
 	}
 	
+	void CalWVRRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+						
+			eoss.writeString(antennaName);
+				
+		
+	
+
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(wvrMethod);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numInputAntennas);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) inputAntennaNames.size());
+		for (unsigned int i = 0; i < inputAntennaNames.size(); i++)
+				
+			eoss.writeString(inputAntennaNames.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numChan);
+				
+		
+	
+
+	
+	
+		
+	Frequency::toBin(chanFreq, eoss);
+		
+	
+
+	
+	
+		
+	Frequency::toBin(chanWidth, eoss);
+		
+	
+
+	
+	
+		
+	Temperature::toBin(refTemp, eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numPoly);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) pathCoeff.size());
+		eoss.writeInt((int) pathCoeff.at(0).size());		
+		eoss.writeInt((int) pathCoeff.at(0).at(0).size());
+		for (unsigned int i = 0; i < pathCoeff.size(); i++) 
+			for (unsigned int j = 0;  j < pathCoeff.at(0).size(); j++)
+				for (unsigned int k = 0; k <  pathCoeff.at(0).at(0).size(); k++)	
+							 
+					eoss.writeFloat(pathCoeff.at(i).at(j).at(k));
+						
+						
+		
+	
+
+	
+	
+		
+	Frequency::toBin(polyFreqLimits, eoss);
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) wetPath.size());
+		for (unsigned int i = 0; i < wetPath.size(); i++)
+				
+			eoss.writeFloat(wetPath.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) dryPath.size());
+		for (unsigned int i = 0; i < dryPath.size(); i++)
+				
+			eoss.writeFloat(dryPath.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+	water.toBin(eoss);
+		
+	
+
+
+	
+	
+	}
+	
+	CalWVRRow* CalWVRRow::fromBin(EndianISStream& eiss, CalWVRTable& table) {
+		CalWVRRow* row = new  CalWVRRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->antennaName =  eiss.readString();
+			
+		
+	
+
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->wvrMethod = CWVRMethod::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->numInputAntennas =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->inputAntennaNames.clear();
+		
+		unsigned int inputAntennaNamesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < inputAntennaNamesDim1; i++)
+			
+			row->inputAntennaNames.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->numChan =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->chanFreq = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->chanWidth = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->refTemp = Temperature::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->numPoly =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->pathCoeff.clear();
+			
+		unsigned int pathCoeffDim1 = eiss.readInt();
+		unsigned int pathCoeffDim2 = eiss.readInt();
+		unsigned int pathCoeffDim3 = eiss.readInt();
+		vector <vector<float> > pathCoeffAux2;
+		vector <float> pathCoeffAux1;
+		for (unsigned int i = 0; i < pathCoeffDim1; i++) {
+			pathCoeffAux2.clear();
+			for (unsigned int j = 0; j < pathCoeffDim2 ; j++) {
+				pathCoeffAux1.clear();
+				for (unsigned int k = 0; k < pathCoeffDim3; k++) {
+			
+					pathCoeffAux1.push_back(eiss.readFloat());
+			
+				}
+				pathCoeffAux2.push_back(pathCoeffAux1);
+			}
+			row->pathCoeff.push_back(pathCoeffAux2);
+		}	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->polyFreqLimits = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->wetPath.clear();
+		
+		unsigned int wetPathDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < wetPathDim1; i++)
+			
+			row->wetPath.push_back(eiss.readFloat());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->dryPath.clear();
+		
+		unsigned int dryPathDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < dryPathDim1; i++)
+			
+			row->dryPath.push_back(eiss.readFloat());
+			
+	
+
+		
+	
+
+	
+		
+		
+		row->water =  Length::fromBin(eiss);
+		
+	
+
+		
+		
+		
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
-	
-
-	
- 	/**
- 	 * Get antennaName.
- 	 * @return antennaName as string
- 	 */
- 	string CalWVRRow::getAntennaName() const {
-	
-  		return antennaName;
- 	}
-
- 	/**
- 	 * Set antennaName with the specified string.
- 	 * @param antennaName The string value to which antennaName is to be set.
- 	 
- 	
- 		
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 	
- 	 */
- 	void CalWVRRow::setAntennaName (string antennaName)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-			throw IllegalAccessException("antennaName", "CalWVR");
-		
-  		}
-  	
- 		this->antennaName = antennaName;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numPoly.
- 	 * @return numPoly as int
- 	 */
- 	int CalWVRRow::getNumPoly() const {
-	
-  		return numPoly;
- 	}
-
- 	/**
- 	 * Set numPoly with the specified int.
- 	 * @param numPoly The int value to which numPoly is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalWVRRow::setNumPoly (int numPoly)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numPoly = numPoly;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numChan.
- 	 * @return numChan as int
- 	 */
- 	int CalWVRRow::getNumChan() const {
-	
-  		return numChan;
- 	}
-
- 	/**
- 	 * Set numChan with the specified int.
- 	 * @param numChan The int value to which numChan is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalWVRRow::setNumChan (int numChan)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numChan = numChan;
-	
- 	}
-	
-	
-
 	
 
 	
@@ -1038,29 +1480,65 @@ namespace asdm {
 
 	
  	/**
- 	 * Get freqLimits.
- 	 * @return freqLimits as vector<Frequency >
+ 	 * Get antennaName.
+ 	 * @return antennaName as string
  	 */
- 	vector<Frequency > CalWVRRow::getFreqLimits() const {
+ 	string CalWVRRow::getAntennaName() const {
 	
-  		return freqLimits;
+  		return antennaName;
  	}
 
  	/**
- 	 * Set freqLimits with the specified vector<Frequency >.
- 	 * @param freqLimits The vector<Frequency > value to which freqLimits is to be set.
+ 	 * Set antennaName with the specified string.
+ 	 * @param antennaName The string value to which antennaName is to be set.
+ 	 
+ 	
+ 		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
+ 	 */
+ 	void CalWVRRow::setAntennaName (string antennaName)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+			throw IllegalAccessException("antennaName", "CalWVR");
+		
+  		}
+  	
+ 		this->antennaName = antennaName;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numInputAntennas.
+ 	 * @return numInputAntennas as int
+ 	 */
+ 	int CalWVRRow::getNumInputAntennas() const {
+	
+  		return numInputAntennas;
+ 	}
+
+ 	/**
+ 	 * Set numInputAntennas with the specified int.
+ 	 * @param numInputAntennas The int value to which numInputAntennas is to be set.
  	 
  	
  		
  	 */
- 	void CalWVRRow::setFreqLimits (vector<Frequency > freqLimits)  {
+ 	void CalWVRRow::setNumInputAntennas (int numInputAntennas)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->freqLimits = freqLimits;
+ 		this->numInputAntennas = numInputAntennas;
 	
  	}
 	
@@ -1070,29 +1548,61 @@ namespace asdm {
 
 	
  	/**
- 	 * Get pathCoeff.
- 	 * @return pathCoeff as vector<vector<vector<float > > >
+ 	 * Get inputAntennaNames.
+ 	 * @return inputAntennaNames as vector<string >
  	 */
- 	vector<vector<vector<float > > > CalWVRRow::getPathCoeff() const {
+ 	vector<string > CalWVRRow::getInputAntennaNames() const {
 	
-  		return pathCoeff;
+  		return inputAntennaNames;
  	}
 
  	/**
- 	 * Set pathCoeff with the specified vector<vector<vector<float > > >.
- 	 * @param pathCoeff The vector<vector<vector<float > > > value to which pathCoeff is to be set.
+ 	 * Set inputAntennaNames with the specified vector<string >.
+ 	 * @param inputAntennaNames The vector<string > value to which inputAntennaNames is to be set.
  	 
  	
  		
  	 */
- 	void CalWVRRow::setPathCoeff (vector<vector<vector<float > > > pathCoeff)  {
+ 	void CalWVRRow::setInputAntennaNames (vector<string > inputAntennaNames)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->pathCoeff = pathCoeff;
+ 		this->inputAntennaNames = inputAntennaNames;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numChan.
+ 	 * @return numChan as int
+ 	 */
+ 	int CalWVRRow::getNumChan() const {
+	
+  		return numChan;
+ 	}
+
+ 	/**
+ 	 * Set numChan with the specified int.
+ 	 * @param numChan The int value to which numChan is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalWVRRow::setNumChan (int numChan)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numChan = numChan;
 	
  	}
 	
@@ -1166,29 +1676,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numInputAntenna.
- 	 * @return numInputAntenna as int
+ 	 * Get refTemp.
+ 	 * @return refTemp as vector<vector<Temperature > >
  	 */
- 	int CalWVRRow::getNumInputAntenna() const {
+ 	vector<vector<Temperature > > CalWVRRow::getRefTemp() const {
 	
-  		return numInputAntenna;
+  		return refTemp;
  	}
 
  	/**
- 	 * Set numInputAntenna with the specified int.
- 	 * @param numInputAntenna The int value to which numInputAntenna is to be set.
+ 	 * Set refTemp with the specified vector<vector<Temperature > >.
+ 	 * @param refTemp The vector<vector<Temperature > > value to which refTemp is to be set.
  	 
  	
  		
  	 */
- 	void CalWVRRow::setNumInputAntenna (int numInputAntenna)  {
+ 	void CalWVRRow::setRefTemp (vector<vector<Temperature > > refTemp)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->numInputAntenna = numInputAntenna;
+ 		this->refTemp = refTemp;
 	
  	}
 	
@@ -1198,29 +1708,61 @@ namespace asdm {
 
 	
  	/**
- 	 * Get inputAntennaNames.
- 	 * @return inputAntennaNames as vector<string >
+ 	 * Get numPoly.
+ 	 * @return numPoly as int
  	 */
- 	vector<string > CalWVRRow::getInputAntennaNames() const {
+ 	int CalWVRRow::getNumPoly() const {
 	
-  		return inputAntennaNames;
+  		return numPoly;
  	}
 
  	/**
- 	 * Set inputAntennaNames with the specified vector<string >.
- 	 * @param inputAntennaNames The vector<string > value to which inputAntennaNames is to be set.
+ 	 * Set numPoly with the specified int.
+ 	 * @param numPoly The int value to which numPoly is to be set.
  	 
  	
  		
  	 */
- 	void CalWVRRow::setInputAntennaNames (vector<string > inputAntennaNames)  {
+ 	void CalWVRRow::setNumPoly (int numPoly)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->inputAntennaNames = inputAntennaNames;
+ 		this->numPoly = numPoly;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get pathCoeff.
+ 	 * @return pathCoeff as vector<vector<vector<float > > >
+ 	 */
+ 	vector<vector<vector<float > > > CalWVRRow::getPathCoeff() const {
+	
+  		return pathCoeff;
+ 	}
+
+ 	/**
+ 	 * Set pathCoeff with the specified vector<vector<vector<float > > >.
+ 	 * @param pathCoeff The vector<vector<vector<float > > > value to which pathCoeff is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalWVRRow::setPathCoeff (vector<vector<vector<float > > > pathCoeff)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->pathCoeff = pathCoeff;
 	
  	}
 	
@@ -1253,6 +1795,102 @@ namespace asdm {
   		}
   	
  		this->polyFreqLimits = polyFreqLimits;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get wetPath.
+ 	 * @return wetPath as vector<float >
+ 	 */
+ 	vector<float > CalWVRRow::getWetPath() const {
+	
+  		return wetPath;
+ 	}
+
+ 	/**
+ 	 * Set wetPath with the specified vector<float >.
+ 	 * @param wetPath The vector<float > value to which wetPath is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalWVRRow::setWetPath (vector<float > wetPath)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->wetPath = wetPath;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get dryPath.
+ 	 * @return dryPath as vector<float >
+ 	 */
+ 	vector<float > CalWVRRow::getDryPath() const {
+	
+  		return dryPath;
+ 	}
+
+ 	/**
+ 	 * Set dryPath with the specified vector<float >.
+ 	 * @param dryPath The vector<float > value to which dryPath is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalWVRRow::setDryPath (vector<float > dryPath)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->dryPath = dryPath;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get water.
+ 	 * @return water as Length
+ 	 */
+ 	Length CalWVRRow::getWater() const {
+	
+  		return water;
+ 	}
+
+ 	/**
+ 	 * Set water with the specified Length.
+ 	 * @param water The Length value to which water is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalWVRRow::setWater (Length water)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->water = water;
 	
  	}
 	
@@ -1417,6 +2055,12 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
+
+	
 	
 
 	
@@ -1424,12 +2068,6 @@ namespace asdm {
 	
 	
 	
-	
-
-	
-
-	
-
 	
 
 	
@@ -1437,6 +2075,18 @@ namespace asdm {
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 wvrMethod = CWVRMethod::from_int(0);
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -1488,6 +2138,12 @@ wvrMethod = CWVRMethod::from_int(0);
 	
 
 	
+
+	
+
+	
+
+	
 	
 
 	
@@ -1496,18 +2152,14 @@ wvrMethod = CWVRMethod::from_int(0);
 		else {
 	
 		
+			antennaName = row.antennaName;
+		
 			calDataId = row.calDataId;
 		
 			calReductionId = row.calReductionId;
 		
-			antennaName = row.antennaName;
 		
 		
-		
-		
-			numPoly = row.numPoly;
-		
-			numChan = row.numChan;
 		
 			startValidTime = row.startValidTime;
 		
@@ -1515,19 +2167,29 @@ wvrMethod = CWVRMethod::from_int(0);
 		
 			wvrMethod = row.wvrMethod;
 		
-			freqLimits = row.freqLimits;
+			numInputAntennas = row.numInputAntennas;
 		
-			pathCoeff = row.pathCoeff;
+			inputAntennaNames = row.inputAntennaNames;
+		
+			numChan = row.numChan;
 		
 			chanFreq = row.chanFreq;
 		
 			chanWidth = row.chanWidth;
 		
-			numInputAntenna = row.numInputAntenna;
+			refTemp = row.refTemp;
 		
-			inputAntennaNames = row.inputAntennaNames;
+			numPoly = row.numPoly;
+		
+			pathCoeff = row.pathCoeff;
 		
 			polyFreqLimits = row.polyFreqLimits;
+		
+			wetPath = row.wetPath;
+		
+			dryPath = row.dryPath;
+		
+			water = row.water;
 		
 		
 		
@@ -1536,10 +2198,17 @@ wvrMethod = CWVRMethod::from_int(0);
 	}
 
 	
-	bool CalWVRRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, int numPoly, int numChan, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > freqLimits, vector<vector<vector<float > > > pathCoeff, vector<Frequency > chanFreq, vector<Frequency > chanWidth, int numInputAntenna, vector<string > inputAntennaNames, vector<Frequency > polyFreqLimits) {
+	bool CalWVRRow::compareNoAutoInc(string antennaName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, int numInputAntennas, vector<string > inputAntennaNames, int numChan, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<vector<Temperature > > refTemp, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<Frequency > polyFreqLimits, vector<float > wetPath, vector<float > dryPath, Length water) {
 		bool result;
 		result = true;
 		
+	
+		
+		result = result && (this->antennaName == antennaName);
+		
+		if (!result) return false;
+	
+
 	
 		
 		result = result && (this->calDataId == calDataId);
@@ -1550,27 +2219,6 @@ wvrMethod = CWVRMethod::from_int(0);
 	
 		
 		result = result && (this->calReductionId == calReductionId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->antennaName == antennaName);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numPoly == numPoly);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numChan == numChan);
 		
 		if (!result) return false;
 	
@@ -1598,14 +2246,21 @@ wvrMethod = CWVRMethod::from_int(0);
 
 	
 		
-		result = result && (this->freqLimits == freqLimits);
+		result = result && (this->numInputAntennas == numInputAntennas);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->pathCoeff == pathCoeff);
+		result = result && (this->inputAntennaNames == inputAntennaNames);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numChan == numChan);
 		
 		if (!result) return false;
 	
@@ -1626,14 +2281,21 @@ wvrMethod = CWVRMethod::from_int(0);
 
 	
 		
-		result = result && (this->numInputAntenna == numInputAntenna);
+		result = result && (this->refTemp == refTemp);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->inputAntennaNames == inputAntennaNames);
+		result = result && (this->numPoly == numPoly);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->pathCoeff == pathCoeff);
 		
 		if (!result) return false;
 	
@@ -1645,23 +2307,36 @@ wvrMethod = CWVRMethod::from_int(0);
 		if (!result) return false;
 	
 
+	
+		
+		result = result && (this->wetPath == wetPath);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->dryPath == dryPath);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->water == water);
+		
+		if (!result) return false;
+	
+
 		return result;
 	}	
 	
 	
 	
-	bool CalWVRRow::compareRequiredValue(int numPoly, int numChan, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > freqLimits, vector<vector<vector<float > > > pathCoeff, vector<Frequency > chanFreq, vector<Frequency > chanWidth, int numInputAntenna, vector<string > inputAntennaNames, vector<Frequency > polyFreqLimits) {
+	bool CalWVRRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, int numInputAntennas, vector<string > inputAntennaNames, int numChan, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<vector<Temperature > > refTemp, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<Frequency > polyFreqLimits, vector<float > wetPath, vector<float > dryPath, Length water) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->numPoly == numPoly)) return false;
-	
-
-	
-		if (!(this->numChan == numChan)) return false;
-	
-
 	
 		if (!(this->startValidTime == startValidTime)) return false;
 	
@@ -1675,11 +2350,15 @@ wvrMethod = CWVRMethod::from_int(0);
 	
 
 	
-		if (!(this->freqLimits == freqLimits)) return false;
+		if (!(this->numInputAntennas == numInputAntennas)) return false;
 	
 
 	
-		if (!(this->pathCoeff == pathCoeff)) return false;
+		if (!(this->inputAntennaNames == inputAntennaNames)) return false;
+	
+
+	
+		if (!(this->numChan == numChan)) return false;
 	
 
 	
@@ -1691,15 +2370,31 @@ wvrMethod = CWVRMethod::from_int(0);
 	
 
 	
-		if (!(this->numInputAntenna == numInputAntenna)) return false;
+		if (!(this->refTemp == refTemp)) return false;
 	
 
 	
-		if (!(this->inputAntennaNames == inputAntennaNames)) return false;
+		if (!(this->numPoly == numPoly)) return false;
+	
+
+	
+		if (!(this->pathCoeff == pathCoeff)) return false;
 	
 
 	
 		if (!(this->polyFreqLimits == polyFreqLimits)) return false;
+	
+
+	
+		if (!(this->wetPath == wetPath)) return false;
+	
+
+	
+		if (!(this->dryPath == dryPath)) return false;
+	
+
+	
+		if (!(this->water == water)) return false;
 	
 
 		return result;
@@ -1717,29 +2412,35 @@ wvrMethod = CWVRMethod::from_int(0);
 	bool CalWVRRow::equalByRequiredValue(CalWVRRow* x) {
 		
 			
-		if (this->numPoly != x->numPoly) return false;
-			
-		if (this->numChan != x->numChan) return false;
-			
 		if (this->startValidTime != x->startValidTime) return false;
 			
 		if (this->endValidTime != x->endValidTime) return false;
 			
 		if (this->wvrMethod != x->wvrMethod) return false;
 			
-		if (this->freqLimits != x->freqLimits) return false;
+		if (this->numInputAntennas != x->numInputAntennas) return false;
 			
-		if (this->pathCoeff != x->pathCoeff) return false;
+		if (this->inputAntennaNames != x->inputAntennaNames) return false;
+			
+		if (this->numChan != x->numChan) return false;
 			
 		if (this->chanFreq != x->chanFreq) return false;
 			
 		if (this->chanWidth != x->chanWidth) return false;
 			
-		if (this->numInputAntenna != x->numInputAntenna) return false;
+		if (this->refTemp != x->refTemp) return false;
 			
-		if (this->inputAntennaNames != x->inputAntennaNames) return false;
+		if (this->numPoly != x->numPoly) return false;
+			
+		if (this->pathCoeff != x->pathCoeff) return false;
 			
 		if (this->polyFreqLimits != x->polyFreqLimits) return false;
+			
+		if (this->wetPath != x->wetPath) return false;
+			
+		if (this->dryPath != x->dryPath) return false;
+			
+		if (this->water != x->water) return false;
 			
 		
 		return true;

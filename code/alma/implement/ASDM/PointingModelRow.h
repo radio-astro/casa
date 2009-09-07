@@ -84,6 +84,16 @@ using namespace enumerations;
 	
 
 	
+#include "CPolarizationType.h"
+using namespace PolarizationTypeMod;
+	
+
+	
+#include "CReceiverBand.h"
+using namespace ReceiverBandMod;
+	
+
+	
 
 	
 
@@ -110,13 +120,16 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file PointingModel.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
 
 //class asdm::PointingModelTable;
 
+
+// class asdm::PointingModelRow;
+class PointingModelRow;
 
 // class asdm::AntennaRow;
 class AntennaRow;
@@ -125,7 +138,7 @@ class AntennaRow;
 /**
  * The PointingModelRow class is a row of a PointingModelTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class PointingModelRow {
@@ -152,8 +165,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct PointingModelRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (PointingModelRowIDL x) throw(ConversionException);
+	void setFromIDL (PointingModelRowIDL x) ;
 #endif
 	
 	/**
@@ -166,8 +180,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the PointingModelTable to which the row built by deserialization will be parented.
+	  */
+	 static PointingModelRow* fromBin(EndianISStream& eiss, PointingModelTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -284,43 +312,92 @@ public:
 
 
 	
-	// ===> Attribute numFormula, which is optional
+	// ===> Attribute polarizationType
 	
 	
-	
-	/**
-	 * The attribute numFormula is optional. Return true if this attribute exists.
-	 * @return true if and only if the numFormula attribute exists. 
-	 */
-	bool isNumFormulaExists() const;
 	
 
 	
  	/**
- 	 * Get numFormula, which is optional.
- 	 * @return numFormula as int
- 	 * @throws IllegalAccessException If numFormula does not exist.
+ 	 * Get polarizationType.
+ 	 * @return polarizationType as PolarizationTypeMod::PolarizationType
  	 */
- 	int getNumFormula() const throw(IllegalAccessException);
+ 	PolarizationTypeMod::PolarizationType getPolarizationType() const;
 	
  
  	
  	
  	/**
- 	 * Set numFormula with the specified int.
- 	 * @param numFormula The int value to which numFormula is to be set.
+ 	 * Set polarizationType with the specified PolarizationTypeMod::PolarizationType.
+ 	 * @param polarizationType The PolarizationTypeMod::PolarizationType value to which polarizationType is to be set.
  	 
  		
+ 			
  	 */
- 	void setNumFormula (int numFormula);
-		
+ 	void setPolarizationType (PolarizationTypeMod::PolarizationType polarizationType);
+  		
 	
 	
 	
-	/**
-	 * Mark numFormula, which is an optional field, as non-existent.
-	 */
-	void clearNumFormula ();
+
+
+	
+	// ===> Attribute receiverBand
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 */
+ 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute assocNature
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get assocNature.
+ 	 * @return assocNature as string
+ 	 */
+ 	string getAssocNature() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set assocNature with the specified string.
+ 	 * @param assocNature The string value to which assocNature is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setAssocNature (string assocNature);
+  		
+	
+	
 	
 
 
@@ -342,7 +419,7 @@ public:
  	 * @return coeffFormula as vector<string >
  	 * @throws IllegalAccessException If coeffFormula does not exist.
  	 */
- 	vector<string > getCoeffFormula() const throw(IllegalAccessException);
+ 	vector<string > getCoeffFormula() const;
 	
  
  	
@@ -401,10 +478,57 @@ public:
 	
 
 
+	
+	// ===> Attribute assocPointingModelId
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get assocPointingModelId.
+ 	 * @return assocPointingModelId as int
+ 	 */
+ 	int getAssocPointingModelId() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set assocPointingModelId with the specified int.
+ 	 * @param assocPointingModelId The int value to which assocPointingModelId is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setAssocPointingModelId (int assocPointingModelId);
+  		
+	
+	
+	
+
+
 	///////////
 	// Links //
 	///////////
 	
+	
+
+	
+		
+	// ===> Slice link from a row of PointingModel table to a collection of row of PointingModel table.
+	
+	/**
+	 * Get the collection of row in the PointingModel table having pointingModelId == this.pointingModelId
+	 * 
+	 * @return a vector of PointingModelRow *
+	 */
+	vector <PointingModelRow *> getPointingModels();
+	
+	
+
+	
+
 	
 
 	
@@ -427,12 +551,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this PointingModelRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag antennaId, int numCoeff, vector<string > coeffName, vector<float > coeffVal);
+	bool compareNoAutoInc(Tag antennaId, int numCoeff, vector<string > coeffName, vector<float > coeffVal, PolarizationTypeMod::PolarizationType polarizationType, ReceiverBandMod::ReceiverBand receiverBand, string assocNature, int assocPointingModelId);
 	
 	
 
 	
-	bool compareRequiredValue(int numCoeff, vector<string > coeffName, vector<float > coeffVal); 
+	bool compareRequiredValue(int numCoeff, vector<string > coeffName, vector<float > coeffVal, PolarizationTypeMod::PolarizationType polarizationType, ReceiverBandMod::ReceiverBand receiverBand, string assocNature, int assocPointingModelId); 
 		 
 	
 	/**
@@ -549,13 +673,33 @@ private:
  	
 
 	
-	// ===> Attribute numFormula, which is optional
+	// ===> Attribute polarizationType
 	
-	
-	bool numFormulaExists;
 	
 
-	int numFormula;
+	PolarizationTypeMod::PolarizationType polarizationType;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute receiverBand
+	
+	
+
+	ReceiverBandMod::ReceiverBand receiverBand;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute assocNature
+	
+	
+
+	string assocNature;
 
 	
 	
@@ -589,10 +733,27 @@ private:
 	
  	
 
+	
+	// ===> Attribute assocPointingModelId
+	
+	
+
+	int assocPointingModelId;
+
+	
+	
+ 	
+
 	///////////
 	// Links //
 	///////////
 	
+	
+		
+
+
+	
+
 	
 		
 

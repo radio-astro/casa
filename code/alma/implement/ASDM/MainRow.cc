@@ -123,6 +123,52 @@ namespace asdm {
 		
 			
 				
+		x->numAntenna = numAntenna;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->timeSampling = timeSampling;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->interval = interval.toIDLInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->numIntegration = numIntegration;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
 		x->scanNumber = scanNumber;
  				
  			
@@ -147,19 +193,7 @@ namespace asdm {
 		
 			
 				
-		x->timeSampling = timeSampling;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->numIntegration = numIntegration;
+		x->dataSize = dataSize;
  				
  			
 		
@@ -178,22 +212,14 @@ namespace asdm {
 	
   		
 		
+		x->flagRowExists = flagRowExists;
+		
 		
 			
 				
 		x->flagRow = flagRow;
  				
  			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->interval = interval.toIDLInterval();
-			
 		
 	
 
@@ -269,7 +295,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct MainRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void MainRow::setFromIDL (MainRowIDL x) throw(ConversionException) {
+	void MainRow::setFromIDL (MainRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -280,6 +306,46 @@ namespace asdm {
 			
 		setTime(ArrayTime (x.time));
 			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumAntenna(x.numAntenna);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setTimeSampling(x.timeSampling);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setInterval(Interval (x.interval));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumIntegration(x.numIntegration);
+  			
  		
 		
 	
@@ -308,17 +374,7 @@ namespace asdm {
 		
 		
 			
-		setTimeSampling(x.timeSampling);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumIntegration(x.numIntegration);
+		setDataSize(x.dataSize);
   			
  		
 		
@@ -336,21 +392,16 @@ namespace asdm {
 
 	
 		
+		flagRowExists = x.flagRowExists;
+		if (x.flagRowExists) {
+		
 		
 			
 		setFlagRow(x.flagRow);
   			
  		
 		
-	
-
-	
-		
-		
-			
-		setInterval(Interval (x.interval));
-			
- 		
+		}
 		
 	
 
@@ -409,7 +460,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Main");
+			throw ConversionException (err.getMessage(),"Main");
 		}
 	}
 #endif
@@ -435,6 +486,38 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(numAntenna, "numAntenna", buf);
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("timeSampling", timeSampling));
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(interval, "interval", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numIntegration, "numIntegration", buf);
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(scanNumber, "scanNumber", buf);
 		
 		
@@ -451,15 +534,7 @@ namespace asdm {
   	
  		
 		
-			buf.append(EnumerationParser::toXML("timeSampling", timeSampling));
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numIntegration, "numIntegration", buf);
+		Parser::toXML(dataSize, "dataSize", buf);
 		
 		
 	
@@ -474,17 +549,13 @@ namespace asdm {
 
   	
  		
+		if (flagRowExists) {
+		
 		
 		Parser::toXML(flagRow, "flagRow", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(interval, "interval", buf);
-		
+		}
 		
 	
 
@@ -543,7 +614,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void MainRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void MainRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -553,6 +624,40 @@ namespace asdm {
   		
 			
 	  	setTime(Parser::getArrayTime("time","Main",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setNumAntenna(Parser::getInteger("numAntenna","Main",rowDoc));
+			
+		
+	
+
+	
+		
+		
+		
+		timeSampling = EnumerationParser::getTimeSampling("timeSampling","Main",rowDoc);
+		
+		
+		
+	
+
+	
+  		
+			
+	  	setInterval(Parser::getInterval("interval","Main",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setNumIntegration(Parser::getInteger("numIntegration","Main",rowDoc));
 			
 		
 	
@@ -574,19 +679,9 @@ namespace asdm {
 	
 
 	
-		
-		
-		
-		timeSampling = EnumerationParser::getTimeSampling("timeSampling","Main",rowDoc);
-		
-		
-		
-	
-
-	
   		
 			
-	  	setNumIntegration(Parser::getInteger("numIntegration","Main",rowDoc));
+	  	setDataSize(Parser::getInteger("dataSize","Main",rowDoc));
 			
 		
 	
@@ -601,18 +696,12 @@ namespace asdm {
 
 	
   		
+        if (row.isStr("<flagRow>")) {
 			
-	  	setFlagRow(Parser::getBoolean("flagRow","Main",rowDoc));
+	  		setFlagRow(Parser::getBoolean("flagRow","Main",rowDoc));
 			
-		
-	
-
-	
-  		
-			
-	  	setInterval(Parser::getInterval("interval","Main",rowDoc));
-			
-		
+		}
+ 		
 	
 
 	
@@ -663,6 +752,264 @@ namespace asdm {
 		}
 	}
 	
+	void MainRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	time.toBin(eoss);
+		
+	
+
+	
+	
+		
+	configDescriptionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	fieldId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numAntenna);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(timeSampling);
+				
+		
+	
+
+	
+	
+		
+	interval.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numIntegration);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(scanNumber);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(subscanNumber);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(dataSize);
+				
+		
+	
+
+	
+	
+		
+	dataOid.toBin(eoss);
+		
+	
+
+	
+	
+		
+	Tag::toBin(stateId, eoss);
+		
+	
+
+	
+	
+		
+	execBlockId.toBin(eoss);
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(flagRowExists);
+	if (flagRowExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(flagRow);
+				
+		
+	
+
+	}
+
+	}
+	
+	MainRow* MainRow::fromBin(EndianISStream& eiss, MainTable& table) {
+		MainRow* row = new  MainRow(table);
+		
+		
+		
+	
+		
+		
+		row->time =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->configDescriptionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->fieldId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numAntenna =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->timeSampling = CTimeSampling::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->interval =  Interval::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numIntegration =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->scanNumber =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->subscanNumber =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->dataSize =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+		row->dataOid =  EntityRef::fromBin(eiss);
+		
+	
+
+	
+		
+		
+			
+	
+	row->stateId = Tag::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+		row->execBlockId =  Tag::fromBin(eiss);
+		
+	
+
+		
+		
+		
+	row->flagRowExists = eiss.readBoolean();
+	if (row->flagRowExists) {
+		
+	
+	
+		
+			
+		row->flagRow =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
@@ -698,6 +1045,134 @@ namespace asdm {
   		}
   	
  		this->time = time;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numAntenna.
+ 	 * @return numAntenna as int
+ 	 */
+ 	int MainRow::getNumAntenna() const {
+	
+  		return numAntenna;
+ 	}
+
+ 	/**
+ 	 * Set numAntenna with the specified int.
+ 	 * @param numAntenna The int value to which numAntenna is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void MainRow::setNumAntenna (int numAntenna)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numAntenna = numAntenna;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get timeSampling.
+ 	 * @return timeSampling as TimeSamplingMod::TimeSampling
+ 	 */
+ 	TimeSamplingMod::TimeSampling MainRow::getTimeSampling() const {
+	
+  		return timeSampling;
+ 	}
+
+ 	/**
+ 	 * Set timeSampling with the specified TimeSamplingMod::TimeSampling.
+ 	 * @param timeSampling The TimeSamplingMod::TimeSampling value to which timeSampling is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void MainRow::setTimeSampling (TimeSamplingMod::TimeSampling timeSampling)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->timeSampling = timeSampling;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get interval.
+ 	 * @return interval as Interval
+ 	 */
+ 	Interval MainRow::getInterval() const {
+	
+  		return interval;
+ 	}
+
+ 	/**
+ 	 * Set interval with the specified Interval.
+ 	 * @param interval The Interval value to which interval is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void MainRow::setInterval (Interval interval)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->interval = interval;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numIntegration.
+ 	 * @return numIntegration as int
+ 	 */
+ 	int MainRow::getNumIntegration() const {
+	
+  		return numIntegration;
+ 	}
+
+ 	/**
+ 	 * Set numIntegration with the specified int.
+ 	 * @param numIntegration The int value to which numIntegration is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void MainRow::setNumIntegration (int numIntegration)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numIntegration = numIntegration;
 	
  	}
 	
@@ -771,61 +1246,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get timeSampling.
- 	 * @return timeSampling as TimeSamplingMod::TimeSampling
+ 	 * Get dataSize.
+ 	 * @return dataSize as int
  	 */
- 	TimeSamplingMod::TimeSampling MainRow::getTimeSampling() const {
+ 	int MainRow::getDataSize() const {
 	
-  		return timeSampling;
+  		return dataSize;
  	}
 
  	/**
- 	 * Set timeSampling with the specified TimeSamplingMod::TimeSampling.
- 	 * @param timeSampling The TimeSamplingMod::TimeSampling value to which timeSampling is to be set.
+ 	 * Set dataSize with the specified int.
+ 	 * @param dataSize The int value to which dataSize is to be set.
  	 
  	
  		
  	 */
- 	void MainRow::setTimeSampling (TimeSamplingMod::TimeSampling timeSampling)  {
+ 	void MainRow::setDataSize (int dataSize)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->timeSampling = timeSampling;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numIntegration.
- 	 * @return numIntegration as int
- 	 */
- 	int MainRow::getNumIntegration() const {
-	
-  		return numIntegration;
- 	}
-
- 	/**
- 	 * Set numIntegration with the specified int.
- 	 * @param numIntegration The int value to which numIntegration is to be set.
- 	 
- 	
- 		
- 	 */
- 	void MainRow::setNumIntegration (int numIntegration)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numIntegration = numIntegration;
+ 		this->dataSize = dataSize;
 	
  	}
 	
@@ -864,13 +1307,25 @@ namespace asdm {
 	
 
 	
+	/**
+	 * The attribute flagRow is optional. Return true if this attribute exists.
+	 * @return true if and only if the flagRow attribute exists. 
+	 */
+	bool MainRow::isFlagRowExists() const {
+		return flagRowExists;
+	}
+	
 
 	
  	/**
- 	 * Get flagRow.
+ 	 * Get flagRow, which is optional.
  	 * @return flagRow as bool
+ 	 * @throw IllegalAccessException If flagRow does not exist.
  	 */
- 	bool MainRow::getFlagRow() const {
+ 	bool MainRow::getFlagRow() const  {
+		if (!flagRowExists) {
+			throw IllegalAccessException("flagRow", "Main");
+		}
 	
   		return flagRow;
  	}
@@ -880,51 +1335,22 @@ namespace asdm {
  	 * @param flagRow The bool value to which flagRow is to be set.
  	 
  	
- 		
  	 */
- 	void MainRow::setFlagRow (bool flagRow)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
+ 	void MainRow::setFlagRow (bool flagRow) {
+	
  		this->flagRow = flagRow;
 	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get interval.
- 	 * @return interval as Interval
- 	 */
- 	Interval MainRow::getInterval() const {
-	
-  		return interval;
- 	}
-
- 	/**
- 	 * Set interval with the specified Interval.
- 	 * @param interval The Interval value to which interval is to be set.
- 	 
- 	
- 		
- 	 */
- 	void MainRow::setInterval (Interval interval)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->interval = interval;
+		flagRowExists = true;
 	
  	}
 	
+	
+	/**
+	 * Mark flagRow, which is an optional field, as non-existent.
+	 */
+	void MainRow::clearFlagRow () {
+		flagRowExists = false;
+	}
 	
 
 	
@@ -1235,6 +1661,12 @@ namespace asdm {
 	
 
 	
+
+	
+		flagRowExists = false;
+	
+
+	
 	
 
 	
@@ -1246,8 +1678,6 @@ namespace asdm {
 	
 	
 	
-	
-
 	
 
 	
@@ -1255,6 +1685,12 @@ namespace asdm {
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 timeSampling = CTimeSampling::from_int(0);
+	
+
+	
+
+	
+
 	
 
 	
@@ -1290,6 +1726,12 @@ timeSampling = CTimeSampling::from_int(0);
 	
 
 	
+
+	
+		flagRowExists = false;
+	
+
+	
 	
 
 	
@@ -1302,44 +1744,60 @@ timeSampling = CTimeSampling::from_int(0);
 		else {
 	
 		
+			time = row.time;
+		
 			configDescriptionId = row.configDescriptionId;
 		
 			fieldId = row.fieldId;
 		
-			time = row.time;
 		
 		
 		
+			numAntenna = row.numAntenna;
 		
-			execBlockId = row.execBlockId;
+			timeSampling = row.timeSampling;
 		
-			stateId = row.stateId;
+			interval = row.interval;
+		
+			numIntegration = row.numIntegration;
 		
 			scanNumber = row.scanNumber;
 		
 			subscanNumber = row.subscanNumber;
 		
-			timeSampling = row.timeSampling;
-		
-			numIntegration = row.numIntegration;
+			dataSize = row.dataSize;
 		
 			dataOid = row.dataOid;
 		
-			flagRow = row.flagRow;
+			stateId = row.stateId;
 		
-			interval = row.interval;
+			execBlockId = row.execBlockId;
 		
 		
 		
+		
+		if (row.flagRowExists) {
+			flagRow = row.flagRow;		
+			flagRowExists = true;
+		}
+		else
+			flagRowExists = false;
 		
 		}	
 	}
 
 	
-	bool MainRow::compareNoAutoInc(Tag configDescriptionId, Tag fieldId, ArrayTime time, Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, TimeSamplingMod::TimeSampling timeSampling, int numIntegration, EntityRef dataOid, bool flagRow, Interval interval) {
+	bool MainRow::compareNoAutoInc(ArrayTime time, Tag configDescriptionId, Tag fieldId, int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int dataSize, EntityRef dataOid, vector<Tag>  stateId, Tag execBlockId) {
 		bool result;
 		result = true;
 		
+	
+		
+		result = result && (this->time == time);
+		
+		if (!result) return false;
+	
+
 	
 		
 		result = result && (this->configDescriptionId == configDescriptionId);
@@ -1356,21 +1814,28 @@ timeSampling = CTimeSampling::from_int(0);
 
 	
 		
-		result = result && (this->time == time);
+		result = result && (this->numAntenna == numAntenna);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->execBlockId == execBlockId);
+		result = result && (this->timeSampling == timeSampling);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->stateId == stateId);
+		result = result && (this->interval == interval);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numIntegration == numIntegration);
 		
 		if (!result) return false;
 	
@@ -1391,14 +1856,7 @@ timeSampling = CTimeSampling::from_int(0);
 
 	
 		
-		result = result && (this->timeSampling == timeSampling);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numIntegration == numIntegration);
+		result = result && (this->dataSize == dataSize);
 		
 		if (!result) return false;
 	
@@ -1412,14 +1870,14 @@ timeSampling = CTimeSampling::from_int(0);
 
 	
 		
-		result = result && (this->flagRow == flagRow);
+		result = result && (this->stateId == stateId);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->interval == interval);
+		result = result && (this->execBlockId == execBlockId);
 		
 		if (!result) return false;
 	
@@ -1429,16 +1887,24 @@ timeSampling = CTimeSampling::from_int(0);
 	
 	
 	
-	bool MainRow::compareRequiredValue(Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, TimeSamplingMod::TimeSampling timeSampling, int numIntegration, EntityRef dataOid, bool flagRow, Interval interval) {
+	bool MainRow::compareRequiredValue(int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int dataSize, EntityRef dataOid, vector<Tag>  stateId, Tag execBlockId) {
 		bool result;
 		result = true;
 		
 	
-		if (!(this->execBlockId == execBlockId)) return false;
+		if (!(this->numAntenna == numAntenna)) return false;
 	
 
 	
-		if (!(this->stateId == stateId)) return false;
+		if (!(this->timeSampling == timeSampling)) return false;
+	
+
+	
+		if (!(this->interval == interval)) return false;
+	
+
+	
+		if (!(this->numIntegration == numIntegration)) return false;
 	
 
 	
@@ -1450,11 +1916,7 @@ timeSampling = CTimeSampling::from_int(0);
 	
 
 	
-		if (!(this->timeSampling == timeSampling)) return false;
-	
-
-	
-		if (!(this->numIntegration == numIntegration)) return false;
+		if (!(this->dataSize == dataSize)) return false;
 	
 
 	
@@ -1462,11 +1924,11 @@ timeSampling = CTimeSampling::from_int(0);
 	
 
 	
-		if (!(this->flagRow == flagRow)) return false;
+		if (!(this->stateId == stateId)) return false;
 	
 
 	
-		if (!(this->interval == interval)) return false;
+		if (!(this->execBlockId == execBlockId)) return false;
 	
 
 		return result;
@@ -1484,23 +1946,25 @@ timeSampling = CTimeSampling::from_int(0);
 	bool MainRow::equalByRequiredValue(MainRow* x) {
 		
 			
-		if (this->execBlockId != x->execBlockId) return false;
+		if (this->numAntenna != x->numAntenna) return false;
 			
-		if (this->stateId != x->stateId) return false;
+		if (this->timeSampling != x->timeSampling) return false;
+			
+		if (this->interval != x->interval) return false;
+			
+		if (this->numIntegration != x->numIntegration) return false;
 			
 		if (this->scanNumber != x->scanNumber) return false;
 			
 		if (this->subscanNumber != x->subscanNumber) return false;
 			
-		if (this->timeSampling != x->timeSampling) return false;
-			
-		if (this->numIntegration != x->numIntegration) return false;
+		if (this->dataSize != x->dataSize) return false;
 			
 		if (this->dataOid != x->dataOid) return false;
 			
-		if (this->flagRow != x->flagRow) return false;
+		if (this->stateId != x->stateId) return false;
 			
-		if (this->interval != x->interval) return false;
+		if (this->execBlockId != x->execBlockId) return false;
 			
 		
 		return true;

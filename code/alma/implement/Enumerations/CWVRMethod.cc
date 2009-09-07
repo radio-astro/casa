@@ -37,12 +37,25 @@
 #include <string>
 using namespace std;
 
+
+int CWVRMethod::version() {
+	return WVRMethodMod::version;
+	}
+	
+string CWVRMethod::revision () {
+	return WVRMethodMod::revision;
+}
+
+unsigned int CWVRMethod::size() {
+	return 2;
+	}
+	
 	
 const std::string& CWVRMethod::sATM_MODEL = "ATM_MODEL";
 	
 const std::string& CWVRMethod::sEMPIRICAL = "EMPIRICAL";
 	
-const std::vector<std::string> CWVRMethod::sWVRMethodSet() {
+const std::vector<std::string> CWVRMethod::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CWVRMethod::sATM_MODEL);
@@ -51,25 +64,6 @@ const std::vector<std::string> CWVRMethod::sWVRMethodSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CWVRMethod::hATM_MODEL = "WVR data reduction uses ATM model";
-	
-const std::string& CWVRMethod::hEMPIRICAL = "WVR data reduction optimized using actual phase data";
-	
-const std::vector<std::string> CWVRMethod::hWVRMethodSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CWVRMethod::hATM_MODEL);
-    
-    enumSet.insert(enumSet.end(), CWVRMethod::hEMPIRICAL);
-        
-    return enumSet;
-}
-   	
 
 std::string CWVRMethod::name(const WVRMethodMod::WVRMethod& f) {
     switch (f) {
@@ -81,25 +75,9 @@ std::string CWVRMethod::name(const WVRMethodMod::WVRMethod& f) {
       return CWVRMethod::sEMPIRICAL;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CWVRMethod::help(const WVRMethodMod::WVRMethod& f) {
-    switch (f) {
-    
-    case WVRMethodMod::ATM_MODEL:
-      return CWVRMethod::hATM_MODEL;
-    
-    case WVRMethodMod::EMPIRICAL:
-      return CWVRMethod::hEMPIRICAL;
-    	
-    }
-    return std::string("");
-}
-   	
 
 WVRMethodMod::WVRMethod CWVRMethod::newWVRMethod(const std::string& name) {
 		
@@ -128,12 +106,10 @@ WVRMethodMod::WVRMethod CWVRMethod::literal(const std::string& name) {
 }
 
 WVRMethodMod::WVRMethod CWVRMethod::from_int(unsigned int i) {
-	vector<string> names = sWVRMethodSet();
-	if (i >= names.size()) throw badInt(i);
-	return newWVRMethod(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newWVRMethod(names_.at(i));
 }
-
-	
 
 string CWVRMethod::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'WVRMethod'.";

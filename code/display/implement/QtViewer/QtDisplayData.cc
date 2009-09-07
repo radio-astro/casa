@@ -559,11 +559,14 @@ Record QtDisplayData::getOptions() {
 void QtDisplayData::checkAxis() {
    //cout << "checkAxis" << endl;
    Record rec = getOptions();
+   //cout << "dd=" << rec << endl;
    try {
        String xaxis = rec.subRecord("xaxis").asString("value");
        String yaxis = rec.subRecord("yaxis").asString("value");
        String zaxis = rec.subRecord("zaxis").asString("value");
        emit axisChanged(xaxis, yaxis, zaxis);
+       Int haxis = rec.subRecord("haxis1").asInt("value");
+       emit axisChanged4(xaxis, yaxis, zaxis, haxis);
    }
    catch(...) {
    } 

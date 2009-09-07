@@ -42,15 +42,28 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the WVRMethod enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace WVRMethodMod
 {
+  //! WVRMethod.
+  //! [CalDM.CalWVR] Methods for WVR Data processing in TelCal
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum WVRMethod
   { 
-    ATM_MODEL ,
-    EMPIRICAL 
+    ATM_MODEL /*!< WVR data reduction uses ATM model */
+     ,
+    EMPIRICAL /*!< WVR data reduction optimized using actual phase data */
+     
   };
   typedef WVRMethod &WVRMethod_out;
 } 
@@ -58,64 +71,91 @@ namespace WVRMethodMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration WVRMethod.
+  * 
+  */
 class CWVRMethod {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the WVRMethod enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sATM_MODEL;
+	static const std::string& sATM_MODEL; /*!< A const string equal to "ATM_MODEL".*/
 	
-	static const std::string& sEMPIRICAL;
-	
-    static const std::vector<std::string> sWVRMethodSet();	 
-
+	static const std::string& sEMPIRICAL; /*!< A const string equal to "EMPIRICAL".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in WVRMethodMod::WVRMethod.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of WVRMethodMod::WVRMethod.
+      * @return a string.
+      */
+	static std::string name(const WVRMethodMod::WVRMethod& e);
 	
-	// Explanations associated with the WVRMethod Enumeration.
-		
-	static const std::string& hATM_MODEL;
-		
-	static const std::string& hEMPIRICAL;
-		
-	static const std::vector<std::string> hWVRMethodSet();
-   	
-
-   	// Is an integer number associated with the WVRMethod enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the WVRMethod enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  WVRMethod enumeration.
-	static std::string name(const WVRMethodMod::WVRMethod& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const WVRMethodMod::WVRMethod& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified WVRMethod enumeration.
-	static std::string help(const WVRMethodMod::WVRMethod& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a WVRMethod enumeration object by specifying its name.
    	static WVRMethodMod::WVRMethod newWVRMethod(const std::string& name);
    	
-   	// Create a WVRMethod enumeration object by specifying its name.
+   	/*! Return a WVRMethod's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a WVRMethodMod::WVRMethod's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static WVRMethodMod::WVRMethod literal(const std::string& name);
  	
-    // Create a WVRMethod enumeration object by specifying its position index (0 based).
+    /*! Return a WVRMethod's enumerator given an unsigned int.
+      * @param i the index of the enumerator in WVRMethodMod::WVRMethod.
+      * @return a WVRMethodMod::WVRMethod's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static WVRMethodMod::WVRMethod from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CWVRMethod();
     CWVRMethod(const CWVRMethod&);
     CWVRMethod& operator=(const CWVRMethod&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CWVRMethod_H*/

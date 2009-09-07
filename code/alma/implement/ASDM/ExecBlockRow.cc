@@ -43,6 +43,9 @@ using std::set;
 
 #include <AntennaTable.h>
 #include <AntennaRow.h>
+
+#include <SBSummaryTable.h>
+#include <SBSummaryRow.h>
 	
 
 using asdm::ASDM;
@@ -51,6 +54,9 @@ using asdm::ExecBlockTable;
 
 using asdm::AntennaTable;
 using asdm::AntennaRow;
+
+using asdm::SBSummaryTable;
+using asdm::SBSummaryRow;
 
 
 #include <Parser.h>
@@ -104,9 +110,61 @@ namespace asdm {
 		
 		
 			
+		x->startTime = startTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->endTime = endTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
 				
 		x->execBlockNum = execBlockNum;
  				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->execBlockUID = execBlockUID.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->projectId = projectId.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->configName = CORBA::string_dup(configName.c_str());
+				
  			
 		
 	
@@ -129,7 +187,7 @@ namespace asdm {
 		
 			
 				
-		x->configName = CORBA::string_dup(configName.c_str());
+		x->observerName = CORBA::string_dup(observerName.c_str());
 				
  			
 		
@@ -141,8 +199,42 @@ namespace asdm {
 		
 			
 				
-		x->numAntenna = numAntenna;
- 				
+		x->observingLog = CORBA::string_dup(observingLog.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->sessionReference = CORBA::string_dup(sessionReference.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->sbSummary = sbSummary.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->schedulerMode = CORBA::string_dup(schedulerMode.c_str());
+				
  			
 		
 	
@@ -202,63 +294,7 @@ namespace asdm {
 		
 		
 			
-		x->timeInterval = timeInterval.toIDLArrayTimeInterval();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->observerName = CORBA::string_dup(observerName.c_str());
-				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->observingLog.length(observingLog.size());
-		for (unsigned int i = 0; i < observingLog.size(); ++i) {
-			
-				
-			x->observingLog[i] = CORBA::string_dup(observingLog.at(i).c_str());
-				
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->schedulerMode.length(schedulerMode.size());
-		for (unsigned int i = 0; i < schedulerMode.size(); ++i) {
-			
-				
-			x->schedulerMode[i] = CORBA::string_dup(schedulerMode.at(i).c_str());
-				
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->projectId = projectId.toIDLEntityRef();
+		x->siteAltitude = siteAltitude.toIDLLength();
 			
 		
 	
@@ -288,8 +324,22 @@ namespace asdm {
 		
 		
 			
-		x->siteAltitude = siteAltitude.toIDLLength();
+				
+		x->aborted = aborted;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
 			
+				
+		x->numAntenna = numAntenna;
+ 				
+ 			
 		
 	
 
@@ -308,32 +358,12 @@ namespace asdm {
 	
   		
 		
+		x->flagRowExists = flagRowExists;
+		
 		
 			
 				
 		x->flagRow = flagRow;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->execBlockUID = execBlockUID.toIDLEntityRef();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->aborted = aborted;
  				
  			
 		
@@ -357,7 +387,20 @@ namespace asdm {
   	
 
 	
+  	
+ 		
 		
+	 	
+			
+		x->sBSummaryId = sBSummaryId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+		
+	
+
 	
 
 		
@@ -372,7 +415,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct ExecBlockRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void ExecBlockRow::setFromIDL (ExecBlockRowIDL x) throw(ConversionException) {
+	void ExecBlockRow::setFromIDL (ExecBlockRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -382,6 +425,26 @@ namespace asdm {
 		
 			
 		setExecBlockId(Tag (x.execBlockId));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setStartTime(ArrayTime (x.startTime));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setEndTime(ArrayTime (x.endTime));
 			
  		
 		
@@ -401,7 +464,17 @@ namespace asdm {
 		
 		
 			
-		setTelescopeName(string (x.telescopeName));
+		setExecBlockUID(EntityRef (x.execBlockUID));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setProjectId(EntityRef (x.projectId));
 			
  		
 		
@@ -421,8 +494,58 @@ namespace asdm {
 		
 		
 			
-		setNumAntenna(x.numAntenna);
-  			
+		setTelescopeName(string (x.telescopeName));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setObserverName(string (x.observerName));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setObservingLog(string (x.observingLog));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setSessionReference(string (x.sessionReference));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setSbSummary(EntityRef (x.sbSummary));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setSchedulerMode(string (x.schedulerMode));
+			
  		
 		
 	
@@ -481,57 +604,7 @@ namespace asdm {
 		
 		
 			
-		setTimeInterval(ArrayTimeInterval (x.timeInterval));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setObserverName(string (x.observerName));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		observingLog .clear();
-		for (unsigned int i = 0; i <x.observingLog.length(); ++i) {
-			
-			observingLog.push_back(string (x.observingLog[i]));
-			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		schedulerMode .clear();
-		for (unsigned int i = 0; i <x.schedulerMode.length(); ++i) {
-			
-			schedulerMode.push_back(string (x.schedulerMode[i]));
-			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		setProjectId(EntityRef (x.projectId));
+		setSiteAltitude(Length (x.siteAltitude));
 			
  		
 		
@@ -561,8 +634,18 @@ namespace asdm {
 		
 		
 			
-		setSiteAltitude(Length (x.siteAltitude));
+		setAborted(x.aborted);
+  			
+ 		
+		
+	
+
+	
+		
+		
 			
+		setNumAntenna(x.numAntenna);
+  			
  		
 		
 	
@@ -584,31 +667,16 @@ namespace asdm {
 
 	
 		
+		flagRowExists = x.flagRowExists;
+		if (x.flagRowExists) {
+		
 		
 			
 		setFlagRow(x.flagRow);
   			
  		
 		
-	
-
-	
-		
-		
-			
-		setExecBlockUID(EntityRef (x.execBlockUID));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setAborted(x.aborted);
-  			
- 		
+		}
 		
 	
 
@@ -628,10 +696,22 @@ namespace asdm {
 
 	
 		
+		
+			
+		setSBSummaryId(Tag (x.sBSummaryId));
+			
+ 		
+		
+	
+
+	
+		
+	
+
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"ExecBlock");
+			throw ConversionException (err.getMessage(),"ExecBlock");
 		}
 	}
 #endif
@@ -657,6 +737,22 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(startTime, "startTime", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(endTime, "endTime", buf);
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(execBlockNum, "execBlockNum", buf);
 		
 		
@@ -665,7 +761,15 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(telescopeName, "telescopeName", buf);
+		Parser::toXML(execBlockUID, "execBlockUID", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(projectId, "projectId", buf);
 		
 		
 	
@@ -681,7 +785,47 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numAntenna, "numAntenna", buf);
+		Parser::toXML(telescopeName, "telescopeName", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(observerName, "observerName", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(observingLog, "observingLog", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(sessionReference, "sessionReference", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(sbSummary, "sbSummary", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(schedulerMode, "schedulerMode", buf);
 		
 		
 	
@@ -729,39 +873,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(timeInterval, "timeInterval", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(observerName, "observerName", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(observingLog, "observingLog", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(schedulerMode, "schedulerMode", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(projectId, "projectId", buf);
+		Parser::toXML(siteAltitude, "siteAltitude", buf);
 		
 		
 	
@@ -785,7 +897,15 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(siteAltitude, "siteAltitude", buf);
+		Parser::toXML(aborted, "aborted", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numAntenna, "numAntenna", buf);
 		
 		
 	
@@ -804,25 +924,13 @@ namespace asdm {
 
   	
  		
+		if (flagRowExists) {
+		
 		
 		Parser::toXML(flagRow, "flagRow", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(execBlockUID, "execBlockUID", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(aborted, "aborted", buf);
-		
+		}
 		
 	
 
@@ -837,8 +945,18 @@ namespace asdm {
 		
 	
 
+  	
+ 		
+		
+		Parser::toXML(sBSummaryId, "sBSummaryId", buf);
+		
+		
+	
+
 	
 		
+	
+
 	
 
 		
@@ -851,7 +969,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void ExecBlockRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void ExecBlockRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -868,6 +986,22 @@ namespace asdm {
 	
   		
 			
+	  	setStartTime(Parser::getArrayTime("startTime","ExecBlock",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setEndTime(Parser::getArrayTime("endTime","ExecBlock",rowDoc));
+			
+		
+	
+
+	
+  		
+			
 	  	setExecBlockNum(Parser::getInteger("execBlockNum","ExecBlock",rowDoc));
 			
 		
@@ -876,7 +1010,15 @@ namespace asdm {
 	
   		
 			
-	  	setTelescopeName(Parser::getString("telescopeName","ExecBlock",rowDoc));
+	  	setExecBlockUID(Parser::getEntityRef("execBlockUID","ExecBlock",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setProjectId(Parser::getEntityRef("projectId","ExecBlock",rowDoc));
 			
 		
 	
@@ -892,7 +1034,47 @@ namespace asdm {
 	
   		
 			
-	  	setNumAntenna(Parser::getInteger("numAntenna","ExecBlock",rowDoc));
+	  	setTelescopeName(Parser::getString("telescopeName","ExecBlock",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setObserverName(Parser::getString("observerName","ExecBlock",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setObservingLog(Parser::getString("observingLog","ExecBlock",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setSessionReference(Parser::getString("sessionReference","ExecBlock",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setSbSummary(Parser::getEntityRef("sbSummary","ExecBlock",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setSchedulerMode(Parser::getString("schedulerMode","ExecBlock",rowDoc));
 			
 		
 	
@@ -940,43 +1122,7 @@ namespace asdm {
 	
   		
 			
-	  	setTimeInterval(Parser::getArrayTimeInterval("timeInterval","ExecBlock",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setObserverName(Parser::getString("observerName","ExecBlock",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-					
-	  	setObservingLog(Parser::get1DString("observingLog","ExecBlock",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-			
-					
-	  	setSchedulerMode(Parser::get1DString("schedulerMode","ExecBlock",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-			
-	  	setProjectId(Parser::getEntityRef("projectId","ExecBlock",rowDoc));
+	  	setSiteAltitude(Parser::getLength("siteAltitude","ExecBlock",rowDoc));
 			
 		
 	
@@ -1000,7 +1146,15 @@ namespace asdm {
 	
   		
 			
-	  	setSiteAltitude(Parser::getLength("siteAltitude","ExecBlock",rowDoc));
+	  	setAborted(Parser::getBoolean("aborted","ExecBlock",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setNumAntenna(Parser::getInteger("numAntenna","ExecBlock",rowDoc));
 			
 		
 	
@@ -1017,26 +1171,12 @@ namespace asdm {
 
 	
   		
+        if (row.isStr("<flagRow>")) {
 			
-	  	setFlagRow(Parser::getBoolean("flagRow","ExecBlock",rowDoc));
+	  		setFlagRow(Parser::getBoolean("flagRow","ExecBlock",rowDoc));
 			
-		
-	
-
-	
-  		
-			
-	  	setExecBlockUID(Parser::getEntityRef("execBlockUID","ExecBlock",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setAborted(Parser::getBoolean("aborted","ExecBlock",rowDoc));
-			
-		
+		}
+ 		
 	
 
 	
@@ -1049,12 +1189,484 @@ namespace asdm {
   	
 
 	
+  		
+			
+	  	setSBSummaryId(Parser::getTag("sBSummaryId","ExecBlock",rowDoc));
+			
 		
+	
+
+	
+		
+	
+
 	
 
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"ExecBlock");
 		}
+	}
+	
+	void ExecBlockRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	execBlockId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(execBlockNum);
+				
+		
+	
+
+	
+	
+		
+	execBlockUID.toBin(eoss);
+		
+	
+
+	
+	
+		
+	projectId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(configName);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(telescopeName);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(observerName);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(observingLog);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(sessionReference);
+				
+		
+	
+
+	
+	
+		
+	sbSummary.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(schedulerMode);
+				
+		
+	
+
+	
+	
+		
+	baseRangeMin.toBin(eoss);
+		
+	
+
+	
+	
+		
+	baseRangeMax.toBin(eoss);
+		
+	
+
+	
+	
+		
+	baseRmsMinor.toBin(eoss);
+		
+	
+
+	
+	
+		
+	baseRmsMajor.toBin(eoss);
+		
+	
+
+	
+	
+		
+	basePa.toBin(eoss);
+		
+	
+
+	
+	
+		
+	siteAltitude.toBin(eoss);
+		
+	
+
+	
+	
+		
+	siteLongitude.toBin(eoss);
+		
+	
+
+	
+	
+		
+	siteLatitude.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(aborted);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numAntenna);
+				
+		
+	
+
+	
+	
+		
+	Tag::toBin(antennaId, eoss);
+		
+	
+
+	
+	
+		
+	sBSummaryId.toBin(eoss);
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(releaseDateExists);
+	if (releaseDateExists) {
+	
+	
+	
+		
+	releaseDate.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(flagRowExists);
+	if (flagRowExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(flagRow);
+				
+		
+	
+
+	}
+
+	}
+	
+	ExecBlockRow* ExecBlockRow::fromBin(EndianISStream& eiss, ExecBlockTable& table) {
+		ExecBlockRow* row = new  ExecBlockRow(table);
+		
+		
+		
+	
+		
+		
+		row->execBlockId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->execBlockNum =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+		row->execBlockUID =  EntityRef::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->projectId =  EntityRef::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->configName =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->telescopeName =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->observerName =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->observingLog =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->sessionReference =  eiss.readString();
+			
+		
+	
+
+	
+		
+		
+		row->sbSummary =  EntityRef::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->schedulerMode =  eiss.readString();
+			
+		
+	
+
+	
+		
+		
+		row->baseRangeMin =  Length::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->baseRangeMax =  Length::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->baseRmsMinor =  Length::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->baseRmsMajor =  Length::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->basePa =  Angle::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->siteAltitude =  Length::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->siteLongitude =  Angle::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->siteLatitude =  Angle::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->aborted =  eiss.readBoolean();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numAntenna =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->antennaId = Tag::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+		row->sBSummaryId =  Tag::fromBin(eiss);
+		
+	
+
+		
+		
+		
+	row->releaseDateExists = eiss.readBoolean();
+	if (row->releaseDateExists) {
+		
+	
+		
+		
+		row->releaseDate =  ArrayTime::fromBin(eiss);
+		
+	
+
+	}
+
+	row->flagRowExists = eiss.readBoolean();
+	if (row->flagRowExists) {
+		
+	
+	
+		
+			
+		row->flagRow =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -1101,6 +1713,70 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get startTime.
+ 	 * @return startTime as ArrayTime
+ 	 */
+ 	ArrayTime ExecBlockRow::getStartTime() const {
+	
+  		return startTime;
+ 	}
+
+ 	/**
+ 	 * Set startTime with the specified ArrayTime.
+ 	 * @param startTime The ArrayTime value to which startTime is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ExecBlockRow::setStartTime (ArrayTime startTime)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->startTime = startTime;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get endTime.
+ 	 * @return endTime as ArrayTime
+ 	 */
+ 	ArrayTime ExecBlockRow::getEndTime() const {
+	
+  		return endTime;
+ 	}
+
+ 	/**
+ 	 * Set endTime with the specified ArrayTime.
+ 	 * @param endTime The ArrayTime value to which endTime is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ExecBlockRow::setEndTime (ArrayTime endTime)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->endTime = endTime;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get execBlockNum.
  	 * @return execBlockNum as int
  	 */
@@ -1133,29 +1809,61 @@ namespace asdm {
 
 	
  	/**
- 	 * Get telescopeName.
- 	 * @return telescopeName as string
+ 	 * Get execBlockUID.
+ 	 * @return execBlockUID as EntityRef
  	 */
- 	string ExecBlockRow::getTelescopeName() const {
+ 	EntityRef ExecBlockRow::getExecBlockUID() const {
 	
-  		return telescopeName;
+  		return execBlockUID;
  	}
 
  	/**
- 	 * Set telescopeName with the specified string.
- 	 * @param telescopeName The string value to which telescopeName is to be set.
+ 	 * Set execBlockUID with the specified EntityRef.
+ 	 * @param execBlockUID The EntityRef value to which execBlockUID is to be set.
  	 
  	
  		
  	 */
- 	void ExecBlockRow::setTelescopeName (string telescopeName)  {
+ 	void ExecBlockRow::setExecBlockUID (EntityRef execBlockUID)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->telescopeName = telescopeName;
+ 		this->execBlockUID = execBlockUID;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get projectId.
+ 	 * @return projectId as EntityRef
+ 	 */
+ 	EntityRef ExecBlockRow::getProjectId() const {
+	
+  		return projectId;
+ 	}
+
+ 	/**
+ 	 * Set projectId with the specified EntityRef.
+ 	 * @param projectId The EntityRef value to which projectId is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ExecBlockRow::setProjectId (EntityRef projectId)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->projectId = projectId;
 	
  	}
 	
@@ -1197,29 +1905,189 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numAntenna.
- 	 * @return numAntenna as int
+ 	 * Get telescopeName.
+ 	 * @return telescopeName as string
  	 */
- 	int ExecBlockRow::getNumAntenna() const {
+ 	string ExecBlockRow::getTelescopeName() const {
 	
-  		return numAntenna;
+  		return telescopeName;
  	}
 
  	/**
- 	 * Set numAntenna with the specified int.
- 	 * @param numAntenna The int value to which numAntenna is to be set.
+ 	 * Set telescopeName with the specified string.
+ 	 * @param telescopeName The string value to which telescopeName is to be set.
  	 
  	
  		
  	 */
- 	void ExecBlockRow::setNumAntenna (int numAntenna)  {
+ 	void ExecBlockRow::setTelescopeName (string telescopeName)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->numAntenna = numAntenna;
+ 		this->telescopeName = telescopeName;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get observerName.
+ 	 * @return observerName as string
+ 	 */
+ 	string ExecBlockRow::getObserverName() const {
+	
+  		return observerName;
+ 	}
+
+ 	/**
+ 	 * Set observerName with the specified string.
+ 	 * @param observerName The string value to which observerName is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ExecBlockRow::setObserverName (string observerName)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->observerName = observerName;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get observingLog.
+ 	 * @return observingLog as string
+ 	 */
+ 	string ExecBlockRow::getObservingLog() const {
+	
+  		return observingLog;
+ 	}
+
+ 	/**
+ 	 * Set observingLog with the specified string.
+ 	 * @param observingLog The string value to which observingLog is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ExecBlockRow::setObservingLog (string observingLog)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->observingLog = observingLog;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get sessionReference.
+ 	 * @return sessionReference as string
+ 	 */
+ 	string ExecBlockRow::getSessionReference() const {
+	
+  		return sessionReference;
+ 	}
+
+ 	/**
+ 	 * Set sessionReference with the specified string.
+ 	 * @param sessionReference The string value to which sessionReference is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ExecBlockRow::setSessionReference (string sessionReference)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->sessionReference = sessionReference;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get sbSummary.
+ 	 * @return sbSummary as EntityRef
+ 	 */
+ 	EntityRef ExecBlockRow::getSbSummary() const {
+	
+  		return sbSummary;
+ 	}
+
+ 	/**
+ 	 * Set sbSummary with the specified EntityRef.
+ 	 * @param sbSummary The EntityRef value to which sbSummary is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ExecBlockRow::setSbSummary (EntityRef sbSummary)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->sbSummary = sbSummary;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get schedulerMode.
+ 	 * @return schedulerMode as string
+ 	 */
+ 	string ExecBlockRow::getSchedulerMode() const {
+	
+  		return schedulerMode;
+ 	}
+
+ 	/**
+ 	 * Set schedulerMode with the specified string.
+ 	 * @param schedulerMode The string value to which schedulerMode is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ExecBlockRow::setSchedulerMode (string schedulerMode)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->schedulerMode = schedulerMode;
 	
  	}
 	
@@ -1389,157 +2257,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get timeInterval.
- 	 * @return timeInterval as ArrayTimeInterval
+ 	 * Get siteAltitude.
+ 	 * @return siteAltitude as Length
  	 */
- 	ArrayTimeInterval ExecBlockRow::getTimeInterval() const {
+ 	Length ExecBlockRow::getSiteAltitude() const {
 	
-  		return timeInterval;
+  		return siteAltitude;
  	}
 
  	/**
- 	 * Set timeInterval with the specified ArrayTimeInterval.
- 	 * @param timeInterval The ArrayTimeInterval value to which timeInterval is to be set.
+ 	 * Set siteAltitude with the specified Length.
+ 	 * @param siteAltitude The Length value to which siteAltitude is to be set.
  	 
  	
  		
  	 */
- 	void ExecBlockRow::setTimeInterval (ArrayTimeInterval timeInterval)  {
+ 	void ExecBlockRow::setSiteAltitude (Length siteAltitude)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->timeInterval = timeInterval;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get observerName.
- 	 * @return observerName as string
- 	 */
- 	string ExecBlockRow::getObserverName() const {
-	
-  		return observerName;
- 	}
-
- 	/**
- 	 * Set observerName with the specified string.
- 	 * @param observerName The string value to which observerName is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ExecBlockRow::setObserverName (string observerName)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->observerName = observerName;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get observingLog.
- 	 * @return observingLog as vector<string >
- 	 */
- 	vector<string > ExecBlockRow::getObservingLog() const {
-	
-  		return observingLog;
- 	}
-
- 	/**
- 	 * Set observingLog with the specified vector<string >.
- 	 * @param observingLog The vector<string > value to which observingLog is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ExecBlockRow::setObservingLog (vector<string > observingLog)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->observingLog = observingLog;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get schedulerMode.
- 	 * @return schedulerMode as vector<string >
- 	 */
- 	vector<string > ExecBlockRow::getSchedulerMode() const {
-	
-  		return schedulerMode;
- 	}
-
- 	/**
- 	 * Set schedulerMode with the specified vector<string >.
- 	 * @param schedulerMode The vector<string > value to which schedulerMode is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ExecBlockRow::setSchedulerMode (vector<string > schedulerMode)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->schedulerMode = schedulerMode;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get projectId.
- 	 * @return projectId as EntityRef
- 	 */
- 	EntityRef ExecBlockRow::getProjectId() const {
-	
-  		return projectId;
- 	}
-
- 	/**
- 	 * Set projectId with the specified EntityRef.
- 	 * @param projectId The EntityRef value to which projectId is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ExecBlockRow::setProjectId (EntityRef projectId)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->projectId = projectId;
+ 		this->siteAltitude = siteAltitude;
 	
  	}
 	
@@ -1613,29 +2353,61 @@ namespace asdm {
 
 	
  	/**
- 	 * Get siteAltitude.
- 	 * @return siteAltitude as Length
+ 	 * Get aborted.
+ 	 * @return aborted as bool
  	 */
- 	Length ExecBlockRow::getSiteAltitude() const {
+ 	bool ExecBlockRow::getAborted() const {
 	
-  		return siteAltitude;
+  		return aborted;
  	}
 
  	/**
- 	 * Set siteAltitude with the specified Length.
- 	 * @param siteAltitude The Length value to which siteAltitude is to be set.
+ 	 * Set aborted with the specified bool.
+ 	 * @param aborted The bool value to which aborted is to be set.
  	 
  	
  		
  	 */
- 	void ExecBlockRow::setSiteAltitude (Length siteAltitude)  {
+ 	void ExecBlockRow::setAborted (bool aborted)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->siteAltitude = siteAltitude;
+ 		this->aborted = aborted;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numAntenna.
+ 	 * @return numAntenna as int
+ 	 */
+ 	int ExecBlockRow::getNumAntenna() const {
+	
+  		return numAntenna;
+ 	}
+
+ 	/**
+ 	 * Set numAntenna with the specified int.
+ 	 * @param numAntenna The int value to which numAntenna is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ExecBlockRow::setNumAntenna (int numAntenna)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numAntenna = numAntenna;
 	
  	}
 	
@@ -1657,7 +2429,7 @@ namespace asdm {
  	 * @return releaseDate as ArrayTime
  	 * @throw IllegalAccessException If releaseDate does not exist.
  	 */
- 	ArrayTime ExecBlockRow::getReleaseDate() const throw(IllegalAccessException) {
+ 	ArrayTime ExecBlockRow::getReleaseDate() const  {
 		if (!releaseDateExists) {
 			throw IllegalAccessException("releaseDate", "ExecBlock");
 		}
@@ -1689,13 +2461,25 @@ namespace asdm {
 	
 
 	
+	/**
+	 * The attribute flagRow is optional. Return true if this attribute exists.
+	 * @return true if and only if the flagRow attribute exists. 
+	 */
+	bool ExecBlockRow::isFlagRowExists() const {
+		return flagRowExists;
+	}
+	
 
 	
  	/**
- 	 * Get flagRow.
+ 	 * Get flagRow, which is optional.
  	 * @return flagRow as bool
+ 	 * @throw IllegalAccessException If flagRow does not exist.
  	 */
- 	bool ExecBlockRow::getFlagRow() const {
+ 	bool ExecBlockRow::getFlagRow() const  {
+		if (!flagRowExists) {
+			throw IllegalAccessException("flagRow", "ExecBlock");
+		}
 	
   		return flagRow;
  	}
@@ -1705,83 +2489,22 @@ namespace asdm {
  	 * @param flagRow The bool value to which flagRow is to be set.
  	 
  	
- 		
  	 */
- 	void ExecBlockRow::setFlagRow (bool flagRow)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
+ 	void ExecBlockRow::setFlagRow (bool flagRow) {
+	
  		this->flagRow = flagRow;
 	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get execBlockUID.
- 	 * @return execBlockUID as EntityRef
- 	 */
- 	EntityRef ExecBlockRow::getExecBlockUID() const {
-	
-  		return execBlockUID;
- 	}
-
- 	/**
- 	 * Set execBlockUID with the specified EntityRef.
- 	 * @param execBlockUID The EntityRef value to which execBlockUID is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ExecBlockRow::setExecBlockUID (EntityRef execBlockUID)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->execBlockUID = execBlockUID;
+		flagRowExists = true;
 	
  	}
 	
 	
-
-	
-
-	
- 	/**
- 	 * Get aborted.
- 	 * @return aborted as bool
- 	 */
- 	bool ExecBlockRow::getAborted() const {
-	
-  		return aborted;
- 	}
-
- 	/**
- 	 * Set aborted with the specified bool.
- 	 * @param aborted The bool value to which aborted is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ExecBlockRow::setAborted (bool aborted)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->aborted = aborted;
-	
- 	}
-	
+	/**
+	 * Mark flagRow, which is an optional field, as non-existent.
+	 */
+	void ExecBlockRow::clearFlagRow () {
+		flagRowExists = false;
+	}
 	
 
 	
@@ -1816,6 +2539,38 @@ namespace asdm {
   		}
   	
  		this->antennaId = antennaId;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get sBSummaryId.
+ 	 * @return sBSummaryId as Tag
+ 	 */
+ 	Tag ExecBlockRow::getSBSummaryId() const {
+	
+  		return sBSummaryId;
+ 	}
+
+ 	/**
+ 	 * Set sBSummaryId with the specified Tag.
+ 	 * @param sBSummaryId The Tag value to which sBSummaryId is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ExecBlockRow::setSBSummaryId (Tag sBSummaryId)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->sBSummaryId = sBSummaryId;
 	
  	}
 	
@@ -1902,6 +2657,25 @@ namespace asdm {
 	
 
 	
+	
+	
+		
+
+	/**
+	 * Returns the pointer to the row in the SBSummary table having SBSummary.sBSummaryId == sBSummaryId
+	 * @return a SBSummaryRow*
+	 * 
+	 
+	 */
+	 SBSummaryRow* ExecBlockRow::getSBSummaryUsingSBSummaryId() {
+	 
+	 	return table.getContainer().getSBSummary().getRowByKey(sBSummaryId);
+	 }
+	 
+
+	
+
+	
 	/**
 	 * Create a ExecBlockRow.
 	 * <p>
@@ -1951,21 +2725,37 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+
+	
 		releaseDateExists = false;
 	
 
 	
+		flagRowExists = false;
+	
+
+	
+	
+
+	
+
+	
+	
+	
+	
 
 	
 
 	
 
-	
-	
-
-	
-	
-	
 	
 
 	
@@ -2055,16 +2845,26 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+
+	
 		releaseDateExists = false;
 	
 
 	
-
+		flagRowExists = false;
 	
 
 	
-
 	
+
 	
 		
 		}
@@ -2076,15 +2876,29 @@ namespace asdm {
 		
 		
 		
-			antennaId = row.antennaId;
+			startTime = row.startTime;
+		
+			endTime = row.endTime;
 		
 			execBlockNum = row.execBlockNum;
 		
-			telescopeName = row.telescopeName;
+			execBlockUID = row.execBlockUID;
+		
+			projectId = row.projectId;
 		
 			configName = row.configName;
 		
-			numAntenna = row.numAntenna;
+			telescopeName = row.telescopeName;
+		
+			observerName = row.observerName;
+		
+			observingLog = row.observingLog;
+		
+			sessionReference = row.sessionReference;
+		
+			sbSummary = row.sbSummary;
+		
+			schedulerMode = row.schedulerMode;
 		
 			baseRangeMin = row.baseRangeMin;
 		
@@ -2096,27 +2910,19 @@ namespace asdm {
 		
 			basePa = row.basePa;
 		
-			timeInterval = row.timeInterval;
-		
-			observerName = row.observerName;
-		
-			observingLog = row.observingLog;
-		
-			schedulerMode = row.schedulerMode;
-		
-			projectId = row.projectId;
+			siteAltitude = row.siteAltitude;
 		
 			siteLongitude = row.siteLongitude;
 		
 			siteLatitude = row.siteLatitude;
 		
-			siteAltitude = row.siteAltitude;
-		
-			flagRow = row.flagRow;
-		
-			execBlockUID = row.execBlockUID;
-		
 			aborted = row.aborted;
+		
+			numAntenna = row.numAntenna;
+		
+			antennaId = row.antennaId;
+		
+			sBSummaryId = row.sBSummaryId;
 		
 		
 		
@@ -2128,17 +2934,31 @@ namespace asdm {
 		else
 			releaseDateExists = false;
 		
+		if (row.flagRowExists) {
+			flagRow = row.flagRow;		
+			flagRowExists = true;
+		}
+		else
+			flagRowExists = false;
+		
 		}	
 	}
 
 	
-	bool ExecBlockRow::compareNoAutoInc(vector<Tag>  antennaId, int execBlockNum, string telescopeName, string configName, int numAntenna, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, ArrayTimeInterval timeInterval, string observerName, vector<string > observingLog, vector<string > schedulerMode, EntityRef projectId, Angle siteLongitude, Angle siteLatitude, Length siteAltitude, bool flagRow, EntityRef execBlockUID, bool aborted) {
+	bool ExecBlockRow::compareNoAutoInc(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId) {
 		bool result;
 		result = true;
 		
 	
 		
-		result = result && (this->antennaId == antennaId);
+		result = result && (this->startTime == startTime);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->endTime == endTime);
 		
 		if (!result) return false;
 	
@@ -2152,7 +2972,14 @@ namespace asdm {
 
 	
 		
-		result = result && (this->telescopeName == telescopeName);
+		result = result && (this->execBlockUID == execBlockUID);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->projectId == projectId);
 		
 		if (!result) return false;
 	
@@ -2166,7 +2993,42 @@ namespace asdm {
 
 	
 		
-		result = result && (this->numAntenna == numAntenna);
+		result = result && (this->telescopeName == telescopeName);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->observerName == observerName);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->observingLog == observingLog);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->sessionReference == sessionReference);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->sbSummary == sbSummary);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->schedulerMode == schedulerMode);
 		
 		if (!result) return false;
 	
@@ -2208,35 +3070,7 @@ namespace asdm {
 
 	
 		
-		result = result && (this->timeInterval.overlaps(timeInterval));
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->observerName == observerName);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->observingLog == observingLog);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->schedulerMode == schedulerMode);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->projectId == projectId);
+		result = result && (this->siteAltitude == siteAltitude);
 		
 		if (!result) return false;
 	
@@ -2257,28 +3091,28 @@ namespace asdm {
 
 	
 		
-		result = result && (this->siteAltitude == siteAltitude);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->flagRow == flagRow);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->execBlockUID == execBlockUID);
-		
-		if (!result) return false;
-	
-
-	
-		
 		result = result && (this->aborted == aborted);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numAntenna == numAntenna);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->antennaId == antennaId);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->sBSummaryId == sBSummaryId);
 		
 		if (!result) return false;
 	
@@ -2288,12 +3122,16 @@ namespace asdm {
 	
 	
 	
-	bool ExecBlockRow::compareRequiredValue(vector<Tag>  antennaId, int execBlockNum, string telescopeName, string configName, int numAntenna, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, ArrayTimeInterval timeInterval, string observerName, vector<string > observingLog, vector<string > schedulerMode, EntityRef projectId, Angle siteLongitude, Angle siteLatitude, Length siteAltitude, bool flagRow, EntityRef execBlockUID, bool aborted) {
+	bool ExecBlockRow::compareRequiredValue(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId) {
 		bool result;
 		result = true;
 		
 	
-		if (!(this->antennaId == antennaId)) return false;
+		if (!(this->startTime == startTime)) return false;
+	
+
+	
+		if (!(this->endTime == endTime)) return false;
 	
 
 	
@@ -2301,7 +3139,11 @@ namespace asdm {
 	
 
 	
-		if (!(this->telescopeName == telescopeName)) return false;
+		if (!(this->execBlockUID == execBlockUID)) return false;
+	
+
+	
+		if (!(this->projectId == projectId)) return false;
 	
 
 	
@@ -2309,7 +3151,27 @@ namespace asdm {
 	
 
 	
-		if (!(this->numAntenna == numAntenna)) return false;
+		if (!(this->telescopeName == telescopeName)) return false;
+	
+
+	
+		if (!(this->observerName == observerName)) return false;
+	
+
+	
+		if (!(this->observingLog == observingLog)) return false;
+	
+
+	
+		if (!(this->sessionReference == sessionReference)) return false;
+	
+
+	
+		if (!(this->sbSummary == sbSummary)) return false;
+	
+
+	
+		if (!(this->schedulerMode == schedulerMode)) return false;
 	
 
 	
@@ -2333,23 +3195,7 @@ namespace asdm {
 	
 
 	
-		if (!(this->timeInterval == timeInterval)) return false;
-	
-
-	
-		if (!(this->observerName == observerName)) return false;
-	
-
-	
-		if (!(this->observingLog == observingLog)) return false;
-	
-
-	
-		if (!(this->schedulerMode == schedulerMode)) return false;
-	
-
-	
-		if (!(this->projectId == projectId)) return false;
+		if (!(this->siteAltitude == siteAltitude)) return false;
 	
 
 	
@@ -2361,19 +3207,19 @@ namespace asdm {
 	
 
 	
-		if (!(this->siteAltitude == siteAltitude)) return false;
-	
-
-	
-		if (!(this->flagRow == flagRow)) return false;
-	
-
-	
-		if (!(this->execBlockUID == execBlockUID)) return false;
-	
-
-	
 		if (!(this->aborted == aborted)) return false;
+	
+
+	
+		if (!(this->numAntenna == numAntenna)) return false;
+	
+
+	
+		if (!(this->antennaId == antennaId)) return false;
+	
+
+	
+		if (!(this->sBSummaryId == sBSummaryId)) return false;
 	
 
 		return result;
@@ -2391,15 +3237,29 @@ namespace asdm {
 	bool ExecBlockRow::equalByRequiredValue(ExecBlockRow* x) {
 		
 			
-		if (this->antennaId != x->antennaId) return false;
+		if (this->startTime != x->startTime) return false;
+			
+		if (this->endTime != x->endTime) return false;
 			
 		if (this->execBlockNum != x->execBlockNum) return false;
 			
-		if (this->telescopeName != x->telescopeName) return false;
+		if (this->execBlockUID != x->execBlockUID) return false;
+			
+		if (this->projectId != x->projectId) return false;
 			
 		if (this->configName != x->configName) return false;
 			
-		if (this->numAntenna != x->numAntenna) return false;
+		if (this->telescopeName != x->telescopeName) return false;
+			
+		if (this->observerName != x->observerName) return false;
+			
+		if (this->observingLog != x->observingLog) return false;
+			
+		if (this->sessionReference != x->sessionReference) return false;
+			
+		if (this->sbSummary != x->sbSummary) return false;
+			
+		if (this->schedulerMode != x->schedulerMode) return false;
 			
 		if (this->baseRangeMin != x->baseRangeMin) return false;
 			
@@ -2411,27 +3271,19 @@ namespace asdm {
 			
 		if (this->basePa != x->basePa) return false;
 			
-		if (this->timeInterval != x->timeInterval) return false;
-			
-		if (this->observerName != x->observerName) return false;
-			
-		if (this->observingLog != x->observingLog) return false;
-			
-		if (this->schedulerMode != x->schedulerMode) return false;
-			
-		if (this->projectId != x->projectId) return false;
+		if (this->siteAltitude != x->siteAltitude) return false;
 			
 		if (this->siteLongitude != x->siteLongitude) return false;
 			
 		if (this->siteLatitude != x->siteLatitude) return false;
 			
-		if (this->siteAltitude != x->siteAltitude) return false;
-			
-		if (this->flagRow != x->flagRow) return false;
-			
-		if (this->execBlockUID != x->execBlockUID) return false;
-			
 		if (this->aborted != x->aborted) return false;
+			
+		if (this->numAntenna != x->numAntenna) return false;
+			
+		if (this->antennaId != x->antennaId) return false;
+			
+		if (this->sBSummaryId != x->sBSummaryId) return false;
 			
 		
 		return true;

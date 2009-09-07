@@ -86,12 +86,6 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
-
-	
 #include "CPolarizationType.h"
 using namespace PolarizationTypeMod;
 	
@@ -129,7 +123,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Feed.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -153,7 +147,7 @@ class BeamRow;
 /**
  * The FeedRow class is a row of a FeedTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class FeedRow {
@@ -180,8 +174,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct FeedRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (FeedRowIDL x) throw(ConversionException);
+	void setFromIDL (FeedRowIDL x) ;
 #endif
 	
 	/**
@@ -194,8 +189,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the FeedTable to which the row built by deserialization will be parented.
+	  */
+	 static FeedRow* fromBin(EndianISStream& eiss, FeedTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -284,47 +293,6 @@ public:
 
 
 	
-	// ===> Attribute feedNum, which is optional
-	
-	
-	
-	/**
-	 * The attribute feedNum is optional. Return true if this attribute exists.
-	 * @return true if and only if the feedNum attribute exists. 
-	 */
-	bool isFeedNumExists() const;
-	
-
-	
- 	/**
- 	 * Get feedNum, which is optional.
- 	 * @return feedNum as int
- 	 * @throws IllegalAccessException If feedNum does not exist.
- 	 */
- 	int getFeedNum() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set feedNum with the specified int.
- 	 * @param feedNum The int value to which feedNum is to be set.
- 	 
- 		
- 	 */
- 	void setFeedNum (int feedNum);
-		
-	
-	
-	
-	/**
-	 * Mark feedNum, which is an optional field, as non-existent.
-	 */
-	void clearFeedNum ();
-	
-
-
-	
 	// ===> Attribute beamOffset
 	
 	
@@ -381,88 +349,6 @@ public:
   		
 	
 	
-	
-
-
-	
-	// ===> Attribute illumOffset, which is optional
-	
-	
-	
-	/**
-	 * The attribute illumOffset is optional. Return true if this attribute exists.
-	 * @return true if and only if the illumOffset attribute exists. 
-	 */
-	bool isIllumOffsetExists() const;
-	
-
-	
- 	/**
- 	 * Get illumOffset, which is optional.
- 	 * @return illumOffset as float
- 	 * @throws IllegalAccessException If illumOffset does not exist.
- 	 */
- 	float getIllumOffset() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set illumOffset with the specified float.
- 	 * @param illumOffset The float value to which illumOffset is to be set.
- 	 
- 		
- 	 */
- 	void setIllumOffset (float illumOffset);
-		
-	
-	
-	
-	/**
-	 * Mark illumOffset, which is an optional field, as non-existent.
-	 */
-	void clearIllumOffset ();
-	
-
-
-	
-	// ===> Attribute illumOffsetPa, which is optional
-	
-	
-	
-	/**
-	 * The attribute illumOffsetPa is optional. Return true if this attribute exists.
-	 * @return true if and only if the illumOffsetPa attribute exists. 
-	 */
-	bool isIllumOffsetPaExists() const;
-	
-
-	
- 	/**
- 	 * Get illumOffsetPa, which is optional.
- 	 * @return illumOffsetPa as float
- 	 * @throws IllegalAccessException If illumOffsetPa does not exist.
- 	 */
- 	float getIllumOffsetPa() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set illumOffsetPa with the specified float.
- 	 * @param illumOffsetPa The float value to which illumOffsetPa is to be set.
- 	 
- 		
- 	 */
- 	void setIllumOffsetPa (float illumOffsetPa);
-		
-	
-	
-	
-	/**
-	 * Mark illumOffsetPa, which is an optional field, as non-existent.
-	 */
-	void clearIllumOffsetPa ();
 	
 
 
@@ -527,129 +413,6 @@ public:
 
 
 	
-	// ===> Attribute xPosition, which is optional
-	
-	
-	
-	/**
-	 * The attribute xPosition is optional. Return true if this attribute exists.
-	 * @return true if and only if the xPosition attribute exists. 
-	 */
-	bool isXPositionExists() const;
-	
-
-	
- 	/**
- 	 * Get xPosition, which is optional.
- 	 * @return xPosition as Length
- 	 * @throws IllegalAccessException If xPosition does not exist.
- 	 */
- 	Length getXPosition() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set xPosition with the specified Length.
- 	 * @param xPosition The Length value to which xPosition is to be set.
- 	 
- 		
- 	 */
- 	void setXPosition (Length xPosition);
-		
-	
-	
-	
-	/**
-	 * Mark xPosition, which is an optional field, as non-existent.
-	 */
-	void clearXPosition ();
-	
-
-
-	
-	// ===> Attribute yPosition, which is optional
-	
-	
-	
-	/**
-	 * The attribute yPosition is optional. Return true if this attribute exists.
-	 * @return true if and only if the yPosition attribute exists. 
-	 */
-	bool isYPositionExists() const;
-	
-
-	
- 	/**
- 	 * Get yPosition, which is optional.
- 	 * @return yPosition as Length
- 	 * @throws IllegalAccessException If yPosition does not exist.
- 	 */
- 	Length getYPosition() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set yPosition with the specified Length.
- 	 * @param yPosition The Length value to which yPosition is to be set.
- 	 
- 		
- 	 */
- 	void setYPosition (Length yPosition);
-		
-	
-	
-	
-	/**
-	 * Mark yPosition, which is an optional field, as non-existent.
-	 */
-	void clearYPosition ();
-	
-
-
-	
-	// ===> Attribute zPosition, which is optional
-	
-	
-	
-	/**
-	 * The attribute zPosition is optional. Return true if this attribute exists.
-	 * @return true if and only if the zPosition attribute exists. 
-	 */
-	bool isZPositionExists() const;
-	
-
-	
- 	/**
- 	 * Get zPosition, which is optional.
- 	 * @return zPosition as Length
- 	 * @throws IllegalAccessException If zPosition does not exist.
- 	 */
- 	Length getZPosition() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set zPosition with the specified Length.
- 	 * @param zPosition The Length value to which zPosition is to be set.
- 	 
- 		
- 	 */
- 	void setZPosition (Length zPosition);
-		
-	
-	
-	
-	/**
-	 * Mark zPosition, which is an optional field, as non-existent.
-	 */
-	void clearZPosition ();
-	
-
-
-	
 	// ===> Attribute receptorAngle
 	
 	
@@ -676,6 +439,129 @@ public:
   		
 	
 	
+	
+
+
+	
+	// ===> Attribute feedNum, which is optional
+	
+	
+	
+	/**
+	 * The attribute feedNum is optional. Return true if this attribute exists.
+	 * @return true if and only if the feedNum attribute exists. 
+	 */
+	bool isFeedNumExists() const;
+	
+
+	
+ 	/**
+ 	 * Get feedNum, which is optional.
+ 	 * @return feedNum as int
+ 	 * @throws IllegalAccessException If feedNum does not exist.
+ 	 */
+ 	int getFeedNum() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set feedNum with the specified int.
+ 	 * @param feedNum The int value to which feedNum is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setFeedNum (int feedNum);
+		
+	
+	
+	
+	/**
+	 * Mark feedNum, which is an optional field, as non-existent.
+	 */
+	void clearFeedNum ();
+	
+
+
+	
+	// ===> Attribute illumOffset, which is optional
+	
+	
+	
+	/**
+	 * The attribute illumOffset is optional. Return true if this attribute exists.
+	 * @return true if and only if the illumOffset attribute exists. 
+	 */
+	bool isIllumOffsetExists() const;
+	
+
+	
+ 	/**
+ 	 * Get illumOffset, which is optional.
+ 	 * @return illumOffset as vector<Length >
+ 	 * @throws IllegalAccessException If illumOffset does not exist.
+ 	 */
+ 	vector<Length > getIllumOffset() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set illumOffset with the specified vector<Length >.
+ 	 * @param illumOffset The vector<Length > value to which illumOffset is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setIllumOffset (vector<Length > illumOffset);
+		
+	
+	
+	
+	/**
+	 * Mark illumOffset, which is an optional field, as non-existent.
+	 */
+	void clearIllumOffset ();
+	
+
+
+	
+	// ===> Attribute position, which is optional
+	
+	
+	
+	/**
+	 * The attribute position is optional. Return true if this attribute exists.
+	 * @return true if and only if the position attribute exists. 
+	 */
+	bool isPositionExists() const;
+	
+
+	
+ 	/**
+ 	 * Get position, which is optional.
+ 	 * @return position as vector<Length >
+ 	 * @throws IllegalAccessException If position does not exist.
+ 	 */
+ 	vector<Length > getPosition() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set position with the specified vector<Length >.
+ 	 * @param position The vector<Length > value to which position is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setPosition (vector<Length > position);
+		
+	
+	
+	
+	/**
+	 * Mark position, which is an optional field, as non-existent.
+	 */
+	void clearPosition ();
 	
 
 
@@ -733,7 +619,7 @@ public:
  	 * @return beamId as vector<Tag> 
  	 * @throws IllegalAccessException If beamId does not exist.
  	 */
- 	vector<Tag>  getBeamId() const throw(IllegalAccessException);
+ 	vector<Tag>  getBeamId() const;
 	
  
  	
@@ -960,12 +846,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this FeedRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, vector<int>  receiverId, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle);
+	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle, vector<int>  receiverId);
 	
 	
 
 	
-	bool compareRequiredValue(vector<int>  receiverId, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle); 
+	bool compareRequiredValue(int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle, vector<int>  receiverId); 
 		 
 	
 	/**
@@ -1071,19 +957,6 @@ private:
  	
 
 	
-	// ===> Attribute feedNum, which is optional
-	
-	
-	bool feedNumExists;
-	
-
-	int feedNum;
-
-	
-	
- 	
-
-	
 	// ===> Attribute beamOffset
 	
 	
@@ -1100,32 +973,6 @@ private:
 	
 
 	vector<vector<Length > > focusReference;
-
-	
-	
- 	
-
-	
-	// ===> Attribute illumOffset, which is optional
-	
-	
-	bool illumOffsetExists;
-	
-
-	float illumOffset;
-
-	
-	
- 	
-
-	
-	// ===> Attribute illumOffsetPa, which is optional
-	
-	
-	bool illumOffsetPaExists;
-	
-
-	float illumOffsetPa;
 
 	
 	
@@ -1154,50 +1001,50 @@ private:
  	
 
 	
-	// ===> Attribute xPosition, which is optional
-	
-	
-	bool xPositionExists;
-	
-
-	Length xPosition;
-
-	
-	
- 	
-
-	
-	// ===> Attribute yPosition, which is optional
-	
-	
-	bool yPositionExists;
-	
-
-	Length yPosition;
-
-	
-	
- 	
-
-	
-	// ===> Attribute zPosition, which is optional
-	
-	
-	bool zPositionExists;
-	
-
-	Length zPosition;
-
-	
-	
- 	
-
-	
 	// ===> Attribute receptorAngle
 	
 	
 
 	vector<Angle > receptorAngle;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute feedNum, which is optional
+	
+	
+	bool feedNumExists;
+	
+
+	int feedNum;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute illumOffset, which is optional
+	
+	
+	bool illumOffsetExists;
+	
+
+	vector<Length > illumOffset;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute position, which is optional
+	
+	
+	bool positionExists;
+	
+
+	vector<Length > position;
 
 	
 	

@@ -1,7 +1,7 @@
 #if     !defined(_BASELINEMETADATA_H)
 #include "Error.h"
 
-namespace asdmBinary {
+namespace sdmbin {
 
   /** Class for baseline-based metadata objects, one type of component in SDM data objects.\n
       There are three baseline-based  metadata in these objects, the flags, the actual times (the mid-point)

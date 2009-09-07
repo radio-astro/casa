@@ -1544,9 +1544,19 @@ void ROVisibilityIterator::detachVisBuffer(VisBuffer& vb)
 }
 
 Int ROVisibilityIterator::numberAnt(){
-
   return msColumns().antenna().nrow(); // for single (sub)array only..
-  
+}
+
+Int ROVisibilityIterator::numberSpw(){
+  return msColumns().spectralWindow().nrow();
+}
+
+Int ROVisibilityIterator::numberDDId(){
+  return msColumns().dataDescription().nrow(); 
+}
+
+Int ROVisibilityIterator::numberPol(){
+  return msColumns().polarization().nrow(); 
 }
 
 Int ROVisibilityIterator::numberCoh(){
@@ -1557,7 +1567,6 @@ Int ROVisibilityIterator::numberCoh(){
   return numcoh;
   
 }
-
 
 VisibilityIterator::VisibilityIterator() {}
 

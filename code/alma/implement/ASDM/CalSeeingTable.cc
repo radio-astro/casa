@@ -80,6 +80,8 @@ namespace asdm {
 	CalSeeingTable::CalSeeingTable(ASDM &c) : container(c) {
 
 	
+		key.push_back("atmPhaseCorrection");
+	
 		key.push_back("calDataId");
 	
 		key.push_back("calReductionId");
@@ -166,11 +168,11 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param atmPhaseCorrection. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
-	
- 	 * @param numBaseLength. 
 	
  	 * @param startValidTime. 
 	
@@ -178,27 +180,27 @@ namespace asdm {
 	
  	 * @param frequencyRange. 
 	
- 	 * @param baseLength. 
+ 	 * @param integrationTime. 
 	
- 	 * @param corrPhaseRms. 
+ 	 * @param numBaseLengths. 
 	
- 	 * @param uncorrPhaseRms. 
+ 	 * @param baselineLengths. 
+	
+ 	 * @param phaseRMS. 
 	
  	 * @param seeing. 
 	
- 	 * @param seeingFrequency. 
-	
- 	 * @param seeingFreqBandwidth. 
+ 	 * @param seeingError. 
 	
      */
-	CalSeeingRow* CalSeeingTable::newRow(Tag calDataId, Tag calReductionId, int numBaseLength, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<Length > baseLength, vector<Angle > corrPhaseRms, vector<Angle > uncorrPhaseRms, Angle seeing, Frequency seeingFrequency, Frequency seeingFreqBandwidth){
+	CalSeeingRow* CalSeeingTable::newRow(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, Interval integrationTime, int numBaseLengths, vector<Length > baselineLengths, vector<Angle > phaseRMS, Angle seeing, Angle seeingError){
 		CalSeeingRow *row = new CalSeeingRow(*this);
+			
+		row->setAtmPhaseCorrection(atmPhaseCorrection);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
-			
-		row->setNumBaseLength(numBaseLength);
 			
 		row->setStartValidTime(startValidTime);
 			
@@ -206,29 +208,29 @@ namespace asdm {
 			
 		row->setFrequencyRange(frequencyRange);
 			
-		row->setBaseLength(baseLength);
+		row->setIntegrationTime(integrationTime);
 			
-		row->setCorrPhaseRms(corrPhaseRms);
+		row->setNumBaseLengths(numBaseLengths);
 			
-		row->setUncorrPhaseRms(uncorrPhaseRms);
+		row->setBaselineLengths(baselineLengths);
+			
+		row->setPhaseRMS(phaseRMS);
 			
 		row->setSeeing(seeing);
 			
-		row->setSeeingFrequency(seeingFrequency);
-			
-		row->setSeeingFreqBandwidth(seeingFreqBandwidth);
+		row->setSeeingError(seeingError);
 	
 		return row;		
 	}	
 
-	CalSeeingRow* CalSeeingTable::newRowFull(Tag calDataId, Tag calReductionId, int numBaseLength, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<Length > baseLength, vector<Angle > corrPhaseRms, vector<Angle > uncorrPhaseRms, Angle seeing, Frequency seeingFrequency, Frequency seeingFreqBandwidth)	{
+	CalSeeingRow* CalSeeingTable::newRowFull(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, Interval integrationTime, int numBaseLengths, vector<Length > baselineLengths, vector<Angle > phaseRMS, Angle seeing, Angle seeingError)	{
 		CalSeeingRow *row = new CalSeeingRow(*this);
+			
+		row->setAtmPhaseCorrection(atmPhaseCorrection);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
-			
-		row->setNumBaseLength(numBaseLength);
 			
 		row->setStartValidTime(startValidTime);
 			
@@ -236,17 +238,17 @@ namespace asdm {
 			
 		row->setFrequencyRange(frequencyRange);
 			
-		row->setBaseLength(baseLength);
+		row->setIntegrationTime(integrationTime);
 			
-		row->setCorrPhaseRms(corrPhaseRms);
+		row->setNumBaseLengths(numBaseLengths);
 			
-		row->setUncorrPhaseRms(uncorrPhaseRms);
+		row->setBaselineLengths(baselineLengths);
+			
+		row->setPhaseRMS(phaseRMS);
 			
 		row->setSeeing(seeing);
 			
-		row->setSeeingFrequency(seeingFrequency);
-			
-		row->setSeeingFreqBandwidth(seeingFreqBandwidth);
+		row->setSeeingError(seeingError);
 	
 		return row;				
 	}
@@ -276,11 +278,13 @@ CalSeeingRow* CalSeeingTable::newRowCopy(CalSeeingRow* row) {
 	CalSeeingRow* CalSeeingTable::add(CalSeeingRow* x) {
 		
 		if (getRowByKey(
+						x->getAtmPhaseCorrection()
+						,
 						x->getCalDataId()
 						,
 						x->getCalReductionId()
 						))
-			//throw DuplicateKey(x.getCalDataId() + "|" + x.getCalReductionId(),"CalSeeing");
+			//throw DuplicateKey(x.getAtmPhaseCorrection() + "|" + x.getCalDataId() + "|" + x.getCalReductionId(),"CalSeeing");
 			throw DuplicateKey("Duplicate key exception in ","CalSeeingTable");
 		
 		row.push_back(x);
@@ -307,12 +311,16 @@ CalSeeingRow* CalSeeingTable::newRowCopy(CalSeeingRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalSeeingRow*  CalSeeingTable::checkAndAdd(CalSeeingRow* x) throw (DuplicateKey) {
+	CalSeeingRow*  CalSeeingTable::checkAndAdd(CalSeeingRow* x)  {
 		
 		
 		if (getRowByKey(
 	
+			x->getAtmPhaseCorrection()
+	,
 			x->getCalDataId()
 	,
 			x->getCalReductionId()
@@ -352,10 +360,14 @@ CalSeeingRow* CalSeeingTable::newRowCopy(CalSeeingRow* row) {
  ** no row exists for that key.
  **
  */
- 	CalSeeingRow* CalSeeingTable::getRowByKey(Tag calDataId, Tag calReductionId)  {
+ 	CalSeeingRow* CalSeeingTable::getRowByKey(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId)  {
 	CalSeeingRow* aRow = 0;
 	for (unsigned int i = 0; i < row.size(); i++) {
 		aRow = row.at(i);
+		
+			
+				if (aRow->atmPhaseCorrection != atmPhaseCorrection) continue;
+			
 		
 			
 				if (aRow->calDataId != calDataId) continue;
@@ -378,11 +390,11 @@ CalSeeingRow* CalSeeingTable::newRowCopy(CalSeeingRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
+ * @param atmPhaseCorrection.
+ 	 		
  * @param calDataId.
  	 		
  * @param calReductionId.
- 	 		
- * @param numBaseLength.
  	 		
  * @param startValidTime.
  	 		
@@ -390,24 +402,24 @@ CalSeeingRow* CalSeeingTable::newRowCopy(CalSeeingRow* row) {
  	 		
  * @param frequencyRange.
  	 		
- * @param baseLength.
+ * @param integrationTime.
  	 		
- * @param corrPhaseRms.
+ * @param numBaseLengths.
  	 		
- * @param uncorrPhaseRms.
+ * @param baselineLengths.
+ 	 		
+ * @param phaseRMS.
  	 		
  * @param seeing.
  	 		
- * @param seeingFrequency.
- 	 		
- * @param seeingFreqBandwidth.
+ * @param seeingError.
  	 		 
  */
-CalSeeingRow* CalSeeingTable::lookup(Tag calDataId, Tag calReductionId, int numBaseLength, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<Length > baseLength, vector<Angle > corrPhaseRms, vector<Angle > uncorrPhaseRms, Angle seeing, Frequency seeingFrequency, Frequency seeingFreqBandwidth) {
+CalSeeingRow* CalSeeingTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, Interval integrationTime, int numBaseLengths, vector<Length > baselineLengths, vector<Angle > phaseRMS, Angle seeing, Angle seeingError) {
 		CalSeeingRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(calDataId, calReductionId, numBaseLength, startValidTime, endValidTime, frequencyRange, baseLength, corrPhaseRms, uncorrPhaseRms, seeing, seeingFrequency, seeingFreqBandwidth)) return aRow;
+			if (aRow->compareNoAutoInc(atmPhaseCorrection, calDataId, calReductionId, startValidTime, endValidTime, frequencyRange, integrationTime, numBaseLengths, baselineLengths, phaseRMS, seeing, seeingError)) return aRow;
 		}			
 		return 0;	
 } 
@@ -415,7 +427,6 @@ CalSeeingRow* CalSeeingTable::lookup(Tag calDataId, Tag calReductionId, int numB
  	 	
 
 	
-
 
 
 
@@ -436,7 +447,7 @@ CalSeeingRow* CalSeeingTable::lookup(Tag calDataId, Tag calReductionId, int numB
 #endif
 	
 #ifndef WITHOUT_ACS
-	void CalSeeingTable::fromIDL(CalSeeingTableIDL x) throw(DuplicateKey,ConversionException) {
+	void CalSeeingTable::fromIDL(CalSeeingTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			CalSeeingRow *tmp = newRow();
@@ -447,28 +458,27 @@ CalSeeingRow* CalSeeingTable::lookup(Tag calDataId, Tag calReductionId, int numB
 	}
 #endif
 
-	char *CalSeeingTable::toFITS() const throw(ConversionException) {
+	char *CalSeeingTable::toFITS() const  {
 		throw ConversionException("Not implemented","CalSeeing");
 	}
 
-	void CalSeeingTable::fromFITS(char *fits) throw(ConversionException) {
+	void CalSeeingTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","CalSeeing");
 	}
 
-	string CalSeeingTable::toVOTable() const throw(ConversionException) {
+	string CalSeeingTable::toVOTable() const {
 		throw ConversionException("Not implemented","CalSeeing");
 	}
 
-	void CalSeeingTable::fromVOTable(string vo) throw(ConversionException) {
+	void CalSeeingTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","CalSeeing");
 	}
 
-	string CalSeeingTable::toXML()  throw(ConversionException) {
+	
+	string CalSeeingTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<CalSeeingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/CalSeeingTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<CalSeeingTable> ");
+		buf.append("<CalSeeingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalSeeingTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalSeeingTable http://almaobservatory.org/XML/XASDM/2/CalSeeingTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -484,8 +494,9 @@ CalSeeingRow* CalSeeingTable::lookup(Tag calDataId, Tag calReductionId, int numB
 		buf.append("</CalSeeingTable> ");
 		return buf;
 	}
+
 	
-	void CalSeeingTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void CalSeeingTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalSeeingTable")) 
 			error();
@@ -527,20 +538,110 @@ CalSeeingRow* CalSeeingTable::lookup(Tag calDataId, Tag calReductionId, int numB
 			error();
 	}
 
-	void CalSeeingTable::error() throw(ConversionException) {
+	
+	void CalSeeingTable::error()  {
 		throw ConversionException("Invalid xml document","CalSeeing");
 	}
 	
+	
 	string CalSeeingTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void CalSeeingTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalSeeing");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			CalSeeingRow* aRow = CalSeeingRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "CalSeeing");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "CalSeeing");
+		} 		 	
+	}
+
 	
 	void CalSeeingTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -571,6 +672,7 @@ CalSeeingRow* CalSeeingTable::lookup(Tag calDataId, Tag calReductionId, int numB
 				throw ConversionException("Could not close file " + fileName, "CalSeeing");
 		}
 	}
+
 	
 	void CalSeeingTable::setFromFile(const string& directory) {
 		string tablename;
@@ -612,6 +714,11 @@ CalSeeingRow* CalSeeingTable::lookup(Tag calDataId, Tag calReductionId, int numB
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

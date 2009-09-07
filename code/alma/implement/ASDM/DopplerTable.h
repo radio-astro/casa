@@ -79,6 +79,9 @@ using namespace enumerations;
 	
 
 	
+#include "CDopplerReferenceCode.h"
+using namespace DopplerReferenceCodeMod;
+	
 
 
 #ifndef WITHOUT_ACS
@@ -120,45 +123,54 @@ class ASDM;
 class DopplerRow;
 /**
  * The DopplerTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Doppler tracking information. This table defines how velocity  information is converted into a frequency offset to compensate in real time  for the Doppler effect. This table may be omitted for ALMA when the  Doppler tracking is not corrected.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Doppler </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> dopplerId </I></TD> 
+ 		
+ * <TD><I> dopplerId </I></TD>
+ 		 
  * <TD> int</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a collection of rows in the table. </TD>
  * </TR>
- 		
 	
- 		
  * <TR>
- * <TD> sourceId </TD> 
- * <TD> int </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> sourceId </TD>
+ 		 
+ * <TD> int</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a collection of rows in SourceTable. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> transitionIndex </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;selects the transition in the source table for which the doppler tracking is done. </TD>
  * </TR>
 	
  * <TR>
  * <TD> velDef </TD> 
- * <TD> Speed </TD>
+ * <TD> DopplerReferenceCodeMod::DopplerReferenceCode </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the definition of the velocity. </TD>
  * </TR>
 	
 
@@ -241,13 +253,13 @@ public:
  	 * @param velDef. 
 	
      */
-	DopplerRow *newRow(int sourceId, int transitionIndex, Speed velDef);
+	DopplerRow *newRow(int sourceId, int transitionIndex, DopplerReferenceCodeMod::DopplerReferenceCode velDef);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	DopplerRow *newRowFull(int sourceId, int transitionIndex, Speed velDef);
+	DopplerRow *newRowFull(int sourceId, int transitionIndex, DopplerReferenceCodeMod::DopplerReferenceCode velDef);
 
 
 	/**
@@ -344,7 +356,7 @@ public:
  	 * @param velDef.
  	 		 
  	 */
-	DopplerRow* lookup(int sourceId, int transitionIndex, Speed velDef); 
+	DopplerRow* lookup(int sourceId, int transitionIndex, DopplerReferenceCodeMod::DopplerReferenceCode velDef); 
 
 
 #ifndef WITHOUT_ACS
@@ -364,43 +376,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(DopplerTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(DopplerTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for Doppler (DopplerTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a Doppler (DopplerTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -479,8 +497,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	DopplerRow* checkAndAdd(DopplerRow* x) throw (DuplicateKey, UniquenessViolationException);
+	DopplerRow* checkAndAdd(DopplerRow* x) ;
 
 
 
@@ -494,7 +516,7 @@ private:
 	vector<DopplerRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

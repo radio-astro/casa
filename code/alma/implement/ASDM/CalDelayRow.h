@@ -78,17 +78,30 @@ using namespace enumerations;
 	
 
 	
+#include "CAtmPhaseCorrection.h"
+using namespace AtmPhaseCorrectionMod;
+	
+
+	
 #include "CBasebandName.h"
 using namespace BasebandNameMod;
 	
 
 	
-
-	
-
-	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -106,6 +119,11 @@ using namespace PolarizationTypeMod;
 
 	
 
+	
+
+	
+#include "CReceiverSideband.h"
+using namespace ReceiverSidebandMod;
 	
 
 
@@ -131,7 +149,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalDelay.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -139,17 +157,17 @@ namespace asdm {
 //class asdm::CalDelayTable;
 
 
-// class asdm::CalReductionRow;
-class CalReductionRow;
-
 // class asdm::CalDataRow;
 class CalDataRow;
+
+// class asdm::CalReductionRow;
+class CalReductionRow;
 	
 
 /**
  * The CalDelayRow class is a row of a CalDelayTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class CalDelayRow {
@@ -176,8 +194,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalDelayRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalDelayRowIDL x) throw(ConversionException);
+	void setFromIDL (CalDelayRowIDL x) ;
 #endif
 	
 	/**
@@ -190,8 +209,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalDelayTable to which the row built by deserialization will be parented.
+	  */
+	 static CalDelayRow* fromBin(EndianISStream& eiss, CalDelayTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -223,6 +256,38 @@ public:
  	 		
  	 */
  	void setAntennaName (string antennaName);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute atmPhaseCorrection
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
+ 	 */
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection getAtmPhaseCorrection() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
+ 	 
+ 		
+ 			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection);
   		
 	
 	
@@ -262,66 +327,6 @@ public:
 
 
 	
-	// ===> Attribute numReceptor
-	
-	
-	
-
-	
- 	/**
- 	 * Get numReceptor.
- 	 * @return numReceptor as int
- 	 */
- 	int getNumReceptor() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numReceptor with the specified int.
- 	 * @param numReceptor The int value to which numReceptor is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumReceptor (int numReceptor);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute refAntennaName
-	
-	
-	
-
-	
- 	/**
- 	 * Get refAntennaName.
- 	 * @return refAntennaName as string
- 	 */
- 	string getRefAntennaName() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set refAntennaName with the specified string.
- 	 * @param refAntennaName The string value to which refAntennaName is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setRefAntennaName (string refAntennaName);
-  		
-	
-	
-	
-
-
-	
 	// ===> Attribute receiverBand
 	
 	
@@ -343,38 +348,10 @@ public:
  	 
  		
  			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
  	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute polarizationTypes
-	
-	
-	
-
-	
- 	/**
- 	 * Get polarizationTypes.
- 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
- 	 */
- 	vector<PolarizationTypeMod::PolarizationType > getPolarizationTypes() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
- 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes);
   		
 	
 	
@@ -442,29 +419,59 @@ public:
 
 
 	
-	// ===> Attribute delayOffset
+	// ===> Attribute refAntennaName
 	
 	
 	
 
 	
  	/**
- 	 * Get delayOffset.
- 	 * @return delayOffset as vector<double >
+ 	 * Get refAntennaName.
+ 	 * @return refAntennaName as string
  	 */
- 	vector<double > getDelayOffset() const;
+ 	string getRefAntennaName() const;
 	
  
  	
  	
  	/**
- 	 * Set delayOffset with the specified vector<double >.
- 	 * @param delayOffset The vector<double > value to which delayOffset is to be set.
+ 	 * Set refAntennaName with the specified string.
+ 	 * @param refAntennaName The string value to which refAntennaName is to be set.
  	 
  		
  			
  	 */
- 	void setDelayOffset (vector<double > delayOffset);
+ 	void setRefAntennaName (string refAntennaName);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numReceptor
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
+ 	 */
+ 	int getNumReceptor() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumReceptor (int numReceptor);
   		
 	
 	
@@ -502,15 +509,112 @@ public:
 
 
 	
-	// ===> Attribute crossDelayOffset
+	// ===> Attribute delayOffset
 	
 	
 	
 
 	
  	/**
- 	 * Get crossDelayOffset.
+ 	 * Get delayOffset.
+ 	 * @return delayOffset as vector<double >
+ 	 */
+ 	vector<double > getDelayOffset() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set delayOffset with the specified vector<double >.
+ 	 * @param delayOffset The vector<double > value to which delayOffset is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setDelayOffset (vector<double > delayOffset);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute polarizationTypes
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get polarizationTypes.
+ 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
+ 	 */
+ 	vector<PolarizationTypeMod::PolarizationType > getPolarizationTypes() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute reducedChiSquared
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get reducedChiSquared.
+ 	 * @return reducedChiSquared as vector<double >
+ 	 */
+ 	vector<double > getReducedChiSquared() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set reducedChiSquared with the specified vector<double >.
+ 	 * @param reducedChiSquared The vector<double > value to which reducedChiSquared is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setReducedChiSquared (vector<double > reducedChiSquared);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute crossDelayOffset, which is optional
+	
+	
+	
+	/**
+	 * The attribute crossDelayOffset is optional. Return true if this attribute exists.
+	 * @return true if and only if the crossDelayOffset attribute exists. 
+	 */
+	bool isCrossDelayOffsetExists() const;
+	
+
+	
+ 	/**
+ 	 * Get crossDelayOffset, which is optional.
  	 * @return crossDelayOffset as double
+ 	 * @throws IllegalAccessException If crossDelayOffset does not exist.
  	 */
  	double getCrossDelayOffset() const;
 	
@@ -522,25 +626,36 @@ public:
  	 * @param crossDelayOffset The double value to which crossDelayOffset is to be set.
  	 
  		
- 			
  	 */
  	void setCrossDelayOffset (double crossDelayOffset);
-  		
+		
 	
 	
+	
+	/**
+	 * Mark crossDelayOffset, which is an optional field, as non-existent.
+	 */
+	void clearCrossDelayOffset ();
 	
 
 
 	
-	// ===> Attribute crossDelayOffsetError
+	// ===> Attribute crossDelayOffsetError, which is optional
 	
 	
+	
+	/**
+	 * The attribute crossDelayOffsetError is optional. Return true if this attribute exists.
+	 * @return true if and only if the crossDelayOffsetError attribute exists. 
+	 */
+	bool isCrossDelayOffsetErrorExists() const;
 	
 
 	
  	/**
- 	 * Get crossDelayOffsetError.
+ 	 * Get crossDelayOffsetError, which is optional.
  	 * @return crossDelayOffsetError as double
+ 	 * @throws IllegalAccessException If crossDelayOffsetError does not exist.
  	 */
  	double getCrossDelayOffsetError() const;
 	
@@ -552,12 +667,180 @@ public:
  	 * @param crossDelayOffsetError The double value to which crossDelayOffsetError is to be set.
  	 
  		
- 			
  	 */
  	void setCrossDelayOffsetError (double crossDelayOffsetError);
-  		
+		
 	
 	
+	
+	/**
+	 * Mark crossDelayOffsetError, which is an optional field, as non-existent.
+	 */
+	void clearCrossDelayOffsetError ();
+	
+
+
+	
+	// ===> Attribute numSideband, which is optional
+	
+	
+	
+	/**
+	 * The attribute numSideband is optional. Return true if this attribute exists.
+	 * @return true if and only if the numSideband attribute exists. 
+	 */
+	bool isNumSidebandExists() const;
+	
+
+	
+ 	/**
+ 	 * Get numSideband, which is optional.
+ 	 * @return numSideband as int
+ 	 * @throws IllegalAccessException If numSideband does not exist.
+ 	 */
+ 	int getNumSideband() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numSideband with the specified int.
+ 	 * @param numSideband The int value to which numSideband is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setNumSideband (int numSideband);
+		
+	
+	
+	
+	/**
+	 * Mark numSideband, which is an optional field, as non-existent.
+	 */
+	void clearNumSideband ();
+	
+
+
+	
+	// ===> Attribute refFreq, which is optional
+	
+	
+	
+	/**
+	 * The attribute refFreq is optional. Return true if this attribute exists.
+	 * @return true if and only if the refFreq attribute exists. 
+	 */
+	bool isRefFreqExists() const;
+	
+
+	
+ 	/**
+ 	 * Get refFreq, which is optional.
+ 	 * @return refFreq as vector<Frequency >
+ 	 * @throws IllegalAccessException If refFreq does not exist.
+ 	 */
+ 	vector<Frequency > getRefFreq() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set refFreq with the specified vector<Frequency >.
+ 	 * @param refFreq The vector<Frequency > value to which refFreq is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setRefFreq (vector<Frequency > refFreq);
+		
+	
+	
+	
+	/**
+	 * Mark refFreq, which is an optional field, as non-existent.
+	 */
+	void clearRefFreq ();
+	
+
+
+	
+	// ===> Attribute refFreqPhase, which is optional
+	
+	
+	
+	/**
+	 * The attribute refFreqPhase is optional. Return true if this attribute exists.
+	 * @return true if and only if the refFreqPhase attribute exists. 
+	 */
+	bool isRefFreqPhaseExists() const;
+	
+
+	
+ 	/**
+ 	 * Get refFreqPhase, which is optional.
+ 	 * @return refFreqPhase as vector<Angle >
+ 	 * @throws IllegalAccessException If refFreqPhase does not exist.
+ 	 */
+ 	vector<Angle > getRefFreqPhase() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set refFreqPhase with the specified vector<Angle >.
+ 	 * @param refFreqPhase The vector<Angle > value to which refFreqPhase is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setRefFreqPhase (vector<Angle > refFreqPhase);
+		
+	
+	
+	
+	/**
+	 * Mark refFreqPhase, which is an optional field, as non-existent.
+	 */
+	void clearRefFreqPhase ();
+	
+
+
+	
+	// ===> Attribute sidebands, which is optional
+	
+	
+	
+	/**
+	 * The attribute sidebands is optional. Return true if this attribute exists.
+	 * @return true if and only if the sidebands attribute exists. 
+	 */
+	bool isSidebandsExists() const;
+	
+
+	
+ 	/**
+ 	 * Get sidebands, which is optional.
+ 	 * @return sidebands as vector<ReceiverSidebandMod::ReceiverSideband >
+ 	 * @throws IllegalAccessException If sidebands does not exist.
+ 	 */
+ 	vector<ReceiverSidebandMod::ReceiverSideband > getSidebands() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set sidebands with the specified vector<ReceiverSidebandMod::ReceiverSideband >.
+ 	 * @param sidebands The vector<ReceiverSidebandMod::ReceiverSideband > value to which sidebands is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSidebands (vector<ReceiverSidebandMod::ReceiverSideband > sidebands);
+		
+	
+	
+	
+	/**
+	 * Mark sidebands, which is an optional field, as non-existent.
+	 */
+	void clearSidebands ();
 	
 
 
@@ -638,21 +921,6 @@ public:
 	
 		
 	/**
-	 * calReductionId pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
-	 * @return a CalReductionRow*
-	 * 
-	 
-	 */
-	 CalReductionRow* getCalReductionUsingCalReductionId();
-	 
-
-	
-
-	
-
-	
-		
-	/**
 	 * calDataId pointer to the row in the CalData table having CalData.calDataId == calDataId
 	 * @return a CalDataRow*
 	 * 
@@ -664,18 +932,33 @@ public:
 	
 
 	
+
+	
+		
+	/**
+	 * calReductionId pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
+	 * @return a CalReductionRow*
+	 * 
+	 
+	 */
+	 CalReductionRow* getCalReductionUsingCalReductionId();
+	 
+
+	
+
+	
 	
 	
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this CalDelayRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, BasebandNameMod::BasebandName basebandName, int numReceptor, string refAntennaName, ReceiverBandMod::ReceiverBand receiverBand, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<double > delayOffset, vector<double > delayError, double crossDelayOffset, double crossDelayOffsetError);
+	bool compareNoAutoInc(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared);
 	
 	
 
 	
-	bool compareRequiredValue(int numReceptor, string refAntennaName, ReceiverBandMod::ReceiverBand receiverBand, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<double > delayOffset, vector<double > delayError, double crossDelayOffset, double crossDelayOffsetError); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared); 
 		 
 	
 	/**
@@ -747,6 +1030,17 @@ private:
  	
 
 	
+	// ===> Attribute atmPhaseCorrection
+	
+	
+
+	AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute basebandName
 	
 	
@@ -758,44 +1052,11 @@ private:
  	
 
 	
-	// ===> Attribute numReceptor
-	
-	
-
-	int numReceptor;
-
-	
-	
- 	
-
-	
-	// ===> Attribute refAntennaName
-	
-	
-
-	string refAntennaName;
-
-	
-	
- 	
-
-	
 	// ===> Attribute receiverBand
 	
 	
 
 	ReceiverBandMod::ReceiverBand receiverBand;
-
-	
-	
- 	
-
-	
-	// ===> Attribute polarizationTypes
-	
-	
-
-	vector<PolarizationTypeMod::PolarizationType > polarizationTypes;
 
 	
 	
@@ -824,11 +1085,22 @@ private:
  	
 
 	
-	// ===> Attribute delayOffset
+	// ===> Attribute refAntennaName
 	
 	
 
-	vector<double > delayOffset;
+	string refAntennaName;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numReceptor
+	
+	
+
+	int numReceptor;
 
 	
 	
@@ -846,8 +1118,43 @@ private:
  	
 
 	
-	// ===> Attribute crossDelayOffset
+	// ===> Attribute delayOffset
 	
+	
+
+	vector<double > delayOffset;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute polarizationTypes
+	
+	
+
+	vector<PolarizationTypeMod::PolarizationType > polarizationTypes;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute reducedChiSquared
+	
+	
+
+	vector<double > reducedChiSquared;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute crossDelayOffset, which is optional
+	
+	
+	bool crossDelayOffsetExists;
 	
 
 	double crossDelayOffset;
@@ -857,11 +1164,65 @@ private:
  	
 
 	
-	// ===> Attribute crossDelayOffsetError
+	// ===> Attribute crossDelayOffsetError, which is optional
 	
+	
+	bool crossDelayOffsetErrorExists;
 	
 
 	double crossDelayOffsetError;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numSideband, which is optional
+	
+	
+	bool numSidebandExists;
+	
+
+	int numSideband;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute refFreq, which is optional
+	
+	
+	bool refFreqExists;
+	
+
+	vector<Frequency > refFreq;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute refFreqPhase, which is optional
+	
+	
+	bool refFreqPhaseExists;
+	
+
+	vector<Angle > refFreqPhase;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute sidebands, which is optional
+	
+	
+	bool sidebandsExists;
+	
+
+	vector<ReceiverSidebandMod::ReceiverSideband > sidebands;
 
 	
 	

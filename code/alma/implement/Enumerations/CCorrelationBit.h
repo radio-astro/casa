@@ -42,16 +42,30 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the CorrelationBit enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace CorrelationBitMod
 {
+  //! CorrelationBit.
+  //!  [APDM] Number of bits used for correlation
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum CorrelationBit
   { 
-    BITS_2x2 ,
-    BITS_3x3 ,
-    BITS_4x4 
+    BITS_2x2 /*!< two bit correlation */
+     ,
+    BITS_3x3 /*!<  three bit correlation */
+     ,
+    BITS_4x4 /*!< four bit correlation */
+     
   };
   typedef CorrelationBit &CorrelationBit_out;
 } 
@@ -59,68 +73,93 @@ namespace CorrelationBitMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration CorrelationBit.
+  * 
+  */
 class CCorrelationBit {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the CorrelationBit enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sBITS_2x2;
+	static const std::string& sBITS_2x2; /*!< A const string equal to "BITS_2x2".*/
 	
-	static const std::string& sBITS_3x3;
+	static const std::string& sBITS_3x3; /*!< A const string equal to "BITS_3x3".*/
 	
-	static const std::string& sBITS_4x4;
-	
-    static const std::vector<std::string> sCorrelationBitSet();	 
-
+	static const std::string& sBITS_4x4; /*!< A const string equal to "BITS_4x4".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in CorrelationBitMod::CorrelationBit.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of CorrelationBitMod::CorrelationBit.
+      * @return a string.
+      */
+	static std::string name(const CorrelationBitMod::CorrelationBit& e);
 	
-	// Explanations associated with the CorrelationBit Enumeration.
-		
-	static const std::string& hBITS_2x2;
-		
-	static const std::string& hBITS_3x3;
-		
-	static const std::string& hBITS_4x4;
-		
-	static const std::vector<std::string> hCorrelationBitSet();
-   	
-
-   	// Is an integer number associated with the CorrelationBit enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the CorrelationBit enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  CorrelationBit enumeration.
-	static std::string name(const CorrelationBitMod::CorrelationBit& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const CorrelationBitMod::CorrelationBit& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified CorrelationBit enumeration.
-	static std::string help(const CorrelationBitMod::CorrelationBit& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a CorrelationBit enumeration object by specifying its name.
    	static CorrelationBitMod::CorrelationBit newCorrelationBit(const std::string& name);
    	
-   	// Create a CorrelationBit enumeration object by specifying its name.
+   	/*! Return a CorrelationBit's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a CorrelationBitMod::CorrelationBit's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static CorrelationBitMod::CorrelationBit literal(const std::string& name);
  	
-    // Create a CorrelationBit enumeration object by specifying its position index (0 based).
+    /*! Return a CorrelationBit's enumerator given an unsigned int.
+      * @param i the index of the enumerator in CorrelationBitMod::CorrelationBit.
+      * @return a CorrelationBitMod::CorrelationBit's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static CorrelationBitMod::CorrelationBit from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CCorrelationBit();
     CCorrelationBit(const CCorrelationBit&);
     CCorrelationBit& operator=(const CCorrelationBit&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CCorrelationBit_H*/

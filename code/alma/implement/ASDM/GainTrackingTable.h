@@ -89,6 +89,21 @@ using namespace enumerations;
 	
 
 	
+#include "CPolarizationType.h"
+using namespace PolarizationTypeMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
 
 	
 
@@ -134,107 +149,167 @@ class ASDM;
 class GainTrackingRow;
 /**
  * The GainTrackingTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Gain tracking information. Contains variable control parameters   affecting the signal coming from a receiver in an antenna. The number of   LOs is in the Receiver table.    See the document \href{https://wikio.nrao.edu/pub/ALMA/CalExamples/DelayCalSteps.pdf}   {Antenna and Electronic Delay Calibration} for details.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of GainTracking </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> antennaId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in AntennaTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> feedId </TD> 
- * <TD> int </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> spectralWindowId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in SpectralWindowTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> spectralWindowId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> timeInterval </TD>
+ 		 
+ * <TD> ArrayTimeInterval</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;time interval for which the row's content is valid. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> timeInterval </TD> 
- * <TD> ArrayTimeInterval </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> feedId </TD>
+ 		 
+ * <TD> int</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in Feed Table </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> attenuator </TD> 
  * <TD> float </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the nominal value of the attenuator. </TD>
  * </TR>
 	
  * <TR>
- * <TD> delayoff1 </TD> 
- * <TD> Interval </TD>
+ * <TD> numLO </TD> 
+ * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of local oscillators. </TD>
  * </TR>
 	
  * <TR>
- * <TD> delayoff2 </TD> 
- * <TD> Interval </TD>
+ * <TD> numReceptor </TD> 
+ * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of receptors. </TD>
  * </TR>
 	
  * <TR>
- * <TD> phaseoff1 </TD> 
- * <TD> Angle </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> cableDelay </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the IF cable delay for each polarization (one value per receptor). </TD>
  * </TR>
 	
  * <TR>
- * <TD> phaseoff2 </TD> 
- * <TD> Angle </TD>
+ * <TD> crossPolarizationDelay </TD> 
+ * <TD> double </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the cross polarization delay. </TD>
  * </TR>
 	
  * <TR>
- * <TD> rateoff1 </TD> 
- * <TD> AngularRate </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> loPropagationDelay </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numLO </TD> 
+ * <TD> &nbsp;the local oscillator propagation delays (one value per local oscillator). </TD>
  * </TR>
 	
  * <TR>
- * <TD> rateoff2 </TD> 
- * <TD> AngularRate </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> polarizationTypes </TD> 
+ * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;describes the polarizations of the receptors (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> receiverDelay </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the receiver delays (one value per receptor). </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
+	
+ * <TR>
+ * <TD> delayOffset </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; an antenna based delay offset. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> freqOffset </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  numLO  </TD>
+ * <TD>&nbsp; an additional frequency offset applied to LOs (one value per LO) </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> phaseOffset </TD> 
+ * <TD> vector<Angle > </TD>
+ * <TD>  numLO  </TD>
+ * <TD>&nbsp; an additional phase offset applied to LOs (one value per LO). </TD>
+ * </TR>
 	
  * <TR>
  * <TD> samplingLevel </TD> 
  * <TD> float </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the sampling level. </TD>
  * </TR>
 	
  * <TR>
- * <TD> phaseRefOffset </TD> 
- * <TD> Angle </TD>
+ * <TD> numAttFreq </TD> 
+ * <TD> int </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the sizes of attSpectrum and attFreq. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> attFreq </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numAttFreq  </TD>
+ * <TD>&nbsp; the attenuator frequencies. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> attSpectrum </TD> 
+ * <TD> vector<Complex > </TD>
+ * <TD>  numAttFreq  </TD>
+ * <TD>&nbsp; the attenuator's measured spectrum. </TD>
  * </TR>
 	
 
@@ -311,34 +386,36 @@ public:
 	
  	 * @param antennaId. 
 	
- 	 * @param feedId. 
-	
  	 * @param spectralWindowId. 
 	
  	 * @param timeInterval. 
 	
+ 	 * @param feedId. 
+	
  	 * @param attenuator. 
 	
- 	 * @param delayoff1. 
+ 	 * @param numLO. 
 	
- 	 * @param delayoff2. 
+ 	 * @param numReceptor. 
 	
- 	 * @param phaseoff1. 
+ 	 * @param cableDelay. 
 	
- 	 * @param phaseoff2. 
+ 	 * @param crossPolarizationDelay. 
 	
- 	 * @param rateoff1. 
+ 	 * @param loPropagationDelay. 
 	
- 	 * @param rateoff2. 
+ 	 * @param polarizationTypes. 
+	
+ 	 * @param receiverDelay. 
 	
      */
-	GainTrackingRow *newRow(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, float attenuator, Interval delayoff1, Interval delayoff2, Angle phaseoff1, Angle phaseoff2, AngularRate rateoff1, AngularRate rateoff2);
+	GainTrackingRow *newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, float attenuator, int numLO, int numReceptor, vector<double > cableDelay, double crossPolarizationDelay, vector<double > loPropagationDelay, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > receiverDelay);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	GainTrackingRow *newRowFull(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, float attenuator, Interval delayoff1, Interval delayoff2, Angle phaseoff1, Angle phaseoff2, AngularRate rateoff1, AngularRate rateoff2);
+	GainTrackingRow *newRowFull(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, float attenuator, int numLO, int numReceptor, vector<double > cableDelay, double crossPolarizationDelay, vector<double > loPropagationDelay, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > receiverDelay);
 
 
 	/**
@@ -378,7 +455,7 @@ public:
 	 *
 	
 	 * @note The row is inserted in the table in such a way that all the rows having the same value of
-	 * ( antennaId, feedId, spectralWindowId ) are stored by ascending time.
+	 * ( antennaId, spectralWindowId, feedId ) are stored by ascending time.
 	 * @see method getByContext.
 	
 	 */
@@ -402,12 +479,12 @@ public:
 
 	/**
 	 * Returns all the rows sorted by ascending startTime for a given context. 
-	 * The context is defined by a value of ( antennaId, feedId, spectralWindowId ).
+	 * The context is defined by a value of ( antennaId, spectralWindowId, feedId ).
 	 *
 	 * @return a pointer on a vector<GainTrackingRow *>. A null returned value means that the table contains
-	 * no GainTrackingRow for the given ( antennaId, feedId, spectralWindowId ).
+	 * no GainTrackingRow for the given ( antennaId, spectralWindowId, feedId ).
 	 */
-	 vector <GainTrackingRow*> *getByContext(Tag antennaId, int feedId, Tag spectralWindowId);
+	 vector <GainTrackingRow*> *getByContext(Tag antennaId, Tag spectralWindowId, int feedId);
 	 
 
 
@@ -420,15 +497,15 @@ public:
 	
 	 * @param antennaId. 
 	
-	 * @param feedId. 
-	
 	 * @param spectralWindowId. 
 	
 	 * @param timeInterval. 
 	
+	 * @param feedId. 
+	
  	 *
 	 */
- 	GainTrackingRow* getRowByKey(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval);
+ 	GainTrackingRow* getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId);
 
  	 	
 
@@ -442,28 +519,30 @@ public:
 			
  	 * @param antennaId.
  	 		
- 	 * @param feedId.
- 	 		
  	 * @param spectralWindowId.
  	 		
  	 * @param timeInterval.
  	 		
+ 	 * @param feedId.
+ 	 		
  	 * @param attenuator.
  	 		
- 	 * @param delayoff1.
+ 	 * @param numLO.
  	 		
- 	 * @param delayoff2.
+ 	 * @param numReceptor.
  	 		
- 	 * @param phaseoff1.
+ 	 * @param cableDelay.
  	 		
- 	 * @param phaseoff2.
+ 	 * @param crossPolarizationDelay.
  	 		
- 	 * @param rateoff1.
+ 	 * @param loPropagationDelay.
  	 		
- 	 * @param rateoff2.
+ 	 * @param polarizationTypes.
+ 	 		
+ 	 * @param receiverDelay.
  	 		 
  	 */
-	GainTrackingRow* lookup(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, float attenuator, Interval delayoff1, Interval delayoff2, Angle phaseoff1, Angle phaseoff2, AngularRate rateoff1, AngularRate rateoff2); 
+	GainTrackingRow* lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, float attenuator, int numLO, int numReceptor, vector<double > cableDelay, double crossPolarizationDelay, vector<double > loPropagationDelay, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > receiverDelay); 
 
 
 #ifndef WITHOUT_ACS
@@ -483,43 +562,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(GainTrackingTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(GainTrackingTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for GainTracking (GainTrackingTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a GainTracking (GainTrackingTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -594,8 +679,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	GainTrackingRow* checkAndAdd(GainTrackingRow* x) throw (DuplicateKey);
+	GainTrackingRow* checkAndAdd(GainTrackingRow* x) ;
 
 
 	
@@ -630,7 +717,7 @@ private:
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
 	 */
-	 string Key(Tag antennaId, int feedId, Tag spectralWindowId) ;
+	 string Key(Tag antennaId, Tag spectralWindowId, int feedId) ;
 		 
 		
 	
@@ -640,11 +727,11 @@ private:
 	 * whose attributes are equal to the corresponding parameters of the method.
 	 *
 	 */
-	void getByKeyNoAutoIncNoTime(vector <GainTrackingRow*>& vin, vector <GainTrackingRow*>& vout,  Tag antennaId, int feedId, Tag spectralWindowId);
+	void getByKeyNoAutoIncNoTime(vector <GainTrackingRow*>& vin, vector <GainTrackingRow*>& vout,  Tag antennaId, Tag spectralWindowId, int feedId);
 	
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

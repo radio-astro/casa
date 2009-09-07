@@ -42,21 +42,42 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the AntennaMake enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace AntennaMakeMod
 {
+  //! AntennaMake.
+  //! The physical types of antenna
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum AntennaMake
   { 
-    AEM_12 ,
-    MITSUBISHI_7 ,
-    MITSUBISHI_12_A ,
-    MITSUBISHI_12_B ,
-    VERTEX_12_ATF ,
-    AEM_12_ATF ,
-    VERTEX_12 ,
-    IRAM_15 
+    AEM_12 /*!< 12m AEM antenna */
+     ,
+    MITSUBISHI_7 /*!< 7-m Mitsubishi antenna (ACA) */
+     ,
+    MITSUBISHI_12_A /*!< 12-m Mitsubishi antenna (ACA) (refurbished prototype) */
+     ,
+    MITSUBISHI_12_B /*!< 12-m Mitsubishi antenna (ACA) (production) */
+     ,
+    VERTEX_12_ATF /*!< 12-m Vertex antenna prototype */
+     ,
+    AEM_12_ATF /*!< 12-m AEM  antenna prototype */
+     ,
+    VERTEX_12 /*!< 12-m Vertex antenna */
+     ,
+    IRAM_15 /*!< 15-m IRAM antenna */
+     ,
+    UNDEFINED /*!< Not defined or not applicable. */
+     
   };
   typedef AntennaMake &AntennaMake_out;
 } 
@@ -64,88 +85,105 @@ namespace AntennaMakeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration AntennaMake.
+  * 
+  */
 class CAntennaMake {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the AntennaMake enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sAEM_12;
+	static const std::string& sAEM_12; /*!< A const string equal to "AEM_12".*/
 	
-	static const std::string& sMITSUBISHI_7;
+	static const std::string& sMITSUBISHI_7; /*!< A const string equal to "MITSUBISHI_7".*/
 	
-	static const std::string& sMITSUBISHI_12_A;
+	static const std::string& sMITSUBISHI_12_A; /*!< A const string equal to "MITSUBISHI_12_A".*/
 	
-	static const std::string& sMITSUBISHI_12_B;
+	static const std::string& sMITSUBISHI_12_B; /*!< A const string equal to "MITSUBISHI_12_B".*/
 	
-	static const std::string& sVERTEX_12_ATF;
+	static const std::string& sVERTEX_12_ATF; /*!< A const string equal to "VERTEX_12_ATF".*/
 	
-	static const std::string& sAEM_12_ATF;
+	static const std::string& sAEM_12_ATF; /*!< A const string equal to "AEM_12_ATF".*/
 	
-	static const std::string& sVERTEX_12;
+	static const std::string& sVERTEX_12; /*!< A const string equal to "VERTEX_12".*/
 	
-	static const std::string& sIRAM_15;
+	static const std::string& sIRAM_15; /*!< A const string equal to "IRAM_15".*/
 	
-    static const std::vector<std::string> sAntennaMakeSet();	 
+	static const std::string& sUNDEFINED; /*!< A const string equal to "UNDEFINED".*/
+	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in AntennaMakeMod::AntennaMake.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of AntennaMakeMod::AntennaMake.
+      * @return a string.
+      */
+	static std::string name(const AntennaMakeMod::AntennaMake& e);
 	
-
-	
-	// Explanations associated with the AntennaMake Enumeration.
-		
-	static const std::string& hAEM_12;
-		
-	static const std::string& hMITSUBISHI_7;
-		
-	static const std::string& hMITSUBISHI_12_A;
-		
-	static const std::string& hMITSUBISHI_12_B;
-		
-	static const std::string& hVERTEX_12_ATF;
-		
-	static const std::string& hAEM_12_ATF;
-		
-	static const std::string& hVERTEX_12;
-		
-	static const std::string& hIRAM_15;
-		
-	static const std::vector<std::string> hAntennaMakeSet();
-   	
-
-   	// Is an integer number associated with the AntennaMake enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the AntennaMake enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  AntennaMake enumeration.
-	static std::string name(const AntennaMakeMod::AntennaMake& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const AntennaMakeMod::AntennaMake& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified AntennaMake enumeration.
-	static std::string help(const AntennaMakeMod::AntennaMake& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a AntennaMake enumeration object by specifying its name.
    	static AntennaMakeMod::AntennaMake newAntennaMake(const std::string& name);
    	
-   	// Create a AntennaMake enumeration object by specifying its name.
+   	/*! Return a AntennaMake's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a AntennaMakeMod::AntennaMake's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static AntennaMakeMod::AntennaMake literal(const std::string& name);
  	
-    // Create a AntennaMake enumeration object by specifying its position index (0 based).
+    /*! Return a AntennaMake's enumerator given an unsigned int.
+      * @param i the index of the enumerator in AntennaMakeMod::AntennaMake.
+      * @return a AntennaMakeMod::AntennaMake's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static AntennaMakeMod::AntennaMake from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CAntennaMake();
     CAntennaMake(const CAntennaMake&);
     CAntennaMake& operator=(const CAntennaMake&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CAntennaMake_H*/

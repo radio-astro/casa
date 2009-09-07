@@ -55,6 +55,8 @@
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
 
+#include <lattices/Lattices/LatticeStatistics.h>
+#include <lattices/Lattices/SubLattice.h>
 
 #include <tables/Tables/SetupNewTab.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
@@ -485,6 +487,229 @@ ms::range(const std::vector<std::string>& items, const bool useflags, const int 
           MSRange msrange(*itsSel);
           msrange.setBlockSize(blocksize);
           retval = fromRecord(msrange.range(toVectorString(items), useflags, False));
+       }
+   } catch (AipsError x) {
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       Table::relinquishAutoLocks();
+       RETHROW(x);
+   }
+   Table::relinquishAutoLocks();
+   return retval;
+}
+
+
+::casac::record* 
+ms::statistics(const std::string& column, 
+               const bool useflags, 
+               const std::string& spw, 
+               const std::string& field, 
+               const std::string& baseline, 
+               const std::string& uvrange, 
+               const std::string& time, 
+               const std::string& correlation,
+               const std::string& scan, 
+               const std::string& array)
+{
+  *itsLog << LogOrigin("ms", "statistics");
+
+    ::casac::record *retval(0);
+    try {
+       if(!detached()){
+
+         /* This tools built-in itsSel is of type
+            MSSelector.
+            That is something completely different than 
+            MSSelection.
+         */
+         const String dummyExpr = String("");
+
+         if (0) cerr << __LINE__ << endl;
+         if (0) cerr << "selection: " << endl <<
+           "time = " << time << endl << 
+           "baseline = " << baseline << endl <<
+           "field = " << field << endl <<
+           "spw = " << spw << endl <<
+           "uvrange = " << uvrange << endl <<
+           "correlation = " << correlation << endl <<
+           "scan = " << scan << endl <<
+           "array = " << array << endl;
+
+         MSSelection mssel(*itsMS,
+                           MSSelection::PARSE_NOW, 
+                           time,
+                           baseline, 
+                           field,
+                           spw,
+                           uvrange,
+                           dummyExpr,   // taqlExpr
+                           correlation,
+                           scan,
+                           array);
+
+         MeasurementSet *sel_p;
+         MeasurementSet sel;
+         if (mssel.getSelectedMS(sel)) {
+           /* It is undocumented, but
+              getSelectedMS() seems to return True
+              if there's a non-trivial selection.
+              If it returns false, the output MS is null.
+           */
+
+           sel_p = &sel;
+         }
+         else {
+           sel_p = itsMS;
+         }
+
+         ROTableColumn rotc(*sel_p, column);
+         std::string type;
+
+         if (rotc.columnDesc().isScalar()) {
+           type = "scalar";
+         }
+         else if (rotc.columnDesc().isArray()) {
+           type = "array";
+         }
+         else if (rotc.columnDesc().isTable()) {
+           type = "table";
+         }
+         else {
+           type = "unknown type";
+         }
+
+         if (rotc.columnDesc().ndim() > 0) {
+           std::stringstream s;
+           s << rotc.columnDesc().ndim();
+           type = s.str() + "-dimensional " + type;
+         }
+
+         //cout << "isScalar: " << rotc.columnDesc().isScalar() << endl;
+         //cout << "isArray:  " << rotc.columnDesc().isArray() << endl;
+         //cout << "isTable:  " << rotc.columnDesc().isTable() << endl;
+         //cout << "ndim:     " << rotc.columnDesc().ndim() << endl;
+         //cerr << __LINE__ << endl;
+
+         DataType dt1 = rotc.columnDesc().dataType();
+
+         *itsLog << "Compute statistics on " << type << " column " << column 
+                 << ", " << sel_p->nrow() << " values..." << LogIO::POST;
+         *itsLog << "Type = " << dt1 << LogIO::POST;
+         //<< ", truetype = " << dt2
+         //<< ") ..." << LogIO::POST;
+
+         if (sel_p->nrow() == 0) {
+           throw AipsError("Selected MS subset is empty, cannot continue");
+         }
+
+
+         /* Convert numerical scalar column to Float */
+         Array<Float> data_float;
+         if (rotc.columnDesc().isScalar()) {
+           if (dt1 == TpInt) {
+             ROScalarColumn<Int> ro_col(*sel_p, column);
+             Vector<Int> v = ro_col.getColumn();
+
+             data_float.resize(IPosition(1, v.nelements()));
+             for (unsigned i = 0; i < v.nelements(); i++) {
+               data_float[i] = v[i];
+             }
+           }
+           else if (dt1 == TpFloat) {
+             ROScalarColumn<Float> ro_col(*sel_p, column);
+             Vector<Float> v = ro_col.getColumn();
+
+             data_float.resize(IPosition(1, v.nelements()));
+
+             for (unsigned i = 0; i < v.nelements(); i++) {
+               data_float[i] = v[i];
+             }
+           }
+           else if (dt1 == TpDouble) {
+             ROScalarColumn<Double> ro_col(*sel_p, column);
+             Vector<Double> v = ro_col.getColumn();
+
+             data_float.resize(IPosition(1, v.nelements()));
+
+             for (unsigned i = 0; i < v.nelements(); i++) {
+               data_float[i] = v[i];
+             }
+
+           }
+         }
+#if 0
+         else if (rotc.columnDesc().isArray()) {
+           if (dt1 == TpComplex) {
+             ROArrayColumn<Complex> ro_col(*sel_p, column);
+             Array<Complex> v = ro_col.getColumn();
+
+             cout << " size = " << v.size() << endl;
+             
+             IPosition s(2);
+             s[0] = 2;
+             s = v.nelements();
+             
+             data_float.resize(s);
+             
+             //             for (unsigned i = 0; i < v.nelements(); i++) {
+             //               data_float[0] = v[i];
+             //               data_float[0] = v[i];
+           }
+           //TpDComplex
+         }
+#endif
+         else {
+           std::string msg("Sorry, no support for " + type + " columns");
+           throw AipsError(msg);
+         }
+
+         //cout << "got it as Array<Float> " << data_float.size() << data_float << endl;
+
+         unsigned long number_of_values = data_float.nelements();
+
+         //cout << "Data as record: " << data << endl;
+         //cout << " --- also as float: " << data_float << endl;
+         
+         ArrayLattice<Float> al(data_float);
+
+         SubLattice<Float> sl(al);
+         LatticeStatistics<Float> ls(sl);
+
+         struct {
+           LatticeStatsBase::StatisticsTypes type;
+           std::string name;
+           std::string descr;
+         }
+         stats_types[] = {
+            {LatticeStatsBase::MIN   , "min",   "minimum"},
+            {LatticeStatsBase::MAX   , "max",   "maximum"},
+            {LatticeStatsBase::SUM   , "sum",   "sum of values"},
+            {LatticeStatsBase::SUMSQ , "sumsq", "sum of squared values"},
+
+            {LatticeStatsBase::MEAN  , "mean"  , "mean value"},
+            {LatticeStatsBase::VARIANCE, "var" , "variance"},
+            {LatticeStatsBase::SIGMA , "stddev", "standard deviation wrt mean"},
+            {LatticeStatsBase::RMS   , "rms"   , "root mean square"},
+            {LatticeStatsBase::MEDIAN, "median", "median value"},
+            {LatticeStatsBase::MEDABSDEVMED, "medabsdevmed", "median absolute deviation wrt median"},
+            {LatticeStatsBase::QUARTILE, "quartile", "first quartile"}
+           };
+
+         Record rec;
+
+         for (unsigned i = 0 ; i < sizeof(stats_types) / sizeof(*stats_types); i++) {
+           Array<Double> the_stats;
+           ls.getStatistic(the_stats, stats_types[i].type);
+
+           if (0) cout << stats_types[i].descr << " [" 
+                       << stats_types[i].name << "]: " << the_stats(IPosition(1, 0)) << endl;
+           rec.define(stats_types[i].name,
+                      the_stats(IPosition(1, 0)));
+         }
+
+         rec.define("npts", (Double) number_of_values);
+
+         retval = fromRecord(rec);
+
        }
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

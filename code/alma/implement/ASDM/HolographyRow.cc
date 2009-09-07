@@ -98,6 +98,26 @@ namespace asdm {
 		
 		
 			
+		x->distance = distance.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->focus = focus.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
 				
 		x->numCorr = numCorr;
  				
@@ -123,38 +143,6 @@ namespace asdm {
 	
 
 	
-  		
-		
-		
-			
-		x->distance = distance.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->focus = focus.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->flagRow = flagRow;
- 				
- 			
-		
-	
-
-	
 	
 		
 		
@@ -169,7 +157,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct HolographyRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void HolographyRow::setFromIDL (HolographyRowIDL x) throw(ConversionException) {
+	void HolographyRow::setFromIDL (HolographyRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -179,6 +167,26 @@ namespace asdm {
 		
 			
 		setHolographyId(Tag (x.holographyId));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setDistance(Length (x.distance));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setFocus(Length (x.focus));
 			
  		
 		
@@ -210,40 +218,10 @@ namespace asdm {
 	
 
 	
-		
-		
-			
-		setDistance(Length (x.distance));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setFocus(Length (x.focus));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setFlagRow(x.flagRow);
-  			
- 		
-		
-	
-
-	
 	
 		
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Holography");
+			throw ConversionException (err.getMessage(),"Holography");
 		}
 	}
 #endif
@@ -269,22 +247,6 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numCorr, "numCorr", buf);
-		
-		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("type", type));
-		
-		
-	
-
-  	
- 		
-		
 		Parser::toXML(distance, "distance", buf);
 		
 		
@@ -301,7 +263,15 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(flagRow, "flagRow", buf);
+		Parser::toXML(numCorr, "numCorr", buf);
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("type", type));
 		
 		
 	
@@ -319,7 +289,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void HolographyRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void HolographyRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -329,6 +299,22 @@ namespace asdm {
   		
 			
 	  	setHolographyId(Parser::getTag("holographyId","Holography",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setDistance(Parser::getLength("distance","Holography",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setFocus(Parser::getLength("focus","Holography",rowDoc));
 			
 		
 	
@@ -352,35 +338,123 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setDistance(Parser::getLength("distance","Holography",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setFocus(Parser::getLength("focus","Holography",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setFlagRow(Parser::getBoolean("flagRow","Holography",rowDoc));
-			
-		
-	
-
-	
 	
 		
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"Holography");
 		}
+	}
+	
+	void HolographyRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	holographyId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	distance.toBin(eoss);
+		
+	
+
+	
+	
+		
+	focus.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numCorr);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) type.size());
+		for (unsigned int i = 0; i < type.size(); i++)
+				
+			eoss.writeInt(type.at(i));
+				
+				
+						
+		
+	
+
+
+	
+	
+	}
+	
+	HolographyRow* HolographyRow::fromBin(EndianISStream& eiss, HolographyTable& table) {
+		HolographyRow* row = new  HolographyRow(table);
+		
+		
+		
+	
+		
+		
+		row->holographyId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->distance =  Length::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->focus =  Length::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numCorr =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->type.clear();
+		
+		unsigned int typeDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < typeDim1; i++)
+			
+			row->type.push_back(CHolographyChannelType::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+		
+		
+		
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -418,70 +492,6 @@ namespace asdm {
   		}
   	
  		this->holographyId = holographyId;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numCorr.
- 	 * @return numCorr as int
- 	 */
- 	int HolographyRow::getNumCorr() const {
-	
-  		return numCorr;
- 	}
-
- 	/**
- 	 * Set numCorr with the specified int.
- 	 * @param numCorr The int value to which numCorr is to be set.
- 	 
- 	
- 		
- 	 */
- 	void HolographyRow::setNumCorr (int numCorr)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numCorr = numCorr;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get type.
- 	 * @return type as vector<HolographyChannelTypeMod::HolographyChannelType >
- 	 */
- 	vector<HolographyChannelTypeMod::HolographyChannelType > HolographyRow::getType() const {
-	
-  		return type;
- 	}
-
- 	/**
- 	 * Set type with the specified vector<HolographyChannelTypeMod::HolographyChannelType >.
- 	 * @param type The vector<HolographyChannelTypeMod::HolographyChannelType > value to which type is to be set.
- 	 
- 	
- 		
- 	 */
- 	void HolographyRow::setType (vector<HolographyChannelTypeMod::HolographyChannelType > type)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->type = type;
 	
  	}
 	
@@ -555,29 +565,61 @@ namespace asdm {
 
 	
  	/**
- 	 * Get flagRow.
- 	 * @return flagRow as bool
+ 	 * Get numCorr.
+ 	 * @return numCorr as int
  	 */
- 	bool HolographyRow::getFlagRow() const {
+ 	int HolographyRow::getNumCorr() const {
 	
-  		return flagRow;
+  		return numCorr;
  	}
 
  	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
+ 	 * Set numCorr with the specified int.
+ 	 * @param numCorr The int value to which numCorr is to be set.
  	 
  	
  		
  	 */
- 	void HolographyRow::setFlagRow (bool flagRow)  {
+ 	void HolographyRow::setNumCorr (int numCorr)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->flagRow = flagRow;
+ 		this->numCorr = numCorr;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get type.
+ 	 * @return type as vector<HolographyChannelTypeMod::HolographyChannelType >
+ 	 */
+ 	vector<HolographyChannelTypeMod::HolographyChannelType > HolographyRow::getType() const {
+	
+  		return type;
+ 	}
+
+ 	/**
+ 	 * Set type with the specified vector<HolographyChannelTypeMod::HolographyChannelType >.
+ 	 * @param type The vector<HolographyChannelTypeMod::HolographyChannelType > value to which type is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void HolographyRow::setType (vector<HolographyChannelTypeMod::HolographyChannelType > type)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->type = type;
 	
  	}
 	
@@ -616,13 +658,9 @@ namespace asdm {
 	
 
 	
-
 	
 	
 	
-	
-	
-
 	
 
 	
@@ -651,8 +689,6 @@ namespace asdm {
 
 	
 
-	
-
 			
 		}
 		else {
@@ -663,15 +699,13 @@ namespace asdm {
 		
 		
 		
-			numCorr = row.numCorr;
-		
-			type = row.type;
-		
 			distance = row.distance;
 		
 			focus = row.focus;
 		
-			flagRow = row.flagRow;
+			numCorr = row.numCorr;
+		
+			type = row.type;
 		
 		
 		
@@ -680,24 +714,10 @@ namespace asdm {
 	}
 
 	
-	bool HolographyRow::compareNoAutoInc(int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type, Length distance, Length focus, bool flagRow) {
+	bool HolographyRow::compareNoAutoInc(Length distance, Length focus, int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type) {
 		bool result;
 		result = true;
 		
-	
-		
-		result = result && (this->numCorr == numCorr);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->type == type);
-		
-		if (!result) return false;
-	
-
 	
 		
 		result = result && (this->distance == distance);
@@ -714,7 +734,14 @@ namespace asdm {
 
 	
 		
-		result = result && (this->flagRow == flagRow);
+		result = result && (this->numCorr == numCorr);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->type == type);
 		
 		if (!result) return false;
 	
@@ -724,18 +751,10 @@ namespace asdm {
 	
 	
 	
-	bool HolographyRow::compareRequiredValue(int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type, Length distance, Length focus, bool flagRow) {
+	bool HolographyRow::compareRequiredValue(Length distance, Length focus, int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->numCorr == numCorr)) return false;
-	
-
-	
-		if (!(this->type == type)) return false;
-	
-
 	
 		if (!(this->distance == distance)) return false;
 	
@@ -745,7 +764,11 @@ namespace asdm {
 	
 
 	
-		if (!(this->flagRow == flagRow)) return false;
+		if (!(this->numCorr == numCorr)) return false;
+	
+
+	
+		if (!(this->type == type)) return false;
 	
 
 		return result;
@@ -763,15 +786,13 @@ namespace asdm {
 	bool HolographyRow::equalByRequiredValue(HolographyRow* x) {
 		
 			
-		if (this->numCorr != x->numCorr) return false;
-			
-		if (this->type != x->type) return false;
-			
 		if (this->distance != x->distance) return false;
 			
 		if (this->focus != x->focus) return false;
 			
-		if (this->flagRow != x->flagRow) return false;
+		if (this->numCorr != x->numCorr) return false;
+			
+		if (this->type != x->type) return false;
 			
 		
 		return true;

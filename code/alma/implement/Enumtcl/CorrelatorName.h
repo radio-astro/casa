@@ -25,7 +25,7 @@
 using namespace CorrelatorNameMod;
 
 template<>
- struct enum_set_traits<CorrelatorName> : public enum_set_traiter<CorrelatorName,8,CorrelatorNameMod::IRAM_WILMA> {};
+ struct enum_set_traits<CorrelatorName> : public enum_set_traiter<CorrelatorName,10,CorrelatorNameMod::NRAO_WIDAR> {};
 
 template<>
 class enum_map_traits<CorrelatorName,void> : public enum_map_traiter<CorrelatorName,void> {
@@ -53,6 +53,10 @@ public:
      (CorrelatorNameMod::IRAM_30M_VESPA,ep((int)CorrelatorNameMod::IRAM_30M_VESPA,"IRAM_30M_VESPA","un-documented")));
     m_.insert(pair<CorrelatorName,EnumPar<void> >
      (CorrelatorNameMod::IRAM_WILMA,ep((int)CorrelatorNameMod::IRAM_WILMA,"IRAM_WILMA","un-documented")));
+    m_.insert(pair<CorrelatorName,EnumPar<void> >
+     (CorrelatorNameMod::NRAO_VLA,ep((int)CorrelatorNameMod::NRAO_VLA,"NRAO_VLA","un-documented")));
+    m_.insert(pair<CorrelatorName,EnumPar<void> >
+     (CorrelatorNameMod::NRAO_WIDAR,ep((int)CorrelatorNameMod::NRAO_WIDAR,"NRAO_WIDAR","un-documented")));
     return true;
   }
   static map<CorrelatorName,EnumPar<void> > m_;

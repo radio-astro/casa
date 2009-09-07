@@ -66,7 +66,43 @@ using asdmIDL::TotalPowerRowIDL;
 #include <ConversionException.h>
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
- 
+
+/*
+#include <Enumerations.h>
+using namespace enumerations;
+ */
+
+
+
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
 using asdm::Angle;
 using asdm::AngularRate;
 using asdm::ArrayTime;
@@ -87,6 +123,9 @@ using asdm::ConversionException;
 using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
+/*\file TotalPower.h
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
+*/
 
 namespace asdm {
 
@@ -108,6 +147,9 @@ class ExecBlockRow;
 
 /**
  * The TotalPowerRow class is a row of a TotalPowerTable.
+ * 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
+ *
  */
 class TotalPowerRow {
 friend class asdm::TotalPowerTable;
@@ -133,8 +175,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct TotalPowerRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (TotalPowerRowIDL x) throw(ConversionException);
+	void setFromIDL (TotalPowerRowIDL x) ;
 #endif
 	
 	/**
@@ -147,21 +190,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
 	
-   /**
+	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
 	 * @param eoss the EndianOSStream to be written to
 	 */
 	 void toBin(EndianOSStream& eoss);
 	 
 	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a TotalPowerRow.
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
 	  * @param eiss the EndianISStream to be read.
 	  * @table the TotalPowerTable to which the row built by deserialization will be parented.
 	  */
-	 static TotalPowerRow* fromBin(EndianISStream& eiss, TotalPowerTable& table);
+	 static TotalPowerRow* fromBin(EndianISStream& eiss, TotalPowerTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -186,10 +230,13 @@ public:
  	/**
  	 * Set time with the specified ArrayTime.
  	 * @param time The ArrayTime value to which time is to be set.
+ 	 
  		
+ 			
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setTime (ArrayTime time) throw(IllegalAccessException);
+ 	void setTime (ArrayTime time);
   		
 	
 	
@@ -215,10 +262,12 @@ public:
  	/**
  	 * Set scanNumber with the specified int.
  	 * @param scanNumber The int value to which scanNumber is to be set.
+ 	 
  		
+ 			
  	 */
  	void setScanNumber (int scanNumber);
-		
+  		
 	
 	
 	
@@ -243,10 +292,12 @@ public:
  	/**
  	 * Set subscanNumber with the specified int.
  	 * @param subscanNumber The int value to which subscanNumber is to be set.
+ 	 
  		
+ 			
  	 */
  	void setSubscanNumber (int subscanNumber);
-		
+  		
 	
 	
 	
@@ -271,10 +322,12 @@ public:
  	/**
  	 * Set integrationNumber with the specified int.
  	 * @param integrationNumber The int value to which integrationNumber is to be set.
+ 	 
  		
+ 			
  	 */
  	void setIntegrationNumber (int integrationNumber);
-		
+  		
 	
 	
 	
@@ -299,10 +352,12 @@ public:
  	/**
  	 * Set uvw with the specified vector<vector<Length > >.
  	 * @param uvw The vector<vector<Length > > value to which uvw is to be set.
+ 	 
  		
+ 			
  	 */
  	void setUvw (vector<vector<Length > > uvw);
-		
+  		
 	
 	
 	
@@ -327,10 +382,12 @@ public:
  	/**
  	 * Set exposure with the specified vector<vector<Interval > >.
  	 * @param exposure The vector<vector<Interval > > value to which exposure is to be set.
+ 	 
  		
+ 			
  	 */
  	void setExposure (vector<vector<Interval > > exposure);
-		
+  		
 	
 	
 	
@@ -355,10 +412,12 @@ public:
  	/**
  	 * Set timeCentroid with the specified vector<vector<ArrayTime > >.
  	 * @param timeCentroid The vector<vector<ArrayTime > > value to which timeCentroid is to be set.
+ 	 
  		
+ 			
  	 */
  	void setTimeCentroid (vector<vector<ArrayTime > > timeCentroid);
-		
+  		
 	
 	
 	
@@ -383,10 +442,12 @@ public:
  	/**
  	 * Set floatData with the specified vector<vector<vector<float > > >.
  	 * @param floatData The vector<vector<vector<float > > > value to which floatData is to be set.
+ 	 
  		
+ 			
  	 */
  	void setFloatData (vector<vector<vector<float > > > floatData);
-		
+  		
 	
 	
 	
@@ -411,10 +472,12 @@ public:
  	/**
  	 * Set flagAnt with the specified vector<int >.
  	 * @param flagAnt The vector<int > value to which flagAnt is to be set.
+ 	 
  		
+ 			
  	 */
  	void setFlagAnt (vector<int > flagAnt);
-		
+  		
 	
 	
 	
@@ -439,10 +502,12 @@ public:
  	/**
  	 * Set flagPol with the specified vector<vector<int > >.
  	 * @param flagPol The vector<vector<int > > value to which flagPol is to be set.
+ 	 
  		
+ 			
  	 */
  	void setFlagPol (vector<vector<int > > flagPol);
-		
+  		
 	
 	
 	
@@ -467,10 +532,12 @@ public:
  	/**
  	 * Set flagRow with the specified bool.
  	 * @param flagRow The bool value to which flagRow is to be set.
+ 	 
  		
+ 			
  	 */
  	void setFlagRow (bool flagRow);
-		
+  		
 	
 	
 	
@@ -495,10 +562,12 @@ public:
  	/**
  	 * Set interval with the specified Interval.
  	 * @param interval The Interval value to which interval is to be set.
+ 	 
  		
+ 			
  	 */
  	void setInterval (Interval interval);
-		
+  		
 	
 	
 	
@@ -522,7 +591,7 @@ public:
  	 * @return subintegrationNumber as int
  	 * @throws IllegalAccessException If subintegrationNumber does not exist.
  	 */
- 	int getSubintegrationNumber() const throw(IllegalAccessException);
+ 	int getSubintegrationNumber() const;
 	
  
  	
@@ -530,6 +599,7 @@ public:
  	/**
  	 * Set subintegrationNumber with the specified int.
  	 * @param subintegrationNumber The int value to which subintegrationNumber is to be set.
+ 	 
  		
  	 */
  	void setSubintegrationNumber (int subintegrationNumber);
@@ -567,10 +637,13 @@ public:
  	/**
  	 * Set configDescriptionId with the specified Tag.
  	 * @param configDescriptionId The Tag value to which configDescriptionId is to be set.
+ 	 
  		
+ 			
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setConfigDescriptionId (Tag configDescriptionId) throw(IllegalAccessException);
+ 	void setConfigDescriptionId (Tag configDescriptionId);
   		
 	
 	
@@ -596,10 +669,12 @@ public:
  	/**
  	 * Set execBlockId with the specified Tag.
  	 * @param execBlockId The Tag value to which execBlockId is to be set.
+ 	 
  		
+ 			
  	 */
  	void setExecBlockId (Tag execBlockId);
-		
+  		
 	
 	
 	
@@ -624,10 +699,13 @@ public:
  	/**
  	 * Set fieldId with the specified Tag.
  	 * @param fieldId The Tag value to which fieldId is to be set.
+ 	 
  		
+ 			
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setFieldId (Tag fieldId) throw(IllegalAccessException);
+ 	void setFieldId (Tag fieldId);
   		
 	
 	
@@ -653,10 +731,12 @@ public:
  	/**
  	 * Set stateId with the specified vector<Tag> .
  	 * @param stateId The vector<Tag>  value to which stateId is to be set.
+ 	 
  		
+ 			
  	 */
  	void setStateId (vector<Tag>  stateId);
-		
+  		
 	
 	
 	
@@ -672,9 +752,10 @@ public:
  	 * Set stateId[i] with the specified Tag.
  	 * @param i The index in stateId where to set the Tag value.
  	 * @param stateId The Tag value to which stateId[i] is to be set. 
- 	 * @throws OutOfBoundsException
+	 		
+ 	 * @throws IndexOutOfBoundsException
   	 */
-  	void setStateId (int i, Tag stateId) throw(OutOfBoundsException) ;
+  	void setStateId (int i, Tag stateId); 
  			
 	
 
@@ -752,20 +833,15 @@ public:
 
 	
 		
-			
-	// ===> One to one link from a row of TotalPower table to a row of ExecBlock table.
-	
 	/**
-	 * Get the row in table ExecBlock by traversing the defined link to that table.
-	 * @return A row in ExecBlock table.
-	 * @throws NoSuchRow if there is no such row in table ExecBlock.
+	 * execBlockId pointer to the row in the ExecBlock table having ExecBlock.execBlockId == execBlockId
+	 * @return a ExecBlockRow*
+	 * 
+	 
 	 */
-	ExecBlockRow *getExecBlock() const throw(NoSuchRow);
-	
+	 ExecBlockRow* getExecBlockUsingExecBlockId();
+	 
 
-		
-		
-		
 	
 
 	
@@ -775,12 +851,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this TotalPowerRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag configDescriptionId, Tag fieldId, ArrayTime time, Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval);
+	bool compareNoAutoInc(ArrayTime time, Tag configDescriptionId, Tag fieldId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval, vector<Tag>  stateId, Tag execBlockId);
 	
 	
 
 	
-	bool compareRequiredValue(Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval); 
+	bool compareRequiredValue(int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval, vector<Tag>  stateId, Tag execBlockId); 
 		 
 	
 	/**
@@ -844,7 +920,9 @@ private:
 	// ===> Attribute time
 	
 	
+
 	ArrayTime time;
+
 	
 	
  	
@@ -853,7 +931,9 @@ private:
 	// ===> Attribute scanNumber
 	
 	
+
 	int scanNumber;
+
 	
 	
  	
@@ -862,7 +942,9 @@ private:
 	// ===> Attribute subscanNumber
 	
 	
+
 	int subscanNumber;
+
 	
 	
  	
@@ -871,7 +953,9 @@ private:
 	// ===> Attribute integrationNumber
 	
 	
+
 	int integrationNumber;
+
 	
 	
  	
@@ -880,7 +964,9 @@ private:
 	// ===> Attribute uvw
 	
 	
+
 	vector<vector<Length > > uvw;
+
 	
 	
  	
@@ -889,7 +975,9 @@ private:
 	// ===> Attribute exposure
 	
 	
+
 	vector<vector<Interval > > exposure;
+
 	
 	
  	
@@ -898,7 +986,9 @@ private:
 	// ===> Attribute timeCentroid
 	
 	
+
 	vector<vector<ArrayTime > > timeCentroid;
+
 	
 	
  	
@@ -907,7 +997,9 @@ private:
 	// ===> Attribute floatData
 	
 	
+
 	vector<vector<vector<float > > > floatData;
+
 	
 	
  	
@@ -916,7 +1008,9 @@ private:
 	// ===> Attribute flagAnt
 	
 	
+
 	vector<int > flagAnt;
+
 	
 	
  	
@@ -925,7 +1019,9 @@ private:
 	// ===> Attribute flagPol
 	
 	
+
 	vector<vector<int > > flagPol;
+
 	
 	
  	
@@ -934,7 +1030,9 @@ private:
 	// ===> Attribute flagRow
 	
 	
+
 	bool flagRow;
+
 	
 	
  	
@@ -943,7 +1041,9 @@ private:
 	// ===> Attribute interval
 	
 	
+
 	Interval interval;
+
 	
 	
  	
@@ -954,7 +1054,9 @@ private:
 	
 	bool subintegrationNumberExists;
 	
+
 	int subintegrationNumber;
+
 	
 	
  	
@@ -967,7 +1069,9 @@ private:
 	// ===> Attribute configDescriptionId
 	
 	
+
 	Tag configDescriptionId;
+
 	
 	
  	
@@ -976,7 +1080,9 @@ private:
 	// ===> Attribute execBlockId
 	
 	
+
 	Tag execBlockId;
+
 	
 	
  	
@@ -985,7 +1091,9 @@ private:
 	// ===> Attribute fieldId
 	
 	
+
 	Tag fieldId;
+
 	
 	
  	
@@ -994,7 +1102,9 @@ private:
 	// ===> Attribute stateId
 	
 	
+
 	vector<Tag>  stateId;
+
 	
 	
  	
@@ -1023,8 +1133,11 @@ private:
 
 	
 
+	
 		
-		
+
+	 
+
 	
 
 

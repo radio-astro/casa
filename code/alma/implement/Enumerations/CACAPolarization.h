@@ -42,17 +42,32 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the ACAPolarization enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace ACAPolarizationMod
 {
+  //! ACAPolarization.
+  //!  ACA-specific ways to store pre-processed data products
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum ACAPolarization
   { 
-    ACA_STANDARD ,
-    ACA_XX_YY_SUM ,
-    ACA_XX_50 ,
-    ACA_YY_50 
+    ACA_STANDARD /*!< Data product is the standard way (it is a standard observed Stokes parameter) */
+     ,
+    ACA_XX_YY_SUM /*!< ACA has calculated I by averaging XX and YY */
+     ,
+    ACA_XX_50 /*!< ACA has averaged XX and XX delayed by half a FFT period */
+     ,
+    ACA_YY_50 /*!< ACA has averaged YY and YY delayed by half a FFT period */
+     
   };
   typedef ACAPolarization &ACAPolarization_out;
 } 
@@ -60,72 +75,95 @@ namespace ACAPolarizationMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration ACAPolarization.
+  * 
+  */
 class CACAPolarization {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the ACAPolarization enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sACA_STANDARD;
+	static const std::string& sACA_STANDARD; /*!< A const string equal to "ACA_STANDARD".*/
 	
-	static const std::string& sACA_XX_YY_SUM;
+	static const std::string& sACA_XX_YY_SUM; /*!< A const string equal to "ACA_XX_YY_SUM".*/
 	
-	static const std::string& sACA_XX_50;
+	static const std::string& sACA_XX_50; /*!< A const string equal to "ACA_XX_50".*/
 	
-	static const std::string& sACA_YY_50;
-	
-    static const std::vector<std::string> sACAPolarizationSet();	 
-
+	static const std::string& sACA_YY_50; /*!< A const string equal to "ACA_YY_50".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in ACAPolarizationMod::ACAPolarization.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of ACAPolarizationMod::ACAPolarization.
+      * @return a string.
+      */
+	static std::string name(const ACAPolarizationMod::ACAPolarization& e);
 	
-	// Explanations associated with the ACAPolarization Enumeration.
-		
-	static const std::string& hACA_STANDARD;
-		
-	static const std::string& hACA_XX_YY_SUM;
-		
-	static const std::string& hACA_XX_50;
-		
-	static const std::string& hACA_YY_50;
-		
-	static const std::vector<std::string> hACAPolarizationSet();
-   	
-
-   	// Is an integer number associated with the ACAPolarization enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the ACAPolarization enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  ACAPolarization enumeration.
-	static std::string name(const ACAPolarizationMod::ACAPolarization& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const ACAPolarizationMod::ACAPolarization& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified ACAPolarization enumeration.
-	static std::string help(const ACAPolarizationMod::ACAPolarization& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a ACAPolarization enumeration object by specifying its name.
    	static ACAPolarizationMod::ACAPolarization newACAPolarization(const std::string& name);
    	
-   	// Create a ACAPolarization enumeration object by specifying its name.
+   	/*! Return a ACAPolarization's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a ACAPolarizationMod::ACAPolarization's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static ACAPolarizationMod::ACAPolarization literal(const std::string& name);
  	
-    // Create a ACAPolarization enumeration object by specifying its position index (0 based).
+    /*! Return a ACAPolarization's enumerator given an unsigned int.
+      * @param i the index of the enumerator in ACAPolarizationMod::ACAPolarization.
+      * @return a ACAPolarizationMod::ACAPolarization's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static ACAPolarizationMod::ACAPolarization from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CACAPolarization();
     CACAPolarization(const CACAPolarization&);
     CACAPolarization& operator=(const CACAPolarization&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CACAPolarization_H*/

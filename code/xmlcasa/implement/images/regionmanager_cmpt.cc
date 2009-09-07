@@ -886,21 +886,25 @@ regionmanager::wbox(const ::casac::variant& blc, const ::casac::variant& trc, co
     casac::record* retval=0;
 
     try {
-	casa::Vector<casa::Quantity> losBlc;
-	casa::Vector<casa::Quantity> losTrc;
+      casa::Vector<casa::String> losBlc;
+	casa::Vector<casa::String> losTrc;
 	casa::Record * leRegion;
 
-	if(blc.type() == ::casac::variant::STRING || 
-		blc.type() == ::casac::variant::STRINGVEC){
-	    toCasaVectorQuantity(blc, losBlc);
+	if(blc.type() == ::casac::variant::STRING ){
+	  sepCommaEmptyToVectorStrings(losBlc, blc.toString());
 	}
+	else if(blc.type() == ::casac::variant::STRINGVEC){
+	  losBlc=toVectorString(blc.toStringVec());
+     	}
 	else{
 	    throw(AipsError("blc has to be a string or vector of strings")); 
       
 	}
-	if(trc.type() == ::casac::variant::STRING || 
-		trc.type() == ::casac::variant::STRINGVEC){
-	    toCasaVectorQuantity(trc, losTrc);
+	if(trc.type() == ::casac::variant::STRING ){
+	  sepCommaEmptyToVectorStrings(losTrc, trc.toString());
+	} 
+	else if(	trc.type() == ::casac::variant::STRINGVEC){
+	  losTrc=toVectorString(trc.toStringVec());
 	}
 	else{
 	    throw(AipsError("trc has to be a string or vector of strings")); 
@@ -911,7 +915,7 @@ regionmanager::wbox(const ::casac::variant& blc, const ::casac::variant& trc, co
 	if((csysRec->nfields()) != 0){ 
 	    casa::Record *csysRec=toRecord(csys);
 	    if(csysRec->nfields() <2){	
-		throw(AipsError("Given coorsys parameter does not appear to be a valid coordsystem record"));
+		throw(AipsError("Given coordsys parameter does not appear to be a valid coordsystem record"));
 	    }
 	    casa::CoordinateSystem *coordsys=casa::CoordinateSystem::restore(*csysRec, "");
 	    leRegion=itsRegMan->wbox(losBlc, losTrc,  pixaxes, *coordsys, String(absrel), String(comment));

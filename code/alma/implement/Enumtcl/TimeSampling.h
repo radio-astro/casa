@@ -38,9 +38,9 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<TimeSampling,EnumPar<void> >
-     (TimeSamplingMod::SUBINTEGRATION,ep((int)TimeSamplingMod::SUBINTEGRATION,"SUBINTEGRATION","Part of an integration")));
+     (TimeSamplingMod::SUBINTEGRATION,ep((int)TimeSamplingMod::SUBINTEGRATION,"SUBINTEGRATION","un-documented")));
     m_.insert(pair<TimeSampling,EnumPar<void> >
-     (TimeSamplingMod::INTEGRATION,ep((int)TimeSamplingMod::INTEGRATION,"INTEGRATION","Part of a subscan. An integration may be composed of several sub-integrations.")));
+     (TimeSamplingMod::INTEGRATION,ep((int)TimeSamplingMod::INTEGRATION,"INTEGRATION","un-documented")));
     return true;
   }
   static map<TimeSampling,EnumPar<void> > m_;

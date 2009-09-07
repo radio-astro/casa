@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CSBType::version() {
+	return SBTypeMod::version;
+	}
+	
+string CSBType::revision () {
+	return SBTypeMod::revision;
+}
+
+unsigned int CSBType::size() {
+	return 3;
+	}
+	
 	
 const std::string& CSBType::sOBSERVATORY = "OBSERVATORY";
 	
@@ -44,7 +57,7 @@ const std::string& CSBType::sOBSERVER = "OBSERVER";
 	
 const std::string& CSBType::sEXPERT = "EXPERT";
 	
-const std::vector<std::string> CSBType::sSBTypeSet() {
+const std::vector<std::string> CSBType::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CSBType::sOBSERVATORY);
@@ -55,29 +68,6 @@ const std::vector<std::string> CSBType::sSBTypeSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CSBType::hOBSERVATORY = "Observatory mode scheduling block";
-	
-const std::string& CSBType::hOBSERVER = "Observer mode scheduling block";
-	
-const std::string& CSBType::hEXPERT = "Expert mode scheduling block";
-	
-const std::vector<std::string> CSBType::hSBTypeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CSBType::hOBSERVATORY);
-    
-    enumSet.insert(enumSet.end(), CSBType::hOBSERVER);
-    
-    enumSet.insert(enumSet.end(), CSBType::hEXPERT);
-        
-    return enumSet;
-}
-   	
 
 std::string CSBType::name(const SBTypeMod::SBType& f) {
     switch (f) {
@@ -92,28 +82,9 @@ std::string CSBType::name(const SBTypeMod::SBType& f) {
       return CSBType::sEXPERT;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CSBType::help(const SBTypeMod::SBType& f) {
-    switch (f) {
-    
-    case SBTypeMod::OBSERVATORY:
-      return CSBType::hOBSERVATORY;
-    
-    case SBTypeMod::OBSERVER:
-      return CSBType::hOBSERVER;
-    
-    case SBTypeMod::EXPERT:
-      return CSBType::hEXPERT;
-    	
-    }
-    return std::string("");
-}
-   	
 
 SBTypeMod::SBType CSBType::newSBType(const std::string& name) {
 		
@@ -150,12 +121,10 @@ SBTypeMod::SBType CSBType::literal(const std::string& name) {
 }
 
 SBTypeMod::SBType CSBType::from_int(unsigned int i) {
-	vector<string> names = sSBTypeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newSBType(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newSBType(names_.at(i));
 }
-
-	
 
 string CSBType::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'SBType'.";

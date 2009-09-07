@@ -83,6 +83,11 @@ using namespace enumerations;
 	
 
 	
+#include "CCalDataOrigin.h"
+using namespace CalDataOriginMod;
+	
+
+	
 #include "CCalType.h"
 using namespace CalTypeMod;
 	
@@ -94,6 +99,9 @@ using namespace CalTypeMod;
 	
 
 	
+#include "CAssociatedCalNature.h"
+using namespace AssociatedCalNatureMod;
+	
 
 	
 
@@ -104,18 +112,6 @@ using namespace CalTypeMod;
 	
 #include "CScanIntent.h"
 using namespace ScanIntentMod;
-	
-
-	
-
-	
-#include "CAssociatedCalNature.h"
-using namespace AssociatedCalNatureMod;
-	
-
-	
-#include "CCalDataOrigin.h"
-using namespace CalDataOriginMod;
 	
 
 
@@ -158,119 +154,126 @@ class ASDM;
 class CalDataRow;
 /**
  * The CalDataTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * This table describes the data used to derive the calibration results.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalData </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> calDataId </I></TD> 
+ 		
+ * <TD><I> calDataId </I></TD>
+ 		 
  * <TD> Tag</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a unique row in the table. </TD>
  * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> numScan </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> scanSet </TD> 
- * <TD> vector<int > </TD>
- * <TD>  numScan </TD> 
- * </TR>
-	
- * <TR>
- * <TD> calType </TD> 
- * <TD> CalTypeMod::CalType </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> startTimeObserved </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of observation. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endTimeObserved </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the end time of observation. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> execBlockUID </TD> 
+ * <TD> EntityRef </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the UID of the Execution Block. </TD>
  * </TR>
 	
  * <TR>
  * <TD> calDataType </TD> 
  * <TD> CalDataOriginMod::CalDataOrigin </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the origin of the data used for the calibration. </TD>
  * </TR>
 	
-
-
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR>
+ * <TD> calType </TD> 
+ * <TD> CalTypeMod::CalType </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the type of performed calibration. </TD>
+ * </TR>
 	
  * <TR>
- * <TD> frequencyGroup </TD> 
+ * <TD> numScan </TD> 
  * <TD> int </TD>
- * <TD>  &nbsp; </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of scans (in this Execution Block). </TD>
  * </TR>
 	
  * <TR>
- * <TD> freqGroupName </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp; </TD>
+ * <TD> scanSet </TD> 
+ * <TD> vector<int > </TD>
+ * <TD>  numScan </TD> 
+ * <TD> &nbsp;the set of scan numbers. </TD>
  * </TR>
 	
- * <TR>
- * <TD> fieldName </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> fieldCode </TD> 
- * <TD> vector<string > </TD>
- * <TD>  numScan  </TD>
- * </TR>
-	
- * <TR>
- * <TD> sourceName </TD> 
- * <TD> vector<string > </TD>
- * <TD>  numScan  </TD>
- * </TR>
-	
- * <TR>
- * <TD> sourceCode </TD> 
- * <TD> vector<string > </TD>
- * <TD>  numScan  </TD>
- * </TR>
-	
- * <TR>
- * <TD> scanIntent </TD> 
- * <TD> vector<ScanIntentMod::ScanIntent > </TD>
- * <TD>  numScan  </TD>
- * </TR>
+
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> assocCalDataId </TD> 
  * <TD> Tag </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; refers to an associate row in CalDataTable. </TD>
  * </TR>
 	
  * <TR>
  * <TD> assocCalNature </TD> 
  * <TD> AssociatedCalNatureMod::AssociatedCalNature </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; identifies the nature of the relation with the associate row in CalDataTable. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> fieldName </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numScan  </TD>
+ * <TD>&nbsp; the names of the fields (one name per scan). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sourceName </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numScan  </TD>
+ * <TD>&nbsp; the names of the sources as given during observations (one source name per scan). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sourceCode </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numScan  </TD>
+ * <TD>&nbsp; the special characteristics of sources expressed in a textual form (one string per scan). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> scanIntent </TD> 
+ * <TD> vector<ScanIntentMod::ScanIntent > </TD>
+ * <TD>  numScan  </TD>
+ * <TD>&nbsp; identifies the intents of  the scans (one value per scan). </TD>
  * </TR>
 	
 
@@ -345,26 +348,28 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param numScan. 
-	
- 	 * @param scanSet. 
-	
- 	 * @param calType. 
-	
  	 * @param startTimeObserved. 
 	
  	 * @param endTimeObserved. 
 	
+ 	 * @param execBlockUID. 
+	
  	 * @param calDataType. 
 	
+ 	 * @param calType. 
+	
+ 	 * @param numScan. 
+	
+ 	 * @param scanSet. 
+	
      */
-	CalDataRow *newRow(int numScan, vector<int > scanSet, CalTypeMod::CalType calType, ArrayTime startTimeObserved, ArrayTime endTimeObserved, CalDataOriginMod::CalDataOrigin calDataType);
+	CalDataRow *newRow(ArrayTime startTimeObserved, ArrayTime endTimeObserved, EntityRef execBlockUID, CalDataOriginMod::CalDataOrigin calDataType, CalTypeMod::CalType calType, int numScan, vector<int > scanSet);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalDataRow *newRowFull(int numScan, vector<int > scanSet, CalTypeMod::CalType calType, ArrayTime startTimeObserved, ArrayTime endTimeObserved, CalDataOriginMod::CalDataOrigin calDataType);
+	CalDataRow *newRowFull(ArrayTime startTimeObserved, ArrayTime endTimeObserved, EntityRef execBlockUID, CalDataOriginMod::CalDataOrigin calDataType, CalTypeMod::CalType calType, int numScan, vector<int > scanSet);
 
 
 	/**
@@ -443,20 +448,22 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param numScan.
- 	 		
- 	 * @param scanSet.
- 	 		
- 	 * @param calType.
- 	 		
  	 * @param startTimeObserved.
  	 		
  	 * @param endTimeObserved.
  	 		
+ 	 * @param execBlockUID.
+ 	 		
  	 * @param calDataType.
+ 	 		
+ 	 * @param calType.
+ 	 		
+ 	 * @param numScan.
+ 	 		
+ 	 * @param scanSet.
  	 		 
  	 */
-	CalDataRow* lookup(int numScan, vector<int > scanSet, CalTypeMod::CalType calType, ArrayTime startTimeObserved, ArrayTime endTimeObserved, CalDataOriginMod::CalDataOrigin calDataType); 
+	CalDataRow* lookup(ArrayTime startTimeObserved, ArrayTime endTimeObserved, EntityRef execBlockUID, CalDataOriginMod::CalDataOrigin calDataType, CalTypeMod::CalType calType, int numScan, vector<int > scanSet); 
 
 
 #ifndef WITHOUT_ACS
@@ -476,43 +483,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalDataTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalDataTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalData (CalDataTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalData (CalDataTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -591,8 +604,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	CalDataRow* checkAndAdd(CalDataRow* x) throw (DuplicateKey, UniquenessViolationException);
+	CalDataRow* checkAndAdd(CalDataRow* x) ;
 
 
 
@@ -606,7 +623,7 @@ private:
 	vector<CalDataRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

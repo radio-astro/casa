@@ -80,13 +80,17 @@ namespace asdm {
 	CalDelayTable::CalDelayTable(ASDM &c) : container(c) {
 
 	
+		key.push_back("antennaName");
+	
+		key.push_back("atmPhaseCorrection");
+	
+		key.push_back("basebandName");
+	
+		key.push_back("receiverBand");
+	
 		key.push_back("calDataId");
 	
 		key.push_back("calReductionId");
-	
-		key.push_back("antennaName");
-	
-		key.push_back("basebandName");
 	
 
 
@@ -170,99 +174,99 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param calDataId. 
-	
- 	 * @param calReductionId. 
-	
  	 * @param antennaName. 
+	
+ 	 * @param atmPhaseCorrection. 
 	
  	 * @param basebandName. 
 	
- 	 * @param numReceptor. 
-	
- 	 * @param refAntennaName. 
-	
  	 * @param receiverBand. 
 	
- 	 * @param polarizationTypes. 
+ 	 * @param calDataId. 
+	
+ 	 * @param calReductionId. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param delayOffset. 
+ 	 * @param refAntennaName. 
+	
+ 	 * @param numReceptor. 
 	
  	 * @param delayError. 
 	
- 	 * @param crossDelayOffset. 
+ 	 * @param delayOffset. 
 	
- 	 * @param crossDelayOffsetError. 
+ 	 * @param polarizationTypes. 
+	
+ 	 * @param reducedChiSquared. 
 	
      */
-	CalDelayRow* CalDelayTable::newRow(Tag calDataId, Tag calReductionId, string antennaName, BasebandNameMod::BasebandName basebandName, int numReceptor, string refAntennaName, ReceiverBandMod::ReceiverBand receiverBand, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<double > delayOffset, vector<double > delayError, double crossDelayOffset, double crossDelayOffsetError){
+	CalDelayRow* CalDelayTable::newRow(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared){
 		CalDelayRow *row = new CalDelayRow(*this);
+			
+		row->setAntennaName(antennaName);
+			
+		row->setAtmPhaseCorrection(atmPhaseCorrection);
+			
+		row->setBasebandName(basebandName);
+			
+		row->setReceiverBand(receiverBand);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setAntennaName(antennaName);
-			
-		row->setBasebandName(basebandName);
-			
-		row->setNumReceptor(numReceptor);
-			
-		row->setRefAntennaName(refAntennaName);
-			
-		row->setReceiverBand(receiverBand);
-			
-		row->setPolarizationTypes(polarizationTypes);
-			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
-		row->setDelayOffset(delayOffset);
+		row->setRefAntennaName(refAntennaName);
+			
+		row->setNumReceptor(numReceptor);
 			
 		row->setDelayError(delayError);
 			
-		row->setCrossDelayOffset(crossDelayOffset);
+		row->setDelayOffset(delayOffset);
 			
-		row->setCrossDelayOffsetError(crossDelayOffsetError);
+		row->setPolarizationTypes(polarizationTypes);
+			
+		row->setReducedChiSquared(reducedChiSquared);
 	
 		return row;		
 	}	
 
-	CalDelayRow* CalDelayTable::newRowFull(Tag calDataId, Tag calReductionId, string antennaName, BasebandNameMod::BasebandName basebandName, int numReceptor, string refAntennaName, ReceiverBandMod::ReceiverBand receiverBand, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<double > delayOffset, vector<double > delayError, double crossDelayOffset, double crossDelayOffsetError)	{
+	CalDelayRow* CalDelayTable::newRowFull(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared)	{
 		CalDelayRow *row = new CalDelayRow(*this);
+			
+		row->setAntennaName(antennaName);
+			
+		row->setAtmPhaseCorrection(atmPhaseCorrection);
+			
+		row->setBasebandName(basebandName);
+			
+		row->setReceiverBand(receiverBand);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setAntennaName(antennaName);
-			
-		row->setBasebandName(basebandName);
-			
-		row->setNumReceptor(numReceptor);
-			
-		row->setRefAntennaName(refAntennaName);
-			
-		row->setReceiverBand(receiverBand);
-			
-		row->setPolarizationTypes(polarizationTypes);
-			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
-		row->setDelayOffset(delayOffset);
+		row->setRefAntennaName(refAntennaName);
+			
+		row->setNumReceptor(numReceptor);
 			
 		row->setDelayError(delayError);
 			
-		row->setCrossDelayOffset(crossDelayOffset);
+		row->setDelayOffset(delayOffset);
 			
-		row->setCrossDelayOffsetError(crossDelayOffsetError);
+		row->setPolarizationTypes(polarizationTypes);
+			
+		row->setReducedChiSquared(reducedChiSquared);
 	
 		return row;				
 	}
@@ -292,15 +296,19 @@ CalDelayRow* CalDelayTable::newRowCopy(CalDelayRow* row) {
 	CalDelayRow* CalDelayTable::add(CalDelayRow* x) {
 		
 		if (getRowByKey(
+						x->getAntennaName()
+						,
+						x->getAtmPhaseCorrection()
+						,
+						x->getBasebandName()
+						,
+						x->getReceiverBand()
+						,
 						x->getCalDataId()
 						,
 						x->getCalReductionId()
-						,
-						x->getAntennaName()
-						,
-						x->getBasebandName()
 						))
-			//throw DuplicateKey(x.getCalDataId() + "|" + x.getCalReductionId() + "|" + x.getAntennaName() + "|" + x.getBasebandName(),"CalDelay");
+			//throw DuplicateKey(x.getAntennaName() + "|" + x.getAtmPhaseCorrection() + "|" + x.getBasebandName() + "|" + x.getReceiverBand() + "|" + x.getCalDataId() + "|" + x.getCalReductionId(),"CalDelay");
 			throw DuplicateKey("Duplicate key exception in ","CalDelayTable");
 		
 		row.push_back(x);
@@ -327,19 +335,25 @@ CalDelayRow* CalDelayTable::newRowCopy(CalDelayRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalDelayRow*  CalDelayTable::checkAndAdd(CalDelayRow* x) throw (DuplicateKey) {
+	CalDelayRow*  CalDelayTable::checkAndAdd(CalDelayRow* x)  {
 		
 		
 		if (getRowByKey(
 	
+			x->getAntennaName()
+	,
+			x->getAtmPhaseCorrection()
+	,
+			x->getBasebandName()
+	,
+			x->getReceiverBand()
+	,
 			x->getCalDataId()
 	,
 			x->getCalReductionId()
-	,
-			x->getAntennaName()
-	,
-			x->getBasebandName()
 			
 		)) throw DuplicateKey("Duplicate key exception in ", "CalDelayTable");
 		
@@ -376,10 +390,26 @@ CalDelayRow* CalDelayTable::newRowCopy(CalDelayRow* row) {
  ** no row exists for that key.
  **
  */
- 	CalDelayRow* CalDelayTable::getRowByKey(Tag calDataId, Tag calReductionId, string antennaName, BasebandNameMod::BasebandName basebandName)  {
+ 	CalDelayRow* CalDelayTable::getRowByKey(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
 	CalDelayRow* aRow = 0;
 	for (unsigned int i = 0; i < row.size(); i++) {
 		aRow = row.at(i);
+		
+			
+				if (aRow->antennaName != antennaName) continue;
+			
+		
+			
+				if (aRow->atmPhaseCorrection != atmPhaseCorrection) continue;
+			
+		
+			
+				if (aRow->basebandName != basebandName) continue;
+			
+		
+			
+				if (aRow->receiverBand != receiverBand) continue;
+			
 		
 			
 				if (aRow->calDataId != calDataId) continue;
@@ -387,14 +417,6 @@ CalDelayRow* CalDelayTable::newRowCopy(CalDelayRow* row) {
 		
 			
 				if (aRow->calReductionId != calReductionId) continue;
-			
-		
-			
-				if (aRow->antennaName != antennaName) continue;
-			
-		
-			
-				if (aRow->basebandName != basebandName) continue;
 			
 		
 		return aRow;
@@ -410,40 +432,40 @@ CalDelayRow* CalDelayTable::newRowCopy(CalDelayRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
- * @param calDataId.
- 	 		
- * @param calReductionId.
- 	 		
  * @param antennaName.
+ 	 		
+ * @param atmPhaseCorrection.
  	 		
  * @param basebandName.
  	 		
- * @param numReceptor.
- 	 		
- * @param refAntennaName.
- 	 		
  * @param receiverBand.
  	 		
- * @param polarizationTypes.
+ * @param calDataId.
+ 	 		
+ * @param calReductionId.
  	 		
  * @param startValidTime.
  	 		
  * @param endValidTime.
  	 		
- * @param delayOffset.
+ * @param refAntennaName.
+ 	 		
+ * @param numReceptor.
  	 		
  * @param delayError.
  	 		
- * @param crossDelayOffset.
+ * @param delayOffset.
  	 		
- * @param crossDelayOffsetError.
+ * @param polarizationTypes.
+ 	 		
+ * @param reducedChiSquared.
  	 		 
  */
-CalDelayRow* CalDelayTable::lookup(Tag calDataId, Tag calReductionId, string antennaName, BasebandNameMod::BasebandName basebandName, int numReceptor, string refAntennaName, ReceiverBandMod::ReceiverBand receiverBand, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<double > delayOffset, vector<double > delayError, double crossDelayOffset, double crossDelayOffsetError) {
+CalDelayRow* CalDelayTable::lookup(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared) {
 		CalDelayRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(calDataId, calReductionId, antennaName, basebandName, numReceptor, refAntennaName, receiverBand, polarizationTypes, startValidTime, endValidTime, delayOffset, delayError, crossDelayOffset, crossDelayOffsetError)) return aRow;
+			if (aRow->compareNoAutoInc(antennaName, atmPhaseCorrection, basebandName, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, refAntennaName, numReceptor, delayError, delayOffset, polarizationTypes, reducedChiSquared)) return aRow;
 		}			
 		return 0;	
 } 
@@ -451,7 +473,6 @@ CalDelayRow* CalDelayTable::lookup(Tag calDataId, Tag calReductionId, string ant
  	 	
 
 	
-
 
 
 
@@ -472,7 +493,7 @@ CalDelayRow* CalDelayTable::lookup(Tag calDataId, Tag calReductionId, string ant
 #endif
 	
 #ifndef WITHOUT_ACS
-	void CalDelayTable::fromIDL(CalDelayTableIDL x) throw(DuplicateKey,ConversionException) {
+	void CalDelayTable::fromIDL(CalDelayTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			CalDelayRow *tmp = newRow();
@@ -483,28 +504,27 @@ CalDelayRow* CalDelayTable::lookup(Tag calDataId, Tag calReductionId, string ant
 	}
 #endif
 
-	char *CalDelayTable::toFITS() const throw(ConversionException) {
+	char *CalDelayTable::toFITS() const  {
 		throw ConversionException("Not implemented","CalDelay");
 	}
 
-	void CalDelayTable::fromFITS(char *fits) throw(ConversionException) {
+	void CalDelayTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","CalDelay");
 	}
 
-	string CalDelayTable::toVOTable() const throw(ConversionException) {
+	string CalDelayTable::toVOTable() const {
 		throw ConversionException("Not implemented","CalDelay");
 	}
 
-	void CalDelayTable::fromVOTable(string vo) throw(ConversionException) {
+	void CalDelayTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","CalDelay");
 	}
 
-	string CalDelayTable::toXML()  throw(ConversionException) {
+	
+	string CalDelayTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<CalDelayTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/CalDelayTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<CalDelayTable> ");
+		buf.append("<CalDelayTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalDelayTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDelayTable http://almaobservatory.org/XML/XASDM/2/CalDelayTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -520,8 +540,9 @@ CalDelayRow* CalDelayTable::lookup(Tag calDataId, Tag calReductionId, string ant
 		buf.append("</CalDelayTable> ");
 		return buf;
 	}
+
 	
-	void CalDelayTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void CalDelayTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalDelayTable")) 
 			error();
@@ -563,20 +584,110 @@ CalDelayRow* CalDelayTable::lookup(Tag calDataId, Tag calReductionId, string ant
 			error();
 	}
 
-	void CalDelayTable::error() throw(ConversionException) {
+	
+	void CalDelayTable::error()  {
 		throw ConversionException("Invalid xml document","CalDelay");
 	}
 	
+	
 	string CalDelayTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void CalDelayTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalDelay");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			CalDelayRow* aRow = CalDelayRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "CalDelay");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "CalDelay");
+		} 		 	
+	}
+
 	
 	void CalDelayTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -607,6 +718,7 @@ CalDelayRow* CalDelayTable::lookup(Tag calDataId, Tag calReductionId, string ant
 				throw ConversionException("Could not close file " + fileName, "CalDelay");
 		}
 	}
+
 	
 	void CalDelayTable::setFromFile(const string& directory) {
 		string tablename;
@@ -648,6 +760,11 @@ CalDelayRow* CalDelayTable::lookup(Tag calDataId, Tag calReductionId, string ant
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

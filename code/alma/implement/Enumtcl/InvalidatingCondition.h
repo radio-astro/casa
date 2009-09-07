@@ -38,15 +38,15 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<InvalidatingCondition,EnumPar<void> >
-     (InvalidatingConditionMod::ANTENNA_DISCONNECT,ep((int)InvalidatingConditionMod::ANTENNA_DISCONNECT,"ANTENNA_DISCONNECT","Antenna was disconnected")));
+     (InvalidatingConditionMod::ANTENNA_DISCONNECT,ep((int)InvalidatingConditionMod::ANTENNA_DISCONNECT,"ANTENNA_DISCONNECT","un-documented")));
     m_.insert(pair<InvalidatingCondition,EnumPar<void> >
-     (InvalidatingConditionMod::ANTENNA_MOVE,ep((int)InvalidatingConditionMod::ANTENNA_MOVE,"ANTENNA_MOVE","Antenna was moved")));
+     (InvalidatingConditionMod::ANTENNA_MOVE,ep((int)InvalidatingConditionMod::ANTENNA_MOVE,"ANTENNA_MOVE","un-documented")));
     m_.insert(pair<InvalidatingCondition,EnumPar<void> >
-     (InvalidatingConditionMod::ANTENNA_POWER_DOWN,ep((int)InvalidatingConditionMod::ANTENNA_POWER_DOWN,"ANTENNA_POWER_DOWN","Antenna was powered down")));
+     (InvalidatingConditionMod::ANTENNA_POWER_DOWN,ep((int)InvalidatingConditionMod::ANTENNA_POWER_DOWN,"ANTENNA_POWER_DOWN","un-documented")));
     m_.insert(pair<InvalidatingCondition,EnumPar<void> >
-     (InvalidatingConditionMod::RECEIVER_EXCHANGE,ep((int)InvalidatingConditionMod::RECEIVER_EXCHANGE,"RECEIVER_EXCHANGE","Receiver was exchanged")));
+     (InvalidatingConditionMod::RECEIVER_EXCHANGE,ep((int)InvalidatingConditionMod::RECEIVER_EXCHANGE,"RECEIVER_EXCHANGE","un-documented")));
     m_.insert(pair<InvalidatingCondition,EnumPar<void> >
-     (InvalidatingConditionMod::RECEIVER_POWER_DOWN,ep((int)InvalidatingConditionMod::RECEIVER_POWER_DOWN,"RECEIVER_POWER_DOWN","Receiver was powered down")));
+     (InvalidatingConditionMod::RECEIVER_POWER_DOWN,ep((int)InvalidatingConditionMod::RECEIVER_POWER_DOWN,"RECEIVER_POWER_DOWN","un-documented")));
     return true;
   }
   static map<InvalidatingCondition,EnumPar<void> > m_;

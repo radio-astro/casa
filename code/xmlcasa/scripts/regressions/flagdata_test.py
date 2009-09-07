@@ -147,11 +147,16 @@ flagdata(vis=vis, unflag=true)
 # Test of mode = 'alma'
 vis='cwilson2.ms'
 for r in ['vla_recipe', 'pdb_recipe']:
+    os.system('rm -rf ' + vis)
     shutil.copytree(os.environ.get('CASAPATH').split()[0] +
                     "/data/regression/flagdata/" + vis,
                     vis)
     listobs(vis=vis, verbose=false)
     flagdata(vis=vis, unflag=true)
     flagdata(vis=vis, mode='alma', recipe=r, gain=['1'], flux=['0'], bpass=['0'], source=['2'])
-    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 261450, 89334)
+    if r == 'vla_recipe':
+        expected = 89334
+    else:
+        expected = 90846
+    test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 261450, expected)
     # previous result with source=[]: 17388 / 261450 flags set

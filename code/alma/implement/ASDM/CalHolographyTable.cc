@@ -80,11 +80,11 @@ namespace asdm {
 	CalHolographyTable::CalHolographyTable(ASDM &c) : container(c) {
 
 	
+		key.push_back("antennaName");
+	
 		key.push_back("calDataId");
 	
 		key.push_back("calReductionId");
-	
-		key.push_back("antennaName");
 	
 
 
@@ -168,147 +168,129 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param antennaName. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
 	
- 	 * @param antennaName. 
-	
  	 * @param antennaMake. 
-	
- 	 * @param numScrew. 
-	
- 	 * @param numReceptor. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
+ 	 * @param ambientTemperature. 
+	
  	 * @param focusPosition. 
-	
- 	 * @param rawRms. 
-	
- 	 * @param weightedRms. 
-	
- 	 * @param screwName. 
-	
- 	 * @param screwMotion. 
-	
- 	 * @param screwMotionError. 
-	
- 	 * @param panelModes. 
 	
  	 * @param frequencyRange. 
 	
- 	 * @param beamMapUID. 
+ 	 * @param illuminationTaper. 
 	
- 	 * @param surfaceMapUID. 
+ 	 * @param numReceptor. 
 	
  	 * @param polarizationTypes. 
 	
+ 	 * @param numPanelModes. 
+	
  	 * @param receiverBand. 
+	
+ 	 * @param beamMapUID. 
+	
+ 	 * @param rawRMS. 
+	
+ 	 * @param weightedRMS. 
+	
+ 	 * @param surfaceMapUID. 
 	
  	 * @param direction. 
 	
- 	 * @param ambientTemperature. 
-	
      */
-	CalHolographyRow* CalHolographyTable::newRow(Tag calDataId, Tag calReductionId, string antennaName, AntennaMakeMod::AntennaMake antennaMake, int numScrew, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusPosition, Length rawRms, Length weightedRms, vector<string > screwName, vector<Length > screwMotion, vector<Length > screwMotionError, int panelModes, vector<Frequency > frequencyRange, EntityRef beamMapUID, EntityRef surfaceMapUID, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ReceiverBandMod::ReceiverBand receiverBand, vector<Angle > direction, Temperature ambientTemperature){
+	CalHolographyRow* CalHolographyTable::newRow(string antennaName, Tag calDataId, Tag calReductionId, AntennaMakeMod::AntennaMake antennaMake, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, vector<Length > focusPosition, vector<Frequency > frequencyRange, double illuminationTaper, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numPanelModes, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, Length rawRMS, Length weightedRMS, EntityRef surfaceMapUID, vector<Angle > direction){
 		CalHolographyRow *row = new CalHolographyRow(*this);
+			
+		row->setAntennaName(antennaName);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setAntennaName(antennaName);
-			
 		row->setAntennaMake(antennaMake);
-			
-		row->setNumScrew(numScrew);
-			
-		row->setNumReceptor(numReceptor);
 			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
+		row->setAmbientTemperature(ambientTemperature);
+			
 		row->setFocusPosition(focusPosition);
-			
-		row->setRawRms(rawRms);
-			
-		row->setWeightedRms(weightedRms);
-			
-		row->setScrewName(screwName);
-			
-		row->setScrewMotion(screwMotion);
-			
-		row->setScrewMotionError(screwMotionError);
-			
-		row->setPanelModes(panelModes);
 			
 		row->setFrequencyRange(frequencyRange);
 			
-		row->setBeamMapUID(beamMapUID);
+		row->setIlluminationTaper(illuminationTaper);
 			
-		row->setSurfaceMapUID(surfaceMapUID);
+		row->setNumReceptor(numReceptor);
 			
 		row->setPolarizationTypes(polarizationTypes);
 			
+		row->setNumPanelModes(numPanelModes);
+			
 		row->setReceiverBand(receiverBand);
 			
-		row->setDirection(direction);
+		row->setBeamMapUID(beamMapUID);
 			
-		row->setAmbientTemperature(ambientTemperature);
+		row->setRawRMS(rawRMS);
+			
+		row->setWeightedRMS(weightedRMS);
+			
+		row->setSurfaceMapUID(surfaceMapUID);
+			
+		row->setDirection(direction);
 	
 		return row;		
 	}	
 
-	CalHolographyRow* CalHolographyTable::newRowFull(Tag calDataId, Tag calReductionId, string antennaName, AntennaMakeMod::AntennaMake antennaMake, int numScrew, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusPosition, Length rawRms, Length weightedRms, vector<string > screwName, vector<Length > screwMotion, vector<Length > screwMotionError, int panelModes, vector<Frequency > frequencyRange, EntityRef beamMapUID, EntityRef surfaceMapUID, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ReceiverBandMod::ReceiverBand receiverBand, vector<Angle > direction, Temperature ambientTemperature)	{
+	CalHolographyRow* CalHolographyTable::newRowFull(string antennaName, Tag calDataId, Tag calReductionId, AntennaMakeMod::AntennaMake antennaMake, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, vector<Length > focusPosition, vector<Frequency > frequencyRange, double illuminationTaper, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numPanelModes, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, Length rawRMS, Length weightedRMS, EntityRef surfaceMapUID, vector<Angle > direction)	{
 		CalHolographyRow *row = new CalHolographyRow(*this);
+			
+		row->setAntennaName(antennaName);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setAntennaName(antennaName);
-			
 		row->setAntennaMake(antennaMake);
-			
-		row->setNumScrew(numScrew);
-			
-		row->setNumReceptor(numReceptor);
 			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
+		row->setAmbientTemperature(ambientTemperature);
+			
 		row->setFocusPosition(focusPosition);
-			
-		row->setRawRms(rawRms);
-			
-		row->setWeightedRms(weightedRms);
-			
-		row->setScrewName(screwName);
-			
-		row->setScrewMotion(screwMotion);
-			
-		row->setScrewMotionError(screwMotionError);
-			
-		row->setPanelModes(panelModes);
 			
 		row->setFrequencyRange(frequencyRange);
 			
-		row->setBeamMapUID(beamMapUID);
+		row->setIlluminationTaper(illuminationTaper);
 			
-		row->setSurfaceMapUID(surfaceMapUID);
+		row->setNumReceptor(numReceptor);
 			
 		row->setPolarizationTypes(polarizationTypes);
 			
+		row->setNumPanelModes(numPanelModes);
+			
 		row->setReceiverBand(receiverBand);
 			
-		row->setDirection(direction);
+		row->setBeamMapUID(beamMapUID);
 			
-		row->setAmbientTemperature(ambientTemperature);
+		row->setRawRMS(rawRMS);
+			
+		row->setWeightedRMS(weightedRMS);
+			
+		row->setSurfaceMapUID(surfaceMapUID);
+			
+		row->setDirection(direction);
 	
 		return row;				
 	}
@@ -338,13 +320,13 @@ CalHolographyRow* CalHolographyTable::newRowCopy(CalHolographyRow* row) {
 	CalHolographyRow* CalHolographyTable::add(CalHolographyRow* x) {
 		
 		if (getRowByKey(
+						x->getAntennaName()
+						,
 						x->getCalDataId()
 						,
 						x->getCalReductionId()
-						,
-						x->getAntennaName()
 						))
-			//throw DuplicateKey(x.getCalDataId() + "|" + x.getCalReductionId() + "|" + x.getAntennaName(),"CalHolography");
+			//throw DuplicateKey(x.getAntennaName() + "|" + x.getCalDataId() + "|" + x.getCalReductionId(),"CalHolography");
 			throw DuplicateKey("Duplicate key exception in ","CalHolographyTable");
 		
 		row.push_back(x);
@@ -371,17 +353,19 @@ CalHolographyRow* CalHolographyTable::newRowCopy(CalHolographyRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalHolographyRow*  CalHolographyTable::checkAndAdd(CalHolographyRow* x) throw (DuplicateKey) {
+	CalHolographyRow*  CalHolographyTable::checkAndAdd(CalHolographyRow* x)  {
 		
 		
 		if (getRowByKey(
 	
+			x->getAntennaName()
+	,
 			x->getCalDataId()
 	,
 			x->getCalReductionId()
-	,
-			x->getAntennaName()
 			
 		)) throw DuplicateKey("Duplicate key exception in ", "CalHolographyTable");
 		
@@ -418,10 +402,14 @@ CalHolographyRow* CalHolographyTable::newRowCopy(CalHolographyRow* row) {
  ** no row exists for that key.
  **
  */
- 	CalHolographyRow* CalHolographyTable::getRowByKey(Tag calDataId, Tag calReductionId, string antennaName)  {
+ 	CalHolographyRow* CalHolographyTable::getRowByKey(string antennaName, Tag calDataId, Tag calReductionId)  {
 	CalHolographyRow* aRow = 0;
 	for (unsigned int i = 0; i < row.size(); i++) {
 		aRow = row.at(i);
+		
+			
+				if (aRow->antennaName != antennaName) continue;
+			
 		
 			
 				if (aRow->calDataId != calDataId) continue;
@@ -429,10 +417,6 @@ CalHolographyRow* CalHolographyTable::newRowCopy(CalHolographyRow* row) {
 		
 			
 				if (aRow->calReductionId != calReductionId) continue;
-			
-		
-			
-				if (aRow->antennaName != antennaName) continue;
 			
 		
 		return aRow;
@@ -448,56 +432,50 @@ CalHolographyRow* CalHolographyTable::newRowCopy(CalHolographyRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
+ * @param antennaName.
+ 	 		
  * @param calDataId.
  	 		
  * @param calReductionId.
  	 		
- * @param antennaName.
- 	 		
  * @param antennaMake.
- 	 		
- * @param numScrew.
- 	 		
- * @param numReceptor.
  	 		
  * @param startValidTime.
  	 		
  * @param endValidTime.
  	 		
+ * @param ambientTemperature.
+ 	 		
  * @param focusPosition.
- 	 		
- * @param rawRms.
- 	 		
- * @param weightedRms.
- 	 		
- * @param screwName.
- 	 		
- * @param screwMotion.
- 	 		
- * @param screwMotionError.
- 	 		
- * @param panelModes.
  	 		
  * @param frequencyRange.
  	 		
- * @param beamMapUID.
+ * @param illuminationTaper.
  	 		
- * @param surfaceMapUID.
+ * @param numReceptor.
  	 		
  * @param polarizationTypes.
  	 		
+ * @param numPanelModes.
+ 	 		
  * @param receiverBand.
  	 		
- * @param direction.
+ * @param beamMapUID.
  	 		
- * @param ambientTemperature.
+ * @param rawRMS.
+ 	 		
+ * @param weightedRMS.
+ 	 		
+ * @param surfaceMapUID.
+ 	 		
+ * @param direction.
  	 		 
  */
-CalHolographyRow* CalHolographyTable::lookup(Tag calDataId, Tag calReductionId, string antennaName, AntennaMakeMod::AntennaMake antennaMake, int numScrew, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusPosition, Length rawRms, Length weightedRms, vector<string > screwName, vector<Length > screwMotion, vector<Length > screwMotionError, int panelModes, vector<Frequency > frequencyRange, EntityRef beamMapUID, EntityRef surfaceMapUID, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ReceiverBandMod::ReceiverBand receiverBand, vector<Angle > direction, Temperature ambientTemperature) {
+CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, Tag calReductionId, AntennaMakeMod::AntennaMake antennaMake, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, vector<Length > focusPosition, vector<Frequency > frequencyRange, double illuminationTaper, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numPanelModes, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, Length rawRMS, Length weightedRMS, EntityRef surfaceMapUID, vector<Angle > direction) {
 		CalHolographyRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(calDataId, calReductionId, antennaName, antennaMake, numScrew, numReceptor, startValidTime, endValidTime, focusPosition, rawRms, weightedRms, screwName, screwMotion, screwMotionError, panelModes, frequencyRange, beamMapUID, surfaceMapUID, polarizationTypes, receiverBand, direction, ambientTemperature)) return aRow;
+			if (aRow->compareNoAutoInc(antennaName, calDataId, calReductionId, antennaMake, startValidTime, endValidTime, ambientTemperature, focusPosition, frequencyRange, illuminationTaper, numReceptor, polarizationTypes, numPanelModes, receiverBand, beamMapUID, rawRMS, weightedRMS, surfaceMapUID, direction)) return aRow;
 		}			
 		return 0;	
 } 
@@ -505,7 +483,6 @@ CalHolographyRow* CalHolographyTable::lookup(Tag calDataId, Tag calReductionId, 
  	 	
 
 	
-
 
 
 
@@ -526,7 +503,7 @@ CalHolographyRow* CalHolographyTable::lookup(Tag calDataId, Tag calReductionId, 
 #endif
 	
 #ifndef WITHOUT_ACS
-	void CalHolographyTable::fromIDL(CalHolographyTableIDL x) throw(DuplicateKey,ConversionException) {
+	void CalHolographyTable::fromIDL(CalHolographyTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			CalHolographyRow *tmp = newRow();
@@ -537,28 +514,27 @@ CalHolographyRow* CalHolographyTable::lookup(Tag calDataId, Tag calReductionId, 
 	}
 #endif
 
-	char *CalHolographyTable::toFITS() const throw(ConversionException) {
+	char *CalHolographyTable::toFITS() const  {
 		throw ConversionException("Not implemented","CalHolography");
 	}
 
-	void CalHolographyTable::fromFITS(char *fits) throw(ConversionException) {
+	void CalHolographyTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","CalHolography");
 	}
 
-	string CalHolographyTable::toVOTable() const throw(ConversionException) {
+	string CalHolographyTable::toVOTable() const {
 		throw ConversionException("Not implemented","CalHolography");
 	}
 
-	void CalHolographyTable::fromVOTable(string vo) throw(ConversionException) {
+	void CalHolographyTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","CalHolography");
 	}
 
-	string CalHolographyTable::toXML()  throw(ConversionException) {
+	
+	string CalHolographyTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/CalHolographyTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<CalHolographyTable> ");
+		buf.append("<CalHolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalHolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalHolographyTable http://almaobservatory.org/XML/XASDM/2/CalHolographyTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -574,8 +550,9 @@ CalHolographyRow* CalHolographyTable::lookup(Tag calDataId, Tag calReductionId, 
 		buf.append("</CalHolographyTable> ");
 		return buf;
 	}
+
 	
-	void CalHolographyTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void CalHolographyTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalHolographyTable")) 
 			error();
@@ -617,20 +594,110 @@ CalHolographyRow* CalHolographyTable::lookup(Tag calDataId, Tag calReductionId, 
 			error();
 	}
 
-	void CalHolographyTable::error() throw(ConversionException) {
+	
+	void CalHolographyTable::error()  {
 		throw ConversionException("Invalid xml document","CalHolography");
 	}
 	
+	
 	string CalHolographyTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void CalHolographyTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalHolography");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			CalHolographyRow* aRow = CalHolographyRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "CalHolography");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "CalHolography");
+		} 		 	
+	}
+
 	
 	void CalHolographyTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -661,6 +728,7 @@ CalHolographyRow* CalHolographyTable::lookup(Tag calDataId, Tag calReductionId, 
 				throw ConversionException("Could not close file " + fileName, "CalHolography");
 		}
 	}
+
 	
 	void CalHolographyTable::setFromFile(const string& directory) {
 		string tablename;
@@ -702,6 +770,11 @@ CalHolographyRow* CalHolographyTable::lookup(Tag calDataId, Tag calReductionId, 
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

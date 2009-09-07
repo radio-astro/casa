@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CCorrelatorName::version() {
+	return CorrelatorNameMod::version;
+	}
+	
+string CCorrelatorName::revision () {
+	return CorrelatorNameMod::revision;
+}
+
+unsigned int CCorrelatorName::size() {
+	return 10;
+	}
+	
 	
 const std::string& CCorrelatorName::sALMA_ACA = "ALMA_ACA";
 	
@@ -54,7 +67,11 @@ const std::string& CCorrelatorName::sIRAM_30M_VESPA = "IRAM_30M_VESPA";
 	
 const std::string& CCorrelatorName::sIRAM_WILMA = "IRAM_WILMA";
 	
-const std::vector<std::string> CCorrelatorName::sCorrelatorNameSet() {
+const std::string& CCorrelatorName::sNRAO_VLA = "NRAO_VLA";
+	
+const std::string& CCorrelatorName::sNRAO_WIDAR = "NRAO_WIDAR";
+	
+const std::vector<std::string> CCorrelatorName::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CCorrelatorName::sALMA_ACA);
@@ -72,13 +89,13 @@ const std::vector<std::string> CCorrelatorName::sCorrelatorNameSet() {
     enumSet.insert(enumSet.end(), CCorrelatorName::sIRAM_30M_VESPA);
     
     enumSet.insert(enumSet.end(), CCorrelatorName::sIRAM_WILMA);
+    
+    enumSet.insert(enumSet.end(), CCorrelatorName::sNRAO_VLA);
+    
+    enumSet.insert(enumSet.end(), CCorrelatorName::sNRAO_WIDAR);
         
     return enumSet;
 }
-
-	
-
-	
 
 std::string CCorrelatorName::name(const CorrelatorNameMod::CorrelatorName& f) {
     switch (f) {
@@ -106,14 +123,17 @@ std::string CCorrelatorName::name(const CorrelatorNameMod::CorrelatorName& f) {
     
     case CorrelatorNameMod::IRAM_WILMA:
       return CCorrelatorName::sIRAM_WILMA;
+    
+    case CorrelatorNameMod::NRAO_VLA:
+      return CCorrelatorName::sNRAO_VLA;
+    
+    case CorrelatorNameMod::NRAO_WIDAR:
+      return CCorrelatorName::sNRAO_WIDAR;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
 
 CorrelatorNameMod::CorrelatorName CCorrelatorName::newCorrelatorName(const std::string& name) {
 		
@@ -147,6 +167,14 @@ CorrelatorNameMod::CorrelatorName CCorrelatorName::newCorrelatorName(const std::
     	
     if (name == CCorrelatorName::sIRAM_WILMA) {
         return CorrelatorNameMod::IRAM_WILMA;
+    }
+    	
+    if (name == CCorrelatorName::sNRAO_VLA) {
+        return CorrelatorNameMod::NRAO_VLA;
+    }
+    	
+    if (name == CCorrelatorName::sNRAO_WIDAR) {
+        return CorrelatorNameMod::NRAO_WIDAR;
     }
     
     throw badString(name);
@@ -185,17 +213,23 @@ CorrelatorNameMod::CorrelatorName CCorrelatorName::literal(const std::string& na
     if (name == CCorrelatorName::sIRAM_WILMA) {
         return CorrelatorNameMod::IRAM_WILMA;
     }
+    	
+    if (name == CCorrelatorName::sNRAO_VLA) {
+        return CorrelatorNameMod::NRAO_VLA;
+    }
+    	
+    if (name == CCorrelatorName::sNRAO_WIDAR) {
+        return CorrelatorNameMod::NRAO_WIDAR;
+    }
     
     throw badString(name);
 }
 
 CorrelatorNameMod::CorrelatorName CCorrelatorName::from_int(unsigned int i) {
-	vector<string> names = sCorrelatorNameSet();
-	if (i >= names.size()) throw badInt(i);
-	return newCorrelatorName(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newCorrelatorName(names_.at(i));
 }
-
-	
 
 string CCorrelatorName::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'CorrelatorName'.";

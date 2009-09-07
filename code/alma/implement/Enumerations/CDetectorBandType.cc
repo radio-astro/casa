@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CDetectorBandType::version() {
+	return DetectorBandTypeMod::version;
+	}
+	
+string CDetectorBandType::revision () {
+	return DetectorBandTypeMod::revision;
+}
+
+unsigned int CDetectorBandType::size() {
+	return 4;
+	}
+	
 	
 const std::string& CDetectorBandType::sBASEBAND = "BASEBAND";
 	
@@ -44,7 +57,9 @@ const std::string& CDetectorBandType::sDOWN_CONVERTER = "DOWN_CONVERTER";
 	
 const std::string& CDetectorBandType::sHOLOGRAPHY_RECEIVER = "HOLOGRAPHY_RECEIVER";
 	
-const std::vector<std::string> CDetectorBandType::sDetectorBandTypeSet() {
+const std::string& CDetectorBandType::sSUBBAND = "SUBBAND";
+	
+const std::vector<std::string> CDetectorBandType::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CDetectorBandType::sBASEBAND);
@@ -52,32 +67,11 @@ const std::vector<std::string> CDetectorBandType::sDetectorBandTypeSet() {
     enumSet.insert(enumSet.end(), CDetectorBandType::sDOWN_CONVERTER);
     
     enumSet.insert(enumSet.end(), CDetectorBandType::sHOLOGRAPHY_RECEIVER);
+    
+    enumSet.insert(enumSet.end(), CDetectorBandType::sSUBBAND);
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CDetectorBandType::hBASEBAND = "Detector in Baseband Processor";
-	
-const std::string& CDetectorBandType::hDOWN_CONVERTER = "Detector in Down - Converter";
-	
-const std::string& CDetectorBandType::hHOLOGRAPHY_RECEIVER = "Detector in Holography Receiver";
-	
-const std::vector<std::string> CDetectorBandType::hDetectorBandTypeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CDetectorBandType::hBASEBAND);
-    
-    enumSet.insert(enumSet.end(), CDetectorBandType::hDOWN_CONVERTER);
-    
-    enumSet.insert(enumSet.end(), CDetectorBandType::hHOLOGRAPHY_RECEIVER);
-        
-    return enumSet;
-}
-   	
 
 std::string CDetectorBandType::name(const DetectorBandTypeMod::DetectorBandType& f) {
     switch (f) {
@@ -90,30 +84,14 @@ std::string CDetectorBandType::name(const DetectorBandTypeMod::DetectorBandType&
     
     case DetectorBandTypeMod::HOLOGRAPHY_RECEIVER:
       return CDetectorBandType::sHOLOGRAPHY_RECEIVER;
+    
+    case DetectorBandTypeMod::SUBBAND:
+      return CDetectorBandType::sSUBBAND;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CDetectorBandType::help(const DetectorBandTypeMod::DetectorBandType& f) {
-    switch (f) {
-    
-    case DetectorBandTypeMod::BASEBAND:
-      return CDetectorBandType::hBASEBAND;
-    
-    case DetectorBandTypeMod::DOWN_CONVERTER:
-      return CDetectorBandType::hDOWN_CONVERTER;
-    
-    case DetectorBandTypeMod::HOLOGRAPHY_RECEIVER:
-      return CDetectorBandType::hHOLOGRAPHY_RECEIVER;
-    	
-    }
-    return std::string("");
-}
-   	
 
 DetectorBandTypeMod::DetectorBandType CDetectorBandType::newDetectorBandType(const std::string& name) {
 		
@@ -127,6 +105,10 @@ DetectorBandTypeMod::DetectorBandType CDetectorBandType::newDetectorBandType(con
     	
     if (name == CDetectorBandType::sHOLOGRAPHY_RECEIVER) {
         return DetectorBandTypeMod::HOLOGRAPHY_RECEIVER;
+    }
+    	
+    if (name == CDetectorBandType::sSUBBAND) {
+        return DetectorBandTypeMod::SUBBAND;
     }
     
     throw badString(name);
@@ -145,17 +127,19 @@ DetectorBandTypeMod::DetectorBandType CDetectorBandType::literal(const std::stri
     if (name == CDetectorBandType::sHOLOGRAPHY_RECEIVER) {
         return DetectorBandTypeMod::HOLOGRAPHY_RECEIVER;
     }
+    	
+    if (name == CDetectorBandType::sSUBBAND) {
+        return DetectorBandTypeMod::SUBBAND;
+    }
     
     throw badString(name);
 }
 
 DetectorBandTypeMod::DetectorBandType CDetectorBandType::from_int(unsigned int i) {
-	vector<string> names = sDetectorBandTypeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newDetectorBandType(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newDetectorBandType(names_.at(i));
 }
-
-	
 
 string CDetectorBandType::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'DetectorBandType'.";

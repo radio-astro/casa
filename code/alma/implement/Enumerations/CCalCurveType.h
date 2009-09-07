@@ -42,15 +42,30 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the CalCurveType enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace CalCurveTypeMod
 {
+  //! CalCurveType.
+  //!  [CalDM.CalCurve] type pf calibration curve
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum CalCurveType
   { 
-    AMPLITUDE ,
-    PHASE 
+    AMPLITUDE /*!< Calibration curve is Amplitude */
+     ,
+    PHASE /*!< Calibration curve is phase */
+     ,
+    UNDEFINED /*!< Not applicable. */
+     
   };
   typedef CalCurveType &CalCurveType_out;
 } 
@@ -58,64 +73,93 @@ namespace CalCurveTypeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration CalCurveType.
+  * 
+  */
 class CCalCurveType {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the CalCurveType enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sAMPLITUDE;
+	static const std::string& sAMPLITUDE; /*!< A const string equal to "AMPLITUDE".*/
 	
-	static const std::string& sPHASE;
+	static const std::string& sPHASE; /*!< A const string equal to "PHASE".*/
 	
-    static const std::vector<std::string> sCalCurveTypeSet();	 
+	static const std::string& sUNDEFINED; /*!< A const string equal to "UNDEFINED".*/
+	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in CalCurveTypeMod::CalCurveType.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of CalCurveTypeMod::CalCurveType.
+      * @return a string.
+      */
+	static std::string name(const CalCurveTypeMod::CalCurveType& e);
 	
-
-	
-	// Explanations associated with the CalCurveType Enumeration.
-		
-	static const std::string& hAMPLITUDE;
-		
-	static const std::string& hPHASE;
-		
-	static const std::vector<std::string> hCalCurveTypeSet();
-   	
-
-   	// Is an integer number associated with the CalCurveType enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the CalCurveType enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  CalCurveType enumeration.
-	static std::string name(const CalCurveTypeMod::CalCurveType& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const CalCurveTypeMod::CalCurveType& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified CalCurveType enumeration.
-	static std::string help(const CalCurveTypeMod::CalCurveType& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a CalCurveType enumeration object by specifying its name.
    	static CalCurveTypeMod::CalCurveType newCalCurveType(const std::string& name);
    	
-   	// Create a CalCurveType enumeration object by specifying its name.
+   	/*! Return a CalCurveType's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a CalCurveTypeMod::CalCurveType's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static CalCurveTypeMod::CalCurveType literal(const std::string& name);
  	
-    // Create a CalCurveType enumeration object by specifying its position index (0 based).
+    /*! Return a CalCurveType's enumerator given an unsigned int.
+      * @param i the index of the enumerator in CalCurveTypeMod::CalCurveType.
+      * @return a CalCurveTypeMod::CalCurveType's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static CalCurveTypeMod::CalCurveType from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CCalCurveType();
     CCalCurveType(const CCalCurveType&);
     CCalCurveType& operator=(const CCalCurveType&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CCalCurveType_H*/

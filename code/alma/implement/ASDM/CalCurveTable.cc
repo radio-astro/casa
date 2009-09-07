@@ -80,6 +80,12 @@ namespace asdm {
 	CalCurveTable::CalCurveTable(ASDM &c) : container(c) {
 
 	
+		key.push_back("atmPhaseCorrection");
+	
+		key.push_back("typeCurve");
+	
+		key.push_back("receiverBand");
+	
 		key.push_back("calDataId");
 	
 		key.push_back("calReductionId");
@@ -166,29 +172,15 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param calDataId. 
+ 	 * @param atmPhaseCorrection. 
 	
- 	 * @param calReductionId. 
-	
- 	 * @param numAntenna. 
-	
- 	 * @param numBaseline. 
-	
- 	 * @param numAPC. 
-	
- 	 * @param numReceptor. 
-	
- 	 * @param numPoly. 
-	
- 	 * @param antennaNames. 
-	
- 	 * @param refAntennaName. 
+ 	 * @param typeCurve. 
 	
  	 * @param receiverBand. 
 	
- 	 * @param atmPhaseCorrections. 
+ 	 * @param calDataId. 
 	
- 	 * @param polarizationTypes. 
+ 	 * @param calReductionId. 
 	
  	 * @param startValidTime. 
 	
@@ -196,41 +188,35 @@ namespace asdm {
 	
  	 * @param frequencyRange. 
 	
- 	 * @param typeCurve. 
+ 	 * @param numAntenna. 
 	
- 	 * @param timeOrigin. 
+ 	 * @param numPoly. 
+	
+ 	 * @param numReceptor. 
+	
+ 	 * @param antennaNames. 
+	
+ 	 * @param refAntennaName. 
+	
+ 	 * @param polarizationTypes. 
 	
  	 * @param curve. 
 	
- 	 * @param rms. 
+ 	 * @param reducedChiSquared. 
 	
      */
-	CalCurveRow* CalCurveTable::newRow(Tag calDataId, Tag calReductionId, int numAntenna, int numBaseline, int numAPC, int numReceptor, int numPoly, vector<string > antennaNames, string refAntennaName, ReceiverBandMod::ReceiverBand receiverBand, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, CalCurveTypeMod::CalCurveType typeCurve, ArrayTime timeOrigin, vector<vector<vector<vector<float > > > > curve, vector<vector<vector<float > > > rms){
+	CalCurveRow* CalCurveTable::newRow(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared){
 		CalCurveRow *row = new CalCurveRow(*this);
+			
+		row->setAtmPhaseCorrection(atmPhaseCorrection);
+			
+		row->setTypeCurve(typeCurve);
+			
+		row->setReceiverBand(receiverBand);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
-			
-		row->setNumAntenna(numAntenna);
-			
-		row->setNumBaseline(numBaseline);
-			
-		row->setNumAPC(numAPC);
-			
-		row->setNumReceptor(numReceptor);
-			
-		row->setNumPoly(numPoly);
-			
-		row->setAntennaNames(antennaNames);
-			
-		row->setRefAntennaName(refAntennaName);
-			
-		row->setReceiverBand(receiverBand);
-			
-		row->setAtmPhaseCorrections(atmPhaseCorrections);
-			
-		row->setPolarizationTypes(polarizationTypes);
 			
 		row->setStartValidTime(startValidTime);
 			
@@ -238,43 +224,37 @@ namespace asdm {
 			
 		row->setFrequencyRange(frequencyRange);
 			
-		row->setTypeCurve(typeCurve);
+		row->setNumAntenna(numAntenna);
 			
-		row->setTimeOrigin(timeOrigin);
+		row->setNumPoly(numPoly);
+			
+		row->setNumReceptor(numReceptor);
+			
+		row->setAntennaNames(antennaNames);
+			
+		row->setRefAntennaName(refAntennaName);
+			
+		row->setPolarizationTypes(polarizationTypes);
 			
 		row->setCurve(curve);
 			
-		row->setRms(rms);
+		row->setReducedChiSquared(reducedChiSquared);
 	
 		return row;		
 	}	
 
-	CalCurveRow* CalCurveTable::newRowFull(Tag calDataId, Tag calReductionId, int numAntenna, int numBaseline, int numAPC, int numReceptor, int numPoly, vector<string > antennaNames, string refAntennaName, ReceiverBandMod::ReceiverBand receiverBand, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, CalCurveTypeMod::CalCurveType typeCurve, ArrayTime timeOrigin, vector<vector<vector<vector<float > > > > curve, vector<vector<vector<float > > > rms)	{
+	CalCurveRow* CalCurveTable::newRowFull(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared)	{
 		CalCurveRow *row = new CalCurveRow(*this);
+			
+		row->setAtmPhaseCorrection(atmPhaseCorrection);
+			
+		row->setTypeCurve(typeCurve);
+			
+		row->setReceiverBand(receiverBand);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
-			
-		row->setNumAntenna(numAntenna);
-			
-		row->setNumBaseline(numBaseline);
-			
-		row->setNumAPC(numAPC);
-			
-		row->setNumReceptor(numReceptor);
-			
-		row->setNumPoly(numPoly);
-			
-		row->setAntennaNames(antennaNames);
-			
-		row->setRefAntennaName(refAntennaName);
-			
-		row->setReceiverBand(receiverBand);
-			
-		row->setAtmPhaseCorrections(atmPhaseCorrections);
-			
-		row->setPolarizationTypes(polarizationTypes);
 			
 		row->setStartValidTime(startValidTime);
 			
@@ -282,13 +262,21 @@ namespace asdm {
 			
 		row->setFrequencyRange(frequencyRange);
 			
-		row->setTypeCurve(typeCurve);
+		row->setNumAntenna(numAntenna);
 			
-		row->setTimeOrigin(timeOrigin);
+		row->setNumPoly(numPoly);
+			
+		row->setNumReceptor(numReceptor);
+			
+		row->setAntennaNames(antennaNames);
+			
+		row->setRefAntennaName(refAntennaName);
+			
+		row->setPolarizationTypes(polarizationTypes);
 			
 		row->setCurve(curve);
 			
-		row->setRms(rms);
+		row->setReducedChiSquared(reducedChiSquared);
 	
 		return row;				
 	}
@@ -318,11 +306,17 @@ CalCurveRow* CalCurveTable::newRowCopy(CalCurveRow* row) {
 	CalCurveRow* CalCurveTable::add(CalCurveRow* x) {
 		
 		if (getRowByKey(
+						x->getAtmPhaseCorrection()
+						,
+						x->getTypeCurve()
+						,
+						x->getReceiverBand()
+						,
 						x->getCalDataId()
 						,
 						x->getCalReductionId()
 						))
-			//throw DuplicateKey(x.getCalDataId() + "|" + x.getCalReductionId(),"CalCurve");
+			//throw DuplicateKey(x.getAtmPhaseCorrection() + "|" + x.getTypeCurve() + "|" + x.getReceiverBand() + "|" + x.getCalDataId() + "|" + x.getCalReductionId(),"CalCurve");
 			throw DuplicateKey("Duplicate key exception in ","CalCurveTable");
 		
 		row.push_back(x);
@@ -349,12 +343,20 @@ CalCurveRow* CalCurveTable::newRowCopy(CalCurveRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalCurveRow*  CalCurveTable::checkAndAdd(CalCurveRow* x) throw (DuplicateKey) {
+	CalCurveRow*  CalCurveTable::checkAndAdd(CalCurveRow* x)  {
 		
 		
 		if (getRowByKey(
 	
+			x->getAtmPhaseCorrection()
+	,
+			x->getTypeCurve()
+	,
+			x->getReceiverBand()
+	,
 			x->getCalDataId()
 	,
 			x->getCalReductionId()
@@ -394,10 +396,22 @@ CalCurveRow* CalCurveTable::newRowCopy(CalCurveRow* row) {
  ** no row exists for that key.
  **
  */
- 	CalCurveRow* CalCurveTable::getRowByKey(Tag calDataId, Tag calReductionId)  {
+ 	CalCurveRow* CalCurveTable::getRowByKey(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
 	CalCurveRow* aRow = 0;
 	for (unsigned int i = 0; i < row.size(); i++) {
 		aRow = row.at(i);
+		
+			
+				if (aRow->atmPhaseCorrection != atmPhaseCorrection) continue;
+			
+		
+			
+				if (aRow->typeCurve != typeCurve) continue;
+			
+		
+			
+				if (aRow->receiverBand != receiverBand) continue;
+			
 		
 			
 				if (aRow->calDataId != calDataId) continue;
@@ -420,29 +434,15 @@ CalCurveRow* CalCurveTable::newRowCopy(CalCurveRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
- * @param calDataId.
+ * @param atmPhaseCorrection.
  	 		
- * @param calReductionId.
- 	 		
- * @param numAntenna.
- 	 		
- * @param numBaseline.
- 	 		
- * @param numAPC.
- 	 		
- * @param numReceptor.
- 	 		
- * @param numPoly.
- 	 		
- * @param antennaNames.
- 	 		
- * @param refAntennaName.
+ * @param typeCurve.
  	 		
  * @param receiverBand.
  	 		
- * @param atmPhaseCorrections.
+ * @param calDataId.
  	 		
- * @param polarizationTypes.
+ * @param calReductionId.
  	 		
  * @param startValidTime.
  	 		
@@ -450,20 +450,28 @@ CalCurveRow* CalCurveTable::newRowCopy(CalCurveRow* row) {
  	 		
  * @param frequencyRange.
  	 		
- * @param typeCurve.
+ * @param numAntenna.
  	 		
- * @param timeOrigin.
+ * @param numPoly.
+ 	 		
+ * @param numReceptor.
+ 	 		
+ * @param antennaNames.
+ 	 		
+ * @param refAntennaName.
+ 	 		
+ * @param polarizationTypes.
  	 		
  * @param curve.
  	 		
- * @param rms.
+ * @param reducedChiSquared.
  	 		 
  */
-CalCurveRow* CalCurveTable::lookup(Tag calDataId, Tag calReductionId, int numAntenna, int numBaseline, int numAPC, int numReceptor, int numPoly, vector<string > antennaNames, string refAntennaName, ReceiverBandMod::ReceiverBand receiverBand, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, CalCurveTypeMod::CalCurveType typeCurve, ArrayTime timeOrigin, vector<vector<vector<vector<float > > > > curve, vector<vector<vector<float > > > rms) {
+CalCurveRow* CalCurveTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared) {
 		CalCurveRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(calDataId, calReductionId, numAntenna, numBaseline, numAPC, numReceptor, numPoly, antennaNames, refAntennaName, receiverBand, atmPhaseCorrections, polarizationTypes, startValidTime, endValidTime, frequencyRange, typeCurve, timeOrigin, curve, rms)) return aRow;
+			if (aRow->compareNoAutoInc(atmPhaseCorrection, typeCurve, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, frequencyRange, numAntenna, numPoly, numReceptor, antennaNames, refAntennaName, polarizationTypes, curve, reducedChiSquared)) return aRow;
 		}			
 		return 0;	
 } 
@@ -471,7 +479,6 @@ CalCurveRow* CalCurveTable::lookup(Tag calDataId, Tag calReductionId, int numAnt
  	 	
 
 	
-
 
 
 
@@ -492,7 +499,7 @@ CalCurveRow* CalCurveTable::lookup(Tag calDataId, Tag calReductionId, int numAnt
 #endif
 	
 #ifndef WITHOUT_ACS
-	void CalCurveTable::fromIDL(CalCurveTableIDL x) throw(DuplicateKey,ConversionException) {
+	void CalCurveTable::fromIDL(CalCurveTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			CalCurveRow *tmp = newRow();
@@ -503,28 +510,27 @@ CalCurveRow* CalCurveTable::lookup(Tag calDataId, Tag calReductionId, int numAnt
 	}
 #endif
 
-	char *CalCurveTable::toFITS() const throw(ConversionException) {
+	char *CalCurveTable::toFITS() const  {
 		throw ConversionException("Not implemented","CalCurve");
 	}
 
-	void CalCurveTable::fromFITS(char *fits) throw(ConversionException) {
+	void CalCurveTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","CalCurve");
 	}
 
-	string CalCurveTable::toVOTable() const throw(ConversionException) {
+	string CalCurveTable::toVOTable() const {
 		throw ConversionException("Not implemented","CalCurve");
 	}
 
-	void CalCurveTable::fromVOTable(string vo) throw(ConversionException) {
+	void CalCurveTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","CalCurve");
 	}
 
-	string CalCurveTable::toXML()  throw(ConversionException) {
+	
+	string CalCurveTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<CalCurveTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/CalCurveTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<CalCurveTable> ");
+		buf.append("<CalCurveTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalCurveTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalCurveTable http://almaobservatory.org/XML/XASDM/2/CalCurveTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -540,8 +546,9 @@ CalCurveRow* CalCurveTable::lookup(Tag calDataId, Tag calReductionId, int numAnt
 		buf.append("</CalCurveTable> ");
 		return buf;
 	}
+
 	
-	void CalCurveTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void CalCurveTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalCurveTable")) 
 			error();
@@ -583,20 +590,110 @@ CalCurveRow* CalCurveTable::lookup(Tag calDataId, Tag calReductionId, int numAnt
 			error();
 	}
 
-	void CalCurveTable::error() throw(ConversionException) {
+	
+	void CalCurveTable::error()  {
 		throw ConversionException("Invalid xml document","CalCurve");
 	}
 	
+	
 	string CalCurveTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void CalCurveTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalCurve");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			CalCurveRow* aRow = CalCurveRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "CalCurve");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "CalCurve");
+		} 		 	
+	}
+
 	
 	void CalCurveTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -627,6 +724,7 @@ CalCurveRow* CalCurveTable::lookup(Tag calDataId, Tag calReductionId, int numAnt
 				throw ConversionException("Could not close file " + fileName, "CalCurve");
 		}
 	}
+
 	
 	void CalCurveTable::setFromFile(const string& directory) {
 		string tablename;
@@ -668,6 +766,11 @@ CalCurveRow* CalCurveTable::lookup(Tag calDataId, Tag calReductionId, int numAnt
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

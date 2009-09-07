@@ -80,11 +80,11 @@ namespace asdm {
 	CalFluxTable::CalFluxTable(ASDM &c) : container(c) {
 
 	
+		key.push_back("sourceName");
+	
 		key.push_back("calDataId");
 	
 		key.push_back("calReductionId");
-	
-		key.push_back("sourceName");
 	
 
 
@@ -168,87 +168,87 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param sourceName. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
-	
- 	 * @param sourceName. 
-	
- 	 * @param numFrequency. 
-	
- 	 * @param numStokes. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param stokes. 
+ 	 * @param numFrequencyRanges. 
+	
+ 	 * @param numStokes. 
+	
+ 	 * @param frequencyRanges. 
+	
+ 	 * @param fluxMethod. 
 	
  	 * @param flux. 
 	
  	 * @param fluxError. 
 	
- 	 * @param fluxMethod. 
-	
- 	 * @param frequencyRange. 
+ 	 * @param stokes. 
 	
      */
-	CalFluxRow* CalFluxTable::newRow(Tag calDataId, Tag calReductionId, string sourceName, int numFrequency, int numStokes, ArrayTime startValidTime, ArrayTime endValidTime, vector<StokesParameterMod::StokesParameter > stokes, vector<vector<double > > flux, vector<vector<double > > fluxError, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<Frequency > frequencyRange){
+	CalFluxRow* CalFluxTable::newRow(string sourceName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFrequencyRanges, int numStokes, vector<vector<Frequency > > frequencyRanges, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<vector<double > > flux, vector<vector<double > > fluxError, vector<StokesParameterMod::StokesParameter > stokes){
 		CalFluxRow *row = new CalFluxRow(*this);
+			
+		row->setSourceName(sourceName);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setSourceName(sourceName);
-			
-		row->setNumFrequency(numFrequency);
-			
-		row->setNumStokes(numStokes);
-			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
-		row->setStokes(stokes);
+		row->setNumFrequencyRanges(numFrequencyRanges);
+			
+		row->setNumStokes(numStokes);
+			
+		row->setFrequencyRanges(frequencyRanges);
+			
+		row->setFluxMethod(fluxMethod);
 			
 		row->setFlux(flux);
 			
 		row->setFluxError(fluxError);
 			
-		row->setFluxMethod(fluxMethod);
-			
-		row->setFrequencyRange(frequencyRange);
+		row->setStokes(stokes);
 	
 		return row;		
 	}	
 
-	CalFluxRow* CalFluxTable::newRowFull(Tag calDataId, Tag calReductionId, string sourceName, int numFrequency, int numStokes, ArrayTime startValidTime, ArrayTime endValidTime, vector<StokesParameterMod::StokesParameter > stokes, vector<vector<double > > flux, vector<vector<double > > fluxError, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<Frequency > frequencyRange)	{
+	CalFluxRow* CalFluxTable::newRowFull(string sourceName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFrequencyRanges, int numStokes, vector<vector<Frequency > > frequencyRanges, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<vector<double > > flux, vector<vector<double > > fluxError, vector<StokesParameterMod::StokesParameter > stokes)	{
 		CalFluxRow *row = new CalFluxRow(*this);
+			
+		row->setSourceName(sourceName);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setSourceName(sourceName);
-			
-		row->setNumFrequency(numFrequency);
-			
-		row->setNumStokes(numStokes);
-			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
-		row->setStokes(stokes);
+		row->setNumFrequencyRanges(numFrequencyRanges);
+			
+		row->setNumStokes(numStokes);
+			
+		row->setFrequencyRanges(frequencyRanges);
+			
+		row->setFluxMethod(fluxMethod);
 			
 		row->setFlux(flux);
 			
 		row->setFluxError(fluxError);
 			
-		row->setFluxMethod(fluxMethod);
-			
-		row->setFrequencyRange(frequencyRange);
+		row->setStokes(stokes);
 	
 		return row;				
 	}
@@ -278,13 +278,13 @@ CalFluxRow* CalFluxTable::newRowCopy(CalFluxRow* row) {
 	CalFluxRow* CalFluxTable::add(CalFluxRow* x) {
 		
 		if (getRowByKey(
+						x->getSourceName()
+						,
 						x->getCalDataId()
 						,
 						x->getCalReductionId()
-						,
-						x->getSourceName()
 						))
-			//throw DuplicateKey(x.getCalDataId() + "|" + x.getCalReductionId() + "|" + x.getSourceName(),"CalFlux");
+			//throw DuplicateKey(x.getSourceName() + "|" + x.getCalDataId() + "|" + x.getCalReductionId(),"CalFlux");
 			throw DuplicateKey("Duplicate key exception in ","CalFluxTable");
 		
 		row.push_back(x);
@@ -311,17 +311,19 @@ CalFluxRow* CalFluxTable::newRowCopy(CalFluxRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalFluxRow*  CalFluxTable::checkAndAdd(CalFluxRow* x) throw (DuplicateKey) {
+	CalFluxRow*  CalFluxTable::checkAndAdd(CalFluxRow* x)  {
 		
 		
 		if (getRowByKey(
 	
+			x->getSourceName()
+	,
 			x->getCalDataId()
 	,
 			x->getCalReductionId()
-	,
-			x->getSourceName()
 			
 		)) throw DuplicateKey("Duplicate key exception in ", "CalFluxTable");
 		
@@ -358,10 +360,14 @@ CalFluxRow* CalFluxTable::newRowCopy(CalFluxRow* row) {
  ** no row exists for that key.
  **
  */
- 	CalFluxRow* CalFluxTable::getRowByKey(Tag calDataId, Tag calReductionId, string sourceName)  {
+ 	CalFluxRow* CalFluxTable::getRowByKey(string sourceName, Tag calDataId, Tag calReductionId)  {
 	CalFluxRow* aRow = 0;
 	for (unsigned int i = 0; i < row.size(); i++) {
 		aRow = row.at(i);
+		
+			
+				if (aRow->sourceName != sourceName) continue;
+			
 		
 			
 				if (aRow->calDataId != calDataId) continue;
@@ -369,10 +375,6 @@ CalFluxRow* CalFluxTable::newRowCopy(CalFluxRow* row) {
 		
 			
 				if (aRow->calReductionId != calReductionId) continue;
-			
-		
-			
-				if (aRow->sourceName != sourceName) continue;
 			
 		
 		return aRow;
@@ -388,36 +390,36 @@ CalFluxRow* CalFluxTable::newRowCopy(CalFluxRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
+ * @param sourceName.
+ 	 		
  * @param calDataId.
  	 		
  * @param calReductionId.
- 	 		
- * @param sourceName.
- 	 		
- * @param numFrequency.
- 	 		
- * @param numStokes.
  	 		
  * @param startValidTime.
  	 		
  * @param endValidTime.
  	 		
- * @param stokes.
+ * @param numFrequencyRanges.
+ 	 		
+ * @param numStokes.
+ 	 		
+ * @param frequencyRanges.
+ 	 		
+ * @param fluxMethod.
  	 		
  * @param flux.
  	 		
  * @param fluxError.
  	 		
- * @param fluxMethod.
- 	 		
- * @param frequencyRange.
+ * @param stokes.
  	 		 
  */
-CalFluxRow* CalFluxTable::lookup(Tag calDataId, Tag calReductionId, string sourceName, int numFrequency, int numStokes, ArrayTime startValidTime, ArrayTime endValidTime, vector<StokesParameterMod::StokesParameter > stokes, vector<vector<double > > flux, vector<vector<double > > fluxError, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<Frequency > frequencyRange) {
+CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFrequencyRanges, int numStokes, vector<vector<Frequency > > frequencyRanges, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<vector<double > > flux, vector<vector<double > > fluxError, vector<StokesParameterMod::StokesParameter > stokes) {
 		CalFluxRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(calDataId, calReductionId, sourceName, numFrequency, numStokes, startValidTime, endValidTime, stokes, flux, fluxError, fluxMethod, frequencyRange)) return aRow;
+			if (aRow->compareNoAutoInc(sourceName, calDataId, calReductionId, startValidTime, endValidTime, numFrequencyRanges, numStokes, frequencyRanges, fluxMethod, flux, fluxError, stokes)) return aRow;
 		}			
 		return 0;	
 } 
@@ -425,7 +427,6 @@ CalFluxRow* CalFluxTable::lookup(Tag calDataId, Tag calReductionId, string sourc
  	 	
 
 	
-
 
 
 
@@ -446,7 +447,7 @@ CalFluxRow* CalFluxTable::lookup(Tag calDataId, Tag calReductionId, string sourc
 #endif
 	
 #ifndef WITHOUT_ACS
-	void CalFluxTable::fromIDL(CalFluxTableIDL x) throw(DuplicateKey,ConversionException) {
+	void CalFluxTable::fromIDL(CalFluxTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			CalFluxRow *tmp = newRow();
@@ -457,28 +458,27 @@ CalFluxRow* CalFluxTable::lookup(Tag calDataId, Tag calReductionId, string sourc
 	}
 #endif
 
-	char *CalFluxTable::toFITS() const throw(ConversionException) {
+	char *CalFluxTable::toFITS() const  {
 		throw ConversionException("Not implemented","CalFlux");
 	}
 
-	void CalFluxTable::fromFITS(char *fits) throw(ConversionException) {
+	void CalFluxTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","CalFlux");
 	}
 
-	string CalFluxTable::toVOTable() const throw(ConversionException) {
+	string CalFluxTable::toVOTable() const {
 		throw ConversionException("Not implemented","CalFlux");
 	}
 
-	void CalFluxTable::fromVOTable(string vo) throw(ConversionException) {
+	void CalFluxTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","CalFlux");
 	}
 
-	string CalFluxTable::toXML()  throw(ConversionException) {
+	
+	string CalFluxTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<CalFluxTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/CalFluxTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<CalFluxTable> ");
+		buf.append("<CalFluxTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalFluxTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFluxTable http://almaobservatory.org/XML/XASDM/2/CalFluxTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -494,8 +494,9 @@ CalFluxRow* CalFluxTable::lookup(Tag calDataId, Tag calReductionId, string sourc
 		buf.append("</CalFluxTable> ");
 		return buf;
 	}
+
 	
-	void CalFluxTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void CalFluxTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalFluxTable")) 
 			error();
@@ -537,20 +538,110 @@ CalFluxRow* CalFluxTable::lookup(Tag calDataId, Tag calReductionId, string sourc
 			error();
 	}
 
-	void CalFluxTable::error() throw(ConversionException) {
+	
+	void CalFluxTable::error()  {
 		throw ConversionException("Invalid xml document","CalFlux");
 	}
 	
+	
 	string CalFluxTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void CalFluxTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalFlux");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			CalFluxRow* aRow = CalFluxRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "CalFlux");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "CalFlux");
+		} 		 	
+	}
+
 	
 	void CalFluxTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -581,6 +672,7 @@ CalFluxRow* CalFluxTable::lookup(Tag calDataId, Tag calReductionId, string sourc
 				throw ConversionException("Could not close file " + fileName, "CalFlux");
 		}
 	}
+
 	
 	void CalFluxTable::setFromFile(const string& directory) {
 		string tablename;
@@ -622,6 +714,11 @@ CalFluxRow* CalFluxTable::lookup(Tag calDataId, Tag calReductionId, string sourc
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

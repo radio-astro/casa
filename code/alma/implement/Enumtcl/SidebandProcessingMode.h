@@ -38,15 +38,15 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<SidebandProcessingMode,EnumPar<void> >
-     (SidebandProcessingModeMod::NONE,ep((int)SidebandProcessingModeMod::NONE,"NONE","No processing")));
+     (SidebandProcessingModeMod::NONE,ep((int)SidebandProcessingModeMod::NONE,"NONE","un-documented")));
     m_.insert(pair<SidebandProcessingMode,EnumPar<void> >
-     (SidebandProcessingModeMod::PHASE_SWITCH_SEPARATION,ep((int)SidebandProcessingModeMod::PHASE_SWITCH_SEPARATION,"PHASE_SWITCH_SEPARATION","Side band separation using 90-degree phase switching")));
+     (SidebandProcessingModeMod::PHASE_SWITCH_SEPARATION,ep((int)SidebandProcessingModeMod::PHASE_SWITCH_SEPARATION,"PHASE_SWITCH_SEPARATION","un-documented")));
     m_.insert(pair<SidebandProcessingMode,EnumPar<void> >
-     (SidebandProcessingModeMod::FREQUENCY_OFFSET_SEPARATION,ep((int)SidebandProcessingModeMod::FREQUENCY_OFFSET_SEPARATION,"FREQUENCY_OFFSET_SEPARATION","Side band separation using offsets of first ans second oscillators")));
+     (SidebandProcessingModeMod::FREQUENCY_OFFSET_SEPARATION,ep((int)SidebandProcessingModeMod::FREQUENCY_OFFSET_SEPARATION,"FREQUENCY_OFFSET_SEPARATION","un-documented")));
     m_.insert(pair<SidebandProcessingMode,EnumPar<void> >
-     (SidebandProcessingModeMod::PHASE_SWITCH_REJECTION,ep((int)SidebandProcessingModeMod::PHASE_SWITCH_REJECTION,"PHASE_SWITCH_REJECTION","Side band rejection 90-degree phase switching")));
+     (SidebandProcessingModeMod::PHASE_SWITCH_REJECTION,ep((int)SidebandProcessingModeMod::PHASE_SWITCH_REJECTION,"PHASE_SWITCH_REJECTION","un-documented")));
     m_.insert(pair<SidebandProcessingMode,EnumPar<void> >
-     (SidebandProcessingModeMod::FREQUENCY_OFFSET_REJECTION,ep((int)SidebandProcessingModeMod::FREQUENCY_OFFSET_REJECTION,"FREQUENCY_OFFSET_REJECTION","Side band rejection using offsets of first and second oscillators")));
+     (SidebandProcessingModeMod::FREQUENCY_OFFSET_REJECTION,ep((int)SidebandProcessingModeMod::FREQUENCY_OFFSET_REJECTION,"FREQUENCY_OFFSET_REJECTION","un-documented")));
     return true;
   }
   static map<SidebandProcessingMode,EnumPar<void> > m_;

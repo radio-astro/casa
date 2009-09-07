@@ -42,25 +42,50 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the AxisName enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace AxisNameMod
 {
+  //! AxisName.
+  //!  Axis names.
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum AxisName
   { 
-    TIM ,
-    BAL ,
-    ANT ,
-    BAB ,
-    SPW ,
-    SIB ,
-    SUB ,
-    BIN ,
-    APC ,
-    SPP ,
-    POL ,
-    HOL 
+    TIM /*!< Time axis. */
+     ,
+    BAL /*!< Baseline axis. */
+     ,
+    ANT /*!< Antenna axis. */
+     ,
+    BAB /*!< Baseband axis. */
+     ,
+    SPW /*!< Spectral window  axis. */
+     ,
+    SIB /*!< Sideband axis. */
+     ,
+    SUB /*!< Subband axis. */
+     ,
+    BIN /*!< Bin axis. */
+     ,
+    APC /*!< Atmosphere phase correction axis. */
+     ,
+    SPP /*!< Spectral point axis. */
+     ,
+    POL /*!< Polarization axis (Stokes parameters). */
+     ,
+    STO /*!< Stokes parameter axis. */
+     ,
+    HOL /*!< Holography axis. */
+     
   };
   typedef AxisName &AxisName_out;
 } 
@@ -68,104 +93,113 @@ namespace AxisNameMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration AxisName.
+  * 
+  */
 class CAxisName {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the AxisName enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sTIM;
+	static const std::string& sTIM; /*!< A const string equal to "TIM".*/
 	
-	static const std::string& sBAL;
+	static const std::string& sBAL; /*!< A const string equal to "BAL".*/
 	
-	static const std::string& sANT;
+	static const std::string& sANT; /*!< A const string equal to "ANT".*/
 	
-	static const std::string& sBAB;
+	static const std::string& sBAB; /*!< A const string equal to "BAB".*/
 	
-	static const std::string& sSPW;
+	static const std::string& sSPW; /*!< A const string equal to "SPW".*/
 	
-	static const std::string& sSIB;
+	static const std::string& sSIB; /*!< A const string equal to "SIB".*/
 	
-	static const std::string& sSUB;
+	static const std::string& sSUB; /*!< A const string equal to "SUB".*/
 	
-	static const std::string& sBIN;
+	static const std::string& sBIN; /*!< A const string equal to "BIN".*/
 	
-	static const std::string& sAPC;
+	static const std::string& sAPC; /*!< A const string equal to "APC".*/
 	
-	static const std::string& sSPP;
+	static const std::string& sSPP; /*!< A const string equal to "SPP".*/
 	
-	static const std::string& sPOL;
+	static const std::string& sPOL; /*!< A const string equal to "POL".*/
 	
-	static const std::string& sHOL;
+	static const std::string& sSTO; /*!< A const string equal to "STO".*/
 	
-    static const std::vector<std::string> sAxisNameSet();	 
+	static const std::string& sHOL; /*!< A const string equal to "HOL".*/
+	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in AxisNameMod::AxisName.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of AxisNameMod::AxisName.
+      * @return a string.
+      */
+	static std::string name(const AxisNameMod::AxisName& e);
 	
-
-	
-	// Explanations associated with the AxisName Enumeration.
-		
-	static const std::string& hTIM;
-		
-	static const std::string& hBAL;
-		
-	static const std::string& hANT;
-		
-	static const std::string& hBAB;
-		
-	static const std::string& hSPW;
-		
-	static const std::string& hSIB;
-		
-	static const std::string& hSUB;
-		
-	static const std::string& hBIN;
-		
-	static const std::string& hAPC;
-		
-	static const std::string& hSPP;
-		
-	static const std::string& hPOL;
-		
-	static const std::string& hHOL;
-		
-	static const std::vector<std::string> hAxisNameSet();
-   	
-
-   	// Is an integer number associated with the AxisName enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the AxisName enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  AxisName enumeration.
-	static std::string name(const AxisNameMod::AxisName& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const AxisNameMod::AxisName& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified AxisName enumeration.
-	static std::string help(const AxisNameMod::AxisName& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a AxisName enumeration object by specifying its name.
    	static AxisNameMod::AxisName newAxisName(const std::string& name);
    	
-   	// Create a AxisName enumeration object by specifying its name.
+   	/*! Return a AxisName's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a AxisNameMod::AxisName's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static AxisNameMod::AxisName literal(const std::string& name);
  	
-    // Create a AxisName enumeration object by specifying its position index (0 based).
+    /*! Return a AxisName's enumerator given an unsigned int.
+      * @param i the index of the enumerator in AxisNameMod::AxisName.
+      * @return a AxisNameMod::AxisName's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static AxisNameMod::AxisName from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CAxisName();
     CAxisName(const CAxisName&);
     CAxisName& operator=(const CAxisName&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CAxisName_H*/

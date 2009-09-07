@@ -101,8 +101,8 @@ namespace asdm {
 		
 			
 				
-		x->numAPC = numAPC;
- 				
+		x->antennaName = CORBA::string_dup(antennaName.c_str());
+				
  			
 		
 	
@@ -113,7 +113,7 @@ namespace asdm {
 		
 			
 				
-		x->numReceptor = numReceptor;
+		x->atmPhaseCorrection = atmPhaseCorrection;
  				
  			
 		
@@ -137,26 +137,9 @@ namespace asdm {
 		
 			
 				
-		x->antennaName = CORBA::string_dup(antennaName.c_str());
-				
+		x->numReceptor = numReceptor;
+ 				
  			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->atmPhaseCorrections.length(atmPhaseCorrections.size());
-		for (unsigned int i = 0; i < atmPhaseCorrections.size(); ++i) {
-			
-				
-			x->atmPhaseCorrections[i] = atmPhaseCorrections.at(i);
-	 			
-	 		
-	 	}
-			
 		
 	
 
@@ -215,23 +198,16 @@ namespace asdm {
 	
   		
 		
-		x->apertureEfficiencyExists = apertureEfficiencyExists;
-		
 		
 			
 		x->apertureEfficiency.length(apertureEfficiency.size());
-		for (unsigned int i = 0; i < apertureEfficiency.size(); i++) {
-			x->apertureEfficiency[i].length(apertureEfficiency.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < apertureEfficiency.size() ; i++)
-			for (unsigned int j = 0; j < apertureEfficiency.at(i).size(); j++)
-					
-						
-				x->apertureEfficiency[i][j] = apertureEfficiency.at(i).at(j);
-		 				
-			 						
-		
+		for (unsigned int i = 0; i < apertureEfficiency.size(); ++i) {
+			
+				
+			x->apertureEfficiency[i] = apertureEfficiency.at(i);
+	 			
+	 		
+	 	}
 			
 		
 	
@@ -239,23 +215,16 @@ namespace asdm {
 	
   		
 		
-		x->apertureEfficiencyErrorExists = apertureEfficiencyErrorExists;
-		
 		
 			
 		x->apertureEfficiencyError.length(apertureEfficiencyError.size());
-		for (unsigned int i = 0; i < apertureEfficiencyError.size(); i++) {
-			x->apertureEfficiencyError[i].length(apertureEfficiencyError.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < apertureEfficiencyError.size() ; i++)
-			for (unsigned int j = 0; j < apertureEfficiencyError.at(i).size(); j++)
-					
-						
-				x->apertureEfficiencyError[i][j] = apertureEfficiencyError.at(i).at(j);
-		 				
-			 						
-		
+		for (unsigned int i = 0; i < apertureEfficiencyError.size(); ++i) {
+			
+				
+			x->apertureEfficiencyError[i] = apertureEfficiencyError.at(i);
+	 			
+	 		
+	 	}
 			
 		
 	
@@ -317,7 +286,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalAmpliRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalAmpliRow::setFromIDL (CalAmpliRowIDL x) throw(ConversionException) {
+	void CalAmpliRow::setFromIDL (CalAmpliRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -326,8 +295,8 @@ namespace asdm {
 		
 		
 			
-		setNumAPC(x.numAPC);
-  			
+		setAntennaName(string (x.antennaName));
+			
  		
 		
 	
@@ -336,7 +305,7 @@ namespace asdm {
 		
 		
 			
-		setNumReceptor(x.numReceptor);
+		setAtmPhaseCorrection(x.atmPhaseCorrection);
   			
  		
 		
@@ -356,24 +325,9 @@ namespace asdm {
 		
 		
 			
-		setAntennaName(string (x.antennaName));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		atmPhaseCorrections .clear();
-		for (unsigned int i = 0; i <x.atmPhaseCorrections.length(); ++i) {
-			
-			atmPhaseCorrections.push_back(x.atmPhaseCorrections[i]);
+		setNumReceptor(x.numReceptor);
   			
-		}
-			
-  		
+ 		
 		
 	
 
@@ -429,51 +383,31 @@ namespace asdm {
 
 	
 		
-		apertureEfficiencyExists = x.apertureEfficiencyExists;
-		if (x.apertureEfficiencyExists) {
-		
 		
 			
 		apertureEfficiency .clear();
-		vector<float> v_aux_apertureEfficiency;
-		for (unsigned int i = 0; i < x.apertureEfficiency.length(); ++i) {
-			v_aux_apertureEfficiency.clear();
-			for (unsigned int j = 0; j < x.apertureEfficiency[0].length(); ++j) {
-				
-				v_aux_apertureEfficiency.push_back(x.apertureEfficiency[i][j]);
-	  			
-  			}
-  			apertureEfficiency.push_back(v_aux_apertureEfficiency);			
+		for (unsigned int i = 0; i <x.apertureEfficiency.length(); ++i) {
+			
+			apertureEfficiency.push_back(x.apertureEfficiency[i]);
+  			
 		}
 			
   		
-		
-		}
 		
 	
 
 	
 		
-		apertureEfficiencyErrorExists = x.apertureEfficiencyErrorExists;
-		if (x.apertureEfficiencyErrorExists) {
-		
 		
 			
 		apertureEfficiencyError .clear();
-		vector<float> v_aux_apertureEfficiencyError;
-		for (unsigned int i = 0; i < x.apertureEfficiencyError.length(); ++i) {
-			v_aux_apertureEfficiencyError.clear();
-			for (unsigned int j = 0; j < x.apertureEfficiencyError[0].length(); ++j) {
-				
-				v_aux_apertureEfficiencyError.push_back(x.apertureEfficiencyError[i][j]);
-	  			
-  			}
-  			apertureEfficiencyError.push_back(v_aux_apertureEfficiencyError);			
+		for (unsigned int i = 0; i <x.apertureEfficiencyError.length(); ++i) {
+			
+			apertureEfficiencyError.push_back(x.apertureEfficiencyError[i]);
+  			
 		}
 			
   		
-		
-		}
 		
 	
 
@@ -522,7 +456,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalAmpli");
+			throw ConversionException (err.getMessage(),"CalAmpli");
 		}
 	}
 #endif
@@ -540,7 +474,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numAPC, "numAPC", buf);
+		Parser::toXML(antennaName, "antennaName", buf);
 		
 		
 	
@@ -548,7 +482,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numReceptor, "numReceptor", buf);
+			buf.append(EnumerationParser::toXML("atmPhaseCorrection", atmPhaseCorrection));
 		
 		
 	
@@ -564,15 +498,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(antennaName, "antennaName", buf);
-		
-		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("atmPhaseCorrections", atmPhaseCorrections));
+		Parser::toXML(numReceptor, "numReceptor", buf);
 		
 		
 	
@@ -611,25 +537,17 @@ namespace asdm {
 
   	
  		
-		if (apertureEfficiencyExists) {
-		
 		
 		Parser::toXML(apertureEfficiency, "apertureEfficiency", buf);
 		
-		
-		}
 		
 	
 
   	
  		
-		if (apertureEfficiencyErrorExists) {
-		
 		
 		Parser::toXML(apertureEfficiencyError, "apertureEfficiencyError", buf);
 		
-		
-		}
 		
 	
 
@@ -680,7 +598,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalAmpliRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalAmpliRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -689,16 +607,18 @@ namespace asdm {
 	
   		
 			
-	  	setNumAPC(Parser::getInteger("numAPC","CalAmpli",rowDoc));
+	  	setAntennaName(Parser::getString("antennaName","CalAmpli",rowDoc));
 			
 		
 	
 
 	
-  		
-			
-	  	setNumReceptor(Parser::getInteger("numReceptor","CalAmpli",rowDoc));
-			
+		
+		
+		
+		atmPhaseCorrection = EnumerationParser::getAtmPhaseCorrection("atmPhaseCorrection","CalAmpli",rowDoc);
+		
+		
 		
 	
 
@@ -715,18 +635,8 @@ namespace asdm {
 	
   		
 			
-	  	setAntennaName(Parser::getString("antennaName","CalAmpli",rowDoc));
+	  	setNumReceptor(Parser::getInteger("numReceptor","CalAmpli",rowDoc));
 			
-		
-	
-
-	
-		
-		
-		
-		atmPhaseCorrections = EnumerationParser::getAtmPhaseCorrection1D("atmPhaseCorrections","CalAmpli",rowDoc);			
-		
-		
 		
 	
 
@@ -768,26 +678,22 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<apertureEfficiency>")) {
 			
-								
-	  		setApertureEfficiency(Parser::get2DFloat("apertureEfficiency","CalAmpli",rowDoc));
+					
+	  	setApertureEfficiency(Parser::get1DFloat("apertureEfficiency","CalAmpli",rowDoc));
 	  			
 	  		
-		}
- 		
+		
 	
 
 	
   		
-        if (row.isStr("<apertureEfficiencyError>")) {
 			
-								
-	  		setApertureEfficiencyError(Parser::get2DFloat("apertureEfficiencyError","CalAmpli",rowDoc));
+					
+	  	setApertureEfficiencyError(Parser::get1DFloat("apertureEfficiencyError","CalAmpli",rowDoc));
 	  			
 	  		
-		}
- 		
+		
 	
 
 	
@@ -830,106 +736,300 @@ namespace asdm {
 		}
 	}
 	
+	void CalAmpliRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+						
+			eoss.writeString(antennaName);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(atmPhaseCorrection);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(receiverBand);
+				
+		
+	
+
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numReceptor);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); i++)
+				
+			eoss.writeInt(polarizationTypes.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	Frequency::toBin(frequencyRange, eoss);
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) apertureEfficiency.size());
+		for (unsigned int i = 0; i < apertureEfficiency.size(); i++)
+				
+			eoss.writeFloat(apertureEfficiency.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) apertureEfficiencyError.size());
+		for (unsigned int i = 0; i < apertureEfficiencyError.size(); i++)
+				
+			eoss.writeFloat(apertureEfficiencyError.at(i));
+				
+				
+						
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(correctionValidityExists);
+	if (correctionValidityExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(correctionValidity);
+				
+		
+	
+
+	}
+
+	}
+	
+	CalAmpliRow* CalAmpliRow::fromBin(EndianISStream& eiss, CalAmpliTable& table) {
+		CalAmpliRow* row = new  CalAmpliRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->antennaName =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numReceptor =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->polarizationTypes.clear();
+		
+		unsigned int polarizationTypesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
+			
+			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+			
+	
+	row->frequencyRange = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->apertureEfficiency.clear();
+		
+		unsigned int apertureEfficiencyDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < apertureEfficiencyDim1; i++)
+			
+			row->apertureEfficiency.push_back(eiss.readFloat());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->apertureEfficiencyError.clear();
+		
+		unsigned int apertureEfficiencyErrorDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < apertureEfficiencyErrorDim1; i++)
+			
+			row->apertureEfficiencyError.push_back(eiss.readFloat());
+			
+	
+
+		
+	
+
+		
+		
+		
+	row->correctionValidityExists = eiss.readBoolean();
+	if (row->correctionValidityExists) {
+		
+	
+	
+		
+			
+		row->correctionValidity =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
-	
-
-	
- 	/**
- 	 * Get numAPC.
- 	 * @return numAPC as int
- 	 */
- 	int CalAmpliRow::getNumAPC() const {
-	
-  		return numAPC;
- 	}
-
- 	/**
- 	 * Set numAPC with the specified int.
- 	 * @param numAPC The int value to which numAPC is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAmpliRow::setNumAPC (int numAPC)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numAPC = numAPC;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numReceptor.
- 	 * @return numReceptor as int
- 	 */
- 	int CalAmpliRow::getNumReceptor() const {
-	
-  		return numReceptor;
- 	}
-
- 	/**
- 	 * Set numReceptor with the specified int.
- 	 * @param numReceptor The int value to which numReceptor is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAmpliRow::setNumReceptor (int numReceptor)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numReceptor = numReceptor;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get receiverBand.
- 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
- 	 */
- 	ReceiverBandMod::ReceiverBand CalAmpliRow::getReceiverBand() const {
-	
-  		return receiverBand;
- 	}
-
- 	/**
- 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
- 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAmpliRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->receiverBand = receiverBand;
-	
- 	}
-	
-	
-
 	
 
 	
@@ -970,29 +1070,101 @@ namespace asdm {
 
 	
  	/**
- 	 * Get atmPhaseCorrections.
- 	 * @return atmPhaseCorrections as vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
  	 */
- 	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > CalAmpliRow::getAtmPhaseCorrections() const {
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection CalAmpliRow::getAtmPhaseCorrection() const {
 	
-  		return atmPhaseCorrections;
+  		return atmPhaseCorrection;
  	}
 
  	/**
- 	 * Set atmPhaseCorrections with the specified vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >.
- 	 * @param atmPhaseCorrections The vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > value to which atmPhaseCorrections is to be set.
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
+ 	 
+ 	
+ 		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
+ 	 */
+ 	void CalAmpliRow::setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+			throw IllegalAccessException("atmPhaseCorrection", "CalAmpli");
+		
+  		}
+  	
+ 		this->atmPhaseCorrection = atmPhaseCorrection;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 */
+ 	ReceiverBandMod::ReceiverBand CalAmpliRow::getReceiverBand() const {
+	
+  		return receiverBand;
+ 	}
+
+ 	/**
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 
+ 	
+ 		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
+ 	 */
+ 	void CalAmpliRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+			throw IllegalAccessException("receiverBand", "CalAmpli");
+		
+  		}
+  	
+ 		this->receiverBand = receiverBand;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
+ 	 */
+ 	int CalAmpliRow::getNumReceptor() const {
+	
+  		return numReceptor;
+ 	}
+
+ 	/**
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
  	 
  	
  		
  	 */
- 	void CalAmpliRow::setAtmPhaseCorrections (vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections)  {
+ 	void CalAmpliRow::setNumReceptor (int numReceptor)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->atmPhaseCorrections = atmPhaseCorrections;
+ 		this->numReceptor = numReceptor;
 	
  	}
 	
@@ -1127,97 +1299,67 @@ namespace asdm {
 	
 
 	
-	/**
-	 * The attribute apertureEfficiency is optional. Return true if this attribute exists.
-	 * @return true if and only if the apertureEfficiency attribute exists. 
-	 */
-	bool CalAmpliRow::isApertureEfficiencyExists() const {
-		return apertureEfficiencyExists;
-	}
-	
 
 	
  	/**
- 	 * Get apertureEfficiency, which is optional.
- 	 * @return apertureEfficiency as vector<vector<float > >
- 	 * @throw IllegalAccessException If apertureEfficiency does not exist.
+ 	 * Get apertureEfficiency.
+ 	 * @return apertureEfficiency as vector<float >
  	 */
- 	vector<vector<float > > CalAmpliRow::getApertureEfficiency() const throw(IllegalAccessException) {
-		if (!apertureEfficiencyExists) {
-			throw IllegalAccessException("apertureEfficiency", "CalAmpli");
-		}
+ 	vector<float > CalAmpliRow::getApertureEfficiency() const {
 	
   		return apertureEfficiency;
  	}
 
  	/**
- 	 * Set apertureEfficiency with the specified vector<vector<float > >.
- 	 * @param apertureEfficiency The vector<vector<float > > value to which apertureEfficiency is to be set.
+ 	 * Set apertureEfficiency with the specified vector<float >.
+ 	 * @param apertureEfficiency The vector<float > value to which apertureEfficiency is to be set.
  	 
  	
+ 		
  	 */
- 	void CalAmpliRow::setApertureEfficiency (vector<vector<float > > apertureEfficiency) {
-	
+ 	void CalAmpliRow::setApertureEfficiency (vector<float > apertureEfficiency)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->apertureEfficiency = apertureEfficiency;
-	
-		apertureEfficiencyExists = true;
 	
  	}
 	
 	
-	/**
-	 * Mark apertureEfficiency, which is an optional field, as non-existent.
-	 */
-	void CalAmpliRow::clearApertureEfficiency () {
-		apertureEfficiencyExists = false;
-	}
-	
 
-	
-	/**
-	 * The attribute apertureEfficiencyError is optional. Return true if this attribute exists.
-	 * @return true if and only if the apertureEfficiencyError attribute exists. 
-	 */
-	bool CalAmpliRow::isApertureEfficiencyErrorExists() const {
-		return apertureEfficiencyErrorExists;
-	}
 	
 
 	
  	/**
- 	 * Get apertureEfficiencyError, which is optional.
- 	 * @return apertureEfficiencyError as vector<vector<float > >
- 	 * @throw IllegalAccessException If apertureEfficiencyError does not exist.
+ 	 * Get apertureEfficiencyError.
+ 	 * @return apertureEfficiencyError as vector<float >
  	 */
- 	vector<vector<float > > CalAmpliRow::getApertureEfficiencyError() const throw(IllegalAccessException) {
-		if (!apertureEfficiencyErrorExists) {
-			throw IllegalAccessException("apertureEfficiencyError", "CalAmpli");
-		}
+ 	vector<float > CalAmpliRow::getApertureEfficiencyError() const {
 	
   		return apertureEfficiencyError;
  	}
 
  	/**
- 	 * Set apertureEfficiencyError with the specified vector<vector<float > >.
- 	 * @param apertureEfficiencyError The vector<vector<float > > value to which apertureEfficiencyError is to be set.
+ 	 * Set apertureEfficiencyError with the specified vector<float >.
+ 	 * @param apertureEfficiencyError The vector<float > value to which apertureEfficiencyError is to be set.
  	 
  	
+ 		
  	 */
- 	void CalAmpliRow::setApertureEfficiencyError (vector<vector<float > > apertureEfficiencyError) {
-	
+ 	void CalAmpliRow::setApertureEfficiencyError (vector<float > apertureEfficiencyError)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->apertureEfficiencyError = apertureEfficiencyError;
-	
-		apertureEfficiencyErrorExists = true;
 	
  	}
 	
-	
-	/**
-	 * Mark apertureEfficiencyError, which is an optional field, as non-existent.
-	 */
-	void CalAmpliRow::clearApertureEfficiencyError () {
-		apertureEfficiencyErrorExists = false;
-	}
 	
 
 	
@@ -1236,7 +1378,7 @@ namespace asdm {
  	 * @return correctionValidity as bool
  	 * @throw IllegalAccessException If correctionValidity does not exist.
  	 */
- 	bool CalAmpliRow::getCorrectionValidity() const throw(IllegalAccessException) {
+ 	bool CalAmpliRow::getCorrectionValidity() const  {
 		if (!correctionValidityExists) {
 			throw IllegalAccessException("correctionValidity", "CalAmpli");
 		}
@@ -1418,12 +1560,6 @@ namespace asdm {
 	
 
 	
-		apertureEfficiencyExists = false;
-	
-
-	
-		apertureEfficiencyErrorExists = false;
-	
 
 	
 		correctionValidityExists = false;
@@ -1440,12 +1576,13 @@ namespace asdm {
 	
 
 	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+atmPhaseCorrection = CAtmPhaseCorrection::from_int(0);
+	
 
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 receiverBand = CReceiverBand::from_int(0);
-	
-
 	
 
 	
@@ -1491,12 +1628,6 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		apertureEfficiencyExists = false;
-	
-
-	
-		apertureEfficiencyErrorExists = false;
-	
 
 	
 		correctionValidityExists = false;
@@ -1511,22 +1642,20 @@ receiverBand = CReceiverBand::from_int(0);
 		else {
 	
 		
+			antennaName = row.antennaName;
+		
+			atmPhaseCorrection = row.atmPhaseCorrection;
+		
+			receiverBand = row.receiverBand;
+		
 			calDataId = row.calDataId;
 		
 			calReductionId = row.calReductionId;
 		
-			antennaName = row.antennaName;
 		
 		
-		
-		
-			numAPC = row.numAPC;
 		
 			numReceptor = row.numReceptor;
-		
-			receiverBand = row.receiverBand;
-		
-			atmPhaseCorrections = row.atmPhaseCorrections;
 		
 			polarizationTypes = row.polarizationTypes;
 		
@@ -1536,22 +1665,12 @@ receiverBand = CReceiverBand::from_int(0);
 		
 			frequencyRange = row.frequencyRange;
 		
+			apertureEfficiency = row.apertureEfficiency;
+		
+			apertureEfficiencyError = row.apertureEfficiencyError;
 		
 		
 		
-		if (row.apertureEfficiencyExists) {
-			apertureEfficiency = row.apertureEfficiency;		
-			apertureEfficiencyExists = true;
-		}
-		else
-			apertureEfficiencyExists = false;
-		
-		if (row.apertureEfficiencyErrorExists) {
-			apertureEfficiencyError = row.apertureEfficiencyError;		
-			apertureEfficiencyErrorExists = true;
-		}
-		else
-			apertureEfficiencyErrorExists = false;
 		
 		if (row.correctionValidityExists) {
 			correctionValidity = row.correctionValidity;		
@@ -1564,10 +1683,31 @@ receiverBand = CReceiverBand::from_int(0);
 	}
 
 	
-	bool CalAmpliRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange) {
+	bool CalAmpliRow::compareNoAutoInc(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<float > apertureEfficiency, vector<float > apertureEfficiencyError) {
 		bool result;
 		result = true;
 		
+	
+		
+		result = result && (this->antennaName == antennaName);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->atmPhaseCorrection == atmPhaseCorrection);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->receiverBand == receiverBand);
+		
+		if (!result) return false;
+	
+
 	
 		
 		result = result && (this->calDataId == calDataId);
@@ -1584,35 +1724,7 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->antennaName == antennaName);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numAPC == numAPC);
-		
-		if (!result) return false;
-	
-
-	
-		
 		result = result && (this->numReceptor == numReceptor);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->receiverBand == receiverBand);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->atmPhaseCorrections == atmPhaseCorrections);
 		
 		if (!result) return false;
 	
@@ -1645,29 +1757,31 @@ receiverBand = CReceiverBand::from_int(0);
 		if (!result) return false;
 	
 
+	
+		
+		result = result && (this->apertureEfficiency == apertureEfficiency);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->apertureEfficiencyError == apertureEfficiencyError);
+		
+		if (!result) return false;
+	
+
 		return result;
 	}	
 	
 	
 	
-	bool CalAmpliRow::compareRequiredValue(int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange) {
+	bool CalAmpliRow::compareRequiredValue(int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<float > apertureEfficiency, vector<float > apertureEfficiencyError) {
 		bool result;
 		result = true;
 		
 	
-		if (!(this->numAPC == numAPC)) return false;
-	
-
-	
 		if (!(this->numReceptor == numReceptor)) return false;
-	
-
-	
-		if (!(this->receiverBand == receiverBand)) return false;
-	
-
-	
-		if (!(this->atmPhaseCorrections == atmPhaseCorrections)) return false;
 	
 
 	
@@ -1686,6 +1800,14 @@ receiverBand = CReceiverBand::from_int(0);
 		if (!(this->frequencyRange == frequencyRange)) return false;
 	
 
+	
+		if (!(this->apertureEfficiency == apertureEfficiency)) return false;
+	
+
+	
+		if (!(this->apertureEfficiencyError == apertureEfficiencyError)) return false;
+	
+
 		return result;
 	}
 	
@@ -1701,13 +1823,7 @@ receiverBand = CReceiverBand::from_int(0);
 	bool CalAmpliRow::equalByRequiredValue(CalAmpliRow* x) {
 		
 			
-		if (this->numAPC != x->numAPC) return false;
-			
 		if (this->numReceptor != x->numReceptor) return false;
-			
-		if (this->receiverBand != x->receiverBand) return false;
-			
-		if (this->atmPhaseCorrections != x->atmPhaseCorrections) return false;
 			
 		if (this->polarizationTypes != x->polarizationTypes) return false;
 			
@@ -1716,6 +1832,10 @@ receiverBand = CReceiverBand::from_int(0);
 		if (this->endValidTime != x->endValidTime) return false;
 			
 		if (this->frequencyRange != x->frequencyRange) return false;
+			
+		if (this->apertureEfficiency != x->apertureEfficiency) return false;
+			
+		if (this->apertureEfficiencyError != x->apertureEfficiencyError) return false;
 			
 		
 		return true;

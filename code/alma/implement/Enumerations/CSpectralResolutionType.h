@@ -42,16 +42,30 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the SpectralResolutionType enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace SpectralResolutionTypeMod
 {
+  //! SpectralResolutionType.
+  //!  [ASDM.SpectralWindow] The types of spectral resolutions for spectral windows.
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum SpectralResolutionType
   { 
-    CHANNEL_AVERAGE ,
-    BASEBAND_WIDE ,
-    FULL_RESOLUTION 
+    CHANNEL_AVERAGE /*!<  */
+     ,
+    BASEBAND_WIDE /*!<  */
+     ,
+    FULL_RESOLUTION /*!<  */
+     
   };
   typedef SpectralResolutionType &SpectralResolutionType_out;
 } 
@@ -59,68 +73,93 @@ namespace SpectralResolutionTypeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration SpectralResolutionType.
+  * 
+  */
 class CSpectralResolutionType {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the SpectralResolutionType enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sCHANNEL_AVERAGE;
+	static const std::string& sCHANNEL_AVERAGE; /*!< A const string equal to "CHANNEL_AVERAGE".*/
 	
-	static const std::string& sBASEBAND_WIDE;
+	static const std::string& sBASEBAND_WIDE; /*!< A const string equal to "BASEBAND_WIDE".*/
 	
-	static const std::string& sFULL_RESOLUTION;
-	
-    static const std::vector<std::string> sSpectralResolutionTypeSet();	 
-
+	static const std::string& sFULL_RESOLUTION; /*!< A const string equal to "FULL_RESOLUTION".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in SpectralResolutionTypeMod::SpectralResolutionType.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of SpectralResolutionTypeMod::SpectralResolutionType.
+      * @return a string.
+      */
+	static std::string name(const SpectralResolutionTypeMod::SpectralResolutionType& e);
 	
-	// Explanations associated with the SpectralResolutionType Enumeration.
-		
-	static const std::string& hCHANNEL_AVERAGE;
-		
-	static const std::string& hBASEBAND_WIDE;
-		
-	static const std::string& hFULL_RESOLUTION;
-		
-	static const std::vector<std::string> hSpectralResolutionTypeSet();
-   	
-
-   	// Is an integer number associated with the SpectralResolutionType enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the SpectralResolutionType enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  SpectralResolutionType enumeration.
-	static std::string name(const SpectralResolutionTypeMod::SpectralResolutionType& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const SpectralResolutionTypeMod::SpectralResolutionType& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified SpectralResolutionType enumeration.
-	static std::string help(const SpectralResolutionTypeMod::SpectralResolutionType& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a SpectralResolutionType enumeration object by specifying its name.
    	static SpectralResolutionTypeMod::SpectralResolutionType newSpectralResolutionType(const std::string& name);
    	
-   	// Create a SpectralResolutionType enumeration object by specifying its name.
+   	/*! Return a SpectralResolutionType's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a SpectralResolutionTypeMod::SpectralResolutionType's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static SpectralResolutionTypeMod::SpectralResolutionType literal(const std::string& name);
  	
-    // Create a SpectralResolutionType enumeration object by specifying its position index (0 based).
+    /*! Return a SpectralResolutionType's enumerator given an unsigned int.
+      * @param i the index of the enumerator in SpectralResolutionTypeMod::SpectralResolutionType.
+      * @return a SpectralResolutionTypeMod::SpectralResolutionType's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static SpectralResolutionTypeMod::SpectralResolutionType from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CSpectralResolutionType();
     CSpectralResolutionType(const CSpectralResolutionType&);
     CSpectralResolutionType& operator=(const CSpectralResolutionType&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CSpectralResolutionType_H*/

@@ -22,6 +22,8 @@
 //#include <msvis/MSVis/VisSetUtil.h>
 #include <casa/BasicSL/String.h>	// for parseColumnNames()
 
+#include <casa/iostream.h>
+
 namespace casa {
 
 FixVis::FixVis(MeasurementSet& ms, const String& dataColName) :
@@ -157,16 +159,34 @@ void FixVis::convertFieldDirs(const MDirection::Types outType)
   // a row-wise basis for objects moving in that frame.
 
   MSColumns msc(ms_p);
-  MSFieldColumns& msfcs(msc.field());
-  ArrayMeasColumn<MDirection> msPhaseDirCol(msfcs.phaseDirMeasCol());
+  MSFieldColumns& msfcs = msc.field();
 
+  // Don't initialize the ArrayMeasCols using this syntax:
+  // ArrayMeasColumn<MDirection> msPhaseDirCol(msfcs.phaseDirMeasCol());
+  // because that creates a copy of msfcs.phaseDirMeasCol(), and the changes
+  // will not propagate.
+  //  ArrayMeasColumn<MDirection> msPhaseDirCol;
+  //msPhaseDirCol.reference(msfcs.phaseDirMeasCol());
+  MDirection pd0(msfcs.phaseDirMeas(0));
+  logSink() << LogIO::DEBUG1
+            << "PHASE_DIR[0] before = " << pd0.tellMe() << " ";
+  {
+    ostringstream os;
+    os << *(pd0.getData()) << endl;
+    logSink() << os.str() << LogIO::POST;
+  }
+  
   // There is no physical or known programming need to change the delay and
   // reference direction frames as well, but for aesthetic reasons we keep them
   // all in the same frame if they start in the same frame.
-  ArrayMeasColumn<MDirection> msDelayDirCol(msfcs.delayDirMeasCol());
-  ArrayMeasColumn<MDirection> msReferenceDirCol(msfcs.referenceDirMeasCol());
-  Bool doAll3 = (msPhaseDirCol.getMeasRef() == msDelayDirCol.getMeasRef()
-                 && msPhaseDirCol.getMeasRef() == msReferenceDirCol.getMeasRef());
+  //ArrayMeasColumn<MDirection> msDelayDirCol;
+  //msDelayDirCol.reference(msfcs.delayDirMeasCol());
+  //ArrayMeasColumn<MDirection> msReferenceDirCol;
+  //msReferenceDirCol.reference(msfcs.referenceDirMeasCol());
+  Bool doAll3 = (msfcs.phaseDirMeasCol().getMeasRef().getType() ==
+                 msfcs.delayDirMeasCol().getMeasRef().getType() &&
+                 msfcs.phaseDirMeasCol().getMeasRef().getType() ==
+                 msfcs.referenceDirMeasCol().getMeasRef().getType());
   
   // Setup conversion machines.
   // Set the frame - choose the first antenna. For e.g. VLBI, we
@@ -176,20 +196,19 @@ void FixVis::convertFieldDirs(const MDirection::Types outType)
   // Expect problems if a moving object is involved!
   mFrame_p = MeasFrame(msfcs.timeMeas()(0), mLocation_p);
 
-  //MDirection::Ref startref(msPhaseDirCol.getMeasRef());
+  //MDirection::Ref startref(msfcs.phaseDirMeasCol().getMeasRef());
   // If the either of the start or destination frames refers to a finite
   // distance, then the conversion has to be done in two steps:
-  // MDirection::Convert start2app(msPhaseDirCol(0), MDirection::APP);
+  // MDirection::Convert start2app(msfcs.phaseDirMeasCol()(0), MDirection::APP);
   // 
   // Otherwise the conversion can be done directly.
-  Bool haveMovingFrame = (msPhaseDirCol.getMeasRef().getType() > MDirection::N_Types ||
+  Bool haveMovingFrame = (MDirection::castType(msfcs.phaseDirMeasCol().getMeasRef().getType()) > MDirection::N_Types ||
                           outType > MDirection::N_Types);
 
   const MDirection::Ref newFrame(haveMovingFrame ? MDirection::APP : outType,
                                  mFrame_p);
 
-  convertFieldCols(msPhaseDirCol, newFrame, doAll3, msDelayDirCol, msReferenceDirCol,
-                   msfcs.nrow());
+  convertFieldCols(msfcs, newFrame, doAll3);
   
   if(haveMovingFrame){
     // Since ArrayMeasCol most likely uses one frame for the whole column, do
@@ -199,26 +218,29 @@ void FixVis::convertFieldDirs(const MDirection::Types outType)
               << "Switching to or from accelerating frames is not well tested."
               << LogIO::POST;
 
-    // Using msPhaseDirCol(0)[0] to initialize converter will only work if
-    // msPhaseDirCol's type has been set to APP.
+    // Using msfcs.phaseDirMeasCol()(0)[0] to initialize converter will only
+    // work if msfcs.phaseDirMeasCol()'s type has been set to APP.
     const MDirection::Ref newerFrame(outType, mFrame_p);
 
-    convertFieldCols(msPhaseDirCol, newerFrame, doAll3, msDelayDirCol,
-                     msReferenceDirCol, msfcs.nrow());
+    convertFieldCols(msfcs, newerFrame, doAll3);
   }
 
-  // Update the reference frame label.
-  //msfcs.phaseDir()
+  pd0 = msfcs.phaseDirMeas(0);
+  logSink() << LogIO::DEBUG1
+            << "PHASE_DIR[0] after =  " << pd0.tellMe() << " ";
+  {
+    ostringstream os;
+    os << *(pd0.getData()) << endl;
+    logSink() << os.str() << LogIO::POST;
+  }
 }
 
 
-void FixVis::convertFieldCols(ArrayMeasColumn<MDirection>& pdc,
+void FixVis::convertFieldCols(MSFieldColumns& msfcs,
                               const MDirection::Ref& newFrame,
-                              const Bool doAll3,
-                              ArrayMeasColumn<MDirection>& ddc,
-                              ArrayMeasColumn<MDirection>& rdc,
-                              uInt nrows)
+                              const Bool doAll3)
 {
+  logSink() << LogOrigin("FixVis", "convertFieldCols");
   // Unfortunately ArrayMeasColumn::doConvert() is private, which squashes the
   // point of making a conversion machine here.
 //   Vector<MDirection> dummyV;
@@ -229,20 +251,62 @@ void FixVis::convertFieldCols(ArrayMeasColumn<MDirection>& pdc,
 //     logSink() << "Cannot make direction conversion machine"
 //               << LogIO::EXCEPTION;
 
-  // Convert each phase tracking center.  This will make them numerically
-  // correct in the new frame, but will the column will still be labelled with the
-  // old frame?
-  for(uInt i = 0; i < nrows; ++i){
-    //pdc.put(i, pdc.doConvert(i, *converter));
-    pdc.put(i, pdc.convert(i, newFrame));
+  uInt nrows = msfcs.nrow();
 
+  // Convert each phase tracking center.  This will make them numerically
+  // correct in the new frame, but the column will still be labelled with the
+  // old frame.
+  
+  uInt nOrders;
+  Array<MDirection> mdarr;              // direction for each order
+  Array<Double>     darr;               // longitude and latitude for each order
+  Vector<Double> dirV;
+  for(uInt i = 0; i < nrows; ++i){
+    nOrders = msfcs.numPoly()(i) + 1;
+    logSink() << LogIO::DEBUG1 << "numPoly(" << i << ") = " << nOrders - 1
+              << LogIO::POST;
+
+    //pdc.put(i, pdc.doConvert(i, *converter));
+    mdarr = msfcs.phaseDirMeasCol().convert(i, newFrame);
+    darr.resize(IPosition(2, nOrders, 2));
+    for(uInt orderNumber = 0; orderNumber < nOrders; ++orderNumber){
+      dirV = mdarr(IPosition(1, orderNumber)).getAngle().getValue();
+      darr(IPosition(2, orderNumber, 0)) = dirV[0];
+      darr(IPosition(2, orderNumber, 1)) = dirV[1];
+    }
+    msfcs.phaseDir().put(i, darr);
+    
+    //msfcs.phaseDirMeasCol().put(i, mdarr);
+    
     if(doAll3){
       //ddc.put(i, ddc.doConvert(i, *converter));
-      ddc.put(i, ddc.convert(i, newFrame));
+      mdarr = msfcs.delayDirMeasCol().convert(i, newFrame);
+      for(uInt orderNumber = 0; orderNumber < nOrders; ++orderNumber){
+        dirV = mdarr(IPosition(1, orderNumber)).getAngle().getValue();
+        darr(IPosition(2, orderNumber, 0)) = dirV[0];
+        darr(IPosition(2, orderNumber, 1)) = dirV[1];
+      }
+      msfcs.delayDir().put(i, darr);
       //rdc.put(i, rdc.doConvert(i, *converter));
-      rdc.put(i, rdc.convert(i, newFrame));
+      //msfcs.referenceDirMeasCol().put(i,
+      //         msfcs.referenceDirMeasCol().convert(i, newFrame));
+      mdarr = msfcs.referenceDirMeasCol().convert(i, newFrame);
+      for(uInt orderNumber = 0; orderNumber < nOrders; ++orderNumber){
+        dirV = mdarr(IPosition(1, orderNumber)).getAngle().getValue();
+        darr(IPosition(2, orderNumber, 0)) = dirV[0];
+        darr(IPosition(2, orderNumber, 1)) = dirV[1];
+      }
+      msfcs.referenceDir().put(i, darr);      
     }
   }
+  
+  // Update the reference frame label(s).
+  msfcs.phaseDirMeasCol().setDescRefCode(newFrame.getType(), false);
+  if(doAll3){
+    msfcs.delayDirMeasCol().setDescRefCode(newFrame.getType(), false);
+    msfcs.referenceDirMeasCol().setDescRefCode(newFrame.getType(), false);
+  }
+
   //delete converter;
 }
 
@@ -287,9 +351,29 @@ Bool FixVis::calc_uvw(const String& refcode)
   logSink() << LogOrigin("FixVis", "calc_uvw");
   
   // Make sure FieldIds_p has a Field ID for each selected field, and -1 for
-  // everything else!
+  // everything else!  (Should have already been done in imager_cmpt.cc.)
+
   if(nsel_p > 0 // && static_cast<uInt>(nsel_p) == phaseDirs_p.nelements()
      ){
+
+    // Get the PHASE_DIR reference frame type for the input ms.
+    MSColumns msc(ms_p);
+    MSFieldColumns& msfcs(msc.field());
+    MDirection::Types startDirType = MDirection::castType(msfcs.phaseDirMeasCol().getMeasRef().getType());
+    MDirection::Types wantedDirType;
+    MDirection::getType(wantedDirType, refcode);
+
+    if(startDirType != wantedDirType){
+      if(nsel_p < nAllFields_p){
+        logSink() << LogIO::SEVERE
+                  << "The reference frame must either be changed for all fields or not at all."
+                  << LogIO::POST;
+        return false;
+      }
+      else
+        convertFieldDirs(wantedDirType);
+    }
+    
     // This is just an enum!  Why can't Muvw just return it instead of
     // filling out a reference?
     Muvw::Types uvwtype;
@@ -303,6 +387,7 @@ Bool FixVis::calc_uvw(const String& refcode)
       logSink() << LogIO::SEVERE
 		<< "refcode \"" << refcode << "\" is not valid for baselines."
 		<< LogIO::POST;
+      return false;
     }
     
     try{

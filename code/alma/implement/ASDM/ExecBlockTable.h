@@ -118,6 +118,12 @@ using namespace enumerations;
 
 	
 
+	
+
+	
+
+	
+
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
@@ -158,161 +164,217 @@ class ASDM;
 class ExecBlockRow;
 /**
  * The ExecBlockTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Characteristics of the Execution block.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of ExecBlock </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> execBlockId </I></TD> 
+ 		
+ * <TD><I> execBlockId </I></TD>
+ 		 
  * <TD> Tag</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a unique row in ExecBlock Table. </TD>
  * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
- * <TD> antennaId </TD> 
- * <TD> vector<Tag>  </TD>
- * <TD>  numAntenna </TD> 
+ * <TD> startTime </TD> 
+ * <TD> ArrayTime </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of the execution block. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> endTime </TD> 
+ * <TD> ArrayTime </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the end time of the execution block. </TD>
  * </TR>
 	
  * <TR>
  * <TD> execBlockNum </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> telescopeName </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> configName </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numAntenna </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> baseRangeMin </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> baseRangeMax </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> baseRmsMinor </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> baseRmsMajor </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> basePa </TD> 
- * <TD> Angle </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> timeInterval </TD> 
- * <TD> ArrayTimeInterval </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> observerName </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> observingLog </TD> 
- * <TD> vector<string > </TD>
- * <TD>   </TD> 
- * </TR>
-	
- * <TR>
- * <TD> schedulerMode </TD> 
- * <TD> vector<string > </TD>
- * <TD>   </TD> 
- * </TR>
-	
- * <TR>
- * <TD> projectId </TD> 
- * <TD> EntityRef </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> siteLongitude </TD> 
- * <TD> Angle </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> siteLatitude </TD> 
- * <TD> Angle </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> siteAltitude </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> flagRow </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;indicates the position of the execution block in the project (sequential numbering starting at 1). </TD>
  * </TR>
 	
  * <TR>
  * <TD> execBlockUID </TD> 
  * <TD> EntityRef </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the archive's UID of the execution block. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> projectId </TD> 
+ * <TD> EntityRef </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the archive's UID of the project. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> configName </TD> 
+ * <TD> string </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the name of the array's configuration. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> telescopeName </TD> 
+ * <TD> string </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the name of the telescope. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> observerName </TD> 
+ * <TD> string </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the name of the observer. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> observingLog </TD> 
+ * <TD> string </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the log of the observation during this execution block. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sessionReference </TD> 
+ * <TD> string </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the observing session reference. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sbSummary </TD> 
+ * <TD> EntityRef </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;refers to a row in SBSummaryTable. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> schedulerMode </TD> 
+ * <TD> string </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the mode of scheduling. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> baseRangeMin </TD> 
+ * <TD> Length </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the length of the shortest baseline. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> baseRangeMax </TD> 
+ * <TD> Length </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the length of the longest baseline. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> baseRmsMinor </TD> 
+ * <TD> Length </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the minor axis of the representative ellipse of baseline lengths. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> baseRmsMajor </TD> 
+ * <TD> Length </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the major axis of the representative ellipse of baseline lengths. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> basePa </TD> 
+ * <TD> Angle </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the baselines position angle. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> siteAltitude </TD> 
+ * <TD> Length </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the altitude of the site. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> siteLongitude </TD> 
+ * <TD> Angle </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the longitude of the site. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> siteLatitude </TD> 
+ * <TD> Angle </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the latitude of the site. </TD>
  * </TR>
 	
  * <TR>
  * <TD> aborted </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the execution block has been aborted (true) or has completed (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numAntenna </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of antennas. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> antennaId </TD> 
+ * <TD> vector<Tag>  </TD>
+ * <TD>  numAntenna </TD> 
+ * <TD> &nbsp;refers to the relevant rows in AntennaTable. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sBSummaryId </TD> 
+ * <TD> Tag </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;refers to a unique row  in SBSummaryTable. </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> releaseDate </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the date when the data go to the public domain. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> flagRow </TD> 
+ * <TD> bool </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; this row is valid (false) or not valid (true). </TD>
  * </TR>
 	
 
@@ -387,15 +449,29 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param antennaId. 
+ 	 * @param startTime. 
+	
+ 	 * @param endTime. 
 	
  	 * @param execBlockNum. 
 	
- 	 * @param telescopeName. 
+ 	 * @param execBlockUID. 
+	
+ 	 * @param projectId. 
 	
  	 * @param configName. 
 	
- 	 * @param numAntenna. 
+ 	 * @param telescopeName. 
+	
+ 	 * @param observerName. 
+	
+ 	 * @param observingLog. 
+	
+ 	 * @param sessionReference. 
+	
+ 	 * @param sbSummary. 
+	
+ 	 * @param schedulerMode. 
 	
  	 * @param baseRangeMin. 
 	
@@ -407,36 +483,28 @@ public:
 	
  	 * @param basePa. 
 	
- 	 * @param timeInterval. 
-	
- 	 * @param observerName. 
-	
- 	 * @param observingLog. 
-	
- 	 * @param schedulerMode. 
-	
- 	 * @param projectId. 
+ 	 * @param siteAltitude. 
 	
  	 * @param siteLongitude. 
 	
  	 * @param siteLatitude. 
 	
- 	 * @param siteAltitude. 
-	
- 	 * @param flagRow. 
-	
- 	 * @param execBlockUID. 
-	
  	 * @param aborted. 
 	
+ 	 * @param numAntenna. 
+	
+ 	 * @param antennaId. 
+	
+ 	 * @param sBSummaryId. 
+	
      */
-	ExecBlockRow *newRow(vector<Tag>  antennaId, int execBlockNum, string telescopeName, string configName, int numAntenna, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, ArrayTimeInterval timeInterval, string observerName, vector<string > observingLog, vector<string > schedulerMode, EntityRef projectId, Angle siteLongitude, Angle siteLatitude, Length siteAltitude, bool flagRow, EntityRef execBlockUID, bool aborted);
+	ExecBlockRow *newRow(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	ExecBlockRow *newRowFull(vector<Tag>  antennaId, int execBlockNum, string telescopeName, string configName, int numAntenna, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, ArrayTimeInterval timeInterval, string observerName, vector<string > observingLog, vector<string > schedulerMode, EntityRef projectId, Angle siteLongitude, Angle siteLatitude, Length siteAltitude, bool flagRow, EntityRef execBlockUID, bool aborted);
+	ExecBlockRow *newRowFull(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId);
 
 
 	/**
@@ -515,15 +583,29 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param antennaId.
+ 	 * @param startTime.
+ 	 		
+ 	 * @param endTime.
  	 		
  	 * @param execBlockNum.
  	 		
- 	 * @param telescopeName.
+ 	 * @param execBlockUID.
+ 	 		
+ 	 * @param projectId.
  	 		
  	 * @param configName.
  	 		
- 	 * @param numAntenna.
+ 	 * @param telescopeName.
+ 	 		
+ 	 * @param observerName.
+ 	 		
+ 	 * @param observingLog.
+ 	 		
+ 	 * @param sessionReference.
+ 	 		
+ 	 * @param sbSummary.
+ 	 		
+ 	 * @param schedulerMode.
  	 		
  	 * @param baseRangeMin.
  	 		
@@ -535,30 +617,22 @@ public:
  	 		
  	 * @param basePa.
  	 		
- 	 * @param timeInterval.
- 	 		
- 	 * @param observerName.
- 	 		
- 	 * @param observingLog.
- 	 		
- 	 * @param schedulerMode.
- 	 		
- 	 * @param projectId.
+ 	 * @param siteAltitude.
  	 		
  	 * @param siteLongitude.
  	 		
  	 * @param siteLatitude.
  	 		
- 	 * @param siteAltitude.
- 	 		
- 	 * @param flagRow.
- 	 		
- 	 * @param execBlockUID.
- 	 		
  	 * @param aborted.
+ 	 		
+ 	 * @param numAntenna.
+ 	 		
+ 	 * @param antennaId.
+ 	 		
+ 	 * @param sBSummaryId.
  	 		 
  	 */
-	ExecBlockRow* lookup(vector<Tag>  antennaId, int execBlockNum, string telescopeName, string configName, int numAntenna, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, ArrayTimeInterval timeInterval, string observerName, vector<string > observingLog, vector<string > schedulerMode, EntityRef projectId, Angle siteLongitude, Angle siteLatitude, Length siteAltitude, bool flagRow, EntityRef execBlockUID, bool aborted); 
+	ExecBlockRow* lookup(ArrayTime startTime, ArrayTime endTime, int execBlockNum, EntityRef execBlockUID, EntityRef projectId, string configName, string telescopeName, string observerName, string observingLog, string sessionReference, EntityRef sbSummary, string schedulerMode, Length baseRangeMin, Length baseRangeMax, Length baseRmsMinor, Length baseRmsMajor, Angle basePa, Length siteAltitude, Angle siteLongitude, Angle siteLatitude, bool aborted, int numAntenna, vector<Tag>  antennaId, Tag sBSummaryId); 
 
 
 #ifndef WITHOUT_ACS
@@ -578,43 +652,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(ExecBlockTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(ExecBlockTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for ExecBlock (ExecBlockTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a ExecBlock (ExecBlockTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -693,8 +773,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	ExecBlockRow* checkAndAdd(ExecBlockRow* x) throw (DuplicateKey, UniquenessViolationException);
+	ExecBlockRow* checkAndAdd(ExecBlockRow* x) ;
 
 
 
@@ -708,7 +792,7 @@ private:
 	vector<ExecBlockRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

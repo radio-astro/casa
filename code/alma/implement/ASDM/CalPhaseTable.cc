@@ -80,11 +80,15 @@ namespace asdm {
 	CalPhaseTable::CalPhaseTable(ASDM &c) : container(c) {
 
 	
+		key.push_back("basebandName");
+	
+		key.push_back("receiverBand");
+	
+		key.push_back("atmPhaseCorrection");
+	
 		key.push_back("calDataId");
 	
 		key.push_back("calReductionId");
-	
-		key.push_back("basebandName");
 	
 
 
@@ -168,135 +172,135 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param calDataId. 
-	
- 	 * @param calReductionId. 
-	
  	 * @param basebandName. 
-	
- 	 * @param numBaseline. 
-	
- 	 * @param numAPC. 
-	
- 	 * @param numReceptor. 
 	
  	 * @param receiverBand. 
 	
- 	 * @param antennaNames. 
+ 	 * @param atmPhaseCorrection. 
 	
- 	 * @param atmPhaseCorrections. 
+ 	 * @param calDataId. 
 	
- 	 * @param polarizationTypes. 
+ 	 * @param calReductionId. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param frequencyRange. 
+ 	 * @param numBaseline. 
+	
+ 	 * @param numReceptor. 
 	
  	 * @param ampli. 
 	
- 	 * @param phase. 
-	
- 	 * @param phaseRms. 
-	
- 	 * @param statPhaseRms. 
-	
- 	 * @param decorrelationFactor. 
+ 	 * @param antennaNames. 
 	
  	 * @param baselineLengths. 
 	
+ 	 * @param decorrelationFactor. 
+	
  	 * @param direction. 
 	
+ 	 * @param frequencyRange. 
+	
+ 	 * @param integrationTime. 
+	
+ 	 * @param phase. 
+	
+ 	 * @param polarizationTypes. 
+	
+ 	 * @param phaseRMS. 
+	
+ 	 * @param statPhaseRMS. 
+	
      */
-	CalPhaseRow* CalPhaseTable::newRow(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numBaseline, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<vector<string > > antennaNames, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<vector<vector<float > > > ampli, vector<vector<vector<float > > > phase, vector<vector<vector<Angle > > > phaseRms, vector<vector<Angle > > statPhaseRms, vector<vector<float > > decorrelationFactor, vector<Length > baselineLengths, vector<Angle > direction){
+	CalPhaseRow* CalPhaseTable::newRow(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numBaseline, int numReceptor, vector<vector<float > > ampli, vector<vector<string > > antennaNames, vector<Length > baselineLengths, vector<vector<float > > decorrelationFactor, vector<Angle > direction, vector<Frequency > frequencyRange, Interval integrationTime, vector<vector<float > > phase, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > phaseRMS, vector<vector<float > > statPhaseRMS){
 		CalPhaseRow *row = new CalPhaseRow(*this);
+			
+		row->setBasebandName(basebandName);
+			
+		row->setReceiverBand(receiverBand);
+			
+		row->setAtmPhaseCorrection(atmPhaseCorrection);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setBasebandName(basebandName);
-			
-		row->setNumBaseline(numBaseline);
-			
-		row->setNumAPC(numAPC);
-			
-		row->setNumReceptor(numReceptor);
-			
-		row->setReceiverBand(receiverBand);
-			
-		row->setAntennaNames(antennaNames);
-			
-		row->setAtmPhaseCorrections(atmPhaseCorrections);
-			
-		row->setPolarizationTypes(polarizationTypes);
-			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
-		row->setFrequencyRange(frequencyRange);
+		row->setNumBaseline(numBaseline);
+			
+		row->setNumReceptor(numReceptor);
 			
 		row->setAmpli(ampli);
 			
-		row->setPhase(phase);
-			
-		row->setPhaseRms(phaseRms);
-			
-		row->setStatPhaseRms(statPhaseRms);
-			
-		row->setDecorrelationFactor(decorrelationFactor);
+		row->setAntennaNames(antennaNames);
 			
 		row->setBaselineLengths(baselineLengths);
 			
+		row->setDecorrelationFactor(decorrelationFactor);
+			
 		row->setDirection(direction);
+			
+		row->setFrequencyRange(frequencyRange);
+			
+		row->setIntegrationTime(integrationTime);
+			
+		row->setPhase(phase);
+			
+		row->setPolarizationTypes(polarizationTypes);
+			
+		row->setPhaseRMS(phaseRMS);
+			
+		row->setStatPhaseRMS(statPhaseRMS);
 	
 		return row;		
 	}	
 
-	CalPhaseRow* CalPhaseTable::newRowFull(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numBaseline, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<vector<string > > antennaNames, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<vector<vector<float > > > ampli, vector<vector<vector<float > > > phase, vector<vector<vector<Angle > > > phaseRms, vector<vector<Angle > > statPhaseRms, vector<vector<float > > decorrelationFactor, vector<Length > baselineLengths, vector<Angle > direction)	{
+	CalPhaseRow* CalPhaseTable::newRowFull(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numBaseline, int numReceptor, vector<vector<float > > ampli, vector<vector<string > > antennaNames, vector<Length > baselineLengths, vector<vector<float > > decorrelationFactor, vector<Angle > direction, vector<Frequency > frequencyRange, Interval integrationTime, vector<vector<float > > phase, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > phaseRMS, vector<vector<float > > statPhaseRMS)	{
 		CalPhaseRow *row = new CalPhaseRow(*this);
+			
+		row->setBasebandName(basebandName);
+			
+		row->setReceiverBand(receiverBand);
+			
+		row->setAtmPhaseCorrection(atmPhaseCorrection);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setBasebandName(basebandName);
-			
-		row->setNumBaseline(numBaseline);
-			
-		row->setNumAPC(numAPC);
-			
-		row->setNumReceptor(numReceptor);
-			
-		row->setReceiverBand(receiverBand);
-			
-		row->setAntennaNames(antennaNames);
-			
-		row->setAtmPhaseCorrections(atmPhaseCorrections);
-			
-		row->setPolarizationTypes(polarizationTypes);
-			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
-		row->setFrequencyRange(frequencyRange);
+		row->setNumBaseline(numBaseline);
+			
+		row->setNumReceptor(numReceptor);
 			
 		row->setAmpli(ampli);
 			
-		row->setPhase(phase);
-			
-		row->setPhaseRms(phaseRms);
-			
-		row->setStatPhaseRms(statPhaseRms);
-			
-		row->setDecorrelationFactor(decorrelationFactor);
+		row->setAntennaNames(antennaNames);
 			
 		row->setBaselineLengths(baselineLengths);
 			
+		row->setDecorrelationFactor(decorrelationFactor);
+			
 		row->setDirection(direction);
+			
+		row->setFrequencyRange(frequencyRange);
+			
+		row->setIntegrationTime(integrationTime);
+			
+		row->setPhase(phase);
+			
+		row->setPolarizationTypes(polarizationTypes);
+			
+		row->setPhaseRMS(phaseRMS);
+			
+		row->setStatPhaseRMS(statPhaseRMS);
 	
 		return row;				
 	}
@@ -326,13 +330,17 @@ CalPhaseRow* CalPhaseTable::newRowCopy(CalPhaseRow* row) {
 	CalPhaseRow* CalPhaseTable::add(CalPhaseRow* x) {
 		
 		if (getRowByKey(
+						x->getBasebandName()
+						,
+						x->getReceiverBand()
+						,
+						x->getAtmPhaseCorrection()
+						,
 						x->getCalDataId()
 						,
 						x->getCalReductionId()
-						,
-						x->getBasebandName()
 						))
-			//throw DuplicateKey(x.getCalDataId() + "|" + x.getCalReductionId() + "|" + x.getBasebandName(),"CalPhase");
+			//throw DuplicateKey(x.getBasebandName() + "|" + x.getReceiverBand() + "|" + x.getAtmPhaseCorrection() + "|" + x.getCalDataId() + "|" + x.getCalReductionId(),"CalPhase");
 			throw DuplicateKey("Duplicate key exception in ","CalPhaseTable");
 		
 		row.push_back(x);
@@ -359,17 +367,23 @@ CalPhaseRow* CalPhaseTable::newRowCopy(CalPhaseRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalPhaseRow*  CalPhaseTable::checkAndAdd(CalPhaseRow* x) throw (DuplicateKey) {
+	CalPhaseRow*  CalPhaseTable::checkAndAdd(CalPhaseRow* x)  {
 		
 		
 		if (getRowByKey(
 	
+			x->getBasebandName()
+	,
+			x->getReceiverBand()
+	,
+			x->getAtmPhaseCorrection()
+	,
 			x->getCalDataId()
 	,
 			x->getCalReductionId()
-	,
-			x->getBasebandName()
 			
 		)) throw DuplicateKey("Duplicate key exception in ", "CalPhaseTable");
 		
@@ -406,10 +420,22 @@ CalPhaseRow* CalPhaseTable::newRowCopy(CalPhaseRow* row) {
  ** no row exists for that key.
  **
  */
- 	CalPhaseRow* CalPhaseTable::getRowByKey(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName)  {
+ 	CalPhaseRow* CalPhaseTable::getRowByKey(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId)  {
 	CalPhaseRow* aRow = 0;
 	for (unsigned int i = 0; i < row.size(); i++) {
 		aRow = row.at(i);
+		
+			
+				if (aRow->basebandName != basebandName) continue;
+			
+		
+			
+				if (aRow->receiverBand != receiverBand) continue;
+			
+		
+			
+				if (aRow->atmPhaseCorrection != atmPhaseCorrection) continue;
+			
 		
 			
 				if (aRow->calDataId != calDataId) continue;
@@ -417,10 +443,6 @@ CalPhaseRow* CalPhaseTable::newRowCopy(CalPhaseRow* row) {
 		
 			
 				if (aRow->calReductionId != calReductionId) continue;
-			
-		
-			
-				if (aRow->basebandName != basebandName) continue;
 			
 		
 		return aRow;
@@ -436,52 +458,52 @@ CalPhaseRow* CalPhaseTable::newRowCopy(CalPhaseRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
- * @param calDataId.
- 	 		
- * @param calReductionId.
- 	 		
  * @param basebandName.
- 	 		
- * @param numBaseline.
- 	 		
- * @param numAPC.
- 	 		
- * @param numReceptor.
  	 		
  * @param receiverBand.
  	 		
- * @param antennaNames.
+ * @param atmPhaseCorrection.
  	 		
- * @param atmPhaseCorrections.
+ * @param calDataId.
  	 		
- * @param polarizationTypes.
+ * @param calReductionId.
  	 		
  * @param startValidTime.
  	 		
  * @param endValidTime.
  	 		
- * @param frequencyRange.
+ * @param numBaseline.
+ 	 		
+ * @param numReceptor.
  	 		
  * @param ampli.
  	 		
- * @param phase.
- 	 		
- * @param phaseRms.
- 	 		
- * @param statPhaseRms.
- 	 		
- * @param decorrelationFactor.
+ * @param antennaNames.
  	 		
  * @param baselineLengths.
  	 		
+ * @param decorrelationFactor.
+ 	 		
  * @param direction.
+ 	 		
+ * @param frequencyRange.
+ 	 		
+ * @param integrationTime.
+ 	 		
+ * @param phase.
+ 	 		
+ * @param polarizationTypes.
+ 	 		
+ * @param phaseRMS.
+ 	 		
+ * @param statPhaseRMS.
  	 		 
  */
-CalPhaseRow* CalPhaseTable::lookup(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numBaseline, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<vector<string > > antennaNames, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<vector<vector<float > > > ampli, vector<vector<vector<float > > > phase, vector<vector<vector<Angle > > > phaseRms, vector<vector<Angle > > statPhaseRms, vector<vector<float > > decorrelationFactor, vector<Length > baselineLengths, vector<Angle > direction) {
+CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numBaseline, int numReceptor, vector<vector<float > > ampli, vector<vector<string > > antennaNames, vector<Length > baselineLengths, vector<vector<float > > decorrelationFactor, vector<Angle > direction, vector<Frequency > frequencyRange, Interval integrationTime, vector<vector<float > > phase, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > phaseRMS, vector<vector<float > > statPhaseRMS) {
 		CalPhaseRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(calDataId, calReductionId, basebandName, numBaseline, numAPC, numReceptor, receiverBand, antennaNames, atmPhaseCorrections, polarizationTypes, startValidTime, endValidTime, frequencyRange, ampli, phase, phaseRms, statPhaseRms, decorrelationFactor, baselineLengths, direction)) return aRow;
+			if (aRow->compareNoAutoInc(basebandName, receiverBand, atmPhaseCorrection, calDataId, calReductionId, startValidTime, endValidTime, numBaseline, numReceptor, ampli, antennaNames, baselineLengths, decorrelationFactor, direction, frequencyRange, integrationTime, phase, polarizationTypes, phaseRMS, statPhaseRMS)) return aRow;
 		}			
 		return 0;	
 } 
@@ -489,7 +511,6 @@ CalPhaseRow* CalPhaseTable::lookup(Tag calDataId, Tag calReductionId, BasebandNa
  	 	
 
 	
-
 
 
 
@@ -510,7 +531,7 @@ CalPhaseRow* CalPhaseTable::lookup(Tag calDataId, Tag calReductionId, BasebandNa
 #endif
 	
 #ifndef WITHOUT_ACS
-	void CalPhaseTable::fromIDL(CalPhaseTableIDL x) throw(DuplicateKey,ConversionException) {
+	void CalPhaseTable::fromIDL(CalPhaseTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			CalPhaseRow *tmp = newRow();
@@ -521,28 +542,27 @@ CalPhaseRow* CalPhaseTable::lookup(Tag calDataId, Tag calReductionId, BasebandNa
 	}
 #endif
 
-	char *CalPhaseTable::toFITS() const throw(ConversionException) {
+	char *CalPhaseTable::toFITS() const  {
 		throw ConversionException("Not implemented","CalPhase");
 	}
 
-	void CalPhaseTable::fromFITS(char *fits) throw(ConversionException) {
+	void CalPhaseTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","CalPhase");
 	}
 
-	string CalPhaseTable::toVOTable() const throw(ConversionException) {
+	string CalPhaseTable::toVOTable() const {
 		throw ConversionException("Not implemented","CalPhase");
 	}
 
-	void CalPhaseTable::fromVOTable(string vo) throw(ConversionException) {
+	void CalPhaseTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","CalPhase");
 	}
 
-	string CalPhaseTable::toXML()  throw(ConversionException) {
+	
+	string CalPhaseTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<CalPhaseTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/CalPhaseTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<CalPhaseTable> ");
+		buf.append("<CalPhaseTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalPhaseTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPhaseTable http://almaobservatory.org/XML/XASDM/2/CalPhaseTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -558,8 +578,9 @@ CalPhaseRow* CalPhaseTable::lookup(Tag calDataId, Tag calReductionId, BasebandNa
 		buf.append("</CalPhaseTable> ");
 		return buf;
 	}
+
 	
-	void CalPhaseTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void CalPhaseTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalPhaseTable")) 
 			error();
@@ -601,20 +622,110 @@ CalPhaseRow* CalPhaseTable::lookup(Tag calDataId, Tag calReductionId, BasebandNa
 			error();
 	}
 
-	void CalPhaseTable::error() throw(ConversionException) {
+	
+	void CalPhaseTable::error()  {
 		throw ConversionException("Invalid xml document","CalPhase");
 	}
 	
+	
 	string CalPhaseTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void CalPhaseTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalPhase");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			CalPhaseRow* aRow = CalPhaseRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "CalPhase");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "CalPhase");
+		} 		 	
+	}
+
 	
 	void CalPhaseTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -645,6 +756,7 @@ CalPhaseRow* CalPhaseTable::lookup(Tag calDataId, Tag calReductionId, BasebandNa
 				throw ConversionException("Could not close file " + fileName, "CalPhase");
 		}
 	}
+
 	
 	void CalPhaseTable::setFromFile(const string& directory) {
 		string tablename;
@@ -686,6 +798,11 @@ CalPhaseRow* CalPhaseTable::lookup(Tag calDataId, Tag calReductionId, BasebandNa
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

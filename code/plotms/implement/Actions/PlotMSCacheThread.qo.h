@@ -28,6 +28,7 @@
 #define PLOTMSCACHETHREAD_QO_H_
 
 #include <plotms/Actions/PlotMSThread.qo.h>
+#include <plotms/PlotMS/PlotMSSelection.h>
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 
@@ -42,8 +43,6 @@ namespace casa {
 //# Forward Declarations
 class PlotMSData;
 class PlotMSPlot;
-class VisSet;
-
 
 // Subclass of PlotMSThread for loading axes in a PlotMSCache.
 class PlotMSCacheThread : public PlotMSThread {
@@ -54,14 +53,18 @@ class PlotMSCacheThread : public PlotMSThread {
     friend class PlotMSCacheThreadHelper;
     
 public:
-    // LOADING constructor which takes the PlotMSPlot, the axes and data
-    // columns, the averaging, a flag for whether to call setupPlot after the
-    // loading, and optional post-thread method parameters.
-    PlotMSCacheThread(PlotMSPlot* plot, const vector<PMS::Axis>& axes,
-            const vector<PMS::DataColumn>& data,
-            const PlotMSAveraging& averaging, bool setupPlot = false,
-            PMSPTMethod postThreadMethod = NULL,
-            PMSPTObject postThreadObject = NULL);
+    // LOADING constructor which takes the PlotMSPlot, the PlotMSData, the axes
+    // and data columns, the averaging, a flag for whether to call setupPlot
+    // after the loading, and optional post-thread method parameters.
+    PlotMSCacheThread(PlotMSPlot* plot, PlotMSData* data,
+		      const vector<PMS::Axis>& axes, 
+		      const vector<PMS::DataColumn>& data,
+		      const String& msname, 
+		      const PlotMSSelection& selection, 
+		      const PlotMSAveraging& averaging, 
+		      bool setupPlot = false,
+		      PMSPTMethod postThreadMethod = NULL,
+		      PMSPTObject postThreadObject = NULL);
     
     // RELEASING constructor which takes the PlotMSPlot, the axes, and optional
     // post-thread method parameters.
@@ -111,9 +114,6 @@ private:
     // Data.
     PlotMSData* itsData_;
     
-    // VisSet.
-    VisSet* itsVisSet_;
-    
     // Load (true) or release (false) axes.
     bool itsLoad_;
     
@@ -123,7 +123,9 @@ private:
     // Axes data columns.
     vector<PMS::DataColumn> itsAxesData_;
     
-    // MS averaging.
+    // MS selection/averaging info
+    String itsMSName_;
+    PlotMSSelection itsSelection_;
     PlotMSAveraging itsAveraging_;
     
     // Whether to set up the cache afterwards.

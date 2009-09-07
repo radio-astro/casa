@@ -73,6 +73,8 @@ using asdm::ExecBlockRow;
 
 #include <Parser.h>
 using asdm::Parser;
+
+#include <EnumerationParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -106,255 +108,259 @@ namespace asdm {
 	
 		
 	
+  		
 		
 		
 			
-		x->time = getTime().toIDLArrayTime();
+		x->time = time.toIDLArrayTime();
 			
-		
-		
-	
-
-	
-		
-		
-			
-				
-		x->scanNumber = getScanNumber();
- 				
- 			
-		
-		
-	
-
-	
-		
-		
-			
-				
-		x->subscanNumber = getSubscanNumber();
- 				
- 			
-		
-		
-	
-
-	
-		
-		
-			
-				
-		x->integrationNumber = getIntegrationNumber();
- 				
- 			
-		
-		
-	
-
-	
-		
-		
-			
-		vector< vector<Length> > tmpUvw = getUvw();
-		x->uvw.length(tmpUvw.size());
-		for (unsigned int i = 0; i < tmpUvw.size(); ++i)
-			x->uvw[i].length(tmpUvw[0].size());
-		for (unsigned int i = 0; i < tmpUvw.size(); ++i) {
-			for (unsigned int j = 0; j < tmpUvw[0].size(); ++j) {
-				
-				x->uvw[i][j] = tmpUvw[i][j].toIDLLength();
-				
-		 	}
-		 }
-			
-		
-		
-	
-
-	
-		
-		
-			
-		vector< vector<Interval> > tmpExposure = getExposure();
-		x->exposure.length(tmpExposure.size());
-		for (unsigned int i = 0; i < tmpExposure.size(); ++i)
-			x->exposure[i].length(tmpExposure[0].size());
-		for (unsigned int i = 0; i < tmpExposure.size(); ++i) {
-			for (unsigned int j = 0; j < tmpExposure[0].size(); ++j) {
-				
-				x->exposure[i][j] = tmpExposure[i][j].toIDLInterval();
-				
-		 	}
-		 }
-			
-		
-		
-	
-
-	
-		
-		
-			
-		vector< vector<ArrayTime> > tmpTimeCentroid = getTimeCentroid();
-		x->timeCentroid.length(tmpTimeCentroid.size());
-		for (unsigned int i = 0; i < tmpTimeCentroid.size(); ++i)
-			x->timeCentroid[i].length(tmpTimeCentroid[0].size());
-		for (unsigned int i = 0; i < tmpTimeCentroid.size(); ++i) {
-			for (unsigned int j = 0; j < tmpTimeCentroid[0].size(); ++j) {
-				
-				x->timeCentroid[i][j] = tmpTimeCentroid[i][j].toIDLArrayTime();
-				
-		 	}
-		 }
-			
-		
-		
-	
-
-	
-		
-		
-			
-		vector< vector< vector<float> > > tmpFloatData = getFloatData();
-		x->floatData.length(tmpFloatData.size());
-		for (unsigned int i = 0; i < tmpFloatData.size(); ++i) {
-			x->floatData[i].length(tmpFloatData[0].size());
-			for (unsigned int j = 0; j < tmpFloatData[0][0].size(); ++j)
-				x->floatData[i][j].length(tmpFloatData[0][0].size());
-		}
-		for (unsigned int i = 0; i < tmpFloatData.size(); ++i) {
-			for (unsigned int j = 0; j < tmpFloatData[0].size(); ++j) {
-				for (unsigned int k = 0; k < tmpFloatData[0][0].size(); ++k) {
-					
-						
-					x->floatData[i][j][k] = tmpFloatData[i][j][k];
-		 				
-			 		
-				}
-			}
-		}
-			
-		
-		
-	
-
-	
-		
-		
-			
-		vector<int> tmpFlagAnt = getFlagAnt();
-		x->flagAnt.length(tmpFlagAnt.size());
-		for (unsigned int i = 0; i < tmpFlagAnt.size(); ++i) {
-			
-				
-			x->flagAnt[i] = tmpFlagAnt[i];
-	 			
-	 		
-	 	}
-			
-		
-		
-	
-
-	
-		
-		
-			
-		vector< vector<int> > tmpFlagPol = getFlagPol();
-		x->flagPol.length(tmpFlagPol.size());
-		for (unsigned int i = 0; i < tmpFlagPol.size(); ++i)
-			x->flagPol[i].length(tmpFlagPol[0].size());
-		for (unsigned int i = 0; i < tmpFlagPol.size(); ++i) {
-			for (unsigned int j = 0; j < tmpFlagPol[0].size(); ++j) {
-				
-					
-				x->flagPol[i][j] = tmpFlagPol[i][j];
-	 				
-		 		
-		 	}
-		 }
-			
-		
-		
-	
-
-	
-		
-		
-			
-				
-		x->flagRow = getFlagRow();
- 				
- 			
-		
-		
-	
-
-	
-		
-		
-			
-		x->interval = getInterval().toIDLInterval();
-			
-		
-		
-	
-
-	
-		
-		x->subintegrationNumberExists = subintegrationNumberExists;
-  		if (subintegrationNumberExists) {
-  			try {
-		
-		
-			
-				
-		x->subintegrationNumber = getSubintegrationNumber();
- 				
- 			
-		
-		
-			} catch (IllegalAccessException e) {
-			}
-		}
-		
-	
-
-	
-	
-		
-	
-		
-		
-			
-		x->configDescriptionId = getConfigDescriptionId().toIDLTag();
-			
-		
-		
-	
-
-	
-		
-		
-			
-		x->execBlockId = getExecBlockId().toIDLTag();
-			
-		
-		
-	
-
-	
-		
-		
-			
-		x->fieldId = getFieldId().toIDLTag();
-			
-		
 		
 	
 
 	
   		
+		
+		
+			
+				
+		x->scanNumber = scanNumber;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->subscanNumber = subscanNumber;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->integrationNumber = integrationNumber;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->uvw.length(uvw.size());
+		for (unsigned int i = 0; i < uvw.size(); i++) {
+			x->uvw[i].length(uvw.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < uvw.size() ; i++)
+			for (unsigned int j = 0; j < uvw.at(i).size(); j++)
+					
+				x->uvw[i][j]= uvw.at(i).at(j).toIDLLength();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->exposure.length(exposure.size());
+		for (unsigned int i = 0; i < exposure.size(); i++) {
+			x->exposure[i].length(exposure.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < exposure.size() ; i++)
+			for (unsigned int j = 0; j < exposure.at(i).size(); j++)
+					
+				x->exposure[i][j]= exposure.at(i).at(j).toIDLInterval();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->timeCentroid.length(timeCentroid.size());
+		for (unsigned int i = 0; i < timeCentroid.size(); i++) {
+			x->timeCentroid[i].length(timeCentroid.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < timeCentroid.size() ; i++)
+			for (unsigned int j = 0; j < timeCentroid.at(i).size(); j++)
+					
+				x->timeCentroid[i][j]= timeCentroid.at(i).at(j).toIDLArrayTime();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->floatData.length(floatData.size());
+		for (unsigned int i = 0; i < floatData.size(); i++) {
+			x->floatData[i].length(floatData.at(i).size());
+			for (unsigned int j = 0; j < floatData.at(i).size(); j++) {
+				x->floatData[i][j].length(floatData.at(i).at(j).size());
+			}					 		
+		}
+		
+		for (unsigned int i = 0; i < floatData.size() ; i++)
+			for (unsigned int j = 0; j < floatData.at(i).size(); j++)
+				for (unsigned int k = 0; k < floatData.at(i).at(j).size(); k++)
+					
+						
+					x->floatData[i][j][k] = floatData.at(i).at(j).at(k);
+		 				
+			 									
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->flagAnt.length(flagAnt.size());
+		for (unsigned int i = 0; i < flagAnt.size(); ++i) {
+			
+				
+			x->flagAnt[i] = flagAnt.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->flagPol.length(flagPol.size());
+		for (unsigned int i = 0; i < flagPol.size(); i++) {
+			x->flagPol[i].length(flagPol.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < flagPol.size() ; i++)
+			for (unsigned int j = 0; j < flagPol.at(i).size(); j++)
+					
+						
+				x->flagPol[i][j] = flagPol.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->flagRow = flagRow;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->interval = interval.toIDLInterval();
+			
+		
+	
+
+	
+  		
+		
+		x->subintegrationNumberExists = subintegrationNumberExists;
+		
+		
+			
+				
+		x->subintegrationNumber = subintegrationNumber;
+ 				
+ 			
+		
+	
+
+	
+	
+		
+	
+  	
+ 		
+		
+	 	
+			
+		x->configDescriptionId = configDescriptionId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x->execBlockId = execBlockId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+	 	
+			
+		x->fieldId = fieldId.toIDLTag();
+			
+	 	 		
+  	
+
+	
+  	
+ 		
+		
+		
+		x->stateId.length(stateId.size());
+		for (unsigned int i = 0; i < stateId.size(); ++i) {
+			
+			x->stateId[i] = stateId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
   	
 
 	
@@ -379,7 +385,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct TotalPowerRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void TotalPowerRow::setFromIDL (TotalPowerRowIDL x) throw(ConversionException) {
+	void TotalPowerRow::setFromIDL (TotalPowerRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -388,7 +394,7 @@ namespace asdm {
 		
 		
 			
-		setTime(*(new ArrayTime (x.time)));
+		setTime(ArrayTime (x.time));
 			
  		
 		
@@ -428,17 +434,17 @@ namespace asdm {
 		
 		
 			
-		vector< vector<Length> > tmpUvw(x.uvw.length());
-		for (unsigned int i = 0; i < tmpUvw.size(); ++i)
-			tmpUvw[i] = *(new vector<Length>(x.uvw[0].length()));
-		for (unsigned int i = 0; i < tmpUvw.size(); ++i) {
-			for (unsigned int j = 0; j < tmpUvw[0].size(); ++j) {
+		uvw .clear();
+		vector<Length> v_aux_uvw;
+		for (unsigned int i = 0; i < x.uvw.length(); ++i) {
+			v_aux_uvw.clear();
+			for (unsigned int j = 0; j < x.uvw[0].length(); ++j) {
 				
-				tmpUvw[i][j] = *(new Length (x.uvw[i][j]));
+				v_aux_uvw.push_back(Length (x.uvw[i][j]));
 				
   			}
+  			uvw.push_back(v_aux_uvw);			
 		}
-		setUvw(tmpUvw);
 			
   		
 		
@@ -448,17 +454,17 @@ namespace asdm {
 		
 		
 			
-		vector< vector<Interval> > tmpExposure(x.exposure.length());
-		for (unsigned int i = 0; i < tmpExposure.size(); ++i)
-			tmpExposure[i] = *(new vector<Interval>(x.exposure[0].length()));
-		for (unsigned int i = 0; i < tmpExposure.size(); ++i) {
-			for (unsigned int j = 0; j < tmpExposure[0].size(); ++j) {
+		exposure .clear();
+		vector<Interval> v_aux_exposure;
+		for (unsigned int i = 0; i < x.exposure.length(); ++i) {
+			v_aux_exposure.clear();
+			for (unsigned int j = 0; j < x.exposure[0].length(); ++j) {
 				
-				tmpExposure[i][j] = *(new Interval (x.exposure[i][j]));
+				v_aux_exposure.push_back(Interval (x.exposure[i][j]));
 				
   			}
+  			exposure.push_back(v_aux_exposure);			
 		}
-		setExposure(tmpExposure);
 			
   		
 		
@@ -468,17 +474,17 @@ namespace asdm {
 		
 		
 			
-		vector< vector<ArrayTime> > tmpTimeCentroid(x.timeCentroid.length());
-		for (unsigned int i = 0; i < tmpTimeCentroid.size(); ++i)
-			tmpTimeCentroid[i] = *(new vector<ArrayTime>(x.timeCentroid[0].length()));
-		for (unsigned int i = 0; i < tmpTimeCentroid.size(); ++i) {
-			for (unsigned int j = 0; j < tmpTimeCentroid[0].size(); ++j) {
+		timeCentroid .clear();
+		vector<ArrayTime> v_aux_timeCentroid;
+		for (unsigned int i = 0; i < x.timeCentroid.length(); ++i) {
+			v_aux_timeCentroid.clear();
+			for (unsigned int j = 0; j < x.timeCentroid[0].length(); ++j) {
 				
-				tmpTimeCentroid[i][j] = *(new ArrayTime (x.timeCentroid[i][j]));
+				v_aux_timeCentroid.push_back(ArrayTime (x.timeCentroid[i][j]));
 				
   			}
+  			timeCentroid.push_back(v_aux_timeCentroid);			
 		}
-		setTimeCentroid(tmpTimeCentroid);
 			
   		
 		
@@ -488,22 +494,23 @@ namespace asdm {
 		
 		
 			
-		vector< vector< vector<float> > > tmpFloatData(x.floatData.length());
-		for (unsigned int i = 0; i < tmpFloatData.size(); ++i) {
-			tmpFloatData[i] = *(new vector< vector<float> > (x.floatData[0].length()));
-			for (unsigned int j = 0; j < tmpFloatData[0].size(); ++j)
-				tmpFloatData[i][j] = *(new vector<float>(x.floatData[0][0].length()));
-		}
-		for (unsigned int i = 0; i < tmpFloatData.size(); ++i) {
-			for (unsigned int j = 0; j < tmpFloatData[0].size(); ++j) {
-				for (unsigned int k = 0; k < tmpFloatData[0][0].size(); ++k) {
+		floatData .clear();
+		vector< vector<float> > vv_aux_floatData;
+		vector<float> v_aux_floatData;
+		
+		for (unsigned int i = 0; i < x.floatData.length(); ++i) {
+			vv_aux_floatData.clear();
+			for (unsigned int j = 0; j < x.floatData[0].length(); ++j) {
+				v_aux_floatData.clear();
+				for (unsigned int k = 0; k < x.floatData[0][0].length(); ++k) {
 					
-					tmpFloatData[i][j][k] = x.floatData[i][j][k];
+					v_aux_floatData.push_back(x.floatData[i][j][k]);
 		  			
 		  		}
+		  		vv_aux_floatData.push_back(v_aux_floatData);
   			}
+  			floatData.push_back(vv_aux_floatData);
 		}
-		setFloatData(tmpFloatData);
 			
   		
 		
@@ -513,13 +520,12 @@ namespace asdm {
 		
 		
 			
-		vector<int> tmpFlagAnt(x.flagAnt.length());
-		for (unsigned int i = 0; i < tmpFlagAnt.size(); ++i) {
+		flagAnt .clear();
+		for (unsigned int i = 0; i <x.flagAnt.length(); ++i) {
 			
-			tmpFlagAnt[i] = x.flagAnt[i];
+			flagAnt.push_back(x.flagAnt[i]);
   			
 		}
-		setFlagAnt(tmpFlagAnt);
 			
   		
 		
@@ -529,17 +535,17 @@ namespace asdm {
 		
 		
 			
-		vector< vector<int> > tmpFlagPol(x.flagPol.length());
-		for (unsigned int i = 0; i < tmpFlagPol.size(); ++i)
-			tmpFlagPol[i] = *(new vector<int>(x.flagPol[0].length()));
-		for (unsigned int i = 0; i < tmpFlagPol.size(); ++i) {
-			for (unsigned int j = 0; j < tmpFlagPol[0].size(); ++j) {
+		flagPol .clear();
+		vector<int> v_aux_flagPol;
+		for (unsigned int i = 0; i < x.flagPol.length(); ++i) {
+			v_aux_flagPol.clear();
+			for (unsigned int j = 0; j < x.flagPol[0].length(); ++j) {
 				
-				tmpFlagPol[i][j] = x.flagPol[i][j];
+				v_aux_flagPol.push_back(x.flagPol[i][j]);
 	  			
   			}
+  			flagPol.push_back(v_aux_flagPol);			
 		}
-		setFlagPol(tmpFlagPol);
 			
   		
 		
@@ -559,7 +565,7 @@ namespace asdm {
 		
 		
 			
-		setInterval(*(new Interval (x.interval)));
+		setInterval(Interval (x.interval));
 			
  		
 		
@@ -567,6 +573,7 @@ namespace asdm {
 
 	
 		
+		subintegrationNumberExists = x.subintegrationNumberExists;
 		if (x.subintegrationNumberExists) {
 		
 		
@@ -586,7 +593,7 @@ namespace asdm {
 		
 		
 			
-		setConfigDescriptionId(*(new Tag (x.configDescriptionId)));
+		setConfigDescriptionId(Tag (x.configDescriptionId));
 			
  		
 		
@@ -596,7 +603,7 @@ namespace asdm {
 		
 		
 			
-		setExecBlockId(*(new Tag (x.execBlockId)));
+		setExecBlockId(Tag (x.execBlockId));
 			
  		
 		
@@ -606,7 +613,7 @@ namespace asdm {
 		
 		
 			
-		setFieldId(*(new Tag (x.fieldId)));
+		setFieldId(Tag (x.fieldId));
 			
  		
 		
@@ -614,13 +621,12 @@ namespace asdm {
 
 	
 		
-		vector<Tag> tmpStateId(x.stateId.length());
-		for (unsigned int i = 0; i < tmpStateId.size(); ++i) {
+		stateId .clear();
+		for (unsigned int i = 0; i <x.stateId.length(); ++i) {
 			
-			tmpStateId[i] = *(new Tag (x.stateId[i]));
+			stateId.push_back(Tag (x.stateId[i]));
 			
 		}
-		setStateId(tmpStateId);		
 		
   	
 
@@ -635,7 +641,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"TotalPower");
+			throw ConversionException (err.getMessage(),"TotalPower");
 		}
 	}
 #endif
@@ -653,7 +659,6 @@ namespace asdm {
   	
  		
 		
-		
 		Parser::toXML(time, "time", buf);
 		
 		
@@ -661,7 +666,6 @@ namespace asdm {
 
   	
  		
-		
 		
 		Parser::toXML(scanNumber, "scanNumber", buf);
 		
@@ -671,7 +675,6 @@ namespace asdm {
   	
  		
 		
-		
 		Parser::toXML(subscanNumber, "subscanNumber", buf);
 		
 		
@@ -679,7 +682,6 @@ namespace asdm {
 
   	
  		
-		
 		
 		Parser::toXML(integrationNumber, "integrationNumber", buf);
 		
@@ -689,7 +691,6 @@ namespace asdm {
   	
  		
 		
-		
 		Parser::toXML(uvw, "uvw", buf);
 		
 		
@@ -697,7 +698,6 @@ namespace asdm {
 
   	
  		
-		
 		
 		Parser::toXML(exposure, "exposure", buf);
 		
@@ -707,7 +707,6 @@ namespace asdm {
   	
  		
 		
-		
 		Parser::toXML(timeCentroid, "timeCentroid", buf);
 		
 		
@@ -715,7 +714,6 @@ namespace asdm {
 
   	
  		
-		
 		
 		Parser::toXML(floatData, "floatData", buf);
 		
@@ -725,7 +723,6 @@ namespace asdm {
   	
  		
 		
-		
 		Parser::toXML(flagAnt, "flagAnt", buf);
 		
 		
@@ -733,7 +730,6 @@ namespace asdm {
 
   	
  		
-		
 		
 		Parser::toXML(flagPol, "flagPol", buf);
 		
@@ -743,7 +739,6 @@ namespace asdm {
   	
  		
 		
-		
 		Parser::toXML(flagRow, "flagRow", buf);
 		
 		
@@ -751,7 +746,6 @@ namespace asdm {
 
   	
  		
-		
 		
 		Parser::toXML(interval, "interval", buf);
 		
@@ -761,7 +755,6 @@ namespace asdm {
   	
  		
 		if (subintegrationNumberExists) {
-		
 		
 		
 		Parser::toXML(subintegrationNumber, "subintegrationNumber", buf);
@@ -777,7 +770,6 @@ namespace asdm {
   	
  		
 		
-		
 		Parser::toXML(configDescriptionId, "configDescriptionId", buf);
 		
 		
@@ -785,7 +777,6 @@ namespace asdm {
 
   	
  		
-		
 		
 		Parser::toXML(execBlockId, "execBlockId", buf);
 		
@@ -795,7 +786,6 @@ namespace asdm {
   	
  		
 		
-		
 		Parser::toXML(fieldId, "fieldId", buf);
 		
 		
@@ -803,7 +793,6 @@ namespace asdm {
 
   	
  		
-		
 		
 		Parser::toXML(stateId, "stateId", buf);
 		
@@ -830,7 +819,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void TotalPowerRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void TotalPowerRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -1003,104 +992,387 @@ namespace asdm {
 	}
 	
 	void TotalPowerRow::toBin(EndianOSStream& eoss) {
-		time.toBin(eoss);
-		eoss.writeInt(scanNumber);
-		eoss.writeInt(subscanNumber);
-		eoss.writeInt(integrationNumber);
-		Length::toBin(uvw, eoss);
-		Interval::toBin(exposure, eoss);
-		ArrayTime::toBin(timeCentroid, eoss);
+	
+	
+	
+	
 		
-		eoss.writeInt(floatData.size());
-		eoss.writeInt(floatData[0].size());
-		eoss.writeInt(floatData[0][0].size());
-		for (unsigned int i = 0; i < floatData.size(); i ++)
-			for (unsigned int j = 0; j < floatData[0].size(); j++)
-				for (unsigned int k = 0; k < floatData[0][0].size(); k++)
-					eoss.writeFloat(floatData[i][j][k]);
+	time.toBin(eoss);
 		
-		eoss.writeInt(flagAnt.size());
+	
+
+	
+	
+		
+	configDescriptionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	fieldId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(scanNumber);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(subscanNumber);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(integrationNumber);
+				
+		
+	
+
+	
+	
+		
+	Length::toBin(uvw, eoss);
+		
+	
+
+	
+	
+		
+	Interval::toBin(exposure, eoss);
+		
+	
+
+	
+	
+		
+	ArrayTime::toBin(timeCentroid, eoss);
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) floatData.size());
+		eoss.writeInt((int) floatData.at(0).size());		
+		eoss.writeInt((int) floatData.at(0).at(0).size());
+		for (unsigned int i = 0; i < floatData.size(); i++) 
+			for (unsigned int j = 0;  j < floatData.at(0).size(); j++)
+				for (unsigned int k = 0; k <  floatData.at(0).at(0).size(); k++)	
+							 
+					eoss.writeFloat(floatData.at(i).at(j).at(k));
+						
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) flagAnt.size());
 		for (unsigned int i = 0; i < flagAnt.size(); i++)
-			eoss.writeInt(flagAnt[i]);
-			
-		eoss.writeInt(flagPol.size());
-		eoss.writeInt(flagPol[0].size());		
-		for (unsigned int i = 0; i < flagPol.size(); i++)
-			for (unsigned int j = 0; j < flagPol[0].size(); j++)
-				eoss.writeInt(flagPol[i][j]);
-			
-		eoss.writeBoolean(flagRow);
-		interval.toBin(eoss);
+				
+			eoss.writeInt(flagAnt.at(i));
+				
+				
+						
 		
-		eoss.writeBoolean(subintegrationNumberExists);
-		if (subintegrationNumberExists)
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) flagPol.size());
+		eoss.writeInt((int) flagPol.at(0).size());
+		for (unsigned int i = 0; i < flagPol.size(); i++) 
+			for (unsigned int j = 0;  j < flagPol.at(0).size(); j++) 
+							 
+				eoss.writeInt(flagPol.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(flagRow);
+				
+		
+	
+
+	
+	
+		
+	interval.toBin(eoss);
+		
+	
+
+	
+	
+		
+	Tag::toBin(stateId, eoss);
+		
+	
+
+	
+	
+		
+	execBlockId.toBin(eoss);
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(subintegrationNumberExists);
+	if (subintegrationNumberExists) {
+	
+	
+	
+		
+						
 			eoss.writeInt(subintegrationNumber);
+				
 		
-		configDescriptionId.toBin(eoss);
-		execBlockId.toBin(eoss);
-		fieldId.toBin(eoss);
-		Tag::toBin(stateId, eoss);
+	
+
+	}
+
 	}
 	
 	TotalPowerRow* TotalPowerRow::fromBin(EndianISStream& eiss, TotalPowerTable& table) {
-		TotalPowerRow* row = new TotalPowerRow(table);
+		TotalPowerRow* row = new  TotalPowerRow(table);
 		
-		row->time = ArrayTime::fromBin(eiss); 
-		row->scanNumber = eiss.readInt(); 
-		row->subscanNumber = eiss.readInt(); 
-		row->integrationNumber = eiss.readInt();  
-		row->uvw = Length::from2DBin(eiss); 
-		row->exposure = Interval::from2DBin(eiss); 
-		row->timeCentroid = ArrayTime::from2DBin(eiss); 
 		
-		int dim1 = 0;
-		int dim2 = 0;
-		int dim3 = 0;
 		
-		dim1 = eiss.readInt();
-		dim2 = eiss.readInt(); 
-		dim3 = eiss.readInt(); 
+	
 		
-		vector<vector<float> > faux1;
-		vector<float> faux2;
-		for (int i = 0; i < dim1; i ++) {
-			faux1.clear();
-			for (int j = 0; j < dim2; j++) {
-				faux2.clear();
-				for (int k = 0; k < dim3; k++)
-					faux2.push_back(eiss.readFloat());
-				faux1.push_back(faux2);
+		
+		row->time =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->configDescriptionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->fieldId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->scanNumber =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->subscanNumber =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->integrationNumber =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->uvw = Length::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->exposure = Interval::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->timeCentroid = ArrayTime::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->floatData.clear();
+			
+		unsigned int floatDataDim1 = eiss.readInt();
+		unsigned int floatDataDim2 = eiss.readInt();
+		unsigned int floatDataDim3 = eiss.readInt();
+		vector <vector<float> > floatDataAux2;
+		vector <float> floatDataAux1;
+		for (unsigned int i = 0; i < floatDataDim1; i++) {
+			floatDataAux2.clear();
+			for (unsigned int j = 0; j < floatDataDim2 ; j++) {
+				floatDataAux1.clear();
+				for (unsigned int k = 0; k < floatDataDim3; k++) {
+			
+					floatDataAux1.push_back(eiss.readFloat());
+			
+				}
+				floatDataAux2.push_back(floatDataAux1);
 			}
-			row->floatData.push_back(faux1);
-		}
+			row->floatData.push_back(floatDataAux2);
+		}	
+	
+
 		
-		dim1 = eiss.readInt();
-		for (int i = 0; i < dim1; i++)
+	
+
+	
+	
+		
+			
+	
+		row->flagAnt.clear();
+		
+		unsigned int flagAntDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < flagAntDim1; i++)
+			
 			row->flagAnt.push_back(eiss.readInt());
+			
+	
+
 		
-		dim1 = eiss.readInt();
-		dim2 = eiss.readInt();
-		vector<int> iaux;
-		for (int i = 0; i < dim1; i++) {
-			iaux.clear();
-			for (int j = 0;  j < dim2; j++)
-				iaux.push_back(eiss.readInt());
-			row->flagPol.push_back(iaux);
+	
+
+	
+	
+		
+			
+	
+		row->flagPol.clear();
+		
+		unsigned int flagPolDim1 = eiss.readInt();
+		unsigned int flagPolDim2 = eiss.readInt();
+		vector <int> flagPolAux1;
+		for (unsigned int i = 0; i < flagPolDim1; i++) {
+			flagPolAux1.clear();
+			for (unsigned int j = 0; j < flagPolDim2 ; j++)			
+			
+			flagPolAux1.push_back(eiss.readInt());
+			
+			row->flagPol.push_back(flagPolAux1);
 		}
-						
-		row->flagRow = eiss.readBoolean(); 
-		row->interval = Interval::fromBin(eiss); 
+	
+	
+
 		
-		row->subintegrationNumberExists = eiss.readBoolean();
-		if (row->subintegrationNumberExists) row->subintegrationNumber = eiss.readInt();
+	
+
+	
+	
 		
-		row->configDescriptionId = Tag::fromBin(eiss);
-		row->execBlockId = Tag::fromBin(eiss);
-		row->fieldId = Tag::fromBin(eiss);
-		row->stateId = Tag::from1DBin(eiss);
+			
+		row->flagRow =  eiss.readBoolean();
+			
+		
+	
+
+	
+		
+		
+		row->interval =  Interval::fromBin(eiss);
+		
+	
+
+	
+		
+		
+			
+	
+	row->stateId = Tag::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+		row->execBlockId =  Tag::fromBin(eiss);
+		
+	
+
+		
+		
+		
+	row->subintegrationNumberExists = eiss.readBoolean();
+	if (row->subintegrationNumberExists) {
+		
+	
+	
+		
+			
+		row->subintegrationNumber =  eiss.readInt();
+			
+		
+	
+
+	}
+
 		
 		return row;
-	}	
+	}
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -1121,12 +1393,19 @@ namespace asdm {
  	/**
  	 * Set time with the specified ArrayTime.
  	 * @param time The ArrayTime value to which time is to be set.
+ 	 
  	
+ 		
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void TotalPowerRow::setTime (ArrayTime time) throw(IllegalAccessException) {
+ 	void TotalPowerRow::setTime (ArrayTime time)  {
+  	
+  	
   		if (hasBeenAdded) {
-			throw IllegalAccessException();
+ 		
+			throw IllegalAccessException("time", "TotalPower");
+		
   		}
   	
  		this->time = time;
@@ -1150,10 +1429,17 @@ namespace asdm {
  	/**
  	 * Set scanNumber with the specified int.
  	 * @param scanNumber The int value to which scanNumber is to be set.
+ 	 
  	
+ 		
  	 */
- 	void TotalPowerRow::setScanNumber (int scanNumber) {
-	
+ 	void TotalPowerRow::setScanNumber (int scanNumber)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->scanNumber = scanNumber;
 	
  	}
@@ -1175,10 +1461,17 @@ namespace asdm {
  	/**
  	 * Set subscanNumber with the specified int.
  	 * @param subscanNumber The int value to which subscanNumber is to be set.
+ 	 
  	
+ 		
  	 */
- 	void TotalPowerRow::setSubscanNumber (int subscanNumber) {
-	
+ 	void TotalPowerRow::setSubscanNumber (int subscanNumber)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->subscanNumber = subscanNumber;
 	
  	}
@@ -1200,10 +1493,17 @@ namespace asdm {
  	/**
  	 * Set integrationNumber with the specified int.
  	 * @param integrationNumber The int value to which integrationNumber is to be set.
+ 	 
  	
+ 		
  	 */
- 	void TotalPowerRow::setIntegrationNumber (int integrationNumber) {
-	
+ 	void TotalPowerRow::setIntegrationNumber (int integrationNumber)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->integrationNumber = integrationNumber;
 	
  	}
@@ -1225,10 +1525,17 @@ namespace asdm {
  	/**
  	 * Set uvw with the specified vector<vector<Length > >.
  	 * @param uvw The vector<vector<Length > > value to which uvw is to be set.
+ 	 
  	
+ 		
  	 */
- 	void TotalPowerRow::setUvw (vector<vector<Length > > uvw) {
-	
+ 	void TotalPowerRow::setUvw (vector<vector<Length > > uvw)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->uvw = uvw;
 	
  	}
@@ -1250,10 +1557,17 @@ namespace asdm {
  	/**
  	 * Set exposure with the specified vector<vector<Interval > >.
  	 * @param exposure The vector<vector<Interval > > value to which exposure is to be set.
+ 	 
  	
+ 		
  	 */
- 	void TotalPowerRow::setExposure (vector<vector<Interval > > exposure) {
-	
+ 	void TotalPowerRow::setExposure (vector<vector<Interval > > exposure)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->exposure = exposure;
 	
  	}
@@ -1275,10 +1589,17 @@ namespace asdm {
  	/**
  	 * Set timeCentroid with the specified vector<vector<ArrayTime > >.
  	 * @param timeCentroid The vector<vector<ArrayTime > > value to which timeCentroid is to be set.
+ 	 
  	
+ 		
  	 */
- 	void TotalPowerRow::setTimeCentroid (vector<vector<ArrayTime > > timeCentroid) {
-	
+ 	void TotalPowerRow::setTimeCentroid (vector<vector<ArrayTime > > timeCentroid)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->timeCentroid = timeCentroid;
 	
  	}
@@ -1300,10 +1621,17 @@ namespace asdm {
  	/**
  	 * Set floatData with the specified vector<vector<vector<float > > >.
  	 * @param floatData The vector<vector<vector<float > > > value to which floatData is to be set.
+ 	 
  	
+ 		
  	 */
- 	void TotalPowerRow::setFloatData (vector<vector<vector<float > > > floatData) {
-	
+ 	void TotalPowerRow::setFloatData (vector<vector<vector<float > > > floatData)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->floatData = floatData;
 	
  	}
@@ -1325,10 +1653,17 @@ namespace asdm {
  	/**
  	 * Set flagAnt with the specified vector<int >.
  	 * @param flagAnt The vector<int > value to which flagAnt is to be set.
+ 	 
  	
+ 		
  	 */
- 	void TotalPowerRow::setFlagAnt (vector<int > flagAnt) {
-	
+ 	void TotalPowerRow::setFlagAnt (vector<int > flagAnt)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->flagAnt = flagAnt;
 	
  	}
@@ -1350,10 +1685,17 @@ namespace asdm {
  	/**
  	 * Set flagPol with the specified vector<vector<int > >.
  	 * @param flagPol The vector<vector<int > > value to which flagPol is to be set.
+ 	 
  	
+ 		
  	 */
- 	void TotalPowerRow::setFlagPol (vector<vector<int > > flagPol) {
-	
+ 	void TotalPowerRow::setFlagPol (vector<vector<int > > flagPol)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->flagPol = flagPol;
 	
  	}
@@ -1375,10 +1717,17 @@ namespace asdm {
  	/**
  	 * Set flagRow with the specified bool.
  	 * @param flagRow The bool value to which flagRow is to be set.
+ 	 
  	
+ 		
  	 */
- 	void TotalPowerRow::setFlagRow (bool flagRow) {
-	
+ 	void TotalPowerRow::setFlagRow (bool flagRow)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->flagRow = flagRow;
 	
  	}
@@ -1400,10 +1749,17 @@ namespace asdm {
  	/**
  	 * Set interval with the specified Interval.
  	 * @param interval The Interval value to which interval is to be set.
+ 	 
  	
+ 		
  	 */
- 	void TotalPowerRow::setInterval (Interval interval) {
-	
+ 	void TotalPowerRow::setInterval (Interval interval)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->interval = interval;
 	
  	}
@@ -1426,9 +1782,9 @@ namespace asdm {
  	 * @return subintegrationNumber as int
  	 * @throw IllegalAccessException If subintegrationNumber does not exist.
  	 */
- 	int TotalPowerRow::getSubintegrationNumber() const throw(IllegalAccessException) {
+ 	int TotalPowerRow::getSubintegrationNumber() const  {
 		if (!subintegrationNumberExists) {
-			throw IllegalAccessException();
+			throw IllegalAccessException("subintegrationNumber", "TotalPower");
 		}
 	
   		return subintegrationNumber;
@@ -1437,6 +1793,7 @@ namespace asdm {
  	/**
  	 * Set subintegrationNumber with the specified int.
  	 * @param subintegrationNumber The int value to which subintegrationNumber is to be set.
+ 	 
  	
  	 */
  	void TotalPowerRow::setSubintegrationNumber (int subintegrationNumber) {
@@ -1476,12 +1833,19 @@ namespace asdm {
  	/**
  	 * Set configDescriptionId with the specified Tag.
  	 * @param configDescriptionId The Tag value to which configDescriptionId is to be set.
+ 	 
  	
+ 		
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void TotalPowerRow::setConfigDescriptionId (Tag configDescriptionId) throw(IllegalAccessException) {
+ 	void TotalPowerRow::setConfigDescriptionId (Tag configDescriptionId)  {
+  	
+  	
   		if (hasBeenAdded) {
-			throw IllegalAccessException();
+ 		
+			throw IllegalAccessException("configDescriptionId", "TotalPower");
+		
   		}
   	
  		this->configDescriptionId = configDescriptionId;
@@ -1505,10 +1869,17 @@ namespace asdm {
  	/**
  	 * Set execBlockId with the specified Tag.
  	 * @param execBlockId The Tag value to which execBlockId is to be set.
+ 	 
  	
+ 		
  	 */
- 	void TotalPowerRow::setExecBlockId (Tag execBlockId) {
-	
+ 	void TotalPowerRow::setExecBlockId (Tag execBlockId)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->execBlockId = execBlockId;
 	
  	}
@@ -1530,12 +1901,19 @@ namespace asdm {
  	/**
  	 * Set fieldId with the specified Tag.
  	 * @param fieldId The Tag value to which fieldId is to be set.
+ 	 
  	
+ 		
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void TotalPowerRow::setFieldId (Tag fieldId) throw(IllegalAccessException) {
+ 	void TotalPowerRow::setFieldId (Tag fieldId)  {
+  	
+  	
   		if (hasBeenAdded) {
-			throw IllegalAccessException();
+ 		
+			throw IllegalAccessException("fieldId", "TotalPower");
+		
   		}
   	
  		this->fieldId = fieldId;
@@ -1559,10 +1937,17 @@ namespace asdm {
  	/**
  	 * Set stateId with the specified vector<Tag> .
  	 * @param stateId The vector<Tag>  value to which stateId is to be set.
+ 	 
  	
+ 		
  	 */
- 	void TotalPowerRow::setStateId (vector<Tag>  stateId) {
-	
+ 	void TotalPowerRow::setStateId (vector<Tag>  stateId)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->stateId = stateId;
 	
  	}
@@ -1579,9 +1964,13 @@ namespace asdm {
  	 * Set stateId[i] with the specified Tag.
  	 * @param i The index in stateId where to set the Tag value.
  	 * @param stateId The Tag value to which stateId[i] is to be set. 
- 	 * @throws OutOfBoundsException
+	 		
+ 	 * @throws IndexOutOfBoundsException
   	 */
-  	void TotalPowerRow::setStateId (int i, Tag stateId) throw(OutOfBoundsException) {
+  	void TotalPowerRow::setStateId (int i, Tag stateId)  {
+  	  	if (hasBeenAdded) {
+  	  		
+  		}
   		if ((i < 0) || (i > ((int) this->stateId.size())))
   			throw OutOfBoundsException("Index out of bounds during a set operation on attribute stateId in table TotalPowerTable");
   		vector<Tag> ::iterator iter = this->stateId.begin();
@@ -1589,8 +1978,8 @@ namespace asdm {
   		while (j < i) {
   			j++; iter++;
   		}
-  		this->stateId.insert(this->stateId.erase(iter), stateId); 	
-  	}
+  		this->stateId.insert(this->stateId.erase(iter), stateId); 
+  	}	
  			
 	
 	
@@ -1685,24 +2074,21 @@ namespace asdm {
 
 	
 	
-		
-		
-			
-	// ===> One to one link from a row of TotalPower table to a row of ExecBlock table.
 	
-	/**
-	 * Get the row in table ExecBlock by traversing the defined link to that table.
-	 * @return A row in ExecBlock table.
-	 * @throws NoSuchRow if there is no such row in table ExecBlock.
-	 */
-	ExecBlockRow *TotalPowerRow::getExecBlock() const throw(NoSuchRow) {
-		return table.getContainer().getExecBlock().getRowByKey( execBlockId );
-	}
-	
+		
 
-		
-		
-		
+	/**
+	 * Returns the pointer to the row in the ExecBlock table having ExecBlock.execBlockId == execBlockId
+	 * @return a ExecBlockRow*
+	 * 
+	 
+	 */
+	 ExecBlockRow* TotalPowerRow::getExecBlockUsingExecBlockId() {
+	 
+	 	return table.getContainer().getExecBlock().getRowByKey(execBlockId);
+	 }
+	 
+
 	
 
 	
@@ -1755,6 +2141,35 @@ namespace asdm {
 
 	
 
+	
+	
+	
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+	
 	}
 	
 	TotalPowerRow::TotalPowerRow (TotalPowerTable &t, TotalPowerRow &row) : table(t) {
@@ -1804,18 +2219,14 @@ namespace asdm {
 		else {
 	
 		
+			time = row.time;
+		
 			configDescriptionId = row.configDescriptionId;
 		
 			fieldId = row.fieldId;
 		
-			time = row.time;
 		
 		
-		
-		
-			execBlockId = row.execBlockId;
-		
-			stateId = row.stateId;
 		
 			scanNumber = row.scanNumber;
 		
@@ -1839,6 +2250,10 @@ namespace asdm {
 		
 			interval = row.interval;
 		
+			stateId = row.stateId;
+		
+			execBlockId = row.execBlockId;
+		
 		
 		
 		
@@ -1853,10 +2268,17 @@ namespace asdm {
 	}
 
 	
-	bool TotalPowerRow::compareNoAutoInc(Tag configDescriptionId, Tag fieldId, ArrayTime time, Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval) {
+	bool TotalPowerRow::compareNoAutoInc(ArrayTime time, Tag configDescriptionId, Tag fieldId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval, vector<Tag>  stateId, Tag execBlockId) {
 		bool result;
 		result = true;
 		
+	
+		
+		result = result && (this->time == time);
+		
+		if (!result) return false;
+	
+
 	
 		
 		result = result && (this->configDescriptionId == configDescriptionId);
@@ -1867,27 +2289,6 @@ namespace asdm {
 	
 		
 		result = result && (this->fieldId == fieldId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->time == time);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->execBlockId == execBlockId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->stateId == stateId);
 		
 		if (!result) return false;
 	
@@ -1969,23 +2370,29 @@ namespace asdm {
 		if (!result) return false;
 	
 
+	
+		
+		result = result && (this->stateId == stateId);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->execBlockId == execBlockId);
+		
+		if (!result) return false;
+	
+
 		return result;
 	}	
 	
 	
 	
-	bool TotalPowerRow::compareRequiredValue(Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval) {
+	bool TotalPowerRow::compareRequiredValue(int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval, vector<Tag>  stateId, Tag execBlockId) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->execBlockId == execBlockId)) return false;
-	
-
-	
-		if (!(this->stateId == stateId)) return false;
-	
-
 	
 		if (!(this->scanNumber == scanNumber)) return false;
 	
@@ -2030,6 +2437,14 @@ namespace asdm {
 		if (!(this->interval == interval)) return false;
 	
 
+	
+		if (!(this->stateId == stateId)) return false;
+	
+
+	
+		if (!(this->execBlockId == execBlockId)) return false;
+	
+
 		return result;
 	}
 	
@@ -2044,10 +2459,6 @@ namespace asdm {
 	 */
 	bool TotalPowerRow::equalByRequiredValue(TotalPowerRow* x) {
 		
-			
-		if (this->execBlockId != x->execBlockId) return false;
-			
-		if (this->stateId != x->stateId) return false;
 			
 		if (this->scanNumber != x->scanNumber) return false;
 			
@@ -2070,6 +2481,10 @@ namespace asdm {
 		if (this->flagRow != x->flagRow) return false;
 			
 		if (this->interval != x->interval) return false;
+			
+		if (this->stateId != x->stateId) return false;
+			
+		if (this->execBlockId != x->execBlockId) return false;
 			
 		
 		return true;

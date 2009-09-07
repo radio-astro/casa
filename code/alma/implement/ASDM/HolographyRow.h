@@ -80,14 +80,12 @@ using namespace enumerations;
 	
 
 	
+
+	
+
+	
 #include "CHolographyChannelType.h"
 using namespace HolographyChannelTypeMod;
-	
-
-	
-
-	
-
 	
 
 
@@ -113,7 +111,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Holography.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -125,7 +123,7 @@ namespace asdm {
 /**
  * The HolographyRow class is a row of a HolographyTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class HolographyRow {
@@ -152,8 +150,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct HolographyRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (HolographyRowIDL x) throw(ConversionException);
+	void setFromIDL (HolographyRowIDL x) ;
 #endif
 	
 	/**
@@ -166,8 +165,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the HolographyTable to which the row built by deserialization will be parented.
+	  */
+	 static HolographyRow* fromBin(EndianISStream& eiss, HolographyTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -189,66 +202,6 @@ public:
  
  	
  	
-	
-	
-
-
-	
-	// ===> Attribute numCorr
-	
-	
-	
-
-	
- 	/**
- 	 * Get numCorr.
- 	 * @return numCorr as int
- 	 */
- 	int getNumCorr() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numCorr with the specified int.
- 	 * @param numCorr The int value to which numCorr is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumCorr (int numCorr);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute type
-	
-	
-	
-
-	
- 	/**
- 	 * Get type.
- 	 * @return type as vector<HolographyChannelTypeMod::HolographyChannelType >
- 	 */
- 	vector<HolographyChannelTypeMod::HolographyChannelType > getType() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set type with the specified vector<HolographyChannelTypeMod::HolographyChannelType >.
- 	 * @param type The vector<HolographyChannelTypeMod::HolographyChannelType > value to which type is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setType (vector<HolographyChannelTypeMod::HolographyChannelType > type);
-  		
-	
 	
 	
 
@@ -314,29 +267,59 @@ public:
 
 
 	
-	// ===> Attribute flagRow
+	// ===> Attribute numCorr
 	
 	
 	
 
 	
  	/**
- 	 * Get flagRow.
- 	 * @return flagRow as bool
+ 	 * Get numCorr.
+ 	 * @return numCorr as int
  	 */
- 	bool getFlagRow() const;
+ 	int getNumCorr() const;
 	
  
  	
  	
  	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
+ 	 * Set numCorr with the specified int.
+ 	 * @param numCorr The int value to which numCorr is to be set.
  	 
  		
  			
  	 */
- 	void setFlagRow (bool flagRow);
+ 	void setNumCorr (int numCorr);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute type
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get type.
+ 	 * @return type as vector<HolographyChannelTypeMod::HolographyChannelType >
+ 	 */
+ 	vector<HolographyChannelTypeMod::HolographyChannelType > getType() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set type with the specified vector<HolographyChannelTypeMod::HolographyChannelType >.
+ 	 * @param type The vector<HolographyChannelTypeMod::HolographyChannelType > value to which type is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setType (vector<HolographyChannelTypeMod::HolographyChannelType > type);
   		
 	
 	
@@ -358,12 +341,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this HolographyRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type, Length distance, Length focus, bool flagRow);
+	bool compareNoAutoInc(Length distance, Length focus, int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type);
 	
 	
 
 	
-	bool compareRequiredValue(int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type, Length distance, Length focus, bool flagRow); 
+	bool compareRequiredValue(Length distance, Length focus, int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type); 
 		 
 	
 	/**
@@ -447,28 +430,6 @@ private:
 	
 
 	
-	// ===> Attribute numCorr
-	
-	
-
-	int numCorr;
-
-	
-	
- 	
-
-	
-	// ===> Attribute type
-	
-	
-
-	vector<HolographyChannelTypeMod::HolographyChannelType > type;
-
-	
-	
- 	
-
-	
 	// ===> Attribute distance
 	
 	
@@ -491,11 +452,22 @@ private:
  	
 
 	
-	// ===> Attribute flagRow
+	// ===> Attribute numCorr
 	
 	
 
-	bool flagRow;
+	int numCorr;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute type
+	
+	
+
+	vector<HolographyChannelTypeMod::HolographyChannelType > type;
 
 	
 	

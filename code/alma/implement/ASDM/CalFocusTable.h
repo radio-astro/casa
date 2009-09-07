@@ -81,8 +81,6 @@ using namespace enumerations;
 	
 
 	
-
-	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
 	
@@ -90,10 +88,48 @@ using namespace ReceiverBandMod;
 	
 
 	
+#include "CAtmPhaseCorrection.h"
+using namespace AtmPhaseCorrectionMod;
+	
 
 	
 #include "CFocusMethod.h"
 using namespace FocusMethodMod;
+	
+
+	
+
+	
+
+	
+
+	
+#include "CPolarizationType.h"
+using namespace PolarizationTypeMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -142,104 +178,232 @@ class ASDM;
 class CalFocusRow;
 /**
  * The CalFocusTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Result of focus calibration performed on-line by TelCal.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalFocus </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaName </TD>
+ 		 
+ * <TD> string</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the name of the antenna. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> receiverBand </TD>
+ 		 
+ * <TD> ReceiverBandMod::ReceiverBand</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies the receiver band. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> antennaName </TD> 
- * <TD> string </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalReduction Table. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> frequencyRange </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>  2 </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> startValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of the result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> receiverBand </TD> 
- * <TD> ReceiverBandMod::ReceiverBand </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> offset </TD> 
- * <TD> vector<Length > </TD>
- * <TD>  3 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> error </TD> 
- * <TD> vector<Length > </TD>
- * <TD>  3 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> focusMethod </TD> 
- * <TD> FocusMethodMod::FocusMethod </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> pointingDirection </TD> 
- * <TD> vector<Angle > </TD>
- * <TD>  2 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> wasFixed </TD> 
- * <TD> vector<bool > </TD>
- * <TD>  3 </TD> 
+ * <TD> &nbsp;the end time of the result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> ambientTemperature </TD> 
  * <TD> Temperature </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the ambient temperature. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> atmPhaseCorrection </TD> 
+ * <TD> AtmPhaseCorrectionMod::AtmPhaseCorrection </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;qualifies how the atmospheric phase correction has been applied. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> focusMethod </TD> 
+ * <TD> FocusMethodMod::FocusMethod </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the method used during the calibration. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> frequencyRange </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  2 </TD> 
+ * <TD> &nbsp;the frequency range over which the result is valid. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> pointingDirection </TD> 
+ * <TD> vector<Angle > </TD>
+ * <TD>  2 </TD> 
+ * <TD> &nbsp;the antenna pointing direction (horizontal coordinates). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numReceptor </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of receptors. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> polarizationTypes </TD> 
+ * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;identifies the polarization types (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> wereFixed </TD> 
+ * <TD> vector<bool > </TD>
+ * <TD>  3 </TD> 
+ * <TD> &nbsp;coordinates were fixed (true) or not fixed (false) (one value per individual coordinate). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> offset </TD> 
+ * <TD> vector<vector<Length > > </TD>
+ * <TD>  numReceptor, 3 </TD> 
+ * <TD> &nbsp;the measured focus offsets in X,Y,Z (one triple of values per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> offsetError </TD> 
+ * <TD> vector<vector<Length > > </TD>
+ * <TD>  numReceptor, 3 </TD> 
+ * <TD> &nbsp;the statistical uncertainties on measured focus offsets (one triple per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> offsetWasTied </TD> 
+ * <TD> vector<vector<bool > > </TD>
+ * <TD>  numReceptor, 3 </TD> 
+ * <TD> &nbsp;focus was tied (true) or not tied (false) (one value per receptor and focus individual coordinate). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> reducedChiSquared </TD> 
+ * <TD> vector<vector<double > > </TD>
+ * <TD>  numReceptor, 3 </TD> 
+ * <TD> &nbsp;a measure of the quality of the fit (one triple per receptor). </TD>
  * </TR>
 	
 
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
+	
+ * <TR>
+ * <TD> polarizationsAveraged </TD> 
+ * <TD> bool </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; Polarizations were averaged. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> focusCurveWidth </TD> 
+ * <TD> vector<vector<Length > > </TD>
+ * <TD>  numReceptor, 3  </TD>
+ * <TD>&nbsp; half power width of fitted focus curve (one triple per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> focusCurveWidthError </TD> 
+ * <TD> vector<vector<Length > > </TD>
+ * <TD>  numReceptor, 3  </TD>
+ * <TD>&nbsp; Uncertainty of the focus curve width. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> focusCurveWasFixed </TD> 
+ * <TD> vector<bool > </TD>
+ * <TD>  3  </TD>
+ * <TD>&nbsp; each coordinate of the focus curve width was set (true) or not set (false) to an assumed value. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> offIntensity </TD> 
+ * <TD> vector<Temperature > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the off intensity levels (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> offIntensityError </TD> 
+ * <TD> vector<Temperature > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the uncertainties on the off intensity levels (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> offIntensityWasFixed </TD> 
+ * <TD> bool </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the off intensity level was fixed (true) or not fixed (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> peakIntensity </TD> 
+ * <TD> vector<Temperature > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the maximum intensities (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> peakIntensityError </TD> 
+ * <TD> vector<Temperature > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the uncertainties on the maximum intensities (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> peakIntensityWasFixed </TD> 
+ * <TD> bool </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the maximum intensity was fixed (true) or not fixed (false). </TD>
+ * </TR>
+	
 
  * </TABLE>
  */
@@ -312,40 +476,50 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param antennaName. 
+	
+ 	 * @param receiverBand. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
-	
- 	 * @param antennaName. 
-	
- 	 * @param frequencyRange. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param receiverBand. 
+ 	 * @param ambientTemperature. 
 	
- 	 * @param offset. 
-	
- 	 * @param error. 
+ 	 * @param atmPhaseCorrection. 
 	
  	 * @param focusMethod. 
 	
+ 	 * @param frequencyRange. 
+	
  	 * @param pointingDirection. 
 	
- 	 * @param wasFixed. 
+ 	 * @param numReceptor. 
 	
- 	 * @param ambientTemperature. 
+ 	 * @param polarizationTypes. 
+	
+ 	 * @param wereFixed. 
+	
+ 	 * @param offset. 
+	
+ 	 * @param offsetError. 
+	
+ 	 * @param offsetWasTied. 
+	
+ 	 * @param reducedChiSquared. 
 	
      */
-	CalFocusRow *newRow(Tag calDataId, Tag calReductionId, string antennaName, vector<Frequency > frequencyRange, ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Length > offset, vector<Length > error, FocusMethodMod::FocusMethod focusMethod, vector<Angle > pointingDirection, vector<bool > wasFixed, Temperature ambientTemperature);
+	CalFocusRow *newRow(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalFocusRow *newRowFull(Tag calDataId, Tag calReductionId, string antennaName, vector<Frequency > frequencyRange, ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Length > offset, vector<Length > error, FocusMethodMod::FocusMethod focusMethod, vector<Angle > pointingDirection, vector<bool > wasFixed, Temperature ambientTemperature);
+	CalFocusRow *newRowFull(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared);
 
 
 	/**
@@ -411,15 +585,17 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param antennaName. 
+	
+	 * @param receiverBand. 
+	
 	 * @param calDataId. 
 	
 	 * @param calReductionId. 
 	
-	 * @param antennaName. 
-	
  	 *
 	 */
- 	CalFocusRow* getRowByKey(Tag calDataId, Tag calReductionId, string antennaName);
+ 	CalFocusRow* getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId);
 
  	 	
 
@@ -431,34 +607,44 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
+ 	 * @param antennaName.
+ 	 		
+ 	 * @param receiverBand.
+ 	 		
  	 * @param calDataId.
  	 		
  	 * @param calReductionId.
- 	 		
- 	 * @param antennaName.
- 	 		
- 	 * @param frequencyRange.
  	 		
  	 * @param startValidTime.
  	 		
  	 * @param endValidTime.
  	 		
- 	 * @param receiverBand.
+ 	 * @param ambientTemperature.
  	 		
- 	 * @param offset.
- 	 		
- 	 * @param error.
+ 	 * @param atmPhaseCorrection.
  	 		
  	 * @param focusMethod.
  	 		
+ 	 * @param frequencyRange.
+ 	 		
  	 * @param pointingDirection.
  	 		
- 	 * @param wasFixed.
+ 	 * @param numReceptor.
  	 		
- 	 * @param ambientTemperature.
+ 	 * @param polarizationTypes.
+ 	 		
+ 	 * @param wereFixed.
+ 	 		
+ 	 * @param offset.
+ 	 		
+ 	 * @param offsetError.
+ 	 		
+ 	 * @param offsetWasTied.
+ 	 		
+ 	 * @param reducedChiSquared.
  	 		 
  	 */
-	CalFocusRow* lookup(Tag calDataId, Tag calReductionId, string antennaName, vector<Frequency > frequencyRange, ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Length > offset, vector<Length > error, FocusMethodMod::FocusMethod focusMethod, vector<Angle > pointingDirection, vector<bool > wasFixed, Temperature ambientTemperature); 
+	CalFocusRow* lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared); 
 
 
 #ifndef WITHOUT_ACS
@@ -478,43 +664,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalFocusTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalFocusTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalFocus (CalFocusTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalFocus (CalFocusTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -589,8 +781,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalFocusRow* checkAndAdd(CalFocusRow* x) throw (DuplicateKey);
+	CalFocusRow* checkAndAdd(CalFocusRow* x) ;
 
 
 
@@ -604,7 +798,7 @@ private:
 	vector<CalFocusRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

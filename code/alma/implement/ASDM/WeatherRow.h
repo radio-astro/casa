@@ -128,7 +128,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Weather.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -143,7 +143,7 @@ class StationRow;
 /**
  * The WeatherRow class is a row of a WeatherTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class WeatherRow {
@@ -170,8 +170,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct WeatherRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (WeatherRowIDL x) throw(ConversionException);
+	void setFromIDL (WeatherRowIDL x) ;
 #endif
 	
 	/**
@@ -184,8 +185,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the WeatherTable to which the row built by deserialization will be parented.
+	  */
+	 static WeatherRow* fromBin(EndianISStream& eiss, WeatherTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -254,197 +269,6 @@ public:
 
 
 	
-	// ===> Attribute relHumidity
-	
-	
-	
-
-	
- 	/**
- 	 * Get relHumidity.
- 	 * @return relHumidity as Humidity
- 	 */
- 	Humidity getRelHumidity() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set relHumidity with the specified Humidity.
- 	 * @param relHumidity The Humidity value to which relHumidity is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setRelHumidity (Humidity relHumidity);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute temperature
-	
-	
-	
-
-	
- 	/**
- 	 * Get temperature.
- 	 * @return temperature as Temperature
- 	 */
- 	Temperature getTemperature() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set temperature with the specified Temperature.
- 	 * @param temperature The Temperature value to which temperature is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setTemperature (Temperature temperature);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute dewPoint, which is optional
-	
-	
-	
-	/**
-	 * The attribute dewPoint is optional. Return true if this attribute exists.
-	 * @return true if and only if the dewPoint attribute exists. 
-	 */
-	bool isDewPointExists() const;
-	
-
-	
- 	/**
- 	 * Get dewPoint, which is optional.
- 	 * @return dewPoint as Temperature
- 	 * @throws IllegalAccessException If dewPoint does not exist.
- 	 */
- 	Temperature getDewPoint() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set dewPoint with the specified Temperature.
- 	 * @param dewPoint The Temperature value to which dewPoint is to be set.
- 	 
- 		
- 	 */
- 	void setDewPoint (Temperature dewPoint);
-		
-	
-	
-	
-	/**
-	 * Mark dewPoint, which is an optional field, as non-existent.
-	 */
-	void clearDewPoint ();
-	
-
-
-	
-	// ===> Attribute windDirection
-	
-	
-	
-
-	
- 	/**
- 	 * Get windDirection.
- 	 * @return windDirection as Angle
- 	 */
- 	Angle getWindDirection() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set windDirection with the specified Angle.
- 	 * @param windDirection The Angle value to which windDirection is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setWindDirection (Angle windDirection);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute windSpeed
-	
-	
-	
-
-	
- 	/**
- 	 * Get windSpeed.
- 	 * @return windSpeed as Speed
- 	 */
- 	Speed getWindSpeed() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set windSpeed with the specified Speed.
- 	 * @param windSpeed The Speed value to which windSpeed is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setWindSpeed (Speed windSpeed);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute windMax
-	
-	
-	
-
-	
- 	/**
- 	 * Get windMax.
- 	 * @return windMax as Speed
- 	 */
- 	Speed getWindMax() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set windMax with the specified Speed.
- 	 * @param windMax The Speed value to which windMax is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setWindMax (Speed windMax);
-  		
-	
-	
-	
-
-
-	
 	// ===> Attribute pressureFlag
 	
 	
@@ -468,6 +292,36 @@ public:
  			
  	 */
  	void setPressureFlag (bool pressureFlag);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute relHumidity
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get relHumidity.
+ 	 * @return relHumidity as Humidity
+ 	 */
+ 	Humidity getRelHumidity() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set relHumidity with the specified Humidity.
+ 	 * @param relHumidity The Humidity value to which relHumidity is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setRelHumidity (Humidity relHumidity);
   		
 	
 	
@@ -505,6 +359,36 @@ public:
 
 
 	
+	// ===> Attribute temperature
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get temperature.
+ 	 * @return temperature as Temperature
+ 	 */
+ 	Temperature getTemperature() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set temperature with the specified Temperature.
+ 	 * @param temperature The Temperature value to which temperature is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setTemperature (Temperature temperature);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute temperatureFlag
 	
 	
@@ -535,43 +419,32 @@ public:
 
 
 	
-	// ===> Attribute dewPointFlag, which is optional
+	// ===> Attribute windDirection
 	
 	
-	
-	/**
-	 * The attribute dewPointFlag is optional. Return true if this attribute exists.
-	 * @return true if and only if the dewPointFlag attribute exists. 
-	 */
-	bool isDewPointFlagExists() const;
 	
 
 	
  	/**
- 	 * Get dewPointFlag, which is optional.
- 	 * @return dewPointFlag as bool
- 	 * @throws IllegalAccessException If dewPointFlag does not exist.
+ 	 * Get windDirection.
+ 	 * @return windDirection as Angle
  	 */
- 	bool getDewPointFlag() const throw(IllegalAccessException);
+ 	Angle getWindDirection() const;
 	
  
  	
  	
  	/**
- 	 * Set dewPointFlag with the specified bool.
- 	 * @param dewPointFlag The bool value to which dewPointFlag is to be set.
+ 	 * Set windDirection with the specified Angle.
+ 	 * @param windDirection The Angle value to which windDirection is to be set.
  	 
  		
+ 			
  	 */
- 	void setDewPointFlag (bool dewPointFlag);
-		
+ 	void setWindDirection (Angle windDirection);
+  		
 	
 	
-	
-	/**
-	 * Mark dewPointFlag, which is an optional field, as non-existent.
-	 */
-	void clearDewPointFlag ();
 	
 
 
@@ -599,6 +472,36 @@ public:
  			
  	 */
  	void setWindDirectionFlag (bool windDirectionFlag);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute windSpeed
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get windSpeed.
+ 	 * @return windSpeed as Speed
+ 	 */
+ 	Speed getWindSpeed() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set windSpeed with the specified Speed.
+ 	 * @param windSpeed The Speed value to which windSpeed is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setWindSpeed (Speed windSpeed);
   		
 	
 	
@@ -636,6 +539,36 @@ public:
 
 
 	
+	// ===> Attribute windMax
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get windMax.
+ 	 * @return windMax as Speed
+ 	 */
+ 	Speed getWindMax() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set windMax with the specified Speed.
+ 	 * @param windMax The Speed value to which windMax is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setWindMax (Speed windMax);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute windMaxFlag
 	
 	
@@ -662,6 +595,88 @@ public:
   		
 	
 	
+	
+
+
+	
+	// ===> Attribute dewPoint, which is optional
+	
+	
+	
+	/**
+	 * The attribute dewPoint is optional. Return true if this attribute exists.
+	 * @return true if and only if the dewPoint attribute exists. 
+	 */
+	bool isDewPointExists() const;
+	
+
+	
+ 	/**
+ 	 * Get dewPoint, which is optional.
+ 	 * @return dewPoint as Temperature
+ 	 * @throws IllegalAccessException If dewPoint does not exist.
+ 	 */
+ 	Temperature getDewPoint() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set dewPoint with the specified Temperature.
+ 	 * @param dewPoint The Temperature value to which dewPoint is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setDewPoint (Temperature dewPoint);
+		
+	
+	
+	
+	/**
+	 * Mark dewPoint, which is an optional field, as non-existent.
+	 */
+	void clearDewPoint ();
+	
+
+
+	
+	// ===> Attribute dewPointFlag, which is optional
+	
+	
+	
+	/**
+	 * The attribute dewPointFlag is optional. Return true if this attribute exists.
+	 * @return true if and only if the dewPointFlag attribute exists. 
+	 */
+	bool isDewPointFlagExists() const;
+	
+
+	
+ 	/**
+ 	 * Get dewPointFlag, which is optional.
+ 	 * @return dewPointFlag as bool
+ 	 * @throws IllegalAccessException If dewPointFlag does not exist.
+ 	 */
+ 	bool getDewPointFlag() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set dewPointFlag with the specified bool.
+ 	 * @param dewPointFlag The bool value to which dewPointFlag is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setDewPointFlag (bool dewPointFlag);
+		
+	
+	
+	
+	/**
+	 * Mark dewPointFlag, which is an optional field, as non-existent.
+	 */
+	void clearDewPointFlag ();
 	
 
 
@@ -727,12 +742,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this WeatherRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, Humidity relHumidity, Temperature temperature, Angle windDirection, Speed windSpeed, Speed windMax, bool pressureFlag, bool relHumidityFlag, bool temperatureFlag, bool windDirectionFlag, bool windSpeedFlag, bool windMaxFlag);
+	bool compareNoAutoInc(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag);
 	
 	
 
 	
-	bool compareRequiredValue(Pressure pressure, Humidity relHumidity, Temperature temperature, Angle windDirection, Speed windSpeed, Speed windMax, bool pressureFlag, bool relHumidityFlag, bool temperatureFlag, bool windDirectionFlag, bool windSpeedFlag, bool windMaxFlag); 
+	bool compareRequiredValue(Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag); 
 		 
 	
 	/**
@@ -815,6 +830,17 @@ private:
  	
 
 	
+	// ===> Attribute pressureFlag
+	
+	
+
+	bool pressureFlag;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute relHumidity
 	
 	
@@ -826,11 +852,99 @@ private:
  	
 
 	
+	// ===> Attribute relHumidityFlag
+	
+	
+
+	bool relHumidityFlag;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute temperature
 	
 	
 
 	Temperature temperature;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute temperatureFlag
+	
+	
+
+	bool temperatureFlag;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute windDirection
+	
+	
+
+	Angle windDirection;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute windDirectionFlag
+	
+	
+
+	bool windDirectionFlag;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute windSpeed
+	
+	
+
+	Speed windSpeed;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute windSpeedFlag
+	
+	
+
+	bool windSpeedFlag;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute windMax
+	
+	
+
+	Speed windMax;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute windMaxFlag
+	
+	
+
+	bool windMaxFlag;
 
 	
 	
@@ -850,72 +964,6 @@ private:
  	
 
 	
-	// ===> Attribute windDirection
-	
-	
-
-	Angle windDirection;
-
-	
-	
- 	
-
-	
-	// ===> Attribute windSpeed
-	
-	
-
-	Speed windSpeed;
-
-	
-	
- 	
-
-	
-	// ===> Attribute windMax
-	
-	
-
-	Speed windMax;
-
-	
-	
- 	
-
-	
-	// ===> Attribute pressureFlag
-	
-	
-
-	bool pressureFlag;
-
-	
-	
- 	
-
-	
-	// ===> Attribute relHumidityFlag
-	
-	
-
-	bool relHumidityFlag;
-
-	
-	
- 	
-
-	
-	// ===> Attribute temperatureFlag
-	
-	
-
-	bool temperatureFlag;
-
-	
-	
- 	
-
-	
 	// ===> Attribute dewPointFlag, which is optional
 	
 	
@@ -923,39 +971,6 @@ private:
 	
 
 	bool dewPointFlag;
-
-	
-	
- 	
-
-	
-	// ===> Attribute windDirectionFlag
-	
-	
-
-	bool windDirectionFlag;
-
-	
-	
- 	
-
-	
-	// ===> Attribute windSpeedFlag
-	
-	
-
-	bool windSpeedFlag;
-
-	
-	
- 	
-
-	
-	// ===> Attribute windMaxFlag
-	
-	
-
-	bool windMaxFlag;
 
 	
 	

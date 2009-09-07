@@ -92,6 +92,11 @@ using namespace enumerations;
 	
 
 	
+#include "CDirectionReferenceCode.h"
+using namespace DirectionReferenceCodeMod;
+	
+
+	
 
 	
 
@@ -118,7 +123,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Field.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -126,20 +131,20 @@ namespace asdm {
 //class asdm::FieldTable;
 
 
-// class asdm::FieldRow;
-class FieldRow;
-
 // class asdm::EphemerisRow;
 class EphemerisRow;
 
 // class asdm::SourceRow;
 class SourceRow;
+
+// class asdm::FieldRow;
+class FieldRow;
 	
 
 /**
  * The FieldRow class is a row of a FieldTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class FieldRow {
@@ -166,8 +171,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct FieldRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (FieldRowIDL x) throw(ConversionException);
+	void setFromIDL (FieldRowIDL x) ;
 #endif
 	
 	/**
@@ -180,8 +186,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the FieldTable to which the row built by deserialization will be parented.
+	  */
+	 static FieldRow* fromBin(EndianISStream& eiss, FieldTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -261,36 +281,6 @@ public:
  			
  	 */
  	void setCode (string code);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute time
-	
-	
-	
-
-	
- 	/**
- 	 * Get time.
- 	 * @return time as ArrayTime
- 	 */
- 	ArrayTime getTime() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set time with the specified ArrayTime.
- 	 * @param time The ArrayTime value to which time is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setTime (ArrayTime time);
   		
 	
 	
@@ -418,6 +408,129 @@ public:
 
 
 	
+	// ===> Attribute time, which is optional
+	
+	
+	
+	/**
+	 * The attribute time is optional. Return true if this attribute exists.
+	 * @return true if and only if the time attribute exists. 
+	 */
+	bool isTimeExists() const;
+	
+
+	
+ 	/**
+ 	 * Get time, which is optional.
+ 	 * @return time as ArrayTime
+ 	 * @throws IllegalAccessException If time does not exist.
+ 	 */
+ 	ArrayTime getTime() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set time with the specified ArrayTime.
+ 	 * @param time The ArrayTime value to which time is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setTime (ArrayTime time);
+		
+	
+	
+	
+	/**
+	 * Mark time, which is an optional field, as non-existent.
+	 */
+	void clearTime ();
+	
+
+
+	
+	// ===> Attribute directionCode, which is optional
+	
+	
+	
+	/**
+	 * The attribute directionCode is optional. Return true if this attribute exists.
+	 * @return true if and only if the directionCode attribute exists. 
+	 */
+	bool isDirectionCodeExists() const;
+	
+
+	
+ 	/**
+ 	 * Get directionCode, which is optional.
+ 	 * @return directionCode as DirectionReferenceCodeMod::DirectionReferenceCode
+ 	 * @throws IllegalAccessException If directionCode does not exist.
+ 	 */
+ 	DirectionReferenceCodeMod::DirectionReferenceCode getDirectionCode() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set directionCode with the specified DirectionReferenceCodeMod::DirectionReferenceCode.
+ 	 * @param directionCode The DirectionReferenceCodeMod::DirectionReferenceCode value to which directionCode is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setDirectionCode (DirectionReferenceCodeMod::DirectionReferenceCode directionCode);
+		
+	
+	
+	
+	/**
+	 * Mark directionCode, which is an optional field, as non-existent.
+	 */
+	void clearDirectionCode ();
+	
+
+
+	
+	// ===> Attribute directionEquinox, which is optional
+	
+	
+	
+	/**
+	 * The attribute directionEquinox is optional. Return true if this attribute exists.
+	 * @return true if and only if the directionEquinox attribute exists. 
+	 */
+	bool isDirectionEquinoxExists() const;
+	
+
+	
+ 	/**
+ 	 * Get directionEquinox, which is optional.
+ 	 * @return directionEquinox as ArrayTime
+ 	 * @throws IllegalAccessException If directionEquinox does not exist.
+ 	 */
+ 	ArrayTime getDirectionEquinox() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set directionEquinox with the specified ArrayTime.
+ 	 * @param directionEquinox The ArrayTime value to which directionEquinox is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setDirectionEquinox (ArrayTime directionEquinox);
+		
+	
+	
+	
+	/**
+	 * Mark directionEquinox, which is an optional field, as non-existent.
+	 */
+	void clearDirectionEquinox ();
+	
+
+
+	
 	// ===> Attribute assocNature, which is optional
 	
 	
@@ -435,7 +548,7 @@ public:
  	 * @return assocNature as string
  	 * @throws IllegalAccessException If assocNature does not exist.
  	 */
- 	string getAssocNature() const throw(IllegalAccessException);
+ 	string getAssocNature() const;
 	
  
  	
@@ -458,36 +571,6 @@ public:
 	
 
 
-	
-	// ===> Attribute flagRow
-	
-	
-	
-
-	
- 	/**
- 	 * Get flagRow.
- 	 * @return flagRow as bool
- 	 */
- 	bool getFlagRow() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setFlagRow (bool flagRow);
-  		
-	
-	
-	
-
-
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -507,21 +590,21 @@ public:
 	
  	/**
  	 * Get assocFieldId, which is optional.
- 	 * @return assocFieldId as vector<Tag> 
+ 	 * @return assocFieldId as Tag
  	 * @throws IllegalAccessException If assocFieldId does not exist.
  	 */
- 	vector<Tag>  getAssocFieldId() const throw(IllegalAccessException);
+ 	Tag getAssocFieldId() const;
 	
  
  	
  	
  	/**
- 	 * Set assocFieldId with the specified vector<Tag> .
- 	 * @param assocFieldId The vector<Tag>  value to which assocFieldId is to be set.
+ 	 * Set assocFieldId with the specified Tag.
+ 	 * @param assocFieldId The Tag value to which assocFieldId is to be set.
  	 
  		
  	 */
- 	void setAssocFieldId (vector<Tag>  assocFieldId);
+ 	void setAssocFieldId (Tag assocFieldId);
 		
 	
 	
@@ -551,7 +634,7 @@ public:
  	 * @return ephemerisId as Tag
  	 * @throws IllegalAccessException If ephemerisId does not exist.
  	 */
- 	Tag getEphemerisId() const throw(IllegalAccessException);
+ 	Tag getEphemerisId() const;
 	
  
  	
@@ -592,7 +675,7 @@ public:
  	 * @return sourceId as int
  	 * @throws IllegalAccessException If sourceId does not exist.
  	 */
- 	int getSourceId() const throw(IllegalAccessException);
+ 	int getSourceId() const;
 	
  
  	
@@ -619,58 +702,6 @@ public:
 	// Links //
 	///////////
 	
-	
- 		
- 	/**
- 	 * Set assocFieldId[i] with the specified Tag.
- 	 * @param i The index in assocFieldId where to set the Tag value.
- 	 * @param assocFieldId The Tag value to which assocFieldId[i] is to be set. 
- 	 * @throws OutOfBoundsException
-  	 */
-  	void setAssocFieldId (int i, Tag assocFieldId)  ;
- 			
-	
-
-	
-		 
-/**
- * Append a Tag to assocFieldId.
- * @param id the Tag to be appended to assocFieldId
- */
- void addAssocFieldId(Tag id); 
-
-/**
- * Append a vector of Tag to assocFieldId.
- * @param id an array of Tag to be appended to assocFieldId
- */
- void addAssocFieldId(const vector<Tag> & id); 
- 
-
- /**
-  * Returns the Tag stored in assocFieldId at position i.
-  * @param i the position in assocFieldId where the Tag is retrieved.
-  * @return the Tag stored at position i in assocFieldId.
-  */
- const Tag getAssocFieldId(int i);
- 
- /**
-  * Returns the FieldRow linked to this row via the tag stored in assocFieldId
-  * at position i.
-  * @param i the position in assocFieldId.
-  * @return a pointer on a FieldRow whose key (a Tag) is equal to the Tag stored at position
-  * i in the assocFieldId. 
-  */
- FieldRow* getField(int i); 
- 
- /**
-  * Returns the vector of FieldRow* linked to this row via the Tags stored in assocFieldId
-  * @return an array of pointers on FieldRow.
-  */
- vector<FieldRow *> getFields(); 
-  
-
-	
-
 	
 
 	
@@ -706,18 +737,35 @@ public:
 	
 
 	
+
+	
+		
+	/**
+	 * assocFieldId pointer to the row in the Field table having Field.assocFieldId == assocFieldId
+	 * @return a FieldRow*
+	 * 
+	 
+	 * throws IllegalAccessException
+	 
+	 */
+	 FieldRow* getFieldUsingAssocFieldId();
+	 
+
+	
+
+	
 	
 	
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this FieldRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(string fieldName, string code, ArrayTime time, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir, bool flagRow);
+	bool compareNoAutoInc(string fieldName, string code, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir);
 	
 	
 
 	
-	bool compareRequiredValue(string fieldName, string code, ArrayTime time, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir, bool flagRow); 
+	bool compareRequiredValue(string fieldName, string code, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir); 
 		 
 	
 	/**
@@ -823,17 +871,6 @@ private:
  	
 
 	
-	// ===> Attribute time
-	
-	
-
-	ArrayTime time;
-
-	
-	
- 	
-
-	
 	// ===> Attribute numPoly
 	
 	
@@ -878,6 +915,45 @@ private:
  	
 
 	
+	// ===> Attribute time, which is optional
+	
+	
+	bool timeExists;
+	
+
+	ArrayTime time;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute directionCode, which is optional
+	
+	
+	bool directionCodeExists;
+	
+
+	DirectionReferenceCodeMod::DirectionReferenceCode directionCode;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute directionEquinox, which is optional
+	
+	
+	bool directionEquinoxExists;
+	
+
+	ArrayTime directionEquinox;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute assocNature, which is optional
 	
 	
@@ -885,17 +961,6 @@ private:
 	
 
 	string assocNature;
-
-	
-	
- 	
-
-	
-	// ===> Attribute flagRow
-	
-	
-
-	bool flagRow;
 
 	
 	
@@ -912,7 +977,7 @@ private:
 	bool assocFieldIdExists;
 	
 
-	vector<Tag>  assocFieldId;
+	Tag assocFieldId;
 
 	
 	
@@ -951,12 +1016,6 @@ private:
 	
 		
 
-
-	
-
-	
-		
-
 	 
 
 	
@@ -964,6 +1023,13 @@ private:
 	
 		
 
+
+	
+
+	
+		
+
+	 
 
 	
 

@@ -270,6 +270,7 @@ class QtDisplayData : public QObject {
 
  
   void axisChanged(String, String, String);
+  void axisChanged4(String, String, String, int);
  protected slots:
   
   // Set the color bar orientation option according to the master

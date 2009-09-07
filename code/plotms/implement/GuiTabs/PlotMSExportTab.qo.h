@@ -44,8 +44,8 @@ class PlotMSExportTab : public PlotMSPlotSubtab, Ui::ExportTab {
     Q_OBJECT
     
 public:
-    // Constructor which takes the parent plotter.
-    PlotMSExportTab(PlotMSPlotter* parent);
+    // Constructor which takes the parent tab and plotter.
+    PlotMSExportTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent);
     
     // Destructor.
     ~PlotMSExportTab();

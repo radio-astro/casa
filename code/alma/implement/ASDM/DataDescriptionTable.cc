@@ -390,9 +390,7 @@ DataDescriptionRow* DataDescriptionTable::lookup(Tag polOrHoloId, Tag spectralWi
 	string DataDescriptionTable::toXML()  throw(ConversionException) {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<DataDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/DataDescriptionTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<DataDescriptionTable> ");
+		buf.append("<DataDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/DataDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/DataDescriptionTable http://almaobservatory.org/XML/XASDM/1/DataDescriptionTable.xsd\"> ");
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".

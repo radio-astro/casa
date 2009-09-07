@@ -42,18 +42,34 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the PointingMethod enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace PointingMethodMod
 {
+  //! PointingMethod.
+  //!  [CalDM.CalPointing] Method of pointing measurement
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum PointingMethod
   { 
-    THREE_POINT ,
-    FOUR_POINT ,
-    FIVE_POINT ,
-    CROSS ,
-    CIRCLE 
+    THREE_POINT /*!< Three-point scan */
+     ,
+    FOUR_POINT /*!< Four-point scan */
+     ,
+    FIVE_POINT /*!< Five-point scan */
+     ,
+    CROSS /*!< Cross scan */
+     ,
+    CIRCLE /*!< Circular scan */
+     
   };
   typedef PointingMethod &PointingMethod_out;
 } 
@@ -61,76 +77,97 @@ namespace PointingMethodMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration PointingMethod.
+  * 
+  */
 class CPointingMethod {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the PointingMethod enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sTHREE_POINT;
+	static const std::string& sTHREE_POINT; /*!< A const string equal to "THREE_POINT".*/
 	
-	static const std::string& sFOUR_POINT;
+	static const std::string& sFOUR_POINT; /*!< A const string equal to "FOUR_POINT".*/
 	
-	static const std::string& sFIVE_POINT;
+	static const std::string& sFIVE_POINT; /*!< A const string equal to "FIVE_POINT".*/
 	
-	static const std::string& sCROSS;
+	static const std::string& sCROSS; /*!< A const string equal to "CROSS".*/
 	
-	static const std::string& sCIRCLE;
-	
-    static const std::vector<std::string> sPointingMethodSet();	 
-
+	static const std::string& sCIRCLE; /*!< A const string equal to "CIRCLE".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in PointingMethodMod::PointingMethod.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of PointingMethodMod::PointingMethod.
+      * @return a string.
+      */
+	static std::string name(const PointingMethodMod::PointingMethod& e);
 	
-	// Explanations associated with the PointingMethod Enumeration.
-		
-	static const std::string& hTHREE_POINT;
-		
-	static const std::string& hFOUR_POINT;
-		
-	static const std::string& hFIVE_POINT;
-		
-	static const std::string& hCROSS;
-		
-	static const std::string& hCIRCLE;
-		
-	static const std::vector<std::string> hPointingMethodSet();
-   	
-
-   	// Is an integer number associated with the PointingMethod enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the PointingMethod enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  PointingMethod enumeration.
-	static std::string name(const PointingMethodMod::PointingMethod& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const PointingMethodMod::PointingMethod& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified PointingMethod enumeration.
-	static std::string help(const PointingMethodMod::PointingMethod& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a PointingMethod enumeration object by specifying its name.
    	static PointingMethodMod::PointingMethod newPointingMethod(const std::string& name);
    	
-   	// Create a PointingMethod enumeration object by specifying its name.
+   	/*! Return a PointingMethod's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a PointingMethodMod::PointingMethod's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static PointingMethodMod::PointingMethod literal(const std::string& name);
  	
-    // Create a PointingMethod enumeration object by specifying its position index (0 based).
+    /*! Return a PointingMethod's enumerator given an unsigned int.
+      * @param i the index of the enumerator in PointingMethodMod::PointingMethod.
+      * @return a PointingMethodMod::PointingMethod's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static PointingMethodMod::PointingMethod from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CPointingMethod();
     CPointingMethod(const CPointingMethod&);
     CPointingMethod& operator=(const CPointingMethod&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CPointingMethod_H*/

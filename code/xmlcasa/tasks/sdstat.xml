@@ -16,7 +16,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         ASAP SD spectral region statistics task:
 
 
-        Modified 2008-08-19 KS
+        Modified 2009-09-03 KS
         Modified 2008-06-23 TN
         Modified 2008-01-30 TT
         Task Version 2007-03-04 STM
@@ -103,6 +103,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="statfile">
             <description>name of output file for line statistics</description>
             <value></value>
+    </param>
+
+    <param type="string" name="format">
+            <description>format string to print statistic values</description>
+            <value>3.3f</value>
     </param>
 
     <param type="bool" name="overwrite">
@@ -214,6 +219,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         statfile -- name of output file for line statistics
                 default: '' (no output statistics file)
                 example: 'stat.txt'
+        format -- format string to print statistic values
+                default: '3.3f'
         overwrite -- overwrite the statistics file if already exists 
                 options: (bool) True,False
                 default: False

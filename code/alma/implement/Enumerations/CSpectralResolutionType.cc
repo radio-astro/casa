@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CSpectralResolutionType::version() {
+	return SpectralResolutionTypeMod::version;
+	}
+	
+string CSpectralResolutionType::revision () {
+	return SpectralResolutionTypeMod::revision;
+}
+
+unsigned int CSpectralResolutionType::size() {
+	return 3;
+	}
+	
 	
 const std::string& CSpectralResolutionType::sCHANNEL_AVERAGE = "CHANNEL_AVERAGE";
 	
@@ -44,7 +57,7 @@ const std::string& CSpectralResolutionType::sBASEBAND_WIDE = "BASEBAND_WIDE";
 	
 const std::string& CSpectralResolutionType::sFULL_RESOLUTION = "FULL_RESOLUTION";
 	
-const std::vector<std::string> CSpectralResolutionType::sSpectralResolutionTypeSet() {
+const std::vector<std::string> CSpectralResolutionType::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CSpectralResolutionType::sCHANNEL_AVERAGE);
@@ -55,29 +68,6 @@ const std::vector<std::string> CSpectralResolutionType::sSpectralResolutionTypeS
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CSpectralResolutionType::hCHANNEL_AVERAGE = "";
-	
-const std::string& CSpectralResolutionType::hBASEBAND_WIDE = "";
-	
-const std::string& CSpectralResolutionType::hFULL_RESOLUTION = "";
-	
-const std::vector<std::string> CSpectralResolutionType::hSpectralResolutionTypeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CSpectralResolutionType::hCHANNEL_AVERAGE);
-    
-    enumSet.insert(enumSet.end(), CSpectralResolutionType::hBASEBAND_WIDE);
-    
-    enumSet.insert(enumSet.end(), CSpectralResolutionType::hFULL_RESOLUTION);
-        
-    return enumSet;
-}
-   	
 
 std::string CSpectralResolutionType::name(const SpectralResolutionTypeMod::SpectralResolutionType& f) {
     switch (f) {
@@ -92,28 +82,9 @@ std::string CSpectralResolutionType::name(const SpectralResolutionTypeMod::Spect
       return CSpectralResolutionType::sFULL_RESOLUTION;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CSpectralResolutionType::help(const SpectralResolutionTypeMod::SpectralResolutionType& f) {
-    switch (f) {
-    
-    case SpectralResolutionTypeMod::CHANNEL_AVERAGE:
-      return CSpectralResolutionType::hCHANNEL_AVERAGE;
-    
-    case SpectralResolutionTypeMod::BASEBAND_WIDE:
-      return CSpectralResolutionType::hBASEBAND_WIDE;
-    
-    case SpectralResolutionTypeMod::FULL_RESOLUTION:
-      return CSpectralResolutionType::hFULL_RESOLUTION;
-    	
-    }
-    return std::string("");
-}
-   	
 
 SpectralResolutionTypeMod::SpectralResolutionType CSpectralResolutionType::newSpectralResolutionType(const std::string& name) {
 		
@@ -150,12 +121,10 @@ SpectralResolutionTypeMod::SpectralResolutionType CSpectralResolutionType::liter
 }
 
 SpectralResolutionTypeMod::SpectralResolutionType CSpectralResolutionType::from_int(unsigned int i) {
-	vector<string> names = sSpectralResolutionTypeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newSpectralResolutionType(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newSpectralResolutionType(names_.at(i));
 }
-
-	
 
 string CSpectralResolutionType::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'SpectralResolutionType'.";

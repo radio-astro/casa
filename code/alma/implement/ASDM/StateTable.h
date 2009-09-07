@@ -77,16 +77,14 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
-
-	
-
-	
 #include "CCalibrationDevice.h"
 using namespace CalibrationDeviceMod;
+	
+
+	
+
+	
+
 	
 
 	
@@ -131,65 +129,70 @@ class ASDM;
 class StateRow;
 /**
  * The StateTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * State information.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of State </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> stateId </I></TD> 
+ 		
+ * <TD><I> stateId </I></TD>
+ 		 
  * <TD> Tag</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a unique row in the table. </TD>
  * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
+	
+ * <TR>
+ * <TD> calDeviceName </TD> 
+ * <TD> CalibrationDeviceMod::CalibrationDevice </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the name of the calibration device. </TD>
+ * </TR>
 	
  * <TR>
  * <TD> sig </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;data to be used for signal measurement (true) or not (false). </TD>
  * </TR>
 	
  * <TR>
  * <TD> ref </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;data to be used for reference measurement (true) or not (false). </TD>
  * </TR>
 	
  * <TR>
  * <TD> onSky </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> calDeviceName </TD> 
- * <TD> CalibrationDeviceMod::CalibrationDevice </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> flagRow </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the beam is on the sky (true) or not (false). </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> weight </TD> 
  * <TD> float </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; used for combining data. </TD>
  * </TR>
 	
 
@@ -264,24 +267,22 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param calDeviceName. 
+	
  	 * @param sig. 
 	
  	 * @param ref. 
 	
  	 * @param onSky. 
 	
- 	 * @param calDeviceName. 
-	
- 	 * @param flagRow. 
-	
      */
-	StateRow *newRow(bool sig, bool ref, bool onSky, CalibrationDeviceMod::CalibrationDevice calDeviceName, bool flagRow);
+	StateRow *newRow(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	StateRow *newRowFull(bool sig, bool ref, bool onSky, CalibrationDeviceMod::CalibrationDevice calDeviceName, bool flagRow);
+	StateRow *newRowFull(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky);
 
 
 	/**
@@ -360,18 +361,16 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
+ 	 * @param calDeviceName.
+ 	 		
  	 * @param sig.
  	 		
  	 * @param ref.
  	 		
  	 * @param onSky.
- 	 		
- 	 * @param calDeviceName.
- 	 		
- 	 * @param flagRow.
  	 		 
  	 */
-	StateRow* lookup(bool sig, bool ref, bool onSky, CalibrationDeviceMod::CalibrationDevice calDeviceName, bool flagRow); 
+	StateRow* lookup(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky); 
 
 
 #ifndef WITHOUT_ACS
@@ -391,43 +390,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(StateTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(StateTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for State (StateTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a State (StateTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -506,8 +511,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	StateRow* checkAndAdd(StateRow* x) throw (DuplicateKey, UniquenessViolationException);
+	StateRow* checkAndAdd(StateRow* x) ;
 
 
 
@@ -521,7 +530,7 @@ private:
 	vector<StateRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

@@ -42,21 +42,44 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the CorrelatorName enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace CorrelatorNameMod
 {
+  //! CorrelatorName.
+  //! 
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum CorrelatorName
   { 
-    ALMA_ACA ,
-    ALMA_BASELINE ,
-    ALMA_BASELINE_ATF ,
-    ALMA_BASELINE_PROTO_OSF ,
-    HERSCHEL ,
-    IRAM_PDB ,
-    IRAM_30M_VESPA ,
-    IRAM_WILMA 
+    ALMA_ACA /*!< ACA correlator */
+     ,
+    ALMA_BASELINE /*!<  */
+     ,
+    ALMA_BASELINE_ATF /*!<  */
+     ,
+    ALMA_BASELINE_PROTO_OSF /*!<  */
+     ,
+    HERSCHEL /*!<  */
+     ,
+    IRAM_PDB /*!<  */
+     ,
+    IRAM_30M_VESPA /*!< Up to 18000 channels. */
+     ,
+    IRAM_WILMA /*!< 2 MHz, 18x930 MHz, HERA (wide) */
+     ,
+    NRAO_VLA /*!< VLA correlator. */
+     ,
+    NRAO_WIDAR /*!< EVLA correlator. */
+     
   };
   typedef CorrelatorName &CorrelatorName_out;
 } 
@@ -64,65 +87,107 @@ namespace CorrelatorNameMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration CorrelatorName.
+  * 
+  */
 class CCorrelatorName {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the CorrelatorName enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sALMA_ACA;
+	static const std::string& sALMA_ACA; /*!< A const string equal to "ALMA_ACA".*/
 	
-	static const std::string& sALMA_BASELINE;
+	static const std::string& sALMA_BASELINE; /*!< A const string equal to "ALMA_BASELINE".*/
 	
-	static const std::string& sALMA_BASELINE_ATF;
+	static const std::string& sALMA_BASELINE_ATF; /*!< A const string equal to "ALMA_BASELINE_ATF".*/
 	
-	static const std::string& sALMA_BASELINE_PROTO_OSF;
+	static const std::string& sALMA_BASELINE_PROTO_OSF; /*!< A const string equal to "ALMA_BASELINE_PROTO_OSF".*/
 	
-	static const std::string& sHERSCHEL;
+	static const std::string& sHERSCHEL; /*!< A const string equal to "HERSCHEL".*/
 	
-	static const std::string& sIRAM_PDB;
+	static const std::string& sIRAM_PDB; /*!< A const string equal to "IRAM_PDB".*/
 	
-	static const std::string& sIRAM_30M_VESPA;
+	static const std::string& sIRAM_30M_VESPA; /*!< A const string equal to "IRAM_30M_VESPA".*/
 	
-	static const std::string& sIRAM_WILMA;
+	static const std::string& sIRAM_WILMA; /*!< A const string equal to "IRAM_WILMA".*/
 	
-    static const std::vector<std::string> sCorrelatorNameSet();	 
+	static const std::string& sNRAO_VLA; /*!< A const string equal to "NRAO_VLA".*/
+	
+	static const std::string& sNRAO_WIDAR; /*!< A const string equal to "NRAO_WIDAR".*/
+	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in CorrelatorNameMod::CorrelatorName.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of CorrelatorNameMod::CorrelatorName.
+      * @return a string.
+      */
+	static std::string name(const CorrelatorNameMod::CorrelatorName& e);
 	
-
-	
-
-   	// Is an integer number associated with the CorrelatorName enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the CorrelatorName enumeration?
-    static bool isHelp() { return false; }
-    
-    // Get the string name associated with the specified  CorrelatorName enumeration.
-	static std::string name(const CorrelatorNameMod::CorrelatorName& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const CorrelatorNameMod::CorrelatorName& f) { return name(f); }
 
-	
-
-	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a CorrelatorName enumeration object by specifying its name.
    	static CorrelatorNameMod::CorrelatorName newCorrelatorName(const std::string& name);
    	
-   	// Create a CorrelatorName enumeration object by specifying its name.
+   	/*! Return a CorrelatorName's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a CorrelatorNameMod::CorrelatorName's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static CorrelatorNameMod::CorrelatorName literal(const std::string& name);
  	
-    // Create a CorrelatorName enumeration object by specifying its position index (0 based).
+    /*! Return a CorrelatorName's enumerator given an unsigned int.
+      * @param i the index of the enumerator in CorrelatorNameMod::CorrelatorName.
+      * @return a CorrelatorNameMod::CorrelatorName's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static CorrelatorNameMod::CorrelatorName from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CCorrelatorName();
     CCorrelatorName(const CCorrelatorName&);
     CCorrelatorName& operator=(const CCorrelatorName&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CCorrelatorName_H*/

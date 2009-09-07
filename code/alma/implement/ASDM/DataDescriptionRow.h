@@ -165,54 +165,6 @@ public:
  	Tag getDataDescriptionId() const;
 	
  
- 	
- 	
-	
-	
-
-
-	
-	// ===> Attribute flagRow, which is optional
-	
-	
-	
-	/**
-	 * The attribute flagRow is optional. Return true if this attribute exists.
-	 * @return true if and only if the flagRow attribute exists. 
-	 */
-	bool isFlagRowExists() const;
-	
-
-	
- 	/**
- 	 * Get flagRow, which is optional.
- 	 * @return flagRow as bool
- 	 * @throws IllegalAccessException If flagRow does not exist.
- 	 */
- 	bool getFlagRow() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 		
- 	 */
- 	void setFlagRow (bool flagRow);
-		
-	
-	
-	
-	/**
-	 * Mark flagRow, which is an optional field, as non-existent.
-	 */
-	void clearFlagRow ();
-	
-	
-	
-	
-
 
 	////////////////////////////////
 	// Extrinsic Table Attributes //
@@ -386,20 +338,7 @@ private:
  	 */
  	void setDataDescriptionId (Tag dataDescriptionId) throw(IllegalAccessException);
   		
-	
-
-	
-	// ===> Attribute flagRow, which is optional
-	
-	
-	bool flagRowExists;
-	
-	bool flagRow;
-
-	
-	
- 	
-
+		
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////

@@ -77,17 +77,30 @@ using namespace enumerations;
 	
 
 	
+#include "CAtmPhaseCorrection.h"
+using namespace AtmPhaseCorrectionMod;
+	
+
+	
 #include "CBasebandName.h"
 using namespace BasebandNameMod;
 	
 
 	
-
-	
-
-	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -105,6 +118,11 @@ using namespace PolarizationTypeMod;
 
 	
 
+	
+
+	
+#include "CReceiverSideband.h"
+using namespace ReceiverSidebandMod;
 	
 
 
@@ -147,112 +165,180 @@ class ASDM;
 class CalDelayRow;
 /**
  * The CalDelayTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Result of delay offset calibration performed on-line by  TelCal. This calibration determines the delay offsets to be added in the  correlator to compensate for residual cable delays.   Delays are entered in seconds but represented as double precision floating point numbers.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalDelay </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaName </TD>
+ 		 
+ * <TD> string</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the name of the antenna. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> atmPhaseCorrection </TD>
+ 		 
+ * <TD> AtmPhaseCorrectionMod::AtmPhaseCorrection</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;qualifies how the atmospheric phase correction has been applied. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> antennaName </TD> 
- * <TD> string </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> basebandName </TD>
+ 		 
+ * <TD> BasebandNameMod::BasebandName</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;Name of the Baseband </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> basebandName </TD> 
- * <TD> BasebandNameMod::BasebandName </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> receiverBand </TD>
+ 		 
+ * <TD> ReceiverBandMod::ReceiverBand</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp; identifies the receiver band. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalReduction Table. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> numReceptor </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> refAntennaName </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> receiverBand </TD> 
- * <TD> ReceiverBandMod::ReceiverBand </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> polarizationTypes </TD> 
- * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
- * <TD>  numReceptor </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> startValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of the result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the end time of the result validity period. </TD>
  * </TR>
 	
  * <TR>
- * <TD> delayOffset </TD> 
- * <TD> vector<double > </TD>
- * <TD>  numReceptor </TD> 
+ * <TD> refAntennaName </TD> 
+ * <TD> string </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the name of the reference antenna. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numReceptor </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of receptors. </TD>
  * </TR>
 	
  * <TR>
  * <TD> delayError </TD> 
  * <TD> vector<double > </TD>
  * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the uncertainties on the measured delay offsets (one value per receptor). </TD>
  * </TR>
+	
+ * <TR>
+ * <TD> delayOffset </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the measured delay offsets (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> polarizationTypes </TD> 
+ * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;identifies the polarizations of the receptors (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> reducedChiSquared </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;measure of the quality of the fit (one value per receptor). </TD>
+ * </TR>
+	
+
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> crossDelayOffset </TD> 
  * <TD> double </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the measured cross delay offset (reference antenna only). </TD>
  * </TR>
 	
  * <TR>
  * <TD> crossDelayOffsetError </TD> 
  * <TD> double </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the uncertainty for the cross delay offset. </TD>
  * </TR>
 	
-
+ * <TR>
+ * <TD> numSideband </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the number of sideband. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> refFreq </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  numSideband  </TD>
+ * <TD>&nbsp; the reference frequencies (one value per sideband). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> refFreqPhase </TD> 
+ * <TD> vector<Angle > </TD>
+ * <TD>  numSideband  </TD>
+ * <TD>&nbsp; the phases at reference frequencies (one value per sideband). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sidebands </TD> 
+ * <TD> vector<ReceiverSidebandMod::ReceiverSideband > </TD>
+ * <TD>  numSideband  </TD>
+ * <TD>&nbsp; identifies the receiver's sidebands (one value per sideband). </TD>
+ * </TR>
+	
 
  * </TABLE>
  */
@@ -325,42 +411,42 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param calDataId. 
-	
- 	 * @param calReductionId. 
-	
  	 * @param antennaName. 
+	
+ 	 * @param atmPhaseCorrection. 
 	
  	 * @param basebandName. 
 	
- 	 * @param numReceptor. 
-	
- 	 * @param refAntennaName. 
-	
  	 * @param receiverBand. 
 	
- 	 * @param polarizationTypes. 
+ 	 * @param calDataId. 
+	
+ 	 * @param calReductionId. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param delayOffset. 
+ 	 * @param refAntennaName. 
+	
+ 	 * @param numReceptor. 
 	
  	 * @param delayError. 
 	
- 	 * @param crossDelayOffset. 
+ 	 * @param delayOffset. 
 	
- 	 * @param crossDelayOffsetError. 
+ 	 * @param polarizationTypes. 
+	
+ 	 * @param reducedChiSquared. 
 	
      */
-	CalDelayRow *newRow(Tag calDataId, Tag calReductionId, string antennaName, BasebandNameMod::BasebandName basebandName, int numReceptor, string refAntennaName, ReceiverBandMod::ReceiverBand receiverBand, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<double > delayOffset, vector<double > delayError, double crossDelayOffset, double crossDelayOffsetError);
+	CalDelayRow *newRow(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalDelayRow *newRowFull(Tag calDataId, Tag calReductionId, string antennaName, BasebandNameMod::BasebandName basebandName, int numReceptor, string refAntennaName, ReceiverBandMod::ReceiverBand receiverBand, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<double > delayOffset, vector<double > delayError, double crossDelayOffset, double crossDelayOffsetError);
+	CalDelayRow *newRowFull(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared);
 
 
 	/**
@@ -426,17 +512,21 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param antennaName. 
+	
+	 * @param atmPhaseCorrection. 
+	
+	 * @param basebandName. 
+	
+	 * @param receiverBand. 
+	
 	 * @param calDataId. 
 	
 	 * @param calReductionId. 
 	
-	 * @param antennaName. 
-	
-	 * @param basebandName. 
-	
  	 *
 	 */
- 	CalDelayRow* getRowByKey(Tag calDataId, Tag calReductionId, string antennaName, BasebandNameMod::BasebandName basebandName);
+ 	CalDelayRow* getRowByKey(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId);
 
  	 	
 
@@ -448,36 +538,36 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param calDataId.
- 	 		
- 	 * @param calReductionId.
- 	 		
  	 * @param antennaName.
+ 	 		
+ 	 * @param atmPhaseCorrection.
  	 		
  	 * @param basebandName.
  	 		
- 	 * @param numReceptor.
- 	 		
- 	 * @param refAntennaName.
- 	 		
  	 * @param receiverBand.
  	 		
- 	 * @param polarizationTypes.
+ 	 * @param calDataId.
+ 	 		
+ 	 * @param calReductionId.
  	 		
  	 * @param startValidTime.
  	 		
  	 * @param endValidTime.
  	 		
- 	 * @param delayOffset.
+ 	 * @param refAntennaName.
+ 	 		
+ 	 * @param numReceptor.
  	 		
  	 * @param delayError.
  	 		
- 	 * @param crossDelayOffset.
+ 	 * @param delayOffset.
  	 		
- 	 * @param crossDelayOffsetError.
+ 	 * @param polarizationTypes.
+ 	 		
+ 	 * @param reducedChiSquared.
  	 		 
  	 */
-	CalDelayRow* lookup(Tag calDataId, Tag calReductionId, string antennaName, BasebandNameMod::BasebandName basebandName, int numReceptor, string refAntennaName, ReceiverBandMod::ReceiverBand receiverBand, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<double > delayOffset, vector<double > delayError, double crossDelayOffset, double crossDelayOffsetError); 
+	CalDelayRow* lookup(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, string refAntennaName, int numReceptor, vector<double > delayError, vector<double > delayOffset, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > reducedChiSquared); 
 
 
 #ifndef WITHOUT_ACS
@@ -497,43 +587,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalDelayTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalDelayTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalDelay (CalDelayTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalDelay (CalDelayTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -608,8 +704,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalDelayRow* checkAndAdd(CalDelayRow* x) throw (DuplicateKey);
+	CalDelayRow* checkAndAdd(CalDelayRow* x) ;
 
 
 
@@ -623,7 +721,7 @@ private:
 	vector<CalDelayRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

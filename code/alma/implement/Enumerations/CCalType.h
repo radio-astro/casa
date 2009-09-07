@@ -42,30 +42,58 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the CalType enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace CalTypeMod
 {
+  //! CalType.
+  //!  [CalDM.CalData] Used to point to a given CalResult table
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum CalType
   { 
-    CAL_AMPLI ,
-    CAL_ATMOSPHERE ,
-    CAL_BANDPASS ,
-    CAL_CURVE ,
-    CAL_DELAY ,
-    CAL_FLUX ,
-    CAL_FOCUS ,
-    CAL_FOCUS_MODEL ,
-    CAL_GAIN ,
-    CAL_HOLOGRAPHY ,
-    CAL_PHASE ,
-    CAL_POINTING ,
-    CAL_POINTING_MODEL ,
-    CAL_POSITION ,
-    CAL_PRIMARY_BEAM ,
-    CAL_SEEING ,
-    CAL_WVR 
+    CAL_AMPLI /*!<  */
+     ,
+    CAL_ATMOSPHERE /*!<  */
+     ,
+    CAL_BANDPASS /*!<  */
+     ,
+    CAL_CURVE /*!<  */
+     ,
+    CAL_DELAY /*!<  */
+     ,
+    CAL_FLUX /*!<  */
+     ,
+    CAL_FOCUS /*!<  */
+     ,
+    CAL_FOCUS_MODEL /*!<  */
+     ,
+    CAL_GAIN /*!<  */
+     ,
+    CAL_HOLOGRAPHY /*!<  */
+     ,
+    CAL_PHASE /*!<  */
+     ,
+    CAL_POINTING /*!<  */
+     ,
+    CAL_POINTING_MODEL /*!<  */
+     ,
+    CAL_POSITION /*!<  */
+     ,
+    CAL_PRIMARY_BEAM /*!<  */
+     ,
+    CAL_SEEING /*!<  */
+     ,
+    CAL_WVR /*!<  */
+     
   };
   typedef CalType &CalType_out;
 } 
@@ -73,124 +101,121 @@ namespace CalTypeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration CalType.
+  * 
+  */
 class CCalType {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the CalType enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sCAL_AMPLI;
+	static const std::string& sCAL_AMPLI; /*!< A const string equal to "CAL_AMPLI".*/
 	
-	static const std::string& sCAL_ATMOSPHERE;
+	static const std::string& sCAL_ATMOSPHERE; /*!< A const string equal to "CAL_ATMOSPHERE".*/
 	
-	static const std::string& sCAL_BANDPASS;
+	static const std::string& sCAL_BANDPASS; /*!< A const string equal to "CAL_BANDPASS".*/
 	
-	static const std::string& sCAL_CURVE;
+	static const std::string& sCAL_CURVE; /*!< A const string equal to "CAL_CURVE".*/
 	
-	static const std::string& sCAL_DELAY;
+	static const std::string& sCAL_DELAY; /*!< A const string equal to "CAL_DELAY".*/
 	
-	static const std::string& sCAL_FLUX;
+	static const std::string& sCAL_FLUX; /*!< A const string equal to "CAL_FLUX".*/
 	
-	static const std::string& sCAL_FOCUS;
+	static const std::string& sCAL_FOCUS; /*!< A const string equal to "CAL_FOCUS".*/
 	
-	static const std::string& sCAL_FOCUS_MODEL;
+	static const std::string& sCAL_FOCUS_MODEL; /*!< A const string equal to "CAL_FOCUS_MODEL".*/
 	
-	static const std::string& sCAL_GAIN;
+	static const std::string& sCAL_GAIN; /*!< A const string equal to "CAL_GAIN".*/
 	
-	static const std::string& sCAL_HOLOGRAPHY;
+	static const std::string& sCAL_HOLOGRAPHY; /*!< A const string equal to "CAL_HOLOGRAPHY".*/
 	
-	static const std::string& sCAL_PHASE;
+	static const std::string& sCAL_PHASE; /*!< A const string equal to "CAL_PHASE".*/
 	
-	static const std::string& sCAL_POINTING;
+	static const std::string& sCAL_POINTING; /*!< A const string equal to "CAL_POINTING".*/
 	
-	static const std::string& sCAL_POINTING_MODEL;
+	static const std::string& sCAL_POINTING_MODEL; /*!< A const string equal to "CAL_POINTING_MODEL".*/
 	
-	static const std::string& sCAL_POSITION;
+	static const std::string& sCAL_POSITION; /*!< A const string equal to "CAL_POSITION".*/
 	
-	static const std::string& sCAL_PRIMARY_BEAM;
+	static const std::string& sCAL_PRIMARY_BEAM; /*!< A const string equal to "CAL_PRIMARY_BEAM".*/
 	
-	static const std::string& sCAL_SEEING;
+	static const std::string& sCAL_SEEING; /*!< A const string equal to "CAL_SEEING".*/
 	
-	static const std::string& sCAL_WVR;
-	
-    static const std::vector<std::string> sCalTypeSet();	 
-
+	static const std::string& sCAL_WVR; /*!< A const string equal to "CAL_WVR".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in CalTypeMod::CalType.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of CalTypeMod::CalType.
+      * @return a string.
+      */
+	static std::string name(const CalTypeMod::CalType& e);
 	
-	// Explanations associated with the CalType Enumeration.
-		
-	static const std::string& hCAL_AMPLI;
-		
-	static const std::string& hCAL_ATMOSPHERE;
-		
-	static const std::string& hCAL_BANDPASS;
-		
-	static const std::string& hCAL_CURVE;
-		
-	static const std::string& hCAL_DELAY;
-		
-	static const std::string& hCAL_FLUX;
-		
-	static const std::string& hCAL_FOCUS;
-		
-	static const std::string& hCAL_FOCUS_MODEL;
-		
-	static const std::string& hCAL_GAIN;
-		
-	static const std::string& hCAL_HOLOGRAPHY;
-		
-	static const std::string& hCAL_PHASE;
-		
-	static const std::string& hCAL_POINTING;
-		
-	static const std::string& hCAL_POINTING_MODEL;
-		
-	static const std::string& hCAL_POSITION;
-		
-	static const std::string& hCAL_PRIMARY_BEAM;
-		
-	static const std::string& hCAL_SEEING;
-		
-	static const std::string& hCAL_WVR;
-		
-	static const std::vector<std::string> hCalTypeSet();
-   	
-
-   	// Is an integer number associated with the CalType enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the CalType enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  CalType enumeration.
-	static std::string name(const CalTypeMod::CalType& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const CalTypeMod::CalType& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified CalType enumeration.
-	static std::string help(const CalTypeMod::CalType& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a CalType enumeration object by specifying its name.
    	static CalTypeMod::CalType newCalType(const std::string& name);
    	
-   	// Create a CalType enumeration object by specifying its name.
+   	/*! Return a CalType's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a CalTypeMod::CalType's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static CalTypeMod::CalType literal(const std::string& name);
  	
-    // Create a CalType enumeration object by specifying its position index (0 based).
+    /*! Return a CalType's enumerator given an unsigned int.
+      * @param i the index of the enumerator in CalTypeMod::CalType.
+      * @return a CalTypeMod::CalType's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static CalTypeMod::CalType from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CCalType();
     CCalType(const CCalType&);
     CCalType& operator=(const CCalType&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CCalType_H*/

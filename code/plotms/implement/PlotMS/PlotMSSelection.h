@@ -87,9 +87,9 @@ public:
     // Applies this selection using the first MS into the second MS.  (See the
     // mssSetData method in ms/MeasurementSets/MSSelectionTools.h for details.)
     void apply(MeasurementSet& ms, MeasurementSet& selectedMS,
-               Matrix<Int>& chansel) const;
-    
-    
+               Vector<Vector<Slice> >& chansel,
+	       Vector<Vector<Slice> >& corrsel) const;
+        
     // Gets/Sets the value for the given selection field.
     // <group>
     const String& getValue(Field f) const;

@@ -27,6 +27,7 @@
 #ifndef Temperature_CLASS
 #define Temperature_CLASS
 
+#include <vector>
 #include <iostream>
 #include <string>
 using namespace std;
@@ -40,6 +41,10 @@ using asdmIDLTypes::IDLTemperature;
 #include <NumberFormatException.h>
 using asdm::StringTokenizer;
 using asdm::NumberFormatException;
+
+#include "EndianStream.h"
+using asdm::EndianOSStream;
+using asdm::EndianISStream;
 
 namespace asdm {
 
@@ -64,6 +69,64 @@ public:
 	static string toString(double);
 	static Temperature getTemperature(StringTokenizer &t) throw(NumberFormatException);
 
+	/**
+	 * Write the binary representation of this to a EndianOSStream.
+	 */		
+	void toBin(EndianOSStream& eoss);
+
+	/**
+	 * Write the binary representation of a vector of Temperature to a EndianOSStream.
+	 * @param temp the vector of Temperature to be written
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	static void toBin(const vector<Temperature>& temp,  EndianOSStream& eoss);
+	
+	/**
+	 * Write the binary representation of a vector of vector of Temperature to a EndianOSStream.
+	 * @param temp the vector of vector of Temperature to be written
+	 * @param eoss the EndianOSStream to be written to
+	 */	
+	static void toBin(const vector<vector<Temperature> >& temp,  EndianOSStream& eoss);
+	
+	/**
+	 * Write the binary representation of a vector of vector of vector of Temperature to a EndianOSStream.
+	 * @param temp the vector of vector of vector of Temperature to be written
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	static void toBin(const vector<vector<vector<Temperature> > >& temp,  EndianOSStream& eoss);
+
+	/**
+	 * Read the binary representation of an Temperature from a EndianISStream
+	 * and use the read value to set an  Temperature.
+	 * @param eiss the EndianStream to be read
+	 * @return an Temperature
+	 */
+	static Temperature fromBin(EndianISStream& eiss);
+	
+	/**
+	 * Read the binary representation of  a vector of  Temperature from an EndianISStream
+	 * and use the read value to set a vector of  Temperature.
+	 * @param dis the EndianISStream to be read
+	 * @return a vector of Temperature
+	 */	 
+	 static vector<Temperature> from1DBin(EndianISStream & eiss);
+	 
+	/**
+	 * Read the binary representation of  a vector of vector of Temperature from an EndianISStream
+	 * and use the read value to set a vector of  vector of Temperature.
+	 * @param eiis the EndianISStream to be read
+	 * @return a vector of vector of Temperature
+	 */	 
+	 static vector<vector<Temperature> > from2DBin(EndianISStream & eiss);
+	 
+	/**
+	 * Read the binary representation of  a vector of vector of vector of Temperature from an EndianISStream
+	 * and use the read value to set a vector of  vector of vector of Temperature.
+	 * @param eiss the EndianISStream to be read
+	 * @return a vector of vector of vector of Temperature
+	 */	 
+	 static vector<vector<vector<Temperature> > > from3DBin(EndianISStream & eiss);	 
+	 		
 	Temperature();                              		// default constructor
 	Temperature(const Temperature &);						// X const X& constructor
 	Temperature(const string &s);

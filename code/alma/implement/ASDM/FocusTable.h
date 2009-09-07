@@ -82,14 +82,6 @@ using namespace enumerations;
 
 	
 
-	
-
-	
-
-	
-
-	
-
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
@@ -130,92 +122,74 @@ class ASDM;
 class FocusRow;
 /**
  * The FocusTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Contains the focus information.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Focus </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> antennaId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in AntennaTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> feedId </TD> 
- * <TD> int </TD>
+ 		
+ * <TD> timeInterval </TD>
+ 		 
+ * <TD> ArrayTimeInterval</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;time interval for which the row's content is valid. </TD>
  * </TR>
- 		
-	
- 		
- * <TR>
- * <TD> timeInterval </TD> 
- * <TD> ArrayTimeInterval </TD>
- * <TD> &nbsp; </TD>
- * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> focusModelId </TD> 
- * <TD> Tag </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> xFocusPosition </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> yFocusPosition </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> zFocusPosition </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> focusTracking </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the focus motions have been tracked (true) or not tracked (false). </TD>
  * </TR>
 	
  * <TR>
- * <TD> xFocusOffset </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> focusOffset </TD> 
+ * <TD> vector<Length > </TD>
+ * <TD>  3 </TD> 
+ * <TD> &nbsp;focus offset relative to the tracked position (a triple ). </TD>
  * </TR>
 	
  * <TR>
- * <TD> yFocusOffset </TD> 
- * <TD> Length </TD>
+ * <TD> focusModelId </TD> 
+ * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> zFocusOffset </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;refers to a collection of rows in FocusModelTable. </TD>
  * </TR>
 	
 
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
+	
+ * <TR>
+ * <TD> measuredFocusPosition </TD> 
+ * <TD> vector<Length > </TD>
+ * <TD>  3  </TD>
+ * <TD>&nbsp; the measured focus position. </TD>
+ * </TR>
+	
 
  * </TABLE>
  */
@@ -290,34 +264,22 @@ public:
 	
  	 * @param antennaId. 
 	
- 	 * @param feedId. 
-	
  	 * @param timeInterval. 
-	
- 	 * @param focusModelId. 
-	
- 	 * @param xFocusPosition. 
-	
- 	 * @param yFocusPosition. 
-	
- 	 * @param zFocusPosition. 
 	
  	 * @param focusTracking. 
 	
- 	 * @param xFocusOffset. 
+ 	 * @param focusOffset. 
 	
- 	 * @param yFocusOffset. 
-	
- 	 * @param zFocusOffset. 
+ 	 * @param focusModelId. 
 	
      */
-	FocusRow *newRow(Tag antennaId, int feedId, ArrayTimeInterval timeInterval, Tag focusModelId, Length xFocusPosition, Length yFocusPosition, Length zFocusPosition, bool focusTracking, Length xFocusOffset, Length yFocusOffset, Length zFocusOffset);
+	FocusRow *newRow(Tag antennaId, ArrayTimeInterval timeInterval, bool focusTracking, vector<Length > focusOffset, int focusModelId);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	FocusRow *newRowFull(Tag antennaId, int feedId, ArrayTimeInterval timeInterval, Tag focusModelId, Length xFocusPosition, Length yFocusPosition, Length zFocusPosition, bool focusTracking, Length xFocusOffset, Length yFocusOffset, Length zFocusOffset);
+	FocusRow *newRowFull(Tag antennaId, ArrayTimeInterval timeInterval, bool focusTracking, vector<Length > focusOffset, int focusModelId);
 
 
 	/**
@@ -357,7 +319,7 @@ public:
 	 *
 	
 	 * @note The row is inserted in the table in such a way that all the rows having the same value of
-	 * ( antennaId, feedId ) are stored by ascending time.
+	 * ( antennaId ) are stored by ascending time.
 	 * @see method getByContext.
 	
 	 */
@@ -381,12 +343,12 @@ public:
 
 	/**
 	 * Returns all the rows sorted by ascending startTime for a given context. 
-	 * The context is defined by a value of ( antennaId, feedId ).
+	 * The context is defined by a value of ( antennaId ).
 	 *
 	 * @return a pointer on a vector<FocusRow *>. A null returned value means that the table contains
-	 * no FocusRow for the given ( antennaId, feedId ).
+	 * no FocusRow for the given ( antennaId ).
 	 */
-	 vector <FocusRow*> *getByContext(Tag antennaId, int feedId);
+	 vector <FocusRow*> *getByContext(Tag antennaId);
 	 
 
 
@@ -399,13 +361,11 @@ public:
 	
 	 * @param antennaId. 
 	
-	 * @param feedId. 
-	
 	 * @param timeInterval. 
 	
  	 *
 	 */
- 	FocusRow* getRowByKey(Tag antennaId, int feedId, ArrayTimeInterval timeInterval);
+ 	FocusRow* getRowByKey(Tag antennaId, ArrayTimeInterval timeInterval);
 
  	 	
 
@@ -419,28 +379,16 @@ public:
 			
  	 * @param antennaId.
  	 		
- 	 * @param feedId.
- 	 		
  	 * @param timeInterval.
- 	 		
- 	 * @param focusModelId.
- 	 		
- 	 * @param xFocusPosition.
- 	 		
- 	 * @param yFocusPosition.
- 	 		
- 	 * @param zFocusPosition.
  	 		
  	 * @param focusTracking.
  	 		
- 	 * @param xFocusOffset.
+ 	 * @param focusOffset.
  	 		
- 	 * @param yFocusOffset.
- 	 		
- 	 * @param zFocusOffset.
+ 	 * @param focusModelId.
  	 		 
  	 */
-	FocusRow* lookup(Tag antennaId, int feedId, ArrayTimeInterval timeInterval, Tag focusModelId, Length xFocusPosition, Length yFocusPosition, Length zFocusPosition, bool focusTracking, Length xFocusOffset, Length yFocusOffset, Length zFocusOffset); 
+	FocusRow* lookup(Tag antennaId, ArrayTimeInterval timeInterval, bool focusTracking, vector<Length > focusOffset, int focusModelId); 
 
 
 #ifndef WITHOUT_ACS
@@ -460,43 +408,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(FocusTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(FocusTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for Focus (FocusTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a Focus (FocusTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -571,8 +525,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	FocusRow* checkAndAdd(FocusRow* x) throw (DuplicateKey);
+	FocusRow* checkAndAdd(FocusRow* x) ;
 
 
 	
@@ -607,7 +563,7 @@ private:
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
 	 */
-	 string Key(Tag antennaId, int feedId) ;
+	 string Key(Tag antennaId) ;
 		 
 		
 	
@@ -617,11 +573,11 @@ private:
 	 * whose attributes are equal to the corresponding parameters of the method.
 	 *
 	 */
-	void getByKeyNoAutoIncNoTime(vector <FocusRow*>& vin, vector <FocusRow*>& vout,  Tag antennaId, int feedId);
+	void getByKeyNoAutoIncNoTime(vector <FocusRow*>& vin, vector <FocusRow*>& vout,  Tag antennaId);
 	
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

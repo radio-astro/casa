@@ -99,6 +99,18 @@ namespace asdm {
 		
 			
 				
+		x->calDeviceName = calDeviceName;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
 		x->sig = sig;
  				
  			
@@ -120,20 +132,6 @@ namespace asdm {
 	
   		
 		
-		x->weightExists = weightExists;
-		
-		
-			
-				
-		x->weight = weight;
- 				
- 			
-		
-	
-
-	
-  		
-		
 		
 			
 				
@@ -146,22 +144,12 @@ namespace asdm {
 	
   		
 		
-		
-			
-				
-		x->calDeviceName = calDeviceName;
- 				
- 			
-		
-	
-
-	
-  		
+		x->weightExists = weightExists;
 		
 		
 			
 				
-		x->flagRow = flagRow;
+		x->weight = weight;
  				
  			
 		
@@ -182,7 +170,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct StateRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void StateRow::setFromIDL (StateRowIDL x) throw(ConversionException) {
+	void StateRow::setFromIDL (StateRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -193,6 +181,16 @@ namespace asdm {
 			
 		setStateId(Tag (x.stateId));
 			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setCalDeviceName(x.calDeviceName);
+  			
  		
 		
 	
@@ -219,6 +217,16 @@ namespace asdm {
 
 	
 		
+		
+			
+		setOnSky(x.onSky);
+  			
+ 		
+		
+	
+
+	
+		
 		weightExists = x.weightExists;
 		if (x.weightExists) {
 		
@@ -233,40 +241,10 @@ namespace asdm {
 	
 
 	
-		
-		
-			
-		setOnSky(x.onSky);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setCalDeviceName(x.calDeviceName);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setFlagRow(x.flagRow);
-  			
- 		
-		
-	
-
-	
 	
 		
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"State");
+			throw ConversionException (err.getMessage(),"State");
 		}
 	}
 #endif
@@ -292,6 +270,14 @@ namespace asdm {
   	
  		
 		
+			buf.append(EnumerationParser::toXML("calDeviceName", calDeviceName));
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(sig, "sig", buf);
 		
 		
@@ -301,6 +287,14 @@ namespace asdm {
  		
 		
 		Parser::toXML(ref, "ref", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(onSky, "onSky", buf);
 		
 		
 	
@@ -317,30 +311,6 @@ namespace asdm {
 		
 	
 
-  	
- 		
-		
-		Parser::toXML(onSky, "onSky", buf);
-		
-		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("calDeviceName", calDeviceName));
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(flagRow, "flagRow", buf);
-		
-		
-	
-
 	
 	
 		
@@ -354,7 +324,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void StateRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void StateRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -365,6 +335,16 @@ namespace asdm {
 			
 	  	setStateId(Parser::getTag("stateId","State",rowDoc));
 			
+		
+	
+
+	
+		
+		
+		
+		calDeviceName = EnumerationParser::getCalibrationDevice("calDeviceName","State",rowDoc);
+		
+		
 		
 	
 
@@ -386,6 +366,14 @@ namespace asdm {
 
 	
   		
+			
+	  	setOnSky(Parser::getBoolean("onSky","State",rowDoc));
+			
+		
+	
+
+	
+  		
         if (row.isStr("<weight>")) {
 			
 	  		setWeight(Parser::getFloat("weight","State",rowDoc));
@@ -395,37 +383,145 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setOnSky(Parser::getBoolean("onSky","State",rowDoc));
-			
-		
-	
-
-	
-		
-		
-		
-		calDeviceName = EnumerationParser::getCalibrationDevice("calDeviceName","State",rowDoc);
-		
-		
-		
-	
-
-	
-  		
-			
-	  	setFlagRow(Parser::getBoolean("flagRow","State",rowDoc));
-			
-		
-	
-
-	
 	
 		
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"State");
 		}
+	}
+	
+	void StateRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	stateId.toBin(eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(calDeviceName);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(sig);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(ref);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(onSky);
+				
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(weightExists);
+	if (weightExists) {
+	
+	
+	
+		
+						
+			eoss.writeFloat(weight);
+				
+		
+	
+
+	}
+
+	}
+	
+	StateRow* StateRow::fromBin(EndianISStream& eiss, StateTable& table) {
+		StateRow* row = new  StateRow(table);
+		
+		
+		
+	
+		
+		
+		row->stateId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->calDeviceName = CCalibrationDevice::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->sig =  eiss.readBoolean();
+			
+		
+	
+
+	
+	
+		
+			
+		row->ref =  eiss.readBoolean();
+			
+		
+	
+
+	
+	
+		
+			
+		row->onSky =  eiss.readBoolean();
+			
+		
+	
+
+		
+		
+		
+	row->weightExists = eiss.readBoolean();
+	if (row->weightExists) {
+		
+	
+	
+		
+			
+		row->weight =  eiss.readFloat();
+			
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -463,6 +559,38 @@ namespace asdm {
   		}
   	
  		this->stateId = stateId;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get calDeviceName.
+ 	 * @return calDeviceName as CalibrationDeviceMod::CalibrationDevice
+ 	 */
+ 	CalibrationDeviceMod::CalibrationDevice StateRow::getCalDeviceName() const {
+	
+  		return calDeviceName;
+ 	}
+
+ 	/**
+ 	 * Set calDeviceName with the specified CalibrationDeviceMod::CalibrationDevice.
+ 	 * @param calDeviceName The CalibrationDeviceMod::CalibrationDevice value to which calDeviceName is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void StateRow::setCalDeviceName (CalibrationDeviceMod::CalibrationDevice calDeviceName)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->calDeviceName = calDeviceName;
 	
  	}
 	
@@ -533,53 +661,6 @@ namespace asdm {
 	
 
 	
-	/**
-	 * The attribute weight is optional. Return true if this attribute exists.
-	 * @return true if and only if the weight attribute exists. 
-	 */
-	bool StateRow::isWeightExists() const {
-		return weightExists;
-	}
-	
-
-	
- 	/**
- 	 * Get weight, which is optional.
- 	 * @return weight as float
- 	 * @throw IllegalAccessException If weight does not exist.
- 	 */
- 	float StateRow::getWeight() const throw(IllegalAccessException) {
-		if (!weightExists) {
-			throw IllegalAccessException("weight", "State");
-		}
-	
-  		return weight;
- 	}
-
- 	/**
- 	 * Set weight with the specified float.
- 	 * @param weight The float value to which weight is to be set.
- 	 
- 	
- 	 */
- 	void StateRow::setWeight (float weight) {
-	
- 		this->weight = weight;
-	
-		weightExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark weight, which is an optional field, as non-existent.
-	 */
-	void StateRow::clearWeight () {
-		weightExists = false;
-	}
-	
-
-	
 
 	
  	/**
@@ -612,67 +693,50 @@ namespace asdm {
 	
 
 	
+	/**
+	 * The attribute weight is optional. Return true if this attribute exists.
+	 * @return true if and only if the weight attribute exists. 
+	 */
+	bool StateRow::isWeightExists() const {
+		return weightExists;
+	}
+	
 
 	
  	/**
- 	 * Get calDeviceName.
- 	 * @return calDeviceName as CalibrationDeviceMod::CalibrationDevice
+ 	 * Get weight, which is optional.
+ 	 * @return weight as float
+ 	 * @throw IllegalAccessException If weight does not exist.
  	 */
- 	CalibrationDeviceMod::CalibrationDevice StateRow::getCalDeviceName() const {
+ 	float StateRow::getWeight() const  {
+		if (!weightExists) {
+			throw IllegalAccessException("weight", "State");
+		}
 	
-  		return calDeviceName;
+  		return weight;
  	}
 
  	/**
- 	 * Set calDeviceName with the specified CalibrationDeviceMod::CalibrationDevice.
- 	 * @param calDeviceName The CalibrationDeviceMod::CalibrationDevice value to which calDeviceName is to be set.
+ 	 * Set weight with the specified float.
+ 	 * @param weight The float value to which weight is to be set.
  	 
  	
- 		
  	 */
- 	void StateRow::setCalDeviceName (CalibrationDeviceMod::CalibrationDevice calDeviceName)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->calDeviceName = calDeviceName;
+ 	void StateRow::setWeight (float weight) {
+	
+ 		this->weight = weight;
+	
+		weightExists = true;
 	
  	}
 	
 	
-
-	
-
-	
- 	/**
- 	 * Get flagRow.
- 	 * @return flagRow as bool
- 	 */
- 	bool StateRow::getFlagRow() const {
-	
-  		return flagRow;
- 	}
-
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 	 
- 	
- 		
- 	 */
- 	void StateRow::setFlagRow (bool flagRow)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->flagRow = flagRow;
-	
- 	}
-	
+	/**
+	 * Mark weight, which is an optional field, as non-existent.
+	 */
+	void StateRow::clearWeight () {
+		weightExists = false;
+	}
 	
 
 	
@@ -704,32 +768,28 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
 		weightExists = false;
 	
 
 	
-
-	
-
-	
-
 	
 	
 	
-	
-	
-
-	
-
-	
-
-	
-
 	
 
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 calDeviceName = CCalibrationDevice::from_int(0);
+	
+
+	
+
+	
+
 	
 
 	
@@ -749,13 +809,11 @@ calDeviceName = CCalibrationDevice::from_int(0);
 	
 
 	
+
+	
+
+	
 		weightExists = false;
-	
-
-	
-
-	
-
 	
 
 			
@@ -768,15 +826,13 @@ calDeviceName = CCalibrationDevice::from_int(0);
 		
 		
 		
+			calDeviceName = row.calDeviceName;
+		
 			sig = row.sig;
 		
 			ref = row.ref;
 		
 			onSky = row.onSky;
-		
-			calDeviceName = row.calDeviceName;
-		
-			flagRow = row.flagRow;
 		
 		
 		
@@ -792,10 +848,17 @@ calDeviceName = CCalibrationDevice::from_int(0);
 	}
 
 	
-	bool StateRow::compareNoAutoInc(bool sig, bool ref, bool onSky, CalibrationDeviceMod::CalibrationDevice calDeviceName, bool flagRow) {
+	bool StateRow::compareNoAutoInc(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky) {
 		bool result;
 		result = true;
 		
+	
+		
+		result = result && (this->calDeviceName == calDeviceName);
+		
+		if (!result) return false;
+	
+
 	
 		
 		result = result && (this->sig == sig);
@@ -817,29 +880,19 @@ calDeviceName = CCalibrationDevice::from_int(0);
 		if (!result) return false;
 	
 
-	
-		
-		result = result && (this->calDeviceName == calDeviceName);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->flagRow == flagRow);
-		
-		if (!result) return false;
-	
-
 		return result;
 	}	
 	
 	
 	
-	bool StateRow::compareRequiredValue(bool sig, bool ref, bool onSky, CalibrationDeviceMod::CalibrationDevice calDeviceName, bool flagRow) {
+	bool StateRow::compareRequiredValue(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky) {
 		bool result;
 		result = true;
 		
+	
+		if (!(this->calDeviceName == calDeviceName)) return false;
+	
+
 	
 		if (!(this->sig == sig)) return false;
 	
@@ -850,14 +903,6 @@ calDeviceName = CCalibrationDevice::from_int(0);
 
 	
 		if (!(this->onSky == onSky)) return false;
-	
-
-	
-		if (!(this->calDeviceName == calDeviceName)) return false;
-	
-
-	
-		if (!(this->flagRow == flagRow)) return false;
 	
 
 		return result;
@@ -875,15 +920,13 @@ calDeviceName = CCalibrationDevice::from_int(0);
 	bool StateRow::equalByRequiredValue(StateRow* x) {
 		
 			
+		if (this->calDeviceName != x->calDeviceName) return false;
+			
 		if (this->sig != x->sig) return false;
 			
 		if (this->ref != x->ref) return false;
 			
 		if (this->onSky != x->onSky) return false;
-			
-		if (this->calDeviceName != x->calDeviceName) return false;
-			
-		if (this->flagRow != x->flagRow) return false;
 			
 		
 		return true;

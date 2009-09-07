@@ -78,35 +78,42 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
 	
 
 	
+#include "CPolarizationType.h"
+using namespace PolarizationTypeMod;
+	
+
+	
+
+	
+
+	
 #include "CAntennaMake.h"
 using namespace AntennaMakeMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 
@@ -132,7 +139,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalFocusModel.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -140,17 +147,17 @@ namespace asdm {
 //class asdm::CalFocusModelTable;
 
 
-// class asdm::CalDataRow;
-class CalDataRow;
-
 // class asdm::CalReductionRow;
 class CalReductionRow;
+
+// class asdm::CalDataRow;
+class CalDataRow;
 	
 
 /**
  * The CalFocusModelRow class is a row of a CalFocusModelTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class CalFocusModelRow {
@@ -177,8 +184,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalFocusModelRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalFocusModelRowIDL x) throw(ConversionException);
+	void setFromIDL (CalFocusModelRowIDL x) ;
 #endif
 	
 	/**
@@ -191,8 +199,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalFocusModelTable to which the row built by deserialization will be parented.
+	  */
+	 static CalFocusModelRow* fromBin(EndianISStream& eiss, CalFocusModelTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -231,29 +253,63 @@ public:
 
 
 	
-	// ===> Attribute numCoeff
+	// ===> Attribute receiverBand
 	
 	
 	
 
 	
  	/**
- 	 * Get numCoeff.
- 	 * @return numCoeff as int
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
  	 */
- 	int getNumCoeff() const;
+ 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
 	
  
  	
  	
  	/**
- 	 * Set numCoeff with the specified int.
- 	 * @param numCoeff The int value to which numCoeff is to be set.
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
  	 
  		
  			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setNumCoeff (int numCoeff);
+ 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute polarizationType
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get polarizationType.
+ 	 * @return polarizationType as PolarizationTypeMod::PolarizationType
+ 	 */
+ 	PolarizationTypeMod::PolarizationType getPolarizationType() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set polarizationType with the specified PolarizationTypeMod::PolarizationType.
+ 	 * @param polarizationType The PolarizationTypeMod::PolarizationType value to which polarizationType is to be set.
+ 	 
+ 		
+ 			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setPolarizationType (PolarizationTypeMod::PolarizationType polarizationType);
   		
 	
 	
@@ -321,29 +377,29 @@ public:
 
 
 	
-	// ===> Attribute focusRMS
+	// ===> Attribute antennaMake
 	
 	
 	
 
 	
  	/**
- 	 * Get focusRMS.
- 	 * @return focusRMS as vector<Length >
+ 	 * Get antennaMake.
+ 	 * @return antennaMake as AntennaMakeMod::AntennaMake
  	 */
- 	vector<Length > getFocusRMS() const;
+ 	AntennaMakeMod::AntennaMake getAntennaMake() const;
 	
  
  	
  	
  	/**
- 	 * Set focusRMS with the specified vector<Length >.
- 	 * @param focusRMS The vector<Length > value to which focusRMS is to be set.
+ 	 * Set antennaMake with the specified AntennaMakeMod::AntennaMake.
+ 	 * @param antennaMake The AntennaMakeMod::AntennaMake value to which antennaMake is to be set.
  	 
  		
  			
  	 */
- 	void setFocusRMS (vector<Length > focusRMS);
+ 	void setAntennaMake (AntennaMakeMod::AntennaMake antennaMake);
   		
 	
 	
@@ -351,179 +407,29 @@ public:
 
 
 	
-	// ===> Attribute coeffName
+	// ===> Attribute numCoeff
 	
 	
 	
 
 	
  	/**
- 	 * Get coeffName.
- 	 * @return coeffName as vector<vector<string > >
+ 	 * Get numCoeff.
+ 	 * @return numCoeff as int
  	 */
- 	vector<vector<string > > getCoeffName() const;
+ 	int getNumCoeff() const;
 	
  
  	
  	
  	/**
- 	 * Set coeffName with the specified vector<vector<string > >.
- 	 * @param coeffName The vector<vector<string > > value to which coeffName is to be set.
+ 	 * Set numCoeff with the specified int.
+ 	 * @param numCoeff The int value to which numCoeff is to be set.
  	 
  		
  			
  	 */
- 	void setCoeffName (vector<vector<string > > coeffName);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute coeffFormula
-	
-	
-	
-
-	
- 	/**
- 	 * Get coeffFormula.
- 	 * @return coeffFormula as vector<vector<string > >
- 	 */
- 	vector<vector<string > > getCoeffFormula() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set coeffFormula with the specified vector<vector<string > >.
- 	 * @param coeffFormula The vector<vector<string > > value to which coeffFormula is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setCoeffFormula (vector<vector<string > > coeffFormula);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute coeffValue
-	
-	
-	
-
-	
- 	/**
- 	 * Get coeffValue.
- 	 * @return coeffValue as vector<vector<float > >
- 	 */
- 	vector<vector<float > > getCoeffValue() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set coeffValue with the specified vector<vector<float > >.
- 	 * @param coeffValue The vector<vector<float > > value to which coeffValue is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setCoeffValue (vector<vector<float > > coeffValue);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute coeffError
-	
-	
-	
-
-	
- 	/**
- 	 * Get coeffError.
- 	 * @return coeffError as vector<vector<float > >
- 	 */
- 	vector<vector<float > > getCoeffError() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set coeffError with the specified vector<vector<float > >.
- 	 * @param coeffError The vector<vector<float > > value to which coeffError is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setCoeffError (vector<vector<float > > coeffError);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute coeffFixed
-	
-	
-	
-
-	
- 	/**
- 	 * Get coeffFixed.
- 	 * @return coeffFixed as vector<vector<bool > >
- 	 */
- 	vector<vector<bool > > getCoeffFixed() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set coeffFixed with the specified vector<vector<bool > >.
- 	 * @param coeffFixed The vector<vector<bool > > value to which coeffFixed is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setCoeffFixed (vector<vector<bool > > coeffFixed);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute focusModel
-	
-	
-	
-
-	
- 	/**
- 	 * Get focusModel.
- 	 * @return focusModel as string
- 	 */
- 	string getFocusModel() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set focusModel with the specified string.
- 	 * @param focusModel The string value to which focusModel is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setFocusModel (string focusModel);
+ 	void setNumCoeff (int numCoeff);
   		
 	
 	
@@ -561,31 +467,29 @@ public:
 
 
 	
-	// ===> Attribute receiverBand
+	// ===> Attribute coeffName
 	
 	
 	
 
 	
  	/**
- 	 * Get receiverBand.
- 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 * Get coeffName.
+ 	 * @return coeffName as vector<string >
  	 */
- 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
+ 	vector<string > getCoeffName() const;
 	
  
  	
  	
  	/**
- 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
- 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 * Set coeffName with the specified vector<string >.
+ 	 * @param coeffName The vector<string > value to which coeffName is to be set.
  	 
  		
  			
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 		
  	 */
- 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
+ 	void setCoeffName (vector<string > coeffName);
   		
 	
 	
@@ -593,29 +497,209 @@ public:
 
 
 	
-	// ===> Attribute antennaMake
+	// ===> Attribute coeffFormula
 	
 	
 	
 
 	
  	/**
- 	 * Get antennaMake.
- 	 * @return antennaMake as AntennaMakeMod::AntennaMake
+ 	 * Get coeffFormula.
+ 	 * @return coeffFormula as vector<string >
  	 */
- 	AntennaMakeMod::AntennaMake getAntennaMake() const;
+ 	vector<string > getCoeffFormula() const;
 	
  
  	
  	
  	/**
- 	 * Set antennaMake with the specified AntennaMakeMod::AntennaMake.
- 	 * @param antennaMake The AntennaMakeMod::AntennaMake value to which antennaMake is to be set.
+ 	 * Set coeffFormula with the specified vector<string >.
+ 	 * @param coeffFormula The vector<string > value to which coeffFormula is to be set.
  	 
  		
  			
  	 */
- 	void setAntennaMake (AntennaMakeMod::AntennaMake antennaMake);
+ 	void setCoeffFormula (vector<string > coeffFormula);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute coeffValue
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get coeffValue.
+ 	 * @return coeffValue as vector<float >
+ 	 */
+ 	vector<float > getCoeffValue() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set coeffValue with the specified vector<float >.
+ 	 * @param coeffValue The vector<float > value to which coeffValue is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCoeffValue (vector<float > coeffValue);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute coeffError
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get coeffError.
+ 	 * @return coeffError as vector<float >
+ 	 */
+ 	vector<float > getCoeffError() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set coeffError with the specified vector<float >.
+ 	 * @param coeffError The vector<float > value to which coeffError is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCoeffError (vector<float > coeffError);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute coeffFixed
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get coeffFixed.
+ 	 * @return coeffFixed as vector<bool >
+ 	 */
+ 	vector<bool > getCoeffFixed() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set coeffFixed with the specified vector<bool >.
+ 	 * @param coeffFixed The vector<bool > value to which coeffFixed is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCoeffFixed (vector<bool > coeffFixed);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute focusModel
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get focusModel.
+ 	 * @return focusModel as string
+ 	 */
+ 	string getFocusModel() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set focusModel with the specified string.
+ 	 * @param focusModel The string value to which focusModel is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setFocusModel (string focusModel);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute focusRMS
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get focusRMS.
+ 	 * @return focusRMS as vector<Length >
+ 	 */
+ 	vector<Length > getFocusRMS() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set focusRMS with the specified vector<Length >.
+ 	 * @param focusRMS The vector<Length > value to which focusRMS is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setFocusRMS (vector<Length > focusRMS);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute reducedChiSquared
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get reducedChiSquared.
+ 	 * @return reducedChiSquared as double
+ 	 */
+ 	double getReducedChiSquared() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set reducedChiSquared with the specified double.
+ 	 * @param reducedChiSquared The double value to which reducedChiSquared is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setReducedChiSquared (double reducedChiSquared);
   		
 	
 	
@@ -699,21 +783,6 @@ public:
 	
 		
 	/**
-	 * calDataId pointer to the row in the CalData table having CalData.calDataId == calDataId
-	 * @return a CalDataRow*
-	 * 
-	 
-	 */
-	 CalDataRow* getCalDataUsingCalDataId();
-	 
-
-	
-
-	
-
-	
-		
-	/**
 	 * calReductionId pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
 	 * @return a CalReductionRow*
 	 * 
@@ -725,18 +794,33 @@ public:
 	
 
 	
+
+	
+		
+	/**
+	 * calDataId pointer to the row in the CalData table having CalData.calDataId == calDataId
+	 * @return a CalDataRow*
+	 * 
+	 
+	 */
+	 CalDataRow* getCalDataUsingCalDataId();
+	 
+
+	
+
+	
 	
 	
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this CalFocusModelRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusRMS, vector<vector<string > > coeffName, vector<vector<string > > coeffFormula, vector<vector<float > > coeffValue, vector<vector<float > > coeffError, vector<vector<bool > > coeffFixed, string focusModel, int numSourceObs, AntennaMakeMod::AntennaMake antennaMake);
+	bool compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, PolarizationTypeMod::PolarizationType polarizationType, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, int numCoeff, int numSourceObs, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffValue, vector<float > coeffError, vector<bool > coeffFixed, string focusModel, vector<Length > focusRMS, double reducedChiSquared);
 	
 	
 
 	
-	bool compareRequiredValue(int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusRMS, vector<vector<string > > coeffName, vector<vector<string > > coeffFormula, vector<vector<float > > coeffValue, vector<vector<float > > coeffError, vector<vector<bool > > coeffFixed, string focusModel, int numSourceObs, AntennaMakeMod::AntennaMake antennaMake); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, int numCoeff, int numSourceObs, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffValue, vector<float > coeffError, vector<bool > coeffFixed, string focusModel, vector<Length > focusRMS, double reducedChiSquared); 
 		 
 	
 	/**
@@ -808,11 +892,22 @@ private:
  	
 
 	
-	// ===> Attribute numCoeff
+	// ===> Attribute receiverBand
 	
 	
 
-	int numCoeff;
+	ReceiverBandMod::ReceiverBand receiverBand;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute polarizationType
+	
+	
+
+	PolarizationTypeMod::PolarizationType polarizationType;
 
 	
 	
@@ -841,77 +936,22 @@ private:
  	
 
 	
-	// ===> Attribute focusRMS
+	// ===> Attribute antennaMake
 	
 	
 
-	vector<Length > focusRMS;
-
-	
-	
- 	
-
-	
-	// ===> Attribute coeffName
-	
-	
-
-	vector<vector<string > > coeffName;
+	AntennaMakeMod::AntennaMake antennaMake;
 
 	
 	
  	
 
 	
-	// ===> Attribute coeffFormula
+	// ===> Attribute numCoeff
 	
 	
 
-	vector<vector<string > > coeffFormula;
-
-	
-	
- 	
-
-	
-	// ===> Attribute coeffValue
-	
-	
-
-	vector<vector<float > > coeffValue;
-
-	
-	
- 	
-
-	
-	// ===> Attribute coeffError
-	
-	
-
-	vector<vector<float > > coeffError;
-
-	
-	
- 	
-
-	
-	// ===> Attribute coeffFixed
-	
-	
-
-	vector<vector<bool > > coeffFixed;
-
-	
-	
- 	
-
-	
-	// ===> Attribute focusModel
-	
-	
-
-	string focusModel;
+	int numCoeff;
 
 	
 	
@@ -929,22 +969,88 @@ private:
  	
 
 	
-	// ===> Attribute receiverBand
+	// ===> Attribute coeffName
 	
 	
 
-	ReceiverBandMod::ReceiverBand receiverBand;
+	vector<string > coeffName;
 
 	
 	
  	
 
 	
-	// ===> Attribute antennaMake
+	// ===> Attribute coeffFormula
 	
 	
 
-	AntennaMakeMod::AntennaMake antennaMake;
+	vector<string > coeffFormula;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute coeffValue
+	
+	
+
+	vector<float > coeffValue;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute coeffError
+	
+	
+
+	vector<float > coeffError;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute coeffFixed
+	
+	
+
+	vector<bool > coeffFixed;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute focusModel
+	
+	
+
+	string focusModel;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute focusRMS
+	
+	
+
+	vector<Length > focusRMS;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute reducedChiSquared
+	
+	
+
+	double reducedChiSquared;
 
 	
 	

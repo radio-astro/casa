@@ -77,6 +77,9 @@ using namespace enumerations;
 	
 
 	
+#include "CWVRMethod.h"
+using namespace WVRMethodMod;
+	
 
 	
 
@@ -128,83 +131,94 @@ class ASDM;
 class WVMCalRow;
 /**
  * The WVMCalTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Coefficients to use water vapour monitor information to correct for  pathlength variations. This contains the coefficients actually used, while  CalWVR contains the coefficients derived from TelCal calibration.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of WVMCal </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> antennaId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in AntennaTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> spectralWindowId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> spectralWindowId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in SpectralWindowTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> timeInterval </TD> 
- * <TD> ArrayTimeInterval </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> timeInterval </TD>
+ 		 
+ * <TD> ArrayTimeInterval</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the time interval for which the row's content is valid. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
+	
+ * <TR>
+ * <TD> wvrMethod </TD> 
+ * <TD> WVRMethodMod::WVRMethod </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the calibration method. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> polyFreqLimits </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  2 </TD> 
+ * <TD> &nbsp;the range of frequencies in which the computation is performed. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numChan </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of WVR channels. </TD>
+ * </TR>
 	
  * <TR>
  * <TD> numPoly </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> freqOrigin </TD> 
- * <TD> Frequency </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of coefficients used in the polynomial expansions. </TD>
  * </TR>
 	
  * <TR>
  * <TD> pathCoeff </TD> 
+ * <TD> vector<vector<double > > </TD>
+ * <TD>  numChan, numPoly </TD> 
+ * <TD> &nbsp;the pathlengths coefficients (one value per chan per coefficient). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> refTemp </TD> 
  * <TD> vector<double > </TD>
- * <TD>  numPoly </TD> 
- * </TR>
-	
- * <TR>
- * <TD> calibrationMode </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD>  numChan </TD> 
+ * <TD> &nbsp;the reference temperatures (one value per channel). </TD>
  * </TR>
 	
 
-
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
-	
- * <TR>
- * <TD> operationMode </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> wvrefModel </TD> 
- * <TD> float </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
 
  * </TABLE>
  */
@@ -283,22 +297,26 @@ public:
 	
  	 * @param timeInterval. 
 	
- 	 * @param numPoly. 
+ 	 * @param wvrMethod. 
 	
- 	 * @param freqOrigin. 
+ 	 * @param polyFreqLimits. 
+	
+ 	 * @param numChan. 
+	
+ 	 * @param numPoly. 
 	
  	 * @param pathCoeff. 
 	
- 	 * @param calibrationMode. 
+ 	 * @param refTemp. 
 	
      */
-	WVMCalRow *newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numPoly, Frequency freqOrigin, vector<double > pathCoeff, string calibrationMode);
+	WVMCalRow *newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<double > > pathCoeff, vector<double > refTemp);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	WVMCalRow *newRowFull(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numPoly, Frequency freqOrigin, vector<double > pathCoeff, string calibrationMode);
+	WVMCalRow *newRowFull(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<double > > pathCoeff, vector<double > refTemp);
 
 
 	/**
@@ -404,16 +422,20 @@ public:
  	 		
  	 * @param timeInterval.
  	 		
- 	 * @param numPoly.
+ 	 * @param wvrMethod.
  	 		
- 	 * @param freqOrigin.
+ 	 * @param polyFreqLimits.
+ 	 		
+ 	 * @param numChan.
+ 	 		
+ 	 * @param numPoly.
  	 		
  	 * @param pathCoeff.
  	 		
- 	 * @param calibrationMode.
+ 	 * @param refTemp.
  	 		 
  	 */
-	WVMCalRow* lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numPoly, Frequency freqOrigin, vector<double > pathCoeff, string calibrationMode); 
+	WVMCalRow* lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<double > > pathCoeff, vector<double > refTemp); 
 
 
 #ifndef WITHOUT_ACS
@@ -433,43 +455,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(WVMCalTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(WVMCalTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for WVMCal (WVMCalTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a WVMCal (WVMCalTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -544,8 +572,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	WVMCalRow* checkAndAdd(WVMCalRow* x) throw (DuplicateKey);
+	WVMCalRow* checkAndAdd(WVMCalRow* x) ;
 
 
 	
@@ -594,7 +624,7 @@ private:
 	
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

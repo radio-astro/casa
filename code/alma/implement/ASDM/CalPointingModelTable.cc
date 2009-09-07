@@ -80,13 +80,13 @@ namespace asdm {
 	CalPointingModelTable::CalPointingModelTable(ASDM &c) : container(c) {
 
 	
-		key.push_back("calDataId");
-	
-		key.push_back("calReductionId");
-	
 		key.push_back("antennaName");
 	
 		key.push_back("receiverBand");
+	
+		key.push_back("calDataId");
+	
+		key.push_back("calReductionId");
 	
 
 
@@ -170,31 +170,25 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param calDataId. 
-	
- 	 * @param calReductionId. 
-	
  	 * @param antennaName. 
 	
  	 * @param receiverBand. 
 	
- 	 * @param antennaMake. 
+ 	 * @param calDataId. 
 	
- 	 * @param numObs. 
-	
- 	 * @param numCoeff. 
+ 	 * @param calReductionId. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param numFormula. 
+ 	 * @param antennaMake. 
 	
- 	 * @param azimuthRms. 
+ 	 * @param pointingModelMode. 
 	
- 	 * @param elevationRms. 
+ 	 * @param polarizationType. 
 	
- 	 * @param skyRms. 
+ 	 * @param numCoeff. 
 	
  	 * @param coeffName. 
 	
@@ -204,39 +198,37 @@ namespace asdm {
 	
  	 * @param coeffFixed. 
 	
- 	 * @param coeffFormula. 
+ 	 * @param azimuthRMS. 
 	
- 	 * @param pointingModelMode. 
+ 	 * @param elevationRms. 
+	
+ 	 * @param skyRMS. 
+	
+ 	 * @param reducedChiSquared. 
 	
      */
-	CalPointingModelRow* CalPointingModelTable::newRow(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand, AntennaMakeMod::AntennaMake antennaMake, int numObs, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, int numFormula, Angle azimuthRms, Angle elevationRms, Angle skyRms, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, vector<string > coeffFormula, PointingModelModeMod::PointingModelMode pointingModelMode){
+	CalPointingModelRow* CalPointingModelTable::newRow(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, PointingModelModeMod::PointingModelMode pointingModelMode, PolarizationTypeMod::PolarizationType polarizationType, int numCoeff, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, Angle azimuthRMS, Angle elevationRms, Angle skyRMS, double reducedChiSquared){
 		CalPointingModelRow *row = new CalPointingModelRow(*this);
-			
-		row->setCalDataId(calDataId);
-			
-		row->setCalReductionId(calReductionId);
 			
 		row->setAntennaName(antennaName);
 			
 		row->setReceiverBand(receiverBand);
 			
-		row->setAntennaMake(antennaMake);
+		row->setCalDataId(calDataId);
 			
-		row->setNumObs(numObs);
-			
-		row->setNumCoeff(numCoeff);
+		row->setCalReductionId(calReductionId);
 			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
-		row->setNumFormula(numFormula);
+		row->setAntennaMake(antennaMake);
 			
-		row->setAzimuthRms(azimuthRms);
+		row->setPointingModelMode(pointingModelMode);
 			
-		row->setElevationRms(elevationRms);
+		row->setPolarizationType(polarizationType);
 			
-		row->setSkyRms(skyRms);
+		row->setNumCoeff(numCoeff);
 			
 		row->setCoeffName(coeffName);
 			
@@ -246,41 +238,39 @@ namespace asdm {
 			
 		row->setCoeffFixed(coeffFixed);
 			
-		row->setCoeffFormula(coeffFormula);
+		row->setAzimuthRMS(azimuthRMS);
 			
-		row->setPointingModelMode(pointingModelMode);
+		row->setElevationRms(elevationRms);
+			
+		row->setSkyRMS(skyRMS);
+			
+		row->setReducedChiSquared(reducedChiSquared);
 	
 		return row;		
 	}	
 
-	CalPointingModelRow* CalPointingModelTable::newRowFull(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand, AntennaMakeMod::AntennaMake antennaMake, int numObs, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, int numFormula, Angle azimuthRms, Angle elevationRms, Angle skyRms, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, vector<string > coeffFormula, PointingModelModeMod::PointingModelMode pointingModelMode)	{
+	CalPointingModelRow* CalPointingModelTable::newRowFull(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, PointingModelModeMod::PointingModelMode pointingModelMode, PolarizationTypeMod::PolarizationType polarizationType, int numCoeff, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, Angle azimuthRMS, Angle elevationRms, Angle skyRMS, double reducedChiSquared)	{
 		CalPointingModelRow *row = new CalPointingModelRow(*this);
-			
-		row->setCalDataId(calDataId);
-			
-		row->setCalReductionId(calReductionId);
 			
 		row->setAntennaName(antennaName);
 			
 		row->setReceiverBand(receiverBand);
 			
-		row->setAntennaMake(antennaMake);
+		row->setCalDataId(calDataId);
 			
-		row->setNumObs(numObs);
-			
-		row->setNumCoeff(numCoeff);
+		row->setCalReductionId(calReductionId);
 			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
-		row->setNumFormula(numFormula);
+		row->setAntennaMake(antennaMake);
 			
-		row->setAzimuthRms(azimuthRms);
+		row->setPointingModelMode(pointingModelMode);
 			
-		row->setElevationRms(elevationRms);
+		row->setPolarizationType(polarizationType);
 			
-		row->setSkyRms(skyRms);
+		row->setNumCoeff(numCoeff);
 			
 		row->setCoeffName(coeffName);
 			
@@ -290,9 +280,13 @@ namespace asdm {
 			
 		row->setCoeffFixed(coeffFixed);
 			
-		row->setCoeffFormula(coeffFormula);
+		row->setAzimuthRMS(azimuthRMS);
 			
-		row->setPointingModelMode(pointingModelMode);
+		row->setElevationRms(elevationRms);
+			
+		row->setSkyRMS(skyRMS);
+			
+		row->setReducedChiSquared(reducedChiSquared);
 	
 		return row;				
 	}
@@ -322,15 +316,15 @@ CalPointingModelRow* CalPointingModelTable::newRowCopy(CalPointingModelRow* row)
 	CalPointingModelRow* CalPointingModelTable::add(CalPointingModelRow* x) {
 		
 		if (getRowByKey(
-						x->getCalDataId()
-						,
-						x->getCalReductionId()
-						,
 						x->getAntennaName()
 						,
 						x->getReceiverBand()
+						,
+						x->getCalDataId()
+						,
+						x->getCalReductionId()
 						))
-			//throw DuplicateKey(x.getCalDataId() + "|" + x.getCalReductionId() + "|" + x.getAntennaName() + "|" + x.getReceiverBand(),"CalPointingModel");
+			//throw DuplicateKey(x.getAntennaName() + "|" + x.getReceiverBand() + "|" + x.getCalDataId() + "|" + x.getCalReductionId(),"CalPointingModel");
 			throw DuplicateKey("Duplicate key exception in ","CalPointingModelTable");
 		
 		row.push_back(x);
@@ -357,19 +351,21 @@ CalPointingModelRow* CalPointingModelTable::newRowCopy(CalPointingModelRow* row)
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalPointingModelRow*  CalPointingModelTable::checkAndAdd(CalPointingModelRow* x) throw (DuplicateKey) {
+	CalPointingModelRow*  CalPointingModelTable::checkAndAdd(CalPointingModelRow* x)  {
 		
 		
 		if (getRowByKey(
 	
-			x->getCalDataId()
-	,
-			x->getCalReductionId()
-	,
 			x->getAntennaName()
 	,
 			x->getReceiverBand()
+	,
+			x->getCalDataId()
+	,
+			x->getCalReductionId()
 			
 		)) throw DuplicateKey("Duplicate key exception in ", "CalPointingModelTable");
 		
@@ -406,18 +402,10 @@ CalPointingModelRow* CalPointingModelTable::newRowCopy(CalPointingModelRow* row)
  ** no row exists for that key.
  **
  */
- 	CalPointingModelRow* CalPointingModelTable::getRowByKey(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand)  {
+ 	CalPointingModelRow* CalPointingModelTable::getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
 	CalPointingModelRow* aRow = 0;
 	for (unsigned int i = 0; i < row.size(); i++) {
 		aRow = row.at(i);
-		
-			
-				if (aRow->calDataId != calDataId) continue;
-			
-		
-			
-				if (aRow->calReductionId != calReductionId) continue;
-			
 		
 			
 				if (aRow->antennaName != antennaName) continue;
@@ -425,6 +413,14 @@ CalPointingModelRow* CalPointingModelTable::newRowCopy(CalPointingModelRow* row)
 		
 			
 				if (aRow->receiverBand != receiverBand) continue;
+			
+		
+			
+				if (aRow->calDataId != calDataId) continue;
+			
+		
+			
+				if (aRow->calReductionId != calReductionId) continue;
 			
 		
 		return aRow;
@@ -440,31 +436,25 @@ CalPointingModelRow* CalPointingModelTable::newRowCopy(CalPointingModelRow* row)
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
- * @param calDataId.
- 	 		
- * @param calReductionId.
- 	 		
  * @param antennaName.
  	 		
  * @param receiverBand.
  	 		
- * @param antennaMake.
+ * @param calDataId.
  	 		
- * @param numObs.
- 	 		
- * @param numCoeff.
+ * @param calReductionId.
  	 		
  * @param startValidTime.
  	 		
  * @param endValidTime.
  	 		
- * @param numFormula.
+ * @param antennaMake.
  	 		
- * @param azimuthRms.
+ * @param pointingModelMode.
  	 		
- * @param elevationRms.
+ * @param polarizationType.
  	 		
- * @param skyRms.
+ * @param numCoeff.
  	 		
  * @param coeffName.
  	 		
@@ -474,16 +464,20 @@ CalPointingModelRow* CalPointingModelTable::newRowCopy(CalPointingModelRow* row)
  	 		
  * @param coeffFixed.
  	 		
- * @param coeffFormula.
+ * @param azimuthRMS.
  	 		
- * @param pointingModelMode.
+ * @param elevationRms.
+ 	 		
+ * @param skyRMS.
+ 	 		
+ * @param reducedChiSquared.
  	 		 
  */
-CalPointingModelRow* CalPointingModelTable::lookup(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand, AntennaMakeMod::AntennaMake antennaMake, int numObs, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, int numFormula, Angle azimuthRms, Angle elevationRms, Angle skyRms, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, vector<string > coeffFormula, PointingModelModeMod::PointingModelMode pointingModelMode) {
+CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, PointingModelModeMod::PointingModelMode pointingModelMode, PolarizationTypeMod::PolarizationType polarizationType, int numCoeff, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, Angle azimuthRMS, Angle elevationRms, Angle skyRMS, double reducedChiSquared) {
 		CalPointingModelRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(calDataId, calReductionId, antennaName, receiverBand, antennaMake, numObs, numCoeff, startValidTime, endValidTime, numFormula, azimuthRms, elevationRms, skyRms, coeffName, coeffVal, coeffError, coeffFixed, coeffFormula, pointingModelMode)) return aRow;
+			if (aRow->compareNoAutoInc(antennaName, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, antennaMake, pointingModelMode, polarizationType, numCoeff, coeffName, coeffVal, coeffError, coeffFixed, azimuthRMS, elevationRms, skyRMS, reducedChiSquared)) return aRow;
 		}			
 		return 0;	
 } 
@@ -491,7 +485,6 @@ CalPointingModelRow* CalPointingModelTable::lookup(Tag calDataId, Tag calReducti
  	 	
 
 	
-
 
 
 
@@ -512,7 +505,7 @@ CalPointingModelRow* CalPointingModelTable::lookup(Tag calDataId, Tag calReducti
 #endif
 	
 #ifndef WITHOUT_ACS
-	void CalPointingModelTable::fromIDL(CalPointingModelTableIDL x) throw(DuplicateKey,ConversionException) {
+	void CalPointingModelTable::fromIDL(CalPointingModelTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			CalPointingModelRow *tmp = newRow();
@@ -523,28 +516,27 @@ CalPointingModelRow* CalPointingModelTable::lookup(Tag calDataId, Tag calReducti
 	}
 #endif
 
-	char *CalPointingModelTable::toFITS() const throw(ConversionException) {
+	char *CalPointingModelTable::toFITS() const  {
 		throw ConversionException("Not implemented","CalPointingModel");
 	}
 
-	void CalPointingModelTable::fromFITS(char *fits) throw(ConversionException) {
+	void CalPointingModelTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","CalPointingModel");
 	}
 
-	string CalPointingModelTable::toVOTable() const throw(ConversionException) {
+	string CalPointingModelTable::toVOTable() const {
 		throw ConversionException("Not implemented","CalPointingModel");
 	}
 
-	void CalPointingModelTable::fromVOTable(string vo) throw(ConversionException) {
+	void CalPointingModelTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","CalPointingModel");
 	}
 
-	string CalPointingModelTable::toXML()  throw(ConversionException) {
+	
+	string CalPointingModelTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<CalPointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/CalPointingModelTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<CalPointingModelTable> ");
+		buf.append("<CalPointingModelTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalPointingModelTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingModelTable http://almaobservatory.org/XML/XASDM/2/CalPointingModelTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -560,8 +552,9 @@ CalPointingModelRow* CalPointingModelTable::lookup(Tag calDataId, Tag calReducti
 		buf.append("</CalPointingModelTable> ");
 		return buf;
 	}
+
 	
-	void CalPointingModelTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void CalPointingModelTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalPointingModelTable")) 
 			error();
@@ -603,20 +596,110 @@ CalPointingModelRow* CalPointingModelTable::lookup(Tag calDataId, Tag calReducti
 			error();
 	}
 
-	void CalPointingModelTable::error() throw(ConversionException) {
+	
+	void CalPointingModelTable::error()  {
 		throw ConversionException("Invalid xml document","CalPointingModel");
 	}
 	
+	
 	string CalPointingModelTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void CalPointingModelTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalPointingModel");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			CalPointingModelRow* aRow = CalPointingModelRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "CalPointingModel");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "CalPointingModel");
+		} 		 	
+	}
+
 	
 	void CalPointingModelTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -647,6 +730,7 @@ CalPointingModelRow* CalPointingModelTable::lookup(Tag calDataId, Tag calReducti
 				throw ConversionException("Could not close file " + fileName, "CalPointingModel");
 		}
 	}
+
 	
 	void CalPointingModelTable::setFromFile(const string& directory) {
 		string tablename;
@@ -688,6 +772,11 @@ CalPointingModelRow* CalPointingModelTable::lookup(Tag calDataId, Tag calReducti
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

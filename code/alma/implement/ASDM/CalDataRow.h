@@ -84,6 +84,11 @@ using namespace enumerations;
 	
 
 	
+#include "CCalDataOrigin.h"
+using namespace CalDataOriginMod;
+	
+
+	
 #include "CCalType.h"
 using namespace CalTypeMod;
 	
@@ -95,6 +100,9 @@ using namespace CalTypeMod;
 	
 
 	
+#include "CAssociatedCalNature.h"
+using namespace AssociatedCalNatureMod;
+	
 
 	
 
@@ -105,18 +113,6 @@ using namespace CalTypeMod;
 	
 #include "CScanIntent.h"
 using namespace ScanIntentMod;
-	
-
-	
-
-	
-#include "CAssociatedCalNature.h"
-using namespace AssociatedCalNatureMod;
-	
-
-	
-#include "CCalDataOrigin.h"
-using namespace CalDataOriginMod;
 	
 
 
@@ -142,7 +138,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalData.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -154,7 +150,7 @@ namespace asdm {
 /**
  * The CalDataRow class is a row of a CalDataTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class CalDataRow {
@@ -181,8 +177,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalDataRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalDataRowIDL x) throw(ConversionException);
+	void setFromIDL (CalDataRowIDL x) ;
 #endif
 	
 	/**
@@ -195,8 +192,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalDataTable to which the row built by deserialization will be parented.
+	  */
+	 static CalDataRow* fromBin(EndianISStream& eiss, CalDataTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -219,260 +230,6 @@ public:
  	
  	
 	
-	
-
-
-	
-	// ===> Attribute numScan
-	
-	
-	
-
-	
- 	/**
- 	 * Get numScan.
- 	 * @return numScan as int
- 	 */
- 	int getNumScan() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numScan with the specified int.
- 	 * @param numScan The int value to which numScan is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumScan (int numScan);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute frequencyGroup, which is optional
-	
-	
-	
-	/**
-	 * The attribute frequencyGroup is optional. Return true if this attribute exists.
-	 * @return true if and only if the frequencyGroup attribute exists. 
-	 */
-	bool isFrequencyGroupExists() const;
-	
-
-	
- 	/**
- 	 * Get frequencyGroup, which is optional.
- 	 * @return frequencyGroup as int
- 	 * @throws IllegalAccessException If frequencyGroup does not exist.
- 	 */
- 	int getFrequencyGroup() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set frequencyGroup with the specified int.
- 	 * @param frequencyGroup The int value to which frequencyGroup is to be set.
- 	 
- 		
- 	 */
- 	void setFrequencyGroup (int frequencyGroup);
-		
-	
-	
-	
-	/**
-	 * Mark frequencyGroup, which is an optional field, as non-existent.
-	 */
-	void clearFrequencyGroup ();
-	
-
-
-	
-	// ===> Attribute scanSet
-	
-	
-	
-
-	
- 	/**
- 	 * Get scanSet.
- 	 * @return scanSet as vector<int >
- 	 */
- 	vector<int > getScanSet() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set scanSet with the specified vector<int >.
- 	 * @param scanSet The vector<int > value to which scanSet is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setScanSet (vector<int > scanSet);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute calType
-	
-	
-	
-
-	
- 	/**
- 	 * Get calType.
- 	 * @return calType as CalTypeMod::CalType
- 	 */
- 	CalTypeMod::CalType getCalType() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set calType with the specified CalTypeMod::CalType.
- 	 * @param calType The CalTypeMod::CalType value to which calType is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setCalType (CalTypeMod::CalType calType);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute freqGroupName, which is optional
-	
-	
-	
-	/**
-	 * The attribute freqGroupName is optional. Return true if this attribute exists.
-	 * @return true if and only if the freqGroupName attribute exists. 
-	 */
-	bool isFreqGroupNameExists() const;
-	
-
-	
- 	/**
- 	 * Get freqGroupName, which is optional.
- 	 * @return freqGroupName as string
- 	 * @throws IllegalAccessException If freqGroupName does not exist.
- 	 */
- 	string getFreqGroupName() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set freqGroupName with the specified string.
- 	 * @param freqGroupName The string value to which freqGroupName is to be set.
- 	 
- 		
- 	 */
- 	void setFreqGroupName (string freqGroupName);
-		
-	
-	
-	
-	/**
-	 * Mark freqGroupName, which is an optional field, as non-existent.
-	 */
-	void clearFreqGroupName ();
-	
-
-
-	
-	// ===> Attribute fieldName, which is optional
-	
-	
-	
-	/**
-	 * The attribute fieldName is optional. Return true if this attribute exists.
-	 * @return true if and only if the fieldName attribute exists. 
-	 */
-	bool isFieldNameExists() const;
-	
-
-	
- 	/**
- 	 * Get fieldName, which is optional.
- 	 * @return fieldName as string
- 	 * @throws IllegalAccessException If fieldName does not exist.
- 	 */
- 	string getFieldName() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set fieldName with the specified string.
- 	 * @param fieldName The string value to which fieldName is to be set.
- 	 
- 		
- 	 */
- 	void setFieldName (string fieldName);
-		
-	
-	
-	
-	/**
-	 * Mark fieldName, which is an optional field, as non-existent.
-	 */
-	void clearFieldName ();
-	
-
-
-	
-	// ===> Attribute fieldCode, which is optional
-	
-	
-	
-	/**
-	 * The attribute fieldCode is optional. Return true if this attribute exists.
-	 * @return true if and only if the fieldCode attribute exists. 
-	 */
-	bool isFieldCodeExists() const;
-	
-
-	
- 	/**
- 	 * Get fieldCode, which is optional.
- 	 * @return fieldCode as vector<string >
- 	 * @throws IllegalAccessException If fieldCode does not exist.
- 	 */
- 	vector<string > getFieldCode() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set fieldCode with the specified vector<string >.
- 	 * @param fieldCode The vector<string > value to which fieldCode is to be set.
- 	 
- 		
- 	 */
- 	void setFieldCode (vector<string > fieldCode);
-		
-	
-	
-	
-	/**
-	 * Mark fieldCode, which is an optional field, as non-existent.
-	 */
-	void clearFieldCode ();
 	
 
 
@@ -537,125 +294,152 @@ public:
 
 
 	
-	// ===> Attribute sourceName, which is optional
+	// ===> Attribute execBlockUID
 	
 	
-	
-	/**
-	 * The attribute sourceName is optional. Return true if this attribute exists.
-	 * @return true if and only if the sourceName attribute exists. 
-	 */
-	bool isSourceNameExists() const;
 	
 
 	
  	/**
- 	 * Get sourceName, which is optional.
- 	 * @return sourceName as vector<string >
- 	 * @throws IllegalAccessException If sourceName does not exist.
+ 	 * Get execBlockUID.
+ 	 * @return execBlockUID as EntityRef
  	 */
- 	vector<string > getSourceName() const throw(IllegalAccessException);
+ 	EntityRef getExecBlockUID() const;
 	
  
  	
  	
  	/**
- 	 * Set sourceName with the specified vector<string >.
- 	 * @param sourceName The vector<string > value to which sourceName is to be set.
+ 	 * Set execBlockUID with the specified EntityRef.
+ 	 * @param execBlockUID The EntityRef value to which execBlockUID is to be set.
  	 
  		
+ 			
  	 */
- 	void setSourceName (vector<string > sourceName);
-		
+ 	void setExecBlockUID (EntityRef execBlockUID);
+  		
 	
 	
-	
-	/**
-	 * Mark sourceName, which is an optional field, as non-existent.
-	 */
-	void clearSourceName ();
 	
 
 
 	
-	// ===> Attribute sourceCode, which is optional
+	// ===> Attribute calDataType
 	
 	
-	
-	/**
-	 * The attribute sourceCode is optional. Return true if this attribute exists.
-	 * @return true if and only if the sourceCode attribute exists. 
-	 */
-	bool isSourceCodeExists() const;
 	
 
 	
  	/**
- 	 * Get sourceCode, which is optional.
- 	 * @return sourceCode as vector<string >
- 	 * @throws IllegalAccessException If sourceCode does not exist.
+ 	 * Get calDataType.
+ 	 * @return calDataType as CalDataOriginMod::CalDataOrigin
  	 */
- 	vector<string > getSourceCode() const throw(IllegalAccessException);
+ 	CalDataOriginMod::CalDataOrigin getCalDataType() const;
 	
  
  	
  	
  	/**
- 	 * Set sourceCode with the specified vector<string >.
- 	 * @param sourceCode The vector<string > value to which sourceCode is to be set.
+ 	 * Set calDataType with the specified CalDataOriginMod::CalDataOrigin.
+ 	 * @param calDataType The CalDataOriginMod::CalDataOrigin value to which calDataType is to be set.
  	 
  		
+ 			
  	 */
- 	void setSourceCode (vector<string > sourceCode);
-		
+ 	void setCalDataType (CalDataOriginMod::CalDataOrigin calDataType);
+  		
 	
 	
-	
-	/**
-	 * Mark sourceCode, which is an optional field, as non-existent.
-	 */
-	void clearSourceCode ();
 	
 
 
 	
-	// ===> Attribute scanIntent, which is optional
+	// ===> Attribute calType
 	
 	
-	
-	/**
-	 * The attribute scanIntent is optional. Return true if this attribute exists.
-	 * @return true if and only if the scanIntent attribute exists. 
-	 */
-	bool isScanIntentExists() const;
 	
 
 	
  	/**
- 	 * Get scanIntent, which is optional.
- 	 * @return scanIntent as vector<ScanIntentMod::ScanIntent >
- 	 * @throws IllegalAccessException If scanIntent does not exist.
+ 	 * Get calType.
+ 	 * @return calType as CalTypeMod::CalType
  	 */
- 	vector<ScanIntentMod::ScanIntent > getScanIntent() const throw(IllegalAccessException);
+ 	CalTypeMod::CalType getCalType() const;
 	
  
  	
  	
  	/**
- 	 * Set scanIntent with the specified vector<ScanIntentMod::ScanIntent >.
- 	 * @param scanIntent The vector<ScanIntentMod::ScanIntent > value to which scanIntent is to be set.
+ 	 * Set calType with the specified CalTypeMod::CalType.
+ 	 * @param calType The CalTypeMod::CalType value to which calType is to be set.
  	 
  		
+ 			
  	 */
- 	void setScanIntent (vector<ScanIntentMod::ScanIntent > scanIntent);
-		
+ 	void setCalType (CalTypeMod::CalType calType);
+  		
 	
 	
 	
-	/**
-	 * Mark scanIntent, which is an optional field, as non-existent.
-	 */
-	void clearScanIntent ();
+
+
+	
+	// ===> Attribute numScan
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numScan.
+ 	 * @return numScan as int
+ 	 */
+ 	int getNumScan() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numScan with the specified int.
+ 	 * @param numScan The int value to which numScan is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumScan (int numScan);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute scanSet
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get scanSet.
+ 	 * @return scanSet as vector<int >
+ 	 */
+ 	vector<int > getScanSet() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set scanSet with the specified vector<int >.
+ 	 * @param scanSet The vector<int > value to which scanSet is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setScanSet (vector<int > scanSet);
+  		
+	
+	
 	
 
 
@@ -677,7 +461,7 @@ public:
  	 * @return assocCalDataId as Tag
  	 * @throws IllegalAccessException If assocCalDataId does not exist.
  	 */
- 	Tag getAssocCalDataId() const throw(IllegalAccessException);
+ 	Tag getAssocCalDataId() const;
 	
  
  	
@@ -718,7 +502,7 @@ public:
  	 * @return assocCalNature as AssociatedCalNatureMod::AssociatedCalNature
  	 * @throws IllegalAccessException If assocCalNature does not exist.
  	 */
- 	AssociatedCalNatureMod::AssociatedCalNature getAssocCalNature() const throw(IllegalAccessException);
+ 	AssociatedCalNatureMod::AssociatedCalNature getAssocCalNature() const;
 	
  
  	
@@ -742,32 +526,166 @@ public:
 
 
 	
-	// ===> Attribute calDataType
+	// ===> Attribute fieldName, which is optional
 	
 	
+	
+	/**
+	 * The attribute fieldName is optional. Return true if this attribute exists.
+	 * @return true if and only if the fieldName attribute exists. 
+	 */
+	bool isFieldNameExists() const;
 	
 
 	
  	/**
- 	 * Get calDataType.
- 	 * @return calDataType as CalDataOriginMod::CalDataOrigin
+ 	 * Get fieldName, which is optional.
+ 	 * @return fieldName as vector<string >
+ 	 * @throws IllegalAccessException If fieldName does not exist.
  	 */
- 	CalDataOriginMod::CalDataOrigin getCalDataType() const;
+ 	vector<string > getFieldName() const;
 	
  
  	
  	
  	/**
- 	 * Set calDataType with the specified CalDataOriginMod::CalDataOrigin.
- 	 * @param calDataType The CalDataOriginMod::CalDataOrigin value to which calDataType is to be set.
+ 	 * Set fieldName with the specified vector<string >.
+ 	 * @param fieldName The vector<string > value to which fieldName is to be set.
  	 
  		
- 			
  	 */
- 	void setCalDataType (CalDataOriginMod::CalDataOrigin calDataType);
-  		
+ 	void setFieldName (vector<string > fieldName);
+		
 	
 	
+	
+	/**
+	 * Mark fieldName, which is an optional field, as non-existent.
+	 */
+	void clearFieldName ();
+	
+
+
+	
+	// ===> Attribute sourceName, which is optional
+	
+	
+	
+	/**
+	 * The attribute sourceName is optional. Return true if this attribute exists.
+	 * @return true if and only if the sourceName attribute exists. 
+	 */
+	bool isSourceNameExists() const;
+	
+
+	
+ 	/**
+ 	 * Get sourceName, which is optional.
+ 	 * @return sourceName as vector<string >
+ 	 * @throws IllegalAccessException If sourceName does not exist.
+ 	 */
+ 	vector<string > getSourceName() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set sourceName with the specified vector<string >.
+ 	 * @param sourceName The vector<string > value to which sourceName is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSourceName (vector<string > sourceName);
+		
+	
+	
+	
+	/**
+	 * Mark sourceName, which is an optional field, as non-existent.
+	 */
+	void clearSourceName ();
+	
+
+
+	
+	// ===> Attribute sourceCode, which is optional
+	
+	
+	
+	/**
+	 * The attribute sourceCode is optional. Return true if this attribute exists.
+	 * @return true if and only if the sourceCode attribute exists. 
+	 */
+	bool isSourceCodeExists() const;
+	
+
+	
+ 	/**
+ 	 * Get sourceCode, which is optional.
+ 	 * @return sourceCode as vector<string >
+ 	 * @throws IllegalAccessException If sourceCode does not exist.
+ 	 */
+ 	vector<string > getSourceCode() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set sourceCode with the specified vector<string >.
+ 	 * @param sourceCode The vector<string > value to which sourceCode is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSourceCode (vector<string > sourceCode);
+		
+	
+	
+	
+	/**
+	 * Mark sourceCode, which is an optional field, as non-existent.
+	 */
+	void clearSourceCode ();
+	
+
+
+	
+	// ===> Attribute scanIntent, which is optional
+	
+	
+	
+	/**
+	 * The attribute scanIntent is optional. Return true if this attribute exists.
+	 * @return true if and only if the scanIntent attribute exists. 
+	 */
+	bool isScanIntentExists() const;
+	
+
+	
+ 	/**
+ 	 * Get scanIntent, which is optional.
+ 	 * @return scanIntent as vector<ScanIntentMod::ScanIntent >
+ 	 * @throws IllegalAccessException If scanIntent does not exist.
+ 	 */
+ 	vector<ScanIntentMod::ScanIntent > getScanIntent() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set scanIntent with the specified vector<ScanIntentMod::ScanIntent >.
+ 	 * @param scanIntent The vector<ScanIntentMod::ScanIntent > value to which scanIntent is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setScanIntent (vector<ScanIntentMod::ScanIntent > scanIntent);
+		
+	
+	
+	
+	/**
+	 * Mark scanIntent, which is an optional field, as non-existent.
+	 */
+	void clearScanIntent ();
 	
 
 
@@ -786,12 +704,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this CalDataRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(int numScan, vector<int > scanSet, CalTypeMod::CalType calType, ArrayTime startTimeObserved, ArrayTime endTimeObserved, CalDataOriginMod::CalDataOrigin calDataType);
+	bool compareNoAutoInc(ArrayTime startTimeObserved, ArrayTime endTimeObserved, EntityRef execBlockUID, CalDataOriginMod::CalDataOrigin calDataType, CalTypeMod::CalType calType, int numScan, vector<int > scanSet);
 	
 	
 
 	
-	bool compareRequiredValue(int numScan, vector<int > scanSet, CalTypeMod::CalType calType, ArrayTime startTimeObserved, ArrayTime endTimeObserved, CalDataOriginMod::CalDataOrigin calDataType); 
+	bool compareRequiredValue(ArrayTime startTimeObserved, ArrayTime endTimeObserved, EntityRef execBlockUID, CalDataOriginMod::CalDataOrigin calDataType, CalTypeMod::CalType calType, int numScan, vector<int > scanSet); 
 		 
 	
 	/**
@@ -875,35 +793,44 @@ private:
 	
 
 	
-	// ===> Attribute numScan
+	// ===> Attribute startTimeObserved
 	
 	
 
-	int numScan;
-
-	
-	
- 	
-
-	
-	// ===> Attribute frequencyGroup, which is optional
-	
-	
-	bool frequencyGroupExists;
-	
-
-	int frequencyGroup;
+	ArrayTime startTimeObserved;
 
 	
 	
  	
 
 	
-	// ===> Attribute scanSet
+	// ===> Attribute endTimeObserved
 	
 	
 
-	vector<int > scanSet;
+	ArrayTime endTimeObserved;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute execBlockUID
+	
+	
+
+	EntityRef execBlockUID;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute calDataType
+	
+	
+
+	CalDataOriginMod::CalDataOrigin calDataType;
 
 	
 	
@@ -921,13 +848,48 @@ private:
  	
 
 	
-	// ===> Attribute freqGroupName, which is optional
+	// ===> Attribute numScan
 	
-	
-	bool freqGroupNameExists;
 	
 
-	string freqGroupName;
+	int numScan;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute scanSet
+	
+	
+
+	vector<int > scanSet;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute assocCalDataId, which is optional
+	
+	
+	bool assocCalDataIdExists;
+	
+
+	Tag assocCalDataId;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute assocCalNature, which is optional
+	
+	
+	bool assocCalNatureExists;
+	
+
+	AssociatedCalNatureMod::AssociatedCalNature assocCalNature;
 
 	
 	
@@ -940,42 +902,7 @@ private:
 	bool fieldNameExists;
 	
 
-	string fieldName;
-
-	
-	
- 	
-
-	
-	// ===> Attribute fieldCode, which is optional
-	
-	
-	bool fieldCodeExists;
-	
-
-	vector<string > fieldCode;
-
-	
-	
- 	
-
-	
-	// ===> Attribute startTimeObserved
-	
-	
-
-	ArrayTime startTimeObserved;
-
-	
-	
- 	
-
-	
-	// ===> Attribute endTimeObserved
-	
-	
-
-	ArrayTime endTimeObserved;
+	vector<string > fieldName;
 
 	
 	
@@ -1015,43 +942,6 @@ private:
 	
 
 	vector<ScanIntentMod::ScanIntent > scanIntent;
-
-	
-	
- 	
-
-	
-	// ===> Attribute assocCalDataId, which is optional
-	
-	
-	bool assocCalDataIdExists;
-	
-
-	Tag assocCalDataId;
-
-	
-	
- 	
-
-	
-	// ===> Attribute assocCalNature, which is optional
-	
-	
-	bool assocCalNatureExists;
-	
-
-	AssociatedCalNatureMod::AssociatedCalNature assocCalNature;
-
-	
-	
- 	
-
-	
-	// ===> Attribute calDataType
-	
-	
-
-	CalDataOriginMod::CalDataOrigin calDataType;
 
 	
 	

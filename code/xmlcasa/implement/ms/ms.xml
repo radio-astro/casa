@@ -1167,6 +1167,81 @@ the ms definition itself. -->
 </method>
 
  
+   <method type="function" name="statistics">
+   <shortdescription>Get statistics on the selected measurement set</shortdescription>
+   
+  <keyword>statistics</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="column">
+     <description>Column name</description>
+     </param>
+    
+     <param type="bool" direction="in" name="useflags">
+     <description>Use the data flags</description>
+     <value>true</value>
+     </param>
+     
+     <param type="string" name="spw">
+     <description>Spectral Window Indices or names : example : '1,2' </description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="field">
+     <description>Field indices or source names : example : '2,3C48' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="baseline">
+     <description>Baseline number : example : '2-3,4-5,132 ????' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="uvrange">
+     <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
+     <value>""</value>
+     </description>
+     </param>
+
+     <param type="string" name="time">
+     <description>Time range, as MJDs or date strings : example : 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="correlation">
+     <description>Correlations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="scan">
+     <description>Scan number : example : '1,2,3' </description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="array">
+     <description>Array Indices or names : example : 'VLAA' </description>
+     <value>""</value>
+     </param>
+
+  </input>
+  <returns type="any">
+    <any type="record"/>
+  </returns>
+
+  <description>
+    This function computes descriptive statistics on the measurement set.
+    It returns the statistical values as a python dictionary.  The given 
+    column name must be a numerical column.
+  </description>
+  <example>
+    \begin{verbatim}
+      
+      ms.open("3C273XC1.MS")
+      ms.statistics(column="DATA", antenna="2")
+    \end{verbatim}
+  </example>
+</method>
+
    <method type="function" name="range">
    <shortdescription>Get the range of values in the measurement set</shortdescription>
    

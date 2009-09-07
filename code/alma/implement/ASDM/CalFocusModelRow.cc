@@ -41,22 +41,22 @@ using std::set;
 #include <CalFocusModelRow.h>
 #include <CalFocusModelTable.h>
 
-#include <CalDataTable.h>
-#include <CalDataRow.h>
-
 #include <CalReductionTable.h>
 #include <CalReductionRow.h>
+
+#include <CalDataTable.h>
+#include <CalDataRow.h>
 	
 
 using asdm::ASDM;
 using asdm::CalFocusModelRow;
 using asdm::CalFocusModelTable;
 
-using asdm::CalDataTable;
-using asdm::CalDataRow;
-
 using asdm::CalReductionTable;
 using asdm::CalReductionRow;
+
+using asdm::CalDataTable;
+using asdm::CalDataRow;
 
 
 #include <Parser.h>
@@ -113,7 +113,19 @@ namespace asdm {
 		
 			
 				
-		x->numCoeff = numCoeff;
+		x->receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->polarizationType = polarizationType;
  				
  			
 		
@@ -144,123 +156,10 @@ namespace asdm {
 		
 		
 			
-		x->focusRMS.length(focusRMS.size());
-		for (unsigned int i = 0; i < focusRMS.size(); ++i) {
-			
-			x->focusRMS[i] = focusRMS.at(i).toIDLLength();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->coeffName.length(coeffName.size());
-		for (unsigned int i = 0; i < coeffName.size(); i++) {
-			x->coeffName[i].length(coeffName.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < coeffName.size() ; i++)
-			for (unsigned int j = 0; j < coeffName.at(i).size(); j++)
-					
-						
-				x->coeffName[i][j] = CORBA::string_dup(coeffName.at(i).at(j).c_str());
-						
-			 						
-		
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->coeffFormula.length(coeffFormula.size());
-		for (unsigned int i = 0; i < coeffFormula.size(); i++) {
-			x->coeffFormula[i].length(coeffFormula.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < coeffFormula.size() ; i++)
-			for (unsigned int j = 0; j < coeffFormula.at(i).size(); j++)
-					
-						
-				x->coeffFormula[i][j] = CORBA::string_dup(coeffFormula.at(i).at(j).c_str());
-						
-			 						
-		
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->coeffValue.length(coeffValue.size());
-		for (unsigned int i = 0; i < coeffValue.size(); i++) {
-			x->coeffValue[i].length(coeffValue.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < coeffValue.size() ; i++)
-			for (unsigned int j = 0; j < coeffValue.at(i).size(); j++)
-					
-						
-				x->coeffValue[i][j] = coeffValue.at(i).at(j);
-		 				
-			 						
-		
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->coeffError.length(coeffError.size());
-		for (unsigned int i = 0; i < coeffError.size(); i++) {
-			x->coeffError[i].length(coeffError.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < coeffError.size() ; i++)
-			for (unsigned int j = 0; j < coeffError.at(i).size(); j++)
-					
-						
-				x->coeffError[i][j] = coeffError.at(i).at(j);
-		 				
-			 						
-		
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->coeffFixed.length(coeffFixed.size());
-		for (unsigned int i = 0; i < coeffFixed.size(); i++) {
-			x->coeffFixed[i].length(coeffFixed.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < coeffFixed.size() ; i++)
-			for (unsigned int j = 0; j < coeffFixed.at(i).size(); j++)
-					
-						
-				x->coeffFixed[i][j] = coeffFixed.at(i).at(j);
-		 				
-			 						
-		
-			
+				
+		x->antennaMake = antennaMake;
+ 				
+ 			
 		
 	
 
@@ -270,8 +169,8 @@ namespace asdm {
 		
 			
 				
-		x->focusModel = CORBA::string_dup(focusModel.c_str());
-				
+		x->numCoeff = numCoeff;
+ 				
  			
 		
 	
@@ -293,10 +192,83 @@ namespace asdm {
 		
 		
 			
+		x->coeffName.length(coeffName.size());
+		for (unsigned int i = 0; i < coeffName.size(); ++i) {
+			
 				
-		x->receiverBand = receiverBand;
- 				
- 			
+			x->coeffName[i] = CORBA::string_dup(coeffName.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->coeffFormula.length(coeffFormula.size());
+		for (unsigned int i = 0; i < coeffFormula.size(); ++i) {
+			
+				
+			x->coeffFormula[i] = CORBA::string_dup(coeffFormula.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->coeffValue.length(coeffValue.size());
+		for (unsigned int i = 0; i < coeffValue.size(); ++i) {
+			
+				
+			x->coeffValue[i] = coeffValue.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->coeffError.length(coeffError.size());
+		for (unsigned int i = 0; i < coeffError.size(); ++i) {
+			
+				
+			x->coeffError[i] = coeffError.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->coeffFixed.length(coeffFixed.size());
+		for (unsigned int i = 0; i < coeffFixed.size(); ++i) {
+			
+				
+			x->coeffFixed[i] = coeffFixed.at(i);
+	 			
+	 		
+	 	}
+			
 		
 	
 
@@ -306,7 +278,34 @@ namespace asdm {
 		
 			
 				
-		x->antennaMake = antennaMake;
+		x->focusModel = CORBA::string_dup(focusModel.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->focusRMS.length(focusRMS.size());
+		for (unsigned int i = 0; i < focusRMS.size(); ++i) {
+			
+			x->focusRMS[i] = focusRMS.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->reducedChiSquared = reducedChiSquared;
  				
  			
 		
@@ -355,7 +354,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalFocusModelRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalFocusModelRow::setFromIDL (CalFocusModelRowIDL x) throw(ConversionException) {
+	void CalFocusModelRow::setFromIDL (CalFocusModelRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -374,7 +373,17 @@ namespace asdm {
 		
 		
 			
-		setNumCoeff(x.numCoeff);
+		setReceiverBand(x.receiverBand);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setPolarizationType(x.polarizationType);
   			
  		
 		
@@ -404,14 +413,29 @@ namespace asdm {
 		
 		
 			
-		focusRMS .clear();
-		for (unsigned int i = 0; i <x.focusRMS.length(); ++i) {
+		setAntennaMake(x.antennaMake);
+  			
+ 		
+		
+	
+
+	
+		
+		
 			
-			focusRMS.push_back(Length (x.focusRMS[i]));
+		setNumCoeff(x.numCoeff);
+  			
+ 		
+		
+	
+
+	
+		
+		
 			
-		}
-			
-  		
+		setNumSourceObs(x.numSourceObs);
+  			
+ 		
 		
 	
 
@@ -420,15 +444,10 @@ namespace asdm {
 		
 			
 		coeffName .clear();
-		vector<string> v_aux_coeffName;
-		for (unsigned int i = 0; i < x.coeffName.length(); ++i) {
-			v_aux_coeffName.clear();
-			for (unsigned int j = 0; j < x.coeffName[0].length(); ++j) {
-				
-				v_aux_coeffName.push_back(string (x.coeffName[i][j]));
-				
-  			}
-  			coeffName.push_back(v_aux_coeffName);			
+		for (unsigned int i = 0; i <x.coeffName.length(); ++i) {
+			
+			coeffName.push_back(string (x.coeffName[i]));
+			
 		}
 			
   		
@@ -440,15 +459,10 @@ namespace asdm {
 		
 			
 		coeffFormula .clear();
-		vector<string> v_aux_coeffFormula;
-		for (unsigned int i = 0; i < x.coeffFormula.length(); ++i) {
-			v_aux_coeffFormula.clear();
-			for (unsigned int j = 0; j < x.coeffFormula[0].length(); ++j) {
-				
-				v_aux_coeffFormula.push_back(string (x.coeffFormula[i][j]));
-				
-  			}
-  			coeffFormula.push_back(v_aux_coeffFormula);			
+		for (unsigned int i = 0; i <x.coeffFormula.length(); ++i) {
+			
+			coeffFormula.push_back(string (x.coeffFormula[i]));
+			
 		}
 			
   		
@@ -460,15 +474,10 @@ namespace asdm {
 		
 			
 		coeffValue .clear();
-		vector<float> v_aux_coeffValue;
-		for (unsigned int i = 0; i < x.coeffValue.length(); ++i) {
-			v_aux_coeffValue.clear();
-			for (unsigned int j = 0; j < x.coeffValue[0].length(); ++j) {
-				
-				v_aux_coeffValue.push_back(x.coeffValue[i][j]);
-	  			
-  			}
-  			coeffValue.push_back(v_aux_coeffValue);			
+		for (unsigned int i = 0; i <x.coeffValue.length(); ++i) {
+			
+			coeffValue.push_back(x.coeffValue[i]);
+  			
 		}
 			
   		
@@ -480,15 +489,10 @@ namespace asdm {
 		
 			
 		coeffError .clear();
-		vector<float> v_aux_coeffError;
-		for (unsigned int i = 0; i < x.coeffError.length(); ++i) {
-			v_aux_coeffError.clear();
-			for (unsigned int j = 0; j < x.coeffError[0].length(); ++j) {
-				
-				v_aux_coeffError.push_back(x.coeffError[i][j]);
-	  			
-  			}
-  			coeffError.push_back(v_aux_coeffError);			
+		for (unsigned int i = 0; i <x.coeffError.length(); ++i) {
+			
+			coeffError.push_back(x.coeffError[i]);
+  			
 		}
 			
   		
@@ -500,15 +504,10 @@ namespace asdm {
 		
 			
 		coeffFixed .clear();
-		vector<bool> v_aux_coeffFixed;
-		for (unsigned int i = 0; i < x.coeffFixed.length(); ++i) {
-			v_aux_coeffFixed.clear();
-			for (unsigned int j = 0; j < x.coeffFixed[0].length(); ++j) {
-				
-				v_aux_coeffFixed.push_back(x.coeffFixed[i][j]);
-	  			
-  			}
-  			coeffFixed.push_back(v_aux_coeffFixed);			
+		for (unsigned int i = 0; i <x.coeffFixed.length(); ++i) {
+			
+			coeffFixed.push_back(x.coeffFixed[i]);
+  			
 		}
 			
   		
@@ -529,9 +528,14 @@ namespace asdm {
 		
 		
 			
-		setNumSourceObs(x.numSourceObs);
-  			
- 		
+		focusRMS .clear();
+		for (unsigned int i = 0; i <x.focusRMS.length(); ++i) {
+			
+			focusRMS.push_back(Length (x.focusRMS[i]));
+			
+		}
+			
+  		
 		
 	
 
@@ -539,17 +543,7 @@ namespace asdm {
 		
 		
 			
-		setReceiverBand(x.receiverBand);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setAntennaMake(x.antennaMake);
+		setReducedChiSquared(x.reducedChiSquared);
   			
  		
 		
@@ -585,7 +579,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalFocusModel");
+			throw ConversionException (err.getMessage(),"CalFocusModel");
 		}
 	}
 #endif
@@ -611,7 +605,15 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numCoeff, "numCoeff", buf);
+			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("polarizationType", polarizationType));
 		
 		
 	
@@ -635,7 +637,23 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(focusRMS, "focusRMS", buf);
+			buf.append(EnumerationParser::toXML("antennaMake", antennaMake));
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numCoeff, "numCoeff", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numSourceObs, "numSourceObs", buf);
 		
 		
 	
@@ -691,7 +709,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numSourceObs, "numSourceObs", buf);
+		Parser::toXML(focusRMS, "focusRMS", buf);
 		
 		
 	
@@ -699,15 +717,7 @@ namespace asdm {
   	
  		
 		
-			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
-		
-		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("antennaMake", antennaMake));
+		Parser::toXML(reducedChiSquared, "reducedChiSquared", buf);
 		
 		
 	
@@ -747,7 +757,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalFocusModelRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalFocusModelRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -762,10 +772,22 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setNumCoeff(Parser::getInteger("numCoeff","CalFocusModel",rowDoc));
-			
+		
+		
+		
+		receiverBand = EnumerationParser::getReceiverBand("receiverBand","CalFocusModel",rowDoc);
+		
+		
+		
+	
+
+	
+		
+		
+		
+		polarizationType = EnumerationParser::getPolarizationType("polarizationType","CalFocusModel",rowDoc);
+		
+		
 		
 	
 
@@ -786,10 +808,36 @@ namespace asdm {
 	
 
 	
+		
+		
+		
+		antennaMake = EnumerationParser::getAntennaMake("antennaMake","CalFocusModel",rowDoc);
+		
+		
+		
+	
+
+	
+  		
+			
+	  	setNumCoeff(Parser::getInteger("numCoeff","CalFocusModel",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setNumSourceObs(Parser::getInteger("numSourceObs","CalFocusModel",rowDoc));
+			
+		
+	
+
+	
   		
 			
 					
-	  	setFocusRMS(Parser::get1DLength("focusRMS","CalFocusModel",rowDoc));
+	  	setCoeffName(Parser::get1DString("coeffName","CalFocusModel",rowDoc));
 	  			
 	  		
 		
@@ -799,7 +847,7 @@ namespace asdm {
   		
 			
 					
-	  	setCoeffName(Parser::get2DString("coeffName","CalFocusModel",rowDoc));
+	  	setCoeffFormula(Parser::get1DString("coeffFormula","CalFocusModel",rowDoc));
 	  			
 	  		
 		
@@ -809,7 +857,7 @@ namespace asdm {
   		
 			
 					
-	  	setCoeffFormula(Parser::get2DString("coeffFormula","CalFocusModel",rowDoc));
+	  	setCoeffValue(Parser::get1DFloat("coeffValue","CalFocusModel",rowDoc));
 	  			
 	  		
 		
@@ -819,7 +867,7 @@ namespace asdm {
   		
 			
 					
-	  	setCoeffValue(Parser::get2DFloat("coeffValue","CalFocusModel",rowDoc));
+	  	setCoeffError(Parser::get1DFloat("coeffError","CalFocusModel",rowDoc));
 	  			
 	  		
 		
@@ -829,17 +877,7 @@ namespace asdm {
   		
 			
 					
-	  	setCoeffError(Parser::get2DFloat("coeffError","CalFocusModel",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-			
-					
-	  	setCoeffFixed(Parser::get2DBoolean("coeffFixed","CalFocusModel",rowDoc));
+	  	setCoeffFixed(Parser::get1DBoolean("coeffFixed","CalFocusModel",rowDoc));
 	  			
 	  		
 		
@@ -856,28 +894,18 @@ namespace asdm {
 	
   		
 			
-	  	setNumSourceObs(Parser::getInteger("numSourceObs","CalFocusModel",rowDoc));
+					
+	  	setFocusRMS(Parser::get1DLength("focusRMS","CalFocusModel",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
 			
-		
-	
-
-	
-		
-		
-		
-		receiverBand = EnumerationParser::getReceiverBand("receiverBand","CalFocusModel",rowDoc);
-		
-		
-		
-	
-
-	
-		
-		
-		
-		antennaMake = EnumerationParser::getAntennaMake("antennaMake","CalFocusModel",rowDoc);
-		
-		
+	  	setReducedChiSquared(Parser::getDouble("reducedChiSquared","CalFocusModel",rowDoc));
+			
 		
 	
 
@@ -909,6 +937,404 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"CalFocusModel");
 		}
+	}
+	
+	void CalFocusModelRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+						
+			eoss.writeString(antennaName);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(receiverBand);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(polarizationType);
+				
+		
+	
+
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(antennaMake);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numCoeff);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numSourceObs);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) coeffName.size());
+		for (unsigned int i = 0; i < coeffName.size(); i++)
+				
+			eoss.writeString(coeffName.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) coeffFormula.size());
+		for (unsigned int i = 0; i < coeffFormula.size(); i++)
+				
+			eoss.writeString(coeffFormula.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) coeffValue.size());
+		for (unsigned int i = 0; i < coeffValue.size(); i++)
+				
+			eoss.writeFloat(coeffValue.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) coeffError.size());
+		for (unsigned int i = 0; i < coeffError.size(); i++)
+				
+			eoss.writeFloat(coeffError.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) coeffFixed.size());
+		for (unsigned int i = 0; i < coeffFixed.size(); i++)
+				
+			eoss.writeBoolean(coeffFixed.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(focusModel);
+				
+		
+	
+
+	
+	
+		
+	Length::toBin(focusRMS, eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeDouble(reducedChiSquared);
+				
+		
+	
+
+
+	
+	
+	}
+	
+	CalFocusModelRow* CalFocusModelRow::fromBin(EndianISStream& eiss, CalFocusModelTable& table) {
+		CalFocusModelRow* row = new  CalFocusModelRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->antennaName =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->polarizationType = CPolarizationType::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->antennaMake = CAntennaMake::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->numCoeff =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numSourceObs =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->coeffName.clear();
+		
+		unsigned int coeffNameDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < coeffNameDim1; i++)
+			
+			row->coeffName.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->coeffFormula.clear();
+		
+		unsigned int coeffFormulaDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < coeffFormulaDim1; i++)
+			
+			row->coeffFormula.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->coeffValue.clear();
+		
+		unsigned int coeffValueDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < coeffValueDim1; i++)
+			
+			row->coeffValue.push_back(eiss.readFloat());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->coeffError.clear();
+		
+		unsigned int coeffErrorDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < coeffErrorDim1; i++)
+			
+			row->coeffError.push_back(eiss.readFloat());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->coeffFixed.clear();
+		
+		unsigned int coeffFixedDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < coeffFixedDim1; i++)
+			
+			row->coeffFixed.push_back(eiss.readBoolean());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->focusModel =  eiss.readString();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->focusRMS = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->reducedChiSquared =  eiss.readDouble();
+			
+		
+	
+
+		
+		
+		
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -955,29 +1381,69 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numCoeff.
- 	 * @return numCoeff as int
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
  	 */
- 	int CalFocusModelRow::getNumCoeff() const {
+ 	ReceiverBandMod::ReceiverBand CalFocusModelRow::getReceiverBand() const {
 	
-  		return numCoeff;
+  		return receiverBand;
  	}
 
  	/**
- 	 * Set numCoeff with the specified int.
- 	 * @param numCoeff The int value to which numCoeff is to be set.
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void CalFocusModelRow::setNumCoeff (int numCoeff)  {
+ 	void CalFocusModelRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("receiverBand", "CalFocusModel");
+		
   		}
   	
- 		this->numCoeff = numCoeff;
+ 		this->receiverBand = receiverBand;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get polarizationType.
+ 	 * @return polarizationType as PolarizationTypeMod::PolarizationType
+ 	 */
+ 	PolarizationTypeMod::PolarizationType CalFocusModelRow::getPolarizationType() const {
+	
+  		return polarizationType;
+ 	}
+
+ 	/**
+ 	 * Set polarizationType with the specified PolarizationTypeMod::PolarizationType.
+ 	 * @param polarizationType The PolarizationTypeMod::PolarizationType value to which polarizationType is to be set.
+ 	 
+ 	
+ 		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
+ 	 */
+ 	void CalFocusModelRow::setPolarizationType (PolarizationTypeMod::PolarizationType polarizationType)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+			throw IllegalAccessException("polarizationType", "CalFocusModel");
+		
+  		}
+  	
+ 		this->polarizationType = polarizationType;
 	
  	}
 	
@@ -1051,29 +1517,93 @@ namespace asdm {
 
 	
  	/**
- 	 * Get focusRMS.
- 	 * @return focusRMS as vector<Length >
+ 	 * Get antennaMake.
+ 	 * @return antennaMake as AntennaMakeMod::AntennaMake
  	 */
- 	vector<Length > CalFocusModelRow::getFocusRMS() const {
+ 	AntennaMakeMod::AntennaMake CalFocusModelRow::getAntennaMake() const {
 	
-  		return focusRMS;
+  		return antennaMake;
  	}
 
  	/**
- 	 * Set focusRMS with the specified vector<Length >.
- 	 * @param focusRMS The vector<Length > value to which focusRMS is to be set.
+ 	 * Set antennaMake with the specified AntennaMakeMod::AntennaMake.
+ 	 * @param antennaMake The AntennaMakeMod::AntennaMake value to which antennaMake is to be set.
  	 
  	
  		
  	 */
- 	void CalFocusModelRow::setFocusRMS (vector<Length > focusRMS)  {
+ 	void CalFocusModelRow::setAntennaMake (AntennaMakeMod::AntennaMake antennaMake)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->focusRMS = focusRMS;
+ 		this->antennaMake = antennaMake;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numCoeff.
+ 	 * @return numCoeff as int
+ 	 */
+ 	int CalFocusModelRow::getNumCoeff() const {
+	
+  		return numCoeff;
+ 	}
+
+ 	/**
+ 	 * Set numCoeff with the specified int.
+ 	 * @param numCoeff The int value to which numCoeff is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalFocusModelRow::setNumCoeff (int numCoeff)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numCoeff = numCoeff;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numSourceObs.
+ 	 * @return numSourceObs as int
+ 	 */
+ 	int CalFocusModelRow::getNumSourceObs() const {
+	
+  		return numSourceObs;
+ 	}
+
+ 	/**
+ 	 * Set numSourceObs with the specified int.
+ 	 * @param numSourceObs The int value to which numSourceObs is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalFocusModelRow::setNumSourceObs (int numSourceObs)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numSourceObs = numSourceObs;
 	
  	}
 	
@@ -1084,21 +1614,21 @@ namespace asdm {
 	
  	/**
  	 * Get coeffName.
- 	 * @return coeffName as vector<vector<string > >
+ 	 * @return coeffName as vector<string >
  	 */
- 	vector<vector<string > > CalFocusModelRow::getCoeffName() const {
+ 	vector<string > CalFocusModelRow::getCoeffName() const {
 	
   		return coeffName;
  	}
 
  	/**
- 	 * Set coeffName with the specified vector<vector<string > >.
- 	 * @param coeffName The vector<vector<string > > value to which coeffName is to be set.
+ 	 * Set coeffName with the specified vector<string >.
+ 	 * @param coeffName The vector<string > value to which coeffName is to be set.
  	 
  	
  		
  	 */
- 	void CalFocusModelRow::setCoeffName (vector<vector<string > > coeffName)  {
+ 	void CalFocusModelRow::setCoeffName (vector<string > coeffName)  {
   	
   	
   		if (hasBeenAdded) {
@@ -1116,21 +1646,21 @@ namespace asdm {
 	
  	/**
  	 * Get coeffFormula.
- 	 * @return coeffFormula as vector<vector<string > >
+ 	 * @return coeffFormula as vector<string >
  	 */
- 	vector<vector<string > > CalFocusModelRow::getCoeffFormula() const {
+ 	vector<string > CalFocusModelRow::getCoeffFormula() const {
 	
   		return coeffFormula;
  	}
 
  	/**
- 	 * Set coeffFormula with the specified vector<vector<string > >.
- 	 * @param coeffFormula The vector<vector<string > > value to which coeffFormula is to be set.
+ 	 * Set coeffFormula with the specified vector<string >.
+ 	 * @param coeffFormula The vector<string > value to which coeffFormula is to be set.
  	 
  	
  		
  	 */
- 	void CalFocusModelRow::setCoeffFormula (vector<vector<string > > coeffFormula)  {
+ 	void CalFocusModelRow::setCoeffFormula (vector<string > coeffFormula)  {
   	
   	
   		if (hasBeenAdded) {
@@ -1148,21 +1678,21 @@ namespace asdm {
 	
  	/**
  	 * Get coeffValue.
- 	 * @return coeffValue as vector<vector<float > >
+ 	 * @return coeffValue as vector<float >
  	 */
- 	vector<vector<float > > CalFocusModelRow::getCoeffValue() const {
+ 	vector<float > CalFocusModelRow::getCoeffValue() const {
 	
   		return coeffValue;
  	}
 
  	/**
- 	 * Set coeffValue with the specified vector<vector<float > >.
- 	 * @param coeffValue The vector<vector<float > > value to which coeffValue is to be set.
+ 	 * Set coeffValue with the specified vector<float >.
+ 	 * @param coeffValue The vector<float > value to which coeffValue is to be set.
  	 
  	
  		
  	 */
- 	void CalFocusModelRow::setCoeffValue (vector<vector<float > > coeffValue)  {
+ 	void CalFocusModelRow::setCoeffValue (vector<float > coeffValue)  {
   	
   	
   		if (hasBeenAdded) {
@@ -1180,21 +1710,21 @@ namespace asdm {
 	
  	/**
  	 * Get coeffError.
- 	 * @return coeffError as vector<vector<float > >
+ 	 * @return coeffError as vector<float >
  	 */
- 	vector<vector<float > > CalFocusModelRow::getCoeffError() const {
+ 	vector<float > CalFocusModelRow::getCoeffError() const {
 	
   		return coeffError;
  	}
 
  	/**
- 	 * Set coeffError with the specified vector<vector<float > >.
- 	 * @param coeffError The vector<vector<float > > value to which coeffError is to be set.
+ 	 * Set coeffError with the specified vector<float >.
+ 	 * @param coeffError The vector<float > value to which coeffError is to be set.
  	 
  	
  		
  	 */
- 	void CalFocusModelRow::setCoeffError (vector<vector<float > > coeffError)  {
+ 	void CalFocusModelRow::setCoeffError (vector<float > coeffError)  {
   	
   	
   		if (hasBeenAdded) {
@@ -1212,21 +1742,21 @@ namespace asdm {
 	
  	/**
  	 * Get coeffFixed.
- 	 * @return coeffFixed as vector<vector<bool > >
+ 	 * @return coeffFixed as vector<bool >
  	 */
- 	vector<vector<bool > > CalFocusModelRow::getCoeffFixed() const {
+ 	vector<bool > CalFocusModelRow::getCoeffFixed() const {
 	
   		return coeffFixed;
  	}
 
  	/**
- 	 * Set coeffFixed with the specified vector<vector<bool > >.
- 	 * @param coeffFixed The vector<vector<bool > > value to which coeffFixed is to be set.
+ 	 * Set coeffFixed with the specified vector<bool >.
+ 	 * @param coeffFixed The vector<bool > value to which coeffFixed is to be set.
  	 
  	
  		
  	 */
- 	void CalFocusModelRow::setCoeffFixed (vector<vector<bool > > coeffFixed)  {
+ 	void CalFocusModelRow::setCoeffFixed (vector<bool > coeffFixed)  {
   	
   	
   		if (hasBeenAdded) {
@@ -1275,29 +1805,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numSourceObs.
- 	 * @return numSourceObs as int
+ 	 * Get focusRMS.
+ 	 * @return focusRMS as vector<Length >
  	 */
- 	int CalFocusModelRow::getNumSourceObs() const {
+ 	vector<Length > CalFocusModelRow::getFocusRMS() const {
 	
-  		return numSourceObs;
+  		return focusRMS;
  	}
 
  	/**
- 	 * Set numSourceObs with the specified int.
- 	 * @param numSourceObs The int value to which numSourceObs is to be set.
+ 	 * Set focusRMS with the specified vector<Length >.
+ 	 * @param focusRMS The vector<Length > value to which focusRMS is to be set.
  	 
  	
  		
  	 */
- 	void CalFocusModelRow::setNumSourceObs (int numSourceObs)  {
+ 	void CalFocusModelRow::setFocusRMS (vector<Length > focusRMS)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->numSourceObs = numSourceObs;
+ 		this->focusRMS = focusRMS;
 	
  	}
 	
@@ -1307,65 +1837,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get receiverBand.
- 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 * Get reducedChiSquared.
+ 	 * @return reducedChiSquared as double
  	 */
- 	ReceiverBandMod::ReceiverBand CalFocusModelRow::getReceiverBand() const {
+ 	double CalFocusModelRow::getReducedChiSquared() const {
 	
-  		return receiverBand;
+  		return reducedChiSquared;
  	}
 
  	/**
- 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
- 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
- 	 
- 	
- 		
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 	
- 	 */
- 	void CalFocusModelRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-			throw IllegalAccessException("receiverBand", "CalFocusModel");
-		
-  		}
-  	
- 		this->receiverBand = receiverBand;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get antennaMake.
- 	 * @return antennaMake as AntennaMakeMod::AntennaMake
- 	 */
- 	AntennaMakeMod::AntennaMake CalFocusModelRow::getAntennaMake() const {
-	
-  		return antennaMake;
- 	}
-
- 	/**
- 	 * Set antennaMake with the specified AntennaMakeMod::AntennaMake.
- 	 * @param antennaMake The AntennaMakeMod::AntennaMake value to which antennaMake is to be set.
+ 	 * Set reducedChiSquared with the specified double.
+ 	 * @param reducedChiSquared The double value to which reducedChiSquared is to be set.
  	 
  	
  		
  	 */
- 	void CalFocusModelRow::setAntennaMake (AntennaMakeMod::AntennaMake antennaMake)  {
+ 	void CalFocusModelRow::setReducedChiSquared (double reducedChiSquared)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->antennaMake = antennaMake;
+ 		this->reducedChiSquared = reducedChiSquared;
 	
  	}
 	
@@ -1458,14 +1952,14 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the CalData table having CalData.calDataId == calDataId
-	 * @return a CalDataRow*
+	 * Returns the pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
+	 * @return a CalReductionRow*
 	 * 
 	 
 	 */
-	 CalDataRow* CalFocusModelRow::getCalDataUsingCalDataId() {
+	 CalReductionRow* CalFocusModelRow::getCalReductionUsingCalReductionId() {
 	 
-	 	return table.getContainer().getCalData().getRowByKey(calDataId);
+	 	return table.getContainer().getCalReduction().getRowByKey(calReductionId);
 	 }
 	 
 
@@ -1477,14 +1971,14 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
-	 * @return a CalReductionRow*
+	 * Returns the pointer to the row in the CalData table having CalData.calDataId == calDataId
+	 * @return a CalDataRow*
 	 * 
 	 
 	 */
-	 CalReductionRow* CalFocusModelRow::getCalReductionUsingCalReductionId() {
+	 CalDataRow* CalFocusModelRow::getCalDataUsingCalDataId() {
 	 
-	 	return table.getContainer().getCalReduction().getRowByKey(calReductionId);
+	 	return table.getContainer().getCalData().getRowByKey(calDataId);
 	 }
 	 
 
@@ -1532,6 +2026,10 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
 	
 
 	
@@ -1539,28 +2037,6 @@ namespace asdm {
 	
 	
 	
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -1570,7 +2046,36 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+polarizationType = CPolarizationType::from_int(0);
+	
+
+	
+
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 antennaMake = CAntennaMake::from_int(0);
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 	
 	}
@@ -1610,6 +2115,10 @@ antennaMake = CAntennaMake::from_int(0);
 	
 
 	
+
+	
+
+	
 	
 
 	
@@ -1618,24 +2127,28 @@ antennaMake = CAntennaMake::from_int(0);
 		else {
 	
 		
-			calDataId = row.calDataId;
-		
-			calReductionId = row.calReductionId;
-		
 			antennaName = row.antennaName;
 		
 			receiverBand = row.receiverBand;
 		
+			polarizationType = row.polarizationType;
+		
+			calDataId = row.calDataId;
+		
+			calReductionId = row.calReductionId;
 		
 		
 		
-			numCoeff = row.numCoeff;
 		
 			startValidTime = row.startValidTime;
 		
 			endValidTime = row.endValidTime;
 		
-			focusRMS = row.focusRMS;
+			antennaMake = row.antennaMake;
+		
+			numCoeff = row.numCoeff;
+		
+			numSourceObs = row.numSourceObs;
 		
 			coeffName = row.coeffName;
 		
@@ -1649,9 +2162,9 @@ antennaMake = CAntennaMake::from_int(0);
 		
 			focusModel = row.focusModel;
 		
-			numSourceObs = row.numSourceObs;
+			focusRMS = row.focusRMS;
 		
-			antennaMake = row.antennaMake;
+			reducedChiSquared = row.reducedChiSquared;
 		
 		
 		
@@ -1660,24 +2173,10 @@ antennaMake = CAntennaMake::from_int(0);
 	}
 
 	
-	bool CalFocusModelRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusRMS, vector<vector<string > > coeffName, vector<vector<string > > coeffFormula, vector<vector<float > > coeffValue, vector<vector<float > > coeffError, vector<vector<bool > > coeffFixed, string focusModel, int numSourceObs, AntennaMakeMod::AntennaMake antennaMake) {
+	bool CalFocusModelRow::compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, PolarizationTypeMod::PolarizationType polarizationType, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, int numCoeff, int numSourceObs, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffValue, vector<float > coeffError, vector<bool > coeffFixed, string focusModel, vector<Length > focusRMS, double reducedChiSquared) {
 		bool result;
 		result = true;
 		
-	
-		
-		result = result && (this->calDataId == calDataId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->calReductionId == calReductionId);
-		
-		if (!result) return false;
-	
-
 	
 		
 		result = result && (this->antennaName == antennaName);
@@ -1694,7 +2193,21 @@ antennaMake = CAntennaMake::from_int(0);
 
 	
 		
-		result = result && (this->numCoeff == numCoeff);
+		result = result && (this->polarizationType == polarizationType);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->calDataId == calDataId);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->calReductionId == calReductionId);
 		
 		if (!result) return false;
 	
@@ -1715,7 +2228,21 @@ antennaMake = CAntennaMake::from_int(0);
 
 	
 		
-		result = result && (this->focusRMS == focusRMS);
+		result = result && (this->antennaMake == antennaMake);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numCoeff == numCoeff);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numSourceObs == numSourceObs);
 		
 		if (!result) return false;
 	
@@ -1764,14 +2291,14 @@ antennaMake = CAntennaMake::from_int(0);
 
 	
 		
-		result = result && (this->numSourceObs == numSourceObs);
+		result = result && (this->focusRMS == focusRMS);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->antennaMake == antennaMake);
+		result = result && (this->reducedChiSquared == reducedChiSquared);
 		
 		if (!result) return false;
 	
@@ -1781,14 +2308,10 @@ antennaMake = CAntennaMake::from_int(0);
 	
 	
 	
-	bool CalFocusModelRow::compareRequiredValue(int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusRMS, vector<vector<string > > coeffName, vector<vector<string > > coeffFormula, vector<vector<float > > coeffValue, vector<vector<float > > coeffError, vector<vector<bool > > coeffFixed, string focusModel, int numSourceObs, AntennaMakeMod::AntennaMake antennaMake) {
+	bool CalFocusModelRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, int numCoeff, int numSourceObs, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffValue, vector<float > coeffError, vector<bool > coeffFixed, string focusModel, vector<Length > focusRMS, double reducedChiSquared) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->numCoeff == numCoeff)) return false;
-	
-
 	
 		if (!(this->startValidTime == startValidTime)) return false;
 	
@@ -1798,7 +2321,15 @@ antennaMake = CAntennaMake::from_int(0);
 	
 
 	
-		if (!(this->focusRMS == focusRMS)) return false;
+		if (!(this->antennaMake == antennaMake)) return false;
+	
+
+	
+		if (!(this->numCoeff == numCoeff)) return false;
+	
+
+	
+		if (!(this->numSourceObs == numSourceObs)) return false;
 	
 
 	
@@ -1826,11 +2357,11 @@ antennaMake = CAntennaMake::from_int(0);
 	
 
 	
-		if (!(this->numSourceObs == numSourceObs)) return false;
+		if (!(this->focusRMS == focusRMS)) return false;
 	
 
 	
-		if (!(this->antennaMake == antennaMake)) return false;
+		if (!(this->reducedChiSquared == reducedChiSquared)) return false;
 	
 
 		return result;
@@ -1848,13 +2379,15 @@ antennaMake = CAntennaMake::from_int(0);
 	bool CalFocusModelRow::equalByRequiredValue(CalFocusModelRow* x) {
 		
 			
-		if (this->numCoeff != x->numCoeff) return false;
-			
 		if (this->startValidTime != x->startValidTime) return false;
 			
 		if (this->endValidTime != x->endValidTime) return false;
 			
-		if (this->focusRMS != x->focusRMS) return false;
+		if (this->antennaMake != x->antennaMake) return false;
+			
+		if (this->numCoeff != x->numCoeff) return false;
+			
+		if (this->numSourceObs != x->numSourceObs) return false;
 			
 		if (this->coeffName != x->coeffName) return false;
 			
@@ -1868,9 +2401,9 @@ antennaMake = CAntennaMake::from_int(0);
 			
 		if (this->focusModel != x->focusModel) return false;
 			
-		if (this->numSourceObs != x->numSourceObs) return false;
+		if (this->focusRMS != x->focusRMS) return false;
 			
-		if (this->antennaMake != x->antennaMake) return false;
+		if (this->reducedChiSquared != x->reducedChiSquared) return false;
 			
 		
 		return true;

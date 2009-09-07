@@ -91,6 +91,11 @@ using namespace enumerations;
 	
 
 	
+#include "CDirectionReferenceCode.h"
+using namespace DirectionReferenceCodeMod;
+	
+
+	
 
 	
 
@@ -134,101 +139,126 @@ class ASDM;
 class FieldRow;
 /**
  * The FieldTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * The field position for each source.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Field </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> fieldId </I></TD> 
+ 		
+ * <TD><I> fieldId </I></TD>
+ 		 
  * <TD> Tag</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a unique row in the table. </TD>
  * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> fieldName </TD> 
  * <TD> string </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the name of the field. </TD>
  * </TR>
 	
  * <TR>
  * <TD> code </TD> 
  * <TD> string </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> time </TD> 
- * <TD> ArrayTime </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;describes the function of the field. </TD>
  * </TR>
 	
  * <TR>
  * <TD> numPoly </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;number of coefficients of the polynomials. </TD>
  * </TR>
 	
  * <TR>
  * <TD> delayDir </TD> 
  * <TD> vector<vector<Angle > > </TD>
- * <TD>  numPoly+1, 2 </TD> 
+ * <TD>  numPoly, 2 </TD> 
+ * <TD> &nbsp;the delay tracking direction. </TD>
  * </TR>
 	
  * <TR>
  * <TD> phaseDir </TD> 
  * <TD> vector<vector<Angle > > </TD>
- * <TD>  numPoly+1, 2 </TD> 
+ * <TD>  numPoly, 2 </TD> 
+ * <TD> &nbsp;the phase tracking direction. </TD>
  * </TR>
 	
  * <TR>
  * <TD> referenceDir </TD> 
  * <TD> vector<vector<Angle > > </TD>
- * <TD>  numPoly+1, 2 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> flagRow </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD>  numPoly, 2 </TD> 
+ * <TD> &nbsp;the reference direction. </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
- * <TD> assocFieldId </TD> 
- * <TD> vector<Tag>  </TD>
- * <TD>    </TD>
+ * <TD> time </TD> 
+ * <TD> ArrayTime </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; value used as the origin for the polynomials. </TD>
  * </TR>
 	
  * <TR>
- * <TD> ephemerisId </TD> 
- * <TD> Tag </TD>
+ * <TD> directionCode </TD> 
+ * <TD> DirectionReferenceCodeMod::DirectionReferenceCode </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the direction reference code of the field. </TD>
  * </TR>
 	
  * <TR>
- * <TD> sourceId </TD> 
- * <TD> int </TD>
+ * <TD> directionEquinox </TD> 
+ * <TD> ArrayTime </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the direction reference equinox of the field. </TD>
  * </TR>
 	
  * <TR>
  * <TD> assocNature </TD> 
  * <TD> string </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; identifies the nature of the association with the row refered to by fieldId. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> ephemerisId </TD> 
+ * <TD> Tag </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; refers to a unique row in EphemerisTable. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sourceId </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; refers to a collection of rows in SourceTable. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> assocFieldId </TD> 
+ * <TD> Tag </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; Associated Field ID </TD>
  * </TR>
 	
 
@@ -307,8 +337,6 @@ public:
 	
  	 * @param code. 
 	
- 	 * @param time. 
-	
  	 * @param numPoly. 
 	
  	 * @param delayDir. 
@@ -317,16 +345,14 @@ public:
 	
  	 * @param referenceDir. 
 	
- 	 * @param flagRow. 
-	
      */
-	FieldRow *newRow(string fieldName, string code, ArrayTime time, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir, bool flagRow);
+	FieldRow *newRow(string fieldName, string code, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	FieldRow *newRowFull(string fieldName, string code, ArrayTime time, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir, bool flagRow);
+	FieldRow *newRowFull(string fieldName, string code, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir);
 
 
 	/**
@@ -409,8 +435,6 @@ public:
  	 		
  	 * @param code.
  	 		
- 	 * @param time.
- 	 		
  	 * @param numPoly.
  	 		
  	 * @param delayDir.
@@ -418,11 +442,9 @@ public:
  	 * @param phaseDir.
  	 		
  	 * @param referenceDir.
- 	 		
- 	 * @param flagRow.
  	 		 
  	 */
-	FieldRow* lookup(string fieldName, string code, ArrayTime time, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir, bool flagRow); 
+	FieldRow* lookup(string fieldName, string code, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir); 
 
 
 #ifndef WITHOUT_ACS
@@ -442,43 +464,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(FieldTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(FieldTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for Field (FieldTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a Field (FieldTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -557,8 +585,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	FieldRow* checkAndAdd(FieldRow* x) throw (DuplicateKey, UniquenessViolationException);
+	FieldRow* checkAndAdd(FieldRow* x) ;
 
 
 
@@ -572,7 +604,7 @@ private:
 	vector<FieldRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

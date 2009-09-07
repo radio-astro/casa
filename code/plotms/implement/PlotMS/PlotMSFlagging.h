@@ -34,11 +34,6 @@
 
 namespace casa {
 
-//# Forward declarations
-class MeasurementSet;
-class VisSet;
-
-
 // Specifies flagging parameters (including possibly flag extension) for an MS.
 class PlotMSFlagging {    
 public:
@@ -98,26 +93,9 @@ public:
     // Default constructor.
     PlotMSFlagging();
     
-    // Constructor which takes the MS, selected MS, and vis set.
-    PlotMSFlagging(MeasurementSet* ms, MeasurementSet* selectedMS,
-            VisSet* visSet);
-    
     // Destructor.
     ~PlotMSFlagging();
-    
-    
-    // Gets the MS objects.  WARNING: could be NULL if they have not been set
-    // through the constructor or setMS().
-    // <group>
-    MeasurementSet* getMS() const;
-    MeasurementSet* getSelectedMS() const;
-    VisSet* getVisSet() const;
-    // </group>
-    
-    // Sets the MS objects to the given.
-    void setMS(MeasurementSet* ms, MeasurementSet* selectedMS, VisSet* visSet);
-    
-    
+        
     // Converts this object to/from a record.  Each field will have a key that
     // is its enum name, with a bool value for its flag value.  Fields that
     // also have double values will have an additional key that is its enum
@@ -219,12 +197,6 @@ public:
     // </group>
     
 private:
-    // Pointers to measurement set objects (do not delete!).
-    // <group>
-    MeasurementSet* itsMS_;
-    MeasurementSet* itsSelectedMS_;
-    VisSet* itsVisSet_;
-    // </group>
     
     // Flagging field flags.
     map<Field, bool> itsFlags_;

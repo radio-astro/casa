@@ -473,75 +473,86 @@ void VisBuffer::freqAveCubes()
 }
 
 
-void VisBuffer::channelAve(Float factor) 
+void VisBuffer::channelAve(const Matrix<Int>& chanavebounds) 
 {
-  // TBD: Use weightSpec, if present, and update weightMat accordingly
+  // TBD: Use/update weightSpec, if present, and update weightMat accordingly
 
-  if (factor<=0.0) return;
+  //  Only do something if there is something to do
+  if ( chanavebounds.nelements()>0 ) {
 
-  // Discern # of input channels per output channel from factor
-  Int width(1);
-  if (factor>1.0) width=Int(factor);        // factor supplied in channel units
-  else width=Int(factor*Float(nChannel())); // factor supplied in fractional units
+    // refer to the supplied chanavebounds
+    chanAveBounds_p.reference(chanavebounds);
 
-  // The number of output channels
-  Int nChanOut((nChannel()+width-1)/width);
-
-  // Apply averaging to whatever data is present
-  if (visCubeOK_p)          chanAveVisCube(visCube(),width,nChanOut);
-  if (modelVisCubeOK_p)     chanAveVisCube(modelVisCube(),width,nChanOut);
-  if (correctedVisCubeOK_p) chanAveVisCube(correctedVisCube(),width,nChanOut);
-  if (flagCubeOK_p)             chanAveFlagCube(flagCube(),width,nChanOut);
-
-  // Finally, collapse the frequency values themselves
-  Vector<Double> newFreq(nChanOut,0.0);
-  Vector<Int> newChan(nChanOut,0);
-  frequency(); // Ensure frequencies pre-filled
-  channel();
-  Int ichan=0;
-  for (Int ochan=0;ochan<nChanOut;++ochan) {
-    Int n=0;
-    while (n<width && ichan<nChannel()) {
-      newFreq(ochan)+=frequency()(ichan);
-      newChan(ochan)+=channel()(ichan);
-      ichan++;
-      n++;
+    //  cout << "chanAveBounds = " << chanAveBounds_p << endl;
+    
+    Int nChanOut(chanAveBounds_p.nrow());
+    
+    // Apply averaging to whatever data is present
+    if (visCubeOK_p)          chanAveVisCube(visCube(),nChanOut);
+    if (modelVisCubeOK_p)     chanAveVisCube(modelVisCube(),nChanOut);
+    if (correctedVisCubeOK_p) chanAveVisCube(correctedVisCube(),nChanOut);
+    if (flagCubeOK_p)         chanAveFlagCube(flagCube(),nChanOut);
+    
+    // Finally, collapse the frequency values themselves
+    // TBD: move this up to bounds calculation loop?
+    Vector<Double> newFreq(nChanOut,0.0);
+    Vector<Int> newChan(nChanOut,0);
+    frequency(); // Ensure frequencies pre-filled
+    Vector<Int> chans(channel()); // Ensure channels pre-filled
+    Int nChan0(chans.nelements());
+    Int ichan=0;
+    for (Int ochan=0;ochan<nChanOut;++ochan) {
+      Int n=0;
+      while (chans(ichan)>=chanAveBounds_p(ochan,0) &&
+	     chans(ichan)<=chanAveBounds_p(ochan,1) &&
+	     ichan<nChan0) {
+	
+	newFreq(ochan)+=frequency()(ichan);
+	newChan(ochan)+=chans(ichan);
+	ichan++;
+	n++;
+      }
+      if (n>0) {
+	newFreq(ochan)/=Double(n);
+	newChan(ochan)/=n;
+      }
     }
-    if (n>0) {
-      newFreq(ochan)/=Double(n);
-      newChan(ochan)/=n;
-    }
+    
+    // Install the new values
+    frequency().reference(newFreq);
+    channel().reference(newChan);
+    nChannel()=nChanOut;
+
   }
-  // Install the new values
-  frequency().reference(newFreq);
-  channel().reference(newChan);
-  nChannel()=nChanOut;
+
 }
 
-void VisBuffer::chanAveVisCube(Cube<Complex>& data,Int width,Int nChanOut) {
+void VisBuffer::chanAveVisCube(Cube<Complex>& data,Int nChanOut) {
 
   IPosition csh(data.shape());
   Int nChan0=csh(1);
   csh(1)=nChanOut;
 
+  Vector<Int>& chans(channel());
+
   Cube<Complex> newCube(csh); newCube=Complex(0.0);
   Int nCor=nCorr();
-  Int ichan(0),n(0);
+  Int ichan(0);
   Vector<Int> ngood(nCor,0);
   for (Int row=0; row<nRow(); row++) {
     if (!flagRow()(row)) {
       ichan=0;
       for (Int ochan=0;ochan<nChanOut;++ochan) {
-	n=0;
 	ngood=0;
-	while (n<width && ichan<nChan0) {
+	while (chans(ichan)>=chanAveBounds_p(ochan,0) &&
+	       chans(ichan)<=chanAveBounds_p(ochan,1) &&
+	       ichan<nChan0) {
 	  for (Int icor=0;icor<nCor;++icor) 
 	    if (!flagCube()(icor,ichan,row)) {
 	      newCube(icor,ochan,row)+=data(icor,ichan,row);
 	      ngood(icor)++;
 	    }
 	  ichan++;
-	  n++;
 	}
 	for (Int icor=0;icor<nCor;++icor) {
 	  if (ngood(icor)>0) {
@@ -557,26 +568,28 @@ void VisBuffer::chanAveVisCube(Cube<Complex>& data,Int width,Int nChanOut) {
 
 }
 
-void VisBuffer::chanAveFlagCube(Cube<Bool>& flagcube,Int width,Int nChanOut) {
+void VisBuffer::chanAveFlagCube(Cube<Bool>& flagcube,Int nChanOut) {
 
   IPosition csh(flagcube.shape());
   Int nChan0=csh(1);
   csh(1)=nChanOut;
 
+  Vector<Int>& chans(channel());
+
   Cube<Bool> newFlag(csh); newFlag=True;
   Int nCor=nCorr();
-  Int ichan(0),n(0);
+  Int ichan(0);
   for (Int row=0; row<nRow(); row++) {
     if (!flagRow()(row)) {
       ichan=0;
       for (Int ochan=0;ochan<nChanOut;++ochan) {
-	n=0;
-	while (n<width && ichan<nChan0) {
+	while (chans(ichan)>=chanAveBounds_p(ochan,0) &&
+	       chans(ichan)<=chanAveBounds_p(ochan,1) &&
+	       ichan<nChan0) {
 	  for (Int icor=0;icor<nCor;++icor) 
 	    if (!flagcube(icor,ichan,row)) 
 	      newFlag(icor,ochan,row)=False;
 	  ichan++;
-	  n++;
 	}
       }
     }
@@ -1115,7 +1128,8 @@ Int & VisBuffer::fillnCorr()
 Int & VisBuffer::fillnChannel() 
 { 
   nChannelOK_p=True; 
-  nChannel_p=visIter_p->channelGroupSize();
+  //  nChannel_p=visIter_p->channelGroupSize();
+  nChannel_p=channel().nelements();
   return nChannel_p;
  }
 

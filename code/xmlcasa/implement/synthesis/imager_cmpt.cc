@@ -187,12 +187,12 @@ imager::clean(const std::string& algorithm, const int niter, const double gain, 
    Bool rstat(False);
    if(hasValidMS_p){
       try {
-         Vector <String> amodel(toVectorString(model));
+         Vector<String> amodel(toVectorString(model));
          Vector<Bool>   fixed(keepfixed);
-         Vector <String> amask(toVectorString(mask));
-         Vector <String> aimage(toVectorString(image));
-         Vector <String> aresidual(toVectorString(residual));
-	 Vector <String> apsf(toVectorString(psfnames));
+         Vector<String> amask(toVectorString(mask));
+         Vector<String> aimage(toVectorString(image));
+         Vector<String> aresidual(toVectorString(residual));
+	 Vector<String> apsf(toVectorString(psfnames));
 	 if( (apsf.nelements()==1) && apsf[0]==String(""))
 	   apsf.resize();
 	 if(!interactive){

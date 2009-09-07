@@ -113,9 +113,56 @@ namespace asdm {
 		
 			
 				
+		x->receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
 		x->antennaMake = antennaMake;
  				
  			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->frequencyRange.length(frequencyRange.size());
+		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
+			
+			x->frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
+			
+	 	}
+			
 		
 	
 
@@ -153,45 +200,15 @@ namespace asdm {
 		
 		
 			
-		x->startValidTime = startValidTime.toIDLArrayTime();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->endValidTime = endValidTime.toIDLArrayTime();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->frequencyRange.length(frequencyRange.size());
-		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
-			
-			x->frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
+		x->mainBeamEfficiency.length(mainBeamEfficiency.size());
+		for (unsigned int i = 0; i < mainBeamEfficiency.size(); ++i) {
 			
 				
-		x->receiverBand = receiverBand;
- 				
- 			
+			x->mainBeamEfficiency[i] = mainBeamEfficiency.at(i);
+	 			
+	 		
+	 	}
+			
 		
 	
 
@@ -260,7 +277,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalPrimaryBeamRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalPrimaryBeamRow::setFromIDL (CalPrimaryBeamRowIDL x) throw(ConversionException) {
+	void CalPrimaryBeamRow::setFromIDL (CalPrimaryBeamRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -279,9 +296,54 @@ namespace asdm {
 		
 		
 			
+		setReceiverBand(x.receiverBand);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setStartValidTime(ArrayTime (x.startValidTime));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setEndValidTime(ArrayTime (x.endValidTime));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
 		setAntennaMake(x.antennaMake);
   			
  		
+		
+	
+
+	
+		
+		
+			
+		frequencyRange .clear();
+		for (unsigned int i = 0; i <x.frequencyRange.length(); ++i) {
+			
+			frequencyRange.push_back(Frequency (x.frequencyRange[i]));
+			
+		}
+			
+  		
 		
 	
 
@@ -314,44 +376,14 @@ namespace asdm {
 		
 		
 			
-		setStartValidTime(ArrayTime (x.startValidTime));
+		mainBeamEfficiency .clear();
+		for (unsigned int i = 0; i <x.mainBeamEfficiency.length(); ++i) {
 			
- 		
-		
-	
-
-	
-		
-		
-			
-		setEndValidTime(ArrayTime (x.endValidTime));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		frequencyRange .clear();
-		for (unsigned int i = 0; i <x.frequencyRange.length(); ++i) {
-			
-			frequencyRange.push_back(Frequency (x.frequencyRange[i]));
-			
+			mainBeamEfficiency.push_back(x.mainBeamEfficiency[i]);
+  			
 		}
 			
   		
-		
-	
-
-	
-		
-		
-			
-		setReceiverBand(x.receiverBand);
-  			
- 		
 		
 	
 
@@ -405,7 +437,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalPrimaryBeam");
+			throw ConversionException (err.getMessage(),"CalPrimaryBeam");
 		}
 	}
 #endif
@@ -431,23 +463,7 @@ namespace asdm {
   	
  		
 		
-			buf.append(EnumerationParser::toXML("antennaMake", antennaMake));
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numReceptor, "numReceptor", buf);
-		
-		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("polarizationTypes", polarizationTypes));
+			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
 		
 		
 	
@@ -471,6 +487,14 @@ namespace asdm {
   	
  		
 		
+			buf.append(EnumerationParser::toXML("antennaMake", antennaMake));
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(frequencyRange, "frequencyRange", buf);
 		
 		
@@ -479,7 +503,23 @@ namespace asdm {
   	
  		
 		
-			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
+		Parser::toXML(numReceptor, "numReceptor", buf);
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("polarizationTypes", polarizationTypes));
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(mainBeamEfficiency, "mainBeamEfficiency", buf);
 		
 		
 	
@@ -535,7 +575,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalPrimaryBeamRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalPrimaryBeamRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -553,9 +593,45 @@ namespace asdm {
 		
 		
 		
+		receiverBand = EnumerationParser::getReceiverBand("receiverBand","CalPrimaryBeam",rowDoc);
+		
+		
+		
+	
+
+	
+  		
+			
+	  	setStartValidTime(Parser::getArrayTime("startValidTime","CalPrimaryBeam",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setEndValidTime(Parser::getArrayTime("endValidTime","CalPrimaryBeam",rowDoc));
+			
+		
+	
+
+	
+		
+		
+		
 		antennaMake = EnumerationParser::getAntennaMake("antennaMake","CalPrimaryBeam",rowDoc);
 		
 		
+		
+	
+
+	
+  		
+			
+					
+	  	setFrequencyRange(Parser::get1DFrequency("frequencyRange","CalPrimaryBeam",rowDoc));
+	  			
+	  		
 		
 	
 
@@ -580,36 +656,10 @@ namespace asdm {
 	
   		
 			
-	  	setStartValidTime(Parser::getArrayTime("startValidTime","CalPrimaryBeam",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setEndValidTime(Parser::getArrayTime("endValidTime","CalPrimaryBeam",rowDoc));
-			
-		
-	
-
-	
-  		
-			
 					
-	  	setFrequencyRange(Parser::get1DFrequency("frequencyRange","CalPrimaryBeam",rowDoc));
+	  	setMainBeamEfficiency(Parser::get1DDouble("mainBeamEfficiency","CalPrimaryBeam",rowDoc));
 	  			
 	  		
-		
-	
-
-	
-		
-		
-		
-		receiverBand = EnumerationParser::getReceiverBand("receiverBand","CalPrimaryBeam",rowDoc);
-		
-		
 		
 	
 
@@ -659,6 +709,268 @@ namespace asdm {
 		}
 	}
 	
+	void CalPrimaryBeamRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+						
+			eoss.writeString(antennaName);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(receiverBand);
+				
+		
+	
+
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(antennaMake);
+				
+		
+	
+
+	
+	
+		
+	Frequency::toBin(frequencyRange, eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numReceptor);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); i++)
+				
+			eoss.writeInt(polarizationTypes.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) mainBeamEfficiency.size());
+		for (unsigned int i = 0; i < mainBeamEfficiency.size(); i++)
+				
+			eoss.writeDouble(mainBeamEfficiency.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+	beamMapUID.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeFloat(relativeAmplitudeRms);
+				
+		
+	
+
+
+	
+	
+	}
+	
+	CalPrimaryBeamRow* CalPrimaryBeamRow::fromBin(EndianISStream& eiss, CalPrimaryBeamTable& table) {
+		CalPrimaryBeamRow* row = new  CalPrimaryBeamRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->antennaName =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->antennaMake = CAntennaMake::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->frequencyRange = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->numReceptor =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->polarizationTypes.clear();
+		
+		unsigned int polarizationTypesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
+			
+			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->mainBeamEfficiency.clear();
+		
+		unsigned int mainBeamEfficiencyDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < mainBeamEfficiencyDim1; i++)
+			
+			row->mainBeamEfficiency.push_back(eiss.readDouble());
+			
+	
+
+		
+	
+
+	
+		
+		
+		row->beamMapUID =  EntityRef::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->relativeAmplitudeRms =  eiss.readFloat();
+			
+		
+	
+
+		
+		
+		
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
@@ -703,93 +1015,33 @@ namespace asdm {
 
 	
  	/**
- 	 * Get antennaMake.
- 	 * @return antennaMake as AntennaMakeMod::AntennaMake
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
  	 */
- 	AntennaMakeMod::AntennaMake CalPrimaryBeamRow::getAntennaMake() const {
+ 	ReceiverBandMod::ReceiverBand CalPrimaryBeamRow::getReceiverBand() const {
 	
-  		return antennaMake;
+  		return receiverBand;
  	}
 
  	/**
- 	 * Set antennaMake with the specified AntennaMakeMod::AntennaMake.
- 	 * @param antennaMake The AntennaMakeMod::AntennaMake value to which antennaMake is to be set.
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void CalPrimaryBeamRow::setAntennaMake (AntennaMakeMod::AntennaMake antennaMake)  {
+ 	void CalPrimaryBeamRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("receiverBand", "CalPrimaryBeam");
+		
   		}
   	
- 		this->antennaMake = antennaMake;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numReceptor.
- 	 * @return numReceptor as int
- 	 */
- 	int CalPrimaryBeamRow::getNumReceptor() const {
-	
-  		return numReceptor;
- 	}
-
- 	/**
- 	 * Set numReceptor with the specified int.
- 	 * @param numReceptor The int value to which numReceptor is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPrimaryBeamRow::setNumReceptor (int numReceptor)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numReceptor = numReceptor;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get polarizationTypes.
- 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
- 	 */
- 	vector<PolarizationTypeMod::PolarizationType > CalPrimaryBeamRow::getPolarizationTypes() const {
-	
-  		return polarizationTypes;
- 	}
-
- 	/**
- 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
- 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPrimaryBeamRow::setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->polarizationTypes = polarizationTypes;
+ 		this->receiverBand = receiverBand;
 	
  	}
 	
@@ -863,6 +1115,38 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get antennaMake.
+ 	 * @return antennaMake as AntennaMakeMod::AntennaMake
+ 	 */
+ 	AntennaMakeMod::AntennaMake CalPrimaryBeamRow::getAntennaMake() const {
+	
+  		return antennaMake;
+ 	}
+
+ 	/**
+ 	 * Set antennaMake with the specified AntennaMakeMod::AntennaMake.
+ 	 * @param antennaMake The AntennaMakeMod::AntennaMake value to which antennaMake is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPrimaryBeamRow::setAntennaMake (AntennaMakeMod::AntennaMake antennaMake)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->antennaMake = antennaMake;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get frequencyRange.
  	 * @return frequencyRange as vector<Frequency >
  	 */
@@ -895,29 +1179,93 @@ namespace asdm {
 
 	
  	/**
- 	 * Get receiverBand.
- 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
  	 */
- 	ReceiverBandMod::ReceiverBand CalPrimaryBeamRow::getReceiverBand() const {
+ 	int CalPrimaryBeamRow::getNumReceptor() const {
 	
-  		return receiverBand;
+  		return numReceptor;
  	}
 
  	/**
- 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
- 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
  	 
  	
  		
  	 */
- 	void CalPrimaryBeamRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
+ 	void CalPrimaryBeamRow::setNumReceptor (int numReceptor)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->receiverBand = receiverBand;
+ 		this->numReceptor = numReceptor;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get polarizationTypes.
+ 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
+ 	 */
+ 	vector<PolarizationTypeMod::PolarizationType > CalPrimaryBeamRow::getPolarizationTypes() const {
+	
+  		return polarizationTypes;
+ 	}
+
+ 	/**
+ 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPrimaryBeamRow::setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->polarizationTypes = polarizationTypes;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get mainBeamEfficiency.
+ 	 * @return mainBeamEfficiency as vector<double >
+ 	 */
+ 	vector<double > CalPrimaryBeamRow::getMainBeamEfficiency() const {
+	
+  		return mainBeamEfficiency;
+ 	}
+
+ 	/**
+ 	 * Set mainBeamEfficiency with the specified vector<double >.
+ 	 * @param mainBeamEfficiency The vector<double > value to which mainBeamEfficiency is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPrimaryBeamRow::setMainBeamEfficiency (vector<double > mainBeamEfficiency)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->mainBeamEfficiency = mainBeamEfficiency;
 	
  	}
 	
@@ -1140,6 +1488,8 @@ namespace asdm {
 	
 
 	
+
+	
 	
 
 	
@@ -1147,6 +1497,15 @@ namespace asdm {
 	
 	
 	
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+receiverBand = CReceiverBand::from_int(0);
+	
+
+	
+
 	
 
 	
@@ -1160,13 +1519,6 @@ antennaMake = CAntennaMake::from_int(0);
 
 	
 
-	
-
-	
-
-	
-// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
-receiverBand = CReceiverBand::from_int(0);
 	
 
 	
@@ -1202,6 +1554,8 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
+
+	
 	
 
 	
@@ -1210,28 +1564,30 @@ receiverBand = CReceiverBand::from_int(0);
 		else {
 	
 		
+			antennaName = row.antennaName;
+		
+			receiverBand = row.receiverBand;
+		
 			calDataId = row.calDataId;
 		
 			calReductionId = row.calReductionId;
 		
-			antennaName = row.antennaName;
 		
 		
-		
-		
-			antennaMake = row.antennaMake;
-		
-			numReceptor = row.numReceptor;
-		
-			polarizationTypes = row.polarizationTypes;
 		
 			startValidTime = row.startValidTime;
 		
 			endValidTime = row.endValidTime;
 		
+			antennaMake = row.antennaMake;
+		
 			frequencyRange = row.frequencyRange;
 		
-			receiverBand = row.receiverBand;
+			numReceptor = row.numReceptor;
+		
+			polarizationTypes = row.polarizationTypes;
+		
+			mainBeamEfficiency = row.mainBeamEfficiency;
 		
 			beamMapUID = row.beamMapUID;
 		
@@ -1244,10 +1600,24 @@ receiverBand = CReceiverBand::from_int(0);
 	}
 
 	
-	bool CalPrimaryBeamRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, AntennaMakeMod::AntennaMake antennaMake, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, float relativeAmplitudeRms) {
+	bool CalPrimaryBeamRow::compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, vector<Frequency > frequencyRange, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > mainBeamEfficiency, EntityRef beamMapUID, float relativeAmplitudeRms) {
 		bool result;
 		result = true;
 		
+	
+		
+		result = result && (this->antennaName == antennaName);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->receiverBand == receiverBand);
+		
+		if (!result) return false;
+	
+
 	
 		
 		result = result && (this->calDataId == calDataId);
@@ -1258,34 +1628,6 @@ receiverBand = CReceiverBand::from_int(0);
 	
 		
 		result = result && (this->calReductionId == calReductionId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->antennaName == antennaName);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->antennaMake == antennaMake);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numReceptor == numReceptor);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->polarizationTypes == polarizationTypes);
 		
 		if (!result) return false;
 	
@@ -1306,6 +1648,13 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
+		result = result && (this->antennaMake == antennaMake);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->frequencyRange == frequencyRange);
 		
 		if (!result) return false;
@@ -1313,7 +1662,21 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->receiverBand == receiverBand);
+		result = result && (this->numReceptor == numReceptor);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->polarizationTypes == polarizationTypes);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->mainBeamEfficiency == mainBeamEfficiency);
 		
 		if (!result) return false;
 	
@@ -1337,12 +1700,24 @@ receiverBand = CReceiverBand::from_int(0);
 	
 	
 	
-	bool CalPrimaryBeamRow::compareRequiredValue(AntennaMakeMod::AntennaMake antennaMake, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, float relativeAmplitudeRms) {
+	bool CalPrimaryBeamRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, vector<Frequency > frequencyRange, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > mainBeamEfficiency, EntityRef beamMapUID, float relativeAmplitudeRms) {
 		bool result;
 		result = true;
 		
 	
+		if (!(this->startValidTime == startValidTime)) return false;
+	
+
+	
+		if (!(this->endValidTime == endValidTime)) return false;
+	
+
+	
 		if (!(this->antennaMake == antennaMake)) return false;
+	
+
+	
+		if (!(this->frequencyRange == frequencyRange)) return false;
 	
 
 	
@@ -1354,19 +1729,7 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		if (!(this->startValidTime == startValidTime)) return false;
-	
-
-	
-		if (!(this->endValidTime == endValidTime)) return false;
-	
-
-	
-		if (!(this->frequencyRange == frequencyRange)) return false;
-	
-
-	
-		if (!(this->receiverBand == receiverBand)) return false;
+		if (!(this->mainBeamEfficiency == mainBeamEfficiency)) return false;
 	
 
 	
@@ -1392,19 +1755,19 @@ receiverBand = CReceiverBand::from_int(0);
 	bool CalPrimaryBeamRow::equalByRequiredValue(CalPrimaryBeamRow* x) {
 		
 			
+		if (this->startValidTime != x->startValidTime) return false;
+			
+		if (this->endValidTime != x->endValidTime) return false;
+			
 		if (this->antennaMake != x->antennaMake) return false;
+			
+		if (this->frequencyRange != x->frequencyRange) return false;
 			
 		if (this->numReceptor != x->numReceptor) return false;
 			
 		if (this->polarizationTypes != x->polarizationTypes) return false;
 			
-		if (this->startValidTime != x->startValidTime) return false;
-			
-		if (this->endValidTime != x->endValidTime) return false;
-			
-		if (this->frequencyRange != x->frequencyRange) return false;
-			
-		if (this->receiverBand != x->receiverBand) return false;
+		if (this->mainBeamEfficiency != x->mainBeamEfficiency) return false;
 			
 		if (this->beamMapUID != x->beamMapUID) return false;
 			

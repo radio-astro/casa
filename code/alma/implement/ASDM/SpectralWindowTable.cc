@@ -164,99 +164,57 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param basebandName. 
+	
+ 	 * @param netSideband. 
+	
  	 * @param numChan. 
 	
  	 * @param refFreq. 
 	
- 	 * @param chanFreq. 
-	
- 	 * @param chanWidth. 
-	
- 	 * @param effectiveBw. 
-	
- 	 * @param resolution. 
+ 	 * @param sidebandProcessingMode. 
 	
  	 * @param totBandwidth. 
 	
- 	 * @param netSideband. 
-	
- 	 * @param sidebandProcessingMode. 
-	
- 	 * @param quantization. 
-	
  	 * @param windowFunction. 
 	
- 	 * @param oversampling. 
-	
- 	 * @param correlationBit. 
-	
- 	 * @param flagRow. 
-	
      */
-	SpectralWindowRow* SpectralWindowTable::newRow(int numChan, Frequency refFreq, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<Frequency > effectiveBw, vector<Frequency > resolution, Frequency totBandwidth, NetSidebandMod::NetSideband netSideband, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, bool quantization, WindowFunctionMod::WindowFunction windowFunction, bool oversampling, CorrelationBitMod::CorrelationBit correlationBit, bool flagRow){
+	SpectralWindowRow* SpectralWindowTable::newRow(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband netSideband, int numChan, Frequency refFreq, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, Frequency totBandwidth, WindowFunctionMod::WindowFunction windowFunction){
 		SpectralWindowRow *row = new SpectralWindowRow(*this);
+			
+		row->setBasebandName(basebandName);
+			
+		row->setNetSideband(netSideband);
 			
 		row->setNumChan(numChan);
 			
 		row->setRefFreq(refFreq);
 			
-		row->setChanFreq(chanFreq);
-			
-		row->setChanWidth(chanWidth);
-			
-		row->setEffectiveBw(effectiveBw);
-			
-		row->setResolution(resolution);
+		row->setSidebandProcessingMode(sidebandProcessingMode);
 			
 		row->setTotBandwidth(totBandwidth);
 			
-		row->setNetSideband(netSideband);
-			
-		row->setSidebandProcessingMode(sidebandProcessingMode);
-			
-		row->setQuantization(quantization);
-			
 		row->setWindowFunction(windowFunction);
-			
-		row->setOversampling(oversampling);
-			
-		row->setCorrelationBit(correlationBit);
-			
-		row->setFlagRow(flagRow);
 	
 		return row;		
 	}	
 
-	SpectralWindowRow* SpectralWindowTable::newRowFull(int numChan, Frequency refFreq, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<Frequency > effectiveBw, vector<Frequency > resolution, Frequency totBandwidth, NetSidebandMod::NetSideband netSideband, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, bool quantization, WindowFunctionMod::WindowFunction windowFunction, bool oversampling, CorrelationBitMod::CorrelationBit correlationBit, bool flagRow)	{
+	SpectralWindowRow* SpectralWindowTable::newRowFull(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband netSideband, int numChan, Frequency refFreq, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, Frequency totBandwidth, WindowFunctionMod::WindowFunction windowFunction)	{
 		SpectralWindowRow *row = new SpectralWindowRow(*this);
+			
+		row->setBasebandName(basebandName);
+			
+		row->setNetSideband(netSideband);
 			
 		row->setNumChan(numChan);
 			
 		row->setRefFreq(refFreq);
 			
-		row->setChanFreq(chanFreq);
-			
-		row->setChanWidth(chanWidth);
-			
-		row->setEffectiveBw(effectiveBw);
-			
-		row->setResolution(resolution);
+		row->setSidebandProcessingMode(sidebandProcessingMode);
 			
 		row->setTotBandwidth(totBandwidth);
 			
-		row->setNetSideband(netSideband);
-			
-		row->setSidebandProcessingMode(sidebandProcessingMode);
-			
-		row->setQuantization(quantization);
-			
 		row->setWindowFunction(windowFunction);
-			
-		row->setOversampling(oversampling);
-			
-		row->setCorrelationBit(correlationBit);
-			
-		row->setFlagRow(flagRow);
 	
 		return row;				
 	}
@@ -292,33 +250,19 @@ SpectralWindowRow* SpectralWindowTable::newRowCopy(SpectralWindowRow* row) {
 			 
 		SpectralWindowRow* aRow = lookup(
 				
+		x->getBasebandName()
+				,
+		x->getNetSideband()
+				,
 		x->getNumChan()
 				,
 		x->getRefFreq()
 				,
-		x->getChanFreq()
-				,
-		x->getChanWidth()
-				,
-		x->getEffectiveBw()
-				,
-		x->getResolution()
+		x->getSidebandProcessingMode()
 				,
 		x->getTotBandwidth()
 				,
-		x->getNetSideband()
-				,
-		x->getSidebandProcessingMode()
-				,
-		x->getQuantization()
-				,
 		x->getWindowFunction()
-				,
-		x->getOversampling()
-				,
-		x->getCorrelationBit()
-				,
-		x->getFlagRow()
 				
 		);
 		if (aRow) return aRow;
@@ -352,39 +296,29 @@ SpectralWindowRow* SpectralWindowTable::newRowCopy(SpectralWindowRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	SpectralWindowRow*  SpectralWindowTable::checkAndAdd(SpectralWindowRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	SpectralWindowRow*  SpectralWindowTable::checkAndAdd(SpectralWindowRow* x)  {
 	 
 		 
 		if (lookup(
 			
+			x->getBasebandName()
+		,
+			x->getNetSideband()
+		,
 			x->getNumChan()
 		,
 			x->getRefFreq()
 		,
-			x->getChanFreq()
-		,
-			x->getChanWidth()
-		,
-			x->getEffectiveBw()
-		,
-			x->getResolution()
+			x->getSidebandProcessingMode()
 		,
 			x->getTotBandwidth()
 		,
-			x->getNetSideband()
-		,
-			x->getSidebandProcessingMode()
-		,
-			x->getQuantization()
-		,
 			x->getWindowFunction()
-		,
-			x->getOversampling()
-		,
-			x->getCorrelationBit()
-		,
-			x->getFlagRow()
 		
 		)) throw UniquenessViolationException("Uniqueness violation exception in table SpectralWindowTable");
 		
@@ -451,40 +385,26 @@ SpectralWindowRow* SpectralWindowTable::newRowCopy(SpectralWindowRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
+ * @param basebandName.
+ 	 		
+ * @param netSideband.
+ 	 		
  * @param numChan.
  	 		
  * @param refFreq.
  	 		
- * @param chanFreq.
- 	 		
- * @param chanWidth.
- 	 		
- * @param effectiveBw.
- 	 		
- * @param resolution.
+ * @param sidebandProcessingMode.
  	 		
  * @param totBandwidth.
  	 		
- * @param netSideband.
- 	 		
- * @param sidebandProcessingMode.
- 	 		
- * @param quantization.
- 	 		
  * @param windowFunction.
- 	 		
- * @param oversampling.
- 	 		
- * @param correlationBit.
- 	 		
- * @param flagRow.
  	 		 
  */
-SpectralWindowRow* SpectralWindowTable::lookup(int numChan, Frequency refFreq, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<Frequency > effectiveBw, vector<Frequency > resolution, Frequency totBandwidth, NetSidebandMod::NetSideband netSideband, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, bool quantization, WindowFunctionMod::WindowFunction windowFunction, bool oversampling, CorrelationBitMod::CorrelationBit correlationBit, bool flagRow) {
+SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband netSideband, int numChan, Frequency refFreq, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, Frequency totBandwidth, WindowFunctionMod::WindowFunction windowFunction) {
 		SpectralWindowRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(numChan, refFreq, chanFreq, chanWidth, effectiveBw, resolution, totBandwidth, netSideband, sidebandProcessingMode, quantization, windowFunction, oversampling, correlationBit, flagRow)) return aRow;
+			if (aRow->compareNoAutoInc(basebandName, netSideband, numChan, refFreq, sidebandProcessingMode, totBandwidth, windowFunction)) return aRow;
 		}			
 		return 0;	
 } 
@@ -492,7 +412,6 @@ SpectralWindowRow* SpectralWindowTable::lookup(int numChan, Frequency refFreq, v
  	 	
 
 	
-
 
 
 
@@ -513,7 +432,7 @@ SpectralWindowRow* SpectralWindowTable::lookup(int numChan, Frequency refFreq, v
 #endif
 	
 #ifndef WITHOUT_ACS
-	void SpectralWindowTable::fromIDL(SpectralWindowTableIDL x) throw(DuplicateKey,ConversionException) {
+	void SpectralWindowTable::fromIDL(SpectralWindowTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			SpectralWindowRow *tmp = newRow();
@@ -524,28 +443,27 @@ SpectralWindowRow* SpectralWindowTable::lookup(int numChan, Frequency refFreq, v
 	}
 #endif
 
-	char *SpectralWindowTable::toFITS() const throw(ConversionException) {
+	char *SpectralWindowTable::toFITS() const  {
 		throw ConversionException("Not implemented","SpectralWindow");
 	}
 
-	void SpectralWindowTable::fromFITS(char *fits) throw(ConversionException) {
+	void SpectralWindowTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","SpectralWindow");
 	}
 
-	string SpectralWindowTable::toVOTable() const throw(ConversionException) {
+	string SpectralWindowTable::toVOTable() const {
 		throw ConversionException("Not implemented","SpectralWindow");
 	}
 
-	void SpectralWindowTable::fromVOTable(string vo) throw(ConversionException) {
+	void SpectralWindowTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","SpectralWindow");
 	}
 
-	string SpectralWindowTable::toXML()  throw(ConversionException) {
+	
+	string SpectralWindowTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<SpectralWindowTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/SpectralWindowTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<SpectralWindowTable> ");
+		buf.append("<SpectralWindowTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/SpectralWindowTable\" xsi:schemaLocation=\"http://Alma/XASDM/SpectralWindowTable http://almaobservatory.org/XML/XASDM/2/SpectralWindowTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -561,8 +479,9 @@ SpectralWindowRow* SpectralWindowTable::lookup(int numChan, Frequency refFreq, v
 		buf.append("</SpectralWindowTable> ");
 		return buf;
 	}
+
 	
-	void SpectralWindowTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void SpectralWindowTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SpectralWindowTable")) 
 			error();
@@ -604,20 +523,110 @@ SpectralWindowRow* SpectralWindowTable::lookup(int numChan, Frequency refFreq, v
 			error();
 	}
 
-	void SpectralWindowTable::error() throw(ConversionException) {
+	
+	void SpectralWindowTable::error()  {
 		throw ConversionException("Invalid xml document","SpectralWindow");
 	}
 	
+	
 	string SpectralWindowTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void SpectralWindowTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "SpectralWindow");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			SpectralWindowRow* aRow = SpectralWindowRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "SpectralWindow");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "SpectralWindow");
+		} 		 	
+	}
+
 	
 	void SpectralWindowTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -648,6 +657,7 @@ SpectralWindowRow* SpectralWindowTable::lookup(int numChan, Frequency refFreq, v
 				throw ConversionException("Could not close file " + fileName, "SpectralWindow");
 		}
 	}
+
 	
 	void SpectralWindowTable::setFromFile(const string& directory) {
 		string tablename;
@@ -689,6 +699,11 @@ SpectralWindowRow* SpectralWindowTable::lookup(int numChan, Frequency refFreq, v
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

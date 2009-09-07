@@ -17,8 +17,9 @@ rg = rgtool.create()
 iatool=casac.homefinder.find_home_by_name('imageHome')
 ia = iatool.create()
 
+
 class cleanhelper:
-    def __init__(self, imtool='', vis='', usescratch=False):
+    def __init__(self, imtool='', vis='', usescratch=False, casalog=None):
         """
         Contruct the cleanhelper object with an imager tool
         like so:
@@ -28,6 +29,13 @@ class cleanhelper:
             self.initsinglems(imtool, vis, usescratch)
         self.maskimages={}
         self.usescratch=usescratch
+
+        if not casalog:  # Not good!
+            loghome =  casac.homefinder.find_home_by_name('logsinkHome')
+            casalog = loghome.create()
+            #casalog.setglobal(True)
+        self._casalog = casalog
+        
         
     def initsinglems(self, imtool, vis, usescratch):
         self.im=imtool
@@ -126,12 +134,14 @@ class cleanhelper:
                           names=[], facets=1, makepbim=False):
         #will do loop in reverse assuming first image is main field
         self.nimages=len(imsizes)
-        if((len(imsizes)<=2) and (type(imsizes[0])==int)):
+        if((len(imsizes)<=2) and ((type(imsizes[0])==int) or (type(imsizes[0]==long)))):
             self.nimages=1
             if(len(imsizes)==2):
                 imsizes=[(imsizes[0], imsizes[1])]
             else:
                 imsizes=[(imsizes[0], imsizes[0])]
+
+        self._casalog.post('Number of images: ' + str(self.nimages), 'DEBUG1')
         #imagelist is to have the list of image model names
         self.imagelist={}
         #imageids is to tag image to mask in aipsbox style file 
@@ -140,10 +150,15 @@ class cleanhelper:
             phasecenters=[phasecenters]
         if(type(phasecenters) == int):
             phasecenters=[phasecenters]
+        self._casalog.post('Number of phase centers: ' + str(len(phasecenters)),
+                           'DEBUG1')
+
         if((self.nimages==1) and (type(names)==str)):
             names=[names]
         if((len(phasecenters)) != (len(imsizes))):
-            raise TypeError, 'Number of phasecenters or image sizes  not equal to images'
+            errmsg = "Mismatch between the number of phasecenters (%d), image sizes (%d) , and images (%d)" % (len(phasecenters), len(imsizes), self.nimages)
+            self._casalog.post(errmsg, 'SEVERE')
+            raise ValueError, errmsg
         lerange=range(self.nimages)
         lerange.reverse()
         for n in lerange:

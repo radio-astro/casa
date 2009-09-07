@@ -41,28 +41,28 @@ using std::set;
 #include <SpectralWindowRow.h>
 #include <SpectralWindowTable.h>
 
+#include <SpectralWindowTable.h>
+#include <SpectralWindowRow.h>
+
+#include <SpectralWindowTable.h>
+#include <SpectralWindowRow.h>
+
 #include <DopplerTable.h>
 #include <DopplerRow.h>
-
-#include <SpectralWindowTable.h>
-#include <SpectralWindowRow.h>
-
-#include <SpectralWindowTable.h>
-#include <SpectralWindowRow.h>
 	
 
 using asdm::ASDM;
 using asdm::SpectralWindowRow;
 using asdm::SpectralWindowTable;
 
+using asdm::SpectralWindowTable;
+using asdm::SpectralWindowRow;
+
+using asdm::SpectralWindowTable;
+using asdm::SpectralWindowRow;
+
 using asdm::DopplerTable;
 using asdm::DopplerRow;
-
-using asdm::SpectralWindowTable;
-using asdm::SpectralWindowRow;
-
-using asdm::SpectralWindowTable;
-using asdm::SpectralWindowRow;
 
 
 #include <Parser.h>
@@ -117,117 +117,9 @@ namespace asdm {
 		
 			
 				
-		x->numChan = numChan;
+		x->basebandName = basebandName;
  				
  			
-		
-	
-
-	
-  		
-		
-		x->nameExists = nameExists;
-		
-		
-			
-				
-		x->name = CORBA::string_dup(name.c_str());
-				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->refFreq = refFreq.toIDLFrequency();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->chanFreq.length(chanFreq.size());
-		for (unsigned int i = 0; i < chanFreq.size(); ++i) {
-			
-			x->chanFreq[i] = chanFreq.at(i).toIDLFrequency();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->chanWidth.length(chanWidth.size());
-		for (unsigned int i = 0; i < chanWidth.size(); ++i) {
-			
-			x->chanWidth[i] = chanWidth.at(i).toIDLFrequency();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->measFreqRefExists = measFreqRefExists;
-		
-		
-			
-				
-		x->measFreqRef = measFreqRef;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->effectiveBw.length(effectiveBw.size());
-		for (unsigned int i = 0; i < effectiveBw.size(); ++i) {
-			
-			x->effectiveBw[i] = effectiveBw.at(i).toIDLFrequency();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->resolution.length(resolution.size());
-		for (unsigned int i = 0; i < resolution.size(); ++i) {
-			
-			x->resolution[i] = resolution.at(i).toIDLFrequency();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->totBandwidth = totBandwidth.toIDLFrequency();
-			
 		
 	
 
@@ -249,6 +141,28 @@ namespace asdm {
 		
 			
 				
+		x->numChan = numChan;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->refFreq = refFreq.toIDLFrequency();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
 		x->sidebandProcessingMode = sidebandProcessingMode;
  				
  			
@@ -258,12 +172,20 @@ namespace asdm {
 	
   		
 		
-		x->basebandNameExists = basebandNameExists;
+		
+			
+		x->totBandwidth = totBandwidth.toIDLFrequency();
+			
+		
+	
+
+	
+  		
 		
 		
 			
 				
-		x->basebandName = basebandName;
+		x->windowFunction = windowFunction;
  				
  			
 		
@@ -272,12 +194,82 @@ namespace asdm {
 	
   		
 		
-		x->bbcSidebandExists = bbcSidebandExists;
+		x->chanFreqStartExists = chanFreqStartExists;
+		
+		
+			
+		x->chanFreqStart = chanFreqStart.toIDLFrequency();
+			
+		
+	
+
+	
+  		
+		
+		x->chanFreqStepExists = chanFreqStepExists;
+		
+		
+			
+		x->chanFreqStep = chanFreqStep.toIDLFrequency();
+			
+		
+	
+
+	
+  		
+		
+		x->chanFreqArrayExists = chanFreqArrayExists;
+		
+		
+			
+		x->chanFreqArray.length(chanFreqArray.size());
+		for (unsigned int i = 0; i < chanFreqArray.size(); ++i) {
+			
+			x->chanFreqArray[i] = chanFreqArray.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->chanWidthExists = chanWidthExists;
+		
+		
+			
+		x->chanWidth = chanWidth.toIDLFrequency();
+			
+		
+	
+
+	
+  		
+		
+		x->chanWidthArrayExists = chanWidthArrayExists;
+		
+		
+			
+		x->chanWidthArray.length(chanWidthArray.size());
+		for (unsigned int i = 0; i < chanWidthArray.size(); ++i) {
+			
+			x->chanWidthArray[i] = chanWidthArray.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->correlationBitExists = correlationBitExists;
 		
 		
 			
 				
-		x->bbcSideband = bbcSideband;
+		x->correlationBit = correlationBit;
  				
  			
 		
@@ -286,14 +278,29 @@ namespace asdm {
 	
   		
 		
-		x->ifConvChainExists = ifConvChainExists;
+		x->effectiveBwExists = effectiveBwExists;
 		
 		
 			
-				
-		x->ifConvChain = ifConvChain;
- 				
- 			
+		x->effectiveBw = effectiveBw.toIDLFrequency();
+			
+		
+	
+
+	
+  		
+		
+		x->effectiveBwArrayExists = effectiveBwArrayExists;
+		
+		
+			
+		x->effectiveBwArray.length(effectiveBwArray.size());
+		for (unsigned int i = 0; i < effectiveBwArray.size(); ++i) {
+			
+			x->effectiveBwArray[i] = effectiveBwArray.at(i).toIDLFrequency();
+			
+	 	}
+			
 		
 	
 
@@ -328,15 +335,15 @@ namespace asdm {
 	
   		
 		
-		x->assocNatureExists = assocNatureExists;
+		x->lineArrayExists = lineArrayExists;
 		
 		
 			
-		x->assocNature.length(assocNature.size());
-		for (unsigned int i = 0; i < assocNature.size(); ++i) {
+		x->lineArray.length(lineArray.size());
+		for (unsigned int i = 0; i < lineArray.size(); ++i) {
 			
 				
-			x->assocNature[i] = assocNature.at(i);
+			x->lineArray[i] = lineArray.at(i);
 	 			
 	 		
 	 	}
@@ -347,10 +354,12 @@ namespace asdm {
 	
   		
 		
+		x->measFreqRefExists = measFreqRefExists;
+		
 		
 			
 				
-		x->quantization = quantization;
+		x->measFreqRef = measFreqRef;
  				
  			
 		
@@ -359,17 +368,21 @@ namespace asdm {
 	
   		
 		
+		x->nameExists = nameExists;
+		
 		
 			
 				
-		x->windowFunction = windowFunction;
- 				
+		x->name = CORBA::string_dup(name.c_str());
+				
  			
 		
 	
 
 	
   		
+		
+		x->oversamplingExists = oversamplingExists;
 		
 		
 			
@@ -383,10 +396,12 @@ namespace asdm {
 	
   		
 		
+		x->quantizationExists = quantizationExists;
+		
 		
 			
 				
-		x->correlationBit = correlationBit;
+		x->quantization = quantization;
  				
  			
 		
@@ -395,12 +410,76 @@ namespace asdm {
 	
   		
 		
+		x->refChanExists = refChanExists;
+		
 		
 			
 				
-		x->flagRow = flagRow;
+		x->refChan = refChan;
  				
  			
+		
+	
+
+	
+  		
+		
+		x->resolutionExists = resolutionExists;
+		
+		
+			
+		x->resolution = resolution.toIDLFrequency();
+			
+		
+	
+
+	
+  		
+		
+		x->resolutionArrayExists = resolutionArrayExists;
+		
+		
+			
+		x->resolutionArray.length(resolutionArray.size());
+		for (unsigned int i = 0; i < resolutionArray.size(); ++i) {
+			
+			x->resolutionArray[i] = resolutionArray.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->numAssocValuesExists = numAssocValuesExists;
+		
+		
+			
+				
+		x->numAssocValues = numAssocValues;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->assocNatureExists = assocNatureExists;
+		
+		
+			
+		x->assocNature.length(assocNature.size());
+		for (unsigned int i = 0; i < assocNature.size(); ++i) {
+			
+				
+			x->assocNature[i] = assocNature.at(i);
+	 			
+	 		
+	 	}
+			
 		
 	
 
@@ -474,7 +553,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct SpectralWindowRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void SpectralWindowRow::setFromIDL (SpectralWindowRowIDL x) throw(ConversionException) {
+	void SpectralWindowRow::setFromIDL (SpectralWindowRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -493,118 +572,8 @@ namespace asdm {
 		
 		
 			
-		setNumChan(x.numChan);
+		setBasebandName(x.basebandName);
   			
- 		
-		
-	
-
-	
-		
-		nameExists = x.nameExists;
-		if (x.nameExists) {
-		
-		
-			
-		setName(string (x.name));
-			
- 		
-		
-		}
-		
-	
-
-	
-		
-		
-			
-		setRefFreq(Frequency (x.refFreq));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		chanFreq .clear();
-		for (unsigned int i = 0; i <x.chanFreq.length(); ++i) {
-			
-			chanFreq.push_back(Frequency (x.chanFreq[i]));
-			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		chanWidth .clear();
-		for (unsigned int i = 0; i <x.chanWidth.length(); ++i) {
-			
-			chanWidth.push_back(Frequency (x.chanWidth[i]));
-			
-		}
-			
-  		
-		
-	
-
-	
-		
-		measFreqRefExists = x.measFreqRefExists;
-		if (x.measFreqRefExists) {
-		
-		
-			
-		setMeasFreqRef(x.measFreqRef);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		
-			
-		effectiveBw .clear();
-		for (unsigned int i = 0; i <x.effectiveBw.length(); ++i) {
-			
-			effectiveBw.push_back(Frequency (x.effectiveBw[i]));
-			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		resolution .clear();
-		for (unsigned int i = 0; i <x.resolution.length(); ++i) {
-			
-			resolution.push_back(Frequency (x.resolution[i]));
-			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		setTotBandwidth(Frequency (x.totBandwidth));
-			
  		
 		
 	
@@ -623,6 +592,26 @@ namespace asdm {
 		
 		
 			
+		setNumChan(x.numChan);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setRefFreq(Frequency (x.refFreq));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
 		setSidebandProcessingMode(x.sidebandProcessingMode);
   			
  		
@@ -631,12 +620,117 @@ namespace asdm {
 
 	
 		
-		basebandNameExists = x.basebandNameExists;
-		if (x.basebandNameExists) {
+		
+			
+		setTotBandwidth(Frequency (x.totBandwidth));
+			
+ 		
+		
+	
+
+	
 		
 		
 			
-		setBasebandName(x.basebandName);
+		setWindowFunction(x.windowFunction);
+  			
+ 		
+		
+	
+
+	
+		
+		chanFreqStartExists = x.chanFreqStartExists;
+		if (x.chanFreqStartExists) {
+		
+		
+			
+		setChanFreqStart(Frequency (x.chanFreqStart));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		chanFreqStepExists = x.chanFreqStepExists;
+		if (x.chanFreqStepExists) {
+		
+		
+			
+		setChanFreqStep(Frequency (x.chanFreqStep));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		chanFreqArrayExists = x.chanFreqArrayExists;
+		if (x.chanFreqArrayExists) {
+		
+		
+			
+		chanFreqArray .clear();
+		for (unsigned int i = 0; i <x.chanFreqArray.length(); ++i) {
+			
+			chanFreqArray.push_back(Frequency (x.chanFreqArray[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		chanWidthExists = x.chanWidthExists;
+		if (x.chanWidthExists) {
+		
+		
+			
+		setChanWidth(Frequency (x.chanWidth));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		chanWidthArrayExists = x.chanWidthArrayExists;
+		if (x.chanWidthArrayExists) {
+		
+		
+			
+		chanWidthArray .clear();
+		for (unsigned int i = 0; i <x.chanWidthArray.length(); ++i) {
+			
+			chanWidthArray.push_back(Frequency (x.chanWidthArray[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		correlationBitExists = x.correlationBitExists;
+		if (x.correlationBitExists) {
+		
+		
+			
+		setCorrelationBit(x.correlationBit);
   			
  		
 		
@@ -646,13 +740,13 @@ namespace asdm {
 
 	
 		
-		bbcSidebandExists = x.bbcSidebandExists;
-		if (x.bbcSidebandExists) {
+		effectiveBwExists = x.effectiveBwExists;
+		if (x.effectiveBwExists) {
 		
 		
 			
-		setBbcSideband(x.bbcSideband);
-  			
+		setEffectiveBw(Frequency (x.effectiveBw));
+			
  		
 		
 		}
@@ -661,14 +755,19 @@ namespace asdm {
 
 	
 		
-		ifConvChainExists = x.ifConvChainExists;
-		if (x.ifConvChainExists) {
+		effectiveBwArrayExists = x.effectiveBwArrayExists;
+		if (x.effectiveBwArrayExists) {
 		
 		
 			
-		setIfConvChain(x.ifConvChain);
-  			
- 		
+		effectiveBwArray .clear();
+		for (unsigned int i = 0; i <x.effectiveBwArray.length(); ++i) {
+			
+			effectiveBwArray.push_back(Frequency (x.effectiveBwArray[i]));
+			
+		}
+			
+  		
 		
 		}
 		
@@ -706,6 +805,151 @@ namespace asdm {
 
 	
 		
+		lineArrayExists = x.lineArrayExists;
+		if (x.lineArrayExists) {
+		
+		
+			
+		lineArray .clear();
+		for (unsigned int i = 0; i <x.lineArray.length(); ++i) {
+			
+			lineArray.push_back(x.lineArray[i]);
+  			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		measFreqRefExists = x.measFreqRefExists;
+		if (x.measFreqRefExists) {
+		
+		
+			
+		setMeasFreqRef(x.measFreqRef);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		nameExists = x.nameExists;
+		if (x.nameExists) {
+		
+		
+			
+		setName(string (x.name));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		oversamplingExists = x.oversamplingExists;
+		if (x.oversamplingExists) {
+		
+		
+			
+		setOversampling(x.oversampling);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		quantizationExists = x.quantizationExists;
+		if (x.quantizationExists) {
+		
+		
+			
+		setQuantization(x.quantization);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		refChanExists = x.refChanExists;
+		if (x.refChanExists) {
+		
+		
+			
+		setRefChan(x.refChan);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		resolutionExists = x.resolutionExists;
+		if (x.resolutionExists) {
+		
+		
+			
+		setResolution(Frequency (x.resolution));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		resolutionArrayExists = x.resolutionArrayExists;
+		if (x.resolutionArrayExists) {
+		
+		
+			
+		resolutionArray .clear();
+		for (unsigned int i = 0; i <x.resolutionArray.length(); ++i) {
+			
+			resolutionArray.push_back(Frequency (x.resolutionArray[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		numAssocValuesExists = x.numAssocValuesExists;
+		if (x.numAssocValuesExists) {
+		
+		
+			
+		setNumAssocValues(x.numAssocValues);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
 		assocNatureExists = x.assocNatureExists;
 		if (x.assocNatureExists) {
 		
@@ -721,56 +965,6 @@ namespace asdm {
   		
 		
 		}
-		
-	
-
-	
-		
-		
-			
-		setQuantization(x.quantization);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setWindowFunction(x.windowFunction);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setOversampling(x.oversampling);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setCorrelationBit(x.correlationBit);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setFlagRow(x.flagRow);
-  			
- 		
 		
 	
 
@@ -832,7 +1026,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"SpectralWindow");
+			throw ConversionException (err.getMessage(),"SpectralWindow");
 		}
 	}
 #endif
@@ -858,79 +1052,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numChan, "numChan", buf);
-		
-		
-	
-
-  	
- 		
-		if (nameExists) {
-		
-		
-		Parser::toXML(name, "name", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(refFreq, "refFreq", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(chanFreq, "chanFreq", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(chanWidth, "chanWidth", buf);
-		
-		
-	
-
-  	
- 		
-		if (measFreqRefExists) {
-		
-		
-		Parser::toXML(measFreqRef, "measFreqRef", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(effectiveBw, "effectiveBw", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(resolution, "resolution", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(totBandwidth, "totBandwidth", buf);
+			buf.append(EnumerationParser::toXML("basebandName", basebandName));
 		
 		
 	
@@ -946,6 +1068,22 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(numChan, "numChan", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(refFreq, "refFreq", buf);
+		
+		
+	
+
+  	
+ 		
+		
 			buf.append(EnumerationParser::toXML("sidebandProcessingMode", sidebandProcessingMode));
 		
 		
@@ -953,10 +1091,26 @@ namespace asdm {
 
   	
  		
-		if (basebandNameExists) {
+		
+		Parser::toXML(totBandwidth, "totBandwidth", buf);
 		
 		
-			buf.append(EnumerationParser::toXML("basebandName", basebandName));
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("windowFunction", windowFunction));
+		
+		
+	
+
+  	
+ 		
+		if (chanFreqStartExists) {
+		
+		
+		Parser::toXML(chanFreqStart, "chanFreqStart", buf);
 		
 		
 		}
@@ -965,10 +1119,10 @@ namespace asdm {
 
   	
  		
-		if (bbcSidebandExists) {
+		if (chanFreqStepExists) {
 		
 		
-		Parser::toXML(bbcSideband, "bbcSideband", buf);
+		Parser::toXML(chanFreqStep, "chanFreqStep", buf);
 		
 		
 		}
@@ -977,10 +1131,70 @@ namespace asdm {
 
   	
  		
-		if (ifConvChainExists) {
+		if (chanFreqArrayExists) {
 		
 		
-		Parser::toXML(ifConvChain, "ifConvChain", buf);
+		Parser::toXML(chanFreqArray, "chanFreqArray", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (chanWidthExists) {
+		
+		
+		Parser::toXML(chanWidth, "chanWidth", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (chanWidthArrayExists) {
+		
+		
+		Parser::toXML(chanWidthArray, "chanWidthArray", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (correlationBitExists) {
+		
+		
+			buf.append(EnumerationParser::toXML("correlationBit", correlationBit));
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (effectiveBwExists) {
+		
+		
+		Parser::toXML(effectiveBw, "effectiveBw", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (effectiveBwArrayExists) {
+		
+		
+		Parser::toXML(effectiveBwArray, "effectiveBwArray", buf);
 		
 		
 		}
@@ -1013,10 +1227,10 @@ namespace asdm {
 
   	
  		
-		if (assocNatureExists) {
+		if (lineArrayExists) {
 		
 		
-			buf.append(EnumerationParser::toXML("assocNature", assocNature));
+		Parser::toXML(lineArray, "lineArray", buf);
 		
 		
 		}
@@ -1025,41 +1239,109 @@ namespace asdm {
 
   	
  		
+		if (measFreqRefExists) {
 		
-		Parser::toXML(quantization, "quantization", buf);
+		
+			buf.append(EnumerationParser::toXML("measFreqRef", measFreqRef));
 		
 		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("windowFunction", windowFunction));
-		
+		}
 		
 	
 
   	
  		
+		if (nameExists) {
+		
+		
+		Parser::toXML(name, "name", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (oversamplingExists) {
+		
 		
 		Parser::toXML(oversampling, "oversampling", buf);
 		
 		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("correlationBit", correlationBit));
-		
+		}
 		
 	
 
   	
  		
+		if (quantizationExists) {
 		
-		Parser::toXML(flagRow, "flagRow", buf);
 		
+		Parser::toXML(quantization, "quantization", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (refChanExists) {
+		
+		
+		Parser::toXML(refChan, "refChan", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (resolutionExists) {
+		
+		
+		Parser::toXML(resolution, "resolution", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (resolutionArrayExists) {
+		
+		
+		Parser::toXML(resolutionArray, "resolutionArray", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (numAssocValuesExists) {
+		
+		
+		Parser::toXML(numAssocValues, "numAssocValues", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (assocNatureExists) {
+		
+		
+			buf.append(EnumerationParser::toXML("assocNature", assocNature));
+		
+		
+		}
 		
 	
 
@@ -1120,7 +1402,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void SpectralWindowRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void SpectralWindowRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -1135,21 +1417,31 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setNumChan(Parser::getInteger("numChan","SpectralWindow",rowDoc));
-			
+		
+		
+		
+		basebandName = EnumerationParser::getBasebandName("basebandName","SpectralWindow",rowDoc);
+		
+		
+		
+	
+
+	
+		
+		
+		
+		netSideband = EnumerationParser::getNetSideband("netSideband","SpectralWindow",rowDoc);
+		
+		
 		
 	
 
 	
   		
-        if (row.isStr("<name>")) {
 			
-	  		setName(Parser::getString("name","SpectralWindow",rowDoc));
+	  	setNumChan(Parser::getInteger("numChan","SpectralWindow",rowDoc));
 			
-		}
- 		
+		
 	
 
 	
@@ -1161,52 +1453,12 @@ namespace asdm {
 	
 
 	
-  		
-			
-					
-	  	setChanFreq(Parser::get1DFrequency("chanFreq","SpectralWindow",rowDoc));
-	  			
-	  		
 		
-	
-
-	
-  		
-			
-					
-	  	setChanWidth(Parser::get1DFrequency("chanWidth","SpectralWindow",rowDoc));
-	  			
-	  		
 		
-	
-
-	
-  		
-        if (row.isStr("<measFreqRef>")) {
-			
-	  		setMeasFreqRef(Parser::getInteger("measFreqRef","SpectralWindow",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-			
-					
-	  	setEffectiveBw(Parser::get1DFrequency("effectiveBw","SpectralWindow",rowDoc));
-	  			
-	  		
 		
-	
-
-	
-  		
-			
-					
-	  	setResolution(Parser::get1DFrequency("resolution","SpectralWindow",rowDoc));
-	  			
-	  		
+		sidebandProcessingMode = EnumerationParser::getSidebandProcessingMode("sidebandProcessingMode","SpectralWindow",rowDoc);
+		
+		
 		
 	
 
@@ -1222,42 +1474,17 @@ namespace asdm {
 		
 		
 		
-		netSideband = EnumerationParser::getNetSideband("netSideband","SpectralWindow",rowDoc);
+		windowFunction = EnumerationParser::getWindowFunction("windowFunction","SpectralWindow",rowDoc);
 		
 		
-		
-	
-
-	
-		
-		
-		
-		sidebandProcessingMode = EnumerationParser::getSidebandProcessingMode("sidebandProcessingMode","SpectralWindow",rowDoc);
-		
-		
-		
-	
-
-	
-		
-	if (row.isStr("<basebandName>")) {
-		
-		
-		
-		basebandName = EnumerationParser::getBasebandName("basebandName","SpectralWindow",rowDoc);
-		
-		
-		
-		basebandNameExists = true;
-	}
 		
 	
 
 	
   		
-        if (row.isStr("<bbcSideband>")) {
+        if (row.isStr("<chanFreqStart>")) {
 			
-	  		setBbcSideband(Parser::getInteger("bbcSideband","SpectralWindow",rowDoc));
+	  		setChanFreqStart(Parser::getFrequency("chanFreqStart","SpectralWindow",rowDoc));
 			
 		}
  		
@@ -1265,10 +1492,81 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<ifConvChain>")) {
+        if (row.isStr("<chanFreqStep>")) {
 			
-	  		setIfConvChain(Parser::getInteger("ifConvChain","SpectralWindow",rowDoc));
+	  		setChanFreqStep(Parser::getFrequency("chanFreqStep","SpectralWindow",rowDoc));
 			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<chanFreqArray>")) {
+			
+								
+	  		setChanFreqArray(Parser::get1DFrequency("chanFreqArray","SpectralWindow",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<chanWidth>")) {
+			
+	  		setChanWidth(Parser::getFrequency("chanWidth","SpectralWindow",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<chanWidthArray>")) {
+			
+								
+	  		setChanWidthArray(Parser::get1DFrequency("chanWidthArray","SpectralWindow",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+		
+	if (row.isStr("<correlationBit>")) {
+		
+		
+		
+		correlationBit = EnumerationParser::getCorrelationBit("correlationBit","SpectralWindow",rowDoc);
+		
+		
+		
+		correlationBitExists = true;
+	}
+		
+	
+
+	
+  		
+        if (row.isStr("<effectiveBw>")) {
+			
+	  		setEffectiveBw(Parser::getFrequency("effectiveBw","SpectralWindow",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<effectiveBwArray>")) {
+			
+								
+	  		setEffectiveBwArray(Parser::get1DFrequency("effectiveBwArray","SpectralWindow",rowDoc));
+	  			
+	  		
 		}
  		
 	
@@ -1294,6 +1592,105 @@ namespace asdm {
 	
 
 	
+  		
+        if (row.isStr("<lineArray>")) {
+			
+								
+	  		setLineArray(Parser::get1DBoolean("lineArray","SpectralWindow",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+		
+	if (row.isStr("<measFreqRef>")) {
+		
+		
+		
+		measFreqRef = EnumerationParser::getFrequencyReferenceCode("measFreqRef","SpectralWindow",rowDoc);
+		
+		
+		
+		measFreqRefExists = true;
+	}
+		
+	
+
+	
+  		
+        if (row.isStr("<name>")) {
+			
+	  		setName(Parser::getString("name","SpectralWindow",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<oversampling>")) {
+			
+	  		setOversampling(Parser::getBoolean("oversampling","SpectralWindow",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<quantization>")) {
+			
+	  		setQuantization(Parser::getBoolean("quantization","SpectralWindow",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<refChan>")) {
+			
+	  		setRefChan(Parser::getDouble("refChan","SpectralWindow",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<resolution>")) {
+			
+	  		setResolution(Parser::getFrequency("resolution","SpectralWindow",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<resolutionArray>")) {
+			
+								
+	  		setResolutionArray(Parser::get1DFrequency("resolutionArray","SpectralWindow",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<numAssocValues>")) {
+			
+	  		setNumAssocValues(Parser::getInteger("numAssocValues","SpectralWindow",rowDoc));
+			
+		}
+ 		
+	
+
+	
 		
 	if (row.isStr("<assocNature>")) {
 		
@@ -1305,50 +1702,6 @@ namespace asdm {
 		
 		assocNatureExists = true;
 	}
-		
-	
-
-	
-  		
-			
-	  	setQuantization(Parser::getBoolean("quantization","SpectralWindow",rowDoc));
-			
-		
-	
-
-	
-		
-		
-		
-		windowFunction = EnumerationParser::getWindowFunction("windowFunction","SpectralWindow",rowDoc);
-		
-		
-		
-	
-
-	
-  		
-			
-	  	setOversampling(Parser::getBoolean("oversampling","SpectralWindow",rowDoc));
-			
-		
-	
-
-	
-		
-		
-		
-		correlationBit = EnumerationParser::getCorrelationBit("correlationBit","SpectralWindow",rowDoc);
-		
-		
-		
-	
-
-	
-  		
-			
-	  	setFlagRow(Parser::getBoolean("flagRow","SpectralWindow",rowDoc));
-			
 		
 	
 
@@ -1396,6 +1749,806 @@ namespace asdm {
 		}
 	}
 	
+	void SpectralWindowRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	spectralWindowId.toBin(eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(basebandName);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(netSideband);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numChan);
+				
+		
+	
+
+	
+	
+		
+	refFreq.toBin(eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(sidebandProcessingMode);
+				
+		
+	
+
+	
+	
+		
+	totBandwidth.toBin(eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(windowFunction);
+				
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(chanFreqStartExists);
+	if (chanFreqStartExists) {
+	
+	
+	
+		
+	chanFreqStart.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(chanFreqStepExists);
+	if (chanFreqStepExists) {
+	
+	
+	
+		
+	chanFreqStep.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(chanFreqArrayExists);
+	if (chanFreqArrayExists) {
+	
+	
+	
+		
+	Frequency::toBin(chanFreqArray, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(chanWidthExists);
+	if (chanWidthExists) {
+	
+	
+	
+		
+	chanWidth.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(chanWidthArrayExists);
+	if (chanWidthArrayExists) {
+	
+	
+	
+		
+	Frequency::toBin(chanWidthArray, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(correlationBitExists);
+	if (correlationBitExists) {
+	
+	
+	
+		
+					
+			eoss.writeInt(correlationBit);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(effectiveBwExists);
+	if (effectiveBwExists) {
+	
+	
+	
+		
+	effectiveBw.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(effectiveBwArrayExists);
+	if (effectiveBwArrayExists) {
+	
+	
+	
+		
+	Frequency::toBin(effectiveBwArray, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(freqGroupExists);
+	if (freqGroupExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(freqGroup);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(freqGroupNameExists);
+	if (freqGroupNameExists) {
+	
+	
+	
+		
+						
+			eoss.writeString(freqGroupName);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(lineArrayExists);
+	if (lineArrayExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) lineArray.size());
+		for (unsigned int i = 0; i < lineArray.size(); i++)
+				
+			eoss.writeBoolean(lineArray.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(measFreqRefExists);
+	if (measFreqRefExists) {
+	
+	
+	
+		
+					
+			eoss.writeInt(measFreqRef);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(nameExists);
+	if (nameExists) {
+	
+	
+	
+		
+						
+			eoss.writeString(name);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(oversamplingExists);
+	if (oversamplingExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(oversampling);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(quantizationExists);
+	if (quantizationExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(quantization);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(refChanExists);
+	if (refChanExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(refChan);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(resolutionExists);
+	if (resolutionExists) {
+	
+	
+	
+		
+	resolution.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(resolutionArrayExists);
+	if (resolutionArrayExists) {
+	
+	
+	
+		
+	Frequency::toBin(resolutionArray, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(numAssocValuesExists);
+	if (numAssocValuesExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numAssocValues);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(assocNatureExists);
+	if (assocNatureExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) assocNature.size());
+		for (unsigned int i = 0; i < assocNature.size(); i++)
+				
+			eoss.writeInt(assocNature.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(assocSpectralWindowIdExists);
+	if (assocSpectralWindowIdExists) {
+	
+	
+	
+		
+	Tag::toBin(assocSpectralWindowId, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(imageSpectralWindowIdExists);
+	if (imageSpectralWindowIdExists) {
+	
+	
+	
+		
+	imageSpectralWindowId.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(dopplerIdExists);
+	if (dopplerIdExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(dopplerId);
+				
+		
+	
+
+	}
+
+	}
+	
+	SpectralWindowRow* SpectralWindowRow::fromBin(EndianISStream& eiss, SpectralWindowTable& table) {
+		SpectralWindowRow* row = new  SpectralWindowRow(table);
+		
+		
+		
+	
+		
+		
+		row->spectralWindowId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->basebandName = CBasebandName::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->netSideband = CNetSideband::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->numChan =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+		row->refFreq =  Frequency::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->sidebandProcessingMode = CSidebandProcessingMode::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->totBandwidth =  Frequency::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->windowFunction = CWindowFunction::from_int(eiss.readInt());
+			
+		
+	
+
+		
+		
+		
+	row->chanFreqStartExists = eiss.readBoolean();
+	if (row->chanFreqStartExists) {
+		
+	
+		
+		
+		row->chanFreqStart =  Frequency::fromBin(eiss);
+		
+	
+
+	}
+
+	row->chanFreqStepExists = eiss.readBoolean();
+	if (row->chanFreqStepExists) {
+		
+	
+		
+		
+		row->chanFreqStep =  Frequency::fromBin(eiss);
+		
+	
+
+	}
+
+	row->chanFreqArrayExists = eiss.readBoolean();
+	if (row->chanFreqArrayExists) {
+		
+	
+		
+		
+			
+	
+	row->chanFreqArray = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->chanWidthExists = eiss.readBoolean();
+	if (row->chanWidthExists) {
+		
+	
+		
+		
+		row->chanWidth =  Frequency::fromBin(eiss);
+		
+	
+
+	}
+
+	row->chanWidthArrayExists = eiss.readBoolean();
+	if (row->chanWidthArrayExists) {
+		
+	
+		
+		
+			
+	
+	row->chanWidthArray = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->correlationBitExists = eiss.readBoolean();
+	if (row->correlationBitExists) {
+		
+	
+	
+		
+			
+		row->correlationBit = CCorrelationBit::from_int(eiss.readInt());
+			
+		
+	
+
+	}
+
+	row->effectiveBwExists = eiss.readBoolean();
+	if (row->effectiveBwExists) {
+		
+	
+		
+		
+		row->effectiveBw =  Frequency::fromBin(eiss);
+		
+	
+
+	}
+
+	row->effectiveBwArrayExists = eiss.readBoolean();
+	if (row->effectiveBwArrayExists) {
+		
+	
+		
+		
+			
+	
+	row->effectiveBwArray = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->freqGroupExists = eiss.readBoolean();
+	if (row->freqGroupExists) {
+		
+	
+	
+		
+			
+		row->freqGroup =  eiss.readInt();
+			
+		
+	
+
+	}
+
+	row->freqGroupNameExists = eiss.readBoolean();
+	if (row->freqGroupNameExists) {
+		
+	
+	
+		
+			
+		row->freqGroupName =  eiss.readString();
+			
+		
+	
+
+	}
+
+	row->lineArrayExists = eiss.readBoolean();
+	if (row->lineArrayExists) {
+		
+	
+	
+		
+			
+	
+		row->lineArray.clear();
+		
+		unsigned int lineArrayDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < lineArrayDim1; i++)
+			
+			row->lineArray.push_back(eiss.readBoolean());
+			
+	
+
+		
+	
+
+	}
+
+	row->measFreqRefExists = eiss.readBoolean();
+	if (row->measFreqRefExists) {
+		
+	
+	
+		
+			
+		row->measFreqRef = CFrequencyReferenceCode::from_int(eiss.readInt());
+			
+		
+	
+
+	}
+
+	row->nameExists = eiss.readBoolean();
+	if (row->nameExists) {
+		
+	
+	
+		
+			
+		row->name =  eiss.readString();
+			
+		
+	
+
+	}
+
+	row->oversamplingExists = eiss.readBoolean();
+	if (row->oversamplingExists) {
+		
+	
+	
+		
+			
+		row->oversampling =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+	row->quantizationExists = eiss.readBoolean();
+	if (row->quantizationExists) {
+		
+	
+	
+		
+			
+		row->quantization =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+	row->refChanExists = eiss.readBoolean();
+	if (row->refChanExists) {
+		
+	
+	
+		
+			
+		row->refChan =  eiss.readDouble();
+			
+		
+	
+
+	}
+
+	row->resolutionExists = eiss.readBoolean();
+	if (row->resolutionExists) {
+		
+	
+		
+		
+		row->resolution =  Frequency::fromBin(eiss);
+		
+	
+
+	}
+
+	row->resolutionArrayExists = eiss.readBoolean();
+	if (row->resolutionArrayExists) {
+		
+	
+		
+		
+			
+	
+	row->resolutionArray = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->numAssocValuesExists = eiss.readBoolean();
+	if (row->numAssocValuesExists) {
+		
+	
+	
+		
+			
+		row->numAssocValues =  eiss.readInt();
+			
+		
+	
+
+	}
+
+	row->assocNatureExists = eiss.readBoolean();
+	if (row->assocNatureExists) {
+		
+	
+	
+		
+			
+	
+		row->assocNature.clear();
+		
+		unsigned int assocNatureDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < assocNatureDim1; i++)
+			
+			row->assocNature.push_back(CSpectralResolutionType::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	}
+
+	row->assocSpectralWindowIdExists = eiss.readBoolean();
+	if (row->assocSpectralWindowIdExists) {
+		
+	
+		
+		
+			
+	
+	row->assocSpectralWindowId = Tag::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->imageSpectralWindowIdExists = eiss.readBoolean();
+	if (row->imageSpectralWindowIdExists) {
+		
+	
+		
+		
+		row->imageSpectralWindowId =  Tag::fromBin(eiss);
+		
+	
+
+	}
+
+	row->dopplerIdExists = eiss.readBoolean();
+	if (row->dopplerIdExists) {
+		
+	
+	
+		
+			
+		row->dopplerId =  eiss.readInt();
+			
+		
+	
+
+	}
+
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
@@ -1440,315 +2593,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numChan.
- 	 * @return numChan as int
+ 	 * Get basebandName.
+ 	 * @return basebandName as BasebandNameMod::BasebandName
  	 */
- 	int SpectralWindowRow::getNumChan() const {
+ 	BasebandNameMod::BasebandName SpectralWindowRow::getBasebandName() const {
 	
-  		return numChan;
+  		return basebandName;
  	}
 
  	/**
- 	 * Set numChan with the specified int.
- 	 * @param numChan The int value to which numChan is to be set.
+ 	 * Set basebandName with the specified BasebandNameMod::BasebandName.
+ 	 * @param basebandName The BasebandNameMod::BasebandName value to which basebandName is to be set.
  	 
  	
  		
  	 */
- 	void SpectralWindowRow::setNumChan (int numChan)  {
+ 	void SpectralWindowRow::setBasebandName (BasebandNameMod::BasebandName basebandName)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->numChan = numChan;
-	
- 	}
-	
-	
-
-	
-	/**
-	 * The attribute name is optional. Return true if this attribute exists.
-	 * @return true if and only if the name attribute exists. 
-	 */
-	bool SpectralWindowRow::isNameExists() const {
-		return nameExists;
-	}
-	
-
-	
- 	/**
- 	 * Get name, which is optional.
- 	 * @return name as string
- 	 * @throw IllegalAccessException If name does not exist.
- 	 */
- 	string SpectralWindowRow::getName() const throw(IllegalAccessException) {
-		if (!nameExists) {
-			throw IllegalAccessException("name", "SpectralWindow");
-		}
-	
-  		return name;
- 	}
-
- 	/**
- 	 * Set name with the specified string.
- 	 * @param name The string value to which name is to be set.
- 	 
- 	
- 	 */
- 	void SpectralWindowRow::setName (string name) {
-	
- 		this->name = name;
-	
-		nameExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark name, which is an optional field, as non-existent.
-	 */
-	void SpectralWindowRow::clearName () {
-		nameExists = false;
-	}
-	
-
-	
-
-	
- 	/**
- 	 * Get refFreq.
- 	 * @return refFreq as Frequency
- 	 */
- 	Frequency SpectralWindowRow::getRefFreq() const {
-	
-  		return refFreq;
- 	}
-
- 	/**
- 	 * Set refFreq with the specified Frequency.
- 	 * @param refFreq The Frequency value to which refFreq is to be set.
- 	 
- 	
- 		
- 	 */
- 	void SpectralWindowRow::setRefFreq (Frequency refFreq)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->refFreq = refFreq;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get chanFreq.
- 	 * @return chanFreq as vector<Frequency >
- 	 */
- 	vector<Frequency > SpectralWindowRow::getChanFreq() const {
-	
-  		return chanFreq;
- 	}
-
- 	/**
- 	 * Set chanFreq with the specified vector<Frequency >.
- 	 * @param chanFreq The vector<Frequency > value to which chanFreq is to be set.
- 	 
- 	
- 		
- 	 */
- 	void SpectralWindowRow::setChanFreq (vector<Frequency > chanFreq)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->chanFreq = chanFreq;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get chanWidth.
- 	 * @return chanWidth as vector<Frequency >
- 	 */
- 	vector<Frequency > SpectralWindowRow::getChanWidth() const {
-	
-  		return chanWidth;
- 	}
-
- 	/**
- 	 * Set chanWidth with the specified vector<Frequency >.
- 	 * @param chanWidth The vector<Frequency > value to which chanWidth is to be set.
- 	 
- 	
- 		
- 	 */
- 	void SpectralWindowRow::setChanWidth (vector<Frequency > chanWidth)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->chanWidth = chanWidth;
-	
- 	}
-	
-	
-
-	
-	/**
-	 * The attribute measFreqRef is optional. Return true if this attribute exists.
-	 * @return true if and only if the measFreqRef attribute exists. 
-	 */
-	bool SpectralWindowRow::isMeasFreqRefExists() const {
-		return measFreqRefExists;
-	}
-	
-
-	
- 	/**
- 	 * Get measFreqRef, which is optional.
- 	 * @return measFreqRef as int
- 	 * @throw IllegalAccessException If measFreqRef does not exist.
- 	 */
- 	int SpectralWindowRow::getMeasFreqRef() const throw(IllegalAccessException) {
-		if (!measFreqRefExists) {
-			throw IllegalAccessException("measFreqRef", "SpectralWindow");
-		}
-	
-  		return measFreqRef;
- 	}
-
- 	/**
- 	 * Set measFreqRef with the specified int.
- 	 * @param measFreqRef The int value to which measFreqRef is to be set.
- 	 
- 	
- 	 */
- 	void SpectralWindowRow::setMeasFreqRef (int measFreqRef) {
-	
- 		this->measFreqRef = measFreqRef;
-	
-		measFreqRefExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark measFreqRef, which is an optional field, as non-existent.
-	 */
-	void SpectralWindowRow::clearMeasFreqRef () {
-		measFreqRefExists = false;
-	}
-	
-
-	
-
-	
- 	/**
- 	 * Get effectiveBw.
- 	 * @return effectiveBw as vector<Frequency >
- 	 */
- 	vector<Frequency > SpectralWindowRow::getEffectiveBw() const {
-	
-  		return effectiveBw;
- 	}
-
- 	/**
- 	 * Set effectiveBw with the specified vector<Frequency >.
- 	 * @param effectiveBw The vector<Frequency > value to which effectiveBw is to be set.
- 	 
- 	
- 		
- 	 */
- 	void SpectralWindowRow::setEffectiveBw (vector<Frequency > effectiveBw)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->effectiveBw = effectiveBw;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get resolution.
- 	 * @return resolution as vector<Frequency >
- 	 */
- 	vector<Frequency > SpectralWindowRow::getResolution() const {
-	
-  		return resolution;
- 	}
-
- 	/**
- 	 * Set resolution with the specified vector<Frequency >.
- 	 * @param resolution The vector<Frequency > value to which resolution is to be set.
- 	 
- 	
- 		
- 	 */
- 	void SpectralWindowRow::setResolution (vector<Frequency > resolution)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->resolution = resolution;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get totBandwidth.
- 	 * @return totBandwidth as Frequency
- 	 */
- 	Frequency SpectralWindowRow::getTotBandwidth() const {
-	
-  		return totBandwidth;
- 	}
-
- 	/**
- 	 * Set totBandwidth with the specified Frequency.
- 	 * @param totBandwidth The Frequency value to which totBandwidth is to be set.
- 	 
- 	
- 		
- 	 */
- 	void SpectralWindowRow::setTotBandwidth (Frequency totBandwidth)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->totBandwidth = totBandwidth;
+ 		this->basebandName = basebandName;
 	
  	}
 	
@@ -1790,6 +2657,70 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get numChan.
+ 	 * @return numChan as int
+ 	 */
+ 	int SpectralWindowRow::getNumChan() const {
+	
+  		return numChan;
+ 	}
+
+ 	/**
+ 	 * Set numChan with the specified int.
+ 	 * @param numChan The int value to which numChan is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void SpectralWindowRow::setNumChan (int numChan)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numChan = numChan;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get refFreq.
+ 	 * @return refFreq as Frequency
+ 	 */
+ 	Frequency SpectralWindowRow::getRefFreq() const {
+	
+  		return refFreq;
+ 	}
+
+ 	/**
+ 	 * Set refFreq with the specified Frequency.
+ 	 * @param refFreq The Frequency value to which refFreq is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void SpectralWindowRow::setRefFreq (Frequency refFreq)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->refFreq = refFreq;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get sidebandProcessingMode.
  	 * @return sidebandProcessingMode as SidebandProcessingModeMod::SidebandProcessingMode
  	 */
@@ -1819,143 +2750,442 @@ namespace asdm {
 	
 
 	
+
+	
+ 	/**
+ 	 * Get totBandwidth.
+ 	 * @return totBandwidth as Frequency
+ 	 */
+ 	Frequency SpectralWindowRow::getTotBandwidth() const {
+	
+  		return totBandwidth;
+ 	}
+
+ 	/**
+ 	 * Set totBandwidth with the specified Frequency.
+ 	 * @param totBandwidth The Frequency value to which totBandwidth is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void SpectralWindowRow::setTotBandwidth (Frequency totBandwidth)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->totBandwidth = totBandwidth;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get windowFunction.
+ 	 * @return windowFunction as WindowFunctionMod::WindowFunction
+ 	 */
+ 	WindowFunctionMod::WindowFunction SpectralWindowRow::getWindowFunction() const {
+	
+  		return windowFunction;
+ 	}
+
+ 	/**
+ 	 * Set windowFunction with the specified WindowFunctionMod::WindowFunction.
+ 	 * @param windowFunction The WindowFunctionMod::WindowFunction value to which windowFunction is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void SpectralWindowRow::setWindowFunction (WindowFunctionMod::WindowFunction windowFunction)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->windowFunction = windowFunction;
+	
+ 	}
+	
+	
+
+	
 	/**
-	 * The attribute basebandName is optional. Return true if this attribute exists.
-	 * @return true if and only if the basebandName attribute exists. 
+	 * The attribute chanFreqStart is optional. Return true if this attribute exists.
+	 * @return true if and only if the chanFreqStart attribute exists. 
 	 */
-	bool SpectralWindowRow::isBasebandNameExists() const {
-		return basebandNameExists;
+	bool SpectralWindowRow::isChanFreqStartExists() const {
+		return chanFreqStartExists;
 	}
 	
 
 	
  	/**
- 	 * Get basebandName, which is optional.
- 	 * @return basebandName as BasebandNameMod::BasebandName
- 	 * @throw IllegalAccessException If basebandName does not exist.
+ 	 * Get chanFreqStart, which is optional.
+ 	 * @return chanFreqStart as Frequency
+ 	 * @throw IllegalAccessException If chanFreqStart does not exist.
  	 */
- 	BasebandNameMod::BasebandName SpectralWindowRow::getBasebandName() const throw(IllegalAccessException) {
-		if (!basebandNameExists) {
-			throw IllegalAccessException("basebandName", "SpectralWindow");
+ 	Frequency SpectralWindowRow::getChanFreqStart() const  {
+		if (!chanFreqStartExists) {
+			throw IllegalAccessException("chanFreqStart", "SpectralWindow");
 		}
 	
-  		return basebandName;
+  		return chanFreqStart;
  	}
 
  	/**
- 	 * Set basebandName with the specified BasebandNameMod::BasebandName.
- 	 * @param basebandName The BasebandNameMod::BasebandName value to which basebandName is to be set.
+ 	 * Set chanFreqStart with the specified Frequency.
+ 	 * @param chanFreqStart The Frequency value to which chanFreqStart is to be set.
  	 
  	
  	 */
- 	void SpectralWindowRow::setBasebandName (BasebandNameMod::BasebandName basebandName) {
+ 	void SpectralWindowRow::setChanFreqStart (Frequency chanFreqStart) {
 	
- 		this->basebandName = basebandName;
+ 		this->chanFreqStart = chanFreqStart;
 	
-		basebandNameExists = true;
+		chanFreqStartExists = true;
 	
  	}
 	
 	
 	/**
-	 * Mark basebandName, which is an optional field, as non-existent.
+	 * Mark chanFreqStart, which is an optional field, as non-existent.
 	 */
-	void SpectralWindowRow::clearBasebandName () {
-		basebandNameExists = false;
+	void SpectralWindowRow::clearChanFreqStart () {
+		chanFreqStartExists = false;
 	}
 	
 
 	
 	/**
-	 * The attribute bbcSideband is optional. Return true if this attribute exists.
-	 * @return true if and only if the bbcSideband attribute exists. 
+	 * The attribute chanFreqStep is optional. Return true if this attribute exists.
+	 * @return true if and only if the chanFreqStep attribute exists. 
 	 */
-	bool SpectralWindowRow::isBbcSidebandExists() const {
-		return bbcSidebandExists;
+	bool SpectralWindowRow::isChanFreqStepExists() const {
+		return chanFreqStepExists;
 	}
 	
 
 	
  	/**
- 	 * Get bbcSideband, which is optional.
- 	 * @return bbcSideband as int
- 	 * @throw IllegalAccessException If bbcSideband does not exist.
+ 	 * Get chanFreqStep, which is optional.
+ 	 * @return chanFreqStep as Frequency
+ 	 * @throw IllegalAccessException If chanFreqStep does not exist.
  	 */
- 	int SpectralWindowRow::getBbcSideband() const throw(IllegalAccessException) {
-		if (!bbcSidebandExists) {
-			throw IllegalAccessException("bbcSideband", "SpectralWindow");
+ 	Frequency SpectralWindowRow::getChanFreqStep() const  {
+		if (!chanFreqStepExists) {
+			throw IllegalAccessException("chanFreqStep", "SpectralWindow");
 		}
 	
-  		return bbcSideband;
+  		return chanFreqStep;
  	}
 
  	/**
- 	 * Set bbcSideband with the specified int.
- 	 * @param bbcSideband The int value to which bbcSideband is to be set.
+ 	 * Set chanFreqStep with the specified Frequency.
+ 	 * @param chanFreqStep The Frequency value to which chanFreqStep is to be set.
  	 
  	
  	 */
- 	void SpectralWindowRow::setBbcSideband (int bbcSideband) {
+ 	void SpectralWindowRow::setChanFreqStep (Frequency chanFreqStep) {
 	
- 		this->bbcSideband = bbcSideband;
+ 		this->chanFreqStep = chanFreqStep;
 	
-		bbcSidebandExists = true;
+		chanFreqStepExists = true;
 	
  	}
 	
 	
 	/**
-	 * Mark bbcSideband, which is an optional field, as non-existent.
+	 * Mark chanFreqStep, which is an optional field, as non-existent.
 	 */
-	void SpectralWindowRow::clearBbcSideband () {
-		bbcSidebandExists = false;
+	void SpectralWindowRow::clearChanFreqStep () {
+		chanFreqStepExists = false;
 	}
 	
 
 	
 	/**
-	 * The attribute ifConvChain is optional. Return true if this attribute exists.
-	 * @return true if and only if the ifConvChain attribute exists. 
+	 * The attribute chanFreqArray is optional. Return true if this attribute exists.
+	 * @return true if and only if the chanFreqArray attribute exists. 
 	 */
-	bool SpectralWindowRow::isIfConvChainExists() const {
-		return ifConvChainExists;
+	bool SpectralWindowRow::isChanFreqArrayExists() const {
+		return chanFreqArrayExists;
 	}
 	
 
 	
  	/**
- 	 * Get ifConvChain, which is optional.
- 	 * @return ifConvChain as int
- 	 * @throw IllegalAccessException If ifConvChain does not exist.
+ 	 * Get chanFreqArray, which is optional.
+ 	 * @return chanFreqArray as vector<Frequency >
+ 	 * @throw IllegalAccessException If chanFreqArray does not exist.
  	 */
- 	int SpectralWindowRow::getIfConvChain() const throw(IllegalAccessException) {
-		if (!ifConvChainExists) {
-			throw IllegalAccessException("ifConvChain", "SpectralWindow");
+ 	vector<Frequency > SpectralWindowRow::getChanFreqArray() const  {
+		if (!chanFreqArrayExists) {
+			throw IllegalAccessException("chanFreqArray", "SpectralWindow");
 		}
 	
-  		return ifConvChain;
+  		return chanFreqArray;
  	}
 
  	/**
- 	 * Set ifConvChain with the specified int.
- 	 * @param ifConvChain The int value to which ifConvChain is to be set.
+ 	 * Set chanFreqArray with the specified vector<Frequency >.
+ 	 * @param chanFreqArray The vector<Frequency > value to which chanFreqArray is to be set.
  	 
  	
  	 */
- 	void SpectralWindowRow::setIfConvChain (int ifConvChain) {
+ 	void SpectralWindowRow::setChanFreqArray (vector<Frequency > chanFreqArray) {
 	
- 		this->ifConvChain = ifConvChain;
+ 		this->chanFreqArray = chanFreqArray;
 	
-		ifConvChainExists = true;
+		chanFreqArrayExists = true;
 	
  	}
 	
 	
 	/**
-	 * Mark ifConvChain, which is an optional field, as non-existent.
+	 * Mark chanFreqArray, which is an optional field, as non-existent.
 	 */
-	void SpectralWindowRow::clearIfConvChain () {
-		ifConvChainExists = false;
+	void SpectralWindowRow::clearChanFreqArray () {
+		chanFreqArrayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute chanWidth is optional. Return true if this attribute exists.
+	 * @return true if and only if the chanWidth attribute exists. 
+	 */
+	bool SpectralWindowRow::isChanWidthExists() const {
+		return chanWidthExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get chanWidth, which is optional.
+ 	 * @return chanWidth as Frequency
+ 	 * @throw IllegalAccessException If chanWidth does not exist.
+ 	 */
+ 	Frequency SpectralWindowRow::getChanWidth() const  {
+		if (!chanWidthExists) {
+			throw IllegalAccessException("chanWidth", "SpectralWindow");
+		}
+	
+  		return chanWidth;
+ 	}
+
+ 	/**
+ 	 * Set chanWidth with the specified Frequency.
+ 	 * @param chanWidth The Frequency value to which chanWidth is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SpectralWindowRow::setChanWidth (Frequency chanWidth) {
+	
+ 		this->chanWidth = chanWidth;
+	
+		chanWidthExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark chanWidth, which is an optional field, as non-existent.
+	 */
+	void SpectralWindowRow::clearChanWidth () {
+		chanWidthExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute chanWidthArray is optional. Return true if this attribute exists.
+	 * @return true if and only if the chanWidthArray attribute exists. 
+	 */
+	bool SpectralWindowRow::isChanWidthArrayExists() const {
+		return chanWidthArrayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get chanWidthArray, which is optional.
+ 	 * @return chanWidthArray as vector<Frequency >
+ 	 * @throw IllegalAccessException If chanWidthArray does not exist.
+ 	 */
+ 	vector<Frequency > SpectralWindowRow::getChanWidthArray() const  {
+		if (!chanWidthArrayExists) {
+			throw IllegalAccessException("chanWidthArray", "SpectralWindow");
+		}
+	
+  		return chanWidthArray;
+ 	}
+
+ 	/**
+ 	 * Set chanWidthArray with the specified vector<Frequency >.
+ 	 * @param chanWidthArray The vector<Frequency > value to which chanWidthArray is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SpectralWindowRow::setChanWidthArray (vector<Frequency > chanWidthArray) {
+	
+ 		this->chanWidthArray = chanWidthArray;
+	
+		chanWidthArrayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark chanWidthArray, which is an optional field, as non-existent.
+	 */
+	void SpectralWindowRow::clearChanWidthArray () {
+		chanWidthArrayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute correlationBit is optional. Return true if this attribute exists.
+	 * @return true if and only if the correlationBit attribute exists. 
+	 */
+	bool SpectralWindowRow::isCorrelationBitExists() const {
+		return correlationBitExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get correlationBit, which is optional.
+ 	 * @return correlationBit as CorrelationBitMod::CorrelationBit
+ 	 * @throw IllegalAccessException If correlationBit does not exist.
+ 	 */
+ 	CorrelationBitMod::CorrelationBit SpectralWindowRow::getCorrelationBit() const  {
+		if (!correlationBitExists) {
+			throw IllegalAccessException("correlationBit", "SpectralWindow");
+		}
+	
+  		return correlationBit;
+ 	}
+
+ 	/**
+ 	 * Set correlationBit with the specified CorrelationBitMod::CorrelationBit.
+ 	 * @param correlationBit The CorrelationBitMod::CorrelationBit value to which correlationBit is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SpectralWindowRow::setCorrelationBit (CorrelationBitMod::CorrelationBit correlationBit) {
+	
+ 		this->correlationBit = correlationBit;
+	
+		correlationBitExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark correlationBit, which is an optional field, as non-existent.
+	 */
+	void SpectralWindowRow::clearCorrelationBit () {
+		correlationBitExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute effectiveBw is optional. Return true if this attribute exists.
+	 * @return true if and only if the effectiveBw attribute exists. 
+	 */
+	bool SpectralWindowRow::isEffectiveBwExists() const {
+		return effectiveBwExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get effectiveBw, which is optional.
+ 	 * @return effectiveBw as Frequency
+ 	 * @throw IllegalAccessException If effectiveBw does not exist.
+ 	 */
+ 	Frequency SpectralWindowRow::getEffectiveBw() const  {
+		if (!effectiveBwExists) {
+			throw IllegalAccessException("effectiveBw", "SpectralWindow");
+		}
+	
+  		return effectiveBw;
+ 	}
+
+ 	/**
+ 	 * Set effectiveBw with the specified Frequency.
+ 	 * @param effectiveBw The Frequency value to which effectiveBw is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SpectralWindowRow::setEffectiveBw (Frequency effectiveBw) {
+	
+ 		this->effectiveBw = effectiveBw;
+	
+		effectiveBwExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark effectiveBw, which is an optional field, as non-existent.
+	 */
+	void SpectralWindowRow::clearEffectiveBw () {
+		effectiveBwExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute effectiveBwArray is optional. Return true if this attribute exists.
+	 * @return true if and only if the effectiveBwArray attribute exists. 
+	 */
+	bool SpectralWindowRow::isEffectiveBwArrayExists() const {
+		return effectiveBwArrayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get effectiveBwArray, which is optional.
+ 	 * @return effectiveBwArray as vector<Frequency >
+ 	 * @throw IllegalAccessException If effectiveBwArray does not exist.
+ 	 */
+ 	vector<Frequency > SpectralWindowRow::getEffectiveBwArray() const  {
+		if (!effectiveBwArrayExists) {
+			throw IllegalAccessException("effectiveBwArray", "SpectralWindow");
+		}
+	
+  		return effectiveBwArray;
+ 	}
+
+ 	/**
+ 	 * Set effectiveBwArray with the specified vector<Frequency >.
+ 	 * @param effectiveBwArray The vector<Frequency > value to which effectiveBwArray is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SpectralWindowRow::setEffectiveBwArray (vector<Frequency > effectiveBwArray) {
+	
+ 		this->effectiveBwArray = effectiveBwArray;
+	
+		effectiveBwArrayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark effectiveBwArray, which is an optional field, as non-existent.
+	 */
+	void SpectralWindowRow::clearEffectiveBwArray () {
+		effectiveBwArrayExists = false;
 	}
 	
 
@@ -1975,7 +3205,7 @@ namespace asdm {
  	 * @return freqGroup as int
  	 * @throw IllegalAccessException If freqGroup does not exist.
  	 */
- 	int SpectralWindowRow::getFreqGroup() const throw(IllegalAccessException) {
+ 	int SpectralWindowRow::getFreqGroup() const  {
 		if (!freqGroupExists) {
 			throw IllegalAccessException("freqGroup", "SpectralWindow");
 		}
@@ -2022,7 +3252,7 @@ namespace asdm {
  	 * @return freqGroupName as string
  	 * @throw IllegalAccessException If freqGroupName does not exist.
  	 */
- 	string SpectralWindowRow::getFreqGroupName() const throw(IllegalAccessException) {
+ 	string SpectralWindowRow::getFreqGroupName() const  {
 		if (!freqGroupNameExists) {
 			throw IllegalAccessException("freqGroupName", "SpectralWindow");
 		}
@@ -2055,6 +3285,429 @@ namespace asdm {
 
 	
 	/**
+	 * The attribute lineArray is optional. Return true if this attribute exists.
+	 * @return true if and only if the lineArray attribute exists. 
+	 */
+	bool SpectralWindowRow::isLineArrayExists() const {
+		return lineArrayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get lineArray, which is optional.
+ 	 * @return lineArray as vector<bool >
+ 	 * @throw IllegalAccessException If lineArray does not exist.
+ 	 */
+ 	vector<bool > SpectralWindowRow::getLineArray() const  {
+		if (!lineArrayExists) {
+			throw IllegalAccessException("lineArray", "SpectralWindow");
+		}
+	
+  		return lineArray;
+ 	}
+
+ 	/**
+ 	 * Set lineArray with the specified vector<bool >.
+ 	 * @param lineArray The vector<bool > value to which lineArray is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SpectralWindowRow::setLineArray (vector<bool > lineArray) {
+	
+ 		this->lineArray = lineArray;
+	
+		lineArrayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark lineArray, which is an optional field, as non-existent.
+	 */
+	void SpectralWindowRow::clearLineArray () {
+		lineArrayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute measFreqRef is optional. Return true if this attribute exists.
+	 * @return true if and only if the measFreqRef attribute exists. 
+	 */
+	bool SpectralWindowRow::isMeasFreqRefExists() const {
+		return measFreqRefExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get measFreqRef, which is optional.
+ 	 * @return measFreqRef as FrequencyReferenceCodeMod::FrequencyReferenceCode
+ 	 * @throw IllegalAccessException If measFreqRef does not exist.
+ 	 */
+ 	FrequencyReferenceCodeMod::FrequencyReferenceCode SpectralWindowRow::getMeasFreqRef() const  {
+		if (!measFreqRefExists) {
+			throw IllegalAccessException("measFreqRef", "SpectralWindow");
+		}
+	
+  		return measFreqRef;
+ 	}
+
+ 	/**
+ 	 * Set measFreqRef with the specified FrequencyReferenceCodeMod::FrequencyReferenceCode.
+ 	 * @param measFreqRef The FrequencyReferenceCodeMod::FrequencyReferenceCode value to which measFreqRef is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SpectralWindowRow::setMeasFreqRef (FrequencyReferenceCodeMod::FrequencyReferenceCode measFreqRef) {
+	
+ 		this->measFreqRef = measFreqRef;
+	
+		measFreqRefExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark measFreqRef, which is an optional field, as non-existent.
+	 */
+	void SpectralWindowRow::clearMeasFreqRef () {
+		measFreqRefExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute name is optional. Return true if this attribute exists.
+	 * @return true if and only if the name attribute exists. 
+	 */
+	bool SpectralWindowRow::isNameExists() const {
+		return nameExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get name, which is optional.
+ 	 * @return name as string
+ 	 * @throw IllegalAccessException If name does not exist.
+ 	 */
+ 	string SpectralWindowRow::getName() const  {
+		if (!nameExists) {
+			throw IllegalAccessException("name", "SpectralWindow");
+		}
+	
+  		return name;
+ 	}
+
+ 	/**
+ 	 * Set name with the specified string.
+ 	 * @param name The string value to which name is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SpectralWindowRow::setName (string name) {
+	
+ 		this->name = name;
+	
+		nameExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark name, which is an optional field, as non-existent.
+	 */
+	void SpectralWindowRow::clearName () {
+		nameExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute oversampling is optional. Return true if this attribute exists.
+	 * @return true if and only if the oversampling attribute exists. 
+	 */
+	bool SpectralWindowRow::isOversamplingExists() const {
+		return oversamplingExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get oversampling, which is optional.
+ 	 * @return oversampling as bool
+ 	 * @throw IllegalAccessException If oversampling does not exist.
+ 	 */
+ 	bool SpectralWindowRow::getOversampling() const  {
+		if (!oversamplingExists) {
+			throw IllegalAccessException("oversampling", "SpectralWindow");
+		}
+	
+  		return oversampling;
+ 	}
+
+ 	/**
+ 	 * Set oversampling with the specified bool.
+ 	 * @param oversampling The bool value to which oversampling is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SpectralWindowRow::setOversampling (bool oversampling) {
+	
+ 		this->oversampling = oversampling;
+	
+		oversamplingExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark oversampling, which is an optional field, as non-existent.
+	 */
+	void SpectralWindowRow::clearOversampling () {
+		oversamplingExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute quantization is optional. Return true if this attribute exists.
+	 * @return true if and only if the quantization attribute exists. 
+	 */
+	bool SpectralWindowRow::isQuantizationExists() const {
+		return quantizationExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get quantization, which is optional.
+ 	 * @return quantization as bool
+ 	 * @throw IllegalAccessException If quantization does not exist.
+ 	 */
+ 	bool SpectralWindowRow::getQuantization() const  {
+		if (!quantizationExists) {
+			throw IllegalAccessException("quantization", "SpectralWindow");
+		}
+	
+  		return quantization;
+ 	}
+
+ 	/**
+ 	 * Set quantization with the specified bool.
+ 	 * @param quantization The bool value to which quantization is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SpectralWindowRow::setQuantization (bool quantization) {
+	
+ 		this->quantization = quantization;
+	
+		quantizationExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark quantization, which is an optional field, as non-existent.
+	 */
+	void SpectralWindowRow::clearQuantization () {
+		quantizationExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute refChan is optional. Return true if this attribute exists.
+	 * @return true if and only if the refChan attribute exists. 
+	 */
+	bool SpectralWindowRow::isRefChanExists() const {
+		return refChanExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get refChan, which is optional.
+ 	 * @return refChan as double
+ 	 * @throw IllegalAccessException If refChan does not exist.
+ 	 */
+ 	double SpectralWindowRow::getRefChan() const  {
+		if (!refChanExists) {
+			throw IllegalAccessException("refChan", "SpectralWindow");
+		}
+	
+  		return refChan;
+ 	}
+
+ 	/**
+ 	 * Set refChan with the specified double.
+ 	 * @param refChan The double value to which refChan is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SpectralWindowRow::setRefChan (double refChan) {
+	
+ 		this->refChan = refChan;
+	
+		refChanExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark refChan, which is an optional field, as non-existent.
+	 */
+	void SpectralWindowRow::clearRefChan () {
+		refChanExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute resolution is optional. Return true if this attribute exists.
+	 * @return true if and only if the resolution attribute exists. 
+	 */
+	bool SpectralWindowRow::isResolutionExists() const {
+		return resolutionExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get resolution, which is optional.
+ 	 * @return resolution as Frequency
+ 	 * @throw IllegalAccessException If resolution does not exist.
+ 	 */
+ 	Frequency SpectralWindowRow::getResolution() const  {
+		if (!resolutionExists) {
+			throw IllegalAccessException("resolution", "SpectralWindow");
+		}
+	
+  		return resolution;
+ 	}
+
+ 	/**
+ 	 * Set resolution with the specified Frequency.
+ 	 * @param resolution The Frequency value to which resolution is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SpectralWindowRow::setResolution (Frequency resolution) {
+	
+ 		this->resolution = resolution;
+	
+		resolutionExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark resolution, which is an optional field, as non-existent.
+	 */
+	void SpectralWindowRow::clearResolution () {
+		resolutionExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute resolutionArray is optional. Return true if this attribute exists.
+	 * @return true if and only if the resolutionArray attribute exists. 
+	 */
+	bool SpectralWindowRow::isResolutionArrayExists() const {
+		return resolutionArrayExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get resolutionArray, which is optional.
+ 	 * @return resolutionArray as vector<Frequency >
+ 	 * @throw IllegalAccessException If resolutionArray does not exist.
+ 	 */
+ 	vector<Frequency > SpectralWindowRow::getResolutionArray() const  {
+		if (!resolutionArrayExists) {
+			throw IllegalAccessException("resolutionArray", "SpectralWindow");
+		}
+	
+  		return resolutionArray;
+ 	}
+
+ 	/**
+ 	 * Set resolutionArray with the specified vector<Frequency >.
+ 	 * @param resolutionArray The vector<Frequency > value to which resolutionArray is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SpectralWindowRow::setResolutionArray (vector<Frequency > resolutionArray) {
+	
+ 		this->resolutionArray = resolutionArray;
+	
+		resolutionArrayExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark resolutionArray, which is an optional field, as non-existent.
+	 */
+	void SpectralWindowRow::clearResolutionArray () {
+		resolutionArrayExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute numAssocValues is optional. Return true if this attribute exists.
+	 * @return true if and only if the numAssocValues attribute exists. 
+	 */
+	bool SpectralWindowRow::isNumAssocValuesExists() const {
+		return numAssocValuesExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get numAssocValues, which is optional.
+ 	 * @return numAssocValues as int
+ 	 * @throw IllegalAccessException If numAssocValues does not exist.
+ 	 */
+ 	int SpectralWindowRow::getNumAssocValues() const  {
+		if (!numAssocValuesExists) {
+			throw IllegalAccessException("numAssocValues", "SpectralWindow");
+		}
+	
+  		return numAssocValues;
+ 	}
+
+ 	/**
+ 	 * Set numAssocValues with the specified int.
+ 	 * @param numAssocValues The int value to which numAssocValues is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SpectralWindowRow::setNumAssocValues (int numAssocValues) {
+	
+ 		this->numAssocValues = numAssocValues;
+	
+		numAssocValuesExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark numAssocValues, which is an optional field, as non-existent.
+	 */
+	void SpectralWindowRow::clearNumAssocValues () {
+		numAssocValuesExists = false;
+	}
+	
+
+	
+	/**
 	 * The attribute assocNature is optional. Return true if this attribute exists.
 	 * @return true if and only if the assocNature attribute exists. 
 	 */
@@ -2069,7 +3722,7 @@ namespace asdm {
  	 * @return assocNature as vector<SpectralResolutionTypeMod::SpectralResolutionType >
  	 * @throw IllegalAccessException If assocNature does not exist.
  	 */
- 	vector<SpectralResolutionTypeMod::SpectralResolutionType > SpectralWindowRow::getAssocNature() const throw(IllegalAccessException) {
+ 	vector<SpectralResolutionTypeMod::SpectralResolutionType > SpectralWindowRow::getAssocNature() const  {
 		if (!assocNatureExists) {
 			throw IllegalAccessException("assocNature", "SpectralWindow");
 		}
@@ -2101,166 +3754,6 @@ namespace asdm {
 	
 
 	
-
-	
- 	/**
- 	 * Get quantization.
- 	 * @return quantization as bool
- 	 */
- 	bool SpectralWindowRow::getQuantization() const {
-	
-  		return quantization;
- 	}
-
- 	/**
- 	 * Set quantization with the specified bool.
- 	 * @param quantization The bool value to which quantization is to be set.
- 	 
- 	
- 		
- 	 */
- 	void SpectralWindowRow::setQuantization (bool quantization)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->quantization = quantization;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get windowFunction.
- 	 * @return windowFunction as WindowFunctionMod::WindowFunction
- 	 */
- 	WindowFunctionMod::WindowFunction SpectralWindowRow::getWindowFunction() const {
-	
-  		return windowFunction;
- 	}
-
- 	/**
- 	 * Set windowFunction with the specified WindowFunctionMod::WindowFunction.
- 	 * @param windowFunction The WindowFunctionMod::WindowFunction value to which windowFunction is to be set.
- 	 
- 	
- 		
- 	 */
- 	void SpectralWindowRow::setWindowFunction (WindowFunctionMod::WindowFunction windowFunction)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->windowFunction = windowFunction;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get oversampling.
- 	 * @return oversampling as bool
- 	 */
- 	bool SpectralWindowRow::getOversampling() const {
-	
-  		return oversampling;
- 	}
-
- 	/**
- 	 * Set oversampling with the specified bool.
- 	 * @param oversampling The bool value to which oversampling is to be set.
- 	 
- 	
- 		
- 	 */
- 	void SpectralWindowRow::setOversampling (bool oversampling)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->oversampling = oversampling;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get correlationBit.
- 	 * @return correlationBit as CorrelationBitMod::CorrelationBit
- 	 */
- 	CorrelationBitMod::CorrelationBit SpectralWindowRow::getCorrelationBit() const {
-	
-  		return correlationBit;
- 	}
-
- 	/**
- 	 * Set correlationBit with the specified CorrelationBitMod::CorrelationBit.
- 	 * @param correlationBit The CorrelationBitMod::CorrelationBit value to which correlationBit is to be set.
- 	 
- 	
- 		
- 	 */
- 	void SpectralWindowRow::setCorrelationBit (CorrelationBitMod::CorrelationBit correlationBit)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->correlationBit = correlationBit;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get flagRow.
- 	 * @return flagRow as bool
- 	 */
- 	bool SpectralWindowRow::getFlagRow() const {
-	
-  		return flagRow;
- 	}
-
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 	 
- 	
- 		
- 	 */
- 	void SpectralWindowRow::setFlagRow (bool flagRow)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->flagRow = flagRow;
-	
- 	}
-	
-	
-
-	
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -2281,7 +3774,7 @@ namespace asdm {
  	 * @return assocSpectralWindowId as vector<Tag> 
  	 * @throw IllegalAccessException If assocSpectralWindowId does not exist.
  	 */
- 	vector<Tag>  SpectralWindowRow::getAssocSpectralWindowId() const throw(IllegalAccessException) {
+ 	vector<Tag>  SpectralWindowRow::getAssocSpectralWindowId() const  {
 		if (!assocSpectralWindowIdExists) {
 			throw IllegalAccessException("assocSpectralWindowId", "SpectralWindow");
 		}
@@ -2328,7 +3821,7 @@ namespace asdm {
  	 * @return dopplerId as int
  	 * @throw IllegalAccessException If dopplerId does not exist.
  	 */
- 	int SpectralWindowRow::getDopplerId() const throw(IllegalAccessException) {
+ 	int SpectralWindowRow::getDopplerId() const  {
 		if (!dopplerIdExists) {
 			throw IllegalAccessException("dopplerId", "SpectralWindow");
 		}
@@ -2375,7 +3868,7 @@ namespace asdm {
  	 * @return imageSpectralWindowId as Tag
  	 * @throw IllegalAccessException If imageSpectralWindowId does not exist.
  	 */
- 	Tag SpectralWindowRow::getImageSpectralWindowId() const throw(IllegalAccessException) {
+ 	Tag SpectralWindowRow::getImageSpectralWindowId() const  {
 		if (!imageSpectralWindowIdExists) {
 			throw IllegalAccessException("imageSpectralWindowId", "SpectralWindow");
 		}
@@ -2410,29 +3903,6 @@ namespace asdm {
 	// Links //
 	///////////
 	
-	
-	
-	
-		
-
-	// ===> Slice link from a row of SpectralWindow table to a collection of row of Doppler table.
-	
-	/**
-	 * Get the collection of row in the Doppler table having their attribut dopplerId == this->dopplerId
-	 */
-	vector <DopplerRow *> SpectralWindowRow::getDopplers() {
-		
-			if (dopplerIdExists) {
-				return table.getContainer().getDoppler().getRowByDopplerId(dopplerId);
-			}
-			else 
-				throw IllegalAccessException();
-		
-	}
-	
-
-	
-
 	
  		
  	/**
@@ -2530,6 +4000,29 @@ namespace asdm {
 	
 
 	
+	
+	
+		
+
+	// ===> Slice link from a row of SpectralWindow table to a collection of row of Doppler table.
+	
+	/**
+	 * Get the collection of row in the Doppler table having their attribut dopplerId == this->dopplerId
+	 */
+	vector <DopplerRow *> SpectralWindowRow::getDopplers() {
+		
+			if (dopplerIdExists) {
+				return table.getContainer().getDoppler().getRowByDopplerId(dopplerId);
+			}
+			else 
+				throw IllegalAccessException();
+		
+	}
+	
+
+	
+
+	
 	/**
 	 * Create a SpectralWindowRow.
 	 * <p>
@@ -2547,18 +4040,6 @@ namespace asdm {
 	
 
 	
-		nameExists = false;
-	
-
-	
-
-	
-
-	
-
-	
-		measFreqRefExists = false;
-	
 
 	
 
@@ -2571,15 +4052,35 @@ namespace asdm {
 	
 
 	
-		basebandNameExists = false;
+		chanFreqStartExists = false;
 	
 
 	
-		bbcSidebandExists = false;
+		chanFreqStepExists = false;
 	
 
 	
-		ifConvChainExists = false;
+		chanFreqArrayExists = false;
+	
+
+	
+		chanWidthExists = false;
+	
+
+	
+		chanWidthArrayExists = false;
+	
+
+	
+		correlationBitExists = false;
+	
+
+	
+		effectiveBwExists = false;
+	
+
+	
+		effectiveBwArrayExists = false;
 	
 
 	
@@ -2591,17 +4092,43 @@ namespace asdm {
 	
 
 	
+		lineArrayExists = false;
+	
+
+	
+		measFreqRefExists = false;
+	
+
+	
+		nameExists = false;
+	
+
+	
+		oversamplingExists = false;
+	
+
+	
+		quantizationExists = false;
+	
+
+	
+		refChanExists = false;
+	
+
+	
+		resolutionExists = false;
+	
+
+	
+		resolutionArrayExists = false;
+	
+
+	
+		numAssocValuesExists = false;
+	
+
+	
 		assocNatureExists = false;
-	
-
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -2623,21 +4150,8 @@ namespace asdm {
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+basebandName = CBasebandName::from_int(0);
 	
 
 	
@@ -2646,23 +4160,12 @@ netSideband = CNetSideband::from_int(0);
 	
 
 	
+
+	
+
+	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 sidebandProcessingMode = CSidebandProcessingMode::from_int(0);
-	
-
-	
-// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
-basebandName = CBasebandName::from_int(0);
-	
-
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -2675,8 +4178,45 @@ windowFunction = CWindowFunction::from_int(0);
 	
 
 	
+
+	
+
+	
+
+	
+
+	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 correlationBit = CCorrelationBit::from_int(0);
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+measFreqRef = CFrequencyReferenceCode::from_int(0);
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -2694,18 +4234,6 @@ correlationBit = CCorrelationBit::from_int(0);
 	
 
 	
-		nameExists = false;
-	
-
-	
-
-	
-
-	
-
-	
-		measFreqRefExists = false;
-	
 
 	
 
@@ -2718,15 +4246,35 @@ correlationBit = CCorrelationBit::from_int(0);
 	
 
 	
-		basebandNameExists = false;
+		chanFreqStartExists = false;
 	
 
 	
-		bbcSidebandExists = false;
+		chanFreqStepExists = false;
 	
 
 	
-		ifConvChainExists = false;
+		chanFreqArrayExists = false;
+	
+
+	
+		chanWidthExists = false;
+	
+
+	
+		chanWidthArrayExists = false;
+	
+
+	
+		correlationBitExists = false;
+	
+
+	
+		effectiveBwExists = false;
+	
+
+	
+		effectiveBwArrayExists = false;
 	
 
 	
@@ -2738,17 +4286,43 @@ correlationBit = CCorrelationBit::from_int(0);
 	
 
 	
+		lineArrayExists = false;
+	
+
+	
+		measFreqRefExists = false;
+	
+
+	
+		nameExists = false;
+	
+
+	
+		oversamplingExists = false;
+	
+
+	
+		quantizationExists = false;
+	
+
+	
+		refChanExists = false;
+	
+
+	
+		resolutionExists = false;
+	
+
+	
+		resolutionArrayExists = false;
+	
+
+	
+		numAssocValuesExists = false;
+	
+
+	
 		assocNatureExists = false;
-	
-
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -2773,92 +4347,78 @@ correlationBit = CCorrelationBit::from_int(0);
 		
 		
 		
+			basebandName = row.basebandName;
+		
+			netSideband = row.netSideband;
+		
 			numChan = row.numChan;
 		
 			refFreq = row.refFreq;
 		
-			chanFreq = row.chanFreq;
-		
-			chanWidth = row.chanWidth;
-		
-			effectiveBw = row.effectiveBw;
-		
-			resolution = row.resolution;
+			sidebandProcessingMode = row.sidebandProcessingMode;
 		
 			totBandwidth = row.totBandwidth;
 		
-			netSideband = row.netSideband;
-		
-			sidebandProcessingMode = row.sidebandProcessingMode;
-		
-			quantization = row.quantization;
-		
 			windowFunction = row.windowFunction;
 		
-			oversampling = row.oversampling;
-		
-			correlationBit = row.correlationBit;
-		
-			flagRow = row.flagRow;
 		
 		
 		
-		
-		if (row.assocSpectralWindowIdExists) {
-			assocSpectralWindowId = row.assocSpectralWindowId;		
-			assocSpectralWindowIdExists = true;
+		if (row.chanFreqStartExists) {
+			chanFreqStart = row.chanFreqStart;		
+			chanFreqStartExists = true;
 		}
 		else
-			assocSpectralWindowIdExists = false;
+			chanFreqStartExists = false;
 		
-		if (row.dopplerIdExists) {
-			dopplerId = row.dopplerId;		
-			dopplerIdExists = true;
+		if (row.chanFreqStepExists) {
+			chanFreqStep = row.chanFreqStep;		
+			chanFreqStepExists = true;
 		}
 		else
-			dopplerIdExists = false;
+			chanFreqStepExists = false;
 		
-		if (row.imageSpectralWindowIdExists) {
-			imageSpectralWindowId = row.imageSpectralWindowId;		
-			imageSpectralWindowIdExists = true;
+		if (row.chanFreqArrayExists) {
+			chanFreqArray = row.chanFreqArray;		
+			chanFreqArrayExists = true;
 		}
 		else
-			imageSpectralWindowIdExists = false;
+			chanFreqArrayExists = false;
 		
-		if (row.nameExists) {
-			name = row.name;		
-			nameExists = true;
+		if (row.chanWidthExists) {
+			chanWidth = row.chanWidth;		
+			chanWidthExists = true;
 		}
 		else
-			nameExists = false;
+			chanWidthExists = false;
 		
-		if (row.measFreqRefExists) {
-			measFreqRef = row.measFreqRef;		
-			measFreqRefExists = true;
+		if (row.chanWidthArrayExists) {
+			chanWidthArray = row.chanWidthArray;		
+			chanWidthArrayExists = true;
 		}
 		else
-			measFreqRefExists = false;
+			chanWidthArrayExists = false;
 		
-		if (row.basebandNameExists) {
-			basebandName = row.basebandName;		
-			basebandNameExists = true;
+		if (row.correlationBitExists) {
+			correlationBit = row.correlationBit;		
+			correlationBitExists = true;
 		}
 		else
-			basebandNameExists = false;
+			correlationBitExists = false;
 		
-		if (row.bbcSidebandExists) {
-			bbcSideband = row.bbcSideband;		
-			bbcSidebandExists = true;
+		if (row.effectiveBwExists) {
+			effectiveBw = row.effectiveBw;		
+			effectiveBwExists = true;
 		}
 		else
-			bbcSidebandExists = false;
+			effectiveBwExists = false;
 		
-		if (row.ifConvChainExists) {
-			ifConvChain = row.ifConvChain;		
-			ifConvChainExists = true;
+		if (row.effectiveBwArrayExists) {
+			effectiveBwArray = row.effectiveBwArray;		
+			effectiveBwArrayExists = true;
 		}
 		else
-			ifConvChainExists = false;
+			effectiveBwArrayExists = false;
 		
 		if (row.freqGroupExists) {
 			freqGroup = row.freqGroup;		
@@ -2874,6 +4434,69 @@ correlationBit = CCorrelationBit::from_int(0);
 		else
 			freqGroupNameExists = false;
 		
+		if (row.lineArrayExists) {
+			lineArray = row.lineArray;		
+			lineArrayExists = true;
+		}
+		else
+			lineArrayExists = false;
+		
+		if (row.measFreqRefExists) {
+			measFreqRef = row.measFreqRef;		
+			measFreqRefExists = true;
+		}
+		else
+			measFreqRefExists = false;
+		
+		if (row.nameExists) {
+			name = row.name;		
+			nameExists = true;
+		}
+		else
+			nameExists = false;
+		
+		if (row.oversamplingExists) {
+			oversampling = row.oversampling;		
+			oversamplingExists = true;
+		}
+		else
+			oversamplingExists = false;
+		
+		if (row.quantizationExists) {
+			quantization = row.quantization;		
+			quantizationExists = true;
+		}
+		else
+			quantizationExists = false;
+		
+		if (row.refChanExists) {
+			refChan = row.refChan;		
+			refChanExists = true;
+		}
+		else
+			refChanExists = false;
+		
+		if (row.resolutionExists) {
+			resolution = row.resolution;		
+			resolutionExists = true;
+		}
+		else
+			resolutionExists = false;
+		
+		if (row.resolutionArrayExists) {
+			resolutionArray = row.resolutionArray;		
+			resolutionArrayExists = true;
+		}
+		else
+			resolutionArrayExists = false;
+		
+		if (row.numAssocValuesExists) {
+			numAssocValues = row.numAssocValues;		
+			numAssocValuesExists = true;
+		}
+		else
+			numAssocValuesExists = false;
+		
 		if (row.assocNatureExists) {
 			assocNature = row.assocNature;		
 			assocNatureExists = true;
@@ -2881,14 +4504,49 @@ correlationBit = CCorrelationBit::from_int(0);
 		else
 			assocNatureExists = false;
 		
+		if (row.assocSpectralWindowIdExists) {
+			assocSpectralWindowId = row.assocSpectralWindowId;		
+			assocSpectralWindowIdExists = true;
+		}
+		else
+			assocSpectralWindowIdExists = false;
+		
+		if (row.imageSpectralWindowIdExists) {
+			imageSpectralWindowId = row.imageSpectralWindowId;		
+			imageSpectralWindowIdExists = true;
+		}
+		else
+			imageSpectralWindowIdExists = false;
+		
+		if (row.dopplerIdExists) {
+			dopplerId = row.dopplerId;		
+			dopplerIdExists = true;
+		}
+		else
+			dopplerIdExists = false;
+		
 		}	
 	}
 
 	
-	bool SpectralWindowRow::compareNoAutoInc(int numChan, Frequency refFreq, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<Frequency > effectiveBw, vector<Frequency > resolution, Frequency totBandwidth, NetSidebandMod::NetSideband netSideband, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, bool quantization, WindowFunctionMod::WindowFunction windowFunction, bool oversampling, CorrelationBitMod::CorrelationBit correlationBit, bool flagRow) {
+	bool SpectralWindowRow::compareNoAutoInc(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband netSideband, int numChan, Frequency refFreq, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, Frequency totBandwidth, WindowFunctionMod::WindowFunction windowFunction) {
 		bool result;
 		result = true;
 		
+	
+		
+		result = result && (this->basebandName == basebandName);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->netSideband == netSideband);
+		
+		if (!result) return false;
+	
+
 	
 		
 		result = result && (this->numChan == numChan);
@@ -2905,28 +4563,7 @@ correlationBit = CCorrelationBit::from_int(0);
 
 	
 		
-		result = result && (this->chanFreq == chanFreq);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->chanWidth == chanWidth);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->effectiveBw == effectiveBw);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->resolution == resolution);
+		result = result && (this->sidebandProcessingMode == sidebandProcessingMode);
 		
 		if (!result) return false;
 	
@@ -2940,49 +4577,7 @@ correlationBit = CCorrelationBit::from_int(0);
 
 	
 		
-		result = result && (this->netSideband == netSideband);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->sidebandProcessingMode == sidebandProcessingMode);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->quantization == quantization);
-		
-		if (!result) return false;
-	
-
-	
-		
 		result = result && (this->windowFunction == windowFunction);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->oversampling == oversampling);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->correlationBit == correlationBit);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->flagRow == flagRow);
 		
 		if (!result) return false;
 	
@@ -2992,10 +4587,18 @@ correlationBit = CCorrelationBit::from_int(0);
 	
 	
 	
-	bool SpectralWindowRow::compareRequiredValue(int numChan, Frequency refFreq, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<Frequency > effectiveBw, vector<Frequency > resolution, Frequency totBandwidth, NetSidebandMod::NetSideband netSideband, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, bool quantization, WindowFunctionMod::WindowFunction windowFunction, bool oversampling, CorrelationBitMod::CorrelationBit correlationBit, bool flagRow) {
+	bool SpectralWindowRow::compareRequiredValue(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband netSideband, int numChan, Frequency refFreq, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, Frequency totBandwidth, WindowFunctionMod::WindowFunction windowFunction) {
 		bool result;
 		result = true;
 		
+	
+		if (!(this->basebandName == basebandName)) return false;
+	
+
+	
+		if (!(this->netSideband == netSideband)) return false;
+	
+
 	
 		if (!(this->numChan == numChan)) return false;
 	
@@ -3005,19 +4608,7 @@ correlationBit = CCorrelationBit::from_int(0);
 	
 
 	
-		if (!(this->chanFreq == chanFreq)) return false;
-	
-
-	
-		if (!(this->chanWidth == chanWidth)) return false;
-	
-
-	
-		if (!(this->effectiveBw == effectiveBw)) return false;
-	
-
-	
-		if (!(this->resolution == resolution)) return false;
+		if (!(this->sidebandProcessingMode == sidebandProcessingMode)) return false;
 	
 
 	
@@ -3025,31 +4616,7 @@ correlationBit = CCorrelationBit::from_int(0);
 	
 
 	
-		if (!(this->netSideband == netSideband)) return false;
-	
-
-	
-		if (!(this->sidebandProcessingMode == sidebandProcessingMode)) return false;
-	
-
-	
-		if (!(this->quantization == quantization)) return false;
-	
-
-	
 		if (!(this->windowFunction == windowFunction)) return false;
-	
-
-	
-		if (!(this->oversampling == oversampling)) return false;
-	
-
-	
-		if (!(this->correlationBit == correlationBit)) return false;
-	
-
-	
-		if (!(this->flagRow == flagRow)) return false;
 	
 
 		return result;
@@ -3067,33 +4634,19 @@ correlationBit = CCorrelationBit::from_int(0);
 	bool SpectralWindowRow::equalByRequiredValue(SpectralWindowRow* x) {
 		
 			
+		if (this->basebandName != x->basebandName) return false;
+			
+		if (this->netSideband != x->netSideband) return false;
+			
 		if (this->numChan != x->numChan) return false;
 			
 		if (this->refFreq != x->refFreq) return false;
 			
-		if (this->chanFreq != x->chanFreq) return false;
-			
-		if (this->chanWidth != x->chanWidth) return false;
-			
-		if (this->effectiveBw != x->effectiveBw) return false;
-			
-		if (this->resolution != x->resolution) return false;
+		if (this->sidebandProcessingMode != x->sidebandProcessingMode) return false;
 			
 		if (this->totBandwidth != x->totBandwidth) return false;
 			
-		if (this->netSideband != x->netSideband) return false;
-			
-		if (this->sidebandProcessingMode != x->sidebandProcessingMode) return false;
-			
-		if (this->quantization != x->quantization) return false;
-			
 		if (this->windowFunction != x->windowFunction) return false;
-			
-		if (this->oversampling != x->oversampling) return false;
-			
-		if (this->correlationBit != x->correlationBit) return false;
-			
-		if (this->flagRow != x->flagRow) return false;
 			
 		
 		return true;

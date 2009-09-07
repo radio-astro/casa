@@ -14,6 +14,8 @@ namespace asdmbinaries {
 
   const regex  HeaderParser::PROJECTPATH3("([0-9]+)/([0-9]+)/([0-9]+)/");
   const string HeaderParser::SDMDATAHEADER      = "sdmDataHeader";
+  const string HeaderParser::SCHEMAVERSION      = "schemaVersion";
+  const string HeaderParser::BYTEORDER          = "byteOrder";
   const string HeaderParser::PROJECTPATH        = "projectPath";
   const string HeaderParser::STARTTIME          = "startTime";
   const string HeaderParser::DATAOID            = "dataOID";
@@ -28,27 +30,30 @@ namespace asdmbinaries {
   const string HeaderParser::NUMANTENNA         = "numAntenna";
   const string HeaderParser::CORRELATIONMODE    = "correlationMode";
   const string HeaderParser::SPECTRALRESOLUTION = "spectralResolution";
+  const string HeaderParser::PROCESSORTYPE      = "processorType";
   const string HeaderParser::DATASTRUCT         = "dataStruct";
   const string HeaderParser::APC                = "apc";
   const string HeaderParser::REF                = "ref";  
   const string HeaderParser::BASEBAND           = "baseband";
   const string HeaderParser::NAME               = "name";
   const string HeaderParser::SPECTRALWINDOW     = "spectralWindow";
+  const string HeaderParser::SW                 = "sw";
+  const string HeaderParser::SWBB               = "swbb";
   const string HeaderParser::CROSSPOLPRODUCTS   = "crossPolProducts";
   const string HeaderParser::SDPOLPRODUCTS      = "sdPolProducts"; 
   const string HeaderParser::SCALEFACTOR        = "scaleFactor"; 
   const string HeaderParser::NUMSPECTRALPOINT   = "numSpectralPoint";
   const string HeaderParser::NUMBIN             = "numBin";
   const string HeaderParser::SIDEBAND           = "sideband";
-  const string HeaderParser::ID                 = "id";
   const string HeaderParser::IMAGE              = "image";
   const string HeaderParser::FLAGS              = "flags";
   const string HeaderParser::ACTUALTIMES        = "actualTimes";
   const string HeaderParser::ACTUALDURATIONS    = "actualDurations";
   const string HeaderParser::ZEROLAGS           = "zeroLags";
+  const string HeaderParser::CORRELATORTYPE     = "correlatorType";
   const string HeaderParser::CROSSDATA          = "crossData";
   const string HeaderParser::AUTODATA           = "autoData";
-  
+  const string HeaderParser::NORMALIZED         = "normalized";
   const string HeaderParser::SIZE               = "size";
   const string HeaderParser::AXES               = "axes";
   const string HeaderParser::TYPE               = "type";
@@ -58,7 +63,8 @@ namespace asdmbinaries {
 
   const regex  SDMDataObjectParser::PROJECTPATH3("([0-9]+)/([0-9]+)/([0-9]+)/"); 
   const regex  SDMDataObjectParser::PROJECTPATH4("([0-9]+)/([0-9]+)/([0-9]+)/([0-9]+)/");
-  const regex  SDMDataObjectParser::PROJECTPATH5("([0-9]+)/([0-9]+)/([0-9]+)/([0-9]+)/([0-9]+)/"); 
+  const regex  SDMDataObjectParser::PROJECTPATH5("([0-9]+)/([0-9]+)/([0-9]+)/([0-9]+)/([0-9]+)/");
+
 
   const string CorrSubsetHeaderParser::SDMDATASUBSETHEADER = "sdmDataSubsetHeader";
   const string CorrSubsetHeaderParser::PROJECTPATH         = "projectPath";
@@ -139,6 +145,11 @@ namespace asdmbinaries {
     // Look up for the <sdmDataHeader ... element.
     SDMDataObjectParser::isElement(a_node, HeaderParser::SDMDATAHEADER);
 
+    // And parse some of its attributes.
+    sdmDataObject.schemaVersion_ = SDMDataObjectParser::parseIntAttr(a_node, HeaderParser::SCHEMAVERSION);
+    sdmDataObject.byteOrder_ = SDMDataObjectParser::parseByteOrderAttr(a_node, HeaderParser::BYTEORDER);
+
+
     // Look up for its projectPath attribute
     // and determine execBlockNum, scanNum and subscanNum from its projectPath attribute.
     vector<unsigned int> v = SDMDataObjectParser::parseProjectPath(a_node, 3);
@@ -186,6 +197,10 @@ namespace asdmbinaries {
     child = child->next;
     parseSpectralResolution(child, sdmDataObject);    
 
+    // Look up for child <processorType> ... child
+    child = child->next;
+    parseProcessorType(child, sdmDataObject);
+
     // Look up for the <dataStruct> ... child
     child = child->next;
     parseDataStruct(child, sdmDataObject);    
@@ -196,7 +211,7 @@ namespace asdmbinaries {
     
 //     cmatch what;
     
-//     if (regex_match(projectPath.c_str(), what, PROJECTPATH3) && what[0].matched) {
+//     if (regex_match(projectPath.c_str(), what,PROJECTPATH3) && what[0].matched) {
 //       sdmDataObject.execBlockNum(::atoi(what[1].first));
 //       sdmDataObject.scanNum(::atoi(what[2].first));
 //       sdmDataObject.subscanNum(::atoi(what[3].first));
@@ -268,6 +283,11 @@ namespace asdmbinaries {
     sdmDataObject.spectralResolutionType_ = SDMDataObjectParser::parseLiteral<SpectralResolutionType, CSpectralResolutionType>(a_node->children);
   }
 
+  void HeaderParser::parseProcessorType(xmlNode* a_node, SDMDataObject& sdmDataObject) {
+    SDMDataObjectParser::isElement(a_node, HeaderParser::PROCESSORTYPE);
+    sdmDataObject.processorType_ = SDMDataObjectParser::parseLiteral<ProcessorType, CProcessorType>(a_node->children);
+  }
+
   void HeaderParser::parseDataStruct(xmlNode* a_node, SDMDataObject& sdmDataObject){
     SDMDataObjectParser::isElement(a_node, HeaderParser::DATASTRUCT);
 
@@ -299,24 +319,32 @@ namespace asdmbinaries {
     // We have recorded the id and image attributes when they are present in private strings in each spectralWindow.
     //
     
-    // I want a map to associate a string of the form "spw_<int>" to a string of the form "<int>_<int>"
-    // and I define an entry in this map for each spectralWindow with an strId_ non empty, the value
-    // associated is of the form <int>_<int> where the two integers are the coordinates (baseband index, spectralWindow index in the baseband)
+    // I want a map to associate a string of the form "<int>_<int>" to a string of the form "<int>_<int>"
+    // and I define an entry in this map for each spectralWindow with an strSw_ non empty, the value
+    // associated is of the form <int>_<int> where the two integers are the coordinates 
+    // (baseband index, spectralWindow index in the baseband)
     //
     map<string, string> id2int_int;
     ostringstream oss;
 
+    string key, value;
     for (unsigned int ibb = 0; ibb < dataStruct.basebands_.size(); ibb++) {
       vector<SDMDataObject::SpectralWindow>& spws = dataStruct.basebands_.at(ibb).spectralWindows_;
       for (unsigned int ispw = 0; ispw < spws.size(); ispw++) {
-	string id = spws.at(ispw).strId();
-	if (id.size() > 0) {
-	  oss.str("");
-	  oss << ibb << " " << ispw;
-	  id2int_int[id]=oss.str();
-	}
+
+	oss.str("");
+	oss << ibb << " " << ispw;
+	value = oss.str();
+
+	oss.str("");
+	oss << ibb << " " << spws.at(ispw).strSw();
+	key = oss.str();
+
+	id2int_int[key] = value;
+	
       }
     }
+
 
     // Now re scan all the spectralWindows and look for the ones with an strImage_ non empty.
     // and define the associations.
@@ -329,11 +357,14 @@ namespace asdmbinaries {
       for (unsigned int ispw = 0; ispw < spws.size(); ispw++) {
 	string image = spws.at(ispw).strImage();
 	if (image.size() > 0) {
-	  if ((iter = id2int_int.find(image)) != id2int_int.end()) {
+	  oss.str("");
+	  oss << ibb << " " << image;
+	  key = oss.str();
+	  if ((iter = id2int_int.find(key)) != id2int_int.end()) {
 	    iss.str(iter->second);
 	    iss >> ibbImage;
 	    iss >> ispwImage;
-	    dataStruct.imageSPW(ibb, ispw, ibbImage, ispwImage);
+	    dataStruct.imageSPW(ibb, ispw, ispwImage);
 	  }
 	  else {
 	    oss.str("");
@@ -372,14 +403,14 @@ namespace asdmbinaries {
       break;
 
     case AUTO_ONLY : 
-      dataStruct.autoData_ = (parseBinaryPart(child, HeaderParser::AUTODATA));
+      dataStruct.autoData_ = (parseAutoDataBinaryPart(child, HeaderParser::AUTODATA));
       child = child->next;
       break;
 
     case CROSS_AND_AUTO :
       dataStruct.crossData_ = (parseBinaryPart(child, HeaderParser::CROSSDATA));
       child = child->next;
-      dataStruct.autoData_ = (parseBinaryPart(child, HeaderParser::AUTODATA));
+      dataStruct.autoData_ = (parseAutoDataBinaryPart(child, HeaderParser::AUTODATA));
       child = child->next;
       break;
     }
@@ -399,12 +430,24 @@ namespace asdmbinaries {
     }
     */
     
-    // zeroLags are optional in any case now. M. Caillat 24 Jul 2008
+    // zeroLags are allowed only with a non FX correlator.
     if (SDMDataObjectParser::testElement(child, HeaderParser::ZEROLAGS)) {
-      dataStruct.zeroLags_ = (parseBinaryPart(child, HeaderParser::ZEROLAGS));
+      // Reject zeroLags if the context does not allow them	  
+      if (sdmDataObject.processorType_ != CORRELATOR) 
+	throw SDMDataObjectParserException("zeroLags are not expected with the declared processor type ('" +
+					   CProcessorType::name(sdmDataObject.processorType_) + "')");
+      
+      
+      dataStruct.zeroLags_ = (parseZeroLagsBinaryPart(child, HeaderParser::ZEROLAGS));
+      
+      // Reject zeroLags if the context does not allow them ... again
+
+      if (dataStruct.zeroLags_.correlatorType_ == FX)
+	throw SDMDataObjectParserException ("zeroLags are not expected with the declared correlator type ('" +
+					    CCorrelatorType::name(dataStruct.zeroLags_.correlatorType_) + "')");
+      
       child = child->next;
     }
-
 
     sdmDataObject.dataStruct_ = (dataStruct);
   }
@@ -437,6 +480,9 @@ namespace asdmbinaries {
       NetSideband sideband;
 
       SDMDataObject::SpectralWindow spw;
+
+      
+      string dummy = SDMDataObjectParser::parseStringAttr(cur_node, HeaderParser::SWBB);
 
       switch (sdmDataObject.correlationMode()) {
 
@@ -480,9 +526,7 @@ namespace asdmbinaries {
 	break;
       }
 	
-      if (SDMDataObjectParser::hasAttr(cur_node, HeaderParser::ID))
-	spw.strId(SDMDataObjectParser::parseStringAttr(cur_node, HeaderParser::ID));
-      
+      spw.strSw(SDMDataObjectParser::parseStringAttr(cur_node, HeaderParser::SW));
       if (SDMDataObjectParser::hasAttr(cur_node, HeaderParser::IMAGE))
 	spw.strImage(SDMDataObjectParser::parseStringAttr(cur_node, HeaderParser::IMAGE));
       
@@ -494,14 +538,26 @@ namespace asdmbinaries {
   SDMDataObject::BinaryPart HeaderParser::parseBinaryPart(xmlNode* a_node, const string& attachmentName) {
     SDMDataObjectParser::isElement(a_node, attachmentName);
 
- //    SDMDataObject::BinaryPart binaryPart;
-//     binaryPart.size_ = (SDMDataObjectParser::parseIntAttr(a_node, HeaderParser::SIZE));
-//     binaryPart.axes_ = (SDMDataObjectParser::parseStringsAttr<AxisName, CAxisName>(a_node, HeaderParser::AXES));
-
     return SDMDataObject::BinaryPart(SDMDataObjectParser::parseIntAttr(a_node, HeaderParser::SIZE),
 				     SDMDataObjectParser::parseStringsAttr<AxisName, CAxisName>(a_node, HeaderParser::AXES));
   }
 
+  SDMDataObject::AutoDataBinaryPart HeaderParser::parseAutoDataBinaryPart(xmlNode* a_node, const string& attachmentName) {
+    SDMDataObjectParser::isElement(a_node, attachmentName);
+
+    return SDMDataObject::AutoDataBinaryPart(SDMDataObjectParser::parseIntAttr(a_node, HeaderParser::SIZE),
+					     SDMDataObjectParser::parseStringsAttr<AxisName, CAxisName>(a_node, HeaderParser::AXES),
+					     SDMDataObjectParser::parseBoolAttr(a_node, HeaderParser::NORMALIZED));
+  }
+  
+  SDMDataObject::ZeroLagsBinaryPart HeaderParser::parseZeroLagsBinaryPart(xmlNode* a_node, const string& attachmentName) {
+    SDMDataObjectParser::isElement(a_node, attachmentName);
+    
+    return SDMDataObject::ZeroLagsBinaryPart(SDMDataObjectParser::parseIntAttr(a_node, HeaderParser::SIZE),
+					     SDMDataObjectParser::parseStringsAttr<AxisName, CAxisName>(a_node, HeaderParser::AXES),
+					     SDMDataObjectParser::parseStringAttr<CorrelatorType, CCorrelatorType>(a_node, HeaderParser::CORRELATORTYPE));
+  }
+  
   // CorrSubsetHeaderParser methods.
 
   CorrSubsetHeaderParser::CorrSubsetHeaderParser() {
@@ -541,21 +597,10 @@ namespace asdmbinaries {
 
     // Project path.
     vector<unsigned int> v;
-    switch (sdmCorrDataSubset.owner()->spectralResolutionType()) {
-    case FULL_RESOLUTION:
-      v = SDMDataObjectParser::parseProjectPath(a_node, 4); 
-      break;
-    case CHANNEL_AVERAGE: 
-      v = SDMDataObjectParser::parseProjectPath(a_node, 5); 
-      break;
-    case BASEBAND_WIDE: 
-      throw SDMDataObjectParserException("internal error in method 'CorrSubsetHeaderParser::parseSDMDataSubsetHeader'. The constant '"
-					 + CSpectralResolutionType::name(BASEBAND_WIDE)
-					 + "' cannot appear here.");
-      break;      
-    }
+    v = SDMDataObjectParser::parseProjectPath(a_node);     // v should contain 4 (integration) or 5 (subintegration) elements.
     
     // Check conformity of execBlockNum, scanNum and subscanNum.
+
     if (v.at(0)      != sdmCorrDataSubset.owner()->execBlockNum()
 	|| v.at(1)   != sdmCorrDataSubset.owner()->scanNum()
 	|| v.at(2)   != sdmCorrDataSubset.owner()->subscanNum())
@@ -565,17 +610,8 @@ namespace asdmbinaries {
 					 +" '"+sdmCorrDataSubset.owner()->projectPath()+"'"); 
     
     // Determine integrationNum [, subintegrationNum]
-    switch (sdmCorrDataSubset.owner()->spectralResolutionType()) {
-    case FULL_RESOLUTION:
-      sdmCorrDataSubset.integrationNum_    = v.at(3); 
-      break;
-    case CHANNEL_AVERAGE: 
-      sdmCorrDataSubset.integrationNum_    = v.at(3);
-      sdmCorrDataSubset.subintegrationNum_ = v.at(4); 
-      break;
-    case BASEBAND_WIDE: 
-      break; // cannot happen.      
-    }
+    sdmCorrDataSubset.integrationNum_ = v.at(3); 
+    sdmCorrDataSubset.subintegrationNum_ = (v.size() == 5) ? v.at(4) : 0;
     
     // Traverse the children .
     xmlNode* child = a_node->children;
@@ -593,7 +629,7 @@ namespace asdmbinaries {
       // Is it a cancelling [sub]integration ?
       sdmCorrDataSubset.aborted_ = true;
       parseAbortObservation(child, sdmCorrDataSubset);
-    }
+    } 
     else {
       // ... or a sequence of attachments description.
       if (SDMDataObjectParser::testElement(child, FLAGSREF)) {
@@ -1001,19 +1037,33 @@ namespace asdmbinaries {
   }
 
   int SDMDataObjectParser::parseInt(xmlNode* a_node) {
+    
     if ((a_node != NULL) && (a_node->next == NULL)) {
-      istringstream in;
-      in.str((const char*) a_node->content);
-      int x;
-      in >> x;
-      if (in.rdstate() == istream::failbit)
-			throw SDMDataObjectParserException("failed to parse '"+string((const char*)a_node->content)+"' as an int in " + string((const char*)a_node->parent->name));
-      return x;
+      const regex UINT("[0-9]+");
+      cmatch what;
+      if (regex_match((char*)a_node->content, what, UINT)) {
+	return (::atoi(what[0].first));
+      }
+      else
+	throw SDMDataObjectParserException("failed to parse '"+string((const char*)a_node->content)+"' as an int in " + string((const char*)a_node->parent->name));
     }
 
     throw SDMDataObjectParserException("Invalid node , can't be parsed into an int");
   }
 
+  bool SDMDataObjectParser::parseBool(xmlNode* a_node) {
+    if ((a_node != NULL) && (a_node->next == NULL)) {
+      const regex TORF("true|false");
+      cmatch what;
+      if (regex_match((char*)a_node->content, what, TORF)) {
+	return ( *(what[0].first) == 't') ? true:false;
+      }
+      else
+	throw SDMDataObjectParserException("failed to parse '"+string((const char*)a_node->content)+"' as an int in " + string((const char*)a_node->parent->name));
+    }
+
+    throw SDMDataObjectParserException("Invalid node , can't be parsed into an bool");    
+  }
 
   float SDMDataObjectParser::parseFloat(xmlNode* a_node) {
     if ((a_node != NULL) && (a_node->next == NULL)) {
@@ -1034,12 +1084,20 @@ namespace asdmbinaries {
 
     if ((attr = hasAttr(a_node, attrName))) {
       int result =parseInt(attr->children);
-      //cout << attr->name << " = " << result << endl;
-      return result;
+       return result;
     }
     else throw SDMDataObjectParserException("could not find attribute '" + attrName + "' in " + string((const char*)a_node->name));    
   }
 
+  bool SDMDataObjectParser::parseBoolAttr(xmlNode* a_node, const string& attrName) {
+    xmlAttr* attr = 0;
+
+    if ((attr = hasAttr(a_node, attrName))) {
+      bool result = parseBool(attr->children);
+      return result;
+    }
+    else throw SDMDataObjectParserException("could not find attribute '" + attrName + "' in " + string((const char*)a_node->name));    
+  }
 
   float SDMDataObjectParser::parseFloatAttr(xmlNode* a_node, const string& attrName) {
     xmlAttr* attr = 0;
@@ -1109,6 +1167,40 @@ namespace asdmbinaries {
       result.push_back(::atoi(what[i+1].first));
     }
     return result;
+  }
+
+  const regex  SDMDataObjectParser::PROJECTPATH4OR5("([0-9]+)/([0-9]+)/([0-9]+)/([0-9]+)/([0-9]+/)?");
+  vector<unsigned int> SDMDataObjectParser::parseProjectPath(xmlNode* a_node) {
+    string projectPath = SDMDataObjectParser::parseStringAttr(a_node, HeaderParser::PROJECTPATH);
+    vector<unsigned int> result;
+    
+    bool matched = true;
+    cmatch what;
+    
+    matched = regex_match(projectPath.c_str(), what, PROJECTPATH4OR5);
+    
+    if (!matched)
+      throw SDMDataObjectException("'" + projectPath + "' is an invalid string for a 'projectPath' attribute.");
+
+    // Let's retrieve the 4 first numbers.
+    for (unsigned int i = 0; i < 4; i++)
+      result.push_back(::atoi(what[i+1].first));
+		       
+    // and the fifth if it exists...
+    if (what[5].matched) {
+      result.push_back(::atoi(what[5].first));
+    }
+    
+    return result;
+  }
+
+  const ByteOrder* SDMDataObjectParser::parseByteOrderAttr(xmlNode* a_node, const string& attrName) {
+    string byteOrder = SDMDataObjectParser::parseStringAttr(a_node, attrName);
+
+    if (byteOrder.compare("Little_Endian")==0) return ByteOrder::Little_Endian;
+    if (byteOrder.compare("Big_Endian")==0) return ByteOrder::Big_Endian;
+
+    throw SDMDataObjectParserException("'" + byteOrder + "' is an invalid string for a 'byteOrder' attribute.");
   }
 
   SDMDataObjectParser::SDMDataObjectParser() {;}

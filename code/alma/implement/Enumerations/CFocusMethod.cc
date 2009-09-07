@@ -37,12 +37,25 @@
 #include <string>
 using namespace std;
 
+
+int CFocusMethod::version() {
+	return FocusMethodMod::version;
+	}
+	
+string CFocusMethod::revision () {
+	return FocusMethodMod::revision;
+}
+
+unsigned int CFocusMethod::size() {
+	return 2;
+	}
+	
 	
 const std::string& CFocusMethod::sTHREE_POINT = "THREE_POINT";
 	
 const std::string& CFocusMethod::sFIVE_POINT = "FIVE_POINT";
 	
-const std::vector<std::string> CFocusMethod::sFocusMethodSet() {
+const std::vector<std::string> CFocusMethod::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CFocusMethod::sTHREE_POINT);
@@ -51,25 +64,6 @@ const std::vector<std::string> CFocusMethod::sFocusMethodSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CFocusMethod::hTHREE_POINT = "Three-point measurement";
-	
-const std::string& CFocusMethod::hFIVE_POINT = "Five-point measurement";
-	
-const std::vector<std::string> CFocusMethod::hFocusMethodSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CFocusMethod::hTHREE_POINT);
-    
-    enumSet.insert(enumSet.end(), CFocusMethod::hFIVE_POINT);
-        
-    return enumSet;
-}
-   	
 
 std::string CFocusMethod::name(const FocusMethodMod::FocusMethod& f) {
     switch (f) {
@@ -81,25 +75,9 @@ std::string CFocusMethod::name(const FocusMethodMod::FocusMethod& f) {
       return CFocusMethod::sFIVE_POINT;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CFocusMethod::help(const FocusMethodMod::FocusMethod& f) {
-    switch (f) {
-    
-    case FocusMethodMod::THREE_POINT:
-      return CFocusMethod::hTHREE_POINT;
-    
-    case FocusMethodMod::FIVE_POINT:
-      return CFocusMethod::hFIVE_POINT;
-    	
-    }
-    return std::string("");
-}
-   	
 
 FocusMethodMod::FocusMethod CFocusMethod::newFocusMethod(const std::string& name) {
 		
@@ -128,12 +106,10 @@ FocusMethodMod::FocusMethod CFocusMethod::literal(const std::string& name) {
 }
 
 FocusMethodMod::FocusMethod CFocusMethod::from_int(unsigned int i) {
-	vector<string> names = sFocusMethodSet();
-	if (i >= names.size()) throw badInt(i);
-	return newFocusMethod(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newFocusMethod(names_.at(i));
 }
-
-	
 
 string CFocusMethod::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'FocusMethod'.";

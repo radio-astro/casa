@@ -38,15 +38,15 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<PointingMethod,EnumPar<void> >
-     (PointingMethodMod::THREE_POINT,ep((int)PointingMethodMod::THREE_POINT,"THREE_POINT","Three-point scan")));
+     (PointingMethodMod::THREE_POINT,ep((int)PointingMethodMod::THREE_POINT,"THREE_POINT","un-documented")));
     m_.insert(pair<PointingMethod,EnumPar<void> >
-     (PointingMethodMod::FOUR_POINT,ep((int)PointingMethodMod::FOUR_POINT,"FOUR_POINT","Four-point scan")));
+     (PointingMethodMod::FOUR_POINT,ep((int)PointingMethodMod::FOUR_POINT,"FOUR_POINT","un-documented")));
     m_.insert(pair<PointingMethod,EnumPar<void> >
-     (PointingMethodMod::FIVE_POINT,ep((int)PointingMethodMod::FIVE_POINT,"FIVE_POINT","Five-point scan")));
+     (PointingMethodMod::FIVE_POINT,ep((int)PointingMethodMod::FIVE_POINT,"FIVE_POINT","un-documented")));
     m_.insert(pair<PointingMethod,EnumPar<void> >
-     (PointingMethodMod::CROSS,ep((int)PointingMethodMod::CROSS,"CROSS","Cross scan")));
+     (PointingMethodMod::CROSS,ep((int)PointingMethodMod::CROSS,"CROSS","un-documented")));
     m_.insert(pair<PointingMethod,EnumPar<void> >
-     (PointingMethodMod::CIRCLE,ep((int)PointingMethodMod::CIRCLE,"CIRCLE","Circular scan")));
+     (PointingMethodMod::CIRCLE,ep((int)PointingMethodMod::CIRCLE,"CIRCLE","un-documented")));
     return true;
   }
   static map<PointingMethod,EnumPar<void> > m_;

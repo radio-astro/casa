@@ -98,8 +98,38 @@ namespace asdm {
 		
 		
 			
+		x->startTimeObserved = startTimeObserved.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->endTimeObserved = endTimeObserved.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->execBlockUID = execBlockUID.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
 				
-		x->numScan = numScan;
+		x->calDataType = calDataType;
  				
  			
 		
@@ -108,12 +138,22 @@ namespace asdm {
 	
   		
 		
-		x->frequencyGroupExists = frequencyGroupExists;
+		
+			
+				
+		x->calType = calType;
+ 				
+ 			
+		
+	
+
+	
+  		
 		
 		
 			
 				
-		x->frequencyGroup = frequencyGroup;
+		x->numScan = numScan;
  				
  			
 		
@@ -139,25 +179,25 @@ namespace asdm {
 	
   		
 		
+		x->assocCalDataIdExists = assocCalDataIdExists;
+		
 		
 			
-				
-		x->calType = calType;
- 				
- 			
+		x->assocCalDataId = assocCalDataId.toIDLTag();
+			
 		
 	
 
 	
   		
 		
-		x->freqGroupNameExists = freqGroupNameExists;
+		x->assocCalNatureExists = assocCalNatureExists;
 		
 		
 			
 				
-		x->freqGroupName = CORBA::string_dup(freqGroupName.c_str());
-				
+		x->assocCalNature = assocCalNature;
+ 				
  			
 		
 	
@@ -169,48 +209,14 @@ namespace asdm {
 		
 		
 			
-				
-		x->fieldName = CORBA::string_dup(fieldName.c_str());
-				
- 			
-		
-	
-
-	
-  		
-		
-		x->fieldCodeExists = fieldCodeExists;
-		
-		
-			
-		x->fieldCode.length(fieldCode.size());
-		for (unsigned int i = 0; i < fieldCode.size(); ++i) {
+		x->fieldName.length(fieldName.size());
+		for (unsigned int i = 0; i < fieldName.size(); ++i) {
 			
 				
-			x->fieldCode[i] = CORBA::string_dup(fieldCode.at(i).c_str());
+			x->fieldName[i] = CORBA::string_dup(fieldName.at(i).c_str());
 				
 	 		
 	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->startTimeObserved = startTimeObserved.toIDLArrayTime();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->endTimeObserved = endTimeObserved.toIDLArrayTime();
 			
 		
 	
@@ -273,44 +279,6 @@ namespace asdm {
 	
 
 	
-  		
-		
-		x->assocCalDataIdExists = assocCalDataIdExists;
-		
-		
-			
-		x->assocCalDataId = assocCalDataId.toIDLTag();
-			
-		
-	
-
-	
-  		
-		
-		x->assocCalNatureExists = assocCalNatureExists;
-		
-		
-			
-				
-		x->assocCalNature = assocCalNature;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->calDataType = calDataType;
- 				
- 			
-		
-	
-
-	
 	
 		
 		
@@ -325,7 +293,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalDataRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalDataRow::setFromIDL (CalDataRowIDL x) throw(ConversionException) {
+	void CalDataRow::setFromIDL (CalDataRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -337,106 +305,6 @@ namespace asdm {
 		setCalDataId(Tag (x.calDataId));
 			
  		
-		
-	
-
-	
-		
-		
-			
-		setNumScan(x.numScan);
-  			
- 		
-		
-	
-
-	
-		
-		frequencyGroupExists = x.frequencyGroupExists;
-		if (x.frequencyGroupExists) {
-		
-		
-			
-		setFrequencyGroup(x.frequencyGroup);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		
-			
-		scanSet .clear();
-		for (unsigned int i = 0; i <x.scanSet.length(); ++i) {
-			
-			scanSet.push_back(x.scanSet[i]);
-  			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		setCalType(x.calType);
-  			
- 		
-		
-	
-
-	
-		
-		freqGroupNameExists = x.freqGroupNameExists;
-		if (x.freqGroupNameExists) {
-		
-		
-			
-		setFreqGroupName(string (x.freqGroupName));
-			
- 		
-		
-		}
-		
-	
-
-	
-		
-		fieldNameExists = x.fieldNameExists;
-		if (x.fieldNameExists) {
-		
-		
-			
-		setFieldName(string (x.fieldName));
-			
- 		
-		
-		}
-		
-	
-
-	
-		
-		fieldCodeExists = x.fieldCodeExists;
-		if (x.fieldCodeExists) {
-		
-		
-			
-		fieldCode .clear();
-		for (unsigned int i = 0; i <x.fieldCode.length(); ++i) {
-			
-			fieldCode.push_back(string (x.fieldCode[i]));
-			
-		}
-			
-  		
-		
-		}
 		
 	
 
@@ -457,6 +325,111 @@ namespace asdm {
 		setEndTimeObserved(ArrayTime (x.endTimeObserved));
 			
  		
+		
+	
+
+	
+		
+		
+			
+		setExecBlockUID(EntityRef (x.execBlockUID));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setCalDataType(x.calDataType);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setCalType(x.calType);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumScan(x.numScan);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		scanSet .clear();
+		for (unsigned int i = 0; i <x.scanSet.length(); ++i) {
+			
+			scanSet.push_back(x.scanSet[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		assocCalDataIdExists = x.assocCalDataIdExists;
+		if (x.assocCalDataIdExists) {
+		
+		
+			
+		setAssocCalDataId(Tag (x.assocCalDataId));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		assocCalNatureExists = x.assocCalNatureExists;
+		if (x.assocCalNatureExists) {
+		
+		
+			
+		setAssocCalNature(x.assocCalNature);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		fieldNameExists = x.fieldNameExists;
+		if (x.fieldNameExists) {
+		
+		
+			
+		fieldName .clear();
+		for (unsigned int i = 0; i <x.fieldName.length(); ++i) {
+			
+			fieldName.push_back(string (x.fieldName[i]));
+			
+		}
+			
+  		
+		
+		}
 		
 	
 
@@ -521,50 +494,10 @@ namespace asdm {
 	
 
 	
-		
-		assocCalDataIdExists = x.assocCalDataIdExists;
-		if (x.assocCalDataIdExists) {
-		
-		
-			
-		setAssocCalDataId(Tag (x.assocCalDataId));
-			
- 		
-		
-		}
-		
-	
-
-	
-		
-		assocCalNatureExists = x.assocCalNatureExists;
-		if (x.assocCalNatureExists) {
-		
-		
-			
-		setAssocCalNature(x.assocCalNature);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		
-			
-		setCalDataType(x.calDataType);
-  			
- 		
-		
-	
-
-	
 	
 		
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalData");
+			throw ConversionException (err.getMessage(),"CalData");
 		}
 	}
 #endif
@@ -590,27 +523,31 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numScan, "numScan", buf);
+		Parser::toXML(startTimeObserved, "startTimeObserved", buf);
 		
 		
 	
 
   	
  		
-		if (frequencyGroupExists) {
 		
+		Parser::toXML(endTimeObserved, "endTimeObserved", buf);
 		
-		Parser::toXML(frequencyGroup, "frequencyGroup", buf);
-		
-		
-		}
 		
 	
 
   	
  		
 		
-		Parser::toXML(scanSet, "scanSet", buf);
+		Parser::toXML(execBlockUID, "execBlockUID", buf);
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("calDataType", calDataType));
 		
 		
 	
@@ -625,10 +562,38 @@ namespace asdm {
 
   	
  		
-		if (freqGroupNameExists) {
+		
+		Parser::toXML(numScan, "numScan", buf);
 		
 		
-		Parser::toXML(freqGroupName, "freqGroupName", buf);
+	
+
+  	
+ 		
+		
+		Parser::toXML(scanSet, "scanSet", buf);
+		
+		
+	
+
+  	
+ 		
+		if (assocCalDataIdExists) {
+		
+		
+		Parser::toXML(assocCalDataId, "assocCalDataId", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (assocCalNatureExists) {
+		
+		
+			buf.append(EnumerationParser::toXML("assocCalNature", assocCalNature));
 		
 		
 		}
@@ -644,34 +609,6 @@ namespace asdm {
 		
 		
 		}
-		
-	
-
-  	
- 		
-		if (fieldCodeExists) {
-		
-		
-		Parser::toXML(fieldCode, "fieldCode", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(startTimeObserved, "startTimeObserved", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(endTimeObserved, "endTimeObserved", buf);
-		
 		
 	
 
@@ -711,38 +648,6 @@ namespace asdm {
 		
 	
 
-  	
- 		
-		if (assocCalDataIdExists) {
-		
-		
-		Parser::toXML(assocCalDataId, "assocCalDataId", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (assocCalNatureExists) {
-		
-		
-			buf.append(EnumerationParser::toXML("assocCalNature", assocCalNature));
-		
-		
-		}
-		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("calDataType", calDataType));
-		
-		
-	
-
 	
 	
 		
@@ -756,7 +661,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalDataRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalDataRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -773,28 +678,34 @@ namespace asdm {
 	
   		
 			
-	  	setNumScan(Parser::getInteger("numScan","CalData",rowDoc));
+	  	setStartTimeObserved(Parser::getArrayTime("startTimeObserved","CalData",rowDoc));
 			
 		
 	
 
 	
   		
-        if (row.isStr("<frequencyGroup>")) {
 			
-	  		setFrequencyGroup(Parser::getInteger("frequencyGroup","CalData",rowDoc));
+	  	setEndTimeObserved(Parser::getArrayTime("endTimeObserved","CalData",rowDoc));
 			
-		}
- 		
+		
 	
 
 	
   		
 			
-					
-	  	setScanSet(Parser::get1DInteger("scanSet","CalData",rowDoc));
-	  			
-	  		
+	  	setExecBlockUID(Parser::getEntityRef("execBlockUID","CalData",rowDoc));
+			
+		
+	
+
+	
+		
+		
+		
+		calDataType = EnumerationParser::getCalDataOrigin("calDataType","CalData",rowDoc);
+		
+		
 		
 	
 
@@ -810,50 +721,57 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<freqGroupName>")) {
 			
-	  		setFreqGroupName(Parser::getString("freqGroupName","CalData",rowDoc));
+	  	setNumScan(Parser::getInteger("numScan","CalData",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+					
+	  	setScanSet(Parser::get1DInteger("scanSet","CalData",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+        if (row.isStr("<assocCalDataId>")) {
+			
+	  		setAssocCalDataId(Parser::getTag("assocCalDataId","CalData",rowDoc));
 			
 		}
  		
+	
+
+	
+		
+	if (row.isStr("<assocCalNature>")) {
+		
+		
+		
+		assocCalNature = EnumerationParser::getAssociatedCalNature("assocCalNature","CalData",rowDoc);
+		
+		
+		
+		assocCalNatureExists = true;
+	}
+		
 	
 
 	
   		
         if (row.isStr("<fieldName>")) {
 			
-	  		setFieldName(Parser::getString("fieldName","CalData",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<fieldCode>")) {
-			
 								
-	  		setFieldCode(Parser::get1DString("fieldCode","CalData",rowDoc));
+	  		setFieldName(Parser::get1DString("fieldName","CalData",rowDoc));
 	  			
 	  		
 		}
  		
-	
-
-	
-  		
-			
-	  	setStartTimeObserved(Parser::getArrayTime("startTimeObserved","CalData",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setEndTimeObserved(Parser::getArrayTime("endTimeObserved","CalData",rowDoc));
-			
-		
 	
 
 	
@@ -896,46 +814,393 @@ namespace asdm {
 	
 
 	
-  		
-        if (row.isStr("<assocCalDataId>")) {
-			
-	  		setAssocCalDataId(Parser::getTag("assocCalDataId","CalData",rowDoc));
-			
-		}
- 		
-	
-
-	
-		
-	if (row.isStr("<assocCalNature>")) {
-		
-		
-		
-		assocCalNature = EnumerationParser::getAssociatedCalNature("assocCalNature","CalData",rowDoc);
-		
-		
-		
-		assocCalNatureExists = true;
-	}
-		
-	
-
-	
-		
-		
-		
-		calDataType = EnumerationParser::getCalDataOrigin("calDataType","CalData",rowDoc);
-		
-		
-		
-	
-
-	
 	
 		
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"CalData");
 		}
+	}
+	
+	void CalDataRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startTimeObserved.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endTimeObserved.toBin(eoss);
+		
+	
+
+	
+	
+		
+	execBlockUID.toBin(eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(calDataType);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(calType);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numScan);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) scanSet.size());
+		for (unsigned int i = 0; i < scanSet.size(); i++)
+				
+			eoss.writeInt(scanSet.at(i));
+				
+				
+						
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(assocCalDataIdExists);
+	if (assocCalDataIdExists) {
+	
+	
+	
+		
+	assocCalDataId.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(assocCalNatureExists);
+	if (assocCalNatureExists) {
+	
+	
+	
+		
+					
+			eoss.writeInt(assocCalNature);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(fieldNameExists);
+	if (fieldNameExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) fieldName.size());
+		for (unsigned int i = 0; i < fieldName.size(); i++)
+				
+			eoss.writeString(fieldName.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(sourceNameExists);
+	if (sourceNameExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) sourceName.size());
+		for (unsigned int i = 0; i < sourceName.size(); i++)
+				
+			eoss.writeString(sourceName.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(sourceCodeExists);
+	if (sourceCodeExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) sourceCode.size());
+		for (unsigned int i = 0; i < sourceCode.size(); i++)
+				
+			eoss.writeString(sourceCode.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(scanIntentExists);
+	if (scanIntentExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) scanIntent.size());
+		for (unsigned int i = 0; i < scanIntent.size(); i++)
+				
+			eoss.writeInt(scanIntent.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	}
+	
+	CalDataRow* CalDataRow::fromBin(EndianISStream& eiss, CalDataTable& table) {
+		CalDataRow* row = new  CalDataRow(table);
+		
+		
+		
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startTimeObserved =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endTimeObserved =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->execBlockUID =  EntityRef::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->calDataType = CCalDataOrigin::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->calType = CCalType::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->numScan =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->scanSet.clear();
+		
+		unsigned int scanSetDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < scanSetDim1; i++)
+			
+			row->scanSet.push_back(eiss.readInt());
+			
+	
+
+		
+	
+
+		
+		
+		
+	row->assocCalDataIdExists = eiss.readBoolean();
+	if (row->assocCalDataIdExists) {
+		
+	
+		
+		
+		row->assocCalDataId =  Tag::fromBin(eiss);
+		
+	
+
+	}
+
+	row->assocCalNatureExists = eiss.readBoolean();
+	if (row->assocCalNatureExists) {
+		
+	
+	
+		
+			
+		row->assocCalNature = CAssociatedCalNature::from_int(eiss.readInt());
+			
+		
+	
+
+	}
+
+	row->fieldNameExists = eiss.readBoolean();
+	if (row->fieldNameExists) {
+		
+	
+	
+		
+			
+	
+		row->fieldName.clear();
+		
+		unsigned int fieldNameDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < fieldNameDim1; i++)
+			
+			row->fieldName.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	}
+
+	row->sourceNameExists = eiss.readBoolean();
+	if (row->sourceNameExists) {
+		
+	
+	
+		
+			
+	
+		row->sourceName.clear();
+		
+		unsigned int sourceNameDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < sourceNameDim1; i++)
+			
+			row->sourceName.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	}
+
+	row->sourceCodeExists = eiss.readBoolean();
+	if (row->sourceCodeExists) {
+		
+	
+	
+		
+			
+	
+		row->sourceCode.clear();
+		
+		unsigned int sourceCodeDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < sourceCodeDim1; i++)
+			
+			row->sourceCode.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	}
+
+	row->scanIntentExists = eiss.readBoolean();
+	if (row->scanIntentExists) {
+		
+	
+	
+		
+			
+	
+		row->scanIntent.clear();
+		
+		unsigned int scanIntentDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < scanIntentDim1; i++)
+			
+			row->scanIntent.push_back(CScanIntent::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -976,290 +1241,6 @@ namespace asdm {
 	
  	}
 	
-	
-
-	
-
-	
- 	/**
- 	 * Get numScan.
- 	 * @return numScan as int
- 	 */
- 	int CalDataRow::getNumScan() const {
-	
-  		return numScan;
- 	}
-
- 	/**
- 	 * Set numScan with the specified int.
- 	 * @param numScan The int value to which numScan is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalDataRow::setNumScan (int numScan)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numScan = numScan;
-	
- 	}
-	
-	
-
-	
-	/**
-	 * The attribute frequencyGroup is optional. Return true if this attribute exists.
-	 * @return true if and only if the frequencyGroup attribute exists. 
-	 */
-	bool CalDataRow::isFrequencyGroupExists() const {
-		return frequencyGroupExists;
-	}
-	
-
-	
- 	/**
- 	 * Get frequencyGroup, which is optional.
- 	 * @return frequencyGroup as int
- 	 * @throw IllegalAccessException If frequencyGroup does not exist.
- 	 */
- 	int CalDataRow::getFrequencyGroup() const throw(IllegalAccessException) {
-		if (!frequencyGroupExists) {
-			throw IllegalAccessException("frequencyGroup", "CalData");
-		}
-	
-  		return frequencyGroup;
- 	}
-
- 	/**
- 	 * Set frequencyGroup with the specified int.
- 	 * @param frequencyGroup The int value to which frequencyGroup is to be set.
- 	 
- 	
- 	 */
- 	void CalDataRow::setFrequencyGroup (int frequencyGroup) {
-	
- 		this->frequencyGroup = frequencyGroup;
-	
-		frequencyGroupExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark frequencyGroup, which is an optional field, as non-existent.
-	 */
-	void CalDataRow::clearFrequencyGroup () {
-		frequencyGroupExists = false;
-	}
-	
-
-	
-
-	
- 	/**
- 	 * Get scanSet.
- 	 * @return scanSet as vector<int >
- 	 */
- 	vector<int > CalDataRow::getScanSet() const {
-	
-  		return scanSet;
- 	}
-
- 	/**
- 	 * Set scanSet with the specified vector<int >.
- 	 * @param scanSet The vector<int > value to which scanSet is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalDataRow::setScanSet (vector<int > scanSet)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->scanSet = scanSet;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get calType.
- 	 * @return calType as CalTypeMod::CalType
- 	 */
- 	CalTypeMod::CalType CalDataRow::getCalType() const {
-	
-  		return calType;
- 	}
-
- 	/**
- 	 * Set calType with the specified CalTypeMod::CalType.
- 	 * @param calType The CalTypeMod::CalType value to which calType is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalDataRow::setCalType (CalTypeMod::CalType calType)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->calType = calType;
-	
- 	}
-	
-	
-
-	
-	/**
-	 * The attribute freqGroupName is optional. Return true if this attribute exists.
-	 * @return true if and only if the freqGroupName attribute exists. 
-	 */
-	bool CalDataRow::isFreqGroupNameExists() const {
-		return freqGroupNameExists;
-	}
-	
-
-	
- 	/**
- 	 * Get freqGroupName, which is optional.
- 	 * @return freqGroupName as string
- 	 * @throw IllegalAccessException If freqGroupName does not exist.
- 	 */
- 	string CalDataRow::getFreqGroupName() const throw(IllegalAccessException) {
-		if (!freqGroupNameExists) {
-			throw IllegalAccessException("freqGroupName", "CalData");
-		}
-	
-  		return freqGroupName;
- 	}
-
- 	/**
- 	 * Set freqGroupName with the specified string.
- 	 * @param freqGroupName The string value to which freqGroupName is to be set.
- 	 
- 	
- 	 */
- 	void CalDataRow::setFreqGroupName (string freqGroupName) {
-	
- 		this->freqGroupName = freqGroupName;
-	
-		freqGroupNameExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark freqGroupName, which is an optional field, as non-existent.
-	 */
-	void CalDataRow::clearFreqGroupName () {
-		freqGroupNameExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute fieldName is optional. Return true if this attribute exists.
-	 * @return true if and only if the fieldName attribute exists. 
-	 */
-	bool CalDataRow::isFieldNameExists() const {
-		return fieldNameExists;
-	}
-	
-
-	
- 	/**
- 	 * Get fieldName, which is optional.
- 	 * @return fieldName as string
- 	 * @throw IllegalAccessException If fieldName does not exist.
- 	 */
- 	string CalDataRow::getFieldName() const throw(IllegalAccessException) {
-		if (!fieldNameExists) {
-			throw IllegalAccessException("fieldName", "CalData");
-		}
-	
-  		return fieldName;
- 	}
-
- 	/**
- 	 * Set fieldName with the specified string.
- 	 * @param fieldName The string value to which fieldName is to be set.
- 	 
- 	
- 	 */
- 	void CalDataRow::setFieldName (string fieldName) {
-	
- 		this->fieldName = fieldName;
-	
-		fieldNameExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark fieldName, which is an optional field, as non-existent.
-	 */
-	void CalDataRow::clearFieldName () {
-		fieldNameExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute fieldCode is optional. Return true if this attribute exists.
-	 * @return true if and only if the fieldCode attribute exists. 
-	 */
-	bool CalDataRow::isFieldCodeExists() const {
-		return fieldCodeExists;
-	}
-	
-
-	
- 	/**
- 	 * Get fieldCode, which is optional.
- 	 * @return fieldCode as vector<string >
- 	 * @throw IllegalAccessException If fieldCode does not exist.
- 	 */
- 	vector<string > CalDataRow::getFieldCode() const throw(IllegalAccessException) {
-		if (!fieldCodeExists) {
-			throw IllegalAccessException("fieldCode", "CalData");
-		}
-	
-  		return fieldCode;
- 	}
-
- 	/**
- 	 * Set fieldCode with the specified vector<string >.
- 	 * @param fieldCode The vector<string > value to which fieldCode is to be set.
- 	 
- 	
- 	 */
- 	void CalDataRow::setFieldCode (vector<string > fieldCode) {
-	
- 		this->fieldCode = fieldCode;
-	
-		fieldCodeExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark fieldCode, which is an optional field, as non-existent.
-	 */
-	void CalDataRow::clearFieldCode () {
-		fieldCodeExists = false;
-	}
 	
 
 	
@@ -1327,144 +1308,163 @@ namespace asdm {
 	
 
 	
-	/**
-	 * The attribute sourceName is optional. Return true if this attribute exists.
-	 * @return true if and only if the sourceName attribute exists. 
-	 */
-	bool CalDataRow::isSourceNameExists() const {
-		return sourceNameExists;
-	}
-	
 
 	
  	/**
- 	 * Get sourceName, which is optional.
- 	 * @return sourceName as vector<string >
- 	 * @throw IllegalAccessException If sourceName does not exist.
+ 	 * Get execBlockUID.
+ 	 * @return execBlockUID as EntityRef
  	 */
- 	vector<string > CalDataRow::getSourceName() const throw(IllegalAccessException) {
-		if (!sourceNameExists) {
-			throw IllegalAccessException("sourceName", "CalData");
-		}
+ 	EntityRef CalDataRow::getExecBlockUID() const {
 	
-  		return sourceName;
+  		return execBlockUID;
  	}
 
  	/**
- 	 * Set sourceName with the specified vector<string >.
- 	 * @param sourceName The vector<string > value to which sourceName is to be set.
+ 	 * Set execBlockUID with the specified EntityRef.
+ 	 * @param execBlockUID The EntityRef value to which execBlockUID is to be set.
  	 
  	
+ 		
  	 */
- 	void CalDataRow::setSourceName (vector<string > sourceName) {
-	
- 		this->sourceName = sourceName;
-	
-		sourceNameExists = true;
+ 	void CalDataRow::setExecBlockUID (EntityRef execBlockUID)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->execBlockUID = execBlockUID;
 	
  	}
 	
 	
-	/**
-	 * Mark sourceName, which is an optional field, as non-existent.
-	 */
-	void CalDataRow::clearSourceName () {
-		sourceNameExists = false;
-	}
-	
 
-	
-	/**
-	 * The attribute sourceCode is optional. Return true if this attribute exists.
-	 * @return true if and only if the sourceCode attribute exists. 
-	 */
-	bool CalDataRow::isSourceCodeExists() const {
-		return sourceCodeExists;
-	}
 	
 
 	
  	/**
- 	 * Get sourceCode, which is optional.
- 	 * @return sourceCode as vector<string >
- 	 * @throw IllegalAccessException If sourceCode does not exist.
+ 	 * Get calDataType.
+ 	 * @return calDataType as CalDataOriginMod::CalDataOrigin
  	 */
- 	vector<string > CalDataRow::getSourceCode() const throw(IllegalAccessException) {
-		if (!sourceCodeExists) {
-			throw IllegalAccessException("sourceCode", "CalData");
-		}
+ 	CalDataOriginMod::CalDataOrigin CalDataRow::getCalDataType() const {
 	
-  		return sourceCode;
+  		return calDataType;
  	}
 
  	/**
- 	 * Set sourceCode with the specified vector<string >.
- 	 * @param sourceCode The vector<string > value to which sourceCode is to be set.
+ 	 * Set calDataType with the specified CalDataOriginMod::CalDataOrigin.
+ 	 * @param calDataType The CalDataOriginMod::CalDataOrigin value to which calDataType is to be set.
  	 
  	
+ 		
  	 */
- 	void CalDataRow::setSourceCode (vector<string > sourceCode) {
-	
- 		this->sourceCode = sourceCode;
-	
-		sourceCodeExists = true;
+ 	void CalDataRow::setCalDataType (CalDataOriginMod::CalDataOrigin calDataType)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->calDataType = calDataType;
 	
  	}
 	
 	
-	/**
-	 * Mark sourceCode, which is an optional field, as non-existent.
-	 */
-	void CalDataRow::clearSourceCode () {
-		sourceCodeExists = false;
-	}
-	
 
-	
-	/**
-	 * The attribute scanIntent is optional. Return true if this attribute exists.
-	 * @return true if and only if the scanIntent attribute exists. 
-	 */
-	bool CalDataRow::isScanIntentExists() const {
-		return scanIntentExists;
-	}
 	
 
 	
  	/**
- 	 * Get scanIntent, which is optional.
- 	 * @return scanIntent as vector<ScanIntentMod::ScanIntent >
- 	 * @throw IllegalAccessException If scanIntent does not exist.
+ 	 * Get calType.
+ 	 * @return calType as CalTypeMod::CalType
  	 */
- 	vector<ScanIntentMod::ScanIntent > CalDataRow::getScanIntent() const throw(IllegalAccessException) {
-		if (!scanIntentExists) {
-			throw IllegalAccessException("scanIntent", "CalData");
-		}
+ 	CalTypeMod::CalType CalDataRow::getCalType() const {
 	
-  		return scanIntent;
+  		return calType;
  	}
 
  	/**
- 	 * Set scanIntent with the specified vector<ScanIntentMod::ScanIntent >.
- 	 * @param scanIntent The vector<ScanIntentMod::ScanIntent > value to which scanIntent is to be set.
+ 	 * Set calType with the specified CalTypeMod::CalType.
+ 	 * @param calType The CalTypeMod::CalType value to which calType is to be set.
  	 
  	
+ 		
  	 */
- 	void CalDataRow::setScanIntent (vector<ScanIntentMod::ScanIntent > scanIntent) {
-	
- 		this->scanIntent = scanIntent;
-	
-		scanIntentExists = true;
+ 	void CalDataRow::setCalType (CalTypeMod::CalType calType)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->calType = calType;
 	
  	}
 	
 	
-	/**
-	 * Mark scanIntent, which is an optional field, as non-existent.
-	 */
-	void CalDataRow::clearScanIntent () {
-		scanIntentExists = false;
-	}
+
+	
+
+	
+ 	/**
+ 	 * Get numScan.
+ 	 * @return numScan as int
+ 	 */
+ 	int CalDataRow::getNumScan() const {
+	
+  		return numScan;
+ 	}
+
+ 	/**
+ 	 * Set numScan with the specified int.
+ 	 * @param numScan The int value to which numScan is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalDataRow::setNumScan (int numScan)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numScan = numScan;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get scanSet.
+ 	 * @return scanSet as vector<int >
+ 	 */
+ 	vector<int > CalDataRow::getScanSet() const {
+	
+  		return scanSet;
+ 	}
+
+ 	/**
+ 	 * Set scanSet with the specified vector<int >.
+ 	 * @param scanSet The vector<int > value to which scanSet is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalDataRow::setScanSet (vector<int > scanSet)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->scanSet = scanSet;
+	
+ 	}
+	
 	
 
 	
@@ -1483,7 +1483,7 @@ namespace asdm {
  	 * @return assocCalDataId as Tag
  	 * @throw IllegalAccessException If assocCalDataId does not exist.
  	 */
- 	Tag CalDataRow::getAssocCalDataId() const throw(IllegalAccessException) {
+ 	Tag CalDataRow::getAssocCalDataId() const  {
 		if (!assocCalDataIdExists) {
 			throw IllegalAccessException("assocCalDataId", "CalData");
 		}
@@ -1530,7 +1530,7 @@ namespace asdm {
  	 * @return assocCalNature as AssociatedCalNatureMod::AssociatedCalNature
  	 * @throw IllegalAccessException If assocCalNature does not exist.
  	 */
- 	AssociatedCalNatureMod::AssociatedCalNature CalDataRow::getAssocCalNature() const throw(IllegalAccessException) {
+ 	AssociatedCalNatureMod::AssociatedCalNature CalDataRow::getAssocCalNature() const  {
 		if (!assocCalNatureExists) {
 			throw IllegalAccessException("assocCalNature", "CalData");
 		}
@@ -1562,35 +1562,191 @@ namespace asdm {
 	
 
 	
+	/**
+	 * The attribute fieldName is optional. Return true if this attribute exists.
+	 * @return true if and only if the fieldName attribute exists. 
+	 */
+	bool CalDataRow::isFieldNameExists() const {
+		return fieldNameExists;
+	}
+	
 
 	
  	/**
- 	 * Get calDataType.
- 	 * @return calDataType as CalDataOriginMod::CalDataOrigin
+ 	 * Get fieldName, which is optional.
+ 	 * @return fieldName as vector<string >
+ 	 * @throw IllegalAccessException If fieldName does not exist.
  	 */
- 	CalDataOriginMod::CalDataOrigin CalDataRow::getCalDataType() const {
+ 	vector<string > CalDataRow::getFieldName() const  {
+		if (!fieldNameExists) {
+			throw IllegalAccessException("fieldName", "CalData");
+		}
 	
-  		return calDataType;
+  		return fieldName;
  	}
 
  	/**
- 	 * Set calDataType with the specified CalDataOriginMod::CalDataOrigin.
- 	 * @param calDataType The CalDataOriginMod::CalDataOrigin value to which calDataType is to be set.
+ 	 * Set fieldName with the specified vector<string >.
+ 	 * @param fieldName The vector<string > value to which fieldName is to be set.
  	 
  	
- 		
  	 */
- 	void CalDataRow::setCalDataType (CalDataOriginMod::CalDataOrigin calDataType)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->calDataType = calDataType;
+ 	void CalDataRow::setFieldName (vector<string > fieldName) {
+	
+ 		this->fieldName = fieldName;
+	
+		fieldNameExists = true;
 	
  	}
 	
+	
+	/**
+	 * Mark fieldName, which is an optional field, as non-existent.
+	 */
+	void CalDataRow::clearFieldName () {
+		fieldNameExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute sourceName is optional. Return true if this attribute exists.
+	 * @return true if and only if the sourceName attribute exists. 
+	 */
+	bool CalDataRow::isSourceNameExists() const {
+		return sourceNameExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get sourceName, which is optional.
+ 	 * @return sourceName as vector<string >
+ 	 * @throw IllegalAccessException If sourceName does not exist.
+ 	 */
+ 	vector<string > CalDataRow::getSourceName() const  {
+		if (!sourceNameExists) {
+			throw IllegalAccessException("sourceName", "CalData");
+		}
+	
+  		return sourceName;
+ 	}
+
+ 	/**
+ 	 * Set sourceName with the specified vector<string >.
+ 	 * @param sourceName The vector<string > value to which sourceName is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalDataRow::setSourceName (vector<string > sourceName) {
+	
+ 		this->sourceName = sourceName;
+	
+		sourceNameExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark sourceName, which is an optional field, as non-existent.
+	 */
+	void CalDataRow::clearSourceName () {
+		sourceNameExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute sourceCode is optional. Return true if this attribute exists.
+	 * @return true if and only if the sourceCode attribute exists. 
+	 */
+	bool CalDataRow::isSourceCodeExists() const {
+		return sourceCodeExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get sourceCode, which is optional.
+ 	 * @return sourceCode as vector<string >
+ 	 * @throw IllegalAccessException If sourceCode does not exist.
+ 	 */
+ 	vector<string > CalDataRow::getSourceCode() const  {
+		if (!sourceCodeExists) {
+			throw IllegalAccessException("sourceCode", "CalData");
+		}
+	
+  		return sourceCode;
+ 	}
+
+ 	/**
+ 	 * Set sourceCode with the specified vector<string >.
+ 	 * @param sourceCode The vector<string > value to which sourceCode is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalDataRow::setSourceCode (vector<string > sourceCode) {
+	
+ 		this->sourceCode = sourceCode;
+	
+		sourceCodeExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark sourceCode, which is an optional field, as non-existent.
+	 */
+	void CalDataRow::clearSourceCode () {
+		sourceCodeExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute scanIntent is optional. Return true if this attribute exists.
+	 * @return true if and only if the scanIntent attribute exists. 
+	 */
+	bool CalDataRow::isScanIntentExists() const {
+		return scanIntentExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get scanIntent, which is optional.
+ 	 * @return scanIntent as vector<ScanIntentMod::ScanIntent >
+ 	 * @throw IllegalAccessException If scanIntent does not exist.
+ 	 */
+ 	vector<ScanIntentMod::ScanIntent > CalDataRow::getScanIntent() const  {
+		if (!scanIntentExists) {
+			throw IllegalAccessException("scanIntent", "CalData");
+		}
+	
+  		return scanIntent;
+ 	}
+
+ 	/**
+ 	 * Set scanIntent with the specified vector<ScanIntentMod::ScanIntent >.
+ 	 * @param scanIntent The vector<ScanIntentMod::ScanIntent > value to which scanIntent is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalDataRow::setScanIntent (vector<ScanIntentMod::ScanIntent > scanIntent) {
+	
+ 		this->scanIntent = scanIntent;
+	
+		scanIntentExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark scanIntent, which is an optional field, as non-existent.
+	 */
+	void CalDataRow::clearScanIntent () {
+		scanIntentExists = false;
+	}
 	
 
 	
@@ -1620,7 +1776,11 @@ namespace asdm {
 	
 
 	
-		frequencyGroupExists = false;
+
+	
+
+	
+
 	
 
 	
@@ -1628,19 +1788,15 @@ namespace asdm {
 	
 
 	
-		freqGroupNameExists = false;
+		assocCalDataIdExists = false;
+	
+
+	
+		assocCalNatureExists = false;
 	
 
 	
 		fieldNameExists = false;
-	
-
-	
-		fieldCodeExists = false;
-	
-
-	
-
 	
 
 	
@@ -1656,16 +1812,6 @@ namespace asdm {
 	
 
 	
-		assocCalDataIdExists = false;
-	
-
-	
-		assocCalNatureExists = false;
-	
-
-	
-
-	
 	
 	
 	
@@ -1675,6 +1821,11 @@ namespace asdm {
 
 	
 
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+calDataType = CCalDataOrigin::from_int(0);
 	
 
 	
@@ -1689,25 +1840,16 @@ calType = CCalType::from_int(0);
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 assocCalNature = CAssociatedCalNature::from_int(0);
 	
 
 	
-// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
-calDataType = CCalDataOrigin::from_int(0);
+
+	
+
+	
+
 	
 	
 	}
@@ -1723,7 +1865,11 @@ calDataType = CCalDataOrigin::from_int(0);
 	
 
 	
-		frequencyGroupExists = false;
+
+	
+
+	
+
 	
 
 	
@@ -1731,19 +1877,15 @@ calDataType = CCalDataOrigin::from_int(0);
 	
 
 	
-		freqGroupNameExists = false;
+		assocCalDataIdExists = false;
+	
+
+	
+		assocCalNatureExists = false;
 	
 
 	
 		fieldNameExists = false;
-	
-
-	
-		fieldCodeExists = false;
-	
-
-	
-
 	
 
 	
@@ -1758,16 +1900,6 @@ calDataType = CCalDataOrigin::from_int(0);
 		scanIntentExists = false;
 	
 
-	
-		assocCalDataIdExists = false;
-	
-
-	
-		assocCalNatureExists = false;
-	
-
-	
-
 			
 		}
 		else {
@@ -1778,34 +1910,36 @@ calDataType = CCalDataOrigin::from_int(0);
 		
 		
 		
-			numScan = row.numScan;
-		
-			scanSet = row.scanSet;
-		
-			calType = row.calType;
-		
 			startTimeObserved = row.startTimeObserved;
 		
 			endTimeObserved = row.endTimeObserved;
 		
+			execBlockUID = row.execBlockUID;
+		
 			calDataType = row.calDataType;
 		
+			calType = row.calType;
+		
+			numScan = row.numScan;
+		
+			scanSet = row.scanSet;
 		
 		
 		
-		if (row.frequencyGroupExists) {
-			frequencyGroup = row.frequencyGroup;		
-			frequencyGroupExists = true;
+		
+		if (row.assocCalDataIdExists) {
+			assocCalDataId = row.assocCalDataId;		
+			assocCalDataIdExists = true;
 		}
 		else
-			frequencyGroupExists = false;
+			assocCalDataIdExists = false;
 		
-		if (row.freqGroupNameExists) {
-			freqGroupName = row.freqGroupName;		
-			freqGroupNameExists = true;
+		if (row.assocCalNatureExists) {
+			assocCalNature = row.assocCalNature;		
+			assocCalNatureExists = true;
 		}
 		else
-			freqGroupNameExists = false;
+			assocCalNatureExists = false;
 		
 		if (row.fieldNameExists) {
 			fieldName = row.fieldName;		
@@ -1813,13 +1947,6 @@ calDataType = CCalDataOrigin::from_int(0);
 		}
 		else
 			fieldNameExists = false;
-		
-		if (row.fieldCodeExists) {
-			fieldCode = row.fieldCode;		
-			fieldCodeExists = true;
-		}
-		else
-			fieldCodeExists = false;
 		
 		if (row.sourceNameExists) {
 			sourceName = row.sourceName;		
@@ -1842,49 +1969,14 @@ calDataType = CCalDataOrigin::from_int(0);
 		else
 			scanIntentExists = false;
 		
-		if (row.assocCalDataIdExists) {
-			assocCalDataId = row.assocCalDataId;		
-			assocCalDataIdExists = true;
-		}
-		else
-			assocCalDataIdExists = false;
-		
-		if (row.assocCalNatureExists) {
-			assocCalNature = row.assocCalNature;		
-			assocCalNatureExists = true;
-		}
-		else
-			assocCalNatureExists = false;
-		
 		}	
 	}
 
 	
-	bool CalDataRow::compareNoAutoInc(int numScan, vector<int > scanSet, CalTypeMod::CalType calType, ArrayTime startTimeObserved, ArrayTime endTimeObserved, CalDataOriginMod::CalDataOrigin calDataType) {
+	bool CalDataRow::compareNoAutoInc(ArrayTime startTimeObserved, ArrayTime endTimeObserved, EntityRef execBlockUID, CalDataOriginMod::CalDataOrigin calDataType, CalTypeMod::CalType calType, int numScan, vector<int > scanSet) {
 		bool result;
 		result = true;
 		
-	
-		
-		result = result && (this->numScan == numScan);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->scanSet == scanSet);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->calType == calType);
-		
-		if (!result) return false;
-	
-
 	
 		
 		result = result && (this->startTimeObserved == startTimeObserved);
@@ -1901,7 +1993,35 @@ calDataType = CCalDataOrigin::from_int(0);
 
 	
 		
+		result = result && (this->execBlockUID == execBlockUID);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->calDataType == calDataType);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->calType == calType);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numScan == numScan);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->scanSet == scanSet);
 		
 		if (!result) return false;
 	
@@ -1911,22 +2031,10 @@ calDataType = CCalDataOrigin::from_int(0);
 	
 	
 	
-	bool CalDataRow::compareRequiredValue(int numScan, vector<int > scanSet, CalTypeMod::CalType calType, ArrayTime startTimeObserved, ArrayTime endTimeObserved, CalDataOriginMod::CalDataOrigin calDataType) {
+	bool CalDataRow::compareRequiredValue(ArrayTime startTimeObserved, ArrayTime endTimeObserved, EntityRef execBlockUID, CalDataOriginMod::CalDataOrigin calDataType, CalTypeMod::CalType calType, int numScan, vector<int > scanSet) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->numScan == numScan)) return false;
-	
-
-	
-		if (!(this->scanSet == scanSet)) return false;
-	
-
-	
-		if (!(this->calType == calType)) return false;
-	
-
 	
 		if (!(this->startTimeObserved == startTimeObserved)) return false;
 	
@@ -1936,7 +2044,23 @@ calDataType = CCalDataOrigin::from_int(0);
 	
 
 	
+		if (!(this->execBlockUID == execBlockUID)) return false;
+	
+
+	
 		if (!(this->calDataType == calDataType)) return false;
+	
+
+	
+		if (!(this->calType == calType)) return false;
+	
+
+	
+		if (!(this->numScan == numScan)) return false;
+	
+
+	
+		if (!(this->scanSet == scanSet)) return false;
 	
 
 		return result;
@@ -1954,17 +2078,19 @@ calDataType = CCalDataOrigin::from_int(0);
 	bool CalDataRow::equalByRequiredValue(CalDataRow* x) {
 		
 			
-		if (this->numScan != x->numScan) return false;
-			
-		if (this->scanSet != x->scanSet) return false;
-			
-		if (this->calType != x->calType) return false;
-			
 		if (this->startTimeObserved != x->startTimeObserved) return false;
 			
 		if (this->endTimeObserved != x->endTimeObserved) return false;
 			
+		if (this->execBlockUID != x->execBlockUID) return false;
+			
 		if (this->calDataType != x->calDataType) return false;
+			
+		if (this->calType != x->calType) return false;
+			
+		if (this->numScan != x->numScan) return false;
+			
+		if (this->scanSet != x->scanSet) return false;
 			
 		
 		return true;

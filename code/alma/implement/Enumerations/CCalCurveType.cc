@@ -37,39 +37,37 @@
 #include <string>
 using namespace std;
 
+
+int CCalCurveType::version() {
+	return CalCurveTypeMod::version;
+	}
+	
+string CCalCurveType::revision () {
+	return CalCurveTypeMod::revision;
+}
+
+unsigned int CCalCurveType::size() {
+	return 3;
+	}
+	
 	
 const std::string& CCalCurveType::sAMPLITUDE = "AMPLITUDE";
 	
 const std::string& CCalCurveType::sPHASE = "PHASE";
 	
-const std::vector<std::string> CCalCurveType::sCalCurveTypeSet() {
+const std::string& CCalCurveType::sUNDEFINED = "UNDEFINED";
+	
+const std::vector<std::string> CCalCurveType::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CCalCurveType::sAMPLITUDE);
     
     enumSet.insert(enumSet.end(), CCalCurveType::sPHASE);
+    
+    enumSet.insert(enumSet.end(), CCalCurveType::sUNDEFINED);
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CCalCurveType::hAMPLITUDE = "Calibration curve is Amplitude";
-	
-const std::string& CCalCurveType::hPHASE = "Calibration curve is phase";
-	
-const std::vector<std::string> CCalCurveType::hCalCurveTypeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CCalCurveType::hAMPLITUDE);
-    
-    enumSet.insert(enumSet.end(), CCalCurveType::hPHASE);
-        
-    return enumSet;
-}
-   	
 
 std::string CCalCurveType::name(const CalCurveTypeMod::CalCurveType& f) {
     switch (f) {
@@ -79,27 +77,14 @@ std::string CCalCurveType::name(const CalCurveTypeMod::CalCurveType& f) {
     
     case CalCurveTypeMod::PHASE:
       return CCalCurveType::sPHASE;
+    
+    case CalCurveTypeMod::UNDEFINED:
+      return CCalCurveType::sUNDEFINED;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CCalCurveType::help(const CalCurveTypeMod::CalCurveType& f) {
-    switch (f) {
-    
-    case CalCurveTypeMod::AMPLITUDE:
-      return CCalCurveType::hAMPLITUDE;
-    
-    case CalCurveTypeMod::PHASE:
-      return CCalCurveType::hPHASE;
-    	
-    }
-    return std::string("");
-}
-   	
 
 CalCurveTypeMod::CalCurveType CCalCurveType::newCalCurveType(const std::string& name) {
 		
@@ -109,6 +94,10 @@ CalCurveTypeMod::CalCurveType CCalCurveType::newCalCurveType(const std::string& 
     	
     if (name == CCalCurveType::sPHASE) {
         return CalCurveTypeMod::PHASE;
+    }
+    	
+    if (name == CCalCurveType::sUNDEFINED) {
+        return CalCurveTypeMod::UNDEFINED;
     }
     
     throw badString(name);
@@ -123,17 +112,19 @@ CalCurveTypeMod::CalCurveType CCalCurveType::literal(const std::string& name) {
     if (name == CCalCurveType::sPHASE) {
         return CalCurveTypeMod::PHASE;
     }
+    	
+    if (name == CCalCurveType::sUNDEFINED) {
+        return CalCurveTypeMod::UNDEFINED;
+    }
     
     throw badString(name);
 }
 
 CalCurveTypeMod::CalCurveType CCalCurveType::from_int(unsigned int i) {
-	vector<string> names = sCalCurveTypeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newCalCurveType(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newCalCurveType(names_.at(i));
 }
-
-	
 
 string CCalCurveType::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'CalCurveType'.";

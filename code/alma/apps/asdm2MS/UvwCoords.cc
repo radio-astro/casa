@@ -13,13 +13,12 @@ UvwCoords::UvwCoords( ASDM* const datasetPtr )
   vector<double> stationPos; stationPos.reserve(3); stationPos.resize(3);
   vector<double> antennaPos;
 
-  vector<Length> staCoords;
+  vector<Length> antOffsetCoords, staCoords;
 
   for(unsigned int na=0; na<v_antenna.size(); na++){
 
-    antOffset[0] = v_antenna[na]->getXOffset().get();
-    antOffset[1] = v_antenna[na]->getYOffset().get();
-    antOffset[2] = v_antenna[na]->getZOffset().get();
+    antOffsetCoords = v_antenna[na]->getOffset();
+    for(unsigned int nc=0; nc<3; nc++)antOffset[nc]=antOffsetCoords[nc].get();
 
     staCoords = v_antenna[na]->getStationUsingStationId()->getPosition();
     for(unsigned int nc=0; nc<3; nc++)stationPos[nc]=staCoords[nc].get();
@@ -270,7 +269,7 @@ void UvwCoords::uvw_bl( Tag configDescriptionId,
   vector<Tag> v_a; v_a.reserve(2); v_a.resize(2);
 
   unsigned int k=0;
-  v_uvw.clear();
+  //  v_uvw.clear(); FV remove
 
   // the cross baselines
   if(reverse){
@@ -318,6 +317,20 @@ void UvwCoords::uvw_bl( Tag configDescriptionId,
   return;
 }
 
+void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<pair<unsigned int,double> > v_tci, 
+			Enum<CorrelationMode> correlationMode,
+ 			pair<bool,bool> dataOrder, vector<Vector<casa::Double> >& v_uvw){
+
+  vector<double> v_timeCentroid;
+  for(unsigned int n=0;n<v_tci.size();n++)v_timeCentroid.push_back(v_tci[n].second);
+  vector<Vector<casa::Double> > vV;
+  uvw_bl( mainRow, v_timeCentroid, correlationMode, dataOrder, vV);
+  v_uvw.clear(); v_uvw.resize(vV.size());
+  //for(unsigned int n=0;n<v_tci.size();n++)v_uvw[v_tci[n].first]=vV[n++];
+  for(unsigned int n=0;n<v_tci.size();n++)v_uvw[v_tci[n].first]=vV[n];
+  return;
+}
+
 
 void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<double> v_timeCentroid, Enum<CorrelationMode> correlationMode,
  			pair<bool,bool> dataOrder, vector<Vector<casa::Double> >& v_uvw){
@@ -338,7 +351,7 @@ void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<double> v_timeCentroid, E
   }else if(correlationMode[CorrelationModeMod::CROSS_AND_AUTO]){
     if(itf->second.e_correlationMode[CorrelationModeMod::CROSS_ONLY])
       correlationMode.set(CorrelationModeMod::CROSS_ONLY);
-    else
+    else if(itf->second.e_correlationMode[CorrelationModeMod::AUTO_ONLY])
       correlationMode.set(CorrelationModeMod::AUTO_ONLY);
   }
 
@@ -376,13 +389,12 @@ void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<double> v_timeCentroid, E
 
     if(!correlationMode[CorrelationModeMod::AUTO_ONLY]){                   // The cross data
       vector<Vector<casa::Double> > v_bluvw;
-      // cout<<"ndump="<<ndump<<endl;
       for(unsigned int nt=0; nt<ndump; nt++){
 	unsigned int cnt=0;
 	for(unsigned int n=0; n<nbl*nrepeat; n++){
 	  if(v_timeCentroid[offset+nt*nbl*nrepeat+n]==v_timeCentroid[offset+nt*nbl*nrepeat])cnt++;
 	  ArrayTime arti(v_timeCentroid[offset+nt*nbl*nrepeat]);
-	  // cout<<arti.toString()<<endl;
+	  //cout<<arti.toString()<<endl;
 	}
 	if(cnt==nbl*nrepeat){                 // duration baseline, spw and bin independent in this dump
 	  uvw_bl( configDescId, 
@@ -445,15 +457,19 @@ void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<double> v_timeCentroid, E
     }
 
   }
+  if (coutest) { 
+    cout << "About to return v_uvw =" << endl;
+    for (unsigned int i = 0; i < v_uvw.size(); i++)
+      cout << v_uvw[i] << endl;
+  }
   return;
 }
 
-vector<double> UvwCoords::antPos(const vector<double>& stationPos,const vector<double>& antOffset){
 
-  vector<double> antennaPos;  
-  for(unsigned int n=0; n<3; n++){      
-    antennaPos.push_back(stationPos[n]);
-  }
-  return antennaPos;
+vector<double> UvwCoords::antPos(const vector<double>& itrfPos,const vector<double>& hoffset){
+
+  // passage du systeme de coords STATION au CS YOKE retire car devra etre integre dans Measure
+  return itrfPos;
 }
+
 

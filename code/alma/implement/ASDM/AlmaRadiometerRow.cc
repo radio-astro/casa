@@ -40,11 +40,17 @@ using std::set;
 #include <ASDM.h>
 #include <AlmaRadiometerRow.h>
 #include <AlmaRadiometerTable.h>
+
+#include <SpectralWindowTable.h>
+#include <SpectralWindowRow.h>
 	
 
 using asdm::ASDM;
 using asdm::AlmaRadiometerRow;
 using asdm::AlmaRadiometerTable;
+
+using asdm::SpectralWindowTable;
+using asdm::SpectralWindowRow;
 
 
 #include <Parser.h>
@@ -88,7 +94,7 @@ namespace asdm {
 		
 		
 			
-		x->modeId = modeId.toIDLTag();
+		x->almaRadiometerId = almaRadiometerId.toIDLTag();
 			
 		
 	
@@ -96,10 +102,12 @@ namespace asdm {
 	
   		
 		
+		x->numAntennaExists = numAntennaExists;
+		
 		
 			
 				
-		x->numBand = numBand;
+		x->numAntenna = numAntenna;
  				
  			
 		
@@ -108,6 +116,27 @@ namespace asdm {
 	
 	
 		
+	
+  	
+ 		
+ 		
+		x->spectralWindowIdExists = spectralWindowIdExists;
+		
+		
+		
+		x->spectralWindowId.length(spectralWindowId.size());
+		for (unsigned int i = 0; i < spectralWindowId.size(); ++i) {
+			
+			x->spectralWindowId[i] = spectralWindowId.at(i).toIDLTag();
+			
+	 	}
+	 	 		
+  	
+
+	
+		
+	
+
 		
 		return x;
 	
@@ -120,7 +149,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct AlmaRadiometerRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void AlmaRadiometerRow::setFromIDL (AlmaRadiometerRowIDL x) throw(ConversionException) {
+	void AlmaRadiometerRow::setFromIDL (AlmaRadiometerRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -129,7 +158,7 @@ namespace asdm {
 		
 		
 			
-		setModeId(Tag (x.modeId));
+		setAlmaRadiometerId(Tag (x.almaRadiometerId));
 			
  		
 		
@@ -137,19 +166,44 @@ namespace asdm {
 
 	
 		
+		numAntennaExists = x.numAntennaExists;
+		if (x.numAntennaExists) {
+		
 		
 			
-		setNumBand(x.numBand);
+		setNumAntenna(x.numAntenna);
   			
  		
 		
+		}
+		
 	
 
 	
 	
 		
+	
+		
+		spectralWindowIdExists = x.spectralWindowIdExists;
+		if (x.spectralWindowIdExists) {
+		
+		spectralWindowId .clear();
+		for (unsigned int i = 0; i <x.spectralWindowId.length(); ++i) {
+			
+			spectralWindowId.push_back(Tag (x.spectralWindowId[i]));
+			
+		}
+		
+		}
+		
+  	
+
+	
+		
+	
+
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"AlmaRadiometer");
+			throw ConversionException (err.getMessage(),"AlmaRadiometer");
 		}
 	}
 #endif
@@ -167,22 +221,42 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(modeId, "modeId", buf);
+		Parser::toXML(almaRadiometerId, "almaRadiometerId", buf);
 		
 		
 	
 
   	
  		
+		if (numAntennaExists) {
 		
-		Parser::toXML(numBand, "numBand", buf);
 		
+		Parser::toXML(numAntenna, "numAntenna", buf);
+		
+		
+		}
 		
 	
 
 	
 	
 		
+  	
+ 		
+		if (spectralWindowIdExists) {
+		
+		
+		Parser::toXML(spectralWindowId, "spectralWindowId", buf);
+		
+		
+		}
+		
+	
+
+	
+		
+	
+
 		
 		buf.append("</row>\n");
 		return buf;
@@ -193,7 +267,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void AlmaRadiometerRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void AlmaRadiometerRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -202,25 +276,129 @@ namespace asdm {
 	
   		
 			
-	  	setModeId(Parser::getTag("modeId","AlmaRadiometer",rowDoc));
+	  	setAlmaRadiometerId(Parser::getTag("almaRadiometerId","AlmaRadiometer",rowDoc));
 			
 		
 	
 
 	
   		
+        if (row.isStr("<numAntenna>")) {
 			
-	  	setNumBand(Parser::getInteger("numBand","AlmaRadiometer",rowDoc));
+	  		setNumAntenna(Parser::getInteger("numAntenna","AlmaRadiometer",rowDoc));
 			
-		
+		}
+ 		
 	
 
 	
 	
 		
+	
+  		
+  		if (row.isStr("<spectralWindowId>")) {
+  			setSpectralWindowId(Parser::get1DTag("spectralWindowId","AlmaRadiometer",rowDoc));  		
+  		}
+  		
+  	
+
+	
+		
+	
+
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"AlmaRadiometer");
 		}
+	}
+	
+	void AlmaRadiometerRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	almaRadiometerId.toBin(eoss);
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(numAntennaExists);
+	if (numAntennaExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numAntenna);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(spectralWindowIdExists);
+	if (spectralWindowIdExists) {
+	
+	
+	
+		
+	Tag::toBin(spectralWindowId, eoss);
+		
+	
+
+	}
+
+	}
+	
+	AlmaRadiometerRow* AlmaRadiometerRow::fromBin(EndianISStream& eiss, AlmaRadiometerTable& table) {
+		AlmaRadiometerRow* row = new  AlmaRadiometerRow(table);
+		
+		
+		
+	
+		
+		
+		row->almaRadiometerId =  Tag::fromBin(eiss);
+		
+	
+
+		
+		
+		
+	row->numAntennaExists = eiss.readBoolean();
+	if (row->numAntennaExists) {
+		
+	
+	
+		
+			
+		row->numAntenna =  eiss.readInt();
+			
+		
+	
+
+	}
+
+	row->spectralWindowIdExists = eiss.readBoolean();
+	if (row->spectralWindowIdExists) {
+		
+	
+		
+		
+			
+	
+	row->spectralWindowId = Tag::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -231,68 +409,83 @@ namespace asdm {
 
 	
  	/**
- 	 * Get modeId.
- 	 * @return modeId as Tag
+ 	 * Get almaRadiometerId.
+ 	 * @return almaRadiometerId as Tag
  	 */
- 	Tag AlmaRadiometerRow::getModeId() const {
+ 	Tag AlmaRadiometerRow::getAlmaRadiometerId() const {
 	
-  		return modeId;
+  		return almaRadiometerId;
  	}
 
  	/**
- 	 * Set modeId with the specified Tag.
- 	 * @param modeId The Tag value to which modeId is to be set.
+ 	 * Set almaRadiometerId with the specified Tag.
+ 	 * @param almaRadiometerId The Tag value to which almaRadiometerId is to be set.
  	 
  	
  		
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
  	 	
  	 */
- 	void AlmaRadiometerRow::setModeId (Tag modeId)  {
+ 	void AlmaRadiometerRow::setAlmaRadiometerId (Tag almaRadiometerId)  {
   	
   	
   		if (hasBeenAdded) {
  		
-			throw IllegalAccessException("modeId", "AlmaRadiometer");
+			throw IllegalAccessException("almaRadiometerId", "AlmaRadiometer");
 		
   		}
   	
- 		this->modeId = modeId;
+ 		this->almaRadiometerId = almaRadiometerId;
 	
  	}
 	
 	
 
 	
+	/**
+	 * The attribute numAntenna is optional. Return true if this attribute exists.
+	 * @return true if and only if the numAntenna attribute exists. 
+	 */
+	bool AlmaRadiometerRow::isNumAntennaExists() const {
+		return numAntennaExists;
+	}
+	
 
 	
  	/**
- 	 * Get numBand.
- 	 * @return numBand as int
+ 	 * Get numAntenna, which is optional.
+ 	 * @return numAntenna as int
+ 	 * @throw IllegalAccessException If numAntenna does not exist.
  	 */
- 	int AlmaRadiometerRow::getNumBand() const {
+ 	int AlmaRadiometerRow::getNumAntenna() const  {
+		if (!numAntennaExists) {
+			throw IllegalAccessException("numAntenna", "AlmaRadiometer");
+		}
 	
-  		return numBand;
+  		return numAntenna;
  	}
 
  	/**
- 	 * Set numBand with the specified int.
- 	 * @param numBand The int value to which numBand is to be set.
+ 	 * Set numAntenna with the specified int.
+ 	 * @param numAntenna The int value to which numAntenna is to be set.
  	 
  	
- 		
  	 */
- 	void AlmaRadiometerRow::setNumBand (int numBand)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numBand = numBand;
+ 	void AlmaRadiometerRow::setNumAntenna (int numAntenna) {
+	
+ 		this->numAntenna = numAntenna;
+	
+		numAntennaExists = true;
 	
  	}
 	
+	
+	/**
+	 * Mark numAntenna, which is an optional field, as non-existent.
+	 */
+	void AlmaRadiometerRow::clearNumAntenna () {
+		numAntennaExists = false;
+	}
 	
 
 	
@@ -300,10 +493,129 @@ namespace asdm {
 	// Extrinsic Table Attributes //
 	////////////////////////////////
 	
+	
+	/**
+	 * The attribute spectralWindowId is optional. Return true if this attribute exists.
+	 * @return true if and only if the spectralWindowId attribute exists. 
+	 */
+	bool AlmaRadiometerRow::isSpectralWindowIdExists() const {
+		return spectralWindowIdExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get spectralWindowId, which is optional.
+ 	 * @return spectralWindowId as vector<Tag> 
+ 	 * @throw IllegalAccessException If spectralWindowId does not exist.
+ 	 */
+ 	vector<Tag>  AlmaRadiometerRow::getSpectralWindowId() const  {
+		if (!spectralWindowIdExists) {
+			throw IllegalAccessException("spectralWindowId", "AlmaRadiometer");
+		}
+	
+  		return spectralWindowId;
+ 	}
+
+ 	/**
+ 	 * Set spectralWindowId with the specified vector<Tag> .
+ 	 * @param spectralWindowId The vector<Tag>  value to which spectralWindowId is to be set.
+ 	 
+ 	
+ 	 */
+ 	void AlmaRadiometerRow::setSpectralWindowId (vector<Tag>  spectralWindowId) {
+	
+ 		this->spectralWindowId = spectralWindowId;
+	
+		spectralWindowIdExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark spectralWindowId, which is an optional field, as non-existent.
+	 */
+	void AlmaRadiometerRow::clearSpectralWindowId () {
+		spectralWindowIdExists = false;
+	}
+	
+
 	///////////
 	// Links //
 	///////////
 	
+	
+ 		
+ 	/**
+ 	 * Set spectralWindowId[i] with the specified Tag.
+ 	 * @param i The index in spectralWindowId where to set the Tag value.
+ 	 * @param spectralWindowId The Tag value to which spectralWindowId[i] is to be set. 
+ 	 * @throws OutOfBoundsException
+  	 */
+  	void AlmaRadiometerRow::setSpectralWindowId (int i, Tag spectralWindowId) {
+  		if ((i < 0) || (i > ((int) this->spectralWindowId.size())))
+  			throw OutOfBoundsException("Index out of bounds during a set operation on attribute spectralWindowId in table AlmaRadiometerTable");
+  		vector<Tag> ::iterator iter = this->spectralWindowId.begin();
+  		int j = 0;
+  		while (j < i) {
+  			j++; iter++;
+  		}
+  		this->spectralWindowId.insert(this->spectralWindowId.erase(iter), spectralWindowId); 	
+  	}
+ 			
+	
+	
+	
+		
+/**
+ * Append a Tag to spectralWindowId.
+ * @param id the Tag to be appended to spectralWindowId
+ */
+ void AlmaRadiometerRow::addSpectralWindowId(Tag id){
+ 	spectralWindowId.push_back(id);
+}
+
+/**
+ * Append an array of Tag to spectralWindowId.
+ * @param id an array of Tag to be appended to spectralWindowId
+ */
+ void AlmaRadiometerRow::addSpectralWindowId(const vector<Tag> & id) {
+ 	for (unsigned int i=0; i < id.size(); i++)
+ 		spectralWindowId.push_back(id.at(i));
+ }
+ 
+
+ /**
+  * Returns the Tag stored in spectralWindowId at position i.
+  *
+  */
+ const Tag AlmaRadiometerRow::getSpectralWindowId(int i) {
+ 	return spectralWindowId.at(i);
+ }
+ 
+ /**
+  * Returns the SpectralWindowRow linked to this row via the Tag stored in spectralWindowId
+  * at position i.
+  */
+ SpectralWindowRow* AlmaRadiometerRow::getSpectralWindow(int i) {
+ 	return table.getContainer().getSpectralWindow().getRowByKey(spectralWindowId.at(i));
+ } 
+ 
+ /**
+  * Returns the vector of SpectralWindowRow* linked to this row via the Tags stored in spectralWindowId
+  *
+  */
+ vector<SpectralWindowRow *> AlmaRadiometerRow::getSpectralWindows() {
+ 	vector<SpectralWindowRow *> result;
+ 	for (unsigned int i = 0; i < spectralWindowId.size(); i++)
+ 		result.push_back(table.getContainer().getSpectralWindow().getRowByKey(spectralWindowId.at(i)));
+ 		
+ 	return result;
+ }
+  
+
+	
+
 	
 	/**
 	 * Create a AlmaRadiometerRow.
@@ -320,8 +632,14 @@ namespace asdm {
 	
 
 	
+		numAntennaExists = false;
+	
 
 	
+	
+		spectralWindowIdExists = false;
+	
+
 	
 	
 	
@@ -340,52 +658,45 @@ namespace asdm {
 	
 
 	
+		numAntennaExists = false;
+	
 
-			
+	
+	
+		spectralWindowIdExists = false;
+	
+		
 		}
 		else {
 	
 		
-			modeId = row.modeId;
+			almaRadiometerId = row.almaRadiometerId;
 		
 		
 		
 		
-			numBand = row.numBand;
 		
 		
 		
+		if (row.numAntennaExists) {
+			numAntenna = row.numAntenna;		
+			numAntennaExists = true;
+		}
+		else
+			numAntennaExists = false;
+		
+		if (row.spectralWindowIdExists) {
+			spectralWindowId = row.spectralWindowId;		
+			spectralWindowIdExists = true;
+		}
+		else
+			spectralWindowIdExists = false;
 		
 		}	
 	}
 
 	
-	bool AlmaRadiometerRow::compareNoAutoInc(int numBand) {
-		bool result;
-		result = true;
-		
 	
-		
-		result = result && (this->numBand == numBand);
-		
-		if (!result) return false;
-	
-
-		return result;
-	}	
-	
-	
-	
-	bool AlmaRadiometerRow::compareRequiredValue(int numBand) {
-		bool result;
-		result = true;
-		
-	
-		if (!(this->numBand == numBand)) return false;
-	
-
-		return result;
-	}
 	
 	
 	/**
@@ -397,10 +708,6 @@ namespace asdm {
 	 * @return a boolean.
 	 */
 	bool AlmaRadiometerRow::equalByRequiredValue(AlmaRadiometerRow* x) {
-		
-			
-		if (this->numBand != x->numBand) return false;
-			
 		
 		return true;
 	}	

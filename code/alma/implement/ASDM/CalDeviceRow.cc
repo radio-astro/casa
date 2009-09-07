@@ -126,15 +126,13 @@ namespace asdm {
 	
   		
 		
-		x->noiseCalExists = noiseCalExists;
-		
 		
 			
-		x->noiseCal.length(noiseCal.size());
-		for (unsigned int i = 0; i < noiseCal.size(); ++i) {
+		x->calLoadNames.length(calLoadNames.size());
+		for (unsigned int i = 0; i < calLoadNames.size(); ++i) {
 			
 				
-			x->noiseCal[i] = noiseCal.at(i);
+			x->calLoadNames[i] = calLoadNames.at(i);
 	 			
 	 		
 	 	}
@@ -145,17 +143,14 @@ namespace asdm {
 	
   		
 		
-		x->temperatureLoadExists = temperatureLoadExists;
+		x->numReceptorExists = numReceptorExists;
 		
 		
 			
-		x->temperatureLoad.length(temperatureLoad.size());
-		for (unsigned int i = 0; i < temperatureLoad.size(); ++i) {
-			
-			x->temperatureLoad[i] = temperatureLoad.at(i).toIDLTemperature();
-			
-	 	}
-			
+				
+		x->numReceptor = numReceptor;
+ 				
+ 			
 		
 	
 
@@ -186,15 +181,34 @@ namespace asdm {
 	
   		
 		
+		x->noiseCalExists = noiseCalExists;
+		
 		
 			
-		x->calLoadName.length(calLoadName.size());
-		for (unsigned int i = 0; i < calLoadName.size(); ++i) {
+		x->noiseCal.length(noiseCal.size());
+		for (unsigned int i = 0; i < noiseCal.size(); ++i) {
 			
 				
-			x->calLoadName[i] = calLoadName.at(i);
+			x->noiseCal[i] = noiseCal.at(i);
 	 			
 	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->temperatureLoadExists = temperatureLoadExists;
+		
+		
+			
+		x->temperatureLoad.length(temperatureLoad.size());
+		for (unsigned int i = 0; i < temperatureLoad.size(); ++i) {
+			
+			x->temperatureLoad[i] = temperatureLoad.at(i).toIDLTemperature();
+			
 	 	}
 			
 		
@@ -258,7 +272,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalDeviceRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalDeviceRow::setFromIDL (CalDeviceRowIDL x) throw(ConversionException) {
+	void CalDeviceRow::setFromIDL (CalDeviceRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -280,6 +294,61 @@ namespace asdm {
 		setNumCalload(x.numCalload);
   			
  		
+		
+	
+
+	
+		
+		
+			
+		calLoadNames .clear();
+		for (unsigned int i = 0; i <x.calLoadNames.length(); ++i) {
+			
+			calLoadNames.push_back(x.calLoadNames[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		numReceptorExists = x.numReceptorExists;
+		if (x.numReceptorExists) {
+		
+		
+			
+		setNumReceptor(x.numReceptor);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		calEffExists = x.calEffExists;
+		if (x.calEffExists) {
+		
+		
+			
+		calEff .clear();
+		vector<float> v_aux_calEff;
+		for (unsigned int i = 0; i < x.calEff.length(); ++i) {
+			v_aux_calEff.clear();
+			for (unsigned int j = 0; j < x.calEff[0].length(); ++j) {
+				
+				v_aux_calEff.push_back(x.calEff[i][j]);
+	  			
+  			}
+  			calEff.push_back(v_aux_calEff);			
+		}
+			
+  		
+		
+		}
 		
 	
 
@@ -320,46 +389,6 @@ namespace asdm {
   		
 		
 		}
-		
-	
-
-	
-		
-		calEffExists = x.calEffExists;
-		if (x.calEffExists) {
-		
-		
-			
-		calEff .clear();
-		vector<float> v_aux_calEff;
-		for (unsigned int i = 0; i < x.calEff.length(); ++i) {
-			v_aux_calEff.clear();
-			for (unsigned int j = 0; j < x.calEff[0].length(); ++j) {
-				
-				v_aux_calEff.push_back(x.calEff[i][j]);
-	  			
-  			}
-  			calEff.push_back(v_aux_calEff);			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		
-			
-		calLoadName .clear();
-		for (unsigned int i = 0; i <x.calLoadName.length(); ++i) {
-			
-			calLoadName.push_back(x.calLoadName[i]);
-  			
-		}
-			
-  		
 		
 	
 
@@ -405,7 +434,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalDevice");
+			throw ConversionException (err.getMessage(),"CalDevice");
 		}
 	}
 #endif
@@ -438,22 +467,18 @@ namespace asdm {
 
   	
  		
-		if (noiseCalExists) {
 		
+			buf.append(EnumerationParser::toXML("calLoadNames", calLoadNames));
 		
-		Parser::toXML(noiseCal, "noiseCal", buf);
-		
-		
-		}
 		
 	
 
   	
  		
-		if (temperatureLoadExists) {
+		if (numReceptorExists) {
 		
 		
-		Parser::toXML(temperatureLoad, "temperatureLoad", buf);
+		Parser::toXML(numReceptor, "numReceptor", buf);
 		
 		
 		}
@@ -474,9 +499,25 @@ namespace asdm {
 
   	
  		
+		if (noiseCalExists) {
 		
-			buf.append(EnumerationParser::toXML("calLoadName", calLoadName));
 		
+		Parser::toXML(noiseCal, "noiseCal", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (temperatureLoadExists) {
+		
+		
+		Parser::toXML(temperatureLoad, "temperatureLoad", buf);
+		
+		
+		}
 		
 	
 
@@ -525,7 +566,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalDeviceRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalDeviceRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -545,6 +586,38 @@ namespace asdm {
 	  	setNumCalload(Parser::getInteger("numCalload","CalDevice",rowDoc));
 			
 		
+	
+
+	
+		
+		
+		
+		calLoadNames = EnumerationParser::getCalibrationDevice1D("calLoadNames","CalDevice",rowDoc);			
+		
+		
+		
+	
+
+	
+  		
+        if (row.isStr("<numReceptor>")) {
+			
+	  		setNumReceptor(Parser::getInteger("numReceptor","CalDevice",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<calEff>")) {
+			
+								
+	  		setCalEff(Parser::get2DFloat("calEff","CalDevice",rowDoc));
+	  			
+	  		
+		}
+ 		
 	
 
 	
@@ -569,28 +642,6 @@ namespace asdm {
 	  		
 		}
  		
-	
-
-	
-  		
-        if (row.isStr("<calEff>")) {
-			
-								
-	  		setCalEff(Parser::get2DFloat("calEff","CalDevice",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-		
-		
-		
-		calLoadName = EnumerationParser::getCalibrationDevice1D("calLoadName","CalDevice",rowDoc);			
-		
-		
-		
 	
 
 	
@@ -631,6 +682,285 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"CalDevice");
 		}
+	}
+	
+	void CalDeviceRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	antennaId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	spectralWindowId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	timeInterval.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(feedId);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numCalload);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) calLoadNames.size());
+		for (unsigned int i = 0; i < calLoadNames.size(); i++)
+				
+			eoss.writeInt(calLoadNames.at(i));
+				
+				
+						
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(numReceptorExists);
+	if (numReceptorExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numReceptor);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(calEffExists);
+	if (calEffExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) calEff.size());
+		eoss.writeInt((int) calEff.at(0).size());
+		for (unsigned int i = 0; i < calEff.size(); i++) 
+			for (unsigned int j = 0;  j < calEff.at(0).size(); j++) 
+							 
+				eoss.writeFloat(calEff.at(i).at(j));
+				
+	
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(noiseCalExists);
+	if (noiseCalExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) noiseCal.size());
+		for (unsigned int i = 0; i < noiseCal.size(); i++)
+				
+			eoss.writeDouble(noiseCal.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(temperatureLoadExists);
+	if (temperatureLoadExists) {
+	
+	
+	
+		
+	Temperature::toBin(temperatureLoad, eoss);
+		
+	
+
+	}
+
+	}
+	
+	CalDeviceRow* CalDeviceRow::fromBin(EndianISStream& eiss, CalDeviceTable& table) {
+		CalDeviceRow* row = new  CalDeviceRow(table);
+		
+		
+		
+	
+		
+		
+		row->antennaId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->spectralWindowId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->feedId =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numCalload =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->calLoadNames.clear();
+		
+		unsigned int calLoadNamesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < calLoadNamesDim1; i++)
+			
+			row->calLoadNames.push_back(CCalibrationDevice::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+		
+		
+		
+	row->numReceptorExists = eiss.readBoolean();
+	if (row->numReceptorExists) {
+		
+	
+	
+		
+			
+		row->numReceptor =  eiss.readInt();
+			
+		
+	
+
+	}
+
+	row->calEffExists = eiss.readBoolean();
+	if (row->calEffExists) {
+		
+	
+	
+		
+			
+	
+		row->calEff.clear();
+		
+		unsigned int calEffDim1 = eiss.readInt();
+		unsigned int calEffDim2 = eiss.readInt();
+		vector <float> calEffAux1;
+		for (unsigned int i = 0; i < calEffDim1; i++) {
+			calEffAux1.clear();
+			for (unsigned int j = 0; j < calEffDim2 ; j++)			
+			
+			calEffAux1.push_back(eiss.readFloat());
+			
+			row->calEff.push_back(calEffAux1);
+		}
+	
+	
+
+		
+	
+
+	}
+
+	row->noiseCalExists = eiss.readBoolean();
+	if (row->noiseCalExists) {
+		
+	
+	
+		
+			
+	
+		row->noiseCal.clear();
+		
+		unsigned int noiseCalDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < noiseCalDim1; i++)
+			
+			row->noiseCal.push_back(eiss.readDouble());
+			
+	
+
+		
+	
+
+	}
+
+	row->temperatureLoadExists = eiss.readBoolean();
+	if (row->temperatureLoadExists) {
+		
+	
+		
+		
+			
+	
+	row->temperatureLoad = Temperature::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -706,6 +1036,132 @@ namespace asdm {
 	
 
 	
+
+	
+ 	/**
+ 	 * Get calLoadNames.
+ 	 * @return calLoadNames as vector<CalibrationDeviceMod::CalibrationDevice >
+ 	 */
+ 	vector<CalibrationDeviceMod::CalibrationDevice > CalDeviceRow::getCalLoadNames() const {
+	
+  		return calLoadNames;
+ 	}
+
+ 	/**
+ 	 * Set calLoadNames with the specified vector<CalibrationDeviceMod::CalibrationDevice >.
+ 	 * @param calLoadNames The vector<CalibrationDeviceMod::CalibrationDevice > value to which calLoadNames is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalDeviceRow::setCalLoadNames (vector<CalibrationDeviceMod::CalibrationDevice > calLoadNames)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->calLoadNames = calLoadNames;
+	
+ 	}
+	
+	
+
+	
+	/**
+	 * The attribute numReceptor is optional. Return true if this attribute exists.
+	 * @return true if and only if the numReceptor attribute exists. 
+	 */
+	bool CalDeviceRow::isNumReceptorExists() const {
+		return numReceptorExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get numReceptor, which is optional.
+ 	 * @return numReceptor as int
+ 	 * @throw IllegalAccessException If numReceptor does not exist.
+ 	 */
+ 	int CalDeviceRow::getNumReceptor() const  {
+		if (!numReceptorExists) {
+			throw IllegalAccessException("numReceptor", "CalDevice");
+		}
+	
+  		return numReceptor;
+ 	}
+
+ 	/**
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalDeviceRow::setNumReceptor (int numReceptor) {
+	
+ 		this->numReceptor = numReceptor;
+	
+		numReceptorExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark numReceptor, which is an optional field, as non-existent.
+	 */
+	void CalDeviceRow::clearNumReceptor () {
+		numReceptorExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute calEff is optional. Return true if this attribute exists.
+	 * @return true if and only if the calEff attribute exists. 
+	 */
+	bool CalDeviceRow::isCalEffExists() const {
+		return calEffExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get calEff, which is optional.
+ 	 * @return calEff as vector<vector<float > >
+ 	 * @throw IllegalAccessException If calEff does not exist.
+ 	 */
+ 	vector<vector<float > > CalDeviceRow::getCalEff() const  {
+		if (!calEffExists) {
+			throw IllegalAccessException("calEff", "CalDevice");
+		}
+	
+  		return calEff;
+ 	}
+
+ 	/**
+ 	 * Set calEff with the specified vector<vector<float > >.
+ 	 * @param calEff The vector<vector<float > > value to which calEff is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalDeviceRow::setCalEff (vector<vector<float > > calEff) {
+	
+ 		this->calEff = calEff;
+	
+		calEffExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark calEff, which is an optional field, as non-existent.
+	 */
+	void CalDeviceRow::clearCalEff () {
+		calEffExists = false;
+	}
+	
+
+	
 	/**
 	 * The attribute noiseCal is optional. Return true if this attribute exists.
 	 * @return true if and only if the noiseCal attribute exists. 
@@ -721,7 +1177,7 @@ namespace asdm {
  	 * @return noiseCal as vector<double >
  	 * @throw IllegalAccessException If noiseCal does not exist.
  	 */
- 	vector<double > CalDeviceRow::getNoiseCal() const throw(IllegalAccessException) {
+ 	vector<double > CalDeviceRow::getNoiseCal() const  {
 		if (!noiseCalExists) {
 			throw IllegalAccessException("noiseCal", "CalDevice");
 		}
@@ -768,7 +1224,7 @@ namespace asdm {
  	 * @return temperatureLoad as vector<Temperature >
  	 * @throw IllegalAccessException If temperatureLoad does not exist.
  	 */
- 	vector<Temperature > CalDeviceRow::getTemperatureLoad() const throw(IllegalAccessException) {
+ 	vector<Temperature > CalDeviceRow::getTemperatureLoad() const  {
 		if (!temperatureLoadExists) {
 			throw IllegalAccessException("temperatureLoad", "CalDevice");
 		}
@@ -797,85 +1253,6 @@ namespace asdm {
 	void CalDeviceRow::clearTemperatureLoad () {
 		temperatureLoadExists = false;
 	}
-	
-
-	
-	/**
-	 * The attribute calEff is optional. Return true if this attribute exists.
-	 * @return true if and only if the calEff attribute exists. 
-	 */
-	bool CalDeviceRow::isCalEffExists() const {
-		return calEffExists;
-	}
-	
-
-	
- 	/**
- 	 * Get calEff, which is optional.
- 	 * @return calEff as vector<vector<float > >
- 	 * @throw IllegalAccessException If calEff does not exist.
- 	 */
- 	vector<vector<float > > CalDeviceRow::getCalEff() const throw(IllegalAccessException) {
-		if (!calEffExists) {
-			throw IllegalAccessException("calEff", "CalDevice");
-		}
-	
-  		return calEff;
- 	}
-
- 	/**
- 	 * Set calEff with the specified vector<vector<float > >.
- 	 * @param calEff The vector<vector<float > > value to which calEff is to be set.
- 	 
- 	
- 	 */
- 	void CalDeviceRow::setCalEff (vector<vector<float > > calEff) {
-	
- 		this->calEff = calEff;
-	
-		calEffExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark calEff, which is an optional field, as non-existent.
-	 */
-	void CalDeviceRow::clearCalEff () {
-		calEffExists = false;
-	}
-	
-
-	
-
-	
- 	/**
- 	 * Get calLoadName.
- 	 * @return calLoadName as vector<CalibrationDeviceMod::CalibrationDevice >
- 	 */
- 	vector<CalibrationDeviceMod::CalibrationDevice > CalDeviceRow::getCalLoadName() const {
-	
-  		return calLoadName;
- 	}
-
- 	/**
- 	 * Set calLoadName with the specified vector<CalibrationDeviceMod::CalibrationDevice >.
- 	 * @param calLoadName The vector<CalibrationDeviceMod::CalibrationDevice > value to which calLoadName is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalDeviceRow::setCalLoadName (vector<CalibrationDeviceMod::CalibrationDevice > calLoadName)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->calLoadName = calLoadName;
-	
- 	}
-	
 	
 
 	
@@ -1070,6 +1447,16 @@ namespace asdm {
 	
 
 	
+
+	
+		numReceptorExists = false;
+	
+
+	
+		calEffExists = false;
+	
+
+	
 		noiseCalExists = false;
 	
 
@@ -1078,12 +1465,6 @@ namespace asdm {
 	
 
 	
-		calEffExists = false;
-	
-
-	
-
-	
 	
 
 	
@@ -1093,6 +1474,8 @@ namespace asdm {
 	
 	
 	
+	
+
 	
 
 	
@@ -1118,17 +1501,21 @@ namespace asdm {
 	
 
 	
-		noiseCalExists = false;
-	
 
 	
-		temperatureLoadExists = false;
+		numReceptorExists = false;
 	
 
 	
 		calEffExists = false;
 	
 
+	
+		noiseCalExists = false;
+	
+
+	
+		temperatureLoadExists = false;
 	
 
 	
@@ -1144,21 +1531,35 @@ namespace asdm {
 		
 			antennaId = row.antennaId;
 		
-			feedId = row.feedId;
-		
 			spectralWindowId = row.spectralWindowId;
 		
 			timeInterval = row.timeInterval;
+		
+			feedId = row.feedId;
 		
 		
 		
 		
 			numCalload = row.numCalload;
 		
-			calLoadName = row.calLoadName;
+			calLoadNames = row.calLoadNames;
 		
 		
 		
+		
+		if (row.numReceptorExists) {
+			numReceptor = row.numReceptor;		
+			numReceptorExists = true;
+		}
+		else
+			numReceptorExists = false;
+		
+		if (row.calEffExists) {
+			calEff = row.calEff;		
+			calEffExists = true;
+		}
+		else
+			calEffExists = false;
 		
 		if (row.noiseCalExists) {
 			noiseCal = row.noiseCal;		
@@ -1174,31 +1575,17 @@ namespace asdm {
 		else
 			temperatureLoadExists = false;
 		
-		if (row.calEffExists) {
-			calEff = row.calEff;		
-			calEffExists = true;
-		}
-		else
-			calEffExists = false;
-		
 		}	
 	}
 
 	
-	bool CalDeviceRow::compareNoAutoInc(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadName) {
+	bool CalDeviceRow::compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadNames) {
 		bool result;
 		result = true;
 		
 	
 		
 		result = result && (this->antennaId == antennaId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->feedId == feedId);
 		
 		if (!result) return false;
 	
@@ -1219,6 +1606,13 @@ namespace asdm {
 
 	
 		
+		result = result && (this->feedId == feedId);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->numCalload == numCalload);
 		
 		if (!result) return false;
@@ -1226,7 +1620,7 @@ namespace asdm {
 
 	
 		
-		result = result && (this->calLoadName == calLoadName);
+		result = result && (this->calLoadNames == calLoadNames);
 		
 		if (!result) return false;
 	
@@ -1236,7 +1630,7 @@ namespace asdm {
 	
 	
 	
-	bool CalDeviceRow::compareRequiredValue(int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadName) {
+	bool CalDeviceRow::compareRequiredValue(int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadNames) {
 		bool result;
 		result = true;
 		
@@ -1245,7 +1639,7 @@ namespace asdm {
 	
 
 	
-		if (!(this->calLoadName == calLoadName)) return false;
+		if (!(this->calLoadNames == calLoadNames)) return false;
 	
 
 		return result;
@@ -1265,7 +1659,7 @@ namespace asdm {
 			
 		if (this->numCalload != x->numCalload) return false;
 			
-		if (this->calLoadName != x->calLoadName) return false;
+		if (this->calLoadNames != x->calLoadNames) return false;
 			
 		
 		return true;

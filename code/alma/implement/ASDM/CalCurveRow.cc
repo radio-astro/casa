@@ -101,7 +101,7 @@ namespace asdm {
 		
 			
 				
-		x->numAntenna = numAntenna;
+		x->atmPhaseCorrection = atmPhaseCorrection;
  				
  			
 		
@@ -113,73 +113,8 @@ namespace asdm {
 		
 			
 				
-		x->numBaseline = numBaseline;
+		x->typeCurve = typeCurve;
  				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->numAPC = numAPC;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->numReceptor = numReceptor;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->numPoly = numPoly;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->antennaNames.length(antennaNames.size());
-		for (unsigned int i = 0; i < antennaNames.size(); ++i) {
-			
-				
-			x->antennaNames[i] = CORBA::string_dup(antennaNames.at(i).c_str());
-				
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->refAntennaName = CORBA::string_dup(refAntennaName.c_str());
-				
  			
 		
 	
@@ -193,40 +128,6 @@ namespace asdm {
 		x->receiverBand = receiverBand;
  				
  			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->atmPhaseCorrections.length(atmPhaseCorrections.size());
-		for (unsigned int i = 0; i < atmPhaseCorrections.size(); ++i) {
-			
-				
-			x->atmPhaseCorrections[i] = atmPhaseCorrections.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->polarizationTypes.length(polarizationTypes.size());
-		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
-			
-				
-			x->polarizationTypes[i] = polarizationTypes.at(i);
-	 			
-	 		
-	 	}
-			
 		
 	
 
@@ -271,7 +172,7 @@ namespace asdm {
 		
 			
 				
-		x->typeCurve = typeCurve;
+		x->numAntenna = numAntenna;
  				
  			
 		
@@ -282,7 +183,67 @@ namespace asdm {
 		
 		
 			
-		x->timeOrigin = timeOrigin.toIDLArrayTime();
+				
+		x->numPoly = numPoly;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->antennaNames.length(antennaNames.size());
+		for (unsigned int i = 0; i < antennaNames.size(); ++i) {
+			
+				
+			x->antennaNames[i] = CORBA::string_dup(antennaNames.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->refAntennaName = CORBA::string_dup(refAntennaName.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->polarizationTypes.length(polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
+			
+				
+			x->polarizationTypes[i] = polarizationTypes.at(i);
+	 			
+	 		
+	 	}
 			
 		
 	
@@ -297,22 +258,17 @@ namespace asdm {
 			x->curve[i].length(curve.at(i).size());
 			for (unsigned int j = 0; j < curve.at(i).size(); j++) {
 				x->curve[i][j].length(curve.at(i).at(j).size());
-				for (unsigned int k = 0; k < curve.at(i).at(j).size(); k++) {
-					 x->curve[i][j][k].length(curve.at(i).at(j).at(k).size());
-			    }
 			}					 		
-		}		
+		}
 		
 		for (unsigned int i = 0; i < curve.size() ; i++)
 			for (unsigned int j = 0; j < curve.at(i).size(); j++)
 				for (unsigned int k = 0; k < curve.at(i).at(j).size(); k++)
-					for (unsigned int l = 0; l < curve.at(i).at(j).at(k).size(); l++)
 					
 						
-						x->curve[i][j][k][l] = curve.at(i).at(j).at(k).at(l);
+					x->curve[i][j][k] = curve.at(i).at(j).at(k);
 		 				
-			 							
-	 	cout << "Converted successfully" << endl;
+			 									
 			
 		
 	
@@ -322,22 +278,52 @@ namespace asdm {
 		
 		
 			
+		x->reducedChiSquared.length(reducedChiSquared.size());
+		for (unsigned int i = 0; i < reducedChiSquared.size(); ++i) {
+			
+				
+			x->reducedChiSquared[i] = reducedChiSquared.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->numBaselineExists = numBaselineExists;
+		
+		
+			
+				
+		x->numBaseline = numBaseline;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->rmsExists = rmsExists;
+		
+		
+			
 		x->rms.length(rms.size());
 		for (unsigned int i = 0; i < rms.size(); i++) {
-			x->rms[i].length(rms.at(i).size());
-			for (unsigned int j = 0; j < rms.at(i).size(); j++) {
-				x->rms[i][j].length(rms.at(i).at(j).size());
-			}					 		
+			x->rms[i].length(rms.at(i).size());			 		
 		}
 		
 		for (unsigned int i = 0; i < rms.size() ; i++)
 			for (unsigned int j = 0; j < rms.at(i).size(); j++)
-				for (unsigned int k = 0; k < rms.at(i).at(j).size(); k++)
 					
 						
-					x->rms[i][j][k] = rms.at(i).at(j).at(k);
+				x->rms[i][j] = rms.at(i).at(j);
 		 				
-			 									
+			 						
+		
 			
 		
 	
@@ -385,7 +371,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalCurveRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalCurveRow::setFromIDL (CalCurveRowIDL x) throw(ConversionException) {
+	void CalCurveRow::setFromIDL (CalCurveRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -394,7 +380,7 @@ namespace asdm {
 		
 		
 			
-		setNumAntenna(x.numAntenna);
+		setAtmPhaseCorrection(x.atmPhaseCorrection);
   			
  		
 		
@@ -404,63 +390,8 @@ namespace asdm {
 		
 		
 			
-		setNumBaseline(x.numBaseline);
+		setTypeCurve(x.typeCurve);
   			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumAPC(x.numAPC);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumReceptor(x.numReceptor);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumPoly(x.numPoly);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		antennaNames .clear();
-		for (unsigned int i = 0; i <x.antennaNames.length(); ++i) {
-			
-			antennaNames.push_back(string (x.antennaNames[i]));
-			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		setRefAntennaName(string (x.refAntennaName));
-			
  		
 		
 	
@@ -472,36 +403,6 @@ namespace asdm {
 		setReceiverBand(x.receiverBand);
   			
  		
-		
-	
-
-	
-		
-		
-			
-		atmPhaseCorrections .clear();
-		for (unsigned int i = 0; i <x.atmPhaseCorrections.length(); ++i) {
-			
-			atmPhaseCorrections.push_back(x.atmPhaseCorrections[i]);
-  			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		polarizationTypes .clear();
-		for (unsigned int i = 0; i <x.polarizationTypes.length(); ++i) {
-			
-			polarizationTypes.push_back(x.polarizationTypes[i]);
-  			
-		}
-			
-  		
 		
 	
 
@@ -544,7 +445,7 @@ namespace asdm {
 		
 		
 			
-		setTypeCurve(x.typeCurve);
+		setNumAntenna(x.numAntenna);
   			
  		
 		
@@ -554,7 +455,42 @@ namespace asdm {
 		
 		
 			
-		setTimeOrigin(ArrayTime (x.timeOrigin));
+		setNumPoly(x.numPoly);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumReceptor(x.numReceptor);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		antennaNames .clear();
+		for (unsigned int i = 0; i <x.antennaNames.length(); ++i) {
+			
+			antennaNames.push_back(string (x.antennaNames[i]));
+			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setRefAntennaName(string (x.refAntennaName));
 			
  		
 		
@@ -564,28 +500,12 @@ namespace asdm {
 		
 		
 			
-		curve .clear();
-		vector <vector< vector<float> > > vvv_aux_curve;
-		vector< vector<float> > vv_aux_curve;
-		vector<float> v_aux_curve;
-		
-		for (unsigned int i = 0; i <x.curve.length(); ++i) {
-			vvv_aux_curve.clear();
-			for (unsigned int j = 0; j <x.curve[0].length(); ++j) { 
-				vv_aux_curve.clear();
-				for (unsigned int k = 0; k < x.curve[0][0].length(); ++k) { 
-					v_aux_curve.clear();
-					for (unsigned int l = 0; l <x.curve[0][0][0].length(); ++l) { 
-					
-						v_aux_curve.push_back(x.curve[i][j][k][l]);
-		  			
-		  		   }
-		  		   vv_aux_curve.push_back(v_aux_curve);
-		  	   }
-		  	   vvv_aux_curve.push_back(vv_aux_curve);
-		  	}
-		  	curve.push_back(vvv_aux_curve);
-		} 		
+		polarizationTypes .clear();
+		for (unsigned int i = 0; i <x.polarizationTypes.length(); ++i) {
+			
+			polarizationTypes.push_back(x.polarizationTypes[i]);
+  			
+		}
 			
   		
 		
@@ -595,25 +515,80 @@ namespace asdm {
 		
 		
 			
-		rms .clear();
-		vector< vector<float> > vv_aux_rms;
-		vector<float> v_aux_rms;
+		curve .clear();
+		vector< vector<float> > vv_aux_curve;
+		vector<float> v_aux_curve;
 		
-		for (unsigned int i = 0; i < x.rms.length(); ++i) {
-			vv_aux_rms.clear();
-			for (unsigned int j = 0; j < x.rms[0].length(); ++j) {
-				v_aux_rms.clear();
-				for (unsigned int k = 0; k < x.rms[0][0].length(); ++k) {
+		for (unsigned int i = 0; i < x.curve.length(); ++i) {
+			vv_aux_curve.clear();
+			for (unsigned int j = 0; j < x.curve[0].length(); ++j) {
+				v_aux_curve.clear();
+				for (unsigned int k = 0; k < x.curve[0][0].length(); ++k) {
 					
-					v_aux_rms.push_back(x.rms[i][j][k]);
+					v_aux_curve.push_back(x.curve[i][j][k]);
 		  			
 		  		}
-		  		vv_aux_rms.push_back(v_aux_rms);
+		  		vv_aux_curve.push_back(v_aux_curve);
   			}
-  			rms.push_back(vv_aux_rms);
+  			curve.push_back(vv_aux_curve);
 		}
 			
   		
+		
+	
+
+	
+		
+		
+			
+		reducedChiSquared .clear();
+		for (unsigned int i = 0; i <x.reducedChiSquared.length(); ++i) {
+			
+			reducedChiSquared.push_back(x.reducedChiSquared[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		numBaselineExists = x.numBaselineExists;
+		if (x.numBaselineExists) {
+		
+		
+			
+		setNumBaseline(x.numBaseline);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		rmsExists = x.rmsExists;
+		if (x.rmsExists) {
+		
+		
+			
+		rms .clear();
+		vector<float> v_aux_rms;
+		for (unsigned int i = 0; i < x.rms.length(); ++i) {
+			v_aux_rms.clear();
+			for (unsigned int j = 0; j < x.rms[0].length(); ++j) {
+				
+				v_aux_rms.push_back(x.rms[i][j]);
+	  			
+  			}
+  			rms.push_back(v_aux_rms);			
+		}
+			
+  		
+		
+		}
 		
 	
 
@@ -647,7 +622,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalCurve");
+			throw ConversionException (err.getMessage(),"CalCurve");
 		}
 	}
 #endif
@@ -665,7 +640,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numAntenna, "numAntenna", buf);
+			buf.append(EnumerationParser::toXML("atmPhaseCorrection", atmPhaseCorrection));
 		
 		
 	
@@ -673,47 +648,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numBaseline, "numBaseline", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numAPC, "numAPC", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numReceptor, "numReceptor", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numPoly, "numPoly", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(antennaNames, "antennaNames", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(refAntennaName, "refAntennaName", buf);
+			buf.append(EnumerationParser::toXML("typeCurve", typeCurve));
 		
 		
 	
@@ -722,22 +657,6 @@ namespace asdm {
  		
 		
 			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
-		
-		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("atmPhaseCorrections", atmPhaseCorrections));
-		
-		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("polarizationTypes", polarizationTypes));
 		
 		
 	
@@ -769,7 +688,7 @@ namespace asdm {
   	
  		
 		
-			buf.append(EnumerationParser::toXML("typeCurve", typeCurve));
+		Parser::toXML(numAntenna, "numAntenna", buf);
 		
 		
 	
@@ -777,7 +696,39 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(timeOrigin, "timeOrigin", buf);
+		Parser::toXML(numPoly, "numPoly", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numReceptor, "numReceptor", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(antennaNames, "antennaNames", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(refAntennaName, "refAntennaName", buf);
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("polarizationTypes", polarizationTypes));
 		
 		
 	
@@ -793,8 +744,32 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(reducedChiSquared, "reducedChiSquared", buf);
+		
+		
+	
+
+  	
+ 		
+		if (numBaselineExists) {
+		
+		
+		Parser::toXML(numBaseline, "numBaseline", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (rmsExists) {
+		
+		
 		Parser::toXML(rms, "rms", buf);
 		
+		
+		}
 		
 	
 
@@ -833,67 +808,29 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalCurveRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalCurveRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
 	
 		
 	
-  		
-			
-	  	setNumAntenna(Parser::getInteger("numAntenna","CalCurve",rowDoc));
-			
+		
+		
+		
+		atmPhaseCorrection = EnumerationParser::getAtmPhaseCorrection("atmPhaseCorrection","CalCurve",rowDoc);
+		
+		
 		
 	
 
 	
-  		
-			
-	  	setNumBaseline(Parser::getInteger("numBaseline","CalCurve",rowDoc));
-			
 		
-	
-
-	
-  		
-			
-	  	setNumAPC(Parser::getInteger("numAPC","CalCurve",rowDoc));
-			
 		
-	
-
-	
-  		
-			
-	  	setNumReceptor(Parser::getInteger("numReceptor","CalCurve",rowDoc));
-			
 		
-	
-
-	
-  		
-			
-	  	setNumPoly(Parser::getInteger("numPoly","CalCurve",rowDoc));
-			
+		typeCurve = EnumerationParser::getCalCurveType("typeCurve","CalCurve",rowDoc);
 		
-	
-
-	
-  		
-			
-					
-	  	setAntennaNames(Parser::get1DString("antennaNames","CalCurve",rowDoc));
-	  			
-	  		
 		
-	
-
-	
-  		
-			
-	  	setRefAntennaName(Parser::getString("refAntennaName","CalCurve",rowDoc));
-			
 		
 	
 
@@ -902,26 +839,6 @@ namespace asdm {
 		
 		
 		receiverBand = EnumerationParser::getReceiverBand("receiverBand","CalCurve",rowDoc);
-		
-		
-		
-	
-
-	
-		
-		
-		
-		atmPhaseCorrections = EnumerationParser::getAtmPhaseCorrection1D("atmPhaseCorrections","CalCurve",rowDoc);			
-		
-		
-		
-	
-
-	
-		
-		
-		
-		polarizationTypes = EnumerationParser::getPolarizationType1D("polarizationTypes","CalCurve",rowDoc);			
 		
 		
 		
@@ -954,19 +871,25 @@ namespace asdm {
 	
 
 	
-		
-		
-		
-		typeCurve = EnumerationParser::getCalCurveType("typeCurve","CalCurve",rowDoc);
-		
-		
+  		
+			
+	  	setNumAntenna(Parser::getInteger("numAntenna","CalCurve",rowDoc));
+			
 		
 	
 
 	
   		
 			
-	  	setTimeOrigin(Parser::getArrayTime("timeOrigin","CalCurve",rowDoc));
+	  	setNumPoly(Parser::getInteger("numPoly","CalCurve",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setNumReceptor(Parser::getInteger("numReceptor","CalCurve",rowDoc));
 			
 		
 	
@@ -975,7 +898,35 @@ namespace asdm {
   		
 			
 					
-	  	setCurve(Parser::get4DFloat("curve","CalCurve",rowDoc));
+	  	setAntennaNames(Parser::get1DString("antennaNames","CalCurve",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setRefAntennaName(Parser::getString("refAntennaName","CalCurve",rowDoc));
+			
+		
+	
+
+	
+		
+		
+		
+		polarizationTypes = EnumerationParser::getPolarizationType1D("polarizationTypes","CalCurve",rowDoc);			
+		
+		
+		
+	
+
+	
+  		
+			
+					
+	  	setCurve(Parser::get3DFloat("curve","CalCurve",rowDoc));
 	  			
 	  		
 		
@@ -985,10 +936,32 @@ namespace asdm {
   		
 			
 					
-	  	setRms(Parser::get3DFloat("rms","CalCurve",rowDoc));
+	  	setReducedChiSquared(Parser::get1DDouble("reducedChiSquared","CalCurve",rowDoc));
 	  			
 	  		
 		
+	
+
+	
+  		
+        if (row.isStr("<numBaseline>")) {
+			
+	  		setNumBaseline(Parser::getInteger("numBaseline","CalCurve",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<rms>")) {
+			
+								
+	  		setRms(Parser::get2DFloat("rms","CalCurve",rowDoc));
+	  			
+	  		
+		}
+ 		
 	
 
 	
@@ -1021,6 +994,449 @@ namespace asdm {
 		}
 	}
 	
+	void CalCurveRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+					
+			eoss.writeInt(atmPhaseCorrection);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(typeCurve);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(receiverBand);
+				
+		
+	
+
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	Frequency::toBin(frequencyRange, eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numAntenna);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numPoly);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numReceptor);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) antennaNames.size());
+		for (unsigned int i = 0; i < antennaNames.size(); i++)
+				
+			eoss.writeString(antennaNames.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(refAntennaName);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); i++)
+				
+			eoss.writeInt(polarizationTypes.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) curve.size());
+		eoss.writeInt((int) curve.at(0).size());		
+		eoss.writeInt((int) curve.at(0).at(0).size());
+		for (unsigned int i = 0; i < curve.size(); i++) 
+			for (unsigned int j = 0;  j < curve.at(0).size(); j++)
+				for (unsigned int k = 0; k <  curve.at(0).at(0).size(); k++)	
+							 
+					eoss.writeFloat(curve.at(i).at(j).at(k));
+						
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) reducedChiSquared.size());
+		for (unsigned int i = 0; i < reducedChiSquared.size(); i++)
+				
+			eoss.writeDouble(reducedChiSquared.at(i));
+				
+				
+						
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(numBaselineExists);
+	if (numBaselineExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numBaseline);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(rmsExists);
+	if (rmsExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) rms.size());
+		eoss.writeInt((int) rms.at(0).size());
+		for (unsigned int i = 0; i < rms.size(); i++) 
+			for (unsigned int j = 0;  j < rms.at(0).size(); j++) 
+							 
+				eoss.writeFloat(rms.at(i).at(j));
+				
+	
+						
+		
+	
+
+	}
+
+	}
+	
+	CalCurveRow* CalCurveRow::fromBin(EndianISStream& eiss, CalCurveTable& table) {
+		CalCurveRow* row = new  CalCurveRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->typeCurve = CCalCurveType::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+			
+	
+	row->frequencyRange = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->numAntenna =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numPoly =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numReceptor =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->antennaNames.clear();
+		
+		unsigned int antennaNamesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < antennaNamesDim1; i++)
+			
+			row->antennaNames.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->refAntennaName =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->polarizationTypes.clear();
+		
+		unsigned int polarizationTypesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
+			
+			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->curve.clear();
+			
+		unsigned int curveDim1 = eiss.readInt();
+		unsigned int curveDim2 = eiss.readInt();
+		unsigned int curveDim3 = eiss.readInt();
+		vector <vector<float> > curveAux2;
+		vector <float> curveAux1;
+		for (unsigned int i = 0; i < curveDim1; i++) {
+			curveAux2.clear();
+			for (unsigned int j = 0; j < curveDim2 ; j++) {
+				curveAux1.clear();
+				for (unsigned int k = 0; k < curveDim3; k++) {
+			
+					curveAux1.push_back(eiss.readFloat());
+			
+				}
+				curveAux2.push_back(curveAux1);
+			}
+			row->curve.push_back(curveAux2);
+		}	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->reducedChiSquared.clear();
+		
+		unsigned int reducedChiSquaredDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < reducedChiSquaredDim1; i++)
+			
+			row->reducedChiSquared.push_back(eiss.readDouble());
+			
+	
+
+		
+	
+
+		
+		
+		
+	row->numBaselineExists = eiss.readBoolean();
+	if (row->numBaselineExists) {
+		
+	
+	
+		
+			
+		row->numBaseline =  eiss.readInt();
+			
+		
+	
+
+	}
+
+	row->rmsExists = eiss.readBoolean();
+	if (row->rmsExists) {
+		
+	
+	
+		
+			
+	
+		row->rms.clear();
+		
+		unsigned int rmsDim1 = eiss.readInt();
+		unsigned int rmsDim2 = eiss.readInt();
+		vector <float> rmsAux1;
+		for (unsigned int i = 0; i < rmsDim1; i++) {
+			rmsAux1.clear();
+			for (unsigned int j = 0; j < rmsDim2 ; j++)			
+			
+			rmsAux1.push_back(eiss.readFloat());
+			
+			row->rms.push_back(rmsAux1);
+		}
+	
+	
+
+		
+	
+
+	}
+
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
@@ -1029,29 +1445,33 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numAntenna.
- 	 * @return numAntenna as int
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
  	 */
- 	int CalCurveRow::getNumAntenna() const {
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection CalCurveRow::getAtmPhaseCorrection() const {
 	
-  		return numAntenna;
+  		return atmPhaseCorrection;
  	}
 
  	/**
- 	 * Set numAntenna with the specified int.
- 	 * @param numAntenna The int value to which numAntenna is to be set.
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void CalCurveRow::setNumAntenna (int numAntenna)  {
+ 	void CalCurveRow::setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("atmPhaseCorrection", "CalCurve");
+		
   		}
   	
- 		this->numAntenna = numAntenna;
+ 		this->atmPhaseCorrection = atmPhaseCorrection;
 	
  	}
 	
@@ -1061,189 +1481,33 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numBaseline.
- 	 * @return numBaseline as int
+ 	 * Get typeCurve.
+ 	 * @return typeCurve as CalCurveTypeMod::CalCurveType
  	 */
- 	int CalCurveRow::getNumBaseline() const {
+ 	CalCurveTypeMod::CalCurveType CalCurveRow::getTypeCurve() const {
 	
-  		return numBaseline;
+  		return typeCurve;
  	}
 
  	/**
- 	 * Set numBaseline with the specified int.
- 	 * @param numBaseline The int value to which numBaseline is to be set.
+ 	 * Set typeCurve with the specified CalCurveTypeMod::CalCurveType.
+ 	 * @param typeCurve The CalCurveTypeMod::CalCurveType value to which typeCurve is to be set.
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void CalCurveRow::setNumBaseline (int numBaseline)  {
+ 	void CalCurveRow::setTypeCurve (CalCurveTypeMod::CalCurveType typeCurve)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("typeCurve", "CalCurve");
+		
   		}
   	
- 		this->numBaseline = numBaseline;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numAPC.
- 	 * @return numAPC as int
- 	 */
- 	int CalCurveRow::getNumAPC() const {
-	
-  		return numAPC;
- 	}
-
- 	/**
- 	 * Set numAPC with the specified int.
- 	 * @param numAPC The int value to which numAPC is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalCurveRow::setNumAPC (int numAPC)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numAPC = numAPC;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numReceptor.
- 	 * @return numReceptor as int
- 	 */
- 	int CalCurveRow::getNumReceptor() const {
-	
-  		return numReceptor;
- 	}
-
- 	/**
- 	 * Set numReceptor with the specified int.
- 	 * @param numReceptor The int value to which numReceptor is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalCurveRow::setNumReceptor (int numReceptor)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numReceptor = numReceptor;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numPoly.
- 	 * @return numPoly as int
- 	 */
- 	int CalCurveRow::getNumPoly() const {
-	
-  		return numPoly;
- 	}
-
- 	/**
- 	 * Set numPoly with the specified int.
- 	 * @param numPoly The int value to which numPoly is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalCurveRow::setNumPoly (int numPoly)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numPoly = numPoly;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get antennaNames.
- 	 * @return antennaNames as vector<string >
- 	 */
- 	vector<string > CalCurveRow::getAntennaNames() const {
-	
-  		return antennaNames;
- 	}
-
- 	/**
- 	 * Set antennaNames with the specified vector<string >.
- 	 * @param antennaNames The vector<string > value to which antennaNames is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalCurveRow::setAntennaNames (vector<string > antennaNames)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->antennaNames = antennaNames;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get refAntennaName.
- 	 * @return refAntennaName as string
- 	 */
- 	string CalCurveRow::getRefAntennaName() const {
-	
-  		return refAntennaName;
- 	}
-
- 	/**
- 	 * Set refAntennaName with the specified string.
- 	 * @param refAntennaName The string value to which refAntennaName is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalCurveRow::setRefAntennaName (string refAntennaName)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->refAntennaName = refAntennaName;
+ 		this->typeCurve = typeCurve;
 	
  	}
 	
@@ -1267,79 +1531,19 @@ namespace asdm {
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
  	void CalCurveRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("receiverBand", "CalCurve");
+		
   		}
   	
  		this->receiverBand = receiverBand;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get atmPhaseCorrections.
- 	 * @return atmPhaseCorrections as vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >
- 	 */
- 	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > CalCurveRow::getAtmPhaseCorrections() const {
-	
-  		return atmPhaseCorrections;
- 	}
-
- 	/**
- 	 * Set atmPhaseCorrections with the specified vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >.
- 	 * @param atmPhaseCorrections The vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > value to which atmPhaseCorrections is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalCurveRow::setAtmPhaseCorrections (vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->atmPhaseCorrections = atmPhaseCorrections;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get polarizationTypes.
- 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
- 	 */
- 	vector<PolarizationTypeMod::PolarizationType > CalCurveRow::getPolarizationTypes() const {
-	
-  		return polarizationTypes;
- 	}
-
- 	/**
- 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
- 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalCurveRow::setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->polarizationTypes = polarizationTypes;
 	
  	}
 	
@@ -1445,29 +1649,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get typeCurve.
- 	 * @return typeCurve as CalCurveTypeMod::CalCurveType
+ 	 * Get numAntenna.
+ 	 * @return numAntenna as int
  	 */
- 	CalCurveTypeMod::CalCurveType CalCurveRow::getTypeCurve() const {
+ 	int CalCurveRow::getNumAntenna() const {
 	
-  		return typeCurve;
+  		return numAntenna;
  	}
 
  	/**
- 	 * Set typeCurve with the specified CalCurveTypeMod::CalCurveType.
- 	 * @param typeCurve The CalCurveTypeMod::CalCurveType value to which typeCurve is to be set.
+ 	 * Set numAntenna with the specified int.
+ 	 * @param numAntenna The int value to which numAntenna is to be set.
  	 
  	
  		
  	 */
- 	void CalCurveRow::setTypeCurve (CalCurveTypeMod::CalCurveType typeCurve)  {
+ 	void CalCurveRow::setNumAntenna (int numAntenna)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->typeCurve = typeCurve;
+ 		this->numAntenna = numAntenna;
 	
  	}
 	
@@ -1477,29 +1681,157 @@ namespace asdm {
 
 	
  	/**
- 	 * Get timeOrigin.
- 	 * @return timeOrigin as ArrayTime
+ 	 * Get numPoly.
+ 	 * @return numPoly as int
  	 */
- 	ArrayTime CalCurveRow::getTimeOrigin() const {
+ 	int CalCurveRow::getNumPoly() const {
 	
-  		return timeOrigin;
+  		return numPoly;
  	}
 
  	/**
- 	 * Set timeOrigin with the specified ArrayTime.
- 	 * @param timeOrigin The ArrayTime value to which timeOrigin is to be set.
+ 	 * Set numPoly with the specified int.
+ 	 * @param numPoly The int value to which numPoly is to be set.
  	 
  	
  		
  	 */
- 	void CalCurveRow::setTimeOrigin (ArrayTime timeOrigin)  {
+ 	void CalCurveRow::setNumPoly (int numPoly)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->timeOrigin = timeOrigin;
+ 		this->numPoly = numPoly;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
+ 	 */
+ 	int CalCurveRow::getNumReceptor() const {
+	
+  		return numReceptor;
+ 	}
+
+ 	/**
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalCurveRow::setNumReceptor (int numReceptor)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numReceptor = numReceptor;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get antennaNames.
+ 	 * @return antennaNames as vector<string >
+ 	 */
+ 	vector<string > CalCurveRow::getAntennaNames() const {
+	
+  		return antennaNames;
+ 	}
+
+ 	/**
+ 	 * Set antennaNames with the specified vector<string >.
+ 	 * @param antennaNames The vector<string > value to which antennaNames is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalCurveRow::setAntennaNames (vector<string > antennaNames)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->antennaNames = antennaNames;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get refAntennaName.
+ 	 * @return refAntennaName as string
+ 	 */
+ 	string CalCurveRow::getRefAntennaName() const {
+	
+  		return refAntennaName;
+ 	}
+
+ 	/**
+ 	 * Set refAntennaName with the specified string.
+ 	 * @param refAntennaName The string value to which refAntennaName is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalCurveRow::setRefAntennaName (string refAntennaName)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->refAntennaName = refAntennaName;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get polarizationTypes.
+ 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
+ 	 */
+ 	vector<PolarizationTypeMod::PolarizationType > CalCurveRow::getPolarizationTypes() const {
+	
+  		return polarizationTypes;
+ 	}
+
+ 	/**
+ 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalCurveRow::setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->polarizationTypes = polarizationTypes;
 	
  	}
 	
@@ -1510,21 +1842,21 @@ namespace asdm {
 	
  	/**
  	 * Get curve.
- 	 * @return curve as vector<vector<vector<vector<float > > > >
+ 	 * @return curve as vector<vector<vector<float > > >
  	 */
- 	vector<vector<vector<vector<float > > > > CalCurveRow::getCurve() const {
+ 	vector<vector<vector<float > > > CalCurveRow::getCurve() const {
 	
   		return curve;
  	}
 
  	/**
- 	 * Set curve with the specified vector<vector<vector<vector<float > > > >.
- 	 * @param curve The vector<vector<vector<vector<float > > > > value to which curve is to be set.
+ 	 * Set curve with the specified vector<vector<vector<float > > >.
+ 	 * @param curve The vector<vector<vector<float > > > value to which curve is to be set.
  	 
  	
  		
  	 */
- 	void CalCurveRow::setCurve (vector<vector<vector<vector<float > > > > curve)  {
+ 	void CalCurveRow::setCurve (vector<vector<vector<float > > > curve)  {
   	
   	
   		if (hasBeenAdded) {
@@ -1541,32 +1873,126 @@ namespace asdm {
 
 	
  	/**
- 	 * Get rms.
- 	 * @return rms as vector<vector<vector<float > > >
+ 	 * Get reducedChiSquared.
+ 	 * @return reducedChiSquared as vector<double >
  	 */
- 	vector<vector<vector<float > > > CalCurveRow::getRms() const {
+ 	vector<double > CalCurveRow::getReducedChiSquared() const {
 	
-  		return rms;
+  		return reducedChiSquared;
  	}
 
  	/**
- 	 * Set rms with the specified vector<vector<vector<float > > >.
- 	 * @param rms The vector<vector<vector<float > > > value to which rms is to be set.
+ 	 * Set reducedChiSquared with the specified vector<double >.
+ 	 * @param reducedChiSquared The vector<double > value to which reducedChiSquared is to be set.
  	 
  	
  		
  	 */
- 	void CalCurveRow::setRms (vector<vector<vector<float > > > rms)  {
+ 	void CalCurveRow::setReducedChiSquared (vector<double > reducedChiSquared)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->rms = rms;
+ 		this->reducedChiSquared = reducedChiSquared;
 	
  	}
 	
+	
+
+	
+	/**
+	 * The attribute numBaseline is optional. Return true if this attribute exists.
+	 * @return true if and only if the numBaseline attribute exists. 
+	 */
+	bool CalCurveRow::isNumBaselineExists() const {
+		return numBaselineExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get numBaseline, which is optional.
+ 	 * @return numBaseline as int
+ 	 * @throw IllegalAccessException If numBaseline does not exist.
+ 	 */
+ 	int CalCurveRow::getNumBaseline() const  {
+		if (!numBaselineExists) {
+			throw IllegalAccessException("numBaseline", "CalCurve");
+		}
+	
+  		return numBaseline;
+ 	}
+
+ 	/**
+ 	 * Set numBaseline with the specified int.
+ 	 * @param numBaseline The int value to which numBaseline is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalCurveRow::setNumBaseline (int numBaseline) {
+	
+ 		this->numBaseline = numBaseline;
+	
+		numBaselineExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark numBaseline, which is an optional field, as non-existent.
+	 */
+	void CalCurveRow::clearNumBaseline () {
+		numBaselineExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute rms is optional. Return true if this attribute exists.
+	 * @return true if and only if the rms attribute exists. 
+	 */
+	bool CalCurveRow::isRmsExists() const {
+		return rmsExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get rms, which is optional.
+ 	 * @return rms as vector<vector<float > >
+ 	 * @throw IllegalAccessException If rms does not exist.
+ 	 */
+ 	vector<vector<float > > CalCurveRow::getRms() const  {
+		if (!rmsExists) {
+			throw IllegalAccessException("rms", "CalCurve");
+		}
+	
+  		return rms;
+ 	}
+
+ 	/**
+ 	 * Set rms with the specified vector<vector<float > >.
+ 	 * @param rms The vector<vector<float > > value to which rms is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalCurveRow::setRms (vector<vector<float > > rms) {
+	
+ 		this->rms = rms;
+	
+		rmsExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark rms, which is an optional field, as non-existent.
+	 */
+	void CalCurveRow::clearRms () {
+		rmsExists = false;
+	}
 	
 
 	
@@ -1730,31 +2156,29 @@ namespace asdm {
 	
 
 	
-
+		numBaselineExists = false;
 	
 
 	
-
-	
-	
-
+		rmsExists = false;
 	
 
-	
-	
 	
 	
 
 	
 
 	
-
+	
+	
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+atmPhaseCorrection = CAtmPhaseCorrection::from_int(0);
 	
 
 	
-
-	
-
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+typeCurve = CCalCurveType::from_int(0);
 	
 
 	
@@ -1773,8 +2197,13 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
-typeCurve = CCalCurveType::from_int(0);
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -1820,9 +2249,11 @@ typeCurve = CCalCurveType::from_int(0);
 	
 
 	
-
+		numBaselineExists = false;
 	
 
+	
+		rmsExists = false;
 	
 
 	
@@ -1834,6 +2265,12 @@ typeCurve = CCalCurveType::from_int(0);
 		else {
 	
 		
+			atmPhaseCorrection = row.atmPhaseCorrection;
+		
+			typeCurve = row.typeCurve;
+		
+			receiverBand = row.receiverBand;
+		
 			calDataId = row.calDataId;
 		
 			calReductionId = row.calReductionId;
@@ -1841,110 +2278,63 @@ typeCurve = CCalCurveType::from_int(0);
 		
 		
 		
-			numAntenna = row.numAntenna;
-		
-			numBaseline = row.numBaseline;
-		
-			numAPC = row.numAPC;
-		
-			numReceptor = row.numReceptor;
-		
-			numPoly = row.numPoly;
-		
-			antennaNames = row.antennaNames;
-		
-			refAntennaName = row.refAntennaName;
-		
-			receiverBand = row.receiverBand;
-		
-			atmPhaseCorrections = row.atmPhaseCorrections;
-		
-			polarizationTypes = row.polarizationTypes;
-		
 			startValidTime = row.startValidTime;
 		
 			endValidTime = row.endValidTime;
 		
 			frequencyRange = row.frequencyRange;
 		
-			typeCurve = row.typeCurve;
+			numAntenna = row.numAntenna;
 		
-			timeOrigin = row.timeOrigin;
+			numPoly = row.numPoly;
+		
+			numReceptor = row.numReceptor;
+		
+			antennaNames = row.antennaNames;
+		
+			refAntennaName = row.refAntennaName;
+		
+			polarizationTypes = row.polarizationTypes;
 		
 			curve = row.curve;
 		
-			rms = row.rms;
+			reducedChiSquared = row.reducedChiSquared;
 		
 		
 		
+		
+		if (row.numBaselineExists) {
+			numBaseline = row.numBaseline;		
+			numBaselineExists = true;
+		}
+		else
+			numBaselineExists = false;
+		
+		if (row.rmsExists) {
+			rms = row.rms;		
+			rmsExists = true;
+		}
+		else
+			rmsExists = false;
 		
 		}	
 	}
 
 	
-	bool CalCurveRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, int numAntenna, int numBaseline, int numAPC, int numReceptor, int numPoly, vector<string > antennaNames, string refAntennaName, ReceiverBandMod::ReceiverBand receiverBand, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, CalCurveTypeMod::CalCurveType typeCurve, ArrayTime timeOrigin, vector<vector<vector<vector<float > > > > curve, vector<vector<vector<float > > > rms) {
+	bool CalCurveRow::compareNoAutoInc(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared) {
 		bool result;
 		result = true;
 		
 	
 		
-		result = result && (this->calDataId == calDataId);
+		result = result && (this->atmPhaseCorrection == atmPhaseCorrection);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->calReductionId == calReductionId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numAntenna == numAntenna);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numBaseline == numBaseline);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numAPC == numAPC);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numReceptor == numReceptor);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numPoly == numPoly);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->antennaNames == antennaNames);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->refAntennaName == refAntennaName);
+		result = result && (this->typeCurve == typeCurve);
 		
 		if (!result) return false;
 	
@@ -1958,14 +2348,14 @@ typeCurve = CCalCurveType::from_int(0);
 
 	
 		
-		result = result && (this->atmPhaseCorrections == atmPhaseCorrections);
+		result = result && (this->calDataId == calDataId);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->polarizationTypes == polarizationTypes);
+		result = result && (this->calReductionId == calReductionId);
 		
 		if (!result) return false;
 	
@@ -1993,14 +2383,42 @@ typeCurve = CCalCurveType::from_int(0);
 
 	
 		
-		result = result && (this->typeCurve == typeCurve);
+		result = result && (this->numAntenna == numAntenna);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->timeOrigin == timeOrigin);
+		result = result && (this->numPoly == numPoly);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numReceptor == numReceptor);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->antennaNames == antennaNames);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->refAntennaName == refAntennaName);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->polarizationTypes == polarizationTypes);
 		
 		if (!result) return false;
 	
@@ -2014,7 +2432,7 @@ typeCurve = CCalCurveType::from_int(0);
 
 	
 		
-		result = result && (this->rms == rms);
+		result = result && (this->reducedChiSquared == reducedChiSquared);
 		
 		if (!result) return false;
 	
@@ -2024,50 +2442,10 @@ typeCurve = CCalCurveType::from_int(0);
 	
 	
 	
-	bool CalCurveRow::compareRequiredValue(int numAntenna, int numBaseline, int numAPC, int numReceptor, int numPoly, vector<string > antennaNames, string refAntennaName, ReceiverBandMod::ReceiverBand receiverBand, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, CalCurveTypeMod::CalCurveType typeCurve, ArrayTime timeOrigin, vector<vector<vector<vector<float > > > > curve, vector<vector<vector<float > > > rms) {
+	bool CalCurveRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->numAntenna == numAntenna)) return false;
-	
-
-	
-		if (!(this->numBaseline == numBaseline)) return false;
-	
-
-	
-		if (!(this->numAPC == numAPC)) return false;
-	
-
-	
-		if (!(this->numReceptor == numReceptor)) return false;
-	
-
-	
-		if (!(this->numPoly == numPoly)) return false;
-	
-
-	
-		if (!(this->antennaNames == antennaNames)) return false;
-	
-
-	
-		if (!(this->refAntennaName == refAntennaName)) return false;
-	
-
-	
-		if (!(this->receiverBand == receiverBand)) return false;
-	
-
-	
-		if (!(this->atmPhaseCorrections == atmPhaseCorrections)) return false;
-	
-
-	
-		if (!(this->polarizationTypes == polarizationTypes)) return false;
-	
-
 	
 		if (!(this->startValidTime == startValidTime)) return false;
 	
@@ -2081,11 +2459,27 @@ typeCurve = CCalCurveType::from_int(0);
 	
 
 	
-		if (!(this->typeCurve == typeCurve)) return false;
+		if (!(this->numAntenna == numAntenna)) return false;
 	
 
 	
-		if (!(this->timeOrigin == timeOrigin)) return false;
+		if (!(this->numPoly == numPoly)) return false;
+	
+
+	
+		if (!(this->numReceptor == numReceptor)) return false;
+	
+
+	
+		if (!(this->antennaNames == antennaNames)) return false;
+	
+
+	
+		if (!(this->refAntennaName == refAntennaName)) return false;
+	
+
+	
+		if (!(this->polarizationTypes == polarizationTypes)) return false;
 	
 
 	
@@ -2093,7 +2487,7 @@ typeCurve = CCalCurveType::from_int(0);
 	
 
 	
-		if (!(this->rms == rms)) return false;
+		if (!(this->reducedChiSquared == reducedChiSquared)) return false;
 	
 
 		return result;
@@ -2111,39 +2505,27 @@ typeCurve = CCalCurveType::from_int(0);
 	bool CalCurveRow::equalByRequiredValue(CalCurveRow* x) {
 		
 			
-		if (this->numAntenna != x->numAntenna) return false;
-			
-		if (this->numBaseline != x->numBaseline) return false;
-			
-		if (this->numAPC != x->numAPC) return false;
-			
-		if (this->numReceptor != x->numReceptor) return false;
-			
-		if (this->numPoly != x->numPoly) return false;
-			
-		if (this->antennaNames != x->antennaNames) return false;
-			
-		if (this->refAntennaName != x->refAntennaName) return false;
-			
-		if (this->receiverBand != x->receiverBand) return false;
-			
-		if (this->atmPhaseCorrections != x->atmPhaseCorrections) return false;
-			
-		if (this->polarizationTypes != x->polarizationTypes) return false;
-			
 		if (this->startValidTime != x->startValidTime) return false;
 			
 		if (this->endValidTime != x->endValidTime) return false;
 			
 		if (this->frequencyRange != x->frequencyRange) return false;
 			
-		if (this->typeCurve != x->typeCurve) return false;
+		if (this->numAntenna != x->numAntenna) return false;
 			
-		if (this->timeOrigin != x->timeOrigin) return false;
+		if (this->numPoly != x->numPoly) return false;
+			
+		if (this->numReceptor != x->numReceptor) return false;
+			
+		if (this->antennaNames != x->antennaNames) return false;
+			
+		if (this->refAntennaName != x->refAntennaName) return false;
+			
+		if (this->polarizationTypes != x->polarizationTypes) return false;
 			
 		if (this->curve != x->curve) return false;
 			
-		if (this->rms != x->rms) return false;
+		if (this->reducedChiSquared != x->reducedChiSquared) return false;
 			
 		
 		return true;

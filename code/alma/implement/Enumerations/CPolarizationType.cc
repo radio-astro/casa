@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CPolarizationType::version() {
+	return PolarizationTypeMod::version;
+	}
+	
+string CPolarizationType::revision () {
+	return PolarizationTypeMod::revision;
+}
+
+unsigned int CPolarizationType::size() {
+	return 4;
+	}
+	
 	
 const std::string& CPolarizationType::sR = "R";
 	
@@ -46,7 +59,7 @@ const std::string& CPolarizationType::sX = "X";
 	
 const std::string& CPolarizationType::sY = "Y";
 	
-const std::vector<std::string> CPolarizationType::sPolarizationTypeSet() {
+const std::vector<std::string> CPolarizationType::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CPolarizationType::sR);
@@ -59,33 +72,6 @@ const std::vector<std::string> CPolarizationType::sPolarizationTypeSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CPolarizationType::hR = "Right-handed Circular";
-	
-const std::string& CPolarizationType::hL = "Left-handed Circular";
-	
-const std::string& CPolarizationType::hX = "X linear";
-	
-const std::string& CPolarizationType::hY = "Y linear";
-	
-const std::vector<std::string> CPolarizationType::hPolarizationTypeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CPolarizationType::hR);
-    
-    enumSet.insert(enumSet.end(), CPolarizationType::hL);
-    
-    enumSet.insert(enumSet.end(), CPolarizationType::hX);
-    
-    enumSet.insert(enumSet.end(), CPolarizationType::hY);
-        
-    return enumSet;
-}
-   	
 
 std::string CPolarizationType::name(const PolarizationTypeMod::PolarizationType& f) {
     switch (f) {
@@ -103,31 +89,9 @@ std::string CPolarizationType::name(const PolarizationTypeMod::PolarizationType&
       return CPolarizationType::sY;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CPolarizationType::help(const PolarizationTypeMod::PolarizationType& f) {
-    switch (f) {
-    
-    case PolarizationTypeMod::R:
-      return CPolarizationType::hR;
-    
-    case PolarizationTypeMod::L:
-      return CPolarizationType::hL;
-    
-    case PolarizationTypeMod::X:
-      return CPolarizationType::hX;
-    
-    case PolarizationTypeMod::Y:
-      return CPolarizationType::hY;
-    	
-    }
-    return std::string("");
-}
-   	
 
 PolarizationTypeMod::PolarizationType CPolarizationType::newPolarizationType(const std::string& name) {
 		
@@ -172,12 +136,10 @@ PolarizationTypeMod::PolarizationType CPolarizationType::literal(const std::stri
 }
 
 PolarizationTypeMod::PolarizationType CPolarizationType::from_int(unsigned int i) {
-	vector<string> names = sPolarizationTypeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newPolarizationType(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newPolarizationType(names_.at(i));
 }
-
-	
 
 string CPolarizationType::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'PolarizationType'.";

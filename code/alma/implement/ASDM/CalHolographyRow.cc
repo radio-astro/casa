@@ -124,30 +124,6 @@ namespace asdm {
 		
 		
 			
-				
-		x->numScrew = numScrew;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->numReceptor = numReceptor;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
 		x->startValidTime = startValidTime.toIDLArrayTime();
 			
 		
@@ -159,6 +135,16 @@ namespace asdm {
 		
 			
 		x->endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->ambientTemperature = ambientTemperature.toIDLTemperature();
 			
 		
 	
@@ -183,85 +169,6 @@ namespace asdm {
 		
 		
 			
-		x->rawRms = rawRms.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->weightedRms = weightedRms.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->screwName.length(screwName.size());
-		for (unsigned int i = 0; i < screwName.size(); ++i) {
-			
-				
-			x->screwName[i] = CORBA::string_dup(screwName.at(i).c_str());
-				
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->screwMotion.length(screwMotion.size());
-		for (unsigned int i = 0; i < screwMotion.size(); ++i) {
-			
-			x->screwMotion[i] = screwMotion.at(i).toIDLLength();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->screwMotionError.length(screwMotionError.size());
-		for (unsigned int i = 0; i < screwMotionError.size(); ++i) {
-			
-			x->screwMotionError[i] = screwMotionError.at(i).toIDLLength();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->panelModes = panelModes;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
 		x->frequencyRange.length(frequencyRange.size());
 		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
 			
@@ -277,8 +184,10 @@ namespace asdm {
 		
 		
 			
-		x->beamMapUID = beamMapUID.toIDLEntityRef();
-			
+				
+		x->illuminationTaper = illuminationTaper;
+ 				
+ 			
 		
 	
 
@@ -287,8 +196,10 @@ namespace asdm {
 		
 		
 			
-		x->surfaceMapUID = surfaceMapUID.toIDLEntityRef();
-			
+				
+		x->numReceptor = numReceptor;
+ 				
+ 			
 		
 	
 
@@ -315,9 +226,61 @@ namespace asdm {
 		
 			
 				
+		x->numPanelModes = numPanelModes;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
 		x->receiverBand = receiverBand;
  				
  			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->beamMapUID = beamMapUID.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->rawRMS = rawRMS.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->weightedRMS = weightedRMS.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->surfaceMapUID = surfaceMapUID.toIDLEntityRef();
+			
 		
 	
 
@@ -339,9 +302,128 @@ namespace asdm {
 	
   		
 		
+		x->numScrewExists = numScrewExists;
+		
 		
 			
-		x->ambientTemperature = ambientTemperature.toIDLTemperature();
+				
+		x->numScrew = numScrew;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->screwNameExists = screwNameExists;
+		
+		
+			
+		x->screwName.length(screwName.size());
+		for (unsigned int i = 0; i < screwName.size(); ++i) {
+			
+				
+			x->screwName[i] = CORBA::string_dup(screwName.at(i).c_str());
+				
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->screwMotionExists = screwMotionExists;
+		
+		
+			
+		x->screwMotion.length(screwMotion.size());
+		for (unsigned int i = 0; i < screwMotion.size(); ++i) {
+			
+			x->screwMotion[i] = screwMotion.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->screwMotionErrorExists = screwMotionErrorExists;
+		
+		
+			
+		x->screwMotionError.length(screwMotionError.size());
+		for (unsigned int i = 0; i < screwMotionError.size(); ++i) {
+			
+			x->screwMotionError[i] = screwMotionError.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->gravCorrectionExists = gravCorrectionExists;
+		
+		
+			
+				
+		x->gravCorrection = gravCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->gravOptRangeExists = gravOptRangeExists;
+		
+		
+			
+		x->gravOptRange.length(gravOptRange.size());
+		for (unsigned int i = 0; i < gravOptRange.size(); ++i) {
+			
+			x->gravOptRange[i] = gravOptRange.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->tempCorrectionExists = tempCorrectionExists;
+		
+		
+			
+				
+		x->tempCorrection = tempCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->tempOptRangeExists = tempOptRangeExists;
+		
+		
+			
+		x->tempOptRange.length(tempOptRange.size());
+		for (unsigned int i = 0; i < tempOptRange.size(); ++i) {
+			
+			x->tempOptRange[i] = tempOptRange.at(i).toIDLTemperature();
+			
+	 	}
 			
 		
 	
@@ -389,7 +471,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalHolographyRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalHolographyRow::setFromIDL (CalHolographyRowIDL x) throw(ConversionException) {
+	void CalHolographyRow::setFromIDL (CalHolographyRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -409,26 +491,6 @@ namespace asdm {
 		
 			
 		setAntennaMake(x.antennaMake);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumScrew(x.numScrew);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumReceptor(x.numReceptor);
   			
  		
 		
@@ -458,6 +520,16 @@ namespace asdm {
 		
 		
 			
+		setAmbientTemperature(Temperature (x.ambientTemperature));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
 		focusPosition .clear();
 		for (unsigned int i = 0; i <x.focusPosition.length(); ++i) {
 			
@@ -466,81 +538,6 @@ namespace asdm {
 		}
 			
   		
-		
-	
-
-	
-		
-		
-			
-		setRawRms(Length (x.rawRms));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setWeightedRms(Length (x.weightedRms));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		screwName .clear();
-		for (unsigned int i = 0; i <x.screwName.length(); ++i) {
-			
-			screwName.push_back(string (x.screwName[i]));
-			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		screwMotion .clear();
-		for (unsigned int i = 0; i <x.screwMotion.length(); ++i) {
-			
-			screwMotion.push_back(Length (x.screwMotion[i]));
-			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		screwMotionError .clear();
-		for (unsigned int i = 0; i <x.screwMotionError.length(); ++i) {
-			
-			screwMotionError.push_back(Length (x.screwMotionError[i]));
-			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		setPanelModes(x.panelModes);
-  			
- 		
 		
 	
 
@@ -563,8 +560,8 @@ namespace asdm {
 		
 		
 			
-		setBeamMapUID(EntityRef (x.beamMapUID));
-			
+		setIlluminationTaper(x.illuminationTaper);
+  			
  		
 		
 	
@@ -573,8 +570,8 @@ namespace asdm {
 		
 		
 			
-		setSurfaceMapUID(EntityRef (x.surfaceMapUID));
-			
+		setNumReceptor(x.numReceptor);
+  			
  		
 		
 	
@@ -598,8 +595,58 @@ namespace asdm {
 		
 		
 			
+		setNumPanelModes(x.numPanelModes);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
 		setReceiverBand(x.receiverBand);
   			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setBeamMapUID(EntityRef (x.beamMapUID));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setRawRMS(Length (x.rawRMS));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setWeightedRMS(Length (x.weightedRMS));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setSurfaceMapUID(EntityRef (x.surfaceMapUID));
+			
  		
 		
 	
@@ -621,11 +668,146 @@ namespace asdm {
 
 	
 		
+		numScrewExists = x.numScrewExists;
+		if (x.numScrewExists) {
+		
 		
 			
-		setAmbientTemperature(Temperature (x.ambientTemperature));
-			
+		setNumScrew(x.numScrew);
+  			
  		
+		
+		}
+		
+	
+
+	
+		
+		screwNameExists = x.screwNameExists;
+		if (x.screwNameExists) {
+		
+		
+			
+		screwName .clear();
+		for (unsigned int i = 0; i <x.screwName.length(); ++i) {
+			
+			screwName.push_back(string (x.screwName[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		screwMotionExists = x.screwMotionExists;
+		if (x.screwMotionExists) {
+		
+		
+			
+		screwMotion .clear();
+		for (unsigned int i = 0; i <x.screwMotion.length(); ++i) {
+			
+			screwMotion.push_back(Length (x.screwMotion[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		screwMotionErrorExists = x.screwMotionErrorExists;
+		if (x.screwMotionErrorExists) {
+		
+		
+			
+		screwMotionError .clear();
+		for (unsigned int i = 0; i <x.screwMotionError.length(); ++i) {
+			
+			screwMotionError.push_back(Length (x.screwMotionError[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		gravCorrectionExists = x.gravCorrectionExists;
+		if (x.gravCorrectionExists) {
+		
+		
+			
+		setGravCorrection(x.gravCorrection);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		gravOptRangeExists = x.gravOptRangeExists;
+		if (x.gravOptRangeExists) {
+		
+		
+			
+		gravOptRange .clear();
+		for (unsigned int i = 0; i <x.gravOptRange.length(); ++i) {
+			
+			gravOptRange.push_back(Angle (x.gravOptRange[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		tempCorrectionExists = x.tempCorrectionExists;
+		if (x.tempCorrectionExists) {
+		
+		
+			
+		setTempCorrection(x.tempCorrection);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		tempOptRangeExists = x.tempOptRangeExists;
+		if (x.tempOptRangeExists) {
+		
+		
+			
+		tempOptRange .clear();
+		for (unsigned int i = 0; i <x.tempOptRange.length(); ++i) {
+			
+			tempOptRange.push_back(Temperature (x.tempOptRange[i]));
+			
+		}
+			
+  		
+		
+		}
 		
 	
 
@@ -659,7 +841,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalHolography");
+			throw ConversionException (err.getMessage(),"CalHolography");
 		}
 	}
 #endif
@@ -693,22 +875,6 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numScrew, "numScrew", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numReceptor, "numReceptor", buf);
-		
-		
-	
-
-  	
- 		
-		
 		Parser::toXML(startValidTime, "startValidTime", buf);
 		
 		
@@ -725,55 +891,15 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(ambientTemperature, "ambientTemperature", buf);
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(focusPosition, "focusPosition", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(rawRms, "rawRms", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(weightedRms, "weightedRms", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(screwName, "screwName", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(screwMotion, "screwMotion", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(screwMotionError, "screwMotionError", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(panelModes, "panelModes", buf);
 		
 		
 	
@@ -789,7 +915,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(beamMapUID, "beamMapUID", buf);
+		Parser::toXML(illuminationTaper, "illuminationTaper", buf);
 		
 		
 	
@@ -797,7 +923,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(surfaceMapUID, "surfaceMapUID", buf);
+		Parser::toXML(numReceptor, "numReceptor", buf);
 		
 		
 	
@@ -813,7 +939,47 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(numPanelModes, "numPanelModes", buf);
+		
+		
+	
+
+  	
+ 		
+		
 			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(beamMapUID, "beamMapUID", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(rawRMS, "rawRMS", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(weightedRMS, "weightedRMS", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(surfaceMapUID, "surfaceMapUID", buf);
 		
 		
 	
@@ -828,9 +994,97 @@ namespace asdm {
 
   	
  		
+		if (numScrewExists) {
 		
-		Parser::toXML(ambientTemperature, "ambientTemperature", buf);
 		
+		Parser::toXML(numScrew, "numScrew", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (screwNameExists) {
+		
+		
+		Parser::toXML(screwName, "screwName", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (screwMotionExists) {
+		
+		
+		Parser::toXML(screwMotion, "screwMotion", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (screwMotionErrorExists) {
+		
+		
+		Parser::toXML(screwMotionError, "screwMotionError", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (gravCorrectionExists) {
+		
+		
+		Parser::toXML(gravCorrection, "gravCorrection", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (gravOptRangeExists) {
+		
+		
+		Parser::toXML(gravOptRange, "gravOptRange", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (tempCorrectionExists) {
+		
+		
+		Parser::toXML(tempCorrection, "tempCorrection", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (tempOptRangeExists) {
+		
+		
+		Parser::toXML(tempOptRange, "tempOptRange", buf);
+		
+		
+		}
 		
 	
 
@@ -869,7 +1123,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalHolographyRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalHolographyRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -896,22 +1150,6 @@ namespace asdm {
 	
   		
 			
-	  	setNumScrew(Parser::getInteger("numScrew","CalHolography",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setNumReceptor(Parser::getInteger("numReceptor","CalHolography",rowDoc));
-			
-		
-	
-
-	
-  		
-			
 	  	setStartValidTime(Parser::getArrayTime("startValidTime","CalHolography",rowDoc));
 			
 		
@@ -921,6 +1159,14 @@ namespace asdm {
   		
 			
 	  	setEndValidTime(Parser::getArrayTime("endValidTime","CalHolography",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setAmbientTemperature(Parser::getTemperature("ambientTemperature","CalHolography",rowDoc));
 			
 		
 	
@@ -938,60 +1184,6 @@ namespace asdm {
 	
   		
 			
-	  	setRawRms(Parser::getLength("rawRms","CalHolography",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setWeightedRms(Parser::getLength("weightedRms","CalHolography",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-					
-	  	setScrewName(Parser::get1DString("screwName","CalHolography",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-			
-					
-	  	setScrewMotion(Parser::get1DLength("screwMotion","CalHolography",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-			
-					
-	  	setScrewMotionError(Parser::get1DLength("screwMotionError","CalHolography",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-			
-	  	setPanelModes(Parser::getInteger("panelModes","CalHolography",rowDoc));
-			
-		
-	
-
-	
-  		
-			
 					
 	  	setFrequencyRange(Parser::get1DFrequency("frequencyRange","CalHolography",rowDoc));
 	  			
@@ -1002,7 +1194,7 @@ namespace asdm {
 	
   		
 			
-	  	setBeamMapUID(Parser::getEntityRef("beamMapUID","CalHolography",rowDoc));
+	  	setIlluminationTaper(Parser::getDouble("illuminationTaper","CalHolography",rowDoc));
 			
 		
 	
@@ -1010,7 +1202,7 @@ namespace asdm {
 	
   		
 			
-	  	setSurfaceMapUID(Parser::getEntityRef("surfaceMapUID","CalHolography",rowDoc));
+	  	setNumReceptor(Parser::getInteger("numReceptor","CalHolography",rowDoc));
 			
 		
 	
@@ -1022,6 +1214,14 @@ namespace asdm {
 		polarizationTypes = EnumerationParser::getPolarizationType1D("polarizationTypes","CalHolography",rowDoc);			
 		
 		
+		
+	
+
+	
+  		
+			
+	  	setNumPanelModes(Parser::getInteger("numPanelModes","CalHolography",rowDoc));
+			
 		
 	
 
@@ -1038,6 +1238,38 @@ namespace asdm {
 	
   		
 			
+	  	setBeamMapUID(Parser::getEntityRef("beamMapUID","CalHolography",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setRawRMS(Parser::getLength("rawRMS","CalHolography",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setWeightedRMS(Parser::getLength("weightedRMS","CalHolography",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setSurfaceMapUID(Parser::getEntityRef("surfaceMapUID","CalHolography",rowDoc));
+			
+		
+	
+
+	
+  		
+			
 					
 	  	setDirection(Parser::get1DAngle("direction","CalHolography",rowDoc));
 	  			
@@ -1047,10 +1279,92 @@ namespace asdm {
 
 	
   		
+        if (row.isStr("<numScrew>")) {
 			
-	  	setAmbientTemperature(Parser::getTemperature("ambientTemperature","CalHolography",rowDoc));
+	  		setNumScrew(Parser::getInteger("numScrew","CalHolography",rowDoc));
 			
-		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<screwName>")) {
+			
+								
+	  		setScrewName(Parser::get1DString("screwName","CalHolography",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<screwMotion>")) {
+			
+								
+	  		setScrewMotion(Parser::get1DLength("screwMotion","CalHolography",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<screwMotionError>")) {
+			
+								
+	  		setScrewMotionError(Parser::get1DLength("screwMotionError","CalHolography",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<gravCorrection>")) {
+			
+	  		setGravCorrection(Parser::getBoolean("gravCorrection","CalHolography",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<gravOptRange>")) {
+			
+								
+	  		setGravOptRange(Parser::get1DAngle("gravOptRange","CalHolography",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<tempCorrection>")) {
+			
+	  		setTempCorrection(Parser::getBoolean("tempCorrection","CalHolography",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<tempOptRange>")) {
+			
+								
+	  		setTempOptRange(Parser::get1DTemperature("tempOptRange","CalHolography",rowDoc));
+	  			
+	  		
+		}
+ 		
 	
 
 	
@@ -1081,6 +1395,584 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"CalHolography");
 		}
+	}
+	
+	void CalHolographyRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+						
+			eoss.writeString(antennaName);
+				
+		
+	
+
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(antennaMake);
+				
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	ambientTemperature.toBin(eoss);
+		
+	
+
+	
+	
+		
+	Length::toBin(focusPosition, eoss);
+		
+	
+
+	
+	
+		
+	Frequency::toBin(frequencyRange, eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeDouble(illuminationTaper);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numReceptor);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); i++)
+				
+			eoss.writeInt(polarizationTypes.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numPanelModes);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(receiverBand);
+				
+		
+	
+
+	
+	
+		
+	beamMapUID.toBin(eoss);
+		
+	
+
+	
+	
+		
+	rawRMS.toBin(eoss);
+		
+	
+
+	
+	
+		
+	weightedRMS.toBin(eoss);
+		
+	
+
+	
+	
+		
+	surfaceMapUID.toBin(eoss);
+		
+	
+
+	
+	
+		
+	Angle::toBin(direction, eoss);
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(numScrewExists);
+	if (numScrewExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numScrew);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(screwNameExists);
+	if (screwNameExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) screwName.size());
+		for (unsigned int i = 0; i < screwName.size(); i++)
+				
+			eoss.writeString(screwName.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(screwMotionExists);
+	if (screwMotionExists) {
+	
+	
+	
+		
+	Length::toBin(screwMotion, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(screwMotionErrorExists);
+	if (screwMotionErrorExists) {
+	
+	
+	
+		
+	Length::toBin(screwMotionError, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(gravCorrectionExists);
+	if (gravCorrectionExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(gravCorrection);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(gravOptRangeExists);
+	if (gravOptRangeExists) {
+	
+	
+	
+		
+	Angle::toBin(gravOptRange, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(tempCorrectionExists);
+	if (tempCorrectionExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(tempCorrection);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(tempOptRangeExists);
+	if (tempOptRangeExists) {
+	
+	
+	
+		
+	Temperature::toBin(tempOptRange, eoss);
+		
+	
+
+	}
+
+	}
+	
+	CalHolographyRow* CalHolographyRow::fromBin(EndianISStream& eiss, CalHolographyTable& table) {
+		CalHolographyRow* row = new  CalHolographyRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->antennaName =  eiss.readString();
+			
+		
+	
+
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->antennaMake = CAntennaMake::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->ambientTemperature =  Temperature::fromBin(eiss);
+		
+	
+
+	
+		
+		
+			
+	
+	row->focusPosition = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->frequencyRange = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->illuminationTaper =  eiss.readDouble();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numReceptor =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->polarizationTypes.clear();
+		
+		unsigned int polarizationTypesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
+			
+			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->numPanelModes =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->beamMapUID =  EntityRef::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->rawRMS =  Length::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->weightedRMS =  Length::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->surfaceMapUID =  EntityRef::fromBin(eiss);
+		
+	
+
+	
+		
+		
+			
+	
+	row->direction = Angle::from1DBin(eiss);	
+	
+
+		
+	
+
+		
+		
+		
+	row->numScrewExists = eiss.readBoolean();
+	if (row->numScrewExists) {
+		
+	
+	
+		
+			
+		row->numScrew =  eiss.readInt();
+			
+		
+	
+
+	}
+
+	row->screwNameExists = eiss.readBoolean();
+	if (row->screwNameExists) {
+		
+	
+	
+		
+			
+	
+		row->screwName.clear();
+		
+		unsigned int screwNameDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < screwNameDim1; i++)
+			
+			row->screwName.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	}
+
+	row->screwMotionExists = eiss.readBoolean();
+	if (row->screwMotionExists) {
+		
+	
+		
+		
+			
+	
+	row->screwMotion = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->screwMotionErrorExists = eiss.readBoolean();
+	if (row->screwMotionErrorExists) {
+		
+	
+		
+		
+			
+	
+	row->screwMotionError = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->gravCorrectionExists = eiss.readBoolean();
+	if (row->gravCorrectionExists) {
+		
+	
+	
+		
+			
+		row->gravCorrection =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+	row->gravOptRangeExists = eiss.readBoolean();
+	if (row->gravOptRangeExists) {
+		
+	
+		
+		
+			
+	
+	row->gravOptRange = Angle::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->tempCorrectionExists = eiss.readBoolean();
+	if (row->tempCorrectionExists) {
+		
+	
+	
+		
+			
+		row->tempCorrection =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+	row->tempOptRangeExists = eiss.readBoolean();
+	if (row->tempOptRangeExists) {
+		
+	
+		
+		
+			
+	
+	row->tempOptRange = Temperature::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -1159,70 +2051,6 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numScrew.
- 	 * @return numScrew as int
- 	 */
- 	int CalHolographyRow::getNumScrew() const {
-	
-  		return numScrew;
- 	}
-
- 	/**
- 	 * Set numScrew with the specified int.
- 	 * @param numScrew The int value to which numScrew is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalHolographyRow::setNumScrew (int numScrew)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numScrew = numScrew;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numReceptor.
- 	 * @return numReceptor as int
- 	 */
- 	int CalHolographyRow::getNumReceptor() const {
-	
-  		return numReceptor;
- 	}
-
- 	/**
- 	 * Set numReceptor with the specified int.
- 	 * @param numReceptor The int value to which numReceptor is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalHolographyRow::setNumReceptor (int numReceptor)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numReceptor = numReceptor;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
  	 * Get startValidTime.
  	 * @return startValidTime as ArrayTime
  	 */
@@ -1287,6 +2115,38 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get ambientTemperature.
+ 	 * @return ambientTemperature as Temperature
+ 	 */
+ 	Temperature CalHolographyRow::getAmbientTemperature() const {
+	
+  		return ambientTemperature;
+ 	}
+
+ 	/**
+ 	 * Set ambientTemperature with the specified Temperature.
+ 	 * @param ambientTemperature The Temperature value to which ambientTemperature is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalHolographyRow::setAmbientTemperature (Temperature ambientTemperature)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->ambientTemperature = ambientTemperature;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get focusPosition.
  	 * @return focusPosition as vector<Length >
  	 */
@@ -1310,198 +2170,6 @@ namespace asdm {
   		}
   	
  		this->focusPosition = focusPosition;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get rawRms.
- 	 * @return rawRms as Length
- 	 */
- 	Length CalHolographyRow::getRawRms() const {
-	
-  		return rawRms;
- 	}
-
- 	/**
- 	 * Set rawRms with the specified Length.
- 	 * @param rawRms The Length value to which rawRms is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalHolographyRow::setRawRms (Length rawRms)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->rawRms = rawRms;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get weightedRms.
- 	 * @return weightedRms as Length
- 	 */
- 	Length CalHolographyRow::getWeightedRms() const {
-	
-  		return weightedRms;
- 	}
-
- 	/**
- 	 * Set weightedRms with the specified Length.
- 	 * @param weightedRms The Length value to which weightedRms is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalHolographyRow::setWeightedRms (Length weightedRms)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->weightedRms = weightedRms;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get screwName.
- 	 * @return screwName as vector<string >
- 	 */
- 	vector<string > CalHolographyRow::getScrewName() const {
-	
-  		return screwName;
- 	}
-
- 	/**
- 	 * Set screwName with the specified vector<string >.
- 	 * @param screwName The vector<string > value to which screwName is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalHolographyRow::setScrewName (vector<string > screwName)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->screwName = screwName;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get screwMotion.
- 	 * @return screwMotion as vector<Length >
- 	 */
- 	vector<Length > CalHolographyRow::getScrewMotion() const {
-	
-  		return screwMotion;
- 	}
-
- 	/**
- 	 * Set screwMotion with the specified vector<Length >.
- 	 * @param screwMotion The vector<Length > value to which screwMotion is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalHolographyRow::setScrewMotion (vector<Length > screwMotion)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->screwMotion = screwMotion;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get screwMotionError.
- 	 * @return screwMotionError as vector<Length >
- 	 */
- 	vector<Length > CalHolographyRow::getScrewMotionError() const {
-	
-  		return screwMotionError;
- 	}
-
- 	/**
- 	 * Set screwMotionError with the specified vector<Length >.
- 	 * @param screwMotionError The vector<Length > value to which screwMotionError is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalHolographyRow::setScrewMotionError (vector<Length > screwMotionError)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->screwMotionError = screwMotionError;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get panelModes.
- 	 * @return panelModes as int
- 	 */
- 	int CalHolographyRow::getPanelModes() const {
-	
-  		return panelModes;
- 	}
-
- 	/**
- 	 * Set panelModes with the specified int.
- 	 * @param panelModes The int value to which panelModes is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalHolographyRow::setPanelModes (int panelModes)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->panelModes = panelModes;
 	
  	}
 	
@@ -1543,29 +2211,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get beamMapUID.
- 	 * @return beamMapUID as EntityRef
+ 	 * Get illuminationTaper.
+ 	 * @return illuminationTaper as double
  	 */
- 	EntityRef CalHolographyRow::getBeamMapUID() const {
+ 	double CalHolographyRow::getIlluminationTaper() const {
 	
-  		return beamMapUID;
+  		return illuminationTaper;
  	}
 
  	/**
- 	 * Set beamMapUID with the specified EntityRef.
- 	 * @param beamMapUID The EntityRef value to which beamMapUID is to be set.
+ 	 * Set illuminationTaper with the specified double.
+ 	 * @param illuminationTaper The double value to which illuminationTaper is to be set.
  	 
  	
  		
  	 */
- 	void CalHolographyRow::setBeamMapUID (EntityRef beamMapUID)  {
+ 	void CalHolographyRow::setIlluminationTaper (double illuminationTaper)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->beamMapUID = beamMapUID;
+ 		this->illuminationTaper = illuminationTaper;
 	
  	}
 	
@@ -1575,29 +2243,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get surfaceMapUID.
- 	 * @return surfaceMapUID as EntityRef
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
  	 */
- 	EntityRef CalHolographyRow::getSurfaceMapUID() const {
+ 	int CalHolographyRow::getNumReceptor() const {
 	
-  		return surfaceMapUID;
+  		return numReceptor;
  	}
 
  	/**
- 	 * Set surfaceMapUID with the specified EntityRef.
- 	 * @param surfaceMapUID The EntityRef value to which surfaceMapUID is to be set.
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
  	 
  	
  		
  	 */
- 	void CalHolographyRow::setSurfaceMapUID (EntityRef surfaceMapUID)  {
+ 	void CalHolographyRow::setNumReceptor (int numReceptor)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->surfaceMapUID = surfaceMapUID;
+ 		this->numReceptor = numReceptor;
 	
  	}
 	
@@ -1639,6 +2307,38 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get numPanelModes.
+ 	 * @return numPanelModes as int
+ 	 */
+ 	int CalHolographyRow::getNumPanelModes() const {
+	
+  		return numPanelModes;
+ 	}
+
+ 	/**
+ 	 * Set numPanelModes with the specified int.
+ 	 * @param numPanelModes The int value to which numPanelModes is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalHolographyRow::setNumPanelModes (int numPanelModes)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numPanelModes = numPanelModes;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get receiverBand.
  	 * @return receiverBand as ReceiverBandMod::ReceiverBand
  	 */
@@ -1662,6 +2362,134 @@ namespace asdm {
   		}
   	
  		this->receiverBand = receiverBand;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get beamMapUID.
+ 	 * @return beamMapUID as EntityRef
+ 	 */
+ 	EntityRef CalHolographyRow::getBeamMapUID() const {
+	
+  		return beamMapUID;
+ 	}
+
+ 	/**
+ 	 * Set beamMapUID with the specified EntityRef.
+ 	 * @param beamMapUID The EntityRef value to which beamMapUID is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalHolographyRow::setBeamMapUID (EntityRef beamMapUID)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->beamMapUID = beamMapUID;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get rawRMS.
+ 	 * @return rawRMS as Length
+ 	 */
+ 	Length CalHolographyRow::getRawRMS() const {
+	
+  		return rawRMS;
+ 	}
+
+ 	/**
+ 	 * Set rawRMS with the specified Length.
+ 	 * @param rawRMS The Length value to which rawRMS is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalHolographyRow::setRawRMS (Length rawRMS)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->rawRMS = rawRMS;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get weightedRMS.
+ 	 * @return weightedRMS as Length
+ 	 */
+ 	Length CalHolographyRow::getWeightedRMS() const {
+	
+  		return weightedRMS;
+ 	}
+
+ 	/**
+ 	 * Set weightedRMS with the specified Length.
+ 	 * @param weightedRMS The Length value to which weightedRMS is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalHolographyRow::setWeightedRMS (Length weightedRMS)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->weightedRMS = weightedRMS;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get surfaceMapUID.
+ 	 * @return surfaceMapUID as EntityRef
+ 	 */
+ 	EntityRef CalHolographyRow::getSurfaceMapUID() const {
+	
+  		return surfaceMapUID;
+ 	}
+
+ 	/**
+ 	 * Set surfaceMapUID with the specified EntityRef.
+ 	 * @param surfaceMapUID The EntityRef value to which surfaceMapUID is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalHolographyRow::setSurfaceMapUID (EntityRef surfaceMapUID)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->surfaceMapUID = surfaceMapUID;
 	
  	}
 	
@@ -1700,35 +2528,379 @@ namespace asdm {
 	
 
 	
+	/**
+	 * The attribute numScrew is optional. Return true if this attribute exists.
+	 * @return true if and only if the numScrew attribute exists. 
+	 */
+	bool CalHolographyRow::isNumScrewExists() const {
+		return numScrewExists;
+	}
+	
 
 	
  	/**
- 	 * Get ambientTemperature.
- 	 * @return ambientTemperature as Temperature
+ 	 * Get numScrew, which is optional.
+ 	 * @return numScrew as int
+ 	 * @throw IllegalAccessException If numScrew does not exist.
  	 */
- 	Temperature CalHolographyRow::getAmbientTemperature() const {
+ 	int CalHolographyRow::getNumScrew() const  {
+		if (!numScrewExists) {
+			throw IllegalAccessException("numScrew", "CalHolography");
+		}
 	
-  		return ambientTemperature;
+  		return numScrew;
  	}
 
  	/**
- 	 * Set ambientTemperature with the specified Temperature.
- 	 * @param ambientTemperature The Temperature value to which ambientTemperature is to be set.
+ 	 * Set numScrew with the specified int.
+ 	 * @param numScrew The int value to which numScrew is to be set.
  	 
  	
- 		
  	 */
- 	void CalHolographyRow::setAmbientTemperature (Temperature ambientTemperature)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->ambientTemperature = ambientTemperature;
+ 	void CalHolographyRow::setNumScrew (int numScrew) {
+	
+ 		this->numScrew = numScrew;
+	
+		numScrewExists = true;
 	
  	}
 	
+	
+	/**
+	 * Mark numScrew, which is an optional field, as non-existent.
+	 */
+	void CalHolographyRow::clearNumScrew () {
+		numScrewExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute screwName is optional. Return true if this attribute exists.
+	 * @return true if and only if the screwName attribute exists. 
+	 */
+	bool CalHolographyRow::isScrewNameExists() const {
+		return screwNameExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get screwName, which is optional.
+ 	 * @return screwName as vector<string >
+ 	 * @throw IllegalAccessException If screwName does not exist.
+ 	 */
+ 	vector<string > CalHolographyRow::getScrewName() const  {
+		if (!screwNameExists) {
+			throw IllegalAccessException("screwName", "CalHolography");
+		}
+	
+  		return screwName;
+ 	}
+
+ 	/**
+ 	 * Set screwName with the specified vector<string >.
+ 	 * @param screwName The vector<string > value to which screwName is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalHolographyRow::setScrewName (vector<string > screwName) {
+	
+ 		this->screwName = screwName;
+	
+		screwNameExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark screwName, which is an optional field, as non-existent.
+	 */
+	void CalHolographyRow::clearScrewName () {
+		screwNameExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute screwMotion is optional. Return true if this attribute exists.
+	 * @return true if and only if the screwMotion attribute exists. 
+	 */
+	bool CalHolographyRow::isScrewMotionExists() const {
+		return screwMotionExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get screwMotion, which is optional.
+ 	 * @return screwMotion as vector<Length >
+ 	 * @throw IllegalAccessException If screwMotion does not exist.
+ 	 */
+ 	vector<Length > CalHolographyRow::getScrewMotion() const  {
+		if (!screwMotionExists) {
+			throw IllegalAccessException("screwMotion", "CalHolography");
+		}
+	
+  		return screwMotion;
+ 	}
+
+ 	/**
+ 	 * Set screwMotion with the specified vector<Length >.
+ 	 * @param screwMotion The vector<Length > value to which screwMotion is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalHolographyRow::setScrewMotion (vector<Length > screwMotion) {
+	
+ 		this->screwMotion = screwMotion;
+	
+		screwMotionExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark screwMotion, which is an optional field, as non-existent.
+	 */
+	void CalHolographyRow::clearScrewMotion () {
+		screwMotionExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute screwMotionError is optional. Return true if this attribute exists.
+	 * @return true if and only if the screwMotionError attribute exists. 
+	 */
+	bool CalHolographyRow::isScrewMotionErrorExists() const {
+		return screwMotionErrorExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get screwMotionError, which is optional.
+ 	 * @return screwMotionError as vector<Length >
+ 	 * @throw IllegalAccessException If screwMotionError does not exist.
+ 	 */
+ 	vector<Length > CalHolographyRow::getScrewMotionError() const  {
+		if (!screwMotionErrorExists) {
+			throw IllegalAccessException("screwMotionError", "CalHolography");
+		}
+	
+  		return screwMotionError;
+ 	}
+
+ 	/**
+ 	 * Set screwMotionError with the specified vector<Length >.
+ 	 * @param screwMotionError The vector<Length > value to which screwMotionError is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalHolographyRow::setScrewMotionError (vector<Length > screwMotionError) {
+	
+ 		this->screwMotionError = screwMotionError;
+	
+		screwMotionErrorExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark screwMotionError, which is an optional field, as non-existent.
+	 */
+	void CalHolographyRow::clearScrewMotionError () {
+		screwMotionErrorExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute gravCorrection is optional. Return true if this attribute exists.
+	 * @return true if and only if the gravCorrection attribute exists. 
+	 */
+	bool CalHolographyRow::isGravCorrectionExists() const {
+		return gravCorrectionExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get gravCorrection, which is optional.
+ 	 * @return gravCorrection as bool
+ 	 * @throw IllegalAccessException If gravCorrection does not exist.
+ 	 */
+ 	bool CalHolographyRow::getGravCorrection() const  {
+		if (!gravCorrectionExists) {
+			throw IllegalAccessException("gravCorrection", "CalHolography");
+		}
+	
+  		return gravCorrection;
+ 	}
+
+ 	/**
+ 	 * Set gravCorrection with the specified bool.
+ 	 * @param gravCorrection The bool value to which gravCorrection is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalHolographyRow::setGravCorrection (bool gravCorrection) {
+	
+ 		this->gravCorrection = gravCorrection;
+	
+		gravCorrectionExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark gravCorrection, which is an optional field, as non-existent.
+	 */
+	void CalHolographyRow::clearGravCorrection () {
+		gravCorrectionExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute gravOptRange is optional. Return true if this attribute exists.
+	 * @return true if and only if the gravOptRange attribute exists. 
+	 */
+	bool CalHolographyRow::isGravOptRangeExists() const {
+		return gravOptRangeExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get gravOptRange, which is optional.
+ 	 * @return gravOptRange as vector<Angle >
+ 	 * @throw IllegalAccessException If gravOptRange does not exist.
+ 	 */
+ 	vector<Angle > CalHolographyRow::getGravOptRange() const  {
+		if (!gravOptRangeExists) {
+			throw IllegalAccessException("gravOptRange", "CalHolography");
+		}
+	
+  		return gravOptRange;
+ 	}
+
+ 	/**
+ 	 * Set gravOptRange with the specified vector<Angle >.
+ 	 * @param gravOptRange The vector<Angle > value to which gravOptRange is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalHolographyRow::setGravOptRange (vector<Angle > gravOptRange) {
+	
+ 		this->gravOptRange = gravOptRange;
+	
+		gravOptRangeExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark gravOptRange, which is an optional field, as non-existent.
+	 */
+	void CalHolographyRow::clearGravOptRange () {
+		gravOptRangeExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute tempCorrection is optional. Return true if this attribute exists.
+	 * @return true if and only if the tempCorrection attribute exists. 
+	 */
+	bool CalHolographyRow::isTempCorrectionExists() const {
+		return tempCorrectionExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get tempCorrection, which is optional.
+ 	 * @return tempCorrection as bool
+ 	 * @throw IllegalAccessException If tempCorrection does not exist.
+ 	 */
+ 	bool CalHolographyRow::getTempCorrection() const  {
+		if (!tempCorrectionExists) {
+			throw IllegalAccessException("tempCorrection", "CalHolography");
+		}
+	
+  		return tempCorrection;
+ 	}
+
+ 	/**
+ 	 * Set tempCorrection with the specified bool.
+ 	 * @param tempCorrection The bool value to which tempCorrection is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalHolographyRow::setTempCorrection (bool tempCorrection) {
+	
+ 		this->tempCorrection = tempCorrection;
+	
+		tempCorrectionExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark tempCorrection, which is an optional field, as non-existent.
+	 */
+	void CalHolographyRow::clearTempCorrection () {
+		tempCorrectionExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute tempOptRange is optional. Return true if this attribute exists.
+	 * @return true if and only if the tempOptRange attribute exists. 
+	 */
+	bool CalHolographyRow::isTempOptRangeExists() const {
+		return tempOptRangeExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get tempOptRange, which is optional.
+ 	 * @return tempOptRange as vector<Temperature >
+ 	 * @throw IllegalAccessException If tempOptRange does not exist.
+ 	 */
+ 	vector<Temperature > CalHolographyRow::getTempOptRange() const  {
+		if (!tempOptRangeExists) {
+			throw IllegalAccessException("tempOptRange", "CalHolography");
+		}
+	
+  		return tempOptRange;
+ 	}
+
+ 	/**
+ 	 * Set tempOptRange with the specified vector<Temperature >.
+ 	 * @param tempOptRange The vector<Temperature > value to which tempOptRange is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalHolographyRow::setTempOptRange (vector<Temperature > tempOptRange) {
+	
+ 		this->tempOptRange = tempOptRange;
+	
+		tempOptRangeExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark tempOptRange, which is an optional field, as non-existent.
+	 */
+	void CalHolographyRow::clearTempOptRange () {
+		tempOptRangeExists = false;
+	}
 	
 
 	
@@ -1898,9 +3070,35 @@ namespace asdm {
 	
 
 	
-
+		numScrewExists = false;
 	
 
+	
+		screwNameExists = false;
+	
+
+	
+		screwMotionExists = false;
+	
+
+	
+		screwMotionErrorExists = false;
+	
+
+	
+		gravCorrectionExists = false;
+	
+
+	
+		gravOptRangeExists = false;
+	
+
+	
+		tempCorrectionExists = false;
+	
+
+	
+		tempOptRangeExists = false;
 	
 
 	
@@ -1937,20 +3135,30 @@ antennaMake = CAntennaMake::from_int(0);
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 receiverBand = CReceiverBand::from_int(0);
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -2000,9 +3208,35 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-
+		numScrewExists = false;
 	
 
+	
+		screwNameExists = false;
+	
+
+	
+		screwMotionExists = false;
+	
+
+	
+		screwMotionErrorExists = false;
+	
+
+	
+		gravCorrectionExists = false;
+	
+
+	
+		gravOptRangeExists = false;
+	
+
+	
+		tempCorrectionExists = false;
+	
+
+	
+		tempOptRangeExists = false;
 	
 
 	
@@ -2014,64 +3248,121 @@ receiverBand = CReceiverBand::from_int(0);
 		else {
 	
 		
+			antennaName = row.antennaName;
+		
 			calDataId = row.calDataId;
 		
 			calReductionId = row.calReductionId;
-		
-			antennaName = row.antennaName;
 		
 		
 		
 		
 			antennaMake = row.antennaMake;
 		
-			numScrew = row.numScrew;
-		
-			numReceptor = row.numReceptor;
-		
 			startValidTime = row.startValidTime;
 		
 			endValidTime = row.endValidTime;
 		
+			ambientTemperature = row.ambientTemperature;
+		
 			focusPosition = row.focusPosition;
-		
-			rawRms = row.rawRms;
-		
-			weightedRms = row.weightedRms;
-		
-			screwName = row.screwName;
-		
-			screwMotion = row.screwMotion;
-		
-			screwMotionError = row.screwMotionError;
-		
-			panelModes = row.panelModes;
 		
 			frequencyRange = row.frequencyRange;
 		
-			beamMapUID = row.beamMapUID;
+			illuminationTaper = row.illuminationTaper;
 		
-			surfaceMapUID = row.surfaceMapUID;
+			numReceptor = row.numReceptor;
 		
 			polarizationTypes = row.polarizationTypes;
 		
+			numPanelModes = row.numPanelModes;
+		
 			receiverBand = row.receiverBand;
+		
+			beamMapUID = row.beamMapUID;
+		
+			rawRMS = row.rawRMS;
+		
+			weightedRMS = row.weightedRMS;
+		
+			surfaceMapUID = row.surfaceMapUID;
 		
 			direction = row.direction;
 		
-			ambientTemperature = row.ambientTemperature;
 		
 		
 		
+		if (row.numScrewExists) {
+			numScrew = row.numScrew;		
+			numScrewExists = true;
+		}
+		else
+			numScrewExists = false;
+		
+		if (row.screwNameExists) {
+			screwName = row.screwName;		
+			screwNameExists = true;
+		}
+		else
+			screwNameExists = false;
+		
+		if (row.screwMotionExists) {
+			screwMotion = row.screwMotion;		
+			screwMotionExists = true;
+		}
+		else
+			screwMotionExists = false;
+		
+		if (row.screwMotionErrorExists) {
+			screwMotionError = row.screwMotionError;		
+			screwMotionErrorExists = true;
+		}
+		else
+			screwMotionErrorExists = false;
+		
+		if (row.gravCorrectionExists) {
+			gravCorrection = row.gravCorrection;		
+			gravCorrectionExists = true;
+		}
+		else
+			gravCorrectionExists = false;
+		
+		if (row.gravOptRangeExists) {
+			gravOptRange = row.gravOptRange;		
+			gravOptRangeExists = true;
+		}
+		else
+			gravOptRangeExists = false;
+		
+		if (row.tempCorrectionExists) {
+			tempCorrection = row.tempCorrection;		
+			tempCorrectionExists = true;
+		}
+		else
+			tempCorrectionExists = false;
+		
+		if (row.tempOptRangeExists) {
+			tempOptRange = row.tempOptRange;		
+			tempOptRangeExists = true;
+		}
+		else
+			tempOptRangeExists = false;
 		
 		}	
 	}
 
 	
-	bool CalHolographyRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, AntennaMakeMod::AntennaMake antennaMake, int numScrew, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusPosition, Length rawRms, Length weightedRms, vector<string > screwName, vector<Length > screwMotion, vector<Length > screwMotionError, int panelModes, vector<Frequency > frequencyRange, EntityRef beamMapUID, EntityRef surfaceMapUID, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ReceiverBandMod::ReceiverBand receiverBand, vector<Angle > direction, Temperature ambientTemperature) {
+	bool CalHolographyRow::compareNoAutoInc(string antennaName, Tag calDataId, Tag calReductionId, AntennaMakeMod::AntennaMake antennaMake, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, vector<Length > focusPosition, vector<Frequency > frequencyRange, double illuminationTaper, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numPanelModes, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, Length rawRMS, Length weightedRMS, EntityRef surfaceMapUID, vector<Angle > direction) {
 		bool result;
 		result = true;
 		
+	
+		
+		result = result && (this->antennaName == antennaName);
+		
+		if (!result) return false;
+	
+
 	
 		
 		result = result && (this->calDataId == calDataId);
@@ -2088,28 +3379,7 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->antennaName == antennaName);
-		
-		if (!result) return false;
-	
-
-	
-		
 		result = result && (this->antennaMake == antennaMake);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numScrew == numScrew);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numReceptor == numReceptor);
 		
 		if (!result) return false;
 	
@@ -2130,49 +3400,14 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
+		result = result && (this->ambientTemperature == ambientTemperature);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->focusPosition == focusPosition);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->rawRms == rawRms);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->weightedRms == weightedRms);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->screwName == screwName);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->screwMotion == screwMotion);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->screwMotionError == screwMotionError);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->panelModes == panelModes);
 		
 		if (!result) return false;
 	
@@ -2186,14 +3421,14 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->beamMapUID == beamMapUID);
+		result = result && (this->illuminationTaper == illuminationTaper);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->surfaceMapUID == surfaceMapUID);
+		result = result && (this->numReceptor == numReceptor);
 		
 		if (!result) return false;
 	
@@ -2207,7 +3442,42 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
+		result = result && (this->numPanelModes == numPanelModes);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->receiverBand == receiverBand);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->beamMapUID == beamMapUID);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->rawRMS == rawRMS);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->weightedRMS == weightedRMS);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->surfaceMapUID == surfaceMapUID);
 		
 		if (!result) return false;
 	
@@ -2219,32 +3489,17 @@ receiverBand = CReceiverBand::from_int(0);
 		if (!result) return false;
 	
 
-	
-		
-		result = result && (this->ambientTemperature == ambientTemperature);
-		
-		if (!result) return false;
-	
-
 		return result;
 	}	
 	
 	
 	
-	bool CalHolographyRow::compareRequiredValue(AntennaMakeMod::AntennaMake antennaMake, int numScrew, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusPosition, Length rawRms, Length weightedRms, vector<string > screwName, vector<Length > screwMotion, vector<Length > screwMotionError, int panelModes, vector<Frequency > frequencyRange, EntityRef beamMapUID, EntityRef surfaceMapUID, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ReceiverBandMod::ReceiverBand receiverBand, vector<Angle > direction, Temperature ambientTemperature) {
+	bool CalHolographyRow::compareRequiredValue(AntennaMakeMod::AntennaMake antennaMake, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, vector<Length > focusPosition, vector<Frequency > frequencyRange, double illuminationTaper, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numPanelModes, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, Length rawRMS, Length weightedRMS, EntityRef surfaceMapUID, vector<Angle > direction) {
 		bool result;
 		result = true;
 		
 	
 		if (!(this->antennaMake == antennaMake)) return false;
-	
-
-	
-		if (!(this->numScrew == numScrew)) return false;
-	
-
-	
-		if (!(this->numReceptor == numReceptor)) return false;
 	
 
 	
@@ -2256,31 +3511,11 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
+		if (!(this->ambientTemperature == ambientTemperature)) return false;
+	
+
+	
 		if (!(this->focusPosition == focusPosition)) return false;
-	
-
-	
-		if (!(this->rawRms == rawRms)) return false;
-	
-
-	
-		if (!(this->weightedRms == weightedRms)) return false;
-	
-
-	
-		if (!(this->screwName == screwName)) return false;
-	
-
-	
-		if (!(this->screwMotion == screwMotion)) return false;
-	
-
-	
-		if (!(this->screwMotionError == screwMotionError)) return false;
-	
-
-	
-		if (!(this->panelModes == panelModes)) return false;
 	
 
 	
@@ -2288,11 +3523,11 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		if (!(this->beamMapUID == beamMapUID)) return false;
+		if (!(this->illuminationTaper == illuminationTaper)) return false;
 	
 
 	
-		if (!(this->surfaceMapUID == surfaceMapUID)) return false;
+		if (!(this->numReceptor == numReceptor)) return false;
 	
 
 	
@@ -2300,15 +3535,31 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
+		if (!(this->numPanelModes == numPanelModes)) return false;
+	
+
+	
 		if (!(this->receiverBand == receiverBand)) return false;
 	
 
 	
-		if (!(this->direction == direction)) return false;
+		if (!(this->beamMapUID == beamMapUID)) return false;
 	
 
 	
-		if (!(this->ambientTemperature == ambientTemperature)) return false;
+		if (!(this->rawRMS == rawRMS)) return false;
+	
+
+	
+		if (!(this->weightedRMS == weightedRMS)) return false;
+	
+
+	
+		if (!(this->surfaceMapUID == surfaceMapUID)) return false;
+	
+
+	
+		if (!(this->direction == direction)) return false;
 	
 
 		return result;
@@ -2328,41 +3579,35 @@ receiverBand = CReceiverBand::from_int(0);
 			
 		if (this->antennaMake != x->antennaMake) return false;
 			
-		if (this->numScrew != x->numScrew) return false;
-			
-		if (this->numReceptor != x->numReceptor) return false;
-			
 		if (this->startValidTime != x->startValidTime) return false;
 			
 		if (this->endValidTime != x->endValidTime) return false;
 			
+		if (this->ambientTemperature != x->ambientTemperature) return false;
+			
 		if (this->focusPosition != x->focusPosition) return false;
-			
-		if (this->rawRms != x->rawRms) return false;
-			
-		if (this->weightedRms != x->weightedRms) return false;
-			
-		if (this->screwName != x->screwName) return false;
-			
-		if (this->screwMotion != x->screwMotion) return false;
-			
-		if (this->screwMotionError != x->screwMotionError) return false;
-			
-		if (this->panelModes != x->panelModes) return false;
 			
 		if (this->frequencyRange != x->frequencyRange) return false;
 			
-		if (this->beamMapUID != x->beamMapUID) return false;
+		if (this->illuminationTaper != x->illuminationTaper) return false;
 			
-		if (this->surfaceMapUID != x->surfaceMapUID) return false;
+		if (this->numReceptor != x->numReceptor) return false;
 			
 		if (this->polarizationTypes != x->polarizationTypes) return false;
 			
+		if (this->numPanelModes != x->numPanelModes) return false;
+			
 		if (this->receiverBand != x->receiverBand) return false;
 			
-		if (this->direction != x->direction) return false;
+		if (this->beamMapUID != x->beamMapUID) return false;
 			
-		if (this->ambientTemperature != x->ambientTemperature) return false;
+		if (this->rawRMS != x->rawRMS) return false;
+			
+		if (this->weightedRMS != x->weightedRMS) return false;
+			
+		if (this->surfaceMapUID != x->surfaceMapUID) return false;
+			
+		if (this->direction != x->direction) return false;
 			
 		
 		return true;

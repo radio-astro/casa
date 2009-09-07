@@ -42,18 +42,34 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the CalibrationMode enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace CalibrationModeMod
 {
+  //! CalibrationMode.
+  //!  Modes of calibration
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum CalibrationMode
   { 
-    HOLOGRAPHY ,
-    INTERFEROMETRY ,
-    OPTICAL ,
-    RADIOMETRY ,
-    WVR 
+    HOLOGRAPHY /*!< Holography receiver */
+     ,
+    INTERFEROMETRY /*!< interferometry */
+     ,
+    OPTICAL /*!< Optical telescope */
+     ,
+    RADIOMETRY /*!< total power */
+     ,
+    WVR /*!< water vapour radiometry receiver */
+     
   };
   typedef CalibrationMode &CalibrationMode_out;
 } 
@@ -61,76 +77,97 @@ namespace CalibrationModeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration CalibrationMode.
+  * 
+  */
 class CCalibrationMode {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the CalibrationMode enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sHOLOGRAPHY;
+	static const std::string& sHOLOGRAPHY; /*!< A const string equal to "HOLOGRAPHY".*/
 	
-	static const std::string& sINTERFEROMETRY;
+	static const std::string& sINTERFEROMETRY; /*!< A const string equal to "INTERFEROMETRY".*/
 	
-	static const std::string& sOPTICAL;
+	static const std::string& sOPTICAL; /*!< A const string equal to "OPTICAL".*/
 	
-	static const std::string& sRADIOMETRY;
+	static const std::string& sRADIOMETRY; /*!< A const string equal to "RADIOMETRY".*/
 	
-	static const std::string& sWVR;
-	
-    static const std::vector<std::string> sCalibrationModeSet();	 
-
+	static const std::string& sWVR; /*!< A const string equal to "WVR".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in CalibrationModeMod::CalibrationMode.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of CalibrationModeMod::CalibrationMode.
+      * @return a string.
+      */
+	static std::string name(const CalibrationModeMod::CalibrationMode& e);
 	
-	// Explanations associated with the CalibrationMode Enumeration.
-		
-	static const std::string& hHOLOGRAPHY;
-		
-	static const std::string& hINTERFEROMETRY;
-		
-	static const std::string& hOPTICAL;
-		
-	static const std::string& hRADIOMETRY;
-		
-	static const std::string& hWVR;
-		
-	static const std::vector<std::string> hCalibrationModeSet();
-   	
-
-   	// Is an integer number associated with the CalibrationMode enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the CalibrationMode enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  CalibrationMode enumeration.
-	static std::string name(const CalibrationModeMod::CalibrationMode& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const CalibrationModeMod::CalibrationMode& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified CalibrationMode enumeration.
-	static std::string help(const CalibrationModeMod::CalibrationMode& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a CalibrationMode enumeration object by specifying its name.
    	static CalibrationModeMod::CalibrationMode newCalibrationMode(const std::string& name);
    	
-   	// Create a CalibrationMode enumeration object by specifying its name.
+   	/*! Return a CalibrationMode's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a CalibrationModeMod::CalibrationMode's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static CalibrationModeMod::CalibrationMode literal(const std::string& name);
  	
-    // Create a CalibrationMode enumeration object by specifying its position index (0 based).
+    /*! Return a CalibrationMode's enumerator given an unsigned int.
+      * @param i the index of the enumerator in CalibrationModeMod::CalibrationMode.
+      * @return a CalibrationModeMod::CalibrationMode's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static CalibrationModeMod::CalibrationMode from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CCalibrationMode();
     CCalibrationMode(const CCalibrationMode&);
     CCalibrationMode& operator=(const CCalibrationMode&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CCalibrationMode_H*/

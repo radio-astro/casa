@@ -108,7 +108,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct BeamRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void BeamRow::setFromIDL (BeamRowIDL x) throw(ConversionException) {
+	void BeamRow::setFromIDL (BeamRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -127,7 +127,7 @@ namespace asdm {
 	
 		
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Beam");
+			throw ConversionException (err.getMessage(),"Beam");
 		}
 	}
 #endif
@@ -163,7 +163,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void BeamRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void BeamRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -183,6 +183,40 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"Beam");
 		}
+	}
+	
+	void BeamRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	beamId.toBin(eoss);
+		
+	
+
+
+	
+	
+	}
+	
+	BeamRow* BeamRow::fromBin(EndianISStream& eiss, BeamTable& table) {
+		BeamRow* row = new  BeamRow(table);
+		
+		
+		
+	
+		
+		
+		row->beamId =  Tag::fromBin(eiss);
+		
+	
+
+		
+		
+		
+		
+		return row;
 	}
 	
 	////////////////////////////////

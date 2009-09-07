@@ -217,8 +217,12 @@ ObservationRow* ObservationTable::newRowCopy(ObservationRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	ObservationRow*  ObservationTable::checkAndAdd(ObservationRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	ObservationRow*  ObservationTable::checkAndAdd(ObservationRow* x)  {
 	 
 		
 		
@@ -285,7 +289,6 @@ ObservationRow* ObservationTable::newRowCopy(ObservationRow* row) {
 
 
 
-
 #ifndef WITHOUT_ACS
 	// Conversion Methods
 
@@ -302,7 +305,7 @@ ObservationRow* ObservationTable::newRowCopy(ObservationRow* row) {
 #endif
 	
 #ifndef WITHOUT_ACS
-	void ObservationTable::fromIDL(ObservationTableIDL x) throw(DuplicateKey,ConversionException) {
+	void ObservationTable::fromIDL(ObservationTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			ObservationRow *tmp = newRow();
@@ -313,28 +316,27 @@ ObservationRow* ObservationTable::newRowCopy(ObservationRow* row) {
 	}
 #endif
 
-	char *ObservationTable::toFITS() const throw(ConversionException) {
+	char *ObservationTable::toFITS() const  {
 		throw ConversionException("Not implemented","Observation");
 	}
 
-	void ObservationTable::fromFITS(char *fits) throw(ConversionException) {
+	void ObservationTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Observation");
 	}
 
-	string ObservationTable::toVOTable() const throw(ConversionException) {
+	string ObservationTable::toVOTable() const {
 		throw ConversionException("Not implemented","Observation");
 	}
 
-	void ObservationTable::fromVOTable(string vo) throw(ConversionException) {
+	void ObservationTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Observation");
 	}
 
-	string ObservationTable::toXML()  throw(ConversionException) {
+	
+	string ObservationTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<ObservationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/ObservationTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<ObservationTable> ");
+		buf.append("<ObservationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/ObservationTable\" xsi:schemaLocation=\"http://Alma/XASDM/ObservationTable http://almaobservatory.org/XML/XASDM/2/ObservationTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -350,8 +352,9 @@ ObservationRow* ObservationTable::newRowCopy(ObservationRow* row) {
 		buf.append("</ObservationTable> ");
 		return buf;
 	}
+
 	
-	void ObservationTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void ObservationTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<ObservationTable")) 
 			error();
@@ -393,20 +396,110 @@ ObservationRow* ObservationTable::newRowCopy(ObservationRow* row) {
 			error();
 	}
 
-	void ObservationTable::error() throw(ConversionException) {
+	
+	void ObservationTable::error()  {
 		throw ConversionException("Invalid xml document","Observation");
 	}
 	
+	
 	string ObservationTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void ObservationTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Observation");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			ObservationRow* aRow = ObservationRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Observation");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Observation");
+		} 		 	
+	}
+
 	
 	void ObservationTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -437,6 +530,7 @@ ObservationRow* ObservationTable::newRowCopy(ObservationRow* row) {
 				throw ConversionException("Could not close file " + fileName, "Observation");
 		}
 	}
+
 	
 	void ObservationTable::setFromFile(const string& directory) {
 		string tablename;
@@ -478,6 +572,11 @@ ObservationRow* ObservationTable::newRowCopy(ObservationRow* row) {
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

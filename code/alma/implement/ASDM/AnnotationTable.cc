@@ -264,8 +264,12 @@ AnnotationRow* AnnotationTable::newRowCopy(AnnotationRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	AnnotationRow*  AnnotationTable::checkAndAdd(AnnotationRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	AnnotationRow*  AnnotationTable::checkAndAdd(AnnotationRow* x)  {
 	 
 		 
 		if (lookup(
@@ -364,7 +368,6 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 
 
 
-
 #ifndef WITHOUT_ACS
 	// Conversion Methods
 
@@ -381,7 +384,7 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 #endif
 	
 #ifndef WITHOUT_ACS
-	void AnnotationTable::fromIDL(AnnotationTableIDL x) throw(DuplicateKey,ConversionException) {
+	void AnnotationTable::fromIDL(AnnotationTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			AnnotationRow *tmp = newRow();
@@ -392,28 +395,27 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 	}
 #endif
 
-	char *AnnotationTable::toFITS() const throw(ConversionException) {
+	char *AnnotationTable::toFITS() const  {
 		throw ConversionException("Not implemented","Annotation");
 	}
 
-	void AnnotationTable::fromFITS(char *fits) throw(ConversionException) {
+	void AnnotationTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Annotation");
 	}
 
-	string AnnotationTable::toVOTable() const throw(ConversionException) {
+	string AnnotationTable::toVOTable() const {
 		throw ConversionException("Not implemented","Annotation");
 	}
 
-	void AnnotationTable::fromVOTable(string vo) throw(ConversionException) {
+	void AnnotationTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Annotation");
 	}
 
-	string AnnotationTable::toXML()  throw(ConversionException) {
+	
+	string AnnotationTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<AnnotationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/AnnotationTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<AnnotationTable> ");
+		buf.append("<AnnotationTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/AnnotationTable\" xsi:schemaLocation=\"http://Alma/XASDM/AnnotationTable http://almaobservatory.org/XML/XASDM/2/AnnotationTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -429,8 +431,9 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 		buf.append("</AnnotationTable> ");
 		return buf;
 	}
+
 	
-	void AnnotationTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void AnnotationTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<AnnotationTable")) 
 			error();
@@ -472,20 +475,110 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 			error();
 	}
 
-	void AnnotationTable::error() throw(ConversionException) {
+	
+	void AnnotationTable::error()  {
 		throw ConversionException("Invalid xml document","Annotation");
 	}
 	
+	
 	string AnnotationTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void AnnotationTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Annotation");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			AnnotationRow* aRow = AnnotationRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Annotation");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Annotation");
+		} 		 	
+	}
+
 	
 	void AnnotationTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -516,6 +609,7 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 				throw ConversionException("Could not close file " + fileName, "Annotation");
 		}
 	}
+
 	
 	void AnnotationTable::setFromFile(const string& directory) {
 		string tablename;
@@ -557,6 +651,11 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

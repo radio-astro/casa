@@ -41,22 +41,22 @@ using std::set;
 #include <CalSeeingRow.h>
 #include <CalSeeingTable.h>
 
-#include <CalReductionTable.h>
-#include <CalReductionRow.h>
-
 #include <CalDataTable.h>
 #include <CalDataRow.h>
+
+#include <CalReductionTable.h>
+#include <CalReductionRow.h>
 	
 
 using asdm::ASDM;
 using asdm::CalSeeingRow;
 using asdm::CalSeeingTable;
 
-using asdm::CalReductionTable;
-using asdm::CalReductionRow;
-
 using asdm::CalDataTable;
 using asdm::CalDataRow;
+
+using asdm::CalReductionTable;
+using asdm::CalReductionRow;
 
 
 #include <Parser.h>
@@ -101,7 +101,7 @@ namespace asdm {
 		
 			
 				
-		x->numBaseLength = numBaseLength;
+		x->atmPhaseCorrection = atmPhaseCorrection;
  				
  			
 		
@@ -147,10 +147,32 @@ namespace asdm {
 		
 		
 			
-		x->baseLength.length(baseLength.size());
-		for (unsigned int i = 0; i < baseLength.size(); ++i) {
+		x->integrationTime = integrationTime.toIDLInterval();
 			
-			x->baseLength[i] = baseLength.at(i).toIDLLength();
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->numBaseLengths = numBaseLengths;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->baselineLengths.length(baselineLengths.size());
+		for (unsigned int i = 0; i < baselineLengths.size(); ++i) {
+			
+			x->baselineLengths[i] = baselineLengths.at(i).toIDLLength();
 			
 	 	}
 			
@@ -162,25 +184,10 @@ namespace asdm {
 		
 		
 			
-		x->corrPhaseRms.length(corrPhaseRms.size());
-		for (unsigned int i = 0; i < corrPhaseRms.size(); ++i) {
+		x->phaseRMS.length(phaseRMS.size());
+		for (unsigned int i = 0; i < phaseRMS.size(); ++i) {
 			
-			x->corrPhaseRms[i] = corrPhaseRms.at(i).toIDLAngle();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->uncorrPhaseRms.length(uncorrPhaseRms.size());
-		for (unsigned int i = 0; i < uncorrPhaseRms.size(); ++i) {
-			
-			x->uncorrPhaseRms[i] = uncorrPhaseRms.at(i).toIDLAngle();
+			x->phaseRMS[i] = phaseRMS.at(i).toIDLAngle();
 			
 	 	}
 			
@@ -202,17 +209,7 @@ namespace asdm {
 		
 		
 			
-		x->seeingFrequency = seeingFrequency.toIDLFrequency();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->seeingFreqBandwidth = seeingFreqBandwidth.toIDLFrequency();
+		x->seeingError = seeingError.toIDLAngle();
 			
 		
 	
@@ -228,6 +225,30 @@ namespace asdm {
 		x->exponent = exponent;
  				
  			
+		
+	
+
+	
+  		
+		
+		x->outerScaleExists = outerScaleExists;
+		
+		
+			
+		x->outerScale = outerScale.toIDLLength();
+			
+		
+	
+
+	
+  		
+		
+		x->outerScaleRMSExists = outerScaleRMSExists;
+		
+		
+			
+		x->outerScaleRMS = outerScaleRMS.toIDLAngle();
+			
 		
 	
 
@@ -274,7 +295,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalSeeingRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalSeeingRow::setFromIDL (CalSeeingRowIDL x) throw(ConversionException) {
+	void CalSeeingRow::setFromIDL (CalSeeingRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -283,7 +304,7 @@ namespace asdm {
 		
 		
 			
-		setNumBaseLength(x.numBaseLength);
+		setAtmPhaseCorrection(x.atmPhaseCorrection);
   			
  		
 		
@@ -328,10 +349,30 @@ namespace asdm {
 		
 		
 			
-		baseLength .clear();
-		for (unsigned int i = 0; i <x.baseLength.length(); ++i) {
+		setIntegrationTime(Interval (x.integrationTime));
 			
-			baseLength.push_back(Length (x.baseLength[i]));
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumBaseLengths(x.numBaseLengths);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		baselineLengths .clear();
+		for (unsigned int i = 0; i <x.baselineLengths.length(); ++i) {
+			
+			baselineLengths.push_back(Length (x.baselineLengths[i]));
 			
 		}
 			
@@ -343,25 +384,10 @@ namespace asdm {
 		
 		
 			
-		corrPhaseRms .clear();
-		for (unsigned int i = 0; i <x.corrPhaseRms.length(); ++i) {
+		phaseRMS .clear();
+		for (unsigned int i = 0; i <x.phaseRMS.length(); ++i) {
 			
-			corrPhaseRms.push_back(Angle (x.corrPhaseRms[i]));
-			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		uncorrPhaseRms .clear();
-		for (unsigned int i = 0; i <x.uncorrPhaseRms.length(); ++i) {
-			
-			uncorrPhaseRms.push_back(Angle (x.uncorrPhaseRms[i]));
+			phaseRMS.push_back(Angle (x.phaseRMS[i]));
 			
 		}
 			
@@ -383,17 +409,7 @@ namespace asdm {
 		
 		
 			
-		setSeeingFrequency(Frequency (x.seeingFrequency));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setSeeingFreqBandwidth(Frequency (x.seeingFreqBandwidth));
+		setSeeingError(Angle (x.seeingError));
 			
  		
 		
@@ -408,6 +424,36 @@ namespace asdm {
 			
 		setExponent(x.exponent);
   			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		outerScaleExists = x.outerScaleExists;
+		if (x.outerScaleExists) {
+		
+		
+			
+		setOuterScale(Length (x.outerScale));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		outerScaleRMSExists = x.outerScaleRMSExists;
+		if (x.outerScaleRMSExists) {
+		
+		
+			
+		setOuterScaleRMS(Angle (x.outerScaleRMS));
+			
  		
 		
 		}
@@ -444,7 +490,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalSeeing");
+			throw ConversionException (err.getMessage(),"CalSeeing");
 		}
 	}
 #endif
@@ -462,7 +508,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numBaseLength, "numBaseLength", buf);
+			buf.append(EnumerationParser::toXML("atmPhaseCorrection", atmPhaseCorrection));
 		
 		
 	
@@ -494,7 +540,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(baseLength, "baseLength", buf);
+		Parser::toXML(integrationTime, "integrationTime", buf);
 		
 		
 	
@@ -502,7 +548,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(corrPhaseRms, "corrPhaseRms", buf);
+		Parser::toXML(numBaseLengths, "numBaseLengths", buf);
 		
 		
 	
@@ -510,7 +556,15 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(uncorrPhaseRms, "uncorrPhaseRms", buf);
+		Parser::toXML(baselineLengths, "baselineLengths", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(phaseRMS, "phaseRMS", buf);
 		
 		
 	
@@ -526,15 +580,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(seeingFrequency, "seeingFrequency", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(seeingFreqBandwidth, "seeingFreqBandwidth", buf);
+		Parser::toXML(seeingError, "seeingError", buf);
 		
 		
 	
@@ -545,6 +591,30 @@ namespace asdm {
 		
 		
 		Parser::toXML(exponent, "exponent", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (outerScaleExists) {
+		
+		
+		Parser::toXML(outerScale, "outerScale", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (outerScaleRMSExists) {
+		
+		
+		Parser::toXML(outerScaleRMS, "outerScaleRMS", buf);
 		
 		
 		}
@@ -586,17 +656,19 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalSeeingRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalSeeingRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
 	
 		
 	
-  		
-			
-	  	setNumBaseLength(Parser::getInteger("numBaseLength","CalSeeing",rowDoc));
-			
+		
+		
+		
+		atmPhaseCorrection = EnumerationParser::getAtmPhaseCorrection("atmPhaseCorrection","CalSeeing",rowDoc);
+		
+		
 		
 	
 
@@ -629,8 +701,24 @@ namespace asdm {
 	
   		
 			
+	  	setIntegrationTime(Parser::getInterval("integrationTime","CalSeeing",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setNumBaseLengths(Parser::getInteger("numBaseLengths","CalSeeing",rowDoc));
+			
+		
+	
+
+	
+  		
+			
 					
-	  	setBaseLength(Parser::get1DLength("baseLength","CalSeeing",rowDoc));
+	  	setBaselineLengths(Parser::get1DLength("baselineLengths","CalSeeing",rowDoc));
 	  			
 	  		
 		
@@ -640,17 +728,7 @@ namespace asdm {
   		
 			
 					
-	  	setCorrPhaseRms(Parser::get1DAngle("corrPhaseRms","CalSeeing",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-			
-					
-	  	setUncorrPhaseRms(Parser::get1DAngle("uncorrPhaseRms","CalSeeing",rowDoc));
+	  	setPhaseRMS(Parser::get1DAngle("phaseRMS","CalSeeing",rowDoc));
 	  			
 	  		
 		
@@ -667,15 +745,7 @@ namespace asdm {
 	
   		
 			
-	  	setSeeingFrequency(Parser::getFrequency("seeingFrequency","CalSeeing",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setSeeingFreqBandwidth(Parser::getFrequency("seeingFreqBandwidth","CalSeeing",rowDoc));
+	  	setSeeingError(Parser::getAngle("seeingError","CalSeeing",rowDoc));
 			
 		
 	
@@ -685,6 +755,26 @@ namespace asdm {
         if (row.isStr("<exponent>")) {
 			
 	  		setExponent(Parser::getFloat("exponent","CalSeeing",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<outerScale>")) {
+			
+	  		setOuterScale(Parser::getLength("outerScale","CalSeeing",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<outerScaleRMS>")) {
+			
+	  		setOuterScaleRMS(Parser::getAngle("outerScaleRMS","CalSeeing",rowDoc));
 			
 		}
  		
@@ -720,6 +810,290 @@ namespace asdm {
 		}
 	}
 	
+	void CalSeeingRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+					
+			eoss.writeInt(atmPhaseCorrection);
+				
+		
+	
+
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	Frequency::toBin(frequencyRange, eoss);
+		
+	
+
+	
+	
+		
+	integrationTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numBaseLengths);
+				
+		
+	
+
+	
+	
+		
+	Length::toBin(baselineLengths, eoss);
+		
+	
+
+	
+	
+		
+	Angle::toBin(phaseRMS, eoss);
+		
+	
+
+	
+	
+		
+	seeing.toBin(eoss);
+		
+	
+
+	
+	
+		
+	seeingError.toBin(eoss);
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(exponentExists);
+	if (exponentExists) {
+	
+	
+	
+		
+						
+			eoss.writeFloat(exponent);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(outerScaleExists);
+	if (outerScaleExists) {
+	
+	
+	
+		
+	outerScale.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(outerScaleRMSExists);
+	if (outerScaleRMSExists) {
+	
+	
+	
+		
+	outerScaleRMS.toBin(eoss);
+		
+	
+
+	}
+
+	}
+	
+	CalSeeingRow* CalSeeingRow::fromBin(EndianISStream& eiss, CalSeeingTable& table) {
+		CalSeeingRow* row = new  CalSeeingRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+			
+	
+	row->frequencyRange = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+		row->integrationTime =  Interval::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numBaseLengths =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->baselineLengths = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->phaseRMS = Angle::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+		row->seeing =  Angle::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->seeingError =  Angle::fromBin(eiss);
+		
+	
+
+		
+		
+		
+	row->exponentExists = eiss.readBoolean();
+	if (row->exponentExists) {
+		
+	
+	
+		
+			
+		row->exponent =  eiss.readFloat();
+			
+		
+	
+
+	}
+
+	row->outerScaleExists = eiss.readBoolean();
+	if (row->outerScaleExists) {
+		
+	
+		
+		
+		row->outerScale =  Length::fromBin(eiss);
+		
+	
+
+	}
+
+	row->outerScaleRMSExists = eiss.readBoolean();
+	if (row->outerScaleRMSExists) {
+		
+	
+		
+		
+		row->outerScaleRMS =  Angle::fromBin(eiss);
+		
+	
+
+	}
+
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
@@ -728,29 +1102,33 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numBaseLength.
- 	 * @return numBaseLength as int
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
  	 */
- 	int CalSeeingRow::getNumBaseLength() const {
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection CalSeeingRow::getAtmPhaseCorrection() const {
 	
-  		return numBaseLength;
+  		return atmPhaseCorrection;
  	}
 
  	/**
- 	 * Set numBaseLength with the specified int.
- 	 * @param numBaseLength The int value to which numBaseLength is to be set.
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void CalSeeingRow::setNumBaseLength (int numBaseLength)  {
+ 	void CalSeeingRow::setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("atmPhaseCorrection", "CalSeeing");
+		
   		}
   	
- 		this->numBaseLength = numBaseLength;
+ 		this->atmPhaseCorrection = atmPhaseCorrection;
 	
  	}
 	
@@ -856,29 +1234,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get baseLength.
- 	 * @return baseLength as vector<Length >
+ 	 * Get integrationTime.
+ 	 * @return integrationTime as Interval
  	 */
- 	vector<Length > CalSeeingRow::getBaseLength() const {
+ 	Interval CalSeeingRow::getIntegrationTime() const {
 	
-  		return baseLength;
+  		return integrationTime;
  	}
 
  	/**
- 	 * Set baseLength with the specified vector<Length >.
- 	 * @param baseLength The vector<Length > value to which baseLength is to be set.
+ 	 * Set integrationTime with the specified Interval.
+ 	 * @param integrationTime The Interval value to which integrationTime is to be set.
  	 
  	
  		
  	 */
- 	void CalSeeingRow::setBaseLength (vector<Length > baseLength)  {
+ 	void CalSeeingRow::setIntegrationTime (Interval integrationTime)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->baseLength = baseLength;
+ 		this->integrationTime = integrationTime;
 	
  	}
 	
@@ -888,29 +1266,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get corrPhaseRms.
- 	 * @return corrPhaseRms as vector<Angle >
+ 	 * Get numBaseLengths.
+ 	 * @return numBaseLengths as int
  	 */
- 	vector<Angle > CalSeeingRow::getCorrPhaseRms() const {
+ 	int CalSeeingRow::getNumBaseLengths() const {
 	
-  		return corrPhaseRms;
+  		return numBaseLengths;
  	}
 
  	/**
- 	 * Set corrPhaseRms with the specified vector<Angle >.
- 	 * @param corrPhaseRms The vector<Angle > value to which corrPhaseRms is to be set.
+ 	 * Set numBaseLengths with the specified int.
+ 	 * @param numBaseLengths The int value to which numBaseLengths is to be set.
  	 
  	
  		
  	 */
- 	void CalSeeingRow::setCorrPhaseRms (vector<Angle > corrPhaseRms)  {
+ 	void CalSeeingRow::setNumBaseLengths (int numBaseLengths)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->corrPhaseRms = corrPhaseRms;
+ 		this->numBaseLengths = numBaseLengths;
 	
  	}
 	
@@ -920,29 +1298,61 @@ namespace asdm {
 
 	
  	/**
- 	 * Get uncorrPhaseRms.
- 	 * @return uncorrPhaseRms as vector<Angle >
+ 	 * Get baselineLengths.
+ 	 * @return baselineLengths as vector<Length >
  	 */
- 	vector<Angle > CalSeeingRow::getUncorrPhaseRms() const {
+ 	vector<Length > CalSeeingRow::getBaselineLengths() const {
 	
-  		return uncorrPhaseRms;
+  		return baselineLengths;
  	}
 
  	/**
- 	 * Set uncorrPhaseRms with the specified vector<Angle >.
- 	 * @param uncorrPhaseRms The vector<Angle > value to which uncorrPhaseRms is to be set.
+ 	 * Set baselineLengths with the specified vector<Length >.
+ 	 * @param baselineLengths The vector<Length > value to which baselineLengths is to be set.
  	 
  	
  		
  	 */
- 	void CalSeeingRow::setUncorrPhaseRms (vector<Angle > uncorrPhaseRms)  {
+ 	void CalSeeingRow::setBaselineLengths (vector<Length > baselineLengths)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->uncorrPhaseRms = uncorrPhaseRms;
+ 		this->baselineLengths = baselineLengths;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get phaseRMS.
+ 	 * @return phaseRMS as vector<Angle >
+ 	 */
+ 	vector<Angle > CalSeeingRow::getPhaseRMS() const {
+	
+  		return phaseRMS;
+ 	}
+
+ 	/**
+ 	 * Set phaseRMS with the specified vector<Angle >.
+ 	 * @param phaseRMS The vector<Angle > value to which phaseRMS is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalSeeingRow::setPhaseRMS (vector<Angle > phaseRMS)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->phaseRMS = phaseRMS;
 	
  	}
 	
@@ -984,61 +1394,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get seeingFrequency.
- 	 * @return seeingFrequency as Frequency
+ 	 * Get seeingError.
+ 	 * @return seeingError as Angle
  	 */
- 	Frequency CalSeeingRow::getSeeingFrequency() const {
+ 	Angle CalSeeingRow::getSeeingError() const {
 	
-  		return seeingFrequency;
+  		return seeingError;
  	}
 
  	/**
- 	 * Set seeingFrequency with the specified Frequency.
- 	 * @param seeingFrequency The Frequency value to which seeingFrequency is to be set.
+ 	 * Set seeingError with the specified Angle.
+ 	 * @param seeingError The Angle value to which seeingError is to be set.
  	 
  	
  		
  	 */
- 	void CalSeeingRow::setSeeingFrequency (Frequency seeingFrequency)  {
+ 	void CalSeeingRow::setSeeingError (Angle seeingError)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->seeingFrequency = seeingFrequency;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get seeingFreqBandwidth.
- 	 * @return seeingFreqBandwidth as Frequency
- 	 */
- 	Frequency CalSeeingRow::getSeeingFreqBandwidth() const {
-	
-  		return seeingFreqBandwidth;
- 	}
-
- 	/**
- 	 * Set seeingFreqBandwidth with the specified Frequency.
- 	 * @param seeingFreqBandwidth The Frequency value to which seeingFreqBandwidth is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalSeeingRow::setSeeingFreqBandwidth (Frequency seeingFreqBandwidth)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->seeingFreqBandwidth = seeingFreqBandwidth;
+ 		this->seeingError = seeingError;
 	
  	}
 	
@@ -1060,7 +1438,7 @@ namespace asdm {
  	 * @return exponent as float
  	 * @throw IllegalAccessException If exponent does not exist.
  	 */
- 	float CalSeeingRow::getExponent() const throw(IllegalAccessException) {
+ 	float CalSeeingRow::getExponent() const  {
 		if (!exponentExists) {
 			throw IllegalAccessException("exponent", "CalSeeing");
 		}
@@ -1088,6 +1466,100 @@ namespace asdm {
 	 */
 	void CalSeeingRow::clearExponent () {
 		exponentExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute outerScale is optional. Return true if this attribute exists.
+	 * @return true if and only if the outerScale attribute exists. 
+	 */
+	bool CalSeeingRow::isOuterScaleExists() const {
+		return outerScaleExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get outerScale, which is optional.
+ 	 * @return outerScale as Length
+ 	 * @throw IllegalAccessException If outerScale does not exist.
+ 	 */
+ 	Length CalSeeingRow::getOuterScale() const  {
+		if (!outerScaleExists) {
+			throw IllegalAccessException("outerScale", "CalSeeing");
+		}
+	
+  		return outerScale;
+ 	}
+
+ 	/**
+ 	 * Set outerScale with the specified Length.
+ 	 * @param outerScale The Length value to which outerScale is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalSeeingRow::setOuterScale (Length outerScale) {
+	
+ 		this->outerScale = outerScale;
+	
+		outerScaleExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark outerScale, which is an optional field, as non-existent.
+	 */
+	void CalSeeingRow::clearOuterScale () {
+		outerScaleExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute outerScaleRMS is optional. Return true if this attribute exists.
+	 * @return true if and only if the outerScaleRMS attribute exists. 
+	 */
+	bool CalSeeingRow::isOuterScaleRMSExists() const {
+		return outerScaleRMSExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get outerScaleRMS, which is optional.
+ 	 * @return outerScaleRMS as Angle
+ 	 * @throw IllegalAccessException If outerScaleRMS does not exist.
+ 	 */
+ 	Angle CalSeeingRow::getOuterScaleRMS() const  {
+		if (!outerScaleRMSExists) {
+			throw IllegalAccessException("outerScaleRMS", "CalSeeing");
+		}
+	
+  		return outerScaleRMS;
+ 	}
+
+ 	/**
+ 	 * Set outerScaleRMS with the specified Angle.
+ 	 * @param outerScaleRMS The Angle value to which outerScaleRMS is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalSeeingRow::setOuterScaleRMS (Angle outerScaleRMS) {
+	
+ 		this->outerScaleRMS = outerScaleRMS;
+	
+		outerScaleRMSExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark outerScaleRMS, which is an optional field, as non-existent.
+	 */
+	void CalSeeingRow::clearOuterScaleRMS () {
+		outerScaleRMSExists = false;
 	}
 	
 
@@ -1178,14 +1650,14 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
-	 * @return a CalReductionRow*
+	 * Returns the pointer to the row in the CalData table having CalData.calDataId == calDataId
+	 * @return a CalDataRow*
 	 * 
 	 
 	 */
-	 CalReductionRow* CalSeeingRow::getCalReductionUsingCalReductionId() {
+	 CalDataRow* CalSeeingRow::getCalDataUsingCalDataId() {
 	 
-	 	return table.getContainer().getCalReduction().getRowByKey(calReductionId);
+	 	return table.getContainer().getCalData().getRowByKey(calDataId);
 	 }
 	 
 
@@ -1197,14 +1669,14 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the CalData table having CalData.calDataId == calDataId
-	 * @return a CalDataRow*
+	 * Returns the pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
+	 * @return a CalReductionRow*
 	 * 
 	 
 	 */
-	 CalDataRow* CalSeeingRow::getCalDataUsingCalDataId() {
+	 CalReductionRow* CalSeeingRow::getCalReductionUsingCalReductionId() {
 	 
-	 	return table.getContainer().getCalData().getRowByKey(calDataId);
+	 	return table.getContainer().getCalReduction().getRowByKey(calReductionId);
 	 }
 	 
 
@@ -1248,6 +1720,14 @@ namespace asdm {
 	
 
 	
+		outerScaleExists = false;
+	
+
+	
+		outerScaleRMSExists = false;
+	
+
+	
 	
 
 	
@@ -1255,6 +1735,13 @@ namespace asdm {
 	
 	
 	
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+atmPhaseCorrection = CAtmPhaseCorrection::from_int(0);
+	
+
+	
+
 	
 
 	
@@ -1310,6 +1797,14 @@ namespace asdm {
 	
 
 	
+		outerScaleExists = false;
+	
+
+	
+		outerScaleRMSExists = false;
+	
+
+	
 	
 
 	
@@ -1318,6 +1813,8 @@ namespace asdm {
 		else {
 	
 		
+			atmPhaseCorrection = row.atmPhaseCorrection;
+		
 			calDataId = row.calDataId;
 		
 			calReductionId = row.calReductionId;
@@ -1325,25 +1822,23 @@ namespace asdm {
 		
 		
 		
-			numBaseLength = row.numBaseLength;
-		
 			startValidTime = row.startValidTime;
 		
 			endValidTime = row.endValidTime;
 		
 			frequencyRange = row.frequencyRange;
 		
-			baseLength = row.baseLength;
+			integrationTime = row.integrationTime;
 		
-			corrPhaseRms = row.corrPhaseRms;
+			numBaseLengths = row.numBaseLengths;
 		
-			uncorrPhaseRms = row.uncorrPhaseRms;
+			baselineLengths = row.baselineLengths;
+		
+			phaseRMS = row.phaseRMS;
 		
 			seeing = row.seeing;
 		
-			seeingFrequency = row.seeingFrequency;
-		
-			seeingFreqBandwidth = row.seeingFreqBandwidth;
+			seeingError = row.seeingError;
 		
 		
 		
@@ -1355,14 +1850,35 @@ namespace asdm {
 		else
 			exponentExists = false;
 		
+		if (row.outerScaleExists) {
+			outerScale = row.outerScale;		
+			outerScaleExists = true;
+		}
+		else
+			outerScaleExists = false;
+		
+		if (row.outerScaleRMSExists) {
+			outerScaleRMS = row.outerScaleRMS;		
+			outerScaleRMSExists = true;
+		}
+		else
+			outerScaleRMSExists = false;
+		
 		}	
 	}
 
 	
-	bool CalSeeingRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, int numBaseLength, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<Length > baseLength, vector<Angle > corrPhaseRms, vector<Angle > uncorrPhaseRms, Angle seeing, Frequency seeingFrequency, Frequency seeingFreqBandwidth) {
+	bool CalSeeingRow::compareNoAutoInc(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, Interval integrationTime, int numBaseLengths, vector<Length > baselineLengths, vector<Angle > phaseRMS, Angle seeing, Angle seeingError) {
 		bool result;
 		result = true;
 		
+	
+		
+		result = result && (this->atmPhaseCorrection == atmPhaseCorrection);
+		
+		if (!result) return false;
+	
+
 	
 		
 		result = result && (this->calDataId == calDataId);
@@ -1373,13 +1889,6 @@ namespace asdm {
 	
 		
 		result = result && (this->calReductionId == calReductionId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numBaseLength == numBaseLength);
 		
 		if (!result) return false;
 	
@@ -1407,21 +1916,28 @@ namespace asdm {
 
 	
 		
-		result = result && (this->baseLength == baseLength);
+		result = result && (this->integrationTime == integrationTime);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->corrPhaseRms == corrPhaseRms);
+		result = result && (this->numBaseLengths == numBaseLengths);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->uncorrPhaseRms == uncorrPhaseRms);
+		result = result && (this->baselineLengths == baselineLengths);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->phaseRMS == phaseRMS);
 		
 		if (!result) return false;
 	
@@ -1435,14 +1951,7 @@ namespace asdm {
 
 	
 		
-		result = result && (this->seeingFrequency == seeingFrequency);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->seeingFreqBandwidth == seeingFreqBandwidth);
+		result = result && (this->seeingError == seeingError);
 		
 		if (!result) return false;
 	
@@ -1452,14 +1961,10 @@ namespace asdm {
 	
 	
 	
-	bool CalSeeingRow::compareRequiredValue(int numBaseLength, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<Length > baseLength, vector<Angle > corrPhaseRms, vector<Angle > uncorrPhaseRms, Angle seeing, Frequency seeingFrequency, Frequency seeingFreqBandwidth) {
+	bool CalSeeingRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, Interval integrationTime, int numBaseLengths, vector<Length > baselineLengths, vector<Angle > phaseRMS, Angle seeing, Angle seeingError) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->numBaseLength == numBaseLength)) return false;
-	
-
 	
 		if (!(this->startValidTime == startValidTime)) return false;
 	
@@ -1473,15 +1978,19 @@ namespace asdm {
 	
 
 	
-		if (!(this->baseLength == baseLength)) return false;
+		if (!(this->integrationTime == integrationTime)) return false;
 	
 
 	
-		if (!(this->corrPhaseRms == corrPhaseRms)) return false;
+		if (!(this->numBaseLengths == numBaseLengths)) return false;
 	
 
 	
-		if (!(this->uncorrPhaseRms == uncorrPhaseRms)) return false;
+		if (!(this->baselineLengths == baselineLengths)) return false;
+	
+
+	
+		if (!(this->phaseRMS == phaseRMS)) return false;
 	
 
 	
@@ -1489,11 +1998,7 @@ namespace asdm {
 	
 
 	
-		if (!(this->seeingFrequency == seeingFrequency)) return false;
-	
-
-	
-		if (!(this->seeingFreqBandwidth == seeingFreqBandwidth)) return false;
+		if (!(this->seeingError == seeingError)) return false;
 	
 
 		return result;
@@ -1511,25 +2016,23 @@ namespace asdm {
 	bool CalSeeingRow::equalByRequiredValue(CalSeeingRow* x) {
 		
 			
-		if (this->numBaseLength != x->numBaseLength) return false;
-			
 		if (this->startValidTime != x->startValidTime) return false;
 			
 		if (this->endValidTime != x->endValidTime) return false;
 			
 		if (this->frequencyRange != x->frequencyRange) return false;
 			
-		if (this->baseLength != x->baseLength) return false;
+		if (this->integrationTime != x->integrationTime) return false;
 			
-		if (this->corrPhaseRms != x->corrPhaseRms) return false;
+		if (this->numBaseLengths != x->numBaseLengths) return false;
 			
-		if (this->uncorrPhaseRms != x->uncorrPhaseRms) return false;
+		if (this->baselineLengths != x->baselineLengths) return false;
+			
+		if (this->phaseRMS != x->phaseRMS) return false;
 			
 		if (this->seeing != x->seeing) return false;
 			
-		if (this->seeingFrequency != x->seeingFrequency) return false;
-			
-		if (this->seeingFreqBandwidth != x->seeingFreqBandwidth) return false;
+		if (this->seeingError != x->seeingError) return false;
 			
 		
 		return true;

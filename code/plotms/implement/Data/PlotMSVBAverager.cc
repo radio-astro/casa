@@ -26,7 +26,6 @@
 //----------------------------------------------------------------------------
 
 #include <plotms/Data/PlotMSVBAverager.h>
-#include <msvis/MSVis/VisSet.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Arrays/ArrayLogical.h>
 
@@ -46,6 +45,7 @@ PlotMSVBAverager::PlotMSVBAverager(Int nAnt,Bool chanDepWt)
     blnOK_p(),
     blnAve_p(False),
     antAve_p(False),
+    inCoh_p(False),
     timeRef_p(0.0),
     minTime_p(0.0),
     maxTime_p(0.0),
@@ -351,6 +351,17 @@ void PlotMSVBAverager::simpAccumulate (VisBuffer& vb)
   if (vb.spectralWindow()!=avBuf_p.spectralWindow())
     avBuf_p.spectralWindow()=-1;
 
+  // Convert to A/ph for incoherent averaging
+  if (inCoh_p) {
+    if (doVC_p) 
+      convertToAP(vb.visCube());
+    if (doMVC_p) 
+      convertToAP(vb.modelVisCube());
+    if (doCVC_p)
+      convertToAP(vb.correctedVisCube());
+  }
+
+
   /*
   cout << vb.flagCube().shape() << " " 
        << vb.weightMat().shape() << " " 
@@ -480,6 +491,16 @@ void PlotMSVBAverager::antAccumulate (VisBuffer& vb)
 
   if (vb.spectralWindow()!=avBuf_p.spectralWindow())
     avBuf_p.spectralWindow()=-1;
+
+  // Convert to A/ph for incoherent averaging
+  if (inCoh_p) {
+    if (doVC_p) 
+      convertToAP(vb.visCube());
+    if (doMVC_p) 
+      convertToAP(vb.modelVisCube());
+    if (doCVC_p)
+      convertToAP(vb.correctedVisCube());
+  }
 
   Double vbWt(0.0);  // will accumulate this VBs total data weight
   Float *wt;
@@ -612,8 +633,17 @@ Int PlotMSVBAverager::baseline(const Int& ant1, const Int& ant2)
 
 //----------------------------------------------------------------------------
 
+void PlotMSVBAverager::convertToAP(Cube<Complex>& d) {
   
-
+  Int n=d.nelements();
+  Complex *c=d.data();
+  Float a;
+  for (Int i=0;i<n;++i,++c) {
+    a=abs(*c);
+    if (a<0.0);
+    *c=Complex(a,arg(*c));
+  }
+}
 
 
 } //# NAMESPACE CASA - END

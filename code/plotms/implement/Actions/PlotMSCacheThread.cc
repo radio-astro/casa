@@ -26,7 +26,6 @@
 //# $Id: $
 #include <plotms/Actions/PlotMSCacheThread.qo.h>
 
-#include <msvis/MSVis/VisSet.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlot.h>
@@ -37,14 +36,20 @@ namespace casa {
 // PLOTMSCACHETHREAD DEFINITIONS //
 ///////////////////////////////////
 
-PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot,
-        const vector<PMS::Axis>& axes, const vector<PMS::DataColumn>& data,
-        const PlotMSAveraging& averaging, bool setupPlot,
-        PMSPTMethod postThreadMethod, PMSPTObject postThreadObject) :
+PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot, PlotMSData* data,
+				     const vector<PMS::Axis>& axes, 
+				     const vector<PMS::DataColumn>& dataCols,
+				     const String& msname, 
+				     const PlotMSSelection& selection, 
+				     const PlotMSAveraging& averaging, 
+				     bool setupPlot,
+				     PMSPTMethod postThreadMethod, 
+				     PMSPTObject postThreadObject) :
         PlotMSThread(plot->parent()->getPlotter()->getProgressWidget(),
         postThreadMethod, postThreadObject), itsPlot_(plot),
-        itsData_(&plot->data()), itsVisSet_(plot->visSet()), itsLoad_(true),
-        itsAxes_(axes), itsAxesData_(data), itsAveraging_(averaging),
+        itsData_(data), itsLoad_(true),
+        itsAxes_(axes), itsAxesData_(dataCols), 
+	itsMSName_(msname),itsSelection_(selection),itsAveraging_(averaging),
         itsSetupPlot_(setupPlot && axes.size() >= 2), wasCanceled_(false) {
     // Make sure axes data vector is same length as axes vector.
     if(itsAxesData_.size() != itsAxes_.size())
@@ -56,17 +61,13 @@ PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot,
         PMSPTObject postThreadObject) :
         PlotMSThread(plot->parent()->getPlotter()->getProgressWidget(),
         postThreadMethod, postThreadObject), itsPlot_(plot),
-        itsData_(&plot->data()), itsVisSet_(plot->visSet()), itsLoad_(false),
+        itsData_(&plot->data()), itsLoad_(false),
         itsAxes_(axes), itsSetupPlot_(false), wasCanceled_(false) { }
 
 PlotMSCacheThread::~PlotMSCacheThread() { }
 
 
 void PlotMSCacheThread::startOperation() {
-    if(itsVisSet_ == NULL) {
-        emit finishedOperation(this);
-        return;
-    }
 
     itsLastProgress_ = 0;
     itsLastStatus_ = "";
@@ -138,9 +139,12 @@ void PlotMSCacheThreadHelper::run() {
     try {
         // Load
         if(itsParent_.itsLoad_) {
-            itsParent_.itsData_->loadCache(*itsParent_.itsVisSet_,
-                    itsParent_.itsAxes_, itsParent_.itsAxesData_,
-                    itsParent_.itsAveraging_, &itsParent_);
+            itsParent_.itsData_->loadCache(itsParent_.itsAxes_, 
+					   itsParent_.itsAxesData_,
+					   itsParent_.itsMSName_, 
+					   itsParent_.itsSelection_, 
+					   itsParent_.itsAveraging_, 
+					   &itsParent_);
             if(itsParent_.itsSetupPlot_)
                 itsParent_.itsData_->setupCache(itsParent_.itsAxes_[0],
                                                 itsParent_.itsAxes_[1]);

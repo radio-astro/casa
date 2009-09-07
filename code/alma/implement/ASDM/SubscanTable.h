@@ -81,6 +81,10 @@ using namespace enumerations;
 	
 
 	
+
+	
+
+	
 #include "CSubscanIntent.h"
 using namespace SubscanIntentMod;
 	
@@ -88,8 +92,6 @@ using namespace SubscanIntentMod;
 	
 #include "CSwitchingMode.h"
 using namespace SwitchingModeMod;
-	
-
 	
 
 	
@@ -143,99 +145,116 @@ class ASDM;
 class SubscanRow;
 /**
  * The SubscanTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Subscan-based information.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Subscan </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> execBlockId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> execBlockId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a unique row in ExecBlockTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> scanNumber </TD> 
- * <TD> int </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> scanNumber </TD>
+ 		 
+ * <TD> int</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the number of the scan this subscan belongs to. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> subscanNumber </TD> 
- * <TD> int </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> subscanNumber </TD>
+ 		 
+ * <TD> int</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the subscan number. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> startTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the actual start time of the subscan. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> subscanIntent </TD> 
- * <TD> SubscanIntentMod::SubscanIntent </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numberIntegration </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numberSubintegration </TD> 
- * <TD> vector<int > </TD>
- * <TD>  numberIntegration </TD> 
- * </TR>
-	
- * <TR>
- * <TD> flagRow </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the actual end time of the subscan. </TD>
  * </TR>
 	
  * <TR>
  * <TD> fieldName </TD> 
  * <TD> string </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the name of the observed field. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> subscanIntent </TD> 
+ * <TD> SubscanIntentMod::SubscanIntent </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the intent of the subscan. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numberIntegration </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of integrations during the scan. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numberSubintegration </TD> 
+ * <TD> vector<int > </TD>
+ * <TD>  numberIntegration </TD> 
+ * <TD> &nbsp;the number of subintegrations for each integration. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> flagRow </TD> 
+ * <TD> bool </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;True if row is flagged. </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> subscanMode </TD> 
  * <TD> SwitchingModeMod::SwitchingMode </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; identifies the data acquisition mode during the subscan. </TD>
  * </TR>
 	
  * <TR>
  * <TD> correlatorCalibration </TD> 
  * <TD> CorrelatorCalibrationMod::CorrelatorCalibration </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; identifies the correlator calibration during the subscan. </TD>
  * </TR>
 	
 
@@ -320,6 +339,8 @@ public:
 	
  	 * @param endTime. 
 	
+ 	 * @param fieldName. 
+	
  	 * @param subscanIntent. 
 	
  	 * @param numberIntegration. 
@@ -328,16 +349,14 @@ public:
 	
  	 * @param flagRow. 
 	
- 	 * @param fieldName. 
-	
      */
-	SubscanRow *newRow(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow, string fieldName);
+	SubscanRow *newRow(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	SubscanRow *newRowFull(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow, string fieldName);
+	SubscanRow *newRowFull(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow);
 
 
 	/**
@@ -433,6 +452,8 @@ public:
  	 		
  	 * @param endTime.
  	 		
+ 	 * @param fieldName.
+ 	 		
  	 * @param subscanIntent.
  	 		
  	 * @param numberIntegration.
@@ -440,11 +461,9 @@ public:
  	 * @param numberSubintegration.
  	 		
  	 * @param flagRow.
- 	 		
- 	 * @param fieldName.
  	 		 
  	 */
-	SubscanRow* lookup(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow, string fieldName); 
+	SubscanRow* lookup(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow); 
 
 
 #ifndef WITHOUT_ACS
@@ -464,43 +483,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(SubscanTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(SubscanTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for Subscan (SubscanTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a Subscan (SubscanTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -575,8 +600,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	SubscanRow* checkAndAdd(SubscanRow* x) throw (DuplicateKey);
+	SubscanRow* checkAndAdd(SubscanRow* x) ;
 
 
 
@@ -590,7 +617,7 @@ private:
 	vector<SubscanRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

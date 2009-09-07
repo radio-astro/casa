@@ -98,13 +98,48 @@ namespace asdm {
 	
   		
 		
-		x->operationModeExists = operationModeExists;
+		
+			
+		x->timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
 		
 		
 			
 				
-		x->operationMode = CORBA::string_dup(operationMode.c_str());
+		x->wvrMethod = wvrMethod;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->polyFreqLimits.length(polyFreqLimits.size());
+		for (unsigned int i = 0; i < polyFreqLimits.size(); ++i) {
+			
+			x->polyFreqLimits[i] = polyFreqLimits.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
 				
+		x->numChan = numChan;
+ 				
  			
 		
 	
@@ -126,61 +161,37 @@ namespace asdm {
 		
 		
 			
-		x->freqOrigin = freqOrigin.toIDLFrequency();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->timeInterval = timeInterval.toIDLArrayTimeInterval();
-			
-		
-	
-
-	
-  		
-		
-		
-			
 		x->pathCoeff.length(pathCoeff.size());
-		for (unsigned int i = 0; i < pathCoeff.size(); ++i) {
+		for (unsigned int i = 0; i < pathCoeff.size(); i++) {
+			x->pathCoeff[i].length(pathCoeff.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < pathCoeff.size() ; i++)
+			for (unsigned int j = 0; j < pathCoeff.at(i).size(); j++)
+					
+						
+				x->pathCoeff[i][j] = pathCoeff.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->refTemp.length(refTemp.size());
+		for (unsigned int i = 0; i < refTemp.size(); ++i) {
 			
 				
-			x->pathCoeff[i] = pathCoeff.at(i);
+			x->refTemp[i] = refTemp.at(i);
 	 			
 	 		
 	 	}
 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->calibrationMode = CORBA::string_dup(calibrationMode.c_str());
-				
- 			
-		
-	
-
-	
-  		
-		
-		x->wvrefModelExists = wvrefModelExists;
-		
-		
-			
-				
-		x->wvrefModel = wvrefModel;
- 				
- 			
 		
 	
 
@@ -227,23 +238,53 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct WVMCalRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void WVMCalRow::setFromIDL (WVMCalRowIDL x) throw(ConversionException) {
+	void WVMCalRow::setFromIDL (WVMCalRowIDL x){
 		try {
 		// Fill the values from x.
 	
 		
 	
 		
-		operationModeExists = x.operationModeExists;
-		if (x.operationModeExists) {
-		
 		
 			
-		setOperationMode(string (x.operationMode));
+		setTimeInterval(ArrayTimeInterval (x.timeInterval));
 			
  		
 		
+	
+
+	
+		
+		
+			
+		setWvrMethod(x.wvrMethod);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		polyFreqLimits .clear();
+		for (unsigned int i = 0; i <x.polyFreqLimits.length(); ++i) {
+			
+			polyFreqLimits.push_back(Frequency (x.polyFreqLimits[i]));
+			
 		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setNumChan(x.numChan);
+  			
+ 		
 		
 	
 
@@ -261,31 +302,16 @@ namespace asdm {
 		
 		
 			
-		setFreqOrigin(Frequency (x.freqOrigin));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setTimeInterval(ArrayTimeInterval (x.timeInterval));
-			
- 		
-		
-	
-
-	
-		
-		
-			
 		pathCoeff .clear();
-		for (unsigned int i = 0; i <x.pathCoeff.length(); ++i) {
-			
-			pathCoeff.push_back(x.pathCoeff[i]);
-  			
+		vector<double> v_aux_pathCoeff;
+		for (unsigned int i = 0; i < x.pathCoeff.length(); ++i) {
+			v_aux_pathCoeff.clear();
+			for (unsigned int j = 0; j < x.pathCoeff[0].length(); ++j) {
+				
+				v_aux_pathCoeff.push_back(x.pathCoeff[i][j]);
+	  			
+  			}
+  			pathCoeff.push_back(v_aux_pathCoeff);			
 		}
 			
   		
@@ -296,24 +322,14 @@ namespace asdm {
 		
 		
 			
-		setCalibrationMode(string (x.calibrationMode));
+		refTemp .clear();
+		for (unsigned int i = 0; i <x.refTemp.length(); ++i) {
 			
- 		
-		
-	
-
-	
-		
-		wvrefModelExists = x.wvrefModelExists;
-		if (x.wvrefModelExists) {
-		
-		
-			
-		setWvrefModel(x.wvrefModel);
+			refTemp.push_back(x.refTemp[i]);
   			
- 		
-		
 		}
+			
+  		
 		
 	
 
@@ -347,7 +363,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"WVMCal");
+			throw ConversionException (err.getMessage(),"WVMCal");
 		}
 	}
 #endif
@@ -364,13 +380,33 @@ namespace asdm {
 		
   	
  		
-		if (operationModeExists) {
+		
+		Parser::toXML(timeInterval, "timeInterval", buf);
 		
 		
-		Parser::toXML(operationMode, "operationMode", buf);
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("wvrMethod", wvrMethod));
 		
 		
-		}
+	
+
+  	
+ 		
+		
+		Parser::toXML(polyFreqLimits, "polyFreqLimits", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numChan, "numChan", buf);
+		
 		
 	
 
@@ -378,22 +414,6 @@ namespace asdm {
  		
 		
 		Parser::toXML(numPoly, "numPoly", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(freqOrigin, "freqOrigin", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(timeInterval, "timeInterval", buf);
 		
 		
 	
@@ -409,20 +429,8 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(calibrationMode, "calibrationMode", buf);
+		Parser::toXML(refTemp, "refTemp", buf);
 		
-		
-	
-
-  	
- 		
-		if (wvrefModelExists) {
-		
-		
-		Parser::toXML(wvrefModel, "wvrefModel", buf);
-		
-		
-		}
 		
 	
 
@@ -461,7 +469,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void WVMCalRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void WVMCalRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -469,12 +477,38 @@ namespace asdm {
 		
 	
   		
-        if (row.isStr("<operationMode>")) {
 			
-	  		setOperationMode(Parser::getString("operationMode","WVMCal",rowDoc));
+	  	setTimeInterval(Parser::getArrayTimeInterval("timeInterval","WVMCal",rowDoc));
 			
-		}
- 		
+		
+	
+
+	
+		
+		
+		
+		wvrMethod = EnumerationParser::getWVRMethod("wvrMethod","WVMCal",rowDoc);
+		
+		
+		
+	
+
+	
+  		
+			
+					
+	  	setPolyFreqLimits(Parser::get1DFrequency("polyFreqLimits","WVMCal",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setNumChan(Parser::getInteger("numChan","WVMCal",rowDoc));
+			
+		
 	
 
 	
@@ -488,24 +522,8 @@ namespace asdm {
 	
   		
 			
-	  	setFreqOrigin(Parser::getFrequency("freqOrigin","WVMCal",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setTimeInterval(Parser::getArrayTimeInterval("timeInterval","WVMCal",rowDoc));
-			
-		
-	
-
-	
-  		
-			
 					
-	  	setPathCoeff(Parser::get1DDouble("pathCoeff","WVMCal",rowDoc));
+	  	setPathCoeff(Parser::get2DDouble("pathCoeff","WVMCal",rowDoc));
 	  			
 	  		
 		
@@ -514,19 +532,11 @@ namespace asdm {
 	
   		
 			
-	  	setCalibrationMode(Parser::getString("calibrationMode","WVMCal",rowDoc));
-			
+					
+	  	setRefTemp(Parser::get1DDouble("refTemp","WVMCal",rowDoc));
+	  			
+	  		
 		
-	
-
-	
-  		
-        if (row.isStr("<wvrefModel>")) {
-			
-	  		setWvrefModel(Parser::getFloat("wvrefModel","WVMCal",rowDoc));
-			
-		}
- 		
 	
 
 	
@@ -559,121 +569,217 @@ namespace asdm {
 		}
 	}
 	
+	void WVMCalRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	antennaId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	spectralWindowId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	timeInterval.toBin(eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(wvrMethod);
+				
+		
+	
+
+	
+	
+		
+	Frequency::toBin(polyFreqLimits, eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numChan);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numPoly);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) pathCoeff.size());
+		eoss.writeInt((int) pathCoeff.at(0).size());
+		for (unsigned int i = 0; i < pathCoeff.size(); i++) 
+			for (unsigned int j = 0;  j < pathCoeff.at(0).size(); j++) 
+							 
+				eoss.writeDouble(pathCoeff.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) refTemp.size());
+		for (unsigned int i = 0; i < refTemp.size(); i++)
+				
+			eoss.writeDouble(refTemp.at(i));
+				
+				
+						
+		
+	
+
+
+	
+	
+	}
+	
+	WVMCalRow* WVMCalRow::fromBin(EndianISStream& eiss, WVMCalTable& table) {
+		WVMCalRow* row = new  WVMCalRow(table);
+		
+		
+		
+	
+		
+		
+		row->antennaId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->spectralWindowId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->wvrMethod = CWVRMethod::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->polyFreqLimits = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->numChan =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numPoly =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->pathCoeff.clear();
+		
+		unsigned int pathCoeffDim1 = eiss.readInt();
+		unsigned int pathCoeffDim2 = eiss.readInt();
+		vector <double> pathCoeffAux1;
+		for (unsigned int i = 0; i < pathCoeffDim1; i++) {
+			pathCoeffAux1.clear();
+			for (unsigned int j = 0; j < pathCoeffDim2 ; j++)			
+			
+			pathCoeffAux1.push_back(eiss.readDouble());
+			
+			row->pathCoeff.push_back(pathCoeffAux1);
+		}
+	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->refTemp.clear();
+		
+		unsigned int refTempDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < refTempDim1; i++)
+			
+			row->refTemp.push_back(eiss.readDouble());
+			
+	
+
+		
+	
+
+		
+		
+		
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
-	
-	/**
-	 * The attribute operationMode is optional. Return true if this attribute exists.
-	 * @return true if and only if the operationMode attribute exists. 
-	 */
-	bool WVMCalRow::isOperationModeExists() const {
-		return operationModeExists;
-	}
-	
-
-	
- 	/**
- 	 * Get operationMode, which is optional.
- 	 * @return operationMode as string
- 	 * @throw IllegalAccessException If operationMode does not exist.
- 	 */
- 	string WVMCalRow::getOperationMode() const throw(IllegalAccessException) {
-		if (!operationModeExists) {
-			throw IllegalAccessException("operationMode", "WVMCal");
-		}
-	
-  		return operationMode;
- 	}
-
- 	/**
- 	 * Set operationMode with the specified string.
- 	 * @param operationMode The string value to which operationMode is to be set.
- 	 
- 	
- 	 */
- 	void WVMCalRow::setOperationMode (string operationMode) {
-	
- 		this->operationMode = operationMode;
-	
-		operationModeExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark operationMode, which is an optional field, as non-existent.
-	 */
-	void WVMCalRow::clearOperationMode () {
-		operationModeExists = false;
-	}
-	
-
-	
-
-	
- 	/**
- 	 * Get numPoly.
- 	 * @return numPoly as int
- 	 */
- 	int WVMCalRow::getNumPoly() const {
-	
-  		return numPoly;
- 	}
-
- 	/**
- 	 * Set numPoly with the specified int.
- 	 * @param numPoly The int value to which numPoly is to be set.
- 	 
- 	
- 		
- 	 */
- 	void WVMCalRow::setNumPoly (int numPoly)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numPoly = numPoly;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get freqOrigin.
- 	 * @return freqOrigin as Frequency
- 	 */
- 	Frequency WVMCalRow::getFreqOrigin() const {
-	
-  		return freqOrigin;
- 	}
-
- 	/**
- 	 * Set freqOrigin with the specified Frequency.
- 	 * @param freqOrigin The Frequency value to which freqOrigin is to be set.
- 	 
- 	
- 		
- 	 */
- 	void WVMCalRow::setFreqOrigin (Frequency freqOrigin)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->freqOrigin = freqOrigin;
-	
- 	}
-	
-	
-
 	
 
 	
@@ -714,22 +820,150 @@ namespace asdm {
 
 	
  	/**
- 	 * Get pathCoeff.
- 	 * @return pathCoeff as vector<double >
+ 	 * Get wvrMethod.
+ 	 * @return wvrMethod as WVRMethodMod::WVRMethod
  	 */
- 	vector<double > WVMCalRow::getPathCoeff() const {
+ 	WVRMethodMod::WVRMethod WVMCalRow::getWvrMethod() const {
+	
+  		return wvrMethod;
+ 	}
+
+ 	/**
+ 	 * Set wvrMethod with the specified WVRMethodMod::WVRMethod.
+ 	 * @param wvrMethod The WVRMethodMod::WVRMethod value to which wvrMethod is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void WVMCalRow::setWvrMethod (WVRMethodMod::WVRMethod wvrMethod)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->wvrMethod = wvrMethod;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get polyFreqLimits.
+ 	 * @return polyFreqLimits as vector<Frequency >
+ 	 */
+ 	vector<Frequency > WVMCalRow::getPolyFreqLimits() const {
+	
+  		return polyFreqLimits;
+ 	}
+
+ 	/**
+ 	 * Set polyFreqLimits with the specified vector<Frequency >.
+ 	 * @param polyFreqLimits The vector<Frequency > value to which polyFreqLimits is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void WVMCalRow::setPolyFreqLimits (vector<Frequency > polyFreqLimits)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->polyFreqLimits = polyFreqLimits;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numChan.
+ 	 * @return numChan as int
+ 	 */
+ 	int WVMCalRow::getNumChan() const {
+	
+  		return numChan;
+ 	}
+
+ 	/**
+ 	 * Set numChan with the specified int.
+ 	 * @param numChan The int value to which numChan is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void WVMCalRow::setNumChan (int numChan)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numChan = numChan;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numPoly.
+ 	 * @return numPoly as int
+ 	 */
+ 	int WVMCalRow::getNumPoly() const {
+	
+  		return numPoly;
+ 	}
+
+ 	/**
+ 	 * Set numPoly with the specified int.
+ 	 * @param numPoly The int value to which numPoly is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void WVMCalRow::setNumPoly (int numPoly)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numPoly = numPoly;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get pathCoeff.
+ 	 * @return pathCoeff as vector<vector<double > >
+ 	 */
+ 	vector<vector<double > > WVMCalRow::getPathCoeff() const {
 	
   		return pathCoeff;
  	}
 
  	/**
- 	 * Set pathCoeff with the specified vector<double >.
- 	 * @param pathCoeff The vector<double > value to which pathCoeff is to be set.
+ 	 * Set pathCoeff with the specified vector<vector<double > >.
+ 	 * @param pathCoeff The vector<vector<double > > value to which pathCoeff is to be set.
  	 
  	
  		
  	 */
- 	void WVMCalRow::setPathCoeff (vector<double > pathCoeff)  {
+ 	void WVMCalRow::setPathCoeff (vector<vector<double > > pathCoeff)  {
   	
   	
   		if (hasBeenAdded) {
@@ -746,79 +980,32 @@ namespace asdm {
 
 	
  	/**
- 	 * Get calibrationMode.
- 	 * @return calibrationMode as string
+ 	 * Get refTemp.
+ 	 * @return refTemp as vector<double >
  	 */
- 	string WVMCalRow::getCalibrationMode() const {
+ 	vector<double > WVMCalRow::getRefTemp() const {
 	
-  		return calibrationMode;
+  		return refTemp;
  	}
 
  	/**
- 	 * Set calibrationMode with the specified string.
- 	 * @param calibrationMode The string value to which calibrationMode is to be set.
+ 	 * Set refTemp with the specified vector<double >.
+ 	 * @param refTemp The vector<double > value to which refTemp is to be set.
  	 
  	
  		
  	 */
- 	void WVMCalRow::setCalibrationMode (string calibrationMode)  {
+ 	void WVMCalRow::setRefTemp (vector<double > refTemp)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->calibrationMode = calibrationMode;
+ 		this->refTemp = refTemp;
 	
  	}
 	
-	
-
-	
-	/**
-	 * The attribute wvrefModel is optional. Return true if this attribute exists.
-	 * @return true if and only if the wvrefModel attribute exists. 
-	 */
-	bool WVMCalRow::isWvrefModelExists() const {
-		return wvrefModelExists;
-	}
-	
-
-	
- 	/**
- 	 * Get wvrefModel, which is optional.
- 	 * @return wvrefModel as float
- 	 * @throw IllegalAccessException If wvrefModel does not exist.
- 	 */
- 	float WVMCalRow::getWvrefModel() const throw(IllegalAccessException) {
-		if (!wvrefModelExists) {
-			throw IllegalAccessException("wvrefModel", "WVMCal");
-		}
-	
-  		return wvrefModel;
- 	}
-
- 	/**
- 	 * Set wvrefModel with the specified float.
- 	 * @param wvrefModel The float value to which wvrefModel is to be set.
- 	 
- 	
- 	 */
- 	void WVMCalRow::setWvrefModel (float wvrefModel) {
-	
- 		this->wvrefModel = wvrefModel;
-	
-		wvrefModelExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark wvrefModel, which is an optional field, as non-existent.
-	 */
-	void WVMCalRow::clearWvrefModel () {
-		wvrefModelExists = false;
-	}
 	
 
 	
@@ -954,8 +1141,6 @@ namespace asdm {
 		
 	
 	
-		operationModeExists = false;
-	
 
 	
 
@@ -968,8 +1153,6 @@ namespace asdm {
 	
 
 	
-		wvrefModelExists = false;
-	
 
 	
 	
@@ -981,6 +1164,9 @@ namespace asdm {
 	
 	
 
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+wvrMethod = CWVRMethod::from_int(0);
 	
 
 	
@@ -1002,8 +1188,6 @@ namespace asdm {
 	
 	
 	
-		operationModeExists = false;
-	
 
 	
 
@@ -1015,8 +1199,6 @@ namespace asdm {
 
 	
 
-	
-		wvrefModelExists = false;
 	
 
 	
@@ -1037,36 +1219,26 @@ namespace asdm {
 		
 		
 		
-			numPoly = row.numPoly;
+			wvrMethod = row.wvrMethod;
 		
-			freqOrigin = row.freqOrigin;
+			polyFreqLimits = row.polyFreqLimits;
+		
+			numChan = row.numChan;
+		
+			numPoly = row.numPoly;
 		
 			pathCoeff = row.pathCoeff;
 		
-			calibrationMode = row.calibrationMode;
+			refTemp = row.refTemp;
 		
 		
 		
-		
-		if (row.operationModeExists) {
-			operationMode = row.operationMode;		
-			operationModeExists = true;
-		}
-		else
-			operationModeExists = false;
-		
-		if (row.wvrefModelExists) {
-			wvrefModel = row.wvrefModel;		
-			wvrefModelExists = true;
-		}
-		else
-			wvrefModelExists = false;
 		
 		}	
 	}
 
 	
-	bool WVMCalRow::compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numPoly, Frequency freqOrigin, vector<double > pathCoeff, string calibrationMode) {
+	bool WVMCalRow::compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<double > > pathCoeff, vector<double > refTemp) {
 		bool result;
 		result = true;
 		
@@ -1093,14 +1265,28 @@ namespace asdm {
 
 	
 		
-		result = result && (this->numPoly == numPoly);
+		result = result && (this->wvrMethod == wvrMethod);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->freqOrigin == freqOrigin);
+		result = result && (this->polyFreqLimits == polyFreqLimits);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numChan == numChan);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numPoly == numPoly);
 		
 		if (!result) return false;
 	
@@ -1114,7 +1300,7 @@ namespace asdm {
 
 	
 		
-		result = result && (this->calibrationMode == calibrationMode);
+		result = result && (this->refTemp == refTemp);
 		
 		if (!result) return false;
 	
@@ -1124,16 +1310,24 @@ namespace asdm {
 	
 	
 	
-	bool WVMCalRow::compareRequiredValue(int numPoly, Frequency freqOrigin, vector<double > pathCoeff, string calibrationMode) {
+	bool WVMCalRow::compareRequiredValue(WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<double > > pathCoeff, vector<double > refTemp) {
 		bool result;
 		result = true;
 		
 	
-		if (!(this->numPoly == numPoly)) return false;
+		if (!(this->wvrMethod == wvrMethod)) return false;
 	
 
 	
-		if (!(this->freqOrigin == freqOrigin)) return false;
+		if (!(this->polyFreqLimits == polyFreqLimits)) return false;
+	
+
+	
+		if (!(this->numChan == numChan)) return false;
+	
+
+	
+		if (!(this->numPoly == numPoly)) return false;
 	
 
 	
@@ -1141,7 +1335,7 @@ namespace asdm {
 	
 
 	
-		if (!(this->calibrationMode == calibrationMode)) return false;
+		if (!(this->refTemp == refTemp)) return false;
 	
 
 		return result;
@@ -1159,13 +1353,17 @@ namespace asdm {
 	bool WVMCalRow::equalByRequiredValue(WVMCalRow* x) {
 		
 			
-		if (this->numPoly != x->numPoly) return false;
+		if (this->wvrMethod != x->wvrMethod) return false;
 			
-		if (this->freqOrigin != x->freqOrigin) return false;
+		if (this->polyFreqLimits != x->polyFreqLimits) return false;
+			
+		if (this->numChan != x->numChan) return false;
+			
+		if (this->numPoly != x->numPoly) return false;
 			
 		if (this->pathCoeff != x->pathCoeff) return false;
 			
-		if (this->calibrationMode != x->calibrationMode) return false;
+		if (this->refTemp != x->refTemp) return false;
 			
 		
 		return true;

@@ -42,15 +42,28 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the FocusMethod enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace FocusMethodMod
 {
+  //! FocusMethod.
+  //!  [CalDM.CalFocus] Method of focus measurement
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum FocusMethod
   { 
-    THREE_POINT ,
-    FIVE_POINT 
+    THREE_POINT /*!< Three-point measurement */
+     ,
+    FIVE_POINT /*!< Five-point measurement */
+     
   };
   typedef FocusMethod &FocusMethod_out;
 } 
@@ -58,64 +71,91 @@ namespace FocusMethodMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration FocusMethod.
+  * 
+  */
 class CFocusMethod {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the FocusMethod enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sTHREE_POINT;
+	static const std::string& sTHREE_POINT; /*!< A const string equal to "THREE_POINT".*/
 	
-	static const std::string& sFIVE_POINT;
-	
-    static const std::vector<std::string> sFocusMethodSet();	 
-
+	static const std::string& sFIVE_POINT; /*!< A const string equal to "FIVE_POINT".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in FocusMethodMod::FocusMethod.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of FocusMethodMod::FocusMethod.
+      * @return a string.
+      */
+	static std::string name(const FocusMethodMod::FocusMethod& e);
 	
-	// Explanations associated with the FocusMethod Enumeration.
-		
-	static const std::string& hTHREE_POINT;
-		
-	static const std::string& hFIVE_POINT;
-		
-	static const std::vector<std::string> hFocusMethodSet();
-   	
-
-   	// Is an integer number associated with the FocusMethod enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the FocusMethod enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  FocusMethod enumeration.
-	static std::string name(const FocusMethodMod::FocusMethod& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const FocusMethodMod::FocusMethod& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified FocusMethod enumeration.
-	static std::string help(const FocusMethodMod::FocusMethod& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a FocusMethod enumeration object by specifying its name.
    	static FocusMethodMod::FocusMethod newFocusMethod(const std::string& name);
    	
-   	// Create a FocusMethod enumeration object by specifying its name.
+   	/*! Return a FocusMethod's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a FocusMethodMod::FocusMethod's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static FocusMethodMod::FocusMethod literal(const std::string& name);
  	
-    // Create a FocusMethod enumeration object by specifying its position index (0 based).
+    /*! Return a FocusMethod's enumerator given an unsigned int.
+      * @param i the index of the enumerator in FocusMethodMod::FocusMethod.
+      * @return a FocusMethodMod::FocusMethod's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static FocusMethodMod::FocusMethod from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CFocusMethod();
     CFocusMethod(const CFocusMethod&);
     CFocusMethod& operator=(const CFocusMethod&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CFocusMethod_H*/

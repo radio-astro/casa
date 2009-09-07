@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CCalibrationDevice::version() {
+	return CalibrationDeviceMod::version;
+	}
+	
+string CCalibrationDevice::revision () {
+	return CalibrationDeviceMod::revision;
+}
+
+unsigned int CCalibrationDevice::size() {
+	return 7;
+	}
+	
 	
 const std::string& CCalibrationDevice::sAMBIENT_LOAD = "AMBIENT_LOAD";
 	
@@ -52,7 +65,7 @@ const std::string& CCalibrationDevice::sSOLAR_FILTER = "SOLAR_FILTER";
 	
 const std::string& CCalibrationDevice::sNONE = "NONE";
 	
-const std::vector<std::string> CCalibrationDevice::sCalibrationDeviceSet() {
+const std::vector<std::string> CCalibrationDevice::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CCalibrationDevice::sAMBIENT_LOAD);
@@ -71,45 +84,6 @@ const std::vector<std::string> CCalibrationDevice::sCalibrationDeviceSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CCalibrationDevice::hAMBIENT_LOAD = "An absorbing load at the ambient temperature.";
-	
-const std::string& CCalibrationDevice::hCOLD_LOAD = "A cooled absorbing load.";
-	
-const std::string& CCalibrationDevice::hHOT_LOAD = "A heated absorbing load.";
-	
-const std::string& CCalibrationDevice::hNOISE_TUBE_LOAD = "A noise tube.";
-	
-const std::string& CCalibrationDevice::hQUARTER_WAVE_PLATE = "A transparent plate that introduces a 90-degree phase difference between othogonal polarizations.";
-	
-const std::string& CCalibrationDevice::hSOLAR_FILTER = "An optical attenuator (to protect receiver from solar heat).";
-	
-const std::string& CCalibrationDevice::hNONE = "No device, the receiver looks at the sky (through the telescope).";
-	
-const std::vector<std::string> CCalibrationDevice::hCalibrationDeviceSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CCalibrationDevice::hAMBIENT_LOAD);
-    
-    enumSet.insert(enumSet.end(), CCalibrationDevice::hCOLD_LOAD);
-    
-    enumSet.insert(enumSet.end(), CCalibrationDevice::hHOT_LOAD);
-    
-    enumSet.insert(enumSet.end(), CCalibrationDevice::hNOISE_TUBE_LOAD);
-    
-    enumSet.insert(enumSet.end(), CCalibrationDevice::hQUARTER_WAVE_PLATE);
-    
-    enumSet.insert(enumSet.end(), CCalibrationDevice::hSOLAR_FILTER);
-    
-    enumSet.insert(enumSet.end(), CCalibrationDevice::hNONE);
-        
-    return enumSet;
-}
-   	
 
 std::string CCalibrationDevice::name(const CalibrationDeviceMod::CalibrationDevice& f) {
     switch (f) {
@@ -136,40 +110,9 @@ std::string CCalibrationDevice::name(const CalibrationDeviceMod::CalibrationDevi
       return CCalibrationDevice::sNONE;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CCalibrationDevice::help(const CalibrationDeviceMod::CalibrationDevice& f) {
-    switch (f) {
-    
-    case CalibrationDeviceMod::AMBIENT_LOAD:
-      return CCalibrationDevice::hAMBIENT_LOAD;
-    
-    case CalibrationDeviceMod::COLD_LOAD:
-      return CCalibrationDevice::hCOLD_LOAD;
-    
-    case CalibrationDeviceMod::HOT_LOAD:
-      return CCalibrationDevice::hHOT_LOAD;
-    
-    case CalibrationDeviceMod::NOISE_TUBE_LOAD:
-      return CCalibrationDevice::hNOISE_TUBE_LOAD;
-    
-    case CalibrationDeviceMod::QUARTER_WAVE_PLATE:
-      return CCalibrationDevice::hQUARTER_WAVE_PLATE;
-    
-    case CalibrationDeviceMod::SOLAR_FILTER:
-      return CCalibrationDevice::hSOLAR_FILTER;
-    
-    case CalibrationDeviceMod::NONE:
-      return CCalibrationDevice::hNONE;
-    	
-    }
-    return std::string("");
-}
-   	
 
 CalibrationDeviceMod::CalibrationDevice CCalibrationDevice::newCalibrationDevice(const std::string& name) {
 		
@@ -238,12 +181,10 @@ CalibrationDeviceMod::CalibrationDevice CCalibrationDevice::literal(const std::s
 }
 
 CalibrationDeviceMod::CalibrationDevice CCalibrationDevice::from_int(unsigned int i) {
-	vector<string> names = sCalibrationDeviceSet();
-	if (i >= names.size()) throw badInt(i);
-	return newCalibrationDevice(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newCalibrationDevice(names_.at(i));
 }
-
-	
 
 string CCalibrationDevice::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'CalibrationDevice'.";

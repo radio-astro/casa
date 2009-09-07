@@ -89,6 +89,8 @@
 
 #include <DataDescriptionTable.h>
 
+#include <DelayModelTable.h>
+
 #include <DopplerTable.h>
 
 #include <EphemerisTable.h>
@@ -132,8 +134,6 @@
 #include <SeeingTable.h>
 
 #include <SourceTable.h>
-
-#include <SourceParameterTable.h>
 
 #include <SpectralWindowTable.h>
 
@@ -214,6 +214,8 @@ using asdm::CorrelatorModeTable;
 
 using asdm::DataDescriptionTable;
 
+using asdm::DelayModelTable;
+
 using asdm::DopplerTable;
 
 using asdm::EphemerisTable;
@@ -257,8 +259,6 @@ using asdm::ScanTable;
 using asdm::SeeingTable;
 
 using asdm::SourceTable;
-
-using asdm::SourceParameterTable;
 
 using asdm::SpectralWindowTable;
 
@@ -421,6 +421,10 @@ namespace asdm {
 		table.push_back(dataDescription);
 		tableEntity["DataDescription"] = emptyEntity;
 
+		delayModel = new DelayModelTable (*this);
+		table.push_back(delayModel);
+		tableEntity["DelayModel"] = emptyEntity;
+
 		doppler = new DopplerTable (*this);
 		table.push_back(doppler);
 		tableEntity["Doppler"] = emptyEntity;
@@ -508,10 +512,6 @@ namespace asdm {
 		source = new SourceTable (*this);
 		table.push_back(source);
 		tableEntity["Source"] = emptyEntity;
-
-		sourceParameter = new SourceParameterTable (*this);
-		table.push_back(sourceParameter);
-		tableEntity["SourceParameter"] = emptyEntity;
 
 		spectralWindow = new SpectralWindowTable (*this);
 		table.push_back(spectralWindow);
@@ -814,6 +814,14 @@ namespace asdm {
 	}
 
 	/**
+	 * Get the table DelayModel.
+	 * @return The table DelayModel as a DelayModelTable.
+	 */
+	DelayModelTable & ASDM::getDelayModel () const {
+		return *delayModel;
+	}
+
+	/**
 	 * Get the table Doppler.
 	 * @return The table Doppler as a DopplerTable.
 	 */
@@ -990,14 +998,6 @@ namespace asdm {
 	}
 
 	/**
-	 * Get the table SourceParameter.
-	 * @return The table SourceParameter as a SourceParameterTable.
-	 */
-	SourceParameterTable & ASDM::getSourceParameter () const {
-		return *sourceParameter;
-	}
-
-	/**
 	 * Get the table SpectralWindow.
 	 * @return The table SpectralWindow as a SpectralWindowTable.
 	 */
@@ -1078,12 +1078,12 @@ namespace asdm {
 	}
 
 
+
 	string ASDM::toXML()   {
 		string out;
 		out.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		out.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/asdm2html.xsl\"?> ");
-		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../idl/ASDM.xsd\"> ");
-		
+		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/2/ASDM.xsd\"> ");
+
 		if (entity.isNull())
 			throw ConversionException("Container entity cannot be null.","Container");
 		out.append(entity.toXML());
@@ -1113,7 +1113,9 @@ namespace asdm {
 		out.append("</ASDM>");
 		return out;
 	}
-	
+
+
+
 	void ASDM::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<ASDM")) 
@@ -1176,6 +1178,9 @@ namespace asdm {
 			error();	
 	}
 
+	
+
+
 #ifndef WITHOUT_ACS	
 	ASDMDataSetIDL* ASDM::toIDL() {
 		ASDMDataSetIDL* result = new ASDMDataSetIDL();
@@ -1236,6 +1241,8 @@ namespace asdm {
 		
 		result->dataDescription = *(this->dataDescription->toIDL());
 		
+		result->delayModel = *(this->delayModel->toIDL());
+		
 		result->doppler = *(this->doppler->toIDL());
 		
 		result->ephemeris = *(this->ephemeris->toIDL());
@@ -1279,8 +1286,6 @@ namespace asdm {
 		result->seeing = *(this->seeing->toIDL());
 		
 		result->source = *(this->source->toIDL());
-		
-		result->sourceParameter = *(this->sourceParameter->toIDL());
 		
 		result->spectralWindow = *(this->spectralWindow->toIDL());
 		
@@ -1363,6 +1368,8 @@ namespace asdm {
 		
 		this->dataDescription->fromIDL(x->dataDescription);
 		
+		this->delayModel->fromIDL(x->delayModel);
+		
 		this->doppler->fromIDL(x->doppler);
 		
 		this->ephemeris->fromIDL(x->ephemeris);
@@ -1407,8 +1414,6 @@ namespace asdm {
 		
 		this->source->fromIDL(x->source);
 		
-		this->sourceParameter->fromIDL(x->sourceParameter);
-		
 		this->spectralWindow->fromIDL(x->spectralWindow);
 		
 		this->squareLawDetector->fromIDL(x->squareLawDetector);
@@ -1433,19 +1438,19 @@ namespace asdm {
 	}
 #endif
 	
-	string ASDM::toVOTable() const throw(ConversionException) {
+	string ASDM::toVOTable() const  {
 		throw ConversionException("Not implemented","ASDM");
 	}
 	
-	void ASDM::fromVOTable(string vo) throw(ConversionException) {
+	void ASDM::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","ASDM");
 	}
 	
-	char * ASDM::toFITS() const throw(ConversionException) {
+	char * ASDM::toFITS() const {
 		throw ConversionException("Not implemented","ASDM");
 	}
 	
-	void ASDM::fromFITS(char * fits) throw(ConversionException) {
+	void ASDM::fromFITS(char * fits) {
 		throw ConversionException("Not implemented","ASDM");
 	}
 	
@@ -2562,6 +2567,43 @@ namespace asdm {
 			dataset->getDataDescription().fromXML(tableDoc);						
 		}
 
+		entity = dataset->tableEntity["DelayModel"];
+		if (entity.getEntityId().getId().length()  != 0) {
+			// Which file must we read ?
+			string tablename = xmlDirectory + "/DelayModel.xml";
+
+			// Determine the file size
+			ifstream::pos_type size;	
+			ifstream tablein (tablename.c_str() , ios::in|ios::binary|ios::ate);
+  			if (tablein.is_open()) { 
+  				size = tablein.tellg(); 
+  			}
+			else {
+				throw ConversionException("Could not open file " + tablename, "DelayModel");
+			}
+			
+			// Read the file in a string
+			string tableDoc;
+
+			tableDoc.reserve(size);
+			tablein.seekg (0);	
+			int nread = BLOCKSIZE;	
+			while (nread == BLOCKSIZE) {
+				tablein.read(c, BLOCKSIZE);
+				if (tablein.rdstate() == istream::failbit || tablein.rdstate() == istream::badbit) {
+					throw ConversionException("Error reading file " + tablename,"ASDM");
+				}
+				nread = tablein.gcount();
+				tableDoc.append(c, nread);
+			}
+			tablein.close();
+			if (tablein.rdstate() == istream::failbit)
+				throw ConversionException("Could not close file " + tablename,"ASDM");
+			
+			// And finally parse the XML document to populate the table.	
+			dataset->getDelayModel().fromXML(tableDoc);						
+		}
+
 		entity = dataset->tableEntity["Doppler"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			// Which file must we read ?
@@ -3376,43 +3418,6 @@ namespace asdm {
 			dataset->getSource().fromXML(tableDoc);						
 		}
 
-		entity = dataset->tableEntity["SourceParameter"];
-		if (entity.getEntityId().getId().length()  != 0) {
-			// Which file must we read ?
-			string tablename = xmlDirectory + "/SourceParameter.xml";
-
-			// Determine the file size
-			ifstream::pos_type size;	
-			ifstream tablein (tablename.c_str() , ios::in|ios::binary|ios::ate);
-  			if (tablein.is_open()) { 
-  				size = tablein.tellg(); 
-  			}
-			else {
-				throw ConversionException("Could not open file " + tablename, "SourceParameter");
-			}
-			
-			// Read the file in a string
-			string tableDoc;
-
-			tableDoc.reserve(size);
-			tablein.seekg (0);	
-			int nread = BLOCKSIZE;	
-			while (nread == BLOCKSIZE) {
-				tablein.read(c, BLOCKSIZE);
-				if (tablein.rdstate() == istream::failbit || tablein.rdstate() == istream::badbit) {
-					throw ConversionException("Error reading file " + tablename,"ASDM");
-				}
-				nread = tablein.gcount();
-				tableDoc.append(c, nread);
-			}
-			tablein.close();
-			if (tablein.rdstate() == istream::failbit)
-				throw ConversionException("Could not close file " + tablename,"ASDM");
-			
-			// And finally parse the XML document to populate the table.	
-			dataset->getSourceParameter().fromXML(tableDoc);						
-		}
-
 		entity = dataset->tableEntity["SpectralWindow"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			// Which file must we read ?
@@ -3797,6 +3802,7 @@ namespace asdm {
 		;
 	}
 	
+	
 	void ASDM::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
 			!createPath(directory.c_str())) {
@@ -3828,286 +3834,288 @@ namespace asdm {
 		}
 		
 		// Then send each of its table to its own file.
-
+	
 		if (getMain().size() > 0) {
 			getMain().toFile(directory);
 		}
-
+	
 		if (getAlmaRadiometer().size() > 0) {
 			getAlmaRadiometer().toFile(directory);
 		}
-
+	
 		if (getAnnotation().size() > 0) {
 			getAnnotation().toFile(directory);
 		}
-
+	
 		if (getAntenna().size() > 0) {
 			getAntenna().toFile(directory);
 		}
-
+	
 		if (getBeam().size() > 0) {
 			getBeam().toFile(directory);
 		}
-
+	
 		if (getCalAmpli().size() > 0) {
 			getCalAmpli().toFile(directory);
 		}
-
+	
 		if (getCalAtmosphere().size() > 0) {
 			getCalAtmosphere().toFile(directory);
 		}
-
+	
 		if (getCalBandpass().size() > 0) {
 			getCalBandpass().toFile(directory);
 		}
-
+	
 		if (getCalCurve().size() > 0) {
 			getCalCurve().toFile(directory);
 		}
-
+	
 		if (getCalData().size() > 0) {
 			getCalData().toFile(directory);
 		}
-
+	
 		if (getCalDelay().size() > 0) {
 			getCalDelay().toFile(directory);
 		}
-
+	
 		if (getCalDevice().size() > 0) {
 			getCalDevice().toFile(directory);
 		}
-
+	
 		if (getCalFlux().size() > 0) {
 			getCalFlux().toFile(directory);
 		}
-
+	
 		if (getCalFocus().size() > 0) {
 			getCalFocus().toFile(directory);
 		}
-
+	
 		if (getCalFocusModel().size() > 0) {
 			getCalFocusModel().toFile(directory);
 		}
-
+	
 		if (getCalGain().size() > 0) {
 			getCalGain().toFile(directory);
 		}
-
+	
 		if (getCalHolography().size() > 0) {
 			getCalHolography().toFile(directory);
 		}
-
+	
 		if (getCalPhase().size() > 0) {
 			getCalPhase().toFile(directory);
 		}
-
+	
 		if (getCalPointing().size() > 0) {
 			getCalPointing().toFile(directory);
 		}
-
+	
 		if (getCalPointingModel().size() > 0) {
 			getCalPointingModel().toFile(directory);
 		}
-
+	
 		if (getCalPosition().size() > 0) {
 			getCalPosition().toFile(directory);
 		}
-
+	
 		if (getCalPrimaryBeam().size() > 0) {
 			getCalPrimaryBeam().toFile(directory);
 		}
-
+	
 		if (getCalReduction().size() > 0) {
 			getCalReduction().toFile(directory);
 		}
-
+	
 		if (getCalSeeing().size() > 0) {
 			getCalSeeing().toFile(directory);
 		}
-
+	
 		if (getCalWVR().size() > 0) {
 			getCalWVR().toFile(directory);
 		}
-
+	
 		if (getConfigDescription().size() > 0) {
 			getConfigDescription().toFile(directory);
 		}
-
+	
 		if (getCorrelatorMode().size() > 0) {
 			getCorrelatorMode().toFile(directory);
 		}
-
+	
 		if (getDataDescription().size() > 0) {
 			getDataDescription().toFile(directory);
 		}
-
+	
+		if (getDelayModel().size() > 0) {
+			getDelayModel().toFile(directory);
+		}
+	
 		if (getDoppler().size() > 0) {
 			getDoppler().toFile(directory);
 		}
-
+	
 		if (getEphemeris().size() > 0) {
 			getEphemeris().toFile(directory);
 		}
-
+	
 		if (getExecBlock().size() > 0) {
 			getExecBlock().toFile(directory);
 		}
-
+	
 		if (getFeed().size() > 0) {
 			getFeed().toFile(directory);
 		}
-
+	
 		if (getField().size() > 0) {
 			getField().toFile(directory);
 		}
-
+	
 		if (getFlagCmd().size() > 0) {
 			getFlagCmd().toFile(directory);
 		}
-
+	
 		if (getFocus().size() > 0) {
 			getFocus().toFile(directory);
 		}
-
+	
 		if (getFocusModel().size() > 0) {
 			getFocusModel().toFile(directory);
 		}
-
+	
 		if (getFreqOffset().size() > 0) {
 			getFreqOffset().toFile(directory);
 		}
-
+	
 		if (getGainTracking().size() > 0) {
 			getGainTracking().toFile(directory);
 		}
-
+	
 		if (getHistory().size() > 0) {
 			getHistory().toFile(directory);
 		}
-
+	
 		if (getHolography().size() > 0) {
 			getHolography().toFile(directory);
 		}
-
+	
 		if (getObservation().size() > 0) {
 			getObservation().toFile(directory);
 		}
-
+	
 		if (getPointing().size() > 0) {
 			getPointing().toFile(directory);
 		}
-
+	
 		if (getPointingModel().size() > 0) {
 			getPointingModel().toFile(directory);
 		}
-
+	
 		if (getPolarization().size() > 0) {
 			getPolarization().toFile(directory);
 		}
-
+	
 		if (getProcessor().size() > 0) {
 			getProcessor().toFile(directory);
 		}
-
+	
 		if (getReceiver().size() > 0) {
 			getReceiver().toFile(directory);
 		}
-
+	
 		if (getSBSummary().size() > 0) {
 			getSBSummary().toFile(directory);
 		}
-
+	
 		if (getScan().size() > 0) {
 			getScan().toFile(directory);
 		}
-
+	
 		if (getSeeing().size() > 0) {
 			getSeeing().toFile(directory);
 		}
-
+	
 		if (getSource().size() > 0) {
 			getSource().toFile(directory);
 		}
-
-		if (getSourceParameter().size() > 0) {
-			getSourceParameter().toFile(directory);
-		}
-
+	
 		if (getSpectralWindow().size() > 0) {
 			getSpectralWindow().toFile(directory);
 		}
-
+	
 		if (getSquareLawDetector().size() > 0) {
 			getSquareLawDetector().toFile(directory);
 		}
-
+	
 		if (getState().size() > 0) {
 			getState().toFile(directory);
 		}
-
+	
 		if (getStation().size() > 0) {
 			getStation().toFile(directory);
 		}
-
+	
 		if (getSubscan().size() > 0) {
 			getSubscan().toFile(directory);
 		}
-
+	
 		if (getSwitchCycle().size() > 0) {
 			getSwitchCycle().toFile(directory);
 		}
-
+	
 		if (getSysCal().size() > 0) {
 			getSysCal().toFile(directory);
 		}
-
+	
 		if (getTotalPower().size() > 0) {
 			getTotalPower().toFile(directory);
 		}
-
+	
 		if (getWVMCal().size() > 0) {
 			getWVMCal().toFile(directory);
 		}
-
+	
 		if (getWeather().size() > 0) {
 			getWeather().toFile(directory);
 		}
-		
+			
 	}
+
+	
 	
 	void ASDM::setFromFile(string directory) {
-		string tablename;
+		string fileName;
 		if (fileAsBin)
-			tablename = directory + "/ASDM.bin";
+			fileName = directory + "/ASDM.bin";
 		else
-			tablename = directory + "/ASDM.xml";
+			fileName = directory + "/ASDM.xml";
 			
 		// Determine the file size.
 		ifstream::pos_type size;
-		ifstream tablefile(tablename.c_str(), ios::in|ios::binary|ios::ate);
+		ifstream theFile(fileName.c_str(), ios::in|ios::binary|ios::ate);
 
- 		if (tablefile.is_open()) { 
-  				size = tablefile.tellg(); 
+ 		if (theFile.is_open()) { 
+  				size = theFile.tellg(); 
   		}
 		else {
-				throw ConversionException("Could not open file " + tablename, "ASDM");
+				throw ConversionException("Could not open file " + fileName, "ASDM");
 		}
 		
 		// Re position to the beginning.
-		tablefile.seekg(0);
+		theFile.seekg(0);
 		
 		// Read in a stringstream.
 		stringstream ss;
-		ss << tablefile.rdbuf();
+		ss << theFile.rdbuf();
 
-		if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
-			throw ConversionException("Error reading file " + tablename,"ASDM");
+		if (theFile.rdstate() == istream::failbit || theFile.rdstate() == istream::badbit) {
+			throw ConversionException("Error reading file " + fileName,"ASDM");
 		}
 
 		// And close
-		tablefile.close();
-		if (tablefile.rdstate() == istream::failbit)
-			throw ConversionException("Could not close file " + tablename,"ASDM");
+		theFile.close();
+		if (theFile.rdstate() == istream::failbit)
+			throw ConversionException("Could not close file " + fileName,"ASDM");
 					
 		// And parse the content with the appropriate method
 		if (fileAsBin) 
@@ -4118,313 +4126,316 @@ namespace asdm {
 		// Now read and parse all files for the tables whose number of rows appear as
 		// non null in the container just built.
 		Entity entity;
-
+	
 		entity = tableEntity["Main"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getMain().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["AlmaRadiometer"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getAlmaRadiometer().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Annotation"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getAnnotation().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Antenna"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getAntenna().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Beam"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getBeam().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalAmpli"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalAmpli().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalAtmosphere"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalAtmosphere().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalBandpass"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalBandpass().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalCurve"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalCurve().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalData"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalData().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalDelay"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalDelay().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalDevice"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalDevice().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalFlux"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalFlux().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalFocus"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalFocus().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalFocusModel"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalFocusModel().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalGain"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalGain().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalHolography"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalHolography().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalPhase"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalPhase().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalPointing"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalPointing().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalPointingModel"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalPointingModel().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalPosition"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalPosition().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalPrimaryBeam"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalPrimaryBeam().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalReduction"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalReduction().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalSeeing"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalSeeing().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CalWVR"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCalWVR().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["ConfigDescription"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getConfigDescription().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["CorrelatorMode"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getCorrelatorMode().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["DataDescription"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getDataDescription().setFromFile(directory);
 		}
-
+	
+		entity = tableEntity["DelayModel"];
+		if (entity.getEntityId().getId().length()  != 0) {
+			getDelayModel().setFromFile(directory);
+		}
+	
 		entity = tableEntity["Doppler"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getDoppler().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Ephemeris"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getEphemeris().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["ExecBlock"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getExecBlock().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Feed"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getFeed().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Field"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getField().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["FlagCmd"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getFlagCmd().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Focus"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getFocus().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["FocusModel"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getFocusModel().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["FreqOffset"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getFreqOffset().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["GainTracking"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getGainTracking().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["History"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getHistory().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Holography"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getHolography().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Observation"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getObservation().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Pointing"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getPointing().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["PointingModel"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getPointingModel().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Polarization"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getPolarization().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Processor"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getProcessor().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Receiver"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getReceiver().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["SBSummary"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getSBSummary().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Scan"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getScan().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Seeing"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getSeeing().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Source"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getSource().setFromFile(directory);
 		}
-
-		entity = tableEntity["SourceParameter"];
-		if (entity.getEntityId().getId().length()  != 0) {
-			getSourceParameter().setFromFile(directory);
-		}
-
+	
 		entity = tableEntity["SpectralWindow"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getSpectralWindow().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["SquareLawDetector"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getSquareLawDetector().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["State"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getState().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Station"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getStation().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Subscan"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getSubscan().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["SwitchCycle"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getSwitchCycle().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["SysCal"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getSysCal().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["TotalPower"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getTotalPower().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["WVMCal"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getWVMCal().setFromFile(directory);
 		}
-
+	
 		entity = tableEntity["Weather"];
 		if (entity.getEntityId().getId().length()  != 0) {
 			getWeather().setFromFile(directory);
 		}
-				
+					
 	}
+
+	
+
 
 	Entity ASDM::getEntity() const {
 		return entity;
@@ -4454,7 +4465,7 @@ namespace asdm {
 	 * entityId of its container.
 	 * @param datasetId The entityId of the container of the dataset.
 	 */
-	ASDM *ASDM::fromArchive(EntityId datasetId) throw(ConversionException) {
+	ASDM *ASDM::fromArchive(EntityId datasetId) {
 		// Get the xml representation of the container.
 		string xml = getXMLEntity(datasetId);
 		// Create the container ...
@@ -4661,6 +4672,13 @@ namespace asdm {
 			container->getDataDescription().fromXML(xml);
 		}
 			
+		entity = container->tableEntity["DelayModel"];
+		if (entity.getEntityId().getId().size() != 0) {
+			container->getDelayModel().setEntity(entity);
+			xml = getXMLEntity(entity.getEntityId());
+			container->getDelayModel().fromXML(xml);
+		}
+			
 		entity = container->tableEntity["Doppler"];
 		if (entity.getEntityId().getId().size() != 0) {
 			container->getDoppler().setEntity(entity);
@@ -4815,13 +4833,6 @@ namespace asdm {
 			container->getSource().fromXML(xml);
 		}
 			
-		entity = container->tableEntity["SourceParameter"];
-		if (entity.getEntityId().getId().size() != 0) {
-			container->getSourceParameter().setEntity(entity);
-			xml = getXMLEntity(entity.getEntityId());
-			container->getSourceParameter().fromXML(xml);
-		}
-			
 		entity = container->tableEntity["SpectralWindow"];
 		if (entity.getEntityId().getId().size() != 0) {
 			container->getSpectralWindow().setEntity(entity);
@@ -4900,7 +4911,7 @@ namespace asdm {
 	/**
 	 * Update an ASDM dataset that already exists in the ALMA archive.
 	 */
-	void ASDM::updateArchive() const throw(ConversionException) {
+	void ASDM::updateArchive() const{
 		// Assumption: Entity objects have already been assigned.
 		// Convert each table to an XML document and write it to the archive.
 		for (unsigned int i = 0; i < table.size(); ++i) {
@@ -4917,7 +4928,7 @@ namespace asdm {
 	 * Return the table, as a Representable object, with the
 	 * specified name.
 	 */
-	Representable &ASDM::getTable(string tableName) throw(InvalidArgumentException) {
+	Representable &ASDM::getTable(string tableName)  {
 		for (unsigned int i = 0; i < table.size(); ++i)
 			if (table[i]->getName() == tableName)
 				return *table[i];
@@ -4957,16 +4968,80 @@ namespace asdm {
 	
 	
 
+	
 
-	void ASDM::error() throw(ConversionException) {
+	
+ 	/**
+ 	 * Get version.
+ 	 * @return version as int
+ 	 */
+ 	int ASDM::getVersion() const {
+	
+  		return version;
+ 	}
+
+ 	/**
+ 	 * Set version with the specified int.
+ 	 * @param version The int value to which version is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ASDM::setVersion (int version)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->version = version;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get xmlnsPrefix.
+ 	 * @return xmlnsPrefix as string
+ 	 */
+ 	string ASDM::getXmlnsPrefix() const {
+	
+  		return xmlnsPrefix;
+ 	}
+
+ 	/**
+ 	 * Set xmlnsPrefix with the specified string.
+ 	 * @param xmlnsPrefix The string value to which xmlnsPrefix is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ASDM::setXmlnsPrefix (string xmlnsPrefix)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->xmlnsPrefix = xmlnsPrefix;
+	
+ 	}
+	
+	
+
+
+	void ASDM::error() {
 		throw ConversionException("Invalid xml document","ASDM");
 	}
 	
-	string ASDM::getXMLEntity(EntityId id) throw(ConversionException) {
+	string ASDM::getXMLEntity(EntityId id) {
 		throw ConversionException("Not implemented","ASDM");
 	}
 	
-	void ASDM::putXMLEntity(string xml) throw(ConversionException) {
+	void ASDM::putXMLEntity(string xml) {
 		throw ConversionException("Not implemented","ASDM");
 	}
 	

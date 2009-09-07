@@ -17,6 +17,8 @@
 #include <SpectralResolutionType.h>
 #include <TimeSampling.h>
 
+#include <CorrelatorType.h>
+
 // Views:
 #include "SDMDataViews.h"
 
@@ -130,6 +132,37 @@ class SDMBinData{
   void selectDataSubset( Enum<CorrelationMode>       e_qcm,
 			 EnumSet<AtmPhaseCorrection> es_qapc );
 
+  /** Method to set priority for DataDescription in the output order
+      @post Output sequence forced to be DataDescriptionId/TimeInterval/Ant1/Ant2
+      @note There is no unset method.
+   */
+  void setPriorityDataDescription();
+
+  /** Accessor to the sequence of time centroids.
+      @return An indexed sequence of time centroids
+      @note The returned sequence has the required informations concerning transpositions to 
+      minimize the number of measure conversions when computing the UVWs with the UvwCoords 
+      state machine.
+  */
+  vector<pair<unsigned int,double> > timeSequence()const;
+
+  /** Predicate to tell if the dataDescriptionId has priority over time in the out
+      sequence of MSData objects.
+  */
+  bool dataDescriptionFirst()const;
+
+  /** Apply system temperature calibration
+      @pre  System temperature calibration not applied
+      @post System temperature calibration will be applied
+      @todo Handle the case when what is needed is missing in the syscal table
+  */
+  void applySysCal();
+
+  /** Predicate to know if the system temperature calibration is applied
+      when accessing data
+  */
+  bool sysCalApplied() const;
+
   /** Accessor to the SDM Main table rows
       @param mainRowPtr Pointer to a row of the Main table
       @return true is the SDM row passed the selection criterion, else false
@@ -167,13 +200,26 @@ class SDMBinData{
 
   vector<SDMData*> getData();
 
+  /**
+     @todo 
+     - apply the polynomials for the field directions
+     - apply syscal for the cross data
+   */
   vector<MSData*>  getData( Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc); 
 
   MSData*          getData( unsigned int na, unsigned int nfe, unsigned int ndd, unsigned int nbin) throw (Error); 
 
+  MSData*          getCalibratedData( unsigned int na, unsigned int nfe, unsigned int ndd, unsigned int nbin,
+				      pair<bool,vector<vector<float> > > p_tsys) throw (Error); 
+
   MSData*          getData( unsigned int na1, unsigned int nfe1, unsigned int na2, unsigned int nfe2, 
 			    unsigned int ndd, unsigned int nbin, vector<unsigned int> v_napc,
 			    float scleFactor);
+
+  MSData*          getCalibratedData( unsigned int na1, unsigned int nfe1, unsigned int na2, unsigned int nfe2, 
+				      unsigned int ndd, unsigned int nbin, vector<unsigned int> v_napc,
+				      float scleFactor,
+				      pair<bool,vector<vector<float> > > p_tsys);
 
   MSData*          getData( Tag antId, int feedId,
 			    Tag dataDescId, 
@@ -251,6 +297,8 @@ class SDMBinData{
   Enum<CorrelationMode>                 e_qcm_;  // query to select a subset of data in a BLOB
   EnumSet<AtmPhaseCorrection>         es_qapc_;  // query to select a subset of data in a BLOB
 
+  bool                                ddfirst_;  // true ==> output sequences of time for every dataDescription
+
   MainRow*                         mainRowPtr_;
   string                              dataOID_;
   SDMDataObjectReader                  blob_r_;  // current read-only BLOB
@@ -258,8 +306,8 @@ class SDMBinData{
 
   const  float*                  floatDataPtr_;  // mutable attribute; autocorrelation data of a single dump
   const  short*                  shortDataPtr_;  // mutable attribute; visiblity data of a single dump
-  const  int*                    longDataPtr_;  // mutable attribute; visiblity data of a single dump
-  const  unsigned int*           flagsPtr_;  // mutable attribute; flags data in a single dump
+  const  int*                     longDataPtr_;  // mutable attribute; visiblity data of a single dump
+  const  unsigned int*               flagsPtr_;  // mutable attribute; flags data in a single dump
   const  long long*            actualTimesPtr_;  // mutable attribute; actualTimes in a single dump 
   const  long long*        actualDurationsPtr_;  // mutable attribute; actualDurations in a single dump
   const  float*                   zeroLagsPtr_;  // mutable attribute; zeroLags in a single dump
@@ -275,8 +323,11 @@ class SDMBinData{
   static bool                  coutDeleteInfo_; // utility for debugging
   static bool                 baselineReverse_; // order in which the data are in the returning VMSData structure.
   static bool                    autoTrailing_; // position of the auto data relative cross data in the returning VMSData structure.
+  static bool                          syscal_; // true ==> apply system temperature calibration.
 
   const float*               floatDataDumpPtr_;
+
+  vector<pair<unsigned int,double> >    v_tci_; // Indexed time centroid sequence
 
   void   deleteMsData(MSData* msDataPtr);
 

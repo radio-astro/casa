@@ -77,10 +77,6 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
 	
@@ -92,7 +88,22 @@ using namespace ReceiverBandMod;
 	
 
 	
+#include "CAntennaMake.h"
+using namespace AntennaMakeMod;
+	
 
+	
+#include "CAtmPhaseCorrection.h"
+using namespace AtmPhaseCorrectionMod;
+	
+
+	
+
+	
+
+	
+#include "CPointingModelMode.h"
+using namespace PointingModelModeMod;
 	
 
 	
@@ -103,6 +114,17 @@ using namespace PointingMethodMod;
 	
 
 	
+#include "CPolarizationType.h"
+using namespace PolarizationTypeMod;
+	
+
+	
+
+	
+
+	
+
+	
 
 	
 
@@ -113,8 +135,15 @@ using namespace PointingMethodMod;
 	
 
 	
-#include "CPointingModelMode.h"
-using namespace PointingModelModeMod;
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -165,165 +194,265 @@ class ASDM;
 class CalPointingRow;
 /**
  * The CalPointingTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Result of the pointing calibration performed on-line by TelCal.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalPointing </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaName </TD>
+ 		 
+ * <TD> string</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;Antenna Name </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> receiverBand </TD>
+ 		 
+ * <TD> ReceiverBandMod::ReceiverBand</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies the receiver band. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> antennaName </TD> 
- * <TD> string </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalReduction Table. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> startValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> receiverBand </TD> 
- * <TD> ReceiverBandMod::ReceiverBand </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> frequencyRange </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>   </TD> 
- * </TR>
-	
- * <TR>
- * <TD> direction </TD> 
- * <TD> vector<Angle > </TD>
- * <TD>  2 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> collOffsetRelative </TD> 
- * <TD> vector<Angle > </TD>
- * <TD>  2 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> collOffsetAbsolute </TD> 
- * <TD> vector<Angle > </TD>
- * <TD>  2 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> collError </TD> 
- * <TD> vector<Angle > </TD>
- * <TD>  2 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> pointingMethod </TD> 
- * <TD> PointingMethodMod::PointingMethod </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> mode </TD> 
- * <TD> PointingModelModeMod::PointingModelMode </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the end time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> ambientTemperature </TD> 
  * <TD> Temperature </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the ambient temperature. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> antennaMake </TD> 
+ * <TD> AntennaMakeMod::AntennaMake </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the antenna make. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> atmPhaseCorrection </TD> 
+ * <TD> AtmPhaseCorrectionMod::AtmPhaseCorrection </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;describes how the atmospheric phase correction has been applied. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> direction </TD> 
+ * <TD> vector<Angle > </TD>
+ * <TD>  2 </TD> 
+ * <TD> &nbsp;the antenna pointing direction. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> frequencyRange </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  2 </TD> 
+ * <TD> &nbsp;the frequency range over which the result is valid. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> pointingModelMode </TD> 
+ * <TD> PointingModelModeMod::PointingModelMode </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the pointing model mode. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> pointingMethod </TD> 
+ * <TD> PointingMethodMod::PointingMethod </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the pointing method. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numReceptor </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of receptors. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> polarizationTypes </TD> 
+ * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;identifies the polarizations types (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> collOffsetRelative </TD> 
+ * <TD> vector<vector<Angle > > </TD>
+ * <TD>  numReceptor, 2 </TD> 
+ * <TD> &nbsp;the collimation offsets (relative) (one pair of angles  per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> collOffsetAbsolute </TD> 
+ * <TD> vector<vector<Angle > > </TD>
+ * <TD>  numReceptor, 2 </TD> 
+ * <TD> &nbsp;the collimation offsets (absolute) (one pair of angles per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> collError </TD> 
+ * <TD> vector<vector<Angle > > </TD>
+ * <TD>  numReceptor, 2 </TD> 
+ * <TD> &nbsp;the uncertainties on collimation (one pair of angles per receptor) </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> collOffsetTied </TD> 
+ * <TD> vector<vector<bool > > </TD>
+ * <TD>  numReceptor, 2 </TD> 
+ * <TD> &nbsp;indicates if a collimation offset was tied (true) or not tied (false) to another polar (one pair of boolean values per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> reducedChiSquared </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;a measure of the quality of the least square fit. </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
- * <TD> beamWidth </TD> 
- * <TD> vector<Angle > </TD>
- * <TD>  2  </TD>
- * </TR>
-	
- * <TR>
- * <TD> beamWidthError </TD> 
- * <TD> vector<Angle > </TD>
- * <TD>  2  </TD>
+ * <TD> averagedPolarizations </TD> 
+ * <TD> bool </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; true when the polarizations were averaged together to improve sensitivity. </TD>
  * </TR>
 	
  * <TR>
  * <TD> beamPA </TD> 
- * <TD> Angle </TD>
- * <TD>  &nbsp; </TD>
+ * <TD> vector<Angle > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the fitted beam position angles (one value per receptor). </TD>
  * </TR>
 	
  * <TR>
  * <TD> beamPAError </TD> 
- * <TD> Angle </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> peakIntensity </TD> 
- * <TD> Temperature </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> peakIntensityError </TD> 
- * <TD> Temperature </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> beamWidthWasFixed </TD> 
- * <TD> vector<bool > </TD>
- * <TD>  2  </TD>
+ * <TD> vector<Angle > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the uncertaintes on the fitted beam position angles (one value per receptor). </TD>
  * </TR>
 	
  * <TR>
  * <TD> beamPAWasFixed </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; indicates if the beam position was fixed (true) or not fixed (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> beamWidth </TD> 
+ * <TD> vector<vector<Angle > > </TD>
+ * <TD>  numReceptor, 2  </TD>
+ * <TD>&nbsp; the fitted beam widths (one pair of angles per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> beamWidthError </TD> 
+ * <TD> vector<vector<Angle > > </TD>
+ * <TD>  numReceptor, 2  </TD>
+ * <TD>&nbsp; the uncertainties on the fitted beam widths (one pair of angles per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> beamWidthWasFixed </TD> 
+ * <TD> vector<bool > </TD>
+ * <TD>  2  </TD>
+ * <TD>&nbsp; indicates if the beam width was fixed (true) or not fixed (true) (one pair of booleans). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> offIntensity </TD> 
+ * <TD> vector<Temperature > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the off intensity levels (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> offIntensityError </TD> 
+ * <TD> vector<Temperature > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the uncertainties on the off intensity levels (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> offIntensityWasFixed </TD> 
+ * <TD> bool </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; indicates if the off intensity level was fixed (true) or not fixed (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> peakIntensity </TD> 
+ * <TD> vector<Temperature > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the maximum intensities (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> peakIntensityError </TD> 
+ * <TD> vector<Temperature > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the uncertainties on the maximum intensities (one value per receptor). </TD>
  * </TR>
 	
  * <TR>
  * <TD> peakIntensityWasFixed </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the maximum intensity was fixed. </TD>
  * </TR>
 	
 
@@ -398,21 +527,35 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param antennaName. 
+	
+ 	 * @param receiverBand. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
-	
- 	 * @param antennaName. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param receiverBand. 
+ 	 * @param ambientTemperature. 
+	
+ 	 * @param antennaMake. 
+	
+ 	 * @param atmPhaseCorrection. 
+	
+ 	 * @param direction. 
 	
  	 * @param frequencyRange. 
 	
- 	 * @param direction. 
+ 	 * @param pointingModelMode. 
+	
+ 	 * @param pointingMethod. 
+	
+ 	 * @param numReceptor. 
+	
+ 	 * @param polarizationTypes. 
 	
  	 * @param collOffsetRelative. 
 	
@@ -420,20 +563,18 @@ public:
 	
  	 * @param collError. 
 	
- 	 * @param pointingMethod. 
+ 	 * @param collOffsetTied. 
 	
- 	 * @param mode. 
-	
- 	 * @param ambientTemperature. 
+ 	 * @param reducedChiSquared. 
 	
      */
-	CalPointingRow *newRow(Tag calDataId, Tag calReductionId, string antennaName, ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Frequency > frequencyRange, vector<Angle > direction, vector<Angle > collOffsetRelative, vector<Angle > collOffsetAbsolute, vector<Angle > collError, PointingMethodMod::PointingMethod pointingMethod, PointingModelModeMod::PointingModelMode mode, Temperature ambientTemperature);
+	CalPointingRow *newRow(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AntennaMakeMod::AntennaMake antennaMake, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, vector<Angle > direction, vector<Frequency > frequencyRange, PointingModelModeMod::PointingModelMode pointingModelMode, PointingMethodMod::PointingMethod pointingMethod, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Angle > > collOffsetRelative, vector<vector<Angle > > collOffsetAbsolute, vector<vector<Angle > > collError, vector<vector<bool > > collOffsetTied, vector<double > reducedChiSquared);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalPointingRow *newRowFull(Tag calDataId, Tag calReductionId, string antennaName, ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Frequency > frequencyRange, vector<Angle > direction, vector<Angle > collOffsetRelative, vector<Angle > collOffsetAbsolute, vector<Angle > collError, PointingMethodMod::PointingMethod pointingMethod, PointingModelModeMod::PointingModelMode mode, Temperature ambientTemperature);
+	CalPointingRow *newRowFull(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AntennaMakeMod::AntennaMake antennaMake, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, vector<Angle > direction, vector<Frequency > frequencyRange, PointingModelModeMod::PointingModelMode pointingModelMode, PointingMethodMod::PointingMethod pointingMethod, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Angle > > collOffsetRelative, vector<vector<Angle > > collOffsetAbsolute, vector<vector<Angle > > collError, vector<vector<bool > > collOffsetTied, vector<double > reducedChiSquared);
 
 
 	/**
@@ -499,15 +640,17 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param antennaName. 
+	
+	 * @param receiverBand. 
+	
 	 * @param calDataId. 
 	
 	 * @param calReductionId. 
 	
-	 * @param antennaName. 
-	
  	 *
 	 */
- 	CalPointingRow* getRowByKey(Tag calDataId, Tag calReductionId, string antennaName);
+ 	CalPointingRow* getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId);
 
  	 	
 
@@ -519,21 +662,35 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
+ 	 * @param antennaName.
+ 	 		
+ 	 * @param receiverBand.
+ 	 		
  	 * @param calDataId.
  	 		
  	 * @param calReductionId.
- 	 		
- 	 * @param antennaName.
  	 		
  	 * @param startValidTime.
  	 		
  	 * @param endValidTime.
  	 		
- 	 * @param receiverBand.
+ 	 * @param ambientTemperature.
+ 	 		
+ 	 * @param antennaMake.
+ 	 		
+ 	 * @param atmPhaseCorrection.
+ 	 		
+ 	 * @param direction.
  	 		
  	 * @param frequencyRange.
  	 		
- 	 * @param direction.
+ 	 * @param pointingModelMode.
+ 	 		
+ 	 * @param pointingMethod.
+ 	 		
+ 	 * @param numReceptor.
+ 	 		
+ 	 * @param polarizationTypes.
  	 		
  	 * @param collOffsetRelative.
  	 		
@@ -541,14 +698,12 @@ public:
  	 		
  	 * @param collError.
  	 		
- 	 * @param pointingMethod.
+ 	 * @param collOffsetTied.
  	 		
- 	 * @param mode.
- 	 		
- 	 * @param ambientTemperature.
+ 	 * @param reducedChiSquared.
  	 		 
  	 */
-	CalPointingRow* lookup(Tag calDataId, Tag calReductionId, string antennaName, ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Frequency > frequencyRange, vector<Angle > direction, vector<Angle > collOffsetRelative, vector<Angle > collOffsetAbsolute, vector<Angle > collError, PointingMethodMod::PointingMethod pointingMethod, PointingModelModeMod::PointingModelMode mode, Temperature ambientTemperature); 
+	CalPointingRow* lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AntennaMakeMod::AntennaMake antennaMake, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, vector<Angle > direction, vector<Frequency > frequencyRange, PointingModelModeMod::PointingModelMode pointingModelMode, PointingMethodMod::PointingMethod pointingMethod, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Angle > > collOffsetRelative, vector<vector<Angle > > collOffsetAbsolute, vector<vector<Angle > > collError, vector<vector<bool > > collOffsetTied, vector<double > reducedChiSquared); 
 
 
 #ifndef WITHOUT_ACS
@@ -568,43 +723,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalPointingTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalPointingTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalPointing (CalPointingTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalPointing (CalPointingTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -679,8 +840,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalPointingRow* checkAndAdd(CalPointingRow* x) throw (DuplicateKey);
+	CalPointingRow* checkAndAdd(CalPointingRow* x) ;
 
 
 
@@ -694,7 +857,7 @@ private:
 	vector<CalPointingRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

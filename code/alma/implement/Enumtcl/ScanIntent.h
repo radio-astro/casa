@@ -25,7 +25,7 @@
 using namespace ScanIntentMod;
 
 template<>
- struct enum_set_traits<ScanIntent> : public enum_set_traiter<ScanIntent,26,ScanIntentMod::UNSPECIFIED> {};
+ struct enum_set_traits<ScanIntent> : public enum_set_traiter<ScanIntent,19,ScanIntentMod::UNSPECIFIED> {};
 
 template<>
 class enum_map_traits<ScanIntent,void> : public enum_map_traiter<ScanIntent,void> {
@@ -38,57 +38,43 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::AMPLI_CAL,ep((int)ScanIntentMod::AMPLI_CAL,"AMPLI_CAL","Amplitude calibration scan")));
+     (ScanIntentMod::CALIBRATE_AMPLI,ep((int)ScanIntentMod::CALIBRATE_AMPLI,"CALIBRATE_AMPLI","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::AMPLI_CURVE,ep((int)ScanIntentMod::AMPLI_CURVE,"AMPLI_CURVE","Amplitude calibration scan, calibration curve to be derived")));
+     (ScanIntentMod::CALIBRATE_ATMOSPHERE,ep((int)ScanIntentMod::CALIBRATE_ATMOSPHERE,"CALIBRATE_ATMOSPHERE","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::ANTENNA_POSITIONS,ep((int)ScanIntentMod::ANTENNA_POSITIONS,"ANTENNA_POSITIONS","Antenna positions measurement")));
+     (ScanIntentMod::CALIBRATE_BANDPASS,ep((int)ScanIntentMod::CALIBRATE_BANDPASS,"CALIBRATE_BANDPASS","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::ATMOSPHERE,ep((int)ScanIntentMod::ATMOSPHERE,"ATMOSPHERE","Atmosphere calibration scan")));
+     (ScanIntentMod::CALIBRATE_DELAY,ep((int)ScanIntentMod::CALIBRATE_DELAY,"CALIBRATE_DELAY","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::BANDPASS,ep((int)ScanIntentMod::BANDPASS,"BANDPASS","Bandpass calibration scan")));
+     (ScanIntentMod::CALIBRATE_FLUX,ep((int)ScanIntentMod::CALIBRATE_FLUX,"CALIBRATE_FLUX","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::DELAY,ep((int)ScanIntentMod::DELAY,"DELAY","Delay calibration scan")));
+     (ScanIntentMod::CALIBRATE_FOCUS,ep((int)ScanIntentMod::CALIBRATE_FOCUS,"CALIBRATE_FOCUS","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::FOCUS,ep((int)ScanIntentMod::FOCUS,"FOCUS","Focus calibration scan. Z coordinate to be derived")));
+     (ScanIntentMod::CALIBRATE_FOCUS_X,ep((int)ScanIntentMod::CALIBRATE_FOCUS_X,"CALIBRATE_FOCUS_X","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::HOLOGRAPHY,ep((int)ScanIntentMod::HOLOGRAPHY,"HOLOGRAPHY","Holography calibration scan")));
+     (ScanIntentMod::CALIBRATE_FOCUS_Y,ep((int)ScanIntentMod::CALIBRATE_FOCUS_Y,"CALIBRATE_FOCUS_Y","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::PHASE_CAL,ep((int)ScanIntentMod::PHASE_CAL,"PHASE_CAL","Phase calibration scan")));
+     (ScanIntentMod::CALIBRATE_PHASE,ep((int)ScanIntentMod::CALIBRATE_PHASE,"CALIBRATE_PHASE","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::PHASE_CURVE,ep((int)ScanIntentMod::PHASE_CURVE,"PHASE_CURVE","Phase calibration scan; phase calibration curve to be derived")));
+     (ScanIntentMod::CALIBRATE_POINTING,ep((int)ScanIntentMod::CALIBRATE_POINTING,"CALIBRATE_POINTING","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::POINTING,ep((int)ScanIntentMod::POINTING,"POINTING","Pointing calibration scan")));
+     (ScanIntentMod::CALIBRATE_POLARIZATION,ep((int)ScanIntentMod::CALIBRATE_POLARIZATION,"CALIBRATE_POLARIZATION","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::POINTING_MODEL,ep((int)ScanIntentMod::POINTING_MODEL,"POINTING_MODEL","Pointing calibration scan; pointing model to be derived")));
+     (ScanIntentMod::CALIBRATE_SIDEBAND_RATIO,ep((int)ScanIntentMod::CALIBRATE_SIDEBAND_RATIO,"CALIBRATE_SIDEBAND_RATIO","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::POLARIZATION,ep((int)ScanIntentMod::POLARIZATION,"POLARIZATION","Polarization calibration scan")));
+     (ScanIntentMod::CALIBRATE_WVR,ep((int)ScanIntentMod::CALIBRATE_WVR,"CALIBRATE_WVR","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::SKYDIP,ep((int)ScanIntentMod::SKYDIP,"SKYDIP","Skydip calibration scan")));
+     (ScanIntentMod::DO_SKYDIP,ep((int)ScanIntentMod::DO_SKYDIP,"DO_SKYDIP","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::TARGET,ep((int)ScanIntentMod::TARGET,"TARGET","Target source scan")));
+     (ScanIntentMod::MAP_ANTENNA_SURFACE,ep((int)ScanIntentMod::MAP_ANTENNA_SURFACE,"MAP_ANTENNA_SURFACE","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::CALIBRATION,ep((int)ScanIntentMod::CALIBRATION,"CALIBRATION","Generic calibration scan")));
+     (ScanIntentMod::MAP_PRIMARY_BEAM,ep((int)ScanIntentMod::MAP_PRIMARY_BEAM,"MAP_PRIMARY_BEAM","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::LAST,ep((int)ScanIntentMod::LAST,"LAST","Last calibration scan of a group")));
+     (ScanIntentMod::OBSERVE_TARGET,ep((int)ScanIntentMod::OBSERVE_TARGET,"OBSERVE_TARGET","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::OFFLINE_PROCESSING,ep((int)ScanIntentMod::OFFLINE_PROCESSING,"OFFLINE_PROCESSING","Calibration to be processed off-line")));
+     (ScanIntentMod::TEST,ep((int)ScanIntentMod::TEST,"TEST","un-documented")));
     m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::FOCUS_X,ep((int)ScanIntentMod::FOCUS_X,"FOCUS_X","Focus calibration scan; X focus coordinate to be derived")));
-    m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::FOCUS_Y,ep((int)ScanIntentMod::FOCUS_Y,"FOCUS_Y","Focus calibration scan; Y focus coordinate to be derived")));
-    m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::SIDEBAND_RATIO,ep((int)ScanIntentMod::SIDEBAND_RATIO,"SIDEBAND_RATIO","")));
-    m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::OPTICAL_POINTING,ep((int)ScanIntentMod::OPTICAL_POINTING,"OPTICAL_POINTING","Data from the optical telescope are used to measure poitning offsets.")));
-    m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::WVR_CAL,ep((int)ScanIntentMod::WVR_CAL,"WVR_CAL","Data from the water vapor radiometers (and correlation data) are used to derive their calibration parameters.")));
-    m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::ASTRO_HOLOGRAPHY,ep((int)ScanIntentMod::ASTRO_HOLOGRAPHY,"ASTRO_HOLOGRAPHY","Correlation data on a celestial calibration source are used to derive antenna surface parameters.")));
-    m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::BEAM_MAP,ep((int)ScanIntentMod::BEAM_MAP,"BEAM_MAP","Data on a celestial calibration source are used to derive a map of the primary beam.")));
-    m_.insert(pair<ScanIntent,EnumPar<void> >
-     (ScanIntentMod::UNSPECIFIED,ep((int)ScanIntentMod::UNSPECIFIED,"UNSPECIFIED","Unspecified scan intent")));
+     (ScanIntentMod::UNSPECIFIED,ep((int)ScanIntentMod::UNSPECIFIED,"UNSPECIFIED","un-documented")));
     return true;
   }
   static map<ScanIntent,EnumPar<void> > m_;

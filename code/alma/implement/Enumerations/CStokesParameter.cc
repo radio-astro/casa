@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CStokesParameter::version() {
+	return StokesParameterMod::version;
+	}
+	
+string CStokesParameter::revision () {
+	return StokesParameterMod::revision;
+}
+
+unsigned int CStokesParameter::size() {
+	return 32;
+	}
+	
 	
 const std::string& CStokesParameter::sI = "I";
 	
@@ -102,7 +115,7 @@ const std::string& CStokesParameter::sPFLINEAR = "PFLINEAR";
 	
 const std::string& CStokesParameter::sPANGLE = "PANGLE";
 	
-const std::vector<std::string> CStokesParameter::sStokesParameterSet() {
+const std::vector<std::string> CStokesParameter::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CStokesParameter::sI);
@@ -171,145 +184,6 @@ const std::vector<std::string> CStokesParameter::sStokesParameterSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CStokesParameter::hI = "";
-	
-const std::string& CStokesParameter::hQ = "";
-	
-const std::string& CStokesParameter::hU = "";
-	
-const std::string& CStokesParameter::hV = "";
-	
-const std::string& CStokesParameter::hRR = "";
-	
-const std::string& CStokesParameter::hRL = "";
-	
-const std::string& CStokesParameter::hLR = "";
-	
-const std::string& CStokesParameter::hLL = "";
-	
-const std::string& CStokesParameter::hXX = "Linear correlation product";
-	
-const std::string& CStokesParameter::hXY = "";
-	
-const std::string& CStokesParameter::hYX = "";
-	
-const std::string& CStokesParameter::hYY = "";
-	
-const std::string& CStokesParameter::hRX = "Mixed correlation product";
-	
-const std::string& CStokesParameter::hRY = "Mixed correlation product";
-	
-const std::string& CStokesParameter::hLX = "Mixed LX product";
-	
-const std::string& CStokesParameter::hLY = "Mixed LY correlation product";
-	
-const std::string& CStokesParameter::hXR = "Mixed XR correlation product";
-	
-const std::string& CStokesParameter::hXL = "Mixed XL correlation product";
-	
-const std::string& CStokesParameter::hYR = "Mixed YR correlation product";
-	
-const std::string& CStokesParameter::hYL = "Mixel YL correlation product";
-	
-const std::string& CStokesParameter::hPP = "";
-	
-const std::string& CStokesParameter::hPQ = "";
-	
-const std::string& CStokesParameter::hQP = "";
-	
-const std::string& CStokesParameter::hQQ = "";
-	
-const std::string& CStokesParameter::hRCIRCULAR = "";
-	
-const std::string& CStokesParameter::hLCIRCULAR = "";
-	
-const std::string& CStokesParameter::hLINEAR = "single dish polarization type";
-	
-const std::string& CStokesParameter::hPTOTAL = "Polarized intensity ((Q^2+U^2+V^2)^(1/2))";
-	
-const std::string& CStokesParameter::hPLINEAR = "Linearly Polarized intensity ((Q^2+U^2)^(1/2))";
-	
-const std::string& CStokesParameter::hPFTOTAL = "Polarization Fraction (Ptotal/I)";
-	
-const std::string& CStokesParameter::hPFLINEAR = "Linear Polarization Fraction (Plinear/I)";
-	
-const std::string& CStokesParameter::hPANGLE = "Linear Polarization Angle (0.5 arctan(U/Q)) (in radians)";
-	
-const std::vector<std::string> CStokesParameter::hStokesParameterSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hI);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hQ);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hU);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hV);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hRR);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hRL);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hLR);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hLL);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hXX);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hXY);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hYX);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hYY);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hRX);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hRY);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hLX);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hLY);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hXR);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hXL);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hYR);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hYL);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hPP);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hPQ);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hQP);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hQQ);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hRCIRCULAR);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hLCIRCULAR);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hLINEAR);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hPTOTAL);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hPLINEAR);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hPFTOTAL);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hPFLINEAR);
-    
-    enumSet.insert(enumSet.end(), CStokesParameter::hPANGLE);
-        
-    return enumSet;
-}
-   	
 
 std::string CStokesParameter::name(const StokesParameterMod::StokesParameter& f) {
     switch (f) {
@@ -411,115 +285,9 @@ std::string CStokesParameter::name(const StokesParameterMod::StokesParameter& f)
       return CStokesParameter::sPANGLE;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CStokesParameter::help(const StokesParameterMod::StokesParameter& f) {
-    switch (f) {
-    
-    case StokesParameterMod::I:
-      return CStokesParameter::hI;
-    
-    case StokesParameterMod::Q:
-      return CStokesParameter::hQ;
-    
-    case StokesParameterMod::U:
-      return CStokesParameter::hU;
-    
-    case StokesParameterMod::V:
-      return CStokesParameter::hV;
-    
-    case StokesParameterMod::RR:
-      return CStokesParameter::hRR;
-    
-    case StokesParameterMod::RL:
-      return CStokesParameter::hRL;
-    
-    case StokesParameterMod::LR:
-      return CStokesParameter::hLR;
-    
-    case StokesParameterMod::LL:
-      return CStokesParameter::hLL;
-    
-    case StokesParameterMod::XX:
-      return CStokesParameter::hXX;
-    
-    case StokesParameterMod::XY:
-      return CStokesParameter::hXY;
-    
-    case StokesParameterMod::YX:
-      return CStokesParameter::hYX;
-    
-    case StokesParameterMod::YY:
-      return CStokesParameter::hYY;
-    
-    case StokesParameterMod::RX:
-      return CStokesParameter::hRX;
-    
-    case StokesParameterMod::RY:
-      return CStokesParameter::hRY;
-    
-    case StokesParameterMod::LX:
-      return CStokesParameter::hLX;
-    
-    case StokesParameterMod::LY:
-      return CStokesParameter::hLY;
-    
-    case StokesParameterMod::XR:
-      return CStokesParameter::hXR;
-    
-    case StokesParameterMod::XL:
-      return CStokesParameter::hXL;
-    
-    case StokesParameterMod::YR:
-      return CStokesParameter::hYR;
-    
-    case StokesParameterMod::YL:
-      return CStokesParameter::hYL;
-    
-    case StokesParameterMod::PP:
-      return CStokesParameter::hPP;
-    
-    case StokesParameterMod::PQ:
-      return CStokesParameter::hPQ;
-    
-    case StokesParameterMod::QP:
-      return CStokesParameter::hQP;
-    
-    case StokesParameterMod::QQ:
-      return CStokesParameter::hQQ;
-    
-    case StokesParameterMod::RCIRCULAR:
-      return CStokesParameter::hRCIRCULAR;
-    
-    case StokesParameterMod::LCIRCULAR:
-      return CStokesParameter::hLCIRCULAR;
-    
-    case StokesParameterMod::LINEAR:
-      return CStokesParameter::hLINEAR;
-    
-    case StokesParameterMod::PTOTAL:
-      return CStokesParameter::hPTOTAL;
-    
-    case StokesParameterMod::PLINEAR:
-      return CStokesParameter::hPLINEAR;
-    
-    case StokesParameterMod::PFTOTAL:
-      return CStokesParameter::hPFTOTAL;
-    
-    case StokesParameterMod::PFLINEAR:
-      return CStokesParameter::hPFLINEAR;
-    
-    case StokesParameterMod::PANGLE:
-      return CStokesParameter::hPANGLE;
-    	
-    }
-    return std::string("");
-}
-   	
 
 StokesParameterMod::StokesParameter CStokesParameter::newStokesParameter(const std::string& name) {
 		
@@ -788,12 +556,10 @@ StokesParameterMod::StokesParameter CStokesParameter::literal(const std::string&
 }
 
 StokesParameterMod::StokesParameter CStokesParameter::from_int(unsigned int i) {
-	vector<string> names = sStokesParameterSet();
-	if (i >= names.size()) throw badInt(i);
-	return newStokesParameter(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newStokesParameter(names_.at(i));
 }
-
-	
 
 string CStokesParameter::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'StokesParameter'.";

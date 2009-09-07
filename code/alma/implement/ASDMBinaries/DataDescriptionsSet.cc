@@ -42,7 +42,7 @@ namespace sdmbin {
       DataDescriptionRow* ddPtr=rddSet.getRowByKey(v_dataDescriptionIdArray[n]);
       SwitchCycleRow*     scPtr=rscSet.getRowByKey(v_switchCycleId[n]);
       v_spwr.push_back(ddPtr->getSpectralWindowUsingSpectralWindowId());
-      if(v_spwr[n]->isBasebandNameExists()){
+      //      if(v_spwr[n]->isBasebandNameExists()){    mandatory since ASDMv1
 	BasebandName   bbn = ddPtr->getSpectralWindowUsingSpectralWindowId()->getBasebandName();
 	DataDescParams ddp;
 	ddp.ddIdx   = n;
@@ -66,10 +66,10 @@ namespace sdmbin {
 	v_spwId_.push_back(ddp.spwId);
 	v_numChan_.push_back(ddp.numChan);
 	v_numPol_.push_back(ddp.numCorr);
-      }else{
-	Error(SERIOUS,"BasebandName ASDM item missing when spectralWindowId=%d",
-	      atoi(ddPtr->getSpectralWindowId().toString().c_str()));
-      }
+//       }else{
+// 	Error(SERIOUS,"BasebandName ASDM item missing when spectralWindowId=%d",
+// 	      atoi(ddPtr->getSpectralWindowId().toString().c_str()));
+//       }
       /*
 	if(v_basebandNum_[n]<1||v_basebandNum_[n]>numBaseband_){
 	cout << "ERROR: bbcNo must have a value in the range [1,"<<numBaseband_<<"]"<<endl;
@@ -704,6 +704,11 @@ unsigned long     DataDescriptionsSet::getCrossSize(){
 unsigned int  DataDescriptionsSet::numChan(unsigned int ndd) throw(Error){
   if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
   return v_numChan_[ndd];
+}
+
+Tag DataDescriptionsSet::getSpwId(unsigned int ndd) throw (Error){
+  if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
+  return v_spwId_[ndd];
 }
 
 Frequency DataDescriptionsSet::totBandwidth(unsigned int ndd) throw(Error){

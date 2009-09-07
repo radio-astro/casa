@@ -47,7 +47,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
     def __init__(self) :
        self.__bases__ = (</xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_,)
        self.__doc__ = self.__call__.__doc__</xsl:text>
-<xsl:text>
+<xsl:text disable-output-escaping="yes">
+       self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
 
     def result(self, key=None):
 	    #### here we will scan the task-ids in __async__
@@ -70,17 +71,10 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:text>
         """</xsl:text>
 <xsl:text disable-output-escaping="yes">
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-          if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-                stacklevel=k
-                break
-        myf=sys._getframe(stacklevel).f_globals
-        myf['__last_task'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
-        myf['taskname'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
+        self.__globals__['__last_task'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
+        self.__globals__['taskname'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         ###
-        myf['update_params'](func=myf['taskname'],printtext=False,ipython_globals=myf)
+        self.__globals__['update_params'](func=self.__globals__['taskname'],printtext=False,ipython_globals=self.__globals__)
         ###
         ###
         #Handle globals or user over-ride of arguments
@@ -98,7 +92,6 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
                         #user has set it - use over-ride
 			if (key != 'self') :
 			   useLocalDefaults = True
-                        #myf[key]=keyVal
 
 	myparams = {}
 	if useLocalDefaults :
@@ -113,7 +106,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 		      exec('myparams[key] = ' + key + ' = keyVal[len(keyVal)-1][\'value\']')
 
 	else :
-            async = myf['async']
+            async = self.__globals__['async']
 </xsl:text>
 <xsl:for-each select="aps:input">
 <xsl:apply-templates select="aps:param"/>
@@ -189,8 +182,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
               casalog.post('##########################################')
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
-          saveinputs = myf['saveinputs']
-          saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams, myf)
+          saveinputs = self.__globals__['saveinputs']
+          saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams, self.__globals__)
 	except Exception, instance:
 	  print '**** Error **** ',instance
 </xsl:text>
@@ -210,14 +203,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
         import paramgui
 
         if useGlobals:
-            if ipython_globals == None:
-                a=inspect.stack()
-                stacklevel=0
-                for k in range(len(a)):
-                    if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-                      stacklevel=k
-                      break
-                myf=sys._getframe(stacklevel).f_globals
+	    if ipython_globals == None:
+                myf=self.__globals__
             else:
                 myf=ipython_globals
 
@@ -233,13 +220,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 #
     def defaults(self, param=None, ipython_globals=None):
         if ipython_globals == None:
-            a=inspect.stack()
-            stacklevel=0
-            for k in range(len(a)):
-                if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-                    stacklevel=k
-                    break
-            myf=sys._getframe(stacklevel).f_globals
+            myf=self.__globals__
         else:
             myf=ipython_globals
 
@@ -276,9 +257,6 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
                 return a.keys()
         else:
 	        if(a.has_key(param)):
-		   #if(type(a[param]) == dict) :
-		   #   return a[param][len(a[param])-1]['value']
-	   	   #else :
 		      return a[param]
 
 
@@ -286,13 +264,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 #
     def check_params(self, param=None, value=None, ipython_globals=None):
       if ipython_globals == None:
-          a=inspect.stack()
-          stacklevel=0
-          for k in range(len(a)):
-              if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-                stacklevel=k
-                break
-          myf=sys._getframe(stacklevel).f_globals
+          myf=self.__globals__
       else:
           myf=ipython_globals
 
@@ -365,7 +337,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:template>
  
 <xsl:template match="aps:param">
-	<xsl:text>            myparams[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;] = <xsl:value-of select="@name"/> = myf[&apos;<xsl:value-of select="@name"/>&apos;]
+	<xsl:text>            myparams[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;] = <xsl:value-of select="@name"/> = self.__globals__[&apos;<xsl:value-of select="@name"/>&apos;]
 </xsl:template>
 
 <xsl:template name="oneliners">

@@ -66,6 +66,41 @@ using std::map;
 #include <NoSuchRow.h>
 #include <DuplicateKey.h>
 
+/*
+#include <Enumerations.h>
+using namespace enumerations;
+*/
+
+
+
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
 using asdmIDL::TotalPowerTableIDL;
@@ -105,126 +140,151 @@ class ASDM;
 class TotalPowerRow;
 /**
  * The TotalPowerTable class is an Alma table.
+ * <BR>
+ * 
+ * \par Role
+ * Total power data monitoring.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
+ *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of TotalPower </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> configDescriptionId </TD> 
- * <TD> Tag </TD>
+ 		
+ * <TD> time </TD>
+ 		 
+ * <TD> ArrayTime</TD>
+ * <TD> &nbsp; </TD>
  * <TD> &nbsp; </TD>
  * </TR>
- 		
 	
- 		
  * <TR>
- * <TD> fieldId </TD> 
- * <TD> Tag </TD>
+ 		
+ * <TD> configDescriptionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
  * <TD> &nbsp; </TD>
  * </TR>
- 		
 	
- 		
  * <TR>
- * <TD> time </TD> 
- * <TD> ArrayTime </TD>
+ 		
+ * <TD> fieldId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
  * <TD> &nbsp; </TD>
  * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> execBlockId </TD> 
- * <TD> Tag </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> stateId </TD> 
- * <TD> vector<Tag>  </TD>
- * <TD>  ConfigDescription.numAntenna </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> scanNumber </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp; </TD>
  * </TR>
 	
  * <TR>
  * <TD> subscanNumber </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp; </TD>
  * </TR>
 	
  * <TR>
  * <TD> integrationNumber </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp; </TD>
  * </TR>
 	
  * <TR>
  * <TD> uvw </TD> 
  * <TD> vector<vector<Length > > </TD>
  * <TD>  ConfigDescription.numAntenna, 3 </TD> 
+ * <TD> &nbsp; </TD>
  * </TR>
 	
  * <TR>
  * <TD> exposure </TD> 
  * <TD> vector<vector<Interval > > </TD>
- * <TD>  ConfigDescription.numAntenna, AlmaCorrelatorMode.numBaseband </TD> 
+ * <TD>  ConfigDescription.numAntenna, CorrelatorMode.numBaseband </TD> 
+ * <TD> &nbsp; </TD>
  * </TR>
 	
  * <TR>
  * <TD> timeCentroid </TD> 
  * <TD> vector<vector<ArrayTime > > </TD>
- * <TD>  ConfigDescription.numAntenna, AlmaCorrelatorMode.numBaseband </TD> 
+ * <TD>  ConfigDescription.numAntenna, CorrelatorMode.numBaseband </TD> 
+ * <TD> &nbsp; </TD>
  * </TR>
 	
  * <TR>
  * <TD> floatData </TD> 
  * <TD> vector<vector<vector<float > > > </TD>
  * <TD>  , ,  </TD> 
+ * <TD> &nbsp; </TD>
  * </TR>
 	
  * <TR>
  * <TD> flagAnt </TD> 
  * <TD> vector<int > </TD>
  * <TD>  ConfigDescription.numAntenna </TD> 
+ * <TD> &nbsp; </TD>
  * </TR>
 	
  * <TR>
  * <TD> flagPol </TD> 
  * <TD> vector<vector<int > > </TD>
  * <TD>  ,  </TD> 
+ * <TD> &nbsp; </TD>
  * </TR>
 	
  * <TR>
  * <TD> flagRow </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp; </TD>
  * </TR>
 	
  * <TR>
  * <TD> interval </TD> 
  * <TD> Interval </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp; </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> stateId </TD> 
+ * <TD> vector<Tag>  </TD>
+ * <TD>  ConfigDescription.numAntenna </TD> 
+ * <TD> &nbsp; </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> execBlockId </TD> 
+ * <TD> Tag </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp; </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> subintegrationNumber </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp;  </TD>
  * </TR>
 	
 
@@ -289,24 +349,21 @@ public:
 	TotalPowerRow *newRow();
 	
 	/**
-	 * Same as the newRow method with the same signature.
-	 * Defined to facilitate the call from Python.
-     */
-	TotalPowerRow *newRowEmpty();
+	  * Has the same definition than the newRow method with the same signature.
+	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
+	  */
+	TotalPowerRow* newRowEmpty();
+
 	
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param time. 
+	
  	 * @param configDescriptionId. 
 	
  	 * @param fieldId. 
-	
- 	 * @param time. 
-	
- 	 * @param execBlockId. 
-	
- 	 * @param stateId. 
 	
  	 * @param scanNumber. 
 	
@@ -330,14 +387,19 @@ public:
 	
  	 * @param interval. 
 	
+ 	 * @param stateId. 
+	
+ 	 * @param execBlockId. 
+	
      */
-	TotalPowerRow *newRow(Tag configDescriptionId, Tag fieldId, ArrayTime time, Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval);
-
+	TotalPowerRow *newRow(ArrayTime time, Tag configDescriptionId, Tag fieldId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval, vector<Tag>  stateId, Tag execBlockId);
+	
 	/**
-	 * Same as the newRow method with the same signature.
-	 * Defined to facilitate the call from Python.
-     */
-	TotalPowerRow *newRowFull(Tag configDescriptionId, Tag fieldId, ArrayTime time, Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval);
+	  * Has the same definition than the newRow method with the same signature.
+	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
+	  */
+	TotalPowerRow *newRowFull(ArrayTime time, Tag configDescriptionId, Tag fieldId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval, vector<Tag>  stateId, Tag execBlockId);
+
 
 	/**
 	 * Create a new row using a copy constructor mechanism.
@@ -354,9 +416,9 @@ public:
 	 TotalPowerRow *newRow(TotalPowerRow *row); 
 
 	/**
-	 * Same as the newRow method with the same signature.
-	 * Defined to facilitate the call from Python.
-     */
+	  * Has the same definition than the newRow method with the same signature.
+	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
+	  */
 	 TotalPowerRow *newRowCopy(TotalPowerRow *row); 
 
 	//
@@ -375,9 +437,16 @@ public:
 	 * and a value section different from x one }
 	 *
 	
+	 * @note The row is inserted in the table in such a way that all the rows having the same value of
+	 * ( configDescriptionId, fieldId ) are stored by ascending time.
+	 * @see method getByContext.
+	
 	 */
 	TotalPowerRow* add(TotalPowerRow* x) ; 
-	
+
+ 
+
+
 
 	//
 	// ====> Methods returning rows.
@@ -392,13 +461,16 @@ public:
 	
 
 	/**
-	 * Returns all the rows sorted by ascending time for a given context. 
+	 * Returns all the rows sorted by ascending startTime for a given context. 
 	 * The context is defined by a value of ( configDescriptionId, fieldId ).
 	 *
 	 * @return a pointer on a vector<TotalPowerRow *>. A null returned value means that the table contains
 	 * no TotalPowerRow for the given ( configDescriptionId, fieldId ).
 	 */
 	 vector <TotalPowerRow*> *getByContext(Tag configDescriptionId, Tag fieldId);
+	 
+
+
  
 	
 	/**
@@ -406,15 +478,15 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param time. 
+	
 	 * @param configDescriptionId. 
 	
 	 * @param fieldId. 
 	
-	 * @param time. 
-	
  	 *
 	 */
- 	TotalPowerRow* getRowByKey(Tag configDescriptionId, Tag fieldId, ArrayTime time);
+ 	TotalPowerRow* getRowByKey(ArrayTime time, Tag configDescriptionId, Tag fieldId);
 
  	 	
 
@@ -426,15 +498,11 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
+ 	 * @param time.
+ 	 		
  	 * @param configDescriptionId.
  	 		
  	 * @param fieldId.
- 	 		
- 	 * @param time.
- 	 		
- 	 * @param execBlockId.
- 	 		
- 	 * @param stateId.
  	 		
  	 * @param scanNumber.
  	 		
@@ -457,9 +525,13 @@ public:
  	 * @param flagRow.
  	 		
  	 * @param interval.
+ 	 		
+ 	 * @param stateId.
+ 	 		
+ 	 * @param execBlockId.
  	 		 
  	 */
-	TotalPowerRow* lookup(Tag configDescriptionId, Tag fieldId, ArrayTime time, Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval); 
+	TotalPowerRow* lookup(ArrayTime time, Tag configDescriptionId, Tag fieldId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval, vector<Tag>  stateId, Tag execBlockId); 
 
 
 #ifndef WITHOUT_ACS
@@ -479,51 +551,57 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(TotalPowerTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(TotalPowerTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for TotalPower (TotalPowerTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a TotalPower (TotalPowerTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
-	/**
+   /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
 	 * @returns a string containing the MIME message.
 	 * 
 	 */
-	string toMIME();	
-
+	string toMIME();
+	
    /** 
      * Extracts the binary part of a MIME message and deserialize its content
 	 * to fill this with the result of the deserialization. 
@@ -531,26 +609,28 @@ public:
 	 * @throws ConversionException
 	 */
 	 void setFromMIME(const string & mimeMsg);
-	 
+	
 	/**
 	  * Stores a representation (binary or XML) of this table into a file.
 	  *
 	  * Depending on the boolean value of its private field fileAsBin a binary serialization  of this (fileAsBin==true)  
 	  * will be saved in a file "TotalPower.bin" or an XML representation (fileAsBin==false) will be saved in a file "TotalPower.xml".
 	  * The file is always written in a directory whose name is passed as a parameter.
+	 * @param directory The name of directory  where the file containing the table's representation will be saved.
 	  * 
 	  */
 	  void toFile(string directory);
 	  
 	/**
-	 * Reads and parses a collection of files as those produced by the toFile method.
+	 * Reads and parses a file containing a representation of a TotalPowerTable as those produced  by the toFile method.
 	 * This table is populated with the result of the parsing.
-	 * @param directory The name of the directory containing the files.
+	 * @param directory The name of the directory containing the file te be read and parsed.
 	 * @throws ConversionException If any error occurs while reading the 
 	 * files in the directory or parsing them.
 	 *
 	 */
-	 void setFromFile(const string& directory);		 
+	 void setFromFile(const string& directory);	
+
 private:
 
 	/**
@@ -566,7 +646,7 @@ private:
 	ASDM & container;
 	
 	bool archiveAsBin; // If true archive binary else archive XML
-	bool fileAsBin; // If true file binary else file XML		
+	bool fileAsBin ; // If true file binary else file XML	
 	
 	Entity entity;
 	
@@ -588,39 +668,59 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	TotalPowerRow* checkAndAdd(TotalPowerRow* x) throw (DuplicateKey);
+	TotalPowerRow* checkAndAdd(TotalPowerRow* x) ;
 
+
+	
+   	
+   /**
+	 * Insert a TotalPowerRow* in a vector of TotalPowerRow* so that it's ordered by ascending time.
+	 *
+	 * @param TotalPowerRow* x . The pointer to be inserted.
+	 * @param vector <TotalPowerRow*>& row. A reference to the vector where to insert x.
+	 *
+	 */
+ 	TotalPowerRow * insertByTime(TotalPowerRow* x, vector<TotalPowerRow *>&row );
+ 	 
 
 
 // A data structure to store the pointers on the table's rows.
 
 // In all cases we maintain a private ArrayList of TotalPowerRow s.
    vector<TotalPowerRow * > privateRows;
-  
+   
 
+	
+
+	
+	
+		
+				
+	typedef vector <TotalPowerRow* > TIME_ROWS;
+	map<string, TIME_ROWS > context;
+		
+	/** 
+	 * Returns a string built by concatenating the ascii representation of the
+	 * parameters values suffixed with a "_" character.
+	 */
+	 string Key(Tag configDescriptionId, Tag fieldId) ;
+		 
+		
+	
+	
 	/**
 	 * Fills the vector vout (passed by reference) with pointers on elements of vin 
 	 * whose attributes are equal to the corresponding parameters of the method.
 	 *
 	 */
-	void getByRequiredValue(vector <TotalPowerRow*>& vin, vector <TotalPowerRow*>& vout,  Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval);
-
-
-
-
-
-
-
-	void error() throw(ConversionException);
+	void getByKeyNoAutoIncNoTime(vector <TotalPowerRow*>& vin, vector <TotalPowerRow*>& vout,  Tag configDescriptionId, Tag fieldId);
 	
 
-	
-	map<string, vector<TotalPowerRow*> > context;
-	
-	string Key( const Tag& configDescriptionId, const Tag& fiedId);
-	
-	TotalPowerRow * insertByTime(TotalPowerRow* x, vector<TotalPowerRow *>&row);
+
+	void error() ; //throw(ConversionException);
 
 };
 

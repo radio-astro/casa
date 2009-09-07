@@ -43,14 +43,21 @@ while len(a) > 0:
 
 if os.uname()[0]=='Darwin' :
     casa_path = os.environ['CASAPATH'].split()
-    casa['helpers']['logger'] = casa_path[0]+'/'+casa_path[1]+'/apps/casalogger.app/Contents/MacOS/casalogger'
+
     casa['helpers']['viewer'] = casa_path[0]+'/'+casa_path[1]+'/apps/casaviewer.app/Contents/MacOS/casaviewer'
-#
-# In the distro of the app then the apps dir is not there and you find things in MacOS
-#
+    # In the distro of the app then the apps dir is not there and you find things in MacOS
     if not os.path.exists(casa['helpers']['viewer']) :
-	casa['helpers']['viewer'] = casa_path[0]+'/MacOS/casaviewer'
-	casa['helpers']['logger'] = casa_path[0]+'/MacOS/casalogger'
+        casa['helpers']['viewer'] = casa_path[0]+'/MacOS/casaviewer'
+
+    if casa['flags'].has_key('--qtlogger') :
+        casa['helpers']['logger'] = casa_path[0]+'/'+casa_path[1]+'/apps/casalogger.app/Contents/MacOS/casalogger'
+
+        # In the distro of the app then the apps dir is not there and you find things in MacOS
+        if not os.path.exists(casa['helpers']['logger']) :
+            casa['helpers']['logger'] = casa_path[0]+'/MacOS/casalogger'
+
+    else:
+        casa['helpers']['logger'] = 'console'
 
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -100,10 +107,11 @@ def casalogger(logfile='casapy.log'):
     """
     pid=9999
     if (os.uname()[0]=='Darwin'):
-	if casa['flags'].has_key('--qtlogger') :
-           pid=os.spawnvp(os.P_NOWAIT,casa['helpers']['logger'],[casa['helpers']['logger'], logfile])
-        else :
+	if casa['helpers']['logger'] == 'console':
            os.system("open -a console " + logfile)
+        else:
+           pid=os.spawnvp(os.P_NOWAIT,casa['helpers']['logger'],[casa['helpers']['logger'], logfile])
+
     elif (os.uname()[0]=='Linux'):
         pid=os.spawnlp(os.P_NOWAIT,casa['helpers']['logger'],casa['helpers']['logger'],logfile)
     else:

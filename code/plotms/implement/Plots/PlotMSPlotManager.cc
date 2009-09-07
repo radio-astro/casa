@@ -28,6 +28,7 @@
 
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Plots/PlotMSMultiPlot.h>
 #include <plotms/Plots/PlotMSSinglePlot.h>
 
 namespace casa {
@@ -98,13 +99,19 @@ PlotMSPlotParameters* PlotMSPlotManager::plotParameters(unsigned int index) {
     else return itsPlotParameters_[index];
 }
 
-PlotMSSinglePlot* PlotMSPlotManager::addSinglePlot(PlotMS* parent,
+PlotMSSinglePlot* PlotMSPlotManager::addSinglePlot(
         const PlotMSPlotParameters* params) {
-    PlotMSSinglePlot* plot = new PlotMSSinglePlot(parent);
-    if(params != NULL) plot->parameters() = *params;
-    itsPlots_.push_back(plot);
-    itsPlotParameters_.push_back(&plot->parameters());
-    addPlotToPlotter(plot);
+    if(itsParent_ == NULL) return NULL;
+    PlotMSSinglePlot* plot = new PlotMSSinglePlot(itsParent_);
+    addPlot(plot, params);
+    return plot;
+}
+
+PlotMSMultiPlot* PlotMSPlotManager::addMultiPlot(
+        const PlotMSPlotParameters* params) {
+    if(itsParent_ == NULL) return NULL;
+    PlotMSMultiPlot* plot = new PlotMSMultiPlot(itsParent_);
+    addPlot(plot, params);
     return plot;
 }
 
@@ -118,8 +125,10 @@ void PlotMSPlotManager::clearPlotsAndCanvases() {
     itsPlotParameters_.clear();
     itsPages_.clearPages();
     
-    for(unsigned int i = 0; i < plotsCopy.size(); i++)
+    for(unsigned int i = 0; i < plotsCopy.size(); i++) {
+        plotsCopy[i]->detachFromCanvases();
         delete plotsCopy[i];
+    }
     
     notifyWatchers();
 }
@@ -127,20 +136,19 @@ void PlotMSPlotManager::clearPlotsAndCanvases() {
 
 // Private Methods //
 
-void PlotMSPlotManager::addPlotToPlotter(PlotMSPlot* plot) {
-    if(plot == NULL) return;    
+void PlotMSPlotManager::addPlot(PlotMSPlot* plot,
+        const PlotMSPlotParameters* params) {
+    if(plot == NULL) return;
     
-    // Generate canvases.
-    vector<PlotCanvasPtr> canvases = plot->generateCanvases(itsPages_);
+    if(params != NULL) plot->parameters() = *params;
+    
+    itsPlots_.push_back(plot);
+    itsPlotParameters_.push_back(&plot->parameters());
+    
     itsPages_.setupCurrentPage();
     
-    // Initialize plots.
-    bool hold = itsParent_->getPlotter()->allDrawingHeld();
-    if(!hold) itsParent_->getPlotter()->holdDrawing();
-    plot->initializePlot(canvases);
-    if(!hold) itsParent_->getPlotter()->releaseDrawing();
+    plot->initializePlot(itsPages_);
     
-    // Notify watchers.
     notifyWatchers();
 }
 

@@ -82,11 +82,11 @@ namespace asdm {
 	
 		key.push_back("antennaId");
 	
-		key.push_back("feedId");
-	
 		key.push_back("spectralWindowId");
 	
 		key.push_back("timeInterval");
+	
+		key.push_back("feedId");
 	
 
 
@@ -182,41 +182,41 @@ namespace asdm {
 	
  	 * @param antennaId. 
 	
- 	 * @param feedId. 
-	
  	 * @param spectralWindowId. 
 	
  	 * @param timeInterval. 
 	
+ 	 * @param feedId. 
+	
  	 * @param offset. 
 	
      */
-	FreqOffsetRow* FreqOffsetTable::newRow(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, Frequency offset){
+	FreqOffsetRow* FreqOffsetTable::newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, Frequency offset){
 		FreqOffsetRow *row = new FreqOffsetRow(*this);
 			
 		row->setAntennaId(antennaId);
 			
-		row->setFeedId(feedId);
-			
 		row->setSpectralWindowId(spectralWindowId);
 			
 		row->setTimeInterval(timeInterval);
+			
+		row->setFeedId(feedId);
 			
 		row->setOffset(offset);
 	
 		return row;		
 	}	
 
-	FreqOffsetRow* FreqOffsetTable::newRowFull(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, Frequency offset)	{
+	FreqOffsetRow* FreqOffsetTable::newRowFull(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, Frequency offset)	{
 		FreqOffsetRow *row = new FreqOffsetRow(*this);
 			
 		row->setAntennaId(antennaId);
 			
-		row->setFeedId(feedId);
-			
 		row->setSpectralWindowId(spectralWindowId);
 			
 		row->setTimeInterval(timeInterval);
+			
+		row->setFeedId(feedId);
 			
 		row->setOffset(offset);
 	
@@ -245,15 +245,15 @@ FreqOffsetRow* FreqOffsetTable::newRowCopy(FreqOffsetRow* row) {
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
 	 */
-	 string FreqOffsetTable::Key(Tag antennaId, int feedId, Tag spectralWindowId) {
+	 string FreqOffsetTable::Key(Tag antennaId, Tag spectralWindowId, int feedId) {
 	 	ostringstream ostrstr;
 	 		ostrstr  
 			
 				<<  antennaId.toString()  << "_"
 			
-				<<   feedId  << "_"
-			
 				<<  spectralWindowId.toString()  << "_"
+			
+				<<   feedId  << "_"
 			
 			;
 		return ostrstr.str();	 	
@@ -271,9 +271,9 @@ FreqOffsetRow* FreqOffsetTable::newRowCopy(FreqOffsetRow* row) {
 		string k = Key(
 						x->getAntennaId()
 					   ,
-						x->getFeedId()
-					   ,
 						x->getSpectralWindowId()
+					   ,
+						x->getFeedId()
 					   );
  
 		if (context.find(k) == context.end()) { 
@@ -305,13 +305,13 @@ FreqOffsetRow* FreqOffsetTable::newRowCopy(FreqOffsetRow* row) {
 			
 			
 			
-	FreqOffsetRow*  FreqOffsetTable::checkAndAdd(FreqOffsetRow* x) throw (DuplicateKey) {
+	FreqOffsetRow*  FreqOffsetTable::checkAndAdd(FreqOffsetRow* x) {
 		string keystr = Key( 
 						x->getAntennaId() 
 					   , 
-						x->getFeedId() 
-					   , 
 						x->getSpectralWindowId() 
+					   , 
+						x->getFeedId() 
 					   ); 
 		if (context.find(keystr) == context.end()) {
 			vector<FreqOffsetRow *> v;
@@ -357,8 +357,8 @@ FreqOffsetRow* FreqOffsetTable::newRowCopy(FreqOffsetRow* row) {
 	 */
 	 }
 	 
-	 vector<FreqOffsetRow *> *FreqOffsetTable::getByContext(Tag antennaId, int feedId, Tag spectralWindowId) {
-	  	string k = Key(antennaId, feedId, spectralWindowId);
+	 vector<FreqOffsetRow *> *FreqOffsetTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
+	  	string k = Key(antennaId, spectralWindowId, feedId);
  
 	    if (context.find(k) == context.end()) return 0;
  	   else return &(context[k]);		
@@ -381,8 +381,8 @@ FreqOffsetRow* FreqOffsetTable::newRowCopy(FreqOffsetRow* row) {
  */
  				
 				
-	FreqOffsetRow* FreqOffsetTable::getRowByKey(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval)  {
- 		string keystr = Key(antennaId, feedId, spectralWindowId);
+	FreqOffsetRow* FreqOffsetTable::getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId)  {
+ 		string keystr = Key(antennaId, spectralWindowId, feedId);
  		vector<FreqOffsetRow *> row;
  		
  		if ( context.find(keystr)  == context.end()) return 0;
@@ -463,7 +463,7 @@ FreqOffsetRow* FreqOffsetTable::newRowCopy(FreqOffsetRow* row) {
 #endif
 	
 #ifndef WITHOUT_ACS
-	void FreqOffsetTable::fromIDL(FreqOffsetTableIDL x) throw(DuplicateKey,ConversionException) {
+	void FreqOffsetTable::fromIDL(FreqOffsetTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			FreqOffsetRow *tmp = newRow();
@@ -474,28 +474,27 @@ FreqOffsetRow* FreqOffsetTable::newRowCopy(FreqOffsetRow* row) {
 	}
 #endif
 
-	char *FreqOffsetTable::toFITS() const throw(ConversionException) {
+	char *FreqOffsetTable::toFITS() const  {
 		throw ConversionException("Not implemented","FreqOffset");
 	}
 
-	void FreqOffsetTable::fromFITS(char *fits) throw(ConversionException) {
+	void FreqOffsetTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","FreqOffset");
 	}
 
-	string FreqOffsetTable::toVOTable() const throw(ConversionException) {
+	string FreqOffsetTable::toVOTable() const {
 		throw ConversionException("Not implemented","FreqOffset");
 	}
 
-	void FreqOffsetTable::fromVOTable(string vo) throw(ConversionException) {
+	void FreqOffsetTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","FreqOffset");
 	}
 
-	string FreqOffsetTable::toXML()  throw(ConversionException) {
+	
+	string FreqOffsetTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<FreqOffsetTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/FreqOffsetTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<FreqOffsetTable> ");
+		buf.append("<FreqOffsetTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/FreqOffsetTable\" xsi:schemaLocation=\"http://Alma/XASDM/FreqOffsetTable http://almaobservatory.org/XML/XASDM/2/FreqOffsetTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -511,8 +510,9 @@ FreqOffsetRow* FreqOffsetTable::newRowCopy(FreqOffsetRow* row) {
 		buf.append("</FreqOffsetTable> ");
 		return buf;
 	}
+
 	
-	void FreqOffsetTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void FreqOffsetTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<FreqOffsetTable")) 
 			error();
@@ -554,20 +554,110 @@ FreqOffsetRow* FreqOffsetTable::newRowCopy(FreqOffsetRow* row) {
 			error();
 	}
 
-	void FreqOffsetTable::error() throw(ConversionException) {
+	
+	void FreqOffsetTable::error()  {
 		throw ConversionException("Invalid xml document","FreqOffset");
 	}
 	
+	
 	string FreqOffsetTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void FreqOffsetTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "FreqOffset");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			FreqOffsetRow* aRow = FreqOffsetRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "FreqOffset");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "FreqOffset");
+		} 		 	
+	}
+
 	
 	void FreqOffsetTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -598,6 +688,7 @@ FreqOffsetRow* FreqOffsetTable::newRowCopy(FreqOffsetRow* row) {
 				throw ConversionException("Could not close file " + fileName, "FreqOffset");
 		}
 	}
+
 	
 	void FreqOffsetTable::setFromFile(const string& directory) {
 		string tablename;
@@ -639,6 +730,11 @@ FreqOffsetRow* FreqOffsetTable::newRowCopy(FreqOffsetRow* row) {
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 		

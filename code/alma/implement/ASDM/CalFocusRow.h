@@ -82,8 +82,6 @@ using namespace enumerations;
 	
 
 	
-
-	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
 	
@@ -91,10 +89,48 @@ using namespace ReceiverBandMod;
 	
 
 	
+#include "CAtmPhaseCorrection.h"
+using namespace AtmPhaseCorrectionMod;
+	
 
 	
 #include "CFocusMethod.h"
 using namespace FocusMethodMod;
+	
+
+	
+
+	
+
+	
+
+	
+#include "CPolarizationType.h"
+using namespace PolarizationTypeMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -126,7 +162,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalFocus.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -144,7 +180,7 @@ class CalReductionRow;
 /**
  * The CalFocusRow class is a row of a CalFocusTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class CalFocusRow {
@@ -171,8 +207,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalFocusRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalFocusRowIDL x) throw(ConversionException);
+	void setFromIDL (CalFocusRowIDL x) ;
 #endif
 	
 	/**
@@ -185,75 +222,27 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalFocusTable to which the row built by deserialization will be parented.
+	  */
+	 static CalFocusRow* fromBin(EndianISStream& eiss, CalFocusTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
-	
-	// ===> Attribute antennaName
-	
-	
-	
-
-	
- 	/**
- 	 * Get antennaName.
- 	 * @return antennaName as string
- 	 */
- 	string getAntennaName() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set antennaName with the specified string.
- 	 * @param antennaName The string value to which antennaName is to be set.
- 	 
- 		
- 			
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 		
- 	 */
- 	void setAntennaName (string antennaName);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute frequencyRange
-	
-	
-	
-
-	
- 	/**
- 	 * Get frequencyRange.
- 	 * @return frequencyRange as vector<Frequency >
- 	 */
- 	vector<Frequency > getFrequencyRange() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set frequencyRange with the specified vector<Frequency >.
- 	 * @param frequencyRange The vector<Frequency > value to which frequencyRange is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setFrequencyRange (vector<Frequency > frequencyRange);
-  		
-	
-	
-	
-
-
 	
 	// ===> Attribute startValidTime
 	
@@ -315,6 +304,38 @@ public:
 
 
 	
+	// ===> Attribute antennaName
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get antennaName.
+ 	 * @return antennaName as string
+ 	 */
+ 	string getAntennaName() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set antennaName with the specified string.
+ 	 * @param antennaName The string value to which antennaName is to be set.
+ 	 
+ 		
+ 			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setAntennaName (string antennaName);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute receiverBand
 	
 	
@@ -336,6 +357,8 @@ public:
  	 
  		
  			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
  	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
   		
@@ -345,29 +368,29 @@ public:
 
 
 	
-	// ===> Attribute offset
+	// ===> Attribute ambientTemperature
 	
 	
 	
 
 	
  	/**
- 	 * Get offset.
- 	 * @return offset as vector<Length >
+ 	 * Get ambientTemperature.
+ 	 * @return ambientTemperature as Temperature
  	 */
- 	vector<Length > getOffset() const;
+ 	Temperature getAmbientTemperature() const;
 	
  
  	
  	
  	/**
- 	 * Set offset with the specified vector<Length >.
- 	 * @param offset The vector<Length > value to which offset is to be set.
+ 	 * Set ambientTemperature with the specified Temperature.
+ 	 * @param ambientTemperature The Temperature value to which ambientTemperature is to be set.
  	 
  		
  			
  	 */
- 	void setOffset (vector<Length > offset);
+ 	void setAmbientTemperature (Temperature ambientTemperature);
   		
 	
 	
@@ -375,29 +398,29 @@ public:
 
 
 	
-	// ===> Attribute error
+	// ===> Attribute atmPhaseCorrection
 	
 	
 	
 
 	
  	/**
- 	 * Get error.
- 	 * @return error as vector<Length >
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
  	 */
- 	vector<Length > getError() const;
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection getAtmPhaseCorrection() const;
 	
  
  	
  	
  	/**
- 	 * Set error with the specified vector<Length >.
- 	 * @param error The vector<Length > value to which error is to be set.
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
  	 
  		
  			
  	 */
- 	void setError (vector<Length > error);
+ 	void setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection);
   		
 	
 	
@@ -435,6 +458,36 @@ public:
 
 
 	
+	// ===> Attribute frequencyRange
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get frequencyRange.
+ 	 * @return frequencyRange as vector<Frequency >
+ 	 */
+ 	vector<Frequency > getFrequencyRange() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set frequencyRange with the specified vector<Frequency >.
+ 	 * @param frequencyRange The vector<Frequency > value to which frequencyRange is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setFrequencyRange (vector<Frequency > frequencyRange);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute pointingDirection
 	
 	
@@ -465,29 +518,29 @@ public:
 
 
 	
-	// ===> Attribute wasFixed
+	// ===> Attribute numReceptor
 	
 	
 	
 
 	
  	/**
- 	 * Get wasFixed.
- 	 * @return wasFixed as vector<bool >
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
  	 */
- 	vector<bool > getWasFixed() const;
+ 	int getNumReceptor() const;
 	
  
  	
  	
  	/**
- 	 * Set wasFixed with the specified vector<bool >.
- 	 * @param wasFixed The vector<bool > value to which wasFixed is to be set.
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
  	 
  		
  			
  	 */
- 	void setWasFixed (vector<bool > wasFixed);
+ 	void setNumReceptor (int numReceptor);
   		
 	
 	
@@ -495,32 +548,592 @@ public:
 
 
 	
-	// ===> Attribute ambientTemperature
+	// ===> Attribute polarizationTypes
 	
 	
 	
 
 	
  	/**
- 	 * Get ambientTemperature.
- 	 * @return ambientTemperature as Temperature
+ 	 * Get polarizationTypes.
+ 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
  	 */
- 	Temperature getAmbientTemperature() const;
+ 	vector<PolarizationTypeMod::PolarizationType > getPolarizationTypes() const;
 	
  
  	
  	
  	/**
- 	 * Set ambientTemperature with the specified Temperature.
- 	 * @param ambientTemperature The Temperature value to which ambientTemperature is to be set.
+ 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
  	 
  		
  			
  	 */
- 	void setAmbientTemperature (Temperature ambientTemperature);
+ 	void setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes);
   		
 	
 	
+	
+
+
+	
+	// ===> Attribute wereFixed
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get wereFixed.
+ 	 * @return wereFixed as vector<bool >
+ 	 */
+ 	vector<bool > getWereFixed() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set wereFixed with the specified vector<bool >.
+ 	 * @param wereFixed The vector<bool > value to which wereFixed is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setWereFixed (vector<bool > wereFixed);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute offset
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get offset.
+ 	 * @return offset as vector<vector<Length > >
+ 	 */
+ 	vector<vector<Length > > getOffset() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set offset with the specified vector<vector<Length > >.
+ 	 * @param offset The vector<vector<Length > > value to which offset is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setOffset (vector<vector<Length > > offset);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute offsetError
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get offsetError.
+ 	 * @return offsetError as vector<vector<Length > >
+ 	 */
+ 	vector<vector<Length > > getOffsetError() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set offsetError with the specified vector<vector<Length > >.
+ 	 * @param offsetError The vector<vector<Length > > value to which offsetError is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setOffsetError (vector<vector<Length > > offsetError);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute offsetWasTied
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get offsetWasTied.
+ 	 * @return offsetWasTied as vector<vector<bool > >
+ 	 */
+ 	vector<vector<bool > > getOffsetWasTied() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set offsetWasTied with the specified vector<vector<bool > >.
+ 	 * @param offsetWasTied The vector<vector<bool > > value to which offsetWasTied is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setOffsetWasTied (vector<vector<bool > > offsetWasTied);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute reducedChiSquared
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get reducedChiSquared.
+ 	 * @return reducedChiSquared as vector<vector<double > >
+ 	 */
+ 	vector<vector<double > > getReducedChiSquared() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set reducedChiSquared with the specified vector<vector<double > >.
+ 	 * @param reducedChiSquared The vector<vector<double > > value to which reducedChiSquared is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setReducedChiSquared (vector<vector<double > > reducedChiSquared);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute polarizationsAveraged, which is optional
+	
+	
+	
+	/**
+	 * The attribute polarizationsAveraged is optional. Return true if this attribute exists.
+	 * @return true if and only if the polarizationsAveraged attribute exists. 
+	 */
+	bool isPolarizationsAveragedExists() const;
+	
+
+	
+ 	/**
+ 	 * Get polarizationsAveraged, which is optional.
+ 	 * @return polarizationsAveraged as bool
+ 	 * @throws IllegalAccessException If polarizationsAveraged does not exist.
+ 	 */
+ 	bool getPolarizationsAveraged() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set polarizationsAveraged with the specified bool.
+ 	 * @param polarizationsAveraged The bool value to which polarizationsAveraged is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setPolarizationsAveraged (bool polarizationsAveraged);
+		
+	
+	
+	
+	/**
+	 * Mark polarizationsAveraged, which is an optional field, as non-existent.
+	 */
+	void clearPolarizationsAveraged ();
+	
+
+
+	
+	// ===> Attribute focusCurveWidth, which is optional
+	
+	
+	
+	/**
+	 * The attribute focusCurveWidth is optional. Return true if this attribute exists.
+	 * @return true if and only if the focusCurveWidth attribute exists. 
+	 */
+	bool isFocusCurveWidthExists() const;
+	
+
+	
+ 	/**
+ 	 * Get focusCurveWidth, which is optional.
+ 	 * @return focusCurveWidth as vector<vector<Length > >
+ 	 * @throws IllegalAccessException If focusCurveWidth does not exist.
+ 	 */
+ 	vector<vector<Length > > getFocusCurveWidth() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set focusCurveWidth with the specified vector<vector<Length > >.
+ 	 * @param focusCurveWidth The vector<vector<Length > > value to which focusCurveWidth is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setFocusCurveWidth (vector<vector<Length > > focusCurveWidth);
+		
+	
+	
+	
+	/**
+	 * Mark focusCurveWidth, which is an optional field, as non-existent.
+	 */
+	void clearFocusCurveWidth ();
+	
+
+
+	
+	// ===> Attribute focusCurveWidthError, which is optional
+	
+	
+	
+	/**
+	 * The attribute focusCurveWidthError is optional. Return true if this attribute exists.
+	 * @return true if and only if the focusCurveWidthError attribute exists. 
+	 */
+	bool isFocusCurveWidthErrorExists() const;
+	
+
+	
+ 	/**
+ 	 * Get focusCurveWidthError, which is optional.
+ 	 * @return focusCurveWidthError as vector<vector<Length > >
+ 	 * @throws IllegalAccessException If focusCurveWidthError does not exist.
+ 	 */
+ 	vector<vector<Length > > getFocusCurveWidthError() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set focusCurveWidthError with the specified vector<vector<Length > >.
+ 	 * @param focusCurveWidthError The vector<vector<Length > > value to which focusCurveWidthError is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setFocusCurveWidthError (vector<vector<Length > > focusCurveWidthError);
+		
+	
+	
+	
+	/**
+	 * Mark focusCurveWidthError, which is an optional field, as non-existent.
+	 */
+	void clearFocusCurveWidthError ();
+	
+
+
+	
+	// ===> Attribute focusCurveWasFixed, which is optional
+	
+	
+	
+	/**
+	 * The attribute focusCurveWasFixed is optional. Return true if this attribute exists.
+	 * @return true if and only if the focusCurveWasFixed attribute exists. 
+	 */
+	bool isFocusCurveWasFixedExists() const;
+	
+
+	
+ 	/**
+ 	 * Get focusCurveWasFixed, which is optional.
+ 	 * @return focusCurveWasFixed as vector<bool >
+ 	 * @throws IllegalAccessException If focusCurveWasFixed does not exist.
+ 	 */
+ 	vector<bool > getFocusCurveWasFixed() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set focusCurveWasFixed with the specified vector<bool >.
+ 	 * @param focusCurveWasFixed The vector<bool > value to which focusCurveWasFixed is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setFocusCurveWasFixed (vector<bool > focusCurveWasFixed);
+		
+	
+	
+	
+	/**
+	 * Mark focusCurveWasFixed, which is an optional field, as non-existent.
+	 */
+	void clearFocusCurveWasFixed ();
+	
+
+
+	
+	// ===> Attribute offIntensity, which is optional
+	
+	
+	
+	/**
+	 * The attribute offIntensity is optional. Return true if this attribute exists.
+	 * @return true if and only if the offIntensity attribute exists. 
+	 */
+	bool isOffIntensityExists() const;
+	
+
+	
+ 	/**
+ 	 * Get offIntensity, which is optional.
+ 	 * @return offIntensity as vector<Temperature >
+ 	 * @throws IllegalAccessException If offIntensity does not exist.
+ 	 */
+ 	vector<Temperature > getOffIntensity() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set offIntensity with the specified vector<Temperature >.
+ 	 * @param offIntensity The vector<Temperature > value to which offIntensity is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setOffIntensity (vector<Temperature > offIntensity);
+		
+	
+	
+	
+	/**
+	 * Mark offIntensity, which is an optional field, as non-existent.
+	 */
+	void clearOffIntensity ();
+	
+
+
+	
+	// ===> Attribute offIntensityError, which is optional
+	
+	
+	
+	/**
+	 * The attribute offIntensityError is optional. Return true if this attribute exists.
+	 * @return true if and only if the offIntensityError attribute exists. 
+	 */
+	bool isOffIntensityErrorExists() const;
+	
+
+	
+ 	/**
+ 	 * Get offIntensityError, which is optional.
+ 	 * @return offIntensityError as vector<Temperature >
+ 	 * @throws IllegalAccessException If offIntensityError does not exist.
+ 	 */
+ 	vector<Temperature > getOffIntensityError() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set offIntensityError with the specified vector<Temperature >.
+ 	 * @param offIntensityError The vector<Temperature > value to which offIntensityError is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setOffIntensityError (vector<Temperature > offIntensityError);
+		
+	
+	
+	
+	/**
+	 * Mark offIntensityError, which is an optional field, as non-existent.
+	 */
+	void clearOffIntensityError ();
+	
+
+
+	
+	// ===> Attribute offIntensityWasFixed, which is optional
+	
+	
+	
+	/**
+	 * The attribute offIntensityWasFixed is optional. Return true if this attribute exists.
+	 * @return true if and only if the offIntensityWasFixed attribute exists. 
+	 */
+	bool isOffIntensityWasFixedExists() const;
+	
+
+	
+ 	/**
+ 	 * Get offIntensityWasFixed, which is optional.
+ 	 * @return offIntensityWasFixed as bool
+ 	 * @throws IllegalAccessException If offIntensityWasFixed does not exist.
+ 	 */
+ 	bool getOffIntensityWasFixed() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set offIntensityWasFixed with the specified bool.
+ 	 * @param offIntensityWasFixed The bool value to which offIntensityWasFixed is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setOffIntensityWasFixed (bool offIntensityWasFixed);
+		
+	
+	
+	
+	/**
+	 * Mark offIntensityWasFixed, which is an optional field, as non-existent.
+	 */
+	void clearOffIntensityWasFixed ();
+	
+
+
+	
+	// ===> Attribute peakIntensity, which is optional
+	
+	
+	
+	/**
+	 * The attribute peakIntensity is optional. Return true if this attribute exists.
+	 * @return true if and only if the peakIntensity attribute exists. 
+	 */
+	bool isPeakIntensityExists() const;
+	
+
+	
+ 	/**
+ 	 * Get peakIntensity, which is optional.
+ 	 * @return peakIntensity as vector<Temperature >
+ 	 * @throws IllegalAccessException If peakIntensity does not exist.
+ 	 */
+ 	vector<Temperature > getPeakIntensity() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set peakIntensity with the specified vector<Temperature >.
+ 	 * @param peakIntensity The vector<Temperature > value to which peakIntensity is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setPeakIntensity (vector<Temperature > peakIntensity);
+		
+	
+	
+	
+	/**
+	 * Mark peakIntensity, which is an optional field, as non-existent.
+	 */
+	void clearPeakIntensity ();
+	
+
+
+	
+	// ===> Attribute peakIntensityError, which is optional
+	
+	
+	
+	/**
+	 * The attribute peakIntensityError is optional. Return true if this attribute exists.
+	 * @return true if and only if the peakIntensityError attribute exists. 
+	 */
+	bool isPeakIntensityErrorExists() const;
+	
+
+	
+ 	/**
+ 	 * Get peakIntensityError, which is optional.
+ 	 * @return peakIntensityError as vector<Temperature >
+ 	 * @throws IllegalAccessException If peakIntensityError does not exist.
+ 	 */
+ 	vector<Temperature > getPeakIntensityError() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set peakIntensityError with the specified vector<Temperature >.
+ 	 * @param peakIntensityError The vector<Temperature > value to which peakIntensityError is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setPeakIntensityError (vector<Temperature > peakIntensityError);
+		
+	
+	
+	
+	/**
+	 * Mark peakIntensityError, which is an optional field, as non-existent.
+	 */
+	void clearPeakIntensityError ();
+	
+
+
+	
+	// ===> Attribute peakIntensityWasFixed, which is optional
+	
+	
+	
+	/**
+	 * The attribute peakIntensityWasFixed is optional. Return true if this attribute exists.
+	 * @return true if and only if the peakIntensityWasFixed attribute exists. 
+	 */
+	bool isPeakIntensityWasFixedExists() const;
+	
+
+	
+ 	/**
+ 	 * Get peakIntensityWasFixed, which is optional.
+ 	 * @return peakIntensityWasFixed as bool
+ 	 * @throws IllegalAccessException If peakIntensityWasFixed does not exist.
+ 	 */
+ 	bool getPeakIntensityWasFixed() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set peakIntensityWasFixed with the specified bool.
+ 	 * @param peakIntensityWasFixed The bool value to which peakIntensityWasFixed is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setPeakIntensityWasFixed (bool peakIntensityWasFixed);
+		
+	
+	
+	
+	/**
+	 * Mark peakIntensityWasFixed, which is an optional field, as non-existent.
+	 */
+	void clearPeakIntensityWasFixed ();
 	
 
 
@@ -633,12 +1246,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this CalFocusRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, vector<Frequency > frequencyRange, ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Length > offset, vector<Length > error, FocusMethodMod::FocusMethod focusMethod, vector<Angle > pointingDirection, vector<bool > wasFixed, Temperature ambientTemperature);
+	bool compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared);
 	
 	
 
 	
-	bool compareRequiredValue(vector<Frequency > frequencyRange, ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Length > offset, vector<Length > error, FocusMethodMod::FocusMethod focusMethod, vector<Angle > pointingDirection, vector<bool > wasFixed, Temperature ambientTemperature); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared); 
 		 
 	
 	/**
@@ -699,28 +1312,6 @@ private:
 	////////////////////////////////
 	
 	
-	// ===> Attribute antennaName
-	
-	
-
-	string antennaName;
-
-	
-	
- 	
-
-	
-	// ===> Attribute frequencyRange
-	
-	
-
-	vector<Frequency > frequencyRange;
-
-	
-	
- 	
-
-	
 	// ===> Attribute startValidTime
 	
 	
@@ -743,6 +1334,17 @@ private:
  	
 
 	
+	// ===> Attribute antennaName
+	
+	
+
+	string antennaName;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute receiverBand
 	
 	
@@ -754,22 +1356,22 @@ private:
  	
 
 	
-	// ===> Attribute offset
+	// ===> Attribute ambientTemperature
 	
 	
 
-	vector<Length > offset;
+	Temperature ambientTemperature;
 
 	
 	
  	
 
 	
-	// ===> Attribute error
+	// ===> Attribute atmPhaseCorrection
 	
 	
 
-	vector<Length > error;
+	AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection;
 
 	
 	
@@ -787,6 +1389,17 @@ private:
  	
 
 	
+	// ===> Attribute frequencyRange
+	
+	
+
+	vector<Frequency > frequencyRange;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute pointingDirection
 	
 	
@@ -798,22 +1411,207 @@ private:
  	
 
 	
-	// ===> Attribute wasFixed
+	// ===> Attribute numReceptor
 	
 	
 
-	vector<bool > wasFixed;
+	int numReceptor;
 
 	
 	
  	
 
 	
-	// ===> Attribute ambientTemperature
+	// ===> Attribute polarizationTypes
 	
 	
 
-	Temperature ambientTemperature;
+	vector<PolarizationTypeMod::PolarizationType > polarizationTypes;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute wereFixed
+	
+	
+
+	vector<bool > wereFixed;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute offset
+	
+	
+
+	vector<vector<Length > > offset;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute offsetError
+	
+	
+
+	vector<vector<Length > > offsetError;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute offsetWasTied
+	
+	
+
+	vector<vector<bool > > offsetWasTied;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute reducedChiSquared
+	
+	
+
+	vector<vector<double > > reducedChiSquared;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute polarizationsAveraged, which is optional
+	
+	
+	bool polarizationsAveragedExists;
+	
+
+	bool polarizationsAveraged;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute focusCurveWidth, which is optional
+	
+	
+	bool focusCurveWidthExists;
+	
+
+	vector<vector<Length > > focusCurveWidth;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute focusCurveWidthError, which is optional
+	
+	
+	bool focusCurveWidthErrorExists;
+	
+
+	vector<vector<Length > > focusCurveWidthError;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute focusCurveWasFixed, which is optional
+	
+	
+	bool focusCurveWasFixedExists;
+	
+
+	vector<bool > focusCurveWasFixed;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute offIntensity, which is optional
+	
+	
+	bool offIntensityExists;
+	
+
+	vector<Temperature > offIntensity;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute offIntensityError, which is optional
+	
+	
+	bool offIntensityErrorExists;
+	
+
+	vector<Temperature > offIntensityError;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute offIntensityWasFixed, which is optional
+	
+	
+	bool offIntensityWasFixedExists;
+	
+
+	bool offIntensityWasFixed;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute peakIntensity, which is optional
+	
+	
+	bool peakIntensityExists;
+	
+
+	vector<Temperature > peakIntensity;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute peakIntensityError, which is optional
+	
+	
+	bool peakIntensityErrorExists;
+	
+
+	vector<Temperature > peakIntensityError;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute peakIntensityWasFixed, which is optional
+	
+	
+	bool peakIntensityWasFixedExists;
+	
+
+	bool peakIntensityWasFixed;
 
 	
 	

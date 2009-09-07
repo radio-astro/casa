@@ -61,7 +61,6 @@
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Containers/Block.h>
 #include <casa/Containers/OrderedMap.h>
-#include <measures/Measures/MCuvw.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MBaseline.h>
 #include <measures/Measures/Muvw.h>
@@ -178,70 +177,33 @@ class ASDM2MSFiller
   ddMgr    itsDDMgr;
 
          
-  int createMS(const char* msName, Bool complexData, Bool withCompression);
+  int createMS(const char* msName, Bool complexData, Bool withCompression, Bool withCorrectedData=false);
 
   const char** getPolCombinations(int numCorr);
     
    
  public:  
-  ASDM2MSFiller (const char* name_,
-		 double      creation_time_,
-		 Bool        withRadioMeters,
-		 Bool        complexData,
-		 Bool        withCompression);
+  ASDM2MSFiller (const char*	name_,
+		 double		creation_time_,
+		 Bool		withRadioMeters,
+		 Bool		complexData,
+		 Bool		withCompression,
+		 Bool		withCorrectedData=false);
   
   // Destructor
   ~ASDM2MSFiller();
 
   const casa::MeasurementSet* ms();
 
-  int addAntenna(
-		 const char   *name_,
-		 const char   *station_,
-		 double lx_,
-		 double ly_,
-		 double lz_,
-		 double offset_x_,
-		 double offset_y_,
-		 double offset_z_,
-		 float  dish_diam_);
-
-  void addData(double time_,
-	       double interval_,
-	       double exposure_,
-	       double time_centroid_,
-	       int    nb_antenna_feed_,
-	       int    antenna_id_[],
-	       int    feed_id_[],
-	       int    data_desc_id_,
-	       int    field_id_,
-	       double uvw_[],
-	       float  vis_r_[],
-	       float  vis_i_[],
-	       float  sigma_[],
-	       float  weight_[],
-	       const char   flag_[]);
-
-  void addData (bool                      complexData,
-		double                    time_,
-		vector<int>               &antennaId1_,
-		vector<int>               &antennaId2_,
-		vector<int>               &feed1_,
-		vector<int>               &feed2_,
-		vector<int>               &dataDescId_,
-		int                       processorId_,
-		int                       fieldId_,
-		double                    interval_,
-		vector<double>            &exposure_,
-		vector<double>            &timeCentroid_,
-		int                       scanNumber_,
-		int                       arrayId_,
-		int                       observationId_,
-		vector<int>               &stateId_,
-		vector <double*>          &uvw_,
-		vector<vector<int> >      &dataShape_,
-		vector<float *>           &data_,
-		vector<unsigned int>      &flag_);
+  int addAntenna(const char	*name_,
+		 const char	*station_,
+		 double		 lx_,
+		 double		 ly_,
+		 double		 lz_,
+		 double		 offset_x_,
+		 double		 offset_y_,
+		 double		 offset_z_,
+		 float		 dish_diam_);
 
   void addData (bool                      complexData,
 		vector<double>            &time_,
@@ -264,24 +226,29 @@ class ASDM2MSFiller
 		vector<float *>           &uncorrectedData_,
 		vector<float *>           &correctedData_,
 		vector<unsigned int>      &flag_);
+
+  void addData (bool                      complexData,
+		vector<double>            &time_,
+		vector<int>               &antennaId1_,
+		vector<int>               &antennaId2_,
+		vector<int>               &feedId1_,
+		vector<int>               &feedId2_,
+		vector<int>               &dataDescId_,
+		int                       processorId_,
+		vector<int>               &fieldId_,
+		vector<double>            &interval_,
+		vector<double>            &exposure_,
+		vector<double>            &timeCentroid_,
+		int                       scanNumber_,
+		int                       arrayId_,
+		int                       observationId_,
+		vector<int>               &stateId_,
+		vector<double>            &uvw_,
+		vector<vector<unsigned int> >      &dataShape_,
+		vector<float *>           &data_,
+		vector<unsigned int>      &flag_);
   
-  void addRCData(double time_,
-		 double interval_,
-		 double exposure_,
-		 double time_centroid_,
-		 int    nb_antenna_feed_,
-		 int    antenna_id_[],
-		 int    feed_id_[],
-		 int    data_desc_id_,
-		 int    field_id_,
-		 double uvw_[],
-		 float  rvis_r_[],
-		 float  rvis_i_[],
-		 float  cvis_r_[],
-		 float  cvis_i_[],
-		 float  sigma_[],
-		 float  weight_[],
-		 const char   flag_[]);
+
 	       
   int  addDataDescription(int spectral_window_id_,
 			  int polarizarion_id_);
@@ -359,7 +326,6 @@ class ASDM2MSFiller
 			int         *antenna_id,
 			double      *time_,
 			double      *interval_,
-			char       **name_,
 			double      *direction_,
 			double      *target_,
 			double      *pointing_offset_,

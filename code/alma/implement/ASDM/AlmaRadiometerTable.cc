@@ -80,7 +80,7 @@ namespace asdm {
 	AlmaRadiometerTable::AlmaRadiometerTable(ASDM &c) : container(c) {
 
 	
-		key.push_back("modeId");
+		key.push_back("almaRadiometerId");
 	
 
 
@@ -160,30 +160,6 @@ namespace asdm {
 	}
 
 
-	/**
-	 * Create a new row initialized to the specified values.
-	 * @return a pointer on the created and initialized row.
-	
- 	 * @param numBand. 
-	
-     */
-	AlmaRadiometerRow* AlmaRadiometerTable::newRow(int numBand){
-		AlmaRadiometerRow *row = new AlmaRadiometerRow(*this);
-			
-		row->setNumBand(numBand);
-	
-		return row;		
-	}	
-
-	AlmaRadiometerRow* AlmaRadiometerTable::newRowFull(int numBand)	{
-		AlmaRadiometerRow *row = new AlmaRadiometerRow(*this);
-			
-		row->setNumBand(numBand);
-	
-		return row;				
-	}
-	
-
 
 AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 	return new AlmaRadiometerRow(*this, *row);
@@ -202,7 +178,7 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRowCopy(AlmaRadiometerRow* row) {
 	
 	/** 
  	 * Look up the table for a row whose noautoincrementable attributes are matching their
- 	 * homologues in *x.  If a row is found  this row else autoincrement  *x.modeId, 
+ 	 * homologues in *x.  If a row is found  this row else autoincrement  *x.almaRadiometerId, 
  	 * add x to its table and returns x.
  	 *  
  	 * @returns a pointer on a AlmaRadiometerRow.
@@ -211,18 +187,11 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRowCopy(AlmaRadiometerRow* row) {
  		
 			
 	AlmaRadiometerRow* AlmaRadiometerTable::add(AlmaRadiometerRow* x) {
-			 
-		AlmaRadiometerRow* aRow = lookup(
-				
-		x->getNumBand()
-				
-		);
-		if (aRow) return aRow;
 			
 
 			
-		// Autoincrement modeId
-		x->setModeId(Tag(size(), TagType::AlmaRadiometer));
+		// Autoincrement almaRadiometerId
+		x->setAlmaRadiometerId(Tag(size(), TagType::AlmaRadiometer));
 						
 		row.push_back(x);
 		privateRows.push_back(x);
@@ -248,21 +217,19 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRowCopy(AlmaRadiometerRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
-	 */
-	AlmaRadiometerRow*  AlmaRadiometerTable::checkAndAdd(AlmaRadiometerRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	 * @throws DuplicateKey
 	 
-		 
-		if (lookup(
-			
-			x->getNumBand()
-		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table AlmaRadiometerTable");
+	 * @throws UniquenessViolationException
+	 
+	 */
+	AlmaRadiometerRow*  AlmaRadiometerTable::checkAndAdd(AlmaRadiometerRow* x)  {
+	 
 		
 		
 		
 		if (getRowByKey(
 	
-			x->getModeId()
+			x->getAlmaRadiometerId()
 			
 		)) throw DuplicateKey("Duplicate key exception in ", "AlmaRadiometerTable");
 		
@@ -299,13 +266,13 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRowCopy(AlmaRadiometerRow* row) {
  ** no row exists for that key.
  **
  */
- 	AlmaRadiometerRow* AlmaRadiometerTable::getRowByKey(Tag modeId)  {
+ 	AlmaRadiometerRow* AlmaRadiometerTable::getRowByKey(Tag almaRadiometerId)  {
 	AlmaRadiometerRow* aRow = 0;
 	for (unsigned int i = 0; i < row.size(); i++) {
 		aRow = row.at(i);
 		
 			
-				if (aRow->modeId != modeId) continue;
+				if (aRow->almaRadiometerId != almaRadiometerId) continue;
 			
 		
 		return aRow;
@@ -315,28 +282,9 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRowCopy(AlmaRadiometerRow* row) {
 	
 
 	
-/**
- * Look up the table for a row whose all attributes  except the autoincrementable one 
- * are equal to the corresponding parameters of the method.
- * @return a pointer on this row if any, 0 otherwise.
- *
-			
- * @param numBand.
- 	 		 
- */
-AlmaRadiometerRow* AlmaRadiometerTable::lookup(int numBand) {
-		AlmaRadiometerRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(numBand)) return aRow;
-		}			
-		return 0;	
-} 
-	
  	 	
 
 	
-
 
 
 
@@ -357,7 +305,7 @@ AlmaRadiometerRow* AlmaRadiometerTable::lookup(int numBand) {
 #endif
 	
 #ifndef WITHOUT_ACS
-	void AlmaRadiometerTable::fromIDL(AlmaRadiometerTableIDL x) throw(DuplicateKey,ConversionException) {
+	void AlmaRadiometerTable::fromIDL(AlmaRadiometerTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			AlmaRadiometerRow *tmp = newRow();
@@ -368,28 +316,27 @@ AlmaRadiometerRow* AlmaRadiometerTable::lookup(int numBand) {
 	}
 #endif
 
-	char *AlmaRadiometerTable::toFITS() const throw(ConversionException) {
+	char *AlmaRadiometerTable::toFITS() const  {
 		throw ConversionException("Not implemented","AlmaRadiometer");
 	}
 
-	void AlmaRadiometerTable::fromFITS(char *fits) throw(ConversionException) {
+	void AlmaRadiometerTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","AlmaRadiometer");
 	}
 
-	string AlmaRadiometerTable::toVOTable() const throw(ConversionException) {
+	string AlmaRadiometerTable::toVOTable() const {
 		throw ConversionException("Not implemented","AlmaRadiometer");
 	}
 
-	void AlmaRadiometerTable::fromVOTable(string vo) throw(ConversionException) {
+	void AlmaRadiometerTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","AlmaRadiometer");
 	}
 
-	string AlmaRadiometerTable::toXML()  throw(ConversionException) {
+	
+	string AlmaRadiometerTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<AlmaRadiometerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/AlmaRadiometerTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<AlmaRadiometerTable> ");
+		buf.append("<AlmaRadiometerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/AlmaRadiometerTable\" xsi:schemaLocation=\"http://Alma/XASDM/AlmaRadiometerTable http://almaobservatory.org/XML/XASDM/2/AlmaRadiometerTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -405,8 +352,9 @@ AlmaRadiometerRow* AlmaRadiometerTable::lookup(int numBand) {
 		buf.append("</AlmaRadiometerTable> ");
 		return buf;
 	}
+
 	
-	void AlmaRadiometerTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void AlmaRadiometerTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<AlmaRadiometerTable")) 
 			error();
@@ -448,20 +396,110 @@ AlmaRadiometerRow* AlmaRadiometerTable::lookup(int numBand) {
 			error();
 	}
 
-	void AlmaRadiometerTable::error() throw(ConversionException) {
+	
+	void AlmaRadiometerTable::error()  {
 		throw ConversionException("Invalid xml document","AlmaRadiometer");
 	}
 	
+	
 	string AlmaRadiometerTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void AlmaRadiometerTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "AlmaRadiometer");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			AlmaRadiometerRow* aRow = AlmaRadiometerRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "AlmaRadiometer");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "AlmaRadiometer");
+		} 		 	
+	}
+
 	
 	void AlmaRadiometerTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -492,6 +530,7 @@ AlmaRadiometerRow* AlmaRadiometerTable::lookup(int numBand) {
 				throw ConversionException("Could not close file " + fileName, "AlmaRadiometer");
 		}
 	}
+
 	
 	void AlmaRadiometerTable::setFromFile(const string& directory) {
 		string tablename;
@@ -533,6 +572,11 @@ AlmaRadiometerRow* AlmaRadiometerTable::lookup(int numBand) {
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	
@@ -543,8 +587,8 @@ AlmaRadiometerRow* AlmaRadiometerTable::lookup(int numBand) {
 		if ((iter=noAutoIncIds.find(key)) == noAutoIncIds.end()) {
 			// There is not yet a combination of the non autoinc attributes values in the hashtable
 			
-			// Initialize  modeId to Tag(0).
-			x->setModeId(Tag(0,  TagType::AlmaRadiometer));
+			// Initialize  almaRadiometerId to Tag(0).
+			x->setAlmaRadiometerId(Tag(0,  TagType::AlmaRadiometer));
 			
 			// Record it in the map.		
 			noAutoIncIds.insert(make_pair(key, 0));			
@@ -554,8 +598,8 @@ AlmaRadiometerRow* AlmaRadiometerTable::lookup(int numBand) {
 			// Increment its value.
 			int n = iter->second + 1; 
 			
-			// Initialize  modeId to Tag(n).
-			x->setModeId(Tag(n, TagType::AlmaRadiometer));
+			// Initialize  almaRadiometerId to Tag(n).
+			x->setAlmaRadiometerId(Tag(n, TagType::AlmaRadiometer));
 			
 			// Record it in the map.		
 			noAutoIncIds.insert(make_pair(key, n));				

@@ -106,45 +106,6 @@ namespace asdm {
 		
 			
     x->dataDescriptionId = getDataDescriptionId().toIDLTag();
-			
-		
-		
-	
-
-	
-		
-		
-			
-				
-    x->flagRowExists = flagRowExists;
-    if (flagRowExists) {
-      try {
-		
-		
-			
-				
-	x->flagRow = getFlagRow();
- 				
- 			
-		
-		
-      } catch (IllegalAccessException e) {
-      }
-    }
-	
- 				
- 			
-		
-		
-	
-
-	
-	
-		
-	
-		
-		
-			
     x->polOrHoloId = getPolOrHoloId().toIDLTag();
 			
 		
@@ -188,36 +149,7 @@ namespace asdm {
 		
 		
 			
-      setDataDescriptionId(*(new Tag (x.dataDescriptionId)));
-			
- 		
-		
-	
-
-	
-		
-		
-      if (x.flagRowExists) {
-		
-		
-			
-	setFlagRow(x.flagRow);
-  			
- 		
-		
-      }
-			
- 		
-		
-	
-
-	
-	
-		
-	
-		
-		
-			
+      setDataDescriptionId(*(new Tag (x.dataDescriptionId)));			
       setPolOrHoloId(*(new Tag (x.polOrHoloId)));
 			
  		
@@ -241,7 +173,7 @@ namespace asdm {
 	
 
     } catch (IllegalAccessException err) {
-      throw new ConversionException (err.getMessage(),"DataDescription");
+      throw ConversionException (err.getMessage(),"DataDescription");
     }
   }
 #endif
@@ -260,33 +192,7 @@ namespace asdm {
  		
 		
 		
-    Parser::toXML(dataDescriptionId, "dataDescriptionId", buf);
-		
-		
-	
-
-  	
- 		
-		
-    if (flagRowExists) {
-		
-		
-		
-      Parser::toXML(flagRow, "flagRow", buf);
-		
-		
-    }
-		
-		
-	
-
-	
-	
-		
-  	
- 		
-		
-		
+    Parser::toXML(dataDescriptionId, "dataDescriptionId", buf);	
     Parser::toXML(polOrHoloId, "polOrHoloId", buf);
 		
 		
@@ -327,26 +233,7 @@ namespace asdm {
   		
 			
       setDataDescriptionId(Parser::getTag("dataDescriptionId","DataDescription",rowDoc));
-			
-		
-	
 
-	
-  		
-			
-      if (row.isStr("<flagRow>")) {
-			
-	setFlagRow(Parser::getBoolean("flagRow","DataDescription",rowDoc));
-			
-      }
- 			
-		
-	
-
-	
-	
-		
-	
   		
 			
       setPolOrHoloId(Parser::getTag("polOrHoloId","DataDescription",rowDoc));
@@ -406,53 +293,6 @@ namespace asdm {
 	
 	
 
-	
-
-	
-  /**
-   * The attribute flagRow is optional. Return true if this attribute exists.
-   * @return true if and only if the flagRow attribute exists. 
-   */
-  bool DataDescriptionRow::isFlagRowExists() const {
-    return flagRowExists;
-  }
-	
-
-	
-  /**
-   * Get flagRow, which is optional.
-   * @return flagRow as bool
-   * @throw IllegalAccessException If flagRow does not exist.
-   */
-  bool DataDescriptionRow::getFlagRow() const throw(IllegalAccessException) {
-    if (!flagRowExists) {
-      throw IllegalAccessException();
-    }
-	
-    return flagRow;
-  }
-
-  /**
-   * Set flagRow with the specified bool.
-   * @param flagRow The bool value to which flagRow is to be set.
- 	
-  */
-  void DataDescriptionRow::setFlagRow (bool flagRow) {
-	
-    this->flagRow = flagRow;
-	
-    flagRowExists = true;
-	
-  }
-	
-	
-  /**
-   * Mark flagRow, which is an optional field, as non-existent.
-   */
-  void DataDescriptionRow::clearFlagRow () {
-    flagRowExists = false;
-  }
-	
 	
 
 	
@@ -563,9 +403,7 @@ namespace asdm {
    */ 
   DataDescriptionRow::DataDescriptionRow (DataDescriptionTable &t) : table(t) {
     hasBeenAdded = false;
-		
-    flagRowExists = false;
-	
+			
 
 	
 
@@ -583,11 +421,6 @@ namespace asdm {
 	
 	
 	
-      flagRowExists = false;
-	
-
-	
-	
 
 	
 		
@@ -603,21 +436,10 @@ namespace asdm {
       polOrHoloId = row.polOrHoloId;
 		
       spectralWindowId = row.spectralWindowId;
-		
-      if (row.flagRowExists) {
-	flagRow = row.flagRow;		
-	flagRowExists = true;
-      }
-      else
-	flagRowExists = false;
-		
-    }			
-		
-		
-		
+				
   }	
 
-
+  }
 	
   bool DataDescriptionRow::compareNoAutoInc(Tag polOrHoloId, Tag spectralWindowId) {
     bool result;

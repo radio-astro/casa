@@ -37,78 +37,67 @@
 #include <string>
 using namespace std;
 
+
+int CAccumMode::version() {
+	return AccumModeMod::version;
+	}
 	
-const std::string& CAccumMode::sALMA_FAST = "ALMA_FAST";
+string CAccumMode::revision () {
+	return AccumModeMod::revision;
+}
+
+unsigned int CAccumMode::size() {
+	return 3;
+	}
 	
-const std::string& CAccumMode::sALMA_NORMAL = "ALMA_NORMAL";
 	
-const std::vector<std::string> CAccumMode::sAccumModeSet() {
+const std::string& CAccumMode::sFAST = "FAST";
+	
+const std::string& CAccumMode::sNORMAL = "NORMAL";
+	
+const std::string& CAccumMode::sUNDEFINED = "UNDEFINED";
+	
+const std::vector<std::string> CAccumMode::names() {
     std::vector<std::string> enumSet;
     
-    enumSet.insert(enumSet.end(), CAccumMode::sALMA_FAST);
+    enumSet.insert(enumSet.end(), CAccumMode::sFAST);
     
-    enumSet.insert(enumSet.end(), CAccumMode::sALMA_NORMAL);
+    enumSet.insert(enumSet.end(), CAccumMode::sNORMAL);
+    
+    enumSet.insert(enumSet.end(), CAccumMode::sUNDEFINED);
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CAccumMode::hALMA_FAST = "1 ms dump time, available only for autocorrelation";
-	
-const std::string& CAccumMode::hALMA_NORMAL = "16ms dump time, available for both autocorrelation and cross-orrelation";
-	
-const std::vector<std::string> CAccumMode::hAccumModeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CAccumMode::hALMA_FAST);
-    
-    enumSet.insert(enumSet.end(), CAccumMode::hALMA_NORMAL);
-        
-    return enumSet;
-}
-   	
 
 std::string CAccumMode::name(const AccumModeMod::AccumMode& f) {
     switch (f) {
     
-    case AccumModeMod::ALMA_FAST:
-      return CAccumMode::sALMA_FAST;
+    case AccumModeMod::FAST:
+      return CAccumMode::sFAST;
     
-    case AccumModeMod::ALMA_NORMAL:
-      return CAccumMode::sALMA_NORMAL;
+    case AccumModeMod::NORMAL:
+      return CAccumMode::sNORMAL;
+    
+    case AccumModeMod::UNDEFINED:
+      return CAccumMode::sUNDEFINED;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CAccumMode::help(const AccumModeMod::AccumMode& f) {
-    switch (f) {
-    
-    case AccumModeMod::ALMA_FAST:
-      return CAccumMode::hALMA_FAST;
-    
-    case AccumModeMod::ALMA_NORMAL:
-      return CAccumMode::hALMA_NORMAL;
-    	
-    }
-    return std::string("");
-}
-   	
 
 AccumModeMod::AccumMode CAccumMode::newAccumMode(const std::string& name) {
 		
-    if (name == CAccumMode::sALMA_FAST) {
-        return AccumModeMod::ALMA_FAST;
+    if (name == CAccumMode::sFAST) {
+        return AccumModeMod::FAST;
     }
     	
-    if (name == CAccumMode::sALMA_NORMAL) {
-        return AccumModeMod::ALMA_NORMAL;
+    if (name == CAccumMode::sNORMAL) {
+        return AccumModeMod::NORMAL;
+    }
+    	
+    if (name == CAccumMode::sUNDEFINED) {
+        return AccumModeMod::UNDEFINED;
     }
     
     throw badString(name);
@@ -116,24 +105,26 @@ AccumModeMod::AccumMode CAccumMode::newAccumMode(const std::string& name) {
 
 AccumModeMod::AccumMode CAccumMode::literal(const std::string& name) {
 		
-    if (name == CAccumMode::sALMA_FAST) {
-        return AccumModeMod::ALMA_FAST;
+    if (name == CAccumMode::sFAST) {
+        return AccumModeMod::FAST;
     }
     	
-    if (name == CAccumMode::sALMA_NORMAL) {
-        return AccumModeMod::ALMA_NORMAL;
+    if (name == CAccumMode::sNORMAL) {
+        return AccumModeMod::NORMAL;
+    }
+    	
+    if (name == CAccumMode::sUNDEFINED) {
+        return AccumModeMod::UNDEFINED;
     }
     
     throw badString(name);
 }
 
 AccumModeMod::AccumMode CAccumMode::from_int(unsigned int i) {
-	vector<string> names = sAccumModeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newAccumMode(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newAccumMode(names_.at(i));
 }
-
-	
 
 string CAccumMode::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'AccumMode'.";

@@ -78,17 +78,15 @@ using namespace enumerations;
 	
 
 	
+#include "CAtmPhaseCorrection.h"
+using namespace AtmPhaseCorrectionMod;
+	
 
 	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
 	
 
-	
-
-	
-#include "CAtmPhaseCorrection.h"
-using namespace AtmPhaseCorrectionMod;
 	
 
 	
@@ -131,7 +129,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalAmpli.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -149,7 +147,7 @@ class CalReductionRow;
 /**
  * The CalAmpliRow class is a row of a CalAmpliTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class CalAmpliRow {
@@ -176,8 +174,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalAmpliRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalAmpliRowIDL x) throw(ConversionException);
+	void setFromIDL (CalAmpliRowIDL x) ;
 #endif
 	
 	/**
@@ -190,103 +189,27 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalAmpliTable to which the row built by deserialization will be parented.
+	  */
+	 static CalAmpliRow* fromBin(EndianISStream& eiss, CalAmpliTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
-	
-	// ===> Attribute numAPC
-	
-	
-	
-
-	
- 	/**
- 	 * Get numAPC.
- 	 * @return numAPC as int
- 	 */
- 	int getNumAPC() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numAPC with the specified int.
- 	 * @param numAPC The int value to which numAPC is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumAPC (int numAPC);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute numReceptor
-	
-	
-	
-
-	
- 	/**
- 	 * Get numReceptor.
- 	 * @return numReceptor as int
- 	 */
- 	int getNumReceptor() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numReceptor with the specified int.
- 	 * @param numReceptor The int value to which numReceptor is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumReceptor (int numReceptor);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute receiverBand
-	
-	
-	
-
-	
- 	/**
- 	 * Get receiverBand.
- 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
- 	 */
- 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
- 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
-  		
-	
-	
-	
-
-
 	
 	// ===> Attribute antennaName
 	
@@ -320,29 +243,93 @@ public:
 
 
 	
-	// ===> Attribute atmPhaseCorrections
+	// ===> Attribute atmPhaseCorrection
 	
 	
 	
 
 	
  	/**
- 	 * Get atmPhaseCorrections.
- 	 * @return atmPhaseCorrections as vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
  	 */
- 	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > getAtmPhaseCorrections() const;
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection getAtmPhaseCorrection() const;
 	
  
  	
  	
  	/**
- 	 * Set atmPhaseCorrections with the specified vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >.
- 	 * @param atmPhaseCorrections The vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > value to which atmPhaseCorrections is to be set.
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
+ 	 
+ 		
+ 			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute receiverBand
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 */
+ 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 
+ 		
+ 			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numReceptor
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
+ 	 */
+ 	int getNumReceptor() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
  	 
  		
  			
  	 */
- 	void setAtmPhaseCorrections (vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections);
+ 	void setNumReceptor (int numReceptor);
   		
 	
 	
@@ -470,84 +457,62 @@ public:
 
 
 	
-	// ===> Attribute apertureEfficiency, which is optional
+	// ===> Attribute apertureEfficiency
 	
 	
-	
-	/**
-	 * The attribute apertureEfficiency is optional. Return true if this attribute exists.
-	 * @return true if and only if the apertureEfficiency attribute exists. 
-	 */
-	bool isApertureEfficiencyExists() const;
 	
 
 	
  	/**
- 	 * Get apertureEfficiency, which is optional.
- 	 * @return apertureEfficiency as vector<vector<float > >
- 	 * @throws IllegalAccessException If apertureEfficiency does not exist.
+ 	 * Get apertureEfficiency.
+ 	 * @return apertureEfficiency as vector<float >
  	 */
- 	vector<vector<float > > getApertureEfficiency() const throw(IllegalAccessException);
+ 	vector<float > getApertureEfficiency() const;
 	
  
  	
  	
  	/**
- 	 * Set apertureEfficiency with the specified vector<vector<float > >.
- 	 * @param apertureEfficiency The vector<vector<float > > value to which apertureEfficiency is to be set.
+ 	 * Set apertureEfficiency with the specified vector<float >.
+ 	 * @param apertureEfficiency The vector<float > value to which apertureEfficiency is to be set.
  	 
  		
+ 			
  	 */
- 	void setApertureEfficiency (vector<vector<float > > apertureEfficiency);
-		
+ 	void setApertureEfficiency (vector<float > apertureEfficiency);
+  		
 	
 	
-	
-	/**
-	 * Mark apertureEfficiency, which is an optional field, as non-existent.
-	 */
-	void clearApertureEfficiency ();
 	
 
 
 	
-	// ===> Attribute apertureEfficiencyError, which is optional
+	// ===> Attribute apertureEfficiencyError
 	
 	
-	
-	/**
-	 * The attribute apertureEfficiencyError is optional. Return true if this attribute exists.
-	 * @return true if and only if the apertureEfficiencyError attribute exists. 
-	 */
-	bool isApertureEfficiencyErrorExists() const;
 	
 
 	
  	/**
- 	 * Get apertureEfficiencyError, which is optional.
- 	 * @return apertureEfficiencyError as vector<vector<float > >
- 	 * @throws IllegalAccessException If apertureEfficiencyError does not exist.
+ 	 * Get apertureEfficiencyError.
+ 	 * @return apertureEfficiencyError as vector<float >
  	 */
- 	vector<vector<float > > getApertureEfficiencyError() const throw(IllegalAccessException);
+ 	vector<float > getApertureEfficiencyError() const;
 	
  
  	
  	
  	/**
- 	 * Set apertureEfficiencyError with the specified vector<vector<float > >.
- 	 * @param apertureEfficiencyError The vector<vector<float > > value to which apertureEfficiencyError is to be set.
+ 	 * Set apertureEfficiencyError with the specified vector<float >.
+ 	 * @param apertureEfficiencyError The vector<float > value to which apertureEfficiencyError is to be set.
  	 
  		
+ 			
  	 */
- 	void setApertureEfficiencyError (vector<vector<float > > apertureEfficiencyError);
-		
+ 	void setApertureEfficiencyError (vector<float > apertureEfficiencyError);
+  		
 	
 	
-	
-	/**
-	 * Mark apertureEfficiencyError, which is an optional field, as non-existent.
-	 */
-	void clearApertureEfficiencyError ();
 	
 
 
@@ -569,7 +534,7 @@ public:
  	 * @return correctionValidity as bool
  	 * @throws IllegalAccessException If correctionValidity does not exist.
  	 */
- 	bool getCorrectionValidity() const throw(IllegalAccessException);
+ 	bool getCorrectionValidity() const;
 	
  
  	
@@ -701,12 +666,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this CalAmpliRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange);
+	bool compareNoAutoInc(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<float > apertureEfficiency, vector<float > apertureEfficiencyError);
 	
 	
 
 	
-	bool compareRequiredValue(int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange); 
+	bool compareRequiredValue(int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<float > apertureEfficiency, vector<float > apertureEfficiencyError); 
 		 
 	
 	/**
@@ -767,22 +732,22 @@ private:
 	////////////////////////////////
 	
 	
-	// ===> Attribute numAPC
+	// ===> Attribute antennaName
 	
 	
 
-	int numAPC;
+	string antennaName;
 
 	
 	
  	
 
 	
-	// ===> Attribute numReceptor
+	// ===> Attribute atmPhaseCorrection
 	
 	
 
-	int numReceptor;
+	AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection;
 
 	
 	
@@ -800,22 +765,11 @@ private:
  	
 
 	
-	// ===> Attribute antennaName
+	// ===> Attribute numReceptor
 	
 	
 
-	string antennaName;
-
-	
-	
- 	
-
-	
-	// ===> Attribute atmPhaseCorrections
-	
-	
-
-	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections;
+	int numReceptor;
 
 	
 	
@@ -866,26 +820,22 @@ private:
  	
 
 	
-	// ===> Attribute apertureEfficiency, which is optional
+	// ===> Attribute apertureEfficiency
 	
-	
-	bool apertureEfficiencyExists;
 	
 
-	vector<vector<float > > apertureEfficiency;
+	vector<float > apertureEfficiency;
 
 	
 	
  	
 
 	
-	// ===> Attribute apertureEfficiencyError, which is optional
+	// ===> Attribute apertureEfficiencyError
 	
-	
-	bool apertureEfficiencyErrorExists;
 	
 
-	vector<vector<float > > apertureEfficiencyError;
+	vector<float > apertureEfficiencyError;
 
 	
 	

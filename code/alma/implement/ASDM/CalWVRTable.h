@@ -79,14 +79,20 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
-
-	
 #include "CWVRMethod.h"
 using namespace WVRMethodMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -143,113 +149,154 @@ class ASDM;
 class CalWVRRow;
 /**
  * The CalWVRTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Result of the water vapour radiometric  calibration performed by TelCal. 
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalWVR </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaName </TD>
+ 		 
+ * <TD> string</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the name of the antenna. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> antennaName </TD> 
- * <TD> string </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to unique row  in CalReductionTable. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> numPoly </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numChan </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> startValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the end time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> wvrMethod </TD> 
  * <TD> WVRMethodMod::WVRMethod </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the method used for the calibration. </TD>
  * </TR>
 	
  * <TR>
- * <TD> freqLimits </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>  2 </TD> 
+ * <TD> numInputAntennas </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of input antennas (i.e. equiped with functional WVRs). </TD>
  * </TR>
 	
  * <TR>
- * <TD> pathCoeff </TD> 
- * <TD> vector<vector<vector<float > > > </TD>
- * <TD>  numInputAntenna, numChan, numPoly </TD> 
+ * <TD> inputAntennaNames </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numInputAntennas </TD> 
+ * <TD> &nbsp;the names of the input antennas (one string per antenna). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numChan </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of frequency channels in the WVR receiver. </TD>
  * </TR>
 	
  * <TR>
  * <TD> chanFreq </TD> 
  * <TD> vector<Frequency > </TD>
  * <TD>  numChan </TD> 
+ * <TD> &nbsp;the channel frequencies (one value per channel). </TD>
  * </TR>
 	
  * <TR>
  * <TD> chanWidth </TD> 
  * <TD> vector<Frequency > </TD>
  * <TD>  numChan </TD> 
+ * <TD> &nbsp;the widths of the channels (one value per channel). </TD>
  * </TR>
 	
  * <TR>
- * <TD> numInputAntenna </TD> 
+ * <TD> refTemp </TD> 
+ * <TD> vector<vector<Temperature > > </TD>
+ * <TD>  numInputAntennas, numChan </TD> 
+ * <TD> &nbsp;the reference temperatures (one value per input antenna per channel). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numPoly </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of polynomial coefficients. </TD>
  * </TR>
 	
  * <TR>
- * <TD> inputAntennaNames </TD> 
- * <TD> vector<string > </TD>
- * <TD>  numInputAntenna </TD> 
+ * <TD> pathCoeff </TD> 
+ * <TD> vector<vector<vector<float > > > </TD>
+ * <TD>  numInputAntennas, numChan, numPoly </TD> 
+ * <TD> &nbsp;the path length coefficients (one value per input antenna per channel per polynomial coefficient). </TD>
  * </TR>
 	
  * <TR>
  * <TD> polyFreqLimits </TD> 
  * <TD> vector<Frequency > </TD>
  * <TD>  2 </TD> 
+ * <TD> &nbsp;the limits of the interval of frequencies for which the path length coefficients are computed. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> wetPath </TD> 
+ * <TD> vector<float > </TD>
+ * <TD>  numPoly </TD> 
+ * <TD> &nbsp;The wet path as a function frequency (expressed as a polynomial). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> dryPath </TD> 
+ * <TD> vector<float > </TD>
+ * <TD>  numPoly </TD> 
+ * <TD> &nbsp;The dry path as a function frequency (expressed as a polynomial). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> water </TD> 
+ * <TD> Length </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;The precipitable water vapor corresponding to the reference model. </TD>
  * </TR>
 	
 
@@ -325,15 +372,11 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param antennaName. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
-	
- 	 * @param antennaName. 
-	
- 	 * @param numPoly. 
-	
- 	 * @param numChan. 
 	
  	 * @param startValidTime. 
 	
@@ -341,28 +384,38 @@ public:
 	
  	 * @param wvrMethod. 
 	
- 	 * @param freqLimits. 
+ 	 * @param numInputAntennas. 
 	
- 	 * @param pathCoeff. 
+ 	 * @param inputAntennaNames. 
+	
+ 	 * @param numChan. 
 	
  	 * @param chanFreq. 
 	
  	 * @param chanWidth. 
 	
- 	 * @param numInputAntenna. 
+ 	 * @param refTemp. 
 	
- 	 * @param inputAntennaNames. 
+ 	 * @param numPoly. 
+	
+ 	 * @param pathCoeff. 
 	
  	 * @param polyFreqLimits. 
 	
+ 	 * @param wetPath. 
+	
+ 	 * @param dryPath. 
+	
+ 	 * @param water. 
+	
      */
-	CalWVRRow *newRow(Tag calDataId, Tag calReductionId, string antennaName, int numPoly, int numChan, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > freqLimits, vector<vector<vector<float > > > pathCoeff, vector<Frequency > chanFreq, vector<Frequency > chanWidth, int numInputAntenna, vector<string > inputAntennaNames, vector<Frequency > polyFreqLimits);
+	CalWVRRow *newRow(string antennaName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, int numInputAntennas, vector<string > inputAntennaNames, int numChan, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<vector<Temperature > > refTemp, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<Frequency > polyFreqLimits, vector<float > wetPath, vector<float > dryPath, Length water);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalWVRRow *newRowFull(Tag calDataId, Tag calReductionId, string antennaName, int numPoly, int numChan, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > freqLimits, vector<vector<vector<float > > > pathCoeff, vector<Frequency > chanFreq, vector<Frequency > chanWidth, int numInputAntenna, vector<string > inputAntennaNames, vector<Frequency > polyFreqLimits);
+	CalWVRRow *newRowFull(string antennaName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, int numInputAntennas, vector<string > inputAntennaNames, int numChan, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<vector<Temperature > > refTemp, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<Frequency > polyFreqLimits, vector<float > wetPath, vector<float > dryPath, Length water);
 
 
 	/**
@@ -428,15 +481,15 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param antennaName. 
+	
 	 * @param calDataId. 
 	
 	 * @param calReductionId. 
 	
-	 * @param antennaName. 
-	
  	 *
 	 */
- 	CalWVRRow* getRowByKey(Tag calDataId, Tag calReductionId, string antennaName);
+ 	CalWVRRow* getRowByKey(string antennaName, Tag calDataId, Tag calReductionId);
 
  	 	
 
@@ -448,15 +501,11 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
+ 	 * @param antennaName.
+ 	 		
  	 * @param calDataId.
  	 		
  	 * @param calReductionId.
- 	 		
- 	 * @param antennaName.
- 	 		
- 	 * @param numPoly.
- 	 		
- 	 * @param numChan.
  	 		
  	 * @param startValidTime.
  	 		
@@ -464,22 +513,32 @@ public:
  	 		
  	 * @param wvrMethod.
  	 		
- 	 * @param freqLimits.
+ 	 * @param numInputAntennas.
  	 		
- 	 * @param pathCoeff.
+ 	 * @param inputAntennaNames.
+ 	 		
+ 	 * @param numChan.
  	 		
  	 * @param chanFreq.
  	 		
  	 * @param chanWidth.
  	 		
- 	 * @param numInputAntenna.
+ 	 * @param refTemp.
  	 		
- 	 * @param inputAntennaNames.
+ 	 * @param numPoly.
+ 	 		
+ 	 * @param pathCoeff.
  	 		
  	 * @param polyFreqLimits.
+ 	 		
+ 	 * @param wetPath.
+ 	 		
+ 	 * @param dryPath.
+ 	 		
+ 	 * @param water.
  	 		 
  	 */
-	CalWVRRow* lookup(Tag calDataId, Tag calReductionId, string antennaName, int numPoly, int numChan, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > freqLimits, vector<vector<vector<float > > > pathCoeff, vector<Frequency > chanFreq, vector<Frequency > chanWidth, int numInputAntenna, vector<string > inputAntennaNames, vector<Frequency > polyFreqLimits); 
+	CalWVRRow* lookup(string antennaName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, int numInputAntennas, vector<string > inputAntennaNames, int numChan, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<vector<Temperature > > refTemp, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<Frequency > polyFreqLimits, vector<float > wetPath, vector<float > dryPath, Length water); 
 
 
 #ifndef WITHOUT_ACS
@@ -499,43 +558,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalWVRTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalWVRTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalWVR (CalWVRTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalWVR (CalWVRTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -610,8 +675,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalWVRRow* checkAndAdd(CalWVRRow* x) throw (DuplicateKey);
+	CalWVRRow* checkAndAdd(CalWVRRow* x) ;
 
 
 
@@ -625,7 +692,7 @@ private:
 	vector<CalWVRRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

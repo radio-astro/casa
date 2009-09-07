@@ -42,14 +42,26 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the AssociatedCalNature enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace AssociatedCalNatureMod
 {
+  //! AssociatedCalNature.
+  //! These are the associated calibration natures
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum AssociatedCalNature
   { 
-    ASSOCIATED_EXECBLOCK 
+    ASSOCIATED_EXECBLOCK /*!< The associated execblock id concatenated to produce the data set */
+     
   };
   typedef AssociatedCalNature &AssociatedCalNature_out;
 } 
@@ -57,60 +69,89 @@ namespace AssociatedCalNatureMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration AssociatedCalNature.
+  * 
+  */
 class CAssociatedCalNature {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the AssociatedCalNature enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sASSOCIATED_EXECBLOCK;
-	
-    static const std::vector<std::string> sAssociatedCalNatureSet();	 
-
+	static const std::string& sASSOCIATED_EXECBLOCK; /*!< A const string equal to "ASSOCIATED_EXECBLOCK".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in AssociatedCalNatureMod::AssociatedCalNature.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of AssociatedCalNatureMod::AssociatedCalNature.
+      * @return a string.
+      */
+	static std::string name(const AssociatedCalNatureMod::AssociatedCalNature& e);
 	
-	// Explanations associated with the AssociatedCalNature Enumeration.
-		
-	static const std::string& hASSOCIATED_EXECBLOCK;
-		
-	static const std::vector<std::string> hAssociatedCalNatureSet();
-   	
-
-   	// Is an integer number associated with the AssociatedCalNature enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the AssociatedCalNature enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  AssociatedCalNature enumeration.
-	static std::string name(const AssociatedCalNatureMod::AssociatedCalNature& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const AssociatedCalNatureMod::AssociatedCalNature& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified AssociatedCalNature enumeration.
-	static std::string help(const AssociatedCalNatureMod::AssociatedCalNature& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a AssociatedCalNature enumeration object by specifying its name.
    	static AssociatedCalNatureMod::AssociatedCalNature newAssociatedCalNature(const std::string& name);
    	
-   	// Create a AssociatedCalNature enumeration object by specifying its name.
+   	/*! Return a AssociatedCalNature's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a AssociatedCalNatureMod::AssociatedCalNature's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static AssociatedCalNatureMod::AssociatedCalNature literal(const std::string& name);
  	
-    // Create a AssociatedCalNature enumeration object by specifying its position index (0 based).
+    /*! Return a AssociatedCalNature's enumerator given an unsigned int.
+      * @param i the index of the enumerator in AssociatedCalNatureMod::AssociatedCalNature.
+      * @return a AssociatedCalNatureMod::AssociatedCalNature's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static AssociatedCalNatureMod::AssociatedCalNature from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CAssociatedCalNature();
     CAssociatedCalNature(const CAssociatedCalNature&);
     CAssociatedCalNature& operator=(const CAssociatedCalNature&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CAssociatedCalNature_H*/

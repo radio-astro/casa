@@ -88,7 +88,7 @@ namespace asdm {
 		
 		
 			
-		x->almaCorrelatorModeId = almaCorrelatorModeId.toIDLTag();
+		x->correlatorModeId = correlatorModeId.toIDLTag();
 			
 		
 	
@@ -168,6 +168,18 @@ namespace asdm {
 		
 		
 			
+				
+		x->numAxes = numAxes;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
 		x->axesOrderArray.length(axesOrderArray.size());
 		for (unsigned int i = 0; i < axesOrderArray.size(); ++i) {
 			
@@ -224,7 +236,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CorrelatorModeRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CorrelatorModeRow::setFromIDL (CorrelatorModeRowIDL x) throw(ConversionException) {
+	void CorrelatorModeRow::setFromIDL (CorrelatorModeRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -233,7 +245,7 @@ namespace asdm {
 		
 		
 			
-		setAlmaCorrelatorModeId(Tag (x.almaCorrelatorModeId));
+		setCorrelatorModeId(Tag (x.correlatorModeId));
 			
  		
 		
@@ -303,6 +315,16 @@ namespace asdm {
 		
 		
 			
+		setNumAxes(x.numAxes);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
 		axesOrderArray .clear();
 		for (unsigned int i = 0; i <x.axesOrderArray.length(); ++i) {
 			
@@ -343,7 +365,7 @@ namespace asdm {
 	
 		
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CorrelatorMode");
+			throw ConversionException (err.getMessage(),"CorrelatorMode");
 		}
 	}
 #endif
@@ -361,7 +383,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(almaCorrelatorModeId, "almaCorrelatorModeId", buf);
+		Parser::toXML(correlatorModeId, "correlatorModeId", buf);
 		
 		
 	
@@ -409,6 +431,14 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(numAxes, "numAxes", buf);
+		
+		
+	
+
+  	
+ 		
+		
 			buf.append(EnumerationParser::toXML("axesOrderArray", axesOrderArray));
 		
 		
@@ -443,7 +473,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CorrelatorModeRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CorrelatorModeRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -452,7 +482,7 @@ namespace asdm {
 	
   		
 			
-	  	setAlmaCorrelatorModeId(Parser::getTag("almaCorrelatorModeId","CorrelatorMode",rowDoc));
+	  	setCorrelatorModeId(Parser::getTag("correlatorModeId","CorrelatorMode",rowDoc));
 			
 		
 	
@@ -504,6 +534,14 @@ namespace asdm {
 	
 
 	
+  		
+			
+	  	setNumAxes(Parser::getInteger("numAxes","CorrelatorMode",rowDoc));
+			
+		
+	
+
+	
 		
 		
 		
@@ -541,6 +579,258 @@ namespace asdm {
 		}
 	}
 	
+	void CorrelatorModeRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	correlatorModeId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numBaseband);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) basebandNames.size());
+		for (unsigned int i = 0; i < basebandNames.size(); i++)
+				
+			eoss.writeInt(basebandNames.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) basebandConfig.size());
+		for (unsigned int i = 0; i < basebandConfig.size(); i++)
+				
+			eoss.writeInt(basebandConfig.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(accumMode);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(binMode);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numAxes);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) axesOrderArray.size());
+		for (unsigned int i = 0; i < axesOrderArray.size(); i++)
+				
+			eoss.writeInt(axesOrderArray.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) filterMode.size());
+		for (unsigned int i = 0; i < filterMode.size(); i++)
+				
+			eoss.writeInt(filterMode.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(correlatorName);
+				
+		
+	
+
+
+	
+	
+	}
+	
+	CorrelatorModeRow* CorrelatorModeRow::fromBin(EndianISStream& eiss, CorrelatorModeTable& table) {
+		CorrelatorModeRow* row = new  CorrelatorModeRow(table);
+		
+		
+		
+	
+		
+		
+		row->correlatorModeId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numBaseband =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->basebandNames.clear();
+		
+		unsigned int basebandNamesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < basebandNamesDim1; i++)
+			
+			row->basebandNames.push_back(CBasebandName::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->basebandConfig.clear();
+		
+		unsigned int basebandConfigDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < basebandConfigDim1; i++)
+			
+			row->basebandConfig.push_back(eiss.readInt());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->accumMode = CAccumMode::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->binMode =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numAxes =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->axesOrderArray.clear();
+		
+		unsigned int axesOrderArrayDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < axesOrderArrayDim1; i++)
+			
+			row->axesOrderArray.push_back(CAxisName::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->filterMode.clear();
+		
+		unsigned int filterModeDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < filterModeDim1; i++)
+			
+			row->filterMode.push_back(CFilterMode::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->correlatorName = CCorrelatorName::from_int(eiss.readInt());
+			
+		
+	
+
+		
+		
+		
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
@@ -549,33 +839,33 @@ namespace asdm {
 
 	
  	/**
- 	 * Get almaCorrelatorModeId.
- 	 * @return almaCorrelatorModeId as Tag
+ 	 * Get correlatorModeId.
+ 	 * @return correlatorModeId as Tag
  	 */
- 	Tag CorrelatorModeRow::getAlmaCorrelatorModeId() const {
+ 	Tag CorrelatorModeRow::getCorrelatorModeId() const {
 	
-  		return almaCorrelatorModeId;
+  		return correlatorModeId;
  	}
 
  	/**
- 	 * Set almaCorrelatorModeId with the specified Tag.
- 	 * @param almaCorrelatorModeId The Tag value to which almaCorrelatorModeId is to be set.
+ 	 * Set correlatorModeId with the specified Tag.
+ 	 * @param correlatorModeId The Tag value to which correlatorModeId is to be set.
  	 
  	
  		
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
  	 	
  	 */
- 	void CorrelatorModeRow::setAlmaCorrelatorModeId (Tag almaCorrelatorModeId)  {
+ 	void CorrelatorModeRow::setCorrelatorModeId (Tag correlatorModeId)  {
   	
   	
   		if (hasBeenAdded) {
  		
-			throw IllegalAccessException("almaCorrelatorModeId", "CorrelatorMode");
+			throw IllegalAccessException("correlatorModeId", "CorrelatorMode");
 		
   		}
   	
- 		this->almaCorrelatorModeId = almaCorrelatorModeId;
+ 		this->correlatorModeId = correlatorModeId;
 	
  	}
 	
@@ -745,6 +1035,38 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get numAxes.
+ 	 * @return numAxes as int
+ 	 */
+ 	int CorrelatorModeRow::getNumAxes() const {
+	
+  		return numAxes;
+ 	}
+
+ 	/**
+ 	 * Set numAxes with the specified int.
+ 	 * @param numAxes The int value to which numAxes is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CorrelatorModeRow::setNumAxes (int numAxes)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numAxes = numAxes;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get axesOrderArray.
  	 * @return axesOrderArray as vector<AxisNameMod::AxisName >
  	 */
@@ -878,6 +1200,8 @@ namespace asdm {
 	
 
 	
+
+	
 	
 	
 	
@@ -892,6 +1216,8 @@ namespace asdm {
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 accumMode = CAccumMode::from_int(0);
+	
+
 	
 
 	
@@ -931,12 +1257,14 @@ correlatorName = CCorrelatorName::from_int(0);
 
 	
 
+	
+
 			
 		}
 		else {
 	
 		
-			almaCorrelatorModeId = row.almaCorrelatorModeId;
+			correlatorModeId = row.correlatorModeId;
 		
 		
 		
@@ -951,6 +1279,8 @@ correlatorName = CCorrelatorName::from_int(0);
 		
 			binMode = row.binMode;
 		
+			numAxes = row.numAxes;
+		
 			axesOrderArray = row.axesOrderArray;
 		
 			filterMode = row.filterMode;
@@ -964,7 +1294,7 @@ correlatorName = CCorrelatorName::from_int(0);
 	}
 
 	
-	bool CorrelatorModeRow::compareNoAutoInc(int numBaseband, vector<BasebandNameMod::BasebandName > basebandNames, vector<int > basebandConfig, AccumModeMod::AccumMode accumMode, int binMode, vector<AxisNameMod::AxisName > axesOrderArray, vector<FilterModeMod::FilterMode > filterMode, CorrelatorNameMod::CorrelatorName correlatorName) {
+	bool CorrelatorModeRow::compareNoAutoInc(int numBaseband, vector<BasebandNameMod::BasebandName > basebandNames, vector<int > basebandConfig, AccumModeMod::AccumMode accumMode, int binMode, int numAxes, vector<AxisNameMod::AxisName > axesOrderArray, vector<FilterModeMod::FilterMode > filterMode, CorrelatorNameMod::CorrelatorName correlatorName) {
 		bool result;
 		result = true;
 		
@@ -1005,6 +1335,13 @@ correlatorName = CCorrelatorName::from_int(0);
 
 	
 		
+		result = result && (this->numAxes == numAxes);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->axesOrderArray == axesOrderArray);
 		
 		if (!result) return false;
@@ -1029,7 +1366,7 @@ correlatorName = CCorrelatorName::from_int(0);
 	
 	
 	
-	bool CorrelatorModeRow::compareRequiredValue(int numBaseband, vector<BasebandNameMod::BasebandName > basebandNames, vector<int > basebandConfig, AccumModeMod::AccumMode accumMode, int binMode, vector<AxisNameMod::AxisName > axesOrderArray, vector<FilterModeMod::FilterMode > filterMode, CorrelatorNameMod::CorrelatorName correlatorName) {
+	bool CorrelatorModeRow::compareRequiredValue(int numBaseband, vector<BasebandNameMod::BasebandName > basebandNames, vector<int > basebandConfig, AccumModeMod::AccumMode accumMode, int binMode, int numAxes, vector<AxisNameMod::AxisName > axesOrderArray, vector<FilterModeMod::FilterMode > filterMode, CorrelatorNameMod::CorrelatorName correlatorName) {
 		bool result;
 		result = true;
 		
@@ -1051,6 +1388,10 @@ correlatorName = CCorrelatorName::from_int(0);
 
 	
 		if (!(this->binMode == binMode)) return false;
+	
+
+	
+		if (!(this->numAxes == numAxes)) return false;
 	
 
 	
@@ -1089,6 +1430,8 @@ correlatorName = CCorrelatorName::from_int(0);
 		if (this->accumMode != x->accumMode) return false;
 			
 		if (this->binMode != x->binMode) return false;
+			
+		if (this->numAxes != x->numAxes) return false;
 			
 		if (this->axesOrderArray != x->axesOrderArray) return false;
 			

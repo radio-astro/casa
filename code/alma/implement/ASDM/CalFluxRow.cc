@@ -112,8 +112,28 @@ namespace asdm {
 		
 		
 			
+		x->startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
 				
-		x->numFrequency = numFrequency;
+		x->numFrequencyRanges = numFrequencyRanges;
  				
  			
 		
@@ -136,7 +156,17 @@ namespace asdm {
 		
 		
 			
-		x->startValidTime = startValidTime.toIDLArrayTime();
+		x->frequencyRanges.length(frequencyRanges.size());
+		for (unsigned int i = 0; i < frequencyRanges.size(); i++) {
+			x->frequencyRanges[i].length(frequencyRanges.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < frequencyRanges.size() ; i++)
+			for (unsigned int j = 0; j < frequencyRanges.at(i).size(); j++)
+					
+				x->frequencyRanges[i][j]= frequencyRanges.at(i).at(j).toIDLFrequency();
+									
+		
 			
 		
 	
@@ -145,26 +175,11 @@ namespace asdm {
   		
 		
 		
-			
-		x->endValidTime = endValidTime.toIDLArrayTime();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->stokes.length(stokes.size());
-		for (unsigned int i = 0; i < stokes.size(); ++i) {
 			
 				
-			x->stokes[i] = stokes.at(i);
-	 			
-	 		
-	 	}
-			
+		x->fluxMethod = fluxMethod;
+ 				
+ 			
 		
 	
 
@@ -207,6 +222,110 @@ namespace asdm {
 				x->fluxError[i][j] = fluxError.at(i).at(j);
 		 				
 			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->stokes.length(stokes.size());
+		for (unsigned int i = 0; i < stokes.size(); ++i) {
+			
+				
+			x->stokes[i] = stokes.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->directionExists = directionExists;
+		
+		
+			
+		x->direction.length(direction.size());
+		for (unsigned int i = 0; i < direction.size(); ++i) {
+			
+			x->direction[i] = direction.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->directionCodeExists = directionCodeExists;
+		
+		
+			
+				
+		x->directionCode = directionCode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->directionEquinoxExists = directionEquinoxExists;
+		
+		
+			
+		x->directionEquinox = directionEquinox.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		x->PAExists = PAExists;
+		
+		
+			
+		x->PA.length(PA.size());
+		for (unsigned int i = 0; i < PA.size(); i++) {
+			x->PA[i].length(PA.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < PA.size() ; i++)
+			for (unsigned int j = 0; j < PA.at(i).size(); j++)
+					
+				x->PA[i][j]= PA.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x->PAErrorExists = PAErrorExists;
+		
+		
+			
+		x->PAError.length(PAError.size());
+		for (unsigned int i = 0; i < PAError.size(); i++) {
+			x->PAError[i].length(PAError.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < PAError.size() ; i++)
+			for (unsigned int j = 0; j < PAError.at(i).size(); j++)
+					
+				x->PAError[i][j]= PAError.at(i).at(j).toIDLAngle();
+									
 		
 			
 		
@@ -265,79 +384,6 @@ namespace asdm {
 	
   		
 		
-		x->PAExists = PAExists;
-		
-		
-			
-		x->PA.length(PA.size());
-		for (unsigned int i = 0; i < PA.size(); i++) {
-			x->PA[i].length(PA.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < PA.size() ; i++)
-			for (unsigned int j = 0; j < PA.at(i).size(); j++)
-					
-				x->PA[i][j]= PA.at(i).at(j).toIDLAngle();
-									
-		
-			
-		
-	
-
-	
-  		
-		
-		x->PAErrorExists = PAErrorExists;
-		
-		
-			
-		x->PAError.length(PAError.size());
-		for (unsigned int i = 0; i < PAError.size(); i++) {
-			x->PAError[i].length(PAError.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < PAError.size() ; i++)
-			for (unsigned int j = 0; j < PAError.at(i).size(); j++)
-					
-				x->PAError[i][j]= PAError.at(i).at(j).toIDLAngle();
-									
-		
-			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->fluxMethod = fluxMethod;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->directionExists = directionExists;
-		
-		
-			
-		x->direction.length(direction.size());
-		for (unsigned int i = 0; i < direction.size(); ++i) {
-			
-			x->direction[i] = direction.at(i).toIDLAngle();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
 		x->sourceModelExists = sourceModelExists;
 		
 		
@@ -346,21 +392,6 @@ namespace asdm {
 		x->sourceModel = sourceModel;
  				
  			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->frequencyRange.length(frequencyRange.size());
-		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
-			
-			x->frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
-			
-	 	}
-			
 		
 	
 
@@ -407,7 +438,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalFluxRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalFluxRow::setFromIDL (CalFluxRowIDL x) throw(ConversionException) {
+	void CalFluxRow::setFromIDL (CalFluxRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -418,26 +449,6 @@ namespace asdm {
 			
 		setSourceName(string (x.sourceName));
 			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumFrequency(x.numFrequency);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumStokes(x.numStokes);
-  			
  		
 		
 	
@@ -466,14 +477,49 @@ namespace asdm {
 		
 		
 			
-		stokes .clear();
-		for (unsigned int i = 0; i <x.stokes.length(); ++i) {
-			
-			stokes.push_back(x.stokes[i]);
+		setNumFrequencyRanges(x.numFrequencyRanges);
   			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumStokes(x.numStokes);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		frequencyRanges .clear();
+		vector<Frequency> v_aux_frequencyRanges;
+		for (unsigned int i = 0; i < x.frequencyRanges.length(); ++i) {
+			v_aux_frequencyRanges.clear();
+			for (unsigned int j = 0; j < x.frequencyRanges[0].length(); ++j) {
+				
+				v_aux_frequencyRanges.push_back(Frequency (x.frequencyRanges[i][j]));
+				
+  			}
+  			frequencyRanges.push_back(v_aux_frequencyRanges);			
 		}
 			
   		
+		
+	
+
+	
+		
+		
+			
+		setFluxMethod(x.fluxMethod);
+  			
+ 		
 		
 	
 
@@ -514,6 +560,121 @@ namespace asdm {
 		}
 			
   		
+		
+	
+
+	
+		
+		
+			
+		stokes .clear();
+		for (unsigned int i = 0; i <x.stokes.length(); ++i) {
+			
+			stokes.push_back(x.stokes[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		directionExists = x.directionExists;
+		if (x.directionExists) {
+		
+		
+			
+		direction .clear();
+		for (unsigned int i = 0; i <x.direction.length(); ++i) {
+			
+			direction.push_back(Angle (x.direction[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		directionCodeExists = x.directionCodeExists;
+		if (x.directionCodeExists) {
+		
+		
+			
+		setDirectionCode(x.directionCode);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		directionEquinoxExists = x.directionEquinoxExists;
+		if (x.directionEquinoxExists) {
+		
+		
+			
+		setDirectionEquinox(Angle (x.directionEquinox));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		PAExists = x.PAExists;
+		if (x.PAExists) {
+		
+		
+			
+		PA .clear();
+		vector<Angle> v_aux_PA;
+		for (unsigned int i = 0; i < x.PA.length(); ++i) {
+			v_aux_PA.clear();
+			for (unsigned int j = 0; j < x.PA[0].length(); ++j) {
+				
+				v_aux_PA.push_back(Angle (x.PA[i][j]));
+				
+  			}
+  			PA.push_back(v_aux_PA);			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		PAErrorExists = x.PAErrorExists;
+		if (x.PAErrorExists) {
+		
+		
+			
+		PAError .clear();
+		vector<Angle> v_aux_PAError;
+		for (unsigned int i = 0; i < x.PAError.length(); ++i) {
+			v_aux_PAError.clear();
+			for (unsigned int j = 0; j < x.PAError[0].length(); ++j) {
+				
+				v_aux_PAError.push_back(Angle (x.PAError[i][j]));
+				
+  			}
+  			PAError.push_back(v_aux_PAError);			
+		}
+			
+  		
+		
+		}
 		
 	
 
@@ -581,86 +742,6 @@ namespace asdm {
 
 	
 		
-		PAExists = x.PAExists;
-		if (x.PAExists) {
-		
-		
-			
-		PA .clear();
-		vector<Angle> v_aux_PA;
-		for (unsigned int i = 0; i < x.PA.length(); ++i) {
-			v_aux_PA.clear();
-			for (unsigned int j = 0; j < x.PA[0].length(); ++j) {
-				
-				v_aux_PA.push_back(Angle (x.PA[i][j]));
-				
-  			}
-  			PA.push_back(v_aux_PA);			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		PAErrorExists = x.PAErrorExists;
-		if (x.PAErrorExists) {
-		
-		
-			
-		PAError .clear();
-		vector<Angle> v_aux_PAError;
-		for (unsigned int i = 0; i < x.PAError.length(); ++i) {
-			v_aux_PAError.clear();
-			for (unsigned int j = 0; j < x.PAError[0].length(); ++j) {
-				
-				v_aux_PAError.push_back(Angle (x.PAError[i][j]));
-				
-  			}
-  			PAError.push_back(v_aux_PAError);			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		
-			
-		setFluxMethod(x.fluxMethod);
-  			
- 		
-		
-	
-
-	
-		
-		directionExists = x.directionExists;
-		if (x.directionExists) {
-		
-		
-			
-		direction .clear();
-		for (unsigned int i = 0; i <x.direction.length(); ++i) {
-			
-			direction.push_back(Angle (x.direction[i]));
-			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
 		sourceModelExists = x.sourceModelExists;
 		if (x.sourceModelExists) {
 		
@@ -671,21 +752,6 @@ namespace asdm {
  		
 		
 		}
-		
-	
-
-	
-		
-		
-			
-		frequencyRange .clear();
-		for (unsigned int i = 0; i <x.frequencyRange.length(); ++i) {
-			
-			frequencyRange.push_back(Frequency (x.frequencyRange[i]));
-			
-		}
-			
-  		
 		
 	
 
@@ -719,7 +785,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalFlux");
+			throw ConversionException (err.getMessage(),"CalFlux");
 		}
 	}
 #endif
@@ -745,22 +811,6 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numFrequency, "numFrequency", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numStokes, "numStokes", buf);
-		
-		
-	
-
-  	
- 		
-		
 		Parser::toXML(startValidTime, "startValidTime", buf);
 		
 		
@@ -777,7 +827,31 @@ namespace asdm {
   	
  		
 		
-			buf.append(EnumerationParser::toXML("stokes", stokes));
+		Parser::toXML(numFrequencyRanges, "numFrequencyRanges", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numStokes, "numStokes", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(frequencyRanges, "frequencyRanges", buf);
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("fluxMethod", fluxMethod));
 		
 		
 	
@@ -800,10 +874,18 @@ namespace asdm {
 
   	
  		
-		if (sizeExists) {
+		
+			buf.append(EnumerationParser::toXML("stokes", stokes));
 		
 		
-		Parser::toXML(size, "size", buf);
+	
+
+  	
+ 		
+		if (directionExists) {
+		
+		
+		Parser::toXML(direction, "direction", buf);
 		
 		
 		}
@@ -812,10 +894,22 @@ namespace asdm {
 
   	
  		
-		if (sizeErrorExists) {
+		if (directionCodeExists) {
 		
 		
-		Parser::toXML(sizeError, "sizeError", buf);
+			buf.append(EnumerationParser::toXML("directionCode", directionCode));
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (directionEquinoxExists) {
+		
+		
+		Parser::toXML(directionEquinox, "directionEquinox", buf);
 		
 		
 		}
@@ -848,18 +942,22 @@ namespace asdm {
 
   	
  		
+		if (sizeExists) {
 		
-			buf.append(EnumerationParser::toXML("fluxMethod", fluxMethod));
 		
+		Parser::toXML(size, "size", buf);
+		
+		
+		}
 		
 	
 
   	
  		
-		if (directionExists) {
+		if (sizeErrorExists) {
 		
 		
-		Parser::toXML(direction, "direction", buf);
+		Parser::toXML(sizeError, "sizeError", buf);
 		
 		
 		}
@@ -875,14 +973,6 @@ namespace asdm {
 		
 		
 		}
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(frequencyRange, "frequencyRange", buf);
-		
 		
 	
 
@@ -921,7 +1011,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalFluxRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalFluxRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -931,22 +1021,6 @@ namespace asdm {
   		
 			
 	  	setSourceName(Parser::getString("sourceName","CalFlux",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setNumFrequency(Parser::getInteger("numFrequency","CalFlux",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setNumStokes(Parser::getInteger("numStokes","CalFlux",rowDoc));
 			
 		
 	
@@ -968,10 +1042,36 @@ namespace asdm {
 	
 
 	
+  		
+			
+	  	setNumFrequencyRanges(Parser::getInteger("numFrequencyRanges","CalFlux",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setNumStokes(Parser::getInteger("numStokes","CalFlux",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+					
+	  	setFrequencyRanges(Parser::get2DFrequency("frequencyRanges","CalFlux",rowDoc));
+	  			
+	  		
+		
+	
+
+	
 		
 		
 		
-		stokes = EnumerationParser::getStokesParameter1D("stokes","CalFlux",rowDoc);			
+		fluxMethod = EnumerationParser::getFluxCalibrationMethod("fluxMethod","CalFlux",rowDoc);
 		
 		
 		
@@ -998,11 +1098,21 @@ namespace asdm {
 	
 
 	
+		
+		
+		
+		stokes = EnumerationParser::getStokesParameter1D("stokes","CalFlux",rowDoc);			
+		
+		
+		
+	
+
+	
   		
-        if (row.isStr("<size>")) {
+        if (row.isStr("<direction>")) {
 			
 								
-	  		setSize(Parser::get3DAngle("size","CalFlux",rowDoc));
+	  		setDirection(Parser::get1DAngle("direction","CalFlux",rowDoc));
 	  			
 	  		
 		}
@@ -1010,13 +1120,26 @@ namespace asdm {
 	
 
 	
+		
+	if (row.isStr("<directionCode>")) {
+		
+		
+		
+		directionCode = EnumerationParser::getDirectionReferenceCode("directionCode","CalFlux",rowDoc);
+		
+		
+		
+		directionCodeExists = true;
+	}
+		
+	
+
+	
   		
-        if (row.isStr("<sizeError>")) {
+        if (row.isStr("<directionEquinox>")) {
 			
-								
-	  		setSizeError(Parser::get3DAngle("sizeError","CalFlux",rowDoc));
-	  			
-	  		
+	  		setDirectionEquinox(Parser::getAngle("directionEquinox","CalFlux",rowDoc));
+			
 		}
  		
 	
@@ -1046,21 +1169,23 @@ namespace asdm {
 	
 
 	
-		
-		
-		
-		fluxMethod = EnumerationParser::getFluxCalibrationMethod("fluxMethod","CalFlux",rowDoc);
-		
-		
-		
+  		
+        if (row.isStr("<size>")) {
+			
+								
+	  		setSize(Parser::get3DAngle("size","CalFlux",rowDoc));
+	  			
+	  		
+		}
+ 		
 	
 
 	
   		
-        if (row.isStr("<direction>")) {
+        if (row.isStr("<sizeError>")) {
 			
 								
-	  		setDirection(Parser::get1DAngle("direction","CalFlux",rowDoc));
+	  		setSizeError(Parser::get3DAngle("sizeError","CalFlux",rowDoc));
 	  			
 	  		
 		}
@@ -1079,16 +1204,6 @@ namespace asdm {
 		
 		sourceModelExists = true;
 	}
-		
-	
-
-	
-  		
-			
-					
-	  	setFrequencyRange(Parser::get1DFrequency("frequencyRange","CalFlux",rowDoc));
-	  			
-	  		
 		
 	
 
@@ -1120,6 +1235,506 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"CalFlux");
 		}
+	}
+	
+	void CalFluxRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+						
+			eoss.writeString(sourceName);
+				
+		
+	
+
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numFrequencyRanges);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numStokes);
+				
+		
+	
+
+	
+	
+		
+	Frequency::toBin(frequencyRanges, eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(fluxMethod);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) flux.size());
+		eoss.writeInt((int) flux.at(0).size());
+		for (unsigned int i = 0; i < flux.size(); i++) 
+			for (unsigned int j = 0;  j < flux.at(0).size(); j++) 
+							 
+				eoss.writeDouble(flux.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) fluxError.size());
+		eoss.writeInt((int) fluxError.at(0).size());
+		for (unsigned int i = 0; i < fluxError.size(); i++) 
+			for (unsigned int j = 0;  j < fluxError.at(0).size(); j++) 
+							 
+				eoss.writeDouble(fluxError.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) stokes.size());
+		for (unsigned int i = 0; i < stokes.size(); i++)
+				
+			eoss.writeInt(stokes.at(i));
+				
+				
+						
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(directionExists);
+	if (directionExists) {
+	
+	
+	
+		
+	Angle::toBin(direction, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(directionCodeExists);
+	if (directionCodeExists) {
+	
+	
+	
+		
+					
+			eoss.writeInt(directionCode);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(directionEquinoxExists);
+	if (directionEquinoxExists) {
+	
+	
+	
+		
+	directionEquinox.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(PAExists);
+	if (PAExists) {
+	
+	
+	
+		
+	Angle::toBin(PA, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(PAErrorExists);
+	if (PAErrorExists) {
+	
+	
+	
+		
+	Angle::toBin(PAError, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(sizeExists);
+	if (sizeExists) {
+	
+	
+	
+		
+	Angle::toBin(size, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(sizeErrorExists);
+	if (sizeErrorExists) {
+	
+	
+	
+		
+	Angle::toBin(sizeError, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(sourceModelExists);
+	if (sourceModelExists) {
+	
+	
+	
+		
+					
+			eoss.writeInt(sourceModel);
+				
+		
+	
+
+	}
+
+	}
+	
+	CalFluxRow* CalFluxRow::fromBin(EndianISStream& eiss, CalFluxTable& table) {
+		CalFluxRow* row = new  CalFluxRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->sourceName =  eiss.readString();
+			
+		
+	
+
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numFrequencyRanges =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numStokes =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->frequencyRanges = Frequency::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->fluxMethod = CFluxCalibrationMethod::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->flux.clear();
+		
+		unsigned int fluxDim1 = eiss.readInt();
+		unsigned int fluxDim2 = eiss.readInt();
+		vector <double> fluxAux1;
+		for (unsigned int i = 0; i < fluxDim1; i++) {
+			fluxAux1.clear();
+			for (unsigned int j = 0; j < fluxDim2 ; j++)			
+			
+			fluxAux1.push_back(eiss.readDouble());
+			
+			row->flux.push_back(fluxAux1);
+		}
+	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->fluxError.clear();
+		
+		unsigned int fluxErrorDim1 = eiss.readInt();
+		unsigned int fluxErrorDim2 = eiss.readInt();
+		vector <double> fluxErrorAux1;
+		for (unsigned int i = 0; i < fluxErrorDim1; i++) {
+			fluxErrorAux1.clear();
+			for (unsigned int j = 0; j < fluxErrorDim2 ; j++)			
+			
+			fluxErrorAux1.push_back(eiss.readDouble());
+			
+			row->fluxError.push_back(fluxErrorAux1);
+		}
+	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->stokes.clear();
+		
+		unsigned int stokesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < stokesDim1; i++)
+			
+			row->stokes.push_back(CStokesParameter::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+		
+		
+		
+	row->directionExists = eiss.readBoolean();
+	if (row->directionExists) {
+		
+	
+		
+		
+			
+	
+	row->direction = Angle::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->directionCodeExists = eiss.readBoolean();
+	if (row->directionCodeExists) {
+		
+	
+	
+		
+			
+		row->directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
+			
+		
+	
+
+	}
+
+	row->directionEquinoxExists = eiss.readBoolean();
+	if (row->directionEquinoxExists) {
+		
+	
+		
+		
+		row->directionEquinox =  Angle::fromBin(eiss);
+		
+	
+
+	}
+
+	row->PAExists = eiss.readBoolean();
+	if (row->PAExists) {
+		
+	
+		
+		
+			
+	
+	row->PA = Angle::from2DBin(eiss);		
+	
+
+		
+	
+
+	}
+
+	row->PAErrorExists = eiss.readBoolean();
+	if (row->PAErrorExists) {
+		
+	
+		
+		
+			
+	
+	row->PAError = Angle::from2DBin(eiss);		
+	
+
+		
+	
+
+	}
+
+	row->sizeExists = eiss.readBoolean();
+	if (row->sizeExists) {
+		
+	
+		
+		
+			
+	
+	row->size = Angle::from3DBin(eiss);		
+	
+
+		
+	
+
+	}
+
+	row->sizeErrorExists = eiss.readBoolean();
+	if (row->sizeErrorExists) {
+		
+	
+		
+		
+			
+	
+	row->sizeError = Angle::from3DBin(eiss);		
+	
+
+		
+	
+
+	}
+
+	row->sourceModelExists = eiss.readBoolean();
+	if (row->sourceModelExists) {
+		
+	
+	
+		
+			
+		row->sourceModel = CSourceModel::from_int(eiss.readInt());
+			
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -1157,70 +1772,6 @@ namespace asdm {
   		}
   	
  		this->sourceName = sourceName;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numFrequency.
- 	 * @return numFrequency as int
- 	 */
- 	int CalFluxRow::getNumFrequency() const {
-	
-  		return numFrequency;
- 	}
-
- 	/**
- 	 * Set numFrequency with the specified int.
- 	 * @param numFrequency The int value to which numFrequency is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalFluxRow::setNumFrequency (int numFrequency)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numFrequency = numFrequency;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numStokes.
- 	 * @return numStokes as int
- 	 */
- 	int CalFluxRow::getNumStokes() const {
-	
-  		return numStokes;
- 	}
-
- 	/**
- 	 * Set numStokes with the specified int.
- 	 * @param numStokes The int value to which numStokes is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalFluxRow::setNumStokes (int numStokes)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numStokes = numStokes;
 	
  	}
 	
@@ -1294,29 +1845,125 @@ namespace asdm {
 
 	
  	/**
- 	 * Get stokes.
- 	 * @return stokes as vector<StokesParameterMod::StokesParameter >
+ 	 * Get numFrequencyRanges.
+ 	 * @return numFrequencyRanges as int
  	 */
- 	vector<StokesParameterMod::StokesParameter > CalFluxRow::getStokes() const {
+ 	int CalFluxRow::getNumFrequencyRanges() const {
 	
-  		return stokes;
+  		return numFrequencyRanges;
  	}
 
  	/**
- 	 * Set stokes with the specified vector<StokesParameterMod::StokesParameter >.
- 	 * @param stokes The vector<StokesParameterMod::StokesParameter > value to which stokes is to be set.
+ 	 * Set numFrequencyRanges with the specified int.
+ 	 * @param numFrequencyRanges The int value to which numFrequencyRanges is to be set.
  	 
  	
  		
  	 */
- 	void CalFluxRow::setStokes (vector<StokesParameterMod::StokesParameter > stokes)  {
+ 	void CalFluxRow::setNumFrequencyRanges (int numFrequencyRanges)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->stokes = stokes;
+ 		this->numFrequencyRanges = numFrequencyRanges;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numStokes.
+ 	 * @return numStokes as int
+ 	 */
+ 	int CalFluxRow::getNumStokes() const {
+	
+  		return numStokes;
+ 	}
+
+ 	/**
+ 	 * Set numStokes with the specified int.
+ 	 * @param numStokes The int value to which numStokes is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalFluxRow::setNumStokes (int numStokes)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numStokes = numStokes;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get frequencyRanges.
+ 	 * @return frequencyRanges as vector<vector<Frequency > >
+ 	 */
+ 	vector<vector<Frequency > > CalFluxRow::getFrequencyRanges() const {
+	
+  		return frequencyRanges;
+ 	}
+
+ 	/**
+ 	 * Set frequencyRanges with the specified vector<vector<Frequency > >.
+ 	 * @param frequencyRanges The vector<vector<Frequency > > value to which frequencyRanges is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalFluxRow::setFrequencyRanges (vector<vector<Frequency > > frequencyRanges)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->frequencyRanges = frequencyRanges;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get fluxMethod.
+ 	 * @return fluxMethod as FluxCalibrationMethodMod::FluxCalibrationMethod
+ 	 */
+ 	FluxCalibrationMethodMod::FluxCalibrationMethod CalFluxRow::getFluxMethod() const {
+	
+  		return fluxMethod;
+ 	}
+
+ 	/**
+ 	 * Set fluxMethod with the specified FluxCalibrationMethodMod::FluxCalibrationMethod.
+ 	 * @param fluxMethod The FluxCalibrationMethodMod::FluxCalibrationMethod value to which fluxMethod is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalFluxRow::setFluxMethod (FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->fluxMethod = fluxMethod;
 	
  	}
 	
@@ -1387,96 +2034,175 @@ namespace asdm {
 	
 
 	
+
+	
+ 	/**
+ 	 * Get stokes.
+ 	 * @return stokes as vector<StokesParameterMod::StokesParameter >
+ 	 */
+ 	vector<StokesParameterMod::StokesParameter > CalFluxRow::getStokes() const {
+	
+  		return stokes;
+ 	}
+
+ 	/**
+ 	 * Set stokes with the specified vector<StokesParameterMod::StokesParameter >.
+ 	 * @param stokes The vector<StokesParameterMod::StokesParameter > value to which stokes is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalFluxRow::setStokes (vector<StokesParameterMod::StokesParameter > stokes)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->stokes = stokes;
+	
+ 	}
+	
+	
+
+	
 	/**
-	 * The attribute size is optional. Return true if this attribute exists.
-	 * @return true if and only if the size attribute exists. 
+	 * The attribute direction is optional. Return true if this attribute exists.
+	 * @return true if and only if the direction attribute exists. 
 	 */
-	bool CalFluxRow::isSizeExists() const {
-		return sizeExists;
+	bool CalFluxRow::isDirectionExists() const {
+		return directionExists;
 	}
 	
 
 	
  	/**
- 	 * Get size, which is optional.
- 	 * @return size as vector<vector<vector<Angle > > >
- 	 * @throw IllegalAccessException If size does not exist.
+ 	 * Get direction, which is optional.
+ 	 * @return direction as vector<Angle >
+ 	 * @throw IllegalAccessException If direction does not exist.
  	 */
- 	vector<vector<vector<Angle > > > CalFluxRow::getSize() const throw(IllegalAccessException) {
-		if (!sizeExists) {
-			throw IllegalAccessException("size", "CalFlux");
+ 	vector<Angle > CalFluxRow::getDirection() const  {
+		if (!directionExists) {
+			throw IllegalAccessException("direction", "CalFlux");
 		}
 	
-  		return size;
+  		return direction;
  	}
 
  	/**
- 	 * Set size with the specified vector<vector<vector<Angle > > >.
- 	 * @param size The vector<vector<vector<Angle > > > value to which size is to be set.
+ 	 * Set direction with the specified vector<Angle >.
+ 	 * @param direction The vector<Angle > value to which direction is to be set.
  	 
  	
  	 */
- 	void CalFluxRow::setSize (vector<vector<vector<Angle > > > size) {
+ 	void CalFluxRow::setDirection (vector<Angle > direction) {
 	
- 		this->size = size;
+ 		this->direction = direction;
 	
-		sizeExists = true;
+		directionExists = true;
 	
  	}
 	
 	
 	/**
-	 * Mark size, which is an optional field, as non-existent.
+	 * Mark direction, which is an optional field, as non-existent.
 	 */
-	void CalFluxRow::clearSize () {
-		sizeExists = false;
+	void CalFluxRow::clearDirection () {
+		directionExists = false;
 	}
 	
 
 	
 	/**
-	 * The attribute sizeError is optional. Return true if this attribute exists.
-	 * @return true if and only if the sizeError attribute exists. 
+	 * The attribute directionCode is optional. Return true if this attribute exists.
+	 * @return true if and only if the directionCode attribute exists. 
 	 */
-	bool CalFluxRow::isSizeErrorExists() const {
-		return sizeErrorExists;
+	bool CalFluxRow::isDirectionCodeExists() const {
+		return directionCodeExists;
 	}
 	
 
 	
  	/**
- 	 * Get sizeError, which is optional.
- 	 * @return sizeError as vector<vector<vector<Angle > > >
- 	 * @throw IllegalAccessException If sizeError does not exist.
+ 	 * Get directionCode, which is optional.
+ 	 * @return directionCode as DirectionReferenceCodeMod::DirectionReferenceCode
+ 	 * @throw IllegalAccessException If directionCode does not exist.
  	 */
- 	vector<vector<vector<Angle > > > CalFluxRow::getSizeError() const throw(IllegalAccessException) {
-		if (!sizeErrorExists) {
-			throw IllegalAccessException("sizeError", "CalFlux");
+ 	DirectionReferenceCodeMod::DirectionReferenceCode CalFluxRow::getDirectionCode() const  {
+		if (!directionCodeExists) {
+			throw IllegalAccessException("directionCode", "CalFlux");
 		}
 	
-  		return sizeError;
+  		return directionCode;
  	}
 
  	/**
- 	 * Set sizeError with the specified vector<vector<vector<Angle > > >.
- 	 * @param sizeError The vector<vector<vector<Angle > > > value to which sizeError is to be set.
+ 	 * Set directionCode with the specified DirectionReferenceCodeMod::DirectionReferenceCode.
+ 	 * @param directionCode The DirectionReferenceCodeMod::DirectionReferenceCode value to which directionCode is to be set.
  	 
  	
  	 */
- 	void CalFluxRow::setSizeError (vector<vector<vector<Angle > > > sizeError) {
+ 	void CalFluxRow::setDirectionCode (DirectionReferenceCodeMod::DirectionReferenceCode directionCode) {
 	
- 		this->sizeError = sizeError;
+ 		this->directionCode = directionCode;
 	
-		sizeErrorExists = true;
+		directionCodeExists = true;
 	
  	}
 	
 	
 	/**
-	 * Mark sizeError, which is an optional field, as non-existent.
+	 * Mark directionCode, which is an optional field, as non-existent.
 	 */
-	void CalFluxRow::clearSizeError () {
-		sizeErrorExists = false;
+	void CalFluxRow::clearDirectionCode () {
+		directionCodeExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute directionEquinox is optional. Return true if this attribute exists.
+	 * @return true if and only if the directionEquinox attribute exists. 
+	 */
+	bool CalFluxRow::isDirectionEquinoxExists() const {
+		return directionEquinoxExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get directionEquinox, which is optional.
+ 	 * @return directionEquinox as Angle
+ 	 * @throw IllegalAccessException If directionEquinox does not exist.
+ 	 */
+ 	Angle CalFluxRow::getDirectionEquinox() const  {
+		if (!directionEquinoxExists) {
+			throw IllegalAccessException("directionEquinox", "CalFlux");
+		}
+	
+  		return directionEquinox;
+ 	}
+
+ 	/**
+ 	 * Set directionEquinox with the specified Angle.
+ 	 * @param directionEquinox The Angle value to which directionEquinox is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalFluxRow::setDirectionEquinox (Angle directionEquinox) {
+	
+ 		this->directionEquinox = directionEquinox;
+	
+		directionEquinoxExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark directionEquinox, which is an optional field, as non-existent.
+	 */
+	void CalFluxRow::clearDirectionEquinox () {
+		directionEquinoxExists = false;
 	}
 	
 
@@ -1496,7 +2222,7 @@ namespace asdm {
  	 * @return PA as vector<vector<Angle > >
  	 * @throw IllegalAccessException If PA does not exist.
  	 */
- 	vector<vector<Angle > > CalFluxRow::getPA() const throw(IllegalAccessException) {
+ 	vector<vector<Angle > > CalFluxRow::getPA() const  {
 		if (!PAExists) {
 			throw IllegalAccessException("PA", "CalFlux");
 		}
@@ -1543,7 +2269,7 @@ namespace asdm {
  	 * @return PAError as vector<vector<Angle > >
  	 * @throw IllegalAccessException If PAError does not exist.
  	 */
- 	vector<vector<Angle > > CalFluxRow::getPAError() const throw(IllegalAccessException) {
+ 	vector<vector<Angle > > CalFluxRow::getPAError() const  {
 		if (!PAErrorExists) {
 			throw IllegalAccessException("PAError", "CalFlux");
 		}
@@ -1575,81 +2301,96 @@ namespace asdm {
 	
 
 	
-
-	
- 	/**
- 	 * Get fluxMethod.
- 	 * @return fluxMethod as FluxCalibrationMethodMod::FluxCalibrationMethod
- 	 */
- 	FluxCalibrationMethodMod::FluxCalibrationMethod CalFluxRow::getFluxMethod() const {
-	
-  		return fluxMethod;
- 	}
-
- 	/**
- 	 * Set fluxMethod with the specified FluxCalibrationMethodMod::FluxCalibrationMethod.
- 	 * @param fluxMethod The FluxCalibrationMethodMod::FluxCalibrationMethod value to which fluxMethod is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalFluxRow::setFluxMethod (FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->fluxMethod = fluxMethod;
-	
- 	}
-	
-	
-
-	
 	/**
-	 * The attribute direction is optional. Return true if this attribute exists.
-	 * @return true if and only if the direction attribute exists. 
+	 * The attribute size is optional. Return true if this attribute exists.
+	 * @return true if and only if the size attribute exists. 
 	 */
-	bool CalFluxRow::isDirectionExists() const {
-		return directionExists;
+	bool CalFluxRow::isSizeExists() const {
+		return sizeExists;
 	}
 	
 
 	
  	/**
- 	 * Get direction, which is optional.
- 	 * @return direction as vector<Angle >
- 	 * @throw IllegalAccessException If direction does not exist.
+ 	 * Get size, which is optional.
+ 	 * @return size as vector<vector<vector<Angle > > >
+ 	 * @throw IllegalAccessException If size does not exist.
  	 */
- 	vector<Angle > CalFluxRow::getDirection() const throw(IllegalAccessException) {
-		if (!directionExists) {
-			throw IllegalAccessException("direction", "CalFlux");
+ 	vector<vector<vector<Angle > > > CalFluxRow::getSize() const  {
+		if (!sizeExists) {
+			throw IllegalAccessException("size", "CalFlux");
 		}
 	
-  		return direction;
+  		return size;
  	}
 
  	/**
- 	 * Set direction with the specified vector<Angle >.
- 	 * @param direction The vector<Angle > value to which direction is to be set.
+ 	 * Set size with the specified vector<vector<vector<Angle > > >.
+ 	 * @param size The vector<vector<vector<Angle > > > value to which size is to be set.
  	 
  	
  	 */
- 	void CalFluxRow::setDirection (vector<Angle > direction) {
+ 	void CalFluxRow::setSize (vector<vector<vector<Angle > > > size) {
 	
- 		this->direction = direction;
+ 		this->size = size;
 	
-		directionExists = true;
+		sizeExists = true;
 	
  	}
 	
 	
 	/**
-	 * Mark direction, which is an optional field, as non-existent.
+	 * Mark size, which is an optional field, as non-existent.
 	 */
-	void CalFluxRow::clearDirection () {
-		directionExists = false;
+	void CalFluxRow::clearSize () {
+		sizeExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute sizeError is optional. Return true if this attribute exists.
+	 * @return true if and only if the sizeError attribute exists. 
+	 */
+	bool CalFluxRow::isSizeErrorExists() const {
+		return sizeErrorExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get sizeError, which is optional.
+ 	 * @return sizeError as vector<vector<vector<Angle > > >
+ 	 * @throw IllegalAccessException If sizeError does not exist.
+ 	 */
+ 	vector<vector<vector<Angle > > > CalFluxRow::getSizeError() const  {
+		if (!sizeErrorExists) {
+			throw IllegalAccessException("sizeError", "CalFlux");
+		}
+	
+  		return sizeError;
+ 	}
+
+ 	/**
+ 	 * Set sizeError with the specified vector<vector<vector<Angle > > >.
+ 	 * @param sizeError The vector<vector<vector<Angle > > > value to which sizeError is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalFluxRow::setSizeError (vector<vector<vector<Angle > > > sizeError) {
+	
+ 		this->sizeError = sizeError;
+	
+		sizeErrorExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark sizeError, which is an optional field, as non-existent.
+	 */
+	void CalFluxRow::clearSizeError () {
+		sizeErrorExists = false;
 	}
 	
 
@@ -1669,7 +2410,7 @@ namespace asdm {
  	 * @return sourceModel as SourceModelMod::SourceModel
  	 * @throw IllegalAccessException If sourceModel does not exist.
  	 */
- 	SourceModelMod::SourceModel CalFluxRow::getSourceModel() const throw(IllegalAccessException) {
+ 	SourceModelMod::SourceModel CalFluxRow::getSourceModel() const  {
 		if (!sourceModelExists) {
 			throw IllegalAccessException("sourceModel", "CalFlux");
 		}
@@ -1698,38 +2439,6 @@ namespace asdm {
 	void CalFluxRow::clearSourceModel () {
 		sourceModelExists = false;
 	}
-	
-
-	
-
-	
- 	/**
- 	 * Get frequencyRange.
- 	 * @return frequencyRange as vector<Frequency >
- 	 */
- 	vector<Frequency > CalFluxRow::getFrequencyRange() const {
-	
-  		return frequencyRange;
- 	}
-
- 	/**
- 	 * Set frequencyRange with the specified vector<Frequency >.
- 	 * @param frequencyRange The vector<Frequency > value to which frequencyRange is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalFluxRow::setFrequencyRange (vector<Frequency > frequencyRange)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->frequencyRange = frequencyRange;
-	
- 	}
-	
 	
 
 	
@@ -1881,11 +2590,19 @@ namespace asdm {
 	
 
 	
-		sizeExists = false;
+
 	
 
 	
-		sizeErrorExists = false;
+		directionExists = false;
+	
+
+	
+		directionCodeExists = false;
+	
+
+	
+		directionEquinoxExists = false;
 	
 
 	
@@ -1897,9 +2614,11 @@ namespace asdm {
 	
 
 	
+		sizeExists = false;
+	
 
 	
-		directionExists = false;
+		sizeErrorExists = false;
 	
 
 	
@@ -1907,8 +2626,6 @@ namespace asdm {
 	
 
 	
-
-	
 	
 
 	
@@ -1916,18 +2633,6 @@ namespace asdm {
 	
 	
 	
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -1948,10 +2653,29 @@ fluxMethod = CFluxCalibrationMethod::from_int(0);
 	
 
 	
-// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
-sourceModel = CSourceModel::from_int(0);
+
 	
 
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+directionCode = CDirectionReferenceCode::from_int(0);
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+sourceModel = CSourceModel::from_int(0);
 	
 	
 	}
@@ -1979,11 +2703,19 @@ sourceModel = CSourceModel::from_int(0);
 	
 
 	
-		sizeExists = false;
+
 	
 
 	
-		sizeErrorExists = false;
+		directionExists = false;
+	
+
+	
+		directionCodeExists = false;
+	
+
+	
+		directionEquinoxExists = false;
 	
 
 	
@@ -1995,15 +2727,15 @@ sourceModel = CSourceModel::from_int(0);
 	
 
 	
+		sizeExists = false;
+	
 
 	
-		directionExists = false;
+		sizeErrorExists = false;
 	
 
 	
 		sourceModelExists = false;
-	
-
 	
 
 	
@@ -2015,49 +2747,56 @@ sourceModel = CSourceModel::from_int(0);
 		else {
 	
 		
+			sourceName = row.sourceName;
+		
 			calDataId = row.calDataId;
 		
 			calReductionId = row.calReductionId;
 		
-			sourceName = row.sourceName;
 		
 		
-		
-		
-			numFrequency = row.numFrequency;
-		
-			numStokes = row.numStokes;
 		
 			startValidTime = row.startValidTime;
 		
 			endValidTime = row.endValidTime;
 		
-			stokes = row.stokes;
+			numFrequencyRanges = row.numFrequencyRanges;
+		
+			numStokes = row.numStokes;
+		
+			frequencyRanges = row.frequencyRanges;
+		
+			fluxMethod = row.fluxMethod;
 		
 			flux = row.flux;
 		
 			fluxError = row.fluxError;
 		
-			fluxMethod = row.fluxMethod;
-		
-			frequencyRange = row.frequencyRange;
+			stokes = row.stokes;
 		
 		
 		
 		
-		if (row.sizeExists) {
-			size = row.size;		
-			sizeExists = true;
+		if (row.directionExists) {
+			direction = row.direction;		
+			directionExists = true;
 		}
 		else
-			sizeExists = false;
+			directionExists = false;
 		
-		if (row.sizeErrorExists) {
-			sizeError = row.sizeError;		
-			sizeErrorExists = true;
+		if (row.directionCodeExists) {
+			directionCode = row.directionCode;		
+			directionCodeExists = true;
 		}
 		else
-			sizeErrorExists = false;
+			directionCodeExists = false;
+		
+		if (row.directionEquinoxExists) {
+			directionEquinox = row.directionEquinox;		
+			directionEquinoxExists = true;
+		}
+		else
+			directionEquinoxExists = false;
 		
 		if (row.PAExists) {
 			PA = row.PA;		
@@ -2073,12 +2812,19 @@ sourceModel = CSourceModel::from_int(0);
 		else
 			PAErrorExists = false;
 		
-		if (row.directionExists) {
-			direction = row.direction;		
-			directionExists = true;
+		if (row.sizeExists) {
+			size = row.size;		
+			sizeExists = true;
 		}
 		else
-			directionExists = false;
+			sizeExists = false;
+		
+		if (row.sizeErrorExists) {
+			sizeError = row.sizeError;		
+			sizeErrorExists = true;
+		}
+		else
+			sizeErrorExists = false;
 		
 		if (row.sourceModelExists) {
 			sourceModel = row.sourceModel;		
@@ -2091,10 +2837,17 @@ sourceModel = CSourceModel::from_int(0);
 	}
 
 	
-	bool CalFluxRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, string sourceName, int numFrequency, int numStokes, ArrayTime startValidTime, ArrayTime endValidTime, vector<StokesParameterMod::StokesParameter > stokes, vector<vector<double > > flux, vector<vector<double > > fluxError, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<Frequency > frequencyRange) {
+	bool CalFluxRow::compareNoAutoInc(string sourceName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFrequencyRanges, int numStokes, vector<vector<Frequency > > frequencyRanges, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<vector<double > > flux, vector<vector<double > > fluxError, vector<StokesParameterMod::StokesParameter > stokes) {
 		bool result;
 		result = true;
 		
+	
+		
+		result = result && (this->sourceName == sourceName);
+		
+		if (!result) return false;
+	
+
 	
 		
 		result = result && (this->calDataId == calDataId);
@@ -2105,27 +2858,6 @@ sourceModel = CSourceModel::from_int(0);
 	
 		
 		result = result && (this->calReductionId == calReductionId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->sourceName == sourceName);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numFrequency == numFrequency);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numStokes == numStokes);
 		
 		if (!result) return false;
 	
@@ -2146,7 +2878,28 @@ sourceModel = CSourceModel::from_int(0);
 
 	
 		
-		result = result && (this->stokes == stokes);
+		result = result && (this->numFrequencyRanges == numFrequencyRanges);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numStokes == numStokes);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->frequencyRanges == frequencyRanges);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->fluxMethod == fluxMethod);
 		
 		if (!result) return false;
 	
@@ -2167,14 +2920,7 @@ sourceModel = CSourceModel::from_int(0);
 
 	
 		
-		result = result && (this->fluxMethod == fluxMethod);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->frequencyRange == frequencyRange);
+		result = result && (this->stokes == stokes);
 		
 		if (!result) return false;
 	
@@ -2184,18 +2930,10 @@ sourceModel = CSourceModel::from_int(0);
 	
 	
 	
-	bool CalFluxRow::compareRequiredValue(int numFrequency, int numStokes, ArrayTime startValidTime, ArrayTime endValidTime, vector<StokesParameterMod::StokesParameter > stokes, vector<vector<double > > flux, vector<vector<double > > fluxError, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<Frequency > frequencyRange) {
+	bool CalFluxRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, int numFrequencyRanges, int numStokes, vector<vector<Frequency > > frequencyRanges, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<vector<double > > flux, vector<vector<double > > fluxError, vector<StokesParameterMod::StokesParameter > stokes) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->numFrequency == numFrequency)) return false;
-	
-
-	
-		if (!(this->numStokes == numStokes)) return false;
-	
-
 	
 		if (!(this->startValidTime == startValidTime)) return false;
 	
@@ -2205,7 +2943,19 @@ sourceModel = CSourceModel::from_int(0);
 	
 
 	
-		if (!(this->stokes == stokes)) return false;
+		if (!(this->numFrequencyRanges == numFrequencyRanges)) return false;
+	
+
+	
+		if (!(this->numStokes == numStokes)) return false;
+	
+
+	
+		if (!(this->frequencyRanges == frequencyRanges)) return false;
+	
+
+	
+		if (!(this->fluxMethod == fluxMethod)) return false;
 	
 
 	
@@ -2217,11 +2967,7 @@ sourceModel = CSourceModel::from_int(0);
 	
 
 	
-		if (!(this->fluxMethod == fluxMethod)) return false;
-	
-
-	
-		if (!(this->frequencyRange == frequencyRange)) return false;
+		if (!(this->stokes == stokes)) return false;
 	
 
 		return result;
@@ -2239,23 +2985,23 @@ sourceModel = CSourceModel::from_int(0);
 	bool CalFluxRow::equalByRequiredValue(CalFluxRow* x) {
 		
 			
-		if (this->numFrequency != x->numFrequency) return false;
-			
-		if (this->numStokes != x->numStokes) return false;
-			
 		if (this->startValidTime != x->startValidTime) return false;
 			
 		if (this->endValidTime != x->endValidTime) return false;
 			
-		if (this->stokes != x->stokes) return false;
+		if (this->numFrequencyRanges != x->numFrequencyRanges) return false;
+			
+		if (this->numStokes != x->numStokes) return false;
+			
+		if (this->frequencyRanges != x->frequencyRanges) return false;
+			
+		if (this->fluxMethod != x->fluxMethod) return false;
 			
 		if (this->flux != x->flux) return false;
 			
 		if (this->fluxError != x->fluxError) return false;
 			
-		if (this->fluxMethod != x->fluxMethod) return false;
-			
-		if (this->frequencyRange != x->frequencyRange) return false;
+		if (this->stokes != x->stokes) return false;
 			
 		
 		return true;

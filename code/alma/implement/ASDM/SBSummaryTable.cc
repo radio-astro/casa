@@ -80,7 +80,7 @@ namespace asdm {
 	SBSummaryTable::SBSummaryTable(ASDM &c) : container(c) {
 
 	
-		key.push_back("sbId");
+		key.push_back("sBSummaryId");
 	
 
 
@@ -164,111 +164,105 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param sbId. 
+ 	 * @param sbSummaryUID. 
 	
- 	 * @param projectId. 
+ 	 * @param projectUID. 
 	
  	 * @param obsUnitSetId. 
-	
- 	 * @param sbIntent. 
-	
- 	 * @param sbType. 
-	
- 	 * @param sbDuration. 
-	
- 	 * @param numScan. 
-	
- 	 * @param scanIntent. 
-	
- 	 * @param numberRepeats. 
-	
- 	 * @param weatherConstraint. 
-	
- 	 * @param scienceGoal. 
-	
- 	 * @param raCenter. 
-	
- 	 * @param decCenter. 
 	
  	 * @param frequency. 
 	
  	 * @param frequencyBand. 
 	
+ 	 * @param sbType. 
+	
+ 	 * @param sbDuration. 
+	
+ 	 * @param centerDirection. 
+	
+ 	 * @param numObservingMode. 
+	
  	 * @param observingMode. 
 	
+ 	 * @param numberRepeats. 
+	
+ 	 * @param numScienceGoal. 
+	
+ 	 * @param scienceGoal. 
+	
+ 	 * @param numWeatherConstraint. 
+	
+ 	 * @param weatherConstraint. 
+	
      */
-	SBSummaryRow* SBSummaryTable::newRow(EntityRef sbId, EntityRef projectId, EntityRef obsUnitSetId, string sbIntent, SBTypeMod::SBType sbType, Interval sbDuration, int numScan, vector<string > scanIntent, int numberRepeats, vector<string > weatherConstraint, vector<string > scienceGoal, double raCenter, double decCenter, double frequency, string frequencyBand, vector<string > observingMode){
+	SBSummaryRow* SBSummaryTable::newRow(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint){
 		SBSummaryRow *row = new SBSummaryRow(*this);
 			
-		row->setSbId(sbId);
+		row->setSbSummaryUID(sbSummaryUID);
 			
-		row->setProjectId(projectId);
+		row->setProjectUID(projectUID);
 			
 		row->setObsUnitSetId(obsUnitSetId);
-			
-		row->setSbIntent(sbIntent);
-			
-		row->setSbType(sbType);
-			
-		row->setSbDuration(sbDuration);
-			
-		row->setNumScan(numScan);
-			
-		row->setScanIntent(scanIntent);
-			
-		row->setNumberRepeats(numberRepeats);
-			
-		row->setWeatherConstraint(weatherConstraint);
-			
-		row->setScienceGoal(scienceGoal);
-			
-		row->setRaCenter(raCenter);
-			
-		row->setDecCenter(decCenter);
 			
 		row->setFrequency(frequency);
 			
 		row->setFrequencyBand(frequencyBand);
 			
+		row->setSbType(sbType);
+			
+		row->setSbDuration(sbDuration);
+			
+		row->setCenterDirection(centerDirection);
+			
+		row->setNumObservingMode(numObservingMode);
+			
 		row->setObservingMode(observingMode);
+			
+		row->setNumberRepeats(numberRepeats);
+			
+		row->setNumScienceGoal(numScienceGoal);
+			
+		row->setScienceGoal(scienceGoal);
+			
+		row->setNumWeatherConstraint(numWeatherConstraint);
+			
+		row->setWeatherConstraint(weatherConstraint);
 	
 		return row;		
 	}	
 
-	SBSummaryRow* SBSummaryTable::newRowFull(EntityRef sbId, EntityRef projectId, EntityRef obsUnitSetId, string sbIntent, SBTypeMod::SBType sbType, Interval sbDuration, int numScan, vector<string > scanIntent, int numberRepeats, vector<string > weatherConstraint, vector<string > scienceGoal, double raCenter, double decCenter, double frequency, string frequencyBand, vector<string > observingMode)	{
+	SBSummaryRow* SBSummaryTable::newRowFull(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint)	{
 		SBSummaryRow *row = new SBSummaryRow(*this);
 			
-		row->setSbId(sbId);
+		row->setSbSummaryUID(sbSummaryUID);
 			
-		row->setProjectId(projectId);
+		row->setProjectUID(projectUID);
 			
 		row->setObsUnitSetId(obsUnitSetId);
-			
-		row->setSbIntent(sbIntent);
-			
-		row->setSbType(sbType);
-			
-		row->setSbDuration(sbDuration);
-			
-		row->setNumScan(numScan);
-			
-		row->setScanIntent(scanIntent);
-			
-		row->setNumberRepeats(numberRepeats);
-			
-		row->setWeatherConstraint(weatherConstraint);
-			
-		row->setScienceGoal(scienceGoal);
-			
-		row->setRaCenter(raCenter);
-			
-		row->setDecCenter(decCenter);
 			
 		row->setFrequency(frequency);
 			
 		row->setFrequencyBand(frequencyBand);
 			
+		row->setSbType(sbType);
+			
+		row->setSbDuration(sbDuration);
+			
+		row->setCenterDirection(centerDirection);
+			
+		row->setNumObservingMode(numObservingMode);
+			
 		row->setObservingMode(observingMode);
+			
+		row->setNumberRepeats(numberRepeats);
+			
+		row->setNumScienceGoal(numScienceGoal);
+			
+		row->setScienceGoal(scienceGoal);
+			
+		row->setNumWeatherConstraint(numWeatherConstraint);
+			
+		row->setWeatherConstraint(weatherConstraint);
 	
 		return row;				
 	}
@@ -289,26 +283,65 @@ SBSummaryRow* SBSummaryTable::newRowCopy(SBSummaryRow* row) {
 
 	
 	 
-	/**
-	 * Add a row.
-	 * @throws DuplicateKey Thrown if the new row has a key that is already in the table.
-	 * @param x A pointer to the row to be added.
-	 * @return x
-	 */
+	
+	/** 
+ 	 * Look up the table for a row whose noautoincrementable attributes are matching their
+ 	 * homologues in *x.  If a row is found  this row else autoincrement  *x.sBSummaryId, 
+ 	 * add x to its table and returns x.
+ 	 *  
+ 	 * @returns a pointer on a SBSummaryRow.
+ 	 * @param x. A pointer on the row to be added.
+ 	 */ 
+ 		
+			
 	SBSummaryRow* SBSummaryTable::add(SBSummaryRow* x) {
-		
-		if (getRowByKey(
-						x->getSbId()
-						))
-			//throw DuplicateKey(x.getSbId(),"SBSummary");
-			throw DuplicateKey("Duplicate key exception in ","SBSummaryTable");
-		
+			 
+		SBSummaryRow* aRow = lookup(
+				
+		x->getSbSummaryUID()
+				,
+		x->getProjectUID()
+				,
+		x->getObsUnitSetId()
+				,
+		x->getFrequency()
+				,
+		x->getFrequencyBand()
+				,
+		x->getSbType()
+				,
+		x->getSbDuration()
+				,
+		x->getCenterDirection()
+				,
+		x->getNumObservingMode()
+				,
+		x->getObservingMode()
+				,
+		x->getNumberRepeats()
+				,
+		x->getNumScienceGoal()
+				,
+		x->getScienceGoal()
+				,
+		x->getNumWeatherConstraint()
+				,
+		x->getWeatherConstraint()
+				
+		);
+		if (aRow) return aRow;
+			
+
+			
+		// Autoincrement sBSummaryId
+		x->setSBSummaryId(Tag(size(), TagType::SBSummary));
+						
 		row.push_back(x);
 		privateRows.push_back(x);
 		x->isAdded();
 		return x;
 	}
-
+		
 		
 
 
@@ -327,13 +360,53 @@ SBSummaryRow* SBSummaryTable::newRowCopy(SBSummaryRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	SBSummaryRow*  SBSummaryTable::checkAndAdd(SBSummaryRow* x) throw (DuplicateKey) {
+	SBSummaryRow*  SBSummaryTable::checkAndAdd(SBSummaryRow* x)  {
+	 
+		 
+		if (lookup(
+			
+			x->getSbSummaryUID()
+		,
+			x->getProjectUID()
+		,
+			x->getObsUnitSetId()
+		,
+			x->getFrequency()
+		,
+			x->getFrequencyBand()
+		,
+			x->getSbType()
+		,
+			x->getSbDuration()
+		,
+			x->getCenterDirection()
+		,
+			x->getNumObservingMode()
+		,
+			x->getObservingMode()
+		,
+			x->getNumberRepeats()
+		,
+			x->getNumScienceGoal()
+		,
+			x->getScienceGoal()
+		,
+			x->getNumWeatherConstraint()
+		,
+			x->getWeatherConstraint()
+		
+		)) throw UniquenessViolationException("Uniqueness violation exception in table SBSummaryTable");
+		
 		
 		
 		if (getRowByKey(
 	
-			x->getSbId()
+			x->getSBSummaryId()
 			
 		)) throw DuplicateKey("Duplicate key exception in ", "SBSummaryTable");
 		
@@ -370,13 +443,13 @@ SBSummaryRow* SBSummaryTable::newRowCopy(SBSummaryRow* row) {
  ** no row exists for that key.
  **
  */
- 	SBSummaryRow* SBSummaryTable::getRowByKey(EntityRef sbId)  {
+ 	SBSummaryRow* SBSummaryTable::getRowByKey(Tag sBSummaryId)  {
 	SBSummaryRow* aRow = 0;
 	for (unsigned int i = 0; i < row.size(); i++) {
 		aRow = row.at(i);
 		
 			
-				if (aRow->sbId != sbId) continue;
+				if (aRow->sBSummaryId != sBSummaryId) continue;
 			
 		
 		return aRow;
@@ -387,49 +460,47 @@ SBSummaryRow* SBSummaryTable::newRowCopy(SBSummaryRow* row) {
 
 	
 /**
- * Look up the table for a row whose all attributes 
+ * Look up the table for a row whose all attributes  except the autoincrementable one 
  * are equal to the corresponding parameters of the method.
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
- * @param sbId.
+ * @param sbSummaryUID.
  	 		
- * @param projectId.
+ * @param projectUID.
  	 		
  * @param obsUnitSetId.
- 	 		
- * @param sbIntent.
- 	 		
- * @param sbType.
- 	 		
- * @param sbDuration.
- 	 		
- * @param numScan.
- 	 		
- * @param scanIntent.
- 	 		
- * @param numberRepeats.
- 	 		
- * @param weatherConstraint.
- 	 		
- * @param scienceGoal.
- 	 		
- * @param raCenter.
- 	 		
- * @param decCenter.
  	 		
  * @param frequency.
  	 		
  * @param frequencyBand.
  	 		
+ * @param sbType.
+ 	 		
+ * @param sbDuration.
+ 	 		
+ * @param centerDirection.
+ 	 		
+ * @param numObservingMode.
+ 	 		
  * @param observingMode.
+ 	 		
+ * @param numberRepeats.
+ 	 		
+ * @param numScienceGoal.
+ 	 		
+ * @param scienceGoal.
+ 	 		
+ * @param numWeatherConstraint.
+ 	 		
+ * @param weatherConstraint.
  	 		 
  */
-SBSummaryRow* SBSummaryTable::lookup(EntityRef sbId, EntityRef projectId, EntityRef obsUnitSetId, string sbIntent, SBTypeMod::SBType sbType, Interval sbDuration, int numScan, vector<string > scanIntent, int numberRepeats, vector<string > weatherConstraint, vector<string > scienceGoal, double raCenter, double decCenter, double frequency, string frequencyBand, vector<string > observingMode) {
+SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint) {
 		SBSummaryRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(sbId, projectId, obsUnitSetId, sbIntent, sbType, sbDuration, numScan, scanIntent, numberRepeats, weatherConstraint, scienceGoal, raCenter, decCenter, frequency, frequencyBand, observingMode)) return aRow;
+			if (aRow->compareNoAutoInc(sbSummaryUID, projectUID, obsUnitSetId, frequency, frequencyBand, sbType, sbDuration, centerDirection, numObservingMode, observingMode, numberRepeats, numScienceGoal, scienceGoal, numWeatherConstraint, weatherConstraint)) return aRow;
 		}			
 		return 0;	
 } 
@@ -437,7 +508,6 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbId, EntityRef projectId, Entity
  	 	
 
 	
-
 
 
 
@@ -458,7 +528,7 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbId, EntityRef projectId, Entity
 #endif
 	
 #ifndef WITHOUT_ACS
-	void SBSummaryTable::fromIDL(SBSummaryTableIDL x) throw(DuplicateKey,ConversionException) {
+	void SBSummaryTable::fromIDL(SBSummaryTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			SBSummaryRow *tmp = newRow();
@@ -469,28 +539,27 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbId, EntityRef projectId, Entity
 	}
 #endif
 
-	char *SBSummaryTable::toFITS() const throw(ConversionException) {
+	char *SBSummaryTable::toFITS() const  {
 		throw ConversionException("Not implemented","SBSummary");
 	}
 
-	void SBSummaryTable::fromFITS(char *fits) throw(ConversionException) {
+	void SBSummaryTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","SBSummary");
 	}
 
-	string SBSummaryTable::toVOTable() const throw(ConversionException) {
+	string SBSummaryTable::toVOTable() const {
 		throw ConversionException("Not implemented","SBSummary");
 	}
 
-	void SBSummaryTable::fromVOTable(string vo) throw(ConversionException) {
+	void SBSummaryTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","SBSummary");
 	}
 
-	string SBSummaryTable::toXML()  throw(ConversionException) {
+	
+	string SBSummaryTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<SBSummaryTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/SBSummaryTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<SBSummaryTable> ");
+		buf.append("<SBSummaryTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/SBSummaryTable\" xsi:schemaLocation=\"http://Alma/XASDM/SBSummaryTable http://almaobservatory.org/XML/XASDM/2/SBSummaryTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -506,8 +575,9 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbId, EntityRef projectId, Entity
 		buf.append("</SBSummaryTable> ");
 		return buf;
 	}
+
 	
-	void SBSummaryTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void SBSummaryTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SBSummaryTable")) 
 			error();
@@ -549,20 +619,110 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbId, EntityRef projectId, Entity
 			error();
 	}
 
-	void SBSummaryTable::error() throw(ConversionException) {
+	
+	void SBSummaryTable::error()  {
 		throw ConversionException("Invalid xml document","SBSummary");
 	}
 	
+	
 	string SBSummaryTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void SBSummaryTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "SBSummary");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			SBSummaryRow* aRow = SBSummaryRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "SBSummary");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "SBSummary");
+		} 		 	
+	}
+
 	
 	void SBSummaryTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -593,6 +753,7 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbId, EntityRef projectId, Entity
 				throw ConversionException("Could not close file " + fileName, "SBSummary");
 		}
 	}
+
 	
 	void SBSummaryTable::setFromFile(const string& directory) {
 		string tablename;
@@ -634,10 +795,39 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbId, EntityRef projectId, Entity
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	
 
+	
+	void SBSummaryTable::autoIncrement(string key, SBSummaryRow* x) {
+		map<string, int>::iterator iter;
+		if ((iter=noAutoIncIds.find(key)) == noAutoIncIds.end()) {
+			// There is not yet a combination of the non autoinc attributes values in the hashtable
+			
+			// Initialize  sBSummaryId to Tag(0).
+			x->setSBSummaryId(Tag(0,  TagType::SBSummary));
+			
+			// Record it in the map.		
+			noAutoIncIds.insert(make_pair(key, 0));			
+		} 
+		else {
+			// There is already a combination of the non autoinc attributes values in the hashtable
+			// Increment its value.
+			int n = iter->second + 1; 
+			
+			// Initialize  sBSummaryId to Tag(n).
+			x->setSBSummaryId(Tag(n, TagType::SBSummary));
+			
+			// Record it in the map.		
+			noAutoIncIds.insert(make_pair(key, n));				
+		}		
+	}
 	
 } // End namespace asdm
  

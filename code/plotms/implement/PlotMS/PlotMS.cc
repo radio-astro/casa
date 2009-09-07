@@ -108,7 +108,10 @@ PlotLoggerPtr PlotMS::getLogger() { return itsLogger_; }
 PlotMSPlotManager& PlotMS::getPlotManager() { return itsPlotManager_; }
 
 PlotMSSinglePlot* PlotMS::addSinglePlot(const PlotMSPlotParameters* p) {
-    return itsPlotManager_.addSinglePlot(this, p); }
+    return itsPlotManager_.addSinglePlot(p); }
+
+PlotMSMultiPlot* PlotMS::addMultiPlot(const PlotMSPlotParameters* p) {
+    return itsPlotManager_.addMultiPlot(p); }
 
 
 // Private Methods //

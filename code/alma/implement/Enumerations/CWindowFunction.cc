@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CWindowFunction::version() {
+	return WindowFunctionMod::version;
+	}
+	
+string CWindowFunction::revision () {
+	return WindowFunctionMod::revision;
+}
+
+unsigned int CWindowFunction::size() {
+	return 7;
+	}
+	
 	
 const std::string& CWindowFunction::sUNIFORM = "UNIFORM";
 	
@@ -52,7 +65,7 @@ const std::string& CWindowFunction::sBLACKMANN_HARRIS = "BLACKMANN_HARRIS";
 	
 const std::string& CWindowFunction::sWELCH = "WELCH";
 	
-const std::vector<std::string> CWindowFunction::sWindowFunctionSet() {
+const std::vector<std::string> CWindowFunction::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CWindowFunction::sUNIFORM);
@@ -71,45 +84,6 @@ const std::vector<std::string> CWindowFunction::sWindowFunctionSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CWindowFunction::hUNIFORM = "No windowing";
-	
-const std::string& CWindowFunction::hHANNING = "Raised cosine: 0.5*(1-cos(x)) where x = 2*pi*i/(N-1)";
-	
-const std::string& CWindowFunction::hHAMMING = "The classic Hamming window is Wm(x) = 0.54 - 0.46*cos(x). This is generalized to Wm(x) = beta - (1-beta)*cos(x) where beta can take any value in the range [0,1]. Beta=0.5 corresponds to the Hanning window.";
-	
-const std::string& CWindowFunction::hBARTLETT = "The Bartlett (triangular) window is 1 - |x/pi|, where x = 2*pi*i/(N-1)";
-	
-const std::string& CWindowFunction::hBLACKMANN = "The window function is: Wb(x) = (0.5 - Beta) - 0.5*cos(Xj) + Beta*cos(2Xj), where Xj=2*pi*j/(N-1). The classic Blackman window is given by Beta=0.08";
-	
-const std::string& CWindowFunction::hBLACKMANN_HARRIS = "The BLACKMANN_HARRIS window is 1.0 - 1.36109*cos(x) + 0.39381*cos(2x) - 0.032557*cos(3x), where x = 2*pi*i/(N-1)";
-	
-const std::string& CWindowFunction::hWELCH = "The Welch window (parabolic) is 1 - (2*i/N)^2";
-	
-const std::vector<std::string> CWindowFunction::hWindowFunctionSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CWindowFunction::hUNIFORM);
-    
-    enumSet.insert(enumSet.end(), CWindowFunction::hHANNING);
-    
-    enumSet.insert(enumSet.end(), CWindowFunction::hHAMMING);
-    
-    enumSet.insert(enumSet.end(), CWindowFunction::hBARTLETT);
-    
-    enumSet.insert(enumSet.end(), CWindowFunction::hBLACKMANN);
-    
-    enumSet.insert(enumSet.end(), CWindowFunction::hBLACKMANN_HARRIS);
-    
-    enumSet.insert(enumSet.end(), CWindowFunction::hWELCH);
-        
-    return enumSet;
-}
-   	
 
 std::string CWindowFunction::name(const WindowFunctionMod::WindowFunction& f) {
     switch (f) {
@@ -136,40 +110,9 @@ std::string CWindowFunction::name(const WindowFunctionMod::WindowFunction& f) {
       return CWindowFunction::sWELCH;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CWindowFunction::help(const WindowFunctionMod::WindowFunction& f) {
-    switch (f) {
-    
-    case WindowFunctionMod::UNIFORM:
-      return CWindowFunction::hUNIFORM;
-    
-    case WindowFunctionMod::HANNING:
-      return CWindowFunction::hHANNING;
-    
-    case WindowFunctionMod::HAMMING:
-      return CWindowFunction::hHAMMING;
-    
-    case WindowFunctionMod::BARTLETT:
-      return CWindowFunction::hBARTLETT;
-    
-    case WindowFunctionMod::BLACKMANN:
-      return CWindowFunction::hBLACKMANN;
-    
-    case WindowFunctionMod::BLACKMANN_HARRIS:
-      return CWindowFunction::hBLACKMANN_HARRIS;
-    
-    case WindowFunctionMod::WELCH:
-      return CWindowFunction::hWELCH;
-    	
-    }
-    return std::string("");
-}
-   	
 
 WindowFunctionMod::WindowFunction CWindowFunction::newWindowFunction(const std::string& name) {
 		
@@ -238,12 +181,10 @@ WindowFunctionMod::WindowFunction CWindowFunction::literal(const std::string& na
 }
 
 WindowFunctionMod::WindowFunction CWindowFunction::from_int(unsigned int i) {
-	vector<string> names = sWindowFunctionSet();
-	if (i >= names.size()) throw badInt(i);
-	return newWindowFunction(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newWindowFunction(names_.at(i));
 }
-
-	
 
 string CWindowFunction::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'WindowFunction'.";

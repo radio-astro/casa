@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CSchedulerMode::version() {
+	return SchedulerModeMod::version;
+	}
+	
+string CSchedulerMode::revision () {
+	return SchedulerModeMod::revision;
+}
+
+unsigned int CSchedulerMode::size() {
+	return 4;
+	}
+	
 	
 const std::string& CSchedulerMode::sDYNAMIC = "DYNAMIC";
 	
@@ -46,7 +59,7 @@ const std::string& CSchedulerMode::sMANUAL = "MANUAL";
 	
 const std::string& CSchedulerMode::sQUEUED = "QUEUED";
 	
-const std::vector<std::string> CSchedulerMode::sSchedulerModeSet() {
+const std::vector<std::string> CSchedulerMode::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CSchedulerMode::sDYNAMIC);
@@ -59,33 +72,6 @@ const std::vector<std::string> CSchedulerMode::sSchedulerModeSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CSchedulerMode::hDYNAMIC = "Dynamic scheduling";
-	
-const std::string& CSchedulerMode::hINTERACTIVE = "Interactive scheduling";
-	
-const std::string& CSchedulerMode::hMANUAL = "Manual scheduling";
-	
-const std::string& CSchedulerMode::hQUEUED = "Queued scheduling";
-	
-const std::vector<std::string> CSchedulerMode::hSchedulerModeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CSchedulerMode::hDYNAMIC);
-    
-    enumSet.insert(enumSet.end(), CSchedulerMode::hINTERACTIVE);
-    
-    enumSet.insert(enumSet.end(), CSchedulerMode::hMANUAL);
-    
-    enumSet.insert(enumSet.end(), CSchedulerMode::hQUEUED);
-        
-    return enumSet;
-}
-   	
 
 std::string CSchedulerMode::name(const SchedulerModeMod::SchedulerMode& f) {
     switch (f) {
@@ -103,31 +89,9 @@ std::string CSchedulerMode::name(const SchedulerModeMod::SchedulerMode& f) {
       return CSchedulerMode::sQUEUED;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CSchedulerMode::help(const SchedulerModeMod::SchedulerMode& f) {
-    switch (f) {
-    
-    case SchedulerModeMod::DYNAMIC:
-      return CSchedulerMode::hDYNAMIC;
-    
-    case SchedulerModeMod::INTERACTIVE:
-      return CSchedulerMode::hINTERACTIVE;
-    
-    case SchedulerModeMod::MANUAL:
-      return CSchedulerMode::hMANUAL;
-    
-    case SchedulerModeMod::QUEUED:
-      return CSchedulerMode::hQUEUED;
-    	
-    }
-    return std::string("");
-}
-   	
 
 SchedulerModeMod::SchedulerMode CSchedulerMode::newSchedulerMode(const std::string& name) {
 		
@@ -172,12 +136,10 @@ SchedulerModeMod::SchedulerMode CSchedulerMode::literal(const std::string& name)
 }
 
 SchedulerModeMod::SchedulerMode CSchedulerMode::from_int(unsigned int i) {
-	vector<string> names = sSchedulerModeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newSchedulerMode(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newSchedulerMode(names_.at(i));
 }
-
-	
 
 string CSchedulerMode::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'SchedulerMode'.";

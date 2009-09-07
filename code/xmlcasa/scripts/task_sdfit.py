@@ -252,6 +252,41 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                     else:
                             "No starting guesses available"
 
+	    elif (fitmode == 'interact'):
+		    # Interactive masking
+		    new_mask=sd.interactivemask(scan=s)
+		    if (len(maskline) > 0):
+			    new_mask.set_basemask(masklist=maskline,invert=False)
+		    new_mask.select_mask(once=False,showmask=True)
+		    # Wait for user to finish mask selection
+		    finish=raw_input("Press return to calculate statistics.\n")
+
+		    # Get final mask list
+		    linemask=new_mask.get_mask()
+		    linelist=s.get_masklist(linemask)
+		    nlines=len(linelist)
+		    if nlines < 1:
+			    msg='No channel is selected. Exit without fittinging.'
+			    casalog.post( msg, priority = 'WARN' )
+			    return
+		    domask=True
+		    doguess=True
+		    print '%d region(s) is selected as a linemask' % nlines
+		    print 'The final mask list ('+s._getabcissalabel()+') ='+str(linelist)
+		    print 'Number of line(s) to fit: nfit =',nfit
+		    ans=raw_input('Do you want to reassign nfit? [N/y]: ')
+		    if (ans.upper() == 'Y'):
+			    ans=input('Input nfit = ')
+			    if type(ans) == list: nfit=ans
+			    elif type(ans) == int:nfit=[ans]
+			    else:
+				    msg='Invalid definition of nfit. Setting nfit=[1] and proceed.'
+				    casalog.post(msg, priority='WARN')
+				    nfit=[1]
+			    casalog.post('List of line number reassigned.\n   nfit = '+str(nfit))
+		    new_mask.finish_selection()
+		    del new_mask
+
             else:
                     # Fit mode AUTO and in channel mode
                     #print "Trying AUTO mode - find line channel regions"
@@ -405,7 +440,7 @@ def sdfit(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, f
                     numlines=nlines
                 
                 if (numlines > 0):
-                    if ( fitmode == 'list' ):
+		    if ( fitmode == 'list' or fitmode == 'interact'):
                             # Get number of things to fit from nfit list
                             if ( type(nfit) == list ):
                                     numfit = len(nfit)

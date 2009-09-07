@@ -132,87 +132,103 @@ class ASDM;
 class CalGainRow;
 /**
  * The CalGainTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * This Table is a placeholder to be used to wrap up casa gain tables produced  in the Science Pipeline and Offline so that they can be archived in the  ALMA Calibration Data Base.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalGain </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row  in CalReductionTable. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> startValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp; the start time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp; the end time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> gain </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>   </TD> 
+ * <TD> float </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;TBD </TD>
  * </TR>
 	
  * <TR>
  * <TD> gainValid </TD> 
- * <TD> vector<bool > </TD>
- * <TD>   </TD> 
+ * <TD> bool </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;TBD </TD>
  * </TR>
 	
  * <TR>
  * <TD> fit </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>   </TD> 
+ * <TD> float </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;TBD </TD>
  * </TR>
 	
  * <TR>
  * <TD> fitWeight </TD> 
- * <TD> vector<float > </TD>
- * <TD>   </TD> 
+ * <TD> float </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;TBD </TD>
  * </TR>
 	
  * <TR>
  * <TD> totalGainValid </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;TBD </TD>
  * </TR>
 	
  * <TR>
  * <TD> totalFit </TD> 
  * <TD> float </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;TBD </TD>
  * </TR>
 	
  * <TR>
  * <TD> totalFitWeight </TD> 
  * <TD> float </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;TBD </TD>
  * </TR>
 	
 
@@ -311,13 +327,13 @@ public:
  	 * @param totalFitWeight. 
 	
      */
-	CalGainRow *newRow(Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<vector<float > > gain, vector<bool > gainValid, vector<vector<float > > fit, vector<float > fitWeight, bool totalGainValid, float totalFit, float totalFitWeight);
+	CalGainRow *newRow(Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, float gain, bool gainValid, float fit, float fitWeight, bool totalGainValid, float totalFit, float totalFitWeight);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalGainRow *newRowFull(Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<vector<float > > gain, vector<bool > gainValid, vector<vector<float > > fit, vector<float > fitWeight, bool totalGainValid, float totalFit, float totalFitWeight);
+	CalGainRow *newRowFull(Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, float gain, bool gainValid, float fit, float fitWeight, bool totalGainValid, float totalFit, float totalFitWeight);
 
 
 	/**
@@ -424,7 +440,7 @@ public:
  	 * @param totalFitWeight.
  	 		 
  	 */
-	CalGainRow* lookup(Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<vector<float > > gain, vector<bool > gainValid, vector<vector<float > > fit, vector<float > fitWeight, bool totalGainValid, float totalFit, float totalFitWeight); 
+	CalGainRow* lookup(Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, float gain, bool gainValid, float fit, float fitWeight, bool totalGainValid, float totalFit, float totalFitWeight); 
 
 
 #ifndef WITHOUT_ACS
@@ -444,43 +460,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalGainTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalGainTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalGain (CalGainTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalGain (CalGainTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -555,8 +577,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalGainRow* checkAndAdd(CalGainRow* x) throw (DuplicateKey);
+	CalGainRow* checkAndAdd(CalGainRow* x) ;
 
 
 
@@ -570,7 +594,7 @@ private:
 	vector<CalGainRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

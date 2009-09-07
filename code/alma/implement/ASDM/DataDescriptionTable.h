@@ -134,18 +134,6 @@ class DataDescriptionRow;
  * <TD> Tag </TD>
  * <TD>  &nbsp;  </TD> 
  * </TR>
-	
-
-
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
-	
- * <TR>
- * <TD> flagRow </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
-
  * </TABLE>
  */
 class DataDescriptionTable : public Representable {

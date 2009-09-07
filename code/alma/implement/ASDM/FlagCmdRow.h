@@ -112,7 +112,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file FlagCmd.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -124,7 +124,7 @@ namespace asdm {
 /**
  * The FlagCmdRow class is a row of a FlagCmdTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class FlagCmdRow {
@@ -151,8 +151,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct FlagCmdRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (FlagCmdRowIDL x) throw(ConversionException);
+	void setFromIDL (FlagCmdRowIDL x) ;
 #endif
 	
 	/**
@@ -165,8 +166,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the FlagCmdTable to which the row built by deserialization will be parented.
+	  */
+	 static FlagCmdRow* fromBin(EndianISStream& eiss, FlagCmdTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //

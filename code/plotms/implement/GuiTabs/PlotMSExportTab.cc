@@ -37,8 +37,8 @@ namespace casa {
 // PLOTMSEXPORTTAB DEFINITIONS //
 /////////////////////////////////
 
-PlotMSExportTab::PlotMSExportTab(PlotMSPlotter* parent) :
-        PlotMSPlotSubtab(parent) {
+PlotMSExportTab::PlotMSExportTab(PlotMSPlotTab* plotTab,PlotMSPlotter* parent):
+        PlotMSPlotSubtab(plotTab, parent) {
     setupUi(this);
     
     // Setup widgets.

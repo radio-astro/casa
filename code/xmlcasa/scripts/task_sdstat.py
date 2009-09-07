@@ -5,7 +5,7 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 
-def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, statfile, overwrite):
+def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, statfile, format, overwrite):
 
 
         casalog.origin('sdstat')
@@ -226,6 +226,13 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                     if ( not os.path.exists(statfile) or overwrite ):
                             sd.rcParams['verbose']=True
 
+	    ### Start mod: 2009/09/03 kana ###
+	    format=format.replace(' ','')
+	    formstr=format
+	    if len(format)==0:
+		casalog.post("Invalid format string. Using the default 3.3f.")
+		formstr='3.3f'
+	    ### End mod ######################
             # Interactive mask
             if interactive:
                     # Interactive masking
@@ -251,47 +258,47 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                     casalog.post( 'final mask list ('+lbl+') = '+str(msks) )
 
                     # Get statistic values
-                    maxl=s.stats('max',msk)
+                    maxl=s.stats('max',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    minl=s.stats('min',msk)
+                    minl=s.stats('min',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-		    maxabcl=s.stats('max_abc',msk)
+		    maxabcl=s.stats('max_abc',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-		    minabcl=s.stats('min_abc',msk)
+		    minabcl=s.stats('min_abc',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    suml=s.stats('sum',msk)
+                    suml=s.stats('sum',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    meanl=s.stats('mean',msk)
+                    meanl=s.stats('mean',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    medianl=s.stats('median',msk)
+                    medianl=s.stats('median',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    rmsl=s.stats('rms',msk)
+                    rmsl=s.stats('rms',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    stdvl=s.stats('stddev',msk)
+                    stdvl=s.stats('stddev',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
@@ -308,47 +315,47 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                             raise Exception, 'Selected mask lists are out of range. Exit without calculation.'
 			    #return
 
-                    maxl=s.stats('max',msk)
+                    maxl=s.stats('max',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    minl=s.stats('min',msk)
+                    minl=s.stats('min',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-		    maxabcl=s.stats('max_abc',msk)
+		    maxabcl=s.stats('max_abc',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-		    minabcl=s.stats('min_abc',msk)
+		    minabcl=s.stats('min_abc',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    suml=s.stats('sum',msk)
+                    suml=s.stats('sum',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    meanl=s.stats('mean',msk)
+                    meanl=s.stats('mean',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    medianl=s.stats('median',msk)
+                    medianl=s.stats('median',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    rmsl=s.stats('rms',msk)
+                    rmsl=s.stats('rms',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    stdvl=s.stats('stddev',msk)
+                    stdvl=s.stats('stddev',msk,formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
@@ -359,47 +366,47 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                     #print 'Using full region'
                     casalog.post( 'Using full region' )
 
-                    maxl=s.stats('max')
+                    maxl=s.stats('max',form=formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    minl=s.stats('min')
+                    minl=s.stats('min',form=formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-		    maxabcl=s.stats('max_abc')
+		    maxabcl=s.stats('max_abc',form=formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-		    minabcl=s.stats('min_abc')
+		    minabcl=s.stats('min_abc',form=formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    suml=s.stats('sum')
+                    suml=s.stats('sum',form=formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    meanl=s.stats('mean')
+                    meanl=s.stats('mean',form=formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    medianl=s.stats('median')
+                    medianl=s.stats('median',form=formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    rmsl=s.stats('rms')
+                    rmsl=s.stats('rms',form=formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
                             f.close()
-                    stdvl=s.stats('stddev')
+                    stdvl=s.stats('stddev',form=formstr)
                     if sd.rcParams['verbose']:
                             f=open(tmpfile,'r')
                             resultstats+=f.readlines()
@@ -467,7 +474,8 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                             if s.nbeam(-1) > 1: out +=  ' Beam[%d] ' % (s.getbeam(i))
                             if s.nif(-1) > 1: out +=  ' IF[%d] ' % (s.getif(i))
                             if s.npol(-1) > 1: out +=  ' Pol[%d] ' % (s.getpol(i))
-			    out += '= %3.3f\n' % (eqw[i])
+			    #out += '= %3.3f\n' % (eqw[i])
+			    out += ('= %'+formstr) % (eqw[i]) + '\n'
                             out +=  "--------------------------------------------------\n"
 			    # Construct integrated flux
 			    integratef = integratef +[suml[i]*dabc]
@@ -476,7 +484,8 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 			    if s.nbeam(-1) > 1: outp +=  ' Beam[%d] ' % (s.getbeam(i))
 			    if s.nif(-1) > 1: outp +=  ' IF[%d] ' % (s.getif(i))
 			    if s.npol(-1) > 1: outp +=  ' Pol[%d] ' % (s.getpol(i))
-			    outp += '= %3.3f\n' % (integratef[i])
+			    #outp += '= %3.3f\n' % (integratef[i])
+			    outp += ('= %'+formstr) % (integratef[i])+'\n'
 			    outp +=  "--------------------------------------------------\n"
 
                     if sd.rcParams['verbose']:
@@ -544,8 +553,8 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                     if s.nbeam(-1) > 1: out +=  ' Beam[%d] ' % (s.getbeam(0))
                     if s.nif(-1) > 1: out +=  ' IF[%d] ' % (s.getif(0))
                     if s.npol(-1) > 1: out +=  ' Pol[%d] ' % (s.getpol(0))
-		    out += '= %3.3f\n' % (eqw)
-
+		    #out += '= %3.3f\n' % (eqw)
+		    out += ('= %'+formstr) % (eqw) + '\n'
                     out +=  "--------------------------------------------------\n"
                     
 		    # Construct integrated flux
@@ -555,7 +564,8 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 		    if s.nbeam(-1) > 1: outp +=  ' Beam[%d] ' % (s.getbeam(0))
 		    if s.nif(-1) > 1: outp +=  ' IF[%d] ' % (s.getif(0))
 		    if s.npol(-1) > 1: outp +=  ' Pol[%d] ' % (s.getpol(0))
-		    outp += '= %3.3f\n' % (integratef)
+		    #outp += '= %3.3f\n' % (integratef)
+		    outp += ('= %'+formstr) % (integratef) + '\n'
 		    outp +=  "--------------------------------------------------\n"
 
                     if sd.rcParams['verbose']:

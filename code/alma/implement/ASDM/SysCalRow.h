@@ -109,62 +109,6 @@ using namespace enumerations;
 
 	
 
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
 
 
 using asdm::Angle;
@@ -188,7 +132,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file SysCal.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -196,20 +140,20 @@ namespace asdm {
 //class asdm::SysCalTable;
 
 
-// class asdm::SpectralWindowRow;
-class SpectralWindowRow;
+// class asdm::AntennaRow;
+class AntennaRow;
 
 // class asdm::FeedRow;
 class FeedRow;
 
-// class asdm::AntennaRow;
-class AntennaRow;
+// class asdm::SpectralWindowRow;
+class SpectralWindowRow;
 	
 
 /**
  * The SysCalRow class is a row of a SysCalTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class SysCalRow {
@@ -236,8 +180,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct SysCalRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (SysCalRowIDL x) throw(ConversionException);
+	void setFromIDL (SysCalRowIDL x) ;
 #endif
 	
 	/**
@@ -250,8 +195,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the SysCalTable to which the row built by deserialization will be parented.
+	  */
+	 static SysCalRow* fromBin(EndianISStream& eiss, SysCalTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -290,1519 +249,62 @@ public:
 
 
 	
-	// ===> Attribute numLoad, which is optional
+	// ===> Attribute numReceptor
 	
 	
-	
-	/**
-	 * The attribute numLoad is optional. Return true if this attribute exists.
-	 * @return true if and only if the numLoad attribute exists. 
-	 */
-	bool isNumLoadExists() const;
 	
 
 	
  	/**
- 	 * Get numLoad, which is optional.
- 	 * @return numLoad as int
- 	 * @throws IllegalAccessException If numLoad does not exist.
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
  	 */
- 	int getNumLoad() const throw(IllegalAccessException);
+ 	int getNumReceptor() const;
 	
  
  	
  	
  	/**
- 	 * Set numLoad with the specified int.
- 	 * @param numLoad The int value to which numLoad is to be set.
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
  	 
  		
+ 			
  	 */
- 	void setNumLoad (int numLoad);
-		
+ 	void setNumReceptor (int numReceptor);
+  		
 	
 	
-	
-	/**
-	 * Mark numLoad, which is an optional field, as non-existent.
-	 */
-	void clearNumLoad ();
 	
 
 
 	
-	// ===> Attribute calLoad, which is optional
+	// ===> Attribute numChan
 	
 	
-	
-	/**
-	 * The attribute calLoad is optional. Return true if this attribute exists.
-	 * @return true if and only if the calLoad attribute exists. 
-	 */
-	bool isCalLoadExists() const;
 	
 
 	
  	/**
- 	 * Get calLoad, which is optional.
- 	 * @return calLoad as vector<int >
- 	 * @throws IllegalAccessException If calLoad does not exist.
+ 	 * Get numChan.
+ 	 * @return numChan as int
  	 */
- 	vector<int > getCalLoad() const throw(IllegalAccessException);
+ 	int getNumChan() const;
 	
  
  	
  	
  	/**
- 	 * Set calLoad with the specified vector<int >.
- 	 * @param calLoad The vector<int > value to which calLoad is to be set.
+ 	 * Set numChan with the specified int.
+ 	 * @param numChan The int value to which numChan is to be set.
  	 
  		
+ 			
  	 */
- 	void setCalLoad (vector<int > calLoad);
-		
+ 	void setNumChan (int numChan);
+  		
 	
 	
-	
-	/**
-	 * Mark calLoad, which is an optional field, as non-existent.
-	 */
-	void clearCalLoad ();
-	
-
-
-	
-	// ===> Attribute feff, which is optional
-	
-	
-	
-	/**
-	 * The attribute feff is optional. Return true if this attribute exists.
-	 * @return true if and only if the feff attribute exists. 
-	 */
-	bool isFeffExists() const;
-	
-
-	
- 	/**
- 	 * Get feff, which is optional.
- 	 * @return feff as vector<float >
- 	 * @throws IllegalAccessException If feff does not exist.
- 	 */
- 	vector<float > getFeff() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set feff with the specified vector<float >.
- 	 * @param feff The vector<float > value to which feff is to be set.
- 	 
- 		
- 	 */
- 	void setFeff (vector<float > feff);
-		
-	
-	
-	
-	/**
-	 * Mark feff, which is an optional field, as non-existent.
-	 */
-	void clearFeff ();
-	
-
-
-	
-	// ===> Attribute aeff, which is optional
-	
-	
-	
-	/**
-	 * The attribute aeff is optional. Return true if this attribute exists.
-	 * @return true if and only if the aeff attribute exists. 
-	 */
-	bool isAeffExists() const;
-	
-
-	
- 	/**
- 	 * Get aeff, which is optional.
- 	 * @return aeff as vector<float >
- 	 * @throws IllegalAccessException If aeff does not exist.
- 	 */
- 	vector<float > getAeff() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set aeff with the specified vector<float >.
- 	 * @param aeff The vector<float > value to which aeff is to be set.
- 	 
- 		
- 	 */
- 	void setAeff (vector<float > aeff);
-		
-	
-	
-	
-	/**
-	 * Mark aeff, which is an optional field, as non-existent.
-	 */
-	void clearAeff ();
-	
-
-
-	
-	// ===> Attribute phaseDiff, which is optional
-	
-	
-	
-	/**
-	 * The attribute phaseDiff is optional. Return true if this attribute exists.
-	 * @return true if and only if the phaseDiff attribute exists. 
-	 */
-	bool isPhaseDiffExists() const;
-	
-
-	
- 	/**
- 	 * Get phaseDiff, which is optional.
- 	 * @return phaseDiff as Angle
- 	 * @throws IllegalAccessException If phaseDiff does not exist.
- 	 */
- 	Angle getPhaseDiff() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set phaseDiff with the specified Angle.
- 	 * @param phaseDiff The Angle value to which phaseDiff is to be set.
- 	 
- 		
- 	 */
- 	void setPhaseDiff (Angle phaseDiff);
-		
-	
-	
-	
-	/**
-	 * Mark phaseDiff, which is an optional field, as non-existent.
-	 */
-	void clearPhaseDiff ();
-	
-
-
-	
-	// ===> Attribute sbgain, which is optional
-	
-	
-	
-	/**
-	 * The attribute sbgain is optional. Return true if this attribute exists.
-	 * @return true if and only if the sbgain attribute exists. 
-	 */
-	bool isSbgainExists() const;
-	
-
-	
- 	/**
- 	 * Get sbgain, which is optional.
- 	 * @return sbgain as float
- 	 * @throws IllegalAccessException If sbgain does not exist.
- 	 */
- 	float getSbgain() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set sbgain with the specified float.
- 	 * @param sbgain The float value to which sbgain is to be set.
- 	 
- 		
- 	 */
- 	void setSbgain (float sbgain);
-		
-	
-	
-	
-	/**
-	 * Mark sbgain, which is an optional field, as non-existent.
-	 */
-	void clearSbgain ();
-	
-
-
-	
-	// ===> Attribute tau, which is optional
-	
-	
-	
-	/**
-	 * The attribute tau is optional. Return true if this attribute exists.
-	 * @return true if and only if the tau attribute exists. 
-	 */
-	bool isTauExists() const;
-	
-
-	
- 	/**
- 	 * Get tau, which is optional.
- 	 * @return tau as vector<Temperature >
- 	 * @throws IllegalAccessException If tau does not exist.
- 	 */
- 	vector<Temperature > getTau() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set tau with the specified vector<Temperature >.
- 	 * @param tau The vector<Temperature > value to which tau is to be set.
- 	 
- 		
- 	 */
- 	void setTau (vector<Temperature > tau);
-		
-	
-	
-	
-	/**
-	 * Mark tau, which is an optional field, as non-existent.
-	 */
-	void clearTau ();
-	
-
-
-	
-	// ===> Attribute tcal, which is optional
-	
-	
-	
-	/**
-	 * The attribute tcal is optional. Return true if this attribute exists.
-	 * @return true if and only if the tcal attribute exists. 
-	 */
-	bool isTcalExists() const;
-	
-
-	
- 	/**
- 	 * Get tcal, which is optional.
- 	 * @return tcal as vector<Temperature >
- 	 * @throws IllegalAccessException If tcal does not exist.
- 	 */
- 	vector<Temperature > getTcal() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set tcal with the specified vector<Temperature >.
- 	 * @param tcal The vector<Temperature > value to which tcal is to be set.
- 	 
- 		
- 	 */
- 	void setTcal (vector<Temperature > tcal);
-		
-	
-	
-	
-	/**
-	 * Mark tcal, which is an optional field, as non-existent.
-	 */
-	void clearTcal ();
-	
-
-
-	
-	// ===> Attribute trx, which is optional
-	
-	
-	
-	/**
-	 * The attribute trx is optional. Return true if this attribute exists.
-	 * @return true if and only if the trx attribute exists. 
-	 */
-	bool isTrxExists() const;
-	
-
-	
- 	/**
- 	 * Get trx, which is optional.
- 	 * @return trx as vector<Temperature >
- 	 * @throws IllegalAccessException If trx does not exist.
- 	 */
- 	vector<Temperature > getTrx() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set trx with the specified vector<Temperature >.
- 	 * @param trx The vector<Temperature > value to which trx is to be set.
- 	 
- 		
- 	 */
- 	void setTrx (vector<Temperature > trx);
-		
-	
-	
-	
-	/**
-	 * Mark trx, which is an optional field, as non-existent.
-	 */
-	void clearTrx ();
-	
-
-
-	
-	// ===> Attribute tsky, which is optional
-	
-	
-	
-	/**
-	 * The attribute tsky is optional. Return true if this attribute exists.
-	 * @return true if and only if the tsky attribute exists. 
-	 */
-	bool isTskyExists() const;
-	
-
-	
- 	/**
- 	 * Get tsky, which is optional.
- 	 * @return tsky as vector<Temperature >
- 	 * @throws IllegalAccessException If tsky does not exist.
- 	 */
- 	vector<Temperature > getTsky() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set tsky with the specified vector<Temperature >.
- 	 * @param tsky The vector<Temperature > value to which tsky is to be set.
- 	 
- 		
- 	 */
- 	void setTsky (vector<Temperature > tsky);
-		
-	
-	
-	
-	/**
-	 * Mark tsky, which is an optional field, as non-existent.
-	 */
-	void clearTsky ();
-	
-
-
-	
-	// ===> Attribute tsys, which is optional
-	
-	
-	
-	/**
-	 * The attribute tsys is optional. Return true if this attribute exists.
-	 * @return true if and only if the tsys attribute exists. 
-	 */
-	bool isTsysExists() const;
-	
-
-	
- 	/**
- 	 * Get tsys, which is optional.
- 	 * @return tsys as vector<Temperature >
- 	 * @throws IllegalAccessException If tsys does not exist.
- 	 */
- 	vector<Temperature > getTsys() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set tsys with the specified vector<Temperature >.
- 	 * @param tsys The vector<Temperature > value to which tsys is to be set.
- 	 
- 		
- 	 */
- 	void setTsys (vector<Temperature > tsys);
-		
-	
-	
-	
-	/**
-	 * Mark tsys, which is an optional field, as non-existent.
-	 */
-	void clearTsys ();
-	
-
-
-	
-	// ===> Attribute tant, which is optional
-	
-	
-	
-	/**
-	 * The attribute tant is optional. Return true if this attribute exists.
-	 * @return true if and only if the tant attribute exists. 
-	 */
-	bool isTantExists() const;
-	
-
-	
- 	/**
- 	 * Get tant, which is optional.
- 	 * @return tant as vector<Temperature >
- 	 * @throws IllegalAccessException If tant does not exist.
- 	 */
- 	vector<Temperature > getTant() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set tant with the specified vector<Temperature >.
- 	 * @param tant The vector<Temperature > value to which tant is to be set.
- 	 
- 		
- 	 */
- 	void setTant (vector<Temperature > tant);
-		
-	
-	
-	
-	/**
-	 * Mark tant, which is an optional field, as non-existent.
-	 */
-	void clearTant ();
-	
-
-
-	
-	// ===> Attribute tantTsys, which is optional
-	
-	
-	
-	/**
-	 * The attribute tantTsys is optional. Return true if this attribute exists.
-	 * @return true if and only if the tantTsys attribute exists. 
-	 */
-	bool isTantTsysExists() const;
-	
-
-	
- 	/**
- 	 * Get tantTsys, which is optional.
- 	 * @return tantTsys as vector<float >
- 	 * @throws IllegalAccessException If tantTsys does not exist.
- 	 */
- 	vector<float > getTantTsys() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set tantTsys with the specified vector<float >.
- 	 * @param tantTsys The vector<float > value to which tantTsys is to be set.
- 	 
- 		
- 	 */
- 	void setTantTsys (vector<float > tantTsys);
-		
-	
-	
-	
-	/**
-	 * Mark tantTsys, which is an optional field, as non-existent.
-	 */
-	void clearTantTsys ();
-	
-
-
-	
-	// ===> Attribute pwvPath, which is optional
-	
-	
-	
-	/**
-	 * The attribute pwvPath is optional. Return true if this attribute exists.
-	 * @return true if and only if the pwvPath attribute exists. 
-	 */
-	bool isPwvPathExists() const;
-	
-
-	
- 	/**
- 	 * Get pwvPath, which is optional.
- 	 * @return pwvPath as vector<Length >
- 	 * @throws IllegalAccessException If pwvPath does not exist.
- 	 */
- 	vector<Length > getPwvPath() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set pwvPath with the specified vector<Length >.
- 	 * @param pwvPath The vector<Length > value to which pwvPath is to be set.
- 	 
- 		
- 	 */
- 	void setPwvPath (vector<Length > pwvPath);
-		
-	
-	
-	
-	/**
-	 * Mark pwvPath, which is an optional field, as non-existent.
-	 */
-	void clearPwvPath ();
-	
-
-
-	
-	// ===> Attribute dpwvPath, which is optional
-	
-	
-	
-	/**
-	 * The attribute dpwvPath is optional. Return true if this attribute exists.
-	 * @return true if and only if the dpwvPath attribute exists. 
-	 */
-	bool isDpwvPathExists() const;
-	
-
-	
- 	/**
- 	 * Get dpwvPath, which is optional.
- 	 * @return dpwvPath as vector<float >
- 	 * @throws IllegalAccessException If dpwvPath does not exist.
- 	 */
- 	vector<float > getDpwvPath() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set dpwvPath with the specified vector<float >.
- 	 * @param dpwvPath The vector<float > value to which dpwvPath is to be set.
- 	 
- 		
- 	 */
- 	void setDpwvPath (vector<float > dpwvPath);
-		
-	
-	
-	
-	/**
-	 * Mark dpwvPath, which is an optional field, as non-existent.
-	 */
-	void clearDpwvPath ();
-	
-
-
-	
-	// ===> Attribute feffSpectrum, which is optional
-	
-	
-	
-	/**
-	 * The attribute feffSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the feffSpectrum attribute exists. 
-	 */
-	bool isFeffSpectrumExists() const;
-	
-
-	
- 	/**
- 	 * Get feffSpectrum, which is optional.
- 	 * @return feffSpectrum as vector<vector<float > >
- 	 * @throws IllegalAccessException If feffSpectrum does not exist.
- 	 */
- 	vector<vector<float > > getFeffSpectrum() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set feffSpectrum with the specified vector<vector<float > >.
- 	 * @param feffSpectrum The vector<vector<float > > value to which feffSpectrum is to be set.
- 	 
- 		
- 	 */
- 	void setFeffSpectrum (vector<vector<float > > feffSpectrum);
-		
-	
-	
-	
-	/**
-	 * Mark feffSpectrum, which is an optional field, as non-existent.
-	 */
-	void clearFeffSpectrum ();
-	
-
-
-	
-	// ===> Attribute sbgainSpectrum, which is optional
-	
-	
-	
-	/**
-	 * The attribute sbgainSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the sbgainSpectrum attribute exists. 
-	 */
-	bool isSbgainSpectrumExists() const;
-	
-
-	
- 	/**
- 	 * Get sbgainSpectrum, which is optional.
- 	 * @return sbgainSpectrum as vector<vector<float > >
- 	 * @throws IllegalAccessException If sbgainSpectrum does not exist.
- 	 */
- 	vector<vector<float > > getSbgainSpectrum() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set sbgainSpectrum with the specified vector<vector<float > >.
- 	 * @param sbgainSpectrum The vector<vector<float > > value to which sbgainSpectrum is to be set.
- 	 
- 		
- 	 */
- 	void setSbgainSpectrum (vector<vector<float > > sbgainSpectrum);
-		
-	
-	
-	
-	/**
-	 * Mark sbgainSpectrum, which is an optional field, as non-existent.
-	 */
-	void clearSbgainSpectrum ();
-	
-
-
-	
-	// ===> Attribute tauSpectrum, which is optional
-	
-	
-	
-	/**
-	 * The attribute tauSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the tauSpectrum attribute exists. 
-	 */
-	bool isTauSpectrumExists() const;
-	
-
-	
- 	/**
- 	 * Get tauSpectrum, which is optional.
- 	 * @return tauSpectrum as vector<vector<Temperature > >
- 	 * @throws IllegalAccessException If tauSpectrum does not exist.
- 	 */
- 	vector<vector<Temperature > > getTauSpectrum() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set tauSpectrum with the specified vector<vector<Temperature > >.
- 	 * @param tauSpectrum The vector<vector<Temperature > > value to which tauSpectrum is to be set.
- 	 
- 		
- 	 */
- 	void setTauSpectrum (vector<vector<Temperature > > tauSpectrum);
-		
-	
-	
-	
-	/**
-	 * Mark tauSpectrum, which is an optional field, as non-existent.
-	 */
-	void clearTauSpectrum ();
-	
-
-
-	
-	// ===> Attribute tcalSpectrum, which is optional
-	
-	
-	
-	/**
-	 * The attribute tcalSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the tcalSpectrum attribute exists. 
-	 */
-	bool isTcalSpectrumExists() const;
-	
-
-	
- 	/**
- 	 * Get tcalSpectrum, which is optional.
- 	 * @return tcalSpectrum as vector<vector<Temperature > >
- 	 * @throws IllegalAccessException If tcalSpectrum does not exist.
- 	 */
- 	vector<vector<Temperature > > getTcalSpectrum() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set tcalSpectrum with the specified vector<vector<Temperature > >.
- 	 * @param tcalSpectrum The vector<vector<Temperature > > value to which tcalSpectrum is to be set.
- 	 
- 		
- 	 */
- 	void setTcalSpectrum (vector<vector<Temperature > > tcalSpectrum);
-		
-	
-	
-	
-	/**
-	 * Mark tcalSpectrum, which is an optional field, as non-existent.
-	 */
-	void clearTcalSpectrum ();
-	
-
-
-	
-	// ===> Attribute trxSpectrum, which is optional
-	
-	
-	
-	/**
-	 * The attribute trxSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the trxSpectrum attribute exists. 
-	 */
-	bool isTrxSpectrumExists() const;
-	
-
-	
- 	/**
- 	 * Get trxSpectrum, which is optional.
- 	 * @return trxSpectrum as vector<Temperature >
- 	 * @throws IllegalAccessException If trxSpectrum does not exist.
- 	 */
- 	vector<Temperature > getTrxSpectrum() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set trxSpectrum with the specified vector<Temperature >.
- 	 * @param trxSpectrum The vector<Temperature > value to which trxSpectrum is to be set.
- 	 
- 		
- 	 */
- 	void setTrxSpectrum (vector<Temperature > trxSpectrum);
-		
-	
-	
-	
-	/**
-	 * Mark trxSpectrum, which is an optional field, as non-existent.
-	 */
-	void clearTrxSpectrum ();
-	
-
-
-	
-	// ===> Attribute tskySpectrum, which is optional
-	
-	
-	
-	/**
-	 * The attribute tskySpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the tskySpectrum attribute exists. 
-	 */
-	bool isTskySpectrumExists() const;
-	
-
-	
- 	/**
- 	 * Get tskySpectrum, which is optional.
- 	 * @return tskySpectrum as vector<vector<Temperature > >
- 	 * @throws IllegalAccessException If tskySpectrum does not exist.
- 	 */
- 	vector<vector<Temperature > > getTskySpectrum() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set tskySpectrum with the specified vector<vector<Temperature > >.
- 	 * @param tskySpectrum The vector<vector<Temperature > > value to which tskySpectrum is to be set.
- 	 
- 		
- 	 */
- 	void setTskySpectrum (vector<vector<Temperature > > tskySpectrum);
-		
-	
-	
-	
-	/**
-	 * Mark tskySpectrum, which is an optional field, as non-existent.
-	 */
-	void clearTskySpectrum ();
-	
-
-
-	
-	// ===> Attribute tsysSpectrum, which is optional
-	
-	
-	
-	/**
-	 * The attribute tsysSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the tsysSpectrum attribute exists. 
-	 */
-	bool isTsysSpectrumExists() const;
-	
-
-	
- 	/**
- 	 * Get tsysSpectrum, which is optional.
- 	 * @return tsysSpectrum as vector<vector<Temperature > >
- 	 * @throws IllegalAccessException If tsysSpectrum does not exist.
- 	 */
- 	vector<vector<Temperature > > getTsysSpectrum() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set tsysSpectrum with the specified vector<vector<Temperature > >.
- 	 * @param tsysSpectrum The vector<vector<Temperature > > value to which tsysSpectrum is to be set.
- 	 
- 		
- 	 */
- 	void setTsysSpectrum (vector<vector<Temperature > > tsysSpectrum);
-		
-	
-	
-	
-	/**
-	 * Mark tsysSpectrum, which is an optional field, as non-existent.
-	 */
-	void clearTsysSpectrum ();
-	
-
-
-	
-	// ===> Attribute tantSpectrum, which is optional
-	
-	
-	
-	/**
-	 * The attribute tantSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the tantSpectrum attribute exists. 
-	 */
-	bool isTantSpectrumExists() const;
-	
-
-	
- 	/**
- 	 * Get tantSpectrum, which is optional.
- 	 * @return tantSpectrum as vector<vector<Temperature > >
- 	 * @throws IllegalAccessException If tantSpectrum does not exist.
- 	 */
- 	vector<vector<Temperature > > getTantSpectrum() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set tantSpectrum with the specified vector<vector<Temperature > >.
- 	 * @param tantSpectrum The vector<vector<Temperature > > value to which tantSpectrum is to be set.
- 	 
- 		
- 	 */
- 	void setTantSpectrum (vector<vector<Temperature > > tantSpectrum);
-		
-	
-	
-	
-	/**
-	 * Mark tantSpectrum, which is an optional field, as non-existent.
-	 */
-	void clearTantSpectrum ();
-	
-
-
-	
-	// ===> Attribute tantTsysSpectrum, which is optional
-	
-	
-	
-	/**
-	 * The attribute tantTsysSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the tantTsysSpectrum attribute exists. 
-	 */
-	bool isTantTsysSpectrumExists() const;
-	
-
-	
- 	/**
- 	 * Get tantTsysSpectrum, which is optional.
- 	 * @return tantTsysSpectrum as vector<vector<float > >
- 	 * @throws IllegalAccessException If tantTsysSpectrum does not exist.
- 	 */
- 	vector<vector<float > > getTantTsysSpectrum() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set tantTsysSpectrum with the specified vector<vector<float > >.
- 	 * @param tantTsysSpectrum The vector<vector<float > > value to which tantTsysSpectrum is to be set.
- 	 
- 		
- 	 */
- 	void setTantTsysSpectrum (vector<vector<float > > tantTsysSpectrum);
-		
-	
-	
-	
-	/**
-	 * Mark tantTsysSpectrum, which is an optional field, as non-existent.
-	 */
-	void clearTantTsysSpectrum ();
-	
-
-
-	
-	// ===> Attribute pwvPathSpectrum, which is optional
-	
-	
-	
-	/**
-	 * The attribute pwvPathSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the pwvPathSpectrum attribute exists. 
-	 */
-	bool isPwvPathSpectrumExists() const;
-	
-
-	
- 	/**
- 	 * Get pwvPathSpectrum, which is optional.
- 	 * @return pwvPathSpectrum as vector<Length >
- 	 * @throws IllegalAccessException If pwvPathSpectrum does not exist.
- 	 */
- 	vector<Length > getPwvPathSpectrum() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set pwvPathSpectrum with the specified vector<Length >.
- 	 * @param pwvPathSpectrum The vector<Length > value to which pwvPathSpectrum is to be set.
- 	 
- 		
- 	 */
- 	void setPwvPathSpectrum (vector<Length > pwvPathSpectrum);
-		
-	
-	
-	
-	/**
-	 * Mark pwvPathSpectrum, which is an optional field, as non-existent.
-	 */
-	void clearPwvPathSpectrum ();
-	
-
-
-	
-	// ===> Attribute dpwvPathSpectrum, which is optional
-	
-	
-	
-	/**
-	 * The attribute dpwvPathSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the dpwvPathSpectrum attribute exists. 
-	 */
-	bool isDpwvPathSpectrumExists() const;
-	
-
-	
- 	/**
- 	 * Get dpwvPathSpectrum, which is optional.
- 	 * @return dpwvPathSpectrum as vector<float >
- 	 * @throws IllegalAccessException If dpwvPathSpectrum does not exist.
- 	 */
- 	vector<float > getDpwvPathSpectrum() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set dpwvPathSpectrum with the specified vector<float >.
- 	 * @param dpwvPathSpectrum The vector<float > value to which dpwvPathSpectrum is to be set.
- 	 
- 		
- 	 */
- 	void setDpwvPathSpectrum (vector<float > dpwvPathSpectrum);
-		
-	
-	
-	
-	/**
-	 * Mark dpwvPathSpectrum, which is an optional field, as non-existent.
-	 */
-	void clearDpwvPathSpectrum ();
-	
-
-
-	
-	// ===> Attribute numPoly, which is optional
-	
-	
-	
-	/**
-	 * The attribute numPoly is optional. Return true if this attribute exists.
-	 * @return true if and only if the numPoly attribute exists. 
-	 */
-	bool isNumPolyExists() const;
-	
-
-	
- 	/**
- 	 * Get numPoly, which is optional.
- 	 * @return numPoly as int
- 	 * @throws IllegalAccessException If numPoly does not exist.
- 	 */
- 	int getNumPoly() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set numPoly with the specified int.
- 	 * @param numPoly The int value to which numPoly is to be set.
- 	 
- 		
- 	 */
- 	void setNumPoly (int numPoly);
-		
-	
-	
-	
-	/**
-	 * Mark numPoly, which is an optional field, as non-existent.
-	 */
-	void clearNumPoly ();
-	
-
-
-	
-	// ===> Attribute numPolyFreq, which is optional
-	
-	
-	
-	/**
-	 * The attribute numPolyFreq is optional. Return true if this attribute exists.
-	 * @return true if and only if the numPolyFreq attribute exists. 
-	 */
-	bool isNumPolyFreqExists() const;
-	
-
-	
- 	/**
- 	 * Get numPolyFreq, which is optional.
- 	 * @return numPolyFreq as int
- 	 * @throws IllegalAccessException If numPolyFreq does not exist.
- 	 */
- 	int getNumPolyFreq() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set numPolyFreq with the specified int.
- 	 * @param numPolyFreq The int value to which numPolyFreq is to be set.
- 	 
- 		
- 	 */
- 	void setNumPolyFreq (int numPolyFreq);
-		
-	
-	
-	
-	/**
-	 * Mark numPolyFreq, which is an optional field, as non-existent.
-	 */
-	void clearNumPolyFreq ();
-	
-
-
-	
-	// ===> Attribute timeOrigin, which is optional
-	
-	
-	
-	/**
-	 * The attribute timeOrigin is optional. Return true if this attribute exists.
-	 * @return true if and only if the timeOrigin attribute exists. 
-	 */
-	bool isTimeOriginExists() const;
-	
-
-	
- 	/**
- 	 * Get timeOrigin, which is optional.
- 	 * @return timeOrigin as ArrayTime
- 	 * @throws IllegalAccessException If timeOrigin does not exist.
- 	 */
- 	ArrayTime getTimeOrigin() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set timeOrigin with the specified ArrayTime.
- 	 * @param timeOrigin The ArrayTime value to which timeOrigin is to be set.
- 	 
- 		
- 	 */
- 	void setTimeOrigin (ArrayTime timeOrigin);
-		
-	
-	
-	
-	/**
-	 * Mark timeOrigin, which is an optional field, as non-existent.
-	 */
-	void clearTimeOrigin ();
-	
-
-
-	
-	// ===> Attribute freqOrigin, which is optional
-	
-	
-	
-	/**
-	 * The attribute freqOrigin is optional. Return true if this attribute exists.
-	 * @return true if and only if the freqOrigin attribute exists. 
-	 */
-	bool isFreqOriginExists() const;
-	
-
-	
- 	/**
- 	 * Get freqOrigin, which is optional.
- 	 * @return freqOrigin as Frequency
- 	 * @throws IllegalAccessException If freqOrigin does not exist.
- 	 */
- 	Frequency getFreqOrigin() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set freqOrigin with the specified Frequency.
- 	 * @param freqOrigin The Frequency value to which freqOrigin is to be set.
- 	 
- 		
- 	 */
- 	void setFreqOrigin (Frequency freqOrigin);
-		
-	
-	
-	
-	/**
-	 * Mark freqOrigin, which is an optional field, as non-existent.
-	 */
-	void clearFreqOrigin ();
-	
-
-
-	
-	// ===> Attribute phaseCurve, which is optional
-	
-	
-	
-	/**
-	 * The attribute phaseCurve is optional. Return true if this attribute exists.
-	 * @return true if and only if the phaseCurve attribute exists. 
-	 */
-	bool isPhaseCurveExists() const;
-	
-
-	
- 	/**
- 	 * Get phaseCurve, which is optional.
- 	 * @return phaseCurve as vector<vector<Angle > >
- 	 * @throws IllegalAccessException If phaseCurve does not exist.
- 	 */
- 	vector<vector<Angle > > getPhaseCurve() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set phaseCurve with the specified vector<vector<Angle > >.
- 	 * @param phaseCurve The vector<vector<Angle > > value to which phaseCurve is to be set.
- 	 
- 		
- 	 */
- 	void setPhaseCurve (vector<vector<Angle > > phaseCurve);
-		
-	
-	
-	
-	/**
-	 * Mark phaseCurve, which is an optional field, as non-existent.
-	 */
-	void clearPhaseCurve ();
-	
-
-
-	
-	// ===> Attribute delayCurve, which is optional
-	
-	
-	
-	/**
-	 * The attribute delayCurve is optional. Return true if this attribute exists.
-	 * @return true if and only if the delayCurve attribute exists. 
-	 */
-	bool isDelayCurveExists() const;
-	
-
-	
- 	/**
- 	 * Get delayCurve, which is optional.
- 	 * @return delayCurve as vector<vector<Interval > >
- 	 * @throws IllegalAccessException If delayCurve does not exist.
- 	 */
- 	vector<vector<Interval > > getDelayCurve() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set delayCurve with the specified vector<vector<Interval > >.
- 	 * @param delayCurve The vector<vector<Interval > > value to which delayCurve is to be set.
- 	 
- 		
- 	 */
- 	void setDelayCurve (vector<vector<Interval > > delayCurve);
-		
-	
-	
-	
-	/**
-	 * Mark delayCurve, which is an optional field, as non-existent.
-	 */
-	void clearDelayCurve ();
-	
-
-
-	
-	// ===> Attribute ampliCurve, which is optional
-	
-	
-	
-	/**
-	 * The attribute ampliCurve is optional. Return true if this attribute exists.
-	 * @return true if and only if the ampliCurve attribute exists. 
-	 */
-	bool isAmpliCurveExists() const;
-	
-
-	
- 	/**
- 	 * Get ampliCurve, which is optional.
- 	 * @return ampliCurve as vector<vector<float > >
- 	 * @throws IllegalAccessException If ampliCurve does not exist.
- 	 */
- 	vector<vector<float > > getAmpliCurve() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set ampliCurve with the specified vector<vector<float > >.
- 	 * @param ampliCurve The vector<vector<float > > value to which ampliCurve is to be set.
- 	 
- 		
- 	 */
- 	void setAmpliCurve (vector<vector<float > > ampliCurve);
-		
-	
-	
-	
-	/**
-	 * Mark ampliCurve, which is an optional field, as non-existent.
-	 */
-	void clearAmpliCurve ();
-	
-
-
-	
-	// ===> Attribute bandpassCurve, which is optional
-	
-	
-	
-	/**
-	 * The attribute bandpassCurve is optional. Return true if this attribute exists.
-	 * @return true if and only if the bandpassCurve attribute exists. 
-	 */
-	bool isBandpassCurveExists() const;
-	
-
-	
- 	/**
- 	 * Get bandpassCurve, which is optional.
- 	 * @return bandpassCurve as vector<vector<float > >
- 	 * @throws IllegalAccessException If bandpassCurve does not exist.
- 	 */
- 	vector<vector<float > > getBandpassCurve() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set bandpassCurve with the specified vector<vector<float > >.
- 	 * @param bandpassCurve The vector<vector<float > > value to which bandpassCurve is to be set.
- 	 
- 		
- 	 */
- 	void setBandpassCurve (vector<vector<float > > bandpassCurve);
-		
-	
-	
-	
-	/**
-	 * Mark bandpassCurve, which is an optional field, as non-existent.
-	 */
-	void clearBandpassCurve ();
-	
-
-
-	
-	// ===> Attribute phasediffFlag, which is optional
-	
-	
-	
-	/**
-	 * The attribute phasediffFlag is optional. Return true if this attribute exists.
-	 * @return true if and only if the phasediffFlag attribute exists. 
-	 */
-	bool isPhasediffFlagExists() const;
-	
-
-	
- 	/**
- 	 * Get phasediffFlag, which is optional.
- 	 * @return phasediffFlag as bool
- 	 * @throws IllegalAccessException If phasediffFlag does not exist.
- 	 */
- 	bool getPhasediffFlag() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set phasediffFlag with the specified bool.
- 	 * @param phasediffFlag The bool value to which phasediffFlag is to be set.
- 	 
- 		
- 	 */
- 	void setPhasediffFlag (bool phasediffFlag);
-		
-	
-	
-	
-	/**
-	 * Mark phasediffFlag, which is an optional field, as non-existent.
-	 */
-	void clearPhasediffFlag ();
-	
-
-
-	
-	// ===> Attribute sbgainFlag, which is optional
-	
-	
-	
-	/**
-	 * The attribute sbgainFlag is optional. Return true if this attribute exists.
-	 * @return true if and only if the sbgainFlag attribute exists. 
-	 */
-	bool isSbgainFlagExists() const;
-	
-
-	
- 	/**
- 	 * Get sbgainFlag, which is optional.
- 	 * @return sbgainFlag as bool
- 	 * @throws IllegalAccessException If sbgainFlag does not exist.
- 	 */
- 	bool getSbgainFlag() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set sbgainFlag with the specified bool.
- 	 * @param sbgainFlag The bool value to which sbgainFlag is to be set.
- 	 
- 		
- 	 */
- 	void setSbgainFlag (bool sbgainFlag);
-		
-	
-	
-	
-	/**
-	 * Mark sbgainFlag, which is an optional field, as non-existent.
-	 */
-	void clearSbgainFlag ();
-	
-
-
-	
-	// ===> Attribute tauFlag, which is optional
-	
-	
-	
-	/**
-	 * The attribute tauFlag is optional. Return true if this attribute exists.
-	 * @return true if and only if the tauFlag attribute exists. 
-	 */
-	bool isTauFlagExists() const;
-	
-
-	
- 	/**
- 	 * Get tauFlag, which is optional.
- 	 * @return tauFlag as bool
- 	 * @throws IllegalAccessException If tauFlag does not exist.
- 	 */
- 	bool getTauFlag() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set tauFlag with the specified bool.
- 	 * @param tauFlag The bool value to which tauFlag is to be set.
- 	 
- 		
- 	 */
- 	void setTauFlag (bool tauFlag);
-		
-	
-	
-	
-	/**
-	 * Mark tauFlag, which is an optional field, as non-existent.
-	 */
-	void clearTauFlag ();
 	
 
 
@@ -1824,7 +326,7 @@ public:
  	 * @return tcalFlag as bool
  	 * @throws IllegalAccessException If tcalFlag does not exist.
  	 */
- 	bool getTcalFlag() const throw(IllegalAccessException);
+ 	bool getTcalFlag() const;
 	
  
  	
@@ -1848,6 +350,47 @@ public:
 
 
 	
+	// ===> Attribute tcalSpectrum, which is optional
+	
+	
+	
+	/**
+	 * The attribute tcalSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the tcalSpectrum attribute exists. 
+	 */
+	bool isTcalSpectrumExists() const;
+	
+
+	
+ 	/**
+ 	 * Get tcalSpectrum, which is optional.
+ 	 * @return tcalSpectrum as vector<vector<Temperature > >
+ 	 * @throws IllegalAccessException If tcalSpectrum does not exist.
+ 	 */
+ 	vector<vector<Temperature > > getTcalSpectrum() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set tcalSpectrum with the specified vector<vector<Temperature > >.
+ 	 * @param tcalSpectrum The vector<vector<Temperature > > value to which tcalSpectrum is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setTcalSpectrum (vector<vector<Temperature > > tcalSpectrum);
+		
+	
+	
+	
+	/**
+	 * Mark tcalSpectrum, which is an optional field, as non-existent.
+	 */
+	void clearTcalSpectrum ();
+	
+
+
+	
 	// ===> Attribute trxFlag, which is optional
 	
 	
@@ -1865,7 +408,7 @@ public:
  	 * @return trxFlag as bool
  	 * @throws IllegalAccessException If trxFlag does not exist.
  	 */
- 	bool getTrxFlag() const throw(IllegalAccessException);
+ 	bool getTrxFlag() const;
 	
  
  	
@@ -1889,6 +432,47 @@ public:
 
 
 	
+	// ===> Attribute trxSpectrum, which is optional
+	
+	
+	
+	/**
+	 * The attribute trxSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the trxSpectrum attribute exists. 
+	 */
+	bool isTrxSpectrumExists() const;
+	
+
+	
+ 	/**
+ 	 * Get trxSpectrum, which is optional.
+ 	 * @return trxSpectrum as vector<vector<Temperature > >
+ 	 * @throws IllegalAccessException If trxSpectrum does not exist.
+ 	 */
+ 	vector<vector<Temperature > > getTrxSpectrum() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set trxSpectrum with the specified vector<vector<Temperature > >.
+ 	 * @param trxSpectrum The vector<vector<Temperature > > value to which trxSpectrum is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setTrxSpectrum (vector<vector<Temperature > > trxSpectrum);
+		
+	
+	
+	
+	/**
+	 * Mark trxSpectrum, which is an optional field, as non-existent.
+	 */
+	void clearTrxSpectrum ();
+	
+
+
+	
 	// ===> Attribute tskyFlag, which is optional
 	
 	
@@ -1906,7 +490,7 @@ public:
  	 * @return tskyFlag as bool
  	 * @throws IllegalAccessException If tskyFlag does not exist.
  	 */
- 	bool getTskyFlag() const throw(IllegalAccessException);
+ 	bool getTskyFlag() const;
 	
  
  	
@@ -1930,6 +514,47 @@ public:
 
 
 	
+	// ===> Attribute tskySpectrum, which is optional
+	
+	
+	
+	/**
+	 * The attribute tskySpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the tskySpectrum attribute exists. 
+	 */
+	bool isTskySpectrumExists() const;
+	
+
+	
+ 	/**
+ 	 * Get tskySpectrum, which is optional.
+ 	 * @return tskySpectrum as vector<vector<Temperature > >
+ 	 * @throws IllegalAccessException If tskySpectrum does not exist.
+ 	 */
+ 	vector<vector<Temperature > > getTskySpectrum() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set tskySpectrum with the specified vector<vector<Temperature > >.
+ 	 * @param tskySpectrum The vector<vector<Temperature > > value to which tskySpectrum is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setTskySpectrum (vector<vector<Temperature > > tskySpectrum);
+		
+	
+	
+	
+	/**
+	 * Mark tskySpectrum, which is an optional field, as non-existent.
+	 */
+	void clearTskySpectrum ();
+	
+
+
+	
 	// ===> Attribute tsysFlag, which is optional
 	
 	
@@ -1947,7 +572,7 @@ public:
  	 * @return tsysFlag as bool
  	 * @throws IllegalAccessException If tsysFlag does not exist.
  	 */
- 	bool getTsysFlag() const throw(IllegalAccessException);
+ 	bool getTsysFlag() const;
 	
  
  	
@@ -1971,6 +596,47 @@ public:
 
 
 	
+	// ===> Attribute tsysSpectrum, which is optional
+	
+	
+	
+	/**
+	 * The attribute tsysSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the tsysSpectrum attribute exists. 
+	 */
+	bool isTsysSpectrumExists() const;
+	
+
+	
+ 	/**
+ 	 * Get tsysSpectrum, which is optional.
+ 	 * @return tsysSpectrum as vector<vector<Temperature > >
+ 	 * @throws IllegalAccessException If tsysSpectrum does not exist.
+ 	 */
+ 	vector<vector<Temperature > > getTsysSpectrum() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set tsysSpectrum with the specified vector<vector<Temperature > >.
+ 	 * @param tsysSpectrum The vector<vector<Temperature > > value to which tsysSpectrum is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setTsysSpectrum (vector<vector<Temperature > > tsysSpectrum);
+		
+	
+	
+	
+	/**
+	 * Mark tsysSpectrum, which is an optional field, as non-existent.
+	 */
+	void clearTsysSpectrum ();
+	
+
+
+	
 	// ===> Attribute tantFlag, which is optional
 	
 	
@@ -1988,7 +654,7 @@ public:
  	 * @return tantFlag as bool
  	 * @throws IllegalAccessException If tantFlag does not exist.
  	 */
- 	bool getTantFlag() const throw(IllegalAccessException);
+ 	bool getTantFlag() const;
 	
  
  	
@@ -2012,6 +678,47 @@ public:
 
 
 	
+	// ===> Attribute tantSpectrum, which is optional
+	
+	
+	
+	/**
+	 * The attribute tantSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the tantSpectrum attribute exists. 
+	 */
+	bool isTantSpectrumExists() const;
+	
+
+	
+ 	/**
+ 	 * Get tantSpectrum, which is optional.
+ 	 * @return tantSpectrum as vector<vector<float > >
+ 	 * @throws IllegalAccessException If tantSpectrum does not exist.
+ 	 */
+ 	vector<vector<float > > getTantSpectrum() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set tantSpectrum with the specified vector<vector<float > >.
+ 	 * @param tantSpectrum The vector<vector<float > > value to which tantSpectrum is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setTantSpectrum (vector<vector<float > > tantSpectrum);
+		
+	
+	
+	
+	/**
+	 * Mark tantSpectrum, which is an optional field, as non-existent.
+	 */
+	void clearTantSpectrum ();
+	
+
+
+	
 	// ===> Attribute tantTsysFlag, which is optional
 	
 	
@@ -2029,7 +736,7 @@ public:
  	 * @return tantTsysFlag as bool
  	 * @throws IllegalAccessException If tantTsysFlag does not exist.
  	 */
- 	bool getTantTsysFlag() const throw(IllegalAccessException);
+ 	bool getTantTsysFlag() const;
 	
  
  	
@@ -2053,43 +760,125 @@ public:
 
 
 	
-	// ===> Attribute pwvPathFlag, which is optional
+	// ===> Attribute tantTsysSpectrum, which is optional
 	
 	
 	
 	/**
-	 * The attribute pwvPathFlag is optional. Return true if this attribute exists.
-	 * @return true if and only if the pwvPathFlag attribute exists. 
+	 * The attribute tantTsysSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the tantTsysSpectrum attribute exists. 
 	 */
-	bool isPwvPathFlagExists() const;
+	bool isTantTsysSpectrumExists() const;
 	
 
 	
  	/**
- 	 * Get pwvPathFlag, which is optional.
- 	 * @return pwvPathFlag as bool
- 	 * @throws IllegalAccessException If pwvPathFlag does not exist.
+ 	 * Get tantTsysSpectrum, which is optional.
+ 	 * @return tantTsysSpectrum as vector<vector<float > >
+ 	 * @throws IllegalAccessException If tantTsysSpectrum does not exist.
  	 */
- 	bool getPwvPathFlag() const throw(IllegalAccessException);
+ 	vector<vector<float > > getTantTsysSpectrum() const;
 	
  
  	
  	
  	/**
- 	 * Set pwvPathFlag with the specified bool.
- 	 * @param pwvPathFlag The bool value to which pwvPathFlag is to be set.
+ 	 * Set tantTsysSpectrum with the specified vector<vector<float > >.
+ 	 * @param tantTsysSpectrum The vector<vector<float > > value to which tantTsysSpectrum is to be set.
  	 
  		
  	 */
- 	void setPwvPathFlag (bool pwvPathFlag);
+ 	void setTantTsysSpectrum (vector<vector<float > > tantTsysSpectrum);
 		
 	
 	
 	
 	/**
-	 * Mark pwvPathFlag, which is an optional field, as non-existent.
+	 * Mark tantTsysSpectrum, which is an optional field, as non-existent.
 	 */
-	void clearPwvPathFlag ();
+	void clearTantTsysSpectrum ();
+	
+
+
+	
+	// ===> Attribute phaseDiffFlag, which is optional
+	
+	
+	
+	/**
+	 * The attribute phaseDiffFlag is optional. Return true if this attribute exists.
+	 * @return true if and only if the phaseDiffFlag attribute exists. 
+	 */
+	bool isPhaseDiffFlagExists() const;
+	
+
+	
+ 	/**
+ 	 * Get phaseDiffFlag, which is optional.
+ 	 * @return phaseDiffFlag as bool
+ 	 * @throws IllegalAccessException If phaseDiffFlag does not exist.
+ 	 */
+ 	bool getPhaseDiffFlag() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set phaseDiffFlag with the specified bool.
+ 	 * @param phaseDiffFlag The bool value to which phaseDiffFlag is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setPhaseDiffFlag (bool phaseDiffFlag);
+		
+	
+	
+	
+	/**
+	 * Mark phaseDiffFlag, which is an optional field, as non-existent.
+	 */
+	void clearPhaseDiffFlag ();
+	
+
+
+	
+	// ===> Attribute phaseDiffSpectrum, which is optional
+	
+	
+	
+	/**
+	 * The attribute phaseDiffSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the phaseDiffSpectrum attribute exists. 
+	 */
+	bool isPhaseDiffSpectrumExists() const;
+	
+
+	
+ 	/**
+ 	 * Get phaseDiffSpectrum, which is optional.
+ 	 * @return phaseDiffSpectrum as vector<vector<float > >
+ 	 * @throws IllegalAccessException If phaseDiffSpectrum does not exist.
+ 	 */
+ 	vector<vector<float > > getPhaseDiffSpectrum() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set phaseDiffSpectrum with the specified vector<vector<float > >.
+ 	 * @param phaseDiffSpectrum The vector<vector<float > > value to which phaseDiffSpectrum is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setPhaseDiffSpectrum (vector<vector<float > > phaseDiffSpectrum);
+		
+	
+	
+	
+	/**
+	 * Mark phaseDiffSpectrum, which is an optional field, as non-existent.
+	 */
+	void clearPhaseDiffSpectrum ();
 	
 
 
@@ -2202,12 +991,12 @@ public:
 	
 		
 	/**
-	 * spectralWindowId pointer to the row in the SpectralWindow table having SpectralWindow.spectralWindowId == spectralWindowId
-	 * @return a SpectralWindowRow*
+	 * antennaId pointer to the row in the Antenna table having Antenna.antennaId == antennaId
+	 * @return a AntennaRow*
 	 * 
 	 
 	 */
-	 SpectralWindowRow* getSpectralWindowUsingSpectralWindowId();
+	 AntennaRow* getAntennaUsingAntennaId();
 	 
 
 	
@@ -2234,12 +1023,12 @@ public:
 	
 		
 	/**
-	 * antennaId pointer to the row in the Antenna table having Antenna.antennaId == antennaId
-	 * @return a AntennaRow*
+	 * spectralWindowId pointer to the row in the SpectralWindow table having SpectralWindow.spectralWindowId == spectralWindowId
+	 * @return a SpectralWindowRow*
 	 * 
 	 
 	 */
-	 AntennaRow* getAntennaUsingAntennaId();
+	 SpectralWindowRow* getSpectralWindowUsingSpectralWindowId();
 	 
 
 	
@@ -2251,10 +1040,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this SysCalRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval);
+	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numReceptor, int numChan);
 	
 	
 
+	
+	bool compareRequiredValue(int numReceptor, int numChan); 
 		 
 	
 	/**
@@ -2326,481 +1117,22 @@ private:
  	
 
 	
-	// ===> Attribute numLoad, which is optional
+	// ===> Attribute numReceptor
 	
-	
-	bool numLoadExists;
 	
 
-	int numLoad;
+	int numReceptor;
 
 	
 	
  	
 
 	
-	// ===> Attribute calLoad, which is optional
+	// ===> Attribute numChan
 	
 	
-	bool calLoadExists;
-	
-
-	vector<int > calLoad;
-
-	
-	
- 	
-
-	
-	// ===> Attribute feff, which is optional
-	
-	
-	bool feffExists;
-	
-
-	vector<float > feff;
-
-	
-	
- 	
-
-	
-	// ===> Attribute aeff, which is optional
-	
-	
-	bool aeffExists;
-	
-
-	vector<float > aeff;
-
-	
-	
- 	
-
-	
-	// ===> Attribute phaseDiff, which is optional
-	
-	
-	bool phaseDiffExists;
-	
-
-	Angle phaseDiff;
-
-	
-	
- 	
-
-	
-	// ===> Attribute sbgain, which is optional
-	
-	
-	bool sbgainExists;
-	
-
-	float sbgain;
-
-	
-	
- 	
-
-	
-	// ===> Attribute tau, which is optional
-	
-	
-	bool tauExists;
-	
-
-	vector<Temperature > tau;
-
-	
-	
- 	
-
-	
-	// ===> Attribute tcal, which is optional
-	
-	
-	bool tcalExists;
-	
-
-	vector<Temperature > tcal;
-
-	
-	
- 	
-
-	
-	// ===> Attribute trx, which is optional
-	
-	
-	bool trxExists;
-	
-
-	vector<Temperature > trx;
-
-	
-	
- 	
-
-	
-	// ===> Attribute tsky, which is optional
-	
-	
-	bool tskyExists;
-	
-
-	vector<Temperature > tsky;
-
-	
-	
- 	
-
-	
-	// ===> Attribute tsys, which is optional
-	
-	
-	bool tsysExists;
-	
-
-	vector<Temperature > tsys;
-
-	
-	
- 	
-
-	
-	// ===> Attribute tant, which is optional
-	
-	
-	bool tantExists;
-	
-
-	vector<Temperature > tant;
-
-	
-	
- 	
-
-	
-	// ===> Attribute tantTsys, which is optional
-	
-	
-	bool tantTsysExists;
-	
-
-	vector<float > tantTsys;
-
-	
-	
- 	
-
-	
-	// ===> Attribute pwvPath, which is optional
-	
-	
-	bool pwvPathExists;
-	
-
-	vector<Length > pwvPath;
-
-	
-	
- 	
-
-	
-	// ===> Attribute dpwvPath, which is optional
-	
-	
-	bool dpwvPathExists;
-	
-
-	vector<float > dpwvPath;
-
-	
-	
- 	
-
-	
-	// ===> Attribute feffSpectrum, which is optional
-	
-	
-	bool feffSpectrumExists;
-	
-
-	vector<vector<float > > feffSpectrum;
-
-	
-	
- 	
-
-	
-	// ===> Attribute sbgainSpectrum, which is optional
-	
-	
-	bool sbgainSpectrumExists;
-	
-
-	vector<vector<float > > sbgainSpectrum;
-
-	
-	
- 	
-
-	
-	// ===> Attribute tauSpectrum, which is optional
-	
-	
-	bool tauSpectrumExists;
-	
-
-	vector<vector<Temperature > > tauSpectrum;
-
-	
-	
- 	
-
-	
-	// ===> Attribute tcalSpectrum, which is optional
-	
-	
-	bool tcalSpectrumExists;
-	
-
-	vector<vector<Temperature > > tcalSpectrum;
-
-	
-	
- 	
-
-	
-	// ===> Attribute trxSpectrum, which is optional
-	
-	
-	bool trxSpectrumExists;
-	
-
-	vector<Temperature > trxSpectrum;
-
-	
-	
- 	
-
-	
-	// ===> Attribute tskySpectrum, which is optional
-	
-	
-	bool tskySpectrumExists;
-	
-
-	vector<vector<Temperature > > tskySpectrum;
-
-	
-	
- 	
-
-	
-	// ===> Attribute tsysSpectrum, which is optional
-	
-	
-	bool tsysSpectrumExists;
-	
-
-	vector<vector<Temperature > > tsysSpectrum;
-
-	
-	
- 	
-
-	
-	// ===> Attribute tantSpectrum, which is optional
-	
-	
-	bool tantSpectrumExists;
-	
-
-	vector<vector<Temperature > > tantSpectrum;
-
-	
-	
- 	
-
-	
-	// ===> Attribute tantTsysSpectrum, which is optional
-	
-	
-	bool tantTsysSpectrumExists;
-	
-
-	vector<vector<float > > tantTsysSpectrum;
-
-	
-	
- 	
-
-	
-	// ===> Attribute pwvPathSpectrum, which is optional
-	
-	
-	bool pwvPathSpectrumExists;
-	
-
-	vector<Length > pwvPathSpectrum;
-
-	
-	
- 	
-
-	
-	// ===> Attribute dpwvPathSpectrum, which is optional
-	
-	
-	bool dpwvPathSpectrumExists;
-	
-
-	vector<float > dpwvPathSpectrum;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numPoly, which is optional
-	
-	
-	bool numPolyExists;
-	
-
-	int numPoly;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numPolyFreq, which is optional
-	
-	
-	bool numPolyFreqExists;
-	
-
-	int numPolyFreq;
-
-	
-	
- 	
-
-	
-	// ===> Attribute timeOrigin, which is optional
-	
-	
-	bool timeOriginExists;
-	
-
-	ArrayTime timeOrigin;
-
-	
-	
- 	
-
-	
-	// ===> Attribute freqOrigin, which is optional
-	
-	
-	bool freqOriginExists;
-	
-
-	Frequency freqOrigin;
-
-	
-	
- 	
-
-	
-	// ===> Attribute phaseCurve, which is optional
-	
-	
-	bool phaseCurveExists;
-	
-
-	vector<vector<Angle > > phaseCurve;
-
-	
-	
- 	
-
-	
-	// ===> Attribute delayCurve, which is optional
-	
-	
-	bool delayCurveExists;
-	
-
-	vector<vector<Interval > > delayCurve;
-
-	
-	
- 	
-
-	
-	// ===> Attribute ampliCurve, which is optional
-	
-	
-	bool ampliCurveExists;
-	
-
-	vector<vector<float > > ampliCurve;
-
-	
-	
- 	
-
-	
-	// ===> Attribute bandpassCurve, which is optional
-	
-	
-	bool bandpassCurveExists;
-	
-
-	vector<vector<float > > bandpassCurve;
-
-	
-	
- 	
-
-	
-	// ===> Attribute phasediffFlag, which is optional
-	
-	
-	bool phasediffFlagExists;
-	
-
-	bool phasediffFlag;
-
-	
-	
- 	
-
-	
-	// ===> Attribute sbgainFlag, which is optional
-	
-	
-	bool sbgainFlagExists;
-	
-
-	bool sbgainFlag;
-
-	
-	
- 	
-
-	
-	// ===> Attribute tauFlag, which is optional
-	
-	
-	bool tauFlagExists;
-	
 
-	bool tauFlag;
+	int numChan;
 
 	
 	
@@ -2820,6 +1152,19 @@ private:
  	
 
 	
+	// ===> Attribute tcalSpectrum, which is optional
+	
+	
+	bool tcalSpectrumExists;
+	
+
+	vector<vector<Temperature > > tcalSpectrum;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute trxFlag, which is optional
 	
 	
@@ -2827,6 +1172,19 @@ private:
 	
 
 	bool trxFlag;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute trxSpectrum, which is optional
+	
+	
+	bool trxSpectrumExists;
+	
+
+	vector<vector<Temperature > > trxSpectrum;
 
 	
 	
@@ -2846,6 +1204,19 @@ private:
  	
 
 	
+	// ===> Attribute tskySpectrum, which is optional
+	
+	
+	bool tskySpectrumExists;
+	
+
+	vector<vector<Temperature > > tskySpectrum;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute tsysFlag, which is optional
 	
 	
@@ -2853,6 +1224,19 @@ private:
 	
 
 	bool tsysFlag;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute tsysSpectrum, which is optional
+	
+	
+	bool tsysSpectrumExists;
+	
+
+	vector<vector<Temperature > > tsysSpectrum;
 
 	
 	
@@ -2872,6 +1256,19 @@ private:
  	
 
 	
+	// ===> Attribute tantSpectrum, which is optional
+	
+	
+	bool tantSpectrumExists;
+	
+
+	vector<vector<float > > tantSpectrum;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute tantTsysFlag, which is optional
 	
 	
@@ -2885,13 +1282,39 @@ private:
  	
 
 	
-	// ===> Attribute pwvPathFlag, which is optional
+	// ===> Attribute tantTsysSpectrum, which is optional
 	
 	
-	bool pwvPathFlagExists;
+	bool tantTsysSpectrumExists;
 	
 
-	bool pwvPathFlag;
+	vector<vector<float > > tantTsysSpectrum;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute phaseDiffFlag, which is optional
+	
+	
+	bool phaseDiffFlagExists;
+	
+
+	bool phaseDiffFlag;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute phaseDiffSpectrum, which is optional
+	
+	
+	bool phaseDiffSpectrumExists;
+	
+
+	vector<vector<float > > phaseDiffSpectrum;
 
 	
 	

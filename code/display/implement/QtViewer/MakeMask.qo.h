@@ -66,7 +66,7 @@ class MakeMask : public QWidget {
   void newRegion_(String imgFilename);
 
   //handle switch display axis
-  void changeAxis(String, String, String);
+  void changeAxis(String, String, String, int);
 
   //handle single click to select a box
   void activate(Record);
@@ -100,7 +100,9 @@ class MakeMask : public QWidget {
 
   //create new box of this shape
   void reShape(const QString&);
-
+ 
+  void zPlaneChanged();
+  void pPlaneChanged();
  protected:
 
   void rotateBox(int cb);
@@ -119,6 +121,7 @@ class MakeMask : public QWidget {
   RSComposite *regionToShape(
         QtDisplayData* qdd, const ImageRegion* wcreg);
 
+  bool planeAllowed(String, String);
 
  private:
 
@@ -133,6 +136,9 @@ class MakeMask : public QWidget {
   bool flash;
 
   int cb;
+  int zIndex;
+  int pIndex;
+  String zAxis;
 
 
   QGroupBox* tGroup;

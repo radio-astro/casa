@@ -37,31 +37,29 @@
 #include <string>
 using namespace std;
 
+
+int CFieldCode::version() {
+	return FieldCodeMod::version;
+	}
+	
+string CFieldCode::revision () {
+	return FieldCodeMod::revision;
+}
+
+unsigned int CFieldCode::size() {
+	return 1;
+	}
+	
 	
 const std::string& CFieldCode::sNONE = "NONE";
 	
-const std::vector<std::string> CFieldCode::sFieldCodeSet() {
+const std::vector<std::string> CFieldCode::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CFieldCode::sNONE);
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CFieldCode::hNONE = "";
-	
-const std::vector<std::string> CFieldCode::hFieldCodeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CFieldCode::hNONE);
-        
-    return enumSet;
-}
-   	
 
 std::string CFieldCode::name(const FieldCodeMod::FieldCode& f) {
     switch (f) {
@@ -70,22 +68,9 @@ std::string CFieldCode::name(const FieldCodeMod::FieldCode& f) {
       return CFieldCode::sNONE;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CFieldCode::help(const FieldCodeMod::FieldCode& f) {
-    switch (f) {
-    
-    case FieldCodeMod::NONE:
-      return CFieldCode::hNONE;
-    	
-    }
-    return std::string("");
-}
-   	
 
 FieldCodeMod::FieldCode CFieldCode::newFieldCode(const std::string& name) {
 		
@@ -106,12 +91,10 @@ FieldCodeMod::FieldCode CFieldCode::literal(const std::string& name) {
 }
 
 FieldCodeMod::FieldCode CFieldCode::from_int(unsigned int i) {
-	vector<string> names = sFieldCodeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newFieldCode(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newFieldCode(names_.at(i));
 }
-
-	
 
 string CFieldCode::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'FieldCode'.";

@@ -62,4 +62,5 @@ secondNGC4826                   rreid@nrao.edu
 third4826                       smyers@aoc.nrao.edu
 time+chan_avg                   rreid@nrao.edu
 vishead_test                    jmlarsen@eso.org
+visstat_test                    jmlarsen@eso.org
 wproject_regression             kgolap@aoc.nrao.edu

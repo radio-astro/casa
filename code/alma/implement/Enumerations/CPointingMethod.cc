@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CPointingMethod::version() {
+	return PointingMethodMod::version;
+	}
+	
+string CPointingMethod::revision () {
+	return PointingMethodMod::revision;
+}
+
+unsigned int CPointingMethod::size() {
+	return 5;
+	}
+	
 	
 const std::string& CPointingMethod::sTHREE_POINT = "THREE_POINT";
 	
@@ -48,7 +61,7 @@ const std::string& CPointingMethod::sCROSS = "CROSS";
 	
 const std::string& CPointingMethod::sCIRCLE = "CIRCLE";
 	
-const std::vector<std::string> CPointingMethod::sPointingMethodSet() {
+const std::vector<std::string> CPointingMethod::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CPointingMethod::sTHREE_POINT);
@@ -63,37 +76,6 @@ const std::vector<std::string> CPointingMethod::sPointingMethodSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CPointingMethod::hTHREE_POINT = "Three-point scan";
-	
-const std::string& CPointingMethod::hFOUR_POINT = "Four-point scan";
-	
-const std::string& CPointingMethod::hFIVE_POINT = "Five-point scan";
-	
-const std::string& CPointingMethod::hCROSS = "Cross scan";
-	
-const std::string& CPointingMethod::hCIRCLE = "Circular scan";
-	
-const std::vector<std::string> CPointingMethod::hPointingMethodSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CPointingMethod::hTHREE_POINT);
-    
-    enumSet.insert(enumSet.end(), CPointingMethod::hFOUR_POINT);
-    
-    enumSet.insert(enumSet.end(), CPointingMethod::hFIVE_POINT);
-    
-    enumSet.insert(enumSet.end(), CPointingMethod::hCROSS);
-    
-    enumSet.insert(enumSet.end(), CPointingMethod::hCIRCLE);
-        
-    return enumSet;
-}
-   	
 
 std::string CPointingMethod::name(const PointingMethodMod::PointingMethod& f) {
     switch (f) {
@@ -114,34 +96,9 @@ std::string CPointingMethod::name(const PointingMethodMod::PointingMethod& f) {
       return CPointingMethod::sCIRCLE;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CPointingMethod::help(const PointingMethodMod::PointingMethod& f) {
-    switch (f) {
-    
-    case PointingMethodMod::THREE_POINT:
-      return CPointingMethod::hTHREE_POINT;
-    
-    case PointingMethodMod::FOUR_POINT:
-      return CPointingMethod::hFOUR_POINT;
-    
-    case PointingMethodMod::FIVE_POINT:
-      return CPointingMethod::hFIVE_POINT;
-    
-    case PointingMethodMod::CROSS:
-      return CPointingMethod::hCROSS;
-    
-    case PointingMethodMod::CIRCLE:
-      return CPointingMethod::hCIRCLE;
-    	
-    }
-    return std::string("");
-}
-   	
 
 PointingMethodMod::PointingMethod CPointingMethod::newPointingMethod(const std::string& name) {
 		
@@ -194,12 +151,10 @@ PointingMethodMod::PointingMethod CPointingMethod::literal(const std::string& na
 }
 
 PointingMethodMod::PointingMethod CPointingMethod::from_int(unsigned int i) {
-	vector<string> names = sPointingMethodSet();
-	if (i >= names.size()) throw badInt(i);
-	return newPointingMethod(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newPointingMethod(names_.at(i));
 }
-
-	
 
 string CPointingMethod::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'PointingMethod'.";

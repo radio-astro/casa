@@ -41,26 +41,28 @@ using std::set;
 #include <PointingRow.h>
 #include <PointingTable.h>
 
-#include <AntennaTable.h>
-#include <AntennaRow.h>
-
 #include <PointingModelTable.h>
 #include <PointingModelRow.h>
+
+#include <AntennaTable.h>
+#include <AntennaRow.h>
 	
 
 using asdm::ASDM;
 using asdm::PointingRow;
 using asdm::PointingTable;
 
-using asdm::AntennaTable;
-using asdm::AntennaRow;
-
 using asdm::PointingModelTable;
 using asdm::PointingModelRow;
+
+using asdm::AntennaTable;
+using asdm::AntennaRow;
 
 
 #include <Parser.h>
 using asdm::Parser;
+
+#include <EnumerationParser.h>
  
 #include <InvalidArgumentException.h>
 using asdm::InvalidArgumentException;
@@ -94,214 +96,258 @@ namespace asdm {
 	
 		
 	
+  		
 		
 		
 			
-		x->timeInterval = getTimeInterval().toIDLArrayTimeInterval();
+		x->timeInterval = timeInterval.toIDLArrayTimeInterval();
 			
-		
 		
 	
 
 	
+  		
 		
 		
 			
 				
-		x->name = CORBA::string_dup(getName().c_str());
-				
- 			
-		
-		
-	
-
-	
-		
-		
-			
-				
-		x->numPoly = getNumPoly();
+		x->numSample = numSample;
  				
  			
 		
-		
 	
 
 	
+  		
 		
 		
 			
-		x->timeOrigin = getTimeOrigin().toIDLArrayTime();
-			
-		
-		
-	
-
-	
-		
-		
-			
-		vector< vector<Angle> > tmpPointingDirection = getPointingDirection();
-		x->pointingDirection.length(tmpPointingDirection.size());
-		for (unsigned int i = 0; i < tmpPointingDirection.size(); ++i)
-			x->pointingDirection[i].length(tmpPointingDirection[0].size());
-		for (unsigned int i = 0; i < tmpPointingDirection.size(); ++i) {
-			for (unsigned int j = 0; j < tmpPointingDirection[0].size(); ++j) {
-				
-				x->pointingDirection[i][j] = tmpPointingDirection[i][j].toIDLAngle();
-				
-		 	}
-		 }
-			
-		
-		
-	
-
-	
-		
-		
-			
-		vector< vector<Angle> > tmpTarget = getTarget();
-		x->target.length(tmpTarget.size());
-		for (unsigned int i = 0; i < tmpTarget.size(); ++i)
-			x->target[i].length(tmpTarget[0].size());
-		for (unsigned int i = 0; i < tmpTarget.size(); ++i) {
-			for (unsigned int j = 0; j < tmpTarget[0].size(); ++j) {
-				
-				x->target[i][j] = tmpTarget[i][j].toIDLAngle();
-				
-		 	}
-		 }
-			
-		
-		
-	
-
-	
-		
-		vector< vector<Angle> > tmpOffset = getOffset();
-		x->offset.length(tmpOffset.size());
-		for (unsigned int i = 0; i < tmpOffset.size(); ++i)
-			x->offset[i].length(tmpOffset[0].size());
-		for (unsigned int i = 0; i < tmpOffset.size(); ++i) {
-			for (unsigned int j = 0; j < tmpOffset[0].size(); ++j) {
-				
-				x->offset[i][j] = tmpOffset[i][j].toIDLAngle();
-				
-		 	}
-		 }
-		
-	
-
-	
-		
-		x->sourceOffsetExists = sourceOffsetExists;
-  		if (sourceOffsetExists) {
-  			try {
-		
-		
-			
-		vector< vector<Angle> > tmpSourceOffset = getSourceOffset();
-		x->sourceOffset.length(tmpSourceOffset.size());
-		for (unsigned int i = 0; i < tmpSourceOffset.size(); ++i)
-			x->sourceOffset[i].length(tmpSourceOffset[0].size());
-		for (unsigned int i = 0; i < tmpSourceOffset.size(); ++i) {
-			for (unsigned int j = 0; j < tmpSourceOffset[0].size(); ++j) {
-				
-				x->sourceOffset[i][j] = tmpSourceOffset[i][j].toIDLAngle();
-				
-		 	}
-		 }
-			
-		
-		
-			} catch (IllegalAccessException e) {
-			}
+		x->encoder.length(encoder.size());
+		for (unsigned int i = 0; i < encoder.size(); i++) {
+			x->encoder[i].length(encoder.at(i).size());			 		
 		}
 		
+		for (unsigned int i = 0; i < encoder.size() ; i++)
+			for (unsigned int j = 0; j < encoder.at(i).size(); j++)
+					
+				x->encoder[i][j]= encoder.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
 	
 
 	
+  		
 		
 		
 			
-		vector<Angle> tmpEncoder = getEncoder();
-		x->encoder.length(tmpEncoder.size());
-		for (unsigned int i = 0; i < tmpEncoder.size(); ++i) {
+				
+		x->pointingTracking = pointingTracking;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
 			
-			x->encoder[i] = tmpEncoder[i].toIDLAngle();
+				
+		x->usePolynomials = usePolynomials;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->timeOrigin = timeOrigin.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->numTerm = numTerm;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->pointingDirection.length(pointingDirection.size());
+		for (unsigned int i = 0; i < pointingDirection.size(); i++) {
+			x->pointingDirection[i].length(pointingDirection.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < pointingDirection.size() ; i++)
+			for (unsigned int j = 0; j < pointingDirection.at(i).size(); j++)
+					
+				x->pointingDirection[i][j]= pointingDirection.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->target.length(target.size());
+		for (unsigned int i = 0; i < target.size(); i++) {
+			x->target[i].length(target.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < target.size() ; i++)
+			for (unsigned int j = 0; j < target.at(i).size(); j++)
+					
+				x->target[i][j]= target.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->offset.length(offset.size());
+		for (unsigned int i = 0; i < offset.size(); i++) {
+			x->offset[i].length(offset.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < offset.size() ; i++)
+			for (unsigned int j = 0; j < offset.at(i).size(); j++)
+					
+				x->offset[i][j]= offset.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x->overTheTopExists = overTheTopExists;
+		
+		
+			
+				
+		x->overTheTop = overTheTop;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->sourceOffsetExists = sourceOffsetExists;
+		
+		
+			
+		x->sourceOffset.length(sourceOffset.size());
+		for (unsigned int i = 0; i < sourceOffset.size(); i++) {
+			x->sourceOffset[i].length(sourceOffset.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < sourceOffset.size() ; i++)
+			for (unsigned int j = 0; j < sourceOffset.at(i).size(); j++)
+					
+				x->sourceOffset[i][j]= sourceOffset.at(i).at(j).toIDLAngle();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x->sourceOffsetReferenceCodeExists = sourceOffsetReferenceCodeExists;
+		
+		
+			
+				
+		x->sourceOffsetReferenceCode = sourceOffsetReferenceCode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->sourceOffsetEquinoxExists = sourceOffsetEquinoxExists;
+		
+		
+			
+		x->sourceOffsetEquinox = sourceOffsetEquinox.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		x->sampledTimeIntervalExists = sampledTimeIntervalExists;
+		
+		
+			
+		x->sampledTimeInterval.length(sampledTimeInterval.size());
+		for (unsigned int i = 0; i < sampledTimeInterval.size(); ++i) {
+			
+			x->sampledTimeInterval[i] = sampledTimeInterval.at(i).toIDLArrayTimeInterval();
 			
 	 	}
 			
 		
-		
 	
 
 	
-		
-		
-			
-				
-		x->pointingTracking = getPointingTracking();
- 				
- 				
-			
-		x->phaseTrackingExists = phaseTrackingExists;
-		if (phaseTrackingExists) {
-			try {		
-				x->phaseTracking = getPhaseTracking();
-			}
- 			catch (IllegalAccessException e) {
-			}
-		}
-		
+	
 		
 	
+  	
+ 		
+		
+	 	
+			
+		x->antennaId = antennaId.toIDLTag();
+			
+	 	 		
+  	
 
 	
+  	
+ 		
 		
-		x->overTheTopExists = overTheTopExists;
-  		if (overTheTopExists) {
-  			try {
-		
-		
+	 	
 			
 				
-		x->overTheTop = getOverTheTop();
+		x->pointingModelId = pointingModelId;
  				
  			
-		
-		
-			} catch (IllegalAccessException e) {
-			}
-		}
-		
-	
-
-	
-	
-		
-	
-		
-		
-			
-		x->antennaId = getAntennaId().toIDLTag();
-			
-		
-		
-	
-
-	
-		
-		
-			
-				
-		x->pointingModelId = getPointingModelId();
- 				
- 			
-		
-		
-	
+	 	 		
+  	
 
 	
 		
@@ -321,7 +367,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct PointingRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void PointingRow::setFromIDL (PointingRowIDL x) throw(ConversionException) {
+	void PointingRow::setFromIDL (PointingRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -330,7 +376,7 @@ namespace asdm {
 		
 		
 			
-		setTimeInterval(*(new ArrayTimeInterval (x.timeInterval)));
+		setTimeInterval(ArrayTimeInterval (x.timeInterval));
 			
  		
 		
@@ -340,17 +386,7 @@ namespace asdm {
 		
 		
 			
-		setName(*(new string (x.name)));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumPoly(x.numPoly);
+		setNumSample(x.numSample);
   			
  		
 		
@@ -360,103 +396,17 @@ namespace asdm {
 		
 		
 			
-		setTimeOrigin(*(new ArrayTime (x.timeOrigin)));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		vector< vector<Angle> > tmpPointingDirection(x.pointingDirection.length());
-		for (unsigned int i = 0; i < tmpPointingDirection.size(); ++i)
-			tmpPointingDirection[i] = *(new vector<Angle>(x.pointingDirection[0].length()));
-		for (unsigned int i = 0; i < tmpPointingDirection.size(); ++i) {
-			for (unsigned int j = 0; j < tmpPointingDirection[0].size(); ++j) {
+		encoder .clear();
+		vector<Angle> v_aux_encoder;
+		for (unsigned int i = 0; i < x.encoder.length(); ++i) {
+			v_aux_encoder.clear();
+			for (unsigned int j = 0; j < x.encoder[0].length(); ++j) {
 				
-				tmpPointingDirection[i][j] = *(new Angle (x.pointingDirection[i][j]));
+				v_aux_encoder.push_back(Angle (x.encoder[i][j]));
 				
   			}
+  			encoder.push_back(v_aux_encoder);			
 		}
-		setPointingDirection(tmpPointingDirection);
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		vector< vector<Angle> > tmpTarget(x.target.length());
-		for (unsigned int i = 0; i < tmpTarget.size(); ++i)
-			tmpTarget[i] = *(new vector<Angle>(x.target[0].length()));
-		for (unsigned int i = 0; i < tmpTarget.size(); ++i) {
-			for (unsigned int j = 0; j < tmpTarget[0].size(); ++j) {
-				
-				tmpTarget[i][j] = *(new Angle (x.target[i][j]));
-				
-  			}
-		}
-		setTarget(tmpTarget);
-			
-  		
-		
-	
-
-	
-		
-		vector< vector<Angle> > tmpOffset(x.offset.length());
-		for (unsigned int i = 0; i < tmpOffset.size(); ++i)
-			tmpOffset[i] = *(new vector<Angle>(x.offset[0].length()));
-		for (unsigned int i = 0; i < tmpOffset.size(); ++i) {
-			for (unsigned int j = 0; j < tmpOffset[0].size(); ++j) {
-				
-				tmpOffset[i][j] = *(new Angle (x.offset[i][j]));
-				
-  			}
-		}
-		setOffset(tmpOffset);
-		
-	
-
-	
-		
-		if (x.sourceOffsetExists) {
-		
-		
-			
-		vector< vector<Angle> > tmpSourceOffset(x.sourceOffset.length());
-		for (unsigned int i = 0; i < tmpSourceOffset.size(); ++i)
-			tmpSourceOffset[i] = *(new vector<Angle>(x.sourceOffset[0].length()));
-		for (unsigned int i = 0; i < tmpSourceOffset.size(); ++i) {
-			for (unsigned int j = 0; j < tmpSourceOffset[0].size(); ++j) {
-				
-				tmpSourceOffset[i][j] = *(new Angle (x.sourceOffset[i][j]));
-				
-  			}
-		}
-		setSourceOffset(tmpSourceOffset);
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		
-			
-		vector<Angle> tmpEncoder(x.encoder.length());
-		for (unsigned int i = 0; i < tmpEncoder.size(); ++i) {
-			
-			tmpEncoder[i] = *(new Angle (x.encoder[i]));
-			
-		}
-		setEncoder(tmpEncoder);
 			
   		
 		
@@ -475,15 +425,96 @@ namespace asdm {
 	
 		
 		
-		if (x.phaseTrackingExists) {
-			setPhaseTracking(x.phaseTracking);
-		}
+			
+		setUsePolynomials(x.usePolynomials);
+  			
  		
 		
 	
 
 	
 		
+		
+			
+		setTimeOrigin(ArrayTime (x.timeOrigin));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumTerm(x.numTerm);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		pointingDirection .clear();
+		vector<Angle> v_aux_pointingDirection;
+		for (unsigned int i = 0; i < x.pointingDirection.length(); ++i) {
+			v_aux_pointingDirection.clear();
+			for (unsigned int j = 0; j < x.pointingDirection[0].length(); ++j) {
+				
+				v_aux_pointingDirection.push_back(Angle (x.pointingDirection[i][j]));
+				
+  			}
+  			pointingDirection.push_back(v_aux_pointingDirection);			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		target .clear();
+		vector<Angle> v_aux_target;
+		for (unsigned int i = 0; i < x.target.length(); ++i) {
+			v_aux_target.clear();
+			for (unsigned int j = 0; j < x.target[0].length(); ++j) {
+				
+				v_aux_target.push_back(Angle (x.target[i][j]));
+				
+  			}
+  			target.push_back(v_aux_target);			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		offset .clear();
+		vector<Angle> v_aux_offset;
+		for (unsigned int i = 0; i < x.offset.length(); ++i) {
+			v_aux_offset.clear();
+			for (unsigned int j = 0; j < x.offset[0].length(); ++j) {
+				
+				v_aux_offset.push_back(Angle (x.offset[i][j]));
+				
+  			}
+  			offset.push_back(v_aux_offset);			
+		}
+			
+  		
+		
+	
+
+	
+		
+		overTheTopExists = x.overTheTopExists;
 		if (x.overTheTopExists) {
 		
 		
@@ -497,13 +528,88 @@ namespace asdm {
 	
 
 	
+		
+		sourceOffsetExists = x.sourceOffsetExists;
+		if (x.sourceOffsetExists) {
+		
+		
+			
+		sourceOffset .clear();
+		vector<Angle> v_aux_sourceOffset;
+		for (unsigned int i = 0; i < x.sourceOffset.length(); ++i) {
+			v_aux_sourceOffset.clear();
+			for (unsigned int j = 0; j < x.sourceOffset[0].length(); ++j) {
+				
+				v_aux_sourceOffset.push_back(Angle (x.sourceOffset[i][j]));
+				
+  			}
+  			sourceOffset.push_back(v_aux_sourceOffset);			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		sourceOffsetReferenceCodeExists = x.sourceOffsetReferenceCodeExists;
+		if (x.sourceOffsetReferenceCodeExists) {
+		
+		
+			
+		setSourceOffsetReferenceCode(x.sourceOffsetReferenceCode);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		sourceOffsetEquinoxExists = x.sourceOffsetEquinoxExists;
+		if (x.sourceOffsetEquinoxExists) {
+		
+		
+			
+		setSourceOffsetEquinox(ArrayTime (x.sourceOffsetEquinox));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		sampledTimeIntervalExists = x.sampledTimeIntervalExists;
+		if (x.sampledTimeIntervalExists) {
+		
+		
+			
+		sampledTimeInterval .clear();
+		for (unsigned int i = 0; i <x.sampledTimeInterval.length(); ++i) {
+			
+			sampledTimeInterval.push_back(ArrayTimeInterval (x.sampledTimeInterval[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
 	
 		
 	
 		
 		
 			
-		setAntennaId(*(new Tag (x.antennaId)));
+		setAntennaId(Tag (x.antennaId));
 			
  		
 		
@@ -526,7 +632,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Pointing");
+			throw ConversionException (err.getMessage(),"Pointing");
 		}
 	}
 #endif
@@ -544,7 +650,6 @@ namespace asdm {
   	
  		
 		
-		
 		Parser::toXML(timeInterval, "timeInterval", buf);
 		
 		
@@ -553,12 +658,7 @@ namespace asdm {
   	
  		
 		
-		if (nameExists) {
-			Parser::toXML(name, "name", buf);
-		}
-		
-		
-		Parser::toXML(numPoly, "numPoly", buf);
+		Parser::toXML(numSample, "numSample", buf);
 		
 		
 	
@@ -566,6 +666,29 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(encoder, "encoder", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(pointingTracking, "pointingTracking", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(usePolynomials, "usePolynomials", buf);
+		
+		
+	
+
+  	
+ 		
 		
 		Parser::toXML(timeOrigin, "timeOrigin", buf);
 		
@@ -575,6 +698,13 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(numTerm, "numTerm", buf);
+		
+		
+	
+
+  	
+ 		
 		
 		Parser::toXML(pointingDirection, "pointingDirection", buf);
 		
@@ -584,15 +714,34 @@ namespace asdm {
   	
  		
 		
-		
 		Parser::toXML(target, "target", buf);
 		
 		
+	
 
+  	
+ 		
+		
 		Parser::toXML(offset, "offset", buf);
+		
+		
+	
+
+  	
+ 		
+		if (overTheTopExists) {
+		
+		
+		Parser::toXML(overTheTop, "overTheTop", buf);
+		
+		
+		}
+		
+	
+
+  	
  		
 		if (sourceOffsetExists) {
-		
 		
 		
 		Parser::toXML(sourceOffset, "sourceOffset", buf);
@@ -604,38 +753,34 @@ namespace asdm {
 
   	
  		
+		if (sourceOffsetReferenceCodeExists) {
 		
 		
-		Parser::toXML(encoder, "encoder", buf);
+			buf.append(EnumerationParser::toXML("sourceOffsetReferenceCode", sourceOffsetReferenceCode));
 		
 		
-	
-
-  	
- 		
-		
-		
-		Parser::toXML(pointingTracking, "pointingTracking", buf);
-		
-		
-	
-
-  	
- 		
-		if (phaseTrackingExists) {
-			Parser::toXML(phaseTracking, "phaseTracking", buf);
 		}
 		
+	
+
+  	
+ 		
+		if (sourceOffsetEquinoxExists) {
+		
+		
+		Parser::toXML(sourceOffsetEquinox, "sourceOffsetEquinox", buf);
+		
+		
+		}
 		
 	
 
   	
  		
-		if (overTheTopExists) {
+		if (sampledTimeIntervalExists) {
 		
 		
-		
-		Parser::toXML(overTheTop, "overTheTop", buf);
+		Parser::toXML(sampledTimeInterval, "sampledTimeInterval", buf);
 		
 		
 		}
@@ -647,7 +792,6 @@ namespace asdm {
 		
   	
  		
-		
 		
 		Parser::toXML(antennaId, "antennaId", buf);
 		
@@ -656,7 +800,6 @@ namespace asdm {
 
   	
  		
-		
 		
 		Parser::toXML(pointingModelId, "pointingModelId", buf);
 		
@@ -679,7 +822,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void PointingRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void PointingRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -696,11 +839,7 @@ namespace asdm {
 	
   		
 			
-	       if (row.isStr("<name>")) {
-			
-	  		setName(Parser::getString("name","Pointing",rowDoc));
-			
-		}
+	  	setNumSample(Parser::getInteger("numSample","Pointing",rowDoc));
 			
 		
 	
@@ -708,7 +847,25 @@ namespace asdm {
 	
   		
 			
-	  	setNumPoly(Parser::getInteger("numPoly","Pointing",rowDoc));
+					
+	  	setEncoder(Parser::get2DAngle("encoder","Pointing",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setPointingTracking(Parser::getBoolean("pointingTracking","Pointing",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setUsePolynomials(Parser::getBoolean("usePolynomials","Pointing",rowDoc));
 			
 		
 	
@@ -717,6 +874,14 @@ namespace asdm {
   		
 			
 	  	setTimeOrigin(Parser::getArrayTime("timeOrigin","Pointing",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setNumTerm(Parser::getInteger("numTerm","Pointing",rowDoc));
 			
 		
 	
@@ -741,9 +906,28 @@ namespace asdm {
 		
 	
 
-				
-	  	setOffset(Parser::get2DAngle("offset","Pointing",rowDoc));
 	
+  		
+			
+					
+	  	setOffset(Parser::get2DAngle("offset","Pointing",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+        if (row.isStr("<overTheTop>")) {
+			
+	  		setOverTheTop(Parser::getBoolean("overTheTop","Pointing",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
         if (row.isStr("<sourceOffset>")) {
 			
 								
@@ -755,40 +939,38 @@ namespace asdm {
 	
 
 	
-  		
-			
-					
-	  	setEncoder(Parser::get1DAngle("encoder","Pointing",rowDoc));
-	  			
-	  		
+		
+	if (row.isStr("<sourceOffsetReferenceCode>")) {
+		
+		
+		
+		sourceOffsetReferenceCode = EnumerationParser::getDirectionReferenceCode("sourceOffsetReferenceCode","Pointing",rowDoc);
+		
+		
+		
+		sourceOffsetReferenceCodeExists = true;
+	}
 		
 	
 
 	
   		
+        if (row.isStr("<sourceOffsetEquinox>")) {
 			
-	  	setPointingTracking(Parser::getBoolean("pointingTracking","Pointing",rowDoc));
-			
-		
-	
-
-	
-  		
-      if (row.isStr("<phaseTracking>")) {
-			
-	  		setPhaseTracking(Parser::getBoolean("phaseTracking","Pointing",rowDoc));
+	  		setSourceOffsetEquinox(Parser::getArrayTime("sourceOffsetEquinox","Pointing",rowDoc));
 			
 		}
-			
-		
+ 		
 	
 
 	
   		
-        if (row.isStr("<overTheTop>")) {
+        if (row.isStr("<sampledTimeInterval>")) {
 			
-	  		setOverTheTop(Parser::getBoolean("overTheTop","Pointing",rowDoc));
-			
+								
+	  		setSampledTimeInterval(Parser::get1DArrayTimeInterval("sampledTimeInterval","Pointing",rowDoc));
+	  			
+	  		
 		}
  		
 	
@@ -824,57 +1006,363 @@ namespace asdm {
 	}
 	
 	void PointingRow::toBin(EndianOSStream& eoss) {
-		timeInterval.toBin(eoss);
-		eoss.writeBoolean(nameExists);
-		if (nameExists) {
-			eoss.writeString(name);
-		}
-		eoss.writeInt(numPoly);
-		timeOrigin.toBin(eoss);
-		Angle::toBin(pointingDirection, eoss);
-		Angle::toBin(target, eoss);
-		Angle::toBin(offset, eoss);
-		eoss.writeBoolean(sourceOffsetExists);
-		if (sourceOffsetExists) {
-			Angle::toBin(sourceOffset, eoss);
-		}
-		Angle::toBin(encoder, eoss);
-		eoss.writeBoolean(pointingTracking);
-		eoss.writeBoolean(phaseTrackingExists);
-		if (phaseTrackingExists) {
-			eoss.writeBoolean(phaseTracking);	
-		}
-		eoss.writeBoolean(overTheTopExists);
-		if (overTheTopExists) {
+	
+	
+	
+	
+		
+	antennaId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	timeInterval.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numSample);
+				
+		
+	
+
+	
+	
+		
+	Angle::toBin(encoder, eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(pointingTracking);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(usePolynomials);
+				
+		
+	
+
+	
+	
+		
+	timeOrigin.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numTerm);
+				
+		
+	
+
+	
+	
+		
+	Angle::toBin(pointingDirection, eoss);
+		
+	
+
+	
+	
+		
+	Angle::toBin(target, eoss);
+		
+	
+
+	
+	
+		
+	Angle::toBin(offset, eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(pointingModelId);
+				
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(overTheTopExists);
+	if (overTheTopExists) {
+	
+	
+	
+		
+						
 			eoss.writeBoolean(overTheTop);
-		}
-		antennaId.toBin(eoss);
-		eoss.writeInt(pointingModelId);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(sourceOffsetExists);
+	if (sourceOffsetExists) {
+	
+	
+	
+		
+	Angle::toBin(sourceOffset, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(sourceOffsetReferenceCodeExists);
+	if (sourceOffsetReferenceCodeExists) {
+	
+	
+	
+		
+					
+			eoss.writeInt(sourceOffsetReferenceCode);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(sourceOffsetEquinoxExists);
+	if (sourceOffsetEquinoxExists) {
+	
+	
+	
+		
+	sourceOffsetEquinox.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(sampledTimeIntervalExists);
+	if (sampledTimeIntervalExists) {
+	
+	
+	
+		
+	ArrayTimeInterval::toBin(sampledTimeInterval, eoss);
+		
+	
+
+	}
+
 	}
 	
 	PointingRow* PointingRow::fromBin(EndianISStream& eiss, PointingTable& table) {
-		PointingRow* row = new PointingRow(table);
-		row->timeInterval = ArrayTimeInterval::fromBin(eiss); 
-		row->nameExists = eiss.readBoolean();
-		if (row->nameExists) row->name = eiss.readString();
-		row->numPoly = eiss.readInt() ; 
-		row->timeOrigin = ArrayTime::fromBin(eiss); 
-		row->pointingDirection = Angle::from2DBin(eiss);
-		row->target =  Angle::from2DBin(eiss);
-		row->offset = Angle::from2DBin(eiss);
-		row->sourceOffsetExists = eiss.readBoolean(); 
-		if (row->sourceOffsetExists) 	row->sourceOffset = Angle::from2DBin(eiss);
-		row->encoder = Angle::from1DBin(eiss);
-		row->pointingTracking = eiss.readBoolean();
-		row->phaseTrackingExists = eiss.readBoolean();
-		if (row->phaseTrackingExists) row->phaseTracking = eiss.readBoolean();
-		row->overTheTopExists = eiss.readBoolean(); 
-		if (row->overTheTopExists)
-			row->overTheTop = eiss.readBoolean();
-		row->antennaId = Tag::fromBin(eiss); 
-		row->pointingModelId = eiss.readInt(); 
-		return row;				
+		PointingRow* row = new  PointingRow(table);
 		
+		
+		
+	
+		
+		
+		row->antennaId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numSample =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->encoder = Angle::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->pointingTracking =  eiss.readBoolean();
+			
+		
+	
+
+	
+	
+		
+			
+		row->usePolynomials =  eiss.readBoolean();
+			
+		
+	
+
+	
+		
+		
+		row->timeOrigin =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numTerm =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->pointingDirection = Angle::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->target = Angle::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->offset = Angle::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->pointingModelId =  eiss.readInt();
+			
+		
+	
+
+		
+		
+		
+	row->overTheTopExists = eiss.readBoolean();
+	if (row->overTheTopExists) {
+		
+	
+	
+		
+			
+		row->overTheTop =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+	row->sourceOffsetExists = eiss.readBoolean();
+	if (row->sourceOffsetExists) {
+		
+	
+		
+		
+			
+	
+	row->sourceOffset = Angle::from2DBin(eiss);		
+	
+
+		
+	
+
+	}
+
+	row->sourceOffsetReferenceCodeExists = eiss.readBoolean();
+	if (row->sourceOffsetReferenceCodeExists) {
+		
+	
+	
+		
+			
+		row->sourceOffsetReferenceCode = CDirectionReferenceCode::from_int(eiss.readInt());
+			
+		
+	
+
+	}
+
+	row->sourceOffsetEquinoxExists = eiss.readBoolean();
+	if (row->sourceOffsetEquinoxExists) {
+		
+	
+		
+		
+		row->sourceOffsetEquinox =  ArrayTime::fromBin(eiss);
+		
+	
+
+	}
+
+	row->sampledTimeIntervalExists = eiss.readBoolean();
+	if (row->sampledTimeIntervalExists) {
+		
+	
+		
+		
+			
+	
+	row->sampledTimeInterval = ArrayTimeInterval::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -896,12 +1384,19 @@ namespace asdm {
  	/**
  	 * Set timeInterval with the specified ArrayTimeInterval.
  	 * @param timeInterval The ArrayTimeInterval value to which timeInterval is to be set.
+ 	 
  	
+ 		
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void PointingRow::setTimeInterval (ArrayTimeInterval timeInterval) throw(IllegalAccessException) {
+ 	void PointingRow::setTimeInterval (ArrayTimeInterval timeInterval)  {
+  	
+  	
   		if (hasBeenAdded) {
-			throw IllegalAccessException();
+ 		
+			throw IllegalAccessException("timeInterval", "Pointing");
+		
   		}
   	
  		this->timeInterval = timeInterval;
@@ -910,211 +1405,36 @@ namespace asdm {
 	
 	
 
-	/**
-	 * The attribute name is optional. Return true if this attribute exists.
-	 * @return true if and only if the name attribute exists. 
-	 */
-	bool PointingRow::isNameExists() const {
-		return nameExists;
-	}
-		
-
- 	/**
- 	 * Get name, which is optional.
- 	 * @return name as string
- 	 * @throw IllegalAccessException If name does not exist.
- 	 */
- 	string PointingRow::getName() const throw(IllegalAccessException) {
-		if (!nameExists) {
-			throw IllegalAccessException();
-		}
 	
-  		return name;
+
+	
+ 	/**
+ 	 * Get numSample.
+ 	 * @return numSample as int
+ 	 */
+ 	int PointingRow::getNumSample() const {
+	
+  		return numSample;
  	}
 
  	/**
- 	 * Set name with the specified string.
- 	 * @param name The string value to which name is to be set.
+ 	 * Set numSample with the specified int.
+ 	 * @param numSample The int value to which numSample is to be set.
+ 	 
  	
+ 		
  	 */
- 	void PointingRow::setName (string name) {
-	
- 		this->name = name;
-	
-		nameExists = true;
+ 	void PointingRow::setNumSample (int numSample)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numSample = numSample;
 	
  	}
 	
-	
-	/**
-	 * Mark name, which is an optional field, as non-existent.
-	 */
-	void PointingRow::clearName () {
-		nameExists = false;
-	}
-	
-
-	
- 	/**
- 	 * Get numPoly.
- 	 * @return numPoly as int
- 	 */
- 	int PointingRow::getNumPoly() const {
-	
-  		return numPoly;
- 	}
-
- 	/**
- 	 * Set numPoly with the specified int.
- 	 * @param numPoly The int value to which numPoly is to be set.
- 	
- 	 */
- 	void PointingRow::setNumPoly (int numPoly) {
-	
- 		this->numPoly = numPoly;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get timeOrigin.
- 	 * @return timeOrigin as ArrayTime
- 	 */
- 	ArrayTime PointingRow::getTimeOrigin() const {
-	
-  		return timeOrigin;
- 	}
-
- 	/**
- 	 * Set timeOrigin with the specified ArrayTime.
- 	 * @param timeOrigin The ArrayTime value to which timeOrigin is to be set.
- 	
- 	 */
- 	void PointingRow::setTimeOrigin (ArrayTime timeOrigin) {
-	
- 		this->timeOrigin = timeOrigin;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get pointingDirection.
- 	 * @return pointingDirection as vector<vector<Angle > >
- 	 */
- 	vector<vector<Angle > > PointingRow::getPointingDirection() const {
-	
-  		return pointingDirection;
- 	}
-
- 	/**
- 	 * Set pointingDirection with the specified vector<vector<Angle > >.
- 	 * @param pointingDirection The vector<vector<Angle > > value to which pointingDirection is to be set.
- 	
- 	 */
- 	void PointingRow::setPointingDirection (vector<vector<Angle > > pointingDirection) {
-	
- 		this->pointingDirection = pointingDirection;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get target.
- 	 * @return target as vector<vector<Angle > >
- 	 */
- 	vector<vector<Angle > > PointingRow::getTarget() const {
-	
-  		return target;
- 	}
-
- 	/**
- 	 * Set target with the specified vector<vector<Angle > >.
- 	 * @param target The vector<vector<Angle > > value to which target is to be set.
- 	
- 	 */
- 	void PointingRow::setTarget (vector<vector<Angle > > target) {
-	
- 		this->target = target;
-	
- 	}
-	
-	
- 	/**
- 	 * Get offset.
- 	 * @return offset as vector<vector<Angle > >
- 	 */
- 	vector<vector<Angle > > PointingRow::getOffset() const {
-	
-  		return offset;
- 	}
-
- 	/**
- 	 * Set offset with the specified vector<vector<Angle > >.
- 	 * @param offset The vector<vector<Angle > > value to which offset is to be set.
- 	
- 	 */
- 	void PointingRow::setOffset (vector<vector<Angle > > offset) {
-	
- 		this->offset = offset;
-	
- 	}
-	
-	
-	/**
-	 * The attribute sourceOffset is optional. Return true if this attribute exists.
-	 * @return true if and only if the sourceOffset attribute exists. 
-	 */
-	bool PointingRow::isSourceOffsetExists() const {
-		return sourceOffsetExists;
-	}
-	
-
-	
- 	/**
- 	 * Get sourceOffset, which is optional.
- 	 * @return sourceOffset as vector<vector<Angle > >
- 	 * @throw IllegalAccessException If sourceOffset does not exist.
- 	 */
- 	vector<vector<Angle > > PointingRow::getSourceOffset() const throw(IllegalAccessException) {
-		if (!sourceOffsetExists) {
-			throw IllegalAccessException();
-		}
-	
-  		return sourceOffset;
- 	}
-
- 	/**
- 	 * Set sourceOffset with the specified vector<vector<Angle > >.
- 	 * @param sourceOffset The vector<vector<Angle > > value to which sourceOffset is to be set.
- 	
- 	 */
- 	void PointingRow::setSourceOffset (vector<vector<Angle > > sourceOffset) {
-	
- 		this->sourceOffset = sourceOffset;
-	
-		sourceOffsetExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark sourceOffset, which is an optional field, as non-existent.
-	 */
-	void PointingRow::clearSourceOffset () {
-		sourceOffsetExists = false;
-	}
 	
 
 	
@@ -1122,20 +1442,27 @@ namespace asdm {
 	
  	/**
  	 * Get encoder.
- 	 * @return encoder as vector<Angle >
+ 	 * @return encoder as vector<vector<Angle > >
  	 */
- 	vector<Angle > PointingRow::getEncoder() const {
+ 	vector<vector<Angle > > PointingRow::getEncoder() const {
 	
   		return encoder;
  	}
 
  	/**
- 	 * Set encoder with the specified vector<Angle >.
- 	 * @param encoder The vector<Angle > value to which encoder is to be set.
+ 	 * Set encoder with the specified vector<vector<Angle > >.
+ 	 * @param encoder The vector<vector<Angle > > value to which encoder is to be set.
+ 	 
  	
+ 		
  	 */
- 	void PointingRow::setEncoder (vector<Angle > encoder) {
-	
+ 	void PointingRow::setEncoder (vector<vector<Angle > > encoder)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->encoder = encoder;
 	
  	}
@@ -1157,54 +1484,214 @@ namespace asdm {
  	/**
  	 * Set pointingTracking with the specified bool.
  	 * @param pointingTracking The bool value to which pointingTracking is to be set.
+ 	 
  	
+ 		
  	 */
- 	void PointingRow::setPointingTracking (bool pointingTracking) {
-	
+ 	void PointingRow::setPointingTracking (bool pointingTracking)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->pointingTracking = pointingTracking;
 	
  	}
 	
 	
-	/**
-	 * The attribute phaseTracking  is optional. Return true if this attribute exists.
-	 * @return true if and only if the isPhaseTracking  attribute exists. 
-	 */
-	bool PointingRow::isPhaseTrackingExists() const {
-		return phaseTrackingExists;
-	}
-	
+
 	
 
 	
  	/**
- 	 * Get phaseTracking.
- 	 * @return phaseTracking as bool
+ 	 * Get usePolynomials.
+ 	 * @return usePolynomials as bool
  	 */
- 	bool PointingRow::getPhaseTracking() const throw(IllegalAccessException) {
-	    if (!phaseTrackingExists) {
-			throw IllegalAccessException();
-		}
-  		return phaseTracking;
+ 	bool PointingRow::getUsePolynomials() const {
+	
+  		return usePolynomials;
  	}
 
  	/**
- 	 * Set phaseTracking with the specified bool.
- 	 * @param phaseTracking The bool value to which phaseTracking is to be set.
+ 	 * Set usePolynomials with the specified bool.
+ 	 * @param usePolynomials The bool value to which usePolynomials is to be set.
+ 	 
  	
+ 		
  	 */
- 	void PointingRow::setPhaseTracking (bool phaseTracking) {
+ 	void PointingRow::setUsePolynomials (bool usePolynomials)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->usePolynomials = usePolynomials;
 	
- 		this->phaseTracking = phaseTracking;
-		phaseTrackingExists = true;	
  	}
 	
-	/**
-	 * Mark phaseTracking, which is an optional field, as non-existent.
-	 */
-	void PointingRow::clearPhaseTracking () {
-		phaseTrackingExists = false;
-	}	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get timeOrigin.
+ 	 * @return timeOrigin as ArrayTime
+ 	 */
+ 	ArrayTime PointingRow::getTimeOrigin() const {
+	
+  		return timeOrigin;
+ 	}
+
+ 	/**
+ 	 * Set timeOrigin with the specified ArrayTime.
+ 	 * @param timeOrigin The ArrayTime value to which timeOrigin is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void PointingRow::setTimeOrigin (ArrayTime timeOrigin)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->timeOrigin = timeOrigin;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numTerm.
+ 	 * @return numTerm as int
+ 	 */
+ 	int PointingRow::getNumTerm() const {
+	
+  		return numTerm;
+ 	}
+
+ 	/**
+ 	 * Set numTerm with the specified int.
+ 	 * @param numTerm The int value to which numTerm is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void PointingRow::setNumTerm (int numTerm)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numTerm = numTerm;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get pointingDirection.
+ 	 * @return pointingDirection as vector<vector<Angle > >
+ 	 */
+ 	vector<vector<Angle > > PointingRow::getPointingDirection() const {
+	
+  		return pointingDirection;
+ 	}
+
+ 	/**
+ 	 * Set pointingDirection with the specified vector<vector<Angle > >.
+ 	 * @param pointingDirection The vector<vector<Angle > > value to which pointingDirection is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void PointingRow::setPointingDirection (vector<vector<Angle > > pointingDirection)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->pointingDirection = pointingDirection;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get target.
+ 	 * @return target as vector<vector<Angle > >
+ 	 */
+ 	vector<vector<Angle > > PointingRow::getTarget() const {
+	
+  		return target;
+ 	}
+
+ 	/**
+ 	 * Set target with the specified vector<vector<Angle > >.
+ 	 * @param target The vector<vector<Angle > > value to which target is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void PointingRow::setTarget (vector<vector<Angle > > target)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->target = target;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get offset.
+ 	 * @return offset as vector<vector<Angle > >
+ 	 */
+ 	vector<vector<Angle > > PointingRow::getOffset() const {
+	
+  		return offset;
+ 	}
+
+ 	/**
+ 	 * Set offset with the specified vector<vector<Angle > >.
+ 	 * @param offset The vector<vector<Angle > > value to which offset is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void PointingRow::setOffset (vector<vector<Angle > > offset)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->offset = offset;
+	
+ 	}
+	
+	
 
 	
 	/**
@@ -1222,9 +1709,9 @@ namespace asdm {
  	 * @return overTheTop as bool
  	 * @throw IllegalAccessException If overTheTop does not exist.
  	 */
- 	bool PointingRow::getOverTheTop() const throw(IllegalAccessException) {
+ 	bool PointingRow::getOverTheTop() const  {
 		if (!overTheTopExists) {
-			throw IllegalAccessException();
+			throw IllegalAccessException("overTheTop", "Pointing");
 		}
 	
   		return overTheTop;
@@ -1233,6 +1720,7 @@ namespace asdm {
  	/**
  	 * Set overTheTop with the specified bool.
  	 * @param overTheTop The bool value to which overTheTop is to be set.
+ 	 
  	
  	 */
  	void PointingRow::setOverTheTop (bool overTheTop) {
@@ -1249,6 +1737,194 @@ namespace asdm {
 	 */
 	void PointingRow::clearOverTheTop () {
 		overTheTopExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute sourceOffset is optional. Return true if this attribute exists.
+	 * @return true if and only if the sourceOffset attribute exists. 
+	 */
+	bool PointingRow::isSourceOffsetExists() const {
+		return sourceOffsetExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get sourceOffset, which is optional.
+ 	 * @return sourceOffset as vector<vector<Angle > >
+ 	 * @throw IllegalAccessException If sourceOffset does not exist.
+ 	 */
+ 	vector<vector<Angle > > PointingRow::getSourceOffset() const  {
+		if (!sourceOffsetExists) {
+			throw IllegalAccessException("sourceOffset", "Pointing");
+		}
+	
+  		return sourceOffset;
+ 	}
+
+ 	/**
+ 	 * Set sourceOffset with the specified vector<vector<Angle > >.
+ 	 * @param sourceOffset The vector<vector<Angle > > value to which sourceOffset is to be set.
+ 	 
+ 	
+ 	 */
+ 	void PointingRow::setSourceOffset (vector<vector<Angle > > sourceOffset) {
+	
+ 		this->sourceOffset = sourceOffset;
+	
+		sourceOffsetExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark sourceOffset, which is an optional field, as non-existent.
+	 */
+	void PointingRow::clearSourceOffset () {
+		sourceOffsetExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute sourceOffsetReferenceCode is optional. Return true if this attribute exists.
+	 * @return true if and only if the sourceOffsetReferenceCode attribute exists. 
+	 */
+	bool PointingRow::isSourceOffsetReferenceCodeExists() const {
+		return sourceOffsetReferenceCodeExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get sourceOffsetReferenceCode, which is optional.
+ 	 * @return sourceOffsetReferenceCode as DirectionReferenceCodeMod::DirectionReferenceCode
+ 	 * @throw IllegalAccessException If sourceOffsetReferenceCode does not exist.
+ 	 */
+ 	DirectionReferenceCodeMod::DirectionReferenceCode PointingRow::getSourceOffsetReferenceCode() const  {
+		if (!sourceOffsetReferenceCodeExists) {
+			throw IllegalAccessException("sourceOffsetReferenceCode", "Pointing");
+		}
+	
+  		return sourceOffsetReferenceCode;
+ 	}
+
+ 	/**
+ 	 * Set sourceOffsetReferenceCode with the specified DirectionReferenceCodeMod::DirectionReferenceCode.
+ 	 * @param sourceOffsetReferenceCode The DirectionReferenceCodeMod::DirectionReferenceCode value to which sourceOffsetReferenceCode is to be set.
+ 	 
+ 	
+ 	 */
+ 	void PointingRow::setSourceOffsetReferenceCode (DirectionReferenceCodeMod::DirectionReferenceCode sourceOffsetReferenceCode) {
+	
+ 		this->sourceOffsetReferenceCode = sourceOffsetReferenceCode;
+	
+		sourceOffsetReferenceCodeExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark sourceOffsetReferenceCode, which is an optional field, as non-existent.
+	 */
+	void PointingRow::clearSourceOffsetReferenceCode () {
+		sourceOffsetReferenceCodeExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute sourceOffsetEquinox is optional. Return true if this attribute exists.
+	 * @return true if and only if the sourceOffsetEquinox attribute exists. 
+	 */
+	bool PointingRow::isSourceOffsetEquinoxExists() const {
+		return sourceOffsetEquinoxExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get sourceOffsetEquinox, which is optional.
+ 	 * @return sourceOffsetEquinox as ArrayTime
+ 	 * @throw IllegalAccessException If sourceOffsetEquinox does not exist.
+ 	 */
+ 	ArrayTime PointingRow::getSourceOffsetEquinox() const  {
+		if (!sourceOffsetEquinoxExists) {
+			throw IllegalAccessException("sourceOffsetEquinox", "Pointing");
+		}
+	
+  		return sourceOffsetEquinox;
+ 	}
+
+ 	/**
+ 	 * Set sourceOffsetEquinox with the specified ArrayTime.
+ 	 * @param sourceOffsetEquinox The ArrayTime value to which sourceOffsetEquinox is to be set.
+ 	 
+ 	
+ 	 */
+ 	void PointingRow::setSourceOffsetEquinox (ArrayTime sourceOffsetEquinox) {
+	
+ 		this->sourceOffsetEquinox = sourceOffsetEquinox;
+	
+		sourceOffsetEquinoxExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark sourceOffsetEquinox, which is an optional field, as non-existent.
+	 */
+	void PointingRow::clearSourceOffsetEquinox () {
+		sourceOffsetEquinoxExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute sampledTimeInterval is optional. Return true if this attribute exists.
+	 * @return true if and only if the sampledTimeInterval attribute exists. 
+	 */
+	bool PointingRow::isSampledTimeIntervalExists() const {
+		return sampledTimeIntervalExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get sampledTimeInterval, which is optional.
+ 	 * @return sampledTimeInterval as vector<ArrayTimeInterval >
+ 	 * @throw IllegalAccessException If sampledTimeInterval does not exist.
+ 	 */
+ 	vector<ArrayTimeInterval > PointingRow::getSampledTimeInterval() const  {
+		if (!sampledTimeIntervalExists) {
+			throw IllegalAccessException("sampledTimeInterval", "Pointing");
+		}
+	
+  		return sampledTimeInterval;
+ 	}
+
+ 	/**
+ 	 * Set sampledTimeInterval with the specified vector<ArrayTimeInterval >.
+ 	 * @param sampledTimeInterval The vector<ArrayTimeInterval > value to which sampledTimeInterval is to be set.
+ 	 
+ 	
+ 	 */
+ 	void PointingRow::setSampledTimeInterval (vector<ArrayTimeInterval > sampledTimeInterval) {
+	
+ 		this->sampledTimeInterval = sampledTimeInterval;
+	
+		sampledTimeIntervalExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark sampledTimeInterval, which is an optional field, as non-existent.
+	 */
+	void PointingRow::clearSampledTimeInterval () {
+		sampledTimeIntervalExists = false;
 	}
 	
 
@@ -1272,12 +1948,19 @@ namespace asdm {
  	/**
  	 * Set antennaId with the specified Tag.
  	 * @param antennaId The Tag value to which antennaId is to be set.
+ 	 
  	
+ 		
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void PointingRow::setAntennaId (Tag antennaId) throw(IllegalAccessException) {
+ 	void PointingRow::setAntennaId (Tag antennaId)  {
+  	
+  	
   		if (hasBeenAdded) {
-			throw IllegalAccessException();
+ 		
+			throw IllegalAccessException("antennaId", "Pointing");
+		
   		}
   	
  		this->antennaId = antennaId;
@@ -1301,10 +1984,17 @@ namespace asdm {
  	/**
  	 * Set pointingModelId with the specified int.
  	 * @param pointingModelId The int value to which pointingModelId is to be set.
+ 	 
  	
+ 		
  	 */
- 	void PointingRow::setPointingModelId (int pointingModelId) {
-	
+ 	void PointingRow::setPointingModelId (int pointingModelId)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
  		this->pointingModelId = pointingModelId;
 	
  	}
@@ -1315,6 +2005,25 @@ namespace asdm {
 	// Links //
 	///////////
 	
+	
+	
+	
+		
+
+	// ===> Slice link from a row of Pointing table to a collection of row of PointingModel table.
+	
+	/**
+	 * Get the collection of row in the PointingModel table having their attribut pointingModelId == this->pointingModelId
+	 */
+	vector <PointingModelRow *> PointingRow::getPointingModels() {
+		
+			return table.getContainer().getPointingModel().getRowByPointingModelId(pointingModelId);
+		
+	}
+	
+
+	
+
 	
 	
 	
@@ -1335,14 +2044,6 @@ namespace asdm {
 	
 
 	
-	
-	
-		
-	
-
-	
-
-	
 	/**
 	 * Create a PointingRow.
 	 * <p>
@@ -1354,10 +2055,88 @@ namespace asdm {
 	PointingRow::PointingRow (PointingTable &t) : table(t) {
 		hasBeenAdded = false;
 		
-		nameExists = false;
-		sourceOffsetExists = false;
-		phaseTrackingExists = false;
+	
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
 		overTheTopExists = false;
+	
+
+	
+		sourceOffsetExists = false;
+	
+
+	
+		sourceOffsetReferenceCodeExists = false;
+	
+
+	
+		sourceOffsetEquinoxExists = false;
+	
+
+	
+		sampledTimeIntervalExists = false;
+	
+
+	
+	
+
+	
+
+	
+	
+	
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+sourceOffsetReferenceCode = CDirectionReferenceCode::from_int(0);
+	
+
+	
+
+	
+	
 	}
 	
 	PointingRow::PointingRow (PointingTable &t, PointingRow &row) : table(t) {
@@ -1365,11 +2144,52 @@ namespace asdm {
 		
 		if (&row == 0) {
 	
-		nameExists = false;
-		sourceOffsetExists = false;
-		phaseTrackingExists = false;
+	
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
 		overTheTopExists = false;
-			
+	
+
+	
+		sourceOffsetExists = false;
+	
+
+	
+		sourceOffsetReferenceCodeExists = false;
+	
+
+	
+		sourceOffsetEquinoxExists = false;
+	
+
+	
+		sampledTimeIntervalExists = false;
+	
+
+	
+	
+
+	
+		
 		}
 		else {
 	
@@ -1381,43 +2201,28 @@ namespace asdm {
 		
 		
 		
-			pointingModelId = row.pointingModelId;
-		
-			numPoly = row.numPoly;
-		
-			timeOrigin = row.timeOrigin;
-		
-			pointingDirection = row.pointingDirection;
-		
-			target = row.target;
-
-			offset = row.offset;
+			numSample = row.numSample;
 		
 			encoder = row.encoder;
 		
 			pointingTracking = row.pointingTracking;
 		
+			usePolynomials = row.usePolynomials;
 		
-		if (row.nameExists) {
-			name = row.name;
-			nameExists = true;	
-		}
-		else
-			nameExists = false;
+			timeOrigin = row.timeOrigin;
 		
-		if (row.sourceOffsetExists) {
-			sourceOffset = row.sourceOffset;		
-			sourceOffsetExists = true;
-		}
-		else
-			sourceOffsetExists = false;
-			
-		if (phaseTrackingExists) {
-			phaseTracking = row.phaseTracking;
-			phaseTrackingExists = false;
-		}
-		else 
-			phaseTrackingExists = false;
+			numTerm = row.numTerm;
+		
+			pointingDirection = row.pointingDirection;
+		
+			target = row.target;
+		
+			offset = row.offset;
+		
+			pointingModelId = row.pointingModelId;
+		
+		
+		
 		
 		if (row.overTheTopExists) {
 			overTheTop = row.overTheTop;		
@@ -1426,11 +2231,39 @@ namespace asdm {
 		else
 			overTheTopExists = false;
 		
+		if (row.sourceOffsetExists) {
+			sourceOffset = row.sourceOffset;		
+			sourceOffsetExists = true;
+		}
+		else
+			sourceOffsetExists = false;
+		
+		if (row.sourceOffsetReferenceCodeExists) {
+			sourceOffsetReferenceCode = row.sourceOffsetReferenceCode;		
+			sourceOffsetReferenceCodeExists = true;
+		}
+		else
+			sourceOffsetReferenceCodeExists = false;
+		
+		if (row.sourceOffsetEquinoxExists) {
+			sourceOffsetEquinox = row.sourceOffsetEquinox;		
+			sourceOffsetEquinoxExists = true;
+		}
+		else
+			sourceOffsetEquinoxExists = false;
+		
+		if (row.sampledTimeIntervalExists) {
+			sampledTimeInterval = row.sampledTimeInterval;		
+			sampledTimeIntervalExists = true;
+		}
+		else
+			sampledTimeIntervalExists = false;
+		
 		}	
 	}
 
 	
-	bool PointingRow::compareNoAutoInc(Tag antennaId, ArrayTimeInterval timeInterval, int pointingModelId, int numPoly, ArrayTime timeOrigin, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, vector<Angle > encoder, bool pointingTracking) {
+	bool PointingRow::compareNoAutoInc(Tag antennaId, ArrayTimeInterval timeInterval, int numSample, vector<vector<Angle > > encoder, bool pointingTracking, bool usePolynomials, ArrayTime timeOrigin, int numTerm, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, int pointingModelId) {
 		bool result;
 		result = true;
 		
@@ -1450,12 +2283,28 @@ namespace asdm {
 
 	
 		
-		result = result && (this->pointingModelId == pointingModelId);
+		result = result && (this->numSample == numSample);
 		
 		if (!result) return false;
+	
+
+	
 		
+		result = result && (this->encoder == encoder);
 		
-		result = result && (this->numPoly == numPoly);
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->pointingTracking == pointingTracking);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->usePolynomials == usePolynomials);
 		
 		if (!result) return false;
 	
@@ -1463,6 +2312,13 @@ namespace asdm {
 	
 		
 		result = result && (this->timeOrigin == timeOrigin);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numTerm == numTerm);
 		
 		if (!result) return false;
 	
@@ -1481,20 +2337,16 @@ namespace asdm {
 		if (!result) return false;
 	
 
-		
-		result = result && (this->offset == offset);
-		
-		if (!result) return false;
 	
 		
-		result = result && (this->encoder == encoder);
+		result = result && (this->offset == offset);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->pointingTracking == pointingTracking);
+		result = result && (this->pointingModelId == pointingModelId);
 		
 		if (!result) return false;
 	
@@ -1504,20 +2356,32 @@ namespace asdm {
 	
 	
 	
-	bool PointingRow::compareRequiredValue(int pointingModelId, int numPoly, ArrayTime timeOrigin, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, vector<Angle > encoder, bool pointingTracking) {
+	bool PointingRow::compareRequiredValue(int numSample, vector<vector<Angle > > encoder, bool pointingTracking, bool usePolynomials, ArrayTime timeOrigin, int numTerm, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, int pointingModelId) {
 		bool result;
 		result = true;
 		
 	
-		if (!(this->pointingModelId == pointingModelId)) return false;
+		if (!(this->numSample == numSample)) return false;
+	
 
 	
+		if (!(this->encoder == encoder)) return false;
 	
-		if (!(this->numPoly == numPoly)) return false;
+
+	
+		if (!(this->pointingTracking == pointingTracking)) return false;
+	
+
+	
+		if (!(this->usePolynomials == usePolynomials)) return false;
 	
 
 	
 		if (!(this->timeOrigin == timeOrigin)) return false;
+	
+
+	
+		if (!(this->numTerm == numTerm)) return false;
 	
 
 	
@@ -1528,14 +2392,12 @@ namespace asdm {
 		if (!(this->target == target)) return false;
 	
 
-		if (!(this->offset == offset)) return false;
-		
 	
-		if (!(this->encoder == encoder)) return false;
+		if (!(this->offset == offset)) return false;
 	
 
 	
-		if (!(this->pointingTracking == pointingTracking)) return false;
+		if (!(this->pointingModelId == pointingModelId)) return false;
 	
 
 		return result;
@@ -1553,13 +2415,17 @@ namespace asdm {
 	bool PointingRow::equalByRequiredValue(PointingRow* x) {
 		
 			
-		if (this->pointingModelId != x->pointingModelId) return false;
+		if (this->numSample != x->numSample) return false;
 			
-		if (this->name != x->name) return false;
+		if (this->encoder != x->encoder) return false;
 			
-		if (this->numPoly != x->numPoly) return false;
+		if (this->pointingTracking != x->pointingTracking) return false;
+			
+		if (this->usePolynomials != x->usePolynomials) return false;
 			
 		if (this->timeOrigin != x->timeOrigin) return false;
+			
+		if (this->numTerm != x->numTerm) return false;
 			
 		if (this->pointingDirection != x->pointingDirection) return false;
 			
@@ -1567,11 +2433,7 @@ namespace asdm {
 			
 		if (this->offset != x->offset) return false;
 			
-		if (this->encoder != x->encoder) return false;
-			
-		if (this->pointingTracking != x->pointingTracking) return false;
-			
-		if (this->phaseTracking != x->phaseTracking) return false;
+		if (this->pointingModelId != x->pointingModelId) return false;
 			
 		
 		return true;

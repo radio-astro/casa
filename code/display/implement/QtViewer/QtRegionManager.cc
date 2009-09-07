@@ -456,6 +456,9 @@ QtRegionManager::QtRegionManager(
     //QMessageBox::warning(this, "QtRegionManager",
     //		    "Load region From file\n");
 
+    if (!this->isVisible())
+       return;
+
     if ((savedName->text()) == "")
        return;
    
@@ -712,6 +715,10 @@ QtRegionManager::QtRegionManager(
   }
 
 void QtRegionManager::loadRegionFromImage() {
+  
+  if (!this->isVisible())
+     return;
+
   regName->clear();
   regData.clear();
   regState.clear();

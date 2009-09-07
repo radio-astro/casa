@@ -40,23 +40,45 @@ vector<String> PlotMSWatchedParameters::NAMES = vector<String>();
 
 
 int PlotMSWatchedParameters::REGISTER_UPDATE_FLAG(const String& name) {
+	/* This one fails
+    // Check if it's already registered.
+    for(unsigned int i = 0; i < NAMES.size(); i++)
+        if(NAMES[i] == name) return FLAGS[i];
+    
+    // Get the next flag value (next sequential bit value after the last).
     int NEXT_FLAG = 1;
-    // cerr << "REGISTER_UPDATE_FLAG " << name << endl;
-    //cerr << "NAMES[i] ";
-    if(!NAMES.size() && name != "REDRAW"){
-	    NAMES.push_back("REDRAW");
-	    FLAGS.push_back(NEXT_FLAG);
-    }
-    for(unsigned int i = 0; i < NAMES.size(); i++){
-	    //cerr << " *" << NAMES[i] << "* " << FLAGS[i];
-	    NEXT_FLAG *= 2;
-        if(NAMES[i] == name){return FLAGS[i];}
-    }
-    //cerr << endl;
+    if(FLAGS.size() > 0) NEXT_FLAG = FLAGS[FLAGS.size() - 1] * 2;
+    
+    // Add new flag.
     FLAGS.push_back(NEXT_FLAG);
     NAMES.push_back(name);
-    // NEXT_FLAG *= 2;
-    // cerr << "NAMES.size() " << NAMES.size() << endl;
+    return NEXT_FLAG;
+    */
+    
+    /* Old version.
+    static int NEXT_FLAG = 1;
+    for(unsigned int i = 0; i < NAMES.size(); i++)
+        if(NAMES[i] == name) return FLAGS[i];
+        
+    FLAGS.push_back(NEXT_FLAG);
+    NAMES.push_back(name);
+    NEXT_FLAG *= 2;
+    return FLAGS[FLAGS.size() - 1];
+    */
+    
+    /* Wes's magic version.
+    */
+    int NEXT_FLAG = 1;
+    if(!NAMES.size() && name != "REDRAW") {
+        NAMES.push_back("REDRAW");
+        FLAGS.push_back(NEXT_FLAG);
+    }
+    for(unsigned int i = 0; i < NAMES.size(); i++) {
+        NEXT_FLAG *= 2;
+        if(NAMES[i] == name) return FLAGS[i];
+    }
+    FLAGS.push_back(NEXT_FLAG);
+    NAMES.push_back(name);
     return FLAGS[FLAGS.size() - 1];
 }
 

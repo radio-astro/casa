@@ -77,35 +77,42 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
 	
 
 	
+#include "CPolarizationType.h"
+using namespace PolarizationTypeMod;
+	
+
+	
+
+	
+
+	
 #include "CAntennaMake.h"
 using namespace AntennaMakeMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 
@@ -148,121 +155,158 @@ class ASDM;
 class CalFocusModelRow;
 /**
  * The CalFocusModelTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Result of focus model calibration performed by TelCal.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalFocusModel </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaName </TD>
+ 		 
+ * <TD> string</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the name of the antenna. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> receiverBand </TD>
+ 		 
+ * <TD> ReceiverBandMod::ReceiverBand</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies the receiver band. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> antennaName </TD> 
- * <TD> string </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> polarizationType </TD>
+ 		 
+ * <TD> PolarizationTypeMod::PolarizationType</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies the polarization type for which this focus model is valid. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> receiverBand </TD> 
- * <TD> ReceiverBandMod::ReceiverBand </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalReduction Table. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> numCoeff </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> startValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> focusRMS </TD> 
- * <TD> vector<Length > </TD>
- * <TD>  3 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> coeffName </TD> 
- * <TD> vector<vector<string > > </TD>
- * <TD>  3, numCoeff </TD> 
- * </TR>
-	
- * <TR>
- * <TD> coeffFormula </TD> 
- * <TD> vector<vector<string > > </TD>
- * <TD>  3, numCoeff </TD> 
- * </TR>
-	
- * <TR>
- * <TD> coeffValue </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>  3, numCoeff </TD> 
- * </TR>
-	
- * <TR>
- * <TD> coeffError </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>  3, numCoeff </TD> 
- * </TR>
-	
- * <TR>
- * <TD> coeffFixed </TD> 
- * <TD> vector<vector<bool > > </TD>
- * <TD>  3, numCoeff </TD> 
- * </TR>
-	
- * <TR>
- * <TD> focusModel </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numSourceObs </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the end time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> antennaMake </TD> 
  * <TD> AntennaMakeMod::AntennaMake </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the antenna make. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numCoeff </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of coefficients. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numSourceObs </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of source directions observed to derive the model. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> coeffName </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numCoeff </TD> 
+ * <TD> &nbsp;the names given to  the coefficients in the model. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> coeffFormula </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numCoeff </TD> 
+ * <TD> &nbsp;the coefficients formula (one string per coefficient). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> coeffValue </TD> 
+ * <TD> vector<float > </TD>
+ * <TD>  numCoeff </TD> 
+ * <TD> &nbsp;the fitted values of the coefficients. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> coeffError </TD> 
+ * <TD> vector<float > </TD>
+ * <TD>  numCoeff </TD> 
+ * <TD> &nbsp;the statistical uncertainties on the derived coefficients (one value per coefficient). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> coeffFixed </TD> 
+ * <TD> vector<bool > </TD>
+ * <TD>  numCoeff </TD> 
+ * <TD> &nbsp;one coefficient was fixed (true) or not fixed (false) (one boolean value per coefficient). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> focusModel </TD> 
+ * <TD> string </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the name of this focus model. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> focusRMS </TD> 
+ * <TD> vector<Length > </TD>
+ * <TD>  3 </TD> 
+ * <TD> &nbsp;the RMS deviations of residuals of focus coordinates. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> reducedChiSquared </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;a measure of the quality of the least-square fit. </TD>
  * </TR>
 	
 
@@ -338,21 +382,25 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param calDataId. 
-	
- 	 * @param calReductionId. 
-	
  	 * @param antennaName. 
 	
  	 * @param receiverBand. 
 	
- 	 * @param numCoeff. 
+ 	 * @param polarizationType. 
+	
+ 	 * @param calDataId. 
+	
+ 	 * @param calReductionId. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param focusRMS. 
+ 	 * @param antennaMake. 
+	
+ 	 * @param numCoeff. 
+	
+ 	 * @param numSourceObs. 
 	
  	 * @param coeffName. 
 	
@@ -366,18 +414,18 @@ public:
 	
  	 * @param focusModel. 
 	
- 	 * @param numSourceObs. 
+ 	 * @param focusRMS. 
 	
- 	 * @param antennaMake. 
+ 	 * @param reducedChiSquared. 
 	
      */
-	CalFocusModelRow *newRow(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusRMS, vector<vector<string > > coeffName, vector<vector<string > > coeffFormula, vector<vector<float > > coeffValue, vector<vector<float > > coeffError, vector<vector<bool > > coeffFixed, string focusModel, int numSourceObs, AntennaMakeMod::AntennaMake antennaMake);
+	CalFocusModelRow *newRow(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, PolarizationTypeMod::PolarizationType polarizationType, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, int numCoeff, int numSourceObs, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffValue, vector<float > coeffError, vector<bool > coeffFixed, string focusModel, vector<Length > focusRMS, double reducedChiSquared);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalFocusModelRow *newRowFull(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusRMS, vector<vector<string > > coeffName, vector<vector<string > > coeffFormula, vector<vector<float > > coeffValue, vector<vector<float > > coeffError, vector<vector<bool > > coeffFixed, string focusModel, int numSourceObs, AntennaMakeMod::AntennaMake antennaMake);
+	CalFocusModelRow *newRowFull(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, PolarizationTypeMod::PolarizationType polarizationType, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, int numCoeff, int numSourceObs, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffValue, vector<float > coeffError, vector<bool > coeffFixed, string focusModel, vector<Length > focusRMS, double reducedChiSquared);
 
 
 	/**
@@ -443,17 +491,19 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
-	 * @param calDataId. 
-	
-	 * @param calReductionId. 
-	
 	 * @param antennaName. 
 	
 	 * @param receiverBand. 
 	
+	 * @param polarizationType. 
+	
+	 * @param calDataId. 
+	
+	 * @param calReductionId. 
+	
  	 *
 	 */
- 	CalFocusModelRow* getRowByKey(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand);
+ 	CalFocusModelRow* getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, PolarizationTypeMod::PolarizationType polarizationType, Tag calDataId, Tag calReductionId);
 
  	 	
 
@@ -465,21 +515,25 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param calDataId.
- 	 		
- 	 * @param calReductionId.
- 	 		
  	 * @param antennaName.
  	 		
  	 * @param receiverBand.
  	 		
- 	 * @param numCoeff.
+ 	 * @param polarizationType.
+ 	 		
+ 	 * @param calDataId.
+ 	 		
+ 	 * @param calReductionId.
  	 		
  	 * @param startValidTime.
  	 		
  	 * @param endValidTime.
  	 		
- 	 * @param focusRMS.
+ 	 * @param antennaMake.
+ 	 		
+ 	 * @param numCoeff.
+ 	 		
+ 	 * @param numSourceObs.
  	 		
  	 * @param coeffName.
  	 		
@@ -493,12 +547,12 @@ public:
  	 		
  	 * @param focusModel.
  	 		
- 	 * @param numSourceObs.
+ 	 * @param focusRMS.
  	 		
- 	 * @param antennaMake.
+ 	 * @param reducedChiSquared.
  	 		 
  	 */
-	CalFocusModelRow* lookup(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusRMS, vector<vector<string > > coeffName, vector<vector<string > > coeffFormula, vector<vector<float > > coeffValue, vector<vector<float > > coeffError, vector<vector<bool > > coeffFixed, string focusModel, int numSourceObs, AntennaMakeMod::AntennaMake antennaMake); 
+	CalFocusModelRow* lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, PolarizationTypeMod::PolarizationType polarizationType, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, int numCoeff, int numSourceObs, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffValue, vector<float > coeffError, vector<bool > coeffFixed, string focusModel, vector<Length > focusRMS, double reducedChiSquared); 
 
 
 #ifndef WITHOUT_ACS
@@ -518,43 +572,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalFocusModelTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalFocusModelTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalFocusModel (CalFocusModelTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalFocusModel (CalFocusModelTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -629,8 +689,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalFocusModelRow* checkAndAdd(CalFocusModelRow* x) throw (DuplicateKey);
+	CalFocusModelRow* checkAndAdd(CalFocusModelRow* x) ;
 
 
 
@@ -644,7 +706,7 @@ private:
 	vector<CalFocusModelRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

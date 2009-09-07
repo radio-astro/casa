@@ -164,75 +164,93 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param antennaId. 
-	
- 	 * @param dataDescriptionId. 
-	
- 	 * @param feedId. 
-	
- 	 * @param processorId. 
-	
- 	 * @param switchCycleId. 
-	
  	 * @param numAntenna. 
+	
+ 	 * @param numDataDescription. 
 	
  	 * @param numFeed. 
 	
- 	 * @param numSubBand. 
-	
  	 * @param correlationMode. 
+	
+ 	 * @param numAtmPhaseCorrection. 
 	
  	 * @param atmPhaseCorrection. 
 	
+ 	 * @param processorType. 
+	
+ 	 * @param spectralType. 
+	
+ 	 * @param antennaId. 
+	
+ 	 * @param feedId. 
+	
+ 	 * @param switchCycleId. 
+	
+ 	 * @param dataDescriptionId. 
+	
+ 	 * @param processorId. 
+	
      */
-	ConfigDescriptionRow* ConfigDescriptionTable::newRow(vector<Tag>  antennaId, vector<Tag>  dataDescriptionId, vector<int>  feedId, Tag processorId, vector<Tag>  switchCycleId, int numAntenna, int numFeed, vector<int > numSubBand, CorrelationModeMod::CorrelationMode correlationMode, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection){
+	ConfigDescriptionRow* ConfigDescriptionTable::newRow(int numAntenna, int numDataDescription, int numFeed, CorrelationModeMod::CorrelationMode correlationMode, int numAtmPhaseCorrection, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection, ProcessorTypeMod::ProcessorType processorType, SpectralResolutionTypeMod::SpectralResolutionType spectralType, vector<Tag>  antennaId, vector<int>  feedId, vector<Tag>  switchCycleId, vector<Tag>  dataDescriptionId, Tag processorId){
 		ConfigDescriptionRow *row = new ConfigDescriptionRow(*this);
-			
-		row->setAntennaId(antennaId);
-			
-		row->setDataDescriptionId(dataDescriptionId);
-			
-		row->setFeedId(feedId);
-			
-		row->setProcessorId(processorId);
-			
-		row->setSwitchCycleId(switchCycleId);
 			
 		row->setNumAntenna(numAntenna);
 			
-		row->setNumFeed(numFeed);
+		row->setNumDataDescription(numDataDescription);
 			
-		row->setNumSubBand(numSubBand);
+		row->setNumFeed(numFeed);
 			
 		row->setCorrelationMode(correlationMode);
 			
+		row->setNumAtmPhaseCorrection(numAtmPhaseCorrection);
+			
 		row->setAtmPhaseCorrection(atmPhaseCorrection);
+			
+		row->setProcessorType(processorType);
+			
+		row->setSpectralType(spectralType);
+			
+		row->setAntennaId(antennaId);
+			
+		row->setFeedId(feedId);
+			
+		row->setSwitchCycleId(switchCycleId);
+			
+		row->setDataDescriptionId(dataDescriptionId);
+			
+		row->setProcessorId(processorId);
 	
 		return row;		
 	}	
 
-	ConfigDescriptionRow* ConfigDescriptionTable::newRowFull(vector<Tag>  antennaId, vector<Tag>  dataDescriptionId, vector<int>  feedId, Tag processorId, vector<Tag>  switchCycleId, int numAntenna, int numFeed, vector<int > numSubBand, CorrelationModeMod::CorrelationMode correlationMode, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection)	{
+	ConfigDescriptionRow* ConfigDescriptionTable::newRowFull(int numAntenna, int numDataDescription, int numFeed, CorrelationModeMod::CorrelationMode correlationMode, int numAtmPhaseCorrection, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection, ProcessorTypeMod::ProcessorType processorType, SpectralResolutionTypeMod::SpectralResolutionType spectralType, vector<Tag>  antennaId, vector<int>  feedId, vector<Tag>  switchCycleId, vector<Tag>  dataDescriptionId, Tag processorId)	{
 		ConfigDescriptionRow *row = new ConfigDescriptionRow(*this);
-			
-		row->setAntennaId(antennaId);
-			
-		row->setDataDescriptionId(dataDescriptionId);
-			
-		row->setFeedId(feedId);
-			
-		row->setProcessorId(processorId);
-			
-		row->setSwitchCycleId(switchCycleId);
 			
 		row->setNumAntenna(numAntenna);
 			
-		row->setNumFeed(numFeed);
+		row->setNumDataDescription(numDataDescription);
 			
-		row->setNumSubBand(numSubBand);
+		row->setNumFeed(numFeed);
 			
 		row->setCorrelationMode(correlationMode);
 			
+		row->setNumAtmPhaseCorrection(numAtmPhaseCorrection);
+			
 		row->setAtmPhaseCorrection(atmPhaseCorrection);
+			
+		row->setProcessorType(processorType);
+			
+		row->setSpectralType(spectralType);
+			
+		row->setAntennaId(antennaId);
+			
+		row->setFeedId(feedId);
+			
+		row->setSwitchCycleId(switchCycleId);
+			
+		row->setDataDescriptionId(dataDescriptionId);
+			
+		row->setProcessorId(processorId);
 	
 		return row;				
 	}
@@ -268,25 +286,31 @@ ConfigDescriptionRow* ConfigDescriptionTable::newRowCopy(ConfigDescriptionRow* r
 			 
 		ConfigDescriptionRow* aRow = lookup(
 				
-		x->getAntennaId()
-				,
-		x->getDataDescriptionId()
-				,
-		x->getFeedId()
-				,
-		x->getProcessorId()
-				,
-		x->getSwitchCycleId()
-				,
 		x->getNumAntenna()
+				,
+		x->getNumDataDescription()
 				,
 		x->getNumFeed()
 				,
-		x->getNumSubBand()
-				,
 		x->getCorrelationMode()
 				,
+		x->getNumAtmPhaseCorrection()
+				,
 		x->getAtmPhaseCorrection()
+				,
+		x->getProcessorType()
+				,
+		x->getSpectralType()
+				,
+		x->getAntennaId()
+				,
+		x->getFeedId()
+				,
+		x->getSwitchCycleId()
+				,
+		x->getDataDescriptionId()
+				,
+		x->getProcessorId()
 				
 		);
 		if (aRow) return aRow;
@@ -320,31 +344,41 @@ ConfigDescriptionRow* ConfigDescriptionTable::newRowCopy(ConfigDescriptionRow* r
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	ConfigDescriptionRow*  ConfigDescriptionTable::checkAndAdd(ConfigDescriptionRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	ConfigDescriptionRow*  ConfigDescriptionTable::checkAndAdd(ConfigDescriptionRow* x)  {
 	 
 		 
 		if (lookup(
 			
-			x->getAntennaId()
-		,
-			x->getDataDescriptionId()
-		,
-			x->getFeedId()
-		,
-			x->getProcessorId()
-		,
-			x->getSwitchCycleId()
-		,
 			x->getNumAntenna()
+		,
+			x->getNumDataDescription()
 		,
 			x->getNumFeed()
 		,
-			x->getNumSubBand()
-		,
 			x->getCorrelationMode()
 		,
+			x->getNumAtmPhaseCorrection()
+		,
 			x->getAtmPhaseCorrection()
+		,
+			x->getProcessorType()
+		,
+			x->getSpectralType()
+		,
+			x->getAntennaId()
+		,
+			x->getFeedId()
+		,
+			x->getSwitchCycleId()
+		,
+			x->getDataDescriptionId()
+		,
+			x->getProcessorId()
 		
 		)) throw UniquenessViolationException("Uniqueness violation exception in table ConfigDescriptionTable");
 		
@@ -411,32 +445,38 @@ ConfigDescriptionRow* ConfigDescriptionTable::newRowCopy(ConfigDescriptionRow* r
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
- * @param antennaId.
- 	 		
- * @param dataDescriptionId.
- 	 		
- * @param feedId.
- 	 		
- * @param processorId.
- 	 		
- * @param switchCycleId.
- 	 		
  * @param numAntenna.
+ 	 		
+ * @param numDataDescription.
  	 		
  * @param numFeed.
  	 		
- * @param numSubBand.
- 	 		
  * @param correlationMode.
  	 		
+ * @param numAtmPhaseCorrection.
+ 	 		
  * @param atmPhaseCorrection.
+ 	 		
+ * @param processorType.
+ 	 		
+ * @param spectralType.
+ 	 		
+ * @param antennaId.
+ 	 		
+ * @param feedId.
+ 	 		
+ * @param switchCycleId.
+ 	 		
+ * @param dataDescriptionId.
+ 	 		
+ * @param processorId.
  	 		 
  */
-ConfigDescriptionRow* ConfigDescriptionTable::lookup(vector<Tag>  antennaId, vector<Tag>  dataDescriptionId, vector<int>  feedId, Tag processorId, vector<Tag>  switchCycleId, int numAntenna, int numFeed, vector<int > numSubBand, CorrelationModeMod::CorrelationMode correlationMode, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection) {
+ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numDataDescription, int numFeed, CorrelationModeMod::CorrelationMode correlationMode, int numAtmPhaseCorrection, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection, ProcessorTypeMod::ProcessorType processorType, SpectralResolutionTypeMod::SpectralResolutionType spectralType, vector<Tag>  antennaId, vector<int>  feedId, vector<Tag>  switchCycleId, vector<Tag>  dataDescriptionId, Tag processorId) {
 		ConfigDescriptionRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(antennaId, dataDescriptionId, feedId, processorId, switchCycleId, numAntenna, numFeed, numSubBand, correlationMode, atmPhaseCorrection)) return aRow;
+			if (aRow->compareNoAutoInc(numAntenna, numDataDescription, numFeed, correlationMode, numAtmPhaseCorrection, atmPhaseCorrection, processorType, spectralType, antennaId, feedId, switchCycleId, dataDescriptionId, processorId)) return aRow;
 		}			
 		return 0;	
 } 
@@ -444,7 +484,6 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(vector<Tag>  antennaId, vec
  	 	
 
 	
-
 
 
 
@@ -465,7 +504,7 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(vector<Tag>  antennaId, vec
 #endif
 	
 #ifndef WITHOUT_ACS
-	void ConfigDescriptionTable::fromIDL(ConfigDescriptionTableIDL x) throw(DuplicateKey,ConversionException) {
+	void ConfigDescriptionTable::fromIDL(ConfigDescriptionTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			ConfigDescriptionRow *tmp = newRow();
@@ -476,28 +515,27 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(vector<Tag>  antennaId, vec
 	}
 #endif
 
-	char *ConfigDescriptionTable::toFITS() const throw(ConversionException) {
+	char *ConfigDescriptionTable::toFITS() const  {
 		throw ConversionException("Not implemented","ConfigDescription");
 	}
 
-	void ConfigDescriptionTable::fromFITS(char *fits) throw(ConversionException) {
+	void ConfigDescriptionTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","ConfigDescription");
 	}
 
-	string ConfigDescriptionTable::toVOTable() const throw(ConversionException) {
+	string ConfigDescriptionTable::toVOTable() const {
 		throw ConversionException("Not implemented","ConfigDescription");
 	}
 
-	void ConfigDescriptionTable::fromVOTable(string vo) throw(ConversionException) {
+	void ConfigDescriptionTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","ConfigDescription");
 	}
 
-	string ConfigDescriptionTable::toXML()  throw(ConversionException) {
+	
+	string ConfigDescriptionTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<ConfigDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/ConfigDescriptionTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<ConfigDescriptionTable> ");
+		buf.append("<ConfigDescriptionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/ConfigDescriptionTable\" xsi:schemaLocation=\"http://Alma/XASDM/ConfigDescriptionTable http://almaobservatory.org/XML/XASDM/2/ConfigDescriptionTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -513,8 +551,9 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(vector<Tag>  antennaId, vec
 		buf.append("</ConfigDescriptionTable> ");
 		return buf;
 	}
+
 	
-	void ConfigDescriptionTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void ConfigDescriptionTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<ConfigDescriptionTable")) 
 			error();
@@ -556,20 +595,110 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(vector<Tag>  antennaId, vec
 			error();
 	}
 
-	void ConfigDescriptionTable::error() throw(ConversionException) {
+	
+	void ConfigDescriptionTable::error()  {
 		throw ConversionException("Invalid xml document","ConfigDescription");
 	}
 	
+	
 	string ConfigDescriptionTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void ConfigDescriptionTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "ConfigDescription");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			ConfigDescriptionRow* aRow = ConfigDescriptionRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "ConfigDescription");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "ConfigDescription");
+		} 		 	
+	}
+
 	
 	void ConfigDescriptionTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -600,6 +729,7 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(vector<Tag>  antennaId, vec
 				throw ConversionException("Could not close file " + fileName, "ConfigDescription");
 		}
 	}
+
 	
 	void ConfigDescriptionTable::setFromFile(const string& directory) {
 		string tablename;
@@ -641,6 +771,11 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(vector<Tag>  antennaId, vec
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

@@ -140,6 +140,12 @@ Bool QtRTRegion::getMouseRegion(Record& mouseRegion,
 //}
 
 void QtRTRegion::clicked(Int x, Int y) {
+   //this has same implementation as doubleClicked
+   //we use single 'clicked' for activation
+   return;
+}
+
+void QtRTRegion::doubleClicked(Int x, Int y) {
    //cout << "QtPTRegion rectangle " << x << " " << y <<  endl;
    if (itsCurrentWC==0) 
       return ;
@@ -296,7 +302,11 @@ Bool QtPTRegion::getMouseRegion(Record& mouseRegion,
 //  cout << "QtPTRegion polygon ready" << endl;
 //}
 
-void QtPTRegion::clicked(Int x, Int y) {
+void QtPTRegion::clicked(Int x, Int y) { 
+  //this has the same implementation as doubleClicked
+  //we use sigle 'clicked' for activation
+}
+void QtPTRegion::doubleClicked(Int x, Int y) {
    //cout << "QtPTRegion polygon " << x << " " << y <<  endl;
    if (itsCurrentWC==0) 
       return ;

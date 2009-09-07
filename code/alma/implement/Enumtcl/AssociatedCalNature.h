@@ -38,7 +38,7 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<AssociatedCalNature,EnumPar<void> >
-     (AssociatedCalNatureMod::ASSOCIATED_EXECBLOCK,ep((int)AssociatedCalNatureMod::ASSOCIATED_EXECBLOCK,"ASSOCIATED_EXECBLOCK","The associated execblock id concatenated to produce the data set")));
+     (AssociatedCalNatureMod::ASSOCIATED_EXECBLOCK,ep((int)AssociatedCalNatureMod::ASSOCIATED_EXECBLOCK,"ASSOCIATED_EXECBLOCK","un-documented")));
     return true;
   }
   static map<AssociatedCalNature,EnumPar<void> > m_;

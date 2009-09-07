@@ -99,6 +99,7 @@ class QtRTRegion: public QtMouseTool, public MWCRTRegion {
   virtual void regionReady();
 
   virtual void clicked(Int x, Int y); 
+  virtual void doubleClicked(Int x, Int y); 
   //virtual void rectangleReady(); 
   //virtual void handleEvent(DisplayEvent& ev);
   //virtual void keyPressed(const WCPositionEvent &ev);
@@ -147,6 +148,7 @@ class QtPTRegion: public QtMouseTool, public MWCPTRegion {
   // See implementation for format of the record.
   virtual void regionReady();
   virtual void clicked(Int x, Int y);
+  virtual void doubleClicked(Int x, Int y); 
 
   //virtual void handleEvent(DisplayEvent& ev);
   //virtual void keyPressed(const WCPositionEvent &ev);

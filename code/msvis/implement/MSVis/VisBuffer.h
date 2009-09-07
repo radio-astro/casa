@@ -205,11 +205,11 @@ public:
   // This conversion may not be accurate for some frame 
   // conversion like topo to lsr except if the spw is in the actual buffer
 
-  void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool convert=False)
+  void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert)
     { visIter_p->lsrFrequency(spw, freq, convert);}
 
   void lsrFrequency(const Int& spw, Vector<Double>& freq, 
-		    Bool convert=False) const
+		    Bool& convert) const
     { visIter_p->lsrFrequency(spw, freq, convert);}
   MDirection& phaseCenter() 
   { return phaseCenterOK_p ? phaseCenter_p : fillPhaseCenter();}
@@ -341,9 +341,9 @@ public:
   void freqAveCubes();
 
   // Average channel axis by factor
-  void channelAve(Float factor);
-  void chanAveVisCube(Cube<Complex>& data,Int width,Int nChanOut);
-  void chanAveFlagCube(Cube<Bool>& flagcube,Int width,Int nChanOut);
+  void channelAve(const Matrix<Int>& chanavebounds);
+  void chanAveVisCube(Cube<Complex>& data,Int nChanOut);
+  void chanAveFlagCube(Cube<Bool>& flagcube,Int nChanOut);
 
   // Sort/unsort the correlations, if necessary
   //  (Rudimentary handling of non-canonically sorted correlations--use with care!)
@@ -454,6 +454,8 @@ private:
   Matrix<Float>& fillImagingWeight();
   Bool checkMSId();
 
+  Matrix<Int>& fillChanAveBounds();
+
   // Filter index arrays for unique elements
   Vector<Int> unique(const Vector<Int>& indices) const;
 
@@ -514,6 +516,9 @@ private:
   Int oldMSId_p;
 
   Cube<Float> weightCube_p;
+
+  Matrix<Int> chanAveBounds_p;
+
 
 };
 

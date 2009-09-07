@@ -80,11 +80,19 @@ namespace asdm {
 	CalBandpassTable::CalBandpassTable(ASDM &c) : container(c) {
 
 	
+		key.push_back("basebandName");
+	
+		key.push_back("sideband");
+	
+		key.push_back("atmPhaseCorrection");
+	
+		key.push_back("typeCurve");
+	
+		key.push_back("receiverBand");
+	
 		key.push_back("calDataId");
 	
 		key.push_back("calReductionId");
-	
-		key.push_back("basebandName");
 	
 
 
@@ -168,141 +176,123 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param basebandName. 
+	
+ 	 * @param sideband. 
+	
+ 	 * @param atmPhaseCorrection. 
+	
+ 	 * @param typeCurve. 
+	
+ 	 * @param receiverBand. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
-	
- 	 * @param basebandName. 
-	
- 	 * @param numAntenna. 
-	
- 	 * @param numBaseline. 
-	
- 	 * @param numAPC. 
-	
- 	 * @param numReceptor. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param freqLimits. 
+ 	 * @param numAntenna. 
 	
- 	 * @param receiverBand. 
+ 	 * @param numPoly. 
+	
+ 	 * @param numReceptor. 
 	
  	 * @param antennaNames. 
 	
  	 * @param refAntennaName. 
 	
- 	 * @param atmPhaseCorrections. 
+ 	 * @param freqLimits. 
 	
  	 * @param polarizationTypes. 
 	
- 	 * @param numAmpliPoly. 
+ 	 * @param curve. 
 	
- 	 * @param ampliCurve. 
-	
- 	 * @param ampliRms. 
-	
- 	 * @param numPhasePoly. 
-	
- 	 * @param phaseCurve. 
-	
- 	 * @param phaseRms. 
+ 	 * @param reducedChiSquared. 
 	
      */
-	CalBandpassRow* CalBandpassTable::newRow(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numAntenna, int numBaseline, int numAPC, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > freqLimits, ReceiverBandMod::ReceiverBand receiverBand, vector<string > antennaNames, string refAntennaName, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numAmpliPoly, vector<vector<vector<vector<float > > > > ampliCurve, vector<vector<vector<float > > > ampliRms, int numPhasePoly, vector<vector<vector<vector<Angle > > > > phaseCurve, vector<vector<vector<float > > > phaseRms){
+	CalBandpassRow* CalBandpassTable::newRow(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband sideband, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<Frequency > freqLimits, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared){
 		CalBandpassRow *row = new CalBandpassRow(*this);
+			
+		row->setBasebandName(basebandName);
+			
+		row->setSideband(sideband);
+			
+		row->setAtmPhaseCorrection(atmPhaseCorrection);
+			
+		row->setTypeCurve(typeCurve);
+			
+		row->setReceiverBand(receiverBand);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setBasebandName(basebandName);
-			
-		row->setNumAntenna(numAntenna);
-			
-		row->setNumBaseline(numBaseline);
-			
-		row->setNumAPC(numAPC);
-			
-		row->setNumReceptor(numReceptor);
-			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
-		row->setFreqLimits(freqLimits);
+		row->setNumAntenna(numAntenna);
 			
-		row->setReceiverBand(receiverBand);
+		row->setNumPoly(numPoly);
+			
+		row->setNumReceptor(numReceptor);
 			
 		row->setAntennaNames(antennaNames);
 			
 		row->setRefAntennaName(refAntennaName);
 			
-		row->setAtmPhaseCorrections(atmPhaseCorrections);
+		row->setFreqLimits(freqLimits);
 			
 		row->setPolarizationTypes(polarizationTypes);
 			
-		row->setNumAmpliPoly(numAmpliPoly);
+		row->setCurve(curve);
 			
-		row->setAmpliCurve(ampliCurve);
-			
-		row->setAmpliRms(ampliRms);
-			
-		row->setNumPhasePoly(numPhasePoly);
-			
-		row->setPhaseCurve(phaseCurve);
-			
-		row->setPhaseRms(phaseRms);
+		row->setReducedChiSquared(reducedChiSquared);
 	
 		return row;		
 	}	
 
-	CalBandpassRow* CalBandpassTable::newRowFull(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numAntenna, int numBaseline, int numAPC, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > freqLimits, ReceiverBandMod::ReceiverBand receiverBand, vector<string > antennaNames, string refAntennaName, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numAmpliPoly, vector<vector<vector<vector<float > > > > ampliCurve, vector<vector<vector<float > > > ampliRms, int numPhasePoly, vector<vector<vector<vector<Angle > > > > phaseCurve, vector<vector<vector<float > > > phaseRms)	{
+	CalBandpassRow* CalBandpassTable::newRowFull(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband sideband, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<Frequency > freqLimits, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared)	{
 		CalBandpassRow *row = new CalBandpassRow(*this);
+			
+		row->setBasebandName(basebandName);
+			
+		row->setSideband(sideband);
+			
+		row->setAtmPhaseCorrection(atmPhaseCorrection);
+			
+		row->setTypeCurve(typeCurve);
+			
+		row->setReceiverBand(receiverBand);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setBasebandName(basebandName);
-			
-		row->setNumAntenna(numAntenna);
-			
-		row->setNumBaseline(numBaseline);
-			
-		row->setNumAPC(numAPC);
-			
-		row->setNumReceptor(numReceptor);
-			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
-		row->setFreqLimits(freqLimits);
+		row->setNumAntenna(numAntenna);
 			
-		row->setReceiverBand(receiverBand);
+		row->setNumPoly(numPoly);
+			
+		row->setNumReceptor(numReceptor);
 			
 		row->setAntennaNames(antennaNames);
 			
 		row->setRefAntennaName(refAntennaName);
 			
-		row->setAtmPhaseCorrections(atmPhaseCorrections);
+		row->setFreqLimits(freqLimits);
 			
 		row->setPolarizationTypes(polarizationTypes);
 			
-		row->setNumAmpliPoly(numAmpliPoly);
+		row->setCurve(curve);
 			
-		row->setAmpliCurve(ampliCurve);
-			
-		row->setAmpliRms(ampliRms);
-			
-		row->setNumPhasePoly(numPhasePoly);
-			
-		row->setPhaseCurve(phaseCurve);
-			
-		row->setPhaseRms(phaseRms);
+		row->setReducedChiSquared(reducedChiSquared);
 	
 		return row;				
 	}
@@ -332,13 +322,21 @@ CalBandpassRow* CalBandpassTable::newRowCopy(CalBandpassRow* row) {
 	CalBandpassRow* CalBandpassTable::add(CalBandpassRow* x) {
 		
 		if (getRowByKey(
+						x->getBasebandName()
+						,
+						x->getSideband()
+						,
+						x->getAtmPhaseCorrection()
+						,
+						x->getTypeCurve()
+						,
+						x->getReceiverBand()
+						,
 						x->getCalDataId()
 						,
 						x->getCalReductionId()
-						,
-						x->getBasebandName()
 						))
-			//throw DuplicateKey(x.getCalDataId() + "|" + x.getCalReductionId() + "|" + x.getBasebandName(),"CalBandpass");
+			//throw DuplicateKey(x.getBasebandName() + "|" + x.getSideband() + "|" + x.getAtmPhaseCorrection() + "|" + x.getTypeCurve() + "|" + x.getReceiverBand() + "|" + x.getCalDataId() + "|" + x.getCalReductionId(),"CalBandpass");
 			throw DuplicateKey("Duplicate key exception in ","CalBandpassTable");
 		
 		row.push_back(x);
@@ -365,17 +363,27 @@ CalBandpassRow* CalBandpassTable::newRowCopy(CalBandpassRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalBandpassRow*  CalBandpassTable::checkAndAdd(CalBandpassRow* x) throw (DuplicateKey) {
+	CalBandpassRow*  CalBandpassTable::checkAndAdd(CalBandpassRow* x)  {
 		
 		
 		if (getRowByKey(
 	
+			x->getBasebandName()
+	,
+			x->getSideband()
+	,
+			x->getAtmPhaseCorrection()
+	,
+			x->getTypeCurve()
+	,
+			x->getReceiverBand()
+	,
 			x->getCalDataId()
 	,
 			x->getCalReductionId()
-	,
-			x->getBasebandName()
 			
 		)) throw DuplicateKey("Duplicate key exception in ", "CalBandpassTable");
 		
@@ -412,10 +420,30 @@ CalBandpassRow* CalBandpassTable::newRowCopy(CalBandpassRow* row) {
  ** no row exists for that key.
  **
  */
- 	CalBandpassRow* CalBandpassTable::getRowByKey(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName)  {
+ 	CalBandpassRow* CalBandpassTable::getRowByKey(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband sideband, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
 	CalBandpassRow* aRow = 0;
 	for (unsigned int i = 0; i < row.size(); i++) {
 		aRow = row.at(i);
+		
+			
+				if (aRow->basebandName != basebandName) continue;
+			
+		
+			
+				if (aRow->sideband != sideband) continue;
+			
+		
+			
+				if (aRow->atmPhaseCorrection != atmPhaseCorrection) continue;
+			
+		
+			
+				if (aRow->typeCurve != typeCurve) continue;
+			
+		
+			
+				if (aRow->receiverBand != receiverBand) continue;
+			
 		
 			
 				if (aRow->calDataId != calDataId) continue;
@@ -423,10 +451,6 @@ CalBandpassRow* CalBandpassTable::newRowCopy(CalBandpassRow* row) {
 		
 			
 				if (aRow->calReductionId != calReductionId) continue;
-			
-		
-			
-				if (aRow->basebandName != basebandName) continue;
 			
 		
 		return aRow;
@@ -442,54 +466,48 @@ CalBandpassRow* CalBandpassTable::newRowCopy(CalBandpassRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
+ * @param basebandName.
+ 	 		
+ * @param sideband.
+ 	 		
+ * @param atmPhaseCorrection.
+ 	 		
+ * @param typeCurve.
+ 	 		
+ * @param receiverBand.
+ 	 		
  * @param calDataId.
  	 		
  * @param calReductionId.
- 	 		
- * @param basebandName.
- 	 		
- * @param numAntenna.
- 	 		
- * @param numBaseline.
- 	 		
- * @param numAPC.
- 	 		
- * @param numReceptor.
  	 		
  * @param startValidTime.
  	 		
  * @param endValidTime.
  	 		
- * @param freqLimits.
+ * @param numAntenna.
  	 		
- * @param receiverBand.
+ * @param numPoly.
+ 	 		
+ * @param numReceptor.
  	 		
  * @param antennaNames.
  	 		
  * @param refAntennaName.
  	 		
- * @param atmPhaseCorrections.
+ * @param freqLimits.
  	 		
  * @param polarizationTypes.
  	 		
- * @param numAmpliPoly.
+ * @param curve.
  	 		
- * @param ampliCurve.
- 	 		
- * @param ampliRms.
- 	 		
- * @param numPhasePoly.
- 	 		
- * @param phaseCurve.
- 	 		
- * @param phaseRms.
+ * @param reducedChiSquared.
  	 		 
  */
-CalBandpassRow* CalBandpassTable::lookup(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numAntenna, int numBaseline, int numAPC, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > freqLimits, ReceiverBandMod::ReceiverBand receiverBand, vector<string > antennaNames, string refAntennaName, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numAmpliPoly, vector<vector<vector<vector<float > > > > ampliCurve, vector<vector<vector<float > > > ampliRms, int numPhasePoly, vector<vector<vector<vector<Angle > > > > phaseCurve, vector<vector<vector<float > > > phaseRms) {
+CalBandpassRow* CalBandpassTable::lookup(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband sideband, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<Frequency > freqLimits, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared) {
 		CalBandpassRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(calDataId, calReductionId, basebandName, numAntenna, numBaseline, numAPC, numReceptor, startValidTime, endValidTime, freqLimits, receiverBand, antennaNames, refAntennaName, atmPhaseCorrections, polarizationTypes, numAmpliPoly, ampliCurve, ampliRms, numPhasePoly, phaseCurve, phaseRms)) return aRow;
+			if (aRow->compareNoAutoInc(basebandName, sideband, atmPhaseCorrection, typeCurve, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, numAntenna, numPoly, numReceptor, antennaNames, refAntennaName, freqLimits, polarizationTypes, curve, reducedChiSquared)) return aRow;
 		}			
 		return 0;	
 } 
@@ -497,7 +515,6 @@ CalBandpassRow* CalBandpassTable::lookup(Tag calDataId, Tag calReductionId, Base
  	 	
 
 	
-
 
 
 
@@ -518,7 +535,7 @@ CalBandpassRow* CalBandpassTable::lookup(Tag calDataId, Tag calReductionId, Base
 #endif
 	
 #ifndef WITHOUT_ACS
-	void CalBandpassTable::fromIDL(CalBandpassTableIDL x) throw(DuplicateKey,ConversionException) {
+	void CalBandpassTable::fromIDL(CalBandpassTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			CalBandpassRow *tmp = newRow();
@@ -529,28 +546,27 @@ CalBandpassRow* CalBandpassTable::lookup(Tag calDataId, Tag calReductionId, Base
 	}
 #endif
 
-	char *CalBandpassTable::toFITS() const throw(ConversionException) {
+	char *CalBandpassTable::toFITS() const  {
 		throw ConversionException("Not implemented","CalBandpass");
 	}
 
-	void CalBandpassTable::fromFITS(char *fits) throw(ConversionException) {
+	void CalBandpassTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","CalBandpass");
 	}
 
-	string CalBandpassTable::toVOTable() const throw(ConversionException) {
+	string CalBandpassTable::toVOTable() const {
 		throw ConversionException("Not implemented","CalBandpass");
 	}
 
-	void CalBandpassTable::fromVOTable(string vo) throw(ConversionException) {
+	void CalBandpassTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","CalBandpass");
 	}
 
-	string CalBandpassTable::toXML()  throw(ConversionException) {
+	
+	string CalBandpassTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<CalBandpassTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/CalBandpassTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<CalBandpassTable> ");
+		buf.append("<CalBandpassTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalBandpassTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalBandpassTable http://almaobservatory.org/XML/XASDM/2/CalBandpassTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -566,8 +582,9 @@ CalBandpassRow* CalBandpassTable::lookup(Tag calDataId, Tag calReductionId, Base
 		buf.append("</CalBandpassTable> ");
 		return buf;
 	}
+
 	
-	void CalBandpassTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void CalBandpassTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalBandpassTable")) 
 			error();
@@ -609,20 +626,110 @@ CalBandpassRow* CalBandpassTable::lookup(Tag calDataId, Tag calReductionId, Base
 			error();
 	}
 
-	void CalBandpassTable::error() throw(ConversionException) {
+	
+	void CalBandpassTable::error()  {
 		throw ConversionException("Invalid xml document","CalBandpass");
 	}
 	
+	
 	string CalBandpassTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void CalBandpassTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalBandpass");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			CalBandpassRow* aRow = CalBandpassRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "CalBandpass");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "CalBandpass");
+		} 		 	
+	}
+
 	
 	void CalBandpassTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -653,6 +760,7 @@ CalBandpassRow* CalBandpassTable::lookup(Tag calDataId, Tag calReductionId, Base
 				throw ConversionException("Could not close file " + fileName, "CalBandpass");
 		}
 	}
+
 	
 	void CalBandpassTable::setFromFile(const string& directory) {
 		string tablename;
@@ -694,6 +802,11 @@ CalBandpassRow* CalBandpassTable::lookup(Tag calDataId, Tag calReductionId, Base
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

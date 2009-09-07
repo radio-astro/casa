@@ -169,6 +169,11 @@ public:
 	 * @return a vector of vector of vector of ArrayTimeInterval
 	 */	 
 	 static vector<vector<vector<ArrayTimeInterval> > > from3DBin(EndianISStream & eiss);
+
+	 /**
+	  * Returns a string representation of this.
+	  */
+	 string toString() const ;
 };
 
 

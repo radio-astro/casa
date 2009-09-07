@@ -37,12 +37,25 @@
 #include <string>
 using namespace std;
 
+
+int CPointingModelMode::version() {
+	return PointingModelModeMod::version;
+	}
+	
+string CPointingModelMode::revision () {
+	return PointingModelModeMod::revision;
+}
+
+unsigned int CPointingModelMode::size() {
+	return 2;
+	}
+	
 	
 const std::string& CPointingModelMode::sRADIO = "RADIO";
 	
 const std::string& CPointingModelMode::sOPTICAL = "OPTICAL";
 	
-const std::vector<std::string> CPointingModelMode::sPointingModelModeSet() {
+const std::vector<std::string> CPointingModelMode::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CPointingModelMode::sRADIO);
@@ -51,25 +64,6 @@ const std::vector<std::string> CPointingModelMode::sPointingModelModeSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CPointingModelMode::hRADIO = "Radio pointing model";
-	
-const std::string& CPointingModelMode::hOPTICAL = "Optical Pointing Model";
-	
-const std::vector<std::string> CPointingModelMode::hPointingModelModeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CPointingModelMode::hRADIO);
-    
-    enumSet.insert(enumSet.end(), CPointingModelMode::hOPTICAL);
-        
-    return enumSet;
-}
-   	
 
 std::string CPointingModelMode::name(const PointingModelModeMod::PointingModelMode& f) {
     switch (f) {
@@ -81,25 +75,9 @@ std::string CPointingModelMode::name(const PointingModelModeMod::PointingModelMo
       return CPointingModelMode::sOPTICAL;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CPointingModelMode::help(const PointingModelModeMod::PointingModelMode& f) {
-    switch (f) {
-    
-    case PointingModelModeMod::RADIO:
-      return CPointingModelMode::hRADIO;
-    
-    case PointingModelModeMod::OPTICAL:
-      return CPointingModelMode::hOPTICAL;
-    	
-    }
-    return std::string("");
-}
-   	
 
 PointingModelModeMod::PointingModelMode CPointingModelMode::newPointingModelMode(const std::string& name) {
 		
@@ -128,12 +106,10 @@ PointingModelModeMod::PointingModelMode CPointingModelMode::literal(const std::s
 }
 
 PointingModelModeMod::PointingModelMode CPointingModelMode::from_int(unsigned int i) {
-	vector<string> names = sPointingModelModeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newPointingModelMode(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newPointingModelMode(names_.at(i));
 }
-
-	
 
 string CPointingModelMode::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'PointingModelMode'.";

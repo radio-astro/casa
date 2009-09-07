@@ -26,7 +26,6 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSPlot.h>
 
-#include <msvis/MSVis/VisSet.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
@@ -56,14 +55,12 @@ void PlotMSPlot::makeParameters(PlotMSPlotParameters& params, PlotMS* plotms) {
 
 PlotMSPlot::PlotMSPlot(PlotMS* parent) : itsParent_(parent),
         itsFactory_(parent->getPlotter()->getFactory()),
-        itsParams_(itsFactory_), itsVisSet_(NULL), itsData_(parent) { }
+        itsParams_(itsFactory_), itsData_(parent) { }
 
 PlotMSPlot::~PlotMSPlot() {
-    // Clean up MS
-    if(itsVisSet_ != NULL) delete itsVisSet_;
     
     // Clean up plots
-    detachFromCanvases();
+    // detachFromCanvases();
 }
 
 
@@ -72,32 +69,36 @@ PlotMSPlot::~PlotMSPlot() {
 const PlotMSPlotParameters& PlotMSPlot::parameters() const{ return itsParams_;}
 PlotMSPlotParameters& PlotMSPlot::parameters() { return itsParams_; }
 
-vector<PlotCanvasPtr> PlotMSPlot::canvases() const { return itsCanvases_; }
-
 vector<PlotCanvasPtr> PlotMSPlot::visibleCanvases() const {
-    vector<PlotCanvasPtr> v, canv= itsParent_->getPlotter()->currentCanvases();
+    vector<PlotCanvasPtr> v, canv = canvases(),
+                          visCanv= itsParent_->getPlotter()->currentCanvases();
     bool found = false;
-    for(unsigned int i = 0; i < itsCanvases_.size(); i++) {
+    for(unsigned int i = 0; i < canv.size(); i++) {
         found = false;
-        for(unsigned int j = 0; !found && j < canv.size(); j++)
-            if(itsCanvases_[i] == canv[j]) found = true;
-        if(found) v.push_back(itsCanvases_[i]);
+        for(unsigned int j = 0; !found && j < visCanv.size(); j++)
+            if(canv[i] == visCanv[j]) found = true;
+        if(found) v.push_back(canv[i]);
     }
     return v;
 }
 
-bool PlotMSPlot::initializePlot(const vector<PlotCanvasPtr>& canvases) {
-    if(canvases.size() != layoutNumCanvases()) return false;
-    itsCanvases_ = canvases;
-    
+PlotMSRegions PlotMSPlot::selectedRegions() const {
+    return selectedRegions(canvases()); }
+PlotMSRegions PlotMSPlot::visibleSelectedRegions() const {
+    return selectedRegions(visibleCanvases()); }
+
+bool PlotMSPlot::initializePlot(PlotMSPages& pages) {    
     bool hold = allDrawingHeld();
     if(!hold) holdDrawing();
     
     // Initialize plot objects and assign canvases.
-    if(!initializePlot() || !assignCanvases()) {
+    if(!assignCanvases(pages) || !initializePlot()) {
         if(!hold) releaseDrawing();
         return false;
     }
+    
+    // Set up page.
+    pages.setupCurrentPage();
     
     // Attach plot objects to their assigned canvases.
     attachToCanvases();
@@ -113,6 +114,7 @@ bool PlotMSPlot::initializePlot(const vector<PlotCanvasPtr>& canvases) {
     return true;
 }
 
+/*
 void PlotMSPlot::attachToCanvases() {
     for(unsigned int i = 0; i < itsPlots_.size(); i++)
         itsCanvasMap_[&*itsPlots_[i]]->plotItem(itsPlots_[i]);
@@ -122,16 +124,10 @@ void PlotMSPlot::detachFromCanvases() {
     for(unsigned int i = 0; i < itsPlots_.size(); i++)
         itsCanvasMap_[&*itsPlots_[i]]->removePlotItem(itsPlots_[i]);
 }
+*/
 
 PlotMSData& PlotMSPlot::data() { return itsData_; }
 const PlotMSData& PlotMSPlot::data() const { return itsData_; }
-
-VisSet* PlotMSPlot::visSet() { return itsVisSet_; }
-const VisSet* PlotMSPlot::visSet() const { return itsVisSet_; }
-MeasurementSet& PlotMSPlot::ms() { return itsMS_; }
-const MeasurementSet& PlotMSPlot::ms() const { return itsMS_; }
-MeasurementSet& PlotMSPlot::selectedMS() { return itsSelectedMS_; }
-const MeasurementSet& PlotMSPlot::selectedMS() const { return itsSelectedMS_; }
 
 PlotMS* PlotMSPlot::parent() { return itsParent_; }
 
@@ -182,23 +178,25 @@ void PlotMSPlot::plotDataChanged() {
     bool hold = allDrawingHeld();
     if(!hold) holdDrawing();
     
-    for(unsigned int i = 0; i < itsPlots_.size(); i++)
-        itsPlots_[i]->dataChanged();
+    vector<MaskedScatterPlotPtr> p = plots();
+    for(unsigned int i = 0; i < p.size(); i++)
+        if(!p[i].null()) p[i]->dataChanged();
     
     if(!hold) releaseDrawing();
 }
 
 bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
-    if(itsCanvases_.size() == 0) return true;
-    else if(itsCanvases_.size() == 1)
-        return itsCanvases_[0]->exportToFile(format);
+    vector<PlotCanvasPtr> canv = canvases();
+    if(canv.size() == 0) return true;
+    else if(canv.size() == 1)
+        return canv[0]->exportToFile(format);
     else {
         bool success = true;
         
         PlotExportFormat form(format);
-        for(unsigned int i = 0; i < itsCanvases_.size(); i++) {
+        for(unsigned int i = 0; i < canv.size(); i++) {
             form.location = String::toString(i) + "-" + format.location;
-            if(!itsCanvases_[i]->exportToFile(form)) success = false;
+            if(!canv[i]->exportToFile(form)) success = false;
         }
         
         return success;        
@@ -208,8 +206,9 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
 void PlotMSPlot::canvasWasDisowned(PlotCanvasPtr canvas) {
     if(canvas.null()) return;
 
-    for(unsigned int i = 0; i < itsPlots_.size(); i++)
-        canvas->removePlotItem(itsPlots_[i]);
+    vector<MaskedScatterPlotPtr> p = plots();
+    for(unsigned int i = 0; i < p.size(); i++)
+        if(!p[i].null()) canvas->removePlotItem(p[i]);
 }
 
 
@@ -225,11 +224,30 @@ void PlotMSPlot::constructorSetup() {
     makeParameters(params, itsParent_);
 }
 
+
+bool PlotMSPlot::allDrawingHeld() {
+    vector<PlotCanvasPtr> canv = canvases();
+    for(unsigned int i = 0; i < canv.size(); i++)
+        if(!canv[i].null() && !canv[i]->drawingIsHeld()) return false;
+    return true;
+}
+
+void PlotMSPlot::holdDrawing() {
+    vector<PlotCanvasPtr> canv = canvases();
+    for(unsigned int i = 0; i < canv.size(); i++) canv[i]->holdDrawing();
+}
+
+void PlotMSPlot::releaseDrawing() {
+    vector<PlotCanvasPtr> canv = canvases();
+    for(unsigned int i = 0; i < canv.size(); i++)
+        if(!canv[i].null()) canv[i]->releaseDrawing();
+}
+
+}
+
+
+  /*  in the following, VisSet is commented
 bool PlotMSPlot::updateData() {
-    if(itsVisSet_ != NULL) {
-        delete itsVisSet_;
-        itsVisSet_ = NULL;
-    }
     
     PMS_PP_MSData* d = parameters().typedGroup<PMS_PP_MSData>();
     if(d == NULL) return false; // shouldn't happen
@@ -244,7 +262,10 @@ bool PlotMSPlot::updateData() {
 
         // Apply the MS selection.
         Matrix<Int> chansel;
-        d->selection().apply(itsMS_, itsSelectedMS_, chansel);
+	OrderedMap<Int, Vector<Vector<Int> > > corrsel(Vector<Vector<Int> >(0));
+        d->selection().apply(itsMS_, itsSelectedMS_, chansel,corrsel);
+
+	cout << "chansel = " << chansel << endl;
         
         // Sort appropriately.
         double solint(DBL_MAX);
@@ -261,7 +282,12 @@ bool PlotMSPlot::updateData() {
         // Open VisSet.
         itsVisSet_ = new VisSet(itsSelectedMS_, columns, Matrix<int>(),False,
                                 interval);
-        itsVisSet_->selectChannel(chansel);
+	//        itsVisSet_->selectChannel(chansel);
+
+	itsVisSet_->iter().selectChannel(chansel);
+	itsVisSet_->iter().selectCorrelation(corrsel);
+
+
         return true;
         
     } catch(AipsError& err) {
@@ -272,21 +298,4 @@ bool PlotMSPlot::updateData() {
         return false;
     }
 }
-
-bool PlotMSPlot::allDrawingHeld() {
-    for(unsigned int i = 0; i < itsCanvases_.size(); i++)
-        if(!itsCanvases_[i]->drawingIsHeld()) return false;
-    return true;
-}
-
-void PlotMSPlot::holdDrawing() {
-    for(unsigned int i = 0; i < itsCanvases_.size(); i++)
-        itsCanvases_[i]->holdDrawing();
-}
-
-void PlotMSPlot::releaseDrawing() {
-    for(unsigned int i = 0; i < itsCanvases_.size(); i++)
-        itsCanvases_[i]->releaseDrawing();
-}
-
-}
+  */

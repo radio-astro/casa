@@ -118,8 +118,10 @@ namespace asdm {
 		
 		
 			
-		x->velDef = velDef.toIDLSpeed();
-			
+				
+		x->velDef = velDef;
+ 				
+ 			
 		
 	
 
@@ -155,7 +157,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct DopplerRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void DopplerRow::setFromIDL (DopplerRowIDL x) throw(ConversionException) {
+	void DopplerRow::setFromIDL (DopplerRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -184,8 +186,8 @@ namespace asdm {
 		
 		
 			
-		setVelDef(Speed (x.velDef));
-			
+		setVelDef(x.velDef);
+  			
  		
 		
 	
@@ -208,7 +210,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Doppler");
+			throw ConversionException (err.getMessage(),"Doppler");
 		}
 	}
 #endif
@@ -242,7 +244,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(velDef, "velDef", buf);
+			buf.append(EnumerationParser::toXML("velDef", velDef));
 		
 		
 	
@@ -272,7 +274,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void DopplerRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void DopplerRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -295,10 +297,12 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setVelDef(Parser::getSpeed("velDef","Doppler",rowDoc));
-			
+		
+		
+		
+		velDef = EnumerationParser::getDopplerReferenceCode("velDef","Doppler",rowDoc);
+		
+		
 		
 	
 
@@ -320,6 +324,98 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"Doppler");
 		}
+	}
+	
+	void DopplerRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+						
+			eoss.writeInt(dopplerId);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(sourceId);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(transitionIndex);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(velDef);
+				
+		
+	
+
+
+	
+	
+	}
+	
+	DopplerRow* DopplerRow::fromBin(EndianISStream& eiss, DopplerTable& table) {
+		DopplerRow* row = new  DopplerRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->dopplerId =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->sourceId =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->transitionIndex =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->velDef = CDopplerReferenceCode::from_int(eiss.readInt());
+			
+		
+	
+
+		
+		
+		
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -399,21 +495,21 @@ namespace asdm {
 	
  	/**
  	 * Get velDef.
- 	 * @return velDef as Speed
+ 	 * @return velDef as DopplerReferenceCodeMod::DopplerReferenceCode
  	 */
- 	Speed DopplerRow::getVelDef() const {
+ 	DopplerReferenceCodeMod::DopplerReferenceCode DopplerRow::getVelDef() const {
 	
   		return velDef;
  	}
 
  	/**
- 	 * Set velDef with the specified Speed.
- 	 * @param velDef The Speed value to which velDef is to be set.
+ 	 * Set velDef with the specified DopplerReferenceCodeMod::DopplerReferenceCode.
+ 	 * @param velDef The DopplerReferenceCodeMod::DopplerReferenceCode value to which velDef is to be set.
  	 
  	
  		
  	 */
- 	void DopplerRow::setVelDef (Speed velDef)  {
+ 	void DopplerRow::setVelDef (DopplerReferenceCodeMod::DopplerReferenceCode velDef)  {
   	
   	
   		if (hasBeenAdded) {
@@ -520,6 +616,9 @@ namespace asdm {
 	
 
 	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+velDef = CDopplerReferenceCode::from_int(0);
+	
 	
 	}
 	
@@ -560,7 +659,7 @@ namespace asdm {
 	}
 
 	
-	bool DopplerRow::compareNoAutoInc(int sourceId, int transitionIndex, Speed velDef) {
+	bool DopplerRow::compareNoAutoInc(int sourceId, int transitionIndex, DopplerReferenceCodeMod::DopplerReferenceCode velDef) {
 		bool result;
 		result = true;
 		
@@ -590,7 +689,7 @@ namespace asdm {
 	
 	
 	
-	bool DopplerRow::compareRequiredValue(int transitionIndex, Speed velDef) {
+	bool DopplerRow::compareRequiredValue(int transitionIndex, DopplerReferenceCodeMod::DopplerReferenceCode velDef) {
 		bool result;
 		result = true;
 		

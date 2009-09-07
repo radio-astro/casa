@@ -41,22 +41,22 @@ using std::set;
 #include <CalAtmosphereRow.h>
 #include <CalAtmosphereTable.h>
 
-#include <CalDataTable.h>
-#include <CalDataRow.h>
-
 #include <CalReductionTable.h>
 #include <CalReductionRow.h>
+
+#include <CalDataTable.h>
+#include <CalDataRow.h>
 	
 
 using asdm::ASDM;
 using asdm::CalAtmosphereRow;
 using asdm::CalAtmosphereTable;
 
-using asdm::CalDataTable;
-using asdm::CalDataRow;
-
 using asdm::CalReductionTable;
 using asdm::CalReductionRow;
+
+using asdm::CalDataTable;
+using asdm::CalDataRow;
 
 
 #include <Parser.h>
@@ -101,8 +101,64 @@ namespace asdm {
 		
 			
 				
+		x->receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
 		x->antennaName = CORBA::string_dup(antennaName.c_str());
 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->numFreq = numFreq;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->numLoad = numLoad;
+ 				
  			
 		
 	
@@ -124,10 +180,20 @@ namespace asdm {
 		
 		
 			
-				
-		x->numFreq = numFreq;
- 				
- 			
+		x->forwardEffSpectrum.length(forwardEffSpectrum.size());
+		for (unsigned int i = 0; i < forwardEffSpectrum.size(); i++) {
+			x->forwardEffSpectrum[i].length(forwardEffSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < forwardEffSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < forwardEffSpectrum.at(i).size(); j++)
+					
+						
+				x->forwardEffSpectrum[i][j] = forwardEffSpectrum.at(i).at(j);
+		 				
+			 						
+		
+			
 		
 	
 
@@ -136,7 +202,12 @@ namespace asdm {
 		
 		
 			
-		x->endValidTime = endValidTime.toIDLArrayTime();
+		x->frequencyRange.length(frequencyRange.size());
+		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
+			
+			x->frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
+			
+	 	}
 			
 		
 	
@@ -146,7 +217,42 @@ namespace asdm {
 		
 		
 			
-		x->startValidTime = startValidTime.toIDLArrayTime();
+		x->groundPressure = groundPressure.toIDLPressure();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->groundRelHumidity = groundRelHumidity.toIDLHumidity();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->frequencySpectrum.length(frequencySpectrum.size());
+		for (unsigned int i = 0; i < frequencySpectrum.size(); ++i) {
+			
+			x->frequencySpectrum[i] = frequencySpectrum.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->groundTemperature = groundTemperature.toIDLTemperature();
 			
 		
 	
@@ -173,12 +279,19 @@ namespace asdm {
 		
 		
 			
-		x->frequencyRange.length(frequencyRange.size());
-		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
-			
-			x->frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
-			
-	 	}
+		x->powerSkySpectrum.length(powerSkySpectrum.size());
+		for (unsigned int i = 0; i < powerSkySpectrum.size(); i++) {
+			x->powerSkySpectrum[i].length(powerSkySpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < powerSkySpectrum.size() ; i++)
+			for (unsigned int j = 0; j < powerSkySpectrum.at(i).size(); j++)
+					
+						
+				x->powerSkySpectrum[i][j] = powerSkySpectrum.at(i).at(j);
+		 				
+			 						
+		
 			
 		
 	
@@ -188,12 +301,22 @@ namespace asdm {
 		
 		
 			
-		x->frequencySpectrum.length(frequencySpectrum.size());
-		for (unsigned int i = 0; i < frequencySpectrum.size(); ++i) {
-			
-			x->frequencySpectrum[i] = frequencySpectrum.at(i).toIDLFrequency();
-			
-	 	}
+		x->powerLoadSpectrum.length(powerLoadSpectrum.size());
+		for (unsigned int i = 0; i < powerLoadSpectrum.size(); i++) {
+			x->powerLoadSpectrum[i].length(powerLoadSpectrum.at(i).size());
+			for (unsigned int j = 0; j < powerLoadSpectrum.at(i).size(); j++) {
+				x->powerLoadSpectrum[i][j].length(powerLoadSpectrum.at(i).at(j).size());
+			}					 		
+		}
+		
+		for (unsigned int i = 0; i < powerLoadSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < powerLoadSpectrum.at(i).size(); j++)
+				for (unsigned int k = 0; k < powerLoadSpectrum.at(i).at(j).size(); k++)
+					
+						
+					x->powerLoadSpectrum[i][j][k] = powerLoadSpectrum.at(i).at(j).at(k);
+		 				
+			 									
 			
 		
 	
@@ -215,15 +338,15 @@ namespace asdm {
 		
 		
 			
-		x->tSysSpectrum.length(tSysSpectrum.size());
-		for (unsigned int i = 0; i < tSysSpectrum.size(); i++) {
-			x->tSysSpectrum[i].length(tSysSpectrum.at(i).size());			 		
+		x->tAtmSpectrum.length(tAtmSpectrum.size());
+		for (unsigned int i = 0; i < tAtmSpectrum.size(); i++) {
+			x->tAtmSpectrum[i].length(tAtmSpectrum.at(i).size());			 		
 		}
 		
-		for (unsigned int i = 0; i < tSysSpectrum.size() ; i++)
-			for (unsigned int j = 0; j < tSysSpectrum.at(i).size(); j++)
+		for (unsigned int i = 0; i < tAtmSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < tAtmSpectrum.at(i).size(); j++)
 					
-				x->tSysSpectrum[i][j]= tSysSpectrum.at(i).at(j).toIDLTemperature();
+				x->tAtmSpectrum[i][j]= tAtmSpectrum.at(i).at(j).toIDLTemperature();
 									
 		
 			
@@ -255,15 +378,15 @@ namespace asdm {
 		
 		
 			
-		x->tAtmSpectrum.length(tAtmSpectrum.size());
-		for (unsigned int i = 0; i < tAtmSpectrum.size(); i++) {
-			x->tAtmSpectrum[i].length(tAtmSpectrum.at(i).size());			 		
+		x->tSysSpectrum.length(tSysSpectrum.size());
+		for (unsigned int i = 0; i < tSysSpectrum.size(); i++) {
+			x->tSysSpectrum[i].length(tSysSpectrum.at(i).size());			 		
 		}
 		
-		for (unsigned int i = 0; i < tAtmSpectrum.size() ; i++)
-			for (unsigned int j = 0; j < tAtmSpectrum.at(i).size(); j++)
+		for (unsigned int i = 0; i < tSysSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < tSysSpectrum.at(i).size(); j++)
 					
-				x->tAtmSpectrum[i][j]= tAtmSpectrum.at(i).at(j).toIDLTemperature();
+				x->tSysSpectrum[i][j]= tSysSpectrum.at(i).at(j).toIDLTemperature();
 									
 		
 			
@@ -297,56 +420,10 @@ namespace asdm {
 		
 		
 			
-		x->sbGainSpectrum.length(sbGainSpectrum.size());
-		for (unsigned int i = 0; i < sbGainSpectrum.size(); i++) {
-			x->sbGainSpectrum[i].length(sbGainSpectrum.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < sbGainSpectrum.size() ; i++)
-			for (unsigned int j = 0; j < sbGainSpectrum.at(i).size(); j++)
-					
-						
-				x->sbGainSpectrum[i][j] = sbGainSpectrum.at(i).at(j);
-		 				
-			 						
-		
+		x->tAtm.length(tAtm.size());
+		for (unsigned int i = 0; i < tAtm.size(); ++i) {
 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->forwardEffSpectrum.length(forwardEffSpectrum.size());
-		for (unsigned int i = 0; i < forwardEffSpectrum.size(); i++) {
-			x->forwardEffSpectrum[i].length(forwardEffSpectrum.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < forwardEffSpectrum.size() ; i++)
-			for (unsigned int j = 0; j < forwardEffSpectrum.at(i).size(); j++)
-					
-						
-				x->forwardEffSpectrum[i][j] = forwardEffSpectrum.at(i).at(j);
-		 				
-			 						
-		
-			
-		
-	
-
-	
-  		
-		
-		x->tSysExists = tSysExists;
-		
-		
-			
-		x->tSys.length(tSys.size());
-		for (unsigned int i = 0; i < tSys.size(); ++i) {
-			
-			x->tSys[i] = tSys.at(i).toIDLTemperature();
+			x->tAtm[i] = tAtm.at(i).toIDLTemperature();
 			
 	 	}
 			
@@ -355,8 +432,6 @@ namespace asdm {
 
 	
   		
-		
-		x->tRecExists = tRecExists;
 		
 		
 			
@@ -373,15 +448,122 @@ namespace asdm {
 	
   		
 		
-		x->tAtmExists = tAtmExists;
+		
+			
+		x->tSys.length(tSys.size());
+		for (unsigned int i = 0; i < tSys.size(); ++i) {
+			
+			x->tSys[i] = tSys.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
 		
 		
 			
-		x->tAtm.length(tAtm.size());
-		for (unsigned int i = 0; i < tAtm.size(); ++i) {
+		x->tau.length(tau.size());
+		for (unsigned int i = 0; i < tau.size(); ++i) {
 			
-			x->tAtm[i] = tAtm.at(i).toIDLTemperature();
+				
+			x->tau[i] = tau.at(i);
+	 			
+	 		
+	 	}
 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->water.length(water.size());
+		for (unsigned int i = 0; i < water.size(); ++i) {
+			
+			x->water[i] = water.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->waterError.length(waterError.size());
+		for (unsigned int i = 0; i < waterError.size(); ++i) {
+			
+			x->waterError[i] = waterError.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->alphaSpectrumExists = alphaSpectrumExists;
+		
+		
+			
+		x->alphaSpectrum.length(alphaSpectrum.size());
+		for (unsigned int i = 0; i < alphaSpectrum.size(); i++) {
+			x->alphaSpectrum[i].length(alphaSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < alphaSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < alphaSpectrum.at(i).size(); j++)
+					
+						
+				x->alphaSpectrum[i][j] = alphaSpectrum.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		x->forwardEfficiencyExists = forwardEfficiencyExists;
+		
+		
+			
+		x->forwardEfficiency.length(forwardEfficiency.size());
+		for (unsigned int i = 0; i < forwardEfficiency.size(); ++i) {
+			
+				
+			x->forwardEfficiency[i] = forwardEfficiency.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->forwardEfficiencyErrorExists = forwardEfficiencyErrorExists;
+		
+		
+			
+		x->forwardEfficiencyError.length(forwardEfficiencyError.size());
+		for (unsigned int i = 0; i < forwardEfficiencyError.size(); ++i) {
+			
+				
+			x->forwardEfficiencyError[i] = forwardEfficiencyError.at(i);
+	 			
+	 		
 	 	}
 			
 		
@@ -409,32 +591,15 @@ namespace asdm {
 	
   		
 		
-		x->waterExists = waterExists;
+		x->sbGainErrorExists = sbGainErrorExists;
 		
 		
 			
-		x->water.length(water.size());
-		for (unsigned int i = 0; i < water.size(); ++i) {
-			
-			x->water[i] = water.at(i).toIDLLength();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->forwardEfficiencyExists = forwardEfficiencyExists;
-		
-		
-			
-		x->forwardEfficiency.length(forwardEfficiency.size());
-		for (unsigned int i = 0; i < forwardEfficiency.size(); ++i) {
+		x->sbGainError.length(sbGainError.size());
+		for (unsigned int i = 0; i < sbGainError.size(); ++i) {
 			
 				
-			x->forwardEfficiency[i] = forwardEfficiency.at(i);
+			x->sbGainError[i] = sbGainError.at(i);
 	 			
 	 		
 	 	}
@@ -445,73 +610,24 @@ namespace asdm {
 	
   		
 		
-		x->tauExists = tauExists;
+		x->sbGainSpectrumExists = sbGainSpectrumExists;
 		
 		
 			
-		x->tau.length(tau.size());
-		for (unsigned int i = 0; i < tau.size(); ++i) {
-			
-				
-			x->tau[i] = tau.at(i);
-	 			
-	 		
-	 	}
-			
+		x->sbGainSpectrum.length(sbGainSpectrum.size());
+		for (unsigned int i = 0; i < sbGainSpectrum.size(); i++) {
+			x->sbGainSpectrum[i].length(sbGainSpectrum.at(i).size());			 		
+		}
 		
-	
-
-	
-  		
-		
+		for (unsigned int i = 0; i < sbGainSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < sbGainSpectrum.at(i).size(); j++)
+					
+						
+				x->sbGainSpectrum[i][j] = sbGainSpectrum.at(i).at(j);
+		 				
+			 						
 		
 			
-		x->groundPressure = groundPressure.toIDLPressure();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->groundTemperature = groundTemperature.toIDLTemperature();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->groundRelHumidity = groundRelHumidity.toIDLHumidity();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->subType = CORBA::string_dup(subType.c_str());
-				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->receiverBand = receiverBand;
- 				
- 			
 		
 	
 
@@ -558,7 +674,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalAtmosphereRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalAtmosphereRow::setFromIDL (CalAtmosphereRowIDL x) throw(ConversionException) {
+	void CalAtmosphereRow::setFromIDL (CalAtmosphereRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -567,37 +683,17 @@ namespace asdm {
 		
 		
 			
+		setReceiverBand(x.receiverBand);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
 		setAntennaName(string (x.antennaName));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumReceptor(x.numReceptor);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumFreq(x.numFreq);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setEndValidTime(ArrayTime (x.endValidTime));
 			
  		
 		
@@ -617,11 +713,56 @@ namespace asdm {
 		
 		
 			
-		polarizationTypes .clear();
-		for (unsigned int i = 0; i <x.polarizationTypes.length(); ++i) {
+		setEndValidTime(ArrayTime (x.endValidTime));
 			
-			polarizationTypes.push_back(x.polarizationTypes[i]);
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumFreq(x.numFreq);
   			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumLoad(x.numLoad);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumReceptor(x.numReceptor);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		forwardEffSpectrum .clear();
+		vector<float> v_aux_forwardEffSpectrum;
+		for (unsigned int i = 0; i < x.forwardEffSpectrum.length(); ++i) {
+			v_aux_forwardEffSpectrum.clear();
+			for (unsigned int j = 0; j < x.forwardEffSpectrum[0].length(); ++j) {
+				
+				v_aux_forwardEffSpectrum.push_back(x.forwardEffSpectrum[i][j]);
+	  			
+  			}
+  			forwardEffSpectrum.push_back(v_aux_forwardEffSpectrum);			
 		}
 			
   		
@@ -647,11 +788,102 @@ namespace asdm {
 		
 		
 			
+		setGroundPressure(Pressure (x.groundPressure));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setGroundRelHumidity(Humidity (x.groundRelHumidity));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
 		frequencySpectrum .clear();
 		for (unsigned int i = 0; i <x.frequencySpectrum.length(); ++i) {
 			
 			frequencySpectrum.push_back(Frequency (x.frequencySpectrum[i]));
 			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setGroundTemperature(Temperature (x.groundTemperature));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		polarizationTypes .clear();
+		for (unsigned int i = 0; i <x.polarizationTypes.length(); ++i) {
+			
+			polarizationTypes.push_back(x.polarizationTypes[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		powerSkySpectrum .clear();
+		vector<float> v_aux_powerSkySpectrum;
+		for (unsigned int i = 0; i < x.powerSkySpectrum.length(); ++i) {
+			v_aux_powerSkySpectrum.clear();
+			for (unsigned int j = 0; j < x.powerSkySpectrum[0].length(); ++j) {
+				
+				v_aux_powerSkySpectrum.push_back(x.powerSkySpectrum[i][j]);
+	  			
+  			}
+  			powerSkySpectrum.push_back(v_aux_powerSkySpectrum);			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		powerLoadSpectrum .clear();
+		vector< vector<float> > vv_aux_powerLoadSpectrum;
+		vector<float> v_aux_powerLoadSpectrum;
+		
+		for (unsigned int i = 0; i < x.powerLoadSpectrum.length(); ++i) {
+			vv_aux_powerLoadSpectrum.clear();
+			for (unsigned int j = 0; j < x.powerLoadSpectrum[0].length(); ++j) {
+				v_aux_powerLoadSpectrum.clear();
+				for (unsigned int k = 0; k < x.powerLoadSpectrum[0][0].length(); ++k) {
+					
+					v_aux_powerLoadSpectrum.push_back(x.powerLoadSpectrum[i][j][k]);
+		  			
+		  		}
+		  		vv_aux_powerLoadSpectrum.push_back(v_aux_powerLoadSpectrum);
+  			}
+  			powerLoadSpectrum.push_back(vv_aux_powerLoadSpectrum);
 		}
 			
   		
@@ -672,16 +904,16 @@ namespace asdm {
 		
 		
 			
-		tSysSpectrum .clear();
-		vector<Temperature> v_aux_tSysSpectrum;
-		for (unsigned int i = 0; i < x.tSysSpectrum.length(); ++i) {
-			v_aux_tSysSpectrum.clear();
-			for (unsigned int j = 0; j < x.tSysSpectrum[0].length(); ++j) {
+		tAtmSpectrum .clear();
+		vector<Temperature> v_aux_tAtmSpectrum;
+		for (unsigned int i = 0; i < x.tAtmSpectrum.length(); ++i) {
+			v_aux_tAtmSpectrum.clear();
+			for (unsigned int j = 0; j < x.tAtmSpectrum[0].length(); ++j) {
 				
-				v_aux_tSysSpectrum.push_back(Temperature (x.tSysSpectrum[i][j]));
+				v_aux_tAtmSpectrum.push_back(Temperature (x.tAtmSpectrum[i][j]));
 				
   			}
-  			tSysSpectrum.push_back(v_aux_tSysSpectrum);			
+  			tAtmSpectrum.push_back(v_aux_tAtmSpectrum);			
 		}
 			
   		
@@ -712,16 +944,16 @@ namespace asdm {
 		
 		
 			
-		tAtmSpectrum .clear();
-		vector<Temperature> v_aux_tAtmSpectrum;
-		for (unsigned int i = 0; i < x.tAtmSpectrum.length(); ++i) {
-			v_aux_tAtmSpectrum.clear();
-			for (unsigned int j = 0; j < x.tAtmSpectrum[0].length(); ++j) {
+		tSysSpectrum .clear();
+		vector<Temperature> v_aux_tSysSpectrum;
+		for (unsigned int i = 0; i < x.tSysSpectrum.length(); ++i) {
+			v_aux_tSysSpectrum.clear();
+			for (unsigned int j = 0; j < x.tSysSpectrum[0].length(); ++j) {
 				
-				v_aux_tAtmSpectrum.push_back(Temperature (x.tAtmSpectrum[i][j]));
+				v_aux_tSysSpectrum.push_back(Temperature (x.tSysSpectrum[i][j]));
 				
   			}
-  			tAtmSpectrum.push_back(v_aux_tAtmSpectrum);			
+  			tSysSpectrum.push_back(v_aux_tSysSpectrum);			
 		}
 			
   		
@@ -752,16 +984,11 @@ namespace asdm {
 		
 		
 			
-		sbGainSpectrum .clear();
-		vector<float> v_aux_sbGainSpectrum;
-		for (unsigned int i = 0; i < x.sbGainSpectrum.length(); ++i) {
-			v_aux_sbGainSpectrum.clear();
-			for (unsigned int j = 0; j < x.sbGainSpectrum[0].length(); ++j) {
-				
-				v_aux_sbGainSpectrum.push_back(x.sbGainSpectrum[i][j]);
-	  			
-  			}
-  			sbGainSpectrum.push_back(v_aux_sbGainSpectrum);			
+		tAtm .clear();
+		for (unsigned int i = 0; i <x.tAtm.length(); ++i) {
+			
+			tAtm.push_back(Temperature (x.tAtm[i]));
+			
 		}
 			
   		
@@ -769,49 +996,6 @@ namespace asdm {
 	
 
 	
-		
-		
-			
-		forwardEffSpectrum .clear();
-		vector<float> v_aux_forwardEffSpectrum;
-		for (unsigned int i = 0; i < x.forwardEffSpectrum.length(); ++i) {
-			v_aux_forwardEffSpectrum.clear();
-			for (unsigned int j = 0; j < x.forwardEffSpectrum[0].length(); ++j) {
-				
-				v_aux_forwardEffSpectrum.push_back(x.forwardEffSpectrum[i][j]);
-	  			
-  			}
-  			forwardEffSpectrum.push_back(v_aux_forwardEffSpectrum);			
-		}
-			
-  		
-		
-	
-
-	
-		
-		tSysExists = x.tSysExists;
-		if (x.tSysExists) {
-		
-		
-			
-		tSys .clear();
-		for (unsigned int i = 0; i <x.tSys.length(); ++i) {
-			
-			tSys.push_back(Temperature (x.tSys[i]));
-			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		tRecExists = x.tRecExists;
-		if (x.tRecExists) {
 		
 		
 			
@@ -824,54 +1008,39 @@ namespace asdm {
 			
   		
 		
-		}
-		
 	
 
 	
 		
-		tAtmExists = x.tAtmExists;
-		if (x.tAtmExists) {
-		
 		
 			
-		tAtm .clear();
-		for (unsigned int i = 0; i <x.tAtm.length(); ++i) {
+		tSys .clear();
+		for (unsigned int i = 0; i <x.tSys.length(); ++i) {
 			
-			tAtm.push_back(Temperature (x.tAtm[i]));
+			tSys.push_back(Temperature (x.tSys[i]));
 			
 		}
 			
   		
 		
-		}
-		
 	
 
 	
 		
-		sbGainExists = x.sbGainExists;
-		if (x.sbGainExists) {
-		
 		
 			
-		sbGain .clear();
-		for (unsigned int i = 0; i <x.sbGain.length(); ++i) {
+		tau .clear();
+		for (unsigned int i = 0; i <x.tau.length(); ++i) {
 			
-			sbGain.push_back(x.sbGain[i]);
+			tau.push_back(x.tau[i]);
   			
 		}
 			
   		
 		
-		}
-		
 	
 
 	
-		
-		waterExists = x.waterExists;
-		if (x.waterExists) {
 		
 		
 			
@@ -880,6 +1049,44 @@ namespace asdm {
 			
 			water.push_back(Length (x.water[i]));
 			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		waterError .clear();
+		for (unsigned int i = 0; i <x.waterError.length(); ++i) {
+			
+			waterError.push_back(Length (x.waterError[i]));
+			
+		}
+			
+  		
+		
+	
+
+	
+		
+		alphaSpectrumExists = x.alphaSpectrumExists;
+		if (x.alphaSpectrumExists) {
+		
+		
+			
+		alphaSpectrum .clear();
+		vector<float> v_aux_alphaSpectrum;
+		for (unsigned int i = 0; i < x.alphaSpectrum.length(); ++i) {
+			v_aux_alphaSpectrum.clear();
+			for (unsigned int j = 0; j < x.alphaSpectrum[0].length(); ++j) {
+				
+				v_aux_alphaSpectrum.push_back(x.alphaSpectrum[i][j]);
+	  			
+  			}
+  			alphaSpectrum.push_back(v_aux_alphaSpectrum);			
 		}
 			
   		
@@ -910,15 +1117,15 @@ namespace asdm {
 
 	
 		
-		tauExists = x.tauExists;
-		if (x.tauExists) {
+		forwardEfficiencyErrorExists = x.forwardEfficiencyErrorExists;
+		if (x.forwardEfficiencyErrorExists) {
 		
 		
 			
-		tau .clear();
-		for (unsigned int i = 0; i <x.tau.length(); ++i) {
+		forwardEfficiencyError .clear();
+		for (unsigned int i = 0; i <x.forwardEfficiencyError.length(); ++i) {
 			
-			tau.push_back(x.tau[i]);
+			forwardEfficiencyError.push_back(x.forwardEfficiencyError[i]);
   			
 		}
 			
@@ -930,51 +1137,66 @@ namespace asdm {
 
 	
 		
-		
-			
-		setGroundPressure(Pressure (x.groundPressure));
-			
- 		
-		
-	
-
-	
+		sbGainExists = x.sbGainExists;
+		if (x.sbGainExists) {
 		
 		
 			
-		setGroundTemperature(Temperature (x.groundTemperature));
+		sbGain .clear();
+		for (unsigned int i = 0; i <x.sbGain.length(); ++i) {
 			
- 		
-		
-	
-
-	
-		
-		
-			
-		setGroundRelHumidity(Humidity (x.groundRelHumidity));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setSubType(string (x.subType));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setReceiverBand(x.receiverBand);
+			sbGain.push_back(x.sbGain[i]);
   			
- 		
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		sbGainErrorExists = x.sbGainErrorExists;
+		if (x.sbGainErrorExists) {
+		
+		
+			
+		sbGainError .clear();
+		for (unsigned int i = 0; i <x.sbGainError.length(); ++i) {
+			
+			sbGainError.push_back(x.sbGainError[i]);
+  			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		sbGainSpectrumExists = x.sbGainSpectrumExists;
+		if (x.sbGainSpectrumExists) {
+		
+		
+			
+		sbGainSpectrum .clear();
+		vector<float> v_aux_sbGainSpectrum;
+		for (unsigned int i = 0; i < x.sbGainSpectrum.length(); ++i) {
+			v_aux_sbGainSpectrum.clear();
+			for (unsigned int j = 0; j < x.sbGainSpectrum[0].length(); ++j) {
+				
+				v_aux_sbGainSpectrum.push_back(x.sbGainSpectrum[i][j]);
+	  			
+  			}
+  			sbGainSpectrum.push_back(v_aux_sbGainSpectrum);			
+		}
+			
+  		
+		
+		}
 		
 	
 
@@ -1008,7 +1230,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalAtmosphere");
+			throw ConversionException (err.getMessage(),"CalAtmosphere");
 		}
 	}
 #endif
@@ -1026,31 +1248,15 @@ namespace asdm {
   	
  		
 		
+			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(antennaName, "antennaName", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numReceptor, "numReceptor", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numFreq, "numFreq", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(endValidTime, "endValidTime", buf);
 		
 		
 	
@@ -1066,7 +1272,39 @@ namespace asdm {
   	
  		
 		
-			buf.append(EnumerationParser::toXML("polarizationTypes", polarizationTypes));
+		Parser::toXML(endValidTime, "endValidTime", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numFreq, "numFreq", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numLoad, "numLoad", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numReceptor, "numReceptor", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(forwardEffSpectrum, "forwardEffSpectrum", buf);
 		
 		
 	
@@ -1082,7 +1320,55 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(groundPressure, "groundPressure", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(groundRelHumidity, "groundRelHumidity", buf);
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(frequencySpectrum, "frequencySpectrum", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(groundTemperature, "groundTemperature", buf);
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("polarizationTypes", polarizationTypes));
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(powerSkySpectrum, "powerSkySpectrum", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(powerLoadSpectrum, "powerLoadSpectrum", buf);
 		
 		
 	
@@ -1098,7 +1384,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(tSysSpectrum, "tSysSpectrum", buf);
+		Parser::toXML(tAtmSpectrum, "tAtmSpectrum", buf);
 		
 		
 	
@@ -1114,7 +1400,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(tAtmSpectrum, "tAtmSpectrum", buf);
+		Parser::toXML(tSysSpectrum, "tSysSpectrum", buf);
 		
 		
 	
@@ -1130,73 +1416,57 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(sbGainSpectrum, "sbGainSpectrum", buf);
+		Parser::toXML(tAtm, "tAtm", buf);
 		
 		
 	
 
   	
  		
-		
-		Parser::toXML(forwardEffSpectrum, "forwardEffSpectrum", buf);
-		
-		
-	
-
-  	
- 		
-		if (tSysExists) {
-		
-		
-		Parser::toXML(tSys, "tSys", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (tRecExists) {
-		
 		
 		Parser::toXML(tRec, "tRec", buf);
 		
 		
-		}
+	
+
+  	
+ 		
+		
+		Parser::toXML(tSys, "tSys", buf);
+		
 		
 	
 
   	
  		
-		if (tAtmExists) {
 		
+		Parser::toXML(tau, "tau", buf);
 		
-		Parser::toXML(tAtm, "tAtm", buf);
-		
-		
-		}
 		
 	
 
   	
  		
-		if (sbGainExists) {
-		
-		
-		Parser::toXML(sbGain, "sbGain", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (waterExists) {
-		
 		
 		Parser::toXML(water, "water", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(waterError, "waterError", buf);
+		
+		
+	
+
+  	
+ 		
+		if (alphaSpectrumExists) {
+		
+		
+		Parser::toXML(alphaSpectrum, "alphaSpectrum", buf);
 		
 		
 		}
@@ -1217,10 +1487,10 @@ namespace asdm {
 
   	
  		
-		if (tauExists) {
+		if (forwardEfficiencyErrorExists) {
 		
 		
-		Parser::toXML(tau, "tau", buf);
+		Parser::toXML(forwardEfficiencyError, "forwardEfficiencyError", buf);
 		
 		
 		}
@@ -1229,41 +1499,37 @@ namespace asdm {
 
   	
  		
+		if (sbGainExists) {
 		
-		Parser::toXML(groundPressure, "groundPressure", buf);
+		
+		Parser::toXML(sbGain, "sbGain", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(groundTemperature, "groundTemperature", buf);
-		
+		}
 		
 	
 
   	
  		
+		if (sbGainErrorExists) {
 		
-		Parser::toXML(groundRelHumidity, "groundRelHumidity", buf);
+		
+		Parser::toXML(sbGainError, "sbGainError", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(subType, "subType", buf);
-		
+		}
 		
 	
 
   	
  		
+		if (sbGainSpectrumExists) {
 		
-			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
 		
+		Parser::toXML(sbGainSpectrum, "sbGainSpectrum", buf);
+		
+		
+		}
 		
 	
 
@@ -1302,12 +1568,22 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalAtmosphereRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalAtmosphereRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
 	
 		
+	
+		
+		
+		
+		receiverBand = EnumerationParser::getReceiverBand("receiverBand","CalAtmosphere",rowDoc);
+		
+		
+		
+	
+
 	
   		
 			
@@ -1319,15 +1595,7 @@ namespace asdm {
 	
   		
 			
-	  	setNumReceptor(Parser::getInteger("numReceptor","CalAtmosphere",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setNumFreq(Parser::getInteger("numFreq","CalAtmosphere",rowDoc));
+	  	setStartValidTime(Parser::getArrayTime("startValidTime","CalAtmosphere",rowDoc));
 			
 		
 	
@@ -1343,7 +1611,77 @@ namespace asdm {
 	
   		
 			
-	  	setStartValidTime(Parser::getArrayTime("startValidTime","CalAtmosphere",rowDoc));
+	  	setNumFreq(Parser::getInteger("numFreq","CalAtmosphere",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setNumLoad(Parser::getInteger("numLoad","CalAtmosphere",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setNumReceptor(Parser::getInteger("numReceptor","CalAtmosphere",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+					
+	  	setForwardEffSpectrum(Parser::get2DFloat("forwardEffSpectrum","CalAtmosphere",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+					
+	  	setFrequencyRange(Parser::get1DFrequency("frequencyRange","CalAtmosphere",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setGroundPressure(Parser::getPressure("groundPressure","CalAtmosphere",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setGroundRelHumidity(Parser::getHumidity("groundRelHumidity","CalAtmosphere",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+					
+	  	setFrequencySpectrum(Parser::get1DFrequency("frequencySpectrum","CalAtmosphere",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setGroundTemperature(Parser::getTemperature("groundTemperature","CalAtmosphere",rowDoc));
 			
 		
 	
@@ -1362,7 +1700,7 @@ namespace asdm {
   		
 			
 					
-	  	setFrequencyRange(Parser::get1DFrequency("frequencyRange","CalAtmosphere",rowDoc));
+	  	setPowerSkySpectrum(Parser::get2DFloat("powerSkySpectrum","CalAtmosphere",rowDoc));
 	  			
 	  		
 		
@@ -1372,7 +1710,7 @@ namespace asdm {
   		
 			
 					
-	  	setFrequencySpectrum(Parser::get1DFrequency("frequencySpectrum","CalAtmosphere",rowDoc));
+	  	setPowerLoadSpectrum(Parser::get3DFloat("powerLoadSpectrum","CalAtmosphere",rowDoc));
 	  			
 	  		
 		
@@ -1392,7 +1730,7 @@ namespace asdm {
   		
 			
 					
-	  	setTSysSpectrum(Parser::get2DTemperature("tSysSpectrum","CalAtmosphere",rowDoc));
+	  	setTAtmSpectrum(Parser::get2DTemperature("tAtmSpectrum","CalAtmosphere",rowDoc));
 	  			
 	  		
 		
@@ -1412,7 +1750,7 @@ namespace asdm {
   		
 			
 					
-	  	setTAtmSpectrum(Parser::get2DTemperature("tAtmSpectrum","CalAtmosphere",rowDoc));
+	  	setTSysSpectrum(Parser::get2DTemperature("tSysSpectrum","CalAtmosphere",rowDoc));
 	  			
 	  		
 		
@@ -1432,7 +1770,7 @@ namespace asdm {
   		
 			
 					
-	  	setSbGainSpectrum(Parser::get2DFloat("sbGainSpectrum","CalAtmosphere",rowDoc));
+	  	setTAtm(Parser::get1DTemperature("tAtm","CalAtmosphere",rowDoc));
 	  			
 	  		
 		
@@ -1442,7 +1780,7 @@ namespace asdm {
   		
 			
 					
-	  	setForwardEffSpectrum(Parser::get2DFloat("forwardEffSpectrum","CalAtmosphere",rowDoc));
+	  	setTRec(Parser::get1DTemperature("tRec","CalAtmosphere",rowDoc));
 	  			
 	  		
 		
@@ -1450,58 +1788,50 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<tSys>")) {
 			
-								
-	  		setTSys(Parser::get1DTemperature("tSys","CalAtmosphere",rowDoc));
+					
+	  	setTSys(Parser::get1DTemperature("tSys","CalAtmosphere",rowDoc));
 	  			
 	  		
-		}
- 		
+		
 	
 
 	
   		
-        if (row.isStr("<tRec>")) {
 			
-								
-	  		setTRec(Parser::get1DTemperature("tRec","CalAtmosphere",rowDoc));
+					
+	  	setTau(Parser::get1DFloat("tau","CalAtmosphere",rowDoc));
 	  			
 	  		
-		}
- 		
+		
 	
 
 	
   		
-        if (row.isStr("<tAtm>")) {
 			
-								
-	  		setTAtm(Parser::get1DTemperature("tAtm","CalAtmosphere",rowDoc));
+					
+	  	setWater(Parser::get1DLength("water","CalAtmosphere",rowDoc));
 	  			
 	  		
-		}
- 		
+		
 	
 
 	
   		
-        if (row.isStr("<sbGain>")) {
 			
-								
-	  		setSbGain(Parser::get1DFloat("sbGain","CalAtmosphere",rowDoc));
+					
+	  	setWaterError(Parser::get1DLength("waterError","CalAtmosphere",rowDoc));
 	  			
 	  		
-		}
- 		
+		
 	
 
 	
   		
-        if (row.isStr("<water>")) {
+        if (row.isStr("<alphaSpectrum>")) {
 			
 								
-	  		setWater(Parser::get1DLength("water","CalAtmosphere",rowDoc));
+	  		setAlphaSpectrum(Parser::get2DFloat("alphaSpectrum","CalAtmosphere",rowDoc));
 	  			
 	  		
 		}
@@ -1522,10 +1852,10 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<tau>")) {
+        if (row.isStr("<forwardEfficiencyError>")) {
 			
 								
-	  		setTau(Parser::get1DFloat("tau","CalAtmosphere",rowDoc));
+	  		setForwardEfficiencyError(Parser::get1DDouble("forwardEfficiencyError","CalAtmosphere",rowDoc));
 	  			
 	  		
 		}
@@ -1534,44 +1864,38 @@ namespace asdm {
 
 	
   		
+        if (row.isStr("<sbGain>")) {
 			
-	  	setGroundPressure(Parser::getPressure("groundPressure","CalAtmosphere",rowDoc));
-			
-		
+								
+	  		setSbGain(Parser::get1DFloat("sbGain","CalAtmosphere",rowDoc));
+	  			
+	  		
+		}
+ 		
 	
 
 	
   		
+        if (row.isStr("<sbGainError>")) {
 			
-	  	setGroundTemperature(Parser::getTemperature("groundTemperature","CalAtmosphere",rowDoc));
-			
-		
+								
+	  		setSbGainError(Parser::get1DFloat("sbGainError","CalAtmosphere",rowDoc));
+	  			
+	  		
+		}
+ 		
 	
 
 	
   		
+        if (row.isStr("<sbGainSpectrum>")) {
 			
-	  	setGroundRelHumidity(Parser::getHumidity("groundRelHumidity","CalAtmosphere",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setSubType(Parser::getString("subType","CalAtmosphere",rowDoc));
-			
-		
-	
-
-	
-		
-		
-		
-		receiverBand = EnumerationParser::getReceiverBand("receiverBand","CalAtmosphere",rowDoc);
-		
-		
-		
+								
+	  		setSbGainSpectrum(Parser::get2DFloat("sbGainSpectrum","CalAtmosphere",rowDoc));
+	  			
+	  		
+		}
+ 		
 	
 
 	
@@ -1604,10 +1928,957 @@ namespace asdm {
 		}
 	}
 	
+	void CalAtmosphereRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+						
+			eoss.writeString(antennaName);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(receiverBand);
+				
+		
+	
+
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numFreq);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numLoad);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numReceptor);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) forwardEffSpectrum.size());
+		eoss.writeInt((int) forwardEffSpectrum.at(0).size());
+		for (unsigned int i = 0; i < forwardEffSpectrum.size(); i++) 
+			for (unsigned int j = 0;  j < forwardEffSpectrum.at(0).size(); j++) 
+							 
+				eoss.writeFloat(forwardEffSpectrum.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+	Frequency::toBin(frequencyRange, eoss);
+		
+	
+
+	
+	
+		
+	groundPressure.toBin(eoss);
+		
+	
+
+	
+	
+		
+	groundRelHumidity.toBin(eoss);
+		
+	
+
+	
+	
+		
+	Frequency::toBin(frequencySpectrum, eoss);
+		
+	
+
+	
+	
+		
+	groundTemperature.toBin(eoss);
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); i++)
+				
+			eoss.writeInt(polarizationTypes.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) powerSkySpectrum.size());
+		eoss.writeInt((int) powerSkySpectrum.at(0).size());
+		for (unsigned int i = 0; i < powerSkySpectrum.size(); i++) 
+			for (unsigned int j = 0;  j < powerSkySpectrum.at(0).size(); j++) 
+							 
+				eoss.writeFloat(powerSkySpectrum.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) powerLoadSpectrum.size());
+		eoss.writeInt((int) powerLoadSpectrum.at(0).size());		
+		eoss.writeInt((int) powerLoadSpectrum.at(0).at(0).size());
+		for (unsigned int i = 0; i < powerLoadSpectrum.size(); i++) 
+			for (unsigned int j = 0;  j < powerLoadSpectrum.at(0).size(); j++)
+				for (unsigned int k = 0; k <  powerLoadSpectrum.at(0).at(0).size(); k++)	
+							 
+					eoss.writeFloat(powerLoadSpectrum.at(i).at(j).at(k));
+						
+						
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(syscalType);
+				
+		
+	
+
+	
+	
+		
+	Temperature::toBin(tAtmSpectrum, eoss);
+		
+	
+
+	
+	
+		
+	Temperature::toBin(tRecSpectrum, eoss);
+		
+	
+
+	
+	
+		
+	Temperature::toBin(tSysSpectrum, eoss);
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) tauSpectrum.size());
+		eoss.writeInt((int) tauSpectrum.at(0).size());
+		for (unsigned int i = 0; i < tauSpectrum.size(); i++) 
+			for (unsigned int j = 0;  j < tauSpectrum.at(0).size(); j++) 
+							 
+				eoss.writeFloat(tauSpectrum.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+	Temperature::toBin(tAtm, eoss);
+		
+	
+
+	
+	
+		
+	Temperature::toBin(tRec, eoss);
+		
+	
+
+	
+	
+		
+	Temperature::toBin(tSys, eoss);
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) tau.size());
+		for (unsigned int i = 0; i < tau.size(); i++)
+				
+			eoss.writeFloat(tau.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+	Length::toBin(water, eoss);
+		
+	
+
+	
+	
+		
+	Length::toBin(waterError, eoss);
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(alphaSpectrumExists);
+	if (alphaSpectrumExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) alphaSpectrum.size());
+		eoss.writeInt((int) alphaSpectrum.at(0).size());
+		for (unsigned int i = 0; i < alphaSpectrum.size(); i++) 
+			for (unsigned int j = 0;  j < alphaSpectrum.at(0).size(); j++) 
+							 
+				eoss.writeFloat(alphaSpectrum.at(i).at(j));
+				
+	
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(forwardEfficiencyExists);
+	if (forwardEfficiencyExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) forwardEfficiency.size());
+		for (unsigned int i = 0; i < forwardEfficiency.size(); i++)
+				
+			eoss.writeFloat(forwardEfficiency.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(forwardEfficiencyErrorExists);
+	if (forwardEfficiencyErrorExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) forwardEfficiencyError.size());
+		for (unsigned int i = 0; i < forwardEfficiencyError.size(); i++)
+				
+			eoss.writeDouble(forwardEfficiencyError.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(sbGainExists);
+	if (sbGainExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) sbGain.size());
+		for (unsigned int i = 0; i < sbGain.size(); i++)
+				
+			eoss.writeFloat(sbGain.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(sbGainErrorExists);
+	if (sbGainErrorExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) sbGainError.size());
+		for (unsigned int i = 0; i < sbGainError.size(); i++)
+				
+			eoss.writeFloat(sbGainError.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(sbGainSpectrumExists);
+	if (sbGainSpectrumExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) sbGainSpectrum.size());
+		eoss.writeInt((int) sbGainSpectrum.at(0).size());
+		for (unsigned int i = 0; i < sbGainSpectrum.size(); i++) 
+			for (unsigned int j = 0;  j < sbGainSpectrum.at(0).size(); j++) 
+							 
+				eoss.writeFloat(sbGainSpectrum.at(i).at(j));
+				
+	
+						
+		
+	
+
+	}
+
+	}
+	
+	CalAtmosphereRow* CalAtmosphereRow::fromBin(EndianISStream& eiss, CalAtmosphereTable& table) {
+		CalAtmosphereRow* row = new  CalAtmosphereRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->antennaName =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numFreq =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numLoad =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numReceptor =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->forwardEffSpectrum.clear();
+		
+		unsigned int forwardEffSpectrumDim1 = eiss.readInt();
+		unsigned int forwardEffSpectrumDim2 = eiss.readInt();
+		vector <float> forwardEffSpectrumAux1;
+		for (unsigned int i = 0; i < forwardEffSpectrumDim1; i++) {
+			forwardEffSpectrumAux1.clear();
+			for (unsigned int j = 0; j < forwardEffSpectrumDim2 ; j++)			
+			
+			forwardEffSpectrumAux1.push_back(eiss.readFloat());
+			
+			row->forwardEffSpectrum.push_back(forwardEffSpectrumAux1);
+		}
+	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->frequencyRange = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+		row->groundPressure =  Pressure::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->groundRelHumidity =  Humidity::fromBin(eiss);
+		
+	
+
+	
+		
+		
+			
+	
+	row->frequencySpectrum = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+		row->groundTemperature =  Temperature::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+	
+		row->polarizationTypes.clear();
+		
+		unsigned int polarizationTypesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
+			
+			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->powerSkySpectrum.clear();
+		
+		unsigned int powerSkySpectrumDim1 = eiss.readInt();
+		unsigned int powerSkySpectrumDim2 = eiss.readInt();
+		vector <float> powerSkySpectrumAux1;
+		for (unsigned int i = 0; i < powerSkySpectrumDim1; i++) {
+			powerSkySpectrumAux1.clear();
+			for (unsigned int j = 0; j < powerSkySpectrumDim2 ; j++)			
+			
+			powerSkySpectrumAux1.push_back(eiss.readFloat());
+			
+			row->powerSkySpectrum.push_back(powerSkySpectrumAux1);
+		}
+	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->powerLoadSpectrum.clear();
+			
+		unsigned int powerLoadSpectrumDim1 = eiss.readInt();
+		unsigned int powerLoadSpectrumDim2 = eiss.readInt();
+		unsigned int powerLoadSpectrumDim3 = eiss.readInt();
+		vector <vector<float> > powerLoadSpectrumAux2;
+		vector <float> powerLoadSpectrumAux1;
+		for (unsigned int i = 0; i < powerLoadSpectrumDim1; i++) {
+			powerLoadSpectrumAux2.clear();
+			for (unsigned int j = 0; j < powerLoadSpectrumDim2 ; j++) {
+				powerLoadSpectrumAux1.clear();
+				for (unsigned int k = 0; k < powerLoadSpectrumDim3; k++) {
+			
+					powerLoadSpectrumAux1.push_back(eiss.readFloat());
+			
+				}
+				powerLoadSpectrumAux2.push_back(powerLoadSpectrumAux1);
+			}
+			row->powerLoadSpectrum.push_back(powerLoadSpectrumAux2);
+		}	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->syscalType = CSyscalMethod::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->tAtmSpectrum = Temperature::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->tRecSpectrum = Temperature::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->tSysSpectrum = Temperature::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->tauSpectrum.clear();
+		
+		unsigned int tauSpectrumDim1 = eiss.readInt();
+		unsigned int tauSpectrumDim2 = eiss.readInt();
+		vector <float> tauSpectrumAux1;
+		for (unsigned int i = 0; i < tauSpectrumDim1; i++) {
+			tauSpectrumAux1.clear();
+			for (unsigned int j = 0; j < tauSpectrumDim2 ; j++)			
+			
+			tauSpectrumAux1.push_back(eiss.readFloat());
+			
+			row->tauSpectrum.push_back(tauSpectrumAux1);
+		}
+	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->tAtm = Temperature::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->tRec = Temperature::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->tSys = Temperature::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->tau.clear();
+		
+		unsigned int tauDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < tauDim1; i++)
+			
+			row->tau.push_back(eiss.readFloat());
+			
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->water = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->waterError = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+		
+		
+		
+	row->alphaSpectrumExists = eiss.readBoolean();
+	if (row->alphaSpectrumExists) {
+		
+	
+	
+		
+			
+	
+		row->alphaSpectrum.clear();
+		
+		unsigned int alphaSpectrumDim1 = eiss.readInt();
+		unsigned int alphaSpectrumDim2 = eiss.readInt();
+		vector <float> alphaSpectrumAux1;
+		for (unsigned int i = 0; i < alphaSpectrumDim1; i++) {
+			alphaSpectrumAux1.clear();
+			for (unsigned int j = 0; j < alphaSpectrumDim2 ; j++)			
+			
+			alphaSpectrumAux1.push_back(eiss.readFloat());
+			
+			row->alphaSpectrum.push_back(alphaSpectrumAux1);
+		}
+	
+	
+
+		
+	
+
+	}
+
+	row->forwardEfficiencyExists = eiss.readBoolean();
+	if (row->forwardEfficiencyExists) {
+		
+	
+	
+		
+			
+	
+		row->forwardEfficiency.clear();
+		
+		unsigned int forwardEfficiencyDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < forwardEfficiencyDim1; i++)
+			
+			row->forwardEfficiency.push_back(eiss.readFloat());
+			
+	
+
+		
+	
+
+	}
+
+	row->forwardEfficiencyErrorExists = eiss.readBoolean();
+	if (row->forwardEfficiencyErrorExists) {
+		
+	
+	
+		
+			
+	
+		row->forwardEfficiencyError.clear();
+		
+		unsigned int forwardEfficiencyErrorDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < forwardEfficiencyErrorDim1; i++)
+			
+			row->forwardEfficiencyError.push_back(eiss.readDouble());
+			
+	
+
+		
+	
+
+	}
+
+	row->sbGainExists = eiss.readBoolean();
+	if (row->sbGainExists) {
+		
+	
+	
+		
+			
+	
+		row->sbGain.clear();
+		
+		unsigned int sbGainDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < sbGainDim1; i++)
+			
+			row->sbGain.push_back(eiss.readFloat());
+			
+	
+
+		
+	
+
+	}
+
+	row->sbGainErrorExists = eiss.readBoolean();
+	if (row->sbGainErrorExists) {
+		
+	
+	
+		
+			
+	
+		row->sbGainError.clear();
+		
+		unsigned int sbGainErrorDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < sbGainErrorDim1; i++)
+			
+			row->sbGainError.push_back(eiss.readFloat());
+			
+	
+
+		
+	
+
+	}
+
+	row->sbGainSpectrumExists = eiss.readBoolean();
+	if (row->sbGainSpectrumExists) {
+		
+	
+	
+		
+			
+	
+		row->sbGainSpectrum.clear();
+		
+		unsigned int sbGainSpectrumDim1 = eiss.readInt();
+		unsigned int sbGainSpectrumDim2 = eiss.readInt();
+		vector <float> sbGainSpectrumAux1;
+		for (unsigned int i = 0; i < sbGainSpectrumDim1; i++) {
+			sbGainSpectrumAux1.clear();
+			for (unsigned int j = 0; j < sbGainSpectrumDim2 ; j++)			
+			
+			sbGainSpectrumAux1.push_back(eiss.readFloat());
+			
+			row->sbGainSpectrum.push_back(sbGainSpectrumAux1);
+		}
+	
+	
+
+		
+	
+
+	}
+
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
+	
+
+	
+ 	/**
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 */
+ 	ReceiverBandMod::ReceiverBand CalAtmosphereRow::getReceiverBand() const {
+	
+  		return receiverBand;
+ 	}
+
+ 	/**
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 
+ 	
+ 		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
+ 	 */
+ 	void CalAtmosphereRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+			throw IllegalAccessException("receiverBand", "CalAtmosphere");
+		
+  		}
+  	
+ 		this->receiverBand = receiverBand;
+	
+ 	}
+	
+	
+
 	
 
 	
@@ -1639,102 +2910,6 @@ namespace asdm {
   		}
   	
  		this->antennaName = antennaName;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numReceptor.
- 	 * @return numReceptor as int
- 	 */
- 	int CalAtmosphereRow::getNumReceptor() const {
-	
-  		return numReceptor;
- 	}
-
- 	/**
- 	 * Set numReceptor with the specified int.
- 	 * @param numReceptor The int value to which numReceptor is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAtmosphereRow::setNumReceptor (int numReceptor)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numReceptor = numReceptor;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numFreq.
- 	 * @return numFreq as int
- 	 */
- 	int CalAtmosphereRow::getNumFreq() const {
-	
-  		return numFreq;
- 	}
-
- 	/**
- 	 * Set numFreq with the specified int.
- 	 * @param numFreq The int value to which numFreq is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAtmosphereRow::setNumFreq (int numFreq)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numFreq = numFreq;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get endValidTime.
- 	 * @return endValidTime as ArrayTime
- 	 */
- 	ArrayTime CalAtmosphereRow::getEndValidTime() const {
-	
-  		return endValidTime;
- 	}
-
- 	/**
- 	 * Set endValidTime with the specified ArrayTime.
- 	 * @param endValidTime The ArrayTime value to which endValidTime is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAtmosphereRow::setEndValidTime (ArrayTime endValidTime)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->endValidTime = endValidTime;
 	
  	}
 	
@@ -1776,29 +2951,157 @@ namespace asdm {
 
 	
  	/**
- 	 * Get polarizationTypes.
- 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
+ 	 * Get endValidTime.
+ 	 * @return endValidTime as ArrayTime
  	 */
- 	vector<PolarizationTypeMod::PolarizationType > CalAtmosphereRow::getPolarizationTypes() const {
+ 	ArrayTime CalAtmosphereRow::getEndValidTime() const {
 	
-  		return polarizationTypes;
+  		return endValidTime;
  	}
 
  	/**
- 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
- 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
+ 	 * Set endValidTime with the specified ArrayTime.
+ 	 * @param endValidTime The ArrayTime value to which endValidTime is to be set.
  	 
  	
  		
  	 */
- 	void CalAtmosphereRow::setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes)  {
+ 	void CalAtmosphereRow::setEndValidTime (ArrayTime endValidTime)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->polarizationTypes = polarizationTypes;
+ 		this->endValidTime = endValidTime;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numFreq.
+ 	 * @return numFreq as int
+ 	 */
+ 	int CalAtmosphereRow::getNumFreq() const {
+	
+  		return numFreq;
+ 	}
+
+ 	/**
+ 	 * Set numFreq with the specified int.
+ 	 * @param numFreq The int value to which numFreq is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setNumFreq (int numFreq)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numFreq = numFreq;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numLoad.
+ 	 * @return numLoad as int
+ 	 */
+ 	int CalAtmosphereRow::getNumLoad() const {
+	
+  		return numLoad;
+ 	}
+
+ 	/**
+ 	 * Set numLoad with the specified int.
+ 	 * @param numLoad The int value to which numLoad is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setNumLoad (int numLoad)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numLoad = numLoad;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
+ 	 */
+ 	int CalAtmosphereRow::getNumReceptor() const {
+	
+  		return numReceptor;
+ 	}
+
+ 	/**
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setNumReceptor (int numReceptor)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numReceptor = numReceptor;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get forwardEffSpectrum.
+ 	 * @return forwardEffSpectrum as vector<vector<float > >
+ 	 */
+ 	vector<vector<float > > CalAtmosphereRow::getForwardEffSpectrum() const {
+	
+  		return forwardEffSpectrum;
+ 	}
+
+ 	/**
+ 	 * Set forwardEffSpectrum with the specified vector<vector<float > >.
+ 	 * @param forwardEffSpectrum The vector<vector<float > > value to which forwardEffSpectrum is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setForwardEffSpectrum (vector<vector<float > > forwardEffSpectrum)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->forwardEffSpectrum = forwardEffSpectrum;
 	
  	}
 	
@@ -1840,591 +3143,6 @@ namespace asdm {
 
 	
  	/**
- 	 * Get frequencySpectrum.
- 	 * @return frequencySpectrum as vector<Frequency >
- 	 */
- 	vector<Frequency > CalAtmosphereRow::getFrequencySpectrum() const {
-	
-  		return frequencySpectrum;
- 	}
-
- 	/**
- 	 * Set frequencySpectrum with the specified vector<Frequency >.
- 	 * @param frequencySpectrum The vector<Frequency > value to which frequencySpectrum is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAtmosphereRow::setFrequencySpectrum (vector<Frequency > frequencySpectrum)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->frequencySpectrum = frequencySpectrum;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get syscalType.
- 	 * @return syscalType as SyscalMethodMod::SyscalMethod
- 	 */
- 	SyscalMethodMod::SyscalMethod CalAtmosphereRow::getSyscalType() const {
-	
-  		return syscalType;
- 	}
-
- 	/**
- 	 * Set syscalType with the specified SyscalMethodMod::SyscalMethod.
- 	 * @param syscalType The SyscalMethodMod::SyscalMethod value to which syscalType is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAtmosphereRow::setSyscalType (SyscalMethodMod::SyscalMethod syscalType)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->syscalType = syscalType;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get tSysSpectrum.
- 	 * @return tSysSpectrum as vector<vector<Temperature > >
- 	 */
- 	vector<vector<Temperature > > CalAtmosphereRow::getTSysSpectrum() const {
-	
-  		return tSysSpectrum;
- 	}
-
- 	/**
- 	 * Set tSysSpectrum with the specified vector<vector<Temperature > >.
- 	 * @param tSysSpectrum The vector<vector<Temperature > > value to which tSysSpectrum is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAtmosphereRow::setTSysSpectrum (vector<vector<Temperature > > tSysSpectrum)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->tSysSpectrum = tSysSpectrum;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get tRecSpectrum.
- 	 * @return tRecSpectrum as vector<vector<Temperature > >
- 	 */
- 	vector<vector<Temperature > > CalAtmosphereRow::getTRecSpectrum() const {
-	
-  		return tRecSpectrum;
- 	}
-
- 	/**
- 	 * Set tRecSpectrum with the specified vector<vector<Temperature > >.
- 	 * @param tRecSpectrum The vector<vector<Temperature > > value to which tRecSpectrum is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAtmosphereRow::setTRecSpectrum (vector<vector<Temperature > > tRecSpectrum)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->tRecSpectrum = tRecSpectrum;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get tAtmSpectrum.
- 	 * @return tAtmSpectrum as vector<vector<Temperature > >
- 	 */
- 	vector<vector<Temperature > > CalAtmosphereRow::getTAtmSpectrum() const {
-	
-  		return tAtmSpectrum;
- 	}
-
- 	/**
- 	 * Set tAtmSpectrum with the specified vector<vector<Temperature > >.
- 	 * @param tAtmSpectrum The vector<vector<Temperature > > value to which tAtmSpectrum is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAtmosphereRow::setTAtmSpectrum (vector<vector<Temperature > > tAtmSpectrum)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->tAtmSpectrum = tAtmSpectrum;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get tauSpectrum.
- 	 * @return tauSpectrum as vector<vector<float > >
- 	 */
- 	vector<vector<float > > CalAtmosphereRow::getTauSpectrum() const {
-	
-  		return tauSpectrum;
- 	}
-
- 	/**
- 	 * Set tauSpectrum with the specified vector<vector<float > >.
- 	 * @param tauSpectrum The vector<vector<float > > value to which tauSpectrum is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAtmosphereRow::setTauSpectrum (vector<vector<float > > tauSpectrum)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->tauSpectrum = tauSpectrum;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get sbGainSpectrum.
- 	 * @return sbGainSpectrum as vector<vector<float > >
- 	 */
- 	vector<vector<float > > CalAtmosphereRow::getSbGainSpectrum() const {
-	
-  		return sbGainSpectrum;
- 	}
-
- 	/**
- 	 * Set sbGainSpectrum with the specified vector<vector<float > >.
- 	 * @param sbGainSpectrum The vector<vector<float > > value to which sbGainSpectrum is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAtmosphereRow::setSbGainSpectrum (vector<vector<float > > sbGainSpectrum)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->sbGainSpectrum = sbGainSpectrum;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get forwardEffSpectrum.
- 	 * @return forwardEffSpectrum as vector<vector<float > >
- 	 */
- 	vector<vector<float > > CalAtmosphereRow::getForwardEffSpectrum() const {
-	
-  		return forwardEffSpectrum;
- 	}
-
- 	/**
- 	 * Set forwardEffSpectrum with the specified vector<vector<float > >.
- 	 * @param forwardEffSpectrum The vector<vector<float > > value to which forwardEffSpectrum is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAtmosphereRow::setForwardEffSpectrum (vector<vector<float > > forwardEffSpectrum)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->forwardEffSpectrum = forwardEffSpectrum;
-	
- 	}
-	
-	
-
-	
-	/**
-	 * The attribute tSys is optional. Return true if this attribute exists.
-	 * @return true if and only if the tSys attribute exists. 
-	 */
-	bool CalAtmosphereRow::isTSysExists() const {
-		return tSysExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tSys, which is optional.
- 	 * @return tSys as vector<Temperature >
- 	 * @throw IllegalAccessException If tSys does not exist.
- 	 */
- 	vector<Temperature > CalAtmosphereRow::getTSys() const throw(IllegalAccessException) {
-		if (!tSysExists) {
-			throw IllegalAccessException("tSys", "CalAtmosphere");
-		}
-	
-  		return tSys;
- 	}
-
- 	/**
- 	 * Set tSys with the specified vector<Temperature >.
- 	 * @param tSys The vector<Temperature > value to which tSys is to be set.
- 	 
- 	
- 	 */
- 	void CalAtmosphereRow::setTSys (vector<Temperature > tSys) {
-	
- 		this->tSys = tSys;
-	
-		tSysExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tSys, which is an optional field, as non-existent.
-	 */
-	void CalAtmosphereRow::clearTSys () {
-		tSysExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tRec is optional. Return true if this attribute exists.
-	 * @return true if and only if the tRec attribute exists. 
-	 */
-	bool CalAtmosphereRow::isTRecExists() const {
-		return tRecExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tRec, which is optional.
- 	 * @return tRec as vector<Temperature >
- 	 * @throw IllegalAccessException If tRec does not exist.
- 	 */
- 	vector<Temperature > CalAtmosphereRow::getTRec() const throw(IllegalAccessException) {
-		if (!tRecExists) {
-			throw IllegalAccessException("tRec", "CalAtmosphere");
-		}
-	
-  		return tRec;
- 	}
-
- 	/**
- 	 * Set tRec with the specified vector<Temperature >.
- 	 * @param tRec The vector<Temperature > value to which tRec is to be set.
- 	 
- 	
- 	 */
- 	void CalAtmosphereRow::setTRec (vector<Temperature > tRec) {
-	
- 		this->tRec = tRec;
-	
-		tRecExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tRec, which is an optional field, as non-existent.
-	 */
-	void CalAtmosphereRow::clearTRec () {
-		tRecExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tAtm is optional. Return true if this attribute exists.
-	 * @return true if and only if the tAtm attribute exists. 
-	 */
-	bool CalAtmosphereRow::isTAtmExists() const {
-		return tAtmExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tAtm, which is optional.
- 	 * @return tAtm as vector<Temperature >
- 	 * @throw IllegalAccessException If tAtm does not exist.
- 	 */
- 	vector<Temperature > CalAtmosphereRow::getTAtm() const throw(IllegalAccessException) {
-		if (!tAtmExists) {
-			throw IllegalAccessException("tAtm", "CalAtmosphere");
-		}
-	
-  		return tAtm;
- 	}
-
- 	/**
- 	 * Set tAtm with the specified vector<Temperature >.
- 	 * @param tAtm The vector<Temperature > value to which tAtm is to be set.
- 	 
- 	
- 	 */
- 	void CalAtmosphereRow::setTAtm (vector<Temperature > tAtm) {
-	
- 		this->tAtm = tAtm;
-	
-		tAtmExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tAtm, which is an optional field, as non-existent.
-	 */
-	void CalAtmosphereRow::clearTAtm () {
-		tAtmExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute sbGain is optional. Return true if this attribute exists.
-	 * @return true if and only if the sbGain attribute exists. 
-	 */
-	bool CalAtmosphereRow::isSbGainExists() const {
-		return sbGainExists;
-	}
-	
-
-	
- 	/**
- 	 * Get sbGain, which is optional.
- 	 * @return sbGain as vector<float >
- 	 * @throw IllegalAccessException If sbGain does not exist.
- 	 */
- 	vector<float > CalAtmosphereRow::getSbGain() const throw(IllegalAccessException) {
-		if (!sbGainExists) {
-			throw IllegalAccessException("sbGain", "CalAtmosphere");
-		}
-	
-  		return sbGain;
- 	}
-
- 	/**
- 	 * Set sbGain with the specified vector<float >.
- 	 * @param sbGain The vector<float > value to which sbGain is to be set.
- 	 
- 	
- 	 */
- 	void CalAtmosphereRow::setSbGain (vector<float > sbGain) {
-	
- 		this->sbGain = sbGain;
-	
-		sbGainExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark sbGain, which is an optional field, as non-existent.
-	 */
-	void CalAtmosphereRow::clearSbGain () {
-		sbGainExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute water is optional. Return true if this attribute exists.
-	 * @return true if and only if the water attribute exists. 
-	 */
-	bool CalAtmosphereRow::isWaterExists() const {
-		return waterExists;
-	}
-	
-
-	
- 	/**
- 	 * Get water, which is optional.
- 	 * @return water as vector<Length >
- 	 * @throw IllegalAccessException If water does not exist.
- 	 */
- 	vector<Length > CalAtmosphereRow::getWater() const throw(IllegalAccessException) {
-		if (!waterExists) {
-			throw IllegalAccessException("water", "CalAtmosphere");
-		}
-	
-  		return water;
- 	}
-
- 	/**
- 	 * Set water with the specified vector<Length >.
- 	 * @param water The vector<Length > value to which water is to be set.
- 	 
- 	
- 	 */
- 	void CalAtmosphereRow::setWater (vector<Length > water) {
-	
- 		this->water = water;
-	
-		waterExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark water, which is an optional field, as non-existent.
-	 */
-	void CalAtmosphereRow::clearWater () {
-		waterExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute forwardEfficiency is optional. Return true if this attribute exists.
-	 * @return true if and only if the forwardEfficiency attribute exists. 
-	 */
-	bool CalAtmosphereRow::isForwardEfficiencyExists() const {
-		return forwardEfficiencyExists;
-	}
-	
-
-	
- 	/**
- 	 * Get forwardEfficiency, which is optional.
- 	 * @return forwardEfficiency as vector<float >
- 	 * @throw IllegalAccessException If forwardEfficiency does not exist.
- 	 */
- 	vector<float > CalAtmosphereRow::getForwardEfficiency() const throw(IllegalAccessException) {
-		if (!forwardEfficiencyExists) {
-			throw IllegalAccessException("forwardEfficiency", "CalAtmosphere");
-		}
-	
-  		return forwardEfficiency;
- 	}
-
- 	/**
- 	 * Set forwardEfficiency with the specified vector<float >.
- 	 * @param forwardEfficiency The vector<float > value to which forwardEfficiency is to be set.
- 	 
- 	
- 	 */
- 	void CalAtmosphereRow::setForwardEfficiency (vector<float > forwardEfficiency) {
-	
- 		this->forwardEfficiency = forwardEfficiency;
-	
-		forwardEfficiencyExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark forwardEfficiency, which is an optional field, as non-existent.
-	 */
-	void CalAtmosphereRow::clearForwardEfficiency () {
-		forwardEfficiencyExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tau is optional. Return true if this attribute exists.
-	 * @return true if and only if the tau attribute exists. 
-	 */
-	bool CalAtmosphereRow::isTauExists() const {
-		return tauExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tau, which is optional.
- 	 * @return tau as vector<float >
- 	 * @throw IllegalAccessException If tau does not exist.
- 	 */
- 	vector<float > CalAtmosphereRow::getTau() const throw(IllegalAccessException) {
-		if (!tauExists) {
-			throw IllegalAccessException("tau", "CalAtmosphere");
-		}
-	
-  		return tau;
- 	}
-
- 	/**
- 	 * Set tau with the specified vector<float >.
- 	 * @param tau The vector<float > value to which tau is to be set.
- 	 
- 	
- 	 */
- 	void CalAtmosphereRow::setTau (vector<float > tau) {
-	
- 		this->tau = tau;
-	
-		tauExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tau, which is an optional field, as non-existent.
-	 */
-	void CalAtmosphereRow::clearTau () {
-		tauExists = false;
-	}
-	
-
-	
-
-	
- 	/**
  	 * Get groundPressure.
  	 * @return groundPressure as Pressure
  	 */
@@ -2448,38 +3166,6 @@ namespace asdm {
   		}
   	
  		this->groundPressure = groundPressure;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get groundTemperature.
- 	 * @return groundTemperature as Temperature
- 	 */
- 	Temperature CalAtmosphereRow::getGroundTemperature() const {
-	
-  		return groundTemperature;
- 	}
-
- 	/**
- 	 * Set groundTemperature with the specified Temperature.
- 	 * @param groundTemperature The Temperature value to which groundTemperature is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalAtmosphereRow::setGroundTemperature (Temperature groundTemperature)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->groundTemperature = groundTemperature;
 	
  	}
 	
@@ -2521,29 +3207,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get subType.
- 	 * @return subType as string
+ 	 * Get frequencySpectrum.
+ 	 * @return frequencySpectrum as vector<Frequency >
  	 */
- 	string CalAtmosphereRow::getSubType() const {
+ 	vector<Frequency > CalAtmosphereRow::getFrequencySpectrum() const {
 	
-  		return subType;
+  		return frequencySpectrum;
  	}
 
  	/**
- 	 * Set subType with the specified string.
- 	 * @param subType The string value to which subType is to be set.
+ 	 * Set frequencySpectrum with the specified vector<Frequency >.
+ 	 * @param frequencySpectrum The vector<Frequency > value to which frequencySpectrum is to be set.
  	 
  	
  		
  	 */
- 	void CalAtmosphereRow::setSubType (string subType)  {
+ 	void CalAtmosphereRow::setFrequencySpectrum (vector<Frequency > frequencySpectrum)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->subType = subType;
+ 		this->frequencySpectrum = frequencySpectrum;
 	
  	}
 	
@@ -2553,32 +3239,762 @@ namespace asdm {
 
 	
  	/**
- 	 * Get receiverBand.
- 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 * Get groundTemperature.
+ 	 * @return groundTemperature as Temperature
  	 */
- 	ReceiverBandMod::ReceiverBand CalAtmosphereRow::getReceiverBand() const {
+ 	Temperature CalAtmosphereRow::getGroundTemperature() const {
 	
-  		return receiverBand;
+  		return groundTemperature;
  	}
 
  	/**
- 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
- 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 * Set groundTemperature with the specified Temperature.
+ 	 * @param groundTemperature The Temperature value to which groundTemperature is to be set.
  	 
  	
  		
  	 */
- 	void CalAtmosphereRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
+ 	void CalAtmosphereRow::setGroundTemperature (Temperature groundTemperature)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->receiverBand = receiverBand;
+ 		this->groundTemperature = groundTemperature;
 	
  	}
 	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get polarizationTypes.
+ 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
+ 	 */
+ 	vector<PolarizationTypeMod::PolarizationType > CalAtmosphereRow::getPolarizationTypes() const {
+	
+  		return polarizationTypes;
+ 	}
+
+ 	/**
+ 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->polarizationTypes = polarizationTypes;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get powerSkySpectrum.
+ 	 * @return powerSkySpectrum as vector<vector<float > >
+ 	 */
+ 	vector<vector<float > > CalAtmosphereRow::getPowerSkySpectrum() const {
+	
+  		return powerSkySpectrum;
+ 	}
+
+ 	/**
+ 	 * Set powerSkySpectrum with the specified vector<vector<float > >.
+ 	 * @param powerSkySpectrum The vector<vector<float > > value to which powerSkySpectrum is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setPowerSkySpectrum (vector<vector<float > > powerSkySpectrum)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->powerSkySpectrum = powerSkySpectrum;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get powerLoadSpectrum.
+ 	 * @return powerLoadSpectrum as vector<vector<vector<float > > >
+ 	 */
+ 	vector<vector<vector<float > > > CalAtmosphereRow::getPowerLoadSpectrum() const {
+	
+  		return powerLoadSpectrum;
+ 	}
+
+ 	/**
+ 	 * Set powerLoadSpectrum with the specified vector<vector<vector<float > > >.
+ 	 * @param powerLoadSpectrum The vector<vector<vector<float > > > value to which powerLoadSpectrum is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setPowerLoadSpectrum (vector<vector<vector<float > > > powerLoadSpectrum)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->powerLoadSpectrum = powerLoadSpectrum;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get syscalType.
+ 	 * @return syscalType as SyscalMethodMod::SyscalMethod
+ 	 */
+ 	SyscalMethodMod::SyscalMethod CalAtmosphereRow::getSyscalType() const {
+	
+  		return syscalType;
+ 	}
+
+ 	/**
+ 	 * Set syscalType with the specified SyscalMethodMod::SyscalMethod.
+ 	 * @param syscalType The SyscalMethodMod::SyscalMethod value to which syscalType is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setSyscalType (SyscalMethodMod::SyscalMethod syscalType)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->syscalType = syscalType;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get tAtmSpectrum.
+ 	 * @return tAtmSpectrum as vector<vector<Temperature > >
+ 	 */
+ 	vector<vector<Temperature > > CalAtmosphereRow::getTAtmSpectrum() const {
+	
+  		return tAtmSpectrum;
+ 	}
+
+ 	/**
+ 	 * Set tAtmSpectrum with the specified vector<vector<Temperature > >.
+ 	 * @param tAtmSpectrum The vector<vector<Temperature > > value to which tAtmSpectrum is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setTAtmSpectrum (vector<vector<Temperature > > tAtmSpectrum)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->tAtmSpectrum = tAtmSpectrum;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get tRecSpectrum.
+ 	 * @return tRecSpectrum as vector<vector<Temperature > >
+ 	 */
+ 	vector<vector<Temperature > > CalAtmosphereRow::getTRecSpectrum() const {
+	
+  		return tRecSpectrum;
+ 	}
+
+ 	/**
+ 	 * Set tRecSpectrum with the specified vector<vector<Temperature > >.
+ 	 * @param tRecSpectrum The vector<vector<Temperature > > value to which tRecSpectrum is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setTRecSpectrum (vector<vector<Temperature > > tRecSpectrum)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->tRecSpectrum = tRecSpectrum;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get tSysSpectrum.
+ 	 * @return tSysSpectrum as vector<vector<Temperature > >
+ 	 */
+ 	vector<vector<Temperature > > CalAtmosphereRow::getTSysSpectrum() const {
+	
+  		return tSysSpectrum;
+ 	}
+
+ 	/**
+ 	 * Set tSysSpectrum with the specified vector<vector<Temperature > >.
+ 	 * @param tSysSpectrum The vector<vector<Temperature > > value to which tSysSpectrum is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setTSysSpectrum (vector<vector<Temperature > > tSysSpectrum)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->tSysSpectrum = tSysSpectrum;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get tauSpectrum.
+ 	 * @return tauSpectrum as vector<vector<float > >
+ 	 */
+ 	vector<vector<float > > CalAtmosphereRow::getTauSpectrum() const {
+	
+  		return tauSpectrum;
+ 	}
+
+ 	/**
+ 	 * Set tauSpectrum with the specified vector<vector<float > >.
+ 	 * @param tauSpectrum The vector<vector<float > > value to which tauSpectrum is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setTauSpectrum (vector<vector<float > > tauSpectrum)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->tauSpectrum = tauSpectrum;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get tAtm.
+ 	 * @return tAtm as vector<Temperature >
+ 	 */
+ 	vector<Temperature > CalAtmosphereRow::getTAtm() const {
+	
+  		return tAtm;
+ 	}
+
+ 	/**
+ 	 * Set tAtm with the specified vector<Temperature >.
+ 	 * @param tAtm The vector<Temperature > value to which tAtm is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setTAtm (vector<Temperature > tAtm)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->tAtm = tAtm;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get tRec.
+ 	 * @return tRec as vector<Temperature >
+ 	 */
+ 	vector<Temperature > CalAtmosphereRow::getTRec() const {
+	
+  		return tRec;
+ 	}
+
+ 	/**
+ 	 * Set tRec with the specified vector<Temperature >.
+ 	 * @param tRec The vector<Temperature > value to which tRec is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setTRec (vector<Temperature > tRec)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->tRec = tRec;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get tSys.
+ 	 * @return tSys as vector<Temperature >
+ 	 */
+ 	vector<Temperature > CalAtmosphereRow::getTSys() const {
+	
+  		return tSys;
+ 	}
+
+ 	/**
+ 	 * Set tSys with the specified vector<Temperature >.
+ 	 * @param tSys The vector<Temperature > value to which tSys is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setTSys (vector<Temperature > tSys)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->tSys = tSys;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get tau.
+ 	 * @return tau as vector<float >
+ 	 */
+ 	vector<float > CalAtmosphereRow::getTau() const {
+	
+  		return tau;
+ 	}
+
+ 	/**
+ 	 * Set tau with the specified vector<float >.
+ 	 * @param tau The vector<float > value to which tau is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setTau (vector<float > tau)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->tau = tau;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get water.
+ 	 * @return water as vector<Length >
+ 	 */
+ 	vector<Length > CalAtmosphereRow::getWater() const {
+	
+  		return water;
+ 	}
+
+ 	/**
+ 	 * Set water with the specified vector<Length >.
+ 	 * @param water The vector<Length > value to which water is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setWater (vector<Length > water)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->water = water;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get waterError.
+ 	 * @return waterError as vector<Length >
+ 	 */
+ 	vector<Length > CalAtmosphereRow::getWaterError() const {
+	
+  		return waterError;
+ 	}
+
+ 	/**
+ 	 * Set waterError with the specified vector<Length >.
+ 	 * @param waterError The vector<Length > value to which waterError is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalAtmosphereRow::setWaterError (vector<Length > waterError)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->waterError = waterError;
+	
+ 	}
+	
+	
+
+	
+	/**
+	 * The attribute alphaSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the alphaSpectrum attribute exists. 
+	 */
+	bool CalAtmosphereRow::isAlphaSpectrumExists() const {
+		return alphaSpectrumExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get alphaSpectrum, which is optional.
+ 	 * @return alphaSpectrum as vector<vector<float > >
+ 	 * @throw IllegalAccessException If alphaSpectrum does not exist.
+ 	 */
+ 	vector<vector<float > > CalAtmosphereRow::getAlphaSpectrum() const  {
+		if (!alphaSpectrumExists) {
+			throw IllegalAccessException("alphaSpectrum", "CalAtmosphere");
+		}
+	
+  		return alphaSpectrum;
+ 	}
+
+ 	/**
+ 	 * Set alphaSpectrum with the specified vector<vector<float > >.
+ 	 * @param alphaSpectrum The vector<vector<float > > value to which alphaSpectrum is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalAtmosphereRow::setAlphaSpectrum (vector<vector<float > > alphaSpectrum) {
+	
+ 		this->alphaSpectrum = alphaSpectrum;
+	
+		alphaSpectrumExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark alphaSpectrum, which is an optional field, as non-existent.
+	 */
+	void CalAtmosphereRow::clearAlphaSpectrum () {
+		alphaSpectrumExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute forwardEfficiency is optional. Return true if this attribute exists.
+	 * @return true if and only if the forwardEfficiency attribute exists. 
+	 */
+	bool CalAtmosphereRow::isForwardEfficiencyExists() const {
+		return forwardEfficiencyExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get forwardEfficiency, which is optional.
+ 	 * @return forwardEfficiency as vector<float >
+ 	 * @throw IllegalAccessException If forwardEfficiency does not exist.
+ 	 */
+ 	vector<float > CalAtmosphereRow::getForwardEfficiency() const  {
+		if (!forwardEfficiencyExists) {
+			throw IllegalAccessException("forwardEfficiency", "CalAtmosphere");
+		}
+	
+  		return forwardEfficiency;
+ 	}
+
+ 	/**
+ 	 * Set forwardEfficiency with the specified vector<float >.
+ 	 * @param forwardEfficiency The vector<float > value to which forwardEfficiency is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalAtmosphereRow::setForwardEfficiency (vector<float > forwardEfficiency) {
+	
+ 		this->forwardEfficiency = forwardEfficiency;
+	
+		forwardEfficiencyExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark forwardEfficiency, which is an optional field, as non-existent.
+	 */
+	void CalAtmosphereRow::clearForwardEfficiency () {
+		forwardEfficiencyExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute forwardEfficiencyError is optional. Return true if this attribute exists.
+	 * @return true if and only if the forwardEfficiencyError attribute exists. 
+	 */
+	bool CalAtmosphereRow::isForwardEfficiencyErrorExists() const {
+		return forwardEfficiencyErrorExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get forwardEfficiencyError, which is optional.
+ 	 * @return forwardEfficiencyError as vector<double >
+ 	 * @throw IllegalAccessException If forwardEfficiencyError does not exist.
+ 	 */
+ 	vector<double > CalAtmosphereRow::getForwardEfficiencyError() const  {
+		if (!forwardEfficiencyErrorExists) {
+			throw IllegalAccessException("forwardEfficiencyError", "CalAtmosphere");
+		}
+	
+  		return forwardEfficiencyError;
+ 	}
+
+ 	/**
+ 	 * Set forwardEfficiencyError with the specified vector<double >.
+ 	 * @param forwardEfficiencyError The vector<double > value to which forwardEfficiencyError is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalAtmosphereRow::setForwardEfficiencyError (vector<double > forwardEfficiencyError) {
+	
+ 		this->forwardEfficiencyError = forwardEfficiencyError;
+	
+		forwardEfficiencyErrorExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark forwardEfficiencyError, which is an optional field, as non-existent.
+	 */
+	void CalAtmosphereRow::clearForwardEfficiencyError () {
+		forwardEfficiencyErrorExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute sbGain is optional. Return true if this attribute exists.
+	 * @return true if and only if the sbGain attribute exists. 
+	 */
+	bool CalAtmosphereRow::isSbGainExists() const {
+		return sbGainExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get sbGain, which is optional.
+ 	 * @return sbGain as vector<float >
+ 	 * @throw IllegalAccessException If sbGain does not exist.
+ 	 */
+ 	vector<float > CalAtmosphereRow::getSbGain() const  {
+		if (!sbGainExists) {
+			throw IllegalAccessException("sbGain", "CalAtmosphere");
+		}
+	
+  		return sbGain;
+ 	}
+
+ 	/**
+ 	 * Set sbGain with the specified vector<float >.
+ 	 * @param sbGain The vector<float > value to which sbGain is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalAtmosphereRow::setSbGain (vector<float > sbGain) {
+	
+ 		this->sbGain = sbGain;
+	
+		sbGainExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark sbGain, which is an optional field, as non-existent.
+	 */
+	void CalAtmosphereRow::clearSbGain () {
+		sbGainExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute sbGainError is optional. Return true if this attribute exists.
+	 * @return true if and only if the sbGainError attribute exists. 
+	 */
+	bool CalAtmosphereRow::isSbGainErrorExists() const {
+		return sbGainErrorExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get sbGainError, which is optional.
+ 	 * @return sbGainError as vector<float >
+ 	 * @throw IllegalAccessException If sbGainError does not exist.
+ 	 */
+ 	vector<float > CalAtmosphereRow::getSbGainError() const  {
+		if (!sbGainErrorExists) {
+			throw IllegalAccessException("sbGainError", "CalAtmosphere");
+		}
+	
+  		return sbGainError;
+ 	}
+
+ 	/**
+ 	 * Set sbGainError with the specified vector<float >.
+ 	 * @param sbGainError The vector<float > value to which sbGainError is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalAtmosphereRow::setSbGainError (vector<float > sbGainError) {
+	
+ 		this->sbGainError = sbGainError;
+	
+		sbGainErrorExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark sbGainError, which is an optional field, as non-existent.
+	 */
+	void CalAtmosphereRow::clearSbGainError () {
+		sbGainErrorExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute sbGainSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the sbGainSpectrum attribute exists. 
+	 */
+	bool CalAtmosphereRow::isSbGainSpectrumExists() const {
+		return sbGainSpectrumExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get sbGainSpectrum, which is optional.
+ 	 * @return sbGainSpectrum as vector<vector<float > >
+ 	 * @throw IllegalAccessException If sbGainSpectrum does not exist.
+ 	 */
+ 	vector<vector<float > > CalAtmosphereRow::getSbGainSpectrum() const  {
+		if (!sbGainSpectrumExists) {
+			throw IllegalAccessException("sbGainSpectrum", "CalAtmosphere");
+		}
+	
+  		return sbGainSpectrum;
+ 	}
+
+ 	/**
+ 	 * Set sbGainSpectrum with the specified vector<vector<float > >.
+ 	 * @param sbGainSpectrum The vector<vector<float > > value to which sbGainSpectrum is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalAtmosphereRow::setSbGainSpectrum (vector<vector<float > > sbGainSpectrum) {
+	
+ 		this->sbGainSpectrum = sbGainSpectrum;
+	
+		sbGainSpectrumExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark sbGainSpectrum, which is an optional field, as non-existent.
+	 */
+	void CalAtmosphereRow::clearSbGainSpectrum () {
+		sbGainSpectrumExists = false;
+	}
 	
 
 	
@@ -2668,14 +4084,14 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the CalData table having CalData.calDataId == calDataId
-	 * @return a CalDataRow*
+	 * Returns the pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
+	 * @return a CalReductionRow*
 	 * 
 	 
 	 */
-	 CalDataRow* CalAtmosphereRow::getCalDataUsingCalDataId() {
+	 CalReductionRow* CalAtmosphereRow::getCalReductionUsingCalReductionId() {
 	 
-	 	return table.getContainer().getCalData().getRowByKey(calDataId);
+	 	return table.getContainer().getCalReduction().getRowByKey(calReductionId);
 	 }
 	 
 
@@ -2687,14 +4103,14 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
-	 * @return a CalReductionRow*
+	 * Returns the pointer to the row in the CalData table having CalData.calDataId == calDataId
+	 * @return a CalDataRow*
 	 * 
 	 
 	 */
-	 CalReductionRow* CalAtmosphereRow::getCalReductionUsingCalReductionId() {
+	 CalDataRow* CalAtmosphereRow::getCalDataUsingCalDataId() {
 	 
-	 	return table.getContainer().getCalReduction().getRowByKey(calReductionId);
+	 	return table.getContainer().getCalData().getRowByKey(calDataId);
 	 }
 	 
 
@@ -2744,23 +4160,31 @@ namespace asdm {
 	
 
 	
-		tSysExists = false;
+
 	
 
 	
-		tRecExists = false;
+
 	
 
 	
-		tAtmExists = false;
+
 	
 
 	
-		sbGainExists = false;
+
 	
 
 	
-		waterExists = false;
+
+	
+
+	
+
+	
+
+	
+		alphaSpectrumExists = false;
 	
 
 	
@@ -2768,7 +4192,32 @@ namespace asdm {
 	
 
 	
-		tauExists = false;
+		forwardEfficiencyErrorExists = false;
+	
+
+	
+		sbGainExists = false;
+	
+
+	
+		sbGainErrorExists = false;
+	
+
+	
+		sbGainSpectrumExists = false;
+	
+
+	
+	
+
+	
+
+	
+	
+	
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+receiverBand = CReceiverBand::from_int(0);
 	
 
 	
@@ -2782,13 +4231,9 @@ namespace asdm {
 	
 
 	
-	
 
 	
 
-	
-	
-	
 	
 
 	
@@ -2841,13 +4286,6 @@ syscalType = CSyscalMethod::from_int(0);
 	
 
 	
-
-	
-
-	
-// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
-receiverBand = CReceiverBand::from_int(0);
-	
 	
 	}
 	
@@ -2888,23 +4326,31 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		tSysExists = false;
+
 	
 
 	
-		tRecExists = false;
+
 	
 
 	
-		tAtmExists = false;
+
 	
 
 	
-		sbGainExists = false;
+
 	
 
 	
-		waterExists = false;
+
+	
+
+	
+
+	
+
+	
+		alphaSpectrumExists = false;
 	
 
 	
@@ -2912,17 +4358,19 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		tauExists = false;
+		forwardEfficiencyErrorExists = false;
 	
 
 	
-
+		sbGainExists = false;
 	
 
 	
-
+		sbGainErrorExists = false;
 	
 
+	
+		sbGainSpectrumExists = false;
 	
 
 	
@@ -2934,90 +4382,76 @@ receiverBand = CReceiverBand::from_int(0);
 		else {
 	
 		
+			antennaName = row.antennaName;
+		
+			receiverBand = row.receiverBand;
+		
 			calDataId = row.calDataId;
 		
 			calReductionId = row.calReductionId;
 		
-			antennaName = row.antennaName;
 		
 		
-		
-		
-			numReceptor = row.numReceptor;
-		
-			numFreq = row.numFreq;
-		
-			endValidTime = row.endValidTime;
 		
 			startValidTime = row.startValidTime;
 		
-			polarizationTypes = row.polarizationTypes;
+			endValidTime = row.endValidTime;
 		
-			frequencyRange = row.frequencyRange;
+			numFreq = row.numFreq;
 		
-			frequencySpectrum = row.frequencySpectrum;
+			numLoad = row.numLoad;
 		
-			syscalType = row.syscalType;
-		
-			tSysSpectrum = row.tSysSpectrum;
-		
-			tRecSpectrum = row.tRecSpectrum;
-		
-			tAtmSpectrum = row.tAtmSpectrum;
-		
-			tauSpectrum = row.tauSpectrum;
-		
-			sbGainSpectrum = row.sbGainSpectrum;
+			numReceptor = row.numReceptor;
 		
 			forwardEffSpectrum = row.forwardEffSpectrum;
 		
-			groundPressure = row.groundPressure;
+			frequencyRange = row.frequencyRange;
 		
-			groundTemperature = row.groundTemperature;
+			groundPressure = row.groundPressure;
 		
 			groundRelHumidity = row.groundRelHumidity;
 		
-			subType = row.subType;
+			frequencySpectrum = row.frequencySpectrum;
 		
-			receiverBand = row.receiverBand;
+			groundTemperature = row.groundTemperature;
+		
+			polarizationTypes = row.polarizationTypes;
+		
+			powerSkySpectrum = row.powerSkySpectrum;
+		
+			powerLoadSpectrum = row.powerLoadSpectrum;
+		
+			syscalType = row.syscalType;
+		
+			tAtmSpectrum = row.tAtmSpectrum;
+		
+			tRecSpectrum = row.tRecSpectrum;
+		
+			tSysSpectrum = row.tSysSpectrum;
+		
+			tauSpectrum = row.tauSpectrum;
+		
+			tAtm = row.tAtm;
+		
+			tRec = row.tRec;
+		
+			tSys = row.tSys;
+		
+			tau = row.tau;
+		
+			water = row.water;
+		
+			waterError = row.waterError;
 		
 		
 		
 		
-		if (row.tSysExists) {
-			tSys = row.tSys;		
-			tSysExists = true;
+		if (row.alphaSpectrumExists) {
+			alphaSpectrum = row.alphaSpectrum;		
+			alphaSpectrumExists = true;
 		}
 		else
-			tSysExists = false;
-		
-		if (row.tRecExists) {
-			tRec = row.tRec;		
-			tRecExists = true;
-		}
-		else
-			tRecExists = false;
-		
-		if (row.tAtmExists) {
-			tAtm = row.tAtm;		
-			tAtmExists = true;
-		}
-		else
-			tAtmExists = false;
-		
-		if (row.sbGainExists) {
-			sbGain = row.sbGain;		
-			sbGainExists = true;
-		}
-		else
-			sbGainExists = false;
-		
-		if (row.waterExists) {
-			water = row.water;		
-			waterExists = true;
-		}
-		else
-			waterExists = false;
+			alphaSpectrumExists = false;
 		
 		if (row.forwardEfficiencyExists) {
 			forwardEfficiency = row.forwardEfficiency;		
@@ -3026,21 +4460,56 @@ receiverBand = CReceiverBand::from_int(0);
 		else
 			forwardEfficiencyExists = false;
 		
-		if (row.tauExists) {
-			tau = row.tau;		
-			tauExists = true;
+		if (row.forwardEfficiencyErrorExists) {
+			forwardEfficiencyError = row.forwardEfficiencyError;		
+			forwardEfficiencyErrorExists = true;
 		}
 		else
-			tauExists = false;
+			forwardEfficiencyErrorExists = false;
+		
+		if (row.sbGainExists) {
+			sbGain = row.sbGain;		
+			sbGainExists = true;
+		}
+		else
+			sbGainExists = false;
+		
+		if (row.sbGainErrorExists) {
+			sbGainError = row.sbGainError;		
+			sbGainErrorExists = true;
+		}
+		else
+			sbGainErrorExists = false;
+		
+		if (row.sbGainSpectrumExists) {
+			sbGainSpectrum = row.sbGainSpectrum;		
+			sbGainSpectrumExists = true;
+		}
+		else
+			sbGainSpectrumExists = false;
 		
 		}	
 	}
 
 	
-	bool CalAtmosphereRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, int numReceptor, int numFreq, ArrayTime endValidTime, ArrayTime startValidTime, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<Frequency > frequencyRange, vector<Frequency > frequencySpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tSysSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tAtmSpectrum, vector<vector<float > > tauSpectrum, vector<vector<float > > sbGainSpectrum, vector<vector<float > > forwardEffSpectrum, Pressure groundPressure, Temperature groundTemperature, Humidity groundRelHumidity, string subType, ReceiverBandMod::ReceiverBand receiverBand) {
+	bool CalAtmosphereRow::compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError) {
 		bool result;
 		result = true;
 		
+	
+		
+		result = result && (this->antennaName == antennaName);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->receiverBand == receiverBand);
+		
+		if (!result) return false;
+	
+
 	
 		
 		result = result && (this->calDataId == calDataId);
@@ -3057,21 +4526,7 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->antennaName == antennaName);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numReceptor == numReceptor);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numFreq == numFreq);
+		result = result && (this->startValidTime == startValidTime);
 		
 		if (!result) return false;
 	
@@ -3085,70 +4540,21 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->startValidTime == startValidTime);
+		result = result && (this->numFreq == numFreq);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->polarizationTypes == polarizationTypes);
+		result = result && (this->numLoad == numLoad);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->frequencyRange == frequencyRange);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->frequencySpectrum == frequencySpectrum);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->syscalType == syscalType);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->tSysSpectrum == tSysSpectrum);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->tRecSpectrum == tRecSpectrum);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->tAtmSpectrum == tAtmSpectrum);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->tauSpectrum == tauSpectrum);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->sbGainSpectrum == sbGainSpectrum);
+		result = result && (this->numReceptor == numReceptor);
 		
 		if (!result) return false;
 	
@@ -3162,14 +4568,14 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->groundPressure == groundPressure);
+		result = result && (this->frequencyRange == frequencyRange);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->groundTemperature == groundTemperature);
+		result = result && (this->groundPressure == groundPressure);
 		
 		if (!result) return false;
 	
@@ -3183,14 +4589,112 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->subType == subType);
+		result = result && (this->frequencySpectrum == frequencySpectrum);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->receiverBand == receiverBand);
+		result = result && (this->groundTemperature == groundTemperature);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->polarizationTypes == polarizationTypes);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->powerSkySpectrum == powerSkySpectrum);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->powerLoadSpectrum == powerLoadSpectrum);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->syscalType == syscalType);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->tAtmSpectrum == tAtmSpectrum);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->tRecSpectrum == tRecSpectrum);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->tSysSpectrum == tSysSpectrum);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->tauSpectrum == tauSpectrum);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->tAtm == tAtm);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->tRec == tRec);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->tSys == tSys);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->tau == tau);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->water == water);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->waterError == waterError);
 		
 		if (!result) return false;
 	
@@ -3200,16 +4704,12 @@ receiverBand = CReceiverBand::from_int(0);
 	
 	
 	
-	bool CalAtmosphereRow::compareRequiredValue(int numReceptor, int numFreq, ArrayTime endValidTime, ArrayTime startValidTime, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<Frequency > frequencyRange, vector<Frequency > frequencySpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tSysSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tAtmSpectrum, vector<vector<float > > tauSpectrum, vector<vector<float > > sbGainSpectrum, vector<vector<float > > forwardEffSpectrum, Pressure groundPressure, Temperature groundTemperature, Humidity groundRelHumidity, string subType, ReceiverBandMod::ReceiverBand receiverBand) {
+	bool CalAtmosphereRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError) {
 		bool result;
 		result = true;
 		
 	
-		if (!(this->numReceptor == numReceptor)) return false;
-	
-
-	
-		if (!(this->numFreq == numFreq)) return false;
+		if (!(this->startValidTime == startValidTime)) return false;
 	
 
 	
@@ -3217,43 +4717,15 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		if (!(this->startValidTime == startValidTime)) return false;
+		if (!(this->numFreq == numFreq)) return false;
 	
 
 	
-		if (!(this->polarizationTypes == polarizationTypes)) return false;
+		if (!(this->numLoad == numLoad)) return false;
 	
 
 	
-		if (!(this->frequencyRange == frequencyRange)) return false;
-	
-
-	
-		if (!(this->frequencySpectrum == frequencySpectrum)) return false;
-	
-
-	
-		if (!(this->syscalType == syscalType)) return false;
-	
-
-	
-		if (!(this->tSysSpectrum == tSysSpectrum)) return false;
-	
-
-	
-		if (!(this->tRecSpectrum == tRecSpectrum)) return false;
-	
-
-	
-		if (!(this->tAtmSpectrum == tAtmSpectrum)) return false;
-	
-
-	
-		if (!(this->tauSpectrum == tauSpectrum)) return false;
-	
-
-	
-		if (!(this->sbGainSpectrum == sbGainSpectrum)) return false;
+		if (!(this->numReceptor == numReceptor)) return false;
 	
 
 	
@@ -3261,11 +4733,11 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		if (!(this->groundPressure == groundPressure)) return false;
+		if (!(this->frequencyRange == frequencyRange)) return false;
 	
 
 	
-		if (!(this->groundTemperature == groundTemperature)) return false;
+		if (!(this->groundPressure == groundPressure)) return false;
 	
 
 	
@@ -3273,11 +4745,67 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		if (!(this->subType == subType)) return false;
+		if (!(this->frequencySpectrum == frequencySpectrum)) return false;
 	
 
 	
-		if (!(this->receiverBand == receiverBand)) return false;
+		if (!(this->groundTemperature == groundTemperature)) return false;
+	
+
+	
+		if (!(this->polarizationTypes == polarizationTypes)) return false;
+	
+
+	
+		if (!(this->powerSkySpectrum == powerSkySpectrum)) return false;
+	
+
+	
+		if (!(this->powerLoadSpectrum == powerLoadSpectrum)) return false;
+	
+
+	
+		if (!(this->syscalType == syscalType)) return false;
+	
+
+	
+		if (!(this->tAtmSpectrum == tAtmSpectrum)) return false;
+	
+
+	
+		if (!(this->tRecSpectrum == tRecSpectrum)) return false;
+	
+
+	
+		if (!(this->tSysSpectrum == tSysSpectrum)) return false;
+	
+
+	
+		if (!(this->tauSpectrum == tauSpectrum)) return false;
+	
+
+	
+		if (!(this->tAtm == tAtm)) return false;
+	
+
+	
+		if (!(this->tRec == tRec)) return false;
+	
+
+	
+		if (!(this->tSys == tSys)) return false;
+	
+
+	
+		if (!(this->tau == tau)) return false;
+	
+
+	
+		if (!(this->water == water)) return false;
+	
+
+	
+		if (!(this->waterError == waterError)) return false;
 	
 
 		return result;
@@ -3295,43 +4823,55 @@ receiverBand = CReceiverBand::from_int(0);
 	bool CalAtmosphereRow::equalByRequiredValue(CalAtmosphereRow* x) {
 		
 			
-		if (this->numReceptor != x->numReceptor) return false;
-			
-		if (this->numFreq != x->numFreq) return false;
+		if (this->startValidTime != x->startValidTime) return false;
 			
 		if (this->endValidTime != x->endValidTime) return false;
 			
-		if (this->startValidTime != x->startValidTime) return false;
+		if (this->numFreq != x->numFreq) return false;
 			
-		if (this->polarizationTypes != x->polarizationTypes) return false;
+		if (this->numLoad != x->numLoad) return false;
 			
-		if (this->frequencyRange != x->frequencyRange) return false;
-			
-		if (this->frequencySpectrum != x->frequencySpectrum) return false;
-			
-		if (this->syscalType != x->syscalType) return false;
-			
-		if (this->tSysSpectrum != x->tSysSpectrum) return false;
-			
-		if (this->tRecSpectrum != x->tRecSpectrum) return false;
-			
-		if (this->tAtmSpectrum != x->tAtmSpectrum) return false;
-			
-		if (this->tauSpectrum != x->tauSpectrum) return false;
-			
-		if (this->sbGainSpectrum != x->sbGainSpectrum) return false;
+		if (this->numReceptor != x->numReceptor) return false;
 			
 		if (this->forwardEffSpectrum != x->forwardEffSpectrum) return false;
 			
-		if (this->groundPressure != x->groundPressure) return false;
+		if (this->frequencyRange != x->frequencyRange) return false;
 			
-		if (this->groundTemperature != x->groundTemperature) return false;
+		if (this->groundPressure != x->groundPressure) return false;
 			
 		if (this->groundRelHumidity != x->groundRelHumidity) return false;
 			
-		if (this->subType != x->subType) return false;
+		if (this->frequencySpectrum != x->frequencySpectrum) return false;
 			
-		if (this->receiverBand != x->receiverBand) return false;
+		if (this->groundTemperature != x->groundTemperature) return false;
+			
+		if (this->polarizationTypes != x->polarizationTypes) return false;
+			
+		if (this->powerSkySpectrum != x->powerSkySpectrum) return false;
+			
+		if (this->powerLoadSpectrum != x->powerLoadSpectrum) return false;
+			
+		if (this->syscalType != x->syscalType) return false;
+			
+		if (this->tAtmSpectrum != x->tAtmSpectrum) return false;
+			
+		if (this->tRecSpectrum != x->tRecSpectrum) return false;
+			
+		if (this->tSysSpectrum != x->tSysSpectrum) return false;
+			
+		if (this->tauSpectrum != x->tauSpectrum) return false;
+			
+		if (this->tAtm != x->tAtm) return false;
+			
+		if (this->tRec != x->tRec) return false;
+			
+		if (this->tSys != x->tSys) return false;
+			
+		if (this->tau != x->tau) return false;
+			
+		if (this->water != x->water) return false;
+			
+		if (this->waterError != x->waterError) return false;
 			
 		
 		return true;

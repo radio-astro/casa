@@ -23,7 +23,7 @@ namespace asdmbinaries {
   }
 
   // A regular expression to define the syntax of a spectral window identifier.
-  const regex SDMDataObject::SPWID("spw_[0-9]+");
+  const regex SDMDataObject::SPWID("[0-9]+");
   
   // SDMDataObject::SpectralWindow:: methods
   //
@@ -31,7 +31,7 @@ namespace asdmbinaries {
     scaleFactor_(0.0),
     numSpectralPoint_(0),
     numBin_(0)
-  {owner_ = 0; strId_ = ""; strImage_ = "";}
+  {owner_ = 0; strSw_ = ""; strImage_ = "";}
   
   SDMDataObject::SpectralWindow::~SpectralWindow() {;}
   
@@ -44,7 +44,7 @@ namespace asdmbinaries {
     numSpectralPoint_(numSpectralPoint),
     numBin_(numBin),
     sideband_(sideband)
-  {owner_ = 0;  strId_ = ""; strImage_ = "";}
+  {owner_ = 0;  strSw_ = ""; strImage_ = "";}
   
   SDMDataObject::SpectralWindow::SpectralWindow::SpectralWindow(const vector<StokesParameter>& sdPolProducts,
 								unsigned int numSpectralPoint,
@@ -54,7 +54,7 @@ namespace asdmbinaries {
     numSpectralPoint_(numSpectralPoint),
     numBin_(numBin),
     sideband_(sideband)
-  {owner_ = 0; strId_ = ""; strImage_ = "";}
+  {owner_ = 0; strSw_ = ""; strImage_ = "";}
   
   SDMDataObject::SpectralWindow::SpectralWindow(const vector<StokesParameter>& crossPolProducts,
 						const vector<StokesParameter>& sdPolProducts,
@@ -68,7 +68,7 @@ namespace asdmbinaries {
     numSpectralPoint_(numSpectralPoint),
     numBin_(numBin),
     sideband_(sideband)
-  {owner_ = 0; strId_ = ""; strImage_ = "";}
+  {owner_ = 0; strSw_ = ""; strImage_ = "";}
   
   const vector<StokesParameter>& SDMDataObject::SpectralWindow::crossPolProducts() const { 
     if (owner_ && (owner_->isTP() || owner_->correlationMode() == AUTO_ONLY)) Utils::invalidCall("SDMDataObject::SpectralWindow::crossPolProducts", owner_);
@@ -111,16 +111,16 @@ namespace asdmbinaries {
 
   const string& SDMDataObject::SpectralWindow::strImage() const { return strImage_; }
 
-  void SDMDataObject::SpectralWindow::strId(const string& s) {
+  void SDMDataObject::SpectralWindow::strSw(const string& s) {
     cmatch what;
     if ((s.size() == 0) || regex_match(s.c_str(), what, SDMDataObject::SPWID)) {
-      strId_ = s;
+      strSw_ = s;
     }
     else
-      throw SDMDataObjectException("SpectralWindow::strId :  '" + s + "' is an invalid string to identify a spectral window.");
+      throw SDMDataObjectException("SpectralWindow::strSw :  '" + s + "' is an invalid string to identify a spectral window.");
   }
 
-  const string& SDMDataObject::SpectralWindow::strId() const { return strId_; }
+  const string& SDMDataObject::SpectralWindow::strSw() const { return strSw_; }
 
   // SDMDataObject::SpectralWindow::
 
@@ -130,7 +130,7 @@ namespace asdmbinaries {
   SDMDataObject::Baseband::Baseband() {owner_ = 0;}
   
   SDMDataObject::Baseband::Baseband(BasebandName name,
-	   const vector<SpectralWindow>& spectralWindows):
+				    const vector<SpectralWindow>& spectralWindows):
     name_(name),
     spectralWindows_(spectralWindows) {owner_ = 0;}
 
@@ -169,6 +169,33 @@ namespace asdmbinaries {
   void SDMDataObject::BinaryPart::owner(const SDMDataObject* o) { owner_ = o; }
   // SDMDataObject::BinaryPart
   
+  // SDMDataObject::AutoDataBinaryPart:: methods
+  SDMDataObject::AutoDataBinaryPart::AutoDataBinaryPart(): BinaryPart() { normalized_ = false; }
+  SDMDataObject::AutoDataBinaryPart::~AutoDataBinaryPart() {;}
+
+  SDMDataObject::AutoDataBinaryPart::AutoDataBinaryPart(unsigned int size,
+							const vector<AxisName>& axes,
+							bool normalized) : BinaryPart(size, axes) {
+    normalized_ = normalized;
+  }
+
+  bool SDMDataObject::AutoDataBinaryPart::normalized() const { return normalized_; }
+
+  // SDMDataObject::AutoDataBinaryPart::
+
+  // SDMDataObject::ZeroLagsBinaryPart:: methods
+  SDMDataObject::ZeroLagsBinaryPart::ZeroLagsBinaryPart(): BinaryPart() { correlatorType_ = XF; }
+  SDMDataObject::ZeroLagsBinaryPart::~ZeroLagsBinaryPart() {;}
+
+  SDMDataObject::ZeroLagsBinaryPart::ZeroLagsBinaryPart(unsigned int size,
+							const vector<AxisName>& axes,
+							CorrelatorType correlatorType) : BinaryPart(size, axes) {
+    correlatorType_ = correlatorType;
+  }
+
+  CorrelatorType SDMDataObject::ZeroLagsBinaryPart::correlatorType() const { return correlatorType_; }
+
+  // SDMDataObject::ZeroLagsBinaryPart::
 
   // SDMDataObject::DataStruct:: methods
   //
@@ -194,9 +221,9 @@ namespace asdmbinaries {
 					const BinaryPart& flags,
 					const BinaryPart& actualTimes,
 					const BinaryPart& actualDurations,
-					const BinaryPart& zeroLags,
+					const ZeroLagsBinaryPart& zeroLags,
 					const BinaryPart& crossData,
-					const BinaryPart& autoData
+					const AutoDataBinaryPart& autoData
 					):apc_(apc),
 					  basebands_(basebands),
 					  flags_(flags),
@@ -223,7 +250,7 @@ namespace asdmbinaries {
   const SDMDataObject::BinaryPart& SDMDataObject::DataStruct::actualDurations() const { return actualDurations_;}
   //  void SDMDataObject::DataStruct::actualDurations(const SDMDataObject::BinaryPart& value) { actualDurations_ = value; }
   
-  const SDMDataObject::BinaryPart& SDMDataObject::DataStruct::zeroLags() const { 
+  const SDMDataObject::ZeroLagsBinaryPart& SDMDataObject::DataStruct::zeroLags() const { 
     if (owner_ && owner_->isTP()) Utils::invalidCall("SDMDataObject::DataStruct::zeroLags", owner_);
     return zeroLags_;
   } 
@@ -236,7 +263,7 @@ namespace asdmbinaries {
   const SDMDataObject::BinaryPart& SDMDataObject::DataStruct::crossData() const { return crossData_;}
   //  void SDMDataObject::DataStruct::crossData(const SDMDataObject::BinaryPart& value) { crossData_ = value; }
   
-  const SDMDataObject::BinaryPart& SDMDataObject::DataStruct::autoData() const { return autoData_;} 
+  const SDMDataObject::AutoDataBinaryPart& SDMDataObject::DataStruct::autoData() const { return autoData_;} 
   //  void SDMDataObject::DataStruct::autoData(const SDMDataObject::BinaryPart& value) { autoData_ = value; }
   void SDMDataObject::DataStruct::owner(const SDMDataObject* o) { owner_ = o; }
 
@@ -253,20 +280,19 @@ namespace asdmbinaries {
     }    
   }
 
-  bool SDMDataObject::DataStruct::associatedSPW(unsigned int ibb1,
+  bool SDMDataObject::DataStruct::associatedSPW(unsigned int ibb,
 						unsigned int ispw1,
-						unsigned int ibb2,
 						unsigned int ispw2) {
-    checkCoordinate(ibb1, ispw1);
-    checkCoordinate(ibb2, ispw2);
+    checkCoordinate(ibb, ispw1);
+    checkCoordinate(ibb, ispw2);
 
     ostringstream oss;
-    oss << ibb1 << " " << ispw1;
+    oss << ibb << " " << ispw1;
     string key = oss.str();
 
     oss.str("");
     
-    oss << ibb2 << " " << ispw2;
+    oss << ibb << " " << ispw2;
     string value = oss.str();
     
     map<string, string>::iterator iter1 = imageSPW_.find(key);
@@ -293,35 +319,33 @@ namespace asdmbinaries {
     }
   }
 
-  void SDMDataObject::DataStruct::imageSPW(unsigned int ibb1,
+  void SDMDataObject::DataStruct::imageSPW(unsigned int ibb,
 					   unsigned int ispw1,
-					   unsigned int ibb2,
 					   unsigned int ispw2) {
-    checkCoordinate(ibb1, ispw1);
-    checkCoordinate(ibb2, ispw2);
+    checkCoordinate(ibb, ispw1);
+    checkCoordinate(ibb, ispw2);
     
-    if (!associatedSPW(ibb1, ispw1, ibb2, ispw2)) {
-      divorceSPW(ibb1, ispw1);
-      divorceSPW(ibb2, ispw2);
+    if (!associatedSPW(ibb, ispw1, ispw2)) {
+      divorceSPW(ibb, ispw1);
+      divorceSPW(ibb, ispw2);
     }
 
     ostringstream oss;
 
-    oss << ibb1 << " " << ispw1;
+    oss << ibb << " " << ispw1;
     string key = oss.str();
 
     oss.str("");
-    oss << ibb2 << " " << ispw2;
+    oss << ibb << " " << ispw2;
     string value = oss.str();
     imageSPW_[key] = value;
     imageOfSPW_[value] = key;
   }
 
-  void SDMDataObject::DataStruct::imageOfSPW(unsigned int ibb1,
+  void SDMDataObject::DataStruct::imageOfSPW(unsigned int ibb,
 					     unsigned int ispw1,
-					     unsigned int ibb2,
 					     unsigned int ispw2) {
-    imageSPW(ibb2,ispw2,ibb1,ispw1);
+    imageSPW(ibb,ispw2,ispw1);
   }
 
   const SDMDataObject::SpectralWindow* SDMDataObject::DataStruct::imageSPW(unsigned int ibb,
@@ -402,7 +426,10 @@ namespace asdmbinaries {
     subscanNum_(subscanNum),
     numAntenna_(numAntenna),
     correlationMode_(correlationMode),
-    dataStruct_(dataStruct){ valid_ = true; aborted_ = false;}
+    dataStruct_(dataStruct){
+    valid_ = true;
+    aborted_ = false;
+  }
   
   
   SDMDataObject::SDMDataObject(unsigned long long startTime,
@@ -469,11 +496,19 @@ namespace asdmbinaries {
 
   CorrelationMode SDMDataObject::correlationMode() const  {TSTVALID(); return correlationMode_; }
 
-  SpectralResolutionType SDMDataObject::spectralResolutionType() const {TSTVALID(); return spectralResolutionType_; }
+  OptionalSpectralResolutionType SDMDataObject::spectralResolutionType() const {TSTVALID(); return spectralResolutionType_; }
+  ProcessorType SDMDataObject::processorType() const {TSTVALID(); return processorType_; }
+  CorrelatorType SDMDataObject::correlatorType() const {
+    TSTVALID(); 
+    if (processorType_ == CORRELATOR) 
+      return dataStruct_.zeroLags_.correlatorType_ ;
+    else
+      throw SDMDataObjectException("no correlator type defined in the current context (processor type = '" +
+				   CProcessorType::name(processorType_));
+  }
 
-  bool SDMDataObject::isTP() const {TSTVALID(); return spectralResolutionType_ == BASEBAND_WIDE; }
-  bool SDMDataObject::isCorrelation() const {TSTVALID(); return spectralResolutionType_ == FULL_RESOLUTION ||
-						spectralResolutionType_ == CHANNEL_AVERAGE ; }
+  bool SDMDataObject::isTP() const {TSTVALID(); return processorType_ == RADIOMETER; }
+  bool SDMDataObject::isCorrelation() const {TSTVALID(); return (processorType_ != RADIOMETER && processorType_ != SPECTROMETER) ; }
 
   
   const vector<SDMDataSubset>& SDMDataObject::corrDataSubsets() const {
@@ -518,7 +553,7 @@ namespace asdmbinaries {
     TSTVALID();
     if (isCorrelation()) Utils::invalidCall("tpDataSubset", this);
     return dataSubsets_.at(0);
-      //return str2index_.begin()->second;
+    //return str2index_.begin()->second;
   }
 
   void SDMDataObject::tpDataSubset(const SDMDataSubset& value) {
@@ -593,6 +628,8 @@ namespace asdmbinaries {
     ostringstream result;
     //ptime t1(date(2007, Jan, 1), time_duration(0, 0, 0,(startTime_ - FIRST_JAN_2007)/1000 ));
     result << "SDMDataObject at address '" << this << "' :" << endl; 
+    result << "XML Schema version = " << schemaVersion_ << endl;
+    result << "Byte order = " << byteOrder_->toString() << endl;
     //result << "startTime = " << startTime_ << " (" << to_simple_string(t1) << ")" << endl;
     result << "startTime = " << startTime_ << endl;
     result << "dataOID = " << dataOID_ << endl;
@@ -607,7 +644,9 @@ namespace asdmbinaries {
     result << "subscanNum = " << subscanNum_ << endl;
     result << "numAntenna = " << numAntenna_ << endl;
     result << "correlationMode = " << CCorrelationMode::name(correlationMode_) << endl;
-    result << "spectralResolutionType = " << CSpectralResolutionType::name(spectralResolutionType_) << endl;
+    if (spectralResolutionType_.present()) 
+      result << "spectralResolutionType = " << CSpectralResolutionType::name(spectralResolutionType_.literal()) << endl;
+    result << "processorType = " << CProcessorType::name(processorType_) << endl;
     if ( correlationMode_ != AUTO_ONLY ) {
       result << "atmospheric phase correction = " << TOSTRING<AtmPhaseCorrection, CAtmPhaseCorrection>(dataStruct_.apc_) << endl;
     } 
@@ -620,6 +659,7 @@ namespace asdmbinaries {
 	result << "\tspectralWindow #" << j << ":" << endl;
 	
 	SpectralWindow spW = spWs.at(j);
+	result << "\t\t" << "sw = " << spW.strSw() << endl;
 	switch (correlationMode_) {
 	case CROSS_ONLY :
 	  result << "\t\t" << "crossPolProducts = " << TOSTRING<StokesParameter, CStokesParameter>(spW.crossPolProducts()) << endl;
@@ -647,61 +687,32 @@ namespace asdmbinaries {
 	  break;
 	}
 	result << "\t\t" << "sideband = " << TOSTRING<NetSideband, CNetSideband>(spW.sideband()) << endl;
-	if (spW.strId().size() > 0)    result << "\t\t" << "id = " << spW.strId() << endl;
+	if (spW.strSw().size() > 0)    
 	if (spW.strImage().size() > 0) result << "\t\t" << "image = " << spW.strImage() << endl;
       }
     }
+        
+    result << "flags:" << endl;
+    result << "\tsize = " << dataStruct_.flags().size() << endl;
+    result << "\taxes = " << TOSTRING<AxisName, CAxisName>(dataStruct_.flags().axes()) << endl; 
     
-    switch (spectralResolutionType_) {
-    case CHANNEL_AVERAGE:
-    case FULL_RESOLUTION:
-      result << "flags:" << endl;
-      result << "\tsize = " << dataStruct_.flags().size() << endl;
-      result << "\taxes = " << TOSTRING<AxisName, CAxisName>(dataStruct_.flags().axes()) << endl; 
-      
-      result << "actualTimes:" << endl;
-      result << "\tsize = " << dataStruct_.actualTimes().size() << endl;
-      result << "\taxes = " << TOSTRING<AxisName, CAxisName>(dataStruct_.actualTimes().axes()) << endl; 
-      
-      result << "actualDurations:" << endl;
-      result << "\tsize = " << dataStruct_.actualDurations().size() << endl;
-      result << "\taxes = " << TOSTRING<AxisName, CAxisName>(dataStruct_.actualDurations().axes()) << endl;
-
-      /*      
-      if (spectralResolutionType_ != CHANNEL_AVERAGE) {
-	result << "zeroLags:" << endl;
-	result << "\tsize = " << dataStruct_.zeroLags().size() << endl;
-	result << "\taxes = " << TOSTRING<AxisName, CAxisName>(dataStruct_.zeroLags().axes()) << endl;
-      }
-      */
-      // zeroLags are optional in any case - Michel Caillat - 24 Jul 2008
-      if (dataStruct_.zeroLags().size() != 0) {
-	result << "zeroLags:" << endl;
-	result << "\tsize = " << dataStruct_.zeroLags().size() << endl;
-	result << "\taxes = " << TOSTRING<AxisName, CAxisName>(dataStruct_.zeroLags().axes()) << endl;
-      }      
-      break;
-
-    case BASEBAND_WIDE:
-      if (dataStruct_.flags().size()) {
-	result << "flags:" << endl;
-	result << "\tsize = " << dataStruct_.flags().size() << endl;
-	result << "\taxes = " << TOSTRING<AxisName, CAxisName>(dataStruct_.flags().axes()) << endl; 
-      }
-
-      if (dataStruct_.actualTimes().size()) {
-	result << "actualTimes:" << endl;
-	result << "\tsize = " << dataStruct_.actualTimes().size() << endl;
-	result << "\taxes = " << TOSTRING<AxisName, CAxisName>(dataStruct_.actualTimes().axes()) << endl; 
-      }
-
-      if (dataStruct_.actualDurations().size()) {
-	result << "actualDurations:" << endl;
-	result << "\tsize = " << dataStruct_.actualDurations().size() << endl;
-	result << "\taxes = " << TOSTRING<AxisName, CAxisName>(dataStruct_.actualDurations().axes()) << endl;
-      }
+    result << "actualTimes:" << endl;
+    result << "\tsize = " << dataStruct_.actualTimes().size() << endl;
+    result << "\taxes = " << TOSTRING<AxisName, CAxisName>(dataStruct_.actualTimes().axes()) << endl; 
+    
+    result << "actualDurations:" << endl;
+    result << "\tsize = " << dataStruct_.actualDurations().size() << endl;
+    result << "\taxes = " << TOSTRING<AxisName, CAxisName>(dataStruct_.actualDurations().axes()) << endl;
+    
+    if ((processorType_ == CORRELATOR)
+	&& (dataStruct_.zeroLags_.correlatorType_ != FX)
+	&& (dataStruct_.zeroLags_.size_ != 0)) {
+      result << "zeroLags:" << endl;
+      result << "\tsize = " << dataStruct_.zeroLags().size() << endl;
+      result << "\taxes = " << TOSTRING<AxisName, CAxisName>(dataStruct_.zeroLags().axes()) << endl;
+      result << "\tcorrelatorType = " << TOSTRING<CorrelatorType, CCorrelatorType>(dataStruct_.zeroLags_.correlatorType_) << endl;
     }
-    
+
     switch (correlationMode_) {
     case CROSS_ONLY :
       result << "crossData:" << endl;
@@ -713,6 +724,7 @@ namespace asdmbinaries {
       result << "autoData:" << endl;
       result << "\tsize = " << dataStruct_.autoData().size() << endl;
       result << "\taxes = " << TOSTRING<AxisName, CAxisName>(dataStruct_.autoData().axes()) << endl;
+      result << "\tnormalized = " << (dataStruct_.autoData_.normalized_ ? "true" : "false") << endl;
       break;
       
     case CROSS_AND_AUTO :
@@ -723,10 +735,11 @@ namespace asdmbinaries {
       result << "autoData:" << endl;
       result << "\tsize = " << dataStruct_.autoData().size() << endl;
       result << "\taxes = " << TOSTRING<AxisName, CAxisName>(dataStruct_.autoData().axes()) << endl;
-	break;
+      result << "\tnormalized = " << (dataStruct_.autoData_.normalized_ ? "true" : "false") << endl;
+      break;
 	
     default:
-	break;
+      break;
     }
     return result.str();
   }
@@ -740,11 +753,31 @@ namespace asdmbinaries {
 	<< endl;
   }
 
-  void SDMDataObject::spectralWindowsToXML(const Baseband& baseband, ostringstream& oss) const {
-    const vector<SDMDataObject::SpectralWindow>& spectralWindows = baseband.spectralWindows();
+  void SDMDataObject::toXML(const AutoDataBinaryPart& autoDataBinaryPart, const string& elementName, ostringstream& oss) const {
+    oss << "<" << elementName ;
+    oss << " " << HeaderParser::SIZE << "=" << QUOTE(autoDataBinaryPart.size())
+	<< " " << HeaderParser::AXES << "=" << QUOTE<AxisName, CAxisName>(autoDataBinaryPart.axes())
+	<< " " << HeaderParser::NORMALIZED << "=" << QUOTE(autoDataBinaryPart.normalized())
+	<< "/>"
+	<< endl;
+  }
+
+  void SDMDataObject::toXML(const ZeroLagsBinaryPart& zeroLagsBinaryPart, const string& elementName, ostringstream& oss) const {
+    oss << "<" << elementName ;
+    oss << " " << HeaderParser::SIZE << "=" << QUOTE(zeroLagsBinaryPart.size())
+	<< " " << HeaderParser::AXES << "=" << QUOTE<AxisName, CAxisName>(zeroLagsBinaryPart.axes())
+	<< " " << HeaderParser::CORRELATORTYPE << "=" << QUOTE<CorrelatorType, CCorrelatorType>(zeroLagsBinaryPart.correlatorType())
+	<< "/>"
+	<< endl;
+  }
+
+  void SDMDataObject::spectralWindowsToXML(const vector<Baseband>& basebands,unsigned int ibb,  ostringstream& oss) const {
+    const vector<SDMDataObject::SpectralWindow>& spectralWindows = basebands.at(ibb).spectralWindows();
     for (unsigned int i = 0; i < spectralWindows.size(); i++) {
       const SpectralWindow& spectralWindow = spectralWindows.at(i);
       oss << "<" << HeaderParser::SPECTRALWINDOW;
+      oss << " " << HeaderParser::SW << "=" << QUOTE(i+1);
+      oss << " " << HeaderParser::SWBB << "=" << QUOTE(CBasebandName::name(basebands.at(ibb).name()));
       
       switch (correlationMode_) {
       case CROSS_ONLY:
@@ -771,8 +804,7 @@ namespace asdmbinaries {
 
       oss << " " << HeaderParser::SIDEBAND << "=" << QUOTE<NetSideband, CNetSideband>(spectralWindow.sideband());
 
-      if (spectralWindow.strId().size() > 0) oss << " " << HeaderParser::ID << "=" << QUOTE(spectralWindow.strId());
-      if (spectralWindow.strImage().size() > 0) oss << " " << HeaderParser::IMAGE << "=" << QUOTE(spectralWindow.strImage());
+      if (spectralWindow.strImage().size() > 0) oss << " " << HeaderParser::IMAGE << "=" << QUOTE(::atoi(spectralWindow.strImage().c_str()));
       
       oss << "/>" << endl;
     }
@@ -781,7 +813,7 @@ namespace asdmbinaries {
   void SDMDataObject::basebandsToXML(ostringstream& oss) const {
     for (unsigned int ibb = 0; ibb < dataStruct_.basebands_.size(); ibb++) {
       oss << "<" << HeaderParser::BASEBAND << " " << HeaderParser::NAME << "=" << QUOTE(CBasebandName::name(dataStruct_.basebands_.at(ibb).name())) << ">" << endl;
-      spectralWindowsToXML(dataStruct_.basebands_.at(ibb), oss);
+      spectralWindowsToXML(dataStruct_.basebands_, ibb, oss);
       oss << "</" << HeaderParser::BASEBAND << ">" << endl;
     }
   }
@@ -791,91 +823,41 @@ namespace asdmbinaries {
 
     // The xsi:type attribute.
     oss << " xsi:type=" ;
-    switch (spectralResolutionType_) {
-    case FULL_RESOLUTION :
-      switch (correlationMode_) {
-      case CROSS_ONLY:
-	oss << QUOTE("CrossDataFullResolution");
-	break;
-      case AUTO_ONLY:
-	oss << QUOTE("AutoDataFullResolution");
-	break;
-      case CROSS_AND_AUTO:
-	oss << QUOTE("CrossAndAutoDataFullResolution");
-	break;
-      }
+    switch (correlationMode_) {
+    case CROSS_ONLY:
+      oss << QUOTE("CrossDataFullResolution");
       break;
-
-    case CHANNEL_AVERAGE:
-      switch (correlationMode_) {
-      case CROSS_ONLY:
-	oss << QUOTE("CrossDataChannelAverage");
-	break;
-      case AUTO_ONLY:
-	oss << QUOTE("AutoDataChannelAverage");
-	break;
-      case CROSS_AND_AUTO:
-	oss << QUOTE("CrossAndAutoDataChannelAverage");
-	break;
-      }
+    case AUTO_ONLY:
+      oss << QUOTE("AutoDataFullResolution");
       break;
-
-    case BASEBAND_WIDE:
-      switch (correlationMode_) {
-      case CROSS_ONLY:
-	break;
-      case AUTO_ONLY:
-	oss << QUOTE("AutoDataBasebandWide");
-	break;
-      case CROSS_AND_AUTO:
-	break;
-      }
+    case CROSS_AND_AUTO:
+      oss << QUOTE("CrossAndAutoDataFullResolution");
       break;
-      
     }
     
     // the apc attribute
-    switch (spectralResolutionType_) {
-    case FULL_RESOLUTION :
-      switch (correlationMode_) {
-      case CROSS_ONLY:
-      case CROSS_AND_AUTO:
-	oss << " apc=" ;
-	oss << QUOTE<AtmPhaseCorrection, CAtmPhaseCorrection>(dataStruct_.apc_);
-	  break;
-      case AUTO_ONLY:
-	break;
-      }
+    switch (correlationMode_) {
+    case CROSS_ONLY:
+    case CROSS_AND_AUTO:
+      oss << " apc=" ;
+      oss << QUOTE<AtmPhaseCorrection, CAtmPhaseCorrection>(dataStruct_.apc_);
       break;
-
-    case CHANNEL_AVERAGE:
-      switch (correlationMode_) {
-      case CROSS_ONLY:
-      case CROSS_AND_AUTO:
-	oss << " apc=" ;
-	oss << QUOTE<AtmPhaseCorrection, CAtmPhaseCorrection>(dataStruct_.apc_);
-	break;
-      case AUTO_ONLY:
-	break;
-      }
-      break;
-
-    case BASEBAND_WIDE:
+    case AUTO_ONLY: 
       break;
     }
-
+    
     oss << ">" << endl;
     
     // Before unrolling the basebands let's prepare the id_ and image_ private fields of the spectral windows.
     updateIdImageSPW();
-
+    
     // Now unroll the basebands.    
     basebandsToXML(oss);
-        
+    
     if ( dataStruct_.flags_.size() )          toXML(dataStruct_.flags_, HeaderParser::FLAGS, oss);
     if ( dataStruct_.actualTimes_.size() )    toXML(dataStruct_.actualTimes_, HeaderParser::ACTUALTIMES, oss);
     if ( dataStruct_.actualDurations_.size() )toXML(dataStruct_.actualDurations_, HeaderParser::ACTUALDURATIONS, oss);
-
+    
     switch (correlationMode_) {
     case CROSS_ONLY:
       toXML(dataStruct_.crossData_, HeaderParser::CROSSDATA, oss);
@@ -890,27 +872,29 @@ namespace asdmbinaries {
     default:
       break;
     }
-
+    
     /*
-    if (spectralResolutionType_ == FULL_RESOLUTION ) {
+      if (spectralResolutionType_ == FULL_RESOLUTION ) {
       toXML(dataStruct_.zeroLags_, HeaderParser::ZEROLAGS, oss);
-    }
+      }
     */
     // zeroLags are optional in any case - Michel Caillat - 24 Jul 2008
     if (dataStruct_.zeroLags().size() != 0) {
       toXML(dataStruct_.zeroLags_, HeaderParser::ZEROLAGS, oss);
     }
-
+    
     oss << "</" << HeaderParser::DATASTRUCT << ">" << endl;
   }
 
   string SDMDataObject::toXML()  {
     TSTVALID();
     ostringstream result;
-    
+  
     result << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl;
-
-    result << "<" << HeaderParser::SDMDATAHEADER << " byteOrder=\"IEEE Low_Endian\" schemaVersion=\"0.9\"" 
+  
+    result << "<" << HeaderParser::SDMDATAHEADER 
+	   << " " << HeaderParser::BYTEORDER << "=\"" << byteOrder_->toString() << "\""
+	   << " " << HeaderParser::SCHEMAVERSION << "=\"" << schemaVersion_ << "\""
 	   << " xsi:noNamespaceSchemaLocation=\"binDataHeader9.xsd\"" 
 	   << " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
 	   << " xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"" 
@@ -921,17 +905,17 @@ namespace asdmbinaries {
 	   << " " << "xvers:schemaVersion=\"0\""
 	   << " " << "xvers:revision=\"0.0.96\""
 	   << ">" << endl;
-
+  
     // startTime...
     TOXML(HeaderParser::STARTTIME, startTime_, result);   
-
+  
     // dataOID...
     result << "<" << HeaderParser::DATAOID
 	   << " xlink:type=\"locator\""
 	   << " xlink:" << HeaderParser::XLINKHREF  << "=" << QUOTE(dataOID_)
 	   << " xlink:" << HeaderParser::XLINKTITLE << "=" << QUOTE(title_)
 	   << "/>" << endl;
-    
+  
     // dimensionality or numTime ...
     if (dimensionality_ == 0) {
       result << "<" << HeaderParser::NUMTIME
@@ -948,37 +932,46 @@ namespace asdmbinaries {
 	     << "</" << HeaderParser::DIMENSIONALITY << ">"
 	     << endl;
     }
-    
+  
     // execBlock...
     result << "<" << HeaderParser::EXECBLOCK << " " << HeaderParser::XLINKHREF << "=" << QUOTE(execBlockUID_) << "/>" << endl;
-	   
+  
     // numAntenna
     TOXML(HeaderParser::NUMANTENNA, numAntenna_, result);
-
+  
     //correlationMode
     TOXML<CorrelationMode, CCorrelationMode>(HeaderParser::CORRELATIONMODE,
-						 correlationMode_,
-						 result);
+					     correlationMode_,
+					     result);
 
-    // spectralResolutionType
-    TOXML<SpectralResolutionType, CSpectralResolutionType>(HeaderParser::SPECTRALRESOLUTION,
-	  spectralResolutionType_,
-	  result);
-
+    // spectralResolutionType ... if present.
+    if (spectralResolutionType_.present())
+      TOXML<SpectralResolutionType, CSpectralResolutionType>(HeaderParser::SPECTRALRESOLUTION,
+							     spectralResolutionType_.literal(),
+							     result);
+  
+    // processorType
+    TOXML<ProcessorType, CProcessorType>(HeaderParser::PROCESSORTYPE,
+					 processorType_,
+					 result);
+  
     // dataStruct
     dataStructToXML(result);
-    
+  
     result << "</" << HeaderParser::SDMDATAHEADER << ">";
-
-
+  
+  
     return result.str();
   }
 
   void SDMDataObject::updateIdImageSPW() {
+    ostringstream oss;
     for (unsigned int ibb = 0; ibb < dataStruct_.basebands_.size(); ibb++) {
       vector<SDMDataObject::SpectralWindow>& spws = dataStruct_.basebands_.at(ibb).spectralWindows_;
       for (unsigned int ispw = 0; ispw < spws.size(); ispw++) {
-	spws.at(ispw).strId("");
+	oss.str("");
+	oss << ispw+1;
+	spws.at(ispw).strSw(oss.str());
 	spws.at(ispw).strImage("");
       }
     }
@@ -991,8 +984,6 @@ namespace asdmbinaries {
     string key, value;
     map<string, string>::const_iterator iter;
     istringstream iss;
-    ostringstream oss;
-    
 
     
     for (iter = dataStruct_.imageSPW_.begin(); iter != dataStruct_.imageSPW_.end(); iter++) {
@@ -1007,20 +998,41 @@ namespace asdmbinaries {
       iss.str(value);
       iss >> ibbValue;
       iss >> ispwValue;      
-      
-      unsigned int spwId = 0;
-      for (unsigned int ibb = 0; ibb < ibbValue; ibb++)
-	spwId += dataStruct_.basebands_.at(ibb).spectralWindows_.size();      
-      spwId += ispwValue;
 
       oss.str("");
-      oss << "spw_" << spwId;
-      
-      dataStruct_.basebands_.at(ibbKey).spectralWindows_.at(ispwKey).strImage_  = oss.str();
-      dataStruct_.basebands_.at(ibbValue).spectralWindows_.at(ispwValue).strId_ = oss.str();
-      
-      spwId++;
+      oss << ispwKey;
+      dataStruct_.basebands_.at(ibbKey).spectralWindows_.at(ispwKey).strImage_  = dataStruct_.basebands_.at(ibbKey).spectralWindows_.at(ispwValue).strSw_;
     }
+  }
+
+
+#ifdef AIPS_DARWIN
+  const ByteOrder* ByteOrder::Little_Endian = new ByteOrder("Little_Endian", __DARWIN_LITTLE_ENDIAN);
+  const ByteOrder* ByteOrder::Big_Endian = new ByteOrder("Big_Endian", __DARWIN_BIG_ENDIAN);
+#else
+  const ByteOrder* ByteOrder::Little_Endian = new ByteOrder("Little_Endian", __LITTLE_ENDIAN);
+  const ByteOrder* ByteOrder::Big_Endian = new ByteOrder("Big_Endian", __BIG_ENDIAN);
+#endif
+  const ByteOrder* ByteOrder::Machine_Endianity = ByteOrder::machineEndianity();
+
+  ByteOrder::ByteOrder(const string& name, int endianity):
+    name_(name), endianity_(endianity){;}
+
+  ByteOrder::~ByteOrder() {;}
+
+  const ByteOrder* ByteOrder::machineEndianity() {
+#ifdef AIPS_DARWIN
+    if (__DARWIN_BYTE_ORDER == __DARWIN_LITTLE_ENDIAN)
+#else
+    if (__BYTE_ORDER == __LITTLE_ENDIAN)
+#endif
+      return Little_Endian;
+    else
+      return Big_Endian;
+  }
+  
+  string ByteOrder::toString() const {
+    return name_;
   }
 
   // SDMDataObject::
@@ -1045,7 +1057,10 @@ namespace asdmbinaries {
     autoData_(0),
     nAutoData_(0),
     aborted_(false)
-  {;}
+  {
+    integrationNum_ = 0;
+    subintegrationNum_ = 0;
+  }
 
 
   SDMDataSubset::SDMDataSubset(SDMDataObject* owner,
@@ -1055,6 +1070,8 @@ namespace asdmbinaries {
     owner_(owner),
     time_(time),
     interval_(interval) {
+    integrationNum_ = 0;
+    subintegrationNum_ = 0;
     if (autoData.size() != 0) {
       autoData_ = &autoData.at(0);
       nAutoData_ = autoData.size();
@@ -1074,18 +1091,9 @@ namespace asdmbinaries {
     ostringstream oss;
     oss << owner_->execBlockNum_ << "/" << owner_->scanNum_ << "/" << owner_->subscanNum_ << "/"; 
 
-    switch (owner_->spectralResolutionType_) {
-    case BASEBAND_WIDE:      
-      break;
-      
-    case FULL_RESOLUTION:
-      oss << integrationNum_ << "/";
-      break;
-      
-    case CHANNEL_AVERAGE:
-      oss << integrationNum_ << "/" << subintegrationNum_ << "/";
-      break;
-    }
+    if (integrationNum_ > 0) oss << integrationNum_ << "/";
+    if (subintegrationNum_ > 0) oss << subintegrationNum_ << "/";
+
     return oss.str();
   }
   
@@ -1142,13 +1150,13 @@ namespace asdmbinaries {
     //boost::gregorian::date d(2007, Jan, 1);
     //ptime t1(date(2007, Jan, 1), time_duration(0, 0, 0,(time_ - FIRST_JAN_2007)/1000 ));
     //result << "(owned by '" << owner_ << "')" << endl; 
-
+  
     result << "projectPath = " << projectPath() << endl;
     //result << "time = " << time_ << " (" << to_simple_string(t1)  << ")" << endl;
     result << "time = " << time_ << endl;
     //result << "dataStructureDesc = " << dataStructureDesc_ << endl;
     result << "interval = " << interval_ <<endl;
-
+  
 
     if ( aborted_ ) {
       // It"s an aborted [sub]integration.
@@ -1196,13 +1204,13 @@ namespace asdmbinaries {
     if (nCrossData_) { 
       result << "CrossData (" << nCrossData_ << " values ) = "; 
       switch (crossDataType_) {
-      case INT_TYPE :
+      case INT32_TYPE :
 	PRINT(longCrossData_, nCrossData_, N, result); result << endl;
 	break;
-      case SHORT_TYPE :
+      case INT16_TYPE :
 	PRINT(shortCrossData_, nCrossData_, N, result); result << endl;
 	break;
-      case FLOAT_TYPE:
+      case FLOAT32_TYPE:
 	PRINT(floatCrossData_, nCrossData_, N, result); result << endl;
 	break;
 
@@ -1217,7 +1225,7 @@ namespace asdmbinaries {
     }
     
     if (nZeroLags_) { 
-	result << "ZeroLags (" << nZeroLags_ << " values ) = = "; PRINT(zeroLags_, nZeroLags_, N, result); result << endl;
+      result << "ZeroLags (" << nZeroLags_ << " values ) = = "; PRINT(zeroLags_, nZeroLags_, N, result); result << endl;
     }
 
     return result.str();
@@ -1241,131 +1249,93 @@ namespace asdmbinaries {
     binAttachToXML(TPSubsetHeaderParser::AUTODATAREF, oss);
   }
 
-  void SDMDataSubset::corrBinAttachToXML(ostringstream& oss) {
-    
+  void SDMDataSubset::corrBinAttachToXML(ostringstream& oss) {    
     // The binaryAttachments elements
+
+    if (nFlags_)
+      binAttachToXML(CorrSubsetHeaderParser::FLAGSREF, oss);
+    if (nActualTimes_)
+      binAttachToXML(CorrSubsetHeaderParser::ACTUALTIMESREF, oss);
+    if (nActualDurations_)
+      binAttachToXML(CorrSubsetHeaderParser::ACTUALDURATIONSREF, oss);
+
     switch (owner_->correlationMode_) {
     case CROSS_ONLY:
-      if (nFlags_)
-	binAttachToXML(CorrSubsetHeaderParser::FLAGSREF, oss);
-      if (nActualTimes_)
-	binAttachToXML(CorrSubsetHeaderParser::ACTUALTIMESREF, oss);
-      if (nActualDurations_)
-	binAttachToXML(CorrSubsetHeaderParser::ACTUALDURATIONSREF, oss);
-      binAttachToXML(CorrSubsetHeaderParser::CROSSDATAREF, oss);      
-      if (owner_->spectralResolutionType_ != CHANNEL_AVERAGE)
-	binAttachToXML(CorrSubsetHeaderParser::ZEROLAGSREF, oss);      
+      
+      binAttachToXML(CorrSubsetHeaderParser::CROSSDATAREF, oss);
       break;
       
     case AUTO_ONLY:
-      if (nFlags_)
-	binAttachToXML(CorrSubsetHeaderParser::FLAGSREF, oss);
-      if (nActualTimes_)
-	binAttachToXML(CorrSubsetHeaderParser::ACTUALTIMESREF, oss);
-      if (nActualDurations_)
-	binAttachToXML(CorrSubsetHeaderParser::ACTUALDURATIONSREF, oss);
       binAttachToXML(CorrSubsetHeaderParser::AUTODATAREF, oss);          
-      if (owner_->spectralResolutionType_ != CHANNEL_AVERAGE)
-	binAttachToXML(CorrSubsetHeaderParser::ZEROLAGSREF, oss);      
       break;
 
     case CROSS_AND_AUTO:
-      if (nFlags_)
-	binAttachToXML(CorrSubsetHeaderParser::FLAGSREF, oss);
-      if (nActualTimes_)
-	binAttachToXML(CorrSubsetHeaderParser::ACTUALTIMESREF, oss);
-      if (nActualDurations_)
-	binAttachToXML(CorrSubsetHeaderParser::ACTUALDURATIONSREF, oss);
       binAttachToXML(CorrSubsetHeaderParser::CROSSDATAREF, oss);            
       binAttachToXML(CorrSubsetHeaderParser::AUTODATAREF, oss);          
-      if (owner_->spectralResolutionType_ != CHANNEL_AVERAGE)
-	binAttachToXML(CorrSubsetHeaderParser::ZEROLAGSREF, oss);      
       break;
     }
+
+    if ((owner_->processorType_ == CORRELATOR) && (owner_->correlatorType() != FX))
+	binAttachToXML(CorrSubsetHeaderParser::ZEROLAGSREF, oss);            
   }
  
 
   string SDMDataSubset::xsiType() const {
     string result;
-
-    switch (owner_->spectralResolutionType_) {
-    case FULL_RESOLUTION:
-      switch (owner_->correlationMode_) {
-      case CROSS_ONLY:     result = "BinaryCrossDataFullResolution" ; break;
-      case AUTO_ONLY:      result = "BinaryAutoDataFullResolution" ; break;
-      case CROSS_AND_AUTO: result = "BinaryCrossAndAutoDataFullResolution" ; break;
-      }
-      break;
-    case CHANNEL_AVERAGE:
-      switch (owner_->correlationMode_) {
-      case CROSS_ONLY:     result = "BinaryCrossDataChannelAverage" ; break;
-      case AUTO_ONLY:      result = "BinaryAutoDataChannelAverage" ; break;
-      case CROSS_AND_AUTO: result = "BinaryCrossAndAutoDataChannelAverage" ; break;
-      }
-      break;
-    case BASEBAND_WIDE:
-      switch (owner_->correlationMode_) {
-      case CROSS_ONLY:     result = "" ; break;
-      case AUTO_ONLY:      result = "BinaryAutoDataBasebandWide" ; break;
-      case CROSS_AND_AUTO: result = "" ; break;    
-      }
-      break;
+    
+    switch (owner_->correlationMode_) {
+    case CROSS_ONLY:     result = "BinaryCrossData" ; break;
+    case AUTO_ONLY:      result = "BinaryAutoData" ; break;
+    case CROSS_AND_AUTO: result = "BinaryCrossAndAutoData" ; break;
     }
-
+        
     return result;
   }
+
 
   string SDMDataSubset::toXML() {
     ostringstream oss;
     
     oss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl;
-    switch (owner_->spectralResolutionType_) {
-    case FULL_RESOLUTION:
-    case CHANNEL_AVERAGE:
+    if (owner_->processorType_ == CORRELATOR) {
       oss << "<" << CorrSubsetHeaderParser::SDMDATASUBSETHEADER
 	  << " xmlns:xlink=\"http://www.w3.org/1999/xlink\""
 	  << " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
 	  << " xsi:type=\"" << xsiType() << "\""
 	  << " projectPath="<< QUOTE(projectPath())
 	  << ">" << endl;
-
+      
       OXML(CorrSubsetHeaderParser::SCHEDULEPERIODTIME, oss);
       TOXML(CorrSubsetHeaderParser::TIME, time_, oss);
       TOXML(CorrSubsetHeaderParser::INTERVAL, interval_, oss);
       CXML(CorrSubsetHeaderParser::SCHEDULEPERIODTIME, oss);
-
+      
       oss << "<" << CorrSubsetHeaderParser::DATASTRUCT << " ref =" << QUOTE("sdmDataHeader") << "/>" << endl;
       corrBinAttachToXML(oss);
-      break;
-    case BASEBAND_WIDE:
+      oss << "</" << CorrSubsetHeaderParser::SDMDATASUBSETHEADER << ">";
+      return oss.str();
+    }
+    else if (owner_->processorType_ == RADIOMETER) {
       oss << "<" << TPSubsetHeaderParser::SDMDATASUBSETHEADER
 	  << " xmlns:xlink=\"http://www.w3.org/1999/xlink\""
 	  << " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
 	  << " xsi:type=\"" << xsiType() << "\""
 	  << " projectPath="<< QUOTE(projectPath())
 	  << ">" << endl;
-
+    
       OXML(TPSubsetHeaderParser::SCHEDULEPERIODTIME, oss);
       TOXML(TPSubsetHeaderParser::TIME, time_, oss);
       TOXML(TPSubsetHeaderParser::INTERVAL, interval_, oss);
       CXML(TPSubsetHeaderParser::SCHEDULEPERIODTIME, oss);
-
+      
       oss << "<" << TPSubsetHeaderParser::DATASTRUCT << " ref =" << QUOTE("sdmDataHeader") << "/>" << endl;
       tpBinAttachToXML(oss);
-      break;
-    }
-    
-    switch (owner_->spectralResolutionType_) {
-    case FULL_RESOLUTION:
-    case CHANNEL_AVERAGE:
-      oss << "</" << CorrSubsetHeaderParser::SDMDATASUBSETHEADER << ">";
-      break;
-    case BASEBAND_WIDE:
       oss << "</" << TPSubsetHeaderParser::SDMDATASUBSETHEADER << ">";
-      break;
+      return oss.str();
     }
-    
-    return oss.str();
+    else
+      throw SDMDataObjectException("no XML representation defined for an SDMDataSubset with a processor type defined as '"
+				   + CProcessorType::name(owner_->processorType_));
   }
   
 
@@ -1393,6 +1363,11 @@ namespace asdmbinaries {
     throw SDMDataObjectException(oss.str());
   }
 
+  string Utils::quote(bool b) {
+    ostringstream oss;
+    oss << "\"" << (b?"true":"false") << "\"";
+    return oss.str();
+  }
 
   string Utils::quote(int i) {
     ostringstream oss;

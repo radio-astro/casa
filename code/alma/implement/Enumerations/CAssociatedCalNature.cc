@@ -37,31 +37,29 @@
 #include <string>
 using namespace std;
 
+
+int CAssociatedCalNature::version() {
+	return AssociatedCalNatureMod::version;
+	}
+	
+string CAssociatedCalNature::revision () {
+	return AssociatedCalNatureMod::revision;
+}
+
+unsigned int CAssociatedCalNature::size() {
+	return 1;
+	}
+	
 	
 const std::string& CAssociatedCalNature::sASSOCIATED_EXECBLOCK = "ASSOCIATED_EXECBLOCK";
 	
-const std::vector<std::string> CAssociatedCalNature::sAssociatedCalNatureSet() {
+const std::vector<std::string> CAssociatedCalNature::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CAssociatedCalNature::sASSOCIATED_EXECBLOCK);
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CAssociatedCalNature::hASSOCIATED_EXECBLOCK = "The associated execblock id concatenated to produce the data set";
-	
-const std::vector<std::string> CAssociatedCalNature::hAssociatedCalNatureSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CAssociatedCalNature::hASSOCIATED_EXECBLOCK);
-        
-    return enumSet;
-}
-   	
 
 std::string CAssociatedCalNature::name(const AssociatedCalNatureMod::AssociatedCalNature& f) {
     switch (f) {
@@ -70,22 +68,9 @@ std::string CAssociatedCalNature::name(const AssociatedCalNatureMod::AssociatedC
       return CAssociatedCalNature::sASSOCIATED_EXECBLOCK;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CAssociatedCalNature::help(const AssociatedCalNatureMod::AssociatedCalNature& f) {
-    switch (f) {
-    
-    case AssociatedCalNatureMod::ASSOCIATED_EXECBLOCK:
-      return CAssociatedCalNature::hASSOCIATED_EXECBLOCK;
-    	
-    }
-    return std::string("");
-}
-   	
 
 AssociatedCalNatureMod::AssociatedCalNature CAssociatedCalNature::newAssociatedCalNature(const std::string& name) {
 		
@@ -106,12 +91,10 @@ AssociatedCalNatureMod::AssociatedCalNature CAssociatedCalNature::literal(const 
 }
 
 AssociatedCalNatureMod::AssociatedCalNature CAssociatedCalNature::from_int(unsigned int i) {
-	vector<string> names = sAssociatedCalNatureSet();
-	if (i >= names.size()) throw badInt(i);
-	return newAssociatedCalNature(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newAssociatedCalNature(names_.at(i));
 }
-
-	
 
 string CAssociatedCalNature::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'AssociatedCalNature'.";

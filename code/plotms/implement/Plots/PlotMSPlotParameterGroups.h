@@ -45,43 +45,48 @@ public:
     static const String UPDATE_REDRAW_NAME;
     static const int UPDATE_REDRAW;
     // </group>
-    
+
     // Update flag for MS data group.
     // <group>
     static const String UPDATE_MSDATA_NAME;
     static const int UPDATE_MSDATA;
     // </group>
-    
+
     // Update flag for cache group.
     // <group>
     static const String UPDATE_CACHE_NAME;
     static const int UPDATE_CACHE;
     // </group>
     
+    // Update flag for axes group.
+    // <group>
+    static const String UPDATE_AXES_NAME;
+    static const int UPDATE_AXES;
+    // </group>
+
     // Update flag for canvas group.
     // <group>
     static const String UPDATE_CANVAS_NAME;
     static const int UPDATE_CANVAS;
     // </group>
-    
+
     // Update flag for display group.
     // <group>
     static const String UPDATE_DISPLAY_NAME;
     static const int UPDATE_DISPLAY;
     // </group>
-    
     // Update flag for log group.
     // <group>
     static const String UPDATE_LOG_NAME;
     static const int UPDATE_LOG;
     // </group>
-    
+    //
     // Update flag for plotms_options group.
     // <group>
     static const String UPDATE_PLOTMS_OPTIONS_NAME;
     static const int UPDATE_PLOTMS_OPTIONS;
     // </group>
-    
+
 private:
     // Disable constructor.
     PMS_PP() { }
@@ -144,6 +149,75 @@ private:                                                                      \
                                                                               \
     /* Record key for the indicated parameter. */                             \
     static const String RECKEY;
+
+#define PMS_PP_GROUP_VECPARAM(TYPE, PARAM, GETTER, GETTER_SINGLE, SETTER,     \
+                              SETTER_SINGLE, RECKEY)                          \
+public:                                                                       \
+    /* Gets/Sets the vector value for the given parameter. */                 \
+    /* <group> */                                                             \
+    const vector<TYPE>& GETTER() const { return PARAM; }                      \
+    void SETTER(const vector<TYPE>& value) {                                  \
+        if(PARAM != value) {                                                  \
+            PARAM = value;                                                    \
+            updated();                                                        \
+        }                                                                     \
+    }                                                                         \
+    /* </group> */                                                            \
+                                                                              \
+    /* Gets/Sets a single parameter for the given parameter. */               \
+    /* <group> */                                                             \
+    TYPE GETTER_SINGLE(unsigned int index = 0) const {                        \
+        if(index >= PARAM.size())                                             \
+            const_cast<vector<TYPE>&>(PARAM).resize(index + 1);               \
+        return PARAM[index]; }                                                \
+    void SETTER_SINGLE(const TYPE& value, unsigned int index = 0) {           \
+        if(index >= PARAM.size()) PARAM.resize(index + 1);                    \
+        if(PARAM[index] != value) {                                           \
+            PARAM[index] = value;                                             \
+            updated();                                                        \
+        }                                                                     \
+    }                                                                         \
+    /* </group> */                                                            \
+                                                                              \
+private:                                                                      \
+    /* Parameter. */                                                          \
+    vector<TYPE> PARAM;                                                       \
+                                                                              \
+    /* Record key for the indicated parameter. */                             \
+    static const String RECKEY;
+
+#define PMS_PP_GROUP_VECREFPARAM(TYPE, PARAM, GETTER, GETTER_SINGLE, SETTER,  \
+                                 SETTER_SINGLE, RECKEY)                       \
+public:                                                                       \
+    /* Gets/Sets the vector value for the given parameter. */                 \
+    /* <group> */                                                             \
+    const vector<TYPE>& GETTER() const { return PARAM; }                      \
+    void SETTER(const vector<TYPE>& value) {                                  \
+        if(PARAM != value) {                                                  \
+            PARAM = value;                                                    \
+            updated();                                                        \
+        }                                                                     \
+    }                                                                         \
+    /* </group> */                                                            \
+                                                                              \
+    /* Gets/Sets a single parameter for the given parameter. */               \
+    /* <group> */                                                             \
+    const TYPE& GETTER_SINGLE(unsigned int index = 0) const {                 \
+        return PARAM[index]; }                                                \
+    void SETTER_SINGLE(const TYPE& value, unsigned int index = 0) {           \
+        if(PARAM[index] != value) {                                           \
+            PARAM[index] = value;                                             \
+            updated();                                                        \
+        }                                                                     \
+    }                                                                         \
+    /* </group> */                                                            \
+                                                                              \
+private:                                                                      \
+    /* Parameter. */                                                          \
+    vector<TYPE> PARAM;                                                       \
+                                                                              \
+    /* Record key for the indicated parameter. */                             \
+    static const String RECKEY;
     
 #define PMS_PP_GROUP_END                                                      \
 private:                                                                      \
@@ -168,81 +242,119 @@ public:
     PMS_PP_GROUP_PARAM(PlotMSAveraging, itsAveraging_, averaging, setAveraging, REC_AVERAGING)
 PMS_PP_GROUP_END
     
+
 // Subclass of PlotMSPlotParameters::Group to handle cache parameters.
 // Currently includes:
 // * x and y axes
 // * x and y data columns
+// Parameters are vector-based, on a per-plot basis.
 PMS_PP_GROUP_START(PMS_PP_Cache, PMS_PP::UPDATE_CACHE_NAME, true)
 public:
-    // Sets the axes.
+    // Gets how many axes and data columns there are.
     // <group>
-    void setXAxis(const PMS::Axis& axis, const PMS::DataColumn& data) {
-        setAxes(axis, yAxis(), data, yDataColumn()); }
-    void setYAxis(const PMS::Axis& axis, const PMS::DataColumn& data) {
-        setAxes(xAxis(), axis, xDataColumn(), data); }
-    void setAxes(const PMS::Axis& xAxis, const PMS::Axis& yAxis,
-            const PMS::DataColumn& xData, const PMS::DataColumn& yData);
+    unsigned int numXAxes() const;
+    unsigned int numYAxes() const;
     // </group>
     
-    PMS_PP_GROUP_PARAM(PMS::Axis, itsXAxis_, xAxis, setXAxis, REC_XAXIS)
-    PMS_PP_GROUP_PARAM(PMS::Axis, itsYAxis_, yAxis, setYAxis, REC_YAXIS)
-    PMS_PP_GROUP_PARAM(PMS::DataColumn, itsXData_, xDataColumn, setXDataColumn, REC_XDATACOL)
-    PMS_PP_GROUP_PARAM(PMS::DataColumn, itsYData_, yDataColumn, setYDataColumn, REC_YDATACOL)
+    // Sets the single axes and data columns for the given index.
+    // <group>
+    void setXAxis(const PMS::Axis& axis, const PMS::DataColumn& data,
+            unsigned int index = 0) {
+        setAxes(axis, yAxis(index), data, yDataColumn(index), index); }
+    void setYAxis(const PMS::Axis& axis, const PMS::DataColumn& data,
+            unsigned int index = 0) {
+        setAxes(xAxis(index), axis, xDataColumn(index), data, index); }    
+    void setAxes(const PMS::Axis& xAxis, const PMS::Axis& yAxis,
+            const PMS::DataColumn& xData, const PMS::DataColumn& yData,
+            unsigned int index = 0);
+    // </group>
+    
+    PMS_PP_GROUP_VECPARAM(PMS::Axis, itsXAxes_, xAxes, xAxis, setXAxes, setXAxis, REC_XAXES)
+    PMS_PP_GROUP_VECPARAM(PMS::Axis, itsYAxes_, yAxes, yAxis, setYAxes, setYAxis, REC_YAXES)
+    PMS_PP_GROUP_VECPARAM(PMS::DataColumn, itsXData_, xDataColumns, xDataColumn, setXDataColumns, setXDataColumn, REC_XDATACOLS)
+    PMS_PP_GROUP_VECPARAM(PMS::DataColumn, itsYData_, yDataColumns, yDataColumn, setYDataColumns, setYDataColumn, REC_YDATACOLS)
+PMS_PP_GROUP_END
+
+
+// Subclass of PlotMSPlotParameters::Group to handle axes parameters.
+// Currently includes:
+// * canvas attach axes
+// * axes ranges, if any
+// Parameters are vector-based, on a per-plot basis.
+PMS_PP_GROUP_START(PMS_PP_Axes, PMS_PP::UPDATE_AXES_NAME, true)
+public:
+    // Gets how many axes there are.
+    // <group>
+    unsigned int numXAxes() const;
+    unsigned int numYAxes() const;
+    // </group>
+    
+    // Sets single versions of the parameters for the given index.
+    // <group>
+    void setAxes(const PlotAxis& xAxis, const PlotAxis& yAxis,
+            unsigned int index = 0);    
+    void setXRange(const bool& set, const prange_t& range,
+            unsigned int index = 0) {
+        setRanges(set, yRangeSet(index), range, yRange(index), index); }
+    void setYRange(const bool& set, const prange_t& range,
+            unsigned int index = 0) {
+        setRanges(xRangeSet(index), set, xRange(index), range, index); }
+    void setRanges(const bool& xSet, const bool& ySet, const prange_t& xRange,
+            const prange_t& yRange, unsigned int index = 0);
+    // </group>
+    
+    PMS_PP_GROUP_VECPARAM(PlotAxis, itsXAxes_, xAxes, xAxis, setXAxes, setXAxis, REC_XAXES)
+    PMS_PP_GROUP_VECPARAM(PlotAxis, itsYAxes_, yAxes, yAxis, setYAxes, setYAxis, REC_YAXES)
+    PMS_PP_GROUP_VECPARAM(bool, itsXRangesSet_, xRangesSet, xRangeSet, setXRanges, setXRange, REC_XRANGESSET)
+    PMS_PP_GROUP_VECPARAM(bool, itsYRangesSet_, yRangesSet, yRangeSet, setYRanges, setYRange, REC_YRANGESSET)
+    PMS_PP_GROUP_VECREFPARAM(prange_t, itsXRanges_, xRanges, xRange, setXRanges, setXRange, REC_XRANGES)
+    PMS_PP_GROUP_VECREFPARAM(prange_t, itsYRanges_, yRanges, yRange, setYRanges, setYRange, REC_YRANGES)
 PMS_PP_GROUP_END
     
     
 // Subclass of PlotMSPlotParameters::Group to handle canvas parameters.
 // Currently includes:
-// * which canvas axes x and y are attached to
-// * reference values for the axes, if any
-// * ranges for the axes, if any
 // * axes label formats
 // * whether to show the canvas axes or not
 // * whether to show the legend or not, and its position
 // * canvas title label format
 // * whether to show grid lines, and their properties
+// Parameters are vector-based, on a per-canvas basis.
 PMS_PP_GROUP_START(PMS_PP_Canvas, PMS_PP::UPDATE_CANVAS_NAME, true)
-public:    
-    // Sets the axes range flags and values.
+public:
+    // Gets how many canvases there are.
+    unsigned int numCanvases() const;
+    
+    // Sets single versions of the parameters for the given index.
     // <group>
-    void setXRange(const bool& set, const prange_t& range) {
-        setRanges(set, yRangeSet(), range, yRange()); }
-    void setYRange(const bool& set, const prange_t& range) {
-        setRanges(xRangeSet(), set, xRange(), range); }
-    void setRanges(const bool& xSet, const bool& ySet, const prange_t& xRange,
-            const prange_t& yRange);
+    void setLabelFormats(const PlotMSLabelFormat& xFormat,
+            const PlotMSLabelFormat& yFormat, unsigned int index = 0);
+    void showAxes(const bool& xShow, const bool& yShow, unsigned int index= 0);    
+    void showLegend(const bool& show, const PlotCanvas::LegendPosition& pos,
+            unsigned int index = 0);
+
+    void showGridMajor(const bool& show, const PlotLinePtr& line,
+            unsigned int index = 0) {
+        showGrid(show,gridMinorShown(index),line,gridMinorLine(index),index); }
+    void showGridMinor(const bool& show, const PlotLinePtr& line,
+            unsigned int index = 0) {
+        showGrid(gridMajorShown(index),show,gridMajorLine(index),line,index); }
+    void showGrid(const bool& showMajor, const bool& showMinor,
+            const PlotLinePtr& majorLine, const PlotLinePtr& minorLine,
+            unsigned int index = 0);
     // </group>
     
-    // Sets the legend flag and position.
-    void showLegend(const bool& show, const PlotCanvas::LegendPosition& pos);
-    
-    // Sets the grid flags and lines.
-    // <group>
-    void showGridMajor(const bool& show, const PlotLinePtr& line) {
-        showGrid(show, gridMinorShown(), line, gridMinorLine()); }
-    void showGridMinor(const bool& show, const PlotLinePtr& line) {
-        showGrid(gridMajorShown(), show, gridMajorLine(), line); }
-    void showGrid(const bool& showMajor, const bool& showMinor,
-            const PlotLinePtr& majorLine, const PlotLinePtr& minorLine);
-    // </group>    
-    
-    PMS_PP_GROUP_PARAM(PlotAxis, itsXAxis_, xAxis, setXAxis, REC_XAXIS)
-    PMS_PP_GROUP_PARAM(PlotAxis, itsYAxis_, yAxis, setYAxis, REC_YAXIS)
-    PMS_PP_GROUP_PARAM(bool, itsXRangeSet_, xRangeSet, setXRange, REC_XRANGESET)
-    PMS_PP_GROUP_PARAM(bool, itsYRangeSet_, yRangeSet, setYRange, REC_YRANGESET)
-    PMS_PP_GROUP_PARAM(prange_t, itsXRange_, xRange, setXRange, REC_XRANGE)
-    PMS_PP_GROUP_PARAM(prange_t, itsYRange_, yRange, setYRange, REC_YRANGE)
-    PMS_PP_GROUP_PARAM(PlotMSLabelFormat, itsXLabel_, xLabelFormat, setXLabelFormat, REC_XLABEL)
-    PMS_PP_GROUP_PARAM(PlotMSLabelFormat, itsYLabel_, yLabelFormat, setYLabelFormat, REC_YLABEL)
-    PMS_PP_GROUP_PARAM(bool, itsXAxisShown_, xAxisShown, showXAxis, REC_SHOWXAXIS)
-    PMS_PP_GROUP_PARAM(bool, itsYAxisShown_, yAxisShown, showYAxis, REC_SHOWYAXIS)
-    PMS_PP_GROUP_PARAM(bool, itsLegendShown_, legendShown, showLegend, REC_SHOWLEGEND)
-    PMS_PP_GROUP_PARAM(PlotCanvas::LegendPosition, itsLegendPos_, legendPosition, showLegend, REC_LEGENDPOS)
-    PMS_PP_GROUP_PARAM(PlotMSLabelFormat, itsTitle_, titleFormat, setTitleFormat, REC_TITLE)
-    PMS_PP_GROUP_PARAM(bool, itsGridMajShown_, gridMajorShown, showGridMajor, REC_SHOWGRIDMAJ)
-    PMS_PP_GROUP_PARAM(bool, itsGridMinShown_, gridMinorShown, showGridMinor, REC_SHOWGRIDMIN)
-    PMS_PP_GROUP_PARAM(PlotLinePtr, itsGridMajLine_, gridMajorLine, setGridMajorLine, REC_GRIDMAJLINE)
-    PMS_PP_GROUP_PARAM(PlotLinePtr, itsGridMinLine_, gridMinorLine, setGridMinorLine, REC_GRIDMINLINE)
+    PMS_PP_GROUP_VECREFPARAM(PlotMSLabelFormat, itsXLabels_, xLabelFormats, xLabelFormat, setXLabelFormats, setXLabelFormat, REC_XLABELS)
+    PMS_PP_GROUP_VECREFPARAM(PlotMSLabelFormat, itsYLabels_, yLabelFormats, yLabelFormat, setYLabelFormats, setYLabelFormat, REC_YLABELS)
+    PMS_PP_GROUP_VECPARAM(bool, itsXAxesShown_, xAxesShown, xAxisShown, showXAxes, showXAxis, REC_SHOWXAXES)
+    PMS_PP_GROUP_VECPARAM(bool, itsYAxesShown_, yAxesShown, yAxisShown, showYAxes, showYAxis, REC_SHOWYAXES)
+    PMS_PP_GROUP_VECPARAM(bool, itsLegendsShown_, legendsShown, legendShown, showLegends, showLegend, REC_SHOWLEGENDS)
+    PMS_PP_GROUP_VECPARAM(PlotCanvas::LegendPosition, itsLegendsPos_, legendPositions, legendPosition, showLegends, showLegend, REC_LEGENDSPOS)
+    PMS_PP_GROUP_VECREFPARAM(PlotMSLabelFormat, itsTitles_, titleFormats, titleFormat, setTitleFormats, setTitleFormat, REC_TITLES)
+    PMS_PP_GROUP_VECPARAM(bool, itsGridMajsShown_, gridMajorsShown, gridMajorShown, showGridMajors, showGridMajor, REC_SHOWGRIDMAJS)
+    PMS_PP_GROUP_VECPARAM(bool, itsGridMinsShown_, gridMinorsShown, gridMinorShown, showGridMinors, showGridMinor, REC_SHOWGRIDMINS)
+    PMS_PP_GROUP_VECPARAM(PlotLinePtr, itsGridMajLines_, gridMajorLines, gridMajorLine, setGridMajorLines, setGridMajorLine, REC_GRIDMAJLINES)
+    PMS_PP_GROUP_VECPARAM(PlotLinePtr, itsGridMinLines_, gridMinorLines, gridMinorLine, setGridMinorLines, setGridMinorLine, REC_GRIDMINLINES)
 PMS_PP_GROUP_END
 
 
@@ -250,11 +362,22 @@ PMS_PP_GROUP_END
 // Currently includes:
 // * flagged and unflagged symbols
 // * plot title format
+// * colorize flag and axis
+// Parameters are vector-based, on a per-plot basis.
 PMS_PP_GROUP_START(PMS_PP_Display, PMS_PP::UPDATE_DISPLAY_NAME, true)
 public:
-    PMS_PP_GROUP_PARAM(PlotSymbolPtr, itsUnflaggedSymbol_, unflaggedSymbol, setUnflaggedSymbol, REC_UNFLAGGED)
-    PMS_PP_GROUP_PARAM(PlotSymbolPtr, itsFlaggedSymbol_, flaggedSymbol, setFlaggedSymbol, REC_FLAGGED)
-    PMS_PP_GROUP_PARAM(PlotMSLabelFormat, itsTitleFormat_, titleFormat, setTitleFormat, REC_TITLE)
+    // Sets whether to colorize, and which axis to use.
+    void setColorize(const bool& colorize, const PMS::Axis& axis,
+            unsigned int index = 0);
+    
+    // Resizes the vectors to the given, using the default values.
+    void resizeVectors(unsigned int newSize);
+    
+    PMS_PP_GROUP_VECPARAM(PlotSymbolPtr, itsUnflaggedSymbols_, unflaggedSymbols, unflaggedSymbol, setUnflaggedSymbols, setUnflaggedSymbol, REC_UNFLAGGEDS)
+    PMS_PP_GROUP_VECPARAM(PlotSymbolPtr, itsFlaggedSymbols_, flaggedSymbols, flaggedSymbol, setFlaggedSymbols, setFlaggedSymbol, REC_FLAGGEDS)
+    PMS_PP_GROUP_VECREFPARAM(PlotMSLabelFormat, itsTitleFormats_, titleFormats, titleFormat, setTitleFormats, setTitleFormat, REC_TITLES)
+    PMS_PP_GROUP_VECPARAM(bool, itsColorizeFlags_, colorizeFlags, colorizeFlag, setColorize, setColorize, REC_COLFLAGS)
+    PMS_PP_GROUP_VECPARAM(PMS::Axis, itsColorizeAxes_, colorizeAxes, colorizeAxis, setColorize, setColorize, REC_COLAXES)
 PMS_PP_GROUP_END
 
 }

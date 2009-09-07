@@ -66,6 +66,48 @@ using std::map;
 #include <NoSuchRow.h>
 #include <DuplicateKey.h>
 
+/*
+#include <Enumerations.h>
+using namespace enumerations;
+*/
+
+
+
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+#include "CDirectionReferenceCode.h"
+using namespace DirectionReferenceCodeMod;
+	
+
+	
+
+	
+
+
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
 using asdmIDL::PointingTableIDL;
@@ -105,106 +147,149 @@ class ASDM;
 class PointingRow;
 /**
  * The PointingTable class is an Alma table.
+ * <BR>
+ * 
+ * \par Role
+ * Antenna pointing information.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
+ *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Pointing </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> antennaId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in AntennaTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> timeInterval </TD> 
- * <TD> ArrayTimeInterval </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> timeInterval </TD>
+ 		 
+ * <TD> ArrayTimeInterval</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the time interval of validity of the row's content. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
- * <TD> pointingModelId </TD> 
+ * <TD> numSample </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numPoly </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> timeOrigin </TD> 
- * <TD> ArrayTime </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> pointingDirection </TD> 
- * <TD> vector<vector<Angle > > </TD>
- * <TD>  numPoly+1, 2 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> target </TD> 
- * <TD> vector<vector<Angle > > </TD>
- * <TD>  numPoly+1, 2 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> offset </TD> 
- * <TD> vector<vector<Angle > > </TD>
- * <TD>  numPoly+1, 2 </TD> 
+ * <TD> &nbsp;the number of time samples. </TD>
  * </TR>
 	
  * <TR>
  * <TD> encoder </TD> 
- * <TD> vector<Angle > </TD>
- * <TD>  2 </TD> 
+ * <TD> vector<vector<Angle > > </TD>
+ * <TD>  numSample, 2 </TD> 
+ * <TD> &nbsp;Encoder values </TD>
  * </TR>
 	
  * <TR>
  * <TD> pointingTracking </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
-
-
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
-	
- * <TR>
- * <TD> name </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp; </TD>
+ * <TD> &nbsp;the antenna was in tracking mode (true) or not (false). </TD>
  * </TR>
 	
  * <TR>
- * <TD> sourceOffset </TD> 
- * <TD> vector<vector<Angle > > </TD>
- * <TD>  numPoly+1, 2  </TD>
- * </TR>
-	
- * <TR>
- * <TD> phaseTracking </TD> 
+ * <TD> usePolynomials </TD> 
  * <TD> bool </TD>
- * <TD>  &nbsp; </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;use polynomials expansions (true) or not (false). </TD>
  * </TR>
+	
+ * <TR>
+ * <TD> timeOrigin </TD> 
+ * <TD> ArrayTime </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the value used as origin in the polynomials expansions. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numTerm </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of terms of the polynomials. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> pointingDirection </TD> 
+ * <TD> vector<vector<Angle > > </TD>
+ * <TD>  numTerm, 2 </TD> 
+ * <TD> &nbsp;the commanded pointing direction. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> target </TD> 
+ * <TD> vector<vector<Angle > > </TD>
+ * <TD>  numTerm, 2 </TD> 
+ * <TD> &nbsp;the direction of the target. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> offset </TD> 
+ * <TD> vector<vector<Angle > > </TD>
+ * <TD>  numTerm, 2 </TD> 
+ * <TD> &nbsp;Horizon mapping offsets </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> pointingModelId </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;refers to a collection of rows in PointingModelTable. </TD>
+ * </TR>
+	
+
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> overTheTop </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; pointing ar elevations larger than 90 degrees (true) or lower (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sourceOffset </TD> 
+ * <TD> vector<vector<Angle > > </TD>
+ * <TD>  numTerm, 2  </TD>
+ * <TD>&nbsp; sources offsets (one pair per term of the polynomial). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sourceOffsetReferenceCode </TD> 
+ * <TD> DirectionReferenceCodeMod::DirectionReferenceCode </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the  direction reference code associated to the source offset. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sourceOffsetEquinox </TD> 
+ * <TD> ArrayTime </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the equinox information (if needed by sourceReferenceCode). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sampledTimeInterval </TD> 
+ * <TD> vector<ArrayTimeInterval > </TD>
+ * <TD>  numSample  </TD>
+ * <TD>&nbsp; an array of ArrayTimeInterval which must be given explicitly as soon as the data are irregularily sampled.  </TD>
  * </TR>
 	
 
@@ -267,12 +352,13 @@ public:
 	 * @return a pointer on a PointingRow
 	 */
 	PointingRow *newRow();
-
+	
 	/**
-	 * Same as the newRow method with the same signature.
-	 * Defined to facilitate the call from Python.
-     */
-     PointingRow* newRowEmpty();
+	  * Has the same definition than the newRow method with the same signature.
+	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
+	  */
+	PointingRow* newRowEmpty();
+
 	
 	/**
 	 * Create a new row initialized to the specified values.
@@ -282,11 +368,17 @@ public:
 	
  	 * @param timeInterval. 
 	
- 	 * @param pointingModelId. 
+ 	 * @param numSample. 
 	
- 	 * @param numPoly. 
+ 	 * @param encoder. 
+	
+ 	 * @param pointingTracking. 
+	
+ 	 * @param usePolynomials. 
 	
  	 * @param timeOrigin. 
+	
+ 	 * @param numTerm. 
 	
  	 * @param pointingDirection. 
 	
@@ -294,19 +386,18 @@ public:
 	
  	 * @param offset. 
 	
- 	 * @param encoder. 
-	
- 	 * @param pointingTracking. 
+ 	 * @param pointingModelId. 
 	
      */
-	PointingRow *newRow(Tag antennaId, ArrayTimeInterval timeInterval, int pointingModelId, int numPoly, ArrayTime timeOrigin, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, vector<Angle > encoder, bool pointingTracking);
-
+	PointingRow *newRow(Tag antennaId, ArrayTimeInterval timeInterval, int numSample, vector<vector<Angle > > encoder, bool pointingTracking, bool usePolynomials, ArrayTime timeOrigin, int numTerm, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, int pointingModelId);
+	
 	/**
-	 * Same as the newRow method with the same signature.
-	 * Defined to facilitate the call from Python.
-     */
- 	PointingRow *newRowFull(Tag antennaId, ArrayTimeInterval timeInterval, int pointingModelId, int numPoly, ArrayTime timeOrigin, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, vector<Angle > encoder, bool pointingTracking);
-     
+	  * Has the same definition than the newRow method with the same signature.
+	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
+	  */
+	PointingRow *newRowFull(Tag antennaId, ArrayTimeInterval timeInterval, int numSample, vector<vector<Angle > > encoder, bool pointingTracking, bool usePolynomials, ArrayTime timeOrigin, int numTerm, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, int pointingModelId);
+
+
 	/**
 	 * Create a new row using a copy constructor mechanism.
 	 * 
@@ -322,11 +413,11 @@ public:
 	 PointingRow *newRow(PointingRow *row); 
 
 	/**
-	 * Same as the newRow method with the same signature.
-	 * Defined to facilitate the call from Python.
-     */
- 	PointingRow *newRowCopy(PointingRow *row);
- 	 
+	  * Has the same definition than the newRow method with the same signature.
+	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
+	  */
+	 PointingRow *newRowCopy(PointingRow *row); 
+
 	//
 	// ====> Append a row to its table.
 	//
@@ -349,7 +440,11 @@ public:
 	
 	 */
 	PointingRow* add(PointingRow* x) ; 
-	
+
+ 
+
+
+
 	//
 	// ====> Methods returning rows.
 	//
@@ -388,6 +483,43 @@ public:
 	 */
  	PointingRow* getRowByKey(Tag antennaId, ArrayTimeInterval timeInterval);
 
+ 	 	
+
+
+
+	/**
+ 	 * Look up the table for a row whose all attributes 
+ 	 * are equal to the corresponding parameters of the method.
+ 	 * @return a pointer on this row if any, null otherwise.
+ 	 *
+			
+ 	 * @param antennaId.
+ 	 		
+ 	 * @param timeInterval.
+ 	 		
+ 	 * @param numSample.
+ 	 		
+ 	 * @param encoder.
+ 	 		
+ 	 * @param pointingTracking.
+ 	 		
+ 	 * @param usePolynomials.
+ 	 		
+ 	 * @param timeOrigin.
+ 	 		
+ 	 * @param numTerm.
+ 	 		
+ 	 * @param pointingDirection.
+ 	 		
+ 	 * @param target.
+ 	 		
+ 	 * @param offset.
+ 	 		
+ 	 * @param pointingModelId.
+ 	 		 
+ 	 */
+	PointingRow* lookup(Tag antennaId, ArrayTimeInterval timeInterval, int numSample, vector<vector<Angle > > encoder, bool pointingTracking, bool usePolynomials, ArrayTime timeOrigin, int numTerm, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, int pointingModelId); 
+
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
@@ -406,81 +538,86 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(PointingTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(PointingTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for Pointing (PointingTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a Pointing (PointingTable.xsd).
-	 * 
 	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
-	/**
+   /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
 	 * @returns a string containing the MIME message.
 	 * 
 	 */
 	string toMIME();
-	 
-    /** 
+	
+   /** 
      * Extracts the binary part of a MIME message and deserialize its content
 	 * to fill this with the result of the deserialization. 
 	 * @param mimeMsg the string containing the MIME message.
 	 * @throws ConversionException
 	 */
 	 void setFromMIME(const string & mimeMsg);
-
+	
 	/**
 	  * Stores a representation (binary or XML) of this table into a file.
 	  *
 	  * Depending on the boolean value of its private field fileAsBin a binary serialization  of this (fileAsBin==true)  
 	  * will be saved in a file "Pointing.bin" or an XML representation (fileAsBin==false) will be saved in a file "Pointing.xml".
 	  * The file is always written in a directory whose name is passed as a parameter.
+	 * @param directory The name of directory  where the file containing the table's representation will be saved.
 	  * 
 	  */
 	  void toFile(string directory);
 	  
 	/**
-	 * Reads and parses a collection of files as those produced by the toFile method.
+	 * Reads and parses a file containing a representation of a PointingTable as those produced  by the toFile method.
 	 * This table is populated with the result of the parsing.
-	 * @param directory The name of the directory containing the files.
+	 * @param directory The name of the directory containing the file te be read and parsed.
 	 * @throws ConversionException If any error occurs while reading the 
 	 * files in the directory or parsing them.
 	 *
 	 */
-	 void setFromFile(const string& directory);		
-	  
+	 void setFromFile(const string& directory);	
+
 private:
 
 	/**
@@ -494,10 +631,10 @@ private:
 	PointingTable (ASDM & container);
 
 	ASDM & container;
-
+	
 	bool archiveAsBin; // If true archive binary else archive XML
-	bool fileAsBin ; // If true file binary else file XML		
-		
+	bool fileAsBin ; // If true file binary else file XML	
+	
 	Entity entity;
 	
 
@@ -518,10 +655,14 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	PointingRow* checkAndAdd(PointingRow* x) throw (DuplicateKey);
+	PointingRow* checkAndAdd(PointingRow* x) ;
 
 
+	
+	
 	/**
 	 * Insert a PointingRow* in a vector of PointingRow* so that it's ordered by ascending time.
 	 *
@@ -530,6 +671,7 @@ private:
 	 *
 	 */
 	 PointingRow * insertByStartTime(PointingRow* x, vector<PointingRow* >& row);
+	  
 
 
 // A data structure to store the pointers on the table's rows.
@@ -553,7 +695,19 @@ private:
 	 */
 	 string Key(Tag antennaId) ;
 		 
-	void error() throw(ConversionException);
+		
+	
+	
+	/**
+	 * Fills the vector vout (passed by reference) with pointers on elements of vin 
+	 * whose attributes are equal to the corresponding parameters of the method.
+	 *
+	 */
+	void getByKeyNoAutoIncNoTime(vector <PointingRow*>& vin, vector <PointingRow*>& vout,  Tag antennaId);
+	
+
+
+	void error() ; //throw(ConversionException);
 
 };
 

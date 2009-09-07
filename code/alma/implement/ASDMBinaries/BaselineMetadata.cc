@@ -3,7 +3,7 @@
 using namespace std;
 #include "Error.h"
 #include "BaselineMetadata.h"
-using namespace asdmBinary;
+using namespace sdmbin;
 
 // constructors
 

@@ -42,20 +42,38 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the DataContent enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace DataContentMod
 {
+  //! DataContent.
+  //!  [ASDM.Binaries] Contents of binary data attachment
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum DataContent
   { 
-    CROSS_DATA ,
-    AUTO_DATA ,
-    ZERO_LAGS ,
-    ACTUAL_TIMES ,
-    ACTUAL_DURATIONS ,
-    WEIGHTS ,
-    FLAGS 
+    CROSS_DATA /*!< Cross-correlation data */
+     ,
+    AUTO_DATA /*!< Auto-correlation data */
+     ,
+    ZERO_LAGS /*!< Zero-lag data */
+     ,
+    ACTUAL_TIMES /*!< :Actual times (mid points of integrations) */
+     ,
+    ACTUAL_DURATIONS /*!< Actual duration of integrations */
+     ,
+    WEIGHTS /*!< Weights */
+     ,
+    FLAGS /*!< Baseband based flags */
+     
   };
   typedef DataContent &DataContent_out;
 } 
@@ -63,84 +81,101 @@ namespace DataContentMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration DataContent.
+  * 
+  */
 class CDataContent {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the DataContent enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sCROSS_DATA;
+	static const std::string& sCROSS_DATA; /*!< A const string equal to "CROSS_DATA".*/
 	
-	static const std::string& sAUTO_DATA;
+	static const std::string& sAUTO_DATA; /*!< A const string equal to "AUTO_DATA".*/
 	
-	static const std::string& sZERO_LAGS;
+	static const std::string& sZERO_LAGS; /*!< A const string equal to "ZERO_LAGS".*/
 	
-	static const std::string& sACTUAL_TIMES;
+	static const std::string& sACTUAL_TIMES; /*!< A const string equal to "ACTUAL_TIMES".*/
 	
-	static const std::string& sACTUAL_DURATIONS;
+	static const std::string& sACTUAL_DURATIONS; /*!< A const string equal to "ACTUAL_DURATIONS".*/
 	
-	static const std::string& sWEIGHTS;
+	static const std::string& sWEIGHTS; /*!< A const string equal to "WEIGHTS".*/
 	
-	static const std::string& sFLAGS;
-	
-    static const std::vector<std::string> sDataContentSet();	 
-
+	static const std::string& sFLAGS; /*!< A const string equal to "FLAGS".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in DataContentMod::DataContent.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of DataContentMod::DataContent.
+      * @return a string.
+      */
+	static std::string name(const DataContentMod::DataContent& e);
 	
-	// Explanations associated with the DataContent Enumeration.
-		
-	static const std::string& hCROSS_DATA;
-		
-	static const std::string& hAUTO_DATA;
-		
-	static const std::string& hZERO_LAGS;
-		
-	static const std::string& hACTUAL_TIMES;
-		
-	static const std::string& hACTUAL_DURATIONS;
-		
-	static const std::string& hWEIGHTS;
-		
-	static const std::string& hFLAGS;
-		
-	static const std::vector<std::string> hDataContentSet();
-   	
-
-   	// Is an integer number associated with the DataContent enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the DataContent enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  DataContent enumeration.
-	static std::string name(const DataContentMod::DataContent& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const DataContentMod::DataContent& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified DataContent enumeration.
-	static std::string help(const DataContentMod::DataContent& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a DataContent enumeration object by specifying its name.
    	static DataContentMod::DataContent newDataContent(const std::string& name);
    	
-   	// Create a DataContent enumeration object by specifying its name.
+   	/*! Return a DataContent's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a DataContentMod::DataContent's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static DataContentMod::DataContent literal(const std::string& name);
  	
-    // Create a DataContent enumeration object by specifying its position index (0 based).
+    /*! Return a DataContent's enumerator given an unsigned int.
+      * @param i the index of the enumerator in DataContentMod::DataContent.
+      * @return a DataContentMod::DataContent's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static DataContentMod::DataContent from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CDataContent();
     CDataContent(const CDataContent&);
     CDataContent& operator=(const CDataContent&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CDataContent_H*/

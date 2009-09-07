@@ -5,23 +5,23 @@ def startup():
       print """___________________________________________________________
 Available tasks:
 
-   accum         flagdata       listcal      sdlist
-   applycal      flagmanager    listhistory  sdplot    
-   bandpass      fluxscale      listobs      sdsave    
-   blcal         ft             listvis      sdscale   
-   browsetable   gaincal        makemask     sdsmooth  
-   clean         hanningsmooth  mosaic       sdstat    
-   clearcal      imcontsub      plotants     setjy     
-   clearplot     imhead         plotcal      smoothcal 
-   clearstat     immoments      plotms       specfit   
-   concat        importfits     plotxy       split     
-   deconvolve    importuvfits   sdaverage    tget      
-   exportfits    importvla      sdbaseline   uvcontsub 
-   exportuvfits  imregrid       sdcal        uvcontsub2
-   feather       imsmooth       sdcoadd      uvmodelfit
-   filecatalog   imstat         sdfit        viewer    
-   find          imval          sdflag       vishead  
-   fixvis        invert                      widefield        
+   accum         flagdata       listcal      sdplot
+   applycal      flagmanager    listhistory  sdsave    
+   bandpass      fluxscale      listobs      sdscale    
+   blcal         ft             listvis      sdsmooth   
+   browsetable   gaincal        makemask     sdstat  
+   clean         hanningsmooth  mosaic       setjy    
+   clearcal      imcontsub      plotants     smoothcal     
+   clearplot     imhead         plotcal      specfit 
+   clearstat     immoments      plotms       split   
+   concat        importfits     plotxy       tget     
+   deconvolve    importuvfits   sdaverage    uvcontsub      
+   exportfits    importvla      sdbaseline   uvcontsub2 
+   exportuvfits  imregrid       sdcal        uvmodelfit
+   feather       imsmooth       sdcoadd      viewer
+   filecatalog   imstat         sdfit        vishead    
+   find          imval          sdflag       visstat  
+   fixvis        invert         sdlist       widefield        
                 
 Additional tasks available for ALMA commissioning use
          (still alpha code as of Beta release):
@@ -106,6 +106,7 @@ def tasklist():
       print 'exportfits       imhead       plotms        plotxy'
       print 'exportuvfits     imstat       plotxy        viewer'
       print '                 vishead'
+      print '                 visstat'
       print ''
       print 'Calibration      Imaging      Modelling     Utility'
       print '-----------      -------      ---------     -------'

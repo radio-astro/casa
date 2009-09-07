@@ -65,6 +65,9 @@ MakeMask::MakeMask(QtDisplayPanel* qdp) {
   flash = false;
 
   cb = 1;
+  zIndex = 0;
+  pIndex = 0;
+  zAxis = "Frequency";
  
   setWindowTitle("FILEBOX");
   QVBoxLayout *layout = new QVBoxLayout;
@@ -76,20 +79,35 @@ MakeMask::MakeMask(QtDisplayPanel* qdp) {
   QGridLayout *tLayout = new QGridLayout;
   tGroup->setLayout(tLayout);
 
+  tGroup->setToolTip(
+      "  1. display the image;\n"
+      "  2. assign a mouse button to rectangle or polygon;\n"
+      "  3. draw a box by pressing/clicking and dragging ;\n"
+      "  4. size and shape by dragging the corner handle;\n"
+      "  5. position by dragging the inside;\n"
+      "  6. record the box by double clicking inside (while handles on);\n"
+      "  7. cancel the box by double clicking outside (while handles on);\n"
+      "  8. delete the box by double clicking inside (while handles off). "
+  );
+  
   load = new QPushButton("Load");
   tLayout->addWidget(load, 0, 0, 1, 3);
+  load->setToolTip("Load box(es) from a previously saved region file.");
   connect(load, SIGNAL(clicked()), SLOT(loadRegionFromFile()));
 
   save = new QPushButton("Save");
   tLayout->addWidget(save, 0, 3, 1, 3);
+  save->setToolTip("Save box(es) to a region file.");
   connect(save, SIGNAL(clicked()), SLOT(saveRegionToFile()));
 
   removeAll = new QPushButton("CleanUp");
   tLayout->addWidget(removeAll, 1, 0, 1, 2);
+  removeAll->setToolTip("Remove all box(es) from display.");
   connect(removeAll, SIGNAL(clicked()), SLOT(deleteAll()));
 
   showHide = new QPushButton("Hide");
   tLayout->addWidget(showHide, 1, 2, 1, 2);
+  showHide->setToolTip("Toggle box display on/off.");
   connect(showHide, SIGNAL(clicked()), SLOT(showHideAll()));
 
   color = new QComboBox;
@@ -100,15 +118,20 @@ MakeMask::MakeMask(QtDisplayPanel* qdp) {
   color->addItem("White");
   color->addItem("Black");
   tLayout->addWidget(color, 1, 4, 1, 2);
+  color->setToolTip("Change box display color.");
   connect(color, SIGNAL(currentIndexChanged(const QString&)),
                  SLOT(colorAll(const QString&)));
 
   tLayout->addWidget(new QLabel("channels"), 2, 0, 1, 2);
   chan = new QLineEdit;
+  chan->setToolTip("Set the box extend channels, example: 1,5~10\n"
+                   "Leave blank for 'all channels'");
   tLayout->addWidget(chan, 2, 2, 1, 4);
 
   tLayout->addWidget(new QLabel("correlations"), 3, 0, 1, 2);
   corr = new QLineEdit;
+  corr->setToolTip("Set the box extend correlations, example: 0,2~3\n"
+                   "Leave blank for 'all correlations'");
   tLayout->addWidget(corr, 3, 2, 1, 4);
 
 /*
@@ -186,13 +209,22 @@ MakeMask::MakeMask(QtDisplayPanel* qdp) {
                  SLOT(deleteAll()));
   connect(qdp_, SIGNAL(activate(Record)),
                 SLOT(activate(Record)) );
+  connect(qdp_, SIGNAL(animatorChange()),
+                SLOT(zPlaneChanged()) );
 
 }
   
-void MakeMask::changeAxis(String xa, String ya, String za) {
-    //cout << "change axis=" << xa << " " << ya
-   //     << " " << za << endl;
+void MakeMask::changeAxis(String xa, String ya, String za, int ha) {
+   //cout << "change axis=" << xa << " " << ya
+   //     << " " << za << " " << ha << endl;
    int ccb = 0;
+   zAxis = "";
+   pIndex = ha;
+   if (za.contains("Stoke"))   
+      zAxis = "Stokes"; 
+   if (za.contains("Frequency"))  
+      zAxis = "Frequency"; 
+
    if (xa.contains("Decl") && ya.contains("Right"))
        ccb = -1;
    if (xa.contains("Right") && ya.contains("Decl"))
@@ -202,13 +234,175 @@ void MakeMask::changeAxis(String xa, String ya, String za) {
    if (xa.contains("ongitu") && ya.contains("atitu"))
        ccb = 1;
 
+   if (zAxis != "Frequency" && zAxis != "Stokes")
+      ccb = 0;
+
    cb = ccb;
+
+   if (cb == 0) {
+      chan->setText("");
+      corr->setText("");
+   }
+   else {
+      if (zAxis == "Stokes") {
+         chan->setText(QString::number(pIndex));
+         corr->setText(QString::number(zIndex));
+      }
+      else {
+         chan->setText(QString::number(zIndex));
+         corr->setText(QString::number(pIndex));
+      }
+   }
+
    reDraw();
 }
 
 void MakeMask::activate(Record rcd) {
-   cout << "activate " << rcd << endl; 
+   if (!(this->isVisible()))
+      return;
 
+   //cout << "activate " << rcd << endl; 
+   String tool = rcd.asString("tool");
+
+   Vector<Double> wx(2);
+   wx  = -1000;
+
+   if (this->isVisible() && rcd.isDefined("world")){
+      Record world = rcd.asRecord("world");
+      Vector<Double> wld = world.asArrayDouble("wld");
+      Vector<String> units = world.asArrayString("units");
+
+      List<QtDisplayData*> DDs = qdp_->registeredDDs();
+      ListIter<QtDisplayData*> qdds(DDs);
+      if (qdds.len() > 0) {
+         qdds.toEnd();
+         qdds--;
+         QtDisplayData* qdd = qdds.getRight();
+         zIndex = qdd->dd()->activeZIndex();
+
+         if ((qdd->imageInterface())){
+            CoordinateSystem csys=(qdd->imageInterface())->coordinates();
+            //Int dirInd=csys.findCoordinate(Coordinate::DIRECTION);
+            //MDirection::Types dirType=csys.directionCoordinate(dirInd)
+            //                      .directionType(True);
+            wx(0) = Quantity(wld(0), units(0)).getValue(RegionShape::UNIT);
+            wx(1) = Quantity(wld(1), units(1)).getValue(RegionShape::UNIT);
+         }
+      }
+   }
+   //cout << "wx=" << wx << endl;
+   if (wx(0) == -1000 && wx(0) == -1000)
+      return;
+ 
+   uInt nreg = unionRegions_p.nelements();
+   for (uInt k = 0; k < nreg; ++k){
+      
+      const ImageRegion* reg = unionRegions_p[k];
+
+      if (reg == 0)
+         continue;
+
+      const WCRegion* wcreg = &(reg->asWCRegion());
+      String cmt = wcreg->comment();
+      //cout << "comment=" << cmt << endl;
+      String chan = cmt.before("polExt:");
+      chan = chan.after("chanExt:");
+      String pola = cmt.after("polExt:");
+      //cout << "chanExt=" << chan << endl;
+      //cout << "polExt=" << pola << endl;
+
+      if (!planeAllowed(chan, pola))
+         continue;
+
+      //cout << wcreg->type() << " " << tool << endl;
+      if ((wcreg->type()) == "WCBox" && tool.contains("ectangle")){
+         TableRecord boxrec=wcreg->toRecord("");
+         const RecordInterface& blcrec=boxrec.asRecord("blc");
+         const RecordInterface& trcrec=boxrec.asRecord("trc");
+         CoordinateSystem *coords;
+         coords=CoordinateSystem::restore(boxrec,"coordinates");
+         //cout << "coords rect " << coords->nCoordinates() << endl;
+         Int dirInd=coords->findCoordinate(Coordinate::DIRECTION);
+         //MDirection::Types dirType=coords->
+         //    directionCoordinate(dirInd).directionType(True);
+         //Assuming x, y axes are dirInd and dirInd+1
+         Vector<Double> blc(2);
+         Vector<Double> trc(2);
+         QuantumHolder h;
+         for (Int j=dirInd; j <= dirInd+1; ++j){
+            const RecordInterface& subRec0=blcrec.asRecord(j);
+            const RecordInterface& subRec1=trcrec.asRecord(j);
+            String error;
+            if (!h.fromRecord(error, subRec0)) {
+                throw (AipsError 
+               (String("WCBox::fromRecord - could not recover blc because ") +
+                error));
+            }
+            blc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
+            if (!h.fromRecord(error, subRec1)) {
+                throw (AipsError 
+                (String("WCBox::fromRecord - could not recover trc because ") + 
+                error));
+            }
+            trc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
+         }
+         
+         if (trc(0) <= wx(0) && wx(0) <= blc(0) &&
+             blc(1) <= wx(1) && wx(1) <= trc(1)) {
+            //cout << "activate rect:" << blc << " " << trc << endl; 
+            //active = true;
+            unionRegions_p.remove(k, True);
+            break;
+         }
+      }
+      else if((wcreg->type())== "WCPolygon" &&  tool.contains("olygon")){
+         TableRecord polyrec=wcreg->toRecord("");
+         CoordinateSystem *coords;
+         coords=CoordinateSystem::restore(polyrec,"coordinates");
+         //cout << "coords polyg " << coords->nCoordinates() << endl;
+
+         //Int dirInd=coords->findCoordinate(Coordinate::DIRECTION);
+         //MDirection::Types dirType=coords->
+         //        directionCoordinate(dirInd).directionType(True);
+         Vector<Double> x;
+         Vector<Double> y;
+         const RecordInterface& subRecord0 = polyrec.asRecord("x");
+         String error;
+         QuantumHolder h;
+         if (!h.fromRecord(error, subRecord0)) {
+            throw (AipsError 
+           (String("WCPolygon::fromRecord - could not recover X") +
+            " Quantum vector because " +error));
+         }
+         x = h.asQuantumVectorDouble().getValue(RegionShape::UNIT);
+         const RecordInterface& subRecord1 = polyrec.asRecord("y");
+         if (!h.fromRecord(error, subRecord1)) {
+            throw (AipsError 
+           (String("WCPolygon::fromRecord - could not recover Y") +
+            " Quantum vector because " +error));
+         }
+         y = h.asQuantumVectorDouble().getValue(RegionShape::UNIT);
+         Double xd = -10000;
+         Double yd = -10000;
+         Double xc = -xd;
+         Double yc = -yd;
+         for (uInt j = 0; j < x.nelements(); j++) {
+            xd = fmax(xd, x(j));
+            yd = fmax(yd, y(j));
+            xc = fmin(xc, x(j));
+            yc = fmin(yc, y(j));
+         }
+         if (xc <= wx(0) && wx(0) <= xd &&
+            yc <= wx(1) && wx(1) <= yd) {
+            //cout << "activate poly: " << x << " " << y << endl;
+            unionRegions_p.remove(k, True);
+            break;
+         }
+
+      }
+
+   }
+   reDraw();
 }
 
 void MakeMask::wcChanged(const String cType,
@@ -252,25 +446,53 @@ void MakeMask::loadRegionFromFile() {
       //cout << "unfolded:" << unfolded->toRecord("") << endl;
       //cout << "leUnion:" << leUnion.toRecord("") << endl;
 
+      if (!reg)
+         return;
+
       PtrBlock<const WCRegion* > outRegPtrs ;
       const WCRegion* rpt = &(reg->asWCRegion());
+      String cmt = rpt->comment();
+      //cout << "comment=" << cmt << endl;
       unfoldIntoSimpleRegionPtrs(outRegPtrs, rpt);
 
+      if (outRegPtrs.nelements() < 1) {
+         QMessageBox::warning(this, "FILEBOX", "The box file is empty.");
+      }
       for (uInt m = 0; m < outRegPtrs.nelements(); m++) {
          uInt nreg=unionRegions_p.nelements();
          unionRegions_p.resize(nreg + 1, True);
-         unionRegions_p[nreg] = new const ImageRegion(
-             const_cast<WCRegion*>(outRegPtrs[m]));
+         WCRegion* regM = const_cast<WCRegion*>(outRegPtrs[m]);
+         regM->setComment(cmt);
+         unionRegions_p[nreg] = new const ImageRegion(regM);
+             //const_cast<WCRegion*>(outRegPtrs[m]));
       }
     }
     catch(...) {
       cout << "Failed to read region record" << endl;
     }
+
+    if (cb == 0) {
+       chan->setText("");
+       corr->setText("");
+    }
+    else {
+       if (zAxis == "Stokes") {
+          chan->setText(QString::number(pIndex));
+          corr->setText(QString::number(zIndex));
+       }
+       else {
+          chan->setText(QString::number(zIndex));
+          corr->setText(QString::number(pIndex));
+       }
+    }
+
     reDraw();
 
 }
 
 void MakeMask::saveRegionToFile() {
+   //cout << "cb=" << cb << " zAxis=" << zAxis
+   //     << " zIndex=" << zIndex << " pIndex=" << pIndex << endl;
    QString sName = QFileDialog::getSaveFileName(this, 
                                                 tr("Save Region File"),
                                                 "./",
@@ -278,19 +500,25 @@ void MakeMask::saveRegionToFile() {
    //qDebug() << "saveRegion to" << sName;
    if (sName != ""){
       QString ext = sName.section('.', -1).toLower();
-      qDebug() << ext;
+      //qDebug() << ext;
       if (ext != "rgn") { 
          sName.append(".rgn");
       }
-      qDebug() << sName;
+      //qDebug() << sName;
     
       String regname(sName.toStdString());
-      if (unionRegions_p.nelements() > 0){
+      
+      if (unionRegions_p.nelements() < 1){
+         QMessageBox::warning(this, "FILEBOX", "There is no box to save.");
+      }
+      else {
          WCUnion leUnion(unionRegions_p);
          leUnion.setComment("chanExt:" +
                    chan->text().toStdString() +
                    "polExt:" +
                    corr->text().toStdString());
+         //cout << "chan=" << chan->text().toStdString()
+         //     << " corr=" << corr->text().toStdString() << endl;
          ImageRegion* reg = new ImageRegion(leUnion);
 
          try{
@@ -304,6 +532,20 @@ void MakeMask::saveRegionToFile() {
                "Please check pathname and directory\n" 
                "permissions.");
          }
+      }
+   }
+   if (cb == 0) {
+      chan->setText("");
+      corr->setText("");
+   }
+   else {
+      if (zAxis == "Stokes") {
+         chan->setText(QString::number(pIndex));
+         corr->setText(QString::number(zIndex));
+      }
+      else {
+         chan->setText(QString::number(zIndex));
+         corr->setText(QString::number(pIndex));
       }
    }
 }
@@ -351,7 +593,7 @@ void MakeMask::reDraw() {
       showHide->text() == "Hide" && cb != 0) {
       WCUnion leUnion(unionRegions_p);
       ImageRegion* reg = new ImageRegion(leUnion);
-      //cout << "to be save ImageRegion:\n"
+      //cout << "to be draw ImageRegion:\n"
       //     << reg->toRecord("arbitrary") << endl;
       regData = regionToShape(qdd, reg);
 
@@ -379,7 +621,6 @@ RSComposite* MakeMask::regionToShape(
         theShapes->setLineColor(color->currentText().toStdString());
         theShapes->setLineWidth(1);
 
-        //regData[regName] = theShapes;
         return theShapes;
      }
      else {
@@ -391,6 +632,16 @@ void MakeMask::addRegionsToShape(RSComposite*& theShapes,
                                         const WCRegion*& wcreg){
     //cout << "WCRegion->comment="
     //     << wcreg->comment() << endl;
+    String rest = wcreg->comment();
+    String chan = rest.before("polExt:");
+    chan = chan.after("chanExt:");
+    String pola = rest.after("polExt:");
+    //cout << "chanExt=" << chan << endl;
+    //cout << "polExt=" << pola << endl;
+
+    if (!planeAllowed(chan, pola))
+       return;
+
     if((wcreg->type()) == "WCBox"){
       TableRecord boxrec=wcreg->toRecord("");
       const RecordInterface& blcrec=boxrec.asRecord("blc");
@@ -421,6 +672,7 @@ void MakeMask::addRegionsToShape(RSComposite*& theShapes,
         }
         trc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
       }
+      
       RSRectangle *rect = (cb == -1) ?
          new RSRectangle(
              (blc(1)+trc(1))/2.0,(blc(0)+trc(0))/2.0,
@@ -428,6 +680,7 @@ void MakeMask::addRegionsToShape(RSComposite*& theShapes,
          new RSRectangle(
              (blc(0)+trc(0))/2.0,(blc(1)+trc(1))/2.0,
               fabs(trc(0)-blc(0)), fabs(trc(1)-blc(1)), dirType);
+      
       rect->setLineColor(color->currentText().toStdString());
       theShapes->addShape(rect);
 
@@ -474,16 +727,6 @@ void MakeMask::addRegionsToShape(RSComposite*& theShapes,
       }
 
     }
-    String rest = wcreg->comment();
-    String chan = rest.before("polExt:");
-    chan = chan.after("chanExt:");
-    String pola = rest.after("polExt:");
-    //cout << "chanExt=" << chan << endl;
-    //cout << "polExt=" << pola << endl;
-    Attribute oldState("chan", chan);
-    Attribute newState("pola", pola);
-    theShapes->setRestriction(oldState);
-    theShapes->setRestriction(newState);
 
   }
 
@@ -558,6 +801,107 @@ void MakeMask::unfoldIntoSimpleRegionPtrs(PtrBlock<const WCRegion*>& outRegPtrs,
          unfoldIntoSimpleRegionPtrs(outRegPtrs, regPtrs[j]);
       }
    }
+}
+
+bool MakeMask::planeAllowed(String xa, String ya) {
+   xa.gsub(" ", "");
+   ya.gsub(" ", "");
+
+   bool allowc = false;
+   bool allowp = false;
+   //cout << "xa=" << xa << " ya=" << ya << endl;
+   if (xa.length() == 0)
+      allowc = true;
+   if (ya.length() == 0)
+      allowp = true;
+   if (allowc && allowp)
+      return true;
+
+   int idx = zIndex;
+   int ipx = pIndex;
+   if (zAxis == "Stokes") {
+      ipx = zIndex;
+      idx = pIndex;
+   }
+   //cout << "idx=" << idx << " ipx=" << ipx << endl;
+   String w[10];
+   if (!allowc) {
+      Int nw = split(xa, w, 10, ',');
+      for (Int k = 0; k < nw; k++) {
+         String x[2];
+         Int nx = split(w[k], x, 2, '~');
+         if (nx == 2 &&
+             idx >= atoi(x[0].c_str()) &&
+             idx <= atoi(x[1].c_str())) {
+            allowc = true;
+            break;
+         }
+         if (nx == 1 && atoi(x[0].c_str()) == idx) {
+            allowc = true;
+            break;
+         }
+      }
+   }
+   if (!allowp) {
+      Int nw = split(ya, w, 10, ',');
+      for (Int k = 0; k < nw; k++) {
+         String x[2];
+         Int nx = split(w[k], x, 2, '~');
+         if (nx == 2 &&
+             ipx >= atoi(x[0].c_str()) &&
+             ipx <= atoi(x[1].c_str())) {
+            allowp = true;
+            break;
+         }
+         if (nx == 1 && atoi(x[0].c_str()) == ipx) {
+            allowp = true;
+            break;
+         }
+      }
+   }
+   //cout << "allowp=" << allowp << " allowc=" << allowc << endl;
+   return (allowp && allowc);
+}
+
+void MakeMask::zPlaneChanged(){
+   List<QtDisplayData*> DDs = qdp_->registeredDDs();
+   ListIter<QtDisplayData*> qdds(DDs);
+   if (qdds.len() > 0) {
+      qdds.toEnd();
+      qdds--;
+      QtDisplayData* qdd = qdds.getRight();
+      zIndex = qdd->dd()->activeZIndex();
+   }
+   if (cb == 0) {
+      chan->setText("");
+      corr->setText("");
+   }
+   else {
+      if (zAxis == "Stokes") {
+         chan->setText(QString::number(pIndex));
+         corr->setText(QString::number(zIndex));
+      }
+      else {
+         chan->setText(QString::number(zIndex));
+         corr->setText(QString::number(pIndex));
+      }
+   }
+   reDraw();
+}
+
+void MakeMask::pPlaneChanged(){
+   //List<QtDisplayData*> DDs = qdp_->registeredDDs();
+   //ListIter<QtDisplayData*> qdds(DDs);
+   //if (qdds.len() > 0) {
+   //   qdds.toEnd();
+   //   qdds--;
+   //   QtDisplayData* qdd = qdds.getRight();
+      //zIndex = qdd->dd()->activeZIndex();
+   //  pIndex = 0;
+   //}
+   cout << "pchanged" << endl;
+   pIndex = 0;
+   reDraw();
 }
 
 void MakeMask::doIt() {

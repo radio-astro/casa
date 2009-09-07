@@ -80,10 +80,10 @@ using namespace enumerations;
 	
 
 	
+
+	
 #include "CStationType.h"
 using namespace StationTypeMod;
-	
-
 	
 
 
@@ -109,7 +109,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Station.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -121,7 +121,7 @@ namespace asdm {
 /**
  * The StationRow class is a row of a StationTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class StationRow {
@@ -148,8 +148,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct StationRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (StationRowIDL x) throw(ConversionException);
+	void setFromIDL (StationRowIDL x) ;
 #endif
 	
 	/**
@@ -162,13 +163,47 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the StationTable to which the row built by deserialization will be parented.
+	  */
+	 static StationRow* fromBin(EndianISStream& eiss, StationTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
+	
+	// ===> Attribute stationId
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get stationId.
+ 	 * @return stationId as Tag
+ 	 */
+ 	Tag getStationId() const;
+	
+ 
+ 	
+ 	
+	
+	
+
+
 	
 	// ===> Attribute name
 	
@@ -259,26 +294,6 @@ public:
 	
 
 
-	
-	// ===> Attribute stationId
-	
-	
-	
-
-	
- 	/**
- 	 * Get stationId.
- 	 * @return stationId as Tag
- 	 */
- 	Tag getStationId() const;
-	
- 
- 	
- 	
-	
-	
-
-
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -360,6 +375,29 @@ private:
 	////////////////////////////////
 	
 	
+	// ===> Attribute stationId
+	
+	
+
+	Tag stationId;
+
+	
+	
+ 	
+ 	/**
+ 	 * Set stationId with the specified Tag value.
+ 	 * @param stationId The Tag value to which stationId is to be set.
+		
+ 		
+			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setStationId (Tag stationId);
+  		
+	
+
+	
 	// ===> Attribute name
 	
 	
@@ -391,29 +429,6 @@ private:
 	
 	
  	
-
-	
-	// ===> Attribute stationId
-	
-	
-
-	Tag stationId;
-
-	
-	
- 	
- 	/**
- 	 * Set stationId with the specified Tag value.
- 	 * @param stationId The Tag value to which stationId is to be set.
-		
- 		
-			
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 		
- 	 */
- 	void setStationId (Tag stationId);
-  		
-	
 
 	////////////////////////////////
 	// Extrinsic Table Attributes //

@@ -173,6 +173,32 @@ namespace asdm {
 	
 
 	
+  		
+		
+		x->directionCodeExists = directionCodeExists;
+		
+		
+			
+				
+		x->directionCode = directionCode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->directionEquinoxExists = directionEquinoxExists;
+		
+		
+			
+		x->directionEquinox = directionEquinox.toIDLArrayTime();
+			
+		
+	
+
+	
 	
 		
 		
@@ -187,7 +213,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct SwitchCycleRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void SwitchCycleRow::setFromIDL (SwitchCycleRowIDL x) throw(ConversionException) {
+	void SwitchCycleRow::setFromIDL (SwitchCycleRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -278,10 +304,40 @@ namespace asdm {
 	
 
 	
+		
+		directionCodeExists = x.directionCodeExists;
+		if (x.directionCodeExists) {
+		
+		
+			
+		setDirectionCode(x.directionCode);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		directionEquinoxExists = x.directionEquinoxExists;
+		if (x.directionEquinoxExists) {
+		
+		
+			
+		setDirectionEquinox(ArrayTime (x.directionEquinox));
+			
+ 		
+		
+		}
+		
+	
+
+	
 	
 		
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"SwitchCycle");
+			throw ConversionException (err.getMessage(),"SwitchCycle");
 		}
 	}
 #endif
@@ -344,6 +400,30 @@ namespace asdm {
 		
 	
 
+  	
+ 		
+		if (directionCodeExists) {
+		
+		
+			buf.append(EnumerationParser::toXML("directionCode", directionCode));
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (directionEquinoxExists) {
+		
+		
+		Parser::toXML(directionEquinox, "directionEquinox", buf);
+		
+		
+		}
+		
+	
+
 	
 	
 		
@@ -357,7 +437,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void SwitchCycleRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void SwitchCycleRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -420,11 +500,226 @@ namespace asdm {
 	
 
 	
+		
+	if (row.isStr("<directionCode>")) {
+		
+		
+		
+		directionCode = EnumerationParser::getDirectionReferenceCode("directionCode","SwitchCycle",rowDoc);
+		
+		
+		
+		directionCodeExists = true;
+	}
+		
+	
+
+	
+  		
+        if (row.isStr("<directionEquinox>")) {
+			
+	  		setDirectionEquinox(Parser::getArrayTime("directionEquinox","SwitchCycle",rowDoc));
+			
+		}
+ 		
+	
+
+	
 	
 		
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"SwitchCycle");
 		}
+	}
+	
+	void SwitchCycleRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	switchCycleId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numStep);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) weightArray.size());
+		for (unsigned int i = 0; i < weightArray.size(); i++)
+				
+			eoss.writeFloat(weightArray.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+	Angle::toBin(dirOffsetArray, eoss);
+		
+	
+
+	
+	
+		
+	Frequency::toBin(freqOffsetArray, eoss);
+		
+	
+
+	
+	
+		
+	Interval::toBin(stepDurationArray, eoss);
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(directionCodeExists);
+	if (directionCodeExists) {
+	
+	
+	
+		
+					
+			eoss.writeInt(directionCode);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(directionEquinoxExists);
+	if (directionEquinoxExists) {
+	
+	
+	
+		
+	directionEquinox.toBin(eoss);
+		
+	
+
+	}
+
+	}
+	
+	SwitchCycleRow* SwitchCycleRow::fromBin(EndianISStream& eiss, SwitchCycleTable& table) {
+		SwitchCycleRow* row = new  SwitchCycleRow(table);
+		
+		
+		
+	
+		
+		
+		row->switchCycleId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numStep =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->weightArray.clear();
+		
+		unsigned int weightArrayDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < weightArrayDim1; i++)
+			
+			row->weightArray.push_back(eiss.readFloat());
+			
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->dirOffsetArray = Angle::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->freqOffsetArray = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->stepDurationArray = Interval::from1DBin(eiss);	
+	
+
+		
+	
+
+		
+		
+		
+	row->directionCodeExists = eiss.readBoolean();
+	if (row->directionCodeExists) {
+		
+	
+	
+		
+			
+		row->directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
+			
+		
+	
+
+	}
+
+	row->directionEquinoxExists = eiss.readBoolean();
+	if (row->directionEquinoxExists) {
+		
+	
+		
+		
+		row->directionEquinox =  ArrayTime::fromBin(eiss);
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -628,6 +923,100 @@ namespace asdm {
 	
 
 	
+	/**
+	 * The attribute directionCode is optional. Return true if this attribute exists.
+	 * @return true if and only if the directionCode attribute exists. 
+	 */
+	bool SwitchCycleRow::isDirectionCodeExists() const {
+		return directionCodeExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get directionCode, which is optional.
+ 	 * @return directionCode as DirectionReferenceCodeMod::DirectionReferenceCode
+ 	 * @throw IllegalAccessException If directionCode does not exist.
+ 	 */
+ 	DirectionReferenceCodeMod::DirectionReferenceCode SwitchCycleRow::getDirectionCode() const  {
+		if (!directionCodeExists) {
+			throw IllegalAccessException("directionCode", "SwitchCycle");
+		}
+	
+  		return directionCode;
+ 	}
+
+ 	/**
+ 	 * Set directionCode with the specified DirectionReferenceCodeMod::DirectionReferenceCode.
+ 	 * @param directionCode The DirectionReferenceCodeMod::DirectionReferenceCode value to which directionCode is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SwitchCycleRow::setDirectionCode (DirectionReferenceCodeMod::DirectionReferenceCode directionCode) {
+	
+ 		this->directionCode = directionCode;
+	
+		directionCodeExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark directionCode, which is an optional field, as non-existent.
+	 */
+	void SwitchCycleRow::clearDirectionCode () {
+		directionCodeExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute directionEquinox is optional. Return true if this attribute exists.
+	 * @return true if and only if the directionEquinox attribute exists. 
+	 */
+	bool SwitchCycleRow::isDirectionEquinoxExists() const {
+		return directionEquinoxExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get directionEquinox, which is optional.
+ 	 * @return directionEquinox as ArrayTime
+ 	 * @throw IllegalAccessException If directionEquinox does not exist.
+ 	 */
+ 	ArrayTime SwitchCycleRow::getDirectionEquinox() const  {
+		if (!directionEquinoxExists) {
+			throw IllegalAccessException("directionEquinox", "SwitchCycle");
+		}
+	
+  		return directionEquinox;
+ 	}
+
+ 	/**
+ 	 * Set directionEquinox with the specified ArrayTime.
+ 	 * @param directionEquinox The ArrayTime value to which directionEquinox is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SwitchCycleRow::setDirectionEquinox (ArrayTime directionEquinox) {
+	
+ 		this->directionEquinox = directionEquinox;
+	
+		directionEquinoxExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark directionEquinox, which is an optional field, as non-existent.
+	 */
+	void SwitchCycleRow::clearDirectionEquinox () {
+		directionEquinoxExists = false;
+	}
+	
+
+	
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -662,6 +1051,14 @@ namespace asdm {
 	
 
 	
+		directionCodeExists = false;
+	
+
+	
+		directionEquinoxExists = false;
+	
+
+	
 	
 	
 	
@@ -673,6 +1070,13 @@ namespace asdm {
 
 	
 
+	
+
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+directionCode = CDirectionReferenceCode::from_int(0);
 	
 
 	
@@ -697,6 +1101,14 @@ namespace asdm {
 
 	
 
+	
+		directionCodeExists = false;
+	
+
+	
+		directionEquinoxExists = false;
+	
+
 			
 		}
 		else {
@@ -719,6 +1131,20 @@ namespace asdm {
 		
 		
 		
+		
+		if (row.directionCodeExists) {
+			directionCode = row.directionCode;		
+			directionCodeExists = true;
+		}
+		else
+			directionCodeExists = false;
+		
+		if (row.directionEquinoxExists) {
+			directionEquinox = row.directionEquinox;		
+			directionEquinoxExists = true;
+		}
+		else
+			directionEquinoxExists = false;
 		
 		}	
 	}

@@ -84,6 +84,13 @@ using namespace enumerations;
 	
 
 	
+
+	
+#include "CReceiverBand.h"
+using namespace ReceiverBandMod;
+	
+
+	
 #include "CSBType.h"
 using namespace SBTypeMod;
 	
@@ -106,6 +113,9 @@ using namespace SBTypeMod;
 
 	
 
+	
+#include "CDirectionReferenceCode.h"
+using namespace DirectionReferenceCodeMod;
 	
 
 	
@@ -133,7 +143,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file SBSummary.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -145,7 +155,7 @@ namespace asdm {
 /**
  * The SBSummaryRow class is a row of a SBSummaryTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class SBSummaryRow {
@@ -172,8 +182,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct SBSummaryRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (SBSummaryRowIDL x) throw(ConversionException);
+	void setFromIDL (SBSummaryRowIDL x) ;
 #endif
 	
 	/**
@@ -186,39 +197,71 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the SBSummaryTable to which the row built by deserialization will be parented.
+	  */
+	 static SBSummaryRow* fromBin(EndianISStream& eiss, SBSummaryTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
 	
-	// ===> Attribute sbId
+	// ===> Attribute sBSummaryId
 	
 	
 	
 
 	
  	/**
- 	 * Get sbId.
- 	 * @return sbId as EntityRef
+ 	 * Get sBSummaryId.
+ 	 * @return sBSummaryId as Tag
  	 */
- 	EntityRef getSbId() const;
+ 	Tag getSBSummaryId() const;
+	
+ 
+ 	
+ 	
+	
+	
+
+
+	
+	// ===> Attribute sbSummaryUID
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get sbSummaryUID.
+ 	 * @return sbSummaryUID as EntityRef
+ 	 */
+ 	EntityRef getSbSummaryUID() const;
 	
  
  	
  	
  	/**
- 	 * Set sbId with the specified EntityRef.
- 	 * @param sbId The EntityRef value to which sbId is to be set.
+ 	 * Set sbSummaryUID with the specified EntityRef.
+ 	 * @param sbSummaryUID The EntityRef value to which sbSummaryUID is to be set.
  	 
  		
  			
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 		
  	 */
- 	void setSbId (EntityRef sbId);
+ 	void setSbSummaryUID (EntityRef sbSummaryUID);
   		
 	
 	
@@ -226,29 +269,29 @@ public:
 
 
 	
-	// ===> Attribute projectId
+	// ===> Attribute projectUID
 	
 	
 	
 
 	
  	/**
- 	 * Get projectId.
- 	 * @return projectId as EntityRef
+ 	 * Get projectUID.
+ 	 * @return projectUID as EntityRef
  	 */
- 	EntityRef getProjectId() const;
+ 	EntityRef getProjectUID() const;
 	
  
  	
  	
  	/**
- 	 * Set projectId with the specified EntityRef.
- 	 * @param projectId The EntityRef value to which projectId is to be set.
+ 	 * Set projectUID with the specified EntityRef.
+ 	 * @param projectUID The EntityRef value to which projectUID is to be set.
  	 
  		
  			
  	 */
- 	void setProjectId (EntityRef projectId);
+ 	void setProjectUID (EntityRef projectUID);
   		
 	
 	
@@ -286,29 +329,59 @@ public:
 
 
 	
-	// ===> Attribute sbIntent
+	// ===> Attribute frequency
 	
 	
 	
 
 	
  	/**
- 	 * Get sbIntent.
- 	 * @return sbIntent as string
+ 	 * Get frequency.
+ 	 * @return frequency as double
  	 */
- 	string getSbIntent() const;
+ 	double getFrequency() const;
 	
  
  	
  	
  	/**
- 	 * Set sbIntent with the specified string.
- 	 * @param sbIntent The string value to which sbIntent is to be set.
+ 	 * Set frequency with the specified double.
+ 	 * @param frequency The double value to which frequency is to be set.
  	 
  		
  			
  	 */
- 	void setSbIntent (string sbIntent);
+ 	void setFrequency (double frequency);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute frequencyBand
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get frequencyBand.
+ 	 * @return frequencyBand as ReceiverBandMod::ReceiverBand
+ 	 */
+ 	ReceiverBandMod::ReceiverBand getFrequencyBand() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set frequencyBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param frequencyBand The ReceiverBandMod::ReceiverBand value to which frequencyBand is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setFrequencyBand (ReceiverBandMod::ReceiverBand frequencyBand);
   		
 	
 	
@@ -376,29 +449,29 @@ public:
 
 
 	
-	// ===> Attribute numScan
+	// ===> Attribute centerDirection
 	
 	
 	
 
 	
  	/**
- 	 * Get numScan.
- 	 * @return numScan as int
+ 	 * Get centerDirection.
+ 	 * @return centerDirection as vector<Angle >
  	 */
- 	int getNumScan() const;
+ 	vector<Angle > getCenterDirection() const;
 	
  
  	
  	
  	/**
- 	 * Set numScan with the specified int.
- 	 * @param numScan The int value to which numScan is to be set.
+ 	 * Set centerDirection with the specified vector<Angle >.
+ 	 * @param centerDirection The vector<Angle > value to which centerDirection is to be set.
  	 
  		
  			
  	 */
- 	void setNumScan (int numScan);
+ 	void setCenterDirection (vector<Angle > centerDirection);
   		
 	
 	
@@ -406,29 +479,59 @@ public:
 
 
 	
-	// ===> Attribute scanIntent
+	// ===> Attribute numObservingMode
 	
 	
 	
 
 	
  	/**
- 	 * Get scanIntent.
- 	 * @return scanIntent as vector<string >
+ 	 * Get numObservingMode.
+ 	 * @return numObservingMode as int
  	 */
- 	vector<string > getScanIntent() const;
+ 	int getNumObservingMode() const;
 	
  
  	
  	
  	/**
- 	 * Set scanIntent with the specified vector<string >.
- 	 * @param scanIntent The vector<string > value to which scanIntent is to be set.
+ 	 * Set numObservingMode with the specified int.
+ 	 * @param numObservingMode The int value to which numObservingMode is to be set.
  	 
  		
  			
  	 */
- 	void setScanIntent (vector<string > scanIntent);
+ 	void setNumObservingMode (int numObservingMode);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute observingMode
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get observingMode.
+ 	 * @return observingMode as vector<string >
+ 	 */
+ 	vector<string > getObservingMode() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set observingMode with the specified vector<string >.
+ 	 * @param observingMode The vector<string > value to which observingMode is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setObservingMode (vector<string > observingMode);
   		
 	
 	
@@ -466,29 +569,29 @@ public:
 
 
 	
-	// ===> Attribute weatherConstraint
+	// ===> Attribute numScienceGoal
 	
 	
 	
 
 	
  	/**
- 	 * Get weatherConstraint.
- 	 * @return weatherConstraint as vector<string >
+ 	 * Get numScienceGoal.
+ 	 * @return numScienceGoal as int
  	 */
- 	vector<string > getWeatherConstraint() const;
+ 	int getNumScienceGoal() const;
 	
  
  	
  	
  	/**
- 	 * Set weatherConstraint with the specified vector<string >.
- 	 * @param weatherConstraint The vector<string > value to which weatherConstraint is to be set.
+ 	 * Set numScienceGoal with the specified int.
+ 	 * @param numScienceGoal The int value to which numScienceGoal is to be set.
  	 
  		
  			
  	 */
- 	void setWeatherConstraint (vector<string > weatherConstraint);
+ 	void setNumScienceGoal (int numScienceGoal);
   		
 	
 	
@@ -526,29 +629,29 @@ public:
 
 
 	
-	// ===> Attribute raCenter
+	// ===> Attribute numWeatherConstraint
 	
 	
 	
 
 	
  	/**
- 	 * Get raCenter.
- 	 * @return raCenter as double
+ 	 * Get numWeatherConstraint.
+ 	 * @return numWeatherConstraint as int
  	 */
- 	double getRaCenter() const;
+ 	int getNumWeatherConstraint() const;
 	
  
  	
  	
  	/**
- 	 * Set raCenter with the specified double.
- 	 * @param raCenter The double value to which raCenter is to be set.
+ 	 * Set numWeatherConstraint with the specified int.
+ 	 * @param numWeatherConstraint The int value to which numWeatherConstraint is to be set.
  	 
  		
  			
  	 */
- 	void setRaCenter (double raCenter);
+ 	void setNumWeatherConstraint (int numWeatherConstraint);
   		
 	
 	
@@ -556,29 +659,29 @@ public:
 
 
 	
-	// ===> Attribute decCenter
+	// ===> Attribute weatherConstraint
 	
 	
 	
 
 	
  	/**
- 	 * Get decCenter.
- 	 * @return decCenter as double
+ 	 * Get weatherConstraint.
+ 	 * @return weatherConstraint as vector<string >
  	 */
- 	double getDecCenter() const;
+ 	vector<string > getWeatherConstraint() const;
 	
  
  	
  	
  	/**
- 	 * Set decCenter with the specified double.
- 	 * @param decCenter The double value to which decCenter is to be set.
+ 	 * Set weatherConstraint with the specified vector<string >.
+ 	 * @param weatherConstraint The vector<string > value to which weatherConstraint is to be set.
  	 
  		
  			
  	 */
- 	void setDecCenter (double decCenter);
+ 	void setWeatherConstraint (vector<string > weatherConstraint);
   		
 	
 	
@@ -586,92 +689,84 @@ public:
 
 
 	
-	// ===> Attribute frequency
+	// ===> Attribute centerDirectionCode, which is optional
 	
 	
+	
+	/**
+	 * The attribute centerDirectionCode is optional. Return true if this attribute exists.
+	 * @return true if and only if the centerDirectionCode attribute exists. 
+	 */
+	bool isCenterDirectionCodeExists() const;
 	
 
 	
  	/**
- 	 * Get frequency.
- 	 * @return frequency as double
+ 	 * Get centerDirectionCode, which is optional.
+ 	 * @return centerDirectionCode as DirectionReferenceCodeMod::DirectionReferenceCode
+ 	 * @throws IllegalAccessException If centerDirectionCode does not exist.
  	 */
- 	double getFrequency() const;
+ 	DirectionReferenceCodeMod::DirectionReferenceCode getCenterDirectionCode() const;
 	
  
  	
  	
  	/**
- 	 * Set frequency with the specified double.
- 	 * @param frequency The double value to which frequency is to be set.
+ 	 * Set centerDirectionCode with the specified DirectionReferenceCodeMod::DirectionReferenceCode.
+ 	 * @param centerDirectionCode The DirectionReferenceCodeMod::DirectionReferenceCode value to which centerDirectionCode is to be set.
  	 
  		
- 			
  	 */
- 	void setFrequency (double frequency);
-  		
+ 	void setCenterDirectionCode (DirectionReferenceCodeMod::DirectionReferenceCode centerDirectionCode);
+		
 	
 	
+	
+	/**
+	 * Mark centerDirectionCode, which is an optional field, as non-existent.
+	 */
+	void clearCenterDirectionCode ();
 	
 
 
 	
-	// ===> Attribute frequencyBand
+	// ===> Attribute centerDirectionEquinox, which is optional
 	
 	
+	
+	/**
+	 * The attribute centerDirectionEquinox is optional. Return true if this attribute exists.
+	 * @return true if and only if the centerDirectionEquinox attribute exists. 
+	 */
+	bool isCenterDirectionEquinoxExists() const;
 	
 
 	
  	/**
- 	 * Get frequencyBand.
- 	 * @return frequencyBand as string
+ 	 * Get centerDirectionEquinox, which is optional.
+ 	 * @return centerDirectionEquinox as ArrayTime
+ 	 * @throws IllegalAccessException If centerDirectionEquinox does not exist.
  	 */
- 	string getFrequencyBand() const;
+ 	ArrayTime getCenterDirectionEquinox() const;
 	
  
  	
  	
  	/**
- 	 * Set frequencyBand with the specified string.
- 	 * @param frequencyBand The string value to which frequencyBand is to be set.
+ 	 * Set centerDirectionEquinox with the specified ArrayTime.
+ 	 * @param centerDirectionEquinox The ArrayTime value to which centerDirectionEquinox is to be set.
  	 
  		
- 			
  	 */
- 	void setFrequencyBand (string frequencyBand);
-  		
+ 	void setCenterDirectionEquinox (ArrayTime centerDirectionEquinox);
+		
 	
 	
 	
-
-
-	
-	// ===> Attribute observingMode
-	
-	
-	
-
-	
- 	/**
- 	 * Get observingMode.
- 	 * @return observingMode as vector<string >
- 	 */
- 	vector<string > getObservingMode() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set observingMode with the specified vector<string >.
- 	 * @param observingMode The vector<string > value to which observingMode is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setObservingMode (vector<string > observingMode);
-  		
-	
-	
+	/**
+	 * Mark centerDirectionEquinox, which is an optional field, as non-existent.
+	 */
+	void clearCenterDirectionEquinox ();
 	
 
 
@@ -690,12 +785,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this SBSummaryRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(EntityRef sbId, EntityRef projectId, EntityRef obsUnitSetId, string sbIntent, SBTypeMod::SBType sbType, Interval sbDuration, int numScan, vector<string > scanIntent, int numberRepeats, vector<string > weatherConstraint, vector<string > scienceGoal, double raCenter, double decCenter, double frequency, string frequencyBand, vector<string > observingMode);
+	bool compareNoAutoInc(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint);
 	
 	
 
 	
-	bool compareRequiredValue(EntityRef projectId, EntityRef obsUnitSetId, string sbIntent, SBTypeMod::SBType sbType, Interval sbDuration, int numScan, vector<string > scanIntent, int numberRepeats, vector<string > weatherConstraint, vector<string > scienceGoal, double raCenter, double decCenter, double frequency, string frequencyBand, vector<string > observingMode); 
+	bool compareRequiredValue(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint); 
 		 
 	
 	/**
@@ -756,22 +851,45 @@ private:
 	////////////////////////////////
 	
 	
-	// ===> Attribute sbId
+	// ===> Attribute sBSummaryId
 	
 	
 
-	EntityRef sbId;
+	Tag sBSummaryId;
+
+	
+	
+ 	
+ 	/**
+ 	 * Set sBSummaryId with the specified Tag value.
+ 	 * @param sBSummaryId The Tag value to which sBSummaryId is to be set.
+		
+ 		
+			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setSBSummaryId (Tag sBSummaryId);
+  		
+	
+
+	
+	// ===> Attribute sbSummaryUID
+	
+	
+
+	EntityRef sbSummaryUID;
 
 	
 	
  	
 
 	
-	// ===> Attribute projectId
+	// ===> Attribute projectUID
 	
 	
 
-	EntityRef projectId;
+	EntityRef projectUID;
 
 	
 	
@@ -789,11 +907,22 @@ private:
  	
 
 	
-	// ===> Attribute sbIntent
+	// ===> Attribute frequency
 	
 	
 
-	string sbIntent;
+	double frequency;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute frequencyBand
+	
+	
+
+	ReceiverBandMod::ReceiverBand frequencyBand;
 
 	
 	
@@ -822,22 +951,33 @@ private:
  	
 
 	
-	// ===> Attribute numScan
+	// ===> Attribute centerDirection
 	
 	
 
-	int numScan;
+	vector<Angle > centerDirection;
 
 	
 	
  	
 
 	
-	// ===> Attribute scanIntent
+	// ===> Attribute numObservingMode
 	
 	
 
-	vector<string > scanIntent;
+	int numObservingMode;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute observingMode
+	
+	
+
+	vector<string > observingMode;
 
 	
 	
@@ -855,11 +995,11 @@ private:
  	
 
 	
-	// ===> Attribute weatherConstraint
+	// ===> Attribute numScienceGoal
 	
 	
 
-	vector<string > weatherConstraint;
+	int numScienceGoal;
 
 	
 	
@@ -877,55 +1017,48 @@ private:
  	
 
 	
-	// ===> Attribute raCenter
+	// ===> Attribute numWeatherConstraint
 	
 	
 
-	double raCenter;
-
-	
-	
- 	
-
-	
-	// ===> Attribute decCenter
-	
-	
-
-	double decCenter;
+	int numWeatherConstraint;
 
 	
 	
  	
 
 	
-	// ===> Attribute frequency
+	// ===> Attribute weatherConstraint
 	
 	
 
-	double frequency;
-
-	
-	
- 	
-
-	
-	// ===> Attribute frequencyBand
-	
-	
-
-	string frequencyBand;
+	vector<string > weatherConstraint;
 
 	
 	
  	
 
 	
-	// ===> Attribute observingMode
+	// ===> Attribute centerDirectionCode, which is optional
 	
+	
+	bool centerDirectionCodeExists;
 	
 
-	vector<string > observingMode;
+	DirectionReferenceCodeMod::DirectionReferenceCode centerDirectionCode;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute centerDirectionEquinox, which is optional
+	
+	
+	bool centerDirectionEquinoxExists;
+	
+
+	ArrayTime centerDirectionEquinox;
 
 	
 	

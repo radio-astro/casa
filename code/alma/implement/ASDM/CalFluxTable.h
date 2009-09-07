@@ -85,21 +85,6 @@ using namespace enumerations;
 	
 
 	
-#include "CStokesParameter.h"
-using namespace StokesParameterMod;
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
 
 	
 #include "CFluxCalibrationMethod.h"
@@ -109,10 +94,32 @@ using namespace FluxCalibrationMethodMod;
 	
 
 	
-#include "CSourceModel.h"
-using namespace SourceModelMod;
+
+	
+#include "CStokesParameter.h"
+using namespace StokesParameterMod;
 	
 
+	
+
+	
+#include "CDirectionReferenceCode.h"
+using namespace DirectionReferenceCodeMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+#include "CSourceModel.h"
+using namespace SourceModelMod;
 	
 
 
@@ -155,135 +162,172 @@ class ASDM;
 class CalFluxRow;
 /**
  * The CalFluxTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Result of flux calibration performed on-line by TelCal. Atmospheric absorption is corrected for. No ionosphere correction has been applied.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalFlux </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> sourceName </TD>
+ 		 
+ * <TD> string</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the name of the source. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> sourceName </TD> 
- * <TD> string </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalReduction Table. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> numFrequency </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numStokes </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> startValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the end time of result validity period. </TD>
  * </TR>
 	
  * <TR>
- * <TD> stokes </TD> 
- * <TD> vector<StokesParameterMod::StokesParameter > </TD>
- * <TD>  numStokes </TD> 
+ * <TD> numFrequencyRanges </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of frequency ranges. </TD>
  * </TR>
 	
  * <TR>
- * <TD> flux </TD> 
- * <TD> vector<vector<double > > </TD>
- * <TD>  numFrequency, numStokes </TD> 
+ * <TD> numStokes </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of Stokes parameters. </TD>
  * </TR>
 	
  * <TR>
- * <TD> fluxError </TD> 
- * <TD> vector<vector<double > > </TD>
- * <TD>  numFrequency, numStokes </TD> 
+ * <TD> frequencyRanges </TD> 
+ * <TD> vector<vector<Frequency > > </TD>
+ * <TD>  numFrequencyRanges, 2 </TD> 
+ * <TD> &nbsp;the frequency ranges (one pair of values per range). </TD>
  * </TR>
 	
  * <TR>
  * <TD> fluxMethod </TD> 
  * <TD> FluxCalibrationMethodMod::FluxCalibrationMethod </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the flux determination method. </TD>
  * </TR>
 	
  * <TR>
- * <TD> frequencyRange </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>  numFrequency, 2 </TD> 
+ * <TD> flux </TD> 
+ * <TD> vector<vector<double > > </TD>
+ * <TD>  numStokes, numFrequencyRanges </TD> 
+ * <TD> &nbsp;the flux densities (one value par Stokes parameter per frequency range). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> fluxError </TD> 
+ * <TD> vector<vector<double > > </TD>
+ * <TD>  numStokes, numFrequencyRanges </TD> 
+ * <TD> &nbsp;the uncertainties on the flux densities (one value per Stokes parameter per frequency range). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> stokes </TD> 
+ * <TD> vector<StokesParameterMod::StokesParameter > </TD>
+ * <TD>  numStokes </TD> 
+ * <TD> &nbsp;the Stokes parameter. </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
-	
- * <TR>
- * <TD> size </TD> 
- * <TD> vector<vector<vector<Angle > > > </TD>
- * <TD>  numFrequency, numStokes, 2  </TD>
- * </TR>
-	
- * <TR>
- * <TD> sizeError </TD> 
- * <TD> vector<vector<vector<Angle > > > </TD>
- * <TD>  numFrequency, numStokes, 2  </TD>
- * </TR>
-	
- * <TR>
- * <TD> PA </TD> 
- * <TD> vector<vector<Angle > > </TD>
- * <TD>  numFrequency, numStokes  </TD>
- * </TR>
-	
- * <TR>
- * <TD> PAError </TD> 
- * <TD> vector<vector<Angle > > </TD>
- * <TD>  numFrequency, numStokes  </TD>
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> direction </TD> 
  * <TD> vector<Angle > </TD>
  * <TD>  2  </TD>
+ * <TD>&nbsp; the direction of the source. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> directionCode </TD> 
+ * <TD> DirectionReferenceCodeMod::DirectionReferenceCode </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; identifies the reference frame of the source's direction. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> directionEquinox </TD> 
+ * <TD> Angle </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; equinox associated with the reference frame of the source's direction. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> PA </TD> 
+ * <TD> vector<vector<Angle > > </TD>
+ * <TD>  numStokes, numFrequencyRanges  </TD>
+ * <TD>&nbsp; the position's angles for the source model (one value per Stokes parameter per frequency range). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> PAError </TD> 
+ * <TD> vector<vector<Angle > > </TD>
+ * <TD>  numStokes, numFrequencyRanges  </TD>
+ * <TD>&nbsp; the uncertainties on the position's angles (one value per Stokes parameter per frequency range). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> size </TD> 
+ * <TD> vector<vector<vector<Angle > > > </TD>
+ * <TD>  numStokes, numFrequencyRanges, 2  </TD>
+ * <TD>&nbsp; the sizes of the source (one pair of angles per Stokes parameter per frequency range). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sizeError </TD> 
+ * <TD> vector<vector<vector<Angle > > > </TD>
+ * <TD>  numStokes, numFrequencyRanges, 2  </TD>
+ * <TD>&nbsp; the uncertainties of the sizes of the source (one pair of angles per Stokes parameter per frequency range). </TD>
  * </TR>
 	
  * <TR>
  * <TD> sourceModel </TD> 
  * <TD> SourceModelMod::SourceModel </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; identifies the source model. </TD>
  * </TR>
 	
 
@@ -358,38 +402,38 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param sourceName. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
-	
- 	 * @param sourceName. 
-	
- 	 * @param numFrequency. 
-	
- 	 * @param numStokes. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param stokes. 
+ 	 * @param numFrequencyRanges. 
+	
+ 	 * @param numStokes. 
+	
+ 	 * @param frequencyRanges. 
+	
+ 	 * @param fluxMethod. 
 	
  	 * @param flux. 
 	
  	 * @param fluxError. 
 	
- 	 * @param fluxMethod. 
-	
- 	 * @param frequencyRange. 
+ 	 * @param stokes. 
 	
      */
-	CalFluxRow *newRow(Tag calDataId, Tag calReductionId, string sourceName, int numFrequency, int numStokes, ArrayTime startValidTime, ArrayTime endValidTime, vector<StokesParameterMod::StokesParameter > stokes, vector<vector<double > > flux, vector<vector<double > > fluxError, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<Frequency > frequencyRange);
+	CalFluxRow *newRow(string sourceName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFrequencyRanges, int numStokes, vector<vector<Frequency > > frequencyRanges, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<vector<double > > flux, vector<vector<double > > fluxError, vector<StokesParameterMod::StokesParameter > stokes);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalFluxRow *newRowFull(Tag calDataId, Tag calReductionId, string sourceName, int numFrequency, int numStokes, ArrayTime startValidTime, ArrayTime endValidTime, vector<StokesParameterMod::StokesParameter > stokes, vector<vector<double > > flux, vector<vector<double > > fluxError, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<Frequency > frequencyRange);
+	CalFluxRow *newRowFull(string sourceName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFrequencyRanges, int numStokes, vector<vector<Frequency > > frequencyRanges, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<vector<double > > flux, vector<vector<double > > fluxError, vector<StokesParameterMod::StokesParameter > stokes);
 
 
 	/**
@@ -455,15 +499,15 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param sourceName. 
+	
 	 * @param calDataId. 
 	
 	 * @param calReductionId. 
 	
-	 * @param sourceName. 
-	
  	 *
 	 */
- 	CalFluxRow* getRowByKey(Tag calDataId, Tag calReductionId, string sourceName);
+ 	CalFluxRow* getRowByKey(string sourceName, Tag calDataId, Tag calReductionId);
 
  	 	
 
@@ -475,32 +519,32 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
+ 	 * @param sourceName.
+ 	 		
  	 * @param calDataId.
  	 		
  	 * @param calReductionId.
- 	 		
- 	 * @param sourceName.
- 	 		
- 	 * @param numFrequency.
- 	 		
- 	 * @param numStokes.
  	 		
  	 * @param startValidTime.
  	 		
  	 * @param endValidTime.
  	 		
- 	 * @param stokes.
+ 	 * @param numFrequencyRanges.
+ 	 		
+ 	 * @param numStokes.
+ 	 		
+ 	 * @param frequencyRanges.
+ 	 		
+ 	 * @param fluxMethod.
  	 		
  	 * @param flux.
  	 		
  	 * @param fluxError.
  	 		
- 	 * @param fluxMethod.
- 	 		
- 	 * @param frequencyRange.
+ 	 * @param stokes.
  	 		 
  	 */
-	CalFluxRow* lookup(Tag calDataId, Tag calReductionId, string sourceName, int numFrequency, int numStokes, ArrayTime startValidTime, ArrayTime endValidTime, vector<StokesParameterMod::StokesParameter > stokes, vector<vector<double > > flux, vector<vector<double > > fluxError, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<Frequency > frequencyRange); 
+	CalFluxRow* lookup(string sourceName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFrequencyRanges, int numStokes, vector<vector<Frequency > > frequencyRanges, FluxCalibrationMethodMod::FluxCalibrationMethod fluxMethod, vector<vector<double > > flux, vector<vector<double > > fluxError, vector<StokesParameterMod::StokesParameter > stokes); 
 
 
 #ifndef WITHOUT_ACS
@@ -520,43 +564,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalFluxTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalFluxTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalFlux (CalFluxTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalFlux (CalFluxTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -631,8 +681,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalFluxRow* checkAndAdd(CalFluxRow* x) throw (DuplicateKey);
+	CalFluxRow* checkAndAdd(CalFluxRow* x) ;
 
 
 
@@ -646,7 +698,7 @@ private:
 	vector<CalFluxRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

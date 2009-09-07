@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CACAPolarization::version() {
+	return ACAPolarizationMod::version;
+	}
+	
+string CACAPolarization::revision () {
+	return ACAPolarizationMod::revision;
+}
+
+unsigned int CACAPolarization::size() {
+	return 4;
+	}
+	
 	
 const std::string& CACAPolarization::sACA_STANDARD = "ACA_STANDARD";
 	
@@ -46,7 +59,7 @@ const std::string& CACAPolarization::sACA_XX_50 = "ACA_XX_50";
 	
 const std::string& CACAPolarization::sACA_YY_50 = "ACA_YY_50";
 	
-const std::vector<std::string> CACAPolarization::sACAPolarizationSet() {
+const std::vector<std::string> CACAPolarization::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CACAPolarization::sACA_STANDARD);
@@ -59,33 +72,6 @@ const std::vector<std::string> CACAPolarization::sACAPolarizationSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CACAPolarization::hACA_STANDARD = "Data product is the standard way (it is a standard observed Stokes parameter)";
-	
-const std::string& CACAPolarization::hACA_XX_YY_SUM = "ACA has calculated I by averaging XX and YY";
-	
-const std::string& CACAPolarization::hACA_XX_50 = "ACA has averaged XX and XX delayed by half a FFT period";
-	
-const std::string& CACAPolarization::hACA_YY_50 = "ACA has averaged YY and YY delayed by half a FFT period";
-	
-const std::vector<std::string> CACAPolarization::hACAPolarizationSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CACAPolarization::hACA_STANDARD);
-    
-    enumSet.insert(enumSet.end(), CACAPolarization::hACA_XX_YY_SUM);
-    
-    enumSet.insert(enumSet.end(), CACAPolarization::hACA_XX_50);
-    
-    enumSet.insert(enumSet.end(), CACAPolarization::hACA_YY_50);
-        
-    return enumSet;
-}
-   	
 
 std::string CACAPolarization::name(const ACAPolarizationMod::ACAPolarization& f) {
     switch (f) {
@@ -103,31 +89,9 @@ std::string CACAPolarization::name(const ACAPolarizationMod::ACAPolarization& f)
       return CACAPolarization::sACA_YY_50;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CACAPolarization::help(const ACAPolarizationMod::ACAPolarization& f) {
-    switch (f) {
-    
-    case ACAPolarizationMod::ACA_STANDARD:
-      return CACAPolarization::hACA_STANDARD;
-    
-    case ACAPolarizationMod::ACA_XX_YY_SUM:
-      return CACAPolarization::hACA_XX_YY_SUM;
-    
-    case ACAPolarizationMod::ACA_XX_50:
-      return CACAPolarization::hACA_XX_50;
-    
-    case ACAPolarizationMod::ACA_YY_50:
-      return CACAPolarization::hACA_YY_50;
-    	
-    }
-    return std::string("");
-}
-   	
 
 ACAPolarizationMod::ACAPolarization CACAPolarization::newACAPolarization(const std::string& name) {
 		
@@ -172,12 +136,10 @@ ACAPolarizationMod::ACAPolarization CACAPolarization::literal(const std::string&
 }
 
 ACAPolarizationMod::ACAPolarization CACAPolarization::from_int(unsigned int i) {
-	vector<string> names = sACAPolarizationSet();
-	if (i >= names.size()) throw badInt(i);
-	return newACAPolarization(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newACAPolarization(names_.at(i));
 }
-
-	
 
 string CACAPolarization::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'ACAPolarization'.";

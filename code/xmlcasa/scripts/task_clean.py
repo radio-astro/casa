@@ -27,13 +27,13 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
 
 	#try:
 	if(1):
+		casalog.origin('clean')
 		imCln=imtool.create()
-		imset=cleanhelper(imCln, vis, (calready or mosweight))
+		imset=cleanhelper(imCln, vis, (calready or mosweight), casalog)
 		
                 
 		if((len(imagename)==0) or ((type(imagename)==str) and (imagename.isspace()))):
 			raise Exception, 'Cannot proceed with blank imagename'
-		casalog.origin('clean')
 		
                 multifield=False
                 if((type(imagename)==list) & (len(imagename) >1)):

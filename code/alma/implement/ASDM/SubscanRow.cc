@@ -95,6 +95,18 @@ namespace asdm {
 		
 			
 				
+		x->scanNumber = scanNumber;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
 		x->subscanNumber = subscanNumber;
  				
  			
@@ -118,6 +130,18 @@ namespace asdm {
 			
 		x->endTime = endTime.toIDLArrayTime();
 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->fieldName = CORBA::string_dup(fieldName.c_str());
+				
+ 			
 		
 	
 
@@ -191,18 +215,6 @@ namespace asdm {
 	
   		
 		
-		
-			
-				
-		x->fieldName = CORBA::string_dup(fieldName.c_str());
-				
- 			
-		
-	
-
-	
-  		
-		
 		x->correlatorCalibrationExists = correlatorCalibrationExists;
 		
 		
@@ -229,19 +241,6 @@ namespace asdm {
   	
 
 	
-  	
- 		
-		
-	 	
-			
-				
-		x->scanNumber = scanNumber;
- 				
- 			
-	 	 		
-  	
-
-	
 		
 	
 
@@ -257,11 +256,21 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct SubscanRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void SubscanRow::setFromIDL (SubscanRowIDL x) throw(ConversionException) {
+	void SubscanRow::setFromIDL (SubscanRowIDL x){
 		try {
 		// Fill the values from x.
 	
 		
+	
+		
+		
+			
+		setScanNumber(x.scanNumber);
+  			
+ 		
+		
+	
+
 	
 		
 		
@@ -287,6 +296,16 @@ namespace asdm {
 		
 			
 		setEndTime(ArrayTime (x.endTime));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setFieldName(string (x.fieldName));
 			
  		
 		
@@ -354,16 +373,6 @@ namespace asdm {
 
 	
 		
-		
-			
-		setFieldName(string (x.fieldName));
-			
- 		
-		
-	
-
-	
-		
 		correlatorCalibrationExists = x.correlatorCalibrationExists;
 		if (x.correlatorCalibrationExists) {
 		
@@ -392,20 +401,10 @@ namespace asdm {
 
 	
 		
-		
-			
-		setScanNumber(x.scanNumber);
-  			
- 		
-		
-	
-
-	
-		
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Subscan");
+			throw ConversionException (err.getMessage(),"Subscan");
 		}
 	}
 #endif
@@ -420,6 +419,14 @@ namespace asdm {
 		
 	
 		
+  	
+ 		
+		
+		Parser::toXML(scanNumber, "scanNumber", buf);
+		
+		
+	
+
   	
  		
 		
@@ -440,6 +447,14 @@ namespace asdm {
  		
 		
 		Parser::toXML(endTime, "endTime", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(fieldName, "fieldName", buf);
 		
 		
 	
@@ -490,14 +505,6 @@ namespace asdm {
 
   	
  		
-		
-		Parser::toXML(fieldName, "fieldName", buf);
-		
-		
-	
-
-  	
- 		
 		if (correlatorCalibrationExists) {
 		
 		
@@ -519,14 +526,6 @@ namespace asdm {
 		
 	
 
-  	
- 		
-		
-		Parser::toXML(scanNumber, "scanNumber", buf);
-		
-		
-	
-
 	
 		
 	
@@ -541,12 +540,20 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void SubscanRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void SubscanRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
 	
 		
+	
+  		
+			
+	  	setScanNumber(Parser::getInteger("scanNumber","Subscan",rowDoc));
+			
+		
+	
+
 	
   		
 			
@@ -567,6 +574,14 @@ namespace asdm {
   		
 			
 	  	setEndTime(Parser::getArrayTime("endTime","Subscan",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setFieldName(Parser::getString("fieldName","Subscan",rowDoc));
 			
 		
 	
@@ -623,14 +638,6 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setFieldName(Parser::getString("fieldName","Subscan",rowDoc));
-			
-		
-	
-
-	
 		
 	if (row.isStr("<correlatorCalibration>")) {
 		
@@ -657,14 +664,6 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setScanNumber(Parser::getInteger("scanNumber","Scan",rowDoc));
-			
-		
-	
-
-	
 		
 	
 
@@ -673,10 +672,304 @@ namespace asdm {
 		}
 	}
 	
+	void SubscanRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	execBlockId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(scanNumber);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(subscanNumber);
+				
+		
+	
+
+	
+	
+		
+	startTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(fieldName);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(subscanIntent);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numberIntegration);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) numberSubintegration.size());
+		for (unsigned int i = 0; i < numberSubintegration.size(); i++)
+				
+			eoss.writeInt(numberSubintegration.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(flagRow);
+				
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(subscanModeExists);
+	if (subscanModeExists) {
+	
+	
+	
+		
+					
+			eoss.writeInt(subscanMode);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(correlatorCalibrationExists);
+	if (correlatorCalibrationExists) {
+	
+	
+	
+		
+					
+			eoss.writeInt(correlatorCalibration);
+				
+		
+	
+
+	}
+
+	}
+	
+	SubscanRow* SubscanRow::fromBin(EndianISStream& eiss, SubscanTable& table) {
+		SubscanRow* row = new  SubscanRow(table);
+		
+		
+		
+	
+		
+		
+		row->execBlockId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->scanNumber =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->subscanNumber =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+		row->startTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->fieldName =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->subscanIntent = CSubscanIntent::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->numberIntegration =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->numberSubintegration.clear();
+		
+		unsigned int numberSubintegrationDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < numberSubintegrationDim1; i++)
+			
+			row->numberSubintegration.push_back(eiss.readInt());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->flagRow =  eiss.readBoolean();
+			
+		
+	
+
+		
+		
+		
+	row->subscanModeExists = eiss.readBoolean();
+	if (row->subscanModeExists) {
+		
+	
+	
+		
+			
+		row->subscanMode = CSwitchingMode::from_int(eiss.readInt());
+			
+		
+	
+
+	}
+
+	row->correlatorCalibrationExists = eiss.readBoolean();
+	if (row->correlatorCalibrationExists) {
+		
+	
+	
+		
+			
+		row->correlatorCalibration = CCorrelatorCalibration::from_int(eiss.readInt());
+			
+		
+	
+
+	}
+
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
+	
+
+	
+ 	/**
+ 	 * Get scanNumber.
+ 	 * @return scanNumber as int
+ 	 */
+ 	int SubscanRow::getScanNumber() const {
+	
+  		return scanNumber;
+ 	}
+
+ 	/**
+ 	 * Set scanNumber with the specified int.
+ 	 * @param scanNumber The int value to which scanNumber is to be set.
+ 	 
+ 	
+ 		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
+ 	 */
+ 	void SubscanRow::setScanNumber (int scanNumber)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+			throw IllegalAccessException("scanNumber", "Subscan");
+		
+  		}
+  	
+ 		this->scanNumber = scanNumber;
+	
+ 	}
+	
+	
+
 	
 
 	
@@ -781,6 +1074,38 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get fieldName.
+ 	 * @return fieldName as string
+ 	 */
+ 	string SubscanRow::getFieldName() const {
+	
+  		return fieldName;
+ 	}
+
+ 	/**
+ 	 * Set fieldName with the specified string.
+ 	 * @param fieldName The string value to which fieldName is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void SubscanRow::setFieldName (string fieldName)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->fieldName = fieldName;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get subscanIntent.
  	 * @return subscanIntent as SubscanIntentMod::SubscanIntent
  	 */
@@ -825,7 +1150,7 @@ namespace asdm {
  	 * @return subscanMode as SwitchingModeMod::SwitchingMode
  	 * @throw IllegalAccessException If subscanMode does not exist.
  	 */
- 	SwitchingModeMod::SwitchingMode SubscanRow::getSubscanMode() const throw(IllegalAccessException) {
+ 	SwitchingModeMod::SwitchingMode SubscanRow::getSubscanMode() const  {
 		if (!subscanModeExists) {
 			throw IllegalAccessException("subscanMode", "Subscan");
 		}
@@ -953,38 +1278,6 @@ namespace asdm {
 	
 
 	
-
-	
- 	/**
- 	 * Get fieldName.
- 	 * @return fieldName as string
- 	 */
- 	string SubscanRow::getFieldName() const {
-	
-  		return fieldName;
- 	}
-
- 	/**
- 	 * Set fieldName with the specified string.
- 	 * @param fieldName The string value to which fieldName is to be set.
- 	 
- 	
- 		
- 	 */
- 	void SubscanRow::setFieldName (string fieldName)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->fieldName = fieldName;
-	
- 	}
-	
-	
-
-	
 	/**
 	 * The attribute correlatorCalibration is optional. Return true if this attribute exists.
 	 * @return true if and only if the correlatorCalibration attribute exists. 
@@ -1000,7 +1293,7 @@ namespace asdm {
  	 * @return correlatorCalibration as CorrelatorCalibrationMod::CorrelatorCalibration
  	 * @throw IllegalAccessException If correlatorCalibration does not exist.
  	 */
- 	CorrelatorCalibrationMod::CorrelatorCalibration SubscanRow::getCorrelatorCalibration() const throw(IllegalAccessException) {
+ 	CorrelatorCalibrationMod::CorrelatorCalibration SubscanRow::getCorrelatorCalibration() const  {
 		if (!correlatorCalibrationExists) {
 			throw IllegalAccessException("correlatorCalibration", "Subscan");
 		}
@@ -1072,42 +1365,6 @@ namespace asdm {
 	
 	
 
-	
-
-	
- 	/**
- 	 * Get scanNumber.
- 	 * @return scanNumber as int
- 	 */
- 	int SubscanRow::getScanNumber() const {
-	
-  		return scanNumber;
- 	}
-
- 	/**
- 	 * Set scanNumber with the specified int.
- 	 * @param scanNumber The int value to which scanNumber is to be set.
- 	 
- 	
- 		
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 	
- 	 */
- 	void SubscanRow::setScanNumber (int scanNumber)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-			throw IllegalAccessException("scanNumber", "Subscan");
-		
-  		}
-  	
- 		this->scanNumber = scanNumber;
-	
- 	}
-	
-	
-
 	///////////
 	// Links //
 	///////////
@@ -1153,9 +1410,11 @@ namespace asdm {
 	
 
 	
-		subscanModeExists = false;
+
 	
 
+	
+		subscanModeExists = false;
 	
 
 	
@@ -1172,10 +1431,12 @@ namespace asdm {
 	
 
 	
+	
+	
+	
 
 	
-	
-	
+
 	
 
 	
@@ -1190,8 +1451,6 @@ subscanIntent = CSubscanIntent::from_int(0);
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 subscanMode = CSwitchingMode::from_int(0);
-	
-
 	
 
 	
@@ -1222,9 +1481,11 @@ correlatorCalibration = CCorrelatorCalibration::from_int(0);
 	
 
 	
-		subscanModeExists = false;
+
 	
 
+	
+		subscanModeExists = false;
 	
 
 	
@@ -1238,8 +1499,6 @@ correlatorCalibration = CCorrelatorCalibration::from_int(0);
 	
 
 	
-	
-
 	
 		
 		}
@@ -1259,6 +1518,8 @@ correlatorCalibration = CCorrelatorCalibration::from_int(0);
 		
 			endTime = row.endTime;
 		
+			fieldName = row.fieldName;
+		
 			subscanIntent = row.subscanIntent;
 		
 			numberIntegration = row.numberIntegration;
@@ -1266,8 +1527,6 @@ correlatorCalibration = CCorrelatorCalibration::from_int(0);
 			numberSubintegration = row.numberSubintegration;
 		
 			flagRow = row.flagRow;
-		
-			fieldName = row.fieldName;
 		
 		
 		
@@ -1290,7 +1549,7 @@ correlatorCalibration = CCorrelatorCalibration::from_int(0);
 	}
 
 	
-	bool SubscanRow::compareNoAutoInc(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow, string fieldName) {
+	bool SubscanRow::compareNoAutoInc(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow) {
 		bool result;
 		result = true;
 		
@@ -1331,6 +1590,13 @@ correlatorCalibration = CCorrelatorCalibration::from_int(0);
 
 	
 		
+		result = result && (this->fieldName == fieldName);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->subscanIntent == subscanIntent);
 		
 		if (!result) return false;
@@ -1357,19 +1623,12 @@ correlatorCalibration = CCorrelatorCalibration::from_int(0);
 		if (!result) return false;
 	
 
-	
-		
-		result = result && (this->fieldName == fieldName);
-		
-		if (!result) return false;
-	
-
 		return result;
 	}	
 	
 	
 	
-	bool SubscanRow::compareRequiredValue(ArrayTime startTime, ArrayTime endTime, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow, string fieldName) {
+	bool SubscanRow::compareRequiredValue(ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow) {
 		bool result;
 		result = true;
 		
@@ -1379,6 +1638,10 @@ correlatorCalibration = CCorrelatorCalibration::from_int(0);
 
 	
 		if (!(this->endTime == endTime)) return false;
+	
+
+	
+		if (!(this->fieldName == fieldName)) return false;
 	
 
 	
@@ -1395,10 +1658,6 @@ correlatorCalibration = CCorrelatorCalibration::from_int(0);
 
 	
 		if (!(this->flagRow == flagRow)) return false;
-	
-
-	
-		if (!(this->fieldName == fieldName)) return false;
 	
 
 		return result;
@@ -1420,6 +1679,8 @@ correlatorCalibration = CCorrelatorCalibration::from_int(0);
 			
 		if (this->endTime != x->endTime) return false;
 			
+		if (this->fieldName != x->fieldName) return false;
+			
 		if (this->subscanIntent != x->subscanIntent) return false;
 			
 		if (this->numberIntegration != x->numberIntegration) return false;
@@ -1427,8 +1688,6 @@ correlatorCalibration = CCorrelatorCalibration::from_int(0);
 		if (this->numberSubintegration != x->numberSubintegration) return false;
 			
 		if (this->flagRow != x->flagRow) return false;
-			
-		if (this->fieldName != x->fieldName) return false;
 			
 		
 		return true;

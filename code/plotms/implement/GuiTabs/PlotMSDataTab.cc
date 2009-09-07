@@ -42,7 +42,8 @@ namespace casa {
 
 // Constructors/Destructors//
 
-PlotMSDataTab::PlotMSDataTab(PlotMSPlotter* parent): PlotMSPlotSubtab(parent) {
+PlotMSDataTab::PlotMSDataTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent) :
+        PlotMSPlotSubtab(plotTab, parent) {
     setupUi(this);
     
     // Setup widgets

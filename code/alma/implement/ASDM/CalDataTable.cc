@@ -164,51 +164,57 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param numScan. 
-	
- 	 * @param scanSet. 
-	
- 	 * @param calType. 
-	
  	 * @param startTimeObserved. 
 	
  	 * @param endTimeObserved. 
 	
+ 	 * @param execBlockUID. 
+	
  	 * @param calDataType. 
 	
+ 	 * @param calType. 
+	
+ 	 * @param numScan. 
+	
+ 	 * @param scanSet. 
+	
      */
-	CalDataRow* CalDataTable::newRow(int numScan, vector<int > scanSet, CalTypeMod::CalType calType, ArrayTime startTimeObserved, ArrayTime endTimeObserved, CalDataOriginMod::CalDataOrigin calDataType){
+	CalDataRow* CalDataTable::newRow(ArrayTime startTimeObserved, ArrayTime endTimeObserved, EntityRef execBlockUID, CalDataOriginMod::CalDataOrigin calDataType, CalTypeMod::CalType calType, int numScan, vector<int > scanSet){
 		CalDataRow *row = new CalDataRow(*this);
-			
-		row->setNumScan(numScan);
-			
-		row->setScanSet(scanSet);
-			
-		row->setCalType(calType);
 			
 		row->setStartTimeObserved(startTimeObserved);
 			
 		row->setEndTimeObserved(endTimeObserved);
 			
+		row->setExecBlockUID(execBlockUID);
+			
 		row->setCalDataType(calDataType);
+			
+		row->setCalType(calType);
+			
+		row->setNumScan(numScan);
+			
+		row->setScanSet(scanSet);
 	
 		return row;		
 	}	
 
-	CalDataRow* CalDataTable::newRowFull(int numScan, vector<int > scanSet, CalTypeMod::CalType calType, ArrayTime startTimeObserved, ArrayTime endTimeObserved, CalDataOriginMod::CalDataOrigin calDataType)	{
+	CalDataRow* CalDataTable::newRowFull(ArrayTime startTimeObserved, ArrayTime endTimeObserved, EntityRef execBlockUID, CalDataOriginMod::CalDataOrigin calDataType, CalTypeMod::CalType calType, int numScan, vector<int > scanSet)	{
 		CalDataRow *row = new CalDataRow(*this);
-			
-		row->setNumScan(numScan);
-			
-		row->setScanSet(scanSet);
-			
-		row->setCalType(calType);
 			
 		row->setStartTimeObserved(startTimeObserved);
 			
 		row->setEndTimeObserved(endTimeObserved);
 			
+		row->setExecBlockUID(execBlockUID);
+			
 		row->setCalDataType(calDataType);
+			
+		row->setCalType(calType);
+			
+		row->setNumScan(numScan);
+			
+		row->setScanSet(scanSet);
 	
 		return row;				
 	}
@@ -244,17 +250,19 @@ CalDataRow* CalDataTable::newRowCopy(CalDataRow* row) {
 			 
 		CalDataRow* aRow = lookup(
 				
-		x->getNumScan()
-				,
-		x->getScanSet()
-				,
-		x->getCalType()
-				,
 		x->getStartTimeObserved()
 				,
 		x->getEndTimeObserved()
 				,
+		x->getExecBlockUID()
+				,
 		x->getCalDataType()
+				,
+		x->getCalType()
+				,
+		x->getNumScan()
+				,
+		x->getScanSet()
 				
 		);
 		if (aRow) return aRow;
@@ -288,23 +296,29 @@ CalDataRow* CalDataTable::newRowCopy(CalDataRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	CalDataRow*  CalDataTable::checkAndAdd(CalDataRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	CalDataRow*  CalDataTable::checkAndAdd(CalDataRow* x)  {
 	 
 		 
 		if (lookup(
 			
-			x->getNumScan()
-		,
-			x->getScanSet()
-		,
-			x->getCalType()
-		,
 			x->getStartTimeObserved()
 		,
 			x->getEndTimeObserved()
 		,
+			x->getExecBlockUID()
+		,
 			x->getCalDataType()
+		,
+			x->getCalType()
+		,
+			x->getNumScan()
+		,
+			x->getScanSet()
 		
 		)) throw UniquenessViolationException("Uniqueness violation exception in table CalDataTable");
 		
@@ -371,24 +385,26 @@ CalDataRow* CalDataTable::newRowCopy(CalDataRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
- * @param numScan.
- 	 		
- * @param scanSet.
- 	 		
- * @param calType.
- 	 		
  * @param startTimeObserved.
  	 		
  * @param endTimeObserved.
  	 		
+ * @param execBlockUID.
+ 	 		
  * @param calDataType.
+ 	 		
+ * @param calType.
+ 	 		
+ * @param numScan.
+ 	 		
+ * @param scanSet.
  	 		 
  */
-CalDataRow* CalDataTable::lookup(int numScan, vector<int > scanSet, CalTypeMod::CalType calType, ArrayTime startTimeObserved, ArrayTime endTimeObserved, CalDataOriginMod::CalDataOrigin calDataType) {
+CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeObserved, EntityRef execBlockUID, CalDataOriginMod::CalDataOrigin calDataType, CalTypeMod::CalType calType, int numScan, vector<int > scanSet) {
 		CalDataRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(numScan, scanSet, calType, startTimeObserved, endTimeObserved, calDataType)) return aRow;
+			if (aRow->compareNoAutoInc(startTimeObserved, endTimeObserved, execBlockUID, calDataType, calType, numScan, scanSet)) return aRow;
 		}			
 		return 0;	
 } 
@@ -396,7 +412,6 @@ CalDataRow* CalDataTable::lookup(int numScan, vector<int > scanSet, CalTypeMod::
  	 	
 
 	
-
 
 
 
@@ -417,7 +432,7 @@ CalDataRow* CalDataTable::lookup(int numScan, vector<int > scanSet, CalTypeMod::
 #endif
 	
 #ifndef WITHOUT_ACS
-	void CalDataTable::fromIDL(CalDataTableIDL x) throw(DuplicateKey,ConversionException) {
+	void CalDataTable::fromIDL(CalDataTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			CalDataRow *tmp = newRow();
@@ -428,28 +443,27 @@ CalDataRow* CalDataTable::lookup(int numScan, vector<int > scanSet, CalTypeMod::
 	}
 #endif
 
-	char *CalDataTable::toFITS() const throw(ConversionException) {
+	char *CalDataTable::toFITS() const  {
 		throw ConversionException("Not implemented","CalData");
 	}
 
-	void CalDataTable::fromFITS(char *fits) throw(ConversionException) {
+	void CalDataTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","CalData");
 	}
 
-	string CalDataTable::toVOTable() const throw(ConversionException) {
+	string CalDataTable::toVOTable() const {
 		throw ConversionException("Not implemented","CalData");
 	}
 
-	void CalDataTable::fromVOTable(string vo) throw(ConversionException) {
+	void CalDataTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","CalData");
 	}
 
-	string CalDataTable::toXML()  throw(ConversionException) {
+	
+	string CalDataTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<CalDataTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/CalDataTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<CalDataTable> ");
+		buf.append("<CalDataTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalDataTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDataTable http://almaobservatory.org/XML/XASDM/2/CalDataTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -465,8 +479,9 @@ CalDataRow* CalDataTable::lookup(int numScan, vector<int > scanSet, CalTypeMod::
 		buf.append("</CalDataTable> ");
 		return buf;
 	}
+
 	
-	void CalDataTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void CalDataTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalDataTable")) 
 			error();
@@ -508,20 +523,110 @@ CalDataRow* CalDataTable::lookup(int numScan, vector<int > scanSet, CalTypeMod::
 			error();
 	}
 
-	void CalDataTable::error() throw(ConversionException) {
+	
+	void CalDataTable::error()  {
 		throw ConversionException("Invalid xml document","CalData");
 	}
 	
+	
 	string CalDataTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void CalDataTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalData");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			CalDataRow* aRow = CalDataRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "CalData");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "CalData");
+		} 		 	
+	}
+
 	
 	void CalDataTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -552,6 +657,7 @@ CalDataRow* CalDataTable::lookup(int numScan, vector<int > scanSet, CalTypeMod::
 				throw ConversionException("Could not close file " + fileName, "CalData");
 		}
 	}
+
 	
 	void CalDataTable::setFromFile(const string& directory) {
 		string tablename;
@@ -593,6 +699,11 @@ CalDataRow* CalDataTable::lookup(int numScan, vector<int > scanSet, CalTypeMod::
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

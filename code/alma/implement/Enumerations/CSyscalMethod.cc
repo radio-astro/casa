@@ -37,12 +37,25 @@
 #include <string>
 using namespace std;
 
+
+int CSyscalMethod::version() {
+	return SyscalMethodMod::version;
+	}
+	
+string CSyscalMethod::revision () {
+	return SyscalMethodMod::revision;
+}
+
+unsigned int CSyscalMethod::size() {
+	return 2;
+	}
+	
 	
 const std::string& CSyscalMethod::sTEMPERATURE_SCALE = "TEMPERATURE_SCALE";
 	
 const std::string& CSyscalMethod::sSKYDIP = "SKYDIP";
 	
-const std::vector<std::string> CSyscalMethod::sSyscalMethodSet() {
+const std::vector<std::string> CSyscalMethod::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CSyscalMethod::sTEMPERATURE_SCALE);
@@ -51,25 +64,6 @@ const std::vector<std::string> CSyscalMethod::sSyscalMethodSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CSyscalMethod::hTEMPERATURE_SCALE = "Use single direction data to compute ta* scale";
-	
-const std::string& CSyscalMethod::hSKYDIP = "Use a skydip (observing the sky at various elevations) to get atmospheric opacity";
-	
-const std::vector<std::string> CSyscalMethod::hSyscalMethodSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CSyscalMethod::hTEMPERATURE_SCALE);
-    
-    enumSet.insert(enumSet.end(), CSyscalMethod::hSKYDIP);
-        
-    return enumSet;
-}
-   	
 
 std::string CSyscalMethod::name(const SyscalMethodMod::SyscalMethod& f) {
     switch (f) {
@@ -81,25 +75,9 @@ std::string CSyscalMethod::name(const SyscalMethodMod::SyscalMethod& f) {
       return CSyscalMethod::sSKYDIP;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CSyscalMethod::help(const SyscalMethodMod::SyscalMethod& f) {
-    switch (f) {
-    
-    case SyscalMethodMod::TEMPERATURE_SCALE:
-      return CSyscalMethod::hTEMPERATURE_SCALE;
-    
-    case SyscalMethodMod::SKYDIP:
-      return CSyscalMethod::hSKYDIP;
-    	
-    }
-    return std::string("");
-}
-   	
 
 SyscalMethodMod::SyscalMethod CSyscalMethod::newSyscalMethod(const std::string& name) {
 		
@@ -128,12 +106,10 @@ SyscalMethodMod::SyscalMethod CSyscalMethod::literal(const std::string& name) {
 }
 
 SyscalMethodMod::SyscalMethod CSyscalMethod::from_int(unsigned int i) {
-	vector<string> names = sSyscalMethodSet();
-	if (i >= names.size()) throw badInt(i);
-	return newSyscalMethod(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newSyscalMethod(names_.at(i));
 }
-
-	
 
 string CSyscalMethod::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'SyscalMethod'.";

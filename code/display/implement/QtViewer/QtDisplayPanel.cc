@@ -72,8 +72,9 @@ QtDisplayPanel::QtDisplayPanel(QtViewerBase* v, QWidget *parent) :
 		animRate_(10), minRate_(1), maxRate_(50), animating_(0),
 		blankCBPanel_(0), mainPanelSize_(1.),
 		hasRgn_(False), rgnExtent_(0), qsm_(0),
-		lastMotionEvent_(0), bkgdClrOpt_(0), printStats(True),
-                extChan_(""), extPol_("")  {
+		lastMotionEvent_(0), bkgdClrOpt_(0), 
+                extChan_(""), extPol_("")  ,
+                printStats(True){
     
   setWindowTitle("Viewer Display Panel");
   
@@ -306,7 +307,7 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
 
   emit mouseRegionReady(mouseRegion, wch);  // echo mouseTool signal.
   
-  Bool rgnSaved = False;
+  //Bool rgnSaved = False;
     
   for(ListIter<QtDisplayData*> qdds(qdds_); 
         !qdds.atEnd(); qdds++) {

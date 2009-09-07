@@ -87,6 +87,13 @@ using namespace enumerations;
 
 	
 
+	
+#include "CDirectionReferenceCode.h"
+using namespace DirectionReferenceCodeMod;
+	
+
+	
+
 
 
 using asdm::Angle;
@@ -110,7 +117,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file SwitchCycle.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -122,7 +129,7 @@ namespace asdm {
 /**
  * The SwitchCycleRow class is a row of a SwitchCycleTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class SwitchCycleRow {
@@ -149,8 +156,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct SwitchCycleRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (SwitchCycleRowIDL x) throw(ConversionException);
+	void setFromIDL (SwitchCycleRowIDL x) ;
 #endif
 	
 	/**
@@ -163,8 +171,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the SwitchCycleTable to which the row built by deserialization will be parented.
+	  */
+	 static SwitchCycleRow* fromBin(EndianISStream& eiss, SwitchCycleTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -340,6 +362,88 @@ public:
 	
 
 
+	
+	// ===> Attribute directionCode, which is optional
+	
+	
+	
+	/**
+	 * The attribute directionCode is optional. Return true if this attribute exists.
+	 * @return true if and only if the directionCode attribute exists. 
+	 */
+	bool isDirectionCodeExists() const;
+	
+
+	
+ 	/**
+ 	 * Get directionCode, which is optional.
+ 	 * @return directionCode as DirectionReferenceCodeMod::DirectionReferenceCode
+ 	 * @throws IllegalAccessException If directionCode does not exist.
+ 	 */
+ 	DirectionReferenceCodeMod::DirectionReferenceCode getDirectionCode() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set directionCode with the specified DirectionReferenceCodeMod::DirectionReferenceCode.
+ 	 * @param directionCode The DirectionReferenceCodeMod::DirectionReferenceCode value to which directionCode is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setDirectionCode (DirectionReferenceCodeMod::DirectionReferenceCode directionCode);
+		
+	
+	
+	
+	/**
+	 * Mark directionCode, which is an optional field, as non-existent.
+	 */
+	void clearDirectionCode ();
+	
+
+
+	
+	// ===> Attribute directionEquinox, which is optional
+	
+	
+	
+	/**
+	 * The attribute directionEquinox is optional. Return true if this attribute exists.
+	 * @return true if and only if the directionEquinox attribute exists. 
+	 */
+	bool isDirectionEquinoxExists() const;
+	
+
+	
+ 	/**
+ 	 * Get directionEquinox, which is optional.
+ 	 * @return directionEquinox as ArrayTime
+ 	 * @throws IllegalAccessException If directionEquinox does not exist.
+ 	 */
+ 	ArrayTime getDirectionEquinox() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set directionEquinox with the specified ArrayTime.
+ 	 * @param directionEquinox The ArrayTime value to which directionEquinox is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setDirectionEquinox (ArrayTime directionEquinox);
+		
+	
+	
+	
+	/**
+	 * Mark directionEquinox, which is an optional field, as non-existent.
+	 */
+	void clearDirectionEquinox ();
+	
+
+
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -493,6 +597,32 @@ private:
 	
 
 	vector<Interval > stepDurationArray;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute directionCode, which is optional
+	
+	
+	bool directionCodeExists;
+	
+
+	DirectionReferenceCodeMod::DirectionReferenceCode directionCode;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute directionEquinox, which is optional
+	
+	
+	bool directionEquinoxExists;
+	
+
+	ArrayTime directionEquinox;
 
 	
 	

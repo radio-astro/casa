@@ -113,7 +113,7 @@ namespace asdm {
 		
 			
 				
-		x->numBaseline = numBaseline;
+		x->receiverBand = receiverBand;
  				
  			
 		
@@ -125,7 +125,39 @@ namespace asdm {
 		
 			
 				
-		x->numAPC = numAPC;
+		x->atmPhaseCorrection = atmPhaseCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->numBaseline = numBaseline;
  				
  			
 		
@@ -148,10 +180,20 @@ namespace asdm {
 		
 		
 			
-				
-		x->receiverBand = receiverBand;
- 				
- 			
+		x->ampli.length(ampli.size());
+		for (unsigned int i = 0; i < ampli.size(); i++) {
+			x->ampli[i].length(ampli.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < ampli.size() ; i++)
+			for (unsigned int j = 0; j < ampli.at(i).size(); j++)
+					
+						
+				x->ampli[i][j] = ampli.at(i).at(j);
+		 				
+			 						
+		
+			
 		
 	
 
@@ -182,177 +224,11 @@ namespace asdm {
 		
 		
 			
-		x->atmPhaseCorrections.length(atmPhaseCorrections.size());
-		for (unsigned int i = 0; i < atmPhaseCorrections.size(); ++i) {
+		x->baselineLengths.length(baselineLengths.size());
+		for (unsigned int i = 0; i < baselineLengths.size(); ++i) {
 			
-				
-			x->atmPhaseCorrections[i] = atmPhaseCorrections.at(i);
-	 			
-	 		
-	 	}
+			x->baselineLengths[i] = baselineLengths.at(i).toIDLLength();
 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->polarizationTypes.length(polarizationTypes.size());
-		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
-			
-				
-			x->polarizationTypes[i] = polarizationTypes.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->startValidTime = startValidTime.toIDLArrayTime();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->endValidTime = endValidTime.toIDLArrayTime();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->frequencyRange.length(frequencyRange.size());
-		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
-			
-			x->frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->ampli.length(ampli.size());
-		for (unsigned int i = 0; i < ampli.size(); i++) {
-			x->ampli[i].length(ampli.at(i).size());
-			for (unsigned int j = 0; j < ampli.at(i).size(); j++) {
-				x->ampli[i][j].length(ampli.at(i).at(j).size());
-			}					 		
-		}
-		
-		for (unsigned int i = 0; i < ampli.size() ; i++)
-			for (unsigned int j = 0; j < ampli.at(i).size(); j++)
-				for (unsigned int k = 0; k < ampli.at(i).at(j).size(); k++)
-					
-						
-					x->ampli[i][j][k] = ampli.at(i).at(j).at(k);
-		 				
-			 									
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->phase.length(phase.size());
-		for (unsigned int i = 0; i < phase.size(); i++) {
-			x->phase[i].length(phase.at(i).size());
-			for (unsigned int j = 0; j < phase.at(i).size(); j++) {
-				x->phase[i][j].length(phase.at(i).at(j).size());
-			}					 		
-		}
-		
-		for (unsigned int i = 0; i < phase.size() ; i++)
-			for (unsigned int j = 0; j < phase.at(i).size(); j++)
-				for (unsigned int k = 0; k < phase.at(i).at(j).size(); k++)
-					
-						
-					x->phase[i][j][k] = phase.at(i).at(j).at(k);
-		 				
-			 									
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->phaseRms.length(phaseRms.size());
-		for (unsigned int i = 0; i < phaseRms.size(); i++) {
-			x->phaseRms[i].length(phaseRms.at(i).size());
-			for (unsigned int j = 0; j < phaseRms.at(i).size(); j++) {
-				x->phaseRms[i][j].length(phaseRms.at(i).at(j).size());
-			}					 		
-		}
-		
-		for (unsigned int i = 0; i < phaseRms.size() ; i++)
-			for (unsigned int j = 0; j < phaseRms.at(i).size(); j++)
-				for (unsigned int k = 0; k < phaseRms.at(i).at(j).size(); k++)
-					
-					x->phaseRms[i][j][k] = phaseRms.at(i).at(j).at(k).toIDLAngle();
-												
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->statPhaseRms.length(statPhaseRms.size());
-		for (unsigned int i = 0; i < statPhaseRms.size(); i++) {
-			x->statPhaseRms[i].length(statPhaseRms.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < statPhaseRms.size() ; i++)
-			for (unsigned int j = 0; j < statPhaseRms.at(i).size(); j++)
-					
-				x->statPhaseRms[i][j]= statPhaseRms.at(i).at(j).toIDLAngle();
-									
-		
-			
-		
-	
-
-	
-  		
-		
-		x->correctionValidityExists = correctionValidityExists;
-		
-		
-			
-		x->correctionValidity.length(correctionValidity.size());
-		for (unsigned int i = 0; i < correctionValidity.size(); ++i) {
-			
-				
-			x->correctionValidity[i] = correctionValidity.at(i);
-	 			
-	 		
 	 	}
 			
 		
@@ -385,10 +261,10 @@ namespace asdm {
 		
 		
 			
-		x->baselineLengths.length(baselineLengths.size());
-		for (unsigned int i = 0; i < baselineLengths.size(); ++i) {
+		x->direction.length(direction.size());
+		for (unsigned int i = 0; i < direction.size(); ++i) {
 			
-			x->baselineLengths[i] = baselineLengths.at(i).toIDLLength();
+			x->direction[i] = direction.at(i).toIDLAngle();
 			
 	 	}
 			
@@ -400,11 +276,123 @@ namespace asdm {
 		
 		
 			
-		x->direction.length(direction.size());
-		for (unsigned int i = 0; i < direction.size(); ++i) {
+		x->frequencyRange.length(frequencyRange.size());
+		for (unsigned int i = 0; i < frequencyRange.size(); ++i) {
 			
-			x->direction[i] = direction.at(i).toIDLAngle();
+			x->frequencyRange[i] = frequencyRange.at(i).toIDLFrequency();
 			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->integrationTime = integrationTime.toIDLInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->phase.length(phase.size());
+		for (unsigned int i = 0; i < phase.size(); i++) {
+			x->phase[i].length(phase.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < phase.size() ; i++)
+			for (unsigned int j = 0; j < phase.at(i).size(); j++)
+					
+						
+				x->phase[i][j] = phase.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->polarizationTypes.length(polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
+			
+				
+			x->polarizationTypes[i] = polarizationTypes.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->phaseRMS.length(phaseRMS.size());
+		for (unsigned int i = 0; i < phaseRMS.size(); i++) {
+			x->phaseRMS[i].length(phaseRMS.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < phaseRMS.size() ; i++)
+			for (unsigned int j = 0; j < phaseRMS.at(i).size(); j++)
+					
+						
+				x->phaseRMS[i][j] = phaseRMS.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->statPhaseRMS.length(statPhaseRMS.size());
+		for (unsigned int i = 0; i < statPhaseRMS.size(); i++) {
+			x->statPhaseRMS[i].length(statPhaseRMS.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < statPhaseRMS.size() ; i++)
+			for (unsigned int j = 0; j < statPhaseRMS.at(i).size(); j++)
+					
+						
+				x->statPhaseRMS[i][j] = statPhaseRMS.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		x->correctionValidityExists = correctionValidityExists;
+		
+		
+			
+		x->correctionValidity.length(correctionValidity.size());
+		for (unsigned int i = 0; i < correctionValidity.size(); ++i) {
+			
+				
+			x->correctionValidity[i] = correctionValidity.at(i);
+	 			
+	 		
 	 	}
 			
 		
@@ -453,7 +441,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalPhaseRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalPhaseRow::setFromIDL (CalPhaseRowIDL x) throw(ConversionException) {
+	void CalPhaseRow::setFromIDL (CalPhaseRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -463,36 +451,6 @@ namespace asdm {
 		
 			
 		setBasebandName(x.basebandName);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumBaseline(x.numBaseline);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumAPC(x.numAPC);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumReceptor(x.numReceptor);
   			
  		
 		
@@ -512,49 +470,9 @@ namespace asdm {
 		
 		
 			
-		antennaNames .clear();
-		vector<string> v_aux_antennaNames;
-		for (unsigned int i = 0; i < x.antennaNames.length(); ++i) {
-			v_aux_antennaNames.clear();
-			for (unsigned int j = 0; j < x.antennaNames[0].length(); ++j) {
-				
-				v_aux_antennaNames.push_back(string (x.antennaNames[i][j]));
-				
-  			}
-  			antennaNames.push_back(v_aux_antennaNames);			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		atmPhaseCorrections .clear();
-		for (unsigned int i = 0; i <x.atmPhaseCorrections.length(); ++i) {
-			
-			atmPhaseCorrections.push_back(x.atmPhaseCorrections[i]);
+		setAtmPhaseCorrection(x.atmPhaseCorrection);
   			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		polarizationTypes .clear();
-		for (unsigned int i = 0; i <x.polarizationTypes.length(); ++i) {
-			
-			polarizationTypes.push_back(x.polarizationTypes[i]);
-  			
-		}
-			
-  		
+ 		
 		
 	
 
@@ -582,14 +500,19 @@ namespace asdm {
 		
 		
 			
-		frequencyRange .clear();
-		for (unsigned int i = 0; i <x.frequencyRange.length(); ++i) {
+		setNumBaseline(x.numBaseline);
+  			
+ 		
+		
+	
+
+	
+		
+		
 			
-			frequencyRange.push_back(Frequency (x.frequencyRange[i]));
-			
-		}
-			
-  		
+		setNumReceptor(x.numReceptor);
+  			
+ 		
 		
 	
 
@@ -598,93 +521,35 @@ namespace asdm {
 		
 			
 		ampli .clear();
-		vector< vector<float> > vv_aux_ampli;
 		vector<float> v_aux_ampli;
-		
 		for (unsigned int i = 0; i < x.ampli.length(); ++i) {
-			vv_aux_ampli.clear();
+			v_aux_ampli.clear();
 			for (unsigned int j = 0; j < x.ampli[0].length(); ++j) {
-				v_aux_ampli.clear();
-				for (unsigned int k = 0; k < x.ampli[0][0].length(); ++k) {
-					
-					v_aux_ampli.push_back(x.ampli[i][j][k]);
-		  			
-		  		}
-		  		vv_aux_ampli.push_back(v_aux_ampli);
-  			}
-  			ampli.push_back(vv_aux_ampli);
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		phase .clear();
-		vector< vector<float> > vv_aux_phase;
-		vector<float> v_aux_phase;
-		
-		for (unsigned int i = 0; i < x.phase.length(); ++i) {
-			vv_aux_phase.clear();
-			for (unsigned int j = 0; j < x.phase[0].length(); ++j) {
-				v_aux_phase.clear();
-				for (unsigned int k = 0; k < x.phase[0][0].length(); ++k) {
-					
-					v_aux_phase.push_back(x.phase[i][j][k]);
-		  			
-		  		}
-		  		vv_aux_phase.push_back(v_aux_phase);
-  			}
-  			phase.push_back(vv_aux_phase);
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		phaseRms .clear();
-		vector< vector<Angle> > vv_aux_phaseRms;
-		vector<Angle> v_aux_phaseRms;
-		
-		for (unsigned int i = 0; i < x.phaseRms.length(); ++i) {
-			vv_aux_phaseRms.clear();
-			for (unsigned int j = 0; j < x.phaseRms[0].length(); ++j) {
-				v_aux_phaseRms.clear();
-				for (unsigned int k = 0; k < x.phaseRms[0][0].length(); ++k) {
-					
-					v_aux_phaseRms.push_back(Angle (x.phaseRms[i][j][k]));
-					
-		  		}
-		  		vv_aux_phaseRms.push_back(v_aux_phaseRms);
-  			}
-  			phaseRms.push_back(vv_aux_phaseRms);
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		statPhaseRms .clear();
-		vector<Angle> v_aux_statPhaseRms;
-		for (unsigned int i = 0; i < x.statPhaseRms.length(); ++i) {
-			v_aux_statPhaseRms.clear();
-			for (unsigned int j = 0; j < x.statPhaseRms[0].length(); ++j) {
 				
-				v_aux_statPhaseRms.push_back(Angle (x.statPhaseRms[i][j]));
+				v_aux_ampli.push_back(x.ampli[i][j]);
+	  			
+  			}
+  			ampli.push_back(v_aux_ampli);			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		antennaNames .clear();
+		vector<string> v_aux_antennaNames;
+		for (unsigned int i = 0; i < x.antennaNames.length(); ++i) {
+			v_aux_antennaNames.clear();
+			for (unsigned int j = 0; j < x.antennaNames[0].length(); ++j) {
+				
+				v_aux_antennaNames.push_back(string (x.antennaNames[i][j]));
 				
   			}
-  			statPhaseRms.push_back(v_aux_statPhaseRms);			
+  			antennaNames.push_back(v_aux_antennaNames);			
 		}
 			
   		
@@ -693,21 +558,16 @@ namespace asdm {
 
 	
 		
-		correctionValidityExists = x.correctionValidityExists;
-		if (x.correctionValidityExists) {
-		
 		
 			
-		correctionValidity .clear();
-		for (unsigned int i = 0; i <x.correctionValidity.length(); ++i) {
+		baselineLengths .clear();
+		for (unsigned int i = 0; i <x.baselineLengths.length(); ++i) {
 			
-			correctionValidity.push_back(x.correctionValidity[i]);
-  			
+			baselineLengths.push_back(Length (x.baselineLengths[i]));
+			
 		}
 			
   		
-		
-		}
 		
 	
 
@@ -735,10 +595,10 @@ namespace asdm {
 		
 		
 			
-		baselineLengths .clear();
-		for (unsigned int i = 0; i <x.baselineLengths.length(); ++i) {
+		direction .clear();
+		for (unsigned int i = 0; i <x.direction.length(); ++i) {
 			
-			baselineLengths.push_back(Length (x.baselineLengths[i]));
+			direction.push_back(Angle (x.direction[i]));
 			
 		}
 			
@@ -750,14 +610,119 @@ namespace asdm {
 		
 		
 			
-		direction .clear();
-		for (unsigned int i = 0; i <x.direction.length(); ++i) {
+		frequencyRange .clear();
+		for (unsigned int i = 0; i <x.frequencyRange.length(); ++i) {
 			
-			direction.push_back(Angle (x.direction[i]));
+			frequencyRange.push_back(Frequency (x.frequencyRange[i]));
 			
 		}
 			
   		
+		
+	
+
+	
+		
+		
+			
+		setIntegrationTime(Interval (x.integrationTime));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		phase .clear();
+		vector<float> v_aux_phase;
+		for (unsigned int i = 0; i < x.phase.length(); ++i) {
+			v_aux_phase.clear();
+			for (unsigned int j = 0; j < x.phase[0].length(); ++j) {
+				
+				v_aux_phase.push_back(x.phase[i][j]);
+	  			
+  			}
+  			phase.push_back(v_aux_phase);			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		polarizationTypes .clear();
+		for (unsigned int i = 0; i <x.polarizationTypes.length(); ++i) {
+			
+			polarizationTypes.push_back(x.polarizationTypes[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		phaseRMS .clear();
+		vector<float> v_aux_phaseRMS;
+		for (unsigned int i = 0; i < x.phaseRMS.length(); ++i) {
+			v_aux_phaseRMS.clear();
+			for (unsigned int j = 0; j < x.phaseRMS[0].length(); ++j) {
+				
+				v_aux_phaseRMS.push_back(x.phaseRMS[i][j]);
+	  			
+  			}
+  			phaseRMS.push_back(v_aux_phaseRMS);			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		statPhaseRMS .clear();
+		vector<float> v_aux_statPhaseRMS;
+		for (unsigned int i = 0; i < x.statPhaseRMS.length(); ++i) {
+			v_aux_statPhaseRMS.clear();
+			for (unsigned int j = 0; j < x.statPhaseRMS[0].length(); ++j) {
+				
+				v_aux_statPhaseRMS.push_back(x.statPhaseRMS[i][j]);
+	  			
+  			}
+  			statPhaseRMS.push_back(v_aux_statPhaseRMS);			
+		}
+			
+  		
+		
+	
+
+	
+		
+		correctionValidityExists = x.correctionValidityExists;
+		if (x.correctionValidityExists) {
+		
+		
+			
+		correctionValidity .clear();
+		for (unsigned int i = 0; i <x.correctionValidity.length(); ++i) {
+			
+			correctionValidity.push_back(x.correctionValidity[i]);
+  			
+		}
+			
+  		
+		
+		}
 		
 	
 
@@ -791,7 +756,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalPhase");
+			throw ConversionException (err.getMessage(),"CalPhase");
 		}
 	}
 #endif
@@ -817,30 +782,6 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numBaseline, "numBaseline", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numAPC, "numAPC", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numReceptor, "numReceptor", buf);
-		
-		
-	
-
-  	
- 		
-		
 			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
 		
 		
@@ -849,23 +790,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(antennaNames, "antennaNames", buf);
-		
-		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("atmPhaseCorrections", atmPhaseCorrections));
-		
-		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("polarizationTypes", polarizationTypes));
+			buf.append(EnumerationParser::toXML("atmPhaseCorrection", atmPhaseCorrection));
 		
 		
 	
@@ -889,7 +814,15 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(frequencyRange, "frequencyRange", buf);
+		Parser::toXML(numBaseline, "numBaseline", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numReceptor, "numReceptor", buf);
 		
 		
 	
@@ -905,43 +838,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(phase, "phase", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(phaseRms, "phaseRms", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(statPhaseRms, "statPhaseRms", buf);
-		
-		
-	
-
-  	
- 		
-		if (correctionValidityExists) {
-		
-		
-		Parser::toXML(correctionValidity, "correctionValidity", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(decorrelationFactor, "decorrelationFactor", buf);
+		Parser::toXML(antennaNames, "antennaNames", buf);
 		
 		
 	
@@ -957,8 +854,76 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(decorrelationFactor, "decorrelationFactor", buf);
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(direction, "direction", buf);
 		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(frequencyRange, "frequencyRange", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(integrationTime, "integrationTime", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(phase, "phase", buf);
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("polarizationTypes", polarizationTypes));
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(phaseRMS, "phaseRMS", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(statPhaseRMS, "statPhaseRMS", buf);
+		
+		
+	
+
+  	
+ 		
+		if (correctionValidityExists) {
+		
+		
+		Parser::toXML(correctionValidity, "correctionValidity", buf);
+		
+		
+		}
 		
 	
 
@@ -997,7 +962,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalPhaseRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalPhaseRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -1014,30 +979,6 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setNumBaseline(Parser::getInteger("numBaseline","CalPhase",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setNumAPC(Parser::getInteger("numAPC","CalPhase",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setNumReceptor(Parser::getInteger("numReceptor","CalPhase",rowDoc));
-			
-		
-	
-
-	
 		
 		
 		
@@ -1048,30 +989,10 @@ namespace asdm {
 	
 
 	
-  		
-			
-					
-	  	setAntennaNames(Parser::get2DString("antennaNames","CalPhase",rowDoc));
-	  			
-	  		
-		
-	
-
-	
 		
 		
 		
-		atmPhaseCorrections = EnumerationParser::getAtmPhaseCorrection1D("atmPhaseCorrections","CalPhase",rowDoc);			
-		
-		
-		
-	
-
-	
-		
-		
-		
-		polarizationTypes = EnumerationParser::getPolarizationType1D("polarizationTypes","CalPhase",rowDoc);			
+		atmPhaseCorrection = EnumerationParser::getAtmPhaseCorrection("atmPhaseCorrection","CalPhase",rowDoc);
 		
 		
 		
@@ -1096,8 +1017,24 @@ namespace asdm {
 	
   		
 			
+	  	setNumBaseline(Parser::getInteger("numBaseline","CalPhase",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setNumReceptor(Parser::getInteger("numReceptor","CalPhase",rowDoc));
+			
+		
+	
+
+	
+  		
+			
 					
-	  	setFrequencyRange(Parser::get1DFrequency("frequencyRange","CalPhase",rowDoc));
+	  	setAmpli(Parser::get2DFloat("ampli","CalPhase",rowDoc));
 	  			
 	  		
 		
@@ -1107,59 +1044,7 @@ namespace asdm {
   		
 			
 					
-	  	setAmpli(Parser::get3DFloat("ampli","CalPhase",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-			
-					
-	  	setPhase(Parser::get3DFloat("phase","CalPhase",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-			
-					
-	  	setPhaseRms(Parser::get3DAngle("phaseRms","CalPhase",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-			
-					
-	  	setStatPhaseRms(Parser::get2DAngle("statPhaseRms","CalPhase",rowDoc));
-	  			
-	  		
-		
-	
-
-	
-  		
-        if (row.isStr("<correctionValidity>")) {
-			
-								
-	  		setCorrectionValidity(Parser::get1DBoolean("correctionValidity","CalPhase",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-			
-					
-	  	setDecorrelationFactor(Parser::get2DFloat("decorrelationFactor","CalPhase",rowDoc));
+	  	setAntennaNames(Parser::get2DString("antennaNames","CalPhase",rowDoc));
 	  			
 	  		
 		
@@ -1179,10 +1064,90 @@ namespace asdm {
   		
 			
 					
+	  	setDecorrelationFactor(Parser::get2DFloat("decorrelationFactor","CalPhase",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+					
 	  	setDirection(Parser::get1DAngle("direction","CalPhase",rowDoc));
 	  			
 	  		
 		
+	
+
+	
+  		
+			
+					
+	  	setFrequencyRange(Parser::get1DFrequency("frequencyRange","CalPhase",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setIntegrationTime(Parser::getInterval("integrationTime","CalPhase",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+					
+	  	setPhase(Parser::get2DFloat("phase","CalPhase",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+		
+		
+		
+		polarizationTypes = EnumerationParser::getPolarizationType1D("polarizationTypes","CalPhase",rowDoc);			
+		
+		
+		
+	
+
+	
+  		
+			
+					
+	  	setPhaseRMS(Parser::get2DFloat("phaseRMS","CalPhase",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+					
+	  	setStatPhaseRMS(Parser::get2DFloat("statPhaseRMS","CalPhase",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+        if (row.isStr("<correctionValidity>")) {
+			
+								
+	  		setCorrectionValidity(Parser::get1DBoolean("correctionValidity","CalPhase",rowDoc));
+	  			
+	  		
+		}
+ 		
 	
 
 	
@@ -1213,6 +1178,560 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"CalPhase");
 		}
+	}
+	
+	void CalPhaseRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+					
+			eoss.writeInt(basebandName);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(receiverBand);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(atmPhaseCorrection);
+				
+		
+	
+
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numBaseline);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numReceptor);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) ampli.size());
+		eoss.writeInt((int) ampli.at(0).size());
+		for (unsigned int i = 0; i < ampli.size(); i++) 
+			for (unsigned int j = 0;  j < ampli.at(0).size(); j++) 
+							 
+				eoss.writeFloat(ampli.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) antennaNames.size());
+		eoss.writeInt((int) antennaNames.at(0).size());
+		for (unsigned int i = 0; i < antennaNames.size(); i++) 
+			for (unsigned int j = 0;  j < antennaNames.at(0).size(); j++) 
+							 
+				eoss.writeString(antennaNames.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+	Length::toBin(baselineLengths, eoss);
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) decorrelationFactor.size());
+		eoss.writeInt((int) decorrelationFactor.at(0).size());
+		for (unsigned int i = 0; i < decorrelationFactor.size(); i++) 
+			for (unsigned int j = 0;  j < decorrelationFactor.at(0).size(); j++) 
+							 
+				eoss.writeFloat(decorrelationFactor.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+	Angle::toBin(direction, eoss);
+		
+	
+
+	
+	
+		
+	Frequency::toBin(frequencyRange, eoss);
+		
+	
+
+	
+	
+		
+	integrationTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) phase.size());
+		eoss.writeInt((int) phase.at(0).size());
+		for (unsigned int i = 0; i < phase.size(); i++) 
+			for (unsigned int j = 0;  j < phase.at(0).size(); j++) 
+							 
+				eoss.writeFloat(phase.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); i++)
+				
+			eoss.writeInt(polarizationTypes.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) phaseRMS.size());
+		eoss.writeInt((int) phaseRMS.at(0).size());
+		for (unsigned int i = 0; i < phaseRMS.size(); i++) 
+			for (unsigned int j = 0;  j < phaseRMS.at(0).size(); j++) 
+							 
+				eoss.writeFloat(phaseRMS.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) statPhaseRMS.size());
+		eoss.writeInt((int) statPhaseRMS.at(0).size());
+		for (unsigned int i = 0; i < statPhaseRMS.size(); i++) 
+			for (unsigned int j = 0;  j < statPhaseRMS.at(0).size(); j++) 
+							 
+				eoss.writeFloat(statPhaseRMS.at(i).at(j));
+				
+	
+						
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(correctionValidityExists);
+	if (correctionValidityExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) correctionValidity.size());
+		for (unsigned int i = 0; i < correctionValidity.size(); i++)
+				
+			eoss.writeBoolean(correctionValidity.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	}
+	
+	CalPhaseRow* CalPhaseRow::fromBin(EndianISStream& eiss, CalPhaseTable& table) {
+		CalPhaseRow* row = new  CalPhaseRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->basebandName = CBasebandName::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numBaseline =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numReceptor =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->ampli.clear();
+		
+		unsigned int ampliDim1 = eiss.readInt();
+		unsigned int ampliDim2 = eiss.readInt();
+		vector <float> ampliAux1;
+		for (unsigned int i = 0; i < ampliDim1; i++) {
+			ampliAux1.clear();
+			for (unsigned int j = 0; j < ampliDim2 ; j++)			
+			
+			ampliAux1.push_back(eiss.readFloat());
+			
+			row->ampli.push_back(ampliAux1);
+		}
+	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->antennaNames.clear();
+		
+		unsigned int antennaNamesDim1 = eiss.readInt();
+		unsigned int antennaNamesDim2 = eiss.readInt();
+		vector <string> antennaNamesAux1;
+		for (unsigned int i = 0; i < antennaNamesDim1; i++) {
+			antennaNamesAux1.clear();
+			for (unsigned int j = 0; j < antennaNamesDim2 ; j++)			
+			
+			antennaNamesAux1.push_back(eiss.readString());
+			
+			row->antennaNames.push_back(antennaNamesAux1);
+		}
+	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->baselineLengths = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->decorrelationFactor.clear();
+		
+		unsigned int decorrelationFactorDim1 = eiss.readInt();
+		unsigned int decorrelationFactorDim2 = eiss.readInt();
+		vector <float> decorrelationFactorAux1;
+		for (unsigned int i = 0; i < decorrelationFactorDim1; i++) {
+			decorrelationFactorAux1.clear();
+			for (unsigned int j = 0; j < decorrelationFactorDim2 ; j++)			
+			
+			decorrelationFactorAux1.push_back(eiss.readFloat());
+			
+			row->decorrelationFactor.push_back(decorrelationFactorAux1);
+		}
+	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->direction = Angle::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->frequencyRange = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+		row->integrationTime =  Interval::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+	
+		row->phase.clear();
+		
+		unsigned int phaseDim1 = eiss.readInt();
+		unsigned int phaseDim2 = eiss.readInt();
+		vector <float> phaseAux1;
+		for (unsigned int i = 0; i < phaseDim1; i++) {
+			phaseAux1.clear();
+			for (unsigned int j = 0; j < phaseDim2 ; j++)			
+			
+			phaseAux1.push_back(eiss.readFloat());
+			
+			row->phase.push_back(phaseAux1);
+		}
+	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->polarizationTypes.clear();
+		
+		unsigned int polarizationTypesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
+			
+			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->phaseRMS.clear();
+		
+		unsigned int phaseRMSDim1 = eiss.readInt();
+		unsigned int phaseRMSDim2 = eiss.readInt();
+		vector <float> phaseRMSAux1;
+		for (unsigned int i = 0; i < phaseRMSDim1; i++) {
+			phaseRMSAux1.clear();
+			for (unsigned int j = 0; j < phaseRMSDim2 ; j++)			
+			
+			phaseRMSAux1.push_back(eiss.readFloat());
+			
+			row->phaseRMS.push_back(phaseRMSAux1);
+		}
+	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->statPhaseRMS.clear();
+		
+		unsigned int statPhaseRMSDim1 = eiss.readInt();
+		unsigned int statPhaseRMSDim2 = eiss.readInt();
+		vector <float> statPhaseRMSAux1;
+		for (unsigned int i = 0; i < statPhaseRMSDim1; i++) {
+			statPhaseRMSAux1.clear();
+			for (unsigned int j = 0; j < statPhaseRMSDim2 ; j++)			
+			
+			statPhaseRMSAux1.push_back(eiss.readFloat());
+			
+			row->statPhaseRMS.push_back(statPhaseRMSAux1);
+		}
+	
+	
+
+		
+	
+
+		
+		
+		
+	row->correctionValidityExists = eiss.readBoolean();
+	if (row->correctionValidityExists) {
+		
+	
+	
+		
+			
+	
+		row->correctionValidity.clear();
+		
+		unsigned int correctionValidityDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < correctionValidityDim1; i++)
+			
+			row->correctionValidity.push_back(eiss.readBoolean());
+			
+	
+
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -1259,102 +1778,6 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numBaseline.
- 	 * @return numBaseline as int
- 	 */
- 	int CalPhaseRow::getNumBaseline() const {
-	
-  		return numBaseline;
- 	}
-
- 	/**
- 	 * Set numBaseline with the specified int.
- 	 * @param numBaseline The int value to which numBaseline is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPhaseRow::setNumBaseline (int numBaseline)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numBaseline = numBaseline;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numAPC.
- 	 * @return numAPC as int
- 	 */
- 	int CalPhaseRow::getNumAPC() const {
-	
-  		return numAPC;
- 	}
-
- 	/**
- 	 * Set numAPC with the specified int.
- 	 * @param numAPC The int value to which numAPC is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPhaseRow::setNumAPC (int numAPC)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numAPC = numAPC;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numReceptor.
- 	 * @return numReceptor as int
- 	 */
- 	int CalPhaseRow::getNumReceptor() const {
-	
-  		return numReceptor;
- 	}
-
- 	/**
- 	 * Set numReceptor with the specified int.
- 	 * @param numReceptor The int value to which numReceptor is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPhaseRow::setNumReceptor (int numReceptor)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numReceptor = numReceptor;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
  	 * Get receiverBand.
  	 * @return receiverBand as ReceiverBandMod::ReceiverBand
  	 */
@@ -1369,12 +1792,16 @@ namespace asdm {
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
  	void CalPhaseRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("receiverBand", "CalPhase");
+		
   		}
   	
  		this->receiverBand = receiverBand;
@@ -1387,93 +1814,33 @@ namespace asdm {
 
 	
  	/**
- 	 * Get antennaNames.
- 	 * @return antennaNames as vector<vector<string > >
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
  	 */
- 	vector<vector<string > > CalPhaseRow::getAntennaNames() const {
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection CalPhaseRow::getAtmPhaseCorrection() const {
 	
-  		return antennaNames;
+  		return atmPhaseCorrection;
  	}
 
  	/**
- 	 * Set antennaNames with the specified vector<vector<string > >.
- 	 * @param antennaNames The vector<vector<string > > value to which antennaNames is to be set.
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void CalPhaseRow::setAntennaNames (vector<vector<string > > antennaNames)  {
+ 	void CalPhaseRow::setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("atmPhaseCorrection", "CalPhase");
+		
   		}
   	
- 		this->antennaNames = antennaNames;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get atmPhaseCorrections.
- 	 * @return atmPhaseCorrections as vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >
- 	 */
- 	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > CalPhaseRow::getAtmPhaseCorrections() const {
-	
-  		return atmPhaseCorrections;
- 	}
-
- 	/**
- 	 * Set atmPhaseCorrections with the specified vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >.
- 	 * @param atmPhaseCorrections The vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > value to which atmPhaseCorrections is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPhaseRow::setAtmPhaseCorrections (vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->atmPhaseCorrections = atmPhaseCorrections;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get polarizationTypes.
- 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
- 	 */
- 	vector<PolarizationTypeMod::PolarizationType > CalPhaseRow::getPolarizationTypes() const {
-	
-  		return polarizationTypes;
- 	}
-
- 	/**
- 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
- 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPhaseRow::setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->polarizationTypes = polarizationTypes;
+ 		this->atmPhaseCorrection = atmPhaseCorrection;
 	
  	}
 	
@@ -1547,29 +1914,61 @@ namespace asdm {
 
 	
  	/**
- 	 * Get frequencyRange.
- 	 * @return frequencyRange as vector<Frequency >
+ 	 * Get numBaseline.
+ 	 * @return numBaseline as int
  	 */
- 	vector<Frequency > CalPhaseRow::getFrequencyRange() const {
+ 	int CalPhaseRow::getNumBaseline() const {
 	
-  		return frequencyRange;
+  		return numBaseline;
  	}
 
  	/**
- 	 * Set frequencyRange with the specified vector<Frequency >.
- 	 * @param frequencyRange The vector<Frequency > value to which frequencyRange is to be set.
+ 	 * Set numBaseline with the specified int.
+ 	 * @param numBaseline The int value to which numBaseline is to be set.
  	 
  	
  		
  	 */
- 	void CalPhaseRow::setFrequencyRange (vector<Frequency > frequencyRange)  {
+ 	void CalPhaseRow::setNumBaseline (int numBaseline)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->frequencyRange = frequencyRange;
+ 		this->numBaseline = numBaseline;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
+ 	 */
+ 	int CalPhaseRow::getNumReceptor() const {
+	
+  		return numReceptor;
+ 	}
+
+ 	/**
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPhaseRow::setNumReceptor (int numReceptor)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numReceptor = numReceptor;
 	
  	}
 	
@@ -1580,21 +1979,21 @@ namespace asdm {
 	
  	/**
  	 * Get ampli.
- 	 * @return ampli as vector<vector<vector<float > > >
+ 	 * @return ampli as vector<vector<float > >
  	 */
- 	vector<vector<vector<float > > > CalPhaseRow::getAmpli() const {
+ 	vector<vector<float > > CalPhaseRow::getAmpli() const {
 	
   		return ampli;
  	}
 
  	/**
- 	 * Set ampli with the specified vector<vector<vector<float > > >.
- 	 * @param ampli The vector<vector<vector<float > > > value to which ampli is to be set.
+ 	 * Set ampli with the specified vector<vector<float > >.
+ 	 * @param ampli The vector<vector<float > > value to which ampli is to be set.
  	 
  	
  		
  	 */
- 	void CalPhaseRow::setAmpli (vector<vector<vector<float > > > ampli)  {
+ 	void CalPhaseRow::setAmpli (vector<vector<float > > ampli)  {
   	
   	
   		if (hasBeenAdded) {
@@ -1611,172 +2010,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get phase.
- 	 * @return phase as vector<vector<vector<float > > >
+ 	 * Get antennaNames.
+ 	 * @return antennaNames as vector<vector<string > >
  	 */
- 	vector<vector<vector<float > > > CalPhaseRow::getPhase() const {
+ 	vector<vector<string > > CalPhaseRow::getAntennaNames() const {
 	
-  		return phase;
+  		return antennaNames;
  	}
 
  	/**
- 	 * Set phase with the specified vector<vector<vector<float > > >.
- 	 * @param phase The vector<vector<vector<float > > > value to which phase is to be set.
+ 	 * Set antennaNames with the specified vector<vector<string > >.
+ 	 * @param antennaNames The vector<vector<string > > value to which antennaNames is to be set.
  	 
  	
  		
  	 */
- 	void CalPhaseRow::setPhase (vector<vector<vector<float > > > phase)  {
+ 	void CalPhaseRow::setAntennaNames (vector<vector<string > > antennaNames)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->phase = phase;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get phaseRms.
- 	 * @return phaseRms as vector<vector<vector<Angle > > >
- 	 */
- 	vector<vector<vector<Angle > > > CalPhaseRow::getPhaseRms() const {
-	
-  		return phaseRms;
- 	}
-
- 	/**
- 	 * Set phaseRms with the specified vector<vector<vector<Angle > > >.
- 	 * @param phaseRms The vector<vector<vector<Angle > > > value to which phaseRms is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPhaseRow::setPhaseRms (vector<vector<vector<Angle > > > phaseRms)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->phaseRms = phaseRms;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get statPhaseRms.
- 	 * @return statPhaseRms as vector<vector<Angle > >
- 	 */
- 	vector<vector<Angle > > CalPhaseRow::getStatPhaseRms() const {
-	
-  		return statPhaseRms;
- 	}
-
- 	/**
- 	 * Set statPhaseRms with the specified vector<vector<Angle > >.
- 	 * @param statPhaseRms The vector<vector<Angle > > value to which statPhaseRms is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPhaseRow::setStatPhaseRms (vector<vector<Angle > > statPhaseRms)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->statPhaseRms = statPhaseRms;
-	
- 	}
-	
-	
-
-	
-	/**
-	 * The attribute correctionValidity is optional. Return true if this attribute exists.
-	 * @return true if and only if the correctionValidity attribute exists. 
-	 */
-	bool CalPhaseRow::isCorrectionValidityExists() const {
-		return correctionValidityExists;
-	}
-	
-
-	
- 	/**
- 	 * Get correctionValidity, which is optional.
- 	 * @return correctionValidity as vector<bool >
- 	 * @throw IllegalAccessException If correctionValidity does not exist.
- 	 */
- 	vector<bool > CalPhaseRow::getCorrectionValidity() const throw(IllegalAccessException) {
-		if (!correctionValidityExists) {
-			throw IllegalAccessException("correctionValidity", "CalPhase");
-		}
-	
-  		return correctionValidity;
- 	}
-
- 	/**
- 	 * Set correctionValidity with the specified vector<bool >.
- 	 * @param correctionValidity The vector<bool > value to which correctionValidity is to be set.
- 	 
- 	
- 	 */
- 	void CalPhaseRow::setCorrectionValidity (vector<bool > correctionValidity) {
-	
- 		this->correctionValidity = correctionValidity;
-	
-		correctionValidityExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark correctionValidity, which is an optional field, as non-existent.
-	 */
-	void CalPhaseRow::clearCorrectionValidity () {
-		correctionValidityExists = false;
-	}
-	
-
-	
-
-	
- 	/**
- 	 * Get decorrelationFactor.
- 	 * @return decorrelationFactor as vector<vector<float > >
- 	 */
- 	vector<vector<float > > CalPhaseRow::getDecorrelationFactor() const {
-	
-  		return decorrelationFactor;
- 	}
-
- 	/**
- 	 * Set decorrelationFactor with the specified vector<vector<float > >.
- 	 * @param decorrelationFactor The vector<vector<float > > value to which decorrelationFactor is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPhaseRow::setDecorrelationFactor (vector<vector<float > > decorrelationFactor)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->decorrelationFactor = decorrelationFactor;
+ 		this->antennaNames = antennaNames;
 	
  	}
 	
@@ -1818,6 +2074,38 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get decorrelationFactor.
+ 	 * @return decorrelationFactor as vector<vector<float > >
+ 	 */
+ 	vector<vector<float > > CalPhaseRow::getDecorrelationFactor() const {
+	
+  		return decorrelationFactor;
+ 	}
+
+ 	/**
+ 	 * Set decorrelationFactor with the specified vector<vector<float > >.
+ 	 * @param decorrelationFactor The vector<vector<float > > value to which decorrelationFactor is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPhaseRow::setDecorrelationFactor (vector<vector<float > > decorrelationFactor)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->decorrelationFactor = decorrelationFactor;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get direction.
  	 * @return direction as vector<Angle >
  	 */
@@ -1844,6 +2132,245 @@ namespace asdm {
 	
  	}
 	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get frequencyRange.
+ 	 * @return frequencyRange as vector<Frequency >
+ 	 */
+ 	vector<Frequency > CalPhaseRow::getFrequencyRange() const {
+	
+  		return frequencyRange;
+ 	}
+
+ 	/**
+ 	 * Set frequencyRange with the specified vector<Frequency >.
+ 	 * @param frequencyRange The vector<Frequency > value to which frequencyRange is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPhaseRow::setFrequencyRange (vector<Frequency > frequencyRange)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->frequencyRange = frequencyRange;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get integrationTime.
+ 	 * @return integrationTime as Interval
+ 	 */
+ 	Interval CalPhaseRow::getIntegrationTime() const {
+	
+  		return integrationTime;
+ 	}
+
+ 	/**
+ 	 * Set integrationTime with the specified Interval.
+ 	 * @param integrationTime The Interval value to which integrationTime is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPhaseRow::setIntegrationTime (Interval integrationTime)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->integrationTime = integrationTime;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get phase.
+ 	 * @return phase as vector<vector<float > >
+ 	 */
+ 	vector<vector<float > > CalPhaseRow::getPhase() const {
+	
+  		return phase;
+ 	}
+
+ 	/**
+ 	 * Set phase with the specified vector<vector<float > >.
+ 	 * @param phase The vector<vector<float > > value to which phase is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPhaseRow::setPhase (vector<vector<float > > phase)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->phase = phase;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get polarizationTypes.
+ 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
+ 	 */
+ 	vector<PolarizationTypeMod::PolarizationType > CalPhaseRow::getPolarizationTypes() const {
+	
+  		return polarizationTypes;
+ 	}
+
+ 	/**
+ 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPhaseRow::setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->polarizationTypes = polarizationTypes;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get phaseRMS.
+ 	 * @return phaseRMS as vector<vector<float > >
+ 	 */
+ 	vector<vector<float > > CalPhaseRow::getPhaseRMS() const {
+	
+  		return phaseRMS;
+ 	}
+
+ 	/**
+ 	 * Set phaseRMS with the specified vector<vector<float > >.
+ 	 * @param phaseRMS The vector<vector<float > > value to which phaseRMS is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPhaseRow::setPhaseRMS (vector<vector<float > > phaseRMS)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->phaseRMS = phaseRMS;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get statPhaseRMS.
+ 	 * @return statPhaseRMS as vector<vector<float > >
+ 	 */
+ 	vector<vector<float > > CalPhaseRow::getStatPhaseRMS() const {
+	
+  		return statPhaseRMS;
+ 	}
+
+ 	/**
+ 	 * Set statPhaseRMS with the specified vector<vector<float > >.
+ 	 * @param statPhaseRMS The vector<vector<float > > value to which statPhaseRMS is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPhaseRow::setStatPhaseRMS (vector<vector<float > > statPhaseRMS)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->statPhaseRMS = statPhaseRMS;
+	
+ 	}
+	
+	
+
+	
+	/**
+	 * The attribute correctionValidity is optional. Return true if this attribute exists.
+	 * @return true if and only if the correctionValidity attribute exists. 
+	 */
+	bool CalPhaseRow::isCorrectionValidityExists() const {
+		return correctionValidityExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get correctionValidity, which is optional.
+ 	 * @return correctionValidity as vector<bool >
+ 	 * @throw IllegalAccessException If correctionValidity does not exist.
+ 	 */
+ 	vector<bool > CalPhaseRow::getCorrectionValidity() const  {
+		if (!correctionValidityExists) {
+			throw IllegalAccessException("correctionValidity", "CalPhase");
+		}
+	
+  		return correctionValidity;
+ 	}
+
+ 	/**
+ 	 * Set correctionValidity with the specified vector<bool >.
+ 	 * @param correctionValidity The vector<bool > value to which correctionValidity is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalPhaseRow::setCorrectionValidity (vector<bool > correctionValidity) {
+	
+ 		this->correctionValidity = correctionValidity;
+	
+		correctionValidityExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark correctionValidity, which is an optional field, as non-existent.
+	 */
+	void CalPhaseRow::clearCorrectionValidity () {
+		correctionValidityExists = false;
+	}
 	
 
 	
@@ -2009,13 +2536,13 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
+
+	
 		correctionValidityExists = false;
-	
-
-	
-
-	
-
 	
 
 	
@@ -2032,14 +2559,17 @@ basebandName = CBasebandName::from_int(0);
 	
 
 	
-
-	
-
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+receiverBand = CReceiverBand::from_int(0);
 	
 
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
-receiverBand = CReceiverBand::from_int(0);
+atmPhaseCorrection = CAtmPhaseCorrection::from_int(0);
+	
+
+	
+
 	
 
 	
@@ -2109,13 +2639,13 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
+
+	
+
+	
+
+	
 		correctionValidityExists = false;
-	
-
-	
-
-	
-
 	
 
 	
@@ -2127,48 +2657,48 @@ receiverBand = CReceiverBand::from_int(0);
 		else {
 	
 		
+			basebandName = row.basebandName;
+		
+			receiverBand = row.receiverBand;
+		
+			atmPhaseCorrection = row.atmPhaseCorrection;
+		
 			calDataId = row.calDataId;
 		
 			calReductionId = row.calReductionId;
 		
-			basebandName = row.basebandName;
 		
 		
-		
-		
-			numBaseline = row.numBaseline;
-		
-			numAPC = row.numAPC;
-		
-			numReceptor = row.numReceptor;
-		
-			receiverBand = row.receiverBand;
-		
-			antennaNames = row.antennaNames;
-		
-			atmPhaseCorrections = row.atmPhaseCorrections;
-		
-			polarizationTypes = row.polarizationTypes;
 		
 			startValidTime = row.startValidTime;
 		
 			endValidTime = row.endValidTime;
 		
-			frequencyRange = row.frequencyRange;
+			numBaseline = row.numBaseline;
+		
+			numReceptor = row.numReceptor;
 		
 			ampli = row.ampli;
 		
-			phase = row.phase;
-		
-			phaseRms = row.phaseRms;
-		
-			statPhaseRms = row.statPhaseRms;
-		
-			decorrelationFactor = row.decorrelationFactor;
+			antennaNames = row.antennaNames;
 		
 			baselineLengths = row.baselineLengths;
 		
+			decorrelationFactor = row.decorrelationFactor;
+		
 			direction = row.direction;
+		
+			frequencyRange = row.frequencyRange;
+		
+			integrationTime = row.integrationTime;
+		
+			phase = row.phase;
+		
+			polarizationTypes = row.polarizationTypes;
+		
+			phaseRMS = row.phaseRMS;
+		
+			statPhaseRMS = row.statPhaseRMS;
 		
 		
 		
@@ -2184,48 +2714,13 @@ receiverBand = CReceiverBand::from_int(0);
 	}
 
 	
-	bool CalPhaseRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numBaseline, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<vector<string > > antennaNames, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<vector<vector<float > > > ampli, vector<vector<vector<float > > > phase, vector<vector<vector<Angle > > > phaseRms, vector<vector<Angle > > statPhaseRms, vector<vector<float > > decorrelationFactor, vector<Length > baselineLengths, vector<Angle > direction) {
+	bool CalPhaseRow::compareNoAutoInc(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numBaseline, int numReceptor, vector<vector<float > > ampli, vector<vector<string > > antennaNames, vector<Length > baselineLengths, vector<vector<float > > decorrelationFactor, vector<Angle > direction, vector<Frequency > frequencyRange, Interval integrationTime, vector<vector<float > > phase, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > phaseRMS, vector<vector<float > > statPhaseRMS) {
 		bool result;
 		result = true;
 		
 	
 		
-		result = result && (this->calDataId == calDataId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->calReductionId == calReductionId);
-		
-		if (!result) return false;
-	
-
-	
-		
 		result = result && (this->basebandName == basebandName);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numBaseline == numBaseline);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numAPC == numAPC);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numReceptor == numReceptor);
 		
 		if (!result) return false;
 	
@@ -2239,21 +2734,21 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->antennaNames == antennaNames);
+		result = result && (this->atmPhaseCorrection == atmPhaseCorrection);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->atmPhaseCorrections == atmPhaseCorrections);
+		result = result && (this->calDataId == calDataId);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->polarizationTypes == polarizationTypes);
+		result = result && (this->calReductionId == calReductionId);
 		
 		if (!result) return false;
 	
@@ -2274,7 +2769,14 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->frequencyRange == frequencyRange);
+		result = result && (this->numBaseline == numBaseline);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numReceptor == numReceptor);
 		
 		if (!result) return false;
 	
@@ -2288,28 +2790,7 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->phase == phase);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->phaseRms == phaseRms);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->statPhaseRms == statPhaseRms);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->decorrelationFactor == decorrelationFactor);
+		result = result && (this->antennaNames == antennaNames);
 		
 		if (!result) return false;
 	
@@ -2323,7 +2804,56 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
+		result = result && (this->decorrelationFactor == decorrelationFactor);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->direction == direction);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->frequencyRange == frequencyRange);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->integrationTime == integrationTime);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->phase == phase);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->polarizationTypes == polarizationTypes);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->phaseRMS == phaseRMS);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->statPhaseRMS == statPhaseRMS);
 		
 		if (!result) return false;
 	
@@ -2333,38 +2863,10 @@ receiverBand = CReceiverBand::from_int(0);
 	
 	
 	
-	bool CalPhaseRow::compareRequiredValue(int numBaseline, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<vector<string > > antennaNames, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<vector<vector<float > > > ampli, vector<vector<vector<float > > > phase, vector<vector<vector<Angle > > > phaseRms, vector<vector<Angle > > statPhaseRms, vector<vector<float > > decorrelationFactor, vector<Length > baselineLengths, vector<Angle > direction) {
+	bool CalPhaseRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, int numBaseline, int numReceptor, vector<vector<float > > ampli, vector<vector<string > > antennaNames, vector<Length > baselineLengths, vector<vector<float > > decorrelationFactor, vector<Angle > direction, vector<Frequency > frequencyRange, Interval integrationTime, vector<vector<float > > phase, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > phaseRMS, vector<vector<float > > statPhaseRMS) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->numBaseline == numBaseline)) return false;
-	
-
-	
-		if (!(this->numAPC == numAPC)) return false;
-	
-
-	
-		if (!(this->numReceptor == numReceptor)) return false;
-	
-
-	
-		if (!(this->receiverBand == receiverBand)) return false;
-	
-
-	
-		if (!(this->antennaNames == antennaNames)) return false;
-	
-
-	
-		if (!(this->atmPhaseCorrections == atmPhaseCorrections)) return false;
-	
-
-	
-		if (!(this->polarizationTypes == polarizationTypes)) return false;
-	
-
 	
 		if (!(this->startValidTime == startValidTime)) return false;
 	
@@ -2374,7 +2876,11 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		if (!(this->frequencyRange == frequencyRange)) return false;
+		if (!(this->numBaseline == numBaseline)) return false;
+	
+
+	
+		if (!(this->numReceptor == numReceptor)) return false;
 	
 
 	
@@ -2382,19 +2888,7 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		if (!(this->phase == phase)) return false;
-	
-
-	
-		if (!(this->phaseRms == phaseRms)) return false;
-	
-
-	
-		if (!(this->statPhaseRms == statPhaseRms)) return false;
-	
-
-	
-		if (!(this->decorrelationFactor == decorrelationFactor)) return false;
+		if (!(this->antennaNames == antennaNames)) return false;
 	
 
 	
@@ -2402,7 +2896,35 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
+		if (!(this->decorrelationFactor == decorrelationFactor)) return false;
+	
+
+	
 		if (!(this->direction == direction)) return false;
+	
+
+	
+		if (!(this->frequencyRange == frequencyRange)) return false;
+	
+
+	
+		if (!(this->integrationTime == integrationTime)) return false;
+	
+
+	
+		if (!(this->phase == phase)) return false;
+	
+
+	
+		if (!(this->polarizationTypes == polarizationTypes)) return false;
+	
+
+	
+		if (!(this->phaseRMS == phaseRMS)) return false;
+	
+
+	
+		if (!(this->statPhaseRMS == statPhaseRMS)) return false;
 	
 
 		return result;
@@ -2420,39 +2942,35 @@ receiverBand = CReceiverBand::from_int(0);
 	bool CalPhaseRow::equalByRequiredValue(CalPhaseRow* x) {
 		
 			
-		if (this->numBaseline != x->numBaseline) return false;
-			
-		if (this->numAPC != x->numAPC) return false;
-			
-		if (this->numReceptor != x->numReceptor) return false;
-			
-		if (this->receiverBand != x->receiverBand) return false;
-			
-		if (this->antennaNames != x->antennaNames) return false;
-			
-		if (this->atmPhaseCorrections != x->atmPhaseCorrections) return false;
-			
-		if (this->polarizationTypes != x->polarizationTypes) return false;
-			
 		if (this->startValidTime != x->startValidTime) return false;
 			
 		if (this->endValidTime != x->endValidTime) return false;
 			
-		if (this->frequencyRange != x->frequencyRange) return false;
+		if (this->numBaseline != x->numBaseline) return false;
+			
+		if (this->numReceptor != x->numReceptor) return false;
 			
 		if (this->ampli != x->ampli) return false;
 			
-		if (this->phase != x->phase) return false;
-			
-		if (this->phaseRms != x->phaseRms) return false;
-			
-		if (this->statPhaseRms != x->statPhaseRms) return false;
-			
-		if (this->decorrelationFactor != x->decorrelationFactor) return false;
+		if (this->antennaNames != x->antennaNames) return false;
 			
 		if (this->baselineLengths != x->baselineLengths) return false;
 			
+		if (this->decorrelationFactor != x->decorrelationFactor) return false;
+			
 		if (this->direction != x->direction) return false;
+			
+		if (this->frequencyRange != x->frequencyRange) return false;
+			
+		if (this->integrationTime != x->integrationTime) return false;
+			
+		if (this->phase != x->phase) return false;
+			
+		if (this->polarizationTypes != x->polarizationTypes) return false;
+			
+		if (this->phaseRMS != x->phaseRMS) return false;
+			
+		if (this->statPhaseRMS != x->statPhaseRMS) return false;
 			
 		
 		return true;

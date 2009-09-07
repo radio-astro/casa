@@ -42,16 +42,30 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the AntennaType enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace AntennaTypeMod
 {
+  //! AntennaType.
+  //!  Functional types of antenna
+  
+  const char *const revision = "1.5.2.1";
+  const int version = 1;
+  
   enum AntennaType
   { 
-    GROUND_BASED ,
-    SPACE_BASED ,
-    TRACKING_STN 
+    GROUND_BASED /*!< Ground-based antenna */
+     ,
+    SPACE_BASED /*!< Antenna in a spacecraft */
+     ,
+    TRACKING_STN /*!< Space-tracking station antenna */
+     
   };
   typedef AntennaType &AntennaType_out;
 } 
@@ -59,68 +73,93 @@ namespace AntennaTypeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration AntennaType.
+  * 
+  */
 class CAntennaType {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the AntennaType enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sGROUND_BASED;
+	static const std::string& sGROUND_BASED; /*!< A const string equal to "GROUND_BASED".*/
 	
-	static const std::string& sSPACE_BASED;
+	static const std::string& sSPACE_BASED; /*!< A const string equal to "SPACE_BASED".*/
 	
-	static const std::string& sTRACKING_STN;
-	
-    static const std::vector<std::string> sAntennaTypeSet();	 
-
+	static const std::string& sTRACKING_STN; /*!< A const string equal to "TRACKING_STN".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in AntennaTypeMod::AntennaType.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of AntennaTypeMod::AntennaType.
+      * @return a string.
+      */
+	static std::string name(const AntennaTypeMod::AntennaType& e);
 	
-	// Explanations associated with the AntennaType Enumeration.
-		
-	static const std::string& hGROUND_BASED;
-		
-	static const std::string& hSPACE_BASED;
-		
-	static const std::string& hTRACKING_STN;
-		
-	static const std::vector<std::string> hAntennaTypeSet();
-   	
-
-   	// Is an integer number associated with the AntennaType enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the AntennaType enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  AntennaType enumeration.
-	static std::string name(const AntennaTypeMod::AntennaType& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const AntennaTypeMod::AntennaType& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified AntennaType enumeration.
-	static std::string help(const AntennaTypeMod::AntennaType& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a AntennaType enumeration object by specifying its name.
    	static AntennaTypeMod::AntennaType newAntennaType(const std::string& name);
    	
-   	// Create a AntennaType enumeration object by specifying its name.
+   	/*! Return a AntennaType's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a AntennaTypeMod::AntennaType's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static AntennaTypeMod::AntennaType literal(const std::string& name);
  	
-    // Create a AntennaType enumeration object by specifying its position index (0 based).
+    /*! Return a AntennaType's enumerator given an unsigned int.
+      * @param i the index of the enumerator in AntennaTypeMod::AntennaType.
+      * @return a AntennaTypeMod::AntennaType's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static AntennaTypeMod::AntennaType from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CAntennaType();
     CAntennaType(const CAntennaType&);
     CAntennaType& operator=(const CAntennaType&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CAntennaType_H*/

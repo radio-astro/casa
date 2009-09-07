@@ -191,8 +191,6 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	        PlotMSPlotParameters& params = plot->parameters();
 	        PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>();
 	        PlotMSData& data = plot->data();
-            if(itsType_ == SEL_FLAG || itsType_ == SEL_UNFLAG)
-                flagging.setMS(&plot->ms(),&plot->selectedMS(),plot->visSet());
 
 	        vector<PlotCanvasPtr> canv = plot->canvases();
 	        for(unsigned int j = 0; j < canv.size(); j++) {
@@ -489,8 +487,9 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	        PlotMSCacheThread* ct;
 	        
 	        if(itsType_ == CACHE_LOAD) {
-	            ct = new PlotMSCacheThread(plot, a, vector<PMS::DataColumn>(
-	                    a.size(), PMS::DEFAULT_DATACOLUMN),
+	            ct = new PlotMSCacheThread(plot, &plot->data(), a,
+	                    vector<PMS::DataColumn>(a.size(), PMS::DEFAULT_DATACOLUMN),
+	                    paramsData->filename(),paramsData->selection(),
 	                    paramsData->averaging(), false,
 	                    &PMS_PP_Cache::notifyWatchers, paramsCache);
 
@@ -506,7 +505,6 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	}
 	
 	case MS_SUMMARY: {
-	    PlotMSPlot* plot = valuePlot(P_PLOT);
 	    
 	    bool success = false, reenableGlobal = false;
 	    try {
@@ -514,23 +512,21 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	        MeasurementSet ms;
 	        
 	        // Check if MS has already been opened.
-	        if(!plot->ms().isNull()) ms = plot->ms();
-	        else {
-	            // Check if filename has been set but not plotted.
-	            PlotMSPlotParameters currentlySet = plotms->getPlotter()
-                        ->getPlotTab()->currentlySetParameters();
-	            String filename = PMS_PP_RETCALL(currentlySet, PMS_PP_MSData,
-	                                             filename, "");
-	            
-	            // If not, exit.
-	            if(filename.empty()) {
-	                itsDoActionResult_ = "MS has not been opened/set yet!";
-	                return false;
-	            }
-	            
-	            ms= MeasurementSet(filename, TableLock(TableLock::AutoLocking),
-	                    Table::Update);
-	        }
+		
+		// Check if filename has been set but not plotted.
+		PlotMSPlotParameters currentlySet = plotms->getPlotter()
+		  ->getPlotTab()->currentlySetParameters();
+		String filename = PMS_PP_RETCALL(currentlySet, PMS_PP_MSData,
+						 filename, "");
+		
+		// If not, exit.
+		if(filename.empty()) {
+		  itsDoActionResult_ = "MS has not been opened/set yet!";
+		  return false;
+		}
+	        
+		ms= MeasurementSet(filename, TableLock(TableLock::AutoLocking),
+				   Table::Old);
 	        
 	        // Set up MSSummary object.
 	        MSSummary mss(ms);
@@ -631,7 +627,7 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 		return true;
 
 	case QUIT:
-	    QApplication::setQuitOnLastWindowClosed(true);
+	    //QApplication::setQuitOnLastWindowClosed(true);
 		plotms->close();
 		return true;
 

@@ -26,8 +26,6 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotMSFlagging.h>
 
-#include <msvis/MSVis/VisSet.h>
-
 namespace casa {
 
 ////////////////////////////////
@@ -85,31 +83,14 @@ const String PlotMSFlagging::RKEY_SELVALUE = "SelectionValue";
 
 // Constructors/Destructors //
 
-PlotMSFlagging::PlotMSFlagging() : itsMS_(NULL), itsSelectedMS_(NULL),
-        itsVisSet_(NULL) {
-    setDefaults(); }
-
-PlotMSFlagging::PlotMSFlagging(MeasurementSet* ms, MeasurementSet* selectedMS,
-        VisSet* visSet) : itsMS_(ms), itsSelectedMS_(selectedMS),
-        itsVisSet_(visSet) {
-    setDefaults(); }
+PlotMSFlagging::PlotMSFlagging() {
+  setDefaults(); 
+}
 
 PlotMSFlagging::~PlotMSFlagging() { }
 
 
 // Public Methods //
-
-MeasurementSet* PlotMSFlagging::getMS() const { return itsMS_; }
-MeasurementSet* PlotMSFlagging::getSelectedMS() const{ return itsSelectedMS_; }
-VisSet* PlotMSFlagging::getVisSet() const { return itsVisSet_; }
-
-void PlotMSFlagging::setMS(MeasurementSet* ms, MeasurementSet* selectedMS,
-        VisSet* visSet) {
-    itsMS_ = ms;
-    itsSelectedMS_ = selectedMS;
-    itsVisSet_ = visSet;
-}
-
 
 void PlotMSFlagging::fromRecord(const RecordInterface& record) {
     const vector<String>& fields = fieldStrings();

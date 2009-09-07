@@ -96,7 +96,7 @@ namespace asdmbinaries {
       
       if (position_ == endPosition_) return string::npos;
       
-      position_ = lastPosition_+1;
+      position_ = lastPosition_; //+1;
     }
   }
     
@@ -339,19 +339,19 @@ namespace asdmbinaries {
       longCrossData_  = 0;
       floatCrossData_ = 0;
       switch (sdmDataSubset.crossDataType()) {
-      case SHORT_TYPE:
+      case INT16_TYPE:
 	shortCrossData_  = (const SHORTCROSSDATATYPE*) (data_ + startAttachPosition);
 	nCrossData_ = length / sizeof (SHORTCROSSDATATYPE);
 	//cout << "shortCrossData = " << (unsigned long int) shortCrossData_ << ", nShortCrossData = " << nCrossData_ << endl;
 	break;
 	
-      case INT_TYPE:
+      case INT32_TYPE:
 	longCrossData_  = (const LONGCROSSDATATYPE*) (data_ + startAttachPosition);
 	nCrossData_ = length / sizeof (LONGCROSSDATATYPE);
 	//cout << "longCrossData = " << (unsigned long int) longCrossData_ << ", nLongCrossData = " << nCrossData_ << endl;
 	break;
 
-      case FLOAT_TYPE:
+      case FLOAT32_TYPE:
 	floatCrossData_ = (const FLOATCROSSDATATYPE*) (data_ + startAttachPosition);
 	nCrossData_ = length / sizeof (FLOATCROSSDATATYPE);
 	break;
@@ -404,18 +404,7 @@ namespace asdmbinaries {
 
     regex r;
     ostringstream oss;
-    switch (sdmDataObject_.spectralResolutionType()) {
-    case FULL_RESOLUTION:
-      r = regex(" *" + sdmDataObject_.projectPath() + "([[:digit:]]+)/desc.xml");
-      break;
-    case CHANNEL_AVERAGE:
-      r = regex(" *" + sdmDataObject_.projectPath() + "([[:digit:]]+)/([[:digit:]]+)/desc.xml");
-      break;
-    case BASEBAND_WIDE:
-      ostringstream oss;
-      oss << "Internal error in method processMIMEIntegration. The constant '" + CSpectralResolutionType::name(BASEBAND_WIDE) + "' cannot occur in this context";
-      throw SDMDataObjectReaderException(oss.str());
-    }
+    r = regex(" *" + sdmDataObject_.projectPath() + "([[:digit:]]+/){1,2}" + "desc.xml");
     
     // Extract the Subset name and the integration [, subintegration] number.
     cmatch what;
@@ -536,17 +525,17 @@ namespace asdmbinaries {
 	integration.floatCrossData_ = 0;
 	integration.nCrossData_     = 0;
 	switch (integration.crossDataType()) {
-	case INT_TYPE:
+	case INT32_TYPE:
 	  integration.longCrossData_    = longCrossData_;
 	  integration.nCrossData_       = nCrossData_; 
 	  break;
 
-	case SHORT_TYPE:
+	case INT16_TYPE:
 	  integration.shortCrossData_   = shortCrossData_;
 	  integration.nCrossData_       = nCrossData_; 
 	  break;
 
-	case FLOAT_TYPE:
+	case FLOAT32_TYPE:
 	  integration.floatCrossData_   = floatCrossData_;
 	  integration.nCrossData_       = nCrossData_;
 	  break;
@@ -605,13 +594,13 @@ namespace asdmbinaries {
 	}
 
 	switch (integration.crossDataType()) {
-	case INT_TYPE:
+	case INT32_TYPE:
 	  crossDataTypeSize = sizeof(LONGCROSSDATATYPE);
 	  break;
-	case SHORT_TYPE:
+	case INT16_TYPE:
 	  crossDataTypeSize = sizeof(SHORTCROSSDATATYPE);
 	  break;
-	case FLOAT_TYPE:
+	case FLOAT32_TYPE:
 	  crossDataTypeSize = sizeof(FLOATCROSSDATATYPE);
 	  break;
 	default:
@@ -633,17 +622,17 @@ namespace asdmbinaries {
 	integration.floatCrossData_ = 0;
 	integration.nCrossData_     = 0;
 	switch (integration.crossDataType()) {
-	case INT_TYPE:
+	case INT32_TYPE:
 	  integration.longCrossData_    = longCrossData_;
 	  integration.nCrossData_       = nCrossData_; 
 	  break;
 	
-	case SHORT_TYPE:
+	case INT16_TYPE:
 	  integration.shortCrossData_   = shortCrossData_;
 	  integration.nCrossData_       = nCrossData_; 
 	  break;
 
-	case FLOAT_TYPE:
+	case FLOAT32_TYPE:
 	  integration.floatCrossData_   = floatCrossData_;
 	  integration.nCrossData_       = nCrossData_;
 	  break;
@@ -662,28 +651,12 @@ namespace asdmbinaries {
 	break;
       }
       
-      // ZeroLags is not present when spectralResolution == CHANNEL_AVERAGE.
-      /*
-	if (sdmDataObject_.spectralResolutionType_ != CHANNEL_AVERAGE) {
-	if (!attachmentFlags.test(ZEROLAGS)) {
-	  ostringstream oss;
-	  oss << "Data subset '"<<contentLocation<<"': ";
-	  oss << "a binary attachment 'zeroLags' was expected in subset #" << integrationNum_;
-	  throw SDMDataObjectReaderException(oss.str());
-	  }
-	  if (nZeroLags_ != sdmDataObject_.dataStruct().zeroLags().size()) {
-	  ostringstream oss;
-	  oss << "Data subset '"<<contentLocation<<"': ";
-	  oss << "size of 'zeroLags' attachment (" << nZeroLags_ << ") is not equal to the size announced in the header (" << sdmDataObject_.dataStruct().zeroLags().size() << ")";
-	  throw SDMDataObjectReaderException(oss.str());
-	  }
-	  integration.zeroLags_  = zeroLags_;
-	  integration.nZeroLags_ = nZeroLags_;       
-	  }
-      */
       
-      // zeroLags are optional in any case. Michel Caillat - 24 Jul 2008
       if (attachmentFlags.test(ZEROLAGS)) {
+	// Refuse the zeroLags attachment if it's not a Correlator or if the correlator is a CORRELATOR_FX (ACA).
+	if ((sdmDataObject_.processorType_ != CORRELATOR) || (sdmDataObject_.correlatorType() == FX))
+	  throw SDMDataObjectReaderException("zeroLags are not expected from a correlator CORRELATOR_FX");
+
 	if (nZeroLags_ != sdmDataObject_.dataStruct().zeroLags().size()) {
 	  ostringstream oss;
 	  oss << "Data subset '"<<contentLocation<<"': ";
@@ -691,8 +664,7 @@ namespace asdmbinaries {
 	  throw SDMDataObjectReaderException(oss.str());
 	}
 	integration.zeroLags_  = zeroLags_;
-	integration.nZeroLags_ = nZeroLags_;       
-      
+	integration.nZeroLags_ = nZeroLags_;      
       }
     
     sdmDataObject_.append(integration);

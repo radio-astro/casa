@@ -75,6 +75,25 @@ using namespace enumerations;
 
 
 	
+#include "CReceiverBand.h"
+using namespace ReceiverBandMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
 
 	
 
@@ -130,13 +149,6 @@ using namespace SyscalMethodMod;
 
 	
 
-	
-
-	
-#include "CReceiverBand.h"
-using namespace ReceiverBandMod;
-	
-
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
@@ -177,201 +189,279 @@ class ASDM;
 class CalAtmosphereRow;
 /**
  * The CalAtmosphereTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Results of atmosphere calibration by TelCal. This calibration determines the system temperatures corrected for atmospheric absorption. Ionospheric effects are not dealt with in the Table.
+ * <BR>
+ 
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalAtmosphere </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaName </TD>
+ 		 
+ * <TD> string</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the name of the antenna. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> receiverBand </TD>
+ 		 
+ * <TD> ReceiverBandMod::ReceiverBand</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies the receiver band. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> antennaName </TD> 
- * <TD> string </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalReduction Table. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
- * <TD> numReceptor </TD> 
- * <TD> int </TD>
+ * <TD> startValidTime </TD> 
+ * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numFreq </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the end time of result validity period. </TD>
  * </TR>
 	
  * <TR>
- * <TD> startValidTime </TD> 
- * <TD> ArrayTime </TD>
+ * <TD> numFreq </TD> 
+ * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of frequency points. </TD>
  * </TR>
 	
  * <TR>
- * <TD> polarizationTypes </TD> 
- * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
- * <TD>  numReceptor </TD> 
+ * <TD> numLoad </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of loads. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numReceptor </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of receptors. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> forwardEffSpectrum </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numFreq </TD> 
+ * <TD> &nbsp;the spectra of forward efficiencies (one value per receptor, per frequency). </TD>
  * </TR>
 	
  * <TR>
  * <TD> frequencyRange </TD> 
  * <TD> vector<Frequency > </TD>
  * <TD>  2 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> frequencySpectrum </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>  numFreq </TD> 
- * </TR>
-	
- * <TR>
- * <TD> syscalType </TD> 
- * <TD> SyscalMethodMod::SyscalMethod </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> tSysSpectrum </TD> 
- * <TD> vector<vector<Temperature > > </TD>
- * <TD>  numFreq, numReceptor </TD> 
- * </TR>
-	
- * <TR>
- * <TD> tRecSpectrum </TD> 
- * <TD> vector<vector<Temperature > > </TD>
- * <TD>  numFreq, numReceptor </TD> 
- * </TR>
-	
- * <TR>
- * <TD> tAtmSpectrum </TD> 
- * <TD> vector<vector<Temperature > > </TD>
- * <TD>  numFreq, numReceptor </TD> 
- * </TR>
-	
- * <TR>
- * <TD> tauSpectrum </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>  numFreq, numReceptor </TD> 
- * </TR>
-	
- * <TR>
- * <TD> sbGainSpectrum </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>  numFreq, numReceptor </TD> 
- * </TR>
-	
- * <TR>
- * <TD> forwardEffSpectrum </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>  numFreq, numReceptor </TD> 
+ * <TD> &nbsp;the frequency range. </TD>
  * </TR>
 	
  * <TR>
  * <TD> groundPressure </TD> 
  * <TD> Pressure </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> groundTemperature </TD> 
- * <TD> Temperature </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the ground pressure. </TD>
  * </TR>
 	
  * <TR>
  * <TD> groundRelHumidity </TD> 
  * <TD> Humidity </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the ground relative humidity. </TD>
  * </TR>
 	
  * <TR>
- * <TD> subType </TD> 
- * <TD> string </TD>
+ * <TD> frequencySpectrum </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  numFreq </TD> 
+ * <TD> &nbsp;the frequencies. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> groundTemperature </TD> 
+ * <TD> Temperature </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the ground temperature. </TD>
  * </TR>
 	
  * <TR>
- * <TD> receiverBand </TD> 
- * <TD> ReceiverBandMod::ReceiverBand </TD>
+ * <TD> polarizationTypes </TD> 
+ * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the polarizations of the receptors (an array with one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> powerSkySpectrum </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numFreq </TD> 
+ * <TD> &nbsp;the powers on the sky (one value per receptor per frequency). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> powerLoadSpectrum </TD> 
+ * <TD> vector<vector<vector<float > > > </TD>
+ * <TD>  numLoad, numReceptor, numFreq </TD> 
+ * <TD> &nbsp;the powers on the loads (one value per load per receptor per frequency). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> syscalType </TD> 
+ * <TD> SyscalMethodMod::SyscalMethod </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
-
-
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
-	
- * <TR>
- * <TD> tSys </TD> 
- * <TD> vector<Temperature > </TD>
- * <TD>  numReceptor  </TD>
+ * <TD> &nbsp;the type of calibration used. </TD>
  * </TR>
 	
  * <TR>
- * <TD> tRec </TD> 
- * <TD> vector<Temperature > </TD>
- * <TD>  numReceptor  </TD>
+ * <TD> tAtmSpectrum </TD> 
+ * <TD> vector<vector<Temperature > > </TD>
+ * <TD>  numReceptor, numFreq </TD> 
+ * <TD> &nbsp;the spectra of atmosphere physical  temperatures (one value per receptor per frequency). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> tRecSpectrum </TD> 
+ * <TD> vector<vector<Temperature > > </TD>
+ * <TD>  numReceptor, numFreq </TD> 
+ * <TD> &nbsp;the spectra of the receptors temperatures (one value  per receptor per frequency). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> tSysSpectrum </TD> 
+ * <TD> vector<vector<Temperature > > </TD>
+ * <TD>  numReceptor, numFreq </TD> 
+ * <TD> &nbsp;the spectra of system temperatures (one value  per receptor per frequency). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> tauSpectrum </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numFreq </TD> 
+ * <TD> &nbsp;the spectra of atmosheric optical depths (one value  per receptor per frequency). </TD>
  * </TR>
 	
  * <TR>
  * <TD> tAtm </TD> 
  * <TD> vector<Temperature > </TD>
- * <TD>  numReceptor  </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the atmosphere physical temperatures (one value per receptor). </TD>
  * </TR>
 	
  * <TR>
- * <TD> sbGain </TD> 
+ * <TD> tRec </TD> 
+ * <TD> vector<Temperature > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the receptors temperatures (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> tSys </TD> 
+ * <TD> vector<Temperature > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the system temperatures (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> tau </TD> 
  * <TD> vector<float > </TD>
- * <TD>  numReceptor  </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the atmospheric optical depths (one value per receptor). </TD>
  * </TR>
 	
  * <TR>
  * <TD> water </TD> 
  * <TD> vector<Length > </TD>
- * <TD>  numReceptor  </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the water vapor path lengths (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> waterError </TD> 
+ * <TD> vector<Length > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the uncertainties of water vapor contents (one value per receptor). </TD>
+ * </TR>
+	
+
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
+	
+ * <TR>
+ * <TD> alphaSpectrum </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numFreq  </TD>
+ * <TD>&nbsp; the alpha coefficients, two loads only (one value per receptor per frequency). </TD>
  * </TR>
 	
  * <TR>
  * <TD> forwardEfficiency </TD> 
  * <TD> vector<float > </TD>
  * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the forward efficiencies (one value per receptor). </TD>
  * </TR>
 	
  * <TR>
- * <TD> tau </TD> 
+ * <TD> forwardEfficiencyError </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the uncertainties on forwardEfficiency (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sbGain </TD> 
  * <TD> vector<float > </TD>
  * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the relative gains of LO1 sideband (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sbGainError </TD> 
+ * <TD> vector<float > </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; the uncertainties on the relative gains of LO1 sideband (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sbGainSpectrum </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numFreq  </TD>
+ * <TD>&nbsp; the spectra of relative sideband gains (one value  per receptor per frequency). </TD>
  * </TR>
 	
 
@@ -446,58 +536,72 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param antennaName. 
+	
+ 	 * @param receiverBand. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
 	
- 	 * @param antennaName. 
-	
- 	 * @param numReceptor. 
-	
- 	 * @param numFreq. 
+ 	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param startValidTime. 
+ 	 * @param numFreq. 
 	
- 	 * @param polarizationTypes. 
+ 	 * @param numLoad. 
 	
- 	 * @param frequencyRange. 
-	
- 	 * @param frequencySpectrum. 
-	
- 	 * @param syscalType. 
-	
- 	 * @param tSysSpectrum. 
-	
- 	 * @param tRecSpectrum. 
-	
- 	 * @param tAtmSpectrum. 
-	
- 	 * @param tauSpectrum. 
-	
- 	 * @param sbGainSpectrum. 
+ 	 * @param numReceptor. 
 	
  	 * @param forwardEffSpectrum. 
 	
- 	 * @param groundPressure. 
+ 	 * @param frequencyRange. 
 	
- 	 * @param groundTemperature. 
+ 	 * @param groundPressure. 
 	
  	 * @param groundRelHumidity. 
 	
- 	 * @param subType. 
+ 	 * @param frequencySpectrum. 
 	
- 	 * @param receiverBand. 
+ 	 * @param groundTemperature. 
+	
+ 	 * @param polarizationTypes. 
+	
+ 	 * @param powerSkySpectrum. 
+	
+ 	 * @param powerLoadSpectrum. 
+	
+ 	 * @param syscalType. 
+	
+ 	 * @param tAtmSpectrum. 
+	
+ 	 * @param tRecSpectrum. 
+	
+ 	 * @param tSysSpectrum. 
+	
+ 	 * @param tauSpectrum. 
+	
+ 	 * @param tAtm. 
+	
+ 	 * @param tRec. 
+	
+ 	 * @param tSys. 
+	
+ 	 * @param tau. 
+	
+ 	 * @param water. 
+	
+ 	 * @param waterError. 
 	
      */
-	CalAtmosphereRow *newRow(Tag calDataId, Tag calReductionId, string antennaName, int numReceptor, int numFreq, ArrayTime endValidTime, ArrayTime startValidTime, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<Frequency > frequencyRange, vector<Frequency > frequencySpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tSysSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tAtmSpectrum, vector<vector<float > > tauSpectrum, vector<vector<float > > sbGainSpectrum, vector<vector<float > > forwardEffSpectrum, Pressure groundPressure, Temperature groundTemperature, Humidity groundRelHumidity, string subType, ReceiverBandMod::ReceiverBand receiverBand);
+	CalAtmosphereRow *newRow(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalAtmosphereRow *newRowFull(Tag calDataId, Tag calReductionId, string antennaName, int numReceptor, int numFreq, ArrayTime endValidTime, ArrayTime startValidTime, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<Frequency > frequencyRange, vector<Frequency > frequencySpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tSysSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tAtmSpectrum, vector<vector<float > > tauSpectrum, vector<vector<float > > sbGainSpectrum, vector<vector<float > > forwardEffSpectrum, Pressure groundPressure, Temperature groundTemperature, Humidity groundRelHumidity, string subType, ReceiverBandMod::ReceiverBand receiverBand);
+	CalAtmosphereRow *newRowFull(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError);
 
 
 	/**
@@ -563,15 +667,17 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param antennaName. 
+	
+	 * @param receiverBand. 
+	
 	 * @param calDataId. 
 	
 	 * @param calReductionId. 
 	
-	 * @param antennaName. 
-	
  	 *
 	 */
- 	CalAtmosphereRow* getRowByKey(Tag calDataId, Tag calReductionId, string antennaName);
+ 	CalAtmosphereRow* getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId);
 
  	 	
 
@@ -583,52 +689,66 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
+ 	 * @param antennaName.
+ 	 		
+ 	 * @param receiverBand.
+ 	 		
  	 * @param calDataId.
  	 		
  	 * @param calReductionId.
  	 		
- 	 * @param antennaName.
- 	 		
- 	 * @param numReceptor.
- 	 		
- 	 * @param numFreq.
+ 	 * @param startValidTime.
  	 		
  	 * @param endValidTime.
  	 		
- 	 * @param startValidTime.
+ 	 * @param numFreq.
  	 		
- 	 * @param polarizationTypes.
+ 	 * @param numLoad.
  	 		
- 	 * @param frequencyRange.
- 	 		
- 	 * @param frequencySpectrum.
- 	 		
- 	 * @param syscalType.
- 	 		
- 	 * @param tSysSpectrum.
- 	 		
- 	 * @param tRecSpectrum.
- 	 		
- 	 * @param tAtmSpectrum.
- 	 		
- 	 * @param tauSpectrum.
- 	 		
- 	 * @param sbGainSpectrum.
+ 	 * @param numReceptor.
  	 		
  	 * @param forwardEffSpectrum.
  	 		
- 	 * @param groundPressure.
+ 	 * @param frequencyRange.
  	 		
- 	 * @param groundTemperature.
+ 	 * @param groundPressure.
  	 		
  	 * @param groundRelHumidity.
  	 		
- 	 * @param subType.
+ 	 * @param frequencySpectrum.
  	 		
- 	 * @param receiverBand.
+ 	 * @param groundTemperature.
+ 	 		
+ 	 * @param polarizationTypes.
+ 	 		
+ 	 * @param powerSkySpectrum.
+ 	 		
+ 	 * @param powerLoadSpectrum.
+ 	 		
+ 	 * @param syscalType.
+ 	 		
+ 	 * @param tAtmSpectrum.
+ 	 		
+ 	 * @param tRecSpectrum.
+ 	 		
+ 	 * @param tSysSpectrum.
+ 	 		
+ 	 * @param tauSpectrum.
+ 	 		
+ 	 * @param tAtm.
+ 	 		
+ 	 * @param tRec.
+ 	 		
+ 	 * @param tSys.
+ 	 		
+ 	 * @param tau.
+ 	 		
+ 	 * @param water.
+ 	 		
+ 	 * @param waterError.
  	 		 
  	 */
-	CalAtmosphereRow* lookup(Tag calDataId, Tag calReductionId, string antennaName, int numReceptor, int numFreq, ArrayTime endValidTime, ArrayTime startValidTime, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<Frequency > frequencyRange, vector<Frequency > frequencySpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tSysSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tAtmSpectrum, vector<vector<float > > tauSpectrum, vector<vector<float > > sbGainSpectrum, vector<vector<float > > forwardEffSpectrum, Pressure groundPressure, Temperature groundTemperature, Humidity groundRelHumidity, string subType, ReceiverBandMod::ReceiverBand receiverBand); 
+	CalAtmosphereRow* lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError); 
 
 
 #ifndef WITHOUT_ACS
@@ -648,43 +768,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalAtmosphereTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalAtmosphereTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalAtmosphere (CalAtmosphereTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalAtmosphere (CalAtmosphereTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -759,8 +885,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalAtmosphereRow* checkAndAdd(CalAtmosphereRow* x) throw (DuplicateKey);
+	CalAtmosphereRow* checkAndAdd(CalAtmosphereRow* x) ;
 
 
 
@@ -774,7 +902,7 @@ private:
 	vector<CalAtmosphereRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

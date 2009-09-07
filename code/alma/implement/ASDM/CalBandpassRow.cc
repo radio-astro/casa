@@ -113,7 +113,7 @@ namespace asdm {
 		
 			
 				
-		x->numAntenna = numAntenna;
+		x->sideband = sideband;
  				
  			
 		
@@ -125,7 +125,7 @@ namespace asdm {
 		
 			
 				
-		x->numBaseline = numBaseline;
+		x->atmPhaseCorrection = atmPhaseCorrection;
  				
  			
 		
@@ -137,7 +137,7 @@ namespace asdm {
 		
 			
 				
-		x->numAPC = numAPC;
+		x->typeCurve = typeCurve;
  				
  			
 		
@@ -149,7 +149,7 @@ namespace asdm {
 		
 			
 				
-		x->numReceptor = numReceptor;
+		x->receiverBand = receiverBand;
  				
  			
 		
@@ -180,13 +180,10 @@ namespace asdm {
 		
 		
 			
-		x->freqLimits.length(freqLimits.size());
-		for (unsigned int i = 0; i < freqLimits.size(); ++i) {
-			
-			x->freqLimits[i] = freqLimits.at(i).toIDLFrequency();
-			
-	 	}
-			
+				
+		x->numAntenna = numAntenna;
+ 				
+ 			
 		
 	
 
@@ -196,7 +193,19 @@ namespace asdm {
 		
 			
 				
-		x->receiverBand = receiverBand;
+		x->numPoly = numPoly;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->numReceptor = numReceptor;
  				
  			
 		
@@ -236,13 +245,11 @@ namespace asdm {
 		
 		
 			
-		x->atmPhaseCorrections.length(atmPhaseCorrections.size());
-		for (unsigned int i = 0; i < atmPhaseCorrections.size(); ++i) {
+		x->freqLimits.length(freqLimits.size());
+		for (unsigned int i = 0; i < freqLimits.size(); ++i) {
 			
-				
-			x->atmPhaseCorrections[i] = atmPhaseCorrections.at(i);
-	 			
-	 		
+			x->freqLimits[i] = freqLimits.at(i).toIDLFrequency();
+			
 	 	}
 			
 		
@@ -270,62 +277,20 @@ namespace asdm {
 		
 		
 			
-				
-		x->numAmpliPoly = numAmpliPoly;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->ampliCurve.length(ampliCurve.size());
-		for (unsigned int i = 0; i < ampliCurve.size(); i++) {
-			x->ampliCurve[i].length(ampliCurve.at(i).size());
-			for (unsigned int j = 0; j < ampliCurve.at(i).size(); j++) {
-				x->ampliCurve[i][j].length(ampliCurve.at(i).at(j).size());
-				for (unsigned int k = 0; k < ampliCurve.at(i).at(j).size(); k++) {
-					 x->ampliCurve[i][j][k].length(ampliCurve.at(i).at(j).at(k).size());
-			    }
-			}					 		
-		}		
-		
-		for (unsigned int i = 0; i < ampliCurve.size() ; i++)
-			for (unsigned int j = 0; j < ampliCurve.at(i).size(); j++)
-				for (unsigned int k = 0; k < ampliCurve.at(i).at(j).size(); k++)
-					for (unsigned int l = 0; l < ampliCurve.at(i).at(j).at(k).size(); l++)
-					
-						
-						x->ampliCurve[i][j][k][l] = ampliCurve.at(i).at(j).at(k).at(l);
-		 				
-			 							
-	 	cout << "Converted successfully" << endl;
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->ampliRms.length(ampliRms.size());
-		for (unsigned int i = 0; i < ampliRms.size(); i++) {
-			x->ampliRms[i].length(ampliRms.at(i).size());
-			for (unsigned int j = 0; j < ampliRms.at(i).size(); j++) {
-				x->ampliRms[i][j].length(ampliRms.at(i).at(j).size());
+		x->curve.length(curve.size());
+		for (unsigned int i = 0; i < curve.size(); i++) {
+			x->curve[i].length(curve.at(i).size());
+			for (unsigned int j = 0; j < curve.at(i).size(); j++) {
+				x->curve[i][j].length(curve.at(i).at(j).size());
 			}					 		
 		}
 		
-		for (unsigned int i = 0; i < ampliRms.size() ; i++)
-			for (unsigned int j = 0; j < ampliRms.at(i).size(); j++)
-				for (unsigned int k = 0; k < ampliRms.at(i).at(j).size(); k++)
+		for (unsigned int i = 0; i < curve.size() ; i++)
+			for (unsigned int j = 0; j < curve.at(i).size(); j++)
+				for (unsigned int k = 0; k < curve.at(i).at(j).size(); k++)
 					
 						
-					x->ampliRms[i][j][k] = ampliRms.at(i).at(j).at(k);
+					x->curve[i][j][k] = curve.at(i).at(j).at(k);
 		 				
 			 									
 			
@@ -337,8 +302,27 @@ namespace asdm {
 		
 		
 			
+		x->reducedChiSquared.length(reducedChiSquared.size());
+		for (unsigned int i = 0; i < reducedChiSquared.size(); ++i) {
+			
 				
-		x->numPhasePoly = numPhasePoly;
+			x->reducedChiSquared[i] = reducedChiSquared.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->numBaselineExists = numBaselineExists;
+		
+		
+			
+				
+		x->numBaseline = numBaseline;
  				
  			
 		
@@ -347,52 +331,23 @@ namespace asdm {
 	
   		
 		
-		
-			
-		x->phaseCurve.length(phaseCurve.size());
-		for (unsigned int i = 0; i < phaseCurve.size(); i++) {
-			x->phaseCurve[i].length(phaseCurve.at(i).size());
-			for (unsigned int j = 0; j < phaseCurve.at(i).size(); j++) {
-				x->phaseCurve[i][j].length(phaseCurve.at(i).at(j).size());
-				for (unsigned int k = 0; k < phaseCurve.at(i).at(j).size(); k++) {
-					 x->phaseCurve[i][j][k].length(phaseCurve.at(i).at(j).at(k).size());
-			    }
-			}					 		
-		}		
-		
-		for (unsigned int i = 0; i < phaseCurve.size() ; i++)
-			for (unsigned int j = 0; j < phaseCurve.at(i).size(); j++)
-				for (unsigned int k = 0; k < phaseCurve.at(i).at(j).size(); k++)
-					for (unsigned int l = 0; l < phaseCurve.at(i).at(j).at(k).size(); l++)
-					
-						x->phaseCurve[i][j][k][l] = phaseCurve.at(i).at(j).at(k).at(l).toIDLAngle();
-										
-	 	cout << "Converted successfully" << endl;
-			
-		
-	
-
-	
-  		
+		x->rmsExists = rmsExists;
 		
 		
 			
-		x->phaseRms.length(phaseRms.size());
-		for (unsigned int i = 0; i < phaseRms.size(); i++) {
-			x->phaseRms[i].length(phaseRms.at(i).size());
-			for (unsigned int j = 0; j < phaseRms.at(i).size(); j++) {
-				x->phaseRms[i][j].length(phaseRms.at(i).at(j).size());
-			}					 		
+		x->rms.length(rms.size());
+		for (unsigned int i = 0; i < rms.size(); i++) {
+			x->rms[i].length(rms.at(i).size());			 		
 		}
 		
-		for (unsigned int i = 0; i < phaseRms.size() ; i++)
-			for (unsigned int j = 0; j < phaseRms.at(i).size(); j++)
-				for (unsigned int k = 0; k < phaseRms.at(i).at(j).size(); k++)
+		for (unsigned int i = 0; i < rms.size() ; i++)
+			for (unsigned int j = 0; j < rms.at(i).size(); j++)
 					
 						
-					x->phaseRms[i][j][k] = phaseRms.at(i).at(j).at(k);
+				x->rms[i][j] = rms.at(i).at(j);
 		 				
-			 									
+			 						
+		
 			
 		
 	
@@ -440,7 +395,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalBandpassRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalBandpassRow::setFromIDL (CalBandpassRowIDL x) throw(ConversionException) {
+	void CalBandpassRow::setFromIDL (CalBandpassRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -459,7 +414,7 @@ namespace asdm {
 		
 		
 			
-		setNumAntenna(x.numAntenna);
+		setSideband(x.sideband);
   			
  		
 		
@@ -469,7 +424,7 @@ namespace asdm {
 		
 		
 			
-		setNumBaseline(x.numBaseline);
+		setAtmPhaseCorrection(x.atmPhaseCorrection);
   			
  		
 		
@@ -479,7 +434,7 @@ namespace asdm {
 		
 		
 			
-		setNumAPC(x.numAPC);
+		setTypeCurve(x.typeCurve);
   			
  		
 		
@@ -489,7 +444,7 @@ namespace asdm {
 		
 		
 			
-		setNumReceptor(x.numReceptor);
+		setReceiverBand(x.receiverBand);
   			
  		
 		
@@ -519,14 +474,9 @@ namespace asdm {
 		
 		
 			
-		freqLimits .clear();
-		for (unsigned int i = 0; i <x.freqLimits.length(); ++i) {
-			
-			freqLimits.push_back(Frequency (x.freqLimits[i]));
-			
-		}
-			
-  		
+		setNumAntenna(x.numAntenna);
+  			
+ 		
 		
 	
 
@@ -534,7 +484,17 @@ namespace asdm {
 		
 		
 			
-		setReceiverBand(x.receiverBand);
+		setNumPoly(x.numPoly);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumReceptor(x.numReceptor);
   			
  		
 		
@@ -569,11 +529,11 @@ namespace asdm {
 		
 		
 			
-		atmPhaseCorrections .clear();
-		for (unsigned int i = 0; i <x.atmPhaseCorrections.length(); ++i) {
+		freqLimits .clear();
+		for (unsigned int i = 0; i <x.freqLimits.length(); ++i) {
 			
-			atmPhaseCorrections.push_back(x.atmPhaseCorrections[i]);
-  			
+			freqLimits.push_back(Frequency (x.freqLimits[i]));
+			
 		}
 			
   		
@@ -599,63 +559,22 @@ namespace asdm {
 		
 		
 			
-		setNumAmpliPoly(x.numAmpliPoly);
-  			
- 		
+		curve .clear();
+		vector< vector<float> > vv_aux_curve;
+		vector<float> v_aux_curve;
 		
-	
-
-	
-		
-		
-			
-		ampliCurve .clear();
-		vector <vector< vector<float> > > vvv_aux_ampliCurve;
-		vector< vector<float> > vv_aux_ampliCurve;
-		vector<float> v_aux_ampliCurve;
-		
-		for (unsigned int i = 0; i <x.ampliCurve.length(); ++i) {
-			vvv_aux_ampliCurve.clear();
-			for (unsigned int j = 0; j <x.ampliCurve[0].length(); ++j) { 
-				vv_aux_ampliCurve.clear();
-				for (unsigned int k = 0; k < x.ampliCurve[0][0].length(); ++k) { 
-					v_aux_ampliCurve.clear();
-					for (unsigned int l = 0; l <x.ampliCurve[0][0][0].length(); ++l) { 
+		for (unsigned int i = 0; i < x.curve.length(); ++i) {
+			vv_aux_curve.clear();
+			for (unsigned int j = 0; j < x.curve[0].length(); ++j) {
+				v_aux_curve.clear();
+				for (unsigned int k = 0; k < x.curve[0][0].length(); ++k) {
 					
-						v_aux_ampliCurve.push_back(x.ampliCurve[i][j][k][l]);
-		  			
-		  		   }
-		  		   vv_aux_ampliCurve.push_back(v_aux_ampliCurve);
-		  	   }
-		  	   vvv_aux_ampliCurve.push_back(vv_aux_ampliCurve);
-		  	}
-		  	ampliCurve.push_back(vvv_aux_ampliCurve);
-		} 		
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		ampliRms .clear();
-		vector< vector<float> > vv_aux_ampliRms;
-		vector<float> v_aux_ampliRms;
-		
-		for (unsigned int i = 0; i < x.ampliRms.length(); ++i) {
-			vv_aux_ampliRms.clear();
-			for (unsigned int j = 0; j < x.ampliRms[0].length(); ++j) {
-				v_aux_ampliRms.clear();
-				for (unsigned int k = 0; k < x.ampliRms[0][0].length(); ++k) {
-					
-					v_aux_ampliRms.push_back(x.ampliRms[i][j][k]);
+					v_aux_curve.push_back(x.curve[i][j][k]);
 		  			
 		  		}
-		  		vv_aux_ampliRms.push_back(v_aux_ampliRms);
+		  		vv_aux_curve.push_back(v_aux_curve);
   			}
-  			ampliRms.push_back(vv_aux_ampliRms);
+  			curve.push_back(vv_aux_curve);
 		}
 			
   		
@@ -666,66 +585,54 @@ namespace asdm {
 		
 		
 			
-		setNumPhasePoly(x.numPhasePoly);
+		reducedChiSquared .clear();
+		for (unsigned int i = 0; i <x.reducedChiSquared.length(); ++i) {
+			
+			reducedChiSquared.push_back(x.reducedChiSquared[i]);
   			
- 		
-		
-	
-
-	
-		
-		
-			
-		phaseCurve .clear();
-		vector <vector< vector<Angle> > > vvv_aux_phaseCurve;
-		vector< vector<Angle> > vv_aux_phaseCurve;
-		vector<Angle> v_aux_phaseCurve;
-		
-		for (unsigned int i = 0; i <x.phaseCurve.length(); ++i) {
-			vvv_aux_phaseCurve.clear();
-			for (unsigned int j = 0; j <x.phaseCurve[0].length(); ++j) { 
-				vv_aux_phaseCurve.clear();
-				for (unsigned int k = 0; k < x.phaseCurve[0][0].length(); ++k) { 
-					v_aux_phaseCurve.clear();
-					for (unsigned int l = 0; l <x.phaseCurve[0][0][0].length(); ++l) { 
-					
-						v_aux_phaseCurve.push_back(Angle (x.phaseCurve[i][j][k][l]));
-					
-		  		   }
-		  		   vv_aux_phaseCurve.push_back(v_aux_phaseCurve);
-		  	   }
-		  	   vvv_aux_phaseCurve.push_back(vv_aux_phaseCurve);
-		  	}
-		  	phaseCurve.push_back(vvv_aux_phaseCurve);
-		} 		
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		phaseRms .clear();
-		vector< vector<float> > vv_aux_phaseRms;
-		vector<float> v_aux_phaseRms;
-		
-		for (unsigned int i = 0; i < x.phaseRms.length(); ++i) {
-			vv_aux_phaseRms.clear();
-			for (unsigned int j = 0; j < x.phaseRms[0].length(); ++j) {
-				v_aux_phaseRms.clear();
-				for (unsigned int k = 0; k < x.phaseRms[0][0].length(); ++k) {
-					
-					v_aux_phaseRms.push_back(x.phaseRms[i][j][k]);
-		  			
-		  		}
-		  		vv_aux_phaseRms.push_back(v_aux_phaseRms);
-  			}
-  			phaseRms.push_back(vv_aux_phaseRms);
 		}
 			
   		
+		
+	
+
+	
+		
+		numBaselineExists = x.numBaselineExists;
+		if (x.numBaselineExists) {
+		
+		
+			
+		setNumBaseline(x.numBaseline);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		rmsExists = x.rmsExists;
+		if (x.rmsExists) {
+		
+		
+			
+		rms .clear();
+		vector<float> v_aux_rms;
+		for (unsigned int i = 0; i < x.rms.length(); ++i) {
+			v_aux_rms.clear();
+			for (unsigned int j = 0; j < x.rms[0].length(); ++j) {
+				
+				v_aux_rms.push_back(x.rms[i][j]);
+	  			
+  			}
+  			rms.push_back(v_aux_rms);			
+		}
+			
+  		
+		
+		}
 		
 	
 
@@ -759,7 +666,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalBandpass");
+			throw ConversionException (err.getMessage(),"CalBandpass");
 		}
 	}
 #endif
@@ -785,7 +692,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numAntenna, "numAntenna", buf);
+			buf.append(EnumerationParser::toXML("sideband", sideband));
 		
 		
 	
@@ -793,7 +700,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numBaseline, "numBaseline", buf);
+			buf.append(EnumerationParser::toXML("atmPhaseCorrection", atmPhaseCorrection));
 		
 		
 	
@@ -801,7 +708,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numAPC, "numAPC", buf);
+			buf.append(EnumerationParser::toXML("typeCurve", typeCurve));
 		
 		
 	
@@ -809,7 +716,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numReceptor, "numReceptor", buf);
+			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
 		
 		
 	
@@ -833,7 +740,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(freqLimits, "freqLimits", buf);
+		Parser::toXML(numAntenna, "numAntenna", buf);
 		
 		
 	
@@ -841,7 +748,15 @@ namespace asdm {
   	
  		
 		
-			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
+		Parser::toXML(numPoly, "numPoly", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numReceptor, "numReceptor", buf);
 		
 		
 	
@@ -865,7 +780,7 @@ namespace asdm {
   	
  		
 		
-			buf.append(EnumerationParser::toXML("atmPhaseCorrections", atmPhaseCorrections));
+		Parser::toXML(freqLimits, "freqLimits", buf);
 		
 		
 	
@@ -881,7 +796,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numAmpliPoly, "numAmpliPoly", buf);
+		Parser::toXML(curve, "curve", buf);
 		
 		
 	
@@ -889,40 +804,32 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(ampliCurve, "ampliCurve", buf);
+		Parser::toXML(reducedChiSquared, "reducedChiSquared", buf);
 		
 		
 	
 
   	
  		
+		if (numBaselineExists) {
 		
-		Parser::toXML(ampliRms, "ampliRms", buf);
+		
+		Parser::toXML(numBaseline, "numBaseline", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(numPhasePoly, "numPhasePoly", buf);
-		
+		}
 		
 	
 
   	
  		
+		if (rmsExists) {
 		
-		Parser::toXML(phaseCurve, "phaseCurve", buf);
+		
+		Parser::toXML(rms, "rms", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(phaseRms, "phaseRms", buf);
-		
+		}
 		
 	
 
@@ -961,7 +868,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalBandpassRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalBandpassRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -978,34 +885,42 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setNumAntenna(Parser::getInteger("numAntenna","CalBandpass",rowDoc));
-			
+		
+		
+		
+		sideband = EnumerationParser::getNetSideband("sideband","CalBandpass",rowDoc);
+		
+		
 		
 	
 
 	
-  		
-			
-	  	setNumBaseline(Parser::getInteger("numBaseline","CalBandpass",rowDoc));
-			
+		
+		
+		
+		atmPhaseCorrection = EnumerationParser::getAtmPhaseCorrection("atmPhaseCorrection","CalBandpass",rowDoc);
+		
+		
 		
 	
 
 	
-  		
-			
-	  	setNumAPC(Parser::getInteger("numAPC","CalBandpass",rowDoc));
-			
+		
+		
+		
+		typeCurve = EnumerationParser::getCalCurveType("typeCurve","CalBandpass",rowDoc);
+		
+		
 		
 	
 
 	
-  		
-			
-	  	setNumReceptor(Parser::getInteger("numReceptor","CalBandpass",rowDoc));
-			
+		
+		
+		
+		receiverBand = EnumerationParser::getReceiverBand("receiverBand","CalBandpass",rowDoc);
+		
+		
 		
 	
 
@@ -1028,20 +943,24 @@ namespace asdm {
 	
   		
 			
-					
-	  	setFreqLimits(Parser::get1DFrequency("freqLimits","CalBandpass",rowDoc));
-	  			
-	  		
+	  	setNumAntenna(Parser::getInteger("numAntenna","CalBandpass",rowDoc));
+			
 		
 	
 
 	
+  		
+			
+	  	setNumPoly(Parser::getInteger("numPoly","CalBandpass",rowDoc));
+			
 		
-		
-		
-		receiverBand = EnumerationParser::getReceiverBand("receiverBand","CalBandpass",rowDoc);
-		
-		
+	
+
+	
+  		
+			
+	  	setNumReceptor(Parser::getInteger("numReceptor","CalBandpass",rowDoc));
+			
 		
 	
 
@@ -1064,12 +983,12 @@ namespace asdm {
 	
 
 	
-		
-		
-		
-		atmPhaseCorrections = EnumerationParser::getAtmPhaseCorrection1D("atmPhaseCorrections","CalBandpass",rowDoc);			
-		
-		
+  		
+			
+					
+	  	setFreqLimits(Parser::get1DFrequency("freqLimits","CalBandpass",rowDoc));
+	  			
+	  		
 		
 	
 
@@ -1086,16 +1005,8 @@ namespace asdm {
 	
   		
 			
-	  	setNumAmpliPoly(Parser::getInteger("numAmpliPoly","CalBandpass",rowDoc));
-			
-		
-	
-
-	
-  		
-			
 					
-	  	setAmpliCurve(Parser::get4DFloat("ampliCurve","CalBandpass",rowDoc));
+	  	setCurve(Parser::get3DFloat("curve","CalBandpass",rowDoc));
 	  			
 	  		
 		
@@ -1105,7 +1016,7 @@ namespace asdm {
   		
 			
 					
-	  	setAmpliRms(Parser::get3DFloat("ampliRms","CalBandpass",rowDoc));
+	  	setReducedChiSquared(Parser::get1DDouble("reducedChiSquared","CalBandpass",rowDoc));
 	  			
 	  		
 		
@@ -1113,30 +1024,24 @@ namespace asdm {
 
 	
   		
+        if (row.isStr("<numBaseline>")) {
 			
-	  	setNumPhasePoly(Parser::getInteger("numPhasePoly","CalBandpass",rowDoc));
+	  		setNumBaseline(Parser::getInteger("numBaseline","CalBandpass",rowDoc));
 			
-		
+		}
+ 		
 	
 
 	
   		
+        if (row.isStr("<rms>")) {
 			
-					
-	  	setPhaseCurve(Parser::get4DAngle("phaseCurve","CalBandpass",rowDoc));
+								
+	  		setRms(Parser::get2DFloat("rms","CalBandpass",rowDoc));
 	  			
 	  		
-		
-	
-
-	
-  		
-			
-					
-	  	setPhaseRms(Parser::get3DFloat("phaseRms","CalBandpass",rowDoc));
-	  			
-	  		
-		
+		}
+ 		
 	
 
 	
@@ -1167,6 +1072,485 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"CalBandpass");
 		}
+	}
+	
+	void CalBandpassRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+					
+			eoss.writeInt(basebandName);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(sideband);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(atmPhaseCorrection);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(typeCurve);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(receiverBand);
+				
+		
+	
+
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numAntenna);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numPoly);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numReceptor);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) antennaNames.size());
+		for (unsigned int i = 0; i < antennaNames.size(); i++)
+				
+			eoss.writeString(antennaNames.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(refAntennaName);
+				
+		
+	
+
+	
+	
+		
+	Frequency::toBin(freqLimits, eoss);
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); i++)
+				
+			eoss.writeInt(polarizationTypes.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) curve.size());
+		eoss.writeInt((int) curve.at(0).size());		
+		eoss.writeInt((int) curve.at(0).at(0).size());
+		for (unsigned int i = 0; i < curve.size(); i++) 
+			for (unsigned int j = 0;  j < curve.at(0).size(); j++)
+				for (unsigned int k = 0; k <  curve.at(0).at(0).size(); k++)	
+							 
+					eoss.writeFloat(curve.at(i).at(j).at(k));
+						
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) reducedChiSquared.size());
+		for (unsigned int i = 0; i < reducedChiSquared.size(); i++)
+				
+			eoss.writeDouble(reducedChiSquared.at(i));
+				
+				
+						
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(numBaselineExists);
+	if (numBaselineExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numBaseline);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(rmsExists);
+	if (rmsExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) rms.size());
+		eoss.writeInt((int) rms.at(0).size());
+		for (unsigned int i = 0; i < rms.size(); i++) 
+			for (unsigned int j = 0;  j < rms.at(0).size(); j++) 
+							 
+				eoss.writeFloat(rms.at(i).at(j));
+				
+	
+						
+		
+	
+
+	}
+
+	}
+	
+	CalBandpassRow* CalBandpassRow::fromBin(EndianISStream& eiss, CalBandpassTable& table) {
+		CalBandpassRow* row = new  CalBandpassRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->basebandName = CBasebandName::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->sideband = CNetSideband::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->typeCurve = CCalCurveType::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numAntenna =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numPoly =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numReceptor =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->antennaNames.clear();
+		
+		unsigned int antennaNamesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < antennaNamesDim1; i++)
+			
+			row->antennaNames.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->refAntennaName =  eiss.readString();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->freqLimits = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->polarizationTypes.clear();
+		
+		unsigned int polarizationTypesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
+			
+			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->curve.clear();
+			
+		unsigned int curveDim1 = eiss.readInt();
+		unsigned int curveDim2 = eiss.readInt();
+		unsigned int curveDim3 = eiss.readInt();
+		vector <vector<float> > curveAux2;
+		vector <float> curveAux1;
+		for (unsigned int i = 0; i < curveDim1; i++) {
+			curveAux2.clear();
+			for (unsigned int j = 0; j < curveDim2 ; j++) {
+				curveAux1.clear();
+				for (unsigned int k = 0; k < curveDim3; k++) {
+			
+					curveAux1.push_back(eiss.readFloat());
+			
+				}
+				curveAux2.push_back(curveAux1);
+			}
+			row->curve.push_back(curveAux2);
+		}	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->reducedChiSquared.clear();
+		
+		unsigned int reducedChiSquaredDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < reducedChiSquaredDim1; i++)
+			
+			row->reducedChiSquared.push_back(eiss.readDouble());
+			
+	
+
+		
+	
+
+		
+		
+		
+	row->numBaselineExists = eiss.readBoolean();
+	if (row->numBaselineExists) {
+		
+	
+	
+		
+			
+		row->numBaseline =  eiss.readInt();
+			
+		
+	
+
+	}
+
+	row->rmsExists = eiss.readBoolean();
+	if (row->rmsExists) {
+		
+	
+	
+		
+			
+	
+		row->rms.clear();
+		
+		unsigned int rmsDim1 = eiss.readInt();
+		unsigned int rmsDim2 = eiss.readInt();
+		vector <float> rmsAux1;
+		for (unsigned int i = 0; i < rmsDim1; i++) {
+			rmsAux1.clear();
+			for (unsigned int j = 0; j < rmsDim2 ; j++)			
+			
+			rmsAux1.push_back(eiss.readFloat());
+			
+			row->rms.push_back(rmsAux1);
+		}
+	
+	
+
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -1213,29 +1597,33 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numAntenna.
- 	 * @return numAntenna as int
+ 	 * Get sideband.
+ 	 * @return sideband as NetSidebandMod::NetSideband
  	 */
- 	int CalBandpassRow::getNumAntenna() const {
+ 	NetSidebandMod::NetSideband CalBandpassRow::getSideband() const {
 	
-  		return numAntenna;
+  		return sideband;
  	}
 
  	/**
- 	 * Set numAntenna with the specified int.
- 	 * @param numAntenna The int value to which numAntenna is to be set.
+ 	 * Set sideband with the specified NetSidebandMod::NetSideband.
+ 	 * @param sideband The NetSidebandMod::NetSideband value to which sideband is to be set.
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void CalBandpassRow::setNumAntenna (int numAntenna)  {
+ 	void CalBandpassRow::setSideband (NetSidebandMod::NetSideband sideband)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("sideband", "CalBandpass");
+		
   		}
   	
- 		this->numAntenna = numAntenna;
+ 		this->sideband = sideband;
 	
  	}
 	
@@ -1245,29 +1633,33 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numBaseline.
- 	 * @return numBaseline as int
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
  	 */
- 	int CalBandpassRow::getNumBaseline() const {
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection CalBandpassRow::getAtmPhaseCorrection() const {
 	
-  		return numBaseline;
+  		return atmPhaseCorrection;
  	}
 
  	/**
- 	 * Set numBaseline with the specified int.
- 	 * @param numBaseline The int value to which numBaseline is to be set.
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void CalBandpassRow::setNumBaseline (int numBaseline)  {
+ 	void CalBandpassRow::setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("atmPhaseCorrection", "CalBandpass");
+		
   		}
   	
- 		this->numBaseline = numBaseline;
+ 		this->atmPhaseCorrection = atmPhaseCorrection;
 	
  	}
 	
@@ -1277,29 +1669,33 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numAPC.
- 	 * @return numAPC as int
+ 	 * Get typeCurve.
+ 	 * @return typeCurve as CalCurveTypeMod::CalCurveType
  	 */
- 	int CalBandpassRow::getNumAPC() const {
+ 	CalCurveTypeMod::CalCurveType CalBandpassRow::getTypeCurve() const {
 	
-  		return numAPC;
+  		return typeCurve;
  	}
 
  	/**
- 	 * Set numAPC with the specified int.
- 	 * @param numAPC The int value to which numAPC is to be set.
+ 	 * Set typeCurve with the specified CalCurveTypeMod::CalCurveType.
+ 	 * @param typeCurve The CalCurveTypeMod::CalCurveType value to which typeCurve is to be set.
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void CalBandpassRow::setNumAPC (int numAPC)  {
+ 	void CalBandpassRow::setTypeCurve (CalCurveTypeMod::CalCurveType typeCurve)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("typeCurve", "CalBandpass");
+		
   		}
   	
- 		this->numAPC = numAPC;
+ 		this->typeCurve = typeCurve;
 	
  	}
 	
@@ -1309,29 +1705,33 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numReceptor.
- 	 * @return numReceptor as int
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
  	 */
- 	int CalBandpassRow::getNumReceptor() const {
+ 	ReceiverBandMod::ReceiverBand CalBandpassRow::getReceiverBand() const {
 	
-  		return numReceptor;
+  		return receiverBand;
  	}
 
  	/**
- 	 * Set numReceptor with the specified int.
- 	 * @param numReceptor The int value to which numReceptor is to be set.
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void CalBandpassRow::setNumReceptor (int numReceptor)  {
+ 	void CalBandpassRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("receiverBand", "CalBandpass");
+		
   		}
   	
- 		this->numReceptor = numReceptor;
+ 		this->receiverBand = receiverBand;
 	
  	}
 	
@@ -1405,29 +1805,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get freqLimits.
- 	 * @return freqLimits as vector<Frequency >
+ 	 * Get numAntenna.
+ 	 * @return numAntenna as int
  	 */
- 	vector<Frequency > CalBandpassRow::getFreqLimits() const {
+ 	int CalBandpassRow::getNumAntenna() const {
 	
-  		return freqLimits;
+  		return numAntenna;
  	}
 
  	/**
- 	 * Set freqLimits with the specified vector<Frequency >.
- 	 * @param freqLimits The vector<Frequency > value to which freqLimits is to be set.
+ 	 * Set numAntenna with the specified int.
+ 	 * @param numAntenna The int value to which numAntenna is to be set.
  	 
  	
  		
  	 */
- 	void CalBandpassRow::setFreqLimits (vector<Frequency > freqLimits)  {
+ 	void CalBandpassRow::setNumAntenna (int numAntenna)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->freqLimits = freqLimits;
+ 		this->numAntenna = numAntenna;
 	
  	}
 	
@@ -1437,29 +1837,61 @@ namespace asdm {
 
 	
  	/**
- 	 * Get receiverBand.
- 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 * Get numPoly.
+ 	 * @return numPoly as int
  	 */
- 	ReceiverBandMod::ReceiverBand CalBandpassRow::getReceiverBand() const {
+ 	int CalBandpassRow::getNumPoly() const {
 	
-  		return receiverBand;
+  		return numPoly;
  	}
 
  	/**
- 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
- 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 * Set numPoly with the specified int.
+ 	 * @param numPoly The int value to which numPoly is to be set.
  	 
  	
  		
  	 */
- 	void CalBandpassRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
+ 	void CalBandpassRow::setNumPoly (int numPoly)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->receiverBand = receiverBand;
+ 		this->numPoly = numPoly;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
+ 	 */
+ 	int CalBandpassRow::getNumReceptor() const {
+	
+  		return numReceptor;
+ 	}
+
+ 	/**
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalBandpassRow::setNumReceptor (int numReceptor)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numReceptor = numReceptor;
 	
  	}
 	
@@ -1533,29 +1965,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get atmPhaseCorrections.
- 	 * @return atmPhaseCorrections as vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >
+ 	 * Get freqLimits.
+ 	 * @return freqLimits as vector<Frequency >
  	 */
- 	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > CalBandpassRow::getAtmPhaseCorrections() const {
+ 	vector<Frequency > CalBandpassRow::getFreqLimits() const {
 	
-  		return atmPhaseCorrections;
+  		return freqLimits;
  	}
 
  	/**
- 	 * Set atmPhaseCorrections with the specified vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >.
- 	 * @param atmPhaseCorrections The vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > value to which atmPhaseCorrections is to be set.
+ 	 * Set freqLimits with the specified vector<Frequency >.
+ 	 * @param freqLimits The vector<Frequency > value to which freqLimits is to be set.
  	 
  	
  		
  	 */
- 	void CalBandpassRow::setAtmPhaseCorrections (vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections)  {
+ 	void CalBandpassRow::setFreqLimits (vector<Frequency > freqLimits)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->atmPhaseCorrections = atmPhaseCorrections;
+ 		this->freqLimits = freqLimits;
 	
  	}
 	
@@ -1597,29 +2029,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numAmpliPoly.
- 	 * @return numAmpliPoly as int
+ 	 * Get curve.
+ 	 * @return curve as vector<vector<vector<float > > >
  	 */
- 	int CalBandpassRow::getNumAmpliPoly() const {
+ 	vector<vector<vector<float > > > CalBandpassRow::getCurve() const {
 	
-  		return numAmpliPoly;
+  		return curve;
  	}
 
  	/**
- 	 * Set numAmpliPoly with the specified int.
- 	 * @param numAmpliPoly The int value to which numAmpliPoly is to be set.
+ 	 * Set curve with the specified vector<vector<vector<float > > >.
+ 	 * @param curve The vector<vector<vector<float > > > value to which curve is to be set.
  	 
  	
  		
  	 */
- 	void CalBandpassRow::setNumAmpliPoly (int numAmpliPoly)  {
+ 	void CalBandpassRow::setCurve (vector<vector<vector<float > > > curve)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->numAmpliPoly = numAmpliPoly;
+ 		this->curve = curve;
 	
  	}
 	
@@ -1629,160 +2061,126 @@ namespace asdm {
 
 	
  	/**
- 	 * Get ampliCurve.
- 	 * @return ampliCurve as vector<vector<vector<vector<float > > > >
+ 	 * Get reducedChiSquared.
+ 	 * @return reducedChiSquared as vector<double >
  	 */
- 	vector<vector<vector<vector<float > > > > CalBandpassRow::getAmpliCurve() const {
+ 	vector<double > CalBandpassRow::getReducedChiSquared() const {
 	
-  		return ampliCurve;
+  		return reducedChiSquared;
  	}
 
  	/**
- 	 * Set ampliCurve with the specified vector<vector<vector<vector<float > > > >.
- 	 * @param ampliCurve The vector<vector<vector<vector<float > > > > value to which ampliCurve is to be set.
+ 	 * Set reducedChiSquared with the specified vector<double >.
+ 	 * @param reducedChiSquared The vector<double > value to which reducedChiSquared is to be set.
  	 
  	
  		
  	 */
- 	void CalBandpassRow::setAmpliCurve (vector<vector<vector<vector<float > > > > ampliCurve)  {
+ 	void CalBandpassRow::setReducedChiSquared (vector<double > reducedChiSquared)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->ampliCurve = ampliCurve;
+ 		this->reducedChiSquared = reducedChiSquared;
 	
  	}
 	
 	
 
 	
+	/**
+	 * The attribute numBaseline is optional. Return true if this attribute exists.
+	 * @return true if and only if the numBaseline attribute exists. 
+	 */
+	bool CalBandpassRow::isNumBaselineExists() const {
+		return numBaselineExists;
+	}
+	
 
 	
  	/**
- 	 * Get ampliRms.
- 	 * @return ampliRms as vector<vector<vector<float > > >
+ 	 * Get numBaseline, which is optional.
+ 	 * @return numBaseline as int
+ 	 * @throw IllegalAccessException If numBaseline does not exist.
  	 */
- 	vector<vector<vector<float > > > CalBandpassRow::getAmpliRms() const {
+ 	int CalBandpassRow::getNumBaseline() const  {
+		if (!numBaselineExists) {
+			throw IllegalAccessException("numBaseline", "CalBandpass");
+		}
 	
-  		return ampliRms;
+  		return numBaseline;
  	}
 
  	/**
- 	 * Set ampliRms with the specified vector<vector<vector<float > > >.
- 	 * @param ampliRms The vector<vector<vector<float > > > value to which ampliRms is to be set.
+ 	 * Set numBaseline with the specified int.
+ 	 * @param numBaseline The int value to which numBaseline is to be set.
  	 
  	
- 		
  	 */
- 	void CalBandpassRow::setAmpliRms (vector<vector<vector<float > > > ampliRms)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->ampliRms = ampliRms;
+ 	void CalBandpassRow::setNumBaseline (int numBaseline) {
+	
+ 		this->numBaseline = numBaseline;
+	
+		numBaselineExists = true;
 	
  	}
 	
 	
+	/**
+	 * Mark numBaseline, which is an optional field, as non-existent.
+	 */
+	void CalBandpassRow::clearNumBaseline () {
+		numBaselineExists = false;
+	}
+	
 
+	
+	/**
+	 * The attribute rms is optional. Return true if this attribute exists.
+	 * @return true if and only if the rms attribute exists. 
+	 */
+	bool CalBandpassRow::isRmsExists() const {
+		return rmsExists;
+	}
 	
 
 	
  	/**
- 	 * Get numPhasePoly.
- 	 * @return numPhasePoly as int
+ 	 * Get rms, which is optional.
+ 	 * @return rms as vector<vector<float > >
+ 	 * @throw IllegalAccessException If rms does not exist.
  	 */
- 	int CalBandpassRow::getNumPhasePoly() const {
+ 	vector<vector<float > > CalBandpassRow::getRms() const  {
+		if (!rmsExists) {
+			throw IllegalAccessException("rms", "CalBandpass");
+		}
 	
-  		return numPhasePoly;
+  		return rms;
  	}
 
  	/**
- 	 * Set numPhasePoly with the specified int.
- 	 * @param numPhasePoly The int value to which numPhasePoly is to be set.
+ 	 * Set rms with the specified vector<vector<float > >.
+ 	 * @param rms The vector<vector<float > > value to which rms is to be set.
  	 
  	
- 		
  	 */
- 	void CalBandpassRow::setNumPhasePoly (int numPhasePoly)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numPhasePoly = numPhasePoly;
+ 	void CalBandpassRow::setRms (vector<vector<float > > rms) {
+	
+ 		this->rms = rms;
+	
+		rmsExists = true;
 	
  	}
 	
 	
-
-	
-
-	
- 	/**
- 	 * Get phaseCurve.
- 	 * @return phaseCurve as vector<vector<vector<vector<Angle > > > >
- 	 */
- 	vector<vector<vector<vector<Angle > > > > CalBandpassRow::getPhaseCurve() const {
-	
-  		return phaseCurve;
- 	}
-
- 	/**
- 	 * Set phaseCurve with the specified vector<vector<vector<vector<Angle > > > >.
- 	 * @param phaseCurve The vector<vector<vector<vector<Angle > > > > value to which phaseCurve is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalBandpassRow::setPhaseCurve (vector<vector<vector<vector<Angle > > > > phaseCurve)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->phaseCurve = phaseCurve;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get phaseRms.
- 	 * @return phaseRms as vector<vector<vector<float > > >
- 	 */
- 	vector<vector<vector<float > > > CalBandpassRow::getPhaseRms() const {
-	
-  		return phaseRms;
- 	}
-
- 	/**
- 	 * Set phaseRms with the specified vector<vector<vector<float > > >.
- 	 * @param phaseRms The vector<vector<vector<float > > > value to which phaseRms is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalBandpassRow::setPhaseRms (vector<vector<vector<float > > > phaseRms)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->phaseRms = phaseRms;
-	
- 	}
-	
+	/**
+	 * Mark rms, which is an optional field, as non-existent.
+	 */
+	void CalBandpassRow::clearRms () {
+		rmsExists = false;
+	}
 	
 
 	
@@ -1950,9 +2348,11 @@ namespace asdm {
 	
 
 	
-
+		numBaselineExists = false;
 	
 
+	
+		rmsExists = false;
 	
 
 	
@@ -1969,22 +2369,29 @@ basebandName = CBasebandName::from_int(0);
 	
 
 	
-
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+sideband = CNetSideband::from_int(0);
 	
 
 	
-
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+atmPhaseCorrection = CAtmPhaseCorrection::from_int(0);
 	
 
 	
-
-	
-
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+typeCurve = CCalCurveType::from_int(0);
 	
 
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 receiverBand = CReceiverBand::from_int(0);
+	
+
+	
+
+	
+
 	
 
 	
@@ -2048,9 +2455,11 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-
+		numBaselineExists = false;
 	
 
+	
+		rmsExists = false;
 	
 
 	
@@ -2062,62 +2471,105 @@ receiverBand = CReceiverBand::from_int(0);
 		else {
 	
 		
+			basebandName = row.basebandName;
+		
+			sideband = row.sideband;
+		
+			atmPhaseCorrection = row.atmPhaseCorrection;
+		
+			typeCurve = row.typeCurve;
+		
+			receiverBand = row.receiverBand;
+		
 			calDataId = row.calDataId;
 		
 			calReductionId = row.calReductionId;
 		
-			basebandName = row.basebandName;
 		
 		
-		
-		
-			numAntenna = row.numAntenna;
-		
-			numBaseline = row.numBaseline;
-		
-			numAPC = row.numAPC;
-		
-			numReceptor = row.numReceptor;
 		
 			startValidTime = row.startValidTime;
 		
 			endValidTime = row.endValidTime;
 		
-			freqLimits = row.freqLimits;
+			numAntenna = row.numAntenna;
 		
-			receiverBand = row.receiverBand;
+			numPoly = row.numPoly;
+		
+			numReceptor = row.numReceptor;
 		
 			antennaNames = row.antennaNames;
 		
 			refAntennaName = row.refAntennaName;
 		
-			atmPhaseCorrections = row.atmPhaseCorrections;
+			freqLimits = row.freqLimits;
 		
 			polarizationTypes = row.polarizationTypes;
 		
-			numAmpliPoly = row.numAmpliPoly;
+			curve = row.curve;
 		
-			ampliCurve = row.ampliCurve;
-		
-			ampliRms = row.ampliRms;
-		
-			numPhasePoly = row.numPhasePoly;
-		
-			phaseCurve = row.phaseCurve;
-		
-			phaseRms = row.phaseRms;
+			reducedChiSquared = row.reducedChiSquared;
 		
 		
 		
+		
+		if (row.numBaselineExists) {
+			numBaseline = row.numBaseline;		
+			numBaselineExists = true;
+		}
+		else
+			numBaselineExists = false;
+		
+		if (row.rmsExists) {
+			rms = row.rms;		
+			rmsExists = true;
+		}
+		else
+			rmsExists = false;
 		
 		}	
 	}
 
 	
-	bool CalBandpassRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numAntenna, int numBaseline, int numAPC, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > freqLimits, ReceiverBandMod::ReceiverBand receiverBand, vector<string > antennaNames, string refAntennaName, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numAmpliPoly, vector<vector<vector<vector<float > > > > ampliCurve, vector<vector<vector<float > > > ampliRms, int numPhasePoly, vector<vector<vector<vector<Angle > > > > phaseCurve, vector<vector<vector<float > > > phaseRms) {
+	bool CalBandpassRow::compareNoAutoInc(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband sideband, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<Frequency > freqLimits, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared) {
 		bool result;
 		result = true;
 		
+	
+		
+		result = result && (this->basebandName == basebandName);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->sideband == sideband);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->atmPhaseCorrection == atmPhaseCorrection);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->typeCurve == typeCurve);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->receiverBand == receiverBand);
+		
+		if (!result) return false;
+	
+
 	
 		
 		result = result && (this->calDataId == calDataId);
@@ -2128,41 +2580,6 @@ receiverBand = CReceiverBand::from_int(0);
 	
 		
 		result = result && (this->calReductionId == calReductionId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->basebandName == basebandName);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numAntenna == numAntenna);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numBaseline == numBaseline);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numAPC == numAPC);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numReceptor == numReceptor);
 		
 		if (!result) return false;
 	
@@ -2183,14 +2600,21 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->freqLimits == freqLimits);
+		result = result && (this->numAntenna == numAntenna);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->receiverBand == receiverBand);
+		result = result && (this->numPoly == numPoly);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numReceptor == numReceptor);
 		
 		if (!result) return false;
 	
@@ -2211,7 +2635,7 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->atmPhaseCorrections == atmPhaseCorrections);
+		result = result && (this->freqLimits == freqLimits);
 		
 		if (!result) return false;
 	
@@ -2225,42 +2649,14 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->numAmpliPoly == numAmpliPoly);
+		result = result && (this->curve == curve);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->ampliCurve == ampliCurve);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->ampliRms == ampliRms);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numPhasePoly == numPhasePoly);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->phaseCurve == phaseCurve);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->phaseRms == phaseRms);
+		result = result && (this->reducedChiSquared == reducedChiSquared);
 		
 		if (!result) return false;
 	
@@ -2270,26 +2666,10 @@ receiverBand = CReceiverBand::from_int(0);
 	
 	
 	
-	bool CalBandpassRow::compareRequiredValue(int numAntenna, int numBaseline, int numAPC, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > freqLimits, ReceiverBandMod::ReceiverBand receiverBand, vector<string > antennaNames, string refAntennaName, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numAmpliPoly, vector<vector<vector<vector<float > > > > ampliCurve, vector<vector<vector<float > > > ampliRms, int numPhasePoly, vector<vector<vector<vector<Angle > > > > phaseCurve, vector<vector<vector<float > > > phaseRms) {
+	bool CalBandpassRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<Frequency > freqLimits, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->numAntenna == numAntenna)) return false;
-	
-
-	
-		if (!(this->numBaseline == numBaseline)) return false;
-	
-
-	
-		if (!(this->numAPC == numAPC)) return false;
-	
-
-	
-		if (!(this->numReceptor == numReceptor)) return false;
-	
-
 	
 		if (!(this->startValidTime == startValidTime)) return false;
 	
@@ -2299,11 +2679,15 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		if (!(this->freqLimits == freqLimits)) return false;
+		if (!(this->numAntenna == numAntenna)) return false;
 	
 
 	
-		if (!(this->receiverBand == receiverBand)) return false;
+		if (!(this->numPoly == numPoly)) return false;
+	
+
+	
+		if (!(this->numReceptor == numReceptor)) return false;
 	
 
 	
@@ -2315,7 +2699,7 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		if (!(this->atmPhaseCorrections == atmPhaseCorrections)) return false;
+		if (!(this->freqLimits == freqLimits)) return false;
 	
 
 	
@@ -2323,27 +2707,11 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		if (!(this->numAmpliPoly == numAmpliPoly)) return false;
+		if (!(this->curve == curve)) return false;
 	
 
 	
-		if (!(this->ampliCurve == ampliCurve)) return false;
-	
-
-	
-		if (!(this->ampliRms == ampliRms)) return false;
-	
-
-	
-		if (!(this->numPhasePoly == numPhasePoly)) return false;
-	
-
-	
-		if (!(this->phaseCurve == phaseCurve)) return false;
-	
-
-	
-		if (!(this->phaseRms == phaseRms)) return false;
+		if (!(this->reducedChiSquared == reducedChiSquared)) return false;
 	
 
 		return result;
@@ -2361,41 +2729,27 @@ receiverBand = CReceiverBand::from_int(0);
 	bool CalBandpassRow::equalByRequiredValue(CalBandpassRow* x) {
 		
 			
-		if (this->numAntenna != x->numAntenna) return false;
-			
-		if (this->numBaseline != x->numBaseline) return false;
-			
-		if (this->numAPC != x->numAPC) return false;
-			
-		if (this->numReceptor != x->numReceptor) return false;
-			
 		if (this->startValidTime != x->startValidTime) return false;
 			
 		if (this->endValidTime != x->endValidTime) return false;
 			
-		if (this->freqLimits != x->freqLimits) return false;
+		if (this->numAntenna != x->numAntenna) return false;
 			
-		if (this->receiverBand != x->receiverBand) return false;
+		if (this->numPoly != x->numPoly) return false;
+			
+		if (this->numReceptor != x->numReceptor) return false;
 			
 		if (this->antennaNames != x->antennaNames) return false;
 			
 		if (this->refAntennaName != x->refAntennaName) return false;
 			
-		if (this->atmPhaseCorrections != x->atmPhaseCorrections) return false;
+		if (this->freqLimits != x->freqLimits) return false;
 			
 		if (this->polarizationTypes != x->polarizationTypes) return false;
 			
-		if (this->numAmpliPoly != x->numAmpliPoly) return false;
+		if (this->curve != x->curve) return false;
 			
-		if (this->ampliCurve != x->ampliCurve) return false;
-			
-		if (this->ampliRms != x->ampliRms) return false;
-			
-		if (this->numPhasePoly != x->numPhasePoly) return false;
-			
-		if (this->phaseCurve != x->phaseCurve) return false;
-			
-		if (this->phaseRms != x->phaseRms) return false;
+		if (this->reducedChiSquared != x->reducedChiSquared) return false;
 			
 		
 		return true;

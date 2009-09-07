@@ -88,7 +88,7 @@ namespace asdm {
 		
 		
 			
-		x->sbId = sbId.toIDLEntityRef();
+		x->sBSummaryId = sBSummaryId.toIDLTag();
 			
 		
 	
@@ -98,7 +98,17 @@ namespace asdm {
 		
 		
 			
-		x->projectId = projectId.toIDLEntityRef();
+		x->sbSummaryUID = sbSummaryUID.toIDLEntityRef();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->projectUID = projectUID.toIDLEntityRef();
 			
 		
 	
@@ -119,8 +129,20 @@ namespace asdm {
 		
 			
 				
-		x->sbIntent = CORBA::string_dup(sbIntent.c_str());
+		x->frequency = frequency;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
 				
+		x->frequencyBand = frequencyBand;
+ 				
  			
 		
 	
@@ -152,8 +174,23 @@ namespace asdm {
 		
 		
 			
+		x->centerDirection.length(centerDirection.size());
+		for (unsigned int i = 0; i < centerDirection.size(); ++i) {
+			
+			x->centerDirection[i] = centerDirection.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
 				
-		x->numScan = numScan;
+		x->numObservingMode = numObservingMode;
  				
  			
 		
@@ -164,11 +201,11 @@ namespace asdm {
 		
 		
 			
-		x->scanIntent.length(scanIntent.size());
-		for (unsigned int i = 0; i < scanIntent.size(); ++i) {
+		x->observingMode.length(observingMode.size());
+		for (unsigned int i = 0; i < observingMode.size(); ++i) {
 			
 				
-			x->scanIntent[i] = CORBA::string_dup(scanIntent.at(i).c_str());
+			x->observingMode[i] = CORBA::string_dup(observingMode.at(i).c_str());
 				
 	 		
 	 	}
@@ -193,15 +230,10 @@ namespace asdm {
 		
 		
 			
-		x->weatherConstraint.length(weatherConstraint.size());
-		for (unsigned int i = 0; i < weatherConstraint.size(); ++i) {
-			
 				
-			x->weatherConstraint[i] = CORBA::string_dup(weatherConstraint.at(i).c_str());
-				
-	 		
-	 	}
-			
+		x->numScienceGoal = numScienceGoal;
+ 				
+ 			
 		
 	
 
@@ -228,7 +260,7 @@ namespace asdm {
 		
 			
 				
-		x->raCenter = raCenter;
+		x->numWeatherConstraint = numWeatherConstraint;
  				
  			
 		
@@ -239,50 +271,40 @@ namespace asdm {
 		
 		
 			
-				
-		x->decCenter = decCenter;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
+		x->weatherConstraint.length(weatherConstraint.size());
+		for (unsigned int i = 0; i < weatherConstraint.size(); ++i) {
 			
 				
-		x->frequency = frequency;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->frequencyBand = CORBA::string_dup(frequencyBand.c_str());
-				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->observingMode.length(observingMode.size());
-		for (unsigned int i = 0; i < observingMode.size(); ++i) {
-			
-				
-			x->observingMode[i] = CORBA::string_dup(observingMode.at(i).c_str());
+			x->weatherConstraint[i] = CORBA::string_dup(weatherConstraint.at(i).c_str());
 				
 	 		
 	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->centerDirectionCodeExists = centerDirectionCodeExists;
+		
+		
+			
+				
+		x->centerDirectionCode = centerDirectionCode;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->centerDirectionEquinoxExists = centerDirectionEquinoxExists;
+		
+		
+			
+		x->centerDirectionEquinox = centerDirectionEquinox.toIDLArrayTime();
 			
 		
 	
@@ -302,7 +324,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct SBSummaryRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void SBSummaryRow::setFromIDL (SBSummaryRowIDL x) throw(ConversionException) {
+	void SBSummaryRow::setFromIDL (SBSummaryRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -311,7 +333,7 @@ namespace asdm {
 		
 		
 			
-		setSbId(EntityRef (x.sbId));
+		setSBSummaryId(Tag (x.sBSummaryId));
 			
  		
 		
@@ -321,7 +343,17 @@ namespace asdm {
 		
 		
 			
-		setProjectId(EntityRef (x.projectId));
+		setSbSummaryUID(EntityRef (x.sbSummaryUID));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setProjectUID(EntityRef (x.projectUID));
 			
  		
 		
@@ -341,8 +373,18 @@ namespace asdm {
 		
 		
 			
-		setSbIntent(string (x.sbIntent));
+		setFrequency(x.frequency);
+  			
+ 		
+		
+	
+
+	
+		
+		
 			
+		setFrequencyBand(x.frequencyBand);
+  			
  		
 		
 	
@@ -371,7 +413,22 @@ namespace asdm {
 		
 		
 			
-		setNumScan(x.numScan);
+		centerDirection .clear();
+		for (unsigned int i = 0; i <x.centerDirection.length(); ++i) {
+			
+			centerDirection.push_back(Angle (x.centerDirection[i]));
+			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setNumObservingMode(x.numObservingMode);
   			
  		
 		
@@ -381,10 +438,10 @@ namespace asdm {
 		
 		
 			
-		scanIntent .clear();
-		for (unsigned int i = 0; i <x.scanIntent.length(); ++i) {
+		observingMode .clear();
+		for (unsigned int i = 0; i <x.observingMode.length(); ++i) {
 			
-			scanIntent.push_back(string (x.scanIntent[i]));
+			observingMode.push_back(string (x.observingMode[i]));
 			
 		}
 			
@@ -406,14 +463,9 @@ namespace asdm {
 		
 		
 			
-		weatherConstraint .clear();
-		for (unsigned int i = 0; i <x.weatherConstraint.length(); ++i) {
-			
-			weatherConstraint.push_back(string (x.weatherConstraint[i]));
-			
-		}
-			
-  		
+		setNumScienceGoal(x.numScienceGoal);
+  			
+ 		
 		
 	
 
@@ -436,7 +488,7 @@ namespace asdm {
 		
 		
 			
-		setRaCenter(x.raCenter);
+		setNumWeatherConstraint(x.numWeatherConstraint);
   			
  		
 		
@@ -446,40 +498,10 @@ namespace asdm {
 		
 		
 			
-		setDecCenter(x.decCenter);
-  			
- 		
-		
-	
-
-	
-		
-		
+		weatherConstraint .clear();
+		for (unsigned int i = 0; i <x.weatherConstraint.length(); ++i) {
 			
-		setFrequency(x.frequency);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setFrequencyBand(string (x.frequencyBand));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		observingMode .clear();
-		for (unsigned int i = 0; i <x.observingMode.length(); ++i) {
-			
-			observingMode.push_back(string (x.observingMode[i]));
+			weatherConstraint.push_back(string (x.weatherConstraint[i]));
 			
 		}
 			
@@ -488,10 +510,40 @@ namespace asdm {
 	
 
 	
+		
+		centerDirectionCodeExists = x.centerDirectionCodeExists;
+		if (x.centerDirectionCodeExists) {
+		
+		
+			
+		setCenterDirectionCode(x.centerDirectionCode);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		centerDirectionEquinoxExists = x.centerDirectionEquinoxExists;
+		if (x.centerDirectionEquinoxExists) {
+		
+		
+			
+		setCenterDirectionEquinox(ArrayTime (x.centerDirectionEquinox));
+			
+ 		
+		
+		}
+		
+	
+
+	
 	
 		
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"SBSummary");
+			throw ConversionException (err.getMessage(),"SBSummary");
 		}
 	}
 #endif
@@ -509,7 +561,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(sbId, "sbId", buf);
+		Parser::toXML(sBSummaryId, "sBSummaryId", buf);
 		
 		
 	
@@ -517,7 +569,15 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(projectId, "projectId", buf);
+		Parser::toXML(sbSummaryUID, "sbSummaryUID", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(projectUID, "projectUID", buf);
 		
 		
 	
@@ -533,7 +593,15 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(sbIntent, "sbIntent", buf);
+		Parser::toXML(frequency, "frequency", buf);
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("frequencyBand", frequencyBand));
 		
 		
 	
@@ -557,7 +625,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numScan, "numScan", buf);
+		Parser::toXML(centerDirection, "centerDirection", buf);
 		
 		
 	
@@ -565,7 +633,15 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(scanIntent, "scanIntent", buf);
+		Parser::toXML(numObservingMode, "numObservingMode", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(observingMode, "observingMode", buf);
 		
 		
 	
@@ -581,7 +657,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(weatherConstraint, "weatherConstraint", buf);
+		Parser::toXML(numScienceGoal, "numScienceGoal", buf);
 		
 		
 	
@@ -597,7 +673,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(raCenter, "raCenter", buf);
+		Parser::toXML(numWeatherConstraint, "numWeatherConstraint", buf);
 		
 		
 	
@@ -605,32 +681,32 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(decCenter, "decCenter", buf);
+		Parser::toXML(weatherConstraint, "weatherConstraint", buf);
 		
 		
 	
 
   	
  		
+		if (centerDirectionCodeExists) {
 		
-		Parser::toXML(frequency, "frequency", buf);
+		
+			buf.append(EnumerationParser::toXML("centerDirectionCode", centerDirectionCode));
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(frequencyBand, "frequencyBand", buf);
-		
+		}
 		
 	
 
   	
  		
+		if (centerDirectionEquinoxExists) {
 		
-		Parser::toXML(observingMode, "observingMode", buf);
 		
+		Parser::toXML(centerDirectionEquinox, "centerDirectionEquinox", buf);
+		
+		
+		}
 		
 	
 
@@ -647,7 +723,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void SBSummaryRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void SBSummaryRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -656,7 +732,7 @@ namespace asdm {
 	
   		
 			
-	  	setSbId(Parser::getEntityRef("sbId","SBSummary",rowDoc));
+	  	setSBSummaryId(Parser::getTag("sBSummaryId","SBSummary",rowDoc));
 			
 		
 	
@@ -664,7 +740,15 @@ namespace asdm {
 	
   		
 			
-	  	setProjectId(Parser::getEntityRef("projectId","SBSummary",rowDoc));
+	  	setSbSummaryUID(Parser::getEntityRef("sbSummaryUID","SBSummary",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setProjectUID(Parser::getEntityRef("projectUID","SBSummary",rowDoc));
 			
 		
 	
@@ -680,8 +764,18 @@ namespace asdm {
 	
   		
 			
-	  	setSbIntent(Parser::getString("sbIntent","SBSummary",rowDoc));
+	  	setFrequency(Parser::getDouble("frequency","SBSummary",rowDoc));
 			
+		
+	
+
+	
+		
+		
+		
+		frequencyBand = EnumerationParser::getReceiverBand("frequencyBand","SBSummary",rowDoc);
+		
+		
 		
 	
 
@@ -706,7 +800,17 @@ namespace asdm {
 	
   		
 			
-	  	setNumScan(Parser::getInteger("numScan","SBSummary",rowDoc));
+					
+	  	setCenterDirection(Parser::get1DAngle("centerDirection","SBSummary",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setNumObservingMode(Parser::getInteger("numObservingMode","SBSummary",rowDoc));
 			
 		
 	
@@ -715,7 +819,7 @@ namespace asdm {
   		
 			
 					
-	  	setScanIntent(Parser::get1DString("scanIntent","SBSummary",rowDoc));
+	  	setObservingMode(Parser::get1DString("observingMode","SBSummary",rowDoc));
 	  			
 	  		
 		
@@ -732,10 +836,8 @@ namespace asdm {
 	
   		
 			
-					
-	  	setWeatherConstraint(Parser::get1DString("weatherConstraint","SBSummary",rowDoc));
-	  			
-	  		
+	  	setNumScienceGoal(Parser::getInteger("numScienceGoal","SBSummary",rowDoc));
+			
 		
 	
 
@@ -752,31 +854,7 @@ namespace asdm {
 	
   		
 			
-	  	setRaCenter(Parser::getDouble("raCenter","SBSummary",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setDecCenter(Parser::getDouble("decCenter","SBSummary",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setFrequency(Parser::getDouble("frequency","SBSummary",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setFrequencyBand(Parser::getString("frequencyBand","SBSummary",rowDoc));
+	  	setNumWeatherConstraint(Parser::getInteger("numWeatherConstraint","SBSummary",rowDoc));
 			
 		
 	
@@ -785,10 +863,35 @@ namespace asdm {
   		
 			
 					
-	  	setObservingMode(Parser::get1DString("observingMode","SBSummary",rowDoc));
+	  	setWeatherConstraint(Parser::get1DString("weatherConstraint","SBSummary",rowDoc));
 	  			
 	  		
 		
+	
+
+	
+		
+	if (row.isStr("<centerDirectionCode>")) {
+		
+		
+		
+		centerDirectionCode = EnumerationParser::getDirectionReferenceCode("centerDirectionCode","SBSummary",rowDoc);
+		
+		
+		
+		centerDirectionCodeExists = true;
+	}
+		
+	
+
+	
+  		
+        if (row.isStr("<centerDirectionEquinox>")) {
+			
+	  		setCenterDirectionEquinox(Parser::getArrayTime("centerDirectionEquinox","SBSummary",rowDoc));
+			
+		}
+ 		
 	
 
 	
@@ -799,6 +902,388 @@ namespace asdm {
 		}
 	}
 	
+	void SBSummaryRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	sBSummaryId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	sbSummaryUID.toBin(eoss);
+		
+	
+
+	
+	
+		
+	projectUID.toBin(eoss);
+		
+	
+
+	
+	
+		
+	obsUnitSetId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeDouble(frequency);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(frequencyBand);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(sbType);
+				
+		
+	
+
+	
+	
+		
+	sbDuration.toBin(eoss);
+		
+	
+
+	
+	
+		
+	Angle::toBin(centerDirection, eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numObservingMode);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) observingMode.size());
+		for (unsigned int i = 0; i < observingMode.size(); i++)
+				
+			eoss.writeString(observingMode.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numberRepeats);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numScienceGoal);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) scienceGoal.size());
+		for (unsigned int i = 0; i < scienceGoal.size(); i++)
+				
+			eoss.writeString(scienceGoal.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numWeatherConstraint);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) weatherConstraint.size());
+		for (unsigned int i = 0; i < weatherConstraint.size(); i++)
+				
+			eoss.writeString(weatherConstraint.at(i));
+				
+				
+						
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(centerDirectionCodeExists);
+	if (centerDirectionCodeExists) {
+	
+	
+	
+		
+					
+			eoss.writeInt(centerDirectionCode);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(centerDirectionEquinoxExists);
+	if (centerDirectionEquinoxExists) {
+	
+	
+	
+		
+	centerDirectionEquinox.toBin(eoss);
+		
+	
+
+	}
+
+	}
+	
+	SBSummaryRow* SBSummaryRow::fromBin(EndianISStream& eiss, SBSummaryTable& table) {
+		SBSummaryRow* row = new  SBSummaryRow(table);
+		
+		
+		
+	
+		
+		
+		row->sBSummaryId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->sbSummaryUID =  EntityRef::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->projectUID =  EntityRef::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->obsUnitSetId =  EntityRef::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->frequency =  eiss.readDouble();
+			
+		
+	
+
+	
+	
+		
+			
+		row->frequencyBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->sbType = CSBType::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->sbDuration =  Interval::fromBin(eiss);
+		
+	
+
+	
+		
+		
+			
+	
+	row->centerDirection = Angle::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->numObservingMode =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->observingMode.clear();
+		
+		unsigned int observingModeDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < observingModeDim1; i++)
+			
+			row->observingMode.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->numberRepeats =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numScienceGoal =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->scienceGoal.clear();
+		
+		unsigned int scienceGoalDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < scienceGoalDim1; i++)
+			
+			row->scienceGoal.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->numWeatherConstraint =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->weatherConstraint.clear();
+		
+		unsigned int weatherConstraintDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < weatherConstraintDim1; i++)
+			
+			row->weatherConstraint.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+		
+		
+		
+	row->centerDirectionCodeExists = eiss.readBoolean();
+	if (row->centerDirectionCodeExists) {
+		
+	
+	
+		
+			
+		row->centerDirectionCode = CDirectionReferenceCode::from_int(eiss.readInt());
+			
+		
+	
+
+	}
+
+	row->centerDirectionEquinoxExists = eiss.readBoolean();
+	if (row->centerDirectionEquinoxExists) {
+		
+	
+		
+		
+		row->centerDirectionEquinox =  ArrayTime::fromBin(eiss);
+		
+	
+
+	}
+
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
@@ -807,33 +1292,33 @@ namespace asdm {
 
 	
  	/**
- 	 * Get sbId.
- 	 * @return sbId as EntityRef
+ 	 * Get sBSummaryId.
+ 	 * @return sBSummaryId as Tag
  	 */
- 	EntityRef SBSummaryRow::getSbId() const {
+ 	Tag SBSummaryRow::getSBSummaryId() const {
 	
-  		return sbId;
+  		return sBSummaryId;
  	}
 
  	/**
- 	 * Set sbId with the specified EntityRef.
- 	 * @param sbId The EntityRef value to which sbId is to be set.
+ 	 * Set sBSummaryId with the specified Tag.
+ 	 * @param sBSummaryId The Tag value to which sBSummaryId is to be set.
  	 
  	
  		
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
  	 	
  	 */
- 	void SBSummaryRow::setSbId (EntityRef sbId)  {
+ 	void SBSummaryRow::setSBSummaryId (Tag sBSummaryId)  {
   	
   	
   		if (hasBeenAdded) {
  		
-			throw IllegalAccessException("sbId", "SBSummary");
+			throw IllegalAccessException("sBSummaryId", "SBSummary");
 		
   		}
   	
- 		this->sbId = sbId;
+ 		this->sBSummaryId = sBSummaryId;
 	
  	}
 	
@@ -843,29 +1328,61 @@ namespace asdm {
 
 	
  	/**
- 	 * Get projectId.
- 	 * @return projectId as EntityRef
+ 	 * Get sbSummaryUID.
+ 	 * @return sbSummaryUID as EntityRef
  	 */
- 	EntityRef SBSummaryRow::getProjectId() const {
+ 	EntityRef SBSummaryRow::getSbSummaryUID() const {
 	
-  		return projectId;
+  		return sbSummaryUID;
  	}
 
  	/**
- 	 * Set projectId with the specified EntityRef.
- 	 * @param projectId The EntityRef value to which projectId is to be set.
+ 	 * Set sbSummaryUID with the specified EntityRef.
+ 	 * @param sbSummaryUID The EntityRef value to which sbSummaryUID is to be set.
  	 
  	
  		
  	 */
- 	void SBSummaryRow::setProjectId (EntityRef projectId)  {
+ 	void SBSummaryRow::setSbSummaryUID (EntityRef sbSummaryUID)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->projectId = projectId;
+ 		this->sbSummaryUID = sbSummaryUID;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get projectUID.
+ 	 * @return projectUID as EntityRef
+ 	 */
+ 	EntityRef SBSummaryRow::getProjectUID() const {
+	
+  		return projectUID;
+ 	}
+
+ 	/**
+ 	 * Set projectUID with the specified EntityRef.
+ 	 * @param projectUID The EntityRef value to which projectUID is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void SBSummaryRow::setProjectUID (EntityRef projectUID)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->projectUID = projectUID;
 	
  	}
 	
@@ -907,29 +1424,61 @@ namespace asdm {
 
 	
  	/**
- 	 * Get sbIntent.
- 	 * @return sbIntent as string
+ 	 * Get frequency.
+ 	 * @return frequency as double
  	 */
- 	string SBSummaryRow::getSbIntent() const {
+ 	double SBSummaryRow::getFrequency() const {
 	
-  		return sbIntent;
+  		return frequency;
  	}
 
  	/**
- 	 * Set sbIntent with the specified string.
- 	 * @param sbIntent The string value to which sbIntent is to be set.
+ 	 * Set frequency with the specified double.
+ 	 * @param frequency The double value to which frequency is to be set.
  	 
  	
  		
  	 */
- 	void SBSummaryRow::setSbIntent (string sbIntent)  {
+ 	void SBSummaryRow::setFrequency (double frequency)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->sbIntent = sbIntent;
+ 		this->frequency = frequency;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get frequencyBand.
+ 	 * @return frequencyBand as ReceiverBandMod::ReceiverBand
+ 	 */
+ 	ReceiverBandMod::ReceiverBand SBSummaryRow::getFrequencyBand() const {
+	
+  		return frequencyBand;
+ 	}
+
+ 	/**
+ 	 * Set frequencyBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param frequencyBand The ReceiverBandMod::ReceiverBand value to which frequencyBand is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void SBSummaryRow::setFrequencyBand (ReceiverBandMod::ReceiverBand frequencyBand)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->frequencyBand = frequencyBand;
 	
  	}
 	
@@ -1003,29 +1552,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numScan.
- 	 * @return numScan as int
+ 	 * Get centerDirection.
+ 	 * @return centerDirection as vector<Angle >
  	 */
- 	int SBSummaryRow::getNumScan() const {
+ 	vector<Angle > SBSummaryRow::getCenterDirection() const {
 	
-  		return numScan;
+  		return centerDirection;
  	}
 
  	/**
- 	 * Set numScan with the specified int.
- 	 * @param numScan The int value to which numScan is to be set.
+ 	 * Set centerDirection with the specified vector<Angle >.
+ 	 * @param centerDirection The vector<Angle > value to which centerDirection is to be set.
  	 
  	
  		
  	 */
- 	void SBSummaryRow::setNumScan (int numScan)  {
+ 	void SBSummaryRow::setCenterDirection (vector<Angle > centerDirection)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->numScan = numScan;
+ 		this->centerDirection = centerDirection;
 	
  	}
 	
@@ -1035,29 +1584,61 @@ namespace asdm {
 
 	
  	/**
- 	 * Get scanIntent.
- 	 * @return scanIntent as vector<string >
+ 	 * Get numObservingMode.
+ 	 * @return numObservingMode as int
  	 */
- 	vector<string > SBSummaryRow::getScanIntent() const {
+ 	int SBSummaryRow::getNumObservingMode() const {
 	
-  		return scanIntent;
+  		return numObservingMode;
  	}
 
  	/**
- 	 * Set scanIntent with the specified vector<string >.
- 	 * @param scanIntent The vector<string > value to which scanIntent is to be set.
+ 	 * Set numObservingMode with the specified int.
+ 	 * @param numObservingMode The int value to which numObservingMode is to be set.
  	 
  	
  		
  	 */
- 	void SBSummaryRow::setScanIntent (vector<string > scanIntent)  {
+ 	void SBSummaryRow::setNumObservingMode (int numObservingMode)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->scanIntent = scanIntent;
+ 		this->numObservingMode = numObservingMode;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get observingMode.
+ 	 * @return observingMode as vector<string >
+ 	 */
+ 	vector<string > SBSummaryRow::getObservingMode() const {
+	
+  		return observingMode;
+ 	}
+
+ 	/**
+ 	 * Set observingMode with the specified vector<string >.
+ 	 * @param observingMode The vector<string > value to which observingMode is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void SBSummaryRow::setObservingMode (vector<string > observingMode)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->observingMode = observingMode;
 	
  	}
 	
@@ -1099,29 +1680,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get weatherConstraint.
- 	 * @return weatherConstraint as vector<string >
+ 	 * Get numScienceGoal.
+ 	 * @return numScienceGoal as int
  	 */
- 	vector<string > SBSummaryRow::getWeatherConstraint() const {
+ 	int SBSummaryRow::getNumScienceGoal() const {
 	
-  		return weatherConstraint;
+  		return numScienceGoal;
  	}
 
  	/**
- 	 * Set weatherConstraint with the specified vector<string >.
- 	 * @param weatherConstraint The vector<string > value to which weatherConstraint is to be set.
+ 	 * Set numScienceGoal with the specified int.
+ 	 * @param numScienceGoal The int value to which numScienceGoal is to be set.
  	 
  	
  		
  	 */
- 	void SBSummaryRow::setWeatherConstraint (vector<string > weatherConstraint)  {
+ 	void SBSummaryRow::setNumScienceGoal (int numScienceGoal)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->weatherConstraint = weatherConstraint;
+ 		this->numScienceGoal = numScienceGoal;
 	
  	}
 	
@@ -1163,29 +1744,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get raCenter.
- 	 * @return raCenter as double
+ 	 * Get numWeatherConstraint.
+ 	 * @return numWeatherConstraint as int
  	 */
- 	double SBSummaryRow::getRaCenter() const {
+ 	int SBSummaryRow::getNumWeatherConstraint() const {
 	
-  		return raCenter;
+  		return numWeatherConstraint;
  	}
 
  	/**
- 	 * Set raCenter with the specified double.
- 	 * @param raCenter The double value to which raCenter is to be set.
+ 	 * Set numWeatherConstraint with the specified int.
+ 	 * @param numWeatherConstraint The int value to which numWeatherConstraint is to be set.
  	 
  	
  		
  	 */
- 	void SBSummaryRow::setRaCenter (double raCenter)  {
+ 	void SBSummaryRow::setNumWeatherConstraint (int numWeatherConstraint)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->raCenter = raCenter;
+ 		this->numWeatherConstraint = numWeatherConstraint;
 	
  	}
 	
@@ -1195,128 +1776,126 @@ namespace asdm {
 
 	
  	/**
- 	 * Get decCenter.
- 	 * @return decCenter as double
+ 	 * Get weatherConstraint.
+ 	 * @return weatherConstraint as vector<string >
  	 */
- 	double SBSummaryRow::getDecCenter() const {
+ 	vector<string > SBSummaryRow::getWeatherConstraint() const {
 	
-  		return decCenter;
+  		return weatherConstraint;
  	}
 
  	/**
- 	 * Set decCenter with the specified double.
- 	 * @param decCenter The double value to which decCenter is to be set.
+ 	 * Set weatherConstraint with the specified vector<string >.
+ 	 * @param weatherConstraint The vector<string > value to which weatherConstraint is to be set.
  	 
  	
  		
  	 */
- 	void SBSummaryRow::setDecCenter (double decCenter)  {
+ 	void SBSummaryRow::setWeatherConstraint (vector<string > weatherConstraint)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->decCenter = decCenter;
+ 		this->weatherConstraint = weatherConstraint;
 	
  	}
 	
 	
 
 	
+	/**
+	 * The attribute centerDirectionCode is optional. Return true if this attribute exists.
+	 * @return true if and only if the centerDirectionCode attribute exists. 
+	 */
+	bool SBSummaryRow::isCenterDirectionCodeExists() const {
+		return centerDirectionCodeExists;
+	}
+	
 
 	
  	/**
- 	 * Get frequency.
- 	 * @return frequency as double
+ 	 * Get centerDirectionCode, which is optional.
+ 	 * @return centerDirectionCode as DirectionReferenceCodeMod::DirectionReferenceCode
+ 	 * @throw IllegalAccessException If centerDirectionCode does not exist.
  	 */
- 	double SBSummaryRow::getFrequency() const {
+ 	DirectionReferenceCodeMod::DirectionReferenceCode SBSummaryRow::getCenterDirectionCode() const  {
+		if (!centerDirectionCodeExists) {
+			throw IllegalAccessException("centerDirectionCode", "SBSummary");
+		}
 	
-  		return frequency;
+  		return centerDirectionCode;
  	}
 
  	/**
- 	 * Set frequency with the specified double.
- 	 * @param frequency The double value to which frequency is to be set.
+ 	 * Set centerDirectionCode with the specified DirectionReferenceCodeMod::DirectionReferenceCode.
+ 	 * @param centerDirectionCode The DirectionReferenceCodeMod::DirectionReferenceCode value to which centerDirectionCode is to be set.
  	 
  	
- 		
  	 */
- 	void SBSummaryRow::setFrequency (double frequency)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->frequency = frequency;
+ 	void SBSummaryRow::setCenterDirectionCode (DirectionReferenceCodeMod::DirectionReferenceCode centerDirectionCode) {
+	
+ 		this->centerDirectionCode = centerDirectionCode;
+	
+		centerDirectionCodeExists = true;
 	
  	}
 	
 	
+	/**
+	 * Mark centerDirectionCode, which is an optional field, as non-existent.
+	 */
+	void SBSummaryRow::clearCenterDirectionCode () {
+		centerDirectionCodeExists = false;
+	}
+	
 
+	
+	/**
+	 * The attribute centerDirectionEquinox is optional. Return true if this attribute exists.
+	 * @return true if and only if the centerDirectionEquinox attribute exists. 
+	 */
+	bool SBSummaryRow::isCenterDirectionEquinoxExists() const {
+		return centerDirectionEquinoxExists;
+	}
 	
 
 	
  	/**
- 	 * Get frequencyBand.
- 	 * @return frequencyBand as string
+ 	 * Get centerDirectionEquinox, which is optional.
+ 	 * @return centerDirectionEquinox as ArrayTime
+ 	 * @throw IllegalAccessException If centerDirectionEquinox does not exist.
  	 */
- 	string SBSummaryRow::getFrequencyBand() const {
+ 	ArrayTime SBSummaryRow::getCenterDirectionEquinox() const  {
+		if (!centerDirectionEquinoxExists) {
+			throw IllegalAccessException("centerDirectionEquinox", "SBSummary");
+		}
 	
-  		return frequencyBand;
+  		return centerDirectionEquinox;
  	}
 
  	/**
- 	 * Set frequencyBand with the specified string.
- 	 * @param frequencyBand The string value to which frequencyBand is to be set.
+ 	 * Set centerDirectionEquinox with the specified ArrayTime.
+ 	 * @param centerDirectionEquinox The ArrayTime value to which centerDirectionEquinox is to be set.
  	 
  	
- 		
  	 */
- 	void SBSummaryRow::setFrequencyBand (string frequencyBand)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->frequencyBand = frequencyBand;
+ 	void SBSummaryRow::setCenterDirectionEquinox (ArrayTime centerDirectionEquinox) {
+	
+ 		this->centerDirectionEquinox = centerDirectionEquinox;
+	
+		centerDirectionEquinoxExists = true;
 	
  	}
 	
 	
-
-	
-
-	
- 	/**
- 	 * Get observingMode.
- 	 * @return observingMode as vector<string >
- 	 */
- 	vector<string > SBSummaryRow::getObservingMode() const {
-	
-  		return observingMode;
- 	}
-
- 	/**
- 	 * Set observingMode with the specified vector<string >.
- 	 * @param observingMode The vector<string > value to which observingMode is to be set.
- 	 
- 	
- 		
- 	 */
- 	void SBSummaryRow::setObservingMode (vector<string > observingMode)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->observingMode = observingMode;
-	
- 	}
-	
+	/**
+	 * Mark centerDirectionEquinox, which is an optional field, as non-existent.
+	 */
+	void SBSummaryRow::clearCenterDirectionEquinox () {
+		centerDirectionEquinoxExists = false;
+	}
 	
 
 	
@@ -1374,6 +1953,14 @@ namespace asdm {
 	
 
 	
+		centerDirectionCodeExists = false;
+	
+
+	
+		centerDirectionEquinoxExists = false;
+	
+
+	
 	
 	
 	
@@ -1383,6 +1970,13 @@ namespace asdm {
 
 	
 
+	
+
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+frequencyBand = CReceiverBand::from_int(0);
 	
 
 	
@@ -1408,6 +2002,9 @@ sbType = CSBType::from_int(0);
 
 	
 
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+centerDirectionCode = CDirectionReferenceCode::from_int(0);
 	
 
 	
@@ -1452,67 +2049,89 @@ sbType = CSBType::from_int(0);
 
 	
 
+	
+		centerDirectionCodeExists = false;
+	
+
+	
+		centerDirectionEquinoxExists = false;
+	
+
 			
 		}
 		else {
 	
 		
-			sbId = row.sbId;
+			sBSummaryId = row.sBSummaryId;
 		
 		
 		
 		
-			projectId = row.projectId;
+			sbSummaryUID = row.sbSummaryUID;
+		
+			projectUID = row.projectUID;
 		
 			obsUnitSetId = row.obsUnitSetId;
-		
-			sbIntent = row.sbIntent;
-		
-			sbType = row.sbType;
-		
-			sbDuration = row.sbDuration;
-		
-			numScan = row.numScan;
-		
-			scanIntent = row.scanIntent;
-		
-			numberRepeats = row.numberRepeats;
-		
-			weatherConstraint = row.weatherConstraint;
-		
-			scienceGoal = row.scienceGoal;
-		
-			raCenter = row.raCenter;
-		
-			decCenter = row.decCenter;
 		
 			frequency = row.frequency;
 		
 			frequencyBand = row.frequencyBand;
 		
+			sbType = row.sbType;
+		
+			sbDuration = row.sbDuration;
+		
+			centerDirection = row.centerDirection;
+		
+			numObservingMode = row.numObservingMode;
+		
 			observingMode = row.observingMode;
 		
+			numberRepeats = row.numberRepeats;
+		
+			numScienceGoal = row.numScienceGoal;
+		
+			scienceGoal = row.scienceGoal;
+		
+			numWeatherConstraint = row.numWeatherConstraint;
+		
+			weatherConstraint = row.weatherConstraint;
 		
 		
+		
+		
+		if (row.centerDirectionCodeExists) {
+			centerDirectionCode = row.centerDirectionCode;		
+			centerDirectionCodeExists = true;
+		}
+		else
+			centerDirectionCodeExists = false;
+		
+		if (row.centerDirectionEquinoxExists) {
+			centerDirectionEquinox = row.centerDirectionEquinox;		
+			centerDirectionEquinoxExists = true;
+		}
+		else
+			centerDirectionEquinoxExists = false;
 		
 		}	
 	}
 
 	
-	bool SBSummaryRow::compareNoAutoInc(EntityRef sbId, EntityRef projectId, EntityRef obsUnitSetId, string sbIntent, SBTypeMod::SBType sbType, Interval sbDuration, int numScan, vector<string > scanIntent, int numberRepeats, vector<string > weatherConstraint, vector<string > scienceGoal, double raCenter, double decCenter, double frequency, string frequencyBand, vector<string > observingMode) {
+	bool SBSummaryRow::compareNoAutoInc(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint) {
 		bool result;
 		result = true;
 		
 	
 		
-		result = result && (this->sbId == sbId);
+		result = result && (this->sbSummaryUID == sbSummaryUID);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->projectId == projectId);
+		result = result && (this->projectUID == projectUID);
 		
 		if (!result) return false;
 	
@@ -1520,76 +2139,6 @@ sbType = CSBType::from_int(0);
 	
 		
 		result = result && (this->obsUnitSetId == obsUnitSetId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->sbIntent == sbIntent);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->sbType == sbType);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->sbDuration == sbDuration);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numScan == numScan);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->scanIntent == scanIntent);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numberRepeats == numberRepeats);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->weatherConstraint == weatherConstraint);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->scienceGoal == scienceGoal);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->raCenter == raCenter);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->decCenter == decCenter);
 		
 		if (!result) return false;
 	
@@ -1610,7 +2159,70 @@ sbType = CSBType::from_int(0);
 
 	
 		
+		result = result && (this->sbType == sbType);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->sbDuration == sbDuration);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->centerDirection == centerDirection);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numObservingMode == numObservingMode);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->observingMode == observingMode);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numberRepeats == numberRepeats);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numScienceGoal == numScienceGoal);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->scienceGoal == scienceGoal);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numWeatherConstraint == numWeatherConstraint);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->weatherConstraint == weatherConstraint);
 		
 		if (!result) return false;
 	
@@ -1620,56 +2232,20 @@ sbType = CSBType::from_int(0);
 	
 	
 	
-	bool SBSummaryRow::compareRequiredValue(EntityRef projectId, EntityRef obsUnitSetId, string sbIntent, SBTypeMod::SBType sbType, Interval sbDuration, int numScan, vector<string > scanIntent, int numberRepeats, vector<string > weatherConstraint, vector<string > scienceGoal, double raCenter, double decCenter, double frequency, string frequencyBand, vector<string > observingMode) {
+	bool SBSummaryRow::compareRequiredValue(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint) {
 		bool result;
 		result = true;
 		
 	
-		if (!(this->projectId == projectId)) return false;
+		if (!(this->sbSummaryUID == sbSummaryUID)) return false;
+	
+
+	
+		if (!(this->projectUID == projectUID)) return false;
 	
 
 	
 		if (!(this->obsUnitSetId == obsUnitSetId)) return false;
-	
-
-	
-		if (!(this->sbIntent == sbIntent)) return false;
-	
-
-	
-		if (!(this->sbType == sbType)) return false;
-	
-
-	
-		if (!(this->sbDuration == sbDuration)) return false;
-	
-
-	
-		if (!(this->numScan == numScan)) return false;
-	
-
-	
-		if (!(this->scanIntent == scanIntent)) return false;
-	
-
-	
-		if (!(this->numberRepeats == numberRepeats)) return false;
-	
-
-	
-		if (!(this->weatherConstraint == weatherConstraint)) return false;
-	
-
-	
-		if (!(this->scienceGoal == scienceGoal)) return false;
-	
-
-	
-		if (!(this->raCenter == raCenter)) return false;
-	
-
-	
-		if (!(this->decCenter == decCenter)) return false;
 	
 
 	
@@ -1681,7 +2257,43 @@ sbType = CSBType::from_int(0);
 	
 
 	
+		if (!(this->sbType == sbType)) return false;
+	
+
+	
+		if (!(this->sbDuration == sbDuration)) return false;
+	
+
+	
+		if (!(this->centerDirection == centerDirection)) return false;
+	
+
+	
+		if (!(this->numObservingMode == numObservingMode)) return false;
+	
+
+	
 		if (!(this->observingMode == observingMode)) return false;
+	
+
+	
+		if (!(this->numberRepeats == numberRepeats)) return false;
+	
+
+	
+		if (!(this->numScienceGoal == numScienceGoal)) return false;
+	
+
+	
+		if (!(this->scienceGoal == scienceGoal)) return false;
+	
+
+	
+		if (!(this->numWeatherConstraint == numWeatherConstraint)) return false;
+	
+
+	
+		if (!(this->weatherConstraint == weatherConstraint)) return false;
 	
 
 		return result;
@@ -1699,35 +2311,35 @@ sbType = CSBType::from_int(0);
 	bool SBSummaryRow::equalByRequiredValue(SBSummaryRow* x) {
 		
 			
-		if (this->projectId != x->projectId) return false;
+		if (this->sbSummaryUID != x->sbSummaryUID) return false;
+			
+		if (this->projectUID != x->projectUID) return false;
 			
 		if (this->obsUnitSetId != x->obsUnitSetId) return false;
-			
-		if (this->sbIntent != x->sbIntent) return false;
-			
-		if (this->sbType != x->sbType) return false;
-			
-		if (this->sbDuration != x->sbDuration) return false;
-			
-		if (this->numScan != x->numScan) return false;
-			
-		if (this->scanIntent != x->scanIntent) return false;
-			
-		if (this->numberRepeats != x->numberRepeats) return false;
-			
-		if (this->weatherConstraint != x->weatherConstraint) return false;
-			
-		if (this->scienceGoal != x->scienceGoal) return false;
-			
-		if (this->raCenter != x->raCenter) return false;
-			
-		if (this->decCenter != x->decCenter) return false;
 			
 		if (this->frequency != x->frequency) return false;
 			
 		if (this->frequencyBand != x->frequencyBand) return false;
 			
+		if (this->sbType != x->sbType) return false;
+			
+		if (this->sbDuration != x->sbDuration) return false;
+			
+		if (this->centerDirection != x->centerDirection) return false;
+			
+		if (this->numObservingMode != x->numObservingMode) return false;
+			
 		if (this->observingMode != x->observingMode) return false;
+			
+		if (this->numberRepeats != x->numberRepeats) return false;
+			
+		if (this->numScienceGoal != x->numScienceGoal) return false;
+			
+		if (this->scienceGoal != x->scienceGoal) return false;
+			
+		if (this->numWeatherConstraint != x->numWeatherConstraint) return false;
+			
+		if (this->weatherConstraint != x->weatherConstraint) return false;
 			
 		
 		return true;

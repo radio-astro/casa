@@ -78,34 +78,17 @@ using namespace enumerations;
 	
 
 	
+#include "CReceiverBand.h"
+using namespace ReceiverBandMod;
+	
+
+	
+
+	
+
+	
 #include "CAntennaMake.h"
 using namespace AntennaMakeMod;
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -114,8 +97,30 @@ using namespace PointingModelModeMod;
 	
 
 	
-#include "CReceiverBand.h"
-using namespace ReceiverBandMod;
+#include "CPolarizationType.h"
+using namespace PolarizationTypeMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 
@@ -141,7 +146,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalPointingModel.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
 */
 
 namespace asdm {
@@ -159,7 +164,7 @@ class CalReductionRow;
 /**
  * The CalPointingModelRow class is a row of a CalPointingModelTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
  *
  */
 class CalPointingModelRow {
@@ -186,8 +191,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalPointingModelRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalPointingModelRowIDL x) throw(ConversionException);
+	void setFromIDL (CalPointingModelRowIDL x) ;
 #endif
 	
 	/**
@@ -200,8 +206,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalPointingModelTable to which the row built by deserialization will be parented.
+	  */
+	 static CalPointingModelRow* fromBin(EndianISStream& eiss, CalPointingModelTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -240,89 +260,31 @@ public:
 
 
 	
-	// ===> Attribute antennaMake
+	// ===> Attribute receiverBand
 	
 	
 	
 
 	
  	/**
- 	 * Get antennaMake.
- 	 * @return antennaMake as AntennaMakeMod::AntennaMake
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
  	 */
- 	AntennaMakeMod::AntennaMake getAntennaMake() const;
+ 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
 	
  
  	
  	
  	/**
- 	 * Set antennaMake with the specified AntennaMakeMod::AntennaMake.
- 	 * @param antennaMake The AntennaMakeMod::AntennaMake value to which antennaMake is to be set.
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
  	 
  		
  			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setAntennaMake (AntennaMakeMod::AntennaMake antennaMake);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute numObs
-	
-	
-	
-
-	
- 	/**
- 	 * Get numObs.
- 	 * @return numObs as int
- 	 */
- 	int getNumObs() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numObs with the specified int.
- 	 * @param numObs The int value to which numObs is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumObs (int numObs);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute numCoeff
-	
-	
-	
-
-	
- 	/**
- 	 * Get numCoeff.
- 	 * @return numCoeff as int
- 	 */
- 	int getNumCoeff() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numCoeff with the specified int.
- 	 * @param numCoeff The int value to which numCoeff is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumCoeff (int numCoeff);
+ 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
   		
 	
 	
@@ -390,29 +352,29 @@ public:
 
 
 	
-	// ===> Attribute numFormula
+	// ===> Attribute antennaMake
 	
 	
 	
 
 	
  	/**
- 	 * Get numFormula.
- 	 * @return numFormula as int
+ 	 * Get antennaMake.
+ 	 * @return antennaMake as AntennaMakeMod::AntennaMake
  	 */
- 	int getNumFormula() const;
+ 	AntennaMakeMod::AntennaMake getAntennaMake() const;
 	
  
  	
  	
  	/**
- 	 * Set numFormula with the specified int.
- 	 * @param numFormula The int value to which numFormula is to be set.
+ 	 * Set antennaMake with the specified AntennaMakeMod::AntennaMake.
+ 	 * @param antennaMake The AntennaMakeMod::AntennaMake value to which antennaMake is to be set.
  	 
  		
  			
  	 */
- 	void setNumFormula (int numFormula);
+ 	void setAntennaMake (AntennaMakeMod::AntennaMake antennaMake);
   		
 	
 	
@@ -420,29 +382,29 @@ public:
 
 
 	
-	// ===> Attribute azimuthRms
+	// ===> Attribute pointingModelMode
 	
 	
 	
 
 	
  	/**
- 	 * Get azimuthRms.
- 	 * @return azimuthRms as Angle
+ 	 * Get pointingModelMode.
+ 	 * @return pointingModelMode as PointingModelModeMod::PointingModelMode
  	 */
- 	Angle getAzimuthRms() const;
+ 	PointingModelModeMod::PointingModelMode getPointingModelMode() const;
 	
  
  	
  	
  	/**
- 	 * Set azimuthRms with the specified Angle.
- 	 * @param azimuthRms The Angle value to which azimuthRms is to be set.
+ 	 * Set pointingModelMode with the specified PointingModelModeMod::PointingModelMode.
+ 	 * @param pointingModelMode The PointingModelModeMod::PointingModelMode value to which pointingModelMode is to be set.
  	 
  		
  			
  	 */
- 	void setAzimuthRms (Angle azimuthRms);
+ 	void setPointingModelMode (PointingModelModeMod::PointingModelMode pointingModelMode);
   		
 	
 	
@@ -450,29 +412,29 @@ public:
 
 
 	
-	// ===> Attribute elevationRms
+	// ===> Attribute polarizationType
 	
 	
 	
 
 	
  	/**
- 	 * Get elevationRms.
- 	 * @return elevationRms as Angle
+ 	 * Get polarizationType.
+ 	 * @return polarizationType as PolarizationTypeMod::PolarizationType
  	 */
- 	Angle getElevationRms() const;
+ 	PolarizationTypeMod::PolarizationType getPolarizationType() const;
 	
  
  	
  	
  	/**
- 	 * Set elevationRms with the specified Angle.
- 	 * @param elevationRms The Angle value to which elevationRms is to be set.
+ 	 * Set polarizationType with the specified PolarizationTypeMod::PolarizationType.
+ 	 * @param polarizationType The PolarizationTypeMod::PolarizationType value to which polarizationType is to be set.
  	 
  		
  			
  	 */
- 	void setElevationRms (Angle elevationRms);
+ 	void setPolarizationType (PolarizationTypeMod::PolarizationType polarizationType);
   		
 	
 	
@@ -480,29 +442,29 @@ public:
 
 
 	
-	// ===> Attribute skyRms
+	// ===> Attribute numCoeff
 	
 	
 	
 
 	
  	/**
- 	 * Get skyRms.
- 	 * @return skyRms as Angle
+ 	 * Get numCoeff.
+ 	 * @return numCoeff as int
  	 */
- 	Angle getSkyRms() const;
+ 	int getNumCoeff() const;
 	
  
  	
  	
  	/**
- 	 * Set skyRms with the specified Angle.
- 	 * @param skyRms The Angle value to which skyRms is to be set.
+ 	 * Set numCoeff with the specified int.
+ 	 * @param numCoeff The int value to which numCoeff is to be set.
  	 
  		
  			
  	 */
- 	void setSkyRms (Angle skyRms);
+ 	void setNumCoeff (int numCoeff);
   		
 	
 	
@@ -630,15 +592,183 @@ public:
 
 
 	
-	// ===> Attribute coeffFormula
+	// ===> Attribute azimuthRMS
 	
 	
 	
 
 	
  	/**
- 	 * Get coeffFormula.
+ 	 * Get azimuthRMS.
+ 	 * @return azimuthRMS as Angle
+ 	 */
+ 	Angle getAzimuthRMS() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set azimuthRMS with the specified Angle.
+ 	 * @param azimuthRMS The Angle value to which azimuthRMS is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setAzimuthRMS (Angle azimuthRMS);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute elevationRms
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get elevationRms.
+ 	 * @return elevationRms as Angle
+ 	 */
+ 	Angle getElevationRms() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set elevationRms with the specified Angle.
+ 	 * @param elevationRms The Angle value to which elevationRms is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setElevationRms (Angle elevationRms);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute skyRMS
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get skyRMS.
+ 	 * @return skyRMS as Angle
+ 	 */
+ 	Angle getSkyRMS() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set skyRMS with the specified Angle.
+ 	 * @param skyRMS The Angle value to which skyRMS is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setSkyRMS (Angle skyRMS);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute reducedChiSquared
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get reducedChiSquared.
+ 	 * @return reducedChiSquared as double
+ 	 */
+ 	double getReducedChiSquared() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set reducedChiSquared with the specified double.
+ 	 * @param reducedChiSquared The double value to which reducedChiSquared is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setReducedChiSquared (double reducedChiSquared);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numObs, which is optional
+	
+	
+	
+	/**
+	 * The attribute numObs is optional. Return true if this attribute exists.
+	 * @return true if and only if the numObs attribute exists. 
+	 */
+	bool isNumObsExists() const;
+	
+
+	
+ 	/**
+ 	 * Get numObs, which is optional.
+ 	 * @return numObs as int
+ 	 * @throws IllegalAccessException If numObs does not exist.
+ 	 */
+ 	int getNumObs() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numObs with the specified int.
+ 	 * @param numObs The int value to which numObs is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setNumObs (int numObs);
+		
+	
+	
+	
+	/**
+	 * Mark numObs, which is an optional field, as non-existent.
+	 */
+	void clearNumObs ();
+	
+
+
+	
+	// ===> Attribute coeffFormula, which is optional
+	
+	
+	
+	/**
+	 * The attribute coeffFormula is optional. Return true if this attribute exists.
+	 * @return true if and only if the coeffFormula attribute exists. 
+	 */
+	bool isCoeffFormulaExists() const;
+	
+
+	
+ 	/**
+ 	 * Get coeffFormula, which is optional.
  	 * @return coeffFormula as vector<string >
+ 	 * @throws IllegalAccessException If coeffFormula does not exist.
  	 */
  	vector<string > getCoeffFormula() const;
 	
@@ -650,74 +780,16 @@ public:
  	 * @param coeffFormula The vector<string > value to which coeffFormula is to be set.
  	 
  		
- 			
  	 */
  	void setCoeffFormula (vector<string > coeffFormula);
-  		
+		
 	
 	
 	
-
-
-	
-	// ===> Attribute pointingModelMode
-	
-	
-	
-
-	
- 	/**
- 	 * Get pointingModelMode.
- 	 * @return pointingModelMode as PointingModelModeMod::PointingModelMode
- 	 */
- 	PointingModelModeMod::PointingModelMode getPointingModelMode() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set pointingModelMode with the specified PointingModelModeMod::PointingModelMode.
- 	 * @param pointingModelMode The PointingModelModeMod::PointingModelMode value to which pointingModelMode is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setPointingModelMode (PointingModelModeMod::PointingModelMode pointingModelMode);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute receiverBand
-	
-	
-	
-
-	
- 	/**
- 	 * Get receiverBand.
- 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
- 	 */
- 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
- 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
- 	 
- 		
- 			
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 		
- 	 */
- 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
-  		
-	
-	
+	/**
+	 * Mark coeffFormula, which is an optional field, as non-existent.
+	 */
+	void clearCoeffFormula ();
 	
 
 
@@ -830,12 +902,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this CalPointingModelRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand, AntennaMakeMod::AntennaMake antennaMake, int numObs, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, int numFormula, Angle azimuthRms, Angle elevationRms, Angle skyRms, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, vector<string > coeffFormula, PointingModelModeMod::PointingModelMode pointingModelMode);
+	bool compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, PointingModelModeMod::PointingModelMode pointingModelMode, PolarizationTypeMod::PolarizationType polarizationType, int numCoeff, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, Angle azimuthRMS, Angle elevationRms, Angle skyRMS, double reducedChiSquared);
 	
 	
 
 	
-	bool compareRequiredValue(AntennaMakeMod::AntennaMake antennaMake, int numObs, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, int numFormula, Angle azimuthRms, Angle elevationRms, Angle skyRms, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, vector<string > coeffFormula, PointingModelModeMod::PointingModelMode pointingModelMode); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, PointingModelModeMod::PointingModelMode pointingModelMode, PolarizationTypeMod::PolarizationType polarizationType, int numCoeff, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, Angle azimuthRMS, Angle elevationRms, Angle skyRMS, double reducedChiSquared); 
 		 
 	
 	/**
@@ -907,33 +979,11 @@ private:
  	
 
 	
-	// ===> Attribute antennaMake
+	// ===> Attribute receiverBand
 	
 	
 
-	AntennaMakeMod::AntennaMake antennaMake;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numObs
-	
-	
-
-	int numObs;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numCoeff
-	
-	
-
-	int numCoeff;
+	ReceiverBandMod::ReceiverBand receiverBand;
 
 	
 	
@@ -962,44 +1012,44 @@ private:
  	
 
 	
-	// ===> Attribute numFormula
+	// ===> Attribute antennaMake
 	
 	
 
-	int numFormula;
-
-	
-	
- 	
-
-	
-	// ===> Attribute azimuthRms
-	
-	
-
-	Angle azimuthRms;
+	AntennaMakeMod::AntennaMake antennaMake;
 
 	
 	
  	
 
 	
-	// ===> Attribute elevationRms
+	// ===> Attribute pointingModelMode
 	
 	
 
-	Angle elevationRms;
+	PointingModelModeMod::PointingModelMode pointingModelMode;
 
 	
 	
  	
 
 	
-	// ===> Attribute skyRms
+	// ===> Attribute polarizationType
 	
 	
 
-	Angle skyRms;
+	PolarizationTypeMod::PolarizationType polarizationType;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numCoeff
+	
+	
+
+	int numCoeff;
 
 	
 	
@@ -1050,33 +1100,70 @@ private:
  	
 
 	
-	// ===> Attribute coeffFormula
+	// ===> Attribute azimuthRMS
 	
+	
+
+	Angle azimuthRMS;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute elevationRms
+	
+	
+
+	Angle elevationRms;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute skyRMS
+	
+	
+
+	Angle skyRMS;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute reducedChiSquared
+	
+	
+
+	double reducedChiSquared;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numObs, which is optional
+	
+	
+	bool numObsExists;
+	
+
+	int numObs;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute coeffFormula, which is optional
+	
+	
+	bool coeffFormulaExists;
 	
 
 	vector<string > coeffFormula;
-
-	
-	
- 	
-
-	
-	// ===> Attribute pointingModelMode
-	
-	
-
-	PointingModelModeMod::PointingModelMode pointingModelMode;
-
-	
-	
- 	
-
-	
-	// ===> Attribute receiverBand
-	
-	
-
-	ReceiverBandMod::ReceiverBand receiverBand;
 
 	
 	

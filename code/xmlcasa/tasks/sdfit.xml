@@ -163,6 +163,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             </when>
             <when param="fitmode">
                 <equals value="list"/>
+                <equals value="interact"/>
                 <equals value="auto">
                         <default param="thresh"><value>5.0</value></default>
                         <default param="min_nchan"><value>3</value></default>
@@ -236,12 +237,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: [] (use all polarizations)
                 example: [1]
         fitmode -- mode for fitting
-                options: (str) 'list','auto'
+                options: (str) 'list','auto','interact'
                 default: 'auto'
                 example: 'list' will use maskline to define regions to
                                 fit for lines with nfit in each
                          'auto' will use the linefinder to fit for lines
                                 using the following parameters
+                         'interact' allows adding and deleting mask 
+                                regions by drawing rectangles on the plot 
+                                with mouse. Draw a rectangle with LEFT-mouse 
+                                to ADD the region to the mask and with RIGHT-mouse 
+                                to DELETE the region. 
+
             &gt;&gt;&gt; fitmode expandable parameters             
                  thresh -- S/N threshold for linefinder
                          default: 5

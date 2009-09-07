@@ -1,10 +1,16 @@
+#define DDPRIORITY 1
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <assert.h>
+#include <cmath>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
+
+#include <boost/algorithm/string.hpp>
+using namespace boost;
+
 
 #include <ASDMAll.h>
 
@@ -19,12 +25,23 @@ using namespace asdm;
 #include "ASDM2MSFiller.h"
 
 #include "measures/Measures/Stokes.h"
+#include "measures/Measures/MFrequency.h"
 using namespace casa;
 
-#include "CStokesParameter.h"
+#include "CBasebandName.h"
+#include "CFrequencyReferenceCode.h"
 #include "CPolarizationType.h"
-#include "CProcessorType.h"
 #include "CProcessorSubType.h"
+#include "CProcessorType.h"
+#include "CScanIntent.h"
+#include "CSubscanIntent.h"
+#include "CStokesParameter.h"
+
+#include "Name2Table.h"
+#include "ASDMVerbatimFiller.h"
+
+#include "SDMDataObjectReader.h"
+#include "SDMDataObject.h"
 
 #include	"time.h"			/* <time.h> */
 #if	defined(__sysv__)
@@ -36,6 +53,8 @@ using namespace casa;
 extern	void	ftime( struct timeb * );	/* this is the funtion */
 #else
 #endif
+
+#include <casa/Logging.h>
 
 void	myTimer( double *cpu_time ,		/* cpu timer */
 		 double *real_time ,		/* real timer */
@@ -77,17 +96,26 @@ void	myTimer( double *cpu_time ,		/* cpu timer */
 
 
 ASDM2MSFiller* msFiller;
+string appName;
+bool verbose = true;
 
+void info (const string& message) {
+  if (verbose)
+    LogSink::postGlobally(LogMessage(message,
+				     LogOrigin(appName, WHERE)));
+}
 
 void error(string message) {
-  cout << message << endl;
+  LogSink::postGlobally(LogMessage(message,
+				   LogOrigin(appName, WHERE)));
   exit(1);
 }
 
 #include <iostream>
 #include <sstream>
 
-ostringstream err;
+ostringstream errstream;
+ostringstream infostream;
 using namespace std;
 
 
@@ -216,6 +244,43 @@ Stokes::StokesTypes* StokesMapper::to1DArray(const vector<StokesParameterMod::St
   return sa;
 }
 
+class FrequencyReferenceMapper {
+
+public :
+  FrequencyReferenceMapper();
+  ~FrequencyReferenceMapper();
+
+  static MFrequency::Types value(FrequencyReferenceCodeMod::FrequencyReferenceCode frc);
+}
+;
+
+FrequencyReferenceMapper::FrequencyReferenceMapper() {
+  ;
+}
+
+FrequencyReferenceMapper::~FrequencyReferenceMapper() {
+  ;
+}
+
+MFrequency::Types FrequencyReferenceMapper::value(FrequencyReferenceCodeMod::FrequencyReferenceCode frc) {
+  switch (frc) {
+  case LABREST : 
+    errstream.str("");
+    errstream << " Can't map FrequencyReferenceCode::LABREST to an MFrequency::Types" << endl;
+    error(errstream.str());
+    break;
+    
+  case FrequencyReferenceCodeMod::LSRD : return MFrequency::LSRD; 
+  case FrequencyReferenceCodeMod::LSRK : return MFrequency::LSRK; 
+  case FrequencyReferenceCodeMod::BARY : return MFrequency::BARY;
+  case FrequencyReferenceCodeMod::REST : return MFrequency::REST;
+  case FrequencyReferenceCodeMod::GEO  : return MFrequency::GEO; 
+  case FrequencyReferenceCodeMod::GALACTO : return MFrequency::GALACTO;
+  case FrequencyReferenceCodeMod::TOPO : return MFrequency::TOPO; 
+  }
+  return MFrequency::TOPO; // Never happens.
+}
+
 class PolTypeMapper {
 private :
   vector<string> polType;
@@ -248,6 +313,8 @@ vector<string> PolTypeMapper::toStringVector(const vector<PolarizationTypeMod::P
   }
   return polType;
 }
+
+
 
 // These classes provide methods to convert from Vectors to Arrays.
 class DConverter {
@@ -696,11 +763,151 @@ float *ComplexDataFilter::to4Pol(int numCorr, int numChan, float* cdata) {
   return filtered;
 }
 
+//
+//  A collection of functions to combine target and offset
+//  into a pointing direction in the Pointing table.
+//
+/**
+ *
+ * From a Fortran 90 subroutine, written by Didier Despois (1980)
+ * and revised by Michel Perault (1984).
+ *
+ * Computes a coodinates conversion matrix for a rotation defined
+ * by Euler angles psi, the and phi (values in radians).
+ *
+ * The product of the euclidean coordinates of a vector in the original
+ * base by this matrix gives the coordinates in the rotated base.
+ * 
+ */
+void eulmat(double psi, double the, double phi, vector<vector<double> >& mat) {
+  double cpsi, spsi, cthe, sthe, cphi, sphi;
+  double x1, x2;
 
+  cpsi = cos(psi);
+  spsi = sin(psi);
+  cthe = cos(the);
+  sthe = sin(the);
+  cphi = cos(phi);
+  sphi = sin(phi);
+
+  x1 = spsi*cthe;
+  x2 = cpsi * cthe; 
+  mat.at(0).at(0) =  cpsi * cphi - x1 * sphi;
+  mat.at(0).at(1) =  spsi * cphi + x2 * sphi;
+  mat.at(0).at(2) =  sthe * sphi;
+
+  mat.at(1).at(0) = -cpsi * sphi - x1 * cphi;
+  mat.at(1).at(1) = -spsi * sphi + x2 * cphi;
+  mat.at(1).at(2) = sthe * cphi;
+
+  mat.at(2).at(0) =  spsi * sthe;
+  mat.at(2).at(1) =  -cpsi * sthe;
+  mat.at(2).at(2) =  cthe;
+}
+
+/**
+ * Performs a product Matrix x Vector.
+ *
+ * Attention ! vFactor , mFactor and vResult must be correctly
+ * sized ! And also vFactor and vResult must be different objects.
+ */
+void matvec (const vector<vector<double> >& mFactor, const vector<double>& vFactor, vector<double>& vResult) {
+  vResult.at(0) = vFactor.at(0)*mFactor.at(0).at(0) + vFactor.at(1)*mFactor.at(0).at(1) + vFactor.at(2)*mFactor.at(0).at(2);
+  vResult.at(1) = vFactor.at(0)*mFactor.at(1).at(0) + vFactor.at(1)*mFactor.at(1).at(1) + vFactor.at(2)*mFactor.at(1).at(2);
+  vResult.at(2) = vFactor.at(0)*mFactor.at(2).at(0) + vFactor.at(1)*mFactor.at(2).at(1) + vFactor.at(2)*mFactor.at(2).at(2);
+}
+
+/**
+ * Spherical to cartesian conversion.
+ * Radius assumed to be equal to 1.
+ *
+ * Attention ! a and x must be correctly sized !
+ */
+void rect(const vector<double>& s, vector<double>& x) {
+  x.at(0) = cos(s.at(0)) * cos(s.at(1));
+  x.at(1) = sin(s.at(0)) * cos(s.at(1));
+  x.at(2) = sin(s.at(1));
+}
+
+/**
+ * Cartesian to spherical conversion.
+ * Radius assumed to be equal to 1.
+ *
+ * Attention ! a and x must be correctly sized !
+ */
+void spher(const vector<double>& x, vector<double>& s) {
+  s.at(0) = atan2(x.at(1) , x.at(0));
+  s.at(1) = atan2(x.at(2), sqrt(x.at(0)*x.at(0) + x.at(1)*x.at(1)));
+}
+
+
+  
 void usage(char* command) {
   cout << "Usage : " << command << " DataSetName" << endl;
 }
 
+template<class T>
+void checkVectorSize(const string& vectorAttrName,
+		     const vector<T>& vectorAttr,
+		     const string& sizeAttrName,
+		     unsigned int sizeAttr,
+		     const string& tableName,
+		     unsigned int rowNumber) {
+  if (vectorAttr.size() != sizeAttr) {
+    errstream.str("");
+    errstream << "In the '"
+	<< tableName 
+	<< " table, at row #"
+	<< rowNumber
+	<< ", I found '"
+	<< vectorAttrName
+	<< "' with a size of '"
+	<< vectorAttr.size() 
+	<< "', I was expecting it to be equal to the size of '"
+	<< sizeAttrName
+	<<"' which is '"
+	<<"'"
+	<<sizeAttr
+	<<"'. I can't go further."
+	<< endl;
+    error(errstream.str());
+  }
+}
+
+EnumSet<AtmPhaseCorrection> apcLiterals(const ASDM& ds, const string& asdmBinaryPath) {
+  EnumSet<AtmPhaseCorrection> result;
+
+  vector<MainRow *> mRs = ds.getMain().get();
+  
+  for (unsigned int i = 0; i < mRs.size(); i++) {
+    string binaryFileName = replace_all_copy(mRs.at(i)->getDataOid().getEntityId().toString(), "/", "_");
+    replace_all(binaryFileName, ":", "_");
+    try {
+      SDMDataObjectReader sdmDataObjectReader;
+      vector<AtmPhaseCorrection> apc = sdmDataObjectReader.read(asdmBinaryPath+"/"+binaryFileName).dataStruct().apc();
+      for (unsigned int i = 0; i < apc.size(); i++)
+	result.set(apc.at(i));
+
+      sdmDataObjectReader.done();
+    }
+    catch (SDMDataObjectReaderException& e1) {
+      cout << e1.getMessage() << endl;
+    }
+    catch (SDMDataObjectException& e2) {
+      cout << e2.getMessage() << endl;
+    }
+  }
+  return result;
+}
+
+bool hasCorrectedData(const EnumSet<AtmPhaseCorrection>& es) {
+  return es[AP_CORRECTED];
+}
+
+bool hasUncorrectedData(const EnumSet<AtmPhaseCorrection>& es) {
+  return es[AP_UNCORRECTED];
+}
+		    
 //
 // A number of EnumSet to encode the different selection criteria.
 //
@@ -709,6 +916,11 @@ EnumSet<SpectralResolutionType>  es_srt;
 EnumSet<TimeSampling>            es_ts;
 Enum<CorrelationMode>            e_query_cm; 
 EnumSet<AtmPhaseCorrection>      es_query_apc;    
+
+// An EnumSet to store the different values of AtmPhaseCorrection present
+// in the binary data (apc in datastruct).
+//
+EnumSet<AtmPhaseCorrection>      es_apc;
 
 //
 // By default the resulting MS will not contain compressed columns
@@ -724,25 +936,30 @@ int main(int argc, char *argv[]) {
 
   string dummy;
 
-  
+  appName = string(argv[0]);
+
+  LogSinkInterface& lsif = LogSink::globalSink();
+
   //   Process command line options and parameters.
-  
+  po::variables_map vm;
   try {
 
 
     // Declare the supported options.
 
     po::options_description generic("Converts an ASDM dataset into a CASA measurement set.\n"
-				    "Usage : asdm2MS [options] asdm-directory\n"
+				    "Usage : " + appName +" [options] asdm-directory\n"
 				    "Allowed options:");
     generic.add_options()
       ("help", "produces help message.")
       ("icm",  po::value<string>()->default_value("all"), "specifies the correlation mode to be considered on input. A quoted string containing a sequence of 'ao' 'co' 'ac' 'all' separated by whitespaces is expected")
       ("isrt", po::value<string>()->default_value("all"), "specifies the spectral resolution type to be considered on input. A quoted string containing a sequence of 'fr' 'ca' 'bw' 'all' separated by whitespaces is expected")
       ("its",  po::value<string>()->default_value("all"), "specifies the time sampling (INTEGRATION and/or SUBINTEGRATION)  to be considered on input. A quoted string containing a sequence of 'i' 'si' 'all' separated by whitespaces is expected")  
-      ("ocm",  po::value<string>()->default_value("co"),  "output data for correlation mode AUTO_ONLY (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)")
+      ("ocm",  po::value<string>()->default_value("ca"),  "output data for correlation mode AUTO_ONLY (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)")
       ("compression,c", "produces compressed columns in the resulting measurement set (not set by default)")
-      ;
+      ("asis", po::value<string>(), "creates verbatim copies of the ASDM tables in the output measurement set. The value given to this option must be a quoted string containing a list of table names separated by space characters; the wildcard character '*' is allowed in table names.")
+      ("wvr-corrected-data", po::value<string>()->default_value("no"),  "specifies wich values are considered in the ASDM binary data to fill the DATA column in the MAIN table of the MS. Expected values for this option are 'no' for the uncorrected data (this is the default), 'yes' for the corrected data and 'both' for corrected and uncorrected data. In the latter case, two measurement sets are created, one containing the uncorrected data and the other one, whose name is suffixed by 'wvr-corrected', containing the corrected data.")
+      ("verbose,v", "logs numerous informations as the filler is working");
 
     // Hidden options, will be allowed both on command line and
     // in config file, but will not be shown to the user.
@@ -758,19 +975,20 @@ int main(int argc, char *argv[]) {
     p.add("asdm-directory", -1);
     
     // Parse the command line and retrieve the options and parameters.
-
-    po::variables_map vm;
     po::store(po::command_line_parser(argc, argv).options(cmdline_options).positional(p).run(), vm);
 
     po::notify(vm);
     
-
     // Help ? displays help's content and don't go further.
 
     if (vm.count("help")) {
-      cout << generic << "\n" ;
-      return 1;
+      errstream.str("");
+      errstream << generic << "\n" ;
+      error(errstream.str());
     }
+
+    // Verbose or quiet ?
+    verbose = vm.count("verbose") > 0;
     
     istringstream iss;
     string token;
@@ -791,12 +1009,16 @@ int main(int argc, char *argv[]) {
       else if (token.compare("all") == 0)
 	es_cm.fromString("CROSS_ONLY AUTO_ONLY CROSS_AND_AUTO", false);
       else {
-	cout << "Token '" << token << "' invalid for --icm option." << endl;
-	cout << generic << endl;
+	errstream.str("");
+	errstream << "Token '" << token << "' invalid for --icm option." << endl;
+	errstream << generic << endl;
+	error(errstream.str());
       }
     }
-    cout << "icm is \"" << icm_opt << "\" (\"" << es_cm.toString() << "\")" << endl;
 
+    // infostream.str("");
+    // infostream << "icm is \"" << icm_opt << "\" (\"" << es_cm.toString() << "\")";
+    // info(infostream.str());
 
     // Selection of spectral resolution type of data to be considered.
 
@@ -814,11 +1036,16 @@ int main(int argc, char *argv[]) {
       else if (token.compare("all") == 0)
 	es_srt.fromString("FULL_RESOLUTION CHANNEL_AVERAGE BASEBAND_WIDE", false);
       else { 
-	cout << "Token '" << token << "' invalid for --isrt option." << endl;
-	cout << generic << endl;
+	errstream.str("");
+	errstream << "Token '" << token << "' invalid for --isrt option." << endl;
+	errstream << generic;
+	error(errstream.str());
       }
     }
-    cout << "isrt is \"" << isrt_opt << "\" (\"" << es_srt.toString() << "\")" << endl;
+
+    // infostream.str("");
+    // infostream << "isrt is \"" << isrt_opt << "\" (\"" << es_srt.toString() << "\")" << endl;
+    // info(infostream.str());
 
     // Selection of the time sampling of data to be considered (integration and/or subintegration)
 
@@ -834,11 +1061,16 @@ int main(int argc, char *argv[]) {
       else if (token.compare("all") == 0)
 	es_ts.fromString("INTEGRATION SUBINTEGRATION", false);
       else {
-	cout << "Token '" << token << "' invalid for its option." << endl;
-	cout << generic << endl;
+	errstream.str("");
+	errstream << "Token '" << token << "' invalid for its option." << endl;
+	errstream << generic ;
+	error(errstream.str());
       }
     }
-    cout << "its is \"" << its_opt << "\" (\"" << es_ts.toString() << "\")" << endl;
+
+    // infostream.str("");
+    // infostream << "its is \"" << its_opt << "\" (\"" << es_ts.toString() << "\")" << endl;
+    // info(infostream.str());
 
     // Selection of the correlation mode of data to be produced in the measurement set.
 
@@ -850,33 +1082,59 @@ int main(int argc, char *argv[]) {
     else if ( ocm_opt.compare("ca") == 0 )
       e_query_cm = CROSS_AND_AUTO;
     else {
-      cout << generic << "\n" ;
-      return 1;
+      errstream.str("");
+      errstream << "Token '" << ocm_opt << "' invalid for ocm option." << endl;
+      errstream << generic ;
+      error(errstream.str());
     }
 
-    cout << "ocm is \"" << ocm_opt << "\" (\"" << e_query_cm.str() << "\")\n";
+    // infostream.str("");
+    // infostream << "ocm is \"" << ocm_opt << "\" (\"" << e_query_cm.str() << "\")\n";
+    // info(infostream.str());
 
     if (vm.count("asdm-directory")) {
       dummy = vm["asdm-directory"].as< string >() ;
-      cout << "asdm-directory is '" << dummy << "'" << endl;
     }
     else {
-      cout << generic << "\n" << endl;
-      return 0;
+      errstream.str("");
+      errstream << generic ;
+      error(errstream.str());
     }
 
 
     // Does the user want compressed columns in the resulting MS ?
 
     if ((withCompression = (vm.count("compression") != 0))) {
-      cout << "the resulting MS will contain compressed columns" << endl;
+      infostream.str("");
+      infostream << "Compressed columns in the resulting MS(s) : Yes" ;
+      info(infostream.str());
+    }
+    else {
+      infostream.str("");
+      infostream << "Compressed columns in the resulting MS(s) : No" ;
+      info(infostream.str());
+    }
+
+    // WVR uncorrected and|or corrected data required ?
+    string wvr_corrected_data = vm["wvr-corrected-data"].as<string>();
+    if (wvr_corrected_data.compare("no") == 0)
+      es_query_apc.fromString("AP_UNCORRECTED");
+    else if (wvr_corrected_data.compare("yes") == 0)
+      es_query_apc.fromString("AP_CORRECTED");
+    else if (wvr_corrected_data.compare("both") == 0)
+      es_query_apc.fromString("AP_CORRECTED AP_UNCORRECTED");
+    else {
+      errstream.str("");
+      errstream << "Token '" << wvr_corrected_data << "' invalid for wvr-corrected-data." << endl;
+      errstream << generic;
+      error(errstream.str());
     }
   }
   catch (std::exception& e) {
-    cout << e.what() << "\n";
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());
   }
-  
-  es_query_apc.fromString("AP_CORRECTED AP_UNCORRECTED", true);
   
   //
   // Try to open an ASDM dataset whose name has been passed as a parameter on the command line
@@ -893,24 +1151,37 @@ int main(int argc, char *argv[]) {
   ASDM* ds = new ASDM();
 
   try {
-    cout << "Taking the dataset '" << dsName << "' as input." << endl;
+    infostream.str("");
+    infostream << "Input ASDM dataset : " << dsName << endl;
+    info(infostream.str());
     ds->setFromFile(dsName);
   }
   catch (ConversionException e) {
-    cout << e.getMessage() << endl;
-    exit(-1);
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
   }
   catch (std::exception e) {
-    cout << e.what() << endl;
-    exit(-1);
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());
   }
   catch (...) {
-    cout << "Uncaught exception !" << endl;
+    errstream.str("");
+    errstream << "Uncaught exception !" << endl;
+    error(errstream.str());
   }
   
   mode = 1; myTimer(&cpu_time_parse_xml, &real_time_parse_xml, &mode);
-  cout << "Time spent parsing the ASDM medata :" << cpu_time_parse_xml << " s." << endl;
-    
+  infostream.str("");
+  infostream << "Time spent parsing the ASDM medata : " << cpu_time_parse_xml << " s.";
+  info(infostream.str());
+
+  //
+  // What are the apc literals present in the binary data.
+  //
+  es_apc = apcLiterals(*ds, dsName+"/ASDMBinary");
+ 
   //
   // Determine what kind of data complex (DATA column) or float (FLOAT_DATA) will be
   // stored in the measurement set by using the method isDataComplex on the first row of 
@@ -926,11 +1197,69 @@ int main(int argc, char *argv[]) {
   // Define the subset of data to be extracted from the BLOBs
   sdmBinData.selectDataSubset(e_query_cm, es_query_apc);
 
-  cout << "e_query_cm = " << e_query_cm.str() << endl;
+  //
+  // Report the selection's parameters.
+  //
+  infostream.str("");
+  infostream << "Correlation modes requested : " << e_query_cm.str() << endl;
+  infostream << "Spectral resolution types requested : " << es_srt.str() << endl;
+  infostream << "Time sampling requested : " << es_ts.str() << endl;
+  infostream << "WVR uncorrected and|or corrected data requested : " << es_query_apc.str() << endl;
+  info(infostream.str());
 
+  //
+  // Shall we have Complex or Float data ?
+  //
   bool complexData =  sdmBinData.isComplexData();
 
-  cout << "The resulting measurement set will contain a '" << ((complexData) ? "DATA" : "FLOAT_DATA") << "' column" << endl; 
+  //
+  // Prepare a map AtmPhaseCorrection -> name of measurement set.
+  // Three cases are possible :
+  // only AP_CORRECTED -> MS name is suffixed with "-wvr-corrected",
+  // only AP_UNCORRECTED -> MS name has no suffix particular suffix,
+  // AP_CORRECTED and AP_UNCORRECTED -> 2 MSs whith names defined by the two above rules.
+  //
+  map<AtmPhaseCorrection, string> msNames;
+  if (hasCorrectedData(es_apc) && es_query_apc[AP_CORRECTED]) {
+    msNames[AP_CORRECTED] = dsName + "-wvr-corrected";
+  }
+  if (hasUncorrectedData(es_apc) && es_query_apc[AP_UNCORRECTED]) {
+    msNames[AP_UNCORRECTED] = dsName;
+  }
+      
+  if (msNames.size() == 0) {
+    //
+    // no MS can be produced due to the selection parameters values.
+    // 
+    infostream.str("");
+    infostream << "No measurement set can be produced with  your selection criteria on '" << dsName << "'" << endl;
+    info(infostream.str());
+    delete ds;
+    exit(1);
+  }
+  else {
+    //
+    // OK, we are going to produce at least one MS.
+    // If the '--compression' option has been used then append a suffix ".compressed" to
+    // the MS name.
+    // And eventually always suffix with ".ms".
+    //
+    for (map<AtmPhaseCorrection, string>::iterator iter=msNames.begin(); iter != msNames.end(); ++iter) {
+      if (withCompression)
+	iter->second = iter->second + ".compressed";
+      iter->second +=  ".ms";
+    }
+  }
+
+  infostream.str("");
+  infostream << "The resulting measurement set will contain a '" << ((complexData) ? "DATA" : "FLOAT_DATA") << "' column" << endl; 
+  info(infostream.str());
+
+#if DDPRIORITY
+  // The data returned by getDataCols will be ordered in priority by Data Descriptions.
+  sdmBinData.setPriorityDataDescription();
+#endif
+
 
   //
   // Create a Measurement Set.
@@ -941,15 +1270,27 @@ int main(int argc, char *argv[]) {
 
   ost << dsName; 
 
-  // ... prefixed with .compressed if compression has been requested ...
+  // ... suffixed with .compressed if compression has been requested ...
   if (withCompression)
     ost << ".compressed";
 
-  // ... and prefixed with .ms in all cases.
+  // ... and suffixed with .ms in all cases.
   ost << ".ms";
 
-  cout << "About to create a new measurement set '" << ost.str() << "'" << endl;
-  msFiller = new ASDM2MSFiller(ost.str().c_str(), 0.0, false, (Bool) complexData, withCompression);
+  map<AtmPhaseCorrection, ASDM2MSFiller*> msFillers;
+  for (map<AtmPhaseCorrection, string>::iterator iter = msNames.begin(); iter != msNames.end(); ++iter) {
+    msFillers[iter->first] = new ASDM2MSFiller(msNames[iter->first].c_str(),
+					       0.0,
+					       false,
+					       (Bool) complexData,
+					       withCompression);
+    info("About to create a filler for the measurement set '" + msNames[iter->first] + "'");
+  }
+
+  //--info("About to create a new measurement set '" + ost.str() + "'");
+
+  msFiller = msFillers.begin()->second;
+  //msFiller = new ASDM2MSFiller(ost.str().c_str(), 0.0, false, (Bool) complexData, withCompression);
 
 
   //
@@ -978,12 +1319,15 @@ int main(int argc, char *argv[]) {
     ExecBlockRow* reb = 0;
 
     int nAntenna = aT.size();
-    cout << "The dataset has " << nAntenna << " antenna(s)...";
+    infostream.str("");
+    infostream << "The dataset has " << nAntenna << " antenna(s)...";
+    info(infostream.str());
+    
     for (int i = 0; i < nAntenna; i++) {
       if ((r = aT.getRowByKey(Tag(i, TagType::Antenna))) == 0){
-	err.str("");
-	err << "Problem while reading the Antenna table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl;
-	error(err.str());
+	errstream.str("");
+	errstream << "Problem while reading the Antenna table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl;
+	error(errstream.str());
       }
 
       // We assume that wether the ExecBlock table has one row or that all ExecBlocks come from the same site.
@@ -997,112 +1341,287 @@ int main(int argc, char *argv[]) {
       double yPosition = position.at(1).get();
       double zPosition = position.at(2).get();
 
-      msFiller->addAntenna(r->getName().c_str(),
-			   r->getStationUsingStationId()->getName().c_str(),
-			   xPosition,
-			   yPosition,
-			   zPosition,
-			   // 		     r->getXPosition().get() + reb->getSiteLongitude().get(),
-			   // 		     r->getYPosition().get() + reb->getSiteLatitude().get(),
-			   // 		     r->getZPosition().get() + reb->getSiteAltitude().get(),
-			   
-			   r->getXOffset().get(),
-			   r->getYOffset().get(),
-			   r->getZOffset().get(),
-			   (float)r->getDishDiameter().get());
+      vector<Length> offset = r->getOffset();
+      double xOffset = offset.at(0).get();
+      double yOffset = offset.at(1).get();
+      double zOffset = offset.at(2).get();
+
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addAntenna(r->getName().c_str(),
+				 r->getStationUsingStationId()->getName().c_str(),
+				 xPosition,
+				 yPosition,
+				 zPosition,
+				 // 		     r->getXPosition().get() + reb->getSiteLongitude().get(),
+				 // 		     r->getYPosition().get() + reb->getSiteLatitude().get(),
+				 // 		     r->getZPosition().get() + reb->getSiteAltitude().get(),
+				 
+				 xOffset,
+				 yOffset,
+				 zOffset,
+				 (float)r->getDishDiameter().get());	
+      }
     }
-    if (nAntenna) cout << "converted in " << msFiller->ms()->antenna().nrow() << " antenna(s)  in the measurement set." ;
-    cout << endl;
+    if (nAntenna) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->antenna().nrow() << " antenna(s)  in the measurement set(s)." ;
+      info(infostream.str());
+    }
   }
 
- 
 
   SpectralWindowTable& spwT = ds->getSpectralWindow();  
   //
   // Read/Write the SpectralWindow table.
   //
-  {
+
+  try {
 
     SpectralWindowRow* r = 0;
     int nSpectralWindow = spwT.size();
-    cout << "The dataset has " << nSpectralWindow << " spectral window(s)..."; 
-    
+
+    infostream.str("");
+    infostream << "The dataset has " << nSpectralWindow << " spectral window(s)..."; 
+    info(infostream.str());
+
     for (int i = 0; i < nSpectralWindow; i++) {
       if ((r = spwT.getRowByKey(Tag(i, TagType::SpectralWindow))) == 0) {
-	err.str("");
-	(err << "Problem while reading the SpectralWindow table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
-	error(err.str());
+	errstream.str("");
+	(errstream << "Problem while reading the SpectralWindow table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
+	error(errstream.str());
       }
 
-      int numAssoc = 0;
+      /*
+       * associated spectral windows and and natures.
+       */
 
-      int* assocSpwId = 0;
+      unsigned int numAssocValues = 0;
+      if (r->isNumAssocValuesExists()) numAssocValues = r->getNumAssocValues();
+
+      // Test the simultaneous presence or absence of assocNature and assoSpectralWindowId
+      if ((r->isAssocNatureExists() && !r->isAssocSpectralWindowIdExists()) ||
+	  (!r->isAssocNatureExists() && r->isAssocSpectralWindowIdExists())) {
+	errstream.str("");
+	errstream << "Only one of the attributes assocSpectralWindowId and assocNature is present. Can't go further."
+	    << endl;
+	error(errstream.str());
+      }
+
+      int* assocSpectralWindowId_ = 0;
       IConverter assocSpwIdConverter;
-      if (r->isAssocSpectralWindowIdExists()) {
-	numAssoc = r->getAssocSpectralWindowId().size();
-	assocSpwId = assocSpwIdConverter.to1DArray(r->getAssocSpectralWindowId());
-      }
-      
-      char** assocNature = 0;
+      vector<Tag> assocSpectralWindowId;
+
+      char** assocNature_ = 0;
       SConverter assocNatureConverter;
-      if (r->isAssocNatureExists()) {
-	assocNature = assocNatureConverter.to1DCStringArray<SpectralResolutionType, CSpectralResolutionType>(r->getAssocNature());
-      }
-      
-      /**
-       * This interpolation is due to the trick/workaround proposed by rlucas to fill the 4 potentially large arrays
-       * contained in a SpectralWindowRow in such a way that their XML representation stay under the 64K (thanks Oracle).
-       **/
-      
-      DConverter chanFreqConverter, chanWidthConverter, effectiveBwConverter, resolutionConverter;
-      // 1stly Transform the asdm vectors into plain c++ arrays.
-      double* chanFreq1D    = chanFreqConverter.to1DArray(r->getChanFreq());
-      double* chanWidth1D   = chanWidthConverter.to1DArray(r->getChanWidth());
-      double* effectiveBw1D = effectiveBwConverter.to1DArray(r->getEffectiveBw());
-      double* resolution1D  = resolutionConverter.to1DArray(r->getResolution());
-      
-      // 2ndly Computes values with indexes in [1, size-2] by interpolation assuming that in each array the elements form
-      // an arithmetic sequence.
-      double chanFreqStep    = (chanFreq1D[r->getNumChan()-1]    - chanFreq1D[0])    / (r->getNumChan() - 1);
-      double chanWidthStep   = (chanWidth1D[r->getNumChan()-1]   - chanWidth1D[0])   / (r->getNumChan() - 1);
-      double effectiveBwStep = (effectiveBw1D[r->getNumChan()-1] - effectiveBw1D[0]) / (r->getNumChan() - 1);      
-      double resolutionStep  = (resolution1D[r->getNumChan()-1]  - resolution1D[0])  / (r->getNumChan() - 1);
+      vector<SpectralResolutionType> assocNature;
 
-      for (int i = 1; i < r->getNumChan() - 1; i++) {
-	chanFreq1D[i]   = chanFreq1D[i-1]    + chanFreqStep;
-	chanWidth1D[i]  = chanWidth1D[i-1]   + chanWidthStep;
-	effectiveBw1D[i]= effectiveBw1D[i-1] + effectiveBwStep;
-	resolution1D[i] = resolution1D[i-1]  + resolutionStep;
+      if (r->isAssocSpectralWindowIdExists()) { // it exists then the assocNature exists also, given the test
+	                                        // which is done before.
+	assocSpectralWindowId = r->getAssocSpectralWindowId();
+	if (numAssocValues != assocSpectralWindowId.size()) {
+	  infostream.str("");
+	  infostream << "The size of assocSpectralWindowId ('"
+		     << assocSpectralWindowId.size()
+		     << "') is not equal to the value announced in numAssocValues ('"
+		     << numAssocValues
+		     << "'). Ignoring the difference and sending the full vector assocSpectralWindowId to the filler" 
+	    ;
+	  info(infostream.str());
+	}
+	numAssocValues = assocSpectralWindowId.size();
+	assocSpectralWindowId_ = assocSpwIdConverter.to1DArray(assocSpectralWindowId);
+
+	assocNature = r->getAssocNature();
+	if (assocNature.size() != assocSpectralWindowId.size()) {
+	  infostream.str("");
+	  infostream << "The size of assocNature ('"
+		     << assocNature.size() 
+		     << "') is not equal to the size of assocSpectralWindowId ('"
+		     << assocSpectralWindowId.size()
+		     << "'). Ignoring the difference and sending the full assocNature vector to the filler.";
+	  info(infostream.str());
+	}
+	assocNature_ = assocNatureConverter.to1DCStringArray<SpectralResolutionType, CSpectralResolutionType>(r->getAssocNature());
       }
 
-      /**
-       * End of interpolation trick.
-       **/
+
+      /* Processing the chanFreqXXX
+       *
+       * Either (chanFreqStart, chanFreqStep) or (chanFreqArray) must be present
+       * with a priority to chanFreqArray if both are present. If chanFreqArray
+       * is present it *must* have a size equal to numChan otherwiser EXIT.
+       */
+      bool chanStartAndStep = r->isChanFreqStartExists() && r->isChanFreqStepExists();
+      bool chanArray = r->isChanFreqArrayExists();
+      if (!chanStartAndStep && !chanArray) {
+	errstream.str("");
+	errstream << "Did not find (chanFreqStart, chanFreqStep) nor chanFreqArray. Can't go further";
+	error(errstream.str());
+      }
+
+      double* chanFreq1D = (double *) 0;
+      DConverter chanFreqConverter;
+      vector<Frequency> chanFreqArray;
+      Frequency chanFreqStart, chanFreqStep;
+      if (chanArray) { // Frequency channels are specified by an array.
+	chanFreqArray = r->getChanFreqArray();
+	if (chanFreqArray.size() != (unsigned int)r->getNumChan()) {
+	  errstream.str("");
+	  errstream << "Size of chanFreqArray ('"
+	      << chanFreqArray.size()
+	      << "') is not equal to numChan ('"
+	      << r->getNumChan()
+	      << "'). Can't go further.";
+	  error(errstream.str());
+	}
+      }
+      else { // Frequency channels are specified by a (start, step) pair.
+	chanFreqStart = r->getChanFreqStart();
+	chanFreqStep  = r->getChanFreqStep();
+	for (int i = 0; i < r->getNumChan(); i++)
+	  chanFreqArray.push_back(chanFreqStart + i * chanFreqStep);
+      }
+      chanFreq1D = chanFreqConverter.to1DArray(chanFreqArray);
+
+      /* Processing the chanWidthXXX
+       *
+       * Either chanWidth or chanWidthArray must be present
+       * with a priority to chanWidthArray if both are present. If chanWidthArray
+       * is present it *must* have a size equal to numChan otherwiser EXIT.
+       */
+      if (!r->isChanWidthExists() && !r->isChanWidthArrayExists()) {
+	errstream.str("");
+	errstream << "Did not find chanWidth nor chanWidthArray. Can't go further";
+	error(errstream.str());
+      }
+
+      double* chanWidth1D = (double *) 0;
+      DConverter chanWidthConverter;
+      vector<Frequency> chanWidthArray;
+      if (r->isChanWidthArrayExists()) { // Frequency channels widths are specified by an array.
+	chanWidthArray = r->getChanWidthArray();
+	if (chanWidthArray.size() != (unsigned int) r->getNumChan()) {
+	  errstream.str("");
+	  errstream << "Size of chanWidthArray ('"
+	      << chanWidthArray.size()
+	      << "') is not equal to numChan ('"
+	      << r->getNumChan()
+	      << "'). Can't go further.";
+	  error(errstream.str());
+	}
+      }
+      else { // Frequency channels widths are specified by a constant value.
+	chanWidthArray.resize(r->getNumChan());
+	chanWidthArray.assign(chanWidthArray.size(), r->getChanWidth());
+      }
+      chanWidth1D = chanWidthConverter.to1DArray(chanWidthArray);
+
+
+      /* Processing the effectiveBwXXX
+       *
+       * Either effectiveBw or effectiveBwArray must be present
+       * with a priority to effectiveBwArray if both are present. If effectiveBwArray
+       * is present it *must* have a size equal to numChan otherwiser EXIT.
+       */
+      if (!r->isEffectiveBwExists() && !r->isEffectiveBwArrayExists()) {
+	errstream.str("");
+	errstream << "Did not find effectiveBw nor effectiveBwArray. Can't go further";
+	error(errstream.str());
+      }
+
+      double* effectiveBw1D = (double *) 0;
+      DConverter effectiveBwConverter;
+      vector<Frequency> effectiveBwArray;
+      if (r->isEffectiveBwArrayExists()) { // Effective BWs are specified by an array.
+	effectiveBwArray = r->getEffectiveBwArray();
+	if (effectiveBwArray.size() != (unsigned int) r->getNumChan()) {
+	  errstream.str("");
+	  errstream << "Size of effectiveBwArray ('"
+	      << effectiveBwArray.size()
+	      << "') is not equal to numChan ('"
+	      << r->getNumChan()
+	      << "'). Can't go further." ;
+	  error(errstream.str());
+	}
+      }
+      else { // Effective BWs are specified by a constant value.
+	effectiveBwArray.resize(r->getNumChan());
+	effectiveBwArray.assign(effectiveBwArray.size(), r->getEffectiveBw());
+      }
+      effectiveBw1D = effectiveBwConverter.to1DArray(effectiveBwArray);
+
+
+      /* Processing the resolutionXXX
+       *
+       * Either resolution or resolutionArray must be present
+       * with a priority to resolutionArray if both are present. If resolutionArray
+       * is present it *must* have a size equal to numChan otherwiser EXIT.
+       */
+      if (!r->isResolutionExists() && !r->isResolutionArrayExists()) {
+	errstream.str("");
+	errstream << "Did not find resolution nor resolutionArray. Can't go further";
+	error(errstream.str());
+      }
+
+      double* resolution1D = (double *) 0;
+      DConverter resolutionConverter;
+      vector<Frequency> resolutionArray;
+      if (r->isResolutionArrayExists()) { // Resolutions are specified by an array.
+	resolutionArray = r->getResolutionArray();
+	if (resolutionArray.size() != (unsigned int) r->getNumChan()) {
+	  errstream.str("");
+	  errstream << "Size of resolutionArray ('"
+	      << resolutionArray.size()
+	      << "') is not equal to numChan ('"
+	      << r->getNumChan()
+	      << "'). Can't go further.";
+	  error(errstream.str());
+	}
+      }
+      else { // Resolutions are specified by a constant value.
+	resolutionArray.resize(r->getNumChan());
+	resolutionArray.assign(resolutionArray.size(), r->getResolution());
+      }
+      resolution1D = resolutionConverter.to1DArray(resolutionArray);
 
       int bbcNo = -1;
-      if (r->isBasebandNameExists()) bbcNo = r->getBasebandName();
-      msFiller->addSpectralWindow(r->getNumChan(),
-				  r->isNameExists()?r->getName().c_str():"",
-				  (r->getRefFreq()).get(),
-				  chanFreq1D,  //DConverter().to1DArray(r->getChanFreq()),
-				  chanWidth1D, //DConverter().to1DArray(r->getChanWidth()),
-				  r->isMeasFreqRefExists()?r->getMeasFreqRef():0,
-				  effectiveBw1D, //DConverter().to1DArray(r->getEffectiveBw()),
-				  resolution1D,//DConverter().to1DArray(r->getResolution()),
-				  (r->getTotBandwidth()).get(),
-				  r->getNetSideband(),
-				  r->isBasebandNameExists()?r->getBasebandName():-1, 
-				  r->isIfConvChainExists()?r->getIfConvChain():0,
-				  r->isFreqGroupExists()?r->getFreqGroup():0,
-				  r->isFreqGroupNameExists()?r->getFreqGroupName().c_str():"",
-				  numAssoc,
-				  assocSpwId,
-				  assocNature);
+      bbcNo = r->getBasebandName();
+
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addSpectralWindow(r->getNumChan(),
+					r->isNameExists()?r->getName().c_str():"",
+					(r->getRefFreq()).get(),
+					chanFreq1D,  
+					chanWidth1D, 
+					r->isMeasFreqRefExists()?FrequencyReferenceMapper::value(r->getMeasFreqRef()):MFrequency::TOPO,
+					effectiveBw1D, 
+					resolution1D,
+					(r->getTotBandwidth()).get(),
+					r->getNetSideband(),
+					r->getBasebandName(),
+					0,  // IFConvChain set to 0.
+					r->isFreqGroupExists()?r->getFreqGroup():0,
+					r->isFreqGroupNameExists()?r->getFreqGroupName().c_str():"",
+					numAssocValues,
+					assocSpectralWindowId_,
+					assocNature_);      
+      }      
     }
-
-    if (nSpectralWindow) cout << "converted in " << msFiller->ms()->spectralWindow().nrow() << " spectral window(s) in the measurement set.";
-    cout << endl;
-
+    if (nSpectralWindow) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->spectralWindow().nrow() << " spectral window(s) in the measurement set(s).";
+      info(infostream.str());
+    }	
+    
+  }
+  catch (IllegalAccessException& e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
   }
 
   //
@@ -1118,13 +1637,15 @@ int main(int argc, char *argv[]) {
   try {
     PolarizationRow* r = 0;
     int nPolarization = polT.size();
-    cout << "The dataset has " << nPolarization << " polarization(s)..."; 
-    
+    infostream.str("");
+    infostream << "The dataset has " << nPolarization << " polarization(s)..."; 
+    info(infostream.str());
+
     for (int i = 0; i < nPolarization; i++) {
       if ((r=polT.getRowByKey(Tag(i, TagType::Polarization))) == 0) {
-	err.str("");
-	(err << "Problem while reading the Polarization table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
-	error(err.str());
+	errstream.str("");
+	(errstream << "Problem while reading the Polarization table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
+	error(errstream.str());
       }
       
       int numCorr = r->getNumCorr();
@@ -1152,20 +1673,30 @@ int main(int argc, char *argv[]) {
       case 4: corrProduct = corrProduct4; break;
       }
 
-      polarizationMap.push_back(msFiller->addUniquePolarization(numCorr,
-							  corrType,
-							  corrProduct
-							  ));
+
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	polarizationMap.push_back(iter->second->addUniquePolarization(numCorr,
+								      corrType,
+								      corrProduct
+								      ));
+      }
+
+      if (nPolarization) {
+	infostream.str("");
+	infostream << "converted in " << msFillers.begin()->second->ms()->polarization().nrow() << " polarization(s)." ;
+	info(infostream.str());
+      }
     }
-    if (nPolarization) cout << "converted in " << msFiller->ms()->polarization().nrow() << " polarization(s) the measurement set." ;
-    cout << endl;
   }
   catch (ASDM2MSException e) {
-    cout << e.getMessage() << endl;
-    exit(-1);
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
   }
-
-
+  
+    
   //
   // Load the DataDescription table.
   vector<int> dataDescriptionMap;
@@ -1173,18 +1704,29 @@ int main(int argc, char *argv[]) {
   {
     DataDescriptionRow* r = 0;
     int nDataDescription = ddT.size();
-    cout << "The dataset has " << nDataDescription << " data description(s)...";
+    infostream.str("");
+    infostream << "The dataset has " << nDataDescription << " data description(s)...";
+    info(infostream.str());
+
     for (int i = 0; i < nDataDescription; i++) {
       if ((r=ddT.getRowByKey(Tag(i, TagType::DataDescription))) == 0) {
-	err.str("");
-	(err << "Problem while reading the DataDescription table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
-	error(err.str());
+	errstream.str("");
+	(errstream << "Problem while reading the DataDescription table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
+	error(errstream.str());
       }
-      dataDescriptionMap.push_back(msFiller->addUniqueDataDescription(r->getSpectralWindowId().getTagValue(),
+      
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	dataDescriptionMap.push_back(msFiller->addUniqueDataDescription(r->getSpectralWindowId().getTagValue(),
 								polarizationMap.at(r->getPolOrHoloId().getTagValue())));
+      }
     }
-    if (nDataDescription) cout << "converted in " << msFiller->ms()->dataDescription().nrow() << " data description(s)  in the measurement set." ;
-    cout << endl;
+    if (nDataDescription) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->dataDescription().nrow() << " data description(s)  in the measurement set(s)." ;
+      info(infostream.str());
+    }
   }
 
 
@@ -1199,7 +1741,10 @@ int main(int argc, char *argv[]) {
   {
     FeedRow* r = 0;
     int nFeed = feedT.size();
-    cout << "The dataset has " << nFeed << " feed(s)...";
+    infostream.str("");
+    infostream << "The dataset has " << nFeed << " feed(s)...";
+    info(infostream.str());
+
     vector<FeedRow *> v = feedT.get();
     for (int i = 0; i < nFeed; i++) {
       r = v.at(i);
@@ -1211,38 +1756,57 @@ int main(int argc, char *argv[]) {
       double xyzPositionArray[] =  {0.0, 0.0, 0.0};
       double* xyzPosition = xyzPositionArray;
       DConverter xyzPositionConverter;
-      if (r->isXPositionExists() && r->isYPositionExists() && r->isZPositionExists() ) {
-	xyzPosition = xyzPositionConverter.to1DArray(r->getXPosition(),r->getYPosition(), r->getZPosition());
+      if (r->isPositionExists()) {
+	vector<Length> position = r->getPosition();
+	if (position.size() != 3) {
+	  errstream.str("");
+	  errstream << "The size of attribute position ('" 
+	      << position.size()
+	      << "') is not equal to 3. Can't go further."
+	      << endl;
+	  error(errstream.str());
+	}
+	xyzPosition = xyzPositionConverter.to1DArray(position.at(0),
+						     position.at(1), 
+						     position.at(2));
       }
-
-      msFiller->addFeed(r->getAntennaId().getTagValue(),
-			r->getFeedId(),
-			r->getSpectralWindowId().getTagValue(),
-			time,
-			interval,
-			r->getNumReceptor(), 
-			-1,             // We ignore the beamId array
-			DConverter().to1DArray(r->getBeamOffset()),
-			PolTypeMapper().toStringVector(r->getPolarizationTypes()),
-			CConverter().to1DArrayR(r->getPolResponse()),
-			CConverter().to1DArrayI(r->getPolResponse()),
-			xyzPosition,
-			DConverter().to1DArray(r->getReceptorAngle()));
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addFeed(r->getAntennaId().getTagValue(),
+			      r->getFeedId(),
+			      r->getSpectralWindowId().getTagValue(),
+			      time,
+			      interval,
+			      r->getNumReceptor(), 
+			      -1,             // We ignore the beamId array
+			      DConverter().to1DArray(r->getBeamOffset()),
+			      PolTypeMapper().toStringVector(r->getPolarizationTypes()),
+			      CConverter().to1DArrayR(r->getPolResponse()),
+			      CConverter().to1DArrayI(r->getPolResponse()),
+			      xyzPosition,
+			      DConverter().to1DArray(r->getReceptorAngle()));
+      }
     }
-    if (nFeed) cout << "converted in " << msFiller->ms()->feed().nrow() << " feed(s) in the measurement set." ;
-    cout << endl;
+    if (nFeed) {
+      infostream.str("");
+      infostream <<  "converted in " << msFillers.begin()->second->ms()->feed().nrow() << " feed(s) in the measurement set." ;
+      info(infostream.str());
+    }
   }
-
+  
   // Load the Field table.
   // Issues :
   // - only processes the case with numPoly == 0 at the moment.
 
   FieldTable& fieldT = ds->getField();
   
-  {
+  try {
     FieldRow* r = 0;
     int nField = fieldT.size();
-    cout << "The dataset has " << nField << " field(s)...";
+    infostream.str("");
+    infostream << "The dataset has " << nField << " field(s)...";
+    info(infostream.str());
 
     double delayDir[2];
     double phaseDir[2];
@@ -1250,9 +1814,9 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < nField; i++) {
       if ((r=fieldT.getRowByKey(Tag(i, TagType::Field))) == 0) {
-	err.str("");
-	(err << "Problem while reading the Field table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
-	error(err.str());
+	errstream.str("");
+	(errstream << "Problem while reading the Field table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
+	error(errstream.str());
       }
 
       delayDir[0] = DConverter().to1DArray(r->getDelayDir())[0];
@@ -1267,16 +1831,26 @@ int main(int argc, char *argv[]) {
       int sourceId = -1;
       if (r->isSourceIdExists()) sourceId = r->getSourceId();
 
-      msFiller->addField( (const char*)r->getFieldName().c_str(),
-		    (const char*)r->getCode().c_str(),
-		    ((double) r->getTime().get()) / ArrayTime::unitsInASecond,
-		    delayDir,
-		    phaseDir,
-		    referenceDir,
-		    sourceId);
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addField( (const char*)r->getFieldName().c_str(),
+				(const char*)r->getCode().c_str(),
+				r->isTimeExists() ? ((double) r->getTime().get()) / ArrayTime::unitsInASecond : 0.0,
+				delayDir,
+				phaseDir,
+				referenceDir,
+				r->isSourceIdExists()?r->getSourceId():0);
+      }
     }  
-    if (nField) cout << "converted in " << msFiller->ms()->field().nrow() << "  field(s) in the measurement set." ;
-    cout << endl;
+    if (nField) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->field().nrow() << "  field(s) in the measurement set(s)." ;
+      info(infostream.str());
+    }
+  }
+  catch (IllegalAccessException& e) {
+    cout << e.getMessage();
   }
 
 
@@ -1287,7 +1861,11 @@ int main(int argc, char *argv[]) {
   {
     FlagCmdRow* r = 0;
     int nFlagCmd = flagCmdT.size();
-    cout << "The dataset has " << nFlagCmd << " flag(s)...";
+    
+    infostream.str("");
+    infostream << "The dataset has " << nFlagCmd << " flag(s)...";
+    info(infostream.str());
+
     vector<FlagCmdRow *> v = flagCmdT.get();
     for (int i = 0; i < nFlagCmd; i++) {
       r = v.at(i);
@@ -1296,18 +1874,25 @@ int main(int argc, char *argv[]) {
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
       double time =  ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval/2.0;
       
-      msFiller->addFlagCmd(time,
-		     interval,
-		     r->getType().c_str(),
-		     r->getReason().c_str(),
-		     r->getLevel(),
-		     r->getSeverity(),
-		     r->getApplied() ? 1 : 0,
-		     r->getCommand().c_str());
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addFlagCmd(time,
+				 interval,
+				 r->getType().c_str(),
+				 r->getReason().c_str(),
+				 r->getLevel(),
+				 r->getSeverity(),
+				 r->getApplied() ? 1 : 0,
+				 r->getCommand().c_str());
+      }
     }
-    if (nFlagCmd) cout << "converted in " << msFiller->ms()->flagCmd().nrow() << " in the measurement set." ;
-    cout << endl;}
-  
+    if (nFlagCmd) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->flagCmd().nrow() << " in the measurement set." ;
+      info(infostream.str());
+    }
+  }
 
   // Load the History table
   // Issues :
@@ -1318,56 +1903,69 @@ int main(int argc, char *argv[]) {
     HistoryRow* r = 0;
     vector<HistoryRow *> v = historyT.get();
     int nHistory = historyT.size();
-    cout << "The dataset has " << nHistory << " history(s)...";
-
+    infostream.str("");
+    infostream << "The dataset has " << nHistory << " history(s)...";
+    info(infostream.str());
 
     for (int i = 0; i < nHistory; i++) {
       r = v.at(i);
       double time =  ((double) r->getTime().get()) / ArrayTime::unitsInASecond ;
-      msFiller->addHistory(time,
-		     r->getExecBlockId().getTagValue(),   
-		     r->getMessage().c_str(),
-		     r->getPriority().c_str(),
-		     r->getOrigin().c_str(),
-		     -1,
-		     r->getApplication().c_str(),
-		     r->getCliCommand().c_str(),
-		     r->getAppParms().c_str());
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addHistory(time,
+				 r->getExecBlockId().getTagValue(),   
+				 r->getMessage().c_str(),
+				 r->getPriority().c_str(),
+				 r->getOrigin().c_str(),
+				 -1,
+				 r->getApplication().c_str(),
+				 r->getCliCommand().c_str(),
+				 r->getAppParms().c_str());
+      }
     }
-    if (nHistory) cout << "converted in " << msFiller->ms()->history().nrow() << " history(s) in the measurement set" ;
-    cout << endl;
+    if (nHistory) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->history().nrow() << " history(s) in the measurement set." ;
+      info(infostream.str());
+    }
   }
-
 
   // Build the MS Observation table with the content of ASDM ExecBlock table.
   // 
   {
     ExecBlockRow* r = 0;
     int nExecBlock = execBlockT.size();
-    cout << "The dataset has " << nExecBlock << " execBlock(s)...";
+    infostream.str("");
+    infostream << "The dataset has " << nExecBlock << " execBlock(s)...";
+    info(infostream.str());
+
     vector<ExecBlockRow *> v = execBlockT.get();
     
     for (int i = 0; i < nExecBlock; i++) {
       r = v.at(i);
       
-      ArrayTimeInterval ati = r->getTimeInterval();
-      double startTime      = ati.getStartInMJD()*86400;
-      ArrayTime endArrayTime = ArrayTime(ati.getStart().get() + ati.getDuration().get());
+      double startTime      = r->getStartTime().getMJD()*86400;
+      double endTime        = r->getEndTime().getMJD()*86400;
 
-      double endTime        = endArrayTime.getMJD()*86400;
-
+      vector<string> observingLog;
+      observingLog.push_back(r->getObservingLog());
       msFiller->addObservation((const char*) r->getTelescopeName().c_str(),
-			 startTime,
-			 endTime,
-			 (const char*) r->getObserverName().c_str(),
-			 (r->getObservingLog().size() == 0) ? ((const char**) 0): ((const char**) SConverter().to1DCStringArray(r->getObservingLog())),
-			 (const char *) "ALMA",
-			 (const char**) 0,
-			 (const char*) "T.B.D.",
-			 r->isReleaseDateExists() ? r->getReleaseDate().getMJD():0.0
-			 );
+			       startTime,
+			       endTime,
+			       (const char*) r->getObserverName().c_str(),
+			       (const char**) SConverter().to1DCStringArray(observingLog),
+			       (const char *) "ALMA",
+			       (const char**) 0,
+			       (const char*) "T.B.D.",
+			       r->isReleaseDateExists() ? r->getReleaseDate().getMJD():0.0
+			       );
     } 
-    if (nExecBlock) cout << "converted in " << msFiller->ms()->observation().nrow() << " observation(s) in the measurement set" ;
+    if (nExecBlock) {
+      infostream.str("");
+      infostream << "converted in " << msFiller->ms()->observation().nrow() << " observation(s) in the measurement set." ;
+      info(infostream.str());
+    }
     cout << endl;
   }
 
@@ -1412,66 +2010,182 @@ int main(int argc, char *argv[]) {
 #else
   PointingTable& pointingT = ds->getPointing();
   int nPointing = pointingT.size();
-  cout << "The dataset has " << nPointing << " pointing(s)...";
-  if (nPointing > 0) {
-    PointingRow* r = 0;
-    vector<PointingRow *> v = pointingT.get();
-    
-    int    *antenna_id_      = new int[nPointing];
-    double *time_            = new double[nPointing];
-    double *interval_        = new double[nPointing];
-    string * namestr_        = new string[nPointing];
-    char  **name_            = new char*[nPointing];
-    double *direction_       = new double[2 * nPointing];
-    double *target_          = new double[2 * nPointing];
-    double *pointing_offset_ = new double[2 * nPointing];
-    double *encoder_         = new double[2 * nPointing];
-    bool   *tracking_        = new bool[nPointing];
+  infostream.str("");
+  infostream << "The dataset has " << nPointing << " pointing(s)...";
+  info(infostream.str());
 
-    for (int i = 0; i < nPointing; i++) {
+  if (nPointing > 0) {
+
+    // Check some assertions.
+    //
+    // All rows of ASDM-Pointing must have their attribute usePolynomials equal to false
+    // and their numTerm attribute equal to 1. Use the opportunity of this check
+    // to compute the number of rows to be created in the MS-Pointing by summing
+    // all the numSample attributes values.
+    //
+    int numMSPointingRows = 0;
+    vector<PointingRow *> v = pointingT.get();
+    for (unsigned int i = 0; i < v.size(); i++) {
+      if (v[i]->getUsePolynomials()) {
+	errstream.str("");
+	errstream << "Found usePolynomials equal to true at row #" << i <<". Can't go further"<<endl;
+	error(errstream.str());
+      }
+
+      if (v[i]->getNumTerm() != 1) {
+	errstream.str("");
+	errstream << "Found numTerm equal to " << v[i]->getNumTerm() <<" at row #" << i <<" and I was expecting 1. Can't go further" << endl;
+	error(errstream.str());
+      }
+
+      numMSPointingRows += v[i]->getNumSample();
+    }
+
+    //
+    // Ok now we have verified the assertions and we know the number of rows
+    // to be created into the MS-Pointing, we can proceed.
+
+    PointingRow* r = 0;
+    int    *antenna_id_      = new int[numMSPointingRows];
+    double *time_            = new double[numMSPointingRows];
+    double *interval_        = new double[numMSPointingRows];
+    double *direction_       = new double[2 * numMSPointingRows];
+    double *target_          = new double[2 * numMSPointingRows];
+    double *pointing_offset_ = new double[2 * numMSPointingRows];
+    double *encoder_         = new double[2 * numMSPointingRows];
+    bool   *tracking_        = new bool[numMSPointingRows];
+
+    int iMSPointingRow = 0;
+    for (int i = 0; i < nPointing; i++) {     // Each row in the ASDM-Pointing ...
       r = v.at(i);
 
-      antenna_id_[i]          = r->getAntennaId().getTagValue();
-      interval_[i]            = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
-      time_[i]                = ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + time_[i]/2.0;
-      namestr_[i]             = r->isNameExists()?r->getName().c_str(): "";
-      name_[i]                = const_cast<char *>(namestr_[i].data());
-      direction_[2*i]         = r->getPointingDirection().at(0).at(0).get();
-      direction_[2*i+1]       = r->getPointingDirection().at(0).at(1).get(); 
-      target_[2*i]            = r->getTarget().at(0).at(0).get();
-      target_[2*i+1]          = r->getTarget().at(0).at(1).get();
-      pointing_offset_[2*i]   = r->getOffset().at(0).at(0).get();
-      pointing_offset_[2*i+1] = r->getOffset().at(0).at(1).get();
-      encoder_[2*i]           = r->getEncoder().at(0).get();
-      encoder_[2*i+1]         = r->getEncoder().at(1).get();
+      // Let's prepare some values.
+      int antennaId = r->getAntennaId().getTagValue();
+      
+      double time = 0.0, interval = 0.0;
+      if (!r->isSampledTimeIntervalExists()) { // If no sampledTimeInterval then
+	                                       // then compute the first value of MS TIME and INTERVAL.
+	interval   = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond / r->getNumSample();
+	time = ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval / 2.0;
+      }
 
-      tracking_[i]            = r->getPointingTracking();
+      //
+      // The size of each vector below 
+      // should be checked against numSample !!!
+      //
+      int numSample = r->getNumSample();
+      const vector<vector<Angle> > encoder = r->getEncoder();
+      checkVectorSize<vector<Angle> >("encoder", encoder, "numSample", (unsigned int) numSample, "Pointing", (unsigned int)i);
+
+      const vector<vector<Angle> > pointingDirection = r->getPointingDirection();
+      checkVectorSize<vector<Angle> >("pointingDirection", pointingDirection, "numSample", (unsigned int) numSample, "Pointing", (unsigned int) i);
+
+      const vector<vector<Angle> > target = r->getTarget();
+      checkVectorSize<vector<Angle> >("target", target, "numSample", (unsigned int) numSample, "Pointing", (unsigned int) i);
+
+      const vector<vector<Angle> > offset = r->getOffset();
+      checkVectorSize<vector<Angle> >("offset", offset, "numSample", (unsigned int) numSample, "Pointing", (unsigned int) i);
+
+      bool   pointingTracking = r->getPointingTracking();
+ 
+      //
+      // Prepare some data structures and values required to compute the
+      // (MS) direction.
+      vector<double> cartesian1(3, 0.0);
+      vector<double> cartesian2(3, 0.0);
+      vector<double> spherical1(2, 0.0);
+      vector<double> spherical2(2, 0.0);
+      vector<vector<double> > matrix3x3;
+      for (unsigned int i = 0; i < 3; i++) {
+	matrix3x3.push_back(cartesian1); // cartesian1 is used here just as a way to get a 1D vector of size 3.
+      }
+      double PSI = M_PI_2;
+      double THETA;
+      double PHI;
+      
+      for (int j = 0 ; j < r->getNumSample(); j++) { // ... must be expanded in numSample MS-Pointing rows.
+	// ANTENNA_ID
+	antenna_id_[iMSPointingRow]          = antennaId;
+
+	// TIME and INTERVAL
+	if (r->isSampledTimeIntervalExists()) { //if sampledTimeInterval is present use its values.	                                         
+	  vector<ArrayTimeInterval> timeInterval = r->getSampledTimeInterval();
+	  // Here the size of timeInterval will have to be checked against numSample !!
+	  interval_[iMSPointingRow] = ((double) timeInterval.at(j).getDuration().get()) / ArrayTime::unitsInASecond ;
+	  time_[iMSPointingRow] = ((double) timeInterval.at(j).getStart().get()) / ArrayTime::unitsInASecond
+	    + interval_[iMSPointingRow]/2;	  
+	}
+	else {                                     // otherwise compute TIMEs and INTERVALs from the first values.
+	  interval_[iMSPointingRow]            = interval;
+	  time_[iMSPointingRow]                = time + j*interval;
+	} 
+
+	// DIRECTION
+#if 0
+	direction_[2*iMSPointingRow]  = pointingDirection.at(j).at(0).get();
+	direction_[2*iMSPointingRow+1]= pointingDirection.at(j).at(1).get();
+#else
+	THETA = target.at(j).at(1).get();
+	PHI   = -M_PI_2 - target.at(j).at(0).get();
+	spherical1[0] = offset.at(j).at(0).get();
+	spherical1[1] = offset.at(j).at(1).get();
+	rect(spherical1, cartesian1);
+	eulmat(PSI, THETA, PHI, matrix3x3);
+	matvec(matrix3x3, cartesian1, cartesian2);
+	spher(cartesian2, spherical2);
+	direction_[2*iMSPointingRow]  = spherical2[0];
+	direction_[2*iMSPointingRow+1]= spherical2[1];
+#endif
+
+	// TARGET
+	target_[2*iMSPointingRow]     = target.at(j).at(0).get();
+	target_[2*iMSPointingRow+1]   = target.at(j).at(1).get();
+
+	// POINTING_OFFSET
+	pointing_offset_[2*iMSPointingRow]   = offset.at(j).at(0).get();
+	pointing_offset_[2*iMSPointingRow+1] = offset.at(j).at(1).get();
+
+	// ENCODER
+	encoder_[2*iMSPointingRow]           = encoder.at(j).at(0).get();
+	encoder_[2*iMSPointingRow+1]         = encoder.at(j).at(1).get();
+
+	// TRACKING
+	tracking_[iMSPointingRow] = pointingTracking;
+
+	// increment the row number in MS Pointing.
+	iMSPointingRow++;
+      }
     }
-    
-    msFiller->addPointingSlice(nPointing,
-			       antenna_id_,
-			       time_,
-			       interval_,
-			       name_,
-			       direction_,
-			       target_,
-			       pointing_offset_,
-			       encoder_,
-			       tracking_);
+   
+    for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	 iter != msFillers.end();
+	 ++iter) {
+      iter->second->addPointingSlice(numMSPointingRows,
+				 antenna_id_,
+				 time_,
+				 interval_,
+				 direction_,
+				 target_,
+				 pointing_offset_,
+				 encoder_,
+				 tracking_);
+    }
 			       
     delete[] antenna_id_;
     delete[] time_;
     delete[] interval_;
-    delete[] namestr_;
-    delete[] name_;
     delete[] direction_;
     delete[] target_;
     delete[] pointing_offset_;
     delete[] encoder_;
     delete[] tracking_;
-    cout << "converted in " << msFiller->ms()->pointing().nrow() << " pointing(s) in the measurement set." ;
   }
-  cout << endl;
+
+  if (nPointing) {
+    infostream.str("");
+    infostream << "converted in " << msFillers.begin()->second->ms()->pointing().nrow() << " pointing(s) in the measurement set." ;
+    info(infostream.str()); 
+  }
 #endif
 
   // Load the processor table
@@ -1480,32 +2194,43 @@ int main(int argc, char *argv[]) {
   {
     ProcessorRow* r = 0;
     int nProcessor = processorT.size();
-    cout << "The dataset has " << nProcessor << " processor(s)..."; 
+
+    infostream.str("");
+    infostream << "The dataset has " << nProcessor << " processor(s)...";
+    info(infostream.str());
     
     for (int i = 0; i < nProcessor; i++) {
       if ((r=processorT.getRowByKey(Tag(i, TagType::Processor))) == 0) {
-	err.str("");
-	(err << "Problem while reading the Processor table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
-	error(err.str());
+	errstream.str("");
+	(errstream << "Problem while reading the Processor table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl);
+	error(errstream.str());
       }
-      
-      msFiller->addProcessor((CProcessorType::name(r->getType())).c_str(),
-		       r->getSubType().c_str(),
-		       -1,    // Since there is no typeId in the ASDM.
-		       r->getAlmaCorrelatorModeId().getTagValue());
+
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addProcessor((CProcessorType::name(r->getProcessorType())).c_str(),
+				   (CProcessorSubType::name(r->getProcessorSubType())).c_str(),
+				   -1,    // Since there is no typeId in the ASDM.
+				   r->getModeId().getTagValue());
+      }
     }
-    if (nProcessor) cout << "converted in " << msFiller->ms()->processor().nrow() << " processor(s) in the measurement set." ;
-    cout << endl;
+    if (nProcessor) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->processor().nrow() << " processor(s) in the measurement set." ;
+      info(infostream.str());
+    } 
   }
   
-
   // Load the source table
   //
   SourceTable& sourceT = ds->getSource();
-  {
+  try {
     SourceRow* r = 0;
     int nSource = sourceT.size();
-    cout << "The dataset has " << nSource << " source(s)...";
+    infostream.str("");
+    infostream << "The dataset has " << nSource << " source(s)...";
+    info(infostream.str());
 
     vector<SourceRow *> v = sourceT.get();
     for (int i = 0; i < nSource; i++) {
@@ -1541,26 +2266,35 @@ int main(int argc, char *argv[]) {
 	transition = transitionConverter.to1DCStringArray(r->getTransition());
       }
       
-
-      msFiller->addSource(r->getSourceId(),
-		    time,
-		    interval,
-		    r->getSpectralWindowId().getTagValue(),
-		    r->getNumLines(),
-		    r->getSourceName().c_str(),
-		    r->isCalibrationGroupExists() ? r->getCalibrationGroup() : 0,
-		    r->getCode().c_str(),
-		    DConverter().to1DArray(r->getDirection()),
-		    position,
-		    DConverter().to1DArray(r->getProperMotion()),
-		    (const char **)transition,
-		    restFrequency,
-		    sysVel);
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	msFiller->addSource(r->getSourceId(),
+			    time,
+			    interval,
+			    r->getSpectralWindowId().getTagValue(),
+			    r->isNumLinesExists() ? r->getNumLines() : 0,
+			    r->getSourceName().c_str(),
+			    r->isCalibrationGroupExists() ? r->getCalibrationGroup() : 0,
+			    r->getCode().c_str(),
+			    DConverter().to1DArray(r->getDirection()),
+			    position,
+			    DConverter().to1DArray(r->getProperMotion()),
+			    (const char **)transition,
+			    restFrequency,
+			    sysVel);
+      }
     }
-    if (nSource) cout << "converted in " << msFiller->ms()->source().nrow() <<" source(s) in the measurement set." ;
-    cout << endl;
+    if (nSource) {
+      infostream.str("");
+      infostream << "converted in " << msFillers.begin()->second->ms()->source().nrow() <<" source(s) in the measurement set." ;
+      info(infostream.str());
+    }
   }  
-
+  catch (IllegalAccessException& e) {
+    errstream.str("");
+    error(errstream.str());
+  }
 #if 0
 
   //
@@ -1574,8 +2308,10 @@ int main(int argc, char *argv[]) {
     vector<WeatherRow*> v = weatherT.get();
 
     int nWeather = weatherT.size();
-    cout << "The dataset has " << nWeather << " weather(s)...";
- 
+    infostream.str("");
+    infostream << "The dataset has " << nWeather << " weather(s)...";
+    info(infostream.str());
+
     for (int i = 0; i < nWeather; i++) {
       r = v.at(i);      
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
@@ -1605,8 +2341,11 @@ int main(int argc, char *argv[]) {
 	 r->isDewPointExists()?r->getDewPointFlag():true);
       */
     }
-    if (nWeather) cout << "successfully copied them into the measurement set.";
-    cout << endl;
+    if (nWeather) {
+      infostream.str("");
+      infostream << "successfully copied them into the measurement set.";
+      info(infostream.str());
+    }
   }
 #endif
 
@@ -1669,19 +2408,45 @@ int main(int argc, char *argv[]) {
 
 	  // Firstly populate the State table...
 	  mode = 0; myTimer(&cpu_time_aips, &real_time_aips, &mode);
+	  ScanRow* scanR = ds->getScan().getRowByKey(r->getExecBlockId(),
+						     r->getScanNumber());
+	  vector<ScanIntent> scanIntent = scanR->getScanIntent();
+	  
 	  vector<int> msStateId;
 	  for (unsigned int iState = 0; iState < vmsDataPtr->v_msState.size(); iState++) {
+							      
 	    const sdmbin::MSState& msState = vmsDataPtr->v_msState.at(iState);
-	    int retId = msFiller->addUniqueState(msState.sig,
-					   msState.ref,
-					   msState.cal,
-					   msState.load,
-					   msState.subscanNum,
-					   msState.obsMode.c_str(),
-					   false);
-	    msStateId.push_back(retId);
+	    SubscanRow* sscanR = ds->getSubscan().getRowByKey(r->getExecBlockId(),
+							      r->getScanNumber(),
+							      msState.subscanNum);
+	    SubscanIntent subscanIntent = sscanR->getSubscanIntent();
+	    string obs_mode;
+	    if (scanIntent.size() > 0) {
+	      obs_mode = CScanIntent::name(scanIntent.at(0))+"."+CSubscanIntent::name(subscanIntent);
+
+	      for (unsigned int iScanIntent = 1; iScanIntent < scanIntent.size(); iScanIntent++) {
+		obs_mode += ",";
+		obs_mode +=  CScanIntent::name(scanIntent.at(iScanIntent))+"."+CSubscanIntent::name(subscanIntent);
+	      }
+	    }
+
+	    bool pushed = false;
+	    for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+		 iter != msFillers.end();
+		 ++iter) {
+	      int retId = iter->second->addUniqueState(msState.sig,
+						       msState.ref,
+						       msState.cal,
+						       msState.load,
+						       msState.subscanNum,
+						       obs_mode.c_str(), //msState.obsMode.c_str(),
+						       false);
+	      if (!pushed) {
+		msStateId.push_back(retId);
+		pushed = true;
+	      }
+	    }
 	  }
-	  
 	  mode = 1; myTimer(&cpu_time_aips, &real_time_aips, &mode);
 	  cpu_time_aips_overall  += cpu_time_aips;
 	  real_time_aips_overall += real_time_aips;
@@ -1690,12 +2455,11 @@ int main(int argc, char *argv[]) {
 	  
 	  // Then populate the Main table.
 	  ComplexDataFilter filter; // To process the case numCorr == 3
-	  cout << "ASDM Main table row #" << i+1
-	       << " will be transformed into " << vmsDataPtr->v_antennaId1.size()
-	       << " MS Main table rows" << endl;
 	  
 	  if (vmsDataPtr->v_antennaId1.size() == 0) {
-	    cout << "No MS data produced for ASDM table row #" << i+1 << endl;
+	    infostream.str("");
+	    infostream << "No MS data produced for ASDM table row #" << i+1 << endl;
+	    info(infostream.str());
 	    continue;
 	  }
 
@@ -1712,103 +2476,228 @@ int main(int argc, char *argv[]) {
 	  vector<float *> uncorrectedData;
 	  vector<float *> correctedData;
 
+	  /* compute the UVW */
+
+	  vector<double> uvw(3*vmsDataPtr->v_time.size());
+	  // cout << "3 * v_time.size = " << 3*vmsDataPtr->v_time.size() << endl;
+	  
+	  vector<casa::Vector<casa::Double> > vv_uvw;
+#if DDPRIORITY
+	  // cout << "About to compute UVW with DD priority" << endl;
+	  uvwCoords.uvw_bl(r, sdmBinData.timeSequence(), e_query_cm, 
+			   sdmbin::SDMBinData::dataOrder(),
+			   vv_uvw);
+	  // cout << "computed UVW with DD priority" << endl;
+#else
+	  // cout << "About to compute UVW without DD priority" << endl;
+	  uvwCoords.uvw_bl(r, vmsDataPtr->v_timeCentroid, e_query_cm, 
+			   sdmbin::SDMBinData::dataOrder(),
+			   vv_uvw);
+	  // cout << "computed UVW without DD priority" << endl;
+#endif
+	  // cout << "vv_uvw size = " << vv_uvw.size() << endl;
+
+	  // cout << "About to linearize uvw " << endl;
+	  int k = 0;
+	  for (unsigned int iUvw = 0; iUvw < vv_uvw.size(); iUvw++) {
+	    uvw[k++] = vv_uvw[iUvw](0); 
+	    uvw[k++] = vv_uvw[iUvw](1);
+	    uvw[k++] = vv_uvw[iUvw](2);
+	  } 
+
 	  ComplexDataFilter cdf;
 	  map<AtmPhaseCorrectionMod::AtmPhaseCorrection, float*>::const_iterator iter;
 
+	  vector<double>	correctedTime;
+	  vector<int>		correctedAntennaId1;
+	  vector<int>		correctedAntennaId2;
+	  vector<int>		correctedFeedId1;
+	  vector<int>		correctedFeedId2;
+	  vector<int>		correctedFieldId;
+	  vector<double>	correctedInterval;
+	  vector<double>	correctedExposure;
+	  vector<double>	correctedTimeCentroid;
+	  vector<int>		correctedMsStateId;
+	  vector<double>	correctedUvw ;
+	  vector<unsigned int>	correctedFlag;
+
 	  for (unsigned int iData = 0; iData < vmsDataPtr->v_m_data.size(); iData++) {
-	    if ((iter=vmsDataPtr->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsDataPtr->v_m_data.at(iData).end())
+
+	    if ((msFillers.find(AP_UNCORRECTED) != msFillers.end()) &&
+		(iter=vmsDataPtr->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsDataPtr->v_m_data.at(iData).end()){
 	      uncorrectedData.push_back(cdf.to4Pol(vmsDataPtr->vv_dataShape.at(iData).at(0),
 						   vmsDataPtr->vv_dataShape.at(iData).at(1),
 						   iter->second));
-	    else 
-	      uncorrectedData.push_back(0);
-
-	    if ((iter=vmsDataPtr->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED)) != vmsDataPtr->v_m_data.at(iData).end())
+	    }
+	    
+	    if ((msFillers.find(AP_CORRECTED) != msFillers.end()) &&
+		(iter=vmsDataPtr->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED)) != vmsDataPtr->v_m_data.at(iData).end()){
+	      correctedTime.push_back(vmsDataPtr->v_time.at(iData));
+	      correctedAntennaId1.push_back(vmsDataPtr->v_antennaId1.at(iData));
+	      correctedAntennaId2.push_back(vmsDataPtr->v_antennaId2.at(iData));
+	      correctedFeedId1.push_back(vmsDataPtr->v_feedId1.at(iData));
+	      correctedFeedId2.push_back(vmsDataPtr->v_feedId2.at(iData));
+	      correctedFieldId.push_back(vmsDataPtr->v_fieldId.at(iData));
+	      correctedInterval.push_back(vmsDataPtr->v_interval.at(iData));
+	      correctedExposure.push_back(vmsDataPtr->v_exposure.at(iData));
+	      correctedTimeCentroid.push_back(vmsDataPtr->v_timeCentroid.at(iData));
+	      correctedMsStateId.push_back(msStateId.at(iData));
+	      correctedUvw.push_back(vv_uvw.at(iData)(0));
+	      correctedUvw.push_back(vv_uvw.at(iData)(1));
+	      correctedUvw.push_back(vv_uvw.at(iData)(2));
 	      correctedData.push_back(cdf.to4Pol(vmsDataPtr->vv_dataShape.at(iData).at(0),
 						 vmsDataPtr->vv_dataShape.at(iData).at(1),
-						 iter->second));	    
-	    else
-	      correctedData.push_back(0);	    
+						 iter->second));
+	      correctedFlag.push_back(vmsDataPtr->v_flag.at(iData));
+	    }
 	  }
 	  
-	  /* compute the UVW */
-#if 1
+	  if (uncorrectedData.size() > 0 && (msFillers.find(AP_UNCORRECTED) != msFillers.end())) {
+	    infostream.str("");
+	    infostream << "ASDM Main table row #" << i+1
+		       << " will be transformed into " << vmsDataPtr->v_antennaId1.size()
+		       << " the wvr uncorrected MS Main table rows." << endl;
+	    info(infostream.str());
+	    msFillers[AP_UNCORRECTED]->addData(complexData,
+					       (vector<double>&) vmsDataPtr->v_time, // this is already time midpoint
+					       (vector<int>&) vmsDataPtr->v_antennaId1,
+					       (vector<int>&) vmsDataPtr->v_antennaId2,
+					       (vector<int>&) vmsDataPtr->v_feedId1,
+					       (vector<int>&) vmsDataPtr->v_feedId2,
+					       filteredDD,
+					       vmsDataPtr->processorId,
+					       (vector<int>&)vmsDataPtr->v_fieldId,
+					       (vector<double>&) vmsDataPtr->v_interval,
+					       (vector<double>&) vmsDataPtr->v_exposure,
+					       (vector<double>&) vmsDataPtr->v_timeCentroid,
+					       (int) r->getScanNumber(), 
+					       0,                                               // Array Id
+					       (int) r->getExecBlockId().getTagValue(), // Observation Id
+					       (vector<int>&)msStateId,
+					       uvw,
+					       filteredShape, // vmsDataPtr->vv_dataShape after filtering the case numCorr == 3
+					       uncorrectedData,
+					       (vector<unsigned int>&)vmsDataPtr->v_flag);
+	    mode = 1; myTimer(&cpu_time_aips, &real_time_aips, &mode);
+	    cpu_time_aips_overall  += cpu_time_aips;
+	    real_time_aips_overall += real_time_aips;
+	  }
 
-	  vector<double> uvw(3*vmsDataPtr->v_time.size());
-	  
-	  vector<casa::Vector<casa::Double> > v_uvw;
-	  uvwCoords.uvw_bl(r, vmsDataPtr->v_timeCentroid, e_query_cm, 
-			   sdmbin::SDMBinData::dataOrder(),
-			   v_uvw);
+	  if (correctedData.size() > 0 && (msFillers.find(AP_CORRECTED) != msFillers.end())) {
+	    infostream.str("");
+	    infostream << "ASDM Main table row #" << i+1
+		       << " will be transformed into " << correctedAntennaId1.size()
+		       << " the wvr corrected MS Main table rows." << endl;
+	    info(infostream.str());
 
-	  int k = 0;
-	  for (unsigned int i = 0; i < v_uvw.size(); i++) {
-	    uvw[k++] = v_uvw[i][0]; 
-	    uvw[k++] = v_uvw[i][1];
-	    uvw[k++] = v_uvw[i][2];
-	  } 
-#else
-	  vector<double> uvw(3*vmsDataPtr->v_time.size(), 0.);
-#endif
-	  msFiller->addData(complexData,
-			    (vector<double>&) vmsDataPtr->v_time, // this is already time midpoint
-			    (vector<int>&) vmsDataPtr->v_antennaId1,
-			    (vector<int>&) vmsDataPtr->v_antennaId2,
-			    (vector<int>&) vmsDataPtr->v_feedId1,
-			    (vector<int>&) vmsDataPtr->v_feedId2,
-			    filteredDD,
-			    vmsDataPtr->processorId,
-			    (vector<int>&)vmsDataPtr->v_fieldId,
-			    (vector<double>&) vmsDataPtr->v_interval,
-			    (vector<double>&) vmsDataPtr->v_exposure,
-			    (vector<double>&) vmsDataPtr->v_timeCentroid,
-			    (int) r->getScanNumber(), 
-			    0,                                               // Array Id
-			    (int) r->getExecBlockId().getTagValue(), // Observation Id
-			    (vector<int>&)msStateId,
-			    uvw,
-			    filteredShape, // vmsDataPtr->vv_dataShape after filtering the case numCorr == 3
-			    uncorrectedData,
-			    correctedData,
-			    (vector<unsigned int>&)vmsDataPtr->v_flag);
-	  mode = 1; myTimer(&cpu_time_aips, &real_time_aips, &mode);
-	  cpu_time_aips_overall  += cpu_time_aips;
-	  real_time_aips_overall += real_time_aips;	
+	    msFillers[AP_CORRECTED]->addData(complexData,
+					     correctedTime, // this is already time midpoint
+					     correctedAntennaId1, 
+					     correctedAntennaId2,
+					     correctedFeedId1,
+					     correctedFeedId2,
+					     filteredDD,
+					     vmsDataPtr->processorId,
+					     correctedFieldId,
+					     correctedInterval,
+					     correctedExposure,
+					     correctedTimeCentroid,
+					     (int) r->getScanNumber(), 
+					     0,                                               // Array Id
+					     (int) r->getExecBlockId().getTagValue(), // Observation Id
+					     correctedMsStateId,
+					     correctedUvw,
+					     filteredShape, // vmsDataPtr->vv_dataShape after filtering the case numCorr == 3
+					     correctedData,
+					     correctedFlag);
+	    mode = 1; myTimer(&cpu_time_aips, &real_time_aips, &mode);
+	    cpu_time_aips_overall  += cpu_time_aips;
+	    real_time_aips_overall += real_time_aips;
+	  }
 	}else{
-	  cout <<"No data retrieved in the SDM row #" << i+1 << " (" << sdmBinData.reasonToReject(r) <<")" << endl;
+	  infostream.str("");
+	  infostream <<"No data retrieved in the SDM row #" << i+1 << " (" << sdmBinData.reasonToReject(r) <<")" << endl;
+	  info(infostream.str());
 	}      
       }
     }
     catch ( IllegalAccessException& e) {
-      cout << e.getMessage() << endl;
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
     }
     catch ( SDMDataObjectReaderException& e ) {
-      cout << e.getMessage() << endl;
-      exit (-1);
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
     }
     catch ( std::exception & e) {
-      cout << e.what() << endl;
-      exit (-1);
+      errstream.str("");
+      errstream << e.what();
+      error(errstream.str());
+      
     }
-    
-    cout << "The dataset has "  << stateT.size() << " state(s)..." ;
-    if (stateT.size()) 
-      cout << "converted in " << msFiller->ms()->state().nrow() << " state(s) in the measurement set";
-    cout << endl;
 
-    cout << "The dataset has " << mainT.size() << " main(s)...";
-    if (mainT.size())
-      cout << "converted in " << msFiller->ms()->nrow() << " main(s) in the measurement set";
-    cout << endl;
+    infostream.str("");
+    infostream << "The dataset has "  << stateT.size() << " state(s)..." ;
+    info(infostream.str());
+
+    if (stateT.size()) {
+      infostream.str("");
+      infostream << "converted in " << msFiller->ms()->state().nrow() << " state(s) in the measurement set.";
+      info(infostream.str());
+    }
+
+
+    infostream.str("");
+    infostream << "The dataset has " << mainT.size() << " main(s)...";
+    info(infostream.str());
+
+
+    if (mainT.size()) {
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	string kindOfData = (iter->first == AP_UNCORRECTED) ? "wvr uncorrected" : "wvr corrected";
+	infostream.str("");
+	infostream << "converted in " << iter->second->ms()->nrow() << " main(s) in the measurement set containing the " << kindOfData << " data.";
+	info(infostream.str());
+      }
+    }
   }
 #endif
-
-  msFiller->end(0.0);
-
-  cout << "Overall cpu time spent in ASDM methods to read/process the ASDM Main table : cpu = " << cpu_time_asdm_overall  << " s." << endl;
-  cout << "Overall cpu time spent in AIPS methods to fill the MS Main table : cpu = " << cpu_time_aips_overall  << " s." << endl;
-
-  delete msFiller;
+  
+  // Do we also want to store the verbatim copies of some tables of the ASDM dataset ?
+  if (vm.count("asis")) {
+    istringstream iss;
+    iss.str(vm["asis"].as<string>());
+    string word;
+    vector<string> tablenames;
+    while (iss>>word)
+      tablenames.push_back(word);
+    
+    ASDMVerbatimFiller avf(const_cast<casa::MS*>(msFillers.begin()->second->ms()), Name2Table::find(tablenames, verbose));
+    avf.fill(*ds);
+  }
+  
+  for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+       iter != msFillers.end();
+       ++iter)
+    iter->second->end(0.0);
+  
+  infostream.str("");
+  infostream << "Overall cpu time spent in ASDM methods to read/process the ASDM Main table : cpu = " << cpu_time_asdm_overall  << " s." << endl;
+  info(infostream.str());
+  
+  infostream.str("");
+  infostream << "Overall cpu time spent in AIPS methods to fill the MS Main table : cpu = " << cpu_time_aips_overall  << " s." << endl;
+  info(infostream.str());
+  
+  for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+       iter != msFillers.end();
+       ++iter)
+    delete iter->second;
   delete ds;
   return 0;
 }
+

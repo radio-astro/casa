@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CAntennaType::version() {
+	return AntennaTypeMod::version;
+	}
+	
+string CAntennaType::revision () {
+	return AntennaTypeMod::revision;
+}
+
+unsigned int CAntennaType::size() {
+	return 3;
+	}
+	
 	
 const std::string& CAntennaType::sGROUND_BASED = "GROUND_BASED";
 	
@@ -44,7 +57,7 @@ const std::string& CAntennaType::sSPACE_BASED = "SPACE_BASED";
 	
 const std::string& CAntennaType::sTRACKING_STN = "TRACKING_STN";
 	
-const std::vector<std::string> CAntennaType::sAntennaTypeSet() {
+const std::vector<std::string> CAntennaType::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CAntennaType::sGROUND_BASED);
@@ -55,29 +68,6 @@ const std::vector<std::string> CAntennaType::sAntennaTypeSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CAntennaType::hGROUND_BASED = "Ground-based antenna";
-	
-const std::string& CAntennaType::hSPACE_BASED = "Antenna in a spacecraft";
-	
-const std::string& CAntennaType::hTRACKING_STN = "Space-tracking station antenna";
-	
-const std::vector<std::string> CAntennaType::hAntennaTypeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CAntennaType::hGROUND_BASED);
-    
-    enumSet.insert(enumSet.end(), CAntennaType::hSPACE_BASED);
-    
-    enumSet.insert(enumSet.end(), CAntennaType::hTRACKING_STN);
-        
-    return enumSet;
-}
-   	
 
 std::string CAntennaType::name(const AntennaTypeMod::AntennaType& f) {
     switch (f) {
@@ -92,28 +82,9 @@ std::string CAntennaType::name(const AntennaTypeMod::AntennaType& f) {
       return CAntennaType::sTRACKING_STN;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CAntennaType::help(const AntennaTypeMod::AntennaType& f) {
-    switch (f) {
-    
-    case AntennaTypeMod::GROUND_BASED:
-      return CAntennaType::hGROUND_BASED;
-    
-    case AntennaTypeMod::SPACE_BASED:
-      return CAntennaType::hSPACE_BASED;
-    
-    case AntennaTypeMod::TRACKING_STN:
-      return CAntennaType::hTRACKING_STN;
-    	
-    }
-    return std::string("");
-}
-   	
 
 AntennaTypeMod::AntennaType CAntennaType::newAntennaType(const std::string& name) {
 		
@@ -150,12 +121,10 @@ AntennaTypeMod::AntennaType CAntennaType::literal(const std::string& name) {
 }
 
 AntennaTypeMod::AntennaType CAntennaType::from_int(unsigned int i) {
-	vector<string> names = sAntennaTypeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newAntennaType(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newAntennaType(names_.at(i));
 }
-
-	
 
 string CAntennaType::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'AntennaType'.";

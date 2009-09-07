@@ -108,8 +108,9 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
    //annotAct_->setEnabled(False);
 
    profileAct_   = tlMenu_->addAction("Spectral Profi&le");
-   rgnMgrAct_    = tlMenu_->addAction("Region Manager...");
-   rgnMgrAct_->setEnabled(False);
+   rgnMgrAct_    = new QAction("Region Manager...", 0);
+   //rgnMgrAct_    = tlMenu_->addAction("Region Manager...");
+   //rgnMgrAct_->setEnabled(False);
 
    shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
   
@@ -132,7 +133,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
 		   mainToolBar_->addAction(dpSaveAct_);
 		   mainToolBar_->addAction(dpRstrAct_);
 		   mainToolBar_->addSeparator();
-		   mainToolBar_->addAction(rgnMgrAct_);
+		   //mainToolBar_->addAction(rgnMgrAct_);
 		   mainToolBar_->addSeparator();
 		   mainToolBar_->addAction(printAct_);
 		   mainToolBar_->addSeparator();
@@ -750,9 +751,9 @@ void QtDisplayPanelGui::showAnnotatorPanel() {
         PanelDisplay* ppd = qdp_->panelDisplay();
         if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
            connect(pdd, 
-                   SIGNAL(axisChanged(String, String, String)),
+                   SIGNAL(axisChanged4(String, String, String, int)),
                    qap_, 
-                   SLOT(changeAxis(String, String, String)));
+                   SLOT(changeAxis(String, String, String, int)));
         }
       }
   }

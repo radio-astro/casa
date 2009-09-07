@@ -89,8 +89,6 @@ PlotMSFlaggingWidget::~PlotMSFlaggingWidget() { }
 
 PlotMSFlagging PlotMSFlaggingWidget::getValue(PlotMSPlot* plot) const {
     PlotMSFlagging val;
-    if(plot != NULL)
-        val.setMS(&plot->ms(), &plot->selectedMS(), plot->visSet());
     
     const vector<PlotMSFlagging::Field>& f = PlotMSFlagging::fields();
     double d;
@@ -118,7 +116,6 @@ PlotMSFlagging PlotMSFlaggingWidget::getValue(PlotMSPlot* plot) const {
 
 void PlotMSFlaggingWidget::setValue(const PlotMSFlagging& val) {
     itsValue_ = val;
-    itsValue_.setMS(NULL, NULL, NULL); // never get/set MS object values
     bool oldFlag = itsFlag_;
     itsFlag_ = false;
     

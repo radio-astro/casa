@@ -40,17 +40,11 @@ using std::set;
 #include <ASDM.h>
 #include <ProcessorRow.h>
 #include <ProcessorTable.h>
-
-#include <CorrelatorModeTable.h>
-#include <CorrelatorModeRow.h>
 	
 
 using asdm::ASDM;
 using asdm::ProcessorRow;
 using asdm::ProcessorTable;
-
-using asdm::CorrelatorModeTable;
-using asdm::CorrelatorModeRow;
 
 
 #include <Parser.h>
@@ -104,8 +98,18 @@ namespace asdm {
 		
 		
 			
+		x->modeId = modeId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
 				
-		x->type = type;
+		x->processorType = processorType;
  				
  			
 		
@@ -117,21 +121,7 @@ namespace asdm {
 		
 			
 				
-		x->subType = CORBA::string_dup(subType.c_str());
-				
- 			
-		
-	
-
-	
-  		
-		
-		x->flagRowExists = flagRowExists;
-		
-		
-			
-				
-		x->flagRow = flagRow;
+		x->processorSubType = processorSubType;
  				
  			
 		
@@ -140,21 +130,6 @@ namespace asdm {
 	
 	
 		
-	
-  	
- 		
-		
-	 	
-			
-		x->almaCorrelatorModeId = almaCorrelatorModeId.toIDLTag();
-			
-	 	 		
-  	
-
-	
-		
-	
-
 		
 		return x;
 	
@@ -167,7 +142,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct ProcessorRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void ProcessorRow::setFromIDL (ProcessorRowIDL x) throw(ConversionException) {
+	void ProcessorRow::setFromIDL (ProcessorRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -186,7 +161,17 @@ namespace asdm {
 		
 		
 			
-		setType(x.type);
+		setModeId(Tag (x.modeId));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setProcessorType(x.processorType);
   			
  		
 		
@@ -196,46 +181,17 @@ namespace asdm {
 		
 		
 			
-		setSubType(string (x.subType));
-			
- 		
-		
-	
-
-	
-		
-		flagRowExists = x.flagRowExists;
-		if (x.flagRowExists) {
-		
-		
-			
-		setFlagRow(x.flagRow);
+		setProcessorSubType(x.processorSubType);
   			
  		
 		
-		}
-		
 	
 
 	
 	
 		
-	
-		
-		
-			
-		setAlmaCorrelatorModeId(Tag (x.almaCorrelatorModeId));
-			
- 		
-		
-	
-
-	
-		
-	
-
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Processor");
+			throw ConversionException (err.getMessage(),"Processor");
 		}
 	}
 #endif
@@ -261,7 +217,7 @@ namespace asdm {
   	
  		
 		
-			buf.append(EnumerationParser::toXML("type", type));
+		Parser::toXML(modeId, "modeId", buf);
 		
 		
 	
@@ -269,38 +225,22 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(subType, "subType", buf);
+			buf.append(EnumerationParser::toXML("processorType", processorType));
 		
 		
 	
 
   	
  		
-		if (flagRowExists) {
 		
-		
-		Parser::toXML(flagRow, "flagRow", buf);
-		
-		
-		}
-		
-	
-
-	
-	
-		
-  	
- 		
-		
-		Parser::toXML(almaCorrelatorModeId, "almaCorrelatorModeId", buf);
+			buf.append(EnumerationParser::toXML("processorSubType", processorSubType));
 		
 		
 	
 
 	
-		
 	
-
+		
 		
 		buf.append("</row>\n");
 		return buf;
@@ -311,7 +251,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void ProcessorRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void ProcessorRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -326,51 +266,123 @@ namespace asdm {
 	
 
 	
-		
-		
-		
-		type = EnumerationParser::getProcessorType("type","Processor",rowDoc);
-		
-		
-		
-	
-
-	
   		
 			
-	  	setSubType(Parser::getString("subType","Processor",rowDoc));
-			
-		
-	
-
-	
-  		
-        if (row.isStr("<flagRow>")) {
-			
-	  		setFlagRow(Parser::getBoolean("flagRow","Processor",rowDoc));
-			
-		}
- 		
-	
-
-	
-	
-		
-	
-  		
-			
-	  	setAlmaCorrelatorModeId(Parser::getTag("almaCorrelatorModeId","Processor",rowDoc));
+	  	setModeId(Parser::getTag("modeId","Processor",rowDoc));
 			
 		
 	
 
 	
 		
+		
+		
+		processorType = EnumerationParser::getProcessorType("processorType","Processor",rowDoc);
+		
+		
+		
 	
 
+	
+		
+		
+		
+		processorSubType = EnumerationParser::getProcessorSubType("processorSubType","Processor",rowDoc);
+		
+		
+		
+	
+
+	
+	
+		
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"Processor");
 		}
+	}
+	
+	void ProcessorRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	processorId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	modeId.toBin(eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(processorType);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(processorSubType);
+				
+		
+	
+
+
+	
+	
+	}
+	
+	ProcessorRow* ProcessorRow::fromBin(EndianISStream& eiss, ProcessorTable& table) {
+		ProcessorRow* row = new  ProcessorRow(table);
+		
+		
+		
+	
+		
+		
+		row->processorId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->modeId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->processorType = CProcessorType::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->processorSubType = CProcessorSubType::from_int(eiss.readInt());
+			
+		
+	
+
+		
+		
+		
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -417,29 +429,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get type.
- 	 * @return type as ProcessorTypeMod::ProcessorType
+ 	 * Get modeId.
+ 	 * @return modeId as Tag
  	 */
- 	ProcessorTypeMod::ProcessorType ProcessorRow::getType() const {
+ 	Tag ProcessorRow::getModeId() const {
 	
-  		return type;
+  		return modeId;
  	}
 
  	/**
- 	 * Set type with the specified ProcessorTypeMod::ProcessorType.
- 	 * @param type The ProcessorTypeMod::ProcessorType value to which type is to be set.
+ 	 * Set modeId with the specified Tag.
+ 	 * @param modeId The Tag value to which modeId is to be set.
  	 
  	
  		
  	 */
- 	void ProcessorRow::setType (ProcessorTypeMod::ProcessorType type)  {
+ 	void ProcessorRow::setModeId (Tag modeId)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->type = type;
+ 		this->modeId = modeId;
 	
  	}
 	
@@ -449,79 +461,64 @@ namespace asdm {
 
 	
  	/**
- 	 * Get subType.
- 	 * @return subType as string
+ 	 * Get processorType.
+ 	 * @return processorType as ProcessorTypeMod::ProcessorType
  	 */
- 	string ProcessorRow::getSubType() const {
+ 	ProcessorTypeMod::ProcessorType ProcessorRow::getProcessorType() const {
 	
-  		return subType;
+  		return processorType;
  	}
 
  	/**
- 	 * Set subType with the specified string.
- 	 * @param subType The string value to which subType is to be set.
+ 	 * Set processorType with the specified ProcessorTypeMod::ProcessorType.
+ 	 * @param processorType The ProcessorTypeMod::ProcessorType value to which processorType is to be set.
  	 
  	
  		
  	 */
- 	void ProcessorRow::setSubType (string subType)  {
+ 	void ProcessorRow::setProcessorType (ProcessorTypeMod::ProcessorType processorType)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->subType = subType;
+ 		this->processorType = processorType;
 	
  	}
 	
 	
 
 	
-	/**
-	 * The attribute flagRow is optional. Return true if this attribute exists.
-	 * @return true if and only if the flagRow attribute exists. 
-	 */
-	bool ProcessorRow::isFlagRowExists() const {
-		return flagRowExists;
-	}
-	
 
 	
  	/**
- 	 * Get flagRow, which is optional.
- 	 * @return flagRow as bool
- 	 * @throw IllegalAccessException If flagRow does not exist.
+ 	 * Get processorSubType.
+ 	 * @return processorSubType as ProcessorSubTypeMod::ProcessorSubType
  	 */
- 	bool ProcessorRow::getFlagRow() const throw(IllegalAccessException) {
-		if (!flagRowExists) {
-			throw IllegalAccessException("flagRow", "Processor");
-		}
+ 	ProcessorSubTypeMod::ProcessorSubType ProcessorRow::getProcessorSubType() const {
 	
-  		return flagRow;
+  		return processorSubType;
  	}
 
  	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
+ 	 * Set processorSubType with the specified ProcessorSubTypeMod::ProcessorSubType.
+ 	 * @param processorSubType The ProcessorSubTypeMod::ProcessorSubType value to which processorSubType is to be set.
  	 
  	
+ 		
  	 */
- 	void ProcessorRow::setFlagRow (bool flagRow) {
-	
- 		this->flagRow = flagRow;
-	
-		flagRowExists = true;
+ 	void ProcessorRow::setProcessorSubType (ProcessorSubTypeMod::ProcessorSubType processorSubType)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->processorSubType = processorSubType;
 	
  	}
 	
-	
-	/**
-	 * Mark flagRow, which is an optional field, as non-existent.
-	 */
-	void ProcessorRow::clearFlagRow () {
-		flagRowExists = false;
-	}
 	
 
 	
@@ -529,61 +526,10 @@ namespace asdm {
 	// Extrinsic Table Attributes //
 	////////////////////////////////
 	
-	
-
-	
- 	/**
- 	 * Get almaCorrelatorModeId.
- 	 * @return almaCorrelatorModeId as Tag
- 	 */
- 	Tag ProcessorRow::getAlmaCorrelatorModeId() const {
-	
-  		return almaCorrelatorModeId;
- 	}
-
- 	/**
- 	 * Set almaCorrelatorModeId with the specified Tag.
- 	 * @param almaCorrelatorModeId The Tag value to which almaCorrelatorModeId is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ProcessorRow::setAlmaCorrelatorModeId (Tag almaCorrelatorModeId)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->almaCorrelatorModeId = almaCorrelatorModeId;
-	
- 	}
-	
-	
-
 	///////////
 	// Links //
 	///////////
 	
-	
-	
-	
-		
-
-	/**
-	 * Returns the pointer to the row in the CorrelatorMode table having CorrelatorMode.almaCorrelatorModeId == almaCorrelatorModeId
-	 * @return a CorrelatorModeRow*
-	 * 
-	 
-	 */
-	 CorrelatorModeRow* ProcessorRow::getCorrelatorModeUsingAlmaCorrelatorModeId() {
-	 
-	 	return table.getContainer().getCorrelatorMode().getRowByKey(almaCorrelatorModeId);
-	 }
-	 
-
-	
-
 	
 	/**
 	 * Create a ProcessorRow.
@@ -604,24 +550,23 @@ namespace asdm {
 	
 
 	
-		flagRowExists = false;
-	
-
-	
-	
 
 	
 	
 	
+	
+	
+
 	
 
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
-type = CProcessorType::from_int(0);
+processorType = CProcessorType::from_int(0);
 	
 
 	
-
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+processorSubType = CProcessorSubType::from_int(0);
 	
 	
 	}
@@ -639,12 +584,8 @@ type = CProcessorType::from_int(0);
 	
 
 	
-		flagRowExists = false;
-	
 
-	
-	
-		
+			
 		}
 		else {
 	
@@ -654,47 +595,40 @@ type = CProcessorType::from_int(0);
 		
 		
 		
-			almaCorrelatorModeId = row.almaCorrelatorModeId;
+			modeId = row.modeId;
 		
-			type = row.type;
+			processorType = row.processorType;
 		
-			subType = row.subType;
-		
-		
+			processorSubType = row.processorSubType;
 		
 		
-		if (row.flagRowExists) {
-			flagRow = row.flagRow;		
-			flagRowExists = true;
-		}
-		else
-			flagRowExists = false;
+		
 		
 		}	
 	}
 
 	
-	bool ProcessorRow::compareNoAutoInc(Tag almaCorrelatorModeId, ProcessorTypeMod::ProcessorType type, string subType) {
+	bool ProcessorRow::compareNoAutoInc(Tag modeId, ProcessorTypeMod::ProcessorType processorType, ProcessorSubTypeMod::ProcessorSubType processorSubType) {
 		bool result;
 		result = true;
 		
 	
 		
-		result = result && (this->almaCorrelatorModeId == almaCorrelatorModeId);
+		result = result && (this->modeId == modeId);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->type == type);
+		result = result && (this->processorType == processorType);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->subType == subType);
+		result = result && (this->processorSubType == processorSubType);
 		
 		if (!result) return false;
 	
@@ -704,20 +638,20 @@ type = CProcessorType::from_int(0);
 	
 	
 	
-	bool ProcessorRow::compareRequiredValue(Tag almaCorrelatorModeId, ProcessorTypeMod::ProcessorType type, string subType) {
+	bool ProcessorRow::compareRequiredValue(Tag modeId, ProcessorTypeMod::ProcessorType processorType, ProcessorSubTypeMod::ProcessorSubType processorSubType) {
 		bool result;
 		result = true;
 		
 	
-		if (!(this->almaCorrelatorModeId == almaCorrelatorModeId)) return false;
+		if (!(this->modeId == modeId)) return false;
 	
 
 	
-		if (!(this->type == type)) return false;
+		if (!(this->processorType == processorType)) return false;
 	
 
 	
-		if (!(this->subType == subType)) return false;
+		if (!(this->processorSubType == processorSubType)) return false;
 	
 
 		return result;
@@ -735,11 +669,11 @@ type = CProcessorType::from_int(0);
 	bool ProcessorRow::equalByRequiredValue(ProcessorRow* x) {
 		
 			
-		if (this->almaCorrelatorModeId != x->almaCorrelatorModeId) return false;
+		if (this->modeId != x->modeId) return false;
 			
-		if (this->type != x->type) return false;
+		if (this->processorType != x->processorType) return false;
 			
-		if (this->subType != x->subType) return false;
+		if (this->processorSubType != x->processorSubType) return false;
 			
 		
 		return true;

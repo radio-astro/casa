@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CProcessorSubType::version() {
+	return ProcessorSubTypeMod::version;
+	}
+	
+string CProcessorSubType::revision () {
+	return ProcessorSubTypeMod::revision;
+}
+
+unsigned int CProcessorSubType::size() {
+	return 4;
+	}
+	
 	
 const std::string& CProcessorSubType::sALMA_CORRELATOR_MODE = "ALMA_CORRELATOR_MODE";
 	
@@ -44,7 +57,9 @@ const std::string& CProcessorSubType::sSQUARE_LAW_DETECTOR = "SQUARE_LAW_DETECTO
 	
 const std::string& CProcessorSubType::sHOLOGRAPHY = "HOLOGRAPHY";
 	
-const std::vector<std::string> CProcessorSubType::sProcessorSubTypeSet() {
+const std::string& CProcessorSubType::sALMA_RADIOMETER = "ALMA_RADIOMETER";
+	
+const std::vector<std::string> CProcessorSubType::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CProcessorSubType::sALMA_CORRELATOR_MODE);
@@ -52,32 +67,11 @@ const std::vector<std::string> CProcessorSubType::sProcessorSubTypeSet() {
     enumSet.insert(enumSet.end(), CProcessorSubType::sSQUARE_LAW_DETECTOR);
     
     enumSet.insert(enumSet.end(), CProcessorSubType::sHOLOGRAPHY);
+    
+    enumSet.insert(enumSet.end(), CProcessorSubType::sALMA_RADIOMETER);
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CProcessorSubType::hALMA_CORRELATOR_MODE = "ALMA_CORRELATOR_MODE";
-	
-const std::string& CProcessorSubType::hSQUARE_LAW_DETECTOR = "SQUARE_LAW_DETECTOR";
-	
-const std::string& CProcessorSubType::hHOLOGRAPHY = "HOLOGRAPHY";
-	
-const std::vector<std::string> CProcessorSubType::hProcessorSubTypeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CProcessorSubType::hALMA_CORRELATOR_MODE);
-    
-    enumSet.insert(enumSet.end(), CProcessorSubType::hSQUARE_LAW_DETECTOR);
-    
-    enumSet.insert(enumSet.end(), CProcessorSubType::hHOLOGRAPHY);
-        
-    return enumSet;
-}
-   	
 
 std::string CProcessorSubType::name(const ProcessorSubTypeMod::ProcessorSubType& f) {
     switch (f) {
@@ -90,30 +84,14 @@ std::string CProcessorSubType::name(const ProcessorSubTypeMod::ProcessorSubType&
     
     case ProcessorSubTypeMod::HOLOGRAPHY:
       return CProcessorSubType::sHOLOGRAPHY;
+    
+    case ProcessorSubTypeMod::ALMA_RADIOMETER:
+      return CProcessorSubType::sALMA_RADIOMETER;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CProcessorSubType::help(const ProcessorSubTypeMod::ProcessorSubType& f) {
-    switch (f) {
-    
-    case ProcessorSubTypeMod::ALMA_CORRELATOR_MODE:
-      return CProcessorSubType::hALMA_CORRELATOR_MODE;
-    
-    case ProcessorSubTypeMod::SQUARE_LAW_DETECTOR:
-      return CProcessorSubType::hSQUARE_LAW_DETECTOR;
-    
-    case ProcessorSubTypeMod::HOLOGRAPHY:
-      return CProcessorSubType::hHOLOGRAPHY;
-    	
-    }
-    return std::string("");
-}
-   	
 
 ProcessorSubTypeMod::ProcessorSubType CProcessorSubType::newProcessorSubType(const std::string& name) {
 		
@@ -127,6 +105,10 @@ ProcessorSubTypeMod::ProcessorSubType CProcessorSubType::newProcessorSubType(con
     	
     if (name == CProcessorSubType::sHOLOGRAPHY) {
         return ProcessorSubTypeMod::HOLOGRAPHY;
+    }
+    	
+    if (name == CProcessorSubType::sALMA_RADIOMETER) {
+        return ProcessorSubTypeMod::ALMA_RADIOMETER;
     }
     
     throw badString(name);
@@ -145,17 +127,19 @@ ProcessorSubTypeMod::ProcessorSubType CProcessorSubType::literal(const std::stri
     if (name == CProcessorSubType::sHOLOGRAPHY) {
         return ProcessorSubTypeMod::HOLOGRAPHY;
     }
+    	
+    if (name == CProcessorSubType::sALMA_RADIOMETER) {
+        return ProcessorSubTypeMod::ALMA_RADIOMETER;
+    }
     
     throw badString(name);
 }
 
 ProcessorSubTypeMod::ProcessorSubType CProcessorSubType::from_int(unsigned int i) {
-	vector<string> names = sProcessorSubTypeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newProcessorSubType(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newProcessorSubType(names_.at(i));
 }
-
-	
 
 string CProcessorSubType::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'ProcessorSubType'.";
