@@ -104,7 +104,7 @@ public:
   //
   // Destructor which does nothing.
   //
-  ~AipsError() throw();
+  virtual ~AipsError() throw();
 
 protected:
   String message;
