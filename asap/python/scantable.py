@@ -389,7 +389,8 @@ class scantable(Scantable):
         else:
             return workscan
 
-    def stats(self, stat='stddev', mask=None):
+    #def stats(self, stat='stddev', mask=None):
+    def stats(self, stat='stddev', mask=None, form='3.3f'):
         """
         Determine the specified statistic of the current beam/if/pol
         Takes a 'mask' as an optional parameter to specify which
@@ -399,6 +400,7 @@ class scantable(Scantable):
                      'mean', 'var', 'stddev', 'avdev', 'rms', 'median'
             mask:    an optional mask specifying where the statistic
                      should be determined.
+            form:    format string to print statistic values
         Example:
             scan.set_unit('channel')
             msk = scan.create_mask([100, 200], [500, 600])
@@ -438,17 +440,20 @@ class scantable(Scantable):
                 qx, qy = self.chan2data(rowno=i, chan=chan[i])
                 if rtnabc:
                     statvals.append(qx['value'])
-                    refstr = '(value: %3.3f' % (qy['value'])+' ['+qy['unit']+'])'
+                    #refstr = '(value: %3.3f' % (qy['value'])+' ['+qy['unit']+'])'
+                    refstr = ('(value: %'+form) % (qy['value'])+' ['+qy['unit']+'])'
                     statunit= '['+qx['unit']+']'
                 else:
-                    refstr = '(@ %3.3f' % (qx['value'])+' ['+qx['unit']+'])'
+                    #refstr = '(@ %3.3f' % (qx['value'])+' ['+qx['unit']+'])'
+                    refstr = ('(@ %'+form) % (qx['value'])+' ['+qx['unit']+'])'
                     #statunit= ' ['+qy['unit']+']'
             out += 'Scan[%d] (%s) ' % (axis[0], src)
             out += 'Time[%s]:\n' % (tm)
             if self.nbeam(-1) > 1: out +=  ' Beam[%d] ' % (axis[1])
             if self.nif(-1) > 1: out +=  ' IF[%d] ' % (axis[2])
             if self.npol(-1) > 1: out +=  ' Pol[%d] ' % (axis[3])
-            out += '= %3.3f   ' % (statvals[i]) +refstr+'\n' 
+            #out += '= %3.3f   ' % (statvals[i]) +refstr+'\n' 
+            out += ('= %'+form) % (statvals[i]) +'   '+refstr+'\n' 
             out +=  "--------------------------------------------------\n"
 
         if rcParams['verbose']:
@@ -764,7 +769,7 @@ class scantable(Scantable):
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push( msg )
+                asaplog.push( msg.message )
                 print_log( 'ERROR' )
             else:
                 raise
@@ -813,7 +818,7 @@ class scantable(Scantable):
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push( msg )
+                asaplog.push( msg.message )
                 print_log( 'ERROR' )
                 return
             else: raise
@@ -847,7 +852,7 @@ class scantable(Scantable):
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push( msg )
+                asaplog.push( msg.message )
                 print_log( 'ERROR' )
                 return
             else: raise
@@ -1229,7 +1234,7 @@ class scantable(Scantable):
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push( msg )
+                asaplog.push( msg.message )
                 print_log( 'ERROR' )
                 return
             else: raise
@@ -1456,7 +1461,7 @@ class scantable(Scantable):
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push( msg )
+                asaplog.push( msg.message )
                 print_log( 'ERROR' )
                 return
             else:
@@ -1536,7 +1541,7 @@ class scantable(Scantable):
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push( msg )
+                asaplog.push( msg.message )
                 print_log( 'ERROR' )
                 return
             else:

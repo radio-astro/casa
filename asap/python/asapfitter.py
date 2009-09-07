@@ -139,7 +139,6 @@ class fitter:
             msg = "Fitter not yet initialised. Please set data & fit function"
             if rcParams['verbose']:
                 #print msg
-		from asap import asaplog
                 asaplog.push(msg)
                 print_log('ERROR')
                 return
@@ -151,7 +150,6 @@ class fitter:
                 self.x = self.data._getabcissa(row)
                 self.y = self.data._getspectrum(row)
                 self.mask = mask_and(self.mask, self.data._getmask(row))
-                from asap import asaplog
                 asaplog.push("Fitting:")
                 i = row
                 out = "Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]" % (self.data.getscan(i),
@@ -179,7 +177,7 @@ class fitter:
             if rcParams['verbose']:
                 #print msg
                 print_log()
-                asaplog.push(msg)
+                asaplog.push(msg.message)
                 print_log('ERROR')
             else:
                 raise
@@ -645,7 +643,6 @@ class fitter:
         # Save parameters of baseline fits as a class attribute. 
         # NOTICE: This does not reflect changes in scantable!
         if len(rows) > 0: self.blpars=[]
-        from asap import asaplog
         asaplog.push("Fitting:")
         for r in rows:
             out = " Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]" % (scan.getscan(r),

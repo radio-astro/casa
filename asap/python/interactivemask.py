@@ -183,7 +183,6 @@ class interactivemask:
 
 
 	def _region_start(self,event):
-		print "_region_start called"
 		# Do not fire event when in zooming/panning mode
 		mode = self.p._plotter.figmgr.toolbar.mode
 		if not mode =='':
