@@ -28,14 +28,13 @@
 #ifndef IMAGES_IMAGEPROPERTIES_H
 #define IMAGES_IMAGEPROPERTIES_H
 
-//# Includes
-#include <casa/aips.h>
 #include <images/Images/ImageInterface.h>
+#include <casa/aips.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
-// A class in which to store (read-only) and allow read-only access to image metadata.
+// A class in which to store and allow read-only access to image metadata.
 // </summary>
 
 // <use visibility=export>
