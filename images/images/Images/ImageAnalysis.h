@@ -104,9 +104,6 @@ class ImageAnalysis
                        const Bool zeroblanks = False, 
                        const Bool overwrite = False);
 
-    Bool imagefromforeign(const String& outfile, const String& infile, 
-                          const String& format, const Bool overwrite = False);
-
     Bool imagefromimage(const String& outfile, const String& infile, 
                         Record& region, const String& mask, 
                         const Bool dropdeg = False, 
