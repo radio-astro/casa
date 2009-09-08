@@ -28,7 +28,7 @@
 
 #include <casa/Inputs/Input.h>
 #include <images/Images/ImageFitter.h>
-#include <images/Images/ImageProperties.h>
+#include <images/Images/ImageMetadata.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Regions/RegionManager.h>
@@ -208,7 +208,7 @@ namespace casa {
     void ImageFitter::_checkImageParameterValidity() const {
         *itsLog << LogOrigin("ImageFitter", "_checkImageParameterValidity");
         String error;
-        ImageProperties imageProps(*image);
+        ImageMetadata imageProps(*image);
         if (imageProps.hasPolarizationAxis() && imageProps.hasSpectralAxis()) {
             if (! imageProps.areChannelAndStokesValid(error, chan, stokesString)) {
                 *itsLog << error << LogIO::EXCEPTION;
@@ -222,7 +222,7 @@ namespace casa {
             if (region == "") {
                 // neither region nor box specified, use entire 2-D plane
                 IPosition imShape = image->shape();
-                Vector<Int> dirNums = ImageProperties(*image).directionAxesNumbers();
+                Vector<Int> dirNums = ImageMetadata(*image).directionAxesNumbers();
                 Vector<Int> dirShape(imShape[dirNums[0]], imShape[dirNums[1]]);
                 *itsLog << LogIO::NORMAL << "Neither box nor region specified, "
                     << "so entire plane of " << dirShape[0] << " x "
@@ -263,7 +263,7 @@ namespace casa {
             trc[i] = imShape[i] - 1;
         }
     
-        Vector<Int> dirNums = ImageProperties(*image).directionAxesNumbers();
+        Vector<Int> dirNums = ImageMetadata(*image).directionAxesNumbers();
         blc[dirNums[0]] = String::toDouble(boxParts[0]);
         blc[dirNums[1]] = String::toDouble(boxParts[1]);
         trc[dirNums[0]] = String::toDouble(boxParts[2]);

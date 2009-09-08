@@ -83,7 +83,7 @@
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
-#include <images/Images/ImageProperties.h>
+#include <images/Images/ImageMetadata.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageSourceFinder.h>
@@ -2427,15 +2427,15 @@ ComponentList ImageAnalysis::fitsky(
 	tmpVector.set(1);
 	IPosition stride(tmpVector);
 
-    ImageProperties imProps(*pImage_p);
-    if (imProps.hasSpectralAxis()) {
-        uInt spectralAxisNumber = imProps.spectralAxisNumber();
+    ImageMetadata imMetadata(*pImage_p);
+    if (imMetadata.hasSpectralAxis()) {
+        uInt spectralAxisNumber = imMetadata.spectralAxisNumber();
 	    startPos[spectralAxisNumber] = chan;
 	    endPos[spectralAxisNumber] = chan;
     }
-    if (imProps.hasPolarizationAxis()) {
-        uInt stokesAxisNumber = imProps.polarizationAxisNumber();
-	    startPos[stokesAxisNumber] = imProps.stokesPixelNumber(stokesString);
+    if (imMetadata.hasPolarizationAxis()) {
+        uInt stokesAxisNumber = imMetadata.polarizationAxisNumber();
+	    startPos[stokesAxisNumber] = imMetadata.stokesPixelNumber(stokesString);
 	    endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
     }
 

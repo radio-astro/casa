@@ -28,25 +28,21 @@
 
 #include <casa/aips.h>
 
-#include <images/Images/ImageProperties.h>
+#include <images/Images/ImageMetadata.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-
-//    template <class T> ImageProperties::ImageProperties(const ImageInterface<T>& image) :
-//            itsCoordinates (image.coordinates()), itsShape(image.shape()) {}
-
-    Int ImageProperties::spectralCoordinateNumber() const {
+    Int ImageMetadata::spectralCoordinateNumber() const {
         // don't do a hasSpectralAxis() check or you will go down an infinite recursion path
         return itsCoordinates.findCoordinate(Coordinate::SPECTRAL);
     }
 
-    Bool ImageProperties::hasSpectralAxis() const {
+    Bool ImageMetadata::hasSpectralAxis() const {
         Int spectralCoordNum = spectralCoordinateNumber();
         return (spectralCoordNum >= 0 && spectralCoordNum < (Int)itsCoordinates.nCoordinates());
     } 
 
-    Int ImageProperties::spectralAxisNumber() const {
+    Int ImageMetadata::spectralAxisNumber() const {
         if (! hasSpectralAxis()) {
             return -1;
         }
@@ -54,26 +50,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         return itsCoordinates.pixelAxes(specIndex)[0];
     }    
 
-    uInt ImageProperties::nChannels() const {
+    uInt ImageMetadata::nChannels() const {
         if (! hasSpectralAxis()) {
             return 0;
         }
         return itsShape[spectralAxisNumber()];
     }
 
-    Bool ImageProperties::isChannelNumberValid(const uInt chan) const {
+    Bool ImageMetadata::isChannelNumberValid(const uInt chan) const {
         if (! hasSpectralAxis()) {
             return False;
         }
         return (chan < nChannels());
     }
 
-    Int ImageProperties::polarizationCoordinateNumber() const {
+    Int ImageMetadata::polarizationCoordinateNumber() const {
         // don't do hasPolarizationAxis check or you will go down an infinite recursion path :)
         return itsCoordinates.findCoordinate(Coordinate::STOKES);
     }
 
-    Bool ImageProperties::hasPolarizationAxis() const {
+    Bool ImageMetadata::hasPolarizationAxis() const {
         Int polarizationCoordNum = polarizationCoordinateNumber();
         return (
             polarizationCoordNum >= 0 
@@ -81,21 +77,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         );
     } 
 
-    Int ImageProperties::polarizationAxisNumber() const {
+    Int ImageMetadata::polarizationAxisNumber() const {
         if (! hasPolarizationAxis()) {
             return -1;
         }
         return itsCoordinates.pixelAxes(polarizationCoordinateNumber())[0];
     }       
 
-    uInt ImageProperties::nStokes() const {
+    uInt ImageMetadata::nStokes() const {
         if (! hasPolarizationAxis()) {
             return 0;
         }
         return itsShape[polarizationAxisNumber()];
     }
 
-    Int ImageProperties::stokesPixelNumber(const String& stokesString) const {
+    Int ImageMetadata::stokesPixelNumber(const String& stokesString) const {
         if (! hasPolarizationAxis()) {
             return -1;
         }
@@ -109,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         return stokesPix;
     }
 
-    Bool ImageProperties::isStokesValid(const String& stokesString) const {
+    Bool ImageMetadata::isStokesValid(const String& stokesString) const {
         if (! hasPolarizationAxis()) {
             return False;
         }
@@ -117,12 +113,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         return stokesPixNum >= 0 && stokesPixNum < (Int)nStokes(); 
     }
 
-    Int ImageProperties::directionCoordinateNumber() const {
+    Int ImageMetadata::directionCoordinateNumber() const {
         // don't do a hasDirectionCoordinate() check or you will go down an infinite recursion path
         return itsCoordinates.findCoordinate(Coordinate::DIRECTION);
     }
 
-    Bool ImageProperties::hasDirectionCoordinate() const {
+    Bool ImageMetadata::hasDirectionCoordinate() const {
         Int directionCoordNum = directionCoordinateNumber();
         return (
             directionCoordNum >= 0 
@@ -130,14 +126,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         );
     } 
 
-    Vector<Int> ImageProperties::directionAxesNumbers() const {
+    Vector<Int> ImageMetadata::directionAxesNumbers() const {
         if (! hasDirectionCoordinate()) {
             return Vector<Int>(-1, -1);
         }
         return itsCoordinates.pixelAxes(directionCoordinateNumber());
     }    
 
-    Vector<Int> ImageProperties::directionShape() const {
+    Vector<Int> ImageMetadata::directionShape() const {
         Vector<Int> dirAxesNums = directionAxesNumbers();
         if (! dirAxesNums[0] < 0) {
             return Vector<Int>(0, 0);
@@ -148,7 +144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         return dirShape;
     }
 
-    Bool ImageProperties::areChannelAndStokesValid(
+    Bool ImageMetadata::areChannelAndStokesValid(
         String& message, const uInt chan, const String& stokesString
     ) const {
         ostringstream os;
