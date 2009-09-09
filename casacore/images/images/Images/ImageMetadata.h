@@ -25,17 +25,16 @@
 //#
 //# $Id: ImageInterface.h 20567 2009-04-09 23:12:39Z gervandiepen $
 
-#ifndef IMAGES_IMAGEPROPERTIES_H
-#define IMAGES_IMAGEPROPERTIES_H
+#ifndef IMAGES_IMAGEMETADATA_H
+#define IMAGES_IMAGEMETADATA_H
 
-//# Includes
-#include <casa/aips.h>
 #include <images/Images/ImageInterface.h>
+#include <casa/aips.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
-// A class in which to store (read-only) and allow read-only access to image metadata.
+// A class in which to store and allow read-only access to image metadata.
 // </summary>
 
 // <use visibility=export>
@@ -48,11 +47,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 
 // <etymology>
-// The ImageProperties class name is derived from its role as holding image metadata.
+// The ImageMetadata class name is derived from its role as holding image metadata.
 // </etymology>
 
 // <synopsis> 
-// The ImageProperties object is meant to allow access to image metadata (eg, shape,
+// The ImageMetadata object is meant to allow access to image metadata (eg, shape,
 // coordinate system info such as spectral and polarization axes numbers, etc).
 // </synopsis>
 
@@ -60,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Construct an object of this class by passing the associated image to the constructor.
 // <srcblock>
 // PagedImage<Float> myImage("myImage");
-// ImageProperties<Float> myImageProperties(myImage);
+// ImageMetadata<Float> myImageMetadata(myImage);
 // </srcblock>
 // </example>
 
@@ -71,10 +70,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 
 
-class ImageProperties {
+class ImageMetadata {
 
     public:
-        template <class T> ImageProperties(const ImageInterface<T>& image) :
+        template <class T> ImageMetadata(const ImageInterface<T>& image) :
             itsCoordinates (image.coordinates()), itsShape(image.shape()) {};
 
         // Get the axis number of the spectral axis of this image (0-based).

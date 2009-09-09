@@ -83,7 +83,7 @@
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
-#include <images/Images/ImageProperties.h>
+#include <images/Images/ImageMetadata.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageSourceFinder.h>
@@ -660,91 +660,6 @@ Bool ImageAnalysis::imagefromfits(const String& outfile,
 		}
 		pImage_p = pOut;
 		rstat = True;
-	} catch (AipsError x) {
-		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-	}
-	return rstat;
-}
-
-// Convert foreign images to aips++ via FITS
-Bool ImageAnalysis::imagefromforeign(const String& outfile,
-		const String& infile, const String& format, const Bool overwrite) {
-	// TODO : IMPLEMENT ME HERE !
-	Bool rstat = False;
-	try {
-		*itsLog << LogOrigin("ImageAnalysis", "imagefromforeign");
-
-		/*
-		 # foreignimagesupport.g: Convert foreign images to aips++ via FITS
-		 const imagefromforeign := function (outfile=unset, infile, format='miriad', overwrite=F)
-		 {
-		 if (!is_string(infile)) {
-		 return throw ('Infile must be a string', origin='imagefromforeign');
-		 }
-		 if (!serverexists('dos', 'os', dos)) {
-		 return throw('The os server "dos" is not running',
-		 origin='imagefromforeign');
-		 }
-		 #
-		 fitsfile := '___temporaryfile.fits';
-		 pckg := to_upper(format);
-		 local exe, command;
-		 if (pckg=='MIRIAD') {
-		 exe := '$MIRBIN/fits';
-		 command := spaste('$MIRBIN/fits op=xyout in=', infile, ' out=', fitsfile);
-		 } else if (pckg=='GIPSY') {
-		 exe := '$gip_exe/nhermes';
-		 command := spaste('$gip_exe/nhermes "wfits inset=', infile, ' fitsfile=',fitsfile, '"');
-		 } else {
-		 msg := spaste('Files of type ', format, ' are currently not supported');
-		 return throw(msg, origin='imagefromimage');
-		 }
-		 #
-		 # Convert to fits
-		 #
-		 if (!dos.fileexists(exe)) {
-		 msg := spaste('The ', format, ' fits executable cannot be located at ', exe);
-		 return throw(msg, origin='imagefromforeign.g');
-		 }
-		 #
-		 if (dos.fileexists(fitsfile)) {
-		 ok := dos.remove(fitsfile, T);
-		 if (is_fail(ok)) fail;
-		 }
-		 #
-		 msg := spaste('Converting ', format, ' file to temporary FITS file');
-		 note (msg, priority='NORMAL', origin='imagefromforeign');
-		 ok := shell(command);
-		 if (!dos.fileexists(fitsfile)) {
-		 return throw('Failed to create FITS file', origin='imagefromforeign');
-		 }
-		 #
-		 # Convert to aips++
-		 #
-		 note ('Converting temporary FITS file to aips++ image', priority='NORMAL',
-		 origin='imagefromforeign');
-		 im := imagefromfits(outfile=outfile, infile=fitsfile, overwrite=overwrite);
-		 if (is_fail(im)) fail;
-		 #
-		 # Delete FITS file
-		 #
-		 if (dos.fileexists(fitsfile)) {
-		 ok := dos.remove(fitsfile, T);
-		 if (is_fail(ok)) {
-		 msg := spaste('Failed to delete temporary FITS file ', fitsfile);
-		 note (msg, priority='WARN', origin='imagefromforeign');
-		 }
-		 }
-		 #
-		 # Return tool
-		 #
-		 return im;
-		 }
-		 */
-
-		pImage_p = new TempImage<Float> ();
-		*itsLog << "not implemented" << LogIO::POST;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
@@ -2427,15 +2342,15 @@ ComponentList ImageAnalysis::fitsky(
 	tmpVector.set(1);
 	IPosition stride(tmpVector);
 
-    ImageProperties imProps(*pImage_p);
-    if (imProps.hasSpectralAxis()) {
-        uInt spectralAxisNumber = imProps.spectralAxisNumber();
+    ImageMetadata imMetadata(*pImage_p);
+    if (imMetadata.hasSpectralAxis()) {
+        uInt spectralAxisNumber = imMetadata.spectralAxisNumber();
 	    startPos[spectralAxisNumber] = chan;
 	    endPos[spectralAxisNumber] = chan;
     }
-    if (imProps.hasPolarizationAxis()) {
-        uInt stokesAxisNumber = imProps.polarizationAxisNumber();
-	    startPos[stokesAxisNumber] = imProps.stokesPixelNumber(stokesString);
+    if (imMetadata.hasPolarizationAxis()) {
+        uInt stokesAxisNumber = imMetadata.polarizationAxisNumber();
+	    startPos[stokesAxisNumber] = imMetadata.stokesPixelNumber(stokesString);
 	    endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
     }
 
