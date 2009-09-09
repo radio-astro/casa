@@ -59,8 +59,6 @@ class image
 
     bool fromfits(const std::string& outfile = "", const std::string& infile = "", const int whichrep = 0, const int whichhdu = 0, const bool zeroblanks = false, const bool overwrite = false);
 
-    bool fromforeign(const std::string& outfile = "", const std::string& infile = "", const std::string& format = "miriad", const bool overwrite = false);
-
     bool fromimage(const std::string& outfile = "", const std::string& infile = "", const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const bool dropdeg = false, const bool overwrite = false);
 
     bool fromshape(const std::string& outfile = "", const std::vector<int>& shape = std::vector<int> (1, 0), const ::casac::record& csys = ::casac::initialize_record(""), const bool linear = false, const bool overwrite = false, const bool log = true);

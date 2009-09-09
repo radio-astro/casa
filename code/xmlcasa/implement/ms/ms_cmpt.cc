@@ -27,7 +27,7 @@
 //# @version 
 //////////////////////////////////////////////////////////////////////////////
 
-
+#include <assert.h>
 #include <iostream>
 #include <sys/wait.h>
 #include <casa/BasicSL/String.h>
@@ -498,8 +498,68 @@ ms::range(const std::vector<std::string>& items, const bool useflags, const int 
 }
 
 
+/*
+  Computes statistics from 1d data,
+  appends results to the given Record, using the given keyname
+*/
+static void
+get_statistics_1d(Record &result, const std::string keyname,
+                  const Vector<Float> data_float)
+{
+    //cout << "got it as Array<Float> " << data_float.size() << data_float << endl;
+    
+    unsigned long number_of_values = data_float.nelements();
+           
+    //cout << "Data as record: " << data << endl;
+    //cout << " --- also as float: " << data_float << endl;
+    
+    ArrayLattice<Float> al(data_float);
+    
+    SubLattice<Float> sl(al);
+    LatticeStatistics<Float> ls(sl);
+    
+    struct {
+        LatticeStatsBase::StatisticsTypes type;
+        std::string name;
+        std::string descr;
+    }
+    stats_types[] = {
+        {LatticeStatsBase::MIN   , "min",   "minimum"},
+        {LatticeStatsBase::MAX   , "max",   "maximum"},
+        {LatticeStatsBase::SUM   , "sum",   "sum of values"},
+        {LatticeStatsBase::SUMSQ , "sumsq", "sum of squared values"},
+        
+        {LatticeStatsBase::MEAN  , "mean"  , "mean value"},
+        {LatticeStatsBase::VARIANCE, "var" , "variance"},
+        {LatticeStatsBase::SIGMA , "stddev", "standard deviation wrt mean"},
+        {LatticeStatsBase::RMS   , "rms"   , "root mean square"},
+        {LatticeStatsBase::MEDIAN, "median", "median value"},
+        {LatticeStatsBase::MEDABSDEVMED, "medabsdevmed", "median absolute deviation wrt median"},
+        {LatticeStatsBase::QUARTILE, "quartile", "first quartile"}
+    };
+    
+    Record rec;
+    
+    for (unsigned i = 0 ; i < sizeof(stats_types) / sizeof(*stats_types); i++) {
+        Array<Double> the_stats;
+        ls.getStatistic(the_stats, stats_types[i].type);
+      
+        if (0) cout << stats_types[i].descr << " [" 
+                    << stats_types[i].name << "]: " << the_stats(IPosition(1, 0)) << endl;
+        rec.define(stats_types[i].name,
+                   the_stats(IPosition(1, 0)));
+    }
+    
+    rec.define("npts", (Double) number_of_values);
+
+    result.defineRecord(keyname, rec);
+
+    return;
+}
+
 ::casac::record* 
 ms::statistics(const std::string& column, 
+               const std::string& complex_value,
                const bool useflags, 
                const std::string& spw, 
                const std::string& field, 
@@ -510,7 +570,7 @@ ms::statistics(const std::string& column,
                const std::string& scan, 
                const std::string& array)
 {
-  *itsLog << LogOrigin("ms", "statistics");
+    *itsLog << LogOrigin("ms", "statistics");
 
     ::casac::record *retval(0);
     try {
@@ -523,7 +583,6 @@ ms::statistics(const std::string& column,
          */
          const String dummyExpr = String("");
 
-         if (0) cerr << __LINE__ << endl;
          if (0) cerr << "selection: " << endl <<
            "time = " << time << endl << 
            "baseline = " << baseline << endl <<
@@ -556,6 +615,7 @@ ms::statistics(const std::string& column,
            */
 
            sel_p = &sel;
+           if (0) cout << "Got the subset MS!" << endl;
          }
          else {
            sel_p = itsMS;
@@ -564,36 +624,47 @@ ms::statistics(const std::string& column,
          ROTableColumn rotc(*sel_p, column);
          std::string type;
 
-         if (rotc.columnDesc().isScalar()) {
-           type = "scalar";
-         }
-         else if (rotc.columnDesc().isArray()) {
-           type = "array";
-         }
-         else if (rotc.columnDesc().isTable()) {
-           type = "table";
-         }
-         else {
-           type = "unknown type";
-         }
-
          if (rotc.columnDesc().ndim() > 0) {
            std::stringstream s;
            s << rotc.columnDesc().ndim();
-           type = s.str() + "-dimensional " + type;
+           type = s.str() + "-dimensional ";
          }
+
+         DataType dt1 = rotc.columnDesc().dataType();
+
+         {
+           ostringstream formatter;
+           formatter << dt1;
+           type += String(formatter);
+         }
+
+         if (rotc.columnDesc().isScalar()) {
+           type += " scalar";
+         }
+         else if (rotc.columnDesc().isArray()) {
+           type += " array";
+         }
+         else if (rotc.columnDesc().isTable()) {
+           type += " table";
+         }
+         else {
+           type += " unknown type";
+         }
+
 
          //cout << "isScalar: " << rotc.columnDesc().isScalar() << endl;
          //cout << "isArray:  " << rotc.columnDesc().isArray() << endl;
          //cout << "isTable:  " << rotc.columnDesc().isTable() << endl;
          //cout << "ndim:     " << rotc.columnDesc().ndim() << endl;
-         //cerr << __LINE__ << endl;
 
-         DataType dt1 = rotc.columnDesc().dataType();
+         *itsLog << "Compute statistics on " << type << " column " 
+                 << column;
+         if (complex_value != "") {
+           *itsLog << ", use " << complex_value;
+         }
+         *itsLog << "..." << LogIO::POST;
 
-         *itsLog << "Compute statistics on " << type << " column " << column 
-                 << ", " << sel_p->nrow() << " values..." << LogIO::POST;
-         *itsLog << "Type = " << dt1 << LogIO::POST;
+         //*itsLog << "Type = " << dt1 << LogIO::POST;
          //<< ", truetype = " << dt2
          //<< ") ..." << LogIO::POST;
 
@@ -602,115 +673,267 @@ ms::statistics(const std::string& column,
          }
 
 
-         /* Convert numerical scalar column to Float */
-         Array<Float> data_float;
-         if (rotc.columnDesc().isScalar()) {
-           if (dt1 == TpInt) {
-             ROScalarColumn<Int> ro_col(*sel_p, column);
-             Vector<Int> v = ro_col.getColumn();
+         Record result;
 
-             data_float.resize(IPosition(1, v.nelements()));
+         /* Strategy depends on data type */
+
+         Vector<Float> data_float;
+
+         bool supported = false; // Supported type?
+
+         if (rotc.columnDesc().isScalar()) {
+           if (dt1 == TpBool) {
+             ROScalarColumn<Bool> ro_col(*sel_p, column);
+             Vector<Bool> v = ro_col.getColumn();
+
+             data_float.resize(v.nelements());
              for (unsigned i = 0; i < v.nelements(); i++) {
                data_float[i] = v[i];
              }
+             supported = true;
+           }
+           else if (dt1 == TpInt) {
+             ROScalarColumn<Int> ro_col(*sel_p, column);
+             Vector<Int> v = ro_col.getColumn();
+
+             data_float.resize(v.nelements());
+             for (unsigned i = 0; i < v.nelements(); i++) {
+               data_float[i] = v[i];
+             }
+             supported = true;
            }
            else if (dt1 == TpFloat) {
              ROScalarColumn<Float> ro_col(*sel_p, column);
              Vector<Float> v = ro_col.getColumn();
 
-             data_float.resize(IPosition(1, v.nelements()));
+             data_float.resize(v.nelements());
 
              for (unsigned i = 0; i < v.nelements(); i++) {
                data_float[i] = v[i];
              }
+             supported = true;
            }
            else if (dt1 == TpDouble) {
              ROScalarColumn<Double> ro_col(*sel_p, column);
              Vector<Double> v = ro_col.getColumn();
 
-             data_float.resize(IPosition(1, v.nelements()));
+             data_float.resize(v.nelements());
 
              for (unsigned i = 0; i < v.nelements(); i++) {
                data_float[i] = v[i];
              }
-
+             supported = true;
+           }
+           if (supported) {
+             get_statistics_1d(result, column, data_float);
            }
          }
-#if 0
          else if (rotc.columnDesc().isArray()) {
-           if (dt1 == TpComplex) {
+
+           if (dt1 == TpDouble && rotc.columnDesc().ndim() == 1) {
+
+             /* Loop over the array, 
+                compute statistics for each index
+             */
+             supported = true;
+
+             ROArrayColumn<Double> ro_col(*sel_p, column);
+             
+             Array<Double> v = ro_col.getColumn();
+             
+             data_float.resize(v.shape()(1));
+
+             IPosition indx(2);
+             for (unsigned i = 0; i < v.shape()(0); i++) {
+                 indx(0) = i;
+                 for (unsigned j = 0; j < v.shape()(1); j++) {
+                     indx(1) = j;
+                     data_float[j] = v(indx);
+                 }
+                 std::stringstream s;
+                 s << column << "_" << i;
+    
+                 get_statistics_1d(result, s.str(), data_float);
+             }
+           }
+           else if (dt1 == TpFloat && rotc.columnDesc().ndim() == 1) {
+
+             supported = true;
+
+             ROArrayColumn<Float> ro_col(*sel_p, column);
+             
+             Array<Float> v = ro_col.getColumn();
+             
+             data_float.resize(v.shape()(1));
+
+             IPosition indx(2);
+             for (unsigned i = 0; i < v.shape()(0); i++) {
+                 indx(0) = i;
+                 for (unsigned j = 0; j < v.shape()(1); j++) {
+                     indx(1) = j;
+                     data_float[j] = v(indx);
+                 }
+                 std::stringstream s;
+                 s << column << "-" << i;
+    
+                 get_statistics_1d(result, s.str(), data_float);
+             }
+           }
+           else if (dt1 == TpComplex && rotc.columnDesc().ndim() == 2) {
+
+             if (complex_value != "amp" && complex_value != "amplitude" &&
+                 complex_value != "phase" && complex_value != "imag" &&
+                 complex_value != "real" && complex_value != "imaginary") {
+               throw AipsError("complex_value must be amp, amplitude, phase, imag, imaginary or real" +
+                               std::string(", is ") + complex_value);
+             }
+
+             /* In this case, collapse the polarization dimension and
+                frequency channels
+             */
+
+             supported = true;
+
              ROArrayColumn<Complex> ro_col(*sel_p, column);
+
+             if (0) cout << " colshape = " << ro_col.shape(0) << endl;
+             
              Array<Complex> v = ro_col.getColumn();
 
-             cout << " size = " << v.size() << endl;
+             if (0) cout << " size = " << v.shape() << endl;
+             if (0) cout << " resize to " << v.shape()(1)*v.shape()(2) << endl;
              
-             IPosition s(2);
-             s[0] = 2;
-             s = v.nelements();
+             data_float.resize(v.shape()(0) * 
+                               v.shape()(1) *
+                               v.shape()(2));
+
+             if (0) cout << " data_float size = " << data_float.shape() << endl;
+
+             unsigned long ii = 0;
+             IPosition indx(3);
+             for (unsigned i = 0; i < v.shape()(0); i++) {  // polarization
+               indx(0) = i;
+               for (unsigned j = 0; j < v.shape()(1); j++) {   // channel number
+                 indx(1) = j;
+                 switch (complex_value[0]) {
+                 case 'a':
+                   for (unsigned k = 0; k < v.shape()(2); k++) {
+                     indx(2) = k;
+                     data_float[ii++] = abs(v(indx));
+                   }
+                   
+                   break;
+                 case 'p':
+                   for (unsigned k = 0; k < v.shape()(2); k++) {
+                     indx(2) = k;
+                     data_float[ii++] = arg(v(indx));
+                   }
+                   break;
+                 case 'i':
+                   for (unsigned k = 0; k < v.shape()(2); k++) {
+                     indx(2) = k;
+                     data_float[ii++] = v(indx).imag();
+                   }
+                   break;
+                 case 'r':
+                   for (unsigned k = 0; k < v.shape()(2); k++) {
+                     indx(2) = k;
+                     data_float[ii++] = v(indx).real();
+                   }
+                   break;
+                 default:
+                   assert(false);
+                 }
+               }
+             }
              
-             data_float.resize(s);
-             
-             //             for (unsigned i = 0; i < v.nelements(); i++) {
-             //               data_float[0] = v[i];
-             //               data_float[0] = v[i];
+             get_statistics_1d(result, column, data_float);
+
            }
-           //TpDComplex
+           else if (dt1 == TpFloat && rotc.columnDesc().ndim() == 2) {
+
+             supported = true;
+
+             ROArrayColumn<Float> ro_col(*sel_p, column);
+             
+             Array<Float> v = ro_col.getColumn();
+             
+             data_float.resize(v.nelements());
+
+             unsigned long ii = 0;
+             IPosition indx(3);
+             for (unsigned i = 0; i < v.shape()(0); i++) {
+               indx(0) = i;
+               for (unsigned j = 0; j < v.shape()(1); j++) {
+                 indx(1) = j;
+                 for (unsigned k = 0; k < v.shape()(2); k++) {
+                   indx(2) = k;
+                   data_float[ii++] = v(indx);
+                 }
+               }
+             }
+             
+             get_statistics_1d(result, column, data_float);
+
+           }
+
+           else if (dt1 == TpBool) {
+
+             ROArrayColumn<Bool> ro_col(*sel_p, column);
+
+             Array<Bool> v = ro_col.getColumn();
+
+             unsigned long ii = 0;
+             data_float.resize(v.nelements());
+
+             if (rotc.columnDesc().ndim() == 2) {
+
+               supported = true;
+
+               IPosition indx(3);
+               for (unsigned i = 0; i < v.shape()(0); i++) {
+                 indx(0) = i;
+                 for (unsigned j = 0; j < v.shape()(1); j++) {
+                   indx(1) = j;
+                   for (unsigned k = 0; k < v.shape()(2); k++) { 
+                     indx(2) = k;
+                     data_float[ii++] = v(indx);
+                   }
+                 }
+               }
+
+               get_statistics_1d(result, column, data_float);
+             }
+             else if (rotc.columnDesc().ndim() == 3) {
+               supported = true;
+
+               IPosition indx(4);
+               for (unsigned i = 0; i < v.shape()(0); i++) {
+                 indx(0) = i;
+                 for (unsigned j = 0; j < v.shape()(1); j++) {
+                   indx(1) = j;
+                   for (unsigned k = 0; k < v.shape()(2); k++) { 
+                     indx(2) = k;
+                     for (unsigned l = 0; l < v.shape()(3); l++) { 
+                       indx(3) = l;
+                       data_float[ii++] = v(indx);
+                     }
+                   }
+                 }
+               }
+               get_statistics_1d(result, column, data_float);
+             }
+           } // end if Bool
+         } // end if isArray
+       
+         if (supported) {
+           retval = fromRecord(result);
          }
-#endif
          else {
            std::string msg("Sorry, no support for " + type + " columns");
            throw AipsError(msg);
          }
-
-         //cout << "got it as Array<Float> " << data_float.size() << data_float << endl;
-
-         unsigned long number_of_values = data_float.nelements();
-
-         //cout << "Data as record: " << data << endl;
-         //cout << " --- also as float: " << data_float << endl;
-         
-         ArrayLattice<Float> al(data_float);
-
-         SubLattice<Float> sl(al);
-         LatticeStatistics<Float> ls(sl);
-
-         struct {
-           LatticeStatsBase::StatisticsTypes type;
-           std::string name;
-           std::string descr;
-         }
-         stats_types[] = {
-            {LatticeStatsBase::MIN   , "min",   "minimum"},
-            {LatticeStatsBase::MAX   , "max",   "maximum"},
-            {LatticeStatsBase::SUM   , "sum",   "sum of values"},
-            {LatticeStatsBase::SUMSQ , "sumsq", "sum of squared values"},
-
-            {LatticeStatsBase::MEAN  , "mean"  , "mean value"},
-            {LatticeStatsBase::VARIANCE, "var" , "variance"},
-            {LatticeStatsBase::SIGMA , "stddev", "standard deviation wrt mean"},
-            {LatticeStatsBase::RMS   , "rms"   , "root mean square"},
-            {LatticeStatsBase::MEDIAN, "median", "median value"},
-            {LatticeStatsBase::MEDABSDEVMED, "medabsdevmed", "median absolute deviation wrt median"},
-            {LatticeStatsBase::QUARTILE, "quartile", "first quartile"}
-           };
-
-         Record rec;
-
-         for (unsigned i = 0 ; i < sizeof(stats_types) / sizeof(*stats_types); i++) {
-           Array<Double> the_stats;
-           ls.getStatistic(the_stats, stats_types[i].type);
-
-           if (0) cout << stats_types[i].descr << " [" 
-                       << stats_types[i].name << "]: " << the_stats(IPosition(1, 0)) << endl;
-           rec.define(stats_types[i].name,
-                      the_stats(IPosition(1, 0)));
-         }
-
-         rec.define("npts", (Double) number_of_values);
-
-         retval = fromRecord(rec);
-
-       }
+       } // end if !detached
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks();

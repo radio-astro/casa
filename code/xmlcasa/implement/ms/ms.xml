@@ -1173,11 +1173,15 @@ the ms definition itself. -->
   <keyword>statistics</keyword>
   <input>
     
-     <param type="string" direction="in" name="column">
+     <param type="string" name="column">
      <description>Column name</description>
      </param>
+
+     <param type="string" name="complex_value">
+     <description>Which derived value to use for complex columns (amp, amplitude, phase, imag, real, imaginary)</description>
+     </param>
     
-     <param type="bool" direction="in" name="useflags">
+     <param type="bool" name="useflags">
      <description>Use the data flags</description>
      <value>true</value>
      </param>
@@ -1232,6 +1236,8 @@ the ms definition itself. -->
     This function computes descriptive statistics on the measurement set.
     It returns the statistical values as a python dictionary.  The given 
     column name must be a numerical column.
+    If it is a complex valued column, the parameter complex_value defines
+    which derived real value is used for the statistics computation.
   </description>
   <example>
     \begin{verbatim}

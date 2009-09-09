@@ -146,6 +146,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>0.0</value>
     </param>
 
+    <param type="bool" name="verify">
+            <description>verify the results of calibration</description>
+            <value>False</value>
+    </param>
+
     <param type="string" name="outfile">
 	    <description>output file name</description>
 	    <value></value>
@@ -314,6 +319,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          default: 'none'
         tau -- atmospheric optical depth
                 default: 0.0 (no correction)
+        verify -- verify the results of calibration. Only effective if 
+                  calmode is not 'none'.
+                options: (bool) True,False
+                default: False
+                WARNING: Currently this just asks whether you accept
+                         the displayed calibration and if not, continues
+                         without doing any calibration. 
         outfile -- Name of output file
                 default: '' (&lt;sdfile&gt;_cal)
         outform -- format of output file

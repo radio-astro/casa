@@ -62,7 +62,9 @@ class ms
 
     bool writehistory(const std::string& message = "", const std::string& parms = "", const std::string& origin = "MSHistoryHandler::addMessage()", const std::string& msname = "", const std::string& app = "ms");
 
-    ::casac::record* statistics(const std::string& column, const bool useflags, const std::string& field, const std::string& spw, const std::string& array,
+    ::casac::record* statistics(const std::string& column, 
+                                const std::string& complex_value,
+                                const bool useflags, const std::string& field, const std::string& spw, const std::string& array,
                                 const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """");
 
     ::casac::record* range(const std::vector<std::string>& items, const bool useflags = true, const int blocksize = 10);

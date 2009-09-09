@@ -91,7 +91,8 @@ def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, sc
             casalog.post( "*** sdaverage stage ***" )
             if calmode != 'none':
               tmpoutfile = sdaverageout
-              sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
+              #sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
+              sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
             else:
             #print "Skipping calibration..."
               tmpoutfile = sdaverageout

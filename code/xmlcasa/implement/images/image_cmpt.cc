@@ -444,28 +444,6 @@ image::fromfits(const std::string& outfile, const std::string& fitsfile,
   return rstat;
 }
 
-// Convert foreign images to aips++ via FITS
-bool
-image::fromforeign(const std::string& outfile, const std::string& infile,
-			const std::string& format, const bool overwrite)
-{
-
-  bool rstat = false;
-  try {
-    if(itsLog==0)
-      itsLog=new LogIO();
-    if(itsImage==0)
-      itsImage=new ImageAnalysis();
-    *itsLog << LogOrigin("image", "fromforeign");
-    rstat=itsImage->imagefromforeign(outfile, infile, format, overwrite);
-
-  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
-  }
-  return rstat;
-}
-
 bool
 image::fromimage(const std::string& outfile, const std::string& infile, const ::casac::record& region, const ::casac::variant& mask, const bool dropdeg, const bool overwrite)
 {

@@ -16,27 +16,35 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>vis='ngc5921.ms'</example>
     </param>
 
-    <param type="string" name="column">
-        <description>Column name</description>
-        <value type="string">DATA</value>
-        <example>column='DATA', column='SCAN_NUMBER'</example>
+
+    <param type="string" name="axis">
+        <description>Which values to use</description>
+        <value type="string">amplitude</value>
+    </param>
+
+    <param type="string" name="datacolumn" subparam="true">
+      <description>Which data column to use (data, corrected, model)</description>
+      <value type="string">data</value>
+      <allowed kind="enum">
+        <value>data</value>
+        <value>corrected</value>
+        <value>model</value>
+      </allowed>
     </param>
 
     <param type="bool" name="useflags">
-        <description>Take flagging into account?</description>
+        <description>Take flagging into account? (not implemented)</description>
         <value>True</value>
         <example>useflags=True</example>
     </param>
 
-                <param type="any" name="spw">
+                <param type="string" name="spw">
                         <description>spectral-window/frequency/channel</description>
-                        <any type="variant" limittypes="string stringArray"/>
                         <value type="string"></value>
                 </param>
 
-                <param type="any" name="field">
+                <param type="string" name="field">
                         <description>Field names or field index numbers: \'\'==>all, field=\'0~2,3C286\'</description>
-                        <any type="variant" limittypes="string stringArray"/>
                         <value type="string"></value>
                 </param>
                 <param type="bool" name="selectdata">
@@ -44,43 +52,58 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <value>True</value>
                 </param>
 
-                <param type="any" name="antenna" subparam="true">
+                <param type="string" name="antenna" subparam="true">
                         <description>antenna/baselines: \'\'==>all, antenna = \'3,VA04\'</description>
-                        <any type="variant" limittypes="string stringArray"/>
                         <value type="string"></value>
                 </param>
 
-                <param type="any" name="uvrange" subparam="true">
+                <param type="string" name="uvrange" subparam="true">
                         <description>uv range: \'\'==>all; uvrange = \'0~100klambda\', default units=meters</description>
-                        <any type="variant" limittypes="string stringArray"/>
                         <value type="string"></value>
                 </param>
 
-                <param type="any" name="timerange" subparam="true">
+                <param type="string" name="timerange" subparam="true">
                         <description>time range: \'\'==>all, timerange=\'09:14:0~09:54:0\'</description>
-                        <any type="variant" limittypes="string stringArray"/>
                         <value type="string"></value>
                 </param>
 
-                <param type="any" name="correlation" subparam="true">
+                <param type="string" name="correlation" subparam="true">
                         <description>Select data based on correlation</description>
-                        <any type="variant" limittypes="string stringArray"/>
                         <value type="string"></value>
                 </param>
 
-                <param type="any" name="scan" subparam="true">
+                <param type="string" name="scan" subparam="true">
                         <description>scan numbers: \'\'==>all</description>
-                        <any type="variant" limittypes="string stringArray"/>
                         <value type="string"></value>
                 </param>
 
-                <param type="any" name="array" subparam="true">
+                <param type="string" name="array" subparam="true">
                         <description>(sub)array numbers: \'\'==>all</description>
-                        <any type="variant" limittypes="string stringArray"/>
                         <value type="string"></value>
                 </param>
 
     <constraints>
+    <when param="axis">
+      <equals type="string" value="amp">
+        <default param="datacolumn"><value type="string">data</value></default>
+      </equals>
+      <equals type="string" value="amplitude">
+        <default param="datacolumn"><value type="string">data</value></default>
+      </equals>
+      <equals type="string" value="phase">
+        <default param="datacolumn"><value type="string">data</value></default>
+      </equals>
+      <equals type="string" value="real">
+        <default param="datacolumn"><value type="string">data</value></default>
+      </equals>
+      <equals type="string" value="imag">
+        <default param="datacolumn"><value type="string">data</value></default>
+      </equals>
+      <equals type="string" value="imaginary">
+        <default param="datacolumn"><value type="string">data</value></default>
+      </equals>
+    </when>
+
                         <when param="selectdata">
                                 <equals type="bool" value="True">
                                         <default param="antenna"><value type="string"></value></default>
@@ -105,7 +128,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <example>
 
-        This task returns statistical information about a measurement set column.
+        This task returns statistical information about data in a measurement set.
+
         The following values are computed: mean value, sum of values, sum of squared values,
         median, median absolute deviation, quartile, minimum, maximum,
         variance, standard deviation, root mean square.
@@ -113,17 +137,35 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         If selectdata = True, the statistical information is computed based only
         on the specified subset of the measurement set.
 
+        Note: If the MS consists of inhomogeneous data, for example several spectral windows
+        each having a different number of channels, it may be necessary to use selection parameters
+        to select a homogeneous subset of the MS, e.g. spw='2'.
+
         Keyword arguments:
 
         vis  --- Name of input visibility file
                   default: '', example: vis='my.ms'
 
-        column  -- Name of MS column to analyze
-                default: ''
-                column='DATA'
-                column='SCAN_NUMBER'
+        axis -- Which data to analyze. The possible values are 'amp', 'amplitude', 'phase',
+                'real', 'imag', 'imaginary'. Also, the name of any real valued MS column can be 
+                given, e.g. TIME, WEIGHT, SIGMA, FLAG, ...
 
-        useflags -- Take MS flags into account
+                default: 'amplitude'
+                axis='phase'
+                axis='imag'
+                axis='scan_number'
+                axis='flag'
+
+                The phase of a complex number is in radians in the range [-pi; pi[.
+
+
+        datacolumn -- Which data column to use for complex data.
+                default: 'data'
+                datacolumn='data'
+                datacolumn='corrected'
+                datacolumn='model'
+
+        useflags -- Take MS flags into account (not implemented)
                 default: False
                 useflag=False
                 useflag=True
