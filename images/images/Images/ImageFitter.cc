@@ -25,12 +25,11 @@
 //#
 //# $Id: tSubImage.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 
-
 #include <casa/Inputs/Input.h>
+#include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageFitter.h>
 #include <images/Images/ImageMetadata.h>
 #include <images/Images/ImageStatistics.h>
-#include <images/Images/ImageAnalysis.h>
 #include <images/Regions/RegionManager.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <casa/Quanta/Quantum.h>
@@ -39,7 +38,8 @@
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/MVTime.h>
 #include <components/ComponentModels/Flux.h>
-
+#include <images/Images/FITSImage.h>
+#include <images/Images/MIRIADImage.h>
 #include <casa/Arrays/ArrayUtil.h>
 
 #include <images/Regions/WCUnion.h>
@@ -80,6 +80,19 @@ namespace casa {
         chan = input.getInt("chan");
         stokesString = input.getString("stokes");
 
+        _construct(imagename, box, region);
+    }
+
+    ImageFitter::ImageFitter(
+        const String& imagename, const String& box, const String& region,
+        const uInt ngaussInp, const uInt chanInp, const String& stokes
+    ) {
+        itsLog = new LogIO();
+        *itsLog << LogOrigin("ImageFitter", "constructor");
+        // set private members
+        ngauss = ngaussInp;
+        chan = chanInp;
+        stokesString = stokes;
         _construct(imagename, box, region);
     }
 
@@ -195,10 +208,18 @@ namespace casa {
     void ImageFitter::_construct(
         const String& imagename, const String& box, const String& region
     ) {
-        if (imagename == "") {
+        if (imagename.empty()) {
             *itsLog << "imagename cannot be blank" << LogIO::EXCEPTION;
         }
-        image = new PagedImage<Float>(imagename);
+
+        // Register the functions to create a FITSImage or MIRIADImage object.
+        FITSImage::registerOpenFunction();
+        MIRIADImage::registerOpenFunction();
+
+        ImageUtilities::openImage(image, imagename, *itsLog);
+        if (image == 0) {
+            throw(AipsError("Unable to open image " + imagename));
+        }
         _doRegion(box, region);
         stokesString = (stokesString == "") ? "I" : stokesString;
         ngauss = (ngauss == 0) ? 1 : ngauss;
