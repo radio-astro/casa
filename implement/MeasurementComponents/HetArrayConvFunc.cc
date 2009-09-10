@@ -112,7 +112,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Quantity blockDiam(dishDiam(k)/25.0*2.0, "m");
 	    
 	    antMath_p[diamIndex]=new PBMath1DAiry(qdiam, blockDiam,  
-						Quantity(70,"arcsec"), 
+						Quantity(150,"arcsec"), 
 						Quantity(100.0,"GHz"));
 	  }
 	  else{
@@ -378,6 +378,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 
 	if(found) {
 	  convSupport=Int(0.5+Float(trial)/Float(convSampling))+1;
+	  //support is really over the edge
+	  if( (convSupport*convSampling) >= convSize_p/2){
+	    convSupport=convSize_p/2/convSampling-1;
+	  }
 	}
 	else {
 	  os << "Convolution function is misbehaved - support seems to be zero\n"
