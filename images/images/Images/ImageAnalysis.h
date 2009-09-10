@@ -28,9 +28,13 @@
 
 
 //# put includes here
+#include <coordinates/Coordinates/CoordinateSystem.h>
 #include <lattices/LatticeMath/Fit2D.h>
+#include <casa/Quanta.h>
+#include <measures/Measures/Stokes.h>
 #include <components/ComponentModels/ComponentType.h>
 #include <casa/Arrays/AxesSpecifier.h>
+
 
 namespace casa {
 
