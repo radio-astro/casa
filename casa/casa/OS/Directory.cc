@@ -256,6 +256,23 @@ void Directory::removeRecursive (Bool keepDir)
     }
 }
 
+Int64 Directory::size() const
+{
+
+  Int64 totSize=0;
+  DirectoryIterator iter(*this);
+  while (! iter.pastEnd()) {
+    File file = iter.file();
+    if (file.isDirectory ()) {
+      totSize+=Directory(file).size();
+    } else {
+      totSize+=file.size();
+    }
+    iter++;
+  }
+  return totSize;
+}
+
 void Directory::copy (const Path& target, Bool overwrite,
 		      Bool setUserWritePermission) const
 {
