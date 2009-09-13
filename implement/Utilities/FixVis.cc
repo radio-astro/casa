@@ -29,9 +29,10 @@ namespace casa {
 FixVis::FixVis(MeasurementSet& ms, const String& dataColName) :
   FTMachine(),
   ms_p(ms),
+  msc_p(NULL),
   nsel_p(0),
   nAllFields_p(1),
-  npix_p(32),
+  npix_p(2),
   cimageShape_p(4, npix_p, npix_p, 1, 1), // Can we get away with
   tileShape_p(4, npix_p, npix_p, 1, 1),   // (1, 1, 1, 1)?  Does it matter?
   tiledShape_p(cimageShape_p, tileShape_p),
@@ -39,6 +40,7 @@ FixVis::FixVis(MeasurementSet& ms, const String& dataColName) :
   freqFrameValid_p(false)
 {
   logSink() << LogOrigin("FixVis", "") << LogIO::NORMAL3;
+
   antennaId_p.resize();
   antennaSelStr_p.resize();
   distances_p.resize();
@@ -75,6 +77,10 @@ FixVis::FixVis(MeasurementSet& ms, const String& dataColName) :
 // Destructor
 FixVis::~FixVis()
 {
+  if(!ms_p.isNull())
+    ms_p.flush();
+
+  delete msc_p;
 }
 
 // Interpret field indices (MSSelection)
@@ -158,8 +164,17 @@ void FixVis::convertFieldDirs(const MDirection::Types outType)
   // reference frame for the entire column, but polynomials can be assigned on
   // a row-wise basis for objects moving in that frame.
 
-  MSColumns msc(ms_p);
-  MSFieldColumns& msfcs = msc.field();
+  Muvw::Types uvwtype;
+  Muvw::getType(uvwtype, MDirection::showType(outType));
+
+  ready_msc_p();
+  
+  // msc_p->setUVWRef(uvwtype) won't work because it requires the column to
+  // be empty, even though we'll be overwriting it.
+  //msc_p->uvwMeas().setDescRefCode(uvwtype, false);
+  msc_p->uvw().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", MDirection::showType(outType));
+
+  MSFieldColumns& msfcs = msc_p->field();
 
   // Don't initialize the ArrayMeasCols using this syntax:
   // ArrayMeasColumn<MDirection> msPhaseDirCol(msfcs.phaseDirMeasCol());
@@ -191,7 +206,7 @@ void FixVis::convertFieldDirs(const MDirection::Types outType)
   // Setup conversion machines.
   // Set the frame - choose the first antenna. For e.g. VLBI, we
   // will need to reset the frame per antenna
-  mLocation_p = msc.antenna().positionMeas()(0);
+  mLocation_p = msc_p->antenna().positionMeas()(0);
 
   // Expect problems if a moving object is involved!
   mFrame_p = MeasFrame(msfcs.timeMeas()(0), mLocation_p);
@@ -349,6 +364,9 @@ Bool FixVis::calc_uvw(const String& refcode)
   Bool retval = false;
   
   logSink() << LogOrigin("FixVis", "calc_uvw");
+
+  if(!ready_msc_p())
+    return false;
   
   // Make sure FieldIds_p has a Field ID for each selected field, and -1 for
   // everything else!  (Should have already been done in imager_cmpt.cc.)
@@ -357,8 +375,7 @@ Bool FixVis::calc_uvw(const String& refcode)
      ){
 
     // Get the PHASE_DIR reference frame type for the input ms.
-    MSColumns msc(ms_p);
-    MSFieldColumns& msfcs(msc.field());
+    MSFieldColumns& msfcs(msc_p->field());
     MDirection::Types startDirType = MDirection::castType(msfcs.phaseDirMeasCol().getMeasRef().getType());
     MDirection::Types wantedDirType;
     MDirection::getType(wantedDirType, refcode);
@@ -391,7 +408,7 @@ Bool FixVis::calc_uvw(const String& refcode)
     }
     
     try{
-      MSUVWGenerator uvwgen(ms_p, bltype, uvwtype);  
+      MSUVWGenerator uvwgen(*msc_p, bltype, uvwtype);  
       retval = uvwgen.make_uvws(FieldIds_p);
 
       // Update HISTORY table
@@ -578,8 +595,39 @@ Bool FixVis::makeSelection(const Int selectedField)
               << mssel_p.nrow() << " rows selected out of " << ms_p.nrow() << "." 
               << LogIO::POST;
 
-  return true;
+  delete msc_p;
+  msc_p = NULL;
+  return ready_msc_p();
 }
+
+Bool FixVis::ready_msc_p()
+{
+  Bool retval = false;
+
+  if(!msc_p){
+    try{
+      msc_p = new MSColumns(mssel_p.isNull() ? ms_p : mssel_p);
+      retval = true; // Assume msc_p is OK.
+    }
+    catch(AipsError& e){
+      logSink() << LogIO::SEVERE
+                << "Error getting the columns from the MS."
+                << LogIO::POST;
+    }
+    catch(std::bad_alloc& e){
+      logSink() << LogIO::SEVERE
+                << "Error allocating memory for the MS columns."
+                << LogIO::POST;
+    }
+    // Just let any other exceptions, of the unexpected kind,
+    // propagate up where they can be seen.
+  }
+  else
+    retval = true; // Assume msc_p is OK.
+
+  return retval;
+}
+
 
 CoordinateSystem FixVis::getCoords(uInt numInSel)
 {
@@ -597,7 +645,6 @@ CoordinateSystem FixVis::getCoords(uInt numInSel)
   deltas(0) = -1.0e-5; // -mcellx_p.get("rad").getValue();
   deltas(1) =  1.0e-5; //  mcelly_p.get("rad").getValue();
   
-  MSColumns msc(ms_p);
   MFrequency::Types obsFreqRef = MFrequency::DEFAULT;
   ROScalarColumn<Int> measFreqRef(ms_p.spectralWindow(),
 				  MSSpectralWindow::columnName(MSSpectralWindow::MEAS_FREQ_REF));
@@ -620,12 +667,14 @@ CoordinateSystem FixVis::getCoords(uInt numInSel)
   refPixel(0) = Double(npix_p / 2);
   refPixel(1) = Double(npix_p / 2);
   
+  ready_msc_p();
+
   //defining observatory...needed for position on earth
-  String telescop = msc.observation().telescopeName()(0);
+  String telescop = msc_p->observation().telescopeName()(0);
 
   // defining epoch as begining time from timerange in OBSERVATION subtable
   // Using first observation for now
-  MEpoch obsEpoch = msc.observation().timeRangeMeas()(0)(IPosition(1,0));
+  MEpoch obsEpoch = msc_p->observation().timeRangeMeas()(0)(IPosition(1,0));
 
   //Now finding the position of the telescope on Earth...needed for proper
   //frequency conversions
@@ -699,14 +748,14 @@ CoordinateSystem FixVis::getCoords(uInt numInSel)
   Double refChan = 0.0;
   
   // Include all spectral windows a la spectral synthesis.
-  uInt nspw = msc.spectralWindow().nrow();
+  uInt nspw = msc_p->spectralWindow().nrow();
   {
     Double fmin = C::dbl_max;
     Double fmax = -(C::dbl_max);
     Double fmean = 0.0;
     for(uInt spw = 0; spw < nspw; ++spw){
-      Vector<Double> chanFreq = msc.spectralWindow().chanFreq()(spw); 
-      Vector<Double> freqResolution = msc.spectralWindow().chanWidth()(spw); 
+      Vector<Double> chanFreq = msc_p->spectralWindow().chanFreq()(spw); 
+      Vector<Double> freqResolution = msc_p->spectralWindow().chanWidth()(spw); 
       
       if(spw == 0){
         fmin = min(chanFreq - abs(freqResolution));
@@ -755,7 +804,7 @@ CoordinateSystem FixVis::getCoords(uInt numInSel)
   myobsinfo.setTelescope(telescop);
   myobsinfo.setPointingCenter(mvPhaseCenter);
   myobsinfo.setObsDate(obsEpoch);
-  myobsinfo.setObserver(msc.observation().observer()(0));
+  myobsinfo.setObserver(msc_p->observation().observer()(0));
   this->setObsInfo(myobsinfo);
 
   //Adding everything to the coordsystem
@@ -764,8 +813,7 @@ CoordinateSystem FixVis::getCoords(uInt numInSel)
   coordInfo.addCoordinate(*mySpectral);
   coordInfo.setObsInfo(myobsinfo);
 
-  if(mySpectral)
-    delete mySpectral;
+  delete mySpectral;
 
   return coordInfo;
 }
