@@ -612,7 +612,6 @@ class asapplotter:
         else: nstack = len(nstack0)
         maxpanel, maxstack = 16,8
         if n > maxpanel or nstack > maxstack:
-            from asap import asaplog
             maxn = 0
             if nstack > maxstack: maxn = maxstack
             if n > maxpanel: maxn = maxpanel

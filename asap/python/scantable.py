@@ -1815,10 +1815,10 @@ class scantable(Scantable):
         self.set_selection(basesel)
         s._add_history("set_sourcetype", varlist)
 
-    def auto_quotient(self, preserve=True, mode='paired'):
+    def auto_quotient(self, preserve=True, mode='paired', verify=False):
         """
         This function allows to build quotients automatically.
-        It assumes the observation to have the same numer of
+        It assumes the observation to have the same number of
         "ons" and "offs"
         Parameters:
             preserve:       you can preserve (default) the continuum or

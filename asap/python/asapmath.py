@@ -3,6 +3,7 @@ from asap import rcParams
 from asap import print_log
 from asap import selector
 from asap import asaplog
+from asap import asaplotgui
 
 def average_time(*args, **kwargs):
     """
@@ -158,7 +159,7 @@ def dosigref(sig, ref, smooth, tsysval=0.0, tauval=0.0):
     print_log()
     return s
 
-def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
+def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, verify=False):
     """
     Calibrate GBT position switched data
     Adopted from GBTIDL getps
@@ -252,11 +253,151 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
 
     #ress = dosigref(sig, ref, smooth, tsysval)
     ress = dosigref(sig, ref, smooth, tsysval, tauval)
+    ###
+    if verify:
+        # get data
+        import numpy
+        precal={}
+        postcal=[]
+        keys=['ps','ps_calon','psr','psr_calon']
+        ifnos=list(ssub.getifnos())
+        polnos=list(ssub.getpolnos())
+        sel=selector()
+        for i in range(2):
+            ss=ssuboff.get_scan('*'+keys[2*i])
+            ll=[]
+            for j in range(len(ifnos)):
+                for k in range(len(polnos)):
+                    sel.set_ifs(ifnos[j])
+                    sel.set_polarizations(polnos[k])
+                    try:
+                        ss.set_selection(sel)
+                    except:
+                        continue
+                    ll.append(numpy.array(ss._getspectrum(0)))
+                    sel.reset()
+                    ss.set_selection()
+            precal[keys[2*i]]=ll
+            del ss
+            ss=ssubon.get_scan('*'+keys[2*i+1])
+            ll=[]
+            for j in range(len(ifnos)):
+                for k in range(len(polnos)):
+                    sel.set_ifs(ifnos[j])
+                    sel.set_polarizations(polnos[k])
+                    try:
+                        ss.set_selection(sel)
+                    except:
+                        continue
+                    ll.append(numpy.array(ss._getspectrum(0)))
+                    sel.reset()
+                    ss.set_selection()
+            precal[keys[2*i+1]]=ll
+            del ss
+        for j in range(len(ifnos)):
+            for k in range(len(polnos)):
+                sel.set_ifs(ifnos[j])
+                sel.set_polarizations(polnos[k])
+                try:
+                    ress.set_selection(sel)
+                except:
+                    continue
+                postcal.append(numpy.array(ress._getspectrum(0)))
+                sel.reset()
+                ress.set_selection()
+        del sel
+        # plot
+        print_log()
+        asaplog.push('Plot only first spectrum for each [if,pol] pairs to verify calibration.')
+        print_log('WARN')
+        p=asaplotgui.asaplotgui()
+        #nr=min(6,len(ifnos)*len(polnos))
+        nr=len(ifnos)*len(polnos)
+        titles=[]
+        btics=[]
+        if nr<4:
+            p.set_panels(rows=nr,cols=2,nplots=2*nr,ganged=False)
+            for i in range(2*nr):
+                b=False
+                if i >= 2*nr-2:
+                    b=True
+                btics.append(b)
+        elif nr==4:
+            p.set_panels(rows=2,cols=4,nplots=8,ganged=False)
+            for i in range(2*nr):
+                b=False
+                if i >= 2*nr-4:
+                    b=True
+                btics.append(b)
+        elif nr<7:
+            p.set_panels(rows=3,cols=4,nplots=2*nr,ganged=False)
+            for i in range(2*nr):
+                if i >= 2*nr-4:
+                    b=True
+                btics.append(b)
+        else:
+            print_log()
+            asaplog.push('Only first 6 [if,pol] pairs are plotted.')
+            print_log('WARN')
+            nr=6
+            for i in range(2*nr):
+                b=False
+                if i >= 2*nr-4:
+                    b=True
+                btics.append(b)
+            p.set_panels(rows=3,cols=4,nplots=2*nr,ganged=False)
+        for i in range(nr):
+            p.subplot(2*i)
+            p.color=0
+            title='raw data IF%s POL%s' % (ifnos[int(i/len(polnos))],polnos[i%len(polnos)])
+            titles.append(title)
+            #p.set_axes('title',title,fontsize=40)
+            ymin=1.0e100
+            ymax=-1.0e100
+            nchan=s.nchan()
+            edge=int(nchan*0.01)
+            for j in range(4):
+                spmin=min(precal[keys[j]][i][edge:nchan-edge])
+                spmax=max(precal[keys[j]][i][edge:nchan-edge])
+                ymin=min(ymin,spmin)
+                ymax=max(ymax,spmax)
+            for j in range(4):
+                if i==0:
+                    p.set_line(label=keys[j])
+                else:
+                    p.legend()
+                p.plot(precal[keys[j]][i])
+            p.axes.set_ylim(ymin-0.1*abs(ymin),ymax+0.1*abs(ymax))
+            if not btics[2*i]:
+                p.axes.set_xticks([])
+            p.subplot(2*i+1)
+            p.color=0
+            title='cal data IF%s POL%s' % (ifnos[int(i/len(polnos))],polnos[i%len(polnos)])
+            titles.append(title)
+            #p.set_axes('title',title)
+            p.legend()
+            ymin=postcal[i][edge:nchan-edge].min()
+            ymax=postcal[i][edge:nchan-edge].max()
+            p.plot(postcal[i])
+            p.axes.set_ylim(ymin-0.1*abs(ymin),ymax+0.1*abs(ymax))
+            if not btics[2*i+1]:
+                p.axes.set_xticks([])
+        for i in range(2*nr):
+            p.subplot(i)
+            p.set_axes('title',titles[i],fontsize='medium')
+        x=raw_input('Accept calibration ([y]/n): ' )
+        if x.upper() == 'N':
+            p.unmap()
+            del p
+            return scabtab
+        p.unmap()
+        del p
+    ###
     ress._add_history("calps", varlist)
     print_log()
     return ress
 
-def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
+def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, verify=False):
     """
     Do full (but a pair of scans at time) processing of GBT Nod data
     calibration.
@@ -327,11 +468,154 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
         else:
             scantab.recalc_azel()
     resspec = scantable(stm._donod(scantab, pairScans, smooth, tsysval,tauval,tcalval))
+    ###
+    if verify:
+        # get data
+        import numpy
+        precal={}
+        postcal=[]
+        keys=['nod','nod_calon']
+        ifnos=list(scantab.getifnos())
+        polnos=list(scantab.getpolnos())
+        sel=selector()
+        for i in range(2):
+            ss=scantab.get_scan('*'+keys[i])
+            ll=[]
+            ll2=[]
+            for j in range(len(ifnos)):
+                for k in range(len(polnos)):
+                    sel.set_ifs(ifnos[j])
+                    sel.set_polarizations(polnos[k])
+                    sel.set_scans(pairScans[0])
+                    try:
+                        ss.set_selection(sel)
+                    except:
+                        continue
+                    ll.append(numpy.array(ss._getspectrum(0)))
+                    sel.reset()
+                    ss.set_selection()
+                    sel.set_ifs(ifnos[j])
+                    sel.set_polarizations(polnos[k])
+                    sel.set_scans(pairScans[1])
+                    try:
+                        ss.set_selection(sel)
+                    except:
+                        ll.pop()
+                        continue
+                    ll2.append(numpy.array(ss._getspectrum(0)))
+                    sel.reset()
+                    ss.set_selection()
+            key='%s%s' %(pairScans[0],keys[i].lstrip('nod'))
+            precal[key]=ll
+            key='%s%s' %(pairScans[1],keys[i].lstrip('nod'))
+            precal[key]=ll2
+            del ss
+        keys=precal.keys()
+        for j in range(len(ifnos)):
+            for k in range(len(polnos)):
+                sel.set_ifs(ifnos[j])
+                sel.set_polarizations(polnos[k])
+                sel.set_scans(pairScans[0])
+                try:
+                    resspec.set_selection(sel)
+                except:
+                    continue
+                postcal.append(numpy.array(resspec._getspectrum(0)))
+                sel.reset()
+                resspec.set_selection()
+        del sel
+        # plot
+        print_log()
+        asaplog.push('Plot only first spectrum for each [if,pol] pairs to verify calibration.')
+        print_log('WARN')
+        p=asaplotgui.asaplotgui()
+        #nr=min(6,len(ifnos)*len(polnos))
+        nr=len(ifnos)*len(polnos)
+        titles=[]
+        btics=[]
+        if nr<4:
+            p.set_panels(rows=nr,cols=2,nplots=2*nr,ganged=False)
+            for i in range(2*nr):
+                b=False
+                if i >= 2*nr-2:
+                    b=True
+                btics.append(b)
+        elif nr==4:
+            p.set_panels(rows=2,cols=4,nplots=8,ganged=False)
+            for i in range(2*nr):
+                b=False
+                if i >= 2*nr-4:
+                    b=True
+                btics.append(b)
+        elif nr<7:
+            p.set_panels(rows=3,cols=4,nplots=2*nr,ganged=False)
+            for i in range(2*nr):
+                if i >= 2*nr-4:
+                    b=True
+                btics.append(b)
+        else:
+            print_log()
+            asaplog.push('Only first 6 [if,pol] pairs are plotted.')
+            print_log('WARN')
+            nr=6
+            for i in range(2*nr):
+                b=False
+                if i >= 2*nr-4:
+                    b=True
+                btics.append(b)
+            p.set_panels(rows=3,cols=4,nplots=2*nr,ganged=False)
+        for i in range(nr):
+            p.subplot(2*i)
+            p.color=0
+            title='raw data IF%s POL%s' % (ifnos[int(i/len(polnos))],polnos[i%len(polnos)])
+            titles.append(title)
+            #p.set_axes('title',title,fontsize=40)
+            ymin=1.0e100
+            ymax=-1.0e100
+            nchan=scantab.nchan()
+            edge=int(nchan*0.01)
+            for j in range(4):
+                spmin=min(precal[keys[j]][i][edge:nchan-edge])
+                spmax=max(precal[keys[j]][i][edge:nchan-edge])
+                ymin=min(ymin,spmin)
+                ymax=max(ymax,spmax)
+            for j in range(4):
+                if i==0:
+                    p.set_line(label=keys[j])
+                else:
+                    p.legend()
+                p.plot(precal[keys[j]][i])
+            p.axes.set_ylim(ymin-0.1*abs(ymin),ymax+0.1*abs(ymax))
+            if not btics[2*i]:
+                p.axes.set_xticks([])
+            p.subplot(2*i+1)
+            p.color=0
+            title='cal data IF%s POL%s' % (ifnos[int(i/len(polnos))],polnos[i%len(polnos)])
+            titles.append(title)
+            #p.set_axes('title',title)
+            p.legend()
+            ymin=postcal[i][edge:nchan-edge].min()
+            ymax=postcal[i][edge:nchan-edge].max()
+            p.plot(postcal[i])
+            p.axes.set_ylim(ymin-0.1*abs(ymin),ymax+0.1*abs(ymax))
+            if not btics[2*i+1]:
+                p.axes.set_xticks([])
+        for i in range(2*nr):
+            p.subplot(i)
+            p.set_axes('title',titles[i],fontsize='medium')
+        x=raw_input('Accept calibration ([y]/n): ' )
+        if x.upper() == 'N':
+            p.unmap()
+            del p
+            return scabtab
+        p.unmap()
+        del p
+    ###
     resspec._add_history("calnod",varlist)
     print_log()
     return resspec
 
-def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
+def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, verify=False):
     """
     Calibrate GBT frequency switched data.
     Adopted from GBTIDL getfs.
@@ -368,6 +652,144 @@ def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
     del scantab
 
     resspec = scantable(stm._dofs(s, scannos, smooth, tsysval,tauval,tcalval))
+    ###
+    if verify:
+        # get data
+        ssub = s.get_scan(scannos)
+        ssubon = ssub.get_scan('*calon')
+        ssuboff = ssub.get_scan('*[^calon]')
+        import numpy
+        precal={}
+        postcal=[]
+        keys=['fs','fs_calon','fsr','fsr_calon']
+        ifnos=list(ssub.getifnos())
+        polnos=list(ssub.getpolnos())
+        sel=selector()
+        for i in range(2):
+            ss=ssuboff.get_scan('*'+keys[2*i])
+            ll=[]
+            for j in range(len(ifnos)):
+                for k in range(len(polnos)):
+                    sel.set_ifs(ifnos[j])
+                    sel.set_polarizations(polnos[k])
+                    try:
+                        ss.set_selection(sel)
+                    except:
+                        continue
+                    ll.append(numpy.array(ss._getspectrum(0)))
+                    sel.reset()
+                    ss.set_selection()
+            precal[keys[2*i]]=ll
+            del ss
+            ss=ssubon.get_scan('*'+keys[2*i+1])
+            ll=[]
+            for j in range(len(ifnos)):
+                for k in range(len(polnos)):
+                    sel.set_ifs(ifnos[j])
+                    sel.set_polarizations(polnos[k])
+                    try:
+                        ss.set_selection(sel)
+                    except:
+                        continue
+                    ll.append(numpy.array(ss._getspectrum(0)))
+                    sel.reset()
+                    ss.set_selection()
+            precal[keys[2*i+1]]=ll
+            del ss
+        sig=resspec.get_scan('*_fs')
+        ref=resspec.get_scan('*_fsr')
+        for k in range(len(polnos)):
+            for j in range(len(ifnos)):
+                sel.set_ifs(ifnos[j])
+                sel.set_polarizations(polnos[k])
+                try:
+                    sig.set_selection(sel)
+                    postcal.append(numpy.array(sig._getspectrum(0)))
+                except:
+                    ref.set_selection(sel)
+                    postcal.append(numpy.array(ref._getspectrum(0)))
+                sel.reset()
+                resspec.set_selection()
+        del sel
+        # plot
+        print_log()
+        asaplog.push('Plot only first spectrum for each [if,pol] pairs to verify calibration.')
+        print_log('WARN')
+        p=asaplotgui.asaplotgui()
+        #nr=min(6,len(ifnos)*len(polnos))
+        nr=len(ifnos)/2*len(polnos)
+        titles=[]
+        btics=[]
+        if nr>3:
+            print_log()
+            asaplog.push('Only first 3 [if,pol] pairs are plotted.')
+            print_log('WARN')
+            nr=3
+        p.set_panels(rows=nr,cols=3,nplots=3*nr,ganged=False)
+        for i in range(3*nr):
+            b=False
+            if i >= 3*nr-3:
+                b=True
+            btics.append(b)
+        for i in range(nr):
+            p.subplot(3*i)
+            p.color=0
+            title='raw data IF%s,%s POL%s' % (ifnos[2*int(i/len(polnos))],ifnos[2*int(i/len(polnos))+1],polnos[i%len(polnos)])
+            titles.append(title)
+            #p.set_axes('title',title,fontsize=40)
+            ymin=1.0e100
+            ymax=-1.0e100
+            nchan=s.nchan()
+            edge=int(nchan*0.01)
+            for j in range(4):
+                spmin=min(precal[keys[j]][i][edge:nchan-edge])
+                spmax=max(precal[keys[j]][i][edge:nchan-edge])
+                ymin=min(ymin,spmin)
+                ymax=max(ymax,spmax)
+            for j in range(4):
+                if i==0:
+                    p.set_line(label=keys[j])
+                else:
+                    p.legend()
+                p.plot(precal[keys[j]][i])
+            p.axes.set_ylim(ymin-0.1*abs(ymin),ymax+0.1*abs(ymax))
+            if not btics[3*i]:
+                p.axes.set_xticks([])
+            p.subplot(3*i+1)
+            p.color=0
+            title='sig data IF%s POL%s' % (ifnos[2*int(i/len(polnos))],polnos[i%len(polnos)])
+            titles.append(title)
+            #p.set_axes('title',title)
+            p.legend()
+            ymin=postcal[2*i][edge:nchan-edge].min()
+            ymax=postcal[2*i][edge:nchan-edge].max()
+            p.plot(postcal[2*i])
+            p.axes.set_ylim(ymin-0.1*abs(ymin),ymax+0.1*abs(ymax))
+            if not btics[3*i+1]:
+                p.axes.set_xticks([])
+            p.subplot(3*i+2)
+            p.color=0
+            title='ref data IF%s POL%s' % (ifnos[2*int(i/len(polnos))+1],polnos[i%len(polnos)])
+            titles.append(title)
+            #p.set_axes('title',title)
+            p.legend()
+            ymin=postcal[2*i+1][edge:nchan-edge].min()
+            ymax=postcal[2*i+1][edge:nchan-edge].max()
+            p.plot(postcal[2*i+1])
+            p.axes.set_ylim(ymin-0.1*abs(ymin),ymax+0.1*abs(ymax))
+            if not btics[3*i+2]:
+                p.axes.set_xticks([])
+        for i in range(3*nr):
+            p.subplot(i)
+            p.set_axes('title',titles[i],fontsize='medium')
+        x=raw_input('Accept calibration ([y]/n): ' )
+        if x.upper() == 'N':
+            p.unmap()
+            del p
+            return scabtab
+        p.unmap()
+        del p
+    ###
     resspec._add_history("calfs",varlist)
     print_log()
     return resspec
@@ -427,3 +849,28 @@ def merge(*args):
     print_log()
     return s
 
+## def apexcal( scantab, calmode ):
+##     """
+##     Calibrate APEX data.
+    
+##     Parameters:
+##         scantab:       scantable
+##         calmode:       calibration mode
+##     """
+##     from asap._asap import stmath
+##     stm = stmath()
+##     if ( calmode == 'ps' ):
+##         asaplog.push( 'APEX position-switch calibration' )
+##         print_log()
+##     elif ( calmode == 'fs' ):
+##         asaplog.push( 'APEX frequency-switch calibration' )
+##         print_log()
+##     elif ( calmode == 'wob' ):
+##         asaplog.push( 'APEX wobbler-switch calibration' )
+##         print_log()
+##     elif ( calmode == 'otf' ):
+##         asaplog.push( 'APEX On-The-Fly calibration' )
+##         print_log()
+##     else:
+##         asaplog.push( '%s: unknown calibration mode' % calmode )
+##         print_log('ERROR')
