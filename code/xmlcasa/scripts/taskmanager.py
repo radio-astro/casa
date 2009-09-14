@@ -106,21 +106,22 @@ class taskmanager(object):
         return count
 
     def __finalize(self):
-        if self.__hub['mec'] is None :
-            self.__setup_mec( )
 
-        self.__hub['mec'].kill(controller=True)
-        for e in self.__hub['engines'] :
-            try:
-                if e['proc'].pid is not None:
-                    os.kill(e['proc'].pid,signal.SIGKILL)
-            except:
-                pass
+        if self.__hub['mec'] is not None :
+            self.__hub['mec'].kill(controller=True)
+            for e in self.__hub['engines'] :
+                try:
+                    if e['proc'].pid is not None:
+                        os.kill(e['proc'].pid,signal.SIGKILL)
+                except:
+                    pass
+
         try:
             if self.__hub['proc'] is not None and self.__hub['proc'].pid is not None:
                 os.kill(self.__hub['proc'].pid,signal.SIGINT)
         except:
             pass
+
         self.__clean_furls( )
         if os.path.exists(self.__dir['log root'] + '/last'):
             self.__rmdir(self.__dir['log root'] + '/last')
@@ -128,6 +129,7 @@ class taskmanager(object):
             os.rename(self.__dir['session log root'], self.__dir['log root'] + '/last')
         except:
             print "could not rename " + self.__dir['session log root'] + " to " + self.__dir['log root'] + '/last' + " ..."
+
 
     def __find_engine( self ) :
         for engine in self.__hub['engines'] :

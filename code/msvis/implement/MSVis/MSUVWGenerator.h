@@ -80,19 +80,18 @@ class LogIO;
 //     - correlationMode filter (hopefully handled by SDM -> MS import routines).
 //       direction item in the field table.
 // @note The current limitations are set by the status of the ASDM
-//     - the use-case when the phase direction is not assumed to be J2000
 //     - OTF not supported due to a limitation in the model of the phase
 // </todo>
 class MSUVWGenerator
 {
 public:
   // Constructor 
-  //      @param ms_ref Reference to the MS.
+  //      @param ms_ref Reference to the MS's columns.
   //      @post - The relative positions for all the antennas in the Antenna
   //              table are in bl_an_p.
   //            - timeRes_p has been conservatively calculated using rough
   //              estimates of the maximum baseline length and field of view.
-  MSUVWGenerator(MS& ms_ref, const MBaseline::Types bltype,
+  MSUVWGenerator(MSColumns& ms_ref, const MBaseline::Types bltype,
 		 const Muvw::Types uvwtype);
 
   // Destructor
@@ -120,7 +119,7 @@ public:
 private:
   // Sets up the antenna positions as baselines (bl_an_p), the number of
   // antennas (nant_p), and timeRes_p.
-  void fill_bl_an(Vector<MVBaseline>& bl_an_p, const MS &ms_ref);
+  void fill_bl_an(Vector<MVBaseline>& bl_an_p);
   
   // Determine antUVW_p for every member of the sequence of antennas
   // defining a (sub)array.
@@ -162,7 +161,7 @@ private:
   //**************** here in the same order ******************************
   //**************** as they do in the ctor. ******************************
 
-  MSColumns msc_p;  // Ptr. to the columns of the measurement set.
+  MSColumns& msc_p;  // the columns of the measurement set.
 
   // Coordinate system selectors.
   MBaseline::Ref bl_csys_p;

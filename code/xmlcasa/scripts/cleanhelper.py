@@ -133,6 +133,8 @@ class cleanhelper:
                           nchan, start, width, restfreq, field, phasecenters,
                           names=[], facets=1, makepbim=False):
         #will do loop in reverse assuming first image is main field
+        if not hasattr(imsizes, '__len__'):
+            imsizes = [imsizes]
         self.nimages=len(imsizes)
         if((len(imsizes)<=2) and ((type(imsizes[0])==int) or (type(imsizes[0]==long)))):
             self.nimages=1

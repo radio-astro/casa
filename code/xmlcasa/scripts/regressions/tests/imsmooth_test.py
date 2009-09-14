@@ -907,6 +907,7 @@ def region_test():
 
         inputArray[49,71,0,14] = 100     # For rgn file
         inputArray[233,276,0,20] = 100     # For rgn in image
+        inputArray[15,15,0,30] = 100     # For rgn in image
 
         
         # Now make the image!
@@ -1036,17 +1037,18 @@ def region_test():
 
 
     results = None
+    # This test was all screwed up when it fell in my lap. Fixing as best as I can - dmehring
+    output = 'rgn_test5'
     try:
         results=imsmooth( 'rgn.pointsrc.image', kernel='gauss', \
-                          major=12, minor=7, outfile='rgn_test5', \
+                          major=2, minor=1, outfile = output, \
                           region='g192_a2.image:testregion')
     except Exception, err:
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Smoothng failed with internal image region 'testregion'."
 
-        
-    if ( not os.path.exists( 'rgn_test5' ) or results==None ): 
+    if ( not os.path.exists(output) or results==None ): 
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Smoothing failed internal image region 'testregion'."
@@ -1054,29 +1056,29 @@ def region_test():
         # Now that we know something has been done lets check the results!
         #     1. Check that the sum of the values under the curve is 100
         #     2. Check that the max is at 49,71, 0, 14
-        ia.open( 'rgn_test5')
+        ia.open(output)
         stats = ia.statistics()
         ia.done()
         
         sum = stats['sum'][0]
-        allowedError=0.00075
-        if ( ( sum < 100 and sum < ( 100-allowedError ) )
-             or ( sum > 100 and sum > ( 100+allowedError) ) ):
-             
+        fluxDensity = 99.948 # not 100 because of flux located outside small image
+        allowedError=0.001
+        if (sum < (fluxDensity - allowedError) or sum > (fluxDensity + allowedError)):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Sum on smoothed file rgn_test4 is "\
+                +"\nError: Sum on smoothed file " + output + " is "\
                 +str(stats['sum'][0]) +" expected value is 100."
 
         # Max position = point src position - minx, miny of region    
         maxpos=stats['maxpos'].tolist()
-        if ( maxpos[0]!=233-166 or maxpos[1]!=276-222 or \
-             maxpos[2]!=0 or maxpos[3]!=20 ):
+        if ( maxpos[0] != 5 or maxpos[1] != 5 or \
+             maxpos[2] != 0 or maxpos[3] != 30 ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                 +"\nError: Max position found at "+str(maxpos)\
                 +" expected it to be at 212,220,0,20."            
 
+    print "*** finishing " + str(retValue['success'])
     return retValue
 
 
@@ -1112,7 +1114,6 @@ def run():
     test_list = [ 'input_test()', 'smooth_test()', \
                   'region_test()' ]
 
-
     # This would be really, really, really, really nice to run in a loop
     # and use the eval() command to execute the various methods BUT for
     # some idiotic reason, which I do not know, when you do this. The
@@ -1138,6 +1139,6 @@ def run():
     print "PASSED: ", passed
     if ( not passed ):
         casalog.post( error_msgs, 'EXCEPTION' )
-        raise Exception, 'imval test has failed!\n'+error_msgs
+        raise Exception, 'imsmooth test has failed!\n'+error_msgs
     
     return []

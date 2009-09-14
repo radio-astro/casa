@@ -880,6 +880,13 @@ EnumSet<AtmPhaseCorrection> apcLiterals(const ASDM& ds, const string& asdmBinary
   vector<MainRow *> mRs = ds.getMain().get();
   
   for (unsigned int i = 0; i < mRs.size(); i++) {
+    ConfigDescriptionRow * configDescriptionRow = mRs.at(i)->getConfigDescriptionUsingConfigDescriptionId();
+    vector<AtmPhaseCorrection> apc = configDescriptionRow -> getAtmPhaseCorrection();
+    for (unsigned int i = 0; i < apc.size(); i++)
+      result.set(apc.at(i));
+  }
+  /*
+  for (unsigned int i = 0; i < mRs.size(); i++) {
     string binaryFileName = replace_all_copy(mRs.at(i)->getDataOid().getEntityId().toString(), "/", "_");
     replace_all(binaryFileName, ":", "_");
     try {
@@ -897,6 +904,7 @@ EnumSet<AtmPhaseCorrection> apcLiterals(const ASDM& ds, const string& asdmBinary
       cout << e2.getMessage() << endl;
     }
   }
+  */
   return result;
 }
 

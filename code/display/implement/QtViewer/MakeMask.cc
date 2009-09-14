@@ -128,10 +128,11 @@ MakeMask::MakeMask(QtDisplayPanel* qdp) {
                    "Leave blank for 'all channels'");
   tLayout->addWidget(chan, 2, 2, 1, 4);
 
-  tLayout->addWidget(new QLabel("correlations"), 3, 0, 1, 2);
+
+  tLayout->addWidget(new QLabel("Stokes"), 3, 0, 1, 2);
   corr = new QLineEdit;
-  corr->setToolTip("Set the box extend correlations, example: 0,2~3\n"
-                   "Leave blank for 'all correlations'");
+  corr->setToolTip("Set the box extend Stokes parameters, example: 0,2~3\n"
+                   "Leave blank for 'all Stokes'");
   tLayout->addWidget(corr, 3, 2, 1, 4);
 
 /*
@@ -458,6 +459,7 @@ void MakeMask::loadRegionFromFile() {
       if (outRegPtrs.nelements() < 1) {
          QMessageBox::warning(this, "FILEBOX", "The box file is empty.");
       }
+      //cout << "number of boxes =" << outRegPtrs.nelements() << endl;
       for (uInt m = 0; m < outRegPtrs.nelements(); m++) {
          uInt nreg=unionRegions_p.nelements();
          unionRegions_p.resize(nreg + 1, True);
@@ -673,17 +675,19 @@ void MakeMask::addRegionsToShape(RSComposite*& theShapes,
         trc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
       }
       
+      double xw = fabs(trc(0)-blc(0));
+      double xh = fabs(trc(1)-blc(1));
+      if (xw <= 0 || xh <= 0)
+         return;
       RSRectangle *rect = (cb == -1) ?
          new RSRectangle(
-             (blc(1)+trc(1))/2.0,(blc(0)+trc(0))/2.0,
-              fabs(trc(1)-blc(1)), fabs(trc(0)-blc(0)), dirType) :
+             (blc(1)+trc(1))/2.0,(blc(0)+trc(0))/2.0, xh, xw, dirType) :
          new RSRectangle(
-             (blc(0)+trc(0))/2.0,(blc(1)+trc(1))/2.0,
-              fabs(trc(0)-blc(0)), fabs(trc(1)-blc(1)), dirType);
+             (blc(0)+trc(0))/2.0,(blc(1)+trc(1))/2.0, xw, xh, dirType);
       
       rect->setLineColor(color->currentText().toStdString());
       theShapes->addShape(rect);
-
+      //cout << "rect=" << rect->toRecord() << endl;
     }
     else if((wcreg->type())== "WCPolygon"){
       TableRecord polyrec=wcreg->toRecord("");
@@ -717,6 +721,7 @@ void MakeMask::addRegionsToShape(RSComposite*& theShapes,
            new RSPolygon(y,x,dirType) : new RSPolygon(x,y,dirType);
       poly->setLineColor(color->currentText().toStdString());
       theShapes->addShape(poly);
+      //cout << "poly=" << poly->toRecord() << endl;
     }
     else if((wcreg->type()) == "WCUnion" ||(wcreg->type()) == "WCIntersection"){
       PtrBlock<const WCRegion*> regPtrs=

@@ -148,11 +148,14 @@ private:
   //const ROArrayMeasColumn<MDirection>& getPhaseDirs() const;
   //ArrayMeasColumn<MDirection>& getPhaseDirs();
 
+  // Makes sure msc_p is ready, and returns false if it fails.
+  Bool ready_msc_p();
+  
   // Convert the directions (phase tracking centers, + DELAY_DIR and
   // REFERENCE_DIR if they start in the same frame) in the FIELD table to
   // newFrame.  Note that each direction column in the table only allows one
   // reference frame for the entire column, so all fields must share the same
-  // frame.
+  // frame.  Calls ready_msc_p() as a side effect.
   void convertFieldDirs(const MDirection::Types outType);
 
   // Private worker function for convertFieldDirs().
@@ -160,6 +163,7 @@ private:
                         const MDirection::Ref& newFrame,
                         const Bool doAll3);
 
+  // Calls ready_msc_p() as a side effect.
   Bool makeSelection(const Int selectedField);
   
   // Does phase tracking center and distance adjustment for mssel_p.
@@ -220,7 +224,8 @@ private:
   LogIO& logSink() {return sink_p;}
 
   // Initialized in ctor.  Make sure the order there matches with the order here.
-  MeasurementSet ms_p;			// Input MS
+  MeasurementSet ms_p;			// Input/Output MS
+  MSColumns      *msc_p;		// Ptr. to columns of mssel_p.
   uInt           nsel_p;		// Number of selected fields.
   uInt           nAllFields_p;	        // The total # of fields in the MS.
   const uInt       npix_p;              // Not that there are any real pixels.

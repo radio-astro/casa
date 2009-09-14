@@ -15,7 +15,6 @@ def fixvis(vis, outputvis, fldids=None, refcode=None
     if refcode or proj:
         badcsys = False
         csys = cs.newcoordsys(True)
-        tb.open(vis)
 
         if refcode:
             refcodes = csys.referencecode('dir', True)
@@ -23,8 +22,6 @@ def fixvis(vis, outputvis, fldids=None, refcode=None
                 casalog.post("refcode %s is invalid" % refcode, 'SEVERE')
                 casalog.post("Valid codes are %s" % refcodes, 'NORMAL')
                 badcsys = True
-            else:
-                casalog.post("Make sure refcode matches the reference frame of the field centers in outputvis.  Otherwise imaging will not work properly!", 'WARNING')
 
         if proj:
             projs = csys.projection('all')['types']
@@ -34,7 +31,6 @@ def fixvis(vis, outputvis, fldids=None, refcode=None
                 badcsys = True
 
         csys.done()
-        tb.close()
         if badcsys:
             return
 
@@ -59,12 +55,12 @@ def fixvis(vis, outputvis, fldids=None, refcode=None
             #if os.path.isdir(outputvis):
             #    shutil.
             shutil.copytree(vis, outputvis)
-            vis = outputvis
         except Exception, instance:
             casalog.post("*** Error %s copying %s to %s." % (instance,
                                                              vis, outputvis),
                          'SEVERE')
             return
+        vis = outputvis
     
     try:
         # Get field IDs before opening the ms so that tb doesn't interfere with

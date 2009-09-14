@@ -13,9 +13,9 @@ namespace casa {
 
 // The UvwCoords ctor has lines for the antennas, antenna offsets, and station
 // positions.  This ctor assumes they're present in msc_p if present at all.
-  MSUVWGenerator::MSUVWGenerator(MS &ms_ref, const MBaseline::Types bltype,
+  MSUVWGenerator::MSUVWGenerator(MSColumns &msc_ref, const MBaseline::Types bltype,
 				 const Muvw::Types uvwtype) :
-  msc_p(ms_ref),				    	
+  msc_p(msc_ref),				    	
   bl_csys_p(MBaseline::Ref(bltype)), // MBaseline::J2000, ITRF, etc.
   uvw_csys_p(uvwtype),               // uvw_csys_p(Muvw::J2000, ITRF, etc.)
   antColumns_p(msc_p.antenna()),
@@ -26,15 +26,16 @@ namespace casa {
 {
   // It seems that using a String is the only safe way to go from say,
   // MPosition::ITRF to MBaseline::ITRF.
-  MBaseline::getType(refposref_p, MPosition::showType(refpos_p.getRef().getType()));
+  MBaseline::getType(refposref_p,
+                     MPosition::showType(refpos_p.getRef().getType()));
 
-  fill_bl_an(bl_an_p, ms_ref);		
+  fill_bl_an(bl_an_p);		
 }
 
 MSUVWGenerator::~MSUVWGenerator(){
 }
 
-void MSUVWGenerator::fill_bl_an(Vector<MVBaseline>& bl_an_p, const MS &ms_ref)
+void MSUVWGenerator::fill_bl_an(Vector<MVBaseline>& bl_an_p)
 {
   nant_p = antPositions_p.table().nrow();
   logSink() << LogIO::DEBUG1 << "nant_p: " << nant_p << LogIO::POST;
@@ -102,20 +103,18 @@ void MSUVWGenerator::uvw_an(const MEpoch& timeCentroid, const Int fldID)
 	    << LogIO::POST;
 
   MBaseline::Ref basref(refposref_p);
-  basMeas.set(mvbl, basref);
+  basMeas.set(mvbl, basref);            // in antenna frame
   basMeas.getRefPtr()->set(measFrame);
 
-  // convert from ITRF vector to baseline vector in bl_csys_p's frame
+  // Setup a machine for converting a baseline vector from the antenna frame to
+  // bl_csys_p's frame
   MBaseline::Convert elconv(basMeas, bl_csys_p);
 
-  Muvw          uvwMeas;
-  Muvw::Ref     uvwref(uvw_csys_p, measFrame);
-  Muvw::Convert uvwconv(uvwMeas, uvwref);
- 
   for(uInt i = 0; i < nant_p; ++i){
     //TODO: (Soon!) Antenna offsets are not handled yet.
     basMeas.set(bl_an_p[i], basref);
     MBaseline basOutFrame = elconv(basMeas);
+    MBaseline::Types botype = MBaseline::castType(basOutFrame.getRef().getType());
     MVuvw uvwOutFrame(basOutFrame.getValue(), phasedir.getValue());
     
     antUVW_p[i] = uvwOutFrame.getValue();

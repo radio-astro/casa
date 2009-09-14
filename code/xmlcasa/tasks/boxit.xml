@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<!-- This is the param set for boxit -->
+
+<task type="function" name="boxit" category="imaging">
+
+  <shortdescription>Box regions in image above given threshold value.</shortdescription>
+
+  <description>Returns a list of boxes, one for each contiguous set of pixels
+  above the threshold value.  If given "regionfile", outputs boxes in
+  regionfile+'.rgn'</description>
+
+  <input>
+
+    <param type="string" name="imagename" mustexist="true">
+    <description>Name of image to threshold</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="regionfile">
+    <description>Output region file</description>
+    <value></value>
+    </param>
+
+    <param type="double" name="threshold" units="mJy">
+    <description>Threshold value.  Must include units.</description>
+    <value>0.0</value>
+    </param>
+
+    <param type="int" name="minsize">
+    <description>Minimum number of pixels for a boxable island</description>
+    <value>2</value>
+    </param>
+
+    <param type="bool" name="overwrite">
+    <description>Overwrite existing region file?</description>
+    <value>False</value>
+    </param>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+
+       This tool finds all 2-dimensional (RA/dec) regions in the given
+       image which are contiguous sets of pixels (islands) above the given ]
+       threshold.  It creates a box for each island, a rectangular "cutout".
+       The boxes are stored as regions in the output regionfile.  Works on
+       multi-plane images, but only boxes 2-D regions in each plane.
+       (Doesn't create cubes/3D boxes.)
+ 
+       imagename -- Name of input images:
+               default: none; example: imagename='myimage.image'
+       regionfile -- Name of output region file (adds extension .rgn).
+               default: none; if not given uses imagename+'.rgn'
+       threshold -- value (with units) to use for island threshold.
+               default: 0.0.
+       minsize -- minimum size of island to get a box (in number of pixels)
+               default: 2
+       overwrite -- Overwrite existing region file?
+               default: False.  If False, gives warning if file exists.
+
+  </example>
+
+</task>
+
+</casaxml>

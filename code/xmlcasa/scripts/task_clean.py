@@ -25,10 +25,13 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
 
 
 
-	#try:
-	if(1):
+	try:
+	
 		casalog.origin('clean')
 		imCln=imtool.create()
+		###if calready open ms with scratch column
+		###if mosweight use scratch columns as there in no
+		###mosweight available for no scratch column /readonly ms yet
 		imset=cleanhelper(imCln, vis, (calready or mosweight), casalog)
 		
                 
@@ -344,7 +347,7 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
 		
 		del imCln
 
-#	except Exception, instance:
-#		print '*** Error *** ',instance
-#		raise Exception, instance
+	except Exception, instance:
+		print '*** Error *** ',instance
+		raise Exception, instance
 

@@ -347,19 +347,31 @@ bool
 imager::close()
 {
  bool rstat(False);
+
+ *itsLog << LogOrigin("im", "close");
  try {
-   if(itsMS)delete itsMS;
-       itsMS = 0;
-    delete itsImager;
-    hasValidMS_p=false;
-    itsImager = new ImagerMultiMS();
-    itsImager->setPGPlotter(*itsPlotter);
+   if(itsMS && !(itsMS->isNull())){
+     *itsLog << LogIO::NORMAL3;
+     if(itsMS->isWritable())
+       *itsLog << "Flushing data to disk and detaching from file.";
+     else
+       *itsLog << "Readonly measurement set: just detaching from file.";
+     *itsLog << LogIO::POST;
+   }
+
+   delete itsMS;
+   itsMS = 0;
+   delete itsImager;
+   hasValidMS_p=false;
+   itsImager = new ImagerMultiMS();
+   itsImager->setPGPlotter(*itsPlotter);
     
-    rstat = True;
+   rstat = True;
  } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
+ Table::relinquishAutoLocks();
  return rstat;
 }
 
