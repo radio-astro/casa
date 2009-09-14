@@ -34,7 +34,7 @@
 #include <measures/Measures/Stokes.h>
 #include <components/ComponentModels/ComponentType.h>
 #include <casa/Arrays/AxesSpecifier.h>
-
+#include <measures/Measures/Stokes.h>
 
 namespace casa {
 
@@ -738,10 +738,19 @@ class ImageAnalysis
     Bool getSpectralAxisVal(const String& specaxis, Vector<Float>& specVal, 
                             const CoordinateSystem& cSys, const String& xunits);
 
-//
 
-
-        
+    // Set the include and/or exclude pixel range for fitsky(). The algorithm is:
+    // if both includepix and excludepix are set, throw and exception
+    // if neither is set and stokes=="I", all pixels >= 0 are included and all < 0 are excluded
+    // if neither is set and stokes != "I", all pixels <= 0 are included and all pixels > 0 are excluded
+    // if include/exclude has one element then -abs(element(0)) to abs(element(0)) are included/excluded
+    // if include/exclude has two elements, then the range betwenn those elements is included/excluded
+  
+    void _setFitSkyIncludeExclude(
+        const Vector<Float>& includepix, const Vector<Float>& excludepix,
+        const Stokes::StokesTypes& stokes, const Float minVal, const Float maxVal,
+        Fit2D& fitter
+    ) const;
 
 };
 
