@@ -26,13 +26,13 @@
 //#
 //# $Id: tHostInfo.cc 18093 2004-11-30 17:51:10Z ddebonis $
 
+// For sleep() and ssize_t.
+#include <unistd.h>
+
 #include <casa/OS/HostInfo.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/iostream.h>
-
-// For sleep()
-#include <unistd.h>
 
 #include <casa/namespace.h>
 int main()

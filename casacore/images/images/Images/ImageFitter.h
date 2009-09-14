@@ -30,7 +30,8 @@
 
 #include <casa/Logging/LogIO.h>
 #include <components/ComponentModels/ComponentList.h>
-#include <images/Images/PagedImage.h>
+// #include <images/Images/PagedImage.h>
+#include <images/Images/ImageInterface.h>
 #include <casa/namespace.h>
 
 namespace casa {
@@ -67,18 +68,24 @@ namespace casa {
 
         public:
 
-            // Do the fit. If componentList is specified, store the fitted components in that object.
-            ComponentList fit() const; 
-
             // constructor appropriate for processing command line arguments (from Unix shell).
             ImageFitter(Int argc, char *argv[]);
+
+            // constructor appropriate for API calls
+            ImageFitter(
+                const String& imagename, const String& box="", const String& region="",
+                const uInt ngaussInp=1, const uInt chanInp=0, const String& stokes="I"
+            ); 
+
+            // Do the fit. If componentList is specified, store the fitted components in that object.
+            ComponentList fit() const; 
 
             // destructor
             ~ImageFitter();
         private:
 
             LogIO *itsLog;
-            PagedImage<Float> *image;            
+            ImageInterface<Float> *image;
             ImageRegion imRegion;
             uInt ngauss, chan;
             String stokesString;

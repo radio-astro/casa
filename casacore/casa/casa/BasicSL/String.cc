@@ -80,6 +80,13 @@ Double String::toDouble(const String& string) {
     return var;
 }
 
+Float String::toFloat(const String& string) {
+    istringstream instr(string);
+    Float var;
+    instr >> var;
+    return var;
+}
+
 // Obtain a (separate) 'sub'-string
 SubString String::at(size_type pos, size_type len) {
   return _substr(pos, len);
