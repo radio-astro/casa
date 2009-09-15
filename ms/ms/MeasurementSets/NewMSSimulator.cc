@@ -310,16 +310,22 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
   // Now we can create the MeasurementSet and add the (empty) subtables
   ms_p=new MeasurementSet(newMS,0);
   ms_p->createDefaultSubtables(Table::New);
+
   // Its better to have an empty SOURCE subtable than none 
   // (ms.tofits for example requires one)
   // We really should fill it in ::setfield() but that can wait
-  // This is from SimpleSimulator - not sure why we're not using that.
+  // This is from SimpleSimulator
   // add the SOURCE table
-  TableDesc tdesc = MSSource::requiredTableDesc();
+  TableDesc tdesc;// = MSSource::requiredTableDesc();
+  for (uInt i = 1 ; i<=MSSource::NUMBER_PREDEFINED_COLUMNS; i++) {
+    MSSource::addColumnToDesc(tdesc, MSSource::PredefinedColumns(i));
+  }
   MSSource::addColumnToDesc(tdesc, MSSourceEnums::REST_FREQUENCY, 1);
   SetupNewTable sourceSetup(ms_p->sourceTableName(),tdesc,Table::New);
   ms_p->rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
 				   Table(sourceSetup));
+  // intialize the references to the subtables just added
+  ms_p->initRefs();
   //
   ms_p->flush();
   
@@ -576,6 +582,31 @@ void NewMSSimulator::initFields(const String& sourceName,
   fieldc.delayDirMeasCol().put(baseFieldID,direction);
   fieldc.phaseDirMeasCol().put(baseFieldID,direction);
   fieldc.referenceDirMeasCol().put(baseFieldID,direction);
+
+  MSSourceColumns& sourcec=msc.source();
+  Int baseSrcID=sourcec.nrow();
+
+  os << "Creating new source " << sourceName << ", ID "
+     << baseSrcID+1 << LogIO::DEBUG1;
+
+  ms_p->source().addRow(1); //SINGLE DISH CASE
+  sourcec.name().put(baseSrcID, sourceName);
+  sourcec.code().put(baseSrcID, calCode);
+  sourcec.time().put(baseSrcID, 0.0);
+  sourcec.sourceId().put(baseSrcID,0);
+  sourcec.directionMeas().put(baseSrcID,sourceDirection);
+  sourcec.spectralWindowId().put(baseSrcID,-1);
+  sourcec.properMotion().put(baseSrcID,Vector<Double>(1));
+  MSSpWindowColumns& spwc=msc.spectralWindow();
+  if(spwc.nrow()>0) {
+    sourcec.spectralWindowId().put(baseSrcID,1); 
+    Vector<Double> freq(1);
+    spwc.refFrequency().get(0,freq(0));
+    sourcec.restFrequency().put(baseSrcID,freq); 
+  }
+  
+
+  //directionMeas_p.setDescRefCode(ref);
 
 };
 
