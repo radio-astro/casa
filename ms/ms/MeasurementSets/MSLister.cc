@@ -72,7 +72,7 @@ MSLister::MSLister (const MeasurementSet& ms, LogIO& os)
   // default precision (in case setPrecision is not called)
   precTime_p = 7;    // hh:mm:ss.s  (0.1 s)
   precUVDist_p = 0;  // 1 wavelength
-  precUVW_p = 5;  // 1 wavelength
+  precUVW_p = 2;  // 1 centimenter
   precAmpl_p = 3;    // mJy
   precPhase_p = 1;   // 0.1 deg
   precWeight_p = 0;  // unit weight
