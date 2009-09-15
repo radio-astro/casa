@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LCExtension.cc 20279 2008-02-29 16:52:56Z gervandiepen $
+//# $Id: LCExtension.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 
 #include <lattices/Lattices/LCExtension.h>

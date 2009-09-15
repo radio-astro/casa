@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tBlock.cc 20338 2008-06-19 05:58:02Z gervandiepen $
+//# $Id: tBlock.cc 20711 2009-09-03 13:11:20Z gervandiepen $
 
 //# Includes
 
@@ -185,7 +185,7 @@ void doit()
 void testIO()
 {
   Block<Int> bl(10000);
-  for (uint i=0; i<bl.size(); ++i) {
+  for (uInt i=0; i<bl.size(); ++i) {
     bl[i] = i+1;
   }
   {
@@ -199,8 +199,8 @@ void testIO()
     Block<Int> bl2;
     aio >> bl2;
     AlwaysAssertExit (bl2.size() == bl.size());
-    for (uint i=0; i<bl2.size(); ++i) {
-      AlwaysAssertExit (bl[i] == i+1);
+    for (uInt i=0; i<bl2.size(); ++i) {
+      AlwaysAssertExit (bl[i] == Int(i+1));
     }
   }
 }

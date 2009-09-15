@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasIERS.cc 20362 2008-06-27 04:54:24Z Malte.Marquarding $
+//# $Id: MeasIERS.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 //# Includes
 #include <measures/Measures/MeasIERS.h>

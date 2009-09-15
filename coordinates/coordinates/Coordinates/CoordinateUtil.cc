@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CoordinateUtil.cc 20648 2009-06-29 07:22:00Z gervandiepen $
+//# $Id: CoordinateUtil.cc 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>

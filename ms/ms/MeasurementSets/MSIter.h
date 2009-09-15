@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSIter.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MSIter.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #ifndef MS_MSITER_H
 #define MS_MSITER_H

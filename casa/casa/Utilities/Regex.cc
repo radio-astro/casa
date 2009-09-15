@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Regex.cc 20606 2009-05-19 08:05:56Z gervandiepen $
+//# $Id: Regex.cc 20698 2009-08-31 12:02:32Z gervandiepen $
 
 // Regex class implementation
 
@@ -179,14 +179,6 @@ Regex &Regex::operator=(const String &strng) {
   dealloc();
   create(strng, 0, 40, 0);
   return *this;
-}
-
-const String &Regex::regexp() const {
-  return *str;
-}
-
-const Char *Regex::transtable() const {
-  return trans;
 }
 
 String Regex::fromPattern(const String &pattern)

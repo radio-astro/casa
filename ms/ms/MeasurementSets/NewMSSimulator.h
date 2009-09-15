@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: NewMSSimulator.h 20710 2009-09-03 11:12:54Z gervandiepen $
 
 #ifndef MS_NEWMSSIMULATOR_H
 #define MS_NEWMSSIMULATOR_H

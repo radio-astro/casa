@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5.h 20398 2008-09-11 13:17:49Z gervandiepen $
+//# $Id: HDF5.h 20712 2009-09-03 14:36:23Z gervandiepen $
 
 #ifndef CASA_HDF5_H
 #define CASA_HDF5_H
@@ -107,9 +107,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // for HDF5 meta data like attributes, property lists, etc..
 //
 // <note>
-// The compilation of these HDF5 classes is conditionally by means of ifdef-s
-// on HAVE_LIBHDF5 which is defined in HDF5Config.h. This file is generated
-// by the build system.
+// All HDF5 classes and all their functions are compiled, but it depends on
+// the setting of HAVE_HDF5 how. If not set, all these functions are merely stubs
+// and the class constructors throw an exception when used.
+// The function <src>HDF5Object::hasHDF5Support()</src> tells if HDF5 is used.
 // See the casacore build instructions at casacore.googlecode.com
 // for more information.
 // </note>

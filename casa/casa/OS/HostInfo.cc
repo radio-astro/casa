@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: HostInfo.cc 20110 2007-08-22 08:09:30Z jcguzmantanaka $
+//# $Id: HostInfo.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <casa/BasicSL/String.h>
 #include <casa/OS/HostInfo.h>

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5Iterator.cc 20600 2009-05-11 09:33:40Z gervandiepen $
+//# $Id: tHDF5Iterator.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <casa/aips.h>
 #include <lattices/Lattices/HDF5Lattice.h>

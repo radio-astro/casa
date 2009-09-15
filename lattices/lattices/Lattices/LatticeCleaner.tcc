@@ -22,7 +22,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeCleaner.tcc 20577 2009-04-23 13:05:42Z max.voronkov $
+//# $Id: LatticeCleaner.tcc 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>

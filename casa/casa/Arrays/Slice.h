@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Slice.h 20482 2009-01-08 10:51:57Z gervandiepen $
+//# $Id: Slice.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #ifndef CASA_SLICE_H
 #define CASA_SLICE_H

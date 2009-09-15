@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSelectionError.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSSelectionError.h 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #ifndef MS_MSSELECTIONERROR_H
 #define MS_MSSELECTIONERROR_H

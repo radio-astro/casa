@@ -24,13 +24,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: HostInfo.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: HostInfo.h 20703 2009-09-03 06:56:12Z gervandiepen $
 
 #ifndef CASA_HOSTINFO_H
 #define CASA_HOSTINFO_H
 
 #include <casa/aips.h>
 #include <cstring>
+#include <unistd.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

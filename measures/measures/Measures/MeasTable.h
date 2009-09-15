@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasTable.h 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: MeasTable.h 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #ifndef MEASURES_MEASTABLE_H
 #define MEASURES_MEASTABLE_H

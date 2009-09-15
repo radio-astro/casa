@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFeedIndex.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSFeedIndex.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <ms/MeasurementSets/MSFeedIndex.h>
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayBase.cc 20234 2008-02-07 16:53:38Z gervandiepen $
+//# $Id: ArrayBase.cc 20705 2009-09-03 09:04:46Z gervandiepen $
 
 #include <casa/Arrays/ArrayBase.h>
 #include <casa/Arrays/ArrayError.h>
@@ -483,7 +483,7 @@ Bool ArrayBase::ok() const
       size_t off = ArrayIndexOffset(ndim(), originalLength_p.storage(),
                                     inc_p.storage(), pos);
       pos(i) = 0;
-      if (steps_p(i) != off) {
+      if (size_t(steps_p(i)) != off) {
 	return False;
       }
     }
