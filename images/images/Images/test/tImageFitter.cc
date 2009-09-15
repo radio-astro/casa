@@ -44,31 +44,126 @@ int main(Int argc, char *argv[]) {
     Path path(argv[0]);
     String fixturesDir = path.dirName() + "/fixtures/tImageFitter/";
     try {
-        ImageFitter fitter = ImageFitter(fixturesDir + "gaussian_model.fits");
-        ComponentList compList = fitter.fit();
-        Vector<Quantity> flux;
-        compList.getFlux(flux,0);
-        // I stokes flux test
-        AlwaysAssert(near(flux(0).getValue(), 60318.5801, 1e-4), AipsError);
-        // Q stokes flux test
-        AlwaysAssert(flux(1).getValue() == 0, AipsError);
-        MDirection direction = compList.getRefDirection(0);
-        AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), 0.000213318, 1e-5), AipsError);
-        AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), 1.939254e-5, 1e-5), AipsError);
-
         Double arcsecsPerRadian = 180*3600/C::pi;
-        Vector<Double> parameters = compList.getShape(0)->parameters();
+        {
+            // test fitter using all available image pixels with model with no noise
+            ImageFitter fitter = ImageFitter(fixturesDir + "gaussian_model.fits");
+            ComponentList compList = fitter.fit();
+            Vector<Quantity> flux;
+            compList.getFlux(flux,0);
+            // I stokes flux test
+            AlwaysAssert(near(flux(0).getValue(), 60318.5801, 1e-4), AipsError);
+            // Q stokes flux test
+            AlwaysAssert(flux(1).getValue() == 0, AipsError);
+            MDirection direction = compList.getRefDirection(0);
+            AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), 0.000213318, 1e-5), AipsError);
+            AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), 1.939254e-5, 1e-5), AipsError);
 
-        Double majorAxis = arcsecsPerRadian*parameters(0);
-        AlwaysAssert(near(majorAxis, 23.548201, 1e-7), AipsError);
+            Vector<Double> parameters = compList.getShape(0)->parameters();
 
-        Double minorAxis = arcsecsPerRadian*parameters(1);
-        AlwaysAssert(near(minorAxis, 18.838560, 1e-7), AipsError);
+            Double majorAxis = arcsecsPerRadian*parameters(0);
+            AlwaysAssert(near(majorAxis, 23.548201, 1e-7), AipsError);
 
-        Double positionAngle = 180/C::pi*parameters(2);
-        AlwaysAssert(near(positionAngle, 120.0, 1e-7), AipsError);
+            Double minorAxis = arcsecsPerRadian*parameters(1);
+            AlwaysAssert(near(minorAxis, 18.838560, 1e-7), AipsError);
 
-        cout<< "ok"<< endl;
+            Double positionAngle = 180/C::pi*parameters(2);
+            AlwaysAssert(near(positionAngle, 120.0, 1e-7), AipsError);
+        }
+        String noisyImage = fixturesDir + "gaussian_model_with_noise.fits";
+        {
+            // test fitter using all available image pixels with model with noise
+            ImageFitter fitter = ImageFitter(noisyImage);
+            ComponentList compList = fitter.fit();
+            Vector<Quantity> flux;
+            compList.getFlux(flux,0);
+            // I stokes flux test
+            AlwaysAssert(near(flux(0).getValue(), 60340.7606, 1e-5), AipsError);
+            // Q stokes flux test
+            AlwaysAssert(flux(1).getValue() == 0, AipsError);
+            MDirection direction = compList.getRefDirection(0);
+            AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), 0.000213381, 1e-5), AipsError);
+            AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), 1.93571e-05, 1e-5), AipsError);
+
+            Vector<Double> parameters = compList.getShape(0)->parameters();
+
+            Double majorAxis = arcsecsPerRadian*parameters(0);
+            AlwaysAssert(near(majorAxis, 23.546913, 1e-7), AipsError);
+
+            Double minorAxis = arcsecsPerRadian*parameters(1);
+            AlwaysAssert(near(minorAxis, 18.876406, 1e-7), AipsError);
+
+            Double positionAngle = 180/C::pi*parameters(2);
+            AlwaysAssert(near(positionAngle, 119.897741, 1e-7), AipsError);
+        }
+        {
+            // test fitter using a box region with model with noise
+            ImageFitter fitter = ImageFitter(noisyImage, "130,89,170,129");
+            ComponentList compList = fitter.fit();
+            Vector<Quantity> flux;
+            compList.getFlux(flux,0);
+            // I stokes flux test
+            AlwaysAssert(near(flux(0).getValue(), 60323.3212, 1e-5), AipsError);
+            // Q stokes flux test
+            AlwaysAssert(flux(1).getValue() == 0, AipsError);
+            MDirection direction = compList.getRefDirection(0);
+            AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), 0.000213372, 1e-5), AipsError);
+            AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), 1.93593e-05, 1e-5), AipsError);
+
+            Vector<Double> parameters = compList.getShape(0)->parameters();
+
+            Double majorAxis = arcsecsPerRadian*parameters(0);
+            AlwaysAssert(near(majorAxis, 23.545291, 1e-7), AipsError);
+
+            Double minorAxis = arcsecsPerRadian*parameters(1);
+            AlwaysAssert(near(minorAxis, 18.866377, 1e-7), AipsError);
+
+            Double positionAngle = 180/C::pi*parameters(2);
+            AlwaysAssert(near(positionAngle, 119.806997, 1e-7), AipsError);
+        }
+        {
+            // test fitter using an includepix (i=0) and excludepix (i=1) range with model with noise
+            for (int i=0; i<2; i++) {
+                Vector<Float> includepix, excludepix;
+                if (i == 0) {
+                    includepix.resize(2);
+                    includepix(0) = 40;
+                    includepix(1) = 121;
+                }
+                else {
+                    includepix(0);
+                    excludepix.resize(2);
+                    excludepix(0) = -10;
+                    excludepix(1) = 40;
+                          
+                }
+                ImageFitter fitter = ImageFitter(
+                        noisyImage, "", "", 1, 0, "I", includepix, excludepix
+                );
+                ComponentList compList = fitter.fit();
+                Vector<Quantity> flux;
+                compList.getFlux(flux,0);
+                // I stokes flux test
+                AlwaysAssert(near(flux(0).getValue(), 60354.3232, 1e-5), AipsError);
+                // Q stokes flux test
+                AlwaysAssert(flux(1).getValue() == 0, AipsError);
+                MDirection direction = compList.getRefDirection(0);
+                AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), 0.000213391, 1e-5), AipsError);
+                AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), 1.93449e-05, 1e-5), AipsError);
+
+                Vector<Double> parameters = compList.getShape(0)->parameters();
+
+                Double majorAxis = arcsecsPerRadian*parameters(0);
+                AlwaysAssert(near(majorAxis, 23.541712, 1e-7), AipsError);
+
+                Double minorAxis = arcsecsPerRadian*parameters(1);
+                AlwaysAssert(near(minorAxis, 18.882029, 1e-7), AipsError);
+
+                Double positionAngle = 180/C::pi*parameters(2);
+                AlwaysAssert(near(positionAngle, 119.769648, 1e-7), AipsError);
+            }
+         }
+         cout << "ok" << endl;
     }
     catch (AipsError x) {
         cerr << "Exception caught: " << x.getMesg() << endl;
