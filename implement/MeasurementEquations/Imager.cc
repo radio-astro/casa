@@ -1584,9 +1584,9 @@ Bool Imager::defineImage(const Int nx, const Int ny,
 			 const MRadialVelocity& mStart, 
 			 const Quantity& qStep,
 			 const Vector<Int>& spectralwindowids,
+			 const Int facets,
 			 const Quantity& restFreq,
                          const MFrequency::Types& mFreqFrame,
-			 const Int facets,
 			 const Quantity& distance, const Bool dotrackDir, 
 			 const MDirection& trackDir)
 {
@@ -2058,7 +2058,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     dataspectralwindowids_p=spectralwindowids;
     datafieldids_p.resize(fieldids.nelements());
     datafieldids_p=fieldids;
-    useModelCol_p=useModelCol;
+    //    useModelCol_p=useModelCol;
     
     
     

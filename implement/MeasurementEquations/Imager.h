@@ -176,9 +176,10 @@ class Imager
 			   const MRadialVelocity& mStart, 
 			   const Quantity& qStep,
 			   const Vector<Int>& spectralwindowids, 
-			   const Quantity& restFreq,
-                           const MFrequency::Types& mFreqFrame,
-			   const Int facets, const Quantity& distance,
+			   const Int facets=1, 
+			   const Quantity& restFreq=Quantity(0,"Hz"),
+                           const MFrequency::Types& mFreqFrame=MFrequency::LSRK,
+			   const Quantity& distance=Quantity(0,"m"),
 			   const Bool trackSource=False, const MDirection& 
 			   trackDir=MDirection(Quantity(0.0, "deg"), 
 					       Quantity(90.0, "deg")));
