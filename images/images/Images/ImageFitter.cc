@@ -70,8 +70,10 @@ namespace casa {
         input.create("ngauss", "1");
         input.create("chan", "0");
         input.create("stokes", "I");
+        input.create("mask","");
         input.create("includepix", "");
         input.create("excludepix", "");
+        // input.create("residual", "");
         input.readArguments(argc, argv);
         String imagename = input.getString("imagename");
 
@@ -81,6 +83,8 @@ namespace casa {
         // input.getInt() will default to 0 if param not specified
         chan = input.getInt("chan");
         stokesString = input.getString("stokes");
+        mask = input.getString("mask");
+        // residual = input.getString("residual");
 
         Vector<String> includePixParts = stringToVector(input.getString("includepix")); 
         Vector<String> excludePixParts = stringToVector(input.getString("excludepix"));
@@ -98,7 +102,9 @@ namespace casa {
     ImageFitter::ImageFitter(
         const String& imagename, const String& box, const String& region,
         const uInt ngaussInp, const uInt chanInp, const String& stokes,
+        const String& maskInp,
         const Vector<Float>& includepix, const Vector<Float>& excludepix
+        // , const String& residualInp
     ) {
         itsLog = new LogIO();
         *itsLog << LogOrigin("ImageFitter", "constructor");
@@ -106,8 +112,10 @@ namespace casa {
         ngauss = ngaussInp;
         chan = chanInp;
         stokesString = stokes;
+        mask = maskInp;
         includePixelRange = includepix;
         excludePixelRange = excludepix;
+        // residual = residualInp;
         _construct(imagename, box, region);
     }
 
@@ -121,7 +129,6 @@ namespace casa {
         Array<Float> residPixels;
         Array<Bool> residMask;
         Bool converged;
-        String mask;
         Vector<String> models(ngauss);
         models.set("gaussian");
         Vector<String> fixedparams;
@@ -133,6 +140,12 @@ namespace casa {
             chan, stokesString, mask, models,
             estimate, fixedparams, includePixelRange, excludePixelRange
         );   
+       
+        // if (! residual.empty()) {
+            // construct the residual image
+        //    PagedImage<Float> (image->shape(), image->coordinates(), residual);
+        //    *itsLog << LogIO::NORMAL << "Wrote residual image " << residual << LogIO::POST;
+        // }
 
         Flux<Double> flux;
         for(uInt k=0; k<compList.nelements(); ++k) {
@@ -306,8 +319,6 @@ namespace casa {
         WCBox wcBox(lcBox, image->coordinates());
         imRegion = ImageRegion(wcBox);
     }
+
 }
-
-
-
 

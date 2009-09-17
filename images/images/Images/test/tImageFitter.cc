@@ -34,6 +34,10 @@
 #include <components/ComponentModels/ComponentShape.h>
 #include <casa/BasicSL/Constants.h>
 
+void writeTestString(const String& test) {
+    cout << "\n" << "*** " << test << " ***" << endl;
+}
+
 int main(Int argc, char *argv[]) {
     // just to eliminate compiler warning about argc not being used
     if (argc > 1) {
@@ -45,8 +49,11 @@ int main(Int argc, char *argv[]) {
     String fixturesDir = path.dirName() + "/fixtures/tImageFitter/";
     try {
         Double arcsecsPerRadian = 180*3600/C::pi;
+        String test;
         {
-            // test fitter using all available image pixels with model with no noise
+            writeTestString(
+                "test fitter using all available image pixels with model with no noise"
+            );
             ImageFitter fitter = ImageFitter(fixturesDir + "gaussian_model.fits");
             ComponentList compList = fitter.fit();
             Vector<Quantity> flux;
@@ -72,7 +79,9 @@ int main(Int argc, char *argv[]) {
         }
         String noisyImage = fixturesDir + "gaussian_model_with_noise.fits";
         {
-            // test fitter using all available image pixels with model with noise
+            writeTestString(
+                "test fitter using all available image pixels with model with noise"
+            );
             ImageFitter fitter = ImageFitter(noisyImage);
             ComponentList compList = fitter.fit();
             Vector<Quantity> flux;
@@ -97,7 +106,9 @@ int main(Int argc, char *argv[]) {
             AlwaysAssert(near(positionAngle, 119.897741, 1e-7), AipsError);
         }
         {
-            // test fitter using a box region with model with noise
+            writeTestString(
+                "test fitter using a box region with model with noise"
+            );
             ImageFitter fitter = ImageFitter(noisyImage, "130,89,170,129");
             ComponentList compList = fitter.fit();
             Vector<Quantity> flux;
@@ -123,27 +134,42 @@ int main(Int argc, char *argv[]) {
         }
         {
             // test fitter using an includepix (i=0) and excludepix (i=1) range with model with noise
-            for (int i=0; i<2; i++) {
+            for (uInt i=0; i<3; i++) {
+                String mask;
                 Vector<Float> includepix, excludepix;
-                if (i == 0) {
-                    includepix.resize(2);
-                    includepix(0) = 40;
-                    includepix(1) = 121;
+                switch (i) {
+                    case 0:
+                        writeTestString("test using includepix range");
+                        includepix.resize(2);
+                        includepix(0) = 40;
+                        includepix(1) = 121;
+                        mask = "";
+                        break;
+                    case 1:
+                        writeTestString("test using excludepix range");
+                        includepix.resize(0);
+                        excludepix.resize(2);
+                        excludepix(0) = -10;
+                        excludepix(1) = 40;
+                        mask = "";
+                        break;
+                    case 2:
+                        includepix.resize(0);
+                        excludepix.resize(0);
+                        mask = "\"" + noisyImage + "\">40";
+                        writeTestString("test using LEL mask " + mask);
+                        break;
                 }
-                else {
-                    includepix(0);
-                    excludepix.resize(2);
-                    excludepix(0) = -10;
-                    excludepix(1) = 40;
-                          
-                }
+                cout << "running " <<  i << endl;
                 ImageFitter fitter = ImageFitter(
-                        noisyImage, "", "", 1, 0, "I", includepix, excludepix
+                        noisyImage, "", "", 1, 0, "I", mask, includepix, excludepix
                 );
+                cout << "ran " << i << endl;
                 ComponentList compList = fitter.fit();
                 Vector<Quantity> flux;
                 compList.getFlux(flux,0);
                 // I stokes flux test
+                cout << "flux " << flux(0).getValue() << endl;
                 AlwaysAssert(near(flux(0).getValue(), 60354.3232, 1e-5), AipsError);
                 // Q stokes flux test
                 AlwaysAssert(flux(1).getValue() == 0, AipsError);
