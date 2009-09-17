@@ -247,8 +247,11 @@ void FTMachine::initMaps(const VisBuffer& vb) {
   matchAllSpwChans(vb);
 
   chanMap.resize();
-  chanMap=multiChanMap_p[vb.spectralWindow()];
 
+  //  cout << "VBSPW " << vb.spectralWindow() << "  " << multiChanMap_p[vb.spectralWindow()] << endl;
+  chanMap=multiChanMap_p[vb.spectralWindow()];
+  if(chanMap.nelements() == 0)
+    chanMap=Vector<Int>(vb.frequency().nelements(), -1);
 
   {
     logIO() << LogIO::DEBUGGING << "Channel Map: " << chanMap << LogIO::POST;
@@ -338,7 +341,10 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
       convertArray(visFreq, lsrFreq_p);
     }
     else{
+      
       convertArray(visFreq, vb.frequency());
+      lsrFreq_p.resize();
+      lsrFreq_p=vb.frequency();
     }
     if(type==FTMachine::MODEL){
       origdata.reference(vb.modelVisCube());
@@ -895,6 +901,7 @@ Bool FTMachine::setSpw(Vector<Int>& spws, Bool validFrame){
 Bool FTMachine::matchAllSpwChans(const VisBuffer& vb){
 
   vb.allSelectedSpectralWindows(selectedSpw_p, nVisChan_p);
+
   doConversion_p.resize(max(selectedSpw_p)+1);
   doConversion_p.set(False);
   
@@ -974,6 +981,7 @@ Bool FTMachine::matchChannel(const Int& spw,
 
   multiChanMap_p[spw].resize();
   multiChanMap_p[spw]=chanMap;
+
 
   if(nFound==0) {
     /*
