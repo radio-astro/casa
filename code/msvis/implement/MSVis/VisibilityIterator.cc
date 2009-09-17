@@ -57,6 +57,16 @@ msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
 {
 
+ 
+    
+  initsinglems();
+  
+
+
+}
+
+
+void ROVisibilityIterator::initsinglems(){
   //  cout << "addDefaultSortColumns = False!" << endl;
   This = (ROVisibilityIterator*)this;
   isMultiMS_p=False;
@@ -80,12 +90,21 @@ floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
   selectChannel(blockNGroup, blockStart, blockWidth, blockIncr,
 		blockSpw);
     
-    
-
-  
-
 
 }
+ROVisibilityIterator::ROVisibilityIterator(const MeasurementSet &ms,
+					   const Block<Int>& sortColumns, const Bool addDefaultSort,
+					   Double timeInterval)
+ :msIter_p(ms,sortColumns,timeInterval, addDefaultSort),
+curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
+msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
+  floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False){
+
+
+  initsinglems();
+
+}
+
 
 ROVisibilityIterator::ROVisibilityIterator(const Block<MeasurementSet> &mss,
 					   const Block<Int>& sortColumns,
@@ -95,6 +114,24 @@ curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
 {
+  
+  initmultims(mss);
+
+}
+
+ROVisibilityIterator::ROVisibilityIterator(const Block<MeasurementSet> &mss,
+					   const Block<Int>& sortColumns, const Bool addDefaultSort,
+					   Double timeInterval)
+  : msIter_p(mss,sortColumns,timeInterval,addDefaultSort),
+curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
+msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
+    floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False){
+
+  initmultims(mss);
+
+}
+void ROVisibilityIterator::initmultims(const Block<MeasurementSet> &mss){
+ 
   This = (ROVisibilityIterator*)this; 
   msCounter_p=0;
   isMultiMS_p=True;
@@ -122,8 +159,8 @@ floatDataFound_p(False),lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
   selectChannel(blockNGroup, blockStart, blockWidth, blockIncr,
 		blockSpw);
 
-
 }
+
 
 ROVisibilityIterator::ROVisibilityIterator(const ROVisibilityIterator& other)
 {
@@ -340,7 +377,7 @@ void ROVisibilityIterator::setSelTable()
     if (curEndRow_p >= curTableNumRow_p) curEndRow_p=curTableNumRow_p-1;
   } else {
     for (curEndRow_p=curStartRow_p+1; curEndRow_p<curTableNumRow_p && 
-	   time_p(curEndRow_p)==time_p(curEndRow_p-1); 
+    	   time_p(curEndRow_p)==time_p(curEndRow_p-1); 
 	 curEndRow_p++);
     curEndRow_p--;
   }
@@ -467,6 +504,8 @@ void ROVisibilityIterator::setTileCache(){
   // This function sets the tile cache because of a feature in 
   // sliced data access that grows memory dramatically in some cases
   if(useSlicer_p){
+
+
     const MeasurementSet& thems=msIter_p.ms();
     const ColumnDescSet& cds=thems.tableDesc().columnDescSet();
     ROArrayColumn<Complex> colVis;
@@ -478,9 +517,15 @@ void ROVisibilityIterator::setTileCache(){
 
     for (uInt k=0; k< columns.nelements(); ++k){
       if (cds.isDefined(columns(k))) {
+
+
+
 	colVis.attach(thems,columns(k));
 	String dataManType = colVis.columnDesc().dataManagerType();
+
+
 	if(dataManType.contains("Tiled")){
+
 	  ROTiledStManAccessor tacc(thems, 
 				    colVis.columnDesc().dataManagerGroup());
 	  uInt nHyper = tacc.nhypercubes();
@@ -511,6 +556,78 @@ void ROVisibilityIterator::setTileCache(){
   
 }
 
+/*
+void ROVisibilityIterator::setTileCache(){
+  // This function sets the tile cache because of a feature in 
+  // sliced data access that grows memory dramatically in some cases
+  //if(useSlicer_p){
+  
+  {   
+    const MeasurementSet& thems=msIter_p.ms();
+    const ColumnDescSet& cds=thems.tableDesc().columnDescSet();
+    ROArrayColumn<Complex> colVis;
+    ROArrayColumn<Float> colwgt;
+    Vector<String> columns(3);
+    columns(0)=MS::columnName(MS::DATA);
+    columns(1)=MS::columnName(MS::CORRECTED_DATA);
+    columns(2)=MS::columnName(MS::MODEL_DATA);
+    //cout << "COL " << columns << endl;
+    //columns(4)=MS::columnName(MS::IMAGING_WEIGHT);
+    for (uInt k=0; k< 3; ++k){
+      //cout << "IN loop k " << k << endl;
+      if (thems.tableDesc().isColumn(columns(k)) ) {
+	
+	colVis.attach(thems,columns(k));
+	String dataManType;
+	dataManType = colVis.columnDesc().dataManagerType();
+	//cout << "dataManType " << dataManType << endl;
+	if(dataManType.contains("Tiled")){
+       
+	  ROTiledStManAccessor tacc(thems, 
+				    colVis.columnDesc().dataManagerGroup());
+	  uInt nHyper = tacc.nhypercubes();
+	  // Find smallest tile shape
+	  Int lowestProduct = 0;
+	  Int lowestId = 0;
+	  Bool firstFound = False;
+	  for (uInt id=0; id < nHyper; id++) {
+	    Int product = tacc.getTileShape(id).product();
+	    if (product > 0 && (!firstFound || product < lowestProduct)) {
+	      lowestProduct = product;
+	      lowestId = id;
+	      if (!firstFound) firstFound = True;
+	    }
+	  }
+	  Int nchantile;
+	  IPosition tileshape=tacc.getTileShape(lowestId);
+	  IPosition axisPath(3,2,0,1);
+	  //nchantile=tileshape(1);
+	  tileshape(1)=channelGroupSize_p;
+	  tileshape(2)=curNumRow_p;
+	  //cout << "cursorshape " << tileshape << endl;
+	  nchantile=tacc.calcCacheSize(0, tileshape, axisPath);
+	
+	//  if(nchantile > 0)
+	 //   nchantile=channelGroupSize_p/nchantile*10;
+	 // if(nchantile<3)
+	  //  nchantile=10;
+	 
+	  ///////////////
+	  //nchantile *=8;
+	  nchantile=1;
+	  //tileshape(2)=tileshape(2)*8;
+	  //////////////
+	  //cout << tacc.cacheSize(0) << " nchantile "<< nchantile << " max cache size " << tacc.maximumCacheSize() << endl; 
+	  tacc.setCacheSize (0, tileshape, axisPath);
+	  //cout << k << "  " << columns(k) << " cache size  " <<  tacc.cacheSize(0) << endl;
+	  
+	}
+      }
+    }
+  }
+  
+}
+*/
 
 void ROVisibilityIterator::attachColumns()
 {
@@ -1577,13 +1694,24 @@ VisibilityIterator::VisibilityIterator(MeasurementSet &MS,
 {
 }
 
+VisibilityIterator::VisibilityIterator(MeasurementSet &MS, 
+				       const Block<Int>& sortColumns, const Bool addDefSort,
+				       Double timeInterval)
+ :ROVisibilityIterator(MS, sortColumns, addDefSort, timeInterval)
+{
+}
 VisibilityIterator::VisibilityIterator(Block<MeasurementSet>& mss, 
 				       const Block<Int>& sortColumns, 
 				       Double timeInterval)
 :ROVisibilityIterator(mss, sortColumns, timeInterval)
 {
 }
-
+VisibilityIterator::VisibilityIterator(Block<MeasurementSet>& mss, 
+				       const Block<Int>& sortColumns, const Bool addDefSort,
+				       Double timeInterval)
+ :ROVisibilityIterator(mss, sortColumns, addDefSort, timeInterval)
+{
+}
 
 VisibilityIterator::VisibilityIterator(const VisibilityIterator & other)
 {

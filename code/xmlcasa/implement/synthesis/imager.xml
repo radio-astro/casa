@@ -879,6 +879,20 @@ the source is at the first time observed in the selected data.
      <value></value>
      </param>
 
+     <param type="string" name="frame">
+     <description>frequency frame of output image (default "", same as input)
+     </description>
+     <value>LSRK</value>
+     <value>LSRD</value>
+     <value>BARY</value>
+     <value>GEO</value>
+     <value>TOPO</value>
+     <value>GALACTO</value>
+     <value>LGROUP</value>
+     <value>CMB</value>
+     <value></value>
+     </param>
+
      <param type="int" name="facets">
      <description>Number of facets on each axis</description>
      <value>1</value>
@@ -4242,7 +4256,7 @@ or <link anchor="imager:imager.setbeam.function">setbeam</link>.
 </example>
 </method>
 
- 
+
    <method type="function" name="uvrange">
    <shortdescription>Select data within the limit of a given range</shortdescription>
    

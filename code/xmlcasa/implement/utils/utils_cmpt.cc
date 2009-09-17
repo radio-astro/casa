@@ -239,5 +239,40 @@ utils::removetable(const std::vector<std::string> &tablenames)
   return rstat;
 }
 
+::casac::record *utils::tableinfo(const std::string &tablename) {
+    Vector<Int> info = casa::DOos::lockInfo(tablename);
+    ::casac::record *result = new record( );
+
+    switch( info[0] ) {
+    case 3:
+	result->insert("lockstatus", "write");
+	break;
+    case 2:
+	result->insert("lockstatus", "read");
+	break;
+    case 1:
+	result->insert("lockstatus", "open");
+	break;
+    case 0:
+	result->insert("lockstatus", "not in use");
+	break;
+    default:
+	result->insert("lockstatus", "unknown");
+    }
+
+    result->insert("lockpid", info[1]);
+    result->insert("lockperm", info[2] ? true : false);
+    return result;
+}
+
+std::vector<std::string> utils::lockedtables( ) {
+    Vector<String> locks = Table::getLockedTables( );
+    std::vector<std::string> result;
+    for ( int x = 0; x < locks.nelements(); ++x ) {
+	result.push_back(locks[x]);
+    }
+    return result;
+}
+
 } // casac namespace
 

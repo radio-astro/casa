@@ -180,8 +180,16 @@ bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode)
   return rstat;
 }
 
-bool
-imager::clean(const std::string& algorithm, const int niter, const double gain, const ::casac::variant& threshold, const bool displayprogress, const std::vector<std::string>& model, const std::vector<bool>& keepfixed, const std::string& complist, const std::vector<std::string>& mask, const std::vector<std::string>& image, const std::vector<std::string>& residual, const std::vector<std::string>& psfnames, const bool interactive, const int npercycle, const std::string& masktemplate, const bool async)
+bool imager::clean(const std::string& algorithm, const int niter, const double gain,
+                   const ::casac::variant& threshold, const bool displayprogress,
+                   const std::vector<std::string>& model,
+                   const std::vector<bool>& keepfixed, const std::string& complist,
+                   const std::vector<std::string>& mask,
+                   const std::vector<std::string>& image,
+                   const std::vector<std::string>& residual,
+                   const std::vector<std::string>& psfnames,
+                   const bool interactive, const int npercycle,
+                   const std::string& masktemplate, const bool async)
 {
 
    Bool rstat(False);
@@ -1259,7 +1267,9 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 		    const ::casac::variant& start, 
 		    const ::casac::variant& step, 
 		    const std::vector<int>& spwid, 
-		    const ::casac::variant& restfreq, const int facets, 
+		    const ::casac::variant& restfreq, 
+	            const std::string& frame,
+	            const int facets, 
 		    const ::casac::variant& movingsource,
 		    const ::casac::variant& distance)
 {
@@ -1340,6 +1350,18 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
       
       casa::Quantity restFreq= casaQuantity(restfreq);
       casa::Quantity cdistance=casaQuantity(distance);
+
+      ROMSSpWindowColumns spwc(itsMS->spectralWindow());
+      casa::String baseframe = MFrequency::showType(spwc.measFreqRef()(0));
+      casa::String cframe=toCasaString(frame);
+      if(baseframe==cframe or cframe=="") {
+        cframe=baseframe;
+      } 
+      casa::MFrequency::Types mfframe;
+      if(!casa::MFrequency::getType(mfframe,cframe)) {
+        *itsLog << LogIO::SEVERE << "Could not interprete frequency frame type "
+                << LogIO::POST;
+      }
       Bool domovingSource=False;
       casa::MDirection movingDir;
       if(toCasaString(movingsource)!=String("")){
@@ -1353,7 +1375,7 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
       rstat = itsImager->defineImage(nX, nY, cellX, cellY, stokes, phaseCenter, 
 				     fieldid, lamoda, nchan, startoo, 
 				     stepoo, mfreq, mvel,  qstep, 
-				     Vector<Int>(spwid), restFreq, facets,
+				     Vector<Int>(spwid), restFreq, mfframe, facets,
 				     cdistance, domovingSource, movingDir);
     } catch  (AipsError x) {
       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

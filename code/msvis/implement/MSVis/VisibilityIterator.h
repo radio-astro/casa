@@ -143,10 +143,18 @@ public:
 		       const Block<Int>& sortColumns, 
 		       Double timeInterval=0);
 
-  // Same as previous constructor, but with multiple MSs to iterate over.
+  ROVisibilityIterator(const MeasurementSet& ms, 
+		       const Block<Int>& sortColumns, const Bool addDefaultSortCols, 
+		       Double timeInterval=0);
+ 
+ // Same as previous constructor, but with multiple MSs to iterate over.
   ROVisibilityIterator(const Block<MeasurementSet>& mss,
 		       const Block<Int>& sortColumns, 
 		       Double timeInterval=0);
+   ROVisibilityIterator(const Block<MeasurementSet>& mss,
+			const Block<Int>& sortColumns, const Bool addDefaultSortCols, 
+			Double timeInterval=0);
+
 
   // Copy construct. This calls the assigment operator.
   ROVisibilityIterator(const ROVisibilityIterator & other);
@@ -509,6 +517,10 @@ protected:
 			     Cube<Complex>& data) const;
   virtual void getDataColumn(DataColumn whichOne, Cube<Complex>& data) const;
 
+  //constructor helpers
+  virtual void initsinglems();
+  virtual void initmultims(const Block<MeasurementSet>& mss);
+
   //Re-Do the channel selection in multi ms case 
   void doChannelSelection();
   //Set the tile cache size....when using slice access if tile cache size is 
@@ -686,9 +698,15 @@ public:
   VisibilityIterator();
   VisibilityIterator(MeasurementSet & ms, const Block<Int>& sortColumns, 
        Double timeInterval=0);
+  VisibilityIterator(MeasurementSet & ms, const Block<Int>& sortColumns, 
+		     const Bool addDefaultSortCols,
+		     Double timeInterval=0);
   // Same as previous constructor, but with multiple MSs to iterate over.
   VisibilityIterator(Block<MeasurementSet>& mss,
 		       const Block<Int>& sortColumns, 
+		       Double timeInterval=0);
+  VisibilityIterator(Block<MeasurementSet>& mss,
+		     const Block<Int>& sortColumns, const Bool addDefaultSortCols, 
 		       Double timeInterval=0);
 
   VisibilityIterator(const VisibilityIterator & MSI);

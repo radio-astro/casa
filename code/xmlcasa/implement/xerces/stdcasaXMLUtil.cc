@@ -414,7 +414,20 @@ bool stdcasaXMLUtil::readXML(record &itsRecord,  const Wrapper4InputSource &xmlS
                                         vector<string> v;
                                         stringstream ss(XMLString::transcode(myTypes));
                                         string str;
-                                        while(ss >> str) v.push_back(str);
+					/*
+					while(ss >> str){
+					       	v.push_back(str);
+					*/
+                                        while(ss >> str){
+						// The xml uses Array and variant uses vec so we make the change
+						// so we don't get false failures for limittype failures
+						ssize_t hasArray = str.find("Array");
+						if(hasArray != string::npos){
+						   str.replace(hasArray, 5, string("vec"));
+						}
+					       	v.push_back(str);
+					}
+
                                         itsRecord[ttName].asRecord()["parameters"].asRecord()[parmName].asRecord().insert(
                                                 "limittypes", *(new variant(v)));
                                     }

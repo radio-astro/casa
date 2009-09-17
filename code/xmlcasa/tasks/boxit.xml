@@ -37,6 +37,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value>2</value>
     </param>
 
+    <param type="bool" name="diag">
+    <description>Count diagonal connections?</description>
+    <value>False</value>
+    </param>
+
     <param type="bool" name="overwrite">
     <description>Overwrite existing region file?</description>
     <value>False</value>
@@ -63,6 +68,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: 0.0.
        minsize -- minimum size of island to get a box (in number of pixels)
                default: 2
+       diag -- count diagonal connections as same island or not
+               default: False
        overwrite -- Overwrite existing region file?
                default: False.  If False, gives warning if file exists.
 

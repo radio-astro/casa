@@ -4,7 +4,7 @@ import numpy
 # returns list of boxes for each island:  [xmin,ymin,xmax,ymax]
 # also return array islandImage (each island's pixels labeled by number)
 
-def boxit(imagename, regionfile, threshold, minsize, overwrite):
+def boxit(imagename, regionfile, threshold, minsize, diag, overwrite):
 
     casalog.origin('boxit')
 
@@ -48,42 +48,47 @@ def boxit(imagename, regionfile, threshold, minsize, overwrite):
                 mask = fullmask
             if len(shape)==4:
                 mask = fullmask[:,:,i2,i3]
-            islandImage = 0-mask   # -1: belongs in an island;  0: below threshold
+            islandImage = 0-mask  # -1: belongs in an island;  0: below threshold
+            # islandImage will become an image with each island's pixels labeled by number
             
             for x in xrange(nx):
                 for y in xrange(ny):
 
                     if(mask[x,y]):
-                        stretch = True
+                        stretch = True # stretch: increase size of island
 
                         if (y>0) and (mask[x,y-1]):
                             islandImage[x,y] = islandImage[x,y-1]
-                            if (x==0) or (y==ny-1):
-                                pass
-                            else:
+                            if (x != 0) and (mask[x-1,y]) and \
+                                   (islandImage[x,y] != islandImage[x-1,y]):
+                                mergeIslands(boxRecord, islandImage,
+                                             islandImage[x-1,y],
+                                             islandImage[x,y])
+                                stretch = False
+                            if (diag) and (y != ny-1):
                                 if (mask[x-1,y+1]) and \
                                        (islandImage[x,y] != islandImage[x-1,y+1]):
-                                    mergeIslands( boxRecord, islandImage,
-                                                  islandImage[x,y],
-                                                  islandImage[x-1,y+1] )
+                                    mergeIslands(boxRecord, islandImage,
+                                                 islandImage[x-1,y+1],
+                                                 islandImage[x,y])
                                     stretch = False
 
-                        elif (x>0) and (y>0) and (mask[x-1,y-1]):
+                        elif (diag) and (x>0) and (y>0) and (mask[x-1,y-1]):
                             islandImage[x,y] = islandImage[x-1,y-1]
                             if y == ny-1 :
                                 pass
                             else:
                                 if (mask[x-1,y+1]) and \
                                        (islandImage[x,y] != islandImage[x-1,y+1]):
-                                    mergeIslands( boxRecord, islandImage,
-                                                  islandImage[x,y],
-                                                  islandImage[x-1,y+1] )
+                                    mergeIslands(boxRecord, islandImage,
+                                                 islandImage[x-1,y+1],
+                                                 islandImage[x,y])
                                     stretch = False
 
                         elif (x>0) and (mask[x-1,y]):
                             islandImage[x,y] = islandImage[x-1,y]
 
-                        elif (x>0) and (y<ny-1) and (mask[x-1,y+1]):
+                        elif (diag) and (x>0) and (y<ny-1) and (mask[x-1,y+1]):
                             islandImage[x,y] = islandImage[x-1,y+1]
 
                         else:
@@ -109,8 +114,11 @@ def boxit(imagename, regionfile, threshold, minsize, overwrite):
                 # check size of box
                 if npix < minsize:
                     continue
-                blc = ia.toworld(box[0:2], 's')['string']
-                trc = ia.toworld(box[2:4], 's')['string']
+                # need pixel corners, not pixel centers
+                blccoord = [pos - 0.5 for pos in box[0:2]]
+                trccoord = [pos + 0.5 for pos in box[2:4]]
+                blc = ia.toworld(blccoord, 's')['string']
+                trc = ia.toworld(trccoord, 's')['string']
                 regions[tuple(box)]= rg.wbox(blc=blc, trc=trc,
                                              csys=csys.torecord())
             if len(regions)==1:

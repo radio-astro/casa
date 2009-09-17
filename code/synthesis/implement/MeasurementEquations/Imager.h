@@ -177,6 +177,7 @@ class Imager
 			   const Quantity& qStep,
 			   const Vector<Int>& spectralwindowids, 
 			   const Quantity& restFreq,
+                           const MFrequency::Types& mFreqFrame,
 			   const Int facets, const Quantity& distance,
 			   const Bool trackSource=False, const MDirection& 
 			   trackDir=MDirection(Quantity(0.0, "deg"), 
@@ -536,6 +537,7 @@ protected:
   MRadialVelocity mDataStart_p, mImageStart_p;
   MRadialVelocity mDataStep_p,  mImageStep_p;
   MFrequency mfImageStart_p, mfImageStep_p;
+  MFrequency::Types freqFrame_p;
   MDirection phaseCenter_p;
   Quantity restFreq_p;
   Quantity distance_p;

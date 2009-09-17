@@ -147,10 +147,20 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:otherwise>
 </xsl:choose>
 </xsl:for-each>
+<xsl:choose>
+<xsl:when test="$async='never'">
+<xsl:text disable-output-escaping="yes">
+	#
+	# This task is never suppose to use the task manager to run async
+	#
+        async=False</xsl:text>
+</xsl:when>
+</xsl:choose>
 <xsl:text disable-output-escaping="yes">
         pathname='file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/'
         trec = casac.cu.torecord(pathname+</xsl:text>&apos;<xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">.xml&apos;)
 </xsl:text>
+
 <xsl:text disable-output-escaping="yes">
         casalog.origin(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;)
         if not trec.has_key(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;) or not casac.cu.verify(mytmp, trec[&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;]) :

@@ -162,31 +162,7 @@ def sdaverage(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode
             sn=list(scanns)
             #print "Number of scans to be processed:", len(sn)
             casalog.post( "Number of scans to be processed: %d" % (len(sn)) )
-            if ( calmode == 'nod' ):
-                    # nod data
-                    #print "Calibrating nod data"
-                    casalog.post( "Calibrating nod data" )
-                    scal=sd.calnod(s,sn,verify=verify)
-            elif ( (calmode=='fs') or (calmode=='fsotf') ):
-                    # frequency-switched data
-                    #print "Calibrating frequency-switched data"
-                    casalog.post( "Calibrating frequency-switched data" )
-                    scal=sd.calfs(s,sn,verify=verify)
-            elif ( calmode == 'ps' ):
-                    # position switch (default)
-                    #print "Calibrating position-switched data"
-                    casalog.post( "Calibrating position-switched data" )
-                    scal=sd.calps(s,sn,verify=verify)
-            elif ( calmode == 'quotient' ):
-                    # quotient (for Mopra etc.)
-                    #print "Calibrating using quotient"
-                    casalog.post( "Calibrating using quotient" )
-                    scal=s.auto_quotient(verify=verify)
-            else:
-                    # no calibration
-                    #print "No calibration"
-                    casalog.post( "No calibration" )
-                    scal=s.copy()
+            scal = sd.asapmath.calibrate( s, scannos=sn, calmode=calmode, verify=verify )
 
             # Done with scantable s - clean up to free memory
             del s

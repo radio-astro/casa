@@ -44,7 +44,6 @@ from importvla import *
 from imregrid import *
 from imstat import *
 from imval import *
-from invert import *
 from listcal import *
 from listobs import *
 from listhistory import *

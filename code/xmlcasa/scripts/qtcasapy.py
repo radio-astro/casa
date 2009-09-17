@@ -317,7 +317,7 @@ def inp(taskname=None):
 
         try:
                 parameter_checktype(['taskname'],taskname,str)
-                parameter_checkmenu('taskname',taskname,['accum','bandpass','blcal','clean','contsub','correct','exportuvfits','feather','flagautocorr','flagdata','flagxy','fluxscale','fringecal','ft','gaincal','imhead','importvla','importasdm','importfits','importuvfits','clearcal','invert','listhistory','listobs','makemask','mosaic','plotants','plotcal','plotxy','pointcal','smooth','setjy','split','uvmodelfit','viewer','browsetable','restore'])
+                parameter_checkmenu('taskname',taskname,['accum','bandpass','blcal','clean','contsub','correct','exportuvfits','feather','flagautocorr','flagdata','flagxy','fluxscale','fringecal','ft','gaincal','imhead','importvla','importasdm','importfits','importuvfits','clearcal','listhistory','listobs','makemask','mosaic','plotants','plotcal','plotxy','pointcal','smooth','setjy','split','uvmodelfit','viewer','browsetable','restore'])
         except TypeError, e:
                 print "inp -- TypeError: ", e
                 return

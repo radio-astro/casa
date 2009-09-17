@@ -179,6 +179,34 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
      <returns type="bool"/>
 </method>
 
+<method type="function" name="tableinfo">
+  <shortdescription>Get information about a particular table</shortdescription>
+  <description>
+    Currently this only returns the pid of the process locking the table (lockpid), if the lock
+    is permanent (lockperm), and the status (lockstatus) -- 'not in use', 'open', 'read', 'write',
+    or 'unknown'. However, the hope is that this will eventually return a complete description of
+    the table.
+  </description>
+  <input>
+    <param type="string" name="tablename">
+      <description>path to table</description>
+      <value></value>
+    </param>
+  </input>
+  <returns type="any">
+    <any type="record" />
+  </returns>
+  <example></example>
+</method>
+
+<method type="function" name="lockedtables">
+  <shortdescription>get the tables locked by this process</shortdescription>
+  <description></description>
+  <input></input>
+  <returns type="stringArray" />
+  <example></example>
+</method>
+
 </tool>
 
 </casaxml>

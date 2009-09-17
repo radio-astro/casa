@@ -253,6 +253,9 @@ class taskmanager(object):
 
     def __init__(self,task_path=[''],engines={'localhost': 1}):
 
+        if os.environ.has_key('__CASARCDIR__'):
+            self.__dir['home'] = os.environ['__CASARCDIR__'] + "/tm"
+
         self.__dir['rc'] = self.__dir['home'] + '/rc'
         self.__dir['furl'] = self.__dir['home'] + '/furl'
         self.__dir['log root'] = self.__dir['home'] + '/log'

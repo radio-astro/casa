@@ -4,7 +4,7 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd">
 
-<task type="function" name="plotms" category="display/plot, data editing">
+<task type="function" name="plotms" category="display/plot, data editing" async="never">
 <shortdescription>A plotter/interactive flagger for visibility data.</shortdescription>
 
 <returns type="void" />

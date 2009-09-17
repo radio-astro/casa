@@ -114,7 +114,6 @@ from listhistory import listhistory
 from mosaic import mosaic
 from importfits import importfits
 from imfit import imfit
-from invert import invert
 from deconvolve import deconvolve
 from simdata import simdata
 from importasdm import importasdm

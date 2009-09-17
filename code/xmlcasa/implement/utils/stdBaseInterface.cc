@@ -383,7 +383,7 @@ variant *stdBaseInterface::expandEnum(variant &allowed, const variant &value, ca
    int count = 0;
    if(allowed.type() == variant::STRINGVEC){
       if(value.type() == variant::STRING && value.getString().length() > 0){
-         for(int i=0;i<allowed.asStringVec().size();i++){
+         for(unsigned int i=0;i<allowed.asStringVec().size();i++){
             // cerr << i << " " << allowed.asStringVec()[i] << endl;
             if(!allowed.asStringVec()[i].compare(0, value.getString().length(), value.getString())){
 	       rstat = new variant(allowed.asStringVec()[i]);
@@ -424,6 +424,12 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 	bool checkit(true);
 	variant  &dflt = constraintsRec["value"];
 	if(constraintsRec["type"].asString() == "any" || constraintsRec["type"].asString() == "variant"){
+	   if(constraintsRec.count("limittypes") &&  constraintsRec["limittypes"].asString().size()){
+	      if(constraintsRec["limittypes"].asString().find(user.typeString()) != string::npos)
+		      rstat = true;
+	      else 
+		      rstat = false;
+	   }
 	   checkit = false;
 	   // need to change this so that if  constraintsRec has a limittypes option this can be checked
 	}

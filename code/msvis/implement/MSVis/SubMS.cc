@@ -224,7 +224,7 @@ namespace casa {
     if(spwids.nelements() < 1)
       spwids=Vector<Int>(1, -1);
 
-    //use nchan f defined else use caret-column syntax of  msselection 
+    //use nchan if defined else use caret-column syntax of  msselection 
     if((nchan.nelements()>0) && nchan[0] > 0){
       inchan.resize(); inchan=nchan;
       istep.resize(); istep=step;
@@ -4042,7 +4042,7 @@ Bool SubMS::fillTimeAverData(const String& columnName)
   const ROArrayColumn<Float> inImagingWeight(mscIn_p->imagingWeight());
   Vector<Float> inImgWtsSpectrum;
 
-  const ROScalarColumn<Double> time(mscIn_p->time());
+  //const ROScalarColumn<Double> time(mscIn_p->time());
   const ROScalarColumn<Double> inTC(mscIn_p->timeCentroid());
   const ROScalarColumn<Double> inExposure(mscIn_p->exposure());
 
@@ -4153,7 +4153,7 @@ Bool SubMS::fillTimeAverData(const String& columnName)
     wgtSpec.reference(mscIn_p->weightSpectrum());
   }
 
-  Double totweight;
+  Double totrowwt;
 
   Matrix<Double> outUVW(3, outNrow);
   outUVW.set(0.0);
@@ -4183,19 +4183,46 @@ Bool SubMS::fillTimeAverData(const String& columnName)
     for(ui2vmap::iterator slotit = bin_slots_p[tbn].begin();
 	slotit != bin_slots_p[tbn].end(); ++slotit){
       uivector& slotv = slotit->second;
-      uInt besttoik = slotv[0]; // Closest match to newTimeVal_p[tbn]
-      Double bestTimeDiff = fabs(time(besttoik) - newTimeVal_p[tbn]);
+      uInt besttoik = slotv[0];    // irn of closest match to newTimeVal_p[tbn]
+      uInt bestbeftoik = slotv[0]; // irn of time before newTimeVal_p[tbn]
+      uInt best2beftoik = slotv[0]; // irn of time before bestbeftoik's time.
+      uInt bestafttoik = slotv[0]; // irn of time after newTimeVal_p[tbn]
+      Double prevTC = inTC(besttoik);
+      Bool findNext = true;
+      Double totslotwt = 0.0;
 
       // Iterate through mscIn_p's rows that belong to the slot.
       for(uivector::iterator toikit = slotv.begin();
 	  toikit != slotv.end(); ++toikit){
 	// Find the slot's row which is closest to newTimeVal_p[tbn].
-	Double timeDiff = fabs(time(*toikit) - newTimeVal_p[tbn]);
 
-	if(timeDiff < bestTimeDiff){
-	  bestTimeDiff = timeDiff;
-	  besttoik = *toikit;
-	}
+        Double currTC = inTC(*toikit);
+        if(currTC > prevTC && findNext){
+          if(currTC < newTimeVal_p[tbn]){
+            best2beftoik = bestbeftoik;
+            bestbeftoik = besttoik;
+            besttoik = *toikit;
+            bestafttoik = besttoik;      // In case we have to stop early.
+            prevTC = currTC;
+          }
+          else{                                         
+            if(currTC + prevTC < 2.0 * newTimeVal_p[tbn]){ // P     C     N
+              bestbeftoik = besttoik;                      // X   * X     X
+              besttoik = *toikit;
+              bestafttoik = besttoik; // Just in case there is no bestafttoik.
+            }
+            else if(prevTC <= newTimeVal_p[tbn]){    // 2B    P     C
+              bestafttoik = *toikit;                 // X     X *   X
+              besttoik    = bestbeftoik;
+              bestbeftoik = best2beftoik;
+              findNext = false;
+            }
+            else{                           // Finish off the X   * X     X case
+              bestafttoik = *toikit;
+              findNext = false;
+            }
+          }
+        }
 
 	// Accumulate the averaging values from *toikit.
 	// doChanAver_p...wrong name but it means that channel 
@@ -4225,7 +4252,8 @@ Bool SubMS::fillTimeAverData(const String& columnName)
 	//  	       << data(*toikit).shape() << LogIO::POST;
 
 	outRowWeight.column(orn) = outRowWeight.column(orn) + unflaggedwt;
-	totweight = sum(unflaggedwt);
+	totrowwt = sum(unflaggedwt);
+	totslotwt += totrowwt;
 
 	if(doChanAver_p)
 	  outFlag.xyPlane(orn) = outFlag.xyPlane(orn) * flag(*toikit)(blc, trc);
@@ -4278,25 +4306,25 @@ Bool SubMS::fillTimeAverData(const String& columnName)
 	  }
 	}
        
-	outTC[orn] += totweight * inTC(*toikit);
-	outExposure[orn] += totweight * inExposure(*toikit);
+	outTC[orn] += totrowwt * (inTC(*toikit) - outTC[orn]) / totslotwt;
+	outExposure[orn] += totrowwt * inExposure(*toikit);
 
 	if(hasImagingWeight){
 	  inImagingWeight.get(*toikit, inImgWtsSpectrum);
 	  
 	  for(uInt c = chanStart_p[0]; c < chanStop; ++c)
-	    outImagingWeight(c, orn) += totweight * inImgWtsSpectrum[c];
+	    outImagingWeight(c, orn) += totrowwt * inImgWtsSpectrum[c];
 	}
       } // End of iterating through the slot's rows.
 
       // Average the accumulated values.
-      totweight = sum(outRowWeight.column(orn));
-      if(totweight > 0.0){
-	outTC[orn] /= totweight;
-	outExposure[orn] *= slotv.size() / totweight;
+      totslotwt = sum(outRowWeight.column(orn));  // Uncommented for debugging!
+      if(totslotwt > 0.0){
+	//outTC[orn] /= totrowwt;
+	outExposure[orn] *= slotv.size() / totslotwt;
 	if(hasImagingWeight){
 	  for(uInt c = chanStart_p[0]; c < chanStop; ++c)
-	    outImagingWeight(c, orn) /= totweight;
+	    outImagingWeight(c, orn) /= totslotwt;
 	}
       }
       slotv.clear();  // Free some memory.
@@ -4327,9 +4355,7 @@ Bool SubMS::fillTimeAverData(const String& columnName)
       // Fill in the nonaveraging values from besttoik.
       // In general, _IDs which are row numbers in a subtable must be
       // remapped, and those which are not probably shouldn't be.
-      // UVW shouldn't be averaged (we don't want the average of an ellipse).
       outTime[orn]       = newTimeVal_p[tbn];
-      outUVW.column(orn) = inUVW(besttoik);
       outScanNum[orn]    = scanNum(besttoik);	// Don't remap!
       if(antennaSel_p){
 	outAnt1[orn]  = antIndexer_p[ant1(besttoik)];
@@ -4352,6 +4378,62 @@ Bool SubMS::fillTimeAverData(const String& columnName)
 				 abs(inObs(besttoik)));
       outArr[orn]     = inArr(besttoik);	        // Don't remap!
       dataDesc[orn]   = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(besttoik)]];
+
+      // UVW is a special case.  It should not be globally averaged because
+      // that would bias the UV distance toward 0.  (We don't want the average
+      // of an ellipse...that would produce a 0 spacing which is insensitive to
+      // diffuse emission.)  So what we really want is uvw(average time).  If
+      // the average time falls on an input row, we can just take that row's
+      // UVW.  Otherwise, we have to interpolate (quadratically works well and
+      // is convenient).  That introduces a bit of the inward bias, but it
+      // should be much less than the tangential offset from nearest neighbor
+      // interpolation in time, since the inward bias is second order in time
+      // interval.
+      if(outTC[orn] != inTC(besttoik)){
+        Double beftime  = inTC(bestbeftoik);
+        Double besttime = inTC(besttoik);
+        Double afttime  = inTC(bestafttoik);
+
+        if(beftime != besttime && besttime != afttime){
+          // Using interpolation due to W.J. Taylor recommended for its stability
+          // in Knuth, Seminumerical Algorithms, 2nd ed., p. 504-5.
+          Double wm1 = 1.0 / ((beftime - besttime) * (beftime - afttime));
+          Double w0  = 1.0 / ((besttime - beftime) * (besttime - afttime));
+          Double wp1 = 1.0 / ((afttime - beftime) * (afttime - besttime));
+          Double coeffm1 = wm1 / (outTC[orn] - beftime);
+          Double coeff0  = w0 / (outTC[orn] - besttime);
+          Double coeffp1 = wp1 / (outTC[orn] - afttime);
+          Double denom = coeffm1 + coeff0 + coeffp1;
+
+          outUVW.column(orn) = (coeffm1 * inUVW(bestbeftoik) +
+                                coeff0 * inUVW(besttoik) +
+                                coeffp1 * inUVW(bestafttoik)) / denom;          
+        }
+        else if(beftime != besttime){
+          Double wm1 = 1.0 / (beftime - besttime);
+          Double w0  = -wm1;
+          Double coeffm1 = wm1 / (outTC[orn] - beftime);
+          Double coeff0  = w0 / (outTC[orn] - besttime);
+          Double denom = coeffm1 + coeff0;
+          
+          outUVW.column(orn) = (coeffm1 * inUVW(bestbeftoik) +
+                                coeff0 * inUVW(besttoik)) / denom;          
+        }
+        else if(afttime != besttime){
+          Double wp1 = 1.0 / (afttime - besttime);
+          Double w0  = -wp1;
+          Double coeffp1 = wp1 / (outTC[orn] - afttime);
+          Double coeff0  = w0 / (outTC[orn] - besttime);
+          Double denom = coeffp1 + coeff0;
+          
+          outUVW.column(orn) = (coeffp1 * inUVW(bestafttoik) +
+                                coeff0 * inUVW(besttoik)) / denom;          
+        }
+        else
+          outUVW.column(orn) = inUVW(besttoik);
+      }
+      else
+        outUVW.column(orn) = inUVW(besttoik);
 
       ++orn;  // Advance the output row #.
     } // End of iterating through the bin's slots.

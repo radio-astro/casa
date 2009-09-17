@@ -102,6 +102,7 @@ class testbase :
 
         if leFile[0:6] == 'tests/':
             leTest = __import__(testName)
+            reload(leTest)
             try:
                 # Fails if module does not
                 # define the description() function

@@ -64,7 +64,7 @@ class imager
 
     bool correct(const bool doparallactic = true, const Quantity& timestep = Quantity(std::vector<double> (1, 10),"s"));
 
-    bool defineimage(const int nx = 128, const int ny = -1, const ::casac::variant& cellx = ::casac::initialize_variant("1.0"), const ::casac::variant& celly = ::casac::initialize_variant(""), const std::string& stokes = "I", const ::casac::variant& phasecenter = ::casac::initialize_variant("0"), const std::string& mode = "mfs", const int nchan = -1, const ::casac::variant& start = ::casac::initialize_variant("0"), const ::casac::variant& step = ::casac::initialize_variant("1"), const std::vector<int>& spw = std::vector<int> (1, 0), const ::casac::variant& restfreq = ::casac::initialize_variant(""), const int facets = 1, const ::casac::variant& movingsource = ::casac::initialize_variant(""), const ::casac::variant& distance = ::casac::initialize_variant("0.0"));
+    bool defineimage(const int nx = 128, const int ny = -1, const ::casac::variant& cellx = ::casac::initialize_variant("1.0"), const ::casac::variant& celly = ::casac::initialize_variant(""), const std::string& stokes = "I", const ::casac::variant& phasecenter = ::casac::initialize_variant("0"), const std::string& mode = "mfs", const int nchan = -1, const ::casac::variant& start = ::casac::initialize_variant("0"), const ::casac::variant& step = ::casac::initialize_variant("1"), const std::vector<int>& spw = std::vector<int> (1, 0), const ::casac::variant& restfreq = ::casac::initialize_variant(""), const std::string& frame= "", const int facets = 1, const ::casac::variant& movingsource = ::casac::initialize_variant(""), const ::casac::variant& distance = ::casac::initialize_variant("0.0"));
 
     bool done();
 
@@ -154,7 +154,7 @@ class imager
     bool stop();
 
     bool summary();
-
+   
     bool uvrange(const double uvmin = 0.0, const double uvmax = 0.0);
 
     bool weight(const std::string& type = "natural", const std::string& rmode = "none", const ::casac::variant& noise = ::casac::initialize_variant("0.0Jy"), const double robust = 0.0, const ::casac::variant& fieldofview = ::casac::initialize_variant("0.0arcsec"), const int npixels = 0, const bool mosaic = false, const bool async = false);

@@ -1,88 +1,233 @@
 #
 
+import os
+import re
+import sys
+import string
+import commands
+
 try:
     import casac
 except ImportError, e:
     print "failed to load casa:\n", e
     exit(1)
 
-import os
-import sys
 import matplotlib
 
-homedir = os.getenv('HOME')
-if homedir == None :
-   print "Environment variable HOME is not set, please set it"
-   exit(1)
 
-casa = { 'helpers': {
-             'logger': 'casalogger',
-             'viewer': 'casaviewer'
-         },
-         'dirs': {
-             'rc': homedir + '/.casa'
-         },
-         'flags': { }
-       }
-
-a = [] + sys.argv             ## get a copy from goofy python
-a.reverse( )
-while len(a) > 0:
-    c = a.pop()
-    ##
-    ## we join multi-arg parameters here
-    ##
-    if c == '--logfile' or c == '-c' or c == '--rcdir':
-        if len(a) == 0 :
-            print "A file must be specified with " + c + "..."
-            exit(1)
-        else :
-            casa['flags'][c] = a.pop( )
-            if c == '--rcdir':
-                casa['dirs']['rc'] = casa['flags'][c]
+##
+## first set up CASAPATH
+##
+if os.environ.has_key('CASAPATH') :
+    __casapath__ = os.environ['CASAPATH'].split(' ')[0]
+    if not os.path.exists(__casapath__ + "/data") :
+        raise RuntimeError, "CASAPATH environment variable is improperly set"
+else :
+    __casapath__ = casac.__file__
+    while __casapath__ and __casapath__ != "/" :
+        if os.path.exists( __casapath__ + "/data") :
+            break
+        __casapath__ = os.path.dirname(__casapath__)
+    if __casapath__ and __casapath__ != "/" :
+        os.environ['CASAPATH']=__casapath__ + " linux local host"
     else :
-        casa['flags'][c] = ''
+        raise RuntimeError, "CASAPATH environment variable must be set"
+
+##
+## next adjust the PYTHONPATH
+##
+if re.match( r'.*/\d+\.\d+\.\d+\w*-\d+$', __casapath__ ) :
+    for root, dirs, files in os.walk(os.path.dirname(__casapath__)):
+        if root.endswith("/numpy"):
+            sys.path.append(os.path.dirname(root))
+            break
+else:
+    for root, dirs, files in os.walk(__casapath__):
+        if root.endswith("/numpy"):
+            sys.path.append(os.path.dirname(root))
+            break
+
+##
+## next adjust PATH and LD_LIBRARY_PATH
+##
+for root, dirs, files in os.walk(__casapath__):
+    if root.endswith("/bin") and "casapyinfo" in files :
+        __ipcontroller__ = (lambda fd: fd.readline().strip('\n'))(os.popen(root + "/casapyinfo --exec 'which ipcontroller'"))
+        if os.path.exists(__ipcontroller__) :
+            os.environ['PATH'] = os.path.dirname(__ipcontroller__) + ":" + os.environ['PATH']
+        else :
+            raise RuntimeError, "cannot configure CASA tasking system"
+        __ld_library_path__ = (lambda fd: fd.readline().strip('\n').split(':'))(os.popen(root + "/casapyinfo --exec 'echo $LD_LIBRARY_PATH'"))
+        map(lambda x: sys.path.append(x),__ld_library_path__)
+        break
+
+#
+#from taskinit import *
+# cannot do this because taskinit contain
+# other functions the engines do not need
+# we load tools and tasks explicitly
+
+##
+## finally load tools
+####
+
+__quantahome__ = casac.homefinder.find_home_by_name('quantaHome')
+__measureshome__ = casac.homefinder.find_home_by_name('measuresHome')
+__imagerhome__ = casac.homefinder.find_home_by_name('imagerHome')
+__calibraterhome__ = casac.homefinder.find_home_by_name('calibraterHome')
+__mshome__ = casac.homefinder.find_home_by_name('msHome')
+__tableplothome__ = casac.homefinder.find_home_by_name('tableplotHome')
+__msplothome__ = casac.homefinder.find_home_by_name('msplotHome')
+__calplothome__ = casac.homefinder.find_home_by_name('calplotHome')
+__tablehome__ = casac.homefinder.find_home_by_name('tableHome')
+__flaggerhome__ = casac.homefinder.find_home_by_name('flaggerHome')
+__autoflaghome__ = casac.homefinder.find_home_by_name('autoflagHome')
+__imagehome__ = casac.homefinder.find_home_by_name('imageHome')
+__imagepolhome__ = casac.homefinder.find_home_by_name('imagepolHome')
+__simulatorhome__ = casac.homefinder.find_home_by_name('simulatorHome')
+__componentlisthome__ = casac.homefinder.find_home_by_name('componentlistHome')
+__coordsyshome__ = casac.homefinder.find_home_by_name('coordsysHome')
+__regionmanagerhome__ = casac.homefinder.find_home_by_name('regionmanagerHome')
+__utilshome__ = casac.homefinder.find_home_by_name('utilsHome')
+__deconvolverhome__ = casac.homefinder.find_home_by_name('deconvolverHome')
+__vpmanagerhome__ = casac.homefinder.find_home_by_name('vpmanagerHome')
+__vlafillertaskhome__ = casac.homefinder.find_home_by_name('vlafillertaskHome')
+__atmospherehome__ = casac.homefinder.find_home_by_name('atmosphereHome')
+__loghome__ =  casac.homefinder.find_home_by_name('logsinkHome')
+__utilstool__ = casac.homefinder.find_home_by_name('utilsHome')
+#__plotmshome__ = casac.homefinder.find_home_by_name('plotmsHome')
 
 
-if os.uname()[0]=='Darwin' :
-    casa_path = os.environ['CASAPATH'].split()
 
-    casa['helpers']['viewer'] = casa_path[0]+'/'+casa_path[1]+'/apps/casaviewer.app/Contents/MacOS/casaviewer'
-    # In the distro of the app then the apps dir is not there and you find things in MacOS
-    if not os.path.exists(casa['helpers']['viewer']) :
-        casa['helpers']['viewer'] = casa_path[0]+'/MacOS/casaviewer'
+casalog = __loghome__.create()
+casalog.setglobal(True)
+quanta = __quantahome__.create( )
+measures = __measureshome__.create( )
+imager = __imagerhome__.create( )
+calibrater = __calibraterhome__.create( )
+ms = __mshome__.create( )
+tableplot = __tableplothome__.create( )
+msplot = __msplothome__.create( )
+calplot = __calplothome__.create( )
+table = __tablehome__.create( )
+flagger = __flaggerhome__.create( )
+autoflag = __autoflaghome__.create( )
+image = __imagehome__.create( )
+imagepol = __imagepolhome__.create( )
+simulator = __simulatorhome__.create( )
+componentlist = __componentlisthome__.create( )
+coordsys = __coordsyshome__.create( )
+regionmanager = __regionmanagerhome__.create( )
+utils = __utilshome__.create( )
+deconvolver = __deconvolverhome__.create( )
+vpmanager = __vpmanagerhome__.create( )
+vlafillertask = __vlafillertaskhome__.create( )
+atmosphere = __atmospherehome__.create( )
+cu = __utilstool__.create()
+#plotms = __plotmshome__.create( )
 
-    if casa['flags'].has_key('--qtlogger') :
-        casa['helpers']['logger'] = casa_path[0]+'/'+casa_path[1]+'/apps/casalogger.app/Contents/MacOS/casalogger'
 
-        # In the distro of the app then the apps dir is not there and you find things in MacOS
-        if not os.path.exists(casa['helpers']['logger']) :
-            casa['helpers']['logger'] = casa_path[0]+'/MacOS/casalogger'
+from imstat_pg import imstat_pg as imstat
+from fringecal_pg import fringecal_pg as fringecal
+from flagdata_pg import flagdata_pg as flagdata
+from split_pg import split_pg as split
+from importvla_pg import importvla_pg as importvla
+from hanningsmooth_pg import hanningsmooth_pg as hanningsmooth
+from widefield_pg import widefield_pg as widefield
+from immoments_pg import immoments_pg as immoments
+from uvcontsub_pg import uvcontsub_pg as uvcontsub
+from listhistory_pg import listhistory_pg as listhistory
 
-    else:
-        casa['helpers']['logger'] = 'console'
+from mosaic_pg import mosaic_pg as mosaic
+from importfits_pg import importfits_pg as importfits
+from imfit_pg import imfit_pg as imfit
+from invert_pg import invert_pg as invert
+from deconvolve_pg import deconvolve_pg as deconvolve
+
+from simdata_pg import simdata_pg as simdata
+
+from importasdm_pg import importasdm_pg as importasdm
+from uvmodelfit_pg import uvmodelfit_pg as uvmodelfit
+from polcal_pg import polcal_pg as polcal
+
+from clearcal_pg import clearcal_pg as clearcal
+from bandpass_pg import bandpass_pg as bandpass
+from clearplot_pg import clearplot_pg as clearplot
+from listvis_pg import listvis_pg as listvis_cl
+from accum_pg import accum_pg as accum
+from concat_pg import concat_pg as concat
+from listobs_pg import listobs_pg as listobs
+from feather_pg import feather_pg as feather
+from imregrid_pg import imregrid_pg as imregrid
+from listcal_pg import listcal_pg as listcal
+from plotxy_pg import plotxy_pg as plotxy
+from ft_pg import ft_pg as ft
+from importuvfits_pg import importuvfits_pg as importuvfits
+from setjy_pg import setjy_pg  as setjy
+#from clean_pg import clean_pg as clean
+from immath_pg import immath_pg as immath
+from imhead_pg import imhead_pg as imhead
+from find_pg import find_pg as find
+from gaincal_pg import gaincal_pg as gaincal
+from fluxscale_pg import fluxscale_pg as fluxscale
+from applycal_pg import applycal_pg as applycal
+from plotants_pg import plotants_pg as plotants
+from exportuvfits_pg import exportuvfits_pg as exportuvfits
+from plotcal_pg import plotcal_pg as plotcal
+from flagmanager_pg import flagmanager_pg as flagmanager
+from specfit_pg import specfit_pg  as specfit
+from viewer_pg import viewer_pg as viewer
+from exportfits_pg import exportfits_pg as exportfits
+from blcal_pg import blcal_pg as blcal
+from uvsub_pg import uvsub_pg as uvsub
+from imcontsub_pg import imcontsub_pg as imcontsub
+from imstat_pg import imstat_pg as imstat
+from newflagdata_pg import newflagdata_pg as newflagdata
+from clearstat_pg import clearstat_pg as clearstat
+from flagautocorr_pg import flagautocorr_pg as flagautocorr
+from browsetable_pg import browsetable_pg as browsetable
+from makemask_pg import makemask_pg as makemask
+from smoothcal_pg import smoothcal_pg as smoothcal
+from imval_pg import imval_pg as imval
+from vishead_pg import vishead_pg as vishead
+from visstat_pg import visstat_pg as visstat
 
 
-## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-## ensure default initialization occurs before this point...
-## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-if os.path.exists( casa['dirs']['rc'] + '/init.py' ) :
-    try:
-        execfile ( casa['dirs']['rc'] + '/init.py' )
-    except:
-        print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/init.py'
-        exit(1)
+##
+## asap may not be available with every casa installation
+##
+try:
+    x=1
+#    from sdcoadd_pg import sdcoadd_pg as sdcoadd
+#    from sdscale_pg import sdscale_pg as sdscale 
+#    from sdtpimaging_pg import sdtpimaging_pg as sdtpimaging
+#    from sdlist_pg import sdlist_pg as sdlist
+#    from sdfit_pg import sdfit_pg as sdfit
+#    from sdbaseline_pg import sdbaseline_pg as sdbaseline
+#    from sdstat_pg import sdstat_pg as sdstat
+#    from sdsave_pg import sdsave_pg as sdsave
+#    from sdflag_pg import sdflag_pg as sdflag
+#    from sdaverage_pg import sdaverage_pg as sdaverage
+#    from sdplot_pg import sdplot_pg as sdplot
+#    from sdsmooth_pg import sdsmooth_pg as sdsmooth
+#    from sdcal_pg import sdcal_pg as sdcal
+except ImportError:
+    sdcoadd = None
+    sdscale = None
+    sdtpimaging = None
+    sdlist = None
+    sdfit = None
+    sdbaseline = None
+    sdstat = None
+    sdsave = None
+    sdflag = None
+    sdaverage = None
+    sdplot = None
+    sdsmooth = None
+    sdcal = None
+     
 
-ipythonenv  = casa['dirs']['rc'] + '/ipython'
-ipythonpath = casa['dirs']['rc'] + '/ipython'
-try :
-   os.makedirs(ipythonpath, 0755)
-except :
-   pass
-os.environ['IPYTHONDIR']=ipythonpath
-os.environ['__CASARCDIR__']=casa['dirs']['rc']
-
-#import string
+#from tasks import *
 
 #
 # Check if the display environment is set if not
@@ -91,69 +236,81 @@ os.environ['__CASARCDIR__']=casa['dirs']['rc']
 if not os.environ.has_key('DISPLAY') and matplotlib.get_backend() == "TkAgg" :
    matplotlib.use('Agg')
 
-#
-# We put in all the task declarations here...
-#
-from taskinit import *
+from time import strftime
+stamp=strftime("%Y%m%d%H%M%S")
+contrid='0'
 
-logpid=[]
+try:
+   contrid=os.environ['contrid']
+   stamp=os.environ['stamp']
+except:
+   pass 
 
-def casalogger(logfile='casapy.log'):
-    """
-    Spawn a new casalogger using logfile as the filename.
-    You should only call this if the casalogger dies or you close it
-    and restart it again.
+#thisproc='casaengine-'+stamp+'-'+contrid+'-'
+thispid=os.getpid()
 
-    Note: if you changed the name of the log file using casalog.setlogfile
-    you will need to respawn casalogger with the new log filename. Eventually,
-    we will figure out how to signal the casalogger with the new name but not
-    for a while.
-    """
-    pid=9999
-    if (os.uname()[0]=='Darwin'):
-	if casa['helpers']['logger'] == 'console':
-           os.system("open -a console " + logfile)
-        else:
-           pid=os.spawnvp(os.P_NOWAIT,casa['helpers']['logger'],[casa['helpers']['logger'], logfile])
+#thelogfile='casapy-'+stamp+'-'+contrid+'-'+str(thispid)+'.log'
 
-    elif (os.uname()[0]=='Linux'):
-        pid=os.spawnlp(os.P_NOWAIT,casa['helpers']['logger'],casa['helpers']['logger'],logfile)
-    else:
-        print 'Unrecognized OS: No logger available'
+#is this sufficient?
+thelogfile='casapy-'+stamp+'-'+str(id)+'.log'
 
-    if (pid!=9999): logpid.append(pid)
+def get_logs():
+   return work_dir+'/'+thelogfile
 
-showconsole = False
+def clear_logs():
+   contents = os.listdir(work_dir)
+   for f in contents:
+      if os.path.isfile(work_dir+'/'+f) and f.startswith('casapy-') and f.endswith('.log'):
+         os.remove(work_dir+'/'+f)
 
-thelogfile = 'casapy.log'
+def mkdir(p):
+   dirsep = '/'
+   pv = p.split(dirsep)
+   path = ""
+   for i in pv:
+      if i:
+         path = path + "/" + i
+         mkdir1(path)
 
-showconsole = casa['flags'].has_key('--log2term')
-if casa['flags'].has_key('--logfile') :
-    thelogfile = casa['flags']['--logfile']
-if casa['flags'].has_key('--nologfile') :
-    thelogfile = 'null'
+def mkdir1(p):
+   if os.path.exists(p):
+      if not os.path.isdir(p):
+         cnt = 1
+         tmp = p + "."
+         while os.path.exists(tmp + str(cnt)):
+            cnt += 1
+            os.rename(p,tmp)
+            os.mkdir(p)
+   else:
+      os.mkdir(p)
 
-deploylogger = True
-if casa['flags'].has_key('--nolog') :
-    print "--nolog is deprecated, please use --nologger"
-    deploylogger = False
+def rmdirs(p):
+   contents = os.listdir(work_dir)
+   for f in contents:
+      #if os.path.isdir(work_dir+'/'+f) and f.startswith(p):
+      if f.startswith(p):
+         os.system("rm -rf %s" % f)
+         #rmdir(f)
 
-if casa['flags'].has_key('--nologger') :
-    deploylogger = False
+# looks all correct, but it complains non-empty dir
+def rmdir(p):
+   dirsep = '/'
+   if os.path.isdir(p):
+      contents = os.listdir(p)
+      for f in contents:
+         if os.path.isfile( p + dirsep + f ) or os.path.islink( p + dirsep + f ):
+            os.remove( p + dirsep + f )
+         elif os.path.isdir( p + dirsep + f ):
+            rmdir( p + dirsep + f )
+         os.rmdir(p)
 
-if deploylogger and (thelogfile != 'null') :
-	casalogger( thelogfile)
 
-###################
-#setup file catalog
-###################
-
-vwrpid=9999
 ####################
 # Task Interface
 
-
 from parameter_check import *
+import inspect 
+
 ####################
 def go(taskname=None):
     """ Execute taskname: """
@@ -180,136 +337,132 @@ def go(taskname=None):
     exec(fulltaskname)
     myf['taskname']=oldtaskname
 
-def selectfield(vis,minstring):
-    """Derive the fieldid from  minimum matched string(s): """
-
-    tb.open(vis+'/FIELD')
-    fields=list(tb.getcol('NAME'))#get fieldname list
-    tb.close()          #close table
-    indexlist=list()    #initialize list
-    stringlist=list()
-
-    fldlist=minstring.split()#split string into elements
-    print 'fldlist is ',fldlist
-    for fld in fldlist:     #loop over fields
-        _iter=fields.__iter__() #create iterator for fieldnames
-        while 1:
-            try:
-                x=_iter.next() # has first value of field name
-            except StopIteration:
-                break
-            #
-            if (x.find(fld)!=-1): 
-                indexlist.append(fields.index(x))
-                stringlist.append(x)
-
-    print 'Selected fields are: ',stringlist
-    return indexlist
-
-def asap_init():
-    """ Initialize ASAP....: """
-    a=inspect.stack()
-    stacklevel=0
-    for k in range(len(a)):
-        if (string.find(a[k][1], 'ipython console') > 0):
-            stacklevel=k
-            break
-    myf=sys._getframe(stacklevel).f_globals
-    casapath=os.environ['CASAPATH']
-    print '*** Loading ATNF ASAP Package...'
-    import asap as sd
-    print '*** ... ASAP (%s rev#%s) import complete ***' % (sd.__version__,sd.__revision__)
-    os.environ['CASAPATH']=casapath
-    from sdaverage_cli import sdaverage_cli as sdaverage
-    from sdsmooth_cli import sdsmooth_cli as sdsmooth
-    from sdbaseline_cli import sdbaseline_cli as sdbaseline
-    from sdcal_cli import sdcal_cli as sdcal
-    from sdcoadd_cli import sdcoadd_cli as sdcoadd
-    from sdsave_cli import sdsave_cli as sdsave
-    from sdscale_cli import sdscale_cli as sdscale
-    from sdfit_cli import sdfit_cli as sdfit
-    from sdplot_cli import sdplot_cli as sdplot
-    from sdstat_cli import sdstat_cli as sdstat
-    from sdlist_cli import sdlist_cli as sdlist
-    from sdflag_cli import sdflag_cli as sdflag
-    from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
-    from sdmath_cli import sdmath_cli as sdmath
-    from sdimaging_cli import sdimaging_cli as sdimaging
-    myf['sd']=sd
-    myf['sdaverage']=sdaverage
-    myf['sdsmooth']=sdsmooth
-    myf['sdbaseline']=sdbaseline
-    myf['sdcal']=sdcal
-    myf['sdcoadd']=sdcoadd
-    myf['sdsave']=sdsave
-    myf['sdscale']=sdscale
-    myf['sdfit']=sdfit
-    myf['sdplot']=sdplot
-    myf['sdstat']=sdstat
-    myf['sdlist']=sdlist
-    myf['sdflag']=sdflag
-    myf['sdtpimaging']=sdtpimaging
-    myf['sdmath']=sdmath
-    myf['sdimaging']=sdimaging
-
-
-def selectantenna(vis,minstring):
-    """Derive the antennaid from matched string(s): """
-
-    tb.open(vis+'/ANTENNA')
-    ants=list(tb.getcol('NAME'))#get fieldname list
-    tb.close()          #close table
-    indexlist=list()    #initialize list
-    stringlist=list()
-
-    antlist=minstring.split()#split string into elements
-    for ant in antlist:     #loop over fields
-        try:
-            ind=ants.index(ant)
-            indexlist.append(ind)
-            stringlist.append(ant)
-        except ValueError:
-            pass
-
-    print 'Selected reference antenna: ',stringlist
-    print 'indexlist: ',indexlist
-    return indexlist[0]
-
-def readboxfile(boxfile):
-    """ Read a file containing clean boxes (compliant with AIPS BOXFILE)
-
-    Format is:
-    #FIELDID BLC-X BLC-Y TRC-X TRC-Y
-    0       110   110   150   150 
-    or
-    0       hh:mm:ss.s dd.mm.ss.s hh:mm:ss.s dd.mm.ss.s
-
-    Note all lines beginning with '#' are ignored.
-
-    """
-    union=[]
-    f=open(boxfile)
-    while 1:
-        try: 
-            line=f.readline()
-            if (line.find('#')!=0): 
-                splitline=line.split('\n')
-                splitline2=splitline[0].split()
-                if (len(splitline2[1])<6): 
-                    boxlist=[int(splitline2[1]),int(splitline2[2]),
-                    int(splitline2[3]),int(splitline2[4])]
-                else:
-                    boxlist=[splitline2[1],splitline2[2],splitline2[3],
-                    splitline2[4]]
-    
-                union.append(boxlist)
-    
-        except:
-            break
-
-    f.close()
-    print 'union is: ',union
-    return union
+#def selectfield(vis,minstring):
+#    """Derive the fieldid from  minimum matched string(s): """
+#
+#    tb.open(vis+'/FIELD')
+#    fields=list(tb.getcol('NAME'))#get fieldname list
+#    tb.close()          #close table
+#    indexlist=list()    #initialize list
+#    stringlist=list()
+#
+#    fldlist=minstring.split()#split string into elements
+#    print 'fldlist is ',fldlist
+#    for fld in fldlist:     #loop over fields
+#        _iter=fields.__iter__() #create iterator for fieldnames
+#        while 1:
+#            try:
+#                x=_iter.next() # has first value of field name
+#            except StopIteration:
+#                break
+#            #
+#            if (x.find(fld)!=-1): 
+#                indexlist.append(fields.index(x))
+#                stringlist.append(x)
+#
+#    print 'Selected fields are: ',stringlist
+#    return indexlist
+#
+#def asap_init():
+#    """ Initialize ASAP....: """
+#    a=inspect.stack()
+#    stacklevel=0
+#    for k in range(len(a)):
+#        if (string.find(a[k][1], 'ipython console') > 0):
+#            stacklevel=k
+#            break
+#    myf=sys._getframe(stacklevel).f_globals
+#    casapath=os.environ['CASAPATH']
+#    print '*** Loading ATNF ASAP Package...'
+#    import asap as sd
+#    print '*** ... ASAP (%s rev#%s) import complete ***' % (sd.__version__,sd.__revision__)
+#    os.environ['CASAPATH']=casapath
+#    from sdaverage_pg import sdaverage_pg as sdaverage
+#    from sdsmooth_pg import sdsmooth_pg as sdsmooth
+#    from sdbaseline_pg import sdbaseline_pg as sdbaseline
+#    from sdcal_pg import sdcal_pg as sdcal
+#    from sdcoadd_pg import sdcoadd_pg as sdcoadd
+#    from sdsave_pg import sdsave_pg as sdsave
+#    from sdscale_pg import sdscale_pg as sdscale
+#    from sdfit_pg import sdfit_pg as sdfit
+#    from sdplot_pg import sdplot_pg as sdplot
+#    from sdstat_pg import sdstat_pg as sdstat
+#    from sdlist_pg import sdlist_pg as sdlist
+#    from sdflag_pg import sdflag_pg as sdflag
+#    from sdtpimaging_pg import sdtpimaging_pg as sdtpimaging
+#    myf['sd']=sd
+#    myf['sdaverage']=sdaverage
+#    myf['sdsmooth']=sdsmooth
+#    myf['sdbaseline']=sdbaseline
+#    myf['sdcal']=sdcal
+#    myf['sdcoadd']=sdcoadd
+#    myf['sdsave']=sdsave
+#    myf['sdscale']=sdscale
+#    myf['sdfit']=sdfit
+#    myf['sdplot']=sdplot
+#    myf['sdstat']=sdstat
+#    myf['sdlist']=sdlist
+#    myf['sdflag']=sdflag
+#    myf['sdtpimaging']=sdtpimaging
+#
+#
+#def selectantenna(vis,minstring):
+#    """Derive the antennaid from matched string(s): """
+#
+#    tb.open(vis+'/ANTENNA')
+#    ants=list(tb.getcol('NAME'))#get fieldname list
+#    tb.close()          #close table
+#    indexlist=list()    #initialize list
+#    stringlist=list()
+#
+#    antlist=minstring.split()#split string into elements
+#    for ant in antlist:     #loop over fields
+#        try:
+#            ind=ants.index(ant)
+#            indexlist.append(ind)
+#            stringlist.append(ant)
+#        except ValueError:
+#            pass
+#
+#    print 'Selected reference antenna: ',stringlist
+#    print 'indexlist: ',indexlist
+#    return indexlist[0]
+#
+#def readboxfile(boxfile):
+#    """ Read a file containing clean boxes (compliant with AIPS BOXFILE)
+#
+#    Format is:
+#    #FIELDID BLC-X BLC-Y TRC-X TRC-Y
+#    0       110   110   150   150 
+#    or
+#    0       hh:mm:ss.s dd.mm.ss.s hh:mm:ss.s dd.mm.ss.s
+#
+#    Note all lines beginning with '#' are ignored.
+#
+#    """
+#    union=[]
+#    f=open(boxfile)
+#    while 1:
+#        try: 
+#            line=f.readline()
+#            if (line.find('#')!=0): 
+#                splitline=line.split('\n')
+#                splitline2=splitline[0].split()
+#                if (len(splitline2[1])<6): 
+#                    boxlist=[int(splitline2[1]),int(splitline2[2]),
+#                    int(splitline2[3]),int(splitline2[4])]
+#                else:
+#                    boxlist=[splitline2[1],splitline2[2],splitline2[3],
+#                    splitline2[4]]
+#    
+#                union.append(boxlist)
+#    
+#        except:
+#            break
+#
+#    f.close()
+#    print 'union is: ',union
+#    return union
 
 def inp(taskname=None):
     try:
@@ -347,27 +500,22 @@ def inp(taskname=None):
         else:
             myf.update({'__last_taskname':taskname})
 
-        print '# ',myf['taskname']+' :: '+(eval(myf['taskname']+'.description()'))
-        update_params(myf['taskname'], myf)
+        #print '# ',myf['taskname']+' :: '+(eval(myf['taskname']+'.description()'))
+        print '# ',myf['taskname']+' input on engine', id
+        update_params(myf['taskname'])
     except TypeError, e:
         print "inp --error: ", e
     except Exception, e:
         print "---",e
 
-def update_params(func, printtext=True, ipython_globals=None):
+def update_params(func, printtext=True):
     from odict import odict
-
-    if ipython_globals == None:
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-            if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k
-                break
-        myf=sys._getframe(stacklevel).f_globals
-    else:
-        myf=ipython_globals
-
+    a=inspect.stack()
+    stacklevel=0
+    for k in range(len(a)):
+        if (string.find(a[k][1], 'ipython console') > 0):
+            stacklevel=k
+    myf=sys._getframe(stacklevel).f_globals
     ### set task to the one being called
     myf['taskname']=func
     obj=myf[func]
@@ -389,23 +537,18 @@ def update_params(func, printtext=True, ipython_globals=None):
 		pathname=myf['task_location'][myf['taskname']]
 	   else :
 	        pathname = os.environ.get('CASAPATH').split()[0]+'/share/xml'
-                if not os.path.exists(pathname) :
-                   pathname = os.environ.get('CASAPATH').split()[0]+'/Resources/xml'
-                
 	else :
 	   pathname = os.environ.get('CASAPATH').split()[0]+'/share/xml'
-           if not os.path.exists(pathname) :
-              pathname = os.environ.get('CASAPATH').split()[0]+'/Resources/xml'
         xmlfile=pathname+'/'+myf['taskname']+'.xml'
         if(os.path.exists(xmlfile)) :
             cu.setconstraints('file://'+xmlfile);
 
-    a=myf[myf['taskname']].defaults("paramkeys",myf)
+    a=myf[myf['taskname']].defaults("paramkeys")
 
     params=a
     itsparams = {}
     for k in range(len(params)):
-        paramval = obj.defaults(params[k], myf)
+        paramval = obj.defaults(params[k])
 
         notdict=True
         ###if a dictionary with key 0, 1 etc then need to peel-open
@@ -419,14 +562,8 @@ def update_params(func, printtext=True, ipython_globals=None):
                 myf.update({params[k]:paramval})
             if(printtext):
                 if(hascheck):
-                    noerror = obj.check_params(params[k],myf[params[k]],myf)
-                # RI this doesn't work with numpy arrays anymore.  Noone seems
-                # interested, so I'll be the red hen and try to fix it.
-                myfparamsk=myf[params[k]]
-                if(type(myf[params[k]])==pl.ndarray):
-                    myfparamsk=myfparamsk.tolist()
-                #if(myf[params[k]]==paramval):
-                if(myfparamsk==paramval):
+                    noerror = obj.check_params(params[k],myf[params[k]])
+                if(myf[params[k]]==paramval):
                     print_params_col(params[k],myf[params[k]],obj.description(params[k]), 'ndpdef', 'black',noerror)
                 else:
                     print_params_col(params[k],myf[params[k]],obj.description(params[k]), 'ndpnondef', 'black', noerror)
@@ -490,7 +627,7 @@ def update_params(func, printtext=True, ipython_globals=None):
                         break
             subkey=subdict[choice].keys()
             if(hascheck):
-                noerror=obj.check_params(params[k],userval,myf)
+                noerror=obj.check_params(params[k],userval)
             if(printtext):
                 if(myf[params[k]]==paramval[0][valuekey]):
                     print_params_col(params[k],myf[params[k]],obj.description(params[k]),'dpdef','black', noerror)
@@ -509,7 +646,7 @@ def update_params(func, printtext=True, ipython_globals=None):
                     else:
                         comment='blue'
                     if(hascheck):
-                        noerror = obj.check_params(subkey[j],myf[subkey[j]],myf)
+                        noerror = obj.check_params(subkey[j],myf[subkey[j]])
                     if(printtext):
                         if(myf[subkey[j]]==paramval):
                             print_params_col(subkey[j],myf[subkey[j]],obj.description(subkey[j],userval),'spdef',comment, noerror)
@@ -628,7 +765,8 @@ def print_params_col(param=None, value=None, comment='', colorparam=None,
     if colorcomment == 'last':        #     (Is colorcomment ever green?)
         commentpart += "\n"
 
-    print parampart + valpart + commentpart
+    #print parampart + valpart + commentpart
+    print parampart + valpart
 
 def __set_default_parameters(b):
     a=inspect.stack()
@@ -663,7 +801,7 @@ def __set_default_parameters(b):
                 if((subkey[j] != 'value') & (subkey[j] != 'notvalue')):
                     myf[subkey[j]]=subdict[0][subkey[j]]
 
-def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None):
+def saveinputs(taskname=None, outfile='', myparams=None):
     #parameter_printvalues(arg_names,arg_values,arg_types)
     """ Save current input values to file on disk for a specified task:
 
@@ -676,17 +814,12 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None):
     """
 
     try:
-        if ipython_globals == None:
-            a=inspect.stack()
-            stacklevel=0
-            for k in range(len(a)):
-                if (string.find(a[k][1], 'ipython console') > 0):
-                    stacklevel=k
-                    break
-            myf=sys._getframe(stacklevel).f_globals
-        else:
-            myf=ipython_globals
-
+        a=inspect.stack()
+        stacklevel=0
+        for k in range(len(a)):
+            if (string.find(a[k][1], 'ipython console') > 0):
+                stacklevel=k
+        myf=sys._getframe(stacklevel).f_globals
         if taskname==None: taskname=myf['taskname']
         myf['taskname']=taskname
         if type(taskname)!=str:
@@ -708,10 +841,13 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None):
         myf['taskname']=taskname
         if outfile=='': outfile=taskname+'.saved'
         ##make sure unfolded parameters get their default values
-        myf['update_params'](func=myf['taskname'], printtext=False, ipython_globals=myf)
+        myf['update_params'](func=myf['taskname'], printtext=False)
         ###
         taskparameterfile=open(outfile,'w')
         print >>taskparameterfile, '%-15s    = "%s"'%('taskname', taskname)
+        print >>taskparameterfile,myf[taskname].__call__.func_defaults
+        print >>taskparameterfile,myf[taskname].__call__.func_code.co_varnames
+
         f=zip(myf[taskname].__call__.func_code.co_varnames,myf[taskname].__call__.func_defaults)
         scriptstring='#'+str(taskname)+'('
 	if myparams == None :
@@ -786,32 +922,12 @@ def default(taskname=None):
     except TypeError, e:
         print "default --error: ", e
 
-def taskparamgui(useGlobals=True):
-    """
-        Show a parameter-setting GUI for all available tasks.
-    """
-    import paramgui
-
-    if useGlobals:
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-            if (string.find(a[k][1], 'ipython console') > 0) or (string.find(a[k][1], '<string>') >= 0):
-                stacklevel=k
-                break
-        paramgui.setGlobals(sys._getframe(stacklevel).f_globals)
-    else:
-        paramgui.setGlobals({})
-
-    paramgui.runAll(_ip)
-    paramgui.setGlobals({})
-
 ####################
 
-def exit():
-    __IPYTHON__.exit_now=True
-    #print 'Use CNTRL-D to exit'
-    #return
+#def exit():
+#    __IPYTHON__.exit_now=True
+#    #print 'Use CNTRL-D to exit'
+#    #return
 
 import pylab as pl
 
@@ -821,7 +937,6 @@ import platform
 ##
 ## CAS-951: matplotlib unresponsive on some 64bit systems
 ##
-
 if (platform.architecture()[0]=='64bit'):
     pl.ioff( )
     pl.clf( )
@@ -835,63 +950,68 @@ T     = True
 false = False
 F     = False
 
-# Case where casapy is run non-interactively
-ipython = not casa['flags'].has_key('--noipython')
+# run casapy non-interactively on engine
+ipython=False
 
 # setup available tasks
 #
 from math import *
-from tasks import *
+
+#from tasks import *
+#cannot do this because
+# tasks imports xxx_cli
+# xxx_pg imports taskmanager
+# taskmanager starts a cluster and 4 engines
+
+
 from parameter_dictionary import *
 from task_help import *
 #
-home=os.environ['HOME']
-if ipython:
-    startup()
+#home=os.environ['HOME']
+#if ipython:
+#    startup()
 
 # assignment protection
 #
-pathname=os.environ.get('CASAPATH').split()[0]
-uname=os.uname()
-unameminusa=str.lower(uname[0])
-fullpath=pathname+'/'+unameminusa+'/python/2.5/assignmentFilter.py'
+#pathname=os.environ.get('CASAPATH').split()[0]
+#uname=os.uname()
+#unameminusa=str.lower(uname[0])
+#fullpath=pathname+'/'+unameminusa+'/python/2.5/assignmentFilter.py'
 casalog.origin('casa')
 ##
-## /CASASUBST/python_library_directory/  is substitued at build time
+## /home/casa-dev-01/hye/gnuactive/linux_64b/python/2.5  is substitued at build time
 ##
-fullpath='/CASASUBST/python_library_directory/' + '/assignmentFilter.py'
+#fullpath='/home/casa-dev-01/hye/casapy-casapy-23.1.6826-006-64b/lib64/python2.5'
+#sys.path.insert(2, fullpath)
+#fullpath='/usr/lib64/casapy/23.1.6826-006/lib/python2.5/assignmentFilter.py'
 
-if os.environ.has_key('__CASAPY_PYTHONDIR'):
-    fullpath=os.environ['__CASAPY_PYTHONDIR'] + '/assignmentFilter.py'
+#if os.environ.has_key('__CASAPY_PYTHONDIR'):
+#    fullpath=os.environ['__CASAPY_PYTHONDIR'] + '/assignmentFilter.py'
 
-if ipython:
-    if casa['flags'].has_key('-c') :
-        print 'will execute script',casa['flags']['-c']
-        if os.path.exists( casa['dirs']['rc']+'/ipython/ipy_user_conf.py' ) :
-            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
-        else:
-            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
-    else:
-        if os.path.exists( casa['dirs']['rc']+'/ipython/ipy_user_conf.py' ) :
-            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
-        else:
-            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
-        ipshell.IP.runlines('execfile("'+fullpath+'")')
+#utilstool = casac.homefinder.find_home_by_name('utilsHome')
+#cu = casac.cu = utilstool.create()
 
-#ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
 casalog.setlogfile(thelogfile)
-casalog.showconsole(showconsole)
+casalog.showconsole(False)
 casalog.version()
 
-import shutil
-if ipython:
-    ipshell.mainloop( )
-    if(os.uname()[0] == 'Darwin') and not casa['flags'].has_key('--qtlogger') :
-           os.system("osascript -e 'tell application \"Console\" to quit'")
-    for pid in logpid: 
-        #print 'pid: ',pid
-        os.kill(pid,9)
+def stop_all():
+    #os.kill(pid,9)
+    print "leaving casapy..."
 
+def setcwd(dir='.'):
+    os.chdir(dir)
+
+def get_host():
+    import commands
+    return commands.getoutput("uname -n")
+
+def get_user():
+    return os.environ['USER']
+
+import shutil
+
+def delete_scratch():
     for x in os.listdir('.'):
        if x.lower().startswith('casapy.scratch-'):
           if os.path.isdir(x):
@@ -899,5 +1019,5 @@ if ipython:
              os.system("rm -rf %s" % x)
              #print "Removed: ", x, "\n"
 
-    if vwrpid!=9999: os.kill(vwrpid,9)
-    print "leaving casapy..."
+if __name__ == "__main__":
+   print "start casapy engine---"

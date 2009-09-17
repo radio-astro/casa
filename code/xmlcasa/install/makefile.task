@@ -254,10 +254,16 @@ pytasks :
 	chmod 664 $(AIPSARCH)/python/$(PYTHONVER)/tasks.py
 	chmod 664 $(AIPSARCH)/python/$(PYTHONVER)/tasksinfo.py
 
-$(CGENXTIME)(%.xml) : $(CGENXTIME) $(AIPSARCH)/python/$(PYTHONVER)/%.py $(CODEDIR)/%.xml $(AIPSARCH)/python/$(PYTHONVER)/%_cli.py
+$(CGENXTIME)(%.xml) : $(CGENXTIME) $(AIPSARCH)/python/$(PYTHONVER)/%.py $(CODEDIR)/%.xml $(AIPSARCH)/python/$(PYTHONVER)/%_cli.py $(AIPSARCH)/python/$(PYTHONVER)/%_pg.py
 
 $(AIPSARCH)/python/$(PYTHONVER)/%_cli.py : $(CODEDIR)/%.xml $(CASAXSLTDIR)/casa2pycli.xsl
 	@ $(SAXON) $<  $(AIPSROOT)/code/xmlcasa/install/casa2pycli.xsl > $@
+	amkdir -p ug=rwx,g+s,o=rx -v $(AIPSROOT)/share/xml
+	cp $< $(AIPSROOT)/share/xml
+	chmod 664 $@
+
+$(AIPSARCH)/python/$(PYTHONVER)/%_pg.py : $(CODEDIR)/%.xml $(CASAXSLTDIR)/casa2pypg.xsl
+	@ $(SAXON) $<  $(AIPSROOT)/code/xmlcasa/install/casa2pypg.xsl > $@
 	amkdir -p ug=rwx,g+s,o=rx -v $(AIPSROOT)/share/xml
 	cp $< $(AIPSROOT)/share/xml
 	chmod 664 $@
@@ -273,7 +279,7 @@ $(AIPSROOT)/share/xml/%.xml : $(CODEDIR)/%.defxml
 	cp $< $(AIPSROOT)/share/xml/%.xml
 	chmod 664 $@
 
-$(CGENXTIME)(%.xml) : $(CGENXTIME) $(AIPSARCH)/python/$(PYTHONVER)/%.py $(CODEDIR)/%.xml $(AIPSARCH)/python/$(PYTHONVER)/%_cli.py
+$(CGENXTIME)(%.xml) : $(CGENXTIME) $(AIPSARCH)/python/$(PYTHONVER)/%.py $(CODEDIR)/%.xml $(AIPSARCH)/python/$(PYTHONVER)/%_cli.py $(AIPSARCH)/python/$(PYTHONVER)/%_pg.py
 	-@ echo "	$*.xml"
 	 @ trap "$(RM) $(ARCHTMPD)/$*.xml" 1 2 3 15 ; \
 	   cat /dev/null > $(ARCHTMPD)/$*.xml; \
@@ -415,7 +421,7 @@ endif
 #---------------------------------
 .PRECIOUS : %.lcc %.ycc $(LIBDBG) $(LIBOPT) $(COMPONENTLIB) $(LIBJAR)\
     $(PCKGDBGD)/%.lcc $(PCKGDBGD)/%.ycc $(PCKGOPTD)/%.lcc $(PCKGOPTD)/%.ycc \
-    $(AIPSGCODE)/impl/%.cc $(AIPSGCODE)/impl/casac/%.h $(DOCSAREA)/helpfiles/%.htex $(AIPSARCH)/python/$(PYTHONVER)/%.py $(AIPSARCH)/python/$(PYTHONVER)/%_cli.py
+    $(AIPSGCODE)/impl/%.cc $(AIPSGCODE)/impl/casac/%.h $(DOCSAREA)/helpfiles/%.htex $(AIPSARCH)/python/$(PYTHONVER)/%.py $(AIPSARCH)/python/$(PYTHONVER)/%_cli.py $(AIPSARCH)/python/$(PYTHONVER)/%_pg.py
 
 .PHONY : build_lock exorcise lib instsys depend ranlib updatelib mocs bin javalib dojars helpfiles
 

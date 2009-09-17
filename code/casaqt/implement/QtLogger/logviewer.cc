@@ -790,12 +790,64 @@ void LogViewer::copy()
    //erase from memory the selected
    //board->clear(QClipboard::Selection);
 
+   QModelIndexList lst = logView->selectionModel()->selectedIndexes();
+   
+   QSet<int> idSet;
+   for (int i = 0; i < lst.count(); i++) {
+     QModelIndex s = proxyModel->mapToSource(lst.at(i));
+     //qDebug() << "selected/mapped row" << s.row();
+     idSet.insert(s.row());
+   }
+ 
+   int rowNum = idSet.size();
+   if (rowNum < 1)
+       return;
+
+   int rowId[rowNum];
+   int k = 0;
+   foreach (int value, idSet)            
+     rowId[k++] = value;
+
+   //for (int i = 0; i < rowNum; i++) {
+   //   qDebug() << "rowId=" << rowId[i];
+   //}
+
+   int sortedId[rowNum];
+   int last = 100000000;
+   for (int j = 0; j < rowNum; j++) {
+     int max = -1;
+     int t = -1;
+     for (int i = 0; i < rowNum; i++) {
+       if (rowId[i] > max && rowId[i] < last) {
+         max = rowId[i];
+         t = i;
+       }
+     }
+     sortedId[j] = rowId[t]; 
+     last = max;
+     //qDebug() << "max=" << last << "sorted" << j << sortedId[j];
+   }
+   
+   //for (int i = 0; i < rowNum; i++) {
+   //  qDebug() << "sorted row" << sortedId[i];
+   //}
+
+   QString clip = "";
+   for (int i = rowNum - 1; i > -1; i--) {
+     //qDebug() << "sorted row" << i;
+     QString str = logModel->stringData(sortedId[i]); 
+     //logModel->removeRow(sortedId[i], QModelIndex()); 
+     clip = clip + str;
+   }
+   board->setText(clip, QClipboard::Selection);
+
+   /*
    //4.2>>>>>>>>>>
    QModelIndexList lst = logView->selectionModel()->selectedIndexes();
    QString clip = "";
    for (int i = 0; i < lst.count(); i += 4) {
     QModelIndex s = proxyModel->mapToSource(lst.at(i));
-   //  qDebug() << "selected/mapped row" << s.row();
+     qDebug() << "selected/mapped row" << s.row();
     QString str = logModel->stringData(s.row()); 
     clip = clip + str;
    }
@@ -803,6 +855,7 @@ void LogViewer::copy()
    // qDebug() << "====cliplboard: " 
    //            << board->text(QClipboard::Selection);
    //4.2<<<<<<<<<<
+   */
 
    /* single selection mode
    QString str = logModel->stringData(currentLogRow.row()); 

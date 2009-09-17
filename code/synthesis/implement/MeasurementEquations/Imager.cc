@@ -981,13 +981,11 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	}
       }
 
-      // when setting in velocity its in LSRK or REST ?
-      {
-	MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : MFrequency::LSRK;
-	mySpectral = new SpectralCoordinate(mfreqref, freqs(0),
-					    freqs(1)-freqs(0), refChan,
-					    restFreq);
-      }
+      //MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : MFrequency::LSRK;
+      MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : freqFrame_p; 
+      mySpectral = new SpectralCoordinate(mfreqref, freqs(0),
+					  freqs(1)-freqs(0), refChan,
+					  restFreq);
      
       {
 	ostringstream oos;
@@ -995,7 +993,9 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	    << MFrequency(Quantity(freqs(0), "Hz")).get("GHz")
 	    << ", spectral increment = "
 	    << MFrequency(Quantity(freqs(1)-freqs(0), "Hz")).get("GHz") 
-	    << endl;
+	    << ", frequency frame = "
+            << MFrequency::showType(mfreqref)
+            << endl; 
 	oos << "Rest frequency is " 
 	    << MFrequency(Quantity(restFreq, "Hz")).get("GHz").getValue()
 	    << " GHz" << endl;
@@ -1037,8 +1037,9 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	}
       }
       // Use this next line when non-linear is working
-      // when selecting in velocity its LSRK
-      MFrequency::Types imfreqref=(obsFreqRef==MFrequency::REST) ? MFrequency::REST : MFrequency::LSRK;
+      // when selecting in velocity its specfied freqframe or REST 
+      //MFrequency::Types imfreqref=(obsFreqRef==MFrequency::REST) ? MFrequency::REST : MFrequency::LSRK;
+      MFrequency::Types imfreqref=(obsFreqRef==MFrequency::REST) ? MFrequency::REST : freqFrame_p;
       mySpectral = new SpectralCoordinate(imfreqref, freqs,
 					  restFreq);
       // mySpectral = new SpectralCoordinate(MFrequency::DEFAULT, freqs(0),
@@ -1048,7 +1049,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	ostringstream oos;
 	oos << "Reference Frequency = "
 	    << MFrequency(Quantity(freqs(0), "Hz")).get("GHz")
-	    << " Ghz" << endl;
+	    << " Ghz, " 
+            <<" frequency frame= "<<MFrequency::showType(imfreqref)<<endl;
 	os << String(oos) << LogIO::POST;
       }
     }
@@ -1582,6 +1584,7 @@ Bool Imager::defineImage(const Int nx, const Int ny,
 			 const Quantity& qStep,
 			 const Vector<Int>& spectralwindowids,
 			 const Quantity& restFreq,
+                         const MFrequency::Types& mFreqFrame,
 			 const Int facets,
 			 const Quantity& distance, const Bool dotrackDir, 
 			 const MDirection& trackDir)
@@ -1603,6 +1606,7 @@ Bool Imager::defineImage(const Int nx, const Int ny,
      << " start=" << start << " step=" << step
      << " spwids=" << spectralwindowids
      << " fieldid=" <<   fieldid << " facets=" << facets
+     << " frame=" << mFreqFrame 
      << " distance='" << distance.getValue() << distance.getUnit() <<"'";
   os << LogIO::POST;
   ostringstream clicom;
@@ -1685,6 +1689,7 @@ Bool Imager::defineImage(const Int nx, const Int ny,
       mfImageStep_p=MFrequency(qStep);
     }
     restFreq_p=restFreq;
+    freqFrame_p=mFreqFrame;
     spectralwindowids_p.resize(spectralwindowids.nelements());
     spectralwindowids_p=spectralwindowids;
     fieldid_p=fieldid;

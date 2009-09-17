@@ -5,23 +5,23 @@ def startup():
       print """___________________________________________________________
 Available tasks:
 
-   accum         flagdata       listcal      sdplot
-   applycal      flagmanager    listhistory  sdsave    
-   bandpass      fluxscale      listobs      sdscale    
-   blcal         ft             listvis      sdsmooth   
-   browsetable   gaincal        makemask     sdstat  
-   clean         hanningsmooth  mosaic       setjy    
-   clearcal      imcontsub      plotants     smoothcal     
-   clearplot     imhead         plotcal      specfit 
-   clearstat     immoments      plotms       split   
-   concat        importfits     plotxy       tget     
-   deconvolve    importuvfits   sdaverage    uvcontsub      
-   exportfits    importvla      sdbaseline   uvcontsub2 
-   exportuvfits  imregrid       sdcal        uvmodelfit
-   feather       imsmooth       sdcoadd      viewer
-   filecatalog   imstat         sdfit        vishead    
-   find          imval          sdflag       visstat  
-   fixvis        invert         sdlist       widefield        
+   accum         flagdata       listhistory  sdsave
+   applycal      flagmanager    listobs      sdscale
+   bandpass      fluxscale      listvis      sdsmooth
+   blcal         ft             makemask     sdstat
+   browsetable   gaincal        mosaic       setjy
+   clean         hanningsmooth  plotants     smoothcal
+   clearcal      imcontsub      plotcal      specfit
+   clearplot     imhead         plotms       split
+   clearstat     immoments      plotxy       tget
+   concat        importfits     sdaverage    uvcontsub
+   deconvolve    importuvfits   sdbaseline   uvcontsub2
+   exportfits    importvla      sdcal        uvmodelfit
+   exportuvfits  imregrid       sdcoadd      viewer
+   feather       imsmooth       sdfit        vishead
+   filecatalog   imstat         sdflag       visstat
+   find          imval          sdlist       widefield
+   fixvis        listcal        sdplot        
                 
 Additional tasks available for ALMA commissioning use
          (still alpha code as of Beta release):
@@ -114,10 +114,10 @@ def tasklist():
       print 'applycal         deconvolve   uvcontsub     help par.parameter'
       print 'bandpass         feather      (uvcontsub2)  taskhelp'
       print 'blcal            ft           uvmodelfit    tasklist'
-      print 'gaincal          invert                     browsetable'
-      print 'fluxscale        makemask                   clearplot'
-      print '(fringecal)      mosaic                     clearstat'
-      print 'clearcal         widefield                  concat'
+      print 'gaincal          makemask                   browsetable'
+      print 'fluxscale        mosaic                     clearplot'
+      print '(fringecal)      widefield                  clearstat'
+      print 'clearcal                                    concat'
       print 'listcal                                     filecatalog'
       print 'smoothcal                                   startup'
       print 'polcal                                      split'

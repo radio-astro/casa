@@ -88,6 +88,7 @@ do
    if [[ "${INSTALLDIR}" != "${WORKDIR}" ]]; then
       mv ${xmlfile}.py ${INSTALLDIR}
       mv ${xmlfile}_cli.py ${INSTALLDIR}
+      mv ${xmlfile}_pg.py ${INSTALLDIR}
       cp ${xmlfile}.xml ${INSTALLDIR}
       cp task_${xmlfile}.py ${INSTALLDIR}
    fi
