@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageExprParse.cc 20600 2009-05-11 09:33:40Z gervandiepen $
+//# $Id: ImageExprParse.cc 20702 2009-09-03 06:55:24Z gervandiepen $
 
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageExprGram.h>
@@ -526,7 +526,7 @@ LatticeExprNode ImageExprParse::makeIndexinNode (const LatticeExprNode& axis,
 						 const vector<Slice>& slices)
 {
   // Determine maximum end value.
-  uInt maxEnd = 0;
+  size_t maxEnd = 0;
   for (uInt i=0; i<slices.size(); i++) {
     if (slices[i].end() > maxEnd) {
       maxEnd = slices[i].end();
@@ -537,7 +537,7 @@ LatticeExprNode ImageExprParse::makeIndexinNode (const LatticeExprNode& axis,
   Vector<Bool> flags(maxEnd+1, False);
   for (uInt i=0; i<slices.size(); i++) {
     const Slice& slice = slices[i];
-    for (uInt j=slice.start(); j<=slice.end(); j+=slice.inc()) {
+    for (size_t j=slice.start(); j<=slice.end(); j+=slice.inc()) {
       flags[j] = True;
     }
   }

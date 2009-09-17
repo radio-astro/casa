@@ -72,6 +72,7 @@ MSLister::MSLister (const MeasurementSet& ms, LogIO& os)
   // default precision (in case setPrecision is not called)
   precTime_p = 7;    // hh:mm:ss.s  (0.1 s)
   precUVDist_p = 0;  // 1 wavelength
+  precUVW_p = 2;  // 1 centimenter
   precAmpl_p = 3;    // mJy
   precPhase_p = 1;   // 0.1 deg
   precWeight_p = 0;  // unit weight
@@ -537,7 +538,7 @@ void MSLister::listData(const int pageRows,
 
     logStream_p << LogIO::DEBUG1 << "Begin: MSLister::listData" << LogIO::POST;
   
-    items_p.resize(10,False);
+    items_p.resize(11,False);
     items_p(0)="time";
     items_p(1)="antenna1";            
     items_p(2)="antenna2";            
@@ -549,6 +550,7 @@ void MSLister::listData(const int pageRows,
     items_p(7)=dataColSel(1);         
     items_p(8)="weight";        
     items_p(9)="flag";
+    items_p(10)="uvw";
   
     // Get ranges of selected data to ranges_p for use in field-width/precision 
     // setting
@@ -585,7 +587,9 @@ void MSLister::listData(const int pageRows,
     Array <Bool>          flag;
     Array <Float>         ampl,phase;
     Array <Float>         weight;
+    Array <Double>         uvw;
   
+    //cout << "type=" << dataRecords_p.type(dataRecords_p.fieldNumber("uvw")) << endl;
     // Fill the arrays.
     rowTime = dataRecords_p.asArrayDouble(RecordFieldId("time"));
     // ACQUIRE ANTENNA NAME VECTORS
@@ -636,6 +640,7 @@ void MSLister::listData(const int pageRows,
     uvdist = dataRecords_p.asArrayDouble(RecordFieldId("uvdist"));
     datadescid = dataRecords_p.asArrayInt(RecordFieldId("data_desc_id"));
     fieldid = dataRecords_p.asArrayInt(RecordFieldId("field_id"));
+    uvw = dataRecords_p.asArrayDouble(RecordFieldId("uvw"));
     //  dataColSel(0) (the data identified by this variable)
     if (dataRecords_p.isDefined(dataColSel(0))) {
       ampl = dataRecords_p.asArrayFloat(RecordFieldId(dataColSel(0)));
@@ -736,6 +741,14 @@ void MSLister::listData(const int pageRows,
     if(wtminmax(0) == wtminmax(1)) 
         { cout << "All selected data has WEIGHT = " << wtminmax(0) << endl; }
     ranges_p.define("weight",wtminmax);
+
+    logStream_p << LogIO::DEBUG2 << "Setting the uvw min and max." << LogIO::POST;
+    Vector<Float> uvwminmax(2);
+    uvwminmax(0)=min(abs(uvw));
+    uvwminmax(1)=max(abs(uvw));
+    if(uvwminmax(0) == uvwminmax(1)) 
+        { cout << "All selected data has UVW = " << uvwminmax(0) << endl; }
+    ranges_p.define("uvw",uvwminmax);
   
     // Records currently only support output to stdio, not to LogIO!
     //cout << "Printing out the Record ranges_p:" << endl
@@ -782,6 +795,8 @@ void MSLister::listData(const int pageRows,
       logStream_p << LogIO::DEBUG1 
                 << "Minumum uvdist   = " << min(uvdist) << endl
                 << "Maximum uvdist   = " << max(uvdist) << endl
+                << "Minumum uvw   = " << min(uvw) << endl
+                << "Maximum uvw   = " << max(uvw) << endl
                 << "Minumum amp      = " << min(ampl) << endl
                 << "Maximum amp      = " << max(ampl) << endl
                 << "Minumum phase    = " << min(abs(phase)) << endl
@@ -801,6 +816,10 @@ void MSLister::listData(const int pageRows,
     if ( precUVDist_p < 0 ) precUVDist_p = 0;
     if ( precUVDist_p > 0 ) oUVDist_p++;  // add space for decimal
   
+    oUVW_p = (uInt)max(1,(Int)rint(log10(max(uvw))+0.5)); // order
+    if ( precUVW_p < 0 ) precUVW_p = 0;
+    if ( precUVW_p > 0 ) oUVW_p++;  // add space for decimal
+
     oAmpl_p = (uInt)max(1,(Int)rint(log10(max(ampl))+0.5)); 
     if ( precAmpl_p < 0 ) precAmpl_p = 3;  // mJy
     if ( precAmpl_p > 0 ) oAmpl_p++;  // add space for decimal
@@ -832,6 +851,7 @@ void MSLister::listData(const int pageRows,
     //    sum of the order and precision:
     wTime_p   = oTime_p + precTime_p;
     wUVDist_p = oUVDist_p + precUVDist_p;  
+    wUVW_p = oUVW_p + precUVW_p;
     wAmpl_p   = oAmpl_p + precAmpl_p;  
     wPhase_p  = oPhase_p + precPhase_p;  
     wWeight_p = oWeight_p + precWeight_p;
@@ -849,6 +869,7 @@ void MSLister::listData(const int pageRows,
   
     wTime_p   = max(wTime_p,  (uInt)12);
     wUVDist_p = max(wUVDist_p,(uInt)6);           wUVDist_p++; wTotal_p+=wUVDist_p;
+    wUVW_p = max(wUVW_p, (uInt)4);               wUVW_p++; wTotal_p+=3*wUVW_p;
     wAmpl_p   = max(wAmpl_p,  (uInt)4);           wAmpl_p++; 
     wPhase_p  = max(wPhase_p, (uInt)4); 
     wWeight_p = max(wWeight_p,(uInt)3);           wWeight_p++;
@@ -865,6 +886,9 @@ void MSLister::listData(const int pageRows,
     colPos+=wTime_p;   hSeparator[colPos]='|';
     colPos+=wIntrf_p;  hSeparator[colPos]='|';
     colPos+=wUVDist_p; hSeparator[colPos]='|';
+    colPos+=wUVW_p; hSeparator[colPos]='|';
+    colPos+=wUVW_p; hSeparator[colPos]='|';
+    colPos+=wUVW_p; hSeparator[colPos]='|';
     if (doFld_p) {colPos+=wFld_p;hSeparator[colPos]='|';}
     if (doSpW_p) {colPos+=wSpW_p;hSeparator[colPos]='|';}
     if (doChn_p) {colPos+=wChn_p;hSeparator[colPos]='|';}
@@ -962,6 +986,10 @@ void MSLister::listData(const int pageRows,
                   cout.width(wAnt2_p);   cout << antNames2(tableRow);
                   cout.precision(precUVDist_p);
                   cout.width(wUVDist_p);cout << uvdist(tableRow);
+                  for (uInt u = 0; u < 3; u++) {
+                     cout.precision(precUVW_p);
+                     cout.width(wUVW_p);cout << uvw(IPosition(2, u, tableRow));
+                  }
                   // For the output to agree with listobs, do not add 1 to fieldid and spwinid.
                   if (doFld_p) {cout.width(wFld_p);   cout << fieldid(tableRow);}
                   if (doSpW_p) {cout.width(wSpW_p);   cout << spwinid(tableRow);}
@@ -1017,13 +1045,16 @@ void MSLister::listColumnHeader() {
   cout.setf(ios::right, ios::adjustfield);
   cout.width(wIntrf_p);            cout << " ";
   cout.width(wUVDist_p);           cout << " ";
+  cout.width(wUVW_p);           cout << " ";
+  cout.width(wUVW_p);           cout << " ";
+  cout.width(wUVW_p);           cout << " ";
   if (wFld_p) {cout.width(wFld_p); cout << " ";}
   if (wSpW_p) {cout.width(wSpW_p); cout << " ";}
   if (wChn_p) {cout.width(wChn_p); cout << " ";}
   cout << " ";
   cout.setf(ios::left, ios::adjustfield);
   for (uInt ipol=0; ipol<nIndexPols_p; ipol++) {
-    cout.width(wVis_p); cout << " "+pols_p(indexPols_p(ipol))+":";
+    cout.width(wVis_p); cout << "  "+pols_p(indexPols_p(ipol))+":";
   }
   cout << endl;
   
@@ -1033,6 +1064,9 @@ void MSLister::listColumnHeader() {
   cout.setf(ios::right, ios::adjustfield);
   cout.width(wIntrf_p);            cout << "Intrf";
   cout.width(wUVDist_p);           cout << "UVDist";
+  cout.width(wUVW_p);           cout << "U";
+  cout.width(wUVW_p);           cout << "V";
+  cout.width(wUVW_p);           cout << "W";
   if (wFld_p) {cout.width(wFld_p); cout << "Fld";}
   if (wSpW_p) {cout.width(wSpW_p); cout << "SpW";}
   if (wChn_p) {cout.width(wChn_p); cout << "Chn";}

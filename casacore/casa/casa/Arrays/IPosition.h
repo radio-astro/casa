@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition.h 20666 2009-07-07 07:46:38Z gervandiepen $
+//# $Id: IPosition.h 20703 2009-09-03 06:56:12Z gervandiepen $
 
 #ifndef CASA_IPOSITION_H
 #define CASA_IPOSITION_H
@@ -31,6 +31,7 @@
 //# Includes
 #include <casa/aips.h>
 #include <casa/iosfwd.h>
+#include <unistd.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

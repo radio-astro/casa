@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFitsOutput.h 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: MSFitsOutput.h 20532 2009-02-26 08:46:12Z gervandiepen $
 
 #ifndef MS_MSFITSOUTPUT_H
 #define MS_MSFITSOUTPUT_H
@@ -66,7 +66,7 @@ public:
 private:
   // Write the main table.
   static FitsOutput *writeMain(Int& refPixelFreq, Double& refFreq,
-			       Double& chanbw,
+			       Double& refFreq1, Double& chanbw,
 			       const String& outFITSFile,
 			       const MeasurementSet& rawms,
 			       const String& column,
@@ -113,9 +113,6 @@ private:
   static void getStartHA (Double& startTime, Double& startHA,
 			  const MeasurementSet& ms, uInt rownr);
 
-  // Discern the antenna numbers that go into UVFITS
-  static void handleAntNumbers(const MeasurementSet& ms,Vector<Int>& antnumbers);
-
   // Handle the SYSCAL table.
   // It skips the entries not needed and sorts it in the correct order.
   static Table handleSysCal (const MeasurementSet& ms,
@@ -132,8 +129,6 @@ private:
   // simply filled with values 0-nrid.
   static Int makeIdMap (Block<Int>& map, Vector<Int>& selids,
 			const Vector<Int>& allids, Bool isSubset);
-
-
 };
 
 

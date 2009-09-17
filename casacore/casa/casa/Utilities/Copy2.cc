@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Copy2.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: Copy2.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <casa/Utilities/Copy.h>
 #include <casa/Exceptions/Error.h>

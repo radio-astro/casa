@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: $
+//# $Id: MSConcat.cc 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #include <ms/MeasurementSets/MSConcat.h>
 #include <casa/Arrays/Vector.h>
@@ -903,7 +903,7 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
       // Check if there are redundant rows and remove them creating map for copyField
       // loop over the columns of the merged source table 
       Vector<Bool> rowToBeRemoved(numrows_this, False);
-      vector<uint> rowsToBeRemoved;
+      vector<uInt> rowsToBeRemoved;
       for (uint j=0 ; j < numrows_this ; ++j){
 	// check if row j has an equivalent row somewhere else in the table
 	for (uint k=0 ; k < numrows_this ; ++k){

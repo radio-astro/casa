@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LatticeRegion.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LatticeRegion.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #ifndef LATTICES_LATTICEREGION_H
 #define LATTICES_LATTICEREGION_H

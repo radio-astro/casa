@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Slice.cc 20482 2009-01-08 10:51:57Z gervandiepen $
+//# $Id: Slice.cc 20702 2009-09-03 06:55:24Z gervandiepen $
 
 #include <casa/Arrays/Slice.h>
 #include <casa/Arrays/Slicer.h>
@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Get total slices length if slices are given.
       // Check if slice does not exceed shape.
       for (uInt j=0; j<sliceVec.size(); ++j) {
-        if (sliceVec[j].end() >= shape[i]) {
+        if (sliceVec[j].end() >= size_t(shape[i])) {
           throw AipsError("Slice::checkSlices - "
                           "slice exceeds array shape");
         }

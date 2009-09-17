@@ -83,7 +83,7 @@
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
-#include <images/Images/ImageMetadata.h>
+#include <images/Images/ImageMetaData.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageSourceFinder.h>
@@ -115,7 +115,6 @@
 #include <lattices/Lattices/PixelCurve1D.h>
 #include <lattices/Lattices/RegionType.h>
 #include <lattices/Lattices/TiledLineStepper.h>
-#include <measures/Measures/Stokes.h>
 #include <scimath/Fitting/LinearFitSVD.h>
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Mathematics/VectorKernel.h>
@@ -2324,12 +2323,6 @@ ComponentList ImageAnalysis::fitsky(
 		 }
 		 */
 	}
-	Bool doInclude = (includepix.nelements() > 0);
-	Bool doExclude = (excludepix.nelements() > 0);
-	if (doInclude && doExclude) {
-		*itsLog << "You cannot give both an include and an exclude pixel range"
-				<< LogIO::EXCEPTION;
-	}
 
     IPosition imShape = pImage_p->shape();
     // pass in a Vector here
@@ -2342,15 +2335,15 @@ ComponentList ImageAnalysis::fitsky(
 	tmpVector.set(1);
 	IPosition stride(tmpVector);
 
-    ImageMetadata imMetadata(*pImage_p);
-    if (imMetadata.hasSpectralAxis()) {
-        uInt spectralAxisNumber = imMetadata.spectralAxisNumber();
+    ImageMetaData imMetaData(*pImage_p);
+    if (imMetaData.hasSpectralAxis()) {
+        uInt spectralAxisNumber = imMetaData.spectralAxisNumber();
 	    startPos[spectralAxisNumber] = chan;
 	    endPos[spectralAxisNumber] = chan;
     }
-    if (imMetadata.hasPolarizationAxis()) {
-        uInt stokesAxisNumber = imMetadata.polarizationAxisNumber();
-	    startPos[stokesAxisNumber] = imMetadata.stokesPixelNumber(stokesString);
+    if (imMetaData.hasPolarizationAxis()) {
+        uInt stokesAxisNumber = imMetaData.polarizationAxisNumber();
+	    startPos[stokesAxisNumber] = imMetaData.stokesPixelNumber(stokesString);
 	    endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
     }
 
@@ -2402,49 +2395,9 @@ ComponentList ImageAnalysis::fitsky(
 	Fit2D fitter(*itsLog);
 
     // Set pixel range depending on Stokes type and min/max
-	if (!doInclude && !doExclude) {
-		if (stokes == Stokes::I) {
-			if (abs(maxVal) >= abs(minVal)) {
-				fitter.setIncludeRange(0.0, maxVal + 0.001);
-				*itsLog << LogIO::NORMAL << "Selecting pixels > 0.0"
-						<< LogIO::POST;
-			} else {
-				fitter.setIncludeRange(minVal - 0.001, 0.0);
-				*itsLog << LogIO::NORMAL << "Selecting pixels < 0.0"
-						<< LogIO::POST;
-			}
-		} else {
-			*itsLog << LogIO::NORMAL << "Selecting all pixels" << LogIO::POST;
-		}
-	} else {
-		if (doInclude) {
-			if (includepix.nelements() == 1) {
-				fitter.setIncludeRange(-abs(includepix(0)), abs(includepix(0)));
-				*itsLog << LogIO::NORMAL << "Selecting pixels from " << -abs(
-						includepix(0)) << " to " << abs(includepix(0))
-						<< LogIO::POST;
-			} else if (includepix.nelements() > 1) {
-				fitter.setIncludeRange(includepix(0), includepix(1));
-				*itsLog << LogIO::NORMAL << "Selecting pixels from "
-						<< includepix(0) << " to " << includepix(1)
-						<< LogIO::POST;
-			}
-		} else {
-			if (excludepix.nelements() == 1) {
-				fitter.setExcludeRange(-abs(excludepix(0)), abs(excludepix(0)));
-				*itsLog << LogIO::NORMAL << "Excluding pixels from " << -abs(
-						excludepix(0)) << " to " << abs(excludepix(0))
-						<< LogIO::POST;
-			} else if (excludepix.nelements() > 1) {
-				fitter.setExcludeRange(excludepix(0), excludepix(1));
-				*itsLog << LogIO::NORMAL << "Excluding pixels from "
-						<< excludepix(0) << " to " << excludepix(1)
-						<< LogIO::POST;
-			}
-		}
-	}
+    _setFitSkyIncludeExclude(includepix, excludepix, stokes, minVal, maxVal, fitter);
 
-	// Recover just single component estimate if desired and bug out
+    // Recover just single component estimate if desired and bug out
 	// Must use subImage in calls as converting positions to absolute
 	// pixel and vice versa
     ComponentList cl;
@@ -2578,6 +2531,65 @@ ComponentList ImageAnalysis::fitsky(
 
 	return cl;
 
+}
+
+void ImageAnalysis::_setFitSkyIncludeExclude(
+    const Vector<Float>& includepix, const Vector<Float>& excludepix,
+    const Stokes::StokesTypes& stokes, const Float minVal, const Float maxVal,
+    Fit2D& fitter 
+) const {
+	Bool doInclude = (includepix.nelements() > 0);
+	Bool doExclude = (excludepix.nelements() > 0);
+	if (doInclude && doExclude) {
+		*itsLog << "You cannot give both an include and an exclude pixel range"
+				<< LogIO::EXCEPTION;
+	}
+	if (!doInclude && !doExclude) {
+		if (stokes == Stokes::I) {
+			if (abs(maxVal) >= abs(minVal)) {
+				fitter.setIncludeRange(0.0, maxVal + 0.001);
+				*itsLog << LogIO::NORMAL << "Selecting pixels > 0.0"
+						<< LogIO::POST;
+			}
+            else {
+				fitter.setIncludeRange(minVal - 0.001, 0.0);
+				*itsLog << LogIO::NORMAL << "Selecting pixels < 0.0"
+						<< LogIO::POST;
+			}
+		}
+        else {
+			*itsLog << LogIO::NORMAL << "Selecting all pixels" << LogIO::POST;
+		}
+	}
+    else {
+		if (doInclude) {
+			if (includepix.nelements() == 1) {
+				fitter.setIncludeRange(-abs(includepix(0)), abs(includepix(0)));
+				*itsLog << LogIO::NORMAL << "Selecting pixels from " << -abs(
+						includepix(0)) << " to " << abs(includepix(0))
+						<< LogIO::POST;
+			} else if (includepix.nelements() > 1) {
+				fitter.setIncludeRange(includepix(0), includepix(1));
+				*itsLog << LogIO::NORMAL << "Selecting pixels from "
+						<< includepix(0) << " to " << includepix(1)
+						<< LogIO::POST;
+			}
+		}
+        else {
+			if (excludepix.nelements() == 1) {
+				fitter.setExcludeRange(-abs(excludepix(0)), abs(excludepix(0)));
+				*itsLog << LogIO::NORMAL << "Excluding pixels from " << -abs(
+						excludepix(0)) << " to " << abs(excludepix(0))
+						<< LogIO::POST;
+			}
+            else if (excludepix.nelements() > 1) {
+				fitter.setExcludeRange(excludepix(0), excludepix(1));
+				*itsLog << LogIO::NORMAL << "Excluding pixels from "
+						<< excludepix(0) << " to " << excludepix(1)
+						<< LogIO::POST;
+			}
+		}
+	}
 }
 
 Bool ImageAnalysis::getchunk(Array<Float>& pixels, Array<Bool>& pixelMask,

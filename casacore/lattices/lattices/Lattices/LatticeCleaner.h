@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LatticeCleaner.h 20577 2009-04-23 13:05:42Z max.voronkov $
+//# $Id: LatticeCleaner.h 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #ifndef LATTICES_LATTICECLEANER_H
 #define LATTICES_LATTICECLEANER_H

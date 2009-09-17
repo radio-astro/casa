@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: fits.cc 20648 2009-06-29 07:22:00Z gervandiepen $
+//# $Id: fits.cc 20704 2009-09-03 08:53:52Z gervandiepen $
 
 //# Partial implementation of little endian code by Kris Huber
 //# (kris@helios.ece.usu.edu)

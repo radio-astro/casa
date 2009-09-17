@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: TempLattice.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: TempLattice.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #ifndef LATTICES_TEMPLATTICE_H
 #define LATTICES_TEMPLATTICE_H

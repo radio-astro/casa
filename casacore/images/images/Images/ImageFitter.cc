@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSubImage.cc 20567 2009-04-09 23:12:39Z gervandiepen $
+//# $Id: $
 
 #include <casa/Inputs/Input.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageFitter.h>
-#include <images/Images/ImageMetadata.h>
+#include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Regions/RegionManager.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -65,11 +65,13 @@ namespace casa {
         Input input(1);
         input.version("$ID:$");
         input.create("imagename");
-        input.create("box");
-        input.create("region");
-        input.create("ngauss");
-        input.create("chan");
-        input.create("stokes");
+        input.create("box", "");
+        input.create("region", "");
+        input.create("ngauss", "1");
+        input.create("chan", "0");
+        input.create("stokes", "I");
+        input.create("includepix", "");
+        input.create("excludepix", "");
         input.readArguments(argc, argv);
         String imagename = input.getString("imagename");
 
@@ -80,12 +82,23 @@ namespace casa {
         chan = input.getInt("chan");
         stokesString = input.getString("stokes");
 
+        Vector<String> includePixParts = stringToVector(input.getString("includepix")); 
+        Vector<String> excludePixParts = stringToVector(input.getString("excludepix"));
+        includePixelRange(includePixParts.nelements());
+        excludePixelRange(excludePixParts.nelements());
+        for (uInt i = 0; i < includePixelRange.nelements(); i++) {
+            includePixelRange[i] = String::toFloat(includePixParts[i]);
+        }
+        for (uInt i = 0; i < excludePixelRange.nelements(); i++) {
+            excludePixelRange[i] = String::toFloat(excludePixParts[i]);
+        }
         _construct(imagename, box, region);
     }
 
     ImageFitter::ImageFitter(
         const String& imagename, const String& box, const String& region,
-        const uInt ngaussInp, const uInt chanInp, const String& stokes
+        const uInt ngaussInp, const uInt chanInp, const String& stokes,
+        const Vector<Float>& includepix, const Vector<Float>& excludepix
     ) {
         itsLog = new LogIO();
         *itsLog << LogOrigin("ImageFitter", "constructor");
@@ -93,6 +106,8 @@ namespace casa {
         ngauss = ngaussInp;
         chan = chanInp;
         stokesString = stokes;
+        includePixelRange = includepix;
+        excludePixelRange = excludepix;
         _construct(imagename, box, region);
     }
 
@@ -111,13 +126,12 @@ namespace casa {
         models.set("gaussian");
         Vector<String> fixedparams;
         Record estimate; 
-        Vector<Float> includepix, excludepix;
         ImageAnalysis myImage(image);
         Record rec = Record(imRegion.toRecord(""));
         ComponentList compList = myImage.fitsky(
             residPixels, residMask, converged, rec,
             chan, stokesString, mask, models,
-            estimate, fixedparams, includepix, excludepix
+            estimate, fixedparams, includePixelRange, excludePixelRange
         );   
 
         Flux<Double> flux;
@@ -221,15 +235,13 @@ namespace casa {
             throw(AipsError("Unable to open image " + imagename));
         }
         _doRegion(box, region);
-        stokesString = (stokesString == "") ? "I" : stokesString;
-        ngauss = (ngauss == 0) ? 1 : ngauss;
         _checkImageParameterValidity();
     }
 
     void ImageFitter::_checkImageParameterValidity() const {
         *itsLog << LogOrigin("ImageFitter", "_checkImageParameterValidity");
         String error;
-        ImageMetadata imageProps(*image);
+        ImageMetaData imageProps(*image);
         if (imageProps.hasPolarizationAxis() && imageProps.hasSpectralAxis()) {
             if (! imageProps.areChannelAndStokesValid(error, chan, stokesString)) {
                 *itsLog << error << LogIO::EXCEPTION;
@@ -243,7 +255,7 @@ namespace casa {
             if (region == "") {
                 // neither region nor box specified, use entire 2-D plane
                 IPosition imShape = image->shape();
-                Vector<Int> dirNums = ImageMetadata(*image).directionAxesNumbers();
+                Vector<Int> dirNums = ImageMetaData(*image).directionAxesNumbers();
                 Vector<Int> dirShape(imShape[dirNums[0]], imShape[dirNums[1]]);
                 *itsLog << LogIO::NORMAL << "Neither box nor region specified, "
                     << "so entire plane of " << dirShape[0] << " x "
@@ -284,7 +296,7 @@ namespace casa {
             trc[i] = imShape[i] - 1;
         }
     
-        Vector<Int> dirNums = ImageMetadata(*image).directionAxesNumbers();
+        Vector<Int> dirNums = ImageMetaData(*image).directionAxesNumbers();
         blc[dirNums[0]] = String::toDouble(boxParts[0]);
         blc[dirNums[1]] = String::toDouble(boxParts[1]);
         trc[dirNums[0]] = String::toDouble(boxParts[2]);

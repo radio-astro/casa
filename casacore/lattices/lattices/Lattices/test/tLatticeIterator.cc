@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLatticeIterator.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tLatticeIterator.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <casa/aips.h>
 #include <lattices/Lattices/PagedArray.h>

@@ -1,5 +1,5 @@
-//# tPagedImage.cc:  test the PagedImage class
-//# Copyright (C) 1994,1995,1998,1999,2000,2001,2002
+//# tImageMetaData.cc:  test the ImageMetaData class
+//# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tPagedImage.cc 20648 2009-06-29 07:22:00Z gervandiepen $
+//# $Id: tImageMetaData.cc 20722 2009-09-16 07:01:34Z gervandiepen $
 
-#include <images/Images/ImageMetadata.h>
+#include <images/Images/ImageMetaData.h>
 #include <images/Images/FITSImage.h>
 #include <casa/OS/Path.h>
 #include <casa/namespace.h>
-
+#include <casa/OS/File.h>
 
 int main(Int argc, char *argv[]) {
     // just to eliminate compiler warning about argc not being used
@@ -39,7 +39,13 @@ int main(Int argc, char *argv[]) {
     }
 
     Path path(argv[0]);
-    String fixturesDir = path.dirName() + "/fixtures/tImageMetadata/";
+    // if fixtures directory exists, get the test data from there
+    // necessary because of differences between build system for NRAO repos
+    // and Google repos.
+    String fixturesDir = path.dirName() + "/fixtures/tImageMetaData/";
+    if (! File(fixturesDir).exists()) {
+        fixturesDir = path.dirName() + "/";
+    }
     try {
         FITSImage fourAxesImage(
             fixturesDir + "ngc5921.clean.fits"
@@ -48,8 +54,8 @@ int main(Int argc, char *argv[]) {
             fixturesDir + "ngc5921.clean.no_freq.no_stokes.fits"
         );
    
-        ImageMetadata fourAxesImageMetaData(fourAxesImage);
-        ImageMetadata twoAxesImageMetaData(twoAxesImage);
+        ImageMetaData fourAxesImageMetaData(fourAxesImage);
+        ImageMetaData twoAxesImageMetaData(twoAxesImage);
         {
             // 3 in the casa format image, but 2 in the FITS image
             AlwaysAssert(fourAxesImageMetaData.spectralAxisNumber() == 2, AipsError);

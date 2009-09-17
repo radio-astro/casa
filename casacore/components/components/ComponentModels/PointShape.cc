@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PointShape.cc 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: PointShape.cc 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #include <components/ComponentModels/PointShape.h>
 #include <components/ComponentModels/Flux.h>

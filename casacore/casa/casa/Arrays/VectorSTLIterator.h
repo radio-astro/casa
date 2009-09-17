@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VectorSTLIterator.h 19815 2006-12-22 02:59:04Z gvandiep $
+//# $Id: VectorSTLIterator.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #ifndef CASA_VECTORSTLITERATOR_H
 #define CASA_VECTORSTLITERATOR_H

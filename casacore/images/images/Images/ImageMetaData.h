@@ -1,5 +1,5 @@
-//# ImageInterface.h: a base class for astronomical images
-//# Copyright (C) 1996,1997,1998,1999,2000,2001
+//# ImageMetaData.h: Meta information for Images
+//# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageInterface.h 20567 2009-04-09 23:12:39Z gervandiepen $
+//# $Id$
 
 #ifndef IMAGES_IMAGEMETADATA_H
 #define IMAGES_IMAGEMETADATA_H
@@ -47,11 +47,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 
 // <etymology>
-// The ImageMetadata class name is derived from its role as holding image metadata.
+// The ImageMetaData class name is derived from its role as holding image metadata.
 // </etymology>
 
 // <synopsis> 
-// The ImageMetadata object is meant to allow access to image metadata (eg, shape,
+// The ImageMetaData object is meant to allow access to image metadata (eg, shape,
 // coordinate system info such as spectral and polarization axes numbers, etc).
 // </synopsis>
 
@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Construct an object of this class by passing the associated image to the constructor.
 // <srcblock>
 // PagedImage<Float> myImage("myImage");
-// ImageMetadata<Float> myImageMetadata(myImage);
+// ImageMetaData<Float> myImageMetaData(myImage);
 // </srcblock>
 // </example>
 
@@ -70,10 +70,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 
 
-class ImageMetadata {
+class ImageMetaData {
 
     public:
-        template <class T> ImageMetadata(const ImageInterface<T>& image) :
+        template <class T> ImageMetaData(const ImageInterface<T>& image) :
             itsCoordinates (image.coordinates()), itsShape(image.shape()) {};
 
         // Get the axis number of the spectral axis of this image (0-based).
@@ -138,13 +138,14 @@ class ImageMetadata {
         Bool hasDirectionCoordinate() const;
 
         // Get the direction axes numbers for this image. Returns a two element
-        // Vector. If there is no direction coordinate, both elements of the
-        // returned Vector are -1.
+        // Vector if there is a direction coordinate, if not returns a zero element
+        // vector.
         Vector<Int> directionAxesNumbers() const; 
 
-        // Get the shape of the direction axes. Returns a two element Vector. 
-        // If no direction coordinate, both elements of the returned Vector are
-        // equal to 0.
+        // Get the shape of the direction axes. Returns a two element
+        // Vector if there is a direction coordinate, if not returns a zero element
+        // vector.
+
         Vector<Int> directionShape() const;
 
         // if the specified stokes parameter is valid. A message suitable for

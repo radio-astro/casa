@@ -23,11 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5.cc 20646 2009-06-26 07:25:35Z gervandiepen $
+//# $Id: tHDF5.cc 20712 2009-09-03 14:36:23Z gervandiepen $
 
 #include <iostream>
 
-#ifndef HAVE_LIBHDF5
+#ifndef HAVE_HDF5
 int main()
 {
   std::cout << "HDF5 not configured in, so cannot run tHDF5" << std::endl;

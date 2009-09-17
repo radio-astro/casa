@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSPointingColumns.h 19944 2007-02-27 11:14:34Z Malte.Marquarding $
+//# $Id: MSPointingColumns.h 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #ifndef MS_MSPOINTINGCOLUMNS_H
 #define MS_MSPOINTINGCOLUMNS_H

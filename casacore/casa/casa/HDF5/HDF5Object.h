@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Object.h 20657 2009-07-07 04:49:56Z Malte.Marquarding $
+//# $Id: HDF5Object.h 20712 2009-09-03 14:36:23Z gervandiepen $
 
 #ifndef CASA_HDF5OBJECT_H
 #define CASA_HDF5OBJECT_H
@@ -35,7 +35,7 @@
 //# Define hid_t and hsize_t if not defined (thus if HDF5 disabled).
 //# They should be the same as used by HDF5.
 //# This is checked by functions check_hid_t and check_hsize_t.
-#ifdef HAVE_LIBHDF5
+#ifdef HAVE_HDF5
 # include <hdf5.h>
 #else 
   typedef int                hid_t;

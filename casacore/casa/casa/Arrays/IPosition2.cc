@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition2.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: IPosition2.cc 20705 2009-09-03 09:04:46Z gervandiepen $
 
 //# This source file is not needed if you aren't interested in converting
 //# to and from Array<Int>, i.e. if you don't want IPosition's to depend
@@ -67,7 +67,8 @@ Vector<Int> IPosition::asVector() const
     // Make an array which is the correct size.
     Vector<Int> retval(nelements());
     for (uInt i=0; i<nelements(); i++) {
-	retval(i) = (*this)(i);
+        AlwaysAssert (data_p[i] <= 2147483647, AipsError);
+	retval[i] = data_p[i];
     }
     return retval;
 }
@@ -83,7 +84,7 @@ AipsIO& operator<< (AipsIO& aio, const IPosition& ip)
   Bool use32 = True;
   if (sizeof(ssize_t) > 4) {
     for (uInt i=0; i<ip.size_p; ++i) {
-      if (ip[i] >= 32768U*65536U) {
+      if (ip[i] >= ssize_t(32768)*65536) {
         use32 = False;
         break;
       }

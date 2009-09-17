@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasTable.cc 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: MeasTable.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 //# Includes
 #include <measures/Measures/MeasTable.h>

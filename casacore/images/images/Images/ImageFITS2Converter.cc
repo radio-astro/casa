@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageFITS2Converter.cc 20648 2009-06-29 07:22:00Z gervandiepen $
+//# $Id: ImageFITS2Converter.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 //#include <casa/version.h>
 

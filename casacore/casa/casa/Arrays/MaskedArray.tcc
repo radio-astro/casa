@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskedArray.tcc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: MaskedArray.tcc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/Array.h>

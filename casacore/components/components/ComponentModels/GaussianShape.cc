@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: GaussianShape.cc 19283 2006-02-24 22:31:52Z gmoellen $
+//# $Id: GaussianShape.cc 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #include <components/ComponentModels/GaussianShape.h>
 #include <components/ComponentModels/Flux.h>

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Array2.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: Array2.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/IPosition.h>

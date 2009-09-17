@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSPolIndex.cc 18464 2005-03-16 18:44:32Z dguo $
+//# $Id: MSPolIndex.cc 20704 2009-09-03 08:53:52Z gervandiepen $
 
 
 #include <ms/MeasurementSets/MSPolIndex.h>
