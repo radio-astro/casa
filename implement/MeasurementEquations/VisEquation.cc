@@ -53,6 +53,7 @@ VisEquation::VisEquation() :
   lfd_(-1),
   rfd_(9999),
   svc_(NULL),
+  pivot_(VisCal::ALL),  // at the sky
   spwOK_(),
   prtlev_(VISEQPRTLEV)
 {
@@ -160,6 +161,18 @@ void VisEquation::setsolve(SolvableVisCal& svc) {
 
 
 //----------------------------------------------------------------------
+void VisEquation::setPivot(VisCal::Type pivot) {
+
+  if (prtlev()>0) cout << "VE::setPivot()" << endl;
+  
+  pivot_ = pivot;
+
+}
+  
+
+
+
+//----------------------------------------------------------------------
 // Correct in place the OBSERVED visibilities in a VisBuffer
 void VisEquation::correct(VisBuffer& vb) {
 
@@ -230,7 +243,7 @@ void VisEquation::collapse(VisBuffer& vb) {
   vb.weightMat();
   
   // Re-calculate weights from sigma column
-  // TBD: somehow avoid is not necessary?
+  // TBD: somehow avoid if not necessary?
   vb.resetWeightMat();
 
   // Ensure correlations in canonical order
@@ -286,6 +299,40 @@ void VisEquation::collapse(VisBuffer& vb) {
     ridx--;
   }
   
+}
+
+//----------------------------------------------------------------------
+void VisEquation::collapseForSim(VisBuffer& vb) {
+
+  if (prtlev()>0) cout << "VE::collapse()" << endl;
+
+  // Handle origin of model data here (?):
+
+  // Ensure correlations in canonical order
+  // (this is a no-op if no sort necessary)
+  // TBD: optimize in combo with model origination?
+  vb.sortCorr();
+
+  // initialize LHS/RHS indices
+  Int lidx=0;
+  Int ridx=napp_-1;
+  
+  // Correct DATA up to pivot 
+  while (lidx<napp_ && vc()[lidx]->type() < pivot_) {
+    vc()[lidx]->correct(vb);
+    lidx++;
+  }
+  
+  // Corrupt MODEL down to (and including) the pivot
+  while (ridx>-1    && vc()[ridx]->type() >= pivot_) {
+    vc()[ridx]->corrupt(vb);
+    ridx--;
+  }
+  
+  // Put correlations back in original order
+  //  (~no-op if already canonical)
+  vb.unSortCorr();
+
 }
 
 void VisEquation::state() {
