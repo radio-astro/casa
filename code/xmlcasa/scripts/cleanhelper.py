@@ -51,7 +51,7 @@ class cleanhelper:
         self.csys={}
 
     def defineimages(self, imsize, cell, stokes, mode, spw, nchan, start,
-                      width, restfreq, field, phasecenter, facets=1):
+                      width, restfreq, field, phasecenter, facets=1, outframe='', veltype='radio'):
         if((type(cell)==list) and (len(cell)==1)):
             cell.append(cell[0])
         elif ((type(cell)==str) or (type(cell)==int) or (type(cell)==float)):
@@ -126,12 +126,13 @@ class cleanhelper:
                             mode=mode,         nchan=nchan,
                             start=start,       step=width,
                             spw=spwindex,      stokes=stokes,
-                            restfreq=restfreq, phasecenter=phasecenter,
+                            restfreq=restfreq, outframe=outframe,
+                            veltype=veltype, phasecenter=phasecenter,
                             facets=facets)
 
     def definemultiimages(self, rootname, imsizes, cell, stokes, mode, spw,
                           nchan, start, width, restfreq, field, phasecenters,
-                          names=[], facets=1, makepbim=False):
+                          names=[], facets=1, outframe='',veltype='radio',  makepbim=False):
         #will do loop in reverse assuming first image is main field
         if not hasattr(imsizes, '__len__'):
             imsizes = [imsizes]
@@ -165,8 +166,8 @@ class cleanhelper:
         lerange.reverse()
         for n in lerange:
             self.defineimages(list(imsizes[n]), cell, stokes, mode, spw, nchan,
-                              start,
-                              width, restfreq, field, phasecenters[n],facets)
+                              start, width, restfreq, field, phasecenters[n],
+                              facets,outframe,veltype)
             if(len(names)==self.nimages):
                 self.imageids[n]=names[n]
                 if(rootname != ''):

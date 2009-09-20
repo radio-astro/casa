@@ -16,8 +16,11 @@
         separately.  However, at present the calibration and imaging will
         only use data with both parallel hands unflagged.
 
-        There is a vector mode of operation to execute several flagging options
-        in one execution.
+        There is a vector mode of operation, which executes several flagging
+        options in one go.
+
+        The current flags are automatically backed up before applying new flags.
+        Previous flag versions can be recovered using the flagmanager task.
 
         </description>
         <input>
@@ -350,10 +353,6 @@
 
         Unflagging is also available with options manualflag and quack.
 
-        Note: I a dual polarization data set, each polarization can be flagged
-        separately.  However, at present the calibration and imaging will
-        only use only data with both parallel hands unflagged.
-
         Keyword arguments:
         vis -- Name of input visibility file
                 default: none example: vis='ngc5921.ms'
@@ -444,9 +443,13 @@
                      'I','XX','YY','RR','LL'
 
         alma: Automatic flagging algorithm from the ALMA heuristics pipeline.
-           For more information, see ???
+           For more information on the algorithm, refer to the log report
+           produced during the execution of this algorithm.
+
            Note: The selection parameters are *not* used in this mode. The
            algorithm always run on the full MS.
+
+           Note: This algorithm is experimental. Use at your own risk!
 
            recipe -- which algorithm to use
                 default: 'vla_recipe'

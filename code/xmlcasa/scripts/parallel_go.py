@@ -427,7 +427,8 @@ class cluster(object):
      
      if phome=='':
         try:
-           phome=str.split(os.environ["CASAPATH"], ' ')[0]
+           v=str.split(os.environ["CASAPATH"], ' ')
+           phome=v[0]+'/'+v[1]
         except:
            pass
            #print 'environment variable CASAPATH not found'
@@ -444,32 +445,27 @@ class cluster(object):
         return None
 
      # this for the release 
-     self.__client.push(dict(phome=phome), i)
-     self.__client.execute('import sys', i)
-     import platform
-     if (platform.architecture()[0]=='64bit'):
-        self.__client.execute('scriptdir=phome+"/lib64/python2.5/"', i)
-     else:
-        self.__client.execute('scriptdir=phome+"/lib/python2.5/"', i)
-     self.__client.execute('sys.path.insert(2, scriptdir)', i)
-
-     #this is for active branch
-     #/home/ballista/casa/active/linux_64b/python/2.5/casa_in_py.py
      #self.__client.push(dict(phome=phome), i)
      #self.__client.execute('import sys', i)
-     #self.__client.execute('scriptdir=phome+"/linux_64b/python/2.5/"', i)
+     #import platform
+     #if (platform.architecture()[0]=='64bit'):
+     #   self.__client.execute('scriptdir=phome+"/lib64/python2.5/"', i)
+     #else:
+     #   self.__client.execute('scriptdir=phome+"/lib/python2.5/"', i)
+     #self.__client.execute('sys.path.insert(2, scriptdir)', i)
 
-     #this is for devel branch
-     if (dhome==''):
-        phome=phome+'/linux_gnu'
-     else:
+     #print phome, dhome
+     if (dhome!=phome):
         phome=dhome
+
+     sdir='/CASASUBST/python_library_directory/'+'/'
      self.__client.push(dict(phome=phome), i)
      self.__client.execute('import sys', i)
-     self.__client.execute('scriptdir=phome+"/python/2.5/"', i)
+     #self.__client.execute('scriptdir=phome+"/python/2.5/"', i)
+     self.__client.push(dict(sdir=sdir), i)
+     self.__client.execute('scriptdir=sdir', i)
 
      self.__client.execute('sys.path.insert(2, scriptdir)', i)
-
      try:
         #self.__client.execute('from casa_in_py import *')
         self.__client.execute("execfile(scriptdir+'casa_in_py.py')", i)

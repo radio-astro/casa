@@ -22,8 +22,8 @@
 # Updated by STM    2008-11-03                  minor updates            #
 # Updated by STM    2008-11-19                  Patch 3 400x400 image    #
 # Updated by STM    2008-12-01                  Patch 3 release          #
-# Updated by STM    2008-06-03                  Patch 4, fix error       #
-# Updated by RR     2009-06-10                  Commented out SPWID hack #
+# Updated by STM    2008-06-03                  Patch 4 vals, fix error  #
+# Updated by STM    2009-06-19                  Patch 4 release          #
 #                                                                        #
 # N4826 - BIMA SONG Data                                                 #
 #                                                                        #
@@ -79,7 +79,7 @@ prefix='ngc4826.tutorial'
 msfile = prefix + '.16apr98.ms'
 
 print 'Tutorial Regression Script for BIMASONG NGC4826 Mosaic'
-print 'Version for Beta Patch 4 (2.4.0) 3-June-2009'
+print 'Version for Beta Patch 4 (2.4.0) 19-June-2009'
 print 'Will do: import, flagging, calibration, imaging'
 print ''
 #
@@ -251,20 +251,18 @@ if benchmarking:
 #
 ##########################################################################
 #
-# Fix up the MS (no longer necessary or desirable, but this is how you say "any
-# spectral window ID is OK".  That works here because all of the rest
-# frequencies in the SOURCE table happen to be the same.)
+# Fix up the MS (temporary, changes to importfits underway)
 #
-## print '--Fixing up spw rest frequencies in MS--'
-## vis='ngc4826.tutorial.ms'
-## tb.open(vis+'/SOURCE',nomodify=false)
-## spwid=tb.getcol('SPECTRAL_WINDOW_ID')
-## #spwid.setfield(-1,int)
-## # Had to do this for 64bit systems 08-Jul-2008
-## spwid.setfield(-1,'int32')
-## tb.putcol('SPECTRAL_WINDOW_ID',spwid)
-## tb.close()
-#
+print '--Fixing up spw rest frequencies in MS--'
+vis='ngc4826.tutorial.ms'
+tb.open(vis+'/SOURCE',nomodify=false)
+spwid=tb.getcol('SPECTRAL_WINDOW_ID')
+#spwid.setfield(-1,int)
+# Had to do this for 64bit systems 08-Jul-2008
+spwid.setfield(-1,'int32')
+tb.putcol('SPECTRAL_WINDOW_ID',spwid)
+tb.close()
+
 # This ensures that the rest freq will be found for all spws. 
 
 #
@@ -1284,7 +1282,7 @@ if benchmarking:
 #model_sum = 73.183142
 #model_pbcor_sum = 76.960971
 
-#New values STM 2008-12-01 Patch3 (released version)
+#New values STM 2008-12-01 Patch3.0 (released version)
 #for 400x400 clean 
 #testdate = '2008-12-01 (STM)'
 #testvers = 'CASA Version 2.3.0 Rev 6654'
@@ -1301,22 +1299,39 @@ if benchmarking:
 #model_sum = 72.437971
 #model_pbcor_sum = 70.417830
 
-#New values STM 2009-06-03 Patch4 (released version)
+#New values STM 2009-02-25 Patch3.1
+#for 400x400 clean 
+#testdate = '2009-02-25 (STM)'
+#testvers = 'CASA Version 2.3.1 Rev 6826'
+#clean_image_max = 1.481322
+#clean_offsrc_rms = 0.043665
+#clean_offline_rms = 0.055379
+#clean_momentzero_max = 174.731842
+#clean_momentzero_rms = 14.858011
+#clean_momentone_median = 428.499237
+#clean_momentone_planezero = 688.575012
+#clean_momentone_planelast = 119.659264
+#vis_mean_cal = 194.915497
+#vis_mean_src = 54.627127
+#model_sum = 72.437973
+#model_pbcor_sum = 70.417831
+
+#New values STM 2009-06-19 Patch4 (released version)
 #for 400x400 clean
-testdate = '2009-06-03 (STM)'
-testvers = 'CASA Version 2.4.0 Rev 8037'
+testdate = '2009-06-19 (STM)'
+testvers = 'CASA Version 2.4.0 Rev 8115'
 clean_image_max = 1.418478
 clean_offsrc_rms = 0.043584
 clean_offline_rms = 0.056824
-clean_momentzero_max = 171.492584
-clean_momentzero_rms = 15.494859
+clean_momentzero_max = 171.601685
+clean_momentzero_rms = 15.532441
 clean_momentone_median = 428.499237
 clean_momentone_planezero = 688.575012
 clean_momentone_planelast = 119.659264
 vis_mean_cal = 194.915497
 vis_mean_src = 54.627127
-model_sum = 70.707411
-model_pbcor_sum = 62.240024
+model_sum = 70.707405
+model_pbcor_sum = 63.006854
 
 canonical = {}
 canonical['exist'] = True

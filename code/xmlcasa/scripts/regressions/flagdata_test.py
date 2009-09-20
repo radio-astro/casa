@@ -26,7 +26,7 @@ shutil.copytree(os.environ.get('CASAPATH').split()[0] +
 
 # Test of vector mode
 mode='manualflag'
-clipminmax=[0,1]
+clipminmax=[0.0, 1.0]
     
 inp(flagdata)
 flagdata()
@@ -41,6 +41,9 @@ test_eq(flagdata(vis=vis, mode='summary'), 2000700, 15548)
 flagdata(vis=vis, unflag=true)
 
 
+# Informational, only
+flagmanager(vis=vis, mode='list')
+
 # Test of mode = 'quack'
 vis='ngc5921.ms'
 os.system('rm -rf ' + vis)
@@ -49,7 +52,7 @@ importuvfits(os.environ.get('CASAPATH').split()[0] + \
              vis)
 
 # parallel quack
-flagdata(vis=vis, mode='quack', quackinterval=[1, 5.0], antenna=['2', '3'], correlation='RR')
+flagdata(vis=vis, mode='quack', quackinterval=[1.0, 5.0], antenna=['2', '3'], correlation='RR')
 test_eq(flagdata(vis=vis, mode='summary'), 2854278, 22365)
 flagdata(vis=vis, unflag=true)
 
@@ -82,6 +85,9 @@ test_eq(flagdata(vis=vis, mode='summary'), 2854278, 1571724)
 flagdata(vis=vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=true)
 test_eq(flagdata(vis=vis, mode='summary'), 2854278, 1762236)
 flagdata(vis=vis, unflag=true)
+
+
+flagmanager(vis=vis, mode='list')
 
 
 # Test of mode='rfi'
@@ -144,6 +150,10 @@ test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 148200, 148200)
 flagdata(vis=vis, unflag=true)
 
 
+flagmanager(vis=vis, mode='list')
+
+
+
 # Test of mode = 'alma'
 vis='cwilson2.ms'
 for r in ['vla_recipe', 'pdb_recipe']:
@@ -160,3 +170,7 @@ for r in ['vla_recipe', 'pdb_recipe']:
         expected = 90846
     test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 261450, expected)
     # previous result with source=[]: 17388 / 261450 flags set
+
+
+
+flagmanager(vis=vis, mode='list')

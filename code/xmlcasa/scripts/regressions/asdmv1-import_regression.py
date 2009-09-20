@@ -1,7 +1,7 @@
 #############################################################################
 # $Id:$
 # Test Name:                                                                #
-#    Regression Test Script for ASDM "version 0.9"  import to MS            #
+#    Regression Test Script for ASDM version 1.0 import to MS               #
 #                                                                           #
 # Rationale for Inclusion:                                                  #
 #    The conversion of ASDM to MS needs to be verified.                     #
@@ -13,14 +13,14 @@
 #    4) Do the tables contain expected values                               #
 #                                                                           #
 # Input data:                                                               #
-#     one dataset for the old filler (ASDM "0.9")                           #
+#     one dataset for the filler of ASDM 1.0                                #
 #                                                                           #
 #############################################################################
 
-myname = 'asdm-import_regression'
+myname = 'asdmv1-import_regression'
 
 # default ASDM dataset name
-myasdm_dataset_name = 'uid___X1eb_X59c0_X1'
+myasdm_dataset_name = 'uid___X5f_X18951_X1'
 
 # get the dataset name from the wrapper if possible
 mydict = locals()
@@ -66,7 +66,7 @@ def checktable(thename, theexpectation):
     return
 
 try:
-    importoldasdm(myasdm_dataset_name)
+    importasdm(myasdm_dataset_name)
 except:
     print myname, ": Error ", sys.exc_info()[0]
     raise
@@ -135,22 +135,23 @@ else:
                      ['DATA',      42, [ [0.00362284+0.00340279j] ], 1E-8]
                      ]
         checktable(name, expected)
+
         
         name = "ANTENNA"
         expected = [ ['OFFSET',       1, [ 0.,  0.,  0.], 0],
-                     ['POSITION',     1, [-1601361.760577, -5042192.535329,  3554531.519329], 0],
+                     ['POSITION',     1, [2202242.5520, -5445215.1570, -2485305.0920], 0.0001],
                      ['DISH_DIAMETER',1, 12.0, 0]
                      ]
         checktable(name, expected)
         
         name = "POINTING"
-        expected = [ ['DIRECTION',       10, [[-2.21348836],[0.69419111]], 1E-8 ],
+        expected = [ ['DIRECTION',       10, [[ 1.94681283],[ 1.19702955]], 1E-8],
                      ['INTERVAL',        10, 0.048, 0],
-                     ['TARGET',          10, [[ 4.06842324],[ 0.69534148]], 1E-8 ],
-                     ['TIME',            10, 4716228756.9840002, 0],
+                     ['TARGET',          10, [[ 1.94681283], [ 1.19702955]], 1E-8],
+                     ['TIME',            10, 4758823736.016000, 0],
                      ['TIME_ORIGIN',     10, 0., 0],
                      ['POINTING_OFFSET', 10, [[ 0.],[ 0.]], 0],
-                     ['ENCODER',         10, [-2.21349349,  0.69419051], 1E-8 ]
+                     ['ENCODER',         10, [ 1.94851533,  1.19867576], 1E-8 ]
                      ]
         checktable(name, expected)
         

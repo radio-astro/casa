@@ -1,4 +1,4 @@
-# wrapper script for ASDM v0.9 import regression test
+# wrapper script for ASDM v1 import regression test
 import sys
 import os
 import string
@@ -7,9 +7,9 @@ import inspect
 
 # Short description
 def description():
-    return "Test of importoldasdm() task, ASDM to MS data conversion"
+    return "Test of importasdm() task, ASDM to MS data conversion"
 
-pass_on = { "asdm_dataset_name" : "uid___X1eb_X59c0_X1" }
+pass_on = { "asdm_dataset_name" : "uid___X5f_X18951_X1" }
 
 a=inspect.stack()
 stacklevel=0
@@ -23,7 +23,7 @@ gl=sys._getframe(stacklevel).f_globals
 def run():
     #####locate the regression script
     try: 
-        lepath=locatescript('asdm-import_regression.py')
+        lepath=locatescript('asdmv1-import_regression.py')
         print 'Script used is ',lepath
         execfile(lepath, gl, pass_on)
     except:

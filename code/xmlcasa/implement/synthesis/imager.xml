@@ -879,7 +879,7 @@ the source is at the first time observed in the selected data.
      <value></value>
      </param>
 
-     <param type="string" name="frame">
+     <param type="string" name="outframe">
      <description>frequency frame of output image (default "", same as input)
      </description>
      <value>LSRK</value>
@@ -891,6 +891,12 @@ the source is at the first time observed in the selected data.
      <value>LGROUP</value>
      <value>CMB</value>
      <value></value>
+     </param>
+
+     <param type="string" name="veltype">
+     <description>velocity definition ('radio' or 'optical')</description>
+     <value>optical</value>
+     <value>radio</value>
      </param>
 
      <param type="int" name="facets">

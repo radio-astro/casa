@@ -43,6 +43,9 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
     __name__ = "</xsl:text><xsl:value-of select="$taskname"/><xsl:text>"
     __async__ = {}
     rkey = None
+    i_am_a_casapy_task = None
+    # The existence of the i_am_a_casapy_task attribute allows help()
+    # (and other) to treat casapy tasks as a special case.
 
     def __init__(self) :
        self.__bases__ = (</xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_,)

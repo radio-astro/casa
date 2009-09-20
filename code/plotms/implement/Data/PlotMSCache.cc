@@ -59,6 +59,9 @@ PlotMSCache::PlotMSCache(PlotMS* parent):
   nAnt_(0),
   nChunk_(0),
   nPoints_(),
+  nTotalPoints_(0),
+  nUnFlagPoints_(0),
+  nFlagPoints_(0),
   refTime_p(0.0),
   minX_(0),
   maxX_(0),
@@ -207,9 +210,11 @@ void PlotMSCache::load(const vector<PMS::Axis>& axes,const vector<PMS::DataColum
 
   // Check if scr cols present
   Bool scrcolOk(False);
+
   {
-    const ColumnDescSet& cds=Table(msname).tableDesc().columnDescSet();
+    const ColumnDescSet cds=Table(msname).tableDesc().columnDescSet();
     scrcolOk=cds.isDefined("CORRECTED_DATA");
+
   }
 
   stringstream ss;
@@ -217,8 +222,11 @@ void PlotMSCache::load(const vector<PMS::Axis>& axes,const vector<PMS::DataColum
        << PMS::axis(axes[1]) << "("<< axes[1] << ") vs. " 
        << PMS::axis(axes[0]) << "(" << axes[0] << ")...\n";
 
+  logLoad(ss.str());
+
   if (!scrcolOk) 
-    ss << "NB: Scratch columns not present; will use DATA exclusively.\n";
+    logLoad("NB: Scratch columns not present; will use DATA exclusively.");
+
 
 
   // Calculate which axes need to be loaded; those that have already been
@@ -238,16 +246,19 @@ void PlotMSCache::load(const vector<PMS::Axis>& axes,const vector<PMS::DataColum
   // Check given axes.  Should only be added to load list if: 1) not
   // already in load list, 2) not loaded, or 3) loaded but with different
   // data column (if applicable).
+
+
   bool found; PMS::Axis axis; PMS::DataColumn dc;
   for(unsigned int i = 0; i < axes.size(); i++) {
     found = false;
     axis = axes[i];
     
+
     // if data vector is not the same length as axes vector, assume
     // default data column
     dc = PMS::DEFAULT_DATACOLUMN;
     if(i < data.size() && scrcolOk) dc = data[i];
-    
+
     // 1)
     for(unsigned int j = 0; !found && j < loadAxes.size(); j++)
       if(loadAxes[i] == axis) found = true;
@@ -1242,36 +1253,6 @@ PlotLogMessage* PlotMSCache::locateNearest(Double x, Double y) {
 
 }
 
-/*
-PlotLogMessage* PlotMSCache::locateRange(Double xmin,Double xmax,Double ymin,Double ymax) {
-
-  Timer locatetimer;
-
-  locatetimer.mark();
-
-  Double thisx;
-  Double thisy;
-  stringstream ss;
-
-  Int nFound(0);
-  for (Int i=0;i<nPoints();++i) {
-    
-    getXY(i,thisx,thisy);;
-
-    if (thisx > xmin && thisx < xmax)
-      if (thisy > ymin && thisy < ymax) {
-	++nFound;
-	reportMeta(thisx,thisy,ss);
-	ss << '\n';
-      }
-  }
-  
-  ss << "Found " << nFound << " points among " << nPoints() << " in "
-     << locatetimer.all_usec()/1.0e6 << "s.";
-
-  return new PlotLogGeneric(PlotMS::CLASS_NAME, PlotMS::LOG_LOCATE, ss.str());
-}
-*/
 
 PlotLogMessage* PlotMSCache::locateRange(const Vector<PlotRegion>& regions) {    
     Timer locatetimer;
@@ -1282,17 +1263,23 @@ PlotLogMessage* PlotMSCache::locateRange(const Vector<PlotRegion>& regions) {
     Int nFound = 0, n = nPoints();
     
     for(Int i = 0; i < n; i++) {
+
+      // Only report unflagged data for now
+      //  TBD: report unflagged data if they are visible!
+      if (!getFlagMask(i)) {
+
         getXY(i, thisx, thisy);
         
         for(uInt j = 0; j < regions.size(); j++) {
-            if(thisx > regions[j].left() && thisx < regions[j].right() &&
-               thisy > regions[j].bottom() && thisy < regions[j].top()) {
-                nFound++;
-                reportMeta(thisx, thisy, ss);
-                ss << '\n';
-                break;
-            }
+	  if(thisx > regions[j].left() && thisx < regions[j].right() &&
+	     thisy > regions[j].bottom() && thisy < regions[j].top()) {
+	    nFound++;
+	    reportMeta(thisx, thisy, ss);
+	    ss << '\n';
+	    break;
+	  }
         }
+      }
     }
     
     ss << "Found " << nFound << " points among " << n << " in "
@@ -1462,25 +1449,19 @@ void PlotMSCache::flagInMS(const PlotMSFlagging& flagging,
   uInt nflag;
   nflag = sorter.sort(order,flchunks.nelements());
 
-  // 
-
   stringstream ss;
 
-  // Open a scope so we can dtor references cleanly later...
-  {
- 
   // Make the VisIterator writable, with selection revised as appropriate
   Bool selectchan(netAxesMask_(1) && !flagging.channel());
   Bool selectcorr(netAxesMask_(0) && !flagging.corrAll());
 
-
+  // Establish a scope in which the VisBuffer is properly created/destroyed
+  {
   setUpVisIter(msname_,selection_,False,selectchan,selectcorr);
-  VisIterator& vi(*wvi_p);
+  VisBuffer vb(*wvi_p);
 
-  VisBuffer vb(*rvi_p);
-
-  vi.originChunks();
-  vi.origin();
+  wvi_p->originChunks();
+  wvi_p->origin();
 
   Int iflag(0);
   for (Int ichk=0;ichk<nChunk_;++ichk) {
@@ -1488,10 +1469,10 @@ void PlotMSCache::flagInMS(const PlotMSFlagging& flagging,
     if (ichk!=flchunks(order[iflag])) {
       // Step over current chunk
       for (Int i=0;i<nVBPerAve_(ichk);++i) {
-	vi++;
-	if (!vi.more() && vi.moreChunks()) {
-	  vi.nextChunk();
-	  vi.origin();
+	wvi_p->operator++();
+	if (!wvi_p->more() && wvi_p->moreChunks()) {
+	  wvi_p->nextChunk();
+	  wvi_p->origin();
 	}
       }
     }
@@ -1570,14 +1551,14 @@ void PlotMSCache::flagInMS(const PlotMSFlagging& flagging,
 		// match a baseline exactly
 		if (a1(irow)==thisA1 &&
 		    a2(irow)==thisA2) {
-		  vbflag(corr,chan,Slice(irow,1,1))=flag;
-
 		  if (False) {
-		    ss << i << " " << ifl << " " << irow << " " << a1(irow) << "-" << a2(irow) 
+		    cout << i << " " << ifl << " " << irow << " " << a1(irow) << "-" << a2(irow) 
 			 << " corr: " << corr.start() << " " << corr.length()
 			 << " chan: " << chan.start() << " " << chan.length()
 			 << endl;
 		  }
+		  vbflag(corr,chan,Slice(irow,1,1))=flag;
+
 		  break;  // found the one baseline, escape from for loop
 		}
 	      }
@@ -1602,13 +1583,13 @@ void PlotMSCache::flagInMS(const PlotMSFlagging& flagging,
 	}
 
 	// Put the flags back into the MS
-	vi.setFlag(vbflag);
+	wvi_p->setFlag(vbflag);
 
 	// Advance to the next vb
-	vi++;
-	if (!vi.more() && vi.moreChunks()) {
-	  vi.nextChunk();
-	  vi.origin();
+	wvi_p->operator++();
+	if (!wvi_p->more() && wvi_p->moreChunks()) {
+	  wvi_p->nextChunk();
+	  wvi_p->origin();
 	}
       }  // VBs in this averaging chunk
 
@@ -1616,14 +1597,17 @@ void PlotMSCache::flagInMS(const PlotMSFlagging& flagging,
       iflag=ifl;
 
       // Escape if we are already finished
-      //      if (uInt(iflag)>=nflag) break;
+      if (uInt(iflag)>=nflag) break;
 
     } // flagable VB
     
-  } // ichk
-  
-  } // Closes the scope in which the VisIterator reference resided
 
+  } // ichk
+
+  // Close the scope that holds the VisBuffer used above
+  }
+
+  // Delete the VisIter so lock is released
   if (wvi_p)
     delete wvi_p;
   wvi_p=NULL;
@@ -2038,76 +2022,83 @@ void PlotMSCache::computeRanges() {
   stringstream ss;
   ss << "Computing ranges...";
 
-    Vector<Int> plaxes(2);
-    plaxes(0)=currentX_;
-    plaxes(1)=currentY_;
+  nTotalPoints_=0;
+  nFlagPoints_=0;
+  nUnFlagPoints_=0;
 
+  Vector<Int> plaxes(2);
+  plaxes(0)=currentX_;
+  plaxes(1)=currentY_;
+  
 
-    Vector<Double> limits(4);
-    limits(0)=limits(2)=DBL_MAX;
-    limits(1)=limits(3)=-DBL_MAX;
-
-    Int totalN(0);
-    for (Int ic=0;ic<nChunk_;++ic) {
-
-      Int thisN=ntrue(*plmask_[ic]);
-      if (thisN >0) {
-	totalN+=thisN;
-	for (Int ix=0;ix<2;++ix) {
-
-	  // Arrange collapsed-on-axis mask
-	  Array<Bool> collmask;
-	  switch(plaxes(ix)) {
-	  case PMS::FREQUENCY: 
-	  case PMS::CHANNEL: {
-	    // collapse on corr, row
-	    collmask=operator>(partialNTrue(*plmask_[ic],IPosition(2,0,2)),uInt(0));
-	    break;
-	  }
-	  case PMS::CORR: {
-	    // collapse on chan, row
-	    collmask=operator>(partialNTrue(*plmask_[ic],IPosition(2,1,2)),uInt(0));
-	    break;
-	  }
-	  case PMS::ROW:
-	  case PMS::ANTENNA1:
-	  case PMS::ANTENNA2:
-	  case PMS::BASELINE:
-	  case PMS::UVDIST:
-	  case PMS::U:
-	  case PMS::V:
-	  case PMS::W: {
-	    // collapse on corr,chan
-	    collmask=operator>(partialNTrue(*plmask_[ic],IPosition(2,0,1)),uInt(0));
-	    break;
-	  }
-	  case PMS::UVDIST_L: {
-	    // collapse on corr
-	    collmask=operator>(partialNTrue(*plmask_[ic],IPosition(1,0)),uInt(0));
-	    break;
-	  }
-	  case PMS::AMP: 
-	  case PMS::PHASE:
-	  case PMS::REAL:
-	  case PMS::IMAG:{
-	    // reference plmask_
-	    collmask.reference(*plmask_[ic]);
-	    break;
-	  }
-	  case PMS::ANTENNA:
-	  case PMS::AZIMUTH:
-	  case PMS::ELEVATION:
-	  case PMS::PARANG:
-	    // TBD
-	    break;
-	  default:
-	    break;
-	  }
-
-	  // Now calculate masked limits
-
-	  if (True) {
-
+  Vector<Double> limits(4);
+  limits(0)=limits(2)=DBL_MAX;
+  limits(1)=limits(3)=-DBL_MAX;
+  
+  Int totalN(0);
+  for (Int ic=0;ic<nChunk_;++ic) {
+    
+    nTotalPoints_+=plmask_[ic]->nelements();
+    
+    Int thisN=ntrue(*plmask_[ic]);
+    nUnFlagPoints_+=thisN;
+    if (thisN >0) {
+      totalN+=thisN;
+      for (Int ix=0;ix<2;++ix) {
+	
+	// Arrange collapsed-on-axis mask
+	Array<Bool> collmask;
+	switch(plaxes(ix)) {
+	case PMS::FREQUENCY: 
+	case PMS::CHANNEL: {
+	  // collapse on corr, row
+	  collmask=operator>(partialNTrue(*plmask_[ic],IPosition(2,0,2)),uInt(0));
+	  break;
+	}
+	case PMS::CORR: {
+	  // collapse on chan, row
+	  collmask=operator>(partialNTrue(*plmask_[ic],IPosition(2,1,2)),uInt(0));
+	  break;
+	}
+	case PMS::ROW:
+	case PMS::ANTENNA1:
+	case PMS::ANTENNA2:
+	case PMS::BASELINE:
+	case PMS::UVDIST:
+	case PMS::U:
+	case PMS::V:
+	case PMS::W: {
+	  // collapse on corr,chan
+	  collmask=operator>(partialNTrue(*plmask_[ic],IPosition(2,0,1)),uInt(0));
+	  break;
+	}
+	case PMS::UVDIST_L: {
+	  // collapse on corr
+	  collmask=operator>(partialNTrue(*plmask_[ic],IPosition(1,0)),uInt(0));
+	  break;
+	}
+	case PMS::AMP: 
+	case PMS::PHASE:
+	case PMS::REAL:
+	case PMS::IMAG:{
+	  // reference plmask_
+	  collmask.reference(*plmask_[ic]);
+	  break;
+	}
+	case PMS::ANTENNA:
+	case PMS::AZIMUTH:
+	case PMS::ELEVATION:
+	case PMS::PARANG:
+	  // TBD
+	  break;
+	default:
+	  break;
+	}
+	
+	// Now calculate masked limits
+	
+	if (True) {
+	  
 	  switch(plaxes(ix)) {
 	  case PMS::SCAN:
 	    limits(2*ix)=min(limits(2*ix),Double(scan_(ic))-0.5);
@@ -2263,179 +2254,25 @@ void PlotMSCache::computeRanges() {
 	    throw(AipsError("Help PlotMSCache::computeRanges"));
 	  }
 
-	  }
-	  else {
-
-	  // Now calculate masked limits
-	  switch(plaxes(ix)) {
-	  case PMS::SCAN:
-	    limits(2*ix)=min(limits(2*ix),Double(scan_(ic)));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(scan_(ic)));
-	    break;
-	  case PMS::FIELD:
-	    limits(2*ix)=min(limits(2*ix),Double(field_(ic)));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(field_(ic)));
-	    break;
-	  case PMS::TIME:
-	    limits(2*ix)=min(limits(2*ix),time_(ic));
-	    limits(2*ix+1)=max(limits(2*ix+1),time_(ic));
-	    break;
-	  case PMS::TIME_INTERVAL:
-	    limits(2*ix)=min(limits(2*ix),timeIntr_(ic));
-	    limits(2*ix+1)=max(limits(2*ix+1),timeIntr_(ic));
-	    break;
-	  case PMS::SPW:
-	    limits(2*ix)=min(limits(2*ix),Double(spw_(ic)));
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(spw_(ic)));
-	    break;
-	  case PMS::FREQUENCY:
-	    if (freq_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),min((*freq_[ic])));
-	      limits(2*ix+1)=max(limits(2*ix+1),max((*freq_[ic])));
-	    }
-	    break;
-	  case PMS::CHANNEL:
-	    if (chan_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*chan_[ic]))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*chan_[ic]))));
-	    }
-	    break;
-	  case PMS::CORR:
-	    if (corr_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*corr_[ic]))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*corr_[ic]))));
-	    }
-	    break;
-	  case PMS::ROW:
-	    if (row_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*row_[ic]))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*row_[ic]))));
-	    }
-	    break;
-	  case PMS::ANTENNA1:
-	    if (antenna1_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*antenna1_[ic]))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*antenna1_[ic]))));
-	    }
-	    break;
-	  case PMS::ANTENNA2:
-	    if (antenna2_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*antenna2_[ic]))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*antenna2_[ic]))));
-	    }
-	    break;
-	  case PMS::BASELINE:
-	    if (baseline_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*baseline_[ic]))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*baseline_[ic]))));
-	    }
-	    break;
-	    
-	  case PMS::UVDIST:
-	    if (uvdist_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*uvdist_[ic]))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*uvdist_[ic]))));
-	    }
-	    break;
-	  case PMS::U:
-	    if (u_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*u_[ic]))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*u_[ic]))));
-	    }
-	    break;
-	  case PMS::V:
-	    if (v_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*v_[ic]))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*v_[ic]))));
-	    }
-	    break;
-	  case PMS::W:
-	    if (w_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*w_[ic]))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*w_[ic]))));
-	    }
-	    break;
-	  case PMS::UVDIST_L:
-	    if (uvdistL_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*uvdistL_[ic]))));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*uvdistL_[ic]))));
-	    }
-	    break;
-	    
-	  case PMS::AMP: {
-	    if (amp_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),min((*amp_[ic])));
-	      limits(2*ix+1)=max(limits(2*ix+1),max((*amp_[ic])));
-	    }
-	    break;
-	  }
-	  case PMS::PHASE:
-	    if (pha_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),min((*pha_[ic])));
-	      limits(2*ix+1)=max(limits(2*ix+1),max((*pha_[ic])));
-	    }
-	    break;
-	  case PMS::REAL:
-	    if (real_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),min((*real_[ic])));
-	      limits(2*ix+1)=max(limits(2*ix+1),max((*real_[ic])));
-	    }
-	    break;
-	  case PMS::IMAG:
-	    if (imag_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),min((*imag_[ic])));
-	      limits(2*ix+1)=max(limits(2*ix+1),max((*imag_[ic])));
-	    }
-	    break;
-	  case PMS::FLAG:
-	  case PMS::FLAG_ROW:
-	    if (flag_[ic]->nelements()>0) {
-	      limits(2*ix)=-0.5;
-	      limits(2*ix+1)=1.5;
-	    }
-	    break;
-	  case PMS::ANTENNA:
-	    if (antenna_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min(*antenna_[ic])));
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max(*antenna_[ic])));
-	    }
-	    break;
-	  case PMS::AZIMUTH:
-	    if (az_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),min(*az_[ic]));
-	      limits(2*ix+1)=max(limits(2*ix+1),max(*az_[ic]));
-	    }
-	    break;
-	  case PMS::ELEVATION:
-	    if (el_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),min(*el_[ic]));
-	      limits(2*ix+1)=max(limits(2*ix+1),max(*el_[ic]));
-	    }
-	    break;
-	  case PMS::PARANG:
-	    if (parang_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),min(*parang_[ic]));
-	      limits(2*ix+1)=max(limits(2*ix+1),max(*parang_[ic]));
-	    }
-	    break;
-	  default:
-	    throw(AipsError("Help PlotMSCache::computeRanges"));
-	  }
-
-	  }
 
 	}
       }
     }
 
-    minX_=limits(0);
-    maxX_=limits(1);
-    minY_=limits(2);
-    maxY_=limits(3);
+  }
 
-    ss << ": dX=" << minX_ << "-" << maxX_ << " dY=" << minY_ << "-" << maxY_ << "\n";
-    ss << "Npoints = " << totalN;
-    logInfo("compute_ranges", ss.str());
+  nFlagPoints_=nTotalPoints_-nUnFlagPoints_;
+
+  //  cout << nUnFlagPoints_ << " " << nFlagPoints_ << " " << nTotalPoints_ << " (=" << nPoints_(nChunk_-1) << ")" << endl;
+
+  minX_=limits(0);
+  maxX_=limits(1);
+  minY_=limits(2);
+  maxY_=limits(3);
+  
+  ss << ": dX=" << minX_ << "-" << maxX_ << " dY=" << minY_ << "-" << maxY_ << "\n";
+  ss << "Npoints = " << totalN;
+  logInfo("compute_ranges", ss.str());
 }
 
 void PlotMSCache::log(const String& method, const String& message,

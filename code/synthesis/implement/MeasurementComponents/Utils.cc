@@ -475,7 +475,7 @@ namespace casa{
     //
     if (dAngleRad==0.0) 
       {
-	outArray = inArray;
+	outArray.reference(inArray);
 	return;
       }
     //
@@ -551,6 +551,40 @@ namespace casa{
   //---------------------------------------------------------------
   //
   void SynthesisUtils::findLatticeMax(const ImageInterface<Complex>& lattice,
+				      Vector<Float>& maxAbs,
+				      Vector<IPosition>& posMaxAbs) 
+  {
+    IPosition lshape(lattice.shape());
+    IPosition ndx(lshape);
+    Int nPol=lshape(2);
+    posMaxAbs.resize(nPol);
+    for(Int i=0;i<nPol;i++)
+      posMaxAbs(i)=IPosition(lattice.shape().nelements(), 0);
+    maxAbs.resize(nPol);
+    ndx=0;
+    
+    for(Int s2=0;s2<lshape(2);s2++)
+      for(Int s3=0;s3<lshape(3);s3++)
+	{
+	  ndx(2) = s2; ndx(3)=s3;
+	  {
+	    //
+	    // Locate the pixel with the peak value.  That's the
+	    // origin in pixel co-ordinates.
+	    //
+	    maxAbs(s2)=0;
+	    posMaxAbs(s2) = 0;
+	    for(ndx(1)=0;ndx(1)<lshape(1);ndx(1)++)
+	      for(ndx(0)=0;ndx(0)<lshape(0);ndx(0)++)
+		if (abs(lattice(ndx)) > maxAbs(s2)) 
+		  {posMaxAbs(s2) = ndx;maxAbs(s2)=abs(lattice(ndx));}
+	  }
+	}
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void SynthesisUtils::findLatticeMax(const Array<Complex>& lattice,
 				      Vector<Float>& maxAbs,
 				      Vector<IPosition>& posMaxAbs) 
   {

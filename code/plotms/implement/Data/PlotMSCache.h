@@ -353,6 +353,9 @@ private:
   // The cumulative running total of points
   Vector<Int> nPoints_;
 
+  // the net number of flagged, unflagged, total points
+  Int nTotalPoints_,nUnFlagPoints_, nFlagPoints_;
+
   // The reference time for this cache, in seconds
   Double refTime_p;
 

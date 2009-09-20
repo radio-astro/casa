@@ -1268,7 +1268,8 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 		    const ::casac::variant& step, 
 		    const std::vector<int>& spwid, 
 		    const ::casac::variant& restfreq, 
-	            const std::string& frame,
+	            const std::string& outframe,
+	            const std::string& veltype,
 	            const int facets, 
 		    const ::casac::variant& movingsource,
 		    const ::casac::variant& distance)
@@ -1318,6 +1319,9 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 	}
       }
       casa::String lamoda(mode);
+      if (veltype=="optical" || veltype=="OPTICAL") {
+         lamoda.prepend("OPTICAL"); 
+      }
       lamoda.upcase();
       casa::MRadialVelocity mvel;
       casa::MFrequency mfreq;
@@ -1353,7 +1357,7 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 
       ROMSSpWindowColumns spwc(itsMS->spectralWindow());
       casa::String baseframe = MFrequency::showType(spwc.measFreqRef()(0));
-      casa::String cframe=toCasaString(frame);
+      casa::String cframe=toCasaString(outframe);
       if(baseframe==cframe or cframe=="") {
         cframe=baseframe;
       } 
@@ -1375,7 +1379,7 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
       rstat = itsImager->defineImage(nX, nY, cellX, cellY, stokes, phaseCenter, 
 				     fieldid, lamoda, nchan, startoo, 
 				     stepoo, mfreq, mvel,  qstep, 
-				     Vector<Int>(spwid), restFreq, mfframe, facets,
+				     Vector<Int>(spwid), facets, restFreq, mfframe,
 				     cdistance, domovingSource, movingDir);
     } catch  (AipsError x) {
       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

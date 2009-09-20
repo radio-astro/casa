@@ -47,68 +47,100 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="spw">
-	    <description>Spectral windows:channels: \'\' is all </description>
-	    <any type="variant"/>
-	    <value type="string"></value>
+      <description>Spectral windows:channels: \'\' is all </description>
+      <any type="variant"/>
+      <value type="string"></value>
     </param>
     <param type="bool" name="selectdata">
-	    <description>Other data selection parameters</description>
-	    <value>False</value>
+      <description>Other data selection parameters</description>
+      <value>False</value>
     </param>
     
     <param type="string" name="timerange" subparam="true">
-	    <description>Range of time to select from data</description>
-	    <value></value>
+      <description>Range of time to select from data</description>
+      <value></value>
     </param>
     <param type="string" name="uvrange" subparam="true">
-	    <description>Select data within uvrange </description>
-	    <value></value>
+      <description>Select data within uvrange </description>
+      <value></value>
     </param>
     <param type="string" name="antenna" subparam="true">
-	    <description>Select data based on antenna/baseline</description>
-	    <value></value>
+      <description>Select data based on antenna/baseline</description>
+      <value></value>
     </param>
     <param type="string" name="scan" subparam="true">
-	    <description>scan number range</description>
-	    <value></value>
+      <description>scan number range</description>
+      <value></value>
     </param>
     
 
     <param type="string" name="mode">
-	    <description> Type of selection (mfs, channel, velocity,frequency)</description>
-	    <value>mfs</value>
-	    <allowed kind="enum">
-	    <value>mfs</value>
-	    <value>channel</value>
-	    <value>velocity</value>
-	    <value>frequency</value>
-    </allowed>
+      <description> Type of selection (mfs, channel, velocity,frequency)</description>
+      <value>mfs</value>
+      <allowed kind="enum">
+	<value>mfs</value>
+	<value>channel</value>
+	<value>velocity</value>
+	<value>frequency</value>
+      </allowed>
+    </param>
+
+    <param type="string" name="gridmode">
+      <description>The kind gridding kernel to be used for FFT-based transforms</description>
+      <value></value>
+      <allowed kind="enum">
+	<value></value>
+	<value>widefield</value>
+	<value>aprojection</value>
+	<value>experimental</value>
+      </allowed>
+    </param>
+    
+    <param type="int" name="wprojplanes" subparam="true">
+      <description>Number of w-projection planes for convolution </description>
+      <value>1</value>
+    </param>
+    <param type="int" name="facets" subparam="true">
+      <description>Number of facets along each axis (main image only)</description>
+      <value>1</value>
+    </param>
+    <param type="string" name="cfcache" subparam="true">
+      <description>Convolution function cache directory</description>
+      <value>cfcache.dir</value>
+    </param>
+    <param type="double" name="painc" subparam="true">
+      <description>Parallactic angle increment (in degree) used to compute new convolution function</description>
+      <value>360.0</value>
+    </param>
+    <param type="string" name="epjtable" subparam="true">
+      <description>Table of EP-Jones parameters</description>
+      <value></value>
     </param>
 
     <param type="string" name="interpolation" subparam="true">
-	    <description>Spectral interpolation(nearest, linear, cubic)</description>
-	    <value>nearest</value>
-	    <allowed kind="enum">
-	    <value>nearest</value>
-	    <value>linear</value>
-	    <value>cubic</value>
-	    <value>spline</value>
+      <description>Spectral interpolation(nearest, linear, cubic)</description>
+      <value>nearest</value>
+      <allowed kind="enum">
+	<value>nearest</value>
+	<value>linear</value>
+	<value>cubic</value>
+	<value>spline</value>
     </allowed>
     </param>
 
     <param type="int" name="niter">
-    <description>Maximum number of iterations</description>
-    <value>500</value>
+      <description>Maximum number of iterations</description>
+      <value>500</value>
     </param>
 
     <param type="double" name="gain">
-	    <description>Loop gain for cleaning</description>
-	    <value>0.1</value>
+      <description>Loop gain for cleaning</description>
+      <value>0.1</value>
     </param>
 
     <param type="double" name="threshold" units="mJy">
-	    <description>Flux level to stop cleaning.  Must include units</description>
-	    <value>0.0</value>
+      <description>Flux level to stop cleaning.  Must include units</description>
+      <value>0.0</value>
     </param>
 
 <!-- Getting rid of this
@@ -120,51 +152,45 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 -->
 
     <param type="string" name="psfmode">
-	    <description>method of PSF calculation to use during minor cycles</description>
-	    <value>clark</value>
-	    <allowed kind="enum">
-	      <value>clark</value>
-              <value>clarkstokes</value>
-	      <value>hogbom</value>
-	    </allowed>
+      <description>method of PSF calculation to use during minor cycles</description>
+      <value>clark</value>
+      <allowed kind="enum">
+	<value>clark</value>
+        <value>clarkstokes</value>
+	<value>hogbom</value>
+      </allowed>
     </param>
 
     <param type="string" name="imagermode">
       <description> Use csclean or mosaic.  If \'\', use psfmode</description>
       <value></value>
       <allowed kind="enum">
-	      <value></value>
-	      <value>csclean</value>
-	      <value>mosaic</value>
-	      <value>multiscale</value>
-	      <value>desquint</value>
-	      <value>ms</value>
-	      <value>msmfs</value>
-	      <value>advanced</value>
+	<value></value>
+	<value>csclean</value>
+	<value>mosaic</value>
       </allowed>
 
 
     </param>
     <param type="string" name="ftmachine" subparam="true">
-	    <description>Gridding method for the image</description>
-	    <value>mosaic</value>
-	    <allowed kind="enum">
-	      <value>mosaic</value>
-	      <value>ft</value>
-	      <value>sd</value>
-	      <value>both</value>
-	      <value>pbwproject</value>
-	      <value>pbmosaic</value>
-	    </allowed>
-	    
+      <description>Gridding method for the image</description>
+      <value>ft</value>
+      <allowed kind="enum">
+	<value>ft</value>
+	<value>mosaic</value>
+	<value>sd</value>
+	<value>both</value>
+	<value>pbwproject</value>
+      </allowed>
     </param>
+
     <param type="bool" name="mosweight" subparam="true">
       <description>Individually weight the fields of the mosaic</description>
       <value>False</value>
     </param>
+
     <param type="string" name="scaletype" subparam="true">
       <description>Controls scaling of pixels in the image plane. default=\'SAULT\'; example: scaletype=\'PBCOR\' Options: \'PBCOR\',\'SAULT\'</description>
-      
       <value>SAULT</value>
       <allowed kind="enum">
 	<value>SAULT</value>
@@ -172,82 +198,100 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       </allowed>
     </param>
     
-
-    <param type="intArray" name="multiscale" subparam="true">
+<!--======================================================== -->
+    <param type="intArray" name="multiscale">
       <description>deconvolution scales (pixels); [] = default standard clean</description>
       <value type="vector">
-	<value></value>
+	<value>0</value>
       </value>
-
     </param>
+
     <param type="int" name="negcomponent" subparam="true">
       <description>Stop cleaning if the largest scale finds this number of neg components</description>
-      
-      <value>0</value>
-     
-
+      <value>-1</value>
     </param>
+
     <param type="double" name="smallscalebias" subparam="true">
       <description>a bias to give more weight toward smaller scales</description>
-      
       <value>0.6</value>
-     
-
     </param>
-
+<!--========================================================= -->
     <param type="bool" name="interactive">
 	    <description>use interactive clean (with GUI viewer)</description>
 	    <value>False</value>
     </param>
-
+<!--========================================================= -->
     <param type="any" name="mask">
 	    <description>cleanbox(es), mask image(s), and/or region(s)  used in cleaning</description>
 	    <any type="variant"/>
 	    <value type="stringArray"></value>
     </param>
-
-
+<!--========================================================= -->
     <param type="int" name="nchan" subparam="true">
 	    <description>Number of channels (planes) in output image</description>
 	    <value>1</value>
     </param>
-
+<!--========================================================= -->
     <param type="any" name="start" subparam="true">
 	    <description>First channel in input to use</description>
 	    <any type="variant"/>
 	    <value type="int">0</value>
     </param>
-
+<!--========================================================= -->
     <param type="any" name="width" subparam="true">
 	    <description>Number of input channels to average</description>
 	    <any type="variant"/>
 	    <value type="int">1</value>
     </param>
-
-
+<!--========================================================= -->
+    <param type="string" name="outframe" ignorecase="true" subparam="true">
+	    <description>velocity frame of output image </description>
+	    <value></value>
+    <allowed kind="enum">
+            <value>lsrk</value>
+            <value>lsrd</value>
+            <value>bary</value>
+            <value>geo</value>
+            <value>topo</value>
+            <value>galacto</value>
+            <value>lgroup</value>
+            <value>cmb</value>
+            <value></value>
+    </allowed>
+    </param>
+<!--========================================================= -->
+    <param type="string" name="veltype" ignorecase="true" subparam="true">
+	    <description>velocity definition (radio, optical) </description>
+	    <value>radio</value>
+    <allowed kind="enum">
+            <value>radio</value>
+            <value>optical</value>
+    </allowed>
+    </param>
+<!--========================================================= -->
     <param type="intArray" name="imsize">
 	    <description>x and y image size in pixels, symmetric for single value</description>
 	    <value type="vector">
     <value>256</value><value>256</value>
 	    </value>
     </param>
-
+<!--========================================================= -->
     <param type="doubleArray" name="cell" units="arcsec">
     <description>x and y cell size. default unit arcsec</description>
     <value type="vector"><value>1.0</value><value>1.0</value></value>
     </param>
-
+<!--========================================================= -->
     <param type="any" name="phasecenter">
 	    <description>Image phase center: position or field index</description>
 	    <any type="variant"/>
 	    <value type="string"></value>
     </param>
-
+<!--========================================================= -->
     <param type="string" name="restfreq">
 	    <description>rest frequency to assign to image (see help)</description>
 	    <value></value>
     </param>
-
+<!--========================================================= -->
     <param type="string" name="stokes">
 	    <description>Stokes params to image (eg I,IV, QU,IQUV)</description>
 	    <value>I</value>
@@ -265,11 +309,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>XXYY</value>
     </allowed>
     </param>
-
-    
-
-    
-
+<!--========================================================= -->
     <param type="string" name="weighting">
     <description>Weighting of uv (natural, uniform, briggs, ...)</description>
     <value>natural</value>
@@ -282,7 +322,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value>superuniform</value>
     </allowed>
     </param>
-
+<!--========================================================= -->
 
     <param type="double" name="robust" subparam="true">
 	    <description>Briggs robustness parameter</description>
@@ -292,98 +332,84 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value range="max">2.0</value>
     </allowed>
     </param>
-
+<!--========================================================= -->
     <param type="bool" name="uvtaper">
 	    <description>Apply additional uv tapering of  visibilities.</description>
 	    <value>False</value>
     </param>
-
+<!--========================================================= -->
     <param type="stringArray" name="outertaper" subparam="true">
 	    <description>uv-taper on outer baselines in uv-plane</description>
 	    <value type="vector">
 	      <value></value>
 	    </value>
     </param>
-
+<!--========================================================= -->
     <param type="stringArray" name="innertaper" subparam="true">
 	    <description>uv-taper in center of uv-plane (not implemented)</description>
 	    <value>1.0</value>
     </param>
-
+<!--========================================================= -->
     <param type="string" name="modelimage">
 	    <description>Name of model image(s) to initialize cleaning</description>
 	    <value></value>
     </param>
+<!--========================================================= -->
     <param type="stringArray" name="restoringbeam">
       <description>Output Gaussian restoring beam for CLEAN image</description>
       <value></value>
     </param>
+<!--========================================================= -->
     <param type="bool" name="pbcor">
 	    <description>Output primary beam-corrected image</description>
 	    <value>False</value>
     </param>
-
+<!--========================================================= -->
     <param type="double" name="minpb">
 	    <description>Minimum PB level to use</description>
 	    <value>0.1</value>
     </param>
-
+<!--========================================================= -->
     <param type="bool" name="calready">
 	    <description>Create scratch columns and store model visibilities so that selfcal can be run after clean</description>
 	    <value>False</value>
     </param>
-
+<!--========================================================= -->
     <param type="any" name="noise"  subparam="true">
 	    <description>noise parameter for briggs abs mode weighting</description>
 	    <any type="variant"/>
 	    <value type="string">1.0Jy</value>	    
     </param>
-
+<!--========================================================= -->
     <param type="int" name="npixels" subparam="true">
 	    <description>number of pixels for superuniform or briggs weighting</description>
 	    <value>0</value>
     </param>
-
-
-
+<!--========================================================= -->
     <param type="int" name="npercycle" subparam="true">
 	    <description>Clean iterations before interactive prompt (can be changed)</description>
 	    <value>100</value>
     </param>
+<!--========================================================= -->
     <param type="double" name="cyclefactor" subparam="true">
       <description>change depth in between of  csclean cycle</description>
       <value>1.5</value>
     </param>
+<!--========================================================= -->
     <param type="int" name="cyclespeedup" subparam="true">
 	    <description>Cycle threshold doubles in this number of iteration</description>
 	    <value>-1</value>
     </param>
-    
-
-    <param type="string" name="cfcache" subparam="true">
-	    <description>Name of the convolution function cache directory (required only for the \'pbwproject\' FTMachine)</description>
-	    <value>cfcache.dir</value>
-    </param>
-
-    <param type="double" name="painc" subparam="true">
-	    <description>Parallactic angle increment (in degree) used to compute new convolution function (required only for the \'pbwproject\' FTMachine)</description>
-	    <value>360.0</value>
-    </param>
-
-    <param type="string" name="epjtable" subparam="true">
-	    <description>Table of EP-Jones parameters (userful only for the \'pbwproject\' FTMachine)</description>
-	    <value></value>
-    </param>
-
+<!--========================================================= -->
     <param type="int" name="nterms" subparam="true">
 	    <description>Number of taylor terms to use for modeling the sky frequency dependence</description>
 	    <value>1</value>
     </param>
-    <param type="double" name="reffreq" subparam="true">
-	    <description>Reference frequency for MFS (in GHz)</description>
-	    <value>1.4</value>
+    <param type="string" name="reffreq" subparam="true">
+	    <description>Reference frequency for MFS (relevant only if nterms > 1)</description>
+	    <value></value>
     </param>
-
+<!--========================================================= -->
     <constraints>
             <when param="selectdata">
 		  <equals type="bool" value="False"/>
@@ -398,14 +424,39 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		    </default>
 	        </equals>
             </when>
-<!-- 	    <when param="multiscale"> -->
-<!-- 		  <notequals type="vector" value="[]" >  -->
-<!-- 		    <default param="negcomponent"><value>-1</value> -->
-<!-- 		    </default> -->
-<!-- 	        </notequals> -->
-<!--             </when> -->
+	    <when param="multiscale">
+		  <notequals type="vector" value="[]" >
+		    <default param="negcomponent"><value>-1</value></default>
+                    <default param="smallscalebias"><value>0.6</value></default>
+	        </notequals>
+            </when>
+            <when param="gridmode">
+	      <equals value=""/>
+	      <equals value="widefield">
+		      <default param="wprojplanes"><value>1</value></default>
+		      <default param="facets"><value>1</value></default>
+              </equals>
+	      <equals value="aprojection">
+		      <!-- <default param="wprojplanes"><value>1</value></default> -->
+		      <!-- <default param="facets"><value>1</value></default> -->
+		      <default param="cfcache"><value type="string">cfcache.dir</value></default>
+		      <default param="painc"><value>360.0</value></default>
+		      <!-- <default param="epjtable"><value type="string"></value></default> -->
+              </equals>
+	      <equals value="experimental">
+		      <default param="ftmachine"><value type="string">ft</value></default>
+		      <default param="wprojplanes"><value>1</value></default>
+		      <default param="facets"><value>1</value></default>
+		      <default param="cfcache"><value type="string">cfcache.dir</value></default>
+		      <default param="painc"><value>360.0</value></default>
+		      <default param="epjtable"><value type="string"></value></default>
+              </equals>
+	    </when>
 	    <when param="mode">
-		<equals value="mfs"/>
+		<equals value="mfs">
+			<default param="nterms"><value>1</value></default>
+			<default param="reffreq"><value type="string"></value></default>
+		</equals>
 		<equals value="channel">
 			<default param="nchan"><value>1</value></default>
 			<default param="start"><value>0</value>
@@ -423,6 +474,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			    <description>image channel width in velocity units: e.g \'-1.0km/s\'</description>
 		    </default>
 		    <default param="interpolation"><value type="string">nearest</value></default>
+		    <default param="outframe"><value type="string"></value>
+			    <description>velocity reference frame of output image</description>
+                    </default>
+		    <default param="veltype"><value type="string">radio</value>
+			    <description>velocity definition</description>
+                    </default>
 	        </equals>
 	        <equals value="frequency">
 			<default param="nchan"><value>1</value></default>
@@ -433,6 +490,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			    <description>Image channel width in frequency units: e.g \'1.0kHz\'</description>
 		    </default>
 		    <default param="interpolation"><value type="string">nearest</value></default>
+		    <default param="outframe"><value type="string"></value></default>
+			    <description>velocity reference frame of output image</description>
 	        </equals>
 	    </when>
 	    
@@ -484,6 +543,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="cyclefactor"><value>1.5</value></default>
 			<default param="cyclespeedup"><value>-1</value></default>
 	        </equals>
+<!--
                 <equals value="multiscale">
                         <default param="ftmachine"><value type="string">ft</value></default>
                         <default param="multiscale"><value type="intArray">0</value></default>
@@ -521,7 +581,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <default param="nterms"><value type="int">1</value></default>
                         <default param="reffreq"><value type="double">1.4</value></default>
                 </equals>
-
+-->
             </when>
 <!--Get rid of that soon
 	    <when param="mosaicmode">
@@ -646,6 +706,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  mode = 'frequency', means channels are specified in 
  		      frequency.
 
+  &gt;&gt;&gt; mode='mfs' expandable parameters 
+               Make a continuum image from the selected frequency
+               channels/range using Multi-frequency synthesis
+               algorithm for wide-band narrow field imaging.
+               nterms is the number of Taylor terms to be used to
+                  model the frequency dependence of the sky emission.
+                  nterms=1 is equivalent to assuming no frequency
+                  dependence.  nterms=2 is equivalent to the
+                  Sault-Wieringa algorithm (AandAS, 1994)
+               reffreq is the reference frequency about which the
+                  Taylor expansion is done.
+
   &gt;&gt;&gt; mode expandable parameters (for modes other than 'mfs')
                Start, width are given in units of channels, frequency 
  		  or velocity as indicated by mode (note: only nearest neighbour 
@@ -661,6 +733,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   the uv-plane
                  default = 'nearest'
                     HOWEVER, 'linear' is recommended
+               outframe -- velocity reference frame of output image (for mode='velocity' or 'frequency')
+                 Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO','LGROUP','CMB'
+                 default: ''; same as input data; example: frame='bary' for Barycentric frame 
+               veltype -- (for mode='velocity') velocity definition
+                 Options: 'radio','optical'
+                 default: 'radio'
            examples:
                spw = '0,1'; mode = 'mfs'
                   will produce one image made from all channels in spw 
@@ -697,6 +775,36 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        imagermode -- Advanced imaging e.g mosaic or Cotton-Schwab clean
                default: imagermode='': Options: '', 'csclean', 'mosaic'
                default ''  =&gt; psfmode cleaning algorithm used
+
+  &gt;&gt;&gt; gridmode='' expandable parameters
+
+         The default value of '' has no effect.
+        
+  &gt;&gt;&gt; gridmode='widefield' expandable parameters
+
+         Apply corrections for non-coplanar effects during imaging
+         using the W-Projection algorithm (Cornwell et al. IEEE JSTSP
+         (2008)) or faceting or a combination of the two.
+
+         wprojplanes is the number of pre-computed w-planes used for
+             the W-Projection algorithm.  wprojplanes=1 disables
+             correction for non-coplanar effects. 
+         facets is the number of facets used.  W-Projection is done
+             for each facet.
+
+  &gt;&gt;&gt; gridmode='aprojection' expandable parameters
+
+        Correct for the (E)VLA polarization squint using the
+        A-Projection algorithm (Bhatnagar et al., AandA (2008)).
+
+        cfcache is the name of the directory to be used to cache the
+           convolution functions.  These functions can be reused again if
+           the image parameters are unchanged.  If the image parameters
+           change, a new cache must be created (or the existing one
+           removed). 
+
+        painc (in degrees) is the Parallactic Angle increment used to
+          compute the convolution functions.
 
   &gt;&gt;&gt; imagermode='mosaic' expandable parameter(s):
          Image as a mosaic of the different pointings (uses csclean style too)
@@ -780,54 +888,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                component search even if the largest component is
                negative.  default: -1; example: negcomponent=50
              
-  &gt;&gt;&gt; imagermode='desquint' expandable parameter(s): 
-       Algorithm to correct for EVLA polarization squint.
-
-       ftmachine -- This is set to \"pbwproject\" which corrects for PB
-       effects during forward and reverse transforms
-       cfcache -- The director name for the caching the convolution
-       functions.  Convolution functions are computed when the
-       Parallactic Angle changes by more than a user defined
-       parallactic angle increment (see below).  Once a function is
-       computed and entered into the cache, it can be reused in later runs.
-       painc -- The value of the Parallactic Angle increment (in
-       degree) after which a new convolution function is computed and cached.
-
-  &gt;&gt;&gt; imagermode='ms' expandable parameter(s): 
-       Image using the multi-scale clean algorithm.
-
-       multiscale -- [See the explaination for the "multiscale" option above]
-       negcomponent -- [See the explaination for the "multiscale"
-       option above]
-
-  &gt;&gt;&gt; imagermode='msmfs' expandable parameter(s): 
-       Image using the multi-scale multi-frequency synthesis (MS-MFS) clean algorithm.
-
-       multiscale -- [See the explaination for the "multiscale" option above]
-       negcomponent -- [See the explaination for the "multiscale"
-       option above]
-       nterms -- The number of Taylor terms used to model the sky
-       frequency dependence.  nterms=2 is equivalent to the SW MFS algorithm.
-       reffreq --  The reference frequency, in GHz, for the MFS
-       ftmachine -- Set this to \'pbwproject\' if frequecy dependence of
-       the PB is considered important.
-       cfcache -- [See the explaination above]
-       painc -- [See the explaination above]
-
-  &gt;&gt;&gt; imagermode='advanced' expandable parameter(s): 
-       The advanced mode for imaging.
-
-       ftmachine -- Set this to \'pbwproject\' if frequecy dependence of
-       the PB is considered important.
-       cfcache -- [See the explaination above]
-       painc -- [See the explaination above]
-       epjones -- Table of EP-Jones parameters
-       multiscale -- [See the explaination for the "multiscale" option above]
-       negcomponent -- [See the explaination for the "multiscale"
-       option above]
-       nterms -- The number of Taylor terms used to model the sky
-       frequency dependence.  nterms=2 is equivalent to the SW MFS algorithm.
-       reffreq --  The reference frequency, in GHz, for the MFS
 
   &gt;&gt;&gt; multiscale expandable parameter(s): 
        negcomponent -- Stop component search when the largest scale has
@@ -910,7 +970,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  	   example: mask='myregion.rgn' (e) Combinations of any of the
  	   above example: mask=[[110,110,150,145],'mycleanbox.txt',
  	   'myimage.mask','myregion.rgn']
-           If include outlier fields, then mask need to be spefied in
+           If include outlier fields, then mask need to be specified in
            nested lists: e.g. mask=[[[110,110,150,145],'myimage.mask'],[],[20,20,40,40]]
            (A clean box with [110,110,150,145] and a image mask for main field, 
             no mask for 1st outlier field, 1 clean box for second outlier field.)

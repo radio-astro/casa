@@ -663,6 +663,15 @@ def __set_default_parameters(b):
                 if((subkey[j] != 'value') & (subkey[j] != 'notvalue')):
                     myf[subkey[j]]=subdict[0][subkey[j]]
 
+def tput(taskname=None, outfile=''):
+	myf = sys._getframe(len(inspect.stack())-1).f_globals
+	if taskname == None: taskname = myf['taskname']
+	if type(taskname) != str:
+		taskname=taskname.__name__
+	myf['taskname'] = taskname
+	outfile = myf['taskname']+'.last'
+	saveinputs(taskname, outfile)
+
 def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None):
     #parameter_printvalues(arg_names,arg_values,arg_types)
     """ Save current input values to file on disk for a specified task:
@@ -856,6 +865,22 @@ uname=os.uname()
 unameminusa=str.lower(uname[0])
 fullpath=pathname+'/'+unameminusa+'/python/2.5/assignmentFilter.py'
 casalog.origin('casa')
+
+#
+# Use something else than python's builtin help() for
+# documenting casapy tasks
+#
+import pydoc
+
+class casaDocHelper(pydoc.Helper):
+    def help(self, request):
+        if hasattr(request, 'i_am_a_casapy_task'):
+            pydoc.pager('Help on ' + pydoc.text.bold(request.__name__) + ' task:\n\n' + request.__doc__)
+        else:
+            return pydoc.Helper.help(self, request)
+
+pydoc.help = casaDocHelper(sys.stdin, sys.stdout)
+
 ##
 ## /CASASUBST/python_library_directory/  is substitued at build time
 ##

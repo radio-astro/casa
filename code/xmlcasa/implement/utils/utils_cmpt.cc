@@ -268,7 +268,7 @@ utils::removetable(const std::vector<std::string> &tablenames)
 std::vector<std::string> utils::lockedtables( ) {
     Vector<String> locks = Table::getLockedTables( );
     std::vector<std::string> result;
-    for ( int x = 0; x < locks.nelements(); ++x ) {
+    for (unsigned int x = 0; x < locks.nelements(); ++x ) {
 	result.push_back(locks[x]);
     }
     return result;

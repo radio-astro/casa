@@ -833,7 +833,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       if(getRestFreq(restFreqVec, spectralwindowids_p(0))){
 	restFreq=restFreqVec[0];
       }
-      mySpectral = new SpectralCoordinate(obsFreqRef,
+      MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : freqFrame_p; 
+      mySpectral = new SpectralCoordinate(mfreqref,
 					  mfImageStart_p.get("Hz").getValue()+
 					  mfImageStep_p.get("Hz").getValue()/2.0,
 					  mfImageStep_p.get("Hz").getValue(),
@@ -842,7 +843,9 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	 << mfImageStart_p.get("GHz").getValue()
 	 << ", channel increment = "
 	 << mfImageStep_p.get("GHz").getValue() 
-	 << "GHz" << endl;
+	 << "GHz, frequency frame = "
+         << MFrequency::showType(mfreqref)
+         << endl;
       os << LogIO::NORMAL << "Rest frequency is " 
 	 << MFrequency(Quantity(restFreq, "Hz")).get("GHz").getValue()
 	 << "GHz" << LogIO::POST;
@@ -981,7 +984,6 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	}
       }
 
-      //MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : MFrequency::LSRK;
       MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : freqFrame_p; 
       mySpectral = new SpectralCoordinate(mfreqref, freqs(0),
 					  freqs(1)-freqs(0), refChan,
@@ -1038,7 +1040,6 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       }
       // Use this next line when non-linear is working
       // when selecting in velocity its specfied freqframe or REST 
-      //MFrequency::Types imfreqref=(obsFreqRef==MFrequency::REST) ? MFrequency::REST : MFrequency::LSRK;
       MFrequency::Types imfreqref=(obsFreqRef==MFrequency::REST) ? MFrequency::REST : freqFrame_p;
       mySpectral = new SpectralCoordinate(imfreqref, freqs,
 					  restFreq);
@@ -1583,9 +1584,9 @@ Bool Imager::defineImage(const Int nx, const Int ny,
 			 const MRadialVelocity& mStart, 
 			 const Quantity& qStep,
 			 const Vector<Int>& spectralwindowids,
+			 const Int facets,
 			 const Quantity& restFreq,
                          const MFrequency::Types& mFreqFrame,
-			 const Int facets,
 			 const Quantity& distance, const Bool dotrackDir, 
 			 const MDirection& trackDir)
 {
@@ -2057,7 +2058,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     dataspectralwindowids_p=spectralwindowids;
     datafieldids_p.resize(fieldids.nelements());
     datafieldids_p=fieldids;
-    useModelCol_p=useModelCol;
+    //    useModelCol_p=useModelCol;
     
     
     

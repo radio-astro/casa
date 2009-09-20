@@ -431,7 +431,9 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		      rstat = false;
 	   }
 	   checkit = false;
-	   // need to change this so that if  constraintsRec has a limittypes option this can be checked
+	   // 
+	   if(!user.size())
+		   rstat = true;
 	}
 	if(user.type() != dflt.type() && user.size() && dflt.size() && checkit){
 		 switch(dflt.type()){

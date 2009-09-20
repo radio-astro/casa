@@ -1,4 +1,4 @@
-# wrapper script for ASDM v0.9 import regression test
+# wrapper script for the async segfault test
 import sys
 import os
 import string
@@ -7,9 +7,9 @@ import inspect
 
 # Short description
 def description():
-    return "Test of importoldasdm() task, ASDM to MS data conversion"
+    return "Test of the occurence of a segfault in the fits file handling in tasks with async==false"
 
-pass_on = { "asdm_dataset_name" : "uid___X1eb_X59c0_X1" }
+pass_on = { "ms_name" : "test.ms" }
 
 a=inspect.stack()
 stacklevel=0
@@ -23,7 +23,7 @@ gl=sys._getframe(stacklevel).f_globals
 def run():
     #####locate the regression script
     try: 
-        lepath=locatescript('asdm-import_regression.py')
+        lepath=locatescript('async-segfault_regression.py')
         print 'Script used is ',lepath
         execfile(lepath, gl, pass_on)
     except:
@@ -34,7 +34,7 @@ def run():
 
 def data():
     ### return the data files that are needed by the regression script
-    return [pass_on["asdm_dataset_name"]]
+    return [pass_on["ms_name"]]
 
 def doCopy():
     ### return a list of the same length as that returned by data()
@@ -43,4 +43,4 @@ def doCopy():
     ###   or 1 if the corresponding file should be really copied to
     ###   the work directory
 
-    return [0]
+    return [1]

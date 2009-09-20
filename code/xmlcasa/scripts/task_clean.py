@@ -1,40 +1,51 @@
 import os
 from taskinit import *
 from cleanhelper import *
-
+#import pdb
 
 def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,antenna,
-	  scan, mode,interpolation,niter,gain,threshold, psfmode,imagermode,
-	  ftmachine, mosweight, scaletype, multiscale,negcomponent,smallscalebias,
-          interactive,mask,nchan,start,width,imsize,cell,phasecenter,restfreq, stokes,
-	  weighting,robust,uvtaper,outertaper,innertaper,modelimage,restoringbeam,
-	  pbcor, minpb,calready, noise, npixels, npercycle, cyclefactor, cyclespeedup,
-	  cfcache,painc,epjtable,nterms,reffreq):
+	  scan, mode,gridmode,wprojplanes,facets, cfcache,painc,epjtable, interpolation,
+	  niter,gain,threshold, psfmode,imagermode,ftmachine, mosweight, scaletype, 
+	  multiscale,negcomponent,smallscalebias, interactive,mask,nchan,start,width,
+          outframe,veltype,imsize,cell,phasecenter,restfreq, stokes,weighting,robust,
+          uvtaper,outertaper,innertaper,modelimage,restoringbeam,pbcor, minpb,calready, 
+          noise, npixels, npercycle, cyclefactor, cyclespeedup,nterms,reffreq):
+
+#	pdb.set_trace()
 
 	#Python script
 
         casalog.origin('clean')
-	reffreq=reffreq*1e9;
-	#maskimage=''
-	#if((mask==[]) or (mask=='')):
-        #	mask=['']
-	#if (interactive):
-        #	if( (mask=='') or (mask==['']) or (mask==[])):
-        #		maskimage=imagename+'.mask'
 
-
-
-
+	applyoffsets=False;
+	pbgridcorrect=True;
+	reffreqVal=1.4e9;
+	padding=1.0;
+	if (facets > 1):
+		padding=1.2;
 	try:
-	
-		casalog.origin('clean')
+		if (nterms > 1):
+			qat=qatool.create();
+			try:
+				rff=qat.canonical(reffreq);
+			except Exception, instance:
+				print '*** Error *** In conversion of reffreq=\'',reffreq,'\' to a numerical value';
+				raise Exception, instance
+			reffreqVal=rff['value'];  # This is the frequency in Hz
+
+
+		if (gridmode =='widefield'):
+			if (wprojplanes > 1):
+				ftmachine='wproject';
+		elif (gridmode == 'aprojection'):
+			ftmachine='pbwproject';
+
 		imCln=imtool.create()
 		###if calready open ms with scratch column
 		###if mosweight use scratch columns as there in no
 		###mosweight available for no scratch column /readonly ms yet
 		imset=cleanhelper(imCln, vis, (calready or mosweight), casalog)
-		
-                
+
 		if((len(imagename)==0) or ((type(imagename)==str) and (imagename.isspace()))):
 			raise Exception, 'Cannot proceed with blank imagename'
 		
@@ -43,7 +54,7 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                         multifield=True
                 else:
                         if((type(phasecenter) == list) and (len(phasecenter) >1)):
-                                raise TypeError, 'Number of phasecenters has be equal to number of images'
+                                raise TypeError, 'Number of phasecenters has to be equal to number of images'
 
 
                 # change to handle multifield masks
@@ -81,7 +92,6 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                         phasecenters=phasecenter
                         imageids=imagename
 
-
 		###PBCOR or not 
 		sclt='SAULT'
                 makepbim=False
@@ -91,16 +101,14 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                 else: 
                         if imagermode!='mosaic': 
                                 makepbim=True 
-                #imset.defineimages(imsize=imsize, cell=cell, stokes=stokes,
-	        #		   mode=mode, spw=spw, nchan=nchan,
-	        #		   start=start,  width=width,
-	        #		   restfreq=restfreq, field=field,
-	        #		   phasecenter=phasecenter)
+
+
 	        imset.definemultiimages(rootname=rootname, imsizes=imsizes, cell=cell, 
                                         stokes=stokes, mode=mode, spw=spw, 
                                         nchan=nchan, start=start,width=width, 
                                         restfreq=restfreq, field=field, phasecenters=phasecenters,
-					names=imageids, facets=1, makepbim=makepbim) 
+					names=imageids, facets=facets, outframe=outframe, 
+                                        veltype=veltype, makepbim=makepbim) 
 
                 imset.datselweightfilter(field=field, spw=spw,
 					 timerange=timerange, uvrange=uvrange,
@@ -111,10 +119,8 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
 					 innertaper=innertaper,
 					 outertaper=outertaper,
 					 calready=calready)
-		#if(maskimage==''):
-		#	maskimage=imagename+'.mask'
-		#imset.makemaskimage(outputmask=maskimage,imagename=imagename,
-		#		    maskobject=mask)
+
+
                 if(maskimage==''):
                         maskimage=imset.imagelist[0]+'.mask'
 
@@ -146,65 +152,61 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                         imCln.setsmallscalebias(smallscalebias)
 		if(imagermode=='csclean'):
 			alg='mf'+alg;
+			if (gridmode=='aprojection'):
+				alg='cs';
 		elif(imagermode=='mosaic'):
 			if(alg.count('mf') <1):
 				alg='mf'+alg;
-			imCln.setoptions(ftmachine=ftmachine, padding=1.0,
-					 freqinterp=interpolation);
+			ftmachine="mosaic";
+			imCln.setoptions(ftmachine=ftmachine, padding=padding,
+					 wprojplanes=wprojplanes,
+					 freqinterp=interpolation,
+					 cfcachedirname=cfcache,
+					 pastep=painc,epjtablename=epjtable,
+					 applypointingoffsets=applyoffsets,
+					 dopbgriddingcorrections=pbgridcorrect);
 			imCln.setvp(dovp=True);
-		elif (imagermode=='multiscale'):
-			imCln.setoptions(ftmachine=ftmachine,
-					 freqinterp=interpolation);
+#
+# Determine the algorithm for wprojection.  Copied the logic from widefield task.
+#
+		if (gridmode=='widefield'):
+			alg='mfclark';
+			if((psfmode=='clark') or (psfmode=='hogbom')):
+				if(facets > 1):
+					alg='wf'+psfmode;
+				else:
+					alg='mf'+psfmode;
 			if((type(multiscale)==list) and (len(multiscale)>0)):
-				alg='multiscale' 
-                                if (multifield):
-                                        alg='mf'+alg
-				imCln.setscales(scalemethod='uservector',
-						uservector=multiscale)
-                                imCln.setsmallscalebias(smallscalebias)
-		elif (imagermode=='desquint'):
-			alg='cs';
-			imCln.setoptions(ftmachine=ftmachine,
-					 cfcachedirname=cfcache,
-					 pastep=painc,
-					 epjtablename="",
-					 applypointingoffsets=False,
-					 dopbgriddingcorrections=True);
-		elif (imagermode=='msmfs'):
-			alg='multiscale';
-			if((type(multiscale)==list) and (len(multiscale)>0)):
-				alg='multiscale';
-                                if (multifield):
-                                        alg='mf'+alg
-				imCln.setscales(scalemethod='uservector',
-						uservector=multiscale);
-                                imCln.setsmallscalebias(smallscalebias)
-			imCln.setoptions(ftmachine=ftmachine,
-					 cfcachedirname=cfcache,
-					 pastep=painc,
-					 epjtablename="",
-					 applypointingoffsets=False,
-					 dopbgriddingcorrections=True);
-			imCln.settaylorterms(ntaylorterms = nterms,
-					     reffreq   = reffreq);
-		elif (imagermode=='advanced'):
+				if(facets >1):
+					raise Exception, 'multiscale with facets > 1 not allowed for now';
+				alg='mfmultiscale';
+
+		imCln.setoptions(ftmachine=ftmachine,
+				 wprojplanes=wprojplanes,
+				 freqinterp=interpolation,padding=padding,
+				 cfcachedirname=cfcache,
+				 pastep=painc,epjtablename=epjtable,
+				 applypointingoffsets=applyoffsets,
+				 dopbgriddingcorrections=pbgridcorrect)
+
+		if (mode=='mfs'):
 			if((type(multiscale)==list) and (len(multiscale)>0)):
 				alg='multiscale';
-                                if (multifield):
-                                        alg='mf'+alg
-				imCln.setscales(scalemethod='uservector',
-						uservector=multiscale);
-                                imCln.setsmallscalebias(smallscalebias)
-			imCln.setoptions(ftmachine=ftmachine,
-					 cfcachedirname=cfcache,
-					 pastep=painc,
-					 epjtablename=epjtable,
-					 applypointingoffsets=False,
-					 dopbgriddingcorrections=True);
-			imCln.settaylorterms(ntaylorterms = nterms,
-					     reffreq   = reffreq);
-		else:
-			imCln.setoptions(freqinterp=interpolation)
+				if (multifield):
+					alg='mf'+alg
+		       # imCln.setscales(scalemethod='uservector',
+		       # 		       uservector=multiscale);
+		       # imCln.setsmallscalebias(smallscalebias)
+		       # imCln.setoptions(ftmachine=ftmachine,
+		       # 			cfcachedirname=cfcache,
+		       # 			pastep=painc,
+		       # 			epjtablename="",
+		       # 			applypointingoffsets=False,
+		       # 			dopbgriddingcorrections=True);
+			if (nterms > 1):
+#				alg='multiscale';
+				imCln.settaylorterms(ntaylorterms = nterms,
+						     reffreq   = reffreqVal);
 
                 if(alg=='mfmultiscale' and multifield): 
                     raise Exception, 'Multiscale clean with flanking fields is not supported yet'

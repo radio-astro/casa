@@ -1,6 +1,7 @@
+from taskinit import *
+import time
 import os
 import sys
-from taskinit import *
 
 pathname = os.environ.get('CASAPATH').split()[0]
 arch     = os.environ.get('CASAPATH').split()[1]
@@ -13,10 +14,10 @@ else:
         filepath = pathname+'/'+arch+'/python/2.5/heuristics/'
 
 sys.path.append(filepath)
-
 import sfiReducer
 import baseFlagger
 import htmlLogger
+
 
 debug = False
 def flagdata(vis = None, mode = None,
@@ -55,27 +56,6 @@ def flagdata(vis = None, mode = None,
 
         casalog.origin('flagdata')
 
-        if mode == 'alma':
-                #import inspect
-
-                #print "now at ", inspect.currentframe().f_lineno, inspect.currentframe().f_code.co_filename
-
-                sfir = sfiReducer.SFIReducer(vis, recipe=recipe)
-                casalog.post('Invoking ' + str(recipe))
-                casalog.post('Source field(s)        = ' + str(source))
-                casalog.post('Flux     calibrator(s) = ' + str(flux))
-                casalog.post('Gain     calibrator(s) = ' + str(gain))
-                casalog.post('Bandpass calibrator(s) = ' + str(bpass))
-                #casalog.post('A log of the run is available in ./html/AAAROOT.html')
-                #print "now at ", inspect.currentframe().f_lineno, inspect.currentframe().f_code.co_filename
-                
-                sfir.reduce(source=source, flux=flux, gain=gain, bandpass=bpass)
-                
-                casalog.post(str(recipe) + ' done')
-                casalog.post('A log of the run is available in ./html/AAAROOT.html')
-                
-                return False
-
         fg.done()
         fg.clearflagselection(0)
         
@@ -85,6 +65,26 @@ def flagdata(vis = None, mode = None,
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 
+
+                if mode == 'alma':
+
+                        backup_flags(mode)
+
+                        sfir = sfiReducer.SFIReducer(vis, recipe=recipe)
+                        casalog.post('Invoking ' + str(recipe))
+                        casalog.post('Source field(s)        = ' + str(source))
+                        casalog.post('Flux     calibrator(s) = ' + str(flux))
+                        casalog.post('Gain     calibrator(s) = ' + str(gain))
+                        casalog.post('Bandpass calibrator(s) = ' + str(bpass))
+                        #casalog.post('A log of the run is available in ./html/AAAROOT.html')
+                        #print "now at ", inspect.currentframe().f_lineno, inspect.currentframe().f_code.co_filename
+                        sfir.reduce(source=source, flux=flux, gain=gain, bandpass=bpass)
+                
+                        casalog.post(str(recipe) + ' done')
+                        casalog.post('A log of the run is available in ./html/AAAROOT.html')
+
+                        fg.done(vis)
+                        return False
 
                 if mode == 'manualflag':
                         # In manualflag and quack modes,
@@ -136,6 +136,8 @@ def flagdata(vis = None, mode = None,
                                 time = timerange, \
                                 correlation = correlation, \
                                 diameter = diameter)
+
+                        backup_flags(mode)
                         fg.run()
                 elif ( mode == 'autoflag' ):
                         fg.setdata(field = field, \
@@ -159,6 +161,7 @@ def flagdata(vis = None, mode = None,
                         rec['column'] = column
                         fg.setautoflag(algorithm = algorithm,
                                        parameters = rec)
+                        backup_flags(mode)
                         fg.run()
 
                 elif mode == 'rfi':
@@ -221,6 +224,8 @@ def flagdata(vis = None, mode = None,
                         #
                         fg.setautoflag(algorithm='tfcrop', parameters=par)
 
+                        backup_flags(mode)
+
                         fg.run()
 
                 elif ( mode == 'summary' ):
@@ -234,7 +239,8 @@ def flagdata(vis = None, mode = None,
                                           uvrange=uvrange, \
                                           time=timerange, \
                                           correlation=correlation)
-                        #tosave = False
+                        
+                        # do not backup existing flags
                         stats = fg.run()
                         fg.done()
                         return stats
@@ -246,8 +252,7 @@ def flagdata(vis = None, mode = None,
                         print "Sorry - not yet implemented !"
                         fg.done()
                         return False
-                #if tosave:
-                #fg.saveflagversion(versionname=versionname,comment='flagdata autosave',merge='replace')
+
 
                 #write history
                 ms.open(vis, nomodify=False)
@@ -381,9 +386,9 @@ def manualflag_quack(mode, selectdata, **params):
 #                                                   clipcolumn=params['clipcolumn'][i], \
 #                                                   outside=params['clipoutside'][i])
 #                                                   quackinterval=quackinterval[i])
+
+        backup_flags(mode)
         fg.run()
-
-
 
 # rename some parameters,
 # in order to match the interface of fg.tool
@@ -400,3 +405,22 @@ def rename_params(params):
         params['autocorrelation'] = params['autocorr']    ; del params['autocorr']
         params['cliprange']       = params['clipminmax']  ; del params['clipminmax']
         params['outside']         = params['clipoutside'] ; del params['clipoutside']
+
+def backup_flags(mode):
+
+        # put time stamp in versionname
+        # resolution = second might not be sufficient, if the user calls
+        # this task in a script using a small MS, hence put also miliseconds
+        # in the time stamp
+
+        time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
+        
+        versionname = "flagdata-" + str(time.time())
+        #versionname = "flagdata-" + time_string
+
+        #casalog.post("Backing up flags under versionname = " + versionname)
+
+        fg.saveflagversion(versionname=versionname,
+                           comment='flagdata autosave on ' + time_string,
+                           merge='replace')
+
