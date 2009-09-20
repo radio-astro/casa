@@ -42,6 +42,7 @@
 #include <measures/Measures/MeasureHolder.h>
 #include <synthesis/MeasurementEquations/VPManager.h>
 #include <synthesis/MeasurementComponents/PBMathInterface.h>
+#include <synthesis/MeasurementComponents/PBMath.h>
 #include <casa/Logging.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
@@ -89,6 +90,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os(LogOrigin("vpmanager", "summarizevps"));
 
+    os << LogIO::NORMAL << "Voltage patterns in the main CASA repository:"
+       << LogIO::POST;
+    String telName;
+    for(Int pbtype = static_cast<Int>(PBMath::DEFAULT) + 1;
+        pbtype < static_cast<Int>(PBMath::NONE); ++pbtype){
+      PBMath::nameCommonPB(static_cast<PBMath::CommonPB>(pbtype), telName);
+      os << LogIO::NORMAL << telName << LogIO::POST;
+    }
+    
+    os << LogIO::NORMAL << "\nUser defined voltage patterns:" << LogIO::POST;
     if (vplist_p.nfields() > 0) {
       os << "VP#  Tel    VP Type" << LogIO::POST;
       for (uInt i=0; i < vplist_p.nfields(); ++i){
@@ -102,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }
       }
     } else {
-      os << "There are no VPs defined" << LogIO::POST;
+      os << "\tNone" << LogIO::POST;
     }
 
     return True;
