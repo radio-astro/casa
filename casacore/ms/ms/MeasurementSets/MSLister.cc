@@ -869,13 +869,13 @@ void MSLister::listData(const int pageRows,
   
     wTime_p   = max(wTime_p,  (uInt)12);
     wUVDist_p = max(wUVDist_p,(uInt)6);           wUVDist_p++; wTotal_p+=wUVDist_p;
-    wUVW_p = max(wUVW_p, (uInt)4);               wUVW_p++; wTotal_p+=3*wUVW_p;
     wAmpl_p   = max(wAmpl_p,  (uInt)4);           wAmpl_p++; 
     wPhase_p  = max(wPhase_p, (uInt)4); 
     wWeight_p = max(wWeight_p,(uInt)3);           wWeight_p++;
   
     wVis_p = wAmpl_p+wPhase_p+wWeight_p+wFlag_p;
     wTotal_p+=wTime_p+nIndexPols_p*wVis_p+1;
+    wUVW_p = max(wUVW_p, (uInt)4);               wUVW_p++; wTotal_p+=3*wUVW_p;
   
     // Make column-ated header rule according to total and field widths
   
@@ -886,17 +886,17 @@ void MSLister::listData(const int pageRows,
     colPos+=wTime_p;   hSeparator[colPos]='|';
     colPos+=wIntrf_p;  hSeparator[colPos]='|';
     colPos+=wUVDist_p; hSeparator[colPos]='|';
-    colPos+=wUVW_p; hSeparator[colPos]='|';
-    colPos+=wUVW_p; hSeparator[colPos]='|';
-    colPos+=wUVW_p; hSeparator[colPos]='|';
     if (doFld_p) {colPos+=wFld_p;hSeparator[colPos]='|';}
     if (doSpW_p) {colPos+=wSpW_p;hSeparator[colPos]='|';}
     if (doChn_p) {colPos+=wChn_p;hSeparator[colPos]='|';}
     colPos++;
-    for (uInt ipol=0; ipol<nIndexPols_p-1; ipol++) {
+    for (uInt ipol=0; ipol<nIndexPols_p; ipol++) {
       colPos+=wVis_p;
       hSeparator[colPos]='|';
     }
+    colPos+=wUVW_p; hSeparator[colPos]='|';
+    colPos+=wUVW_p; hSeparator[colPos]='|';
+    colPos+=wUVW_p; hSeparator[colPos]='|';
   
     Vector<String> flagSym(2);
     flagSym(0) = " ";
@@ -986,10 +986,6 @@ void MSLister::listData(const int pageRows,
                   cout.width(wAnt2_p);   cout << antNames2(tableRow);
                   cout.precision(precUVDist_p);
                   cout.width(wUVDist_p);cout << uvdist(tableRow);
-                  for (uInt u = 0; u < 3; u++) {
-                     cout.precision(precUVW_p);
-                     cout.width(wUVW_p);cout << uvw(IPosition(2, u, tableRow));
-                  }
                   // For the output to agree with listobs, do not add 1 to fieldid and spwinid.
                   if (doFld_p) {cout.width(wFld_p);   cout << fieldid(tableRow);}
                   if (doSpW_p) {cout.width(wSpW_p);   cout << spwinid(tableRow);}
@@ -1007,6 +1003,10 @@ void MSLister::listData(const int pageRows,
                       // Print all loop indices; useful for debugging these loops.
                       // cout << "ipol= " << ipol << " ichan= " << ichan << " rowCL= " << rowCL << " tableRow= " << tableRow;
                   } // pol loop
+                  for (uInt u = 0; u < 3; u++) {
+                     cout.precision(precUVW_p);
+                     cout.width(wUVW_p);cout << uvw(IPosition(2, u, tableRow));
+                  }
                   cout << endl;
               } // chan loop
               if (endOutput) {break;} // break out of spw loop
@@ -1045,9 +1045,6 @@ void MSLister::listColumnHeader() {
   cout.setf(ios::right, ios::adjustfield);
   cout.width(wIntrf_p);            cout << " ";
   cout.width(wUVDist_p);           cout << " ";
-  cout.width(wUVW_p);           cout << " ";
-  cout.width(wUVW_p);           cout << " ";
-  cout.width(wUVW_p);           cout << " ";
   if (wFld_p) {cout.width(wFld_p); cout << " ";}
   if (wSpW_p) {cout.width(wSpW_p); cout << " ";}
   if (wChn_p) {cout.width(wChn_p); cout << " ";}
@@ -1056,6 +1053,9 @@ void MSLister::listColumnHeader() {
   for (uInt ipol=0; ipol<nIndexPols_p; ipol++) {
     cout.width(wVis_p); cout << "  "+pols_p(indexPols_p(ipol))+":";
   }
+  cout.width(wUVW_p);           cout << " ";
+  cout.width(wUVW_p);           cout << " ";
+  cout.width(wUVW_p);           cout << " ";
   cout << endl;
   
   // Second line of column header
@@ -1064,9 +1064,6 @@ void MSLister::listColumnHeader() {
   cout.setf(ios::right, ios::adjustfield);
   cout.width(wIntrf_p);            cout << "Intrf";
   cout.width(wUVDist_p);           cout << "UVDist";
-  cout.width(wUVW_p);           cout << "U";
-  cout.width(wUVW_p);           cout << "V";
-  cout.width(wUVW_p);           cout << "W";
   if (wFld_p) {cout.width(wFld_p); cout << "Fld";}
   if (wSpW_p) {cout.width(wSpW_p); cout << "SpW";}
   if (wChn_p) {cout.width(wChn_p); cout << "Chn";}
@@ -1077,6 +1074,9 @@ void MSLister::listColumnHeader() {
     cout.width(wWeight_p);    cout << "Wt";
                               cout << " F"; // flag column
   }
+  cout.width(wUVW_p);           cout << "U";
+  cout.width(wUVW_p);           cout << "V";
+  cout.width(wUVW_p);           cout << "W";
   cout << endl;
 } // end listColumnHeader()
 

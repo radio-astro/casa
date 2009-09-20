@@ -28,10 +28,12 @@
 #ifndef IMAGES_IMAGEFITTER_H
 #define IMAGES_IMAGEFITTER_H
 
+#include <measures/Measures/Stokes.h>
+#include <lattices/LatticeMath/Fit2D.h>
 #include <casa/Logging/LogIO.h>
 #include <components/ComponentModels/ComponentList.h>
-// #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInterface.h>
+#include <components/ComponentModels/ComponentType.h>
 #include <casa/namespace.h>
 
 namespace casa {
@@ -70,12 +72,31 @@ namespace casa {
 
             // constructor appropriate for processing command line arguments (from Unix shell).
             ImageFitter(Int argc, char *argv[]);
-
+        
+            // constructor approprate for API calls.
+            // Parameters:
+            // <ul>
+            // <li>imagename - the name of the input image in which to fit the models</li>
+            // <li>box - A 2-D rectangular box in which to use pixels for the fitting, eg box=100,120,200,230
+            // In cases where both box and region are specified, box, not region, is used.</li>
+            // <li>region - Named region to use for fitting</li>
+            // <li>ngaussInp - Number of gaussians to attempt to fit</li>
+            // <li>chanInp - Zero-based channel number on which to do the fit. Only a single channel can be
+            // specified.</li>
+            // <li>stokes - Stokes plane on which to do the fit. Only a single Stokes parameter can be
+            // specified.</li>
+            // <li> maskInp - Mask (as LEL) to use as a way to specify which pixels to use </li>
+            // <li> includepix - Pixel value range to include in the fit. includepix and excludepix
+            // cannot be specified simultaneously. </li>
+            // <li> excludepix - Pixel value range to exclude from fit</li>
+            // <li> residualInp - Name of residual image to save. Blank means do not save residual image</li>
             ImageFitter(
                 const String& imagename, const String& box="", const String& region="",
                 const uInt ngaussInp=1, const uInt chanInp=0, const String& stokes="I",
+                const String& maskInp="",
                 const Vector<Float>& includepix = Vector<Float>(0),
-                const Vector<Float>& excludepix = Vector<Float>(0) 
+                const Vector<Float>& excludepix = Vector<Float>(0)
+                // , const String& residualInp=""
             ); 
 
             // destructor
@@ -91,7 +112,7 @@ namespace casa {
             ImageInterface<Float> *image;
             ImageRegion imRegion;
             uInt ngauss, chan;
-            String stokesString;
+            String stokesString, mask; //residual;
             Vector<Float> includePixelRange, excludePixelRange;
 
             // does the lion's share of constructing the object, ie checks validity of
@@ -106,9 +127,11 @@ namespace casa {
             // process the 'box' command line argument and return the associated region as
             // a record.
             void _processBox(const String& box);
-            
+
             // check the validity of the image-related parameters.
             void _checkImageParameterValidity() const;
+  
     };
 }
+
 #endif
