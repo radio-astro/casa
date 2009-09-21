@@ -950,7 +950,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
     // Spectral channels resampled at equal increments in optical velocity
     // Here we compute just the first two channels and use increments for
     // the others
-    else if (imageMode_p=="VELOCITY") {
+    else if (imageMode_p=="VELOCITY" || imageMode_p.contains("RADIO")) {
       if(imageNchan_p==0) {
 	this->unlock();
 	os << LogIO::SEVERE << "Must specify number of channels" 
@@ -1006,10 +1006,11 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       }
       
     }
-    // Since optical velocity is non-linear in frequency, we have to
+    // Since optical/relativistic velocity is non-linear in frequency, we have to
     // pass in all the frequencies. For radio velocity we can use 
     // a linear axis.
-    else if (imageMode_p=="OPTICALVELOCITY") {
+    else if (imageMode_p=="OPTICALVELOCITY" || imageMode_p.contains("OPTICAL") || imageMode_p.contains("TRUE") 
+	     || imageMode_p.contains("BETA") ||  imageMode_p.contains("RELATI") ) {
       if(imageNchan_p==0) {
 	this->unlock();
 	os << LogIO::SEVERE << "Must specify number of channels" 
@@ -1028,7 +1029,13 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       if(Double(mImageStep_p.getValue())!=0.0) {
 	MRadialVelocity mRadVel=mImageStart_p;
 	for (Int chan=0;chan<imageNchan_p;++chan) {
-	  MDoppler mdoppler=mRadVel.toDoppler();
+	  MDoppler mdoppler;
+	  if(imageMode_p.contains("OPTICAL")){
+	    mdoppler=MDoppler(mRadVel.getValue().get(), MDoppler::OPTICAL);
+	  } 
+	  else{
+	    mdoppler=MDoppler(mRadVel.getValue().get(), MDoppler::BETA);
+	  }
 	  freqs(chan)=
 	    MFrequency::fromDoppler(mdoppler, restFreq).getValue().getValue();
 	  mRadVel.set(mRadVel.getValue()+mImageStep_p.getValue());
