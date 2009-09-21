@@ -2630,7 +2630,7 @@ Bool Imager::boxmask(const String& mask, const Vector<Int>& blc,
 
   ImageRegion* recordRegion=0;
   if(imageRegRec !=0){
-    ImageAnalysis::tweakedRegionRecord(imageRegRec);
+    ImageRegion::tweakedRegionRecord(imageRegRec);
     TableRecord rec1;
     rec1.assign(*imageRegRec);
     recordRegion=ImageRegion::fromRecord(rec1,"");    
