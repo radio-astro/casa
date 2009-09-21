@@ -175,6 +175,9 @@ public:
     virtual LattRegionHolder* makeComplement() const;
     // </group>
 
+    // moved from ImageAnalysis
+    static  Record * tweakedRegionRecord(Record *Region);
+
 private:
     WCRegion*   itsWC;
 };

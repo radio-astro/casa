@@ -249,53 +249,6 @@ Bool ImageAnalysis::detached() {
 
 }
 
-Record * ImageAnalysis::tweakedRegionRecord(Record *Region) {
-	// Image uses Float but it can't be specified in the IDL interface
-	if (Region->isDefined("blc")) {
-		Int fldn_blc = Region->fieldNumber("blc");
-		if ((Region->dataType(fldn_blc)) == TpArrayDouble) {
-			Array<Double> a_blc;
-			Region->get(fldn_blc, a_blc);
-			Vector<Double> blc(a_blc);
-			Vector<Float> Blc(blc.size());
-			for (uInt i = 0; i < blc.size(); i++) {
-				Blc[i] = (Float) blc[i];
-			}
-			Region->removeField(fldn_blc);
-			Region->define("blc", Blc);
-		}
-	}
-	if (Region->isDefined("trc")) {
-		Int fldn_trc = Region->fieldNumber("trc");
-		if ((Region->dataType(fldn_trc)) == TpArrayDouble) {
-			Array<Double> a_trc;
-			Region->get(fldn_trc, a_trc);
-			Vector<Double> trc(a_trc);
-			Vector<Float> Trc(trc.size());
-			for (uInt i = 0; i < trc.size(); i++) {
-				Trc[i] = (Float) trc[i];
-			}
-			Region->removeField(fldn_trc);
-			Region->define("trc", Trc);
-		}
-	}
-	if (Region->isDefined("inc")) {
-		Int fldn_inc = Region->fieldNumber("inc");
-		if ((Region->dataType(fldn_inc)) == TpArrayDouble) {
-			Array<Double> a_inc;
-			Region->get(fldn_inc, a_inc);
-			Vector<Double> inc(a_inc);
-			Vector<Float> Inc(inc.size());
-			for (uInt i = 0; i < inc.size(); i++) {
-				Inc[i] = (Float) inc[i];
-			}
-			Region->removeField(fldn_inc);
-			Region->define("inc", Inc);
-		}
-	}
-	return Region;
-}
-
 Bool ImageAnalysis::addnoise(const String& type, const Vector<Double>& pars,
 		Record& region, const Bool zeroIt) {
 	bool rstat(False);
@@ -308,7 +261,7 @@ Bool ImageAnalysis::addnoise(const String& type, const Vector<Double>& pars,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(pRegion)), mask, False, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(pRegion)), mask, False, *itsLog,
 			True);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -687,7 +640,7 @@ Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 		if (dropdeg)
 			axesSpecifier = AxesSpecifier(False);
 		SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-				*pInImage, *(tweakedRegionRecord(&region)), Mask, True,
+				*pInImage, *(ImageRegion::tweakedRegionRecord(&region)), Mask, True,
 				*itsLog, True, axesSpecifier);
 		delete pRegionRegion;
 		delete pMaskRegion;
@@ -831,7 +784,7 @@ ImageAnalysis::convolve(const String& outFile, Array<Float>& kernelArray,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&region)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&region)), mask, True, *itsLog,
 			False);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -889,7 +842,7 @@ ImageAnalysis::boundingbox(const Record& Region) {
 	// Find the bounding box of this region
 	Record tmpR(Region);
 	const ImageRegion* pRegion = makeRegionRegion(*pImage_p,
-			*tweakedRegionRecord(&tmpR), False, *itsLog);
+			*ImageRegion::tweakedRegionRecord(&tmpR), False, *itsLog);
 	LatticeRegion latRegion = pRegion->toLatticeRegion(pImage_p->coordinates(),
 			pImage_p->shape());
 	//
@@ -1361,7 +1314,7 @@ ImageAnalysis::convolve2d(const String& outFile, const Vector<Int>& axes,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
 			False);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -1566,7 +1519,7 @@ ImageAnalysis::decompose(Matrix<Int>& blcs, Matrix<Int>& trcs, Record& Region, c
 	ImageRegion* pMaskRegion = 0;
 	AxesSpecifier axesSpec(False);
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
 			False, axesSpec);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -1651,7 +1604,7 @@ Record ImageAnalysis::deconvolvecomponentlist(Record& compList) {
 	ComponentList outCL;
 	for (uInt i = 0; i < n; ++i) {
 		// listOut(i) = deconvolveSkyComponent(*itsLog, list(i), beam, dirCoord);
-		outCL.add(deconvolveSkyComponent(*itsLog, list(i), beam, dirCoord));
+		outCL.add(ImageUtilities::deconvolveSkyComponent(*itsLog, list(i), beam, dirCoord));
 	}
 	if (outCL.nelements() > 0)
 		if (!outCL.toRecord(error, retval)) {
@@ -1766,7 +1719,7 @@ Bool ImageAnalysis::fft(const String& realOut, const String& imagOut,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
 			False);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -1840,7 +1793,7 @@ Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 	ImageRegion* pMaskRegion = 0;
 	AxesSpecifier axesSpec(False);
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
 			False, axesSpec);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -1879,7 +1832,7 @@ Bool ImageAnalysis::fitallprofiles(Record& Region, const Int axis,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, False, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, False, *itsLog,
 			True);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -1946,7 +1899,7 @@ Record ImageAnalysis::fitprofile(Vector<Float>& values,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, False, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, False, *itsLog,
 			False);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -2168,7 +2121,7 @@ ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, False, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, False, *itsLog,
 			False);
 	delete pMaskRegion;
 	IPosition imageShape = subImage.shape();
@@ -2358,7 +2311,7 @@ ComponentList ImageAnalysis::fitsky(
 	AxesSpecifier axesSpec(False);
 
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			subImageTmp, *(tweakedRegionRecord(&Region)), mask, list, *itsLog,
+			subImageTmp, *(ImageRegion::tweakedRegionRecord(&Region)), mask, list, *itsLog,
 			False, axesSpec);
 
     ostringstream oss;
@@ -2410,7 +2363,7 @@ ComponentList ImageAnalysis::fitsky(
 		// Encode as SkyComponent and return
 		Vector<SkyComponent> result(1);
 		Double facToJy;
-		result(0) = encodeSkyComponent(*itsLog, facToJy, subImage,
+		result(0) = ImageUtilities::encodeSkyComponent(*itsLog, facToJy, subImage,
 				convertModelType(Fit2D::GAUSSIAN), parameters, stokes, xIsLong,
 				deconvolveIt);
 		cl.add(result(0));
@@ -2522,7 +2475,7 @@ ComponentList ImageAnalysis::fitsky(
 		Vector<Double> solution = fitter.availableSolution(i);
 		Vector<Double> errors = fitter.availableErrors(i);
 		//
-		result(i) = encodeSkyComponent(*itsLog, facToJy, subImage, modelType,
+		result(i) = ImageUtilities::encodeSkyComponent(*itsLog, facToJy, subImage, modelType,
 				solution, stokes, xIsLong, deconvolveIt);
 		encodeSkyComponentError(*itsLog, result(i), facToJy, subImage,
 				solution, errors, stokes, xIsLong);
@@ -2642,7 +2595,7 @@ Bool ImageAnalysis::getregion(Array<Float>& pixels, Array<Bool>& pixelmask,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), Mask, list, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), Mask, list, *itsLog,
 			False);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -2744,7 +2697,7 @@ ImageAnalysis::hanning(const String& outFile, Record& Region,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
 			False);
 	//
 	IPosition blc(subImage.ndim(), 0);
@@ -2880,7 +2833,7 @@ Bool ImageAnalysis::histograms(Record& histout, const Vector<Int>& axes,
 	ImageRegion* pMaskRegion = 0;
 
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&regionRec)), sMask, True,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&regionRec)), sMask, True,
 			*itsLog, False);
 
 	// Make new object only if we need to.
@@ -3163,13 +3116,13 @@ Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 	ImageRegion* pMaskRegion = 0;
 	String mask;
 	SubImage<Float> subRealImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
 			False);
 	delete pRegionRegion;
 	delete pMaskRegion;
 	//
 	SubImage<Float> subImagImage = makeSubImage(pRegionRegion, pMaskRegion,
-			imagImage, *(tweakedRegionRecord(&Region)), mask, False, *itsLog,
+			imagImage, *(ImageRegion::tweakedRegionRecord(&Region)), mask, False, *itsLog,
 			False);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -3328,7 +3281,7 @@ Bool ImageAnalysis::modify(Record& Model, Record& Region, const String& mask,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, list, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, list, *itsLog,
 			True);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -3366,7 +3319,7 @@ Record ImageAnalysis::maxfit(Record& Region, const Bool doPoint,
 	AxesSpecifier axesSpec(False); // drop degenerate
 	String mask;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
 			False, axesSpec);
 	Vector<Float> blc;
 	if (pRegionRegion) {
@@ -3456,7 +3409,7 @@ ImageAnalysis::moments(const Vector<Int>& whichmoments, const Int axis,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
 			False);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -3811,7 +3764,7 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 	// truncated here.
 
 	const ImageRegion* pRegion = makeRegionRegion(*pImage_p,
-			*tweakedRegionRecord(&region), list, *itsLog);
+			*ImageRegion::tweakedRegionRecord(&region), list, *itsLog);
 	LatticeRegion latRegion = pRegion->toLatticeRegion(pImage_p->coordinates(),
 			pImage_p->shape());
 	// The pixels array must be same shape as the bounding box of the
@@ -4002,7 +3955,7 @@ ImageAnalysis::rebin(const String& outFile, const Vector<Int>& factors,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
 			False, axesSpecifier);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -4097,7 +4050,7 @@ ImageAnalysis::regrid(const String& outFile, const Vector<Int>& inshape,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
 			False, axesSpecifier);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -4253,7 +4206,7 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, True, *itsLog,
 			False, axesSpecifier);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -4483,7 +4436,7 @@ Bool ImageAnalysis::replacemaskedpixels(const String& pixels, Record& pRegion,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&pRegion)), maskRegion, list,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&pRegion)), maskRegion, list,
 			*itsLog, True);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -4580,7 +4533,7 @@ ImageAnalysis::sepconvolve(const String& outFile,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&pRegion)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&pRegion)), mask, True, *itsLog,
 			False);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -4664,7 +4617,7 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 	// Make region and subimage
 	Record *tmpRegion = new Record(p_Region);
 	const ImageRegion* pRegion = makeRegionRegion(*pImage_p,
-			*(tweakedRegionRecord(tmpRegion)), list, *itsLog);
+			*(ImageRegion::tweakedRegionRecord(tmpRegion)), list, *itsLog);
 	delete tmpRegion;
 	SubImage<Float> subImage(*pImage_p, *pRegion, True);
 
@@ -4881,7 +4834,7 @@ Bool ImageAnalysis::statistics(Record& statsout, const Vector<Int>& axes,
 	if (mtmp == "false" || mtmp == "[]")
 		mtmp = "";
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&regionRec)), mtmp, verbose,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&regionRec)), mtmp, verbose,
 			*itsLog, False);
 
 	// Reset who is logging stuff.
@@ -5149,7 +5102,7 @@ Bool ImageAnalysis::twopointcorrelation(const String& outFile,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&theRegion)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&theRegion)), mask, True, *itsLog,
 			False, axesSpecifier);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -5213,7 +5166,7 @@ ImageAnalysis::subimage(const String& outfile, Record& Region,
 	if (dropDegenerateAxes)
 		axesSpecifier = AxesSpecifier(False);
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&Region)), mask, list, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, list, *itsLog,
 			True, axesSpecifier);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -5374,7 +5327,7 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 	}
 
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-			*pImage_p, *(tweakedRegionRecord(&pRegion)), mask, True, *itsLog,
+			*pImage_p, *(ImageRegion::tweakedRegionRecord(&pRegion)), mask, True, *itsLog,
 			False, axesSpecifier);
 	delete pRegionRegion;
 	delete pMaskRegion;
@@ -5871,145 +5824,14 @@ void ImageAnalysis::set_cache(const IPosition &chunk_shape) const {
 	}
 }
 
-// This is just a glorified string = operator
-/*
- String ImageAnalysis::substituteOID (Block<LatticeExprNode>& nodes,
- String& exprName,
- const String& expr) const
- {
- // Added this for python/acs prototype pipeline
- *itsLog << LogOrigin("ImageAnalysis", "substituteOID");
- *itsLog << LogIO::WARN << "There is no ObjectController available so '$tool' substitutions are not available" << endl;
- *itsLog << LogIO::WARN << "Any LatticeExpressionLanguage (LEL) strings containing these will fail" << LogIO::POST;
- return expr;
- }
- */
-
-SkyComponent ImageAnalysis::deconvolveSkyComponent(LogIO& os,
-		const SkyComponent& skyIn, const Vector<Quantum<Double> >& beam,
-		const DirectionCoordinate& dirCoord) const {
-	SkyComponent skyOut;
-	skyOut = skyIn.copy();
-	//
-	const ComponentShape& shapeIn = skyIn.shape();
-	ComponentType::Shape type = shapeIn.type();
-
-	// Put beam p.a. into XY frame
-	Vector<Quantum<Double> > beam2 = putBeamInXYFrame(beam, dirCoord);
-	if (type == ComponentType::POINT) {
-		//
-	} else if (type == ComponentType::GAUSSIAN) {
-		// Recover shape
-		const TwoSidedShape& ts = dynamic_cast<const TwoSidedShape&> (shapeIn);
-		Quantum<Double> major = ts.majorAxis();
-		Quantum<Double> minor = ts.minorAxis();
-		Quantum<Double> pa = ts.positionAngle();
-		// Adjust position angle to XY pixel frame  (pos +x -> +y)
-		Vector<Double> p = ts.toPixel(dirCoord);
-		// Deconvolve.
-		//  Bool isPointSource = deconvolveFromBeam(major, minor, paXYFrame, os, beam);
-		Quantum<Double> paXYFrame(p(4), Unit("rad"));
-		Quantum<Double> paXYFrame2(paXYFrame);
-		deconvolveFromBeam(major, minor, paXYFrame, os, beam2);
-
-		// Account for frame change of position angle
-		Quantum<Double> diff = paXYFrame2 - paXYFrame;
-		pa -= diff;
-		//
-		const MDirection dirRefIn = shapeIn.refDirection();
-		GaussianShape shapeOut(dirRefIn, major, minor, pa);
-		skyOut.setShape(shapeOut);
-	} else {
-		os << "Cannot deconvolve components of type " << shapeIn.ident()
-				<< LogIO::EXCEPTION;
-	}
-	//
-	return skyOut;
-}
-
-Vector<Quantum<Double> > ImageAnalysis::putBeamInXYFrame(const Vector<Quantum<
-		Double> >& beam, const DirectionCoordinate& dirCoord) const
-//
-// The beam is spatially invariant across an image, and its position
-// must be fit in the pixel coordinate system to make any sense.
-// However, its position angle is positive N->E which means
-// some attempt to look at the increments has been made...
-// We want positive +x -> +y  so have to try and do this.
-{
-	Vector<Quantum<Double> > beam2 = beam.copy();
-	Vector<Double> inc = dirCoord.increment();
-	Double pa = beam(2).getValue(Unit("rad"));
-	Double pa2 = beam2(2).getValue(Unit("rad"));
-	//
-	if (inc(1) > 0) {
-		if (inc(0) < 0) {
-			pa2 = C::pi_2 + pa;
-		} else {
-			pa2 = C::pi_2 - pa;
-		}
-	} else {
-		if (inc(0) < 0) {
-			pa2 = C::pi + C::pi_2 - pa;
-		} else {
-			pa2 = C::pi + C::pi_2 + pa;
-		}
-	}
-	//
-	Double pa3 = fmod(pa2, C::pi);
-	if (pa3 < 0.0)
-		pa3 += C::pi;
-	beam2(2).setValue(pa3);
-	beam2(2).setUnit(Unit("rad"));
-	return beam2;
-}
-
 // the public version of the function
 Bool ImageAnalysis::deconvolveFromBeam(Quantity& majorFit, Quantity& minorFit,
 		Quantity& paFit, const Vector<Quantity>& beam) {
 
-	return deconvolveFromBeam(majorFit, minorFit, paFit, *itsLog, beam);
+	return ImageUtilities::deconvolveFromBeam(majorFit, minorFit, paFit, *itsLog, beam);
 
 }
-Bool ImageAnalysis::deconvolveFromBeam(Quantum<Double>& majorFit, Quantum<
-		Double>& minorFit, Quantum<Double>& paFit, LogIO& os, const Vector<
-		Quantum<Double> >& beam) const {
-	// The position angle of the component is measured in the frame
-	// of the local coordinate system.  Since the restoring beam
-	// is invariant over the image, we need to rotate the restoring
-	// beam into the same coordinate system as the component.
-	//
-	Bool isPointSource = False;
-	Quantum<Double> majorOut;
-	Quantum<Double> minorOut;
-	Quantum<Double> paOut;
-	try {
-		isPointSource = GaussianConvert::deconvolve(majorOut, minorOut, paOut,
-				majorFit, minorFit, paFit, beam(0), beam(1), beam(2));
-	} catch (AipsError x) {
-		os << LogIO::WARN << "Could not deconvolve beam from source - "
-				<< x.getMesg() << endl;
-		{
-			ostringstream oss;
-			oss << "Model = " << majorFit << ", " << minorFit << ", " << paFit
-					<< endl;
-			os << String(oss);
-		}
-		{
-			ostringstream oss;
-			oss << "Beam  = " << beam(0) << ", " << beam(1) << ", " << beam(2)
-					<< endl;
-			os << String(oss) << LogIO::POST;
-		}
-		return False;
-	}
-	//
-	// os << LogIO::NORMAL << "Deconvolving gaussian fit from beam" << LogIO::POST;
-	majorFit = majorOut;
-	minorFit = minorOut;
-	paFit = paOut;
-	//
-	return isPointSource;
-}
+
 
 Vector<Double> ImageAnalysis::singleParameterEstimate(Fit2D& fitter,
 		Fit2D::Types model, const MaskedArray<Float>& pixels, Float minVal,
@@ -6071,60 +5893,6 @@ ComponentType::Shape ImageAnalysis::convertModelType(Fit2D::Types typeIn) const 
 		return ComponentType::DISK;
 	} else {
 		throw(AipsError("Unrecognized model type"));
-	}
-}
-
-SkyComponent ImageAnalysis::encodeSkyComponent(LogIO& os, Double& facToJy,
-		const ImageInterface<Float>& subIm, ComponentType::Shape model,
-		const Vector<Double>& parameters, Stokes::StokesTypes stokes,
-		Bool xIsLong, Bool deconvolveIt) const
-//
-// This function takes a vector of doubles and converts them to
-// a SkyComponent.   These doubles are in the 'x' and 'y' frames
-// (e.g. result from Fit2D). It is possible that the
-// x and y axes of the pixel array are lat/long rather than
-// long/lat if the CoordinateSystem has been reordered.  So we have
-// to take this into account before making the SkyComponent as it
-// needs to know long/lat values.  The subImage holds only the sky
-//
-// Input
-//   pars(0) = Flux     image units
-//   pars(1) = x cen    abs pix
-//   pars(2) = y cen    abs pix
-//   pars(3) = major    pix
-//   pars(4) = minor    pix
-//   pars(5) = pa radians (pos +x -> +y)
-// Output
-//   facToJy = converts brightness units to Jy
-//
-{
-	const ImageInfo& ii = subIm.imageInfo();
-	const CoordinateSystem& cSys = subIm.coordinates();
-	const Unit& bU = subIm.units();
-	SkyComponent sky = ImageUtilities::encodeSkyComponent(os, facToJy, ii,
-			cSys, bU, model, parameters, stokes, xIsLong);
-	//
-	if (!deconvolveIt)
-		return sky;
-	//
-	Vector<Quantum<Double> > beam = ii.restoringBeam();
-	if (beam.nelements() == 0) {
-		os << LogIO::WARN
-				<< "This image does not have a restoring beam so no deconvolution possible"
-				<< LogIO::POST;
-		return sky;
-	} else {
-		Int dirCoordinate = cSys.findCoordinate(Coordinate::DIRECTION);
-		if (dirCoordinate == -1) {
-			os << LogIO::WARN
-					<< "This image does not have a DirectionCoordinate so no deconvolution possible"
-					<< LogIO::POST;
-			return sky;
-		}
-		//
-		const DirectionCoordinate& dirCoord = cSys.directionCoordinate(
-				dirCoordinate);
-		return deconvolveSkyComponent(os, sky, beam, dirCoord);
 	}
 }
 
@@ -6490,7 +6258,7 @@ ImageAnalysis::newimage(const String& infile, const String& outfile,
 		if (dropdeg)
 			axesSpecifier = AxesSpecifier(False);
 		SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
-				*pInImage, *(tweakedRegionRecord(&region)), Mask, True,
+				*pInImage, *(ImageRegion::tweakedRegionRecord(&region)), Mask, True,
 				*itsLog, True, axesSpecifier);
 		delete pRegionRegion;
 		delete pMaskRegion;

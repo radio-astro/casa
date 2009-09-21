@@ -532,9 +532,6 @@ class ImageAnalysis
                         const Int& whichLinear=0,
                         const String& xunits="");
 
-    static  Record * tweakedRegionRecord(Record *Region);
-
-
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);
     // Create a pagedimage if imagename is not "" else create a tempimage
@@ -546,7 +543,6 @@ class ImageAnalysis
                          Quantity& minorFit,
                          Quantity& paFit,
                          const Vector<Quantity>& beam);
-
  private:
     
     ImageInterface<Float>* pImage_p;
@@ -575,34 +571,10 @@ class ImageAnalysis
     
     // Convert types
     casa::ComponentType::Shape convertModelType (casa::Fit2D::Types typeIn) const;
-    
-    // Deconvolve from beam
-    casa::Bool
-      deconvolveFromBeam(casa::Quantum<casa::Double>& majorFit,
-                         casa::Quantum<casa::Double>& minorFit,
-                         casa::Quantum<casa::Double>& paFit,
-                         casa::LogIO& os,
-                         const casa::Vector<casa::Quantum<casa::Double> >& beam) const;
-    
-    
-    // Deconvolve SkyComponent from beam
-    casa::SkyComponent
-      deconvolveSkyComponent(casa::LogIO& os, const casa::SkyComponent& skyIn,
-                             const casa::Vector<casa::Quantum<casa::Double> >& beam,
-                             const casa::DirectionCoordinate& dirCoord) const;
-    
+   
     // Delete private ImageStatistics and ImageHistograms objects
     bool deleteHistAndStats();
-    
-    // Convert a parameters vector to a SkyComponent
-    casa::SkyComponent
-      encodeSkyComponent(casa::LogIO& os, casa::Double& fluxRatio,
-                         const casa::ImageInterface<casa::Float>& im,
-                         casa::ComponentType::Shape modelType,
-                         const casa::Vector<casa::Double>& parameters,
-                         casa::Stokes::StokesTypes stokes,
-                         casa::Bool xIsLong, casa::Bool deconvolveIt) const;
-    
+   
     // Convert error parameters from pixel to world and insert in SkyComponent
     void encodeSkyComponentError (casa::LogIO& os,
                                   casa::SkyComponent& sky,
@@ -681,11 +653,6 @@ class ImageAnalysis
     void makeRegionBlock(casa::PtrBlock<const casa::ImageRegion*>& regions,
                          const casa::Record& Regions,
                          casa::LogIO& logger);
-    
-    // Put beam into +x -> +y frame
-    casa::Vector<casa::Quantum<casa::Double> >
-      putBeamInXYFrame (const casa::Vector<casa::Quantum<casa::Double> >& beam,
-                        const casa::DirectionCoordinate& dirCoord) const;
     
     // Set the cache
     void set_cache(const casa::IPosition& chunk_shape) const;

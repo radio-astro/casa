@@ -206,13 +206,59 @@ public:
                                           Stokes::StokesTypes stokes,
                                           Bool xIsLong);
 
-   static Vector<Double> decodeSkyComponent (const SkyComponent& sky,
-                                             const ImageInfo& ii,
-                                             const CoordinateSystem& cSys,
-                                             const Unit& brightnessUnit,
-                                             Stokes::StokesTypes stokes,
-                                             Bool xIsLong);
+    // for some reason, this method was in ImageAnalysis but also belongs here.
+    // Obviously hugely confusing to have to methods with the same name and
+    // which presumably are for the same thing in two different classes. I'm
+    // moving ImageAnalysis' method here and also moving that implamentation to
+    // here as well and also being consistent regarding callers (ie those that
+    // called the ImageAnalysis method will now call this method). I couldn't
+    // tell you which of the two implementations is the better one to use
+    // for new code, but this version does call the version that already existed
+    // in ImageUtilities, so this version seems to do a bit more.
+    // I also hate having a class with anything like Utilities in the name,
+    // but I needed to move this somewhere and can only tackle one issue
+    // at a time.
+    static casa::SkyComponent encodeSkyComponent(
+        casa::LogIO& os, casa::Double& fluxRatio,
+        const casa::ImageInterface<casa::Float>& im, 
+        casa::ComponentType::Shape modelType,
+        const casa::Vector<casa::Double>& parameters,
+        casa::Stokes::StokesTypes stokes,
+        casa::Bool xIsLong, casa::Bool deconvolveIt
+    );
+
+    // Deconvolve SkyComponent from beam
+    // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
+    static casa::SkyComponent deconvolveSkyComponent(
+        casa::LogIO& os, const casa::SkyComponent& skyIn,
+        const casa::Vector<casa::Quantum<casa::Double> >& beam,
+        const casa::DirectionCoordinate& dirCoord
+    );
+
+    // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
+    // Put beam into +x -> +y frame
+    static casa::Vector<casa::Quantum<casa::Double> >putBeamInXYFrame (
+        const casa::Vector<casa::Quantum<casa::Double> >& beam,
+        const casa::DirectionCoordinate& dirCoord
+    );
+
+    // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
+    static Vector<Double> decodeSkyComponent (
+        const SkyComponent& sky, const ImageInfo& ii,
+        const CoordinateSystem& cSys, const Unit& brightnessUnit,
+        Stokes::StokesTypes stokes, Bool xIsLong
+    );
 // </group>
+
+    // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
+    // Deconvolve from beam
+    static casa::Bool deconvolveFromBeam(
+        casa::Quantum<casa::Double>& majorFit, casa::Quantum<casa::Double>& minorFit,
+        casa::Quantum<casa::Double>& paFit, casa::LogIO& os,
+        const casa::Vector<casa::Quantum<casa::Double> >& beam
+    );
+
+
 //
 // Convert 2d shape from world (world parameters=x, y, major axis, 
 // minor axis, position angle) to pixel (major, minor, pa).  
@@ -231,6 +277,7 @@ public:
                                    const CoordinateSystem& cSys,
                                    const IPosition& pixelAxes,
                                    Bool doRef=False); 
+
 
 // Convert 2d shape  from pixels (parameters=x,y, major axis, 
 // minor axis, position angle) to world (major, minor, pa)
