@@ -1619,7 +1619,16 @@ Bool Imager::defineImage(const Int nx, const Int ny,
      << " distance='" << distance.getValue() << distance.getUnit() <<"'";
   os << LogIO::POST;
   ostringstream clicom;
-  clicom << " phaseCenter='" << phaseCenter;
+  clicom << " phaseCenter='"  ;
+  if(fieldid < 0){
+    MVAngle mvRA=phaseCenter.getAngle().getValue()(0);
+    MVAngle mvDEC=phaseCenter.getAngle().getValue()(1);
+    clicom << mvRA(0.0).string(MVAngle::TIME,8) << ", ";
+    clicom << mvDEC(0.0).string(MVAngle::ANGLE_CLEAN,8) << ", ";
+  }
+  else{
+    clicom << "field-" << fieldid<< " "; 
+  }
   clicom << "' mStart='" << mStart << "' qStep='" << qStep << "'";
   clicom << "' mFreqStart='" << mFreqStart;
   os << String(clicom);
