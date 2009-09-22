@@ -129,7 +129,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const String& taQLExpr,
 		  const String& polnExpr,
 		  const String& scanExpr,
-		  const String& arrayExpr
+		  const String& arrayExpr,
+		  const Int defaultChanStep
 		  )
   {
     //
@@ -150,7 +151,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool rstat = mss->getSelectedMS(selectedMS,outMSName);
 
     // Get in-row selection info
-    mss->getChanSlices(chanSlices,&ms);
+    mss->getChanSlices(chanSlices,&ms,defaultChanStep);
     mss->getCorrSlices(corrSlices,&ms);
 
     delete mss;

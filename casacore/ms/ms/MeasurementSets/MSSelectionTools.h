@@ -66,7 +66,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const String& taQLExpr="",
 		  const String& polnExpr="",
 		  const String& scanExpr="",
-		  const String& arrayExpr=""
+		  const String& arrayExpr="",
+		  const Int defaultChanStep=1
 		  );
 
   String stripWhite(const String& str, Bool onlyends=True);

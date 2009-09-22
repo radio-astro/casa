@@ -708,7 +708,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //----------------------------------------------------------------------------
 
   void MSSelection::getChanSlices(Vector<Vector<Slice> >& chanslices,
-				  const MeasurementSet* ms) {
+				  const MeasurementSet* ms,const Int defaultChanStep) {
     
     // The total number of spws
     Int nspw=ms->spectralWindow().nrow();
@@ -718,7 +718,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     chanslices.set(Vector<Slice>());
     
     // Get the chan selection matrix
-    Matrix<Int> chanmat=this->getChanList(ms);
+    Matrix<Int> chanmat=this->getChanList(ms,defaultChanStep);
     
     for (uInt i=0;i<chanmat.nrow();++i) {
       // Reference to the current spw's slice list
