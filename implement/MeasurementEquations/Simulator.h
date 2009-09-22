@@ -138,6 +138,8 @@ public:
 		 const Vector<String>& antName,
 		 const String& coordsystem,
 		 const MPosition& referenceLocation);
+  // get info back from e.g. loaded ms in newmssimulator
+  Bool getconfig();
 
   // set the observed fields for the simulation
   Bool setfield(const String& sourceName,           
@@ -238,6 +240,21 @@ public:
 		// const Quantity& trx,
 		// const Quantity& tatmos, 
 		// const Quantity& tcmb);
+
+  Bool setnoise2(const String& mode, 
+		 const Quantity& simplenoise,
+		 const String& table,
+		 const Float antefficiency,
+		 const Float correfficiency,
+		 const Float spillefficiency,
+		 const Float tau,
+		 const Float trx,
+		 const Float tatmos, 
+		 const Float tground, 
+		 const Float tcmb);
+  // const Quantity& trx,
+  // const Quantity& tatmos, 
+  // const Quantity& tcmb);
 
   // calculate errors and apply them to the data in our MS
   // RI TODO once the SimACohs are gone this won't actually 

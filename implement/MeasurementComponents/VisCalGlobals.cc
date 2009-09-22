@@ -109,6 +109,9 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype=="A" || uptype=="A MUELLER")
     return new AMueller(vs);
 
+  else if (uptype=="N" || uptype=="A NOISE")
+    return new ANoise(vs);
+
   else if (uptype=="MF" || uptype=="MF MUELLER")
     return new MfMueller(vs);
      

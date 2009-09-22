@@ -66,6 +66,33 @@ public:
 };
 
 
+class ANoiseCorruptor : public CalCorruptor {
+
+  public:
+    ANoiseCorruptor();
+    virtual ~ANoiseCorruptor();
+    Float &amp() {return amplitude_; };
+    virtual void initialize() {
+      initialize(1234,1.0);
+    }
+    void initialize(const Int seed, const Float amp) {
+      rndGen_p = new MLCG(seed);
+      nDist_p = new Normal(rndGen_p, 0.0, 1.0); // sigma=1.
+      amplitude_=amp;
+    };
+    //Array<Complex> noise(const IPosition shape);
+    Array<Complex> noise(const Int nrow, const Int ncol);
+    inline String& mode() {return mode_; };
+
+  private:
+    Float amplitude_;
+    MLCG *rndGen_p;
+    Normal *nDist_p;
+    String mode_;
+    
+  };
+
+
 // Additive noise
 // In practice, this is not really solvable, but it
 //   is a SVM because we need access to general simulation methods
@@ -96,9 +123,22 @@ public:
   //   implement it in AMueller.cc
   //   Is this simPar?
 
-  // Also need setSimPar, etc., I think
+  virtual Bool simPar(VisBuffGroupAcc& vbga);
 
-  //  Not clear to me if we also need an "ANoiseCorruptor"....?  Probably do.
+  // Also need setSimPar, etc., I think
+  // use SVC::setSimulate for now
+  
+  Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
+
+protected:
+  // umm... 2 like an M, for each of parallel hands?
+  virtual Int nPar() { return 2; };
+
+  // Jones matrix elements are trivial
+  virtual Bool trivialMuellerElem() { return True; };
+
+private:
+  ANoiseCorruptor *acorruptor_p;
 
 };
 
