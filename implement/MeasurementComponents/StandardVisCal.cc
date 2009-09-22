@@ -2182,6 +2182,9 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
 
   Vector<Int> slotidx(vs.numberSpw(),-1);
 
+
+  ve.state();
+
   Int nGood(0);
   vi.originChunks();
   for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
@@ -2216,6 +2219,10 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
         // If permitted/required by solvable component, normalize
         if (normalizable())
           vb.normalize();
+
+	// If this solve not freqdep, and channels not averaged yet, do so
+	if (!freqDepMat() && vb.nChannel()>1) 
+	  vb.freqAveCubes();
 
         // Accumulate collapsed vb in a time average
         vba.accumulate(vb);
@@ -2384,6 +2391,10 @@ void MMueller::oldselfSolve(VisSet& vs, VisEquation& ve) {
       ve.collapse(vb);
 
       vb.normalize();
+
+      // If this solve not freqdep, and channels not averaged yet, do so
+      if (!freqDepMat() && vb.nChannel()>1)
+	vb.freqAveCubes();
 
       // Accumulate collapsed vb in a time average
       vba.accumulate(vb);
@@ -2950,6 +2961,10 @@ void XMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
         //if (normalizable())
 	//          vb.normalize();
 
+	// If this solve not freqdep, and channels not averaged yet, do so
+	if (!freqDepMat() && vb.nChannel()>1)
+	  vb.freqAveCubes();
+
         // Accumulate collapsed vb in a time average
         vba.accumulate(vb);
       }
@@ -3076,6 +3091,10 @@ void XMueller::oldselfSolve(VisSet& vs, VisEquation& ve) {
       ve.collapse(vb);
 
       //      vb.normalize();
+
+      // If this solve not freqdep, and channels not averaged yet, do so
+      if (!freqDepMat() && vb.nChannel()>1)
+	vb.freqAveCubes();
 
       // Accumulate collapsed vb in a time average
       vba.accumulate(vb);

@@ -181,6 +181,9 @@ private:
   Int lfd_;     // Right-most freq-dep term on LEFT  side
   Int rfd_;     // Left-most  freq-dep term on RIGHT side
 
+  // Trap for frequency averaging in collapse
+  Bool freqAveOK_;
+
   // VisCal with solving interface
   //  (No ownership responsibilities)
   SolvableVisCal* svc_;

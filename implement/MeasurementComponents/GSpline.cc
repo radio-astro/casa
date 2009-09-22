@@ -345,6 +345,10 @@ void GJonesSpline::selfSolve (VisSet& vs, VisEquation& ve)
       if (normalizable())
         vb.normalize();
       
+      // If this solve not freqdep, and channels not averaged yet, do so
+      if (!freqDepMat() && vb.nChannel()>1)
+	vb.freqAveCubes();
+
       // Accumulate collapsed vb in a time average
       vba.accumulate(vb);
     }

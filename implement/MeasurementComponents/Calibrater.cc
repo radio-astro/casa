@@ -1302,6 +1302,10 @@ Bool Calibrater::standardSolve3() {
 	// If permitted/required by solvable component, normalize
 	if (svc_p->normalizable()) 
 	  vb.normalize();
+
+	// If this solve not freqdep, and channels not averaged yet, do so
+	if (!svc_p->freqDepMat() && vb.nChannel()>1)
+	  vb.freqAveCubes();
 	
 	// Accumulate collapsed vb in a time average
 	vbga.accumulate(vb);
@@ -1455,6 +1459,10 @@ Bool Calibrater::standardSolve2() {
 	if (svc_p->normalizable()) 
 	  vb.normalize();
 	
+	// If this solve not freqdep, and channels not averaged yet, do so
+	if (!svc_p->freqDepMat() && vb.nChannel()>1)
+	  vb.freqAveCubes();
+
 	// Accumulate collapsed vb in a time average
 	vba.accumulate(vb);
 
@@ -1607,6 +1615,10 @@ Bool Calibrater::standardSolve() {
       if (svc_p->normalizable()) 
 	vb.normalize();
 
+      // If this solve not freqdep, and channels not averaged yet, do so
+      if (!svc_p->freqDepMat() && vb.nChannel()>1)
+	vb.freqAveCubes();
+      
       // Accumulate collapsed vb in a time average
       vba.accumulate(vb);
     }

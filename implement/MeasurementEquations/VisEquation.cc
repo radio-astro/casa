@@ -52,6 +52,7 @@ VisEquation::VisEquation() :
   napp_(0),
   lfd_(-1),
   rfd_(9999),
+  freqAveOK_(False),
   svc_(NULL),
   pivot_(VisCal::ALL),  // at the sky
   spwOK_(),
@@ -263,10 +264,11 @@ void VisEquation::collapse(VisBuffer& vb) {
   // initialize LHS/RHS indices
   Int lidx=0;
   Int ridx=napp_-1;
-  
-  // If solve NOT freqDep, and data is, must freqAve before solve;
+
+  // If solve NOT freqDep, and data is, we want
+  //  to freqAve as soon as possible before solve;
   //   apply any freqDep cal first
-  if ( !svc().freqDepMat() && vb.nChannel()>1 ) {
+  if ( freqAveOK_ && !svc().freqDepMat() && vb.nChannel()>1 ) {
     
     // Correct OBSERVED data up to last freqDep term on LHS
     //  (type(lfd_) guaranteed < type(svc))
@@ -338,6 +340,9 @@ void VisEquation::collapseForSim(VisBuffer& vb) {
 void VisEquation::state() {
 
   if (prtlev()>0) cout << "VE::state()" << endl;
+
+  cout << "freqAveOK_ = " << freqAveOK_ << endl;
+
 
   // Order in which DATA is corrected
   cout << "Correct order:" << endl;
@@ -584,6 +589,9 @@ void VisEquation::setFreqDep() {
   lfd_=-1;      // right-most freq-dep term on LHS
   rfd_=napp_;   // left-most freq-dep term on RHS
 
+  // Nominally averaging in frequency before normalization is ok
+  freqAveOK_=True;
+
   // Only if there are both apply-able and solve-able terms
   if (svc_ && napp_>0) {
 
@@ -593,10 +601,16 @@ void VisEquation::setFreqDep() {
     
     // freqdep to RIGHT of solvable type
     for (Int idx=(napp_-1); (idx>-1    && vc()[idx]->type()>=svc().type()); idx--)
-      if (vc()[idx]->freqDepMat()) rfd_=idx;
+      if (vc()[idx]->freqDepMat()) {
+	rfd_=idx;
+	// If we will corrupt the model with something freqdep, we can't
+	//  frequency average in collapse
+	freqAveOK_=False;
+      }
 
   }
   
+
 }
 
 Bool VisEquation::ok() {
