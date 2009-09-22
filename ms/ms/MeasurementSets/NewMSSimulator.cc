@@ -311,12 +311,8 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
   ms_p=new MeasurementSet(newMS,0);
   ms_p->createDefaultSubtables(Table::New);
 
-  // Its better to have an empty SOURCE subtable than none 
-  // (ms.tofits for example requires one)
-  // We really should fill it in ::setfield() but that can wait
-  // This is from SimpleSimulator
-  // add the SOURCE table
-  TableDesc tdesc;// = MSSource::requiredTableDesc();
+  // add the SOURCE table  [copied from SimpleSimulator]
+  TableDesc tdesc; // = MSSource::requiredTableDesc();
   for (uInt i = 1 ; i<=MSSource::NUMBER_PREDEFINED_COLUMNS; i++) {
     MSSource::addColumnToDesc(tdesc, MSSource::PredefinedColumns(i));
   }
@@ -500,11 +496,48 @@ void NewMSSimulator::initAnt(const String& telescope,
   antc.name().putColumnRange(antSlice,name);
   //  antc.offset().putColumnRange(antSlice,offset);
   antc.position().putColumnRange(antSlice, antXYZ);
-  antc.station().fillColumn("");
+  antc.station().fillColumn("");  // RI TODO add
   antc.flagRow().fillColumn(False);
   antc.type().fillColumn("GROUND-BASED");
   os << "Added rows to ANTENNA table" << LogIO::POST;
 }
+
+//getAnt(telescope_p, nAnt, xyz_p, diam_p, offset_p, mount_p, antName_p, 
+//		    coordsystem_p, mRefLocation_p)) {
+bool NewMSSimulator::getAnt(String& telescope, Int& nAnt, Matrix<Double>* antXYZ, 
+			    Vector<Double>& antDiam, Vector<Double>& offset,
+			    Vector<String>& mount, Vector<String>& name,
+			    String& coordsystem, MPosition& mRefLocation ) {
+  // return already set config info
+  LogIO os(LogOrigin("NewMSSimulator", "getAnt()", WHERE));
+  
+  MSColumns msc(*ms_p);
+  MSAntennaColumns& antc=msc.antenna();
+  if(antc.nrow()==0) {
+    os << "Antenna information not yet defined" << LogIO::WARN;
+    return False;
+  }
+  telescope=telescope_p;
+  nAnt=antc.nrow();
+  if (!antXYZ) antXYZ = new Matrix<Double>(3,nAnt);
+  antXYZ->resize(3,nAnt);
+  antc.position().getColumn(*antXYZ);
+  antc.dishDiameter().getColumn(antDiam);
+  //antc.offset().getColumn(offset);
+  antc.mount().getColumn(mount);
+  antc.name().getColumn(name);
+
+  coordsystem="global";
+  MVPosition mvzero(0.,0.,0.);
+  MPosition mzero(mvzero,MPosition::ITRF);
+  mRefLocation=mzero;
+
+  return True;
+}
+
+
+
+
 
 void NewMSSimulator::local2global(Vector<Double>& xGeo,
 				  Vector<Double>& yGeo,
