@@ -823,7 +823,6 @@ namespace casa {
 	fillSelections(selrec);
 	
 	if (separatespw) {
-	    
 	    /* SPW ID */
 	    {
 	      RecordDesc flagDesc;       
@@ -927,7 +926,7 @@ namespace casa {
 	*/
 	
 	/* Clip/FlagRange */
-	/*Jira Casa 212 : Check if "clipexpr" has multiple 
+	/* Jira Casa 212 : Check if "clipexpr" has multiple 
 	  comma-separated expressions
 	  and loop here, creating multiple clipRecs. 
 	  The RFASelector will handle it. */
@@ -1005,7 +1004,7 @@ namespace casa {
             selrec.mergeField(flagRec, RF_QUACKINC , RecordInterface::OverwriteDuplicates);
         }
 	/* end if opmode = ... */
-	
+        
 	/* Add this agent to the list */
 	addAgent(selrec);
     }
@@ -1117,6 +1116,7 @@ namespace casa {
     return True;
   }
   
+
   Record Flagger::getautoflagparams(String algorithm)
   {
     LogIO os(LogOrigin("Flagger", "getautoflagparams()", WHERE));
@@ -1550,12 +1550,13 @@ namespace casa {
     
     RFABase::setIndexingBase(0);
     // set debug level
-    Int debug_level=0;
+    Int debug_level = 0;
     if ( opt.isDefined("debug") )
       debug_level = opt.asInt("debug");
     
     // reset existing flags?
     Bool reset_flags = isFieldSet(opt, RF_RESET);
+
     
     try { // all exceptions to be caught below
       

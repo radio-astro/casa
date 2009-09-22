@@ -105,7 +105,6 @@ protected:
   Int itime;
 
 //  Matrix<uInt> nf_corr_ifr, nf_chan_corr, nf_chan_time, nf_corr_time;
-  Cube<uInt> nf_chan_ifr_time;
   
   PGPlotterInterface *pgp_screen,*pgp_report;
 
@@ -244,10 +243,6 @@ public:
   //uInt & nfCorrTime( uInt icorr, uInt itime ) { return nf_corr_time(icorr,itime); }
   //const Matrix<uInt> & nfCorrTime () const { return nf_corr_time; }
   
-  uInt & nfChanIfrTime( uInt ichan, uInt ifr, uInt itime ) 
-                { return nf_chan_ifr_time(ichan,ifr,itime); }
-  const Cube<uInt> & nfChanIfrTime () const { return nf_chan_ifr_time; }
-
 // prints stats to stderr
   void printStats ();
 };

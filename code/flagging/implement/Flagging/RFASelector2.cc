@@ -660,6 +660,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
   shadow = fieldType(parm, RF_SHADOW, TpBool) && parm.asBool(RF_SHADOW);
   if (shadow) {
     diameter = parm.asDouble(RF_DIAMETER);
+    //cerr << "diameter = " << diameter << endl;
   }
  
 // now, scan arguments for what to flag within the selection
@@ -715,7 +716,10 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
           quack_increment = parm.asBool(RF_QUACKINC);
           
       }
-      sprintf(s, "%s=%ds", RF_QUACK, (Int)quack_si);
+      sprintf(s, "%s=%ds", // %s=%s; %s=%s", 
+              RF_QUACK, (Int)quack_si);
+              //RF_QUACKMODE, quack_mode,
+              //RF_QUACKINC, quack_increment ? "true" : "false");
       addString(desc_str, s);
       //    quack_si /= (24*3600);
       //    quack_dt /= (24*3600);
@@ -913,7 +917,9 @@ Bool RFASelector::newChunk (Int &maxmem)
       corrmask = clip_corrmask;
       if( !corrmask )
       {
-       if(verbose2)  os<<"No matching correlations in this chunk\n"<<LogIO::POST;
+        if (verbose2) {
+          os << "No matching correlations in this chunk\n" << LogIO::POST;
+        }
         return active=False;
       }
     }
@@ -954,14 +960,18 @@ void RFASelector::processRow(uInt ifr,uInt it)
 }
 
 // -----------------------------------------------------------------------
-// iterTime
+// Processes 1 time slot in the MS
+// There is one MS row per baseline
+//  
 // -----------------------------------------------------------------------
 RFA::IterMode RFASelector::iterTime (uInt it)
 {
   RFAFlagCubeBase::iterTime(it);
 // extract time
   const Vector<Double> &times( chunk.visBuf().time() );
+  const Vector<Double> &dtimes( chunk.visBuf().timeInterval() );
   Double t0 = times(0);
+  Double dt0 = dtimes(0);
   if( !allEQ(times,t0) )
     os << "RFASelector: VisBuffer has given us different times." << LogIO::EXCEPTION;
   bool timeselect = True;
@@ -1163,26 +1173,78 @@ RFA::IterMode RFASelector::iterTime (uInt it)
         }
 	  
       }
+
       // flag if within specific timeslots
       if (sel_time.ncolumn())
 	  if( anyEQ(sel_timerng.row(0)<=t0 && sel_timerng.row(1)>=t0,True) )
 	      flagall = True;
+
       // flag for specific row-based clipping expressions
-      if (sel_clip_row.nelements())
-	  {
-	      // setup each row mapper
-	      for( uInt i=0; i<sel_clip_row.nelements(); i++ ) 
-		  sel_clip_row[i].mapper->setVisBuffer(chunk.visBuf());
-	      for( uInt i=0; i<ifrs.nelements(); i++ ) // loop over rows
-		  for( uInt j=0; j<sel_clip_row.nelements(); j++ ) 
-		      {
-			  Float vmin = sel_clip_row[j].vmin, vmax = sel_clip_row[j].vmax;
-			  Float val = sel_clip_row[j].mapper->mapValue(i) - sel_clip_row[j].offset;
-			  if( (sel_clip_row[j].clip  && ( val<vmin || val>vmax ) ) ||
-			      (!sel_clip_row[j].clip && val>=vmin && val<=vmax ) )
-			      processRow(ifrs(i),it);
-		      } 
-	  }
+      if (sel_clip_row.nelements()) {
+        // setup each row mapper
+        for( uInt i=0; i<sel_clip_row.nelements(); i++ ) 
+          sel_clip_row[i].mapper->setVisBuffer(chunk.visBuf());
+        for( uInt i=0; i<ifrs.nelements(); i++ ) // loop over rows
+          for( uInt j=0; j<sel_clip_row.nelements(); j++ ) 
+            {
+              Float vmin = sel_clip_row[j].vmin, vmax = sel_clip_row[j].vmax;
+              Float val = sel_clip_row[j].mapper->mapValue(i) - sel_clip_row[j].offset;
+              if( (sel_clip_row[j].clip  && ( val<vmin || val>vmax ) ) ||
+                  (!sel_clip_row[j].clip && val>=vmin && val<=vmax ) )
+                processRow(ifrs(i),it);
+            } 
+      }
+
+      bool clip_based_on_tsys = false;
+      if (clip_based_on_tsys) {
+          /*
+            for each row:
+            
+            find antenna1 and antenna2
+            lookup temperature for 
+            (antenna1,spwid,time) and
+            (antenna2,spwid,time) in the SYSCAL subtable
+            
+          */
+          cout << "Get sysCal table" << endl;
+          // note, this is an optional subtable
+
+          const MSSysCal syscal(chunk.measSet().sysCal());
+
+          ROScalarColumn<uInt> sc_antenna_id(syscal, "ANTENNA_ID");
+          ROScalarColumn<uInt> sc_spwid     (syscal, "SPECTRAL_WINDOW_ID");
+          ROScalarColumn<Double> sc_time   (syscal, "TIME");
+          ROArrayColumn<Float> sc_tsys     (syscal, "TSYS");
+                    
+          unsigned spwid = chunk.visBuf().spectralWindow();
+          
+          for (uInt i = 0; i < ifrs.nelements(); i++) {
+          
+              unsigned a1, a2;
+              chunk.ifrToAnt(a1, a2, chunk.ifrNum(i));
+              
+              //for each SYSCAL table row
+              // if antenna1 matches or antenna2 matches and
+              //    spwid matches and time matches
+              //     if (tsys out of allowed range)
+              //             flag
+
+              unsigned nrows_syscal = sc_antenna_id.getColumn().nelements();
+              cout << nrows_syscal << " rows in SYSCAL table" << endl;
+              for (unsigned row = 0; row < nrows_syscal; row++) {
+                  cout << "a1, a2 = " << a1 << ", " << a2 << " ?= " << sc_antenna_id(row) << endl;
+                  cout << "time   = " << t0 << " ?= " << sc_time(row) << endl;
+                  cout << "spwid  = " << spwid << " ?= " << sc_spwid(row) << endl;
+                  cout << "tsys   = " << sc_tsys(row) << endl;
+
+                  if ((a1 == sc_antenna_id(row) || a2 == sc_antenna_id(row)) &&
+                      spwid == sc_spwid(row) &&
+                      t0-dt0/2 < sc_time(row) && sc_time(row) < t0+dt0/2) {
+                    cout << "                         MATCH!" << endl;
+                  }
+              }
+          }
+      }
   }
   
 // flag whole selection, if still needed

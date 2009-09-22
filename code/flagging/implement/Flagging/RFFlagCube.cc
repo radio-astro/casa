@@ -455,7 +455,7 @@ void RFFlagCube::setMSFlags(uInt itime)
 	      //chunk.nfChanCorr(ich,icorr) += (Int)(out_fl(icorr,ich));
 	      //chunk.nfChanTime(ich,itime) += (Int)(out_fl(icorr,ich));
 	      //chunk.nfCorrTime(icorr,itime) += (Int)(out_fl(icorr,ich));
-	      chunk.nfChanIfrTime(ich,ifr,itime) += (Int)(out_fl(icorr,ich));
+	      //chunk.nfChanIfrTime(ich,ifr,itime) += (Int)(out_fl(icorr,ich));
 	  }
 	  chunk.nfIfrTime(ifr,itime) += chunk.nfChanIfr(ich,ifr);
       }

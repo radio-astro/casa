@@ -36,6 +36,7 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <flagging/Flagging/RFAFlagExaminer.h>
 #include <casa/stdio.h>
+#include <cassert>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -209,6 +210,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // jmlarsen: gets called
+  // it: time index
   void RFAFlagExaminer::iterFlag(uInt it)
       //Bool resetFlags
   {
@@ -263,22 +265,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		
 		//cout << "selected row for " << ifrs(i) << "," << it << endl;
 		
-		  if(chunk.nfIfrTime(ifrs(i),it) == chunk.num(CORR)*chunk.num(CHAN))
-		      totalrowflags++;
-		  totalrowcount++;
-		
-		for (uInt ich=0; 
-                     ich < chunk.num(CHAN); 
-                     ich++ ) {
+                if(chunk.nfIfrTime(ifrs(i),it) == chunk.num(CORR)*chunk.num(CHAN))
+                    totalrowflags++;
+
+                totalrowcount++;
+
+
+                if (0) {
+                  for (uInt ich=0; 
+                       ich < chunk.num(CHAN); 
+                       ich++ ) {
 
 		    if (flagchan.nelements() == 0 || 
                         flagchan[ich]) {
 			
-			totalflags += chunk.nfChanIfrTime(ich, ifrs(i), it);
-			totalcount += chunk.num(CORR);
+                      //totalflags += chunk.nfChanIfrTime(ich, ifrs(i), it);
+                      //totalcount += chunk.num(CORR); // missing the number of SPWs
+
+                        if (0) cout << " totalflags = " << totalflags
+                                    << " totalcount = " << totalcount
+                                    << " nfcit      = " //<< chunk.nfChanIfrTime(ich, ifrs(i), it)
+                                    << " chunk.num(CORR) = " << chunk.num(CORR)
+                                    << endl;
 		    }
+                  }
+                }
+                else {
+                    totalflags += chunk.nfIfrTime(ifrs(i), it);
+                    totalcount += chunk.num(CORR) * chunk.num(CHAN); // missing the number of SPWs
+                  }
 		}
-	      }
 	}
     }
     
@@ -294,8 +310,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // cout << chunk.getCorrString() << " , " << chunk.num(CHAN) << " channels, " << chunk.num(TIME) << " time slots, " << chunk.num(IFR) << "(" << chunk.num(ROW)/chunk.num(TIME) << ") baselines, " << chunk.num(ROW) << " rows" << LogIO::POST;
     
     char s[1024];
-    sprintf(s,"Chunk %d (field %s, spw %d)",
-     	    chunk.nchunk(),chunk.visIter().fieldName().chars(),chunk.visIter().spectralWindow());
+    sprintf(s,"Chunk %d (field %s, fieldID %d, spw %d)",
+     	    chunk.nchunk(),
+            chunk.visIter().fieldName().chars(),
+            chunk.visIter().fieldId(),
+            chunk.visIter().spectralWindow());
     os << "---------------------------------------------------------------------" << LogIO::POST;
     os<<s<<LogIO::POST;
     

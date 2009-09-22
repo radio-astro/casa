@@ -183,6 +183,8 @@ class cleanhelper:
 	    if(makepbim and n==0):
     		##make .flux image 
                 # for now just make for a main field 
+                ###need to get the pointing so select the fields
+                self.im.selectvis(field=field)
 		self.im.setvp(dovp=True)
                 self.im.makeimage(type='pb', image=self.imagelist[n]+'.flux')
 		self.im.setvp(dovp=False)

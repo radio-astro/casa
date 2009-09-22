@@ -2197,10 +2197,32 @@ uInt VLAFiller::addDataDescription(uInt spwId, uInt polId) {
 
 uInt VLAFiller::addSource(const MDirection& dir ){
 
+  // TBD: this should be revised to handle multiple restfreq/cda
+  //     (requires careful coordination with addSpw, addFld, etc.)
+
+  const VLASDA& sda = itsRecord.SDA();
+
   MSSourceColumns& src = source();
   const uInt newRow = src.nrow();
+
+  if (newRow==0) {
+    // Set frame info...
+    src.setFrequencyRef(MFrequency::REST);
+
+    // This assumes the MS will have one frame
+    for (uInt c = 0; c < maxCDA; c++) {
+      const VLACDA& cda = itsRecord.CDA(c);
+      
+      if (cda.isValid()) {
+	const VLAEnum::CDA thisCDA = VLAEnum::CDA(c);
+	// We subtract 1 because RV frames are one less than Freq frames...
+	src.setRadialVelocityRef(MRadialVelocity::Types(sda.restFrame(thisCDA)-1));
+	break;
+      }
+    }
+  }
+
   itsMS.source().addRow(1);
-  const VLASDA& sda = itsRecord.SDA();
   src.name().put(newRow, sda.sourceName());
   src.sourceId().put( newRow, newRow ); // added by GYL
   src.spectralWindowId().put(newRow, -1);
@@ -2211,10 +2233,12 @@ uInt VLAFiller::addSource(const MDirection& dir ){
   MPosition obsPos;
   MeasTable::Observatory(obsPos, "VLA");
   MeasFrame frame(*mepPtr, obsPos, dir);
-  Vector<MFrequency> restFreq;
+  Vector<Double> restFreq;
+  Vector<Double> sysvel;
   uInt validRest=0;
   for (uInt c = 0; c < maxCDA; c++) {
     const VLACDA& cda = itsRecord.CDA(c);
+    
     if (cda.isValid()) {
       const VLAEnum::CDA thisCDA = VLAEnum::CDA(c);
       // check if it has a valid frame...some old data come without one !
@@ -2222,18 +2246,21 @@ uInt VLAFiller::addSource(const MDirection& dir ){
       if(sda.restFrame(thisCDA) < MFrequency::N_Types){
 	++validRest;
 	restFreq.resize(validRest, True);
-	MFrequency::Convert tolsr(sda.restFrame(thisCDA), 
-				  MFrequency::Ref(MFrequency::LSRK, frame));
-	restFreq(validRest-1)=tolsr(sda.restFrequency(thisCDA));
+	restFreq(validRest-1)=sda.restFrequency(thisCDA);
+
+	sysvel.resize(validRest,True);
+	sysvel(validRest-1) = sda.radialVelocity(thisCDA);
+
       }
     }
   }
-  Vector<Double> sysvel(restFreq.size(), 0.0);
+
   Vector<String> transition(restFreq.size(), "Unknown");
   src.numLines().put(newRow, validRest);
-  src.restFrequencyMeas().put(newRow, restFreq);
+  src.restFrequency().put(newRow, restFreq);
   src.sysvel().put(newRow, sysvel);
   src.transition().put(newRow, transition);
+
   return newRow;
 
 }

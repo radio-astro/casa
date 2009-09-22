@@ -35,6 +35,7 @@
 
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayLogical.h>
 
 #include <casa/Logging.h>
 #include <casa/Logging/LogIO.h>
@@ -2235,8 +2236,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
                             mDataStart_p, mDataStep_p);
     ///Tell iterator to use on the fly imaging weights if scratch columns is not in use
     if(!useModelCol_p){
-        VisImagingWeight imwgt("natural");
-        rvi_p->useImagingWeight(imwgt);
+        imwgt_p=VisImagingWeight("natural");
+        rvi_p->useImagingWeight(imwgt_p);
     }
 
     // Guess that the beam is no longer valid
@@ -8504,6 +8505,10 @@ void Imager::makeVisSet(MeasurementSet& ms,
   
   if(!useModelCol_p){
     rvi_p=new ROVisibilityIterator(ms, sort, timeInterval);
+    if(imwgt_p.getType()=="none"){
+      imwgt_p=VisImagingWeight("natural");
+    }
+    rvi_p->useImagingWeight(imwgt_p);
   }
   else{
     wvi_p=new VisibilityIterator(ms, sort, timeInterval);
@@ -8670,15 +8675,36 @@ Bool Imager::makePBImage(PBMath& pbMath, ImageInterface<Float>& pbImage){
     directionCoord=imageCoord.directionCoordinate(directionIndex);
 
   IPosition imShape=pbImage.shape();
-  Vector<Double> pcenter(2);
-  pcenter(0) = imShape(0)/2;
-  pcenter(1) = imShape(1)/2;    
-  directionCoord.toWorld( wcenter, pcenter );
+  //Vector<Double> pcenter(2);
+  // pcenter(0) = imShape(0)/2;
+  // pcenter(1) = imShape(1)/2;    
+  //directionCoord.toWorld( wcenter, pcenter );
+  VisBuffer vb(*rvi_p);
+  Int fieldCounter=0;
+  Vector<Int> fieldsDone;
+  
+  for(rvi_p->originChunks(); rvi_p->moreChunks(); rvi_p->nextChunk()){
+    Bool fieldDone=False;
+    for (uInt k=0;  k < fieldsDone.nelements(); ++k)
+      fieldDone=fieldDone || (vb.fieldId()==fieldsDone(k));
+    if(!fieldDone){
+      ++fieldCounter;
+      fieldsDone.resize(fieldCounter, True);
+      fieldsDone(fieldCounter-1)=vb.fieldId();
+      wcenter=vb.direction1()(0);
+      TempImage<Float> pbTemp(imShape, imageCoord);
+      TempImage<Complex> ctemp(imShape, imageCoord);
+      ctemp.set(1.0);
+      pbMath.applyPB(ctemp, ctemp, wcenter, Quantity(0.0, "deg"), BeamSquint::NONE);
+      StokesImageUtil::To(pbTemp, ctemp);
+      pbImage.copyData(  (LatticeExpr<Float>)(pbImage+pbTemp) );
+    }
+  }
+  LatticeExprNode elmax= max( pbImage );
+  Float fmax = abs(elmax.getFloat());
+  if(fmax>0.0)
+    pbImage.copyData((LatticeExpr<Float>)(pbImage/fmax));
 
-  TempImage<Complex> ctemp(imShape, imageCoord);
-  ctemp.set(1.0);
-  pbMath.applyPB(ctemp, ctemp, wcenter, Quantity(0.0, "deg"), BeamSquint::NONE);
-  StokesImageUtil::To(pbImage, ctemp);
   Float cutoffval=minPB_p;
   LatticeExpr<Bool> lemask(iif(pbImage < cutoffval, 
 			       False, True));

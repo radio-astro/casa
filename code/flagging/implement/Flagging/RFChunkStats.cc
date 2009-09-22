@@ -87,7 +87,7 @@ void RFChunkStats::newChunk ()
   itime=-1;
   chunk_no++;
 // setup shapes
-  visshape = visiter.visibilityShape();
+  visshape = visiter.visibilityShape(); //4
   counts[POLZN] = visshape(0);
   counts[CHAN] = visshape(1);
   counts[TIME] = visiter.nSubInterval();
@@ -102,6 +102,7 @@ void RFChunkStats::newChunk ()
   start_time = end_time = current_time = 0;
 
 // setups statistics
+
   nrf_time.resize(num(TIME));
   nrf_time.set(0);
   nrf_ifr.resize(num(IFR));
@@ -122,10 +123,9 @@ void RFChunkStats::newChunk ()
 //  nf_corr_time.resize(num(CORR),num(TIME));
 //  nf_corr_time.set(0);
 
-  nf_chan_ifr_time.resize(num(CHAN),num(IFR),num(TIME));
-  nf_chan_ifr_time.set(0);
-
-//  cout << "Ifr : " << num(IFR) << " Chan : " << num(CHAN) << " Corr : " << num(CORR) << " Time : " << num(TIME) << endl;
+  if (0) {
+    cout << "Ifr : " << num(IFR) << " Chan : " << num(CHAN) << " Corr : " << num(CORR) << " Time : " << num(TIME) << endl;
+  }
       
 // build up description of correlations
   corr_string = "";

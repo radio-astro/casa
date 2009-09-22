@@ -423,12 +423,21 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 	//
 	bool checkit(true);
 	variant  &dflt = constraintsRec["value"];
-	if(constraintsRec["type"].asString() == "any" || constraintsRec["type"].asString() == "variant"){
-	   if(constraintsRec.count("limittypes") &&  constraintsRec["limittypes"].asString().size()){
-	      if(constraintsRec["limittypes"].asString().find(user.typeString()) != string::npos)
+	if(constraintsRec["type"].asString() == "any" || constraintsRec["type"].asString()  == "variant"){
+	   if(constraintsRec.count("limittypes") &&  constraintsRec["type"].asString().size()){
+	      string theAllowedTypes = constraintsRec["limittypes"].asString();
+	      string myType = user.typeString();
+	      if(theAllowedTypes.find(myType) != string::npos){
 		      rstat = true;
-	      else 
+	      } else {
+	         if(myType == "int" && theAllowedTypes.find("double") != string::npos){
+			rstat = true;
+	          } else if(myType == "intvec" && theAllowedTypes.find("doublevec") != string::npos){
+			rstat = true;
+		  } else {
 		      rstat = false;
+		  }
+	       }
 	   }
 	   checkit = false;
 	   // 
