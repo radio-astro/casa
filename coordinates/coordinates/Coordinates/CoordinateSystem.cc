@@ -2943,7 +2943,14 @@ Vector<String> CoordinateSystem::list (LogIO& os,
    } else {
       os << "Date observation    : " << "UNKNOWN" << endl;
    }
+   if(obsinfo_p.isTelescopePositionSet()){
+       MVPosition pos1 = obsinfo_p.telescopePosition().getValue();
+       os << "Telescope position: [" << pos1.get()[0] << "m, "
+	  << pos1.get()[1] << "m, "
+	  << pos1.get()[2] << "m] (ITRF)" << endl;   
+   }
    os << endl;
+
 
 // Determine the widths for all the fields that we want to list
 
