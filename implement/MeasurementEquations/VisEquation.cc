@@ -589,8 +589,9 @@ void VisEquation::setFreqDep() {
   lfd_=-1;      // right-most freq-dep term on LHS
   rfd_=napp_;   // left-most freq-dep term on RHS
 
-  // Nominally averaging in frequency before normalization is ok
-  freqAveOK_=True;
+  // Nominally averaging in frequency before normalization is NOT OK
+  //  (we will revise this when we can assert constant MODEL_DATA)
+  freqAveOK_=False;
 
   // Only if there are both apply-able and solve-able terms
   if (svc_ && napp_>0) {
