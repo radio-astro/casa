@@ -246,5 +246,53 @@ LattRegionHolder* ImageRegion::makeComplement() const
     return LattRegionHolder::makeComplement();
 }
 
+Record * ImageRegion::tweakedRegionRecord(Record *Region) {
+	// Image uses Float but it can't be specified in the IDL interface
+	if (Region->isDefined("blc")) {
+		Int fldn_blc = Region->fieldNumber("blc");
+		if ((Region->dataType(fldn_blc)) == TpArrayDouble) {
+			Array<Double> a_blc;
+			Region->get(fldn_blc, a_blc);
+			Vector<Double> blc(a_blc);
+			Vector<Float> Blc(blc.size());
+			for (uInt i = 0; i < blc.size(); i++) {
+				Blc[i] = (Float) blc[i];
+			}
+			Region->removeField(fldn_blc);
+			Region->define("blc", Blc);
+		}
+	}
+	if (Region->isDefined("trc")) {
+		Int fldn_trc = Region->fieldNumber("trc");
+		if ((Region->dataType(fldn_trc)) == TpArrayDouble) {
+			Array<Double> a_trc;
+			Region->get(fldn_trc, a_trc);
+			Vector<Double> trc(a_trc);
+			Vector<Float> Trc(trc.size());
+			for (uInt i = 0; i < trc.size(); i++) {
+				Trc[i] = (Float) trc[i];
+			}
+			Region->removeField(fldn_trc);
+			Region->define("trc", Trc);
+		}
+	}
+	if (Region->isDefined("inc")) {
+		Int fldn_inc = Region->fieldNumber("inc");
+		if ((Region->dataType(fldn_inc)) == TpArrayDouble) {
+			Array<Double> a_inc;
+			Region->get(fldn_inc, a_inc);
+			Vector<Double> inc(a_inc);
+			Vector<Float> Inc(inc.size());
+			for (uInt i = 0; i < inc.size(); i++) {
+				Inc[i] = (Float) inc[i];
+			}
+			Region->removeField(fldn_inc);
+			Region->define("inc", Inc);
+		}
+	}
+	return Region;
+}
+
+
 } //# NAMESPACE CASA - END
 
