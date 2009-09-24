@@ -55,7 +55,7 @@ namespace CalibrationSetMod
   //! CalibrationSet.
   //! Defines sets of calibration scans to be reduced together for a result.
   
-  const char *const revision = "1.5.2.1";
+  const char *const revision = "1.6";
   const int version = 1;
   
   enum CalibrationSet

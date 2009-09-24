@@ -20,7 +20,7 @@
 myname = 'asdm-import_regression'
 
 # default ASDM dataset name
-myasdm_dataset_name = 'uid___X1eb_X59c0_X1'
+myasdm_dataset_name = 'uid___X54_X1418_X1'
 
 # get the dataset name from the wrapper if possible
 mydict = locals()
@@ -130,9 +130,9 @@ else:
         # check main table first
         name = ""
         #             col name, row number, expected value, tolerance
-        expected = [ ['UVW',       42, [-65.07576556, 1.05494114, -33.6589334], 1E-8],
+        expected = [ ['UVW',       42, [1.9006977, -22.538636, 26.703018], 1E-6],
                      ['EXPOSURE',  42, 1.008, 0],
-                     ['DATA',      42, [ [0.00362284+0.00340279j] ], 1E-8]
+                     ['DATA',      42, [ [0.00025587+0.00000797j] ], 1E-8]
                      ]
         checktable(name, expected)
         
@@ -144,13 +144,13 @@ else:
         checktable(name, expected)
         
         name = "POINTING"
-        expected = [ ['DIRECTION',       10, [[-2.21348836],[0.69419111]], 1E-8 ],
+        expected = [ ['DIRECTION',       10, [[0.958],[0.416791]], 1E-6 ],
                      ['INTERVAL',        10, 0.048, 0],
-                     ['TARGET',          10, [[ 4.06842324],[ 0.69534148]], 1E-8 ],
-                     ['TIME',            10, 4716228756.9840002, 0],
+                     ['TARGET',          10, [[ 0.95722],[ 0.4183]], 1E-6 ],
+                     ['TIME',            10, 4735409708, 1],
                      ['TIME_ORIGIN',     10, 0., 0],
                      ['POINTING_OFFSET', 10, [[ 0.],[ 0.]], 0],
-                     ['ENCODER',         10, [-2.21349349,  0.69419051], 1E-8 ]
+                     ['ENCODER',         10, [0.958002, 0.416791], 1E-6 ]
                      ]
         checktable(name, expected)
         

@@ -261,11 +261,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="string" name="veltype" ignorecase="true" subparam="true">
-	    <description>velocity definition (radio, optical) </description>
+	    <description>velocity definition (radio, optical, true) </description>
 	    <value>radio</value>
     <allowed kind="enum">
             <value>radio</value>
             <value>optical</value>
+            <value>true</value>
+            <value>relativistic</value>
     </allowed>
     </param>
 <!--========================================================= -->
@@ -736,7 +738,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO','LGROUP','CMB'
                  default: ''; same as input data; example: frame='bary' for Barycentric frame 
                veltype -- (for mode='velocity') velocity definition
-                 Options: 'radio','optical'
+                 Options: 'radio','optical','true' or 'relativistic'
                  default: 'radio'
            examples:
                spw = '0,1'; mode = 'mfs'

@@ -32,8 +32,9 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
 				print '*** Error *** In conversion of reffreq=\'',reffreq,'\' to a numerical value';
 				raise Exception, instance
 			reffreqVal=rff['value'];  # This is the frequency in Hz
-
-
+			qat.close()
+			
+		ftmachine='ft';
 		if (gridmode =='widefield'):
 			if (wprojplanes > 1):
 				ftmachine='wproject';
@@ -210,6 +211,7 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
 
                 if(alg=='mfmultiscale' and multifield): 
                     raise Exception, 'Multiscale clean with flanking fields is not supported yet'
+
                 ### THIS PART IS MOVED TO BEGINNING OF THE SCRIPT
 		###PBCOR or not
 #		sclt='SAULT'
@@ -310,41 +312,42 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
 		        fluxscale_image = '\'' + newimage + '.flux'  + '\'';
 		        residim         = '\'' + newimage + '.residual'  + '\'';
                         # currently .flux exist only for main field
-                        if k==0: 
-                                if (pbcor):
-                                        if(sclt != 'NONE'):
-                                                ##otherwise its already divided
-                                                ia.open(newimage+'.image')
+                        # this was fixed..
+                        #if k==0: 
+                        if (pbcor):
+                                if(sclt != 'NONE'):
+                                        ##otherwise its already divided
+                                        ia.open(newimage+'.image')
 
-                                                ##this is not needed as mask is set in C++
-                                                #pixmask = fluxscale_image+'>'+str(minpb);
-                                                #ia.calcmask(pixmask,asdefault=True);
-                                                corrfac=minpb*minpb
-                                                if(ftmachine=='ft'):
-                                                        corrfac=minpb
-                                                pixels='iif('+ fluxscale_image+'>'+str(corrfac)+','+ result+'/'+fluxscale_image+', 0)'
-                  
-                                                ia.calc(pixels=pixels)
-                                                ia.close()
-                                                ia.open(newimage+'.residual')
-                                                pixels='iif('+ fluxscale_image+'>'+str(corrfac)+','+ residim+'/'+fluxscale_image+', 0)'
-                                                ia.calc(pixels=pixels)
-                                                ia.close()
-                                else:
-                                        ##  people has imaged the fluxed corrected image
-                                        ## but want the
-                                        ## final image to be non-fluxed corrected
-                                        if(sclt=='NONE'):
-                                                ia.open(newimage+'.image')
-                                                pixels=result+'*'+fluxscale_image
-                                                ia.calc(pixels=pixels)
-                                                ia.close()
-                                                ia.open(newimage+'.residual')
-                                                pixels=residim+'*'+fluxscale_image
-                                                ia.calc(pixels=pixels)
-                                                ia.close()
-                                        
-                                os.chdir(presdir)
+                                        ##this is not needed as mask is set in C++
+                                        #pixmask = fluxscale_image+'>'+str(minpb);
+                                        #ia.calcmask(pixmask,asdefault=True);
+                                        corrfac=minpb*minpb
+                                        if(ftmachine=='ft'):
+                                                corrfac=minpb
+                                        pixels='iif('+ fluxscale_image+'>'+str(corrfac)+','+ result+'/'+fluxscale_image+', 0)'
+          
+                                        ia.calc(pixels=pixels)
+                                        ia.close()
+                                        ia.open(newimage+'.residual')
+                                        pixels='iif('+ fluxscale_image+'>'+str(corrfac)+','+ residim+'/'+fluxscale_image+', 0)'
+                                        ia.calc(pixels=pixels)
+                                        ia.close()
+                        else:
+                                ##  people has imaged the fluxed corrected image
+                                ## but want the
+                                ## final image to be non-fluxed corrected
+                                if(sclt=='NONE'):
+                                        ia.open(newimage+'.image')
+                                        pixels=result+'*'+fluxscale_image
+                                        ia.calc(pixels=pixels)
+                                        ia.close()
+                                        ia.open(newimage+'.residual')
+                                        pixels=residim+'*'+fluxscale_image
+                                        ia.calc(pixels=pixels)
+                                        ia.close()
+                                
+                        os.chdir(presdir)
 
 		
 		del imCln

@@ -717,6 +717,11 @@ def fitorder_test():
         if file.startswith( 'fit_test_' ):
             shutil.rmtree( file )
 
+    # TODO I'm just fixing the tests here to do something more reasonable since they were broken
+    # and in bad need of rewriting (see the diff with the previous version before I made these
+    # edits). This whole test file probably needs to be reviewed but of course time is tight so
+    # I cannot do that now.
+
     for order in [1,2]:
         contfile='fit_test_cont'+str(order)
         linefile='fit_test_line'+str(order)
@@ -724,68 +729,62 @@ def fitorder_test():
         oldcontfile='g192_a2.cont.order'+str(order)
         oldlinefile='g192_a2.contfree.order'+str(order)
         try:
-            results=imcontsub( 'g192_a2.image', fitorder=order, contfile=contfile, linefile=linefile )
+            results = imcontsub('g192_a2.image', fitorder=order, contfile=contfile, linefile=linefile)
         except Exception, err:
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                 +"\nError: Unable to subtract continuum with a fit order="+str(order)\
                 +"\n\t REULTS: "+str(results)
         else:
-            if ( not os.path.exists( contfile ) or not os.path.exists( linefile ) or not results ): 
+            if ( os.path.exists( contfile ) and os.path.exists( linefile ) and results ):
+                try:
+                    # check the subtracted line image matches expectations
+                    subtract_expr = '(\"' + linefile + '\"-\"' + oldlinefile + '\")'
+                    output_image = "line_diff" + str(order) + ".im"
+                    immath(mode='evalexpr', expr=subtract_expr, outfile=output_image)
+                    ia.open(output_image)
+                    stats = ia.statistics()
+                    ia.close()
+                    absmax = max(abs(stats['min']), abs(stats['max']))
+                    # in an infinite precision utopia, the difference image would be 0, but
+                    # alas, we do not live in such a world yet.
+                    if (absmax > 1e-8):
+                        retValue['success'] = False
+                        retValue['error_msgs'] = retValue['error_msgs']\
+                            + "line image different from expected on order " + str(order)\
+                            + " fit. Max resid is " + str(absmax)
+                except Exception, err:
+                    retValue['success'] = False
+                    retValue['error_msgs'] = retValue['error_msgs']\
+                        + "Exception thrown when differencing line images on order " + str(order)\
+                        + " fit " + str(err)
+                try:
+                    # check continuum image matches expectations
+                    subtract_expr = '(\"' + contfile + '\"-\"' + oldcontfile + '\")'
+                    output_image = "cont_diff" + str(order) + ".im"
+                    immath(mode='evalexpr', expr=subtract_expr, outfile=output_image)
+                    ia.open(output_image)
+                    stats = ia.statistics()
+                    ia.close()
+                    absmax = max(abs(stats['min']), abs(stats['max']))
+                    # in an infinite precision utopia, the difference image would be 0, but
+                    # alas, we do not live in such a world yet.
+                    if (absmax > 1e-8):
+                        retValue['success'] = False
+                        retValue['error_msgs'] = retValue['error_msgs']\
+                            + "continuum image different from expected on order " + str(order)\
+                            + " fit. Max residual is " + str(absmax)
+                except Exception, err:
+                    retValue['success'] = False
+                    retValue['error_msgs'] = retValue['error_msgs']\
+                        + "Exception thrown when differencing continuum images using order " + str(order)\
+                        + " fit " + str(err)
+            else:  
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: output files were NOT created for fitorder="\
                    +str(order)+" test."
-            else:
-                # Now that we know something has been done lets check some values
-                # with previously created files to see if the values are the same.
-                # We randomly pick 50 points (almost 10%)
-                for count in range(0,50):
-                    x = random.randint(0,511)
-                    y = random.randint(0,511)
-                    box=str(x)+','+str(y)+','+str(x)+','+str(y)
-                    chan = str(random.randint(0,39))
-
-                    line_prev_value={}
-                    line_cur_value={ 'empty':''}
-                    try:
-                        line_prev_value = imval( oldlinefile, box=box, chans=chan, stokes='I' )
-                        line_cur_value  = imval( linefile, box=box, chans=chan, stokes='I' )
-                    except:
-                        retValue['success']=False
-                        retValue['error_msgs']=retValue['error_msgs']\
-                          +"\nError: Unable to compare spectral line files."
-                    else:
-                        #print "Spec line prev value: ", line_prev_value
-                        #print "spec line current value: ", line_cur_value
-                        if ( line_prev_value != line_cur_value ):
-                            retValue['success']    = False
-                            retValue['error_msgs'] = '\nError: continuum value differs with '\
-                               + "previously calculated value at: "\
-                               + "\t["+str(x)+','+str(y)+','+chan+',I].'\
-                               + "\tvalues are "+str(line_prev_value)+" and "+str(line_cur_value)
-                    cont_prev_value={}
-                    cont_cur_value={ 'empty':''}
-                    try:
-                        cont_prev_value = imval( oldcontfile, box=box, chans=chan, stokes='I' )
-                        cont_cur_value  = imval( contfile, box=box, chans=chan, stokes='I' )
-                    except:
-                        retValue['success']=False
-                        retValue['error_msgs']=retValue['error_msgs']\
-                          +"\nError: Unable to compare continuum files "\
-                          +oldcontfile+"  and  "+contfile
-                    else:
-                      #print "Continuum prev value: ", cont_prev_value
-                      #print "Continuum current value: ", cont_cur_value
-                      if ( cont_prev_value != cont_cur_value ):
-                          retValue['success']    = False
-                          retValue['error_msgs'] = '\nError: continuum value differs with '\
-                             + "previously calculated value at: "\
-                             + "\t["+str(x)+','+str(y)+','+chan+',I].'
-                             #+ "\tvalues are "+str(line_prev_value)+" and "+str(line_cur_value)
-
     return retValue
-
 
 ####################################################################
 # Methods for the automated CASA testing
@@ -836,7 +835,8 @@ def run():
     testResults=[]
     testResults.append( input_test() )
     testResults.append( continuum_test() )
-    #testResults.append( region_test() )
+    # region_test was commented out already when I inherited this - dmehring 2009sep22
+    ##testResults.append( region_test() )
     testResults.append( fitorder_test() )
     print "TEST RESULTS: ", testResults
 

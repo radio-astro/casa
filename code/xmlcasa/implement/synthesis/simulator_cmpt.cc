@@ -828,13 +828,38 @@ simulator::setnoise(const std::string& mode, const std::string& table,
    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
 	   << LogIO::POST;
     RETHROW(x);
- }
-  
+ }  
  return rstat;
-   
-
-
 }
+
+
+bool
+simulator::setnoise2(const std::string& mode, const std::string& table, 
+		     const ::casac::variant& simplenoise, 
+		     const double antefficiency, const double correfficiency, 
+		     const double spillefficiency, const double tau, 
+		     const double trx, const double tatmos, 
+		     const double tground, const double tcmb)
+{
+  Bool rstat(False);
+  try {
+    
+    if(itsSim !=0){
+      
+      casa::Quantity qnoise(casaQuantity(simplenoise));
+      rstat=itsSim->setnoise2(mode, qnoise, table, antefficiency, correfficiency, spillefficiency, tau, trx, tatmos, tground, tcmb);
+    }
+    
+    
+ } catch  (AipsError x) {
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	   << LogIO::POST;
+    RETHROW(x);
+ }  
+ return rstat;
+}
+
+
 
 bool
 simulator::setpa(const std::string& mode, const std::string& table, 

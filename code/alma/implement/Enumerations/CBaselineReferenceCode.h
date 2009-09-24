@@ -55,7 +55,7 @@ namespace BaselineReferenceCodeMod
   //! BaselineReferenceCode.
   //! defines reference frames to qualify the measure of a baseline.
   
-  const char *const revision = "1.5.2.1";
+  const char *const revision = "1.6";
   const int version = 1;
   
   enum BaselineReferenceCode

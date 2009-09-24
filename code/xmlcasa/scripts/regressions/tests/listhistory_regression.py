@@ -12,7 +12,7 @@
 #    1) Does it give a proper return status?                                #
 #                                                                           #
 # Input data:                                                               #
-#    NGC4286 MS                                                             #
+#    ngc4826_22apr98.ms                                                            #
 #                                                                           #
 #############################################################################
 
@@ -28,20 +28,18 @@ from taskinit import casalog
 
 startTime = time.time()
 
-
-input_file="ngc4826.tutorial.ms"
+input_file="n4826_22apr98.ms"
 stars = "*************"
 
 def description():
-    return "Test of listhistory using NGC4826.tutorial.ms"
+    return "Test of listhistory using NGC4826_22apr98.ms"
 
 def data():
     return [input_file]
 
 def run():
   
-    # Is this always correct?
-    refnum=205
+    refnum=40
     total=0
     fail=0
 

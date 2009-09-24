@@ -43,7 +43,7 @@ class calibrater
     calibrater();
     virtual ~calibrater();
 
-    bool open(const std::string& filename, const bool compress = false);
+    bool open(const std::string& filename, const bool compress = false, const bool addscratch = true);
 
     bool selectvis(const ::casac::variant& time = ::casac::initialize_variant(""), const ::casac::variant& spw = ::casac::initialize_variant(""), const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& baseline = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& chanmode = "none", const int nchan = 1, const int start = 0, const int step = 1, const Quantity& mstart = Quantity(std::vector<double> (1, 0.0),"km/s"), const Quantity& mstep = Quantity(std::vector<double> (1, 0.0),"km/s"), const std::string& msselect = "");
 

@@ -55,7 +55,7 @@ namespace CalibrationDeviceMod
   //! CalibrationDevice.
   //! Devices that may be inserted in the optical path in front of the receiver.
   
-  const char *const revision = "1.5.2.1";
+  const char *const revision = "1.6";
   const int version = 1;
   
   enum CalibrationDevice

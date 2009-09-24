@@ -55,7 +55,7 @@ namespace DopplerReferenceCodeMod
   //! DopplerReferenceCode.
   //! defines reference frames to qualify the measure of a radial velocity expressed as doppler shift.
   
-  const char *const revision = "1.5.2.1";
+  const char *const revision = "1.6";
   const int version = 1;
   
   enum DopplerReferenceCode

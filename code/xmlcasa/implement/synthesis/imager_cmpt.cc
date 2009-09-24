@@ -1319,8 +1319,16 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 	}
       }
       casa::String lamoda(mode);
-      if (veltype=="optical" || veltype=="OPTICAL") {
-         lamoda.prepend("OPTICAL"); 
+      if(lamoda.contains("velo") || lamoda.contains("VELO")){
+	 if (String(veltype).contains("optical") || String(veltype).contains("OPTICAL")) {
+	   lamoda=String("OPTICALVELOCITY"); 
+	 }
+	 else if (String(veltype).contains("radio") || String(veltype).contains("RADIO") || String(veltype)==String("RADIO") || String(veltype)==String("radio") ){
+	   lamoda="RADIOVELOCITY";
+	 }
+	 else if(String(veltype).contains("true") ||  String(veltype).contains("relativistic")){
+	   lamoda="TRUEVELOCITY";
+	 }
       }
       lamoda.upcase();
       casa::MRadialVelocity mvel;
@@ -1355,10 +1363,13 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
       casa::Quantity restFreq= casaQuantity(restfreq);
       casa::Quantity cdistance=casaQuantity(distance);
 
-      ROMSSpWindowColumns spwc(itsMS->spectralWindow());
-      casa::String baseframe = MFrequency::showType(spwc.measFreqRef()(0));
+      casa::String baseframe("LSRK");
+      if(itsMS && !(itsMS->isNull())){
+	ROMSSpWindowColumns spwc(itsMS->spectralWindow());
+	baseframe = MFrequency::showType(spwc.measFreqRef()(0));
+      }
       casa::String cframe=toCasaString(outframe);
-      if(baseframe==cframe or cframe=="") {
+      if(cframe=="") {
         cframe=baseframe;
       } 
       casa::MFrequency::Types mfframe;

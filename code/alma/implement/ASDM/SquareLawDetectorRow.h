@@ -107,7 +107,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file SquareLawDetector.h
-    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -119,7 +119,7 @@ namespace asdm {
 /**
  * The SquareLawDetectorRow class is a row of a SquareLawDetectorTable.
  * 
- * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class SquareLawDetectorRow {

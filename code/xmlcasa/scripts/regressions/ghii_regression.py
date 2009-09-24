@@ -65,13 +65,14 @@ hii_im=ia.open(project + '.dirty.flat')
 hii_stats=ia.statistics()
 ia.close()
 
-refstats = { 'flux': 0.5945,
-             'max': 0.2851,
-             'min': -0.04490,
-             'rms': 0.02131,
-             'sigma': 0.02131 }
 refstats = { 'flux': 0.9403,
              'max': 0.2845,
+             'min': -0.043,
+             'rms': 0.022,
+             'sigma': 0.022 }
+# 200909 pk flx changed- imagr change?
+refstats = { 'flux': 0.96941,
+             'max': 0.2841,
              'min': -0.043,
              'rms': 0.022,
              'sigma': 0.022 }

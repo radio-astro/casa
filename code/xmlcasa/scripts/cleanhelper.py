@@ -180,7 +180,8 @@ class cleanhelper:
             ###otherwise i guess you want to continue a clean
             if(not os.path.exists(self.imagelist[n])):
                 self.im.make(self.imagelist[n])
-	    if(makepbim and n==0):
+	    #if(makepbim and n==0):
+	    if(makepbim):
     		##make .flux image 
                 # for now just make for a main field 
                 ###need to get the pointing so select the fields

@@ -349,6 +349,11 @@ class report:
         archive_size = commands.getoutput("du -hs " + result_dir + " | awk '{print $1}'")
         fd.write('<title>CASA regression tests</title>\n')
         fd.write('<body>\n')
+        if revision == 'all':
+            fd.write('[ All versions ] <a href="../CASA_latest/test-report.html">[ Latest test release ]<br>')
+        else:
+            fd.write('<a href="../CASA/test-report.html">[ All versions ]</a> [ Latest test release ]<br>')
+
         fd.write('Generated on <i>'+time.strftime('%a %Y %b %d %H:%M:%S %Z')+'</i>')
 
         fd.write('<br>Summary of <i>'+str(len(data))+'</i> tests, archive size is <i>'+ \
@@ -358,10 +363,6 @@ class report:
         fd.write('<dd><a href="#revision_platform_full">Revision vs. platform</a> (full)')
         fd.write('<dd><a href="#test_platform_full">Test vs. platform</a> (full)')
         fd.write('</dl>')
-        if revision == 'all':
-            fd.write('<a href="../CASA_latest/test-report.html">--> Latest test release</a><br>')
-        else:
-            fd.write('<a href="../CASA/test-report.html">--> All revisions</a><br>')
         fd.write('<center>')
 
         if revision != 'all':
@@ -1066,7 +1067,7 @@ class report:
                     os.system("python /tmp/gprof2dot.py -f pstats " +\
                               prof_file + " | dot -Tpng -o " +\
                               report_dir + '/' + plot_file)
-                fd.write('<br><a href="'+plot_file+'">Python profile</a>')
+                    fd.write('<br><a href="'+plot_file+'">Python profile</a>')
 
         if extended and subtest[1] == 'exec':          
             framework_log = 'run-'     + test + '-' + host + '.log'

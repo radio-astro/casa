@@ -57,7 +57,8 @@ if not (locals()).has_key('datasets'):
                25: ('1904-66_TAN', [116, 177], '19:39:30.753, -63.42.59.218', 'Gnomonic Projection (TAN)'), 
                26: ('1904-66_TSC', [112, 160], '19:39:39.997, -63.41.14.586', 'Tangential Spherical Cube Projection (TSC)'), 
                27: ('1904-66_ZEA', [109, 169], '19:39:26.872, -63.43.26.060', 'Zenithal Equal Area Projection (ZEA)'), 
-               28: ('1904-66_ZPN', [94, 150], '19:39:24.948, -63.46.43.636', 'Zenithal Polynomial Projection (ZPN)') 
+               28: ('1904-66_ZPN', [94, 150], '19:39:24.948, -63.46.43.636', 'Zenithal Polynomial Projection (ZPN)'), 
+               29: ('1904-66_AIT-obsgeo', [109, 168], '19:39:41.653, -63.43.54.147', 'Hammer-Aitoff Projection (AIT)')
            }
 else: # the script has been called from the wrapper, don't need to output name
     myname = ' '
@@ -123,6 +124,8 @@ def checkimage(myfitsimage_name, maxpos_expect, maxposf_expect):
                 else:
                     print myname, ' No exceptions raised! Now checking image ...'
                     ia.open(myfitsimage_name+'exp')
+                    csm = ia.coordsys()
+                    csm.summary() 
                     mystat = imstat(imagename = myfitsimage_name+'exp')
                     if not ((mystat['maxpos']) == maxpos_expect).all():
                         print myname, ' Error in re-imported image ', myfitsimage_name+'exp', ':'

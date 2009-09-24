@@ -55,7 +55,7 @@ namespace ProcessorSubTypeMod
   //! ProcessorSubType.
   //!  [ASDM.Processor] The tables used to contain device configuration data
   
-  const char *const revision = "1.5.2.1";
+  const char *const revision = "1.6";
   const int version = 1;
   
   enum ProcessorSubType

@@ -107,6 +107,9 @@ public:
   // Arrange for solve of a single SolvableVisCal
   void setsolve(SolvableVisCal& svc);
 
+  // Arrange a pivot point for evaluating the equation in collapseForSim
+  void setPivot(VisCal::Type pivot);
+
   // Report if spw has solutions available from all applied tables
   inline Bool spwOK(const Int& spw) { return (napp_>0) ? spwOK_(spw) : True; };
 
@@ -121,6 +124,11 @@ public:
   // Correct/Corrupt in place the OBSERVED/MODEL visibilities in a VisBuffer
   //  with the apply-able VisCals on either side of the SolvableVisCal
   void collapse(VisBuffer& vb);
+
+
+  // This collapse avoids I/O (assumes the vb data/model are ready),
+  //  and uses a generic pivot (see setPivot) rather than the svc
+  void collapseForSim(VisBuffer& vb);
 
   // Calculate residuals 
   //   (optionally for specific chan)
@@ -173,9 +181,15 @@ private:
   Int lfd_;     // Right-most freq-dep term on LEFT  side
   Int rfd_;     // Left-most  freq-dep term on RIGHT side
 
+  // Trap for frequency averaging in collapse
+  Bool freqAveOK_;
+
   // VisCal with solving interface
   //  (No ownership responsibilities)
   SolvableVisCal* svc_;
+
+  // The pivot point used by collapse2
+  VisCal::Type pivot_;
 
   // SpwOK?
   Vector<Bool> spwOK_;

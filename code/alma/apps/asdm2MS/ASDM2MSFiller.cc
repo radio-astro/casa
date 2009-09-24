@@ -953,7 +953,7 @@ void ASDM2MSFiller::addData (bool                complexData,
 			     vector<float *>    &data_,
 			     vector<unsigned int>      &flag_) {
   
-  // cout << "Entering addData" << endl;
+  //cout << "Entering addData" << endl;
 
   unsigned int theSize = time_.size();
   Bool *flag_row__  = new Bool[theSize];
@@ -992,7 +992,6 @@ void ASDM2MSFiller::addData (bool                complexData,
   // The flag                "
   
   try {
-    // cout << "Working with the slice" << endl;
     
     // Define  a slicer to write blocks of values in each column of the main table.
     Slicer slicer(IPosition(1,itsMSMainRow),
@@ -1024,7 +1023,6 @@ void ASDM2MSFiller::addData (bool                complexData,
 #if 1     
     // All the columns that could not be written in one shot are now filled row by row.
     //Matrix<Complex> uncorrected_data;
-    // cout << "Working on the non sliceable data" << endl;
     Matrix<Complex> data;
     Matrix<Float>   float_data;
     Matrix<Bool>    flag;
@@ -1036,29 +1034,21 @@ void ASDM2MSFiller::addData (bool                complexData,
 
       Vector<float>   ones(IPosition(1, numCorr), 1.0);
 
-      // cout << "row # " << cRow0 << endl;
       if (complexData) {
-	// cout << "complex data" << endl;
-	data.takeStorage(IPosition(2, numCorr, numChan), (Complex *)(data_.at(cRow0)), COPY);
-	// cout << "About to put" << endl;
-	itsMSCol->data().put(cRow, data);
+	  data.takeStorage(IPosition(2, numCorr, numChan), (Complex *)(data_.at(cRow0)), COPY);
+	  itsMSCol->data().put(cRow, data);
       }
       else {
-	// cout << "float data" << endl;
 	// Float data.
 	float_data.takeStorage(IPosition(2, numCorr, numChan), data_.at(cRow0), SHARE);
 	itsMSCol->floatData().put(cRow, float_data);
       }
 
       // Sigma and Weight set to arrays of 1.0
-      // cout << "sigma" << endl;
       itsMSCol->sigma().put(cRow, ones);
-
-      // cout << "weight" << endl;
       itsMSCol->weight().put(cRow, ones);
       // The flag cell (an array) is put at false.
 
-      // cout << "flag" << endl;
       itsMSCol->flag().put(cRow, Matrix<Bool>(IPosition(2, numCorr, numChan), false));
       cRow0++;
     }
@@ -1072,9 +1062,9 @@ void ASDM2MSFiller::addData (bool                complexData,
   
   // Flush
   // itsMS->flush();   
+  //cout << "Exiting addData" << endl;
 
   delete[] flag_row__;
-  // cout << "Exiting addData" << endl;
 }
 
 

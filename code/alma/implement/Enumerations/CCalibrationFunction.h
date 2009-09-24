@@ -55,7 +55,7 @@ namespace CalibrationFunctionMod
   //! CalibrationFunction.
   //! Function of a scan in a calibration set. Useful only in real time.
   
-  const char *const revision = "1.5.2.1";
+  const char *const revision = "1.6";
   const int version = 1;
   
   enum CalibrationFunction

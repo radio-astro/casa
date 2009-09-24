@@ -78,6 +78,8 @@ class CalCorruptor {
   inline Double& slot_time() { return slot_times_(curr_slot()); };
   inline Int& currAnt() { return curr_ant_; };
   inline Int& currSpw() { return curr_spw_; };
+  inline Int& currCorr() { return curr_corr_; };
+  inline Int& nCorr() { return nCorr_; };
   inline Int& nAnt() { return nAnt_; };
   inline Int& nSpw() { return nSpw_; };  
   inline Int& currChan() { return curr_chan_; };  
@@ -93,7 +95,7 @@ class CalCorruptor {
    Bool initialized_;
    Int prtlev_;
    Int curr_slot_;
-   Int nAnt_,curr_ant_;
+   Int nAnt_,curr_ant_,nCorr_,curr_corr_;
    Int nSpw_,curr_spw_,curr_chan_;
    Double curr_time_,starttime_,stoptime_;
    Vector<Double> slot_times_;   

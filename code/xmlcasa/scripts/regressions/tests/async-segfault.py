@@ -9,7 +9,9 @@ import inspect
 def description():
     return "Test of the occurence of a segfault in the fits file handling in tasks with async==false"
 
-pass_on = { "ms_name" : "test.ms" }
+pass_on = { "ms_name" : "test.ms",
+            "image_name" : "test.clean.image"
+            }
 
 a=inspect.stack()
 stacklevel=0
@@ -34,7 +36,10 @@ def run():
 
 def data():
     ### return the data files that are needed by the regression script
-    return [pass_on["ms_name"]]
+    myfiles = []
+    for i in pass_on.keys():
+        myfiles.append(pass_on[i])
+    return myfiles
 
 def doCopy():
     ### return a list of the same length as that returned by data()
@@ -43,4 +48,4 @@ def doCopy():
     ###   or 1 if the corresponding file should be really copied to
     ###   the work directory
 
-    return [1]
+    return [1,1]

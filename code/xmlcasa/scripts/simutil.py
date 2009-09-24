@@ -1099,9 +1099,9 @@ class simutil:
     def long2xyz(self,long,lat,elevation,datum):
         
         dx,dy,dz,er,rf = self.getdatum(datum,verbose=False)
-        
+
         f=1./rf
-        esq=2*f-f**2
+        esq=2*f-f**2    
         nu=er/(1.-esq*(pl.sin(lat))**2)
         
         x=(nu+elevation)*pl.cos(lat)*pl.cos(long) +dx
@@ -1111,6 +1111,47 @@ class simutil:
         return x,y,z
     
     
+    def xyz2long(self,x,y,z,datum):
+        
+        dx,dy,dz,er,rf = self.getdatum(datum,verbose=False)
+        
+        f=1./rf
+
+        b= ((x-dx)**2 + (y-dy)**2) / er**2
+        c= (z-dx)**2 / er**2
+
+        esq=2*f-f**2 # (a2-b2)/a2
+
+        a0=c*(1-esq)
+        a1=2*a0
+        efth=esq**2
+        a2=a0+b-efth
+        a3=-2.*efth
+        a4=-efth
+
+        b0=4.*a0
+        b1=3.*a1
+        b2=2.*a2
+        b3=a3
+
+        # refine/calculate esq
+        nlqk=esq
+        for i in range(3):
+            nlqks = nlqk * nlqk
+            nlqkc = nlqk * nlqks
+            nlf = a0*nlqks*nlqks + a1*nlqkc + a2*nlqks + a3*nlqk + a4
+            nlfprm = b0*nlqkc + b1*nlqks + b2*nlqk + b3
+            nlqk = nlqk - (nlf / nlfprm)
+
+        y0 = (1.+nlqk)*(z-dz)
+        x0 = sqrt((x-dx)**2 + (y-dy)**2)
+        lat=atan2(y0,x0)
+        lon=atan2(y-dy,x-dx)
+        #print x-dx,y-dy,z-dz,x0,y0
+                
+        return lon,lat
+
+
     def utm2xyz(self,easting,northing,elevation,zone,datum,nors):
 
         lon,lat = self.utm2long(easting,northing,zone,datum,nors)

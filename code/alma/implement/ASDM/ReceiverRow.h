@@ -123,7 +123,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Receiver.h
-    \brief Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -138,7 +138,7 @@ class SpectralWindowRow;
 /**
  * The ReceiverRow class is a row of a ReceiverTable.
  * 
- * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class ReceiverRow {

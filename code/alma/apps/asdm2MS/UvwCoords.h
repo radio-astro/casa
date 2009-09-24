@@ -20,7 +20,7 @@ using namespace casa;
 #include "ASDMEntities.h"
 using namespace asdm;
 
-/** @brief SDM UVW engine: compute the uvw these being not present in the SDM but
+/** @Brief SDM UVW engine: compute the uvw these being not present in the SDM but
     required to build MS main table.
     
 

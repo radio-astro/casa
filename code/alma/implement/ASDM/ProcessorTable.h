@@ -134,7 +134,7 @@ class ProcessorRow;
  * Processor characteristics. This table holds summary information for the  back-end processing devices used to generate the basic science  data.
  * <BR>
  
- * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Processor </CAPTION>

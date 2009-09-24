@@ -91,7 +91,7 @@ using namespace boost;
 
 #ifdef AIPS_DARWIN
 #include <machine/endian.h>
-#else
+#else 
 #include <endian.h>
 #endif
 

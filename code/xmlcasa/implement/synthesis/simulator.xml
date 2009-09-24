@@ -600,7 +600,7 @@ curvature for the near-field effect at the center of the image.
      <param type="string" name="calcode">
      <description>Calibration code</description>
      <value></value>
-     <choice>''</choice>
+     <choice>'OBJ'</choice>
      </param>
 
      <param type="any" name="distance">
@@ -1368,9 +1368,9 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      </param>
 
      <param type="double" name="tatmos">
-     <description>Temperature of atmosphere [k]</description>
-     <value>250.0</value>
-     <choice>250.0</choice>
+     <description>Temperature of atmosphere [K]</description>
+     <value>230.0</value>
+     <choice>230.0</choice>
      </param>
 
      <param type="double" name="tcmb">
@@ -1383,6 +1383,87 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
 </method>
 
  
+   <method type="function" name="setnoise2">
+   <shortdescription>Set the noise level fixed sigma (mode=simple) or
+   Brown's equation (mode=calculate)</shortdescription>
+   
+<description>
+TESTING ONLY
+</description>
+<input>
+
+     <param type="string" name="mode">
+     <description>Mode of operation. String: 'table'|'simplenoise'|'calculate' 
+     </description>
+     <value>calculate</value>
+     <choice>'calculate'</choice>
+     </param>
+
+     <param type="string" name="table">
+     <description>Name of noise table if not simplenoise or not calculated</description>
+     <value></value>
+     <choice>''</choice>
+     </param>
+
+     <param type="any" name="simplenoise" >
+     <description>Level of noise if not Table or not Calculated</description>
+     <any type="variant" />
+     <value>0.0Jy</value>
+     </param>
+
+     <param type="double" name="antefficiency">
+     <description>antenna efficiency</description>
+     <value>0.8</value>
+     <choice>0.8</choice>
+     </param>
+
+     <param type="double" name="correfficiency">
+     <description>Correlation efficiency</description>
+     <value>0.85</value>
+     <choice>0.85</choice>
+     </param>
+
+     <param type="double" name="spillefficiency">
+     <description>Forward spillover efficiency</description>
+     <value>0.85</value>
+     <choice>0.85</choice>
+     </param>
+
+     <param type="double" name="tau">
+     <description>Atmospheric Opacity</description>
+     <value>0.0</value>
+     <choice>0.0</choice>
+     </param>
+
+     <param type="double" name="trx">
+     <description>Receiver temp (ie, all non-atmospheric Tsys contributions) [K]</description>
+     <value>50</value>
+     <choice>50</choice>
+     </param>
+
+     <param type="double" name="tatmos">
+     <description>Temperature of atmosphere [k]</description>
+     <value>250.0</value>
+     <choice>250.0</choice>
+     </param>
+
+     <param type="double" name="tground">
+     <description>Temperature of ground/spill [K]</description>
+     <value>280.0</value>
+     <choice>280.0</choice>
+     </param>
+
+     <param type="double" name="tcmb">
+     <description>Temperature of cosmic microwave background [K]</description>
+     <value>2.7</value>
+     <choice>2.7</choice>
+     </param>
+</input>
+<returns type='bool'>Bool</returns>
+</method>
+
+
+
    <method type="function" name="setpa">
    <shortdescription>Corrupt phase by the parallactic angle</shortdescription>
    

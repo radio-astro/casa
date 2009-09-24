@@ -1177,7 +1177,15 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
     cout << "nchunk = " << chunk << endl;
   }
 
-  Int nSol(sol+1);
+  //Int nSol(sol+1);
+  // RI - ah hell - this somehow made all the antennas 0 except #1.
+  Int nSol(sol+2);
+  if (nSol>2) {
+    solTimes[nSol-1]=2*solTimes[nSol-2]-solTimes[nSol-3];
+  } else {
+    // sol=0 means only one solint, so no interp:
+    solTimes[nSol-1]=solTimes[nSol-2];
+  }
   
   nChunkPerSol.resize(nSol,True);
   solTimes.resize(nSol,True);
@@ -1231,6 +1239,8 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
 
   // Size the solvePar arrays
   initSolvePar();
+
+  // cout << "calset shape = " << cs().shape(0) << " solveCPar shape = " << solveCPar().shape() << endl;
 
   // Return the total number of solution intervals
   return nSol;
@@ -2095,6 +2105,8 @@ void SolvableVisCal::keep(const Int& slot) {
     cs().parSNR(currSpw())(blc4,trc4).nonDegenerate(3)= solveParSNR();
     cs().solutionOK(currSpw())(slot) = anyEQ(solveParOK(),True);
 
+    if ( cs().solutionOK(currSpw())(slot) != True) 
+      cout << solveCPar().shape() << " : " << solveCPar()[0,0,0,0] << " -> " << solveParOK()[0,0,0,0] << endl;
   }
   else
     throw(AipsError("SVJ::keep: Attempt to store solution in non-existent CalSet slot"));

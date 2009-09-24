@@ -130,7 +130,8 @@ else:
         # check main table first
         name = ""
         #             col name, row number, expected value, tolerance
-        expected = [ ['UVW',       42, [-65.07576556, 1.05494114, -33.6589334], 1E-8],
+        expected = [
+                     ['UVW',       42, [-65.07623467,   1.05534109, -33.65801386], 1E-8],
                      ['EXPOSURE',  42, 1.008, 0],
                      ['DATA',      42, [ [0.00362284+0.00340279j] ], 1E-8]
                      ]

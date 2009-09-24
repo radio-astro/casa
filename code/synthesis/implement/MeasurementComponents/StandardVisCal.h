@@ -291,6 +291,26 @@ class fBM {
 //  GJones
 //
 
+class GJonesCorruptor : public CalCorruptor {
+
+ public:
+   GJonesCorruptor(const Int nSim);
+   virtual ~GJonesCorruptor();
+
+   //Complex& drift(const Int i);  // drift as fBM
+   Matrix<Complex>* drift();   
+   inline Float& tsys() { return tsys_; };
+   virtual void initialize();
+   void initialize(const Int Seed, const Float Beta, const Float scale);
+   Complex gain(const Int icorr, const Int islot);  // tsys scale and time-dep drift   
+
+ protected:
+
+ private:   
+   Float tsys_;
+   PtrBlock<Matrix<Complex>*> drift_p;
+};
+
 class GJones : public SolvableVisJones {
 public:
 
@@ -319,6 +339,11 @@ public:
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);
 
+  Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
+
+  // Simulate/calculate parameters for given sim interval
+  virtual Bool simPar(VisBuffGroupAcc& vbga);
+
 protected:
 
   // G has two trivial Complex parameters
@@ -335,9 +360,11 @@ protected:
 
 private:
 
-  // <nothing>
+  GJonesCorruptor *gcorruptor_p;
   
 };
+
+
 
 // **********************************************************
 //  BJones  (freq-dep GJones)
@@ -568,6 +595,34 @@ private:
 //  M: baseline-based (closure) 
 //
 
+class MMCorruptor : public CalCorruptor {
+
+ public:
+  MMCorruptor();
+  virtual ~MMCorruptor();
+  Float &amp() {return amplitude_; };
+  virtual void initialize() {
+    throw(AipsError("MMCorruptor initialize error - you should not be here!"));
+  }
+  void initialize(const Float amp, const Record& simpar) {
+    amplitude_=amp;
+    simpar_=simpar;
+  };
+  Array<Complex> gain();
+  inline String& mode() {return mode_; };
+  inline Record& simpar() {return simpar_;}
+  
+ protected:
+  Record simpar_;
+  
+ private:
+  Float amplitude_;
+  String mode_;
+  
+};
+
+
+
 class MMueller : public SolvableVisMueller {
 public:
 
@@ -604,6 +659,11 @@ public:
 
   virtual void keep(const Int& slot);
 
+  // Set up simulated params
+  Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
+
+  virtual Bool simPar(VisBuffGroupAcc& vbga);
+
 protected:
 
   // M currently has just 2 complex parameters, i.e., both parallel hands
@@ -613,10 +673,14 @@ protected:
   virtual Bool trivialMuellerElem() { return True; };
 
 private:
-
-  // <nothing>
+  MMCorruptor *mcorruptor_p;
 
 };
+
+
+
+
+
 
 // **********************************************************
 //  MfMueller (freq-dep MMueller)

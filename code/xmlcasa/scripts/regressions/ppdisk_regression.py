@@ -50,7 +50,8 @@ else:
     display=False
     fidelity=False
 noise_thermal=True
-tau0=0.05
+tau0=0.001  # just to test machinery
+t_amb=100.
 inp()
 go()
 

@@ -56,6 +56,10 @@ cb2=calibrater.create()
      <description>Compress calibration columns?</description>
      <value>false</value>
      </param>
+     <param type="bool" direction="in" name="addscratch">
+     <description>Add scratch columns?</description>
+     <value>true</value>
+     </param>
 </input>
 <returns type="bool"/>
 

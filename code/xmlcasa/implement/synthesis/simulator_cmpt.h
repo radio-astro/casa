@@ -102,6 +102,8 @@ class simulator
 
     bool setnoise(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& simplenoise = ::casac::initialize_variant("0.0Jy"), const double antefficiency = 0.8, const double correfficiency = 0.85, const double spillefficiency = 0.85, const double tau = 0.0, const double trx = 50, const double tatmos = 250.0, const double tcmb = 2.7);
 
+    bool setnoise2(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& simplenoise = ::casac::initialize_variant("0.0Jy"), const double antefficiency = 0.8, const double correfficiency = 0.85, const double spillefficiency = 0.85, const double tau = 0.0, const double trx = 50, const double tatmos = 250.0, const double tground = 250.0, const double tcmb = 2.7);
+
     bool setpa(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& interval = ::casac::initialize_variant("10s"));
 
     bool setseed(const int seed = 185349251);

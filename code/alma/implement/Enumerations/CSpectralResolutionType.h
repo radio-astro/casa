@@ -55,7 +55,7 @@ namespace SpectralResolutionTypeMod
   //! SpectralResolutionType.
   //!  [ASDM.SpectralWindow] The types of spectral resolutions for spectral windows.
   
-  const char *const revision = "1.5.2.1";
+  const char *const revision = "1.6";
   const int version = 1;
   
   enum SpectralResolutionType

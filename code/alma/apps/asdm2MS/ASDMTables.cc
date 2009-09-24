@@ -4284,6 +4284,12 @@ ASDM_CALWVR::ASDM_CALWVR() {
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("polyFreqLimits", "blabla"));
   		
+  tableDesc_.addColumn(ArrayColumnDesc<float>("wetPath", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<float>("dryPath", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("water", "blabla"));
+  		
   		  		
 }
 
@@ -4332,6 +4338,12 @@ void ASDM_CALWVR::fill(const ASDM& asdm) {
     ArrayColumn<float> pathCoeff(*table_p_, "pathCoeff");             
   		
     ArrayColumn<double> polyFreqLimits(*table_p_, "polyFreqLimits");             
+  		
+    ArrayColumn<float> wetPath(*table_p_, "wetPath");             
+  		
+    ArrayColumn<float> dryPath(*table_p_, "dryPath");             
+  		
+    ScalarColumn<double> water(*table_p_, "water");             
   		
   		  	
 
@@ -4396,6 +4408,18 @@ void ASDM_CALWVR::fill(const ASDM& asdm) {
 
 	
 	polyFreqLimits.put(rowIndex, ext2CASA1D<Frequency,double>(rows.at(i)->getPolyFreqLimits()));
+	
+
+	
+	wetPath.put(rowIndex, basic2CASA1D<float,float>(rows.at(i)->getWetPath()));
+	
+
+	
+	dryPath.put(rowIndex, basic2CASA1D<float,float>(rows.at(i)->getDryPath()));
+	
+
+	
+	water.put(rowIndex, rows.at(i)->getWater().get());
 	
 
 		

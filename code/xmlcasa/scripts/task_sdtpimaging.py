@@ -497,7 +497,7 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, flaglist, antenna, stokes, cr
                 (l,m,n) = fdatcol.shape
                 fdatcol.reshape(l,n)
                 #print "Flag processing..."
-                casalot.post( "Flag processing..." )
+                casalog.post( "Flag processing..." )
                 flagscanlist=[]
                 if type(antid) == int:
                     startrow=antid

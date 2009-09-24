@@ -377,8 +377,7 @@ mosaic simulation task (prototype):
           # datum=WGS84
           # zone=19
         * [alpha] standard arrays are found in your CASA data repository, 
-          $CASAPATH/data/alma/simmos/
-        but for now you have to copy them to the current working dir.
+          os.getenv("CASAPATH").split()[0]+"/data/alma/simmos/"        
     checkinputs -- plot scaled model image and desired mosaic pointings, 
         target altitude, and [alpha] atmospheric transmission.
         choose yes|no, or "only" to just check your inputs and stop without 

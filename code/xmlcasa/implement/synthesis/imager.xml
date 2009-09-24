@@ -840,9 +840,11 @@ the source is at the first time observed in the selected data.
 
 
      <param type="string" name="mode">
-     <description>Type of processing</description>
+     <description>Type of processing (velocity =radiovelocity)</description>
      <value>frequency</value>
-     <value>velocity</value>
+     <value>radiovelocity</value>
+     <value>opticalvelocity</value>
+     <value>truevelocity</value>
      <value>mfs</value>
      </param>
 
@@ -880,13 +882,11 @@ the source is at the first time observed in the selected data.
      </param>
 
      <param type="string" name="outframe">
-     <description>frequency frame of output image (default "", same as input)
+     <description>frequency frame of output image (default "", same as input ms or LSRK in case of multiple ms's), options are LSRK, LSRD, BARY, GALACTO, LGROUP, CMB
      </description>
      <value>LSRK</value>
      <value>LSRD</value>
      <value>BARY</value>
-     <value>GEO</value>
-     <value>TOPO</value>
      <value>GALACTO</value>
      <value>LGROUP</value>
      <value>CMB</value>
@@ -894,8 +894,9 @@ the source is at the first time observed in the selected data.
      </param>
 
      <param type="string" name="veltype">
-     <description>velocity definition ('radio' or 'optical')</description>
+     <description>velocity definition ('radio' or 'optical' or 'relativistic')</description>
      <value>optical</value>
+     <value>relativistic</value>
      <value>radio</value>
      </param>
 

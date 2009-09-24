@@ -139,7 +139,7 @@ class SwitchCycleRow;
  * Cycle information in switching modes. Describe each step in a switching cycle.
  * <BR>
  
- * Generated from model's revision "1.50.2.3", branch "WVR-2009-07-B"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SwitchCycle </CAPTION>

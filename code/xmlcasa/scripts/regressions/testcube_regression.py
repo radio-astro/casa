@@ -11,7 +11,7 @@ startProc = time.clock()
 
 print '--Running simdata of test cube--'
 # configs are in the repository
-if repodir==None: repodir=os.getenv("CASAPATH").split(' ')[0]
+repodir=os.getenv("CASAPATH").split(' ')[0]
 print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
@@ -37,19 +37,16 @@ stokes="I"
 verbose=True
 #thermalnoise=True
 #tau0=1.0
-if interactive:
-    checkinputs="yes"
-# cleaning changes the ms?
-#    psfmode="clark"
-#    niter=250
-#    weighting="briggs"
-#    robust=0.0
-else:
-    checkinputs="no"
-    display=False
-    fidelity=False
-#    psfmode="none"
-#    niter=0
+checkinputs="no"
+display=False
+
+# interactive:
+#checkinputs="yes"
+#display=True
+
+
+
+fidelity=False
 psfmode="none"
 niter=0
 inp()
@@ -71,12 +68,17 @@ refstats = { 'max': 0.0119+0.00229j,
              'min':-0.0140+0.00105j,
              'sum': 552.9-34.3j,
              'std': 0.00132 }
+# 200909 more digits
+refstats = { 'max': 0.01185+0.002285j,
+             'min':-0.0140+0.001082j,
+             'sum': 553.4-34.36j,
+             'std': 0.001324 }
 
 ### tight 
-reftol   = {'max':  1e-4,
-            'min':  1e-4,
-            'sum':  1e-4,
-            'std':  1e-4}
+reftol   = {'max':  5e-3,
+            'min':  5e-3,
+            'sum':  5e-3,
+            'std':  5e-3}
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())
