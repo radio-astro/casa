@@ -137,6 +137,10 @@ Bool ANoise::simPar(VisBuffGroupAcc& vbga) {
       solveCPar()=Complex(1.0);
       solveParOK()=False;
 
+      // put these outside loop so don't have to keep creating/destructing:
+      IPosition visshape(3),vblc(3),vtrc(3);
+      Int nCorr,i;
+
       for (Int irow=0;irow<svb.nRow();++irow) {
 	
 	if ( !svb.flagRow()(irow) &&
@@ -155,14 +159,14 @@ Bool ANoise::simPar(VisBuffGroupAcc& vbga) {
 
 	  // figure out shape of viscube - from MM::selfSolve: 
 	  // Insist that channel,row shapes match
-	  IPosition visshape(svb.visCube().shape());
+	  visshape=svb.visCube().shape();
 	  AlwaysAssert(solveCPar().shape().getLast(2)==visshape.getLast(2),AipsError);
 	  
 	  // Zero flagged data
-	  IPosition vblc(3,0,0,0);
-	  IPosition vtrc(visshape);  vtrc-=1;      
-	  Int nCorr(visshape(0));
-	  for (Int i=0;i<nCorr;++i) {
+	  vblc=(3,0,0,0);
+	  vtrc=(visshape);  vtrc-=1;      
+	  nCorr=visshape(0);
+	  for (i=0;i<nCorr;++i) {
 	    vblc(0)=vtrc(0)=i;
 	    svb.visCube()(vblc,vtrc).reform(visshape.getLast(2))(svb.flag())=Complex(1.0);
 	  }

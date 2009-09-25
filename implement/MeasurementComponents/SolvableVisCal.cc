@@ -177,13 +177,19 @@ SolvableVisCal::~SolvableVisCal() {
 
 }
 
-void SolvableVisCal::makeCalSet()
+void SolvableVisCal::makeCalSet()  { makeCalSet(False); }
+
+void SolvableVisCal::makeCalSet(Bool newtable)
 {
   switch(parType())
     {
     case VisCalEnum::COMPLEX:
       {
-	cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
+	if (newtable) 
+	  cs_ = new CalSet<Complex>(nSpw(),nPar(),Vector<Int>(1,1),nElem(),Vector<Int>(1,1));
+	//cs_ = new CalSet<Complex>(nSpw(),nPar(),nChan(),nElem(),nTime());
+	else
+	  cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
 	cs().initCalTableDesc(typeName(),parType_);
 	nChanParList() = cs().nChan();
 	startChanList() = cs().startChan();
@@ -195,7 +201,11 @@ void SolvableVisCal::makeCalSet()
       }
     case VisCalEnum::REAL:
       {
-	rcs_ = new CalSet<Float>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
+	if (newtable) 
+	  rcs_ = new CalSet<Float>(nSpw(),nPar(),Vector<Int>(1,1),nElem(),Vector<Int>(1,1));
+	//rcs_ = new CalSet<Float>(nSpw(),nPar(),nChan(),nElem(),nTime());
+	else
+	  rcs_ = new CalSet<Float>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
 	rcs().initCalTableDesc(typeName(),parType_);
 	// Create CalInterp
 // 	cint_ = new CalInterp(rcs(),tInterpType(),"nearest");
@@ -488,26 +498,29 @@ void SolvableVisCal::setSimulate(const Record& simpar) {
   setSimulated(True);
 
   // Create a pristine CalSet
-  //  TBD: move this to inflate()?
-  switch (parType())
-    {
-    case VisCalEnum::COMPLEX:
-      {
-	cs_ = new CalSet<Complex>(nSpw());
-	cs().initCalTableDesc(typeName(),parType_);
-	break;
-      }
-    case VisCalEnum::REAL:
-      {
-	rcs_ = new CalSet<Float>(nSpw());
-	rcs().initCalTableDesc(typeName(),parType_);
-	break;
-      }
-    default:
-      throw(AipsError("Internal SVC::setSolve(record) error: Got invalid VisCalEnum"));
-    }
+  // still need inflate somewhere?
+//  switch (parType())
+//    {
+//    case VisCalEnum::COMPLEX:
+//      {
+//	cs_ = new CalSet<Complex>(nSpw());
+//	cs().initCalTableDesc(typeName(),parType_);
+//	break;
+//      }
+//    case VisCalEnum::REAL:
+//      {
+//	rcs_ = new CalSet<Float>(nSpw());
+//	rcs().initCalTableDesc(typeName(),parType_);
+//	break;
+//      }
+//    default:
+//      throw(AipsError("Internal SVC::setSolve(record) error: Got invalid VisCalEnum"));
+//    }
   
+  makeCalSet(True); // make one with calinterp but by shape not by existing caltable
+
   // RI TODO specializations probably have to deal with channelization?
+  // setapply does a loop setting nChanParList()(ispw) and then recreates cint_
 
 }
 

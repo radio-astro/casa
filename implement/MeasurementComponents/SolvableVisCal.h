@@ -146,6 +146,10 @@ public:
   virtual Vector<Bool> spwOK() { 
     return cint_ ? ci().spwOK() : Vector<Bool>(nSpw(),True); };
 
+  void setSpwOK() {
+    if (cs_) cs().setSpwOK();
+    if (cint_) ci().setSpwOK(); }
+
   // Use standard VisCal solving mechanism?
   virtual Bool standardSolve() { return True; };
 
@@ -409,6 +413,7 @@ protected:
   LogIO& logSink() { return logsink_p; };
 
   void makeCalSet();
+  void makeCalSet(Bool newtable);
 
   // Check if a cal table is appropriate
   void verifyCalTable(const String& caltablename);

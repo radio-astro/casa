@@ -1448,8 +1448,12 @@ SolvableVisCal *Simulator::create_corrupt(const Record& simpar)
     // Generic VisCal setSimulate will throw an exception -- 
     //   each VC needs to have its own.
     // specializations should call SolvableVisCal::setSimulate though
-    svc->setSimulate(simpar);
-
+    svc->setSimulate(simpar);   
+    // makes a calset, but spwOK starts out F for the shape-based constructor
+    // used here and in the solve context, in contrast to the caltable-based
+    // constructor used in setapply
+    // NEED VC->setsimulate to do VC.spwOK=T like VC::setapply ? set in calc_corrupt
+    
     os << LogIO::NORMAL << ".   "
        << svc->siminfo()
        << LogIO::POST;
@@ -1461,7 +1465,7 @@ SolvableVisCal *Simulator::create_corrupt(const Record& simpar)
 
     // Maintain apply/corrupt list and sort the vc_p list
     ve_p.setapply(vc_p);
-    
+
     return svc;
     
   } catch (AipsError x) {
@@ -1525,7 +1529,7 @@ Bool Simulator::calc_corrupt(SolvableVisCal *svc, const Record& simpar)
     // setupSim might be a good place to set the VI sort order and 
     // reset the VI (in which case it needs a pointer to the VisSet)
     // test
-    nSim=10.;
+    // nSim=10.;
     
     // The iterator, VisBuffer
     VisIter& vi(vs_p->iter());
@@ -1610,6 +1614,11 @@ Bool Simulator::calc_corrupt(SolvableVisCal *svc, const Record& simpar)
       // svc->corruptor_p->curr_slot()++;
       
     } // end of nSim
+    
+    svc->setSpwOK();
+    // calls these protected methods:   
+    //svc->cs().setSpwOK();  // checks if nTime()!=0;  hopefully nTime is getting set
+    //svc->ci().setSpwOK();  // gets that from cs()
     
     if (svc->calTableName()!="<none>") {
       
@@ -1789,11 +1798,14 @@ Bool Simulator::corrupt() {
     // if we want a different order for corruption we either need to 
     // implement the sort here or create a VE::setcorrupt(vc_p)
     ve_p.setapply(vc_p);
-
+    
     // Apply 
     if (vc_p.nelements()>0) {
       os << LogIO::NORMAL << "Doing visibility corruption." 
 	 << LogIO::POST;
+      for (Int i=0;i<vc_p.nelements();i++) 
+	os << vc_p[i]->longTypeName() << endl << vc_p[i]->siminfo() << endl <<
+	  vc_p[i]->spwOK() << LogIO::POST;
       for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
 	// Only if 
 	if (ve_p.spwOK(vi.spectralWindow())) {
