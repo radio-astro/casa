@@ -25,28 +25,19 @@
 //#
 //# $Id: tPagedImage.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 
-#include <casa/OS/Path.h>
-#include <casa/namespace.h>
 #include <casa/BasicMath/Math.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <images/Images/ImageFitter.h>
 #include <measures/Measures/MDirection.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <casa/BasicSL/Constants.h>
+#include <casa/namespace.h>
 
 void writeTestString(const String& test) {
     cout << "\n" << "*** " << test << " ***" << endl;
 }
 
-int main(Int argc, char *argv[]) {
-    // just to eliminate compiler warning about argc not being used
-    if (argc > 1) {
-        cerr << "WARNING: This test takes no command line options, "
-            << "so the options you specified will be ignored" << endl;
-    }
-
-    Path path(argv[0]);
-    String fixturesDir = path.dirName() + "/fixtures/tImageFitter/";
+int main() {
     try {
         Double arcsecsPerRadian = 180*3600/C::pi;
         String test;
@@ -54,7 +45,7 @@ int main(Int argc, char *argv[]) {
             writeTestString(
                 "test fitter using all available image pixels with model with no noise"
             );
-            ImageFitter fitter = ImageFitter(fixturesDir + "gaussian_model.fits");
+            ImageFitter fitter = ImageFitter("gaussian_model.fits");
             ComponentList compList = fitter.fit();
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
@@ -77,7 +68,7 @@ int main(Int argc, char *argv[]) {
             Double positionAngle = 180/C::pi*parameters(2);
             AlwaysAssert(near(positionAngle, 120.0, 1e-7), AipsError);
         }
-        String noisyImage = fixturesDir + "gaussian_model_with_noise.fits";
+        String noisyImage = "gaussian_model_with_noise.fits";
         {
             writeTestString(
                 "test fitter using all available image pixels with model with noise"
