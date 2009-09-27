@@ -2101,12 +2101,12 @@ void PlotMSCache::computeRanges() {
 	  
 	  switch(plaxes(ix)) {
 	  case PMS::SCAN:
-	    limits(2*ix)=min(limits(2*ix),Double(scan_(ic))-0.5);
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(scan_(ic))+0.5);
+	    limits(2*ix)=min(limits(2*ix),Double(scan_(ic)));
+	    limits(2*ix+1)=max(limits(2*ix+1),Double(scan_(ic)));
 	    break;
 	  case PMS::FIELD:
-	    limits(2*ix)=min(limits(2*ix),Double(field_(ic))-0.5);
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(field_(ic))+0.5);
+	    limits(2*ix)=min(limits(2*ix),Double(field_(ic)));
+	    limits(2*ix+1)=max(limits(2*ix+1),Double(field_(ic)));
 	    break;
 	  case PMS::TIME:
 	    limits(2*ix)=min(limits(2*ix),time_(ic));
@@ -2117,8 +2117,8 @@ void PlotMSCache::computeRanges() {
 	    limits(2*ix+1)=max(limits(2*ix+1),timeIntr_(ic));
 	    break;
 	  case PMS::SPW:
-	    limits(2*ix)=min(limits(2*ix),Double(spw_(ic))-0.5);
-	    limits(2*ix+1)=max(limits(2*ix+1),Double(spw_(ic))+0.5);
+	    limits(2*ix)=min(limits(2*ix),Double(spw_(ic)));
+	    limits(2*ix+1)=max(limits(2*ix+1),Double(spw_(ic)));
 	    break;
 	  case PMS::FREQUENCY:
 	    if (freq_[ic]->nelements()>0) {
@@ -2128,38 +2128,38 @@ void PlotMSCache::computeRanges() {
 	    break;
 	  case PMS::CHANNEL:
 	    if (chan_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*chan_[ic])(collmask)))-0.5);
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*chan_[ic])(collmask)))+0.5);
+	      limits(2*ix)=min(limits(2*ix),Double(min((*chan_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*chan_[ic])(collmask))));
 	    }
 	    break;
 	  case PMS::CORR:
 	    if (corr_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*corr_[ic])(collmask)))-0.5);
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*corr_[ic])(collmask)))+0.5);
+	      limits(2*ix)=min(limits(2*ix),Double(min((*corr_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*corr_[ic])(collmask))));
 	    }
 	    break;
 	  case PMS::ROW:
 	    if (row_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*row_[ic])(collmask)))-0.5);
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*row_[ic])(collmask)))+0.5);
+	      limits(2*ix)=min(limits(2*ix),Double(min((*row_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*row_[ic])(collmask))));
 	    }
 	    break;
 	  case PMS::ANTENNA1:
 	    if (antenna1_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*antenna1_[ic])(collmask)))-0.5);
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*antenna1_[ic])(collmask)))+0.5);
+	      limits(2*ix)=min(limits(2*ix),Double(min((*antenna1_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*antenna1_[ic])(collmask))));
 	    }
 	    break;
 	  case PMS::ANTENNA2:
 	    if (antenna2_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*antenna2_[ic])(collmask)))-0.5);
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*antenna2_[ic])(collmask)))+0.5);
+	      limits(2*ix)=min(limits(2*ix),Double(min((*antenna2_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*antenna2_[ic])(collmask))));
 	    }
 	    break;
 	  case PMS::BASELINE:
 	    if (baseline_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min((*baseline_[ic])(collmask)))-0.5);
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*baseline_[ic])(collmask)))+0.5);
+	      limits(2*ix)=min(limits(2*ix),Double(min((*baseline_[ic])(collmask))));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max((*baseline_[ic])(collmask))));
 	    }
 	    break;
 	    
@@ -2222,14 +2222,14 @@ void PlotMSCache::computeRanges() {
 	  case PMS::FLAG:
 	  case PMS::FLAG_ROW:
 	    if (flag_[ic]->nelements()>0) {
-	      limits(2*ix)=-0.5;
-	      limits(2*ix+1)=1.5;
+	      limits(2*ix)=0.0;
+	      limits(2*ix+1)=1.0;
 	    }
 	    break;
 	  case PMS::ANTENNA:
 	    if (antenna_[ic]->nelements()>0) {
-	      limits(2*ix)=min(limits(2*ix),Double(min(*antenna_[ic]))-0.5);
-	      limits(2*ix+1)=max(limits(2*ix+1),Double(max(*antenna_[ic]))+0.5);
+	      limits(2*ix)=min(limits(2*ix),Double(min(*antenna_[ic])));
+	      limits(2*ix+1)=max(limits(2*ix+1),Double(max(*antenna_[ic])));
 	    }
 	    break;
 	  case PMS::AZIMUTH:
@@ -2270,6 +2270,14 @@ void PlotMSCache::computeRanges() {
   minY_=limits(2);
   maxY_=limits(3);
   
+  // Pad genericially
+  Double dX=0.05*abs(maxX_-minX_);
+  Double dY=0.05*abs(maxY_-minY_);
+  minX_-=dX;
+  maxX_+=dX;
+  minY_-=dY;
+  maxY_+=dY;
+
   ss << ": dX=" << minX_ << "-" << maxX_ << " dY=" << minY_ << "-" << maxY_ << "\n";
   ss << "Npoints = " << totalN;
   logInfo("compute_ranges", ss.str());

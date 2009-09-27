@@ -568,11 +568,16 @@ simulator::setvp(const bool dovp, const bool usedefaultvp,
   try {
     
     if(itsSim !=0){
-      
-      casa::Quantity qparinc(casaQuantity(parangleinc));
-      casa::Quantity qskypos(casaQuantity(skyposthreshold));
-      rstat=itsSim->setvp(dovp, usedefaultvp, vptable, dosquint,qparinc, 
-			  qskypos, pblimit);
+      casa::Quantity skyposthr(180, "deg");
+      casa::Quantity parang(360, "deg");
+      if ((String(parangleinc.toString()) != casa::String("")) && 
+	  (String(parangleinc.toString()) != casa::String("[]")) )
+	parang=casaQuantity(parangleinc);
+      if ((String(skyposthreshold.toString()) != casa::String("")) && 
+	  (String(skyposthreshold.toString()) != casa::String("[]")))
+	skyposthr=casaQuantity(skyposthreshold);
+      rstat=itsSim->setvp(dovp, usedefaultvp, vptable, dosquint,parang, 
+			  skyposthr, pblimit);
     }
     
     

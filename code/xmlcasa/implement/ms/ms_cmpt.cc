@@ -744,9 +744,9 @@ ms::statistics(const std::string& column,
              data_float.resize(v.shape()(1));
 
              IPosition indx(2);
-             for (unsigned i = 0; i < v.shape()(0); i++) {
+             for (Int i = 0; i < v.shape()(0); i++) {
                  indx(0) = i;
-                 for (unsigned j = 0; j < v.shape()(1); j++) {
+                 for (Int j = 0; j < v.shape()(1); j++) {
                      indx(1) = j;
                      data_float[j] = v(indx);
                  }
@@ -767,9 +767,9 @@ ms::statistics(const std::string& column,
              data_float.resize(v.shape()(1));
 
              IPosition indx(2);
-             for (unsigned i = 0; i < v.shape()(0); i++) {
+             for (Int i = 0; i < v.shape()(0); i++) {
                  indx(0) = i;
-                 for (unsigned j = 0; j < v.shape()(1); j++) {
+                 for (Int j = 0; j < v.shape()(1); j++) {
                      indx(1) = j;
                      data_float[j] = v(indx);
                  }
@@ -817,26 +817,26 @@ ms::statistics(const std::string& column,
                  indx(1) = j;
                  switch (complex_value[0]) {
                  case 'a':
-                   for (unsigned k = 0; k < v.shape()(2); k++) {
+                   for (Int k = 0; k < v.shape()(2); k++) {
                      indx(2) = k;
                      data_float[ii++] = abs(v(indx));
                    }
                    
                    break;
                  case 'p':
-                   for (unsigned k = 0; k < v.shape()(2); k++) {
+                   for (Int k = 0; k < v.shape()(2); k++) {
                      indx(2) = k;
                      data_float[ii++] = arg(v(indx));
                    }
                    break;
                  case 'i':
-                   for (unsigned k = 0; k < v.shape()(2); k++) {
+                   for (Int k = 0; k < v.shape()(2); k++) {
                      indx(2) = k;
                      data_float[ii++] = v(indx).imag();
                    }
                    break;
                  case 'r':
-                   for (unsigned k = 0; k < v.shape()(2); k++) {
+                   for (Int k = 0; k < v.shape()(2); k++) {
                      indx(2) = k;
                      data_float[ii++] = v(indx).real();
                    }
@@ -856,71 +856,27 @@ ms::statistics(const std::string& column,
 
              ROArrayColumn<Float> ro_col(*sel_p, column);
              
-             Array<Float> v = ro_col.getColumn();
-             
-             data_float.resize(v.nelements());
-
-             unsigned long ii = 0;
-             IPosition indx(3);
-             for (unsigned i = 0; i < v.shape()(0); i++) {
-               indx(0) = i;
-               for (unsigned j = 0; j < v.shape()(1); j++) {
-                 indx(1) = j;
-                 for (unsigned k = 0; k < v.shape()(2); k++) {
-                   indx(2) = k;
-                   data_float[ii++] = v(indx);
-                 }
-               }
-             }
-             
-             get_statistics_1d(result, column, data_float);
-
+             get_statistics_1d(result, column,
+                               ro_col.getColumn().reform(IPosition(1,
+                                             ro_col.getColumn().nelements())));
            }
 
            else if (dt1 == TpBool) {
 
              ROArrayColumn<Bool> ro_col(*sel_p, column);
 
-             Array<Bool> v = ro_col.getColumn();
-
-             unsigned long ii = 0;
-             data_float.resize(v.nelements());
-
-             if (rotc.columnDesc().ndim() == 2) {
+             if (rotc.columnDesc().ndim() == 2 ||
+                 rotc.columnDesc().ndim() == 3) {
 
                supported = true;
 
-               IPosition indx(3);
-               for (unsigned i = 0; i < v.shape()(0); i++) {
-                 indx(0) = i;
-                 for (unsigned j = 0; j < v.shape()(1); j++) {
-                   indx(1) = j;
-                   for (unsigned k = 0; k < v.shape()(2); k++) { 
-                     indx(2) = k;
-                     data_float[ii++] = v(indx);
-                   }
-                 }
-               }
-
-               get_statistics_1d(result, column, data_float);
-             }
-             else if (rotc.columnDesc().ndim() == 3) {
-               supported = true;
-
-               IPosition indx(4);
-               for (unsigned i = 0; i < v.shape()(0); i++) {
-                 indx(0) = i;
-                 for (unsigned j = 0; j < v.shape()(1); j++) {
-                   indx(1) = j;
-                   for (unsigned k = 0; k < v.shape()(2); k++) { 
-                     indx(2) = k;
-                     for (unsigned l = 0; l < v.shape()(3); l++) { 
-                       indx(3) = l;
-                       data_float[ii++] = v(indx);
-                     }
-                   }
-                 }
-               }
+               data_float.resize();
+               Vector<Bool> bv(ro_col.getColumn().reform(IPosition(1,
+                                  ro_col.getColumn().nelements())));
+               
+               for(uInt i = 0; i < bv.nelements(); ++i)
+                 data_float[i] = bv[i];
+               
                get_statistics_1d(result, column, data_float);
              }
            } // end if Bool
@@ -1109,7 +1065,7 @@ ms::cvel(const std::string& outframe,
        }	 
        if(!agree){ // start and center don't agree
 	 *itsLog << LogIO::SEVERE
-		 << "Please give only the start (lower endge) or the center of the new spectral window, not both."
+		 << "Please give only the start (lower edge) or the center of the new spectral window, not both."
 		 << LogIO::POST;
        return False;       
        }
@@ -1358,13 +1314,12 @@ ms::timesort(const std::string& msname)
 
 bool
 ms::split(const std::string&      outputms,  const ::casac::variant& field, 
-	  const ::casac::variant& spw,       const std::vector<int>& nchan, 
-	  const std::vector<int>& start,     const std::vector<int>& step, 
-	  const ::casac::variant& antenna,   const ::casac::variant& timebin, 
-	  const std::string&      timerange, const ::casac::variant& scan, 
-	  const ::casac::variant& uvrange,   const std::string&      taql, 
-	  const std::string&      whichcol,  const ::casac::variant& tileShape,
-          const ::casac::variant& subarray)
+	  const ::casac::variant& spw,       const std::vector<int>& step,
+          const ::casac::variant& antenna,   const ::casac::variant& timebin,
+          const std::string&      timerange, const ::casac::variant& scan,
+          const ::casac::variant& uvrange,   const std::string&      taql,
+          const std::string&      whichcol,  const ::casac::variant& tileShape,
+          const ::casac::variant& subarray,  const bool averchan)
 {
   Bool rstat(False);
   try {
@@ -1386,10 +1341,17 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
      String t_uvrange = toCasaString(uvrange);
      String t_taql(taql);
      const String t_subarray = toCasaString(subarray);
-     splitter->setmsselect(t_spw, t_field, t_antenna, t_scan, t_uvrange, 
-			   t_taql, 
-			   Vector<Int>(nchan), Vector<Int>(start), 
-			   Vector<Int>(step), True, t_subarray);
+     
+     if(!splitter->setmsselect(t_spw, t_field, t_antenna, t_scan, t_uvrange, 
+                               t_taql, Vector<Int>(step), averchan,
+                               t_subarray)){
+       *itsLog << LogIO::SEVERE
+               << "Error selecting data."
+               << LogIO::POST;
+       delete splitter;
+       return false;
+     }
+       
      Double timeInSec=casaQuantity(timebin).get("s").getValue();
      splitter->selectTime(timeInSec, String(timerange));
      String t_outputms(outputms);
@@ -1399,7 +1361,15 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
        t_tileshape.resize();
        t_tileshape=tileShape.toIntVec();
      }
-     splitter->makeSubMS(t_outputms, t_whichcol, t_tileshape);
+     if(!splitter->makeSubMS(t_outputms, t_whichcol, t_tileshape)){
+       *itsLog << LogIO::SEVERE
+               << "Error splitting " << itsMS->tableName() << " to "
+               << t_outputms
+               << LogIO::POST;
+       delete splitter;
+       return false;
+     }
+       
      *itsLog << LogIO::NORMAL2 << "SubMS made" << LogIO::POST;
      delete splitter;
    
@@ -1407,7 +1377,6 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
        String message= toCasaString(outputms) + " split from " + itsMS->tableName();
        ostringstream param;
        param << "fieldids=" << t_field << " spwids=" << t_spw
-             << " nchan=" << Vector<Int>(nchan) << " start=" << Vector<Int>(start)
              << " step=" << Vector<Int>(step) << " which='" << whichcol << "'";
        String paramstr=param.str();
        writehistory(message, paramstr, "ms::split()", outputms, "ms");

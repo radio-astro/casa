@@ -54,17 +54,6 @@ NROFITSDataset::NROFITSDataset( string name )
   record_ = new NRODataRecord() ;
   record_->LDATA = NULL ; // never use LDATA 
 
-  // check endian
-  // FITS file is always BIG_ENDIAN
-  if ( endian_ == BIG_ENDIAN ) {
-    same_ = 1 ;
-    os << LogIO::NORMAL << "same endian " << LogIO::POST ;
-  }
-  else {
-    same_ = 0 ;
-    os << LogIO::NORMAL << "different endian " << LogIO::POST ;
-  }
-
   // open file
   if ( open() ) 
     os << LogIO::SEVERE << "error while opening file " << filename_ << LogIO::EXCEPTION ;
@@ -79,6 +68,22 @@ NROFITSDataset::NROFITSDataset( string name )
 
   // data initialization
   getField() ;
+
+  // check endian
+  // FITS file is always BIG_ENDIAN
+  int itmp ;
+  if ( readTable( itmp, "NCH", true ) != 0 ) {
+    os << LogIO::WARN << "Error while checking endian." << LogIO::POST ;
+    return ;
+  }
+  if ( itmp > 0 && itmp <= 2048 ) {
+    same_ = 1 ;
+    os << LogIO::NORMAL << "same endian " << LogIO::POST ;
+  }
+  else {
+    same_ = 0 ;
+    os << LogIO::NORMAL << "different endian " << LogIO::POST ;
+  }
 }
 
 // destructor 
@@ -1124,9 +1129,7 @@ int NROFITSDataset::fillRecord( int i )
   string str8( 8, ' ' ) ;
   string str24( 24, ' ' ) ;
 
-  //cout << "before strlen(LSFIL) = " << strlen(record_->LSFIL) << " " << record_->LSFIL << endl ;
   strcpy( record_->LSFIL, str4.c_str() ) ;
-  //cout << "after  strlen(LSFIL) = " << strlen(record_->LSFIL) << " " << record_->LSFIL << endl ;
   status = readTable( record_->LSFIL, "LSFIL", 4, i ) ;
   if ( status ) {
     os << LogIO::WARN << "Error while reading LSFIL." << LogIO::POST ;
@@ -1442,7 +1445,6 @@ int NROFITSDataset::fillRecord( int i )
   }
   // DEBUG
 //   for ( int i = 0 ; i < chmax_ ; i++ ) 
-//     cout << "JDATA[" << i << "] = " << record_->JDATA[i] << " " ;
 //     cout << "JDATA[" << i << "] = " << JDATA[i] << " " ;
 //   cout << endl ;
   //
@@ -1836,7 +1838,7 @@ void NROFITSDataset::fillARYTP()
   for ( int i = 0 ; i < 20 ; i++ ) {
     if ( arry3[i] == '1' ) {
       char arytp[4] ;
-      sprintf( arytp, "A%d", i ) ;
+      sprintf( arytp, "A%d", i+1 ) ;
       ARYTP[count++] = string( arytp ) ;
       //cout << "ARYTP[" << count-1 << "] = " << ARYTP[count-1] << endl ;
     }

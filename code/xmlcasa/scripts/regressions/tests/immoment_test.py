@@ -352,7 +352,7 @@ def input_test():
     _momentTest_debug_msg( 21 )
     results = None
     results = immoments( 'n1333_both.image', region=3, outfile='input_test_bad_rgn' )
-    if ( results != None ):
+    if ( results ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
              +"\nError: Bad region file, 3, was not reported as bad."
@@ -664,7 +664,7 @@ def input_test():
     _momentTest_debug_msg( 49 )
     results = None
     results = immoments( 'n1333_both.image', includepix='bad', outfile='input_test_bad_incpix' )
-    if ( results!=None or results==True ):
+    if ( results ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
              +"\nError: Bad includepix value, 'bad', was not reported."
@@ -697,7 +697,7 @@ def input_test():
     _momentTest_debug_msg( 51 )
     results = None
     results = immoments( 'n1333_both.image', excludepix='badpix', outfile='input_test_bad_expix' )
-    if ( results!=None and results!=True ):
+    if ( results ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
              +"\nError: Bad excludepix value, 'bad', was not reported."

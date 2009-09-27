@@ -2341,18 +2341,6 @@ for i in range(len(tcoord)):
      <value></value>
      </param>
     
-     <param type="intArray" direction="in" name="nchan">
-     <description>number of channels in output - 
-     Int vector of length 1 or same length as spw</description>
-     <value>-1</value>
-     </param>	
-    
-     <param type="intArray" direction="in" name="start">
-     <description>Start channels in input data -
-     Int vector of length 1 or same length as spw</description>
-     <value>0</value>
-     </param>	
-    
      <param type="intArray" direction="in" name="step">
      <description>number of input channels to average to make 1
      output channel - Int vector of length 1 or same as spw</description>
@@ -2411,6 +2399,11 @@ for i in range(len(tcoord)):
      <description>Limit data to specific (sub)array numbers.</description>
      <any type="variant"/>
      <value></value>
+     </param>
+
+     <param type="bool" name="averchan">
+     <description>If true, width will be used to average channels.  Otherwise it will be used to skip channels.</description>
+     <value>true</value>
      </param>
   </input>
   <returns type="bool"/>

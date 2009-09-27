@@ -172,7 +172,9 @@ Bool BeamSkyJones::changed(const VisBuffer& vb, Int row)
   if (!lastParallacticAngles_p.nelements() && myPBMaths_p.nelements())
        return True; // it's a first call of this method and setPBMath has
                     // definitely been called before
-  
+
+ 
+
   // Obtaining a reference on parallactic angles is a fast operation as
   // caching is implemented inside VisBuffer.
   Float feed1_pa=vb.feed1_pa()[row];
@@ -189,7 +191,12 @@ Bool BeamSkyJones::changed(const VisBuffer& vb, Int row)
   if (lastUpdateIndex2_p!=-1)
       if (abs(feed2_pa-lastParallacticAngles_p[lastUpdateIndex2_p]) >
               parallacticAngleIncrement_p) return True;
-	      
+
+  /*
+   These direction test are not used right now  and are terrible calculations to do on 
+   billions of rows of data
+   If it is needed a faster algorithm for changed direction is needed
+////	      
   if (lastUpdateIndex1_p!=-1)
       if (!directionsCloseEnough(lastDirections_p[lastUpdateIndex1_p],
                      vb.direction1()[row])) return True;
@@ -197,6 +204,8 @@ Bool BeamSkyJones::changed(const VisBuffer& vb, Int row)
   if (lastUpdateIndex2_p!=-1)
       if (!directionsCloseEnough(lastDirections_p[lastUpdateIndex2_p],
                      vb.direction2()[row])) return True;    
+  */
+
   return False;
 };
 

@@ -104,25 +104,39 @@ class SubMS
   // Change or Set the MS this MSSelector refers to.
   void setMS(MeasurementSet& ms);
 
+  // Select spw and channels for each spw.
+  // If averchan is true, chanStep_p will be used as a width for channel
+  // averaging.  Otherwise it will be used as a step for channel skipping.
+  // This is the version used by split.  It returns true on success and false
+  // on failure.
+  Bool selectSpw(const String& spwstr, const Vector<Int>& steps,
+                 const Bool averchan=true);
 
-  // select spw and channels for each spw...
+  // This older version is used by the older version of setmsselect().
   void selectSpw(Vector<Int> spw, Vector<Int> nchan, Vector<Int> start, 
-		 Vector<Int> step, const Bool averchan=True);
-
-
+                 Vector<Int> step, const Bool averchan);
+  
   //select Time and time averaging or regridding
   //void selectTime();
 
   //select stuff using msselection syntax ...time is left out
-  // call it seperately with timebin
-  void setmsselect(const String& spw="", const String& field="", 
-		   const String& baseline="", 
-		   const String& scan="", const String& uvrange="", 
-		   const String& taql="", 
-		   const Vector<Int>& nchan=Vector<Int> (1,-1),
-		   const Vector<Int>& start=Vector<Int> (1,0),
+  // call it separately with timebin
+  // This version returns a success value, and does not need nchan, start, and
+  // step.  It is used by split.
+  Bool setmsselect(const String& spw="", const String& field="", 
+		   const String& baseline="", const String& scan="",
+                   const String& uvrange="", const String& taql="", 
 		   const Vector<Int>& step=Vector<Int> (1,1),
 		   const Bool averchan=True, const String& subarray="");
+
+  // This older version does not return a success value, and does need nchan,
+  // start, and step.  It is used elsewhere.
+  void setmsselect(const String& spw,        const String& field, 
+                   const String& baseline,   const String& scan,
+                   const String& uvrange,    const String& taql,
+                   const Vector<Int>& nchan, const Vector<Int>& start,
+                   const Vector<Int>& step,  const Bool averchan,
+                   const String& subarray);
 
   // Select source or field
   void selectSource(Vector<Int> fieldid);
@@ -340,7 +354,12 @@ class SubMS
 
   // Uninitialized by ctors.
   MeasurementSet msOut_p;
-  Vector<Int> spw_p, nchan_p, chanStart_p, chanStep_p, npol_p, inNumChan_p;
+  Vector<Int> spw_p,      // The input spw corresponding to each output spw.
+              nchan_p,    // The # of output channels for each output spw.
+              chanStart_p,
+              chanStep_p,
+              npol_p,
+              inNumChan_p;
   Vector<Int> fieldid_p;
   Bool averageChannel_p;
   Vector<Int> spwRelabel_p, fieldRelabel_p, sourceRelabel_p;

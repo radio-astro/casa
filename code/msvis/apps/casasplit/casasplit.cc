@@ -32,8 +32,6 @@
 using namespace casa;
 
 int main(int argc, char* argv[]) {
-  //SubMSLogger::Level log = SubMSLogger::OFF;
-  
   // Parse arguments.
   if(argc < 3 || argc > 6 || argv[1] == "-h" || argv[1] == "--help"){
     cout << argv[0] << ": Stand-alone executable for splitting an MS.\n"
@@ -48,12 +46,6 @@ int main(int argc, char* argv[]) {
   Bool nomodify = false; // Known to work.
   String spwsel("");
 
-  Vector<Int> nchan;
-  nchan.resize(0);
-  
-  Vector<Int> start;
-  start.resize(0);
-  
   Vector<Int> step;
   step.resize(0);
   
@@ -64,7 +56,7 @@ int main(int argc, char* argv[]) {
   String t_taql("");
   String timerange("");
   String t_whichcol("corrected");
-  Bool   averchan = false;  // Should really be determined by other parameters.
+  Bool   averchan = true;
 
   char **args = argv + 1;
   while(args[0][0] == '-'){
@@ -99,7 +91,7 @@ int main(int argc, char* argv[]) {
   //*itsLog << LogIO::NORMAL2 << "Sub MS created" << LogIO::POST;
 
   splitter->setmsselect(spwsel, t_field, t_antenna, t_scan, t_uvrange,
-			t_taql, nchan, start, step, averchan);
+			t_taql, step, averchan);
   splitter->selectTime(timebin, timerange);
   splitter->makeSubMS(outms, t_whichcol);
   //*itsLog << LogIO::NORMAL2 << "SubMS made" << LogIO::POST;

@@ -132,20 +132,97 @@ namespace casa {
     parseColumnNames("None");
   }
   
+  // This is the version used by split.
+  Bool SubMS::selectSpw(const String& spwstr, const Vector<Int>& steps,
+                        const Bool averchan)
+  {
+    LogIO os(LogOrigin("SubMS", "selectSpw()"));
+
+    MSSelection mssel;
+    mssel.setSpwExpr(spwstr);
+
+    Vector<Int> widths = steps.copy();
+    if(widths.nelements() < 1){
+      widths.resize(1);
+      widths[0] = 1;
+    }
+    if(widths[0] == 0){
+      os << LogIO::WARN
+         << "0 cannot be used for channel width...using 1 instead."
+         << LogIO::POST;
+      widths[0] = 1;
+    }
+
+    // Each row should have spw, start, stop, step
+    Matrix<Int> chansel = mssel.getChanList(&ms_p, widths[0]);
+
+    if(chansel.nrow() > 0) {         // Use spwstr if it selected anything...
+      spw_p       = chansel.column(0);
+      chanStart_p = chansel.column(1);
+      nchan_p     = chansel.column(2);
+      chanStep_p  = chansel.column(3);
+    }
+    else{                            // select everything and rely on widths.
+      ROMSSpWindowColumns mySpwTab(ms_p.spectralWindow());
+      uInt nspw = mySpwTab.nrow();
+      
+      spw_p.resize(nspw);
+      indgen(spw_p);
+      
+      chanStart_p.resize(nspw);
+      for(uInt k = 0; k < nspw; ++k)
+        chanStart_p[k] = 0;
+      
+      nchan_p.resize(nspw);
+      for(uInt k = 0; k < nspw; ++k)
+        nchan_p[k] = mySpwTab.numChan()(spw_p[k]);
+      
+      if(widths.nelements() != spw_p.nelements()){
+        if(widths.nelements() == 1){
+          widths.resize(spw_p.nelements(), True);
+          for(uInt k = 1; k < spw_p.nelements(); ++k)
+            widths[k] = widths[0];
+	}
+        else{
+          os << LogIO::SEVERE
+             << "Mismatch between the # of widths specified by width and the # of spws."
+             << LogIO::POST;
+          return false;
+        }
+      }
+      chanStep_p = widths;
+    }
+    
+    // SubMS uses a different meaning for nchan_p from MSSelection.  For
+    // SubMS it is the # of output channels for each output spw.  For
+    // MSSelection it is end input chan - start input chan + 1 for each
+    // output spw.
+    for(uInt k = 0; k < nchan_p.nelements(); ++k){
+      // This expression works for both cases, though.  For MSSelection nchan_p
+      // starts as the stop channel.  For the blank spw default, chanStart_p is
+      // 0.
+      nchan_p[k] = (nchan_p[k] - chanStart_p[k] + 1) / chanStep_p[k];
+      if(nchan_p[k] < 1)
+        nchan_p[k] = 1;
+    }
+
+
+    averageChannel_p = averchan;
+    return true;
+  }
   
+  // This older version is used elsewhere.
   void SubMS::selectSpw(Vector<Int> spw, Vector<Int> nchan, Vector<Int> start, 
 			Vector<Int> step, const Bool averchan)
   {
     spw_p.resize();
-    spw_p=spw;
+    spw_p = spw;
     
     //check for default
     if(spw_p.nelements() == 1 && spw_p[0] < 0){
       spw_p.resize(ms_p.spectralWindow().nrow());
-      for (uInt k =0 ; k < spw_p.nelements() ; ++k){
-	spw_p[k]=k;
-	
-      }
+      indgen(spw_p);
+
       //no may be we have to redo the chan selection
       
       if (nchan.nelements() != spw_p.nelements()){
@@ -167,8 +244,7 @@ namespace casa {
 	}
       }
     }
-    
-    
+        
     nchan_p.resize();
     nchan_p = nchan;
     chanStart_p.resize();
@@ -202,7 +278,44 @@ namespace casa {
       } 
     }    
   }
-  
+
+  // This is the one used by split.
+  Bool SubMS::setmsselect(const String& spw, const String& field,
+                          const String& baseline, const String& scan,
+                          const String& uvrange, const String& taql,
+                          const Vector<Int>& step, const Bool averchan,
+                          const String& subarray)
+  {
+    LogIO os(LogOrigin("SubMS", "setmsselect()"));
+    Record selrec = ms_p.msseltoindex(spw, field);
+
+    Vector<Int> fldids = selrec.asArrayInt("field");
+    if(fldids.nelements() < 1)
+      fldids=Vector<Int>(1,-1);
+
+    selectSource(fldids);
+
+    if(!selectSpw(spw, step, averchan)){
+      os << LogIO::SEVERE << "No channels selected." << LogIO::POST;
+      return false;
+    }
+    
+    if(baseline != ""){
+      Vector<Int> antid(0);
+      Vector<String> antstr(1,baseline);
+      selectAntenna(antid, antstr);
+    }
+    scanString_p    = scan;
+    uvrangeString_p = uvrange;
+    taqlString_p    = taql;
+
+    if(subarray != "")
+      selectArray(subarray);
+
+    return true;
+  }
+
+  // This is the older version, used elsewhere.
   void SubMS::setmsselect(const String& spw, const String& field, 
 			  const String& baseline, 
 			  const String& scan, const String& uvrange, 
@@ -274,7 +387,8 @@ namespace casa {
 
     if(subarray != "")
       selectArray(subarray);
-  }
+  }  
+
   
   void SubMS::selectSource(Vector<Int> fieldid)
   {
@@ -886,11 +1000,28 @@ namespace casa {
       msPol.corrProduct().put(k,corrProd(polId(spw_p[k])));
       msPol.flagRow().put(k,polFlagRow(polId(spw_p[k])));
     }
+
+    // Make map from input to output spws.
+    Sort sortSpws(spw_p.getStorage(dum), sizeof(Int));
+    sortSpws.sortKey((uInt)0, TpInt);
+    Vector<uInt> spwsortindex, spwuniq;
+    sortSpws.sort(spwsortindex, spw_p.nelements());
+    uInt nuniqSpws = sortSpws.unique(spwuniq, spwsortindex);
+    for(uInt k = 0; k < nuniqSpws; ++k)
+      spwRelabel_p[spw_p[spwuniq[k]]] = k;
+    if(nuniqSpws < spw_p.nelements()){
+      os << LogIO::WARN
+         << "Multiple channel ranges within an spw may not work."
+         << "\nConsider splitting them individually and optionally combining the output MSes with concat."
+         << "\nEven then, expect problems if exporting to uvfits."
+         << LogIO::POST;
+    }
+
     for(uInt k=0; k < spw_p.nelements(); ++k){
       inNumChan_p[k]=numChan(spw_p[k]);
       msOut_p.spectralWindow().addRow();
       msOut_p.dataDescription().addRow();
-      spwRelabel_p[spw_p[k]]=k;
+
       if(nchan_p[k] != numChan(spw_p[k])){
 	Int totchan=nchan_p[k]*chanStep_p[k]+chanStart_p[k];
 	if(totchan >  numChan(spw_p[k])){
@@ -2255,6 +2386,106 @@ namespace casa {
 
   }
 
+// Bool addOutputSpw()
+// {
+//   // complete the calculation of the new spectral window parameters
+//   // from newNUM_CHAN, newChanLoBound, and newChanHiBound 
+//   newXout.resize(newNUM_CHAN);
+//   newCHAN_WIDTH.resize(newNUM_CHAN);
+//   for(Int i=0; i<newNUM_CHAN; i++){
+//     newXout[i] = (newChanLoBound[i]+newChanHiBound[i])/2.;
+//     newCHAN_WIDTH[i] = newChanHiBound[i]-newChanLoBound[i];
+//     newRESOLUTION[i] = newCHAN_WIDTH[i]; //???????????
+//   }
+//   // set the reference frequency to the lower edge of the new spw,
+//   // keeping the already changed frame
+//   MVFrequency mvf(newChanLoBound[0]);
+//   newREF_FREQUENCY.set(mvf);
+	    
+//   // trivial definition of the bandwidth
+//   newTOTAL_BANDWIDTH = newChanHiBound[newNUM_CHAN-1]-newChanLoBound[0];
+	    
+//   // effective bandwidth needs to be interpolated in quadrature
+//   newEFFECTIVE_BW.resize(newNUM_CHAN);
+//   Vector<Double> newEffBWSquared(newNUM_CHAN);
+//   Vector<Double> oldEffBWSquared(oldEFFECTIVE_BW);
+//   for(Int i=0; i<oldNUM_CHAN; i++){
+//     oldEffBWSquared[i] *= oldEffBWSquared[i];
+//   }
+//   for(Int i=0; i<newNUM_CHAN; i++){
+//     newEFFECTIVE_BW[i] = sqrt(newEffBWSquared[i]);
+//   }
+
+//   // Create new row in the SPW table (with ID nextSPWId) by copying
+//   // all information from row theSPWId
+//   if(!spwtable.canAddRow()){
+//     os << LogIO::SEVERE
+//        << "Cannot add new row to SPECTRAL_WINDOW table." 
+//        << LogIO::POST;
+//     return False; 
+//   }
+	    
+//   numNewSPWIds++;
+//   nextSPWId++;
+	    
+//   os << LogIO::NORMAL
+//      << "Spectral window "
+//      << nextSPWId - origNumSPWs << " will be created with parameters " << endl 
+//      << message
+//      << LogIO::POST;
+	    
+//   // prepare parameter string for later entry into MS history
+//   {    
+//     ostringstream param;
+//     param << "Regridded SPW " << nextSPWId - origNumSPWs
+//           << " created with parameters " << endl
+//           << message << endl;
+//     regridMessage += param.str(); // append
+//   }
+	    
+//   spwtable.addRow();
+//   TableRow SPWRow(spwtable);
+//   TableRecord spwRecord = SPWRow.get(theSPWId);
+//   // TODO        Warn if the original channels are not contiguous or overlap!
+//   SPWRow.putMatchingFields(nextSPWId, spwRecord);
+	    
+//   // and replacing the following columns with updated information:
+//   // Store xout as new value of CHAN_FREQ.
+//   chanFreqCol.put(nextSPWId, newXout);
+//   numChanCol.put(nextSPWId, newNUM_CHAN);
+//   chanWidthCol.put(nextSPWId,  newCHAN_WIDTH);
+//   refFrequencyCol.put(nextSPWId, newREF_FREQUENCY.getValue());
+//   measFreqRefCol.put(nextSPWId, (Int)theFrame);
+//   totalBandwidthCol.put(nextSPWId, newTOTAL_BANDWIDTH);
+//   effectiveBWCol.put(nextSPWId, newEFFECTIVE_BW);
+//   resolutionCol.put(nextSPWId, newRESOLUTION);
+
+//   //   Create a new row in the DATA_DESCRIPTION table and enter
+//   //   nextSPWId in the SPW_ID column, copy the polarization id and
+//   //   the flag_row content from the old DATA_DESCRIPTION row.
+//   if(!ddtable.canAddRow()){
+//     os << LogIO::SEVERE
+//        << "Cannot add a new row to the DATA_DESCRIPTION table."
+//        << LogIO::POST;
+//     return False; 
+//   }
+//   numNewDataDesc++;
+//   nextDataDescId++;
+//   ddtable.addRow();
+//   TableRow DDRow(ddtable);
+//   TableRecord DDRecord = DDRow.get(theDataDescId);
+//   DDRow.putMatchingFields(nextDataDescId, DDRecord);
+
+//   // anticipate the deletion of the original SPW table rows
+//   SPWIdCol.put(nextDataDescId, nextSPWId - origNumSPWs); 
+	    
+//   // writing the value of nextDataDescId into the DATA_DESC_ID cell
+//   // of the present MAIN table row.  will be done in the main cvel
+//   // method
+//   theDataDescId = nextDataDescId;
+
+//   return true;
+// }
 
   Bool SubMS::setRegridParameters(vector<Int>& oldSpwId,
 				  vector<Int>& oldFieldId,
@@ -3135,11 +3366,13 @@ namespace casa {
 // etc.)
 void SubMS::relabelIDs()
 {
-  Vector<Int> datDesc = mscIn_p->dataDescId().getColumn();
-
-  for(uInt k = 0; k < datDesc.nelements(); ++k)
-    datDesc[k] = spwRelabel_p[oldDDSpwMatch_p[datDesc[k]]];
-  msc_p->dataDescId().putColumn(datDesc);
+  const Vector<Int>& inDDID = mscIn_p->dataDescId().getColumn();
+  Vector<Int> outDDID;
+  
+  outDDID.resize(inDDID.nelements());
+  for(uInt k = 0; k < inDDID.nelements(); ++k)
+    outDDID[k] = spwRelabel_p[oldDDSpwMatch_p[inDDID[k]]];
+  msc_p->dataDescId().putColumn(outDDID);
 
   Vector<Int> fieldId = mscIn_p->fieldId().getColumn();
   for(uInt k = 0; k < fieldId.nelements(); ++k)
@@ -3583,7 +3816,7 @@ void SubMS::relabelIDs()
 	    //----------------------------------------------------------------------
 
 	    msc_p->flag().putColumnCells(rowstoadd, locflag);
-	    rowsdone+=rowsnow;
+	    rowsdone += rowsnow;
 
 	  }
       }
