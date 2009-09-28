@@ -868,6 +868,258 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
 }
 
 
+void SolvableVisCal::setSpecify(const Record& specify) {
+
+  LogMessage message(LogOrigin("SolvableVisCal","setSpecify"));
+
+  // Not actually applying or solving
+  setSolved(False);
+  setApplied(False);
+
+  // Collect Cal table parameters
+  Bool tableExists(False);
+  if (specify.isDefined("caltable")) {
+    calTableName()=specify.asString("caltable");
+
+    // Detect existence of the table
+    tableExists=Table::isReadable(calTableName());
+
+  }
+
+  if (tableExists) {
+
+    // Verify table has correct type
+    verifyCalTable(calTableName());
+
+    logSink() << "Loading existing " << typeName()
+	      << " table: " << calTableName()
+	      << "."
+	      << LogIO::POST;
+
+    // Create CalSet, from table
+    switch (parType())
+      {
+      case VisCalEnum::COMPLEX:
+	{
+	  cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
+	  cs().initCalTableDesc(typeName(), parType_);
+	  nChanParList() = cs().nChan();
+	  startChanList() = cs().startChan();
+	  // For now, check that table has only one slot...
+	  for (Int ispw=0;ispw<nSpw();++ispw)
+	    if (cs().nTime(ispw) != 1)
+	      throw(AipsError("Cannot yet handle multi-timestamp calibration specification."));
+
+	  break;
+	}
+      case VisCalEnum::REAL:
+	{
+	  rcs_ = new CalSet<Float>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
+	  rcs().initCalTableDesc(typeName(), parType_);
+	  nChanParList() = rcs().nChan();
+	  startChanList() = rcs().startChan();
+	  // For now, check that table has only one slot...
+	  for (Int ispw=0;ispw<nSpw();++ispw)
+	    if (rcs().nTime(ispw) != 1)
+	      throw(AipsError("Cannot yet handle multi-timestamp calibration specification."));
+	  break;
+	}
+      default:
+	throw(AipsError("Internal SVC::setSpecify(...) error: Got invalid VisCalEnum"));
+      }
+    
+  }
+  else {
+
+    Vector<Int> nSlot(nSpw(),1);
+    nChanParList()=Vector<Int>(nSpw(),1);
+    startChanList()=Vector<Int>(nSpw(),0);
+    
+    // we are creating a table from scratch
+    logSink() << "Creating " << typeName()
+	      << " table from specified parameters."
+	      << LogIO::POST;
+    
+    // Create a pristine CalSet
+    switch (parType()) {
+    case VisCalEnum::COMPLEX:
+      {
+	cs_ = new CalSet<Complex>(nSpw());
+	cs().initCalTableDesc(typeName(),parType_);
+	
+	inflate(nChanParList(),startChanList(),nSlot);
+	
+	// Set parOK,etc. to true
+	for (Int ispw=0;ispw<nSpw();ispw++) {
+	  cs().par(ispw)=defaultPar();
+	  cs().parOK(ispw)=True;
+	  cs().solutionOK(ispw)=True;
+	}
+	break;
+      }
+    case VisCalEnum::REAL:
+      {
+	rcs_ = new CalSet<Float>(nSpw());
+	rcs().initCalTableDesc(typeName(),parType_);
+	
+	inflate(nChanParList(),startChanList(),nSlot);
+	
+	// Set parOK,etc. to true
+	for (Int ispw=0;ispw<nSpw();ispw++) {
+	  rcs().par(ispw)=1.0;
+	  rcs().parOK(ispw)=True;
+	  rcs().solutionOK(ispw)=True;
+	}
+	break;
+      }
+    default:
+      throw(AipsError("Internal SVC::setAccumulate(...) error: Got invalid VisCalEnum"));
+    }
+  }
+}
+
+
+void SolvableVisCal::specify(const Record& specify) {
+
+  LogMessage message(LogOrigin("SolvableVisCal","specify"));
+
+  Vector<Int> spws;
+  Vector<Int> antennas;
+  Vector<Int> pols;
+  Vector<Double> parameters;
+
+  Int Nspw(1);
+  Int Ntime(1);
+  Int Nant(0);
+  Int Npol(1);
+  
+  Bool repspw(False);
+  
+  IPosition ip0(4,0,0,0,0);
+  IPosition ip1(4,0,0,0,0);
+
+  if (specify.isDefined("time")) {
+    // TBD: the time label
+    cout << "time = " << specify.asString("time") << endl;
+
+    cout << "refTime() = " << refTime() << endl;
+
+
+  }
+  if (specify.isDefined("spw")) {
+    // TBD: the spws (in order) identifying the solutions
+    spws=specify.asArrayInt("spw");
+    cout << "spws = " << spws << endl;
+    Nspw=spws.nelements();
+    if (Nspw<1) {
+      // None specified, so loop over all, repetitively
+      //  (We need to optimize this...)
+      cout << "Specified parameters repeated on all spws." << endl;
+      repspw=True;
+      Nspw=nSpw();
+      spws.resize(Nspw);
+      indgen(spws);
+    }
+  }
+
+
+  if (specify.isDefined("antenna")) {
+    // TBD: the antennas (in order) identifying the solutions
+    antennas=specify.asArrayInt("antenna");
+    cout << "antenna indices = " << antennas << endl;
+    Nant=antennas.nelements();
+    if (Nant<1) {
+      // Use specified values for _all_ antennas implicitly
+      Nant=1;   // For the antenna loop below
+      ip0(2)=0;
+      ip1(2)=nAnt()-1;
+    }
+    else {
+      // Point to first antenna
+      ip0(2)=antennas(0);
+      ip1(2)=ip0(2);
+    }
+  }
+  if (specify.isDefined("pol")) {
+    // TBD: the pols (in order) identifying the solutions
+    String polstr=specify.asString("pol");
+    cout << "pol = " << polstr << endl;
+    if (polstr=="R" || polstr=="X") 
+      // Fill in only first pol
+      pols=Vector<Int>(1,0);
+    else if (polstr=="L" || polstr=="Y") 
+      // Fill in only second pol
+      pols=Vector<Int>(1,1);
+    else if (polstr=="R,L" || polstr=="X,Y") {
+      // Fill in both pols explicity
+      pols=Vector<Int>(2,0);
+      pols(1)=1;
+    }
+    else if (polstr=="L,R" || polstr=="Y,X") {
+      // Fill in both pols explicity
+      pols=Vector<Int>(2,0);
+      pols(0)=1;
+    }
+    else if (polstr=="")
+      // Fill in both pols implicitly
+      pols=Vector<Int>();
+    else
+      throw(AipsError("Invalid pol specification"));
+    
+    Npol=pols.nelements();
+    if (Npol<1) {
+      // No pol axis specified
+      Npol=1;
+      ip0(0)=0;
+      ip1(0)=nPar()-1;
+    }
+    else {
+      // Point to the first polarization
+      ip0(0)=pols(0);
+      ip1(0)=ip0(0);
+    }
+  }
+  if (specify.isDefined("parameter")) {
+    // TBD: the actual cal values
+    cout << "parameter = " << specify.asArrayDouble("parameter") << endl;
+
+    parameters=specify.asArrayDouble("parameter");
+
+  }
+  
+  cout << "Shapes = " << parameters.nelements() << " " 
+       << (repspw ? (Ntime*Nant*Npol) : (Nspw*Ntime*Nant*Npol)) << endl;
+
+  Int ipar(0);
+  for (Int ispw=0;ispw<Nspw;++ispw) {
+    // reset par index if we are repeating for all spws
+    if (repspw) ipar=0;
+    
+    // Loop over specified timestamps
+    for (Int itime=0;itime<Ntime;++itime) {
+      ip1(3)=ip0(3)=itime;
+      
+      // Loop over specified antennas
+      for (Int iant=0;iant<Nant;++iant) {
+	if (Nant>1)
+	  ip1(2)=ip0(2)=antennas(iant);
+	
+	// Loop over specified polarizations
+	for (Int ipol=0;ipol<Npol;++ipol) {
+	  if (Npol>1)
+	    ip1(0)=ip0(0)=pols(ipol);
+	  
+	  Array<Complex> slice(cs().par(spws(ispw))(ip0,ip1));
+	  // Default accumultion in multiplication
+	  slice*=Complex(parameters(ipar));
+	  ++ipar;
+	}
+      }
+    }
+  }
+}
+
+
 
 Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
 

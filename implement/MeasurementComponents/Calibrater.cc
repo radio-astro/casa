@@ -2223,6 +2223,76 @@ void Calibrater::accumulate(const String& intab,
 
 }
 
+void Calibrater::specifycal(const String& type,
+			    const String& caltable,
+			    const String& time,
+			    const String& spw,
+			    const String& antenna,
+			    const String& pol,
+			    const Vector<Double>& parameter) {
+
+  logSink() << LogOrigin("Calibrater","specifycal") << LogIO::NORMAL;
+
+  // SVJ objects:
+  SolvableVisCal *cal_(NULL);
+
+  try {
+ 			    
+    // Set record format for calibration table application information
+    RecordDesc specifyDesc;
+    specifyDesc.addField ("caltable", TpString);
+    specifyDesc.addField ("time", TpString);
+    specifyDesc.addField ("spw", TpArrayInt);
+    specifyDesc.addField ("antenna", TpArrayInt);
+    specifyDesc.addField ("pol", TpString);
+    specifyDesc.addField ("parameter", TpArrayDouble);
+    
+    // Create record with the requisite field values
+    Record specify(specifyDesc);
+    specify.define ("caltable", caltable);
+    specify.define ("time", time);
+    if (spw=="*")
+      specify.define ("spw",Vector<Int>(1,-1));
+    else
+      specify.define ("spw",getSpwIdx(spw));
+    if (antenna=="*")
+      specify.define ("antenna",Vector<Int>(1,-1) );
+    else
+      specify.define ("antenna",getAntIdx(antenna));
+    specify.define ("pol",pol);
+    specify.define ("parameter",parameter);
+
+
+
+    // Now do it
+    cal_ = createSolvableVisCal(type,*vs_p);
+
+    // set up for specification (set up the CalSet)
+    cal_->setSpecify(specify);
+
+    // fill with specified values
+    cal_->specify(specify);
+
+    // Store result
+    cal_->store();
+
+    delete cal_;
+
+  } catch (AipsError x) {
+    logSink() << LogIO::SEVERE
+	      << "Caught Exception: "
+	      << x.getMesg()
+	      << LogIO::POST;
+
+    if (cal_) delete cal_;
+    
+    throw(AipsError("Error in Calibrater::specifycal."));
+    return;
+  }
+  return;
+
+}
+
 
 Bool Calibrater::smooth(const String& infile, 
 			String& outfile,  // const Bool& append,

@@ -199,6 +199,15 @@ public:
 			     const Double& t,
 			     const Int& refAnt=-1);
 
+  // Default value for parameters
+  virtual Complex defaultPar() { return Complex(1.0); };
+
+  // Arrange to build a cal table from specified values
+  virtual void setSpecify(const Record& specify);
+
+  // Fill a caltable with specified values
+  virtual void specify(const Record& specify);
+
   // Size up the solving arrays, etc.  (supports combine)
   Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
 

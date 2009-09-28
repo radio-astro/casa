@@ -259,6 +259,15 @@ class Calibrater
 		  const String& interp="linear",
 		  const Double& t=-1.0,
 		  const Vector<Int>& spwmap=Vector<Int>(1,-1));
+  
+  // Generate cal table from specified values
+  void specifycal(const String& type,
+		  const String& caltable,
+		  const String& time,
+		  const String& spw,
+		  const String& antenna,
+		  const String& pol,
+		  const Vector<Double>& parameter);
 
   // Smooth  calibration
   Bool smooth(const String& infile,
