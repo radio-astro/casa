@@ -2230,7 +2230,8 @@ ComponentList ImageAnalysis::fitsky(
 	const Vector<String>& models, Record& Estimate,
 	const Vector<String>& fixed, const Vector<Float>& includepix,
 	const Vector<Float>& excludepix, const Bool fitIt,
-	const Bool deconvolveIt, const Bool list
+	const Bool deconvolveIt, const Bool list,
+    const String& residImageName, const String& modelImageName
 ) {
 	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
 	String error;
@@ -2465,7 +2466,8 @@ ComponentList ImageAnalysis::fitsky(
 	}
 
 	// Compute residuals
-	fitter.residual(residPixels, pixels);
+	Array<Float> modelPixels;
+	fitter.residual(residPixels, modelPixels, pixels);
 	// Convert units of solution from pixel units to astronomical units
 	Vector<SkyComponent> result(nModels);
 	Double facToJy;
@@ -2481,6 +2483,22 @@ ComponentList ImageAnalysis::fitsky(
 				solution, errors, stokes, xIsLong);
 		cl.add(result(i));
 	}
+	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
+    if (! residImageName.empty()) {
+        // construct the residual image, copying pattern from ImageProxy
+    	ImageUtilities::writeImage(
+    			subImage.shape(), subImage.coordinates(),
+    			residImageName, residPixels, *itsLog
+    	);
+    }
+
+    if (! modelImageName.empty()) {
+        // construct the residual image, copying pattern from ImageProxy
+    	ImageUtilities::writeImage(
+    			subImage.shape(), subImage.coordinates(),
+    			modelImageName, modelPixels, *itsLog
+    	);
+    }
 
 	return cl;
 

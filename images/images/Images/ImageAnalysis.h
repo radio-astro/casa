@@ -231,7 +231,10 @@ class ImageAnalysis
                                          Record& region, const String& mask, 
                                          const bool overwrite = false);
 
-    ComponentList fitsky(Array<Float>& pixels, Array<Bool>& pixelmask,
+    // adding residImage parameter. If set to blank, do not write residual iamge,
+    // else write to the file given.
+    ComponentList fitsky(
+    		Array<Float>& pixels, Array<Bool>& pixelmask,
             Bool& converged, Record& region,
             const uInt& chan, const String& stokesString,
             const String& mask, 
@@ -239,8 +242,10 @@ class ImageAnalysis
             const Vector<String>& fixedparams, 
             const Vector<Float>& includepix, 
             const Vector<Float>& excludepix, 
-            const Bool fit = True, 
-            const Bool deconvolve = False, const Bool list = True);
+            const Bool fit=True,
+            const Bool deconvolve=False, const Bool list=True,
+            const String& residImage="", const String& modelImageName=""
+    );
 
     Bool getchunk(Array<Float>& pixel, Array<Bool>& pixmask, 
                   const Vector<Int>& blc, const Vector<Int>& trc, 

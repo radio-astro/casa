@@ -73,7 +73,9 @@ namespace casa {
         input.create("mask","");
         input.create("includepix", "");
         input.create("excludepix", "");
-        // input.create("residual", "");
+        input.create("residual", "");
+        input.create("model", "");
+
         input.readArguments(argc, argv);
         String imagename = input.getString("imagename");
 
@@ -84,7 +86,8 @@ namespace casa {
         chan = input.getInt("chan");
         stokesString = input.getString("stokes");
         mask = input.getString("mask");
-        // residual = input.getString("residual");
+        residual = input.getString("residual");
+        model = input.getString("model");
 
         Vector<String> includePixParts = stringToVector(input.getString("includepix")); 
         Vector<String> excludePixParts = stringToVector(input.getString("excludepix"));
@@ -103,8 +106,8 @@ namespace casa {
         const String& imagename, const String& box, const String& region,
         const uInt ngaussInp, const uInt chanInp, const String& stokes,
         const String& maskInp,
-        const Vector<Float>& includepix, const Vector<Float>& excludepix
-        // , const String& residualInp
+        const Vector<Float>& includepix, const Vector<Float>& excludepix,
+        const String& residualInp, const String& modelInp
     ) {
         itsLog = new LogIO();
         *itsLog << LogOrigin("ImageFitter", "constructor");
@@ -115,7 +118,8 @@ namespace casa {
         mask = maskInp;
         includePixelRange = includepix;
         excludePixelRange = excludepix;
-        // residual = residualInp;
+        residual = residualInp;
+        model = modelInp;
         _construct(imagename, box, region);
     }
 
@@ -134,11 +138,16 @@ namespace casa {
         Vector<String> fixedparams;
         Record estimate; 
         ImageAnalysis myImage(image);
+        Bool fit = True;
+        Bool deconvolve = False;
+        Bool list = True;
         Record rec = Record(imRegion.toRecord(""));
         ComponentList compList = myImage.fitsky(
             residPixels, residMask, converged, rec,
             chan, stokesString, mask, models,
-            estimate, fixedparams, includePixelRange, excludePixelRange
+            estimate, fixedparams, includePixelRange,
+            excludePixelRange, fit, deconvolve, list,
+            residual, model
         );   
        
         // if (! residual.empty()) {
