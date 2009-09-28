@@ -296,6 +296,15 @@ public:
                                    const IPosition& pixelAxes,
                                    Bool doRef=False); 
 
+   // write the specified image and add the specified pixels to it.
+   // Currently no checks are done to ensure the pixel array size and
+   // mapShape are compatible; the caller is responsible for this check.
+   static void writeImage(
+   		const TiledShape& mapShape,
+   		const CoordinateSystem& coordinateInfo,
+   		const String& imageName,
+   		const Array<Float>& pixels, LogIO& log
+   );
 
 private:
 
@@ -318,6 +327,8 @@ private:
                                     const Quantum<Double>& length,
                                     const CoordinateSystem& cSys,
                                     const IPosition& pixelAxes);
+
+
 
    static Quantum<Double> pixelWidthToWorld (LogIO& os, Double positionAngle,
                                              Double length,
