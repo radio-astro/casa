@@ -880,6 +880,13 @@ EnumSet<AtmPhaseCorrection> apcLiterals(const ASDM& ds, const string& asdmBinary
   vector<MainRow *> mRs = ds.getMain().get();
   
   for (unsigned int i = 0; i < mRs.size(); i++) {
+    ConfigDescriptionRow * configDescriptionRow = mRs.at(i)->getConfigDescriptionUsingConfigDescriptionId();
+    vector<AtmPhaseCorrection> apc = configDescriptionRow -> getAtmPhaseCorrection();
+    for (unsigned int i = 0; i < apc.size(); i++)
+      result.set(apc.at(i));
+  }
+  /*
+  for (unsigned int i = 0; i < mRs.size(); i++) {
     string binaryFileName = replace_all_copy(mRs.at(i)->getDataOid().getEntityId().toString(), "/", "_");
     replace_all(binaryFileName, ":", "_");
     try {
@@ -897,6 +904,7 @@ EnumSet<AtmPhaseCorrection> apcLiterals(const ASDM& ds, const string& asdmBinary
       cout << e2.getMessage() << endl;
     }
   }
+  */
   return result;
 }
 
@@ -1371,7 +1379,6 @@ int main(int argc, char *argv[]) {
     }
   }
 
- 
 
   SpectralWindowTable& spwT = ds->getSpectralWindow();  
   //
@@ -2456,11 +2463,6 @@ int main(int argc, char *argv[]) {
 	  
 	  // Then populate the Main table.
 	  ComplexDataFilter filter; // To process the case numCorr == 3
-	  infostream.str("");
-	  infostream << "ASDM Main table row #" << i+1
-		     << " will be transformed into " << vmsDataPtr->v_antennaId1.size()
-		     << " MS Main table rows." << endl;
-	  info(infostream.str());
 	  
 	  if (vmsDataPtr->v_antennaId1.size() == 0) {
 	    infostream.str("");
@@ -2505,28 +2507,65 @@ int main(int argc, char *argv[]) {
 
 	  // cout << "About to linearize uvw " << endl;
 	  int k = 0;
-	  for (unsigned int i = 0; i < vv_uvw.size(); i++) {
-	    uvw[k++] = vv_uvw[i](0); 
-	    uvw[k++] = vv_uvw[i](1);
-	    uvw[k++] = vv_uvw[i](2);
+	  for (unsigned int iUvw = 0; iUvw < vv_uvw.size(); iUvw++) {
+	    uvw[k++] = vv_uvw[iUvw](0); 
+	    uvw[k++] = vv_uvw[iUvw](1);
+	    uvw[k++] = vv_uvw[iUvw](2);
 	  } 
 
 	  ComplexDataFilter cdf;
 	  map<AtmPhaseCorrectionMod::AtmPhaseCorrection, float*>::const_iterator iter;
 
+	  vector<double>	correctedTime;
+	  vector<int>		correctedAntennaId1;
+	  vector<int>		correctedAntennaId2;
+	  vector<int>		correctedFeedId1;
+	  vector<int>		correctedFeedId2;
+	  vector<int>		correctedFieldId;
+	  vector<double>	correctedInterval;
+	  vector<double>	correctedExposure;
+	  vector<double>	correctedTimeCentroid;
+	  vector<int>		correctedMsStateId;
+	  vector<double>	correctedUvw ;
+	  vector<unsigned int>	correctedFlag;
+
 	  for (unsigned int iData = 0; iData < vmsDataPtr->v_m_data.size(); iData++) {
-	    if ((iter=vmsDataPtr->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsDataPtr->v_m_data.at(iData).end())
+
+	    if ((msFillers.find(AP_UNCORRECTED) != msFillers.end()) &&
+		(iter=vmsDataPtr->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsDataPtr->v_m_data.at(iData).end()){
 	      uncorrectedData.push_back(cdf.to4Pol(vmsDataPtr->vv_dataShape.at(iData).at(0),
 						   vmsDataPtr->vv_dataShape.at(iData).at(1),
 						   iter->second));
-
-	    if ((iter=vmsDataPtr->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED)) != vmsDataPtr->v_m_data.at(iData).end())
+	    }
+	    
+	    if ((msFillers.find(AP_CORRECTED) != msFillers.end()) &&
+		(iter=vmsDataPtr->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED)) != vmsDataPtr->v_m_data.at(iData).end()){
+	      correctedTime.push_back(vmsDataPtr->v_time.at(iData));
+	      correctedAntennaId1.push_back(vmsDataPtr->v_antennaId1.at(iData));
+	      correctedAntennaId2.push_back(vmsDataPtr->v_antennaId2.at(iData));
+	      correctedFeedId1.push_back(vmsDataPtr->v_feedId1.at(iData));
+	      correctedFeedId2.push_back(vmsDataPtr->v_feedId2.at(iData));
+	      correctedFieldId.push_back(vmsDataPtr->v_fieldId.at(iData));
+	      correctedInterval.push_back(vmsDataPtr->v_interval.at(iData));
+	      correctedExposure.push_back(vmsDataPtr->v_exposure.at(iData));
+	      correctedTimeCentroid.push_back(vmsDataPtr->v_timeCentroid.at(iData));
+	      correctedMsStateId.push_back(msStateId.at(iData));
+	      correctedUvw.push_back(vv_uvw.at(iData)(0));
+	      correctedUvw.push_back(vv_uvw.at(iData)(1));
+	      correctedUvw.push_back(vv_uvw.at(iData)(2));
 	      correctedData.push_back(cdf.to4Pol(vmsDataPtr->vv_dataShape.at(iData).at(0),
 						 vmsDataPtr->vv_dataShape.at(iData).at(1),
-						 iter->second));	    
+						 iter->second));
+	      correctedFlag.push_back(vmsDataPtr->v_flag.at(iData));
+	    }
 	  }
 	  
-	  if (uncorrectedData.size() > 0) {
+	  if (uncorrectedData.size() > 0 && (msFillers.find(AP_UNCORRECTED) != msFillers.end())) {
+	    infostream.str("");
+	    infostream << "ASDM Main table row #" << i+1
+		       << " will be transformed into " << vmsDataPtr->v_antennaId1.size()
+		       << " the wvr uncorrected MS Main table rows." << endl;
+	    info(infostream.str());
 	    msFillers[AP_UNCORRECTED]->addData(complexData,
 					       (vector<double>&) vmsDataPtr->v_time, // this is already time midpoint
 					       (vector<int>&) vmsDataPtr->v_antennaId1,
@@ -2552,28 +2591,36 @@ int main(int argc, char *argv[]) {
 	    real_time_aips_overall += real_time_aips;
 	  }
 
-	  if (correctedData.size() > 0) {
-	    msFillers[AP_UNCORRECTED]->addData(complexData,
-					       (vector<double>&) vmsDataPtr->v_time, // this is already time midpoint
-					       (vector<int>&) vmsDataPtr->v_antennaId1,
-					       (vector<int>&) vmsDataPtr->v_antennaId2,
-					       (vector<int>&) vmsDataPtr->v_feedId1,
-					       (vector<int>&) vmsDataPtr->v_feedId2,
-					       filteredDD,
-					       vmsDataPtr->processorId,
-					       (vector<int>&)vmsDataPtr->v_fieldId,
-					       (vector<double>&) vmsDataPtr->v_interval,
-					       (vector<double>&) vmsDataPtr->v_exposure,
-					       (vector<double>&) vmsDataPtr->v_timeCentroid,
-					       (int) r->getScanNumber(), 
-					       0,                                               // Array Id
-					       (int) r->getExecBlockId().getTagValue(), // Observation Id
-					       (vector<int>&)msStateId,
-					       uvw,
-					       filteredShape, // vmsDataPtr->vv_dataShape after filtering the case numCorr == 3
-					       uncorrectedData,
-					       (vector<unsigned int>&)vmsDataPtr->v_flag);
+	  if (correctedData.size() > 0 && (msFillers.find(AP_CORRECTED) != msFillers.end())) {
+	    infostream.str("");
+	    infostream << "ASDM Main table row #" << i+1
+		       << " will be transformed into " << correctedAntennaId1.size()
+		       << " the wvr corrected MS Main table rows." << endl;
+	    info(infostream.str());
 
+	    msFillers[AP_CORRECTED]->addData(complexData,
+					     correctedTime, // this is already time midpoint
+					     correctedAntennaId1, 
+					     correctedAntennaId2,
+					     correctedFeedId1,
+					     correctedFeedId2,
+					     filteredDD,
+					     vmsDataPtr->processorId,
+					     correctedFieldId,
+					     correctedInterval,
+					     correctedExposure,
+					     correctedTimeCentroid,
+					     (int) r->getScanNumber(), 
+					     0,                                               // Array Id
+					     (int) r->getExecBlockId().getTagValue(), // Observation Id
+					     correctedMsStateId,
+					     correctedUvw,
+					     filteredShape, // vmsDataPtr->vv_dataShape after filtering the case numCorr == 3
+					     correctedData,
+					     correctedFlag);
+	    mode = 1; myTimer(&cpu_time_aips, &real_time_aips, &mode);
+	    cpu_time_aips_overall  += cpu_time_aips;
+	    real_time_aips_overall += real_time_aips;
 	  }
 	}else{
 	  infostream.str("");
@@ -2608,6 +2655,7 @@ int main(int argc, char *argv[]) {
       infostream << "converted in " << msFiller->ms()->state().nrow() << " state(s) in the measurement set.";
       info(infostream.str());
     }
+
 
     infostream.str("");
     infostream << "The dataset has " << mainT.size() << " main(s)...";
