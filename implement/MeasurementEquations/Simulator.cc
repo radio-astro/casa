@@ -2422,8 +2422,8 @@ Bool Simulator::setdata(const Vector<Int>& spectralwindowids,
       // Now remake the original ms
       mssel_p = new MeasurementSet(original(condition));
 
-      AlwaysAssert(mssel_p, AipsError);
-      mssel_p->rename(msname_p+"/SELECTED_TABLE", Table::Scratch);
+      //AlwaysAssert(mssel_p, AipsError);
+      //mssel_p->rename(msname_p+"/SELECTED_TABLE", Table::Scratch);
       if(mssel_p->nrow()==0) {
 	delete mssel_p; mssel_p=0;
 	os << LogIO::WARN
@@ -2451,7 +2451,7 @@ Bool Simulator::setdata(const Vector<Int>& spectralwindowids,
 	mssel_p2=new MeasurementSet(tableCommand(parseString,*mssel_p));
 	AlwaysAssert(mssel_p2, AipsError);
 	// Rename the selected MS as */SELECTED_TABLE2
-	mssel_p2->rename(msname_p+"/SELECTED_TABLE2", Table::Scratch); 
+	//mssel_p2->rename(msname_p+"/SELECTED_TABLE2", Table::Scratch); 
 	if (mssel_p2->nrow()==0) {
 	  os << LogIO::WARN
 	     << "Selection string results in empty MS: "
@@ -2481,7 +2481,13 @@ Bool Simulator::setdata(const Vector<Int>& spectralwindowids,
     // Now create the VisSet
     if(vs_p) delete vs_p; vs_p=0;
     makeVisSet();
-
+    //Now assign the source direction to something selected or sensible
+    {
+      Int fieldsel=0;
+      if(fieldids.nelements() >0)
+	fieldsel=fieldids(0);
+      sourceDirection_p=(vs_p->iter()).msColumns().field().phaseDirMeas(fieldsel); 
+    }
     return True;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
