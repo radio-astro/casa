@@ -161,10 +161,15 @@
 #include <components/ComponentModels/Flux.h>
 #include <components/ComponentModels/PointShape.h>
 #include <components/ComponentModels/FluxStandard.h>
-// Dependence on display
-#include <display/Display/StandAloneDisplayApp.h>
-#include <display/QtViewer/QtClean.qo.h>
 
+#include <casadbus/viewer/ViewerProxy.h>
+#include <casadbus/utilities/BusAccess.h>
+#include <casadbus/session/DBusSession.h>
+
+// required for qwt plotting
+// --- --- --- --- --- --- --- --- ---
+#include <QApplication>
+// --- --- --- --- --- --- --- --- ---
 
 #include <casa/OS/HostInfo.h>
 #include <casa/System/PGPlotter.h>
@@ -191,7 +196,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 Imager::Imager() 
   :  ms_p(0),msname_p(""), mssel_p(0), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), 
      cft_p(0), se_p(0),
-    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0)
+     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
+     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
 {
   lockCounter_p=0;
   defaults();
@@ -299,7 +305,8 @@ traceEvent(1,"Entering imager::defaults",25);
 Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
   : ms_p(0), msname_p(""), mssel_p(0), vs_p(0), rvi_p(0), wvi_p(0), 
     ft_p(0), cft_p(0), se_p(0),
-    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0)
+    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
+    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
 {
   lockCounter_p=0;
   LogIO os(LogOrigin("Imager", "Imager(MeasurementSet &theMS)", WHERE));
@@ -315,7 +322,8 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
 
 Imager::Imager(MeasurementSet& theMS, PGPlotter& thePlotter, Bool compress)
   : ms_p(0), msname_p(""), mssel_p(0), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), cft_p(0), se_p(0),
-    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0)
+    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
+    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
 {
   lockCounter_p=0;
   LogIO os(LogOrigin("Imager", "Imager(MeasurementSet &theMS)", WHERE));
@@ -332,7 +340,8 @@ Imager::Imager(MeasurementSet& theMS, PGPlotter& thePlotter, Bool compress)
 Imager::Imager(const Imager & other)
   :  ms_p(0),msname_p(""), mssel_p(0), vs_p(0), rvi_p(0), wvi_p(0), 
      ft_p(0), cft_p(0), se_p(0),
-    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0)
+     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
+     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
 {
   operator=(other);
 }
@@ -432,6 +441,11 @@ Imager::~Imager()
       delete cft_p;
     }
     cft_p = 0;
+
+    if ( viewer_p ) {
+      viewer_p->close( clean_panel_p );
+      delete viewer_p;
+    }
 
   }
   catch (AipsError x){
@@ -6452,6 +6466,7 @@ Bool Imager::correct(const Bool doparallactic, const Quantity& t)
 // Plot the uv plane
 Bool Imager::plotuv(const Bool rotate) 
 {
+
   if(!valid()) return False;
   
   LogIO os(LogOrigin("imager", "plotuv()", WHERE));
@@ -6615,7 +6630,7 @@ Bool Imager::plotuv(const Bool rotate)
 // Plot the visibilities
 Bool Imager::plotvis(const String& type, const Int increment) 
 {
-  
+
   if(!valid()) return False;
   LogIO os(LogOrigin("imager", "plotvis()", WHERE));
   
@@ -6853,13 +6868,14 @@ Bool Imager::plotvis(const String& type, const Int increment)
     return False;
   } 
   this->unlock();
+
   return True;
 }
 
 // Plot the weights
 Bool Imager::plotweights(const Bool gridded, const Int increment) 
 {
-  
+
   if(!valid()) return False;
   LogIO os(LogOrigin("imager", "plotweights()", WHERE));
   
@@ -7066,13 +7082,14 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
     return False;
   } 
   this->unlock();
+
   return True;
 }
 
 // Plot the visibilities
 Bool Imager::clipvis(const Quantity& threshold) 
 {
-  
+
   if(!valid()) return False;
   
   LogIO os(LogOrigin("imager", "clipvis()", WHERE));
@@ -7130,13 +7147,13 @@ Bool Imager::clipvis(const Quantity& threshold)
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
   } 
   this->unlock();
+
   return True;
 }
 
 // Plot various ids
 Bool Imager::plotsummary() 
 {
-  
   
   if(!valid()) return False;
   
@@ -7231,6 +7248,7 @@ Bool Imager::plotsummary()
     return False;
   } 
   this->unlock();
+
   return True;
 }
 
@@ -8804,6 +8822,26 @@ Bool Imager::getRestFreq(Vector<Double>& restFreq, const Int& spw){
     return True;
   return False;
 }
+
+
+class interactive_clean_callback {
+    public:
+	interactive_clean_callback( ) { }
+	casa::dbus::variant result( ) { return casa::dbus::toVariant(result_); }
+	bool callback( const DBus::Message & msg );
+    private:
+	DBus::Variant result_;
+};
+
+bool interactive_clean_callback::callback( const DBus::Message &msg ) {
+    if (msg.is_signal("edu.nrao.casa.viewer","interact")) {
+	DBus::MessageIter ri = msg.reader( );
+	::operator >>(ri,result_);
+	casa::DBusSession::instance( ).dispatcher( ).leave( );
+    }
+    return true;
+}
+
 Int Imager::interactivemask(const String& image, const String& mask, 
 			    Int& niter, Int& ncycles, String& thresh){
 
@@ -8818,20 +8856,111 @@ Int Imager::interactivemask(const String& image, const String& mask,
    else{
      clone(image, mask);
    }
-   INITIALIZE_PGPLOT
-   //QtApp::init();
-   QtClean vwrCln(image, mask); 
-   //  if(!vwrCln.loadImage(image, mask)){
-   if(!vwrCln.imageLoaded()){
-     os << "Failed to load image and mask in viewer" 
-	<< LogIO::SEVERE << LogIO::POST;
-   return False;
-   
+
+   if ( viewer_p == 0 ) {
+     viewer_p = dbus::launch<ViewerProxy>( "view_server" );
+     if ( viewer_p == 0 ) {
+       os << "failed to launch viewer gui" << LogIO::WARN << LogIO::POST;
+       return False;
+     }
    }
-   vwrCln.setButtonState(interactiveState_p);
-   Int val=vwrCln.go(niter, ncycles, thresh);
-   vwrCln.getButtonState(interactiveState_p);
-   return val;
+   if ( clean_panel_p == 0 ) {
+     dbus::variant panel_id = viewer_p->panel( "clean" );
+     if ( panel_id.type() != dbus::variant::INT ) {
+       os << "failed to create clean panel" << LogIO::WARN << LogIO::POST;
+       return False;
+     }
+     clean_panel_p = panel_id.getInt( );
+   }
+
+   if ( mask_id_p != 0 ) {
+     viewer_p->unload(mask_id_p);
+     mask_id_p = 0;
+   }
+
+   if ( image_id_p != 0 ) {
+     viewer_p->unload(image_id_p);
+     image_id_p = 0;
+   }
+
+   dbus::variant image_id = viewer_p->load(image, "raster",clean_panel_p);
+   if ( image_id.type() != dbus::variant::INT ) {
+     os << "failed to load image" << LogIO::WARN << LogIO::POST;
+     return False;
+   }
+   image_id_p = image_id.getInt( );
+
+   dbus::variant mask_id = viewer_p->load(mask,"contour",clean_panel_p);
+   if ( mask_id.type() != dbus::variant::INT ) {
+     os << "failed to load mask" << LogIO::WARN << LogIO::POST;
+     return False;
+   }
+   mask_id_p = mask_id.getInt( );
+
+    interactive_clean_callback *mycb = new interactive_clean_callback( );
+    DBus::MessageSlot filter;
+    filter = new DBus::Callback<interactive_clean_callback,bool,const DBus::Message &>( mycb, &interactive_clean_callback::callback );
+    casa::DBusSession::instance( ).connection( ).add_filter( filter );
+    casa::dbus::variant res = viewer_p->start_interact(image_id,clean_panel_p);
+    casa::DBusSession::instance( ).dispatcher( ).enter( );
+    casa::DBusSession::instance( ).connection( ).remove_filter( filter );
+    casa::dbus::variant interact_result = mycb->result( );
+    delete mycb;
+
+
+    int result = 0;
+    if ( interact_result.type() == dbus::variant::RECORD ) {
+      const dbus::record  &rec = interact_result.getRecord( );
+      for ( dbus::record::const_iterator iter = rec.begin(); iter != rec.end(); ++iter ) {
+	if ( iter->first == "action" ) {
+	  if ( iter->second.type( ) != dbus::variant::STRING ) {
+	    os << "ill-formed action result" << LogIO::WARN << LogIO::POST;
+	    return False;
+	  } else {
+	    const std::string &action = iter->second.getString( );
+	    if ( action == "stop" )
+	      result = 2;
+	    else if ( action == "no more" )
+	      result = 1;
+	    else if ( action == "continue" )
+	      result = 0;
+	    else {
+	      os << "ill-formed action result" << LogIO::WARN << LogIO::POST;
+	      return False;
+	    }
+	  }
+	} else if ( iter->first == "ncycle" ) {
+	  if ( iter->second.type( ) != dbus::variant::INT ) {
+	    os << "ill-formed ncycle result" << LogIO::WARN << LogIO::POST;
+	    return False;
+	  } else {
+	    ncycles = iter->second.getInt( );
+	  }
+	} else if ( iter->first == "niter" ) {
+	  if ( iter->second.type( ) != dbus::variant::INT ) {
+	    os << "ill-formed niter result" << LogIO::WARN << LogIO::POST;
+	    return False;
+	  } else {
+	    niter = iter->second.getInt( );
+	  }
+	} else if ( iter->first == "threshold" ) {
+	  if ( iter->second.type( ) != dbus::variant::STRING ) {
+	    os << "ill-formed threshold result" << LogIO::WARN << LogIO::POST;
+	    return False;
+	  } else {
+	    thresh = iter->second.getString( );
+	  }
+	}
+      }
+    } else {
+      os << "failed to get a vaild result for viewer" << LogIO::WARN << LogIO::POST;
+      return False;
+    }
+
+    // return 0 if "continue"
+    // return 1 if "no more interaction"
+    // return 2 if "stop"
+    return result;
 }
 
 void Imager::setSkyEquation(){
