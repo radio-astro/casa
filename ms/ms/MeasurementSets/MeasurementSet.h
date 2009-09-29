@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasurementSet.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MeasurementSet.h 20726 2009-09-23 10:25:43Z gervandiepen $
 
 #ifndef MS_MEASUREMENTSET_H
 #define MS_MEASUREMENTSET_H
@@ -135,7 +135,7 @@ typedef MeasurementSet MS;
 // This example illustrates a simple use of the MeasurementSet class.
 // <srcblock>
 //      // create the table descriptor
-//      TableDesc simpleDesc = MS::requiredTableDesc()
+//      TableDesc simpleDesc = MS::requiredTableDesc();
 //      // set up a new table
 //      SetupNewTable newTab("simpleTab", simpleDesc, Table::New);
 //      // create the MeasurementSet

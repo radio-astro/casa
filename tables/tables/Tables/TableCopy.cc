@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableCopy.cc 20665 2009-07-07 07:34:46Z gervandiepen $
+//# $Id: TableCopy.cc 20728 2009-09-23 14:37:23Z gervandiepen $
 
 
 //# Includes
@@ -306,7 +306,7 @@ void TableCopy::setTiledStMan (Record& dminfo, const Vector<String>& columns,
 }
 
 void TableCopy::copyRows (Table& out, const Table& in, uInt startout,
-			  uInt startin, uInt nrrow)
+			  uInt startin, uInt nrrow, Bool flush)
 {
   // Check if startin and nrrow are correct for input.
   if (startin + nrrow > in.nrow()) {
@@ -335,7 +335,9 @@ void TableCopy::copyRows (Table& out, const Table& in, uInt startout,
     inrow.get (startin + i);
     outrow.put (startout + i, inrow.record(), inrow.getDefined(), False);
   }
-  out.flush();
+  if (flush) {
+    out.flush();
+  }
 }
 
 void TableCopy::copyInfo (Table& out, const Table& in)

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5File.cc 20712 2009-09-03 14:36:23Z gervandiepen $
+//# $Id: HDF5File.cc 20718 2009-09-15 09:56:55Z gervandiepen $
 
 //# Includes
 #include <casa/HDF5/HDF5File.h>
@@ -42,7 +42,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     // Disable automatic printing of errors.
     H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
-    setName (name);
+    // Use absolute expanded path name.
+    setName (Path(name).absoluteName());
     doOpen();
   }
 

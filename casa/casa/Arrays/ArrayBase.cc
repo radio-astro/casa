@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayBase.cc 20705 2009-09-03 09:04:46Z gervandiepen $
+//# $Id: ArrayBase.cc 20720 2009-09-15 09:58:25Z gervandiepen $
 
 #include <casa/Arrays/ArrayBase.h>
 #include <casa/Arrays/ArrayError.h>
@@ -95,7 +95,7 @@ ArrayBase::~ArrayBase()
 void ArrayBase::baseReform (ArrayBase& tmp, const IPosition& len) const
 {
   // Check if reform can be done.
-  if (len.product() != nelements()) {
+  if (len.product() != Int64(nelements())) {
     throw(ArrayConformanceError("ArrayBase::reform() - "
 				"total elements differ"));
   }

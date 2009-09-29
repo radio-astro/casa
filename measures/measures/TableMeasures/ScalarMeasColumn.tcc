@@ -22,7 +22,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScalarMeasColumn.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: ScalarMeasColumn.tcc 20724 2009-09-21 08:04:48Z gervandiepen $
 
 //# Includes
 #include <measures/TableMeasures/ScalarMeasColumn.h>
@@ -372,7 +372,7 @@ void ScalarMeasColumn<M>::setDescRefCode (uInt refCode,
 		      "the table is not empty"));
   }
   itsDescPtr->resetRefCode (refCode);
-  itsDescPtr->write (const_cast<TableDesc&>(tab.tableDesc()));
+  itsDescPtr->write (tab);
   itsMeasRef.set (refCode);
 }
 
@@ -386,7 +386,7 @@ void ScalarMeasColumn<M>::setDescOffset (const Measure& offset,
 		      "the table is not empty"));
   }
   itsDescPtr->resetOffset (offset);
-  itsDescPtr->write (const_cast<TableDesc&>(tab.tableDesc()));
+  itsDescPtr->write (tab);
   itsMeasRef.set (offset);
 }
 
@@ -400,7 +400,7 @@ void ScalarMeasColumn<M>::setDescUnits (const Vector<Unit>& units,
 		      "the table is not empty"));
   }
   itsDescPtr->resetUnits (units);
-  itsDescPtr->write (const_cast<TableDesc&>(tab.tableDesc()));
+  itsDescPtr->write (tab);
 }
  
 template<class M>

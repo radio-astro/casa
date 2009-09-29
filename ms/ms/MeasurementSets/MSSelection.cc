@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$ 
+//# $Id: MSSelection.cc 20721 2009-09-15 10:01:32Z gervandiepen $ 
 //----------------------------------------------------------------------------
 
 #include <ms/MeasurementSets/MSSelection.h>
@@ -411,11 +411,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  default:  break;
 	  } // Switch
 	
-	if(node && node->isNull() == False)
-	  if(condition.isNull() == True)
+	if(node && !node->isNull()) {
+	  if(condition.isNull()) {
 	    condition = *node;
-	  else
+	  } else {
 	    condition = condition && *node;
+	  }
+	}
       }//For
     //
     // Now parse the time expression.  Internally use the condition
@@ -430,9 +432,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Add the time-expression TEN to the condition
     //
-    if(timeNode && timeNode->isNull() == False)
-      if(condition.isNull() == True) condition = *timeNode;
-      else                           condition = condition && *timeNode;
+    if(timeNode && !timeNode->isNull()) {
+      if(condition.isNull()) {
+	condition = *timeNode;
+      } else {
+	condition = condition && *timeNode;
+      }
+    }
     
     fullTEN_p = condition;
     msAntennaGramParseDeleteNode();
