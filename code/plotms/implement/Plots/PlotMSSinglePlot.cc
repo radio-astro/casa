@@ -184,7 +184,8 @@ bool PlotMSSinglePlot::parametersHaveChanged_(const PlotMSWatchedParameters& p,
     itsTCLParams_.releaseWhenDone = releaseWhenDone;
     itsTCLParams_.updateCanvas = (updateFlag & PMS_PP::UPDATE_MSDATA) ||
             (updateFlag & PMS_PP::UPDATE_CACHE) ||
-            (updateFlag & PMS_PP::UPDATE_CANVAS) || !d->isSet();
+            (updateFlag & PMS_PP::UPDATE_CANVAS) || 
+            (updateFlag & PMS_PP::UPDATE_AXES) || !d->isSet();
     itsTCLParams_.updateDisplay = updateFlag & PMS_PP::UPDATE_DISPLAY;
     itsTCLParams_.endCacheLog = false;
     

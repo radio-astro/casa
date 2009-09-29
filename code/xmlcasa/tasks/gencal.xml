@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="gencal" category="calibration">
+	<shortdescription>Externally specify calibration solutions of varous types</shortdescription>
+	<description>
+
+        Specify calibration externally.
+
+	</description>
+	<input>
+		<param type="string" name="vis" mustexist="true">
+			<description>Name of input visibility file</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="caltable">
+			<description>The calibration table</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="spw">
+			<description>Calibration spw(s)</description>
+			<value></value>
+		</param>
+		<param type="string" name="antenna">
+			<description>Calibraiton antenna(s)</description>
+			<value></value>
+		</param>
+		<param type="string" name="pol">
+			<description>Calibration polarizations(s)</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="caltype">
+			<description>The calibration type</description>
+			<value></value>
+		</param>
+
+		<param type="doubleArray" name="parameter">
+			<description>The calibration values</description>
+			<value></value>
+		</param>
+
+	</input>
+<returns type="void"/>
+
+<example>
+
+     TBD
+
+     Keyword arguments:
+
+     vis -- Name of input visibility file
+             default: none.  example: vis='ngc5921.ms'
+     caltable -- 
+
+     Examples:
+
+ </example>
+ </task>
+ </casaxml>
+

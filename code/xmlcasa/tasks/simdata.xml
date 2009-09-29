@@ -260,16 +260,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--  NOISE  -->
 
     <param type="bool" name="noise_thermal">
-      <description>add thermal noise</description><value>True</value></param>
-    
-    <param type="double" name="t_amb" subparam="true">
-      <description>ambient temperature</description><value>265.</value></param>
-    <!--
-	<param type="double" name="t_ground" subparam="true">
-	  <description>ambient temperature</description><value>269.</value></param>
-	<param type="double" name="t_sky" subparam="true">
-	  <description>atmospheric temperature</description><value>263.</value></param>
-	-->
+      <description>add thermal noise</description><value>True</value></param>    
+    <param type="double" name="t_ground" subparam="true">
+      <description>ambient temperature</description><value>270.</value></param>
+    <param type="double" name="t_sky" subparam="true">
+       <description>atmospheric temperature</description><value>260.</value></param>	
     <param type="double" name="tau0" subparam="true">
       <description>zenith opacity</description><value>0.1</value></param>
     
@@ -299,12 +294,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <constraints>
       <when param="noise_thermal">
 	<equals type="bool" value="False"/>
-	<equals type="bool" value="True">
-	  <!--
-	      <default param="t_ground"><value>269.</value></default>
-	      <default param="t_sky"><value>263.</value></default>
-	      -->
-	  <default param="t_amb"><value>265.</value></default>
+	<equals type="bool" value="True">	  
+	  <default param="t_ground"><value>269.</value></default>
+	  <default param="t_sky"><value>263.</value></default>
 	  <default param="tau0"><value>0.1</value></default>
 	</equals>
       </when>
@@ -427,7 +419,8 @@ mosaic simulation task (prototype):
     -- Corrupting data:
     noise_thermal -- add thermal noise 
         * [alpha] currently only knows about ALMA and (E)VLA receivers 
-    t_amb -- ambient temperature in K = atmospheric temp 
+    t_sky -- atmospheric temperature in K 
+    t_ground -- ground/spillover temperature in K 
     tau0 -- zenith opacity at observing frequency
     -------------------------------
     fidelity -- Calculate fidelity image

@@ -35,7 +35,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
- // RFAs use bitwise flags
+// RFAs use bitwise flags
 typedef uInt RFlagWord;
 typedef Vector<RFlagWord> FlagVector;
 typedef Matrix<RFlagWord> FlagMatrix;

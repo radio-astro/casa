@@ -18,7 +18,7 @@ import pylab as pl
 import pdb
 
 
-def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, antennalist=None, checkinputs=None, project=None, refdate=None, totaltime=None, integration=None, scanlength=None, startfreq=None, chanwidth=None, nchan=None, direction=None, pointingspacing=None, relmargin=None, cell=None, imsize=None, niter=None, threshold=None, psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, noise_thermal=None, t_amb=None, tau0=None, fidelity=None, display=None, verbose=False, async=None):
+def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, antennalist=None, checkinputs=None, project=None, refdate=None, totaltime=None, integration=None, scanlength=None, startfreq=None, chanwidth=None, nchan=None, direction=None, pointingspacing=None, relmargin=None, cell=None, imsize=None, niter=None, threshold=None, psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, noise_thermal=None, t_atm=None, t_ground=None, tau0=None, fidelity=None, display=None, verbose=False, async=None):
 
 
     # scanlength=5 # number of integrations
@@ -619,7 +619,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         # XXX should we center this at imcenter or at centralpointing?
         # the user may be surprised if the center of their image moves. 
         
-        # XXXX if the input cube is in VEL, we need to actually
+        # XXX if the input cube is in VEL, we need to actually
         # make sure it is getting importfitted to turn into freq -
         # if it started as fits, then it got transformed on ia.open,
         # but if it started as an image, then it won't get converted.
@@ -631,6 +631,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                        ", restfreq='"+str(model_restfreq)+"')")
 
 
+        # XXX LSRK is not used - put that in outframe!
         im.defineimage(nx=in_shape[axmap[0]], ny=in_shape[axmap[1]],
                        cellx=model_cell,celly=model_cell, stokes=model_stokes,
                        phasecenter=model_refdir, nchan=in_shape[axmap[3]], 
@@ -745,12 +746,6 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                 msg('spillover efficiency  = ' + str(eta_s),origin="noise")
                 msg('correlator efficiency = ' + str(eta_q),origin="noise")
  
-            # Ambient surface radiation temperature in K. 
-            # FOR NOW, T_atm = T_ground = T_amb = parameter, also tau0=parameter
-            t_ground = t_amb
-            # Atmospheric radiation temperature in K. 
-            t_atm = t_amb
-
             # Cosmic background radiation temperature in K. 
             t_cmb = 2.275
 
@@ -765,9 +760,14 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             # visibilities referenced to above atmosphere 
             # sm.setapply(type='TOPAC',opacity=tau0);  # opac corruption
             # SimACohCalc needs 2-temp formula not just t_atm
-            sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+#            sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+#                        antefficiency=eta_a,trx=t_rx,
+#                        tau=tau0,tatmos=t_atm,tcmb=t_cmb,
+#                        mode="calculate")
+# use ANoise version
+            sm.setnoise2(spillefficiency=eta_s,correfficiency=eta_q,
                         antefficiency=eta_a,trx=t_rx,
-                        tau=tau0,tatmos=t_atm,tcmb=t_cmb,
+                        tau=tau0,tatmos=t_atm,tground=t_ground,tcmb=t_cmb,
                         mode="calculate")
             sm.corrupt();
             sm.done();

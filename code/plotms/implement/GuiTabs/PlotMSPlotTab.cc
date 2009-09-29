@@ -189,8 +189,10 @@ void PlotMSPlotTab::plot() {
         // previously.
         bool pchanged = params != *itsCurrentParameters_,
              cload = !itsCurrentPlot_->data().cacheReady();
+             
         if(pchanged || cload) {
             if(pchanged) {
+                // check for "clear selections on axes change" setting
                 if(itsParent_->getParameters().clearSelectionsOnAxesChange() &&
                    ((c != NULL && cc != NULL && (c->xAxis() != cc->xAxis() ||
                      c->yAxis() != cc->yAxis())) || (d != NULL && cd != NULL &&

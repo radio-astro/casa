@@ -42,11 +42,13 @@
 //# General CASA includes
 #include <casa/BasicSL/String.h>
 
-//# Measurment and table related includes
+//# Measurement and table related includes
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
 #include <ms/MeasurementSets/MSDerivedValues.h>
+
+#include <measures/Measures/MeasTable.h>
 
 #include <tableplot/TablePlot/SLog.h>
 

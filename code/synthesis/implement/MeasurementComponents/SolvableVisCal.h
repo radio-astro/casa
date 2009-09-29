@@ -146,6 +146,10 @@ public:
   virtual Vector<Bool> spwOK() { 
     return cint_ ? ci().spwOK() : Vector<Bool>(nSpw(),True); };
 
+  void setSpwOK() {
+    if (cs_) cs().setSpwOK();
+    if (cint_) ci().setSpwOK(); }
+
   // Use standard VisCal solving mechanism?
   virtual Bool standardSolve() { return True; };
 
@@ -194,6 +198,15 @@ public:
 			     const String& select,
 			     const Double& t,
 			     const Int& refAnt=-1);
+
+  // Default value for parameters
+  virtual Complex defaultPar() { return Complex(1.0); };
+
+  // Arrange to build a cal table from specified values
+  virtual void setSpecify(const Record& specify);
+
+  // Fill a caltable with specified values
+  virtual void specify(const Record& specify);
 
   // Size up the solving arrays, etc.  (supports combine)
   Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
@@ -409,6 +422,7 @@ protected:
   LogIO& logSink() { return logsink_p; };
 
   void makeCalSet();
+  void makeCalSet(Bool newtable);
 
   // Check if a cal table is appropriate
   void verifyCalTable(const String& caltablename);

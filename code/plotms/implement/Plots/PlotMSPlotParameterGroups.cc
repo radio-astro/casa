@@ -253,13 +253,13 @@ bool CLASS::operator==(const Group& other) const {                            \
     if(FLAG.size() != o->FLAG.size() || PARAM.size() != o->PARAM.size() ||    \
        FLAG.size() != PARAM.size()) return false;                             \
     for(unsigned int i = 0; i < FLAG.size(); i++)                             \
-        if(FLAG[i] && PARAM[i] != o->PARAM[i]) return false;
+        if(FLAG[i] != o->FLAG[i] || (FLAG[i] && PARAM[i] != o->PARAM[i])) return false;
 
 #define PMS_PP_EQUALOP_PARAMFLAGVECREF(FLAG, PARAM)                           \
     if(FLAG.size() != o->FLAG.size() || PARAM.size() != o->PARAM.size() ||    \
        FLAG.size() != PARAM.size()) return false;                             \
     for(unsigned int i = 0; i < FLAG.size(); i++)                             \
-        if(FLAG[i] && *PARAM[i] != *o->PARAM[i]) return false;
+        if(FLAG[i] != o->FLAG[i] || (FLAG[i] && *PARAM[i] != *o->PARAM[i])) return false;
 
 #define PMS_PP_EQUALOP_END return true; }
 // </group>

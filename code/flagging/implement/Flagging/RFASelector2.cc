@@ -1187,7 +1187,8 @@ RFA::IterMode RFASelector::iterTime (uInt it)
         for( uInt i=0; i<ifrs.nelements(); i++ ) // loop over rows
           for( uInt j=0; j<sel_clip_row.nelements(); j++ ) 
             {
-              Float vmin = sel_clip_row[j].vmin, vmax = sel_clip_row[j].vmax;
+              Float vmin = sel_clip_row[j].vmin;
+              Float vmax = sel_clip_row[j].vmax;
               Float val = sel_clip_row[j].mapper->mapValue(i) - sel_clip_row[j].offset;
               if( (sel_clip_row[j].clip  && ( val<vmin || val>vmax ) ) ||
                   (!sel_clip_row[j].clip && val>=vmin && val<=vmax ) )

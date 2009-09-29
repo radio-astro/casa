@@ -25,6 +25,7 @@
 //#
 //# $Id$
 //----------------------------------------------------------------------------
+#include <tableplot/TablePlot/TablePlot.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableInfo.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -51,7 +52,6 @@
 #include <casa/Quanta/MVTime.h>
 #include <casa/OS/Time.h>
 #include <casa/iostream.h>
-#include <tableplot/TablePlot/TablePlot.h>
 #include <graphics/Graphics/PGPlotterLocal.h>
 #include <graphics/Graphics/PGPLOT.h>
 #include <casa/Logging/LogIO.h>

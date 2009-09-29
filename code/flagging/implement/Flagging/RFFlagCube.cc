@@ -95,33 +95,42 @@ uInt RFFlagCube::estimateMemoryUse ( const RFChunkStats &ch )
 }
 
 // creates flag cube for a given visibility chunk
-void RFFlagCube::init ( RFlagWord corrmsk,const String &name ) 
+void RFFlagCube::init( RFlagWord corrmsk,const String &name ) 
 {
     if (dbg) cout << "name=" << name << endl;
+ 
     // setup some masks
     corrmask = corrmsk;
     check_corrmask = pfpolicy==FL_HONOR ? corrmsk : 0;
     check_rowmask = pfpolicy==FL_HONOR ? RowFlagged : 0;
+ 
     // clear stats  
     tot_fl_raised=tot_row_fl_raised=fl_raised=fl_cleared=
 	row_fl_raised=row_fl_cleared=0;
+    
     // init flag cube if it is empty
     if ( !flag.shape().nelements() ) {
+
 	//cout << " init flag cube" << endl;
 	reset_preflags=False;
+
 	// setup correlation masks. The first NCORR bits of the flag word
 	// are used to store the apriori flags. Basemask is the first bitmask
 	// actually used for flagging
 	base_flagmask = num(CORR)>=2 ? 1<<num(CORR) : 4;
+
 	// full_corrmask is the mask of all correlations flagged
 	full_corrmask = (1<<num(CORR))-1;
+
 	// init empty flag lattice
 	// initial state is all pre-flags set; we'll clear them as we go along
 	flag.init(num(CHAN),num(IFR),num(TIME),full_corrmask,maxmemuse,2);
 	pos_get_flag=pos_set_flag=-1;
+
 	// allocate cube of row flags
 	flagrow.resize(num(IFR),num(TIME));
 	flagrow = RowFlagged|RowAbsent; // 0000 0011
+
 	// reset instance counters 
 	agent_count = 0; // reset instantiation counts
 	corr_flagmask.resize(1<<num(CORR));

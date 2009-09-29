@@ -845,6 +845,79 @@ private:
 };
 
 
+
+// K Jones provides support for delays
+class KJones : public GJones {
+public:
+
+  // Constructor
+  KJones(VisSet& vs);
+  KJones(const Int& nAnt);
+
+  virtual ~KJones();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::K; };
+
+  // Return type name as string
+  virtual String typeName()     { return "K Jones"; };
+  virtual String longTypeName() { return "K Jones (array geometry and clocks)"; };
+
+  // Type of Jones matrix according to nPar()
+  virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
+
+  // Freq dependence (delays)
+  virtual Bool freqDepPar() { return False; };
+  virtual Bool freqDepMat() { return True; };
+
+
+  // Default parameter value
+  virtual Complex defaultPar() { return Complex(0.0); };
+
+  // Type-specific specify
+  virtual void specify(const Record& specify);
+
+  // This type is not yet accumulatable
+  virtual Bool accumulatable() { return False; };
+
+  // This type is not yet smoothable
+  virtual Bool smoothable() { return False; };
+
+  // Calculate phase(chan) from delay
+  virtual void calcAllJones();
+
+  // Delay to phase calculator
+  //  virtual void calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk, 
+  //                            const Vector<Complex>& par, const Vector<Bool>& pOk );
+
+
+  // Hazard a guess at parameters
+  virtual void guessPar(VisBuffer& vb) {};
+
+protected:
+
+  // K has two "real" parameters
+  virtual Int nPar() { return 2; };
+
+  // Jones matrix elements are trivial
+  virtual Bool trivialJonesElem() { return False; };
+
+  // dG/dp are trivial
+  virtual Bool trivialDJ() { return False; };
+
+  // Initialize trivial dJs
+  virtual void initTrivDJ() {};
+
+private:
+
+  Vector<Double> KrefFreqs_;
+  
+};
+
+
+
+
+
 } //# NAMESPACE CASA - END
 
 #endif

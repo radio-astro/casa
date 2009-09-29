@@ -1525,6 +1525,68 @@ cb.close();
 </example>
 </method>
 
+
+
+<method type="function" name="specifycal">
+   <shortdescription>Externally specify calibration
+of various types</shortdescription>
+   
+<input>
+
+     <param type="string" direction="in" name="caltable">
+     <description>The calibration table name</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="time">
+     <description>Calibration timestamp</description>
+     <value></value>
+     </param>
+     <param type="string" direction="in" name="spw">
+     <description>Calibration spw(s)</description>
+     <value></value>
+     </param>
+     <param type="string" direction="in" name="antenna">
+     <description>Calibration antenna(s)</description>
+     <value></value>
+     </param>
+     <param type="string" direction="in" name="pol">
+     <description>Calibration polarization</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="caltype">
+     <description>Calibration timestamp</description>
+     <value></value>
+     </param>
+
+     <param type="doubleArray" direction="in" name="parameter">
+     <description>Calibration parameters</description>
+     <value>1.0</value>
+     </param>
+
+</input>
+<returns type="bool"/>
+
+<description>
+
+This function enables specifying calibration parameters externally.
+
+
+</description>
+
+<example>
+\begin{verbatim}
+cb.open('ap366.sim');
+
+(TBD)
+
+cb.close();
+\end{verbatim}
+
+</example>
+</method>
+
  
 <method type="function" name="smooth">
    <shortdescription>Produce a smoothed calibration table</shortdescription>

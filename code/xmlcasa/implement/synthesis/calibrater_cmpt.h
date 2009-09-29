@@ -73,6 +73,8 @@ class calibrater
 
     bool accumulate(const std::string& tablein = "", const std::string& incrtable = "", const std::string& tableout = "", const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& calfield = ::casac::initialize_variant(""), const std::string& interp = "linear", const double t = -1.0, const std::vector<int>& spwmap = std::vector<int> (1, -1));
 
+    bool specifycal(const std::string& caltable = "", const std::string& time = "", const std::string& spw = "", const std::string& antenna = "", const std::string& pol = "", const std::string& caltype = "", const std::vector<double>& parameter = std::vector<double> (1, 1.0));
+
     bool smooth(const std::string& tablein, const std::string& tableout, const ::casac::variant& field = ::casac::initialize_variant(""), const std::string& smoothtype = "median", const double smoothtime = 60.0);
 
     bool listcal(const std::string& caltable, const ::casac::variant& field, const ::casac::variant& antenna, const ::casac::variant& spw, const std::string& listfile, const int pagerows = 50);

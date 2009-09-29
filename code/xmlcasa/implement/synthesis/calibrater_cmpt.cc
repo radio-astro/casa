@@ -647,6 +647,40 @@ calibrater::accumulate(const std::string& tablein,
   return true;
 }
 
+bool 
+calibrater::specifycal(const std::string& caltable,
+		       const std::string& time,
+		       const std::string& spw,
+		       const std::string& antenna,
+		       const std::string& pol,
+		       const std::string& caltype, 
+		       const std::vector<double>& parameter) {
+
+  if (!itsMS) {
+    *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
+	    << endl << LogIO::POST;
+    return false;
+  }
+
+  try {
+
+    logSink_p.clearLocally();
+    LogIO os (LogOrigin ("calibrater", "specifycal"), logSink_p);
+    os << "Beginning specifycal-----------------------" << LogIO::POST;
+
+    itsCalibrater->specifycal(caltype,caltable,time,spw,antenna,pol,parameter);
+    
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return true;
+
+
+
+}
+
+
 
 bool
 calibrater::smooth(const std::string& tablein, 

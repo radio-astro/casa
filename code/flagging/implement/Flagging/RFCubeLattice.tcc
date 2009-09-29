@@ -93,17 +93,25 @@ template<class T> RFCubeLattice<T>::~RFCubeLattice ()
   cleanup();
 }
 
-template<class T> void RFCubeLattice<T>::init ( uInt nchan,uInt nifr,uInt ntime,Int maxmem,Int tile_mb )
+template<class T> void 
+RFCubeLattice<T>::init(uInt nchan,
+                       uInt nifr,
+                       uInt ntime,
+                       Int maxmem,
+                       Int tile_mb)
 {
   lat_shape = IPosition(3,nchan,nifr,ntime);
-// itertaor is one plane of lattice
+
+  // iterator is one plane of lattice
   iter_shape = IPosition(3,nchan,nifr,1);
-// select a tile size
+
+  // select a tile size
   uInt tilesize = tile_mb*1024*1024, 
       planesize = iter_shape.product()*sizeof(T),
       ntile = (uInt)(tilesize/(Float)planesize+.2);
   tile_shape = IPosition(3,nchan,nifr,ntile);
-//  cerr<<"Using "<<ntile<<" planes ("<<tile_shape.product()*sizeof(T)/(1024*1024.)<<"MB) tile\n";
+  //  cerr<<"Using "<<ntile<<" planes ("<<tile_shape.product()*sizeof(T)/(1024*1024.)<<"MB) tile\n";
+
   lat = TempLattice<T>( TiledShape(lat_shape,iter_shape),maxmem );
   iter = RFCubeLatticeIterator<T>( lat,iter_shape );
 }
