@@ -107,7 +107,7 @@ int main() {
         String noisyImage = "gaussian_model_with_noise.fits";
         {
             writeTestString(
-                "test fitter using all available image pixels with model with noise"
+                "test fitter using all available image pixels with model with noise added"
             );
             ImageFitter fitter = ImageFitter(noisyImage);
             ComponentList compList = fitter.fit();
@@ -134,7 +134,7 @@ int main() {
         }
         {
             writeTestString(
-                "test fitter using a box region with model with noise"
+                "test fitter using a box region with model with noise added"
             );
             ImageFitter fitter = ImageFitter(noisyImage, "130,89,170,129");
             ComponentList compList = fitter.fit();
@@ -217,6 +217,7 @@ int main() {
             }
         }
         {
+            writeTestString("test writing of residual and mdoel images");
 
             workdir.create();
             String residImage = dirName + "/residualImage";
@@ -229,10 +230,12 @@ int main() {
             	modelImage
             );
             fitter.fit();
+            writeTestString("test residual image correctness");
             checkImage(
             	residImage, "gaussian_model_with_noise_resid.fits",
             	residDiff
             );
+            writeTestString("test model image correctness");
             checkImage(
              	modelImage, "gaussian_model_with_noise_model.fits",
              	modelDiff
