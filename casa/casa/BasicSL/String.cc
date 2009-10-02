@@ -89,6 +89,29 @@ Float String::toFloat(const String& string) {
     return var;
 }
 
+void String::trim() {
+    iterator iter = begin();
+    while (
+        iter != end()
+        && (
+            *iter == ' ' || *iter == '\t'
+            || *iter == '\n' || *iter == '\r'
+        )
+    ) {
+        erase(iter);
+    }
+    iter = end() - 1;
+    while (
+        iter != begin() && (
+            *iter == ' ' || *iter == '\t'
+            || *iter == '\n' || *iter == '\r'
+        )
+    ) {
+        erase(iter);
+        iter--;
+    }
+}
+
 // Obtain a (separate) 'sub'-string
 SubString String::at(size_type pos, size_type len) {
   return _substr(pos, len);

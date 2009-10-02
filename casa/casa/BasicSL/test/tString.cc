@@ -380,6 +380,21 @@ void toFloat() {
     assert(y < 1e-316 && y > -1e-316);
 }
 
+void trim() {
+    String myString = "\t  \t  \n\r  my string \n\r \t ";
+    myString.trim();
+    assert(myString == "my string");
+    myString = "\t  \t  \n\r  my string";
+    myString.trim();
+    assert(myString == "my string");
+    myString = "my string \n\r \t ";
+    myString.trim();
+    assert(myString == "my string");
+    myString = "\n \t\t\r  ";
+    myString.trim();
+    assert(myString.empty());
+}
+
 /* void hashtest()
 {
   String *xp, a, x[] = {
@@ -421,6 +436,7 @@ int main() {
   iotest();
   toDouble();
   toFloat();
+  trim();
   cout << "\nEnd of test\n";
   return(0);
 }
