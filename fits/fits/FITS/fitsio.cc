@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: fitsio.cc 20648 2009-06-29 07:22:00Z gervandiepen $
+//# $Id: fitsio.cc 20749 2009-09-30 14:24:05Z gervandiepen $
 
 # include <fits/FITS/hdu.h>
 # include <fits/FITS/fitsio.h>

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSelection.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSSelection.h 20749 2009-09-30 14:24:05Z gervandiepen $
 
 #ifndef MS_MSSELECTION_H
 #define MS_MSSELECTION_H

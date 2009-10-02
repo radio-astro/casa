@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSelection.cc 20721 2009-09-15 10:01:32Z gervandiepen $ 
+//# $Id: MSSelection.cc 20754 2009-10-01 08:59:24Z gervandiepen $ 
 //----------------------------------------------------------------------------
 
 #include <ms/MeasurementSets/MSSelection.h>
@@ -99,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     spwExpr_p(""), scanExpr_p(""), arrayExpr_p(""), timeExpr_p(""), uvDistExpr_p(""),
     polnExpr_p(""),taqlExpr_p(""), exprOrder_p(MAX_EXPR, NO_EXPR),
     antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), spwIDs_p(), 
-    scanIDs_p(),baselineIDs_p(),ddIDs_p(), selectedTimesList_p(),
+    scanIDs_p(),ddIDs_p(),baselineIDs_p(), selectedTimesList_p(),
     selectedUVRange_p(),selectedUVUnits_p(),selectedPolMap_p(Vector<Int>(0)),
     selectedSetupMap_p(Vector<Vector<Int> >(0)),
     maxScans_p(1000), maxArray_p(1000)
@@ -172,7 +172,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     antennaExpr_p(""), fieldExpr_p(""),
     spwExpr_p(""), scanExpr_p(""), arrayExpr_p(""), timeExpr_p(""), uvDistExpr_p(""),
     polnExpr_p(""),taqlExpr_p(""),antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), 
-    spwIDs_p(),baselineIDs_p(), ddIDs_p(), selectedPolMap_p(Vector<Int>(0)),
+    spwIDs_p(),ddIDs_p(),baselineIDs_p(), selectedPolMap_p(Vector<Int>(0)),
     selectedSetupMap_p(Vector<Vector<Int> >(0))
     
   {

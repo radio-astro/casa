@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: String.h 20654 2009-07-06 07:49:03Z gervandiepen $
+//# $Id: String.h 20749 2009-09-30 14:24:05Z gervandiepen $
 
 #ifndef CASA_STRING_H
 #define CASA_STRING_H
@@ -571,14 +571,12 @@ class String : public string {
     return String(*this, pos, n); }
 
 
-  // convert a string to a Double. If the specified string does not represent
-  // a Double, 0 (or something very close because of finite machine precision) is
-  // returned.
+  // Convert a string to a Double. If the specified string does not represent
+  // a Double, 0 is returned.
   static Double toDouble(const String& string);
 
-  // convert a string to a Float. If the specified string does not represent
-  // a Float, 0 (or something very close because of finite machine precision) is
-  // returned.
+  // Convert a string to a Float. If the specified string does not represent
+  // a Float, 0 is returned.
   static Float toFloat(const String& string);
 
   // Search functions. Returns either npos (if not found); else position.

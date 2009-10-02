@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSelectionTools.cc 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSSelectionTools.cc 20749 2009-09-30 14:24:05Z gervandiepen $
 //# Includes
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
@@ -178,7 +178,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	       Bool upcase)
   {
     String tmpStr(str);
-    String::size_type tokpos,startpos=0;
+    /* String::size_type tokpos,startpos=0; */
     if (upcase) tmpStr.upcase();
     char *sep_p=(char *)sep.c_str();
 

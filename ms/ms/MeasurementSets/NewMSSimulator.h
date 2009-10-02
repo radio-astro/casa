@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NewMSSimulator.h 20710 2009-09-03 11:12:54Z gervandiepen $
+//# $Id: NewMSSimulator.h 20752 2009-10-01 07:14:04Z gervandiepen $
 
 #ifndef MS_NEWMSSIMULATOR_H
 #define MS_NEWMSSIMULATOR_H
@@ -52,9 +52,7 @@ class MeasurementSet;
 //
 // <prerequisite>
 //# Classes you should understand before using this one.
-// <list>
-//   <item> MeasurementSet
-// </list>
+//  <li> MeasurementSet
 // </prerequisite>
 //
 // <etymology>

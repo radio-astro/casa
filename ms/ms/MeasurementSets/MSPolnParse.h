@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSPolnParse.h 20749 2009-09-30 14:24:05Z gervandiepen $
 
 #ifndef MS_MSPOLNPARSE_H
 #define MS_MSPOLNPARSE_H
@@ -128,9 +128,9 @@ private:
 			      Vector<Int>& polnIDs,
 			      Vector<Int>& polnIndices);
   TableExprNode node_p;
+  Vector<Int> ddIDList_p;
   OrderedMap<Int, Vector<Int> > polMap_p;
   OrderedMap<Int, Vector<Vector<Int> > > setupMap_p;
-  Vector<Int> ddIDList_p;
 
   void setIDLists(const Int key, const Int ndx, Vector<Int>& val);
 };

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NewMSSimulator.cc 20704 2009-09-03 08:53:52Z gervandiepen $
+//# $Id: NewMSSimulator.cc 20749 2009-09-30 14:24:05Z gervandiepen $
 
 //# Includes
 #include <ms/MeasurementSets/NewMSSimulator.h>
@@ -505,7 +505,7 @@ void NewMSSimulator::initAnt(const String& telescope,
 //getAnt(telescope_p, nAnt, xyz_p, diam_p, offset_p, mount_p, antName_p, 
 //		    coordsystem_p, mRefLocation_p)) {
 bool NewMSSimulator::getAnt(String& telescope, Int& nAnt, Matrix<Double>* antXYZ, 
-			    Vector<Double>& antDiam, Vector<Double>& offset,
+			    Vector<Double>& antDiam, Vector<Double>& /*offset*/,
 			    Vector<String>& mount, Vector<String>& name,
 			    String& coordsystem, MPosition& mRefLocation ) {
   // return already set config info

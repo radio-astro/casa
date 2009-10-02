@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Directory.cc 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: Directory.cc 20749 2009-09-30 14:24:05Z gervandiepen $
 
 // we NEED to include aips(env).h before using any AIPS_xyz defines
 #include <casa/OS/Directory.h>

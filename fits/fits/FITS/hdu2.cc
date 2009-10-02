@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: hdu2.cc 20628 2009-06-12 02:56:35Z gervandiepen $
+//# $Id: hdu2.cc 20749 2009-09-30 14:24:05Z gervandiepen $
 
 # include <fits/FITS/fits.h>
 # include <fits/FITS/hdu.h>
