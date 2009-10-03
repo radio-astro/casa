@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSPolnGram.cc 20749 2009-09-30 14:24:05Z gervandiepen $
 
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/ExprNodeSet.h>
@@ -50,7 +50,7 @@ int MSPolnGramwrap()
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   //# Declare a file global pointer to a char* for the input string.
-  static const char*           strpMSPolnGram = 0;
+  /* static const char*           strpMSPolnGram = 0; */
   static Int                   posMSPolnGram = 0;
   
   // MSPolnGramwrap out of namespace

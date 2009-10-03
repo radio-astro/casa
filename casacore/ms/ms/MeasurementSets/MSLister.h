@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSLister.h 20749 2009-09-30 14:24:05Z gervandiepen $
 //#
 #ifndef MS_MSLISTER_H
 #define MS_MSLISTER_H

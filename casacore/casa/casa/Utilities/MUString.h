@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MUString.h 19815 2006-12-22 02:59:04Z gvandiep $
+//# $Id: MUString.h 20732 2009-09-25 10:11:45Z gervandiepen $
 
 #ifndef CASA_MUSTRING_H
 #define CASA_MUSTRING_H
@@ -306,6 +306,8 @@ public:
   Bool tSkipChar(Char nc);
   void skipCharNC(Char ch);
   Bool tSkipCharNC(Char ch);
+  Bool tSkipOneChar(Char ch);
+  Bool tSkipOneCharNC(Char ch);
   void skipChar(const Regex &ex);
   Bool tSkipChar(const Regex &ex);
   void skipAlpha();

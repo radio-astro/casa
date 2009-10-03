@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ObsInfo.cc 20725 2009-09-22 13:31:56Z gervandiepen $
+//# $Id: ObsInfo.cc 20730 2009-09-24 11:17:08Z gervandiepen $
 
 #include <coordinates/Coordinates/ObsInfo.h>
 #include <measures/Measures/MeasureHolder.h>

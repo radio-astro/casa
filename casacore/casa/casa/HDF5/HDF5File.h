@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5File.h 20600 2009-05-11 09:33:40Z gervandiepen $
+//# $Id: HDF5File.h 20718 2009-09-15 09:56:55Z gervandiepen $
 
 #ifndef CASA_HDF5FILE_H
 #define CASA_HDF5FILE_H
@@ -67,7 +67,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class HDF5File : public HDF5Object
   {
   public:
-    // Create an HDF5 file object with the given file name.
+    // Create an HDF5 file object with the given file name (possible tilde
+    // or environment variables in it will be expanded).
     // The ByteIO option determines if the file will be created,
     // opened for input and/or output, or possibly deleted by the destructor.
     explicit HDF5File (const String& name,

@@ -18,7 +18,7 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-#  $Id: doxygen_pp 20697 2009-08-31 12:01:41Z gervandiepen $
+#  $Id: doxygen_pp 20742 2009-09-29 13:44:37Z wbrouw $
 
 
 #  Convert multiple C++ "slash-slash" style comment lines
@@ -273,7 +273,7 @@ sub change_comment_style
 	# So escape the #. Don't do that for #include and if.
 	$comment =~ s|([ (])#([a-z]+)|$1\\#$2|ig;
 	$comment =~ s| \\#include| #include|g;
-	$comment =~ s| \\#if| #if|g;
+   	$comment =~ s| \\#if| #if|g;
 	$comment =~ s| \\#endif| #endif|g;
 
 	# Remove possible prototype text.
@@ -422,7 +422,7 @@ sub change_comment_style
 	$comment =~ s|</motivation>||ig;
 	$comment =~ s|<synopsis>|<h3>Synopsis</h3>|ig;
 	$comment =~ s|</synopsis>||ig;
-	$comment =~ s|<example>| \\anchor ${hdrnm}_example <h3>Example</h3>|ig;
+	$comment =~ s|<example>|<h3>Example</h3> \\anchor ${hdrnm}_example|ig;
 	$comment =~ s|</example>||ig;
 	$comment =~ s|<etymology>|<h3>Etymology</h3>|ig;
 	$comment =~ s|</etymology>||ig;

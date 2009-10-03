@@ -1,4 +1,4 @@
-//# tPagedImage.cc:  test the PagedImage class
+//# tImageFitter.cc:  test the PagedImage class
 //# Copyright (C) 1994,1995,1998,1999,2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,23 +23,59 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tPagedImage.cc 20648 2009-06-29 07:22:00Z gervandiepen $
+//# $Id: $
+
 
 #include <casa/BasicMath/Math.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <images/Images/ImageFitter.h>
 #include <measures/Measures/MDirection.h>
 #include <components/ComponentModels/ComponentShape.h>
+#include <images/Images/ImageAnalysis.h>
 #include <casa/BasicSL/Constants.h>
+#include <casa/OS/Directory.h>
 #include <casa/namespace.h>
+
+#include <sys/types.h>
+#include <unistd.h>
+
 
 void writeTestString(const String& test) {
     cout << "\n" << "*** " << test << " ***" << endl;
 }
 
+void checkImage(
+		const String& gotImage, const String& expectedImage,
+		const String& differenceImage
+	) {
+    ImageAnalysis ia;
+    ia.open(gotImage);
+    String expr = "\"" + gotImage + "\" - \"" + expectedImage + "\"";
+    ia.imagecalc(differenceImage, expr, True);
+    ia.open(differenceImage);
+    Record stats;
+    Vector<Int> axes(2);
+    axes[0] = 0;
+    axes[1] = 1;
+    Record region;
+    Vector<String> plotstats(0);
+    ia.statistics(stats, axes, region, "", plotstats, Vector<Float>(0), Vector<Float>(0));
+
+    Array<Double> sumArray = stats.asArrayDouble("sum");
+    vector<double> sum;
+    sumArray.tovector(sum);
+    AlwaysAssert(sum[0] == 0, AipsError);
+}
+
 int main() {
+    pid_t pid = getpid();
+    ostringstream os;
+    os << "tImageFitter_tmp_" << pid;
+    String dirName = os.str();
+	Directory workdir(dirName);
     try {
-        Double arcsecsPerRadian = 180*3600/C::pi;
+    	const Double DEGREES_PER_RADIAN = 180/C::pi;
+        Double arcsecsPerRadian = DEGREES_PER_RADIAN*3600;
         String test;
         {
             writeTestString(
@@ -65,13 +101,13 @@ int main() {
             Double minorAxis = arcsecsPerRadian*parameters(1);
             AlwaysAssert(near(minorAxis, 18.838560, 1e-7), AipsError);
 
-            Double positionAngle = 180/C::pi*parameters(2);
+            Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
             AlwaysAssert(near(positionAngle, 120.0, 1e-7), AipsError);
         }
         String noisyImage = "gaussian_model_with_noise.fits";
         {
             writeTestString(
-                "test fitter using all available image pixels with model with noise"
+                "test fitter using all available image pixels with model with noise added"
             );
             ImageFitter fitter = ImageFitter(noisyImage);
             ComponentList compList = fitter.fit();
@@ -93,12 +129,12 @@ int main() {
             Double minorAxis = arcsecsPerRadian*parameters(1);
             AlwaysAssert(near(minorAxis, 18.876406, 1e-7), AipsError);
 
-            Double positionAngle = 180/C::pi*parameters(2);
+            Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
             AlwaysAssert(near(positionAngle, 119.897741, 1e-7), AipsError);
         }
         {
             writeTestString(
-                "test fitter using a box region with model with noise"
+                "test fitter using a box region with model with noise added"
             );
             ImageFitter fitter = ImageFitter(noisyImage, "130,89,170,129");
             ComponentList compList = fitter.fit();
@@ -120,7 +156,7 @@ int main() {
             Double minorAxis = arcsecsPerRadian*parameters(1);
             AlwaysAssert(near(minorAxis, 18.866377, 1e-7), AipsError);
 
-            Double positionAngle = 180/C::pi*parameters(2);
+            Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
             AlwaysAssert(near(positionAngle, 119.806997, 1e-7), AipsError);
         }
         {
@@ -176,13 +212,42 @@ int main() {
                 Double minorAxis = arcsecsPerRadian*parameters(1);
                 AlwaysAssert(near(minorAxis, 18.882029, 1e-7), AipsError);
 
-                Double positionAngle = 180/C::pi*parameters(2);
+                Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
                 AlwaysAssert(near(positionAngle, 119.769648, 1e-7), AipsError);
             }
-         }
-         cout << "ok" << endl;
+        }
+        {
+            writeTestString("test writing of residual and mdoel images");
+
+            workdir.create();
+            String residImage = dirName + "/residualImage";
+            String modelImage = dirName + "/modelImage";
+            String residDiff = dirName + "/residualImage.diff";
+            String modelDiff = dirName + "/modelImage.diff";
+            ImageFitter fitter(
+            	noisyImage, "100,100,200,200", "", 1, 0, "I", "",
+            	Vector<Float>(0), Vector<Float>(0), residImage,
+            	modelImage
+            );
+            fitter.fit();
+            writeTestString("test residual image correctness");
+            checkImage(
+            	residImage, "gaussian_model_with_noise_resid.fits",
+            	residDiff
+            );
+            writeTestString("test model image correctness");
+            checkImage(
+             	modelImage, "gaussian_model_with_noise_model.fits",
+             	modelDiff
+            );
+            workdir.removeRecursive();
+        }
+        cout << "ok" << endl;
     }
     catch (AipsError x) {
+    	if(workdir.exists()) {
+    		workdir.removeRecursive();
+    	}
         cerr << "Exception caught: " << x.getMesg() << endl;
         return 1;
     } 

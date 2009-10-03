@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableCopy.h 20665 2009-07-07 07:34:46Z gervandiepen $
+//# $Id: TableCopy.h 20728 2009-09-23 14:37:23Z gervandiepen $
 
 #ifndef TABLES_TABLECOPY_H
 #define TABLES_TABLECOPY_H
@@ -102,15 +102,17 @@ public:
   // Copy rows from the input to the output.
   // By default all rows will be copied starting at row 0 of the output.
   // Rows will be added to the output table as needed.
+  // The output table will by default be flushed after the rows are copied.
   // <br> All columns in Table <src>out</src> will be filled from the
   // column with the same name in table <src>in</src>. In principle only
   // stored columns will be filled; however if the output table has only
   // one column, it can also be a virtual one.
   // <group>
-  static void copyRows (Table& out, const Table& in)
-    { copyRows (out, in, 0, 0, in.nrow()); }
+  static void copyRows (Table& out, const Table& in, Bool flush=True)
+    { copyRows (out, in, 0, 0, in.nrow(), flush); }
   static void copyRows (Table& out, const Table& in,
-			uInt startout, uInt startin, uInt nrrow);
+			uInt startout, uInt startin, uInt nrrow,
+                        Bool flush=True);
   // </group>
 
   // Copy the table info block from input to output table.

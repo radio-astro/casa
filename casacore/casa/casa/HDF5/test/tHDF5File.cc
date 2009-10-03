@@ -23,9 +23,10 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5File.cc 20600 2009-05-11 09:33:40Z gervandiepen $
+//# $Id: tHDF5File.cc 20731 2009-09-25 09:31:41Z gervandiepen $
 
 #include <casa/HDF5/HDF5File.h>
+#include <casa/OS/Path.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 
@@ -41,7 +42,7 @@ int main()
     {
       // Create the file.
       HDF5File file("tHDF5File_tmpx", ByteIO::New);
-      AlwaysAssertExit (file.getName() == "tHDF5File_tmpx");
+      AlwaysAssertExit (Path(file.getName()).baseName() == "tHDF5File_tmpx");
       AlwaysAssertExit (! file.isClosed());
       AlwaysAssertExit (file.isWritable());
       AlwaysAssertExit (! file.isOpenedForDelete());
@@ -79,6 +80,8 @@ int main()
       AlwaysAssertExit (file.isOpenedForDelete());
     }
     {
+      // File name gets absolute, so ignore for output comparison.
+      cout << ">>>" << endl;
       Bool succ = True;
       try {
 	HDF5File file("tHDF5File_tmpx", ByteIO::Old);
@@ -87,6 +90,7 @@ int main()
 	cout << x.what() << endl;
       }
       AlwaysAssertExit (!succ);
+      cout << "<<<" << endl;
     }
     {
       // Create the file for scratch.
@@ -101,6 +105,7 @@ int main()
     }
     {
       // Create the file. Fails, because already exists.
+      cout << ">>>" << endl;
       Bool succ = True;
       try {
       HDF5File file("tHDF5File_tmp", ByteIO::NewNoReplace);
@@ -109,6 +114,7 @@ int main()
 	cout << x.what() << endl;
       }
       AlwaysAssertExit (!succ);
+      cout << "<<<" << endl;
     }
 
   } catch (AipsError& x) {

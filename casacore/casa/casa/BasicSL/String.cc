@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: String.cc 20654 2009-07-06 07:49:03Z gervandiepen $
+//# $Id: String.cc 20749 2009-09-30 14:24:05Z gervandiepen $
 
 #include <casa/BasicSL/String.h>
 
@@ -83,6 +83,8 @@ Double String::toDouble(const String& string) {
 Float String::toFloat(const String& string) {
     istringstream instr(string);
     Float var;
+    // Initialize in case the string is empty or non-numeric.
+    var = 0;
     instr >> var;
     return var;
 }

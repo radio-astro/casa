@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSPolnParse.cc 20754 2009-10-01 08:59:24Z gervandiepen $
 
 #include <ms/MeasurementSets/MSPolnParse.h>
 #include <ms/MeasurementSets/MSColumns.h>
@@ -269,7 +269,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	  }
 
-	if (allFound=(foundCounter == polIds.nelements()))
+	if ((allFound=(foundCounter == polIds.nelements())))
 	  {
 	    if (addToMap) setIDLists((Int)row,0,polIndices);
 	  }

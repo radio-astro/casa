@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MUString.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: MUString.cc 20732 2009-09-25 10:11:45Z gervandiepen $
 
 //# Includes
 #include <casa/Utilities/MUString.h>
@@ -219,6 +219,22 @@ void MUString::skipCharNC(Char ch) {
 
 Bool MUString::tSkipCharNC(Char ch) {
   return (testCharNC(ch) ? (skipCharNC(ch), True) : False);
+}
+
+Bool MUString::tSkipOneChar(Char ch) {
+  if (testChar(ch)) {
+    ptr++;
+    return True;
+  }
+  return False;
+}
+
+Bool MUString::tSkipOneCharNC(Char ch) {
+  if (testCharNC(ch)) {
+    ptr++;
+    return True;
+  }
+  return False;
 }
 
 void MUString::skipChar(const Regex &ex) {

@@ -90,13 +90,14 @@ namespace casa {
             // cannot be specified simultaneously. </li>
             // <li> excludepix - Pixel value range to exclude from fit</li>
             // <li> residualInp - Name of residual image to save. Blank means do not save residual image</li>
+            // <li> modelInp - Name of the model image to save. Blank means do not save model image</li>
             ImageFitter(
                 const String& imagename, const String& box="", const String& region="",
                 const uInt ngaussInp=1, const uInt chanInp=0, const String& stokes="I",
                 const String& maskInp="",
                 const Vector<Float>& includepix = Vector<Float>(0),
-                const Vector<Float>& excludepix = Vector<Float>(0)
-                // , const String& residualInp=""
+                const Vector<Float>& excludepix = Vector<Float>(0),
+                const String& residualInp="", const String& modelInp=""
             ); 
 
             // destructor
@@ -112,7 +113,7 @@ namespace casa {
             ImageInterface<Float> *image;
             ImageRegion imRegion;
             uInt ngauss, chan;
-            String stokesString, mask; //residual;
+            String stokesString, mask, residual, model;
             Vector<Float> includePixelRange, excludePixelRange;
 
             // does the lion's share of constructing the object, ie checks validity of

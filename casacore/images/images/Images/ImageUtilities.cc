@@ -1048,5 +1048,28 @@ void ImageUtilities::copyMask (ImageInterface<Float>& out,
    }   
 }  
 
+void ImageUtilities::writeImage(
+		const TiledShape& mapShape,
+		const CoordinateSystem& coordinateInfo,
+		const String& imageName,
+		const Array<Float>& pixels, LogIO& log
+) {
+
+	// using pattern from ImageProxy
+	PagedImage<Float> *newImage = new PagedImage<Float>(
+			mapShape, coordinateInfo, imageName
+	);
+	newImage->put(pixels);
+	if (newImage == 0) {
+		log << "Failed to create image "
+			 << imageName << LogIO::EXCEPTION;
+	}
+	else {
+		log << LogIO::NORMAL << "Created image "
+			 << imageName << LogIO::POST;
+	}
+	delete newImage;
+}
+
 
 } //# NAMESPACE CASA - END

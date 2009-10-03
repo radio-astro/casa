@@ -176,6 +176,11 @@ public:
     // </group>
 
     // moved from ImageAnalysis
+    // TODO: From Ger:
+    // In fact I doubt if that tweaked function is really needed.
+    // The fromRecord function in e.g. LCBox use toArrayFloat which converts a double array
+    // to a float array.
+    // You should try if the code works fine without doing the tweakrecord.
     static  Record * tweakedRegionRecord(Record *Region);
 
 private:

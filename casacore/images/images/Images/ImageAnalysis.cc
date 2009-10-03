@@ -2230,7 +2230,8 @@ ComponentList ImageAnalysis::fitsky(
 	const Vector<String>& models, Record& Estimate,
 	const Vector<String>& fixed, const Vector<Float>& includepix,
 	const Vector<Float>& excludepix, const Bool fitIt,
-	const Bool deconvolveIt, const Bool list
+	const Bool deconvolveIt, const Bool list,
+    const String& residImageName, const String& modelImageName
 ) {
 	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
 	String error;
@@ -2242,7 +2243,8 @@ ComponentList ImageAnalysis::fitsky(
 		*itsLog << LogIO::WARN
 				<< "Can not  convert input parameter to ComponentList "
 				<< error << LogIO::POST;
-	} else {
+	}
+	else {
 		int n = compList.nelements();
 		estimate.resize(n);
 		for (int i = 0; i < n; i++) {
@@ -2324,9 +2326,6 @@ ComponentList ImageAnalysis::fitsky(
 	const CoordinateSystem& cSys = subImage.coordinates();
 	Bool xIsLong = CoordinateUtil::isSky(*itsLog, cSys);
 
-	//Bool xIsLong = CoordinateUtil::isSky(*itsLog, subImage.coordinates());
-	// Get 2D pixels and mask
-
 	Array<Float> pixels = subImage.get(True);
 	IPosition shape = pixels.shape();
 
@@ -2391,17 +2390,22 @@ ComponentList ImageAnalysis::fitsky(
 			fixedParameters(i) += String("abp");
 		}
 		modelType = Fit2D::type(modelTypes(i));
-		//
-		Vector<Bool> parameterMask = Fit2D::convertMask(fixedParameters(i),
-				modelType);
-		//
+
+		Vector<Bool> parameterMask = Fit2D::convertMask(
+			fixedParameters(i),
+			modelType
+		);
+
 		Vector<Double> parameters;
 		if (nModels == 1 && nEstimates == 0) {
 			// Auto estimate
-			parameters = singleParameterEstimate(fitter, modelType,
-					maskedPixels, minVal, maxVal, minPos, maxPos, stokes,
-					subImage, xIsLong, *itsLog);
-		} else {
+			parameters = singleParameterEstimate(
+				fitter, modelType,
+				maskedPixels, minVal, maxVal, minPos, maxPos, stokes,
+				subImage, xIsLong, *itsLog
+			);
+		}
+		else {
 			// Decode parameters from estimate
 			const CoordinateSystem& cSys = subImage.coordinates();
 			const ImageInfo& imageInfo = subImage.imageInfo();
@@ -2416,10 +2420,12 @@ ComponentList ImageAnalysis::fitsky(
 					// We need the restoring beam shape as well.
 					Vector<Quantum<Double> > beam = imageInfo.restoringBeam();
 					Vector<Quantum<Double> > wParameters(5);
-					//
-					wParameters(0).setValue(0.0); // Because we convert at the reference
-					wParameters(1).setValue(0.0); // value for the beam, the position is
-					wParameters(0).setUnit(String("rad")); // irrelevant
+					// Because we convert at the reference
+					// value for the beam, the position is
+					// irrelevant
+					wParameters(0).setValue(0.0);
+					wParameters(1).setValue(0.0);
+					wParameters(0).setUnit(String("rad"));
 					wParameters(1).setUnit(String("rad"));
 					wParameters(2) = beam(0);
 					wParameters(3) = beam(1);
@@ -2443,7 +2449,8 @@ ComponentList ImageAnalysis::fitsky(
 					parameters(4) = dParameters(1);
 					parameters(5) = dParameters(2);
 				}
-			} else if (modelType == Fit2D::LEVEL) {
+			}
+			else if (modelType == Fit2D::LEVEL) {
 				*itsLog << LogIO::EXCEPTION; // Levels not supported yet
 			}
 		}
@@ -2458,15 +2465,17 @@ ComponentList ImageAnalysis::fitsky(
 		*itsLog << LogIO::NORMAL << "Number of iterations = "
 				<< fitter.numberIterations() << LogIO::POST;
 		converged = True;
-	} else {
+	}
+	else {
 		converged = False;
 		*itsLog << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
 		return cl;
 	}
 
 	// Compute residuals
-	fitter.residual(residPixels, pixels);
-	// Convert units of solution from pixel units to astronomical units
+	Array<Float> modelPixels;
+	fitter.residual(residPixels, modelPixels, pixels);
+	// Convert units of solution from pixel units to physical units
 	Vector<SkyComponent> result(nModels);
 	Double facToJy;
 	for (uInt i = 0; i < models.nelements(); i++) {
@@ -2481,6 +2490,22 @@ ComponentList ImageAnalysis::fitsky(
 				solution, errors, stokes, xIsLong);
 		cl.add(result(i));
 	}
+	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
+    if (! residImageName.empty()) {
+        // construct the residual image, copying pattern from ImageProxy
+    	ImageUtilities::writeImage(
+    			subImage.shape(), subImage.coordinates(),
+    			residImageName, residPixels, *itsLog
+    	);
+    }
+
+    if (! modelImageName.empty()) {
+        // construct the residual image, copying pattern from ImageProxy
+    	ImageUtilities::writeImage(
+    			subImage.shape(), subImage.coordinates(),
+    			modelImageName, modelPixels, *itsLog
+    	);
+    }
 
 	return cl;
 
