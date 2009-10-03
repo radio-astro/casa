@@ -849,28 +849,62 @@ def merge(*args):
     print_log()
     return s
 
-## def apexcal( scantab, calmode ):
-##     """
-##     Calibrate APEX data.
+def calibrate( scantab, scannos=[], calmode='none', verify=None ):
+    """
+    Calibrate data.
     
-##     Parameters:
-##         scantab:       scantable
-##         calmode:       calibration mode
-##     """
-##     from asap._asap import stmath
-##     stm = stmath()
-##     if ( calmode == 'ps' ):
-##         asaplog.push( 'APEX position-switch calibration' )
-##         print_log()
-##     elif ( calmode == 'fs' ):
-##         asaplog.push( 'APEX frequency-switch calibration' )
-##         print_log()
-##     elif ( calmode == 'wob' ):
-##         asaplog.push( 'APEX wobbler-switch calibration' )
-##         print_log()
-##     elif ( calmode == 'otf' ):
-##         asaplog.push( 'APEX On-The-Fly calibration' )
-##         print_log()
-##     else:
-##         asaplog.push( '%s: unknown calibration mode' % calmode )
-##         print_log('ERROR')
+    Parameters:
+        scantab:       scantable
+        scannos:       list of scan number
+        calmode:       calibration mode
+        verify:        verify calibration     
+    """
+    antname = scantab.get_antennaname()
+    if ( calmode == 'nod' ):
+        asaplog.push( 'Calibrating nod data.' )
+        print_log()
+        scal = calnod( scantab, scannos=scannos, verify=verify )
+    elif ( calmode == 'quotient' ):
+        asaplog.push( 'Calibrating using quotient.' )
+        print_log()
+        scal = scantab.auto_quotient( verify=verify )
+    elif ( calmode == 'ps' ):
+        asaplog.push( 'Calibrating %s position-switched data.' % antname )
+        print_log()
+        if ( antname.find( 'APEX' ) != -1 or antname.find( 'ALMA' ) != -1 ):
+            scal = almacal( scantab, scannos, calmode, verify )
+        else:
+            scal = calps( scantab, scannos=scannos, verify=verify )
+    elif ( calmode == 'fs' or calmode == 'fsotf' ):
+        asaplog.push( 'Calibrating %s frequency-switched data.' % antname )
+        print_log()
+        if ( antname.find( 'APEX' ) != -1 or antname.find( 'ALMA' ) != -1 ):
+            scal = almacal( scantab, scannos, calmode, verify )
+        else:
+            scal = calfs( scantab, scannos=scannos, verify=verify )
+    elif ( calmode == 'otf' ):
+        asaplog.push( 'Calibrating %s On-The-Fly data.' % antname )
+        print_log()
+        scal = almacal( scantab, scannos, calmode, verify )
+    else:
+        asaplog.push( 'No calibration.' )
+        scal = scantab.copy()
+
+    return scal 
+
+def almacal( scantab, scannos=[], calmode='none', verify=False ):
+    """
+    Calibrate APEX and ALMA data
+
+    Parameters:
+        scantab:       scantable
+        scannos:       list of scan number
+        calmode:       calibration mode
+        verify:        verify calibration     
+    """
+    from asap._asap import stmath
+    stm = stmath()
+    antname = scantab.get_antennaname()
+    ssub = scantab.get_scan( scannos )
+    scal = scantable( stm.cwcal( ssub, calmode, antname ) )
+    return scal

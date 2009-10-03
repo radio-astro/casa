@@ -115,46 +115,113 @@ void asap::STSelector::setSortOrder( const std::vector< std::string > & order )
   }
 }
 
+void STSelector::setRows( const std::vector< int >& rows )
+{
+  rowselection_ = rows;
+}
+
+// Table STSelector::apply( const Table& tab )
+// {
+//   if ( empty() ) {
+//     return sort(tab);
+//   }
+//   TableExprNode query;
+//   intidmap::const_iterator it;
+//   for (it = intselections_.begin(); it != intselections_.end(); ++it) {
+//     TableExprNode theset(Vector<Int>( (*it).second ));
+//     if ( query.isNull() ) {
+//       query = tab.col((*it).first).in(theset);
+//     } else {
+//       query = tab.col((*it).first).in(theset) && query;
+//     }
+//   }
+//   stringidmap::const_iterator it1;
+//   for (it1 = stringselections_.begin(); it1 != stringselections_.end(); ++it1) {
+//     TableExprNode theset(mathutil::toVectorString( (*it1).second ));
+//     if ( query.isNull() ) {
+//       query = tab.col((*it1).first).in(theset);
+//     } else {
+//       query = tab.col((*it1).first).in(theset) && query;
+//     }
+//   }
+//   // add taql query
+//   if ( taql_.size() > 0 ) {
+//     Table tmpt = tab;
+//     std::string pytaql = "USING STYLE PYTHON " + taql_;
+
+//     if ( !query.isNull() ) { // taql and selection
+//       tmpt = tableCommand(pytaql, tab(query));
+//     } else { // taql only
+//       tmpt = tableCommand(pytaql, tab);
+//     }
+//     return sort(tmpt);
+//   } else {
+//     if ( query.isNull() ) {
+//       return sort(tab);
+//     } else {
+//       return sort(tab(query));
+//     }
+//   }
+// }
 Table STSelector::apply( const Table& tab )
 {
   if ( empty() ) {
     return sort(tab);
+  }
+  Table basetab = tab;
+  // Important!! Be sure to apply row selection first. 
+  if (rowselection_.size() > 0){
+    //Vector<Int> intrownrs(rowselection_);
+    Vector<uInt> rownrs( rowselection_.size() );
+    convertArray(rownrs, Vector<Int> ( rowselection_ ));
+    basetab = tab( rownrs );
+    ///TableExprNode theset(Vector<Int>( rowselection_ ));
+    ///query = tab.nodeRownr().in(theset);
   }
   TableExprNode query;
   intidmap::const_iterator it;
   for (it = intselections_.begin(); it != intselections_.end(); ++it) {
     TableExprNode theset(Vector<Int>( (*it).second ));
     if ( query.isNull() ) {
-      query = tab.col((*it).first).in(theset);
+      //query = tab.col((*it).first).in(theset);
+      query = basetab.col((*it).first).in(theset);
     } else {
-      query = tab.col((*it).first).in(theset) && query;
+      //query = tab.col((*it).first).in(theset) && query;
+      query = basetab.col((*it).first).in(theset) && query;
     }
   }
   stringidmap::const_iterator it1;
   for (it1 = stringselections_.begin(); it1 != stringselections_.end(); ++it1) {
     TableExprNode theset(mathutil::toVectorString( (*it1).second ));
     if ( query.isNull() ) {
-      query = tab.col((*it1).first).in(theset);
+      //query = tab.col((*it1).first).in(theset);
+      query = basetab.col((*it1).first).in(theset);
     } else {
-      query = tab.col((*it1).first).in(theset) && query;
+      //query = tab.col((*it1).first).in(theset) && query;
+      query = basetab.col((*it1).first).in(theset) && query;
     }
   }
   // add taql query
   if ( taql_.size() > 0 ) {
-    Table tmpt = tab;
+    //Table tmpt = tab;
+    Table tmpt = basetab;
     std::string pytaql = "USING STYLE PYTHON " + taql_;
 
     if ( !query.isNull() ) { // taql and selection
-      tmpt = tableCommand(pytaql, tab(query));
+      //tmpt = tableCommand(pytaql, tab(query));
+      tmpt = tableCommand(pytaql, basetab(query));
     } else { // taql only
-      tmpt = tableCommand(pytaql, tab);
+      //tmpt = tableCommand(pytaql, tab);
+      tmpt = tableCommand(pytaql, basetab);
     }
     return sort(tmpt);
   } else {
     if ( query.isNull() ) {
-      return sort(tab);
+      //return sort(tab);
+      return sort(basetab);
     } else {
-      return sort(tab(query));
+      //return sort(tab(query));
+      return sort(basetab(query));
     }
   }
 }
@@ -226,7 +293,8 @@ std::string asap::STSelector::print( )
 
 bool asap::STSelector::empty( ) const
 {
-  return (intselections_.empty() && taql_.size() == 0 );
+  //return (intselections_.empty() && taql_.size() == 0 );
+  return (intselections_.empty() && taql_.size() == 0 && rowselection_.size() == 0);
 }
 
 casa::Table asap::STSelector::sort( const casa::Table & tab )

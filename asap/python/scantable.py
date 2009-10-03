@@ -1520,18 +1520,44 @@ class scantable(Scantable):
         varlist = vars()
         if mask is None:
             mask = [True for i in xrange(self.nchan(-1))]
+        
         from asap.asapfitter import fitter
         try:
             f = fitter()
-            f.set_scan(self, mask)
             if uselin:
                 f.set_function(lpoly=order)
             else:
                 f.set_function(poly=order)
-            s = f.auto_fit(insitu, plot=plot)
-            # Save parameters of baseline fits as a class attribute.
-            # NOTICE: It does not reflect changes in scantable!
-            self.blpars = f.blpars
+
+            rows = range(self.nrow())
+            if len(rows) > 0:
+                self.blpars = []
+            
+            for r in rows:
+                # take into account flagtra info (CAS-1434)
+                flagtra = self._getmask(r)
+                actualmask = mask[:]
+                if len(actualmask) == 0:
+                    actualmask = list(flagtra[:])
+                else:
+                    if len(actualmask) != len(flagtra):
+                        raise RuntimeError, "Mask and flagtra have different length"
+                    else:
+                        for i in range(0, len(actualmask)):
+                            actualmask[i] = actualmask[i] and flagtra[i]
+                f.set_scan(self, actualmask)
+                f.x = self._getabcissa(r)
+                f.y = self._getspectrum(r)
+                f.data = None
+                f.fit()
+                fpar = f.get_parameters()
+                self.blpars.append(fpar)
+                
+            #f.set_scan(self, mask)
+            #s = f.auto_fit(insitu, plot=plot)
+            ## Save parameters of baseline fits as a class attribute.
+            ## NOTICE: It does not reflect changes in scantable!
+            #self.blpars = f.blpars
             s._add_history("poly_baseline", varlist)
             print_log()
             if insitu: self._assign(s)
@@ -1649,8 +1675,20 @@ class scantable(Scantable):
                                         "be less than the number of IFs"
                     curedge = edge[workscan.getif(r)]
 
+            # take into account flagtra info (CAS-1434)
+            flagtra = workscan._getmask(r)
+            actualmask = mask[:]
+            if len(actualmask) == 0:
+                actualmask = list(flagtra[:])
+            else:
+                if len(actualmask) != len(flagtra):
+                    raise RuntimeError, "Mask and flagtra have different length"
+                else:
+                    for i in range(0, len(actualmask)):
+                        actualmask[i] = actualmask[i] and flagtra[i]
+
             # setup line finder
-            fl.find_lines(r, mask, curedge)
+            fl.find_lines(r, actualmask, curedge)
             outmask=fl.get_mask()
             f.set_scan(workscan, fl.get_mask())
             f.x = workscan._getabcissa(r)

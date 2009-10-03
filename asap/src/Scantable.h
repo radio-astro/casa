@@ -308,6 +308,8 @@ public:
     { return azCol_(whichrow); }
   float getParAngle(int whichrow) const
     { return paraCol_(whichrow); }
+  int getTcalId(int whichrow) const
+    { return mtcalidCol_(whichrow); }
 
   std::string getSourceName(int whichrow) const
     { return srcnCol_(whichrow); }

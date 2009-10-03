@@ -205,6 +205,16 @@ public:
     return ScantableWrapper(STMath::new_average(sts, compel, mask, weight, avmode));
   }
 
+  // cwcal
+  ScantableWrapper cwcal( const ScantableWrapper &in,
+                          const std::string calmode,
+                          const std::string antname )
+  {
+    casa::CountedPtr<Scantable> tab = in.getCP() ;
+    casa::String mode( calmode ) ;
+    casa::String name( antname ) ;
+    return ScantableWrapper( STMath::cwcal( tab, mode, name ) ) ;
+  }
 };
 
 }

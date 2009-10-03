@@ -147,6 +147,20 @@ class selector(_selector):
         """
         self._setorder(order)
 
+    def set_rows(self, rows=[]):
+        """
+        Set a sequence of row numbers (0-based). Power users Only!
+        NOTICE row numbers can be changed easily by sorting,
+        prior selection, etc. 
+        Parameters:
+            rows:    a list of integers. Default [] is to unset the selection.
+        """
+        vec = _to_list(rows, int) 
+        if isinstance(vec,list):
+            self._setrows(vec)
+        else:
+            raise TypeError('Unknown row number type. Use lists of integers.')
+
     def get_scans(self):
         return list(self._getscans())
     def get_cycles(self):

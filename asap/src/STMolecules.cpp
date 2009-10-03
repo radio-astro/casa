@@ -106,7 +106,7 @@ uInt STMolecules::addEntry( Vector<Double> restfreq, const Vector<String>& name,
 {
 // How to handle this...?
   Table result =
-    table_( nelements(table_.col("RESTFREQUENCY")) == uInt(restfreq.size()) && 
+    table_( nelements(table_.col("RESTFREQUENCY")) == uInt (restfreq.size()) && 
             all(table_.col("RESTFREQUENCY")== restfreq) );
   uInt resultid = 0;
   if ( result.nrow() > 0) {

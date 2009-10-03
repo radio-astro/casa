@@ -47,6 +47,7 @@ public:
   virtual void setTaQL(const std::string& taql);
 
   void setSortOrder(const std::vector<std::string>& order);
+  void setRows(const std::vector<int>& rows);
 
   std::vector<int> getScans() const;
   std::vector<int> getBeams() const;
@@ -85,6 +86,7 @@ private:
   std::vector<std::string> poltypes_;
   casa::Block<casa::String> order_;
   std::string taql_;
+  std::vector<int> rowselection_;
 };
 
 }
