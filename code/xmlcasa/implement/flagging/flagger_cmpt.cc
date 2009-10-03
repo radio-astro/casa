@@ -122,6 +122,7 @@ flagger::setmanualflags(
     const std::vector<double>& cliprange,
     const std::string& clipcolumn, 
     const bool outside, 
+    const bool channelavg,
     const double quackinterval, 
     const std::string& quackmode, 
     const bool quackincrement)
@@ -145,7 +146,8 @@ flagger::setmanualflags(
 	    if(ret) {
 		ret = flagger_p->setmanualflags(
 		    Bool(autocorrelation), Bool(unflag),
-		    String(clipexpr), l_cliprange, String(clipcolumn), Bool(outside),
+		    String(clipexpr), l_cliprange, String(clipcolumn), 
+                    Bool(outside), Bool(channelavg),
 		    quackinterval, String(quackmode), Bool(quackincrement),
                     String("FLAG"));
 	    }
@@ -243,7 +245,7 @@ flagger::setflagsummary(const std::string& field, const std::string& spw, const 
 	    if(ret) {
 		ret = flagger_p->setmanualflags(False,False,
 						String(""),Vector<Double>(),String(""),
-						False, 
+						False, False,
                                                 0.0, String("beg"), False,
                                                 String("SUMMARY"));
 	    }
@@ -284,7 +286,7 @@ flagger::setshadowflags(const std::string& field,
 		ret = flagger_p->setmanualflags(
 		    False, False,
 		    String(""), Vector<Double>(), String(""),
-		    False,
+		    False, False,
                     0.0, String("beg"), False,
                     String("SHADOW"), diameter);
 	    }

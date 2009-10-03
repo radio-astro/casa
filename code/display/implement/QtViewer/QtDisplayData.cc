@@ -923,7 +923,10 @@ Bool QtDisplayData::setCMBrtCont(const Vector<Float>& params) {
   return True;  }
 
 
-
+void QtDisplayData::unlock( ) {
+    if ( im_ != 0 ) im_->unlock( );
+    if ( cim_ != 0 ) cim_->unlock( );
+}
 
 
 void QtDisplayData::registerNotice(QtDisplayPanel* qdp) {

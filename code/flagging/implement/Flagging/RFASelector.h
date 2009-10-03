@@ -87,10 +87,12 @@ public:
 protected:
   typedef struct ClipInfo {
       RFDataMapper *mapper; 
-      Float vmin,vmax; 
-      Bool clip;          // flag outside range if True (otherwise flag inside)
-      Float offset;       // offset added to value (used for angles, etc.)
+      Float vmin, vmax; 
+      Bool channel_average; // average data over channels?
+      Bool clip;            // flag outside range if True (otherwise flag inside)
+      Float offset;         // offset added to value (used for angles, etc.)
   } ClipInfo;
+  
     
   template<class T> Bool reformRange( Matrix<T> &rng,const Array<T> &arr );
   template<class T> Bool parseRange( Matrix<T> &rng,const RecordInterface &parm,const String &id );
@@ -100,7 +102,7 @@ protected:
   void addString   ( String &str,const String &s1,const char *sep=" " );
   virtual void processRow  ( uInt ifr,uInt it );
   Bool parseMinMax ( Float &vmin,Float &vmax,const RecordInterface &spec,uInt f0 );
-  void addClipInfo ( const Vector<String> &expr,Float vmin,Float vmax,Bool clip );
+  void addClipInfo ( const Vector<String> &expr,Float vmin,Float vmax,Bool clip, Bool channel_average );
   void parseClipField  ( const RecordInterface &spec,Bool clip );
   void addClipInfoDesc ( const Block<ClipInfo> &clip );
 

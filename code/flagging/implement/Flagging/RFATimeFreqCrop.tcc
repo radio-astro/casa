@@ -45,7 +45,6 @@ RFATimeFreqCrop :: RFATimeFreqCrop( RFChunkStats &ch,const RecordInterface &parm
 	                    vi(ch.visIter()),
 	                    vb(ch.visBuf())
 {
-	cout << "constructor for RFATimeFreqCrop" << endl;
 	cubepos.resize(3);
 	matpos.resize(3);
 	ANT_TOL = parm.asDouble("ant_cutoff");

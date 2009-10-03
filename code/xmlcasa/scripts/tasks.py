@@ -11,6 +11,7 @@ from applycal import *
 from bandpass import *
 from blcal import *
 from browsetable import *
+from calstat import *
 from clean import *
 from oldclean import *
 from clearcal import *

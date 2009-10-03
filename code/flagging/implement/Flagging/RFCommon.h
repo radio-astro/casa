@@ -76,7 +76,7 @@ const char
     RF_FLAGRANGE[] = "flagrange",
     RF_MIN[]       = "min",
     RF_MAX[]       = "max",
-    
+    RF_CHANAVG[]   = "chanavg",
     
     RF_NDEG[]    = "ndeg",
     RF_SPWID[]   = "spwid", 

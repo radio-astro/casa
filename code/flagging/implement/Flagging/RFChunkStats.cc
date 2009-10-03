@@ -177,7 +177,7 @@ void RFChunkStats::newChunk ()
           //cout << "flag() = " << visbuf.flag() << endl;
           //cout << "flagRow() = " << visbuf.flagRow() << endl;
 
-          if (scan_start.size() < scan+1) {
+          if (scan_start.size() < (unsigned) scan+1) {
             // initialize to -1
             scan_start     .resize(scan+1, -1.0);
             scan_start_flag.resize(scan+1, -1.0);

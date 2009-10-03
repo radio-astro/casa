@@ -36,9 +36,9 @@ known_releases = ["CASA Version 2.3.0 (build #6654)",
                   "CASA Version 2.4.0 (build #8115)"]
 
 exclude_host = []
-#exclude_test = ['pointing_regression']  #temporarily!
-exclude_test = []
-same_version_per_host = False  # if False the latest run for each test is reported
+exclude_test = {}
+exclude_test['pointing_regression'] = ["CASA Version 2.4.0 (build #8115)"]
+same_version_per_host = False # if False, the latest run for each test is reported
 
 def cmp_exec(a, b):
     if a[1] == 'exec':
@@ -116,7 +116,7 @@ def selected_revisions(data):
     # 32,48,64,80,96   (density=1/16 in range < 125)
     # etc.
     #
-    # and also 5,6,7,8,9
+    # and also 5,6,7,8,9, ... 4b-1
     #
     b = 5
     d = 4
@@ -128,7 +128,7 @@ def selected_revisions(data):
         for j in range(20):
             # loops until b^20 (i.e. long enough)
             if (c < interval and (c % density) == 0) or \
-                   (c < 2*b) :
+                   (c < 4*b) :
 
                 use_it = True
                 break
@@ -197,10 +197,11 @@ class report:
         #
         # collect some general data
         #
-        hosts_set    = sets.Set()
-        tests_set    = sets.Set()
-        self.subtests = {}
-        casas_set    = sets.Set()
+        hosts_set         = sets.Set()
+        tests_set         = sets.Set()
+        self.tests_v      = {}          # tests per version
+        self.subtests     = {}
+        casas_set         = sets.Set()
         for log in data:
             # Use only the hostname as key
             # (the 'platform' string format might change
@@ -214,6 +215,11 @@ class report:
             test = log['testid']
             if not self.subtests.has_key(test):
                 self.subtests[test] = sets.Set()
+
+            if not self.tests_v.has_key(log['CASA']):
+                self.tests_v[log['CASA']] = sets.Set()
+
+            self.tests_v[log['CASA']].add(log['testid'])
                 
             if log['type'] == 'exec':
                 self.subtests[test].add(('', log['type']))
@@ -395,7 +401,7 @@ class report:
         extended = False
         self.generate_host_vs_revision('Revision vs. platform',
                                        reg_dir, report_dir,
-                                       self.tests,
+                                       self.tests_v,
                                        False, extended, data, fd)
 
         self.dump_legend(fd)
@@ -411,7 +417,7 @@ class report:
         extended = True
         self.generate_host_vs_revision('Revision vs. platform',
                                        reg_dir, report_dir,
-                                       self.tests,
+                                       self.tests_v,
                                        gen_plot, extended, data, fd)
 
         fd.write('<hr>')
@@ -453,16 +459,16 @@ class report:
                 summary[host][casa]['pass'] = 0
                 summary[host][casa]['fail'] = 0
                 summary[host][casa]['undetermined'] = 0
-                for test in tests:
+                for test in tests[casa]:
                     status  [host][casa][test] = {}
                     run_date[host][casa][test] = {}
                     l       [host][casa][test] = {}
 
         for log in data:
-            if log['testid'] in tests:
-                host = log['host']
-                casa = log['CASA']
-                test = log['testid']
+            host = log['host']
+            casa = log['CASA']
+            test = log['testid']
+            if test in tests[casa]:
                 if log['type'] == 'exec':
                     subtest = ('', log['type'])
                 else:
@@ -490,7 +496,7 @@ class report:
         for host in self.hosts:
             for casa in self.casas:
                 # Count number of pass/fail/undet.
-                for test in tests:
+                for test in tests[casa]:
                     for subtest in self.subtests[test]:
                         if status[host][casa][test].has_key(subtest):
                             s = status[host][casa][test][subtest]
@@ -641,7 +647,8 @@ class report:
 
         subtests_list = {}
 
-        for test in self.tests:
+        for test in self.tests:      # Loop through set of all tests,
+                                     # not just test for any particular version
 
             # loop through the subtests so that the 'exec' subtest
             # is always processed first
@@ -654,6 +661,7 @@ class report:
             fd.write('<TR>')
             fd.write('<TD rowspan='+str(1+len(self.subtests[test]))+' align=center><big><b>')
             if extended:
+                fd.write('<a name="'+test+'"></a>')
                 fd.write('<a href="summary_'+test+'.html">'+shorten(test)+'</a>')
 
                 f = open(summary_filename, "w")
@@ -661,17 +669,23 @@ class report:
                 f.write('<html><head></head><body><center>\n')
 
                 print "Creating %s..." % (summary_filename)
+
+                # For every CASA version, make a summary of only
+                # the current test
+                tests_to_consider = {}
+                for casa in self.casas:
+                    tests_to_consider[casa] = [test]
                 
                 self.generate_host_vs_revision(test+' all subtests',
                                                reg_dir, report_dir,
-                                               [test],
+                                               tests_to_consider,
                                                False, False,
                                                data, f)
                 self.dump_legend(f)
                 f.write('</center></body></html>')
                 f.close()               
             else:
-                fd.write('<a href="summary_'+test+'.html">'+shorten(test, 10)+'</a>')
+                fd.write('<a href="#'+test+'">'+shorten(test, 10)+'</a>')
                 
             fd.write('</big></b>')
             if extended and self.test_description.has_key(test):
@@ -1260,14 +1274,17 @@ class report:
                 if not found_ref:
                     is_valid = False
 
-            if is_valid and \
-                   not data_file['host'] in exclude_host and \
-                   not (data_file['testid'] in exclude_test \
-                        and \
-                        (data_file['host'].find('tst') >= 0 or \
-                         data_file['host'].find('ma014655') >= 0 \
-                         )):                # ignore pc011896 for now; it is out of date
 
+            if is_valid and data_file['host'] in exclude_host:
+                is_valid = False
+
+            if is_valid and \
+                   exclude_test.has_key(data_file['testid']) and \
+                   data_file['CASA'] in exclude_test[data_file['testid']]:
+                #print "Excluding", data_file['testid'], "in version", data_file['CASA']
+                is_valid = False
+                               
+            if is_valid:
                 if revision == 'all' or \
                        data_file['host'].find('tst') >= 0 or \
                        data_file['host'].find('ma014655') >= 0:

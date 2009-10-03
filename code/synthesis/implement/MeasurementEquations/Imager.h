@@ -45,6 +45,7 @@
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 #include <graphics/GenericPlotter/SimplePlotter.h>
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
@@ -58,6 +59,7 @@ class File;
 class VPSkyJones;
 class PGPlotter;
 class EPJones;
+class ViewerProxy;
 template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
@@ -708,23 +710,15 @@ protected:
   String pointingDirCol_p;
   VisImagingWeight imwgt_p;
 
+  // viewer connection
+  ViewerProxy *viewer_p;
+  int clean_panel_p;
+  int image_id_p;
+  int mask_id_p;
+
 };
 
 
 } //# NAMESPACE CASA - END
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-

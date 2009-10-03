@@ -194,6 +194,7 @@ public:
                       Vector<Double> cliprange, 
                       String clipcolumn, 
                       Bool outside, 
+                      Bool channel_average,
                       Double quackinterval=0.0, 
                       String quackmode=String("beg"),
                       Bool quackincrement=Bool(false),

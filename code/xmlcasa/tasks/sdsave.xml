@@ -26,6 +26,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value></value>
     </param>
 
+    <param type="intArray" name="rowlist">
+	    <description>list of row numbers to process (e.g. [0,2,4,6])</description>
+	    <value></value>
+    </param>
+
     <param type="intArray" name="scanlist">
 	    <description>list of scan to process (e.g. [20,21,22,23])</description>
 	    <value></value>
@@ -126,6 +131,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <example>
   Keyword arguments:
         sdfile -- name of input SD dataset
+        rowlist -- list of row numbers to process
+                default: [] (use all rows)
+                example: [0,2,4,6]
+                         For expert users only!
+                         this selection is applied first, and then 
+                         followed by the selection with scans, fields, 
+                         ifs, and polarizations. 
         scanlist -- list of to process
                 default: [] (use all scans)
                 example: [21,22,23,24]
@@ -186,8 +198,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         Task sdsave writes the single dish data to a disk file in 
         specified format (ASAP, MS2, SDFITS, ASCII). It is possible to 
-        save the subset of the data by selecting scan numbers, IF ids,
-        polarization ids and field names. The ASAP (scantable) format 
+        save the subset of the data by selecting row numbers, scan numbers, 
+        IF ids, polarization ids and field names. The ASAP (scantable) format 
         is recommended for further analysis using Sd tool. For further 
         imaging using imager, save the data to the Measurement Set (MS2).
 

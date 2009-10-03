@@ -202,7 +202,9 @@ class QtDisplayData : public QObject {
   //# be able to assume it will exist for the life of the QDD).
   ImageInterface<Float>* imageInterface() { return im_;  }
  
- 
+  // force unlocking of paged images
+  void unlock( );
+
  public slots:
   
   // (Should only be used by QtDisplayPanels to notify the QDD that it

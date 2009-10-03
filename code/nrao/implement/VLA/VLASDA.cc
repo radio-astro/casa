@@ -176,14 +176,16 @@ MFrequency::Types VLASDA::restFrame(VLAEnum::CDA cda) const {
   Char code;
   itsRecord >> code;
   switch (code) {
-  case 'T':
-    return MFrequency::TOPO;
   case 'G':
     return MFrequency::GEO;
   case 'B':
     return MFrequency::BARY;
   case 'L':
     return MFrequency::LSRK;
+  case 'T':
+  default:
+    // Assume TOPO when not specified
+    return MFrequency::TOPO;
   }
   // I have to return something! This should be suitably meaningless.
   return  MFrequency::N_Types;

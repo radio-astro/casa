@@ -746,6 +746,7 @@ namespace casa {
 				 Vector<Double> cliprange, 
 				 String clipcolumn, 
 				 Bool outside, 
+                                 Bool channel_average,
 				 Double quackinterval, 
                                  String quackmode,
                                  Bool quackincrement,
@@ -945,10 +946,12 @@ namespace casa {
 		clipDesc.addField(RF_EXPR, TpString);
 		clipDesc.addField(RF_MIN, TpDouble);
 		clipDesc.addField(RF_MAX, TpDouble);
+                clipDesc.addField(RF_CHANAVG, TpBool);
 		Record clipRec(clipDesc);
 		clipRec.define(RF_EXPR, clipexpr);
 		clipRec.define(RF_MIN, cliprange[0]);
 		clipRec.define(RF_MAX, cliprange[1]);
+                clipRec.define(RF_CHANAVG, channel_average);
 		
 		if ( outside )
 		  {

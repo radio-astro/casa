@@ -76,9 +76,9 @@ class cleanhelper:
 	
         if(mode=='frequency'):
         ##check that start and step have units
-            if(qa.quantity(start)['unit'].find('Hz') < 1):
+            if(qa.quantity(start)['unit'].find('Hz') < 0):
                 raise TypeError, "start parameter is not a valid frequency quantity "
-            if(qa.quantity(width)['unit'].find('Hz') < 1):
+            if(qa.quantity(width)['unit'].find('Hz') < 0):
                 raise TypeError, "width parameter is not a valid frequency quantity "	
         elif(mode=='velocity'):
         ##check that start and step have units
@@ -133,6 +133,7 @@ class cleanhelper:
     def definemultiimages(self, rootname, imsizes, cell, stokes, mode, spw,
                           nchan, start, width, restfreq, field, phasecenters,
                           names=[], facets=1, outframe='',veltype='radio',  makepbim=False):
+        #pdb.set_trace()
         #will do loop in reverse assuming first image is main field
         if not hasattr(imsizes, '__len__'):
             imsizes = [imsizes]
@@ -252,7 +253,7 @@ class cleanhelper:
                     ia.set(pixels=1.0)
                     ia.done()
 
-    def makemultifieldmask2(self, maskobject=''):
+    def makemultifieldmask2(self, maskobject='',slice=-1):
         """
         New makemultifieldmask to accomodate different kinds of masks supported
         in clean with flanking fields (added by TT)
@@ -323,7 +324,13 @@ class cleanhelper:
                                 self.csys=ia.coordsys().torecord()
                                 shp = ia.shape()
                                 ia.done()
-                                self.copymaskimage(masklets,shp,'__tmp_mask')
+                                if slice>-1:
+                                    self.getchanimage(masklets,masklets+'chanim',slice)
+                                    self.copymaskimage(masklets+'chanim',shp,'__tmp_mask')
+                                else:
+                                    self.copymaskimage(masklets, shp, '__tmp_mask')
+                                ia.removefile(maskets+'chanim')
+                                #self.copymaskimage(masklets,shp,'__tmp_mask')
                                 ia.open(self.maskimages[self.imagelist[maskid]])
                                 ia.calc(pixels='+ __tmp_mask')
                                 ia.done()
@@ -387,7 +394,7 @@ class cleanhelper:
                 ia.done()
                 
         
-    def makemaskimage(self, outputmask='', imagename='', maskobject=[]):
+    def makemaskimage(self, outputmask='', imagename='', maskobject=[], slice=-1):
         """
         This function is an attempt to convert all the kind of 'masks' that
         people want to throw at it and convert it to a mask image to be used
@@ -404,6 +411,10 @@ class cleanhelper:
         masktext=[]
         maskrecord={}
         tablerecord=[]
+        # relax to allow list input for imagename 
+        if(type(imagename)==list):
+           imagename=imagename[0] 
+
         if(type(maskobject)==dict):
             maskrecord=maskobject
             maskobject=[]
@@ -432,7 +443,6 @@ class cleanhelper:
                     masklist.append(masklets)
                 if(type(masklets)==dict):
                     maskrecord=masklets
-                
         if(len(outputmask)==0):
             outputmask=imagename+'.mask'
         if(os.path.exists(outputmask)):
@@ -455,7 +465,11 @@ class cleanhelper:
         ia.close()
         if(len(maskimage) > 0):
             for ima in maskimage :
-                self.copymaskimage(ima, shp, '__temp_mask')
+                if slice>-1:
+                    self.getchanimage(ima, ima+'chanim',slice)
+                    self.copymaskimage(ima+'chanim',shp,'__temp_mask')
+                else:
+                    self.copymaskimage(ima, shp, '__temp_mask')
                 #ia.open(ima)
                 #ia.regrid(outfile='__temp_mask',shape=shp,csys=self.csys,
                 #          overwrite=True)
@@ -467,14 +481,16 @@ class cleanhelper:
                 ia.done()
                 ia.removefile('__temp_mask')
                 ia.removefile('__temp_mask2')
+                ia.removefile(ima+'chanim')
             #make image a mask image i.e 1 and 0 only
             ia.open(outputmask)
             ###getchunk is a mem hog
             #arr=ia.getchunk()
             #arr[arr>0.01]=1
             #ia.putchunk(arr)
-            ia.calc(pixels='iif('+outputmask+'>0.01, 1, 0)')
+            ia.calc(pixels='iif('+outputmask.replace('/','\/')+'>0.01, 1, 0)')
             ia.close()
+        #pdb.set_trace()
         #### This goes when those tablerecord goes
         if(len(tablerecord) > 0):
             reg={}
@@ -503,11 +519,13 @@ class cleanhelper:
             for reg in regs:
                 elrec=rg.fromtabletorecord(imagename, reg)
                 self.im.regiontoimagemask(mask=outputmask, region=elrec)
+
         self.outputmask=outputmask
+            
         #Done with making masks
     def datselweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
                            wgttype, robust, noise, npixels, mosweight,
-                           innertaper, outertaper, calready):
+                           innertaper, outertaper, calready, nchan=-1, start=0, width=1):
         rmode='none'
         weighting='natural';
         if(wgttype=='briggsabs'):
@@ -533,10 +551,14 @@ class cleanhelper:
                 self.im.selectvis(field=k, spw=self.spwindex,time=timerange, usescratch=calready)
                 self.im.weight(type=weighting,rmode=rmode,robust=robust, npixels=npixels, noise=qa.quantity(noise,'Jy'))
             ###now redo the selectvis
-            self.im.selectvis(field=field,spw=spw,time=timerange,
+            #self.im.selectvis(field=field,spw=spw,time=timerange,
+            #                  baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
+            self.im.selectvis(nchan=nchan,start=start,step=width,field=field,spw=spw,time=timerange,
                               baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
         else:
-            self.im.selectvis(field=field,spw=spw,time=timerange,
+            #self.im.selectvis(field=field,spw=spw,time=timerange,
+            #                  baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
+            self.im.selectvis(nchan=nchan,start=start,step=width,field=field,spw=spw,time=timerange,
                               baseline=antenna, scan=scan, uvrange=uvrange, usescratch=calready)
             self.im.weight(type=weighting,rmode=rmode,robust=robust,
                            npixels=npixels, noise=qa.quantity(noise, 'Jy'))
@@ -820,7 +842,7 @@ class cleanhelper:
         return imsizes,phasecenters,imageids
 
     def copymaskimage(self, maskimage, shp, outfile):
-        
+        #pdb.set_trace() 
         ia.open(maskimage)
         oldshp=ia.shape()
         if((len(oldshp) < 4) or (shp[2] != oldshp[2]) or (shp[3] != oldshp[3])):
@@ -877,3 +899,76 @@ class cleanhelper:
                 retlist.append(l[i])
         return retlist 
 
+
+    def getchanimage(self,cubeimage,outim,chan):
+        """
+        create a slice of channel image from cubeimage
+        """
+        #pdb.set_trace()
+        ia.open(cubeimage)
+        modshape=ia.shape()
+        if modshape[3]==1:
+          return False
+        blc=[0,0,modshape[2]-1,chan]
+        trc=[modshape[0]-1,modshape[1]-1,modshape[2]-1,chan]
+        sbim=ia.subimage(outfile=outim, region=rg.box(blc,trc), overwrite=True)
+        sbim.close()
+        ia.close()
+        return True
+
+    def getfreqs(self,nchan,spw,start,width):
+        """
+        return a list of frequencies to be use in output clean image
+        """
+        freqlist=[]
+
+        if spw in (-1, '-1', '*', '', ' '):
+            spwinds = -1
+        else:
+            spwinds=ms.msseltoindex(self.vis, spw=spw)['spw'].tolist()
+            if(len(spwinds) == 0):
+                spwinds = -1
+
+        #if type(spw)==int:
+        #    spw0=spw
+        #elif type(spw)==str:
+        #    spwinds=[]
+        #    ind=0
+        #    spws=spw.split(',')
+        #    for spwexp in spws:
+        #        indx1=spwexp.find(':')
+        #        indx2=spwexp.find('~') 
+        #        if indx1>-1:
+        #           if indx2>indx1:
+        #               spwinds.append(int(spwexp[:indx1])) 
+        #           else:
+        #               spwinds.append(int(spwexp[:indx2]))
+        #        else:
+        #           if indx2>-1:
+        #               spwinds.append(int(spwexp[:indx2]))
+        #           else:
+        #               spwinds.append(int(spwexp))
+        #spwinds.sort()
+        #spw0=spwinds[0]       
+        if spwinds==-1:
+            # first row
+            spw0=0
+        else:
+            spw0=spwinds[0]
+        #pdb.set_trace() 
+        tb.open(self.vis+'/SPECTRAL_WINDOW')
+        chanfreqscol=tb.getcol('CHAN_FREQ')
+        tb.close()
+        # assume spw[0]  
+        chanfreqs=chanfreqscol.transpose()
+        chanfreqs1d=chanfreqs[spw0:].flatten() 
+        if start > len(chanfreqs1d):
+            raise TypeError, "start channel exceed data range"
+        startf = chanfreqs1d[start]
+        finc=(chanfreqs1d[start+1]-chanfreqs1d[start])*width
+        for i in range(nchan):
+            if i==0: 
+                freqlist.append(startf)
+            else:
+                freqlist.append(freqlist[-1]+finc) 
+        return freqlist, finc

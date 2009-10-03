@@ -188,6 +188,8 @@ class table
 
     bool clearlocks();
 
+    ::casac::record* statistics(const std::string& column, const std::string& complex_value, const bool useflags = true);
+
     private:
 
 	#include <xmlcasa/tables/table_private.h>

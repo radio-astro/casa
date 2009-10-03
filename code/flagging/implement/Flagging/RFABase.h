@@ -162,7 +162,7 @@ protected:
   RFChunkStats &chunk;
   Record params;
   String myname;
-  
+
   uInt num (StatEnums which) { return chunk.num(which); };
 
 // Bit mask of correlations which are used & flagged by this RFA. This mask is

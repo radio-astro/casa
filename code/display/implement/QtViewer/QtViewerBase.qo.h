@@ -180,7 +180,7 @@ class QtViewerBase : public QObject {
   static const Int INVALID=0;
   
   
- 
+  bool exiting( ) { return qtviewer_app_exit; }
  
  public slots:
  
@@ -273,7 +273,9 @@ class QtViewerBase : public QObject {
   // dataDisplaysAs_[datatype][0] will be the default displaytype for
   // that datatype.
   Vector<Vector<Int> > dataDisplaysAs_;
- 
+
+ private:
+  static bool qtviewer_app_exit;
  
  public: 
   

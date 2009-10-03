@@ -34,7 +34,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="ocorr_mode" >
 	    <description>output data for correlation mode AUTO_ONLY (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)</description>
-	    <value>co</value>
+	    <value>ca</value>
 	    <allowed kind="enum">
 	       <value>co</value>
 	       <value>ao</value>

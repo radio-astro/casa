@@ -31,6 +31,9 @@
 #include <vector>
 #include <string>
 #include <casadbus/viewer/ViewerProxy.dbusproxy.h>
+#include <casadbus/utilities/Conversion.h>
+#include <casa/Containers/Record.h>
+#include <xmlcasa/variant.h>
 
 namespace casa {
     class ViewerProxy :
@@ -40,17 +43,35 @@ namespace casa {
 
     public:
 
+	static const char **execArgs( );
+
+	ViewerProxy( const std::string &name );
 	ViewerProxy( const char *path, const char *name );
 	ViewerProxy( const std::string &path, const std::string &name );
 
-	int load( const std::string &path, const std::string &displaytype = "raster", int panel=0 )
-			{ return edu::nrao::casa::viewer_proxy::load( path, displaytype, panel ); }
-	int restore( const std::string &path, bool new_window = true )
-			{ return edu::nrao::casa::viewer_proxy::restore(path,new_window); }
+	dbus::variant start_interact( const dbus::variant &input, int panel )
+			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::start_interact(dbus::fromVariant(input), panel) ); }
+	dbus::variant load( const std::string &path, const std::string &displaytype = "raster", int panel=0 )
+			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::load( path, displaytype, panel ) ); }
+	dbus::variant reload( int panel_or_data )
+			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::reload(panel_or_data) ); }
+	dbus::variant unload( int data )
+			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::unload(data) ); }
+
+	dbus::variant restore( const std::string &path, bool new_window = true )
+			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::restore(path,new_window) ); }
+
+	dbus::variant hide( int panel )
+			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::hide(panel) ); }
+	dbus::variant show( int panel )
+			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::show(panel) ); }
+	dbus::variant close( int panel )
+			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::close(panel) ); }
+
 	std::string cwd( const std::string &new_path = "" )
 			{ return edu::nrao::casa::viewer_proxy::cwd( new_path ); }
-	int panel( const std::string &type="viewer" )
-			{ return edu::nrao::casa::viewer_proxy::panel( type ); }
+	dbus::variant panel( const std::string &type="viewer" )
+			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::panel(type) ); }
 
 	// device:	file name or printer name
 	// devicetype:	"file", "printer", or "ghostscript"
@@ -68,6 +89,7 @@ namespace casa {
 
 	std::vector<std::string> keyinfo( int key )
 			{ return edu::nrao::casa::viewer_proxy::keyinfo(key); }
+
 	bool done( ) 	{ return edu::nrao::casa::viewer_proxy::done( ); }
     };
 }

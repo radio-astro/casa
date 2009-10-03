@@ -5,11 +5,12 @@ def startup():
       print """___________________________________________________________
 Available tasks:
 
-   accum         flagdata       listhistory  sdsave
-   applycal      flagmanager    listobs      sdscale
-   bandpass      fluxscale      listvis      sdsmooth
-   blcal         ft             makemask     sdstat
-   browsetable   gaincal        mosaic       setjy
+   accum         fixvis         listcal      sdplot
+   applycal      flagdata       listhistory  sdsave
+   bandpass      flagmanager    listobs      sdscale
+   blcal         fluxscale      listvis      sdsmooth
+   browsetable   ft             makemask     sdstat
+   calstat       gaincal        mosaic       setjy
    clean         hanningsmooth  plotants     smoothcal
    clearcal      imcontsub      plotcal      specfit
    clearplot     imhead         plotms       split
@@ -21,7 +22,6 @@ Available tasks:
    feather       imsmooth       sdfit        vishead
    filecatalog   imstat         sdflag       visstat
    find          imval          sdlist       widefield
-   fixvis        listcal        sdplot        
                 
 Additional tasks available for ALMA commissioning use
          (still alpha code as of Beta release):
@@ -114,14 +114,15 @@ def tasklist():
       print 'applycal         deconvolve   uvcontsub     help par.parameter'
       print 'bandpass         feather      (uvcontsub2)  taskhelp'
       print 'blcal            ft           uvmodelfit    tasklist'
-      print 'gaincal          makemask                   browsetable'
-      print 'fluxscale        mosaic                     clearplot'
-      print '(fringecal)      widefield                  clearstat'
-      print 'clearcal                                    concat'
-      print 'listcal                                     filecatalog'
-      print 'smoothcal                                   startup'
-      print 'polcal                                      split'
-      print 'hanningsmooth                               fixvis'
+      print 'calstat          makemask                   browsetable'
+      print 'gaincal          mosaic                     clearplot'
+      print 'fluxscale        widefield                  clearstat'
+      print '(fringecal)                                 concat'
+      print 'clearcal                                    filecatalog'
+      print 'listcal                                     startup'
+      print 'smoothcal                                   split'
+      print 'polcal                                      fixvis'
+      print 'hanningsmooth'
       print '                                                 '
       print ''
       print 'Image Analysis   Simulation   Single Dish'

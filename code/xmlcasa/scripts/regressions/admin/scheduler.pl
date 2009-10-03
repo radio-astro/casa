@@ -54,7 +54,7 @@ $file_tests = $reg_dir . "/tests_list.txt";
 (-e $file_tests) or $file_tests = $admin_dir . "/tests_list.txt";
 
 if ($all) {
-    unlink($file_next) or die;
+    unlink($file_next);
 }
 
 repeat:

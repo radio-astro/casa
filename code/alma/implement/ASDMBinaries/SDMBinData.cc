@@ -814,7 +814,7 @@ namespace sdmbin {
     catch (SDMDataObjectReaderException e) { cout << e.getMessage()          << endl; }
     catch (SDMDataObjectParserException e) { cout << e.getMessage()          << endl; }
     catch (SDMDataObjectException e)       { cout << e.getMessage()          << endl; }
-    catch (exception e)                    { cout << e.what()                << endl; }
+    catch (std::exception e)               { cout << e.what()                << endl; }
     catch (...)                            { cout << "Unexpected exception." << endl; }
     return 1;
   }

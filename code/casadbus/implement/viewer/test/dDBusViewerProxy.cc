@@ -29,30 +29,122 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <casa/Containers/Record.h>
+#include <casadbus/utilities/Conversion.h>
+#include <casadbus/utilities/BusAccess.h>
+#include <casadbus/types/variant.h>
+#include <dbus-c++/types.h>
+#include <dbus/dbus-shared.h>
+
+using casa::Record;
+using casa::Array;
+using casa::Bool;
+using casa::IPosition;
+
+void show_variantmap( std::map<std::string, DBus::Variant> &variantmap );
+void show_variantvec( std::vector<DBus::Variant> &variantvec );
+
+void show_variant( DBus::Variant &variant ) {
+	std::cout << "\t" << variant.signature() << std::endl;
+	if ( variant.signature( ) == "s" ) {
+	    std::cout << "\t\t\t\t" << (variant.operator std::string( )) << std::endl;
+	} else if ( variant.signature( ) == "i" ) {
+	    std::cout << "\t\t\t\t" << (variant.operator int( )) << std::endl;
+	} else if ( variant.signature( ) == "u") {
+	    std::cout << "\t\t\t\t" << (variant.operator unsigned( )) << std::endl;
+	} else if ( variant.signature( ) == "d" ) {
+	    std::cout << "\t\t\t\t" << (variant.operator double( )) << std::endl;
+	} else if ( variant.signature( ) == "b" ) {
+	    std::cout << "\t\t\t\t" << (variant.operator bool( )) << std::endl;
+	} else if ( ! variant.signature( ).compare( 0, 2, "a{" ) ) {
+	    std::map<std::string, DBus::Variant> vm(variant.operator std::map<std::string, DBus::Variant>( ));
+	    std::cout << "\t\t\t\t==> " << vm.size() << std::endl;
+	    show_variantmap(vm);
+	} else if ( ! variant.signature( ).compare( 0, 2, "av" ) ) {
+	    std::vector<DBus::Variant> vl(variant.operator std::vector<DBus::Variant>( ));
+	    show_variantvec(vl);
+	}
+}
+
+void show_variantmap( std::map<std::string, DBus::Variant> &variantmap ) {
+    for ( std::map<std::string,DBus::Variant>::iterator it=variantmap.begin(); it != variantmap.end(); ++it ) {
+	std::cout << "\t\t" << it->first << " -> ";
+	show_variant( it->second );
+    }
+}
+
+void show_variantvec( std::vector<DBus::Variant> &variantvec ) {
+    for ( std::vector<DBus::Variant>::iterator it=variantvec.begin(); it != variantvec.end(); ++it ) {
+	std::cout << "\t\t";
+	show_variant( *it );
+	std::cout << std::endl;
+    }
+}
+
+
+class mycallback {
+    public:
+	mycallback( ) { }
+	casa::dbus::variant result( ) { return casa::dbus::toVariant(result_); }
+	bool callback( const DBus::Message & msg );
+    private:
+	DBus::Variant result_;
+};
+
+bool mycallback::callback( const DBus::Message &msg ) {
+    if (msg.is_signal("edu.nrao.casa.viewer","interact")) {
+	fprintf( stderr, "\tYESSSSSSSSSSS!!!!!!!!!!!!!!\n" );
+	fprintf( stderr, "\tsender:      %s\n", msg.sender( ) );
+	fprintf( stderr, "\tdestination: %s\n", msg.destination( ) );
+	DBus::MessageIter ri = msg.reader( );
+	ri >> result_;
+	casa::DBusSession::instance( ).dispatcher( ).leave( );
+    }
+    return true;
+}
 
 int main( int argc, const char *argv[ ] ) {
 
-    casa::DBusSession &session = casa::DBusSession::instance( );
-    std::vector<std::string> name_list(session.listNames( ));
+    casa::ViewerProxy *vp = casa::dbus::launch<casa::ViewerProxy>( "view_server" );
 
-    std::vector<std::string> viewers;
-    std::string casa_prefix("edu.nrao.casa.");
-    std::string viewer_prefix(casa_prefix + "viewer_");
-    for ( std::vector<std::string>::iterator iter = name_list.begin(); iter != name_list.end( ); ++iter ) {
-	if ( ! iter->compare(0,viewer_prefix.size(),viewer_prefix) )
-	    viewers.push_back(*iter);
+    if ( vp == 0 ) {
+	fprintf( stderr, "\t(n) crap, couldn't start viewer service...\n" );
+	exit(1);
     }
-    std::cout << "found " << viewers.size() << (viewers.size() > 1 ? " viewers..." : " viewer...") << std::endl;
-    for ( std::vector<std::string>::iterator iter = viewers.begin(); iter != viewers.end( ); ++iter ) {
-	std::cout << "\t" << *iter << std::endl;
+	      
+    std::string cwd = vp->cwd( );
+    fprintf( stdout, "current directory: %s\n", cwd.c_str( ) );
+    cwd = vp->cwd( "/Users/drs/dev/viewer/code/display/apps/casaviewer/casapy_het_test" );
+    fprintf( stdout, "    new directory: %s\n", cwd.c_str( ) );
+
+    casa::dbus::variant panel = vp->panel("clean");
+    if ( panel.type() != casa::dbus::variant::INT ) {
+	fprintf( stderr, "error: wrong type for panel id" );
+	exit(1);
     }
-    std::cout << (viewers.size() > 1 ? "they are " : "it is ") << "described as..." << std::endl;
-    for ( std::vector<std::string>::iterator iter = viewers.begin(); iter != viewers.end( ); ++iter ) {
-	std::string name = iter->substr(casa_prefix.size());
-	casa::ViewerProxy vp( "/casa/" + name, *iter );
-	// TODO: replace cwd() with a "status( )" (or something) function
-	//       which summarizes what the viewer is showing
-	std::cout << "\t" << vp.cwd( ) << std::endl;
+    casa::dbus::variant im3 = vp->load( "test4.image", "raster", panel.getInt( ) );
+    if ( im3.type() != casa::dbus::variant::INT ) {
+	fprintf( stderr, "error: wrong type for data id" );
+	exit(1);
     }
-    
+
+    mycallback *mycb = new mycallback( );
+    DBus::MessageSlot filter;
+    filter = new DBus::Callback<mycallback,bool,const DBus::Message &>( mycb, &mycallback::callback );
+    casa::DBusSession::instance( ).connection( ).add_filter( filter );
+
+    fprintf( stderr, "\t>>>>> ok, starting...\n" );
+    sleep(5);
+
+    casa::dbus::variant res = vp->start_interact( panel, panel.getInt( ) );
+    casa::DBusSession::instance( ).connection( ).flush( );
+    casa::DBusSession::instance( ).dispatcher( ).enter( );
+    casa::dbus::variant interact_result = mycb->result( );
+    casa::dbus::show( interact_result );
+
+    sleep(5);
+
+    vp->close(panel.getInt( ));
+    delete vp;
+
 }

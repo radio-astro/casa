@@ -400,6 +400,7 @@ class ExtendFlagger
       Vector<Double> cliprange;
       String clipcolumn;
       Bool outside;
+      Bool channelavg;
       Double quackinterval;
       String opmode;
 

@@ -114,7 +114,7 @@ void MSUVWGenerator::uvw_an(const MEpoch& timeCentroid, const Int fldID)
     //TODO: (Soon!) Antenna offsets are not handled yet.
     basMeas.set(bl_an_p[i], basref);
     MBaseline basOutFrame = elconv(basMeas);
-    MBaseline::Types botype = MBaseline::castType(basOutFrame.getRef().getType());
+    //MBaseline::Types botype = MBaseline::castType(basOutFrame.getRef().getType());
     MVuvw uvwOutFrame(basOutFrame.getValue(), phasedir.getValue());
     
     antUVW_p[i] = uvwOutFrame.getValue();

@@ -472,7 +472,7 @@ int NROReader::getHeaderInfo( Int &nchan,
   //cout << "epoch = " << epoch << endl ;
   string poltp = dataset_->getPOLTP()[0] ;
   //cout << "poltp = '" << poltp << "'" << endl ;
-  if ( poltp == "" ) 
+  if ( poltp == "" || poltp[0] == ' ' ) 
     //poltp = "None" ;
     poltp = "linear" ;   // if no polarization type specified, set to "linear"
   //else if ( strcmp( poltp, "LINR" ) == 0 )

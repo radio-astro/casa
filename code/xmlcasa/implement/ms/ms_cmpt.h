@@ -81,7 +81,24 @@ class ms
 
     bool selectpolarization(const std::vector<std::string>& wantedpol);
 
-    bool cvel(const std::string& outframe = "", const std::string& regrid_quantity = "chan", const double regrid_velo_restfrq = -9E99 , const std::string& regrid_interp_meth = "LINEAR", const double regrid_start = -9E99, const double regrid_center = -9E99, const double regrid_bandwidth = -1., const double regrid_chan_width = -1.);
+    bool cvel(const std::string& outframe = "", 
+	      const std::string& regrid_quantity = "chan", 
+	      const double regrid_velo_restfrq = -9E99 , 
+	      const std::string& regrid_interp_meth = "LINEAR", 
+	      const double regrid_start = -9E99, 
+	      const double regrid_center = -9E99, 
+	      const double regrid_bandwidth = -1., 
+	      const double regrid_chan_width = -1.);
+
+    bool cvel2(const std::string& mode = "channel", 
+	       const int nchan = -1, 
+	       const ::casac::variant& start = ::casac::initialize_variant("0"), 
+	       const ::casac::variant& width = ::casac::initialize_variant("1"), 
+	       const std::string& interp = "linear", 
+	       const ::casac::variant& phasec = ::casac::initialize_variant(""), 
+	       const ::casac::variant& restfreq = ::casac::initialize_variant(""), 
+	       const std::string& outframe = "", 
+	       const std::string& veltype = "radio");
 
     ::casac::record* getdata(const std::vector<std::string>& items, const bool ifraxis = false, const int ifraxisgap = 0, const int increment = 1, const bool average = false);
 

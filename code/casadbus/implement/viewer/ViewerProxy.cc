@@ -26,10 +26,23 @@
 //# $Id: $
 #include <casadbus/viewer/ViewerProxy.h>
 #include <casadbus/session/DBusSession.h>
+#include <casadbus/utilities/BusAccess.h>
+#include <casadbus/utilities/Conversion.h>
 
 namespace casa {
 
-    ViewerProxy::ViewerProxy( const char *path, const char *name ) : DBus::ObjectProxy( DBusSession::instance().connection( ), path, name) { }
-    ViewerProxy::ViewerProxy( const std::string &path, const std::string &name ) : DBus::ObjectProxy( DBusSession::instance().connection( ), path.c_str(), name.c_str()) { }
+
+    const char **ViewerProxy::execArgs( ) {
+	static const char *args[] = { "casaviewer", "--server", (char*) 0 };
+	return args;
+    }
+
+    ViewerProxy::ViewerProxy( const std::string &name ) : 
+		DBus::ObjectProxy( DBusSession::instance().connection( ), dbus::object(name).c_str(), dbus::path(name).c_str() ) { }
+    ViewerProxy::ViewerProxy( const std::string &path, const std::string &name ) :
+		DBus::ObjectProxy( DBusSession::instance().connection( ), path.c_str( ), name.c_str( )) { }
+    ViewerProxy::ViewerProxy( const char *path, const char *name ) :
+		DBus::ObjectProxy( DBusSession::instance().connection( ), path, name) { }
+
 
 }

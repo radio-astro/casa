@@ -49,113 +49,87 @@
 
 namespace casa {
 
-class QtViewer;
-class QtDisplayPanel;
-class QtDisplayData;
-class ImageRegion;
-class WorldCanvasHolder;
+    class QtViewer;
+    class QtDisplayPanel;
+    class QtDisplayData;
+    class ImageRegion;
+    class WorldCanvasHolder;
 
-// <synopsis>
-// Demo class to encapsulate 'serial' running of qtviewer into callable
-// methods of a class; this example also applies it to the task of
-// interactive selection of CLEAN boxes.
-// </synopsis>
-class QtCleanPanelGui: public QtDisplayPanelGui {
+    // <synopsis>
+    // Demo class to encapsulate 'serial' running of qtviewer into callable
+    // methods of a class; this example also applies it to the task of
+    // interactive selection of CLEAN boxes.
+    // </synopsis>
+    class QtCleanPanelGui: public QtDisplayPanelGui {
 
-  Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
-		//# implement/.../*.h files; also, makefile must include
-		//# name of this file in 'mocs' section.
+	Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+			//# implement/.../*.h files; also, makefile must include
+			//# name of this file in 'mocs' section.
   
+    public: 
  
- public: 
- 
-  QtCleanPanelGui( QtViewer *v, QWidget *parent=0 );
+	QtCleanPanelGui( QtViewer *v, QWidget *parent=0 );
   
-  ~QtCleanPanelGui();
+	~QtCleanPanelGui();
   
-  // prototype: the CleanBoxes type will probably change
-  typedef Vector<String> CleanBoxes;
+	bool supports( SCRIPTING_OPTION option ) const;
+	QVariant start_interact( QVariant input, int id );
 
-#if 0 
-  // returns True if it was able to find and display the image.
-  virtual Bool loadImage(String imgname, String maskname);
-  
-  virtual Bool imageLoaded() { return imagedd_!=0;  }
-  
-  // start viewer display; return when viewer windows are closed.
-  // Return value indicates event loop (exec) return status..
-  virtual Int go(Int& niter, Int& ncycle, String& threshold);
+	// the QtDBusViewerAdaptor can handle loading & registering data itself,
+	// but to connect up extra functionality, the upper-level QtDisplayPanelGui
+	// (or in the current case, the derived QtCleanPanelGui) would have to be
+	// notified that data has been added. This will allow it to set up the
+	// callbacks for drawing regions...
+	void addedData( QString type, QtDisplayData * );
 
-  virtual Int go();
-
-  //return/get the state of buttons on the viewer
-  virtual void getButtonState(Record& state);
-  virtual void setButtonState(const Record& state);
-
-
-  virtual CleanBoxes cleanBoxes() { return boxes_;  }
-  
+    protected slots:
  
+	virtual void exitStop();
+	virtual void exitDone();
+	virtual void exitNoMore();
+
+	// Connected to the rectangle region mouse tools new rectangle signal.
+	// Accumulates [/ displays] selected boxes.
+	virtual void newMouseRegion(Record mouseRegion, WorldCanvasHolder* wch);
+
+    signals:
+	void interact( QVariant );
+
+    protected: 
+
+	// scripted (via dbus) panels should override the closeEvent( ) and hide the gui
+	// instead of deleting it when it was created via a dbus script...
+	void closeEvent(QCloseEvent *event);
+
+	std::list<QWidget*> disabled_widgets;
  
- public slots: 
- 
-  // delete old dd (and clean boxes), if any.
-  virtual void clearImage();
+	QRadioButton* addRB_;
+	QRadioButton* eraseRB_;
+	QRadioButton* allChanRB_;
+	QRadioButton* thisPlaneRB_;
+	QPushButton* maskNoMorePB_;
+	QPushButton* maskDonePB_;
+	QPushButton* stopPB_;
+	QLineEdit* niterED_;
+	QLineEdit* ncyclesED_;
+	QLineEdit* threshED_;
+	Record buttonState_;
 
-  // delete accumulated clean boxes, if any.
-  virtual void clearCleanBoxes() { boxes_.resize(0);  }
-  
-  
- 
- protected slots:
- 
-  // Connected to the rectangle region mouse tools new rectangle signal.
-  // Accumulates [/ displays] selected boxes.
-  virtual void newMouseRegion_(Record mouseRegion, WorldCanvasHolder* wch);
+	// standard palette...
+	QPalette default_palette;
+	// palette used when input is expected for clean...
+	QPalette input_palette;
 
-  virtual void exitLoop();
-  virtual void exitStop();
-  virtual void exitDone();
-  virtual void exitNoMore();
- 
- protected:
+    private: 
+	bool in_interact_mode;
+	int interact_id;
 
- void getPlaneBoxRegion(const Vector<Double>& blc, const Vector<Double>& trc, 
-			ImageRegion& planeReg);
+	void writeRegionText(const ImageRegion& imageReg, const String& filename, Float value);
 
- void writeRegionText(const ImageRegion& imageReg, const String& filename, Float value);
-#endif
- protected: 
-  CoordinateSystem csys_p;  
-  DirectionCoordinate dirCoord_p;
-  String imgname_;
-  CleanBoxes boxes_;	// accumulated clean boxes.
-  
-  QtDisplayData* imagedd_;
-  QtDisplayData* maskdd_;	// later: to display clean region.
-
-  Int niter_p, ncycles_p;
-  String thresh_p;
-
- 
-  QGroupBox* clnGB_;
-  QGroupBox* chanGB_;
-  QGroupBox* maskGB_;
-  QGroupBox* stopGB_;
-  QGroupBox* niterGB_;
-  QRadioButton* addRB_;
-  QRadioButton* eraseRB_;
-  QRadioButton* allChanRB_;
-  QRadioButton* thisPlaneRB_;
-  QPushButton* maskNoMorePB_;
-  QPushButton* maskDonePB_;
-  QPushButton* stopPB_;
-  QLineEdit* niterED_;
-  QLineEdit* ncyclesED_;
-  QLineEdit* threshED_;
-  Record buttonState_;
-
-  Int retVal_p;
+	QtDisplayData* imagedd_;
+	QtDisplayData* maskdd_;		// later: to display clean region.
+	CoordinateSystem csys_p;  
+	DirectionCoordinate dirCoord_p;
 
 };
 

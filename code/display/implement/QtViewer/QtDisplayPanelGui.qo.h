@@ -69,7 +69,8 @@ class QtDisplayPanelGui : public QMainWindow,
 		//# name of this file in 'mocs' section.
 
  public:
-  
+  enum SCRIPTING_OPTION { INTERACT };
+
   QtDisplayPanelGui(QtViewer* v, QWidget* parent=0);
   ~QtDisplayPanelGui();
   
@@ -83,6 +84,24 @@ class QtDisplayPanelGui : public QMainWindow,
   virtual void setStatsPrint(Bool printStats=True) {
     qdp_->printStats = printStats;  }
 
+
+  // Used to close this panel (i.e. QMainWindow)... This function
+  // should be used instead of close() to programmatically close
+  // the window, i.e. cause it to no longer be valid.
+  virtual void closeMainPanel( );
+  // Used to indicate that "closing" the window should be reinterpreted
+  // as "hiding" the window, i.e. QtDBusViewerAdaptor is done with the
+  // window so when the user closes it it should go away.
+  virtual void releaseMainPanel( );
+
+  virtual bool supports( SCRIPTING_OPTION option ) const;
+  virtual QVariant start_interact( QVariant input, int id );
+  // the QtDBusViewerAdaptor can handle loading & registering data itself,
+  // but to connect up extra functionality, the upper-level QtDisplayPanelGui
+  // (or in the current case, the derived QtCleanPanelGui) would have to be
+  // notified that data has been added. This will allow it to set up the
+  // callbacks for drawing regions...
+  virtual void addedData( QString type, QtDisplayData * );
  
  public slots:
  
@@ -272,10 +291,12 @@ class QtDisplayPanelGui : public QMainWindow,
   QWidget*    trkgWidget_;
   
      
+  bool isOverridedClose( ) const { return close_override; }
  
  private:
   
   QtDisplayPanelGui() {  }		// (not intended for use)  
+  bool close_override;
     
 };
 

@@ -31,8 +31,8 @@ namespace casa {
     static const char *DBUS_SERVER_NAME = "org.freedesktop.DBus";
     static const char *DBUS_SERVER_PATH = "/org/freedesktop/DBus";
 
-    static DBus::BusDispatcher dispatcher;
-    static class init_dispatcher { public: init_dispatcher( ) { DBus::default_dispatcher = &dispatcher; } } init_dispatcher_;
+    bool init_dispatcher::initalized = false;
+    dbus::Dispatcher DBusSession::dispatcher_;
 
     DBusSession &DBusSession::instance( ) {
 	static DBus::Connection bus = DBus::Connection::SessionBus();

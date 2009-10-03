@@ -48,7 +48,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
 		   QMainWindow(parent),
 		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qrm_(0),
 		   qsm_(0), profile_(0), savedTool_(QtMouseToolNames::NONE),
-		   profileDD_(0) {
+		   profileDD_(0), close_override(false)  {
     
   setWindowTitle("Viewer Display Panel");
   
@@ -547,8 +547,26 @@ QtDisplayPanelGui::~QtDisplayPanelGui() {
   if(qsm_!=0) delete qsm_;
 }
 
+bool QtDisplayPanelGui::supports( SCRIPTING_OPTION ) const {
+    return false;
+}
 
+QVariant QtDisplayPanelGui::start_interact( QVariant, int ) {
+    return QVariant(QString("*error* unimplemented (by design)"));
+}
 
+void QtDisplayPanelGui:: addedData( QString type, QtDisplayData * ) { }
+
+void QtDisplayPanelGui::closeMainPanel( ) {
+    close_override = true;
+    close( );
+}
+
+void QtDisplayPanelGui::releaseMainPanel( ) {
+    close_override = true;
+    if ( isVisible( ) == false )
+	close( );
+}
 
 // Animation slots.
 

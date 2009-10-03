@@ -36,8 +36,17 @@ extern int qInitResources_QtViewer();
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-QtViewer::QtViewer() : QtViewerBase(), qdm_(0), qdo_(0), dbus_(NULL),
-		       autoDDOptionsShow(True) {
+QString QtViewer::name_;
+
+const QString &QtViewer::name( ) {
+    return name_;
+}
+
+QtViewer::QtViewer( bool is_server ) : QtViewerBase(), qdm_(0), qdo_(0), dbus_(NULL),
+				       autoDDOptionsShow(True)
+ {
+
+  name_ = (is_server ? "view_server" : "viewer");
 
   qInitResources_QtViewer();
 	// Makes QtViewer icons, etc. available via Qt resource system.
@@ -95,7 +104,7 @@ void QtViewer::hideAllSubwindows() {
   hideDataOptionsPanel();  }
 
     
-void QtViewer::createDPG() {
+QtDisplayPanelGui *QtViewer::createDPG() {
   // Create a main display panel Gui.
   //
   QtDisplayPanelGui* dpg = new QtDisplayPanelGui(this);
@@ -113,7 +122,8 @@ void QtViewer::createDPG() {
 	// restarts of the Qt event loop.  In that case, QtClean manages
 	// its own dpg storage.
 
-  dpg->show();  }
+  dpg->show();
+  return dpg; }
   
   
 void QtViewer::quit() {  hideAllSubwindows(); QtViewerBase::quit();  }

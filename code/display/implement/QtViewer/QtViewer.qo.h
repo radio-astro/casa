@@ -39,6 +39,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class QtDataManager;
 class QtDataOptionsPanel;
 class QtDBusViewerAdaptor;
+class QtDisplayPanelGui;
 
 // <summary>
 // Qt implementation of main viewer supervisory object -- Gui level.
@@ -73,12 +74,14 @@ class QtViewer : public QtViewerBase {
 
  public:
   
-  QtViewer();
+  QtViewer( bool is_server=false );
   ~QtViewer();
   
   QtDataManager* dataMgr() { return qdm_;  }
-  
-  
+
+  // name used to initialize connection to dbus
+  static const QString &name( );
+
  public slots:
  
   virtual void showDataManager();
@@ -90,7 +93,7 @@ class QtViewer : public QtViewerBase {
   virtual void hideAllSubwindows();
   
   // create a main display panel Gui 
-  virtual void createDPG();
+  virtual QtDisplayPanelGui *createDPG();
    
   // Exits Qt loop.  (Note that the loop can be restarted (and is, in
   // interactive clean, e.g.), with existing widgets intact.  This
@@ -120,6 +123,8 @@ class QtViewer : public QtViewerBase {
   //# if desired (yes, is is (gasp!) public data)).
   Bool autoDDOptionsShow;
  
+ private:
+  static QString name_;
     
 };
 

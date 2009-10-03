@@ -136,7 +136,7 @@ rename("$prefix/cksum_new", "$prefix/cksum");
 
 sys_exe("rm -f $prefix/$latest_release");
 
-$unpacked_dir = `/bin/ls -1 | grep CASA`;  # newly unpacked directory
+$unpacked_dir = `/bin/ls -1 | grep -E "(CASA|casapy-)"`;  # newly unpacked directory
 $? == 0 or die $!;
 chomp($unpacked_dir);
 chdir($unpacked_dir) or die $unpacked_dir;

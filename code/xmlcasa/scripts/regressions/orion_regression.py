@@ -91,11 +91,12 @@ clean('orion.ms',
       imagermode='mosaic',
       mosweight=True,
       ftmachine='ft',
-      cyclefactor=4,
-      cyclespeedup=500,
+      cyclefactor=2,
+      cyclespeedup=-1,
       multiscale=[0,3,10,30],
       negcomponent=-1,
       mask=datapath+'orion.mask6',
+      modelimage=datapath+'orion.gbt.im',
       imsize=[300,300],
       cell=['2.0arcsec','2.0arcsec'],
       phasecenter=6,
@@ -155,27 +156,28 @@ def joint_deconvolve(datapath):
 			bpa='0deg',normalize=False)
 	dc.close()
 	dc.open('orion_tgbt_regrid.im',psf='gbt_gau.im')
-	dc.setscales(scalemethod='uservector',uservector=[30.,100.,300.])
-	dc.clean(algorithm='msclean',model='orion_tjoint3',niter=500,
-		 gain=0.4,mask=datapath+'orion.mask6',threshold='0.1Jy')
+	dc.setscales(scalemethod='uservector',uservector=[30.,100.,200.])
+	dc.clean(algorithm='fullmsclean',model='orion_tjoint3',niter=50,
+		 gain=0.3,mask='',threshold='0.5Jy')
 	dc.close()
 	#default('clean')
+	ia.open('orion_tjoint3')
+	ia.calc(pixels='orion_tjoint3*"'+datapath+'orion.mask6"')
+	ia.close()
 
 	im.open('orion.ms')
 	im.selectvis(field=[2,3,4,5,6,7,8,9,10],spw=[0,1])
 	im.defineimage(nx=300,cellx='2arcsec',phasecenter=6,spw=[0,1])
 	im.setvp(dovp=True)
 	#im.setscales(scalemethod='uservector',uservector=[0,3,10,30,100])
-	im.setscales(scalemethod='uservector',uservector=[0,3,10,30, 70])
+	im.setscales(scalemethod='uservector',uservector=[0,3,10,30])
 	###if clean component for large scale goes negative continue to use
 	##that scale
-
-	## NEW as of 6/12/2009
-	im.setoptions(ftmachine='mosaic')
-	im.setmfcontrol(stoplargenegatives=-1, cyclefactor=5, cyclespeedup=100)
+	im.setoptions(ftmachine='ft')
+	im.setmfcontrol(stoplargenegatives=-1, cyclefactor=2.0, cyclespeedup=-1)
 	im.weight(type='briggs',rmode='norm',robust=-1,mosaic=True)
 	im.clean(algorithm='mfmultiscale', model='orion_tjoint3',
-		 image='orion_tjoint3.image', gain=0.2, niter=1000,
+		 image='orion_tjoint3.image', gain=0.3, niter=10000,
 		 mask=datapath+'orion.mask6')
 	im.close()
 	return time.time()
@@ -258,14 +260,14 @@ print >>logfile,'*                               *'
 #              Test name          Stat type Expected  Label irregularities 
 test_descs = (('Feather 1',           'max',  0.780,  ' '),
 	      ('Feather 2',           'max',  0.868,  ' '),
-	      ('SD Model (MS)',       'max',  0.935),
+	      ('SD Model (MS)',       'max',  1.04),
 	      ('SD Model (MEM)',      'max',  0.87),
-	      ('Joint Deconvolution', 'max',  1.06, '', 'Joint Decon1'), # 1.014
+	      ('Joint Deconvolution', 'max',  0.96, '', 'Joint Decon1'), # 1.014
 	      ('Feather 1',           'flux', 242.506,  ' '),
 	      ('Feather 2',           'flux', 242.506,  ' '),
-	      ('SD Model (MS)',       'flux', 187, ' ', 'SD Model (MS)', 'Feather 3'),
+	      ('SD Model (MS)',       'flux', 364, ' ', 'SD Model (MS)', 'Feather 3'),
 	      ('SD Model (MEM)',      'flux', 289, '', 'SD Model (MEM)', 'Joint Deconvolution'),
-	      ('Joint Deconvolution', 'flux', 620, '', 'Joint Decon2')) # 360.468
+	      ('Joint Deconvolution', 'flux', 326, '', 'Joint Decon2')) # 360.468
 
 def log_test_result(test_results, testdesc, logfile):
 	"""Append testdesc to logfile and return whether or not the test was

@@ -50,9 +50,10 @@
 #include <casa/sstream.h>	
 namespace casa {
 
-    QtCleanPanelGui::QtCleanPanelGui( QtViewer *v, QWidget *parent ) : QtDisplayPanelGui( v, parent ), imgname_(), boxes_(), 
-								       imagedd_(0), maskdd_(0), niter_p(100),
-								       ncycles_p(10), thresh_p("0Jy"), retVal_p(0) {
+    QtCleanPanelGui::QtCleanPanelGui( QtViewer *v, QWidget *parent ) : QtDisplayPanelGui( v, parent ),
+								       in_interact_mode(false), interact_id(0),
+								       maskdd_(0), imagedd_(0) {
+
 	resize(700,900);
 	
 	v_->autoDDOptionsShow = False;		// Prevents automatically showing 'adjust' panel.
@@ -66,7 +67,7 @@ namespace casa {
 	widget->setFixedSize(641, 51);
 	    
 	QFont smallFont;
-	smallFont.setPointSize(9);
+	smallFont.setPointSize(8);
 
 	    
 	////////
@@ -92,6 +93,13 @@ namespace casa {
 	eraseRB_->setChecked(False);
 	eraseRB_->setToolTip("Erase the mask under drawn region");
 
+	frame_2->setEnabled(false);
+	default_palette = frame_2->palette( );
+	input_palette = frame_2->palette( );
+	input_palette.setColor( backgroundRole(), QColor( 20, 255, 64) );
+// 	input_palette.setColor( backgroundRole(), QColor(122, 193, 66) );	// Qt Green
+	frame_2->setAutoFillBackground(true);
+	disabled_widgets.push_back(frame_2);
 
 	////////
 	// channels or planes
@@ -114,6 +122,9 @@ namespace casa {
 	allChanRB_->setChecked(False);
 	allChanRB_->setToolTip("Propagate mask(or erasure) to all channels");
 
+	frame_4->setEnabled(false);
+	frame_4->setAutoFillBackground(true);
+	disabled_widgets.push_back(frame_4);
 
 	////////
 	// Action Buttons
@@ -154,6 +165,9 @@ namespace casa {
 	stopPB_->setIconSize(QSize(32, 32));
 	stopPB_->setFlat(true);
 
+	frame_3->setEnabled(false);
+	frame_3->setAutoFillBackground(true);
+	disabled_widgets.push_back(frame_3);
 
 	////////
 	// Iteration Control Items
@@ -203,6 +217,11 @@ namespace casa {
 	threshED_->setMinimumSize(QSize(64, 0));
 	threshED_->setMaxLength(128);
 	threshED_->setToolTip("Threshold at which to stop clean; e.g 10 mJy\nClean will stop immediately if it is reached.");
+
+	frame->setEnabled(false);
+	frame->setAutoFillBackground(true);
+	disabled_widgets.push_back(frame);
+
 	// 
 	//////// end iteration control items
 
@@ -222,15 +241,15 @@ namespace casa {
 	allChanRB_->setText(QApplication::translate("InteractiveClean", "All Channels", 0, QApplication::UnicodeUTF8));
 
 	dock->setWidget(widget);
-#if 0
+
 	// Receives rectangle regions from the mouse tool.
-	connect( dp_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),	
-		 SLOT( newMouseRegion_(Record, WorldCanvasHolder*)) );
+	connect( displayPanel(), SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),	
+		 SLOT( newMouseRegion(Record, WorldCanvasHolder*)) );
 
 	connect(stopPB_, SIGNAL(clicked()), this, SLOT(exitStop()));
 	connect(maskDonePB_, SIGNAL(clicked()), this, SLOT(exitDone()));
 	connect(maskNoMorePB_, SIGNAL(clicked()), this, SLOT(exitNoMore()));
-#endif
+
 	addDockWidget(Qt::TopDockWidgetArea, dock);
 
 	show( );
@@ -240,97 +259,82 @@ namespace casa {
 
     QtCleanPanelGui::~QtCleanPanelGui() { }
 
-#if 0
-    Bool QtCleanPanelGui::loadImage(String imgname, String maskname) {
-	// Loads image with pathname imgname for display and clean box
-	// selection (reloads even if pathname is the same as previously).
-	// Returns True if it was able to find and display the image.
+#define EXIT_FUNC(NAME,STR,EXTRA)						\
+    void QtCleanPanelGui::NAME() {						\
+	QMap<QString,QVariant> state;						\
+	state["action"] = STR;							\
+	state["niter"] = niterED_->text().toInt();				\
+	state["ncycle"] = ncyclesED_->text().toInt();				\
+	state["threshold"] = threshED_->text();					\
+	state["panel"] = interact_id;						\
+	for ( std::list<QWidget*>::iterator iter = disabled_widgets.begin();	\
+	      iter != disabled_widgets.end(); ++iter ) {			\
+	    (*iter)->setPalette( default_palette );				\
+	    (*iter)->setEnabled(false);						\
+	}									\
+	in_interact_mode = false;						\
+	if ( maskdd_ != 0 ) maskdd_->unlock( );					\
+	emit interact( QVariant(state) );					\
+	EXTRA									\
+    }
 
-	// delete old dd and old clean boxes, if any.
-	clearImage();
 
-	if((imgname!="") && (maskname != "")) {
+    EXIT_FUNC(exitDone,"continue",)
+    EXIT_FUNC(exitNoMore,"no more",)
+    EXIT_FUNC(exitStop,"stop",hide( );)
 
-	    imagedd_ = v_->createDD(imgname, "image", "raster");
-	    maskdd_ = v_->createDD(maskname, "image", "contour");
-	    if(imageLoaded()) {
-		Record opts;
-		opts.define("axislabelswitch", True);
-		imagedd_->setOptions(opts); 
-	    } else {
-		cerr<<endl<<v_->errMsg()<<endl<<endl; 
+    bool QtCleanPanelGui::supports( SCRIPTING_OPTION option ) const {
+	return option == INTERACT ? true : false;
+    }
+
+    QVariant QtCleanPanelGui::start_interact( QVariant input, int id ) {
+	if ( ! in_interact_mode ) {
+	    in_interact_mode = true;
+	    interact_id = id;
+	    for ( std::list<QWidget*>::iterator iter = disabled_widgets.begin();
+		  iter != disabled_widgets.end(); ++iter ) {
+		(*iter)->setPalette( input_palette );
+		(*iter)->setEnabled(true);
 	    }
+	    raise( );
+	    return QVariant(true);
+	} else {
+	    return QVariant(false);
 	}
-	if(imageLoaded() && maskdd_->imageInterface()!=0){
+    }
+
+
+    void QtCleanPanelGui::addedData( QString type, QtDisplayData *dd ) {
+	if ( type == "contour" ) {
+	    maskdd_ = dd;
 	    ImageInterface<Float> *maskim=maskdd_->imageInterface();
 	    csys_p=maskim->coordinates();
 	    Int dirIndex=csys_p.findCoordinate(Coordinate::DIRECTION);
 	    dirCoord_p=csys_p.directionCoordinate(dirIndex);
+	} else if ( type == "raster" ) {
+	    imagedd_ = dd;
+	    Record opts;
+	    opts.define("axislabelswitch", True);
+	    imagedd_->setOptions(opts); 
 	}
-	if(imageLoaded()) imgname_ = imgname;
-	    // (Not sure we even need imgname_...).
-	    return imageLoaded();
     }
 
-    void QtCleanPanelGui::clearImage() {
-	// delete old dd[s] and clean boxes, if any.
-	v_->removeAllDDs(); 
-	imagedd_=0;
-	maskdd_=0;
-	imgname_="";
-	clearCleanBoxes();
+    void QtCleanPanelGui::closeEvent(QCloseEvent *event) {
+	// v_->exiting( ) is set when the gui user clicks quit() from
+	// the menu bar... however, for the clean panel gui, we should
+	// probably only exit when the script/c++ user invokes
+	// closeMainPanel( ) via the close( ) slot on the
+	// QtDBusViewerAdaptor... which sets isOverridedClose( )...
+//	if ( ! v_->exiting( ) && ! isOverridedClose( ) ) {
+	if ( ! isOverridedClose( ) ) {
+	    event->ignore( );
+	    hide( );
+	} else {
+	    QtDisplayPanelGui::closeEvent(event);
+	}
     }
 
-
-
-    Int QtCleanPanelGui::go(){
-	Int niter=0;
-	Int ncycle=0;
-	String thresh="0.0Jy";
-	return go(niter, ncycle, thresh);
-    }
-
-
-    Int QtCleanPanelGui::go(Int& niter, Int& ncycle, String& threshold) {
-	// Start viewer's display event loop; returns when viewer window
-	// is closed.	Return type is an example format for the clean boxes
-	// selected / accumulated while the window was open.
-
-	niterED_->setText(QString(String::toString(niter).c_str()));
-	ncyclesED_->setText(QString(String::toString(ncycle).c_str()));
-	threshED_->setText(QString(threshold.c_str()));
-
-	dpg_->show();
-	if(!imageLoaded()) v_->showDataManager();	// (Browse for file).
-
-	niter=niterED_->text().toInt();
-	ncycle=ncyclesED_->text().toInt();
-	threshold=String(threshED_->text().toStdString());
-	return retVal_p;
-    }	
-
-    void QtCleanPanelGui::exitDone() {
-	// retVal_p=0;
-	// v_->quit();
-    }
-	
-    void QtCleanPanelGui::exitNoMore() {
-	// retVal_p=1;
-	// v_->quit();
-    }
-	
-    void QtCleanPanelGui::exitStop() {
-	// retVal_p=2;
-	// v_->quit();
-    }
-
-    void QtCleanPanelGui::exitLoop() {
-	// retVal_p=2;
-	// v_->quit();
-    }
-
-
-    void QtCleanPanelGui::newMouseRegion_(Record mouseRegion, WorldCanvasHolder* wch) {
+    void QtCleanPanelGui::newMouseRegion(Record mouseRegion, WorldCanvasHolder* wch) {
 	// Slot connected to the display panel's 'new mouse region' signal.
 	// Accumulates [/ displays] selected boxes.
 
@@ -343,7 +347,7 @@ namespace casa {
 
 	Float value=addRB_->isChecked()? 1.0 : 0.0;
 
-	if(imageLoaded() && maskdd_->imageInterface()!=0){
+	if( maskdd_ && imagedd_ && maskdd_->imageInterface() != 0 ){
 	    //Lets see if we can change the mask
 	    ImageRegion* imagereg=0;
 	    try{
@@ -360,54 +364,28 @@ namespace casa {
 		LatticeExpr<Float> myexpr(iif(pixmask, value, partToMask) );
 		partToMask.copyData(myexpr);
 		((*maskdd_).dd())->refresh(True);
-		if(imagereg !=0)
-		    delete imagereg;
-	    } catch(...) {
-		if(imagereg !=0)
-		    delete imagereg;
-	    }
-	}
 
-	dpg_->displayPanel()->resetSelectionTools();
-	// Clears mouse tool drawings.	(Maskdd should show accumulated
-	// clean boxes instead).
+	    } catch(...) { }
+
+	    if(imagereg !=0) delete imagereg;
+	}
+	// Clears mouse tool drawings.	(Maskdd should show accumulated clean boxes instead).
+	displayPanel()->resetSelectionTools();
     }
 
-    void QtCleanPanelGui::getPlaneBoxRegion(const Vector<Double>& blc, const Vector<Double>& trc, ImageRegion& planeReg){
-
-	Vector<Quantity> qBlc(2);
-	Vector<Quantity> qTrc(2);
-	Vector<Double> wBlc(2);
-	Vector<Double> wTrc(2);
-	dirCoord_p.toWorld(wBlc, blc);
-	dirCoord_p.toWorld(wTrc, trc);
-
-	for (Int i=0; i<2; ++i) {
-	    qBlc(i) = Quantum<Double>(wBlc(i), csys_p.worldAxisUnits()(i));
-	    qTrc(i) = Quantum<Double>(wTrc(i), csys_p.worldAxisUnits()(i));
-	}
-
-	Vector<Int> pixax(2);
-	pixax(0)=0;
-	pixax(1)=1;
-
-	Vector<Int> absrel(2, RegionType::Abs);
-
-	planeReg=ImageRegion(WCBox(qBlc,qTrc, pixax, csys_p, absrel));
-    }
-
-
-    void QtCleanPanelGui::writeRegionText( const ImageRegion& imageReg, 
-					   const String& filename, Float value) {
+    void QtCleanPanelGui::writeRegionText(const ImageRegion& imageReg, const String& filename, Float value){
 	//Write text of region
-	if ( imagedd_->imageInterface()==0 ) return;
+	if ( imagedd_ == 0 || imagedd_->imageInterface()==0) return;
+
 	Record regRec(imageReg.asWCRegion().toLCRegion(csys_p,imagedd_->imageInterface()->shape())->toRecord(""));
 	Vector<Float> x;
 	Vector<Float> y;
-	if(regRec.isDefined("name") && regRec.asString("name")=="LCIntersection") {
+
+	if(regRec.isDefined("name") && regRec.asString("name")=="LCIntersection"){
 	    regRec=regRec.asRecord("regions").asRecord(0).asRecord("region");
 	}
-	if ( regRec.isDefined("name") && regRec.asString("name")=="LCBox" ) {
+
+	if(regRec.isDefined("name") && regRec.asString("name")=="LCBox"){
 	    x.resize();
 	    y.resize();
 	    x=Vector<Float>(regRec.asArrayFloat("blc"));
@@ -415,38 +393,26 @@ namespace casa {
 	    x.resize(2,True);
 	    y.resize(2,True);	
 	}
-	if ( regRec.isDefined("name") && regRec.asString("name")=="LCPolygon" ) {
+
+	if(regRec.isDefined("name") && regRec.asString("name")=="LCPolygon"){
 	    x.resize();
 	    y.resize();
 	    x=Vector<Float>(regRec.asArrayFloat("x"));
 	    y=Vector<Float>(regRec.asArrayFloat("y"));	
 	}
-	if ( regRec.isDefined("oneRel") && regRec.asBool("oneRel") ) {
+
+	if(regRec.isDefined("oneRel") && regRec.asBool("oneRel")){
 	    x-=Float(1.0);
 	    y-=Float(1.0);
 	}		
+
 	String textfile=filename+".text";
 	ofstream outfile(textfile.c_str(), ios::out | ios::app);
-	if ( outfile ) {
+	if(outfile){
 	    outfile.precision(6);
 	    outfile << floor(x)<<"		" << floor(y) << "		 "<< Int(value) << endl;
 	}
 	//End of write text
     }
-
-    void QtCleanPanelGui::getButtonState( Record& state ) {
-	state.define("allchan", allChanRB_->isChecked());
-	state.define("addregions", addRB_->isChecked()) ;
-    }
-
-    void QtCleanPanelGui::setButtonState( const Record& state ) {
-	if ( state.isDefined("allchan") ) {
-	    Bool allchan;
-	    state.get("allchan", allchan);
-	    allChanRB_->setChecked(allchan);
-	    thisPlaneRB_->setChecked(!allchan);
-	}
-    }
-#endif
 
 } //# NAMESPACE CASA - END

@@ -46,7 +46,7 @@ class flagger
 
     bool setdata(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """");
 
-    bool setmanualflags(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """", const bool autocorrelation = false, const bool unflag = false, const std::string& clipexpr = """", const std::vector<double>& cliprange = std::vector<double> (0), const std::string& clipcolumn = "DATA", const bool outside = true, const double quackinterval = 0.0, const std::string& quackmode = "beg", const bool quackincrement = false);
+    bool setmanualflags(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """", const bool autocorrelation = false, const bool unflag = false, const std::string& clipexpr = """", const std::vector<double>& cliprange = std::vector<double> (0), const std::string& clipcolumn = "DATA", const bool outside = true, const bool channelavg = false, const double quackinterval = 0.0, const std::string& quackmode = "beg", const bool quackincrement = false);
 
     bool printflagselection();
 

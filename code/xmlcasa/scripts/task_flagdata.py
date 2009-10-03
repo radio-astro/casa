@@ -3,22 +3,6 @@ import time
 import os
 import sys
 
-pathname = os.environ.get('CASAPATH').split()[0]
-arch     = os.environ.get('CASAPATH').split()[1]
-if pathname.find('lib') >= 0:
-        filepath = pathname+'/lib/python2.5/heuristics/'
-else:
-   if pathname.find('Contents') >= 0 :
-        filepath = pathname+'/Resources/python/heuristics/'
-   else :
-        filepath = pathname+'/'+arch+'/python/2.5/heuristics/'
-
-sys.path.append(filepath)
-import sfiReducer
-import baseFlagger
-import htmlLogger
-
-
 debug = False
 def flagdata(vis = None, mode = None,
              spw = None, field = None,
@@ -30,18 +14,13 @@ def flagdata(vis = None, mode = None,
              scan = None,
              feed = None, array = None,
              clipexpr = None, clipminmax = None,
-             clipcolumn = None, clipoutside = None,
+             clipcolumn = None, clipoutside = None, channelavg = None,
              quackinterval = None, quackmode = None, quackincrement = None,
              autocorr = None,
              unflag = None, algorithm = None,
-             recipe = None,
              column = None, expr = None,
              thr = None, window = None,
              diameter = None,
-             source = None,
-             flux = None,
-             bpass = None,
-             gain = None,
              time_amp_cutoff = None,
              freq_amp_cutoff = None,
              freqlinefit = None,
@@ -51,7 +30,6 @@ def flagdata(vis = None, mode = None,
              end_chan = None,
              bs_cutoff = None,
              ant_cutoff = None,
-             showplots = None,
              flag_level = None):
 
         casalog.origin('flagdata')
@@ -65,27 +43,6 @@ def flagdata(vis = None, mode = None,
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 
-
-                if mode == 'alma':
-
-                        backup_flags(mode)
-
-                        sfir = sfiReducer.SFIReducer(vis, recipe=recipe)
-                        casalog.post('Invoking ' + str(recipe))
-                        casalog.post('Source field(s)        = ' + str(source))
-                        casalog.post('Flux     calibrator(s) = ' + str(flux))
-                        casalog.post('Gain     calibrator(s) = ' + str(gain))
-                        casalog.post('Bandpass calibrator(s) = ' + str(bpass))
-                        #casalog.post('A log of the run is available in ./html/AAAROOT.html')
-                        #print "now at ", inspect.currentframe().f_lineno, inspect.currentframe().f_code.co_filename
-                        sfir.reduce(source=source, flux=flux, gain=gain, bandpass=bpass)
-                
-                        casalog.post(str(recipe) + ' done')
-                        casalog.post('A log of the run is available in ./html/AAAROOT.html')
-
-                        fg.done(vis)
-                        return False
-
                 if mode == 'manualflag':
                         # In manualflag and quack modes,
                         # filter out the parameters which are not used
@@ -97,6 +54,7 @@ def flagdata(vis = None, mode = None,
                                          clipminmax=clipminmax,   # manualflag only
                                          clipcolumn=clipcolumn,   # manualflag only
                                          clipoutside=clipoutside, # manualflag only
+                                         channelavg=channelavg,   # manualflag only
                                          spw=spw,
                                          field=field,
                                          antenna=antenna,
@@ -111,6 +69,7 @@ def flagdata(vis = None, mode = None,
                                          autocorr=autocorr,
                                          unflag=unflag,
                                          clipminmax=[], clipoutside=False,
+                                         channelavg=False,
                                          quackinterval=quackinterval,   # quack only
                                          quackmode=quackmode,           # quack only
                                          quackincrement=quackincrement, # quack only
@@ -185,7 +144,9 @@ def flagdata(vis = None, mode = None,
                         ## Needs 'gnuplot'
                         ## Needs "ds9 &" running in the background (before starting casapy)
                         ## Needs xpaset, xpaget, etc.. accessible in the path (for ds9)
-                        par['showplots']=showplots
+                        par['showplots']=False
+			## jmlarsen: Do not show plots. There's no way for the user to interrupt
+			## a lengthy sequence of plots (CAS-1655)
                         
                         ## channel range (1 based)
                         par['start_chan']=start_chan 

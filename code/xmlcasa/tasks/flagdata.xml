@@ -30,7 +30,7 @@
                 </param>
 
                 <param type="string" name="mode">
-                        <description>Mode (manualflag,shadow,quack,summary,autoflag,alma,rfi)</description>
+                        <description>Mode (manualflag,shadow,quack,summary,autoflag,rfi)</description>
                         <value>manualflag</value>
                         <allowed kind="enum">
                         <value>manualflag</value>
@@ -38,7 +38,6 @@
                         <value>summary</value>
                         <value>quack</value>
                         <value>shadow</value>
-                        <value>alma</value>
                         <value>rfi</value>
                         </allowed>
                 </param>
@@ -131,6 +130,12 @@
                         <value type="bool">True</value>
                 </param>
 
+                <param type="any" name="channelavg" subparam="true">
+                        <description>Average over channels</description>
+                        <any type="variant" limittypes="bool boolArray"/>
+                        <value type="bool">False</value>
+                </param>
+
                 <param type="any" name="quackinterval" subparam="true">
                         <description>Quack n seconds from scan beginning/end</description>
                         <any type="variant" limittypes="double doubleArray"/>
@@ -170,15 +175,6 @@
                         </allowed>
                 </param>
 
-                <param type="string" name="recipe" subparam="true">
-                        <description>Flagging algorithm (pdb_recipe,vla_recipe)</description>
-                        <value>vla_recipe</value>
-                        <allowed kind="enum">
-                        <value>pdb_recipe</value>
-                        <value>vla_recipe</value>
-                        </allowed>
-                </param>
-
                 <param type="string" name="column" subparam="true">
                         <description>Data column to operate on.</description>
                         <value>DATA</value>
@@ -208,25 +204,6 @@
                         <description>Effective diameter (m) to use. -1 ==>antenna diameter</description>
                         <value>-1.0</value>
                 </param>
-
-
-		<param type="stringArray" name="source" subparam="true">
-			<description>Source field index numbers: source=[\'1\',\'2\']</description>
-			<value type="stringArray"></value>
-		</param>
-		<param type="stringArray" name="flux" subparam="true">
-			<description>Flux calibrator field index number: flux=[\'0\']</description>
-			<value type="stringArray"></value>
-		</param>
-		<param type="stringArray" name="bpass" subparam="true">
-			<description>Bandpass calibrator field index number: bpass=[\'0\']</description>
-			<value type="stringArray"></value>
-		</param>
-		<param type="stringArray" name="gain" subparam="true">
-			<description>Gain calibrator field index number: gain=[\'0\']</description>
-			<value type="stringArray"></value>
-                </param>
-
 
                 <param type="double" name="time_amp_cutoff" subparam="true">
                         <description>Flagging thresholds in units of sigma, where sigma is the stdev of the "fit"</description>
@@ -264,10 +241,7 @@
                         <description>total autocorrelation amplitude threshold for a functional antenna</description>
                         <value>0.0</value>
                 </param>
-                <param type="bool" name="showplots" subparam="true">
-                        <description>Show plots of each time-frequency chunk</description>
-                        <value>False</value>
-                </param>
+
                 <param type="int" name="flag_level" subparam="true">
                         <description>0: flag only what is found. 1: extend flags one timestep before and after. 2: extend flags one timestep and channel before/after</description>
                         <value>1</value>
@@ -282,6 +256,7 @@
                                         <default param="clipminmax"><value type="doubleArray"></value></default>
                                         <default param="clipcolumn"><value type="string">DATA</value></default>
                                         <default param="clipoutside"><value type="bool">True</value></default>
+                                        <default param="channelavg"><value type="bool">False</value></default>
                                 </equals>
                                 <equals value="autoflag">
                                         <default param="algorithm"><value type="string">timemed</value></default>
@@ -301,13 +276,6 @@
                                 <equals value="shadow">
                                         <default param="diameter"><value type="double">-1.0</value></default>
                                 </equals>
-                                <equals value="alma">
-                                        <default param="recipe"><value type="string">vla_recipe</value></default>
-                                        <default param="source"><value type="stringArray"></value></default>
-                                        <default param="flux"><value type="stringArray"></value></default>
-                                        <default param="gain"><value type="stringArray"></value></default>
-                                        <default param="bpass"><value type="stringArray"></value></default>
-                                </equals>
                                 <equals value="rfi">
                                         <default param="clipcolumn"><value type="string">DATA</value></default>
                                         <default param="clipexpr"><value type="string">ABS RR</value></default>
@@ -320,7 +288,6 @@
                                         <default param="end_chan"><value type="int">2048</value></default>
                                         <default param="bs_cutoff"><value type="double">0.0</value></default>
                                         <default param="ant_cutoff"><value type="double">0.0</value></default>
-                                        <default param="showplots"><value type="bool">False</value></default>
                                         <default param="flag_level"><value type="int">1</value></default>
                                 </equals>
                         </when>
@@ -347,7 +314,6 @@
             summary    = report the amount of flagged data
             quack      = remove/keep specific time range at scan beginning/end
             shadow     = remove antenna-shadowed data
-            alma       = ALMA pipeline auto-flagging
             rfi        = Radio Frequency Interference auto-flagging
             autoflag   = experimental auto-flagging outliers
 
@@ -357,7 +323,7 @@
         vis -- Name of input visibility file
                 default: none example: vis='ngc5921.ms'
         mode -- Mode of operation.
-                options: 'manualflag','autoflag','summary','quack','shadow','alma'
+                options: 'manualflag','autoflag','summary','quack','shadow'
                 default: 'manualflag'
 
         manualflag --  option does data-selected flagging.
@@ -374,8 +340,13 @@
 
               clipexpr -- Clip using the following:
                 default: 'ABS RR'; example: clipexpr='RE XX'
-                Options: 'ABS','ARG','RE','IM','NORM' + ' ' +
+                options: 'ABS','ARG','RE','IM','NORM' + ' ' +
                           'I','XX','YY','RR','LL'
+              channelavg -- Average data over (selected) channels? Channel
+                            selections are taken into account. Flagged channels
+                            are excluded from the average.
+                default: False
+                options: True,False
               clipminmax -- Range of data (Jy) that will NOT be flagged
                 default: [] means do not use clip option
                 example: [0.0,1.5]
@@ -434,42 +405,13 @@
                   spectral channels.
 
         rfi: RFI automatic flagging of outliers.
-           For more information, see ???
+           For more information, see ?
 
            clipcolumn -- the column on which to operate (DATA, CORRECTED, MODEL)
            clipexpr -- expression to use for flagging option
                 default: 'ABS RR'; example: expr='RE XX'
                 Options: 'ABS','ARG','RE','IM','NORM' + ' ' +
                      'I','XX','YY','RR','LL'
-
-        alma: Automatic flagging algorithm from the ALMA heuristics pipeline.
-           For more information on the algorithm, refer to the log report
-           produced during the execution of this algorithm.
-
-           Note: The selection parameters are *not* used in this mode. The
-           algorithm always run on the full MS.
-
-           Note: This algorithm is experimental. Use at your own risk!
-
-           recipe -- which algorithm to use
-                default: 'vla_recipe'
-                options: 'vla_recipe', 'pdb_recipe' 
-           flux -- which field(s) to use as flux calibrator
-           bpass -- which field(s) to use as bandpass calibrator
-           gain -- which field(s) to use as gain calibrator
-           source -- which field(s) are the sources
-
-           The source/flux/bpass/gain parameters must be vectors containing
-           the field IDs, not field names. For example:
-
-               flux   = ['0']
-               bpass  = ['1']
-               gain   = ['0']
-               source = ['2', '3']
-
-           if there are two source fields (2 and 3) and field='0' should be
-           used as both flux and gain calibrator.
-
 
         selectdata -- Other data selection parameters
                 default: True

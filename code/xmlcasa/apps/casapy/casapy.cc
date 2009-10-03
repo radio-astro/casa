@@ -25,11 +25,11 @@
 //#
 //# $Id$
 
+#include <Python.h>
+#include <CCM_Python/Py.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <Python.h>
-#include <CCM_Python/Py.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>

@@ -162,7 +162,7 @@ from smoothcal import smoothcal
 from imval import imval
 from vishead import vishead
 from visstat import visstat
-
+from calstat import calstat
 
 ##
 ## asap may not be available with every casa installation

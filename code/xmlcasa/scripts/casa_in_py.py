@@ -191,7 +191,7 @@ from smoothcal_pg import smoothcal_pg as smoothcal
 from imval_pg import imval_pg as imval
 from vishead_pg import vishead_pg as vishead
 from visstat_pg import visstat_pg as visstat
-
+from calstat_pg import calstat_pg as calstat
 
 ##
 ## asap may not be available with every casa installation

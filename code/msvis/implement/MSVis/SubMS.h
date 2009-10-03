@@ -274,6 +274,11 @@ class SubMS
 			   String& regridMessage
 			   );
 
+  // combineSpws():
+  // make one spectral window from all spws given by the spwids vector, 
+  // Vector<Int>(1,-1) means: use all SPWs
+  Bool combineSpws(const Vector<Int>& spwids = Vector<Int>(1,-1));
+
  private:
   // *** Private member functions ***
 
@@ -345,7 +350,10 @@ class SubMS
   MeasurementSet ms_p, mssel_p;
   MSColumns * msc_p;		// columns of msOut_p
   ROMSColumns * mscIn_p;
-  Bool doChanAver_p, antennaSel_p, sameShape_p;
+  Bool chanModification_p,      // Iff true, the input channels cannot simply
+                                // be copied through to the output channels.
+       antennaSel_p,
+       sameShape_p;
   Double timeBin_p;
   uInt numOutRows_p;
   String scanString_p, uvrangeString_p, taqlString_p;
@@ -355,7 +363,10 @@ class SubMS
   // Uninitialized by ctors.
   MeasurementSet msOut_p;
   Vector<Int> spw_p,      // The input spw corresponding to each output spw.
-              nchan_p,    // The # of output channels for each output spw.
+              spw_uniq_p, // Uniquified version of spw_p.
+              spwind_to_min_spwind_p,
+              nchan_p,    // The # of output channels for each range.
+              totnchan_p, // The # of output channels for each output spw.
               chanStart_p,
               chanStep_p,
               npol_p,

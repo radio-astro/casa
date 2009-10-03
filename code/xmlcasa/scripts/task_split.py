@@ -83,7 +83,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
 
         if(type(antenna) == list):
             antenna = ', '.join([str(ant) for ant in antenna])
-            
+
         ms.split(outputms=outputvis, field=field,
                  spw=spw,            step=width,
                  baseline=antenna,   subarray=array,

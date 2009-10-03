@@ -1955,6 +1955,79 @@ Date/Time:                         RR:                      RL:                 
   </example>
 </method>
 
+<method type="function" name="cvel2">
+   <shortdescription>transform spectral data to different reference frame and/or regrid the frequency channels
+   </shortdescription>
+   
+  <keyword>cvel</keyword>
+  <input>
+  
+     <param type="string" direction="in" name="mode">
+     <description> "channel", "velocity", or "frequency", default = "channel"
+     </description>
+     <value>channel</value>
+     </param>
+
+     <param type="int" direction="in" name="nchan">
+     <description> number of channels, default = -1 = all 
+     </description>
+     <value>-1</value>
+     </param>
+
+     <param type="any" direction="in" name="start">
+     <description> start channel, default = 0 
+     </description>
+     <any type="variant"/>
+     <value>0</value>
+     </param>
+
+     <param type="any" direction="in" name="width">
+     <description> new channel width, default = 1 
+     </description>
+     <any type="variant"/>
+     <value>1</value>
+     </param>
+
+     <param type="string" direction="in" name="interp">
+     <description> interpolation method, default = linear
+     </description>
+     <value>linear</value>
+     </param>
+
+     <param type="any" direction="in" name="phasec">
+     <description> phase center, default = first field
+     </description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" direction="in" name="restfreq">
+     <description> rest frequency, default = 1.4GHz 
+     </description>
+     <any type="variant"/>
+     <value>1.4GHz</value>
+     </param>
+
+     <param type="string" direction="in" name="outframe">
+     <description>LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO, default = "" = keep reference frame.</description>
+     </param>
+
+     <param type="string" direction="in" name="veltype">
+     <description>radio or optical, default = radio</description>
+     <value>radio</value>
+     </param>
+    
+  </input>
+  <returns type="bool"/>
+
+  <description>
+  This function permits you to transform the spectral data of your measurement set to a 
+  given reference frame and/or regrid it. It will combine all spectral windows of the MS into one.
+  </description>
+  <example>
+  </example>
+</method>
+
 
  
    <method type="function" name="getdata">

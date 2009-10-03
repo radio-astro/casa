@@ -31,6 +31,7 @@
 #include <vector>
 #include <string>
 #include <casadbus/session/DBusSession.dbusproxy.h>
+#include <casadbus/session/Dispatcher.h>
 
 namespace casa {
 
@@ -43,17 +44,35 @@ namespace casa {
 	static DBusSession &instance( );
 	std::vector<std::string> listNames( ) { return ListNames( ); }
 	DBus::Connection &connection( ) { return conn; }
+	dbus::Dispatcher &dispatcher( ) { return dispatcher_; }
 
     private:
 
 	DBus::Connection conn;
 	DBusSession( DBus::Connection & );
+	DBusSession( );
+
+	static dbus::Dispatcher dispatcher_;
 
 	// pure virtual functions (i.e. dbus signals)
 	void NameOwnerChanged(const std::string&, const std::string&, const std::string&);
 	void NameLost(const std::string&);
 	void NameAcquired(const std::string&);
+
+	friend class init_dispatcher;
     };  
+
+    static class init_dispatcher {
+        public:
+	    init_dispatcher( ) {
+		if ( ! initalized ) {
+		    initalized = true;
+		    DBus::default_dispatcher = &DBusSession::dispatcher_;
+		}
+	    }
+        private:
+	    static bool initalized;
+    } init_dispatcher_;
 
 }
 #endif

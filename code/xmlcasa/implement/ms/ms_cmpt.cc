@@ -27,12 +27,12 @@
 //# @version 
 //////////////////////////////////////////////////////////////////////////////
 
-#include <assert.h>
 #include <iostream>
 #include <sys/wait.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
 #include <xmlcasa/ms/ms_cmpt.h>
+#include <xmlcasa/ms/Statistics.h>
 #include <msfits/MSFits/MSFitsInput.h>
 #include <msfits/MSFits/MSFitsOutput.h>
 #include <ms/MeasurementSets/MSRange.h>
@@ -62,6 +62,7 @@
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 
 #include <casa/namespace.h>
+#include <cassert>
 
 using namespace std;
 
@@ -498,65 +499,6 @@ ms::range(const std::vector<std::string>& items, const bool useflags, const int 
 }
 
 
-/*
-  Computes statistics from 1d data,
-  appends results to the given Record, using the given keyname
-*/
-static void
-get_statistics_1d(Record &result, const std::string keyname,
-                  const Vector<Float> data_float)
-{
-    //cout << "got it as Array<Float> " << data_float.size() << data_float << endl;
-    
-    unsigned long number_of_values = data_float.nelements();
-           
-    //cout << "Data as record: " << data << endl;
-    //cout << " --- also as float: " << data_float << endl;
-    
-    ArrayLattice<Float> al(data_float);
-    
-    SubLattice<Float> sl(al);
-    LatticeStatistics<Float> ls(sl);
-    
-    struct {
-        LatticeStatsBase::StatisticsTypes type;
-        std::string name;
-        std::string descr;
-    }
-    stats_types[] = {
-        {LatticeStatsBase::MIN   , "min",   "minimum"},
-        {LatticeStatsBase::MAX   , "max",   "maximum"},
-        {LatticeStatsBase::SUM   , "sum",   "sum of values"},
-        {LatticeStatsBase::SUMSQ , "sumsq", "sum of squared values"},
-        
-        {LatticeStatsBase::MEAN  , "mean"  , "mean value"},
-        {LatticeStatsBase::VARIANCE, "var" , "variance"},
-        {LatticeStatsBase::SIGMA , "stddev", "standard deviation wrt mean"},
-        {LatticeStatsBase::RMS   , "rms"   , "root mean square"},
-        {LatticeStatsBase::MEDIAN, "median", "median value"},
-        {LatticeStatsBase::MEDABSDEVMED, "medabsdevmed", "median absolute deviation wrt median"},
-        {LatticeStatsBase::QUARTILE, "quartile", "first quartile"}
-    };
-    
-    Record rec;
-    
-    for (unsigned i = 0 ; i < sizeof(stats_types) / sizeof(*stats_types); i++) {
-        Array<Double> the_stats;
-        ls.getStatistic(the_stats, stats_types[i].type);
-      
-        if (0) cout << stats_types[i].descr << " [" 
-                    << stats_types[i].name << "]: " << the_stats(IPosition(1, 0)) << endl;
-        rec.define(stats_types[i].name,
-                   the_stats(IPosition(1, 0)));
-    }
-    
-    rec.define("npts", (Double) number_of_values);
-
-    result.defineRecord(keyname, rec);
-
-    return;
-}
-
 ::casac::record* 
 ms::statistics(const std::string& column, 
                const std::string& complex_value,
@@ -621,274 +563,12 @@ ms::statistics(const std::string& column,
            sel_p = itsMS;
          }
 
-         ROTableColumn rotc(*sel_p, column);
-         std::string type;
 
-         if (rotc.columnDesc().ndim() > 0) {
-           std::stringstream s;
-           s << rotc.columnDesc().ndim();
-           type = s.str() + "-dimensional ";
-         }
+         retval = fromRecord(Statistics::get_statistics(*sel_p,
+                                                        column,
+                                                        complex_value,
+                                                        itsLog));
 
-         DataType dt1 = rotc.columnDesc().dataType();
-
-         {
-           ostringstream formatter;
-           formatter << dt1;
-           type += String(formatter);
-         }
-
-         if (rotc.columnDesc().isScalar()) {
-           type += " scalar";
-         }
-         else if (rotc.columnDesc().isArray()) {
-           type += " array";
-         }
-         else if (rotc.columnDesc().isTable()) {
-           type += " table";
-         }
-         else {
-           type += " unknown type";
-         }
-
-
-         //cout << "isScalar: " << rotc.columnDesc().isScalar() << endl;
-         //cout << "isArray:  " << rotc.columnDesc().isArray() << endl;
-         //cout << "isTable:  " << rotc.columnDesc().isTable() << endl;
-         //cout << "ndim:     " << rotc.columnDesc().ndim() << endl;
-
-         *itsLog << "Compute statistics on " << type << " column " 
-                 << column;
-         if (complex_value != "") {
-           *itsLog << ", use " << complex_value;
-         }
-         *itsLog << "..." << LogIO::POST;
-
-         //*itsLog << "Type = " << dt1 << LogIO::POST;
-         //<< ", truetype = " << dt2
-         //<< ") ..." << LogIO::POST;
-
-         if (sel_p->nrow() == 0) {
-           throw AipsError("Selected MS subset is empty, cannot continue");
-         }
-
-
-         Record result;
-
-         /* Strategy depends on data type */
-
-         Vector<Float> data_float;
-
-         bool supported = false; // Supported type?
-
-         if (rotc.columnDesc().isScalar()) {
-           if (dt1 == TpBool) {
-             ROScalarColumn<Bool> ro_col(*sel_p, column);
-             Vector<Bool> v = ro_col.getColumn();
-
-             data_float.resize(v.nelements());
-             for (unsigned i = 0; i < v.nelements(); i++) {
-               data_float[i] = v[i];
-             }
-             supported = true;
-           }
-           else if (dt1 == TpInt) {
-             ROScalarColumn<Int> ro_col(*sel_p, column);
-             Vector<Int> v = ro_col.getColumn();
-
-             data_float.resize(v.nelements());
-             for (unsigned i = 0; i < v.nelements(); i++) {
-               data_float[i] = v[i];
-             }
-             supported = true;
-           }
-           else if (dt1 == TpFloat) {
-             ROScalarColumn<Float> ro_col(*sel_p, column);
-             Vector<Float> v = ro_col.getColumn();
-
-             data_float.resize(v.nelements());
-
-             for (unsigned i = 0; i < v.nelements(); i++) {
-               data_float[i] = v[i];
-             }
-             supported = true;
-           }
-           else if (dt1 == TpDouble) {
-             ROScalarColumn<Double> ro_col(*sel_p, column);
-             Vector<Double> v = ro_col.getColumn();
-
-             data_float.resize(v.nelements());
-
-             for (unsigned i = 0; i < v.nelements(); i++) {
-               data_float[i] = v[i];
-             }
-             supported = true;
-           }
-           if (supported) {
-             get_statistics_1d(result, column, data_float);
-           }
-         }
-         else if (rotc.columnDesc().isArray()) {
-
-           if (dt1 == TpDouble && rotc.columnDesc().ndim() == 1) {
-
-             /* Loop over the array, 
-                compute statistics for each index
-             */
-             supported = true;
-
-             ROArrayColumn<Double> ro_col(*sel_p, column);
-             
-             Array<Double> v = ro_col.getColumn();
-             
-             data_float.resize(v.shape()(1));
-
-             IPosition indx(2);
-             for (Int i = 0; i < v.shape()(0); i++) {
-                 indx(0) = i;
-                 for (Int j = 0; j < v.shape()(1); j++) {
-                     indx(1) = j;
-                     data_float[j] = v(indx);
-                 }
-                 std::stringstream s;
-                 s << column << "_" << i;
-    
-                 get_statistics_1d(result, s.str(), data_float);
-             }
-           }
-           else if (dt1 == TpFloat && rotc.columnDesc().ndim() == 1) {
-
-             supported = true;
-
-             ROArrayColumn<Float> ro_col(*sel_p, column);
-             
-             Array<Float> v = ro_col.getColumn();
-             
-             data_float.resize(v.shape()(1));
-
-             IPosition indx(2);
-             for (Int i = 0; i < v.shape()(0); i++) {
-                 indx(0) = i;
-                 for (Int j = 0; j < v.shape()(1); j++) {
-                     indx(1) = j;
-                     data_float[j] = v(indx);
-                 }
-                 std::stringstream s;
-                 s << column << "-" << i;
-    
-                 get_statistics_1d(result, s.str(), data_float);
-             }
-           }
-           else if (dt1 == TpComplex && rotc.columnDesc().ndim() == 2) {
-
-             if (complex_value != "amp" && complex_value != "amplitude" &&
-                 complex_value != "phase" && complex_value != "imag" &&
-                 complex_value != "real" && complex_value != "imaginary") {
-               throw AipsError("complex_value must be amp, amplitude, phase, imag, imaginary or real" +
-                               std::string(", is ") + complex_value);
-             }
-
-             /* In this case, collapse the polarization dimension and
-                frequency channels
-             */
-
-             supported = true;
-
-             ROArrayColumn<Complex> ro_col(*sel_p, column);
-
-             if (0) cout << " colshape = " << ro_col.shape(0) << endl;
-             
-             Array<Complex> v = ro_col.getColumn();
-
-             if (0) cout << " size = " << v.shape() << endl;
-             if (0) cout << " resize to " << v.shape()(1)*v.shape()(2) << endl;
-             
-             data_float.resize(v.shape()(0) * 
-                               v.shape()(1) *
-                               v.shape()(2));
-
-             if (0) cout << " data_float size = " << data_float.shape() << endl;
-
-             unsigned long ii = 0;
-             IPosition indx(3);
-             for (unsigned i = 0; i < v.shape()(0); i++) {  // polarization
-               indx(0) = i;
-               for (unsigned j = 0; j < v.shape()(1); j++) {   // channel number
-                 indx(1) = j;
-                 switch (complex_value[0]) {
-                 case 'a':
-                   for (Int k = 0; k < v.shape()(2); k++) {
-                     indx(2) = k;
-                     data_float[ii++] = abs(v(indx));
-                   }
-                   
-                   break;
-                 case 'p':
-                   for (Int k = 0; k < v.shape()(2); k++) {
-                     indx(2) = k;
-                     data_float[ii++] = arg(v(indx));
-                   }
-                   break;
-                 case 'i':
-                   for (Int k = 0; k < v.shape()(2); k++) {
-                     indx(2) = k;
-                     data_float[ii++] = v(indx).imag();
-                   }
-                   break;
-                 case 'r':
-                   for (Int k = 0; k < v.shape()(2); k++) {
-                     indx(2) = k;
-                     data_float[ii++] = v(indx).real();
-                   }
-                   break;
-                 default:
-                   assert(false);
-                 }
-               }
-             }
-             
-             get_statistics_1d(result, column, data_float);
-
-           }
-           else if (dt1 == TpFloat && rotc.columnDesc().ndim() == 2) {
-
-             supported = true;
-
-             ROArrayColumn<Float> ro_col(*sel_p, column);
-             
-             get_statistics_1d(result, column,
-                               ro_col.getColumn().reform(IPosition(1,
-                                             ro_col.getColumn().nelements())));
-           }
-
-           else if (dt1 == TpBool) {
-
-             ROArrayColumn<Bool> ro_col(*sel_p, column);
-
-             if (rotc.columnDesc().ndim() == 2 ||
-                 rotc.columnDesc().ndim() == 3) {
-
-               supported = true;
-
-               data_float.resize();
-               Vector<Bool> bv(ro_col.getColumn().reform(IPosition(1,
-                                  ro_col.getColumn().nelements())));
-               
-               for(uInt i = 0; i < bv.nelements(); ++i)
-                 data_float[i] = bv[i];
-               
-               get_statistics_1d(result, column, data_float);
-             }
-           } // end if Bool
-         } // end if isArray
-       
-         if (supported) {
-           retval = fromRecord(result);
-         }
-         else {
-           std::string msg("Sorry, no support for " + type + " columns");
-           throw AipsError(msg);
-         }
        } // end if !detached
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -1133,6 +813,209 @@ ms::cvel(const std::string& outframe,
   return rstat;
 }
 
+bool
+ms::cvel2(const std::string& mode, 
+	  const int nchan, 
+	  const ::casac::variant& start, const ::casac::variant& width,
+	  const std::string& interp, 
+	  const ::casac::variant& phasec, 
+	  const ::casac::variant& restfreq, 
+	  const std::string& outframe,
+	  const std::string& veltype)
+{
+  Bool rstat(False);
+  try {
+    *itsLog << LogOrigin("ms", "cvel2");
+    
+    SubMS *sms = new SubMS(*itsMS);
+    
+    *itsLog << LogIO::NORMAL2 << "Selecting data ..." << LogIO::POST;
+    
+//     // keep all available data columns      
+//     String t_whichcol = ""; 
+//     if (itsMS->tableDesc().isColumn(MS::columnName(MS::DATA))){
+//       t_whichcol = MS::columnName(MS::DATA);
+//     }
+//     if (itsMS->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA))){
+//       t_whichcol += ", " + MS::columnName(MS::MODEL_DATA);
+//     }
+//     if (itsMS->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA))){
+//       t_whichcol += ", " + MS::columnName(MS::CORRECTED_DATA);
+//     }
+//     if(t_whichcol.empty()){
+//       *itsLog << LogIO::WARN << "No data columns found. Nothing to regrid." << LogIO::POST;
+//       delete sms;
+//       return false;
+//     }
+//     else{
+//       *itsLog << LogIO::NORMAL << "Found data column(s) "+t_whichcol << LogIO::POST;
+//     }
+    
+    String t_interp = toCasaString(interp);
+    String t_phasec = toCasaString(phasec);
+    String t_mode = toCasaString(mode);
+    Double t_restfreq = 0.; // rest frequency, convert to Hz
+    if(!restfreq.toString().empty()){
+      t_restfreq = casaQuantity(restfreq).getValue("Hz");
+    }
+
+    // Determine grid
+    Double t_start = -9e99; // default value indicating that the original start of the SPW should be used
+    Double t_center= -3E30; // default value indicating that the original center of the SPW should be used
+    Double t_bandwidth = -1.; // default value indicating that the original width of the SPW should be used
+    Double t_width = -1.; // default value indicating that the original channel width of the SPW should be used
+
+    // determine start
+    if(!start.toString().empty()){
+      if(t_mode == "channel"){
+	t_start = Double(atoi(start.toString().c_str()));
+      }
+      else if(t_mode == "frequency"){
+	t_start = casaQuantity(start).getValue("Hz");
+      }
+      else if(t_mode == "velocity"){
+	t_start = casaQuantity(start).getValue("m/s");
+      }
+      else{
+	*itsLog << LogIO::WARN << "Invalid mode " << t_mode << LogIO::POST;
+	delete sms;
+	return false;
+      }
+    
+      // determine width
+      if(!width.toString().empty()){
+	if(t_mode == "channel"){
+	  t_width = Double(atoi(width.toString().c_str()));
+	}
+	else if(t_mode == "frequency"){
+	  t_width = casaQuantity(width).getValue("Hz");
+	}
+	else if(t_mode == "velocity"){
+	  t_width = casaQuantity(width).getValue("m/s");
+	}   
+    
+	// determine bandwidth and center
+	if(nchan > 0){ // we are not using the default, which is all channels
+	  if(t_mode == "channel"){
+	    t_bandwidth = Double(nchan);
+	    t_center = floor(t_bandwidth/2. + t_start);
+	  }
+	  else{
+	    t_bandwidth = nchan*t_width;
+	    t_center = t_bandwidth/2. + t_start;
+	  }
+	}
+      }
+    }
+    
+    String t_veltype = toCasaString(veltype); 
+    String t_regridQuantity;
+    if(t_mode == "channel"){
+      t_regridQuantity = "chan";
+    }
+    else if(t_mode == "frequency"){
+      t_regridQuantity = "freq";
+    }
+    else if(t_mode == "velocity"){
+      t_regridQuantity = "vrad";
+      if(t_veltype == "optical"){
+	t_regridQuantity = "vopt";
+      }
+      else{
+	*itsLog << LogIO::SEVERE << "Invalid velocity type "<< veltype << LogIO::POST;
+	delete sms;
+	return False;
+      }
+    }   
+    
+    String t_outframe=toCasaString(outframe);
+    String t_regridInterpMeth=toCasaString(interp);
+    
+    casa::MDirection  t_phaseCenter;
+    Int t_phasec_fieldid=-1;
+    //If phasecenter is a simple numeric value then it's taken as a fieldid 
+    //otherwise its converted to a MDirection
+    if(phasec.type()==::casac::variant::DOUBLEVEC 
+       || phasec.type()==::casac::variant::DOUBLE
+       || phasec.type()==::casac::variant::INTVEC
+       || phasec.type()==::casac::variant::INT){
+      t_phasec_fieldid = phasec.toInt();	
+    }
+    else{
+      if(t_phasec.empty()){
+	t_phasec_fieldid = 0;
+      }
+      else{
+	if(!casaMDirection(phasec, t_phaseCenter)){
+	  *itsLog << LogIO::SEVERE << "Could not interprete phasecenter parameter " << t_phasec;
+	  delete sms;
+	  return False;
+	}
+      }
+    }
+
+    // end prepare regridding parameters
+    
+    // Combine all the spectral windows into one
+    
+    if(!sms->combineSpws()){
+      *itsLog << LogIO::SEVERE << "Error combining spectral windows." << LogIO::POST;
+      delete sms;
+      return False;
+    }
+    
+    // Regrid
+    Int rval;
+    String regridMessage;
+    
+    if((rval = sms->cvel(regridMessage,
+			 t_outframe,
+			 t_regridQuantity,
+			 t_restfreq,
+			 t_regridInterpMeth,
+			 t_center, 
+			 t_bandwidth,
+			 t_width //,
+			 // t_phasec_fieldid, // == -1 if t_phaseCenter is valid
+			 // t_phaseCenter
+			 )
+	)==1){ // successful modification of the MS took place
+      *itsLog << LogIO::WARN << "Phase center parameter not yet taken into account by ms.cvel." << LogIO::POST;
+      *itsLog << LogIO::NORMAL << "Spectral frame transformation/regridding completed." << LogIO::POST;
+      
+      // Update HISTORY table of modfied MS
+      String message = "Transformed/regridded with cvel";
+      writehistory(message, regridMessage, "ms::cvel()", "", "ms"); 
+      rstat = True;
+    }
+    else if(rval==0) { // an unsuccessful modification of the MS took place
+      String message= "Frame transformation to " + t_outframe + " failed. MS probably invalid.";
+      *itsLog << LogIO::WARN << message << LogIO::POST;
+      // Update HISTORY table of the unsuccessfully modfied MS
+      ostringstream param;
+      param << "Original input parameters: outframe=" << t_outframe << " mode= " <<  t_regridQuantity
+	    << " center= " << t_center << " bandwidth=" << t_bandwidth
+	    << " chanwidth= " << t_width << " restfreq= " << t_restfreq 
+	    << " interpolation= " << t_regridInterpMeth;
+      String paramstr=param.str();
+      writehistory(message,paramstr,"ms::cvel()", "", "ms"); 
+      rstat = False;
+    }
+    else {
+      *itsLog << LogIO::NORMAL << "SubMS not modified." << LogIO::POST;
+      rstat = True;
+    }       
+    
+    delete sms;
+
+  } catch (AipsError x) {
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      Table::relinquishAutoLocks();
+      RETHROW(x);
+  }
+  Table::relinquishAutoLocks();
+  return rstat;
+}
 
 
 ::casac::record*

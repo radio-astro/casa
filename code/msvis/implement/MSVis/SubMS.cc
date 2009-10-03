@@ -81,7 +81,7 @@ namespace casa {
     mssel_p(ms_p),
     msc_p(NULL),
     mscIn_p(NULL),
-    doChanAver_p(False),
+    chanModification_p(False),
     antennaSel_p(False),
     sameShape_p(True),
     timeBin_p(-1.0),
@@ -100,7 +100,7 @@ namespace casa {
     mssel_p(ms_p),
     msc_p(NULL),
     mscIn_p(NULL),
-    doChanAver_p(False),
+    chanModification_p(False),
     antennaSel_p(False),
     sameShape_p(True),
     timeBin_p(-1.0),
@@ -929,8 +929,6 @@ namespace casa {
     MSDataDescColumns& msDD(msc_p->dataDescription());
     MSPolarizationColumns& msPol(msc_p->polarization());
     
-    
-    
     //DD table
     const MSDataDescription ddtable= mssel_p.dataDescription();
     ROScalarColumn<Int> polId(ddtable, 
@@ -981,113 +979,164 @@ namespace casa {
     sort.sort(index,ddPolId.nelements());
     uInt nPol = sort.unique(uniq,index);
     Vector<Int> selectedPolId(nPol);
-    for(uInt k=0; k < nPol; ++k){
+    for(uInt k = 0; k < nPol; ++k)
       selectedPolId[k]=ddPolId[index[uniq[k]]];
-    }
     
-    Vector<Int> newPolId(spw_p.nelements());
-    for(uInt k=0; k < spw_p.nelements(); ++k){
-      for (uInt j=0; j < nPol; ++j){ 
-	if(selectedPolId[j]==ddPolId[k])
-	  newPolId[k]=j;
-      }
-    }
-    
-    for(uInt k=0; k < newPolId.nelements(); ++k){
-      msOut_p.polarization().addRow();
-      msPol.numCorr().put(k,numCorr(polId(spw_p[k])));
-      msPol.corrType().put(k,corrType(polId(spw_p[k])));
-      msPol.corrProduct().put(k,corrProd(polId(spw_p[k])));
-      msPol.flagRow().put(k,polFlagRow(polId(spw_p[k])));
-    }
-
     // Make map from input to output spws.
     Sort sortSpws(spw_p.getStorage(dum), sizeof(Int));
     sortSpws.sortKey((uInt)0, TpInt);
-    Vector<uInt> spwsortindex, spwuniq;
+    Vector<uInt> spwsortindex, spwuniqinds;
     sortSpws.sort(spwsortindex, spw_p.nelements());
-    uInt nuniqSpws = sortSpws.unique(spwuniq, spwsortindex);
-    for(uInt k = 0; k < nuniqSpws; ++k)
-      spwRelabel_p[spw_p[spwuniq[k]]] = k;
+    uInt nuniqSpws = sortSpws.unique(spwuniqinds, spwsortindex);
+    spw_uniq_p.resize(nuniqSpws);
+    for(uInt k = 0; k < nuniqSpws; ++k){
+      spw_uniq_p[k] = spw_p[spwuniqinds[k]];
+      spwRelabel_p[spw_uniq_p[k]] = k;
+    }
     if(nuniqSpws < spw_p.nelements()){
       os << LogIO::WARN
-         << "Multiple channel ranges within an spw may not work."
+         << "Multiple channel ranges within an spw may not work.  SOME DATA MAY BE OMITTED!"
          << "\nConsider splitting them individually and optionally combining the output MSes with concat."
          << "\nEven then, expect problems if exporting to uvfits."
          << LogIO::POST;
     }
 
-    for(uInt k=0; k < spw_p.nelements(); ++k){
+    Vector<Int> newPolId(spw_uniq_p.nelements());
+    for(uInt k = 0; k < nuniqSpws; ++k){
+      for (uInt j=0; j < nPol; ++j){ 
+	if(selectedPolId[j]==ddPolId[k])
+	  newPolId[k]=j;
+      }
+      msOut_p.polarization().addRow();
+      msPol.numCorr().put(k, numCorr(polId(spw_uniq_p[k])));
+      msPol.corrType().put(k,corrType(polId(spw_uniq_p[k])));
+      msPol.corrProduct().put(k,corrProd(polId(spw_uniq_p[k])));
+      msPol.flagRow().put(k,polFlagRow(polId(spw_uniq_p[k])));
+    }
+
+    for(uInt k = 0; k < spw_p.nelements(); ++k)
       inNumChan_p[k]=numChan(spw_p[k]);
+    
+    Vector<Vector<Int> > spwinds_of_uniq_spws(nuniqSpws);
+
+    totnchan_p.resize(nuniqSpws);
+    for(uInt k = 0; k < nuniqSpws; ++k){
+      Int maxchan = 0;
+      uInt j = 0;
+
       msOut_p.spectralWindow().addRow();
       msOut_p.dataDescription().addRow();
 
-      if(nchan_p[k] != numChan(spw_p[k])){
-	Int totchan=nchan_p[k]*chanStep_p[k]+chanStart_p[k];
-	if(totchan >  numChan(spw_p[k])){
-	  os << LogIO::SEVERE
-	     << " Channel settings wrong; exceeding number of channels in spw "
-	     << spw_p[k]+1 << LogIO::POST;
-	  return False;
-	}
-	doChanAver_p=True; 
-	Vector<Double> chanFreqOut(nchan_p[k]);
-	Vector<Double> chanFreqIn= chanFreq(spw_p[k]);
-	Vector<Double> spwResolOut(nchan_p[k]);
-	Vector<Double> spwResolIn= spwResol(spw_p[k]);
-	for(Int j=0; j < nchan_p[k]; ++j){
-	  if(averageChannel_p){
-	    chanFreqOut[j]=(chanFreqIn[chanStart_p[k]+j*chanStep_p[k]]+
-			    chanFreqIn[chanStart_p[k]+(j+1)*chanStep_p[k]-1])/2;
-	    spwResolOut[j]= spwResolIn[chanStart_p[k]+ 
-				       j*chanStep_p[k]]*chanStep_p[k];
-	  }
-	  else{
-	    chanFreqOut[j]=chanFreqIn[chanStart_p[k]+j*chanStep_p[k]];
-	    spwResolOut[j]=spwResolIn[chanStart_p[k]+ 
-				      j*chanStep_p[k]];
-	  }
-	}
-	Double totalBW=chanFreqOut[nchan_p[k]-1]-chanFreqOut[0]+spwResolOut[0];
-	msSpW.chanFreq().put(k, chanFreqOut);
-	msSpW.resolution().put(k, spwResolOut);
-	msSpW.numChan().put(k, nchan_p[k]);
-	msSpW.chanWidth().put(k, spwResolOut);
-	msSpW.effectiveBW().put(k, spwResolOut);
-	msSpW.refFrequency().put(k,chanFreqOut[0]);
-	msSpW.totalBandwidth().put(k, totalBW);
-	
-	
+      totnchan_p[k] = 0;
+      spwinds_of_uniq_spws[k].resize();
+      for(uInt spwind = 0; spwind < spw_p.nelements(); ++spwind){
+        if(spw_p[spwind] == spw_uniq_p[k]){
+          Int highchan = nchan_p[spwind] * chanStep_p[spwind]
+            + chanStart_p[spwind];
+
+          if(highchan > maxchan)
+            maxchan = highchan;
+
+          totnchan_p[k] += nchan_p[spwind];
+
+          // The true is necessary to avoid scrambling previously assigned
+          // values.
+          spwinds_of_uniq_spws[k].resize(j + 1, true);
+
+          // Warning!  spwinds_of_uniq_spws[k][j] will compile without warning,
+          // but dump core at runtime.
+          (spwinds_of_uniq_spws[k])[j] = spwind;
+          ++j;
+        }
+      }
+      if(maxchan > numChan(spw_uniq_p[k])){
+        os << LogIO::SEVERE
+           << " Channel settings wrong; exceeding number of channels in spw "
+           << spw_uniq_p[k] + 1 << LogIO::POST;
+        return False;
+      }
+    }
+
+    // min_k is an index for getting an spw index via spw_uniq_p[min_k].
+    // k is an index for getting an spw index via spw_p[k].
+    for(uInt min_k = 0; min_k < nuniqSpws; ++min_k){
+      uInt k = spwinds_of_uniq_spws[min_k][0];
+
+      if(spwinds_of_uniq_spws[min_k].nelements() > 1 ||
+         nchan_p[k] != numChan(spw_p[k])){
+        Vector<Double> chanFreqOut(totnchan_p[min_k]);
+        Vector<Double> chanFreqIn = chanFreq(spw_uniq_p[min_k]);
+        Vector<Double> spwResolOut(totnchan_p[min_k]);
+        Vector<Double> spwResolIn = spwResol(spw_uniq_p[min_k]);
+        Vector<Double> effBWOut(totnchan_p[min_k]);
+        Vector<Double> effBWIn = effBW(spw_uniq_p[min_k]);
+        Int outChan = 0;
+
+        chanModification_p = true;
+
+        effBWOut.set(0.0);
+        for(uInt rangeNum = 0;
+            rangeNum < spwinds_of_uniq_spws[min_k].nelements(); ++rangeNum){
+          k = spwinds_of_uniq_spws[min_k][rangeNum];
+
+          for(Int j = 0; j < nchan_p[k]; ++j){
+            Int inpChan = chanStart_p[k] + j * chanStep_p[k];
+
+            if(averageChannel_p){
+              chanFreqOut[outChan] = (chanFreqIn[inpChan] +
+                                      chanFreqIn[inpChan + chanStep_p[k]
+                                                 - 1])/2;
+              spwResolOut[outChan] = spwResolIn[inpChan] * chanStep_p[k];
+
+              for(Int avgChan = inpChan; avgChan < inpChan + chanStep_p[k];
+                  ++avgChan)
+                effBWOut[outChan] += effBWIn[avgChan];
+            }
+            else{
+              chanFreqOut[outChan] = chanFreqIn[inpChan];
+              spwResolOut[outChan] = spwResolIn[inpChan];
+              effBWOut[outChan]    = effBWIn[inpChan];
+            }
+            ++outChan;
+          }
+        }
+        --outChan;
+        
+        Double totalBW = chanFreqOut[outChan] - chanFreqOut[0] +
+          0.5 * (spwResolOut[outChan] + spwResolOut[0]);
+
+        msSpW.chanFreq().put(min_k, chanFreqOut);
+        msSpW.resolution().put(min_k, spwResolOut);
+        msSpW.numChan().put(min_k, totnchan_p[min_k]);
+        msSpW.chanWidth().put(min_k, spwResolOut);
+        msSpW.effectiveBW().put(min_k, spwResolOut);
+        msSpW.refFrequency().put(min_k, chanFreqOut[0]);
+        msSpW.totalBandwidth().put(min_k, totalBW);
       }
       else{
-	msSpW.chanFreq().put(k, chanFreq(spw_p[k]));
-	msSpW.resolution().put(k, spwResol(spw_p[k]));
-	msSpW.numChan().put(k, numChan(spw_p[k]));    
-	msSpW.chanWidth().put(k, chanWidth(spw_p[k]));
-	msSpW.effectiveBW().put(k, effBW(spw_p[k]));
-	msSpW.refFrequency().put(k, refFreq(spw_p[k]));
-	msSpW.totalBandwidth().put(k, totBW(spw_p[k]));
+	msSpW.chanFreq().put(min_k, chanFreq(spw_p[k]));
+	msSpW.resolution().put(min_k, spwResol(spw_p[k]));
+	msSpW.numChan().put(min_k, numChan(spw_p[k]));    
+	msSpW.chanWidth().put(min_k, chanWidth(spw_p[k]));
+	msSpW.effectiveBW().put(min_k, effBW(spw_p[k]));
+	msSpW.refFrequency().put(min_k, refFreq(spw_p[k]));
+	msSpW.totalBandwidth().put(min_k, totBW(spw_p[k]));
       }
       
-      msSpW.flagRow().put(k,spwFlagRow(spw_p[k]));
-      msSpW.freqGroup().put(k, freqGroup(spw_p[k]));
-      msSpW.freqGroupName().put(k, freqGroupName(spw_p[k]));
-      msSpW.ifConvChain().put(k, ifConvChain(spw_p[k]));
-      msSpW.measFreqRef().put(k, measFreqRef(spw_p[k]));
-      msSpW.name().put(k, spwName(spw_p[k]));
-      msSpW.netSideband().put(k, netSideband(spw_p[k]));
+      msSpW.flagRow().put(min_k, spwFlagRow(spw_p[k]));
+      msSpW.freqGroup().put(min_k, freqGroup(spw_p[k]));
+      msSpW.freqGroupName().put(min_k, freqGroupName(spw_p[k]));
+      msSpW.ifConvChain().put(min_k, ifConvChain(spw_p[k]));
+      msSpW.measFreqRef().put(min_k, measFreqRef(spw_p[k]));
+      msSpW.name().put(min_k, spwName(spw_p[k]));
+      msSpW.netSideband().put(min_k, netSideband(spw_p[k])); 
       
-      
-      msDD.flagRow().put(k, False);
-      msDD.polarizationId().put(k,newPolId[k]);
-      msDD.spectralWindowId().put(k,k);
-      
-      
+      msDD.flagRow().put(min_k, False);
+      msDD.polarizationId().put(min_k, newPolId[min_k]);
+      msDD.spectralWindowId().put(min_k, min_k);
     }
     
-    
-    
-    return True;
+    return true;
     
   }
   
@@ -1219,7 +1268,9 @@ namespace casa {
 		  const String& regridInterpMeth,
 		  const Double regridCenter, 
 		  const Double regridBandwidth, 
-		  const Double regridChanWidth 
+		  const Double regridChanWidth//,
+		  //const Int phaseCenterFieldId,
+		  //MDirection phaseCenter
 		  ){
     
     LogIO os(LogOrigin("SubMS", "cvel()"));
@@ -3116,6 +3167,487 @@ namespace casa {
     return rval;
   }
 
+  Bool SubMS::combineSpws(const Vector<Int>& spwids){
+    
+    LogIO os(LogOrigin("SubMS", "combineSpws()"));
+      
+    os << LogIO::NORMAL << "in combineSpws ..." << LogIO::POST;
+
+    Bool rval = False;
+
+    // Analyse spwids
+
+    if(spwids.nelements()==0){
+      os << LogIO::WARN << "No SPWs selected for combination ..." <<  LogIO::POST;
+      return False;
+    }
+    // find all existing spws, 
+    MSSpectralWindow spwtable = ms_p.spectralWindow();
+    Int origNumSPWs = spwtable.nrow();
+    Int newSPWId = origNumSPWs;
+
+    vector<Int> spwsToCombine;
+
+    for(Int i = 0; i < static_cast<Int>(spwids.nelements()); i++){
+      if(spwids(0) == -1){
+	spwsToCombine.push_back(i);
+      }
+      else if(spwids(i)<origNumSPWs && spwids(i)>=0){
+	spwsToCombine.push_back(spwids(i));
+      }
+      else{
+	os << LogIO::SEVERE << "Invalid SPW ID selected for combination " << spwids(i) 
+	   << "valid range is 0 - " << origNumSPWs-1 << ")" << LogIO::POST;
+	return False;
+      }
+    }
+    if(spwsToCombine.size()<=1){
+	os << LogIO::NORMAL << "Less than two SPWs selected. No combination necessary."
+	   << LogIO::POST;
+	return True;
+    }      
+
+    // sort the spwids
+    std::sort(spwsToCombine.begin(), spwsToCombine.end());
+
+    // prepare storage for parameters of new spw table row
+    MSSpWindowColumns SPWCols(spwtable);
+    ScalarColumn<Int> numChanCol = SPWCols.numChan(); 
+    ArrayColumn<Double> chanFreqCol = SPWCols.chanFreq(); 
+    ArrayColumn<Double> chanWidthCol = SPWCols.chanWidth(); 
+    //    ArrayMeasColumn<MFrequency> chanFreqMeasCol = SPWCols.chanFreqMeas();
+    ScalarColumn<Int> measFreqRefCol = SPWCols.measFreqRef();
+    ArrayColumn<Double> effectiveBWCol = SPWCols.effectiveBW();   
+    ScalarColumn<Double> refFrequencyCol = SPWCols.refFrequency(); 
+    //    ScalarMeasColumn<MFrequency> refFrequencyMeasCol = SPWCols.refFrequencyMeas(); 
+    ArrayColumn<Double> resolutionCol = SPWCols.resolution(); 
+    ScalarColumn<Double> totalBandwidthCol = SPWCols.totalBandwidth();
+
+    // Create new row in the SPW table (with ID nextSPWId) by copying
+    // all information from row theSPWId
+    if(!spwtable.canAddRow()){
+      os << LogIO::WARN
+	 << "Unable to add new row to SPECTRAL_WINDOW table. Cannot proceed with spwCombine ..." 
+	 << LogIO::POST;
+      return False; 
+    }
+    TableRow SPWRow(spwtable);
+    Int id0 = spwsToCombine[0];
+    TableRecord spwRecord = SPWRow.get(id0);
+
+    Int newNUM_CHAN = numChanCol(id0);
+    Vector<Double> newCHAN_FREQ(chanFreqCol(id0));
+    Vector<Double> newCHAN_WIDTH(chanWidthCol(id0));
+    Vector<Double> newEFFECTIVE_BW(effectiveBWCol(id0));
+    Double newREF_FREQUENCY(refFrequencyCol(id0));
+    //MFrequency newREF_FREQUENCY = refFrequencyMeasCol(id0);
+    Int newMEAS_FREQ_REF = measFreqRefCol(id0);
+    Vector<Double> newRESOLUTION(resolutionCol(id0));
+    Double newTOTAL_BANDWIDTH = totalBandwidthCol(id0);
+
+    vector<Int> averageN; // for each new channel store the number of old channels to av. over
+    vector<vector<Int> > averageWhichSPW; // for each new channel store the
+                                          // SPWs to average over  
+    vector<vector<Int> > averageWhichChan; // for each new channel store the
+                                           // channel numbers to av. over
+    vector<vector<Double> > averageChanFrac; // for each new channel store the
+                                             // channel fraction for each old channel
+    // initialise the averaging vectors
+    for(Int i=0; i<newNUM_CHAN; i++){
+      averageN[i] = 1;
+      vector<Int> tv;
+      tv.push_back(id0);
+      averageWhichSPW.push_back(tv);
+      tv[1] = i;
+      averageWhichChan.push_back(tv);
+      vector<Double> tvd;
+      tvd.push_back(1.);
+      averageChanFrac.push_back(tvd);
+    }
+
+    // loop over given spws
+    for(uInt i=1; i<spwsToCombine.size(); i++){
+      Int idi = spwsToCombine[i];
+      
+      Int newNUM_CHANi = numChanCol(idi);
+      Vector<Double> newCHAN_FREQi(chanFreqCol(idi));
+      Vector<Double> newCHAN_WIDTHi(chanWidthCol(idi));
+      Vector<Double> newEFFECTIVE_BWi(effectiveBWCol(idi));
+      //Double newREF_FREQUENCYi(refFrequencyCol(idi));
+      //      MFrequency newREF_FREQUENCYi = refFrequencyMeasCol(idi);
+      Int newMEAS_FREQ_REFi = measFreqRefCol(idi);
+      Vector<Double> newRESOLUTIONi(resolutionCol(idi));
+      //Double newTOTAL_BANDWIDTHi = totalBandwidthCol(idi);
+      
+      vector<Double> mergedChanFreq;
+      vector<Double> mergedChanWidth;
+      vector<Double> mergedEffBW;
+      vector<Double> mergedRes;
+      vector<Int> mergedAverageN;
+      vector<vector<Int> > mergedAverageWhichSPW;
+      vector<vector<Int> > mergedAverageWhichChan;
+      vector<vector<Double> > mergedAverageChanFrac;
+
+      // check for compatibility
+      if(newMEAS_FREQ_REFi != newMEAS_FREQ_REF){
+	os << LogIO::WARN
+	   << "SPW " << idi << " cannot be combined with SPW " << id0 << ". Non-matching ref. frame."
+	   << LogIO::POST;
+	return False; 
+      }
+
+      // append spw to new spw
+      // overlap at all?
+      if(newCHAN_FREQ(newNUM_CHAN) + newCHAN_WIDTH(newNUM_CHAN)/2. 
+	 < newCHAN_FREQi(0) - newCHAN_WIDTHi(newNUM_CHANi)/2.) {
+	// no overlap, need to append
+	for(Int j=0; j<newNUM_CHAN; j++){
+	  mergedChanFreq.push_back(newCHAN_FREQ(j));
+	  mergedChanWidth.push_back(newCHAN_WIDTH(j));
+	  mergedEffBW.push_back(newEFFECTIVE_BW(j));
+	  mergedRes.push_back(newRESOLUTION(j));
+	  mergedAverageN.push_back(averageN[j]);
+	  mergedAverageWhichSPW.push_back(averageWhichSPW[j]);
+	  mergedAverageWhichChan.push_back(averageWhichChan[j]);
+	  mergedAverageChanFrac.push_back(averageChanFrac[j]);
+	}
+	vector<Int> tv;
+	tv.push_back(idi); // origin is spw idi
+	vector<Int> tv2;
+	tv2.push_back(0);
+	vector<Double> tvd;
+	tvd.push_back(1.); // fraction is 1.
+	for(Int j=0; j<newNUM_CHANi; j++){
+	  mergedChanFreq.push_back(newCHAN_FREQi(j));
+	  mergedChanWidth.push_back(newCHAN_WIDTHi(j));
+	  mergedEffBW.push_back(newEFFECTIVE_BWi(j));
+	  mergedRes.push_back(newRESOLUTIONi(j));
+	  mergedAverageN.push_back(1); // so far only one channel
+	  mergedAverageWhichSPW.push_back(tv);
+	  tv2[0] = j;
+	  mergedAverageWhichChan.push_back(tv2); // channel number is j
+	  mergedAverageChanFrac.push_back(tvd);
+	}
+      }
+      else if( newCHAN_FREQ(0) - newCHAN_WIDTH(newNUM_CHAN)/2. 
+	       > newCHAN_FREQi(newNUM_CHANi) + newCHAN_WIDTHi(newNUM_CHANi)/2.){ 
+	// no overlap, need to prepend
+	vector<Int> tv;
+	tv.push_back(idi); // origin is spw idi
+	vector<Int> tv2;
+	tv2.push_back(0);
+	vector<Double> tvd;
+	tvd.push_back(1.); // fraction is 1.
+	for(Int j=0; j<newNUM_CHANi; j++){
+	  mergedChanFreq.push_back(newCHAN_FREQi(j));
+	  mergedChanWidth.push_back(newCHAN_WIDTHi(j));
+	  mergedEffBW.push_back(newEFFECTIVE_BWi(j));
+	  mergedRes.push_back(newRESOLUTIONi(j));
+	  mergedAverageN.push_back(1); // so far only one channel
+	  mergedAverageWhichSPW.push_back(tv);
+	  tv2[0] = j;
+	  mergedAverageWhichChan.push_back(tv2); // channel number is j
+	  mergedAverageChanFrac.push_back(tvd);
+	}
+	for(Int j=0; j<newNUM_CHAN; j++){
+	  mergedChanFreq.push_back(newCHAN_FREQ(j));
+	  mergedChanWidth.push_back(newCHAN_WIDTH(j));
+	  mergedEffBW.push_back(newEFFECTIVE_BW(j));
+	  mergedRes.push_back(newRESOLUTION(j));
+	  mergedAverageN.push_back(averageN[j]);
+	  mergedAverageWhichSPW.push_back(averageWhichSPW[j]);
+	  mergedAverageWhichChan.push_back(averageWhichChan[j]);
+	  mergedAverageChanFrac.push_back(averageChanFrac[j]);
+	}
+      }
+      else{ // there is overlap
+	Int id0StartChan = 0;
+	if(newCHAN_FREQi(0) - newCHAN_WIDTHi(0)/2. < 
+	   newCHAN_FREQ(newNUM_CHAN) - newCHAN_WIDTH(newNUM_CHAN)/2.){
+	  // spw idi starts before spw id0
+
+	  // some utilities for the averaging info
+	  vector<Int> tv; // temporary vector
+	  tv.push_back(idi); // origin is spw idi
+	  vector<Int> tv2;
+	  tv2.push_back(0);
+	  vector<Double> tvd;
+	  tvd.push_back(1.); // fraction is 1.
+
+	  // find the first overlapping channel and prepend non-overlapping channels
+	  Double ubound0 = newCHAN_FREQ(0) + newCHAN_WIDTH(0)/2.;
+	  Double lbound0 = newCHAN_FREQ(0) - newCHAN_WIDTH(0)/2.;
+	  Double uboundk = 0.;
+	  Double lboundk = 0.;	      
+	  Int k;
+	  for(k=0; k<newNUM_CHANi; k++){
+	    uboundk = newCHAN_FREQi(k) + newCHAN_WIDTHi(k)/2.;
+	    lboundk = newCHAN_FREQi(k) - newCHAN_WIDTHi(k)/2.;	      
+	    if(lbound0 < uboundk){
+	      break;
+	    }
+	    mergedChanFreq.push_back(newCHAN_FREQi(k));
+	    mergedChanWidth.push_back(newCHAN_WIDTHi(k));
+	    mergedEffBW.push_back(newEFFECTIVE_BWi(k));
+	    mergedRes.push_back(newRESOLUTIONi(k));
+	    mergedAverageN.push_back(1); // so far only one channel
+	    mergedAverageWhichSPW.push_back(tv);
+	    tv2[0] = k;
+	    mergedAverageWhichChan.push_back(tv2); // channel number is k
+	    mergedAverageChanFrac.push_back(tvd);	    
+	  }
+	  // k's the one
+	  if(lbound0 < uboundk && lboundk < lbound0){ // actual overlap, need to merge channel k with channel 0
+	    Double newWidth = ubound0 - lboundk;
+	    Double newCenter = lboundk + newWidth/2.;
+	    mergedChanFreq.push_back(newCenter);
+	    mergedChanWidth.push_back(newWidth);
+	    mergedEffBW.push_back(newWidth); // NOTE: rough approximation!
+	    mergedRes.push_back(newWidth); // NOTE: rough approximation!
+	    mergedAverageN.push_back(2); // two channels contribute
+	    tv.push_back(id0); // second contributor is spw id0
+	    mergedAverageWhichSPW.push_back(tv);
+	    tv2[0] = k; // channel k from spw idi
+	    tv2.push_back(0); // channel 0 from spw id0
+	    mergedAverageWhichChan.push_back(tv2); 
+	    tvd.push_back(1.); // both fractions are unity
+	    mergedAverageChanFrac.push_back(tvd);
+	    id0StartChan = 1;
+	  }
+	}
+	// now move along SPW id0 and merge until end of id0 is reached, then just copy
+	for(Int j=id0StartChan; j<newNUM_CHAN; j++){
+	  mergedChanFreq.push_back(newCHAN_FREQ(j));
+	  mergedChanWidth.push_back(newCHAN_WIDTH(j));
+	  mergedEffBW.push_back(newEFFECTIVE_BW(j));
+	  mergedRes.push_back(newRESOLUTION(j));
+	  Double overlap_frac = 0.;
+	  for(Int k=0; k<newNUM_CHANi; k++){
+	    // does channel j in spw id0 overlap with channel k in spw idi?
+	    Double uboundj = newCHAN_FREQ(j) + newCHAN_WIDTH(j)/2.;
+	    Double uboundk = newCHAN_FREQi(k) + newCHAN_WIDTHi(k)/2.;
+	    Double lboundj = newCHAN_FREQ(j) - newCHAN_WIDTH(j)/2.;
+	    Double lboundk = newCHAN_FREQi(k) - newCHAN_WIDTHi(k)/2.;
+	    // determine fraction 
+	    if(lboundj <= lboundk && uboundk <= uboundj){ // chan k is completely covered by chan j
+	      overlap_frac = 1.;
+	    }
+	    else if(lboundk <= lboundj && uboundj <= uboundk){ // chan j is completely covered by chan k 
+	      overlap_frac = newCHAN_WIDTH(j)/newCHAN_WIDTHi(k);
+	    }
+	    else if(lboundj <= lboundk && uboundj < uboundk){ // lower end of k is overlapping with j
+	      overlap_frac = (uboundj - lboundk)/newCHAN_WIDTHi(k);
+	    }
+	    else if(lboundj < lboundk && lboundj > lboundk){ // upper end of k is overlapping with j 
+	      overlap_frac = (uboundk - lboundj)/newCHAN_WIDTHi(k);
+	    }
+	    if(overlap_frac > 0.){ // update averaging info
+	      averageN[j] += 1;
+	      averageWhichSPW[j].push_back(idi);
+	      averageWhichChan[j].push_back(k);
+	      averageChanFrac[j].push_back(overlap_frac);
+	    }
+	  } // end loop over spw idi
+	    // append this channel with updated averaging info
+	  mergedAverageN.push_back(averageN[j]);
+	  mergedAverageWhichSPW.push_back(averageWhichSPW[j]);
+	  mergedAverageWhichChan.push_back(averageWhichChan[j]);
+	  mergedAverageChanFrac.push_back(averageChanFrac[j]);  
+	} // end loop over spw id0
+	if(newCHAN_FREQ(newNUM_CHAN) + newCHAN_WIDTH(newNUM_CHAN)/2.
+	   < newCHAN_FREQi(newNUM_CHANi) + newCHAN_WIDTHi(newNUM_CHANi)/2.){// spw idi still continues!
+	  // find the last overlapping channel
+	  Int j = newNUM_CHAN-1;
+	  Double uboundj = newCHAN_FREQ(j) + newCHAN_WIDTH(j)/2.;
+	  Double lboundj = newCHAN_FREQ(j) - newCHAN_WIDTH(j)/2.;
+	  Double uboundk;
+	  Double lboundk;	      
+	  Int k;
+	  for(k=newNUM_CHANi-1; k>=0; k--){
+	    uboundk = newCHAN_FREQi(k) + newCHAN_WIDTHi(k)/2.;
+	    lboundk = newCHAN_FREQi(k) - newCHAN_WIDTHi(k)/2.;	      
+	    if(lboundk <= uboundj){
+	      break;
+	    }
+	  }
+	  // k's the one 
+	  if(lboundk < uboundj && uboundj < uboundk ){ // actual overlap, need to merge channel k with channel j
+	    Double newWidth = uboundk - lboundj;
+	    Double newCenter = lboundj + newWidth/2.;
+	    mergedChanFreq[j] =  newCenter;
+	    mergedChanWidth[j] = newWidth;
+	    mergedEffBW[j] = newWidth; // NOTE: very rough approximation
+	    mergedRes[j] = newWidth; // NOTE: very rough approximation
+	    mergedAverageChanFrac[j][mergedAverageN[j]-1] = 1.; // set overlap fraction to 1.
+	    k++; // start appending remaining channels after k
+	  }
+	  // append the remaining channels
+	  vector<Int> tv;
+	  tv.push_back(idi); // origin is spw idi
+	  vector<Int> tv2;
+	  tv2.push_back(0);
+	  vector<Double> tvd;
+	  tvd.push_back(1.); // fraction is 1.
+	  for(Int m=k; m<newNUM_CHANi; m++){
+	    mergedChanFreq.push_back(newCHAN_FREQi(m));
+	    mergedChanWidth.push_back(newCHAN_WIDTHi(m));
+	    mergedEffBW.push_back(newEFFECTIVE_BWi(m));
+	    mergedRes.push_back(newRESOLUTIONi(m));
+	    mergedAverageN.push_back(1); // so far only one channel
+	    mergedAverageWhichSPW.push_back(tv);
+	    tv2[0] = j;
+	    mergedAverageWhichChan.push_back(tv2); // channel number is j
+	    mergedAverageChanFrac.push_back(tvd);
+	  }
+	} // end if spw idi still continues
+      } // end if there is overlap    
+
+      newNUM_CHAN = mergedChanFreq.size();
+      newCHAN_FREQ.assign(Vector<Double>(mergedChanFreq));
+      newCHAN_WIDTH.assign(Vector<Double>(mergedChanWidth));
+      newEFFECTIVE_BW.assign(Vector<Double>(mergedEffBW));
+      newREF_FREQUENCY = newCHAN_FREQ(0) - newCHAN_WIDTH(0)/2.; // Note: approximation, t.b. improved
+      newTOTAL_BANDWIDTH = newCHAN_FREQ(newNUM_CHAN-1) + newCHAN_WIDTH(newNUM_CHAN-1)/2.
+	- newCHAN_FREQ(0) + newCHAN_WIDTH(0)/2.;
+      newRESOLUTION.assign(Vector<Double>(mergedRes));
+      averageN = mergedAverageN;
+      averageWhichSPW = mergedAverageWhichSPW;
+      averageWhichChan = mergedAverageWhichChan;
+      averageChanFrac = mergedAverageChanFrac;
+
+    } // end loop over SPWs
+      
+
+    // write new spw to spw table (ID =  newSpwId)
+    spwtable.addRow();
+    SPWRow.putMatchingFields(newSPWId, spwRecord);
+
+    chanFreqCol.put(newSPWId, newCHAN_FREQ);
+    numChanCol.put(newSPWId, newNUM_CHAN);
+    chanWidthCol.put(newSPWId,  newCHAN_WIDTH);
+    refFrequencyCol.put(newSPWId, newREF_FREQUENCY);
+    totalBandwidthCol.put(newSPWId, newTOTAL_BANDWIDTH);
+    effectiveBWCol.put(newSPWId, newEFFECTIVE_BW);
+    resolutionCol.put(newSPWId, newRESOLUTION);
+
+    // delete unwanted spws and memorize the new ID of the new merged one.
+    // (remember the IDs were sorted above)
+    for(int i=spwsToCombine.size()-1; i>=0; i--){ // remove highest row numbers first
+      spwtable.removeRow(spwsToCombine[i]);
+    }
+    newSPWId -= spwsToCombine.size(); 
+
+    // other tables to correct: MAIN, FREQ_OFFSET, SYSCAL, FEED, DATA_DESCRIPTION, SOURCE
+
+    // 1) SOURCE
+    Int numSourceRows = 0;
+    MSSource* p_sourcetable = NULL;
+    MSSourceColumns* p_sourceCol = NULL;
+    if(Table::isReadable(ms_p.sourceTableName())){
+      p_sourcetable = &(ms_p.source());
+      p_sourceCol = new MSSourceColumns(*p_sourcetable);
+      numSourceRows = p_sourcetable->nrow();
+      ScalarColumn<Int> SOURCESPWIdCol = p_sourceCol->spectralWindowId();
+      // loop over source table rows
+      for(Int i=0; i<numSourceRows; i++){
+	for(uInt j=0; j<spwsToCombine.size(); j++){
+	  // if spw id affected, replace by newSpwId
+	  if(SOURCESPWIdCol(i) == spwsToCombine[j]){ // source row i is affected
+	    SOURCESPWIdCol.put(i, newSPWId);
+	  }
+	} // end for j
+      }// end for i
+    }
+    else { // there is no source table
+      os << LogIO::NORMAL << "Note: MS contains no SOURCE table ..." << LogIO::POST;
+    }
+
+    // 2) DATA_DESCRIPTION
+    MSDataDescription ddtable = ms_p.dataDescription();
+    Int numDataDescs = ddtable.nrow();
+    MSDataDescColumns DDCols(ddtable);
+    ScalarColumn<Int> SPWIdCol = DDCols.spectralWindowId();
+    ScalarColumn<Int> PolIdCol = DDCols.polarizationId();
+    vector<Int> affDDIds;  
+    vector<Bool> DDRowsToDelete(numDataDescs, False);
+    SimpleOrderedMap <Int, Int> tempDDIndex(-1);
+
+    // loop over DD table rows
+    for(Int i=0; i<numDataDescs; i++){
+      // if spw id affected, replace by newSpwId
+      for(uInt j=0; j<spwsToCombine.size(); j++){
+	// if spw id affected, replace by newSpwId
+	if(SPWIdCol(i) == spwsToCombine[j]){ // DD row i is affected
+	  SPWIdCol.put(i, newSPWId);
+	  // memorize affected DD IDs in affDDIds
+	  affDDIds.push_back(i);
+	}     
+      }
+    }
+    // Find redundant DD IDs
+    // loop over DD table rows
+    for(Int i=0; i<numDataDescs; i++){
+      if(i == affDDIds[i] && !DDRowsToDelete[i]){
+	Int PolIDi = PolIdCol(i);
+	Int SpwIDi = SPWIdCol(i);
+	// loop over DD table rows
+	for(Int j=i+1; j<numDataDescs; j++){
+          // if row i and row j redundant?
+	  if(PolIDi == PolIdCol(j) && SpwIDi == SPWIdCol(j)){
+	    // mark for deletion
+	    DDRowsToDelete[j] = True;
+	    // fill map for DDrenumbering
+	    tempDDIndex.define(j, i);
+	  }
+	}
+      }
+    }
+    for(Int i=0; i<numDataDescs; i++){
+      if(DDRowsToDelete[i]){
+	ddtable.removeRow(i);
+      }
+    }
+
+    // 3) FEED  
+
+    // loop over FEED table rows
+
+       // if spw id affected, replace by newSpwId
+
+    // 4) SYSCAL
+
+    // loop over SYSCAL table rows
+
+       // if spw id affected, replace by newSpwId
+
+    // 5) FREQ_OFFSET
+
+    // loop over FREQ_OFFSET table rows
+
+       // if spw id affected, replace by newSpwId
+
+    // 6) MAIN
+
+    // timesort main table
+
+    // loop over main table rows
+
+       // if DD ID affected (affDDIDs)
+           // find matching rows with same time stamp
+
+           // merge data columns from all rows found
+
+           // write new row over first one found
+        
+           // delete other found rows
+
+       // do DD ID renumbering A and B 
+
+
+    return rval;
+
+  }
+
 
   const Vector<String>& SubMS::parseColumnNames(const String col)
   {
@@ -3137,67 +3669,63 @@ namespace casa {
     
     String tmpNames(col);
     Vector<String> tokens;
-    String sep(",");
     uInt  nNames;
-    String::size_type tokpos,startpos=0;
     tmpNames.upcase();
     
     if (tmpNames.contains("ALL")) allCols=True;
-    
-    while ((tokpos=tmpNames.index(sep,startpos)))
-      {
-	tokens.resize(tokens.nelements()+1,True);
-	if (tokpos==String::npos)
-	  tokens(tokens.nelements()-1)=tmpNames.after(startpos-1);
-	else
-	  tokens(tokens.nelements()-1)=tmpNames.before(sep,startpos);
-	
-	if (tokpos==String::npos) break;
-	
-	startpos=tokpos+1;
-      }
+
+    { // split name string into individual names
+	char * pch;
+	Int i = 0;
+	pch = strtok((char*)tmpNames.c_str()," ,");
+	while (pch != NULL){
+	    tokens.resize(i+1,True);
+	    tokens(i) = String(pch);
+	    i++;
+	    pch = strtok(NULL, " ,");
+	}
+    }
 
     nNames=tokens.nelements();
     
-    if (allCols)
-      {
+    if (allCols){
 	my_colNameVect.resize(3);
 	my_colNameVect[0] = MS::columnName(MS::DATA);
 	my_colNameVect[1] = MS::columnName(MS::MODEL_DATA);
 	my_colNameVect[2] = MS::columnName(MS::CORRECTED_DATA);
-      }
-    else
-      for(uInt i=0; i<nNames; i++)
-	{
-	  my_colNameVect.resize(i+1,True);
-	  my_colNameVect[i]="Unrecognized";
-	  
-	  if (tokens[i]=="OBSERVED" || 
-	      tokens[i]=="DATA" || 
-	      tokens[i]==MS::columnName(MS::DATA)) 
+    }
+    else{
+	for(uInt i=0; i<nNames; i++){
+	    my_colNameVect.resize(i+1,True);
+	    my_colNameVect[i]="Unrecognized";
+	    
+	    if (tokens[i]=="OBSERVED" || 
+		tokens[i]=="DATA" || 
+		tokens[i]==MS::columnName(MS::DATA)) 
 	    {
-	      my_colNameVect[i] = MS::columnName(MS::DATA);
+		my_colNameVect[i] = MS::columnName(MS::DATA);
 	    }
-	  else if(tokens[i]=="MODEL" || 
-		  tokens[i]=="MODEL_DATA" || 
-		  tokens[i]==MS::columnName(MS::MODEL_DATA)) 
+	    else if(tokens[i]=="MODEL" || 
+		    tokens[i]=="MODEL_DATA" || 
+		    tokens[i]==MS::columnName(MS::MODEL_DATA)) 
 	    {
-	      my_colNameVect[i] = "MODEL_DATA";
+		my_colNameVect[i] = "MODEL_DATA";
 	    } 
-	  else if(tokens[i]=="CORRECTED" || 
-		  tokens[i]=="CORRECTED_DATA" || 
-		  tokens[i]==MS::columnName(MS::CORRECTED_DATA)) 
+	    else if(tokens[i]=="CORRECTED" || 
+		    tokens[i]=="CORRECTED_DATA" || 
+		    tokens[i]==MS::columnName(MS::CORRECTED_DATA)) 
 	    {
-	      my_colNameVect[i] = "CORRECTED_DATA";
+		my_colNameVect[i] = "CORRECTED_DATA";
 	    }
-	  else
+	    else
 	    {
-	      my_colNameVect[0] = MS::columnName(MS::DATA);
-	      os << LogIO::SEVERE << "Unrecognized column " << tokens[i]
-		 << " ...using DATA."
-		 << LogIO::POST;
+		my_colNameVect[0] = MS::columnName(MS::DATA);
+		os << LogIO::SEVERE << "Unrecognized column " << tokens[i]
+		   << " ...using DATA."
+		   << LogIO::POST;
 	    }
-	} 
+	}
+    } 
 
     // Whether or not the MS has the columns is checked by verifyColumns().
     // Unfortunately it cannot be done here because this is a static method.
@@ -3305,7 +3833,7 @@ namespace casa {
     // chain by verifyColumns().
     const Vector<String> columnName = parseColumnNames(whichCol);
     
-    if(!doChanAver_p){
+    if(!chanModification_p){
       ROArrayColumn<Complex> data;
       for(uInt ni = 0;ni < columnName.nelements(); ++ni){
 	getDataColumn(data, columnName[ni]);
@@ -4314,8 +4842,11 @@ Bool SubMS::fillTimeAverData(const String& columnName)
      << newTimeVal_p.nelements()<< " time slots" << LogIO::POST;
 
   const Bool doSpWeight = !mscIn_p->weightSpectrum().isNull() &&
-                           mscIn_p->weightSpectrum().isDefined(0);
-
+                           mscIn_p->weightSpectrum().isDefined(0) &&
+    mscIn_p->weightSpectrum().shape(0).isEqual(IPosition(2, npol_p[0],
+                                                         nchan_p[0]));
+    
+  
   Vector<Double> outTime;
   outTime.resize(outNrow);
 
@@ -4400,21 +4931,16 @@ Bool SubMS::fillTimeAverData(const String& columnName)
   //os << LogIO::NORMAL << "npol_p = " << npol_p << LogIO::POST;
   //os << LogIO::NORMAL << "nchan_p = " << nchan_p << LogIO::POST;
 
-  IPosition blc(2, 0, chanStart_p[0]);
-  IPosition trc(2, npol_p[0] - 1, nchan_p[0] + chanStart_p[0] - 1);
-  Array<Float> unflgWtSpec(trc - blc + 1);  
-  Array<Complex> data_toikit(trc - blc + 1);
-  os << LogIO::DEBUG1
-     << "unflgWtSpec.shape() = " << unflgWtSpec.shape()
-     << LogIO::POST;
-  uInt chanStop = nchan_p[0] * chanStep_p[0] + chanStart_p[0];
+  Array<Float> unflgWtSpec;
+  Array<Complex> data_toikit;
+  Vector<Float> unflaggedwt;
     
   // Iterate through timebins.
   uInt orn = 0; 		      // row number in output.
   for(uInt tbn = 0; tbn < bin_slots_p.nelements(); ++tbn){
     // Iterate through slots.
     for(ui2vmap::iterator slotit = bin_slots_p[tbn].begin();
-	slotit != bin_slots_p[tbn].end(); ++slotit){
+		slotit != bin_slots_p[tbn].end(); ++slotit){
       uivector& slotv = slotit->second;
       uInt besttoik = slotv[0];    // irn of closest match to newTimeVal_p[tbn]
       uInt bestbeftoik = slotv[0]; // irn of time before newTimeVal_p[tbn]
@@ -4424,191 +4950,233 @@ Bool SubMS::fillTimeAverData(const String& columnName)
       Bool findNext = true;
       Double totslotwt = 0.0;
 
+      Int ddID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(besttoik)]];
+      if(ddID < 0)                      // Paranoia
+        ddID = 0;
+      
+      IPosition blc(2, 0, chanStart_p[ddID]);
+      IPosition trc(2, npol_p[ddID] - 1, nchan_p[ddID] + chanStart_p[ddID] - 1);
+      uInt chanStop = nchan_p[ddID] * chanStep_p[ddID] + chanStart_p[ddID];
+
+      IPosition sliceShape(trc - blc + 1);
+      unflgWtSpec.resize(sliceShape);
+      data_toikit.resize(sliceShape);
+      os << LogIO::DEBUG1
+         << "unflgWtSpec.shape() = " << unflgWtSpec.shape()
+         << LogIO::POST;
+
       // Iterate through mscIn_p's rows that belong to the slot.
       for(uivector::iterator toikit = slotv.begin();
-	  toikit != slotv.end(); ++toikit){
-	// Find the slot's row which is closest to newTimeVal_p[tbn].
+          toikit != slotv.end(); ++toikit){
+        // chanModification_p==true means the input channels cannot simply
+        // be copied through to the output channels.
+        // It's a bit faster if no slicing is done...so avoid it if possible.
+        unflaggedwt.resize(npol_p[ddID]);
+        unflaggedwt = inRowWeight(*toikit);
 
-        Double currTC = inTC(*toikit);
-        if(currTC > prevTC && findNext){
-          if(currTC < newTimeVal_p[tbn]){
-            best2beftoik = bestbeftoik;
-            bestbeftoik = besttoik;
-            besttoik = *toikit;
-            bestafttoik = besttoik;      // In case we have to stop early.
-            prevTC = currTC;
-          }
-          else{                                         
-            if(currTC + prevTC < 2.0 * newTimeVal_p[tbn]){ // P     C     N
-              bestbeftoik = besttoik;                      // X   * X     X
+        for(Int polind = 0; polind < npol_p[ddID]; ++polind){
+          // Vector<Bool> polflags((chanModification_p ? flag(*toikit)(blc, trc) :
+          //                        flag(*toikit))(IPosition(2, polind, 0),
+          //                                       IPosition(2, polind,
+          //                                                 nchan_p[ddID] - 1)));
+          
+          if(allTrue((chanModification_p ? flag(*toikit)(blc, trc) :
+                      flag(*toikit))(IPosition(2, polind, 0),
+                                     IPosition(2, polind,
+                                               nchan_p[ddID] - 1))))
+            unflaggedwt[polind] = 0.0;
+        }
+        
+        // The input row may be completely flagged even if the row flag is
+        // false.
+        totrowwt = sum(unflaggedwt);
+        if(totrowwt > 0.0){
+          // Find the slot's row which is closest to newTimeVal_p[tbn].
+          Double currTC = inTC(*toikit);
+          if(currTC > prevTC && findNext){
+            if(currTC < newTimeVal_p[tbn]){
+              best2beftoik = bestbeftoik;
+              bestbeftoik = besttoik;
               besttoik = *toikit;
-              bestafttoik = besttoik; // Just in case there is no bestafttoik.
+              bestafttoik = besttoik;      // In case we have to stop early.
+              prevTC = currTC;
             }
-            else if(prevTC <= newTimeVal_p[tbn]){    // 2B    P     C
-              bestafttoik = *toikit;                 // X     X *   X
-              besttoik    = bestbeftoik;
-              bestbeftoik = best2beftoik;
-              findNext = false;
+            else{                                         
+              if(currTC + prevTC < 2.0 * newTimeVal_p[tbn]){ // P     C     N
+                bestbeftoik = besttoik;                      // X   * X     X
+                besttoik = *toikit;
+                bestafttoik = besttoik; // Just in case there is no bestafttoik.
+              }
+              else if(prevTC <= newTimeVal_p[tbn]){    // 2B    P     C
+                bestafttoik = *toikit;                 // X     X *   X
+                besttoik    = bestbeftoik;
+                bestbeftoik = best2beftoik;
+                findNext = false;
+              }
+              else{                   // Finish off the X   * X     X case
+                bestafttoik = *toikit;
+                findNext = false;
+              }
             }
-            else{                           // Finish off the X   * X     X case
-              bestafttoik = *toikit;
-              findNext = false;
+          }
+
+          // Accumulate the averaging values from *toikit.
+          //  	    os << LogIO::DEBUG1 << "inRowWeight(*toikit).shape() = "
+          //  	       << inRowWeight(*toikit).shape() << LogIO::POST;
+          //  	    os << LogIO::DEBUG1 << "unflaggedwt.shape() = "
+          //  	       << unflaggedwt.shape() << LogIO::POST;
+          //  	    os << LogIO::DEBUG1 << "flag(*toikit).shape() = "
+          //  	       << flag(*toikit).shape() << LogIO::POST;
+          //  	    os << LogIO::DEBUG1 << "data(*toikit).shape() = "
+          //  	       << data(*toikit).shape() << LogIO::POST;
+
+          outRowWeight.column(orn) = outRowWeight.column(orn) + unflaggedwt;
+          
+          totslotwt += totrowwt;
+        
+          if(chanModification_p)
+            outFlag.xyPlane(orn) = outFlag.xyPlane(orn) * flag(*toikit)(blc,
+                                                                        trc);
+          else
+            outFlag.xyPlane(orn) = outFlag.xyPlane(orn) * flag(*toikit);
+
+          if(doSpWeight){
+            //    os << LogIO::DEBUG1
+            // //    << "wgtSpec(*toikit).shape() = " << wgtSpec(*toikit).shape()
+            // //    << "\nflag(*toikit).shape() = " << flag(*toikit).shape()
+            // //    << "outSpWeight.xyPlane(orn).shape() = "
+            // //    << outSpWeight.xyPlane(orn).shape()
+            //       << "\noutSpWeight.xyPlane(orn)(blc) (before) =\t"
+            //       << outSpWeight.xyPlane(orn)(blc)
+            //       << LogIO::POST;
+            
+            if(chanModification_p){
+              outSpWeight.xyPlane(orn) = outSpWeight.xyPlane(orn) +
+                wgtSpec(*toikit)(blc, trc);
+              outSpWeight.xyPlane(orn)(flag(*toikit)(blc, trc)) = 0.0;
             }
+            else{
+              outSpWeight.xyPlane(orn) = outSpWeight.xyPlane(orn) +
+                wgtSpec(*toikit);
+              outSpWeight.xyPlane(orn)(flag(*toikit)) = 0.0;
+            }
+            
+            // os << LogIO::DEBUG1
+            //    << "outSpWeight.xyPlane(orn)(blc) (after) = "
+            //    << outSpWeight.xyPlane(orn)(blc)
+            //    << "\nunflgWtSpec(blc) = " << unflgWtSpec(blc)
+            //    << "\nwgtSpec(*toikit)(blc) = " << wgtSpec(*toikit)(blc)
+            //    << "\nflag(*toikit)(blc) = " << flag(*toikit)(blc)
+            //    << LogIO::POST;
+            for(uInt datacol = 0; datacol < ntok; ++datacol){
+              if(chanModification_p){
+                data_toikit = data[datacol](*toikit)(blc, trc) *
+                  wgtSpec(*toikit)(blc, trc);
+
+                // It's already multiplied by a zero weight, but zero it again
+                // just in case some flagged NaNs or infinities snuck in there.
+                data_toikit(flag(*toikit)(blc, trc)) = 0.0;
+              }
+              else{
+                data_toikit = data[datacol](*toikit) * wgtSpec(*toikit);
+                data_toikit(flag(*toikit)) = 0.0;
+              }
+              
+              outData[datacol].xyPlane(orn) = outData[datacol].xyPlane(orn)
+                + data_toikit;
+            }
+          }
+          else{
+            for(uInt datacol = 0; datacol < ntok; ++datacol){
+              if(chanModification_p){
+                data_toikit = data[datacol](*toikit)(blc, trc);
+                data_toikit(flag(*toikit)(blc, trc)) = 0.0;
+              }
+              else{
+                data_toikit = data[datacol](*toikit);
+                data_toikit(flag(*toikit)) = 0.0;
+              }
+              binOpExpandInPlace(data_toikit, unflaggedwt,
+                                 Multiplies<Complex, Float>());
+            
+              outData[datacol].xyPlane(orn) = outData[datacol].xyPlane(orn)
+                + data_toikit;
+            }
+          }
+       
+          // totrowwt > 0.0 implies totslotwt > 0.0
+          outTC[orn] += totrowwt * (inTC(*toikit) - outTC[orn]) / totslotwt;
+          outExposure[orn] += totrowwt * inExposure(*toikit);
+        
+          if(hasImagingWeight){
+            inImagingWeight.get(*toikit, inImgWtsSpectrum);
+          
+            for(uInt c = chanStart_p[ddID]; c < chanStop; ++c)
+              outImagingWeight(c, orn) += totrowwt * inImgWtsSpectrum[c];
           }
         }
-
-	// Accumulate the averaging values from *toikit.
-	// doChanAver_p...wrong name but it means that channel 
-	// selection is a sub selection
-	// its a bit faster if no slicing is done...so avoid it if possible
-	Array<Float> unflaggedwt(doChanAver_p ?
-				 inRowWeight(*toikit)(blc, trc).shape() :
-				 inRowWeight(*toikit).shape());
-	  
-	if(doChanAver_p)	    
-	  unflaggedwt = MaskedArray<Float>(inRowWeight(*toikit)(blc, trc),
-					   reformedMask(flag(*toikit)(blc, trc),
-							false,
-							unflaggedwt.shape()));
-	else
-	  unflaggedwt = MaskedArray<Float>(inRowWeight(*toikit),
-					   reformedMask(flag(*toikit), false,
-							unflaggedwt.shape()));
-	    
-	//  	    os << LogIO::DEBUG1 << "inRowWeight(*toikit).shape() = "
-	//  	       << inRowWeight(*toikit).shape() << LogIO::POST;
-	//  	    os << LogIO::DEBUG1 << "unflaggedwt.shape() = "
-	//  	       << unflaggedwt.shape() << LogIO::POST;
-	//  	    os << LogIO::DEBUG1 << "flag(*toikit).shape() = "
-	//  	       << flag(*toikit).shape() << LogIO::POST;
-	//  	    os << LogIO::DEBUG1 << "data(*toikit).shape() = "
-	//  	       << data(*toikit).shape() << LogIO::POST;
-
-	outRowWeight.column(orn) = outRowWeight.column(orn) + unflaggedwt;
-	totrowwt = sum(unflaggedwt);
-	totslotwt += totrowwt;
-
-	if(doChanAver_p)
-	  outFlag.xyPlane(orn) = outFlag.xyPlane(orn) * flag(*toikit)(blc, trc);
-	else
-	  outFlag.xyPlane(orn) = outFlag.xyPlane(orn) * flag(*toikit);
-
-	if(doSpWeight){
-//  	  os << LogIO::DEBUG1
-// // 	     << "wgtSpec(*toikit).shape() = " << wgtSpec(*toikit).shape()
-// // 	     << "\nflag(*toikit).shape() = " << flag(*toikit).shape()
-// // 	     << "outSpWeight.xyPlane(orn).shape() = "
-// //	     << outSpWeight.xyPlane(orn).shape()
-// 	     << "\noutSpWeight.xyPlane(orn)(blc) (before) =\t"
-// 	     << outSpWeight.xyPlane(orn)(blc)
-// 	     << LogIO::POST;
-
-	  if(doChanAver_p)
-	    unflgWtSpec = MaskedArray<Float>(wgtSpec(*toikit)(blc, trc),
-					     !flag(*toikit)(blc, trc));
-	  else
-	    unflgWtSpec = MaskedArray<Float>(wgtSpec(*toikit), !flag(*toikit));
-	  
-	  outSpWeight.xyPlane(orn) = outSpWeight.xyPlane(orn) + unflgWtSpec;
-//  	  os << LogIO::DEBUG1
-// 	     << "outSpWeight.xyPlane(orn)(blc) (after) = "
-// 	     << outSpWeight.xyPlane(orn)(blc)
-// 	     << "\nunflgWtSpec(blc) = " << unflgWtSpec(blc)
-// 	     << "\nwgtSpec(*toikit)(blc) = " << wgtSpec(*toikit)(blc)
-// 	     << "\nflag(*toikit)(blc) = " << flag(*toikit)(blc)
-// 	     << LogIO::POST;
-	  for(uInt datacol = 0; datacol < ntok; ++datacol){
-	    data_toikit = doChanAver_p ? data[datacol](*toikit)(blc, trc) :
-	      data[datacol](*toikit);
-
-	    data_toikit *= unflgWtSpec;
-	    
-	    outData[datacol].xyPlane(orn) = outData[datacol].xyPlane(orn)
-	      + data_toikit;
-	  }
-	}
-	else{
-	  for(uInt datacol = 0; datacol < ntok; ++datacol){
-	    data_toikit = doChanAver_p ? data[datacol](*toikit)(blc, trc) :
-	      data[datacol](*toikit);
-	    binOpExpandInPlace(data_toikit, unflaggedwt,
-			       Multiplies<Complex, Float>());
-	    
-	    outData[datacol].xyPlane(orn) = outData[datacol].xyPlane(orn)
-	      + data_toikit;
-	  }
-	}
-       
-	outTC[orn] += totrowwt * (inTC(*toikit) - outTC[orn]) / totslotwt;
-	outExposure[orn] += totrowwt * inExposure(*toikit);
-
-	if(hasImagingWeight){
-	  inImagingWeight.get(*toikit, inImgWtsSpectrum);
-	  
-	  for(uInt c = chanStart_p[0]; c < chanStop; ++c)
-	    outImagingWeight(c, orn) += totrowwt * inImgWtsSpectrum[c];
-	}
-      } // End of iterating through the slot's rows.
+      } // End of loop through the slot's rows.
 
       // Average the accumulated values.
-      totslotwt = sum(outRowWeight.column(orn));  // Uncommented for debugging!
+      //totslotwt = sum(outRowWeight.column(orn));  // Uncomment for debugging
       if(totslotwt > 0.0){
-	//outTC[orn] /= totrowwt;
-	outExposure[orn] *= slotv.size() / totslotwt;
-	if(hasImagingWeight){
-	  for(uInt c = chanStart_p[0]; c < chanStop; ++c)
-	    outImagingWeight(c, orn) /= totslotwt;
-	}
+        outExposure[orn] *= slotv.size() / totslotwt;
+        if(hasImagingWeight){
+          for(uInt c = chanStart_p[ddID]; c < chanStop; ++c)
+            outImagingWeight(c, orn) /= totslotwt;
+        }
       }
       slotv.clear();  // Free some memory.
-      if(product(outRowWeight.column(orn)) > 0.0){
-	Array<Complex> grumble;   			// Referenceable copy
+      if(product(outRowWeight.column(orn)) > 0.0){ // Can product be profitably
+                                                   // replaced with some sort
+                                                   // of all()?
+        Array<Complex> grumble;   			// Referenceable copy
 
-	if(doSpWeight){
-	  for(uInt datacol = 0; datacol < ntok; ++datacol)
-	    outData[datacol].xyPlane(orn) = outData[datacol].xyPlane(orn)
-	      / outSpWeight.xyPlane(orn);
-	}
-	else{
-	  Vector<Float> groan(outRowWeight.column(orn)); // Referenceable copy
+        if(doSpWeight){
+          for(uInt datacol = 0; datacol < ntok; ++datacol)
+            outData[datacol].xyPlane(orn) = outData[datacol].xyPlane(orn)
+              / outSpWeight.xyPlane(orn);
+        }
+        else{
+          Vector<Float> groan(outRowWeight.column(orn)); // Referenceable copy
 
-	  for(uInt datacol = 0; datacol < ntok; ++datacol){
-	    grumble = outData[datacol].xyPlane(orn);
+          for(uInt datacol = 0; datacol < ntok; ++datacol){
+            grumble = outData[datacol].xyPlane(orn);
 	  
-	    binOpExpandInPlace(grumble, groan, casa::Divides<Complex, Float>());
-	    outData[datacol].xyPlane(orn) = grumble;
-	  }
-	}
+            binOpExpandInPlace(grumble, groan, casa::Divides<Complex, Float>());
+            outData[datacol].xyPlane(orn) = grumble;
+          }
+        }
 	
-	for(uInt polind = 0; polind < outRowWeight.column(orn).nelements();
-	    ++polind)
-	  outSigma(polind, orn) = 1.0 / sqrt(outRowWeight(polind, orn));
+        for(uInt polind = 0; polind < outRowWeight.column(orn).nelements();
+            ++polind)
+          outSigma(polind, orn) = 1.0 / sqrt(outRowWeight(polind, orn));
       }
 
       // Fill in the nonaveraging values from besttoik.
       // In general, _IDs which are row numbers in a subtable must be
       // remapped, and those which are not probably shouldn't be.
-      outTime[orn]       = newTimeVal_p[tbn];
-      outScanNum[orn]    = scanNum(besttoik);	// Don't remap!
+      outTime[orn]    = newTimeVal_p[tbn];
+      outScanNum[orn] = scanNum(besttoik);	// Don't remap!
       if(antennaSel_p){
-	outAnt1[orn]  = antIndexer_p[ant1(besttoik)];
-	outAnt2[orn]  = antIndexer_p[ant2(besttoik)];
-	outFeed1[orn] = feedNewIndex_p[inFeed1(besttoik)];
-	outFeed2[orn] = feedNewIndex_p[inFeed2(besttoik)];
+        outAnt1[orn]  = antIndexer_p[ant1(besttoik)];
+        outAnt2[orn]  = antIndexer_p[ant2(besttoik)];
+        outFeed1[orn] = feedNewIndex_p[inFeed1(besttoik)];
+        outFeed2[orn] = feedNewIndex_p[inFeed2(besttoik)];
       }
       else{
-	outAnt1[orn]  = ant1(besttoik);
-	outAnt2[orn]  = ant2(besttoik);
-	outFeed1[orn] = inFeed1(besttoik);
-	outFeed2[orn] = inFeed2(besttoik);
+        outAnt1[orn]  = ant1(besttoik);
+        outAnt2[orn]  = ant2(besttoik);
+        outFeed1[orn] = inFeed1(besttoik);
+        outFeed2[orn] = inFeed2(besttoik);
       }		
       outField[orn]   = fieldRelabel_p[fieldID(besttoik)];
       outState[orn]   = remapped(state(besttoik), stateRemapper_p,
-				 abs(state(besttoik)));
+                                 abs(state(besttoik)));
       outProc[orn]    = remapped(inProc(besttoik), procMapper,
-				 abs(inProc(besttoik)));
+                                 abs(inProc(besttoik)));
       outObs[orn]     = remapped(inObs(besttoik), obsMapper,
-				 abs(inObs(besttoik)));
+                                 abs(inObs(besttoik)));
       outArr[orn]     = inArr(besttoik);	        // Don't remap!
       dataDesc[orn]   = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(besttoik)]];
 
@@ -4630,37 +5198,32 @@ Bool SubMS::fillTimeAverData(const String& columnName)
         if(beftime != besttime && besttime != afttime){
           // Using interpolation due to W.J. Taylor recommended for its stability
           // in Knuth, Seminumerical Algorithms, 2nd ed., p. 504-5.
-          Double wm1 = 1.0 / ((beftime - besttime) * (beftime - afttime));
-          Double w0  = 1.0 / ((besttime - beftime) * (besttime - afttime));
-          Double wp1 = 1.0 / ((afttime - beftime) * (afttime - besttime));
-          Double coeffm1 = wm1 / (outTC[orn] - beftime);
-          Double coeff0  = w0 / (outTC[orn] - besttime);
-          Double coeffp1 = wp1 / (outTC[orn] - afttime);
-          Double denom = coeffm1 + coeff0 + coeffp1;
+          Double wm1 = 1.0 / ((beftime - besttime) * (beftime - afttime));//>0
+          Double w0  = 1.0 / ((besttime - beftime) * (besttime - afttime));//<0
+          Double wp1 = 1.0 / ((afttime - beftime) * (afttime - besttime));//>0
+          Double coeffm1 = wm1 / (outTC[orn] - beftime);//>0?
+          Double coeff0  = w0 / (outTC[orn] - besttime);//w0/!0
+          Double coeffp1 = wp1 / (outTC[orn] - afttime);//<0?
+          Double denom = coeffm1 + coeff0 + coeffp1;    // Could be anything?
 
-          outUVW.column(orn) = (coeffm1 * inUVW(bestbeftoik) +
-                                coeff0 * inUVW(besttoik) +
-                                coeffp1 * inUVW(bestafttoik)) / denom;          
+          if(denom != 0.0)
+            outUVW.column(orn) = (coeffm1 * inUVW(bestbeftoik) +
+                                  coeff0 * inUVW(besttoik) +
+                                  coeffp1 * inUVW(bestafttoik)) / denom;
+          else	// implies outTC[orn] == inTC(besttoik) ?!
+            outUVW.column(orn) = inUVW(besttoik);
         }
         else if(beftime != besttime){
-          Double wm1 = 1.0 / (beftime - besttime);
-          Double w0  = -wm1;
-          Double coeffm1 = wm1 / (outTC[orn] - beftime);
-          Double coeff0  = w0 / (outTC[orn] - besttime);
-          Double denom = coeffm1 + coeff0;
-          
-          outUVW.column(orn) = (coeffm1 * inUVW(bestbeftoik) +
-                                coeff0 * inUVW(besttoik)) / denom;          
+          outUVW.column(orn) = inUVW(besttoik) +
+			(outTC[orn] - besttime) * (inUVW(bestbeftoik) -
+                                                   inUVW(besttoik)) /
+            (beftime - besttime);
         }
         else if(afttime != besttime){
-          Double wp1 = 1.0 / (afttime - besttime);
-          Double w0  = -wp1;
-          Double coeffp1 = wp1 / (outTC[orn] - afttime);
-          Double coeff0  = w0 / (outTC[orn] - besttime);
-          Double denom = coeffp1 + coeff0;
-          
-          outUVW.column(orn) = (coeffp1 * inUVW(bestafttoik) +
-                                coeff0 * inUVW(besttoik)) / denom;          
+          outUVW.column(orn) = inUVW(besttoik) +
+			(outTC[orn] - besttime) * (inUVW(bestafttoik) -
+                                                   inUVW(besttoik)) /
+            (afttime - besttime);
         }
         else
           outUVW.column(orn) = inUVW(besttoik);

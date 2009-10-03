@@ -407,9 +407,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <description>Number of taylor terms to use for modeling the sky frequency dependence</description>
 	    <value>1</value>
     </param>
+<!--========================================================= -->
     <param type="string" name="reffreq" subparam="true">
 	    <description>Reference frequency for MFS (relevant only if nterms > 1)</description>
 	    <value></value>
+    </param>
+<!--========================================================= -->
+    <param type="string" name="chaniter" subparam="true">
+            <description>Do interactive CLEAN on spectral data cube per channel or jointly all channels? (\'channel\' to clean per channel)</description>
+            <value>joint</value>
+            <allowed kind="enum">
+            <value>joint</value>
+            <value>channel</value>
+            </allowed>
     </param>
 <!--========================================================= -->
     <constraints>
@@ -530,6 +540,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<equals type="bool" value="False"/>
 		<equals type="bool" value="True">
 		      <default param="npercycle"><value>100</value></default>
+                      <default param="chaniter"><value type='string'>channel</value></default>
 	        </equals>
             </when>
 	    <when param="imagermode">
@@ -738,7 +749,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO','LGROUP','CMB'
                  default: ''; same as input data; example: frame='bary' for Barycentric frame 
                veltype -- (for mode='velocity') velocity definition
-                 Options: 'radio','optical','true' or 'relativistic'
+                 Options: 'radio','optical','true' (='relativistic')
+                 veltype='true' (or equivalently 'relativistic') 
+                 for velocity defined without approximations using the relativistic expression 
                  default: 'radio'
            examples:
                spw = '0,1'; mode = 'mfs'

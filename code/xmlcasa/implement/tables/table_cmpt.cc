@@ -30,6 +30,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/File.h>
 #include <xmlcasa/utils/stdBaseInterface.h>
+#include <xmlcasa/ms/Statistics.h>
 //begin modification
 //july 4 2007
 #include <xmlcasa/xerces/asdmCasaXMLUtil.h>
@@ -1680,7 +1681,7 @@ return rstatus;
 //begin modification
 //july 2 2007
 //This function will write the final table. The table will
-//depened on the structure of incoming Record, which was
+//depend on the structure of incoming Record, which was
 //built using the XML ASDM table structure.
 
 void test_record(Record &myRecord)
@@ -1807,12 +1808,41 @@ bool rstatus(false);
  } catch (AipsError x) {
       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
-   }
-
-
+ }
 
 return rstatus;
 }
 //end modification
+
+
+::casac::record* 
+table::statistics(const std::string& column, 
+                  const std::string& complex_value, 
+                  const bool useflags)
+{
+    ::casac::record *retval(NULL);
+
+    try {
+        if(itsTable){
+
+            if (itsTable->nrows() == 0) {
+                throw AipsError("Table has zero rows, cannot continue");
+            }
+
+            retval = fromRecord(casac::Statistics::get_statistics(itsTable->table(),
+                                                                  column,
+                                                                  complex_value,
+                                                                  itsLog));
+
+        } else {
+            *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
+        }
+    } catch (AipsError x) {
+        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+        RETHROW(x);
+    }
+    return retval;
+}
+
 } // casac namespace
 

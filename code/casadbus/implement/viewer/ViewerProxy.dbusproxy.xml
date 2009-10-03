@@ -1,16 +1,29 @@
 <?xml version="1.0" ?>
 <node name="/casa/viewer">
   <interface name="edu.nrao.casa.viewer">
+    <method name="start_interact" >
+      <arg direction="in" type="v" name="input" />
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
     <method name="load" >
       <arg direction="in" type="s" name="path" />
       <arg direction="in" type="s" name="displaytype" />
       <arg direction="in" type="i" name="panel" />
-      <arg direction="out" type="i" />
+      <arg direction="out" type="v" />
+    </method>
+    <method name="reload" >
+      <arg direction="in" type="i" name="panel_or_data" />
+      <arg direction="out" type="v" />
+    </method>
+    <method name="unload" >
+      <arg direction="in" type="i" name="data" />
+      <arg direction="out" type="v" />
     </method>
     <method name="restore">
       <arg direction="in" type="s" name="path" />
       <arg direction="in" type="b" name="new_window" />
-      <arg direction="out" type="i" />
+      <arg direction="out" type="v" />
     </method>
     <method name="cwd">
       <arg direction="in" type="s" name="new_path" />
@@ -18,7 +31,19 @@
     </method>
     <method name="panel">
       <arg direction="in" type="s" name="type" />
-      <arg direction="out" type="i" />
+      <arg direction="out" type="v" />
+    </method>
+    <method name="hide">
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
+    <method name="show">
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
+    <method name="close">
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
     </method>
     <method name="output">
       <arg direction="in" type="s" name="device" />

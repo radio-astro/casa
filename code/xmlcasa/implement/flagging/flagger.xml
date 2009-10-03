@@ -243,6 +243,12 @@ Note that fg.setmanualflags() can be called multiple times before a call to fg.r
      <value>true</value>
      </param>
     
+     <param type="bool" name="channelavg">
+     <description>Average data over channels before clipping ? [ True / False ]
+     </description>
+     <value>false</value>
+     </param>
+    
      <param type="double" name="quackinterval">
      <description>Quack Length in seconds : example : 30.0</description>
      <value>0.0</value>

@@ -3,7 +3,7 @@ from taskinit import *
 
 import asap as sd
 
-def sdsave(sdfile, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, outfile, outform, overwrite):
+def sdsave(sdfile, rowlist, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, outfile, outform, overwrite):
 
         casalog.origin('sdsave')
 
@@ -36,8 +36,17 @@ def sdsave(sdfile, scanlist, field, iflist, pollist, scanaverage, timeaverage, t
 
             s=sd.scantable(sdfile,scanaverage)
 
-            #Select scan and field
+	    #Select rows
             sel = sd.selector()
+	    if (type(rowlist) == list ):
+	      rows = rowlist
+	    else:
+	      rows = [rowlist]
+	    
+	    if ( len(rows) > 0):
+	      sel.set_rows(rows)
+
+            #Select scan and field
             if (type(scanlist) == list ):
               scans = scanlist
             else:
