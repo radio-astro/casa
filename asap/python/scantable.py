@@ -1558,10 +1558,10 @@ class scantable(Scantable):
             ## Save parameters of baseline fits as a class attribute.
             ## NOTICE: It does not reflect changes in scantable!
             #self.blpars = f.blpars
-            s._add_history("poly_baseline", varlist)
+            self._add_history("poly_baseline", varlist)
             print_log()
-            if insitu: self._assign(s)
-            else: return s
+            if insitu: self
+            else: return self.copy()
         except RuntimeError:
             msg = "The fit failed, possibly because it didn't converge."
             if rcParams['verbose']:
