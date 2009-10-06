@@ -47,7 +47,6 @@ FitterEstimatesFileParser::FitterEstimatesFileParser (
 
 	RegularFile myFile(filename);
 	itsLog->origin(LogOrigin("FitterEstimatesFileParser","constructor"));
-	*itsLog << "in constructor" << LogIO::POST;
 
 	if (! myFile.exists()) {
 		*itsLog << LogIO::NORMAL << "Estimates file " << filename << " does not exist"
