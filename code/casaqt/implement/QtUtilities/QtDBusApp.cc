@@ -25,6 +25,7 @@
 //#
 //# $Id: $
 
+#include <stdlib.h>
 #include <QTextStream>
 #include <QDBusConnectionInterface>
 #include <casaqt/QtUtilities/QtDBusApp.h>
@@ -109,5 +110,32 @@ namespace casa {
 	QTextStream(object_name) << object_base << getName( ) << "_" << getpid( );
 	return *object_name;
     }
+
+    int QtDBusApp::get_id( ) {
+	static bool initialized = false;
+#if defined(__APPLE___)
+	if ( ! initialized ) {
+	    initialized = true;
+	    srandomdev( );
+	}
+#else
+	if ( ! initialized ) {
+	    initialized = true;
+	    union {
+	      void *foo;
+	      unsigned bar;
+	    };
+	    foo = &initialized;
+	    srandom(bar);
+	}
+#endif
+	int rn = (int) random( );
+	while ( rn <= 0 || used_ids.find(rn) != used_ids.end() ) {
+	    rn = (int) random( );
+	}
+	used_ids.insert(rn);
+	return rn;
+    }
+
 }
 

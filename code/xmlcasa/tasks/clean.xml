@@ -418,6 +418,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>joint</value>
             <allowed kind="enum">
             <value>joint</value>
+            <value>chan</value>
             <value>channel</value>
             </allowed>
     </param>
@@ -540,7 +541,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<equals type="bool" value="False"/>
 		<equals type="bool" value="True">
 		      <default param="npercycle"><value>100</value></default>
-                      <default param="chaniter"><value type='string'>channel</value></default>
+                      <default param="chaniter"><value type='string'>joint</value></default>
 	        </equals>
             </when>
 	    <when param="imagermode">
@@ -945,30 +946,35 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    this number interactively during the cleaning, starting wiht
                    a low number like 20, but then increasing as more extended
                    emission is encountered.
-               mask -- Specification of cleanbox(es), mask image(s), and/or
- 	           region(s) to be used for CLEANing. As long as the image has
- 	           the same shape (size), mask images from a previous
- 	           interactive session can be used for a new execution. NOTE:
- 	           the initial clean mask actually used is the union of what
- 	           is specified in mask and &lt;imagename&gt;.mask default: [] (no
- 	           masking); Possible specification types: (a) Explicit
- 	           cleanbox pixel ranges example: mask=[110,110,150,145] clean
- 	           region with blc=110,100; trc=150,145 (pixel values) (b)
- 	           Filename with cleanbox pixel values with ascii format:
- 	           example: mask='mycleanbox.txt' &lt;fieldid blc-x blc-y
- 	           trc-x trc-y&gt; on each line 
- 	           1 45 66 123 124 
- 	           2 23 100 300 340
- 	           (c) Filename for image mask example: mask='myimage.mask'
- 	           (d) Filename for region specification (e.g. from viewer)
- 	           example: mask='myregion.rgn' (e) Combinations of any of the
- 	           above example: mask=[[110,110,150,145],'mycleanbox.txt',
- 	                                'myimage.mask','myregion.rgn']
-                   If include outlier fields, then mask need to be specified in
-                   nested lists: 
-                     e.g. mask=[[[110,110,150,145],'myimage.mask'],[],[20,20,40,40]]
-                   (A clean box with [110,110,150,145] and a image mask for main field, 
-                   no mask for 1st outlier field, 1 clean box for second outlier field.)
+               chaniter -- specify how interactive CLEAN is performed, 
+                   either by stepping through channels or do jointly for all channel
+                   default: chaniter='joint'; 
+                   example: chaniter='channel'; step through channels 
+
+       mask -- Specification of cleanbox(es), mask image(s), and/or
+               region(s) to be used for CLEANing. As long as the image has
+               the same shape (size), mask images from a previous
+               interactive session can be used for a new execution. NOTE:
+               the initial clean mask actually used is the union of what
+               is specified in mask and &lt;imagename&gt;.mask default: [] (no
+               masking); Possible specification types: (a) Explicit
+               cleanbox pixel ranges example: mask=[110,110,150,145] clean
+               region with blc=110,100; trc=150,145 (pixel values) (b)
+               Filename with cleanbox pixel values with ascii format:
+               example: mask='mycleanbox.txt' &lt;fieldid blc-x blc-y
+               trc-x trc-y&gt; on each line 
+               1 45 66 123 124 
+               2 23 100 300 340
+               (c) Filename for image mask example: mask='myimage.mask'
+               (d) Filename for region specification (e.g. from viewer)
+               example: mask='myregion.rgn' (e) Combinations of any of the
+               above example: mask=[[110,110,150,145],'mycleanbox.txt',
+                                    'myimage.mask','myregion.rgn']
+               If include outlier fields, then mask need to be specified in
+               nested lists: 
+                 e.g. mask=[[[110,110,150,145],'myimage.mask'],[],[20,20,40,40]]
+               (A clean box with [110,110,150,145] and a image mask for main field, 
+               no mask for 1st outlier field, 1 clean box for second outlier field.)
        uvtaper -- Apply additional uv tapering of the visibilities.
                default: uvtaper=False; example: uvtaper=True
 

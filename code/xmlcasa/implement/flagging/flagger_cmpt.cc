@@ -470,19 +470,24 @@ flagger::deleteflagversion(const std::vector<std::string>& versionname)
     }
 }
 
-bool
-flagger::getflagversionlist()
+std::vector<std::string>
+flagger::getflagversionlist(const bool printflags)
 {
     try
     {
+        std::vector<std::string> result;
+
         if( flagger_p )
         {
                 Vector<String> versionlist(0);
-                flagger_p->getFlagVersionList(versionlist);
-                for(uInt i = 0; i < versionlist.nelements(); i++)
-		    *logger_p << versionlist[i] << LogIO::POST;
+		flagger_p->getFlagVersionList(versionlist);
+		for(uInt i = 0; i < versionlist.nelements(); i++) {
+		    if (printflags) *logger_p << versionlist[i] << LogIO::POST;
+		    result.push_back(versionlist[i]);
+		}
+		
         }
-        return False;
+        return result;
     } catch (AipsError x) {
             *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);

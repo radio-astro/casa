@@ -1,52 +1,73 @@
 import os
 from taskinit import *
 
-def flagmanager(vis=None,mode=None,versionname=None,comment=None,merge=None):
-        """Enable list, save, restore and delete flag version files.
-
-        These flag version files are copies of the flag column for a
-        measurement set.  They can be restored to the data set to get
-        back to a previous flag version.  On running importvla, a flag
-        version call 'Original' is automatically produced.
-
-        Keyword arguments:
-        vis -- Name of input visibility file
-                default: none. example: vis='ngc5921.ms'
-        mode -- Flag version operation
-                default: 'list'; to list existing flagtables
-                'save' will save flag column from vis to a specified flag file
-                'restore' will place the specified flag file into vis
-                'delete ' will delete specified flag file
-        versionname -- Flag version name
-                default: none; example: versionname='original_data'
-                No imbedded blanks in the versionname
-        comment -- Short description of a versionname (used for mode='save')
-                default: ''; example: comment='Clip above 1.85'
-                comment = versionname
-        merge -- Merge operation
-                Options: 'or','and', but not recommended for now.
-
-        """
-
+def flagmanager(vis=None,
+		mode=None,
+		versionname=None,
+		oldname=None,
+		comment=None,
+		merge=None):
+	
         casalog.origin('flagmanager')
+	fg.done()
 
-	#Python script
-	#parameter_printvalues(arg_names,arg_values,arg_types)
 	try:
-                if ((type(vis)==str) & (os.path.exists(vis))):
-                        fg.open(vis)
+		if type(vis)==str and os.path.exists(vis):
+			if mode != 'rename':
+				fg.open(vis)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 		if (mode=='list'):
 			fg.getflagversionlist()
 			print 'See logger for flag versions for this MS'
 		elif (mode=='save'):
+			casalog.post('Save current flagversion in ' + versionname)
 			fg.saveflagversion(versionname=versionname,comment=comment,merge=merge)
 		elif (mode=='restore'):
+			casalog.post('Restore flagversion ' + versionname)
 			fg.restoreflagversion(versionname=versionname,merge=merge)
 		elif (mode=='delete'):
 			fg.deleteflagversion(versionname=versionname)
+		elif (mode=='rename'):
+			if False:
+				# This is a way to do it through the C++ code, but it's inefficient:
+				fg.saveflagversion(versionname="_flagmanager_backup", comment="flagmanager internal", merge="replace")
+				fg.restoreflagversion(versionname=oldname)
+				fg.saveflagversion(versionname=versionname,comment=comment,merge=merge)
+				fg.deleteflagversion(versionname=oldname)
+				fg.restoreflagversion(versionname="_flagmanager_backup")
+				fg.deleteflagversion(versionname="_flagmanager_backup")
+			else:
+				# The directory structure is unlikely to change
+				olddir = vis + ".flagversions/flags." + oldname
+				newdir = vis + ".flagversions/flags." + versionname
+				if not os.path.isdir(olddir):
+					raise Exception, "No such flagversion: " + str(oldname)
+				if os.path.exists(newdir):
+					raise Exception, "Flagversion " + str(versionname) + " already exists!"				
+
+				casalog.post('Rename flagversion "%s" to "%s"' % (oldname, versionname))
+
+				os.rename(olddir, newdir)
+
+				# Edit entry in .flagversions/FLAG_VERSION_LIST
+				# For realistic usecases, this file is short enough to keep in memory
+				file = vis + ".flagversions/FLAG_VERSION_LIST"
+				fd = open(file)
+				lines = fd.readlines()
+				fd.close()
+
+				for i in range(len(lines)):
+					if lines[i][:(len(oldname)+3)] == oldname + ' : ':
+						lines[i] = versionname + " : " + comment + '\n'
+						break
+
+				fd = open(file, 'w')
+				fd.writelines(lines)
+				fd.close()
+				
+		else:
+			raise Exception, "Unknown mode" + str(mode)
 		fg.done()
 	except Exception, instance:
 		print '*** Error ***',instance
-

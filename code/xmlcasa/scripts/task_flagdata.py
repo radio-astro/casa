@@ -4,7 +4,9 @@ import os
 import sys
 
 debug = False
-def flagdata(vis = None, mode = None,
+def flagdata(vis = None,
+             flagbackup = None,
+             mode = None,
              spw = None, field = None,
              selectdata = None,
              antenna = None,
@@ -47,7 +49,7 @@ def flagdata(vis = None, mode = None,
                         # In manualflag and quack modes,
                         # filter out the parameters which are not used
 
-                        manualflag_quack(mode, selectdata,
+                        manualflag_quack(mode, selectdata, flagbackup,
                                          autocorr=autocorr,
                                          unflag=unflag,
                                          clipexpr=clipexpr,       # manualflag only
@@ -65,7 +67,7 @@ def flagdata(vis = None, mode = None,
                                          array=array,
                                          uvrange=uvrange)
                 elif mode == 'quack':
-                        manualflag_quack(mode, selectdata,
+                        manualflag_quack(mode, selectdata, flagbackup,
                                          autocorr=autocorr,
                                          unflag=unflag,
                                          clipminmax=[], clipoutside=False,
@@ -96,7 +98,8 @@ def flagdata(vis = None, mode = None,
                                 correlation = correlation, \
                                 diameter = diameter)
 
-                        backup_flags(mode)
+                        if flagbackup:
+                                backup_flags(mode)
                         fg.run()
                 elif ( mode == 'autoflag' ):
                         fg.setdata(field = field, \
@@ -120,7 +123,9 @@ def flagdata(vis = None, mode = None,
                         rec['column'] = column
                         fg.setautoflag(algorithm = algorithm,
                                        parameters = rec)
-                        backup_flags(mode)
+                        
+                        if flagbackup:
+                                backup_flags(mode)
                         fg.run()
 
                 elif mode == 'rfi':
@@ -185,7 +190,8 @@ def flagdata(vis = None, mode = None,
                         #
                         fg.setautoflag(algorithm='tfcrop', parameters=par)
 
-                        backup_flags(mode)
+                        if flagbackup:
+                                backup_flags(mode)
 
                         fg.run()
 
@@ -253,7 +259,7 @@ def flagdata(vis = None, mode = None,
 #
 # Handle mode = 'manualflag' and mode = 'quack'
 #
-def manualflag_quack(mode, selectdata, **params):
+def manualflag_quack(mode, selectdata, flagbackup, **params):
         if debug: print params
 
         if not selectdata:
@@ -348,7 +354,8 @@ def manualflag_quack(mode, selectdata, **params):
 #                                                   outside=params['clipoutside'][i])
 #                                                   quackinterval=quackinterval[i])
 
-        backup_flags(mode)
+        if flagbackup:
+                backup_flags(mode)
         fg.run()
 
 # rename some parameters,
@@ -375,9 +382,18 @@ def backup_flags(mode):
         # in the time stamp
 
         time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
-        
-        versionname = "flagdata-" + str(time.time())
-        #versionname = "flagdata-" + time_string
+
+	existing = fg.getflagversionlist(printflags=False)
+	# remove comments from strings
+	existing = [x[0:x.find(' : ')] for x in existing]
+	i = 1
+	while True:
+		versionname = mode+"_" + str(i)
+
+		if not versionname in existing:
+			break
+		else:
+			i = i + 1
 
         #casalog.post("Backing up flags under versionname = " + versionname)
 

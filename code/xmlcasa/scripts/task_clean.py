@@ -64,7 +64,7 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
 
                 #setup for 'per channel' clean
                 dochaniter=False
-                if interactive and chaniter=='channel':
+                if interactive and (chaniter=='chan' or chaniter=='channel'): 
                         if nchan >1:
                                 dochaniter=True
                 

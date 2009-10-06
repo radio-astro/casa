@@ -915,10 +915,15 @@ T
    <shortdescription>*** \n Print out a list of saved flag_versions. 
  			  ***</shortdescription>
 <description> 
+Print out the list of flag versions in the MS, unless the parameter printflags=False. The list of names is returned.
 </description>
 <input>
+     <param type="bool" name="printflags">
+     <description>Print flagversions in logger?</description>
+     <value>true</value>
+     </param>
 </input>
-<returns type="bool"/>
+<returns type="stringArray"/>
 <example>
 \begin{verbatim}
 \end{verbatim}

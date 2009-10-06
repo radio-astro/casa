@@ -17,9 +17,17 @@ def test_eq(result, total, flagged):
 default(flagdata)
 
 vis = 'flagdatatest.ms'
-shutil.copytree(os.environ.get('CASAPATH').split()[0] +
-                "/data/regression/flagdata/" + vis,
-                vis)
+if False:
+    # Do not use copytree because of
+    # http://bugs.python.org/issue1545
+    shutil.copytree(os.environ.get('CASAPATH').split()[0] +
+                    "/data/regression/flagdata/" + vis,
+                    vis)
+else:
+    os.system('cp -r ' + \
+              os.environ.get('CASAPATH').split()[0] +
+              "/data/regression/flagdata/" + vis + ' ' + vis)
+
 flagdata(vis=vis, unflag=true)
 
 print "Test of vector mode"
@@ -34,8 +42,36 @@ flagdata()
 test_eq(flagdata(vis=vis, mode='summary'), 2000700, 465398)
 flagdata(vis=vis, unflag=true)
 
-print "flagmanager mode=list"
+
+
+print "Test of flagmanager mode=list, flagbackup=True/False"
 flagmanager(vis=vis, mode='list')
+fg.open(vis)
+if len(fg.getflagversionlist()) != 5:
+    raise Exception()
+fg.done()
+
+flagdata(vis=vis, unflag=true, flagbackup=false)
+flagmanager(vis=vis, mode='list')
+fg.open(vis)
+if len(fg.getflagversionlist()) != 5:
+    raise Exception()
+fg.done()
+
+flagdata(vis=vis, unflag=true, flagbackup=true)
+flagmanager(vis=vis, mode='list')
+fg.open(vis)
+if len(fg.getflagversionlist()) != 6:
+    raise Exception()
+fg.done()
+
+print "Test of flagmanager mode=rename"
+flagmanager(vis=vis, mode='rename', oldname='manualflag_3', versionname='Ha! The best version ever!', comment='This is a *much* better name')
+flagmanager(vis=vis, mode='list')
+fg.open(vis)
+if len(fg.getflagversionlist()) != 6:
+    raise Exception()
+fg.done()
 
 
 print "Test of channel average"
@@ -74,6 +110,7 @@ flagdata(vis=vis, unflag=true)
 flagdata(vis=vis, mode='quack', quackmode='endb', quackinterval=1)
 test_eq(flagdata(vis=vis, mode='summary'), 2854278, 333396)
 flagdata(vis=vis, unflag=true)
+
 
 flagdata(vis=vis, mode='quack', quackmode='end', quackinterval=1)
 test_eq(flagdata(vis=vis, mode='summary'), 2854278, 2520882)

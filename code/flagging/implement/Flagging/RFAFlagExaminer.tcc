@@ -65,22 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   RFAFlagExaminer::~RFAFlagExaminer ()
   {
-    if(dbg3)  cout << "FlgaExaminer destructor " << endl;
-    //     char s[1024];
-    //     sprintf(s,"Chunk %d (field %s, spw %d)",
-    // 	    chunk.nchunk(),chunk.visIter().fieldName().chars(),chunk.visIter().spectralWindow());
-    //     os << "---------------------------------------------------------------------" << LogIO::POST;
-    //     os<<s<<LogIO::POST;
-    
-    //     sprintf(s,"%s, %d channels, %d time slots, %d baselines, %d rows\n",
-    // 	    chunk.getCorrString().chars(),chunk.num(CHAN),chunk.num(TIME),
-    // 	    chunk.num(IFR),chunk.num(ROW));
-    //     os<<s<<LogIO::POST;
-    
-    //     os << "\n\n\nData Selection to examine : " << desc_str ;
-    //     if(flag_everything) os << " all " ;
-    //     os << LogIO::POST;
-    
+    if(dbg3)  cout << "FlgaExaminer destructor " << endl;    
   }
   
   // jmlarsen: gets called
@@ -88,10 +73,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 
-    totalflags    = 0;//  accumTotalFlags    = 0;
-    totalcount    = 0;//  accumTotalCount    = 0;
-    totalrowflags = 0;//  accumTotalRowFlags = 0;
-    totalrowcount = 0;//  accumTotalRowCount = 0;
+    totalflags    = 0;
+    totalcount    = 0;
+    totalrowflags = 0;
+    totalrowcount = 0;
     inTotalFlags =
 	inTotalCount = 
 	inTotalRowCount = 
@@ -125,10 +110,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 
-    totalflags    = 0;// accumTotalFlags    = 0;
-    totalcount    = 0;//  accumTotalCount   = 0;
-    totalrowflags = 0;//  accumTotalRowFlags = 0;
-    totalrowcount = 0;//  accumTotalRowCount = 0;
+    totalflags    = 0;
+    totalcount    = 0;
+    totalrowflags = 0;
+    totalrowcount = 0;
     
     inTotalFlags = 
 	inTotalCount = 
@@ -146,7 +131,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // jmlarsen: gets called
   void RFAFlagExaminer::initializeIter (uInt it) 
   {
-      //    totalflags = totalcount = totalrowflags = totalrowcount = 0;
       if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 
       for(unsigned ii=0;
@@ -165,12 +149,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      jj<chunk.visBuf().flag().shape()(1);
 	      jj++)
 	      if (chunk.visBuf().flag()(ii,jj)) inTotalFlags++;
-      
-//     iterFlag(it);
-//     inTotalFlags += totalflags;
-//     inTotalCount += totalcount;
-//     inTotalRowFlags += totalrowflags;
-//     inTotalRowCount += totalrowcount;
   }
   
   // jmlarsen: doesn't get called (?)
@@ -199,14 +177,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if (chunk.visBuf().flag()(ii,jj)) outTotalFlags++;
 	}
     }
-
-//     totalflags = totalcount = totalrowflags = totalrowcount = 0;
-//     iterFlag(it, False);
-//     outTotalFlags += totalflags;
-//     outTotalCount += totalcount;
-//     outTotalRowFlags += totalrowflags;
-//     outTotalRowCount += totalrowcount;
-    //    cerr << outTotalRowCount << " " << inTotalRowCount << " " << outTotalRowCount-inTotalRowCount << endl;
   }
 
   // jmlarsen: gets called
@@ -270,31 +240,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
                 totalrowcount++;
 
-
-                if (0) {
-                  for (uInt ich=0; 
-                       ich < chunk.num(CHAN); 
-                       ich++ ) {
-
-		    if (flagchan.nelements() == 0 || 
-                        flagchan[ich]) {
-			
-                      //totalflags += chunk.nfChanIfrTime(ich, ifrs(i), it);
-                      //totalcount += chunk.num(CORR); // missing the number of SPWs
-
-                        if (0) cout << " totalflags = " << totalflags
-                                    << " totalcount = " << totalcount
-                                    << " nfcit      = " //<< chunk.nfChanIfrTime(ich, ifrs(i), it)
-                                    << " chunk.num(CORR) = " << chunk.num(CORR)
-                                    << endl;
-		    }
-                  }
-                }
-                else {
-                    totalflags += chunk.nfIfrTime(ifrs(i), it);
-                    totalcount += chunk.num(CORR) * chunk.num(CHAN); // missing the number of SPWs
-                  }
-		}
+                totalflags += chunk.nfIfrTime(ifrs(i), it);
+                totalcount += chunk.num(CORR) * chunk.num(CHAN);
+              }
 	}
     }
     
@@ -305,10 +253,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void RFAFlagExaminer::endFlag ()
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
-    
-    // os << "\nChunk : " << chunk.nchunk() << " : [ Field Id : " << chunk.visBuf().fieldId() << " , Spw Id : " << chunk.visBuf().spectralWindow() << " ]" << endl;
-    // cout << chunk.getCorrString() << " , " << chunk.num(CHAN) << " channels, " << chunk.num(TIME) << " time slots, " << chunk.num(IFR) << "(" << chunk.num(ROW)/chunk.num(TIME) << ") baselines, " << chunk.num(ROW) << " rows" << LogIO::POST;
-    
+        
     char s[1024];
     sprintf(s,"Chunk %d (field %s, fieldID %d, spw %d)",
      	    chunk.nchunk(),
@@ -327,22 +272,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    chunk.num(ROW));
     os << s << LogIO::POST;
     
-    /*
-      Int n,n0;
-      char s[200];
-      // % of rows flagged
-      n  = sum(chunk.nrfIfr());
-      n0 = chunk.num(ROW);
-      sprintf(s,"\n%d (%0.2f%%) rows are flagged (all baselines/times/chans/corrs for [field=%d,spw=%d]).",n,n*100.0/n0,chunk.visBuf().fieldId(),chunk.visBuf().spectralWindow());
-      os<<s<<LogIO::POST;
-    
-      // % of data points flagged
-      n  = sum(chunk.nfIfrTime());
-      n0 = chunk.num(ROW)*chunk.num(CHAN)*chunk.num(CORR);
-      sprintf(s,"%d of %d (%0.2f%%) data points are flagged (all baselines/times/chans/corrs for [field=%d,spw=%d]).",n,n0,n*100.0/n0,chunk.visBuf().fieldId(),chunk.visBuf().spectralWindow());
-      os<<s<<LogIO::POST;
-    */
-    
     os << "\n\n\nData Selection to examine : " << desc_str ;
     if(flag_everything) os << " all " ;
     os << LogIO::POST;
@@ -359,19 +288,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	" (" << ffrac << "%) data points are flagged.\n\n" <<
 	LogIO::POST;
     
-
-    
-    if (0) {
-	rffrac = outTotalRowFlags * 100.0 / outTotalRowCount;
-	ffrac = outTotalFlags * 100.0 / outTotalCount;
-	os <<
-	    outTotalRowFlags << " out of " <<
-	    outTotalRowCount << " (" << rffrac << "%) rows are flagged." <<
-	    LogIO::POST;
-	os << outTotalFlags << " out of " << 
-	    outTotalCount << " (" << ffrac << "%) data points are flagged.\n\n" << 
-	    LogIO::POST;
-    }
     os << "---------------------------------------------------------------------" << LogIO::POST;
     
     accumTotalFlags    += totalflags;
@@ -379,13 +295,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     accumTotalRowFlags += totalrowflags;
     accumTotalRowCount += totalrowcount;
     
-    if (0) {
-      cerr << "accumTotalFlags " << accumTotalFlags -totalflags
-           << " + " << totalflags << " -> " << accumTotalFlags << endl;
-      cerr << "accumTotalCount " << accumTotalCount -totalcount
-           << " + " << totalcount << " -> " << accumTotalCount << endl;
-    }
-
     return;
   }
 

@@ -494,7 +494,7 @@ void SolvableVisCal::setSimulate(const Record& simpar) {
     calTableName()="<none>";
    
   setSolved(False);
-  setApplied(False); // RI TODO this may have to be true
+  setApplied(True); // this has to be true for some of George's VE stuff but be careful about VC structure and inflation!
   setSimulated(True);
 
   // Create a pristine CalSet

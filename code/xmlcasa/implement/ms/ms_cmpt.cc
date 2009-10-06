@@ -829,27 +829,7 @@ ms::cvel2(const std::string& mode,
     
     SubMS *sms = new SubMS(*itsMS);
     
-    *itsLog << LogIO::NORMAL2 << "Selecting data ..." << LogIO::POST;
-    
-//     // keep all available data columns      
-//     String t_whichcol = ""; 
-//     if (itsMS->tableDesc().isColumn(MS::columnName(MS::DATA))){
-//       t_whichcol = MS::columnName(MS::DATA);
-//     }
-//     if (itsMS->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA))){
-//       t_whichcol += ", " + MS::columnName(MS::MODEL_DATA);
-//     }
-//     if (itsMS->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA))){
-//       t_whichcol += ", " + MS::columnName(MS::CORRECTED_DATA);
-//     }
-//     if(t_whichcol.empty()){
-//       *itsLog << LogIO::WARN << "No data columns found. Nothing to regrid." << LogIO::POST;
-//       delete sms;
-//       return false;
-//     }
-//     else{
-//       *itsLog << LogIO::NORMAL << "Found data column(s) "+t_whichcol << LogIO::POST;
-//     }
+    *itsLog << LogIO::NORMAL << "Selecting data ..." << LogIO::POST;
     
     String t_interp = toCasaString(interp);
     String t_phasec = toCasaString(phasec);
@@ -882,7 +862,7 @@ ms::cvel2(const std::string& mode,
 	return false;
       }
     
-      // determine width
+      // determine channel width
       if(!width.toString().empty()){
 	if(t_mode == "channel"){
 	  t_width = Double(atoi(width.toString().c_str()));
@@ -957,7 +937,6 @@ ms::cvel2(const std::string& mode,
     // end prepare regridding parameters
     
     // Combine all the spectral windows into one
-    
     if(!sms->combineSpws()){
       *itsLog << LogIO::SEVERE << "Error combining spectral windows." << LogIO::POST;
       delete sms;

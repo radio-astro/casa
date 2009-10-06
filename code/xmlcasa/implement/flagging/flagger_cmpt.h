@@ -78,7 +78,7 @@ class flagger
 
     bool deleteflagversion(const std::vector<std::string>& versionname = std::vector<std::string> (1, """"));
 
-    bool getflagversionlist();
+    std::vector<std::string> getflagversionlist(const bool printflags = true);
 
     private:
 

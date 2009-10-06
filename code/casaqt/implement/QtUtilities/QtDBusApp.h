@@ -27,6 +27,7 @@
 #ifndef QTDBUSAPP_QO_H_
 #define QTDBUSAPP_QO_H_
 
+#include <set>
 #include <string>
 #include <QString>
 #include <QDBusConnection>
@@ -47,11 +48,19 @@ namespace casa {
 	    virtual const QString &getName( ) const = 0;
 	    QtDBusApp( ) : service_name(0), object_name(0) { }
 	    virtual ~QtDBusApp( );
+
+	protected:
+	    // returns a new "id" to be used for things such as data, widget,
+	    // or object handles on both ends of the dbus connection...
+	    virtual int get_id( );
+
 	private:
 	    static const QString &serviceBase( );
 	    static const QString &objectBase( );
 	    QString *service_name;
 	    QString *object_name;
+
+	    std::set<int> used_ids;
     };
 
     inline std::string to_string(const QString &other) { return std::string((const char*) other.toAscii().data()); }

@@ -327,9 +327,9 @@ class cleanhelper:
                                 if slice>-1:
                                     self.getchanimage(masklets,masklets+'chanim',slice)
                                     self.copymaskimage(masklets+'chanim',shp,'__tmp_mask')
+                                    ia.removefile(maskets+'chanim')
                                 else:
                                     self.copymaskimage(masklets, shp, '__tmp_mask')
-                                ia.removefile(maskets+'chanim')
                                 #self.copymaskimage(masklets,shp,'__tmp_mask')
                                 ia.open(self.maskimages[self.imagelist[maskid]])
                                 ia.calc(pixels='+ __tmp_mask')
@@ -468,6 +468,7 @@ class cleanhelper:
                 if slice>-1:
                     self.getchanimage(ima, ima+'chanim',slice)
                     self.copymaskimage(ima+'chanim',shp,'__temp_mask')
+                    ia.removefile(ima+'chanim')
                 else:
                     self.copymaskimage(ima, shp, '__temp_mask')
                 #ia.open(ima)
@@ -481,7 +482,6 @@ class cleanhelper:
                 ia.done()
                 ia.removefile('__temp_mask')
                 ia.removefile('__temp_mask2')
-                ia.removefile(ima+'chanim')
             #make image a mask image i.e 1 and 0 only
             ia.open(outputmask)
             ###getchunk is a mem hog

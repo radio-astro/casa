@@ -1798,6 +1798,9 @@ Bool Simulator::corrupt() {
     // if we want a different order for corruption we either need to 
     // implement the sort here or create a VE::setcorrupt(vc_p)
     ve_p.setapply(vc_p);
+
+    // set to corrupt DATA up to B (T,D,G,etc) and correct model with A,M,K
+    ve_p.setPivot(VisCal::B); 
     
     // Apply 
     if (vc_p.nelements()>0) {
@@ -1812,21 +1815,30 @@ Bool Simulator::corrupt() {
 	  for (vi.origin(); vi.more(); vi++) {
 
 
-	    // RI TODO does Simulator::corrupt need to do anything with 
-	    // the VisCal's, their CAlSets etc, or does the VE take care of it?
+	    // RI does Simulator::corrupt need to do anything with 
+	    // the VisCal's, their CalSets etc, or does the VE take care of it?
 	    
 	    // Corrupt the *model*
-	    ve_p.corrupt(vb);
-	    
-	    // Deposit into DATA/CORRECTED_DATA
+	    // ve_p.corrupt(vb);
+
+	    // corrupt model to pivot, correct data up to pivot
+	    ve_p.collapseForSim(vb);	    
+	    // add model data to model
+	    vb.modelVisCube()+=vb.visCube();
+
+	    // Deposit into model into DATA
 	    vi.setVis(vb.modelVisCube(), VisibilityIterator::Observed);
-	    vi.setVis(vb.modelVisCube(), VisibilityIterator::Corrected);
+	    // corrected also?
+	    // vi.setVis(vb.modelVisCube(), VisibilityIterator::Corrected);
+
+	    // RI TODO is this 100% right?
+	    vi.setWeightMat(vb.weightMat());
+
 	  }
 	}
 	else 
 	  cout << "Encountered data spw for which there is no (simulated) calibration." << endl;
       }
-
     }
 
     // Old-fashioned noise, for now
@@ -1842,6 +1854,8 @@ Bool Simulator::corrupt() {
 	}
       }
     }
+
+
 
     // Flush to disk
     vs_p->flush();

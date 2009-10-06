@@ -14,6 +14,7 @@ asdmv1-import                   dpetry@eso.org
 async-segfault                  dpetry@eso.org
 b0319_regression                rreid@nrao.edu
 calstat_test                    jmlarsen@eso.org
+clearstat_test                  scastro@eso.org
 coordsystest_regression         dpetry@eso.org
 fits-import-export              dpetry@eso.org
 flagdata_test                   jmlarsen@eso.org

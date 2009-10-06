@@ -29,6 +29,12 @@
                         <value></value>
                 </param>
 
+                <param type="bool" name="flagbackup">
+                        <description>Automatically back up the current flags?</description>
+                        <value>True</value>
+                </param>
+
+
                 <param type="string" name="mode">
                         <description>Mode (manualflag,shadow,quack,summary,autoflag,rfi)</description>
                         <value>manualflag</value>
@@ -319,9 +325,17 @@
 
         Unflagging is also available with options manualflag and quack.
 
+        The flags stored in the MS are automatically backed up before each run,
+        unless flagbackup = False.
+
         Keyword arguments:
         vis -- Name of input visibility file
                 default: none example: vis='ngc5921.ms'
+
+        flagbackup -- Automatically backup flags?
+                default: True
+                options: True,False
+
         mode -- Mode of operation.
                 options: 'manualflag','autoflag','summary','quack','shadow'
                 default: 'manualflag'

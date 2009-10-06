@@ -6,16 +6,13 @@ import os
 epsilon = 0.0001
 
 caltables = ['ggtau.1mm.amp.gcal',
-             'ggtau.1mm.amp.gcal',
              'ggtau.1mm.bpoly',
              'ggtau.1mm.ph.gcal',
              'ggtau.1mm.ph.gcal0',
-             'ggtau.1mm.temp',
              'ggtau.3mm.amp.gcal',
              'ggtau.3mm.bpoly',
              'ggtau.3mm.ph.gcal',
              'ggtau.3mm.ph.gcal0',
-             'ggtau.3mm.temp',
              'ggtau.co.bpoly',
              'ggtau.hco.bpoly']
 
@@ -53,17 +50,7 @@ def run():
                                        'npts': 200,
                                        'mean': 4362063104.0}}}
 
-    for caltable in ['ggtau.3mm.ph.gcal0',
-                     'ggtau.1mm.ph.gcal0',
-                     'ggtau.co.bpoly',
-                     'ggtau.hco.bpoly',
-                     'ggtau.1mm.amp.gcal',
-                     'ggtau.1mm.amp.gcal',
-                     'ggtau.1mm.bpoly',
-                     'ggtau.1mm.ph.gcal',
-                     'ggtau.3mm.amp.gcal',
-                     'ggtau.3mm.bpoly',
-                     'ggtau.3mm.ph.gcal']:
+    for caltable in caltables:
 
         print "Testing with data", caltable, "..."
 

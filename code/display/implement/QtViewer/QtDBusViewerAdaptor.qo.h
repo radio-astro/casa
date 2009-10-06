@@ -29,7 +29,6 @@
 #define QTDBUSVIEWERADAPTOR_QO_H_
 
 #include <map>
-#include <set>
 #include <casaqt/QtUtilities/QtDBusXmlApp.qo.h>
 #include <casa/namespace.h>
 #include <QVariantMap>
@@ -162,10 +161,8 @@ namespace casa {
 	panelmap managed_panels;
 	mainwinmap managed_windows;
 
-	std::set<int> used_ids;
 	int get_id( QtDisplayPanel *, QtDisplayData *, const QString &path, const QString &type );
 	int get_id( QtDisplayPanel* );
-	int get_id( );
 	QtDisplayPanel *findpanel( int );
 
     protected:

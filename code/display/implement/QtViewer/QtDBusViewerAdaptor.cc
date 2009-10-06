@@ -732,7 +732,7 @@ namespace casa {
 		return iter->second->id();
 	}
 
-	int index = get_id( );
+	int index = QtDBusApp::get_id( );
 	data_desc *dd = new data_desc(index, path, type, data, panel );
 	managed_datas.insert(datamap::value_type(index, dd));
 	return index;
@@ -745,33 +745,10 @@ namespace casa {
 		return iter->first;
 	}
 
-	int index = get_id( );
+	int index = QtDBusApp::get_id( );
 	managed_panels.insert(panelmap::value_type(index, new panel_desc(panel)));
 	return index;
     }
-
-    int QtDBusViewerAdaptor::get_id( ) {
-	static bool initialized = false;
-#if defined(__APPLE___)
-	if ( ! initialized ) srandomdev( );
-#else
-	if ( ! initialized ) {
-	    union {
-	      void *foo;
-	      unsigned bar;
-	    };
-	    foo = &initialized;
-	    srandom(bar);
-	}
-#endif
-	int rn = (int) random( );
-	while ( rn <= 0 || used_ids.find(rn) != used_ids.end() ) {
-	    rn = (int) random( );
-	}
-	used_ids.insert(rn);
-	return rn;
-    }
-
 
     ////////////////////////////////////////////////////////////////////////
     /////////File Statics///////////////////////////////////////////////////
