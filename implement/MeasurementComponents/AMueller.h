@@ -123,7 +123,7 @@ public:
   //   implement it in AMueller.cc
   //   Is this simPar?
 
-  virtual Bool simPar(VisBuffGroupAcc& vbga);
+  virtual Bool simPar(VisIter& vi, const Int nChunks);
 
   // Also need setSimPar, etc., I think
   // use SVC::setSimulate for now

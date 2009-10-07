@@ -117,85 +117,67 @@ Int ANoise::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
 
 
 
-Bool ANoise::simPar(VisBuffGroupAcc& vbga) {
+Bool ANoise::simPar(VisIter& vi, const Int nChunks){
+  if (prtlev()>3) cout << "  AN::simPar()" << endl;  
 
-  if (prtlev()>2) cout << "  AN::simPar()" << endl;  
-
-  // This method only called in simulate context!
-  // does AMueller have isSimulated?  
   AlwaysAssert((isSimulated()),AipsError);
 
   try {
     
-    for (Int ivb=0;ivb<vbga.nBuf();++ivb) {
-      VisBuffer& svb(vbga(ivb));   
+    Vector<Int> a1;
+    vi.antenna1(a1);
+    Vector<Int> a2;
+    vi.antenna2(a2);
+    Matrix<Bool> flags;  // matrix foreach row and chan - if want pol send cube.
+    vi.flag(flags);
 
-      Vector<Int>& a1(svb.antenna1());
-      Vector<Int>& a2(svb.antenna2());
+    solveCPar()=Complex(0.0);
+    // n good VI elements averaged in each CPar() entry:
+    IPosition cparshape=solveCPar().shape();
+    Cube<Complex> nGood(cparshape);
+    solveParOK()=False;
 
-      // corruptor_p->currSpw()=svb.spectralWindow(); // same for entire vbga right?
-      solveCPar()=Complex(1.0);
-      solveParOK()=False;
+    Vector<Double> timevec;
+    Double starttime,stoptime;
+    Vector<int> scntmp;
+    starttime=vi.time(timevec)[0];
 
-      // put these outside loop so don't have to keep creating/destructing:
-      IPosition visshape(3),vblc(3),vtrc(3);
-      Int nCorr,i;
+    for (Int ichunk=0;ichunk<nChunks;++ichunk) {
+      Int spw(vi.spectralWindow());	
+      // corruptor_p->currSpw()=svb.spectralWindow(); 
 
-      for (Int irow=0;irow<svb.nRow();++irow) {
-	
-	if ( !svb.flagRow()(irow) &&
-             svb.antenna1()(irow)!=svb.antenna2()(irow) &&
-             nfalse(svb.flag().column(irow))> 0 ) {  
-	  
-	  // in T, there's a loop to find the corruptor time slot here. 
-	  // since this is baseline-based random noise, it doesn't 
-	  // need a fixed sequence in corruptor, but just the noise params 
-	  // and can draw from the distribution every time. 
+      for (vi.origin(); vi.more(); vi++) {
 
-	  // could have corruptor return different Tsys according to different 
-	  // antennas, e.g. for a heterogeneous array
-	  // corruptor_p->currAnt1()=a1(irow);
-	  // corruptor_p->currAnt2()=a2(irow);
+	Int scan(vi.scan(scntmp)[0]);
+	if (prtlev()>3 and scan<1)
+	  cout << "[chunk " << ichunk << "], scan " << scan << ",time = " << timevec[0]-4.84694e+09 << endl;
 
-	  // figure out shape of viscube - from MM::selfSolve: 
-	  // Insist that channel,row shapes match
-	  visshape=svb.visCube().shape();
-	  AlwaysAssert(solveCPar().shape().getLast(2)==visshape.getLast(2),AipsError);
-	  
-	  // Zero flagged data
-	  vblc=(3,0,0,0);
-	  vtrc=(visshape);  vtrc-=1;      
-	  nCorr=visshape(0);
-	  for (i=0;i<nCorr;++i) {
-	    vblc(0)=vtrc(0)=i;
-	    svb.visCube()(vblc,vtrc).reform(visshape.getLast(2))(svb.flag())=Complex(1.0);
+	for (Int irow=0;irow<vi.nRow();++irow)	
+	  if ( a1(irow)!=a2(irow) &&
+	       nfalse(flags.column(irow)) > 0 ) {   
+	    // RI TODOverify col not row here
+	    // in T, there's a loop to find the corruptor time slot here.
+	    solveCPar().xyPlane(irow) = solveCPar().xyPlane(irow) + 
+	      acorruptor_p->noise(solveCPar().nrow(),solveCPar().ncolumn());
+	    nGood.xyPlane(irow) = nGood.xyPlane(irow) + Complex(1.);	    
+	    solveParOK().xyPlane(irow) = True;	    
 	  }
-	  	  
-	  // initSolvePar: solveCPar().resize(nPar(),nChanPar(),nBln());
-
-//	  Complex factor(1.0);
-//	  if (acorruptor_p->mode() == "calc") {
-//	    // live dangerously: assume all vis have the same tint
-//	    Double tint = svb.msColumns().exposure()(0);  
-//	    Int iSpW = svb.spectralWindow();
-//	    Float deltaNu = svb.msColumns().spectralWindow().totalBandwidth()(iSpW) / 
-//	      Float(svb.msColumns().spectralWindow().numChan()(iSpW));	    
-//	    factor = Complex(1./sqrt( deltaNu * tint ));
-//	  }
-	  // 20090922 moved dnu dt to the MMueller part of adding noise.
-//	  solveCPar().xyPlane(irow) = 
-//	    ( acorruptor_p->noise(solveCPar().nrow(),solveCPar().ncolumn()) )* factor;
-
-	  // RI TODO do we need a switch (nCorr)?
-	  solveCPar().xyPlane(irow) = 
-	    acorruptor_p->noise(solveCPar().nrow(),solveCPar().ncolumn());
-
-	  solveParOK().xyPlane(irow) = True;
-	  //	  cout << irow << ": " << a1(irow) << "&" << a2(irow) << solveCPar().xyPlane(irow)[0,0] << endl;
-	  
-        }
       }
+      if (vi.moreChunks()) vi.nextChunk();
     }
+    
+    // RI TODO AN::simPar  don't divide by zero  **
+    for (Int i=0;i<cparshape(2);i++)
+      solveCPar().xyPlane(i) =  solveCPar().xyPlane(i) / nGood.xyPlane(i);
+
+    vi.time(timevec);
+    Int tvsize;
+    timevec.shape(tvsize);
+    stoptime=timevec[tvsize-1];
+    refTime() = 0.5*(starttime+stoptime);
+    interval() = (stoptime-starttime);
+    currField() = vi.fieldId();
+
   } catch (AipsError x) {
     if (corruptor_p) delete corruptor_p;
     cout << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;

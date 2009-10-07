@@ -352,7 +352,7 @@ public:
   virtual Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
 
   // Calculate simulated parameters by some means 
-  virtual Bool simPar(VisBuffGroupAcc& vbga);
+  virtual Bool simPar(VisIter& vi, const Int nChunks);
 
   // access to simulation variables that are general to all VisCals
   inline String& simint() { return simint_; };

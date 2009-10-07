@@ -541,7 +541,7 @@ Int SolvableVisCal::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChu
 
 
 
-Bool SolvableVisCal::simPar(VisBuffGroupAcc& vbga) {
+Bool SolvableVisCal::simPar(VisIter& vi, const Int nChunks){
   
   if (prtlev()>2) cout << "      SVC::simPar()" << endl;
   // This method only called in simulate context!
