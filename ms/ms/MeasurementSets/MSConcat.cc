@@ -533,20 +533,22 @@ Bool MSConcat::copyPointing(const MSPointing& otherPoint,const
 
   LogIO os(LogOrigin("MSConcat", "concatenate"));
 
-  if(itsMS.pointing().isNull()|| (itsMS.pointing().nrow() == 0)){
-    //We do not have a valid pointing table so we don't care
-    os << "No valid pointing table in first ms.   Result won't have one either.";
+  if((itsMS.pointing().isNull() || (itsMS.pointing().nrow() == 0))
+     && (otherPoint.isNull() || (otherPoint.nrow() == 0))
+     ){ // neither of the two MSs do have valid pointing tables
+    os << LogIO::NORMAL << "No valid pointing tables present. Result won't have one either." << LogIO::POST;
+    return True;
+  }
+  else if((itsMS.pointing().isNull() || (itsMS.pointing().nrow() == 0)) &&
+     !(otherPoint.isNull() && (otherPoint.nrow() == 0))
+     ){ // only the second  of the two MSs does have a valid pointing table
+    os << LogIO::WARN << itsMS.tableName() << "does not have a valid pointing table, "
+       << " the MS to be appended, however, has one. Result won't have one." << LogIO::POST;
     return False;
   }
-  if(otherPoint.isNull() || (otherPoint.nrow() == 0)){
-
-    os << LogIO::WARN 
-       << "No valid pointing table in ms that is being concatenated" 
-       << LogIO::POST;
-    os << LogIO::WARN 
-       << "It may be a problem for e.g mosaicing,\n so all pointing information is being deleted" 
-       << LogIO::POST;
-
+  else if(otherPoint.isNull() || (otherPoint.nrow() == 0)){
+    os << LogIO::WARN << "MS to be appended does not have a valid pointing table, "
+       << itsMS.tableName() << ", however, has one. Result won't have one." << LogIO::POST;
              
     Vector<uInt> delrows(itsMS.pointing().nrow());
     indgen(delrows);
