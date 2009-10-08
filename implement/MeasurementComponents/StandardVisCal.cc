@@ -2648,10 +2648,10 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 		( mcorruptor_p->simpar().asFloat("antefficiency") * 
 		  mcorruptor_p->simpar().asFloat("correfficiency") * C::pi );
 
-	      Int scan(vi.scan(scntmp)[0]);
-	      if (a1(irow)==5 and a2(irow)==6 and prtlev()>3 and scan<1) {
-		cout << "[chunk " << ichunk << "], scan " << scan << ",time = " << vi.time(timtmp)[0]-4.84694e+09 << endl;		
-		cout << "Tsys = " << tsys << " dnu = " << deltaNu << " factor = " << factor << endl; }
+// 	      Int scan(vi.scan(scntmp)[0]);
+// 	      if (a1(irow)==5 and a2(irow)==6 and prtlev()>3 and scan<1) {
+// 		cout << "[chunk " << ichunk << "], scan " << scan << ",time = " << vi.time(timtmp)[0]-4.84694e+09 << endl;		
+// 		cout << "Tsys = " << tsys << " dnu = " << deltaNu << " factor = " << factor << endl; }
 	    }
 	    
 	    // RI TODO MM::simPar switch (nCorr) ?  at least for the flags?
