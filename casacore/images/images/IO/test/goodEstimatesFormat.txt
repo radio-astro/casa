@@ -1,0 +1,6 @@
+# my estimates
+     
+5.0Jy,452, 131 , 4arcsec, 3arcsec, 60deg
+
+4.5Jy, 499, 232 , 6.5arcsec ,  4.1 arcsec,  95.11 deg, a
+

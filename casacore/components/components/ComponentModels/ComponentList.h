@@ -431,7 +431,7 @@ public:
   // methods to store itself as a Record and recover from a Record its state
 
   Bool fromRecord(String& error, const RecordInterface& inRec);
-  Bool toRecord(String& error, RecordInterface& outRec);
+  Bool toRecord(String& error, RecordInterface& outRec) const;
 
 private:
   // Privarte function to create the Table which will hold the components

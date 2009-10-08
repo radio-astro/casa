@@ -1071,7 +1071,7 @@ void ComponentList::readTable(const Path& fileName, const Bool readOnly) {
   itsROFlag = readOnly;
 }
 
-Bool ComponentList::toRecord(String& error, RecordInterface& outRec){
+Bool ComponentList::toRecord(String& error, RecordInterface& outRec) const {
 
   Bool retval=True;
 
@@ -1089,35 +1089,35 @@ Bool ComponentList::toRecord(String& error, RecordInterface& outRec){
 
 Bool ComponentList::fromRecord(String& error, const RecordInterface& inRec){
 
-  Bool retval= True;
-  if(itsNelements > 0){
-    LogIO logErr(LogOrigin("ComponentList", "fromRecord()"));
-    logErr << LogIO::SEVERE 
-	   << "Trying to overwrite a non-empty componentList  from Record"
-           << LogIO::POST;
-     return False;
+	Bool retval= True;
+	if(itsNelements > 0){
+		LogIO logErr(LogOrigin("ComponentList", "fromRecord()"));
+		logErr << LogIO::SEVERE
+		<< "Trying to overwrite a non-empty componentList  from Record"
+		<< LogIO::POST;
+		return False;
 
-  }  
+	}
 
-  uInt nelements=0;
-  if (inRec.isDefined("nelements")) {
-    inRec.get("nelements", nelements);
-    if(nelements >0){
-      for(uInt k=0; k < nelements; ++k){
-	String componentId=String("component")+String::toString(k);
-	Record componentRecord=inRec.asRecord(componentId);
-	SkyComponent  tempComponent;
-	retval=(retval && tempComponent.fromRecord(error, componentRecord));
-	if(retval){
-	  add(tempComponent);
+	uInt nelements=0;
+	if (inRec.isDefined("nelements")) {
+		inRec.get("nelements", nelements);
+		if(nelements >0){
+			for(uInt k=0; k < nelements; ++k){
+				String componentId=String("component")+String::toString(k);
+				Record componentRecord=inRec.asRecord(componentId);
+				SkyComponent  tempComponent;
+				retval=(retval && tempComponent.fromRecord(error, componentRecord));
+				if(retval){
+					add(tempComponent);
+				}
+				else{
+					return retval;
+				}
+			}
+		}
 	}
-	else{
-	  return retval;
-	}
-      }
-    }
-  }
-  return retval;
+	return retval;
 }
 // Local Variables: 
 // compile-command: "gmake ComponentList"

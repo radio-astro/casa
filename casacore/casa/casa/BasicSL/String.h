@@ -579,6 +579,9 @@ class String : public string {
   // a Float, 0 is returned.
   static Float toFloat(const String& string);
 
+  // Remove beginning and ending whitespace.
+  void trim();
+
   // Search functions. Returns either npos (if not found); else position.
   // <note role=warning> The RegexBase ones are ** aips++ additions</note>
   // <group>
