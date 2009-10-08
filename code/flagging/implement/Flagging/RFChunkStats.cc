@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <casa/sstream.h>
 #include <casa/System/PGPlotter.h>
-    
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // when no plotter is specified for screen/report,
@@ -82,7 +82,7 @@ PGPlotterInterface & RFChunkStats::pgprep() const
 void RFChunkStats::setReportPanels (Int nx,Int ny) const 
 { flagger.setReportPanels(nx,ny); }
 
-void RFChunkStats::newChunk ()
+void RFChunkStats::newChunk (unsigned ntimes, bool init_quack)
 {
   itime=-1;
   chunk_no++;
@@ -90,7 +90,8 @@ void RFChunkStats::newChunk ()
   visshape = visiter.visibilityShape(); //4
   counts[POLZN] = visshape(0);
   counts[CHAN] = visshape(1);
-  counts[TIME] = visiter.nSubInterval();
+
+  counts[TIME] = ntimes;
 //  counts[TIME] = flagger.numTime();
 //  Flagger::logSink()<<LogIO::WARN<< 
 //    "RFChunkStats::newChunk(): "
@@ -136,10 +137,9 @@ void RFChunkStats::newChunk ()
   sprintf(s,"Chunk %d : [field: %d, spw: %d] %s, %d channels, %d time slots, %d baselines, %d rows\n", chunk_no,visBuf().fieldId(),visBuf().spectralWindow(),corr_string.chars(),num(CHAN),num(TIME),num(IFR),num(ROW));
  // Flagger::logSink()<<s<<LogIO::POST;
 
-
+  if (init_quack) {
       // figure out all scan's start and end times
       // for use in quack mode
-
       for (visiter.origin(); 
            visiter.more(); 
            visiter++) {
@@ -218,6 +218,7 @@ void RFChunkStats::newChunk ()
           MVTime( scan_end_flag[i]/C::day).string(MVTime::DMY,7) << endl;
 
       }
+  }
 }
 
 void RFChunkStats::newPass (uInt npass)

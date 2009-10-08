@@ -324,6 +324,8 @@ private:
   // Debug Message flag
   Bool dbg;
 
+  Bool quack_agent_exists;
+  /* More initialization is required, if there exists a quacking agent */
 };
 
 

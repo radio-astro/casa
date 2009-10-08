@@ -28,8 +28,6 @@
 #define FLAGGING_RFABASE_H
 
 #include <casa/Arrays/Cube.h> 
-#include <lattices/Lattices/TempLattice.h> 
-#include <lattices/Lattices/LatticeIterator.h> 
 #include <flagging/Flagging/RFChunkStats.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Containers/Record.h>

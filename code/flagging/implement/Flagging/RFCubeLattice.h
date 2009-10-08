@@ -30,11 +30,14 @@
 #include <casa/Arrays/Matrix.h> 
 #include <lattices/Lattices/TempLattice.h> 
 #include <lattices/Lattices/LatticeIterator.h> 
+#include <boost/dynamic_bitset.hpp>
+#include <vector>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+
 // <summary>
-// RFCubeLatticeIterator: iterator over a cubic lattice
+// RFCubeLatticeIterator: iterator over a cubic buffer
 // </summary>
 
 // <use visibility=local>
@@ -43,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite>
-//   <li> LatticeIterator
+//   <li> std::vector, Matrix
 // </prerequisite>
 //
 // <synopsis>
@@ -51,7 +54,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </synopsis>
 //
 // <templating arg=T>
-//    <li> same as LatticeIterator
+//    <li> same as Matrix
 // </templating>
 //
 // <todo asof="2001/04/16">
@@ -60,52 +63,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> start discussion of this possible extension
 // </todo>
 
-template<class T> class RFCubeLatticeIterator : public LatticeIterator<T>
+template<class T>
+class RFCubeLattice;
+
+template<class T> class RFCubeLatticeIterator
 {
-//# Make members of parent class known.
-protected:
-  using LatticeIterator<T>::matrixCursor;
-  using LatticeIterator<T>::rwMatrixCursor;
-  using LatticeIterator<T>::woMatrixCursor;
+  private:
+    std::vector<Matrix<T> > *lattice;
 
-protected:
-  Bool read,write;
-  Int  iter_pos;
-  Matrix<T> * curs;
+    unsigned int iter_pos;
   
-  Matrix<T> * setupCursor ();
-  
-public:
-// default constructor creates empty iterator
-  RFCubeLatticeIterator();
-// creates and attches to lattice
-  RFCubeLatticeIterator( TempLattice<T> &lat,const IPosition &iter_shape );
-// destructor
-  ~RFCubeLatticeIterator();
+  public:
+    // default constructor creates empty iterator
+    RFCubeLatticeIterator();
+    
+    // creates and attaches to lattice
+    RFCubeLatticeIterator(std::vector<Matrix<T> > *lat);
+    
+    // destructor
+    ~RFCubeLatticeIterator();
 
-// resets the lattice iterator to beginning, returns cursor
-  Matrix<T> * reset ( Bool will_read=True,Bool will_write=True );  
-  
-// enables or diables read/write access
-  void setRead  ( Bool val=True ) 
-                { read=val; };
-  void setWrite ( Bool val=True ) 
-                { write=val; };
-  
-// advances internal iterator to specified slot along the Z axis, returns cursor
-  Matrix<T> * advance( Int iz );
-  
-// returns position of internal iterator
-  Int position ()                 
+    // resets the lattice iterator to beginning, returns cursor
+    Matrix<T> * reset();
+    
+    // advances internal iterator to specified slot along the Z axis, returns cursor
+    Matrix<T> * advance( uInt iz );
+    
+    // returns position of internal iterator
+    uInt position ()                 
       { return iter_pos; }
-  
-//  returns internal cursor
-  Matrix<T> * cursor()              
-      { return curs; }
-  
-// returns element at i,j of cursor
-  T & operator () ( uInt i,uInt j )  
-      { return (*curs)(i,j); }
+    
+    //  returns internal cursor
+    Matrix<T> * cursor();
+    
+    // returns element at i,j of cursor
+    T & operator () ( uInt i,uInt j );
 };
 
 
@@ -123,8 +115,22 @@ public:
 // </prerequisite>
 //
 // <synopsis>
-// RFCubeLattice is basically an specialized [NX,NY,NZ] TempLattice which 
+// RFCubeLattice is a [NX,NY,NZ] vector of Matrices which 
 // is iterated over the Z axis. 
+// While a vector of Matrices may not be localized in memory, it has the
+// advantage that the total amount of memory allocated can exceed
+// the available RAM, which is probably not possible if allocated as a
+// single giant block.
+//
+// The buffer is no longer implemented using a TempLattice because the
+// template parameter to TempLattice is restricted to certain types, and
+// cannot be boost::dynamic_bitset<>. Besides, TempLattice is currently(?)
+// *not* well implemented: it creates TempLattice disk files although most
+// of the RAM is free.
+//
+// If more memory than avilable RAM is requested, swapping will occur.
+// The underlying OS probably knows better when to swap!
+//
 // </synopsis>
 //
 // <motivation>
@@ -134,7 +140,7 @@ public:
 // </motivation>
 //
 // <templating arg=T>
-//    <li> same as TempLattice
+//    <li> same as Matrix
 // </templating>
 //
 // <todo asof="2001/04/16">
@@ -147,8 +153,8 @@ template<class T> class RFCubeLattice
 {
 protected:
   IPosition                 lat_shape,tile_shape,iter_shape;
-  TempLattice<T>            lat;
-  RFCubeLatticeIterator<T> iter;
+  std::vector<Matrix<T> >   lat;
+  RFCubeLatticeIterator<T>  iter;
   Bool                      valid;
 
 public:
@@ -174,7 +180,8 @@ public:
         { return nx*ny*nz*sizeof(T)/(1024*1024) + 1; }
 
 // resets the lattice iterator to beginning. 
-  Matrix<T> * reset ( Bool will_read=True,Bool will_write=True );  
+  Matrix<T> * reset( Bool will_read=True,
+                     Bool will_write=True );  
   
 // advances internal iterator to specified slot along the Z axis, returns cursor
   Matrix<T> * advance( Int iz )   { return iter.advance(iz); };
@@ -192,7 +199,8 @@ public:
   T & operator () ( uInt i,uInt j )  { return (*iter.cursor())(i,j); }
   
 // provides access to lattice itself  
-  TempLattice<T> &      lattice()       { return lat; }
+  std::vector<Matrix<T> > & lattice()    { return lat; }
+
 // provides access to iterator  
   RFCubeLatticeIterator<T> & iterator()    { return iter; }
 

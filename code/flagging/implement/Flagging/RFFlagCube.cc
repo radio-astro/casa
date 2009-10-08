@@ -315,6 +315,7 @@ FlagMatrix * RFFlagCube::advance( uInt it,Bool getFlags )
   return flag.cursor();
 }
 
+
 // Fills lattice with apriori flags (from VisBuffer in ChunkStats)
 void RFFlagCube::getMSFlags()
 {
@@ -352,26 +353,23 @@ void RFFlagCube::getMSFlags()
       //{
         // clear row flag in internal matrix, if needed
       if( !fr(i) ) 
-              fl_row(ifr) &= ~RowFlagged; // 0000 0001 & 1111 1110 -> 0000 0000
-              /* clear all row flags...so that only new flags are True at the end */
-
+	  fl_row(ifr) &= ~RowFlagged; // 0000 0001 & 1111 1110 -> 0000 0000
+      /* clear all row flags...so that only new flags are True at the end */
+      
       ///... read in chan flags for all rows......
       ///...  because all may need to be written back.
-        // fl: row in flag lattice for this ifr
-        FlagVector fl( flag.cursor()->column(ifr) ); 
-        // fc1: (ncorr,nchan) matrix of pre-flags for this row
-        const Matrix<Bool> fc1( fc.xyPlane(i) );  
-        // use each (icorr) column of the fc1 matrix as a mask into the fl
-        // vector, clearing the appropriate flag mask
-        for( uInt ich=0; ich<num(CHAN); ich++ )
-          for( uInt icorr=0; icorr<num(CORR); icorr++ )
-            if( !fc1(icorr,ich) ) 
-              fl(ich) &= ~(1<<icorr);
-            
-      //}
+
+      for( uInt ich=0; ich<num(CHAN); ich++ ) {
+	  for( uInt icorr=0; icorr<num(CORR); icorr++ ) {
+	      if( !fc(icorr,ich,i) ) {
+		  (*flag.cursor())(ich,ifr) &= ~(1<<icorr); 
+	      }
+	  }
+      }
     }
   }
 }
+
 
 // Moves flags from lattice to VisBuffer
 // ifrnums is a vector of IFR indices (derived from antenna indices)
@@ -415,12 +413,9 @@ void RFFlagCube::setMSFlags(uInt itime)
       //chunk.nrfIfr(ifr)=0;
       chunk.nfIfrTime(ifr,itime)=0;
       // (ncorr,nchan) matrix of output flags
-      Matrix<Bool> out_fl( out_flagcube.xyPlane(ir) ); 
-      // vector of nchan flagwords
-      FlagVector fwv( flag.cursor()->column(ifr) ); 
-      
+
       if (dbg) cerr << "  at " << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << out_flagrow(ir) << endl;
-      if (dbg) cerr << "  at " << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << fwv << endl;
+      //if (dbg) cerr << "  at " << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << fwv << endl;
 
       if( ! reset_preflags ) out_flagrow(ir) = False;
 
@@ -430,7 +425,9 @@ void RFFlagCube::setMSFlags(uInt itime)
       for( uInt ich=0; ich<num(CHAN); ich++ ) {
 	  //F
 	  chunk.nfChanIfr(ich, ifr) = 0;
-	  RFlagWord fw = fwv(ich); // fw: flags raised by agents
+
+	  RFlagWord fw = (*flag.cursor())(ich,ifr);
+
 	  if (fw) {
 	      // if anything was raised for this channel
 
@@ -444,27 +441,24 @@ void RFFlagCube::setMSFlags(uInt itime)
 	      for( uInt  icorr=0; icorr<num(CORR); icorr++,cmask<<=1 ) {
 		  //cerr << "num(CORR) " << num(CORR) << " " << cmask << " " << corr_flagmask(cmask) << endl;
 		  if( fw&cmask || fw&corr_flagmask(cmask) ) {
-		      out_fl(icorr,ich) = True;
+
+		      out_flagcube(icorr,ich,ir) = True;
 	              //cerr << "is true" << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << endl;
 		  }
 		  else
-		      if( ! reset_preflags ) out_fl(icorr,ich) = False;
+		      if( ! reset_preflags ) out_flagcube(icorr,ich,ir) = False;
 	      }
 	  }
 	  else {
 	      if( ! reset_preflags ) {
 		  for( uInt  icorr=0; icorr<num(CORR); icorr++ )
-		      out_fl(icorr,ich) = False;
+
+		      out_flagcube(icorr,ich,ir) = False;
 	      }
 	  }
-	  //F
 	  for( uInt  icorr=0; icorr<num(CORR); icorr++ ) {
-	      chunk.nfChanIfr(ich,ifr) += (Int)(out_fl(icorr,ich));
-	      //chunk.nfCorrIfr(icorr,ifr) += (Int)(out_fl(icorr,ich));
-	      //chunk.nfChanCorr(ich,icorr) += (Int)(out_fl(icorr,ich));
-	      //chunk.nfChanTime(ich,itime) += (Int)(out_fl(icorr,ich));
-	      //chunk.nfCorrTime(icorr,itime) += (Int)(out_fl(icorr,ich));
-	      //chunk.nfChanIfrTime(ich,ifr,itime) += (Int)(out_fl(icorr,ich));
+
+	    chunk.nfChanIfr(ich,ifr) += (Int)(out_flagcube(icorr,ich,ir));
 	  }
 	  chunk.nfIfrTime(ifr,itime) += chunk.nfChanIfr(ich,ifr);
       }
@@ -476,8 +470,8 @@ void RFFlagCube::setMSFlags(uInt itime)
       // so make flag_row the AND of the dataflags.
       if (dbg) cerr << "  at " << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << out_flagrow(ir) << endl;
 
-      if( allEQ(out_fl,True) ) out_flagrow(ir) = True;
-      else out_flagrow(ir) = False;
+      /* Set flagrow if everything was flagged */
+      out_flagrow(ir) = (chunk.nfIfrTime(ifr, itime) == num(CHAN)*num(CORR));
 
       if (dbg) cerr << "  at " << __FILE__ << " " << __func__ << " " << __LINE__ << " " << __LINE__ << out_flagrow(ir) << endl;
     

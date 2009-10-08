@@ -572,7 +572,6 @@ protected:
     String m_drawingError;
     // </group>
     
-    String comment;
     
     // Pure Virtual Methods //
     

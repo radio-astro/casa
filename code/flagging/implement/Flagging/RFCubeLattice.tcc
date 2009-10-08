@@ -31,51 +31,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator ()
 {
-  curs=NULL;
+  iter_pos = 0;
+  lattice = NULL;
 }
 
-template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator ( TempLattice<T> &lat,const IPosition &iter_shape )
-  : LatticeIterator<T>(lat,LatticeStepper(lat.shape(),iter_shape,IPosition(2,0,1),IPosition()))
+template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator(std::vector<Matrix<T> > *lat)
 {
-  iter_pos=0;
-  read=False;
-  write=True;
-  curs=NULL;
+  iter_pos = 0;
+  lattice = lat;
 }
 
-template<class T> RFCubeLatticeIterator<T>::~RFCubeLatticeIterator ()
+template<class T> RFCubeLatticeIterator<T>::~RFCubeLatticeIterator()
 {
 }
 
-template<class T> Matrix<T> * RFCubeLatticeIterator<T>::setupCursor ()
+template<class T> Matrix<T> * RFCubeLatticeIterator<T>::reset()
 {
-  // fetch RO,WO or RW cursor
-  if( read )
-    return curs = ( write ? &rwMatrixCursor() : (Matrix<T>*) &matrixCursor() );
-  return curs = &woMatrixCursor();
+  iter_pos = 0;
+  return cursor();
 }
 
-template<class T> Matrix<T> * RFCubeLatticeIterator<T>::reset ( Bool r,Bool w )
+template<class T> Matrix<T> * RFCubeLatticeIterator<T>::advance(uInt t1)
 {
-  LatticeIterator<T>::reset();
-  read=r;
-  write=w;
-  iter_pos=0;
-  return setupCursor();
+  iter_pos = t1;
+  return cursor();
 }
 
-template<class T> Matrix<T> * RFCubeLatticeIterator<T>::advance ( Int t1 )
+template<class T> Matrix<T> * RFCubeLatticeIterator<T>::cursor()
 {
-  // advance the iterator
-  iter_pos = LatticeIterator<T>::position()(2); 
-  if( iter_pos>t1 )
-  {
-    LatticeIterator<T>::reset();
-    iter_pos=0;
-  }
-  for( ; iter_pos<t1; iter_pos++,(*this)++ );
-  return setupCursor();
+  return &((*lattice)[iter_pos]);
 }
+
+template<class T> T & RFCubeLatticeIterator<T>::operator()(uInt i,uInt j)
+{ 
+  return (*lattice)[iter_pos](i,j); 
+}
+
+
+
+
+
 
 template<class T> RFCubeLattice<T>::RFCubeLattice ()
 {
@@ -112,32 +107,45 @@ RFCubeLattice<T>::init(uInt nchan,
   tile_shape = IPosition(3,nchan,nifr,ntile);
   //  cerr<<"Using "<<ntile<<" planes ("<<tile_shape.product()*sizeof(T)/(1024*1024.)<<"MB) tile\n";
 
-  lat = TempLattice<T>( TiledShape(lat_shape,iter_shape),maxmem );
-  iter = RFCubeLatticeIterator<T>( lat,iter_shape );
+  //  lat = TempLattice<T>( TiledShape(lat_shape,iter_shape),maxmem );
+  lat = std::vector<Matrix<T> >(ntime);
+  for (unsigned i = 0; i < ntime; i++) {
+    lat[i] = Matrix<T>(IPosition(2, nchan, nifr));
+  }
+
+  iter = RFCubeLatticeIterator<T>(&lat);
 }
 
-template<class T> RFCubeLatticeIterator<T>  RFCubeLattice<T>::newIter()
+template<class T> RFCubeLatticeIterator<T> RFCubeLattice<T>::newIter()
 {
-  return RFCubeLatticeIterator<T>( lat,iter_shape );
+  return RFCubeLatticeIterator<T>(&lat);
 }
 
-template<class T> void RFCubeLattice<T>::init ( uInt nchan,uInt nifr,uInt ntime,const T &init_val,Int maxmem,Int tile_mb )
+template<class T> void RFCubeLattice<T>::init(uInt nchan,
+                                              uInt nifr,
+                                              uInt ntime,
+                                              const T &init_val,
+                                              Int maxmem,
+                                              Int tile_mb)
 {
   init(nchan,nifr,ntime,maxmem,tile_mb);
-  lat.set(init_val);
-  iter.setRead();
+  //  lat.set(init_val);
+  for (unsigned i = 0; i < ntime; i++) {
+    lat[i].set(init_val);
+  }
 }
 
 template<class T> void RFCubeLattice<T>::cleanup ()
 {
   iter = RFCubeLatticeIterator<T>();
-  lat = TempLattice<T>();
+  //  lat = TempLattice<T>();
+  lat.resize(0);
   lat_shape.resize(0);
 }
 
 template<class T> Matrix<T> * RFCubeLattice<T>::reset ( Bool r,Bool w )
 {
-  return iter.reset(r,w);
+  return iter.reset();
 }
 
 

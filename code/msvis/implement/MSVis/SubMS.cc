@@ -1432,7 +1432,7 @@ namespace casa {
 	oldFLOAT_DATAColP = new ArrayColumn<Float>(ms_p, "oldFLOAT_DATA");
       }
       if(!IMAGING_WEIGHTCol.isNull()){
-      oldIMAGING_WEIGHTColP = new ArrayColumn<Float>(ms_p, "oldIMAGING_WEIGHT");
+	oldIMAGING_WEIGHTColP = new ArrayColumn<Float>(ms_p, "oldIMAGING_WEIGHT");
       }
       if(!LAG_DATACol.isNull()){
 	oldLAG_DATAColP = new ArrayColumn<Complex>(ms_p, "oldLAG_DATA");
@@ -2653,12 +2653,12 @@ namespace casa {
       return rval; 
     }
 
-    if(!writeTables){
-      cout << "Verifying parameters and MS ..." << endl;
-    }
-    else {
-      cout << "Writing modified spectral window parameters ..." << endl;
-    }
+//     if(!writeTables){
+//       cout << "Verifying parameters and MS ..." << endl;
+//     }
+//     else {
+//       cout << "Writing modified spectral window parameters ..." << endl;
+//     }
 
     MPosition mObsPos = ANTPositionMeasCol(0); // transfer reference frame
     mObsPos.set(MVPosition(pos)); // set coordinates
@@ -2677,7 +2677,7 @@ namespace casa {
       else {
 	os << LogIO::SEVERE
            << "Incoherent MS: Found at main table row " << mainTabRow
-	   << " reference to non-existing DATA_DESCRIPTION table entry << ..."
+	   << " reference to non-existing DATA_DESCRIPTION table entry "
            << theDataDescId
 	   << LogIO::POST;
 	rval = False;
@@ -3183,17 +3183,21 @@ namespace casa {
 
     vector<Int> spwsToCombine;
 
-    for(uInt i=0; i<spwids.nelements(); i++){
-      if(spwids(0) == -1){
-	spwsToCombine.push_back(i);
+    if(spwids(0) == -1){
+      for(Int i=0; i<origNumSPWs; i++){
+    	spwsToCombine.push_back(i);
       }
-      else if(spwids(i)<origNumSPWs && spwids(i)>=0){
-	spwsToCombine.push_back(spwids(i));
-      }
-      else{
-	os << LogIO::SEVERE << "Invalid SPW ID selected for combination " << spwids(i) 
-	   << "valid range is 0 - " << origNumSPWs-1 << ")" << LogIO::POST;
-	return False;
+    }
+    else {
+      for(uInt i=0; i<spwids.nelements(); i++){
+	if(spwids(i)<origNumSPWs && spwids(i)>=0){
+	  spwsToCombine.push_back(spwids(i));
+	}
+	else{
+	  os << LogIO::SEVERE << "Invalid SPW ID selected for combination " << spwids(i) 
+	     << "valid range is 0 - " << origNumSPWs-1 << ")" << LogIO::POST;
+	  return False;
+	}
       }
     }
     if(spwsToCombine.size()<=1){
@@ -3249,13 +3253,13 @@ namespace casa {
                                              // channel fraction for each old channel
     // initialise the averaging vectors
     for(Int i=0; i<newNUM_CHAN; i++){
-      averageN[i] = 1;
-      vector<Int> tv;
+      averageN.push_back(1);
+      vector<Int> tv; // just a temporary auxiliary vector
       tv.push_back(id0);
       averageWhichSPW.push_back(tv);
       tv[1] = i;
       averageWhichChan.push_back(tv);
-      vector<Double> tvd;
+      vector<Double> tvd; // another one
       tvd.push_back(1.);
       averageChanFrac.push_back(tvd);
     }
@@ -3656,37 +3660,45 @@ namespace casa {
 
     // 4) SYSCAL
 
-    MSSysCal sysCaltable = ms_p.sysCal();
-    uInt numSysCalRows = sysCaltable.nrow();
-    MSSysCalColumns sysCalCols(sysCaltable);
-    ScalarColumn<Int> sysCalSPWIdCol = sysCalCols.spectralWindowId();
- 
-    // loop over SYSCAL table rows
-    for(uInt i=0; i<numSysCalRows; i++){
-      // if spw id affected, replace by newSpwId
-      for(uInt j=0; j<spwsToCombine.size(); j++){
+    // note: syscal is optional
+
+    if(!ms_p.sysCal().isNull()){
+      MSSysCal sysCaltable = ms_p.sysCal();
+      uInt numSysCalRows = sysCaltable.nrow();
+      MSSysCalColumns sysCalCols(sysCaltable);
+      ScalarColumn<Int> sysCalSPWIdCol = sysCalCols.spectralWindowId();
+      
+      // loop over SYSCAL table rows
+      for(uInt i=0; i<numSysCalRows; i++){
 	// if spw id affected, replace by newSpwId
-	if(sysCalSPWIdCol(i) == spwsToCombine[j]){ // SysCal row i is affected
-	  sysCalSPWIdCol.put(i, newSPWId);
-	}     
+	for(uInt j=0; j<spwsToCombine.size(); j++){
+	  // if spw id affected, replace by newSpwId
+	  if(sysCalSPWIdCol(i) == spwsToCombine[j]){ // SysCal row i is affected
+	    sysCalSPWIdCol.put(i, newSPWId);
+	  }     
+	}
       }
     }
 
     // 5) FREQ_OFFSET
 
-    MSFreqOffset freqOffsettable = ms_p.freqOffset();
-    uInt numFreqOffsetRows = freqOffsettable.nrow();
-    MSFreqOffsetColumns freqOffsetCols(freqOffsettable);
-    ScalarColumn<Int> freqOffsetSPWIdCol = freqOffsetCols.spectralWindowId();
- 
-    // loop over FREQ_OFFSET table rows
-    for(uInt i=0; i<numFreqOffsetRows; i++){
-      // if spw id affected, replace by newSpwId
-      for(uInt j=0; j<spwsToCombine.size(); j++){
+    // note: freq_offset is optional
+
+    if(!ms_p.freqOffset().isNull()){
+      MSFreqOffset freqOffsettable = ms_p.freqOffset();
+      uInt numFreqOffsetRows = freqOffsettable.nrow();
+      MSFreqOffsetColumns freqOffsetCols(freqOffsettable);
+      ScalarColumn<Int> freqOffsetSPWIdCol = freqOffsetCols.spectralWindowId();
+      
+      // loop over FREQ_OFFSET table rows
+      for(uInt i=0; i<numFreqOffsetRows; i++){
 	// if spw id affected, replace by newSpwId
-	if(freqOffsetSPWIdCol(i) == spwsToCombine[j]){ // FreqOffset row i is affected
-	  freqOffsetSPWIdCol.put(i, newSPWId);
-	}     
+	for(uInt j=0; j<spwsToCombine.size(); j++){
+	  // if spw id affected, replace by newSpwId
+	  if(freqOffsetSPWIdCol(i) == spwsToCombine[j]){ // FreqOffset row i is affected
+	    freqOffsetSPWIdCol.put(i, newSPWId);
+	  }     
+	}
       }
     }
 
@@ -3700,30 +3712,23 @@ namespace casa {
     // create the "partner" columns, i.e. rename the old array columns to old...
     // and create new empty columns with the original names to hold the regridded values
 
-    IPosition tileShape = MSTileLayout::tileShape(IPosition(2,1,newNUM_CHAN));
+    IPosition tileShapeA = MSTileLayout::tileShape(IPosition(2, 1, newNUM_CHAN));
+    IPosition tileShapeB = MSTileLayout::tileShape(IPosition(4, tileShapeA(0),tileShapeA(1),1, tileShapeA(2)));
     
-    createPartnerColumn(origMSTD, "CORRECTED_DATA", "oldCORRECTED_DATA", 3, tileShape);
-    createPartnerColumn(origMSTD, "DATA", "oldDATA", 3, tileShape);
-    createPartnerColumn(origMSTD, "FLOAT_DATA", "oldFLOAT_DATA", 3, tileShape);
-    createPartnerColumn(origMSTD, "IMAGING_WEIGHT", "oldIMAGING_WEIGHT", 3, tileShape);
-    createPartnerColumn(origMSTD, "LAG_DATA", "oldLAG_DATA", 3, tileShape);
-    createPartnerColumn(origMSTD, "MODEL_DATA", "oldMODEL_DATA", 3, tileShape);
-    createPartnerColumn(origMSTD, "SIGMA_SPECTRUM", "oldSIGMA_SPECTRUM", 3, tileShape);
-    createPartnerColumn(origMSTD, "WEIGHT_SPECTRUM", "oldWEIGHT_SPECTRUM", 3, tileShape);
-    createPartnerColumn(origMSTD, "FLAG", "oldFLAG", 3, tileShape);
-    createPartnerColumn(origMSTD, "FLAG_CATEGORY", "oldFLAG_CATEGORY", 4,
-			IPosition(4,tileShape(0),tileShape(1),1, tileShape(2)));
+    createPartnerColumn(origMSTD, "CORRECTED_DATA", "oldCORRECTED_DATA", 3, tileShapeA);
+    createPartnerColumn(origMSTD, "DATA", "oldDATA", 3, tileShapeA);
+    createPartnerColumn(origMSTD, "FLOAT_DATA", "oldFLOAT_DATA", 3, tileShapeA);
+    createPartnerColumn(origMSTD, "IMAGING_WEIGHT", "oldIMAGING_WEIGHT", 3, tileShapeA);
+    createPartnerColumn(origMSTD, "LAG_DATA", "oldLAG_DATA", 3, tileShapeA);
+    createPartnerColumn(origMSTD, "MODEL_DATA", "oldMODEL_DATA", 3, tileShapeA);
+    createPartnerColumn(origMSTD, "SIGMA_SPECTRUM", "oldSIGMA_SPECTRUM", 3, tileShapeA);
+    createPartnerColumn(origMSTD, "WEIGHT_SPECTRUM", "oldWEIGHT_SPECTRUM", 3, tileShapeA);
+    createPartnerColumn(origMSTD, "FLAG", "oldFLAG", 3, tileShapeA);
+    createPartnerColumn(origMSTD, "FLAG_CATEGORY", "oldFLAG_CATEGORY", 4, tileShapeB);
 
     MSMainColumns mainCols(ms_p);
 
-    // administrational columns needed from the main table
-    ArrayColumn<Float> SIGMACol =  mainCols.sigma();
-    ScalarColumn<Int> fieldCol = mainCols.fieldId();
-    ScalarColumn<Int> DDIdCol = mainCols.dataDescId();
-    ScalarColumn<Int> antenna1Col = mainCols.antenna1();
-    ScalarColumn<Int> antenna2Col = mainCols.antenna2();
-    ScalarColumn<Double> timeCol = mainCols.time(); 
-
+    uInt nMainTabRows = ms_p.nrow();
 
     // columns which depend on the number of frequency channels and may need to be combined:
     // DATA, FLOAT_DATA, CORRECTED_DATA, MODEL_DATA, IMAGING_WEIGHT, LAG_DATA, SIGMA_SPECTRUM,
@@ -3749,23 +3754,16 @@ namespace casa {
     ArrayColumn<Bool> FLAG_CATEGORYCol =  mainCols.flagCategory();
     ArrayColumn<Bool>* oldFLAG_CATEGORYColP = 0;
 
-    uInt nMainTabRows = ms_p.nrow();
+    // administrational columns needed from the main table
+    ArrayColumn<Float> SIGMACol =  mainCols.sigma();
+    ScalarColumn<Int> fieldCol = mainCols.fieldId();
+    ScalarColumn<Int> DDIdCol = mainCols.dataDescId();
+    ScalarColumn<Int> antenna1Col = mainCols.antenna1();
+    ScalarColumn<Int> antenna2Col = mainCols.antenna2();
+    ScalarColumn<Double> timeCol = mainCols.time(); 
 
     // arrays for composing the combined columns 
     // model them on the first affected row of the main table
-
-    // for this purpose, find the first affected row
-    Int firstAffRow = 0;
-    for(uInt mRow=0; mRow<nMainTabRows; mRow++){
-      if(DDtoSPWIndex.isDefined(DDIdCol(mRow))){
-	firstAffRow = mRow;
-	break;
-      }
-    }
-
-    // get the number of correlators from the
-    // dimension of the first axis of the sigma column
-    uInt nCorrelators = SIGMACol(firstAffRow).shape()(0); 
 
     Matrix<Complex> newCorrectedData; 
     Matrix<Complex> newData;
@@ -3777,6 +3775,20 @@ namespace casa {
     Matrix<Float> newWeightSpectrum;
     Matrix<Bool> newFlag;
     Array<Bool> newFlagCategory; // has three dimensions
+
+
+    // find the first row affected by the spw combination
+    Int firstAffRow = 0;
+    for(uInt mRow=0; mRow<nMainTabRows; mRow++){
+      if(DDtoSPWIndex.isDefined(DDIdCol(mRow))){
+	firstAffRow = mRow;
+	break;
+      }
+    }
+
+    // get the number of correlators from the
+    // dimension of the first axis of the sigma column
+    uInt nCorrelators = SIGMACol(firstAffRow).shape()(0); 
 
     IPosition newShape = IPosition(2, nCorrelators, newNUM_CHAN);
 
@@ -3831,7 +3843,12 @@ namespace casa {
     }
     if(WEIGHT_SPECTRUMColIsOK){
       oldWEIGHT_SPECTRUMColP = new ArrayColumn<Float>(ms_p, "oldWEIGHT_SPECTRUM");
-      newWeightSpectrum.resize(newShape);
+      if(oldWEIGHT_SPECTRUMColP->isDefined(firstAffRow)){ // required column but may be empty
+	newWeightSpectrum.resize(newShape);
+      }
+      else{
+	WEIGHT_SPECTRUMColIsOK = False;
+      }
     }
     if(FLAGColIsOK){ // required but one never knows
       oldFLAGColP = new ArrayColumn<Bool>(ms_p, "oldFLAG"); 

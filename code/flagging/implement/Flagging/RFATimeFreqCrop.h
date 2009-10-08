@@ -149,7 +149,6 @@ private:
   uInt NumAnt; // Number of antennas.
  
   FlagCubeIterator flag_iter; // Local Flag Iterator
-  
 };
 
     

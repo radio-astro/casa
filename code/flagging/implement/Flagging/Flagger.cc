@@ -70,8 +70,9 @@
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasTable.h>
 
-
 #include <flagging/Flagging/RFANewMedianClip.h>
+
+#include <algorithm>
 
 namespace casa {
   
@@ -99,6 +100,8 @@ namespace casa {
     selectdata_p = False;
     // setupAgentDefaults();
     pgprep_nx = pgprep_ny = 1;
+
+    quack_agent_exists = false;
   }
   
   // -----------------------------------------------------------------------
@@ -121,6 +124,8 @@ namespace casa {
     selectdata_p = False;
     attach(mset);
     pgprep_nx = pgprep_ny = 1;
+
+    quack_agent_exists = false;
   }
   
     Flagger::~Flagger ()
@@ -193,6 +198,7 @@ namespace casa {
   // Flagger::attach
   // attaches to MS
   // -----------------------------------------------------------------------
+
   bool Flagger::attach( MeasurementSet &mset, Bool setAgentDefaults )
   {
     nant = 0;
@@ -221,22 +227,25 @@ namespace casa {
     bsort[0] = MS::FIELD_ID;
     bsort[1] = MS::DATA_DESC_ID;
     bsort[2] = MS::TIME;
-
-    Bool addScratch = False;
-    vs_p = new VisSet(mset, bsort, noselection, addScratch, 0.0);
-    vs_p->resetVisIter(bsort, 0.0);
     
     // extract various interesting info from the MS
     // obtain number of distinct time slots
     ROMSColumns msc(ms);
     Vector<Double> time( msc.time().getColumn() );
     uInt nrows = time.nelements();
-    Bool dum;
-    Sort sort( time.getStorage(dum),sizeof(Double) );
-    sort.sortKey((uInt)0,TpDouble);
-    Vector<uInt> index,uniq;
-    sort.sort(index,time.nelements());
-    ntime = sort.unique(uniq,index);
+
+    if (nrows == 0) ntime = 0;
+    else {
+      Bool dum;
+      Double *tp = time.getStorage(dum);
+      
+      std::sort(tp, tp + nrows);
+      
+      ntime = 1;
+      for (unsigned i = 0; i < nrows-1; i++) {
+	if (tp[i] < tp[i+1]) ntime += 1;
+      }
+    }
 
     // obtain central frequencies of spws.
     const MSSpectralWindow spwin( ms.spectralWindow() );
@@ -1005,6 +1014,8 @@ namespace casa {
             selrec.mergeField(flagRec, RF_QUACK    , RecordInterface::OverwriteDuplicates);
             selrec.mergeField(flagRec, RF_QUACKMODE, RecordInterface::OverwriteDuplicates);
             selrec.mergeField(flagRec, RF_QUACKINC , RecordInterface::OverwriteDuplicates);
+
+	    quack_agent_exists = true;
         }
 	/* end if opmode = ... */
         
@@ -1338,9 +1349,20 @@ namespace casa {
   // computes vector of IFR indeces, given two antennas
   Vector<Int> Flagger::ifrNumbers ( Vector<Int> ant1,Vector<Int> ant2 ) const
   {
-    Vector<Int> a1( ::casa::max(static_cast<Array<Int> >(ant1),static_cast<Array<Int> >(ant2)) ),
-      a2( ::casa::min(static_cast<Array<Int> >(ant1),static_cast<Array<Int> >(ant2)) );
-    return a1*(a1+1)/2 + a2;
+      unsigned n = ant1.nelements();
+      Vector<Int> r(n);
+
+      for (unsigned i = 0; i < n; i++) {
+	Int a1 = ant1(i);
+	Int a2 = ant2(i);
+	if (a1 > a2) {
+	  r(i) = a1*(a1+1)/2 + a2;
+	}
+	else {
+	  r(i) = a2*(a2+1)/2 + a1;
+	}
+      }
+      return r;  
   }
   
   void Flagger::ifrToAnt ( uInt &ant1,uInt &ant2,uInt ifr ) const
@@ -1661,7 +1683,6 @@ namespace casa {
       // begin iterating over chunks
       uInt nchunk=0;
 
-      // process just the first chunk because something's screwy
       for (vi.originChunks(); 
 	   vi.moreChunks(); 
 	   vi.nextChunk(), nchunk++) {
@@ -1671,7 +1692,7 @@ namespace casa {
             acc[i]->initialize();
           }
 
-	  chunk.newChunk();
+	  chunk.newChunk(ntime, quack_agent_exists);
 
 	  // limit frequency of progmeter updates (duh!)
 	  Int pm_update_freq = chunk.num(TIME)/200;
@@ -1888,7 +1909,7 @@ namespace casa {
 		      iter_mode(ival) = acc[ival]->endDry();
 		} // end of dry pass
 	    } // end loop over passes
-	  
+      
 	  //cout << opt << endl;
 	  //cout << "any active = " << active_init << endl;
 

@@ -432,6 +432,7 @@ void RegionShape::initDefaults() {
     m_lastWCH = NULL;
 
     m_hadDrawingError = false;
+
 }
 
 

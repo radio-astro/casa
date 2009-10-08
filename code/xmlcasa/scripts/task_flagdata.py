@@ -220,35 +220,6 @@ def flagdata(vis = None,
                         fg.done()
                         return False
 
-
-                #write history
-                ms.open(vis, nomodify=False)
-                ms.writehistory(message='taskname = flagdata',origin='flagdata')
-                ms.writehistory(message='vis         = "'+str(vis)+'"',origin='flagdata')
-                ms.writehistory(message='mode         = "'+str(mode)+'"',origin='flagdata')
-                ms.writehistory(message='antenna    = '+str(antenna),origin='flagdata')
-                ms.writehistory(message='spw    = '+str(spw),origin='flagdata')
-                ms.writehistory(message='correlation  = '+str(correlation),origin='flagdata')
-                ms.writehistory(message='field    = '+str(field),origin='flagdata')
-                ms.writehistory(message='uvrange    = '+str(uvrange),origin='flagdata')
-                ms.writehistory(message='timerange    = '+str(timerange),origin='flagdata')
-                ms.writehistory(message='scan    = '+str(scan),origin='flagdata')
-                ms.writehistory(message='feed    = '+str(feed),origin='flagdata')
-                ms.writehistory(message='array    = '+str(array),origin='flagdata')
-                ms.writehistory(message='clipexpr = "'+str(clipexpr)+'"',origin='flagdata')
-                ms.writehistory(message='clipminmax = "'+str(clipminmax)+'"',origin='flagdata')
-                ms.writehistory(message='clipcolumn = "'+str(clipcolumn)+'"',origin='flagdata')
-                ms.writehistory(message='clipoutside = "'+str(clipoutside)+'"',origin='flagdata')
-                ms.writehistory(message='quackinterval  = '+str(quackinterval),origin='flagdata')
-                ms.writehistory(message='autocorr  = '+str(autocorr),origin='flagdata')
-                ms.writehistory(message='unflag      = '+str(unflag),origin='flagdata')
-                ms.writehistory(message='algorithm      = '+str(algorithm),origin='flagdata')
-                ms.writehistory(message='column      = '+str(column),origin='flagdata')
-                ms.writehistory(message='expr      = '+str(expr),origin='flagdata')
-                ms.writehistory(message='thr      = '+str(thr),origin='flagdata')
-                ms.writehistory(message='window      = '+str(window),origin='flagdata')
-                ms.close()
-        
         except Exception, instance:
                 fg.done()
                 print '*** Error ***', instance

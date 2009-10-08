@@ -56,7 +56,7 @@ namespace casa {
         char *str = strdup(service.toAscii().data());
 	char *cur = strtok(str,".");
 	char *prev = cur;
-	while ( cur = strtok(0,".") ) {
+	while ( (cur = strtok(0,".")) ) {
 	    prev = cur;
 	}
 	QString result(object_base);
