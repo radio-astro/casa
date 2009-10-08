@@ -1517,6 +1517,10 @@ class scantable(Scantable):
             bscan = scan.poly_baseline(order=3)
         """
         if insitu is None: insitu = rcParams['insitu']
+        if not insitu:
+            workscan = self.copy()
+        else:
+            workscan = self
         varlist = vars()
         if mask is None:
             mask = [True for i in xrange(self.nchan(-1))]
@@ -1550,6 +1554,7 @@ class scantable(Scantable):
                 f.y = self._getspectrum(r)
                 f.data = None
                 f.fit()
+                workscan._setspectrum(f.fitter.getresidual(), r)
                 fpar = f.get_parameters()
                 self.blpars.append(fpar)
                 
@@ -1558,10 +1563,10 @@ class scantable(Scantable):
             ## Save parameters of baseline fits as a class attribute.
             ## NOTICE: It does not reflect changes in scantable!
             #self.blpars = f.blpars
-            self._add_history("poly_baseline", varlist)
+            workscan._add_history("poly_baseline", varlist)
             print_log()
-            if insitu: self
-            else: return self.copy()
+            if insitu: self._assign(workscan)
+            else: return workscan 
         except RuntimeError:
             msg = "The fit failed, possibly because it didn't converge."
             if rcParams['verbose']:
