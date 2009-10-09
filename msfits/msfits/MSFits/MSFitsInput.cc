@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFitsInput.cc 20704 2009-09-03 08:53:52Z gervandiepen $
+//# $Id: MSFitsInput.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 //
 
 #include <msfits/MSFits/MSFitsInput.h>
@@ -1359,8 +1359,7 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
   itsLog << LogOrigin("MSFitsInput", "fillAntennaTable");
   const Regex trailing(" *$"); // trailing blanks
   TableRecord btKeywords=bt.getKeywords();
-  Int nAnt;
-  Int nAntMax=0;
+  Int nAnt, nAntMax;
   Bool itsEVLA=((array_p=="VLA") || (array_p=="EVLA"));
   if (itsEVLA)
     {
@@ -1511,7 +1510,7 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
 	 {ms_p.antenna().addRow(); row++;}
      }
    row = ms_p.antenna().nrow()-1;
-   for(uInt i=0;i<ms_p.antenna().nrow();i++)
+   for(Int i=0;i<ms_p.antenna().nrow();i++)
      ant.flagRow().put(i,True);
 
    for (Int i=0; i<nAnt; i++) {
