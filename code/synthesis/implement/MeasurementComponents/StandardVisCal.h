@@ -232,7 +232,7 @@ public:
 //  virtual void setupSim(const Int& nSim, VisSet& vs, const Record& simpar);
 
   // Simulate/calculate parameters for given sim interval
-  virtual Bool simPar(VisBuffGroupAcc& vbga);
+  virtual Bool simPar(VisIter& vi, const Int nChunks);
 
 protected:
 
@@ -342,7 +342,7 @@ public:
   Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
 
   // Simulate/calculate parameters for given sim interval
-  virtual Bool simPar(VisBuffGroupAcc& vbga);
+  virtual Bool simPar(VisIter& vi, const Int nChunks);
 
 protected:
 
@@ -662,7 +662,7 @@ public:
   // Set up simulated params
   Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
 
-  virtual Bool simPar(VisBuffGroupAcc& vbga);
+  virtual Bool simPar(VisIter& vi, const Int nChunks);
 
 protected:
 

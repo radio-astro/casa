@@ -34,28 +34,38 @@ def data():
 
 def run():
         
-    islocked = None
+    isreadlocked = None
+    iswritelocked = None
+    msg = ''
     
-    print "Open an MS table an acquire a lock on it"
+    print "Open an MS table an acquire a read lock on it"
     isopened = tb.open(input_file)
     if isopened == False :
         raise Exception, "Cannot open MS table"
     
+    isreadlocked = tb.haslock(write=False)
+    if isreadlocked == False :
+        msg = "Error in acquiring a read lock for table"
+        print >> sys.stderr, msg
+        
+    print 'Acquire a write lock on table'
     tb.lock()
     
-    islocked = tb.haslock()
-    if islocked == False :
-        raise Exception, "Error in acquiring lock for table (islocked=%s)" %islocked
-    else:
-        print "Table is locked"
+    iswritelocked = tb.haslock(write=True)
+    if iswritelocked == False :
+        msg = "Error in acquiring a write lock for table"
+        print >> sys.stderr, msg         
         
     # Clear all the locks
+    print 'Clear all read/write locks'
     clearstat()
     
-    islocked = tb.haslock()
-    if islocked == True :
+    isreadlocked = tb.haslock(write=False)
+    iswritelocked = tb.haslock(write=True)
+    if (isreadlocked == True) or (iswritelocked == True) :
         tb.close()
-        raise Exception, "Test failed! Table is still locked (islocked=%s)" %islocked
+        raise Exception, "Test failed! Table is still locked; read lock=%s, write "\
+                         "lock=%s" %(isreadlocked,iswritelocked)
     else:
         tb.close()
         print "-- Test clearstat() succeeded --"    

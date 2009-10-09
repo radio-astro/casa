@@ -1212,8 +1212,11 @@ canonical_results['clean_momentzero_max']['value'] = 0.515659034252
 canonical_results['clean_momentzero_rms'] = {}
 canonical_results['clean_momentzero_rms']['value'] = 0.0803907588124
 
+# NB: canonical result changed from 129.969772339 because the
+#  vlafiller is now getting the rest frequency correct (2009Oct07 gmoellen)
 canonical_results['clean_momentone_median'] = {}
-canonical_results['clean_momentone_median']['value'] = 129.969772339
+canonical_results['clean_momentone_median']['value'] = 132.471100
+
 
 #
 ##########################################################################

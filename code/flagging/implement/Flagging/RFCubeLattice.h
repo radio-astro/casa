@@ -71,7 +71,11 @@ template<class T> class RFCubeLatticeIterator
   private:
     std::vector<Matrix<T> > *lattice;
 
+    Matrix<T> curs;
+
     unsigned int iter_pos;
+
+    void update_curs();
   
   public:
     // default constructor creates empty iterator
@@ -98,6 +102,8 @@ template<class T> class RFCubeLatticeIterator
     
     // returns element at i,j of cursor
     T & operator () ( uInt i,uInt j );
+
+    void flush_curs();
 };
 
 

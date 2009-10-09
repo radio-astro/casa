@@ -119,7 +119,6 @@ mymean=spave.stats('mean',linemask)	#  IF[15] = 0.125
 spave.set_unit('channel')		# set units to channel				# chan
 sd.plotter.plot(spave)			# plot spectrum				
 f=sd.fitter()
-f.fit()					# autofit fails to converge so...
 msk=spave.create_mask([3900,4300])	# create region around line			# gregion,[4000,4200]
 f.set_function(gauss=1)			# set a single gaussian component		# ngauss,1
 f.set_scan(spave,msk)			# set the data and region for the fitter	

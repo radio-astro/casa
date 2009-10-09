@@ -322,6 +322,7 @@ void RFFlagCube::getMSFlags()
 // return if already filled at this iterator position
   if( flag.position() <= pos_get_flag )
     return;
+
   pos_get_flag = flag.position();
 
   FlagVector fl_row( flagrow.column(pos_get_flag) );
@@ -343,6 +344,7 @@ void RFFlagCube::getMSFlags()
        //        Then can write them back too !!! ( beware of correlation flags )
   {
     const Cube<Bool>   & fc( chunk.visBuf().flagCube() );
+
     for( uInt i=0; i<fr.nelements(); i++ )
     {
       uInt ifr = chunk.ifrNum(i);
@@ -380,9 +382,11 @@ void RFFlagCube::setMSFlags(uInt itime)
       cerr << "RFFlagCube :: setMSFlags for " ;
       cerr << "itime : " << itime << endl;
     }
+
 // return if already done at this iterator position
   if( flag.position() <= pos_set_flag )
     return;
+
   pos_set_flag = flag.position();
   uInt nr = chunk.visBuf().nRow();
   // Int itime = 0;//chunk.iTime();
@@ -494,6 +498,7 @@ void RFFlagCube::setMSFlags(uInt itime)
                   cerr << "Sum of flags (ifr,itime): " << cnt2 << endl;
 	      }
       }
+
   chunk.visIter().setFlag(out_flagcube);
   chunk.visIter().setFlagRow(out_flagrow);
 }

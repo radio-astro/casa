@@ -5436,15 +5436,10 @@ Bool SubMS::fillTimeAverData(const String& columnName)
     for(ui2vmap::iterator slotit = bin_slots_p[tbn].begin();
 		slotit != bin_slots_p[tbn].end(); ++slotit){
       uivector& slotv = slotit->second;
-      uInt besttoik = slotv[0];    // irn of closest match to newTimeVal_p[tbn]
-      uInt bestbeftoik = slotv[0]; // irn of time before newTimeVal_p[tbn]
-      uInt best2beftoik = slotv[0]; // irn of time before bestbeftoik's time.
-      uInt bestafttoik = slotv[0]; // irn of time after newTimeVal_p[tbn]
-      Double prevTC = inTC(besttoik);
-      Bool findNext = true;
+      uInt slotv0 = slotv[0];
       Double totslotwt = 0.0;
 
-      Int ddID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(besttoik)]];
+      Int ddID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(slotv0)]];
       if(ddID < 0)                      // Paranoia
         ddID = 0;
       
@@ -5460,6 +5455,8 @@ Bool SubMS::fillTimeAverData(const String& columnName)
          << LogIO::POST;
 
       // Iterate through mscIn_p's rows that belong to the slot.
+      Double swv = 0.0; // Sum of the weighted visibilities.
+      outUVW.column(orn).set(0.0);
       for(uivector::iterator toikit = slotv.begin();
           toikit != slotv.end(); ++toikit){
         // chanModification_p==true means the input channels cannot simply
@@ -5485,35 +5482,6 @@ Bool SubMS::fillTimeAverData(const String& columnName)
         // false.
         totrowwt = sum(unflaggedwt);
         if(totrowwt > 0.0){
-          // Find the slot's row which is closest to newTimeVal_p[tbn].
-          Double currTC = inTC(*toikit);
-          if(currTC > prevTC && findNext){
-            if(currTC < newTimeVal_p[tbn]){
-              best2beftoik = bestbeftoik;
-              bestbeftoik = besttoik;
-              besttoik = *toikit;
-              bestafttoik = besttoik;      // In case we have to stop early.
-              prevTC = currTC;
-            }
-            else{                                         
-              if(currTC + prevTC < 2.0 * newTimeVal_p[tbn]){ // P     C     N
-                bestbeftoik = besttoik;                      // X   * X     X
-                besttoik = *toikit;
-                bestafttoik = besttoik; // Just in case there is no bestafttoik.
-              }
-              else if(prevTC <= newTimeVal_p[tbn]){    // 2B    P     C
-                bestafttoik = *toikit;                 // X     X *   X
-                besttoik    = bestbeftoik;
-                bestbeftoik = best2beftoik;
-                findNext = false;
-              }
-              else{                   // Finish off the X   * X     X case
-                bestafttoik = *toikit;
-                findNext = false;
-              }
-            }
-          }
-
           // Accumulate the averaging values from *toikit.
           //  	    os << LogIO::DEBUG1 << "inRowWeight(*toikit).shape() = "
           //  	       << inRowWeight(*toikit).shape() << LogIO::POST;
@@ -5597,7 +5565,18 @@ Bool SubMS::fillTimeAverData(const String& columnName)
                 + data_toikit;
             }
           }
-       
+
+          Double wv = 0.0;
+          Array<Complex>::const_iterator dataEnd = data_toikit.end();
+          for(Array<Complex>::const_iterator dit = data_toikit.begin();
+              dit != dataEnd; ++dit)
+            wv += fabs(*dit);
+          if(wv > 0.0){
+            swv += wv;
+            outUVW.column(orn) = outUVW.column(orn)
+              + (wv / swv) * (inUVW(*toikit) - outUVW.column(orn));
+          }
+
           // totrowwt > 0.0 implies totslotwt > 0.0
           outTC[orn] += totrowwt * (inTC(*toikit) - outTC[orn]) / totslotwt;
           outExposure[orn] += totrowwt * inExposure(*toikit);
@@ -5610,6 +5589,11 @@ Bool SubMS::fillTimeAverData(const String& columnName)
           }
         }
       } // End of loop through the slot's rows.
+
+      // If there were no weights > 0, plop in a reasonable UVW just for
+      // appearance's sake.
+      if(swv <= 0.0)
+        outUVW.column(orn) = inUVW(slotv0);
 
       // Average the accumulated values.
       //totslotwt = sum(outRowWeight.column(orn));  // Uncomment for debugging
@@ -5647,83 +5631,32 @@ Bool SubMS::fillTimeAverData(const String& columnName)
           outSigma(polind, orn) = 1.0 / sqrt(outRowWeight(polind, orn));
       }
 
-      // Fill in the nonaveraging values from besttoik.
+      // Fill in the nonaveraging values from slotv0.
       // In general, _IDs which are row numbers in a subtable must be
       // remapped, and those which are not probably shouldn't be.
       outTime[orn]    = newTimeVal_p[tbn];
-      outScanNum[orn] = scanNum(besttoik);	// Don't remap!
+      outScanNum[orn] = scanNum(slotv0);	// Don't remap!
       if(antennaSel_p){
-        outAnt1[orn]  = antIndexer_p[ant1(besttoik)];
-        outAnt2[orn]  = antIndexer_p[ant2(besttoik)];
-        outFeed1[orn] = feedNewIndex_p[inFeed1(besttoik)];
-        outFeed2[orn] = feedNewIndex_p[inFeed2(besttoik)];
+        outAnt1[orn]  = antIndexer_p[ant1(slotv0)];
+        outAnt2[orn]  = antIndexer_p[ant2(slotv0)];
+        outFeed1[orn] = feedNewIndex_p[inFeed1(slotv0)];
+        outFeed2[orn] = feedNewIndex_p[inFeed2(slotv0)];
       }
       else{
-        outAnt1[orn]  = ant1(besttoik);
-        outAnt2[orn]  = ant2(besttoik);
-        outFeed1[orn] = inFeed1(besttoik);
-        outFeed2[orn] = inFeed2(besttoik);
+        outAnt1[orn]  = ant1(slotv0);
+        outAnt2[orn]  = ant2(slotv0);
+        outFeed1[orn] = inFeed1(slotv0);
+        outFeed2[orn] = inFeed2(slotv0);
       }		
-      outField[orn]   = fieldRelabel_p[fieldID(besttoik)];
-      outState[orn]   = remapped(state(besttoik), stateRemapper_p,
-                                 abs(state(besttoik)));
-      outProc[orn]    = remapped(inProc(besttoik), procMapper,
-                                 abs(inProc(besttoik)));
-      outObs[orn]     = remapped(inObs(besttoik), obsMapper,
-                                 abs(inObs(besttoik)));
-      outArr[orn]     = inArr(besttoik);	        // Don't remap!
-      dataDesc[orn]   = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(besttoik)]];
-
-      // UVW is a special case.  It should not be globally averaged because
-      // that would bias the UV distance toward 0.  (We don't want the average
-      // of an ellipse...that would produce a 0 spacing which is insensitive to
-      // diffuse emission.)  So what we really want is uvw(average time).  If
-      // the average time falls on an input row, we can just take that row's
-      // UVW.  Otherwise, we have to interpolate (quadratically works well and
-      // is convenient).  That introduces a bit of the inward bias, but it
-      // should be much less than the tangential offset from nearest neighbor
-      // interpolation in time, since the inward bias is second order in time
-      // interval.
-      if(outTC[orn] != inTC(besttoik)){
-        Double beftime  = inTC(bestbeftoik);
-        Double besttime = inTC(besttoik);
-        Double afttime  = inTC(bestafttoik);
-
-        if(beftime != besttime && besttime != afttime){
-          // Using interpolation due to W.J. Taylor recommended for its stability
-          // in Knuth, Seminumerical Algorithms, 2nd ed., p. 504-5.
-          Double wm1 = 1.0 / ((beftime - besttime) * (beftime - afttime));//>0
-          Double w0  = 1.0 / ((besttime - beftime) * (besttime - afttime));//<0
-          Double wp1 = 1.0 / ((afttime - beftime) * (afttime - besttime));//>0
-          Double coeffm1 = wm1 / (outTC[orn] - beftime);//>0?
-          Double coeff0  = w0 / (outTC[orn] - besttime);//w0/!0
-          Double coeffp1 = wp1 / (outTC[orn] - afttime);//<0?
-          Double denom = coeffm1 + coeff0 + coeffp1;    // Could be anything?
-
-          if(denom != 0.0)
-            outUVW.column(orn) = (coeffm1 * inUVW(bestbeftoik) +
-                                  coeff0 * inUVW(besttoik) +
-                                  coeffp1 * inUVW(bestafttoik)) / denom;
-          else	// implies outTC[orn] == inTC(besttoik) ?!
-            outUVW.column(orn) = inUVW(besttoik);
-        }
-        else if(beftime != besttime){
-          outUVW.column(orn) = inUVW(besttoik) +
-			(outTC[orn] - besttime) * (inUVW(bestbeftoik) -
-                                                   inUVW(besttoik)) /
-            (beftime - besttime);
-        }
-        else if(afttime != besttime){
-          outUVW.column(orn) = inUVW(besttoik) +
-			(outTC[orn] - besttime) * (inUVW(bestafttoik) -
-                                                   inUVW(besttoik)) /
-            (afttime - besttime);
-        }
-        else
-          outUVW.column(orn) = inUVW(besttoik);
-      }
-      else
-        outUVW.column(orn) = inUVW(besttoik);
+      outField[orn]   = fieldRelabel_p[fieldID(slotv0)];
+      outState[orn]   = remapped(state(slotv0), stateRemapper_p,
+                                 abs(state(slotv0)));
+      outProc[orn]    = remapped(inProc(slotv0), procMapper,
+                                 abs(inProc(slotv0)));
+      outObs[orn]     = remapped(inObs(slotv0), obsMapper,
+                                 abs(inObs(slotv0)));
+      outArr[orn]     = inArr(slotv0);	        // Don't remap!
+      dataDesc[orn]   = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(slotv0)]];
 
       ++orn;  // Advance the output row #.
     } // End of iterating through the bin's slots.

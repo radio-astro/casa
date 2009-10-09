@@ -101,16 +101,21 @@ public:
   
 // Called before starting a data pass on a chunk. 
   virtual void startData () {};
+
 // Called before starting a dry pass on a chunk. 
   virtual void startDry  () {};
+
 // Called before starting the fetch-flags pass.
   virtual void startFlag () {};
+
 // Called after a pass is completed successfully (i.e., not stopped
 // by start or iter methods). Return value: STOP to stop, DATA for 
 // another data pass, DRY for another dry pass.
   virtual IterMode endData   () { return STOP; };
+
 // Called after a dry pass is complete
   virtual IterMode endDry    () { return STOP; };
+
 // Called after a flag pass is complete
   virtual void endFlag () {};
   
@@ -119,16 +124,20 @@ public:
 // Return value: STOP to finish iterating, CONT/DATA to continue, or DRY
 // to cancel the data pass and request a dry pass.
   virtual IterMode iterTime ( uInt itime ) { return CONT; };
+
 // iterRow() is called once per each row in the VisBuffer.
 // Iterating over rows is perhaps preferrable in terms of performance,
 // at least for data iterations.
   virtual IterMode iterRow  ( uInt irow ) { return CONT; };
+
 // Iteration method for a dry pass. Called once per each time slot.
 // Return value: STOP to finish iterating, CONT/DRY to continue, or DATA
 // to cancel the dry pass and request another data pass.
   virtual IterMode iterDry  ( uInt itime ) { return CONT; };
+
 // Iteration method for a flag pass. Called once per each VisBuffer.
   virtual void iterFlag ( uInt itime ) {}
+
 // called to obtain a short description of this RFA
   virtual String getDesc () { return ""; }
 // called (before endChunk()) to obtain a statistics report 

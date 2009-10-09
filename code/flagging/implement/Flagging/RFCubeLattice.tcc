@@ -32,6 +32,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator ()
 {
   iter_pos = 0;
+  curs = Matrix<T>();
   lattice = NULL;
 }
 
@@ -39,35 +40,58 @@ template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator(std::vector<Ma
 {
   iter_pos = 0;
   lattice = lat;
+  update_curs();
 }
 
 template<class T> RFCubeLatticeIterator<T>::~RFCubeLatticeIterator()
 {
+  flush_curs();
+}
+
+/* Update cursor from buffer */
+template<class T> void RFCubeLatticeIterator<T>::update_curs()
+{
+  if (lattice != NULL && iter_pos < lattice->size()) {
+    //curs.resize((*lattice)[iter_pos].shape());
+    curs = (*lattice)[iter_pos];
+  }
+}
+
+/* Write cursor back to buffer */
+template<class T> void RFCubeLatticeIterator<T>::flush_curs()
+{
+  if (lattice != NULL && iter_pos < lattice->size()) {
+    (*lattice)[iter_pos] = curs;
+  }
 }
 
 template<class T> Matrix<T> * RFCubeLatticeIterator<T>::reset()
 {
+  if (iter_pos != 0) flush_curs();
   iter_pos = 0;
+  update_curs();
   return cursor();
 }
 
 template<class T> Matrix<T> * RFCubeLatticeIterator<T>::advance(uInt t1)
 {
+  if (iter_pos != t1) flush_curs();
   iter_pos = t1;
+  update_curs();
   return cursor();
 }
 
 template<class T> Matrix<T> * RFCubeLatticeIterator<T>::cursor()
 {
-  return &((*lattice)[iter_pos]);
+  return &curs;
+  //return &((*lattice)[iter_pos]);
 }
 
 template<class T> T & RFCubeLatticeIterator<T>::operator()(uInt i,uInt j)
 { 
-  return (*lattice)[iter_pos](i,j); 
+  return curs(i, j);
+  //return (*lattice)[iter_pos](i, j);
 }
-
-
 
 
 
@@ -137,8 +161,9 @@ template<class T> void RFCubeLattice<T>::init(uInt nchan,
 
 template<class T> void RFCubeLattice<T>::cleanup ()
 {
+  iter.flush_curs();
+  iter.cursor()->resize(IPosition(2, 0, 0));
   iter = RFCubeLatticeIterator<T>();
-  //  lat = TempLattice<T>();
   lat.resize(0);
   lat_shape.resize(0);
 }

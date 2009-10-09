@@ -1029,9 +1029,7 @@ namespace casa {
   Bool Flagger::applyFlags(const std::vector<FlagIndex> &fi) {
   
     Record agent(defaultAgents().asRecord("applyflags"));
-    
-    //cerr << __FILE__ << __LINE__ << "the hello agent = " << hello << endl;
-    
+       
     RFAApplyFlags::setIndices(&fi); // static memory!
 
     agent.define("id", String("applyflags"));
@@ -1616,8 +1614,6 @@ namespace casa {
       Record agcounts; // record of agent instance counts
       acc.resize(agents.nfields());
       
-      //cerr << __FILE__ << " " << __LINE__ << agents << endl;
-
       acc.set(NULL);
       uInt nacc = 0;
       for (uInt i=0; i<agents.nfields(); i++) {
@@ -1789,6 +1785,7 @@ namespace casa {
 			acc[ival]->startDry();
 		  // iterate over visbuffers
 		  for( vi.origin(); vi.more() && nactive; vi++,itime++ ) {
+
 		    progmeter.update(itime);
 		    chunk.newTime();
 		    Bool anyActive = False;
@@ -1831,8 +1828,9 @@ namespace casa {
 		      if ( active(ival) ) {
 			// call iterTime/iterDry as appropriate
 			RFA::IterMode res = RFA::STOP;
-			if ( iter_mode(ival) == RFA::DATA )
+			if ( iter_mode(ival) == RFA::DATA ) {
 			  res = acc[ival]->iterTime(itime);
+			}
 			else if ( iter_mode(ival) == RFA::DRY ) 
 			  res = acc[ival]->iterDry(itime);
 			// change requested? Deactivate agent
@@ -1846,7 +1844,7 @@ namespace casa {
 			      break;
 			  }
 		      }
-		    
+
 		    // also iterate over rows for data passes
 		    for( Int ir=0; ir<vb.nRow() && ndata; ir++ ) {
 		      for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
@@ -1863,7 +1861,9 @@ namespace casa {
 			      }
 			  }
 		    }
-		  }
+		  
+		  } /* for vi... */
+
 		  // end pass for all agents
 		  for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
 		    {
@@ -1925,7 +1925,7 @@ namespace casa {
 	      uInt itime=0;
 	      for( vi.origin(); vi.more(); vi++,itime++ ) {
 		  progmeter.update(itime);
-
+		  
 		  chunk.newTime();
 		  //		  inRowFlags += sum(chunk.nrfIfr());
 
@@ -1950,14 +1950,14 @@ namespace casa {
 		  }
 		  
 		  //		  outRowFlags += sum(chunk.nrfIfr());
-		  {
-		      for(uInt ii=0; ii < vb.flagRow().nelements(); ii++)
-			  if (vb.flagRow()(ii) == True) outRowFlags++;
-		      for(Int ii = 0; ii < vb.flagCube().shape()(0); ii++)
-		      for(Int jj = 0; jj < vb.flagCube().shape()(1); jj++)
+		  
+		  for(uInt ii=0; ii < vb.flagRow().nelements(); ii++)
+		    if (vb.flagRow()(ii) == True) outRowFlags++;
+		  for(Int ii = 0; ii < vb.flagCube().shape()(0); ii++)
+		    for(Int jj = 0; jj < vb.flagCube().shape()(1); jj++)
 		      for(Int kk = 0; kk < vb.flagCube().shape()(2); kk++)
-			  if (vb.flagCube()(ii, jj, kk)) outDataFlags++;
-		  }
+			if (vb.flagCube()(ii, jj, kk)) outDataFlags++;
+
 	      }  // for (vi ... )
 	      if (didSomething) {
 		  for (uInt i = 0; i < acc.nelements(); i++)
@@ -1995,8 +1995,7 @@ namespace casa {
 
 		if ( active_init(i) ) {
 
-
-                  acc[i]->endFlag();
+		  acc[i]->endFlag();
                   // summary mode prints here
 
                   // cerr << "Agent = " << acc[i]->getID() << endl;
@@ -2008,15 +2007,17 @@ namespace casa {
 		LogIO oss(LogOrigin("Flagger", "run()"), logSink_p);
 		os=oss;
 	      }
-	    }
+	    } /* end if not trial run and some agent is active */
+
 	  // call endChunk on all agents
 	  for( uInt i = 0; i<acc.nelements(); i++ ) 
 	    acc[i]->endChunk();
 
-	} // end loop over chunks
+      } // end loop over chunks
       
       // get results for all agents
-      // (gets just last agent; doesn't work for multiple agents)
+      // (gets just last agent; doesn't work for multiple agents, 
+      // but only used in mode summary)
       for (uInt i = 0; i < acc.nelements(); i++) {
         result = acc[i]->getResult();
       }
