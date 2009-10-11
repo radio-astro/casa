@@ -30,13 +30,19 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator ()
+  : n_chan(0), n_ifr(0), n_time(0), n_bit(0), n_corr(0)
 {
   iter_pos = 0;
   curs = Matrix<T>();
   lattice = NULL;
 }
 
-template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator(std::vector<Matrix<T> > *lat)
+ template<class T> RFCubeLatticeIterator<T>::RFCubeLatticeIterator(std::vector<boost::dynamic_bitset<> > *lat,
+								   unsigned nchan, unsigned nifr, 
+								   unsigned ntime, unsigned nbit,
+								   unsigned ncorr)
+   : n_chan(nchan), n_ifr(nifr), n_time(ntime), n_bit(nbit), n_corr(ncorr)
+
 {
   iter_pos = 0;
   lattice = lat;
@@ -48,20 +54,105 @@ template<class T> RFCubeLatticeIterator<T>::~RFCubeLatticeIterator()
   flush_curs();
 }
 
-/* Update cursor from buffer */
+/* Update cursor from buffer, convert from bitset to Matrix<uInt> */
+
+/*
+    The format is like this:
+
+    [ ... | agent1 | agent0 | corrN | ... | corr1 | corr0 ]
+
+    i.e. the length is number of agents + number of correlations.
+
+    Except (don't ask why) if nCorr = 1, the format is
+
+    [ ... | agent1 | agent0 | notUsed | corr0 ]
+
+*/
+
 template<class T> void RFCubeLatticeIterator<T>::update_curs()
 {
   if (lattice != NULL && iter_pos < lattice->size()) {
-    //curs.resize((*lattice)[iter_pos].shape());
-    curs = (*lattice)[iter_pos];
+    curs.resize(IPosition(2, n_chan, n_ifr));
+
+    //curs = (*lattice)[iter_pos];
+
+    boost::dynamic_bitset<> &l = (*lattice)[iter_pos];
+    
+    boost::dynamic_bitset<> val(n_bit);
+    if (n_corr == 1) {
+      val.resize(n_bit+1);
+    }
+
+    for (unsigned ifr = 0; ifr < n_ifr; ifr++) {
+      for (unsigned chan = 0; chan < n_chan; chan++) {
+	if (n_corr <= 1) {
+	  /* write corr0 */
+	  unsigned indx = 0 + n_bit*(chan + n_chan*ifr);
+	  val[0] = l[indx];
+
+	  /* write agents starting from b[2] */
+	  for (unsigned b = 1; b < n_bit; b++) {
+	    indx = b + n_bit*(chan + n_chan*ifr);
+	    val[b+1] = l[indx];
+	  }
+	}
+	else {
+	  unsigned indx;
+	  for (unsigned b = 0; b < n_bit; b++) {
+	    indx = b + n_bit*(chan + n_chan*ifr);
+	    
+	    val[b] = l[indx]; 
+	  }
+	}
+
+	curs(chan, ifr) = val.to_ulong();
+      }
+    }
   }
 }
 
-/* Write cursor back to buffer */
+/* Write cursor back to buffer, convert from Matrix<uInt> to bitset.
+   See above for an explanation of the format.
+*/
 template<class T> void RFCubeLatticeIterator<T>::flush_curs()
 {
   if (lattice != NULL && iter_pos < lattice->size()) {
-    (*lattice)[iter_pos] = curs;
+
+    //(*lattice)[iter_pos] = curs;
+    boost::dynamic_bitset<> &l = (*lattice)[iter_pos];
+    
+    boost::dynamic_bitset<> val(n_bit+1);
+
+    for (unsigned ifr = 0; ifr < n_ifr; ifr++) {
+      for (unsigned chan = 0; chan < n_chan; chan++) {
+
+	/* It would be faster to avoid this allocation,
+	   and put the bit pattern from curs(chan,ifr) in val
+	   in some other way.  There doesn't seem to be a
+	   val.set_from_ulong(curs(chan,ifr));
+	*/
+	   
+	val = boost::dynamic_bitset<> (n_bit+1, (unsigned)curs(chan, ifr));
+
+	if (n_corr <= 1) {
+	  unsigned indx = 0 + n_bit*(chan + n_chan*ifr);
+	  l[indx] = val[0];
+
+	  for (unsigned b = 1; b < n_bit; b++) {
+	    indx = b + n_bit*(chan + n_chan*ifr);
+	    l[indx] = val[b+1];
+	  }
+	}
+	else {
+	  unsigned indx;
+	  for (unsigned b = 0; b < n_bit; b++) {
+	    indx = b + n_bit*(chan + n_chan*ifr);
+	    
+	    l[indx] = val[b];
+	  }
+	}
+      }
+    }
   }
 }
 
@@ -116,46 +207,71 @@ template<class T> void
 RFCubeLattice<T>::init(uInt nchan,
                        uInt nifr,
                        uInt ntime,
+		       uInt ncorr,
+		       uInt nAgent,
                        Int maxmem,
                        Int tile_mb)
 {
   lat_shape = IPosition(3,nchan,nifr,ntime);
 
-  // iterator is one plane of lattice
-  iter_shape = IPosition(3,nchan,nifr,1);
-
-  // select a tile size
-  uInt tilesize = tile_mb*1024*1024, 
-      planesize = iter_shape.product()*sizeof(T),
-      ntile = (uInt)(tilesize/(Float)planesize+.2);
-  tile_shape = IPosition(3,nchan,nifr,ntile);
-  //  cerr<<"Using "<<ntile<<" planes ("<<tile_shape.product()*sizeof(T)/(1024*1024.)<<"MB) tile\n";
-
-  //  lat = TempLattice<T>( TiledShape(lat_shape,iter_shape),maxmem );
-  lat = std::vector<Matrix<T> >(ntime);
+  lat = std::vector<boost::dynamic_bitset<> >(ntime);
   for (unsigned i = 0; i < ntime; i++) {
-    lat[i] = Matrix<T>(IPosition(2, nchan, nifr));
+    //lat[i] = Matrix<T>(IPosition(2, nchan, nifr));
+    lat[i] = boost::dynamic_bitset<>(nchan * nifr * (ncorr+nAgent));
   }
 
-  iter = RFCubeLatticeIterator<T>(&lat);
+  iter = RFCubeLatticeIterator<T>(&lat, nchan, nifr, ntime, ncorr+nAgent, ncorr);
 }
 
 template<class T> RFCubeLatticeIterator<T> RFCubeLattice<T>::newIter()
 {
-  return RFCubeLatticeIterator<T>(&lat);
+  return RFCubeLatticeIterator<T>(&lat, n_chan, n_ifr, n_time, n_bit, n_corr);
 }
 
 template<class T> void RFCubeLattice<T>::init(uInt nchan,
                                               uInt nifr,
                                               uInt ntime,
+					      uInt ncorr,
+					      uInt nAgent,
                                               const T &init_val,
                                               Int maxmem,
                                               Int tile_mb)
 {
-  init(nchan,nifr,ntime,maxmem,tile_mb);
+  n_chan = nchan;
+  n_ifr = nifr;
+  n_time = ntime;
+  n_bit = ncorr + nAgent;
+  n_corr = ncorr;
+  init(nchan, nifr, ntime, ncorr, nAgent, maxmem, tile_mb);
   //  lat.set(init_val);
+
+  uInt nbits = ncorr + nAgent;
+
+  /* Write init_val to every matrix element.
+     See above for description of format */
+  boost::dynamic_bitset<> val(nbits+1, (unsigned) init_val);
   for (unsigned i = 0; i < ntime; i++) {
-    lat[i].set(init_val);
+    for (unsigned chan = 0; chan < nchan; chan++) {
+      for (unsigned ifr = 0; ifr < nifr; ifr++) {
+	if (n_corr <= 1) {
+	  unsigned indx = 0 + n_bit*(chan + n_chan*ifr);
+	  lat[i][indx] = val[0];
+
+	  for (unsigned b = 1; b < n_bit; b++) {
+	    indx = b + n_bit*(chan + n_chan*ifr);
+	    lat[i][indx] = val[b+1];
+	  }
+	}
+	else {
+	  unsigned indx;
+	  for (unsigned b = 0; b < n_bit; b++) {
+	    indx = b + n_bit*(chan + n_chan*ifr);
+	    
+	    lat[i][indx] = val[b];
+	  }
+	}
+      }
+    }
   }
 }
 

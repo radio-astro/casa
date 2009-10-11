@@ -72,12 +72,6 @@ public:
   RFAFlagExaminer ( RFChunkStats &ch,const RecordInterface &parm ); 
   virtual ~RFAFlagExaminer ();
   
-  /*
-  virtual uInt estimateMemoryUse () { return RFAFlagCubeBase::estimateMemoryUse()+2; }
-  virtual Bool newChunk ( Int &maxmem );
-//  virtual IterMode iterTime ( uInt it );
-//  virtual IterMode iterRow  ( uInt ir );
-*/
   virtual void iterFlag ( uInt it );
 
   virtual void startData(){RFAFlagCubeBase::startData();return;};

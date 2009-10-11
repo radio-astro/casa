@@ -94,6 +94,7 @@ public:
 // contain the total memory footprint. Note that only a rough reckoning
 // is sufficient, so only bother estimating the biggest data structures.
 // See implementations in RFADiffBase and RFATimeMedian for good examples.
+// nAgent is the total number of agents.
   virtual Bool newChunk (Int &) 
          { return active=False; };
 // Called once finished with a chunk
@@ -165,7 +166,10 @@ public:
   virtual void initializeIter(uInt iter) {};
   virtual void finalizeIter(uInt iter) {};
 
+  virtual void setNAgent(uInt n) { nAgent = n; };
+
 protected:
+  uInt nAgent;
   RFChunkStats &chunk;
   Record params;
   String myname;

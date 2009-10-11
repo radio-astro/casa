@@ -122,7 +122,7 @@ uInt RFAFlagCubeBase::estimateMemoryUse ()
 // -----------------------------------------------------------------------
 Bool RFAFlagCubeBase::newChunk (Int &)
 {
-  flag.init(corrmask,name());
+  flag.init(corrmask, nAgent, name());
   return active=True;
 }
 

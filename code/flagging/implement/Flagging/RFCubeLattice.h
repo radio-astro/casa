@@ -69,11 +69,13 @@ class RFCubeLattice;
 template<class T> class RFCubeLatticeIterator
 {
   private:
-    std::vector<Matrix<T> > *lattice;
+    std::vector<boost::dynamic_bitset<> > *lattice;
 
     Matrix<T> curs;
 
     unsigned int iter_pos;
+
+    unsigned n_chan, n_ifr, n_time, n_bit, n_corr;
 
     void update_curs();
   
@@ -82,7 +84,9 @@ template<class T> class RFCubeLatticeIterator
     RFCubeLatticeIterator();
     
     // creates and attaches to lattice
-    RFCubeLatticeIterator(std::vector<Matrix<T> > *lat);
+    RFCubeLatticeIterator(std::vector<boost::dynamic_bitset<> > *lat, 
+			  unsigned nchan, unsigned nifr, 
+			  unsigned ntime, unsigned nbit, unsigned ncorr);
     
     // destructor
     ~RFCubeLatticeIterator();
@@ -127,6 +131,9 @@ template<class T> class RFCubeLatticeIterator
 // advantage that the total amount of memory allocated can exceed
 // the available RAM, which is probably not possible if allocated as a
 // single giant block.
+// Each element of the matrices is a few bits, therefore (in order to
+// save memory), the full matrix is represented as a bitsequence, which
+// is converted to Matrix<T> on the fly.
 //
 // The buffer is no longer implemented using a TempLattice because the
 // template parameter to TempLattice is restricted to certain types, and
@@ -158,10 +165,10 @@ template<class T> class RFCubeLatticeIterator
 template<class T> class RFCubeLattice
 {
 protected:
-  IPosition                 lat_shape,tile_shape,iter_shape;
-  std::vector<Matrix<T> >   lat;
-  RFCubeLatticeIterator<T>  iter;
-  Bool                      valid;
+  IPosition                              lat_shape;
+  std::vector<boost::dynamic_bitset<> >  lat;
+  RFCubeLatticeIterator<T>               iter;
+  unsigned n_chan, n_ifr, n_time, n_bit, n_corr;
 
 public:
 // default constructor creates empty cube
@@ -175,10 +182,10 @@ public:
 
 // creates NX x NY x NZ cube
 // tile_mb is the tile size, in MB (when using paging)
-  void init ( uInt nx,uInt ny,uInt nz,Int maxmem=-1,Int tile_mb=2 );
+  void init ( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, Int maxmem=-1,Int tile_mb=2 );
 // creates NX x NY x NZ cube and fills with initial value
 // tile_mb is the tile size, in MB (when using paging)
-  void init ( uInt nx,uInt ny,uInt nz,const T &init_val,Int maxmem=-1,Int tile_mb=2 );
+  void init ( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, const T &init_val,Int maxmem=-1,Int tile_mb=2 );
 // destroys cube
   void cleanup ();
 // returns size of cube
@@ -205,7 +212,7 @@ public:
   T & operator () ( uInt i,uInt j )  { return (*iter.cursor())(i,j); }
   
 // provides access to lattice itself  
-  std::vector<Matrix<T> > & lattice()    { return lat; }
+//  std::vector<boost::dynamic_bitset<> > & lattice()    { return lat; }
 
 // provides access to iterator  
   RFCubeLatticeIterator<T> & iterator()    { return iter; }

@@ -813,6 +813,7 @@ ms::cvel(const std::string& outframe,
   return rstat;
 }
 
+
 bool
 ms::cvel2(const std::string& mode, 
 	  const int nchan, 
@@ -825,9 +826,8 @@ ms::cvel2(const std::string& mode,
 {
   Bool rstat(False);
   try {
+
     *itsLog << LogOrigin("ms", "cvel2");
-    
-    SubMS *sms = new SubMS(*itsMS);
     
     *itsLog << LogIO::NORMAL << "Selecting data ..." << LogIO::POST;
     
@@ -858,7 +858,6 @@ ms::cvel2(const std::string& mode,
       }
       else{
 	*itsLog << LogIO::WARN << "Invalid mode " << t_mode << LogIO::POST;
-	delete sms;
 	return false;
       }
     
@@ -902,8 +901,7 @@ ms::cvel2(const std::string& mode,
 	t_regridQuantity = "vopt";
       }
       else{
-	*itsLog << LogIO::SEVERE << "Invalid velocity type "<< veltype << LogIO::POST;
-	delete sms;
+	*itsLog << LogIO::SEVERE << "Invalid velocity type "<< veltype << LogIO::POST; 
 	return False;
       }
     }   
@@ -928,21 +926,30 @@ ms::cvel2(const std::string& mode,
       else{
 	if(!casaMDirection(phasec, t_phaseCenter)){
 	  *itsLog << LogIO::SEVERE << "Could not interprete phasecenter parameter " << t_phasec;
-	  delete sms;
 	  return False;
 	}
       }
     }
 
     // end prepare regridding parameters
-    
-    // Combine all the spectral windows into one
+
+    // need exclusive rights to this MS, will re-open it after combineSpws
+    String originalName = itsMS->tableName();
+    itsMS->flush();
+    close();
+
+    *itsLog << LogOrigin("ms", "cvel2");
+
+    SubMS *sms = new SubMS(originalName);
+
+    // combine Spws
     if(!sms->combineSpws()){
       *itsLog << LogIO::SEVERE << "Error combining spectral windows." << LogIO::POST;
       delete sms;
+      open(originalName,  Table::Update, False); 
       return False;
     }
-    
+
     // Regrid
     Int rval;
     String regridMessage;
@@ -959,15 +966,16 @@ ms::cvel2(const std::string& mode,
 			 // t_phaseCenter
 			 )
 	)==1){ // successful modification of the MS took place
-      *itsLog << LogIO::WARN << "Phase center parameter not yet taken into account by ms.cvel." << LogIO::POST;
+      *itsLog << LogIO::WARN << "Phase center parameter not yet taken into account by ms.cvel2." << LogIO::POST;
       *itsLog << LogIO::NORMAL << "Spectral frame transformation/regridding completed." << LogIO::POST;
       
       // Update HISTORY table of modfied MS
-      String message = "Transformed/regridded with cvel";
-      writehistory(message, regridMessage, "ms::cvel()", "", "ms"); 
+      String message = "Transformed/regridded with cvel2";
+      writehistory(message, regridMessage, "ms::cvel2()", originalName, "ms"); 
       rstat = True;
     }
     else if(rval==0) { // an unsuccessful modification of the MS took place
+      delete sms;
       String message= "Frame transformation to " + t_outframe + " failed. MS probably invalid.";
       *itsLog << LogIO::WARN << message << LogIO::POST;
       // Update HISTORY table of the unsuccessfully modfied MS
@@ -977,15 +985,16 @@ ms::cvel2(const std::string& mode,
 	    << " chanwidth= " << t_width << " restfreq= " << t_restfreq 
 	    << " interpolation= " << t_regridInterpMeth;
       String paramstr=param.str();
-      writehistory(message,paramstr,"ms::cvel()", "", "ms"); 
+      writehistory(message,paramstr,"ms::cvel2()", originalName, "ms"); 
       rstat = False;
     }
-    else {
-      *itsLog << LogIO::NORMAL << "SubMS not modified." << LogIO::POST;
+    else { // there was no need to regrid
+      *itsLog << LogIO::NORMAL << "SubMS not modified by regridding." << LogIO::POST;
       rstat = True;
     }       
     
     delete sms;
+    open(originalName,  Table::Update, False);
 
   } catch (AipsError x) {
       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -1145,9 +1154,9 @@ ms::timesort(const std::string& msname)
 		    newMSmain = Table();
 		    // reopen 
 		    open(originalName,  Table::Update, False); 
+		    *itsLog << LogOrigin("ms", "timesort");
 		    String message = "Sorted by TIME in ascending order.";
 		    writehistory(std::string(message.data()), "", std::string("ms::timesort()"), originalName, "ms");
-
 		    *itsLog << LogIO::NORMAL << "Sorted main table of " << originalName << " by TIME." 
 			    << LogIO::POST;
 		}

@@ -102,7 +102,8 @@ public:
   static uInt estimateMemoryUse ( const RFChunkStats &ch );
 
   // creates flag cube for current chunk. name is name of agent.
-  void init ( RFlagWord polmsk,const String &name = "" );
+  // nAgent is total number of agents
+  void init ( RFlagWord polmsk, uInt nAgent, const String &name = "" );
 
   // cleans up at end of chunk
   void cleanup ();

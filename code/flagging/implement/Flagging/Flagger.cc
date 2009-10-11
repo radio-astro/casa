@@ -1669,10 +1669,11 @@ namespace casa {
 	  if ( !agent )
 	    os<<"Unrecognized method name '"<<agents.name(i)<<"'\n"<<LogIO::EXCEPTION;
 	  agent->init();
+	  agent->setNAgent(agents.nfields());
 	  String inp,st;
 	  //    agent->logSink()<<agent->getDesc()<<endl<<LogIO::POST;
 	  acc[nacc++] = agent;
-	}
+      }
       
       acc.resize(nacc, True);
 

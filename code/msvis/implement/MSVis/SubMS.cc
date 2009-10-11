@@ -1466,8 +1466,18 @@ namespace casa {
     // Loop 3: Apply to MAIN table rows
     
     //    cout << "Modifying main table ..." << endl;
-    
-    for(uInt mainTabRow=0; mainTabRow<ms_p.nrow(); mainTabRow++){
+
+    uInt nMainTabRows = ms_p.nrow();
+
+    // prepare progress meter
+    Float progress = 0.5;
+    Float progressStep = 0.5;
+    if(ms_p.nrow()>1000000){
+      progress = 0.2;
+      progressStep = 0.2;
+    }
+
+    for(uInt mainTabRow=0; mainTabRow<nMainTabRows; mainTabRow++){
       
       // For each MAIN table row, the FIELD_ID cell and the DATA_DESC_ID cell are read 
       Int theFieldId = fieldIdCol(mainTabRow);
@@ -1635,6 +1645,11 @@ namespace casa {
 	msModified = True;
 	
       } // end if regridding necessary
+
+      if(mainTabRow>nMainTabRows*progress){
+	cout << "cvel progress: " << progress*100 << "% processed ... " << endl;
+	progress += progressStep;
+      }
       
     } // end loop over main table rows
 
@@ -3176,967 +3191,1055 @@ namespace casa {
       os << LogIO::WARN << "No SPWs selected for combination ..." <<  LogIO::POST;
       return True;
     }
-    // find all existing spws, 
-    MSSpectralWindow spwtable = ms_p.spectralWindow();
-    Int origNumSPWs = spwtable.nrow();
-    Int newSPWId = origNumSPWs;
 
-    vector<Int> spwsToCombine;
+    String tempNewName = ms_p.tableName()+".spwCombined"; // temporary name for the MS to store the result
 
-    if(spwids(0) == -1){
-      for(Int i=0; i<origNumSPWs; i++){
-    	spwsToCombine.push_back(i);
-      }
-    }
-    else {
-      for(uInt i=0; i<spwids.nelements(); i++){
-	if(spwids(i)<origNumSPWs && spwids(i)>=0){
-	  spwsToCombine.push_back(spwids(i));
-	}
-	else{
-	  os << LogIO::SEVERE << "Invalid SPW ID selected for combination " << spwids(i) 
-	     << "valid range is 0 - " << origNumSPWs-1 << ")" << LogIO::POST;
-	  return False;
+    { // begin scope for MS related objects
+
+      // find all existing spws, 
+      MSSpectralWindow spwtable = ms_p.spectralWindow();
+      Int origNumSPWs = spwtable.nrow();
+      Int newSPWId = origNumSPWs;
+
+      vector<Int> spwsToCombine;
+
+      if(spwids(0) == -1){
+	for(Int i=0; i<origNumSPWs; i++){
+	  spwsToCombine.push_back(i);
 	}
       }
-    }
-    if(spwsToCombine.size()<=1){
+      else {
+	for(uInt i=0; i<spwids.nelements(); i++){
+	  if(spwids(i)<origNumSPWs && spwids(i)>=0){
+	    spwsToCombine.push_back(spwids(i));
+	  }
+	  else{
+	    os << LogIO::SEVERE << "Invalid SPW ID selected for combination " << spwids(i) 
+	       << "valid range is 0 - " << origNumSPWs-1 << ")" << LogIO::POST;
+	    return False;
+	  }
+	}
+      }
+      if(spwsToCombine.size()<=1){
 	os << LogIO::NORMAL << "Less than two SPWs selected. No combination necessary."
 	   << LogIO::POST;
 	return True;
-    }      
+      }      
 
-    // sort the spwids
-    std::sort(spwsToCombine.begin(), spwsToCombine.end());
+      // sort the spwids
+      std::sort(spwsToCombine.begin(), spwsToCombine.end());
 
-    // prepare storage for parameters of new spw table row
-    MSSpWindowColumns SPWCols(spwtable);
-    ScalarColumn<Int> numChanCol = SPWCols.numChan(); 
-    ArrayColumn<Double> chanFreqCol = SPWCols.chanFreq(); 
-    ArrayColumn<Double> chanWidthCol = SPWCols.chanWidth(); 
-    //    ArrayMeasColumn<MFrequency> chanFreqMeasCol = SPWCols.chanFreqMeas();
-    ScalarColumn<Int> measFreqRefCol = SPWCols.measFreqRef();
-    ArrayColumn<Double> effectiveBWCol = SPWCols.effectiveBW();   
-    ScalarColumn<Double> refFrequencyCol = SPWCols.refFrequency(); 
-    //    ScalarMeasColumn<MFrequency> refFrequencyMeasCol = SPWCols.refFrequencyMeas(); 
-    ArrayColumn<Double> resolutionCol = SPWCols.resolution(); 
-    ScalarColumn<Double> totalBandwidthCol = SPWCols.totalBandwidth();
+      // prepare storage for parameters of new spw table row
+      MSSpWindowColumns SPWCols(spwtable);
+      ScalarColumn<Int> numChanCol = SPWCols.numChan(); 
+      ArrayColumn<Double> chanFreqCol = SPWCols.chanFreq(); 
+      ArrayColumn<Double> chanWidthCol = SPWCols.chanWidth(); 
+      //    ArrayMeasColumn<MFrequency> chanFreqMeasCol = SPWCols.chanFreqMeas();
+      ScalarColumn<Int> measFreqRefCol = SPWCols.measFreqRef();
+      ArrayColumn<Double> effectiveBWCol = SPWCols.effectiveBW();   
+      ScalarColumn<Double> refFrequencyCol = SPWCols.refFrequency(); 
+      //    ScalarMeasColumn<MFrequency> refFrequencyMeasCol = SPWCols.refFrequencyMeas(); 
+      ArrayColumn<Double> resolutionCol = SPWCols.resolution(); 
+      ScalarColumn<Double> totalBandwidthCol = SPWCols.totalBandwidth();
 
-    // Create new row in the SPW table (with ID nextSPWId) by copying
-    // all information from row theSPWId
-    if(!spwtable.canAddRow()){
-      os << LogIO::WARN
-	 << "Unable to add new row to SPECTRAL_WINDOW table. Cannot proceed with spwCombine ..." 
-	 << LogIO::POST;
-      return False; 
-    }
-    TableRow SPWRow(spwtable);
-    Int id0 = spwsToCombine[0];
-    TableRecord spwRecord = SPWRow.get(id0);
-
-    Int newNUM_CHAN = numChanCol(id0);
-    Vector<Double> newCHAN_FREQ(chanFreqCol(id0));
-    Vector<Double> newCHAN_WIDTH(chanWidthCol(id0));
-    Vector<Double> newEFFECTIVE_BW(effectiveBWCol(id0));
-    Double newREF_FREQUENCY(refFrequencyCol(id0));
-    //MFrequency newREF_FREQUENCY = refFrequencyMeasCol(id0);
-    Int newMEAS_FREQ_REF = measFreqRefCol(id0);
-    Vector<Double> newRESOLUTION(resolutionCol(id0));
-    Double newTOTAL_BANDWIDTH = totalBandwidthCol(id0);
-
-    vector<Int> averageN; // for each new channel store the number of old channels to average over
-    vector<vector<Int> > averageWhichSPW; // for each new channel store the
-                                          // (old) SPWs to average over  
-    vector<vector<Int> > averageWhichChan; // for each new channel store the
-                                           // channel numbers to av. over
-    vector<vector<Double> > averageChanFrac; // for each new channel store the
-                                             // channel fraction for each old channel
-    // initialise the averaging vectors
-    for(Int i=0; i<newNUM_CHAN; i++){
-      averageN.push_back(1);
-      vector<Int> tv; // just a temporary auxiliary vector
-      tv.push_back(id0);
-      averageWhichSPW.push_back(tv);
-      tv[1] = i;
-      averageWhichChan.push_back(tv);
-      vector<Double> tvd; // another one
-      tvd.push_back(1.);
-      averageChanFrac.push_back(tvd);
-    }
-
-    // loop over remaining given spws
-    for(uInt i=1; i<spwsToCombine.size(); i++){
-      Int idi = spwsToCombine[i];
-      
-      Int newNUM_CHANi = numChanCol(idi);
-      Vector<Double> newCHAN_FREQi(chanFreqCol(idi));
-      Vector<Double> newCHAN_WIDTHi(chanWidthCol(idi));
-      Vector<Double> newEFFECTIVE_BWi(effectiveBWCol(idi));
-      //Double newREF_FREQUENCYi(refFrequencyCol(idi));
-      //MFrequency newREF_FREQUENCYi = refFrequencyMeasCol(idi);
-      Int newMEAS_FREQ_REFi = measFreqRefCol(idi);
-      Vector<Double> newRESOLUTIONi(resolutionCol(idi));
-      //Double newTOTAL_BANDWIDTHi = totalBandwidthCol(idi);
-      
-      vector<Double> mergedChanFreq;
-      vector<Double> mergedChanWidth;
-      vector<Double> mergedEffBW;
-      vector<Double> mergedRes;
-      vector<Int> mergedAverageN;
-      vector<vector<Int> > mergedAverageWhichSPW;
-      vector<vector<Int> > mergedAverageWhichChan;
-      vector<vector<Double> > mergedAverageChanFrac;
-
-      // check for compatibility
-      if(newMEAS_FREQ_REFi != newMEAS_FREQ_REF){
+      // Create new row in the SPW table (with ID nextSPWId) by copying
+      // all information from row theSPWId
+      if(!spwtable.canAddRow()){
 	os << LogIO::WARN
-	   << "SPW " << idi << " cannot be combined with SPW " << id0 << ". Non-matching ref. frame."
+	   << "Unable to add new row to SPECTRAL_WINDOW table. Cannot proceed with spwCombine ..." 
 	   << LogIO::POST;
 	return False; 
       }
+      TableRow SPWRow(spwtable);
+      Int id0 = spwsToCombine[0];
+      TableRecord spwRecord = SPWRow.get(id0);
 
-      // append spw to new spw
-      // overlap at all?
-      if(newCHAN_FREQ(newNUM_CHAN) + newCHAN_WIDTH(newNUM_CHAN)/2. 
-	 < newCHAN_FREQi(0) - newCHAN_WIDTHi(newNUM_CHANi)/2.) {
-	// no overlap, need to append
-	for(Int j=0; j<newNUM_CHAN; j++){
-	  mergedChanFreq.push_back(newCHAN_FREQ(j));
-	  mergedChanWidth.push_back(newCHAN_WIDTH(j));
-	  mergedEffBW.push_back(newEFFECTIVE_BW(j));
-	  mergedRes.push_back(newRESOLUTION(j));
-	  mergedAverageN.push_back(averageN[j]);
-	  mergedAverageWhichSPW.push_back(averageWhichSPW[j]);
-	  mergedAverageWhichChan.push_back(averageWhichChan[j]);
-	  mergedAverageChanFrac.push_back(averageChanFrac[j]);
-	}
-	vector<Int> tv;
-	tv.push_back(idi); // origin is spw idi
-	vector<Int> tv2;
-	tv2.push_back(0);
-	vector<Double> tvd;
-	tvd.push_back(1.); // fraction is 1.
-	for(Int j=0; j<newNUM_CHANi; j++){
-	  mergedChanFreq.push_back(newCHAN_FREQi(j));
-	  mergedChanWidth.push_back(newCHAN_WIDTHi(j));
-	  mergedEffBW.push_back(newEFFECTIVE_BWi(j));
-	  mergedRes.push_back(newRESOLUTIONi(j));
-	  mergedAverageN.push_back(1); // so far only one channel
-	  mergedAverageWhichSPW.push_back(tv);
-	  tv2[0] = j;
-	  mergedAverageWhichChan.push_back(tv2); // channel number is j
-	  mergedAverageChanFrac.push_back(tvd);
-	}
+      Int newNUM_CHAN = numChanCol(id0);
+      Vector<Double> newCHAN_FREQ(chanFreqCol(id0));
+      Vector<Double> newCHAN_WIDTH(chanWidthCol(id0));
+      Vector<Double> newEFFECTIVE_BW(effectiveBWCol(id0));
+      Double newREF_FREQUENCY(refFrequencyCol(id0));
+      //MFrequency newREF_FREQUENCY = refFrequencyMeasCol(id0);
+      Int newMEAS_FREQ_REF = measFreqRefCol(id0);
+      Vector<Double> newRESOLUTION(resolutionCol(id0));
+      Double newTOTAL_BANDWIDTH = totalBandwidthCol(id0);
+
+      vector<Int> averageN; // for each new channel store the number of old channels to average over
+      vector<vector<Int> > averageWhichSPW; // for each new channel store the
+      // (old) SPWs to average over  
+      vector<vector<Int> > averageWhichChan; // for each new channel store the
+      // channel numbers to av. over
+      vector<vector<Double> > averageChanFrac; // for each new channel store the
+      // channel fraction for each old channel
+      // initialise the averaging vectors
+      for(Int i=0; i<newNUM_CHAN; i++){
+	averageN.push_back(1);
+	vector<Int> tv; // just a temporary auxiliary vector
+	tv.push_back(id0);
+	averageWhichSPW.push_back(tv);
+	tv[1] = i;
+	averageWhichChan.push_back(tv);
+	vector<Double> tvd; // another one
+	tvd.push_back(1.);
+	averageChanFrac.push_back(tvd);
       }
-      else if( newCHAN_FREQ(0) - newCHAN_WIDTH(newNUM_CHAN)/2. 
-	       > newCHAN_FREQi(newNUM_CHANi) + newCHAN_WIDTHi(newNUM_CHANi)/2.){ 
-	// no overlap, need to prepend
-	vector<Int> tv;
-	tv.push_back(idi); // origin is spw idi
-	vector<Int> tv2;
-	tv2.push_back(0);
-	vector<Double> tvd;
-	tvd.push_back(1.); // fraction is 1.
-	for(Int j=0; j<newNUM_CHANi; j++){
-	  mergedChanFreq.push_back(newCHAN_FREQi(j));
-	  mergedChanWidth.push_back(newCHAN_WIDTHi(j));
-	  mergedEffBW.push_back(newEFFECTIVE_BWi(j));
-	  mergedRes.push_back(newRESOLUTIONi(j));
-	  mergedAverageN.push_back(1); // so far only one channel
-	  mergedAverageWhichSPW.push_back(tv);
-	  tv2[0] = j;
-	  mergedAverageWhichChan.push_back(tv2); // channel number is j
-	  mergedAverageChanFrac.push_back(tvd);
-	}
-	for(Int j=0; j<newNUM_CHAN; j++){
-	  mergedChanFreq.push_back(newCHAN_FREQ(j));
-	  mergedChanWidth.push_back(newCHAN_WIDTH(j));
-	  mergedEffBW.push_back(newEFFECTIVE_BW(j));
-	  mergedRes.push_back(newRESOLUTION(j));
-	  mergedAverageN.push_back(averageN[j]);
-	  mergedAverageWhichSPW.push_back(averageWhichSPW[j]);
-	  mergedAverageWhichChan.push_back(averageWhichChan[j]);
-	  mergedAverageChanFrac.push_back(averageChanFrac[j]);
-	}
-      }
-      else{ // there is overlap
-	Int id0StartChan = 0;
-	if(newCHAN_FREQi(0) - newCHAN_WIDTHi(0)/2. < 
-	   newCHAN_FREQ(newNUM_CHAN) - newCHAN_WIDTH(newNUM_CHAN)/2.){
-	  // spw idi starts before spw id0
 
-	  // some utilities for the averaging info
-	  vector<Int> tv; // temporary vector
-	  tv.push_back(idi); // origin is spw idi
-	  vector<Int> tv2;
-	  tv2.push_back(0);
-	  vector<Double> tvd;
-	  tvd.push_back(1.); // fraction is 1.
+      os << LogIO::NORMAL << "Number of channels in original SPWs:" << LogIO::POST;
+      os << LogIO::NORMAL << "     SPW " << id0 << ": " << newNUM_CHAN << " channels " << LogIO::POST;
 
-	  // find the first overlapping channel and prepend non-overlapping channels
-	  Double ubound0 = newCHAN_FREQ(0) + newCHAN_WIDTH(0)/2.;
-	  Double lbound0 = newCHAN_FREQ(0) - newCHAN_WIDTH(0)/2.;
-	  Double uboundk = 0.;
-	  Double lboundk = 0.;	      
-	  Int k;
-	  for(k=0; k<newNUM_CHANi; k++){
-	    uboundk = newCHAN_FREQi(k) + newCHAN_WIDTHi(k)/2.;
-	    lboundk = newCHAN_FREQi(k) - newCHAN_WIDTHi(k)/2.;	      
-	    if(lbound0 < uboundk){
-	      break;
-	    }
-	    mergedChanFreq.push_back(newCHAN_FREQi(k));
-	    mergedChanWidth.push_back(newCHAN_WIDTHi(k));
-	    mergedEffBW.push_back(newEFFECTIVE_BWi(k));
-	    mergedRes.push_back(newRESOLUTIONi(k));
-	    mergedAverageN.push_back(1); // so far only one channel
-	    mergedAverageWhichSPW.push_back(tv);
-	    tv2[0] = k;
-	    mergedAverageWhichChan.push_back(tv2); // channel number is k
-	    mergedAverageChanFrac.push_back(tvd);	    
-	  }
-	  // k's the one
-	  if(lbound0 < uboundk && lboundk < lbound0){ // actual overlap, need to merge channel k with channel 0
-	    Double newWidth = ubound0 - lboundk;
-	    Double newCenter = lboundk + newWidth/2.;
-	    mergedChanFreq.push_back(newCenter);
-	    mergedChanWidth.push_back(newWidth);
-	    mergedEffBW.push_back(newWidth); // NOTE: rough approximation!
-	    mergedRes.push_back(newWidth); // NOTE: rough approximation!
-	    mergedAverageN.push_back(2); // two channels contribute
-	    tv.push_back(id0); // second contributor is spw id0
-	    mergedAverageWhichSPW.push_back(tv);
-	    tv2[0] = k; // channel k from spw idi
-	    tv2.push_back(0); // channel 0 from spw id0
-	    mergedAverageWhichChan.push_back(tv2); 
-	    tvd.push_back(1.); // both fractions are unity
-	    mergedAverageChanFrac.push_back(tvd);
-	    id0StartChan = 1;
-	  }
+      // loop over remaining given spws
+      for(uInt i=1; i<spwsToCombine.size(); i++){
+	Int idi = spwsToCombine[i];
+      
+	Int newNUM_CHANi = numChanCol(idi);
+	Vector<Double> newCHAN_FREQi(chanFreqCol(idi));
+	Vector<Double> newCHAN_WIDTHi(chanWidthCol(idi));
+	Vector<Double> newEFFECTIVE_BWi(effectiveBWCol(idi));
+	//Double newREF_FREQUENCYi(refFrequencyCol(idi));
+	//MFrequency newREF_FREQUENCYi = refFrequencyMeasCol(idi);
+	Int newMEAS_FREQ_REFi = measFreqRefCol(idi);
+	Vector<Double> newRESOLUTIONi(resolutionCol(idi));
+	//Double newTOTAL_BANDWIDTHi = totalBandwidthCol(idi);
+
+	os << LogIO::NORMAL << "     SPW " << idi << ": " << newNUM_CHANi << " channels" << LogIO::POST;
+      
+	vector<Double> mergedChanFreq;
+	vector<Double> mergedChanWidth;
+	vector<Double> mergedEffBW;
+	vector<Double> mergedRes;
+	vector<Int> mergedAverageN;
+	vector<vector<Int> > mergedAverageWhichSPW;
+	vector<vector<Int> > mergedAverageWhichChan;
+	vector<vector<Double> > mergedAverageChanFrac;
+
+	// check for compatibility
+	if(newMEAS_FREQ_REFi != newMEAS_FREQ_REF){
+	  os << LogIO::WARN
+	     << "SPW " << idi << " cannot be combined with SPW " << id0 << ". Non-matching ref. frame."
+	     << LogIO::POST;
+	  return False; 
 	}
-	// now move along SPW id0 and merge until end of id0 is reached, then just copy
-	for(Int j=id0StartChan; j<newNUM_CHAN; j++){
-	  mergedChanFreq.push_back(newCHAN_FREQ(j));
-	  mergedChanWidth.push_back(newCHAN_WIDTH(j));
-	  mergedEffBW.push_back(newEFFECTIVE_BW(j));
-	  mergedRes.push_back(newRESOLUTION(j));
-	  Double overlap_frac = 0.;
-	  for(Int k=0; k<newNUM_CHANi; k++){
-	    // does channel j in spw id0 overlap with channel k in spw idi?
-	    Double uboundj = newCHAN_FREQ(j) + newCHAN_WIDTH(j)/2.;
-	    Double uboundk = newCHAN_FREQi(k) + newCHAN_WIDTHi(k)/2.;
-	    Double lboundj = newCHAN_FREQ(j) - newCHAN_WIDTH(j)/2.;
-	    Double lboundk = newCHAN_FREQi(k) - newCHAN_WIDTHi(k)/2.;
-	    // determine fraction 
-	    if(lboundj <= lboundk && uboundk <= uboundj){ // chan k is completely covered by chan j
-	      overlap_frac = 1.;
-	    }
-	    else if(lboundk <= lboundj && uboundj <= uboundk){ // chan j is completely covered by chan k 
-	      overlap_frac = newCHAN_WIDTH(j)/newCHAN_WIDTHi(k);
-	    }
-	    else if(lboundj <= lboundk && uboundj < uboundk){ // lower end of k is overlapping with j
-	      overlap_frac = (uboundj - lboundk)/newCHAN_WIDTHi(k);
-	    }
-	    else if(lboundj < lboundk && lboundj > lboundk){ // upper end of k is overlapping with j 
-	      overlap_frac = (uboundk - lboundj)/newCHAN_WIDTHi(k);
-	    }
-	    if(overlap_frac > 0.){ // update averaging info
-	      averageN[j] += 1;
-	      averageWhichSPW[j].push_back(idi);
-	      averageWhichChan[j].push_back(k);
-	      averageChanFrac[j].push_back(overlap_frac);
-	    }
-	  } // end loop over spw idi
-	    // append this channel with updated averaging info
-	  mergedAverageN.push_back(averageN[j]);
-	  mergedAverageWhichSPW.push_back(averageWhichSPW[j]);
-	  mergedAverageWhichChan.push_back(averageWhichChan[j]);
-	  mergedAverageChanFrac.push_back(averageChanFrac[j]);  
-	} // end loop over spw id0
-	if(newCHAN_FREQ(newNUM_CHAN) + newCHAN_WIDTH(newNUM_CHAN)/2.
-	   < newCHAN_FREQi(newNUM_CHANi) + newCHAN_WIDTHi(newNUM_CHANi)/2.){// spw idi still continues!
-	  // find the last overlapping channel
-	  Int j = newNUM_CHAN-1;
-	  Double uboundj = newCHAN_FREQ(j) + newCHAN_WIDTH(j)/2.;
-	  Double lboundj = newCHAN_FREQ(j) - newCHAN_WIDTH(j)/2.;
-	  Double uboundk = 0;
-	  Double lboundk = 0;	      
-	  Int k;
-	  for(k=newNUM_CHANi-1; k>=0; k--){
-	    uboundk = newCHAN_FREQi(k) + newCHAN_WIDTHi(k)/2.;
-	    lboundk = newCHAN_FREQi(k) - newCHAN_WIDTHi(k)/2.;	      
-	    if(lboundk <= uboundj){
-	      break;
-	    }
+
+	// append or prepend spw to new spw
+	// overlap at all?
+	if(newCHAN_FREQ(newNUM_CHAN-1) + newCHAN_WIDTH(newNUM_CHAN-1)/2. 
+	   < newCHAN_FREQi(0) - newCHAN_WIDTHi(newNUM_CHANi-1)/2.) {
+	  // no overlap, need to append
+	  for(Int j=0; j<newNUM_CHAN; j++){
+	    mergedChanFreq.push_back(newCHAN_FREQ(j));
+	    mergedChanWidth.push_back(newCHAN_WIDTH(j));
+	    mergedEffBW.push_back(newEFFECTIVE_BW(j));
+	    mergedRes.push_back(newRESOLUTION(j));
+	    mergedAverageN.push_back(averageN[j]);
+	    mergedAverageWhichSPW.push_back(averageWhichSPW[j]);
+	    mergedAverageWhichChan.push_back(averageWhichChan[j]);
+	    mergedAverageChanFrac.push_back(averageChanFrac[j]);
 	  }
-	  // k's the one 
-	  if(lboundk < uboundj && uboundj < uboundk ){ // actual overlap, need to merge channel k with channel j
-	    Double newWidth = uboundk - lboundj;
-	    Double newCenter = lboundj + newWidth/2.;
-	    mergedChanFreq[j] =  newCenter;
-	    mergedChanWidth[j] = newWidth;
-	    mergedEffBW[j] = newWidth; // NOTE: very rough approximation
-	    mergedRes[j] = newWidth; // NOTE: very rough approximation
-	    mergedAverageChanFrac[j][mergedAverageN[j]-1] = 1.; // set overlap fraction to 1.
-	    k++; // start appending remaining channels after k
-	  }
-	  // append the remaining channels
 	  vector<Int> tv;
 	  tv.push_back(idi); // origin is spw idi
 	  vector<Int> tv2;
 	  tv2.push_back(0);
 	  vector<Double> tvd;
 	  tvd.push_back(1.); // fraction is 1.
-	  for(Int m=k; m<newNUM_CHANi; m++){
-	    mergedChanFreq.push_back(newCHAN_FREQi(m));
-	    mergedChanWidth.push_back(newCHAN_WIDTHi(m));
-	    mergedEffBW.push_back(newEFFECTIVE_BWi(m));
-	    mergedRes.push_back(newRESOLUTIONi(m));
+	  for(Int j=0; j<newNUM_CHANi; j++){
+	    mergedChanFreq.push_back(newCHAN_FREQi(j));
+	    mergedChanWidth.push_back(newCHAN_WIDTHi(j));
+	    mergedEffBW.push_back(newEFFECTIVE_BWi(j));
+	    mergedRes.push_back(newRESOLUTIONi(j));
 	    mergedAverageN.push_back(1); // so far only one channel
 	    mergedAverageWhichSPW.push_back(tv);
 	    tv2[0] = j;
 	    mergedAverageWhichChan.push_back(tv2); // channel number is j
 	    mergedAverageChanFrac.push_back(tvd);
 	  }
-	} // end if spw idi still continues
-      } // end if there is overlap    
+	}
+	else if( newCHAN_FREQ(0) - newCHAN_WIDTH(newNUM_CHAN-1)/2. 
+		 > newCHAN_FREQi(newNUM_CHANi-1) + newCHAN_WIDTHi(newNUM_CHANi-1)/2.){ 
+	  // no overlap, need to prepend
+	  vector<Int> tv;
+	  tv.push_back(idi); // origin is spw idi
+	  vector<Int> tv2;
+	  tv2.push_back(0);
+	  vector<Double> tvd;
+	  tvd.push_back(1.); // fraction is 1.
+	  for(Int j=0; j<newNUM_CHANi; j++){
+	    mergedChanFreq.push_back(newCHAN_FREQi(j));
+	    mergedChanWidth.push_back(newCHAN_WIDTHi(j));
+	    mergedEffBW.push_back(newEFFECTIVE_BWi(j));
+	    mergedRes.push_back(newRESOLUTIONi(j));
+	    mergedAverageN.push_back(1); // so far only one channel
+	    mergedAverageWhichSPW.push_back(tv);
+	    tv2[0] = j;
+	    mergedAverageWhichChan.push_back(tv2); // channel number is j
+	    mergedAverageChanFrac.push_back(tvd);
+	  }
+	  for(Int j=0; j<newNUM_CHAN; j++){
+	    mergedChanFreq.push_back(newCHAN_FREQ(j));
+	    mergedChanWidth.push_back(newCHAN_WIDTH(j));
+	    mergedEffBW.push_back(newEFFECTIVE_BW(j));
+	    mergedRes.push_back(newRESOLUTION(j));
+	    mergedAverageN.push_back(averageN[j]);
+	    mergedAverageWhichSPW.push_back(averageWhichSPW[j]);
+	    mergedAverageWhichChan.push_back(averageWhichChan[j]);
+	    mergedAverageChanFrac.push_back(averageChanFrac[j]);
+	  }
+	}
+	else{ // there is overlap
+	  Int id0StartChan = 0;
+	  if(newCHAN_FREQi(0) - newCHAN_WIDTHi(0)/2. < 
+	     newCHAN_FREQ(newNUM_CHAN-1) - newCHAN_WIDTH(newNUM_CHAN-1)/2.){
+	    // spw idi starts before spw id0
 
-      newNUM_CHAN = mergedChanFreq.size();
-      newCHAN_FREQ.assign(Vector<Double>(mergedChanFreq));
-      newCHAN_WIDTH.assign(Vector<Double>(mergedChanWidth));
-      newEFFECTIVE_BW.assign(Vector<Double>(mergedEffBW));
-      newREF_FREQUENCY = newCHAN_FREQ(0) - newCHAN_WIDTH(0)/2.; // Note: approximation, t.b. improved
-      newTOTAL_BANDWIDTH = newCHAN_FREQ(newNUM_CHAN-1) + newCHAN_WIDTH(newNUM_CHAN-1)/2.
-	- newCHAN_FREQ(0) + newCHAN_WIDTH(0)/2.;
-      newRESOLUTION.assign(Vector<Double>(mergedRes));
-      averageN = mergedAverageN;
-      averageWhichSPW = mergedAverageWhichSPW;
-      averageWhichChan = mergedAverageWhichChan;
-      averageChanFrac = mergedAverageChanFrac;
+	    // some utilities for the averaging info
+	    vector<Int> tv; // temporary vector
+	    tv.push_back(idi); // origin is spw idi
+	    vector<Int> tv2;
+	    tv2.push_back(0);
+	    vector<Double> tvd;
+	    tvd.push_back(1.); // fraction is 1.
 
-    } // end loop over SPWs
+	    // find the first overlapping channel and prepend non-overlapping channels
+	    Double ubound0 = newCHAN_FREQ(0) + newCHAN_WIDTH(0)/2.;
+	    Double lbound0 = newCHAN_FREQ(0) - newCHAN_WIDTH(0)/2.;
+	    Double uboundk = 0.;
+	    Double lboundk = 0.;	      
+	    Int k;
+	    for(k=0; k<newNUM_CHANi; k++){
+	      uboundk = newCHAN_FREQi(k) + newCHAN_WIDTHi(k)/2.;
+	      lboundk = newCHAN_FREQi(k) - newCHAN_WIDTHi(k)/2.;	      
+	      if(lbound0 < uboundk){
+		break;
+	      }
+	      mergedChanFreq.push_back(newCHAN_FREQi(k));
+	      mergedChanWidth.push_back(newCHAN_WIDTHi(k));
+	      mergedEffBW.push_back(newEFFECTIVE_BWi(k));
+	      mergedRes.push_back(newRESOLUTIONi(k));
+	      mergedAverageN.push_back(1); // so far only one channel
+	      mergedAverageWhichSPW.push_back(tv);
+	      tv2[0] = k;
+	      mergedAverageWhichChan.push_back(tv2); // channel number is k
+	      mergedAverageChanFrac.push_back(tvd);	    
+	    }
+	    // k's the one
+	    if(lbound0 < uboundk && lboundk < lbound0){ // actual overlap, need to merge channel k with channel 0
+	      Double newWidth = ubound0 - lboundk;
+	      Double newCenter = lboundk + newWidth/2.;
+	      mergedChanFreq.push_back(newCenter);
+	      mergedChanWidth.push_back(newWidth);
+	      mergedEffBW.push_back(newWidth); // NOTE: rough approximation!
+	      mergedRes.push_back(newWidth); // NOTE: rough approximation!
+	      mergedAverageN.push_back(2); // two channels contribute
+	      tv.push_back(id0); // second contributor is spw id0
+	      mergedAverageWhichSPW.push_back(tv);
+	      tv2[0] = k; // channel k from spw idi
+	      tv2.push_back(0); // channel 0 from spw id0
+	      mergedAverageWhichChan.push_back(tv2); 
+	      tvd.push_back(1.); // both fractions are unity
+	      mergedAverageChanFrac.push_back(tvd);
+	      id0StartChan = 1;
+	    }
+	  }
+	  // now move along SPW id0 and merge until end of id0 is reached, then just copy
+	  for(Int j=id0StartChan; j<newNUM_CHAN; j++){
+	    mergedChanFreq.push_back(newCHAN_FREQ(j));
+	    mergedChanWidth.push_back(newCHAN_WIDTH(j));
+	    mergedEffBW.push_back(newEFFECTIVE_BW(j));
+	    mergedRes.push_back(newRESOLUTION(j));
+	    Double overlap_frac = 0.;
+	    for(Int k=0; k<newNUM_CHANi; k++){
+	      // does channel j in spw id0 overlap with channel k in spw idi?
+	      Double uboundj = newCHAN_FREQ(j) + newCHAN_WIDTH(j)/2.;
+	      Double uboundk = newCHAN_FREQi(k) + newCHAN_WIDTHi(k)/2.;
+	      Double lboundj = newCHAN_FREQ(j) - newCHAN_WIDTH(j)/2.;
+	      Double lboundk = newCHAN_FREQi(k) - newCHAN_WIDTHi(k)/2.;
+	      // determine fraction 
+	      if(lboundj <= lboundk && uboundk <= uboundj){ // chan k is completely covered by chan j
+		overlap_frac = 1.;
+	      }
+	      else if(lboundk <= lboundj && uboundj <= uboundk){ // chan j is completely covered by chan k 
+		overlap_frac = newCHAN_WIDTH(j)/newCHAN_WIDTHi(k);
+	      }
+	      else if(lboundj <= lboundk && uboundj < uboundk){ // lower end of k is overlapping with j
+		overlap_frac = (uboundj - lboundk)/newCHAN_WIDTHi(k);
+	      }
+	      else if(lboundj < lboundk && lboundj > lboundk){ // upper end of k is overlapping with j 
+		overlap_frac = (uboundk - lboundj)/newCHAN_WIDTHi(k);
+	      }
+	      if(overlap_frac > 0.){ // update averaging info
+		averageN[j] += 1;
+		averageWhichSPW[j].push_back(idi);
+		averageWhichChan[j].push_back(k);
+		averageChanFrac[j].push_back(overlap_frac);
+	      }
+	    } // end loop over spw idi
+	    // append this channel with updated averaging info
+	    mergedAverageN.push_back(averageN[j]);
+	    mergedAverageWhichSPW.push_back(averageWhichSPW[j]);
+	    mergedAverageWhichChan.push_back(averageWhichChan[j]);
+	    mergedAverageChanFrac.push_back(averageChanFrac[j]);  
+	  } // end loop over spw id0
+	  if(newCHAN_FREQ(newNUM_CHAN-1) + newCHAN_WIDTH(newNUM_CHAN-1)/2.
+	     < newCHAN_FREQi(newNUM_CHANi-1) + newCHAN_WIDTHi(newNUM_CHANi-1)/2.){// spw idi still continues!
+	    // find the last overlapping channel
+	    Int j = newNUM_CHAN-1;
+	    Double uboundj = newCHAN_FREQ(j) + newCHAN_WIDTH(j)/2.;
+	    Double lboundj = newCHAN_FREQ(j) - newCHAN_WIDTH(j)/2.;
+	    Double uboundk = 0;
+	    Double lboundk = 0;	      
+	    Int k;
+	    for(k=newNUM_CHANi-1; k>=0; k--){
+	      uboundk = newCHAN_FREQi(k) + newCHAN_WIDTHi(k)/2.;
+	      lboundk = newCHAN_FREQi(k) - newCHAN_WIDTHi(k)/2.;	      
+	      if(lboundk <= uboundj){
+		break;
+	      }
+	    }
+	    // k's the one 
+	    if(lboundk < uboundj && uboundj < uboundk ){ // actual overlap, need to merge channel k with channel j
+	      Double newWidth = uboundk - lboundj;
+	      Double newCenter = lboundj + newWidth/2.;
+	      mergedChanFreq[j] =  newCenter;
+	      mergedChanWidth[j] = newWidth;
+	      mergedEffBW[j] = newWidth; // NOTE: very rough approximation
+	      mergedRes[j] = newWidth; // NOTE: very rough approximation
+	      mergedAverageChanFrac[j][mergedAverageN[j]-1] = 1.; // set overlap fraction to 1.
+	      k++; // start appending remaining channels after k
+	    }
+	    // append the remaining channels
+	    vector<Int> tv;
+	    tv.push_back(idi); // origin is spw idi
+	    vector<Int> tv2;
+	    tv2.push_back(0);
+	    vector<Double> tvd;
+	    tvd.push_back(1.); // fraction is 1.
+	    for(Int m=k; m<newNUM_CHANi; m++){
+	      mergedChanFreq.push_back(newCHAN_FREQi(m));
+	      mergedChanWidth.push_back(newCHAN_WIDTHi(m));
+	      mergedEffBW.push_back(newEFFECTIVE_BWi(m));
+	      mergedRes.push_back(newRESOLUTIONi(m));
+	      mergedAverageN.push_back(1); // so far only one channel
+	      mergedAverageWhichSPW.push_back(tv);
+	      tv2[0] = j;
+	      mergedAverageWhichChan.push_back(tv2); // channel number is j
+	      mergedAverageChanFrac.push_back(tvd);
+	    }
+	  } // end if spw idi still continues
+	} // end if there is overlap    
+
+	newNUM_CHAN = mergedChanFreq.size();
+	newCHAN_FREQ.assign(Vector<Double>(mergedChanFreq));
+	newCHAN_WIDTH.assign(Vector<Double>(mergedChanWidth));
+	newEFFECTIVE_BW.assign(Vector<Double>(mergedEffBW));
+	newREF_FREQUENCY = newCHAN_FREQ(0) - newCHAN_WIDTH(0)/2.; // Note: approximation, t.b. improved
+	newTOTAL_BANDWIDTH = newCHAN_FREQ(newNUM_CHAN-1) + newCHAN_WIDTH(newNUM_CHAN-1)/2.
+	  - newCHAN_FREQ(0) + newCHAN_WIDTH(0)/2.;
+	newRESOLUTION.assign(Vector<Double>(mergedRes));
+	averageN = mergedAverageN;
+	averageWhichSPW = mergedAverageWhichSPW;
+	averageWhichChan = mergedAverageWhichChan;
+	averageChanFrac = mergedAverageChanFrac;
+
+      } // end loop over SPWs
       
-    // normalise channel fractions
-    Vector<Double> newNorm(newNUM_CHAN, 0); 
-    for(Int i=0; i<newNUM_CHAN; i++){
-      for(Int j=0; j<averageN[i]; j++){
-	newNorm(i) += averageChanFrac[i][j];
+      os << LogIO::NORMAL << "New combined SPW will have " << newNUM_CHAN << " channels." << LogIO::POST;
+
+      // normalise channel fractions
+      Vector<Double> newNorm(newNUM_CHAN, 0); 
+      for(Int i=0; i<newNUM_CHAN; i++){
+	for(Int j=0; j<averageN[i]; j++){
+	  newNorm(i) += averageChanFrac[i][j];
+	}
+      }	
+      for(Int i=0; i<newNUM_CHAN; i++){
+	for(Int j=0; j<averageN[i]; j++){
+	  averageChanFrac[i][j] /= newNorm(i);
+	}
+      }	
+
+      // write new spw to spw table (ID =  newSpwId)
+      spwtable.addRow();
+      SPWRow.putMatchingFields(newSPWId, spwRecord);
+
+      chanFreqCol.put(newSPWId, newCHAN_FREQ);
+      numChanCol.put(newSPWId, newNUM_CHAN);
+      chanWidthCol.put(newSPWId,  newCHAN_WIDTH);
+      refFrequencyCol.put(newSPWId, newREF_FREQUENCY);
+      totalBandwidthCol.put(newSPWId, newTOTAL_BANDWIDTH);
+      effectiveBWCol.put(newSPWId, newEFFECTIVE_BW);
+      resolutionCol.put(newSPWId, newRESOLUTION);
+
+      // delete unwanted spws and memorize the new ID of the new merged one.
+      // (remember the IDs were sorted above)
+      for(int i=spwsToCombine.size()-1; i>=0; i--){ // remove highest row numbers first
+	spwtable.removeRow(spwsToCombine[i]);
       }
-    }	
-    for(Int i=0; i<newNUM_CHAN; i++){
-      for(Int j=0; j<averageN[i]; j++){
-	averageChanFrac[i][j] /= newNorm(i);
+      newSPWId -= spwsToCombine.size(); 
+
+      // other tables to correct: MAIN, FREQ_OFFSET, SYSCAL, FEED, DATA_DESCRIPTION, SOURCE
+
+      // 1) SOURCE (an optional table)
+      uInt numSourceRows = 0;
+      MSSource* p_sourcetable = NULL;
+      MSSourceColumns* p_sourceCol = NULL;
+      if(Table::isReadable(ms_p.sourceTableName())){
+	p_sourcetable = &(ms_p.source());
+	p_sourceCol = new MSSourceColumns(*p_sourcetable);
+	numSourceRows = p_sourcetable->nrow();
+	ScalarColumn<Int> SOURCESPWIdCol = p_sourceCol->spectralWindowId();
+	// loop over source table rows
+	for(uInt i=0; i<numSourceRows; i++){
+	  for(uInt j=0; j<spwsToCombine.size(); j++){
+	    // if spw id affected, replace by newSpwId
+	    if(SOURCESPWIdCol(i) == spwsToCombine[j]){ // source row i is affected
+	      SOURCESPWIdCol.put(i, newSPWId);
+	    }
+	  } // end for j
+	}// end for i
       }
-    }	
+      else { // there is no source table
+	os << LogIO::NORMAL << "Note: MS contains no SOURCE table ..." << LogIO::POST;
+      }
 
-    // write new spw to spw table (ID =  newSpwId)
-    spwtable.addRow();
-    SPWRow.putMatchingFields(newSPWId, spwRecord);
-
-    chanFreqCol.put(newSPWId, newCHAN_FREQ);
-    numChanCol.put(newSPWId, newNUM_CHAN);
-    chanWidthCol.put(newSPWId,  newCHAN_WIDTH);
-    refFrequencyCol.put(newSPWId, newREF_FREQUENCY);
-    totalBandwidthCol.put(newSPWId, newTOTAL_BANDWIDTH);
-    effectiveBWCol.put(newSPWId, newEFFECTIVE_BW);
-    resolutionCol.put(newSPWId, newRESOLUTION);
-
-    // delete unwanted spws and memorize the new ID of the new merged one.
-    // (remember the IDs were sorted above)
-    for(int i=spwsToCombine.size()-1; i>=0; i--){ // remove highest row numbers first
-      spwtable.removeRow(spwsToCombine[i]);
-    }
-    newSPWId -= spwsToCombine.size(); 
-
-    // other tables to correct: MAIN, FREQ_OFFSET, SYSCAL, FEED, DATA_DESCRIPTION, SOURCE
-
-    // 1) SOURCE (an optional table)
-    uInt numSourceRows = 0;
-    MSSource* p_sourcetable = NULL;
-    MSSourceColumns* p_sourceCol = NULL;
-    if(Table::isReadable(ms_p.sourceTableName())){
-      p_sourcetable = &(ms_p.source());
-      p_sourceCol = new MSSourceColumns(*p_sourcetable);
-      numSourceRows = p_sourcetable->nrow();
-      ScalarColumn<Int> SOURCESPWIdCol = p_sourceCol->spectralWindowId();
-      // loop over source table rows
-      for(uInt i=0; i<numSourceRows; i++){
+      // 2) DATA_DESCRIPTION
+      MSDataDescription ddtable = ms_p.dataDescription();
+      uInt numDataDescs = ddtable.nrow();
+      MSDataDescColumns DDCols(ddtable);
+      ScalarColumn<Int> SPWIdCol = DDCols.spectralWindowId();
+      ScalarColumn<Int> PolIdCol = DDCols.polarizationId();
+      vector<uInt> affDDIds;  
+      vector<Bool> DDRowsToDelete(numDataDescs, False);
+      SimpleOrderedMap <Int, Int> tempDDIndex(-1); // store relation between old and new DD Ids
+      SimpleOrderedMap <Int, Int> DDtoSPWIndex(-1); // store relation between old DD Ids and old SPW Ids 
+      //  (only for affected SPW IDs)
+      // loop over DD table rows
+      for(uInt i=0; i<numDataDescs; i++){
+	// if spw id affected, replace by newSpwId
 	for(uInt j=0; j<spwsToCombine.size(); j++){
 	  // if spw id affected, replace by newSpwId
-	  if(SOURCESPWIdCol(i) == spwsToCombine[j]){ // source row i is affected
-	    SOURCESPWIdCol.put(i, newSPWId);
-	  }
-	} // end for j
-      }// end for i
-    }
-    else { // there is no source table
-      os << LogIO::NORMAL << "Note: MS contains no SOURCE table ..." << LogIO::POST;
-    }
-
-    // 2) DATA_DESCRIPTION
-    MSDataDescription ddtable = ms_p.dataDescription();
-    uInt numDataDescs = ddtable.nrow();
-    MSDataDescColumns DDCols(ddtable);
-    ScalarColumn<Int> SPWIdCol = DDCols.spectralWindowId();
-    ScalarColumn<Int> PolIdCol = DDCols.polarizationId();
-    vector<uInt> affDDIds;  
-    vector<Bool> DDRowsToDelete(numDataDescs, False);
-    SimpleOrderedMap <Int, Int> tempDDIndex(-1); // store relation between old and new DD Ids
-    SimpleOrderedMap <Int, Int> DDtoSPWIndex(-1); // store relation between old DD Ids and old SPW Ids 
-                                                  //  (only for affected SPW IDs)
-    // loop over DD table rows
-    for(uInt i=0; i<numDataDescs; i++){
-      // if spw id affected, replace by newSpwId
-      for(uInt j=0; j<spwsToCombine.size(); j++){
-	// if spw id affected, replace by newSpwId
-	if(SPWIdCol(i) == spwsToCombine[j]){ // DD row i is affected
-	  // correct the SPW Id in the DD table
-	  SPWIdCol.put(i, newSPWId);
-	  // memorize affected DD IDs in affDDIds
-	  affDDIds.push_back(i);
-	  // store relation between old DD Id and old SPW ID for later use in the modification of the MAIN table
-	  DDtoSPWIndex.define(i, spwsToCombine[j]); // note: this relation can be many-to-one  
-	}     
+	  if(SPWIdCol(i) == spwsToCombine[j]){ // DD row i is affected
+	    // correct the SPW Id in the DD table
+	    SPWIdCol.put(i, newSPWId);
+	    // memorize affected DD IDs in affDDIds
+	    affDDIds.push_back(i);
+	    // store relation between old DD Id and old SPW ID for later use in the modification of the MAIN table
+	    DDtoSPWIndex.define(i, spwsToCombine[j]); // note: this relation can be many-to-one  
+	  }     
+	}
       }
-    }
-    // Find redundant DD IDs
-    // loop over DD table rows
-    for(uInt i=0; i<numDataDescs; i++){
-      Bool affected = False;
-      for(uInt j=0; j<affDDIds.size(); j++){
-	if(i == affDDIds[j] && !DDRowsToDelete[i]){
-	  affected = True;
+      // Find redundant DD IDs
+      // loop over DD table rows
+      for(uInt i=0; i<numDataDescs; i++){
+	Bool affected = False;
+	for(uInt j=0; j<affDDIds.size(); j++){
+	  if(i == affDDIds[j] && !DDRowsToDelete[i]){
+	    affected = True;
+	    break;
+	  }
+	}
+	if(!affected){
+	  continue;
+	}
+	else { // i is an affected row
+	  Int PolIDi = PolIdCol(i);
+	  Int SpwIDi = SPWIdCol(i);
+	  // loop over following DD table rows
+	  for(uInt j=i+1; j<numDataDescs; j++){
+	    // if row i and row j redundant?
+	    if(PolIDi == PolIdCol(j) && SpwIDi == SPWIdCol(j)){
+	      // mark for deletion
+	      DDRowsToDelete[j] = True;
+	      // fill map for DDrenumbering
+	      tempDDIndex.define(j, i);
+	    }
+	  }    
+	} // end if affected 
+      }
+      // delete redundant DD rows
+      Int removed = 0;
+      for(uInt i=0; i<numDataDescs; i++){
+	if(DDRowsToDelete[i]){
+	  ddtable.removeRow(i-removed);
+	  removed++;
+	}
+	else{ // this row is not deleted but changes its number by <removed> due to removal of others
+	  tempDDIndex.define(i, i-removed);
+	}
+      }
+
+      // 3) FEED  
+      MSFeed feedtable = ms_p.feed();
+      uInt numFeedRows = feedtable.nrow();
+      MSFeedColumns feedCols(feedtable);
+      ScalarColumn<Int> feedSPWIdCol = feedCols.spectralWindowId();
+ 
+      // loop over FEED table rows
+      for(uInt i=0; i<numFeedRows; i++){
+	// if spw id affected, replace by newSpwId
+	for(uint j=0; j<spwsToCombine.size(); j++){
+	  // if spw id affected, replace by newSpwId
+	  if(feedSPWIdCol(i) == spwsToCombine[j]){ // feed row i is affected
+	    feedSPWIdCol.put(i, newSPWId);
+	  }     
+	}
+      }
+
+      // TODO: (possibly, not clear if necessary) remove redundant FEED rows and propagate
+
+      // 4) SYSCAL
+
+      // note: syscal is optional
+
+      if(!ms_p.sysCal().isNull()){
+	MSSysCal sysCaltable = ms_p.sysCal();
+	uInt numSysCalRows = sysCaltable.nrow();
+	MSSysCalColumns sysCalCols(sysCaltable);
+	ScalarColumn<Int> sysCalSPWIdCol = sysCalCols.spectralWindowId();
+      
+	// loop over SYSCAL table rows
+	for(uInt i=0; i<numSysCalRows; i++){
+	  // if spw id affected, replace by newSpwId
+	  for(uInt j=0; j<spwsToCombine.size(); j++){
+	    // if spw id affected, replace by newSpwId
+	    if(sysCalSPWIdCol(i) == spwsToCombine[j]){ // SysCal row i is affected
+	      sysCalSPWIdCol.put(i, newSPWId);
+	    }     
+	  }
+	}
+      }
+
+      // 5) FREQ_OFFSET
+
+      // note: freq_offset is optional
+
+      if(!ms_p.freqOffset().isNull()){
+	MSFreqOffset freqOffsettable = ms_p.freqOffset();
+	uInt numFreqOffsetRows = freqOffsettable.nrow();
+	MSFreqOffsetColumns freqOffsetCols(freqOffsettable);
+	ScalarColumn<Int> freqOffsetSPWIdCol = freqOffsetCols.spectralWindowId();
+      
+	// loop over FREQ_OFFSET table rows
+	for(uInt i=0; i<numFreqOffsetRows; i++){
+	  // if spw id affected, replace by newSpwId
+	  for(uInt j=0; j<spwsToCombine.size(); j++){
+	    // if spw id affected, replace by newSpwId
+	    if(freqOffsetSPWIdCol(i) == spwsToCombine[j]){ // FreqOffset row i is affected
+	      freqOffsetSPWIdCol.put(i, newSPWId);
+	    }     
+	  }
+	}
+      }
+
+      // 6) MAIN
+
+      // expect a time-sorted main table
+      os << LogIO::NORMAL5 << "Note: combineSpw assumes the input MAIN table to be sorted in TIME ..." << LogIO::POST;
+      
+      ms_p.flush(True); // with fsync
+      
+      Table newMain(TableCopy::makeEmptyTable( tempNewName,
+					       Record(),
+					       (Table) ms_p,
+					       Table::New,
+					       Table::AipsrcEndian,
+					       True, // replaceTSM 
+					       True // noRows
+					       )
+		    );
+      
+      TableCopy::copySubTables(newMain, ms_p, False);
+      
+      MSMainColumns mainCols((MeasurementSet&)newMain);
+      MSMainColumns oldMainCols(ms_p);
+      
+      uInt nMainTabRows = ms_p.nrow();
+      
+      // columns which depend on the number of frequency channels and may need to be combined:
+      // DATA, FLOAT_DATA, CORRECTED_DATA, MODEL_DATA, IMAGING_WEIGHT, LAG_DATA, SIGMA_SPECTRUM,
+      // WEIGHT_SPECTRUM, FLAG, and FLAG_CATEGORY    
+      ArrayColumn<Complex> CORRECTED_DATACol =  mainCols.correctedData();
+      ArrayColumn<Complex> oldCORRECTED_DATACol = oldMainCols.correctedData();
+      ArrayColumn<Complex>  DATACol =  mainCols.data();
+      ArrayColumn<Complex>  oldDATACol = oldMainCols.data();
+      ArrayColumn<Float> FLOAT_DATACol =  mainCols.floatData();
+      ArrayColumn<Float> oldFLOAT_DATACol = oldMainCols.floatData();
+      ArrayColumn<Float> IMAGING_WEIGHTCol =  mainCols.imagingWeight();
+      ArrayColumn<Float> oldIMAGING_WEIGHTCol = oldMainCols.imagingWeight();
+      ArrayColumn<Complex> LAG_DATACol =  mainCols.lagData();
+      ArrayColumn<Complex> oldLAG_DATACol = oldMainCols.lagData();
+      ArrayColumn<Complex> MODEL_DATACol =  mainCols.modelData();
+      ArrayColumn<Complex> oldMODEL_DATACol = oldMainCols.modelData();
+      ArrayColumn<Float> SIGMA_SPECTRUMCol =  mainCols.sigmaSpectrum();
+      ArrayColumn<Float> oldSIGMA_SPECTRUMCol = oldMainCols.sigmaSpectrum();
+      ArrayColumn<Float> WEIGHT_SPECTRUMCol =  mainCols.weightSpectrum();
+      ArrayColumn<Float> oldWEIGHT_SPECTRUMCol = oldMainCols.weightSpectrum();
+      ArrayColumn<Bool> FLAGCol =  mainCols.flag();
+      ArrayColumn<Bool> oldFLAGCol = oldMainCols.flag();
+      ArrayColumn<Bool> FLAG_CATEGORYCol =  mainCols.flagCategory();
+      ArrayColumn<Bool> oldFLAG_CATEGORYCol = oldMainCols.flagCategory();
+      
+      // columns which may be different for otherwise matching main table rows
+      //  and need to be combined
+      ScalarColumn<Bool> flagRowCol = oldMainCols.flagRow();
+
+      // administrational columns needed from the main table
+      ArrayColumn<Float> SIGMACol =  oldMainCols.sigma();
+      ScalarColumn<Int> fieldCol = oldMainCols.fieldId();
+      ScalarColumn<Int> DDIdCol = oldMainCols.dataDescId();
+      ScalarColumn<Int> antenna1Col = oldMainCols.antenna1();
+      ScalarColumn<Int> antenna2Col = oldMainCols.antenna2();
+      ScalarColumn<Double> timeCol = oldMainCols.time(); 
+      ScalarColumn<Double> intervalCol = oldMainCols.interval();
+      ScalarColumn<Double> exposureCol = oldMainCols.exposure();
+
+      // arrays for composing the combined columns 
+      // model them on the first affected row of the main table
+      
+      Matrix<Complex> newCorrectedData; 
+      Matrix<Complex> newData;
+      Matrix<Float> newFloatData;
+      Vector<Float> newImagingWeight; // imaging weight is independent of the correlator
+      Matrix<Complex> newLagData;
+      Matrix<Complex> newModelData;
+      Matrix<Float> newSigmaSpectrum;
+      Matrix<Float> newWeightSpectrum;
+      Matrix<Bool> newFlag;
+      Array<Bool> newFlagCategory; // has three dimensions
+      Bool newFlagRow; 
+      
+      // find the first row affected by the spw combination
+      Int firstAffRow = 0;
+      for(uInt mRow=0; mRow<nMainTabRows; mRow++){
+	if(DDtoSPWIndex.isDefined(DDIdCol(mRow))){
+	  firstAffRow = mRow;
 	  break;
 	}
       }
-      if(!affected){
-	continue;
-      }
-      else { // i is an affected row
-	Int PolIDi = PolIdCol(i);
-	Int SpwIDi = SPWIdCol(i);
-	// loop over following DD table rows
-	for(uInt j=i+1; j<numDataDescs; j++){
-	  // if row i and row j redundant?
-	  if(PolIDi == PolIdCol(j) && SpwIDi == SPWIdCol(j)){
-	    // mark for deletion
-	    DDRowsToDelete[j] = True;
-	    // fill map for DDrenumbering
-	    tempDDIndex.define(j, i);
-	  }
-	}    
-      } // end if affected 
-    }
-    // delete redundant DD rows
-    Int removed = 0;
-    for(uInt i=0; i<numDataDescs; i++){
-      if(DDRowsToDelete[i]){
-	ddtable.removeRow(i-removed);
-	removed++;
-      }
-      else{ // this row is not deleted but changes its number by <removed> due to removal of others
-	tempDDIndex.define(i, i-removed);
-      }
-    }
-
-    // 3) FEED  
-    MSFeed feedtable = ms_p.feed();
-    uInt numFeedRows = feedtable.nrow();
-    MSFeedColumns feedCols(feedtable);
-    ScalarColumn<Int> feedSPWIdCol = feedCols.spectralWindowId();
- 
-    // loop over FEED table rows
-    for(uInt i=0; i<numFeedRows; i++){
-      // if spw id affected, replace by newSpwId
-      for(uint j=0; j<spwsToCombine.size(); j++){
-	// if spw id affected, replace by newSpwId
-	if(feedSPWIdCol(i) == spwsToCombine[j]){ // feed row i is affected
-	  feedSPWIdCol.put(i, newSPWId);
-	}     
-      }
-    }
-
-    // TODO: (possibly, not clear if necessary) remove redundant FEED rows and propagate
-
-    // 4) SYSCAL
-
-    // note: syscal is optional
-
-    if(!ms_p.sysCal().isNull()){
-      MSSysCal sysCaltable = ms_p.sysCal();
-      uInt numSysCalRows = sysCaltable.nrow();
-      MSSysCalColumns sysCalCols(sysCaltable);
-      ScalarColumn<Int> sysCalSPWIdCol = sysCalCols.spectralWindowId();
       
-      // loop over SYSCAL table rows
-      for(uInt i=0; i<numSysCalRows; i++){
-	// if spw id affected, replace by newSpwId
-	for(uInt j=0; j<spwsToCombine.size(); j++){
-	  // if spw id affected, replace by newSpwId
-	  if(sysCalSPWIdCol(i) == spwsToCombine[j]){ // SysCal row i is affected
-	    sysCalSPWIdCol.put(i, newSPWId);
-	  }     
+      // get the number of correlators from the
+      // dimension of the first axis of the sigma column
+      uInt nCorrelators = SIGMACol(firstAffRow).shape()(0); 
+      
+      IPosition newShape = IPosition(2, nCorrelators, newNUM_CHAN);
+      
+      Bool CORRECTED_DATAColIsOK = !CORRECTED_DATACol.isNull();
+      Bool DATAColIsOK = !DATACol.isNull();
+      Bool FLOAT_DATAColIsOK = !FLOAT_DATACol.isNull();
+      Bool IMAGING_WEIGHTColIsOK = !IMAGING_WEIGHTCol.isNull();
+      Bool LAG_DATAColIsOK = !LAG_DATACol.isNull();
+      Bool MODEL_DATAColIsOK = !MODEL_DATACol.isNull();
+      Bool SIGMA_SPECTRUMColIsOK = !SIGMA_SPECTRUMCol.isNull();
+      Bool WEIGHT_SPECTRUMColIsOK = !WEIGHT_SPECTRUMCol.isNull(); // rechecked further below
+      Bool FLAGColIsOK = !FLAGCol.isNull();
+      Bool FLAG_CATEGORYColIsOK = False; // to be set to the correct value further below
+      
+      // initialize arrays to store combined column data
+      if(CORRECTED_DATAColIsOK){
+	newCorrectedData.resize(newShape);
+      }
+      if(DATAColIsOK){
+	newData.resize(newShape);
+      }
+      if(FLOAT_DATAColIsOK){
+	newFloatData.resize(newShape);
+      }
+      if(IMAGING_WEIGHTColIsOK){
+	if(oldIMAGING_WEIGHTCol.shape(firstAffRow).nelements() == 1){
+	  newImagingWeight.resize(newNUM_CHAN);
+	}
+	else{
+	  os << LogIO::SEVERE << "Error: unexpected shape of imaging weight column: " 
+	     << oldIMAGING_WEIGHTCol.shape(firstAffRow) << LogIO::POST;
+	  return False;
 	}
       }
-    }
-
-    // 5) FREQ_OFFSET
-
-    // note: freq_offset is optional
-
-    if(!ms_p.freqOffset().isNull()){
-      MSFreqOffset freqOffsettable = ms_p.freqOffset();
-      uInt numFreqOffsetRows = freqOffsettable.nrow();
-      MSFreqOffsetColumns freqOffsetCols(freqOffsettable);
-      ScalarColumn<Int> freqOffsetSPWIdCol = freqOffsetCols.spectralWindowId();
-      
-      // loop over FREQ_OFFSET table rows
-      for(uInt i=0; i<numFreqOffsetRows; i++){
-	// if spw id affected, replace by newSpwId
-	for(uInt j=0; j<spwsToCombine.size(); j++){
-	  // if spw id affected, replace by newSpwId
-	  if(freqOffsetSPWIdCol(i) == spwsToCombine[j]){ // FreqOffset row i is affected
-	    freqOffsetSPWIdCol.put(i, newSPWId);
-	  }     
+      if(LAG_DATAColIsOK){
+	newLagData.resize(newShape); 
+      }
+      if(MODEL_DATAColIsOK){
+	newModelData.resize(newShape);
+      }
+      if(SIGMA_SPECTRUMColIsOK){
+	newSigmaSpectrum.resize(newShape);
+      }
+      if(WEIGHT_SPECTRUMColIsOK){
+	if(oldWEIGHT_SPECTRUMCol.isDefined(firstAffRow)){ // required column but may be empty
+	  newWeightSpectrum.resize(newShape);
+	}
+	else{
+	  WEIGHT_SPECTRUMColIsOK = False;
 	}
       }
-    }
-
-    // 6) MAIN
-
-    // expect a time-sorted main table
-    os << LogIO::NORMAL5 << "Note: combineSpw assumes the input MAIN table to be sorted in TIME ..." << LogIO::POST;
-
-    TableDesc origMSTD(ms_p.actualTableDesc());
-
-    // create the "partner" columns, i.e. rename the old array columns to old...
-    // and create new empty columns with the original names to hold the regridded values
-
-    IPosition tileShapeA = MSTileLayout::tileShape(IPosition(2, 1, newNUM_CHAN));
-    IPosition tileShapeB = MSTileLayout::tileShape(IPosition(4, tileShapeA(0),tileShapeA(1),1, tileShapeA(2)));
-    
-    createPartnerColumn(origMSTD, "CORRECTED_DATA", "oldCORRECTED_DATA", 3, tileShapeA);
-    createPartnerColumn(origMSTD, "DATA", "oldDATA", 3, tileShapeA);
-    createPartnerColumn(origMSTD, "FLOAT_DATA", "oldFLOAT_DATA", 3, tileShapeA);
-    createPartnerColumn(origMSTD, "IMAGING_WEIGHT", "oldIMAGING_WEIGHT", 3, tileShapeA);
-    createPartnerColumn(origMSTD, "LAG_DATA", "oldLAG_DATA", 3, tileShapeA);
-    createPartnerColumn(origMSTD, "MODEL_DATA", "oldMODEL_DATA", 3, tileShapeA);
-    createPartnerColumn(origMSTD, "SIGMA_SPECTRUM", "oldSIGMA_SPECTRUM", 3, tileShapeA);
-    createPartnerColumn(origMSTD, "WEIGHT_SPECTRUM", "oldWEIGHT_SPECTRUM", 3, tileShapeA);
-    createPartnerColumn(origMSTD, "FLAG", "oldFLAG", 3, tileShapeA);
-    createPartnerColumn(origMSTD, "FLAG_CATEGORY", "oldFLAG_CATEGORY", 4, tileShapeB);
-
-    MSMainColumns mainCols(ms_p);
-
-    uInt nMainTabRows = ms_p.nrow();
-
-    // columns which depend on the number of frequency channels and may need to be combined:
-    // DATA, FLOAT_DATA, CORRECTED_DATA, MODEL_DATA, IMAGING_WEIGHT, LAG_DATA, SIGMA_SPECTRUM,
-    // WEIGHT_SPECTRUM, FLAG, and FLAG_CATEGORY    
-    ArrayColumn<Complex> CORRECTED_DATACol =  mainCols.correctedData();
-    ArrayColumn<Complex>* oldCORRECTED_DATAColP  = 0;
-    ArrayColumn<Complex>  DATACol =  mainCols.data();
-    ArrayColumn<Complex>* oldDATAColP = 0;
-    ArrayColumn<Float> FLOAT_DATACol =  mainCols.floatData();
-    ArrayColumn<Float>* oldFLOAT_DATAColP = 0;
-    ArrayColumn<Float> IMAGING_WEIGHTCol =  mainCols.imagingWeight();
-    ArrayColumn<Float>* oldIMAGING_WEIGHTColP = 0;
-    ArrayColumn<Complex> LAG_DATACol =  mainCols.lagData();
-    ArrayColumn<Complex>* oldLAG_DATAColP = 0;
-    ArrayColumn<Complex> MODEL_DATACol =  mainCols.modelData();
-    ArrayColumn<Complex>* oldMODEL_DATAColP = 0;
-    ArrayColumn<Float> SIGMA_SPECTRUMCol =  mainCols.sigmaSpectrum();
-    ArrayColumn<Float>* oldSIGMA_SPECTRUMColP = 0;
-    ArrayColumn<Float> WEIGHT_SPECTRUMCol =  mainCols.weightSpectrum();
-    ArrayColumn<Float>* oldWEIGHT_SPECTRUMColP = 0;
-    ArrayColumn<Bool> FLAGCol =  mainCols.flag();
-    ArrayColumn<Bool>* oldFLAGColP = 0;
-    ArrayColumn<Bool> FLAG_CATEGORYCol =  mainCols.flagCategory();
-    ArrayColumn<Bool>* oldFLAG_CATEGORYColP = 0;
-
-    // administrational columns needed from the main table
-    ArrayColumn<Float> SIGMACol =  mainCols.sigma();
-    ScalarColumn<Int> fieldCol = mainCols.fieldId();
-    ScalarColumn<Int> DDIdCol = mainCols.dataDescId();
-    ScalarColumn<Int> antenna1Col = mainCols.antenna1();
-    ScalarColumn<Int> antenna2Col = mainCols.antenna2();
-    ScalarColumn<Double> timeCol = mainCols.time(); 
-
-    // arrays for composing the combined columns 
-    // model them on the first affected row of the main table
-
-    Matrix<Complex> newCorrectedData; 
-    Matrix<Complex> newData;
-    Matrix<Float> newFloatData;
-    Vector<Float> newImagingWeight; // imaging weight is independent of the correlator
-    Matrix<Complex> newLagData;
-    Matrix<Complex> newModelData;
-    Matrix<Float> newSigmaSpectrum;
-    Matrix<Float> newWeightSpectrum;
-    Matrix<Bool> newFlag;
-    Array<Bool> newFlagCategory; // has three dimensions
-
-
-    // find the first row affected by the spw combination
-    Int firstAffRow = 0;
-    for(uInt mRow=0; mRow<nMainTabRows; mRow++){
-      if(DDtoSPWIndex.isDefined(DDIdCol(mRow))){
-	firstAffRow = mRow;
-	break;
+      if(FLAGColIsOK){ // required but one never knows
+	newFlag.resize(newShape);
       }
-    }
-
-    // get the number of correlators from the
-    // dimension of the first axis of the sigma column
-    uInt nCorrelators = SIGMACol(firstAffRow).shape()(0); 
-
-    IPosition newShape = IPosition(2, nCorrelators, newNUM_CHAN);
-
-    Bool CORRECTED_DATAColIsOK = !CORRECTED_DATACol.isNull();
-    Bool DATAColIsOK = !DATACol.isNull();
-    Bool FLOAT_DATAColIsOK = !FLOAT_DATACol.isNull();
-    Bool IMAGING_WEIGHTColIsOK = !IMAGING_WEIGHTCol.isNull();
-    Bool LAG_DATAColIsOK = !LAG_DATACol.isNull();
-    Bool MODEL_DATAColIsOK = !MODEL_DATACol.isNull();
-    Bool SIGMA_SPECTRUMColIsOK = !SIGMA_SPECTRUMCol.isNull();
-    Bool WEIGHT_SPECTRUMColIsOK = !WEIGHT_SPECTRUMCol.isNull();
-    Bool FLAGColIsOK = !FLAGCol.isNull();
-    Bool FLAG_CATEGORYColIsOK = False; // to be set to the correct value further below
-    
-    // (create column objects for all "partners" of the array columns to be modified)
-    // and initialize arrays to store combined column data
-    if(CORRECTED_DATAColIsOK){
-      oldCORRECTED_DATAColP = new ArrayColumn<Complex>(ms_p, "oldCORRECTED_DATA");
-      // initialize from first affected row to get number of dimensions right    
-      newCorrectedData.resize(newShape);
-    }
-    if(DATAColIsOK){
-      oldDATAColP = new ArrayColumn<Complex>(ms_p, "oldDATA");
-      newData.resize(newShape);
-    }
-    if(FLOAT_DATAColIsOK){
-      oldFLOAT_DATAColP = new ArrayColumn<Float>(ms_p, "oldFLOAT_DATA");
-      newFloatData.resize(newShape);
-    }
-    if(IMAGING_WEIGHTColIsOK){
-      oldIMAGING_WEIGHTColP = new ArrayColumn<Float>(ms_p, "oldIMAGING_WEIGHT");
-      if(oldIMAGING_WEIGHTColP->shape(firstAffRow).nelements() == 1){
-	newImagingWeight.resize(newNUM_CHAN);
+      IPosition flagCatShape;
+      uInt nCat  = 0;
+      if(!FLAG_CATEGORYCol.isNull()){ 
+	if(oldFLAG_CATEGORYCol.isDefined(firstAffRow)){ // required column but may be empty
+	  FLAG_CATEGORYColIsOK = True;
+	  flagCatShape = oldFLAG_CATEGORYCol.shape(firstAffRow);
+	  nCat = flagCatShape(2); // the dimension of the third axis ==
+	  // number of categories
+	  newFlagCategory.resize(IPosition(3, nCorrelators, newNUM_CHAN, nCat));
+	} 
       }
-      else{
-	os << LogIO::SEVERE << "Error: unexpected shape of imaging weight column: " 
-	     << oldIMAGING_WEIGHTColP->shape(firstAffRow) << LogIO::POST;
-	return False;
+      
+      ///////////////////////////////////////// 
+      // Loop over main table rows
+      uInt mainTabRow=0;
+      uInt newMainTabRow=0;
+      // prepare progress meter
+      Float progress = 0.5;
+      Float progressStep = 0.5;
+      if(nMainTabRows>1000000){
+	progress = 0.2;
+	progressStep = 0.2;
       }
-    }
-    if(LAG_DATAColIsOK){
-      oldLAG_DATAColP = new ArrayColumn<Complex>(ms_p, "oldLAG_DATA");
-      newLagData.resize(newShape); 
-    }
-    if(MODEL_DATAColIsOK){
-      oldMODEL_DATAColP = new ArrayColumn<Complex>(ms_p, "oldMODEL_DATA");
-      newModelData.resize(newShape);
-    }
-    if(SIGMA_SPECTRUMColIsOK){
-      oldSIGMA_SPECTRUMColP = new ArrayColumn<Float>(ms_p, "oldSIGMA_SPECTRUM");
-      newSigmaSpectrum.resize(newShape);
-    }
-    if(WEIGHT_SPECTRUMColIsOK){
-      oldWEIGHT_SPECTRUMColP = new ArrayColumn<Float>(ms_p, "oldWEIGHT_SPECTRUM");
-      if(oldWEIGHT_SPECTRUMColP->isDefined(firstAffRow)){ // required column but may be empty
-	newWeightSpectrum.resize(newShape);
-      }
-      else{
-	WEIGHT_SPECTRUMColIsOK = False;
-      }
-    }
-    if(FLAGColIsOK){ // required but one never knows
-      oldFLAGColP = new ArrayColumn<Bool>(ms_p, "oldFLAG"); 
-      newFlag.resize(newShape);
-    }
-    IPosition flagCatShape;
-    uInt nCat  = 0;
-    if(!FLAG_CATEGORYCol.isNull()){ 
-      oldFLAG_CATEGORYColP = new ArrayColumn<Bool>(ms_p, "oldFLAG_CATEGORY");
-      if(oldFLAG_CATEGORYColP->isDefined(firstAffRow)){ // required column but may be empty
-	FLAG_CATEGORYColIsOK = True;
-	flagCatShape = oldFLAG_CATEGORYColP->shape(firstAffRow);
-	nCat = flagCatShape(2); // the dimension of the third axis ==
-	                        // number of categories
-	newFlagCategory.resize(IPosition(3, nCorrelators, newNUM_CHAN, nCat));
-      } 
-    }
-  
-    ///////////////////////////////////////// 
-    // Loop over main table rows
-    uInt mainTabRow=0;
-    while(mainTabRow<nMainTabRows){
 
-      // should row be combined with others, i.e. has SPW changed?
-      // no -> just renumber DD ID (because of shrunk DD ID table)
-
-      // yes-> find rows from the spws tobe combined with same timestamp, antennas and field
-      //       merge these rows
-      //       write merged row over first one, correcting DD ID at the same time
-      //       delete other merged rows
-      //       reduce nMainTabRows accordingly
-
-      // continue
-
-      Int theDataDescId = DDIdCol(mainTabRow);
-
-      // row affected by the spw combination? (uses the old DD numbering)
-      if(DDtoSPWIndex.isDefined(theDataDescId)){
-	// find matching affected rows with same time stamp, antennas and field
+      while(mainTabRow<nMainTabRows){
+	
+	// should row be combined with others, i.e. has SPW changed?
+	// no -> just renumber DD ID (because of shrunk DD ID table)
+	
+	// yes-> find rows from the spws tobe combined with same timestamp, antennas and field
+	//       merge these rows
+	//       write merged row over first one, correcting DD ID at the same time
+	//       set TIME to 0 in other merged rows
+	//       reduce nMainTabRows accordingly
+	
+	// continue
+	//
+	// when finished, delete all rows with TIME = 0
+	
 	Double theTime = timeCol(mainTabRow);
-	Int theAntenna1 = antenna1Col(mainTabRow);
-	Int theAntenna2 = antenna2Col(mainTabRow);
-	Int theField = fieldCol(mainTabRow);
-	vector<Int> matchingRows;
-	matchingRows.push_back(mainTabRow);
-	vector<Int> matchingRowSPWIds;
-	matchingRowSPWIds.push_back(DDtoSPWIndex(theDataDescId));
-	SimpleOrderedMap <Int, Int> SPWtoRowIndex(-1);
-	SPWtoRowIndex.define(matchingRowSPWIds[0], mainTabRow);
-      
-	uInt nextRow = mainTabRow+1;
-	while(nextRow<nMainTabRows &&
-	      timeCol(nextRow) == theTime &&
-	      matchingRows.size() < spwsToCombine.size() // there should be one matching row per SPW
-	      ){
+	
+	// row was already combined with a previous row?
+	if(theTime == 0){
+	  mainTabRow++;
+	  continue;
+	}
+	
+	Int theDataDescId = DDIdCol(mainTabRow);
+	
+	// row affected by the spw combination? (uses the old DD numbering)
+	if(DDtoSPWIndex.isDefined(theDataDescId)){
+	  // find matching affected rows with same time stamp, antennas and field
+	  Int theAntenna1 = antenna1Col(mainTabRow);
+	  Int theAntenna2 = antenna2Col(mainTabRow);
+	  Int theField = fieldCol(mainTabRow);
+	  Double theInterval = intervalCol(mainTabRow);
+	  Double theExposure = exposureCol(mainTabRow);
+	  vector<Int> matchingRows;
+	  matchingRows.push_back(mainTabRow);
+	  vector<Int> matchingRowSPWIds;
+	  matchingRowSPWIds.push_back(DDtoSPWIndex(theDataDescId));
+	  SimpleOrderedMap <Int, Int> SPWtoRowIndex(-1);
+	  SPWtoRowIndex.define(matchingRowSPWIds[0], mainTabRow);
 	  
-	  if(!DDtoSPWIndex.isDefined(DDIdCol(nextRow)) ||
-	     antenna1Col(nextRow) != theAntenna1 ||
-	     antenna2Col(nextRow) != theAntenna2 ||
-	     fieldCol(nextRow) != theField ){ // not a matching row
-	    nextRow++;
-	    continue;
-	  }
-	  // found a matching row
-	  Int theSPWId = DDtoSPWIndex(DDIdCol(nextRow));
-	  if(SPWtoRowIndex.isDefined(theSPWId)){ // there should be a one-to-one relation: SPW <-> matching row
-	    os << LogIO::SEVERE << "Error: for time " <<  theTime << ", baseline (" << theAntenna1 << ","
+	  uInt nextRow = mainTabRow+1;
+	  while(nextRow<nMainTabRows &&
+		timeCol(nextRow) == theTime &&
+		matchingRows.size() < spwsToCombine.size() // there should be one matching row per SPW
+		){
+	    
+	    if(!DDtoSPWIndex.isDefined(DDIdCol(nextRow)) ||
+	       antenna1Col(nextRow) != theAntenna1 ||
+	       antenna2Col(nextRow) != theAntenna2 ||
+	       fieldCol(nextRow) != theField ){ // not a matching row
+	      nextRow++;
+	      continue;
+	    }
+	    // check that the intervals are the same
+	    if(intervalCol(nextRow) != theInterval){
+	      os << LogIO::SEVERE << "Error: for time " <<  theTime << ", baseline (" << theAntenna1 << ", "
+		 << theAntenna2 << "), field "<< theField << ", DataDescID " << DDIdCol(mainTabRow)
+		 << " found matching row with DataDescID " << DDIdCol(nextRow) << endl
+		 << " but the two rows have different intervals: " << theInterval
+		 << " vs. " << intervalCol(nextRow)
+		 << LogIO::POST;
+	      return False;
+	    }
+	    // check that the exposures are the same
+	    if(exposureCol(nextRow) != theExposure){
+	      os << LogIO::SEVERE << "Error: for time " <<  theTime << ", baseline (" << theAntenna1 << ", "
+		 << theAntenna2 << "), field "<< theField << ", DataDescID " << DDIdCol(mainTabRow)
+		 << " found matching row with DataDescID " << DDIdCol(nextRow) << endl
+		 << " but the two rows have different exposures: " << theExposure
+		 << " vs. " << exposureCol(nextRow)
+		 << LogIO::POST;
+	      return False;
+	    }
+	    // found a matching row
+	    Int theSPWId = DDtoSPWIndex(DDIdCol(nextRow));
+	    if(SPWtoRowIndex.isDefined(theSPWId)){ // there should be a one-to-one relation: SPW <-> matching row
+	      os << LogIO::SEVERE << "Error: for time " <<  theTime << ", baseline (" << theAntenna1 << ","
 		 << theAntenna2 << "), field "<< theField << " found more than one row for SPW "
 		 << theSPWId << LogIO::POST;
-	    return False;
-	  }
-	  else{ // this SPW not yet covered, memorize SPWId, row number, and relation
-	    matchingRowSPWIds.push_back(theSPWId);
-	    matchingRows.push_back(nextRow);
-	    SPWtoRowIndex.define(theSPWId, nextRow);
-	  }
-	  nextRow++;
-	} // end while nextRow ...
-      
-	// now we have a set of matching rows
-	uInt nMatchingRows = matchingRows.size();
+	      return False;
+	    }
+	    else{ // this SPW not yet covered, memorize SPWId, row number, and relation
+	      matchingRowSPWIds.push_back(theSPWId);
+	      matchingRows.push_back(nextRow);
+	      SPWtoRowIndex.define(theSPWId, nextRow);
+	    }
+	    nextRow++;
+	  } // end while nextRow ...
+	  
+	  // now we have a set of matching rows
+	  uInt nMatchingRows = matchingRows.size();
+	  
+	  // reset arrays and prepare input data matrices
+	  
+	  vector<Matrix<Complex> > newCorrectedDataI(nMatchingRows); 
+	  vector<Matrix<Complex> > newDataI(nMatchingRows);
+	  vector<Matrix<Float> > newFloatDataI(nMatchingRows);
+	  vector<Vector<Float> > newImagingWeightI(nMatchingRows);
+	  vector<Matrix<Complex> > newLagDataI(nMatchingRows);
+	  vector<Matrix<Complex> > newModelDataI(nMatchingRows);
+	  vector<Matrix<Float> > newSigmaSpectrumI(nMatchingRows);
+	  vector<Matrix<Float> > newWeightSpectrumI(nMatchingRows);
+	  vector<Matrix<Bool> > newFlagI(nMatchingRows);
+	  vector<Array<Bool> > newFlagCategoryI(nMatchingRows); // has three dimensions
+	  vector<Bool> newFlagRowI(nMatchingRows);
 
-	// reset arrays and prepare input data matrices
-
-	vector<Matrix<Complex> > newCorrectedDataI(nMatchingRows); 
-	vector<Matrix<Complex> > newDataI(nMatchingRows);
-	vector<Matrix<Float> > newFloatDataI(nMatchingRows);
-	vector<Vector<Float> > newImagingWeightI(nMatchingRows);
-	vector<Matrix<Complex> > newLagDataI(nMatchingRows);
-	vector<Matrix<Complex> > newModelDataI(nMatchingRows);
-	vector<Matrix<Float> > newSigmaSpectrumI(nMatchingRows);
-	vector<Matrix<Float> > newWeightSpectrumI(nMatchingRows);
-	vector<Matrix<Bool> > newFlagI(nMatchingRows);
-	vector<Array<Bool> > newFlagCategoryI(nMatchingRows); // has three dimensions
-
-	for(uInt i=0; i<nMatchingRows; i++){
-	  Int theMatchingRowSPWId = matchingRowSPWIds[i];
-	  Int theRow  = SPWtoRowIndex(theMatchingRowSPWId);
-	
-	  if(CORRECTED_DATAColIsOK){
-	    newCorrectedData.set(0);
-	    newCorrectedDataI[theMatchingRowSPWId].reference((*oldCORRECTED_DATAColP)(theRow));
-	  }
-	  if(DATAColIsOK){
-	    newData.set(0);
-	    newDataI[theMatchingRowSPWId].reference((*oldDATAColP)(theRow));
-	  }
-	  if(FLOAT_DATAColIsOK){
-	    newFloatData.set(0);
-	    newFloatDataI[theMatchingRowSPWId].reference((*oldFLOAT_DATAColP)(theRow));
-	  }
-	  if(IMAGING_WEIGHTColIsOK){
-	    newImagingWeight.set(0);
-	    newImagingWeightI[theMatchingRowSPWId].reference((*oldIMAGING_WEIGHTColP)(theRow));
-	  }
-	  if(LAG_DATAColIsOK){
-	    newLagData.set(0);
-	    newLagDataI[theMatchingRowSPWId].reference((*oldLAG_DATAColP)(theRow));
-	  }
-	  if(MODEL_DATAColIsOK){
-	    newModelData.set(0);
-	    newModelDataI[theMatchingRowSPWId].reference((*oldMODEL_DATAColP)(theRow));
-	  }
-	  if(SIGMA_SPECTRUMColIsOK){
-	    newSigmaSpectrum.set(0);
-	    newSigmaSpectrumI[theMatchingRowSPWId].reference((*oldSIGMA_SPECTRUMColP)(theRow));
-	  }
-	  if(WEIGHT_SPECTRUMColIsOK){
-	    newWeightSpectrum.set(0);
-	    newWeightSpectrumI[theMatchingRowSPWId].reference((*oldWEIGHT_SPECTRUMColP)(theRow));
-	  }
-	  if(FLAGColIsOK){
-	    newFlag.set(0);
-	    newFlagI[theMatchingRowSPWId].reference((*oldFLAGColP)(theRow));
-	  }
-	  if(FLAG_CATEGORYColIsOK){
-	    newFlagCategory.set(0);
-	    newFlagCategoryI[theMatchingRowSPWId].reference((*oldFLAG_CATEGORYColP)(theRow));
-	  }
-	} // end for i
-	
-	// merge data columns from all rows found using the averaging info from above
-	// averageN[], averageWhichSPW[], averageWhichChan[], averageChanFrac[]
-	
-	// loop over new channels
-	for(Int i=0; i<newNUM_CHAN; i++){
-	  for(Int j=0; j<averageN[i]; j++){
-	    // new channel value i 
-	    //   = SUM{j=0 to averageN[i]}( channelValue(SPW = averageWhichSPW[i][j], CHANNEL = averageWhichChan[i][j]) * averageChanFrac[i][j])
+	  for(uInt i=0; i<nMatchingRows; i++){
+	    Int theMatchingRowSPWId = matchingRowSPWIds[i];
+	    Int theRow  = SPWtoRowIndex(theMatchingRowSPWId);
 	    
-	    // loop over first dimension (number of correlators)
-	    for(uInt k=0; k<nCorrelators; k++){
-	      
-	      if(CORRECTED_DATAColIsOK){
-		newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
-	      }
-	      if(DATAColIsOK){
-		newData(k,i) += newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
-	      }
-	      if(FLOAT_DATAColIsOK){
-		newFloatData(k,i) += newFloatDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
-	      }
-	      if(LAG_DATAColIsOK){
-		newLagData(k,i) += newLagDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
-	      }
-	      if(MODEL_DATAColIsOK){
-		newModelData(k,i) += newModelDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
-	      }
-	      if(SIGMA_SPECTRUMColIsOK){
-		newSigmaSpectrum(k,i) += newSigmaSpectrumI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
-	      }
-	      if(WEIGHT_SPECTRUMColIsOK){
-		newWeightSpectrum(k,i) += newWeightSpectrumI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
-	      }
-	      
-	    } // end for k = 0
-	    
-	    // imaging weight is independent of the correlator
+	    if(CORRECTED_DATAColIsOK){
+	      newCorrectedData.set(0);
+	      newCorrectedDataI[theMatchingRowSPWId].reference(oldCORRECTED_DATACol(theRow));
+	    }
+	    if(DATAColIsOK){
+	      newData.set(0);
+	      newDataI[theMatchingRowSPWId].reference(oldDATACol(theRow));
+	    }
+	    if(FLOAT_DATAColIsOK){
+	      newFloatData.set(0);
+	      newFloatDataI[theMatchingRowSPWId].reference(oldFLOAT_DATACol(theRow));
+	    }
 	    if(IMAGING_WEIGHTColIsOK){
-	      newImagingWeight(i) += newImagingWeightI[ averageWhichSPW[i][j] ]( averageWhichChan[i][j] ) * averageChanFrac[i][j];
+	      newImagingWeight.set(0);
+	      newImagingWeightI[theMatchingRowSPWId].reference(oldIMAGING_WEIGHTCol(theRow));
 	    }
-	    
-	    // special treatment for Bool columns
+	    if(LAG_DATAColIsOK){
+	      newLagData.set(0);
+	      newLagDataI[theMatchingRowSPWId].reference(oldLAG_DATACol(theRow));
+	    }
+	    if(MODEL_DATAColIsOK){
+	      newModelData.set(0);
+	      newModelDataI[theMatchingRowSPWId].reference(oldMODEL_DATACol(theRow));
+	    }
+	    if(SIGMA_SPECTRUMColIsOK){
+	      newSigmaSpectrum.set(0);
+	      newSigmaSpectrumI[theMatchingRowSPWId].reference(oldSIGMA_SPECTRUMCol(theRow));
+	    }
+	    if(WEIGHT_SPECTRUMColIsOK){
+	      newWeightSpectrum.set(0);
+	      newWeightSpectrumI[theMatchingRowSPWId].reference(oldWEIGHT_SPECTRUMCol(theRow));
+	    }
 	    if(FLAGColIsOK){
-	      newFlag(0,i) = newFlagI[ averageWhichSPW[i][j] ]( 0, averageWhichChan[i][j] ); 
-	      for(uInt k=1; k<nCorrelators; k++){ // logical AND of all input channels
-		newFlag(k,i) =  newFlag(k,i) && newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ); 
+	      newFlag.set(0);
+	      newFlagI[theMatchingRowSPWId].reference(oldFLAGCol(theRow));
+	    }
+	    if(FLAG_CATEGORYColIsOK){
+	      newFlagCategory.set(0);
+	      newFlagCategoryI[theMatchingRowSPWId].reference(oldFLAG_CATEGORYCol(theRow));
+	    }
+	    newFlagRowI[theMatchingRowSPWId] = flagRowCol(theRow);
+	  } // end for i
+	  
+	  // merge data columns from all rows found using the averaging info from above
+	  // averageN[], averageWhichSPW[], averageWhichChan[], averageChanFrac[]
+	  
+
+
+	  // loop over new channels
+	  for(Int i=0; i<newNUM_CHAN; i++){
+	    // initialise special treatment for Bool columns
+	    if(FLAGColIsOK){
+	      for(uInt k=0; k<nCorrelators; k++){ 
+		newFlag(k,i) =  False; 
 	      }
 	    }
-	    
 	    if(FLAG_CATEGORYColIsOK){
-	      for(uInt k=0; k<nCorrelators; k++){ // logical AND of all input channels
-		newFlagCategory(IPosition(3,k,i,0)) = newFlagCategoryI[ averageWhichSPW[i][j] ](IPosition(3,k,averageWhichChan[i][j],0));
+	      for(uInt k=0; k<nCorrelators; k++){ 
 		for(uInt m=1; m<nCat; m++){ 
-		  newFlagCategory(IPosition(3,k,i,m)) = 
-		    newFlagCategory(IPosition(3,k,i,m)) && newFlagCategoryI[ averageWhichSPW[i][j] ](IPosition(3,k,averageWhichChan[i][j],m));
+		  newFlagCategory(IPosition(3,k,i,m)) = False;
 		}
 	      }
 	    }
-	    
-	  } // end for j=0
-	} // end for i=0, loop over new channels
+
+	    // loop over SPWs
+	    for(Int j=0; j<averageN[i]; j++){
+	      // new channel value i 
+	      //   = SUM{j=0 to averageN[i]}( channelValue(SPW = averageWhichSPW[i][j], CHANNEL = averageWhichChan[i][j]) * averageChanFrac[i][j])
+	      
+	      // loop over first dimension (number of correlators)
+	      for(uInt k=0; k<nCorrelators; k++){
+		
+		if(CORRECTED_DATAColIsOK){
+		  newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
+		}
+		if(DATAColIsOK){
+		  newData(k,i) += newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
+		}
+		if(FLOAT_DATAColIsOK){
+		  newFloatData(k,i) += newFloatDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
+		}
+		if(LAG_DATAColIsOK){
+		  newLagData(k,i) += newLagDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
+		}
+		if(MODEL_DATAColIsOK){
+		  newModelData(k,i) += newModelDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
+		}
+		if(SIGMA_SPECTRUMColIsOK){
+		  newSigmaSpectrum(k,i) += newSigmaSpectrumI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
+		}
+		if(WEIGHT_SPECTRUMColIsOK){
+		  newWeightSpectrum(k,i) += newWeightSpectrumI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
+		}
+		
+	      } // end for k = 0
+	      
+	      // imaging weight is independent of the correlator
+	      if(IMAGING_WEIGHTColIsOK){
+		newImagingWeight(i) += newImagingWeightI[ averageWhichSPW[i][j] ]( averageWhichChan[i][j] ) * averageChanFrac[i][j];
+	      }
+	      
+	      // special treatment for Bool columns
+	      if(FLAGColIsOK){
+		for(uInt k=1; k<nCorrelators; k++){ // logical OR of all input spws
+		  newFlag(k,i) =  newFlag(k,i) || newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ); 
+		}
+	      }
+	      
+	      if(FLAG_CATEGORYColIsOK){
+		for(uInt k=0; k<nCorrelators; k++){ // logical OR of all input spws
+		  for(uInt m=1; m<nCat; m++){ 
+		    newFlagCategory(IPosition(3,k,i,m)) = 
+		      newFlagCategory(IPosition(3,k,i,m)) || newFlagCategoryI[ averageWhichSPW[i][j] ](IPosition(3,k,averageWhichChan[i][j],m));
+		  }
+		}
+	      }
+	      
+	    } // end for j=0, loop oer SPWs
+	  } // end for i=0, loop over new channels
+
+	  // calculate FLAG_ROW as logical OR of all input rows
+	  newFlagRow = newFlagRowI[0];
+	  for(uInt i=1; i<nMatchingRows; i++){
+	    newFlagRow = newFlagRow || newFlagRowI[i];
+	  }
+
+	  // write data into the new main table
+	  newMain.addRow(1,False);
+	  
+	  if(CORRECTED_DATAColIsOK){
+	    CORRECTED_DATACol.put(newMainTabRow, newCorrectedData);
+	  }
+	  if(DATAColIsOK){
+// 	    cout << "old " << oldDATACol(mainTabRow).shape() << endl;
+// 	    cout << "new " << newData.shape() << endl;
+	    DATACol.put(newMainTabRow, newData);
+	  }
+	  if(FLOAT_DATAColIsOK){
+	    FLOAT_DATACol.put(newMainTabRow, newFloatData);
+	  }
+	  if(IMAGING_WEIGHTColIsOK){
+	    IMAGING_WEIGHTCol.put(newMainTabRow, newImagingWeight);
+	  }
+	  if(LAG_DATAColIsOK){
+	    LAG_DATACol.put(newMainTabRow, newLagData);
+	  }
+	  if(MODEL_DATAColIsOK){
+	    MODEL_DATACol.put(newMainTabRow, newModelData);
+	  }
+	  if(SIGMA_SPECTRUMColIsOK){
+	    SIGMA_SPECTRUMCol.put(newMainTabRow, newSigmaSpectrum);
+	  }
+	  if(WEIGHT_SPECTRUMColIsOK){
+	    WEIGHT_SPECTRUMCol.put(newMainTabRow, newWeightSpectrum);
+	  }
+	  if(FLAGColIsOK){
+	    FLAGCol.put(newMainTabRow, newFlag);
+	  }
+	  if(FLAG_CATEGORYColIsOK){
+	    FLAG_CATEGORYCol.put(newMainTabRow, newFlagCategory);
+	  }
+
+	  mainCols.flagRow().put(newMainTabRow, newFlagRow);
+	  
+	  if(tempDDIndex.isDefined(theDataDescId)){
+	    // do DD ID renumbering (due to shrunk DD table and spw combination )
+	    mainCols.dataDescId().put(newMainTabRow, tempDDIndex(theDataDescId)); 
+	  }
+	  else{
+	    mainCols.dataDescId().put(newMainTabRow,  DDIdCol(mainTabRow)); 
+	  }	  
+	  // copy the rest of the row contents from mainTabRow
+	  mainCols.sigma().put(newMainTabRow, SIGMACol(mainTabRow));
+	  mainCols.fieldId().put(newMainTabRow, fieldCol(mainTabRow));
+	  mainCols.antenna1().put(newMainTabRow, antenna1Col(mainTabRow));
+	  mainCols.antenna2().put(newMainTabRow, antenna2Col(mainTabRow));
+	  mainCols.time().put(newMainTabRow, timeCol(mainTabRow));
+	  mainCols.exposure().put(newMainTabRow, exposureCol(mainTabRow));
+	  mainCols.interval().put(newMainTabRow, intervalCol(mainTabRow));
+
+	  mainCols.uvw().put(newMainTabRow, oldMainCols.uvw()(mainTabRow));
+	  mainCols.weight().put(newMainTabRow, oldMainCols.weight()(mainTabRow));
+	  mainCols.arrayId().put(newMainTabRow, oldMainCols.arrayId()(mainTabRow));
+	  mainCols.feed1().put(newMainTabRow, oldMainCols.feed1()(mainTabRow));
+	  mainCols.feed2().put(newMainTabRow, oldMainCols.feed2()(mainTabRow));
+	  mainCols.observationId().put(newMainTabRow, oldMainCols.observationId()(mainTabRow));
+	  mainCols.processorId().put(newMainTabRow, oldMainCols.processorId()(mainTabRow));
+	  mainCols.scanNumber().put(newMainTabRow, oldMainCols.scanNumber()(mainTabRow));
+	  mainCols.stateId().put(newMainTabRow, oldMainCols.stateId()(mainTabRow));
+	  mainCols.timeCentroid().put(newMainTabRow, oldMainCols.timeCentroid()(mainTabRow));
+
+	  //	  cout << "Wrote new row " << newMainTabRow << endl;
+	  newMainTabRow++;	  
+	  // mark other found rows to be ignored, i.e. set their time to zero
+	  for(uInt i=1; i<nMatchingRows; i++){ // don't mark the first
+	    timeCol.put(matchingRows[i], 0);
+	  }
+	  
+	} // end if row is affected
 	
-	// write data into first of the matched rows found
-	if(CORRECTED_DATAColIsOK){
-	  CORRECTED_DATACol.put(mainTabRow, newCorrectedData);
+	mainTabRow++;
+	if(mainTabRow>nMainTabRows*progress){
+	  cout << "combineSpws progress: " << progress*100 << "% processed ... " << endl;
+	  progress += progressStep;
 	}
-	if(DATAColIsOK){
-	  DATACol.put(mainTabRow, newData);
-	}
-	if(FLOAT_DATAColIsOK){
-	  FLOAT_DATACol.put(mainTabRow, newFloatData);
-	}
-	if(IMAGING_WEIGHTColIsOK){
-	  IMAGING_WEIGHTCol.put(mainTabRow, newImagingWeight);
-	}
-	if(LAG_DATAColIsOK){
-	  LAG_DATACol.put(mainTabRow, newLagData);
-	}
-	if(MODEL_DATAColIsOK){
-	  MODEL_DATACol.put(mainTabRow, newModelData);
-	}
-	if(SIGMA_SPECTRUMColIsOK){
-	  SIGMA_SPECTRUMCol.put(mainTabRow, newSigmaSpectrum);
-	}
-	if(WEIGHT_SPECTRUMColIsOK){
-	  WEIGHT_SPECTRUMCol.put(mainTabRow, newWeightSpectrum);
-	}
-	if(FLAGColIsOK){
-	  FLAGCol.put(mainTabRow, newFlag);
-	}
-	if(FLAG_CATEGORYColIsOK){
-	  FLAG_CATEGORYCol.put(mainTabRow, newFlagCategory);
-	}
-    
-        // delete other found rows
-	for(uInt i=1; i<nMatchingRows; i++){ // don't delete the first
-	  ms_p.removeRow(matchingRows[i]);
-	}
-
-	// reduce nMainTabRows
-	nMainTabRows -= nMatchingRows-1;
-
-      } // end if row is affected
-	
-      // do DD ID renumbering (due to shrunk DD table and spw combination )
-      if(tempDDIndex.isDefined(theDataDescId)){
-	DDIdCol.put(mainTabRow, tempDDIndex(theDataDescId));
-      }
-
-      mainTabRow++;
       
-    } // end loop over main table rows
-    ////////////////////////////////////////////
+      } // end loop over main table rows
+      ////////////////////////////////////////////
 
-    // delete old columns
-    if(CORRECTED_DATAColIsOK){
-      ms_p.removeColumn("oldCORRECTED_DATA");
-    }
-    if(DATAColIsOK){
-      ms_p.removeColumn("oldDATA");
-    }
-    if(FLOAT_DATAColIsOK){
-      ms_p.removeColumn("oldFLOAT_DATA");
-    }
-    if(IMAGING_WEIGHTColIsOK){
-      ms_p.removeColumn("oldIMAGING_WEIGHT");
-    }
-    if(LAG_DATAColIsOK){
-      ms_p.removeColumn("oldLAG_DATA");
-    }
-    if(MODEL_DATAColIsOK){
-      ms_p.removeColumn("oldMODEL_DATA");
-    }
-    if(SIGMA_SPECTRUMColIsOK){
-      ms_p.removeColumn("oldSIGMA_SPECTRUM");
-    }
-    if(WEIGHT_SPECTRUMColIsOK){
-      ms_p.removeColumn("oldWEIGHT_SPECTRUM");
-    }
-    if(FLAGColIsOK){
-      ms_p.removeColumn("oldFLAG");
-    } 
-    if(FLAG_CATEGORYColIsOK){
-      ms_p.removeColumn("oldFLAG_CATEGORY");
+      os << LogIO::NORMAL << "Processed " << mainTabRow << " original rows, wrote "
+	 << newMainTabRow << " new ones." << LogIO::POST;
+
+      newMain.flush(True); 
+
+    } // end scope for MS related objects
+
+    String oldName(ms_p.tableName());
+
+    // detach old MS
+    ms_p.flush(True);
+    ms_p = MeasurementSet();
+    mssel_p = MeasurementSet();
+
+    // rename the result MS overwriting the old MS
+    {
+      Table tab(tempNewName, Table::Update);
+      tab.rename(oldName, Table::New);
     }
 
-    ms_p.flush();
+    // attach new MS
+    ms_p = MeasurementSet(oldName, Table::Update);
+    mssel_p = ms_p;
+
+    os << LogIO::NORMAL << "Spectral window combination complete." << LogIO::POST;
 
     return True;
 

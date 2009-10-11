@@ -95,7 +95,7 @@ uInt RFFlagCube::estimateMemoryUse ( const RFChunkStats &ch )
 }
 
 // creates flag cube for a given visibility chunk
-void RFFlagCube::init( RFlagWord corrmsk,const String &name ) 
+void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, const String &name) 
 {
     if (dbg) cout << "name=" << name << endl;
  
@@ -124,7 +124,7 @@ void RFFlagCube::init( RFlagWord corrmsk,const String &name )
 
 	// init empty flag lattice
 	// initial state is all pre-flags set; we'll clear them as we go along
-	flag.init(num(CHAN),num(IFR),num(TIME),full_corrmask,maxmemuse,2);
+	flag.init(num(CHAN),num(IFR),num(TIME),num(CORR), nAgent, full_corrmask,maxmemuse,2);
 	pos_get_flag=pos_set_flag=-1;
 
 	// allocate cube of row flags
