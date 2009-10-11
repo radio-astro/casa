@@ -131,12 +131,18 @@ else:
         name = ""
         #             col name, row number, expected value, tolerance
         expected = [
-                     ['UVW',       42, [-65.07623467,   1.05534109, -33.65801386], 1E-8],
+                     ['UVW',       42, [ 0., 0., 0. ], 1E-8],
                      ['EXPOSURE',  42, 1.008, 0],
-                     ['DATA',      42, [ [0.00362284+0.00340279j] ], 1E-8]
+                     ['DATA',      42, [ [10.5526886+0.0j] ], 1E-7]
                      ]
         checktable(name, expected)
 
+        expected = [
+                     ['UVW',       638, [-65.07623467,   1.05534109, -33.65801386], 1E-8],
+                     ['EXPOSURE',  638, 1.008, 0],
+                     ['DATA',      638, [ [0.00362284+0.00340279j] ], 1E-8]
+                     ]
+        checktable(name, expected)
         
         name = "ANTENNA"
         expected = [ ['OFFSET',       1, [ 0.,  0.,  0.], 0],

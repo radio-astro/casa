@@ -2,7 +2,7 @@ import os
 import shutil
 from taskinit import *
 from cleanhelper import *
-import pdb
+#import pdb
 
 def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,antenna,
 	  scan, mode,gridmode,wprojplanes,facets, cfcache,painc,epjtable, interpolation,
@@ -18,8 +18,10 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
 
 	#For some vague reason despite the clean.py having gotten a generated 
         #default for ftmachine='ft'...it appears as 'mosaic' at this stage
-	if(imagermode==''):
-		ftmachine='ft'
+        # had a problem with csclean 
+	#if(imagermode==''):
+        #	ftmachine='ft'
+ 	ftmachine='ft'
 
         casalog.origin('clean')
 
@@ -62,12 +64,13 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                         if((type(phasecenter) == list) and (len(phasecenter) >1)):
                                 raise TypeError, 'Number of phasecenters has to be equal to number of images'
 
+
                 #setup for 'per channel' clean
                 dochaniter=False
-                if interactive and (chaniter=='chan' or chaniter=='channel'): 
+                if interactive and (chaniter=='chan' or chaniter=='channel'):
                         if nchan >1:
                                 dochaniter=True
-                
+
                 if dochaniter:
                         nchaniter=nchan
                         finalimagename=imagename
@@ -93,22 +96,20 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                         if (mode=='channel'):
                                 freqs,finc  = imset.getfreqs(nchan,spw,start,width)
                                 mode = 'frequency'
-                                
+
                 else:
                         nchaniter=1
                         finalimagename=''
+
                 # loop over channels for per-channel clean
                 for j in xrange(nchaniter):
                         if dochaniter:
                                 imset.maskimages={}
-                                #imagename=[os.path.dirname(imn)+'/'+tmpdir+os.path.basename(imn)+'.ch'+str(j) 
-                                #           for imn in finalimagename]
-                                imagename=[tmppath[indx]+os.path.basename(imn)+'.ch'+str(j) 
+                                imagename=[tmppath[indx]+os.path.basename(imn)+'.ch'+str(j)
                                            for indx, imn in enumerate(finalimagename)]
-                                
+
                                 print "Processing for Ch %s starts..." % j
                                 casalog.post("Processing for Channel %s "% j)
- 
 
                         # change to handle multifield masks
                         maskimage=''
@@ -159,9 +160,10 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                         # It does not work well for multi-spw so need
                         # to select with nchan=-1
                         if dochaniter:
+                                print "doing something..."
                                 imnchan=1
                                 chanslice=j
-			        qat=qatool.create();
+                                qat=qatool.create();
                                 q = qat.quantity
 
                                 if len(spw)==1:
@@ -174,11 +176,10 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                                 #visstart=imstart
                                 visstart=0
 
-                                #pdb.set_trace()
                                 if type(start)==int:
                                         # need to convert to frequencies
-                                        # to ensure correct frequencies in 
-                                        # output images(especially for multi-spw) 
+                                        # to ensure correct frequencies in
+                                        # output images(especially for multi-spw)
                                         #imstart=start+j*width
                                         # Use freq list instead
                                         imstart=q(freqs[j],'Hz')
@@ -189,17 +190,17 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                                         imstart=qat.add(q(start),qat.mul(j,q(width)))
                                 elif start.find('Hz')>0:
                                         imstart=qat.add(q(start),qat.mul(j,q(width)))
-
+  
                         else:
                                 imnchan=nchan
                                 chanslice=-1
                                 imstart=start
                                 visnchan=-1
-                                visstart=1
-
+                                visstart=0
+ 
                         imset.definemultiimages(rootname=rootname, imsizes=imsizes, cell=cell, 
                                                 stokes=stokes, mode=mode, spw=spw, 
-                                                nchan=imnchan, start=imstart, width=width, 
+                                                nchan=imnchan, start=imstart,width=width, 
                                                 restfreq=restfreq, field=field, phasecenters=phasecenters,
                                                 names=imageids, facets=facets, outframe=outframe, 
                                                 veltype=veltype, makepbim=makepbim) 
@@ -213,23 +214,19 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                                                  innertaper=innertaper,
                                                  outertaper=outertaper,
                                                  calready=calready, 
-                                                 nchan=visnchan,start=visstart,
+                                                 nchan=visnchan, start=visstart,
                                                  width=1)
-                        
+
 
                         if(maskimage==''):
                                 maskimage=imset.imagelist[0]+'.mask'
-
-                        #for chaniter="channael" get a channel plane image if input mask is
-                        #image cube
 
                         if(not multifield):
                                 imset.makemaskimage(outputmask=maskimage, imagename=imagename,
                                                             maskobject=mask, slice=chanslice)
 
-
                         else:
-                                imset.makemultifieldmask2(mask,slice=chanslice)
+                                imset.makemultifieldmask2(mask,chanslice)
                                 maskimage=[]
                                 for k in range(len(imset.maskimages)):
                                         maskimage.append(imset.maskimages[imset.imagelist[k]])
@@ -256,6 +253,7 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                         elif(imagermode=='mosaic'):
                                 if(alg.count('mf') <1):
                                         alg='mf'+alg;
+                                ftmachine="mosaic";
                                 imCln.setoptions(ftmachine=ftmachine, padding=padding,
                                                  wprojplanes=wprojplanes,
                                                  freqinterp=interpolation,
@@ -290,7 +288,7 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                         if (mode=='mfs'):
                                 if((type(multiscale)==list) and (len(multiscale)>0)):
                                         alg='multiscale';
-                                        if (multifield or (imagermode != "")):
+                                        if (multifield):
                                                 alg='mf'+alg
                                # imCln.setscales(scalemethod='uservector',
                                # 		       uservector=multiscale);
@@ -328,11 +326,6 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                         #if not multifield:
                         #         imset.convertmodelimage(modelimages=modelimage,
                         # 				outputmodel=imagename+'.model')
-                        #if modelimage !='' and modelimage!=[]:
-                        #        imset.convertmodelimage(modelimages=modelimage,
-                        #                                outputmodel=imset.imagelist.values()[0]+'.model')
-                        
-                        # model image: make sure right modeimage is used for chaniter mode 
                         if modelimage !='' and modelimage!=[]:
                                 if dochaniter:
                                         chanmodimg=[]
@@ -365,9 +358,7 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                                                                 os.system('rm -rf '+img)
                                 else:
                                         imset.convertmodelimage(modelimages=modelimage,
-                                                                outputmodel=imset.imagelist.values()[0]+'.model')
-
-                                
+                                                        outputmodel=imset.imagelist.values()[0]+'.model')
                         modelimages=[]
                         restoredimage=[]
                         residualimage=[]
@@ -412,11 +403,11 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
 
                         ####after all the mask shenanigans...make sure to use the
                         ####last mask
-                            
                         if(not multifield):
                             maskimage=imset.outputmask
-                             
-                 
+                        
+                        
+                                
                         #imCln.clean(algorithm=alg,niter=niter,gain=gain,
                         #	    threshold=qa.quantity(threshold,'mJy'),
                         #	    model=[imagename+'.model'],
@@ -435,12 +426,10 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                                     mask=maskimage,
                                     interactive=interactive,
                                     npercycle=npercycle)
-
-                # end of 'per channel' iteration
 		imCln.close()
                 if len(finalimagename)!=0:
                         imagext = ['.image','.model','.flux','.residual','.psf']
-                        if imagermode=='mosaic': 
+                        if imagermode=='mosaic':
                                 imagext.append('.flux.pbcoverage')
                                 imagext.append('.model.mask')
                         else:
@@ -465,11 +454,9 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                                 #os.system('rm -rf %s' % tmppath[indx]+os.path.basename(imf)+'.ch*'+imext[-1]+'.text')
                         # clean up temp. directory
                         for k in range(len(finalimagename)):
-                                if os.path.isdir(tmppath[k]): 
+                                if os.path.isdir(tmppath[k]):
                                         #print tmppath[k], " exists, removing..."
                                         os.system('rm -rf %s' % tmppath[k])
-
-
                 if dochaniter:
                         imset.imagelist=finalimagename
 		presdir=os.path.realpath('.')
