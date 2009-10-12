@@ -903,6 +903,7 @@ void MSLister::listData(const int pageRows,
     //cout << "wTotal_p=" << wTotal_p << " colPos=" << colPos << endl;
     //cout << "hSeparator.length=" << hSeparator.size() << endl;
     //hSeparator.resize(colPos, True);
+
   
     Vector<String> flagSym(2);
     flagSym(0) = " ";
