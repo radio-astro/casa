@@ -350,7 +350,7 @@ Fit2D::ErrorTypes Fit2D::fit(const Array<Float>& data,
 	   "have the same shape" << LogIO::EXCEPTION;
       }
    }
-//
+
    Matrix<Double> pos;
    Vector<Double> values;
    Vector<Double> weights;
@@ -358,7 +358,7 @@ Fit2D::ErrorTypes Fit2D::fit(const Array<Float>& data,
       itsErrorMessage = String("There were no selected data points");
       return Fit2D::NOGOOD;
    }
-//
+
    return fitData(values, pos, weights);
 
 }
