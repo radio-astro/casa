@@ -56,7 +56,7 @@ FitterEstimatesFileParser::FitterEstimatesFileParser (
 		*itsLog << LogIO::NORMAL << "Estimates file " << filename << " is not readable"
 			<< LogIO::EXCEPTION;
 	}
-	_parseFile(myFile);
+	_parseFile(myFile, image);
 	_createComponentList(image);
 
 }
@@ -74,7 +74,7 @@ Vector<String> FitterEstimatesFileParser::getFixed() {
 }
 
 void FitterEstimatesFileParser::_parseFile(
-	const RegularFile& myFile
+	const RegularFile& myFile, const ImageInterface<Float>& image
 ) {
 	itsLog->origin(LogOrigin("FitterEstimatesFileParser","_parseFile"));
 
@@ -135,6 +135,11 @@ void FitterEstimatesFileParser::_parseFile(
 		if (! readQuantity(fluxQuantity, flux)) {
 			*itsLog << "File " << filename << ", line " << *iter
 				<< ": Flux value " << flux << " is not a quantity"
+				<< LogIO::EXCEPTION;
+		}
+		if (fluxQuantity.getUnit().empty()) {
+			*itsLog << "Flux units not specified for component number "
+				<< componentIndex << ". Please specify and run again"
 				<< LogIO::EXCEPTION;
 		}
 		fluxValues(componentIndex) = fluxQuantity;
