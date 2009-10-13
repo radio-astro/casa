@@ -1419,28 +1419,23 @@ SolvableVisCal *Simulator::create_corrupt(const Record& simpar)
 {
   LogIO os(LogOrigin("Simulator", "create_corrupt()", WHERE));
 
-  // First try to create the requested VisCal object
   SolvableVisCal *svc(NULL);
 
-  // RI TODO assert that the associated ms has some structure - 
-  // RI TODO either has been predict()ed or sm opened from a real ms.  
-  // RI TODO makeVisSet maybe does this for us?
+  // RI TODO sim::create_corrupt assert that ms has certain structure - 
+  // either has been predict()ed or sm opened from a real ms.  
     
   try {
 
-    // Someday it would be nice to do all this without requiring an MS/VisSet, 
-    // but that's a lot more work.
+    // if VisSet goes away we'll have to change this.
     makeVisSet();
     
     String upType=simpar.asString("type");
-    // Must be upper case
     upType.upcase();
     
     os << LogIO::NORMAL
        << "Arranging to CORRUPT with:"
        << LogIO::POST;
     
-    // Add a new VisCal to the apply list
     svc = createSolvableVisCal(upType,*vs_p);
 
     svc->setPrtlev(4);
@@ -1448,11 +1443,20 @@ SolvableVisCal *Simulator::create_corrupt(const Record& simpar)
     // Generic VisCal setSimulate will throw an exception -- 
     //   each VC needs to have its own.
     // specializations should call SolvableVisCal::setSimulate though
-    svc->setSimulate(simpar);   
+    svc->setSimulate(simpar);
+    //note that when setSimulate creates the CalSet it doesn't know 
+    // nChan(Spw()) yet so the calSet needs to be inflated for each 
+    // Spw, using 
+    // void SolvableVisCal::inflate(const Vector<Int>& nChan,
+    // const Vector<Int>& startChan,
+    // const Vector<Int>& nSlot) {
+
+
     // makes a calset, but spwOK starts out F for the shape-based constructor
     // used here and in the solve context, in contrast to the caltable-based
     // constructor used in setapply
-    // NEED VC->setsimulate to do VC.spwOK=T like VC::setapply ? set in calc_corrupt
+    // do we need VC->setsimulate to do VC.spwOK=T like VC::setapply? 
+    // no - we'll set that in calc_corrupt
     
     os << LogIO::NORMAL << ".   "
        << svc->siminfo()
@@ -1498,10 +1502,6 @@ Bool Simulator::calc_corrupt(SolvableVisCal *svc, const Record& simpar)
     makeVisSet();
     AlwaysAssert(vs_p, AipsError);
 
-    // RI TODO assert that the associated ms has some structure - 
-    // RI TODO either has been predict()ed or sm opened from a real ms.  
-    // RI TODO makeVisSet maybe does this for us?
-
     // adapted from Calibrater::standardSolve3()
     // but here we need to setup the entire observation at once 
     // in each VC's simcorrupter, so that it can ensure continuity
@@ -1515,21 +1515,27 @@ Bool Simulator::calc_corrupt(SolvableVisCal *svc, const Record& simpar)
     // RI TODO relax min sim_interval ?     
     if (interval < integrationTime_p.getValue("s"))
       interval = integrationTime_p.getValue("s");
-    
-    
-    // sizeUpSolve also deals with nCorr for us
-    // sizeUpSolve does inflate the CalSet - did we make one?
-    // sizeUpSolve does setSolveChannelization() and initSolvePar();
+        
+    // sizeUpSim also deals with nCorr for us
+    // sizeUpSim does inflate the CalSet - did we make one?
+    // sizeUpSim does setSolveChannelization() and initSolvePar();
     // initSolvePar does solveCPar().resize(nPar(),1,nAnt());
     
     Vector<Int> nChunkPerSim;
     Vector<Double> solTimes;
     Int nSim = svc->setupSim(*vs_p,simpar,nChunkPerSim,solTimes);
+
+    // setupSim (sizeUpSim) is supposed to be inflating the calset
+    // after running setSolveChannelization, so why is nChanPar
+    // not correct in the cs?
     
     // setupSim might be a good place to set the VI sort order and 
     // reset the VI (in which case it needs a pointer to the VisSet)
     
-    // GM organize calibration correction/corruption according to 
+    if (!(svc->corruptor_p))
+      throw(AipsError("Error in Simulator::calc_corrupt: corruptor doesn't exist!"));
+    
+    // GM sez: organize calibration correction/corruption according to 
     // multi-spw consistency; e.g. move time ahead of data_desc_id so that 
     // data_desc_id (spw) changes faster than time, even within scans.
     
@@ -1547,66 +1553,62 @@ Bool Simulator::calc_corrupt(SolvableVisCal *svc, const Record& simpar)
     //    VisBuffer vb(vi);
     
     Int nSpw=vs_p->numberSpw();
-    // same as cs_p->nSpw()  ?    
+    // same as cs_p->nSpw() ?    
     Vector<Int> slotidx(nSpw,-1);
     
     Int nGood(0);
     vi.originChunks();
     Double t0(0.);
 
+    // debug:
     cout << "nChunkPerSim = ";
-    //for (Int isim=0;isim<nSim && vi.moreChunks();++isim) 
     cout << 0 << " | " << nChunkPerSim[0] << " ; " << nSim-1 << " | " << nChunkPerSim[nSim-1] << endl;
 
-    for (Int isim=0;isim<nSim && vi.moreChunks();++isim) {
-
+    for (Int isim=0;isim<nSim && vi.moreChunks();++isim) {      
       Int thisSpw=svc->spwMap()(vi.spectralWindow());
       slotidx(thisSpw)++;
-//      
-//      if (!(svc->corruptor_p))
-//	throw(AipsError("Error in Simulator::calc_corrupt: corruptor doesn't exist!"));
-//      
-//      if (vbOk) {
-//	// channel loop here, row in VBA loop inside vc::simPar
-//	Int nc = ((const SolvableVisCal*)svc)->nChanPar();
-//	// for (Int ich=((const SolvableVisCal*)svc)->nChanPar()-1;ich>-1;--ich) {
-//	for (Int ich=nc-1;ich>-1;--ich) {
+
+//	for (Int ich=((const SolvableVisCal*)svc)->nChanPar()-1;ich>-1;--ich) {
 //	  svc->focusChan()=ich;
-//	  // RI TODO just pass time stamp etc? just one VB? 
-//	  cout << "isim=" << isim << " ich=" << ich << " ";
+
+// need to inflate calset to right shape (is this a function of spw - probably)
+// since it was created without Chan info:
+// new CalSet<Complex>(nSpw(),nPar(),Vector<Int>(1,1),nElem(),Vector<Int>(1,1));
+
+//			     const Vector<Int>& startChan,
+//			     const Vector<Int>& nSlot) {
+// 	cs().resize(nPar(),nChan,nElem(),nSlot);
+//
+// this call assumes all channels want to be simulated:      
+// we should be able to do this for all spw together, right?  
+// but that requires figuring out the spwmap and nchan per spw - 
+// does the VisSet know this already or is there some way to do it?
+// George probably knows....
+// also, do we want to inflate completely to nSim, or just to current slotidx?
+// the cast to SVC is annoying but nChanPar() is private for some reason...
+//      svc->inflate(Vector<Int>(1,((const SolvableVisCal*)svc)->nChanPar()),
+//		   Vector<Int>(1,0), 
+//		   Vector<Int>(1,slotidx(thisSpw)));
+      
       if (!svc->simPar(vi,nChunkPerSim[isim])) 
 	    throw(AipsError("Error calculating simulated VC")); 
-//	  // svc has reftime() from syncSolveMeta above, needs antennas?
-//	  // svc->simPar(); 
-      svc->keep(slotidx(thisSpw));	  
-//	} 
-//      }
-      // RI TODO simPar probably needs to be smarter and actually only advance 
-      // the slot itself if the timestamp changes (e.g. if iterating 
-      // through spws at the same timestamp
-      // vc_p->advance_corruptor(); // may be different ways of doing this?
-      // svc->corruptor_p->curr_slot()++;
-      
-  } // end of nSim
+      svc->keep(slotidx(thisSpw));	        
+    }
     
     svc->setSpwOK();
     // calls these protected methods:   
     //svc->cs().setSpwOK();  // checks if nTime()!=0;  hopefully nTime is getting set
     //svc->ci().setSpwOK();  // gets that from cs()
     
-    if (svc->calTableName()!="<none>") {
-      
-      // Store whole of result in a caltable
-      
-      // RI TODO check if user wanting to overwrite calTable
+
+    if (svc->calTableName()!="<none>") {      
+      // RI TODO Sim::create_corrupt check if user wants to overwrite calTable
       os << LogIO::NORMAL 
 	 << "Writing calTable = "+svc->calTableName()+" ("+svc->typeName()+")" 
-	 << endl << LogIO::POST;
-      
+	 << endl << LogIO::POST;      
       // write the table
       // append()=False set by setSimulate()
       svc->store();
-
     } else {
       os << LogIO::NORMAL 
 	 << "calTable name not set - not writing to disk." 

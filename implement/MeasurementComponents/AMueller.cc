@@ -118,19 +118,15 @@ Int ANoise::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
 
 
 Bool ANoise::simPar(VisIter& vi, const Int nChunks){
-  if (prtlev()>3) cout << "  AN::simPar()" << endl;  
+  if (prtlev()>4) cout << "  AN::simPar()" << endl;  
 
   AlwaysAssert((isSimulated()),AipsError);
 
   try {
     
     Vector<Int> a1;
-    vi.antenna1(a1);
     Vector<Int> a2;
-    vi.antenna2(a2);
     Matrix<Bool> flags;  // matrix foreach row and chan - if want pol send cube.
-    vi.flag(flags);
-
     solveCPar()=Complex(0.0);
     // n good VI elements averaged in each CPar() entry:
     IPosition cparshape=solveCPar().shape();
@@ -140,6 +136,7 @@ Bool ANoise::simPar(VisIter& vi, const Int nChunks){
     Vector<Double> timevec;
     Double starttime,stoptime;
     Vector<int> scntmp;
+    Int ibln;
     starttime=vi.time(timevec)[0];
 
     for (Int ichunk=0;ichunk<nChunks;++ichunk) {
@@ -148,21 +145,32 @@ Bool ANoise::simPar(VisIter& vi, const Int nChunks){
 
       for (vi.origin(); vi.more(); vi++) {
 
+	// these need to be updated whenever the VI scrolls forward
+	vi.antenna1(a1);
+	vi.antenna2(a2);
+	vi.flag(flags);
+
 	Int scan(vi.scan(scntmp)[0]);
-	if (prtlev()>3 and scan<1)
-	  cout << "[chunk " << ichunk << "], scan " << scan << ",time = " << timevec[0]-4.84694e+09 << endl;
+//	if (prtlev()>3 and scan<2)
+//	  cout << "[chunk " << ichunk << "], scan " << scan << ",time = " << timevec[0]-4.84694e+09 << endl;
 
 	for (Int irow=0;irow<vi.nRow();++irow)	
 	  if ( a1(irow)!=a2(irow) &&
 	       nfalse(flags.column(irow)) > 0 ) {   
-	    // RI TODOverify col not row here
+	    // RI TODO verify col not row here
 	    // in T, there's a loop to find the corruptor time slot here.
-	    solveCPar().xyPlane(irow) = solveCPar().xyPlane(irow) + 
+
+	    ibln=blnidx(a1(irow),a2(irow)); // baseline id.
+	    //cout << irow << " " << vi.nRow() << " ants:" << a1(irow) << "&" <<a2(irow) << " = " << ibln << " cparshape= " << solveCPar().shape() << endl;
+
+	    solveCPar().xyPlane(ibln) = solveCPar().xyPlane(ibln) + 
 	      acorruptor_p->noise(solveCPar().nrow(),solveCPar().ncolumn());
-	    nGood.xyPlane(irow) = nGood.xyPlane(irow) + Complex(1.);	    
-	    solveParOK().xyPlane(irow) = True;	    
+	    nGood.xyPlane(ibln) = nGood.xyPlane(ibln) + Complex(1.);	    
+	    solveParOK().xyPlane(ibln) = True;	    
 	  }
+	//cout << " more from the VI now..." << endl;
       }
+      //cout << " yo! mo chunky now? " << vi.moreChunks() << endl; 
       if (vi.moreChunks()) vi.nextChunk();
     }
     
