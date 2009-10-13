@@ -63,6 +63,7 @@
 
 #include <casa/Logging/LogIO.h>
 
+#include <set>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -134,8 +135,43 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
   Vector<Int> spwids;
   uInt nrspw;
   {
-    ROScalarColumn<Int> ddidcol(ms, MS::columnName(MS::DATA_DESC_ID));
-    nrspw = makeIdMap (spwidMap, spwids, ddidcol.getColumn(), isSubset);
+    
+    /* Note: The MAIN table does not point directly to 
+       spwIDs but to the DATA_DESC_ID table, which in turn points
+       to entries in the SPECTRAL_WINDOW table (the spwid).
+       First, determine which spwIDs are referenced from the MAIN table.
+    */
+    
+    Vector<Int> ddidcol (ROScalarColumn<Int>(ms, MS::columnName(MS::DATA_DESC_ID)).getColumn());
+    Vector<Int> spwidcol(ROScalarColumn<Int>(ms.dataDescription(), 
+                                        MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID))
+                         .getColumn());
+
+    std::set<Int> allIDs;
+    for (uInt i = 0; i < ddidcol.nelements(); i++) {
+      Int ddid = ddidcol(i);
+      if (ddid < spwidcol.nelements()) {
+        Int spwid = spwidcol(ddid);
+        
+        allIDs.insert(spwid);
+      }
+      else {
+        os << LogIO::SEVERE << ms.tableName() << " row " << i << ": " <<
+          "Invalid data description ID = " << ddid << ". DATA_DESC_ID table " << 
+          "has " << spwidcol.nelements() << " rows" << LogIO::POST;
+      }
+    }
+
+    /* Convert to vector */
+    Vector<Int> allids(allIDs.size());
+    uInt j = 0;
+    for (std::set<Int>::iterator i = allIDs.begin();
+         i != allIDs.end(); 
+         i++){
+      allids[j++] = *i;
+    }
+
+    nrspw = makeIdMap(spwidMap, spwids, allids, isSubset);
   }
 
   // If not asMultiSource, check if multiple sources are present.
@@ -2068,6 +2104,13 @@ Table MSFitsOutput::handleSysCal (const MeasurementSet& ms,
 }
 
 
+/*
+  allids: (input)  IDs to consider
+  map:    (output) map from allids to 0,1,...,nr
+  selids: (output) inverse of map
+
+  returns: nr, number of different IDs in allids
+ */
 Int MSFitsOutput::makeIdMap (Block<Int>& map, Vector<Int>& selids,
 			     const Vector<Int>& allids, Bool isSubset)
 {
