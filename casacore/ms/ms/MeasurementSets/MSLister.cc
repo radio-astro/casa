@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSLister.cc 20749 2009-09-30 14:24:05Z gervandiepen $
+//# $Id: MSLister.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 //#
 #include <casa/Quanta/MVTime.h>
 #include <casa/Containers/RecordFieldId.h>
@@ -819,6 +819,7 @@ void MSLister::listData(const int pageRows,
     oUVW_p = (uInt)max(1,(Int)rint(log10(max(uvw))+0.5)); // order
     if ( precUVW_p < 0 ) precUVW_p = 0;
     if ( precUVW_p > 0 ) oUVW_p++;  // add space for decimal
+                         oUVW_p++;  // add space for sign
 
     oAmpl_p = (uInt)max(1,(Int)rint(log10(max(ampl))+0.5)); 
     if ( precAmpl_p < 0 ) precAmpl_p = 3;  // mJy
@@ -881,7 +882,9 @@ void MSLister::listData(const int pageRows,
   
     // replicate does not work if the first parameter is "-", but it does for '-'.
     // Bug report here: https://bugs.aoc.nrao.edu/browse/CAS-511
-    String hSeparator=replicate('-',wTotal_p);
+    String hSeparator=replicate('-',wTotal_p+1);
+    //cout << "wTotal_p=" << wTotal_p << endl;
+    //cout << "hSeparator.length=" << hSeparator.size() << endl;
     uInt colPos=0;
     colPos+=wTime_p;   hSeparator[colPos]='|';
     colPos+=wIntrf_p;  hSeparator[colPos]='|';
@@ -897,6 +900,10 @@ void MSLister::listData(const int pageRows,
     colPos+=wUVW_p; hSeparator[colPos]='|';
     colPos+=wUVW_p; hSeparator[colPos]='|';
     colPos+=wUVW_p; hSeparator[colPos]='|';
+    //cout << "wTotal_p=" << wTotal_p << " colPos=" << colPos << endl;
+    //cout << "hSeparator.length=" << hSeparator.size() << endl;
+    //hSeparator.resize(colPos, True);
+
   
     Vector<String> flagSym(2);
     flagSym(0) = " ";

@@ -63,6 +63,7 @@
 
 #include <casa/Logging/LogIO.h>
 
+#include <set>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -134,8 +135,43 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
   Vector<Int> spwids;
   uInt nrspw;
   {
-    ROScalarColumn<Int> ddidcol(ms, MS::columnName(MS::DATA_DESC_ID));
-    nrspw = makeIdMap (spwidMap, spwids, ddidcol.getColumn(), isSubset);
+    
+    /* Note: The MAIN table does not point directly to 
+       spwIDs but to the DATA_DESC_ID table, which in turn points
+       to entries in the SPECTRAL_WINDOW table (the spwid).
+       First, determine which spwIDs are referenced from the MAIN table.
+    */
+    
+    Vector<Int> ddidcol (ROScalarColumn<Int>(ms, MS::columnName(MS::DATA_DESC_ID)).getColumn());
+    Vector<Int> spwidcol(ROScalarColumn<Int>(ms.dataDescription(), 
+                                        MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID))
+                         .getColumn());
+
+    std::set<Int> allIDs;
+    for (uInt i = 0; i < ddidcol.nelements(); i++) {
+      Int ddid = ddidcol(i);
+      if (ddid < spwidcol.nelements()) {
+        Int spwid = spwidcol(ddid);
+        
+        allIDs.insert(spwid);
+      }
+      else {
+        os << LogIO::SEVERE << ms.tableName() << " row " << i << ": " <<
+          "Invalid data description ID = " << ddid << ". DATA_DESC_ID table " << 
+          "has " << spwidcol.nelements() << " rows" << LogIO::POST;
+      }
+    }
+
+    /* Convert to vector */
+    Vector<Int> allids(allIDs.size());
+    uInt j = 0;
+    for (std::set<Int>::iterator i = allIDs.begin();
+         i != allIDs.end(); 
+         i++){
+      allids[j++] = *i;
+    }
+
+    nrspw = makeIdMap(spwidMap, spwids, allids);
   }
 
   // If not asMultiSource, check if multiple sources are present.
@@ -152,7 +188,7 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
       }
     }
     Vector<Int> fieldids;
-    nrfield = makeIdMap (fieldidMap, fieldids, fldid, isSubset);
+    nrfield = makeIdMap (fieldidMap, fieldids, fldid);
   }  
 
   // Write main table. Get freq and channel-width back.
@@ -2068,49 +2104,51 @@ Table MSFitsOutput::handleSysCal (const MeasurementSet& ms,
 }
 
 
+/*
+  allids: (input)  IDs to consider
+  map:    (output) map from allids to 0,1,...,nr
+  selids: (output) inverse of map
+
+  returns: nr, number of different IDs in allids
+ */
 Int MSFitsOutput::makeIdMap (Block<Int>& map, Vector<Int>& selids,
-			     const Vector<Int>& allids, Bool isSubset)
+			     const Vector<Int>& allids)
 {
   // Determine the number of ids and make a mapping of
   // id number in the table to id number in fits.
-  // Only if the MS is a subset, we have to determine this mapping
-  // explicitly (because then some ids might be left out).
+  // Even if the MS is not a subset (by selection), we have to
+  // determine this mapping explicitly (because then some ids
+  // might be left out).
+
   Int nrid = 1 + max(allids);
   map.resize (nrid, True, True);
   map = -1;
-  if (!isSubset) {
-    selids.resize (nrid);
-    for (Int i=0; i<nrid; i++) {
-      map[i] = i;
-      selids(i) = i;
-    }
-  } else {
-    // Find out which fields are actually used, because only those
-    // fields need to be written from the FIELD table.
-    Bool deleteIt;
-    const Int* data = allids.getStorage (deleteIt);
-    Block<Bool> idUsed(nrid, False);
-    Int nrow = allids.nelements();
-    for (Int i=0; i<nrow; i++) {
-      idUsed[data[i]] = True;
-    }
-    allids.freeStorage (data, deleteIt);
-    Int nr = 0;
-    for (Int i=0; i<nrid; i++) {
-      if (idUsed[i]) {
-	map[i] = nr++;                // form the mapping
-      }
-    }
-    selids.resize (nr);
-    nr = 0;
-    for (Int i=0; i<nrid; i++) {
-      if (idUsed[i]) {
-	selids(nr++) = i;             // determine which ids are selected
-      }
-    }
-    nrid = nr;
+
+  // Find out which fields are actually used, because only those
+  // fields need to be written from the FIELD table.
+  Bool deleteIt;
+  const Int* data = allids.getStorage (deleteIt);
+  Block<Bool> idUsed(nrid, False);
+  Int nrow = allids.nelements();
+  for (Int i=0; i<nrow; i++) {
+    idUsed[data[i]] = True;
   }
-  return nrid;
+  allids.freeStorage (data, deleteIt);
+  Int nr = 0;
+  for (Int i=0; i<nrid; i++) {
+    if (idUsed[i]) {
+      map[i] = nr++;                // form the mapping
+    }
+  }
+  selids.resize (nr);
+  nr = 0;
+  for (Int i=0; i<nrid; i++) {
+    if (idUsed[i]) {
+      selids(nr++) = i;             // determine which ids are selected
+    }
+  }
+
+  return nr;
 }
 
 

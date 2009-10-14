@@ -32,6 +32,8 @@
 #include <lattices/LatticeMath/Fit2D.h>
 #include <casa/Quanta.h>
 #include <measures/Measures/Stokes.h>
+#include <images/Images/ImageInfo.h>
+#include <images/Images/ImageInterface.h>
 #include <components/ComponentModels/ComponentType.h>
 #include <casa/Arrays/AxesSpecifier.h>
 #include <measures/Measures/Stokes.h>
@@ -41,7 +43,6 @@ namespace casa {
 class DirectionCoordinate;
 class LogIO;
 class SkyComponent;
-class String;
 class Record;
 class Fit2D;
 class ImageRegion;
@@ -50,11 +51,9 @@ template<class T> class Array;
 template<class T> class Block;
 template<class T> class PtrBlock; 
 template<class T> class Flux;
-template<class T> class ImageInterface;
 template<class T> class ImageStatistics;
 template<class T> class ImageHistograms;
 template<class T> class MaskedArray;
-template<class T> class PagedImage;
 template<class T> class Quantum;
 template<class T> class SubLattice;
 template<class T> class SubImage;
@@ -722,6 +721,11 @@ class ImageAnalysis
         const Vector<Float>& includepix, const Vector<Float>& excludepix,
         const Stokes::StokesTypes& stokes, const Float minVal, const Float maxVal,
         Fit2D& fitter
+    ) const;
+
+    void _fitskyExtractBeam(
+    	Vector<Double>& parameters, const ImageInfo& imageInfo,
+    	const Bool xIsLong, const CoordinateSystem& cSys
     ) const;
 
 };

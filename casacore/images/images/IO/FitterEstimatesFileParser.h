@@ -109,12 +109,11 @@ class FitterEstimatesFileParser {
 		FitterEstimatesFileParser();
 
 		// parse the file
-		void _parseFile(const RegularFile& myFile);
+		void _parseFile(const RegularFile& myFile, const ImageInterface<Float>& image);
 		void _createComponentList(const ImageInterface<Float>& image);
 
 
-		// trim whitespace from a String
-		String _trim(const String& s);
+
 };
 
 } //# NAMESPACE CASA - END

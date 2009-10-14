@@ -131,7 +131,7 @@ private:
   // represents an entire MS. In that case the map and selids are
   // simply filled with values 0-nrid.
   static Int makeIdMap (Block<Int>& map, Vector<Int>& selids,
-			const Vector<Int>& allids, Bool isSubset);
+			const Vector<Int>& allids);
 
 
 };

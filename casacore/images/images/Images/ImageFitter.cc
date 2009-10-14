@@ -25,7 +25,6 @@
 //#
 //# $Id: $
 
-#include <casa/Inputs/Input.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageFitter.h>
 #include <images/Images/ImageMetaData.h>
@@ -40,6 +39,7 @@
 #include <components/ComponentModels/Flux.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/MIRIADImage.h>
+#include <images/IO/FitterEstimatesFileParser.h>
 #include <casa/Arrays/ArrayUtil.h>
 
 #include <images/Regions/WCUnion.h>
@@ -58,69 +58,18 @@
 
 namespace casa {
 
-    ImageFitter::ImageFitter(Int argc, char *argv[]) {
-        itsLog = new LogIO();
-        *itsLog << LogOrigin("ImageFitter", "constructor");
-    
-        Input input(1);
-        input.version("$ID:$");
-        input.create("imagename");
-        input.create("box", "");
-        input.create("region", "");
-        input.create("ngauss", "1");
-        input.create("chan", "0");
-        input.create("stokes", "I");
-        input.create("mask","");
-        input.create("includepix", "");
-        input.create("excludepix", "");
-        input.create("residual", "");
-        input.create("model", "");
-
-        input.readArguments(argc, argv);
-        String imagename = input.getString("imagename");
-
-        String box = input.getString("box");
-        String region = input.getString("region");
-        ngauss = input.getInt("ngauss");
-        // input.getInt() will default to 0 if param not specified
-        chan = input.getInt("chan");
-        stokesString = input.getString("stokes");
-        mask = input.getString("mask");
-        residual = input.getString("residual");
-        model = input.getString("model");
-
-        Vector<String> includePixParts = stringToVector(input.getString("includepix")); 
-        Vector<String> excludePixParts = stringToVector(input.getString("excludepix"));
-        includePixelRange(includePixParts.nelements());
-        excludePixelRange(excludePixParts.nelements());
-        for (uInt i = 0; i < includePixelRange.nelements(); i++) {
-            includePixelRange[i] = String::toFloat(includePixParts[i]);
-        }
-        for (uInt i = 0; i < excludePixelRange.nelements(); i++) {
-            excludePixelRange[i] = String::toFloat(excludePixParts[i]);
-        }
-        _construct(imagename, box, region);
-    }
-
     ImageFitter::ImageFitter(
         const String& imagename, const String& box, const String& region,
         const uInt ngaussInp, const uInt chanInp, const String& stokes,
-        const String& maskInp,
-        const Vector<Float>& includepix, const Vector<Float>& excludepix,
-        const String& residualInp, const String& modelInp
-    ) {
+        const String& maskInp, const Vector<Float>& includepix,
+        const Vector<Float>& excludepix, const String& residualInp,
+        const String& modelInp, const String& estimatesFilename
+    ) : ngauss(ngaussInp), chan(chanInp), stokesString(stokes), mask(maskInp),
+		residual(residualInp),model(modelInp), includePixelRange(includepix),
+		excludePixelRange(excludepix), estimates(), fixed(0) {
         itsLog = new LogIO();
         *itsLog << LogOrigin("ImageFitter", "constructor");
-        // set private members
-        ngauss = ngaussInp;
-        chan = chanInp;
-        stokesString = stokes;
-        mask = maskInp;
-        includePixelRange = includepix;
-        excludePixelRange = excludepix;
-        residual = residualInp;
-        model = modelInp;
-        _construct(imagename, box, region);
+        _construct(imagename, box, region, estimatesFilename);
     }
 
     ImageFitter::~ImageFitter() {
@@ -135,26 +84,23 @@ namespace casa {
         Bool converged;
         Vector<String> models(ngauss);
         models.set("gaussian");
-        Vector<String> fixedparams;
-        Record estimate; 
         ImageAnalysis myImage(image);
         Bool fit = True;
         Bool deconvolve = False;
         Bool list = True;
+        // TODO make param passed to fitsky a ComponentList so this crap doesn't
+        // have to be done.
+        String errmsg;
+        Record estimatesRecord;
+        estimates.toRecord(errmsg, estimatesRecord);
         Record rec = Record(imRegion.toRecord(""));
         ComponentList compList = myImage.fitsky(
             residPixels, residMask, converged, rec,
             chan, stokesString, mask, models,
-            estimate, fixedparams, includePixelRange,
+            estimatesRecord, fixed, includePixelRange,
             excludePixelRange, fit, deconvolve, list,
             residual, model
-        );   
-       
-        // if (! residual.empty()) {
-            // construct the residual image
-        //    PagedImage<Float> (image->shape(), image->coordinates(), residual);
-        //    *itsLog << LogIO::NORMAL << "Wrote residual image " << residual << LogIO::POST;
-        // }
+        );
 
         Flux<Double> flux;
         for(uInt k=0; k<compList.nelements(); ++k) {
@@ -172,8 +118,21 @@ namespace casa {
         cout << "component type " << compType << endl;
 
         MDirection mdir = compList.getRefDirection(0);
+
         Quantity lat = mdir.getValue().getLat("rad");
         Quantity longitude = mdir.getValue().getLong("rad");
+
+        Vector<Double> world(4,0), pixel(4,0);
+        image->coordinates().toWorld(world, pixel);
+
+        world[0] = longitude.getValue();
+        world[1] = lat.getValue();
+        if (image->coordinates().toPixel(pixel, world)) {
+        	cout << "max pixel position " << pixel << endl;
+        }
+        else {
+        	cerr << "unable to convert world to pixel" << endl;
+        }
 
         Quantity elat = compShape->refDirectionErrorLat();
         Quantity elong = compShape->refDirectionErrorLong();
@@ -242,7 +201,8 @@ namespace casa {
     }
 
     void ImageFitter::_construct(
-        const String& imagename, const String& box, const String& region
+        const String& imagename, const String& box, const String& region,
+        const String& estimatesFilename
     ) {
         if (imagename.empty()) {
             *itsLog << "imagename cannot be blank" << LogIO::EXCEPTION;
@@ -258,6 +218,14 @@ namespace casa {
         }
         _doRegion(box, region);
         _checkImageParameterValidity();
+        if(! estimatesFilename.empty()) {
+        	FitterEstimatesFileParser parser(estimatesFilename, *image);
+        	estimates = parser.getEstimates();
+        	fixed = parser.getFixed();
+        	Record rec;
+        	String errmsg;
+        	estimates.toRecord(errmsg, rec);
+        }
     }
 
     void ImageFitter::_checkImageParameterValidity() const {
@@ -328,6 +296,5 @@ namespace casa {
         WCBox wcBox(lcBox, image->coordinates());
         imRegion = ImageRegion(wcBox);
     }
-
 }
 

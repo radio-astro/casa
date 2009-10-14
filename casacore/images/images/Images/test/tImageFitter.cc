@@ -61,10 +61,14 @@ void checkImage(
     Vector<String> plotstats(0);
     ia.statistics(stats, axes, region, "", plotstats, Vector<Float>(0), Vector<Float>(0));
 
-    Array<Double> sumArray = stats.asArrayDouble("sum");
-    vector<double> sum;
-    sumArray.tovector(sum);
-    AlwaysAssert(sum[0] == 0, AipsError);
+    Array<Double> minArray = stats.asArrayDouble("min");
+    Array<Double> maxArray = stats.asArrayDouble("max");
+
+    vector<Double> min, max;
+    minArray.tovector(min);
+    maxArray.tovector(max);
+
+    AlwaysAssert(min[0] == 0 && max[0] == 0, AipsError);
 }
 
 int main() {
@@ -73,11 +77,11 @@ int main() {
     os << "tImageFitter_tmp_" << pid;
     String dirName = os.str();
 	Directory workdir(dirName);
+  	const Double DEGREES_PER_RADIAN = 180/C::pi;
+    Double arcsecsPerRadian = DEGREES_PER_RADIAN*3600;
+    String test;
     try {
-    	const Double DEGREES_PER_RADIAN = 180/C::pi;
-        Double arcsecsPerRadian = DEGREES_PER_RADIAN*3600;
-        String test;
-        {
+       {
             writeTestString(
                 "test fitter using all available image pixels with model with no noise"
             );

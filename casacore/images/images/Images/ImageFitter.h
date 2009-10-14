@@ -69,10 +69,6 @@ namespace casa {
         // </example>
 
         public:
-
-            // constructor appropriate for processing command line arguments (from Unix shell).
-            ImageFitter(Int argc, char *argv[]);
-        
             // constructor approprate for API calls.
             // Parameters:
             // <ul>
@@ -97,14 +93,15 @@ namespace casa {
                 const String& maskInp="",
                 const Vector<Float>& includepix = Vector<Float>(0),
                 const Vector<Float>& excludepix = Vector<Float>(0),
-                const String& residualInp="", const String& modelInp=""
+                const String& residualInp="", const String& modelInp="",
+                const String& estiamtesFilename=""
             ); 
 
             // destructor
             ~ImageFitter();
 
-            // constructor appropriate for API calls
-            // Do the fit. If componentList is specified, store the fitted components in that object.
+            // Do the fit. If componentList is specified, store the fitted components in
+            // that object.
             ComponentList fit() const; 
 
         private:
@@ -115,11 +112,14 @@ namespace casa {
             uInt ngauss, chan;
             String stokesString, mask, residual, model;
             Vector<Float> includePixelRange, excludePixelRange;
+            ComponentList estimates;
+            Vector<String> fixed;
 
             // does the lion's share of constructing the object, ie checks validity of
             // inputs, etc.
             void _construct(
-                const String& imagename, const String& box, const String& region
+                const String& imagename, const String& box, const String& region,
+                const String& estimatesFilename
             );
 
             // determine the region based on the inputs

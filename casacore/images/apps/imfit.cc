@@ -25,12 +25,53 @@
 //#
 //# $Id: tSubImage.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 
-
+#include <casa/Inputs/Input.h>
 #include <images/Images/ImageFitter.h>
 #include <casa/namespace.h>
 
 Int main(Int argc, char *argv[]) {
-    ImageFitter imFitter(argc, argv);
+	Input input(1);
+	input.version("$ID:$");
+	input.create("imagename");
+	input.create("box", "");
+	input.create("region", "");
+	input.create("ngauss", "1");
+	input.create("chan", "0");
+	input.create("stokes", "I");
+	input.create("mask","");
+	input.create("includepix", "");
+	input.create("excludepix", "");
+	input.create("residual", "");
+	input.create("model", "");
+	input.create("estimates","");
+
+	input.readArguments(argc, argv);
+	String imagename = input.getString("imagename");
+
+	String box = input.getString("box");
+	String region = input.getString("region");
+	uInt ngauss = input.getInt("ngauss");
+	uInt chan = input.getInt("chan");
+	String stokes = input.getString("stokes");
+	String mask = input.getString("mask");
+	String residual = input.getString("residual");
+	String model = input.getString("model");
+	String estimatesFilename = input.getString("estimates");
+
+	Vector<String> includePixParts = stringToVector(input.getString("includepix"));
+	Vector<String> excludePixParts = stringToVector(input.getString("excludepix"));
+	Vector<Float> includePixelRange(includePixParts.nelements());
+	Vector<Float> excludePixelRange(excludePixParts.nelements());
+	for (uInt i = 0; i < includePixelRange.nelements(); i++) {
+		includePixelRange[i] = String::toFloat(includePixParts[i]);
+	}
+	for (uInt i = 0; i < excludePixelRange.nelements(); i++) {
+		excludePixelRange[i] = String::toFloat(excludePixParts[i]);
+	}
+	ImageFitter imFitter(
+			imagename, box, region, ngauss, chan, stokes, mask, includePixelRange,
+			excludePixelRange, residual, model, estimatesFilename
+	);
     imFitter.fit();
     return 0;
 }

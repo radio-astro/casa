@@ -2409,6 +2409,7 @@ ComponentList ImageAnalysis::fitsky(
 			// Decode parameters from estimate
 			const CoordinateSystem& cSys = subImage.coordinates();
 			const ImageInfo& imageInfo = subImage.imageInfo();
+
 			parameters = ImageUtilities::decodeSkyComponent(estimate(i),
 					imageInfo, cSys, subImage.units(), stokes, xIsLong);
 			// The estimate SkyComponent may not be the same type as the
@@ -2417,37 +2418,7 @@ ComponentList ImageAnalysis::fitsky(
 			ComponentType::Shape estType = estimate(i).shape().type();
 			if (modelType == Fit2D::GAUSSIAN || modelType == Fit2D::DISK) {
 				if (estType == ComponentType::POINT) {
-					// We need the restoring beam shape as well.
-					Vector<Quantum<Double> > beam = imageInfo.restoringBeam();
-					Vector<Quantum<Double> > wParameters(5);
-					// Because we convert at the reference
-					// value for the beam, the position is
-					// irrelevant
-					wParameters(0).setValue(0.0);
-					wParameters(1).setValue(0.0);
-					wParameters(0).setUnit(String("rad"));
-					wParameters(1).setUnit(String("rad"));
-					wParameters(2) = beam(0);
-					wParameters(3) = beam(1);
-					wParameters(4) = beam(2);
-
-					// Convert to pixels for Fit2D
-					IPosition pixelAxes(2);
-					pixelAxes(0) = 0;
-					pixelAxes(1) = 1;
-					if (!xIsLong) {
-						pixelAxes(1) = 0;
-						pixelAxes(0) = 1;
-					}
-					Bool doRef = True;
-					Vector<Double> dParameters;
-					ImageUtilities::worldWidthsToPixel(*itsLog, dParameters,
-							wParameters, cSys, pixelAxes, doRef);
-					//
-					parameters.resize(6, True);
-					parameters(3) = dParameters(0);
-					parameters(4) = dParameters(1);
-					parameters(5) = dParameters(2);
+					_fitskyExtractBeam(parameters, imageInfo, xIsLong, cSys);
 				}
 			}
 			else if (modelType == Fit2D::LEVEL) {
@@ -2483,7 +2454,6 @@ ComponentList ImageAnalysis::fitsky(
 				modelTypes(i)));
 		Vector<Double> solution = fitter.availableSolution(i);
 		Vector<Double> errors = fitter.availableErrors(i);
-		//
 		result(i) = ImageUtilities::encodeSkyComponent(*itsLog, facToJy, subImage, modelType,
 				solution, stokes, xIsLong, deconvolveIt);
 		encodeSkyComponentError(*itsLog, result(i), facToJy, subImage,
@@ -2509,6 +2479,43 @@ ComponentList ImageAnalysis::fitsky(
 
 	return cl;
 
+}
+
+void ImageAnalysis::_fitskyExtractBeam(
+	Vector<Double>& parameters, const ImageInfo& imageInfo,
+	const Bool xIsLong, const CoordinateSystem& cSys
+) const {
+	// We need the restoring beam shape as well.
+	Vector<Quantum<Double> > beam = imageInfo.restoringBeam();
+	Vector<Quantum<Double> > wParameters(5);
+	// Because we convert at the reference
+	// value for the beam, the position is
+	// irrelevant
+	wParameters(0).setValue(0.0);
+	wParameters(1).setValue(0.0);
+	wParameters(0).setUnit(String("rad"));
+	wParameters(1).setUnit(String("rad"));
+	wParameters(2) = beam(0);
+	wParameters(3) = beam(1);
+	wParameters(4) = beam(2);
+
+	// Convert to pixels for Fit2D
+	IPosition pixelAxes(2);
+	pixelAxes(0) = 0;
+	pixelAxes(1) = 1;
+	if (!xIsLong) {
+		pixelAxes(1) = 0;
+		pixelAxes(0) = 1;
+	}
+	Bool doRef = True;
+	Vector<Double> dParameters;
+	ImageUtilities::worldWidthsToPixel(*itsLog, dParameters,
+			wParameters, cSys, pixelAxes, doRef);
+	//
+	parameters.resize(6, True);
+	parameters(3) = dParameters(0);
+	parameters(4) = dParameters(1);
+	parameters(5) = dParameters(2);
 }
 
 void ImageAnalysis::_setFitSkyIncludeExclude(
