@@ -68,13 +68,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // image metadata without polluting the ImageInterface and CoordinateSystem
 // classes with these methods.
 // </motivation>
+// <todo>
+// Merge ImageInfo class into this class.
+// </todo>
 
 
 class ImageMetaData {
 
     public:
         template <class T> ImageMetaData(const ImageInterface<T>& image) :
-            itsCoordinates (image.coordinates()), itsShape(image.shape()) {};
+			itsInfo(image.imageInfo()), itsUnits(image.units()),
+            itsCoordinates(image.coordinates()), itsShape(image.shape()) {};
 
         // Get the axis number of the spectral axis of this image (0-based).
         Int spectralAxisNumber() const; 
@@ -155,10 +159,17 @@ class ImageMetaData {
             String& message, const uInt chan, const String& stokesString
         ) const;
 
-        private:
-            const CoordinateSystem& itsCoordinates;
-            IPosition itsShape;
-    };
+        // Get beam volume if possible. Return true if beam area was determined.
+        Bool getBeamArea (Quantity& beamArea) const;
+
+    private:
+        const ImageInfo itsInfo;
+        const Unit itsUnits;
+        const CoordinateSystem& itsCoordinates;
+        const IPosition itsShape;
+
+
+};
 
 } //# NAMESPACE CASA - END
 #endif
