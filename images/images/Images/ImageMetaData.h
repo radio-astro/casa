@@ -160,7 +160,11 @@ class ImageMetaData {
         ) const;
 
         // Get beam volume if possible. Return true if beam area was determined.
-        Bool getBeamArea (Quantity& beamArea) const;
+        Bool getBeamArea(Quantity& beamArea) const;
+
+        // Get the solid angle subtended by a direction pixel (eg ra,dec or lat, long)
+        // Return False if this value cannot be determined.
+        Bool getDirectionPixelArea(Quantity& pixelArea) const;
 
     private:
         const ImageInfo itsInfo;

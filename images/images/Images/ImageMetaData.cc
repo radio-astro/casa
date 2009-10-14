@@ -176,11 +176,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        Vector<Quantum<Double> > beam = itsInfo.restoringBeam();
        String imageUnits = itsUnits.getName();
        imageUnits.upcase();
-       Int afterCoord = -1;
-       Int dC = itsCoordinates.findCoordinate(Coordinate::DIRECTION, afterCoord);
 
-       if (beam.nelements()==3 && dC!=-1 && imageUnits==String("JY/BEAM")) {
-          DirectionCoordinate dCoord = itsCoordinates.directionCoordinate(dC);
+       if (beam.nelements()==3 && hasDirectionCoordinate() && imageUnits==String("JY/BEAM")) {
+          DirectionCoordinate dCoord = itsCoordinates.directionCoordinate(directionCoordinateNumber());
           Vector<String> units(2);
           units(0) = "rad"; units(1) = "rad";
           dCoord.setWorldAxisUnits(units);
@@ -192,5 +190,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           return False;
        }
     }
+    Bool ImageMetaData::getDirectionPixelArea(Quantity& pixelArea) const {
+    	if (!hasDirectionCoordinate()) {
+    		return False;
+    	}
+    	DirectionCoordinate dCoord = itsCoordinates.directionCoordinate(directionCoordinateNumber());
+    	Vector<Double> increment = dCoord.increment();
+    	Quantity xLength(increment(0), "rad");
+    	Quantity yLength(increment(1), "rad");
+    	pixelArea = xLength*yLength;
+    	pixelArea.setValue(fabs(pixelArea.getValue()));
+    	return True;
+    }
+
+
 } //# NAMESPACE CASA - END
 
