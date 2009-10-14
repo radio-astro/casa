@@ -1810,11 +1810,11 @@ Date/Time:                         RR:                      RL:                 
   </example>
 </method>
 
-<method type="function" name="cvel">
+<method type="function" name="regridspw">
    <shortdescription>transform spectral data to different reference frame and/or regrid the frequency channels
    </shortdescription>
    
-  <keyword>cvel</keyword>
+  <keyword>regridspw</keyword>
   <input>
     
      <param type="string" direction="in" name="outframe">
@@ -1924,12 +1924,12 @@ Date/Time:                         RR:                      RL:                 
   <example>
     \begin{verbatim}
       ms.fromfits("NGC5921.MS", "/usr/lib/casapy/data/demo/NGC5921.fits")
-      ms.cvel(outframe="LSRK")
+      ms.regridspw(outframe="LSRK")
     \end{verbatim}
     This example reads a measurement set and transforms its spectral axis to
     the LSRK reference frame.
     \begin{verbatim}
-      ms.cvel(outframe="BARY", mode="vrad", 
+      ms.regridspw(outframe="BARY", mode="vrad", 
       center=73961800., chanwidth=50., bandwidth=1000.,
       restfreq=1420405750e6)
     \end{verbatim}
@@ -1940,13 +1940,13 @@ Date/Time:                         RR:                      RL:                 
     be 1000 m/s, i.e. 20 channels of width 50 m/s, 10 on each side of the given
     center.
     \begin{verbatim}
-      ms.cvel(mode="vopt", restfreq=1420405750e6)
+      ms.regridspw(mode="vopt", restfreq=1420405750e6)
     \end{verbatim}
     In this example the channels are regridded such that they are
     equidistant in optical velocity. The reference frame and number of channels 
     is kept as is.
     \begin{verbatim}
-      ms.cvel(mode="chan", center=64, chanwidth=2,
+      ms.regridspw(mode="chan", center=64, chanwidth=2,
       bandwidth=102)
     \end{verbatim}
     In this example, the channels are regridded such that the new bandwidth is
@@ -1955,7 +1955,7 @@ Date/Time:                         RR:                      RL:                 
   </example>
 </method>
 
-<method type="function" name="cvel2">
+<method type="function" name="cvel">
    <shortdescription>transform spectral data to different reference frame and/or regrid the frequency channels
    </shortdescription>
    

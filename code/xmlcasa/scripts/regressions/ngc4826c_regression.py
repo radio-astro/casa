@@ -67,6 +67,7 @@ clean(vis='n4826_both.ms', imagename='mosaic',
       mode='channel',
       psfmode='clark',
       imagermode='mosaic',
+      ftmachine='mosaic',
       niter=500,
       gain=0.1,                     # Specified for certainty, 6/10/2009
       scaletype='SAULT', minpb=0.1) # Changed from 0.01 6/10/2009
@@ -98,6 +99,7 @@ clean(vis='n4826_both.ms', imagename='n4826_tjoint1',
       psfmode='clark',
       niter=500,
       imagermode='mosaic',
+      ftmachine='mosaic',
       modelimage='n4826_t12mchan.im',
       scaletype='SAULT', minpb=0.01)
 sdmodeltime = time.time()
@@ -140,6 +142,7 @@ clean(vis='n4826_both.ms', imagename='n4826_tjoint2',
       mode='channel',
       psfmode='clark',
       imagermode='mosaic',
+      ftmachine='mosaic',
       niter=500,
       modelimage='n4826_tjoint2',
       scaletype='SAULT', minpb=0.01)

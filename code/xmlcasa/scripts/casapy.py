@@ -401,7 +401,7 @@ def update_params(func, printtext=True, ipython_globals=None):
             cu.setconstraints('file://'+xmlfile);
 
     a=myf[myf['taskname']].defaults("paramkeys",myf)
-
+    itsdef=myf[myf['taskname']].itsdefault
     params=a
     itsparams = {}
     for k in range(len(params)):
@@ -448,8 +448,8 @@ def update_params(func, printtext=True, ipython_globals=None):
                     elif(somedict.has_key('notvalue') and myf.has_key(params[k])):
                         if(somedict['notvalue']!=myf[params[k]]):
                             userdict=somedict
-                ###The behaviour is to set to the first default
-                ### all non set parameters and parameters that
+                ###The behaviour is to use the task.itsdefault
+                ### for all non set parameters and parameters that
                 ### have no meaning for this selection
                 for j in range(len(subdict)):
                     subkey=subdict[j].keys()
@@ -459,14 +459,13 @@ def update_params(func, printtext=True, ipython_globals=None):
                             #if user selecteddict
                             #does not have the key
                             ##put default
-                            if((not userdict.has_key(subkey[kk])) and (not subkeyupdated[subkey[kk]])):
-                                myf.update({subkey[kk]:subdict[j][subkey[kk]]})
+                            if((not userdict.has_key(subkey[kk])) and (not subkeyupdated[subkey[kk]]) and (not myf.has_key(subkey[kk]))):
+                                myf.update({subkey[kk]:itsdef(subkey[kk])})
                                 subkeyupdated[subkey[kk]]=True
-                                
                     ###put default if not there
                             if(not myf.has_key(subkey[kk])):
-                                myf.update({subkey[kk]:subdict[j][subkey[kk]]})
-                        
+                                myf.update({subkey[kk]:itsdef(subkey[kk])})
+                    ###put default if not there
             ### need to do default when user has not set val
             if(not myf.has_key(params[k])):
                 if(paramval[0].has_key('notvalue')):

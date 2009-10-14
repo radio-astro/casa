@@ -12,17 +12,10 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
           uvtaper,outertaper,innertaper,modelimage,restoringbeam,pbcor, minpb,calready, 
           noise, npixels, npercycle, cyclefactor, cyclespeedup,nterms,reffreq,chaniter):
 
-	#pdb.set_trace()
 
 	#Python script
 
-	#For some vague reason despite the clean.py having gotten a generated 
-        #default for ftmachine='ft'...it appears as 'mosaic' at this stage
-        # had a problem with csclean 
-	#if(imagermode==''):
-        #	ftmachine='ft'
- 	ftmachine='ft'
-
+	
         casalog.origin('clean')
 
 	applyoffsets=False;
@@ -253,14 +246,6 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                         elif(imagermode=='mosaic'):
                                 if(alg.count('mf') <1):
                                         alg='mf'+alg;
-                                ftmachine="mosaic";
-                                imCln.setoptions(ftmachine=ftmachine, padding=padding,
-                                                 wprojplanes=wprojplanes,
-                                                 freqinterp=interpolation,
-                                                 cfcachedirname=cfcache,
-                                                 pastep=painc,epjtablename=epjtable,
-                                                 applypointingoffsets=applyoffsets,
-                                                 dopbgriddingcorrections=pbgridcorrect);
                                 imCln.setvp(dovp=True);
         #
         # Determine the algorithm for wprojection.  Copied the logic from widefield task.
@@ -286,19 +271,6 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                                          dopbgriddingcorrections=pbgridcorrect)
 
                         if (mode=='mfs'):
-                                if((type(multiscale)==list) and (len(multiscale)>0)):
-                                        alg='multiscale';
-                                        if (multifield):
-                                                alg='mf'+alg
-                               # imCln.setscales(scalemethod='uservector',
-                               # 		       uservector=multiscale);
-                               # imCln.setsmallscalebias(smallscalebias)
-                               # imCln.setoptions(ftmachine=ftmachine,
-                               # 			cfcachedirname=cfcache,
-                               # 			pastep=painc,
-                               # 			epjtablename="",
-                               # 			applypointingoffsets=False,
-                               # 			dopbgriddingcorrections=True);
                                 if (nterms > 1):
         #				alg='multiscale';
                                         imCln.settaylorterms(ntaylorterms = nterms,
@@ -307,19 +279,6 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                         #if(alg=='mfmultiscale' and multifield): 
                         #    raise Exception, 'Multiscale clean with flanking fields is not supported yet'
 
-                        ### THIS PART IS MOVED TO BEGINNING OF THE SCRIPT
-                        ###PBCOR or not
-        #		sclt='SAULT'
-        #		if((scaletype=='PBCOR') or (scaletype=='pbcor')):
-        #			sclt='NONE'
-        #			imCln.setvp(dovp=True)
-        #		else:
-        #	        	if(imagermode != 'mosaic'):
-        #	        		##make a pb for flux scale
-        #				imCln.setmfcontrol(minpb=minpb, constpb=1.0)
-        #				imCln.setvp(dovp=True)
-        #				imCln.makeimage(type='pb', image=imagename+'.flux')
-        #				imCln.setvp(dovp=False)
                         ##restoring
                         imset.setrestoringbeam(restoringbeam)
                         ###model image

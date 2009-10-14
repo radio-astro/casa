@@ -484,7 +484,7 @@ void SolvableVisCal::setSimulate(const Record& simpar) {
   // check if want to write a table:
   if (simpar.isDefined("caltable")) {
     calTableName()=simpar.asString("caltable");
-    // RI TODO deal with over-writing existing caltables
+    // RI TODO SVC::setSimulate deal with over-writing existing caltables
     // verifyCalTable(calTableName());
     append()=False;
   } else {
@@ -494,35 +494,19 @@ void SolvableVisCal::setSimulate(const Record& simpar) {
     calTableName()="<none>";
    
   setSolved(False);
-  setApplied(True); // this has to be true for some of George's VE stuff but be careful about VC structure and inflation!
+  // this has to be true for some of George's VE stuff 
+  // but be careful about VC structure and inflation!
+  setApplied(True); 
   setSimulated(True);
 
-  // Create a pristine CalSet
-  // still need inflate somewhere?
-//  switch (parType())
-//    {
-//    case VisCalEnum::COMPLEX:
-//      {
-//	cs_ = new CalSet<Complex>(nSpw());
-//	cs().initCalTableDesc(typeName(),parType_);
-//	break;
-//      }
-//    case VisCalEnum::REAL:
-//      {
-//	rcs_ = new CalSet<Float>(nSpw());
-//	rcs().initCalTableDesc(typeName(),parType_);
-//	break;
-//      }
-//    default:
-//      throw(AipsError("Internal SVC::setSolve(record) error: Got invalid VisCalEnum"));
-//    }
-  
-  makeCalSet(True); // make one with calinterp but by shape not by existing caltable
-
-  // RI TODO specializations probably have to deal with channelization?
-  // setapply does a loop setting nChanParList()(ispw) and then recreates cint_
-
+  // Don't do this yet - wait until sizeUpSim
+  // make cs with calinterp but by shape not from existing caltable:
+  // makeCalSet(True); 
+  // we'll need to inflate the CalSet for 
+  // each Spw before simPar!  (and possibly recreate the CI?)
 }
+
+
 
 
 
@@ -541,7 +525,7 @@ Int SolvableVisCal::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChu
 
 
 
-Bool SolvableVisCal::simPar(VisBuffGroupAcc& vbga) {
+Bool SolvableVisCal::simPar(VisIter& vi, const Int nChunks){
   
   if (prtlev()>2) cout << "      SVC::simPar()" << endl;
   // This method only called in simulate context!
@@ -1318,8 +1302,6 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   // New version that counts solutions (which may overlap in 
   //   field and/or ddid) rather than chunks
 
-  // Set Nominal per-spw channelization
-  setSolveChannelization(vs);
 
   // Interpret solution interval for the VisIter
   Double iterInterval(max(interval(),DBL_MIN));
@@ -1454,6 +1436,38 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   
   nChunkPerSol.resize(nSol,True);
   solTimes.resize(nSol,True);
+  
+  // Set Nominal per-spw channelization
+  setSolveChannelization(vs);
+  
+  // makeCalSet(True);
+  // do it ourselves in order to use nchanparlist just set in setsolvechan
+
+  switch(parType())
+    {
+    case VisCalEnum::COMPLEX:
+      {
+	cs_ = new CalSet<Complex>(nSpw(),nPar(),nChanParList(),nElem(),Vector<Int>(nSpw(),nSol));
+	cs().initCalTableDesc(typeName(),parType_);
+	
+	// Create CalInterp
+	cint_ = new CalInterp(cs(),tInterpType(),"nearest");
+	ci().setSpwMap(spwMap());
+	break;
+      }
+    case VisCalEnum::REAL:
+      {
+	rcs_ = new CalSet<Float>(nSpw(),nPar(),nChanParList(),nElem(),Vector<Int>(nSpw(),nSol));
+	rcs().initCalTableDesc(typeName(),parType_);
+	// Create CalInterp
+	// 	cint_ = new CalInterp(rcs(),tInterpType(),"nearest");
+	// 	ci().setSpwMap(spwMap());
+	break;
+      }
+    default:
+      throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
+		      "COMPLEXREAL found in SolvableVisCal::makeCalSet()"));
+    }
   
   spwMap().resize(vs.numberSpw());
   indgen(spwMap());

@@ -30,6 +30,8 @@ Quantity          casaQuantity(const casac::Quantity &);
 Quantity          casaQuantity(const casac::variant &);
 
 ::casac::Quantity casacQuantity(const Quantity &);
+
+// See note in implementation about possible memory leak.
 ::casac::record  *fromRecord(const Record &);
 // makes a Vector of Quntity out of strings or vector of such or later records
  Bool toCasaVectorQuantity(const ::casac::variant& theval, 

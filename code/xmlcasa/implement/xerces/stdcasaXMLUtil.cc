@@ -51,6 +51,7 @@ stdcasaXMLUtil::stdcasaXMLUtil() :
         shortdesc = XMLString::transcode("shortdescription");
         example = XMLString::transcode("example");
         subparam = XMLString::transcode("subparam");
+        ignorecase = XMLString::transcode("ignorecase");
         //
     }
     catch (const XMLException& toCatch) {
@@ -82,6 +83,7 @@ stdcasaXMLUtil::~stdcasaXMLUtil()
     XMLString::release(&shortdesc);
     XMLString::release(&example);
     XMLString::release(&subparam);
+    XMLString::release(&ignorecase);
     XMLPlatformUtils::Terminate();
 }
 
@@ -305,6 +307,12 @@ bool stdcasaXMLUtil::readXML(record &itsRecord,  const Wrapper4InputSource &xmlS
                                 parmName = aName;
                                 itsRecord[ttName].asRecord()["parameters"].asRecord().insert(parmName, *new record());
                                 paramOrder.push_back(parmName);
+                                DOMNode *ignoreNode = theAttributes->getNamedItem(ignorecase);
+                                if(ignoreNode){
+                                    const XMLCh *myType = ignoreNode->getNodeValue();
+                                    char *aType = XMLString::transcode(myType);
+                                    itsRecord[ttName].asRecord()["parameters"].asRecord()[parmName].asRecord().insert("ignorecase", aType);
+				}
                                 DOMNode *typeNode = theAttributes->getNamedItem(type);
                                 if(typeNode){
                                     const XMLCh *myType = typeNode->getNodeValue();

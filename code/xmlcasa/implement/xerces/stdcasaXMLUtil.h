@@ -60,6 +60,7 @@ class stdcasaXMLUtil {
 	XMLCh *shortdesc;
 	XMLCh *example;
 	XMLCh *subparam;
+	XMLCh *ignorecase;
 	
 	record *rangeRec;
 	record *whenRec;

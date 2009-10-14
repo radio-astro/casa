@@ -20,6 +20,7 @@ def boxit(imagename, regionfile, threshold, minsize, diag, overwrite):
     # If no units, assume mJy for consistency with auto/clean tasks.
     # But convert to Jy, because that's what units the images are in.
     threshold = qa.getvalue(qa.convert(qa.quantity(threshold,'mJy'),'Jy'))
+    print "Setting threshold to " + str(threshold) + "Jy"
 
     boxRecord = {}
     newIsland = numpy.zeros(1, dtype=[('box','4i4'),('npix','i4')])
@@ -50,10 +51,8 @@ def boxit(imagename, regionfile, threshold, minsize, diag, overwrite):
                 mask = fullmask[:,:,i2,i3]
             islandImage = 0-mask  # -1: belongs in an island;  0: below threshold
             # islandImage will become an image with each island's pixels labeled by number
-            
             for x in xrange(nx):
                 for y in xrange(ny):
-
                     if(mask[x,y]):
                         stretch = True # stretch: increase size of island
 
@@ -121,10 +120,17 @@ def boxit(imagename, regionfile, threshold, minsize, diag, overwrite):
                 trc = ia.toworld(trccoord, 's')['string']
                 regions[tuple(box)]= rg.wbox(blc=blc, trc=trc,
                                              csys=csys.torecord())
+            print "number of regions " + str(len(regions))
+            # CAS-1666, if this check is not done, catastrophic memory use may occur
+            if len(regions) > 200:
+                raise ValueError, "Too many regions. Please increase the threshold and run again"
+
             if len(regions)==1:
                 union = regions[tuple(box)]
             else:
+                print "computing union"
                 union = rg.makeunion(regions)
+                print "done computing union"
             if(os.path.exists(regionfile)):
                 os.system('rm -f '+regionfile)
             rg.tofile(regionfile, union)

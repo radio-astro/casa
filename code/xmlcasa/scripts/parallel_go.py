@@ -1,4 +1,3 @@
-#
 from IPython.kernel import client 
 from subprocess import *
 import os

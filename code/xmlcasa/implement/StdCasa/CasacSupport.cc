@@ -203,7 +203,9 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casa::Vector<casa::Qua
 /*
  * Note to self, asArrayDouble doesn't cut it.  We'll have to do asType and convert element by element,
  * sigh.....
-*/
+ * TODO MEMORY LEAK? We are allocating memory via new, but this method can be called recursively and
+ * when that happens, it does not appear that the subsequently created pointers get deleted.
+ */
 ::casac::record *fromRecord(const Record &theRec){
     ::casac::record *transcribedRec = new ::casac::record();
     for(uInt i=0; i<theRec.nfields(); i++){
@@ -932,6 +934,7 @@ Bool casaMFrequency(const ::casac::variant& theVar,
     Record * ptrRec = toRecord(localvar.asRecord());
     if(mh.fromRecord(error, *ptrRec)){
       theMeas=mh.asMFrequency();
+      return True;
     }
     else{//could be a quantity
       if(qh.fromRecord(error, *ptrRec)){
@@ -942,7 +945,7 @@ Bool casaMFrequency(const ::casac::variant& theVar,
       else{
 	ostringstream oss;
 	oss << "Error " << error 
-	      << "In converting Frequency parameter";
+            << "In converting Frequency parameter";
 	throw( AipsError(oss.str()));
 	return False;
       }

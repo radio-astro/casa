@@ -196,9 +196,9 @@ def diffAmpPhsFloat(test, standard, prefix="", precision="1e-6"):
             printDiff(standardList[linenum],testList[linenum])
             continue
         # Number of floats per line should be even
-        elif ( len(tFloatList) % 2 ): 
+        #elif ( len(tFloatList) % 2 ): 
             #print "- (line ", linenum, ") Odd number of floats! All must be Amp-Phs pairs!"
-            continue
+        #    continue
             #print "stopping listing.diffAmpPhsFloat now!"
             #return 
         

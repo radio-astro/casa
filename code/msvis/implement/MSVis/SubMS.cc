@@ -1143,62 +1143,89 @@ namespace casa {
   
   Bool SubMS::fillFieldTable() 
   {  
+    //(EPHEMERIS_ID) 	Int 			Ephemeris id.
+    LogIO os(LogOrigin("SubMS", "fillFieldTable()"));
     MSFieldColumns& msField(msc_p->field());
     
     //MSField fieldtable= mssel_p.field();
-    const ROMSFieldColumns & fieldIn= mscIn_p->field(); 
-    
-    String dirref;
-    // Need to define the direction measures right
-    fieldIn.delayDir().keywordSet().asRecord("MEASINFO").
-      get("Ref", dirref);
-    //  MDirection::getType(dir1, dirref);
-    msField.delayDir().rwKeywordSet().asrwRecord("MEASINFO").
-      define("Ref", dirref);
-    fieldIn.phaseDir().keywordSet().asRecord("MEASINFO").
-      get("Ref", dirref);
-    msField.phaseDir().rwKeywordSet().asrwRecord("MEASINFO").
-      define("Ref", dirref);
-    fieldIn.referenceDir().keywordSet().asRecord("MEASINFO").
-      get("Ref", dirref);
-    msField.referenceDir().rwKeywordSet().asrwRecord("MEASINFO").
-      define("Ref", dirref);
-    
-    
+    Vector<String> optionalCols(1);
+    optionalCols[0] = "EPHEMERIS_ID";
+    uInt nAddedCols = addOptionalColumns(mssel_p.field(), msOut_p.field(),
+                                         optionalCols, true);
+
+    const ROMSFieldColumns& fieldIn = mscIn_p->field(); 
     ROScalarColumn<String> code(fieldIn.code());
-    ROArrayColumn<Double> delayDir(fieldIn.delayDir());
-    ROScalarColumn<Bool> flagRow(fieldIn.flagRow());
+    ROArrayColumn<Double>  delayDir(fieldIn.delayDir());
+    ROScalarColumn<Bool>   flagRow(fieldIn.flagRow());
     ROScalarColumn<String> name(fieldIn.name());
-    ROScalarColumn<Int> numPoly(fieldIn.numPoly());
-    ROArrayColumn<Double> phaseDir(fieldIn.phaseDir());
-    ROArrayColumn<Double> refDir(fieldIn.referenceDir());
-    ROScalarColumn<Int> sourceId(fieldIn.sourceId());
+    ROScalarColumn<Int>    numPoly(fieldIn.numPoly());
+    ROArrayColumn<Double>  phaseDir(fieldIn.phaseDir());
+    ROArrayColumn<Double>  refDir(fieldIn.referenceDir());
+    ROScalarColumn<Int>    sourceId(fieldIn.sourceId());
     ROScalarColumn<Double> time(fieldIn.time());
     
+    String refstr;
+    // Need to correctly define the direction measures.
+    delayDir.keywordSet().asRecord("MEASINFO").get("Ref", refstr);
+    //  MDirection::getType(dir1, refstr);
+    msField.delayDir().rwKeywordSet().asrwRecord("MEASINFO").define("Ref",
+                                                                    refstr);
+    phaseDir.keywordSet().asRecord("MEASINFO").get("Ref", refstr);
+    msField.phaseDir().rwKeywordSet().asrwRecord("MEASINFO").define("Ref",
+                                                                    refstr);
+    refDir.keywordSet().asRecord("MEASINFO").get("Ref", refstr);
+    msField.referenceDir().rwKeywordSet().asrwRecord("MEASINFO").define("Ref",
+                                                                        refstr);
+    
+    // ...and the time measure...
+    time.keywordSet().asRecord("MEASINFO").get("Ref", refstr);
+    msField.time().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", refstr);
 
     fieldRelabel_p.resize(mscIn_p->field().nrow());
     fieldRelabel_p.set(-1);
 
-    
-    for(uInt k=0; k < fieldid_p.nelements(); ++k){
-      fieldRelabel_p[fieldid_p[k]]=k;
-      msOut_p.field().addRow();
-      
-      msField.code().put(k,code(fieldid_p[k]));
-      msField.delayDir().put(k, delayDir(fieldid_p[k]));
-      msField.flagRow().put(k, flagRow(fieldid_p[k]));
-      msField.name().put(k, name(fieldid_p[k]));
-      msField.numPoly().put(k, numPoly(fieldid_p[k]));
-      msField.phaseDir().put(k, phaseDir(fieldid_p[k]));
-      msField.referenceDir().put(k, refDir(fieldid_p[k]));
+    os << LogIO::DEBUG1
+       << fieldid_p.nelements() << " fields selected out of "
+       << mscIn_p->field().nrow()
+       << LogIO::POST;
 
-      Int inSrcID = sourceId(fieldid_p[k]);
-      if(inSrcID < 0)
-	msField.sourceId().put(k, -1);
-      else
-	msField.sourceId().put(k, sourceRelabel_p[inSrcID]);
+    try{
+      msOut_p.field().addRow(fieldid_p.nelements());
+      for(uInt k = 0; k < fieldid_p.nelements(); ++k){
+        fieldRelabel_p[fieldid_p[k]] = k;
+      
+        msField.code().put(k, code(fieldid_p[k]));
+        msField.delayDir().put(k, delayDir(fieldid_p[k]));
+        msField.flagRow().put(k, flagRow(fieldid_p[k]));
+        msField.name().put(k, name(fieldid_p[k]));
+        msField.numPoly().put(k, numPoly(fieldid_p[k]));
+        msField.phaseDir().put(k, phaseDir(fieldid_p[k]));
+        msField.referenceDir().put(k, refDir(fieldid_p[k]));
+        msField.time().put(k, time(fieldid_p[k]));
+
+        Int inSrcID = sourceId(fieldid_p[k]);
+        if(inSrcID < 0)
+          msField.sourceId().put(k, -1);
+        else
+          msField.sourceId().put(k, sourceRelabel_p[inSrcID]);
+      }
+
+      if(nAddedCols > 0){
+        ROScalarColumn<Int> eID(fieldIn.ephemerisId());
+
+        for(uInt k = 0; k < fieldid_p.nelements(); ++k)
+          msField.ephemerisId().put(k, eID(fieldid_p[k]));
+      }
     }
-  
+    catch(AipsError x){
+      os << LogIO::EXCEPTION
+         << "Error " << x.getMesg() << " setting up the output FIELD table."
+         << LogIO::POST;
+    }
+    catch(...){
+      throw(AipsError("Unknown exception caught and released in fillFieldTable()"));
+    }
+    
     return True;    
   }
 
@@ -1211,10 +1238,13 @@ namespace casa {
     // the input MS, not just the selected ones.
     const Vector<Int>& inSrcIDs = mscIn_p->field().sourceId().getColumn();
 
-    uInt nInputSrcs = inSrcIDs.nelements();
+    // uInt nInputSrcs = inSrcIDs.nelements();
+    Int nOutputSrcs = max(inSrcIDs);
     
-    sourceRelabel_p.resize(nInputSrcs > 1 ? nInputSrcs : 1); // Ensure space for -1.
-    sourceRelabel_p.set(-1);    			     // Default to "any".
+    if(nOutputSrcs < 1)                   // Ensure space for -1.
+      nOutputSrcs = 1;
+    sourceRelabel_p.resize(nOutputSrcs);
+    sourceRelabel_p.set(-1);   	          // Default to "any".
 
     // Enable sourceIDs that are actually referred to by selected fields, and
     // remap them using j.
@@ -1261,19 +1291,19 @@ namespace casa {
     return  (allCols && inputImgWtsExist);
   }
 
-  Int SubMS::cvel(String& regridMessage,
-		  const String& outframe,
-		  const String& regridQuant,
-		  const Double regridVeloRestfrq,
-		  const String& regridInterpMeth,
-		  const Double regridCenter, 
-		  const Double regridBandwidth, 
-		  const Double regridChanWidth//,
-		  //const Int phaseCenterFieldId,
-		  //MDirection phaseCenter
+  Int SubMS::regridSpw(String& regridMessage,
+		       const String& outframe,
+		       const String& regridQuant,
+		       const Double regridVeloRestfrq,
+		       const String& regridInterpMeth,
+		       const Double regridCenter, 
+		       const Double regridBandwidth, 
+		       const Double regridChanWidth,
+		       const Int phaseCenterFieldId,
+		       MDirection phaseCenter
 		  ){
     
-    LogIO os(LogOrigin("SubMS", "cvel()"));
+    LogIO os(LogOrigin("SubMS", "regridSpw()"));
 
     Int rval = -1; // return values: -1 = MS not modified, 1 = MS modified and OK, 
                    // 0 = MS modified but not OK 
@@ -1319,6 +1349,8 @@ namespace casa {
 			    regridCenter, 
 			    regridBandwidth, 
 			    regridChanWidth,
+			    phaseCenterFieldId,
+			    phaseCenter,
 			    False, // <-----
 			    os,
 			    regridMessage
@@ -1344,6 +1376,8 @@ namespace casa {
 			    regridCenter, 
 			    regridBandwidth, 
 			    regridChanWidth,
+			    phaseCenterFieldId,
+			    phaseCenter,
 			    True, // <-----
 			    os,
 			    regridMessage
@@ -1598,7 +1632,7 @@ namespace casa {
 							 yinf, yinFlags, methodF[iDone], False, False);
 	  SIGMA_SPECTRUMCol.put(mainTabRow, youtf);
 	}
-	if(!WEIGHT_SPECTRUMCol.isNull()){
+	if(!WEIGHT_SPECTRUMCol.isNull() && oldWEIGHT_SPECTRUMColP->isDefined(mainTabRow)){ // required column, but can be empty
 	  yinf.assign((*oldWEIGHT_SPECTRUMColP)(mainTabRow));
 	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone],
                                                          xin[iDone], yinf, yinFlags,
@@ -1647,7 +1681,7 @@ namespace casa {
       } // end if regridding necessary
 
       if(mainTabRow>nMainTabRows*progress){
-	cout << "cvel progress: " << progress*100 << "% processed ... " << endl;
+	cout << "regridSpw progress: " << progress*100 << "% processed ... " << endl;
 	progress += progressStep;
       }
       
@@ -1916,7 +1950,7 @@ namespace casa {
 	// radio velocity ...
 	// need restfrq
 	if(regridVeloRestfrq<-1E30){ // means "not set"
-	  oss << "Parameter \"restfreq\" needs to be set if regrid_quantity==vrad. Cannot proceed with cvel ..."; 
+	  oss << "Parameter \"restfreq\" needs to be set if regrid_quantity==vrad. Cannot proceed with regridSpw ..."; 
 	  message = oss.str();
 	  return False;
 	}
@@ -1951,7 +1985,7 @@ namespace casa {
 	// optical velocity ...
 	// need restfrq
 	if(regridVeloRestfrq < -1E30){ // means "not set"
-	  oss << "Parameter \"restfreq\" needs to be set if regrid_quantity==vopt. Cannot proceed with cvel ...";
+	  oss << "Parameter \"restfreq\" needs to be set if regrid_quantity==vopt. Cannot proceed with regridSpw ...";
 	  message = oss.str();
 	  return False;
 	}
@@ -2544,7 +2578,7 @@ namespace casa {
 //   // anticipate the deletion of the original SPW table rows
 //   SPWIdCol.put(nextDataDescId, nextSPWId - origNumSPWs); 
 	    
-//   // writing the value of nextDataDescId into the DATA_DESC_ID cell
+//   // writing the value of nextDataDescId into the DATA_DESC_ID 
 //   // of the present MAIN table row.  will be done in the main cvel
 //   // method
 //   theDataDescId = nextDataDescId;
@@ -2571,6 +2605,8 @@ namespace casa {
 				  const Double regridCenter, 
 				  const Double regridBandwidth, 
 				  const Double regridChanWidth,
+				  const Int regridPhaseCenterFieldId,
+				  const MDirection regridPhaseCenter,
 				  const Bool writeTables,
 				  LogIO& os,
 				  String& regridMessage
@@ -2663,7 +2699,7 @@ namespace casa {
       pos /= Double(nAnt);
     }
     else {
-      os << LogIO::WARN << "No unflagged antennas in this MS. Cannot proceed with cvel ..." 
+      os << LogIO::WARN << "No unflagged antennas in this MS. Cannot proceed with regridSpw ..." 
 	 << LogIO::POST;
       return rval; 
     }
@@ -2728,15 +2764,32 @@ namespace casa {
 	//      MEAS_FREQ_REF cell corresponding to theSPWId in the SPW table)
 	MFrequency::Types theOldRefFrame = MFrequency::castType(measFreqRefCol(theSPWId));
 	//      -> store in oldRefFrame[numNewDataDesc] (further below)
-	//   3) direction of the field (taken from the REFERENCE_DIR cell
-	//      corresponding to theFieldId in the FIELD table)
-	MDirection theFieldDir =  FIELDCols.referenceDirMeas(theFieldId); 
-	//      -> store in fieldDir[numNewDataDesc] (further below)
-	//   4) in case either the original or the destination reference frame
+	//   3) in case either the original or the destination reference frame
 	//      is TOPO or GEO, we need the observation time
 	//      (taken from the TIME cell corresponding to theFieldId in the FIELD table)
-	MEpoch theObsTime = timeMeasCol(theFieldId);
 	//      -> store in obsTime[numNewDataDesc] (further below)
+	MEpoch theObsTime = timeMeasCol(theFieldId);
+	//   4) direction of the field, i.e. the phase center
+	MDirection theFieldDir;
+	if(regridPhaseCenterFieldId<-1){ // take it from the PHASE_DIR cell
+	                                 // corresponding to theFieldId in the FIELD table)
+	  theFieldDir = FIELDCols.phaseDirMeas(theFieldId, 0);
+	}
+	else if(regridPhaseCenterFieldId==-1){ // use the given direction
+	  theFieldDir = regridPhaseCenter;
+	}
+	else if((uInt)regridPhaseCenterFieldId < fieldtable.nrow()){ // use this valid field ID
+	  theFieldDir = FIELDCols.phaseDirMeas(regridPhaseCenterFieldId, 0);
+	  // and the corresponding obs time (??)
+	  theObsTime = timeMeasCol(regridPhaseCenterFieldId);
+	}
+	else{
+	  os << LogIO::SEVERE << "Field to be used as phase center, id " 
+	     << regridPhaseCenterFieldId 
+	     << ", does not exist." << LogIO::POST;
+	  return False;
+	}
+	//      -> store in fieldDir[numNewDataDesc] (further below)
 	//   5) in case either the original or the destination reference frame
 	//      (but not both) are TOPO, we need the observatory position
 	//      (from the mean antenna position calculated above) 
@@ -3004,7 +3057,7 @@ namespace casa {
 	    // all information from row theSPWId
 	    if(!spwtable.canAddRow()){
 	      os << LogIO::WARN
-                 << "Unable to add new row to SPECTRAL_WINDOW table. Cannot proceed with cvel ..." 
+                 << "Unable to add new row to SPECTRAL_WINDOW table. Cannot proceed with regridSpw ..." 
 		 << LogIO::POST;
 	      return False; 
 	    }
@@ -3050,7 +3103,7 @@ namespace casa {
 	    //   the flag_row content from the old DATA_DESCRIPTION row.
 	    if(!ddtable.canAddRow()){
 	      os << LogIO::WARN
-                 << "Unable to add new row to DATA_DESCRIPTION table.  Cannot proceed with cvel ..." 
+                 << "Unable to add new row to DATA_DESCRIPTION table.  Cannot proceed with regridSpw ..." 
 		 << LogIO::POST;
 	      return False; 
 	    }
@@ -3065,7 +3118,7 @@ namespace casa {
 	    SPWIdCol.put(nextDataDescId, nextSPWId - origNumSPWs); 
 	    
 	    // writing the value of nextDataDescId into the DATA_DESC_ID cell
-	    // of the present MAIN table row.  will be done in the main cvel
+	    // of the present MAIN table row.  will be done in the main regirdSpw
 	    // method
 	    theDataDescId = nextDataDescId;
 	  
@@ -3083,7 +3136,7 @@ namespace casa {
 	  if(nextSourceRow>=0){ // there is a source table
 	    if(!p_sourcetable->canAddRow()){
 	      os << LogIO::WARN
-                 << "Unable to add new row to SOURCE table. Cannot proceed with cvel ..." 
+                 << "Unable to add new row to SOURCE table. Cannot proceed with regridSpw ..." 
 		 << LogIO::POST;
 	      return False; 
 	    }
@@ -4443,6 +4496,9 @@ namespace casa {
 	}
 
       msc_p->flag().putColumn(mscIn_p->flag());
+      if(!(mscIn_p->weightSpectrum().isNull()) &&
+         mscIn_p->weightSpectrum().isDefined(0))
+        msc_p->weightSpectrum().putColumn(mscIn_p->weightSpectrum());
     }
     else{
       if(sameShape_p){
@@ -4651,7 +4707,8 @@ void SubMS::relabelIDs()
       optionalCols[3] = "SOURCE_MODEL";
       optionalCols[4] = "PULSAR_ID";
       optionalCols[5] = "POSITION";
-      uInt nAddedCols = addOptionalColumns(oldSource, newSource, optionalCols, true);
+      uInt nAddedCols = addOptionalColumns(oldSource, newSource, optionalCols,
+                                           true);
       os << LogIO::DEBUG1 << "SOURCE has " << nAddedCols
 	 << " optional columns." << LogIO::POST;
       
@@ -4797,6 +4854,14 @@ void SubMS::relabelIDs()
       spwindex[spw_p[k]]=k;
     }
     
+    Cube<Complex> vis;
+    Cube<Bool> inFlag;
+    Cube<Float> inSpWeight;
+    Matrix<Bool> chanFlag;
+    Cube<Float> spWeight;
+    Matrix<Float> inImgWts;
+    Cube<Bool> locflag;
+
     // RR 5/15/2009: columnName has already been vetted higher up in the
     // calling chain by verifyColumns().
     const Vector<String> colNameTok=parseColumnNames(columnName);
@@ -4809,18 +4874,16 @@ void SubMS::relabelIDs()
 	    rowsnow=vb.nRow();
 	    RefRows rowstoadd(rowsdone, rowsdone+rowsnow-1);
 	    //	    Cube<Bool> locflag(npol_p[spw], nchan_p[spw], rowsnow);
-	    Cube<Bool> locflag;
-	    Matrix<Float> inImgWts;
 	    Matrix<Float> avgImgWts(nchan_p[spw],rowsnow);
 	    inImgWts.reference(vb.imagingWeight());
 	    avgImgWts.set(0.0);
 	    Float *oproxyImgWtsP = avgImgWts.getStorage(idelete);
 	    Float *iproxyImgWtsP = inImgWts.getStorage(idelete);
 
+            Cube<Complex> averdata(npol_p[spw], nchan_p[spw], rowsnow);
+		
 	    for(uInt ni=0;ni<ntok;ni++)
 	      {
-		Cube<Complex> vis;
-
 		if(colNameTok[ni]== MS::columnName(MS::DATA))
 		  vis.reference(vb.visCube());
 		else if(colNameTok[ni] == MS::columnName(MS::MODEL_DATA))
@@ -4828,34 +4891,28 @@ void SubMS::relabelIDs()
 		else
 		  vis.reference(vb.correctedVisCube());
 		
-		Cube<Bool> inFlag;
-		Cube<Float> inSpWeight;
-		Matrix<Bool> chanFlag;
-		Cube<Complex> averdata(npol_p[spw], nchan_p[spw], rowsnow);
-		Cube<Float> spWeight;
-		
 		chanFlag.reference(vb.flag());
 		inFlag.reference(vb.flagCube());
-		averdata.set(Complex(0,0));
+                inSpWeight.reference(vb.weightSpectrum());
+		averdata.set(Complex(0.0, 0.0));
 		
-		if (doSpWeight)
+		if (doSpWeight){
 		  spWeight.resize(npol_p[spw], nchan_p[spw], rowsnow);
+                  spWeight.set(0.0);
+                }
 		
 		locflag.resize(npol_p[spw], nchan_p[spw], rowsnow);
 		const Bool* iflag=inFlag.getStorage(idelete);
 		const Complex* idata=vis.getStorage(idelete);
-		//      const Float* iweight=inSpWeight.getStorage(idelete);
+		const Float* iweight=inSpWeight.getStorage(idelete);
 		Complex* odata=averdata.getStorage(idelete);
-		Bool* oflag=locflag.getStorage(idelete);
-		// We have to revisit this once visBuffer provides the spectral Weights
-		
+		Bool* oflag=locflag.getStorage(idelete);		
+		Float* oSpWt = spWeight.getStorage(idelete);
 		
 		for(Int r=0; r < rowsnow; ++r)
 		  {
 		    for(Int c=0; c < nchan_p[spw]; ++c)
 		      {
-			Vector<Int>counter(npol_p[spw]);
-			counter.set(0);
 			for (Int pol=0; pol < npol_p[spw]; ++pol)
 			  {
 			    Int outoffset=r*nchan_p[spw]*npol_p[spw]+c*npol_p[spw]+pol;
@@ -4863,33 +4920,51 @@ void SubMS::relabelIDs()
 			      {
 				Int whichChan=chanStart_p[spw]+ c*chanStep_p[spw];
 				averdata.xyPlane(r).column(c) = vis.xyPlane(r).column(whichChan); 
-				locflag.xyPlane(r).column(c)  = inFlag.xyPlane(r).column(whichChan); 
+				locflag.xyPlane(r).column(c)  = inFlag.xyPlane(r).column(whichChan);
+                                spWeight.xyPlane(r).column(c) = inSpWeight.xyPlane(r).column(whichChan);
 			      }
-			    else
-			      for (Int m=0; m < chanStep_p[spw]; ++m)
-				{
-				  Int inoffset=r*inNumChan_p[spw]*npol_p[spw]+
-				    (c*chanStep_p[spw]+m)*npol_p[spw]+ pol;
+			    else{
+                              if(doSpWeight){
+                                for(Int m = 0; m < chanStep_p[spw]; ++m){
+                                  Int inoffset=r*inNumChan_p[spw]*npol_p[spw]+
+                                    (c*chanStep_p[spw]+m)*npol_p[spw]+ pol;
 				    
-				  if(!iflag[inoffset])
-				    {
-				      odata[outoffset]               += idata[inoffset];
-				      ++counter[pol];
-				    }
+                                  if(!iflag[inoffset]){
+                                    odata[outoffset] += iweight[inoffset] *
+                                                        idata[inoffset];
+                                    oSpWt[outoffset] += iweight[inoffset];
+                                  }
+                                }
+                                if(oSpWt[outoffset] <= 0.0){
+                                  odata[outoffset] /= oSpWt[outoffset];
+                                  oflag[outoffset] = False;
+                                }
+                                else
+                                  oflag[outoffset] = True;
+                              }
+                              else{
+                                uInt counter = 0;
+                                
+                                for(Int m = 0; m < chanStep_p[spw]; ++m){
+                                  Int inoffset=r*inNumChan_p[spw]*npol_p[spw]+
+                                    (c*chanStep_p[spw]+m)*npol_p[spw]+ pol;
+				    
+                                  if(!iflag[inoffset]){
+                                    odata[outoffset] += idata[inoffset];
+                                    ++counter;
+                                  }
+                                }
+                                if(counter > 0){
+				  odata[outoffset] /= counter;
+				  oflag[outoffset] = False;
 				}
-					      
-			    if(averageChannel_p)
-			      if(counter[pol] >0)
-				{
-				  odata[outoffset]               /= counter[pol];
-				  oflag[outoffset]=False;
+                                else{
+				  // odata[outoffset]=0; // It's 0 anyway.
+				  oflag[outoffset] = True;
 				}
-			      else
-				{
-				  odata[outoffset]=0;
-				  oflag[outoffset]=True;
-				}
-			  }
+                              }
+                            }
+                          }
 		      }
 		  }  
 		
@@ -4941,6 +5016,7 @@ void SubMS::relabelIDs()
 	    //----------------------------------------------------------------------
 
 	    msc_p->flag().putColumnCells(rowstoadd, locflag);
+            msc_p->weightSpectrum().putColumnCells(rowstoadd, spWeight);
 	    rowsdone += rowsnow;
 
 	  }

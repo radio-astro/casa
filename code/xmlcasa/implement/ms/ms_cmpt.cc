@@ -713,19 +713,19 @@ ms::selectpolarization(const std::vector<std::string>& wantedpol)
 }
 
 bool
-ms::cvel(const std::string& outframe, 
-	 const std::string& regrid_quantity, 
-	 const double regrid_velo_restfrq, 
-	 const std::string& regrid_interp_meth,
-	 const double regrid_start, 
-	 const double regrid_center, 
-	 const double regrid_bandwidth, 
-	 const double regrid_chan_width 
-	 )
+ms::regridspw(const std::string& outframe, 
+	      const std::string& regrid_quantity, 
+	      const double regrid_velo_restfrq, 
+	      const std::string& regrid_interp_meth,
+	      const double regrid_start, 
+	      const double regrid_center, 
+	      const double regrid_bandwidth, 
+	      const double regrid_chan_width 
+	      )
 {
   Bool rstat(False);
   try {
-     *itsLog << LogOrigin("ms", "cvel");
+     *itsLog << LogOrigin("ms", "regridspw");
      if(!ready2write_()){
        *itsLog << LogIO::SEVERE
             << "Please open ms with parameter nomodify=false. Write access to ms is needed."
@@ -768,21 +768,21 @@ ms::cvel(const std::string& outframe,
      String regridMessage;
 
 
-     if((rval = subms->cvel(regridMessage,
-			    t_outframe,
-			    t_regridQuantity,
-			    Double(regrid_velo_restfrq),
-			    t_regridInterpMeth,
-			    Double(center), 
-			    Double(regrid_bandwidth),
-			    Double(regrid_chan_width)
-			    )
+     if((rval = subms->regridSpw(regridMessage,
+				 t_outframe,
+				 t_regridQuantity,
+				 Double(regrid_velo_restfrq),
+				 t_regridInterpMeth,
+				 Double(center), 
+				 Double(regrid_bandwidth),
+				 Double(regrid_chan_width)
+				 )
 	 )==1){ // successful modification of the MS took place
        *itsLog << LogIO::NORMAL << "Spectral frame transformation/regridding completed." << LogIO::POST;
    
        // Update HISTORY table of modfied MS
-       String message= "Transformed/regridded with cvel";
-       writehistory(message, regridMessage, "ms::cvel()", "", "ms"); // empty name writes to itsMS
+       String message= "Transformed/regridded with regridspw";
+       writehistory(message, regridMessage, "ms::regridspw()", "", "ms"); // empty name writes to itsMS
        rstat = True;
      }
      else if(rval==0) { // an unsuccessful modification of the MS took place
@@ -795,7 +795,7 @@ ms::cvel(const std::string& outframe,
 	     << " chanwidth= " << regrid_chan_width << " restfreq= " << regrid_velo_restfrq 
 	     << " interpolation= " << t_regridInterpMeth;
        String paramstr=param.str();
-       writehistory(message,paramstr,"ms::cvel()", "", "ms"); // empty name writes to itsMS
+       writehistory(message,paramstr,"ms::regridspw()", "", "ms"); // empty name writes to itsMS
      }
      else {
        *itsLog << LogIO::NORMAL << "MS not modified." << LogIO::POST;
@@ -815,19 +815,19 @@ ms::cvel(const std::string& outframe,
 
 
 bool
-ms::cvel2(const std::string& mode, 
-	  const int nchan, 
-	  const ::casac::variant& start, const ::casac::variant& width,
-	  const std::string& interp, 
-	  const ::casac::variant& phasec, 
-	  const ::casac::variant& restfreq, 
-	  const std::string& outframe,
-	  const std::string& veltype)
+ms::cvel(const std::string& mode, 
+	 const int nchan, 
+	 const ::casac::variant& start, const ::casac::variant& width,
+	 const std::string& interp, 
+	 const ::casac::variant& phasec, 
+	 const ::casac::variant& restfreq, 
+	 const std::string& outframe,
+	 const std::string& veltype)
 {
   Bool rstat(False);
   try {
 
-    *itsLog << LogOrigin("ms", "cvel2");
+    *itsLog << LogOrigin("ms", "cvel");
     
     *itsLog << LogIO::NORMAL << "Selecting data ..." << LogIO::POST;
     
@@ -925,10 +925,17 @@ ms::cvel2(const std::string& mode,
       }
       else{
 	if(!casaMDirection(phasec, t_phaseCenter)){
-	  *itsLog << LogIO::SEVERE << "Could not interprete phasecenter parameter " << t_phasec;
+	  *itsLog << LogIO::SEVERE << "Could not interprete phasecenter parameter "
+		  << t_phasec << LogIO::POST;
 	  return False;
 	}
+	*itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
       }
+    }
+    if(t_phasec_fieldid >= itsMS->field().nrow()){
+      *itsLog << LogIO::SEVERE << "Field id " << t_phasec_fieldid
+	      << " selected to be used as phasecenter does not exist." << LogIO::POST;
+      return False;
     }
 
     // end prepare regridding parameters
@@ -938,7 +945,7 @@ ms::cvel2(const std::string& mode,
     itsMS->flush();
     close();
 
-    *itsLog << LogOrigin("ms", "cvel2");
+    *itsLog << LogOrigin("ms", "cvel");
 
     SubMS *sms = new SubMS(originalName);
 
@@ -954,24 +961,23 @@ ms::cvel2(const std::string& mode,
     Int rval;
     String regridMessage;
     
-    if((rval = sms->cvel(regridMessage,
-			 t_outframe,
-			 t_regridQuantity,
-			 t_restfreq,
-			 t_regridInterpMeth,
-			 t_center, 
-			 t_bandwidth,
-			 t_width //,
-			 // t_phasec_fieldid, // == -1 if t_phaseCenter is valid
-			 // t_phaseCenter
-			 )
+    if((rval = sms->regridSpw(regridMessage,
+			      t_outframe,
+			      t_regridQuantity,
+			      t_restfreq,
+			      t_regridInterpMeth,
+			      t_center, 
+			      t_bandwidth,
+			      t_width,
+			      t_phasec_fieldid, // == -1 if t_phaseCenter is valid
+			      t_phaseCenter
+			      )
 	)==1){ // successful modification of the MS took place
-      *itsLog << LogIO::WARN << "Phase center parameter not yet taken into account by ms.cvel2." << LogIO::POST;
       *itsLog << LogIO::NORMAL << "Spectral frame transformation/regridding completed." << LogIO::POST;
       
       // Update HISTORY table of modfied MS
-      String message = "Transformed/regridded with cvel2";
-      writehistory(message, regridMessage, "ms::cvel2()", originalName, "ms"); 
+      String message = "Transformed/regridded with cvel";
+      writehistory(message, regridMessage, "ms::cvel()", originalName, "ms"); 
       rstat = True;
     }
     else if(rval==0) { // an unsuccessful modification of the MS took place
@@ -985,7 +991,7 @@ ms::cvel2(const std::string& mode,
 	    << " chanwidth= " << t_width << " restfreq= " << t_restfreq 
 	    << " interpolation= " << t_regridInterpMeth;
       String paramstr=param.str();
-      writehistory(message,paramstr,"ms::cvel2()", originalName, "ms"); 
+      writehistory(message,paramstr,"ms::cvel()", originalName, "ms"); 
       rstat = False;
     }
     else { // there was no need to regrid

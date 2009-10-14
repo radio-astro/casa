@@ -28,7 +28,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="double" name="threshold" units="mJy">
-    <description>Threshold value.  Must include units.</description>
+    <description>Threshold value. If units are not specified, units of mJy are assumed.</description>
     <value>0.0</value>
     </param>
 
@@ -64,7 +64,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: none; example: imagename='myimage.image'
        regionfile -- Name of output region file (adds extension .rgn).
                default: none; if not given uses imagename+'.rgn'
-       threshold -- value (with units) to use for island threshold.
+       threshold -- value to use for island threshold. If no units are specified, units of mJy are assumed.
                default: 0.0.
        minsize -- minimum size of island to get a box (in number of pixels)
                default: 2

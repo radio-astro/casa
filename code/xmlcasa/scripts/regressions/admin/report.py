@@ -356,9 +356,9 @@ class report:
         fd.write('<title>CASA regression tests</title>\n')
         fd.write('<body>\n')
         if revision == 'all':
-            fd.write('[ All versions ] <a href="../CASA_latest/test-report.html">[ Latest test release ]<br>')
+            fd.write('[ All versions ]  <a href="../CASA_latest/test-report.html">[ Latest test release ]</a><p>')
         else:
-            fd.write('<a href="../CASA/test-report.html">[ All versions ]</a> [ Latest test release ]<br>')
+            fd.write('<a href="../CASA/test-report.html">[ All versions ]</a>  [ Latest test release ]<p>')
 
         fd.write('Generated on <i>'+time.strftime('%a %Y %b %d %H:%M:%S %Z')+'</i>')
 

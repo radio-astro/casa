@@ -1,5 +1,4 @@
 #
-
 import os
 import re
 import sys
@@ -141,7 +140,6 @@ from listhistory_pg import listhistory_pg as listhistory
 from mosaic_pg import mosaic_pg as mosaic
 from importfits_pg import importfits_pg as importfits
 from imfit_pg import imfit_pg as imfit
-from invert_pg import invert_pg as invert
 from deconvolve_pg import deconvolve_pg as deconvolve
 
 from simdata_pg import simdata_pg as simdata

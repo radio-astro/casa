@@ -153,6 +153,166 @@ if (total>=skipuntil):
         print '*** Unexpected exception ***',instance   
         failures += 1
 
+os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+os.system('cp -R jupiter6cm.demo.ms myinput.ms')
+default('cvel')
+vis = 'myinput.ms'
+outputvis = 'cvel-output.ms'
+# select some other field
+field = '11'
+# both available SPWs
+spw = '0,1'
+passall = False
+# regrid
+nchan = 1
+width = 2
+total += 1
+if (total>=skipuntil):
+    try:
+        print "Test ", total
+        print "Input and output vis set, input vis with two spws, one field selected, 2 spws selected, passall = False, regridding 1..."
+        cvel()
+        omsname = "test"+str(total)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+    except Exception, instance:
+        print '*** Unexpected exception ***',instance   
+        failures += 1
+
+os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+os.system('cp -R jupiter6cm.demo.ms myinput.ms')
+default('cvel')
+vis = 'myinput.ms'
+outputvis = 'cvel-output.ms'
+# select some other field
+field = '10'
+# both available SPWs
+spw = '0,1'
+passall = False
+# regrid
+mode='channel'
+nchan = 1
+start = 1
+total += 1
+if (total>=skipuntil):
+    try:
+        print "Test ", total
+        print "Input and output vis set, input vis with two spws, one field selected, 2 spws selected, passall = False, regridding 2..."
+        cvel()
+        omsname = "test"+str(total)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+    except Exception, instance:
+        print '*** Unexpected exception ***',instance   
+        failures += 1
+
+os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+os.system('cp -R jupiter6cm.demo.ms myinput.ms')
+default('cvel')
+vis = 'myinput.ms'
+outputvis = 'cvel-output.ms'
+# select some other field
+field = '9'
+# both available SPWs
+spw = '0,1'
+passall = False
+# regrid
+mode='frequency'
+nchan = 2
+start = '4.88GHz'
+total += 1
+if (total>=skipuntil):
+    try:
+        print "Test ", total
+        print "Input and output vis set, input vis with two spws, one field selected, 2 spws selected, passall = False, regridding 3..."
+        cvel()
+        omsname = "test"+str(total)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+    except Exception, instance:
+        print '*** Unexpected exception ***',instance   
+        failures += 1
+
+os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+os.system('cp -R jupiter6cm.demo.ms myinput.ms')
+default('cvel')
+vis = 'myinput.ms'
+outputvis = 'cvel-output.ms'
+# select some other field
+field = '10'
+# both available SPWs
+spw = '0,1'
+passall = False
+# regrid
+mode='channel'
+nchan = 1
+start = 1
+outframe = 'lsrk'
+total += 1
+if (total>=skipuntil):
+    try:
+        print "Test ", total
+        print "Input and output vis set, input vis with two spws, one field selected, 2 spws selected, passall = False, regridding 4..."
+        cvel()
+        omsname = "test"+str(total)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+    except Exception, instance:
+        print '*** Unexpected exception ***',instance   
+        failures += 1
+
+os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+os.system('cp -R jupiter6cm.demo.ms myinput.ms')
+default('cvel')
+vis = 'myinput.ms'
+outputvis = 'cvel-output.ms'
+# select some other field
+field = '12'
+# both available SPWs
+spw = '0,1'
+passall = False
+# regrid
+mode='frequency'
+nchan = 2
+start = '4.88 GHz'
+outframe = 'bary'
+total += 1
+if (total>=skipuntil):
+    try:
+        print "Test ", total
+        print "Input and output vis set, input vis with two spws, one field selected, 2 spws selected, passall = False, regridding 5..."
+        cvel()
+        omsname = "test"+str(total)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+    except Exception, instance:
+        print '*** Unexpected exception ***',instance   
+        failures += 1
+
+os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+os.system('cp -R jupiter6cm.demo.ms myinput.ms')
+default('cvel')
+vis = 'myinput.ms'
+outputvis = 'cvel-output.ms'
+# select some other field
+field = '12'
+# both available SPWs
+spw = '0,1'
+passall = False
+# regrid
+mode='frequency'
+nchan = 2
+start = '4.88GHz'
+outframe = 'BARY'
+phasecenter = 12
+total += 1
+if (total>=skipuntil):
+    try:
+        print "Test ", total
+        print "Input and output vis set, input vis with two spws, one field selected, 2 spws selected, passall = False, regridding 6..."
+        cvel()
+        omsname = "test"+str(total)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+    except Exception, instance:
+        print '*** Unexpected exception ***',instance   
+        failures += 1
+
+
 
 # Summary ########################################
 print "Tests = ", total    

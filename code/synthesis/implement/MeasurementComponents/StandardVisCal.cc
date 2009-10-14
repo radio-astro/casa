@@ -2564,19 +2564,18 @@ Int MMueller::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerS
 }
 
 Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
-  if (prtlev()>3) cout << "  MM::simPar()" << endl;
+  if (prtlev()>4) cout << "  MM::simPar()" << endl;
+
   AlwaysAssert((isSimulated()),AipsError);
   try {
     
     Vector<Int> a1;
-    vi.antenna1(a1);
     Vector<Int> a2;
-    vi.antenna2(a2);
     Matrix<Bool> flags;  // matrix foreach row and chan - if want pol send cube.
-    vi.flag(flags);
     Vector<Double> antDiams = vi.msColumns().antenna().dishDiameter().getColumn();
     Vector<Double> timevec;
     Double starttime,stoptime;
+    Int ibln;
     
     // initSolvePar: solveCPar().resize(nPar(),nChanPar(),nBln());
     solveCPar()=Complex(0.0);
@@ -2588,15 +2587,46 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
     
     // RI TODO MM::simPar needs channel loop **
     // RI TODO MM::simPar CPar and VI shape checks?
-
+    
     starttime=vi.time(timevec)[0];
+
+    Complex factor(1.0);	
+    Float tau0(0.),airmass1(1.0),airmass2(1.0),A(1.0),tsys0(0.),tsys1(0.),
+      tsys(0.);
+    Bool dotsys(False);
+    // 1e-4 converts the Diam from cm to m
+    Float factor0(1.0);
+
+    if (mcorruptor_p->mode() == "tsys") {
+      tsys0 = mcorruptor_p->simpar().asFloat("trx") + 
+	mcorruptor_p->simpar().asFloat("spillefficiency")*mcorruptor_p->simpar().asFloat("tatmos");
+      tsys1 = (1.-mcorruptor_p->simpar().asFloat("spillefficiency"))*mcorruptor_p->simpar().asFloat("tground") + 
+	mcorruptor_p->simpar().asFloat("tcmb");
+      dotsys=True;
+      factor0 = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 / 		
+	( mcorruptor_p->simpar().asFloat("antefficiency") * 
+	  mcorruptor_p->simpar().asFloat("correfficiency") * C::pi );      
+    } 
+    
+    // live dangerously: assume all vis have the same tint
+    Double tint = vi.msColumns().exposure()(0);  
+    Int iSpW = vi.spectralWindow();
+    Float deltaNu = 
+      vi.msColumns().spectralWindow().totalBandwidth()(iSpW) / 
+      Float(vi.msColumns().spectralWindow().numChan()(iSpW));	    
+    factor0 = factor0 / sqrt( deltaNu * tint ) ;  
 
     for (Int ichunk=0;ichunk<nChunks;++ichunk) {
       Int spw(vi.spectralWindow());	
       corruptor_p->currSpw()=spw;
       currSpw()=spw;
-
-      for (vi.origin(); vi.more(); vi++)
+            
+      for (vi.origin(); vi.more(); vi++) {
+	
+	vi.antenna1(a1);
+	vi.antenna2(a2);
+	vi.flag(flags);
+	
 	for (Int irow=0;irow<vi.nRow();++irow)
 	  if ( a1(irow)!=a2(irow) &&
 	       nfalse(flags.column(irow)) > 0 ) {   
@@ -2606,63 +2636,41 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 	    // since just drawing from random distribution.
 	    
 	    // RI TODO MM::simPar put temp vars outside of row loop
-	    Complex factor(1.0);	
 	    Vector<MDirection> antazel(vi.azel(refTime()));
 	    
-	    if (mcorruptor_p->mode() == "tsys") {
-	      
-	      Float tau0(0.);
+	    if (dotsys) {
+	      tau0=0.;
 	      if (mcorruptor_p->simpar().isDefined("tau0")) tau0=mcorruptor_p->simpar().asFloat("tau0");
 	      // RI TODO MM::simPar *** ATM freqdep()  tau0 from pwv!
 	      
 	      Float el1 = antazel(a1(irow)).getAngle("rad").getValue()(1);
 	      Float el2 = antazel(a2(irow)).getAngle("rad").getValue()(1);
 	      
-	      Float airmass1(1.0);   
-	      Float airmass2(1.0);   
 	      if (el1 > 0.0 && el2 > 0.0) {
 		airmass1 = 1.0/ sin(el1);
 		airmass2 = 1.0/ sin(el2);
+	      } else {
+		airmass1 = 1.0;
+		airmass2 = 1.0;
 	      }
-	      
-	      Float A(sqrt(exp(-tau0 * airmass1)) * sqrt(exp(-tau0 * airmass2)));
+	      A=sqrt(exp(-tau0 * airmass1)) * sqrt(exp(-tau0 * airmass2));
 	      
 	      // this is tsys at telescope 
 	      // (use TOpac later in Simulator to get it above atm)
-	      Float tsys = mcorruptor_p->simpar().asFloat("trx") + 
-		mcorruptor_p->simpar().asFloat("spillefficiency")*mcorruptor_p->simpar().asFloat("tatmos")*(1.-A) + 
-		(1.-mcorruptor_p->simpar().asFloat("spillefficiency"))*mcorruptor_p->simpar().asFloat("tground") + 
-		mcorruptor_p->simpar().asFloat("tcmb")*A;
-	      
-	      // live dangerously: assume all vis have the same tint
-	      Double tint = vi.msColumns().exposure()(0);  
-	      Int iSpW = vi.spectralWindow();
-	      Float deltaNu = 
-		vi.msColumns().spectralWindow().totalBandwidth()(iSpW) / 
-		Float(vi.msColumns().spectralWindow().numChan()(iSpW));	    
-	      
-	      // 1e-4 converts the Diam from cm to m
-	      factor  = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 * tsys / 
-		antDiams(a1(irow)) / antDiams(a2(irow)) /
-		sqrt( deltaNu * tint ) /  
-		( mcorruptor_p->simpar().asFloat("antefficiency") * 
-		  mcorruptor_p->simpar().asFloat("correfficiency") * C::pi );
-
-// 	      Int scan(vi.scan(scntmp)[0]);
-// 	      if (a1(irow)==5 and a2(irow)==6 and prtlev()>3 and scan<1) {
-// 		cout << "[chunk " << ichunk << "], scan " << scan << ",time = " << vi.time(timtmp)[0]-4.84694e+09 << endl;		
-// 		cout << "Tsys = " << tsys << " dnu = " << deltaNu << " factor = " << factor << endl; }
+	      tsys = tsys0*(1.-A) + tsys1*A;
+	      	      
+	      factor  = factor0 * tsys / 
+		antDiams(a1(irow)) / antDiams(a2(irow));
 	    }
 	    
-	    // RI TODO MM::simPar switch (nCorr) ?  at least for the flags?
-	    
 	    // corr,chan,bln = xyz
-	    solveCPar().xyPlane(irow) = solveCPar().xyPlane(irow) + factor;   
-	    nGood.xyPlane(irow) = nGood.xyPlane(irow) + Complex(1.);
-	    
-	    solveParOK().xyPlane(irow) = True;
+	    ibln=blnidx(a1(irow),a2(irow));
+	    solveCPar().xyPlane(ibln) = solveCPar().xyPlane(ibln) + factor;   
+	    nGood.xyPlane(ibln) = nGood.xyPlane(ibln) + Complex(1.);	    
+	    solveParOK().xyPlane(ibln) = True;
 	    
 	  } // if good row
+      } // advancing VI
       if (vi.moreChunks()) vi.nextChunk();
     } // nchunks loop
     

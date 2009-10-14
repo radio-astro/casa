@@ -11,6 +11,7 @@
 #include <casa/Logging/NullLogSink.h>
 #include <sys/stat.h>
 
+#include <casa/BasicSL/String.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/Unit.h>
 
@@ -606,12 +607,29 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		  case variant::STRING:
 		     {
 		      unsigned int i=0;
+		      bool ignorecase(false);
+		      if(constraintsRec.count("ignorecase")){
+		         casa::String ignoreit(constraintsRec["ignorecase"].asString());
+		         ignoreit.downcase();
+		         if(ignoreit == "true"){
+                            ignorecase=true;
+		         }
+		      }
 		      vector<string> &theEnums = dflt.asStringVec();
 		      while(i<theEnums.size()){
 			      // std::cerr << "*"<< theEnums[i] << "*"<< user.asString() << "*"<< std::endl;
-			if(!theEnums[i].compare(0, user.asString().length(), user.asString())){
-			   user.asString() = theEnums[i];
-			   break;
+			if(ignorecase){
+			   casa::String theval(user.asString());
+			   theval.downcase();
+			   if(!theEnums[i].compare(0, user.asString().length(), theval)){
+			      user.asString() = theEnums[i];
+			      break;
+			   }
+			}else {
+			   if(!theEnums[i].compare(0, user.asString().length(), user.asString())){
+			      user.asString() = theEnums[i];
+			      break;
+			   }
 			}
 			 i++;
 		       }

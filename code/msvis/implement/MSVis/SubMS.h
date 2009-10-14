@@ -204,17 +204,19 @@ class SubMS
   // optionally regrid the frequency channels 
   // return values: -1 = MS not modified, 1 = MS modified and OK, 
   // 0 = MS modified but not OK (i.e. MS is probably damaged) 
-  Int cvel(String& message, // returns the MS history entry 
-	   const String& outframe="", // default = "keep the same"
-	   const String& regridQuant="chan",
-	   const Double regridVeloRestfrq=-3E30, // default = "not set" 
-	   const String& regridInterpMeth="LINEAR",
-	   const Double regridCenter=-3E30, // default = "not set" 
-	   const Double regridBandwidth=-1., // default = "not set" 
-	   const Double regridChanWidth=-1. // default = "not set" 
-	   );
+  Int regridSpw(String& message, // returns the MS history entry 
+		const String& outframe="", // default = "keep the same"
+		const String& regridQuant="chan",
+		const Double regridVeloRestfrq=-3E30, // default = "not set" 
+		const String& regridInterpMeth="LINEAR",
+		const Double regridCenter=-3E30, // default = "not set" 
+		const Double regridBandwidth=-1., // default = "not set" 
+		const Double regridChanWidth=-1., // default = "not set" 
+		const Int phaseCenterFieldId=-2, // -2 = use pahse center from field table
+		MDirection phaseCenter=MDirection() // this direction is used if phaseCenterFieldId==-1
+		);
 
-  // the following inline convenience methods for cvel bypass the whole CASA measure system
+  // the following inline convenience methods for regridSpw bypass the whole CASA measure system
   // because when they are used, they can assume that the frame stays the same and the units are OK
   Double vrad(const Double freq, const Double rest){ return (C::c * (1. - freq/rest)); };
   Double vopt(const Double freq, const Double rest){ return (C::c *(rest/freq - 1.)); };
@@ -223,7 +225,7 @@ class SubMS
   Double freq_from_vopt(const Double vopt, const Double rest){ return (rest / (1. + vopt/C::c)); };
   Double freq_from_lambda(const Double lambda){ return (C::c/lambda); };
   
-  // Support method for cvel():
+  // Support method for regridSpw():
   // results in the column oldName being renamed to newName, and a new column which is an empty copy of 
   // oldName being created together with a TileShapeStMan data manager and hypercolumn (name copied from 
   // the old hypercolumn) with given dimension, the old hypercolumn of name hypercolumnName is renamed 
@@ -231,7 +233,7 @@ class SubMS
   Bool createPartnerColumn(TableDesc& modMSTD, const String& oldName, const String& newName,
 			   const Int& hypercolumnDim, const IPosition& tileShape);
 
-  // Support method for cvel():
+  // Support method for regridSpw():
   // calculate the final new channel boundaries from the regridding parameters
   // and the old channel boundaries (already transformed to the desired reference frame);
   // returns False if input paramters were invalid and no useful boundaries could be created
@@ -247,7 +249,7 @@ class SubMS
 			String& message // message to the user, epsecially in case of error 
 			);
 
-  // Support method for cvel():
+  // Support method for regridSpw():
   // if writeTables is False, the (const) input parameters are only verified, nothing is written;
   // return value is True if the parameters are OK.
   // if writeTables is True, the vectors are filled and the SPW, DD, and SOURCE tables are modified;
@@ -269,6 +271,8 @@ class SubMS
 			   const Double regridCenter, 
 			   const Double regridBandwidth, 
 			   const Double regridChanWidth,
+			   const Int regridPhaseCenterFieldId, // -2 = take from field table, -1 = use 
+			   const MDirection regridPhaseCenter, //    <- this value, >-1 = take from this field
 			   const Bool writeTables,
 			   LogIO& os,
 			   String& regridMessage

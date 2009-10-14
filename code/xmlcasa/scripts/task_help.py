@@ -5,23 +5,23 @@ def startup():
       print """___________________________________________________________
 Available tasks:
 
-   accum         fixvis         listcal      sdplot
-   applycal      flagdata       listhistory  sdsave
-   bandpass      flagmanager    listobs      sdscale
-   blcal         fluxscale      listvis      sdsmooth
-   browsetable   ft             makemask     sdstat
-   calstat       gaincal        mosaic       setjy
-   clean         hanningsmooth  plotants     smoothcal
-   clearcal      imcontsub      plotcal      specfit
-   clearplot     imhead         plotms       split
-   clearstat     immoments      plotxy       tget
-   concat        importfits     sdaverage    uvcontsub
-   deconvolve    importuvfits   sdbaseline   uvcontsub2
-   exportfits    importvla      sdcal        uvmodelfit
-   exportuvfits  imregrid       sdcoadd      viewer
-   feather       imsmooth       sdfit        vishead
-   filecatalog   imstat         sdflag       visstat
-   find          imval          sdlist       widefield
+   accum         fixvis         listcal      sdlist       vishead
+   applycal      flagdata       listhistory  sdmath       visstat 
+   bandpass      flagmanager    listobs      sdplot       widefield 
+   blcal         fluxscale      listvis      sdsave 
+   browsetable   ft             makemask     sdscale 
+   calstat       gaincal        mosaic       sdsmooth 
+   clean         hanningsmooth  plotants     sdstat
+   clearcal      imcontsub      plotcal      sdtpimaging  
+   clearplot     imhead         plotms       setjy
+   clearstat     immoments      plotxy       smoothcal
+   concat        importfits     sdaverage    specfit
+   deconvolve    importuvfits   sdbaseline   split
+   exportfits    importvla      sdcal        tget 
+   exportuvfits  imregrid       sdcoadd      uvcontsub
+   feather       imsmooth       sdfit        uvcontsub2
+   filecatalog   imstat         sdflag       uvmodelfit
+   find          imval          sdimaging    viewer 
                 
 Additional tasks available for ALMA commissioning use
          (still alpha code as of Beta release):
@@ -133,12 +133,15 @@ def tasklist():
       print 'immoments                     sdcoadd'
       print 'imregrid                      sdfit'
       print 'imsmooth                      sdflag'
-      print 'imstat                        sdlist'
-      print 'imval                         sdplot'
-      print '(specfit)                     sdsave'
+      print 'imstat                        sdimaging'
+      print 'imval                         sdlist'
+      print '(specfit)                     sdmath'
+      print '                              sdplot'
+      print '                              sdsave'
       print '                              sdscale'
       print '                              sdsmooth'
       print '                              sdstat'
+      print '                              sdtpimaging'
       if globals().has_key('mytasks') :
          print ''
          print 'User defined tasks'

@@ -796,8 +796,9 @@ regionmanager::setcoordinates(const ::casac::record& csys)
 ::casac::record*
 regionmanager::makeunion(const ::casac::variant& regions, const std::string& comment)
 {
-    if ( !itsIsSetup )
-	setup();
+    if ( !itsIsSetup ) {
+        setup();
+    }
     casac::record* retval=0;
     *itsLog << LogOrigin("regionmanager", "makeunion");
   
