@@ -40,7 +40,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
 #include <ms/MeasurementSets/MSColumns.h>
-
+#include <msvis/MSVis/SubMS.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <casa/Arrays/Matrix.h>
@@ -76,6 +76,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }
 
+  Bool ImagerMultiMS::setDataToMemory(const String& msname, const String& mode, 
+				   const Vector<Int>& nchan, 
+				   const Vector<Int>& start,
+				   const Vector<Int>& step,
+				   const Vector<Int>& spectralwindowids,
+				   const Vector<Int>& fieldids,
+				   const String& msSelect,
+				   const String& timerng,
+				   const String& fieldnames,
+				   const Vector<Int>& antIndex,
+				   const String& antnames,
+				   const String& spwstring,
+				   const String& uvdist,
+				      const String& scan){
+    useModelCol_p=False;
+    LogIO os(LogOrigin("imager", "setDataPerMS()"), logSink_p);
+    if(!Table::isReadable(msname)){
+      os << LogIO::SEVERE << "MeasurementSet " 
+	 << msname << " does not exist  " 
+	 << LogIO::POST;
+      return False;
+    }
+    MeasurementSet thisms(msname, TableLock(TableLock::AutoNoReadLocking), 
+			      Table::Old);
+    SubMS splitter(thisms);
+    splitter.setmsselect(spwstring, fieldnames, antnames, scan, uvdist, 
+			 msSelect, nchan, start, step, True, "");
+    splitter.selectTime(-1.0, timerng);
+    String whichCol="data";
+    if(thisms.tableDesc().isColumn("CORRECTED_DATA"))
+      whichCol="corrected";
+    CountedPtr<MeasurementSet> subMS(splitter.makeScratchSubMS(whichCol, True), True);
+    return setDataOnThisMS(*subMS);
+
+  }
+
+
   Bool ImagerMultiMS::setDataPerMS(const String& msname, const String& mode, 
 				   const Vector<Int>& nchan, 
 				   const Vector<Int>& start,
@@ -89,8 +126,48 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   const String& antnames,
 				   const String& spwstring,
 				   const String& uvdist,
-                                   const String& scan, const Bool useModel) {
-    LogIO os(LogOrigin("imager", "setDataPerMS()"), logSink_p);  
+                                   const String& scan, const Bool useModel){
+    useModelCol_p=useModel;
+    LogIO os(LogOrigin("imager", "setDataPerMS()"), logSink_p);
+    if(!Table::isReadable(msname)){
+      os << LogIO::SEVERE << "MeasurementSet " 
+	 << msname << " does not exist  " 
+	 << LogIO::POST;
+      return False;
+    }
+    else{
+      MeasurementSet thisms;
+      if(useModelCol_p)
+	thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
+			      Table::Update);
+      else
+	thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
+			      Table::Old);
+      
+      return setDataOnThisMS(thisms, mode, nchan, start, step, spectralwindowids, fieldids, msSelect, timerng, 
+			     fieldnames, antIndex, antnames, spwstring, uvdist, scan);  
+      
+    }
+    
+  }
+
+
+
+  Bool ImagerMultiMS::setDataOnThisMS(MeasurementSet& thisms, const String& mode, 
+				   const Vector<Int>& nchan, 
+				   const Vector<Int>& start,
+				   const Vector<Int>& step,
+				   const Vector<Int>& spectralwindowids,
+				   const Vector<Int>& fieldids,
+				   const String& msSelect,
+				   const String& timerng,
+				   const String& fieldnames,
+				   const Vector<Int>& antIndex,
+				   const String& antnames,
+				   const String& spwstring,
+				   const String& uvdist,
+                                   const String& scan) {
+    LogIO os(LogOrigin("imager", "setDataOnThisMS()"), logSink_p);  
 
 
     dataMode_p=mode;
@@ -104,43 +181,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     dataspectralwindowids_p=spectralwindowids;
     datafieldids_p.resize(fieldids.nelements());
     datafieldids_p=fieldids;
-    useModelCol_p=useModel;
     
 
 
     //make ms
     // auto lock for now
     // make ms and visset
-    MeasurementSet thisms;
-    if(!Table::isWritable(msname)){
-      os << LogIO::SEVERE << "MeasurementSet " 
-	 << msname << " does not exist or is not writable " 
-	 << LogIO::POST;
-      return False;
-    }
-    else{
-      ++numMS_p;
-      blockMSSel_p.resize(numMS_p);
-      blockNChan_p.resize(numMS_p);
-      blockStart_p.resize(numMS_p);
-      blockStep_p.resize(numMS_p);
-      blockSpw_p.resize(numMS_p);
-      //Using autolocking here 
-      //Will need to rethink this when in parallel mode with multi-cpu access
-      if(useModelCol_p)
-	thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
-			      Table::Update);
-      else
-	thisms=MeasurementSet(msname, TableLock(TableLock::AutoNoReadLocking), 
-			      Table::Old);
-      blockMSSel_p[numMS_p-1]=thisms;
-      //breaking reference
-      if(ms_p == 0)
-	ms_p=new MeasurementSet();
-      else
-	(*ms_p)=MeasurementSet();
-      (*ms_p)=thisms;
-    }
+    ++numMS_p;
+    blockMSSel_p.resize(numMS_p);
+    blockNChan_p.resize(numMS_p);
+    blockStart_p.resize(numMS_p);
+    blockStep_p.resize(numMS_p);
+    blockSpw_p.resize(numMS_p);
+    //Using autolocking here 
+    //Will need to rethink this when in parallel mode with multi-cpu access
+    blockMSSel_p[numMS_p-1]=thisms;
+    //breaking reference
+    if(ms_p.null())
+      ms_p=new MeasurementSet();
+    else
+      (*ms_p)=MeasurementSet();
+    (*ms_p)=thisms;
+    
     
 
     openSubTables();
@@ -163,7 +225,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //if(vs_p) delete vs_p; vs_p=0;
       if(rvi_p) delete rvi_p;
       rvi_p=0; wvi_p=0;
-      if(mssel_p) delete mssel_p; mssel_p=0;
+      //if(mssel_p) delete mssel_p; 
+      mssel_p=0;
       
       // check that sorted table exists (it should), if not, make it now.
       //this->makeVisSet(thisms);
@@ -277,9 +340,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Null take all the ms ...setdata() blank means that
 	mssel_p = new MeasurementSet(thisms);
       } 
-      AlwaysAssert(mssel_p, AipsError);
+      AlwaysAssert(!mssel_p.null(), AipsError);
       if(mssel_p->nrow()==0) {
-	delete mssel_p; mssel_p=0;
+	//delete mssel_p; 
+	mssel_p=0;
 	//Ayeee...lets back out of this one
 	--numMS_p;
 	blockMSSel_p.resize(numMS_p, True);
@@ -317,6 +381,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //vs_p= new VisSet(blockMSSel_p, sort, noChanSel, useModelCol_p);
       if(!useModelCol_p){
 	rvi_p=new ROVisibilityIterator(blockMSSel_p, sort);
+	if(imwgt_p.getType()=="none")
+	  imwgt_p=VisImagingWeight("natural");
+	rvi_p->useImagingWeight(imwgt_p);
       }
       else{
 	wvi_p=new VisibilityIterator(blockMSSel_p, sort);
@@ -511,65 +578,68 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 
   Bool ImagerMultiMS::openSubTables(){
 
-    antab_p=Table(ms_p->antennaTableName(),
-		  TableLock(TableLock::AutoNoReadLocking));
-    datadesctab_p=Table(ms_p->dataDescriptionTableName(),
-			TableLock(TableLock::AutoNoReadLocking));
-    feedtab_p=Table(ms_p->feedTableName(),
+    //If its a memory table who cares 
+    if((ms_p->tableType()) != Table::Memory){
+      antab_p=Table(ms_p->antennaTableName(),
 		    TableLock(TableLock::AutoNoReadLocking));
-    fieldtab_p=Table(ms_p->fieldTableName(),
-		     TableLock(TableLock::AutoNoReadLocking));
-    obstab_p=Table(ms_p->observationTableName(),
-		   TableLock(TableLock::AutoNoReadLocking));
-    poltab_p=Table(ms_p->polarizationTableName(),
-		   TableLock(TableLock::AutoNoReadLocking));
-    proctab_p=Table(ms_p->processorTableName(),
-		    TableLock(TableLock::AutoNoReadLocking));
-    spwtab_p=Table(ms_p->spectralWindowTableName(),
-		   TableLock(TableLock::AutoNoReadLocking));
-    statetab_p=Table(ms_p->stateTableName(),
-		     TableLock(TableLock::AutoNoReadLocking));
-    
-    if(Table::isReadable(ms_p->dopplerTableName()))
-      dopplertab_p=Table(ms_p->dopplerTableName(),
-			 TableLock(TableLock::AutoNoReadLocking));
-    
-    if(Table::isReadable(ms_p->flagCmdTableName()))
-      flagcmdtab_p=Table(ms_p->flagCmdTableName(),
-			 TableLock(TableLock::AutoNoReadLocking));
-    if(Table::isReadable(ms_p->freqOffsetTableName()))
-      freqoffsettab_p=Table(ms_p->freqOffsetTableName(),
-			    TableLock(TableLock::AutoNoReadLocking));
-    
-    if(ms_p->isWritable()){
-      if(!(Table::isReadable(ms_p->historyTableName()))){
-	// setup a new table in case its not there
-	TableRecord &kws = ms_p->rwKeywordSet();
-	SetupNewTable historySetup(ms_p->historyTableName(),
-				   MSHistory::requiredTableDesc(),Table::New);
-	kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
-	
-      }
-      historytab_p=Table(ms_p->historyTableName(),
-			 TableLock(TableLock::AutoNoReadLocking), Table::Update);
-    }
-    if(Table::isReadable(ms_p->pointingTableName()))
-      pointingtab_p=Table(ms_p->pointingTableName(), 
+      datadesctab_p=Table(ms_p->dataDescriptionTableName(),
 			  TableLock(TableLock::AutoNoReadLocking));
-    
-    if(Table::isReadable(ms_p->sourceTableName()))
-      sourcetab_p=Table(ms_p->sourceTableName(),
-			TableLock(TableLock::AutoNoReadLocking));
-
-    if(Table::isReadable(ms_p->sysCalTableName()))
-      syscaltab_p=Table(ms_p->sysCalTableName(),
-			TableLock(TableLock::AutoNoReadLocking));
-    if(Table::isReadable(ms_p->weatherTableName()))
-      weathertab_p=Table(ms_p->weatherTableName(),
+      feedtab_p=Table(ms_p->feedTableName(),
+		      TableLock(TableLock::AutoNoReadLocking));
+      fieldtab_p=Table(ms_p->fieldTableName(),
+		       TableLock(TableLock::AutoNoReadLocking));
+      obstab_p=Table(ms_p->observationTableName(),
+		     TableLock(TableLock::AutoNoReadLocking));
+      poltab_p=Table(ms_p->polarizationTableName(),
+		     TableLock(TableLock::AutoNoReadLocking));
+      proctab_p=Table(ms_p->processorTableName(),
+		      TableLock(TableLock::AutoNoReadLocking));
+      spwtab_p=Table(ms_p->spectralWindowTableName(),
+		     TableLock(TableLock::AutoNoReadLocking));
+      statetab_p=Table(ms_p->stateTableName(),
+		       TableLock(TableLock::AutoNoReadLocking));
+      
+      if(Table::isReadable(ms_p->dopplerTableName()))
+	dopplertab_p=Table(ms_p->dopplerTableName(),
+			   TableLock(TableLock::AutoNoReadLocking));
+      
+      if(Table::isReadable(ms_p->flagCmdTableName()))
+	flagcmdtab_p=Table(ms_p->flagCmdTableName(),
+			   TableLock(TableLock::AutoNoReadLocking));
+      if(Table::isReadable(ms_p->freqOffsetTableName()))
+	freqoffsettab_p=Table(ms_p->freqOffsetTableName(),
+			      TableLock(TableLock::AutoNoReadLocking));
+      
+      if(ms_p->isWritable()){
+	if(!(Table::isReadable(ms_p->historyTableName()))){
+	  // setup a new table in case its not there
+	  TableRecord &kws = ms_p->rwKeywordSet();
+	  SetupNewTable historySetup(ms_p->historyTableName(),
+				     MSHistory::requiredTableDesc(),Table::New);
+	  kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
+	  
+	}
+	historytab_p=Table(ms_p->historyTableName(),
+			   TableLock(TableLock::AutoNoReadLocking), Table::Update);
+      }
+      if(Table::isReadable(ms_p->pointingTableName()))
+	pointingtab_p=Table(ms_p->pointingTableName(), 
+			    TableLock(TableLock::AutoNoReadLocking));
+      
+      if(Table::isReadable(ms_p->sourceTableName()))
+	sourcetab_p=Table(ms_p->sourceTableName(),
+			  TableLock(TableLock::AutoNoReadLocking));
+      
+      if(Table::isReadable(ms_p->sysCalTableName()))
+	syscaltab_p=Table(ms_p->sysCalTableName(),
+			  TableLock(TableLock::AutoNoReadLocking));
+      if(Table::isReadable(ms_p->weatherTableName()))
+	weathertab_p=Table(ms_p->weatherTableName(),
 			 TableLock(TableLock::AutoNoReadLocking));
     
-    if(ms_p->isWritable()){
-      hist_p= new MSHistoryHandler(*ms_p, "imager");
+      if(ms_p->isWritable()){
+	hist_p= new MSHistoryHandler(*ms_p, "imager");
+      }
     }
     
 return True;
