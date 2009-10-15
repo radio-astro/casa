@@ -144,10 +144,12 @@
 #include <images/Regions/RegionManager.h>
 #include <images/Regions/WCBox.h>
 #include <images/Regions/WCUnion.h>
+#include <images/Regions/WCIntersection.h>
 #include <synthesis/MeasurementComponents/PBMath.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInfo.h>
 #include <images/Images/SubImage.h>
+#include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageUtilities.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -194,11 +196,13 @@ using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Imager::Imager() 
-  :  ms_p(0),msname_p(""), mssel_p(0), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), 
+  :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), 
      cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
      viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
 {
+  ms_p=0;
+  mssel_p=0;
   lockCounter_p=0;
   defaults();
 };
@@ -303,11 +307,14 @@ traceEvent(1,"Entering imager::defaults",25);
 
 
 Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
-  : ms_p(0), msname_p(""), mssel_p(0), vs_p(0), rvi_p(0), wvi_p(0), 
+  : msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
     ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
 {
+
+  mssel_p=0;
+  ms_p=0;
   lockCounter_p=0;
   LogIO os(LogOrigin("Imager", "Imager(MeasurementSet &theMS)", WHERE));
   if(!open(theMS, compress, useModel)) {
@@ -321,10 +328,12 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
 
 
 Imager::Imager(MeasurementSet& theMS, PGPlotter& thePlotter, Bool compress)
-  : ms_p(0), msname_p(""), mssel_p(0), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), cft_p(0), se_p(0),
+  :  msname_p(""),  vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
 {
+  mssel_p=0;
+  ms_p=0;
   lockCounter_p=0;
   LogIO os(LogOrigin("Imager", "Imager(MeasurementSet &theMS)", WHERE));
   if(!open(theMS, compress)) {
@@ -338,17 +347,19 @@ Imager::Imager(MeasurementSet& theMS, PGPlotter& thePlotter, Bool compress)
 }
 
 Imager::Imager(const Imager & other)
-  :  ms_p(0),msname_p(""), mssel_p(0), vs_p(0), rvi_p(0), wvi_p(0), 
+  :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
      ft_p(0), cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
      viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
 {
+  mssel_p=0;
+  ms_p=0;
   operator=(other);
 }
 
 Imager &Imager::operator=(const Imager & other)
 {
-  if (ms_p && this != &other) {
+  if (!ms_p.null() && this != &other) {
     *ms_p = *(other.ms_p);
   }
   //Equating the table and ms parameters
@@ -368,7 +379,7 @@ Imager &Imager::operator=(const Imager & other)
   doTrackSource_p=other.doTrackSource_p;
   trackDir_p=other.trackDir_p;
   smallScaleBias_p=other.smallScaleBias_p;
-  if (mssel_p && this != &other) {
+  if (!mssel_p.null() && this != &other) {
     *mssel_p = *(other.mssel_p);
   }
   if (vs_p && this != &other) {
@@ -415,13 +426,13 @@ Imager::~Imager()
     destroySkyEquation();
     this->unlock(); //unlock things if they are in a locked state
     
-    if (mssel_p) {
-      delete mssel_p;
-    }
+    //if (mssel_p) {
+    //  delete mssel_p;
+    // }
     mssel_p = 0;
-    if (ms_p) {
-      delete ms_p;
-    }
+    //if (ms_p) {
+    //  delete ms_p;
+    //}
     ms_p = 0;
     if (vs_p) {
       delete vs_p;
@@ -488,11 +499,11 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
 
   LogIO os(LogOrigin("Imager", "open()", WHERE));
   
-  if (ms_p) {
+  if (!ms_p.null()) {
     *ms_p = theMs;
   } else {
     ms_p = new MeasurementSet(theMs);
-    AlwaysAssert(ms_p, AipsError);
+    AlwaysAssert(!ms_p.null(), AipsError);
   }
   
 
@@ -507,7 +518,8 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
     if(!ms_p->tableDesc().isColumn("DATA") && 
        !ms_p->tableDesc().isColumn("FLOAT_DATA")) {
       ms_p->unlock();
-      delete ms_p; ms_p=0;
+      //delete ms_p; 
+      ms_p=0;
       os << LogIO::SEVERE
 	 << "Missing DATA or FLOAT_DATA column: imager cannot be run"
 	 << LogIO::EXCEPTION;
@@ -595,8 +607,10 @@ Bool Imager::close()
   if(rvi_p) delete rvi_p; 
   rvi_p=0;
   wvi_p=0;
-  if(mssel_p) delete mssel_p; mssel_p = 0;
-  if(ms_p) delete ms_p; ms_p = 0;
+  //if(mssel_p) delete mssel_p; 
+  mssel_p = 0;
+  //if(ms_p) delete ms_p; 
+  ms_p = 0;
 
   if(se_p) delete se_p; se_p = 0;
 
@@ -2055,7 +2069,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "data selection"), logSink_p);
 
-  if(!ms_p) {
+  if(ms_p.null()) {
     os << LogIO::SEVERE << "Program logic error: MeasurementSet pointer ms_p not yet set"
        << LogIO::EXCEPTION;
     return False;
@@ -2097,7 +2111,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     if(rvi_p) delete rvi_p; 
     rvi_p=0;
     wvi_p=0;
-    if(mssel_p) delete mssel_p; mssel_p=0;
+    // if(mssel_p) delete mssel_p; 
+    mssel_p=0;
     
     // check that sorted table exists (it should), if not, make it now.
     //this->makeVisSet(*ms_p);
@@ -2163,7 +2178,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     
     //***************
     
-    TableExprNode exprNode=thisSelection.toTableExprNode(ms_p);
+    TableExprNode exprNode=thisSelection.toTableExprNode(&(*ms_p));
     //TableExprNode exprNode=thisSelection.getTEN();
     //if(exprNode.isNull()){
       //      throw(AipsError("Selection failed...review ms and selection parameters"));
@@ -2222,9 +2237,10 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       // Null take all the ms ...setdata() blank means that
       mssel_p = new MeasurementSet(*ms_p);
     }
-    AlwaysAssert(mssel_p, AipsError);
+    AlwaysAssert(!mssel_p.null(), AipsError);
     if(mssel_p->nrow()==0) {
-      delete mssel_p; mssel_p=0;
+      //delete mssel_p; 
+      mssel_p=0;
       os << LogIO::WARN
 	 << "Selection is empty: reverting to sorted MeasurementSet"
 	 << LogIO::POST;
@@ -3061,7 +3077,7 @@ Bool Imager::feather(const String& image, const String& highRes,
 	LogSink& sink = imagelog.sink();
 	LogOrigin lor(String("imager"), String("feather()"));
 	LogMessage msg(lor);
-	if (ms_p) {
+	if (!ms_p.null()) {
 	  String info = "MeasurementSet is " + ms_p->tableName() + "\n";
 	  sink.postLocally(msg.message(info));
 	  ROMSHistoryColumns msHis(ms_p->history());
@@ -3343,12 +3359,18 @@ Bool Imager::linearmosaic(const String& mosaic,
     return False;
   }
 
+  Double meminMB=Double(HostInfo::memoryTotal())/1024.0;
   PagedImage<Float> mosaicImage( mosaic );
   mosaicImage.set(0.0);
-  TempImage<Float>  numerator( mosaicImage.shape(), mosaicImage.coordinates() );
+  TempImage<Float>  numerator( mosaicImage.shape(), mosaicImage.coordinates(), meminMB/2.0);
   numerator.set(0.0);
-  TempImage<Float>  denominator( mosaicImage.shape(), mosaicImage.coordinates() );
+  TempImage<Float>  denominator( mosaicImage.shape(), mosaicImage.coordinates(), meminMB/2.0);
   numerator.set(0.0);
+  IPosition iblcmos(mosaicImage.shape().nelements(),0);
+  IPosition itrcmos(mosaicImage.shape());
+  itrcmos=itrcmos-Int(1);
+  LCBox lboxmos(iblcmos, itrcmos, mosaicImage.shape());
+  ImageRegion imagregMos(WCBox(lboxmos, mosaicImage.coordinates()));
 
   ImageRegrid<Float> regridder;
   ROMSColumns msc(*ms_p);
@@ -3358,43 +3380,72 @@ Bool Imager::linearmosaic(const String& mosaic,
 	" is not readable" << LogIO::POST;
       return False;
     }
-    PagedImage<Float> smallImage( images(i) );
-    TempImage<Float> fullImage(  mosaicImage.shape(), mosaicImage.coordinates() );
-
-    // Need a provision for "same size exactly";  for now, insert will cover it
-
-    /*
-    Bool congruent = Coordinates::isCongruent(fullImage.coordinates(), smallImage.coordinates());
-    if (congruent) {
-      regridder.insert( fullImage, refShift, smallImage );
-    } else {
-      regridder.regrid( fullImage, Interpolate2D::CUBIC,
-			IPosition(2,0,1), smallImage );
-    }
-    */
-    regridder.regrid( fullImage, Interpolate2D::CUBIC,
-		      IPosition(2,0,1), smallImage );
-
-    TempImage<Float>  imageTimesPB( fullImage.shape(), fullImage.coordinates());
-    imageTimesPB.set(0.0);
-    TempImage<Float>  PB( fullImage.shape(), fullImage.coordinates());
-    PB.set(1.0);
-
-    MDirection pointingDirection = msc.field().phaseDirMeas( fieldids(i)-1 );
-
-    Quantity pa(0.0, "deg");
-    pbguts ( PB, PB, pointingDirection, pa);
-
-    imageTimesPB.copyData( (LatticeExpr<Float>) (fullImage *  PB ) );
-
-    // accumulate the images
     
-    numerator.copyData( (LatticeExpr<Float>) (numerator + imageTimesPB) );
-    denominator.copyData( (LatticeExpr<Float>) (denominator + pow(PB, 2)) );
+    PagedImage<Float> smallImagedisk( images(i) );
+    TempImage<Float> smallImage(smallImagedisk.shape(), smallImagedisk.coordinates(), meminMB/8.0);
+    smallImage.copyData(smallImagedisk);
+    CoordinateSystem fullimcoord=smallImage.coordinates();
+    ImageMetaData iminfo(smallImage);
+    DirectionCoordinate dirfull=fullimcoord.directionCoordinate(iminfo.directionCoordinateNumber());
+    DirectionCoordinate dirMos=mosaicImage.coordinates().directionCoordinate(iminfo.directionCoordinateNumber());
+    dirfull.setIncrement(dirMos.increment());
+    fullimcoord.replaceCoordinate(dirfull, iminfo.directionCoordinateNumber());
+
+    IPosition iblc(smallImage.shape().nelements(),0);
+    IPosition itrc(smallImage.shape());
+    itrc=itrc-Int(1);
+      
+    LCBox lbox(iblc, itrc, smallImage.shape());
+    ImageRegion imagreg(WCBox(lbox, fullimcoord) );
+    try{
+      // accumulate the images
+      SubImage<Float> subNum(numerator, imagreg, True);
+     
+      SubImage<Float> subDen(denominator, imagreg, True);
+
+
+
+
+      TempImage<Float> fullImage(subNum.shape(), fullimcoord, meminMB/8.0);
+    
+      os  << "Processing Image " << images(i)  << LogIO::POST;
+
+      // Need a provision for "same size exactly";  for now, insert will cover it
+      
+      /*
+	Bool congruent = Coordinates::isCongruent(fullImage.coordinates(), smallImage.coordinates());
+	if (congruent) {
+	regridder.insert( fullImage, refShift, smallImage );
+	} else {
+	regridder.regrid( fullImage, Interpolate2D::CUBIC,
+	IPosition(2,0,1), smallImage );
+	}
+      */
+      regridder.regrid( fullImage, Interpolate2D::LINEAR,
+			IPosition(2,0,1), smallImage );
+
+      TempImage<Float>  PB( subNum.shape(), fullImage.coordinates(), meminMB/8.0);
+      PB.set(1.0);
+
+      MDirection pointingDirection = msc.field().phaseDirMeas( fieldids(i) );
+
+      Quantity pa(0.0, "deg");
+      pbguts ( PB, PB, pointingDirection, pa);
+
+      fullImage.copyData( (LatticeExpr<Float>) (fullImage *  PB ) );
+      subNum.copyData( (LatticeExpr<Float>) (subNum + fullImage) );
+      subDen.copyData( (LatticeExpr<Float>) (subDen + (PB*PB)) );
+      
+    }
+    catch(...){
+	//most probably no overlap
+	continue;
+    }
   }
     
   LatticeExprNode LEN = max( denominator );
   Float dMax =  LEN.getFloat();
+
 
   if (scaleType_p == "SAULT") {
 
@@ -3404,9 +3455,8 @@ Bool Imager::linearmosaic(const String& mosaic,
 			       denominator) ) );
 
     if (fluxscale != "") {
-      if(!Table::isWritable( fluxscale )) {
-	make( fluxscale );
-      }
+      clone( mosaic, fluxscale );
+      
       PagedImage<Float> fluxscaleImage( fluxscale );
       fluxscaleImage.copyData( (LatticeExpr<Float>) 
 			       (iif(denominator < (dMax*minPB_p), 0.0,
@@ -3414,19 +3464,23 @@ Bool Imager::linearmosaic(const String& mosaic,
       fluxscaleImage.copyData( (LatticeExpr<Float>) 
 			       (iif(denominator > (dMax*constPB_p), 1.0,
 				    (fluxscaleImage) )) );
+      mosaicImage.copyData( (LatticeExpr<Float>)(iif(denominator > (dMax*minPB_p),
+						   (numerator/denominator), 0)) );
     }
   } else {
     mosaicImage.copyData( (LatticeExpr<Float>)(iif(denominator > (dMax*minPB_p),
 						   (numerator/denominator), 0)) );
     if (fluxscale != "") {
-      if(!Table::isWritable( fluxscale )) {
-	make( fluxscale );
-      }
+      clone(mosaic, fluxscale );
       PagedImage<Float> fluxscaleImage( fluxscale );
       fluxscaleImage.copyData( (LatticeExpr<Float>)( 1.0 ) );
     }
   }
-  
+  if (sensitivity != "") {
+    clone(mosaic, sensitivity);
+    PagedImage<Float> sensitivityImage( sensitivity );
+    sensitivityImage.copyData( (LatticeExpr<Float>)( denominator/dMax ));
+  }
   return True;
 }
 
@@ -3761,7 +3815,7 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
 
     this->lock();
       
-    if(!mssel_p){ os << "Please setdata first before using uvrange " << LogIO::POST; return False; }
+    if(mssel_p.null()){ os << "Please setdata first before using uvrange " << LogIO::POST; return False; }
 
 
      // use the average wavelength for the selected windows to convert
@@ -3828,9 +3882,9 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
 	    << LogIO::POST;
 	 delete mssel_p2;
      } else {
-	 if (mssel_p) {
+       if (!mssel_p.null()) {
 	     os << "By UVRANGE selection previously selected number of rows " << mssel_p->nrow() << "  are now reduced to " << mssel_p2->nrow() << LogIO::POST; 
-	     delete mssel_p; 
+	     //delete mssel_p; 
 	     mssel_p=mssel_p2;
 	     mssel_p->flush();
 	 }
@@ -7260,7 +7314,7 @@ Bool Imager::plotsummary()
 
 Bool Imager::detached() const
 {
-  if (ms_p == 0) {
+  if (ms_p.null()) {
     LogIO os(LogOrigin("imager", "detached()", WHERE));
     os << LogIO::SEVERE << 
       "imager is detached - cannot perform operation." << endl <<
@@ -7754,7 +7808,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
       }
       images_p[model]=0;
       images_p[model]=new PagedImage<Float>(image(model));
-      //AlwaysAssert(images_p[model], AipsError);
+      AlwaysAssert(!images_p[model].null(), AipsError);
 
       //Determining the number of XFR
       Int numOfXFR=nmodels_p+1;
@@ -7932,12 +7986,12 @@ Bool Imager::assertDefinedImageParameters() const
 
 Bool Imager::valid() const {
   LogIO os(LogOrigin("imager", "if(!valid()) return False", WHERE));
-  if(!ms_p) {
+  if(ms_p.null()) {
     os << LogIO::SEVERE << "Program logic error: MeasurementSet pointer ms_p not yet set"
        << LogIO::POST;
     return False;
   }
-  if(!mssel_p) {
+  if(mssel_p.null()) {
     os << LogIO::SEVERE << "Program logic error: MeasurementSet pointer mssel_p not yet set"
        << LogIO::POST;
     return False;
