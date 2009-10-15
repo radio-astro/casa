@@ -3371,8 +3371,8 @@ Bool Imager::linearmosaic(const String& mosaic,
   itrcmos=itrcmos-Int(1);
   LCBox lboxmos(iblcmos, itrcmos, mosaicImage.shape());
   ImageRegion imagregMos(WCBox(lboxmos, mosaicImage.coordinates()));
-
-  ImageRegrid<Float> regridder;
+   ImageRegrid<Float> regridder;
+ 
   ROMSColumns msc(*ms_p);
   for (uInt i=0; i < images.nelements(); ++i) {
     if(!Table::isReadable(images(i))) {   
@@ -3380,18 +3380,12 @@ Bool Imager::linearmosaic(const String& mosaic,
 	" is not readable" << LogIO::POST;
       return False;
     }
-    
+   
     PagedImage<Float> smallImagedisk( images(i) );
     TempImage<Float> smallImage(smallImagedisk.shape(), smallImagedisk.coordinates(), meminMB/8.0);
     smallImage.copyData(smallImagedisk);
     CoordinateSystem fullimcoord=smallImage.coordinates();
-    ImageMetaData iminfo(smallImage);
-    DirectionCoordinate dirfull=fullimcoord.directionCoordinate(iminfo.directionCoordinateNumber());
-    DirectionCoordinate dirMos=mosaicImage.coordinates().directionCoordinate(iminfo.directionCoordinateNumber());
-    dirfull.setIncrement(dirMos.increment());
-    fullimcoord.replaceCoordinate(dirfull, iminfo.directionCoordinateNumber());
-
-    IPosition iblc(smallImage.shape().nelements(),0);
+     IPosition iblc(smallImage.shape().nelements(),0);
     IPosition itrc(smallImage.shape());
     itrc=itrc-Int(1);
       
@@ -3406,25 +3400,14 @@ Bool Imager::linearmosaic(const String& mosaic,
 
 
 
-      TempImage<Float> fullImage(subNum.shape(), fullimcoord, meminMB/8.0);
+      TempImage<Float> fullImage(subNum.shape(), subNum.coordinates(), meminMB/8.0);
     
       os  << "Processing Image " << images(i)  << LogIO::POST;
 
-      // Need a provision for "same size exactly";  for now, insert will cover it
-      
-      /*
-	Bool congruent = Coordinates::isCongruent(fullImage.coordinates(), smallImage.coordinates());
-	if (congruent) {
-	regridder.insert( fullImage, refShift, smallImage );
-	} else {
-	regridder.regrid( fullImage, Interpolate2D::CUBIC,
-	IPosition(2,0,1), smallImage );
-	}
-      */
       regridder.regrid( fullImage, Interpolate2D::LINEAR,
 			IPosition(2,0,1), smallImage );
 
-      TempImage<Float>  PB( subNum.shape(), fullImage.coordinates(), meminMB/8.0);
+      TempImage<Float>  PB( subNum.shape(), subNum.coordinates(), meminMB/8.0);
       PB.set(1.0);
 
       MDirection pointingDirection = msc.field().phaseDirMeas( fieldids(i) );
