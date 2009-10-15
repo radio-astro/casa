@@ -8888,7 +8888,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
       os << "Mask image is not modifiable " << LogIO::WARN << LogIO::POST;
       return False;
     }
-    //we should regrid here is image and mask do not match
+    //we should regrid here if image and mask do not match
    }
    else{
      clone(image, mask);
@@ -8992,6 +8992,16 @@ Int Imager::interactivemask(const String& image, const String& mask,
     } else {
       os << "failed to get a vaild result for viewer" << LogIO::WARN << LogIO::POST;
       return False;
+    }
+
+    if(result==2){
+      //clean up
+      viewer_p->done();
+      viewer_p=0;
+      clean_panel_p=0;
+      image_id_p=0;
+      mask_id_p=0;
+
     }
 
     // return 0 if "continue"
