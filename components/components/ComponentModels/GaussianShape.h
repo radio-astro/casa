@@ -245,6 +245,11 @@ public:
   // return a pointer to this object.
   virtual const ComponentShape* getPtr() const; 
 
+  // TODO This probably should be made a pure virtual method in TwoSidedShape
+  // Return the effective area of the Gaussian (pi/(4*ln(2))*maj*min.
+  // Units of the returned Quantity are steradians.
+  virtual Quantity getArea() const;
+
 
 private:
   //# Updates the parameters of the itsFT object

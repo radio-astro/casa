@@ -260,6 +260,13 @@ const ComponentShape* GaussianShape::getPtr() const {
     return this;
 }
 
+Quantity GaussianShape::getArea() const {
+	Double majorAxis = itsShape.majorAxis();
+	Double minorAxis = itsShape.minorAxis();
+
+	Quantity area(C::pi/(4*C::ln2) * majorAxis * minorAxis, "sr");
+	return area;
+}
 
 void GaussianShape::updateFT() {
   const Double factor = 4.0*C::ln2/C::pi;
