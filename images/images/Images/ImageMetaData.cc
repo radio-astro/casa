@@ -171,35 +171,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // This method was copied from ImageStatistics and modified.
     Bool ImageMetaData::getBeamArea (Quantity& beamArea) const {
-       beamArea = -1.0;
-       //TODO merge ImageInfo into ImageMetaData
-       Vector<Quantum<Double> > beam = itsInfo.restoringBeam();
-       String imageUnits = itsUnits.getName();
-       imageUnits.upcase();
+    	beamArea = -1.0;
+    	if (! hasDirectionCoordinate() ) {
+    		return False;
+    	}
+    	//TODO merge ImageInfo into ImageMetaData
+    	Vector<Quantum<Double> > beam = itsInfo.restoringBeam();
+    	String imageUnits = itsUnits.getName();
+    	imageUnits.upcase();
 
-       if (beam.nelements()==3 && hasDirectionCoordinate() && imageUnits==String("JY/BEAM")) {
-          DirectionCoordinate dCoord = itsCoordinates.directionCoordinate(directionCoordinateNumber());
-          Vector<String> units(2);
-          units(0) = "rad"; units(1) = "rad";
-          dCoord.setWorldAxisUnits(units);
-          Double major = beam(0).getValue(Unit("rad"));
-          Double minor = beam(1).getValue(Unit("rad"));
-          beamArea = (C::pi/(4*log(2.0))) * major * minor;
-          return True;
-       } else {
-          return False;
-       }
+    	if (beam.nelements()==3 && imageUnits==String("JY/BEAM")) {
+            beam[0].convert("rad");
+    		beam[1].convert("rad");
+    		beamArea = (C::pi/(4*log(2.0))) * beam[0].getValue() * beam[1].getValue();
+            beamArea.setUnit("sr");
+    		return True;
+    	} else {
+    		return False;
+    	}
     }
+
     Bool ImageMetaData::getDirectionPixelArea(Quantity& pixelArea) const {
+    	pixelArea = -1.0;
     	if (!hasDirectionCoordinate()) {
     		return False;
     	}
     	DirectionCoordinate dCoord = itsCoordinates.directionCoordinate(directionCoordinateNumber());
     	Vector<Double> increment = dCoord.increment();
-    	Quantity xLength(increment(0), "rad");
-    	Quantity yLength(increment(1), "rad");
-    	pixelArea = xLength*yLength;
-    	pixelArea.setValue(fabs(pixelArea.getValue()));
+    	pixelArea  = Quantity(fabs(increment[0]*increment[1]), String("sr"));
     	return True;
     }
 
