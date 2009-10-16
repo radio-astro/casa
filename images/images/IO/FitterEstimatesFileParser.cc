@@ -35,14 +35,16 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/IO/FitterEstimatesFileParser.h>
 #include <images/Images/ImageMetaData.h>
+#include <images/Images/ImageStatistics.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 FitterEstimatesFileParser::FitterEstimatesFileParser (
 		const String& filename,
 		const ImageInterface<Float>& image
-	) : componentList(), xposValues(0), yposValues(0),
-		fluxValues(0), majValues(0), minValues(0), paValues(0) {
+	) : componentList(), peakValues(0), xposValues(0), yposValues(0),
+		majValues(0), minValues(0), paValues(0) {
 	itsLog = new LogIO();
 
 	RegularFile myFile(filename);
@@ -112,18 +114,17 @@ void FitterEstimatesFileParser::_parseFile(
 			viter->trim();
 		}
 		String filename = myFile.path().dirName() + "/" + myFile.path().baseName();
-		String flux = parts[0];
+		String peak = parts[0];
+//		String flux = parts[0];
 		String xpos = parts[1];
 		String ypos = parts[2];
 		String maj = parts[3];
 		String min = parts[4];
 		String pa = parts[5];
-		*itsLog << "flux " << flux << LogIO::NORMAL;
-		*itsLog << "ypos " << ypos << LogIO::NORMAL;
 
 		String fixedMask;
-
-		fluxValues.resize(componentIndex + 1, True);
+		peakValues.resize(componentIndex + 1, True);
+//		fluxValues.resize(componentIndex + 1, True);
 		xposValues.resize(componentIndex + 1, True);
 		yposValues.resize(componentIndex + 1, True);
 		majValues.resize(componentIndex + 1, True);
@@ -131,6 +132,7 @@ void FitterEstimatesFileParser::_parseFile(
 		paValues.resize(componentIndex + 1, True);
 		fixedValues.resize(componentIndex + 1, True);
 
+		/*
 		Quantity fluxQuantity;
 		if (! readQuantity(fluxQuantity, flux)) {
 			*itsLog << "File " << filename << ", line " << *iter
@@ -143,6 +145,14 @@ void FitterEstimatesFileParser::_parseFile(
 				<< LogIO::EXCEPTION;
 		}
 		fluxValues(componentIndex) = fluxQuantity;
+		*/
+
+		if (! peak.matches(RXdouble) ) {
+			*itsLog << "File " << filename << ", line " << *iter
+				<< ": peak value " << peak << " is not numeric"
+				<< LogIO::EXCEPTION;
+		}
+		peakValues(componentIndex) = String::toDouble(peak);
 
 		if (! xpos.matches(RXdouble) ) {
 			*itsLog << "File " << filename << ", line " << *iter
@@ -199,9 +209,7 @@ void FitterEstimatesFileParser::_parseFile(
 			fixedValues(componentIndex) = fixedMask;
 		}
 		fixedValues(componentIndex) = fixedMask;
-
 		componentIndex++;
-
 	}
 }
 
@@ -219,30 +227,57 @@ void FitterEstimatesFileParser::_createComponentList(
      	dirCoordNumber
     );
     MDirection::Types mtype = dirCoord.directionType();
-    cout << "type " << mtype << endl;
+    // SkyComponents require the flux density but users and the fitting
+	// code really want to specify peak intensities. So we must convert
+	// here. To do that, we need to know the brightness units of the image.
 
-	for(uInt i=0; i<fluxValues.size(); i++) {
-		// Just fill the Stokes which aren't being fit with the same value as
-		// the Stokes that is. Doesn't matter that the other three are bogus
-		// for the purposes of this, since we only fit one stokes at a time
-		Vector<Double> fluxStokes(4);
-		for(uInt j=0; j<4; j++) {
-			fluxStokes[j] = fluxValues[i].getValue();
+	Quantity resolutionElementArea;
+	ImageMetaData md(image);
+	Quantity intensityToFluxConversion(1.0, "beam");
+
+	// does the image have a restoring beam?
+	if(! md.getBeamArea(resolutionElementArea)) {
+		// if no restoring beam, let's hope the the brightness units are
+		// in [prefix]Jy/pixel and let's find the pixel size.
+		if(md.getDirectionPixelArea(resolutionElementArea)) {
+			intensityToFluxConversion.setUnit("pixel");
 		}
-		Quantum<Vector<Double> > fluxQuantum(fluxStokes, fluxValues[i].getUnit());
-		Flux<Double> flux(fluxQuantum);
-
-
+		else {
+			// can't find  pixel size, which is extremely bad!
+			*itsLog << "Unable to determine the resolution element area of image "
+					<< image.name()<< LogIO::EXCEPTION;
+		}
+	}
+	for(uInt i=0; i<peakValues.size(); i++) {
 		pos[dirAxesNums[0]] = xposValues[i];
 		pos[dirAxesNums[1]] = yposValues[i];
-
         csys.toWorld(world, pos);
         Quantity ra(world[0], "rad");
         Quantity dec(world[1], "rad");
         MDirection mdir(ra, dec, mtype);
+
         GaussianShape gaussShape(
         	mdir, majValues[i], minValues[i], paValues[i]
         );
+		Unit brightnessUnit = image.units();
+		// Estimate the flux density
+
+		Quantity fluxQuantity = Quantity(peakValues[i], brightnessUnit) * intensityToFluxConversion;
+		fluxQuantity.convert("Jy");
+		fluxQuantity = fluxQuantity*gaussShape.getArea()/resolutionElementArea;
+		// convert to Jy again to get rid of the superfluous sr/(sr)
+		fluxQuantity.convert("Jy");
+
+		// Just fill the Stokes which aren't being fit with the same value as
+		// the Stokes that is. Doesn't matter that the other three are bogus
+		// for the purposes of this, since we only fit one stokes at a time
+		Vector<Double> fluxStokes(4);
+
+		for(uInt j=0; j<4; j++) {
+			fluxStokes[j] = fluxQuantity.getValue();
+		}
+		Quantum<Vector<Double> > fluxVector(fluxStokes, fluxQuantity.getUnit());
+		Flux<Double> flux(fluxVector);
         SkyComponent skyComp(flux, gaussShape, spectrum);
         componentList.add(skyComp);
 	}

@@ -102,8 +102,9 @@ class FitterEstimatesFileParser {
 		ComponentList componentList;
 		Vector<String> fixedValues;
 		LogIO* itsLog;
-		Vector<Double> xposValues, yposValues;
-		Vector<Quantity> fluxValues, majValues, minValues, paValues;
+		Vector<Double> peakValues, xposValues, yposValues;
+		//Vector<Quantity> fluxValues, majValues, minValues, paValues;
+		Vector<Quantity> majValues, minValues, paValues;
 
 		// default constructor cannot be called.
 		FitterEstimatesFileParser();
