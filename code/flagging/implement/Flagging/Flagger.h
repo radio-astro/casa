@@ -153,7 +153,7 @@ protected:
   MRadialVelocity mDataStep_p;
 
   //
-  uInt nant,nifr,ntime,nfeed,nfeedcorr;
+  uInt nant,nifr,nfeed,nfeedcorr;
   Vector<Int> ifr2ant1,ifr2ant2;
   Vector<String> antnames;
   Vector<Double> spwfreqs;
@@ -251,10 +251,6 @@ public:
 // number of feed correlations in MS
   uInt numFeedCorr    () const 
       { return nfeedcorr; };
-
-// number of time slots in MS
-  uInt numTime   () const 
-      { return ntime; };
 
 // names of antennas
   const Vector<String> & antNames() const 

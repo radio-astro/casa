@@ -17,18 +17,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
           <value></value>
     </param>
 
+    <param type="string" name="vis" kind="ms" >
+          <description>Root name of the resulting ms. Note the .ms is added </description>
+          <value></value>
+    </param>
+
     <param type="string" name="corr_mode" >
-	    <description>specifies the correlation mode to be considered on input. A quoted string containing a sequence of ao co ac all separated by whitespaces is expected</description>
+	    <description>specifies the correlation mode to be considered on input. A quoted string containing a sequence of ao, co, ac,or all separated by whitespaces is expected</description>
 	    <value>all</value>
     </param>
 
     <param type="string" name="srt" >
-	    <description>specifies the spectral resolution type to be considered on input. A quoted string containing a sequence of fr ca bw all separated by whitespaces is expected</description>
+	    <description>specifies the spectral resolution type to be considered on input. A quoted string containing a sequence of fr, ca, bw, or all separated by whitespaces is expected</description>
 	    <value>all</value>
     </param>
 
     <param type="string" name="time_sampling" >
-	    <description>specifies the time sampling (INTEGRATION and/or SUBINTEGRATION)  to be considered on input. A quoted string containing a sequence of i si all separated by whitespaces is expected</description>
+	    <description>specifies the time sampling (INTEGRATION and/or SUBINTEGRATION)  to be considered on input. A quoted string containing a sequence of i, si, or all separated by whitespaces is expected</description>
 	    <value>all</value>
     </param>
 
@@ -63,6 +68,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="bool" name="verbose">
 	    <description>Output lots of information while the filler is working</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="showversion">
+	    <description>Report the version of asdm2MS being used</description>
 	    <value>False</value>
     </param>
 

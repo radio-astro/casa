@@ -56,27 +56,22 @@ namespace asdm {
      */
     UniquenessViolationException(string t);
 
-    
+
+    /**
+     * The DTOR.
+     */
     virtual ~UniquenessViolationException();
 
+    /**
+     * @return a text describing the exception.
+     */
     string getMessage() const;
     
   protected:
     
     string message;	
     
-  };
-  
-  inline UniquenessViolationException::UniquenessViolationException(): message("Uniqueness violation exception") {;}
-  inline UniquenessViolationException::UniquenessViolationException (string t) : 
-    message("The uniqueness constraint on all attributes except the autoincrementable one is violated in table "+t) {
-  }
-  
-  inline UniquenessViolationException::~UniquenessViolationException() {;}
-  inline string UniquenessViolationException::getMessage() const {
-    return message;
-  }
-  
+  };  
 } // End namespace asdm
 
 #endif /* UniquenessViolationException_CLASS */

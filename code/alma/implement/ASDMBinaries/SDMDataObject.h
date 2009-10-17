@@ -89,9 +89,9 @@ using namespace std;
 #include <boost/regex.hpp> 
 using namespace boost;
 
-#if defined( __APPLE__ )
+#ifdef AIPS_DARWIN
 #include <machine/endian.h>
-#else
+#else 
 #include <endian.h>
 #endif
 

@@ -398,15 +398,19 @@ int  addUniqueState(Bool sig_,
   void addWeather(int    antennaId_,
 		  double time_,
 		  double interval_,
-		  float  h2o_,
-		  float  rms_h2o_,
-		  float  rms_h2o_flag_,
 		  float  pressure_,
+		  bool   pressure_flag_,
 		  float  rel_humidity_,
+		  bool   rel_humidity_flag_,
 		  float  temperature_,
-		  float  dew_point_,
+		  bool   temperature_flag_,
 		  float  wind_direction_,
-		  float  wind_speed_);
+		  bool   wind_direction_flag_,
+		  float  wind_speed_,
+		  bool   wind_speed_flag_,
+		  bool   has_dew_point_,
+		  float  dew_point_,
+		  bool   dew_point_flag_);
 
   void end(double time_);
 };

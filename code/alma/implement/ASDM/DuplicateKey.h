@@ -39,34 +39,40 @@ namespace asdm {
 class DuplicateKey {
 
 public:
+  /**
+   * An empty CTOR.
+   */
+  DuplicateKey();
 
-	/**
-	 * Create an exception if an error occurs in converting a table
- 	 * to its external representation or in restoring a table from
- 	 * one of its external representations.
-	 * @param m The conversion error.
-	 * @param t The table being converted.
-	 */
-	DuplicateKey(string m, string t);
+  /**
+   * Create an exception if an error occurs in converting a table
+   * to its external representation or in restoring a table from
+   * one of its external representations.
+   * @param m The conversion error.
+   * @param t The table being converted.
+   */
+  DuplicateKey(const string& m, const string& t);
+  
 
-	string getMessage() const;
+  /**
+   * The DTOR.
+   */
+  ~DuplicateKey();
 
-protected:
+  /**
+   * @return a text describing the exception.
+   */
+  string getMessage() const;
+  
+ protected:  
+  string message;
 
-	string message;
-	string tableName;	
-
+ private:
+  static const string ITSNAME;
+  
 };
+ 
 
-inline DuplicateKey::DuplicateKey (string k, string t)  {
-	tableName = t;
-	message = "Cannot insert row with key " + k + " into table " + 
-			tableName + ".  Key already exists.";
-}
-
-inline string DuplicateKey::getMessage() const {
-	return message;
-}
 
 } // End namespace asdm
 

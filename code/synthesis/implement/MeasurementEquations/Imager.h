@@ -485,7 +485,7 @@ class Imager
 
 protected:
 
-  MeasurementSet* ms_p;
+  CountedPtr<MeasurementSet> ms_p;
   CountedPtr<MSHistoryHandler> hist_p;
   Table antab_p;
   Table datadesctab_p;
@@ -512,7 +512,7 @@ protected:
 
 
   String msname_p;
-  MeasurementSet *mssel_p;
+  CountedPtr<MeasurementSet> mssel_p;
   VisSet *vs_p;
   ROVisibilityIterator* rvi_p;
   VisibilityIterator* wvi_p;

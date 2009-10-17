@@ -32,52 +32,48 @@ using std::string;
 
 namespace asdm {
 
-/**
- * The IllegalAccessException class represents an exception when 
- * an error occurs in converting a table to its external 
- * representation or in restoring a table from one of its 
- * external representations. 
- */
-	class IllegalAccessException {
+  /**
+   * The IllegalAccessException class represents an exception when 
+   * an error occurs in converting a table to its external 
+   * representation or in restoring a table from one of its 
+   * external representations. 
+   */
+  class IllegalAccessException {
 
-public:
+  public:
 
-	/**
-	 * Create an exception if an attempt is made to access an
-	 * optional variable that does not exist.
-	 * @param m The conversion error.
-	 * @param t The table being converted.
-	 */
-	IllegalAccessException();
-	
-   /**
-	 * Create an exception if an attempt is made to access an
-	 * optional variable that does not exist.
-	 * @param m The conversion error.
-	 * @param t The table being converted.
-	 */
-	 IllegalAccessException(const string& attribute, const string& table);
+    /**
+     * Create an exception if an attempt is made to access an
+     * optional variable that does not exist.
+     * @param m The conversion error.
+     * @param t The table being converted.
+     */
+    IllegalAccessException();
 
-	string getMessage() const;
+    /**
+     * Create an exception if an attempt is made to access an
+     * optional variable that does not exist.
+     * @param m The conversion error.
+     * @param t The table being converted.
+     */
+    IllegalAccessException(const string& attribute, const string& table);
+	 
+    /**
+     * The DTOR
+     */
+    virtual ~IllegalAccessException();
 
-protected:
-
-	string message;	
-
-};
-
-inline IllegalAccessException::IllegalAccessException () : 
-	message("Attempt to access an optional variable that is undefined.") {
-}
-
-inline IllegalAccessException::IllegalAccessException (const string& attribute, const string& table) {
-	message = "Attempt to access an optional variable that is undefined : attribute '"+attribute+"' in table '"+table+"'."; 
-}
-
-inline string IllegalAccessException::getMessage() const {
-	return message;
-}
-
+    /**
+     * @return a text describing the exception.
+     */    
+    string getMessage() const;
+    
+  protected:
+    
+    string message;
+    string tableName;
+    
+  };
 } // End namespace asdm
 
 #endif /* IllegalAccessException_CLASS */

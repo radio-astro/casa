@@ -39,12 +39,24 @@ namespace asdm {
   class OutOfBoundsException {
   
   public:
+    /**
+     * The empty CTOR.
+     */
     OutOfBoundsException();
     
+    /**
+     * a CTOR with a message.
+     */
     OutOfBoundsException(const string &s);
     
+    /**
+     * The DTOR.
+     */
     virtual ~OutOfBoundsException();
     
+    /**
+     * @return a text describing the exception.
+     */
     string getMessage() const;
     
   private:
@@ -52,16 +64,6 @@ namespace asdm {
     string message;	
     
   };
-  
-  
-  inline OutOfBoundsException::OutOfBoundsException(): message("Out of bounds exception") {;}
-  inline OutOfBoundsException::OutOfBoundsException (const string &s) : message(s) {;}
-  inline OutOfBoundsException::~OutOfBoundsException() {;}
-  
-  inline string OutOfBoundsException::getMessage()  const {
-    return message;
-  }
-  
 } // End namespace asdm
 
 #endif /* OutOfBoundsException_CLASS */

@@ -51,6 +51,10 @@ namespace asdm {
      * 	@param msg  A message indicating the cause of the exception.
      */	
     TagFormatException(string msg);
+
+    /**
+     * The DTOR.
+     */
     
     virtual ~TagFormatException();
 
@@ -62,12 +66,5 @@ namespace asdm {
   protected:
     string message;
   };
-  
-  inline TagFormatException::TagFormatException() : message("Tag format exception") {;}
-  inline TagFormatException::TagFormatException(string msg): message(msg) {;}
-  inline TagFormatException::~TagFormatException() {;}
-  inline string TagFormatException::getMessage() const {
-    return "TagFormatException : " + message;
-  }
-}
+} // end namespace asdm.
 #endif

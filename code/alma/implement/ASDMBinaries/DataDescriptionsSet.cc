@@ -174,13 +174,15 @@ namespace sdmbin {
 	// for the cross correlations:
 	v_crossDataDescriptionId_.push_back(v_dataDescriptionIdArray[n]);
 
-	spwId =  v_spwr[n]->getSpectralWindowId();            //cout<<spwId.toString()<<endl;
+	spwId =  v_spwr[n]->getSpectralWindowId();            
+	if (coutest) cout<<spwId.toString()<<endl;
 	itf   =  s_imspwId.find(spwId);                
 	ite   =  s_imspwId.end();
 	
 	if(itf==ite){
 
-	  e_sbpm = v_spwr[n]->getSidebandProcessingMode();    //cout<<"SidebandProcessingMode: "<<e_sbpm.str()<<endl;
+	  if (coutest) cout<<"SidebandProcessingMode: "<<e_sbpm.str()<<endl;
+	  e_sbpm = v_spwr[n]->getSidebandProcessingMode();    
 	  if(e_sbpm[PHASE_SWITCH_SEPARATION]){
 	    if(v_spwr[n]->isImageSpectralWindowIdExists())
 	      s_imspwId.insert(v_spwr[n]->getSpectralWindowId());
@@ -190,7 +192,7 @@ namespace sdmbin {
 	      Error(SERIOUS,"The definition of the image sideband is missing");
 	    }
 	  }
-
+	  
 	  // for the auto correlations:
 	  v_corrType.clear();
 	  //cout << v_corrType.size() << endl;
@@ -199,6 +201,7 @@ namespace sdmbin {
 	  v_autoProduct.clear();
 	  autoPolar = false;
 	  for(unsigned int j=0; j<v_polPtr.size(); j++){                            // for every row in the Polarization table
+	    if (coutest) cout << "index in Polarization table = " << j << endl;
 	    if(v_polPtr[j]->getNumCorr()<=4){                                       //  this row could be for an auto-correlation
 	      vv_corrProduct = v_polPtr[j]->getCorrProduct();
 // 	      EnumSet<StokesParameter> es; es.set(v_corrType); cout<<es.str()<<endl;
@@ -231,6 +234,10 @@ namespace sdmbin {
 	      }
 	    }
 	  }
+	  if (coutest) cout << "autoPolarizationId=" << autoPolarizationId.toString() << endl;
+	  if (coutest) cout << "spectralWindowId=" << rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getSpectralWindowId().toString() << endl;
+	  if (autoPolarizationId.toString()=="null_0")
+	    Error(FATAL,"Missing row in the Polarization table for autocorrelation data.");
 	  ddRowPtr = rddSet.lookup( autoPolarizationId, 
 				    rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getSpectralWindowId());
 	  ddId = ddRowPtr->getDataDescriptionId();
@@ -238,7 +245,8 @@ namespace sdmbin {
 	  v_pairDataDescriptionId_.push_back(true);
 	  if(coutest)cout << "dataDesc cross-corr="<< v_crossDataDescriptionId_[n].toString()
 			  << " dataDescr auto-corr=" << v_autoDataDescriptionId_[n].toString() << endl;
-	}else{
+	}
+	else{
 	  v_pairDataDescriptionId_.push_back(false);   // this crossDataDescriptionId is not associated to an autoDescriptionId
 	}
       }

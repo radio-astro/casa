@@ -35,88 +35,74 @@ using asdm::Integer;
 
 namespace asdm {
 
-/**
- * Generate an exception when an expected row cannot be found. 
- */
-class NoSuchRow {
+  /**
+   * Generate an exception when an expected row cannot be found. 
+   */
+  class NoSuchRow {
 
-public:
+  public:
+    /**
+     * An empty CTOR.
+     */
+    NoSuchRow();
 
-	/**
-	 * Create an exception when an expected row cannot be found.
-	 * @param rowNumber The row number that cannot be found.
-	 * @param tableName The table being searched.
-	 */
-	NoSuchRow(int rowNumber, string tableName);
+    /**
+     * Create an exception when an expected row cannot be found.
+     * @param rowNumber The row number that cannot be found.
+     * @param tableName The table being searched.
+     */
+    NoSuchRow(int rowNumber, string tableName);
 
-	/**
-	 * Create an exception when an expected row cannot be found.
-	 * @param key The key of the row that cannot be found.
-	 * @param tableName The table being searched.
-	 */
-	NoSuchRow(string key, string tableName);
+    /**
+     * Create an exception when an expected row cannot be found.
+     * @param key The key of the row that cannot be found.
+     * @param tableName The table being searched.
+     */
+    NoSuchRow(string key, string tableName);
 
-	/**
-	 * Create an exception when an expected link cannot be found.
-	 * @param N The link number that cannot be found.
-	 * @param toTableName The table to which the link is directed.
-	 * @param fromTableName The table from which the link is directed.
-	 */
-	NoSuchRow(int N, string toTableName, string fromTableName);
+    /**
+     * Create an exception when an expected link cannot be found.
+     * @param N The link number that cannot be found.
+     * @param toTableName The table to which the link is directed.
+     * @param fromTableName The table from which the link is directed.
+     */
+    NoSuchRow(int N, string toTableName, string fromTableName);
 
-	/**
-	 * Create an exception when an expected link cannot be found.
-	 * @param key The key of the link that cannot be found.
-	 * @param toTableName The table to which the link is directed.
-	 * @param fromTableName The table from which the link is directed.
-	 */
-	NoSuchRow(string key, string toTableName, string fromTableName);
+    /**
+     * Create an exception when an expected link cannot be found.
+     * @param key The key of the link that cannot be found.
+     * @param toTableName The table to which the link is directed.
+     * @param fromTableName The table from which the link is directed.
+     */
+    NoSuchRow(string key, string toTableName, string fromTableName);
 
-	/**
-	 * Create an exception when an optional link does not exist.
-	 * @param toTableName The table to which the link is directed.
-	 * @param fromTableName The table from which the link is directed.
-	 * @param option Is not really used.
-	 */
-	NoSuchRow(string toTableName, string fromTableName, bool option);
+    /**
+     * Create an exception when an optional link does not exist.
+     * @param toTableName The table to which the link is directed.
+     * @param fromTableName The table from which the link is directed.
+     * @param option Is not really used.
+     */
+    NoSuchRow(string toTableName, string fromTableName, bool option);
 	
-	string getMessage() const;
+
+    /**
+     * The DTOR.
+     */
+    virtual ~NoSuchRow();
+
+    /**
+     * @return a text describing the exception.
+     */
+    string getMessage() const;
 	
-protected:
+  protected:
 
-	string message;
+    string message;
 
-};
+  private:
+    static const string ITSNAME;
 
-inline string NoSuchRow::getMessage() const {
-	return message;
-}
-
-inline NoSuchRow::NoSuchRow(int rowNumber, string tableName) :
-	message("No such row as number " + Integer::toString(rowNumber) + 
-		" in table " + tableName) {
-}
-
-inline NoSuchRow::NoSuchRow(string key, string tableName) :
-	message("No such row with key " + key + " in table " + tableName) {
-}
-
-inline NoSuchRow::NoSuchRow(int N, string toTableName, string fromTableName) :
-	message("No such link as number " + Integer::toString(N) + " to table " + 
-				toTableName + " in this row of table " + fromTableName) {
-}
-
-inline NoSuchRow::NoSuchRow(string key, string toTableName, string fromTableName) :
-	message("No such link with key " + key + " to table " + 
-				toTableName + " in this row of table " + fromTableName) {
-}
-
-inline NoSuchRow::NoSuchRow(string toTableName, string fromTableName, bool option) :
-	message("The optional link to table " + toTableName + " in this row of table " + 
-		fromTableName + " does not exist! ")  {
-}
-
-
+  };
 } // End namespace asdm
 
 #endif /* NoSuchRow_CLASS */

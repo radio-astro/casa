@@ -814,7 +814,7 @@ namespace sdmbin {
     catch (SDMDataObjectReaderException e) { cout << e.getMessage()          << endl; }
     catch (SDMDataObjectParserException e) { cout << e.getMessage()          << endl; }
     catch (SDMDataObjectException e)       { cout << e.getMessage()          << endl; }
-    catch (std::exception e)               { cout << e.what()                << endl; }
+    catch (std::exception e)                    { cout << e.what()                << endl; }
     catch (...)                            { cout << "Unexpected exception." << endl; }
     return 1;
   }
@@ -2014,7 +2014,8 @@ namespace sdmbin {
 	    v_ddr = cdr->getDataDescriptions();
 	    for(unsigned int ndd=0; ndd<v_ddr.size(); ndd++)
 	      if(v_ddr[ndd]->getPolarizationUsingPolOrHoloId()->getCorrType().size()>2)return forceComplex_;
-	  }else if(e_cm[CROSS_AND_AUTO]){
+	  }
+	  else if(e_cm[CROSS_AND_AUTO]){
 	    if(e_qcm_[CROSS_AND_AUTO]){
 	      return true;
 	    }else{
@@ -2022,6 +2023,9 @@ namespace sdmbin {
 	      for(unsigned int ndd=0; ndd<v_ddr.size(); ndd++)
 		if(v_ddr[ndd]->getPolarizationUsingPolOrHoloId()->getCorrType().size()>2)return forceComplex_;
 	    }
+	  }
+	  else if (e_cm[CROSS_ONLY]) {
+	    return true;
 	  }
 	}
       }

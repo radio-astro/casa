@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <cmath>
 
+#include <boost/algorithm/string.hpp>
+
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
@@ -942,7 +944,8 @@ Bool                             withCompression = false;
  */
 int main(int argc, char *argv[]) {
 
-  string dummy;
+  string dsName;
+  string msNamePrefix;
 
   appName = string(argv[0]);
 
@@ -956,7 +959,13 @@ int main(int argc, char *argv[]) {
     // Declare the supported options.
 
     po::options_description generic("Converts an ASDM dataset into a CASA measurement set.\n"
-				    "Usage : " + appName +" [options] asdm-directory\n"
+				    "Usage : " + appName +" [options] asdm-directory [ms-directory-prefix]\n\n"
+				    "Command parameters: \n"
+				    " asdm-directory : the pathname to the ASDM dataset to be converted \n"
+				    " ms-directory-prefix : the prefix of the pathname(s) of the measurement set(s ) to be created,\n"
+				    " this prefis is completed by a suffix to form the name(s) of the resulting measurement set(s), \n"
+				    " this suffix depends on the selected options (see options compression and wvr-correction) \n"
+				    " but in in all cases ends with \".ms\".\n\n"
 				    "Allowed options:");
     generic.add_options()
       ("help", "produces help message.")
@@ -964,10 +973,12 @@ int main(int argc, char *argv[]) {
       ("isrt", po::value<string>()->default_value("all"), "specifies the spectral resolution type to be considered on input. A quoted string containing a sequence of 'fr' 'ca' 'bw' 'all' separated by whitespaces is expected")
       ("its",  po::value<string>()->default_value("all"), "specifies the time sampling (INTEGRATION and/or SUBINTEGRATION)  to be considered on input. A quoted string containing a sequence of 'i' 'si' 'all' separated by whitespaces is expected")  
       ("ocm",  po::value<string>()->default_value("ca"),  "output data for correlation mode AUTO_ONLY (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)")
-      ("compression,c", "produces compressed columns in the resulting measurement set (not set by default)")
+      ("compression,c", "produces compressed columns in the resulting measurement set (not set by default). When this option is selected the string '-compressed' is inserted in the pathname of the resulting measurement set.")
       ("asis", po::value<string>(), "creates verbatim copies of the ASDM tables in the output measurement set. The value given to this option must be a quoted string containing a list of table names separated by space characters; the wildcard character '*' is allowed in table names.")
-      ("wvr-corrected-data", po::value<string>()->default_value("no"),  "specifies wich values are considered in the ASDM binary data to fill the DATA column in the MAIN table of the MS. Expected values for this option are 'no' for the uncorrected data (this is the default), 'yes' for the corrected data and 'both' for corrected and uncorrected data. In the latter case, two measurement sets are created, one containing the uncorrected data and the other one, whose name is suffixed by 'wvr-corrected', containing the corrected data.")
-      ("verbose,v", "logs numerous informations as the filler is working");
+      ("wvr-corrected-data", po::value<string>()->default_value("no"),  "specifies wich values are considered in the ASDM binary data to fill the DATA column in the MAIN table of the MS. Expected values for this option are 'no' for the uncorrected data (this is the default), 'yes' for the corrected data and 'both' for corrected and uncorrected data. In the latter case, two measurement sets are created, one containing the uncorrected data and the other one, whose name is suffixed by '-wvr-corrected', containing the corrected data.")
+      ("verbose,v", "logs numerous informations as the filler is working.")
+      ("revision,r", "logs information about the revision of this application.");
+
 
     // Hidden options, will be allowed both on command line and
     // in config file, but will not be shown to the user.
@@ -975,12 +986,16 @@ int main(int argc, char *argv[]) {
     hidden.add_options()
       ("asdm-directory", po::value< string >(), "asdm directory")
       ;
+    hidden.add_options()
+      ("ms-directory-prefix", po::value< string >(), "ms directory prefix")
+      ;
 
     po::options_description cmdline_options;
     cmdline_options.add(generic).add(hidden);
     
     po::positional_options_description p;
-    p.add("asdm-directory", -1);
+    p.add("asdm-directory", 1);
+    p.add("ms-directory-prefix", 1);
     
     // Parse the command line and retrieve the options and parameters.
     po::store(po::command_line_parser(argc, argv).options(cmdline_options).positional(p).run(), vm);
@@ -992,6 +1007,13 @@ int main(int argc, char *argv[]) {
     if (vm.count("help")) {
       errstream.str("");
       errstream << generic << "\n" ;
+      error(errstream.str());
+    }
+
+    // Revision ? displays revision's info and don't go further.
+    if (vm.count("revision")) {
+      errstream.str("");
+      errstream << "$Id: asdm2MS.cpp,v 1.28 2009/10/15 12:54:26 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -1024,10 +1046,6 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    // infostream.str("");
-    // infostream << "icm is \"" << icm_opt << "\" (\"" << es_cm.toString() << "\")";
-    // info(infostream.str());
-
     // Selection of spectral resolution type of data to be considered.
 
     string isrt_opt = vm["isrt"].as< string >();
@@ -1051,9 +1069,6 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    // infostream.str("");
-    // infostream << "isrt is \"" << isrt_opt << "\" (\"" << es_srt.toString() << "\")" << endl;
-    // info(infostream.str());
 
     // Selection of the time sampling of data to be considered (integration and/or subintegration)
 
@@ -1076,10 +1091,6 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    // infostream.str("");
-    // infostream << "its is \"" << its_opt << "\" (\"" << es_ts.toString() << "\")" << endl;
-    // info(infostream.str());
-
     // Selection of the correlation mode of data to be produced in the measurement set.
 
     string ocm_opt = vm["ocm"].as< string >();
@@ -1096,12 +1107,9 @@ int main(int argc, char *argv[]) {
       error(errstream.str());
     }
 
-    // infostream.str("");
-    // infostream << "ocm is \"" << ocm_opt << "\" (\"" << e_query_cm.str() << "\")\n";
-    // info(infostream.str());
-
     if (vm.count("asdm-directory")) {
-      dummy = vm["asdm-directory"].as< string >() ;
+      string dummy = vm["asdm-directory"].as< string >();
+      dsName = lrtrim(dummy) ;
     }
     else {
       errstream.str("");
@@ -1109,6 +1117,13 @@ int main(int argc, char *argv[]) {
       error(errstream.str());
     }
 
+    if (vm.count("ms-directory-prefix")) {
+      string dummy = vm["ms-directory-prefix"].as< string >();
+      msNamePrefix = lrtrim(dummy);
+    }
+    else {
+      msNamePrefix = dsName;
+    }
 
     // Does the user want compressed columns in the resulting MS ?
 
@@ -1147,7 +1162,6 @@ int main(int argc, char *argv[]) {
   //
   // Try to open an ASDM dataset whose name has been passed as a parameter on the command line
   //
-  string dsName = lrtrim(dummy);
   if ( dsName.at(dsName.size()-1) == '/' ) dsName.erase(dsName.size()-1);
 
 
@@ -1224,15 +1238,19 @@ int main(int argc, char *argv[]) {
   // Prepare a map AtmPhaseCorrection -> name of measurement set.
   // Three cases are possible :
   // only AP_CORRECTED -> MS name is suffixed with "-wvr-corrected",
-  // only AP_UNCORRECTED -> MS name has no suffix particular suffix,
+  // only AP_UNCORRECTED -> MS name has no particular suffix,
   // AP_CORRECTED and AP_UNCORRECTED -> 2 MSs whith names defined by the two above rules.
   //
+  
+  if ( msNamePrefix.at(msNamePrefix.size()-1) == '/' ) msNamePrefix.erase(msNamePrefix.size()-1);
+  if ( boost::algorithm::ends_with(msNamePrefix, ".ms")) msNamePrefix.erase(msNamePrefix.size()-3);
+
   map<AtmPhaseCorrection, string> msNames;
   if (hasCorrectedData(es_apc) && es_query_apc[AP_CORRECTED]) {
-    msNames[AP_CORRECTED] = dsName + "-wvr-corrected";
+    msNames[AP_CORRECTED] = msNamePrefix + "-wvr-corrected";
   }
   if (hasUncorrectedData(es_apc) && es_query_apc[AP_UNCORRECTED]) {
-    msNames[AP_UNCORRECTED] = dsName;
+    msNames[AP_UNCORRECTED] = msNamePrefix;
   }
       
   if (msNames.size() == 0) {
@@ -1270,29 +1288,27 @@ int main(int argc, char *argv[]) {
 
 
   //
-  // Create a Measurement Set.
-
-
-  // The name of the measurement set is the name of the ASDM dataset ...
-  ostringstream ost;
-
-  ost << dsName; 
-
-  // ... suffixed with .compressed if compression has been requested ...
-  if (withCompression)
-    ost << ".compressed";
-
-  // ... and suffixed with .ms in all cases.
-  ost << ".ms";
-
+  // Create the measurement set(s). 
   map<AtmPhaseCorrection, ASDM2MSFiller*> msFillers;
-  for (map<AtmPhaseCorrection, string>::iterator iter = msNames.begin(); iter != msNames.end(); ++iter) {
-    msFillers[iter->first] = new ASDM2MSFiller(msNames[iter->first].c_str(),
-					       0.0,
-					       false,
-					       (Bool) complexData,
-					       withCompression);
-    info("About to create a filler for the measurement set '" + msNames[iter->first] + "'");
+  try {
+    for (map<AtmPhaseCorrection, string>::iterator iter = msNames.begin(); iter != msNames.end(); ++iter) {
+      msFillers[iter->first] = new ASDM2MSFiller(msNames[iter->first].c_str(),
+						 0.0,
+						 false,
+						 (Bool) complexData,
+						 withCompression);
+      info("About to create a filler for the measurement set '" + msNames[iter->first] + "'");
+    }
+  }
+  catch(AipsError & e) {
+    errstream.str("");
+    errstream << e.getMesg();
+    error(errstream.str());
+  }
+  catch (std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());
   }
 
   //--info("About to create a new measurement set '" + ost.str() + "'");
@@ -1311,7 +1327,7 @@ int main(int argc, char *argv[]) {
   //
   // Antenna table conversion.
   //  
-  AntennaTable& aT = ds->getAntenna();
+  AntennaTable& antennaT = ds->getAntenna();
 
   // We need the ExecBlockTable here to compute the antenna position with a site dependant logic.
   // This table will be used later to fill the MS Observation table.
@@ -1326,13 +1342,13 @@ int main(int argc, char *argv[]) {
     AntennaRow*   r   = 0;
     ExecBlockRow* reb = 0;
 
-    int nAntenna = aT.size();
+    int nAntenna = antennaT.size();
     infostream.str("");
     infostream << "The dataset has " << nAntenna << " antenna(s)...";
     info(infostream.str());
     
     for (int i = 0; i < nAntenna; i++) {
-      if ((r = aT.getRowByKey(Tag(i, TagType::Antenna))) == 0){
+      if ((r = antennaT.getRowByKey(Tag(i, TagType::Antenna))) == 0){
 	errstream.str("");
 	errstream << "Problem while reading the Antenna table, the row with key = Tag(" << i << ") does not exist.Aborting." << endl;
 	error(errstream.str());
@@ -2303,15 +2319,24 @@ int main(int argc, char *argv[]) {
     errstream.str("");
     error(errstream.str());
   }
-#if 0
 
+#if 1
   //
   // Load the weather table
   WeatherTable& weatherT = ds->getWeather();
 
   {
-    WeatherRow* r = 0;
+    //
+    // Build a map to be able to associate an Antenna to a Station, since the ASDM Weather table's key is a Station Tag
+    // while the MS's one is an index in the Antenna table. Doing so, we make the assumption that all antennas used during
+    // an Exec block stay in place. 
+    //
+    map<Tag, Tag> station2Antenna;
+    vector<AntennaRow *> antennaRows = antennaT.get();
+    for (unsigned int i = 0; i < antennaRows.size(); i++)
+      station2Antenna[antennaRows.at(i)->getStationId()] = antennaRows.at(i)->getAntennaId();
 
+    WeatherRow* r = 0;
     
     vector<WeatherRow*> v = weatherT.get();
 
@@ -2323,31 +2348,32 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < nWeather; i++) {
       r = v.at(i);      
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
-      double time =  ((double) r->getTimeInterval().getStart().get());
-      vector<WeatherRow*> v = weatherT.get();
+      double time =  ((double) r->getTimeInterval().getStart().get()) + interval / 2.0 ;
       
-      int nWeather = weatherT.size(); / ArrayTime::unitsInASecond + interval/2.0;
-      /* 
-	 msFiller->addWeather(Integer::parseInt(r->getAntennaId().getId()),
-	 time,
-	 interval,
-	 r->getH2o(),
-	 r->getH2oFlag(),
-	 r->getPressure(),
-	 r->getPressureFlag(),
-	 r->getRelHumidity(),
-	 r->getRelHumidityFlag(),
-	 r->getTemperature(),
-	 r->getTemperatureFlag(),
-	 r->getWindDirection(),
-	 r->getWindDirectionFlag(),
-	 r->getWindSpeed(),
-	 r->getWindSpeedFlag(),
-	 r->getWindMax(),
-	 r->getWindMaxFlag(),
-	 r->isDewPointExists()?r->getDewPoint():-1.0,
-	 r->isDewPointExists()?r->getDewPointFlag():true);
-      */
+      map<Tag, Tag>::iterator iter = station2Antenna.find(r->getStationId());
+      if (iter == station2Antenna.end()) {
+	infostream.str("");
+	infostream << "Could not find the antenna located on station #" << iter->first.getTagValue() <<". The row #" << i << " in the Weather table will be ignored";
+	info(infostream.str());
+	continue;
+      }
+	
+      msFiller->addWeather(iter->second.getTagValue(),
+			   time,
+			   interval,
+			   r->getPressure().get(),
+			   r->getPressureFlag(),
+			   r->getRelHumidity().get(),
+			   r->getRelHumidityFlag(),
+			   r->getTemperature().get(),
+			   r->getTemperatureFlag(),
+			   r->getWindDirection().get(),
+			   r->getWindDirectionFlag(),
+			   r->getWindSpeed().get(),
+			   r->getWindSpeedFlag(),
+			   r->isDewPointExists(),
+			   r->isDewPointExists()?r->getDewPoint().get():-1.0,
+			   r->isDewPointExists()?r->getDewPointFlag():true);
     }
     if (nWeather) {
       infostream.str("");
@@ -2405,7 +2431,7 @@ int main(int argc, char *argv[]) {
 	real_time_asdm_overall += real_time_asdm;
 	
 	if(sdmBinData.acceptMainRow(r)){
-	  //	  cout << "Processing ASDM Main row #" << i+1 << endl;
+
 	  mode = 0; myTimer(&cpu_time_asdm, &real_time_asdm, &mode);
 	  vmsDataPtr = sdmBinData.getDataCols();
 
@@ -2564,7 +2590,7 @@ int main(int argc, char *argv[]) {
 	    infostream.str("");
 	    infostream << "ASDM Main table row #" << i+1
 		       << " will be transformed into " << vmsDataPtr->v_antennaId1.size()
-		       << " the wvr uncorrected MS Main table rows." << endl;
+		       << " rows in the wvr uncorrected MS Main table." << endl;
 	    info(infostream.str());
 	    msFillers[AP_UNCORRECTED]->addData(complexData,
 					       (vector<double>&) vmsDataPtr->v_time, // this is already time midpoint
@@ -2595,7 +2621,7 @@ int main(int argc, char *argv[]) {
 	    infostream.str("");
 	    infostream << "ASDM Main table row #" << i+1
 		       << " will be transformed into " << correctedAntennaId1.size()
-		       << " the wvr corrected MS Main table rows." << endl;
+		       << " rows in the wvr corrected MS Main table." << endl;
 	    info(infostream.str());
 
 	    msFillers[AP_CORRECTED]->addData(complexData,
@@ -2642,8 +2668,12 @@ int main(int argc, char *argv[]) {
     catch ( std::exception & e) {
       errstream.str("");
       errstream << e.what();
+      error(errstream.str());      
+    }
+    catch (Error & e) {
+      errstream.str("");
+      errstream << e.getErrorMessage();
       error(errstream.str());
-      
     }
 
     infostream.str("");
@@ -2668,7 +2698,7 @@ int main(int argc, char *argv[]) {
 	   ++iter) {
 	string kindOfData = (iter->first == AP_UNCORRECTED) ? "wvr uncorrected" : "wvr corrected";
 	infostream.str("");
-	infostream << "converted in " << iter->second->ms()->nrow() << " main(s) in the measurement set containing the " << kindOfData << " data.";
+	infostream << "converted in " << iter->second->ms()->nrow() << " main(s) rows in the measurement set containing the " << kindOfData << " data.";
 	info(infostream.str());
       }
     }

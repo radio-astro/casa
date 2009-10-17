@@ -205,18 +205,32 @@ def cvel(vis, outputvis,
                     tmppc=phasecenter
                 phasecenter=tmppc
 
+        newphasecenter = phasecenter
+        phasecentername = phasecenter
         if not (type(phasecenter)==str):
-            # phase center id will change if we select on fields
-            # => need to go via its name
+            # first check that this field will be in the output MS
+            if not (phasecenter in ms.msseltoindex(vis,field=field)['field']):
+                message = "Field id " + str(phasecenter)
+                message += " was selected as phasecenter but is not among the fields selected for output: "
+                message += str(ms.msseltoindex(vis,field=field)['field'])
+                raise Exception, message
+
             tb.open(vis+"/FIELD")
             try:
-                phasecentername = tb.getcell('NAME', phasecenter)
-                phasecenter = phasecentername
+                # get the name for later display
+                phasecentername = tb.getcell('NAME', phasecenter) + " (original field " + str(phasecenter)
                 tb.close()
-            except Exception, instance:
+                # phase center id will change if we select on fields,
+                # the name column is only optionally filled and not necessarily unique.
+                # But ms.msseltoindex(vis,field=field)['field'] returns the old field ids
+                # in the order in which they will occur in the new field table.
+                # => need to get index from there as new phase center ID
+                newphasecenter = (ms.msseltoindex(vis,field=field)['field']).tolist().index(phasecenter)
+                phasecentername += ", new field " + str(newphasecenter) + ")"
+            except:
                 tb.close()
                 message = "phasecenter field id " + str(phasecenter) + " is not valid"
-                raise TypeError, message
+                raise Exception, message
 
         if(mode=='frequency'):
             ## reset the default values
@@ -225,8 +239,11 @@ def cvel(vis, outputvis,
             if(width==1):
                 width = ""
             ##check that start and width have units if they are non-empty
-            if(not(start=="") and (qa.quantity(start)['unit'].find('Hz') < 0)):
-                raise TypeError, "start parameter is not a valid frequency quantity " %start
+            if not(start==""):
+                if (qa.quantity(start)['unit'].find('Hz') < 0):
+                    raise TypeError, "start parameter is not a valid frequency quantity " %start
+                if(width==""):
+                    raise TypeError, "in frequency mode, width parameter must be set if start parameter is set"
             if(not(width=="") and (qa.quantity(width)['unit'].find('Hz') < 0)):
                 raise TypeError, "width parameter %s is not a valid frequency quantity " %width	
         elif(mode=='velocity'):
@@ -236,8 +253,11 @@ def cvel(vis, outputvis,
             if(width==1):
                 width = ""
             ##check that start and width have units if they are non-empty
-            if(not(start=="") and (qa.quantity(start)['unit'].find('m/s') < 0)):
-                raise TypeError, "start parameter %s is not a valid velocity quantity " %start
+            if not(start==""):
+                if (qa.quantity(start)['unit'].find('m/s') < 0):
+                    raise TypeError, "start parameter %s is not a valid velocity quantity " %start
+                if(width==""):
+                    raise TypeError, "in velocity mode, width parameter must be set if start parameter is set"
             if(not(width=="") and (qa.quantity(width)['unit'].find('m/s') < 0)):
                 raise TypeError, "width parameter %s is not a valid velocity quantity " %width
         elif(mode=='channel'):
@@ -274,7 +294,7 @@ def cvel(vis, outputvis,
 
         ms.close()
 
-        # time sort it (required for cvel2)
+        # time sort it (required for cvel)
 	ms.open(outputvis, nomodify=False)
         ms.timesort()        
         ms.close()
@@ -283,24 +303,12 @@ def cvel(vis, outputvis,
         casalog.post("Regridding SubMS ...", 'INFO')
 	ms.open(outputvis, nomodify=False)
 
-        # redetermine the phase center field id after split
-        # (cvel expects a numerical ID or a Direction)
-
-        message = "Using " + phasecenter + " as phase center."
+        message = "Using " + phasecentername + " as phase center."
         casalog.post(message, 'INFO')
-        tmppc = phasecenter
-        try:
-            if(len(ms.msseltoindex(outputvis, field=phasecenter)['field']) > 0):
-                tmppc = ms.msseltoindex(outputvis, field=phasecenter)['field'][0]
-                ##succesful must be string like '0' or 'NGC*'
-        except Exception, instance:
-            ##failed must be a string 'J2000 18h00m00 10d00m00'
-            tmppc = phasecenter
-        phasecenter = tmppc    
 
 	if not ms.cvel(mode=mode, nchan=nchan, start=start, width=width,
                        interp=interpolation,
-                       phasec=phasecenter, restfreq=restfreq,
+                       phasec=newphasecenter, restfreq=restfreq,
                        outframe=outframe, veltype=veltype):
             ms.close()
             raise Exception, "Error in regridding step ..."
@@ -413,16 +421,16 @@ def cvel(vis, outputvis,
 	ms.writehistory(message='interpolation = '+str(interpolation), origin='cvel')
 	ms.writehistory(message='outframe    = "'+str(outframe)+'"',
 			origin='cvel')
-	ms.writehistory(message='phasecenter = "'+str(phasecenter)+'"',
+	ms.writehistory(message='phasecenter = "'+ str(phasecentername) +'"',
 			origin='cvel')
 	ms.writehistory(message='hanning   = "'+str(hanning)+'"',
 			origin='cvel')
 	ms.close()
 
+        return True
 
     except Exception, instance:
         casalog.post("Error ...", 'SEVERE')
-	print '*** Error ***', instance
 	raise Exception, instance
     
 

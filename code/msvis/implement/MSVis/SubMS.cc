@@ -1234,26 +1234,39 @@ namespace casa {
   // fillFieldTable() or copySource().
   void SubMS::relabelSources()
   {
-    // Note that mscIn_p->field().sourceId() has ALL of the sourceIDs in
-    // the input MS, not just the selected ones.
-    const Vector<Int>& inSrcIDs = mscIn_p->field().sourceId().getColumn();
+    LogIO os(LogOrigin("SubMS", "relabelSources()"));
 
-    // uInt nInputSrcs = inSrcIDs.nelements();
-    Int nOutputSrcs = max(inSrcIDs);
+    //Source is an optional table, so it may not exist
+    if(Table::isReadable(mssel_p.sourceTableName())){
+      // Note that mscIn_p->field().sourceId() has ALL of the sourceIDs in
+      // the input MS, not just the selected ones.
+      const Vector<Int>& inSrcIDs = mscIn_p->field().sourceId().getColumn();
+
+      // uInt nInputSrcs = inSrcIDs.nelements();
+      Int nOutputSrcs = max(inSrcIDs);
     
-    if(nOutputSrcs < 1)                   // Ensure space for -1.
-      nOutputSrcs = 1;
-    sourceRelabel_p.resize(nOutputSrcs);
-    sourceRelabel_p.set(-1);   	          // Default to "any".
+      if(nOutputSrcs < 1)                   // Ensure space for -1.
+        nOutputSrcs = 1;
+      sourceRelabel_p.resize(nOutputSrcs);
+      sourceRelabel_p.set(-1);   	          // Default to "any".
 
-    // Enable sourceIDs that are actually referred to by selected fields, and
-    // remap them using j.
-    uInt j = 0;
-    for(uInt k = 0; k < fieldid_p.nelements(); ++k){
-      if(inSrcIDs[fieldid_p[k]] > -1){
-	sourceRelabel_p[inSrcIDs[fieldid_p[k]]] = j;
-	++j;
+      // Enable sourceIDs that are actually referred to by selected fields, and
+      // remap them using j.
+      uInt j = 0;
+      for(uInt k = 0; k < fieldid_p.nelements(); ++k){
+        if(inSrcIDs[fieldid_p[k]] > -1){
+          sourceRelabel_p[inSrcIDs[fieldid_p[k]]] = j;
+          ++j;
+        }
       }
+    }
+    else{
+      os << LogIO::NORMAL
+         << "The input MS does not have the optional SOURCE table.\n"
+         << "-1 will be used as a generic source ID."
+         << LogIO::POST;
+      sourceRelabel_p.resize(1);
+      sourceRelabel_p.set(-1);   	          // Default to "any".      
     }
   }
 
@@ -1403,11 +1416,9 @@ namespace casa {
       }
     }
 
-    
-
     if(needRegridding){
 
-      // cout << "Main table data array columns will be rewritten." << endl;
+      os << LogIO::NORMAL << "Main table data array columns will be rewritten ..." <<  LogIO::POST;
 
       // create the "partner" columns, i.e. rename the old array columns to old...
       // and create new empty columns with the original names to hold the regridded values
@@ -1504,8 +1515,8 @@ namespace casa {
     uInt nMainTabRows = ms_p.nrow();
 
     // prepare progress meter
-    Float progress = 0.5;
-    Float progressStep = 0.5;
+    Float progress = 0.4;
+    Float progressStep = 0.4;
     if(ms_p.nrow()>1000000){
       progress = 0.2;
       progressStep = 0.2;
@@ -1868,7 +1879,7 @@ namespace casa {
 	// starting from the central channel going down
 	//    Want to keep the center of the center channel at the center of
 	//    the new center channel if the bandwidth is an odd multiple of the
-        //    new channel width or the regridCenter was explicitely given,
+        //    new channel width or the regridCenter was explicitely given, 
 	//    otherwise the center channel is the lower edge of the new center channel
 	Int startChan;
 	Double tnumChan = regridBandwidthChan/regridChanWidthChan;
@@ -2084,9 +2095,13 @@ namespace casa {
            transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2.){
 	  theRegridBWF = (transNewXin[oldNUM_CHAN-1] +
                           transCHAN_WIDTH[oldNUM_CHAN-1]/2. - theRegridCenterF)*2.;
+	  oss << " *** Defined new spectral window exceeds upper end of original window." << endl
+	      << " Shrinking it to maximum possible size keeping defined center (may reduce number of channels)." << endl;
 	}
 	if(theRegridCenterF - theRegridBWF/2. < transNewXin[0] - transCHAN_WIDTH[0]/2.){
-	  theRegridBWF = (theRegridCenterF - transNewXin[0] - transCHAN_WIDTH[0]/2.)*2.;
+	  theRegridBWF = (theRegridCenterF - transNewXin[0] + transCHAN_WIDTH[0]/2.)*2.;
+	  oss << " *** Defined new spectral window exceeds lower end of original window." << endl
+	      << " Shrinking it to maximum possible size keeping defined center (may reduce number of channels)." << endl;
 	}
       }
       if(regridChanWidthF <= 0.){ // "not set"
@@ -2101,6 +2116,7 @@ namespace casa {
 	theCentralChanWidthF = regridChanWidthF;
 	if(theCentralChanWidthF>theRegridBWF){ // too large => make a single channel
 	  theCentralChanWidthF = theRegridBWF;
+	  oss << " *** Requested new channel width exceeds defined SPW width. Shrinking to maximum size." << endl;
 	}
 	else{ // check if too small
 	  // determine smallest channel width in the new band
@@ -2115,6 +2131,8 @@ namespace casa {
 	  if(theCentralChanWidthF < smallestChanWidth){
 	    // too small => make as small as the smallest channel
 	    theCentralChanWidthF = smallestChanWidth;
+	    oss << " *** Requested new channel width is smaller than smallest original channel width." << endl
+		<< " Increasing channel width to minimum possible size." << endl;
 	  }
 	  else { // input channel width was OK, memorize 
 	    theChanWidthX = regridChanWidth;
@@ -2125,8 +2143,7 @@ namespace casa {
 	  << " Central frequency (in output frame) = " << theRegridCenterF
           << " Hz" << endl 
 	  << " Width of central channel (in output frame) = "
-          << theCentralChanWidthF << " Hz" << endl
-	  << " Total bandwidth (in output frame) = " << theRegridBWF << " Hz" << endl;
+          << theCentralChanWidthF << " Hz" << endl;
       
       // now calculate newChanLoBound, and newChanHiBound from
       // theRegridCenterF, theRegridBWF, theCentralChanWidthF
@@ -2153,10 +2170,10 @@ namespace casa {
 
 	//    Want to keep the center of the center channel at the center of
 	//    the new center channel if the bandwidth is an odd multiple of the
-        //    new channel width or the regridCenter was explicitly given,
+        //    new channel width,
 	//    otherwise the center channel is the lower edge of the new center channel
 	Int tnumChan = (Int) rint(theRegridBWF/theCentralChanWidthF);
-	if((tnumChan/2. - tnumChan/2)>0.1 || regridCenter>-1E30){
+	if((tnumChan/2. - tnumChan/2)>0.1){
           // odd multiple or center channel given by user 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
@@ -2241,11 +2258,11 @@ namespace casa {
 
 	//    Want to keep the center of the center channel at the center of
 	//    the new center channel if the bandwidth is an odd multiple of the
-	//    new channel width or the regridCenter was explicitely given,
+	//    new channel width,
 	//    otherwise the center channel is the lower edge of the new center
 	//    channel
 	Int tnumChan = (Int) rint(theRegridBWF/theCentralChanWidthF);
-	if((tnumChan/2. - tnumChan/2)>0.1 || regridCenter>-1E30){
+	if((tnumChan/2. - tnumChan/2)>0.1){
           // odd multiple or center channel given by user 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
@@ -2325,10 +2342,10 @@ namespace casa {
 
 	//    Want to keep the center of the center channel at the center of
 	//    the new center channel if the bandwidth is an odd multiple of the
-        //    new channel width or the regridCenter was explicitely given,
+        //    new channel width, 
 	//    otherwise the center channel is the lower edge of the new center channel
 	Double tnumChan = theRegridBWF/theCentralChanWidthF;
-	if((tnumChan/2. - tnumChan/2)>0.1 || regridCenter>-1E30){
+	if((tnumChan/2. - tnumChan/2)>0.1){
           // odd multiple or center channel given by user 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
@@ -2379,11 +2396,11 @@ namespace casa {
 
 	//    Want to keep the center of the center channel at the center of
 	//    the new center channel if the bandwidth is an odd multiple of the
-	//    new channel width or the regridCenter was explicitly given,
+	//    new channel width, 
 	//    otherwise the center channel is the lower edge of the new center
 	//    channel
 	Int tnumChan = (Int) rint(theRegridBWF/theCentralChanWidthF);
-	if((tnumChan/2. - tnumChan/2)>0.1 || regridCenter>-1E30){
+	if((tnumChan/2. - tnumChan/2)>0.1){
           // odd multiple or center channel given by user 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
@@ -2478,113 +2495,19 @@ namespace casa {
 	newChanHiBound[i+numNewChanDown-1] = hiFBup[i];
       }
       
+      uInt nc = newChanLoBound.size();
+      oss << " Number of channels = " << nc << endl;
+      oss << " Total width of SPW (in output frame) = " << newChanHiBound[nc-1] - newChanLoBound[0] 
+	  << " Hz" << endl;
+      oss << " Lower edge = " << newChanLoBound[0] << " Hz,"
+	  << " upper edge = " << newChanHiBound[nc-1] << " Hz" << endl;
+
       message = oss.str();
       return True;
       
     } // end if (regridQuant=="chan")
 
   }
-
-// Bool addOutputSpw()
-// {
-//   // complete the calculation of the new spectral window parameters
-//   // from newNUM_CHAN, newChanLoBound, and newChanHiBound 
-//   newXout.resize(newNUM_CHAN);
-//   newCHAN_WIDTH.resize(newNUM_CHAN);
-//   for(Int i=0; i<newNUM_CHAN; i++){
-//     newXout[i] = (newChanLoBound[i]+newChanHiBound[i])/2.;
-//     newCHAN_WIDTH[i] = newChanHiBound[i]-newChanLoBound[i];
-//     newRESOLUTION[i] = newCHAN_WIDTH[i]; //???????????
-//   }
-//   // set the reference frequency to the lower edge of the new spw,
-//   // keeping the already changed frame
-//   MVFrequency mvf(newChanLoBound[0]);
-//   newREF_FREQUENCY.set(mvf);
-	    
-//   // trivial definition of the bandwidth
-//   newTOTAL_BANDWIDTH = newChanHiBound[newNUM_CHAN-1]-newChanLoBound[0];
-	    
-//   // effective bandwidth needs to be interpolated in quadrature
-//   newEFFECTIVE_BW.resize(newNUM_CHAN);
-//   Vector<Double> newEffBWSquared(newNUM_CHAN);
-//   Vector<Double> oldEffBWSquared(oldEFFECTIVE_BW);
-//   for(Int i=0; i<oldNUM_CHAN; i++){
-//     oldEffBWSquared[i] *= oldEffBWSquared[i];
-//   }
-//   for(Int i=0; i<newNUM_CHAN; i++){
-//     newEFFECTIVE_BW[i] = sqrt(newEffBWSquared[i]);
-//   }
-
-//   // Create new row in the SPW table (with ID nextSPWId) by copying
-//   // all information from row theSPWId
-//   if(!spwtable.canAddRow()){
-//     os << LogIO::SEVERE
-//        << "Cannot add new row to SPECTRAL_WINDOW table." 
-//        << LogIO::POST;
-//     return False; 
-//   }
-	    
-//   numNewSPWIds++;
-//   nextSPWId++;
-	    
-//   os << LogIO::NORMAL
-//      << "Spectral window "
-//      << nextSPWId - origNumSPWs << " will be created with parameters " << endl 
-//      << message
-//      << LogIO::POST;
-	    
-//   // prepare parameter string for later entry into MS history
-//   {    
-//     ostringstream param;
-//     param << "Regridded SPW " << nextSPWId - origNumSPWs
-//           << " created with parameters " << endl
-//           << message << endl;
-//     regridMessage += param.str(); // append
-//   }
-	    
-//   spwtable.addRow();
-//   TableRow SPWRow(spwtable);
-//   TableRecord spwRecord = SPWRow.get(theSPWId);
-//   // TODO        Warn if the original channels are not contiguous or overlap!
-//   SPWRow.putMatchingFields(nextSPWId, spwRecord);
-	    
-//   // and replacing the following columns with updated information:
-//   // Store xout as new value of CHAN_FREQ.
-//   chanFreqCol.put(nextSPWId, newXout);
-//   numChanCol.put(nextSPWId, newNUM_CHAN);
-//   chanWidthCol.put(nextSPWId,  newCHAN_WIDTH);
-//   refFrequencyCol.put(nextSPWId, newREF_FREQUENCY.getValue());
-//   measFreqRefCol.put(nextSPWId, (Int)theFrame);
-//   totalBandwidthCol.put(nextSPWId, newTOTAL_BANDWIDTH);
-//   effectiveBWCol.put(nextSPWId, newEFFECTIVE_BW);
-//   resolutionCol.put(nextSPWId, newRESOLUTION);
-
-//   //   Create a new row in the DATA_DESCRIPTION table and enter
-//   //   nextSPWId in the SPW_ID column, copy the polarization id and
-//   //   the flag_row content from the old DATA_DESCRIPTION row.
-//   if(!ddtable.canAddRow()){
-//     os << LogIO::SEVERE
-//        << "Cannot add a new row to the DATA_DESCRIPTION table."
-//        << LogIO::POST;
-//     return False; 
-//   }
-//   numNewDataDesc++;
-//   nextDataDescId++;
-//   ddtable.addRow();
-//   TableRow DDRow(ddtable);
-//   TableRecord DDRecord = DDRow.get(theDataDescId);
-//   DDRow.putMatchingFields(nextDataDescId, DDRecord);
-
-//   // anticipate the deletion of the original SPW table rows
-//   SPWIdCol.put(nextDataDescId, nextSPWId - origNumSPWs); 
-	    
-//   // writing the value of nextDataDescId into the DATA_DESC_ID 
-//   // of the present MAIN table row.  will be done in the main cvel
-//   // method
-//   theDataDescId = nextDataDescId;
-
-//   return true;
-// }
 
   Bool SubMS::setRegridParameters(vector<Int>& oldSpwId,
 				  vector<Int>& oldFieldId,
@@ -2624,7 +2547,6 @@ namespace casa {
     methodF.resize(0);
     regrid.resize(0);	
     
-
     // Determine the highest data_desc_id from the DATA_DESCRIPTION table
     // (= number of rows).
     MSDataDescription ddtable = ms_p.dataDescription();
@@ -2658,7 +2580,7 @@ namespace casa {
     MSMainColumns mainCols(ms_p);
     ScalarColumn<Int> fieldIdCol = mainCols.fieldId();
     ScalarColumn<Int> DDIdCol = mainCols.dataDescId();
-
+    ScalarMeasColumn<MEpoch> mainTimeMeasCol = mainCols.timeMeas();
     // other administrational tables
 
     MSDataDescColumns DDCols(ddtable);
@@ -2679,7 +2601,7 @@ namespace casa {
     MSField fieldtable = ms_p.field();
     MSFieldColumns FIELDCols(fieldtable);
     //ArrayMeasColumn<MDirection> referenceDirMeasCol = FIELDCols.referenceDirMeasCol(); 
-    ScalarMeasColumn<MEpoch>& timeMeasCol = FIELDCols.timeMeas();
+    //ScalarMeasColumn<MEpoch>& timeMeasCol = FIELDCols.timeMeas();
     ScalarColumn<Int> FIELDsourceIdCol = FIELDCols.sourceId(); 
 
     // calculate mean antenna position for TOPO transformation
@@ -2766,9 +2688,12 @@ namespace casa {
 	//      -> store in oldRefFrame[numNewDataDesc] (further below)
 	//   3) in case either the original or the destination reference frame
 	//      is TOPO or GEO, we need the observation time
-	//      (taken from the TIME cell corresponding to theFieldId in the FIELD table)
+////      (taken from the TIME cell corresponding to theFieldId in the FIELD table)
+////      -> store in obsTime[numNewDataDesc] (further below)
+// 	MEpoch theObsTime = timeMeasCol(theFieldId);
+	//      (taken from the time of the first integration for this (theFieldId, theSPWId) pair)
 	//      -> store in obsTime[numNewDataDesc] (further below)
-	MEpoch theObsTime = timeMeasCol(theFieldId);
+       	MEpoch theObsTime = mainTimeMeasCol(mainTabRow);
 	//   4) direction of the field, i.e. the phase center
 	MDirection theFieldDir;
 	if(regridPhaseCenterFieldId<-1){ // take it from the PHASE_DIR cell
@@ -2780,8 +2705,6 @@ namespace casa {
 	}
 	else if((uInt)regridPhaseCenterFieldId < fieldtable.nrow()){ // use this valid field ID
 	  theFieldDir = FIELDCols.phaseDirMeas(regridPhaseCenterFieldId, 0);
-	  // and the corresponding obs time (??)
-	  theObsTime = timeMeasCol(regridPhaseCenterFieldId);
 	}
 	else{
 	  os << LogIO::SEVERE << "Field to be used as phase center, id " 
@@ -2789,6 +2712,9 @@ namespace casa {
 	     << ", does not exist." << LogIO::POST;
 	  return False;
 	}
+	//	cout << "theFieldId = " << theFieldId << ", theObsTime = " << theObsTime
+	//	     << ", theFieldDir = " << theFieldDir.getAngle() << endl;
+
 	//      -> store in fieldDir[numNewDataDesc] (further below)
 	//   5) in case either the original or the destination reference frame
 	//      (but not both) are TOPO, we need the observatory position
@@ -2947,6 +2873,8 @@ namespace casa {
 	    theMethod = InterpolateArray1D<Float,Complex>::linear;
 	    theMethodF = InterpolateArray1D<Double,Float>::linear;
 	    methodName = "linear";
+	    message = " output frame = " + MFrequency::showType(theFrame) + " (pure transformation of the channel definition)";
+	    // cout <<  regridQuant << " " << regridCenter << " " << regridBandwidth << " " << regridChanWidth << endl;
 	  }
 	  else { // a regrid quantity was chosen
 	    // determine interpolation method (this is common for all possible
@@ -3011,11 +2939,11 @@ namespace casa {
 	    message = " output frame = " + MFrequency::showType(theFrame) +
               "\n" + message + " Interpolation Method = " + methodName;
 	    
-	    
 	    // complete the calculation of the new spectral window parameters
 	    // from newNUM_CHAN, newChanLoBound, and newChanHiBound 
 	    newXout.resize(newNUM_CHAN);
 	    newCHAN_WIDTH.resize(newNUM_CHAN);
+	    newRESOLUTION.resize(newNUM_CHAN);
 	    for(Int i=0; i<newNUM_CHAN; i++){
 	      newXout[i] = (newChanLoBound[i]+newChanHiBound[i])/2.;
 	      newCHAN_WIDTH[i] = newChanHiBound[i]-newChanLoBound[i];
@@ -3065,19 +2993,15 @@ namespace casa {
 	    numNewSPWIds++;
 	    nextSPWId++;
 	    
-	    os << LogIO::NORMAL
-               << "Regridded spectral window "
-               << nextSPWId - origNumSPWs << " will be created with parameters " << endl 
-	       << message
-               << LogIO::POST;
-	    
-	    // prepare parameter string for later entry into MS history
+	    // prepare parameter string for later entry into MS history and report to logger
 	    {    
 	      ostringstream param;
-	      param << "Regridded SPW " << nextSPWId - origNumSPWs
-                    << " created with parameters " << endl
+	      param << "Regridded spectral window "
+		    << nextSPWId - origNumSPWs << " will be created for field " 
+		    << theFieldId << " with parameters " << endl
                     << message << endl;
 	      regridMessage += param.str(); // append
+	      os << LogIO::NORMAL << param.str() << LogIO::POST;
 	    }
 	    
 	    spwtable.addRow();
@@ -3942,8 +3866,8 @@ namespace casa {
       uInt mainTabRow=0;
       uInt newMainTabRow=0;
       // prepare progress meter
-      Float progress = 0.5;
-      Float progressStep = 0.5;
+      Float progress = 0.4;
+      Float progressStep = 0.4;
       if(nMainTabRows>1000000){
 	progress = 0.2;
 	progressStep = 0.2;
@@ -4466,6 +4390,9 @@ namespace casa {
     msc_p->interval().putColumn(mscIn_p->interval());
     msc_p->scanNumber().putColumn(mscIn_p->scanNumber());
     msc_p->time().putColumn(mscIn_p->time());
+
+    // Technically, if only some of the channels are selected or flagged,
+    // timeCentroid should be recalculated.
     msc_p->timeCentroid().putColumn(mscIn_p->timeCentroid());
 
     // ScalarMeasColumn doesn't have a putColumn() for some reason.
@@ -4750,7 +4677,7 @@ void SubMS::relabelIDs()
       }
 
       return True;
-    }    
+    }
   
     return False;
   }

@@ -82,7 +82,7 @@ PGPlotterInterface & RFChunkStats::pgprep() const
 void RFChunkStats::setReportPanels (Int nx,Int ny) const 
 { flagger.setReportPanels(nx,ny); }
 
-void RFChunkStats::newChunk (unsigned ntimes, bool init_quack)
+void RFChunkStats::newChunk(bool init_quack)
 {
   itime=-1;
   chunk_no++;
@@ -91,12 +91,9 @@ void RFChunkStats::newChunk (unsigned ntimes, bool init_quack)
   counts[POLZN] = visshape(0);
   counts[CHAN] = visshape(1);
 
-  counts[TIME] = ntimes;
-//  counts[TIME] = flagger.numTime();
-//  Flagger::logSink()<<LogIO::WARN<< 
-//    "RFChunkStats::newChunk(): "
-//    "VisIter::nSubInterval() not yet implemented. Using global NTIME instead\n"<<LogIO::POST;
+  counts[TIME] = visiter.nSubInterval();
   counts[ROW]  = visiter.nRowChunk();
+
 // get correlation types
   visiter.corrType(corrtypes);
 // reset min/max time slots

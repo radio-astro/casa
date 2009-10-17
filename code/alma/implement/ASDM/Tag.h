@@ -180,7 +180,7 @@ public:
 	 * 
 	 * @note The returned integer value has a meaning if and only if the Taf is not null.
 	 */
-	unsigned int getTagValue();
+	unsigned int getTagValue() const ;
 
 #ifndef WITHOUT_ACS
 	/**

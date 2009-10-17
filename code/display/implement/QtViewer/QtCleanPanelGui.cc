@@ -257,7 +257,7 @@ namespace casa {
     }
 
 
-    QtCleanPanelGui::~QtCleanPanelGui() { }
+  QtCleanPanelGui::~QtCleanPanelGui() { }
 
 #define EXIT_FUNC(NAME,STR,EXTRA)						\
     void QtCleanPanelGui::NAME() {						\
@@ -327,8 +327,13 @@ namespace casa {
 	// QtDBusViewerAdaptor... which sets isOverridedClose( )...
 //	if ( ! v_->exiting( ) && ! isOverridedClose( ) ) {
 	if ( ! isOverridedClose( ) ) {
-	    event->ignore( );
-	    hide( );
+
+	  
+	  event->ignore( );
+	  //hide( );	  
+	  //That is what is meant most probably at this stage
+	  exitStop();
+
 	} else {
 	    QtDisplayPanelGui::closeEvent(event);
 	}

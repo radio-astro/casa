@@ -233,6 +233,7 @@ namespace casa {
     ROMSColumns msc(ms);
     Vector<Double> time( msc.time().getColumn() );
     uInt nrows = time.nelements();
+    unsigned ntime;
 
     if (nrows == 0) ntime = 0;
     else {
@@ -1689,7 +1690,7 @@ namespace casa {
             acc[i]->initialize();
           }
 
-	  chunk.newChunk(ntime, quack_agent_exists);
+	  chunk.newChunk(quack_agent_exists);
 
 	  // limit frequency of progmeter updates (duh!)
 	  Int pm_update_freq = chunk.num(TIME)/200;

@@ -178,7 +178,7 @@ Regrid an MS to a new spectral window / channel structure or frame
 		    <default param="interpolation"><value type="string">linear</value></default>
 	        </equals>
 	        <equals value="frequency">
-			<default param="nchan"><value type="int">1</value></default>
+			<default param="nchan"><value type="int">-1</value></default>
 			<default param="start"><value type="string">""</value>
 			    <description>Frequency of first image channel: e.q. \'1.4GHz\'</description>
 		    </default>
@@ -206,7 +206,7 @@ Regrid an MS to a new spectral window / channel structure or frame
                
        passall --  if False, data not meeting the selection is omitted/deleted 
                or flagged (if in-row); if True, data not meeting the selection 
-               is passed through without modification
+               on field and spw is passed through without modification
 	       default: False; example: 
                field='NGC5921'
                passall=False : only data from NGC5921 is included in output MS, 

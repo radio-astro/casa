@@ -822,6 +822,9 @@ int SDFITSreader::getHeader(
     strcpy(dopplerFrame, "TOPOCENT");
 
     // Look for VELFRAME, written by earlier versions of Livedata.
+    //
+    // Added few more codes currently (as of 2009 Oct) used in the GBT
+    // SDFITS (based io_sdfits_define.pro of GBTIDL). - TT
     if (readParm("VELFRAME", TSTRING, dopplerFrame)) {	// Additional.
       // No, try digging it out of the CTYPE card (AIPS convention).
       char keyw[9], ctype[9];
@@ -833,15 +836,35 @@ int SDFITSreader::getHeader(
         if (strcmp(dopplerFrame, "LSR") == 0) {
           // LSR unqualified usually means LSR (kinematic).
           strcpy(dopplerFrame, "LSRK");
+        } else if (strcmp(dopplerFrame, "LSD") == 0) {
+          // LSR as a dynamical defintion 
+          strcpy(dopplerFrame, "LSRD");
         } else if (strcmp(dopplerFrame, "HEL") == 0) {
           // Almost certainly barycentric.
           strcpy(dopplerFrame, "BARYCENT");
+        } else if (strcmp(dopplerFrame, "BAR") == 0) {
+          // barycentric.
+          strcpy(dopplerFrame, "BARYCENT");
+        } else if (strcmp(dopplerFrame, "OBS") == 0) {
+          // observed or topocentric.
+          strcpy(dopplerFrame, "TOPO");
+        } else if (strcmp(dopplerFrame, "GEO") == 0) {
+          // geocentric 
+          strcpy(dopplerFrame, "GEO");
+        } else if (strcmp(dopplerFrame, "GAL") == 0) {
+          // galactic 
+          strcpy(dopplerFrame, "GAL");
+        } else if (strcmp(dopplerFrame, "LGR") == 0) {
+          // Local group 
+          strcpy(dopplerFrame, "LGROUP");
+        } else if (strcmp(dopplerFrame, "CMB") == 0) {
+          // Cosimic Microwave Backgroup
+          strcpy(dopplerFrame, "CMB");
         }
       } else {
         strcpy(dopplerFrame, "");
       }
     }
-
     // Translate to FITS standard names.
     if (strncmp(dopplerFrame, "TOP", 3) == 0) {
       strcpy(dopplerFrame, "TOPOCENT");
@@ -851,9 +874,15 @@ int SDFITSreader::getHeader(
       strcpy(dopplerFrame, "HELIOCEN");
     } else if (strncmp(dopplerFrame, "BARY", 4) == 0) {
       strcpy(dopplerFrame, "BARYCENT");
+    } else if (strncmp(dopplerFrame, "GAL", 3) == 0) {
+      strcpy(dopplerFrame, "GALACTOC");
+    } else if (strncmp(dopplerFrame, "LGROUP", 6) == 0) {
+      strcpy(dopplerFrame, "LOCALGRP");
+    } else if (strncmp(dopplerFrame, "CMB", 3) == 0) {
+      strcpy(dopplerFrame, "CMBDIPOL");
     }
   }
-
+  
   if (cStatus) {
     log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
     return 1;
@@ -1251,7 +1280,6 @@ int SDFITSreader::read(
   if (!cSDptr) {
     return 1;
   }
-
   // Find the next selected beam and IF.
   short iBeam = 0, iIF = 0;
   while (++cRow <= cNRow) {

@@ -41,22 +41,22 @@ namespace asdm {
   class NumberFormatException : public InvalidArgumentException {
     
   public:
+    /**
+     * An empty CTOR
+     */
     NumberFormatException();
+
+    /**
+     * A CTOR with a message.
+     */
     NumberFormatException(const string &s);
+
+    /**
+     * the DTOR
+     */
     virtual ~NumberFormatException();
     
   };
-  
-  inline NumberFormatException::NumberFormatException (const string &s) : 
-    InvalidArgumentException("No valid numeric data in string: [" + s + "]") {
-  }
-
-  inline NumberFormatException::NumberFormatException () : 
-    InvalidArgumentException("No valid numeric data in string") {
-  }
-
-  inline NumberFormatException::~NumberFormatException() {;}
-
 } // End namespace asdm
 
 #endif /* NumberFormatException_CLASS */

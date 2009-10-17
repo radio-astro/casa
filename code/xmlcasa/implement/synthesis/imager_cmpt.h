@@ -10,8 +10,6 @@
  * @version 
  ***/
 
-//Please keep this consistent with gcode*/impl/imager_cmpt.h.
-
 #ifndef _imager_cmpt__H__
 #define _imager_cmpt__H__
 
@@ -124,25 +122,20 @@ class imager
 
     bool setdata(const std::string& mode = "none", const std::vector<int>& nchan = std::vector<int> (1, 1), const std::vector<int>& start = std::vector<int> (1, 0), const std::vector<int>& step = std::vector<int> (1, 1), const Quantity& mstart = Quantity(std::vector<double> (1, 0.0),"km/s"), const Quantity& mstep = Quantity(std::vector<double> (1, 0.0),"km/s"), const std::vector<int>& spwid = std::vector<int> (1, 0), const std::vector<int>& fieldid = std::vector<int> (1, 0), const std::string& msselect = "", const bool async = false);
 
-    bool selectvis(const std::string& vis = "", const std::vector<int>& nchan = std::vector<int> (1, -1), const std::vector<int>& start = std::vector<int> (1, 0), const std::vector<int>& step = std::vector<int> (1, 1), const ::casac::variant& spw = ::casac::initialize_variant("-1"), const ::casac::variant& field = ::casac::initialize_variant("-1"), const ::casac::variant& baseline = ::casac::initialize_variant("-1"), const ::casac::variant& time = ::casac::initialize_variant(""), const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& taql = "", const bool usescratch = false);
+    bool selectvis(const std::string& vis = "", const std::vector<int>& nchan = std::vector<int> (1, -1), const std::vector<int>& start = std::vector<int> (1, 0), const std::vector<int>& step = std::vector<int> (1, 1), const ::casac::variant& spw = ::casac::initialize_variant("-1"), const ::casac::variant& field = ::casac::initialize_variant("-1"), const ::casac::variant& baseline = ::casac::initialize_variant("-1"), const ::casac::variant& time = ::casac::initialize_variant(""), const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& taql = "", const bool usescratch = false, const bool datainmemory = false);
 
     bool setimage(const int nx = 128, const int ny = 128, const Quantity& cellx = Quantity(std::vector<double> (1, 1.0),"arcsec"), const Quantity& celly = Quantity(std::vector<double> (1, 1.0),"arcsec"), const std::string& stokes = "I", const bool doshift = false, const std::string& phasecenter = "00h00m00.00 +090d00m00.000 B1950", const Quantity& shiftx = Quantity(std::vector<double> (1, 0.0),"arcsec"), const Quantity& shifty = Quantity(std::vector<double> (1, 0.0),"arcsec"), const std::string& mode = "mfs", const int nchan = 1, const int start = 0, const int step = 1, const std::string& mstart = "0 km/s", const std::string& mstep = "1 km/s", const std::vector<int>& spwid = std::vector<int> (1, 0), const int fieldid = 0, const int facets = 1, const Quantity& distance = Quantity(std::vector<double> (1, 0.0),"m"));
 
-    bool setjy(const ::casac::variant& field = ::casac::initialize_variant(""),
-               const ::casac::variant& spw = ::casac::initialize_variant(""),
-               const std::string& modimage = "",
-               const std::vector<double>& fluxdensity = ::casac::initialize_vector( 4, (double) 0.0, (double) 0.0, (double) 0.0, (double) 0.0 ),
-               const std::string& standard = "SOURCE");
+    bool setjy(const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& spw = ::casac::initialize_variant(""), const std::string& modimage = "", const std::vector<double>& fluxdensity = ::casac::initialize_vector( 4, (double) 0.0, (double) 0.0, (double) 0.0, (double) 0.0 ), const std::string& standard = "SOURCE");
 
     bool setmfcontrol(const double cyclefactor = 1.5, const double cyclespeedup = -1, const int stoplargenegatives = 2, const int stoppointmode = -1, const double minpb = 0.1, const std::string& scaletype = "NONE", const double constpb = 0.4, const std::vector<std::string>& fluxscale = std::vector<std::string> (1, ""));
 
     bool setoptions(const std::string& ftmachine = "ft", const int cache = -1, const int tile = 16, const std::string& gridfunction = "SF", const ::casac::variant& location = ::casac::initialize_variant(""), const double padding = 1.0, const std::string& freqinterp = "nearest", const int wprojplanes = 1, const std::string& epjtablename = "", const bool applypointingoffsets = false, const bool dopbgriddingcorrections = true, const std::string& cfcachedirname = "", const double pastep = 1.0, const double pblimit = 0.05);
 
-    bool setscales(const std::string& scalemethod = "nscales",
-                   const int nscales = 5,
-                   const std::vector<double>& uservector = ::casac::initialize_vector( 3, (double) 0.0, (double) 3.0, (double) 10.0 ));
+    bool setscales(const std::string& scalemethod = "nscales", const int nscales = 5, const std::vector<double>& uservector = ::casac::initialize_vector( 3, (double) 0.0, (double) 3.0, (double) 10.0 ));
 
     bool setsmallscalebias(const float inbias = 0.6);
+
     bool settaylorterms(const int ntaylorterms = 2, const double reffreq = 1.4e+09);
 
     bool setsdoptions(const double scale = 1.0, const double weight = 1.0, const int convsupport = -1, const std::string& pointingcolumntouse = "DIRECTION");

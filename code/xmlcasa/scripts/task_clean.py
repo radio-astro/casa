@@ -153,7 +153,6 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                         # It does not work well for multi-spw so need
                         # to select with nchan=-1
                         if dochaniter:
-                                print "doing something..."
                                 imnchan=1
                                 chanslice=j
                                 qat=qatool.create();

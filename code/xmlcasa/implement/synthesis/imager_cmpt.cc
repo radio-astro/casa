@@ -570,6 +570,11 @@ imager::linearmosaic(const std::vector<std::string>& images, const std::string& 
    if(hasValidMS_p){
    try {
       Vector <String> aimages(toVectorString(images));
+      String vp(vptable);
+      if(!vp.empty())
+	itsImager->setvp(True, False, vp, False, casa::Quantity(360.0, "deg"), casa::Quantity(180.0, "deg"));
+      else if(usedefaultvp)
+	itsImager->setvp(True, True, "", False, casa::Quantity(360.0, "deg"), casa::Quantity(180.0, "deg"));
       rstat = itsImager->linearmosaic(mosaic, fluxscale, sensitivity, aimages, fieldids);
     } catch  (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -1204,7 +1209,7 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
                   const ::casac::variant& baseline,
 		  const ::casac::variant& time,const ::casac::variant& scan,
                   const ::casac::variant& uvrange, const std::string& taql,
-                  const bool useScratch)
+                  const bool useScratch, const bool datainmemory)
 {
     Bool rstat(False);
     if(itsMS || (vis != "")){
@@ -1239,15 +1244,25 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
 	 uvdist=toCasaString(uvrange);
 	 casa::String scanrange="";
 	 scanrange=toCasaString(scan);
-	 
-
-	 rstat = itsImager->setDataPerMS(vis, mode, Vector<Int>(nchan), 
-					 Vector<Int>(start),
-					 Vector<Int>(step), Vector<Int>(spwid),
-					 fieldIndex, 
-					 String(taql), String(timerange),
-					 fieldnames, antIndex, antennanames, 
-                                         spwstring, uvdist, scanrange, useScratch);
+	 //Only load to memory if open is not used and loadinmemory
+	 if((String(vis) != String("")) && datainmemory)
+	   rstat=(static_cast<ImagerMultiMS *>(itsImager))->setDataToMemory(
+									    vis, mode, Vector<Int>(nchan),
+									    Vector<Int>(start),
+									    Vector<Int>(step), 
+									    Vector<Int>(spwid),
+									    fieldIndex, 
+									    String(taql), String(timerange),
+									    fieldnames, antIndex, antennanames, 
+									    spwstring, uvdist, scanrange);
+	 else
+	   rstat = itsImager->setDataPerMS(vis, mode, Vector<Int>(nchan), 
+					   Vector<Int>(start),
+					   Vector<Int>(step), Vector<Int>(spwid),
+					   fieldIndex, 
+					   String(taql), String(timerange),
+					   fieldnames, antIndex, antennanames, 
+					   spwstring, uvdist, scanrange, useScratch);
 	 hasValidMS_p=rstat;
        } catch  (AipsError x) {
           *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

@@ -46,12 +46,7 @@ public:
   
 };
 
- inline InvalidDataException::InvalidDataException() :
-   InvalidArgumentException("Invalid argument exception") {;}
- 
- inline InvalidDataException::InvalidDataException (const string &s) : 
-   InvalidArgumentException("Invalid data: [" + s + "]") {;}
- 
+
 } // End namespace asdm
 
 #endif /* InvalidDataException_CLASS */

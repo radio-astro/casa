@@ -157,7 +157,7 @@ public:
   void setReportPanels (Int nx,Int ny) const;
   
 // loads data for new chunk, resets all flag stat counters
-  void newChunk (unsigned ntimes, bool init_quack);
+  void newChunk (bool init_quack);
 // loads data for new pass
   void newPass (uInt npass);
 // loads data for new iteration

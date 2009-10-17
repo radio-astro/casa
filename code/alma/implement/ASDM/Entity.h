@@ -127,74 +127,7 @@ private:
 
 };
 
-// Entity constructors
-inline Entity::Entity(const string &s) {
-	setFromXML(s);
-}
 
-// Entity destructor
-inline Entity::~Entity() { }
-
-inline bool Entity::isNull() const {
-	return entityId.isNull();
-}
-
-inline string Entity::toString() const {
-	return toXML();
-}
-
-inline bool Entity::equals(const Entity &x) const {
-	return *this == x;
-}
-
-// Getters and Setters
-
-inline EntityId Entity::getEntityId() const {
-	return entityId;
-}
-
-inline string Entity::getEntityIdEncrypted() const {
-	return entityIdEncrypted;
-}
-
-inline string Entity::getEntityTypeName() const {
-	return entityTypeName;
-}
-
-inline string Entity::getEntityVersion() const {
-	return entityVersion;
-}
-
-inline string Entity::getInstanceVersion() const {
-	return instanceVersion;
-}
-
-inline void Entity::setEntityId(EntityId e) {
-	entityId = e;
-}
-
-inline void Entity::setEntityIdEncrypted(string s) {
-	entityIdEncrypted = s;
-}
-
-inline void Entity::setEntityTypeName(string s) {
-	entityTypeName = s;
-}
-
-inline void Entity::setEntityVersion(string s) {
-	entityVersion = s;
-}
-
-inline void Entity::setInstanceVersion(string s) {
-	instanceVersion = s;
-}
-
-// Friend functions
-
-inline ostream & operator << ( ostream &o, const Entity &x ) {
-	o << x.toXML();
-	return o;
-}
 
 } // End namespace asdm
 

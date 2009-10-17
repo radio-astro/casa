@@ -1486,7 +1486,7 @@ we specify the pointing center in terms of the row numbers of the FIELD subtable
      </param>
 
      <param type="intArray" name="fieldids">
-     <description>output component list after PB has been applied [optional]</description>
+     <description>List of field ids that correspond each of the  images,used to center the PB of each image. (0-based list)</description>
      <value>0</value>
      </param>
 
@@ -3238,6 +3238,11 @@ im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
       after deconvolution </description>
      <value>false</value>
      </param>
+      <param type="bool" name="datainmemory">
+     <description>If True: imager will load the selected ms memory; useful if imaging a few channels that fit in memory </description>
+     <value>false</value>
+     </param>
+
 </input>
 <example>
 \begin{verbatim}

@@ -862,31 +862,42 @@ ms::cvel(const std::string& mode,
       }
     
       // determine channel width
-      if(!width.toString().empty()){
-	if(t_mode == "channel"){
+      if(t_mode == "channel"){
+	if(!width.toString().empty()){
 	  t_width = Double(atoi(width.toString().c_str()));
 	}
-	else if(t_mode == "frequency"){
+      }
+      else if(t_mode == "frequency"){
+	if(!width.toString().empty()){
 	  t_width = casaQuantity(width).getValue("Hz");
 	}
-	else if(t_mode == "velocity"){
+	else{
+	  *itsLog << LogIO::WARN << "In frequency mode, need to set channel width if channel start is set." << LogIO::POST;
+	  return false;
+	}
+      }
+      else if(t_mode == "velocity"){
+	if(!width.toString().empty()){
 	  t_width = casaQuantity(width).getValue("m/s");
 	}   
-    
-	// determine bandwidth and center
-	if(nchan > 0){ // we are not using the default, which is all channels
-	  if(t_mode == "channel"){
-	    t_bandwidth = Double(nchan);
-	    t_center = floor(t_bandwidth/2. + t_start);
-	  }
-	  else{
-	    t_bandwidth = nchan*t_width;
-	    t_center = t_bandwidth/2. + t_start;
-	  }
+	else{
+	  *itsLog << LogIO::WARN << "In velocity mode, need to set channel width if channel start is set." << LogIO::POST;
+	  return false;
+	}
+      }
+      // determine bandwidth and center
+      if(nchan > 0){ // we are not using the default, which is all channels
+	if(t_mode == "channel"){
+	  t_bandwidth = Double(nchan);
+	  t_center = floor(t_bandwidth/2. + t_start);
+	}
+	else{
+	  t_bandwidth = nchan*t_width;
+	  t_center = t_bandwidth/2. + t_start;
 	}
       }
     }
-    
+
     String t_veltype = toCasaString(veltype); 
     String t_regridQuantity;
     if(t_mode == "channel"){
@@ -981,7 +992,6 @@ ms::cvel(const std::string& mode,
       rstat = True;
     }
     else if(rval==0) { // an unsuccessful modification of the MS took place
-      delete sms;
       String message= "Frame transformation to " + t_outframe + " failed. MS probably invalid.";
       *itsLog << LogIO::WARN << message << LogIO::POST;
       // Update HISTORY table of the unsuccessfully modfied MS
