@@ -101,8 +101,8 @@ int main() {
             ComponentList compList = parser.getEstimates();
             AlwaysAssert(compList.nelements() == 2, AipsError);
             Vector<Double> expectedFlux(2);
-            expectedFlux[0] = 5.0;
-            expectedFlux[1] = 4.5;
+            expectedFlux[0] = 67.985402127407909;
+            expectedFlux[1] = 135.88582250215657;
             Vector<Quantity> flux;
             Vector<Double> dirTuple;
             Vector<Vector<Double> > expectedDir(2);
@@ -126,7 +126,7 @@ int main() {
             expectedFixed[1] = "a";
             for (uInt i=0; i<compList.nelements(); i++) {
             	compList.getFlux(flux,i);
-            	AlwaysAssert(flux[0].getValue() == expectedFlux[i], AipsError);
+                AlwaysAssert(near(flux[0].getValue(), expectedFlux[i], 1e-7), AipsError);
             	dirTuple = compList.getRefDirection(i).getAngle().getValue();
             	AlwaysAssert(dirTuple.size() == 2, AipsError);
             	for (uInt j=0; j<dirTuple.size(); j++) {
@@ -152,6 +152,18 @@ int main() {
            	for(uInt i=0; i<fixed.size(); i++) {
            		AlwaysAssert(fixed[i] == expectedFixed[i], AipsError);
            	}
+        }
+        {
+            FitterEstimatesFileParser parser("./goodEstimatesFormat.txt", FITSImage("jyperbeammap.fits"));
+            ComponentList compList = parser.getEstimates();
+            Vector<Double> expectedFlux(2);
+            expectedFlux[0] = 20.0;
+            expectedFlux[1] = 39.975;
+            Vector<Quantity> flux;
+            for (uInt i=0; i<compList.nelements(); i++) {
+            	compList.getFlux(flux,i);
+                AlwaysAssert(near(flux[0].getValue(), expectedFlux[i], 1e-7), AipsError);
+            }
         }
     }
     catch (AipsError x) {

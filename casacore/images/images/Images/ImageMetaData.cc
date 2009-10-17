@@ -26,7 +26,9 @@
 //# $Id: ImageInterface.tcc 20356 2008-06-23 11:37:34Z gervandiepen $
 
 
+#include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <casa/aips.h>
+
 
 #include <images/Images/ImageMetaData.h>
 
@@ -166,5 +168,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }    
         return areValid;
     }
+
+    // This method was copied from ImageStatistics and modified.
+    Bool ImageMetaData::getBeamArea (Quantity& beamArea) const {
+    	beamArea = -1.0;
+    	if (! hasDirectionCoordinate() ) {
+    		return False;
+    	}
+    	//TODO merge ImageInfo into ImageMetaData
+    	Vector<Quantum<Double> > beam = itsInfo.restoringBeam();
+    	String imageUnits = itsUnits.getName();
+    	imageUnits.upcase();
+
+    	if (beam.nelements()==3 && imageUnits==String("JY/BEAM")) {
+            beam[0].convert("rad");
+    		beam[1].convert("rad");
+    		beamArea = (C::pi/(4*log(2.0))) * beam[0].getValue() * beam[1].getValue();
+            beamArea.setUnit("sr");
+    		return True;
+    	} else {
+    		return False;
+    	}
+    }
+
+    Bool ImageMetaData::getDirectionPixelArea(Quantity& pixelArea) const {
+    	pixelArea = -1.0;
+    	if (!hasDirectionCoordinate()) {
+    		return False;
+    	}
+    	DirectionCoordinate dCoord = itsCoordinates.directionCoordinate(directionCoordinateNumber());
+    	Vector<Double> increment = dCoord.increment();
+    	pixelArea  = Quantity(fabs(increment[0]*increment[1]), String("sr"));
+    	return True;
+    }
+
+
 } //# NAMESPACE CASA - END
 

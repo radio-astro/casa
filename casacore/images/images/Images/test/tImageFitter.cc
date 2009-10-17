@@ -191,9 +191,8 @@ int main() {
                         writeTestString("test using LEL mask " + mask);
                         break;
                 }
-                cout << "running " <<  i << endl;
-                ImageFitter fitter = ImageFitter(
-                        noisyImage, "", "", 1, 0, "I", mask, includepix, excludepix
+                ImageFitter fitter(
+                	noisyImage, "", "", 1, 0, "I", mask, includepix, excludepix
                 );
                 cout << "ran " << i << endl;
                 ComponentList compList = fitter.fit();
@@ -245,6 +244,67 @@ int main() {
              	modelDiff
             );
             workdir.removeRecursive();
+        }
+        String convolvedModel = "gaussian_convolved.fits";
+        {
+        	writeTestString("test fitting model gaussian that has been convolved with a beam");
+        	ImageFitter fitter(convolvedModel);
+        	ComponentList compList = fitter.fit();
+            Vector<Quantity> flux;
+
+        	compList.getFlux(flux,0);
+        	// I stokes flux test
+        	AlwaysAssert(near(flux(0).getValue(), 60318.6, 1e-5), AipsError);
+        	// Q stokes flux test
+        	AlwaysAssert(flux(1).getValue() == 0, AipsError);
+        	MDirection direction = compList.getRefDirection(0);
+        	AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), 0.000213318, 1e-5), AipsError);
+        	AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), 1.939254e-5, 1e-5), AipsError);
+
+        	Vector<Double> parameters = compList.getShape(0)->parameters();
+
+        	Double majorAxis = arcsecsPerRadian*parameters(0);
+        	AlwaysAssert(near(majorAxis, 26.50461508, 1e-7), AipsError);
+
+        	Double minorAxis = arcsecsPerRadian*parameters(1);
+        	AlwaysAssert(near(minorAxis, 23.99821851, 1e-7), AipsError);
+
+        	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
+        	AlwaysAssert(near(positionAngle, 126.3211060, 1e-7), AipsError);
+        }
+        {
+        	writeTestString(
+        		String("test fitting model gaussian that has been convolved with a beam and fix ")
+        		+ String("the peak intensity to be less than what it really is")
+        	);
+            ImageFitter fitter(
+            		convolvedModel, "", "", 1, 0, "I", "",
+             	Vector<Float>(0), Vector<Float>(0), "",
+             	"", "estimates_convolved.txt"
+            );
+        	ComponentList compList = fitter.fit();
+            Vector<Quantity> flux;
+
+        	compList.getFlux(flux,0);
+        	// I stokes flux test
+        	AlwaysAssert(near(flux(0).getValue(), 60082.6, 1e-5), AipsError);
+        	// Q stokes flux test
+        	AlwaysAssert(flux(1).getValue() == 0, AipsError);
+        	MDirection direction = compList.getRefDirection(0);
+        	AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), 0.000213318, 1e-5), AipsError);
+        	AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), 1.939254e-5, 1e-5), AipsError);
+
+        	Vector<Double> parameters = compList.getShape(0)->parameters();
+
+        	Double majorAxis = arcsecsPerRadian*parameters(0);
+        	AlwaysAssert(near(majorAxis, 28.21859344, 1e-7), AipsError);
+
+        	Double minorAxis = arcsecsPerRadian*parameters(1);
+
+        	AlwaysAssert(near(minorAxis, 25.55011520, 1e-7), AipsError);
+
+        	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
+        	AlwaysAssert(near(positionAngle, 126.3211050, 1e-7), AipsError);
         }
         cout << "ok" << endl;
     }
