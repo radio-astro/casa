@@ -115,6 +115,6 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
 
 
     except Exception, instance:
-        print '*** Error ***',instance
+        #print '*** Error ***',instance
         raise Exception, instance
 

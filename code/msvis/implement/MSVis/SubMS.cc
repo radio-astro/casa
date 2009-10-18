@@ -1143,7 +1143,6 @@ namespace casa {
   
   Bool SubMS::fillFieldTable() 
   {  
-    //(EPHEMERIS_ID) 	Int 			Ephemeris id.
     LogIO os(LogOrigin("SubMS", "fillFieldTable()"));
     MSFieldColumns& msField(msc_p->field());
     
@@ -1242,12 +1241,11 @@ namespace casa {
       // the input MS, not just the selected ones.
       const Vector<Int>& inSrcIDs = mscIn_p->field().sourceId().getColumn();
 
-      // uInt nInputSrcs = inSrcIDs.nelements();
-      Int nOutputSrcs = max(inSrcIDs);
+      Int highestInpFld = max(fieldid_p);
     
-      if(nOutputSrcs < 1)                   // Ensure space for -1.
-        nOutputSrcs = 1;
-      sourceRelabel_p.resize(nOutputSrcs);
+      if(highestInpFld < 1)                   // Ensure space for -1.
+        highestInpFld = 1;
+      sourceRelabel_p.resize(highestInpFld);
       sourceRelabel_p.set(-1);   	          // Default to "any".
 
       // Enable sourceIDs that are actually referred to by selected fields, and
@@ -4390,9 +4388,6 @@ namespace casa {
     msc_p->interval().putColumn(mscIn_p->interval());
     msc_p->scanNumber().putColumn(mscIn_p->scanNumber());
     msc_p->time().putColumn(mscIn_p->time());
-
-    // Technically, if only some of the channels are selected or flagged,
-    // timeCentroid should be recalculated.
     msc_p->timeCentroid().putColumn(mscIn_p->timeCentroid());
 
     // ScalarMeasColumn doesn't have a putColumn() for some reason.
