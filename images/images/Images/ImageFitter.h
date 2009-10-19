@@ -76,7 +76,6 @@ namespace casa {
             // <li>box - A 2-D rectangular box in which to use pixels for the fitting, eg box=100,120,200,230
             // In cases where both box and region are specified, box, not region, is used.</li>
             // <li>region - Named region to use for fitting</li>
-            // <li>ngaussInp - Number of gaussians to attempt to fit</li>
             // <li>chanInp - Zero-based channel number on which to do the fit. Only a single channel can be
             // specified.</li>
             // <li>stokes - Stokes plane on which to do the fit. Only a single Stokes parameter can be
@@ -89,7 +88,7 @@ namespace casa {
             // <li> modelInp - Name of the model image to save. Blank means do not save model image</li>
             ImageFitter(
                 const String& imagename, const String& box="", const String& region="",
-                const uInt ngaussInp=1, const uInt chanInp=0, const String& stokes="I",
+                const uInt chanInp=0, const String& stokes="I",
                 const String& maskInp="",
                 const Vector<Float>& includepix = Vector<Float>(0),
                 const Vector<Float>& excludepix = Vector<Float>(0),
@@ -109,7 +108,7 @@ namespace casa {
             LogIO *itsLog;
             ImageInterface<Float> *image;
             ImageRegion imRegion;
-            uInt ngauss, chan;
+            uInt chan;
             String stokesString, mask, residual, model;
             Vector<Float> includePixelRange, excludePixelRange;
             ComponentList estimates;
