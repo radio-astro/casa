@@ -8922,6 +8922,26 @@ Int Imager::interactivemask(const String& image, const String& mask,
    }
    mask_id_p = mask_id.getInt( );
 
+   ///////////////Experimental setoptions
+   ///Record way
+   /*
+   Record options;
+   options.define("niter", niter);
+   options.define("ncycle", ncycles);
+   options.define("threshold", thresh);
+   //I suspect below works as Bool ...
+   viewer_p->setoptions((casa::dbus::fromRecord(options)), clean_panel_p);
+   */
+   //////////
+   ///dbus::record way
+   /*
+   casa::dbus::record options;
+   options.insert("niter", niter);
+   options.insert("ncycle", ncycles);
+   options.insert("threshold", thresh);
+     
+   viewer_p->setoptions(options, clean_panel_p);
+   */
     interactive_clean_callback *mycb = new interactive_clean_callback( );
     DBus::MessageSlot filter;
     filter = new DBus::Callback<interactive_clean_callback,bool,const DBus::Message &>( mycb, &interactive_clean_callback::callback );
