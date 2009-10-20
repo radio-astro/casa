@@ -743,8 +743,10 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
   // Now find the projection to use: could probably also use
   // max(abs(w))=0.0 as a criterion
   Projection projection(Projection::SIN);
-  if(telescop=="ATCASCP") {
-    os << LogIO::NORMAL << "Using SIN image projection adjusted for SCP" 
+  if(telescop == "ATCASCP" || telescop == "WSRT" || telescop == "DRAO") {
+    os << LogIO::NORMAL
+       << "Using SIN image projection adjusted for "
+       << (telescop == "ATCASCP" ? 'S' : 'N') << "CP" 
        << LogIO::POST;
     Vector<Double> projectionParameters(2);
     projectionParameters(0) = 0.0;
@@ -753,23 +755,9 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       projection=Projection(Projection::SIN, projectionParameters);
     }
     else {
-      os << LogIO::WARN << "Singular projection for ATCA: using plain SIN"
+      os << LogIO::WARN
+         << "Singular projection for " << telescop << ": using plain SIN"
          << LogIO::POST;
-      projection=Projection(Projection::SIN);
-    }
-  }
-  else if(telescop=="WSRT") {
-    os << LogIO::NORMAL << "Using SIN image projection adjusted for NCP" 
-       << LogIO::POST;
-    Vector<Double> projectionParameters(2);
-    projectionParameters(0)=0.0;
-    if(sin(dec)!=0.0) {
-      projectionParameters(1)=cos(dec)/sin(dec);
-      projection=Projection(Projection::SIN, projectionParameters);
-    }
-    else {
-      os << LogIO::WARN << "Singular projection for WSRT: using plain SIN" 
-	 << LogIO::POST;
       projection=Projection(Projection::SIN);
     }
   }
