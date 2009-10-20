@@ -1379,7 +1379,7 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
       }
   nAnt=bt.nrows();
 
-  if (itsEVLA) receptorAngle_p.resize(2*(nAntMax+1));
+  if (itsEVLA) receptorAngle_p.resize(2*(nAnt+1));
   else receptorAngle_p.resize(2*nAnt);
   receptorAngle_p=0.0;
   Vector<Double> arrayXYZ(3);
@@ -1501,7 +1501,7 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
 
    // add antenna info to table
    ant.setPositionRef(MPosition::ITRF);
-   Int row=ms_p.antenna().nrow();
+   Int row=ms_p.antenna().nrow()-1;
 
    if (itsEVLA && (row < nAntMax))
      {
