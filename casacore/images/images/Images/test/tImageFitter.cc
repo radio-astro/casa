@@ -192,7 +192,7 @@ int main() {
                         break;
                 }
                 ImageFitter fitter(
-                	noisyImage, "", "", 1, 0, "I", mask, includepix, excludepix
+                	noisyImage, "", "", 0, "I", mask, includepix, excludepix
                 );
                 cout << "ran " << i << endl;
                 ComponentList compList = fitter.fit();
@@ -228,7 +228,7 @@ int main() {
             String residDiff = dirName + "/residualImage.diff";
             String modelDiff = dirName + "/modelImage.diff";
             ImageFitter fitter(
-            	noisyImage, "100,100,200,200", "", 1, 0, "I", "",
+            	noisyImage, "100,100,200,200", "", 0, "I", "",
             	Vector<Float>(0), Vector<Float>(0), residImage,
             	modelImage
             );
@@ -275,10 +275,10 @@ int main() {
         {
         	writeTestString(
         		String("test fitting model gaussian that has been convolved with a beam and fix ")
-        		+ String("the peak intensity to be less than what it really is")
+        		+ String("the peak intensity to be artificially low")
         	);
             ImageFitter fitter(
-            		convolvedModel, "", "", 1, 0, "I", "",
+            		convolvedModel, "", "", 0, "I", "",
              	Vector<Float>(0), Vector<Float>(0), "",
              	"", "estimates_convolved.txt"
             );
@@ -306,6 +306,61 @@ int main() {
         	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
         	AlwaysAssert(near(positionAngle, 126.3211050, 1e-7), AipsError);
         }
+        {
+         	writeTestString("Fit two gaussians");
+            ImageFitter fitter(
+             		"two_gaussian_model.fits", "", "", 0, "I", "",
+              	Vector<Float>(0), Vector<Float>(0), "",
+              	"", "estimates_2gauss.txt"
+            );
+         	ComponentList compList = fitter.fit();
+            Vector<Quantity> flux;
+            MDirection direction;
+            Vector<Double> parameters;
+            AlwaysAssert(compList.nelements() == 2, AipsError);
+            Vector<Double> expectedFlux(2);
+            expectedFlux[0] = 60318.5820312;
+            expectedFlux[1] = 112174.6953125;
+            Vector<Double> expectedLong(2);
+            expectedLong[0] = 2.1331802e-04;
+            expectedLong[1] = -2.2301344e-04;
+            Vector<Double> expectedLat(2);
+            expectedLat[0] = 1.9392547e-05;
+            expectedLat[1] = 4.5572321e-04;
+            Vector<Double> expectedMajorAxis(2);
+            expectedMajorAxis[0] = 23.548201;
+            expectedMajorAxis[1] = 46.582182;
+            Vector<Double> expectedMinorAxis(2);
+            expectedMinorAxis[0] = 18.838561;
+            expectedMinorAxis[1] = 23.613296;
+            Vector<Double> expectedPositionAngle(2);
+            expectedPositionAngle[0] = 120.0;
+            expectedPositionAngle[1] = 140.07385;
+
+            for (uInt i = 0; i < compList.nelements(); i++) {
+            	compList.getFlux(flux,i);
+            	// I stokes flux test
+            	AlwaysAssert(near(flux(0).getValue(), expectedFlux[i], 1e-7), AipsError);
+            	// Q stokes flux test
+            	AlwaysAssert(flux(1).getValue() == 0, AipsError);
+            	direction = compList.getRefDirection(i);
+
+            	AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), expectedLong[i], 1e-7), AipsError);
+            	AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), expectedLat[i], 1e-7), AipsError);
+             	Vector<Double> parameters = compList.getShape(i)->parameters();
+            	Double majorAxis = arcsecsPerRadian*parameters(0);
+             	AlwaysAssert(near(majorAxis, expectedMajorAxis[i], 1e-7), AipsError);
+
+             	Double minorAxis = arcsecsPerRadian*parameters(1);
+             	AlwaysAssert(near(minorAxis, expectedMinorAxis[i], 1e-7), AipsError);
+
+             	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
+             	AlwaysAssert(near(positionAngle, expectedPositionAngle[i], 1e-7), AipsError);
+            }
+
+
+
+         }
         cout << "ok" << endl;
     }
     catch (AipsError x) {

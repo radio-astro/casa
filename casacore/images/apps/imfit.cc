@@ -35,7 +35,6 @@ Int main(Int argc, char *argv[]) {
 	input.create("imagename");
 	input.create("box", "");
 	input.create("region", "");
-	input.create("ngauss", "1");
 	input.create("chan", "0");
 	input.create("stokes", "I");
 	input.create("mask","");
@@ -50,7 +49,6 @@ Int main(Int argc, char *argv[]) {
 
 	String box = input.getString("box");
 	String region = input.getString("region");
-	uInt ngauss = input.getInt("ngauss");
 	uInt chan = input.getInt("chan");
 	String stokes = input.getString("stokes");
 	String mask = input.getString("mask");
@@ -69,7 +67,7 @@ Int main(Int argc, char *argv[]) {
 		excludePixelRange[i] = String::toFloat(excludePixParts[i]);
 	}
 	ImageFitter imFitter(
-			imagename, box, region, ngauss, chan, stokes, mask, includePixelRange,
+			imagename, box, region, chan, stokes, mask, includePixelRange,
 			excludePixelRange, residual, model, estimatesFilename
 	);
     imFitter.fit();

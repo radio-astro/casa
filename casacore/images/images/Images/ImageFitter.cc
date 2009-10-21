@@ -60,11 +60,11 @@ namespace casa {
 
     ImageFitter::ImageFitter(
         const String& imagename, const String& box, const String& region,
-        const uInt ngaussInp, const uInt chanInp, const String& stokes,
+        const uInt chanInp, const String& stokes,
         const String& maskInp, const Vector<Float>& includepix,
         const Vector<Float>& excludepix, const String& residualInp,
         const String& modelInp, const String& estimatesFilename
-    ) : ngauss(ngaussInp), chan(chanInp), stokesString(stokes), mask(maskInp),
+    ) : chan(chanInp), stokesString(stokes), mask(maskInp),
 		residual(residualInp),model(modelInp), includePixelRange(includepix),
 		excludePixelRange(excludepix), estimates(), fixed(0) {
         itsLog = new LogIO();
@@ -82,8 +82,11 @@ namespace casa {
         Array<Float> residPixels;
         Array<Bool> residMask;
         Bool converged;
+        uInt ngauss = estimates.nelements() > 0 ? estimates.nelements() : 1;
         Vector<String> models(ngauss);
         models.set("gaussian");
+        cout << "ngauss " << models.size() << endl;
+        cout << "n estiamtes " << estimates.nelements() << endl;
         ImageAnalysis myImage(image);
         Bool fit = True;
         Bool deconvolve = False;
@@ -101,58 +104,57 @@ namespace casa {
             excludePixelRange, fit, deconvolve, list,
             residual, model
         );
-
+        cout << " fitted comp list elements " << compList.nelements() << endl;
         Flux<Double> flux;
-        for(uInt k=0; k<compList.nelements(); ++k) {
+        Vector<Quantity> fluxQuant;
+        for(uInt k=0; k<compList.nelements(); k++) {
             SkyComponent skyComp = compList.component(k);
             flux = skyComp.flux();
             cout << "flux val " << flux.value(Stokes::I) << endl;
-        }
-        Vector<Quantity> fluxQuant;
-        compList.getFlux(fluxQuant, 0);
-        cout << " flux from comp list " << fluxQuant << endl;
-        Vector<String> polarization = compList.getStokes(0);
-        cout << "stokes from comp list " << polarization << endl;
-        const ComponentShape* compShape = compList.getShape(0);
-        String compType = ComponentType::name(compShape->type());
-        cout << "component type " << compType << endl;
+            compList.getFlux(fluxQuant, k);
+            cout << " flux from comp list " << fluxQuant << endl;
+            Vector<String> polarization = compList.getStokes(k);
+            cout << "stokes from comp list " << polarization << endl;
+            const ComponentShape* compShape = compList.getShape(k);
+            String compType = ComponentType::name(compShape->type());
+            cout << "component type " << compType << endl;
+            MDirection mdir = compList.getRefDirection(k);
 
-        MDirection mdir = compList.getRefDirection(0);
+            Quantity lat = mdir.getValue().getLat("rad");
+            Quantity longitude = mdir.getValue().getLong("rad");
 
-        Quantity lat = mdir.getValue().getLat("rad");
-        Quantity longitude = mdir.getValue().getLong("rad");
+            Vector<Double> world(4,0), pixel(4,0);
+            image->coordinates().toWorld(world, pixel);
 
-        Vector<Double> world(4,0), pixel(4,0);
-        image->coordinates().toWorld(world, pixel);
+            world[0] = longitude.getValue();
+            world[1] = lat.getValue();
+            if (image->coordinates().toPixel(pixel, world)) {
+        	    cout << "max pixel position " << pixel << endl;
+            }
+            else {
+        	    cerr << "unable to convert world to pixel" << endl;
+            }
 
-        world[0] = longitude.getValue();
-        world[1] = lat.getValue();
-        if (image->coordinates().toPixel(pixel, world)) {
-        	cout << "max pixel position " << pixel << endl;
-        }
-        else {
-        	cerr << "unable to convert world to pixel" << endl;
-        }
+            Quantity elat = compShape->refDirectionErrorLat();
+            Quantity elong = compShape->refDirectionErrorLong();
+            cout << " RA " << MVTime(lat).string(MVTime::TIME, 11) << " DEC "
+                << MVAngle(longitude).string(MVAngle::ANGLE_CLEAN, 11) << endl;
+            cout << "RA error " << MVTime(elat).string(MVTime::TIME, 11) << " Dec error " 
+                << MVAngle(elong).string(MVAngle::ANGLE, 11) << endl;
 
-        Quantity elat = compShape->refDirectionErrorLat();
-        Quantity elong = compShape->refDirectionErrorLong();
-        cout << " RA " << MVTime(lat).string(MVTime::TIME, 11) << " DEC "
-            << MVAngle(longitude).string(MVAngle::ANGLE_CLEAN, 11) << endl;
-        cout << "RA error " << MVTime(elat).string(MVTime::TIME, 11) << " Dec error " 
-            << MVAngle(elong).string(MVAngle::ANGLE, 11) << endl;
+            cout << "RA error rads" << elat << " Dec error rad " << elong << endl;
 
-        cout << "RA error rads" << elat << " Dec error rad " << elong << endl;
-
-        if (compShape->type() == ComponentType::GAUSSIAN) {
-            // print gaussian stuff
-            Quantity bmaj = (static_cast<const GaussianShape *>(compShape))->majorAxis();
-            Quantity bmin = (static_cast<const GaussianShape *>(compShape))->minorAxis();
-            Quantity bpa  = (static_cast<const GaussianShape *>(compShape))->positionAngle();
-            Quantity emaj = (static_cast<const GaussianShape *>(compShape))->majorAxisError();
-            Quantity emin = (static_cast<const GaussianShape *>(compShape))->minorAxisError();
-            Quantity epa  = (static_cast<const GaussianShape *>(compShape))->positionAngleError();
-            cout << "bmaj " << bmaj << " bmin " << bmin << " bpa " << bpa << endl;
-            cout << "emaj " << emaj << " emin " << emin << " epa " << epa << endl;
+            if (compShape->type() == ComponentType::GAUSSIAN) {
+                // print gaussian stuff
+                Quantity bmaj = (static_cast<const GaussianShape *>(compShape))->majorAxis();
+                Quantity bmin = (static_cast<const GaussianShape *>(compShape))->minorAxis();
+                Quantity bpa  = (static_cast<const GaussianShape *>(compShape))->positionAngle();
+                Quantity emaj = (static_cast<const GaussianShape *>(compShape))->majorAxisError();
+                Quantity emin = (static_cast<const GaussianShape *>(compShape))->minorAxisError();
+                Quantity epa  = (static_cast<const GaussianShape *>(compShape))->positionAngleError();
+                cout << "bmaj " << bmaj << " bmin " << bmin << " bpa " << bpa << endl;
+                cout << "emaj " << emaj << " emin " << emin << " epa " << epa << endl;
+            }
         }
         return compList;
    /*
@@ -218,13 +220,19 @@ namespace casa {
         }
         _doRegion(box, region);
         _checkImageParameterValidity();
-        if(! estimatesFilename.empty()) {
+        if(estimatesFilename.empty()) {
+        	*itsLog << LogIO::NORMAL << "No estimates file specified, so will attempt to find and fit one gaussian."
+        		<< LogIO::POST;
+        }
+        else {
         	FitterEstimatesFileParser parser(estimatesFilename, *image);
         	estimates = parser.getEstimates();
         	fixed = parser.getFixed();
         	Record rec;
         	String errmsg;
         	estimates.toRecord(errmsg, rec);
+        	*itsLog << LogIO::NORMAL << "File " << estimatesFilename << " has " << estimates.nelements()
+        		<< " specified, so will attempt to fit that many gaussians " << LogIO::POST;
         }
     }
 
