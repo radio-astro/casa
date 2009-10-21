@@ -18,7 +18,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="vis" kind="ms" >
-          <description>Root name of the resulting ms. Note the .ms is added </description>
+          <description>Root name of the ms to be created. Note the .ms is added </description>
           <value></value>
     </param>
 
@@ -88,7 +88,55 @@ shapes.
 				          
 Keyword arguments:
 asdm -- Name of input ASDM file (directory)
-default: none; example: asdm='ExecBlock3'
+        default: none; example: asdm='ExecBlock3'
+
+vis       -- Root ms name, note a .ms is appended to this name
+             default: none
+
+corr_mode -- correlation mode to be considered on input. Could
+	     be one or more of the following, ao, co, ac, or all
+	     default: all
+
+srt       -- spectral resolution type. Could be one or more of
+	     the following, fr, ca, bw, or all
+	     default: all
+
+time_sampling -- specifies the time sampling, INTEGRATION and/or
+                 SUBINTEGRAION. could be one or more of the following
+                 i, si, or all.
+		 default: all
+
+ocorr_mode    -- output data for correlation mode AUTO_ONLY 
+                 (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
+		 default: ca
+		 
+
+compression  -- produces comrpressed columns in the resulting measurement set.
+                default: False
+
+
+asis         --  creates verbatim copies of the ASDM tables in 
+                 the output measurement set. The value given to
+		 this option must be a list of table names separated
+		 by space characters; the wildcard character '*' is 
+                 allowed in table names.
+
+wvr_corrected_data -- specifies wich values are considered in the 
+                      ASDM binary data to fill the DATA column in 
+                      the MAIN table of the MS. Expected values for 
+                      this option are 'no' for the uncorrected data 
+                      (this is the default), 'yes' for the corrected
+                      data and 'both' for corrected and uncorrected 
+                      data. In the latter case, two measurement sets
+                      are created, one containing the uncorrected 
+                      data and the other one, whose name is suffixed
+                      by '-wvr-corrected', containing the corrected 
+                      data.
+
+
+verbose     -- produce log output as asdm2MS is being run
+
+showversion -- report the version of the asdm2MS being used.
 
   </example>
 

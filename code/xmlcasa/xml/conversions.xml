@@ -306,7 +306,10 @@
 	    if ( sigsetjmp(casa::jmp_buf,1) ) {
 		casa::longjmp_ok = false;
 		signal(SIGINT, old_handler);
-	        PyErr_SetString( PyExc_StandardError, "Control-C typed..." );
+		if ( old_handler != 0 &amp;&amp; old_handler != SIG_IGN )
+		    (*old_handler)(SIGINT);
+		else
+		    PyErr_SetString( PyExc_StandardError, "Control-C typed..." );
 		return NULL;
 	    }
 	    casa::longjmp_ok = true;

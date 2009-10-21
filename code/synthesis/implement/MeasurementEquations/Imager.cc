@@ -743,8 +743,10 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
   // Now find the projection to use: could probably also use
   // max(abs(w))=0.0 as a criterion
   Projection projection(Projection::SIN);
-  if(telescop=="ATCASCP") {
-    os << LogIO::NORMAL << "Using SIN image projection adjusted for SCP" 
+  if(telescop == "ATCASCP" || telescop == "WSRT" || telescop == "DRAO") {
+    os << LogIO::NORMAL
+       << "Using SIN image projection adjusted for "
+       << (telescop == "ATCASCP" ? 'S' : 'N') << "CP" 
        << LogIO::POST;
     Vector<Double> projectionParameters(2);
     projectionParameters(0) = 0.0;
@@ -753,23 +755,9 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       projection=Projection(Projection::SIN, projectionParameters);
     }
     else {
-      os << LogIO::WARN << "Singular projection for ATCA: using plain SIN"
+      os << LogIO::WARN
+         << "Singular projection for " << telescop << ": using plain SIN"
          << LogIO::POST;
-      projection=Projection(Projection::SIN);
-    }
-  }
-  else if(telescop=="WSRT") {
-    os << LogIO::NORMAL << "Using SIN image projection adjusted for NCP" 
-       << LogIO::POST;
-    Vector<Double> projectionParameters(2);
-    projectionParameters(0)=0.0;
-    if(sin(dec)!=0.0) {
-      projectionParameters(1)=cos(dec)/sin(dec);
-      projection=Projection(Projection::SIN, projectionParameters);
-    }
-    else {
-      os << LogIO::WARN << "Singular projection for WSRT: using plain SIN" 
-	 << LogIO::POST;
       projection=Projection(Projection::SIN);
     }
   }
@@ -8934,6 +8922,26 @@ Int Imager::interactivemask(const String& image, const String& mask,
    }
    mask_id_p = mask_id.getInt( );
 
+   ///////////////Experimental setoptions
+   ///Record way
+   /*
+   Record options;
+   options.define("niter", niter);
+   options.define("ncycle", ncycles);
+   options.define("threshold", thresh);
+   //I suspect below works as Bool ...
+   viewer_p->setoptions((casa::dbus::fromRecord(options)), clean_panel_p);
+   */
+   //////////
+   ///dbus::record way
+   /*
+   casa::dbus::record options;
+   options.insert("niter", niter);
+   options.insert("ncycle", ncycles);
+   options.insert("threshold", thresh);
+     
+   viewer_p->setoptions(options, clean_panel_p);
+   */
     interactive_clean_callback *mycb = new interactive_clean_callback( );
     DBus::MessageSlot filter;
     filter = new DBus::Callback<interactive_clean_callback,bool,const DBus::Message &>( mycb, &interactive_clean_callback::callback );

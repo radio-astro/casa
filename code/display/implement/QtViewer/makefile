@@ -148,10 +148,10 @@ qt : ru
 	$(QT4ROOT)/bin/moc-qt4 -o QtMouseToolState.moc.cc QtMouseToolState.qo.h
 	$(QT4ROOT)/bin/moc-qt4 -o QtMouseToolBar.moc.cc QtMouseToolBar.qo.h
 	$(QT4ROOT)/bin/moc-qt4 -o QtMouseTools.moc.cc QtMouseTools.qo.h
-	$(QT4ROOT)/bin/moc-qt4 -o QtClean.moc.cc QtClean.qo.h
 	$(QT4ROOT)/bin/moc-qt4 -o QtRegionManager.moc.cc QtRegionManager.qo.h
 	$(QT4ROOT)/bin/moc-qt4 -o QtLELEdit.moc.cc QtLELEdit.qo.h
 	$(QT4ROOT)/bin/moc-qt4 -o MakeMask.moc.cc MakeMask.qo.h
+	$(QT4ROOT)/bin/moc-qt4 -o MakeRegion.moc.cc MakeRegion.qo.h
 
 qtclean :
 	rm -f *.ui.h *.qrc.cc *.moc.cc

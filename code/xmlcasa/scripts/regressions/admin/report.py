@@ -1070,7 +1070,8 @@ class report:
 
             if log['type'] == 'exec':
                 from_dir = os.path.dirname('%s/%s' % (result_dir, log['logfile']))
-                
+                to_dir   = os.path.dirname('%s/%s' % (report_dir, log['logfile']))
+
                 prof_file = from_dir + "/cProfile.profile"
                 plot_file = "python_profile-"+test+"-"+host+".png"
                 if os.path.isfile(prof_file):
@@ -1078,18 +1079,49 @@ class report:
                     # This might fail with a "... marshal blah, blah ..." error
                     # if there's a mismatch between this python and
                     # CASA's python which created the binary cProfile.profile
-                    os.system("python /tmp/gprof2dot.py -f pstats " +\
+                    os.system("/usr/lib/casapy/bin/python /tmp/gprof2dot.py -f pstats " +\
                               prof_file + " | dot -Tpng -o " +\
                               report_dir + '/' + plot_file)
                     fd.write('<br><a href="'+plot_file+'">Python profile</a>')
 
+
+                cpp_dot  = from_dir + '/cpp_profile.dot'
+                cpp_txt  = from_dir + '/cpp_profile.txt'
+                cpp_src  = from_dir + '/cpp_profile.cc'
+                cpp_png  = from_dir + '/cpp_profile.png'
+                cpp_html = to_dir + '/cpp_profile.html'
+                if os.path.isfile(cpp_dot):
+                    print "Creating C++ profile ", cpp_dot
+                    #cmd = "cat " + cpp_dot + " | dot -Tpng -o " + to_dir + '/cpp_profile.png'
+                    #print cmd
+                    #os.system(cmd)
+
+                    if os.path.isfile(cpp_txt):
+                        shutil.copyfile(from_dir+'/cpp_profile.txt',
+                                        to_dir  +'/cpp_profile.txt')
+                    if os.path.isfile(cpp_src):
+                        shutil.copyfile(from_dir+'/cpp_profile.cc',
+                                        to_dir  +'/cpp_profile.cc')
+                    if os.path.isfile(cpp_png):
+                        shutil.copyfile(from_dir+'/cpp_profile.png',
+                                        to_dir  +'/cpp_profile.png')
+
+
+                    fd.write('<br><a href="'+os.path.dirname(log['logfile'])+'/cpp_profile.html">C++ profile</a>')
+                    f = open(cpp_html, 'w')
+                    f.write('<html><head><title>'+cpp_html+'</title></head><body>')
+                    f.write('<table cellpadding="10">')
+                    f.write('<tr><td rowspan="2">'+test+' C++ timing profile</td><td>as <a href="cpp_profile.png">graph</a><br></td></tr><tr><td>as <a href="cpp_profile.txt">text</a></td></tr>')
+                    f.write('<tr><td colspan="2">'+test+' <a href="cpp_profile.cc">annotated source</a></td></tr>')
+                    f.write('</table>')
+                    f.write('<p>Links: The timing profiles were created using <a href="http://oprofile.sourceforge.net">oprofile</a> ')
+                    f.write('and <a href="http://code.google.com/p/jrfonseca/wiki/Gprof2Dot">Gprof2Dot</a>.')
+                    f.write('</body></html>')
+                    f.close()
+            
         if extended and subtest[1] == 'exec':          
             framework_log = 'run-'     + test + '-' + host + '.log'
-            cpp_profile   = 'profile-' + test + '-' + host + '.dot'
-            if os.path.isfile(reg_dir + '/Log/' + cpp_profile):
-                os.system("cat " + reg_dir + '/Log/' + cpp_profile + \
-                          " | dot -Tpng -o " + report_dir + '/' + cpp_profile + '.png')
-                fd.write('<br><a href="'+cpp_profile+'.png">C++ profile</a>')
+
             if os.path.isfile(reg_dir + '/Log/' + framework_log):
                 shutil.copyfile(reg_dir + '/Log/' + framework_log, \
                                 report_dir + '/' + framework_log)

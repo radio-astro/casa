@@ -73,7 +73,8 @@ namespace casa {
 	~QtCleanPanelGui();
   
 	bool supports( SCRIPTING_OPTION option ) const;
-	QVariant start_interact( QVariant input, int id );
+	QVariant start_interact( const QVariant &input, int id );
+	QVariant setoptions( const QVariant &input, int id);
 
 	// the QtDBusViewerAdaptor can handle loading & registering data itself,
 	// but to connect up extra functionality, the upper-level QtDisplayPanelGui

@@ -1013,7 +1013,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.28 2009/10/15 12:54:26 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.30 2009/10/21 14:00:06 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -1232,7 +1232,15 @@ int main(int argc, char *argv[]) {
   //
   // Shall we have Complex or Float data ?
   //
-  bool complexData =  sdmBinData.isComplexData();
+  bool complexData;
+  try {
+    complexData =  sdmBinData.isComplexData();
+  }
+  catch (Error & e) {
+    errstream.str("");
+    errstream << e.getErrorMessage();
+    error(errstream.str());
+  }
 
   //
   // Prepare a map AtmPhaseCorrection -> name of measurement set.
@@ -1329,18 +1337,19 @@ int main(int argc, char *argv[]) {
   //  
   AntennaTable& antennaT = ds->getAntenna();
 
-  // We need the ExecBlockTable here to compute the antenna position with a site dependant logic.
-  // This table will be used later to fill the MS Observation table.
-  //
-  ExecBlockTable& execBlockT = ds->getExecBlock(); 
 
   //
   // Write the Antenna table.
   // 
   // (That part needs the Station table)
+  //
+  // At the same time, we populate a map ASDM Station Tag -> MS ANTENNA ID
+  // which will be useful when the Weather table will be converted.
+  //
+  map <Tag, int> stationId2ANTENNA_ID;
+  unsigned int numTrueAntenna;
   { 
     AntennaRow*   r   = 0;
-    ExecBlockRow* reb = 0;
 
     int nAntenna = antennaT.size();
     infostream.str("");
@@ -1355,7 +1364,7 @@ int main(int argc, char *argv[]) {
       }
 
       // We assume that wether the ExecBlock table has one row or that all ExecBlocks come from the same site.
-      reb = execBlockT.get().at(0);
+      // reb = execBlockT.get().at(0);
 
       // The MS Antenna position is defined as the sum of the ASDM station position and
       // of the ASDM Antenna position after applying to it a coordinate system transformation.
@@ -1373,28 +1382,67 @@ int main(int argc, char *argv[]) {
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
 	   iter != msFillers.end();
 	   ++iter) {
-	iter->second->addAntenna(r->getName().c_str(),
-				 r->getStationUsingStationId()->getName().c_str(),
-				 xPosition,
-				 yPosition,
-				 zPosition,
-				 // 		     r->getXPosition().get() + reb->getSiteLongitude().get(),
-				 // 		     r->getYPosition().get() + reb->getSiteLatitude().get(),
-				 // 		     r->getZPosition().get() + reb->getSiteAltitude().get(),
-				 
-				 xOffset,
-				 yOffset,
-				 zOffset,
-				 (float)r->getDishDiameter().get());	
+	stationId2ANTENNA_ID[r->getStationId()] = iter->second->addAntenna(r->getName().c_str(),
+									   r->getStationUsingStationId()->getName().c_str(),
+									   xPosition,
+									   yPosition,
+									   zPosition,
+									   xOffset,
+									   yOffset,
+									   zOffset,
+									   (float)r->getDishDiameter().get());	
       }
     }
+    numTrueAntenna = msFillers.begin()->second->ms()->antenna().nrow();
     if (nAntenna) {
       infostream.str("");
-      infostream << "converted in " << msFillers.begin()->second->ms()->antenna().nrow() << " antenna(s)  in the measurement set(s)." ;
+      infostream << "converted in " << numTrueAntenna << " antenna(s)  in the measurement set(s)." ;
       info(infostream.str());
     }
   }
+  
+  //
+  // Possibly create some fake MS ANTENNA(s) to represent the weather station.
+  //
+  unsigned int numFakeAntenna;
+  {
+    vector<WeatherRow *> wRs = ds->getWeather().get();
+    for (unsigned int i = 0; i < wRs.size(); i++) {
+      Tag stationId = wRs.at(i)->getStationId();
+      StationRow * sR = wRs.at(i)->getStationUsingStationId();
+      
+      if (stationId2ANTENNA_ID.find(stationId) == stationId2ANTENNA_ID.end()){
+	//
+	// We have a station referred to in the Weather table which does not host an antenna
+	// Let's create a fake ANTENNA in the MS.
+	//
+	vector<Length> position = sR->getPosition();
+	double xPosition = position.at(0).get();
+	double yPosition = position.at(1).get();
+	double zPosition = position.at(2).get();
 
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	     iter != msFillers.end();
+	     ++iter) {
+	  stationId2ANTENNA_ID[wRs.at(i)->getStationId()] = iter->second->addAntenna(sR->getName().c_str(),
+										     sR->getName().c_str(),
+										     xPosition,
+										     yPosition,
+										     zPosition,
+										     0.0,
+										     0.0,
+										     0.0,
+										     0.0);	
+	}	
+      }
+    }
+    numFakeAntenna = stationId2ANTENNA_ID.size() - numTrueAntenna;  
+    if ( numFakeAntenna > 0) {
+      infostream.str("");
+      infostream << numFakeAntenna << " dummy ANTENNA(s) created to represent WEATHER station(s)." ;
+      info(infostream.str());
+    }
+  }
 
   SpectralWindowTable& spwT = ds->getSpectralWindow();  
   //
@@ -1950,13 +1998,14 @@ int main(int argc, char *argv[]) {
     }
     if (nHistory) {
       infostream.str("");
-      infostream << "converted in " << msFillers.begin()->second->ms()->history().nrow() << " history(s) in the measurement set." ;
+      infostream << "converted in " << msFillers.begin()->second->ms()->history().nrow() << " history(s) in the measurement set(s)." ;
       info(infostream.str());
     }
   }
 
   // Build the MS Observation table with the content of ASDM ExecBlock table.
   // 
+  ExecBlockTable& execBlockT = ds->getExecBlock(); 
   {
     ExecBlockRow* r = 0;
     int nExecBlock = execBlockT.size();
@@ -1974,23 +2023,26 @@ int main(int argc, char *argv[]) {
 
       vector<string> observingLog;
       observingLog.push_back(r->getObservingLog());
-      msFiller->addObservation((const char*) r->getTelescopeName().c_str(),
-			       startTime,
-			       endTime,
-			       (const char*) r->getObserverName().c_str(),
-			       (const char**) SConverter().to1DCStringArray(observingLog),
-			       (const char *) "ALMA",
-			       (const char**) 0,
-			       (const char*) "T.B.D.",
-			       r->isReleaseDateExists() ? r->getReleaseDate().getMJD():0.0
-			       );
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addObservation((const char*) r->getTelescopeName().c_str(),
+				     startTime,
+				     endTime,
+				     (const char*) r->getObserverName().c_str(),
+				     (const char**) SConverter().to1DCStringArray(observingLog),
+				     (const char *) "ALMA",
+				     (const char**) 0,
+				     (const char*) "T.B.D.",
+				     r->isReleaseDateExists() ? r->getReleaseDate().getMJD():0.0
+				     );
+      }
     } 
     if (nExecBlock) {
       infostream.str("");
-      infostream << "converted in " << msFiller->ms()->observation().nrow() << " observation(s) in the measurement set." ;
+      infostream << "converted in " << msFillers.begin()->second->ms()->observation().nrow() << " observation(s) in the measurement set(s)." ;
       info(infostream.str());
     }
-    cout << endl;
   }
 
   // Load the Pointing table
@@ -2293,20 +2345,20 @@ int main(int argc, char *argv[]) {
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
 	   iter != msFillers.end();
 	   ++iter) {
-	msFiller->addSource(r->getSourceId(),
-			    time,
-			    interval,
-			    r->getSpectralWindowId().getTagValue(),
-			    r->isNumLinesExists() ? r->getNumLines() : 0,
-			    r->getSourceName().c_str(),
-			    r->isCalibrationGroupExists() ? r->getCalibrationGroup() : 0,
-			    r->getCode().c_str(),
-			    DConverter().to1DArray(r->getDirection()),
-			    position,
-			    DConverter().to1DArray(r->getProperMotion()),
-			    (const char **)transition,
-			    restFrequency,
-			    sysVel);
+	iter->second->addSource(r->getSourceId(),
+				time,
+				interval,
+				r->getSpectralWindowId().getTagValue(),
+				r->isNumLinesExists() ? r->getNumLines() : 0,
+				r->getSourceName().c_str(),
+				r->isCalibrationGroupExists() ? r->getCalibrationGroup() : 0,
+				r->getCode().c_str(),
+				DConverter().to1DArray(r->getDirection()),
+				position,
+				DConverter().to1DArray(r->getProperMotion()),
+				(const char **)transition,
+				restFrequency,
+				sysVel);
       }
     }
     if (nSource) {
@@ -2326,16 +2378,6 @@ int main(int argc, char *argv[]) {
   WeatherTable& weatherT = ds->getWeather();
 
   {
-    //
-    // Build a map to be able to associate an Antenna to a Station, since the ASDM Weather table's key is a Station Tag
-    // while the MS's one is an index in the Antenna table. Doing so, we make the assumption that all antennas used during
-    // an Exec block stay in place. 
-    //
-    map<Tag, Tag> station2Antenna;
-    vector<AntennaRow *> antennaRows = antennaT.get();
-    for (unsigned int i = 0; i < antennaRows.size(); i++)
-      station2Antenna[antennaRows.at(i)->getStationId()] = antennaRows.at(i)->getAntennaId();
-
     WeatherRow* r = 0;
     
     vector<WeatherRow*> v = weatherT.get();
@@ -2350,34 +2392,38 @@ int main(int argc, char *argv[]) {
       double interval = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond ;
       double time =  ((double) r->getTimeInterval().getStart().get()) + interval / 2.0 ;
       
-      map<Tag, Tag>::iterator iter = station2Antenna.find(r->getStationId());
-      if (iter == station2Antenna.end()) {
+      map<Tag, int>::iterator iter1 = stationId2ANTENNA_ID.find(r->getStationId());
+      if (iter1 == stationId2ANTENNA_ID.end()) {
 	infostream.str("");
-	infostream << "Could not find the antenna located on station #" << iter->first.getTagValue() <<". The row #" << i << " in the Weather table will be ignored";
+	infostream << "Could not find the antenna located on station #" << r->getStationId().getTagValue() <<". This is impossible in principle, please submit a bug report!";
 	info(infostream.str());
 	continue;
       }
-	
-      msFiller->addWeather(iter->second.getTagValue(),
-			   time,
-			   interval,
-			   r->getPressure().get(),
-			   r->getPressureFlag(),
-			   r->getRelHumidity().get(),
-			   r->getRelHumidityFlag(),
-			   r->getTemperature().get(),
-			   r->getTemperatureFlag(),
-			   r->getWindDirection().get(),
-			   r->getWindDirectionFlag(),
-			   r->getWindSpeed().get(),
-			   r->getWindSpeedFlag(),
-			   r->isDewPointExists(),
-			   r->isDewPointExists()?r->getDewPoint().get():-1.0,
-			   r->isDewPointExists()?r->getDewPointFlag():true);
+  
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->addWeather(iter1->second,
+				 time,
+				 interval,
+				 r->getPressure().get(),
+				 r->getPressureFlag(),
+				 r->getRelHumidity().get(),
+				 r->getRelHumidityFlag(),
+				 r->getTemperature().get(),
+				 r->getTemperatureFlag(),
+				 r->getWindDirection().get(),
+				 r->getWindDirectionFlag(),
+				 r->getWindSpeed().get(),
+				 r->getWindSpeedFlag(),
+				 r->isDewPointExists(),
+				 r->isDewPointExists()?r->getDewPoint().get():-1.0,
+				 r->isDewPointFlagExists()?r->getDewPointFlag():true);
+      }
     }
     if (nWeather) {
       infostream.str("");
-      infostream << "successfully copied them into the measurement set.";
+      infostream << "converted in " << msFillers.begin()->second->ms()->weather().nrow() <<" weather(s) in the measurement set." ;
       info(infostream.str());
     }
   }

@@ -174,9 +174,9 @@ public:
 // default constructor creates empty cube
   RFCubeLattice();
 // creates NX x NY x NZ cube
-  RFCubeLattice( uInt nx,uInt ny,uInt nz,Int maxmem=-1 );
+  RFCubeLattice( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, Int maxmem=-1 );
 // creates NX x NY x NZ cube and fills with initial value
-  RFCubeLattice( uInt nx,uInt ny,uInt nz,const T &init_val,Int maxmem=-1 );
+  RFCubeLattice( uInt nx,uInt ny,uInt nz, uInt ncorr, uInt nAgent, const T &init_val,Int maxmem=-1 );
 // destructor
   ~RFCubeLattice();
 

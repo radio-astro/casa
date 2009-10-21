@@ -56,7 +56,12 @@ class runTest:
                  WORKING_DIR='/tmp/casa_regression_work/', \
                  RESULT_DIR='/tmp/casa_regression_result/', \
                  retemplate=False,
-                 cleanup=True):
+                 cleanup=True,
+                 profile=False):
+        """cleanup: set to False to keep data around.
+        profile: set to True to enable C++ profiling. This requires that the command 'sudo opcontrol' must work,
+        Note, a profile is created only for the casapy process. If you want to include profiles for async / child
+        processes, refer to the documentation for opreport."""
         casalog.showconsole(onconsole=True)
         
         TEMPLATE_RESULT_DIR=AIPS_DIR+'/data/regression/'
@@ -159,10 +164,10 @@ class runTest:
                 prof = cProfile.Profile()
                 
                 try:
-                    #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", globals(), locals())
-                    #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", gl, lo)
-                    #prof.run("(leResult, leImages) = self.tester.runtests(testName, k, dry)")
-                    (leResult, leImages) = prof.runcall(self.tester.runtests, testName, k, dry)
+                    #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry, profile)", globals(), locals())
+                    #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry, profile)", gl, lo)
+                    #prof.run("(leResult, leImages) = self.tester.runtests(testName, k, dry, profile)")
+                    (leResult, leImages) = prof.runcall(self.tester.runtests, testName, k, dry, profile)
 
                     # returns absolute_paths, relative_paths
                     exec_success = True
@@ -218,6 +223,11 @@ class runTest:
                     # Clean up early, so that this infrastructure can continue
                     if not exec_success and cleanup:
                         self.tester.cleanup()
+                        
+                # Copy C++ profiling info
+                if profile:
+                    os.system('cp cpp_profile.* ' + self.resultsubdir)
+
                 os.chdir(presentDir)
 
                 # Terminate profiling process

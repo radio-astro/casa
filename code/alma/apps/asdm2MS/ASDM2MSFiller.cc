@@ -658,14 +658,18 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
   // Weather
   {
     TableDesc td = MSWeather::requiredTableDesc();
-    MSWeather::addColumnToDesc (td, MSWeather::H2O);
-    MSWeather::addColumnToDesc (td, MSWeather::IONOS_ELECTRON);
     MSWeather::addColumnToDesc (td, MSWeather::PRESSURE);
+    MSWeather::addColumnToDesc (td, MSWeather::PRESSURE_FLAG);
     MSWeather::addColumnToDesc (td, MSWeather::REL_HUMIDITY);
+    MSWeather::addColumnToDesc (td, MSWeather::REL_HUMIDITY_FLAG);
     MSWeather::addColumnToDesc (td, MSWeather::TEMPERATURE);
+    MSWeather::addColumnToDesc (td, MSWeather::TEMPERATURE_FLAG);
     MSWeather::addColumnToDesc (td, MSWeather::DEW_POINT);
+    MSWeather::addColumnToDesc (td, MSWeather::DEW_POINT_FLAG);
     MSWeather::addColumnToDesc (td, MSWeather::WIND_DIRECTION);
+    MSWeather::addColumnToDesc (td, MSWeather::WIND_DIRECTION_FLAG);
     MSWeather::addColumnToDesc (td, MSWeather::WIND_SPEED);
+    MSWeather::addColumnToDesc (td, MSWeather::WIND_SPEED_FLAG);
     SetupNewTable tabSetup(itsMS->weatherTableName(), td, Table::New);
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::WEATHER),
 				      Table(tabSetup));   
@@ -767,7 +771,7 @@ int ASDM2MSFiller::addAntenna( const char   *name_,
   // cout << "addAntenna : table flushed \n";
   // cout << "addAntenna : exiting \n";
   // cout << "\n";
-  return crow-1;
+  return crow;
 }
 
 const casa::MeasurementSet* ASDM2MSFiller::ms() { return itsMS; }

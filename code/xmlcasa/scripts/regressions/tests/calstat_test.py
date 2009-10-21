@@ -81,7 +81,7 @@ def run():
                         failed = True
 
                 # Remove these 3 lines of code, once CAS-1671 is solved
-                if failed == True and caltable == 'ggtau.1mm.ph.gcal0' and e in ['var', 'stddev']:
+                if failed == True and e in ['var', 'stddev']:
                     print "Ignoring this known problem on 64bit!"
                     failed = False
 

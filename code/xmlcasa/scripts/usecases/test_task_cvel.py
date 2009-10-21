@@ -457,7 +457,7 @@ if (testnumber in testlist):
     passall = False
     # regrid
     mode='frequency'
-    nchan = 2
+    nchan = 1
     start = '4.80GHz'
     width = '50MHz'
     outframe = ''
@@ -526,6 +526,40 @@ if (testnumber in testlist):
     width = '3.125MHz'
     outframe = 'lsrd'
     phasecenter = 2
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "Input and output vis set, input vis with one spw, two fields selected, passall = False, regridding 9..."
+        rval = cvel()
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 2, 10, 0)
+    except:
+        print myname, ': *** Unxpected error ***'   
+        failures += 1
+
+testnumber = 18
+if (testnumber in testlist):
+    myvis = vis_d
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    vis = 'myinput.ms'
+    outputvis = 'cvel-output.ms'
+    # select some other field
+    field = '2,3'
+    # only one SPW
+    spw = '0'
+    passall = False
+    # regrid
+    mode='frequency'
+    nchan = 10
+    start = '114.9507GHz'
+    width = '3.125MHz'
+    outframe = 'lsrd'
+    phasecenter = 'J2000 12h56m43.88s +21d41m00.1s'
     total += 1
     try:
         print "\n>>>> Test ", testnumber, ", input MS: ", myvis

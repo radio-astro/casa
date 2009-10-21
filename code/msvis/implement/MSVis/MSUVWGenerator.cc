@@ -89,7 +89,8 @@ void MSUVWGenerator::fill_bl_an(Vector<MVBaseline>& bl_an_p)
     sqrt(smallestDiam * secondSmallestDiam) / max_baseline;
 }  
 
-void MSUVWGenerator::uvw_an(const MEpoch& timeCentroid, const Int fldID)
+void MSUVWGenerator::uvw_an(const MEpoch& timeCentroid, const Int fldID,
+                            const Bool WSRTConvention)
 {
   const MDirection& phasedir = msc_p.field().phaseDirMeas(fldID);
   MeasFrame  measFrame(refpos_p, timeCentroid, phasedir);
@@ -119,6 +120,17 @@ void MSUVWGenerator::uvw_an(const MEpoch& timeCentroid, const Int fldID)
     
     antUVW_p[i] = uvwOutFrame.getValue();
   }
+
+  // Tony Willis supplied this crucial bit of history: the WSRT definition of
+  // phase is opposite to that of the VLA - the WSRT definition of the l,m
+  // direction cosines is that l increases toward decreasing RA, whereas the
+  // VLA definition is that l increases toward increasing RA.  AIPS seems to
+  // understand this.  (For a completely useless piece of trivia, the WSRT defn
+  // of phase is consistent with that of the Cambridge one-mile telescope as
+  // Wim Brouw set things up to be in agreement with the one-mile telescope ca
+  // 1968.)
+  if(WSRTConvention)
+    antUVW_p = -antUVW_p;
 }
 
 // antUVW_p must be set up for the correct timeCentroid and phase direction by

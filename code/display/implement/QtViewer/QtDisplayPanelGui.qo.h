@@ -51,6 +51,7 @@ class QtMouseToolBar;
 class QtCanvasManager;
 class QtAnnotatorGui;
 class MakeMask;
+class MakeRegion;
 class QtProfile;
 class QtDisplayData;
 class TrackBox;
@@ -69,7 +70,7 @@ class QtDisplayPanelGui : public QMainWindow,
 		//# name of this file in 'mocs' section.
 
  public:
-  enum SCRIPTING_OPTION { INTERACT };
+  enum SCRIPTING_OPTION { INTERACT, SETOPTIONS };
 
   QtDisplayPanelGui(QtViewer* v, QWidget* parent=0);
   ~QtDisplayPanelGui();
@@ -95,7 +96,9 @@ class QtDisplayPanelGui : public QMainWindow,
   virtual void releaseMainPanel( );
 
   virtual bool supports( SCRIPTING_OPTION option ) const;
-  virtual QVariant start_interact( QVariant input, int id );
+  virtual QVariant start_interact( const QVariant &input, int id );
+  virtual QVariant setoptions( const QVariant &input, int id);
+
   // the QtDBusViewerAdaptor can handle loading & registering data itself,
   // but to connect up extra functionality, the upper-level QtDisplayPanelGui
   // (or in the current case, the derived QtCleanPanelGui) would have to be
@@ -121,6 +124,9 @@ class QtDisplayPanelGui : public QMainWindow,
 
   virtual void showAnnotatorPanel();
   virtual void hideAnnotatorPanel();
+
+  virtual void showMakeRegionPanel();
+  virtual void hideMakeRegionPanel();
  
   virtual void showImageProfile();
   virtual void hideImageProfile();
@@ -262,6 +268,7 @@ class QtDisplayPanelGui : public QMainWindow,
   QtCanvasManager* qcm_;	//# display panel options window.
   //QtAnnotatorGui* qap_;
   MakeMask* qap_;
+  MakeRegion* qmr_;
   QtRegionManager* qrm_;      //# Region manager window.
   QtRegionShapeManager* qsm_; //# Region shape manager window.
   
@@ -276,8 +283,8 @@ class QtDisplayPanelGui : public QMainWindow,
   
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 	  *ddOpenAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_, 
-	  *zoomInAct_, *zoomOutAct_, *annotAct_, *profileAct_, *rgnMgrAct_,
-	  *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
+	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_,
+          *profileAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_; 
   
   QToolBar* mainToolBar_;
   QToolButton *ddRegBtn_, *ddCloseBtn_;

@@ -6,6 +6,11 @@
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
+    <method name="setoptions" >
+      <arg direction="in" type="v" name="options" />
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
+    </method>
     <method name="load" >
       <arg direction="in" type="s" name="path" />
       <arg direction="in" type="s" name="displaytype" />

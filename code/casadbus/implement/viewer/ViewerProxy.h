@@ -51,6 +51,8 @@ namespace casa {
 
 	dbus::variant start_interact( const dbus::variant &input, int panel )
 			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::start_interact(dbus::fromVariant(input), panel) ); }
+	dbus::variant setoptions( const dbus::variant &input, int panel )
+			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::setoptions(dbus::fromVariant(input), panel) ); }
 	dbus::variant load( const std::string &path, const std::string &displaytype = "raster", int panel=0 )
 			{ return dbus::toVariant( edu::nrao::casa::viewer_proxy::load( path, displaytype, panel ) ); }
 	dbus::variant reload( int panel_or_data )

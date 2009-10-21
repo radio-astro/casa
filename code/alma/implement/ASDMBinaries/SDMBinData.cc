@@ -142,6 +142,12 @@ namespace sdmbin {
     // the scan intent:
     sr = datasetPtr_->getScan().getRowByKey( mainRowPtr->getExecBlockUsingExecBlockId()->getExecBlockId(),
 					     mainRowPtr->getScanNumber() );
+    if (sr == (ScanRow*) 0) {
+      ostringstream oss;
+      oss << "There is no row in the Scan table with 'execBlockId==" << mainRowPtr->getExecBlockId().toString()
+	  << "' and 'scanNumber==" << mainRowPtr->getScanNumber() << "'.";
+      Error(FATAL, oss.str());
+    }
     vector<ScanIntent> v_si=sr->getScanIntent();
     ok=false;
     for(unsigned int n=0 ; n<v_si.size(); n++)if(es_si_[v_si[n]])ok=true;

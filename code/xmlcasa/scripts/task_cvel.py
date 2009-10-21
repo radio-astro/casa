@@ -183,7 +183,7 @@ def cvel(vis, outputvis,
         if (field == ''):
             field = '*'
 
-        if ( spw == ''):
+        if (spw == ''):
             spw = '*'
 
         if(passall and spw=='*' and field=='*'):
@@ -291,7 +291,6 @@ def cvel(vis, outputvis,
                  timebin='-1s',    time=timerange,
                  whichcol=datacolumn,
                  scan=scan,          uvrange="")
-
         ms.close()
 
         # time sort it (required for cvel)

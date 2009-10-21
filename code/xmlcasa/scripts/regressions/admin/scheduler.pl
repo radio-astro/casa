@@ -22,7 +22,7 @@ $res_dir = "" if (0);   # non-default result dir
 $noloop  = "" if (0);   # Iterate through tests only once
 $noclean = "" if (0);   # Do not cleanup result dir
 $all     = "" if (0);   # Loop through all tests?
-$opcontrol = "" if (0); # path to opcontrol (oprofile)
+$profile = "" if (0);   # enable profiling? assumes sudo opcontrol
 
 $reg_dir  = $ARGV[0];
 $data_dir = $ARGV[1];
@@ -136,7 +136,6 @@ if ($load_average_15 < $la_limit) {
             $test_number = ($next + $base) % ($#tests+1);	    
 	    $testname = $tests[$test_number];
 	    $runcasa_log     = "$workdir/Log/run-$testname-$hostname.log";
-	    $runcasa_profile = "$workdir/Log/profile-$testname-$hostname.dot";
 	    
 	    system("/bin/rm -rf $workdir") == 0 or die $!;
 	    mkdir("$workdir") or die;
@@ -146,20 +145,19 @@ if ($load_average_15 < $la_limit) {
 	    system("cp $admin_dir/*.py $admin_dir/*.pl $workdir/admin/") == 0 or die $!;
 	    
 	    $xdisplay = 7;
+	    $p = "0";
+	    if ($profile) {
+		$p = "1";
+	    }
 	    $cmd = 
 		"$admin_dir/process_manager.pl $timeout " .
-		"$admin_dir/runcasa_from_shell.sh $xdisplay $workdir/admin/execute.py $data_dir $workdir $testname";
+		"$admin_dir/runcasa_from_shell.sh $xdisplay $workdir/admin/execute.py $data_dir $workdir $testname $p";
 	    
 	    print gettime(), "Run test $test_number $testname: $cmd > $runcasa_log 2>&1\n";
-            if ($opcontrol) {
-                system("$opcontrol --reset") == 0 or die $!;
-                system("$opcontrol --start --no-vmlinux") == 0 or die $!;
-            }
 	    system("$cmd > $runcasa_log 2>&1"); # no check on return code
-            if ($opcontrol) {
-                system("$opcontrol --dump") == 0 or die $!;
-                system("$opcontrol --stop") == 0 or die $!;
-                system("opreport -clf image-exclude:/no-vmlinux | $admin_dir/gprof2dot.py -e0 -n0.1 -f oprofile > $runcasa_profile");
+            if ($profile) {
+		# be sure to stop the oprofile deamon if the casapy session did not
+                system("sudo opcontrol --stop") == 0 or die $!;
             }
 	    if (-d "$workdir/result") {
 		rename("$workdir/result/", "$workdir/Result/") or die $!;

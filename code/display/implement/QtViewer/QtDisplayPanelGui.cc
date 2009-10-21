@@ -32,6 +32,7 @@
 #include <display/QtViewer/QtCanvasManager.qo.h>
 #include <display/QtViewer/QtRegionManager.qo.h>
 #include <display/QtViewer/MakeMask.qo.h>
+#include <display/QtViewer/MakeRegion.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtMouseToolBar.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
@@ -46,7 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
 		   QMainWindow(parent),
-		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qrm_(0),
+		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qmr_(0), qrm_(0),
 		   qsm_(0), profile_(0), savedTool_(QtMouseToolNames::NONE),
 		   profileDD_(0), close_override(false)  {
     
@@ -105,12 +106,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
   
   tlMenu_        = menuBar()->addMenu("&Tools");
    annotAct_     = tlMenu_->addAction("&File Box");
+   mkRgnAct_     = tlMenu_->addAction("&Image Region");
    //annotAct_->setEnabled(False);
 
    profileAct_   = tlMenu_->addAction("Spectral Profi&le");
    rgnMgrAct_    = new QAction("Region Manager...", 0);
    //rgnMgrAct_    = tlMenu_->addAction("Region Manager...");
-   //rgnMgrAct_->setEnabled(False);
+   rgnMgrAct_->setEnabled(False);
 
    shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
   
@@ -462,6 +464,7 @@ cerr<<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy()
   connect(dpCloseAct_, SIGNAL(triggered()),  SLOT(close()));
   connect(dpQuitAct_,  SIGNAL(triggered()),  v_, SLOT(quit()));
   connect(annotAct_,   SIGNAL(triggered()),  SLOT(showAnnotatorPanel()));
+  connect(mkRgnAct_,   SIGNAL(triggered()),  SLOT(showMakeRegionPanel()));
   connect(profileAct_, SIGNAL(triggered()),  SLOT(showImageProfile()));
   connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
   connect(shpMgrAct_,  SIGNAL(triggered()), SLOT(showShapeManager()));
@@ -551,10 +554,12 @@ bool QtDisplayPanelGui::supports( SCRIPTING_OPTION ) const {
     return false;
 }
 
-QVariant QtDisplayPanelGui::start_interact( QVariant, int ) {
+QVariant QtDisplayPanelGui::start_interact( const QVariant &, int ) {
     return QVariant(QString("*error* unimplemented (by design)"));
 }
-
+QVariant QtDisplayPanelGui::setoptions( const QVariant &, int ) {
+    return QVariant(QString("*error* nothing  implemented yet"));
+}
 void QtDisplayPanelGui:: addedData( QString type, QtDisplayData * ) { }
 
 void QtDisplayPanelGui::closeMainPanel( ) {
@@ -786,6 +791,36 @@ void QtDisplayPanelGui::hideAnnotatorPanel() {
   qap_->hide();  
 }
 
+void QtDisplayPanelGui::showMakeRegionPanel() {
+
+  if (qmr_ == 0) 
+     qmr_ = new MakeRegion(qdp_);
+
+  List<QtDisplayData*> rdds = qdp_->registeredDDs();
+  for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+     QtDisplayData* pdd = qdds.getRight();
+     if(pdd != 0 && pdd->dataType() == "image") {
+            
+        ImageInterface<float>* img = pdd->imageInterface();
+        PanelDisplay* ppd = qdp_->panelDisplay();
+        if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
+           connect(pdd, 
+                   SIGNAL(axisChanged4(String, String, String, int)),
+                   qmr_, 
+                   SLOT(changeAxis(String, String, String, int)));
+        }
+      }
+  }
+  qmr_->showNormal();
+  qmr_->raise();  
+
+}
+
+void QtDisplayPanelGui::hideMakeRegionPanel() {
+  if (qmr_==0) 
+     return;
+  qmr_->hide();  
+}
 
 void QtDisplayPanelGui::showImageProfile() {
 

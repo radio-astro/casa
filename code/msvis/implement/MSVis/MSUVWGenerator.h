@@ -123,9 +123,13 @@ private:
   
   // Determine antUVW_p for every member of the sequence of antennas
   // defining a (sub)array.
-  //     @param  timeCentroid An epoch, the 'when' characterization.
-  //     @param  fldID        The row number in the FIELD table which gives the
-  //                          phase direction.
+  //     @param  timeCentroid    An epoch, the 'when' characterization.
+  //     @param  fldID           The row number in the FIELD table which gives
+  //                             the phase tracking center.
+  //     @param  WSRTConvention  If true (WSRT only?), the l in the ul + vm
+  //                             phase calculation decreases toward increasing
+  //                             RA.  If false (VLA), it increases with
+  //                             increasing RA.  See the code for more info.
   //     @note This function only calculates UVWs for a single time and a
   //     single phase center.  Fields can potentially have multiple phase
   //     directions, so be prepared to call this function from within a loop
@@ -134,7 +138,8 @@ private:
   //       MEpoch timeCentroid(Quantity(<double>, "s"), MEpoch::TAI);
   //      but the accuracy is limited since there is no extra precision
   //      attribute (see Main table of MS v2).
-  void uvw_an(const MEpoch& timeCentroid, const Int fldID);
+  void uvw_an(const MEpoch& timeCentroid, const Int fldID,
+              const Bool WSRTConvention=false);
 
   // (Sub-)array parameters constraining order and size of the output vector 
   // of UVW coords triplets.

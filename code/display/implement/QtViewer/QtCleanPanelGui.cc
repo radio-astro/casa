@@ -284,10 +284,15 @@ namespace casa {
     EXIT_FUNC(exitStop,"stop",hide( );)
 
     bool QtCleanPanelGui::supports( SCRIPTING_OPTION option ) const {
-	return option == INTERACT ? true : false;
+	return option == INTERACT || option == SETOPTIONS ? true : false;
     }
 
-    QVariant QtCleanPanelGui::start_interact( QVariant input, int id ) {
+    QVariant QtCleanPanelGui::setoptions(const QVariant &input, int id) {
+	fprintf( stderr, "\t\t>>> QtCleanPanelGui::setoptions( )\n" );
+	return QVariant(true);
+    }
+
+    QVariant QtCleanPanelGui::start_interact( const QVariant &input, int id ) {
 	if ( ! in_interact_mode ) {
 	    in_interact_mode = true;
 	    interact_id = id;

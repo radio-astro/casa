@@ -845,8 +845,7 @@ ms::cvel(const std::string& mode,
     Double t_bandwidth = -1.; // default value indicating that the original width of the SPW should be used
     Double t_width = -1.; // default value indicating that the original channel width of the SPW should be used
 
-    // determine start
-    if(!start.toString().empty()){
+    if(!start.toString().empty()){ // start was set
       if(t_mode == "channel"){
 	t_start = Double(atoi(start.toString().c_str()));
       }
@@ -866,13 +865,16 @@ ms::cvel(const std::string& mode,
 	if(!width.toString().empty()){
 	  t_width = Double(atoi(width.toString().c_str()));
 	}
+	else{
+	  t_width = 1;
+	}
       }
       else if(t_mode == "frequency"){
 	if(!width.toString().empty()){
 	  t_width = casaQuantity(width).getValue("Hz");
 	}
 	else{
-	  *itsLog << LogIO::WARN << "In frequency mode, need to set channel width if channel start is set." << LogIO::POST;
+	  *itsLog << LogIO::WARN << "In frequency mode, need to set channel width if start is set." << LogIO::POST;
 	  return false;
 	}
       }
@@ -881,14 +883,14 @@ ms::cvel(const std::string& mode,
 	  t_width = casaQuantity(width).getValue("m/s");
 	}   
 	else{
-	  *itsLog << LogIO::WARN << "In velocity mode, need to set channel width if channel start is set." << LogIO::POST;
+	  *itsLog << LogIO::WARN << "In velocity mode, need to set channel width if start is set." << LogIO::POST;
 	  return false;
 	}
       }
       // determine bandwidth and center
       if(nchan > 0){ // we are not using the default, which is all channels
 	if(t_mode == "channel"){
-	  t_bandwidth = Double(nchan);
+	  t_bandwidth = Double(nchan*t_width);
 	  t_center = floor(t_bandwidth/2. + t_start);
 	}
 	else{
@@ -897,6 +899,48 @@ ms::cvel(const std::string& mode,
 	}
       }
     }
+    else { // start was not set
+      if(t_mode == "channel"){
+	t_start = 0;
+	if(!width.toString().empty()){
+	  t_width = Double(atoi(width.toString().c_str()));
+	}
+	else{
+	  t_width = 1;
+	}
+	if(nchan > 0){
+	  t_bandwidth = Double(nchan*t_width);
+	}
+      }
+      else if(t_mode == "frequency"){
+	if(!width.toString().empty()){
+	  if(nchan<=0){
+	    *itsLog << LogIO::WARN << "In frequency mode, need to set nchan if width is set." << LogIO::POST;
+	    return false;
+	  }
+	  else{
+	    t_width = casaQuantity(width).getValue("Hz");
+	    t_bandwidth = nchan*t_width;
+	  }	
+	}
+      }
+      else if(t_mode == "velocity"){
+	if(!width.toString().empty()){
+	  if(nchan<=0){
+	    *itsLog << LogIO::WARN << "In velocity mode, need to set nchan if width is set." << LogIO::POST;
+	    return false;
+	  }
+	  else{
+	    t_width = casaQuantity(width).getValue("m/s");
+	    t_bandwidth = nchan*t_width;
+	  }	
+	}
+      }
+      else{
+	*itsLog << LogIO::WARN << "Invalid mode " << t_mode << LogIO::POST;
+	return false;
+      }
+    } // end if start was set
 
     String t_veltype = toCasaString(veltype); 
     String t_regridQuantity;
@@ -907,6 +951,10 @@ ms::cvel(const std::string& mode,
       t_regridQuantity = "freq";
     }
     else if(t_mode == "velocity"){
+      if(t_restfreq == 0.){
+	*itsLog << LogIO::SEVERE << "Need to set restfreq in velocity mode." << LogIO::POST; 
+	return False;
+      }	
       t_regridQuantity = "vrad";
       if(t_veltype == "optical"){
 	t_regridQuantity = "vopt";
@@ -929,6 +977,11 @@ ms::cvel(const std::string& mode,
        || phasec.type()==::casac::variant::INTVEC
        || phasec.type()==::casac::variant::INT){
       t_phasec_fieldid = phasec.toInt();	
+      if(t_phasec_fieldid >= itsMS->field().nrow() || t_phasec_fieldid < 0){
+	*itsLog << LogIO::SEVERE << "Field id " << t_phasec_fieldid
+		<< " selected to be used as phasecenter does not exist." << LogIO::POST;
+	return False;
+      }
     }
     else{
       if(t_phasec.empty()){
@@ -942,11 +995,6 @@ ms::cvel(const std::string& mode,
 	}
 	*itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
       }
-    }
-    if(t_phasec_fieldid >= itsMS->field().nrow()){
-      *itsLog << LogIO::SEVERE << "Field id " << t_phasec_fieldid
-	      << " selected to be used as phasecenter does not exist." << LogIO::POST;
-      return False;
     }
 
     // end prepare regridding parameters

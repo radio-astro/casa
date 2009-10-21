@@ -140,7 +140,7 @@ Bool RFADiffBase::newChunk (Int &maxmem)
 // init flag cube
   RFAFlagCubeBase::newChunk(maxmem);
 // create a temp lattice to hold nchan x num(IFR) x ntime diff-medians
-  diff.init(num(CHAN),num(IFR),num(TIME),mmdiff,2);
+  diff.init(num(CHAN),num(IFR),num(TIME),num(CORR), nAgent, mmdiff,2);
 // init the row-clipper object
   rowclipper.init(num(IFR),num(TIME));
   diffrow.resize(num(CHAN));

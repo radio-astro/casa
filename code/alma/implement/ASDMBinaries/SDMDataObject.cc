@@ -1005,7 +1005,7 @@ namespace asdmbinaries {
     }
   }
 
-#ifdef AIPS_DARWIN
+#ifdef __APPLE__
   const ByteOrder* ByteOrder::Little_Endian = new ByteOrder("Little_Endian", __DARWIN_LITTLE_ENDIAN);
   const ByteOrder* ByteOrder::Big_Endian = new ByteOrder("Big_Endian", __DARWIN_BIG_ENDIAN);
 #else 
@@ -1020,7 +1020,7 @@ namespace asdmbinaries {
   ByteOrder::~ByteOrder() {;}
 
   const ByteOrder* ByteOrder::machineEndianity() {
-#ifdef AIPS_DARWIN
+#ifdef __APPLE__
     if (__DARWIN_BYTE_ORDER == __DARWIN_LITTLE_ENDIAN)
 #else 
     if (__BYTE_ORDER == __LITTLE_ENDIAN)

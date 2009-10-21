@@ -15,8 +15,12 @@ def importasdm(asdm=None, vis=None, corr_mode=None, srt=None, time_sampling=None
 	#Python script
 	try:
 		casalog.origin('importasdm')
+		viso = ''
 		if(len(vis) > 0) :
-			vis = vis + '.ms'
+		   viso = vis + '.ms'
+		else :
+		   viso = asdm + '.ms'
+		   vis = asdm
 		execute_string='asdm2MS  --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' + time_sampling+ '\" --ocm \"' + ocorr_mode + '\" --wvr-corrected-data \"' + wvr_corrected_data + '\" --asis \"' + asis + '\"'
 		if(compression) :
 		   execute_string= execute_string +' --compression'
@@ -24,15 +28,14 @@ def importasdm(asdm=None, vis=None, corr_mode=None, srt=None, time_sampling=None
 		   execute_string= execute_string +' --verbose'
 		if(showversion) :
 		   execute_string= execute_string +' --revision'
-		execute_string = execute_string + ' ' + asdm + ' ' + vis
+		execute_string = execute_string + ' ' + asdm + ' ' + viso
 		casalog.post('Running the asdm2MS standalone invoked as:')
 		#print execute_string
 		casalog.post(execute_string)
         	os.system(execute_string)
-		if(compression) :
-                   ok=fg.open(asdm+'.compressed.ms');
-		else :
-                   ok=fg.open(asdm+'.ms');
+		if compression :
+			viso = vis + '.compressed.ms'
+                ok=fg.open(viso);
                 ok=fg.saveflagversion('Original',comment='Original flags at import into CASA',merge='save')
                 ok=fg.done();
 	except Exception, instance:

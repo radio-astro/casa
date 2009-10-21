@@ -114,8 +114,26 @@ class testbase :
         else:
             desc = None
         return desc
+
+    def op_init(self, oprofile):
+        if oprofile:
+            os.system("sudo opcontrol --deinit && sudo opcontrol --init && sudo opcontrol --reset && sudo opcontrol --start --callgraph=999 --no-vmlinux --separate=lib --event=\"default\"")
+
+    def op_done(self, oprofile):
+        if oprofile:
+            casapy = os.environ["CASAPATH"].split()[0] + '/' + \
+                     os.environ["CASAPATH"].split()[1] + '/bin/casapy'
+
+            gprof2dot = os.environ["CASAPATH"].split()[0] + \
+                        '/code/xmlcasa/scripts/regressions/admin/gprof2dot.py'
+            
+            os.system("sudo opcontrol --stop && sudo opcontrol --dump")
+            os.system("opreport -clf image-exclude:/no-vmlinux " + casapy + " > cpp_profile.txt")
+            os.system("cat cpp_profile.txt | " + gprof2dot + " -e0.1 -n1 -f oprofile > cpp_profile.dot")
+            os.system("cat cpp_profile.dot | dot -Tpng -o cpp_profile.png")
+            os.system("opannotate --source > cpp_profile.cc")
                
-    def runtests(self, testName, testId=0, dry=False):
+    def runtests(self, testName, testId=0, dry=False, profile=False):
         try:
             leFile=self.testsToRun[testId]
 
@@ -152,13 +170,16 @@ class testbase :
                             else:
                                 os.system('ln -sf '+theData+' '+self.workingDirectory+'/'+leData)
                 if not dry:
+                    self.op_init(profile)
                     theImages=leTest.run()
+                    self.op_done(profile)
                 else:
                     # ngc5921redux
                     theImages = ['ngc5921_regression/ngc5921.clean.image']
 
                     # h121
                     theImages =  ['nrao150.3mm.image', 'h121.co10.image',  '0224b.3mm.image', 'h121b.co10.image', 'h121all.3mm.image', 'h121c.co10.image' ]
+
 
                 del leTest
 
@@ -204,10 +225,13 @@ class testbase :
 
                 # What we really want, but regstate doesn't propagate:
                 # execfile(leFile, gl)
+                self.op_init(profile)
                 execfile('./exec-'+leFile, gl)
+                self.op_done(profile)
                 
                 return [], []   # no product images known
         except:
+            self.op_done(profile)
             self.notest=True
             #print >> sys.stderr, "Error running test:", sys.exc_info()[0]
             raise

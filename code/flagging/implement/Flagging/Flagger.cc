@@ -536,6 +536,7 @@ namespace casa {
   }
 
   Bool Flagger::selectDataChannel(){
+
     if (!vs_p || !msselection_p) return False;
     /* Set channel selection in visiter */
     /* Set channel selection per spectral window - from msselection_p->getChanList(); */
@@ -553,7 +554,7 @@ namespace casa {
 	{
 	  Int j=0;
 	  for ( j=0;j<(spwchan.shape())[0];j++ )
-	    if ( spwchan(j,0) == spwlist[i] ) break;
+              if ( spwchan(j,0) == spwlist[i] ) break;
 	  vs_p->iter().selectChannel(1, Int(spwchan(j,1)), 
 				     Int(spwchan(j,2)-spwchan(j,1)+1),
 				     Int(spwchan(j,3)), spwlist[i]);
@@ -568,69 +569,6 @@ namespace casa {
   }
 
 
-  // Help function for setdata use
-#if 0
-  Bool Flagger::selectDataChannel(Vector<Int> &spwidnchans, Vector<Int>& spectralwindowids, 
-				  Vector<Int>& dataStart, 
-				  Vector<Int>& dataEnd, Vector<Int>& dataStep)
-  {
-    LogIO os(LogOrigin("Flagger", "selectDataChannel()", WHERE));
-    
-    if (dataEnd.nelements() != spectralwindowids.nelements()){
-      if (dataEnd.nelements()==1){
-	dataEnd.resize(spectralwindowids.nelements(), True);
-	for(uInt k=1; k < spectralwindowids.nelements(); ++k){
-	  dataEnd[k]=dataEnd[0];
-	}
-      }
-      else{
-	os << LogIO::SEVERE 
-	   << "Vector of endchan has to be of size 1 or be of the same shape as spw " 
-	   << LogIO::POST;
-	return False; 
-      }
-    }
-    if (dataStart.nelements() != spectralwindowids.nelements()){
-      if (dataStart.nelements()==1){
-	dataStart.resize(spectralwindowids.nelements(), True);
-	for(uInt k=1; k < spectralwindowids.nelements(); ++k){
-	  dataStart[k]=dataStart[0];
-	}
-      }
-      else{
-	os << LogIO::SEVERE 
-	   << "Vector of startchan has to be of size 1 or be of the same shape as spw " 
-	   << LogIO::POST;
-	return False; 
-      }
-    }
-    if (dataStep.nelements() != spectralwindowids.nelements()){
-      if (dataStep.nelements()==1){
-	dataStep.resize(spectralwindowids.nelements(), True);
-	for(uInt k=1; k < spectralwindowids.nelements(); ++k){
-	  dataStep[k]=dataStep[0];
-	}
-      }
-      else{
-	os << LogIO::SEVERE 
-	   << "Vector of stepchan has to be of size 1 or be of the same shape as spw " 
-	   << LogIO::POST;
-	return False; 
-      }
-    }
-    
-    for(uInt i=0;i<spectralwindowids.nelements();i++) {
-      if (dataStart[i]==-1 || dataStart[i]>=spwidnchans[i])
-	dataStart[i]=0;
-      if (dataEnd[i]==-1 || dataEnd[i]>=spwidnchans[i])
-	dataEnd[i] = spwidnchans[i]-1;
-      if (dataStep[i]==-1) dataStep[i]=1;
-      
-    }
-    
-    return True;
-  }
-#endif
   
   /************************** Set Manual Flags ***************************/
   
@@ -2045,7 +1983,19 @@ namespace casa {
 	//cleanupPlotters();
 	// throw the exception on
 	throw x;
-      }  
+      }
+    catch(std::exception e) 
+      {
+	for( uInt i=0; i<acc.nelements(); i++ ) {
+          if ( acc[i] ) {
+            delete acc[i];
+            acc[i] = NULL;
+          }
+        }
+	acc.resize(0);
+
+        throw AipsError(e.what());
+      }
     //cleanupPlotters();
     ms.flush();
     //os<<"Flagging complete\n"<<LogIO::POST;

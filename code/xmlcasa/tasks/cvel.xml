@@ -78,19 +78,19 @@ Regrid an MS to a new spectral window / channel structure or frame
 
         <param type="int" name="nchan" subparam="true">
 	    <description>Number of channels in output spw (-1=all)</description>
-	    <value>1</value>
+	    <value>-1</value>
         </param>
 
         <param type="any" name="start" subparam="true">
 	    <description>First channel in input to use</description>
 	    <any type="variant"/>
-	    <value type="string"></value>
+	    <value type="int">0</value>
         </param>
 
         <param type="any" name="width" subparam="true">
 	    <description>Number of input channels to average</description>
 	    <any type="variant"/>
-	    <value type="string"></value>
+	    <value type="int">1</value>
         </param>
 
         <param type="string" name="interpolation" subparam="true" ignorecase="True">

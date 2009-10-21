@@ -60,7 +60,7 @@ namespace casa {
 
     public slots:
 
-	QDBusVariant start_interact( QDBusVariant input, int panel );
+	QDBusVariant start_interact( const QDBusVariant &input, int panel );
 	QDBusVariant load( const QString &path, const QString &displaytype = "raster", int panel=0 );
 	QDBusVariant reload( int panel_or_data );
 	QDBusVariant unload( int data );
@@ -72,6 +72,8 @@ namespace casa {
 	QDBusVariant close( int panel );
 	// like "close()", but leaves the closing up to the user if the window is not hidden
 	QDBusVariant release( int panel );
+	//To change certain things so the panel 
+	QDBusVariant setoptions( const QDBusVariant &input, int panel);
 	// device:	file name or printer name
 	// devicetype:	"file", "printer", or "ghostscript"
 	// format:	"jpg", "pdf", "eps", "ps", "png", "xbm", "xpm", "ppm"

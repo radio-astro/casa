@@ -76,7 +76,7 @@ namespace casa {
 	emit interact(QDBusVariant(v));
     }
 
-    QDBusVariant QtDBusViewerAdaptor::start_interact( QDBusVariant input, int panel ) {
+    QDBusVariant QtDBusViewerAdaptor::start_interact( const QDBusVariant &input, int panel ) {
 	mainwinmap::iterator iter = managed_windows.find( panel );
 	if ( iter == managed_windows.end( ) ) {
 	    char buf[50];
@@ -90,7 +90,21 @@ namespace casa {
 	};
 	return QDBusVariant(iter->second->start_interact(input.variant(),panel));
     }
-
+  QDBusVariant QtDBusViewerAdaptor::setoptions( const QDBusVariant &input, int panel ) {
+	fprintf( stderr, "\t\t>>> QtDBusViewerAdaptor::setoptions( )\n" );
+	mainwinmap::iterator iter = managed_windows.find( panel );
+	if ( iter == managed_windows.end( ) ) {
+	    char buf[50];
+	    sprintf( buf, "%d", panel );
+	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' not found"));
+	}
+	if ( ! iter->second->supports( QtDisplayPanelGui::SETOPTIONS ) ) {
+	    char buf[50];
+	    sprintf( buf, "%d", panel );
+	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' does not support 'interact'"));
+	};
+	return QDBusVariant(iter->second->setoptions(input.variant(),panel));
+    }
     QDBusVariant QtDBusViewerAdaptor::load( const QString &path, const QString &displaytype, int panel ) {
 
 	struct stat buf;
@@ -703,7 +717,10 @@ namespace casa {
 	QDBusAbstractAdaptor(new QObject()), viewer_(viewer) {
     }
 
-    QtDBusViewerAdaptor::~QtDBusViewerAdaptor() { }
+    QtDBusViewerAdaptor::~QtDBusViewerAdaptor() {
+      
+
+    }
 
     QtDisplayPanel *QtDBusViewerAdaptor::findpanel( int key ) {
 

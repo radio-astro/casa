@@ -139,9 +139,8 @@ class SubMS
                    const String& subarray);
 
   // Select source or field
-  void selectSource(Vector<Int> fieldid);
+  Bool selectSource(const Vector<Int>& fieldid);
   
-
   // Select Antennas to split out  
   void selectAntenna(Vector<Int>& antennaids, Vector<String>& antennaSel);
 
@@ -298,15 +297,15 @@ class SubMS
   Bool fillAllTables(const String& colname);
   Bool fillDDTables();
   Bool fillFieldTable();
-  Bool fillMainTable(const String& which);
-  Bool fillAverMainTable(const String& which);
+  Bool fillMainTable(const Vector<String>& colNames);
+  Bool fillAverMainTable(const Vector<String>& colNames);
   Bool copyAntenna();
   Bool copyFeed();
   Bool copySource();
   Bool copyObservation();
   Bool copyPointing();
-  Bool writeDiffSpwShape(const String& columnName);
-  Bool writeSimilarSpwShape(const String& columnName);
+  Bool writeDiffSpwShape(const Vector<String>& colNames);
+  Bool writeSimilarSpwShape(const Vector<String>& colNames);
   // return the number of unique antennas selected
   //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2, Bool includeAutoCorr=False);
   // Number of time bins to average into from selected data
@@ -323,7 +322,7 @@ class SubMS
   uInt fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer);
 
   //Bool fillAverAntTime();
-  Bool fillTimeAverData(const String& ColumnName);
+  Bool fillTimeAverData(const Vector<String>& colNames);
 
   // Returns whether or not all the elements of inNumChan_p are the
   // same, AND whether all the elements of nchan_p are the same.
@@ -394,6 +393,9 @@ class SubMS
   // rowProps2slotKey() to lists of the row numbers in mscIn_p that belong to
   // the slot.
   Vector<ui2vmap> bin_slots_p;
+
+  Bool doImgWts_p; // Use doWriteImagingWeight() to get this!  Cutting corners
+                   // just leads to trouble...
 };
 
 

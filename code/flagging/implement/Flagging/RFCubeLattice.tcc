@@ -103,9 +103,9 @@ template<class T> void RFCubeLatticeIterator<T>::update_curs()
 	    
 	    val[b] = l[indx]; 
 	  }
-	}
+        }
 
-	curs(chan, ifr) = val.to_ulong();
+        curs(chan, ifr) = val.to_ulong();
       }
     }
   }
@@ -190,13 +190,24 @@ template<class T> T & RFCubeLatticeIterator<T>::operator()(uInt i,uInt j)
 template<class T> RFCubeLattice<T>::RFCubeLattice ()
 {
 }
-template<class T> RFCubeLattice<T>::RFCubeLattice ( uInt nchan,uInt nifr,uInt ntime,Int maxmem )
+template<class T> RFCubeLattice<T>::RFCubeLattice ( uInt nchan,
+                                                    uInt nifr,
+                                                    uInt ntime,
+                                                    uInt ncorr,
+                                                    uInt nAgent,
+                                                    Int maxmem )
 {
-  init(nchan,nifr,ntime,maxmem);
+  init(nchan, nifr, ntime, ncorr, nAgent, maxmem);
 }
-template<class T> RFCubeLattice<T>::RFCubeLattice ( uInt nchan,uInt nifr,uInt ntime,const T &init_val,Int maxmem )
+template<class T> RFCubeLattice<T>::RFCubeLattice ( uInt nchan,
+                                                    uInt nifr,
+                                                    uInt ntime,
+                                                    uInt ncorr,
+                                                    uInt nAgent,
+                                                    const T &init_val,
+                                                    Int maxmem )
 {
-  init(nchan,nifr,ntime,init_val,maxmem);
+  init(nchan, nifr, ntime, ncorr, nAgent, init_val, maxmem);
 }
 template<class T> RFCubeLattice<T>::~RFCubeLattice ()
 {
@@ -212,6 +223,18 @@ RFCubeLattice<T>::init(uInt nchan,
                        Int maxmem,
                        Int tile_mb)
 {
+  n_bit = ncorr + nAgent;
+
+  if (n_bit > 32) {
+    stringstream ss;
+    ss << 
+      "Sorry, too many polarizations (" << ncorr <<
+      ") and agents (" << nAgent << "). Max supported number is 32 in total.";
+    cerr << ss.str();
+    abort();
+    throw AipsError(ss.str());
+  }
+
   lat_shape = IPosition(3,nchan,nifr,ntime);
 
   lat = std::vector<boost::dynamic_bitset<> >(ntime);

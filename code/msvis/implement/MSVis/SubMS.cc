@@ -287,17 +287,21 @@ namespace casa {
                           const String& subarray)
   {
     LogIO os(LogOrigin("SubMS", "setmsselect()"));
+    Bool  ok;
+    
     Record selrec = ms_p.msseltoindex(spw, field);
 
-    Vector<Int> fldids = selrec.asArrayInt("field");
-    if(fldids.nelements() < 1)
-      fldids=Vector<Int>(1,-1);
+    ok = selectSource(selrec.asArrayInt("field"));
 
-    selectSource(fldids);
+    // All of the requested selection functions will be tried, even if an
+    // earlier one has indicated its failure.  This allows all of the selection
+    // strings to be tested, yielding more complete feedback for the user
+    // (fewer retries).  This is a matter of taste, though.  If the selections
+    // turn out to be slow, this function should return on the first false.
 
     if(!selectSpw(spw, step, averchan)){
       os << LogIO::SEVERE << "No channels selected." << LogIO::POST;
-      return false;
+      ok = false;
     }
     
     if(baseline != ""){
@@ -312,7 +316,7 @@ namespace casa {
     if(subarray != "")
       selectArray(subarray);
 
-    return true;
+    return ok;
   }
 
   // This is the older version, used elsewhere.
@@ -329,11 +333,7 @@ namespace casa {
     Record      selrec = ms_p.msseltoindex(spw, field);
     Vector<Int> spwids = selrec.asArrayInt("spw");
 
-    Vector<Int>fldids=selrec.asArrayInt("field");
-    if(fldids.nelements() < 1)
-      fldids=Vector<Int>(1,-1);
-
-    selectSource(fldids);
+    selectSource(selrec.asArrayInt("field"));
     if(spwids.nelements() < 1)
       spwids=Vector<Int>(1, -1);
 
@@ -390,15 +390,37 @@ namespace casa {
   }  
 
   
-  void SubMS::selectSource(Vector<Int> fieldid)
+  Bool SubMS::selectSource(const Vector<Int>& fieldid)
   {
-    fieldid_p.resize();
-    fieldid_p=fieldid;
-    if(fieldid.nelements()==1 && fieldid(0)<0){
-      fieldid_p.resize(ms_p.field().nrow());
-      for(uInt k = 0; k < fieldid_p.nelements(); ++k)
-		fieldid_p[k]=k;
+    LogIO os(LogOrigin("SubMS", "selectSource()"));
+    Bool cando = true;
+
+    if(fieldid.nelements() < 1){
+      fieldid_p = Vector<Int>(1, -1);
     }
+    else if(fieldid.nelements() > ms_p.field().nrow()){
+      os << LogIO::SEVERE
+         << "More fields were requested than are in the input MS.\n"
+         << LogIO::POST;
+      cando = false;
+    }
+    else if(max(fieldid) >= static_cast<Int>(ms_p.field().nrow())){
+      // Arriving here is very unlikely since if fieldid came from MSSelection
+      // bad fields were presumably already quietly dropped.
+      os << LogIO::SEVERE
+         << "At least 1 field was requested that is not in the input MS.\n"
+         << LogIO::POST;      
+      cando = false;
+    }
+    else{
+      fieldid_p = fieldid;
+    }
+
+    if(fieldid_p.nelements() == 1 && fieldid_p[0] < 0){
+      fieldid_p.resize(ms_p.field().nrow());
+      indgen(fieldid_p);
+    }
+    return cando;
   }
   
   
@@ -434,28 +456,18 @@ namespace casa {
   }
   
   
-  Bool SubMS::makeSubMS(String& msname, String& colname, const Vector<Int>& tileShape){
-    
+  Bool SubMS::makeSubMS(String& msname, String& colname,
+                        const Vector<Int>& tileShape)
+  {
     LogIO os(LogOrigin("SubMS", "makeSubMS()"));
     try{
-      if ((fieldid_p.nelements()>0) && 
-	  ((max(fieldid_p) >= Int(ms_p.field().nrow())))){
-	os << LogIO::SEVERE 
-	   << "Field selection contains elements that do not exist in "
-	   << "this MS"
-	   << LogIO::POST;
-	ms_p=MeasurementSet();
-	return False;
-      }
       if((spw_p.nelements()>0) && (max(spw_p) >= Int(ms_p.spectralWindow().nrow()))){
 	os << LogIO::SEVERE 
 	   << "SpectralWindow selection contains elements that do not exist in "
 	   << "this MS"
 	   << LogIO::POST;
 	ms_p=MeasurementSet();
-	return False;
-	
-	
+	return False;	
       }
       
       // Watch out!  This throws an AipsError if ms_p doesn't have the
@@ -637,11 +649,12 @@ namespace casa {
     copyObservation();
     copyPointing();
     
-    //check the spw shapes
     sameShape_p = checkSpwShape();
+    const Vector<String> columnNames(parseColumnNames(colname));
+    doImgWts_p = doWriteImagingWeight(*mscIn_p, columnNames);
     
     if(timeBin_p <= 0.0){
-      fillMainTable(colname);
+      fillMainTable(columnNames);
     }
     else{
       if(!sameShape_p){
@@ -654,7 +667,7 @@ namespace casa {
 	return False;
       }
       else{
-	fillAverMainTable(colname);
+	fillAverMainTable(columnNames);
       }
     }
     return True;
@@ -1243,9 +1256,9 @@ namespace casa {
 
       Int highestInpFld = max(fieldid_p);
     
-      if(highestInpFld < 1)                   // Ensure space for -1.
-        highestInpFld = 1;
-      sourceRelabel_p.resize(highestInpFld);
+      if(highestInpFld < 0)                   // Ensure space for -1.
+        highestInpFld = 0;
+      sourceRelabel_p.resize(highestInpFld + 1);
       sourceRelabel_p.set(-1);   	          // Default to "any".
 
       // Enable sourceIDs that are actually referred to by selected fields, and
@@ -1695,6 +1708,7 @@ namespace casa {
       }
       
     } // end loop over main table rows
+    cout << "regridSpw progress: 100% processed." << endl;
 
     if(msModified){
       if(needRegridding){
@@ -1810,7 +1824,7 @@ namespace casa {
 	regridCenterChan = (Int) floor(regridCenter);  
       }
       else { // invalid
-	oss << "Parameter \"center\" value " << regridCenter << " outside valid range which is "
+	oss << "SPW center " << regridCenter << " outside valid range which is "
 	    << 0 << " - " << oldNUM_CHAN-1 <<".";
 	message = oss.str();
 	return False;  
@@ -1825,9 +1839,11 @@ namespace casa {
 
       if(regridCenterChan-regridBandwidthChan/2 < 0) { // center too close to lower edge
 	regridBandwidthChan = 2 * regridCenterChan + 1;
+	oss << " *** Requested output SPW width too large." << endl;
       }
       if( oldNUM_CHAN < regridCenterChan+regridBandwidthChan/2){  // center too close to upper edge
 	regridBandwidthChan = 2*(oldNUM_CHAN - regridCenterChan);
+	oss << " *** Requested output SPW width too large." << endl;
       } 
       
       if(regridChanWidth < 1.){
@@ -1835,13 +1851,15 @@ namespace casa {
       }
       else if(regridChanWidth > Double(regridBandwidthChan)){
 	regridChanWidthChan = regridBandwidthChan; // i.e. SPW = a single channel
+	oss << " *** Requested output channel width too large. Adjusted to maximum possible value." << endl;
       }
       else { // valid input
 	regridChanWidthChan = (Int) floor(regridChanWidth);
       }
       
       if(regridBandwidthChan != floor(regridBandwidth)){
-	oss << " Adjusted output bandwidth to " << regridBandwidthChan << " original channels." << endl;
+	oss << " *** Output SPW width set to " << regridBandwidthChan << " original channels" << endl;
+	oss << "     in an attempt to keep center of output SPW close to center of requested SPW." << endl;
       } 
       
       // calculate newChanLoBound and newChanHiBound from regridCenterChan, regridBandwidthChan, and regridChanWidthChan
@@ -1939,12 +1957,14 @@ namespace casa {
       oss << " New channels defined based on original channels" << endl
 	  << " Central channel contains original channel " <<  regridCenterChan << endl 
 	  << " Channel width = " << regridChanWidthChan
-          << " original channels (edge channels can be more narrow)" << endl
-	  << " Total bandwidth = " <<  regridBandwidthChan << " original channels == " 
+          << " original channels" << endl
+	  << " Total width of SPW = " <<  regridBandwidthChan << " original channels == " 
 	  << numNewChanDown + numNewChanUp << " new channels" << endl;
-
-      //      cout << "lo " << newChanLoBound << endl;
-      //      cout << "hi " << newChanHiBound << endl;
+      uInt nc = newChanLoBound.size();
+      oss << " Total width of SPW (in output frame) = " << newChanHiBound[nc-1] - newChanLoBound[0] 
+	  << " Hz" << endl;
+      oss << " Lower edge = " << newChanLoBound[0] << " Hz,"
+	  << " upper edge = " << newChanHiBound[nc-1] << " Hz" << endl;
 
       message = oss.str();
       return True;
@@ -3204,6 +3224,8 @@ namespace casa {
       // sort the spwids
       std::sort(spwsToCombine.begin(), spwsToCombine.end());
 
+      uInt nSpwsToCombine = spwsToCombine.size();
+
       // prepare storage for parameters of new spw table row
       MSSpWindowColumns SPWCols(spwtable);
       ScalarColumn<Int> numChanCol = SPWCols.numChan(); 
@@ -3252,7 +3274,7 @@ namespace casa {
 	vector<Int> tv; // just a temporary auxiliary vector
 	tv.push_back(id0);
 	averageWhichSPW.push_back(tv);
-	tv[1] = i;
+	tv[0] = i;
 	averageWhichChan.push_back(tv);
 	vector<Double> tvd; // another one
 	tvd.push_back(1.);
@@ -3263,7 +3285,7 @@ namespace casa {
       os << LogIO::NORMAL << "     SPW " << id0 << ": " << newNUM_CHAN << " channels " << LogIO::POST;
 
       // loop over remaining given spws
-      for(uInt i=1; i<spwsToCombine.size(); i++){
+      for(uInt i=1; i<nSpwsToCombine; i++){
 	Int idi = spwsToCombine[i];
       
 	Int newNUM_CHANi = numChanCol(idi);
@@ -3475,8 +3497,8 @@ namespace casa {
 	      Double newCenter = lboundj + newWidth/2.;
 	      mergedChanFreq[j] =  newCenter;
 	      mergedChanWidth[j] = newWidth;
-	      mergedEffBW[j] = newWidth; // NOTE: very rough approximation
-	      mergedRes[j] = newWidth; // NOTE: very rough approximation
+	      mergedEffBW[j] = newWidth; 
+	      mergedRes[j] = newWidth; 
 	      mergedAverageChanFrac[j][mergedAverageN[j]-1] = 1.; // set overlap fraction to 1.
 	      k++; // start appending remaining channels after k
 	    }
@@ -3505,7 +3527,7 @@ namespace casa {
 	newCHAN_FREQ.assign(Vector<Double>(mergedChanFreq));
 	newCHAN_WIDTH.assign(Vector<Double>(mergedChanWidth));
 	newEFFECTIVE_BW.assign(Vector<Double>(mergedEffBW));
-	newREF_FREQUENCY = newCHAN_FREQ(0) - newCHAN_WIDTH(0)/2.; // Note: approximation, t.b. improved
+	newREF_FREQUENCY = newCHAN_FREQ(0); 
 	newTOTAL_BANDWIDTH = newCHAN_FREQ(newNUM_CHAN-1) + newCHAN_WIDTH(newNUM_CHAN-1)/2.
 	  - newCHAN_FREQ(0) + newCHAN_WIDTH(0)/2.;
 	newRESOLUTION.assign(Vector<Double>(mergedRes));
@@ -3545,10 +3567,10 @@ namespace casa {
 
       // delete unwanted spws and memorize the new ID of the new merged one.
       // (remember the IDs were sorted above)
-      for(int i=spwsToCombine.size()-1; i>=0; i--){ // remove highest row numbers first
+      for(int i=nSpwsToCombine-1; i>=0; i--){ // remove highest row numbers first
 	spwtable.removeRow(spwsToCombine[i]);
       }
-      newSPWId -= spwsToCombine.size(); 
+      newSPWId -= nSpwsToCombine; 
 
       // other tables to correct: MAIN, FREQ_OFFSET, SYSCAL, FEED, DATA_DESCRIPTION, SOURCE
 
@@ -3563,7 +3585,7 @@ namespace casa {
 	ScalarColumn<Int> SOURCESPWIdCol = p_sourceCol->spectralWindowId();
 	// loop over source table rows
 	for(uInt i=0; i<numSourceRows; i++){
-	  for(uInt j=0; j<spwsToCombine.size(); j++){
+	  for(uInt j=0; j<nSpwsToCombine; j++){
 	    // if spw id affected, replace by newSpwId
 	    if(SOURCESPWIdCol(i) == spwsToCombine[j]){ // source row i is affected
 	      SOURCESPWIdCol.put(i, newSPWId);
@@ -3589,7 +3611,7 @@ namespace casa {
       // loop over DD table rows
       for(uInt i=0; i<numDataDescs; i++){
 	// if spw id affected, replace by newSpwId
-	for(uInt j=0; j<spwsToCombine.size(); j++){
+	for(uInt j=0; j<nSpwsToCombine; j++){
 	  // if spw id affected, replace by newSpwId
 	  if(SPWIdCol(i) == spwsToCombine[j]){ // DD row i is affected
 	    // correct the SPW Id in the DD table
@@ -3650,7 +3672,7 @@ namespace casa {
       // loop over FEED table rows
       for(uInt i=0; i<numFeedRows; i++){
 	// if spw id affected, replace by newSpwId
-	for(uint j=0; j<spwsToCombine.size(); j++){
+	for(uint j=0; j<nSpwsToCombine; j++){
 	  // if spw id affected, replace by newSpwId
 	  if(feedSPWIdCol(i) == spwsToCombine[j]){ // feed row i is affected
 	    feedSPWIdCol.put(i, newSPWId);
@@ -3673,7 +3695,7 @@ namespace casa {
 	// loop over SYSCAL table rows
 	for(uInt i=0; i<numSysCalRows; i++){
 	  // if spw id affected, replace by newSpwId
-	  for(uInt j=0; j<spwsToCombine.size(); j++){
+	  for(uInt j=0; j<nSpwsToCombine; j++){
 	    // if spw id affected, replace by newSpwId
 	    if(sysCalSPWIdCol(i) == spwsToCombine[j]){ // SysCal row i is affected
 	      sysCalSPWIdCol.put(i, newSPWId);
@@ -3695,7 +3717,7 @@ namespace casa {
 	// loop over FREQ_OFFSET table rows
 	for(uInt i=0; i<numFreqOffsetRows; i++){
 	  // if spw id affected, replace by newSpwId
-	  for(uInt j=0; j<spwsToCombine.size(); j++){
+	  for(uInt j=0; j<nSpwsToCombine; j++){
 	    // if spw id affected, replace by newSpwId
 	    if(freqOffsetSPWIdCol(i) == spwsToCombine[j]){ // FreqOffset row i is affected
 	      freqOffsetSPWIdCol.put(i, newSPWId);
@@ -3765,6 +3787,7 @@ namespace casa {
       ScalarColumn<Double> timeCol = oldMainCols.time(); 
       ScalarColumn<Double> intervalCol = oldMainCols.interval();
       ScalarColumn<Double> exposureCol = oldMainCols.exposure();
+      ScalarMeasColumn<MEpoch> mainTimeMeasCol = oldMainCols.timeMeas();
 
       // arrays for composing the combined columns 
       // model them on the first affected row of the main table
@@ -3780,7 +3803,7 @@ namespace casa {
       Matrix<Bool> newFlag;
       Array<Bool> newFlagCategory; // has three dimensions
       Bool newFlagRow; 
-      
+
       // find the first row affected by the spw combination
       Int firstAffRow = 0;
       for(uInt mRow=0; mRow<nMainTabRows; mRow++){
@@ -3844,7 +3867,7 @@ namespace casa {
 	  WEIGHT_SPECTRUMColIsOK = False;
 	}
       }
-      if(FLAGColIsOK){ // required but one never knows
+      if(FLAGColIsOK){ // required but one never knows (there may be bugs elsewhere)
 	newFlag.resize(newShape);
       }
       IPosition flagCatShape;
@@ -3861,8 +3884,9 @@ namespace casa {
       
       ///////////////////////////////////////// 
       // Loop over main table rows
-      uInt mainTabRow=0;
-      uInt newMainTabRow=0;
+      uInt mainTabRow = 0;
+      uInt newMainTabRow = 0;
+      Bool nIncompleteCoverage = 0; // number of rows with incomplete SPW coverage
       // prepare progress meter
       Float progress = 0.4;
       Float progressStep = 0.4;
@@ -3890,6 +3914,7 @@ namespace casa {
 	
 	// row was already combined with a previous row?
 	if(theTime == 0){
+	  //	  cout << "skipping row with zero time " << mainTabRow << endl;
 	  mainTabRow++;
 	  continue;
 	}
@@ -3903,6 +3928,7 @@ namespace casa {
 	  Int theAntenna2 = antenna2Col(mainTabRow);
 	  Int theField = fieldCol(mainTabRow);
 	  Double theInterval = intervalCol(mainTabRow);
+	  Double toleratedTimeDiff = theInterval/10.;
 	  Double theExposure = exposureCol(mainTabRow);
 	  vector<Int> matchingRows;
 	  matchingRows.push_back(mainTabRow);
@@ -3910,13 +3936,16 @@ namespace casa {
 	  matchingRowSPWIds.push_back(DDtoSPWIndex(theDataDescId));
 	  SimpleOrderedMap <Int, Int> SPWtoRowIndex(-1);
 	  SPWtoRowIndex.define(matchingRowSPWIds[0], mainTabRow);
+
+	  //	  cout << "theRow = " << mainTabRow << ", time = " << theTime << " DDID " << theDataDescId << endl;
 	  
 	  uInt nextRow = mainTabRow+1;
+	  //	  cout << "nextRow = " << nextRow << ", time diff  = " << timeCol(nextRow) - theTime << " DDID " << DDIdCol(nextRow) << endl;
 	  while(nextRow<nMainTabRows &&
-		timeCol(nextRow) == theTime &&
-		matchingRows.size() < spwsToCombine.size() // there should be one matching row per SPW
+		(timeCol(nextRow) - theTime)< toleratedTimeDiff &&
+		matchingRows.size() < nSpwsToCombine // there should be one matching row per SPW
 		){
-	    
+
 	    if(!DDtoSPWIndex.isDefined(DDIdCol(nextRow)) ||
 	       antenna1Col(nextRow) != theAntenna1 ||
 	       antenna2Col(nextRow) != theAntenna2 ||
@@ -3956,6 +3985,7 @@ namespace casa {
 	      matchingRowSPWIds.push_back(theSPWId);
 	      matchingRows.push_back(nextRow);
 	      SPWtoRowIndex.define(theSPWId, nextRow);
+	      //	      cout << "matching nextRow = " << nextRow << ", time = " << timeCol(nextRow) << " DDID " << DDIdCol(nextRow) << endl;
 	    }
 	    nextRow++;
 	  } // end while nextRow ...
@@ -3963,142 +3993,190 @@ namespace casa {
 	  // now we have a set of matching rows
 	  uInt nMatchingRows = matchingRows.size();
 	  
+	  if(nMatchingRows < nSpwsToCombine){
+	    if(nIncompleteCoverage==0){
+	      ostringstream oss;
+	      oss << mainTimeMeasCol(mainTabRow);
+	      os << LogIO::WARN << "Incomplete coverage of combined SPW starting at timestamp " << oss.str()
+		 << ", baseline ( " << theAntenna1 << ", " << theAntenna2 << " )" << endl
+		 << "In this and further affected rows, the data arrays will be padded with zeros and corresponding channels flagged." <<  LogIO::POST;
+	    }
+	    nIncompleteCoverage++;
+	  }
+
 	  // reset arrays and prepare input data matrices
 	  
-	  vector<Matrix<Complex> > newCorrectedDataI(nMatchingRows); 
-	  vector<Matrix<Complex> > newDataI(nMatchingRows);
-	  vector<Matrix<Float> > newFloatDataI(nMatchingRows);
-	  vector<Vector<Float> > newImagingWeightI(nMatchingRows);
-	  vector<Matrix<Complex> > newLagDataI(nMatchingRows);
-	  vector<Matrix<Complex> > newModelDataI(nMatchingRows);
-	  vector<Matrix<Float> > newSigmaSpectrumI(nMatchingRows);
-	  vector<Matrix<Float> > newWeightSpectrumI(nMatchingRows);
-	  vector<Matrix<Bool> > newFlagI(nMatchingRows);
-	  vector<Array<Bool> > newFlagCategoryI(nMatchingRows); // has three dimensions
-	  vector<Bool> newFlagRowI(nMatchingRows);
+	  if(CORRECTED_DATAColIsOK){
+	    newCorrectedData.set(0);
+	  }
+	  if(DATAColIsOK){
+	    newData.set(0);
+	  }
+	  if(FLOAT_DATAColIsOK){
+	    newFloatData.set(0);
+	  }
+	  if(IMAGING_WEIGHTColIsOK){
+	    newImagingWeight.set(0);
+	  }
+	  if(LAG_DATAColIsOK){
+	    newLagData.set(0);
+	  }
+	  if(MODEL_DATAColIsOK){
+	    newModelData.set(0);
+	  }
+	  if(SIGMA_SPECTRUMColIsOK){
+	    newSigmaSpectrum.set(0);
+	  }
+	  if(WEIGHT_SPECTRUMColIsOK){
+	    newWeightSpectrum.set(0);
+	  }
+	  if(FLAGColIsOK){
+	    newFlag.set(0);
+	  }
+	  if(FLAG_CATEGORYColIsOK){
+	    newFlagCategory.set(0);
+	  }
 
-	  for(uInt i=0; i<nMatchingRows; i++){
-	    Int theMatchingRowSPWId = matchingRowSPWIds[i];
-	    Int theRow  = SPWtoRowIndex(theMatchingRowSPWId);
-	    
-	    if(CORRECTED_DATAColIsOK){
-	      newCorrectedData.set(0);
-	      newCorrectedDataI[theMatchingRowSPWId].reference(oldCORRECTED_DATACol(theRow));
-	    }
-	    if(DATAColIsOK){
-	      newData.set(0);
-	      newDataI[theMatchingRowSPWId].reference(oldDATACol(theRow));
-	    }
-	    if(FLOAT_DATAColIsOK){
-	      newFloatData.set(0);
-	      newFloatDataI[theMatchingRowSPWId].reference(oldFLOAT_DATACol(theRow));
-	    }
-	    if(IMAGING_WEIGHTColIsOK){
-	      newImagingWeight.set(0);
-	      newImagingWeightI[theMatchingRowSPWId].reference(oldIMAGING_WEIGHTCol(theRow));
-	    }
-	    if(LAG_DATAColIsOK){
-	      newLagData.set(0);
-	      newLagDataI[theMatchingRowSPWId].reference(oldLAG_DATACol(theRow));
-	    }
-	    if(MODEL_DATAColIsOK){
-	      newModelData.set(0);
-	      newModelDataI[theMatchingRowSPWId].reference(oldMODEL_DATACol(theRow));
-	    }
-	    if(SIGMA_SPECTRUMColIsOK){
-	      newSigmaSpectrum.set(0);
-	      newSigmaSpectrumI[theMatchingRowSPWId].reference(oldSIGMA_SPECTRUMCol(theRow));
-	    }
-	    if(WEIGHT_SPECTRUMColIsOK){
-	      newWeightSpectrum.set(0);
-	      newWeightSpectrumI[theMatchingRowSPWId].reference(oldWEIGHT_SPECTRUMCol(theRow));
-	    }
-	    if(FLAGColIsOK){
-	      newFlag.set(0);
-	      newFlagI[theMatchingRowSPWId].reference(oldFLAGCol(theRow));
-	    }
-	    if(FLAG_CATEGORYColIsOK){
-	      newFlagCategory.set(0);
-	      newFlagCategoryI[theMatchingRowSPWId].reference(oldFLAG_CATEGORYCol(theRow));
-	    }
-	    newFlagRowI[theMatchingRowSPWId] = flagRowCol(theRow);
+	  vector<Matrix<Complex> > newCorrectedDataI(nSpwsToCombine); 
+	  vector<Matrix<Complex> > newDataI(nSpwsToCombine);
+	  vector<Matrix<Float> > newFloatDataI(nSpwsToCombine);
+	  vector<Vector<Float> > newImagingWeightI(nSpwsToCombine);
+	  vector<Matrix<Complex> > newLagDataI(nSpwsToCombine);
+	  vector<Matrix<Complex> > newModelDataI(nSpwsToCombine);
+	  vector<Matrix<Float> > newSigmaSpectrumI(nSpwsToCombine);
+	  vector<Matrix<Float> > newWeightSpectrumI(nSpwsToCombine);
+	  vector<Matrix<Bool> > newFlagI(nSpwsToCombine);
+	  vector<Array<Bool> > newFlagCategoryI(nSpwsToCombine); // has three dimensions
+	  vector<Bool> newFlagRowI(nSpwsToCombine);
+
+	  for(uInt i=0; i<nSpwsToCombine; i++){
+	    Int theRowSPWId = spwsToCombine[i];
+	    if(SPWtoRowIndex.isDefined(theRowSPWId)){ // there actually is a matching row for this SPW
+	      Int theRow = SPWtoRowIndex(theRowSPWId);
+	      if(CORRECTED_DATAColIsOK){
+		newCorrectedDataI[theRowSPWId].reference(oldCORRECTED_DATACol(theRow));
+	      }
+	      if(DATAColIsOK){
+		newDataI[theRowSPWId].reference(oldDATACol(theRow));
+	      }
+	      if(FLOAT_DATAColIsOK){
+		newFloatDataI[theRowSPWId].reference(oldFLOAT_DATACol(theRow));
+	      }
+	      if(IMAGING_WEIGHTColIsOK){
+		newImagingWeightI[theRowSPWId].reference(oldIMAGING_WEIGHTCol(theRow));
+	      }
+	      if(LAG_DATAColIsOK){
+		newLagDataI[theRowSPWId].reference(oldLAG_DATACol(theRow));
+	      }
+	      if(MODEL_DATAColIsOK){
+		newModelDataI[theRowSPWId].reference(oldMODEL_DATACol(theRow));
+	      }
+	      if(SIGMA_SPECTRUMColIsOK){
+		newSigmaSpectrumI[theRowSPWId].reference(oldSIGMA_SPECTRUMCol(theRow));
+	      }
+	      if(WEIGHT_SPECTRUMColIsOK){
+		newWeightSpectrumI[theRowSPWId].reference(oldWEIGHT_SPECTRUMCol(theRow));
+	      }
+	      if(FLAGColIsOK){
+		newFlagI[theRowSPWId].reference(oldFLAGCol(theRow));
+	      }
+	      if(FLAG_CATEGORYColIsOK){
+		newFlagCategoryI[theRowSPWId].reference(oldFLAG_CATEGORYCol(theRow));
+	      }
+	      newFlagRowI[theRowSPWId] = flagRowCol(theRow);
+	    } // end if
 	  } // end for i
 	  
 	  // merge data columns from all rows found using the averaging info from above
 	  // averageN[], averageWhichSPW[], averageWhichChan[], averageChanFrac[]
 	  
-
-
 	  // loop over new channels
 	  for(Int i=0; i<newNUM_CHAN; i++){
+	    Bool haveCoverage = False;
+	    Double modNorm = 0.;
+	    for(Int j=0; j<averageN[i]; j++){
+	      if(SPWtoRowIndex.isDefined(averageWhichSPW[i][j])){
+		haveCoverage = True;
+		modNorm += averageChanFrac[i][j];
+	      }
+	    }
 	    // initialise special treatment for Bool columns
 	    if(FLAGColIsOK){
-	      for(uInt k=0; k<nCorrelators; k++){ 
-		newFlag(k,i) =  False; 
+	      if(haveCoverage){ // there is some data for this channel
+		for(uInt k=0; k<nCorrelators; k++){ 
+		  newFlag(k,i) =  False; 
+		}
+	      }
+	      else{ // there is no data for this channel
+		for(uInt k=0; k<nCorrelators; k++){ 
+		  newFlag(k,i) =  True; // therefore flag this channel
+		}
 	      }
 	    }
 	    if(FLAG_CATEGORYColIsOK){
 	      for(uInt k=0; k<nCorrelators; k++){ 
-		for(uInt m=1; m<nCat; m++){ 
+		for(uInt m=0; m<nCat; m++){ 
 		  newFlagCategory(IPosition(3,k,i,m)) = False;
 		}
 	      }
 	    }
+	    if(haveCoverage){
+	      // loop over SPWs
+	      for(Int j=0; j<averageN[i]; j++){
+		// new channel value i 
+		//   = SUM{j=0 to averageN[i]}( channelValue(SPW = averageWhichSPW[i][j], CHANNEL = averageWhichChan[i][j]) * averageChanFrac[i][j])
+		if(SPWtoRowIndex.isDefined(averageWhichSPW[i][j])){
 
-	    // loop over SPWs
-	    for(Int j=0; j<averageN[i]; j++){
-	      // new channel value i 
-	      //   = SUM{j=0 to averageN[i]}( channelValue(SPW = averageWhichSPW[i][j], CHANNEL = averageWhichChan[i][j]) * averageChanFrac[i][j])
-	      
-	      // loop over first dimension (number of correlators)
-	      for(uInt k=0; k<nCorrelators; k++){
+		  Double weight = averageChanFrac[i][j]/modNorm; // renormalize for the case of missing SPW coverage
+
+		  // loop over first dimension (number of correlators)
+		  for(uInt k=0; k<nCorrelators; k++){
+		    if(CORRECTED_DATAColIsOK){
+		      newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+		    }
+		    if(DATAColIsOK){
+		      newData(k,i) += newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+		    }
+		    if(FLOAT_DATAColIsOK){
+		      newFloatData(k,i) += newFloatDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+		    }
+		    if(LAG_DATAColIsOK){
+		      newLagData(k,i) += newLagDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+		    }
+		    if(MODEL_DATAColIsOK){
+		      newModelData(k,i) += newModelDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+		    }
+		    if(SIGMA_SPECTRUMColIsOK){
+		      newSigmaSpectrum(k,i) += newSigmaSpectrumI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+		    }
+		    if(WEIGHT_SPECTRUMColIsOK){
+		      newWeightSpectrum(k,i) += newWeightSpectrumI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+		    }
+		  } // end for k = 0
 		
-		if(CORRECTED_DATAColIsOK){
-		  newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
-		}
-		if(DATAColIsOK){
-		  newData(k,i) += newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
-		}
-		if(FLOAT_DATAColIsOK){
-		  newFloatData(k,i) += newFloatDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
-		}
-		if(LAG_DATAColIsOK){
-		  newLagData(k,i) += newLagDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
-		}
-		if(MODEL_DATAColIsOK){
-		  newModelData(k,i) += newModelDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
-		}
-		if(SIGMA_SPECTRUMColIsOK){
-		  newSigmaSpectrum(k,i) += newSigmaSpectrumI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
-		}
-		if(WEIGHT_SPECTRUMColIsOK){
-		  newWeightSpectrum(k,i) += newWeightSpectrumI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * averageChanFrac[i][j];
-		}
-		
-	      } // end for k = 0
-	      
-	      // imaging weight is independent of the correlator
-	      if(IMAGING_WEIGHTColIsOK){
-		newImagingWeight(i) += newImagingWeightI[ averageWhichSPW[i][j] ]( averageWhichChan[i][j] ) * averageChanFrac[i][j];
-	      }
-	      
-	      // special treatment for Bool columns
-	      if(FLAGColIsOK){
-		for(uInt k=1; k<nCorrelators; k++){ // logical OR of all input spws
-		  newFlag(k,i) =  newFlag(k,i) || newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ); 
-		}
-	      }
-	      
-	      if(FLAG_CATEGORYColIsOK){
-		for(uInt k=0; k<nCorrelators; k++){ // logical OR of all input spws
-		  for(uInt m=1; m<nCat; m++){ 
-		    newFlagCategory(IPosition(3,k,i,m)) = 
-		      newFlagCategory(IPosition(3,k,i,m)) || newFlagCategoryI[ averageWhichSPW[i][j] ](IPosition(3,k,averageWhichChan[i][j],m));
+		  // imaging weight is independent of the correlator
+		  if(IMAGING_WEIGHTColIsOK){
+		    newImagingWeight(i) += newImagingWeightI[ averageWhichSPW[i][j] ]( averageWhichChan[i][j] ) * weight;
 		  }
-		}
-	      }
-	      
-	    } // end for j=0, loop oer SPWs
+		  
+		  // special treatment for Bool columns
+		  if(FLAGColIsOK){
+		    for(uInt k=0; k<nCorrelators; k++){ // logical OR of all input spws
+		      newFlag(k,i) =  newFlag(k,i) || newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ); 
+		    }
+		  }
+		  
+		  if(FLAG_CATEGORYColIsOK){
+		    for(uInt k=0; k<nCorrelators; k++){ // logical OR of all input spws
+		      for(uInt m=0; m<nCat; m++){ 
+			newFlagCategory(IPosition(3,k,i,m)) = 
+			  newFlagCategory(IPosition(3,k,i,m)) || newFlagCategoryI[ averageWhichSPW[i][j] ](IPosition(3,k,averageWhichChan[i][j],m));
+		      }
+		    }
+		  }
+		} // end if there is a row for this SPW	      
+	      } // end for j=0, loop over SPWs
+	    } // if there is coverage for this channel 
 	  } // end for i=0, loop over new channels
 
 	  // calculate FLAG_ROW as logical OR of all input rows
@@ -4109,6 +4187,8 @@ namespace casa {
 
 	  // write data into the new main table
 	  newMain.addRow(1,False);
+
+	  //	  cout << "writing new row " << newMainTabRow << endl;
 	  
 	  if(CORRECTED_DATAColIsOK){
 	    CORRECTED_DATACol.put(newMainTabRow, newCorrectedData);
@@ -4176,6 +4256,7 @@ namespace casa {
 	  newMainTabRow++;	  
 	  // mark other found rows to be ignored, i.e. set their time to zero
 	  for(uInt i=1; i<nMatchingRows; i++){ // don't mark the first
+	    //	    cout << "setting time to zero in row " << matchingRows[i] << endl;
 	    timeCol.put(matchingRows[i], 0);
 	  }
 	  
@@ -4188,10 +4269,16 @@ namespace casa {
 	}
       
       } // end loop over main table rows
+      cout << "combineSpws progress: 100% processed." << endl;
       ////////////////////////////////////////////
 
       os << LogIO::NORMAL << "Processed " << mainTabRow << " original rows, wrote "
 	 << newMainTabRow << " new ones." << LogIO::POST;
+
+      if(nIncompleteCoverage>0){
+	os << LogIO::WARN << "Incomplete coverage of combined SPW in " << nIncompleteCoverage
+	   << " of " <<  newMainTabRow << " output rows." <<  LogIO::POST;
+      }
 
       newMain.flush(True); 
 
@@ -4349,7 +4436,7 @@ namespace casa {
     return True;
   }
 
-  Bool SubMS::fillMainTable(const String& whichCol){
+  Bool SubMS::fillMainTable(const Vector<String>& colNames){
     
     LogIO os(LogOrigin("SubMS", "fillMainTable()"));
     
@@ -4400,22 +4487,17 @@ namespace casa {
     relabelIDs();
 
     //Deal with data
-
-    // RR 5/15/2009: whichCol has already been vetted higher up in the calling
-    // chain by verifyColumns().
-    const Vector<String> columnName = parseColumnNames(whichCol);
-    
     if(!chanModification_p){
       ROArrayColumn<Complex> data;
-      for(uInt ni = 0;ni < columnName.nelements(); ++ni){
-	getDataColumn(data, columnName[ni]);
-	putDataColumn(*msc_p, data, columnName[ni], (columnName.nelements() == 1));
+
+      for(uInt ni = 0;ni < colNames.nelements(); ++ni){
+	getDataColumn(data, colNames[ni]);
+	putDataColumn(*msc_p, data, colNames[ni], (colNames.nelements() == 1));
       }
-      if (doWriteImagingWeight(*mscIn_p,columnName))
-	{
-	  ROArrayColumn<Float> imgWts(mscIn_p->imagingWeight());
-	  msc_p->imagingWeight().putColumn(imgWts);
-	}
+      if(doImgWts_p){
+        ROArrayColumn<Float> imgWts(mscIn_p->imagingWeight());
+        msc_p->imagingWeight().putColumn(imgWts);
+      }
 
       msc_p->flag().putColumn(mscIn_p->flag());
       if(!(mscIn_p->weightSpectrum().isNull()) &&
@@ -4434,9 +4516,9 @@ namespace casa {
 	  sameShape_p = False;
       }
       if(sameShape_p)
-	writeSimilarSpwShape(whichCol);
+	writeSimilarSpwShape(colNames);
       else
-	writeDiffSpwShape(whichCol);
+	writeDiffSpwShape(colNames);
     }
     
     return True;
@@ -4488,41 +4570,39 @@ void SubMS::relabelIDs()
   remapColumn(mscIn_p->observationId(), msc_p->observationId());
 }
 
-  Bool SubMS::fillAverMainTable(const String& whichCol){
+Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
+{    
+  LogIO os(LogOrigin("SubMS", "fillAverMainTable()"));
     
-    LogIO os(LogOrigin("SubMS", "fillAverMainTable()"));
+  Double timeBin=timeBin_p;
+
+  //// fill time and timecentroid and antennas
+  nant_p = fillAntIndexer(mscIn_p, antIndexer_p);
+  if(nant_p < 1)
+    return False;
+
+  //Int numBaselines=numOfBaselines(ant1, ant2, False);
+  Int numTimeBins = numOfTimeBins(timeBin);  // Sets up remappers as a side-effect.
     
-    Double timeBin=timeBin_p;
+  if(numTimeBins < 1)
+    os << LogIO::SEVERE
+       << "Number of time bins is < 1: time averaging bin size is not > 0"
+       << LogIO::POST;
 
-    //// fill time and timecentroid and antennas
-    nant_p = fillAntIndexer(mscIn_p, antIndexer_p);
-    if(nant_p < 1)
-      return False;
-
-    //Int numBaselines=numOfBaselines(ant1, ant2, False);
-    Int numTimeBins=numOfTimeBins(timeBin);  // Sets up remappers as a side-effect.
-    
-    if(numTimeBins < 1)
-      os << LogIO::SEVERE
-	 << "Number of time bins is < 1: time averaging bin size is not > 0"
-	 << LogIO::POST;
-
-    msOut_p.addRow(numOutRows_p, True);
+  msOut_p.addRow(numOutRows_p, True);
         
-    //    relabelIDs();
+  //    relabelIDs();
 
-    msc_p->interval().fillColumn(timeBin);
+  msc_p->interval().fillColumn(timeBin);
     
-    //things to be taken care in fillTimeAverData...
-    // flagRow		ScanNumber	uvw		weight		
-    // sigma		ant1		ant2		time
-    // timeCentroid	feed1 		feed2		exposure
-    // stateId		processorId	observationId	arrayId
-    if(!fillTimeAverData(whichCol))
-      return False;
-    
-    return True; 
-  }
+  //things to be taken care in fillTimeAverData...
+  // flagRow		ScanNumber	uvw		weight		
+  // sigma		ant1		ant2		time
+  // timeCentroid	feed1 		feed2		exposure
+  // stateId		processorId	observationId	arrayId
+  // imaging_weight (optional)
+  return fillTimeAverData(colNames); 
+}
   
   Bool SubMS::copyAntenna(){
     const MSAntenna& oldAnt = mssel_p.antenna();
@@ -4756,8 +4836,8 @@ void SubMS::relabelIDs()
     return True;
   }
   
-  Bool SubMS::writeDiffSpwShape(const String& columnName){
-    
+  Bool SubMS::writeDiffSpwShape(const Vector<String>& columnNames)
+  {  
     Bool doSpWeight = !(mscIn_p->weightSpectrum().isNull()) &&
                       mscIn_p->weightSpectrum().isDefined(0);
     
@@ -4784,10 +4864,7 @@ void SubMS::relabelIDs()
     Matrix<Float> inImgWts;
     Cube<Bool> locflag;
 
-    // RR 5/15/2009: columnName has already been vetted higher up in the
-    // calling chain by verifyColumns().
-    const Vector<String> colNameTok=parseColumnNames(columnName);
-    const uInt ntok=colNameTok.nelements();
+    const uInt ntok = columnNames.nelements();
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
       {
 	for (vi.origin(); vi.more(); vi++) 
@@ -4806,9 +4883,9 @@ void SubMS::relabelIDs()
 		
 	    for(uInt ni=0;ni<ntok;ni++)
 	      {
-		if(colNameTok[ni]== MS::columnName(MS::DATA))
+		if(columnNames[ni]== MS::columnName(MS::DATA))
 		  vis.reference(vb.visCube());
-		else if(colNameTok[ni] == MS::columnName(MS::MODEL_DATA))
+		else if(columnNames[ni] == MS::columnName(MS::MODEL_DATA))
 		  vis.reference(vb.modelVisCube());
 		else
 		  vis.reference(vb.correctedVisCube());
@@ -4894,9 +4971,9 @@ void SubMS::relabelIDs()
 		  msc_p->data().putColumnCells(rowstoadd, averdata);
 		else
 		  {
-		    if(colNameTok[ni]== MS::columnName(MS::DATA))
+		    if(columnNames[ni]== MS::columnName(MS::DATA))
 		      msc_p->data().putColumnCells(rowstoadd, averdata);
-		    if (colNameTok[ni]==MS::columnName(MS::MODEL_DATA))
+		    if (columnNames[ni]==MS::columnName(MS::MODEL_DATA))
 		      msc_p->modelData().putColumnCells(rowstoadd, averdata);
 		    else
 		      msc_p->correctedData().putColumnCells(rowstoadd, averdata);
@@ -4907,9 +4984,7 @@ void SubMS::relabelIDs()
 	    //----------------------------------------------------------------------
 	    // Average the imaging weights - if required.
 	    //
-	    Bool doImgWeight = !mscIn_p->imagingWeight().isNull() &&
-	      mscIn_p->imagingWeight().isDefined(0);
-	    if (doImgWeight)
+	    if (doImgWts_p)
 	      {
 		for(Int r=0; r < rowsnow; ++r)
 		  for(Int c=0; c < nchan_p[spw]; ++c)
@@ -4947,7 +5022,7 @@ void SubMS::relabelIDs()
     return True;
   }
   
-Bool SubMS::writeSimilarSpwShape(const String& columnName){
+Bool SubMS::writeSimilarSpwShape(const Vector<String>& columnNames){
   Int nrow=mssel_p.nrow();
 
   Bool deleteIptr,  deleteIWptr;
@@ -4970,16 +5045,13 @@ Bool SubMS::writeSimilarSpwShape(const String& columnName){
   Cube<Bool> outflag(npol_p[0], nchan_p[0], nrow);
   Cube<Float> outspweight;
     
-  // RR 5/15/2009: columnName has already been vetted higher up in the
-  // calling chain by verifyColumns().
-  const Vector<String> colNameTok = parseColumnNames(columnName);
-  const uInt ntok = colNameTok.nelements();
+  const uInt ntok = columnNames.nelements();
   ROArrayColumn<Complex> data;
   ROArrayColumn<Float> wgtSpec;
 
   ROArrayColumn<Bool> flag(mscIn_p->flag());
   for(uInt ni = 0; ni < ntok; ni++){
-    data.reference(right_column(mscIn_p, colNameTok[ni]));
+    data.reference(right_column(mscIn_p, columnNames[ni]));
     if(doSpWeight){ 
       outspweight.resize(npol_p[0], nchan_p[0], nrow);
       wgtSpec.reference(mscIn_p->weightSpectrum());
@@ -5043,7 +5115,7 @@ Bool SubMS::writeSimilarSpwShape(const String& columnName){
       }
     }
     
-    putDataColumn(*msc_p, outdata, colNameTok[ni], (ntok == 1));
+    putDataColumn(*msc_p, outdata, columnNames[ni], (ntok == 1));
   }
   
   msc_p->flag().putColumn(outflag);
@@ -5051,11 +5123,8 @@ Bool SubMS::writeSimilarSpwShape(const String& columnName){
     msc_p->weightSpectrum().putColumn(outspweight);
 
   //-----------------------------------------------------------------------------
-  // Write the IMAGING_WEIGHTs column as well if all data columns are written out.
-  //
-  //  Bool doImgWeight = !mscIn_p->imagingWeight().isNull() &&
-  //                    mscIn_p->imagingWeight().isDefined(0);
-  if(doWriteImagingWeight(*mscIn_p, colNameTok)){
+  // Write the IMAGING_WEIGHTs column as well if required.
+  if(doImgWts_p){
     //      ROArrayColumn<Bool> rowFlag(mscIn_p->rowFlags());
     ROArrayColumn<Float> inImgWts(mscIn_p->imagingWeight());
 
@@ -5374,7 +5443,7 @@ uInt SubMS::fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer)
   return nant;
 }
   
-Bool SubMS::fillTimeAverData(const String& columnName)
+Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
 {
   LogIO os(LogOrigin("SubMS", "fillTimeAverData()"));
 
@@ -5386,15 +5455,11 @@ Bool SubMS::fillTimeAverData(const String& columnName)
 
   Int outNrow = msOut_p.nrow();
 
-  // RR 5/15/2009: columnName has already been vetted higher up in the
-  // calling chain by verifyColumns().
-  const Vector<String> colNameTok = parseColumnNames(columnName);
-  const uInt ntok = colNameTok.nelements();
+  const uInt ntok = columnNames.nelements();
 
   //Vector<ROArrayColumn<Complex> > data(ntok);
   ROArrayColumn<Complex> data[ntok];
 
-  Bool hasImagingWeight = doWriteImagingWeight(*mscIn_p, colNameTok);
   const ROArrayColumn<Float> inImagingWeight(mscIn_p->imagingWeight());
   Vector<Float> inImgWtsSpectrum;
 
@@ -5432,7 +5497,7 @@ Bool SubMS::fillTimeAverData(const String& columnName)
   const ROArrayColumn<Double> inUVW(mscIn_p->uvw());
  
   for(uInt datacol = 0; datacol < ntok; ++datacol)
-    data[datacol].reference(right_column(mscIn_p, colNameTok[datacol]));
+    data[datacol].reference(right_column(mscIn_p, columnNames[datacol]));
   os << LogIO::NORMAL << "Writing time averaged data of "
      << newTimeVal_p.nelements()<< " time slots" << LogIO::POST;
 
@@ -5463,9 +5528,9 @@ Bool SubMS::fillTimeAverData(const String& columnName)
   Matrix<Float> outRowWeight(npol_p[0], outNrow);
   outRowWeight.set(0.0);
 
-  Matrix<Float> outImagingWeight(hasImagingWeight ? nchan_p[0] : 0,
-				 hasImagingWeight ? outNrow    : 0);
-  if(hasImagingWeight)
+  Matrix<Float> outImagingWeight(doImgWts_p ? nchan_p[0] : 0,
+				 doImgWts_p ? outNrow    : 0);
+  if(doImgWts_p)
     outImagingWeight.set(0.0);
 
   Cube<Bool> outFlag(npol_p[0], nchan_p[0], outNrow);
@@ -5682,7 +5747,7 @@ Bool SubMS::fillTimeAverData(const String& columnName)
           outTC[orn] += totrowwt * (inTC(*toikit) - outTC[orn]) / totslotwt;
           outExposure[orn] += totrowwt * inExposure(*toikit);
         
-          if(hasImagingWeight){
+          if(doImgWts_p){
             inImagingWeight.get(*toikit, inImgWtsSpectrum);
           
             for(uInt c = chanStart_p[ddID]; c < chanStop; ++c)
@@ -5700,7 +5765,7 @@ Bool SubMS::fillTimeAverData(const String& columnName)
       //totslotwt = sum(outRowWeight.column(orn));  // Uncomment for debugging
       if(totslotwt > 0.0){
         outExposure[orn] *= slotv.size() / totslotwt;
-        if(hasImagingWeight){
+        if(doImgWts_p){
           for(uInt c = chanStart_p[ddID]; c < chanStop; ++c)
             outImagingWeight(c, orn) /= totslotwt;
         }
@@ -5776,7 +5841,7 @@ Bool SubMS::fillTimeAverData(const String& columnName)
   msc_p->sigma().putColumn(outSigma);
   outSigma.resize();
 
-  if(hasImagingWeight){
+  if(doImgWts_p){
     msc_p->imagingWeight().putColumn(outImagingWeight);
     outImagingWeight.resize();
   }
@@ -5804,7 +5869,7 @@ Bool SubMS::fillTimeAverData(const String& columnName)
   msc_p->timeCentroid().putColumn(outTC);
 
   for(uInt datacol = 0; datacol < ntok; ++datacol)
-    putDataColumn(*msc_p, outData[datacol], colNameTok[datacol], (ntok == 1));
+    putDataColumn(*msc_p, outData[datacol], columnNames[datacol], (ntok == 1));
 
   if(doSpWeight)
     msc_p->weightSpectrum().putColumn(outSpWeight);

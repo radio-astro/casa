@@ -103,7 +103,7 @@ string Tag::getTag() const {
 	return tag;
 }
 
-unsigned int Tag::getTagValue() const {
+unsigned int Tag::getTagValue() {
 	return (isNull() ? 0 : Integer::parseInt(tag));
 } 
 

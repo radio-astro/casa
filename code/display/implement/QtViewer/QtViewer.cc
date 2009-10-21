@@ -73,8 +73,9 @@ QtViewer::QtViewer( bool is_server ) : QtViewerBase(), qdm_(0), qdo_(0), dbus_(N
 
 QtViewer::~QtViewer() {
   if(qdm_!=0) delete qdm_;
-  if(qdo_!=0) delete qdo_;  }
-  
+  if(qdo_!=0) delete qdo_;
+  // wonder if we need to delete dbus adaptor...
+}
   
   
 void QtViewer::showDataManager() {
