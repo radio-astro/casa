@@ -8908,14 +8908,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
      image_id_p = 0;
    }
 
-#if 1
-   dbus::record rec;
-   rec.insert("niter","a string");
-   rec.insert("ncycle",100);
-   rec.insert("threshold",0.5);
-   viewer_p->setoptions(rec,clean_panel_p);
-#endif
-
+ 
    dbus::variant image_id = viewer_p->load(image, "raster",clean_panel_p);
    if ( image_id.type() != dbus::variant::INT ) {
      os << "failed to load image" << LogIO::WARN << LogIO::POST;
@@ -8930,26 +8923,13 @@ Int Imager::interactivemask(const String& image, const String& mask,
    }
    mask_id_p = mask_id.getInt( );
 
-   ///////////////Experimental setoptions
-   ///Record way
-   /*
-   Record options;
-   options.define("niter", niter);
-   options.define("ncycle", ncycles);
-   options.define("threshold", thresh);
-   //I suspect below works as Bool ...
-   viewer_p->setoptions((casa::dbus::fromRecord(options)), clean_panel_p);
-   */
-   //////////
-   ///dbus::record way
-   /*
+   
    casa::dbus::record options;
    options.insert("niter", niter);
    options.insert("ncycle", ncycles);
-   options.insert("threshold", thresh);
-     
+   options.insert("threshold", thresh);  
    viewer_p->setoptions(options, clean_panel_p);
-   */
+   
     interactive_clean_callback *mycb = new interactive_clean_callback( );
     DBus::MessageSlot filter;
     filter = new DBus::Callback<interactive_clean_callback,bool,const DBus::Message &>( mycb, &interactive_clean_callback::callback );
