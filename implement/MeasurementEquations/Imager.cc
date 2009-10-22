@@ -8883,7 +8883,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
    }
 
    if ( viewer_p == 0 ) {
-     viewer_p = dbus::launch<ViewerProxy>( "view_server" );
+     viewer_p = dbus::launch<ViewerProxy>( );
      if ( viewer_p == 0 ) {
        os << "failed to launch viewer gui" << LogIO::WARN << LogIO::POST;
        return False;
@@ -8907,6 +8907,14 @@ Int Imager::interactivemask(const String& image, const String& mask,
      viewer_p->unload(image_id_p);
      image_id_p = 0;
    }
+
+#if 1
+   dbus::record rec;
+   rec.insert("niter","a string");
+   rec.insert("ncycle",100);
+   rec.insert("threshold",0.5);
+   viewer_p->setoptions(rec,clean_panel_p);
+#endif
 
    dbus::variant image_id = viewer_p->load(image, "raster",clean_panel_p);
    if ( image_id.type() != dbus::variant::INT ) {
