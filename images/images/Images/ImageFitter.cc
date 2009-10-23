@@ -42,7 +42,7 @@
 #include <images/IO/FitterEstimatesFileParser.h>
 // #include <casa/Arrays/ArrayUtil.h>
 
-#include <components/components/ComponentModels/SpectralModel.h>
+#include <components/ComponentModels/SpectralModel.h>
 #include <images/Regions/WCUnion.h>
 #include <images/Regions/WCBox.h>
 #include <lattices/Lattices/LCRegion.h>
