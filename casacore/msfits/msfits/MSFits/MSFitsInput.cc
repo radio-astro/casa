@@ -1368,7 +1368,7 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
 	itsLog << array_p 
 	       << " telescope quirk detected.  Filler purports to construct the full"
 	       << " ANTENNA table with possible blank entries." 
-	       << LogIO::WARN << LogIO::POST;
+	       << LogIO::NORMAL1 << LogIO::POST;
     }
   else 
     if (nAnt_p>bt.nrows()) 
@@ -1378,6 +1378,7 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
 	       << LogIO::EXCEPTION;
       }
   nAnt=bt.nrows();
+  nAntMax=nAnt-1;
 
   if (itsEVLA) receptorAngle_p.resize(2*(nAntMax+1));
   else receptorAngle_p.resize(2*nAnt);
