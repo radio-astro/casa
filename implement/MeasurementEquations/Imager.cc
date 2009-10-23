@@ -165,6 +165,7 @@
 #include <components/ComponentModels/FluxStandard.h>
 
 #include <casadbus/viewer/ViewerProxy.h>
+#include <casadbus/plotserver/PlotServerProxy.h>
 #include <casadbus/utilities/BusAccess.h>
 #include <casadbus/session/DBusSession.h>
 
@@ -6913,14 +6914,6 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
     ROVisIter& vi(*rvi_p);
     VisBuffer vb(vi);
     
-    Char** lala=0;
-    Int lala1=0;
-    QApplication app(lala1,lala);
-    plotter_p=simplePlotter(Plotter::QWT); 
-
-
-    //PGPlotter plotter=getPGPlotter();
-    
     if(gridded) {
       if(!assertDefinedImageParameters()) {this->unlock(); return False;}
       // First find the gridded weights
@@ -6982,6 +6975,39 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
       Float umax=Float(nx_p/2)/uscale;
       Float vmax=Float(ny_p/2)/vscale;
 
+
+      PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
+      dbus::variant panel_id = plotter->panel( "Gridded weights for "+imageName(), "U (wavelengths)", "V (wavelengths)", "ImagingWeight-plot" );
+      if ( panel_id.type() != dbus::variant::INT ) {
+	  os << "failed to create plot panel" << LogIO::WARN << LogIO::POST;
+	  return False;
+      }
+
+      plotter->release( panel_id.getInt( ) );
+
+      gwt=Float(0xFFFFFF)-gwt*(Float(0xFFFFFF)/maxWeight);
+      IPosition shape = gwt.shape( );
+      bool deleteit = false;
+      std::vector<double> data(shape[0] * shape[1]);
+      int off = 0;
+      for ( int column=0; column < shape[1]; ++column ) {
+	for ( int row=0; row < shape[0]; ++row ) {
+	  data[off++] = gwt(row,column);
+	}
+      }
+
+      plotter->raster( data, (int) shape[1], (int) shape[0] );
+
+#if 0
+      Char** lala=0;
+      Int lala1=0;
+      QApplication app(lala1,lala);
+      plotter_p=simplePlotter(Plotter::QWT); 
+
+
+    //PGPlotter plotter=getPGPlotter();
+    
+
       plotter_p->setWindowTitle("ImagingWeight-plot");
       plotter_p->setCanvasTitle("Gridded weights for "+imageName());
       plotter_p->setAxesLabels("U (wavelengths)","V (wavelengths)" );
@@ -7002,6 +7028,8 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
 		  +imageName());
       plotter.iden();
       */
+#endif
+
     }
     else {
       
@@ -7076,24 +7104,18 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
 	os << LogIO::SEVERE << "Maximum uv distance is zero" << LogIO::POST;
 	return False;
       }
-      /*
-      plotter.env(0.0, +maxuvDistance*1.15, 0, +maxWeight*1.1,
-		  Int(0), Int(0));
-      plotter.lab("UVDistance (wavelengths)", "Weights", "Weights for "
-		  +imageName());
-      plotter.sci(1);
-      plotter.pt(uvDistance,weights,-1);
-      plotter.iden();
-      */
-      plotter_p->setWindowTitle("ImagingWeight-plot");
-      plotter_p->setCanvasTitle("Weights for "+imageName());
-      plotter_p->setAxesLabels("UVDistance (wavelengths)","Weights" );
-      plotter_p->showLines(False);
-      plotter_p->showSymbols(True);
-      plotter_p->setSymbol(PlotSymbol::CIRCLE, "blue", 4);
-      plotter_p->showDefaultHandTools(True);
-      plotter_p->plotxy(uvDistance,weights);
-      app.exec();
+
+
+      PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
+      dbus::variant panel_id = plotter->panel( "Weights for "+imageName(), "UVDistance (wavelengths)", "Weights", "ImagingWeight-plot" );
+
+      if ( panel_id.type( ) != dbus::variant::INT ) {
+	os << LogIO::SEVERE << "failed to start plotter" << LogIO::POST;
+	return False;
+      }
+
+      plotter->release( panel_id.getInt( ) );
+      plotter->scatter(dbus::af(uvDistance),dbus::af(weights),"blue","","hexagon",4);
 
     }
     
