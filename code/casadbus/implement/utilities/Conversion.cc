@@ -27,6 +27,7 @@
 #include <casadbus/utilities/Conversion.h>
 #include <dbus-c++/dbus.h>
 
+
 namespace casa {
     namespace dbus {
 
@@ -68,12 +69,7 @@ namespace casa {
 	    return variant( );
 	}
 
-	DBus::Variant fromVariant( const variant & src ) {
-#if LOCAL_FILE_DEBUG
-	    std::cout << "****************************** " << src.typeString( ) << " *****************************b" << std::endl;
-#endif
-	    DBus::Variant result;
-	    ::DBus::MessageIter vi = result.writer();
+	static void fromVariant( ::DBus::MessageIter &vi, const variant &src ) {
 	    switch ( src.type() ) {
 	    case variant::INT:
 		::operator <<(vi,src.getInt( ));
@@ -84,7 +80,58 @@ namespace casa {
 	    case variant::STRING:
 		::operator <<(vi,src.getString( ));
 		break;
+	    case variant::DOUBLE:
+		::operator <<(vi,src.getDouble( ));
+		break;
+	    case variant::BOOLVEC:
+		::operator <<(vi,src.getBoolVec( ));
+		break;
+	    case variant::INTVEC:
+		::operator <<(vi,src.getIntVec( ));
+		break;
+	    case variant::DOUBLEVEC:
+		::operator <<(vi,src.getDoubleVec( ));
+		break;
+	    case variant::STRINGVEC:
+		::operator <<(vi,src.getStringVec( ));
+		break;
+	    case variant::RECORD:
+		{   const record &rec = src.getRecord( );
+		    ::DBus::MessageIter ait = vi.new_array("{sv}");
+		    for ( record::const_iterator rit = rec.begin( ); rit != rec.end( ); ++rit ) {
+		        ::DBus::MessageIter eit = ait.new_dict_entry( );
+			::operator <<(eit,rit->first);
+			::DBus::MessageIter val = eit.new_variant( rit->second.sig() );
+			fromVariant( val, rit->second );
+			eit.close_container(val);
+			ait.close_container(eit);
+		    }
+		    vi.close_container(ait);
+		}
 	    }
+	}
+
+      /*static void debug_log(const char *format, ...) {
+	    va_list args;
+	    va_start(args, format);
+
+	    fprintf(stderr, "dbus-c++: ");
+	    vfprintf(stderr, format, args);
+	    fprintf(stderr, "\n");
+
+	    va_end(args);
+        }
+      */
+
+	DBus::Variant fromVariant( const variant & src ) {
+// 	    DBus::debug_log = debug_log;
+
+#if LOCAL_FILnE_DEBUG
+	    std::cout << "****************************** " << src.typeString( ) << " *****************************b" << std::endl;
+#endif
+	    DBus::Variant result;
+	    ::DBus::MessageIter vi = result.writer();
+	    fromVariant( vi, src );
 	    return result;
 	}
 

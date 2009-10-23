@@ -557,8 +557,8 @@ bool QtDisplayPanelGui::supports( SCRIPTING_OPTION ) const {
 QVariant QtDisplayPanelGui::start_interact( const QVariant &, int ) {
     return QVariant(QString("*error* unimplemented (by design)"));
 }
-QVariant QtDisplayPanelGui::setoptions( const QVariant &, int ) {
-    return QVariant(QString("*error* nothing  implemented yet"));
+QVariant QtDisplayPanelGui::setoptions( const QMap<QString,QVariant> &, int ) {
+    return QVariant(QString("*error* nothing implemented yet"));
 }
 void QtDisplayPanelGui:: addedData( QString type, QtDisplayData * ) { }
 

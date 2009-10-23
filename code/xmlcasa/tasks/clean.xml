@@ -374,7 +374,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--========================================================= -->
     <param type="bool" name="calready">
 	    <description>Create scratch columns and store model visibilities so that selfcal can be run after clean</description>
-	    <value>False</value>
+	    <value>True</value>
     </param>
 <!--========================================================= -->
     <param type="any" name="noise"  subparam="true">

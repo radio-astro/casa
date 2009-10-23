@@ -39,10 +39,5 @@ namespace casa {
 
     ViewerProxy::ViewerProxy( const std::string &name ) : 
 		DBus::ObjectProxy( DBusSession::instance().connection( ), dbus::object(name).c_str(), dbus::path(name).c_str() ) { }
-    ViewerProxy::ViewerProxy( const std::string &path, const std::string &name ) :
-		DBus::ObjectProxy( DBusSession::instance().connection( ), path.c_str( ), name.c_str( )) { }
-    ViewerProxy::ViewerProxy( const char *path, const char *name ) :
-		DBus::ObjectProxy( DBusSession::instance().connection( ), path, name) { }
-
 
 }

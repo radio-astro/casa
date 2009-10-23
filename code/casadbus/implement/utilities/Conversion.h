@@ -33,8 +33,10 @@
 #include <dbus-c++/dbus.h>
 #include <casadbus/types/variant.h>
 #include <casadbus/types/record.h>
+#include <casa/Arrays/Vector.h>
 
 namespace casa {
+
     namespace dbus {
 	std::map<std::string, DBus::Variant> *fromRecord( const Record &theRecord );
 
@@ -42,6 +44,13 @@ namespace casa {
 
 	DBus::Variant fromVariant( const variant &src );
 	void show( const variant &v );
+
+	template<class t> std::vector<double> af( const Vector<t> &other ) {
+	    std::vector<double> result(other.nelements( ));
+	    for (int x=0; x < result.size(); ++x)
+		result[x] = (double) other[x];
+	    return result;
+	}
 
 #if 0
 	Record *toRecord( const std::map<std::string, DBus::Variant> &map );

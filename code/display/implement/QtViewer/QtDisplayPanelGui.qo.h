@@ -97,7 +97,7 @@ class QtDisplayPanelGui : public QMainWindow,
 
   virtual bool supports( SCRIPTING_OPTION option ) const;
   virtual QVariant start_interact( const QVariant &input, int id );
-  virtual QVariant setoptions( const QVariant &input, int id);
+  virtual QVariant setoptions( const QMap<QString,QVariant> &input, int id);
 
   // the QtDBusViewerAdaptor can handle loading & registering data itself,
   // but to connect up extra functionality, the upper-level QtDisplayPanelGui

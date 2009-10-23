@@ -183,6 +183,36 @@ namespace casa {
 	    }
 	}
 
+	const char *variant::sig( ) const {
+	    static const char *bs = "b";
+	    static const char *bvs = "ab";
+	    static const char *is = "i";
+	    static const char *ivs = "ai";
+	    static const char *ds = "d";
+	    static const char *dvs = "ad";
+	    static const char *cs = "(dd)";
+	    static const char *cvs = "a(dd)";
+	    static const char *ss = "s";
+	    static const char *svs = "as";
+	    static const char *rec = "a{sv}";
+	    static const char *unknown = "v";
+
+	    switch( typev ) {
+	    case BOOL:		return bs;
+	    case BOOLVEC:	return bvs;
+	    case INT:		return is;
+	    case INTVEC:	return ivs;
+	    case DOUBLE:	return ds;
+	    case DOUBLEVEC:	return dvs;
+	    case COMPLEX:	return cs;
+	    case COMPLEXVEC:	return cvs;
+	    case STRING:	return ss;
+	    case STRINGVEC:	return svs;
+	    case RECORD:	return rec;
+	    default:		return unknown;
+	    }
+	}
+
 	bool variant::toBool( ) const {
 	    switch( typev ) {
 	    case BOOL:

@@ -33,10 +33,10 @@
 namespace casa {
     namespace dbus {
 
-	template<class proxy> proxy *launch( const std::string &name, int trys=60, unsigned long delay=500000 ) {
+	template<class proxy> proxy *launch( int trys=60, unsigned long delay=500000 ) {
 	    proxy *result = 0;
 	    try {
-		result = new proxy( name );
+		result = new proxy( );
 	    } catch (...) {
 		const char **args = proxy::execArgs( );
 		if ( ! fork( ) ) {
@@ -47,7 +47,7 @@ namespace casa {
 		while ( count > 0 ) {
  		    usleep(delay);
 		    try {
-		      result = new proxy( name );
+		      result = new proxy( );
 		      break;
 		    } catch (...) { }
 		    --count;

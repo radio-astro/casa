@@ -287,8 +287,14 @@ namespace casa {
 	return option == INTERACT || option == SETOPTIONS ? true : false;
     }
 
-    QVariant QtCleanPanelGui::setoptions(const QVariant &input, int id) {
-	fprintf( stderr, "\t\t>>> QtCleanPanelGui::setoptions( )\n" );
+    QVariant QtCleanPanelGui::setoptions(const QMap<QString,QVariant> &input, int id) {
+      if(input.contains("niter"))
+	 niterED_->setText(input["niter"].toString());
+       if(input.contains("ncycle"))
+	  ncyclesED_->setText(input["ncycle"].toString());
+       if(input.contains("threshold"))
+	 threshED_->setText(input["threshold"].toString());
+      
 	return QVariant(true);
     }
 

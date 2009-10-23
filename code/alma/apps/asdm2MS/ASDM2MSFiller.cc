@@ -349,10 +349,13 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
 
   //cout << "createMS SetupNewTable\n";
     
-  // Choose the Tile size per column to be ~ 4096K
+  // Choose the Tile size per column to be ~ 16K
+  // While this size is somewhat arbitrary, it is known
+  // that tile sizes above 128K trigger a performance bottleneck
+  // in later I/O caching.
   const Int nTileCorr = 1;
   const Int nTileChan = 1024;
-  const Int tileSizeKBytes = 4096;
+  const Int tileSizeKBytes = 16;
   Int nTileRow;
 
   // Create an incremental storage manager

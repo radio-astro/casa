@@ -4,7 +4,7 @@ from taskinit import *
 import asap as sd
 from asap._asap import Scantable
 
-def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, outfile, outform, overwrite, plotlevel):
+def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, verify, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdsmooth')
 
@@ -119,7 +119,8 @@ def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwid
                                     sd.plotter.save(pltfile)
                     #print "Smoothing spectrum with kernel "+kernel
                     casalog.post( "Smoothing spectrum with kernel "+kernel )
-                    s.smooth(kernel,kwidth,insitu=True)
+                    #s.smooth(kernel,kwidth,insitu=True)
+                    s.smooth(kernel,kwidth,plot=verify,insitu=True)
                     if ( abs(plotlevel) > 0 ):
                            # plot spectrum after smoothing
                             # each IF is separate panel, pols stacked

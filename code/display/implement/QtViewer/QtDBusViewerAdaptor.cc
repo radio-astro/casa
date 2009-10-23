@@ -90,8 +90,10 @@ namespace casa {
 	};
 	return QDBusVariant(iter->second->start_interact(input.variant(),panel));
     }
-  QDBusVariant QtDBusViewerAdaptor::setoptions( const QDBusVariant &input, int panel ) {
-	fprintf( stderr, "\t\t>>> QtDBusViewerAdaptor::setoptions( )\n" );
+
+
+    QDBusVariant QtDBusViewerAdaptor::setoptions( const QDBusVariant &input, int panel ) {
+
 	mainwinmap::iterator iter = managed_windows.find( panel );
 	if ( iter == managed_windows.end( ) ) {
 	    char buf[50];
@@ -103,8 +105,17 @@ namespace casa {
 	    sprintf( buf, "%d", panel );
 	    return QDBusVariant(QVariant(QString("*error* panel '") + buf + "' does not support 'interact'"));
 	};
-	return QDBusVariant(iter->second->setoptions(input.variant(),panel));
+
+	QVariant v = input.variant( );
+	QMap<QString,QVariant> map;
+	if ( v.type( ) == QVariant::UserType ) {
+	    QDBusArgument arg = qvariant_cast<QDBusArgument>(v);
+	    arg >> map;
+	}
+
+	return QDBusVariant(iter->second->setoptions(map,panel));
     }
+
     QDBusVariant QtDBusViewerAdaptor::load( const QString &path, const QString &displaytype, int panel ) {
 
 	struct stat buf;

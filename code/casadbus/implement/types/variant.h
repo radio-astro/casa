@@ -158,6 +158,7 @@ namespace casa {
 	    std::vector<int> &arrayshape() {return shape();}
 
 	    const std::string &typeString( ) const;
+	    const char *sig( ) const;
 	    TYPE type( ) const { return typev; }
 
 	    void push(bool, bool conform = true);
