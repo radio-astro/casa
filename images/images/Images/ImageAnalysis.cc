@@ -2453,7 +2453,10 @@ ComponentList ImageAnalysis::fitsky(
 		ComponentType::Shape modelType = convertModelType(Fit2D::type(
 				modelTypes(i)));
 		Vector<Double> solution = fitter.availableSolution(i);
+		// cout << "solution " << solution << endl;
 		Vector<Double> errors = fitter.availableErrors(i);
+		// cout << "errors " << errors << endl;
+
 		result(i) = ImageUtilities::encodeSkyComponent(*itsLog, facToJy, subImage, modelType,
 				solution, stokes, xIsLong, deconvolveIt);
 		encodeSkyComponentError(*itsLog, result(i), facToJy, subImage,
@@ -5947,6 +5950,10 @@ void ImageAnalysis::encodeSkyComponentError(LogIO& os, SkyComponent& sky,
 	//
 	// Flux. The fractional error of the integrated and peak flux
 	// is the same.  errorInt = Int * (errorPeak / Peak) * facToJy
+	// TODO it is? why is that? The error in the flux density has not
+	// been propogated correctly, because the (implicit) error in facToJy
+	// is not being caried along. This error arises because the size (major*minor axex)
+	// is not error free.
 	Flux<Double> flux = sky.flux(); // Integral
 	Vector<Double> valueInt;
 	flux.value(valueInt);
