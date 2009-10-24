@@ -325,9 +325,9 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                         for k in range(len(imset.imagelist)):
                                 ia.open(imset.imagelist[k])
                                 if (modelimage =='' or modelimage==[]) and multifield:
-                                    ia.rename(imset.imagelist[k]+'.model',overwrite=True)
+					ia.rename(imset.imagelist[k]+'.model',overwrite=True)
                                 else:
-                                    ia.remove()
+					ia.remove()
                                 ia.close() 
                                 modelimages.append(imset.imagelist[k]+'.model')
                                 restoredimage.append(imset.imagelist[k]+'.image')

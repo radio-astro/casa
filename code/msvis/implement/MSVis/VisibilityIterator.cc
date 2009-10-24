@@ -1282,15 +1282,21 @@ Int ROVisibilityIterator::nSubInterval() const
   Int retval=0;
   uInt nTimes=time_p.nelements();
   if (nTimes > 0) {
-    Sort sorter;
+  
+    Vector<Double> times(time_p); /* Do not change time_p, make a copy */
     Bool deleteIt;
-    sorter.sortKey(time_p.getStorage(deleteIt),TpDouble,0,Sort::Ascending);
-    Vector<uInt> indexVector, uniqueVector;
-    sorter.sort(indexVector,nTimes);
-    retval=sorter.unique(uniqueVector,indexVector);
-  };
+    Double *tp = times.getStorage(deleteIt);
+
+    std::sort(tp, tp + nTimes);
+    
+    /* Count unique times */
+    retval = 1;
+    for (unsigned i = 0; i < nTimes; i++) {
+      if (tp[i] < tp[i+1]) retval += 1;
+    }
+  }
   return retval;
-};
+}
 
 ROVisibilityIterator& 
 ROVisibilityIterator::selectVelocity

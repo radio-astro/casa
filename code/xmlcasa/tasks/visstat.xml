@@ -134,8 +134,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         median, median absolute deviation, quartile, minimum, maximum,
         variance, standard deviation, root mean square.
 
+        The following axes are supported: uvw, flag, weight, sigma, imaging_weight,
+        antenna1, antenna2, feed1, feed2, field_id, array_id, data_desc_id, flag_row,
+        interval, scan_number, time, weight_spectrum, amp, amplitude, phase, real, 
+        imag, imaginary, uvrange.
+
         If selectdata = True, the statistical information is computed based only
-        on the specified subset of the measurement set.
+        on a given subset of the measurement set.
 
         Note: If the MS consists of inhomogeneous data, for example several spectral windows
         each having a different number of channels, it may be necessary to use selection parameters
@@ -146,9 +151,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         vis  --- Name of input visibility file
                   default: '', example: vis='my.ms'
 
-        axis -- Which data to analyze. The possible values are 'amp', 'amplitude', 'phase',
-                'real', 'imag', 'imaginary'. Also, the name of any real valued MS column can be 
-                given, e.g. TIME, WEIGHT, SIGMA, FLAG, ...
+        axis -- Which data to analyze.
 
                 default: 'amplitude'
                 axis='phase'

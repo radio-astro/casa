@@ -1,6 +1,6 @@
 //# QtDisplayPanelGui.qo.h: Qt implementation of main viewer display window.
 //# with surrounding Gui functionality
-//# Copyright (C) 2005
+//# Copyright (C) 2005,2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -30,8 +30,6 @@
 #define QTDISPLAYPANELGUI_H
 
 #include <casa/aips.h>
-#include <display/QtViewer/QtDisplayPanel.qo.h>
-
 #include <graphics/X11/X_enter.h>
 #  include <QtCore>
 #  include <QtGui>
@@ -40,6 +38,8 @@
    //#   E.g. <QApplication> needs the X11 definition of 'Display'
 #  include <display/QtViewer/QtAnimatorGui.ui.h>
 #include <graphics/X11/X_exit.h>
+#include <casaqt/QtUtilities/QtPanelBase.qo.h>
+#include <display/QtViewer/QtDisplayPanel.qo.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -62,7 +62,7 @@ class QtRegionShapeManager;
 // The main display window for the Qt version of the viewer.
 // </summary>
 
-class QtDisplayPanelGui : public QMainWindow,
+class QtDisplayPanelGui : public QtPanelBase,
 		          protected Ui::QtAnimatorGui {
 
   Q_OBJECT;	//# Allows slot/signal definition.  Must only occur in
@@ -84,16 +84,6 @@ class QtDisplayPanelGui : public QMainWindow,
 
   virtual void setStatsPrint(Bool printStats=True) {
     qdp_->printStats = printStats;  }
-
-
-  // Used to close this panel (i.e. QMainWindow)... This function
-  // should be used instead of close() to programmatically close
-  // the window, i.e. cause it to no longer be valid.
-  virtual void closeMainPanel( );
-  // Used to indicate that "closing" the window should be reinterpreted
-  // as "hiding" the window, i.e. QtDBusViewerAdaptor is done with the
-  // window so when the user closes it it should go away.
-  virtual void releaseMainPanel( );
 
   virtual bool supports( SCRIPTING_OPTION option ) const;
   virtual QVariant start_interact( const QVariant &input, int id );
@@ -298,12 +288,9 @@ class QtDisplayPanelGui : public QMainWindow,
   QWidget*    trkgWidget_;
   
      
-  bool isOverridedClose( ) const { return close_override; }
- 
  private:
   
   QtDisplayPanelGui() {  }		// (not intended for use)  
-  bool close_override;
     
 };
 

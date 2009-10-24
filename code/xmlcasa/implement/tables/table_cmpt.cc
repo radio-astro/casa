@@ -1829,7 +1829,7 @@ table::statistics(const std::string& column,
                 throw AipsError("Table has zero rows, cannot continue");
             }
 
-            retval = fromRecord(casac::Statistics::get_statistics(itsTable->table(),
+            retval = fromRecord(casac::Statistics<Int>::get_statistics(itsTable->table(),
                                                                   column,
                                                                   complex_value,
                                                                   itsLog));

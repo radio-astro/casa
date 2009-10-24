@@ -1254,11 +1254,11 @@ namespace casa {
       // the input MS, not just the selected ones.
       const Vector<Int>& inSrcIDs = mscIn_p->field().sourceId().getColumn();
 
-      Int highestInpFld = max(fieldid_p);
+      Int highestInpSrc = max(inSrcIDs);
     
-      if(highestInpFld < 0)                   // Ensure space for -1.
-        highestInpFld = 0;
-      sourceRelabel_p.resize(highestInpFld + 1);
+      if(highestInpSrc < 0)                   // Ensure space for -1.
+        highestInpSrc = 0;
+      sourceRelabel_p.resize(highestInpSrc + 1);
       sourceRelabel_p.set(-1);   	          // Default to "any".
 
       // Enable sourceIDs that are actually referred to by selected fields, and
@@ -1895,11 +1895,11 @@ namespace casa {
 	// starting from the central channel going down
 	//    Want to keep the center of the center channel at the center of
 	//    the new center channel if the bandwidth is an odd multiple of the
-        //    new channel width or the regridCenter was explicitely given, 
+        //    new channel width 
 	//    otherwise the center channel is the lower edge of the new center channel
 	Int startChan;
 	Double tnumChan = regridBandwidthChan/regridChanWidthChan;
-	if(tnumChan/2 != tnumChan/2. || regridCenter>-1E30){
+	if(tnumChan/2 != tnumChan/2.){
           // odd multiple or center channel given by user 
 	  startChan = regridCenterChan-regridChanWidthChan/2;
 	}
@@ -2192,7 +2192,7 @@ namespace casa {
 	//    otherwise the center channel is the lower edge of the new center channel
 	Int tnumChan = (Int) rint(theRegridBWF/theCentralChanWidthF);
 	if((tnumChan/2. - tnumChan/2)>0.1){
-          // odd multiple or center channel given by user 
+          // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
 	  loFBdown.push_back(theRegridCenterF-theCentralChanWidthF/2.);
@@ -2281,7 +2281,7 @@ namespace casa {
 	//    channel
 	Int tnumChan = (Int) rint(theRegridBWF/theCentralChanWidthF);
 	if((tnumChan/2. - tnumChan/2)>0.1){
-          // odd multiple or center channel given by user 
+          // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
 	  loFBdown.push_back(theRegridCenterF-theCentralChanWidthF/2.);
@@ -2364,7 +2364,7 @@ namespace casa {
 	//    otherwise the center channel is the lower edge of the new center channel
 	Double tnumChan = theRegridBWF/theCentralChanWidthF;
 	if((tnumChan/2. - tnumChan/2)>0.1){
-          // odd multiple or center channel given by user 
+          // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
 	  loFBdown.push_back(theRegridCenterF-theCentralChanWidthF/2.);
@@ -2419,7 +2419,7 @@ namespace casa {
 	//    channel
 	Int tnumChan = (Int) rint(theRegridBWF/theCentralChanWidthF);
 	if((tnumChan/2. - tnumChan/2)>0.1){
-          // odd multiple or center channel given by user 
+          // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
 	  loFBdown.push_back(theRegridCenterF-theCentralChanWidthF/2.);
@@ -2808,7 +2808,7 @@ namespace casa {
 	  for(Int i=0; i<oldNUM_CHAN; i++){
 	    transNewXin[i] = freqTrans(newXin[i]).get(unit).getValue();
 	    transCHAN_WIDTH[i] = freqTrans(newXin[i] +
-                                           oldCHAN_WIDTH[i]/2.).get(unit).getValue()
+					   oldCHAN_WIDTH[i]/2.).get(unit).getValue()
 	      - freqTrans(newXin[i] -
                           oldCHAN_WIDTH[i]/2.).get(unit).getValue(); // eliminate possible offsets
 	    transRESOLUTION[i] = freqTrans(newXin[i] +
@@ -3886,7 +3886,7 @@ namespace casa {
       // Loop over main table rows
       uInt mainTabRow = 0;
       uInt newMainTabRow = 0;
-      Bool nIncompleteCoverage = 0; // number of rows with incomplete SPW coverage
+      uInt nIncompleteCoverage = 0; // number of rows with incomplete SPW coverage
       // prepare progress meter
       Float progress = 0.4;
       Float progressStep = 0.4;
@@ -4092,25 +4092,10 @@ namespace casa {
 	  
 	  // loop over new channels
 	  for(Int i=0; i<newNUM_CHAN; i++){
-	    Bool haveCoverage = False;
-	    Double modNorm = 0.;
-	    for(Int j=0; j<averageN[i]; j++){
-	      if(SPWtoRowIndex.isDefined(averageWhichSPW[i][j])){
-		haveCoverage = True;
-		modNorm += averageChanFrac[i][j];
-	      }
-	    }
 	    // initialise special treatment for Bool columns
 	    if(FLAGColIsOK){
-	      if(haveCoverage){ // there is some data for this channel
-		for(uInt k=0; k<nCorrelators; k++){ 
-		  newFlag(k,i) =  False; 
-		}
-	      }
-	      else{ // there is no data for this channel
-		for(uInt k=0; k<nCorrelators; k++){ 
-		  newFlag(k,i) =  True; // therefore flag this channel
-		}
+	      for(uInt k=0; k<nCorrelators; k++){ 
+		newFlag(k,i) =  True; // overwritten with False below if there is a SPW where this channel is not flagged for this correlator
 	      }
 	    }
 	    if(FLAG_CATEGORYColIsOK){
@@ -4120,38 +4105,61 @@ namespace casa {
 		}
 	      }
 	    }
-	    if(haveCoverage){
+
+	    Bool haveCoverage = False;
+	    Vector<Double> modNorm(nCorrelators, 0.); // normalization for the averaging of the contributions from the SPWs
+	    for(Int j=0; j<averageN[i]; j++){
+	      if(SPWtoRowIndex.isDefined(averageWhichSPW[i][j])){
+		for(uInt k=0; k<nCorrelators; k++){
+		  if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){
+		    haveCoverage = True;
+		    modNorm(k) += averageChanFrac[i][j];
+		    if(FLAGColIsOK){
+		      newFlag(k,i) = False; // there is valid data for this channel => don't flag in output
+		    }
+		  }
+		}
+	      }
+	    }
+
+	    if(haveCoverage){ // there is unflagged data for this channel
 	      // loop over SPWs
 	      for(Int j=0; j<averageN[i]; j++){
 		// new channel value i 
 		//   = SUM{j=0 to averageN[i]}( channelValue(SPW = averageWhichSPW[i][j], CHANNEL = averageWhichChan[i][j]) * averageChanFrac[i][j])
 		if(SPWtoRowIndex.isDefined(averageWhichSPW[i][j])){
 
-		  Double weight = averageChanFrac[i][j]/modNorm; // renormalize for the case of missing SPW coverage
+		  Double weight = 0.;
 
 		  // loop over first dimension (number of correlators)
 		  for(uInt k=0; k<nCorrelators; k++){
-		    if(CORRECTED_DATAColIsOK){
-		      newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
-		    }
-		    if(DATAColIsOK){
-		      newData(k,i) += newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
-		    }
-		    if(FLOAT_DATAColIsOK){
-		      newFloatData(k,i) += newFloatDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
-		    }
-		    if(LAG_DATAColIsOK){
-		      newLagData(k,i) += newLagDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
-		    }
-		    if(MODEL_DATAColIsOK){
-		      newModelData(k,i) += newModelDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
-		    }
-		    if(SIGMA_SPECTRUMColIsOK){
-		      newSigmaSpectrum(k,i) += newSigmaSpectrumI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
-		    }
-		    if(WEIGHT_SPECTRUMColIsOK){
-		      newWeightSpectrum(k,i) += newWeightSpectrumI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
-		    }
+		    if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){ // this channel is not flagged for the given SPW and correlator
+
+		      weight = averageChanFrac[i][j]/modNorm(k); // renormalize for the case of missing SPW coverage
+
+		      if(CORRECTED_DATAColIsOK){
+			newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+		      }
+		      if(DATAColIsOK){
+			newData(k,i) += newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+		      }
+		      if(FLOAT_DATAColIsOK){
+			newFloatData(k,i) += newFloatDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+		      }
+		      if(LAG_DATAColIsOK){
+			newLagData(k,i) += newLagDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+		      }
+		      if(MODEL_DATAColIsOK){
+			newModelData(k,i) += newModelDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+		      }
+		      if(SIGMA_SPECTRUMColIsOK){
+			newSigmaSpectrum(k,i) += newSigmaSpectrumI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+		      }
+		      if(WEIGHT_SPECTRUMColIsOK){
+			newWeightSpectrum(k,i) += newWeightSpectrumI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+		      }
+
+		    } // end if flagged
 		  } // end for k = 0
 		
 		  // imaging weight is independent of the correlator
@@ -4159,13 +4167,7 @@ namespace casa {
 		    newImagingWeight(i) += newImagingWeightI[ averageWhichSPW[i][j] ]( averageWhichChan[i][j] ) * weight;
 		  }
 		  
-		  // special treatment for Bool columns
-		  if(FLAGColIsOK){
-		    for(uInt k=0; k<nCorrelators; k++){ // logical OR of all input spws
-		      newFlag(k,i) =  newFlag(k,i) || newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ); 
-		    }
-		  }
-		  
+		  // special treatment for flag cat
 		  if(FLAG_CATEGORYColIsOK){
 		    for(uInt k=0; k<nCorrelators; k++){ // logical OR of all input spws
 		      for(uInt m=0; m<nCat; m++){ 
@@ -4174,6 +4176,7 @@ namespace casa {
 		      }
 		    }
 		  }
+
 		} // end if there is a row for this SPW	      
 	      } // end for j=0, loop over SPWs
 	    } // if there is coverage for this channel 

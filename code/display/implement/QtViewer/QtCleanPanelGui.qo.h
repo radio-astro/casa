@@ -1,5 +1,5 @@
 //# QtCleanPanelGui.qo.h:  interactive clean display panel
-//# Copyright (C) 2005
+//# Copyright (C) 2005,2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -31,7 +31,6 @@
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>
-#include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <casa/Arrays/Vector.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -45,6 +44,7 @@
 #  include <QVBoxLayout>
 #  include <QLineEdit>
 #include <graphics/X11/X_exit.h>
+#include <display/QtViewer/QtDisplayPanelGui.qo.h>
 
 
 namespace casa {

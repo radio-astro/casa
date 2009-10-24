@@ -408,11 +408,11 @@ Bool FixVis::calc_uvw(const String& refcode)
     }
     
     try{
-      MSUVWGenerator uvwgen(*msc_p, bltype, uvwtype);  
+      MSUVWGenerator uvwgen(*msc_p, bltype, uvwtype);
       retval = uvwgen.make_uvws(FieldIds_p);
 
       // Update HISTORY table
-      LogSink localLogSink = LogSink(LogMessage::NORMAL, False);	  
+      LogSink localLogSink = LogSink(LogMessage::NORMAL, False);
       localLogSink.clearLocally();
       LogIO os(LogOrigin("im", "calcuvw()", WHERE), localLogSink);
       

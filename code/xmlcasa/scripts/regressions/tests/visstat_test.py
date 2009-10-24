@@ -1,5 +1,6 @@
 from tasks import *
 from taskinit import *
+from __main__ import inp
 import os
 
 epsilon = 0.0001
@@ -55,9 +56,9 @@ def run():
             raise Exception("Wrong dictionary keys. Expected %s, got %s" % \
                             (expected[vis], s))
                             
-
+        # Detailed check of values, column=DATA
         print "Expected =", expected[vis]
-        print "Got = ", s
+        print "Got =", s
         if not s.has_key('DATA'):
             raise Exception("Dictionary returned from visstat does not have key DATA")
         for e in expected[vis]['DATA'].keys():
@@ -73,12 +74,30 @@ def run():
             if failed:
                 raise Exception("Numbers differ, expected %s, got %s" % \
                       (str(expected[vis]['DATA'][e]), str(s['DATA'][e])))
+
+
+        # Check of channel selection
+        if vis == 'ngc5921.ms':
+            for ch in [1, 2, 4, 7, 13, 62]:
+              for corr in ['ll', 'rr', 'll,rr']:
+                print "Call with spw='0:1~"+str(ch)+"', correlation="+corr
+                s = visstat(vis=vis, axis='amp', datacolumn='data', spw='0:1~'+str(ch), correlation=corr)
+                print s
+                n_expected = 2854278/63 * ch
+
+                if corr in ['ll', 'rr']:
+                    n_expected /= 2
+                
+                n = int(s['DATA']['npts'])
+                print "Checking npts: %s vs %s" % (n, n_expected)
+                if n != n_expected:
+                    raise Exception(str(n_expected) + " points expected, but npts = " + str(n))
+
             
-        print "Create scratch columns. Expect error messages from applycal,"
-        print "that's fine we just want the scratch columns"
+        # Test running on all columns
+        print "Create scratch columns. Expect error messages from applycal, that is okay, this is just to create the scratch columns"
         applycal(vis=vis)
 
-          
         tb.open(vis)
         cols = tb.colnames()
         tb.close()
@@ -90,6 +109,7 @@ def run():
         cols.remove('DATA')
         cols.remove('CORRECTED_DATA')
         cols.remove('MODEL_DATA')
+        cols.append('UVRANGE')
 
         cols = [x.lower() for x in cols]
 
@@ -106,14 +126,25 @@ def run():
                     s = visstat(vis=vis, axis=col, datacolumn=dc)
                 else:
                     s = visstat(vis=vis, axis=col)
-                if col.upper() == "FLAG_CATEGORY":
-                    # The MSs used have no data in FLAG_CATEGORY, therefore
-                    # visstat() should fail
+                print "Result was", s
+                if col.upper() in ["FLAG_CATEGORY", "EXPOSURE", "OBSERVATION_ID", "PROCESSOR_ID", "STATE_ID", "TIME_CENTROID"]:
+                    # no support for FLAG_CATEGORY, EXPOSURE, OBSERVATION_ID, ...
+                    # so expect failure
                     if s != None:
                         raise Exception("Error! " + str(s))
                 elif not type(s) is dict:
                     raise Exception("Error! Return value " + str(s) + " is not a dictionary")
+                else:
+                    if dc == '' and \
+                           not col.upper() in s.keys() and \
+                           not col.upper()+'_0' in s.keys():
+                        raise Exception("Missing key " + col.upper() + " in result")
+                    
+                    if dc != '' and not dc.upper() in s.keys():
+                        raise Exception("Missing key " + dc.upper() + " in result")
 
+
+        # Few tests of special cases
         for a in range(1, 5):
             s = visstat(vis=vis, axis='ANTENNA1', antenna=str(a)+'&26')
             print "antenna =", a, "; mean = ", s['ANTENNA1']['mean']

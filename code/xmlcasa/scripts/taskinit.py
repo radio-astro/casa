@@ -235,7 +235,6 @@ def announce_async_task(taskname):
 	casalog.post('###  Begin Task: " + taskname + " ###')
 	casalog.post("")
 	casalog.post("Use: ")
-	casalog.post("      tm.abort(return_value)    # to abort the asynchronous task ")
 	casalog.post("      tm.retrieve(return_value) # to retrieve the status")
 	casalog.post("")
 	

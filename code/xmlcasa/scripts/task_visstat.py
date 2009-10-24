@@ -25,10 +25,6 @@ def visstat(vis=None,
         col = axis
 
 
-    if col == 'corrected':
-        col = 'CORRECTED_DATA'
-    if col == 'model':
-        col = 'MODEL_DATA'
     s = ms.statistics(column=col.upper(),
                       complex_value=complex_type,
                       useflags=useflags,

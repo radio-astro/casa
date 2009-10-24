@@ -132,7 +132,18 @@ template<class T> void RFCubeLatticeIterator<T>::flush_curs()
 	   val.set_from_ulong(curs(chan,ifr));
 	*/
 	   
-	val = boost::dynamic_bitset<> (n_bit+1, (unsigned)curs(chan, ifr));
+	if (0) {
+	  /* This costs a malloc+free */
+	  val = boost::dynamic_bitset<> ((int)(n_bit+1), (unsigned)curs(chan, ifr));
+	}
+	else {
+	  /* This is faster */
+	  unsigned c = (unsigned) curs(chan, ifr);
+	  for (unsigned i = 0; i < n_bit+1; i++) {
+	    val[i] = (c & 1);
+	    c = c >> 1;
+	  }
+	}
 
 	if (n_corr <= 1) {
 	  unsigned indx = 0 + n_bit*(chan + n_chan*ifr);
@@ -272,7 +283,7 @@ template<class T> void RFCubeLattice<T>::init(uInt nchan,
 
   /* Write init_val to every matrix element.
      See above for description of format */
-  boost::dynamic_bitset<> val(nbits+1, (unsigned) init_val);
+  boost::dynamic_bitset<> val((int)(nbits+1), (unsigned) init_val);
   for (unsigned i = 0; i < ntime; i++) {
     for (unsigned chan = 0; chan < nchan; chan++) {
       for (unsigned ifr = 0; ifr < nifr; ifr++) {

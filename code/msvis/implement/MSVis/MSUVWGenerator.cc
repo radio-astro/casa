@@ -129,6 +129,7 @@ void MSUVWGenerator::uvw_an(const MEpoch& timeCentroid, const Int fldID,
   // of phase is consistent with that of the Cambridge one-mile telescope as
   // Wim Brouw set things up to be in agreement with the one-mile telescope ca
   // 1968.)
+  // RR: It is not just l, v and w are flipped as well.
   if(WSRTConvention)
     antUVW_p = -antUVW_p;
 }
@@ -153,6 +154,8 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
   const ROScalarColumn<Int> ant2(msc_p.antenna2());
   const ROScalarColumn<Int> feed1(msc_p.feed1());
   const ROScalarColumn<Int> feed2(msc_p.feed2());
+  const ROScalarColumn<Int> obsID(msc_p.observationId());
+  const ROScalarColumn<Int> arrID(msc_p.arrayId());
 
   // Use a time ordered index to minimize the number of calls to uvw_an.
   // TODO: use field as a secondary sort key.
@@ -172,21 +175,42 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
   logSink() << LogIO::DEBUG1 << "timeRes_p: " << timeRes_p << LogIO::POST;
 
   try{
+    uInt oldObsID = obsID(tOI[0]);
+    uInt oldArrID = arrID(tOI[0]);
+    Bool oldWsrtConvention = (msc_p.observation().telescopeName()(oldObsID) ==
+                              "WSRT");
+
     // Ensure a call to uvw_an on the 1st iteration.
     const Unit sec("s");
     Double oldTime = timeCentMeas(tOI[0]).get(sec).getValue() - 2.0 * timeRes_p;
     Int    oldFld  = -2;
     for(uInt row = 0; row < msc_p.nrow(); ++row){
-      uInt toir = tOI[row];
+      uInt   toir = tOI[row];
       Double currTime = timeCentMeas(toir).get(sec).getValue();
       Int    currFld  = fieldID(toir);
+      Bool   newObsID = obsID(toir);
+      Bool   newArrID = arrID(toir);
 
-      if(currTime - oldTime > timeRes_p || currFld != oldFld){
+      if(currTime - oldTime > timeRes_p || currFld != oldFld
+         || newObsID != oldObsID || newArrID != oldArrID){
         oldTime = currTime;
         oldFld  = currFld;
+        oldObsID = newObsID;
+        oldArrID = newArrID;
+        Bool newWsrtConvention = (msc_p.observation().telescopeName()(newObsID) ==
+                                  "WSRT");
+
+        if(newWsrtConvention != oldWsrtConvention){
+          logSink() << LogIO::WARN
+                    << "There is a switch to or from the WSRT convention at row "
+                    << toir << ".\nWatch for an inconsistency in the sign of UVW."
+                    << LogIO::POST;
+          oldWsrtConvention = newWsrtConvention;
+        }
+
         logSink() << LogIO::DEBUG1 << "currTime: " << currTime
                   << "\ncurrFld: " << currFld << LogIO::POST;
-        uvw_an(timeCentMeas(toir), currFld);
+        uvw_an(timeCentMeas(toir), currFld, newWsrtConvention);
       }
     
       if(flds[fieldID(toir)] > -1){

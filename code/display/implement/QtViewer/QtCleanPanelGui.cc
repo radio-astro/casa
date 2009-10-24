@@ -1,5 +1,5 @@
 //# QtCleanPanelGui.cc:	Prototype QObject for interactive clean.
-//# Copyright (C) 2005
+//# Copyright (C) 2005,2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it

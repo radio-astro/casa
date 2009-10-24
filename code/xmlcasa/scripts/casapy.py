@@ -235,6 +235,7 @@ def asap_init():
     from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
     from sdmath_cli import sdmath_cli as sdmath
     from sdimaging_cli import sdimaging_cli as sdimaging
+    from sdimprocess_cli import sdimprocess_cli as sdimprocess
     myf['sd']=sd
     myf['sdaverage']=sdaverage
     myf['sdsmooth']=sdsmooth
@@ -251,6 +252,7 @@ def asap_init():
     myf['sdtpimaging']=sdtpimaging
     myf['sdmath']=sdmath
     myf['sdimaging']=sdimaging
+    myf['sdimprocess']=sdimprocess
 
 
 def selectantenna(vis,minstring):

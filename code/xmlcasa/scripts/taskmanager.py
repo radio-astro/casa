@@ -60,14 +60,6 @@ class taskmanager(object):
         else:
             raise Exception, "invalid reciept"
 
-    def abort(self, reciept):
-        if self.__hub['result map'].has_key(reciept):
-            if self.__hub['result map'][reciept]['engine']['active'] :
-                targets = [ self.__hub['result map'][reciept]['engine']['index'] ]
-                self.__hub['mec'].kill(controller=False,targets=targets,block=False)
-                self.__hub['result map'][reciept]['engine']['active'] = False
-        return None
-
     def execute(self, taskname, *args, **kwargs):
 
         if not self.__hub['initialized']:

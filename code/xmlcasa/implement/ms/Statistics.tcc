@@ -132,12 +132,12 @@ reform_array(ROTableColumn &rotc,
   supported:   set to true if column type is supported
 */
 template <class T>
-static void
-get_stats(Vector<T> v,
-          Record &result,
-          const std::string &column,
-          bool &supported)
+Record
+Statistics<T>::get_stats(Vector<T> v,
+                      const std::string &column,
+                      bool &supported)
 {
+    Record result;
     if (supported) {
 
         Vector<Float> data_float(v.shape());
@@ -151,7 +151,7 @@ get_stats(Vector<T> v,
         get_statistics_1d(result, column, data_float);
     }
 
-    return;
+    return result;
 }
 
 /*
@@ -160,13 +160,22 @@ get_stats(Vector<T> v,
   The conversion from complex to Float depends on the parameter
   complex_value. Eg complex_value="imag" picks out the imaginary part.
  */
-static void
-get_stats_complex(Vector<Complex> v,
-                  Record &result,
-                  const std::string &column,
-                  bool &supported,
-                  const std::string complex_value)
+template<class T>
+Record
+Statistics<T>::get_stats_complex(Vector<Complex> v,
+                              const std::string &column,
+                              bool &supported,
+                              const std::string complex_value)
 {
+    if (complex_value != "amp" && complex_value != "amplitude" &&
+        complex_value != "phase" && complex_value != "imag" &&
+        complex_value != "real" && complex_value != "imaginary") {
+      throw AipsError("complex_value must be amp, amplitude, phase, imag, imaginary or real" +
+                      std::string(", is ") + complex_value);
+    }
+    
+    Record result;
+    
     if (supported) {
 
       Vector<Float> data_float(v.shape());
@@ -204,10 +213,11 @@ get_stats_complex(Vector<Complex> v,
       
       get_statistics_1d(result, column, data_float);
     }
-
-    return;
-
+    return result;
+    
 }
+
+     
 
 /*
   Converts data to Float, computes statistics
@@ -216,15 +226,15 @@ get_stats_complex(Vector<Complex> v,
   result:      output dictionary, which will contain
                N sets of statistical information, one for
                each index in the array
-  column:      column whose values are N-dimensional arrays
+  column:      column whose values are N-length arrays
   supported:   set to true if column type is supported
 */
 template <class T>
 static void
-get_stats_array(const Table &t, 
-                Record &result,
-                const std::string &column,
-                bool &supported)
+get_stats_array_table(const Table &t, 
+                      Record &result,
+                      const std::string &column,
+                      bool &supported)
 {
     supported = true;
     
@@ -232,11 +242,26 @@ get_stats_array(const Table &t,
     
     Matrix<T> v = ro_col.getColumn();
 
+    result = Statistics<T>::get_stats_array(v,
+                                            column,
+                                            supported);
+
+    return;
+}
+
+template <class T>
+Record
+Statistics<T>::get_stats_array(Matrix<T> v,
+                               const std::string &column,
+                               bool &supported)
+{
+    Record result;
+
     Vector<Float> data_float(IPosition(1, v.shape()(1)));
 
     IPosition indx(2);
 
-    /* Compute statistics for each element in the array */
+    /* Compute statistics per column element */
 
     for (unsigned i = 0; i < (unsigned)v.shape()(0); i++) {
         indx(0) = i;
@@ -251,8 +276,9 @@ get_stats_array(const Table &t,
         get_statistics_1d(result, s.str(), data_float);
     }
 
-    return;
+    return result;
 }
+
 
 /*
   Linearize array
@@ -289,10 +315,9 @@ reform_array(ROTableColumn &rotc,
 }
 
 
-
-
+template <class T>
 Record
-Statistics::get_statistics(const Table &table,
+Statistics<T>::get_statistics(const Table &table,
                            const std::string &column,
                            const std::string &complex_value,
                            casa::LogIO *itsLog)
@@ -348,41 +373,34 @@ Statistics::get_statistics(const Table &table,
            compute statistics for each index
         */
         if (dt1 == TpDouble) {
-            get_stats_array<Double>(table, result, column, supported);
+            get_stats_array_table<Double>(table, result, column, supported);
         }
         else if (dt1 == TpFloat) {
-                 get_stats_array<Float>(table, result, column, supported);
+            get_stats_array_table<Float>(table, result, column, supported);
         }
     }
     else {
       /* Scalar or multi-dimensional array */
 
       if (dt1 == TpBool) {
-        get_stats<Bool>(reform_array<Bool>(rotc, table, column, supported),
-                        result, column, supported);
+        result = Statistics<Bool>::get_stats(reform_array<Bool>(rotc, table, column, supported),
+                                 column, supported);
       }
       else if (dt1 == TpInt) {
-        get_stats<Int>(reform_array<Int>(rotc, table, column, supported),
-                               result, column, supported);
+        result = Statistics<Int>::get_stats(reform_array<Int>(rotc, table, column, supported),
+                                column, supported);
       }
       else if (dt1 == TpFloat) {
-        get_stats<Float>(reform_array<Float>(rotc, table, column, supported),
-                         result, column, supported);
+        result = Statistics<Float>::get_stats(reform_array<Float>(rotc, table, column, supported),
+                                  column, supported);
       }
       else if (dt1 == TpDouble) {
-       get_stats<Double>(reform_array<Double>(rotc, table, column, supported),
-                         result, column, supported);
+        result = Statistics<Double>::get_stats(reform_array<Double>(rotc, table, column, supported),
+                                   column, supported);
       }
       else if (dt1 == TpComplex) {
-        if (complex_value != "amp" && complex_value != "amplitude" &&
-            complex_value != "phase" && complex_value != "imag" &&
-            complex_value != "real" && complex_value != "imaginary") {
-          throw AipsError("complex_value must be amp, amplitude, phase, imag, imaginary or real" +
-                          std::string(", is ") + complex_value);
-        }
-
-        get_stats_complex(reform_array<Complex>(rotc, table, column, supported),
-                          result, column, supported, complex_value);
+        result = get_stats_complex(reform_array<Complex>(rotc, table, column, supported),
+                                   column, supported, complex_value);
       }
     }
 
@@ -394,7 +412,5 @@ Statistics::get_statistics(const Table &table,
       throw AipsError(msg);
     }
 }
-
-
 
 } // namespace casac

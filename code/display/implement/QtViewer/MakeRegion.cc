@@ -343,13 +343,15 @@ void MakeRegion::activate(Record rcd) {
       QList<QAction *> list = showHideMenu->actions();
       bool showGroup = false;
       for (int i = 0; i < list.size(); ++i) {
-         if (grp == "" ||
-             (list.at(i)->text() == grp.c_str() && 
-              list.at(i)->isChecked())){
+         if (list.at(i)->text() == grp.c_str() && 
+             list.at(i)->isChecked()){
             showGroup = true;
             break;
          }
       }
+      if (grp == "")
+         showGroup = true;
+
       if (!showGroup)
          return;
 
@@ -516,6 +518,9 @@ void MakeRegion::loadRegionFromImage() {
           if (!reg)
              continue;
 
+          if (!reg->isWCRegion())
+             continue;
+
           PtrBlock<const WCRegion* > outRegPtrs ;
           const WCRegion* rpt = const_cast<WCRegion*>(&(reg->asWCRegion()));
           String cmt = rpt->comment();
@@ -607,16 +612,50 @@ void MakeRegion::saveRegionToImage() {
                            "There is no region to save.");
    }
    else {
-      WCUnion leUnion(unionRegions_p);
+      QList<QAction *> list = showHideMenu->actions();
+
+      PtrBlock<const ImageRegion*> saveRegions_p;
+      saveRegions_p.resize(0, True);
+      uInt nreg = unionRegions_p.nelements();
+      uInt sreg = 0;
+      for (uInt k = 0; k < nreg; ++k){
+         if (unionRegions_p[k] != 0){
+            const WCRegion* wcreg = &(unionRegions_p[k]->asWCRegion());
+            String cmt = wcreg->comment();
+            //cout << "comment=" << cmt << endl;
+            String chan = cmt.before("polExt:");
+            chan = chan.after("chanExt:");
+            String pola = cmt.after("polExt:");
+            String grp = cmt.after("Group:");
+            pola = pola.before("Group:");
+            bool showGroup = false;
+            for (int i = 0; i < list.size(); ++i) {
+               if (list.at(i)->text() == grp.c_str() && 
+                   list.at(i)->isChecked()){
+                  showGroup = true;
+                  break;
+               }
+            }
+            if (grp == "")
+               showGroup = true;
+            if (showGroup) {
+               saveRegions_p.resize(sreg+1, True);
+               saveRegions_p[sreg++] = unionRegions_p[k];
+            }
+         }
+      }
+
+      //WCUnion leUnion(unionRegions_p);
+      WCUnion leUnion(saveRegions_p);
       leUnion.setComment("chanExt:" +
                 chan->text().toStdString() +
                 "polExt:" +
                 corr->text().toStdString() +
                 "Group:" + sName.toStdString());
-      cout << "chan=" << chan->text().toStdString()
-           << " corr=" << corr->text().toStdString() 
-           << " group=" << sName.toStdString() 
-           << endl;
+      //cout << "chan=" << chan->text().toStdString()
+      //     << " corr=" << corr->text().toStdString() 
+      //     << " group=" << sName.toStdString() 
+      //     << endl;
       ImageRegion* reg = new ImageRegion(leUnion);
       qdp_->saveRegionInImage(regname, *reg);
    }
@@ -753,7 +792,8 @@ void MakeRegion::addRegionsToShape(RSComposite*& theShapes,
     pola = pola.before("Group:");
     //cout << "chanExt=" << chan << endl;
     //cout << "polExt=" << pola << endl;
-    //cout << "Group=" << grp << endl;
+    //cout << "Group=" << grp << " " << (grp == "") << endl;
+    
 
     //cout << "WCRegion->group_id="
     //     << wcreg->group() << endl;
@@ -761,13 +801,15 @@ void MakeRegion::addRegionsToShape(RSComposite*& theShapes,
     QList<QAction *> list = showHideMenu->actions();
     bool showGroup = false;
     for (int i = 0; i < list.size(); ++i) {
-       if (grp == "" ||
-           (list.at(i)->text() == grp.c_str() && 
-            list.at(i)->isChecked())){
+       if (list.at(i)->text() == grp.c_str() && 
+           list.at(i)->isChecked()){
           showGroup = true;
           break;
        }
     }
+    if (grp == "")
+       showGroup = true;
+
     if (!showGroup)
        return;
 

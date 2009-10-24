@@ -1,6 +1,6 @@
 //# QtDisplayPanelGui.cc: Qt implementation of main viewer display window.
 //# with surrounding Gui functionality
-//# Copyright (C) 2005
+//# Copyright (C) 2005,2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -46,10 +46,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
-		   QMainWindow(parent),
+		   QtPanelBase(parent),
 		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qmr_(0), qrm_(0),
 		   qsm_(0), profile_(0), savedTool_(QtMouseToolNames::NONE),
-		   profileDD_(0), close_override(false)  {
+		   profileDD_(0)  {
     
   setWindowTitle("Viewer Display Panel");
   
@@ -561,17 +561,6 @@ QVariant QtDisplayPanelGui::setoptions( const QMap<QString,QVariant> &, int ) {
     return QVariant(QString("*error* nothing implemented yet"));
 }
 void QtDisplayPanelGui:: addedData( QString type, QtDisplayData * ) { }
-
-void QtDisplayPanelGui::closeMainPanel( ) {
-    close_override = true;
-    close( );
-}
-
-void QtDisplayPanelGui::releaseMainPanel( ) {
-    close_override = true;
-    if ( isVisible( ) == false )
-	close( );
-}
 
 // Animation slots.
 

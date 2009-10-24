@@ -11,8 +11,13 @@ int main(int argc, char **argv)
     QApplication app(argc, argv);
 
     char* fn = 0;
-    if (argc > 1)
+    if (argc > 1) {
         fn = argv[1]; 
+    }
+    else {
+       qDebug() << "Usage: 3v <image_name>\n"
+                   "(The image format can be CASA or FITS)";
+    }
 
     Window3D window(fn);
     window.show();

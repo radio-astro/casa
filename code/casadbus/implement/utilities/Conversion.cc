@@ -111,6 +111,9 @@ namespace casa {
 	    }
 	}
 
+
+      /************** causes problems with linux **************
+       ************** without extra includes...  **************/
       /*static void debug_log(const char *format, ...) {
 	    va_list args;
 	    va_start(args, format);
