@@ -258,12 +258,12 @@ public:
   // get the the flux as a double
   // param: which - the component number (0 based)
   // return The flux as a Quantity
-  void getFlux(Vector<Quantity>& fluxQuant, const Int& which);
+  void getFlux(Vector<Quantity>& fluxQuant, const Int& which) const;
   void getFlux(Vector<Quantum<Complex> >& fluxQuant, const Int& which);
 
   // get the associated polarizations as a vector of strings for the
   // specified component. Returned vector always has 4 elements.
-  Vector<String> getStokes(const Int& which);
+  Vector<String> getStokes(const Int& which) const;
 
   // set the flux on the specified components to the specified flux
   // <thrown>
@@ -318,7 +318,7 @@ public:
   void convertRefDirection(const Vector<Int>& which,
 			   MDirection::Types newFrame);
 
-  MDirection getRefDirection(Int which);
+  MDirection getRefDirection(Int which) const;
 
   // set the shape on the specified components to the specified one.
   // <thrown>

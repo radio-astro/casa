@@ -299,7 +299,7 @@ void ComponentList::setLabel(const Vector<Int>& which,
   DebugAssert(ok(), AipsError);
 }
 
-void ComponentList::getFlux(Vector<Quantity>& fluxQuant, const Int& which) {
+void ComponentList::getFlux(Vector<Quantity>& fluxQuant, const Int& which) const {
    SkyComponent comp = component(which);
    // each element in the returned vector represents a different polarization.
    // NumericTraits::Conjugate is just a confusing way of saying Complex if you
@@ -337,7 +337,7 @@ void ComponentList::setFlux(const Vector<Int>& which,
   DebugAssert(ok(), AipsError);
 }
 
-Vector<String> ComponentList::getStokes(const Int& which) {
+Vector<String> ComponentList::getStokes(const Int& which) const {
     SkyComponent comp = component(which);
     ComponentType::Polarisation stokesType = comp.flux().pol();
     Vector<String> polarization(4);
@@ -436,8 +436,8 @@ void ComponentList::convertRefDirection(const Vector<Int>& which,
   DebugAssert(ok(), AipsError);
 }
 
-MDirection ComponentList::getRefDirection(Int which) {
-    ComponentShape& compShape = component(which).shape();
+MDirection ComponentList::getRefDirection(Int which) const {
+    const ComponentShape& compShape = component(which).shape();
     MDirection refDir = compShape.refDirection();
     return refDir;
 }

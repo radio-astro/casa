@@ -481,12 +481,9 @@ Bool ImageUtilities::deconvolveFromBeam(
         }
         return False;
     }
-    //
-    // os << LogIO::NORMAL << "Deconvolving gaussian fit from beam" << LogIO::POST;
     majorFit = majorOut;
     minorFit = minorOut;
     paFit = paOut;
-    //
     return isPointSource;
 }
 

@@ -101,7 +101,7 @@ namespace casa {
 
             // Do the fit. If componentList is specified, store the fitted components in
             // that object.
-            ComponentList fit() const; 
+            ComponentList fit();
 
         private:
 
@@ -111,7 +111,7 @@ namespace casa {
             uInt chan;
             String stokesString, mask, residual, model;
             Vector<Float> includePixelRange, excludePixelRange;
-            ComponentList estimates;
+            ComponentList estimates, results;
             Vector<String> fixed;
 
             // does the lion's share of constructing the object, ie checks validity of
@@ -130,7 +130,34 @@ namespace casa {
 
             // check the validity of the image-related parameters.
             void _checkImageParameterValidity() const;
-  
+
+            // summarize the results in a nicely formatted string
+            String _resultsToString() const;
+
+            // summarize the position details in a nicely formatted string
+            String _positionToString(const uInt compNumber) const;
+
+            //summarize the size details in a nicely formatted string
+            String _sizeToString(const uInt compNumber) const;
+
+            // summarize gaussian details in a nicely formatted string
+            String _gaussianToString(
+            	Quantity major, Quantity minor, Quantity posangle,
+            	Quantity majorErr, Quantity minorErr, Quantity posanErr,
+            	Bool includeUncertainties = True
+            ) const;
+
+            String _fluxToString(uInt compNumber) const;
+
+            String _spectrumToString(uInt compNumber) const;
+
+
+			//Round a number to 2 or 3 significant digits for printing
+            // If number is n>3.2*10**e, 2 digits; if 1<n<3.2*10**e, 3 digits
+            Double _round(Double number) const;
+
+            // return the precision for printing
+            uInt _precision(const Vector<Double>& pair1, const Vector<Double>& pair2) const;
     };
 }
 
