@@ -7115,7 +7115,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
       }
 
       plotter->release( panel_id.getInt( ) );
-      plotter->scatter(dbus::af(uvDistance),dbus::af(weights),"blue","","hexagon",4);
+      plotter->scatter(dbus::af(uvDistance),dbus::af(weights),"blue","","hexagon",4,-1,panel_id.getInt( ));
 
     }
     
