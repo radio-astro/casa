@@ -4440,27 +4440,3 @@ vector<float> STMath::getFSCalibratedSpectra( CountedPtr<Scantable>& sig,
 
   return sp ;
 }
-
-CountedPtr<Scantable> STMath::pressedOut( const casa::CountedPtr<Scantable> &in,
-                                          const float numpoly,
-                                          const float radius,
-                                          const float threshold ) 
-{
-  // scan pattern analysis
-
-
-  // for each channel
-  int nchan = in->nchan() ;
-  for ( int i = 0 ; i < nchan ; i++ ) {
-    // smoothing
-    
-    // get dTij
-    
-    // polynomial fitting
-    
-    // remove scanning effect from the map
-
-  }
-
-  return in ;
-}

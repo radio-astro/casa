@@ -1470,7 +1470,8 @@ class scantable(Scantable):
         print_log()
         return s
 
-    def smooth(self, kernel="hanning", width=5.0, insitu=None):
+    #def smooth(self, kernel="hanning", width=5.0, insitu=None):
+    def smooth(self, kernel="hanning", width=5.0, plot=False, insitu=None):
         """
         Smooth the spectrum by the specified kernel (conserving flux).
         Parameters:
@@ -1482,6 +1483,9 @@ class scantable(Scantable):
                         For 'gaussian' it is the Full Width Half
                         Maximum. For 'boxcar' it is the full width.
                         For 'rmedian' it is the half width.
+            plot:       plot the original and the smoothed spectra.
+                        In this each indivual fit has to be approved, by
+                        typing 'y' or 'n'
             insitu:     if False a new scantable is returned.
                         Otherwise, the scaling is done in-situ
                         The default is taken from .asaprc (False)
@@ -1491,8 +1495,48 @@ class scantable(Scantable):
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
+
+        if plot: orgscan = self.copy()
+
         s = scantable(self._math._smooth(self, kernel.lower(), width))
         s._add_history("smooth", varlist)
+
+        if plot:
+            if rcParams['plotter.gui']:
+                from asap.asaplotgui import asaplotgui as asaplot
+            else:
+                from asap.asaplot import asaplot
+            self._p=asaplot()
+            self._p.set_panels()
+            ylab=s._get_ordinate_label()
+            #self._p.palette(0,["#777777","red"])
+            for r in xrange(s.nrow()):
+                xsm=s._getabcissa(r)
+                ysm=s._getspectrum(r)
+                xorg=orgscan._getabcissa(r)
+                yorg=orgscan._getspectrum(r)
+                self._p.clear()
+                self._p.hold()
+                self._p.set_axes('ylabel',ylab)
+                self._p.set_axes('xlabel',s._getabcissalabel(r))
+                self._p.set_axes('title',s._getsourcename(r))
+                self._p.set_line(label='Original',color="#777777")
+                self._p.plot(xorg,yorg)
+                self._p.set_line(label='Smoothed',color="red")
+                self._p.plot(xsm,ysm)
+                ### Ugly part for legend
+                for i in [0,1]:
+                    self._p.subplots[0]['lines'].append([self._p.subplots[0]['axes'].lines[i]])
+                self._p.release()
+                ### Ugly part for legend
+                self._p.subplots[0]['lines']=[]
+                res = raw_input("Accept smoothing ([y]/n): ")
+                if res.upper() == 'N':
+                    s._setspectrum(yorg, r)
+            self._p.unmap()
+            self._p = None
+            del orgscan
+
         print_log()
         if insitu: self._assign(s)
         else: return s
@@ -1554,10 +1598,18 @@ class scantable(Scantable):
                 f.y = self._getspectrum(r)
                 f.data = None
                 f.fit()
-                workscan._setspectrum(f.fitter.getresidual(), r)
                 fpar = f.get_parameters()
+                if plot:
+                    f.plot(residual=True)
+                    x = raw_input("Accept fit ( [y]/n ): ")
+                    if x.upper() == 'N':
+                        self.blpars.append(None)
+                        continue
+                workscan._setspectrum(f.fitter.getresidual(), r)
                 self.blpars.append(fpar)
-                
+            if plot:
+                f._p.unmap()
+                f._p = None
             #f.set_scan(self, mask)
             #s = f.auto_fit(insitu, plot=plot)
             ## Save parameters of baseline fits as a class attribute.

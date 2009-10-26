@@ -316,19 +316,6 @@ public:
 		 const std::string& avmode = "SCAN" )
     throw (casa::AipsError) ;
 
-  /***
-   * "Pressed-Out" method (Sofe & Reich 1979)
-   * @param input scantable
-   * @param order of polynomial fitting function
-   * @param smoothing beam radius [arcsec]
-   * @param threshold valus in the unit of sigma (standard deviation)
-   ***/
-  casa::CountedPtr<Scantable>
-    pressedOut( const casa::CountedPtr<Scantable> &in,
-                const float numpoly,
-                const float radius,
-                const float threshold ) ;
-
 private:
   casa::CountedPtr<Scantable>  applyToPol( const casa::CountedPtr<Scantable>& in,
                                            STPol::polOperation fptr,

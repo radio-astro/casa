@@ -900,6 +900,7 @@ def almacal( scantab, scannos=[], calmode='none', verify=False ):
         scantab:       scantable
         scannos:       list of scan number
         calmode:       calibration mode
+
         verify:        verify calibration     
     """
     from asap._asap import stmath
@@ -908,3 +909,121 @@ def almacal( scantab, scannos=[], calmode='none', verify=False ):
     ssub = scantab.get_scan( scannos )
     scal = scantable( stm.cwcal( ssub, calmode, antname ) )
     return scal
+
+### Start mod: 2009.10.16 kana ###
+def splitant(filename, outprefix='',overwrite=False):
+    """
+    Split Measurement set by antenna name, save data as a scantables,
+    and return a list of filename.
+    Notice this method can only be available from CASA. 
+    Prameter
+       filename:    the name of Measurement set to be read. 
+       outprefix:   the prefix of output scantable name.
+                    the names of output scantable will be
+                    outprefix.antenna1, outprefix.antenna2, ....
+                    If not specified, outprefix = filename is assumed.
+       overwrite    If the file should be overwritten if it exists.
+                    The default False is to return with warning
+                    without writing the output. USE WITH CARE.
+                    
+    """
+    # Import the table toolkit from CASA
+    try:
+        import casac
+    except ImportError:
+        if rcParams['verbose']:
+            #print "failed to load casa"
+            print_log()
+            asaplog.push("failed to load casa")
+            print_log('ERROR')
+        else: raise
+        return False
+    try:
+        tbtool = casac.homefinder.find_home_by_name('tableHome')
+        tb = tbtool.create()
+        tb2 = tbtool.create()
+    except:
+        if rcParams['verbose']:
+            #print "failed to load a table tool:\n", e
+            print_log()
+            asaplog.push("failed to load table tool")
+            print_log('ERROR')
+        else: raise
+        return False
+    # Check the input filename
+    if isinstance(filename, str):
+        import os.path
+        filename = os.path.expandvars(filename)
+        filename = os.path.expanduser(filename)
+        if not os.path.exists(filename):
+            s = "File '%s' not found." % (filename)
+            if rcParams['verbose']:
+                print_log()
+                asaplog.push(s)
+                print_log('ERROR')
+                return
+            raise IOError(s)
+        # check if input file is MS
+        if not os.path.isdir(filename) \
+               or not os.path.exists(filename+'/ANTENNA') \
+               or not os.path.exists(filename+'/table.f1'): 
+            s = "File '%s' is not a Measurement set." % (filename)
+            if rcParams['verbose']:
+                print_log()
+                asaplog.push(s)
+                print_log('ERROR')
+                return
+            raise IOError(s)
+    else:
+        s = "The filename should be string. "
+        if rcParams['verbose']:
+            print_log()
+            asaplog.push(s)
+            print_log('ERROR')
+            return
+        raise TypeError(s)
+    # Check out put file name
+    outname=''
+    if len(outprefix) > 0: prefix=outprefix+'.'
+    else:
+        prefix=filename
+    # Now do the actual splitting.
+    outfiles=[]
+    tmpms="temp_antsplit.ms"
+    if os.path.exists(tmpms):
+        ans=raw_input('Temporal file '+tmpms+' exists. Delete it and continue? [y/N]: ')
+        if ans.upper() == 'Y':
+            os.system('rm -rf '+tmpms)
+            asaplog.push('The file '+tmpms+' deleted.')
+        else:
+            asaplog.push('Exit without splitting.')
+            return
+    tb.open(tablename=filename+'/ANTENNA',nomodify=True)
+    nant=tb.nrows()
+    antnames=tb.getcol('NAME',0,nant,1)
+    antpos=tb.getcol('POSITION',0,nant,1).transpose()
+    tb.close()
+    tb.open(tablename=filename,nomodify=True)
+    ant1=tb.getcol('ANTENNA1',0,-1,1)
+    for antid in set(ant1):
+        qstr="ANTENNA1 == "+str(antid)
+        stab = tb.queryC(qstr)
+        ctab = stab.copy(tmpms,deep=True)
+        stab.close()
+        ctab.close()
+        scan=scantable(tmpms,False)
+        outname=prefix+antnames[antid]+'.asap'
+        scan.save(outname,format='ASAP',overwrite=overwrite)
+        # Modify scantable header
+        tb2.open(tablename=outname,nomodify=False)
+        tb2.putkeyword(keyword='AntennaName',value=antnames[antid])
+        tb2.putkeyword(keyword='AntennaPosition',value=antpos[antid])
+        tb2.flush()
+        tb2.close()
+        del scan, ctab, stab
+        outfiles.append(outname)
+    tb.close()
+    del tb, tb2
+    os.system('rm -rf '+tmpms)
+    return outfiles
+### End mod ######################
