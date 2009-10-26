@@ -155,7 +155,6 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
   const ROScalarColumn<Int> feed1(msc_p.feed1());
   const ROScalarColumn<Int> feed2(msc_p.feed2());
   const ROScalarColumn<Int> obsID(msc_p.observationId());
-  const ROScalarColumn<Int> arrID(msc_p.arrayId());
 
   // Use a time ordered index to minimize the number of calls to uvw_an.
   // TODO: use field as a secondary sort key.
@@ -175,9 +174,7 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
   logSink() << LogIO::DEBUG1 << "timeRes_p: " << timeRes_p << LogIO::POST;
 
   try{
-    uInt oldObsID = obsID(tOI[0]);
-    uInt oldArrID = arrID(tOI[0]);
-    Bool oldWsrtConvention = (msc_p.observation().telescopeName()(oldObsID) ==
+    Bool oldWsrtConvention = (msc_p.observation().telescopeName()(obsID(tOI[0])) ==
                               "WSRT");
 
     // Ensure a call to uvw_an on the 1st iteration.
@@ -188,17 +185,13 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
       uInt   toir = tOI[row];
       Double currTime = timeCentMeas(toir).get(sec).getValue();
       Int    currFld  = fieldID(toir);
-      Bool   newObsID = obsID(toir);
-      Bool   newArrID = arrID(toir);
+      Bool   newWsrtConvention = (msc_p.observation().telescopeName()(obsID(toir)) ==
+                                  "WSRT");
 
       if(currTime - oldTime > timeRes_p || currFld != oldFld
-         || newObsID != oldObsID || newArrID != oldArrID){
+         || newWsrtConvention != oldWsrtConvention){
         oldTime = currTime;
         oldFld  = currFld;
-        oldObsID = newObsID;
-        oldArrID = newArrID;
-        Bool newWsrtConvention = (msc_p.observation().telescopeName()(newObsID) ==
-                                  "WSRT");
 
         if(newWsrtConvention != oldWsrtConvention){
           logSink() << LogIO::WARN

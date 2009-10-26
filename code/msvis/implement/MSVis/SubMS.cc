@@ -161,6 +161,16 @@ namespace casa {
       chanStart_p = chansel.column(1);
       nchan_p     = chansel.column(2);
       chanStep_p  = chansel.column(3);
+
+      // SubMS uses a different meaning for nchan_p from MSSelection.  For
+      // SubMS it is the # of output channels for each output spw.  For
+      // MSSelection it is end input chan - start input chan + 1 for each
+      // output spw.
+      for(uInt k = 0; k < nchan_p.nelements(); ++k){
+        nchan_p[k] = (nchan_p[k] - chanStart_p[k] + 1) / chanStep_p[k];
+        if(nchan_p[k] < 1)
+          nchan_p[k] = 1;
+      }
     }
     else{                            // select everything and rely on widths.
       ROMSSpWindowColumns mySpwTab(ms_p.spectralWindow());
@@ -193,20 +203,6 @@ namespace casa {
       chanStep_p = widths;
     }
     
-    // SubMS uses a different meaning for nchan_p from MSSelection.  For
-    // SubMS it is the # of output channels for each output spw.  For
-    // MSSelection it is end input chan - start input chan + 1 for each
-    // output spw.
-    for(uInt k = 0; k < nchan_p.nelements(); ++k){
-      // This expression works for both cases, though.  For MSSelection nchan_p
-      // starts as the stop channel.  For the blank spw default, chanStart_p is
-      // 0.
-      nchan_p[k] = (nchan_p[k] - chanStart_p[k] + 1) / chanStep_p[k];
-      if(nchan_p[k] < 1)
-        nchan_p[k] = 1;
-    }
-
-
     averageChannel_p = averchan;
     return true;
   }
@@ -1065,7 +1061,7 @@ namespace casa {
       if(maxchan > numChan(spw_uniq_p[k])){
         os << LogIO::SEVERE
            << " Channel settings wrong; exceeding number of channels in spw "
-           << spw_uniq_p[k] + 1 << LogIO::POST;
+           << spw_uniq_p[k] << LogIO::POST;
         return False;
       }
     }
