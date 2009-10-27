@@ -8920,30 +8920,23 @@ Int Imager::interactivemask(const String& image, const String& mask,
      clean_panel_p = panel_id.getInt( );
    }
 
-   if ( mask_id_p != 0 ) {
-     viewer_p->unload(mask_id_p);
-     mask_id_p = 0;
-   }
+   if ( image_id_p == 0 || mask_id_p == 0 ) {
+      dbus::variant image_id = viewer_p->load(image, "raster",clean_panel_p);
+      if ( image_id.type() != dbus::variant::INT ) {
+	 os << "failed to load image" << LogIO::WARN << LogIO::POST;
+	 return False;
+      }
+      image_id_p = image_id.getInt( );
 
-   if ( image_id_p != 0 ) {
-     viewer_p->unload(image_id_p);
-     image_id_p = 0;
+      dbus::variant mask_id = viewer_p->load(mask,"contour",clean_panel_p);
+      if ( mask_id.type() != dbus::variant::INT ) {
+	 os << "failed to load mask" << LogIO::WARN << LogIO::POST;
+	 return False;
+      }
+      mask_id_p = mask_id.getInt( );
+   } else {
+      viewer_p->reload( clean_panel_p );
    }
-
- 
-   dbus::variant image_id = viewer_p->load(image, "raster",clean_panel_p);
-   if ( image_id.type() != dbus::variant::INT ) {
-     os << "failed to load image" << LogIO::WARN << LogIO::POST;
-     return False;
-   }
-   image_id_p = image_id.getInt( );
-
-   dbus::variant mask_id = viewer_p->load(mask,"contour",clean_panel_p);
-   if ( mask_id.type() != dbus::variant::INT ) {
-     os << "failed to load mask" << LogIO::WARN << LogIO::POST;
-     return False;
-   }
-   mask_id_p = mask_id.getInt( );
 
    
    casa::dbus::record options;
@@ -8956,7 +8949,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
     DBus::MessageSlot filter;
     filter = new DBus::Callback<interactive_clean_callback,bool,const DBus::Message &>( mycb, &interactive_clean_callback::callback );
     casa::DBusSession::instance( ).connection( ).add_filter( filter );
-    casa::dbus::variant res = viewer_p->start_interact(image_id,clean_panel_p);
+    casa::dbus::variant res = viewer_p->start_interact( dbus::variant(), clean_panel_p);
     casa::DBusSession::instance( ).dispatcher( ).enter( );
     casa::DBusSession::instance( ).connection( ).remove_filter( filter );
     casa::dbus::variant interact_result = mycb->result( );
