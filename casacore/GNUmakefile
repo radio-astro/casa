@@ -1082,5 +1082,5 @@ apps: apps-msfits apps-fits apps-images apps-measures
 
 ifeq "$(DEP)" "1"
 -include $(CASADEP) $(COMPONENTSDEP) $(COORDINATESDEP) $(LATTICESDEP) $(IMAGESDEP) \
-	$(SCIMATHDEP) $(MEASURESDEP) $(FITSDEP) $(MSDEP) $(MSFITSDEP) $(MIRDEP)
+	$(TABLESDEP) $(SCIMATHDEP) $(MEASURESDEP) $(FITSDEP) $(MSDEP) $(MSFITSDEP) $(MIRDEP)
 endif

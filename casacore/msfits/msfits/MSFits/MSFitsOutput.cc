@@ -233,19 +233,29 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
   // This is needed for WSRT MS's, where the first time in the SYSCAL
   // table is the average at the middle of the observation.
   if (ok && writeSysCal) {
-    Table syscal = handleSysCal (ms, spwids, isSubset);
-
-    os << LogIO::NORMAL << "writing AIPS TY table" << LogIO::POST;
-    ok = writeTY(fitsOutput, ms, syscal, spwidMap, nrspw, combineSpw);
-    if (!ok) {
-      os << LogIO::SEVERE << "Could not write TY table\n" << LogIO::POST;
-    } else {
-      os << LogIO::NORMAL << "Writing AIPS GC table" << LogIO::POST;
-      ok = writeGC(fitsOutput, ms, syscal, spwidMap, nrspw, combineSpw,
-		   sensitivity, refPixelFreq, refFreq, chanbw);
+    if (ms.sysCal().tableDesc().ncolumn() == 0) {
+      os << LogIO::WARN << "MS has no or empty SYSCAL subtable, " << 
+        "could not write AIPS TY table and AIPS GC table" << LogIO::POST;
     }
-    if (!ok) {
-      os << LogIO::SEVERE << "Could not write GC table\n" << LogIO::POST;
+    else if (ms.sysCal().nrow() == 0) {
+      os << LogIO::WARN << "MS has empty SYSCAL subtable, " <<
+        "could not write AIPS TY table and AIPS GC table" << LogIO::POST;
+    }
+    else {
+      Table syscal = handleSysCal (ms, spwids, isSubset);
+    
+      os << LogIO::NORMAL << "writing AIPS TY table" << LogIO::POST;
+      ok = writeTY(fitsOutput, ms, syscal, spwidMap, nrspw, combineSpw);
+      if (!ok) {
+        os << LogIO::SEVERE << "Could not write TY table\n" << LogIO::POST;
+      } else {
+        os << LogIO::NORMAL << "Writing AIPS GC table" << LogIO::POST;
+        ok = writeGC(fitsOutput, ms, syscal, spwidMap, nrspw, combineSpw,
+                     sensitivity, refPixelFreq, refFreq, chanbw);
+      }
+      if (!ok) {
+        os << LogIO::SEVERE << "Could not write GC table\n" << LogIO::POST;
+      }
     }
   }
 
