@@ -93,7 +93,8 @@ namespace casa {
                 const Vector<Float>& includepix = Vector<Float>(0),
                 const Vector<Float>& excludepix = Vector<Float>(0),
                 const String& residualInp="", const String& modelInp="",
-                const String& estiamtesFilename=""
+                const String& estiamtesFilename="", const String& logfile="",
+                const Bool& append=True
             ); 
 
             // destructor
@@ -109,10 +110,11 @@ namespace casa {
             ImageInterface<Float> *image;
             ImageRegion imRegion;
             uInt chan;
-            String stokesString, mask, residual, model;
+            String stokesString, mask, residual, model, logfileName;
             Vector<Float> includePixelRange, excludePixelRange;
             ComponentList estimates, results;
             Vector<String> fixed;
+            Bool logfileAppend;
 
             // does the lion's share of constructing the object, ie checks validity of
             // inputs, etc.
@@ -158,6 +160,9 @@ namespace casa {
 
             // return the precision for printing
             uInt _precision(const Vector<Double>& pair1, const Vector<Double>& pair2) const;
+
+            // write output to log file
+            void _writeLogfile(const String& output) const;
     };
 }
 
