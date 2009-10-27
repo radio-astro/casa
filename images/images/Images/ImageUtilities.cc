@@ -856,162 +856,157 @@ Quantum<Double> ImageUtilities::pixelWidthToWorld (LogIO& os,
    return q;
 }
 
+void ImageUtilities::addDegenerateAxes(
+	LogIO& os, PtrHolder<ImageInterface<Float> >& outImage,
+	ImageInterface<Float>& inImage, const String& outFile,
+	Bool direction, Bool spectral, const String& stokes,
+	Bool linear, Bool tabular, Bool overwrite
+) {
+	// Verify output file
+	if (!overwrite && !outFile.empty()) {
+		NewFile validfile;
+		String errmsg;
+		if (!validfile.valueOK(outFile, errmsg)) {
+			os << errmsg << LogIO::EXCEPTION;
+		}
+	}
+	IPosition shape = inImage.shape();
+	CoordinateSystem cSys = inImage.coordinates();
+	IPosition keepAxes = IPosition::makeAxisPath(shape.nelements());
+	Int afterCoord;
+	uInt nExtra = 0;
+	if (direction) {
+		afterCoord = -1;
+		Int iC = cSys.findCoordinate(Coordinate::DIRECTION, afterCoord);
+		if (iC<0) {
+			CoordinateUtil::addDirAxes(cSys);
+			nExtra += 2;
+		} else {
+			os << "Image already contains a DirectionCoordinate" << LogIO::EXCEPTION;
+		}
+	}
 
-void ImageUtilities::addDegenerateAxes (LogIO& os, 
-                                        PtrHolder<ImageInterface<Float> >& outImage,
-                                        ImageInterface<Float>& inImage,
-                                        const String& outFile, Bool direction,
-                                        Bool spectral, const String& stokes,
-                                        Bool linear, Bool tabular, Bool overwrite)
-{
-// Verify output file
-      
-   if (!overwrite && !outFile.empty()) {
-      NewFile validfile;
-      String errmsg;
-      if (!validfile.valueOK(outFile, errmsg)) {
-          os << errmsg << LogIO::EXCEPTION;
-      }
-   }
-//
-   IPosition shape = inImage.shape();
-   CoordinateSystem cSys = inImage.coordinates();
-   IPosition keepAxes = IPosition::makeAxisPath(shape.nelements());
-   Int afterCoord;
-   uInt nExtra = 1;
-//
-   Bool didSomething = False;
-   if (direction) {
-      afterCoord = -1;
+	if (spectral) {
+		afterCoord = -1;
+		Int iC = cSys.findCoordinate(Coordinate::SPECTRAL, afterCoord);
+		if (iC<0) {
+			CoordinateUtil::addFreqAxis(cSys);
+			nExtra++;
+		} else {
+			os << "Image already contains a SpectralCoordinate" << LogIO::EXCEPTION;
+		}
+	}
 
-      Int iC = cSys.findCoordinate(Coordinate::DIRECTION, afterCoord);
-      if (iC<0) {
-         CoordinateUtil::addDirAxes(cSys);
-         nExtra = 2;
-         didSomething = True;
-      } else {
-         os << "Image already contains a DirectionCoordinate" << LogIO::EXCEPTION;
-      }
-   }
-//
-   if (spectral) {
-      afterCoord = -1;
-      Int iC = cSys.findCoordinate(Coordinate::SPECTRAL, afterCoord);
-      if (iC<0) {
-         CoordinateUtil::addFreqAxis(cSys);
-         didSomething = True;
-      } else {
-         os << "Image already contains a SpectralCoordinate" << LogIO::EXCEPTION;
-      }
-   }
-//
-   if (!stokes.empty()) {
-      afterCoord = -1;
-      Int iC = cSys.findCoordinate(Coordinate::STOKES, afterCoord);
-      if (iC<0) {
-         Vector<Int> which(1);
-         String tmp = upcase(stokes);
-         which(0) = Stokes::type(tmp);
-         StokesCoordinate sc(which);
-         cSys.addCoordinate(sc);
-//
-         didSomething = True;
-      } else {
-         os << "Image already contains a StokesCoordinate" << LogIO::EXCEPTION;
-      }
-   }
-   if (linear) {
-      afterCoord = -1;
-      Int iC = cSys.findCoordinate(Coordinate::LINEAR, afterCoord);
-      if (iC<0) {
-         Vector<String> names(1);
-         Vector<String> units(1);
-         Vector<Double> refVal(1);
-         Vector<Double> refPix(1);
-         Vector<Double> incr(1);
-         names(0) = "Axis1";
-         units(0) = "km";
-         refVal(0) = 0.0;
-         refPix(0) = 0.0;
-         incr(0) = 1.0;
-         Matrix<Double> pc(1,1);
-         pc.set(0.0);
-         pc.diagonal() = 1.0;
-         LinearCoordinate lc(names, units, refVal, incr, pc, refPix);
-         cSys.addCoordinate(lc);
-//  
-         didSomething = True;
-      } else {
-         os << "Image already contains a LinearCoordinate" << LogIO::EXCEPTION;
-      }
-   }
-//
-   if (tabular) {
-      afterCoord = -1;
-      Int iC = cSys.findCoordinate(Coordinate::TABULAR, afterCoord);
-      if (iC<0) {
-         TabularCoordinate tc;
-         cSys.addCoordinate(tc);
-//  
-         didSomething = True;
-      } else {
-         os << "Image already contains a TabularCoordinate" << LogIO::EXCEPTION;
-      }
-   }
-//
-   if (didSomething) {
-      uInt n = shape.nelements();
-      shape.resize(n+nExtra,True);
-      for (uInt i=0; i<nExtra; i++) {
-         shape(n+i) = 1;
-      }
-   } else {
-      os << "No degenerate axes specified" << LogIO::EXCEPTION;
-   }
-//       
-   if (outFile.empty()) {
-      os << LogIO::NORMAL << "Creating (temp)image of shape "
-         << shape << LogIO::POST;
-      outImage.set(new TempImage<Float>(shape, cSys));
-   } else {
-      os << LogIO::NORMAL << "Creating image '" << outFile << "' of shape "
-         << shape << LogIO::POST;
-      outImage.set(new PagedImage<Float>(shape, cSys, outFile));
-   }   
-   ImageInterface<Float>* pOutImage = outImage.ptr();
-         
-// Generate output masks
-         
-   Vector<String> maskNames = inImage.regionNames(RegionHandler::Masks);
-   const uInt nMasks = maskNames.nelements();
-   if (nMasks > 0) { 
-      for (uInt i=0; i<nMasks; i++) {
-         pOutImage->makeMask(maskNames(i), True, False, True);
-      }
-   }
-   pOutImage->setDefaultMask(inImage.getDefaultMask());
+	if (!stokes.empty()) {
+		afterCoord = -1;
+		Int iC = cSys.findCoordinate(Coordinate::STOKES, afterCoord);
+		if (iC<0) {
+			Vector<Int> which(1);
+			String tmp = upcase(stokes);
+			which(0) = Stokes::type(tmp);
+			StokesCoordinate sc(which);
+			cSys.addCoordinate(sc);
+			nExtra++;
+		} else {
+			os << "Image already contains a StokesCoordinate" << LogIO::EXCEPTION;
+		}
+	}
+	if (linear) {
+		afterCoord = -1;
+		Int iC = cSys.findCoordinate(Coordinate::LINEAR, afterCoord);
+		if (iC<0) {
+			Vector<String> names(1);
+			Vector<String> units(1);
+			Vector<Double> refVal(1);
+			Vector<Double> refPix(1);
+			Vector<Double> incr(1);
+			names(0) = "Axis1";
+			units(0) = "km";
+			refVal(0) = 0.0;
+			refPix(0) = 0.0;
+			incr(0) = 1.0;
+			Matrix<Double> pc(1,1);
+			pc.set(0.0);
+			pc.diagonal() = 1.0;
+			LinearCoordinate lc(names, units, refVal, incr, pc, refPix);
+			cSys.addCoordinate(lc);
+			nExtra++;
+		} else {
+			os << "Image already contains a LinearCoordinate" << LogIO::EXCEPTION;
+		}
+	}
 
-// Generate SubImage to copy the data into
-   
-   AxesSpecifier axesSpecifier(keepAxes);
-   SubImage<Float> subImage(*pOutImage, True, axesSpecifier);
+	if (tabular) {
+		afterCoord = -1;
+		Int iC = cSys.findCoordinate(Coordinate::TABULAR, afterCoord);
+		if (iC<0) {
+			TabularCoordinate tc;
+			cSys.addCoordinate(tc);
+			nExtra++;
+		} else {
+			os << "Image already contains a TabularCoordinate" << LogIO::EXCEPTION;
+		}
+	}
 
-// Copy masks (directly, can't do via SubImage)
-      
-   if (nMasks > 0) {
-      for (uInt i=0; i<nMasks; i++) {
-         ImageUtilities::copyMask(*pOutImage, inImage, maskNames(i), maskNames(i),
-                                  axesSpecifier);  
-      }  
-   }
-   
-// Copy data
-    
-   subImage.copyData(inImage);
- 
-// Copy miscellaneous
-   
-   ImageUtilities::copyMiscellaneous(*pOutImage, inImage);
+	if (nExtra > 0) {
+		uInt n = shape.nelements();
+		os << LogIO::WARN << " shape before " << shape.nelements() << LogIO::POST;
+		os << LogIO::WARN << " nExtra " << nExtra << LogIO::POST;
+		os << LogIO::WARN << " n " << n << LogIO::POST;
+
+		shape.resize(n+nExtra,True);
+		for (uInt i=0; i<nExtra; i++) {
+			shape(n+i) = 1;
+		}
+	} else {
+		os << "No degenerate axes specified" << LogIO::EXCEPTION;
+	}
+	os << LogIO::WARN << "csys ndim " << cSys.nPixelAxes() << LogIO::POST;
+	os << LogIO::WARN << "shape ndim " << shape.nelements() << LogIO::POST;
+	if (outFile.empty()) {
+		os << LogIO::NORMAL << "Creating (temp)image of shape "
+			<< shape << LogIO::POST;
+		outImage.set(new TempImage<Float>(shape, cSys));
+	}
+	else {
+		os << LogIO::NORMAL << "Creating image '" << outFile << "' of shape "
+			<< shape << LogIO::POST;
+		outImage.set(new PagedImage<Float>(shape, cSys, outFile));
+	}
+	ImageInterface<Float>* pOutImage = outImage.ptr();
+
+	// Generate output masks
+
+	Vector<String> maskNames = inImage.regionNames(RegionHandler::Masks);
+	const uInt nMasks = maskNames.nelements();
+	if (nMasks > 0) {
+		for (uInt i=0; i<nMasks; i++) {
+			pOutImage->makeMask(maskNames(i), True, False, True);
+		}
+	}
+	pOutImage->setDefaultMask(inImage.getDefaultMask());
+
+	// Generate SubImage to copy the data into
+
+	AxesSpecifier axesSpecifier(keepAxes);
+	SubImage<Float> subImage(*pOutImage, True, axesSpecifier);
+
+	// Copy masks (directly, can't do via SubImage)
+
+	if (nMasks > 0) {
+		for (uInt i=0; i<nMasks; i++) {
+			ImageUtilities::copyMask(*pOutImage, inImage, maskNames(i), maskNames(i),
+					axesSpecifier);
+		}
+	}
+
+	// Copy data
+
+	subImage.copyData(inImage);
+
+	// Copy miscellaneous
+
+	ImageUtilities::copyMiscellaneous(*pOutImage, inImage);
 }
 
 
