@@ -67,7 +67,6 @@
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Slice.h>
-#include <casaqt/PlotterImplementations/PlotterImplementations.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageExpr.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
@@ -168,11 +167,6 @@
 #include <casadbus/plotserver/PlotServerProxy.h>
 #include <casadbus/utilities/BusAccess.h>
 #include <casadbus/session/DBusSession.h>
-
-// required for qwt plotting
-// --- --- --- --- --- --- --- --- ---
-#include <QApplication>
-// --- --- --- --- --- --- --- --- ---
 
 #include <casa/OS/HostInfo.h>
 #include <casa/System/PGPlotter.h>
@@ -299,10 +293,6 @@ traceEvent(1,"Entering imager::defaults",25);
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
-  /*
-  QtApp::init();
-  plotter_p=simplePlotter(Plotter::DEFAULT);
-  */
 
 }
 
@@ -414,9 +404,6 @@ Imager &Imager::operator=(const Imager & other)
   }
   if (pgplotter_p && this != &other) {
     *pgplotter_p = *(other.pgplotter_p);
-  }
-  if (this != &other) {
-    plotter_p = other.plotter_p;
   }
   return *this;
 }
@@ -6496,12 +6483,7 @@ Bool Imager::plotuv(const Bool rotate)
   if(!valid()) return False;
   
   LogIO os(LogOrigin("imager", "plotuv()", WHERE));
-  /*
-  pid_t pId = fork();
-
-  if(pId==0){
-  */
-  if(1){
+  
   this->lock();
   try {
     os << "Plotting uv coverage for currently selected data" << LogIO::POST;
@@ -6589,65 +6571,53 @@ Bool Imager::plotuv(const Bool rotate)
 	 << " arcsec" << LogIO::POST;
     }
     
-
-    Char** lala=0;
-    Int lala1=0;
-    QApplication app(lala1,lala);
-    plotter_p=simplePlotter(Plotter::QWT);
-    /*PGPlotter plotter=getPGPlotter();
-    plotter.env(-maxAbsUV*1.1, +maxAbsUV*1.1, -maxAbsUV*1.1, +maxAbsUV*1.1,
-		Int(1), Int(0));
-    plotter.sci(1);
-    plotter.pt(u,v,-1);
-    */
+   
     if(rotate) {
-      //plotter.lab("U (wavelengths)", "V (wavelengths)", "UV coverage for "
-      //		  +imageName()+" (rotated points in red)");
-      //    plotter.sci(2);
-      // plotter.pt(uRotated, vRotated, -1);
-      plotter_p->setCanvasTitle("UV coverage for "
-				+imageName()+" (rotated points in red)");
-      plotter_p->setAxesLabels("U (wavelengths)","V (wavelengths)" );
-      plotter_p->setSymbol(PlotSymbol::CIRCLE, "red", 8);
-      plotter_p->plotxy(uRotated, vRotated);
+    
+      PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
+      dbus::variant panel_id = plotter->panel( "UV-Coverage for "+imageName(), "U (wavelengths)", "V (wavelengths)", "UV-Plot", "right");
+
+      if ( panel_id.type( ) != dbus::variant::INT ) {
+	os << LogIO::SEVERE << "failed to start plotter" << LogIO::POST;
+	return False;
+      }
+
+      plotter->release( panel_id.getInt( ) );
+      plotter->scatter(dbus::af(u),dbus::af(v),"blue","unrotated","hexagon",6,-1,panel_id.getInt( ));
+      plotter->scatter(dbus::af(uRotated),dbus::af(vRotated),"red","rotated","ellipse",6,-1,panel_id.getInt( ));
 
     }
     else {
-      //plotter.lab("U (wavelengths)", "V (wavelengths)", "UV coverage for "
-      //		  +imageName()+" (conjugate points in red)");
-      plotter_p->setWindowTitle("UV-plot");
-      plotter_p->setCanvasTitle("UV coverage for "
-				+imageName()+" (conjugate points in red)");
-      plotter_p->setAxesLabels("U (wavelengths)","V (wavelengths)" );
-      plotter_p->showLines(False);
-      plotter_p->showSymbols(True);
-      plotter_p->setSymbol(PlotSymbol::CIRCLE, "red", 6);
-      plotter_p->plotxy(u,v,True);
-      Vector<Float> u1=u*Float(-1.0);
-      Vector<Float> v1=v*Float(-1.0);
-      plotter_p->setSymbol(PlotSymbol::CIRCLE, "green", 6);
-      plotter_p->showDefaultHandTools(True);
-      plotter_p->plotxy(u1,v1, True);
-      app.exec();
+       PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
+      dbus::variant panel_id = plotter->panel( "UV-Coverage for "+imageName(), "U (wavelengths)", "V (wavelengths)", "UV-Plot" ,"right");
+
+      if ( panel_id.type( ) != dbus::variant::INT ) {
+	os << LogIO::SEVERE << "failed to start plotter" << LogIO::POST;
+	return False;
+      }
+
+      plotter->release( panel_id.getInt( ) );
+      plotter->scatter(dbus::af(u),dbus::af(v),"blue","uv in data","rect",6,-1,panel_id.getInt( ));
+      u=u*Float(-1.0);
+      v=v*Float(-1.0);
+      plotter->scatter(dbus::af(u),dbus::af(v),"red","conjugate","ellipse",6,-1,panel_id.getInt( ));
+
     }
     
     this->unlock();
-    //exit(0);
+  
   } 
   catch (AipsError x) {
     this->unlock();
-    //exit(0);
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
     return False;
     
   } 
   catch (...) {
-    this->unlock();
-    //exit(0);
-    
+    this->unlock();  
   } 
   this->unlock();
-  }
+  
   
 
   return True;
@@ -6666,7 +6636,11 @@ Bool Imager::plotvis(const String& type, const Int increment)
     os << "Plotting Stokes I visibility for currently selected data"
        << LogIO::POST;
     
+    
     ROMSColumns msc(*mssel_p);
+    Bool hasCorrected=!(msc.correctedData().isNull());
+    Bool hasModel= !(msc.modelData().isNull());
+
     Bool twoPol=True;
     Vector<String> polType=msc.feed().polarizationType()(0);
     if (polType(0)!="X" && polType(0)!="Y" &&
@@ -6723,6 +6697,13 @@ Bool Imager::plotvis(const String& type, const Int increment)
     Vector<Float> modelAmp(nVis); modelAmp=0.0;
     Vector<Float> residualAmp(nVis); residualAmp=0.0;
     Vector<Float> uvDistance(nVis); uvDistance=0.0;
+   
+    if(!hasModel)
+      modelAmp.resize();
+    if(!hasCorrected)
+      correctedAmp.resize();
+    if(!hasCorrected || !hasModel)
+      residualAmp.resize();
     
     Float maxuvDistance=0.0;
     Float maxAmp=0.0;
@@ -6751,25 +6732,31 @@ Bool Imager::plotvis(const String& type, const Int increment)
 		if(twoPol) {
 		  amp(iVis)=sqrt((square(abs(vb.visCube()(0,chn,row)))+
 				  square(abs(vb.visCube()(numCorrPol,chn,row))))/2.0);
-		  correctedAmp(iVis)=
-		    sqrt((square(abs(vb.correctedVisCube()(0,chn,row)))+
-			  square(abs(vb.correctedVisCube()(numCorrPol,chn,row))))/2.0);
-		  modelAmp(iVis)=
-		    sqrt((square(abs(vb.modelVisCube()(0,chn,row)))+
-			  square(abs(vb.modelVisCube()(numCorrPol,chn,row))))/2.0);
-		  residualAmp(iVis)=
-		    sqrt((square(abs(vb.modelVisCube()(0,chn,row)-
-				     vb.correctedVisCube()(0,chn,row)))+
-			  square(abs(vb.modelVisCube()(numCorrPol,chn,row)-
-				     vb.correctedVisCube()(numCorrPol,chn,row))))/2.0);
+		  if(hasCorrected)
+		    correctedAmp(iVis)=
+		      sqrt((square(abs(vb.correctedVisCube()(0,chn,row)))+
+			    square(abs(vb.correctedVisCube()(numCorrPol,chn,row))))/2.0);
+		  if(hasModel)
+		    modelAmp(iVis)=
+		      sqrt((square(abs(vb.modelVisCube()(0,chn,row)))+
+			    square(abs(vb.modelVisCube()(numCorrPol,chn,row))))/2.0);
+		  if(hasCorrected && hasModel)
+		    residualAmp(iVis)=
+		      sqrt((square(abs(vb.modelVisCube()(0,chn,row)-
+				       vb.correctedVisCube()(0,chn,row)))+
+			    square(abs(vb.modelVisCube()(numCorrPol,chn,row)-
+				       vb.correctedVisCube()(numCorrPol,chn,row))))/2.0);
 		}
 		else {
 		  amp(iVis)=abs(vb.visCube()(0,chn,row));
-		  correctedAmp(iVis)=abs(vb.correctedVisCube()(0,chn,row));
-		  modelAmp(iVis)=abs(vb.modelVisCube()(0,chn,row));
-		  residualAmp(iVis)=
-		    abs(vb.modelVisCube()(0,chn,row)-
-			vb.correctedVisCube()(0,chn,row));
+		  if(hasCorrected)
+		    correctedAmp(iVis)=abs(vb.correctedVisCube()(0,chn,row));
+		   if(hasModel)
+		     modelAmp(iVis)=abs(vb.modelVisCube()(0,chn,row));
+		  if(hasCorrected && hasModel) 
+		    residualAmp(iVis)=
+		      abs(vb.modelVisCube()(0,chn,row)-
+			  vb.correctedVisCube()(0,chn,row));
 		}
 		if(uvDistance(iVis)>maxuvDistance) {
 		  maxuvDistance=uvDistance(iVis);
@@ -6777,13 +6764,13 @@ Bool Imager::plotvis(const String& type, const Int increment)
 		if(amp(iVis)>maxAmp) {
 		  maxAmp=amp(iVis);
 		}
-		if(correctedAmp(iVis)>maxCorrectedAmp) {
+		if(hasCorrected && (correctedAmp(iVis)>maxCorrectedAmp)) {
 		  maxCorrectedAmp=correctedAmp(iVis);
 		}
-		if(modelAmp(iVis)>maxModelAmp) {
+		if(hasModel && (modelAmp(iVis)>maxModelAmp)) {
 		  maxModelAmp=modelAmp(iVis);
 		}
-		if(residualAmp(iVis)>maxResidualAmp) {
+		if((hasModel&&hasCorrected) && (residualAmp(iVis)>maxResidualAmp)) {
 		  maxResidualAmp=residualAmp(iVis);
 		}
 		++iVis;
@@ -6800,23 +6787,19 @@ Bool Imager::plotvis(const String& type, const Int increment)
       return False;
     }
     
-    //    PGPlotter plotter=getPGPlotter();
 
 
-    Char** lala=0;
-    Int lala1=0;
-    QApplication app(lala1,lala);
-    plotter_p=simplePlotter(Plotter::QWT); 
+    
 
     Float Ymax(0.0);
 
-    if (type.contains("corrected"))
+    if (type.contains("corrected") && hasCorrected)
       if(maxCorrectedAmp>Ymax) Ymax = maxCorrectedAmp;
 
-    if (type.contains("model"))
+    if (type.contains("model") && hasModel)
       if(maxModelAmp>Ymax)     Ymax = maxModelAmp;
 
-    if (type.contains("residual"))
+    if (type.contains("residual") && (hasModel && hasCorrected))
       if(maxResidualAmp>Ymax)  Ymax = maxResidualAmp;
 
     if (type.contains("observed"))
@@ -6825,64 +6808,35 @@ Bool Imager::plotvis(const String& type, const Int increment)
     if ((type=="all") || (type == ""))
       {
 	if (maxAmp > Ymax)       Ymax = maxAmp;
-	if(maxCorrectedAmp>Ymax) Ymax = maxCorrectedAmp;
-	if(maxModelAmp>Ymax)     Ymax = maxModelAmp;
-	if(maxResidualAmp>Ymax)  Ymax = maxResidualAmp;
+	if(hasCorrected && (maxCorrectedAmp>Ymax)) Ymax = maxCorrectedAmp;
+	if(hasModel && (maxModelAmp>Ymax))     Ymax = maxModelAmp;
+	if((hasModel && hasCorrected) && maxResidualAmp>Ymax)  Ymax = maxResidualAmp;
       }
-    /*
-      
-    plotter.sci(1);
-    plotter.env(0.0, +maxuvDistance*1.15, 0, +Ymax*1.15,
-		Int(0), Int(0));
-    plotter.lab("UVDistance (wavelengths)", "Amplitude",
-		"Stokes I Visibility for "+imageName());
-    */
+    PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
+    dbus::variant panel_id = plotter->panel( "Stokes I Visibility for "+imageName(),"UVDistance (wavelengths)" , "Amplitude", "Vis-Plot", "right");
+    
+    if ( panel_id.type( ) != dbus::variant::INT ) {
+      os << LogIO::SEVERE << "failed to start plotter" << LogIO::POST;
+      return False;
+    }
 
-     plotter_p->setWindowTitle("Vis-plot");
-     plotter_p->setCanvasTitle("Stokes I Visibility for "+imageName());
-     plotter_p->setAxesLabels("UVDistance (wavelengths)","Amplitude" );
-     plotter_p->showLines(False);
-     plotter_p->showSymbols(True);
-     plotter_p->setSymbol(PlotSymbol::CIRCLE, "blue", 4);
-     plotter_p->showDefaultHandTools(True);
-
+    plotter->release( panel_id.getInt( ) );
 
     if(type=="all"||type==""||type.contains("observed")) {
-      plotter_p->setSymbol(PlotSymbol::CIRCLE, "blue", 4);
-      PlotAnnotationPtr txtptr=plotter_p->annotation(1.02*maxuvDistance, 1.10*Ymax, "observed");
-      PlotFontPtr fntptr=txtptr->font();
-      fntptr->setColor("blue");
-      txtptr->setFont(fntptr);
-
-      plotter_p->plotxy(uvDistance,amp);
+      plotter->scatter(dbus::af(uvDistance),dbus::af(amp),"blue","observed","hexagon",6,-1,panel_id.getInt( ));
       
     }
-    if(type=="all"||type==""||type.contains("corrected")) {
-      plotter_p->setSymbol(PlotSymbol::CIRCLE, "red", 4);
-      PlotAnnotationPtr txtptr=plotter_p->annotation(1.02*maxuvDistance, 1.05*Ymax, "corrected");
-      PlotFontPtr fntptr=txtptr->font();
-      fntptr->setColor("red");
-      txtptr->setFont(fntptr);
-      plotter_p->plotxy(uvDistance,correctedAmp);
+    if((type=="all"||type==""||type.contains("corrected")) && hasCorrected) {
+      plotter->scatter(dbus::af(uvDistance),dbus::af(correctedAmp),"red","corrected","ellipse",6,-1,panel_id.getInt( ));
     }
-    if(type=="all"||type==""||type.contains("model")) {
-      plotter_p->setSymbol(PlotSymbol::CIRCLE, "green", 4);
-      PlotAnnotationPtr txtptr=plotter_p->annotation(1.02*maxuvDistance, 1.00*Ymax, "model");
-      PlotFontPtr fntptr=txtptr->font();
-      fntptr->setColor("green");
-      txtptr->setFont(fntptr);
-      plotter_p->plotxy(uvDistance,modelAmp);
+    if((type=="all"||type==""||type.contains("model")) && hasModel) {
+      plotter->scatter(dbus::af(uvDistance),dbus::af(modelAmp),"green","model","rect",6,-1,panel_id.getInt( ));
     }
-    if(type=="all"||type==""||type.contains("residual")) {
-      plotter_p->setSymbol(PlotSymbol::CIRCLE, "yellow", 4);
-      PlotAnnotationPtr txtptr=plotter_p->annotation(1.02*maxuvDistance, 0.95*Ymax, "residual");
-      PlotFontPtr fntptr=txtptr->font();
-      fntptr->setColor("yellow");
-      txtptr->setFont(fntptr);
-      plotter_p->plotxy(uvDistance,residualAmp);
+    if((type=="all"||type==""||type.contains("residual")) && (hasCorrected && hasModel)) {
+      plotter->scatter(dbus::af(uvDistance),dbus::af(residualAmp),"yellow","residual","cross",6,-1,panel_id.getInt( ));
     }
 
-    app.exec();
+   
 
 
     
@@ -6998,37 +6952,6 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
 
       plotter->raster( data, (int) shape[1], (int) shape[0] );
 
-#if 0
-      Char** lala=0;
-      Int lala1=0;
-      QApplication app(lala1,lala);
-      plotter_p=simplePlotter(Plotter::QWT); 
-
-
-    //PGPlotter plotter=getPGPlotter();
-    
-
-      plotter_p->setWindowTitle("ImagingWeight-plot");
-      plotter_p->setCanvasTitle("Gridded weights for "+imageName());
-      plotter_p->setAxesLabels("U (wavelengths)","V (wavelengths)" );
-      plotter_p->showDefaultHandTools(True);
-      gwt=Float(0xFFFFFF)-gwt*(Float(0xFFFFFF)/maxWeight);
-      //gwt=gwt*(Float(0xFFFFFF)/maxWeight);
-      plotter_p->rasterPlot(gwt, -umax, umax, -vmax, vmax);
-      
-      app.exec(); 
-     
-      /*
-      plotter.env(-umax, +umax, -vmax, +vmax, Int(0), Int(0));
-      Vector<Float> tr(6); tr=0.0;
-      tr(0)=-umax; tr(1)=1.0/uscale;
-      tr(3)=-vmax; tr(5)=1.0/vscale;
-      plotter.imag(gwt, 0.0, maxWeight, tr);
-      plotter.lab("U (wavelengths)", "V (wavelengths)", "Gridded weights for "
-		  +imageName());
-      plotter.iden();
-      */
-#endif
 
     }
     else {
@@ -7212,6 +7135,7 @@ Bool Imager::plotsummary()
 
   this->lock();
   try {
+    /*
     os << "Plotting field and spectral window ids for currently selected data" << LogIO::POST;
     
     ROVisIter& vi(*rvi_p);
@@ -7289,11 +7213,13 @@ Bool Imager::plotsummary()
     plotter.iden();
     this->unlock();
     return True;
+    */
   } catch (AipsError x) {
     this->unlock();
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
+    
   this->unlock();
 
   return True;

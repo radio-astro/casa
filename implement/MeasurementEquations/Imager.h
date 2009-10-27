@@ -701,7 +701,7 @@ protected:
   EPJones *epJ;
   String epJTableName_p, cfCacheDirName_p;
   Bool doPointing, doPBCorr;
-  SimplePlotterPtr plotter_p;
+  //SimplePlotterPtr plotter_p;
   Record interactiveState_p;
 
   //Track moving source stuff
