@@ -6,7 +6,7 @@ def importvla(archivefiles,vis,
 	      project,
 	      starttime,stoptime,
 	      applytsys,
-	      autocorr,antnamescheme,keepblanks):
+	      autocorr,antnamescheme,keepblanks,evlabands):
 
 	#Python script
 	i=0
@@ -26,7 +26,8 @@ def importvla(archivefiles,vis,
 					  stop=stoptime, applytsys=applytsys,
 					  keepautocorr=autocorr,
 					  antnamescheme=antnamescheme,
-					  keepblanks=keepblanks)
+					  keepblanks=keepblanks,
+					  evlabands=evlabands)
 				i=i+1
 			else:
 				raise Exception, 'Archive file not found - please verify the name'

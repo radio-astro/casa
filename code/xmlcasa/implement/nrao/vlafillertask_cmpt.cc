@@ -76,7 +76,8 @@ vlafillertask::fill(const std::string& msname,
 		    const bool keepautocorr, 
 		    const std::string& antnamescheme, 
 		    const int useday,
-		    const bool keepblanks)
+		    const bool keepblanks,
+		    const bool evlabands)
 {
    VLALogicalRecord *in(0);
    Int logProgress = 0;
@@ -111,23 +112,59 @@ vlafillertask::fill(const std::string& msname,
               centerNu="321.5MHz";
 	      bandwidthNu="47MHz";
 	 }else if(bandname == "L" || bandname == "l" || bandname == "20cm"){
-              centerNu="1450MHz";
-	      bandwidthNu="600MHz";
+	      if(!evlabands){
+                 centerNu="1450MHz";
+	         bandwidthNu="600MHz";
+	      } else {
+                 centerNu="1.5GHz";
+	         bandwidthNu="1GHz";
+	      }
+	 }else if(bandname == "S" || bandname == "s" || bandname == "10cm"){
+              centerNu="3GHz";
+	      bandwidthNu="2GHz";
 	 }else if(bandname == "C" || bandname == "c" || bandname == "6cm"){
-              centerNu="4.65GHz";
-	      bandwidthNu="900MHz";
+	      if(!evlabands){
+                 centerNu="4.65GHz";
+	         bandwidthNu="900MHz";
+	      } else {
+                 centerNu="6GHz";
+	         bandwidthNu="4GHz";
+	      }
 	 }else if(bandname == "X" || bandname == "x" || bandname == "3.6cm"){
-              centerNu="8.2GHz";
-	      bandwidthNu="2.8GHz";
+	      if(!evlabands){
+                 centerNu="8.2GHz";
+	         bandwidthNu="2.8GHz";
+	      } else {
+                 centerNu="10GHz";
+	         bandwidthNu="4GHz";
+	      }
 	 }else if(bandname == "U" || bandname == "u" || bandname == "2cm"){
-              centerNu="14.9GHz";
-	      bandwidthNu="2.8GHz";
+	      if(!evlabands){
+                 centerNu="14.9GHz";
+	         bandwidthNu="2.8GHz";
+	      } else {
+                 centerNu="15GHz";
+	         bandwidthNu="6GHz";
+	      }
 	 }else if(bandname == "K" || bandname == "k" || bandname == "1.2cm"){
-              centerNu="23.3GHz";
-	      bandwidthNu="5GHz";
+	      if(!evlabands){
+                 centerNu="23.3GHz";
+	         bandwidthNu="5GHz";
+	      } else {
+                 centerNu="22.26GHz";
+	         bandwidthNu="8GHz";
+	      }
+	 }else if(bandname == "Ka" || bandname == "ka" || bandname == "9mm"){
+              centerNu="33.25GHz";
+	      bandwidthNu="13.5GHz";
 	 }else if(bandname == "Q" || bandname == "q" || bandname == "7mm"){
-              centerNu="44.5GHz";
-	      bandwidthNu="13GHz";
+	      if(!evlabands){
+                 centerNu="44.5GHz";
+	         bandwidthNu="13GHz";
+	      } else {
+                 centerNu="45GHz";
+	         bandwidthNu="10GHz";
+	      }
 	 }else{
 	 }
       } else {

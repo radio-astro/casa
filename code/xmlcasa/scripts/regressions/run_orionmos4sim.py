@@ -7,6 +7,11 @@
 # Updated STM 2008-11-19 Patch3 final version 640x640
 # Updated STM 2009-06-16 Patch4 800x800
 # Updated STM 2009-06-23 Patch4 web download of pickle file
+# Updated STM 2009-06-25 minor improvements
+# Updated STM 2009-08-24 Release0, new immath syntax, noise
+# Updated STM 2009-08-27 pbcor=F on clean
+# Updated STM 2009-08-27 noise only option
+# Updated STM 2009-10-22 point to Release0 pickle file
 #
 # Simulates point sources and cleans
 #                                                                       
@@ -25,11 +30,14 @@
 #====================================================================
 # IMPORTANT: VERSIONING HERE
 #====================================================================
-myscriptvers = '2008-06-23 STM'
+myscriptvers = '2008-08-28 STM'
 
 import time
 import os
 import pickle
+
+# needed for existence check
+from os import F_OK
 
 scriptprefix='run_orionmos4sim'
 prefix='simtest_orionmos4sim'
@@ -52,8 +60,6 @@ print "Output will be prefixed with "+prefix
 #Start from existing MS
 templatems = 'orion_calsplit.ms'
 
-# needed for existence check
-from os import F_OK
 if os.access(templatems,F_OK):
     # already in current directory
     print "  Using "+templatems+" found in current directory"
@@ -87,7 +93,7 @@ else:
             # try web retrieval
             print '--Retrieve data from '+webms
             # Use curl (for Mac compatibility)
-            os.system('curl '+webms+' -o '+msname+'.tgz')
+            os.system('curl '+webms+' -f -o '+msname+'.tgz')
             # NOTE: could also use wget
             #os.system('wget '+webms)
         
@@ -116,7 +122,12 @@ myfield  = "2~10"
 myspw    = ""
 myftmachine = "mosaic"
 mycyclefactor = 1.5
-myminpb = 0.15
+myminpb = 0.2
+
+#Sim params
+myflux = 1.0
+mynoise = "0.019Jy"
+# EVLA X-band SEFD is 300Jy (1Hz,1sec) so 50MHz,5sec would be 19mJy per vis
 
 print "Will use template MS "+ templatems
 print "Will image with imsize %5i and cell %s " % (myimsize,mycell)
@@ -131,6 +142,8 @@ if myftmachine!="":
     print "Will mosaic using ftmachine "+myftmachine
 if mymask!="":
     print "Will use clean mask "+mymask
+if mynoise!="":
+    print "Will add noise level of "+mynoise
 
 # Save the parameters used in clean etc.
 params = {}
@@ -149,6 +162,7 @@ params['user']['myspw'] = myspw
 params['user']['myftmachine'] = myftmachine
 params['user']['mycyclefactor'] = mycyclefactor
 params['user']['myminpb'] = myminpb
+params['user']['mynoise'] = mynoise
 
 #====================================================================
 
@@ -169,7 +183,7 @@ complist['A'] = {}
 complist['A']['rf'] = 'J2000'
 complist['A']['RA'] = '05:35:22.024'
 complist['A']['Dec'] = '-05.24.14.789' 
-complist['A']['flux'] = 1.0
+complist['A']['flux'] = myflux
 
 # Comp B is in center of field 6 (phs center), at 96% of peak .flux
 #     05:35:17.47      -05.23.06.79
@@ -177,7 +191,7 @@ complist['B'] = {}
 complist['B']['rf'] = 'J2000'
 complist['B']['RA'] = '05:35:17.47'
 complist['B']['Dec'] = '-05.23.06.79'
-complist['B']['flux'] = 1.0
+complist['B']['flux'] = myflux
 
 # Comp C is center of field 10, at 75% of peak .flux
 #     05:35:27.52      -05.20.37.52
@@ -185,7 +199,7 @@ complist['C'] = {}
 complist['C']['rf'] = 'J2000'
 complist['C']['RA'] = '05:35:27.52'
 complist['C']['Dec'] = '-05.20.37.52'
-complist['C']['flux'] = 1.0
+complist['C']['flux'] = myflux
 
 # Comp D is SSE of field 2, at 33% of peak .flux
 #     05:35:08.746    -05.27.19.013
@@ -193,7 +207,7 @@ complist['D'] = {}
 complist['D']['rf'] = 'J2000'
 complist['D']['RA'] = '05:35:08.746'
 complist['D']['Dec'] = '-05.27.19.013'
-complist['D']['flux'] = 1.0
+complist['D']['flux'] = myflux
 
 # Which of these to use
 compnames = ['A','B','C','D']
@@ -239,9 +253,9 @@ print "Creating componentlist "
 
 for comp in compnames:
     mydirection = "J2000 "+complist[comp]['RA']+" "+complist[comp]['Dec']
-    myflux = complist[comp]['flux']
-    cl.addcomponent(dir=mydirection, flux=myflux, freq='230.0GHz', spectrumtype='constant')
-    print "  Added comp "+comp+" "+str(myflux)+" Jy at "+mydirection+" ("+str(complist[comp]['xpix'])+","+str(complist[comp]['ypix'])+")"
+    compflux = complist[comp]['flux']
+    cl.addcomponent(dir=mydirection, flux=compflux, freq='230.0GHz', spectrumtype='constant')
+    print "  Added comp "+comp+" "+str(compflux)+" Jy at "+mydirection+" ("+str(complist[comp]['xpix'])+","+str(complist[comp]['ypix'])+")"
 
 cl.rename(clfile)
 mycl = cl.torecord()
@@ -257,8 +271,19 @@ print "Copying "+templatems+" to "+msfile
 os.system('cp -rf '+templatems+' '+msfile)
 
 sm.openfromms(msfile)
-sm.setvp(dovp=T, usedefaultvp=T, dosquint=F)
+if mynoise!="":
+    sm.setvp(dovp=T, usedefaultvp=T, dosquint=F)
+else:
+    sm.setvp(dovp=F)
+
+#Add components
 sm.predict(complist=clfile)
+
+#Add noise if desired
+if mynoise!="":
+    sm.setnoise(mode='simplenoise',simplenoise=mynoise)
+    sm.corrupt()
+
 sm.close()
 
 print "Completed simulating MS "+msfile
@@ -361,7 +386,6 @@ outertaper         =  []
 innertaper         =  []
 modelimage         =  ""
 restoringbeam      =  ['']
-pbcor              =  T
 minpb              =  myminpb
 noise              =  "1.0Jy"
 npixels            =  0
@@ -374,6 +398,7 @@ cyclespeedup       =  -1
 print "Will be mosaicing using phasecenter "+phasecenter
 
 print "First make dirty image"
+pbcor              =  T
 dirtimag = prefix + ".dirty"
 imagename          =  dirtimag
 niter              =  0
@@ -391,6 +416,7 @@ else:
 
 #Clean image
 contimag = prefix + ".clean"
+pbcor              =  F
 imagename          =  contimag
 niter              =  myniter
 print "Now actually clean the image using niter = "+str(niter)
@@ -417,27 +443,46 @@ clnimage = contimag+'.image'
 fluximage = contimag+'.flux'
 modimage = contimag+'.model'
 resimage = contimag+'.residual'
+covimage = contimag+'.flux.pbcoverage'
 
 #====================================================================
 # pbcor the model, be careful to mask zeros
 
 pbmodimage = contimag+'.pbcormod'
-immath(outfile=pbmodimage,
+pbcorimage = contimag+'.pbcorimg'
+# Old syntax
+#if myflux!=0.0:
+#    immath(outfile=pbmodimage,
+#           mode='evalexpr',
+#           expr="'"+modimage+"'['"+fluximage+"'!=0.0]/'"+fluximage+"'")
+#immath(outfile=pbcorimage,
+#       mode='evalexpr',
+#       expr="'"+clnimage+"'['"+fluximage+"'!=0.0]/'"+fluximage+"'")
+
+# New syntax (STM 2009-08-24)
+if myflux!=0.0:
+    immath(outfile=pbmodimage,
+           mode='evalexpr',
+           imagename=[modimage,fluximage],
+           expr="IM0[IM1!=0.0]/IM1")
+
+immath(outfile=pbcorimage,
        mode='evalexpr',
-       expr="'"+modimage+"'['"+fluximage+"'!=0.0]/'"+fluximage+"'")
+       imagename=[clnimage,fluximage],
+       expr="IM0[IM1!=0.0]/IM1")
 
 # stats
 #====================================================================
 # Some continuum image statistics
 
 # Set up off-src box
-# Offset NW of comp A
+# Offset from first component
 #offbox = str(myref+45)+','+str(myref+30)+','+str(myref+110)+','+str(myref+100)
 doffx = 75
 doffy = 65
 doffbox = 30
-xpix = complist['A']['xpix']
-ypix = complist['A']['ypix']
+xpix = complist[compnames[0]]['xpix']
+ypix = complist[compnames[0]]['ypix']
 blcx = xpix + doffx - doffbox
 blcy = ypix + doffy - doffbox
 trcx = xpix + doffx + doffbox
@@ -454,11 +499,11 @@ diroffstats = imstat(imagename=dirimage,box=offbox)
 dirtyoff_rms = diroffstats['sigma'][0]
 
 # Do clean image
-allstats = imstat(imagename=clnimage,box = '')
+allstats = imstat(imagename=pbcorimage,box = '')
 imageall_max = allstats['max'][0]
 imageall_rms = allstats['sigma'][0]
 
-offstats = imstat(imagename=clnimage,box=offbox)
+offstats = imstat(imagename=pbcorimage,box=offbox)
 imageoff_rms = offstats['sigma'][0]
 
 # Do residual image
@@ -469,12 +514,13 @@ residall_rms = resstats['sigma'][0]
 resoffstats = imstat(imagename=resimage,box=offbox)
 residoff_rms = resoffstats['sigma'][0]
 
-# Do whole model
-modstats = imstat(imagename=modimage,box = '')
-modelall_flux = modstats['sum'][0]
+if myflux!=0.0:
+    # Do whole model
+    modstats = imstat(imagename=modimage,box = '')
+    modelall_flux = modstats['sum'][0]
 
-pbmodstats = imstat(imagename=pbmodimage,box = '')
-pbmodelall_flux = pbmodstats['sum'][0]
+    pbmodstats = imstat(imagename=pbmodimage,box = '')
+    pbmodelall_flux = pbmodstats['sum'][0]
 
 # Flux image effective area (STM 2009-06-18)
 fluxstats = imstat(imagename=fluximage,box = '')
@@ -513,30 +559,26 @@ stats1time=time.time()
 totalflux = 0.0
 # Box around each component in image
 for comp in compnames:
-    myflux = complist[comp]['flux']
-    totalflux = totalflux + myflux
+    compflux = complist[comp]['flux']
+    totalflux = totalflux + compflux
     mybox = complist[comp]['box']
     print "Component "+comp+" stats in box "+mybox
     # Dirty image
     xstat_dirimg = imstat(imagename=dirimage,box=mybox)
-    xfit_dirimg_cl = imfit(imagename=dirimage,box=mybox,usecleanbeam=T)
-    xfit_dirimg = xfit_dirimg_cl.getcomponent(0)
     # Clean image
-    xstat_img = imstat(imagename=clnimage,box=mybox)
-    xfit_img_cl = imfit(imagename=clnimage,box=mybox,usecleanbeam=T)
-    xfit_img = xfit_img_cl.getcomponent(0)
-    # Clean model
-    xstat_mod = imstat(imagename=modimage,box=mybox)
-    xstat_pbmod = imstat(imagename=pbmodimage,box=mybox)
+    xstat_img = imstat(imagename=pbcorimage,box=mybox)
+    if myflux!=0.0:
+        # Clean model
+        xstat_mod = imstat(imagename=modimage,box=mybox)
+        xstat_pbmod = imstat(imagename=pbmodimage,box=mybox)
     # Residual image
     xstat_res = imstat(imagename=resimage,box=mybox)
     # Save in complist
     complist[comp]['dirtystat'] = xstat_dirimg
-    complist[comp]['dirtyfit'] = xfit_dirimg
     complist[comp]['imstat'] = xstat_img
-    complist[comp]['imfit'] = xfit_img
-    complist[comp]['modstat'] = xstat_mod
-    complist[comp]['pbmodstat'] = xstat_pbmod
+    if myflux!=0.0:
+        complist[comp]['modstat'] = xstat_mod
+        complist[comp]['pbmodstat'] = xstat_pbmod
     complist[comp]['resstat'] = xstat_res
 
 #====================================================================
@@ -671,23 +713,24 @@ results['clean_residoff_rms']['value'] = residoff_rms
 results['clean_residoff_rms']['op'] = op
 results['clean_residoff_rms']['tol'] = tol
 
-results['clean_modelall_flux'] = {}
-results['clean_modelall_flux']['name'] = 'Model image (all) flux'
-results['clean_modelall_flux']['value'] = modelall_flux
-results['clean_modelall_flux']['op'] = op
-results['clean_modelall_flux']['tol'] = tol
+if myflux!=0.0:
+    results['clean_modelall_flux'] = {}
+    results['clean_modelall_flux']['name'] = 'Model image (all) flux'
+    results['clean_modelall_flux']['value'] = modelall_flux
+    results['clean_modelall_flux']['op'] = op
+    results['clean_modelall_flux']['tol'] = tol
 
-results['clean_pbmodelall_flux'] = {}
-results['clean_pbmodelall_flux']['name'] = 'PBCOR Model image (all) flux'
-results['clean_pbmodelall_flux']['value'] = pbmodelall_flux
-results['clean_pbmodelall_flux']['op'] = op
-results['clean_pbmodelall_flux']['tol'] = tol
+    results['clean_pbmodelall_flux'] = {}
+    results['clean_pbmodelall_flux']['name'] = 'PBCOR Model image (all) flux'
+    results['clean_pbmodelall_flux']['value'] = pbmodelall_flux
+    results['clean_pbmodelall_flux']['op'] = op
+    results['clean_pbmodelall_flux']['tol'] = tol
 
-results['sim_comp_flux'] = {}
-results['sim_comp_flux']['name'] = 'Sim Model total flux'
-results['sim_comp_flux']['value'] = totalflux
-results['sim_comp_flux']['op'] = op
-results['sim_comp_flux']['tol'] = tol
+    results['sim_comp_flux'] = {}
+    results['sim_comp_flux']['name'] = 'Sim Model total flux'
+    results['sim_comp_flux']['value'] = totalflux
+    results['sim_comp_flux']['op'] = op
+    results['sim_comp_flux']['tol'] = tol
 
 results['flux_area'] = {}
 results['flux_area']['name'] = 'Eff. mosaic area (sq.arcmin.)'
@@ -708,11 +751,10 @@ for comp in compnames:
     compresults[comp] = {}
     
     xstat_dirimg = complist[comp]['dirtystat']
-    xfit_dirimg = complist[comp]['dirtyfit']
-    xstat_img = complist[comp]['imstat'] 
-    xfit_img = complist[comp]['imfit']
-    xstat_mod = complist[comp]['modstat']
-    xstat_pbmod = complist[comp]['pbmodstat']
+    xstat_img = complist[comp]['imstat']
+    if myflux!=0.0:
+        xstat_mod = complist[comp]['modstat']
+        xstat_pbmod = complist[comp]['pbmodstat']
     xstat_res = complist[comp]['resstat']
 
     compresults[comp]['box'] = complist[comp]['box']
@@ -775,37 +817,38 @@ for comp in compnames:
     compresults[comp]['residual_image_rms']['op'] = op
     compresults[comp]['residual_image_rms']['tol'] = tol
 
-    compresults[comp]['model_image_sum'] = {}
-    compresults[comp]['model_image_sum']['name'] = 'Model image flux'
-    compresults[comp]['model_image_sum']['value'] = xstat_mod['sum'][0]
-    compresults[comp]['model_image_sum']['op'] = op
-    compresults[comp]['model_image_sum']['tol'] = tol
+    if myflux!=0.0:
+        compresults[comp]['model_image_sum'] = {}
+        compresults[comp]['model_image_sum']['name'] = 'Model image flux'
+        compresults[comp]['model_image_sum']['value'] = xstat_mod['sum'][0]
+        compresults[comp]['model_image_sum']['op'] = op
+        compresults[comp]['model_image_sum']['tol'] = tol
+        
+        compresults[comp]['pbmodel_image_sum'] = {}
+        compresults[comp]['pbmodel_image_sum']['name'] = 'PBCOR Model image flux'
+        compresults[comp]['pbmodel_image_sum']['value'] = xstat_pbmod['sum'][0]
+        compresults[comp]['pbmodel_image_sum']['op'] = op
+        compresults[comp]['pbmodel_image_sum']['tol'] = tol
+        
+        compresults[comp]['sim_comp_flux'] = {}
+        compresults[comp]['sim_comp_flux']['name'] = 'Simulated comp flux'
+        compresults[comp]['sim_comp_flux']['value'] = complist[comp]['flux']
+        compresults[comp]['sim_comp_flux']['op'] = op
+        compresults[comp]['sim_comp_flux']['tol'] = tol
 
-    compresults[comp]['pbmodel_image_sum'] = {}
-    compresults[comp]['pbmodel_image_sum']['name'] = 'PBCOR Model image flux'
-    compresults[comp]['pbmodel_image_sum']['value'] = xstat_pbmod['sum'][0]
-    compresults[comp]['pbmodel_image_sum']['op'] = op
-    compresults[comp]['pbmodel_image_sum']['tol'] = tol
-
-    compresults[comp]['sim_comp_flux'] = {}
-    compresults[comp]['sim_comp_flux']['name'] = 'Simulated comp flux'
-    compresults[comp]['sim_comp_flux']['value'] = complist[comp]['flux']
-    compresults[comp]['sim_comp_flux']['op'] = op
-    compresults[comp]['sim_comp_flux']['tol'] = tol
-
-    op = 'diff'
-    tol = 0.5
-    compresults[comp]['sim_comp_posx'] = {}
-    compresults[comp]['sim_comp_posx']['name'] = 'Simulated comp pos x'
-    compresults[comp]['sim_comp_posx']['value'] = complist[comp]['xpix']
-    compresults[comp]['sim_comp_posx']['op'] = op
-    compresults[comp]['sim_comp_posx']['tol'] = tol
+        op = 'diff'
+        tol = 0.5
+        compresults[comp]['sim_comp_posx'] = {}
+        compresults[comp]['sim_comp_posx']['name'] = 'Simulated comp pos x'
+        compresults[comp]['sim_comp_posx']['value'] = complist[comp]['xpix']
+        compresults[comp]['sim_comp_posx']['op'] = op
+        compresults[comp]['sim_comp_posx']['tol'] = tol
     
-    compresults[comp]['sim_comp_posy'] = {}
-    compresults[comp]['sim_comp_posy']['name'] = 'Simulated comp pos y'
-    compresults[comp]['sim_comp_posy']['value'] = complist[comp]['ypix']
-    compresults[comp]['sim_comp_posy']['op'] = op
-    compresults[comp]['sim_comp_posy']['tol'] = tol
+        compresults[comp]['sim_comp_posy'] = {}
+        compresults[comp]['sim_comp_posy']['name'] = 'Simulated comp pos y'
+        compresults[comp]['sim_comp_posy']['value'] = complist[comp]['ypix']
+        compresults[comp]['sim_comp_posy']['op'] = op
+        compresults[comp]['sim_comp_posy']['tol'] = tol
 
 new_regression['compresults'] = compresults
 
@@ -850,14 +893,15 @@ prev_results = {}
 
 # Path to web archive (latest version)
 #webfile = 'http://casa.nrao.edu/Doc/Scripts/'+scriptprefix+'.pickle'
-webfile = 'http://casa.nrao.edu/Patch4/Doc/Scripts/'+scriptprefix+'.pickle'
+#webfile = 'http://casa.nrao.edu/Patch4/Doc/Scripts/'+scriptprefix+'.pickle'
+webfile = 'http://casa.nrao.edu/Release0/Doc/Scripts/'+scriptprefix+'.pickle'
 
 if os.access(regressfile,F_OK):
     # pickle file in current directory
     print "  Found "+regressfile+" in current directory"
 else:
     print "Trying web download of "+webfile
-    os.system('curl '+webfile+' -o '+regressfile)
+    os.system('curl '+webfile+' -f -o '+regressfile)
     # NOTE: could also use wget
     #os.system('wget '+webfile)
 
@@ -882,17 +926,27 @@ else:
 #
 ##########################################################################
 # Now print regression results if a previous pickfile can be found
-resultlist = ['clean_dirtyimg_max','clean_dirtyimg_rms',
-              'clean_imageall_max','clean_imageall_rms','clean_imageoff_rms',
-              'clean_residall_max','clean_residall_rms','clean_residoff_rms',
-              'clean_modelall_flux','clean_pbmodelall_flux',
-              'sim_comp_flux','flux_area']
+if myflux!=0.0:
+    resultlist = ['clean_dirtyimg_max','clean_dirtyimg_rms',
+                  'clean_imageall_max','clean_imageall_rms','clean_imageoff_rms',
+                  'clean_residall_max','clean_residall_rms','clean_residoff_rms',
+                  'clean_modelall_flux','clean_pbmodelall_flux',
+                  'sim_comp_flux','flux_area']
 
-compreslist = ['dirty_image_max','dirty_image_maxposx','dirty_image_maxposy',
-              'clean_image_max','clean_image_maxposx','clean_image_maxposy',
-              'residual_image_max','residual_image_rms',
-              'model_image_sum','pbmodel_image_sum',
-              'sim_comp_flux','sim_comp_posx','sim_comp_posy']
+    compreslist = ['dirty_image_max','dirty_image_maxposx','dirty_image_maxposy',
+                   'clean_image_max','clean_image_maxposx','clean_image_maxposy',
+                   'residual_image_max','residual_image_rms',
+                   'model_image_sum','pbmodel_image_sum',
+                   'sim_comp_flux','sim_comp_posx','sim_comp_posy']
+else:
+    resultlist = ['clean_dirtyimg_max','clean_dirtyimg_rms',
+                  'clean_imageall_max','clean_imageall_rms','clean_imageoff_rms',
+                  'clean_residall_max','clean_residall_rms','clean_residoff_rms',
+                  'flux_area']
+    
+    compreslist = ['dirty_image_max','dirty_image_maxposx','dirty_image_maxposy',
+                   'clean_image_max','clean_image_maxposx','clean_image_maxposy',
+                   'residual_image_max','residual_image_rms']
 
 testresults = {}
 testcompresults = {}
@@ -925,63 +979,7 @@ else:
     print "  No previous regression file"
 
 
-# First do the overall results
-print ""
-print " Whole image :"
-print >>logfile,""
-print >>logfile," Whole image :"
-for keys in resultlist:
-    res = results[keys]
-    new_val = res['value']
-    if regression['exist']:
-        # Set up storage for regression results
-        testresults[keys] = {}
-        testres = {}
-        testres['value'] = new_val
-        testres['op'] = res['op']
-        testres['tol'] = res['tol']
-    
-        # Compute regression results
-        if prev_results.has_key(keys):
-            # This is a known regression key
-            prev = prev_results[keys]
-            prev_val = prev['value']
-            if res['op'] == 'divf':
-                new_diff = (new_val - prev_val)/prev_val
-            else:
-                new_diff = new_val - prev_val
-            
-            if abs(new_diff)>res['tol']:
-                new_status = 'Failed'
-            else:
-                new_status = 'Passed'
-            
-            testres['prev'] = prev_val
-            testres['diff'] = new_diff
-            testres['status'] = new_status
-            testres['test'] = 'Last'
-        else:
-            # Unknown regression key
-            testres['prev'] = 0.0
-            testres['diff'] = 1.0
-            testres['status'] = 'Missed'
-            testres['test'] = 'none'
-
-        # Save results
-        testresults[keys] = testres
-
-        # Print results
-        print '--%30s : %12.6f was %12.6f %4s %12.6f (%6s) %s ' % ( res['name'], testres['value'], testres['prev'], testres['op'], testres['diff'], testres['status'], testres['test'] )
-        print >>logfile,'--%30s : %12.6f was %12.6f %4s %12.6f (%6s) %s ' % ( res['name'], testres['value'], testres['prev'], testres['op'], testres['diff'], testres['status'], testres['test'] )
-        if testres['status']=='Failed':
-            final_status = 'Failed'
-
-    else:
-        # Just print the current results
-        print '--%30s : %12.6f ' % ( res['name'], res['value'] )
-        print >>logfile,'--%30s : %12.6f ' % ( res['name'], res['value'] )
-    
-# Now do the component results
+# Do the component results
 for comp in compnames:
     print ""
     print " Component "+comp+" :"
@@ -1053,6 +1051,62 @@ for comp in compnames:
             print '--%30s : %12.6f ' % ( res['name'], res['value'] )
             print >>logfile,'--%30s : %12.6f ' % ( res['name'], res['value'] )
 
+# Do the overall results
+print ""
+print " Whole image :"
+print >>logfile,""
+print >>logfile," Whole image :"
+for keys in resultlist:
+    res = results[keys]
+    new_val = res['value']
+    if regression['exist']:
+        # Set up storage for regression results
+        testresults[keys] = {}
+        testres = {}
+        testres['value'] = new_val
+        testres['op'] = res['op']
+        testres['tol'] = res['tol']
+    
+        # Compute regression results
+        if prev_results.has_key(keys):
+            # This is a known regression key
+            prev = prev_results[keys]
+            prev_val = prev['value']
+            if res['op'] == 'divf':
+                new_diff = (new_val - prev_val)/prev_val
+            else:
+                new_diff = new_val - prev_val
+            
+            if abs(new_diff)>res['tol']:
+                new_status = 'Failed'
+            else:
+                new_status = 'Passed'
+            
+            testres['prev'] = prev_val
+            testres['diff'] = new_diff
+            testres['status'] = new_status
+            testres['test'] = 'Last'
+        else:
+            # Unknown regression key
+            testres['prev'] = 0.0
+            testres['diff'] = 1.0
+            testres['status'] = 'Missed'
+            testres['test'] = 'none'
+
+        # Save results
+        testresults[keys] = testres
+
+        # Print results
+        print '--%30s : %12.6f was %12.6f %4s %12.6f (%6s) %s ' % ( res['name'], testres['value'], testres['prev'], testres['op'], testres['diff'], testres['status'], testres['test'] )
+        print >>logfile,'--%30s : %12.6f was %12.6f %4s %12.6f (%6s) %s ' % ( res['name'], testres['value'], testres['prev'], testres['op'], testres['diff'], testres['status'], testres['test'] )
+        if testres['status']=='Failed':
+            final_status = 'Failed'
+
+    else:
+        # Just print the current results
+        print '--%30s : %12.6f ' % ( res['name'], res['value'] )
+        print >>logfile,'--%30s : %12.6f ' % ( res['name'], res['value'] )
+    
 # Done
                     
 if regression['exist']:

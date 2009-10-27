@@ -188,7 +188,7 @@ def cvel(vis, outputvis,
 
         if(passall and spw=='*' and field=='*'):
             # all spws and fields selected, nothing to pass through
-            passall = false
+            passall = False
 
         if(type(phasecenter)==str):
             ### blank means take field 0

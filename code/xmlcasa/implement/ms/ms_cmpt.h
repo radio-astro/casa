@@ -110,7 +110,7 @@ class ms
 
     bool split(const std::string&      outputms="",
                const ::casac::variant& field=::casac::initialize_variant(""),
-               const ::casac::variant& spw=::casac::initialize_variant(""),
+               const ::casac::variant& spw=::casac::initialize_variant("*"),
                const std::vector<int>& step=std::vector<int> (1, 1),
                const ::casac::variant& baseline=::casac::initialize_variant(""),
                const ::casac::variant& timebin=::casac::initialize_variant("-1s"),

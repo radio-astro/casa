@@ -2402,16 +2402,14 @@ for i in range(len(tcoord)):
      <value></value>
      </param>
     
-     <param type="any" direction="in" name="field">
+     <param type="variant" direction="in" name="field">
      <description>Field ids  (0-based) or fieldnames to split out</description>
-     <any type="variant"/>
      <value></value>
      </param>
     
-     <param type="any" direction="in" name="spw">
-     <description>Spectral windows to split </description>
-     <any type="variant"/>
-     <value></value>
+     <param type="variant" direction="in" name="spw">
+     <description>Spectral windows (and :channels) to select</description>
+     <value>"*"</value>
      </param>
     
      <param type="intArray" direction="in" name="step">
@@ -2420,15 +2418,13 @@ for i in range(len(tcoord)):
      <value>1</value>
      </param>
 
-     <param type="any" direction="in" name="baseline">
+     <param type="variant" direction="in" name="baseline">
      <description>Antenna names or Antenna indices to select</description>
-     <any type="variant" />
      <value></value>
      </param>
 
-     <param type="any" direction="in" name="timebin">
+     <param type="variant" direction="in" name="timebin">
      <description>Value to average the data to, 0s means keep the data as is sampled, which is the  default</description>
-     <any type="variant" />
      <value>-1s</value>
      </param>
     
@@ -2437,16 +2433,14 @@ for i in range(len(tcoord)):
      <value></value>
      </param>
 
-     <param type="any" name="scan">
+     <param type="variant" name="scan">
      <description>Limit data selected on scan numbers. Syntax is defined in the msselection link</description>
-     <any type="variant"/>
      <value></value>
      </param>
      
-     <param type="any" name="uvrange">
+     <param type="variant" name="uvrange">
      <description>Limit data selected on uv distance. Syntax is defined in 
      the msselection link</description>
-     <any type="variant"/>
      <value></value>
      </param>
 
@@ -2460,17 +2454,15 @@ for i in range(len(tcoord)):
      <value>DATA</value>
      </param>
 
-     <param type="any" name="tileshape">
+     <param type="variant" name="tileshape">
        <description>Tile shape of the disk data columns, most users should not need to touch this parameter 
        [0] =&gt; normal tiling, [1] =&gt; fast mosaic style tile 
        [4,15,351] =&gt; a tile shape of 4 pol 15 chan and 351 rows</description>
-       <any type="variant"/>
        <value></value>
      </param>
 
-     <param type="any" name="subarray">
+     <param type="variant" name="subarray">
      <description>Limit data to specific (sub)array numbers.</description>
-     <any type="variant"/>
      <value></value>
      </param>
 

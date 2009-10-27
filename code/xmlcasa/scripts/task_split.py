@@ -56,9 +56,14 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             raise Exception, 'Visibility data set not found - please verify the name'
         if os.path.exists(outputvis):
             raise Exception, "Output MS %s already exists - will not overwrite." % outputvis
+
+        # No longer needed.  When did it get put in?  Note that the default
+        # spw='*' in ms.split ends up as '' since the default type for a variant
+        # is BOOLVEC.  (Of course!)  Therefore both split and ms.split must
+        # work properly when spw=''.
+        #if(spw == ''):
+        #    spw = '*'
         
-        if(spw == ''):
-            spw = '*'
         if timebin in ('0s', '0'):
             timebin = '-1s'
         ## Accept digits without units ...assume seconds

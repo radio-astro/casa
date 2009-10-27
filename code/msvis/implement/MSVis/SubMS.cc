@@ -3316,8 +3316,8 @@ namespace casa {
 	// append or prepend spw to new spw
 	// overlap at all?
 	if(newCHAN_FREQ(newNUM_CHAN-1) + newCHAN_WIDTH(newNUM_CHAN-1)/2. 
-	   < newCHAN_FREQi(0) - newCHAN_WIDTHi(newNUM_CHANi-1)/2.) {
-	  // no overlap, need to append
+	   < newCHAN_FREQi(0) - newCHAN_WIDTHi(0)/2.) {
+	  // no overlap, and need to append
 	  for(Int j=0; j<newNUM_CHAN; j++){
 	    mergedChanFreq.push_back(newCHAN_FREQ(j));
 	    mergedChanWidth.push_back(newCHAN_WIDTH(j));
@@ -3346,7 +3346,7 @@ namespace casa {
 	    mergedAverageChanFrac.push_back(tvd);
 	  }
 	}
-	else if( newCHAN_FREQ(0) - newCHAN_WIDTH(newNUM_CHAN-1)/2. 
+	else if( newCHAN_FREQ(0) - newCHAN_WIDTH(0)/2. 
 		 > newCHAN_FREQi(newNUM_CHANi-1) + newCHAN_WIDTHi(newNUM_CHANi-1)/2.){ 
 	  // no overlap, need to prepend
 	  vector<Int> tv;
@@ -3419,15 +3419,17 @@ namespace casa {
 	      Double newCenter = lboundk + newWidth/2.;
 	      mergedChanFreq.push_back(newCenter);
 	      mergedChanWidth.push_back(newWidth);
-	      mergedEffBW.push_back(newWidth); // NOTE: rough approximation!
-	      mergedRes.push_back(newWidth); // NOTE: rough approximation!
-	      mergedAverageN.push_back(2); // two channels contribute
-	      tv.push_back(id0); // second contributor is spw id0
-	      mergedAverageWhichSPW.push_back(tv);
+	      mergedEffBW.push_back(newWidth); 
+	      mergedRes.push_back(newWidth); 
+	      mergedAverageN.push_back(averageN[0]+1); // one more channel contributes
 	      tv2[0] = k; // channel k from spw idi
-	      tv2.push_back(0); // channel 0 from spw id0
+	      for(int j=0; j<averageN[0]; j++){
+		tv.push_back(averageWhichSPW[0][j]); // additional contributors
+		tv2.push_back(averageWhichChan[0][j]); // channel 0 from spw id0
+		tvd.push_back(averageChanFrac[0][j]);
+	      }
+	      mergedAverageWhichSPW.push_back(tv);
 	      mergedAverageWhichChan.push_back(tv2); 
-	      tvd.push_back(1.); // both fractions are unity
 	      mergedAverageChanFrac.push_back(tvd);
 	      id0StartChan = 1;
 	    }
@@ -3512,8 +3514,8 @@ namespace casa {
 	      mergedRes.push_back(newRESOLUTIONi(m));
 	      mergedAverageN.push_back(1); // so far only one channel
 	      mergedAverageWhichSPW.push_back(tv);
-	      tv2[0] = j;
-	      mergedAverageWhichChan.push_back(tv2); // channel number is j
+	      tv2[0] = m;
+	      mergedAverageWhichChan.push_back(tv2); // channel number is m
 	      mergedAverageChanFrac.push_back(tvd);
 	    }
 	  } // end if spw idi still continues
@@ -3541,6 +3543,8 @@ namespace casa {
       for(Int i=0; i<newNUM_CHAN; i++){
 	for(Int j=0; j<averageN[i]; j++){
 	  newNorm(i) += averageChanFrac[i][j];
+	  //	  cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
+	  //	       << " averageWhichSPW[i][j] " << averageWhichSPW[i][j] << endl;
 	}
       }	
       for(Int i=0; i<newNUM_CHAN; i++){
@@ -4135,6 +4139,13 @@ namespace casa {
 
 		      if(CORRECTED_DATAColIsOK){
 			newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
+// 			cout << "row " << SPWtoRowIndex(averageWhichSPW[i][j]) << "averageWhichSPW[i][j] " 
+// 			     << averageWhichSPW[i][j] << "  averageWhichChan[i][j] " << averageWhichChan[i][j]
+// 			     << " i, j, k " << i << ", " << j << ", " << k << " averageChanFrac[i][j] " << averageChanFrac[i][j] 
+// 			     << " modNorm(k) " << modNorm(k) << " newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) "
+// 			     << newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) 
+// 			     << " newCorrectedData(k,i) " << newCorrectedData(k,i) 
+// 			     << " weight " << weight << endl; 
 		      }
 		      if(DATAColIsOK){
 			newData(k,i) += newDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;

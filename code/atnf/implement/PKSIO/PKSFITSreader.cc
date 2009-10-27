@@ -385,6 +385,7 @@ Int PKSFITSreader::read(PKSrecord &pksrec)
   pksrec.refFreq   = cMBrec.fqRefVal[0];
   pksrec.bandwidth = chanWidth * nChan;
   pksrec.freqInc   = cMBrec.fqDelt[0];
+  pksrec.restFreq.resize(1) ;
   pksrec.restFreq(0)  = cMBrec.restFreq;
 
   pksrec.tcal.resize(nPol);
