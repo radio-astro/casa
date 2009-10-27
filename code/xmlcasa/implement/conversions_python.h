@@ -39,7 +39,7 @@ int convert_idl_StringAry_from_python_StringAry(PyObject *obj, void *s);
 PyObject *convert_idl_StringAry_to_python_StringAry( const StringAry &from);
 
 
-variant pyobj2variant(PyObject*);
+variant pyobj2variant(PyObject*,bool throw_error=false);
 PyObject *variant2pyobj(const variant &val);
 int convert_record_value_from_python_dict(PyObject *obj, void *s);
 PyObject *convert_record_value_to_python_dict( WX::Utils::SmartPtr<WX::Utils::Value> ptr );

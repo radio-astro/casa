@@ -184,8 +184,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>5</value>
     </param>
 
-    <param type="bool" name="verify">
-            <description>verify the results of calibration and baseline fitting</description>
+    <param type="bool" name="verifycal">
+            <description>verify the results of calibration</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="verifysm">
+            <description>verify the results of smoothing</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="verifybl">
+            <description>verify the results of baseline fitting</description>
             <value>False</value>
     </param>
 
@@ -444,12 +454,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: 5
                 example: typically in range 2-9 (higher values
                          seem to be needed for GBT)
-        verify -- verify the results of calibration and baseline fitting
+        verifycal -- verify the results of calibration
                 options: (bool) True,False
                 default: False
-                WARNING: Currently this just asks whether you accept
-                         the displayed calibraion/fit and if not, continues
-                         without doing any calibraion/baseline fit.
+                WARNING: Currently verifying parameters just asks whether you 
+                         accept the displayed calibraion/fit and if not, 
+                         continues without doing any calibraion/baseline fit.
+        verifysm -- verify the results of smoothing
+                options: (bool) True,False
+                default: False
+        verifybl -- verify the results of baseline fitting
+                options: (bool) True,False
+                default: False
         masklist -- list of mask regions to INCLUDE in BASELINE fit
                 default: [] (entire spectrum)
                 example: [[1000,3000],[5000,7000]]
