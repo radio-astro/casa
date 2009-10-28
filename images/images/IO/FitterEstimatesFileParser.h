@@ -93,10 +93,13 @@ class FitterEstimatesFileParser {
 		~FitterEstimatesFileParser();
 
 		// Get the estimates specified in the file as a ComponentList object.
-		ComponentList getEstimates();
+		ComponentList getEstimates() const;
 
 		// Get the fixed parameter masks specified in the file.
-		Vector<String> getFixed();
+		Vector<String> getFixed() const;
+
+		// Get the contents of the file
+		String getContents() const;
 
 	private:
 		ComponentList componentList;
@@ -105,6 +108,7 @@ class FitterEstimatesFileParser {
 		Vector<Double> peakValues, xposValues, yposValues;
 		//Vector<Quantity> fluxValues, majValues, minValues, paValues;
 		Vector<Quantity> majValues, minValues, paValues;
+		String contents;
 
 		// default constructor cannot be called.
 		FitterEstimatesFileParser();
@@ -112,9 +116,6 @@ class FitterEstimatesFileParser {
 		// parse the file
 		void _parseFile(const RegularFile& myFile, const ImageInterface<Float>& image);
 		void _createComponentList(const ImageInterface<Float>& image);
-
-
-
 };
 
 } //# NAMESPACE CASA - END
