@@ -50,8 +50,31 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     try:
         casalog.origin('split')
 
+        # HACK ALERT!  (RR, 10/26/2009)
+        # readonly should be removed (i.e. always be True) when ROVisIter is
+        # fixed.  In the meantime, this compromise allows differently shaped
+        # spws in the output if the input is writable.
+        readonly = True
+        if hasattr(spw, '__iter__'):
+            for window in spw:
+                if type(window) == str:
+                    # This isn't a perfect test, but I think a perfect test
+                    # would be more trouble than it's worth.  The problem is
+                    # the dual nature of ; in spw:chan selection strings.
+                    if window.find(':') > -1 and (window.find(',') > -1 or
+                                                  window.find(';') > -1):
+                        readonly = False
+                        break
+        elif type(spw) == str:
+            # This isn't a perfect test, but I think a perfect test
+            # would be more trouble than it's worth.  The problem is
+            # the dual nature of ; in spw:chan selection strings.
+            if spw.find(':') > -1 and (spw.find(',') > -1 or
+                                       spw.find(';') > -1):
+                readonly = False                   
+
         if ((type(vis)==str) & (os.path.exists(vis))):
-            ms.open(vis)
+            ms.open(vis, nomodify=readonly)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
         if os.path.exists(outputvis):

@@ -234,6 +234,7 @@ namespace casa {
 	  
 	panelmap::iterator dpiter = managed_panels.find( panel_or_data );
 	if ( dpiter != managed_panels.end( ) ) {
+#if 0
 	    std::list<int> &data = dpiter->second->data( );
 	    for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
 		unload_data( dpiter->second->panel( ), *diter );
@@ -241,6 +242,9 @@ namespace casa {
 	    for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
 		load_data( dpiter->second->panel( ), *diter );
 	    }
+#else
+	    dpiter->second->panel( )->refresh( );
+#endif
 	} else {
 	    datamap::iterator dmiter = managed_datas.find( panel_or_data );
 	    if ( dmiter != managed_datas.end( ) ) {

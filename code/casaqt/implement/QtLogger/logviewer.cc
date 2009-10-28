@@ -462,14 +462,34 @@ bool LogViewer::load(const QString &f)
     }
 
     std::string name = fileName.toStdString();
-    logStream = new std::ifstream(name.c_str());
+    try {
+       logStream = new std::ifstream(name.c_str());
+    }
+    catch (std::bad_alloc &x) {
+       qDebug() << "Can't load the file. " << x.what();
+       return false;
+    }
 
     logStream->seekg(0,std::ios::end);
     int length = logStream->tellg();
     logStream->seekg(0,std::ios::beg);
-    char *buf = new char[length+1];
-    buf[0] = '\0';
+    char *buf;
+    buf = new (std::nothrow) char[length+1];
+    if (!buf) {
+       qDebug() << "Can't allocate memory region" ;
+       return false;
+    }
 
+    //same functionality as above
+    //try {
+    //   buf = new char[length+1];
+    //}
+    //catch (std::bad_alloc &x) {
+    //   qDebug() << "Can't allocate memory region: " << x.what();
+    //   return false;
+    //}
+
+    buf[0] = '\0';
     logStream->read(buf,length);
     buf[length] = '\0';
 	
@@ -650,7 +670,21 @@ void LogViewer::fileChanged(const QString& fileName)
 		logStream->seekg(0,std::ios::end);
 		int length = ((int)logStream->tellg()) - current_offset;
 		logStream->seekg(current_offset,std::ios::beg);
-		char *buf = new char[length+1];
+		char *buf;
+                buf = new (std::nothrow) char[length+1];
+                if (!buf) {
+                   qDebug() << "Can't allocate more memory region" ;
+                   return;
+                }
+
+                //try {
+                //   buf = new char[length+1];
+                //}
+                //catch(...) {
+                //   qDebug() << "Can't allocate more memory region";
+                //   return;
+                //}
+
 		buf[0] = '\0';
 
 		logStream->read(buf,length);

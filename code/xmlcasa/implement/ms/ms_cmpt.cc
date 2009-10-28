@@ -1543,6 +1543,9 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
      *itsLog << LogIO::NORMAL2 << "Sub MS created" << LogIO::POST;
      String t_field(m1toBlankCStr_(field));
      String t_spw(m1toBlankCStr_(spw));
+     if(t_spw == "")   // MSSelection doesn't respond well to "", and setting it
+       t_spw = "*";    // at the XML level does not work.
+
      String t_antenna = toCasaString(antenna);
      String t_scan    = toCasaString(scan);
      String t_uvrange = toCasaString(uvrange);
