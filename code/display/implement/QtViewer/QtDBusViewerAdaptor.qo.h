@@ -169,7 +169,7 @@ namespace casa {
 
     protected:
 	void load_data( QtDisplayPanel *panel, int index );
-	void unload_data( QtDisplayPanel *panel, int index );
+	void unload_data( QtDisplayPanel *panel, int index, bool erase=true );
 	void erase_panel( QtDisplayPanel *panel );
 	void erase_data( int );
 

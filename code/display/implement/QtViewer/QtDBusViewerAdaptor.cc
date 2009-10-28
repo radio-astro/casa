@@ -165,16 +165,18 @@ namespace casa {
 	return QDBusVariant(QVariant(QString("*error* datatype '") + datatype.c_str( ) + "' not yet implemented"));
     }
 
-    void QtDBusViewerAdaptor::unload_data( QtDisplayPanel *panel, int index ) {
+    void QtDBusViewerAdaptor::unload_data( QtDisplayPanel *panel, int index, bool erase ) {
 	datamap::iterator iter = managed_datas.find( index );
 	if ( iter == managed_datas.end( ) ) {
 	    fprintf( stderr, "error: internal error (data id not found)" );
 	    return;
 	}
 	if ( iter->second->data( ) != 0 ) {
-	    panel->unregisterDD( iter->second->data( ) );
+	    viewer_->removeDD( iter->second->data( ) );
+//***	    fails to notify the wrench that things have changed...
+// 	    panel->unregisterDD( iter->second->data( ) );
 	    iter->second->data( ) = 0;
-	    managed_datas.erase(iter);
+	    if ( erase ) managed_datas.erase(iter);
 	}
     }
 
@@ -184,6 +186,18 @@ namespace casa {
 	    fprintf( stderr, "error: internal error (data id not found)" );
 	    return;
 	}
+
+	QtDisplayPanelGui *win = 0;
+	for ( panelmap::iterator dpiter = managed_panels.begin(); dpiter != managed_panels.end(); ++dpiter ) {
+	    if ( dpiter->second->panel() == panel ) {
+		mainwinmap::iterator iter = managed_windows.find( dpiter->first );
+		if ( iter != managed_windows.end( ) ) {
+		    win = iter->second;
+		    break;
+		}
+	    }
+	}
+
 
 	struct stat buf;
 	const QString &path = iter->second->path();
@@ -217,6 +231,7 @@ namespace casa {
 		    iter->second->data( ) = 0;
 		    dp = viewer_->createDD(to_string(path), datatype, to_string(displaytype));
 		}
+		if ( win ) win->addedData( displaytype, dp );
 		iter->second->data( ) = dp;
 	    }
 	} else {
@@ -234,17 +249,14 @@ namespace casa {
 	  
 	panelmap::iterator dpiter = managed_panels.find( panel_or_data );
 	if ( dpiter != managed_panels.end( ) ) {
-#if 0
 	    std::list<int> &data = dpiter->second->data( );
 	    for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
-		unload_data( dpiter->second->panel( ), *diter );
+		unload_data( dpiter->second->panel( ), *diter, false );
 	    }
 	    for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
 		load_data( dpiter->second->panel( ), *diter );
 	    }
-#else
-	    dpiter->second->panel( )->refresh( );
-#endif
+
 	} else {
 	    datamap::iterator dmiter = managed_datas.find( panel_or_data );
 	    if ( dmiter != managed_datas.end( ) ) {
@@ -767,6 +779,14 @@ namespace casa {
 	int index = QtDBusApp::get_id( );
 	data_desc *dd = new data_desc(index, path, type, data, panel );
 	managed_datas.insert(datamap::value_type(index, dd));
+
+	for ( panelmap::iterator dpiter = managed_panels.begin(); dpiter != managed_panels.end(); ++dpiter ) {
+	    if ( dpiter->second->panel() == panel ) {
+		dpiter->second->data().push_back(index);
+		break;
+	    }
+	}
+
 	return index;
     }
 

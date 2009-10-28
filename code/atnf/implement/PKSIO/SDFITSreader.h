@@ -119,12 +119,15 @@ class SDFITSreader : public FITSreader
     // These are to differentiate 0-, and 1-relative beam and IF numbering.
     int  cBeam_1rel, cIF_1rel;
 
+    // for GBT
+    int *cPols ;
+
     enum {SCAN, CYCLE, DATE_OBS, TIME, EXPOSURE, OBJECT, OBJ_RA, OBJ_DEC,
           RESTFRQ, OBSMODE, BEAM, IF, FqRefPix, FqRefVal, FqDelt, RA, DEC,
           SCANRATE, TSYS, CALFCTR, XCALFCTR, BASELIN, BASESUB, DATA, FLAGGED,
           DATAXED, XPOLDATA, REFBEAM, TCAL, TCALTIME, AZIMUTH, ELEVATIO,
           PARANGLE, FOCUSAXI, FOCUSTAN, FOCUSROT, TAMBIENT, PRESSURE,
-          HUMIDITY, WINDSPEE, WINDDIRE, NDATA};
+          HUMIDITY, WINDSPEE, WINDDIRE, STOKES, SIG, CAL, NDATA};
 
     // Message handling.
     void log(LogOrigin origin, LogIO::Command cmd, const char *msg = 0x0);
@@ -143,6 +146,9 @@ class SDFITSreader : public FITSreader
 
     // These are for GBT data.
     int   cGBT, cFirstScanNo;
+    double cGLastUTC[4] ;
+    int cGLastScan[4] ;
+    int cGCycleNo[4] ;
 };
 
 #endif

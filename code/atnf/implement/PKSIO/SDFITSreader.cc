@@ -38,6 +38,7 @@
 #include <atnf/PKSIO/SDFITSreader.h>
 
 #include <casa/Logging/LogIO.h>
+#include <casa/Quanta/MVTime.h>
 #include <casa/math.h>
 #include <casa/stdio.h>
 #include <cstring>
@@ -86,6 +87,7 @@ SDFITSreader::SDFITSreader()
   cStartChan = 0x0;
   cEndChan   = 0x0;
   cRefChan   = 0x0;
+  cPols      = 0x0;
 }
 
 //------------------------------------------------ SDFITSreader::~SDFITSreader
@@ -260,6 +262,7 @@ int SDFITSreader::open(
   char *decCRVAL = 0;
   char *timeCRVAL = 0;
   char *beamCRVAL = 0;
+  char *polCRVAL = 0;
 
   for (int iaxis = 0; iaxis < cNAxis; iaxis++) {
     if (strncmp(ctype[iaxis], "FREQ", 4) == 0) {
@@ -270,6 +273,7 @@ int SDFITSreader::open(
 
     } else if (strncmp(ctype[iaxis], "STOKES", 6) == 0) {
       cReqax[1] = iaxis;
+      polCRVAL = CRVAL[iaxis];
 
     } else if (strncmp(ctype[iaxis], "RA", 2) == 0) {
       cReqax[2] = iaxis;
@@ -350,6 +354,10 @@ int SDFITSreader::open(
   findData(WINDSPEE, "WINDSPEE", TFLOAT);       // Shared.
   findData(WINDDIRE, "WINDDIRE", TFLOAT);       // Shared.
 
+  findData(STOKES,    polCRVAL,  TINT);
+  findData(SIG,       "SIG",     TSTRING);
+  findData(CAL,       "CAL",     TSTRING);
+
   if (cStatus) {
     log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
     close();
@@ -379,6 +387,11 @@ int SDFITSreader::open(
 
   cCycleNo = 0;
   cLastUTC = 0.0;
+  for ( int i = 0 ; i < 4 ; i++ ) {
+    cGLastUTC[i] = 0.0 ;
+    cGLastScan[i] = -1 ;
+    cGCycleNo[i] = 0 ;
+  }
 
   // Beam number, 1-relative by default.
   cBeam_1rel = 1;
@@ -672,6 +685,46 @@ int SDFITSreader::open(
     // Older ALFA data labels each polarization as a separate IF.
     cNPol[0] = cNIF;
     cNIF = 1;
+  }
+
+  // For GBT data that stores spectra for each polarization in separate rows
+  if ( cData[STOKES].colnum > 0 ) {
+    int *stokesCol = new int[cNRow];
+    int stokesNul = 1;
+    int   anynul;
+    if (fits_read_col(cSDptr, TINT, cData[STOKES].colnum, 1, 1, cNRow,
+                      &stokesNul, stokesCol, &anynul, &cStatus)) {
+      delete [] stokesCol;
+      log(LogOrigin( className, methodName, WHERE ), LogIO::SEVERE);
+      close();
+      return 1;
+    }
+
+    vector<int> pols ;
+    pols.push_back( stokesCol[0] ) ;
+    for ( int i = 0 ; i < cNRow ; i++ ) {
+      bool pmatch = false ;
+      for ( uint j = 0 ; j < pols.size() ; j++ ) {
+        if ( stokesCol[i] == pols[j] ) {
+          pmatch = true ;
+          break ;
+        }
+      }
+      if ( !pmatch ) {
+        pols.push_back( stokesCol[i] ) ;
+      }
+    }
+
+    cPols = new int[pols.size()] ;
+    for ( uint i = 0 ; i < pols.size() ; i++ ) {
+      cPols[i] = pols[i] ;
+    }
+
+    for ( int i = 0 ; i < cNIF ; i++ ) {
+      cNPol[i] = pols.size() ;
+    }
+
+    delete [] stokesCol ;
   }
 
   // Passing back the address of the array allows PKSFITSreader::select() to
@@ -1282,6 +1335,7 @@ int SDFITSreader::read(
   }
   // Find the next selected beam and IF.
   short iBeam = 0, iIF = 0;
+  int iPol = -1 ;
   while (++cRow <= cNRow) {
     if (cData[BEAM].colnum > 0) {
       readData(BEAM, cRow, &iBeam);
@@ -1318,6 +1372,16 @@ int SDFITSreader::read(
           }
         }
 
+        // for GBT SDFITS
+        if (cData[STOKES].colnum > 0 ) {
+          readData(STOKES, cRow, &iPol ) ;
+          for ( int i = 0 ; i < cNPol[iIF] ; i++ ) {
+            if ( cPols[i] == iPol ) {
+              iPol = i ;
+              break ;
+            }
+          }
+        }
         break;
       }
     }
@@ -1348,7 +1412,17 @@ int SDFITSreader::read(
   // Times.
   char datobs[32];
   readData(DATE_OBS, cRow,  datobs);
-  readData(TIME,     cRow, &mbrec.utc);
+  if ( cData[TIME].colnum > 0 )
+    readData(TIME,     cRow, &mbrec.utc);
+  else {
+    Int yy, mm ;
+    Double dd, hour, min, sec ;
+    sscanf( datobs, "%d-%d-%lfT%lf:%lf:%lf", &yy, &mm, &dd, &hour, &min, &sec ) ;
+    dd = dd + ( hour * 3600.0 + min * 60.0 + sec ) / 86400.0 ;
+    MVTime mvt( yy, mm, dd ) ;
+    dd = mvt.day() ;
+    mbrec.utc = fmod( dd, 1.0 ) * 86400.0 ;
+  }
   if (cALFA_BD) mbrec.utc *= 3600.0;
 
   if (datobs[2] == '/') {
@@ -1386,10 +1460,66 @@ int SDFITSreader::read(
     }
   }
 
+  if ( iPol != -1 ) {
+    if ( mbrec.scanNo != cGLastScan[iPol] ) {
+      cGLastScan[iPol] = mbrec.scanNo ;
+      cGCycleNo[iPol] = 0 ;
+      mbrec.cycleNo = ++cGCycleNo[iPol] ;
+    }
+    else {
+      mbrec.cycleNo = ++cGCycleNo[iPol] ;
+    }
+  }
+
   readData(EXPOSURE, cRow, &mbrec.exposure);
 
   // Source identification.
   readData(OBJECT, cRow, mbrec.srcName);
+
+  if ( iPol != -1 ) {
+    char obsmode[32] ;
+    readData( OBSMODE, cRow, obsmode ) ;
+    char sig[1] ;
+    char cal[1] ;
+    readData( SIG, cRow, sig ) ;
+    readData( CAL, cRow, cal ) ;
+    if ( strstr( obsmode, "PSWITCH" ) != NULL ) {
+      // position switch
+      strcat( mbrec.srcName, "_p" ) ;
+      if ( strstr( obsmode, "PSWITCHON" ) != NULL ) {
+        strcat( mbrec.srcName, "s" ) ;
+      }
+      else if ( strstr( obsmode, "PSWITCHOFF" ) != NULL ) {
+        strcat( mbrec.srcName, "r" ) ;
+      }
+    }
+    else if ( strstr( obsmode, "Nod" ) != NULL ) {
+      // nod
+      strcat( mbrec.srcName, "_n" ) ;
+      if ( sig[0] == 'T' ) {
+        strcat( mbrec.srcName, "s" ) ;
+      }
+      else {
+        strcat( mbrec.srcName, "r" ) ;
+      }
+    }
+    else if ( strstr( obsmode, "FSWITCH" ) != NULL ) {
+      // frequency switch
+      strcat( mbrec.srcName, "_f" ) ;
+      if ( sig[0] == 'T' ) {
+        strcat( mbrec.srcName, "s" ) ;
+      }
+      else {
+        strcat( mbrec.srcName, "r" ) ;
+      }
+    }
+    if ( cal[0] == 'T' ) {
+      strcat( mbrec.srcName, "c" ) ;
+    }
+    else {
+      strcat( mbrec.srcName, "o" ) ;
+    }
+  }
 
   readData(OBJ_RA,  cRow, &mbrec.srcRA);
   if (strcmp(cData[OBJ_RA].name, "OBJ-RA") == 0) {
@@ -1437,6 +1567,9 @@ int SDFITSreader::read(
   int nChan = abs(endChan - startChan) + 1;
   int nPol = cNPol[iIF];
 
+  if ( cData[STOKES].colnum > 0 )
+    nPol = 1 ;
+
   if (cGetSpectra || cGetXPol) {
     int nxpol = cGetXPol ? 2*nChan : 0;
     mbrec.allocate(0, nChan*nPol, nxpol);
@@ -1446,6 +1579,7 @@ int SDFITSreader::read(
   mbrec.IFno[0]  = iIF + 1;
   mbrec.nChan[0] = nChan;
   mbrec.nPol[0]  = nPol;
+  mbrec.polNo = iPol ;
 
   readData(FqRefPix, cRow, mbrec.fqRefPix);
   readData(FqRefVal, cRow, mbrec.fqRefVal);

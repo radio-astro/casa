@@ -359,16 +359,70 @@ Int PKSFITSreader::read(PKSrecord &pksrec)
 
   pksrec.scanNo  = cMBrec.scanNo;
   pksrec.cycleNo = cMBrec.cycleNo;
+  pksrec.polNo = cMBrec.polNo ;
 
   // Extract MJD.
   Int day, month, year;
-  sscanf(cMBrec.datobs, "%4d-%2d-%2d", &year, &month, &day);
-  pksrec.mjd = MVTime(year, month, Double(day)).day() + cMBrec.utc/86400.0;
+  if ( strstr( cMBrec.datobs, "T" ) == NULL ) {
+    sscanf(cMBrec.datobs, "%4d-%2d-%2d", &year, &month, &day);
+    pksrec.mjd = MVTime(year, month, Double(day)).day() + cMBrec.utc/86400.0;
+  }
+  else {
+    Double dd, hour, min, sec ;
+    sscanf( cMBrec.datobs, "%4d-%2d-%2lfT%lf:%lf:%lf", &year, &month, &dd, &hour, &min, &sec ) ;
+    dd = dd + ( hour * 3600.0 + min * 60.0 + sec ) / 86400.0 ;
+    pksrec.mjd = MVTime(year, month, dd).day() ;
+  }
 
   pksrec.interval  = cMBrec.exposure;
 
   pksrec.fieldName = trim(cMBrec.srcName);
   pksrec.srcName   = pksrec.fieldName;
+
+  int namelen = pksrec.srcName.length() ;
+  if ( namelen > 4 ) {
+    String srcsub = pksrec.srcName.substr( namelen-4, 4 ) ;
+    if ( srcsub.find( "_psc" ) != string::npos ) {
+      pksrec.fieldName = pksrec.srcName.substr( 0, namelen-4 ) ;
+      pksrec.srcName = pksrec.fieldName + "_ps_calon" ;
+    }
+    else if ( srcsub.find( "_pso" ) != string::npos ) {
+      pksrec.fieldName = pksrec.srcName.substr( 0, namelen-4 ) ;
+      pksrec.srcName = pksrec.fieldName + "_ps" ;
+    }
+    else if ( srcsub.find( "_prc" ) != string::npos ) {
+      pksrec.fieldName = pksrec.srcName.substr( 0, namelen-4 ) ;
+      pksrec.srcName = pksrec.fieldName + "_psr_calon" ;
+    }
+    else if ( srcsub.find( "_pro" ) != string::npos ) {
+      pksrec.fieldName = pksrec.srcName.substr( 0, namelen-4 ) ;
+      pksrec.srcName = pksrec.fieldName + "_psr" ;
+    }
+    else if ( srcsub.find( "_fsc" ) != string::npos ) {
+      pksrec.fieldName = pksrec.srcName.substr( 0, namelen-4 ) ;
+      pksrec.srcName = pksrec.fieldName + "_fs_calon" ;
+    }
+    else if ( srcsub.find( "_fso" ) != string::npos ) {
+      pksrec.fieldName = pksrec.srcName.substr( 0, namelen-4 ) ;
+      pksrec.srcName = pksrec.fieldName + "_fs" ;
+    }
+    else if ( srcsub.find( "_frc" ) != string::npos ) {
+      pksrec.fieldName = pksrec.srcName.substr( 0, namelen-4 ) ;
+      pksrec.srcName = pksrec.fieldName + "_fsr_calon" ;
+    }
+    else if ( srcsub.find( "_fro" ) != string::npos ) {
+      pksrec.fieldName = pksrec.srcName.substr( 0, namelen-4 ) ;
+      pksrec.srcName = pksrec.fieldName + "_fsr" ;
+    }
+    else if ( srcsub.find( "_nsc" ) != string::npos || srcsub.find( "_nrc" ) != string::npos ) {
+      pksrec.fieldName = pksrec.srcName.substr( 0, namelen-4 ) ;
+      pksrec.srcName = pksrec.fieldName + "_nod_calon" ;
+    }
+    else if ( srcsub.find( "_nso" ) != string::npos || srcsub.find( "_nro" ) != string::npos ) {
+      pksrec.fieldName = pksrec.srcName.substr( 0, namelen-4 ) ;
+      pksrec.srcName = pksrec.fieldName + "_nod" ;
+    }
+  }
 
   pksrec.srcDir.resize(2);
   pksrec.srcDir(0) = cMBrec.srcRA;

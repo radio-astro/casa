@@ -93,6 +93,7 @@ class PKSrecord
     Matrix<uChar>   flagged;
     Complex         xCalFctr;
     Vector<Complex> xPol;
+    Int             polNo ;
 };
 
 #endif

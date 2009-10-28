@@ -256,8 +256,7 @@ namespace casa {
 	v_->autoDDOptionsShow = true;
     }
 
-
-  QtCleanPanelGui::~QtCleanPanelGui() { }
+    QtCleanPanelGui::~QtCleanPanelGui() { }
 
 #define EXIT_FUNC(NAME,STR,EXTRA)						\
     void QtCleanPanelGui::NAME() {						\

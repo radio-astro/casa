@@ -2958,10 +2958,12 @@ namespace casa {
 	    newXout.resize(newNUM_CHAN);
 	    newCHAN_WIDTH.resize(newNUM_CHAN);
 	    newRESOLUTION.resize(newNUM_CHAN);
+ 	    newEFFECTIVE_BW.resize(newNUM_CHAN);
 	    for(Int i=0; i<newNUM_CHAN; i++){
 	      newXout[i] = (newChanLoBound[i]+newChanHiBound[i])/2.;
 	      newCHAN_WIDTH[i] = newChanHiBound[i]-newChanLoBound[i];
-	      newRESOLUTION[i] = newCHAN_WIDTH[i]; //???????????
+	      newRESOLUTION[i] = newCHAN_WIDTH[i]; // to be revisited
+	      newEFFECTIVE_BW[i] = newCHAN_WIDTH[i]; // to be revisited
 	    }
 	    // set the reference frequency to the lower edge of the new spw,
 	    // keeping the already changed frame
@@ -2971,20 +2973,19 @@ namespace casa {
 	    // trivial definition of the bandwidth
 	    newTOTAL_BANDWIDTH = newChanHiBound[newNUM_CHAN-1]-newChanLoBound[0];
 	    
-	    // effective bandwidth needs to be interpolated in quadrature
-	    newEFFECTIVE_BW.resize(newNUM_CHAN);
-	    Vector<Double> newEffBWSquared(newNUM_CHAN);
-	    Vector<Double> oldEffBWSquared(oldEFFECTIVE_BW);
-	    for(Int i=0; i<oldNUM_CHAN; i++){
-	      oldEffBWSquared[i] *= oldEffBWSquared[i];
-	    }
-	    InterpolateArray1D<Double, Double>::interpolate(newEffBWSquared, newXout,
-                                                            transNewXin,
-                                                            oldEffBWSquared,
-                                                            InterpolateArray1D<Double,Double>::linear);
-	    for(Int i=0; i<newNUM_CHAN; i++){
-	      newEFFECTIVE_BW[i] = sqrt(newEffBWSquared[i]);
-	    }
+// 	    // effective bandwidth needs to be interpolated in quadrature
+// 	    Vector<Double> newEffBWSquared(newNUM_CHAN);
+// 	    Vector<Double> oldEffBWSquared(oldEFFECTIVE_BW);
+// 	    for(Int i=0; i<oldNUM_CHAN; i++){
+// 	      oldEffBWSquared[i] *= oldEffBWSquared[i];
+// 	    }
+// 	    InterpolateArray1D<Double, Double>::interpolate(newEffBWSquared, newXout,
+//                                                             transNewXin,
+//                                                             oldEffBWSquared,
+//                                                             InterpolateArray1D<Double,Double>::linear);
+// 	    for(Int i=0; i<newNUM_CHAN; i++){
+// 	      newEFFECTIVE_BW[i] = sqrt(newEffBWSquared[i]);
+// 	    }
 	    
 	    if(!allEQ(newXout, transNewXin)){ // grids are different
 	      doRegrid = True;
