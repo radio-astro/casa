@@ -311,6 +311,18 @@ int asap::STFiller::read( )
 #endif
   PKSrecord pksrec;
   int n = 0;
+  bool isGBTFITS = false ;
+  if ((header_->antennaname.find( "GBT" ) != String::npos) && File(filename_).isRegular()) {
+    FILE *fp = fopen( filename_.c_str(), "r" ) ;
+    fseek( fp, 640, SEEK_SET ) ;
+    char buf[81] ;
+    fread( buf, 80, 1, fp ) ;
+    buf[80] = '\0' ;
+    if ( strstr( buf, "NRAO_GBT" ) != NULL ) {
+      isGBTFITS = true ;
+    }
+    fclose( fp ) ;
+  } 
   while ( status == 0 ) {
     status = reader_->read(pksrec);
     if ( status != 0 ) break;
@@ -417,7 +429,10 @@ int asap::STFiller::read( )
     for ( uInt i=0; i< npol; ++i ) {
       tsysvec = pksrec.tsys(i);
       *tsysCol = tsysvec;
-      *polnoCol = i;
+      if (isGBTFITS)
+        *polnoCol = pksrec.polNo ;
+      else
+        *polnoCol = i;
 
       *specCol = pksrec.spectra.column(i);
       *flagCol = pksrec.flagged.column(i);
