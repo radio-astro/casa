@@ -64,11 +64,15 @@ namespace casa {
         const String& maskInp, const Vector<Float>& includepix,
         const Vector<Float>& excludepix, const String& residualInp,
         const String& modelInp, const String& estimatesFilename,
-        const String& logfile, const Bool& append
+        const String& logfile, const Bool& append,
+        const String& newEstimatesInp
     ) : chan(chanInp), stokesString(stokes), mask(maskInp),
 		residual(residualInp),model(modelInp), logfileName(logfile),
+		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
-		estimates(), fixed(0), logfileAppend(append) {
+		estimates(), fixed(0), logfileAppend(append), peakIntensities(),
+		pixelPositions(), intensityToFluxConversion(1.0, "beam")
+ {
         itsLog = new LogIO();
         *itsLog << LogOrigin("ImageFitter", "constructor");
         _construct(imagename, box, region, estimatesFilename);
@@ -104,12 +108,20 @@ namespace casa {
             excludePixelRange, fit, deconvolve, list,
             residual, model
         );
-        Flux<Double> flux;
-        Vector<Quantity> fluxQuant;
-        String resultsString = _resultsToString();
+        _setFluxes();
+		pixelPositions.resize(results.nelements());
+		for(uInt i=0; i<results.nelements(); i++) {
+			Vector<Double> x(2);
+			pixelPositions[i] = x;
+		}
+		_setSizes();
+        String resultsString = _resultsToString(converged);
         *itsLog << LogIO::NORMAL << resultsString << LogIO::POST;
         if (! logfileName.empty()) {
         	_writeLogfile(resultsString);
+        }
+        if (! newEstimatesFileName.empty()) {
+        	_writeNewEstimatesFile();
         }
         return results;
     }
@@ -139,6 +151,7 @@ namespace casa {
         else {
         	FitterEstimatesFileParser parser(estimatesFilename, *image);
         	estimates = parser.getEstimates();
+        	estimatesString = parser.getContents();
         	fixed = parser.getFixed();
         	Record rec;
         	String errmsg;
@@ -175,8 +188,17 @@ namespace casa {
                 _processBox(String(boxStream));
             }
             else {
-                // get the ImageRegion from the specified region
-                imRegion = image->getRegion(region);
+            	Regex otherImage("(.*)+:(.*)+");
+            	if (region.matches(otherImage)) {
+            		String res[2];
+            		casa::split(region, res, 2, ":");
+            		PagedImage<Float> other(res[0]);
+            		imRegion = other.getRegion(res[1]);
+            	}
+            	else {
+            		imRegion = image->getRegion(region);
+            	}
+                regionString = "Used image region " + region;
             }
 
         }
@@ -189,6 +211,7 @@ namespace casa {
             }
             // we have been given a box by the user and it is specified correctly
             _processBox(box);
+            regionString = "Used box " + box;
         }
     } 
 
@@ -217,20 +240,35 @@ namespace casa {
         imRegion = ImageRegion(wcBox);
     }
 
-    String ImageFitter::_resultsToString() const {
+    String ImageFitter::_resultsToString(Bool converged) {
     	ostringstream summary;
-    	summary << "****** Fit performed at " << Time().toString() << "******" << endl;
-    	for (uInt i = 0; i < results.nelements(); i++) {
-    		summary << "Fit on " << image->name(True) << " region " << i << endl;
-    		summary << _positionToString(i) << endl;
-    		summary << _sizeToString(i) << endl;
-    		summary << _fluxToString(i) << endl;
-    		summary << _spectrumToString(i) << endl;
+    	summary << "****** Fit performed at " << Time().toString() << "******" << endl << endl;
+    	summary << "Input parameters ---" << endl;
+    	summary << "       --- imagename:           " << image->name() << endl;
+    	summary << "       --- region:              " << regionString << endl;
+    	summary << "       --- channel:             " << chan << endl;
+    	summary << "       --- stokes:              " << stokesString << endl;
+    	summary << "       --- mask:                " << mask << endl;
+    	summary << "       --- include pixel ragne: " << includePixelRange << endl;
+    	summary << "       --- exclude pixel ragne: " << excludePixelRange << endl;
+    	summary << "       --- initial estimates:   " << estimatesString << endl;
+
+    	if (converged) {
+    		for (uInt i = 0; i < results.nelements(); i++) {
+    			summary << "Fit on " << image->name(True) << " component " << i << endl;
+    			summary << _positionToString(i) << endl;
+    			summary << _sizeToString(i) << endl;
+    			summary << _fluxToString(i) << endl;
+    			summary << _spectrumToString(i) << endl;
+    		}
+    	}
+    	else {
+    		summary << "*** FIT FAILED ***" << endl;
     	}
     	return summary.str();
     }
 
-    String ImageFitter::_positionToString(const uInt compNumber) const  {
+    String ImageFitter::_positionToString(const uInt compNumber)  {
     	ostringstream position;
     	MDirection mdir = results.getRefDirection(compNumber);
 
@@ -260,7 +298,7 @@ namespace casa {
     		delta = fabs(dra.getValue());
     	}
     	else {
-    		delta = sqrt ( dra.getValue()*dra.getValue() + ddec.getValue()*ddec.getValue() );
+    		delta = sqrt( dra.getValue()*dra.getValue() + ddec.getValue()*ddec.getValue() );
     	}
 
 		// Add error estimates to ra/dec strings if an error is given (either >0)
@@ -289,7 +327,11 @@ namespace casa {
 
         world[0] = longitude.getValue();
         world[1] = lat.getValue();
+        // TODO do the pixel computations in another method
         if (image->coordinates().toPixel(pixel, world)) {
+        	pixelPositions[compNumber][0] = pixel[0];
+        	pixelPositions[compNumber][1] = pixel[1];
+
         	DirectionCoordinate dCoord = image->coordinates().directionCoordinate(
         		ImageMetaData(*image).directionCoordinateNumber()
         	);
@@ -311,44 +353,96 @@ namespace casa {
     	return position.str();
     }
 
+    void ImageFitter::_setFluxes() {
+    	fluxDensities.resize(results.nelements());
+    	peakIntensities.resize(results.nelements());
+    	Vector<Quantity> fluxQuant;
+		Quantity resolutionElementArea;
+		ImageMetaData md(*image);
+
+		// does the image have a restoring beam?
+		if(! md.getBeamArea(resolutionElementArea)) {
+			// if no restoring beam, let's hope the the brightness units are
+			// in [prefix]Jy/pixel and let's find the pixel size.
+			if(md.getDirectionPixelArea(resolutionElementArea)) {
+				intensityToFluxConversion.setUnit("pixel");
+			}
+			else {
+				// can't find  pixel size, which is extremely bad!
+				*itsLog << "Unable to determine the resolution element area of image "
+						<< image->name()<< LogIO::EXCEPTION;
+			}
+		}
+
+    	for(uInt i=0; i<results.nelements(); i++) {
+    		results.getFlux(fluxQuant, i);
+    		// TODO there is probably a better way to get the flux component we want...
+    		Vector<String> polarization = results.getStokes(i);
+    		for(uInt j = 0; j < polarization.size(); j++) {
+    			if (polarization[j] == stokesString) {
+    				fluxDensities[i] = fluxQuant[j];
+    				break;
+    			}
+    		}
+    		const ComponentShape* compShape = results.getShape(i);
+    		Quantity compArea, peakIntensity;
+    		AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
+    		compArea = (static_cast<const GaussianShape *>(compShape))->getArea();
+    		peakIntensities[i] = fluxDensities[i]/intensityToFluxConversion*resolutionElementArea/compArea;
+    		peakIntensities[i].convert("Jy/" + intensityToFluxConversion.getUnit());
+    	}
+    }
+
+    void ImageFitter::_setSizes() {
+    	uInt ncomps = results.nelements();
+    	majorAxes.resize(ncomps);
+    	minorAxes.resize(ncomps);
+    	positionAngles.resize(ncomps);
+    	for(uInt i=0; i<results.nelements(); i++) {
+    		const ComponentShape* compShape = results.getShape(i);
+    		AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
+    		majorAxes[i] = (static_cast<const GaussianShape *>(compShape))->majorAxis();
+    		minorAxes[i] = (static_cast<const GaussianShape *>(compShape))->minorAxis();
+    		positionAngles[i]  = (static_cast<const GaussianShape *>(compShape))->positionAngle();
+    	}
+    }
+
     String ImageFitter::_sizeToString(const uInt compNumber) const  {
     	ostringstream size;
-        const ComponentShape* compShape = results.getShape(compNumber);
+    	const ComponentShape* compShape = results.getShape(compNumber);
 
-    	if (compShape->type() == ComponentType::GAUSSIAN) {
-    		// print gaussian stuff
-    		Quantity maj = (static_cast<const GaussianShape *>(compShape))->majorAxis();
-    		Quantity min = (static_cast<const GaussianShape *>(compShape))->minorAxis();
-    		Quantity pa  = (static_cast<const GaussianShape *>(compShape))->positionAngle();
-    		Quantity emaj = (static_cast<const GaussianShape *>(compShape))->majorAxisError();
-    		Quantity emin = (static_cast<const GaussianShape *>(compShape))->minorAxisError();
-    		Quantity epa  = (static_cast<const GaussianShape *>(compShape))->positionAngleError();
-    		Vector<Quantum<Double> > beam = image->imageInfo().restoringBeam();
-    		Bool hasBeam = beam.nelements() == 3;
-    		size << "Image component size";
-    		if (hasBeam) {
-    			size << " (convolved with beam)";
+    	AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
+    	Quantity maj = majorAxes[compNumber];
+    	Quantity min = minorAxes[compNumber];
+    	Quantity pa = positionAngles[compNumber];
+    	Quantity emaj = (static_cast<const GaussianShape *>(compShape))->majorAxisError();
+    	Quantity emin = (static_cast<const GaussianShape *>(compShape))->minorAxisError();
+    	Quantity epa  = (static_cast<const GaussianShape *>(compShape))->positionAngleError();
+    	Vector<Quantum<Double> > beam = image->imageInfo().restoringBeam();
+    	Bool hasBeam = beam.nelements() == 3;
+    	size << "Image component size";
+    	if (hasBeam) {
+    		size << " (convolved with beam)";
+    	}
+    	size << " ---" << endl;
+    	size << _gaussianToString(maj, min, pa, emaj, emin, epa) << endl;
+    	if (hasBeam) {
+    		size << "Clean beam size ---" << endl;
+    		size << _gaussianToString(beam[0], beam[1], beam[2], 0, 0, 0, False) << endl;
+    		size << "Image component size (deconvolved from beam) ---" << endl;
+    		// NOTE fit components change here to their deconvolved counterparts
+    		Quantity femaj = emaj/maj;
+    		Quantity femin = emin/min;
+    		if (ImageUtilities::deconvolveFromBeam(maj, min, pa, *itsLog, beam)) {
+    			size << "    Component is a point source" << endl;
     		}
-    		size << " ---" << endl;
-    		size << _gaussianToString(maj, min, pa, emaj, emin, epa) << endl;
-    		if (hasBeam) {
-        		size << "Clean beam size ---" << endl;
-    			size << _gaussianToString(beam[0], beam[1], beam[2], 0, 0, 0, False) << endl;
-    			size << "Image component size (deconvolved from beam) ---" << endl;
-    			// NOTE fit components change here to their deconvolved counterparts
-    			Quantity femaj = emaj/maj;
-    			Quantity femin = emin/min;
-    			if (ImageUtilities::deconvolveFromBeam(maj, min, pa, *itsLog, beam)) {
-    				size << "    Component is a point source" << endl;
+    		else {
+    			if (pa.getValue("deg") < 0) {
+    				pa += Quantity(180, "deg");
     			}
-    			else {
-    				if (pa.getValue("deg") < 0) {
-    					pa += Quantity(180, "deg");
-    				}
-    				emaj *= femaj;
-    				emin *= femin;
-    				size << _gaussianToString(maj, min, pa, emaj, emin, epa);
-    			}
+    			emaj *= femaj;
+    			emin *= femin;
+    			size << _gaussianToString(maj, min, pa, emaj, emin, epa);
     		}
     	}
     	return size.str();
@@ -525,48 +619,18 @@ namespace casa {
 		unitPrefix[7] = "n";
 
     	ostringstream fluxes;
-    	Vector<Quantity> fluxQuant;
-    	Quantity fluxDensity;
-    	Quantity fluxDensityError;
-
-    	results.getFlux(fluxQuant, compNumber);
-    	// TODO there is probably a better way to get the flux component we want...
-        Vector<String> polarization = results.getStokes(compNumber);
-        for(uInt i = 0; i < polarization.size(); i++) {
-        	if (polarization[i] == stokesString) {
-        		fluxDensity = fluxQuant[i];
-        		complex<double> error = results.component(compNumber).flux().errors()[i];
-        		fluxDensityError.setValue(sqrt(error.real()*error.real() + error.imag()*error.imag()));
-        		fluxDensityError.setUnit(fluxDensity.getUnit());
-        		break;
-        	}
-        }
-        Quantity peakIntensity;
-        Quantity resolutionElementArea;
-        ImageMetaData md(*image);
-        Quantity intensityToFluxConversion(1.0, "beam");
-        Unit brightnessUnit = image->units();
-        const ComponentShape* compShape = results.getShape(compNumber);
-
-        // does the image have a restoring beam?
-        if(! md.getBeamArea(resolutionElementArea)) {
-            // if no restoring beam, let's hope the the brightness units are
-            // in [prefix]Jy/pixel and let's find the pixel size.
-            if(md.getDirectionPixelArea(resolutionElementArea)) {
-                intensityToFluxConversion.setUnit("pixel");
+    	Quantity fluxDensity = fluxDensities[compNumber];
+    	Quantity peakIntensity = peakIntensities[compNumber];
+       	Quantity fluxDensityError;
+		Vector<String> polarization = results.getStokes(compNumber);
+		for (uInt i=0; i<polarization.nelements(); i++) {
+            if (polarization[i] == stokesString) {
+            	complex<double> error = results.component(compNumber).flux().errors()[i];
+            	fluxDensityError.setValue(sqrt(error.real()*error.real() + error.imag()*error.imag()));
+            	fluxDensityError.setUnit(fluxDensity.getUnit());
+            	break;
             }
-            else {
-                // can't find  pixel size, which is extremely bad!
-                *itsLog << "Unable to determine the resolution element area of image "
-                	<< image->name()<< LogIO::EXCEPTION;
-            }
-        }
-        Quantity compArea;
-        if (compShape->type() == ComponentType::GAUSSIAN) {
-        	compArea = (static_cast<const GaussianShape *>(compShape))->getArea();
-        	peakIntensity = fluxDensity/intensityToFluxConversion*resolutionElementArea/compArea;
-        	peakIntensity.convert("Jy/" + intensityToFluxConversion.getUnit());
-        }
+		}
         fluxes << "Flux ---" << endl;
         String unit;
         for (uInt i=0; i<unitPrefix.size(); i++) {
@@ -582,7 +646,7 @@ namespace casa {
         fd[1] = fluxDensityError.getValue();
         uInt precision = _precision(fd, Vector<Double>());
         fluxes << std::fixed << setprecision(precision);
-        fluxes << "       ---   Integrated: " << fluxDensity.getValue()
+        fluxes << "       --- Integrated:   " << fluxDensity.getValue()
 			<< " +/- " << fluxDensityError.getValue() << " "
 			<< fluxDensity.getUnit() << endl;
 
@@ -600,7 +664,7 @@ namespace casa {
          pi[1] = peakIntensityError.getValue();
          precision = _precision(pi, Vector<Double>());
          fluxes << std::fixed << setprecision(precision);
-         fluxes << "       ---         Peak: " << peakIntensity.getValue()
+         fluxes << "       --- Peak:         " << peakIntensity.getValue()
  			<< " +/- " << peakIntensityError.getValue() << " "
  			<< peakIntensity.getUnit() << endl;
          fluxes << "       --- Polarization: " << stokesString << endl;
@@ -608,15 +672,16 @@ namespace casa {
     }
 
     String ImageFitter::_spectrumToString(uInt compNumber) const {
-    	Vector<String> unitPrefix(8);
+    	Vector<String> unitPrefix(9);
 		unitPrefix[0] = "T";
 		unitPrefix[1] = "G";
 		unitPrefix[2] = "M";
 		unitPrefix[3] = "k";
 		unitPrefix[4] = "";
-		unitPrefix[5] = "m";
-		unitPrefix[6] = "u";
-		unitPrefix[7] = "n";
+		unitPrefix[5] = "c";
+		unitPrefix[6] = "m";
+		unitPrefix[7] = "u";
+		unitPrefix[8] = "n";
     	ostringstream spec;
     	const SpectralModel& spectrum = results.component(compNumber).spectrum();
     	Quantity frequency = spectrum.refFrequency().get("MHz");
@@ -689,5 +754,45 @@ namespace casa {
     	}
     }
 
+    void ImageFitter::_writeNewEstimatesFile() const {
+    	ostringstream out;
+    	for (uInt i=0; i<results.nelements(); i++) {
+    		out << peakIntensities[i].getValue(image->units()) << ", "
+    				<< pixelPositions[i][0] << ", " << pixelPositions[i][1] << ", "
+    				<< majorAxes[i] << ", " << minorAxes[i] << ", "
+    				<< positionAngles[i] << endl;
+    	}
+    	String output = out.str();
+    	File estimates(newEstimatesFileName);
+    	if(estimates.exists()) {
+    		if (estimates.isWritable()) {
+    			Int fd = FiledesIO::create(newEstimatesFileName.c_str());
+    			FiledesIO fio(fd);
+    			fio.write(output.length(), output.c_str());
+    			FiledesIO::close(fd);
+    			*itsLog << LogIO::NORMAL << "Overwrote file "
+    					<< newEstimatesFileName << " with new estimates file"
+    					<< LogIO::POST;
+    		}
+    		else {
+    			*itsLog << LogIO::WARN << "Unable to write to file "
+    					<< newEstimatesFileName << LogIO::POST;
+    		}
+    	}
+    	else {
+    		if (estimates.canCreate()) {
+    			Int fd = FiledesIO::create(newEstimatesFileName.c_str());
+    			FiledesIO fio (fd);
+    			fio.write(output.length(), output.c_str());
+    			FiledesIO::close(fd);
+    			*itsLog << LogIO::NORMAL << "Created estimates file "
+    					<< newEstimatesFileName << LogIO::POST;
+    		}
+    		else {
+    			*itsLog << LogIO::WARN << "Cannot create estimates file "
+    					<< newEstimatesFileName << LogIO::POST;
+    		}
+    	}
+    }
 }
 

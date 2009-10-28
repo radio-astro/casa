@@ -45,6 +45,7 @@ Int main(Int argc, char *argv[]) {
 	input.create("estimates", "");
 	input.create("logfile", "");
 	input.create("append","false");
+	input.create("newestimates","");
 
 	input.readArguments(argc, argv);
 	String imagename = input.getString("imagename");
@@ -59,6 +60,7 @@ Int main(Int argc, char *argv[]) {
 	String estimatesFilename = input.getString("estimates");
 	String logfile = input.getString("logfile");
 	Bool append = input.getBool("append");
+	String newEstimatesFileName = input.getString("newestimates");
 
 	Vector<String> includePixParts = stringToVector(input.getString("includepix"));
 	Vector<String> excludePixParts = stringToVector(input.getString("excludepix"));
@@ -73,7 +75,7 @@ Int main(Int argc, char *argv[]) {
 	ImageFitter imFitter(
 		imagename, box, region, chan, stokes, mask, includePixelRange,
 		excludePixelRange, residual, model, estimatesFilename, logfile,
-		append
+		append, newEstimatesFileName
 	);
     imFitter.fit();
     return 0;

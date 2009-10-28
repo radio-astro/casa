@@ -94,7 +94,7 @@ namespace casa {
                 const Vector<Float>& excludepix = Vector<Float>(0),
                 const String& residualInp="", const String& modelInp="",
                 const String& estiamtesFilename="", const String& logfile="",
-                const Bool& append=True
+                const Bool& append=True, const String& newEstimatesInp=""
             ); 
 
             // destructor
@@ -110,11 +110,15 @@ namespace casa {
             ImageInterface<Float> *image;
             ImageRegion imRegion;
             uInt chan;
-            String stokesString, mask, residual, model, logfileName;
+            String stokesString, mask, residual, model, logfileName,
+				regionString, estimatesString, newEstimatesFileName;
             Vector<Float> includePixelRange, excludePixelRange;
             ComponentList estimates, results;
             Vector<String> fixed;
             Bool logfileAppend;
+            Vector<Quantity> peakIntensities, fluxDensities, majorAxes, minorAxes, positionAngles;
+            Vector<Vector<Double> > pixelPositions;
+            Quantity intensityToFluxConversion;
 
             // does the lion's share of constructing the object, ie checks validity of
             // inputs, etc.
@@ -134,10 +138,10 @@ namespace casa {
             void _checkImageParameterValidity() const;
 
             // summarize the results in a nicely formatted string
-            String _resultsToString() const;
+            String _resultsToString(Bool converged);
 
             // summarize the position details in a nicely formatted string
-            String _positionToString(const uInt compNumber) const;
+            String _positionToString(const uInt compNumber);
 
             //summarize the size details in a nicely formatted string
             String _sizeToString(const uInt compNumber) const;
@@ -153,7 +157,6 @@ namespace casa {
 
             String _spectrumToString(uInt compNumber) const;
 
-
 			//Round a number to 2 or 3 significant digits for printing
             // If number is n>3.2*10**e, 2 digits; if 1<n<3.2*10**e, 3 digits
             Double _round(Double number) const;
@@ -163,6 +166,14 @@ namespace casa {
 
             // write output to log file
             void _writeLogfile(const String& output) const;
+
+            // Write the estimates file using this fit.
+            void _writeNewEstimatesFile() const;
+
+            // Set the flux densities and peak intensities of the fitted components.
+            void _setFluxes();
+            // Set the convolved sizes of the fitted components.
+            void _setSizes();
     };
 }
 
