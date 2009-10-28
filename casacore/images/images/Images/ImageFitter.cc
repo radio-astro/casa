@@ -25,32 +25,31 @@
 //#
 //# $Id: $
 
-#include <images/Images/ImageAnalysis.h>
-#include <images/Images/ImageFitter.h>
-#include <images/Images/ImageMetaData.h>
-#include <images/Images/ImageStatistics.h>
-#include <images/Regions/RegionManager.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <casa/IO/FilebufIO.h>
+#include <casa/IO/FiledesIO.h>
+
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/Unit.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/MVTime.h>
+#include <casa/OS/Time.h>
+
 #include <components/ComponentModels/Flux.h>
+#include <components/ComponentModels/SpectralModel.h>
+
+#include <images/IO/FitterEstimatesFileParser.h>
+#include <images/Images/ImageAnalysis.h>
+#include <images/Images/ImageFitter.h>
+#include <images/Images/ImageMetaData.h>
+#include <images/Images/ImageStatistics.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/MIRIADImage.h>
-#include <images/IO/FitterEstimatesFileParser.h>
-// #include <casa/Arrays/ArrayUtil.h>
+#include <images/Regions/RegionManager.h>
 
-#include <components/ComponentModels/SpectralModel.h>
 #include <images/Regions/WCUnion.h>
 #include <images/Regions/WCBox.h>
 #include <lattices/Lattices/LCRegion.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-// #include <casa/Arrays/Vector.h>
-// #include <casa/Arrays/IPosition.h>
-#include <casa/Utilities/Assert.h>
-// #include <casa/Exceptions/Error.h>
 
 #include <components/ComponentModels/SkyComponent.h>
 #include <components/ComponentModels/ComponentShape.h>
@@ -64,10 +63,12 @@ namespace casa {
         const uInt chanInp, const String& stokes,
         const String& maskInp, const Vector<Float>& includepix,
         const Vector<Float>& excludepix, const String& residualInp,
-        const String& modelInp, const String& estimatesFilename
+        const String& modelInp, const String& estimatesFilename,
+        const String& logfile, const Bool& append
     ) : chan(chanInp), stokesString(stokes), mask(maskInp),
-		residual(residualInp),model(modelInp), includePixelRange(includepix),
-		excludePixelRange(excludepix), estimates(), fixed(0) {
+		residual(residualInp),model(modelInp), logfileName(logfile),
+		includePixelRange(includepix), excludePixelRange(excludepix),
+		estimates(), fixed(0), logfileAppend(append) {
         itsLog = new LogIO();
         *itsLog << LogOrigin("ImageFitter", "constructor");
         _construct(imagename, box, region, estimatesFilename);
@@ -105,100 +106,12 @@ namespace casa {
         );
         Flux<Double> flux;
         Vector<Quantity> fluxQuant;
-        *itsLog << LogIO::NORMAL << _resultsToString() << LogIO::POST;
-        for(uInt k=0; k<results.nelements(); k++) {
-            SkyComponent skyComp = results.component(k);
-            flux = skyComp.flux();
-            cout << "flux val " << flux.value(Stokes::I) << endl;
-            results.getFlux(fluxQuant, k);
-            cout << " flux from comp list " << fluxQuant << endl;
-            Vector<String> polarization = results.getStokes(k);
-            cout << "stokes from comp list " << polarization << endl;
-            const ComponentShape* compShape = results.getShape(k);
-            String compType = ComponentType::name(compShape->type());
-            cout << "component type " << compType << endl;
-            MDirection mdir = results.getRefDirection(k);
-
-            Quantity lat = mdir.getValue().getLat("rad");
-            Quantity longitude = mdir.getValue().getLong("rad");
-
-            Vector<Double> world(4,0), pixel(4,0);
-            image->coordinates().toWorld(world, pixel);
-
-            world[0] = longitude.getValue();
-            world[1] = lat.getValue();
-            if (image->coordinates().toPixel(pixel, world)) {
-        	    cout << "max pixel position " << pixel << endl;
-            }
-            else {
-        	    cerr << "unable to convert world to pixel" << endl;
-            }
-
-            Quantity elat = compShape->refDirectionErrorLat();
-            Quantity elong = compShape->refDirectionErrorLong();
-            cout << " RA " << MVTime(lat).string(MVTime::TIME, 11) << " DEC "
-                << MVAngle(longitude).string(MVAngle::ANGLE_CLEAN, 11) << endl;
-            cout << "RA error " << MVTime(elat).string(MVTime::TIME, 11) << " Dec error " 
-                << MVAngle(elong).string(MVAngle::ANGLE, 11) << endl;
-
-            cout << "RA error rads" << elat << " Dec error rad " << elong << endl;
-
-            if (compShape->type() == ComponentType::GAUSSIAN) {
-                // print gaussian stuff
-                Quantity bmaj = (static_cast<const GaussianShape *>(compShape))->majorAxis();
-                Quantity bmin = (static_cast<const GaussianShape *>(compShape))->minorAxis();
-                Quantity bpa  = (static_cast<const GaussianShape *>(compShape))->positionAngle();
-                Quantity emaj = (static_cast<const GaussianShape *>(compShape))->majorAxisError();
-                Quantity emin = (static_cast<const GaussianShape *>(compShape))->minorAxisError();
-                Quantity epa  = (static_cast<const GaussianShape *>(compShape))->positionAngleError();
-                cout << "bmaj " << bmaj << " bmin " << bmin << " bpa " << bpa << endl;
-                cout << "emaj " << emaj << " emin " << emin << " epa " << epa << endl;
-            }
+        String resultsString = _resultsToString();
+        *itsLog << LogIO::NORMAL << resultsString << LogIO::POST;
+        if (! logfileName.empty()) {
+        	_writeLogfile(resultsString);
         }
         return results;
-   /*
-    // this needs to be cleaned up, it was done as an intro to the casa dev system
-
-    ImageInterface<Float>* imagePtr = &image;
-    SubImage<Float> subim;
-    if (doRegion) {
-        subim = SubImage<Float>(image, imRegion, False);
-        imagePtr = &subim;
-    }
-    LogIO logio;
-    ImageStatistics<Float> stats(*imagePtr, logio, True, False);
-    IPosition minpos, maxpos;
-    stats.getMinMaxPos(minpos, maxpos);
-    cout << " min pos " << minpos << " maxpos " << maxpos << endl; 
-    Array<Double> sumsquared;
-    stats.getStatistic (sumsquared, LatticeStatsBase::SUMSQ);
-    cout << "sumsq " << sumsquared << endl;
-    // get single channel
-    IPosition start(4, 0, 0, 0, 0);
-    IPosition end = imagePtr->shape() - 1;
-    IPosition stride(4, 1, 1, 1, 1);
-    cout << "start " << start << " end " << end << endl;
-    // channel 38
-    start[3] = chan;
-    end[3] = chan; 
-    cout << "start " << start << " end " << end << endl;
-
-    Slicer sl(start, end, stride, Slicer::endIsLast);
-    SubImage<Float> subim2(*imagePtr, sl, False);
-    
-    stats.setNewImage(subim2);
-    stats.getMinMaxPos(minpos, maxpos);
-    cout << " min pos " << minpos << " maxpos " << maxpos << endl; 
-
-    stats.getStatistic (sumsquared, LatticeStatsBase::SUMSQ);
-    cout << "sumsq " << sumsquared << endl;
-
-
-//    GaussianFitter myGF(image, regionRecord);
-//    const IPosition latticeShape(image.shape());
-//    RegionManager *regionManager_p;
-//    regionManager_p = new casa::RegionManager();
-*/
     }
 
     void ImageFitter::_construct(
@@ -306,6 +219,7 @@ namespace casa {
 
     String ImageFitter::_resultsToString() const {
     	ostringstream summary;
+    	summary << "****** Fit performed at " << Time().toString() << "******" << endl;
     	for (uInt i = 0; i < results.nelements(); i++) {
     		summary << "Fit on " << image->name(True) << " region " << i << endl;
     		summary << _positionToString(i) << endl;
@@ -727,6 +641,52 @@ namespace casa {
     	spec << "Spectrum ---" << endl;
     	spec << "      --- frequency:        " << frequency << " (" << wavelength << ")" << endl;
     	return spec.str();
+    }
+
+    void ImageFitter::_writeLogfile(const String& output) const {
+    	File log(logfileName);
+    	if(log.exists()) {
+    		if (log.isWritable()) {
+    			if (logfileAppend) {
+    				Int fd = open(logfileName.c_str(), O_RDWR | O_APPEND);
+    				FiledesIO fio(fd);
+    				fio.write(output.length(), output.c_str());
+    				FiledesIO::close(fd);
+
+    				*itsLog << LogIO::NORMAL << "Appended results to file "
+    						<< logfileName << LogIO::POST;
+    			}
+    			else {
+    				if (log.canCreate()) {
+    					Int fd = FiledesIO::create(logfileName.c_str());
+    					FiledesIO fio (fd);
+    					fio.write(output.length(), output.c_str());
+    					FiledesIO::close(fd);
+    					*itsLog << LogIO::NORMAL << "Overwrote file "
+    							<< logfileName << " with new log file"
+    							<< LogIO::POST;
+    				}
+    			}
+    		}
+    		else {
+    			*itsLog << LogIO::WARN << "Unable to write to file "
+    					<< logfileName << LogIO::POST;
+    		}
+    	}
+    	else {
+    		if (log.canCreate()) {
+    			Int fd = FiledesIO::create(logfileName.c_str());
+    			FiledesIO fio (fd);
+    			fio.write(output.length(), output.c_str());
+    			FiledesIO::close(fd);
+    			*itsLog << LogIO::NORMAL << "Created log file "
+    					<< logfileName << LogIO::POST;
+    		}
+    		else {
+    			*itsLog << LogIO::WARN << "Cannot create log file "
+    					<< logfileName << LogIO::POST;
+    		}
+    	}
     }
 
 }
