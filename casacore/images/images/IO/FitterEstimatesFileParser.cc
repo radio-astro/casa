@@ -45,7 +45,7 @@ FitterEstimatesFileParser::FitterEstimatesFileParser (
 		const String& filename,
 		const ImageInterface<Float>& image
 	) : componentList(), peakValues(0), xposValues(0), yposValues(0),
-		majValues(0), minValues(0), paValues(0) {
+		majValues(0), minValues(0), paValues(0), contents("") {
 	itsLog = new LogIO();
 
 	RegularFile myFile(filename);
@@ -68,12 +68,16 @@ FitterEstimatesFileParser::~FitterEstimatesFileParser() {
 	delete itsLog;
 }
 
-ComponentList FitterEstimatesFileParser::getEstimates() {
+ComponentList FitterEstimatesFileParser::getEstimates() const {
 	return componentList;
 }
 
-Vector<String> FitterEstimatesFileParser::getFixed() {
+Vector<String> FitterEstimatesFileParser::getFixed() const {
 	return fixedValues;
+}
+
+String FitterEstimatesFileParser::getContents() const {
+	return contents;
 }
 
 void FitterEstimatesFileParser::_parseFile(
@@ -85,7 +89,6 @@ void FitterEstimatesFileParser::_parseFile(
 	// I doubt a genuine estimates file will ever have this many characters
 	Int bufSize = 4096;
 	char *buffer = new char[bufSize];
-	String contents;
 	int nRead;
 
 	while ((nRead = fileIO.read(bufSize, buffer, False)) == bufSize) {
@@ -132,21 +135,6 @@ void FitterEstimatesFileParser::_parseFile(
 		minValues.resize(componentIndex + 1, True);
 		paValues.resize(componentIndex + 1, True);
 		fixedValues.resize(componentIndex + 1, True);
-
-		/*
-		Quantity fluxQuantity;
-		if (! readQuantity(fluxQuantity, flux)) {
-			*itsLog << "File " << filename << ", line " << *iter
-				<< ": Flux value " << flux << " is not a quantity"
-				<< LogIO::EXCEPTION;
-		}
-		if (fluxQuantity.getUnit().empty()) {
-			*itsLog << "Flux units not specified for component number "
-				<< componentIndex << ". Please specify and run again"
-				<< LogIO::EXCEPTION;
-		}
-		fluxValues(componentIndex) = fluxQuantity;
-		*/
 
 		if (! peak.matches(RXdouble) ) {
 			*itsLog << "File " << filename << ", line " << *iter

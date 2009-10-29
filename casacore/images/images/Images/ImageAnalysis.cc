@@ -2439,6 +2439,7 @@ ComponentList ImageAnalysis::fitsky(
 	}
 	else {
 		converged = False;
+		*itsLog << LogOrigin("ImageAnalysis", "fitsky");
 		*itsLog << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
 		return cl;
 	}
