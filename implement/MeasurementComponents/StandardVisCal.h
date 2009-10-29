@@ -288,6 +288,44 @@ class fBM {
 
 
 // **********************************************************
+//  TfJones (freq-dep T)
+//
+
+class TfJones : public TJones {
+public:
+
+  // Constructor
+  TfJones(VisSet& vs);
+  TfJones(const Int& nAnt);
+
+  virtual ~TfJones();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::T; };
+
+  // Return type name as string
+  virtual String typeName()     { return "Tf Jones"; };
+  virtual String longTypeName() { return "Tf Jones (frequency-dependent atmospheric complex gain"; };
+
+  // This is the freq-dep version of T
+  //   (this is the ONLY fundamental difference from T)
+  virtual Bool freqDepPar() { return True; };
+
+protected:
+
+  // <nothing>
+
+private:
+
+  // <nothing>
+  
+};
+
+
+
+
+
+// **********************************************************
 //  GJones
 //
 
@@ -457,6 +495,11 @@ public:
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);
 
+  Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
+  
+  // Simulate/calculate parameters for given sim interval
+  virtual Bool simPar(VisIter& vi, const Int nChunks);
+
   // Update the parameters from solving
   //  (in linear approx, we always set the source update to zero, for now!)
   virtual void updatePar(const Vector<Complex> dCalPar,
@@ -623,6 +666,27 @@ class MMCorruptor : public CalCorruptor {
 
 
 
+
+class MfMCorruptor : public MMCorruptor {
+
+ public:
+  MfMCorruptor();
+  virtual ~MfMCorruptor();
+  void initAtm();
+  inline Float& pwv() { return pwv_; };
+  
+ private:   
+  Float pwv_;
+  atm::AtmProfile *itsatm;
+  atm::RefractiveIndexProfile *itsRIP;
+  atm::SkyStatus *itsSkyStatus;
+  atm::SpectralGrid *itsSpecGrid;
+};
+
+
+
+
+
 class MMueller : public SolvableVisMueller {
 public:
 
@@ -778,6 +842,45 @@ private:
   Vector<Double> za_;
   
 };
+
+
+// **********************************************************
+//  TfOpac (freq-dep TOpac)
+//
+
+class TfOpac : public TOpac {
+public:
+
+  // Constructor
+  TfOpac(VisSet& vs);
+  //  TfOpac(const Int& nAnt);
+
+  virtual ~TfOpac();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::T; };
+
+  // Return type name as string
+  virtual String typeName()     { return "TfOpac"; };
+  virtual String longTypeName() { return "TfOpac (frequency-dependent opacity"; };
+
+  // This is the freq-dep version of TOpac
+  //   (this is the ONLY fundamental difference from TOpac)
+  virtual Bool freqDepPar() { return True; };
+
+protected:
+
+  // <nothing>
+
+private:
+
+  // <nothing>
+  
+};
+
+
+
+
 
 
 // **********************************************************

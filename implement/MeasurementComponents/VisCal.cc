@@ -223,7 +223,6 @@ void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout) {
 
 }
 
- 
 void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
 
   if (prtlev()>3) cout << " VC::corrupt()" << endl;
@@ -319,6 +318,7 @@ void VisCal::syncCal(const VisBuffer& vb,
   syncCal(doInv);
 
 }
+
 
 void VisCal::syncCal(VisCal& vc) {
   
@@ -493,6 +493,8 @@ void VisCal::syncCal(const Bool& doInv) {
   //       << endl;
 
 }
+
+
 
 void VisCal::syncPar() {
 

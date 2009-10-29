@@ -44,6 +44,9 @@ VisCal* createVisCal(const String& type, VisSet& vs) {
   if (uptype=="P" || uptype=="P JONES") 
     return new PJones(vs);
 
+  else if (uptype=="TFOPAC")  // Not yet solvable (even though an SVJ)
+    return new TfOpac(vs);
+
   else if (uptype=="TOPAC")  // Not yet solvable (even though an SVJ)
     return new TOpac(vs);
 
@@ -84,6 +87,9 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype=="GSPLINE") 
     return new GJonesSpline(vs);
   
+  else if (uptype=="TF" || uptype=="TF JONES") 
+    return new TfJones(vs);
+
   else if (uptype=="T" || uptype=="T JONES") 
     return new TJones(vs);
 
