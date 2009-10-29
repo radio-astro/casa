@@ -85,6 +85,7 @@ coordsys::coordsys() : itsParentImageName("unknown")
 
 coordsys::~coordsys()
 {
+  delete itsCoordSys;
   delete itsLog;
 }
 
@@ -779,6 +780,9 @@ coordsys::fromrecord(const ::casac::record& csys_record)
 	      << LogIO::EXCEPTION;
     }
     //
+    if(itsCoordSys){
+	    delete itsCoordSys;
+    }
     itsCoordSys=new CoordinateSystem(*pCS); // memory leak here??
     delete pCS;
     //
