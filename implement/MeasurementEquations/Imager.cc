@@ -500,7 +500,8 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
     this->lock();
     msname_p = ms_p->tableName();
     
-    os << "Opening MeasurementSet " << msname_p << LogIO::POST;
+    os << LogIO::DEBUG1
+	   << "Opening MeasurementSet " << msname_p << LogIO::POST;
 
     // Check for DATA or FLOAT_DATA column
     if(!ms_p->tableDesc().isColumn("DATA") && 
@@ -2064,7 +2065,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     this->lock();
     this->writeCommand(os);
 
-    os << "Selecting data" << LogIO::POST;
+    os << LogIO::NORMAL2 << "Selecting data" << LogIO::POST;
     nullSelect_p=False;
     dataMode_p=mode;
     dataNchan_p.resize();
@@ -2081,10 +2082,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     datafieldids_p=fieldids;
     //    useModelCol_p=useModelCol;
     
-    
-    
-    os << "Performing selection on MeasurementSet" << LogIO::POST;
-    if(rvi_p) delete rvi_p; 
+	if(rvi_p)
+	  delete rvi_p; 
     rvi_p=0;
     wvi_p=0;
     // if(mssel_p) delete mssel_p; 
@@ -2105,19 +2104,22 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 
     if(datafieldids_p.nelements() > 0){
       thisSelection.setFieldExpr(MSSelection::indexExprStr(datafieldids_p));
-      os << "Selecting on field ids" << LogIO::POST;
+      os << LogIO::DEBUG1 << "Selecting on field ids" << LogIO::POST;
     }
     if(fieldnames != ""){
       thisSelection.setFieldExpr(fieldnames);
-      os << "Selecting on field names " << fieldnames << LogIO::POST;
+      os << LogIO::DEBUG1
+		 << "Selecting on field names " << fieldnames << LogIO::POST;
     }
     
     if(dataspectralwindowids_p.nelements() > 0){
       thisSelection.setSpwExpr(MSSelection::indexExprStr(dataspectralwindowids_p));
-      os << "Selecting on spectral windows" << LogIO::POST;
+      os << LogIO::DEBUG1 << "Selecting on spectral windows" << LogIO::POST;
     }
     else if(spwstring != ""){
-      os << "Selecting on spectral windows expression "<< spwstring << LogIO::POST;
+      os << LogIO::DEBUG1
+		 << "Selecting on spectral windows expression " << spwstring
+		 << LogIO::POST;
       thisSelection.setSpwExpr(spwstring);
     }
     
@@ -3603,24 +3605,34 @@ Bool Imager::weight(const String& type, const String& rmode,
       }
       if(actualFieldOfView.get().getValue()==0.0&&actualNPixels==0) {
         actualNPixels=nx_p;
-        actualFieldOfView=Quantity(actualNPixels*mcellx_p.get("rad").getValue(), "rad");
-        os << wtype << " weighting: sidelobes will be suppressed over full image" << endl;
+        actualFieldOfView=Quantity(actualNPixels*mcellx_p.get("rad").getValue(),
+								   "rad");
+        os << LogIO::NORMAL1
+		   << wtype
+		   << " weighting: sidelobes will be suppressed over full image"
+		   << LogIO::POST;
       }
       else if(actualFieldOfView.get().getValue()>0.0&&actualNPixels==0) {
         actualNPixels=nx_p;
-        os << wtype << " weighting: sidelobes will be suppressed over specified field of view: "
-           << actualFieldOfView.get("arcsec").getValue() << " arcsec" << endl;
+        os << LogIO::NORMAL1
+		   << wtype
+		   << " weighting: sidelobes will be suppressed over specified field of view: "
+           << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
       }
       else if(actualFieldOfView.get().getValue()==0.0&&actualNPixels>0) {
-        actualFieldOfView=Quantity(actualNPixels*mcellx_p.get("rad").getValue(), "rad");
-        os << wtype << " weighting: sidelobes will be suppressed over full image field of view: "
-           << actualFieldOfView.get("arcsec").getValue() << " arcsec" << endl;
+        actualFieldOfView=Quantity(actualNPixels*mcellx_p.get("rad").getValue(),
+								   "rad");
+        os << LogIO::NORMAL1
+		   << wtype
+		   << " weighting: sidelobes will be suppressed over full image field of view: "
+           << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
       }
       else {
         os << wtype << " weighting: sidelobes will be suppressed over specified field of view: "
-           << actualFieldOfView.get("arcsec").getValue() << " arcsec" << endl;
+           << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
       }
-      os << "                 : using " << actualNPixels << " pixels in the uv plane"
+      os << LogIO::DEBUG1
+		 << "Weighting used " << actualNPixels << " uv pixels."
          << LogIO::POST;
       Quantity actualCellSize(actualFieldOfView.get("rad").getValue()/actualNPixels, "rad");
       if(useModelCol_p){
