@@ -55,7 +55,9 @@ void LatticeFFT::cfft2d(Lattice<Complex>& cLattice, const Bool toFrequency) {
   const uInt nx = slabShape(0) = latticeShape(0);
   const uInt ny = slabShape(1) = latticeShape(1);
   // use 1/8 of memory for FFT of a plane at most 
-  Long cacheSize = (HostInfo::memoryTotal()/(sizeof(Complex)*8))*1024;
+  //Long cacheSize = (HostInfo::memoryTotal()/(sizeof(Complex)*8))*1024;
+  //use aipsrc value for memory size if exists
+  Long cacheSize = (HostInfo::memoryTotal(true)/(sizeof(Complex)*8))*1024;
 
   // For small transforms, we do everything in one plane
   if (((Long)(nx)*(Long)(ny)) <= cacheSize) {
