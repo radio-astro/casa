@@ -205,7 +205,8 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
       }
       
       if((psfmax==0.0) ||(hasMask(0) && (mask_sl == 0)) ) {
-	os << "No data or blank mask for this channel: skipping" << LogIO::POST;
+	os << LogIO::NORMAL1
+           << "No data or blank mask for this channel: skipping" << LogIO::POST;
       } else {
 	LatConvEquation eqn(psf_sl, residual_sl);
 	ClarkCleanLatModel cleaner( localmodel );
@@ -228,7 +229,8 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 	// clean if there is no mask or if it has mask AND mask is not empty 
 	cleaner.solve(eqn);
 	cleaner.setChoose(False);
-	os << "Clean used " << cleaner.numberIterations() << " iterations" 
+	os << LogIO::NORMAL1
+           << "Clean used " << cleaner.numberIterations() << " iterations" 
 	   << " to get to a max residual of " << cleaner.threshold() 
 	   << LogIO::POST;
 	

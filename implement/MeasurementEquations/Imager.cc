@@ -551,7 +551,7 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
     // Initialize the weights if the IMAGING_WEIGHT column
     // was just created
     if(initialize && useModelCol_p) {
-      os << LogIO::NORMAL
+      os << LogIO::NORMAL2
 	 << "Initializing natural weights"
 	 << LogIO::POST;
       Double sumwt=0.0;
@@ -587,7 +587,8 @@ Bool Imager::close()
   if(!valid()) return False;
   if (detached()) return True;
   LogIO os(LogOrigin("imager", "close()", WHERE));
-  os << "Closing MeasurementSet and detaching from imager"
+  os << LogIO::NORMAL2
+     << "Closing MeasurementSet and detaching from imager"
      << LogIO::POST;
   this->unlock();
   if(ft_p) delete ft_p; ft_p = 0;
@@ -820,7 +821,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
     Double finc=(fmax-fmin); 
     mySpectral = new SpectralCoordinate(obsFreqRef,  fmean, finc,
       					refChan, restFreq);
-    os <<  "Frequency = "
+    os << LogIO::NORMAL1
+       << "Center frequency = "
        << MFrequency(Quantity(fmean, "Hz")).get("GHz").getValue()
        << " GHz, synthesized continuum bandwidth = "
        << MFrequency(Quantity(finc, "Hz")).get("GHz").getValue()
@@ -845,14 +847,14 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 					  mfImageStep_p.get("Hz").getValue()/2.0,
 					  mfImageStep_p.get("Hz").getValue(),
 					  refChan, restFreq);
-      os <<  "Frequency = "
+      os << LogIO::NORMAL1 << "Start frequency = "
 	 << mfImageStart_p.get("GHz").getValue()
 	 << ", channel increment = "
 	 << mfImageStep_p.get("GHz").getValue() 
 	 << "GHz, frequency frame = "
          << MFrequency::showType(mfreqref)
          << endl;
-      os << LogIO::NORMAL << "Rest frequency is " 
+      os << LogIO::NORMAL1 << "Rest frequency is " 
 	 << MFrequency(Quantity(restFreq, "Hz")).get("GHz").getValue()
 	 << "GHz" << LogIO::POST;
       
@@ -1102,11 +1104,13 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
   
   if (polType(0)=="X" || polType(0)=="Y") {
     polRep_p=SkyModel::LINEAR;
-    os << "Preferred polarization representation is linear" << LogIO::POST;
+    os << LogIO::DEBUG1 
+       << "Preferred polarization representation is linear" << LogIO::POST;
   }
   else {
     polRep_p=SkyModel::CIRCULAR;
-    os << "Preferred polarization representation is circular" << LogIO::POST;
+    os << LogIO::DEBUG1
+       << "Preferred polarization representation is circular" << LogIO::POST;
   }
 
   Vector<Int> whichStokes(npol_p);
@@ -1125,7 +1129,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       whichStokes(0)=Stokes::YY;
     else
       whichStokes(0)=Stokes::I;
-    os <<  "Image polarization = Stokes "<< stokes_p << LogIO::POST;
+    os << LogIO::DEBUG1 << "Image polarization = Stokes "<< stokes_p << LogIO::POST;
     break;
   case 2:
     whichStokes.resize(2);
@@ -1146,11 +1150,11 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
       whichStokes(0)=Stokes::I;
       if (polRep_p==SkyModel::LINEAR) {
 	whichStokes(1)=Stokes::Q;
-	os <<  "Image polarization = Stokes I,Q" << LogIO::POST;
+	os << LogIO::DEBUG1 << "Image polarization = Stokes I,Q" << LogIO::POST;
       }
       else {
 	whichStokes(1)=Stokes::V;
-	os <<  "Image polarization = Stokes I,V" << LogIO::POST;
+	os << LogIO::DEBUG1 << "Image polarization = Stokes I,V" << LogIO::POST;
       }
     }
     break;
@@ -1159,7 +1163,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
     whichStokes(0)=Stokes::I;
     whichStokes(1)=Stokes::Q;
     whichStokes(2)=Stokes::U;
-    os <<  "Image polarization = Stokes I,Q,U" << LogIO::POST;
+    os << LogIO::DEBUG1 << "Image polarization = Stokes I,Q,U" << LogIO::POST;
     break;
   case 4:
     whichStokes.resize(4);
@@ -1167,7 +1171,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
     whichStokes(1)=Stokes::Q;
     whichStokes(2)=Stokes::U;
     whichStokes(3)=Stokes::V;
-    os <<  "Image polarization = Stokes I,Q,U,V" << LogIO::POST;
+    os << LogIO::DEBUG1 << "Image polarization = Stokes I,Q,U,V" << LogIO::POST;
     break;
   default:
     this->unlock();
@@ -1427,7 +1431,7 @@ Bool Imager::setimage(const Int nx, const Int ny,
     this->lock();
     this->writeCommand(os);
 
-    os << "Defining image properties" << LogIO::POST;
+    os << LogIO::NORMAL1 << "Defining image properties" << LogIO::POST;
   
     /**** this check is not really needed here especially for SD imaging
     if(2*Int(nx/2)!=nx) {
@@ -1611,7 +1615,7 @@ Bool Imager::defineImage(const Int nx, const Int ny,
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "defineimage()"), logSink_p);
 
-  os << "Defining image properties:";
+  os << LogIO::NORMAL1 << "Defining image properties:";
   os << "nx=" << nx << " ny=" << ny
      << " cellx='" << cellx.getValue() << cellx.getUnit()
      << "' celly='" << celly.getValue() << celly.getUnit()
@@ -2125,20 +2129,19 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     
     if(antIndex.nelements() >0){
       thisSelection.setAntennaExpr( MSSelection::indexExprStr(antIndex));
-      os << "Selecting on antenna ids" << LogIO::POST;	
+      os << LogIO::DEBUG1 << "Selecting on antenna ids" << LogIO::POST;	
     }
     if(antnames != ""){
       Vector<String>antNames(1, antnames);
       //       thisSelection.setAntennaExpr(MSSelection::nameExprStr(antNames));
       thisSelection.setAntennaExpr(antnames);
-      os << "Selecting on antenna names" << LogIO::POST;
-      
+      os << LogIO::DEBUG1 << "Selecting on antenna names" << LogIO::POST; 
     } 
                
     if(timerng != ""){
       //	Vector<String>timerange(1, timerng);
 	thisSelection.setTimeExpr(timerng);
-	os << "Selecting on time range" << LogIO::POST;	
+	os << LogIO::DEBUG1 << "Selecting on time range" << LogIO::POST;	
     }
     
     
@@ -2232,25 +2235,36 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     if (nullSelect_p) {
       Table mytab(msname_p+"/FIELD", Table::Old);
       if (mytab.nrow() > 1) {
-	os << "Multiple fields selected" << LogIO::POST;
+	os << LogIO::NORMAL4 << "Multiple fields selected" << LogIO::POST;
 	multiFields_p = True;
       } else {
-	os << "Single field selected" << LogIO::POST;
+	os << LogIO::NORMAL4 << "Single field selected" << LogIO::POST;
 	multiFields_p = False;
       }
     }
-    if(mssel_p->nrow()!=ms_p->nrow()) {
-      os << "By selection " << ms_p->nrow() << " rows are reduced to "
-	 << mssel_p->nrow() << LogIO::POST;
-    }
-    else {
-      os << "Selection did not drop any rows" << LogIO::POST;
-    }
-    //    }
+
+    // ms_p is a CountedPtr, so there doesn't seem to be an easy way of telling
+    // whether rvi_p is tied to mssel_p instead of ms_p.
+    //if(!rvi_p || &(rvi_p->ms()) != ms_p)
+    if(!rvi_p)
+      this->makeVisSet(*ms_p);
+    uInt nvis_all = count_visibilities(rvi_p, false, false);
     
     // Now create the VisSet
     this->makeVisSet(*mssel_p); 
     AlwaysAssert(rvi_p, AipsError);
+    uInt nvis_sel = count_visibilities(rvi_p, false, false);
+    
+    if(nvis_sel != nvis_all) {
+      os << LogIO::NORMAL1
+         << "Selected " << nvis_sel << " out of "
+         << nvis_all << " visibilities."
+	 << LogIO::POST;
+    }
+    else {
+      os << LogIO::NORMAL1 << "Selected all visibilities" << LogIO::POST;
+    }
+    //    }
     
     // Now we do a selection to cut down the amount of information
     // passed around.
@@ -2258,7 +2272,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     this->selectDataChannel(dataspectralwindowids_p, dataMode_p,
 			    dataNchan_p, dataStart_p, dataStep_p,
                             mDataStart_p, mDataStep_p);
-    ///Tell iterator to use on the fly imaging weights if scratch columns is not in use
+    ///Tell iterator to use on the fly imaging weights if scratch columns is
+    ///not in use
     if(!useModelCol_p){
         imwgt_p=VisImagingWeight("natural");
         rvi_p->useImagingWeight(imwgt_p);
@@ -2269,7 +2284,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     destroySkyEquation();
     if(!valid()){ 
       this->unlock();
-      os << LogIO::SEVERE << "Check your data selection or Measurement set " << LogIO::EXCEPTION;
+      os << LogIO::SEVERE << "Check your data selection or Measurement set "
+         << LogIO::EXCEPTION;
       return False;
     }
     this->unlock();
@@ -3557,7 +3573,8 @@ Bool Imager::weight(const String& type, const String& rmode,
   this->lock();
   try {
     
-    os << "Weighting MS: IMAGING_WEIGHT column will be changed" << LogIO::POST;
+    os << LogIO::NORMAL1
+       << "Weighting MS: IMAGING_WEIGHT column will be changed" << LogIO::POST;
     
     Double sumwt=0.0;
     
@@ -3608,31 +3625,33 @@ Bool Imager::weight(const String& type, const String& rmode,
         actualFieldOfView=Quantity(actualNPixels*mcellx_p.get("rad").getValue(),
 								   "rad");
         os << LogIO::NORMAL1
-		   << wtype
-		   << " weighting: sidelobes will be suppressed over full image"
-		   << LogIO::POST;
+           << wtype
+           << " weighting: sidelobes will be suppressed over full image"
+           << LogIO::POST;
       }
       else if(actualFieldOfView.get().getValue()>0.0&&actualNPixels==0) {
         actualNPixels=nx_p;
         os << LogIO::NORMAL1
-		   << wtype
-		   << " weighting: sidelobes will be suppressed over specified field of view: "
+           << wtype
+           << " weighting: sidelobes will be suppressed over specified field of view: "
            << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
       }
       else if(actualFieldOfView.get().getValue()==0.0&&actualNPixels>0) {
         actualFieldOfView=Quantity(actualNPixels*mcellx_p.get("rad").getValue(),
 								   "rad");
         os << LogIO::NORMAL1
-		   << wtype
-		   << " weighting: sidelobes will be suppressed over full image field of view: "
+           << wtype
+           << " weighting: sidelobes will be suppressed over full image field of view: "
            << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
       }
       else {
-        os << wtype << " weighting: sidelobes will be suppressed over specified field of view: "
+        os << LogIO::NORMAL1
+           << wtype
+           << " weighting: sidelobes will be suppressed over specified field of view: "
            << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
       }
       os << LogIO::DEBUG1
-		 << "Weighting used " << actualNPixels << " uv pixels."
+         << "Weighting used " << actualNPixels << " uv pixels."
          << LogIO::POST;
       Quantity actualCellSize(actualFieldOfView.get("rad").getValue()/actualNPixels, "rad");
       if(useModelCol_p){
@@ -3668,7 +3687,7 @@ Bool Imager::weight(const String& type, const String& rmode,
     
     if(useModelCol_p){
       if(sumwt>0.0) {
-	os << "Sum of weights = " << sumwt << LogIO::POST;
+	os << LogIO::NORMAL1 << "Sum of weights = " << sumwt << LogIO::POST;
       }
       else {
 	this->unlock();
@@ -4556,10 +4575,10 @@ Bool Imager::clean(const String& algorithm,
 
 	return False;
       }
-    os << "Cleaning images" << LogIO::POST;
     
     Int nmodels=model.nelements();
-    os<< "Found " << nmodels << " specified model images" << LogIO::POST;
+    os << LogIO::DEBUG1
+       << "Found " << nmodels << " specified model images" << LogIO::POST;
     
     if(model.nelements()>0) {
       for (uInt thismodel=0;thismodel<model.nelements(); ++thismodel) {
@@ -4824,7 +4843,7 @@ Bool Imager::clean(const String& algorithm,
       ostringstream oos;
       oos << "Clean gain = " <<gain<<", Niter = "<<niter<<", Threshold = "
 	  <<threshold << ", Algorithm = " << algorithm;
-      os << String(oos) << LogIO::POST;
+      os << LogIO::DEBUG1 << String(oos) << LogIO::POST;
     }
 #ifdef PABLO_IO
     traceEvent(1,"Starting Deconvolution",23);
@@ -5138,7 +5157,7 @@ Bool Imager::mem(const String& algorithm,
     
     addResidualsToSkyEquation(residualNames);
 
-    os << "Starting deconvolution" << LogIO::POST;
+    os << LogIO::NORMAL2 << "Starting deconvolution" << LogIO::POST;
     if(se_p->solveSkyModel()) {
       os << "Successfully deconvolved image" << LogIO::POST;
     }
@@ -6255,7 +6274,8 @@ Bool Imager::make(const String& model)
     // Make an image with the required shape and coordinates
     String modelName(model);
     if(modelName=="") modelName=imageName()+".model";
-    os << "Making empty image: " << modelName << LogIO::POST;
+    os << LogIO::DEBUG1
+       << "Making empty image: " << modelName << LogIO::POST;
     
     removeTable(modelName);
     CoordinateSystem coords;
@@ -6488,6 +6508,33 @@ Bool Imager::correct(const Bool doparallactic, const Quantity& t)
   return True;
 }
 
+uInt Imager::count_visibilities(ROVisibilityIterator *rvi,
+                                const Bool unflagged_only,
+                                const Bool must_have_imwt)
+{
+  if(!valid()) return 0;
+  LogIO os(LogOrigin("imager", "count_visibilities()", WHERE));
+  
+  this->lock();
+  ROVisIter& vi(*rvi);
+  VisBuffer vb(vi);
+    
+  uInt nVis = 0;
+  for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()){
+    for(vi.origin(); vi.more(); ++vi){
+      uInt nRow = vb.nRow();
+      uInt nChan = vb.nChannel();
+      for(uInt row = 0; row < nRow; ++row)
+        for(uInt chn = 0; chn < nChan; ++chn)
+          if((!unflagged_only || !vb.flag()(chn,row)) &&
+             (!must_have_imwt || vb.imagingWeight()(chn,row) > 0.0))
+            ++nVis;
+    }
+  }
+  this->unlock();
+  return nVis;
+}
+
 // Plot the uv plane
 Bool Imager::plotuv(const Bool rotate) 
 {
@@ -6503,20 +6550,7 @@ Bool Imager::plotuv(const Bool rotate)
     ROVisIter& vi(*rvi_p);
     VisBuffer vb(vi);
     
-    Int nVis=0;
-    for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-      for (vi.origin();vi.more();vi++) {
-	Int nRow=vb.nRow();
-	Int nChan=vb.nChannel();
-	for (Int row=0; row<nRow; ++row) {
-	  for (Int chn=0; chn<nChan; ++chn) {
-	    if(!vb.flag()(chn,row)&&vb.imagingWeight()(chn,row)>0.0) {
-	      ++nVis;
-	    }
-	  }
-	}
-      }
-    }
+    uInt nVis = count_visibilities(rvi_p, true, true);
     
     if(nVis==0) {
       this->unlock();
@@ -7337,7 +7371,7 @@ Bool Imager::createFTMachine()
     AlwaysAssert(cft_p, AipsError);
   }
   else if(ftmachine_p=="mosaic") {
-    os << "Performing Mosaic gridding" << LogIO::POST;
+    os << LogIO::NORMAL2 << "Performing Mosaic gridding" << LogIO::POST;
    
     setMosaicFTMachine();
 
@@ -7354,7 +7388,7 @@ Bool Imager::createFTMachine()
   // Make WProject FT machine (for non co-planar imaging)
   //
   else if (ftmachine_p == "wproject"){
-    os << "Performing w-plane projection"
+    os << LogIO::NORMAL2 << "Performing w-plane projection"
        << LogIO::POST;
     if(wprojPlanes_p<64) {
       os << LogIO::WARN
@@ -7377,23 +7411,24 @@ Bool Imager::createFTMachine()
 	os << LogIO::NORMAL
 	   << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
 	   << LogIO::POST;
-	os << "Performing pb-projection"
-	   << LogIO::POST;
+	os << LogIO::NORMAL2 << "Performing pb-projection" << LogIO::POST;
       }
     if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
       {
 	os << LogIO::WARN
 	   << "No. of w-planes set too low for W projection - recommend at least 128"
 	   << LogIO::POST;
-	os << "Performing pb + w-plane projection"
+	os << LogIO::NORMAL2 << "Performing pb + w-plane projection"
 	   << LogIO::POST;
       }
 
 
     if(!gvp_p) 
       {
-	os << "Using defaults for primary beams used in gridding" << LogIO::POST;
-	gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,skyPosThreshold_p);
+	os << LogIO::NORMAL1
+           << "Using defaults for primary beams used in gridding" << LogIO::POST;
+	gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+                               skyPosThreshold_p);
       }
 
     ft_p = new nPBWProjectFT(//*ms_p, 
@@ -7447,22 +7482,22 @@ Bool Imager::createFTMachine()
 	os << LogIO::NORMAL
 	   << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
 	   << LogIO::POST;
-	os << "Performing pb-mosaic"
-	   << LogIO::POST;
+	os << LogIO::NORMAL2 << "Performing pb-mosaic" << LogIO::POST;
       }
     if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
       {
 	os << LogIO::WARN
 	   << "No. of w-planes set too low for W projection - recommend at least 128"
 	   << LogIO::POST;
-	os << "Performing pb + w-plane projection"
-	   << LogIO::POST;
+	os << LogIO::NORMAL2 << "Performing pb + w-plane projection" << LogIO::POST;
       }
 
     if(!gvp_p) 
       {
-	os << "Using defaults for primary beams used in gridding" << LogIO::POST;
-	gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,skyPosThreshold_p);
+	os << LogIO::NORMAL1
+           << "Using defaults for primary beams used in gridding" << LogIO::POST;
+	gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+                               skyPosThreshold_p);
       }
     ft_p = new PBMosaicFT(*ms_p, wprojPlanes_p, cache_p/2, 
 			  cfCacheDirName_p, True /*doPointing*/, doPBCorr, 
@@ -7513,13 +7548,16 @@ Bool Imager::createFTMachine()
   }
   else if(ftmachine_p=="both") {
       
-    os << "Performing single dish gridding with convolution function "
+    os << LogIO::NORMAL1
+       << "Performing single dish gridding with convolution function "
        << gridfunction_p << LogIO::POST;
-    os << "and interferometric gridding with convolution function SF"
+    os << LogIO::NORMAL1
+       << "and interferometric gridding with the prolate spheroidal convolution function"
        << LogIO::POST;
     
     // Now make the Single Dish Gridding
-    os << "Gridding will use specified common tangent point:" << LogIO::POST;
+    os << LogIO::NORMAL1
+       << "Gridding will use specified common tangent point:" << LogIO::POST;
     MVAngle mvRa=phaseCenter_p.getAngle().getValue()(0);
     MVAngle mvDec=phaseCenter_p.getAngle().getValue()(1);
     ostringstream oos;
@@ -7531,13 +7569,20 @@ Bool Imager::createFTMachine()
     oos.width(widthDec); oos << mvDec.string(MVAngle::DIG2,8);
     oos << "     "
 	<< MDirection::showType(phaseCenter_p.getRefPtr()->getType());
-    os << String(oos)  << LogIO::POST;
+    os << LogIO::NORMAL1 << String(oos)  << LogIO::POST;
     if(!gvp_p) {
-      os << "Using defaults for primary beams used in gridding" << LogIO::POST;
-      gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,skyPosThreshold_p);
+      os << LogIO::NORMAL1
+         << "Using defaults for primary beams used in gridding" << LogIO::POST;
+      gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+                             skyPosThreshold_p);
     }
-    if(sdScale_p!=1.0) os << "Multiplying single dish data by factor " << sdScale_p << LogIO::POST;
-    if(sdWeight_p!=1.0) os << "Multiplying single dish weights by factor " << sdWeight_p << LogIO::POST;
+    if(sdScale_p != 1.0)
+      os << LogIO::NORMAL1
+         << "Multiplying single dish data by factor " << sdScale_p << LogIO::POST;
+    if(sdWeight_p != 1.0)
+      os << LogIO::NORMAL1
+         << "Multiplying single dish weights by factor " << sdWeight_p
+         << LogIO::POST;
     ft_p = new GridBoth(*gvp_p, cache_p/2, tile_p,
 			mLocation_p, phaseCenter_p,
 			gridfunction_p, "SF", padding,
@@ -7555,11 +7600,13 @@ Bool Imager::createFTMachine()
     
   }  
   else {
-    os << "Performing interferometric gridding with convolution function "
+    os << LogIO::NORMAL1
+       << "Performing interferometric gridding with convolution function "
        << gridfunction_p << LogIO::POST;
     // Now make the FTMachine
     if(facets_p>1) {
-      os << "Multi-facet Fourier transforms will use specified common tangent point:"
+      os << LogIO::NORMAL1
+         << "Multi-facet Fourier transforms will use specified common tangent point:"
 	 << LogIO::POST;
       MVAngle mvRa=phaseCenter_p.getAngle().getValue()(0);
       MVAngle mvDec=phaseCenter_p.getAngle().getValue()(1);
@@ -7572,13 +7619,14 @@ Bool Imager::createFTMachine()
       oos.width(widthDec); oos << mvDec.string(MVAngle::DIG2,8);
       oos << "     "
 	  << MDirection::showType(phaseCenter_p.getRefPtr()->getType());
-      os << String(oos)  << LogIO::POST;
-	ft_p = new GridFT(cache_p/2, tile_p, gridfunction_p, mLocation_p,
-			  phaseCenter_p, padding);
+      os << LogIO::NORMAL1 << String(oos)  << LogIO::POST;
+      ft_p = new GridFT(cache_p / 2, tile_p, gridfunction_p, mLocation_p,
+                        phaseCenter_p, padding);
       
     }
     else {
-      os << "Single facet Fourier transforms will use image center as tangent points"
+      os << LogIO::DEBUG1
+         << "Single facet Fourier transforms will use image center as tangent points"
 	 << LogIO::POST;
       ft_p = new GridFT(cache_p/2, tile_p, gridfunction_p, mLocation_p,
 			padding);
@@ -7706,7 +7754,8 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
 	 << " to SkyModel" << LogIO::POST;
       return False;
     }
-    os << "Processing after subtracting componentlist " << complist << LogIO::POST;
+    os << LogIO::NORMAL1
+       << "Processing after subtracting componentlist " << complist << LogIO::POST;
   }
   else {
     componentList_p=0;
@@ -7800,9 +7849,11 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
     // mosaicing with no vp correction
     else{
       setSkyEquation();
-      os << "Processing multiple fields with simple sky equation" << LogIO::POST;
-      os << "Voltage Pattern is not set: will not correct for primary beam"
-	 << LogIO::WARN;
+      os << LogIO::NORMAL1
+         << "Processing multiple fields with simple sky equation" << LogIO::POST;
+      os << LogIO::WARN
+         << "Voltage Pattern is not set: will not correct for primary beam"
+	 << LogIO::POST;
       doMultiFields_p=False;
     }
   }
@@ -7812,7 +7863,8 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
     if((facets_p >1)){
 	setSkyEquation();
 	//se_p=new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p);
-	os << "Processing multiple facets with simple sky equation" << LogIO::POST;
+	os << LogIO::NORMAL1
+           << "Processing multiple facets with simple sky equation" << LogIO::POST;
     }
     // Mosaicing
     else if(doVP_p) {
@@ -7822,12 +7874,14 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
       setSkyEquation();
       if(ft_p->name() != "MosaicFT") 
 	sm_p->mandateFluxScale(0);
-      os << "Mosaicing single field with simple sky equation" << LogIO::POST;      
+      os << LogIO::NORMAL2
+         << "Mosaicing single field with simple sky equation" << LogIO::POST;      
     }
     // Default
     else {
       setSkyEquation();
-      os << "Processing single field with simple sky equation" << LogIO::POST;    
+      os << LogIO::DEBUG1
+         << "Processing single field with simple sky equation" << LogIO::POST;    
     } 
   }
   //os.localSink().flush();
@@ -8372,10 +8426,16 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 	       << LogIO::POST;
 	    return False;
 	  }
-	  os << "Selecting "<< nch
-	     << " channels, starting at visibility channel "
-	     << dataStart[i]  << " stepped by "
-	     << dataStep[i] << " for spw " << spwid << LogIO::POST;
+
+          if(nch > 1)
+            os << LogIO::DEBUG1
+               << "Selecting " << nch << " channels, starting at "
+               << dataStart[i]  << ", stepped by " << dataStep[i]
+               << ", for spw " << spwid << LogIO::POST;
+          else
+            os << LogIO::DEBUG1
+               << "Selecting channel " << dataStart[i]
+               << " for spw " << spwid << LogIO::POST;
 	  rvi_p->selectChannel(1, Int(dataStart[i]), Int(nch),
 				     Int(dataStep[i]), spwid);
 	  dataNchan[i]=nch;
