@@ -201,7 +201,7 @@ Deconvolver::~Deconvolver()
   // pgplotter_p = 0;
 }
 
-Bool Deconvolver::open(const String& dirty, const String& psf)
+Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
 {
   LogIO os(LogOrigin("Deconvolver", "open()", WHERE));
   
@@ -228,11 +228,13 @@ Bool Deconvolver::open(const String& dirty, const String& psf)
     
     if (psf_p) delete psf_p;  psf_p = 0;
     if (psf == ""){
-      os << LogIO::WARN 
-	 << "No psf given; please define one before deconvolving" << LogIO::POST;
-      os << LogIO::WARN
-	 << "Use the function open with the psf" << LogIO::POST;
-      return True;
+    	if(warn) {
+    		os << LogIO::WARN
+    			<< "No psf given; please define one before deconvolving" << LogIO::POST;
+    		os << LogIO::WARN
+    			<< "Use the function open with the psf" << LogIO::POST;
+    	}
+    	return True;
     }
     else{
       psf_p = new PagedImage<Float>(psf);
