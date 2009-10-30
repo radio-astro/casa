@@ -8981,7 +8981,6 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	    return False;
 	  } else {
 	    ncycles = iter->second.getInt( );
-            cerr<<"NPERCYCLE is set to "<<ncycles<<endl;
 	  }
 	} else if ( iter->first == "niter" ) {
 	  if ( iter->second.type( ) != dbus::variant::INT ) {
