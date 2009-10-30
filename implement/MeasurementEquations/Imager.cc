@@ -5448,7 +5448,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	      }
 		
 	      //Setting the bit-mask for mosaic image
-	      LatticeExpr<Bool> lemask(iif(cover < cutoffval, 
+	      LatticeExpr<Bool> lemask(iif((cover < cutoffval) || (sm_p->fluxScale(thismodel) < cutoffval) , 
 					  False, True));
 	      ImageRegion outreg=restored.makeMask("mask0", False, True);
 	      LCRegion& outmask=outreg.asMask();
