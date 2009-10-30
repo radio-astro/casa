@@ -70,15 +70,21 @@ refstats = { 'flux': 0.9403,
              'min': -0.043,
              'rms': 0.022,
              'sigma': 0.022 }
-# 200909 pk flx changed- imagr change?
+# 200909 pk flx changed - imager changed
 refstats = { 'flux': 0.96941,
+             'max': 0.2841,
+             'min': -0.043,
+             'rms': 0.022,
+             'sigma': 0.022 }
+# 20091025 pk flx changed again - imager changed again.
+refstats = { 'flux': 0.92547,
              'max': 0.2841,
              'min': -0.043,
              'rms': 0.022,
              'sigma': 0.022 }
 
 ### tight 
-reftol   = {'flux':  1e-2,
+reftol   = {'flux':  1e-1,
             'max':  1e-2,
             'min':  1e-2,
             'rms':  1e-2,

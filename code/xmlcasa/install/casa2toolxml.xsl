@@ -180,7 +180,9 @@
 <xsl:if test="@direction"><xsl:attribute name="direction"> <xsl:value-of select="@direction"/></xsl:attribute></xsl:if>
 <xsl:text>
 </xsl:text>
- <xsl:element name="description"><xsl:value-of select="aps:description"/></xsl:element>
+ <xsl:element name="description">
+  <xsl:value-of select="replace(.,'\s+',' ')"/>
+ </xsl:element>
 <xsl:choose>
 <xsl:when test="@type='variant'">
 	<xsl:element name="any"><xsl:attribute name="type">variant</xsl:attribute></xsl:element>

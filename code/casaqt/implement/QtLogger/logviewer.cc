@@ -471,12 +471,20 @@ bool LogViewer::load(const QString &f)
     }
 
     logStream->seekg(0,std::ios::end);
-    int length = logStream->tellg();
-    logStream->seekg(0,std::ios::beg);
+    unsigned int len = logStream->tellg();
+    //qDebug() << "#c=" << len;
+    int length = 100 * 500000; //500000 rows each 100 chars
+    if (len < (unsigned int)length) {
+       length = len;
+       logStream->seekg(0,std::ios::beg);
+    }
+    else {
+       logStream->seekg(len - length);
+    }
     char *buf;
     buf = new (std::nothrow) char[length+1];
     if (!buf) {
-       qDebug() << "Can't allocate memory region" ;
+       qDebug() << "Can't allocate memory region of size=" << length ;
        return false;
     }
 
@@ -666,9 +674,12 @@ void LogViewer::filePrintPdf()
 void LogViewer::fileChanged(const QString& fileName)
 {
 	if (!logStream->eof()) {
-		int current_offset = logStream->tellg( );
+		unsigned int current_offset = logStream->tellg( );
 		logStream->seekg(0,std::ios::end);
-		int length = ((int)logStream->tellg()) - current_offset;
+                unsigned int now = logStream->tellg();
+		int length = now - current_offset;
+                //qDebug() << "current_offset=" << current_offset 
+                //         << " length=" << length;
 		logStream->seekg(current_offset,std::ios::beg);
 		char *buf;
                 buf = new (std::nothrow) char[length+1];

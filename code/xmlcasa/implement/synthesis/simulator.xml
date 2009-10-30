@@ -1075,6 +1075,11 @@ calibrater.setapply.
 </description>
 <input>
 
+     <param type="string" direction="in" name="table">
+     <description>Calibration table name</description>
+     <value></value>
+     </param>
+
      <param type="string" direction="in" name="type">
      <description>Component type</description>
      <value>B</value>
@@ -1092,11 +1097,6 @@ calibrater.setapply.
      <param type="double" direction="in" name="t">
      <description>Interpolation interval (seconds)</description>
      <value>0.0</value>
-     </param>
-
-     <param type="string" direction="in" name="table">
-     <description>Calibration table name</description>
-     <value></value>
      </param>
 
      <param type="any" direction="in" name="field">
@@ -1193,9 +1193,9 @@ Set the atmosphere.
 <input>
 
      <param type="string" name="mode">
-     <description>Mode of operation. String: 'generate'</description>
-     <value>generate</value>
-     <choice>'generate'</choice>
+     <description>Mode of operation - screen or individual antennas</description>
+     <value>screen</value>
+     <choice>'screen'</choice>
      </param>
 
      <param type="string" name="table">

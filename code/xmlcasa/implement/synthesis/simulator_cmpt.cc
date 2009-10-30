@@ -665,9 +665,9 @@ simulator::setbandpass(const std::string& mode, const std::string& table,
 }
 
 bool 
-simulator::setapply(const std::string& type, 
-		    const double t, 
-		    const std::string& table, 
+simulator::setapply(const std::string& table, 
+		    const std::string& type, 
+		    const double t, 		    
 		    const ::casac::variant& field,
 		    const std::string& interp,
 		    const std::string& select,

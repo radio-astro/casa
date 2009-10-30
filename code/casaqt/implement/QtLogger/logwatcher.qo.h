@@ -50,7 +50,7 @@ public:
       //qDebug() << "dt=" << dt.toString();
       QTimer* timer = new QTimer(this);
       connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-      timer->start(3000);
+      timer->start(500);
    }
    ~FileWatcher(){}
 public slots:

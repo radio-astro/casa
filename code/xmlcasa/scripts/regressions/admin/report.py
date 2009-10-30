@@ -833,17 +833,17 @@ class report:
 
         result_dir = reg_dir + '/Result'
 
-        # Find the latest run
+        # Find the latest run; CASA version has 1st priority, date has 2nd priority
         log = None
-        latest_date = '0000'
+        latest_run = 'A'
         for l in data:
             if l['host'] == host and \
                (same_version_per_host == False or l['CASA'] == self.casa_revision[host]) and \
                l['testid'] == test and \
                l['type'] == subtest[1] and \
                (subtest[0] == '' or l['image'] == subtest[0]):
-                if l['date'] > latest_date:
-                    latest_date = l['date']
+                if (l['CASA'] + l['date']) > latest_run:
+                    latest_run = (l['CASA'] + l['date'])
                     log = l
         coords = ' title="'+test+' \\ '+host+'"'
         
@@ -1105,16 +1105,23 @@ class report:
                     if os.path.isfile(cpp_png):
                         shutil.copyfile(from_dir+'/cpp_profile.png',
                                         to_dir  +'/cpp_profile.png')
-
+                    elif os.path.isfile(cpp_dot):
+                        # If the dot tool wasn't on the test machine
+                        # create the .png now
+                        os.system("cat " + cpp_dot + " | dot -Tpng -o " + \
+                                  to_dir + '/cpp_profile.png')
 
                     fd.write('<br><a href="'+os.path.dirname(log['logfile'])+'/cpp_profile.html">C++ profile</a>')
                     f = open(cpp_html, 'w')
                     f.write('<html><head><title>'+cpp_html+'</title></head><body>')
                     f.write('<table cellpadding="10">')
-                    f.write('<tr><td rowspan="2">'+test+' C++ timing profile</td><td>as <a href="cpp_profile.png">graph</a><br></td></tr><tr><td>as <a href="cpp_profile.txt">text</a></td></tr>')
+                    f.write('<tr><td rowspan="2">'+test+' timing profile</td><td>as <a href="cpp_profile.png">callgraph</a><br></td></tr><tr><td>as <a href="cpp_profile.txt">text</a></td></tr>')
                     f.write('<tr><td colspan="2">'+test+' <a href="cpp_profile.cc">annotated source</a></td></tr>')
                     f.write('</table>')
-                    f.write('<p>Links: The timing profiles were created using <a href="http://oprofile.sourceforge.net">oprofile</a> ')
+                    f.write('<p>Note: The timing profile includes CPU time only. Time spent waiting for I/O is not included. Check <a href="../profile-'+test+'-'+host+'.html">here</a> to see if this test is CPU bound or I/O bound.')
+                    f.write('<p>Note: The timing profile covers the casapy process including any threads. Time which was spent in casapy subprocesses (such as asdm2MS) is not included.')
+                    f.write('<p>Note: The graphical and textual profiles contain the same information but displayed in different ways. However, functions (nodes) accounting for less than 1 percent of the total execution time, as well as function calls (edges) accounting for less than 0.1 percent of the overall execution time, are excluded from the graphical representation. For that reason, the percentages may not add up exactly.')
+                    f.write('<p>For further information see <a href="http://oprofile.sourceforge.net">oprofile</a> ')
                     f.write('and <a href="http://code.google.com/p/jrfonseca/wiki/Gprof2Dot">Gprof2Dot</a>.')
                     f.write('</body></html>')
                     f.close()

@@ -48,6 +48,8 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 
+#define RI_DEBUG
+
 // math.h ?
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -324,31 +326,25 @@ void TJones::initTrivDJ() {
 
 Int TJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes)
 {
+
+  LogIO os(LogOrigin("T", "setupSim()", WHERE));
+
   prtlev()=4; // debug
 
   if (prtlev()>2) cout << "   T::setupSim()" << endl;
-
-  // This method only called in simulate context!
   AlwaysAssert((isSimulated()),AipsError);
-
-  // this is done in sizeUpSim, and if VS goes away we'll probably need to 
-  // be passing either the ms or the vi down from Calibrator and Simulator
-  // into here and then on to sizeUpSim.
-  // right now, I want vi to get vi.msColumns()
-  // I'm assuming that there's only one ms attached to the VI *
+  // assume only one ms attached to the VI. need vi for mscolumns.
   VisIter& vi(vs.iter());
-  // VisBuffer vb(vi);
   
-  Int nSim = sizeUpSim(vs,nChunkPerSol,solTimes);
 
-  if (prtlev()>3) cout << " sized for Sim." << endl;
+  Int nSim = sizeUpSim(vs,nChunkPerSol,solTimes);
+  if (prtlev()>2) cout << " sized for Sim, " << nSim << " slots." << endl;
 
   // we can use the private access directly the corruptor
   tcorruptor_p = new TJonesCorruptor(nSim);
   // but set the public one 
   corruptor_p = tcorruptor_p;
-
-  if (prtlev()>3) cout << " TCorruptor created." << endl;
+  if (prtlev()>4) cout << " TCorruptor created." << endl;
 
   corruptor_p->startTime()=min(solTimes);
   corruptor_p->stopTime()=max(solTimes);
@@ -373,8 +369,10 @@ Int TJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
   Float Scale(.15); // scale of fluctuations rel to mean
   if (simpar.isDefined("delta_pwv") and simpar.isDefined("mean_pwv")) {    
     Scale=simpar.asFloat("delta_pwv")/simpar.asFloat("mean_pwv");
-    if (Scale>.5)
-      Scale=.5;  // RI_TODO warn when doing this!!!
+    if (Scale>.5) {
+      Scale=.5;  
+      os << LogIO::WARN << " decreasing PWV fluctuation magnitude to half of the mean PWV, " << simpar.asFloat("mean_pwv") << LogIO::POST;  
+    }
   }
 
 
@@ -383,7 +381,6 @@ Int TJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
   // corruption values
   // this preparation is just to tell the corruptor about its VC - maybe 
   // the logic should be changed so the corruptor doesn't have to know 
-  // all this?
 
   const ROMSSpWindowColumns& spwcols = vi.msColumns().spectralWindow();
 
@@ -420,9 +417,6 @@ Int TJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
       tcorruptor_p->initialize(Seed,Beta,Scale);
     else if (simpar.asString("mode") == "screen") {
       const ROMSAntennaColumns& antcols(vi.msColumns().antenna());
-      // moved into Corruptor:
-      // const ROMSObservationColumns& obscols(vi.msColumns().observation());
-      // const Float tracklength = max(obscols.timeRange().getColumn())-min(obscols.timeRange().getColumn());
       if (simpar.isDefined("windspeed")) {
 	tcorruptor_p->windspeed()=simpar.asFloat("windspeed");
 	tcorruptor_p->initialize(Seed,Beta,Scale,antcols);
@@ -439,6 +433,9 @@ Int TJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
 
 
 
+
+
+
 Bool TJones::simPar(VisIter& vi, const Int nChunks){
 
   LogIO os(LogOrigin("T", "simPar()", WHERE));
@@ -447,81 +444,124 @@ Bool TJones::simPar(VisIter& vi, const Int nChunks){
 
   AlwaysAssert((isSimulated()),AipsError);
   
-  // sizeUpSolve did this (Mueller):
-  // solveCPar().resize(nPar(),nChanPar(),nBln());
-  // or this (Jones):
-  // solveCPar().resize(nPar(),1,nAnt());
+  // sizeUpSim did solveCPar().resize(nPar(),nChanPar(),nAnt());
 
-  // loop through correlations or use corridx ?
+  // RI TODO T:simPar loop through correlations or use corridx ?
 
-  try {
+#ifndef RI_DEBUG
+    try {
+#endif
     
-    VisBuffer cvb(vi);   
-    Vector<Int>& a1(cvb.antenna1());
-    Vector<Int>& a2(cvb.antenna2());
-    corruptor_p->currSpw()=cvb.spectralWindow(); 
+    Vector<Int> a1;
+    Vector<Int> a2;
+    Matrix<Bool> flags;
+
+    solveCPar()=Complex(0.0);
+    // n good VI elements averaged in each CPar() entry:
+    IPosition cparshape=solveCPar().shape();
+    Cube<Complex> nGood(cparshape);
+    solveParOK()=False;
+
+    if (corruptor_p->curr_slot()<1 and prtlev()>3) 
+      cout << "  shape of solveCPar = " << cparshape << 
+	"  and cs().shape(spw=" << corruptor_p->currSpw() << ") = " << 
+	cs().shape(corruptor_p->currSpw()) << endl;
+
+    Vector<Double> timevec;
+    Double starttime,stoptime;
+    starttime=vi.time(timevec)[0];
+
+    for (Int ichunk=0;ichunk<nChunks;++ichunk) {
+      Int spw(vi.spectralWindow());
+      corruptor_p->currSpw()=spw;
+
+      for (vi.origin(); vi.more(); vi++) {
+        // these need to be updated whenever the VI scrolls forward
+        vi.antenna1(a1);
+        vi.antenna2(a2);
+        vi.flag(flags);
+        vi.time(timevec);
     
-    for (Int irow=0;irow<cvb.nRow();++irow) {
-      if ( !cvb.flagRow()(irow) &&
-	   cvb.antenna1()(irow)!=cvb.antenna2()(irow) &&
-	   nfalse(cvb.flag().column(irow))> 0 ) {	
-	
-	// outside row loop i.e. use all same Corruptor slot for this VB?
-	if (corruptor_p->curr_time()!=refTime()) {
-	  
-	  corruptor_p->curr_time()=refTime();
-	  
-	  // find new slot if required
-	  Double dt(1e10),dt0(-1);
-	  dt0 = abs(corruptor_p->slot_time() - refTime());
-	  
-	  if (refTime()<corruptor_p->curr_time()) {
-	    //throw(AipsError("T:simPar error: VB not monotonic in time!"));
-	    
-	    for (Int newslot=corruptor_p->curr_slot()-1;newslot>=0;newslot--) {
-	      dt=abs(corruptor_p->slot_time(newslot) - refTime());
-	      if (dt<dt0) {
-		// use this check for on-depand corruptors to get new val.
-		corruptor_p->curr_slot()=newslot;
-		dt0 = dt;
-		if (prtlev()>3) 
-		  cout << "    T:simPar retreating to time " << refTime() << endl;
-	      }
-	    }	  
-	  } else {	      
-	    for (Int newslot=corruptor_p->curr_slot()+1;newslot<corruptor_p->nSim();newslot++) {
-	      dt=abs(corruptor_p->slot_time(newslot) - refTime());
-	      if (dt<dt0) {
-		// use this check for on-demand corruptors to get new val.
-		corruptor_p->curr_slot()=newslot;
-		dt0 = dt;
-		if (prtlev()>4) 
-		  cout << "    T:simPar advancing to time " << refTime() << endl;
-	      }	  
-	    }
-	  }
-	}
-	
-	corruptor_p->currAnt()=a1(irow);
-	
-	if(tcorruptor_p->mode()=="test" or tcorruptor_p->mode()=="1d")
-	  solveCPar()(0,focusChan(),a1(irow))=tcorruptor_p->gain(focusChan());
-	else if (tcorruptor_p->mode()=="2d") {
-	  // RI_TODO modify x,y by tan(zenith angle)*(layer altitude)
-	  Int ix(Int(tcorruptor_p->antx()[a1(irow)]));
-	  Int iy(Int(tcorruptor_p->anty()[a1(irow)]));
-	  if (prtlev()>4) 
-	    cout << " getting gain for antenna ix,iy = " << ix << "," << iy << endl;  
-	  solveCPar()(0,focusChan(),a1(irow))=tcorruptor_p->gain(ix,iy,focusChan());
-	} else 
-	  throw(AipsError("T: unknown corruptor mode "+tcorruptor_p->mode()));
-      }
-    }
+	for (Int irow=0;irow<vi.nRow();++irow) {
+
+          if ( a1(irow)!=a2(irow) &&
+               nfalse(flags.column(irow))> 0 ) {
+
+            if (corruptor_p->curr_time()!=timevec[irow]) {
+              corruptor_p->curr_time()=timevec[irow];
+              // find new slot if required
+              Double dt(1e10),dt0(-1);
+              dt0 = abs(corruptor_p->slot_time() - timevec[irow]);
+
+              if (timevec[irow]<corruptor_p->curr_time()) {
+                for (Int newslot=corruptor_p->curr_slot()-1;
+                     newslot>=0;newslot--) {
+                  dt=abs(corruptor_p->slot_time(newslot) - timevec[irow]);
+                  if (dt<dt0) {
+                    // use this check for on-depand corruptors to get new val.
+                    corruptor_p->curr_slot()=newslot;
+                    dt0 = dt;
+                    if (prtlev()>4)
+                      cout << "    G:simPar retreating to time " <<
+                        timevec[irow] << endl;
+                  }
+                }
+              } else {
+                for (Int newslot=corruptor_p->curr_slot()+1;
+                     newslot<corruptor_p->nSim();newslot++) {
+                  dt=abs(corruptor_p->slot_time(newslot) - timevec[irow]);
+                  if (dt<dt0) {
+                    // use this check for on-depand corruptors to get new val.
+                    corruptor_p->curr_slot()=newslot;
+                    dt0 = dt;
+                    if (prtlev()>4)
+                      cout << "    G:simPar advancing to time " <<
+                        timevec[irow] << endl;
+                  }
+                }
+              }
+            }
+
+            corruptor_p->currAnt()=a1(irow);
+
+	    // chan loop has to be outside of this because George has 
+	    // hardcoded that a SVJ only has one channel.
+	    if(tcorruptor_p->mode()=="test" or tcorruptor_p->mode()=="1d")
+	      solveCPar()(0,focusChan(),a1(irow))=tcorruptor_p->gain(focusChan());
+	    else if (tcorruptor_p->mode()=="2d") {
+	      // RI_TODO modify x,y by tan(zenith angle)*(layer altitude)
+	      Int ix(Int(tcorruptor_p->antx()[a1(irow)]));
+	      Int iy(Int(tcorruptor_p->anty()[a1(irow)]));
+	      if (prtlev()>5) 
+		cout << " getting gain for antenna ix,iy = " << ix << "," << iy << endl;  
+	      solveCPar()(0,focusChan(),a1(irow))=tcorruptor_p->gain(ix,iy,focusChan());
+	    } else 
+	      throw(AipsError("T: unknown corruptor mode "+tcorruptor_p->mode()));
+	  }// if not flagged
+	}// row
+      }// vi
+      if (vi.moreChunks()) vi.nextChunk();
+    } // chunk loop
+
+    // RI TODO T::simPar  don't divide by zero  **
+    for (Int i=0;i<cparshape(2);i++)
+      solveCPar().xyPlane(i) =  solveCPar().xyPlane(i) / nGood.xyPlane(i);
+
+    vi.time(timevec);
+    Int tvsize;
+    timevec.shape(tvsize);
+    stoptime=timevec[tvsize-1];
+    refTime() = 0.5*(starttime+stoptime);
+    interval() = (stoptime-starttime);
+    currField() = vi.fieldId();
+
+#ifndef RI_DEBUG    
   } catch (AipsError x) {
     if (tcorruptor_p) delete tcorruptor_p;
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
+#endif
   return True;
 }
 
@@ -726,7 +766,7 @@ void TJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float s
   //obsPos = MPosition::Convert(obsPos, MPosition::ITRF)();
   Float meanlat=mean(anty())/6371000.;
   antx()=antx()*cos(meanlat);
-  if (prtlev()>4) 
+  if (prtlev()>5) 
     cout << antx() << endl << anty() << endl;
   Int buffer(2); // # pix border
   //antx()=antx()-mean(antx());
@@ -735,19 +775,19 @@ void TJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float s
   anty()=anty()-min(anty());
   antx()=antx()/pixsize();
   anty()=anty()/pixsize();
-  if (prtlev()>3) 
+  if (prtlev()>4) 
     cout << antx() << endl << anty() << endl;
 
   Int ysize(Int(ceil(max(anty())+buffer)));
 
   const Float tracklength = stopTime()-startTime();    
   const Float blowlength = windspeed()*tracklength*1.05; // 5% margin
-  if (prtlev()>2) 
+  if (prtlev()>3) 
     cout << "blowlength: " << blowlength << " track time = " << tracklength << endl;
   
   Int xsize(Int(ceil(max(antx())+buffer+blowlength/pixsize()))); 
 
-  if (prtlev()>2) 
+  if (prtlev()>3) 
     cout << "xy screen size = " << xsize << "," << ysize << 
       " pixels (" << pixsize() << "m)" << endl;
   // if the array is too elongated, FFT sometimes gets upset;
@@ -763,7 +803,7 @@ void TJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float s
   Float pmean = mean(*screen_p);
   Float rms = sqrt(mean( ((*screen_p)-pmean)*((*screen_p)-pmean) ));
   // if (prtlev()>4) cout << (*screen_p)[10] << endl;
-  if (prtlev()>2 and currAnt()<2) {
+  if (prtlev()>3 and currAnt()<2) {
     cout << "RMS screen fluctuation " 
 	 << " = " << rms << " ( " << pmean << " ; beta = " << Beta << " ) " << endl;
   }
@@ -807,7 +847,7 @@ Complex TJonesCorruptor::gain(const Int ix, const Int iy, const Int ichan) {
 	<< blown << "," << iy << ") (" << screen_p->shape() << ")" << endl;
       throw(AipsError(o));
     }
-    // RI TODO interpolate!
+    // RI TODO Tcorr::gain  interpolate screen!
     Float deltapwv = (*screen_p)(ix+blown,iy);
     delay = itsRIP->getDispersiveWetPhaseDelay(currSpw(),ichan).get("rad") 
       * deltapwv / 57.2958; // convert from deg to rad
@@ -832,11 +872,13 @@ Complex TJonesCorruptor::gain(const Int ichan) {
       Float deltapwv = (*pwv_p[currAnt()])(curr_slot());
       delay = itsRIP->getDispersiveWetPhaseDelay(currSpw(),ichan).get("rad") 
 	* deltapwv / 57.2958; // convert from deg to rad
-      //      cout << itsRIP->getDispersiveWetPhaseDelay(0,ichan).get("rad") << " "
-      //	   << itsRIP->getDispersiveWetPhaseDelay(1,ichan).get("rad") << " "
-      //	   << itsRIP->getDispersiveWetPhaseDelay(2,ichan).get("rad") << " "
-      //	   << itsRIP->getDispersiveWetPhaseDelay(3,ichan).get("rad") << endl;
-	
+#ifdef RI_DEBUG      
+      if (prtlev()>5) 
+	cout << itsRIP->getDispersiveWetPhaseDelay(0,ichan).get("rad") << " "
+	     << itsRIP->getDispersiveWetPhaseDelay(1,ichan).get("rad") << " "
+	     << itsRIP->getDispersiveWetPhaseDelay(2,ichan).get("rad") << " "
+	     << itsRIP->getDispersiveWetPhaseDelay(3,ichan).get("rad") << endl;
+#endif	
     } else
       throw(AipsError("TJonesCorruptor internal error accessing pwv()"));  
     return Complex(cos(delay),sin(delay));
@@ -923,10 +965,8 @@ void fBM::initialize(const Int seed, const Float beta) {
     break;
   case 2:
     // beta = 1+2H = 7-2D
-    // Will the server resize itself?
     server.resize(size2);
-    // RI_TODO make sure the hermitian business is correct - fftw only doubles
-    // the first axis...
+    // RI_TODO fBM::init make sure hermitian calc is correct - fftw only doubles first axis.
     // F2.resize(s(0)/2,s(1)/2);
     F2.resize(s(0)/2,s(1));
     for (uInt i=0; i<s(0)/2; i++)
@@ -989,6 +1029,40 @@ void fBM::initialize(const Int seed, const Float beta) {
 	  data_->operator()(IPosition(3,i,j,k))=5.;     
   }
 };
+
+
+
+
+
+
+
+
+
+// **********************************************************
+//  TfJones Implementations
+//
+
+TfJones::TfJones(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  TJones(vs)              // immediate parent
+{
+  if (prtlev()>2) cout << "Tf::Tf(vs)" << endl;
+}
+
+TfJones::TfJones(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  TJones(nAnt)
+{
+  if (prtlev()>2) cout << "Tf::Tf(nAnt)" << endl;
+}
+
+TfJones::~TfJones() {
+  if (prtlev()>2) cout << "Tf::~Tf()" << endl;
+}
+
+
 
 
 
@@ -1169,14 +1243,16 @@ void GJones::initTrivDJ() {
 
 Int GJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes)
 {
-  prtlev()=4; // debug
+
+  LogIO os(LogOrigin("G", "setupSim()", WHERE));
+  //prtlev()=4; // debug
 
   if (prtlev()>2) cout << "   G::setupSim()" << endl;
   AlwaysAssert((isSimulated()),AipsError);
   VisIter& vi(vs.iter());
   
   Int nSim = sizeUpSim(vs,nChunkPerSol,solTimes);
-  if (prtlev()>3) cout << " sized for Sim." << endl;
+  if (prtlev()>2) cout << " sized for Sim with " << nSim << " slots."<< endl;
 
   gcorruptor_p = new GJonesCorruptor(nSim);
   corruptor_p = gcorruptor_p;
@@ -1208,8 +1284,10 @@ Int GJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
   Float Scale(.15); // scale of fluctuations rel to mean
   if (simpar.isDefined("scale")) {
     Scale=simpar.asFloat("scale");
-    if (Scale>.5)
-      Scale=.5;  // RI_TODO warn when doing this!!!
+    if (Scale>.5) {
+      Scale=.5;
+      os << LogIO::WARN << " decreasing PWV fluctuation magnitude to half of the mean PWV, " << simpar.asFloat("mean_pwv") << LogIO::POST;  
+    }
   }
 
   const ROMSSpWindowColumns& spwcols = vi.msColumns().spectralWindow();
@@ -1239,9 +1317,12 @@ Int GJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
 
   gcorruptor_p->initialize(Seed,Beta,Scale);
   
-  if (prtlev()>2) cout << "   G::setupSim()  nSim = " << nSim << endl;
+  //if (prtlev()>2) cout << "   G::setupSim()  nSim = " << nSim << endl;
   return nSim;
 }
+
+
+
 
 
 
@@ -1250,77 +1331,111 @@ Bool GJones::simPar(VisIter& vi, const Int nChunks){
   if (prtlev()>4) cout << "   G::simPar()" << endl;
   
   AlwaysAssert((isSimulated()),AipsError);
+#ifndef RI_DEBUG
   try {
-    VisBuffer cvb(vi);
-    Vector<Int>& a1(cvb.antenna1());
-    Vector<Int>& a2(cvb.antenna2());
-    Vector<Int>& feed1(cvb.feed1());
-    corruptor_p->currSpw()=cvb.spectralWindow(); 
+#endif
+    Vector<Int> a1;
+    Vector<Int> a2;
+    Matrix<Bool> flags;
+
+    solveCPar()=Complex(0.0);
+    // n good VI elements averaged in each CPar() entry:
+    IPosition cparshape=solveCPar().shape();
+    Cube<Complex> nGood(cparshape);
+    solveParOK()=False;
     
-    cout << " ant1=" << min(a1) << "-" << max(a1) << 
-      " spw=" << cvb.spectralWindow() << 
-      " feed=" << min(feed1) << "-" << max(feed1) << 
-      " nrow=" << cvb.nRow() << 
-      "(" << min(cvb.rowIds()) << "-" << max(cvb.rowIds()) << ") " << endl;
+    Vector<Double> timevec;
+    Double starttime,stoptime;
+    starttime=vi.time(timevec)[0];
     
-    for (Int irow=0;irow<cvb.nRow();++irow) {
-      if (prtlev()>4 and !cvb.flagRow()(irow) and a1(irow)==49)
-	cout << " G::simPar(): ant=" << cvb.antenna1()(irow) << " +" << cvb.antenna2()(irow) << 
-	  " spw=" << cvb.spectralWindow() << 
-	  " feed=" << cvb.feed1()(irow) << 
-	  " row=" << irow << 
-	  "(" << cvb.rowIds()(irow) << ") " <<
-	  cvb.flagRow()(irow) << endl;
+    for (Int ichunk=0;ichunk<nChunks;++ichunk) {
+      Int spw(vi.spectralWindow());
+      corruptor_p->currSpw()=spw; 
+
+      for (vi.origin(); vi.more(); vi++) {
+        // these need to be updated whenever the VI scrolls forward
+        vi.antenna1(a1);
+        vi.antenna2(a2);
+        vi.flag(flags);
+	vi.time(timevec);
+
+	for (Int irow=0;irow<vi.nRow();++irow) {
       
-      if ( !cvb.flagRow()(irow) &&
-	   cvb.antenna1()(irow)!=cvb.antenna2()(irow) &&
-	   nfalse(cvb.flag().column(irow))> 0 ) { 
+	  if ( a1(irow)!=a2(irow) &&
+	       nfalse(flags.column(irow))> 0 ) { 
 	
-	if (corruptor_p->curr_time()!=refTime()) {
+	    if (corruptor_p->curr_time()!=timevec[irow]) {	  
+	      corruptor_p->curr_time()=timevec[irow];          
+	      // find new slot if required
+	      Double dt(1e10),dt0(-1);
+	      dt0 = abs(corruptor_p->slot_time() - timevec[irow]);
 	  
-	  corruptor_p->curr_time()=refTime();
-          
-	  // find new slot if required
-	  Double dt(1e10),dt0(-1);
-	  dt0 = abs(corruptor_p->slot_time() - refTime());
-	  
-	  if (refTime()<corruptor_p->curr_time()) {
-	    //throw(AipsError("T:simPar error: VB not monotonic in time!"));
-	    
-	    for (Int newslot=corruptor_p->curr_slot()-1;newslot>=0;newslot--) {
-	      dt=abs(corruptor_p->slot_time(newslot) - refTime());
-	      if (dt<dt0) {
-		// use this check for on-depand corruptors to get new val.
-		corruptor_p->curr_slot()=newslot;
-		dt0 = dt;
-		if (prtlev()>3) 
-		  cout << "    G:simPar retreating to time " << refTime() << endl;
+	      if (timevec[irow]<corruptor_p->curr_time()) {
+		for (Int newslot=corruptor_p->curr_slot()-1;
+		     newslot>=0;newslot--) {
+		  dt=abs(corruptor_p->slot_time(newslot) - timevec[irow]);
+		  if (dt<dt0) {
+		    // use this check for on-depand corruptors to get new val.
+		    corruptor_p->curr_slot()=newslot;
+		    dt0 = dt;
+		    if (prtlev()>4) 
+		      cout << "    G:simPar retreating to time " << 
+			timevec[irow] << endl;
+		  }
+		}
+	      } else {          
+		for (Int newslot=corruptor_p->curr_slot()+1;
+		     newslot<corruptor_p->nSim();newslot++) {
+		  dt=abs(corruptor_p->slot_time(newslot) - timevec[irow]);
+		  if (dt<dt0) {
+		    // use this check for on-depand corruptors to get new val.
+		    corruptor_p->curr_slot()=newslot;
+		    dt0 = dt;
+		    if (prtlev()>4) 
+		      cout << "    G:simPar advancing to time " << 
+			timevec[irow] << endl;
+		  }         
+		}
 	      }
-	    }   
-	  } else {          
-	    for (Int newslot=corruptor_p->curr_slot()+1;newslot<corruptor_p->nSim();newslot++) {
-	      dt=abs(corruptor_p->slot_time(newslot) - refTime());
-	      if (dt<dt0) {
-		// use this check for on-depand corruptors to get new val.
-		corruptor_p->curr_slot()=newslot;
-		dt0 = dt;
-		if (prtlev()>4) 
-		  cout << "    G:simPar advancing to time " << refTime() << endl;
-	      }         
 	    }
-	  }
-	}
-	corruptor_p->currAnt()=a1(irow);
-        
-	for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) 
-	  solveCPar()(icorr,focusChan(),a1(irow))=gcorruptor_p->gain(icorr,focusChan());
-      }
-    }
+
+	    corruptor_p->currAnt()=a1(irow);
+
+	    // Gcorruptor::gain doesn't currently depend on chan/freq:
+	    // RI TODO G::simPar freqDepPar() ?
+	    for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) 
+	      solveCPar().xyPlane(a1(irow)).row(icorr) = 
+		gcorruptor_p->gain(icorr,0);
+	    nGood.xyPlane(a1(irow)) = nGood.xyPlane(a1(irow)) + Complex(1.);
+	    solveParOK().xyPlane(a1(irow)) = True;
+	    //	      solveCPar()(icorr,focusChan(),a1(irow)) = 
+	    //		gcorruptor_p->gain(icorr,focusChan());
+
+	  } // if not flagged or autocorr
+	} // irow loop
+      } // vi loop
+      if (vi.moreChunks()) vi.nextChunk();
+    } // chunk loop
+
+    // RI TODO G::simPar  don't divide by zero  **
+    for (Int i=0;i<cparshape(2);i++)
+      solveCPar().xyPlane(i) =  solveCPar().xyPlane(i) / nGood.xyPlane(i);
+    
+    vi.time(timevec);
+    Int tvsize;
+    timevec.shape(tvsize);
+    stoptime=timevec[tvsize-1];
+    refTime() = 0.5*(starttime+stoptime);
+    interval() = (stoptime-starttime);
+    currField() = vi.fieldId();
+
+#ifndef RI_DEBUG
   } catch (AipsError x) {
     if (gcorruptor_p) delete gcorruptor_p;
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
+#endif
   return True;
 }
 
@@ -1345,13 +1460,6 @@ Matrix<Complex>* GJonesCorruptor::drift() {
     return NULL;
 };
  
-//Complex& GJonesCorruptor::drift(const Int islot) { 
-//  if (currAnt()<=drift_p.nelements())
-//    return (*drift_p[currAnt()])(islot);
-//  else
-//    throw(AipsError("GJonesCorruptor internal error accessing drift()"));;
-//};
-
 
 void GJonesCorruptor::initialize() {
   // for testing only
@@ -1369,7 +1477,7 @@ void GJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float s
       myfbm->initialize(Seed+iant+icorr,Beta); // (re)initialize
       Float pmean = mean(myfbm->data());
       Float rms = sqrt(mean( ((myfbm->data())-pmean)*((myfbm->data())-pmean) ));
-      if (prtlev()>2 and currAnt()<2) {
+      if (prtlev()>3 and currAnt()<2) {
 	cout << "RMS fBM fluctuation for antenna " << iant 
 	     << " = " << rms << " ( " << pmean << " ; beta = " << Beta << " ) " << endl;      
       }
@@ -1979,6 +2087,106 @@ void DJones::initTrivDJ() {
 }
 
 
+
+Int DJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes)
+{
+
+  LogIO os(LogOrigin("D", "setupSim()", WHERE));
+
+  if (prtlev()>2) cout << "   D::setupSim()" << endl;
+  AlwaysAssert((isSimulated()),AipsError);
+
+  // this is trivial since we don't need slots, just a constant D with time.
+
+  Int nSim = 1;
+  // still need a corruptor to have a curr_time in it
+  corruptor_p = new CalCorruptor(nSim);
+  corruptor_p->prtlev()=prtlev();
+    Vector<Double> timevec;
+  corruptor_p->curr_time()=vs.iter().time(timevec)[0];
+  corruptor_p->amp()=simpar.asFloat("amplitude");
+
+  return nSim;
+}
+
+
+
+
+
+
+Bool DJones::simPar(VisIter& vi, const Int nChunks){
+  LogIO os(LogOrigin("D", "simPar()", WHERE));
+  if (prtlev()>4) cout << "   D::simPar()" << endl;
+  
+  AlwaysAssert((isSimulated()),AipsError);
+#ifndef RI_DEBUG
+  try {
+#endif
+    Vector<Int> a1;
+    Vector<Int> a2;
+    Matrix<Bool> flags;
+    Float& amp(corruptor_p->amp());
+
+    solveCPar()=Complex(0.0);
+    // n good VI elements averaged in each CPar() entry:
+    solveParOK()=False;
+    
+    Vector<Double> timevec;
+    Double starttime,stoptime;
+    starttime=vi.time(timevec)[0];
+    
+    for (Int ichunk=0;ichunk<nChunks;++ichunk) {
+      Int spw(vi.spectralWindow());
+      corruptor_p->currSpw()=spw; 
+
+      for (vi.origin(); vi.more(); vi++) {
+        // these need to be updated whenever the VI scrolls forward
+        vi.antenna1(a1);
+        vi.antenna2(a2);
+        vi.flag(flags);
+	vi.time(timevec);
+
+	for (Int irow=0;irow<vi.nRow();++irow) {
+      
+	  if ( a1(irow)!=a2(irow) &&
+	       nfalse(flags.column(irow))> 0 ) { 	    
+	    corruptor_p->currAnt()=a1(irow);
+
+	    for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) 
+	      solveCPar().xyPlane(a1(irow)).row(icorr) = amp; 
+	    solveParOK().xyPlane(a1(irow)) = True;
+
+	  } // if not flagged or autocorr
+	} // irow loop
+      } // vi loop
+      if (vi.moreChunks()) vi.nextChunk();
+    } // chunk loop
+
+    
+    vi.time(timevec);
+    Int tvsize;
+    timevec.shape(tvsize);
+    stoptime=timevec[tvsize-1];
+    refTime() = 0.5*(starttime+stoptime);
+    interval() = (stoptime-starttime);
+    currField() = vi.fieldId();
+
+#ifndef RI_DEBUG
+  } catch (AipsError x) {
+    if (gcorruptor_p) delete gcorruptor_p;
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
+    return False;
+  } 
+#endif
+  return True;
+}
+
+
+
+
+
+
+
 // **********************************************************
 //  DfJones Implementations
 //
@@ -2002,6 +2210,13 @@ DfJones::DfJones(const Int& nAnt) :
 DfJones::~DfJones() {
   if (prtlev()>2) cout << "Df::~Df()" << endl;
 }
+
+
+
+
+
+
+
 
 // **********************************************************
 //  JJones Implementations
@@ -2528,6 +2743,8 @@ void MMueller::keep(const Int& slot) {
 }
 
 
+
+
 Int MMueller::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes)
 {
   prtlev()=4; // debug
@@ -2541,27 +2758,35 @@ Int MMueller::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerS
 
   if (prtlev()>3) cout << " sized for Sim." << endl;
 
-  mcorruptor_p = new MMCorruptor();
-  corruptor_p = mcorruptor_p;
-
-  if (prtlev()>3) cout << " MMCorruptor created." << endl;
 
   Float Amp(1.0);
   if (simpar.isDefined("amplitude")) {
     Amp=simpar.asFloat("amplitude");
   }
 
+
+  if (freqDepPar()) {
+    mcorruptor_p = new MMCorruptor();
+    if (prtlev()>3) cout << " MMCorruptor created." << endl;
+  } else {
+    mcorruptor_p = new MfMCorruptor();
+    if (prtlev()>3) cout << " MfMCorruptor created." << endl;
+  }
   mcorruptor_p->initialize(Amp,simpar);
 
   String Mode("simple"); // simple means just multiply by amp()
   if (simpar.isDefined("mode")) {
     Mode=simpar.asString("mode");
   }
-
   mcorruptor_p->mode()=Mode;
+
+  corruptor_p = mcorruptor_p;
 
   return nSim;
 }
+
+
+
 
 Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
   if (prtlev()>4) cout << "  MM::simPar()" << endl;
@@ -2620,6 +2845,9 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
       Int spw(vi.spectralWindow());	
       corruptor_p->currSpw()=spw;
       currSpw()=spw;
+      
+      // assume one time slot per chunk
+      Vector<MDirection> antazel(vi.azel(refTime()));
             
       for (vi.origin(); vi.more(); vi++) {
 	
@@ -2635,13 +2863,9 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 	    // don't need loop to find the corruptor time slot here,
 	    // since just drawing from random distribution.
 	    
-	    // RI TODO MM::simPar put temp vars outside of row loop
-	    Vector<MDirection> antazel(vi.azel(refTime()));
-	    
 	    if (dotsys) {
 	      tau0=0.;
 	      if (mcorruptor_p->simpar().isDefined("tau0")) tau0=mcorruptor_p->simpar().asFloat("tau0");
-	      // RI TODO MM::simPar *** ATM freqdep()  tau0 from pwv!
 	      
 	      Float el1 = antazel(a1(irow)).getAngle("rad").getValue()(1);
 	      Float el2 = antazel(a2(irow)).getAngle("rad").getValue()(1);
@@ -2653,6 +2877,15 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 		airmass1 = 1.0;
 		airmass2 = 1.0;
 	      }
+
+	      if (freqDepPar()) {
+		// RI TODO MfM::simPar: use ATM to get freqDep tau
+		// need to initialize ATM in the mcorruptor_p in setSimulate
+		// or switch to an atmcorruptor that handles MfM,TJ,and Topacf
+		// -> get correlated fluctuations in noise and phase
+		throw(AipsError("MfM w/ATM not yet implemented!!"));
+	      }	      
+
 	      A=sqrt(exp(-tau0 * airmass1)) * sqrt(exp(-tau0 * airmass2));
 	      
 	      // this is tsys at telescope 
@@ -2705,6 +2938,11 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 MMCorruptor::MMCorruptor(): CalCorruptor(0) {};
 
 MMCorruptor::~MMCorruptor() {};
+
+
+MfMCorruptor::MfMCorruptor(): MMCorruptor() {};
+
+MfMCorruptor::~MfMCorruptor() {};
 
 
 
@@ -2866,6 +3104,37 @@ void TOpac::calcAllJones() {
   }
 
 }
+
+
+
+// **********************************************************
+//  TfOpac
+//
+
+TfOpac::TfOpac(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  TOpac(vs)              // immediate parent
+{
+  if (prtlev()>2) cout << "TfOpac::TfOpac(vs)" << endl;
+}
+
+//TfOpac::TfOpac(const Int& nAnt) :
+//  VisCal(nAnt), 
+//  VisMueller(nAnt),
+//  TOpac(nAnt)
+//{
+//  if (prtlev()>2) cout << "TfOpac::TfOpac(nAnt)" << endl;
+//}
+
+TfOpac::~TfOpac() {
+  if (prtlev()>2) cout << "TfOpac::~TfOpac()" << endl;
+}
+
+
+
+
+
 
 
 // **********************************************************

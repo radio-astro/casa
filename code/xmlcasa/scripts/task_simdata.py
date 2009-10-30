@@ -563,11 +563,18 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                  mount=['alt-az'], antname=antnames,
                  coordsystem='global', referencelocation=posobs)
         midfreq=qa.add(qa.quantity(startfreq),qa.div(bandwidth,qa.quantity("2")))
-        sm.setspwindow(spwname=fband, freq=midfreq, deltafreq=chanwidth, 
-                   freqresolution=chanwidth, nchannels=nchan, 
-                   stokes='XX YY')
+        if str.upper(telescopename).find('VLA')>0:
+            sm.setspwindow(spwname=fband, freq=midfreq, deltafreq=chanwidth, 
+                           freqresolution=chanwidth, nchannels=nchan, 
+                           stokes='RR LL')
+            sm.setfeed(mode='perfect R L',pol=[''])
+        else:            
+            sm.setspwindow(spwname=fband, freq=midfreq, deltafreq=chanwidth, 
+                           freqresolution=chanwidth, nchannels=nchan, 
+                           stokes='XX YY')
+            sm.setfeed(mode='perfect X Y',pol=[''])
+            
         if verbose: msg(" spectral window set centered at %s" % str(midfreq))
-        sm.setfeed(mode='perfect X Y',pol=[''])
         sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
         sm.setauto(0.0)
         for k in range(0,nfld):
@@ -735,6 +742,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             noise_any=True
 
             noisymsfile = project + ".noisy.ms"
+            noisymsroot = project + ".noisy"
             msg('adding thermal noise to ' + noisymsfile,origin="noise")
 
             eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp()
@@ -768,7 +776,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             sm.setnoise2(spillefficiency=eta_s,correfficiency=eta_q,
                         antefficiency=eta_a,trx=t_rx,
                         tau=tau0,tatmos=t_atm,tground=t_ground,tcmb=t_cmb,
-                        mode="calculate")
+                        mode="calculate",table=noisymsroot)
             sm.corrupt();
             sm.done();
 
@@ -807,11 +815,11 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         else:
             mstoimage = msfile
 
-        if fidelity == True and not doclean:
+        if fidelity == True and doclean == False:
             msg("WARN: You can't calculate fidelity without imaging, so change psfmode if you want a fidelity image calculated.",origin="deconvolve")
             fidelity=False
 
-        if display == True and not doclean:
+        if display == True and doclean == False:
             msg("WARN: Without creating an image, there's very little to display, so I'm turning off display.  Change psfmode if you want to make an image.",origin="deconvolve")
             display=False
 

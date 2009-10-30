@@ -499,6 +499,10 @@ void SolvableVisCal::setSimulate(const Record& simpar) {
   setApplied(True); 
   setSimulated(True);
 
+  // yikes, without this, CI gets created without a sensible time
+  // interpolation, and ends up bombing
+  tInterpType()="nearest";
+
   // Don't do this yet - wait until sizeUpSim
   // make cs with calinterp but by shape not from existing caltable:
   // makeCalSet(True); 
@@ -1424,15 +1428,16 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
     cout << "nchunk = " << chunk << endl;
   }
 
-  //Int nSol(sol+1);
-  // RI - ah hell - this somehow made all the antennas 0 except #1.
-  Int nSol(sol+2);
-  if (nSol>2) {
-    solTimes[nSol-1]=2*solTimes[nSol-2]-solTimes[nSol-3];
-  } else {
-    // sol=0 means only one solint, so no interp:
-    solTimes[nSol-1]=solTimes[nSol-2];
-  }
+  // RI sol+1 somehow made all the antennas 0 except #1.
+  //Int nSol(sol+2);
+  Int nSol(sol+1);
+//  if (nSol>2) {
+//    solTimes[nSol-1]=2*solTimes[nSol-2]-solTimes[nSol-3];
+//  } else {
+//    // sol=0 means only one solint, so no interp:
+//    solTimes[nSol-1]=solTimes[nSol-2];
+//  }
+//  nChunkPerSol[nSol-1]=0;
   
   nChunkPerSol.resize(nSol,True);
   solTimes.resize(nSol,True);
@@ -1513,7 +1518,7 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
 	    <<  nSol << " solution intervals."
 	    << LogIO::POST;
 
-  // Inflate the CalSet
+  // Inflate the CalSet - RI TODO redundant with create above - also need to inflate for each spw...
   inflate(nChanParList(),startChanList(),nChunkPerSpw);
 
   // Size the solvePar arrays
@@ -2384,11 +2389,12 @@ void SolvableVisCal::keep(const Int& slot) {
     cs().parSNR(currSpw())(blc4,trc4).nonDegenerate(3)= solveParSNR();
     cs().solutionOK(currSpw())(slot) = anyEQ(solveParOK(),True);
 
-    if ( cs().solutionOK(currSpw())(slot) != True) 
-      cout << solveCPar().shape() << " : " << solveCPar()[0,0,0,0] << " -> " << solveParOK()[0,0,0,0] << endl;
+//    if ( cs().solutionOK(currSpw())(slot) != True) 
+//      cout << solveCPar().shape() << " : " << solveCPar()[0,0,0,0] << " -> " << solveParOK()[0,0,0,0] << endl;
   }
-  else
+  else {    
     throw(AipsError("SVJ::keep: Attempt to store solution in non-existent CalSet slot"));
+  }
 
 }
 

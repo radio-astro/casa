@@ -231,7 +231,7 @@ void LogModel::appendData(const QString &data)
 	{
 		QString line = lines.next();
 		
-		// qDebug() << line << "\n";
+		//qDebug() << line << "\n";
 		
 		QStringList items = line.split("\t", QString::SkipEmptyParts);
 		
@@ -241,17 +241,26 @@ void LogModel::appendData(const QString &data)
 			QString date 	= items.at(0);
 			QString priority= items.at(1);
 			QString origin;
-			if ( items.size() > 2 ) {
+			if ( items.size() > 3 ) {
 				origin = items.at(2);
 			}
+                        if (items.size() == 3) {
+				origin = " ";
+                        }
 
-			// qDebug() << date << "\t";
-			// qDebug() << priority << "\t";
-			// qDebug() << origin << "\t";
+			// qDebug() << "date=" << date << "\t";
+			// qDebug() << "priority=" << priority << "\t";
+			// qDebug() << "origin=" << origin << "\t";
 			
 			QList<QVariant> columnData;
 			columnData << date << priority << origin;
 
+			if(items.size() == 3) {
+				QString message = items.at(2);
+				message.replace('\r','\n');
+				columnData << message;
+				// qDebug() << message << "\t";
+			}
 			if(items.size() > 3) {
 				QString message = items.at(3);
 

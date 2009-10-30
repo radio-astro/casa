@@ -87,7 +87,8 @@ class CalCorruptor {
   inline Vector<Float>& fRefFreq() { return fRefFreq_; };
   inline Vector<Float>& fWidth() { return fWidth_; };
   inline Vector<Int>& fnChan() { return fnChan_; };
-  virtual void initialize()=0;
+  inline Float& amp() { return amp_;};
+  virtual void initialize() {}; //=0;
  
  protected:
    
@@ -98,6 +99,7 @@ class CalCorruptor {
    Int nAnt_,curr_ant_,nCorr_,curr_corr_;
    Int nSpw_,curr_spw_,curr_chan_;
    Double curr_time_,starttime_,stoptime_;
+   Float amp_;
    Vector<Double> slot_times_;   
    Vector<Float> fRefFreq_,fWidth_; // for each spw
    Vector<Int> fnChan_;
@@ -366,11 +368,8 @@ public:
   // object that can simulate the corruption terms
   CalCorruptor *corruptor_p;
 
-  // RI TODO simplify? i.e. do we need full comb machinery?
+  // calculate # required slots to simulate this SVC
   Int sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
-  //inline virtual Int sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol) {
-  //  return sizeUpSolve(vs,nChunkPerSol) ; }
- 
 
 protected:
 

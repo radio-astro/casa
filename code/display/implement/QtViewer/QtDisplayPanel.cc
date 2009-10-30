@@ -1939,6 +1939,8 @@ String QtDisplayPanel::dpState(String restorefilename) {
     
     WorldCanvas* wc = wcs->getRight();
     
+    // Save Zoom
+
     QDomElement zoom = restoredoc.createElement("zoom");
     dpSettings.appendChild(zoom);
     
@@ -2224,6 +2226,60 @@ Bool QtDisplayPanel::restorePanelState(String filename) {
   return setPanelState(restoredoc, restoredir);  }
   
 
+QtDisplayPanel::panel_state QtDisplayPanel::getPanelState( ) const {
+
+    // Zoom state.  Preferable to get it from wc [0] than zoomer (God
+    // knows what obsolete rubbishy state that may be in).  (Zoomer will
+    // be used to _restore_ zoom state though...).
+    Vector<Double> blc(2), trc(2);
+    ListIter<WorldCanvas* >* wcs = pd_->wcs();
+    wcs->toStart();
+    if ( ! wcs->atEnd() ) {
+        WorldCanvas* wc = wcs->getRight();
+	blc[0] = wc->linXMin(); blc[1] = wc->linYMin();
+	trc[0] = wc->linXMax(); trc[1] = wc->linYMax();
+    }
+
+    panel_state::colormap_map colormapstate;
+    Vector<Float> shiftSlope, brtCont;
+    for ( ConstListIter<QtDisplayData*> dds = registeredDDs(); ! dds.atEnd(); dds++ ) {
+	QtDisplayData* dd = dds.getRight();
+	if ( dd->hasColormap( ) ) {
+	    dd->getCMShiftSlope(shiftSlope);
+	    dd->getCMBrtCont(brtCont);
+	    colormapstate.insert( panel_state::colormap_map::value_type(dd->path( ), panel_state::colormap_state(dd->getColormap( ),shiftSlope,brtCont)) );
+	}
+    }
+
+    return panel_state( panel_state::zoom_state(blc,trc),
+			colormapstate );
+}
+
+
+const QtDisplayPanel::panel_state::colormap_state *QtDisplayPanel::panel_state::colormap( const std::string &path ) const {
+    colormap_map::const_iterator iter = colormaps_.find( path );
+    if ( iter == colormaps_.end( ) )
+	return 0;
+    return &iter->second;
+}
+
+void QtDisplayPanel::setPanelState( const panel_state &state ) {
+    zoom_->zoom( state.blc( ), state.trc( ) );
+    
+    Vector<Float> shiftSlope, brtCont;
+    ListIter<QtDisplayData*> iter(qdds_);
+    iter.toStart( );
+    while ( ! iter.atEnd( ) ) {
+	QtDisplayData* dd = iter.getRight();
+	const QtDisplayPanel::panel_state::colormap_state *colormap = state.colormap(dd->path());
+	if ( colormap ) {
+	    dd->setColormap(colormap->name( ));
+	    dd->setCMShiftSlope(colormap->shift( ));
+	    dd->setCMBrtCont(colormap->brightness( ));
+	}
+	++iter;
+    }
+}
 
 
 Bool QtDisplayPanel::ddFileMatch_(String path, String dataType,

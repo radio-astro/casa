@@ -318,19 +318,33 @@ void VisEquation::collapseForSim(VisBuffer& vb) {
   // initialize LHS/RHS indices
   Int lidx=0;
   Int ridx=napp_-1;
+
+  // copy data to model, to be corrupted in place there.
+  // RI TODO: VC::corrupt insists on using Model - change that?
+  vb.setModelVisCube(vb.visCube());
+
+  // Corrupt Model down to (and including) the pivot
+  while (ridx>-1    && vc()[ridx]->type() >= pivot_) {
+    vc()[ridx]->corrupt(vb);
+    ridx--;
+  }
+  
+  // zero the data. correct will operate in place on data, so 
+  // if we don't have an AMueller we don't get anything from this.
+  vb.setVisCube(0.0);
   
   // Correct DATA up to pivot 
   while (lidx<napp_ && vc()[lidx]->type() < pivot_) {
     vc()[lidx]->correct(vb);
     lidx++;
   }
-  
-  // Corrupt MODEL down to (and including) the pivot
-  while (ridx>-1    && vc()[ridx]->type() >= pivot_) {
-    vc()[ridx]->corrupt(vb);
-    ridx--;
-  }
-  
+
+  // add corrected/scaled data (e.g. noise) to corrupted model
+  // vb.modelVisCube()+=vb.visCube();
+
+  // add corrupted Model to corrected/scaled data (i.e.. noise)
+  vb.visCube()+=vb.modelVisCube();
+
   // Put correlations back in original order
   //  (~no-op if already canonical)
   vb.unSortCorr();

@@ -151,6 +151,9 @@ public:
  
   // Report the VisEq's state
   void state();
+
+  inline const VisCal::Type pivot() const { return pivot_; };
+
   
 protected:
 

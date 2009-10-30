@@ -219,13 +219,13 @@ $(XDOCTIME)(%.htex) : $(XDOCTIME) $(DOCSAREA)/helpfiles/%.htex $(CODEDIR)/%.xml
 	   $(AR) r $(XDOCTIME) $(ARCHTMPD)/$*.htex ; \
 	   $(RM) $(ARCHTMPD)/$*.htex
 
-$(XDOCTIME) : 
+$(XDOCTIME) :
 	   @ cat /dev/null > $(ARCHTMPD)/$*gdocs ; \
 	   amkdir -p ug=rwx,g+s,o=rx -v $(DOCSAREA)/helpfiles ; \
 	   $(AR) r $(XDOCTIME) $(ARCHTMPD)/$*gdocs ; \
 	   $(RM) $(ARCHTMPD)/$*gdocs
 
-tasklist : 
+tasklist :  $(CODEDIR)/*.xml
 	cp /dev/null $(ARCHTMPD)/tasklist
 	echo "from odict import odict" >> $(ARCHTMPD)/tasklist
 	echo "tlist = odict()" >> $(ARCHTMPD)/tasklist
@@ -235,7 +235,9 @@ tasklist :
 	echo >> $(ARCHTMPD)/tasklist
 	cat $(ARCHTMPD)/tasklist
 
-pytasks : 
+pytasks : $(AIPSARCH)/python/$(PYTHONVER)/tasks.py
+
+$(AIPSARCH)/python/$(PYTHONVER)/tasks.py :  $(CODEDIR)/*.xml
 	cp /dev/null $(ARCHTMPD)/taskinfo
 	amkdir $(DOCSAREA)/helpfiles
 	cp /dev/null $(DOCSAREA)/helpfiles/tasksref.htex

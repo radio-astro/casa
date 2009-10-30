@@ -249,13 +249,19 @@ namespace casa {
 	  
 	panelmap::iterator dpiter = managed_panels.find( panel_or_data );
 	if ( dpiter != managed_panels.end( ) ) {
+	    QtDisplayPanel::panel_state state = dpiter->second->panel( )->getPanelState( );
+	    dpiter->second->panel( )->hold( );
+
 	    std::list<int> &data = dpiter->second->data( );
 	    for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
 		unload_data( dpiter->second->panel( ), *diter, false );
 	    }
+
 	    for ( std::list<int>::iterator diter = data.begin(); diter != data.end(); ++diter ) {
 		load_data( dpiter->second->panel( ), *diter );
 	    }
+	    dpiter->second->panel( )->setPanelState( state );
+	    dpiter->second->panel( )->release( );
 
 	} else {
 	    datamap::iterator dmiter = managed_datas.find( panel_or_data );

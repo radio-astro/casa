@@ -617,18 +617,27 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		      }
 		      vector<string> &theEnums = dflt.asStringVec();
 		      while(i<theEnums.size()){
-			      // std::cerr << "*"<< theEnums[i] << "*"<< user.asString() << "*"<< std::endl;
+			// std::cerr << i << "*"<< theEnums[i] << "*"<< user.asString() << "*"<< std::endl;
 			if(ignorecase){
 			   casa::String theval(user.asString());
 			   theval.downcase();
-			   if(!theEnums[i].compare(0, user.asString().length(), theval)){
-			      user.asString() = theEnums[i];
-			      break;
+			   if(user.asString().length()){
+			      if(!theEnums[i].compare(0, user.asString().length(), theval)){
+			         user.asString() = theEnums[i];
+			         break;
+			      }
+			   } else {
+			      if(user.asString() == theEnums[i])
+				 break;
 			   }
 			}else {
-			   if(!theEnums[i].compare(0, user.asString().length(), user.asString())){
-			      user.asString() = theEnums[i];
-			      break;
+			   if(user.asString().length()){
+			      if(!theEnums[i].compare(0, user.asString().length(), user.asString())){
+			         user.asString() = theEnums[i];
+			         break;
+			      }
+			   } else if(user.asString() == theEnums[i]) {
+				 break;
 			   }
 			}
 			 i++;
@@ -645,8 +654,12 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		      while(j<userVals.size()){
 		         unsigned int i=0;
 		         while(i<theEnums.size()){
-			   if(!theEnums[i].compare(0, userVals[j].length(), userVals[j]))
-			      break;
+		            if(userVals[j].length()){
+			    if(!theEnums[i].compare(0, userVals[j].length(), userVals[j]))
+			       break;
+			    } else if(userVals[j] == theEnums[i]){
+			       break;
+			    }
 			    i++;
 		          }
 		          if(i == theEnums.size())

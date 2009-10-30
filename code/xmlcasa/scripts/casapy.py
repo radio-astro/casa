@@ -52,15 +52,15 @@ if os.uname()[0]=='Darwin' :
     if not os.path.exists(casa['helpers']['viewer']) :
         casa['helpers']['viewer'] = casa_path[0]+'/MacOS/casaviewer'
 
-    if casa['flags'].has_key('--qtlogger') :
+    if casa['flags'].has_key('--maclogger') :
+        casa['helpers']['logger'] = 'console'
+    else:
         casa['helpers']['logger'] = casa_path[0]+'/'+casa_path[1]+'/apps/casalogger.app/Contents/MacOS/casalogger'
 
         # In the distro of the app then the apps dir is not there and you find things in MacOS
         if not os.path.exists(casa['helpers']['logger']) :
             casa['helpers']['logger'] = casa_path[0]+'/MacOS/casalogger'
 
-    else:
-        casa['helpers']['logger'] = 'console'
 
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -235,7 +235,6 @@ def asap_init():
     from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
     from sdmath_cli import sdmath_cli as sdmath
     from sdimaging_cli import sdimaging_cli as sdimaging
-    from sdimprocess_cli import sdimprocess_cli as sdimprocess
     myf['sd']=sd
     myf['sdaverage']=sdaverage
     myf['sdsmooth']=sdsmooth
@@ -252,7 +251,6 @@ def asap_init():
     myf['sdtpimaging']=sdtpimaging
     myf['sdmath']=sdmath
     myf['sdimaging']=sdimaging
-    myf['sdimprocess']=sdimprocess
 
 
 def selectantenna(vis,minstring):
@@ -912,7 +910,7 @@ casalog.version()
 import shutil
 if ipython:
     ipshell.mainloop( )
-    if(os.uname()[0] == 'Darwin') and not casa['flags'].has_key('--qtlogger') :
+    if(os.uname()[0] == 'Darwin') and casa['flags'].has_key('--maclogger') :
            os.system("osascript -e 'tell application \"Console\" to quit'")
     for pid in logpid: 
         #print 'pid: ',pid

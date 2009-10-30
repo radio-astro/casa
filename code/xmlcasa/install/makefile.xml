@@ -74,6 +74,7 @@ allsys : $(MAKEINST) framework $(MAKEAUXD) $(MAKEFTND) $(MAKEIMPD) $(MAKEAPSD) $
 .cleansys ::
 	-$Q $(RM) -r $(ARCHTMPD)/$(PACKAGE)
 	$(RM) -r $(AIPSGCODE)/$(ARCH) $(AIPSGCODE)/*.idl $(AIPSGCODE)/*.xml
+	$(RM) -rf  $(AIPSARCH)/python/$(PYTHONVER)
 
 lib : $(MAKEIMPD) $(MAKEFTND) ;
 

@@ -66,6 +66,7 @@ polcal_20080224_cband           smyers@aoc.nrao.edu
 ppdisk_regression               rindebet@nrao.edu
 pylabmem                        kgolap@aoc.nrao.edu
 secondNGC4826                   rreid@nrao.edu
+smoothcal_test                  scastro@eso.org
 testcube_regression             rindebet@nrao.edu
 third4826                       smyers@aoc.nrao.edu
 time+chan_avg                   rreid@nrao.edu
