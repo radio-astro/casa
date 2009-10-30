@@ -36,6 +36,7 @@
 #include <casa/Logging/LogSink.h>
 #include <synthesis/MeasurementComponents/FTMachine.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <ms/MeasurementSets/MSMainEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -201,7 +202,8 @@ public:
   // Predict model coherence for the SkyModel. If this is
   // incremental then the model visibilities are not reset
   // but are simply added to
-  virtual void predict(Bool incremental=False);
+  //virtual void predict(Bool incremental=False);
+  virtual void predict(Bool incremental=False, MS::PredefinedColumns Type=MS::MODEL_DATA);
 
   // Find sum of weights, Chi-squared, and the first and second derivatives
   // by transforming to the measurements. 
@@ -348,7 +350,8 @@ public:
 
   virtual void checkVisIterNumRows(ROVisibilityIterator& vi);
 
-  virtual void predictComponents(Bool& incremental, Bool& initialized);
+  //virtual void predictComponents(Bool& incremental, Bool& initialized);
+  virtual void predictComponents(Bool& incremental, Bool& initialized,  MS::PredefinedColumns Type=MS::MODEL_DATA);
 
   // SkyModel
   SkyModel* sm_;

@@ -190,7 +190,11 @@ void SkyEquation::setSkyJones(SkyJones& j) {
 
 //----------------------------------------------------------------------
 // Predict the Sky coherence
-void SkyEquation::predictComponents(Bool& incremental, Bool& initialized){
+//void SkyEquation::predictComponents(Bool& incremental, Bool& initialized){
+//  predictComponents(incrementa,initialized,MS::MODEL_DATA);
+//}
+
+void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::PredefinedColumns Type){
   // Initialize 
   
   
@@ -215,14 +219,34 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized){
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
         if(!incremental&&!initialized) {
-	  vb.setModelVisCube(Complex(0.0,0.0));
+	  switch(Type) {
+	  case MS::MODEL_DATA:
+	    vb.setModelVisCube(Complex(0.0,0.0));
+	    break;
+	  case MS::DATA:
+	    vb.setVisCube(Complex(0.0,0.0));
+	    break;
+	  case MS::CORRECTED_DATA:
+	    vb.setCorrectedVisCube(Complex(0.0,0.0));
+	    break;
+	  }
 	  //	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
 	}
 
 	get(vb, sm_->componentList() );
 
 	// and write it to the model MS
-	vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
+	switch(Type) {
+	case MS::MODEL_DATA:	  
+	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
+	  break;
+	case MS::DATA:	  
+	  vi.setVis(vb.visCube(),VisibilityIterator::Observed);
+	  break;
+	case MS::CORRECTED_DATA:	  
+	  vi.setVis(vb.correctedVisCube(),VisibilityIterator::Corrected);
+	  break;
+	}
 	cohDone+=vb.nRow();
 	pm.update(Double(cohDone));
       }
@@ -233,12 +257,16 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized){
 
 }
 
-void SkyEquation::predict(Bool incremental) {
+//void SkyEquation::predict(Bool incremental) {
+//  predict(incremental,MS::MODEL_DATA);
+//}
+
+void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
 
 
 
-  if(noModelCol_p)
-        throw(AipsError("Cannot predict model vis without using scratch columns yet"));
+  //  if(noModelCol_p)
+  //        throw(AipsError("Cannot predict model vis without using scratch columns yet"));
   AlwaysAssert(cft_, AipsError);
   AlwaysAssert(sm_, AipsError);
   //AlwaysAssert(vs_, AipsError);
@@ -260,8 +288,20 @@ void SkyEquation::predict(Bool incremental) {
       // We are at the begining with an empty model start
       for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
 	for (vi.origin(); vi.more(); vi++) {
-	  vb.setModelVisCube(Complex(0.0,0.0));
-	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
+	  switch(Type) {
+	  case MS::MODEL_DATA:
+	    vb.setModelVisCube(Complex(0.0,0.0));
+	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
+	    break;
+	  case MS::DATA:
+	    vb.setVisCube(Complex(0.0,0.0));
+	    vi.setVis(vb.visCube(),VisibilityIterator::Observed);
+	    break;
+	  case MS::CORRECTED_DATA:
+	    vb.setCorrectedVisCube(Complex(0.0,0.0));
+	    vi.setVis(vb.correctedVisCube(),VisibilityIterator::Corrected);
+	    break;
+	  }
 	}
       }
 
@@ -300,12 +340,32 @@ void SkyEquation::predict(Bool incremental) {
       for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
 	for (vi.origin(); vi.more(); vi++) {
 	  if(!incremental&&!initialized) {
-	    vb.setModelVisCube(Complex(0.0,0.0));
+	    switch(Type) {
+	    case MS::MODEL_DATA:
+	      vb.setModelVisCube(Complex(0.0,0.0));
+	      break;
+	    case MS::DATA:
+	      vb.setVisCube(Complex(0.0,0.0));
+	      break;
+	    case MS::CORRECTED_DATA:
+	      vb.setCorrectedVisCube(Complex(0.0,0.0));
+	      break;
+	    }
 	    //	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
 	  }
 	  // get the model visibility and write it to the model MS
 	  get(vb,model,incremental);
-	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
+	  switch(Type) {
+	  case MS::MODEL_DATA:
+	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);	      
+	    break;
+	  case MS::DATA:
+	    vi.setVis(vb.visCube(),VisibilityIterator::Observed);	      
+	    break;
+	  case MS::CORRECTED_DATA:
+	    vi.setVis(vb.correctedVisCube(),VisibilityIterator::Corrected);	      
+	    break;
+	  }
 	  cohDone+=vb.nRow();
 	  pm.update(Double(cohDone));
 	}
