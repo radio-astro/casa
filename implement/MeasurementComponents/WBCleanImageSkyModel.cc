@@ -112,7 +112,7 @@ void WBCleanImageSkyModel::initVars()
   tdbg=0;
   
   modified_p=True;
-  memoryMB_p = Double(HostInfo::memoryTotal()/1024)/(2.0);
+  memoryMB_p = Double(HostInfo::memoryTotal(true)/1024)/(2.0);
   donePSF_p=False;
 
   nfields_p=1;

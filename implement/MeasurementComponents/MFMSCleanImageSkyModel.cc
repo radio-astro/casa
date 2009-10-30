@@ -329,7 +329,9 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		  }
 		}
 		if(!skipThisPlane){
-		  if(cleaner) {
+                  cerr<<"NUMBER OF MODELS ===="<<numberOfModels()<<endl;
+		  if(cleaner && numberOfModels()==1) {
+		  //if(cleaner) {
 		    os << "Updating multiscale cleaner with new residual images"
 		       << LogIO::POST;
 		    cleaner->update(subResid);

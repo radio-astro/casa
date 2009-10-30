@@ -660,7 +660,8 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
   }
   else{
     Long npix=theIm.shape().product();
-    Long memtot=HostInfo::memoryTotal();
+    // use memory size denfined in aisprc if exists
+    Long memtot=HostInfo::memoryTotal(true);
     //check for 32 bit OS and limit it to 2Gbyte
     if( sizeof(void*) == 4){
       if(memtot > 2000000)
@@ -885,7 +886,7 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   SubImage<Complex>* sliceIm= new SubImage<Complex>(sm_->cImage(model), sl_p, False);
   if(typeOfSlice==0){    
     
-    Double memoryMB=HostInfo::memoryTotal()/1024.0/(8.0*(sm_->numberOfModels()));
+    Double memoryMB=HostInfo::memoryTotal(true)/1024.0/(8.0*(sm_->numberOfModels()));
     slice=new TempImage<Complex> (sliceIm->shape(), sliceIm->coordinates(), memoryMB);
     //slice.copyData(sliceIm);
     slice->set(Complex(0.0, 0.0));
