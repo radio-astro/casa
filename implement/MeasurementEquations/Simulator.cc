@@ -1023,7 +1023,7 @@ Bool Simulator::setnoise2(const String& mode,
     } else {
       throw(AipsError("unsupported mode "+mode+" in setnoise2()"));
     }
-        
+
     // create the A
     SolvableVisCal *svc = create_corrupt(simpar);
     
@@ -2012,8 +2012,10 @@ Bool Simulator::predict(const Vector<String>& modelImage,
 	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
 	} else {
 	  // from above, the prediction is now already in Observed.
-	  //	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);
-	  //	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
+	  // RI TODO remove scratch columns from NewMSSimulator; 
+	  // until then we;ll just leave them full of zero.
+	  // vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);
+	  // vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
 	}
       }
     }

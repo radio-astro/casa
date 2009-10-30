@@ -219,20 +219,11 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::P
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
         if(!incremental&&!initialized) {
-	  switch(Type) {
-	  case MS::MODEL_DATA:
 	    vb.setModelVisCube(Complex(0.0,0.0));
-	    break;
-	  case MS::DATA:
-	    vb.setVisCube(Complex(0.0,0.0));
-	    break;
-	  case MS::CORRECTED_DATA:
-	    vb.setCorrectedVisCube(Complex(0.0,0.0));
-	    break;
-	  }
 	  //	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
 	}
 
+	// get always fills Model
 	get(vb, sm_->componentList() );
 
 	// and write it to the model MS
@@ -241,10 +232,10 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::P
 	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
 	  break;
 	case MS::DATA:	  
-	  vi.setVis(vb.visCube(),VisibilityIterator::Observed);
+	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);
 	  break;
 	case MS::CORRECTED_DATA:	  
-	  vi.setVis(vb.correctedVisCube(),VisibilityIterator::Corrected);
+	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
 	  break;
 	}
 	cohDone+=vb.nRow();
@@ -279,7 +270,7 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
   // Reset the visibilities only if this is not an incremental
   // change to the model
   Bool initialized=False;
-  predictComponents(incremental, initialized);
+  predictComponents(incremental, initialized, Type);
  
   // Now do the images
   for (Int model=0;model<sm_->numberOfModels();model++) {      
@@ -294,12 +285,12 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
 	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
 	    break;
 	  case MS::DATA:
-	    vb.setVisCube(Complex(0.0,0.0));
-	    vi.setVis(vb.visCube(),VisibilityIterator::Observed);
+	    vb.setModelVisCube(Complex(0.0,0.0));
+	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);
 	    break;
 	  case MS::CORRECTED_DATA:
-	    vb.setCorrectedVisCube(Complex(0.0,0.0));
-	    vi.setVis(vb.correctedVisCube(),VisibilityIterator::Corrected);
+	    vb.setModelVisCube(Complex(0.0,0.0));
+	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
 	    break;
 	  }
 	}
@@ -340,30 +331,20 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
       for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
 	for (vi.origin(); vi.more(); vi++) {
 	  if(!incremental&&!initialized) {
-	    switch(Type) {
-	    case MS::MODEL_DATA:
-	      vb.setModelVisCube(Complex(0.0,0.0));
-	      break;
-	    case MS::DATA:
-	      vb.setVisCube(Complex(0.0,0.0));
-	      break;
-	    case MS::CORRECTED_DATA:
-	      vb.setCorrectedVisCube(Complex(0.0,0.0));
-	      break;
-	    }
+	    vb.setModelVisCube(Complex(0.0,0.0));
 	    //	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
 	  }
-	  // get the model visibility and write it to the model MS
+	  // get the model visibility and write it to the Model MS
 	  get(vb,model,incremental);
 	  switch(Type) {
 	  case MS::MODEL_DATA:
 	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);	      
 	    break;
 	  case MS::DATA:
-	    vi.setVis(vb.visCube(),VisibilityIterator::Observed);	      
+	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);	      
 	    break;
 	  case MS::CORRECTED_DATA:
-	    vi.setVis(vb.correctedVisCube(),VisibilityIterator::Corrected);	      
+	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);	      
 	    break;
 	  }
 	  cohDone+=vb.nRow();
