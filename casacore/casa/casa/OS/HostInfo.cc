@@ -138,21 +138,34 @@ Int HostInfo::numCPUs(bool use_aipsrc)				\
 								\
 ssize_t HostInfo::memoryTotal(bool use_aipsrc) 			\
 {								\
-    static const String keyword("system.resources.memory");	\
+    static const String memory("system.resources.memory");	\
+    static const String fraction("system.resources.memfrac");	\
+    int frac = 0;						\
     /** aipsrc memory is in megabytes whereas this **/		\
     /** returns the memory in kilobytes...         **/		\
     if ( use_aipsrc ) {						\
 	String value;						\
-	if ( Aipsrc::find(value, keyword) ) {			\
-	    char buf[256];					\
+	if ( Aipsrc::find(value, memory) ) {			\
 	    int result;						\
 	    if ( sscanf( value.c_str( ), "%d", &result ) == 1 )	\
 		return (ssize_t) result * 1024;			\
+	} else if ( Aipsrc::find(value,	fraction) ) {		\
+	    int result;						\
+	    if ( sscanf( value.c_str( ), "%d", &result ) == 1 )	\
+		frac = result;					\
 	}							\
     }								\
 								\
     if ( ! info ) info = new HostMachineInfo( );		\
-    return info->valid ? info->memory_total : -1;		\
+								\
+    if ( ! info->valid )					\
+	return -1;						\
+    else if ( frac == 0 )					\
+	return info->memory_total;				\
+    else {							\
+	double f = ((double) frac / 100.0);			\
+	return (ssize_t) ((double ) info->memory_total * f);	\
+    }								\
 }								\
 								\
 ssize_t HostInfo::memoryUsed( )					\

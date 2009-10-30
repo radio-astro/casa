@@ -426,6 +426,7 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	      lastday=day;
 
 	      thisnrow=0;
+	      meanIntTim=0.;
 	    }
 
 	    // etime keeps pace with thistime
