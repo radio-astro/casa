@@ -62,6 +62,12 @@ int main()
     cout << "Number of CPUs (from ./aipsrc): " << HostInfo::numCPUs(true) << endl;
     cout << "Physical Memory (from ./aipsrc): " << HostInfo::memoryTotal(true) << "K" << endl;
     unlink( "aipsrc" );
+    aipsrc = fopen( "aipsrc", "w" );
+    fprintf( aipsrc, "system.resources.memfrac: 50\n" );
+    fclose( aipsrc );
+    Aipsrc::reRead( );
+    cout << "50% Physical Memory (from ./aipsrc): " << HostInfo::memoryTotal(true) << "K" << endl;
+    unlink( "aipsrc" );
     cout << "Swap Space: " << HostInfo::swapTotal( ) <<
       "K [ " << HostInfo::swapUsed( ) << " used, " <<
       HostInfo::swapFree( ) << " free ]" << endl;
