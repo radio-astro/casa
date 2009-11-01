@@ -272,6 +272,12 @@ class Imager
   // Return the state of the object as a string
   String state();
   
+  // Return the # of visibilities accessible to *rvi, optionally excluding
+  // flagged ones (if unflagged_only is true) and/or ones without imaging
+  // weights (if must_have_imwt is true).
+  uInt count_visibilities(ROVisibilityIterator *rvi,
+                          const Bool unflagged_only, const Bool must_have_imwt);
+
   // Return the image coordinates
   Bool imagecoordinates(CoordinateSystem& coordInfo);
 

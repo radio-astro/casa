@@ -43,7 +43,7 @@ class deconvolver
     deconvolver();
     virtual ~deconvolver();
 
-    bool open(const std::string& dirty = "", const std::string& psf = "");
+    bool open(const std::string& dirty = "", const std::string& psf = "", bool suppressWarnings=false);
 
     bool reopen();
 

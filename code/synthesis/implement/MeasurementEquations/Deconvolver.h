@@ -135,7 +135,9 @@ public:
   ~Deconvolver();
 
   // Open the given dirty image and psf
-  Bool open(const String& dirty, const String& psf);
+  // If warn is true,  print warnings about there being
+  // no psf if one is not supplied.
+  Bool open(const String& dirty, const String& psf, Bool warn=True);
 
   // After some cleaning, the dirty image is replaced with the
   // residual image in the deconvolver tool.  reopen reinstates

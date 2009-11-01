@@ -59,14 +59,14 @@ deconvolver::~deconvolver()
 }
 
 bool
-deconvolver::open(const std::string& dirty, const std::string& psf)
+deconvolver::open(const std::string& dirty, const std::string& psf, bool warn)
 {
   if(itsDeconv==0)
     itsDeconv = new Deconvolver();
   if(itsLog==0)
     itsLog = new LogIO();
   try {
-    itsDeconv->open(String(dirty), String(psf));
+    itsDeconv->open(String(dirty), String(psf), warn);
     return true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

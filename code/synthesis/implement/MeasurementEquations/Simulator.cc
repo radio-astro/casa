@@ -1023,7 +1023,7 @@ Bool Simulator::setnoise2(const String& mode,
     } else {
       throw(AipsError("unsupported mode "+mode+" in setnoise2()"));
     }
-        
+
     // create the A
     SolvableVisCal *svc = create_corrupt(simpar);
     
@@ -1979,7 +1979,11 @@ Bool Simulator::predict(const Vector<String>& modelImage,
       os << LogIO::SEVERE << "Failed to create SkyEquation" << LogIO::POST;
       return False;
     }
-    se_p->predict(False);
+    if (incremental) {
+      se_p->predict(False,MS::MODEL_DATA);  
+    } else {
+      se_p->predict(False,MS::DATA);   //20091030 RI changed SE::predict to use DATA
+    }
     destroySkyEquation();
 
     // Copy the predicted visibilities over to the observed and 
@@ -1991,8 +1995,8 @@ Bool Simulator::predict(const Vector<String>& modelImage,
     vi.origin();
     vi.originChunks();
 
-    os << "Copying predicted visibilities from MODEL_DATA to DATA and CORRECTED_DATA" << LogIO::POST;
-
+    //os << "Copying predicted visibilities from MODEL_DATA to DATA and CORRECTED_DATA" << LogIO::POST;
+      
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()){
       for (vi.origin(); vi.more(); vi++) {
 	//	vb.setVisCube(vb.modelVisCube());
@@ -2001,10 +2005,17 @@ Bool Simulator::predict(const Vector<String>& modelImage,
 	  vi.setVis( (vb.modelVisCube() + vb.visCube()),
 		     VisibilityIterator::Corrected);
 	  vi.setVis(vb.correctedVisCube(),VisibilityIterator::Observed);
-	  vi.setVis(vb.correctedVisCube(),VisibilityIterator::Model);
+
+	  // This is to make things more consistent with VS::initCalSet 
+	  // vi.setVis(vb.correctedVisCube(),VisibilityIterator::Model);
+	  vb.setModelVisCube(Complex(1.0,0.0));
+	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
 	} else {
-	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);
-	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
+	  // from above, the prediction is now already in Observed.
+	  // RI TODO remove scratch columns from NewMSSimulator; 
+	  // until then we;ll just leave them full of zero.
+	  // vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);
+	  // vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
 	}
       }
     }

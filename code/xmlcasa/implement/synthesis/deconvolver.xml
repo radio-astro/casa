@@ -164,6 +164,11 @@ the data selection.
      <description>point spread function to be processed</description>
      <value></value>
      </param>
+
+     <param type="bool" name="warn">
+     <description>Produce warning messages if psf is not provided</description>
+     <value>true</value>
+     </param>
 </input>
 <returns type="bool"/>
 </method>

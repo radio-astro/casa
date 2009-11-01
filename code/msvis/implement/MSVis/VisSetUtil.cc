@@ -197,7 +197,7 @@ void VisSetUtil::WeightUniform(VisibilityIterator& vi,
   
   Float f2, d2;
   if (rmode=="norm") {
-    os << "Normal robustness, robust = " << robust << LogIO::POST;
+    os << LogIO::DEBUG1 << "Normal robustness, robust = " << robust << LogIO::POST;
     Double sumlocwt = 0.;
     for(Int vgrid=0;vgrid<ny;vgrid++) {
       for(Int ugrid=0;ugrid<nx;ugrid++) {
@@ -208,7 +208,8 @@ void VisSetUtil::WeightUniform(VisibilityIterator& vi,
     d2 = 1.0;
   }
   else if (rmode=="abs") {
-    os << "Absolute robustness, robust = " << robust << ", noise = "
+    os << LogIO::DEBUG1
+       << "Absolute robustness, robust = " << robust << ", noise = "
        << noise.get("Jy").getValue() << "Jy" << LogIO::POST;
     f2 = square(robust);
     d2 = 2.0 * square(noise.get("Jy").getValue());
