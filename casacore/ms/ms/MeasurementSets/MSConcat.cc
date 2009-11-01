@@ -55,6 +55,8 @@
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableRow.h>
+#include <tables/Tables/TableVector.h>
+#include <tables/Tables/TabVecMath.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
 #include <casa/iostream.h>
@@ -329,10 +331,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   copyObservation(otherMS.observation());
 
   // POINTING
-  if(copyPointing(otherMS.pointing(), newAntIndices)){
-    log << "Merged Pointing subtables " << LogIO::POST;
-  }
-  else{
+  if(!copyPointing(otherMS.pointing(), newAntIndices)){
     log << LogIO::WARN << "Could not merge Pointing subtables " << LogIO::POST ;
   }
 
@@ -351,8 +350,59 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       }
     }
   }  
-      
+     
+  // SCAN NUMBER
+  // find the distinct ObsIds in use in this MS
+  SimpleOrderedMap <Int, Int> scanOffsetForOid(-1);
+  SimpleOrderedMap <Int, Int> encountered(-1);
+  Int defaultScanOffset;
+  {
+    ROTableVector<Int> ScanTabVectThis(thisScan);
+    ROTableVector<Int> ScanTabVectOther(otherScan);
+    Int maxScanThis = max(ScanTabVectThis);
+    Int minScanOther = min(ScanTabVectOther);
+    defaultScanOffset = maxScanThis + 1 - minScanOther;
+  }
+  vector<Int> distinctObsIdSet;
+  for(uInt r = 0; r < curRow; r++) {
+    Int oid = thisObsId(r);
+    Bool found = False;
+    for(uInt i=0; i<distinctObsIdSet.size(); i++){
+      if(distinctObsIdSet[i]==oid){
+	found = True;
+	break;
+      }
+    }
+    if(!found){
+      distinctObsIdSet.push_back(oid);
+
+      // determine minimum scan number for this oid
+      Int minScanThisOid = 9999999;
+      for(uInt i=r; i<curRow; i++){
+	if(thisObsId(i) == oid){
+	  if(thisScan(i)<minScanThisOid){
+	    minScanThisOid = thisScan(i);
+	  }
+	}
+      }
+      // determine scan offset for this oid
+      Int scanOffset;
+      scanOffset = minScanThisOid - 1; // assume scan numbers originally start at 1
+      if(scanOffset<0){
+	log << LogIO::WARN << "Zero or negative scan numbers in MS. May lead to duplicate scan numbers in concatenated MS." << LogIO::POST;
+	scanOffset = 0;
+      }
+      if(scanOffset==0){
+	encountered.define(oid,0);
+      }
+      scanOffsetForOid.define(oid, scanOffset); 
+    }
+  }
+ 
+  // MAIN
+
   for (uInt r = 0; r < newRows; r++, curRow++) {
+
     thisTime.put(curRow, otherTime, r);
     thisAnt1.put(curRow, newAntIndices[otherAnt1(r)]);
     thisAnt2.put(curRow, newAntIndices[otherAnt2(r)]);
@@ -363,21 +413,33 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     thisInterval.put(curRow, otherInterval, r);
     thisExposure.put(curRow, otherExposure, r);
     thisTimeCen.put(curRow, otherTimeCen, r);
-    thisScan.put(curRow, otherScan, r);
     thisArrayId.put(curRow, otherArrayId, r);
 
+    Int oid = 0;
     if(doObsB_p && newObsIndexB_p.isDefined(obsIds[r])){ 
       // the obs ids have been changed for the table to be appended
-      thisObsId.put(curRow, newObsIndexB_p(obsIds[r]));
+      oid = newObsIndexB_p(obsIds[r]); 
     }
-    else { // this OBS id didn't change
-      thisObsId.put(curRow, obsIds[r]);
+    else { // this OBS id didn't change 
+      oid = obsIds[r];
     }
+    thisObsId.put(curRow, oid);
+
+    if(!scanOffsetForOid.isDefined(oid)){ // offset not set, use default
+      scanOffsetForOid.define(oid, defaultScanOffset);
+    }
+    if(!encountered.isDefined(oid)){
+      log << LogIO::NORMAL << "Will offset scan numbers by " <<  scanOffsetForOid(oid)
+	  << " for observations with Obs ID " << oid
+	  << " in order to make scan numbers unique." << LogIO::POST;
+      encountered.define(oid,0);
+    }
+
+    thisScan.put(curRow, otherScan(r) + scanOffsetForOid(oid));
+
 
     thisStateId.put(curRow, otherStateId, r);
     thisUvw.put(curRow, otherUvw, r);
-
-    log << LogIO::DEBUG1 << "added basics for row " << curRow << endl;
     
     if(itsChanReversed[otherDDId(r)]){
       Vector<Int> datShape;

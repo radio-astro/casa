@@ -71,7 +71,7 @@ namespace casa {
 		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), peakIntensities(),
-		pixelPositions(), intensityToFluxConversion(1.0, "beam")
+		pixelPositions()
  {
         itsLog = new LogIO();
         *itsLog << LogOrigin("ImageFitter", "constructor");
@@ -108,13 +108,13 @@ namespace casa {
             excludePixelRange, fit, deconvolve, list,
             residual, model
         );
+		_setSizes();
         _setFluxes();
 		pixelPositions.resize(results.nelements());
 		for(uInt i=0; i<results.nelements(); i++) {
 			Vector<Double> x(2);
 			pixelPositions[i] = x;
 		}
-		_setSizes();
         String resultsString = _resultsToString(converged);
         *itsLog << LogIO::NORMAL << resultsString << LogIO::POST;
         if (! logfileName.empty()) {
@@ -357,22 +357,9 @@ namespace casa {
     	fluxDensities.resize(results.nelements());
     	peakIntensities.resize(results.nelements());
     	Vector<Quantity> fluxQuant;
-		Quantity resolutionElementArea;
-		ImageMetaData md(*image);
 
-		// does the image have a restoring beam?
-		if(! md.getBeamArea(resolutionElementArea)) {
-			// if no restoring beam, let's hope the the brightness units are
-			// in [prefix]Jy/pixel and let's find the pixel size.
-			if(md.getDirectionPixelArea(resolutionElementArea)) {
-				intensityToFluxConversion.setUnit("pixel");
-			}
-			else {
-				// can't find  pixel size, which is extremely bad!
-				*itsLog << "Unable to determine the resolution element area of image "
-						<< image->name()<< LogIO::EXCEPTION;
-			}
-		}
+		ImageAnalysis ia;
+		ia.open(image->name());
 
     	for(uInt i=0; i<results.nelements(); i++) {
     		results.getFlux(fluxQuant, i);
@@ -385,11 +372,10 @@ namespace casa {
     			}
     		}
     		const ComponentShape* compShape = results.getShape(i);
-    		Quantity compArea, peakIntensity;
     		AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
-    		compArea = (static_cast<const GaussianShape *>(compShape))->getArea();
-    		peakIntensities[i] = fluxDensities[i]/intensityToFluxConversion*resolutionElementArea/compArea;
-    		peakIntensities[i].convert("Jy/" + intensityToFluxConversion.getUnit());
+    		peakIntensities[i] = ia.convertflux(
+    			fluxDensities[i], majorAxes[i], minorAxes[i], "Gaussian", True
+    		);
     	}
     }
 
@@ -620,7 +606,6 @@ namespace casa {
 
     	ostringstream fluxes;
     	Quantity fluxDensity = fluxDensities[compNumber];
-    	Quantity peakIntensity = peakIntensities[compNumber];
        	Quantity fluxDensityError;
 		Vector<String> polarization = results.getStokes(compNumber);
 		for (uInt i=0; i<polarization.nelements(); i++) {
@@ -650,25 +635,38 @@ namespace casa {
 			<< " +/- " << fluxDensityError.getValue() << " "
 			<< fluxDensity.getUnit() << endl;
 
+    	Quantity peakIntensity = peakIntensities[compNumber];
+    	Quantity intensityToFluxConversion = peakIntensity.getUnit().contains("/beam")
+    		? Quantity(1.0, "beam")
+    		: Quantity(1.0, "pixel");
+
+    	Quantity tmpFlux = peakIntensity * intensityToFluxConversion;
+    	tmpFlux.convert("Jy");
+
         Quantity peakIntensityError = peakIntensity*fluxDensityError/fluxDensity;
+        Quantity tmpFluxError = peakIntensityError * intensityToFluxConversion;
+
         for (uInt i=0; i<unitPrefix.size(); i++) {
-         	unit = unitPrefix[i] + "Jy/" + intensityToFluxConversion.getUnit();
-         	if (peakIntensity.getValue(unit) > 1) {
-         		peakIntensity.convert(unit);
-         		peakIntensityError.convert(unit);
+        	String unit = unitPrefix[i] + tmpFlux.getUnit();
+         	if (tmpFlux.getValue(unit) > 1) {
+         		tmpFlux.convert(unit);
+         		tmpFluxError.convert(unit);
          		break;
          	}
-         }
-         Vector<Double> pi(2);
-         pi[0] = peakIntensity.getValue();
-         pi[1] = peakIntensityError.getValue();
-         precision = _precision(pi, Vector<Double>());
-         fluxes << std::fixed << setprecision(precision);
-         fluxes << "       --- Peak:         " << peakIntensity.getValue()
+        }
+        String newUnit = tmpFlux.getUnit() + "/" + intensityToFluxConversion.getUnit();
+        peakIntensity = Quantity(tmpFlux.getValue(), tmpFlux.getUnit() + "/" + intensityToFluxConversion.getUnit());
+        peakIntensityError = Quantity(tmpFluxError.getValue(), peakIntensity.getUnit());
+        Vector<Double> pi(2);
+        pi[0] = peakIntensity.getValue();
+        pi[1] = peakIntensityError.getValue();
+        precision = _precision(pi, Vector<Double>());
+        fluxes << std::fixed << setprecision(precision);
+        fluxes << "       --- Peak:         " << peakIntensity.getValue()
  			<< " +/- " << peakIntensityError.getValue() << " "
  			<< peakIntensity.getUnit() << endl;
-         fluxes << "       --- Polarization: " << stokesString << endl;
-         return fluxes.str();
+        fluxes << "       --- Polarization: " << stokesString << endl;
+        return fluxes.str();
     }
 
     String ImageFitter::_spectrumToString(uInt compNumber) const {

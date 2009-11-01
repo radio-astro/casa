@@ -118,7 +118,6 @@ namespace casa {
             Bool logfileAppend;
             Vector<Quantity> peakIntensities, fluxDensities, majorAxes, minorAxes, positionAngles;
             Vector<Vector<Double> > pixelPositions;
-            Quantity intensityToFluxConversion;
 
             // does the lion's share of constructing the object, ie checks validity of
             // inputs, etc.

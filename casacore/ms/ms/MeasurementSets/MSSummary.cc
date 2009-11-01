@@ -378,11 +378,18 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 
 	    // If state changed, then print out last scan's info
 	    if (!samescan) {
-
-	      if (thisnrow>0) 
+// 		cout << "thisscan " << thisscan << "lastscan " << lastscan
+// 		     << " fldids " << fldids << " lastfldids " << lastfldids
+// 		     << " ddids " << ddids << " lastddids " << lastddids
+// 		     << " samescan " << (thisscan==lastscan) <<  " samefld " << samefld << " sameddi " << sameddi
+// 		     << " meanIntTim " << meanIntTim << " thisnrow " << thisnrow << " inttim.makeVector().size() " 
+// 		     <<  inttim.makeVector().size() << " meanIntTim/thisnrow " << meanIntTim/thisnrow << endl; 
+	      if (thisnrow>0){
 		meanIntTim/=thisnrow;
-	      else
+	      }
+	      else {
 		meanIntTim=0.0;
+	      }
 
 	      // this MJD
 	      day=floor(MVTime(btime/C::day).day());
