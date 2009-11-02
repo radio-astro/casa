@@ -2006,17 +2006,16 @@ Bool Simulator::predict(const Vector<String>& modelImage,
 		     VisibilityIterator::Corrected);
 	  vi.setVis(vb.correctedVisCube(),VisibilityIterator::Observed);
 
-	  // This is to make things more consistent with VS::initCalSet 
+	  // model=1 is more consistent with VS::initCalSet 
 	  // vi.setVis(vb.correctedVisCube(),VisibilityIterator::Model);
-	  vb.setModelVisCube(Complex(1.0,0.0));
-	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
 	} else {
 	  // from above, the prediction is now already in Observed.
 	  // RI TODO remove scratch columns from NewMSSimulator; 
-	  // until then we;ll just leave them full of zero.
-	  // vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);
-	  // vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
+	  // until then we;ll just leave them 1 and Corr=Obs (for imaging)
+	  vi.setVis(vb.visCube(),VisibilityIterator::Corrected);
 	}
+	vb.setModelVisCube(Complex(1.0,0.0));
+	vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
       }
     }
     ms_p->unlock();     
