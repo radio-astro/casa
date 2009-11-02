@@ -77,6 +77,12 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 
   LogIO os(LogOrigin("CSCleanImageSkyModel","solve"));
   Bool converged=True;
+  if(modified_p) {
+    makeNewtonRaphsonStep(se, False);
+  }
+
+  if( numberIterations() < 1)
+    return True;
   //Make the PSFs, one per field
 
   os << "Making approximate Point Spread Functions" << LogIO::POST;
@@ -297,6 +303,8 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
 		  cleaner.setChoose(False);
 		  if(cycleSpeedup_p >1)
 		    cleaner.setSpeedup(cycleSpeedup_p);
+		  else
+		    cleaner.setSpeedup(0.0);
 		  //Be a bit more conservative with pathologically bad PSFs
 		  if(maxSidelobe > 0.5)
 		    cleaner.setMaxNumberMinorIterations(5);

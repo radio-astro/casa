@@ -91,7 +91,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
     makeNewtonRaphsonStep(se);
   
   //Make the PSF
-  if(!donePSF_p)
+  if(!donePSF_p && (numberIterations() > 0))
     makeApproxPSFs(se);
 
   if(numberIterations() <1){
