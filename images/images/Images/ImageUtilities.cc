@@ -950,10 +950,6 @@ void ImageUtilities::addDegenerateAxes(
 
 	if (nExtra > 0) {
 		uInt n = shape.nelements();
-		os << LogIO::WARN << " shape before " << shape.nelements() << LogIO::POST;
-		os << LogIO::WARN << " nExtra " << nExtra << LogIO::POST;
-		os << LogIO::WARN << " n " << n << LogIO::POST;
-
 		shape.resize(n+nExtra,True);
 		for (uInt i=0; i<nExtra; i++) {
 			shape(n+i) = 1;
@@ -961,8 +957,6 @@ void ImageUtilities::addDegenerateAxes(
 	} else {
 		os << "No degenerate axes specified" << LogIO::EXCEPTION;
 	}
-	os << LogIO::WARN << "csys ndim " << cSys.nPixelAxes() << LogIO::POST;
-	os << LogIO::WARN << "shape ndim " << shape.nelements() << LogIO::POST;
 	if (outFile.empty()) {
 		os << LogIO::NORMAL << "Creating (temp)image of shape "
 			<< shape << LogIO::POST;
