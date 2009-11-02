@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+      <task type="function" name="importgmrt" category="import/export">
+	<shortdescription>Convert a UVFITS file to a CASA visibility data set</shortdescription>
+	<description>Convert a GRMT FITS file to a CASA visiblity data set.
+                Also read GMRT flag file(s) and flag data based on the 
+                contents of the files.
+	</description>
+	<input>
+		<param type="string" mustexist="true" name="fitsfile">
+			<description>Name of input UV FITS file</description>
+			<value></value>
+		</param>
+
+		<param type="any" name="flagfile">
+			<description>Name of output visibility file (MS)</description>
+			<any type="variant" limittypes="string stringArra"/>
+			<value type="string"></value>
+		</param>
+
+		<param type="string" name="vis">
+			<description>Name of output visibility file (MS)</description>
+			<value></value>
+		</param>
+
+	</input>
+
+<example>
+        Convert a GMRT FITS file to a CASA visibility data set:
+
+        Keyword arguments:
+        fitsfile -- Name of input UV FITS file
+                    default: none; example='3C273XC1.fits'
+        flagfile -- List of files containing flagging information.
+                    default: none; example='3c273XC1.flag'
+                                   example=['3c273Cc1_1.flag','3c273Cc2_1.flag',']
+        vis      -- Name of output visibility file (MS)
+                    default: none; example: vis='3C273XC1.ms'
+        async    -- Run asynchronously
+                    default = false; do not run asychronously
+
+	Note: Don't forget to flag autocorrections using
+  	   taskname flagdata, autocorr = true
+
+ </example>
+ </task>
+ </casaxml>

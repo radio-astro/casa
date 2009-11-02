@@ -138,7 +138,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cfCache.initCache();
     convSampling=OVERSAMPLING;
     convSize=CONVSIZE;
-    Long hostRAM = (HostInfo::memoryTotal()*1024); // In bytes
+    //use memory size defined in aipsrc if exists
+    Long hostRAM = (HostInfo::memoryTotal(true)*1024); // In bytes
     hostRAM = hostRAM/(sizeof(Float)*2); // In complex pixels
     if (cachesize > hostRAM) cachesize=hostRAM;
 

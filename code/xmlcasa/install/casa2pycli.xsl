@@ -179,7 +179,6 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 	       key = keybase + "_" + str(count)
             result = tm.execute(&apos;</xsl:text><xsl:value-of select="$taskname"/>&apos;, <xsl:call-template name="doargs2"/>)
 	    print "Use: "
-	    print "      tm.abort(return_value)    # to abort the asynchronous task "
 	    print "      tm.retrieve(return_value) # to retrieve the status"
 	    print 
 	    self.rkey = key

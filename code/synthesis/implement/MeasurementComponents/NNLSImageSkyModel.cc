@@ -168,7 +168,7 @@ Bool NNLSImageSkyModel::solve(SkyEquation& se) {
       logSink().post(message);
     }
 
-    if(4.0*Double(lMask)*Double(lFluxMask)>Double(HostInfo::memoryTotal())*1024.0) {
+    if(4.0*Double(lMask)*Double(lFluxMask)>Double(HostInfo::memoryTotal(true))*1024.0) {
       ostringstream o;
       o << "Insufficient memory for PSF matrix: reduce the size of the masks";
       message.message(o);

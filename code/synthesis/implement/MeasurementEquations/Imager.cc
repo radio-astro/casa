@@ -238,7 +238,7 @@ traceEvent(1,"Entering imager::defaults",25);
   multiFields_p=False;
   // Use half the machine memory as cache. The user can override
   // this via the setoptions function().
-  cache_p=(HostInfo::memoryTotal()/8)*1024;
+  cache_p=(HostInfo::memoryTotal(true)/8)*1024;
   //On 32 bit machines with more than 2G of mem this can become negative
   // overriding it to 2 Gb.
   if(cache_p <=0 )
@@ -3353,7 +3353,7 @@ Bool Imager::linearmosaic(const String& mosaic,
     return False;
   }
 
-  Double meminMB=Double(HostInfo::memoryTotal())/1024.0;
+  Double meminMB=Double(HostInfo::memoryTotal(true))/1024.0;
   PagedImage<Float> mosaicImage( mosaic );
   mosaicImage.set(0.0);
   TempImage<Float>  numerator( mosaicImage.shape(), mosaicImage.coordinates(), meminMB/2.0);
@@ -5448,7 +5448,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	      }
 		
 	      //Setting the bit-mask for mosaic image
-	      LatticeExpr<Bool> lemask(iif(cover < cutoffval, 
+	      LatticeExpr<Bool> lemask(iif((cover < cutoffval) || (sm_p->fluxScale(thismodel) < cutoffval) , 
 					  False, True));
 	      ImageRegion outreg=restored.makeMask("mask0", False, True);
 	      LCRegion& outmask=outreg.asMask();

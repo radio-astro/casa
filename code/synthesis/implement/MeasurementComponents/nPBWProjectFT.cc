@@ -180,7 +180,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cfCache.initCache();
     convSampling=OVERSAMPLING;
     convSize=CONVSIZE;
-    Long hostRAM = (HostInfo::memoryTotal()*1024); // In bytes
+    Long hostRAM = (HostInfo::memoryTotal(true)*1024); // In bytes
     hostRAM = hostRAM/(sizeof(Float)*2); // In complex pixels
     if (cachesize > hostRAM) cachesize=hostRAM;
   }
@@ -1190,7 +1190,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Compute the aggregate memory used by the cached convolution
 	// functions.
 	//
-	Int maxMemoryMB=HostInfo::memoryTotal()/1024;
+	Int maxMemoryMB=HostInfo::memoryTotal(true)/1024;
 	Float memoryKB=0;
 	String unit(" KB");
 	for(uInt iPA=0;iPA<convFuncCache.nelements();iPA++)

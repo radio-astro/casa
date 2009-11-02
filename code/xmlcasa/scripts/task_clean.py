@@ -148,6 +148,11 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                         else: 
                                 if imagermode!='mosaic': 
                                         makepbim=True 
+				else:
+					#mosaic and pbcor=true
+                                        #do the division in c++
+					if(pbcor):
+						sclt='NONE'
 
                         # Select only subset of vis data if possible.
                         # It does not work well for multi-spw so need
@@ -425,6 +430,9 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
 			        os.chdir(os.path.dirname(imset.imagelist[k]))
 		        result          = '\'' + newimage + '.image' + '\'';
 		        fluxscale_image = '\'' + newimage + '.flux'  + '\'';
+			pbcov_image=fluxscale_image
+			if(ftmachine=='mosaic'):
+				pbcov_image = '\'' + newimage + '.flux.pbcoverage'  + '\'';
 		        residim         = '\'' + newimage + '.residual'  + '\'';
                         if (pbcor):
                                 if(sclt != 'NONE'):
@@ -437,7 +445,7 @@ def clean(vis,imagename,outlierfile, field, spw, selectdata, timerange, uvrange,
                                         corrfac=minpb*minpb
                                         if(ftmachine=='ft'):
                                                 corrfac=minpb
-                                        pixels='iif('+ fluxscale_image+'>'+str(corrfac)+','+ result+'/'+fluxscale_image+', 0)'
+                                        pixels='iif('+ pbcov_image+'>'+str(corrfac)+','+ result+'/'+fluxscale_image+', 0)'
           
                                         ia.calc(pixels=pixels)
                                         ia.close()

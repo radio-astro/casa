@@ -58,7 +58,7 @@ ClarkCleanAlgorithm::ClarkCleanAlgorithm() : model_sl_p(0),
 {
 // Default constructor
 //
-  cache_p = HostInfo::memoryTotal()*1024/(16*16);
+  cache_p = HostInfo::memoryTotal(true)*1024/(16*16);
 };
 
 ClarkCleanAlgorithm::~ClarkCleanAlgorithm() 
