@@ -71,8 +71,7 @@ namespace casa {
 		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), peakIntensities(),
-		pixelPositions()
- {
+		pixelPositions() {
         itsLog = new LogIO();
         *itsLog << LogOrigin("ImageFitter", "constructor");
         _construct(imagename, box, region, estimatesFilename);
@@ -202,7 +201,7 @@ namespace casa {
             }
 
         }
-        else if (box.freq(",") != 3) {
+        else if (box.freq(",") % 4 != 3) {
             *itsLog << "box not specified correctly" << LogIO::EXCEPTION;
         }
         else {
@@ -217,27 +216,42 @@ namespace casa {
 
     void ImageFitter::_processBox(const String& box) {
         Vector<String> boxParts = stringToVector(box);
-        if (boxParts.size() != 4) {
-            return;
+        AlwaysAssert(boxParts.size() % 4 == 0, AipsError);
+        RegionManager rm;
+        for(uInt i=0; i<boxParts.size()/4; i++) {
+        	uInt index = 4*i;
+        	ImageRegion boxRegion = _boxRegion(
+        		boxParts[index], boxParts[index+1], boxParts[index+2], boxParts[index+3]
+        	);
+        	if (i == 0) {
+        		imRegion = boxRegion;
+        	}
+        	else {
+        		imRegion = *rm.doUnion(imRegion, boxRegion);
+        	}
         }
+    }
+
+    ImageRegion ImageFitter::_boxRegion(String blc1, String blc2, String trc1, String trc2) {
+
         IPosition imShape = image->shape(); 
         Vector<Double> blc(imShape.nelements());
         Vector<Double> trc(imShape.nelements());
 
-        for (uInt i=0; i<imShape.nelements(); ++i) {
+        for (uInt i=0; i<imShape.nelements(); i++) {
             blc[i] = 0;
             trc[i] = imShape[i] - 1;
         }
     
         Vector<Int> dirNums = ImageMetaData(*image).directionAxesNumbers();
-        blc[dirNums[0]] = String::toDouble(boxParts[0]);
-        blc[dirNums[1]] = String::toDouble(boxParts[1]);
-        trc[dirNums[0]] = String::toDouble(boxParts[2]);
-        trc[dirNums[1]] = String::toDouble(boxParts[3]);
+        blc[dirNums[0]] = String::toDouble(blc1);
+        blc[dirNums[1]] = String::toDouble(blc2);
+        trc[dirNums[0]] = String::toDouble(trc1);
+        trc[dirNums[1]] = String::toDouble(trc2);
 
         LCBox lcBox(blc, trc, imShape);
         WCBox wcBox(lcBox, image->coordinates());
-        imRegion = ImageRegion(wcBox);
+        return ImageRegion(wcBox);
     }
 
     String ImageFitter::_resultsToString(Bool converged) {

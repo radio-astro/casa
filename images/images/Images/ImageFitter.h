@@ -133,6 +133,8 @@ namespace casa {
             // a record.
             void _processBox(const String& box);
 
+            ImageRegion _boxRegion(String blc1, String blc2, String trc1, String trc2);
+
             // check the validity of the image-related parameters.
             void _checkImageParameterValidity() const;
 
