@@ -1,6 +1,6 @@
 # $Id$
 SCRIPTS := installer.pl process_manager.pl scheduler.pl
-PYPACK := regressions
+PYPACK := regressions/admin
 
 # Use the generic AIPS++ script installation makefile.
 #-----------------------------------------------------

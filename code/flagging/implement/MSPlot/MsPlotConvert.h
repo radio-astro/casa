@@ -1054,10 +1054,17 @@ class MSPlotConvertArrayPositions : public TPConvertBase
        Double obsSinLongitude   = sin( obsLongitude );
        //Double obsCosLatitude    = cos( obsLatitude );
        Double obsSinLatitude    = sin( obsLatitude );
+
+       //       cout << endl << "observatory: " << observatory << endl << 
+       //	 "lonlat = " << obsLongitude*180/3.1415 << " , " << obsLatitude*180/3.1415 << endl;
+       //       cout << "obsXYZ = " << obsXYZ << endl;
        
        // Now do the conversion.
        for( uInt i=0; i < numAnts; i++ )
        {
+	 //	 if (i<3)
+	 //	   cout << i << ": " << antPositions[i] << " from " <<  (MPosition::Types)antPositions[i].type() << " to " << observatory.type() << ": ";
+
       if ( antPositions[i].type() != observatory.type() )
           antPositions[i] = MPosition::Convert( antPositions[i],
                      (MPosition::Types)observatory.type() )();
@@ -1069,6 +1076,8 @@ class MSPlotConvertArrayPositions : public TPConvertBase
       yTrans[i] = antXYZ[1] - obsXYZ[1];
       zTrans[i] = antXYZ[2] - obsXYZ[2];
       
+      //      if (i<3) cout << "Trans = " << xTrans[i] << "," << yTrans[i] << "," << zTrans[i] << endl;
+
       // Now rotate and store the new position information
       itsXValues[i] = ( -obsSinLongitude * xTrans[i] )
           + ( obsCosLongitude * yTrans[i] );

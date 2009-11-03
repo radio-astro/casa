@@ -500,64 +500,71 @@ ms::range(const std::vector<std::string>& items, const bool useflags, const int 
    return retval;
 }
 
-
 template <typename T>
 static void
-append(Array<T> &data, const Array<T> &data_chunk, const string &column)
+append(Array<T> &data, unsigned &current_length, 
+       unsigned nrow,
+       const Array<T> &data_chunk, 
+       const string &column)
 {
   unsigned dimension = data_chunk.shape().nelements();
 
   if (data.nelements() == 0) {
-    /* Initialize */
-    data = data_chunk;
+    /* Initialize.
+       Allocate the full buffer at once,
+       because there does not seem to exist an efficient way
+       to expand an Array<T> chunk by chunk.
+       (like std::vector<>::push_back()). 
+       Note that Array<T>::resize() takes linear time, it is inefficent
+       to use that in every iteration
+    */
+    IPosition shape = data_chunk.shape();
+    shape(dimension - 1) = nrow;
+    data.resize(shape);
+    current_length = 0;
   }
-  else {
-    if (dimension != data.shape().nelements()) {
+
+  if (dimension != data.shape().nelements()) {
 
       stringstream ss;
       ss << "Dimension of " << column << " values changed from " << 
         data.shape().nelements() << " to " << dimension;
       throw AipsError(ss.str());
                  
-    }
-               
-    /* Accumulate */
-    IPosition current = data.shape();
-    unsigned current_length = current(dimension-1);
-    current(dimension-1) = current_length + data_chunk.shape()(dimension-1);
-    bool copy_values = true;
-    data.resize(current, copy_values);
-               
-    if (dimension == 3) {
-      for (unsigned i = 0; i < (unsigned) data_chunk.shape()(0); i++) {
-        for (unsigned j = 0; j < (unsigned) data_chunk.shape()(1); j++) {
-          for (unsigned k = 0; k < (unsigned) data_chunk.shape()(2); k++) {
-            static_cast<Cube<T> >(data)(i, j, current_length+k) =
-              static_cast<Cube<T> >(data_chunk)(i, j, k);
-          }
+  }
+
+  /* Accumulate */              
+  if (dimension == 3) {
+    for (unsigned i = 0; i < (unsigned) data_chunk.shape()(0); i++) {
+      for (unsigned j = 0; j < (unsigned) data_chunk.shape()(1); j++) {
+        for (unsigned k = 0; k < (unsigned) data_chunk.shape()(2); k++) {
+          static_cast<Cube<T> >(data)(i, j, current_length+k) =
+            static_cast<Cube<T> >(data_chunk)(i, j, k);
         }
       }
-    }
-    else if (dimension == 2) {
-      for (unsigned i = 0; i < (unsigned) data_chunk.shape()(0); i++) {
-        for (unsigned j = 0; j < (unsigned) data_chunk.shape()(1); j++) {
-          static_cast<Matrix<T> >(data)(i, current_length+j) =
-            static_cast<Matrix<T> >(data_chunk)(i, j);
-        }
-      }
-    }
-    else if (dimension == 1) {
-      for (unsigned i = 0; i < (unsigned) data_chunk.shape()(0); i++) {
-        static_cast<Vector<T> >(data)(current_length+i) =
-          static_cast<Vector<T> >(data_chunk)(i);
-      }
-    }
-    else {
-      stringstream ss;
-      ss << "Unsupported dimension of " << column << ": " << dimension;
-      throw AipsError(ss.str());
     }
   }
+  else if (dimension == 2) {
+    for (unsigned i = 0; i < (unsigned) data_chunk.shape()(0); i++) {
+      for (unsigned j = 0; j < (unsigned) data_chunk.shape()(1); j++) {
+        static_cast<Matrix<T> >(data)(i, current_length+j) =
+          static_cast<Matrix<T> >(data_chunk)(i, j);
+      }
+    }
+  }
+  else if (dimension == 1) {
+    for (unsigned i = 0; i < (unsigned) data_chunk.shape()(0); i++) {
+      static_cast<Vector<T> >(data)(current_length+i) =
+        static_cast<Vector<T> >(data_chunk)(i);
+    }
+  }
+  else {
+    stringstream ss;
+    ss << "Unsupported dimension of " << column << ": " << dimension;
+    throw AipsError(ss.str());
+  }
+
+  current_length += data_chunk.shape()(dimension - 1);
 }
 
 
@@ -626,6 +633,7 @@ ms::statistics(const std::string& column,
          }
 
          
+         *itsLog << "Use " << itsMS->tableName() << LogIO::POST;
          *itsLog << "Compute statistics on " << column;
          
          if (complex_value != "") {
@@ -637,6 +645,9 @@ ms::statistics(const std::string& column,
 
          Block<Int> sortColumns;
          ROVisIterator vi(*sel_p, sortColumns, 0.0);
+
+         unsigned nrow = sel_p->nrow();
+
          VisBuffer vb(vi);
 
          /* Apply selection */
@@ -646,8 +657,6 @@ ms::statistics(const std::string& column,
          mssel.getCorrSlices(corrSlices, itsMS);
          vi.selectChannel(chanSlices);
          vi.selectCorrelation(corrSlices);
-
-         bool debug = false;
 
          /* Now loop over the column, collect the data and compute statistics.
             This is somewhat involved because:
@@ -663,25 +672,37 @@ ms::statistics(const std::string& column,
          Array<Float> data_float;
          Array<Bool> data_bool;
          Array<Int> data_int;
+         unsigned length;  // logical length of data array
+
+         Vector<Bool> flagrows;
+         Cube<Bool> flags;
+         unsigned flagrows_length;
+         unsigned flags_length;
 
          for (vi.originChunks();
               vi.moreChunks();
               vi.nextChunk()) {
            
-           if (debug) cerr << "next chunk" << endl;
-           
            for (vi.origin();
                 vi.more();
                 vi++) {
-             
-             if (debug) cerr << "next iteration" << endl;
-             if (debug) cerr << "data shape is " << data_complex.shape() << endl;
-             
+            
              Array<Complex> data_complex_chunk;
              Array<Double> data_double_chunk;
              Array<Float> data_float_chunk;
              Array<Bool> data_bool_chunk;
              Array<Int> data_int_chunk;
+
+             if (useflags && false) {
+               Cube<Bool> flag_chunk;
+               vi.flag(static_cast<Cube<Bool>&>(flag_chunk));
+               append<Bool>(flags, flags_length, nrow, flag_chunk, "FLAG");
+
+               Vector<Bool> flagrow_chunk;
+               vi.flagRow(static_cast<Vector<Bool>&>(flagrow_chunk));
+               append<Bool>(flagrows, flagrows_length, nrow, flagrow_chunk, "FLAG_ROW");
+             }
+
              if (column == "DATA" || column == "CORRECTED" || column == "MODEL") {
                  ROVisibilityIterator::DataColumn dc;
                  if (column == "DATA") dc = ROVisibilityIterator::Observed;
@@ -690,7 +711,7 @@ ms::statistics(const std::string& column,
                  
                  vi.visibility(static_cast<Cube<Complex>&>(data_complex_chunk), dc);
                  
-                 append<Complex>(data_complex, data_complex_chunk, column);
+                 append<Complex>(data_complex, length, nrow, data_complex_chunk, column);
              }
              else if (column == "UVW") {
                  Vector<RigidVector<Double, 3> > uvw;
@@ -702,7 +723,7 @@ ms::statistics(const std::string& column,
                    static_cast<Matrix<Double> >(data_double_chunk)(1, i) = uvw(i)(1);
                    static_cast<Matrix<Double> >(data_double_chunk)(2, i) = uvw(i)(2);
                  }
-                 append<Double>(data_double, data_double_chunk, column);
+                 append<Double>(data_double, length, nrow, data_double_chunk, column);
              }
              else if (column == "UVRANGE") {
                  Vector<RigidVector<Double, 3> > uvw;
@@ -713,74 +734,74 @@ ms::statistics(const std::string& column,
                    static_cast<Vector<Double> >(data_double_chunk)(i) = 
                      sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
                  }
-                 append<Double>(data_double, data_double_chunk, column);
+                 append<Double>(data_double, length, nrow, data_double_chunk, column);
              }
              else if (column == "FLAG") {
                  vi.flag(static_cast<Cube<Bool>&>(data_bool_chunk));
-                 append<Bool>(data_bool, data_bool_chunk, column);
+                 append<Bool>(data_bool, length, nrow, data_bool_chunk, column);
              }
              else if (column == "WEIGHT") {
                  vi.weightMat(static_cast<Matrix<Float>&>(data_float_chunk));
-                 append<Float>(data_float, data_float_chunk, column);
+                 append<Float>(data_float, length, nrow, data_float_chunk, column);
              }
              else if (column == "SIGMA") {
                  vi.sigmaMat(static_cast<Matrix<Float>&>(data_float_chunk));
-                 append<Float>(data_float, data_float_chunk, column);
+                 append<Float>(data_float, length, nrow, data_float_chunk, column);
              }
              else if (column == "IMAGING_WEIGHT") {
                  vi.imagingWeight(static_cast<Matrix<Float>&>(data_float_chunk));
-                 append<Float>(data_float, data_float_chunk, column);
+                 append<Float>(data_float, length, nrow, data_float_chunk, column);
              }
              else if (column == "ANTENNA1") {
                  vi.antenna1(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
              }
              else if (column == "ANTENNA2") {
                  vi.antenna2(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
              }
              else if (column == "FEED1") {
                  vi.feed1(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
              }
              else if (column == "FEED2") {
                  vi.feed2(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
              }
              else if (column == "FIELD_ID") {
                  data_int_chunk.resize(IPosition(1, 1));
                  data_int_chunk(IPosition(1, 0)) = vi.fieldId();
-                 append<Int>(data_int, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
              }
              else if (column == "ARRAY_ID") {
                  data_int_chunk.resize(IPosition(1, 1));
                  data_int_chunk(IPosition(1, 0)) = vi.arrayId();
-                 append<Int>(data_int, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
              }
              else if (column == "DATA_DESC_ID") {
                  data_int_chunk.resize(IPosition(1, 1));
                  data_int_chunk(IPosition(1, 0)) = vi.dataDescriptionId();
-                 append<Int>(data_int, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
              }
              else if (column == "FLAG_ROW") {
                  vi.flagRow(static_cast<Vector<Bool>&>(data_bool_chunk));
-                 append<Bool>(data_bool, data_bool_chunk, column);
+                 append<Bool>(data_bool, length, nrow, data_bool_chunk, column);
              }
              else if (column == "INTERVAL") {
                  vi.timeInterval(static_cast<Vector<Double>&>(data_double_chunk));
-                 append<Double>(data_double, data_double_chunk, column);
+                 append<Double>(data_double, length, nrow, data_double_chunk, column);
              }
              else if (column == "SCAN_NUMBER") {
                  vi.scan(static_cast<Vector<Int>&>(data_int_chunk));
-                 append<Int>(data_int, data_int_chunk, column);
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
              }
              else if (column == "TIME") {
                  vi.time(static_cast<Vector<Double>&>(data_double_chunk));
-                 append<Double>(data_double, data_double_chunk, column);
+                 append<Double>(data_double, length, nrow, data_double_chunk, column);
              }
              else if (column == "WEIGHT_SPECTRUM") {
                  vi.weightSpectrum(static_cast<Cube<Float>&>(data_float_chunk));
-                 append<Float>(data_float, data_float_chunk, column);
+                 append<Float>(data_float, length, nrow, data_float_chunk, column);
              }
              else {
                  stringstream ss;
@@ -788,55 +809,110 @@ ms::statistics(const std::string& column,
                  throw AipsError(ss.str());
              }
              
-             if (debug) cerr << "data_chunk shape is " << data_complex_chunk.shape() << endl;
-             if (debug) cerr << "data shape is now " << data_complex.shape() << endl;
            }
          }
-                
+
+         
+         unsigned dimension;
+         unsigned n;
+         if (data_complex.nelements() > 0) {
+           dimension = data_complex.shape().nelements();
+           n = data_complex.shape().product();
+         }
+         else if (data_double.nelements() > 0) {
+           dimension = data_double.shape().nelements();
+           n = data_double.shape().product();
+         }
+         else if (data_float.nelements() > 0) {
+           dimension = data_float.shape().nelements();
+           n = data_float.shape().product();
+         }
+         else if (data_bool.nelements() > 0) {
+           dimension = data_bool.shape().nelements();
+           n = data_bool.shape().product();
+         }
+         else if (data_int.nelements() > 0) {
+           dimension = data_int.shape().nelements();
+           n = data_int.shape().product();
+         }
+         else {
+           throw AipsError("No data could be found!");
+         }
+         
+         Vector<Bool> f;
+         if (useflags && false) {
+           if (dimension == 1) {
+             f = flagrows;
+           }
+           else if (dimension == 2) {
+             f = flagrows;
+           }
+           else if (dimension == 3) {
+             f = flags.reform(IPosition(1, n));
+           }
+           else {
+             stringstream ss;
+             ss << "Unsupported column name: " << column;
+             throw AipsError(ss.str());
+           }
+         }
+         else {
+           f = Vector<Bool>(n);
+         }
+
          bool supported = true;
          if (data_complex.nelements() > 0) {
+
            Vector<Complex> v(data_complex.reform(IPosition(1, data_complex.shape().product())));
-           retval = fromRecord(Statistics<Complex>::get_stats_complex(v, 
+           retval = fromRecord(Statistics<Complex>::get_stats_complex(v, f,
                                                                       column, 
                                                                       supported,
                                                                       complex_value));
          }
          else if (data_double.nelements() > 0) {
-           unsigned dimension = data_double.shape().nelements();
-           if (dimension == 2) {
-             retval = fromRecord(Statistics<Double>::get_stats_array(static_cast<Matrix<Double> >(data_double),
+             if (dimension == 2) {
+                 f.resize(0);
+                 f = Vector<Bool>(data_double.shape()(1));
+                 retval = fromRecord(Statistics<Double>::get_stats_array(static_cast<Matrix<Double> >(data_double),
+                                                                     f,
                                                                      column,
                                                                      supported));
              
            }
            else {
-             retval = fromRecord(Statistics<Double>::get_stats(data_double.reform(IPosition(1, data_double.shape().product())),
-                                                             column,
-                                                             supported));
+               retval = fromRecord(Statistics<Double>::get_stats(data_double.reform(IPosition(1, data_double.shape().product())),
+                                                               f,
+                                                               column,
+                                                               supported));
            }
          }
          else if (data_bool.nelements() > 0) {
              retval = fromRecord(Statistics<Bool>::get_stats(data_bool.reform(IPosition(1, data_bool.shape().product())),
+                                                             f,
                                                              column,
                                                              supported));
          }
          else if (data_float.nelements() > 0) {
-             unsigned dimension = data_float.shape().nelements();
              if (dimension == 2) {
+                 f.resize(0);
+                 f = Vector<Bool>(data_float.shape()(1));
                  retval = fromRecord(Statistics<Float>::get_stats_array(static_cast<Matrix<Float> >(data_float),
+                                                                        f,
                                                                         column,
                                                                         supported));
              }
              else {
                retval = fromRecord(Statistics<Float>::get_stats(data_float.reform(IPosition(1, data_float.shape().product())),
+                                                                f,
                                                                 column,
                                                                 supported));
              }
          }
          else if (data_int.nelements() > 0) {
              retval = fromRecord(Statistics<Int>::get_stats(data_int.reform(IPosition(1, data_int.shape().product())),
-                                                             column,
-                                                             supported));
+                                                            f,
+                                                            column,
+                                                            supported));
          }
          else {
            throw AipsError("No data could be found!");

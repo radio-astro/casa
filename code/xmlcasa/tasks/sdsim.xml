@@ -204,15 +204,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <!--<value>True</value>-->
       <value>False</value>
     </param>
-    
-    <param type="double" name="t_amb" subparam="true">
-      <description>ambient temperature</description><value>265.</value></param>
+    <param type="double" name="t_atm" subparam="true">
+      <description>atmospheric temperature</description><value>260.</value>
+    </param>
     <!--
-	<param type="double" name="t_ground" subparam="true">
-	  <description>ambient temperature</description><value>269.</value></param>
+       <param type="double" name="t_ground" subparam="true">
+         <description>ambient temperature</description><value>270.
+       </value></param>
+    -->
+    <!--
 	<param type="double" name="t_sky" subparam="true">
 	  <description>atmospheric temperature</description><value>263.</value></param>
-	-->
+    -->
     <param type="double" name="tau0" subparam="true">
       <description>zenith opacity</description><value>0.1</value></param>
     
@@ -241,10 +244,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<equals type="bool" value="False"/>
 	<equals type="bool" value="True">
 	  <!--
-	      <default param="t_ground"><value>269.</value></default>
 	      <default param="t_sky"><value>263.</value></default>
-	      -->
-	  <default param="t_amb"><value>265.</value></default>
+	   -->
+	  <default param="t_atm"><value>260.</value></default>
+	  <!--
+	  <default param="t_ground"><value>270.</value></default>
+	   -->
 	  <default param="tau0"><value>0.1</value></default>
 	</equals>
       </when>
@@ -265,6 +270,87 @@ single dish simulation task (prototype):
     -------------------------------
     Keyword arguments:
     -------------------------------
+    -- Input Model:
+    modelimage -- Name of an image to simulate.
+    modifymodel -- Modify model image WCS or flux scale
+                options: (bool) True,False
+                default: False 
+         >>> modifymodel expandable parameters
+                refdirection -- Reference direction of the model image. 
+                       options: (str) 'direction', 'header', or reference 
+                                direction, e.g., 'J2000 19h00m00 -40d00m00"'
+                       default: 'direction'
+                refpixcel -- Reference pixel in the model image. 
+                       options: (str) 'center', 'header' or reference pixel, 
+                                e.g. '[100,100]' 
+                       default: 'center'
+                incell -- Pixel size of the model image. 
+                       options: 'header' or pixel size, e.g. '0.1arcsec'
+                       default: 'header'
+    inbright -- Peak surface brightness to scale input image 
+                in Jy/square arcsec.
+                options: 'default' or surface brightness in Jy/sq. 
+                default: 'default'
+    antennalist -- Name of ascii file containing antenna positions.
+                each row has x y z coordinates and antenna diameter; 
+                header lines are required to specify the observatory name
+                and coordinate system e.g. 
+                # observatory=ALMA
+                # coordsys=UTM
+                # datum=WGS84
+                # zone=19
+    antenna -- Antenna id with which observed. 
+                default: ''
+    -------------------------------
+    -- Output Control:
+    project -- Name of project simulated; created ms and images will
+                start with this string. 
+                default: 'simsd'.
+    refdate -- Central time of simulated observation. 
+                default: '2012/05/21/22:05:00'
+                [alpha] ** observations are centered at the nearest transit **
+    integration --- Time interval for each integration
+                default: '10s'
+    startfreq -- Frequency of first channel
+                default: '89MHz'
+    chanwidth -- Channel width
+                default: '10MHz'
+    nchan -- number of channels (can be 1 for a continuum simulation)
+                options: (int)
+                default: 1
+    direction -- image center direction
+                * can optionally be a list of pointings, which will override
+                pointingspacing.  Otherwise sdsim will hexagonally
+                pack the input image with pointings.  When direction is a
+                list, the centroid of direction will be used as the center.
+                default: ['J2000 19h00m00 -40d00m00']
+    pointingspacing-- spacing in between beams
+                default: '1arcmin'        
+    relmargin -- how close pointing centers may approach the edge of the
+                output image, as a fraction of pointingspacing.
+                * ignored if direction is a list.
+                options: (float)
+                default: 1.0
+    cell -- output cell/pixel size
+                default: '0.1arcsec'
+    imsize -- output image size in pixels (x,y)
+                options: (list)
+                default: [128,128]
+    stokes -- Stokes parameters to image
+                default: 'I'
+    -------------------------------
+    -- Corrupting data:
+    noise_thermal -- add thermal noise 
+                options: (bool) True, False
+                default: False
+                * [alpha] currently only knows about ALMA receivers 
+         >>> modifymodel expandable parameters
+                t_atm -- atmospheric temperature in K 
+                       default: 260.0
+                tau0 -- zenith opacity at observing frequency
+                       default: 0.1
+
+
 </example>
 </task>
 </casaxml>

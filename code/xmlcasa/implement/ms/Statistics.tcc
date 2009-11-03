@@ -103,9 +103,9 @@ get_statistics_1d(Record &result,
 template <class T>
 Vector<T>
 reform_array(ROTableColumn &rotc,
-                         const Table &t,
-                         const std::string &column,
-                         bool &supported)
+             const Table &t,
+             const std::string &column,
+             bool &supported)
 {
     Array <T> v;
     
@@ -123,20 +123,19 @@ reform_array(ROTableColumn &rotc,
     return v;
 }
 
-/*
-  Converts data to Float, computes statistics
-
-  v:           data
-  result:      output dictionary
-  column:      column name
-  supported:   set to true if column type is supported
-*/
 template <class T>
 Record
-Statistics<T>::get_stats(Vector<T> v,
-                      const std::string &column,
-                      bool &supported)
+Statistics<T>::get_stats(const Vector<T> v,
+                         const Vector<Bool> flags,
+                         const std::string &column,
+                         bool &supported)
 {
+    if (v.shape() != flags.shape()) {
+      stringstream ss;
+      ss << "Incompatible array vs. flags shapes: " << v.shape() << " vs. " << flags.shape();
+      throw AipsError(ss.str());
+    }
+
     Record result;
     if (supported) {
 
@@ -154,24 +153,38 @@ Statistics<T>::get_stats(Vector<T> v,
     return result;
 }
 
-/*
-  As get_stats().
+template <class T>
+Record
+Statistics<T>::get_stats(const Vector<T> v,
+          const std::string &column,
+          bool &supported)
+{
+  return get_stats(v, 
+                   Vector<Bool>(v.nelements()),
+                   column, 
+                   supported);
+}
 
-  The conversion from complex to Float depends on the parameter
-  complex_value. Eg complex_value="imag" picks out the imaginary part.
- */
+
 template<class T>
 Record
-Statistics<T>::get_stats_complex(Vector<Complex> v,
-                              const std::string &column,
-                              bool &supported,
-                              const std::string complex_value)
+Statistics<T>::get_stats_complex(const Vector<Complex> v,
+                                 const Vector<Bool> flags,
+                                 const std::string &column,
+                                 bool &supported,
+                                 const std::string complex_value)
 {
     if (complex_value != "amp" && complex_value != "amplitude" &&
         complex_value != "phase" && complex_value != "imag" &&
         complex_value != "real" && complex_value != "imaginary") {
       throw AipsError("complex_value must be amp, amplitude, phase, imag, imaginary or real" +
                       std::string(", is ") + complex_value);
+    }
+
+    if (v.shape() != flags.shape()) {
+      stringstream ss;
+      ss << "Incompatible array vs flags shapes: " << v.shape() << " vs " << flags.shape();
+      throw AipsError(ss.str());
     }
     
     Record result;
@@ -217,18 +230,21 @@ Statistics<T>::get_stats_complex(Vector<Complex> v,
     
 }
 
-     
+template<class T>
+Record
+Statistics<T>::get_stats_complex(const Vector<Complex> v,
+                                 const std::string &column,
+                                 bool &supported,
+                                 const std::string complex_value)
+{
+  return get_stats_complex(v, 
+                           Vector<Bool>(v.nelements()),
+                           column,
+                           supported,
+                           complex_value);
+}     
 
-/*
-  Converts data to Float, computes statistics
 
-  t:           Table
-  result:      output dictionary, which will contain
-               N sets of statistical information, one for
-               each index in the array
-  column:      column whose values are N-length arrays
-  supported:   set to true if column type is supported
-*/
 template <class T>
 static void
 get_stats_array_table(const Table &t, 
@@ -243,6 +259,7 @@ get_stats_array_table(const Table &t,
     Matrix<T> v = ro_col.getColumn();
 
     result = Statistics<T>::get_stats_array(v,
+                                            Vector<Bool>(v.shape()(1)),
                                             column,
                                             supported);
 
@@ -251,11 +268,19 @@ get_stats_array_table(const Table &t,
 
 template <class T>
 Record
-Statistics<T>::get_stats_array(Matrix<T> v,
+Statistics<T>::get_stats_array(const Matrix<T> v,
+                               const Vector<Bool> flags,
                                const std::string &column,
                                bool &supported)
 {
     Record result;
+
+    if (v.shape()(1) != flags.shape()(0)) {
+      stringstream ss;
+      ss << "Incompatible number of values (" << v.shape()(1) <<
+        ") and flags (" << flags.shape()(0) << ") given";
+      throw AipsError(ss.str());
+    }
 
     Vector<Float> data_float(IPosition(1, v.shape()(1)));
 
@@ -318,9 +343,9 @@ reform_array(ROTableColumn &rotc,
 template <class T>
 Record
 Statistics<T>::get_statistics(const Table &table,
-                           const std::string &column,
-                           const std::string &complex_value,
-                           casa::LogIO *itsLog)
+                              const std::string &column,
+                              const std::string &complex_value,
+                              casa::LogIO *itsLog)
 {
     ROTableColumn rotc(table, column);
     

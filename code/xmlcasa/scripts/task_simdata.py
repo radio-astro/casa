@@ -50,6 +50,8 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         # read antenna file:
 
         stnx, stny, stnz, stnd, nant, telescopename = util.readantenna(antennalist)
+        if stnx==False:
+            return
         antnames=[]
         for k in range(0,nant): antnames.append('A%02d'%k)
         aveant=stnd.mean()

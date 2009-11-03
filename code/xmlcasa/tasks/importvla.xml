@@ -98,7 +98,7 @@ importvla(archivefiles=None,vis=None,
 	   </param>
 
 	   <param type="bool" name="evlabands" >
-		   <description>Use the evla frequencies and bandwidths when specifying Band by name or wavelength</description>
+		   <description>Use updated eVLA frequencies and bandwidths for bands and wavelengths</description>
 		   <value>True</value>
 	   </param>
    </input>

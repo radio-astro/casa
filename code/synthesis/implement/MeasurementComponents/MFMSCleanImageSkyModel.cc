@@ -131,7 +131,13 @@ MFMSCleanImageSkyModel::~MFMSCleanImageSkyModel()
 Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 
   LogIO os(LogOrigin("MFMSCleanImageSkyModel","solve"));
-  
+ 
+  if(modified_p){
+    makeNewtonRaphsonStep(se, False);
+  }
+  if(numberIterations() < 1){
+    return True;
+  }
   //Make the PSFs, one per field
   if(!donePSF_p){
     os << "Making approximate PSFs" << LogIO::POST;

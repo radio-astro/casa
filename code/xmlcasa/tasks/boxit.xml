@@ -28,7 +28,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="double" name="threshold" units="mJy">
-    <description>Threshold value. If units are not specified, units of mJy are assumed.</description>
+    <description>Threshold value.  Must include units.</description>
     <value>0.0</value>
     </param>
 
@@ -40,6 +40,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="bool" name="diag">
     <description>Count diagonal connections?</description>
     <value>False</value>
+    </param>
+
+    <param type="int" name="boxstretch">
+    <description>Increase box sizes by this many pixels beyond thresholded pixels.</description>
+    <value>1</value>
+    <allowed kind="range">
+      <value range="min">-1</value>
+      <value range="max">6</value>
+    </allowed>
     </param>
 
     <param type="bool" name="overwrite">
@@ -64,12 +73,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: none; example: imagename='myimage.image'
        regionfile -- Name of output region file (adds extension .rgn).
                default: none; if not given uses imagename+'.rgn'
-       threshold -- value to use for island threshold. If no units are specified, units of mJy are assumed.
+       threshold -- value (with units) to use for island threshold.
                default: 0.0.
        minsize -- minimum size of island to get a box (in number of pixels)
                default: 2
        diag -- count diagonal connections as same island or not
                default: False
+       boxstretch -- number of pixels to increase outward size of each box; can
+               range from -1 to 5.
+               default: 1
        overwrite -- Overwrite existing region file?
                default: False.  If False, gives warning if file exists.
 

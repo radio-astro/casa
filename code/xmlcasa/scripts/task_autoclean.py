@@ -17,13 +17,13 @@ import numpy
 
 def autoclean(vis, imagename, field, spw, selectdata, timerange, uvrange,
               antenna, scan, mode, nchan, start, width, interpolation, doconcat,
-              psfmode, imagermode, cyclefactor,
-              cyclespeedup, imsize, cell, phasecenter, restfreq, stokes,
-              weighting, robust, noise, npixels, interactive, mask, modelimage,
-              uvtaper, outertaper, innertaper, niter, npercycle,
-              npercycle_speedup, gain, pbcor, minpb, clean_threshold, Nrms,
-              eps_maxres, allow_maxres_inc, island_rms, diag, peak_rms,
-              gain_threshold, Npeak, shape, boxstretch, irregsize):
+              psfmode, imagermode, cyclefactor, cyclespeedup, imsize, cell,
+              phasecenter, restfreq, stokes, weighting, robust, noise, npixels,
+              interactive, mask, modelimage, uvtaper, outertaper, innertaper,
+              niter, npercycle, npercycle_speedup, gain, pbcor, minpb,
+              clean_threshold, Nrms, eps_maxres, useabsresid, allow_maxres_inc,
+              island_rms, diag, peak_rms, gain_threshold, Npeak, shape,
+              boxstretch, irregsize):
 
     casalog.origin('autoclean')
 
@@ -81,7 +81,7 @@ def autoclean(vis, imagename, field, spw, selectdata, timerange, uvrange,
               weighting=weighting, robust=robust, noise=noise, npixels=npixels,
               modelimage=modelimage, uvtaper=uvtaper, outertaper=outertaper,
               innertaper=innertaper, niter=0, gain=gain, minpb=minpb)
-        casalog.origin('myautoclean')
+        casalog.origin('autoclean')
 
         # make the mask image
         ia_tool = ia.newimagefromimage(infile=thisImage+'.image',
@@ -107,7 +107,8 @@ def autoclean(vis, imagename, field, spw, selectdata, timerange, uvrange,
                                   boxstretch=boxstretch, Nrms=Nrms,
                                   island_rms=island_rms, peak_rms=peak_rms,
                                   gain_threshold=gain_threshold,
-                                  clean_threshold=clean_threshold, diag=diag) 
+                                  clean_threshold=clean_threshold, diag=diag,
+                                  useabsresid=useabsresid, ichan=ichan) 
 
             # if first iteration, make sure CLEAN is cleaning
             if not(cleanmore):
@@ -147,7 +148,7 @@ def autoclean(vis, imagename, field, spw, selectdata, timerange, uvrange,
                   niter=min(new_npercycle,niter-iterations),
                   mask=thisImage+'.mask',  gain=gain, minpb=minpb, npercycle=niter,
                   interactive=bool(nregions and interactive))
-            casalog.origin('myautoclean')
+            casalog.origin('autoclean')
             iterations += new_npercycle
 
             # stop if we've reached maximum number of clean minor cycles
@@ -161,8 +162,10 @@ def autoclean(vis, imagename, field, spw, selectdata, timerange, uvrange,
                 ia.open(residualImage)
                 stats = ia.statistics(list=False)
                 ia.close()
-                post_max = max([ stats['max'][0], abs(stats['min'][0]) ])
-                casalog.post('new max_res = %f' % post_max)
+                if(useabsresid):
+                    post_max = max([ stats['max'][0], abs(stats['min'][0]) ])
+                else:
+                    post_max = stats['max'][0]
                 # check fractional change of maximum residual
                 if(eps_maxres):
                     if abs(post_max-pre_max)/pre_max < eps_maxres:
@@ -201,7 +204,7 @@ def autoclean(vis, imagename, field, spw, selectdata, timerange, uvrange,
 # Autowindow selects the clean region based on peaks in each island above threshold
 def autowindow(imagename='', island_rms=0, gain_threshold=0, peak_rms=0, Nrms=0,
                boxstretch=0, clean_threshold=0, Npeak=None, shape=0,
-               irregsize=100, diag=False):
+               irregsize=100, diag=False, useabsresid=False, ichan=0):
 
     maskImage = imagename+'.mask'
     residualImage = imagename+'.residual'
@@ -211,6 +214,10 @@ def autowindow(imagename='', island_rms=0, gain_threshold=0, peak_rms=0, Nrms=0,
     ia.open(residualImage)
     rms = ia.statistics(mask=maskImage+'==0',list=False)['rms'][0]
     max_residual = ia.statistics(list=False)['max'][0]
+    if(useabsresid):
+        min_residual = ia.statistics(list=False)['min'][0]
+        if abs(min_residual) > max_residual:
+            max_residual = abs(min_residual)
     ia.close()
 
     # threshold values for selecting clean regions
@@ -240,7 +247,7 @@ def autowindow(imagename='', island_rms=0, gain_threshold=0, peak_rms=0, Nrms=0,
     # select the new clean regions; put them in the mask
     casalog.post('Selecting clean regions.')
     Nregions = get_islands(imagename, Npeak, island_rms*rms, threshold, shape,
-                           boxstretch, irregsize, diag)
+                           boxstretch, irregsize, diag, ichan)
     
     if not(Nregions):
         casalog.post('No new peaks passed selection.')
@@ -255,7 +262,7 @@ def autowindow(imagename='', island_rms=0, gain_threshold=0, peak_rms=0, Nrms=0,
 # Won't always add Npeak new clean regions if current clean regions still
 # contain peaks.  But isolated bright pixels (<2.5*peak_threshold) are ignored.
 def get_islands(imagename='', Npeak=3, island_threshold=0, peak_threshold=0,
-                shape=0, boxstretch=0, irregsize=100, diag=False):
+                shape=0, boxstretch=0, irregsize=100, diag=False, ichan=0):
 
     maskImage = imagename+'.mask'
     residualImage = imagename+'.residual'
@@ -371,7 +378,7 @@ def get_islands(imagename='', Npeak=3, island_threshold=0, peak_threshold=0,
             mask_island(imagename, newIsland, islandPix)
         else:
             # region will be circle or box
-            mask_region(imagename, newIsland, shape, boxstretch)
+            mask_region(imagename, newIsland, shape, boxstretch, ichan)
     return Nkept
 
 
@@ -388,7 +395,7 @@ def mask_island(imagename='', island=None, pixels=None):
 
 
 # Chooses appropriate shape (box or circle) for clean region
-def mask_region(imagename='', island=None, shape=0, boxstretch=0):
+def mask_region(imagename='', island=None, shape=0, boxstretch=0, ichan=0):
     
     peak_flux = island['peak_flux']
     box = island['box']
@@ -402,13 +409,15 @@ def mask_region(imagename='', island=None, shape=0, boxstretch=0):
             shape = 1
 
     if(shape):
-        add_box(imagename, box, peak_flux, boxstretch)
+        add_box(imagename, ichan, box, peak_flux, boxstretch)
     else:
-        add_circle(imagename, box, peak_flux, boxstretch)
+        add_circle(imagename, ichan, box, peak_flux, boxstretch)
 
 
 # Add a circular region to the mask image
-def add_circle(imagename, box, peak_flux, boxstretch=0):
+def add_circle(imagename, ichan, box, peak_flux, boxstretch=0):
+    #TMP# At some point im.regiontoimagemask should allow circles that
+    #     specify a particular channel
     xsize = box[2] - box[0]
     ysize = box[3] - box[1]
     radius = max(sqrt(xsize**2+ysize**2)/2. + boxstretch, 1)
@@ -421,7 +430,7 @@ def add_circle(imagename, box, peak_flux, boxstretch=0):
 
 
 # Add a box region to the mask image; save new region in region file
-def add_box(imagename, box, peak_flux, boxstretch=0):
+def add_box(imagename, ichan, box, peak_flux, boxstretch=0):
     box[0:2] -= boxstretch
     box[2:4] += boxstretch
     # in case we used boxstretch < 0 and a one-pixel sized box:
@@ -437,6 +446,8 @@ def add_box(imagename, box, peak_flux, boxstretch=0):
     ia.open(imagename+'.mask')
     csys = ia.coordsys()
     # need pixel corners, not pixel centers, for region file
+    blccoord = [box[0]-0.5, box[1]-0.5, 0, ichan]
+    trccoord = [box[2]+0.5, box[3]-0.5, 0, ichan]
     blccoord = [pos - 0.5 for pos in box[0:2]]
     trccoord = [pos + 0.5 for pos in box[2:4]]
     blc = ia.toworld(blccoord, 's')['string']
@@ -477,4 +488,4 @@ def concat_regions(imagename='', suffix='', number=0):
         if nregion > 1:
             rg.tofile(regionfile, rg.makeunion(regions))
         else:
-            rg.tofile(regionfile, regions)
+            rg.tofile(regionfile, regions[file])

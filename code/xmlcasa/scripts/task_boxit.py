@@ -1,20 +1,20 @@
 from taskinit import *
 import numpy
+import sys
 
-# returns list of boxes for each island:  [xmin,ymin,xmax,ymax]
-# also return array islandImage (each island's pixels labeled by number)
+# Writes out regions above threshold to regionfile+'.rgn'
 
-def boxit(imagename, regionfile, threshold, minsize, diag, overwrite):
+def boxit(imagename, regionfile, threshold, minsize, diag, boxstretch, overwrite):
 
     casalog.origin('boxit')
 
     if not(regionfile):
         regionfile = imagename
-    regionfile = regionfile+'.rgn'
+    exten = '.rgn'
 
     if not(overwrite):
-        if(os.path.exists(regionfile)):
-            casalog.post('file "'+regionfile+'" already exists.', 'WARN')
+        if(os.path.exists(regionfile+exten)):
+            casalog.post('file "'+regionfile+exten+'" already exists.', 'WARN')
             return
 
     # If no units, assume mJy for consistency with auto/clean tasks.
@@ -22,7 +22,6 @@ def boxit(imagename, regionfile, threshold, minsize, diag, overwrite):
     threshold = qa.getvalue(qa.convert(qa.quantity(threshold,'mJy'),'Jy'))
     print "Setting threshold to " + str(threshold) + "Jy"
 
-    boxRecord = {}
     newIsland = numpy.zeros(1, dtype=[('box','4i4'),('npix','i4')])
     # Find all pixels above the threshold
     ia.open(imagename)
@@ -30,7 +29,7 @@ def boxit(imagename, regionfile, threshold, minsize, diag, overwrite):
     if not(fullmask.max()):
         casalog.post('Maximum flux in image is below threshold.', 'WARN')
         return
-    ia.close()
+    csys = ia.coordsys()
 
     shape = fullmask.shape
     nx = shape[0]
@@ -41,10 +40,13 @@ def boxit(imagename, regionfile, threshold, minsize, diag, overwrite):
     if len(shape)==4:
         n2 = shape[2]
         n3 = shape[3]
-    
+
+    totregions = 0
     for i3 in xrange(n3):
         for i2 in xrange(n2):
 
+            regions = {}
+            boxRecord = {}
             if len(shape)==2:
                 mask = fullmask
             if len(shape)==4:
@@ -104,38 +106,58 @@ def boxit(imagename, regionfile, threshold, minsize, diag, overwrite):
                         if(stretch):
                             stretchIsland( boxRecord, islandImage[x,y], x, y)
 
-            regions = {}
-            ia.open(imagename)
-            csys = ia.coordsys()
             for record in boxRecord.values():
                 box = record['box'][0]
                 npix = record['npix'][0]
                 # check size of box
                 if npix < minsize:
                     continue
+                totregions += 1
                 # need pixel corners, not pixel centers
-                blccoord = [pos - 0.5 for pos in box[0:2]]
-                trccoord = [pos + 0.5 for pos in box[2:4]]
+                box[0:2] -= boxstretch
+                box[2:4] += boxstretch
+                # in case we used boxstretch < 0 and a one-pixel sized box:
+                if box[0] > box[2]:
+                    box[0] += boxstretch
+                    box[2] -= boxstretch
+                if box[1] > box[3]:
+                    box[1] += boxstretch
+                    box[3] -= boxstretch
+                blccoord = [box[0]-0.5, box[1]-0.5, i2, i3]
+                trccoord = [box[2]+0.5, box[3]+0.5, i2, i3]
                 blc = ia.toworld(blccoord, 's')['string']
                 trc = ia.toworld(trccoord, 's')['string']
                 regions[tuple(box)]= rg.wbox(blc=blc, trc=trc,
                                              csys=csys.torecord())
-            print "number of regions " + str(len(regions))
+
             # CAS-1666, if this check is not done, catastrophic memory use may occur
             if len(regions) > 200:
-                raise ValueError, "Too many regions. Please increase the threshold and run again"
+                raise ValueError, "Too many regions ("+str(len(regions))+"). Please increase the threshold and run again"
+            
+            if(len(regions)):
+                if len(regions)==1:
+                    union = regions.values()[0]
+                else:
+                    print "computing union of "+str(len(regions))+" regions"
+                    union = rg.makeunion(regions)
+                polfile = regionfile + '.pol.' + str(i2) + exten
+                if(os.path.exists(polfile)):
+                    os.system('rm -f ' + polfile)
+                rg.tofile(polfile, union)
+                casalog.post('Writing out %d region(s) to file %s'
+                             % (len(regions), polfile), 'INFO1')
 
-            if len(regions)==1:
-                union = regions[tuple(box)]
-            else:
-                print "computing union"
-                union = rg.makeunion(regions)
-                print "done computing union"
-            if(os.path.exists(regionfile)):
-                os.system('rm -f '+regionfile)
-            rg.tofile(regionfile, union)
-            casalog.post('Writing out %d region(s) to file' % len(regions))
-            ia.done()
+        # combine all polarization files for this frequency into one channel file
+        chanfile = regionfile + '.chan.' + str(i3) + exten
+        concat_regions(chanfile, regionfile+'.pol.', exten, n2)
+        #print 'combining pol files for chan '+str(i3)+' into file '+chanfile
+
+    # combine all frequency channel files into one final output file
+    concat_regions(regionfile+exten, regionfile+'.chan.', exten, n3)
+    #print 'combining chan files into final output file '+regionfile+exten
+    casalog.post('Found %d individual regions.' % totregions)
+    print 'Found %d individual regions.' % totregions
+    ia.done()
     return
 
 # two previously separate islands should have same numID
@@ -162,3 +184,20 @@ def stretchIsland(boxRecord, islandNum, x, y):
     record['box'][0][2] = max(record['box'][0][2], x)
     record['box'][0][3] = max(record['box'][0][3], y)
     record['npix'][0] += 1
+
+# read in multiple region (.rgn) files; save to one file
+def concat_regions(outfile='', fileroot='', exten='', number=0):
+    regions = {}
+    for infile in [fileroot + i + exten for i in map(str, range(number))]:
+        if(os.path.exists(infile)):
+            regions[infile] = rg.fromfiletorecord(infile)
+            os.system('rm -f ' + infile)
+    nregion = len(regions)
+    if(nregion):
+        if(os.path.exists(outfile)):
+            os.system('rm -f '+outfile)
+        casalog.post('Combining %d file(s) into single file %s' % (nregion, outfile), 'INFO1')
+        if nregion > 1:
+            rg.tofile(outfile, rg.makeunion(regions))
+        else:
+            rg.tofile(outfile, regions[infile])

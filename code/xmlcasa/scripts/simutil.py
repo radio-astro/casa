@@ -683,7 +683,11 @@ class simutil:
             else:
                 if (params["coordsys"].upper()[0:3]=="LOC"):
                     # I'm pretty sure Rob's function only works with lat,lon in degrees;
-                    obs=me.measure(me.observatory(params["observatory"]),'WGS84')
+                    meobs=me.observatory(params["observatory"])
+                    if (meobs.__len__()<=1):
+                        self.msg("You need to add "+params["observatory"]+" to the Observatories table in your installation to proceed.",color="31")
+                        return False,False,False,False,False,params["observatory"]
+                    obs=me.measure(meobs,'WGS84')
                     obslat=qa.convert(obs['m1'],'deg')['value']
                     obslon=qa.convert(obs['m0'],'deg')['value']
                     obsalt=qa.convert(obs['m2'],'m')['value']
@@ -1035,7 +1039,7 @@ class simutil:
         
         # find the central meridian if the zone number is less than 30
         
-        if zone < 30 :
+        if zone < 30 :   # ie W long - this code uses W=positive lon
             iz=zone
             icm=(183-(6*iz))
             cm=float(icm)/rad
@@ -1060,7 +1064,6 @@ class simutil:
         orlim=0.0
         
         found=0
-
 
         # precompute parameters for this zone:
         eps,r,so,v0,v2,v4,v6 = self.tconpc(sf,orlim,er,esq,rf)
@@ -1088,6 +1091,9 @@ class simutil:
         #     lat,lon,conv,kp = tmgeod(n,e,eps,cm,fe,sf,so,r,v0,v2,v4,v6,fn,er,esq)
         #     found=found+1
         
+        # *** convert to more usual convention of negative lon = W
+        lon=-lon
+
         if self.verbose:
             self.msg(" longitude, latitude = %s %s; conv,kp = %f,%f" % (qa.angle(qa.quantity(lon,"rad"),prec=8),qa.angle(qa.quantity(lat,"rad"),prec=8),conv,kp),origin="utm2long")
         

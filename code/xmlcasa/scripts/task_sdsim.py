@@ -4,7 +4,8 @@ import asap as sd
 from taskinit import * 
 from simutil import *
 
-def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, antennalist, antenna,  project, refdate, integration, startfreq, chanwidth, nchan, direction, pointingspacing, relmargin, cell, imsize, stokes, noise_thermal, t_amb, tau0, verbose):
+def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, antennalist, antenna,  project, refdate, integration, startfreq, chanwidth, nchan, direction, pointingspacing, relmargin, cell, imsize, stokes, noise_thermal, t_atm, tau0, verbose):
+#def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, antennalist, antenna,  project, refdate, integration, startfreq, chanwidth, nchan, direction, pointingspacing, relmargin, cell, imsize, stokes, noise_thermal, t_atm, t_ground, tau0, verbose):
 
     casalog.origin('sdsim')
 
@@ -303,6 +304,7 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
             sm.close()
 
             # modify STATE table information for ASAP
+            # Ugly part!! need improvement. 
             nstate=1
             tb.open(tablename=msfile+'/STATE',nomodify=False)
             tb.addrows(nrow=nstate)
@@ -353,8 +355,68 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
             msg('generation of measurement set ' + msfile + ' complete.')
 
 
-            msg('creating image from generated ms')
-            im.open(msfile)
+            ###################################################################
+            # noisify
+
+            noise_any=False
+            
+            if noise_thermal:
+                if not (util.telescopename == 'ALMA' or util.telescopename == 'ACA'):
+                    msg("WARN: thermal noise only works properly for ALMA/ACA",color="31",origin="noise")
+                
+                noise_any=True
+
+                noisymsfile = project + ".noisy.ms"
+                noisymsroot = project + ".noisy"
+                msg('adding thermal noise to ' + noisymsfile,origin="noise")
+
+                eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp()
+
+                # antenna efficiency
+                eta_a = eta_p * eta_s * eta_b * eta_t
+                if verbose: 
+                    msg('antenna efficiency    = ' + str(eta_a),origin="noise")
+                    msg('spillover efficiency  = ' + str(eta_s),origin="noise")
+                    msg('correlator efficiency = ' + str(eta_q),origin="noise")
+ 
+                # Cosmic background radiation temperature in K. 
+                t_cmb = 2.275
+
+                if os.path.exists(noisymsfile):
+                    cu.removetable(noisymsfile)
+                os.system("cp -r "+msfile+" "+noisymsfile)
+                # XXX check for and copy flagversions file as well
+            
+                sm.openfromms(noisymsfile);    # an existing MS
+                sm.setdata();                  # currently defaults to fld=0,spw=0
+                # sm.setapply(type='TOPAC',opacity=tau0);  # opac corruption
+                # SimACohCalc needs 2-temp formula not just t_atm
+                sm.setnoise(mode="calculate",table=noisymsroot,
+                            antefficiency=eta_a,correfficiency=eta_q,
+                            spillefficiency=eta_s,tau=tau0,trx=t_rx,
+                            tatmos=t_atm,tcmb=t_cmb)
+                # use ANoise version
+                #sm.setnoise2(mode="calculate",table=noisymsroot,
+                #             antefficiency=eta_a,correfficiency=eta_q,
+                #             spillefficiency=eta_s,tau=tau0,trx=t_rx,
+                #             tatmos=t_atm,tground=t_ground,tcmb=t_cmb)
+                sm.corrupt();
+                sm.done();
+
+                if verbose: msg("done corrupting with thermal noise",origin="noise")
+
+
+            ##################################################################
+            # Imaging            
+
+            if noise_any:
+                mstoimage = noisymsfile
+            else:
+                mstoimage = msfile
+
+            msg('creating image from generated ms: '+mstoimage)
+            #im.open(msfile)
+            im.open(mstoimage)
             im.selectvis(nchan=nchan,start=0,step=1,spw=0)
             im.defineimage(mode='channel',nx=imsize[0],ny=imsize[1],cellx=cell,celly=cell,phasecenter=imcenter,nchan=nchan,start=0,step=1,spw=0)
             im.setoptions(ftmachine='sd',gridfunction='pb')
@@ -362,7 +424,7 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
             im.makeimage(type='singledish',image=outimage)
             im.close()
 
-            msg('generation of image' + outimage + ' complete.')
+            msg('generation of image ' + outimage + ' complete.')
 
         except TypeError, e:
             print 'TypeError: ', e

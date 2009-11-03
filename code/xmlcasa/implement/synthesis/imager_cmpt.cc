@@ -243,7 +243,7 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 	     itsImager->clean(String(algorithm), 0, gain, 
 			      casaQuantity(threshold), displayprogress,
 			      amodel, fixed, String(complist), amask,  
-			      aimage, aresidual, apsf);
+			      aimage, aresidual);
 	     for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
 	       continter=itsImager->interactivemask(aresidual[nIm], amask[nIm], 
 						    elniter, nloop,thresh);
@@ -268,14 +268,18 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 	       thrsh=casa::Quantity(0, "Jy");
 	       thresh="0.0Jy";
 	     }
+	     Vector<String> elpsf(0);
+	     //Need to save psfs in interactive only once and lets do it the 
+	     //first time
+	     if(k==0)
+	       elpsf=apsf;
 	     if(anyEQ(fixed, False)){
-	       // interactive on first model only for now
 	       rstat = itsImager->clean(String(algorithm), elniter, gain, 
 					thrsh, 
 					displayprogress,
 					amodel, fixed, String(complist), 
 					amask,  
-					aimage, aresidual);
+					aimage, aresidual, elpsf);
 	       //if clean converged... equivalent to stop
 	       if(rstat){
 		 continter=2;

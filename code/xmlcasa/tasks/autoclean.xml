@@ -288,6 +288,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value>0.01</value>
     </param>
 
+    <param type="bool" name="useabsresid">
+    <description>If True, use absolute value of residual to test for clean convergence.</description>
+    <value>False</value>
+    </param>
+
     <param type="int" name="allow_maxres_inc">
     <description>Stop cleaning if max abs(residual) increases this many times (set to -1 to ignore)</description>
     <value>3</value>
@@ -766,7 +771,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
            default: 1  
            example: shape=2
        boxstretch: number of pixels to increase outward size of clean region,
- 	   can range from 0 to -1 to 5. 
+ 	   can range from -1 to 5. 
            default: 1
            example: boxstretch = 3
        irregsize: for islands this large (dimension in pixels) or larger, fill
