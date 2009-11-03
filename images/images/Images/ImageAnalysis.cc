@@ -596,16 +596,15 @@ Bool ImageAnalysis::imagefromfits(const String& outfile,
 		}
 		//
 		if (whichrep < 0) {
-			*itsLog
-					<< "The Coordinate Representation index must be non-negative"
-					<< LogIO::EXCEPTION;
+			*itsLog	<< "The Coordinate Representation index must be non-negative"
+				<< LogIO::EXCEPTION;
 		}
 		//
 		ImageInterface<Float>* pOut = 0;
 		String error;
 		ImageFITSConverter::FITSToImage(pOut, error, outfile, fitsfile,
-				whichrep, whichhdu, HostInfo::memoryFree() / 1024, overwrite,
-				zeroBlanks);
+						whichrep, whichhdu, HostInfo::memoryFree() / 1024, overwrite,
+						zeroBlanks);
 		//
 		if (pOut == 0) {
 			*itsLog << error << LogIO::EXCEPTION;

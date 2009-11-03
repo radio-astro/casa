@@ -551,7 +551,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		strncpy(tmp,header[i].c_str(),hsize+1);
 		tmp[19]='\'';tmp[20]=tmp[21]=tmp[22]=tmp[23]=' ';
 		all = all.append(tmp);
-		os << LogIO::WARN
+		os << LogIO::NORMAL
 		   << "The SIP convention for representing distortion in FITS headers\n  is not part of FITS standard v3.0"
 		   << " and not yet supported by CASA.\n  Header\n  "<< header[i] << "\n  was interpreted as\n  " << tmp << LogIO::POST;
 	    } else {
@@ -587,12 +587,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    return False;
 	}
 	if (uInt(nwcs) == 0) {
-	    os << LogIO::WARN << "No WCS compliant coordinate representation found. Will try to continue ..." << LogIO::POST;
+	    os << LogIO::NORMAL << "No WCS compliant coordinate representation found. Will try to continue ..." << LogIO::POST;
 	    cardsToRecord (os, recHeader, pChar2);
 	    return False;
 	}
 	else if (which >= uInt(nwcs)) {
-	    os << LogIO::SEVERE << "Requested WCS # " << which << " exceeds the number available " << nwcs << LogIO::POST;
+	    os << LogIO::WARN << "Requested WCS # " << which << " exceeds the number available " << nwcs << LogIO::POST;
 	}
 
 // Add the saved OBSGEO keywords.
@@ -648,10 +648,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		int err = stat[i];
 		if (err>0) {
 		    if (i==DATFIX) {
-			os << LogIO::WARN << wcsNames(i) << " incurred the error " << wcsfix_errmsg[err] <<  LogIO::POST;
-			os << LogIO::WARN << "this probably isn't fatal so continuing" << LogIO::POST;
+			os << LogIO::NORMAL << wcsNames(i) << " incurred the error " << wcsfix_errmsg[err] <<  LogIO::POST;
+			os << LogIO::NORMAL << "this probably isn't fatal so continuing" << LogIO::POST;
 		    } else {
-			os << LogIO::SEVERE << "The wcs function '"
+			os << LogIO::WARN << "The wcs function '"
 			   << wcsNames(i) << "' failed with error: "
 			   << wcsfix_errmsg[err] <<  LogIO::POST;
 //
