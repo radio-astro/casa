@@ -194,7 +194,7 @@ Imager::Imager()
   :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), 
      cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
-     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
+     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
 {
   ms_p=0;
   mssel_p=0;
@@ -301,7 +301,7 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
   : msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
     ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
-    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
+    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
 {
 
   mssel_p=0;
@@ -321,7 +321,7 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
 Imager::Imager(MeasurementSet& theMS, PGPlotter& thePlotter, Bool compress)
   :  msname_p(""),  vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
-    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
+    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
 {
   mssel_p=0;
   ms_p=0;
@@ -341,7 +341,7 @@ Imager::Imager(const Imager & other)
   :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
      ft_p(0), cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
-     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
+     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
 {
   mssel_p=0;
   ms_p=0;
@@ -2243,17 +2243,12 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       }
     }
 
-    // ms_p is a CountedPtr, so there doesn't seem to be an easy way of telling
-    // whether rvi_p is tied to mssel_p instead of ms_p.
-    //if(!rvi_p || &(rvi_p->ms()) != ms_p)
-    if(!rvi_p)
-      this->makeVisSet(*ms_p);
-    uInt nvis_all = count_visibilities(rvi_p, false, false);
-    
+    uInt nvis_all = ms_p->nrow();
+
     // Now create the VisSet
     this->makeVisSet(*mssel_p); 
     AlwaysAssert(rvi_p, AipsError);
-    uInt nvis_sel = count_visibilities(rvi_p, false, false);
+    uInt nvis_sel = mssel_p->nrow();
     
     if(nvis_sel != nvis_all) {
       os << LogIO::NORMAL1
@@ -8919,23 +8914,22 @@ Int Imager::interactivemask(const String& image, const String& mask,
    }
 
    if ( image_id_p == 0 || mask_id_p == 0 ) {
-      viewer_p->unload( prev_image_id_p );
-      viewer_p->unload( prev_mask_id_p );
-      dbus::variant image_id = viewer_p->load(image, "raster",clean_panel_p);
-      if ( image_id.type() != dbus::variant::INT ) {
-	 os << "failed to load image" << LogIO::WARN << LogIO::POST;
-	 return False;
-      }
-      image_id_p = image_id.getInt( );
-
-      dbus::variant mask_id = viewer_p->load(mask,"contour",clean_panel_p);
+     //Make sure image left after a "no more" is pressed is cleared
+     dbus::variant image_id = viewer_p->load(image, "raster",clean_panel_p);
+     if ( image_id.type() != dbus::variant::INT ) {
+       os << "failed to load image" << LogIO::WARN << LogIO::POST;
+       return False;
+     }
+     image_id_p = image_id.getInt( );
+     
+     dbus::variant mask_id = viewer_p->load(mask,"contour",clean_panel_p);
       if ( mask_id.type() != dbus::variant::INT ) {
-	 os << "failed to load mask" << LogIO::WARN << LogIO::POST;
-	 return False;
+	os << "failed to load mask" << LogIO::WARN << LogIO::POST;
+	return False;
       }
       mask_id_p = mask_id.getInt( );
    } else {
-      viewer_p->reload( clean_panel_p );
+     viewer_p->reload( clean_panel_p );
    }
 
    
@@ -9005,19 +8999,25 @@ Int Imager::interactivemask(const String& image, const String& mask,
       return False;
     }
     if(result==1){
-      prev_image_id_p=image_id_p;
-      prev_mask_id_p=mask_id_p;
+      viewer_p->unload(image_id_p);
+      viewer_p->unload(mask_id_p);
       image_id_p=0;
       mask_id_p=0;
     }
     if(result==2){
+      cout << "before done " << endl;
       //clean up
-      viewer_p->done();
-      viewer_p=0;
+      //viewer_p->close(clean_panel_p);
+      //viewer_p->done();
+      //delete viewer_p;
+      //viewer_p=0;
+      //viewer_p->unload(image_id_p);
+      //viewer_p->unload(mask_id_p);
+      //Setting clean_panel_p to 0 seems to do the trick...the above stuff 
+      // like done causes a crash after a call again...have to understand that
       clean_panel_p=0;
       image_id_p=0;
       mask_id_p=0;
-
     }
 
     // return 0 if "continue"
