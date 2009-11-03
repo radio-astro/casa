@@ -25,8 +25,6 @@
 //#
 //# $Id$
 
-
-
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
 #include <synthesis/MeasurementEquations/Imager.h>
@@ -442,7 +440,8 @@ Imager::~Imager()
     cft_p = 0;
 
     if ( viewer_p ) {
-      viewer_p->close( clean_panel_p );
+      // viewer_p->close( clean_panel_p );
+      viewer_p->done();
       delete viewer_p;
     }
 
