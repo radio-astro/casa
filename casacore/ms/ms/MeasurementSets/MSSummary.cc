@@ -374,16 +374,16 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	    Bool samescan;
 	    samescan=(thisscan==lastscan);
 
-	    samescan= samescan & samefld & sameddi;
+	    samescan = samescan && samefld && sameddi;
 
 	    // If state changed, then print out last scan's info
 	    if (!samescan) {
-// 		cout << "thisscan " << thisscan << "lastscan " << lastscan
-// 		     << " fldids " << fldids << " lastfldids " << lastfldids
-// 		     << " ddids " << ddids << " lastddids " << lastddids
-// 		     << " samescan " << (thisscan==lastscan) <<  " samefld " << samefld << " sameddi " << sameddi
-// 		     << " meanIntTim " << meanIntTim << " thisnrow " << thisnrow << " inttim.makeVector().size() " 
-// 		     <<  inttim.makeVector().size() << " meanIntTim/thisnrow " << meanIntTim/thisnrow << endl; 
+// 	      cout << "thisscan " << thisscan << "lastscan " << lastscan
+// 		   << " fldids " << fldids << " lastfldids " << lastfldids
+// 		   << " ddids " << ddids << " lastddids " << lastddids
+// 		   << " samescan " << (thisscan==lastscan) <<  " samefld " << samefld << " sameddi " << sameddi
+// 		   << " meanIntTim " << meanIntTim << " thisnrow " << thisnrow << " inttim.makeVector().size() " 
+// 		   <<  inttim.makeVector().size() << " meanIntTim/thisnrow " << meanIntTim/thisnrow << endl; 
 	      if (thisnrow>0){
 		meanIntTim/=thisnrow;
 	      }
@@ -452,8 +452,8 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	  meanIntTim+=sum(inttim.makeVector());
 
 	  // for comparison at next timestamp
-	  lastfldids.resize(); lastfldids=fldids;
-	  lastddids.resize(); lastddids=ddids;
+	  lastfldids.assign(fldids);
+	  lastddids.assign(ddids);
 	  lastscan=thisscan;
 
 	  // push iteration

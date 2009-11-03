@@ -353,50 +353,56 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
      
   // SCAN NUMBER
   // find the distinct ObsIds in use in this MS
+  // and the maximum scan ID in each of them
   SimpleOrderedMap <Int, Int> scanOffsetForOid(-1);
   SimpleOrderedMap <Int, Int> encountered(-1);
-  Int defaultScanOffset;
-  {
-    ROTableVector<Int> ScanTabVectThis(thisScan);
-    ROTableVector<Int> ScanTabVectOther(otherScan);
-    Int maxScanThis = max(ScanTabVectThis);
-    Int minScanOther = min(ScanTabVectOther);
-    defaultScanOffset = maxScanThis + 1 - minScanOther;
-  }
   vector<Int> distinctObsIdSet;
+  vector<Int> minScan;
+  Int maxScanThis=0;
   for(uInt r = 0; r < curRow; r++) {
     Int oid = thisObsId(r);
+    Int scanid = thisScan(r);
     Bool found = False;
-    for(uInt i=0; i<distinctObsIdSet.size(); i++){
+    uInt i;
+    for(i=0; i<distinctObsIdSet.size(); i++){
       if(distinctObsIdSet[i]==oid){
 	found = True;
 	break;
       }
     }
-    if(!found){
-      distinctObsIdSet.push_back(oid);
-
-      // determine minimum scan number for this oid
-      Int minScanThisOid = 9999999;
-      for(uInt i=r; i<curRow; i++){
-	if(thisObsId(i) == oid){
-	  if(thisScan(i)<minScanThisOid){
-	    minScanThisOid = thisScan(i);
-	  }
-	}
+    if(found){
+      if(scanid<minScan[i]){
+	minScan[i] = scanid;
       }
-      // determine scan offset for this oid
-      Int scanOffset;
-      scanOffset = minScanThisOid - 1; // assume scan numbers originally start at 1
-      if(scanOffset<0){
-	log << LogIO::WARN << "Zero or negative scan numbers in MS. May lead to duplicate scan numbers in concatenated MS." << LogIO::POST;
-	scanOffset = 0;
-      }
-      if(scanOffset==0){
-	encountered.define(oid,0);
-      }
-      scanOffsetForOid.define(oid, scanOffset); 
     }
+    else {
+      distinctObsIdSet.push_back(oid);
+      minScan.push_back(scanid); 
+    }
+    if(scanid>maxScanThis){
+      maxScanThis = scanid;
+    }
+  }
+  // set the offset added to scan numbers in each observation
+  for(uInt i=0; i<distinctObsIdSet.size(); i++){
+    Int scanOffset;
+    scanOffset = minScan[i] - 1; // assume scan numbers originally start at 1
+    if(scanOffset<0){
+      log << LogIO::WARN << "Zero or negative scan numbers in MS. May lead to duplicate scan numbers in concatenated MS." 
+	  << LogIO::POST;
+      scanOffset = 0;
+    }
+    if(scanOffset==0){
+      encountered.define(distinctObsIdSet[i],0); // used later to decide whether to notify user
+    }
+    scanOffsetForOid.define(distinctObsIdSet[i], scanOffset); 
+  }
+
+  Int defaultScanOffset=0;
+  {
+    ROTableVector<Int> ScanTabVectOther(otherScan);
+    Int minScanOther = min(ScanTabVectOther);
+    defaultScanOffset = maxScanThis + 1 - minScanOther;
   }
  
   // MAIN
