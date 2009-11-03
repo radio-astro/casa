@@ -194,7 +194,7 @@ Imager::Imager()
   :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), 
      cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
-     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
+     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
 {
   ms_p=0;
   mssel_p=0;
@@ -301,7 +301,7 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
   : msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
     ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
-    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
+    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
 {
 
   mssel_p=0;
@@ -321,7 +321,7 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
 Imager::Imager(MeasurementSet& theMS, PGPlotter& thePlotter, Bool compress)
   :  msname_p(""),  vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
-    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
+    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
 {
   mssel_p=0;
   ms_p=0;
@@ -341,7 +341,7 @@ Imager::Imager(const Imager & other)
   :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
      ft_p(0), cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), pgplotter_p(0),
-     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0)
+     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
 {
   mssel_p=0;
   ms_p=0;
@@ -8919,6 +8919,8 @@ Int Imager::interactivemask(const String& image, const String& mask,
    }
 
    if ( image_id_p == 0 || mask_id_p == 0 ) {
+      viewer_p->unload( prev_image_id_p );
+      viewer_p->unload( prev_mask_id_p );
       dbus::variant image_id = viewer_p->load(image, "raster",clean_panel_p);
       if ( image_id.type() != dbus::variant::INT ) {
 	 os << "failed to load image" << LogIO::WARN << LogIO::POST;
@@ -9002,7 +9004,12 @@ Int Imager::interactivemask(const String& image, const String& mask,
       os << "failed to get a vaild result for viewer" << LogIO::WARN << LogIO::POST;
       return False;
     }
-
+    if(result==1){
+      prev_image_id_p=image_id_p;
+      prev_mask_id_p=mask_id_p;
+      image_id_p=0;
+      mask_id_p=0;
+    }
     if(result==2){
       //clean up
       viewer_p->done();
