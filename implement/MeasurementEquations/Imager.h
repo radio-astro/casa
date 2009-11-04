@@ -721,7 +721,8 @@ protected:
   int clean_panel_p;
   int image_id_p;
   int mask_id_p;
-
+  int prev_image_id_p;
+  int prev_mask_id_p;
 };
 
 
