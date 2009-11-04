@@ -5424,7 +5424,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	    //
 	    Float cutoffval=minPB_p;
 	    if(ft_p->name()=="MosaicFT")
-	      cutoffval=minPB_p*minPB_p;
+	      cutoffval=minPB_p;
 
 	    if (sm_p->doFluxScale(thismodel)) {
 	      TempImage<Float> cover(modelIm.shape(),modelIm.coordinates());
@@ -5498,7 +5498,7 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
           fluxScale.copyData(sm_p->fluxScale(thismodel));
 	  Float cutoffval=minPB_p;
 	  if(ft_p->name()=="MosaicFT"){
-	    cutoffval=minPB_p*minPB_p;
+	    cutoffval=minPB_p;
 	    se_p->getCoverageImage(thismodel, coverimage);
             cover=&(coverimage);
 	    //Do the sqrt
