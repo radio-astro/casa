@@ -4,4 +4,3 @@
 #-----------------------------------------
 include $(word 1, $(CASAPATH))/code/install/makefile.pkg
 
-#define RI_DEBUG
