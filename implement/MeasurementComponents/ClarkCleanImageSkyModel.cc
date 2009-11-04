@@ -231,8 +231,8 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 	cleaner.setChoose(False);
 	os << LogIO::NORMAL1
            << "Clean used " << cleaner.numberIterations() << " iterations" 
-	   << " to get to a max residual of " << cleaner.threshold() 
-	   << LogIO::POST;
+	   << " in this round to get to a max residual of " << cleaner.threshold()
+           << LogIO::POST;
 	
 	LatticeExpr<Float> expr= model_sl + localmodel; 
 	model_sl.copyData(expr);
@@ -249,8 +249,10 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
     delete mask_sl;
     mask_sl=0;
   }
-  os << LatticeExprNode(sum(image(0))).getFloat() 
-	       << " Jy is the sum of clean components " << LogIO::POST;
+  os << LogIO::NORMAL1
+     << LatticeExprNode(sum(image(0))).getFloat()
+     << " Jy <- The sum of the clean components"
+     << LogIO::POST;
   modified_p=True;
   return(converged);
 };

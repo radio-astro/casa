@@ -121,11 +121,8 @@ class CCList;
 // deconvolvedModel.setGain(0.2); 
 // deconvolvedModel.setNumberIterations(1000);
 // Bool convWorked = deconvolvedModel.solve(convEqn);
-// Array<Float> finalModel, residuals;
-// if (convWorked){
-//   finalModel = deconvolvedModel.getModel();
+// if (convWorked)
 //   ConvEqn.residual(deconvolvedModel, finalResidual);
-// }
 // </srcblock> 
 // </example>
 //
@@ -254,6 +251,9 @@ public:
   virtual void setMaxExtPsf(const Float maxExtPsf ); 
   virtual Float getMaxExtPsf(); 
   // </group>
+
+  // The total flux density in the model.
+  Float modelFlux();
 
   // An exponent on the F(m,n) factor (see Clark[1980]) which influences how
   // quickly active pixels are treated as unreliable. Larger values mean
