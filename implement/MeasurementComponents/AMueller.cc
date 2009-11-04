@@ -24,6 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
+#include <synthesis/MeasurementComponents/CalCorruptor.h>
 #include <synthesis/MeasurementComponents/AMueller.h>
 
 #include <msvis/MSVis/VisBuffer.h>
@@ -34,6 +35,7 @@
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // **********************************************************
 //  AMueller
@@ -195,17 +197,6 @@ Bool ANoise::simPar(VisIter& vi, const Int nChunks){
 }
 
 
-Array<Complex> ANoiseCorruptor::noise(const Int nrow,const Int ncol) {
-  Matrix<Complex> foo(nrow,ncol);
-  for (Int j=0;j<ncol;j++)
-    for (Int i=0;i<nrow;i++) {
-      //foo(i,j,k) = Complex((*nDist_p)(),(*nDist_p)())/amp();
-      foo(i,j).real() = (*nDist_p)()*amp();
-      foo(i,j).imag() = (*nDist_p)()*amp();
-    }
-  return foo;
-}
-
 
 
 
@@ -228,9 +219,5 @@ ANoise::ANoise(const Int& nAnt) :
 ANoise::~ANoise() {
   if (prtlev()>2) cout << "ANoise::~ANoise()" << endl;
 }
-
-ANoiseCorruptor::ANoiseCorruptor(): CalCorruptor(0) {};
-
-ANoiseCorruptor::~ANoiseCorruptor() {};
 
 } //# NAMESPACE CASA - END

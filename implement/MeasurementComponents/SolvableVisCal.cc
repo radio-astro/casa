@@ -25,6 +25,7 @@
 //#
 //# $Id: VisCal.cc,v 1.15 2006/02/06 19:23:11 gmoellen Exp $
 
+#include <synthesis/MeasurementComponents/CalCorruptor.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 
 #include <msvis/MSVis/VisBuffer.h>
@@ -425,19 +426,6 @@ void SolvableVisCal::setApply(const Record& apply) {
 // ===================================================
 
 #define PRTLEV 0
-
-CalCorruptor::CalCorruptor(const Int nSim) : 
-  nSim_(nSim),
-  initialized_(False),
-  prtlev_(PRTLEV),
-  curr_slot_(-1),
-  curr_spw_(-1), nSpw_(0),
-  curr_ant_(-1), nAnt_(0) 
-{}
-
-CalCorruptor::~CalCorruptor() {}
-
-
 
 void SolvableVisCal::setSimulate(const Record& simpar) {
 

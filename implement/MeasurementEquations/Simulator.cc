@@ -1292,8 +1292,10 @@ Bool Simulator::setnoise(const String& mode,
   LogIO os(LogOrigin("Simulator", "setnoise()", WHERE));
   try {
     
-    os << "In Simulator::setnoise() " << endl;
+    //os << "In Simulator::setnoise() " << endl;
     noisemode_p = mode;
+
+    os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise2" << LogIO::POST;
 
     if(mode=="table") {
       os << LogIO::SEVERE << "Cannot yet read from table" << LogIO::POST;
@@ -1857,19 +1859,19 @@ Bool Simulator::corrupt() {
       }
     }
 
+
     // Old-fashioned noise, for now
-//    if(ac_p != NULL){
-//      os << LogIO::NORMAL << "Doing noise corruption " 
-//	 << LogIO::POST;
-//      for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-//	for (vi.origin(); vi.more(); vi++) {
-//
-//	  ac_p->apply(vb);
-//	  vi.setVis(vb.visibility(), VisibilityIterator::Observed);
-//	  vi.setVis(vb.visibility(), VisibilityIterator::Corrected);
-//	}
-//      }
-//    }
+    if(ac_p != NULL){
+      os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise2" << LogIO::POST;
+      for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+	for (vi.origin(); vi.more(); vi++) {
+	  
+	  ac_p->apply(vb);
+	  vi.setVis(vb.visibility(), VisibilityIterator::Observed);
+	  vi.setVis(vb.visibility(), VisibilityIterator::Corrected);
+	}
+      }
+    }
 
     // Clear scratch columns - this is private, should it be?
     // vs_p->removeCalSet(*ms_p);
