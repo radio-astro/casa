@@ -40,8 +40,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Forward declarations
 class VisEquation;
 class TJonesCorruptor;
-class MMCorruptor;
-class MfMCorruptor;
+//class MMCorruptor;
+//class MfMCorruptor;
 
 
 // **********************************************************
@@ -576,7 +576,7 @@ protected:
   virtual Bool trivialMuellerElem() { return True; };
 
 private:
-  MMCorruptor *mcorruptor_p;
+  AtmosCorruptor *atmcorruptor_p;
 
 };
 

@@ -87,14 +87,14 @@ ANoiseCorruptor::~ANoiseCorruptor() {};
 
 
 
-MMCorruptor::MMCorruptor(): CalCorruptor(0) {};
-
-MMCorruptor::~MMCorruptor() {};
-
-
-MfMCorruptor::MfMCorruptor(): MMCorruptor() {};
-
-MfMCorruptor::~MfMCorruptor() {};
+//MMCorruptor::MMCorruptor(): CalCorruptor(0) {};
+//
+//MMCorruptor::~MMCorruptor() {};
+//
+//
+//MfMCorruptor::MfMCorruptor(): MMCorruptor() {};
+//
+//MfMCorruptor::~MfMCorruptor() {};
 
 
 
@@ -171,7 +171,7 @@ void TJonesCorruptor::initAtm() {
   atm::Length       Alt(  5000,"m" ); // Altitude of the site 
   atm::Length       WVL(   2.0,"km"); // Water vapor scale height
 
-  // RI todo get Alt from observatory info in Simulator
+  // RI TODO get Alt etc from observatory info in Simulator
 
   double TLR = -5.6;     // Tropospheric lapse rate (must be in K/km)
   atm::Length  topAtm(  48.0,"km");   // Upper atm. boundary for calculations
@@ -432,6 +432,11 @@ Complex TJonesCorruptor::gain(const Int ichan) {
 // and also produce MfM and Topac corruptions
 
 
+AtmosCorruptor::AtmosCorruptor() : 
+  CalCorruptor(1),  // parent
+  mean_pwv_(-1.)
+{}
+
 AtmosCorruptor::AtmosCorruptor(const Int nSim) : 
   CalCorruptor(nSim),  // parent
   mean_pwv_(-1.)
@@ -502,7 +507,7 @@ void AtmosCorruptor::initAtm() {
   atm::Length       Alt(  5000,"m" ); // Altitude of the site 
   atm::Length       WVL(   2.0,"km"); // Water vapor scale height
 
-  // RI todo get Alt from observatory info in Simulator
+  // RI TODO get Alt etc from observatory info in Simulator
 
   double TLR = -5.6;     // Tropospheric lapse rate (must be in K/km)
   atm::Length  topAtm(  48.0,"km");   // Upper atm. boundary for calculations
@@ -543,6 +548,22 @@ void AtmosCorruptor::initAtm() {
 }
 
 
+
+
+void AtmosCorruptor::initialize(const Record& simpar, Bool freqdep) {
+  // use ATM but no time dependence - e.g. for B[Tsys]
+  simpar_=simpar;
+  if (freqdep) initAtm();
+  mode()="constant";
+
+  initialized()=True;
+  if (prtlev()>2) cout << "AtmosCorruptor::init [const]" << endl;
+
+}
+
+
+
+  
 
 
 void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float scale) {
@@ -689,6 +710,13 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
 
 
 
+// opacity - for screens, we'll need other versions of this like the different cphase calls
+// that multiply wetopacity by the fluctuation in pwv
+Float AtmosCorruptor::opac(const Int ichan) {
+  Float opac = itsRIP->getDryOpacity(currSpw(),ichan).get() + 
+    itsRIP->getWetOpacity(currSpw(),ichan).get()  ;
+  return opac;
+}
 
 
 Complex AtmosCorruptor::cphase(const Int ix, const Int iy, const Int ichan) {

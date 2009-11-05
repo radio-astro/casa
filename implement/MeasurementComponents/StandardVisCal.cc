@@ -2305,23 +2305,24 @@ Int MMueller::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerS
   }
 
 
-  if (freqDepPar()) {
-    mcorruptor_p = new MMCorruptor();
-    if (prtlev()>3) cout << " MMCorruptor created." << endl;
-  } else {
-    mcorruptor_p = new MfMCorruptor();
-    if (prtlev()>3) cout << " MfMCorruptor created." << endl;
-  }
-  mcorruptor_p->initialize(Amp,simpar);
+  atmcorruptor_p = new AtmosCorruptor();
+  corruptor_p = atmcorruptor_p;
+
+  if (prtlev()>3) cout << " AtmosCorruptor created." << endl;
 
   String Mode("simple"); // simple means just multiply by amp()
   if (simpar.isDefined("mode")) {
     Mode=simpar.asString("mode");
   }
-  mcorruptor_p->mode()=Mode;
-
-  corruptor_p = mcorruptor_p;
-
+  atmcorruptor_p->mode()=Mode;
+  if (Mode=="simple") {
+    // generic init
+    corruptor_p->initialize(Amp,simpar);
+  } else {
+    // RI TODO check for mode = constant or Tsky ... and use freqdep
+    atmcorruptor_p->initialize(simpar,freqDepPar());
+  }
+  
   return nSim;
 }
 
@@ -2350,27 +2351,26 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
     Cube<Complex> nGood(cparshape);
     solveParOK()=False;
     
-    // RI TODO MM::simPar needs channel loop **
     // RI TODO MM::simPar CPar and VI shape checks?
     
     starttime=vi.time(timevec)[0];
 
     Complex factor(1.0);	
     Float tau0(0.),airmass1(1.0),airmass2(1.0),A(1.0),tsys0(0.),tsys1(0.),
-      tsys(0.);
+      tsys(0.),tau(0.);
     Bool dotsys(False);
     // 1e-4 converts the Diam from cm to m
     Float factor0(1.0);
 
-    if (mcorruptor_p->mode() == "tsys") {
-      tsys0 = mcorruptor_p->simpar().asFloat("trx") + 
-	mcorruptor_p->simpar().asFloat("spillefficiency")*mcorruptor_p->simpar().asFloat("tatmos");
-      tsys1 = (1.-mcorruptor_p->simpar().asFloat("spillefficiency"))*mcorruptor_p->simpar().asFloat("tground") + 
-	mcorruptor_p->simpar().asFloat("tcmb");
+    if (atmcorruptor_p->mode() == "tsys") {
+      tsys0 = atmcorruptor_p->simpar().asFloat("trx") + 
+	atmcorruptor_p->simpar().asFloat("spillefficiency")*atmcorruptor_p->simpar().asFloat("tatmos");
+      tsys1 = (1.-atmcorruptor_p->simpar().asFloat("spillefficiency"))*atmcorruptor_p->simpar().asFloat("tground") + 
+	atmcorruptor_p->simpar().asFloat("tcmb");
       dotsys=True;
       factor0 = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 / 		
-	( mcorruptor_p->simpar().asFloat("antefficiency") * 
-	  mcorruptor_p->simpar().asFloat("correfficiency") * C::pi );      
+	( atmcorruptor_p->simpar().asFloat("antefficiency") * 
+	  atmcorruptor_p->simpar().asFloat("correfficiency") * C::pi );      
     } 
     
     // live dangerously: assume all vis have the same tint
@@ -2380,6 +2380,8 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
       vi.msColumns().spectralWindow().totalBandwidth()(iSpW) / 
       Float(vi.msColumns().spectralWindow().numChan()(iSpW));	    
     factor0 = factor0 / sqrt( deltaNu * tint ) ;  
+    Float el1(1.5708);    
+    Float el2(1.5708);
 
     for (Int ichunk=0;ichunk<nChunks;++ichunk) {
       Int spw(vi.spectralWindow());	
@@ -2405,10 +2407,10 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 	    
 	    if (dotsys) {
 	      tau0=0.;
-	      if (mcorruptor_p->simpar().isDefined("tau0")) tau0=mcorruptor_p->simpar().asFloat("tau0");
+	      if (atmcorruptor_p->simpar().isDefined("tau0")) tau0=atmcorruptor_p->simpar().asFloat("tau0");
 	      
-	      Float el1 = antazel(a1(irow)).getAngle("rad").getValue()(1);
-	      Float el2 = antazel(a2(irow)).getAngle("rad").getValue()(1);
+	      el1 = antazel(a1(irow)).getAngle("rad").getValue()(1);
+	      el2 = antazel(a2(irow)).getAngle("rad").getValue()(1);
 	      
 	      if (el1 > 0.0 && el2 > 0.0) {
 		airmass1 = 1.0/ sin(el1);
@@ -2424,9 +2426,12 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 		// or switch to an atmcorruptor that handles MfM,TJ,and Topacf
 		// -> get correlated fluctuations in noise and phase
 		throw(AipsError("MfM w/ATM not yet implemented!!"));
-	      }	      
+		// tau = something from ATM 
+	      }	else {
+		tau=tau0;
+	      }
 
-	      A=sqrt(exp(-tau0 * airmass1)) * sqrt(exp(-tau0 * airmass2));
+	      A=sqrt(exp(-tau * airmass1)) * sqrt(exp(-tau * airmass2));
 	      
 	      // this is tsys at telescope 
 	      // (use TOpac later in Simulator to get it above atm)

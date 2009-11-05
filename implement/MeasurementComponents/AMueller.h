@@ -35,9 +35,6 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-//forward
-//class ANoiseCorruptor;
-
 class AMueller : public MMueller {
 public:
 

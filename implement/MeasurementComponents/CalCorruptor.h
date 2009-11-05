@@ -91,38 +91,53 @@ class CalCorruptor {
   virtual ~CalCorruptor();
   inline Int& nSim() { return nSim_; };
   inline Bool& initialized() { return initialized_; };
-  inline Int& prtlev() { return prtlev_; };
   inline Int& curr_slot() { return curr_slot_; };
   inline Double& curr_time() { return curr_time_; };
   inline Double& startTime() { return starttime_; };
   inline Double& stopTime() { return stoptime_; };
   inline Double& slot_time(const Int i) { return slot_times_(i); };
   inline Double& slot_time() { return slot_times_(curr_slot()); };
-  inline Int& currAnt() { return curr_ant_; };
-  inline Int& currSpw() { return curr_spw_; };
+  inline Float& amp() { return amp_;};
+  virtual void initialize() {};
+
+  // a generic initializer that just takes amplitude and simpar
+  void initialize(const Float amp, const Record& simpar) {
+    amp_=amp;
+    simpar_=simpar;
+    initialized_=True;
+  };
+  inline Record& simpar() {return simpar_;}
+  inline String& mode() { return mode_; };
+
   inline Int& currCorr() { return curr_corr_; };
   inline Int& nCorr() { return nCorr_; };
-  inline Int& nAnt() { return nAnt_; };
-  inline Int& nSpw() { return nSpw_; };  
   inline Int& currChan() { return curr_chan_; };  
   inline Int& nChan() { return fnChan_[currSpw()]; };  
+
+  // inherited from VC
+  inline Int& prtlev() { return prtlev_; };
+  inline Int& nAnt() { return nAnt_; };
+  inline Int& nSpw() { return nSpw_; };  
+  inline Int& currAnt() { return curr_ant_; };
+  inline Int& currSpw() { return curr_spw_; };
   inline Vector<Float>& fRefFreq() { return fRefFreq_; };
   inline Vector<Float>& fWidth() { return fWidth_; };
   inline Vector<Int>& fnChan() { return fnChan_; };
-  inline Float& amp() { return amp_;};
-  virtual void initialize() {}; //=0;
  
  protected:
    
    Int nSim_;
    Bool initialized_;
-   Int prtlev_;
    Int curr_slot_;
-   Int nAnt_,curr_ant_,nCorr_,curr_corr_;
-   Int nSpw_,curr_spw_,curr_chan_;
+   Int nCorr_,curr_corr_,curr_chan_;
    Double curr_time_,starttime_,stoptime_;
    Float amp_;
    Vector<Double> slot_times_;   
+   Record simpar_;
+   String mode_; // general parameter for different kinds of corruptions
+
+   Int prtlev_;
+   Int nAnt_,curr_ant_,nSpw_,curr_spw_;
    Vector<Float> fRefFreq_,fWidth_; // for each spw
    Vector<Int> fnChan_;
 
@@ -135,30 +150,29 @@ class CalCorruptor {
 
 
 
+
 class ANoiseCorruptor : public CalCorruptor {
 
   public:
     ANoiseCorruptor();
     virtual ~ANoiseCorruptor();
-    Float &amp() {return amplitude_; };
+    //Float &amp() {return amplitude_; };
     virtual void initialize() {
       initialize(1234,1.0);
     }
     void initialize(const Int seed, const Float amp) {
       rndGen_p = new MLCG(seed);
       nDist_p = new Normal(rndGen_p, 0.0, 1.0); // sigma=1.
-      amplitude_=amp;
+      amp_=amp;
+      initialized_=True;
     };
     //Array<Complex> noise(const IPosition shape);
     Array<Complex> noise(const Int nrow, const Int ncol);
-    inline String& mode() {return mode_; };
 
   private:
-    Float amplitude_;
+    //Float amplitude_;
     MLCG *rndGen_p;
     Normal *nDist_p;
-    String mode_;
-    
   };
 
 
@@ -170,50 +184,50 @@ class ANoiseCorruptor : public CalCorruptor {
 
 
 
-class MMCorruptor : public CalCorruptor {
-
- public:
-  MMCorruptor();
-  virtual ~MMCorruptor();
-  Float &amp() {return amplitude_; };
-  virtual void initialize() {
-    throw(AipsError("MMCorruptor initialize error - you should not be here!"));
-  }
-  void initialize(const Float amp, const Record& simpar) {
-    amplitude_=amp;
-    simpar_=simpar;
-  };
-  Array<Complex> gain();
-  inline String& mode() {return mode_; };
-  inline Record& simpar() {return simpar_;}
-  
- protected:
-  Record simpar_;
-  
- private:
-  Float amplitude_;
-  String mode_;
-  
-};
-
-
-
-
-class MfMCorruptor : public MMCorruptor {
-
- public:
-  MfMCorruptor();
-  virtual ~MfMCorruptor();
-  void initAtm();
-  inline Float& pwv() { return pwv_; };
-  
- private:   
-  Float pwv_;
-  atm::AtmProfile *itsatm;
-  atm::RefractiveIndexProfile *itsRIP;
-  atm::SkyStatus *itsSkyStatus;
-  atm::SpectralGrid *itsSpecGrid;
-};
+//class MMCorruptor : public CalCorruptor {
+//
+// public:
+//  MMCorruptor();
+//  virtual ~MMCorruptor();
+//  //Float &amp() {return amplitude_; };
+//  virtual void initialize() {
+//    throw(AipsError("MMCorruptor initialize error - you should not be here!"));
+//  }
+//  void initialize(const Float amp, const Record& simpar) {
+//    amp_=amp;
+//    simpar_=simpar;
+//  };
+//  Array<Complex> gain();
+//  inline String& mode() {return mode_; };
+//  inline Record& simpar() {return simpar_;}
+//  
+// protected:
+//  Record simpar_;
+//  
+// private:
+//  //Float amplitude_;
+//  String mode_;
+//  
+//};
+//
+//
+//
+//
+//class MfMCorruptor : public MMCorruptor {
+//
+// public:
+//  MfMCorruptor();
+//  virtual ~MfMCorruptor();
+//  void initAtm();
+//  inline Float& pwv() { return pwv_; };
+//  
+// private:   
+//  Float pwv_;
+//  atm::AtmProfile *itsatm;
+//  atm::RefractiveIndexProfile *itsRIP;
+//  atm::SkyStatus *itsSkyStatus;
+//  atm::SpectralGrid *itsSpecGrid;
+//};
 
 
 
@@ -237,7 +251,6 @@ class TJonesCorruptor : public CalCorruptor {
    Float& pwv(const Int i); 
    Vector<Float>* pwv();
    void initAtm();
-   inline String& mode() { return mode_; };
    inline Float& mean_pwv() { return mean_pwv_; };
    inline Matrix<Float>& screen() { return *screen_p; };
    inline Float screen(const Int i, const Int j) { 
@@ -258,7 +271,6 @@ class TJonesCorruptor : public CalCorruptor {
 
  private:   
    Float mean_pwv_,windspeed_,pixsize_;
-   String mode_; // general parameter for different kinds of corruptions
    Matrix<Float>* screen_p; 
 
    atm::AtmProfile *itsatm;
@@ -306,18 +318,18 @@ class fBM {
 
 
 
-/// intended successor to TjonesCorruptor
+/// intended successor to TCorruptor, TfCorruptor, MMcorruptor, MfMcorruptor
 
 class AtmosCorruptor : public CalCorruptor {
 
  public:
+   AtmosCorruptor();
    AtmosCorruptor(const Int nSim);
    virtual ~AtmosCorruptor();
 
    Float& pwv(const Int i); 
    Vector<Float>* pwv();
    void initAtm();
-   inline String& mode() { return mode_; };
    inline Float& mean_pwv() { return mean_pwv_; };
    // pwv screen e.g. for a T
    inline Matrix<Float>& screen() { return *screen_p; };
@@ -325,6 +337,8 @@ class AtmosCorruptor : public CalCorruptor {
      // RI_TODO out of bounds check or is that done by Vector?
      return screen_p->operator()(i,j); };
    virtual void initialize();
+  // use ATM but no time dependence - e.g. for B[Tsys]
+   void initialize(const Record& simpar, Bool freqdep);
    void initialize(const Int Seed, const Float Beta, const Float scale);
    void initialize(const Int Seed, const Float Beta, const Float scale,
 		   const ROMSAntennaColumns& antcols);
@@ -335,12 +349,12 @@ class AtmosCorruptor : public CalCorruptor {
    inline Vector<Float>& anty() { return anty_; };
    inline Float& windspeed() { return windspeed_; };
    inline Float& pixsize() { return pixsize_; };
+   Float opac(const Int ichan);
 
  protected:
 
  private:   
    Float mean_pwv_,windspeed_,pixsize_;
-   String mode_; // general parameter for different kinds of corruptions
    Matrix<Float>* screen_p; 
 
    atm::AtmProfile *itsatm;
