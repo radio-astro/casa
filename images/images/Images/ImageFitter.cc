@@ -59,7 +59,7 @@
 namespace casa {
 
     ImageFitter::ImageFitter(
-        const String& imagename, const String& box, const String& region,
+        const String& imagename, const String& region, const String& box,
         const uInt chanInp, const String& stokes,
         const String& maskInp, const Vector<Float>& includepix,
         const Vector<Float>& excludepix, const String& residualInp,
@@ -72,9 +72,24 @@ namespace casa {
 		includePixelRange(includepix), excludePixelRange(excludepix),
 		estimates(), fixed(0), logfileAppend(append), peakIntensities(),
 		pixelPositions() {
-        itsLog = new LogIO();
-        *itsLog << LogOrigin("ImageFitter", "constructor");
-        _construct(imagename, box, region, estimatesFilename);
+        _construct(imagename, box, region, 0, estimatesFilename);
+    }
+
+    ImageFitter::ImageFitter(
+        const String& imagename, const Record* regionPtr, const String& box,
+        const uInt chanInp, const String& stokes,
+        const String& maskInp, const Vector<Float>& includepix,
+        const Vector<Float>& excludepix, const String& residualInp,
+        const String& modelInp, const String& estimatesFilename,
+        const String& logfile, const Bool& append,
+        const String& newEstimatesInp
+    ) : chan(chanInp), stokesString(stokes), mask(maskInp),
+		residual(residualInp),model(modelInp), logfileName(logfile),
+		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
+		includePixelRange(includepix), excludePixelRange(excludepix),
+		estimates(), fixed(0), logfileAppend(append), peakIntensities(),
+		pixelPositions() {
+        _construct(imagename, box, "", regionPtr, estimatesFilename);
     }
 
     ImageFitter::~ImageFitter() {
@@ -99,9 +114,8 @@ namespace casa {
         String errmsg;
         Record estimatesRecord;
         estimates.toRecord(errmsg, estimatesRecord);
-        Record rec = Record(imRegion.toRecord(""));
         results = myImage.fitsky(
-            residPixels, residMask, converged, rec,
+            residPixels, residMask, converged, regionRecord,
             chan, stokesString, mask, models,
             estimatesRecord, fixed, includePixelRange,
             excludePixelRange, fit, deconvolve, list,
@@ -126,9 +140,11 @@ namespace casa {
     }
 
     void ImageFitter::_construct(
-        const String& imagename, const String& box, const String& region,
-        const String& estimatesFilename
+        const String& imagename, const String& box, const String& regionName,
+        const Record* regionPtr, const String& estimatesFilename
     ) {
+        itsLog = new LogIO();
+        *itsLog << LogOrigin("ImageFitter", "_construct");
         if (imagename.empty()) {
             *itsLog << "imagename cannot be blank" << LogIO::EXCEPTION;
         }
@@ -141,7 +157,7 @@ namespace casa {
         if (image == 0) {
             throw(AipsError("Unable to open image " + imagename));
         }
-        _doRegion(box, region);
+        _doRegion(box, regionName, regionPtr);
         _checkImageParameterValidity();
         if(estimatesFilename.empty()) {
         	*itsLog << LogIO::NORMAL << "No estimates file specified, so will attempt to find and fit one gaussian."
@@ -171,10 +187,12 @@ namespace casa {
         }
     } 
 
-    void ImageFitter::_doRegion(const String& box, const String& region) {
-        if (box == "") {
+    void ImageFitter::_doRegion(const String& box, const String& region, const Record* regionPtr) {
+    	// note that only one of region and regionPtr should ever be provided
+    	ImageRegion imRegion;
+        if (box.empty()) {
             // box not specified, check for saved region
-            if (region == "") {
+            if (region.empty() && regionPtr == 0) {
                 // neither region nor box specified, use entire 2-D plane
                 IPosition imShape = image->shape();
                 Vector<Int> dirNums = ImageMetaData(*image).directionAxesNumbers();
@@ -184,9 +202,16 @@ namespace casa {
                     << dirShape[1] << "  will be used" << LogIO::POST;
                 ostringstream boxStream;
                 boxStream << "0, 0, " << dirShape[0] << ", " << dirShape[1];
-                _processBox(String(boxStream));
+                imRegion = _processBox(String(boxStream));
+            }
+            else if (regionPtr != 0) {
+            	// region record pointer provided
+            	regionRecord = *regionPtr;
+            	regionString = "used provided region record";
+            	return;
             }
             else {
+            	// region name provided
             	Regex otherImage("(.*)+:(.*)+");
             	if (region.matches(otherImage)) {
             		String res[2];
@@ -209,27 +234,25 @@ namespace casa {
                 *itsLog << "both box and region specified, box will be used" << LogIO::WARN;
             }
             // we have been given a box by the user and it is specified correctly
-            _processBox(box);
+            imRegion = _processBox(box);
             regionString = "Used box " + box;
         }
+        regionRecord = Record(imRegion.toRecord(""));
     } 
 
-    void ImageFitter::_processBox(const String& box) {
+    ImageRegion ImageFitter::_processBox(const String& box) {
         Vector<String> boxParts = stringToVector(box);
         AlwaysAssert(boxParts.size() % 4 == 0, AipsError);
         RegionManager rm;
+        ImageRegion imRegion;
         for(uInt i=0; i<boxParts.size()/4; i++) {
         	uInt index = 4*i;
         	ImageRegion boxRegion = _boxRegion(
         		boxParts[index], boxParts[index+1], boxParts[index+2], boxParts[index+3]
         	);
-        	if (i == 0) {
-        		imRegion = boxRegion;
-        	}
-        	else {
-        		imRegion = *rm.doUnion(imRegion, boxRegion);
-        	}
+        	imRegion = (i == 0) ? boxRegion : imRegion = *rm.doUnion(imRegion, boxRegion);
         }
+        return imRegion;
     }
 
     ImageRegion ImageFitter::_boxRegion(String blc1, String blc2, String trc1, String trc2) {

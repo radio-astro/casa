@@ -32,6 +32,9 @@
 #include <measures/Measures/MDirection.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <images/Images/ImageAnalysis.h>
+#include <images/Images/FITSImage.h>
+#include <images/Images/ImageMetaData.h>
+#include <images/Regions/WCBox.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/OS/Directory.h>
 #include <casa/namespace.h>
@@ -85,7 +88,7 @@ int main() {
             writeTestString(
                 "test fitter using all available image pixels with model with no noise"
             );
-            ImageFitter fitter = ImageFitter("gaussian_model.fits");
+            ImageFitter fitter = ImageFitter("gaussian_model.fits", "", "");
             ComponentList compList = fitter.fit();
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
@@ -113,7 +116,7 @@ int main() {
             writeTestString(
                 "test fitter using all available image pixels with model with noise added"
             );
-            ImageFitter fitter = ImageFitter(noisyImage);
+            ImageFitter fitter = ImageFitter(noisyImage, 0, "");
             ComponentList compList = fitter.fit();
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
@@ -140,7 +143,7 @@ int main() {
             writeTestString(
                 "test fitter using a box region with model with noise added"
             );
-            ImageFitter fitter = ImageFitter(noisyImage, "130,89,170,129");
+            ImageFitter fitter(noisyImage, 0, "130,89,170,129");
             ComponentList compList = fitter.fit();
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
@@ -162,6 +165,53 @@ int main() {
 
             Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
             AlwaysAssert(near(positionAngle, 119.806997, 1e-7), AipsError);
+        }
+        {
+        	writeTestString(
+        			"test fitter using a region record with model with noise added"
+        	);
+        	FITSImage noisy(noisyImage);
+        	IPosition imShape = noisy.shape();
+        	Vector<Double> blc(imShape.nelements());
+        	Vector<Double> trc(imShape.nelements());
+
+        	for (uInt i=0; i<imShape.nelements(); i++) {
+        		blc[i] = 0;
+        		trc[i] = imShape[i] - 1;
+        	}
+
+        	Vector<Int> dirNums = ImageMetaData(noisy).directionAxesNumbers();
+        	blc[dirNums[0]] = 130;
+        	blc[dirNums[1]] = 89;
+        	trc[dirNums[0]] = 170;
+        	trc[dirNums[1]] = 129;
+
+        	LCBox lcBox(blc, trc, imShape);
+        	WCBox wcBox(lcBox, noisy.coordinates());
+        	ImageRegion rg(wcBox);
+        	Record regionRecord(rg.toRecord(""));
+        	ImageFitter fitter(noisyImage, &regionRecord);
+        	ComponentList compList = fitter.fit();
+        	Vector<Quantity> flux;
+        	compList.getFlux(flux,0);
+        	// I stokes flux test
+        	AlwaysAssert(near(flux(0).getValue(), 60323.3212, 1e-5), AipsError);
+        	// Q stokes flux test
+        	AlwaysAssert(flux(1).getValue() == 0, AipsError);
+        	MDirection direction = compList.getRefDirection(0);
+        	AlwaysAssert(near(direction.getValue().getLong("rad").getValue(), 0.000213372, 1e-5), AipsError);
+        	AlwaysAssert(near(direction.getValue().getLat("rad").getValue(), 1.93593e-05, 1e-5), AipsError);
+
+        	Vector<Double> parameters = compList.getShape(0)->parameters();
+
+        	Double majorAxis = arcsecsPerRadian*parameters(0);
+        	AlwaysAssert(near(majorAxis, 23.545291, 1e-7), AipsError);
+
+        	Double minorAxis = arcsecsPerRadian*parameters(1);
+        	AlwaysAssert(near(minorAxis, 18.866377, 1e-7), AipsError);
+
+        	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
+        	AlwaysAssert(near(positionAngle, 119.806997, 1e-7), AipsError);
         }
         {
             // test fitter using an includepix (i=0) and excludepix (i=1) range with model with noise
@@ -228,7 +278,7 @@ int main() {
             String residDiff = dirName + "/residualImage.diff";
             String modelDiff = dirName + "/modelImage.diff";
             ImageFitter fitter(
-            	noisyImage, "100,100,200,200", "", 0, "I", "",
+            	noisyImage, "", "100,100,200,200", 0, "I", "",
             	Vector<Float>(0), Vector<Float>(0), residImage,
             	modelImage
             );
@@ -248,7 +298,7 @@ int main() {
         String convolvedModel = "gaussian_convolved.fits";
         {
         	writeTestString("test fitting model gaussian that has been convolved with a beam");
-        	ImageFitter fitter(convolvedModel);
+        	ImageFitter fitter(convolvedModel, "", "");
         	ComponentList compList = fitter.fit();
             Vector<Quantity> flux;
 
@@ -357,9 +407,6 @@ int main() {
              	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
              	AlwaysAssert(near(positionAngle, expectedPositionAngle[i], 1e-7), AipsError);
             }
-
-
-
          }
         cout << "ok" << endl;
     }
