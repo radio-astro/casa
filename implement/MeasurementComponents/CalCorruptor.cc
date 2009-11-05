@@ -550,20 +550,69 @@ void AtmosCorruptor::initAtm() {
 
 
 
-void AtmosCorruptor::initialize(const Record& simpar, Bool freqdep) {
-  // use ATM but no time dependence - e.g. for B[Tsys]
+void AtmosCorruptor::initialize(const Record& simpar) {
   simpar_=simpar;
-  if (freqdep) initAtm();
-  mode()="constant";
 
-  initialized()=True;
-  if (prtlev()>2) cout << "AtmosCorruptor::init [const]" << endl;
+  // start with amp defined as something
+  amp()=1.0;
+  if (simpar.isDefined("amplitude")) amp()=simpar.asFloat("amplitude");
+  
+  // simple means just multiply by amp()
+  mode()="simple"; 
+  if (simpar.isDefined("mode")) mode()=simpar.asString("mode");  
 
+  if (mode()=="simple") {
+    freqDep()=False; 
+    if (prtlev()>2) cout << "AtmosCorruptor::init [simple scale by " << amp() << "]" << endl;
+
+  } else {
+
+    // use ATM but no time dependence - e.g. for B[Tsys]
+    if (freqDep()) initAtm();
+    
+    // RI TODO AtmCorr::initialize catch other modes?  
+    // if (mode()=="tsys") {
+
+    // go with ATM straight up:
+    tauscale() = 1.0;
+    // user can override the ATM tau0 thusly - if its freqdep it'll be interpreted in the center of the band
+    if (simpar.isDefined("tau0")) {
+      Float tau0_atm(1.0);
+      // find tau in center of band for current ATM parameters
+      if (freqDep()) tau0_atm=opac(nChan()/2);
+      tauscale()=simpar.asFloat("tau0")/tau0_atm;
+    }
+    
+    // modified from mm::simPar:  
+    // Tsys = Tsys0 + Tsys1*exp(+tau)
+    tsys0() = simpar.asFloat("tcmb") - simpar.asFloat("spillefficiency")*simpar.asFloat("tatmos");
+    tsys1() = simpar.asFloat("spillefficiency")*simpar.asFloat("tatmos") + 
+      (1-simpar.asFloat("spillefficiency"))*simpar.asFloat("tground") +
+      simpar.asFloat("trx");
+    
+    // conversion to Jy, when divided by D1D2
+    amp() = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 / 		
+      ( simpar.asFloat("antefficiency") * 
+	simpar.asFloat("correfficiency") * C::pi );
+
+    if (prtlev()>2) cout << "AtmosCorruptor::init [tsys scale, freqDep=" << freqDep() << "]" << endl;
+  }
+  initialized()=True;    
 }
 
 
 
-  
+// opacity - for screens, we'll need other versions of this like the different cphase calls
+// that multiply wetopacity by the fluctuation in pwv
+Float AtmosCorruptor::opac(const Int ichan) {
+  Float opac = itsRIP->getDryOpacity(currSpw(),ichan).get() + 
+    itsRIP->getWetOpacity(currSpw(),ichan).get()  ;
+  return opac;
+}
+
+
+
+
 
 
 void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float scale) {
@@ -708,15 +757,6 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
 
 }
 
-
-
-// opacity - for screens, we'll need other versions of this like the different cphase calls
-// that multiply wetopacity by the fluctuation in pwv
-Float AtmosCorruptor::opac(const Int ichan) {
-  Float opac = itsRIP->getDryOpacity(currSpw(),ichan).get() + 
-    itsRIP->getWetOpacity(currSpw(),ichan).get()  ;
-  return opac;
-}
 
 
 Complex AtmosCorruptor::cphase(const Int ix, const Int iy, const Int ichan) {

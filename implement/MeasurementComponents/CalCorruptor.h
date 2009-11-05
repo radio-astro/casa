@@ -37,27 +37,27 @@
 using namespace std;
 
 #ifndef CASA_STANDALONE
-#include <ATMRefractiveIndexProfile.h>
-#include <ATMPercent.h>
-#include <ATMPressure.h>
-#include <ATMNumberDensity.h>
-#include <ATMMassDensity.h>
-#include <ATMTemperature.h>
-#include <ATMLength.h>
-#include <ATMInverseLength.h>
-#include <ATMOpacity.h>
-#include <ATMHumidity.h>
-#include <ATMFrequency.h>
-#include <ATMWaterVaporRadiometer.h>
-#include <ATMWVRMeasurement.h>
-#include <ATMAtmosphereType.h>
-#include <ATMType.h>
-#include <ATMProfile.h>
-#include <ATMSpectralGrid.h>
-#include <ATMRefractiveIndex.h>
-#include <ATMSkyStatus.h>
-#include <ATMTypeName.h>
-#include <ATMAngle.h>
+#include <ATM/ATMRefractiveIndexProfile.h>
+#include <ATM/ATMPercent.h>
+#include <ATM/ATMPressure.h>
+#include <ATM/ATMNumberDensity.h>
+#include <ATM/ATMMassDensity.h>
+#include <ATM/ATMTemperature.h>
+#include <ATM/ATMLength.h>
+#include <ATM/ATMInverseLength.h>
+#include <ATM/ATMOpacity.h>
+#include <ATM/ATMHumidity.h>
+#include <ATM/ATMFrequency.h>
+#include <ATM/ATMWaterVaporRadiometer.h>
+#include <ATM/ATMWVRMeasurement.h>
+#include <ATM/ATMAtmosphereType.h>
+#include <ATM/ATMType.h>
+#include <ATM/ATMProfile.h>
+#include <ATM/ATMSpectralGrid.h>
+#include <ATM/ATMRefractiveIndex.h>
+#include <ATM/ATMSkyStatus.h>
+#include <ATM/ATMTypeName.h>
+#include <ATM/ATMAngle.h>
 #else
 //#ATM Not available; mimic the classes and functions used
 namespace atm{
@@ -338,7 +338,7 @@ class AtmosCorruptor : public CalCorruptor {
      return screen_p->operator()(i,j); };
    virtual void initialize();
   // use ATM but no time dependence - e.g. for B[Tsys]
-   void initialize(const Record& simpar, Bool freqdep);
+   void initialize(const Record& simpar);
    void initialize(const Int Seed, const Float Beta, const Float scale);
    void initialize(const Int Seed, const Float Beta, const Float scale,
 		   const ROMSAntennaColumns& antcols);
@@ -350,12 +350,17 @@ class AtmosCorruptor : public CalCorruptor {
    inline Float& windspeed() { return windspeed_; };
    inline Float& pixsize() { return pixsize_; };
    Float opac(const Int ichan);
+   inline Float& tsys0() { return tsys0_; };  // const in T_A* scale
+   inline Float& tsys1() { return tsys1_; };  // scale with exp(+tau)
+   inline Bool& freqDep() { return freqdep_; };
+   inline Float& tauscale() { return tauscale_; };
 
  protected:
 
  private:   
-   Float mean_pwv_,windspeed_,pixsize_;
+   Float mean_pwv_,windspeed_,pixsize_,tsys0_,tsys1_,tauscale_;
    Matrix<Float>* screen_p; 
+   Bool freqdep_;
 
    atm::AtmProfile *itsatm;
    atm::RefractiveIndexProfile *itsRIP;

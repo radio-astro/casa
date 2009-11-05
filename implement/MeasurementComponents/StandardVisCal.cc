@@ -2287,41 +2287,48 @@ void MMueller::keep(const Int& slot) {
 
 Int MMueller::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes)
 {
-  prtlev()=4; // debug
-
+  // prtlev()=4; // debug
   if (prtlev()>2) cout << "   MM::setupSim()" << endl;
-
-  // This method only called in simulate context!
   AlwaysAssert((isSimulated()),AipsError);
 
   Int nSim = sizeUpSim(vs,nChunkPerSol,solTimes);
-
   if (prtlev()>3) cout << " sized for Sim." << endl;
-
-
-  Float Amp(1.0);
-  if (simpar.isDefined("amplitude")) {
-    Amp=simpar.asFloat("amplitude");
-  }
-
 
   atmcorruptor_p = new AtmosCorruptor();
   corruptor_p = atmcorruptor_p;
-
   if (prtlev()>3) cout << " AtmosCorruptor created." << endl;
 
-  String Mode("simple"); // simple means just multiply by amp()
-  if (simpar.isDefined("mode")) {
-    Mode=simpar.asString("mode");
+  atmcorruptor_p->freqDep()=freqDepPar();
+
+  // RI TODO mm:setupSim move spw info to generic setupSim?
+  VisIter& vi(vs.iter());
+  const ROMSSpWindowColumns& spwcols = vi.msColumns().spectralWindow();
+
+  if (prtlev()>3) cout << " SpwCols accessed:" << endl;
+  if (prtlev()>3) cout << "   nSpw()= " << nSpw() << endl;
+  if (prtlev()>3) cout << "   spwcols.nrow()= " << nSpw() << endl;
+
+  AlwaysAssert(nSpw()==spwcols.nrow(),AipsError);
+
+  // things will break if spw mapping, ie not in same order as in vs
+  corruptor_p->nSpw()=nSpw();
+  corruptor_p->nAnt()=nAnt();
+  corruptor_p->currAnt()=0;
+  corruptor_p->currSpw()=0;
+  corruptor_p->fRefFreq().resize(nSpw());
+  corruptor_p->fnChan().resize(nSpw());
+  corruptor_p->fWidth().resize(nSpw());
+
+  for (Int irow=0;irow<nSpw();++irow) { 
+    corruptor_p->fRefFreq()[irow]=spwcols.refFrequency()(irow);
+    corruptor_p->fnChan()[irow]=spwcols.numChan()(irow);
+    corruptor_p->fWidth()[irow]=spwcols.totalBandwidth()(irow); 
+    // totalBandwidthQuant ?  in other places its assumed to be in Hz
   }
-  atmcorruptor_p->mode()=Mode;
-  if (Mode=="simple") {
-    // generic init
-    corruptor_p->initialize(Amp,simpar);
-  } else {
-    // RI TODO check for mode = constant or Tsky ... and use freqdep
-    atmcorruptor_p->initialize(simpar,freqDepPar());
-  }
+  // see MSsummary.cc for more info/examples
+
+
+  atmcorruptor_p->initialize(simpar);
   
   return nSim;
 }
@@ -2355,34 +2362,37 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
     
     starttime=vi.time(timevec)[0];
 
-    Complex factor(1.0);	
-    Float tau0(0.),airmass1(1.0),airmass2(1.0),A(1.0),tsys0(0.),tsys1(0.),
-      tsys(0.),tau(0.);
-    Bool dotsys(False);
+    Complex factor(1.0);
+    Float tau0(0.),airmass1(1.0),airmass2(1.0),A(1.0),tsys(0.),tau(0.),factor0(1.0);
+    // Bool dotsys(False);
     // 1e-4 converts the Diam from cm to m
-    Float factor0(1.0);
+    // Float tsys0(0.),tsys1(0.),
 
-    if (atmcorruptor_p->mode() == "tsys") {
-      tsys0 = atmcorruptor_p->simpar().asFloat("trx") + 
-	atmcorruptor_p->simpar().asFloat("spillefficiency")*atmcorruptor_p->simpar().asFloat("tatmos");
-      tsys1 = (1.-atmcorruptor_p->simpar().asFloat("spillefficiency"))*atmcorruptor_p->simpar().asFloat("tground") + 
-	atmcorruptor_p->simpar().asFloat("tcmb");
-      dotsys=True;
-      factor0 = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 / 		
-	( atmcorruptor_p->simpar().asFloat("antefficiency") * 
-	  atmcorruptor_p->simpar().asFloat("correfficiency") * C::pi );      
-    } 
+//    if (atmcorruptor_p->mode() == "tsys") {
+//      tsys0 = atmcorruptor_p->simpar().asFloat("trx") + 
+//	atmcorruptor_p->simpar().asFloat("spillefficiency")*atmcorruptor_p->simpar().asFloat("tatmos");
+//      tsys1 = (1.-atmcorruptor_p->simpar().asFloat("spillefficiency"))*atmcorruptor_p->simpar().asFloat("tground") + 
+//	atmcorruptor_p->simpar().asFloat("tcmb");
+//      dotsys=True;
+//      factor0 = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 / 		
+//	( atmcorruptor_p->simpar().asFloat("antefficiency") * 
+//	  atmcorruptor_p->simpar().asFloat("correfficiency") * C::pi );      
+//    } 
     
-    // live dangerously: assume all vis have the same tint
-    Double tint = vi.msColumns().exposure()(0);  
-    Int iSpW = vi.spectralWindow();
-    Float deltaNu = 
-      vi.msColumns().spectralWindow().totalBandwidth()(iSpW) / 
-      Float(vi.msColumns().spectralWindow().numChan()(iSpW));	    
-    factor0 = factor0 / sqrt( deltaNu * tint ) ;  
+    factor0 = atmcorruptor_p->amp();
+    
+    if (atmcorruptor_p->mode() == "tsys") {
+      // live dangerously: assume all vis have the same tint
+      Double tint = vi.msColumns().exposure()(0);  
+      Int iSpW = vi.spectralWindow();
+      Float deltaNu = 
+	vi.msColumns().spectralWindow().totalBandwidth()(iSpW) / 
+	Float(vi.msColumns().spectralWindow().numChan()(iSpW));	    
+      factor0 /= sqrt( deltaNu * tint ) ;  
+    }
     Float el1(1.5708);    
     Float el2(1.5708);
-
+      
     for (Int ichunk=0;ichunk<nChunks;++ichunk) {
       Int spw(vi.spectralWindow());	
       corruptor_p->currSpw()=spw;
@@ -2405,9 +2415,9 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 	    // don't need loop to find the corruptor time slot here,
 	    // since just drawing from random distribution.
 	    
-	    if (dotsys) {
-	      tau0=0.;
-	      if (atmcorruptor_p->simpar().isDefined("tau0")) tau0=atmcorruptor_p->simpar().asFloat("tau0");
+	    factor=factor0;
+
+	    if (atmcorruptor_p->mode() == "tsys") {
 	      
 	      el1 = antazel(a1(irow)).getAngle("rad").getValue()(1);
 	      el2 = antazel(a2(irow)).getAngle("rad").getValue()(1);
@@ -2427,18 +2437,17 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 		// -> get correlated fluctuations in noise and phase
 		throw(AipsError("MfM w/ATM not yet implemented!!"));
 		// tau = something from ATM 
-	      }	else {
-		tau=tau0;
-	      }
+	      }	
 
-	      A=sqrt(exp(-tau * airmass1)) * sqrt(exp(-tau * airmass2));
-	      
-	      // this is tsys at telescope 
-	      // (use TOpac later in Simulator to get it above atm)
-	      tsys = tsys0*(1.-A) + tsys1*A;
+	      // user could be overriding the tau scale, but keep the
+	      // ATM freq dependence
+	      tau *= atmcorruptor_p->tauscale();
+
+	      A = exp(-tau *0.5*(airmass1+airmass2));	      
+	      // this is tsys above atmosphere
+	      tsys = atmcorruptor_p->tsys0() + A*atmcorruptor_p->tsys1();
 	      	      
-	      factor  = factor0 * tsys / 
-		antDiams(a1(irow)) / antDiams(a2(irow));
+	      factor *= tsys / antDiams(a1(irow)) / antDiams(a2(irow));
 	    }
 	    
 	    // corr,chan,bln = xyz
