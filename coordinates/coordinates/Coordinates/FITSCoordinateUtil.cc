@@ -82,7 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Int tabCoord = -1;
 	while ((tabCoord = cSys.findCoordinate(Coordinate::TABULAR, tabCoord)) > 0) {
 	    if (cSys.tabularCoordinate(tabCoord).pixelValues().nelements() > 0) {
-		os << LogIO::WARN <<
+		os << LogIO::NORMAL <<
 		    "Note: Your coordinate system has one or more TABULAR axes.\n"
 		    "The lookup table will be lost in the conversion to FITS, and\n"
 		    "will be replaced by averaged (i.e. linearized) axes." <<
@@ -292,7 +292,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		if (theLatAxisNum == -1){
 		    header.define("pv2_", pvi_ma);
-		    os << LogIO::WARN << 
+		    os << LogIO::NORMAL << 
 			"There is no axis with type DEC or LAT. Cannot identify latitude axis for WCS."
 			" Will assume axis 2 as default." <<
 			LogIO::POST;
@@ -502,7 +502,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		strncpy(tmp,header[i].c_str(),hsize+1);
 		tmp[18]=tmp[17];tmp[17]=tmp[16];tmp[16]=tmp[15];tmp[15]=tmp[14];
 		all = all.append(tmp);
-		os << LogIO::WARN
+		os << LogIO::NORMAL
 		   << "Header\n"<< header[i] << "\nwas interpreted as\n" << tmp << LogIO::POST;
 	    } else if (hsize >= 19 &&	  // change GLON-FLT to GLON-CAR, etc.
 		       header[i][0]=='C' && header[i][1]=='T' && header[i][2]=='Y' &&
@@ -514,7 +514,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		strncpy(tmp,header[i].c_str(),hsize+1);
 		tmp[16]='C'; tmp[17]='A'; tmp[18]='R';
 		all = all.append(tmp);
-		os << LogIO::WARN
+		os << LogIO::NORMAL
 		   << "Header\n"<< header[i] << "\nwas interpreted as\n" << tmp << LogIO::POST;
 	    } else if (hsize >= 19 &&	  // change 'GLON    ' to 'GLON-CAR', etc.
 		       header[i][0]=='C' && header[i][1]=='T' && header[i][2]=='Y' &&
@@ -526,7 +526,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		strncpy(tmp,header[i].c_str(),hsize+1);
 		tmp[15]='-'; tmp[16]='C'; tmp[17]='A'; tmp[18]='R';
 		all = all.append(tmp);
-		os << LogIO::WARN
+		os << LogIO::NORMAL
 		   << "Header\n"<< header[i] << "\nwas interpreted as\n" << tmp << LogIO::POST;
 	    } else if (hsize >= 19 &&	  // change 'OBSFREQ' to 'RESTFRQ'
 		       header[i][0]=='O' && header[i][1]=='B' && header[i][2]=='S' &&
@@ -538,7 +538,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		tmp[0]='R'; tmp[1]='E'; tmp[2]='S'; tmp[3]='T';
 		tmp[4]='F'; tmp[5]='R'; tmp[6]='Q'; tmp[7]=' ';
 		all = all.append(tmp);
-		os << LogIO::WARN
+		os << LogIO::NORMAL
 		   << "Header\n"<< header[i] << "\nwas interpreted as\n" << tmp << LogIO::POST;
 	    } else if (hsize >= 24 &&       // ignore "-SIP"
 		       header[i][0]=='C' && header[i][1]=='T' && header[i][2]=='Y' &&
@@ -651,7 +651,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			os << LogIO::NORMAL << wcsNames(i) << " incurred the error " << wcsfix_errmsg[err] <<  LogIO::POST;
 			os << LogIO::NORMAL << "this probably isn't fatal so continuing" << LogIO::POST;
 		    } else {
-			os << LogIO::WARN << "The wcs function '"
+			os << LogIO::NORMAL << "The wcs function '"
 			   << wcsNames(i) << "' failed with error: "
 			   << wcsfix_errmsg[err] <<  LogIO::POST;
 //
@@ -1223,7 +1223,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     {
 	if (wcs.specsys[0]=='\0') {
-	    os << LogIO::WARN << "No frequency system is defined - TopoCentric assumed" << LogIO::POST;
+	    os << LogIO::NORMAL << "No frequency system is defined - TopoCentric assumed" << LogIO::POST;
 	    type = MFrequency::TOPO;
 	    return True;
 	}
@@ -1244,7 +1244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    return True;
 	} else if (specSys=="HELIOCEN") {
 	    type = MFrequency::BARY;
-	    os << LogIO::WARN << "The HELIOCENTRIC frequency system is deprecated in FITS - it is assumed BARYCENTIC was meant" << LogIO::POST;
+	    os << LogIO::NORMAL << "The HELIOCENTRIC frequency system is deprecated in FITS - it is assumed BARYCENTIC was meant" << LogIO::POST;
 	    return True;
 	} else if (specSys=="LSRK") {
 	    type = MFrequency::LSRK;
@@ -1311,7 +1311,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 	    if (stokes(k)==0) {
 		if (warnStokes) {
-		    os << LogIO::WARN 
+		    os << LogIO::NORMAL 
 		       << "Detected Stokes coordinate = 0; this is an unoffical" << endl;
 		    os << "Convention for an image containing a beam.  Putting Stokes=Undefined" << endl;
 		    os << "Better would be to write your FITS image with the correct Stokes" << LogIO::POST;
@@ -1400,7 +1400,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if (FITSDateUtil::fromFITS(time, timeSystem, dateObsStr, timeSysStr)) {
 		oi.setObsDate(MEpoch(time.get(), timeSystem));
 	    } else {
-		os << LogIO::WARN << "Failed to decode DATE-OBS & TIMESYS keywords - no date set" << LogIO::POST;
+		os << LogIO::NORMAL << "Failed to decode DATE-OBS & TIMESYS keywords - no date set" << LogIO::POST;
 	    }
 	}
 
@@ -1754,7 +1754,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Define sub record 
 
 		if (rec.isDefined(name)) {
-		    os << LogIO::WARN << "Duplicate card '" <<  name << "'in header - only first will be used" << LogIO::POST;
+		    os << LogIO::NORMAL << "Duplicate card '" <<  name << "'in header - only first will be used" << LogIO::POST;
 		} else {
 		    rec.defineRecord(name, subRec);
 		}
