@@ -8872,7 +8872,9 @@ Bool Imager::makePBImage(PBMath& pbMath, ImageInterface<Float>& pbImage){
   }
   LatticeExprNode elmax= max( pbImage );
   Float fmax = abs(elmax.getFloat());
-  if(fmax>0.0)
+  //If there are multiple overlap of beam such that the peak is larger than 1 then normalize
+  //otherwise leave as is
+  if(fmax>1.0)
     pbImage.copyData((LatticeExpr<Float>)(pbImage/fmax));
 
   Float cutoffval=minPB_p;
