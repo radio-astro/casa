@@ -184,64 +184,6 @@ class ANoiseCorruptor : public CalCorruptor {
 
 
 
-//class MMCorruptor : public CalCorruptor {
-//
-// public:
-//  MMCorruptor();
-//  virtual ~MMCorruptor();
-//  //Float &amp() {return amplitude_; };
-//  virtual void initialize() {
-//    throw(AipsError("MMCorruptor initialize error - you should not be here!"));
-//  }
-//  void initialize(const Float amp, const Record& simpar) {
-//    amp_=amp;
-//    simpar_=simpar;
-//  };
-//  Array<Complex> gain();
-//  inline String& mode() {return mode_; };
-//  inline Record& simpar() {return simpar_;}
-//  
-// protected:
-//  Record simpar_;
-//  
-// private:
-//  //Float amplitude_;
-//  String mode_;
-//  
-//};
-//
-//
-//
-//
-//class MfMCorruptor : public MMCorruptor {
-//
-// public:
-//  MfMCorruptor();
-//  virtual ~MfMCorruptor();
-//  void initAtm();
-//  inline Float& pwv() { return pwv_; };
-//  
-// private:   
-//  Float pwv_;
-//  atm::AtmProfile *itsatm;
-//  atm::RefractiveIndexProfile *itsRIP;
-//  atm::SkyStatus *itsSkyStatus;
-//  atm::SpectralGrid *itsSpecGrid;
-//};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class TJonesCorruptor : public CalCorruptor {
 
  public:

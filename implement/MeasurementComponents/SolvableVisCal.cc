@@ -1328,6 +1328,8 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
     cout << endl;
   }
 
+  // this sets the vi to send chunks by iterInterval (e.g. integration time)
+  // instead of default which would go until the scan changed
   vs.resetVisIter(columns,iterInterval);
   
   // Number of VisIter chunks per spw
@@ -1416,19 +1418,15 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
     cout << "nchunk = " << chunk << endl;
   }
 
-  // RI sol+1 somehow made all the antennas 0 except #1.
-  //Int nSol(sol+2);
   Int nSol(sol+1);
-//  if (nSol>2) {
-//    solTimes[nSol-1]=2*solTimes[nSol-2]-solTimes[nSol-3];
-//  } else {
-//    // sol=0 means only one solint, so no interp:
-//    solTimes[nSol-1]=solTimes[nSol-2];
-//  }
-//  nChunkPerSol[nSol-1]=0;
-  
+
   nChunkPerSol.resize(nSol,True);
   solTimes.resize(nSol,True);
+
+  if (prtlev()>3) {
+    cout << "    solTimes = " << solTimes-4.84694e+09 << endl;
+    cout << "nChunkPerSol = " << nChunkPerSol << " " << sum(nChunkPerSol) << endl;
+  }
   
   // Set Nominal per-spw channelization
   setSolveChannelization(vs);

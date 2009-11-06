@@ -342,7 +342,9 @@ Int TJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
   if (prtlev()>2) cout << " sized for Sim, " << nSim << " slots." << endl;
 
   // we can use the private access directly the corruptor
+  // RIATM 
   tcorruptor_p = new TJonesCorruptor(nSim);
+  //tcorruptor_p = new AtmosCorruptor(nSim);
   // but set the public one 
   corruptor_p = tcorruptor_p;
   if (prtlev()>4) cout << " TCorruptor created." << endl;
@@ -2427,10 +2429,7 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 	      nGood.xyPlane(ibln) = nGood.xyPlane(ibln) + Complex(1.);	    
 	      solveParOK().xyPlane(ibln) = True;
 	    }
-	    } else {
-	       
-	    // RI TODO MM::simPar verify col not row in flags(irow)
-
+	    } else {	       
 	    // don't need loop to find the corruptor time slot here,
 	    // since just drawing from random distribution.
 	    

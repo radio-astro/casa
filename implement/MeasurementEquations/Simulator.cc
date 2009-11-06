@@ -998,10 +998,27 @@ Bool Simulator::setnoise2(const String& mode,
     simparDesc.addField ("tground"	  ,TpFloat);
     simparDesc.addField ("tcmb"           ,TpFloat);
 
-    String caltbl(caltable);
-    if (String(caltbl).matches (Regex(Regex::fromPattern("cal$")))) {      
-      caltbl.resize(caltable.length()-3);
-    }
+    String caltbl=caltable;
+    caltbl.trim();
+    string::size_type strlen;
+    strlen=caltbl.length();
+    if (strlen>3) 
+      if (caltbl.substr(strlen-3,3)=="cal") {
+	//    if (String(caltbl).matches (Regex(Regex::fromPattern("cal$")))) {
+	caltbl.resize(strlen-3);
+	strlen-=3;
+      }
+    if (strlen>1)
+      if (caltbl.substr(strlen-1,1)==".") {
+	caltbl.resize(strlen-1);
+	strlen-=1;
+      }
+    if (strlen>1)
+      if (caltbl.substr(strlen-1,1)=="_") {
+	caltbl.resize(strlen-1);
+	strlen-=1;
+      }
+
     
     Record simpar(simparDesc);
     simpar.define ("type", "A Noise");
@@ -1458,7 +1475,7 @@ SolvableVisCal *Simulator::create_corrupt(const Record& simpar)
     svc = createSolvableVisCal(upType,*vs_p);
 
     // debugging info
-    svc->setPrtlev(3);
+    svc->setPrtlev(2);
 
     // Generic VisCal setSimulate will throw an exception -- 
     //   each VC needs to have its own.
@@ -1572,7 +1589,17 @@ Bool Simulator::calc_corrupt(SolvableVisCal *svc, const Record& simpar)
     columns[2]=MS::FIELD_ID;
     columns[3]=MS::DATA_DESC_ID;
     columns[4]=MS::TIME;
-    vs_p->resetVisIter(columns,0.0);
+
+    // drop chunking time interval down to the simulation interval, else will 
+    // chunk by entuire scans.
+    Double iterInterval(max(svc->interval(),DBL_MIN));
+    if (svc->interval() < 0.0) {   // means no interval (infinite solint)
+      iterInterval=0.0;
+      svc->interval()=DBL_MAX;   //RI TODO Sim::calc sets svc:interval ->max interval
+    }
+    vs_p->resetVisIter(columns,iterInterval);
+  
+
     VisIter& vi(vs_p->iter());
     //    VisBuffer vb(vi);
     
@@ -1587,8 +1614,8 @@ Bool Simulator::calc_corrupt(SolvableVisCal *svc, const Record& simpar)
     Double t0(0.);
 
     // debug:
-    cout << "nChunkPerSim = ";
-    cout << 0 << " | " << nChunkPerSim[0] << " ; " << nSim-1 << " | " << nChunkPerSim[nSim-1] << endl;
+    //    cout << "nChunkPerSim = ";
+    //    cout << 0 << " | " << nChunkPerSim[0] << " ; " << nSim-1 << " | " << nChunkPerSim[nSim-1] << endl;
 
     for (Int isim=0;isim<nSim && vi.moreChunks();++isim) {      
       Int thisSpw=svc->spwMap()(vi.spectralWindow());
