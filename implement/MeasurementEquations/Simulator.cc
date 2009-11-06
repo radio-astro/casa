@@ -1046,6 +1046,11 @@ Bool Simulator::setnoise2(const String& mode,
 
 
       // simpar.define ("amplitude", tsys );
+      // RI TODO setnoise2: create an Mf or M depending on user prefs
+
+      // tau from ATM with user unput pwv or user can input a freq-indep tau
+      // need mode="calculate-atm" and calculate-tau ?
+
       simpar.define ("type", "M");
       simpar.define ("caltable", caltbl+".M.cal");
       simpar.define ("mode", "tsys");  
@@ -1058,12 +1063,6 @@ Bool Simulator::setnoise2(const String& mode,
       
       // calculate the M 
       calc_corrupt(svc,simpar);
-
-      // RI TODO Sim::setnoise2: change M,Topac to use an anoisecorruptor?
-      // tau from ATM with user unput pwv or user can input a freq-indep tau
-      // need mode="calculate-atm" and calculate-tau ?
-
-      // RI TODO Sim::setnoise2 create a Topac based in tau, or need a TOpacf that knows to use ATM and pwv
      
     } 
 
@@ -1619,6 +1618,8 @@ Bool Simulator::calc_corrupt(SolvableVisCal *svc, const Record& simpar)
 //      svc->inflate(Vector<Int>(1,((const SolvableVisCal*)svc)->nChanPar()),
 //		   Vector<Int>(1,0), 
 //		   Vector<Int>(1,slotidx(thisSpw)));
+//
+// George claims that if freqDepPar is set the channel sizing is automagic.
       
 	if (!svc->simPar(vi,nChunkPerSim[isim])) 
 	  throw(AipsError("Error calculating simulated VC")); 
@@ -1848,6 +1849,12 @@ Bool Simulator::corrupt() {
 	    // Deposit corrupted visibilities into DATA
 	    // vi.setVis(vb.modelVisCube(), VisibilityIterator::Observed);
 	    vi.setVis(vb.visCube(), VisibilityIterator::Observed);
+	    // for now, Also deposit in corrected 
+	    // (until newmmssimulator doesn't make corrected anymore)
+	    // actually we should have this check if corrected is there, 
+	    // and if it is for some reason, copy data into it.
+	    // RI TODO Sim::corrupt check for existence of Corrected
+	    vi.setVis(vb.visCube(), VisibilityIterator::Corrected);
 
 	    // RI TODO is this 100% right?
 	    vi.setWeightMat(vb.weightMat());

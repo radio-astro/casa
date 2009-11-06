@@ -485,8 +485,11 @@ Bool TJones::simPar(VisIter& vi, const Int nChunks){
     
 	for (Int irow=0;irow<vi.nRow();++irow) {
 
-          if ( a1(irow)!=a2(irow) &&
-               nfalse(flags.column(irow))> 0 ) {
+	  if (nfalse(flags.column(irow))> 0 ) {
+	    if ( a1(irow)==a2(irow) ) {
+	      // autocorrels should get 1. for multiplicative VC
+	      solveCPar()(0,focusChan(),a1(irow))=1.0;
+	    } else {
 
             if (corruptor_p->curr_time()!=timevec[irow]) {
               corruptor_p->curr_time()=timevec[irow];
@@ -538,6 +541,7 @@ Bool TJones::simPar(VisIter& vi, const Int nChunks){
 	      solveCPar()(0,focusChan(),a1(irow))=tcorruptor_p->gain(ix,iy,focusChan());
 	    } else 
 	      throw(AipsError("T: unknown corruptor mode "+tcorruptor_p->mode()));
+	    } // if not autocorr
 	  }// if not flagged
 	}// row
       }// vi
@@ -901,8 +905,13 @@ Bool GJones::simPar(VisIter& vi, const Int nChunks){
 
 	for (Int irow=0;irow<vi.nRow();++irow) {
       
-	  if ( a1(irow)!=a2(irow) &&
-	       nfalse(flags.column(irow))> 0 ) { 
+	  if (nfalse(flags.column(irow))> 0 ) {
+	    if ( a1(irow)==a2(irow) ) {
+	      // autocorrels should get 1. for multiplicative VC
+	      for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) 
+		solveCPar().xyPlane(a1(irow)).row(icorr) = Complex(1.);	      
+	      nGood.xyPlane(a1(irow)) = nGood.xyPlane(a1(irow)) + Complex(1.);
+	    } else {
 	
 	    if (corruptor_p->curr_time()!=timevec[irow]) {	  
 	      corruptor_p->curr_time()=timevec[irow];          
@@ -928,7 +937,7 @@ Bool GJones::simPar(VisIter& vi, const Int nChunks){
 		     newslot<corruptor_p->nSim();newslot++) {
 		  dt=abs(corruptor_p->slot_time(newslot) - timevec[irow]);
 		  if (dt<dt0) {
-		    // use this check for on-depand corruptors to get new val.
+		    // use this check for on-demand corruptors to get new val.
 		    corruptor_p->curr_slot()=newslot;
 		    dt0 = dt;
 		    if (prtlev()>4) 
@@ -942,16 +951,26 @@ Bool GJones::simPar(VisIter& vi, const Int nChunks){
 	    corruptor_p->currAnt()=a1(irow);
 
 	    // Gcorruptor::gain doesn't currently depend on chan/freq:
-	    // RI TODO G::simPar freqDepPar() ?
-	    for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) 
-	      solveCPar().xyPlane(a1(irow)).row(icorr) = 
-		gcorruptor_p->gain(icorr,0);
-	    nGood.xyPlane(a1(irow)) = nGood.xyPlane(a1(irow)) + Complex(1.);
-	    solveParOK().xyPlane(a1(irow)) = True;
-	    //	      solveCPar()(icorr,focusChan(),a1(irow)) = 
-	    //		gcorruptor_p->gain(icorr,focusChan());
+	    // RI TODO Gcorruptor needs freqDepPar and switch in gain()
 
-	  } // if not flagged or autocorr
+	    if (freqDepPar()) { 
+	      // then this is actually a B which is a Gf
+	      for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) {
+		solveCPar()(icorr,focusChan(),a1(irow)) = 
+		  gcorruptor_p->gain(icorr,focusChan());
+		nGood(icorr,focusChan(),a1(irow)) += Complex(1.);
+		solveParOK()(icorr,focusChan(),a1(irow)) = True;
+	      }
+	    } else {
+	      // do all channels:
+	      for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) 
+		solveCPar().xyPlane(a1(irow)).row(icorr) = 
+		  gcorruptor_p->gain(icorr,0);
+	      nGood.xyPlane(a1(irow)) = nGood.xyPlane(a1(irow)) + Complex(1.);
+	      solveParOK().xyPlane(a1(irow)) = True;
+	    }	    
+	    } // if not autocorr
+	  } // if not flagged 
 	} // irow loop
       } // vi loop
       if (vi.moreChunks()) vi.nextChunk();
@@ -1688,15 +1707,17 @@ Bool DJones::simPar(VisIter& vi, const Int nChunks){
 
 	for (Int irow=0;irow<vi.nRow();++irow) {
       
-	  if ( a1(irow)!=a2(irow) &&
-	       nfalse(flags.column(irow))> 0 ) { 	    
+	  if (nfalse(flags.column(irow))> 0 ) { 	    
 	    corruptor_p->currAnt()=a1(irow);
-
-	    for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) 
-	      solveCPar().xyPlane(a1(irow)).row(icorr) = amp; 
-	    solveParOK().xyPlane(a1(irow)) = True;
-
-	  } // if not flagged or autocorr
+	    for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) {
+	      if ( a1(irow)==a2(irow) ) {
+		solveCPar().xyPlane(a1(irow)).row(icorr) = Complex(1.0); 
+	      } else {	       	      
+		solveCPar().xyPlane(a1(irow)).row(icorr) = amp; 
+	      }		
+	      solveParOK().xyPlane(a1(irow)) = True;
+	    }
+	  } // if not flagged 
 	} // irow loop
       } // vi loop
       if (vi.moreChunks()) vi.nextChunk();
@@ -2364,21 +2385,6 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 
     Complex factor(1.0);
     Float tau0(0.),airmass1(1.0),airmass2(1.0),A(1.0),tsys(0.),tau(0.),factor0(1.0);
-    // Bool dotsys(False);
-    // 1e-4 converts the Diam from cm to m
-    // Float tsys0(0.),tsys1(0.),
-
-//    if (atmcorruptor_p->mode() == "tsys") {
-//      tsys0 = atmcorruptor_p->simpar().asFloat("trx") + 
-//	atmcorruptor_p->simpar().asFloat("spillefficiency")*atmcorruptor_p->simpar().asFloat("tatmos");
-//      tsys1 = (1.-atmcorruptor_p->simpar().asFloat("spillefficiency"))*atmcorruptor_p->simpar().asFloat("tground") + 
-//	atmcorruptor_p->simpar().asFloat("tcmb");
-//      dotsys=True;
-//      factor0 = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 / 		
-//	( atmcorruptor_p->simpar().asFloat("antefficiency") * 
-//	  atmcorruptor_p->simpar().asFloat("correfficiency") * C::pi );      
-//    } 
-    
     factor0 = atmcorruptor_p->amp();
     
     if (atmcorruptor_p->mode() == "tsys") {
@@ -2408,8 +2414,21 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 	vi.flag(flags);
 	
 	for (Int irow=0;irow<vi.nRow();++irow)
-	  if ( a1(irow)!=a2(irow) &&
-	       nfalse(flags.column(irow)) > 0 ) {   
+	  if ( nfalse(flags.column(irow)) > 0 ) {   
+	    if ( a1(irow)==a2(irow) ) {
+	    if (freqDepPar()) {
+	      for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) {		
+		solveCPar()(icorr,focusChan(),ibln) += Complex(1.);
+		nGood(icorr,focusChan(),ibln) += + Complex(1.);	    
+		solveParOK()(icorr,focusChan(),ibln) = True;
+	      }
+	    } else {
+	      solveCPar().xyPlane(ibln) = solveCPar().xyPlane(ibln) + Complex(1.);
+	      nGood.xyPlane(ibln) = nGood.xyPlane(ibln) + Complex(1.);	    
+	      solveParOK().xyPlane(ibln) = True;
+	    }
+	    } else {
+	       
 	    // RI TODO MM::simPar verify col not row in flags(irow)
 
 	    // don't need loop to find the corruptor time slot here,
@@ -2417,8 +2436,7 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 	    
 	    factor=factor0;
 
-	    if (atmcorruptor_p->mode() == "tsys") {
-	      
+	    if (atmcorruptor_p->mode() == "tsys") {	      
 	      el1 = antazel(a1(irow)).getAngle("rad").getValue()(1);
 	      el2 = antazel(a2(irow)).getAngle("rad").getValue()(1);
 	      
@@ -2431,16 +2449,12 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 	      }
 
 	      if (freqDepPar()) {
-		// RI TODO MfM::simPar: use ATM to get freqDep tau
-		// need to initialize ATM in the mcorruptor_p in setSimulate
-		// or switch to an atmcorruptor that handles MfM,TJ,and Topacf
-		// -> get correlated fluctuations in noise and phase
-		throw(AipsError("MfM w/ATM not yet implemented!!"));
-		// tau = something from ATM 
-	      }	
-
+		tau = atmcorruptor_p->opac(focusChan());
+	      }	else {
+		tau = 1.;
+	      }
 	      // user could be overriding the tau scale, but keep the
-	      // ATM freq dependence
+	      // ATM freq dependence - see atmcorruptor::initialize
 	      tau *= atmcorruptor_p->tauscale();
 
 	      A = exp(-tau *0.5*(airmass1+airmass2));	      
@@ -2452,10 +2466,18 @@ Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
 	    
 	    // corr,chan,bln = xyz
 	    ibln=blnidx(a1(irow),a2(irow));
-	    solveCPar().xyPlane(ibln) = solveCPar().xyPlane(ibln) + factor;   
-	    nGood.xyPlane(ibln) = nGood.xyPlane(ibln) + Complex(1.);	    
-	    solveParOK().xyPlane(ibln) = True;
-	    
+	    if (freqDepPar()) {
+	      for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) {		
+		solveCPar()(icorr,focusChan(),ibln) += factor;
+		nGood(icorr,focusChan(),ibln) += + Complex(1.);	    
+		solveParOK()(icorr,focusChan(),ibln) = True;
+	      }
+	    } else {
+	      solveCPar().xyPlane(ibln) = solveCPar().xyPlane(ibln) + factor;   
+	      nGood.xyPlane(ibln) = nGood.xyPlane(ibln) + Complex(1.);	    
+	      solveParOK().xyPlane(ibln) = True;
+	    }
+	    }// if not autocorr	    
 	  } // if good row
       } // advancing VI
       if (vi.moreChunks()) vi.nextChunk();

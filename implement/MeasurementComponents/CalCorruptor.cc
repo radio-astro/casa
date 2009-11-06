@@ -26,30 +26,11 @@
 
 #include <synthesis/MeasurementComponents/StandardVisCal.h>
 
-//#include <msvis/MSVis/VisBuffer.h>
-//#include <msvis/MSVis/VisBuffAccumulator.h>
-//#include <ms/MeasurementSets/MSColumns.h>
-//#include <synthesis/MeasurementEquations/VisEquation.h>
-//#include <scimath/Fitting/LSQFit.h>
-//#include <lattices/Lattices/ArrayLattice.h>
-//#include <lattices/Lattices/LatticeFFT.h>
-//#include <tables/Tables/ExprNode.h>
-//
-//#include <casa/Arrays/ArrayMath.h>
-//#include <casa/BasicSL/String.h>
-//#include <casa/Utilities/Assert.h>
-//#include <casa/Utilities/GenSort.h>
-//#include <casa/Exceptions/Error.h>
-//#include <casa/OS/Memory.h>
-//#include <casa/System/Aipsrc.h>
-//
-//#include <casa/sstream.h>
-
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 
 #define RI_DEBUG
-#define PRTLEV 2
+#define PRTLEV 3
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -82,19 +63,6 @@ Array<Complex> ANoiseCorruptor::noise(const Int nrow,const Int ncol) {
 ANoiseCorruptor::ANoiseCorruptor(): CalCorruptor(0) {};
 
 ANoiseCorruptor::~ANoiseCorruptor() {};
-
-
-
-
-
-//MMCorruptor::MMCorruptor(): CalCorruptor(0) {};
-//
-//MMCorruptor::~MMCorruptor() {};
-//
-//
-//MfMCorruptor::MfMCorruptor(): MMCorruptor() {};
-//
-//MfMCorruptor::~MfMCorruptor() {};
 
 
 
@@ -567,7 +535,7 @@ void AtmosCorruptor::initialize(const Record& simpar) {
 
   } else {
 
-    // use ATM but no time dependence - e.g. for B[Tsys]
+    // use ATM but no time dependence - e.g. for Tf [Tsys scaling, also Mf]
     if (freqDep()) initAtm();
     
     // RI TODO AtmCorr::initialize catch other modes?  
@@ -575,12 +543,13 @@ void AtmosCorruptor::initialize(const Record& simpar) {
 
     // go with ATM straight up:
     tauscale() = 1.0;
-    // user can override the ATM tau0 thusly - if its freqdep it'll be interpreted in the center of the band
+    // user can override the ATM tau0 thusly 
     if (simpar.isDefined("tau0")) {
-      Float tau0_atm(1.0);
+      tauscale()=simpar.asFloat("tau0");
+      // (if tau0 is not set, scale is 1.)    
       // find tau in center of band for current ATM parameters
-      if (freqDep()) tau0_atm=opac(nChan()/2);
-      tauscale()=simpar.asFloat("tau0")/tau0_atm;
+      if (freqDep()) tauscale()/=opac(nChan()/2);
+      // if freqDep then opac will be called in simPar and multiplied by tauscale
     }
     
     // modified from mm::simPar:  

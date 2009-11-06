@@ -156,13 +156,17 @@ Bool ANoise::simPar(VisIter& vi, const Int nChunks){
 //	if (prtlev()>3 and scan<2)
 //	  cout << "[chunk " << ichunk << "], scan " << scan << ",time = " << timevec[0]-4.84694e+09 << endl;
 
-	for (Int irow=0;irow<vi.nRow();++irow)	
-	  if ( a1(irow)!=a2(irow) &&
-	       nfalse(flags.column(irow)) > 0 ) {   
+	for (Int irow=0;irow<vi.nRow();++irow)		  
+	  if (nfalse(flags.column(irow)) > 0 ) {   
+	    ibln=blnidx(a1(irow),a2(irow)); // baseline id.
+	    if ( a1(irow)==a2(irow) ) {
+	      solveCPar().xyPlane(ibln) = Complex(0.0);
+	      nGood.xyPlane(ibln) = nGood.xyPlane(ibln) + Complex(1.);	    
+	      solveParOK().xyPlane(ibln) = True;	    
+	    } else {
 	    // RI TODO verify col not row here
 	    // in T, there's a loop to find the corruptor time slot here.
 
-	    ibln=blnidx(a1(irow),a2(irow)); // baseline id.
 	    //cout << irow << " " << vi.nRow() << " ants:" << a1(irow) << "&" <<a2(irow) << " = " << ibln << " cparshape= " << solveCPar().shape() << endl;
 
 	    solveCPar().xyPlane(ibln) = solveCPar().xyPlane(ibln) + 
@@ -170,9 +174,8 @@ Bool ANoise::simPar(VisIter& vi, const Int nChunks){
 	    nGood.xyPlane(ibln) = nGood.xyPlane(ibln) + Complex(1.);	    
 	    solveParOK().xyPlane(ibln) = True;	    
 	  }
-	//cout << " more from the VI now..." << endl;
+	  }
       }
-      //cout << " yo! mo chunky now? " << vi.moreChunks() << endl; 
       if (vi.moreChunks()) vi.nextChunk();
     }
     
