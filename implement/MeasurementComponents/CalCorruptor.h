@@ -37,27 +37,27 @@
 using namespace std;
 
 #ifndef CASA_STANDALONE
-#include <ATM/ATMRefractiveIndexProfile.h>
-#include <ATM/ATMPercent.h>
-#include <ATM/ATMPressure.h>
-#include <ATM/ATMNumberDensity.h>
-#include <ATM/ATMMassDensity.h>
-#include <ATM/ATMTemperature.h>
-#include <ATM/ATMLength.h>
-#include <ATM/ATMInverseLength.h>
-#include <ATM/ATMOpacity.h>
-#include <ATM/ATMHumidity.h>
-#include <ATM/ATMFrequency.h>
-#include <ATM/ATMWaterVaporRadiometer.h>
-#include <ATM/ATMWVRMeasurement.h>
-#include <ATM/ATMAtmosphereType.h>
-#include <ATM/ATMType.h>
-#include <ATM/ATMProfile.h>
-#include <ATM/ATMSpectralGrid.h>
-#include <ATM/ATMRefractiveIndex.h>
-#include <ATM/ATMSkyStatus.h>
-#include <ATM/ATMTypeName.h>
-#include <ATM/ATMAngle.h>
+#include <ATMRefractiveIndexProfile.h>
+#include <ATMPercent.h>
+#include <ATMPressure.h>
+#include <ATMNumberDensity.h>
+#include <ATMMassDensity.h>
+#include <ATMTemperature.h>
+#include <ATMLength.h>
+#include <ATMInverseLength.h>
+#include <ATMOpacity.h>
+#include <ATMHumidity.h>
+#include <ATMFrequency.h>
+#include <ATMWaterVaporRadiometer.h>
+#include <ATMWVRMeasurement.h>
+#include <ATMAtmosphereType.h>
+#include <ATMType.h>
+#include <ATMProfile.h>
+#include <ATMSpectralGrid.h>
+#include <ATMRefractiveIndex.h>
+#include <ATMSkyStatus.h>
+#include <ATMTypeName.h>
+#include <ATMAngle.h>
 #else
 //#ATM Not available; mimic the classes and functions used
 namespace atm{
