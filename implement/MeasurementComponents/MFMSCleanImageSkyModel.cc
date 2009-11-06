@@ -131,13 +131,15 @@ MFMSCleanImageSkyModel::~MFMSCleanImageSkyModel()
 Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 
   LogIO os(LogOrigin("MFMSCleanImageSkyModel","solve"));
- 
+  /*backed out for now
   if(modified_p){
     makeNewtonRaphsonStep(se, False);
   }
+  
   if(numberIterations() < 1){
     return True;
   }
+  */
   //Make the PSFs, one per field
   if(!donePSF_p){
     os << "Making approximate PSFs" << LogIO::POST;
@@ -231,7 +233,10 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
       }
     
     }
-    
+    if(numberIterations() < 1){
+      // Why waste the time to set up
+      return True;
+    }
 
     absmax=maxField(resmax, resmin);
 

@@ -109,9 +109,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   LogIO os(LogOrigin("MFCleanImageSkyModel","solve"));
   Bool converged=True;
   //Make the PSFs, one per field
-  if(!donePSF_p && (numberIterations() >0)) {
-    makeApproxPSFs(se);
-  }
+  /*back out for now
   if(modified_p){ 
       makeNewtonRaphsonStep(se, False);
   }
@@ -119,6 +117,12 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       // Why waste the time to set up
       return True;
   }
+  */
+
+  if(!donePSF_p) {
+    makeApproxPSFs(se);
+  }
+
   // Validate PSFs for each field
   Vector<Float> psfmax(numberOfModels()); psfmax=0.0;
   Vector<Float> psfmaxouter(numberOfModels()); psfmaxouter=0.0;
@@ -322,7 +326,10 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       //makeNewtonRaphsonStep(se, (cycle>1));
     }
 
-
+    if(numberIterations() < 1){
+      // Why waste the time to set up
+      return True;
+    }
     
 
     if(0) {
