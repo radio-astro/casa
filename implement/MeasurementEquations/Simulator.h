@@ -413,12 +413,17 @@ private:
 
   // spectral windows data
   // <group>
-  String 	spWindowName_p; 
-  Int		nChan_p;
-  Quantity     	startFreq_p;
-  Quantity     	freqInc_p;
-  Quantity     	freqRes_p;
-  String     	stokesString_p;   
+  // RI 20091107 durn. whoever build this didn't enable multiple spw.
+  // we'll at least get some functionality here, but there are probably
+  // combinations of pols etc that won't properly report here. 
+  // better than now, when it doesn't even report more than one spw.
+  Int nSpw;
+  Vector<String> 	spWindowName_p; 
+  Vector<Int>		nChan_p;
+  Vector<Quantity>     	startFreq_p;
+  Vector<Quantity>     	freqInc_p;
+  Vector<Quantity>     	freqRes_p;
+  Vector<String>     	stokesString_p;   
   // </group>
   // </group>
 

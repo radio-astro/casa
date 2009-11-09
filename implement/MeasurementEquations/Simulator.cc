@@ -96,7 +96,7 @@
 
 #include <casa/namespace.h>
 
-#define RI_DEBUG
+//#define RI_DEBUG
 
 
 Simulator::Simulator(): 
@@ -107,7 +107,8 @@ Simulator::Simulator():
   ac_p(0), vp_p(0), gvp_p(0), 
   sim_p(0),
   // epJ_p(0),
-  epJTableName_p()
+  epJTableName_p(),
+  nSpw(0)
 {
 }
 
@@ -161,7 +162,13 @@ Simulator::Simulator(MeasurementSet &theMs)
   AlwaysAssert(ms_p, AipsError);
 
   // get info from the MS into Simulator:
-  if (!getconfig()) os << "Can't find antenna information for loaded MS" << LogIO::WARN;
+  if (!getconfig()) 
+    os << "Can't find antenna information for loaded MS" << LogIO::WARN;
+#ifdef RI_DEBUG
+  if (!sim_p->getSpWindows(nSpw,spWindowName_p,nChan_p,startFreq_p,freqInc_p,stokesString_p))
+    os << "Can't find Spectral Window information for loaded MS" << LogIO::WARN;
+#endif
+
 }
 
 
@@ -276,12 +283,19 @@ void Simulator::defaults()
   calCode_p="";
 
   // info for spectral windows
-  spWindowName_p="UNSET";
-  nChan_p=1;
-  startFreq_p=Quantity(50., "GHz");
-  freqInc_p=Quantity(0.1, "MHz");
-  freqRes_p=Quantity(0.1, "MHz");
-  stokesString_p="RR RL LR LL";
+  nSpw=0;
+  spWindowName_p.resize(1);
+  nChan_p.resize(1);
+  startFreq_p.resize(1);
+  freqInc_p.resize(1);
+  freqRes_p.resize(1);
+  stokesString_p.resize(1);
+  spWindowName_p[0]="UNSET";
+  nChan_p[0]=1;
+  startFreq_p[0]=Quantity(50., "GHz");
+  freqInc_p[0]=Quantity(0.1, "MHz");
+  freqRes_p[0]=Quantity(0.1, "MHz");
+  stokesString_p[0]="RR RL LR LL";
 
   // feeds
   feedMode_p = "perfect R L";
@@ -512,14 +526,18 @@ Bool Simulator::spWindowSummary(LogIO& os)
 {
   os << "----------------------------------------------------------------------" << LogIO::POST;
   os << " Spectral Windows information: " << LogIO::POST;
-  os << " Name  nchan  freq[GHz]  freqInc[MHz]  freqRes[MHz]  stokes" << LogIO::POST;
-  os << spWindowName_p 	 
-     << "  " << nChan_p
-     << "  " << startFreq_p.getValue("GHz")
-     << "  " << freqInc_p.getValue("MHz")
-     << "  " << freqRes_p.getValue("MHz")
-     << "  " << stokesString_p
-     << LogIO::POST;
+  if (nSpw==0)
+    os << "NO Spectral window information set" << LogIO::POST;
+  else 
+    os << " Name  nchan  freq[GHz]  freqInc[MHz]  freqRes[MHz]  stokes" << LogIO::POST;
+  for (Int i=0;i<nSpw;i++) 
+    os << spWindowName_p[i] 	 
+       << "  " << nChan_p[i]
+       << "  " << startFreq_p[i].getValue("GHz")
+       << "  " << freqInc_p[i].getValue("MHz")
+       << "  " << freqRes_p[i].getValue("MHz")
+       << "  " << stokesString_p[i]
+       << LogIO::POST;
   return True;
 }
 
@@ -856,27 +874,47 @@ Bool Simulator::setspwindow(const String& spwName,
 
 {
   LogIO os(LogOrigin("Simulator", "setspwindow()", WHERE));
-
+#ifndef RI_DEBUG
   try {
+#else 
+    os << LogIO::WARN << "debug mode - not catching errors." << LogIO::POST;  
+#endif
     if (nChan == 0) {
       os << LogIO::SEVERE << "must provide nchannels" << LogIO::POST;  
       return False;
     }
 
-    spWindowName_p = spwName;   
-    nChan_p = nChan;          
-    startFreq_p = freq;      
-    freqInc_p = deltafreq;        
-    freqRes_p = freqresolution;        
-    stokesString_p = stokes;   
+    nSpw++;    
+#ifdef RI_DEBUG
+    os << "nspw = " << nSpw << LogIO::POST;  
+#endif
+    spWindowName_p.resize(nSpw,True);
+    spWindowName_p[nSpw-1] = spwName;   
+    nChan_p.resize(nSpw,True);
+    nChan_p[nSpw-1] = nChan;
+    startFreq_p.resize(nSpw,True);
+    startFreq_p[nSpw-1] = freq;
+    freqInc_p.resize(nSpw,True);
+    freqInc_p[nSpw-1] = deltafreq;
+    freqRes_p.resize(nSpw,True);
+    freqRes_p[nSpw-1] = freqresolution;        
+    stokesString_p.resize(nSpw,True);
+    stokesString_p[nSpw-1] = stokes;   
 
-    sim_p->initSpWindows(spWindowName_p, nChan_p, startFreq_p, freqInc_p, 
-			 freqRes_p, stokesString_p);
+#ifdef RI_DEBUG
+    os << "sending init to MSSim for spw = " << spWindowName_p[nSpw-1] << LogIO::POST;  
+#endif
 
+    sim_p->initSpWindows(spWindowName_p[nSpw-1], nChan_p[nSpw-1], 
+			 startFreq_p[nSpw-1], freqInc_p[nSpw-1], 
+			 freqRes_p[nSpw-1], stokesString_p[nSpw-1]);
+
+#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
+#endif
   return True;
 };
 
@@ -1603,6 +1641,8 @@ Bool Simulator::calc_corrupt(SolvableVisCal *svc, const Record& simpar)
     VisIter& vi(vs_p->iter());
     //    VisBuffer vb(vi);
     
+    // there's a member variable in Simulator nSpw, should we verify that 
+    // this is the same? probably.
     Int nSpw=vs_p->numberSpw();
     // same as cs_p->nSpw() ?    
     //AlwaysAssert(nSpw == svc->cs().nSpw(), AipsError);
@@ -1907,9 +1947,6 @@ Bool Simulator::corrupt() {
       }
     }
 
-    // Clear scratch columns - this is private, should it be?
-    // vs_p->removeCalSet(*ms_p);
-
     // Flush to disk
     vs_p->flush();
 
@@ -1985,6 +2022,8 @@ Bool Simulator::observe(const String&   sourcename,
   } 
   return True;
 }
+
+
 
 Bool Simulator::predict(const Vector<String>& modelImage, 
 			   const String& compList,
@@ -2170,7 +2209,8 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       }
       else if(ftmachine_p=="mosaic") {
 	os << "Performing Mosaic gridding" << LogIO::POST;
-	ft_p = new MosaicFT(gvp_p, mLocation_p, stokesString_p, cache_p/2, tile_p, True);
+	// RI TODO need stokesString for current spw - e.g. currSpw()?
+	ft_p = new MosaicFT(gvp_p, mLocation_p, stokesString_p[0], cache_p/2, tile_p, True);
       }
       else if(ftmachine_p=="both") {
 	os << "Performing single dish gridding with convolution function "
