@@ -818,7 +818,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
     }
     imageNchan_p=1;
     Double finc=(fmax-fmin); 
-    mySpectral = new SpectralCoordinate(obsFreqRef,  fmean, finc,
+    mySpectral = new SpectralCoordinate(freqFrame_p,  fmean, finc,
       					refChan, restFreq);
     os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3) // Loglevel INFO
        << "Center frequency = "
@@ -943,7 +943,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	finc=freqResolution(IPosition(1,0))*imageStep_p;
       }
 
-      mySpectral = new SpectralCoordinate(obsFreqRef, freqs(0), finc,
+      mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0), finc,
 					  refChan, restFreq);
       os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
          << "Frequency = " // Loglevel INFO
