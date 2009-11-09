@@ -202,7 +202,7 @@ class ImageAnalysis
 
     Record deconvolvecomponentlist(Record& complist);
 
-    Bool remove();
+    Bool remove(Bool verbose=true);
 
     Bool fft(const String& real, const String& imag, const String& amp, 
              const String& phase, const Vector<Int>& axes, Record& region, 
