@@ -147,6 +147,13 @@ public:
 		     const Quantity& freqRes,
 		     const String& stokesString);
 
+  bool getSpWindows(Int& nSpw,
+		    Vector<String>& spWindowName,
+		    Vector<Int>& nChan,
+		    Vector<Quantity>& startFreq,
+		    Vector<Quantity>& freqInc,
+		    Vector<String>& stokesString);
+
   void setFractionBlockageLimit(const Double fraclimit) 
     { fractionBlockageLimit_p = fraclimit; }
 

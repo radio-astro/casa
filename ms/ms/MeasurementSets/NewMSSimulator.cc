@@ -737,6 +737,63 @@ void NewMSSimulator::initSpWindows(const String& spWindowName,
 
 }
 
+// if known already e.g. from openfromms()
+bool NewMSSimulator::getSpWindows(Int& nSpw,
+				  Vector<String>& spWindowName,
+				  Vector<Int>& nChan,
+				  Vector<Quantity>& startFreq,
+				  Vector<Quantity>& freqInc,
+				  Vector<String>& stokesString)
+{
+  
+  LogIO os(LogOrigin("MSsimulator", "getSpWindows()", WHERE)); 
+  
+//  os << spWindowName_p 	 
+//     << "  " << nChan_p
+//     << "  " << startFreq_p.getValue("GHz")
+//     << "  " << freqInc_p.getValue("MHz")
+//     << "  " << freqRes_p.getValue("MHz")
+//     << "  " << stokesString_p
+
+  MSColumns msc(*ms_p);
+  MSSpWindowColumns& spwc=msc.spectralWindow();
+  MSDataDescColumns& ddc=msc.dataDescription();
+  MSPolarizationColumns& polc=msc.polarization();
+  nSpw=spwc.nrow();
+
+  spWindowName.resize(nSpw);
+  nChan.resize(nSpw);
+  startFreq.resize(nSpw);
+  freqInc.resize(nSpw);
+  stokesString.resize(nSpw);
+
+  for (Int i=0;i<nSpw;i++) {
+    spwc.name().get(i,spWindowName[i]);
+    spwc.numChan().get(i,nChan[i]);
+    Double vStartFreq,vFreqInc,vBW;
+    spwc.refFrequency().get(i,vStartFreq);
+    startFreq[i].setValue(vStartFreq);
+    startFreq[i].setUnit("Hz");
+    spwc.totalBandwidth().get(i,vBW);
+    // yeah, ok - maybe they're not uniform.  we're doing what we can here.x
+    freqInc[i].setValue(vBW/nChan[i]);
+    freqInc[i].setUnit("Hz");
+    // need to translate enum Stokes::type back into strings... there's no
+    // easy way to do that in C++, but there is a Stokes Name function:
+    Int nCorr;
+    polc.numCorr().get(i, nCorr);
+    Vector<Int> stokes(4);
+    polc.corrType().get(i,stokes);
+    String t;
+    for (uInt j=0; j<nCorr; j++) 
+      t += Stokes::name(Stokes::StokesTypes(stokes(j))) + " ";
+    stokesString[i]=t;
+  }  
+}
+
+
+
+
 void NewMSSimulator::initFeeds(const String& mode) {
   LogIO os(LogOrigin("MSsimulator", "initFeeds()", WHERE));
   if(mode=="list") {
