@@ -279,7 +279,7 @@ class Imager
                           const Bool unflagged_only, const Bool must_have_imwt);
 
   // Return the image coordinates
-  Bool imagecoordinates(CoordinateSystem& coordInfo);
+  Bool imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose=true);
 
   // Return the image shape
   IPosition imageshape() const;

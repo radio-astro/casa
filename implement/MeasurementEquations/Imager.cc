@@ -550,7 +550,7 @@ Bool Imager::open(MeasurementSet& theMs, Bool compress, Bool useModelCol)
     // Initialize the weights if the IMAGING_WEIGHT column
     // was just created
     if(initialize && useModelCol_p) {
-      os << LogIO::NORMAL2
+      os << LogIO::NORMAL // Loglevel PROGRESS
 	 << "Initializing natural weights"
 	 << LogIO::POST;
       Double sumwt=0.0;
@@ -586,7 +586,7 @@ Bool Imager::close()
   if(!valid()) return False;
   if (detached()) return True;
   LogIO os(LogOrigin("imager", "close()", WHERE));
-  os << LogIO::NORMAL2
+  os << LogIO::NORMAL // Loglevel PROGRESS
      << "Closing MeasurementSet and detaching from imager"
      << LogIO::POST;
   this->unlock();
@@ -645,7 +645,7 @@ String Imager::imageName()
 }
 
 // Make standard choices for coordinates
-Bool Imager::imagecoordinates(CoordinateSystem& coordInfo) 
+Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose) 
 {  
   if(!valid()) return False;
   if(!assertDefinedImageParameters()) return False;
@@ -733,7 +733,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
   // max(abs(w))=0.0 as a criterion
   Projection projection(Projection::SIN);
   if(telescop == "ATCASCP" || telescop == "WSRT" || telescop == "DRAO") {
-    os << LogIO::NORMAL
+    os << LogIO::NORMAL // Loglevel NORMAL
        << "Using SIN image projection adjusted for "
        << (telescop == "ATCASCP" ? 'S' : 'N') << "CP" 
        << LogIO::POST;
@@ -820,7 +820,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
     Double finc=(fmax-fmin); 
     mySpectral = new SpectralCoordinate(obsFreqRef,  fmean, finc,
       					refChan, restFreq);
-    os << LogIO::NORMAL1
+    os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3) // Loglevel INFO
        << "Center frequency = "
        << MFrequency(Quantity(fmean, "Hz")).get("GHz").getValue()
        << " GHz, synthesized continuum bandwidth = "
@@ -846,14 +846,16 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 					  mfImageStep_p.get("Hz").getValue()/2.0,
 					  mfImageStep_p.get("Hz").getValue(),
 					  refChan, restFreq);
-      os << LogIO::NORMAL1 << "Start frequency = "
+      os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
+         << "Start frequency = " // Loglevel INFO
 	 << mfImageStart_p.get("GHz").getValue()
 	 << ", channel increment = "
 	 << mfImageStep_p.get("GHz").getValue() 
 	 << "GHz, frequency frame = "
          << MFrequency::showType(mfreqref)
          << endl;
-      os << LogIO::NORMAL1 << "Rest frequency is " 
+      os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
+         << "Rest frequency is "  // Loglevel INFO
 	 << MFrequency(Quantity(restFreq, "Hz")).get("GHz").getValue()
 	 << "GHz" << LogIO::POST;
       
@@ -919,10 +921,10 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	(chanFreq.shape()(0) - Int(imageStart_p)+1)/Int(imageStep_p)+1;
       if((nsubchans >0) && (imageNchan_p>nsubchans)) imageNchan_p=nsubchans;
 
-      os << "Image spectral coordinate: "<< imageNchan_p
-	   << " channels, starting at visibility channel "
-	 << imageStart_p << " stepped by "
-	 << imageStep_p << endl;
+      os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
+         << "Image spectral coordinate: "<< imageNchan_p
+         << " channels, starting at visibility channel "
+	 << imageStart_p << " stepped by " << imageStep_p << LogIO::POST;
       freqs.resize(imageNchan_p);
       for (Int chan=0;chan<imageNchan_p;chan++) {
 	freqs(chan)=chanFreq(Int(imageStart_p)+Int(Float(chan+0.5)*Float(imageStep_p)-0.5));
@@ -943,12 +945,14 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 
       mySpectral = new SpectralCoordinate(obsFreqRef, freqs(0), finc,
 					  refChan, restFreq);
-      os << LogIO::NORMAL1 <<  "Frequency = "
+      os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
+         << "Frequency = " // Loglevel INFO
 	 << MFrequency(Quantity(freqs(0), "Hz")).get("GHz").getValue()
 	 << ", channel increment = "
 	 << MFrequency(Quantity(finc, "Hz")).get("GHz").getValue() 
 	 << "GHz" << endl;
-      os << LogIO::NORMAL1 << "Rest frequency is " 
+      os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
+         << "Rest frequency is "  // Loglevel INFO
 	 << MFrequency(Quantity(restFreq, "Hz")).get("GHz").getValue()
 	 << "GHz" << LogIO::POST;
       
@@ -968,7 +972,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	oos << "Image spectral coordinate:"<< imageNchan_p 
 	    << " channels, starting at radio velocity " << mImageStart_p
 	    << "  stepped by " << mImageStep_p << endl;
-	os << LogIO::NORMAL1 << String(oos);
+	os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
+           << String(oos); // Loglevel INFO
       }
       Vector<Double> freqs(2);
       freqs=0.0;
@@ -1008,7 +1013,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	oos << "Rest frequency is " 
 	    << MFrequency(Quantity(restFreq, "Hz")).get("GHz").getValue()
 	    << " GHz" << endl;
-	os << LogIO::NORMAL1 << String(oos) << LogIO::POST;
+	os << LogIO::NORMAL << String(oos) << LogIO::POST; // Loglevel INFO
       }
       
     }
@@ -1028,7 +1033,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	oos << "Image spectral coordinate: "<< imageNchan_p 
 	    << " channels, starting at optical velocity " << mImageStart_p
 	    << "  stepped by " << mImageStep_p << endl;
-	os << LogIO::NORMAL1 << String(oos);
+	os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
+           << String(oos); // Loglevel INFO
       }
       Vector<Double> freqs(imageNchan_p);
       freqs=0.0;
@@ -1066,7 +1072,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo)
 	    << MFrequency(Quantity(freqs(0), "Hz")).get("GHz")
 	    << " Ghz, " 
             <<" frequency frame= "<<MFrequency::showType(imfreqref)<<endl;
-	os << LogIO::NORMAL1 << String(oos) << LogIO::POST;
+	os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
+           << String(oos) << LogIO::POST; // Loglevel INFO
       }
     }
     else {
@@ -1430,7 +1437,7 @@ Bool Imager::setimage(const Int nx, const Int ny,
     this->lock();
     this->writeCommand(os);
 
-    os << LogIO::NORMAL1 << "Defining image properties" << LogIO::POST;
+    os << LogIO::NORMAL << "Defining image properties" << LogIO::POST; // Loglevel INFO
   
     /**** this check is not really needed here especially for SD imaging
     if(2*Int(nx/2)!=nx) {
@@ -1614,7 +1621,7 @@ Bool Imager::defineImage(const Int nx, const Int ny,
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "defineimage()"), logSink_p);
 
-  os << LogIO::NORMAL1 << "Defining image properties:";
+  os << LogIO::NORMAL << "Defining image properties:"; // Loglevel INFO
   os << "nx=" << nx << " ny=" << ny
      << " cellx='" << cellx.getValue() << cellx.getUnit()
      << "' celly='" << celly.getValue() << celly.getUnit()
@@ -2068,7 +2075,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     this->lock();
     this->writeCommand(os);
 
-    os << LogIO::NORMAL2 << "Selecting data" << LogIO::POST;
+    os << LogIO::NORMAL << "Selecting data" << LogIO::POST; // Loglevel PROGRESS
     nullSelect_p=False;
     dataMode_p=mode;
     dataNchan_p.resize();
@@ -2250,13 +2257,13 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     uInt nvis_sel = mssel_p->nrow();
     
     if(nvis_sel != nvis_all) {
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Selected " << nvis_sel << " out of "
          << nvis_all << " visibilities."
 	 << LogIO::POST;
     }
     else {
-      os << LogIO::NORMAL1 << "Selected all visibilities" << LogIO::POST;
+      os << LogIO::NORMAL << "Selected all visibilities" << LogIO::POST; // Loglevel INFO
     }
     //    }
     
@@ -2341,7 +2348,7 @@ Bool Imager::setvp(const Bool dovp,
   //    }
   LogIO os(LogOrigin("Imager", "setvp()", WHERE));
   
-  os << LogIO::NORMAL2 << "Setting voltage pattern parameters" << LogIO::POST;
+  os << LogIO::NORMAL << "Setting voltage pattern parameters" << LogIO::POST; // Loglevel PROGRESS
   
   if(!dovp && !vp_p)
     delete vp_p;
@@ -2359,22 +2366,22 @@ Bool Imager::setvp(const Bool dovp,
   parAngleInc_p = parAngleInc;
 
   skyPosThreshold_p = skyPosThreshold;
-  os << LogIO::NORMAL1
+  os << LogIO::NORMAL // Loglevel INFO
      <<"Sky position tolerance is "<<skyPosThreshold_p.getValue("deg")
      << " degrees" << LogIO::POST;
 
   if (doDefaultVP_p) {
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Using system default voltage patterns for each telescope" << LogIO::POST;
   } else {
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Using user defined voltage patterns in Table "
        <<  vpTableStr_p << LogIO::POST;
   }
   if (doSquint) {
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Beam Squint will be included in the VP model" <<  LogIO::POST;
-    os << LogIO::NORMAL1 << "and the Parallactic Angle increment is " 
+    os << LogIO::NORMAL << "and the Parallactic Angle increment is "  // Loglevel INFO
        << parAngleInc_p.getValue("deg") << " degrees"  << LogIO::POST;
   }
 
@@ -2423,7 +2430,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
     }
   LogIO os(LogOrigin("imager", "setoptions()", WHERE));
   
-  os << LogIO::NORMAL2 << "Setting processing options" << LogIO::POST;
+  os << LogIO::NORMAL << "Setting processing options" << LogIO::POST; // Loglevel PROGRESS
 
   ftmachine_p=downcase(ftmachine);
   if(ftmachine_p=="gridft") {
@@ -2487,7 +2494,7 @@ Bool Imager::setsdoptions(const Float scale, const Float weight,
 
   LogIO os(LogOrigin("imager", "setsdoptions()", WHERE));
   
-  os << LogIO::NORMAL2 << "Setting single dish processing options" << LogIO::POST;
+  os << LogIO::NORMAL << "Setting single dish processing options" << LogIO::POST; // Loglevel PROGRESS
   
   sdScale_p=scale;
   sdWeight_p=weight;
@@ -2533,7 +2540,7 @@ Bool Imager::mask(const String& mask, const String& image,
     PagedImage<Float> maskImage(maskName);
     maskImage.table().markForDelete();
     PagedImage<Float> imageImage(image);
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Making mask image " << maskName << ", applying threshold "
        << threshold.get("Jy").getValue() << "Jy, " << endl
        << "to template image " << image << LogIO::POST;
@@ -2740,7 +2747,7 @@ Bool Imager::clipimage(const String& image, const Quantity& threshold)
       return False;
     }
     PagedImage<Float> imageImage(image);
-    os << LogIO::NORMAL2
+    os << LogIO::NORMAL // Loglevel PROGRESS
        << "Zeroing " << image << ", for all pixels where Stokes I < threshold "
        << threshold.get("Jy").getValue() << "Jy " << LogIO::POST;
     
@@ -2780,7 +2787,7 @@ Bool Imager::feather(const String& image, const String& highRes,
 	return False;
       }
       
-      os << LogIO::NORMAL2
+      os << LogIO::NORMAL // Loglevel PROGRESS
          << "\nFeathering together high and low resolution images.\n" << LogIO::POST;
       
      
@@ -2799,7 +2806,7 @@ Bool Imager::feather(const String& image, const String& highRes,
 	if ( (hightemp.coordinates().findCoordinate(Coordinate::STOKES) < 0) &&
 	     (lowtemp.coordinates().findCoordinate(Coordinate::STOKES) < 0)){
 	  noStokes=True;
-	  os << LogIO::NORMAL2
+	  os << LogIO::NORMAL // Loglevel PROGRESS
              << "Making some temporary images as the inputs have no Stokes axis.\n" 
              << LogIO::POST;
 	  PtrHolder<ImageInterface<Float> > outImage1;
@@ -2929,7 +2936,7 @@ Bool Imager::feather(const String& image, const String& highRes,
       
       TempImage<Complex> cweight(myshap, high.coordinates());
       if(lowPSF=="") {
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Using primary beam to determine weighting.\n" << LogIO::POST;
 	if((lBeam.nelements()==0) || 
 	   (lBeam.nelements()>0)&&(lBeam(0).get("arcsec").getValue()==0.0)) {
@@ -2940,7 +2947,7 @@ Bool Imager::feather(const String& image, const String& highRes,
 	  
 	    TempImage<Float> lowpsf0(cweight.shape(), cweight.coordinates());
 	    
-	    os << LogIO::NORMAL1
+	    os << LogIO::NORMAL // Loglevel INFO
                << "Determining scaling from SD Primary Beam.\n"
 	       << LogIO::POST;
 	    lBeam.resize(3);
@@ -2951,7 +2958,7 @@ Bool Imager::feather(const String& image, const String& highRes,
 	  delete myPBp;
 	}
 	else{
-	  os << LogIO::NORMAL1
+	  os << LogIO::NORMAL // Loglevel INFO
              << "Determining scaling from SD restoring beam.\n"
 	     << LogIO::POST;
 	  TempImage<Float> lowpsf0(cweight.shape(), cweight.coordinates());
@@ -2966,7 +2973,7 @@ Bool Imager::feather(const String& image, const String& highRes,
 	}
       }
       else {
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Using specified low resolution PSF to determine weighting.\n" 
 	   << LogIO::POST;
 	// regrid the single dish psf
@@ -2993,7 +3000,7 @@ Bool Imager::feather(const String& image, const String& highRes,
 	}
 	if((lBeam.nelements()==0) || 
 	   (lBeam.nelements()>0)&&(lBeam(0).get("arcsec").getValue()==0.0)) {
-	  os << LogIO::NORMAL1
+	  os << LogIO::NORMAL // Loglevel INFO
              << "Determining scaling from low resolution PSF.\n" << LogIO::POST;
 	  lBeam.resize(3);
 	  StokesImageUtil::FitGaussianPSF(lowpsf0, lBeam(0), lBeam(1), lBeam(2));
@@ -3018,7 +3025,7 @@ Bool Imager::feather(const String& image, const String& highRes,
 
       // This factor comes from the beam volumes
       if(sdScale_p!=1.0)
-        os << LogIO::NORMAL1
+        os << LogIO::NORMAL // Loglevel INFO
            << "Multiplying single dish data by user specified factor"
            << sdScale_p << ".\n" << LogIO::POST;
       Float sdScaling  = sdScale_p;
@@ -3029,7 +3036,7 @@ Bool Imager::feather(const String& image, const String& highRes,
 	Float beamFactor=
 	  hBeam(0).get("arcsec").getValue()*hBeam(1).get("arcsec").getValue()/
 	  (lBeam(0).get("arcsec").getValue()*lBeam(1).get("arcsec").getValue());
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Applying additional scaling for ratio of the volumes of the high to the low resolution images : "
 	   <<  beamFactor << ".\n" << LogIO::POST;
 	sdScaling*=beamFactor;
@@ -3589,13 +3596,13 @@ Bool Imager::weight(const String& type, const String& rmode,
   this->lock();
   try {
     
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Weighting MS: IMAGING_WEIGHT column will be changed" << LogIO::POST;
     
     Double sumwt=0.0;
     
     if (type=="natural") {
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Natural weighting" << LogIO::POST;
       if(useModelCol_p)
 	VisSetUtil::WeightNatural(*wvi_p, sumwt);
@@ -3608,7 +3615,7 @@ Bool Imager::weight(const String& type, const String& rmode,
       Int actualNpix=npixels;
       if(actualNpix <=0)
 	actualNpix=3;
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "SuperUniform weighting over a square cell spanning [" 
 	 << -actualNpix 
 	 << ", " << actualNpix << "] in the uv plane" << LogIO::POST;
@@ -3642,14 +3649,14 @@ Bool Imager::weight(const String& type, const String& rmode,
         actualNPixels=nx_p;
         actualFieldOfView=Quantity(actualNPixels*mcellx_p.get("rad").getValue(),
 								   "rad");
-        os << LogIO::NORMAL1
+        os << LogIO::NORMAL // Loglevel INFO
            << wtype
            << " weighting: sidelobes will be suppressed over full image"
            << LogIO::POST;
       }
       else if(actualFieldOfView.get().getValue()>0.0&&actualNPixels==0) {
         actualNPixels=nx_p;
-        os << LogIO::NORMAL1
+        os << LogIO::NORMAL // Loglevel INFO
            << wtype
            << " weighting: sidelobes will be suppressed over specified field of view: "
            << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
@@ -3657,13 +3664,13 @@ Bool Imager::weight(const String& type, const String& rmode,
       else if(actualFieldOfView.get().getValue()==0.0&&actualNPixels>0) {
         actualFieldOfView=Quantity(actualNPixels*mcellx_p.get("rad").getValue(),
 								   "rad");
-        os << LogIO::NORMAL1
+        os << LogIO::NORMAL // Loglevel INFO
            << wtype
            << " weighting: sidelobes will be suppressed over full image field of view: "
            << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
       }
       else {
-        os << LogIO::NORMAL1
+        os << LogIO::NORMAL // Loglevel INFO
            << wtype
            << " weighting: sidelobes will be suppressed over specified field of view: "
            << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
@@ -3705,7 +3712,7 @@ Bool Imager::weight(const String& type, const String& rmode,
     
     if(useModelCol_p){
       if(sumwt>0.0) {
-	os << LogIO::NORMAL1 << "Sum of weights = " << sumwt << LogIO::POST;
+	os << LogIO::NORMAL << "Sum of weights = " << sumwt << LogIO::POST; // Loglevel INFO
       }
       else {
 	this->unlock();
@@ -3756,13 +3763,13 @@ Bool Imager::filter(const String& type, const Quantity& bmaj,
     Double minfilter=1.0;
     
     if(useModelCol_p){
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Filtering MS: IMAGING_WEIGHT column will be changed" << LogIO::POST;
       VisSetUtil::Filter(*wvi_p, type, bmaj, bmin, bpa, sumwt, minfilter,
 			 maxfilter);
       
       if(sumwt>0.0) {
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Sum of weights = " << sumwt << endl;
 	os << "Max, min taper = " << maxfilter << ", " << minfilter << LogIO::POST;
       }
@@ -3773,7 +3780,7 @@ Bool Imager::filter(const String& type, const Quantity& bmaj,
       }
     }
     else{
-       os << LogIO::NORMAL1
+       os << LogIO::NORMAL // Loglevel INFO
           << "Imaging weights will be tapered" << LogIO::POST;
       imwgt_p.setFilter(type, bmaj, bmin, bpa);
       rvi_p->useImagingWeight(imwgt_p);
@@ -3804,7 +3811,7 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
   LogIO os(LogOrigin("imager", "uvrange()"),logSink_p);
   
   try {
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Selecting data according to  uvrange: setdata will reset this selection"
        << LogIO::POST;
 
@@ -3813,7 +3820,7 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
 
     if(auvmax<=0.0) auvmax=1e10;
     if(auvmax>auvmin&&(auvmin>=0.0)) {
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Allowed uv range: " << auvmin << " to " << auvmax
 	 << " wavelengths" << LogIO::POST;
     }
@@ -3896,7 +3903,7 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
 	 delete mssel_p2;
      } else {
        if (!mssel_p.null()) {
-	     os << LogIO::NORMAL1
+	     os << LogIO::NORMAL // Loglevel INFO
                 << "By UVRANGE selection previously selected number of rows "
                 << mssel_p->nrow() << "  are now reduced to "
                 << mssel_p2->nrow() << LogIO::POST; 
@@ -3939,21 +3946,21 @@ Bool Imager::sensitivity(Quantity& pointsourcesens, Double& relativesens,
   
   try {
     
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Calculating sensitivity from IMAGING_WEIGHT and SIGMA columns"
        << LogIO::POST;
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "(assuming that SIGMA column is correct, otherwise scale appropriately)"
        << LogIO::POST;
     
     this->lock();
     VisSetUtil::Sensitivity(*rvi_p, pointsourcesens, relativesens, sumwt);
-    os << LogIO::NORMAL1 << "RMS Point source sensitivity  : "
+    os << LogIO::NORMAL << "RMS Point source sensitivity  : " // Loglevel INFO
        << pointsourcesens.get("Jy").getValue() << " Jy/beam"
        << LogIO::POST;
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Relative to natural weighting : " << relativesens << LogIO::POST;
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Sum of weights                : " << sumwt << LogIO::POST;
     this->unlock();
     return True;
@@ -4005,7 +4012,7 @@ Bool Imager::makeimage(const String& type, const String& image,
 	return False;
       }
     
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Calculating image (without full skyequation)" << LogIO::POST;
     
     FTMachine::Type seType(FTMachine::OBSERVED);
@@ -4013,7 +4020,7 @@ Bool Imager::makeimage(const String& type, const String& image,
 
     if(type=="observed") {
       seType=FTMachine::OBSERVED;
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Making dirty image from " << type << " data "
 	 << LogIO::POST;
     }
@@ -4023,13 +4030,13 @@ Bool Imager::makeimage(const String& type, const String& image,
            << "Cannot make model image without scratch model-data column "
 	   << LogIO::EXCEPTION;
       seType=FTMachine::MODEL;
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Making dirty image from " << type << " data "
 	 << LogIO::POST;
     }
     else if (type=="corrected") {
       seType=FTMachine::CORRECTED;
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Making dirty image from " << type << " data "
 	 << LogIO::POST;
     }
@@ -4047,40 +4054,40 @@ Bool Imager::makeimage(const String& type, const String& image,
            << "Cannot make residual image without scratch model-data column "
 	   << LogIO::EXCEPTION;
       seType=FTMachine::RESIDUAL;
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Making dirty image from " << type << " data "
 	 << LogIO::POST;
     }
     else if (type=="singledish-observed") {
       doSD = True;
       seType=FTMachine::OBSERVED;
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Making single dish image from observed data" << LogIO::POST;
     }
     else if (type=="singledish") {
       doSD = True;
       seType=FTMachine::CORRECTED;
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Making single dish image from corrected data" << LogIO::POST;
     }
     else if (type=="coverage") {
       doSD = True;
       seType=FTMachine::COVERAGE;
-      os << LogIO::NORMAL2
+      os << LogIO::NORMAL // Loglevel PROGRESS
          << "Making single dish coverage function "
 	 << LogIO::POST;
     }
     else if (type=="holography") {
       doSD = True;
       seType=FTMachine::CORRECTED;
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Making complex holographic image from corrected data "
 	 << LogIO::POST;
     }
     else if (type=="holography-observed") {
       doSD = True;
       seType=FTMachine::OBSERVED;
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Making complex holographic image from observed data "
 	 << LogIO::POST;
     }
@@ -4144,7 +4151,7 @@ Bool Imager::makeimage(const String& type, const String& image,
     if(image=="") {
       imageName=Imager::imageName()+".image";
     }
-    os << LogIO::NORMAL1 << "Image is : " << imageName << LogIO::POST;
+    os << LogIO::NORMAL << "Image is : " << imageName << LogIO::POST; // Loglevel INFO
     Bool keepImage=(image!="");
     Bool keepComplexImage=(compleximage!="")||(type=="holography")||(type=="holography-observed");
     String cImageName(compleximage);
@@ -4158,7 +4165,7 @@ Bool Imager::makeimage(const String& type, const String& image,
     }
 
     CoordinateSystem imagecoords;
-    if(!imagecoordinates(imagecoords))
+    if(!imagecoordinates(imagecoords, false))
       {
 
 #ifdef PABLO_IO
@@ -4179,7 +4186,7 @@ Bool Imager::makeimage(const String& type, const String& image,
 			min(4, cimageShape(2)), min(32, cimageShape(3)));
     
     CoordinateSystem cimagecoords;
-    if(!imagecoordinates(cimagecoords))
+    if(!imagecoordinates(cimagecoords, false))
       {
 
 #ifdef PABLO_IO
@@ -4270,7 +4277,7 @@ Bool Imager::restore(const Vector<String>& model,
       return False;
     }
     else {
-      os << LogIO::NORMAL2
+      os << LogIO::NORMAL // Loglevel PROGRESS
          << "Restoring " << model.nelements() << " models" << LogIO::POST;
     }
     
@@ -4319,10 +4326,10 @@ Bool Imager::restore(const Vector<String>& model,
       }
     
       if(beamValid_p) {
-	os << LogIO::NORMAL1 << "Using previous beam fit" << LogIO::POST;
+	os << LogIO::NORMAL << "Using previous beam fit" << LogIO::POST; // Loglevel INFO
       }
       else {
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Calculating PSF using current parameters" << LogIO::POST;
 	String psf;
 	psf=imageNames(0)+".psf";
@@ -4366,7 +4373,7 @@ Bool Imager::residual(const Vector<String>& model,
   this->lock();
   try {
     if(!assertDefinedImageParameters()) return False;
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Calculating residual image using full sky equation" << LogIO::POST;
     Vector<String> theModels=model;
 
@@ -4389,7 +4396,7 @@ Bool Imager::residual(const Vector<String>& model,
       return False;
     }
     else {
-      os << LogIO::NORMAL1 << "Finding residuals for " << theModels.nelements()
+      os << LogIO::NORMAL << "Finding residuals for " << theModels.nelements() // Loglevel INFO
 	 << " models" << LogIO::POST;
     }
     
@@ -4443,7 +4450,7 @@ Bool Imager::approximatepsf(const String& psf)
   this->lock();
   try {
     if(!assertDefinedImageParameters()) return False;
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Calculating approximate PSFs using full sky equation" << LogIO::POST;
     
  
@@ -4474,7 +4481,7 @@ Bool Imager::approximatepsf(const String& psf)
     StokesImageUtil::FitGaussianPSF(elpsf, mbmaj, mbmin, mbpa);
     LatticeExprNode sumPSF = sum(elpsf);
     Float volume=sumPSF.getFloat();
-    os << LogIO::NORMAL1 << "Approximate PSF  "  << ": size "
+    os << LogIO::NORMAL << "Approximate PSF  "  << ": size " // Loglevel INFO
        << mbmaj.get("arcsec").getValue() << " by "
        << mbmin.get("arcsec").getValue() << " (arcsec) at pa " 
        << mbpa.get("deg").getValue() << " (deg)" << endl
@@ -4509,7 +4516,7 @@ Bool Imager::smooth(const Vector<String>& model,
   try {
     if(!assertDefinedImageParameters()) return False;
     
-    os << LogIO::NORMAL2 << "Smoothing image" << LogIO::POST;
+    os << LogIO::NORMAL << "Smoothing image" << LogIO::POST; // Loglevel PROGRESS
     
     if(model.nelements()>0) {
       for ( uInt thismodel=0;thismodel<model.nelements(); ++thismodel) {
@@ -4529,13 +4536,13 @@ Bool Imager::smooth(const Vector<String>& model,
     
     if(usefit) {
       if(beamValid_p) {
-	os << LogIO::NORMAL1 << "Using previous beam" << LogIO::POST;
+	os << LogIO::NORMAL << "Using previous beam" << LogIO::POST; // Loglevel INFO
 	mbmaj=bmaj_p;
 	mbmin=bmin_p;
 	mbpa=bpa_p;
       }
       else {
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Calculating PSF using current parameters" << LogIO::POST;
 	String psf;
 	psf=model(0)+".psf";
@@ -4745,7 +4752,7 @@ Bool Imager::clean(const String& algorithm,
 	sm_p->setSubAlgorithm("hogbom");
 	doMultiFields_p = True;
 	doMultiFields_p = False;
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Using wide-field algorithm with Hogbom Clean" << LogIO::POST;
       }
       else if (algorithm=="multiscale") {
@@ -4769,25 +4776,25 @@ Bool Imager::clean(const String& algorithm,
 	   sm_p->setJointStokesClean(False);
 
 	doMultiFields_p = True;
-	os << LogIO::NORMAL1 << "Using Clark Clean" << LogIO::POST;
+	os << LogIO::NORMAL << "Using Clark Clean" << LogIO::POST; // Loglevel INFO
       }
       else if (algorithm=="csclean" || algorithm=="cs") {
 	sm_p = new CSCleanImageSkyModel();
 	doMultiFields_p = True;
-	os << LogIO::NORMAL1 << "Using Cotton-Schwab Clean" << LogIO::POST;
+	os << LogIO::NORMAL << "Using Cotton-Schwab Clean" << LogIO::POST; // Loglevel INFO
       }
       else if (algorithm=="csfast" || algorithm=="csf") {
 	sm_p = new CSCleanImageSkyModel();
 	sm_p->setSubAlgorithm("fast");
 	doMultiFields_p = True;
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Using Cotton-Schwab Clean (optimized)" << LogIO::POST;
       }
       else if (algorithm=="mfhogbom") {
 	sm_p = new MFCleanImageSkyModel();
 	sm_p->setSubAlgorithm("hogbom");
 	doMultiFields_p = True;
-	os << LogIO::NORMAL1 << "Using Hogbom Clean" << LogIO::POST;
+	os << LogIO::NORMAL << "Using Hogbom Clean" << LogIO::POST; // Loglevel INFO
       }
       else if (algorithm=="mfmultiscale") {
 	if (!scaleInfoValid_p) {
@@ -4811,7 +4818,7 @@ Bool Imager::clean(const String& algorithm,
 	sm_p->setSubAlgorithm("full");
 
 	doMultiFields_p = True;
-	os << LogIO::NORMAL1 << "Using Multi-Scale Clean" 
+	os << LogIO::NORMAL << "Using Multi-Scale Clean"  // Loglevel INFO
 	   << LogIO::POST;
       } 
       else if (algorithm=="wfclark" || algorithm=="wf") {
@@ -4819,7 +4826,7 @@ Bool Imager::clean(const String& algorithm,
 	setWFCleanImageSkyModel();
 	sm_p->setSubAlgorithm("clark");
 	doMultiFields_p = False;
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Using wide-field algorithm with Clark Clean" << LogIO::POST;
       }
       else if (algorithm=="wfhogbom") {
@@ -4827,7 +4834,7 @@ Bool Imager::clean(const String& algorithm,
 	setWFCleanImageSkyModel();
 	sm_p->setSubAlgorithm("hogbom");
 	doMultiFields_p = False;
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Using wide-field algorithm with Hogbom Clean" << LogIO::POST;
       }
       else if (algorithm=="msmfs") {
@@ -4847,7 +4854,7 @@ Bool Imager::clean(const String& algorithm,
 	} else {
 	   sm_p = new WBCleanImageSkyModel(ntaylor_p,nscales_p,reffreq_p);
 	}
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Using multi frequency synthesis Algorithm" << LogIO::POST;
 	((WBCleanImageSkyModel*)sm_p)->imageNames = Vector<String>(image);
       }
@@ -4903,13 +4910,13 @@ Bool Imager::clean(const String& algorithm,
     traceEvent(1,"Starting Deconvolution",23);
 #endif
 
-    os << LogIO::NORMAL2 << "Starting deconvolution" << LogIO::POST;
+    os << LogIO::NORMAL << "Starting deconvolution" << LogIO::POST; // Loglevel PROGRESS
     if(se_p->solveSkyModel()) {
-      os << LogIO::NORMAL2 << "Successfully deconvolved image" << LogIO::POST;
+      os << LogIO::NORMAL << "Successfully deconvolved image" << LogIO::POST; // Loglevel PROGRESS
     }
     else {
       converged=False;
-      os << LogIO::NORMAL2 << "Threshhold not reached yet." << LogIO::POST;
+      os << LogIO::NORMAL << "Threshhold not reached yet." << LogIO::POST; // Loglevel PROGRESS
     }
 
 #ifdef PABLO_IO
@@ -4918,7 +4925,7 @@ Bool Imager::clean(const String& algorithm,
 
     //Use predefined beam for restoring or find one by fitting
     if(beamValid_p == True){
-      os << LogIO::NORMAL1 << "Beam used in restoration: " ;
+      os << LogIO::NORMAL << "Beam used in restoration: " ; // Loglevel INFO
     }
     else{
       Vector<Float> beam(3);
@@ -4927,10 +4934,10 @@ Bool Imager::clean(const String& algorithm,
       bmin_p=Quantity(abs(beam(1)), "arcsec");
       bpa_p=Quantity(beam(2), "deg");
       beamValid_p=True;
-      os << LogIO::NORMAL1 << "Fitted beam used in restoration: " ;	
+      os << LogIO::NORMAL << "Fitted beam used in restoration: " ;	 // Loglevel INFO
     }
 
-    os << LogIO::NORMAL1 << bmaj_p.get("arcsec").getValue() << " by "
+    os << LogIO::NORMAL << bmaj_p.get("arcsec").getValue() << " by " // Loglevel INFO
        << bmin_p.get("arcsec").getValue() << " (arcsec) at pa " 
        << bpa_p.get("deg").getValue() << " (deg) " << LogIO::POST;
 
@@ -5043,7 +5050,7 @@ Bool Imager::clean(const String& algorithm,
   traceEvent(1,"Exiting Imager::clean",21);
 #endif  
 
-  os << LogIO::NORMAL2 << "Exiting Imager::clean" << LogIO::POST;
+  os << LogIO::NORMAL << "Exiting Imager::clean" << LogIO::POST; // Loglevel PROGRESS
   return converged;
 }
 
@@ -5076,10 +5083,10 @@ Bool Imager::mem(const String& algorithm,
       {
 	return False;
       }
-    os << LogIO::NORMAL2 << "Deconvolving images with MEM" << LogIO::POST;
+    os << LogIO::NORMAL << "Deconvolving images with MEM" << LogIO::POST; // Loglevel PROGRESS
     
     Int nmodels=model.nelements();
-    os << LogIO::NORMAL1 
+    os << LogIO::NORMAL  // Loglevel INFO
        << "Found " << nmodels << " specified model images" << LogIO::POST;
     
     if(model.nelements()>0) {
@@ -5147,7 +5154,7 @@ Bool Imager::mem(const String& algorithm,
 				    constrainFlux,
 				    prior,
 				    algorithm);
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Using single-field algorithm with Maximum Entropy" << LogIO::POST;
       if(ftmachine_p=="mosaic" ||ftmachine_p=="wproject" )
 	sm_p->setSubAlgorithm("full");
@@ -5158,7 +5165,7 @@ Bool Imager::mem(const String& algorithm,
 				    constrainFlux,
 				    prior,
 				    algorithm);
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Using single-field algorithm with Maximum Emptiness" << LogIO::POST;
       if(ftmachine_p=="mosaic" ||ftmachine_p=="wproject" )
 	sm_p->setSubAlgorithm("full");
@@ -5170,7 +5177,7 @@ Bool Imager::mem(const String& algorithm,
 				      prior,
 				      algorithm);
       doMultiFields_p = True;
-      os << LogIO::NORMAL1 << "Using Maximum Entropy" << LogIO::POST;
+      os << LogIO::NORMAL << "Using Maximum Entropy" << LogIO::POST; // Loglevel INFO
       //   if(ftmachine_p=="mosaic" ||ftmachine_p=="wproject" )
       sm_p->setSubAlgorithm("full");
     } else if (algorithm=="mfemptiness") {
@@ -5180,7 +5187,7 @@ Bool Imager::mem(const String& algorithm,
 				      prior,
 				      algorithm);
       doMultiFields_p = True;
-      os << LogIO::NORMAL1 << "Using Maximum Emptiness" << LogIO::POST;
+      os << LogIO::NORMAL << "Using Maximum Emptiness" << LogIO::POST; // Loglevel INFO
       // if(ftmachine_p=="mosaic" ||ftmachine_p=="wproject" )
       sm_p->setSubAlgorithm("full");
     } else {
@@ -5214,12 +5221,12 @@ Bool Imager::mem(const String& algorithm,
     
     addResidualsToSkyEquation(residualNames);
 
-    os << LogIO::NORMAL2 << "Starting deconvolution" << LogIO::POST;
+    os << LogIO::NORMAL << "Starting deconvolution" << LogIO::POST; // Loglevel PROGRESS
     if(se_p->solveSkyModel()) {
-      os << LogIO::NORMAL1 << "Successfully deconvolved image" << LogIO::POST;
+      os << LogIO::NORMAL << "Successfully deconvolved image" << LogIO::POST; // Loglevel INFO
     }
     else {
-      os << LogIO::NORMAL1 << "Nominally failed deconvolution" << LogIO::POST;
+      os << LogIO::NORMAL << "Nominally failed deconvolution" << LogIO::POST; // Loglevel INFO
     }
 
     // Get the PSF fit while we are here
@@ -5320,22 +5327,22 @@ Bool Imager::pixon(const String& algorithm,
       
       PagedImage<Float> modelImage(modelName);
       
-      os << LogIO::NORMAL2 << "Single dish pixon processing" << LogIO::POST;
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL << "Single dish pixon processing" << LogIO::POST; // Loglevel PROGRESS
+      os << LogIO::NORMAL // Loglevel INFO
          << "Using defaults for primary beams in pixon processing" << LogIO::POST;
       gvp_p=new VPSkyJones(*mssel_p, True, parAngleInc_p, squintType_p,
                            skyPosThreshold_p);
-      os << LogIO::NORMAL2 << "Calculating data sampling, etc." << LogIO::POST;
+      os << LogIO::NORMAL << "Calculating data sampling, etc." << LogIO::POST; // Loglevel PROGRESS
       SDDataSampling ds(*mssel_p, *gvp_p, modelImage.coordinates(),
 			modelImage.shape(), sigma);
       
-      os << LogIO::NORMAL2 << "Finding pixon solution" << LogIO::POST;
+      os << LogIO::NORMAL << "Finding pixon solution" << LogIO::POST; // Loglevel PROGRESS
       PixonProcessor pp;
 
       IPosition zero(4, 0, 0, 0, 0);
       Array<Float> result;
       if(pp.calculate(ds, result)) {
-	os << LogIO::NORMAL1 << "Pixon solution succeeded" << LogIO::POST;
+	os << LogIO::NORMAL << "Pixon solution succeeded" << LogIO::POST; // Loglevel INFO
 	modelImage.putSlice(result, zero);
       }
       else {
@@ -5353,18 +5360,18 @@ Bool Imager::pixon(const String& algorithm,
       
       PagedImage<Float> modelImage(modelName);
       
-      os << LogIO::NORMAL1 << "Synthesis pixon processing" << LogIO::POST;
-      os << LogIO::NORMAL2 << "Calculating data sampling, etc." << LogIO::POST;
+      os << LogIO::NORMAL << "Synthesis pixon processing" << LogIO::POST; // Loglevel INFO
+      os << LogIO::NORMAL << "Calculating data sampling, etc." << LogIO::POST; // Loglevel PROGRESS
       SynDataSampling ds(*mssel_p, modelImage.coordinates(),
 			 modelImage.shape(), sigma);
       
-      os << LogIO::NORMAL2 << "Finding pixon solution" << LogIO::POST;
+      os << LogIO::NORMAL << "Finding pixon solution" << LogIO::POST; // Loglevel PROGRESS
       PixonProcessor pp;
       
       IPosition zero(4, 0, 0, 0, 0);
       Array<Float> result;
       if(pp.calculate(ds, result)) {
-	os << LogIO::NORMAL1 << "Pixon solution succeeded" << LogIO::POST;
+	os << LogIO::NORMAL << "Pixon solution succeeded" << LogIO::POST; // Loglevel INFO
 	modelImage.putSlice(result, zero);
       }
       else {
@@ -5382,7 +5389,7 @@ Bool Imager::pixon(const String& algorithm,
       
       PagedImage<Float> modelImage(modelName);
       
-      os << LogIO::NORMAL2 << "Synthesis image pixon processing" << LogIO::POST;
+      os << LogIO::NORMAL << "Synthesis image pixon processing" << LogIO::POST; // Loglevel PROGRESS
       String dirtyName=modelName+".dirty";
       Imager::makeimage("corrected", dirtyName);
       String psfName=modelName+".psf";
@@ -5406,7 +5413,7 @@ Bool Imager::pixon(const String& algorithm,
 
     else if(algorithm=="test") {
 
-      os << LogIO::NORMAL1 << "Pixon standard test" << LogIO::POST;
+      os << LogIO::NORMAL << "Pixon standard test" << LogIO::POST; // Loglevel INFO
       PixonProcessor pp;
 
       return pp.standardTest();
@@ -5588,12 +5595,12 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
 
         } else {
 	  answer = False;
-          os << LogIO::NORMAL1
+          os << LogIO::NORMAL // Loglevel INFO
              << "No flux scale available (or required) for model " << thismodel
              << LogIO::POST;
-          os << LogIO::NORMAL1
+          os << LogIO::NORMAL // Loglevel INFO
              << "(This is only pertinent to mosaiced images)" << LogIO::POST;
-          os << LogIO::NORMAL1
+          os << LogIO::NORMAL // Loglevel INFO
              << "Writing out image of constant 1.0" << LogIO::POST;
           fluxScale.set(1.0);
         }
@@ -5619,7 +5626,7 @@ Bool Imager::nnls(const String&,  const Int niter, const Float tolerance,
   try {
     if(!assertDefinedImageParameters()) return False;
     
-    os << LogIO::NORMAL2 << "Performing NNLS deconvolution" << LogIO::POST;
+    os << LogIO::NORMAL << "Performing NNLS deconvolution" << LogIO::POST; // Loglevel PROGRESS
     
     if(niter<0) {
       this->unlock();
@@ -5676,13 +5683,13 @@ Bool Imager::nnls(const String&,  const Int niter, const Float tolerance,
 
     addResidualsToSkyEquation(residualNames);
     
-    os << LogIO::NORMAL2 << "Starting deconvolution" << LogIO::POST;
+    os << LogIO::NORMAL << "Starting deconvolution" << LogIO::POST; // Loglevel PROGRESS
 
     if(se_p->solveSkyModel()) {
-      os << LogIO::NORMAL1 << "Successfully deconvolved image" << LogIO::POST;
+      os << LogIO::NORMAL << "Successfully deconvolved image" << LogIO::POST; // Loglevel INFO
     }
     else {
-      os << LogIO::NORMAL1 << "Nominally failed deconvolution" << LogIO::POST;
+      os << LogIO::NORMAL << "Nominally failed deconvolution" << LogIO::POST; // Loglevel INFO
     }
     
     // Get the PSF fit while we are here
@@ -5718,11 +5725,11 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
     
     if(sm_p) destroySkyEquation();
     if(incremental) {
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Fourier transforming: adding to MODEL_DATA column" << LogIO::POST;
     }
     else {
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Fourier transforming: replacing MODEL_DATA column" << LogIO::POST;
     }
     
@@ -5942,7 +5949,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 	  os << (spwid) << "  ";
 	  os.output().width(0);
 	  os.output().precision(4);
-	  os << LogIO::NORMAL1 << "[I=" << fluxUsed(0) << ", ";
+	  os << LogIO::NORMAL << "[I=" << fluxUsed(0) << ", "; // Loglevel INFO
 	  os << "Q=" << fluxUsed(1) << ", ";
 	  os << "U=" << fluxUsed(2) << ", ";
 	  os << "V=" << fluxUsed(3) << "] Jy, ";
@@ -6150,7 +6157,7 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 	os << (spwid) << "  ";
 	os.output().width(0);
 	os.output().precision(4);
-	os << LogIO::NORMAL1 << "[I=" << fluxUsed(0) << ", ";
+	os << LogIO::NORMAL << "[I=" << fluxUsed(0) << ", "; // Loglevel INFO
 	os << "Q=" << fluxUsed(1) << ", ";
 	os << "U=" << fluxUsed(2) << ", ";
 	os << "V=" << fluxUsed(3) << "] Jy, ";
@@ -6196,15 +6203,15 @@ Bool Imager::setjy(const Vector<Int>& fieldid,
 	  // scale the image
 	  tmodimage->copyData( (LatticeExpr<Float>)(modimage*scale) );
 
-	  os << LogIO::NORMAL1 << "Using model image " << modimage.name()
+	  os << LogIO::NORMAL << "Using model image " << modimage.name() // Loglevel INFO
 	     << LogIO::POST;
 
-	  os << LogIO::NORMAL1
+	  os << LogIO::NORMAL // Loglevel INFO
              << "The model image's reference pixel is " << sep << " arcsec from "
 	     << fieldName << "'s phase center."
 	     << LogIO::POST;
 	  
-	  os << LogIO::NORMAL1 << "Scaling model image to I=" << fluxUsed(0)
+	  os << LogIO::NORMAL << "Scaling model image to I=" << fluxUsed(0) // Loglevel INFO
 	     << " Jy for visibility prediction."
 	     << LogIO::POST;
 
@@ -6416,7 +6423,7 @@ Bool Imager::fitpsf(const String& psf, Quantity& mbmaj, Quantity& mbmin,
 	return False;
       }
     
-    os << LogIO::NORMAL2 << "Fitting to psf" << LogIO::POST;
+    os << LogIO::NORMAL << "Fitting to psf" << LogIO::POST; // Loglevel PROGRESS
     
     String lpsf; lpsf=psf;
     if(lpsf=="") {
@@ -6443,7 +6450,7 @@ Bool Imager::fitpsf(const String& psf, Quantity& mbmaj, Quantity& mbmin,
     bpa_p=mbpa;
     beamValid_p=True;
     
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "  Beam fit: " << bmaj_p.get("arcsec").getValue() << " by "
        << bmin_p.get("arcsec").getValue() << " (arcsec) at pa " 
        << bpa_p.get("deg").getValue() << " (deg) " << endl;
@@ -6614,7 +6621,7 @@ Bool Imager::plotuv(const Bool rotate)
   
   this->lock();
   try {
-    os << LogIO::NORMAL2
+    os << LogIO::NORMAL // Loglevel PROGRESS
        << "Plotting uv coverage for currently selected data" << LogIO::POST;
     
     ROVisIter& vi(*rvi_p);
@@ -6629,7 +6636,7 @@ Bool Imager::plotuv(const Bool rotate)
     }
     
     if(rotate) {
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "UVW will be rotated to specified phase center" << LogIO::POST;    
     }
     
@@ -6683,9 +6690,9 @@ Bool Imager::plotuv(const Bool rotate)
     }
     else {
       Quantity cell(0.5/maxAbsUV, "rad");
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Maximum uv distance = " << maxAbsUV << " wavelengths" << endl;
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Recommended cell size < " << cell.get("arcsec").getValue()
 	 << " arcsec" << LogIO::POST;
     }
@@ -6752,7 +6759,7 @@ Bool Imager::plotvis(const String& type, const Int increment)
   this->lock();
   try {
     
-    os << LogIO::NORMAL2
+    os << LogIO::NORMAL // Loglevel PROGRESS
        << "Plotting Stokes I visibility for currently selected data"
        << LogIO::POST;
     
@@ -6806,11 +6813,11 @@ Bool Imager::plotvis(const String& type, const Int increment)
     }
     
     if(increment>1) {
-      os << LogIO::NORMAL1 << "For increment = " << increment << ", found " << nVis
+      os << LogIO::NORMAL << "For increment = " << increment << ", found " << nVis // Loglevel INFO
 	 << " points for plotting" << endl;
     }
     else {
-      os << LogIO::NORMAL1 << "Found " << nVis << " points for plotting" << endl;
+      os << LogIO::NORMAL << "Found " << nVis << " points for plotting" << endl; // Loglevel INFO
     }
     Vector<Float> amp(nVis); amp=0.0;
     Vector<Float> correctedAmp(nVis); correctedAmp=0.0;
@@ -6983,7 +6990,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
   try {
     
     
-    os << LogIO::NORMAL2
+    os << LogIO::NORMAL // Loglevel PROGRESS
        << "Plotting IMAGING_WEIGHT column for currently selected data"
        << LogIO::POST;
     
@@ -7038,7 +7045,7 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
       }
       
       if(sumwt>0.0) {
-	os << LogIO::NORMAL1 << "Sum of weights = " << sumwt << endl;
+	os << LogIO::NORMAL << "Sum of weights = " << sumwt << endl; // Loglevel INFO
       }
       else {
 	this->unlock();
@@ -7101,12 +7108,12 @@ Bool Imager::plotweights(const Bool gridded, const Int increment)
       }
       
       if(increment>1) {
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "For increment = " << increment << ", found " << nVis
 	   << " points for plotting" << endl;
       }
       else {
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Found " << nVis << " points for plotting" << endl;
       }
       
@@ -7192,7 +7199,7 @@ Bool Imager::clipvis(const Quantity& threshold)
     
     Float thres=threshold.get("Jy").getValue();
     
-    os << LogIO::NORMAL2
+    os << LogIO::NORMAL // Loglevel PROGRESS
        << "Clipping visibilities where residual visibility > "
        << thres << " Jy" << LogIO::POST;
     if(!wvi_p){
@@ -7233,7 +7240,7 @@ Bool Imager::clipvis(const Quantity& threshold)
       }
     }
     
-    os << LogIO::NORMAL1 << "Flagged " << nBad << " points" << LogIO::POST;
+    os << LogIO::NORMAL << "Flagged " << nBad << " points" << LogIO::POST; // Loglevel INFO
     
     this->unlock();
     return True;
@@ -7394,13 +7401,13 @@ Bool Imager::createFTMachine()
   padding=1.0;
   if(doMultiFields_p||(facets_p>1)) {
     padding = padding_p;
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Multiple fields or facets: transforms will be padded by a factor "
        << padding << LogIO::POST;
   }
 
   if(ftmachine_p=="sd") {
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Performing Single Dish gridding with convolution function "
        << gridfunction_p << LogIO::POST;
 
@@ -7417,16 +7424,16 @@ Bool Imager::createFTMachine()
     oos.width(widthDec); oos << mvDec.string(MVAngle::DIG2,8);
     oos << "     "
 	<< MDirection::showType(phaseCenter_p.getRefPtr()->getType());
-    os << LogIO::NORMAL1 << String(oos)  << LogIO::POST;
+    os << LogIO::NORMAL << String(oos)  << LogIO::POST; // Loglevel INFO
     if(gridfunction_p=="pb") {
       if(!gvp_p) {
 	if (doDefaultVP_p) {
-	  os << LogIO::NORMAL1
+	  os << LogIO::NORMAL // Loglevel INFO
              << "Using defaults for primary beams used in gridding" << LogIO::POST;
 	  gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
                                skyPosThreshold_p);
 	} else {
-	  os << LogIO::NORMAL1
+	  os << LogIO::NORMAL // Loglevel INFO
              << "Using VP as defined in " << vpTableStr_p <<  LogIO::POST;
 	  Table vpTable( vpTableStr_p ); 
 	  gvp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p,
@@ -7453,7 +7460,7 @@ Bool Imager::createFTMachine()
     AlwaysAssert(cft_p, AipsError);
   }
   else if(ftmachine_p=="mosaic") {
-    os << LogIO::NORMAL2 << "Performing Mosaic gridding" << LogIO::POST;
+    os << LogIO::NORMAL << "Performing Mosaic gridding" << LogIO::POST; // Loglevel PROGRESS
    
     setMosaicFTMachine();
 
@@ -7470,7 +7477,7 @@ Bool Imager::createFTMachine()
   // Make WProject FT machine (for non co-planar imaging)
   //
   else if (ftmachine_p == "wproject"){
-    os << LogIO::NORMAL2 << "Performing w-plane projection"
+    os << LogIO::NORMAL << "Performing w-plane projection" // Loglevel PROGRESS
        << LogIO::POST;
     if(wprojPlanes_p<64) {
       os << LogIO::WARN
@@ -7493,21 +7500,21 @@ Bool Imager::createFTMachine()
 	os << LogIO::NORMAL
 	   << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
 	   << LogIO::POST;
-	os << LogIO::NORMAL2 << "Performing pb-projection" << LogIO::POST;
+	os << LogIO::NORMAL << "Performing pb-projection" << LogIO::POST; // Loglevel PROGRESS
       }
     if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
       {
 	os << LogIO::WARN
 	   << "No. of w-planes set too low for W projection - recommend at least 128"
 	   << LogIO::POST;
-	os << LogIO::NORMAL2 << "Performing pb + w-plane projection"
+	os << LogIO::NORMAL << "Performing pb + w-plane projection" // Loglevel PROGRESS
 	   << LogIO::POST;
       }
 
 
     if(!gvp_p) 
       {
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Using defaults for primary beams used in gridding" << LogIO::POST;
 	gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
                                skyPosThreshold_p);
@@ -7564,19 +7571,19 @@ Bool Imager::createFTMachine()
 	os << LogIO::NORMAL
 	   << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
 	   << LogIO::POST;
-	os << LogIO::NORMAL2 << "Performing pb-mosaic" << LogIO::POST;
+	os << LogIO::NORMAL << "Performing pb-mosaic" << LogIO::POST; // Loglevel PROGRESS
       }
     if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
       {
 	os << LogIO::WARN
 	   << "No. of w-planes set too low for W projection - recommend at least 128"
 	   << LogIO::POST;
-	os << LogIO::NORMAL2 << "Performing pb + w-plane projection" << LogIO::POST;
+	os << LogIO::NORMAL << "Performing pb + w-plane projection" << LogIO::POST; // Loglevel PROGRESS
       }
 
     if(!gvp_p) 
       {
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Using defaults for primary beams used in gridding" << LogIO::POST;
 	gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
                                skyPosThreshold_p);
@@ -7630,15 +7637,15 @@ Bool Imager::createFTMachine()
   }
   else if(ftmachine_p=="both") {
       
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Performing single dish gridding with convolution function "
        << gridfunction_p << LogIO::POST;
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "and interferometric gridding with the prolate spheroidal convolution function"
        << LogIO::POST;
     
     // Now make the Single Dish Gridding
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Gridding will use specified common tangent point:" << LogIO::POST;
     MVAngle mvRa=phaseCenter_p.getAngle().getValue()(0);
     MVAngle mvDec=phaseCenter_p.getAngle().getValue()(1);
@@ -7651,18 +7658,18 @@ Bool Imager::createFTMachine()
     oos.width(widthDec); oos << mvDec.string(MVAngle::DIG2,8);
     oos << "     "
 	<< MDirection::showType(phaseCenter_p.getRefPtr()->getType());
-    os << LogIO::NORMAL1 << String(oos)  << LogIO::POST;
+    os << LogIO::NORMAL << String(oos)  << LogIO::POST; // Loglevel INFO
     if(!gvp_p) {
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Using defaults for primary beams used in gridding" << LogIO::POST;
       gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
                              skyPosThreshold_p);
     }
     if(sdScale_p != 1.0)
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Multiplying single dish data by factor " << sdScale_p << LogIO::POST;
     if(sdWeight_p != 1.0)
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Multiplying single dish weights by factor " << sdWeight_p
          << LogIO::POST;
     ft_p = new GridBoth(*gvp_p, cache_p/2, tile_p,
@@ -7682,12 +7689,12 @@ Bool Imager::createFTMachine()
     
   }  
   else {
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Performing interferometric gridding with convolution function "
        << gridfunction_p << LogIO::POST;
     // Now make the FTMachine
     if(facets_p>1) {
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Multi-facet Fourier transforms will use specified common tangent point:"
 	 << LogIO::POST;
       MVAngle mvRa=phaseCenter_p.getAngle().getValue()(0);
@@ -7701,7 +7708,7 @@ Bool Imager::createFTMachine()
       oos.width(widthDec); oos << mvDec.string(MVAngle::DIG2,8);
       oos << "     "
 	  << MDirection::showType(phaseCenter_p.getRefPtr()->getType());
-      os << LogIO::NORMAL1 << String(oos)  << LogIO::POST;
+      os << LogIO::NORMAL << String(oos)  << LogIO::POST; // Loglevel INFO
       ft_p = new GridFT(cache_p / 2, tile_p, gridfunction_p, mLocation_p,
                         phaseCenter_p, padding);
       
@@ -7836,7 +7843,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
 	 << " to SkyModel" << LogIO::POST;
       return False;
     }
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Processing after subtracting componentlist " << complist << LogIO::POST;
   }
   else {
@@ -7926,13 +7933,13 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
       setSkyEquation();
       if(ft_p->name() != "MosaicFT") 
 	sm_p->mandateFluxScale(0);
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Mosaicing multiple fields with simple sky equation" << LogIO::POST;
     }
     // mosaicing with no vp correction
     else{
       setSkyEquation();
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Processing multiple fields with simple sky equation" << LogIO::POST;
       os << LogIO::WARN
          << "Voltage Pattern is not set: will not correct for primary beam"
@@ -7946,7 +7953,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
     if((facets_p >1)){
 	setSkyEquation();
 	//se_p=new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p);
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Processing multiple facets with simple sky equation" << LogIO::POST;
     }
     // Mosaicing
@@ -7957,7 +7964,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
       setSkyEquation();
       if(ft_p->name() != "MosaicFT") 
 	sm_p->mandateFluxScale(0);
-      os << LogIO::NORMAL2
+      os << LogIO::NORMAL // Loglevel PROGRESS
          << "Mosaicing single field with simple sky equation" << LogIO::POST;      
     }
     // Default
@@ -8090,7 +8097,7 @@ Bool Imager::addMasksToSkyEquation(const Vector<String>& mask, const Vector<Bool
 
     
     if((Int(fixed.nelements())>model) && fixed(model)) {
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Model " << model << " will be held fixed" << LogIO::POST;
       sm_p->fix(model);
     }     
@@ -8127,7 +8134,7 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
       return False;
     }
 
-    os << LogIO::NORMAL1 << "Creating an initial model image " << modelImage 
+    os << LogIO::NORMAL << "Creating an initial model image " << modelImage  // Loglevel INFO
        << " from single dish image " << sdImage << LogIO::POST;
     
     CoordinateSystem coordsys;
@@ -8158,7 +8165,7 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
     // Will need to make a complex image to apply the beam
     TempImage<Complex> ctemp(model.shape(), model.coordinates());
     if(lowPSF=="") {
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Using primary beam of single dish to determine flux scale"
          << LogIO::POST;
 
@@ -8203,7 +8210,7 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
       
     }
     else {
-      os << LogIO::NORMAL1
+      os << LogIO::NORMAL // Loglevel INFO
          << "Using specified low resolution PSF to determine sd flux scale"
          << LogIO::POST;
       // regrid the single dish psf
@@ -8217,7 +8224,7 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
       LatticeExprNode sumImage = sum(lowpsf);
       beamFactor=sumImage.getFloat();
       if((lBeam.nelements()>0)&&(lBeam(0).get("arcsec").getValue()==0.0)) {
-	os << LogIO::NORMAL2 << "Finding SD beam from given PSF" << LogIO::POST;
+	os << LogIO::NORMAL << "Finding SD beam from given PSF" << LogIO::POST; // Loglevel PROGRESS
 	lBeam.resize(3);
 	StokesImageUtil::FitGaussianPSF(lowpsf0, lBeam(0), lBeam(1), lBeam(2));
       }
@@ -8256,7 +8263,7 @@ Bool Imager::makemodelfromsd(const String& sdImage, const String& modelImage,
 
 	
       }
-      os << LogIO::NORMAL1 << "Beam volume factor  "
+      os << LogIO::NORMAL << "Beam volume factor  " // Loglevel INFO
 	 <<  beamFactor << LogIO::POST;
       sdScaling*=beamFactor;
     }
@@ -8551,7 +8558,7 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 	     << LogIO::POST;
 	  return False;
 	}
-	os << LogIO::NORMAL1 << "Selecting "<< dataNchan[0]
+	os << LogIO::NORMAL << "Selecting "<< dataNchan[0] // Loglevel INFO
 	   << " channels, starting at visibility channel "
 	 << dataStart[0]  << " stepped by "
 	   << dataStep[0] << LogIO::POST;
@@ -8562,7 +8569,7 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
       MVRadialVelocity mvStep(mDataStep.get("m/s"));
       MRadialVelocity::Types
 	vType((MRadialVelocity::Types)mDataStart.getRefPtr()->getType());
-      os << LogIO::NORMAL1 << "Selecting "<< dataNchan[0]
+      os << LogIO::NORMAL << "Selecting "<< dataNchan[0] // Loglevel INFO
 	 << " channels, starting at radio velocity " << mvStart
 	 << " stepped by " << mvStep << ", reference frame is "
 	 << MRadialVelocity::showType(vType) << LogIO::POST;
@@ -8574,7 +8581,7 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
       MVRadialVelocity mvStep(mDataStep.get("m/s"));
       MRadialVelocity::Types
 	vType((MRadialVelocity::Types)mDataStart.getRefPtr()->getType());
-      os << LogIO::NORMAL1 << "Selecting "<< dataNchan[0]
+      os << LogIO::NORMAL << "Selecting "<< dataNchan[0] // Loglevel INFO
 	 << " channels, starting at optical velocity " << mvStart
 	 << " stepped by " << mvStep << ", reference frame is "
 	 << MRadialVelocity::showType(vType) << LogIO::POST;
@@ -9192,12 +9199,12 @@ void Imager::setMosaicFTMachine(){
     
     if(!gvp_p) {
       if (doDefaultVP_p) {
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Using defaults for primary beams used in gridding" << LogIO::POST;
 	gvp_p=new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
                              skyPosThreshold_p);
       } else {
-	os << LogIO::NORMAL1
+	os << LogIO::NORMAL // Loglevel INFO
            << "Using VP as defined in " << vpTableStr_p <<  LogIO::POST;
 	Table vpTable( vpTableStr_p ); 
 	gvp_p=new VPSkyJones(*ms_p, vpTable, parAngleInc_p, squintType_p,
@@ -9209,7 +9216,7 @@ void Imager::setMosaicFTMachine(){
   ft_p = new MosaicFT(gvp_p, mLocation_p, stokes_p, cache_p/2, tile_p, True);
   if((kpb == PBMath::UNKNOWN) || (kpb==PBMath::OVRO) || (kpb==PBMath::ACA)
      || (kpb==PBMath::ALMA)){
-    os << LogIO::NORMAL1
+    os << LogIO::NORMAL // Loglevel INFO
        << "Using antenna diameters for determining beams for gridding"
        << LogIO::POST;
     CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc();
