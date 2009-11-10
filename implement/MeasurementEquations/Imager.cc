@@ -4926,12 +4926,14 @@ Bool Imager::clean(const String& algorithm,
     if(!beamValid_p){
       Vector<Float> beam(3);
       beam=sm_p->beam(0);
-      bmaj_p=Quantity(abs(beam(0)), "arcsec"); 
-      bmin_p=Quantity(abs(beam(1)), "arcsec");
-      bpa_p=Quantity(beam(2), "deg");
-      beamValid_p=True;
-      printBeam = true;
-      os << LogIO::NORMAL << "Fitted beam used in restoration: "; // Loglevel INFO
+      if(beam[0] > 0.0){
+	bmaj_p=Quantity(abs(beam(0)), "arcsec"); 
+	bmin_p=Quantity(abs(beam(1)), "arcsec");
+	bpa_p=Quantity(beam(2), "deg");
+	beamValid_p=True;
+	printBeam = true;
+	os << LogIO::NORMAL << "Fitted beam used in restoration: " ;	 // Loglevel INFO
+      }
     }
     else if(firstrun){
       printBeam = true;
@@ -4986,12 +4988,14 @@ Bool Imager::clean(const String& algorithm,
       }
       
       for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
-	PagedImage<Float> restoredImage(image(thismodel),
-					TableLock(TableLock::AutoNoReadLocking));
-	LoggerHolder& log = restoredImage.logger();
-	log.append(imagelog);
-	log.flush();
-	restoredImage.table().relinquishAutoLocks();
+	if(Table::isWritable(image(thismodel))){
+	  PagedImage<Float> restoredImage(image(thismodel),
+					  TableLock(TableLock::AutoNoReadLocking));
+	  LoggerHolder& log = restoredImage.logger();
+	  log.append(imagelog);
+	  log.flush();
+	  restoredImage.table().relinquishAutoLocks();
+	}
       }
       
     }
@@ -5230,13 +5234,16 @@ Bool Imager::mem(const String& algorithm,
     }
 
     // Get the PSF fit while we are here
-    Vector<Float> beam(3);
-    beam=sm_p->beam(0);
-    bmaj_p=Quantity(abs(beam(0)), "arcsec"); 
-    bmin_p=Quantity(abs(beam(1)), "arcsec");
-    bpa_p=Quantity(beam(2), "deg");
-    beamValid_p=True;
-
+    if(!beamValid_p){
+      Vector<Float> beam(3);
+      beam=sm_p->beam(0);
+      if(beam[0] > 0){
+	bmaj_p=Quantity(abs(beam(0)), "arcsec"); 
+	bmin_p=Quantity(abs(beam(1)), "arcsec");
+	bpa_p=Quantity(beam(2), "deg");
+	beamValid_p=True;
+      }
+    }
     if(algorithm=="entropy" || algorithm=="emptiness" )
       sm_p->solveResiduals(*se_p, True);
     restoreImages(image);
@@ -5464,6 +5471,9 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 
     }
     */
+    Bool dorestore=False;
+    if( (bmaj_p.getValue() >0.0) && (bmin_p.getValue() > 0.0))
+      dorestore=True;
     
     if(restoredNames.nelements()>0) {
       for (Int thismodel=0;thismodel<Int(restoredNames.nelements()); 
@@ -5471,17 +5481,20 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	if(restoredNames(thismodel)!="") {
 	  PagedImage<Float> modelIm(modelNames[thismodel]);
 	  PagedImage<Float> residIm(residualNames[thismodel]);
-	  PagedImage<Float> restored(modelIm.shape(),
-				     modelIm.coordinates(),
-				     restoredNames(thismodel));
-	  restored.table().markForDelete();
-	  restored.copyData(modelIm);
-	  StokesImageUtil::Convolve(restored, bmaj_p, bmin_p, bpa_p);
-
+	  TempImage<Float> restored;
+	  if(dorestore){
+	    restored=TempImage<Float>(modelIm.shape(),
+				modelIm.coordinates());
+	    restored.copyData(modelIm);
+	   
+	    StokesImageUtil::Convolve(restored, bmaj_p, bmin_p, bpa_p);
+	  }
 	  // We can work only if the residual image was defined.
 	  if(residIm.name() != "") {
-	    LatticeExpr<Float> le(restored+(residIm)); 
-	    restored.copyData(le);
+	    if(dorestore){
+	      LatticeExpr<Float> le(restored+(residIm)); 
+	      restored.copyData(le);
+	    }
 	    //should be able to do that only on testing dofluxscale
 	    // ftmachines or sm_p should tell us that
 	    
@@ -5497,56 +5510,68 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	    Float cutoffval=minPB_p;
 	    if(ft_p->name()=="MosaicFT")
 	      cutoffval=minPB_p*minPB_p;
-
+	    
 	    if (sm_p->doFluxScale(thismodel)) {
 	      TempImage<Float> cover(modelIm.shape(),modelIm.coordinates());
 	      if(ft_p->name()=="MosaicFT")
-                  se_p->getCoverageImage(thismodel, cover);
+		se_p->getCoverageImage(thismodel, cover);
               else
                   cover.copyData(sm_p->fluxScale(thismodel));
 	      if(scaleType_p=="NONE"){
-		LatticeExpr<Float> le(iif(cover < minPB_p, 
-					  0.0,(restored/(sm_p->fluxScale(thismodel)))));
-		restored.copyData(le);
+		if(dorestore){
+		  LatticeExpr<Float> le(iif(cover < minPB_p, 
+					    0.0,(restored/(sm_p->fluxScale(thismodel)))));
+		  restored.copyData(le);
+		}
 		LatticeExpr<Float> le1(iif(cover < minPB_p, 
 					   0,(residIm/(sm_p->fluxScale(thismodel)))));
 		residIm.copyData(le1);
 	      }
-		
+	      
 	      //Setting the bit-mask for mosaic image
 	      LatticeExpr<Bool> lemask(iif((cover < cutoffval) , 
-					  False, True));
-	      ImageRegion outreg=restored.makeMask("mask0", False, True);
-	      LCRegion& outmask=outreg.asMask();
-	      outmask.copyData(lemask);
-	      restored.defineRegion("mask0", outreg, RegionHandler::Masks, True);
-	      restored.setDefaultMask("mask0");
+					   False, True));
+	      if(dorestore){
+		ImageRegion outreg=restored.makeMask("mask0", False, True);
+		LCRegion& outmask=outreg.asMask();
+		outmask.copyData(lemask);
+		restored.defineRegion("mask0", outreg, RegionHandler::Masks, True);
+		restored.setDefaultMask("mask0");
+	  
+	      }
 	      
-
 	    }
-	    
+	    if(dorestore){
+	      PagedImage<Float> diskrestore(restored.shape(), restored.coordinates(), 
+					    restoredNames(thismodel));
+	      diskrestore.copyData(restored);
+	      ImageInfo ii = modelIm.imageInfo();
+	      ii.setRestoringBeam(bmaj_p, bmin_p, bpa_p); 
+	      diskrestore.setImageInfo(ii);
+	      diskrestore.setUnits(Unit("Jy/beam"));
+	      if(restored.hasRegion("mask0")){
+		diskrestore.defineRegion("mask0", restored.getRegion("mask0"), RegionHandler::Masks, True);
+		diskrestore.setDefaultMask("mask0");
+	      }
+		 
+	    }
 	  }
 	  else {
 	    os << LogIO::SEVERE << "No residual image for model "
 	       << thismodel << ", cannot restore image" << LogIO::POST;
 	  }
-
-	  ImageInfo ii = modelIm.imageInfo();
-	  ii.setRestoringBeam(bmaj_p, bmin_p, bpa_p); 
-	  restored.setImageInfo(ii);
-	  restored.setUnits(Unit("Jy/beam"));
-	  restored.table().unmarkForDelete();
+	  
 	}
-      }
     
-    }
-    return True;
+      }
 
+    }
   }
   catch (exception &x) { 
     os << LogIO::SEVERE << "Exception: " << x.what() << LogIO::POST;
     return False;
   }
+  return True;
 }
 
 Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
