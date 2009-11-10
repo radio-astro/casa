@@ -3972,18 +3972,12 @@ Bool Imager::sensitivity(Quantity& pointsourcesens, Double& relativesens,
   return True;
 }
 
-Bool Imager::makeimage(const String& type, const String& image)
-{
-  Imager::makeimage(type, image, "");
-  return True;
-}
-
 // Calculate various sorts of image. Only one image
 // can be calculated at a time. The complex Image make
 // be retained if a name is given. This does not use
 // the SkyEquation.
 Bool Imager::makeimage(const String& type, const String& image,
-                       const String& compleximage)
+                       const String& compleximage, const Bool verbose)
 {
 #ifdef PABLO_IO
   traceEvent(1,"Entering Imager::makeimage",23);
@@ -4105,7 +4099,7 @@ Bool Imager::makeimage(const String& type, const String& image,
 	}
       }
       CoordinateSystem coordsys;
-      imagecoordinates(coordsys);
+      imagecoordinates(coordsys, verbose);
       if (doDefaultVP_p) {
 	if(telescope_p!=""){
 	  ObsInfo myobsinfo=this->latestObsInfo();
@@ -4600,7 +4594,8 @@ Bool Imager::clean(const String& algorithm,
 		   const Vector<String>& mask,
 		   const Vector<String>& image,
 		   const Vector<String>& residual,
-		   const Vector<String>& psfnames)
+		   const Vector<String>& psfnames,
+                   const Bool firstrun)
 {
 #ifdef PABLO_IO
   traceEvent(1,"Entering Imager::clean",22);
@@ -4662,7 +4657,7 @@ Bool Imager::clean(const String& algorithm,
     else{
       Bool coordMatch=False;
       CoordinateSystem coordsys;
-      imagecoordinates(coordsys);
+      imagecoordinates(coordsys, firstrun);
       for (uInt modelNum=0; modelNum < modelNames.nelements(); ++modelNum){
 	if(Table::isWritable(modelNames(modelNum))){
 	  coordMatch= coordMatch || 
@@ -4910,9 +4905,12 @@ Bool Imager::clean(const String& algorithm,
     traceEvent(1,"Starting Deconvolution",23);
 #endif
 
-    os << LogIO::NORMAL << "Starting deconvolution" << LogIO::POST; // Loglevel PROGRESS
+    os << LogIO::NORMAL << (firstrun ? "Start" : "Continu")
+       << "ing deconvolution" << LogIO::POST; // Loglevel PROGRESS
     if(se_p->solveSkyModel()) {
-      os << LogIO::NORMAL << "Successfully deconvolved image" << LogIO::POST; // Loglevel PROGRESS
+      os << LogIO::NORMAL
+         << (niter == 0 ? "Image OK" : "Successfully deconvolved image")
+         << LogIO::POST; // Loglevel PROGRESS
     }
     else {
       converged=False;
@@ -4924,30 +4922,32 @@ Bool Imager::clean(const String& algorithm,
 #endif
 
     //Use predefined beam for restoring or find one by fitting
-    if(beamValid_p == True){
-      os << LogIO::NORMAL << "Beam used in restoration: " ; // Loglevel INFO
-    }
-    else{
+    Bool printBeam = false;
+    if(!beamValid_p){
       Vector<Float> beam(3);
       beam=sm_p->beam(0);
       bmaj_p=Quantity(abs(beam(0)), "arcsec"); 
       bmin_p=Quantity(abs(beam(1)), "arcsec");
       bpa_p=Quantity(beam(2), "deg");
       beamValid_p=True;
-      os << LogIO::NORMAL << "Fitted beam used in restoration: " ;	 // Loglevel INFO
+      printBeam = true;
+      os << LogIO::NORMAL << "Fitted beam used in restoration: "; // Loglevel INFO
     }
-
-    os << LogIO::NORMAL << bmaj_p.get("arcsec").getValue() << " by " // Loglevel INFO
-       << bmin_p.get("arcsec").getValue() << " (arcsec) at pa " 
-       << bpa_p.get("deg").getValue() << " (deg) " << LogIO::POST;
+    else if(firstrun){
+      printBeam = true;
+      os << LogIO::NORMAL << "Beam used in restoration: "; // Loglevel INFO
+    }
+    if(printBeam)
+      os << LogIO::NORMAL << bmaj_p.get("arcsec").getValue() << " by " // Loglevel INFO
+         << bmin_p.get("arcsec").getValue() << " (arcsec) at pa " 
+         << bpa_p.get("deg").getValue() << " (deg) " << LogIO::POST;
 
     
-    if(( (algorithm.substr(0,5)=="clark") || algorithm=="hogbom" || algorithm=="multiscale") 
-       && (niter !=0)){
+    if(((algorithm.substr(0,5)=="clark") || algorithm=="hogbom" ||
+        algorithm=="multiscale") && (niter != 0))
       //write the model visibility to ms for now 
       sm_p->solveResiduals(*se_p, True);
-      
-    }
+
     savePSF(psfnames);
     redoSkyModel_p=False;
     restoreImages(image);
@@ -6354,7 +6354,7 @@ Bool Imager::make(const String& model)
     
     removeTable(modelName);
     CoordinateSystem coords;
-    if(!imagecoordinates(coords)) 
+    if(!imagecoordinates(coords, false)) 
       {
 
 #ifdef PABLO_IO
