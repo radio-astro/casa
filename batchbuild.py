@@ -52,11 +52,11 @@ def run_scons(targets, args=[]):
         sys.stdout.flush()
 	print command
 	try:
-	    failed = os.system(command)
+            failed = os.system(command)
 	except KeyboardInterrupt:
 	    sys.exit()
 	if failed:
-	    sys.exit(failed)
+	    sys.exit(1)
         sys.stdout.flush()
         os.chdir(cwd)
 
@@ -100,3 +100,4 @@ if "-c" in args or "--clean" in args:
     # clean up highest level package first
     tobuild.reverse()
 run_scons(tobuild, args)
+print "back here"
