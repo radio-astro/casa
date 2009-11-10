@@ -96,8 +96,6 @@
 
 #include <casa/namespace.h>
 
-//#define RI_DEBUG
-
 
 Simulator::Simulator(): 
   msname_p(String("")), ms_p(0), mssel_p(0), vs_p(0), 
@@ -122,7 +120,11 @@ Simulator::Simulator(String& msname)
     // epJ_p(0),
     epJTableName_p()
 {
+#ifdef RI_DEBUG
   LogIO os(LogOrigin("simulator", "simulator(String& msname)", WHERE));
+#else
+  LogIO os(LogOrigin("simulator", "simulator(String& msname)"));
+#endif
 
   defaults();
 
@@ -164,10 +166,8 @@ Simulator::Simulator(MeasurementSet &theMs)
   // get info from the MS into Simulator:
   if (!getconfig()) 
     os << "Can't find antenna information for loaded MS" << LogIO::WARN;
-#ifdef RI_DEBUG
   if (!sim_p->getSpWindows(nSpw,spWindowName_p,nChan_p,startFreq_p,freqInc_p,stokesString_p))
-    os << "Can't find Spectral Window information for loaded MS" << LogIO::WARN;
-#endif
+    os << "Can't find spectral window information for loaded MS" << LogIO::WARN;
 
 }
 
@@ -279,8 +279,12 @@ void Simulator::defaults()
   nmodels_p = 0;
 
   // info for fields and schedule:
-  sourceName_p="UNSET";
-  calCode_p="";
+  nField=0;
+  sourceName_p.resize(1);
+  sourceName_p[0]="UNSET";
+  calCode_p.resize(1);
+  calCode_p[0]="";
+  sourceDirection_p.resize(1);  
 
   // info for spectral windows
   nSpw=0;
@@ -472,13 +476,14 @@ Bool Simulator::configSummary(LogIO& os)
   } else {
     os << "----------------------------------------------------------------------" << LogIO::POST;
     os << "Generating (u,v,w) using this configuration: " << LogIO::POST;
-    os << "   x     y     z     diam     mount " << LogIO::POST;
+    os << "   x     y     z     diam     mount     name " << LogIO::POST;
     for (uInt i=0; i< x_p.nelements(); i++) {
       os << x_p(i)
 	 << "  " << y_p(i)
 	 << "  " << z_p(i)
 	 << "  " << diam_p(i)
 	 << "  " << mount_p(i)
+	 << "  " << antName_p(i)
 	 << LogIO::POST;
     }
     os << " Coordsystem = " << coordsystem_p << LogIO::POST;
@@ -495,11 +500,15 @@ Bool Simulator::fieldSummary(LogIO& os)
 {
   os << "----------------------------------------------------------------------" << LogIO::POST;
   os << " Field information: " << LogIO::POST;
-  os << " Name  direction  calcode" << LogIO::POST; 
-  os << sourceName_p 
-     << "  " << formatDirection(sourceDirection_p)
-     << "  " << calCode_p
-     << LogIO::POST;
+  if (nField==0)
+    os << "NO Field window information set" << LogIO::POST;
+  else 
+    os << " Name  direction  calcode" << LogIO::POST; 
+  for (Int i=0;i<nField;i++) 
+    os << sourceName_p[i] 
+       << "  " << formatDirection(sourceDirection_p[i])
+       << "  " << calCode_p[i]
+       << LogIO::POST;
   return True;
 }
 
@@ -781,24 +790,38 @@ Bool Simulator::setfield(const String& sourceName,
 			 const Quantity& distance)
 {
   LogIO os(LogOrigin("Simulator", "setfield()", WHERE));
-
+#ifndef RI_DEBUG
   try {
+#else 
+    os << LogIO::WARN << "debug mode - not catching errors." << LogIO::POST;  
+#endif
+    
     if (sourceName == "") {
       os << LogIO::SEVERE << "must provide a source name" << LogIO::POST;  
       return False;
     }
 
-    distance_p=distance;
-    sourceName_p=sourceName;
-    sourceDirection_p=sourceDirection;
-    calCode_p=calCode;
+    nField++;    
+#ifdef RI_DEBUG
+    os << "nField = " << nField << LogIO::POST;  
+#endif
+    distance_p.resize(nField,True);
+    distance_p[nField-1]=distance;
+    sourceName_p.resize(nField,True);
+    sourceName_p[nField-1]=sourceName;
+    sourceDirection_p.resize(nField,True);
+    sourceDirection_p[nField-1]=sourceDirection;
+    calCode_p.resize(nField,True);
+    calCode_p[nField-1]=calCode;
 
     sim_p->initFields(sourceName, sourceDirection, calCode);
 
+#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
+#endif
   return True;
 };
 
@@ -2160,13 +2183,14 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	    images_p[model]=new PagedImage<Float>(image(model));
 
 	    AlwaysAssert(images_p[model], AipsError);
+	    // RI TODO is this a logic problem with more than one source??
 	    // Add distance
-	    if(abs(distance_p.get().getValue())>0.0) {
-	      os << "  Refocusing to distance " << distance_p.get("km").getValue()
+	    if(abs(distance_p[nField-1].get().getValue())>0.0) {
+	      os << "  Refocusing to distance " << distance_p[nField-1].get("km").getValue()
 		 << " km" << LogIO::POST;
 	    }
 	    Record info(images_p[model]->miscInfo());
-	    info.define("distance", distance_p.get("m").getValue());
+	    info.define("distance", distance_p[nField-1].get("m").getValue());
 	    images_p[model]->setMiscInfo(info);
 	    if(sm_p->add(*images_p[model])!=model) {
 	      os << LogIO::SEVERE << "Error adding model " << model+1 << LogIO::POST;
@@ -2234,14 +2258,15 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       //    if(wprojPlanes_p>1) {
       if (ftmachine_p=="wproject") {
 	os << "Fourier transforms will use specified common tangent point:" << LogIO::POST;
-	os << formatDirection(sourceDirection_p) << LogIO::POST;
+	// RI TODO how does this work with more than one field?
+	os << formatDirection(sourceDirection_p[nField-1]) << LogIO::POST;
 	//      ft_p = new WProjectFT(*ams, facets_p, cache_p/2, tile_p, False);
 	ft_p = new WProjectFT(wprojPlanes_p, mLocation_p, cache_p/2, tile_p, False);
       }
       else if (ftmachine_p=="pbwproject") {
 	os << "Fourier transfroms will use specified common tangent point and PBs" 
 	   << LogIO::POST;
-	os << formatDirection(sourceDirection_p) << LogIO::POST;
+	os << formatDirection(sourceDirection_p[nField-1]) << LogIO::POST;
 	
 	//	if (!epJ_p)
 	  os << "Antenna pointing related term (EPJones) not set.  "
@@ -2606,7 +2631,8 @@ Bool Simulator::setdata(const Vector<Int>& spectralwindowids,
       Int fieldsel=0;
       if(fieldids.nelements() >0)
 	fieldsel=fieldids(0);
-      sourceDirection_p=(vs_p->iter()).msColumns().field().phaseDirMeas(fieldsel); 
+      // RI TODO sim:setdata need nField=fieldids.nelements()?
+      sourceDirection_p[nField-1]=(vs_p->iter()).msColumns().field().phaseDirMeas(fieldsel); 
     }
     return True;
   } catch (AipsError x) {

@@ -401,9 +401,11 @@ private:
   // info for observed field parameters
   // <group>
 
-  String 	sourceName_p, calCode_p;
-  MDirection	sourceDirection_p;
-  Quantity      distance_p;
+  Int nField;
+  Vector<String> 	sourceName_p;
+  Vector<String>        calCode_p;
+  Vector<MDirection>	sourceDirection_p;
+  Vector<Quantity>      distance_p;
 
   // </group>
 
