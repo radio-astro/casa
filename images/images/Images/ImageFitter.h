@@ -87,7 +87,7 @@ namespace casa {
             // <li> residualInp - Name of residual image to save. Blank means do not save residual image</li>
             // <li> modelInp - Name of the model image to save. Blank means do not save model image</li>
             ImageFitter(
-                const String& imagename, const String& box, const String& region,
+                const String& imagename, const String& region, const String& box="",
                 const uInt chanInp=0, const String& stokes="I",
                 const String& maskInp="",
                 const Vector<Float>& includepix = Vector<Float>(0),
