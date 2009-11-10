@@ -138,6 +138,8 @@ public:
   // set the Feeds;  brain dead version
   void initFeeds(const String& mode);
 
+  bool getFeedMode(String& mode);
+
   // set the Feeds;  Smart version
   void initFeeds(const String& mode,
 		 const Vector<Double>& x,

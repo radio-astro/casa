@@ -988,6 +988,44 @@ void NewMSSimulator::initFeeds(const String& mode,
 };
 
 
+
+
+bool NewMSSimulator::getFeedMode(String& mode)
+{
+  LogIO os(LogOrigin("MSsimulator", "getFeedMode()", WHERE));
+  
+  MSColumns msc(*ms_p);
+  MSAntennaColumns& antc=msc.antenna();
+  Int nAnt=antc.nrow();
+  
+  if (nAnt <= 0) {
+    os <<  LogIO::SEVERE << "NewMSSimulator::getFeeds: must call initAnt() first" << LogIO::POST;
+  }
+  
+  MSFeedColumns& feedc=msc.feed();
+  Int numFeeds=feedc.nrow();
+
+  if (numFeeds>nAnt)
+    mode="list";
+  else {
+    if (numFeeds<1) return False;
+    // quick and dirty - assume all ants the same kind 
+    Vector<String> feedPol(2);
+    feedc.polarizationType().get(0,feedPol,True);
+    // we only support setting perfect feeds in Simulator.
+    Int nF(0);
+    feedPol.shape(nF);
+    if (nF<2) 
+      mode=feedPol[0];
+    else
+      mode=feedPol[0]+" "+feedPol[1];
+  }
+  return True;
+}
+ 
+
+
+
 NewMSSimulator::~NewMSSimulator() 
 {
 
