@@ -127,6 +127,12 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype=="K" || uptype=="K JONES")
     return new KJones(vs);
 
+  else if (uptype=="KMBD" || uptype=="KMBD JONES")
+    return new KMBDJones(vs);
+
+  else if (uptype.contains("KANTPOS") || uptype.contains("KANTPOS JONES"))
+    return new KAntPosJones(vs);
+
   else {
     cout << "attempted type = " << type << endl;
     throw(AipsError("Unknown calibration type."));

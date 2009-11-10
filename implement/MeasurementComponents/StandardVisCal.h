@@ -788,7 +788,7 @@ private:
 
 
 
-// K Jones provides support for delays
+// K Jones provides support for SBD delays
 class KJones : public GJones {
 public:
 
@@ -803,7 +803,7 @@ public:
 
   // Return type name as string
   virtual String typeName()     { return "K Jones"; };
-  virtual String longTypeName() { return "K Jones (array geometry and clocks)"; };
+  virtual String longTypeName() { return "K Jones (single-band delay)"; };
 
   // Type of Jones matrix according to nPar()
   virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
@@ -811,7 +811,6 @@ public:
   // Freq dependence (delays)
   virtual Bool freqDepPar() { return False; };
   virtual Bool freqDepMat() { return True; };
-
 
   // Default parameter value
   virtual Complex defaultPar() { return Complex(0.0); };
@@ -850,15 +849,89 @@ protected:
   // Initialize trivial dJs
   virtual void initTrivDJ() {};
 
+  // Reference frequencies
+  Vector<Double> KrefFreqs_;
+
 private:
 
-  Vector<Double> KrefFreqs_;
   
 };
 
 
+// KMBD Jones provides support for multi-band delays
+class KMBDJones : public KJones {
+public:
+
+  // Constructor
+  KMBDJones(VisSet& vs);
+  KMBDJones(const Int& nAnt);
+
+  virtual ~KMBDJones();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::K; };
+
+  // Return type name as string
+  virtual String typeName()     { return "KMBD Jones"; };
+  virtual String longTypeName() { return "KMBD Jones (multi-band delay)"; };
+
+ 
+};
 
 
+
+class KAntPosJones : public KJones {
+public:
+
+  // Constructor
+  KAntPosJones(VisSet& vs);
+  KAntPosJones(const Int& nAnt);
+
+  virtual ~KAntPosJones();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::KAntPos; };
+
+  // Return type name as string
+  virtual String typeName()     { return "KAntPos Jones"; };
+  virtual String longTypeName() { return "KAntPos Jones (antenna position errors)"; };
+
+  // This is a scalar Jones matrix
+  virtual Jones::JonesType jonesType() { return Jones::Scalar; };
+
+  virtual Bool timeDepMat() { return True; };
+
+  // Local setApply to enforce spwmap=0 for all spw
+  virtual void setApply(const Record& apply);
+  using KJones::setApply;
+
+  // Type-specific specify
+  virtual void specify(const Record& specify);
+
+  // Calculate phase(chan) from delay
+  virtual void calcAllJones();
+
+protected:
+
+  // AntPos has three "real" parameters (dBx, dBy, dBz)
+  virtual Int nPar() { return 3; };
+
+  // Jones matrix elements are not trivial
+  virtual Bool trivialJonesElem() { return False; };
+
+  // dG/dp are not trivial
+  virtual Bool trivialDJ() { return False; };
+
+  // Initialize trivial dJs
+  virtual void initTrivDJ() {};
+
+private:
+  
+  // Some info from the MS we need for Measures work
+  ArrayMeasColumn<MDirection> dirmeas_p;
+  String epochref_p;
+
+};
 
 } //# NAMESPACE CASA - END
 

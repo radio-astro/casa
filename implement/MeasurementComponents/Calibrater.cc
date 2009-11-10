@@ -2246,7 +2246,8 @@ void Calibrater::specifycal(const String& type,
     specifyDesc.addField ("antenna", TpArrayInt);
     specifyDesc.addField ("pol", TpString);
     specifyDesc.addField ("parameter", TpArrayDouble);
-    
+    specifyDesc.addField ("caltype",TpString);
+
     // Create record with the requisite field values
     Record specify(specifyDesc);
     specify.define ("caltable", caltable);
@@ -2261,11 +2262,20 @@ void Calibrater::specifycal(const String& type,
       specify.define ("antenna",getAntIdx(antenna));
     specify.define ("pol",pol);
     specify.define ("parameter",parameter);
-
-
+    specify.define ("caltype",type);
 
     // Now do it
-    cal_ = createSolvableVisCal(type,*vs_p);
+    String utype=upcase(type);
+    if (utype=="G" || utype.contains("AMP") || utype.contains("PH"))
+      cal_ = createSolvableVisCal("G",*vs_p);
+    else if (utype=='K' || utype.contains("SBD") || utype.contains("DELAY"))
+      cal_ = createSolvableVisCal("K",*vs_p);
+    else if (utype.contains("MBD"))
+      cal_ = createSolvableVisCal("KMBD",*vs_p);
+    else if (utype.contains("ANTPOS"))
+      cal_ = createSolvableVisCal("KANTPOS",*vs_p);
+    else
+      throw(AipsError("Unrecognized caltype."));
 
     // set up for specification (set up the CalSet)
     cal_->setSpecify(specify);

@@ -37,6 +37,7 @@
 #include <tables/Tables/ExprNode.h>
 
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/MatrixMath.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/GenSort.h>
@@ -45,6 +46,11 @@
 #include <casa/System/Aipsrc.h>
 
 #include <casa/sstream.h>
+
+#include <measures/Measures/MCBaseline.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MeasTable.h>
 
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
@@ -3136,6 +3142,7 @@ KJones::KJones(VisSet& vs) :
   if (prtlev()>2) cout << "K::K(vs)" << endl;
 
   // Extract per-spw ref Freq for phase(delay) calculation
+  //  TBD: these should be in the caltable!!
   MSSpectralWindow msSpw(vs.msName()+"/SPECTRAL_WINDOW");
   MSSpWindowColumns msCol(msSpw);
   msCol.refFrequency().getColumn(KrefFreqs_,True);
@@ -3180,10 +3187,7 @@ void KJones::specify(const Record& specify) {
   if (specify.isDefined("time")) {
     // TBD: the time label
     cout << "time = " << specify.asString("time") << endl;
-
     cout << "refTime() = " << refTime() << endl;
-
-
   }
 */
 
@@ -3267,9 +3271,17 @@ void KJones::specify(const Record& specify) {
     parameters=specify.asArrayDouble("parameter");
 
   }
-  
-  cout << "Shapes = " << parameters.nelements() << " " 
-       << (repspw ? (Ntime*Nant*Npol) : (Nspw*Ntime*Nant*Npol)) << endl;
+
+  Int nparam=parameters.nelements();
+
+  // Test for correct number of specified parameters
+  //  Either all params are enumerated, or one is specified
+  //  for all, [TBD:or a polarization pair is specified for all]
+  //  else throw
+  if (nparam!=(repspw ? (Ntime*Nant*Npol) : (Nspw*Ntime*Nant*Npol)) && 
+      nparam!=1 )                // one for all
+    //      (Npol==2 && nparam%2!=0) )  // poln pair for all
+    throw(AipsError("Inconsistent number of parameters specified."));
 
   Int ipar(0);
   for (Int ispw=0;ispw<Nspw;++ispw) {
@@ -3304,6 +3316,8 @@ void KJones::specify(const Record& specify) {
 void KJones::calcAllJones() {
 
   if (prtlev()>6) cout << "       VJ::calcAllJones()" << endl;
+
+  cout << "calcAllJones" << endl;
 
   if (False) {
     Vector<Complex> x(16,Complex(1.0));
@@ -3340,6 +3354,8 @@ void KJones::calcAllJones() {
 
       for (Int ipar=0;ipar<nPar();++ipar) {
 	if (onePOK(ipar)) { 
+	  
+
 	  phase=2.0*C::pi*real(onePar(ipar))*(currFreq()(ich)-KrefFreqs_(currSpw()));
 	  oneJones(ipar)=Complex(cos(phase),sin(phase));
 	  oneJOK(ipar)=True;
@@ -3361,6 +3377,301 @@ void KJones::calcAllJones() {
       POKiter.next();
     }
   }
+}
+
+// **********************************************************
+//  KMBDJones Implementations
+//
+
+KMBDJones::KMBDJones(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  KJones(vs)             // immediate parent
+{
+  if (prtlev()>2) cout << "K::K(vs)" << endl;
+
+  // For MBD, the ref frequencies are zero
+  //  TBD: these should be in the caltable!!
+  KrefFreqs_.resize(nSpw());
+  KrefFreqs_.set(0.0);
+
+  /*  
+  MSSpectralWindow msSpw(vs.msName()+"/SPECTRAL_WINDOW");
+  MSSpWindowColumns msCol(msSpw);
+  msCol.refFrequency().getColumn(KrefFreqs_,True);
+  KrefFreqs_/=1.0e9;  // in GHz
+  */
+
+}
+
+KMBDJones::KMBDJones(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  KJones(nAnt)
+{
+
+  if (prtlev()>2) cout << "K::K(nAnt)" << endl;
+  // For MBD, the ref frequencies are zero
+  //  TBD: these should be in the caltable!!
+  KrefFreqs_.resize(nSpw());
+  KrefFreqs_.set(0.0);
+
+}
+
+KMBDJones::~KMBDJones() {
+  if (prtlev()>2) cout << "K::~K()" << endl;
+}
+
+
+
+
+
+
+// **********************************************************
+//  KAntPosJones Implementations
+//
+
+KAntPosJones::KAntPosJones(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  KJones(vs)             // immediate parent
+{
+  if (prtlev()>2) cout << "Kap::Kap(vs)" << endl;
+
+  // Extract the FIELD phase direction measure column
+  MSField msf(vs.msName()+"/FIELD");
+  MSFieldColumns msfc(msf);
+  dirmeas_p.reference(msfc.phaseDirMeasCol());
+
+  //  epochref_p = MSMainColumns(MeasurementSet(vs.msName())).time().columnMeasureType(MSMainEnums::TIME);
+
+  epochref_p="UTC";
+
+}
+
+KAntPosJones::KAntPosJones(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  KJones(nAnt)
+{
+  if (prtlev()>2) cout << "Kap::Kap(nAnt)" << endl;
+}
+
+KAntPosJones::~KAntPosJones() {
+  if (prtlev()>2) cout << "Kap::~Kap()" << endl;
+}
+
+void KAntPosJones::setApply(const Record& apply) {
+
+  // Call parent to do conventional things
+  KJones::setApply(apply);
+
+  //  cout << "spwMap() = " << spwMap();
+
+  // Reset spwmap to use spw 0 for all spws
+  if (cs().spwOK()(0)) {
+    spwMap() = Vector<Int>(nSpw(),0);
+    ci().setSpwMap(spwMap());
+  }
+  else
+    throw(AipsError("No KAntPos solutions available for spw 0"));
+
+  //  cout << "->" << spwMap() << endl;
+
+}
+
+
+void KAntPosJones::specify(const Record& specify) {
+
+
+  LogMessage message(LogOrigin("KAntPosJones","specify"));
+
+  Vector<Int> spws;
+  Vector<Int> antennas;
+  Vector<Double> parameters;
+
+  Int Nant(0);
+
+  // Handle old VLA rotation, if necessary
+  Bool doVLARot(False);
+  Matrix<Double> vlaRot=Rot3D(0,0.0);
+  if (specify.isDefined("caltype") ) {
+    String caltype=upcase(specify.asString("caltype"));
+    if (upcase(caltype).contains("VLA")) {
+      doVLARot=True;
+      MPosition vlaCenter;
+      AlwaysAssert(MeasTable::Observatory(vlaCenter,"VLA"),AipsError);
+      Double vlalong=vlaCenter.getValue().getLong();
+      //      vlalong=-107.617722*C::pi/180.0;
+      cout << "We will rotate specified offsets by VLA longitude = " 
+	   << vlalong*180.0/C::pi << endl;
+      vlaRot=Rot3D(2,vlalong);
+    }
+  }
+  
+  IPosition ip0(4,0,0,0,0);
+  IPosition ip1(4,2,0,0,0);
+
+  if (specify.isDefined("antenna")) {
+    // TBD: the antennas (in order) identifying the solutions
+    antennas=specify.asArrayInt("antenna");
+    //    cout << "antenna indices = " << antennas << endl;
+    Nant=antennas.nelements();
+    if (Nant<1) {
+      // Use specified values for _all_ antennas implicitly
+      Nant=1;   // For the antenna loop below
+      ip0(2)=0;
+      ip1(2)=nAnt()-1;
+    }
+    else {
+      // Point to first antenna
+      ip0(2)=antennas(0);
+      ip1(2)=ip0(2);
+    }
+  }
+
+  if (specify.isDefined("parameter")) {
+    // TBD: the actual cal values
+    parameters=specify.asArrayDouble("parameter");
+
+  }
+
+  Int npar=parameters.nelements();
+  
+  if (npar%3 != 0)
+    throw(AipsError("For antenna position corrections, 3 parameters per antenna are required."));
+
+  
+  //  cout << "Shapes = " << parameters.nelements() << " " 
+  //       << Nant*3 << endl;
+
+  //  cout << "parameters = " << parameters << endl;
+
+  // Loop over specified antennas
+  Int ipar(0);
+  for (Int iant=0;iant<Nant;++iant) {
+    if (Nant>1)
+      ip1(2)=ip0(2)=antennas(iant);
+
+    // make sure ipar doesn't exceed specified list
+    ipar=ipar%npar;
+    
+    // The current 3-vector of position corrections
+    Vector<Double> apar(parameters(IPosition(1,ipar),IPosition(1,ipar+2)));
+
+    // If old VLA, rotate them
+    if (doVLARot) {
+      cout << "id = " << antennas(iant) << " " << apar;
+      apar = product(vlaRot,apar);
+      cout << "--(rotation VLA to ITRF)-->" << apar << endl;
+    }
+
+    // Loop over 3 parameters, each antenna
+    for (Int ipar0=0;ipar0<3;++ipar0) {
+      ip1(0)=ip0(0)=ipar0;
+
+      Array<Complex> slice(cs().par(0)(ip0,ip1));
+    
+      // Acccumulation is addition for ant pos corrections
+      slice+=Complex(apar(ipar0),0.0);
+      ++ipar;
+    }
+  }
+  
+  //  cout << "Ant pos: cs().par(0) = " << cs().par(0) << endl;
+
+
+}
+
+void KAntPosJones::calcAllJones() {
+
+  if (prtlev()>6) cout << "       Kap::calcAllJones()" << endl;
+
+
+  // The relevant direction for the delay offset calculation
+  const MDirection& phasedir = vb().msColumns().field().phaseDirMeas(currField());
+
+  // The relevant timestamp 
+  MEpoch epoch(Quantity(currTime(),"s"));
+  epoch.setRefString(epochref_p);
+
+  //  cout << epoch.getValue() << ":" << endl;
+
+  // The frame in which we convert our MBaseline from earth to sky and to uvw
+  MeasFrame mframe(vb().msColumns().antenna().positionMeas()(0),epoch,phasedir);
+
+  // template MBaseline, that will be used in calculations below
+  MBaseline::Ref mbearthref(MBaseline::ITRF,mframe);
+  MBaseline mb;
+  MVBaseline mvb;
+  mb.set(mvb,mbearthref); 
+
+  // A converter that takes the MBaseline from earth to sky frame
+  MBaseline::Ref mbskyref(MBaseline::fromDirType(MDirection::castType(phasedir.myType())));
+  MBaseline::Convert mbcverter(mb,mbskyref);
+
+
+
+  Double phase(0.0);
+  for (Int iant=0; iant<nAnt(); iant++) {
+
+    Vector<Complex> pars(currCPar().xyPlane(iant).column(0));
+    Vector<Float> rpars=real(pars);
+    Vector<Double> dpars(rpars.nelements());
+    convertArray(dpars,rpars);
+
+    // Only do complicated calculation if there 
+    //   is a non-zero ant pos error
+    if (max(amplitude(pars))>0.0) {
+
+      //      cout << iant << " ";
+      //      cout << dpars << " ";
+      //      cout << flush;
+
+      // We need the w offset (in direction of source) implied
+      //  by the antenna position correction
+      Double dw(0.0);
+      
+      // The current antenna's error as an MBaseline (earth frame)
+      mvb=MVBaseline(dpars);
+      mb.set(mvb,mbearthref);
+      
+      // Convert to sky frame
+      MBaseline mbdir = mbcverter(mb);
+
+      // Get implied uvw
+      MVuvw uvw(mbdir.getValue(),phasedir.getValue());
+
+      // dw is third element
+      dw=uvw.getVector()(2);
+
+      // In time units 
+      dw/=C::c;    // to sec
+      dw*=1.0e9;   // to nsec
+
+      //      cout << " " << dw << flush;
+
+      // Form the complex corrections per chan (freq)
+      for (Int ich=0; ich<nChanMat(); ++ich) {
+        
+	// NB: currFreq() is in GHz
+	phase=2.0*C::pi*dw*currFreq()(ich);
+	currJElem()(0,ich,iant)=Complex(cos(phase),sin(phase));
+	currJElemOK()(0,ich,iant)=True;
+	
+	//	if (ich==0)
+	//	  cout << " " << cos(phase) << " " << sin(phase) << endl;
+
+      }
+    }
+    else {
+      // No correction
+      currJElem().xyPlane(iant)=Complex(1.0);
+      currJElemOK().xyPlane(iant)=True;
+    }
+
+  }
+
 }
 
 
