@@ -5496,7 +5496,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	    //
 	    Float cutoffval=minPB_p;
 	    if(ft_p->name()=="MosaicFT")
-	      cutoffval=minPB_p;
+	      cutoffval=minPB_p*minPB_p;
 
 	    if (sm_p->doFluxScale(thismodel)) {
 	      TempImage<Float> cover(modelIm.shape(),modelIm.coordinates());
@@ -5505,16 +5505,16 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
               else
                   cover.copyData(sm_p->fluxScale(thismodel));
 	      if(scaleType_p=="NONE"){
-		LatticeExpr<Float> le(iif(cover < cutoffval, 
+		LatticeExpr<Float> le(iif(cover < minPB_p, 
 					  0.0,(restored/(sm_p->fluxScale(thismodel)))));
 		restored.copyData(le);
-		LatticeExpr<Float> le1(iif(cover < cutoffval, 
+		LatticeExpr<Float> le1(iif(cover < minPB_p, 
 					   0,(residIm/(sm_p->fluxScale(thismodel)))));
 		residIm.copyData(le1);
 	      }
 		
 	      //Setting the bit-mask for mosaic image
-	      LatticeExpr<Bool> lemask(iif((cover < cutoffval) || (sm_p->fluxScale(thismodel) < cutoffval) , 
+	      LatticeExpr<Bool> lemask(iif((cover < cutoffval) , 
 					  False, True));
 	      ImageRegion outreg=restored.makeMask("mask0", False, True);
 	      LCRegion& outmask=outreg.asMask();
@@ -5570,7 +5570,7 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
           fluxScale.copyData(sm_p->fluxScale(thismodel));
 	  Float cutoffval=minPB_p;
 	  if(ft_p->name()=="MosaicFT"){
-	    cutoffval=minPB_p;
+	    cutoffval=minPB_p*minPB_p;
 	    se_p->getCoverageImage(thismodel, coverimage);
             cover=&(coverimage);
 	    //Do the sqrt
@@ -5584,7 +5584,7 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
 	    coverimage.defineRegion("mask0", outreg,RegionHandler::Masks, True); 
 	    coverimage.setDefaultMask("mask0");
 	  }
-	  LatticeExpr<Bool> lemask(iif((*cover) < cutoffval, 
+	  LatticeExpr<Bool> lemask(iif((*cover) < minPB_p, 
 				       False, True));
 	  ImageRegion outreg=fluxScale.makeMask("mask0", False, True);
 	  LCRegion& outmask=outreg.asMask();

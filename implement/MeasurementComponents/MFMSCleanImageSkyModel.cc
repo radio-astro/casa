@@ -203,7 +203,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
     progress_p = new LatticeCleanProgress( pgplotter_p );
   }
 
-  LatticeCleaner<Float>* cleaner;
+  Block<CountedPtr<LatticeCleaner<Float> > > cleaner(numberOfModels());
   cleaner=0;
 
   Int cycle=0;
@@ -310,7 +310,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	      // we simply make a new one for each channel
 	      if(nchan>1) {
 		os<<"Processing channel "<<chan+1<<" of "<<nchan<<LogIO::POST;
-		if(cleaner) delete cleaner; cleaner=0;
+		if(!cleaner[model].null()) cleaner[model]=0;
 	      }
 	      
 	      blcDirty(3) = chan;
@@ -340,49 +340,50 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		  }
 		}
 		if(!skipThisPlane){
-		  if(cleaner) {
+		  if(!cleaner[model].null()) {
 		    os << "Updating multiscale cleaner with new residual images"
 		       << LogIO::POST;
-		    cleaner->update(subResid);
+		    cleaner[model]->update(subResid);
 		  }
 		  else {
 		    os << "Creating multiscale cleaner with psf and residual images" << LogIO::POST;
-		    cleaner=new LatticeCleaner<Float>(subPSF, subResid);
-		    setScales(*cleaner);
-                    cleaner->setSmallScaleBias(smallScaleBias_p);
+		    cleaner[model]=new LatticeCleaner<Float>(subPSF, subResid);
+		    setScales(*(cleaner[model]));
+                    cleaner[model]->setSmallScaleBias(smallScaleBias_p);
 		    if (doMask) {		  
-		      cleaner->setMask(*subMaskPointer);
+		      cleaner[model]->setMask(*subMaskPointer);
 		    }
 		  }
 		  subDeltaImage.set(0.0);
 		  
-		  cleaner->setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), 
+		  cleaner[model]->setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), 
 				      aThreshold, fThreshold, True);
 		  
 		  if (cycleSpeedup_p > 1) {
 		    os << "cycleSpeedup is " << cycleSpeedup_p << LogIO::POST;
-		    cleaner->speedup(cycleSpeedup_p);
+		    cleaner[model]->speedup(cycleSpeedup_p);
 		  }
 		
-		  cleaner->startingIteration( iterations[model](chan) );
+		  cleaner[model]->startingIteration( iterations[model](chan) );
 		  if (cycle <= stopLargeNegatives_p) {
-		    cleaner->stopAtLargeScaleNegative();
+		    cleaner[model]->stopAtLargeScaleNegative();
 		  }
-		  cleaner->stopPointMode(stopPointMode_p);
-		  cleaner->ignoreCenterBox(True);
-		  converging=cleaner->clean( subDeltaImage, progress_p );
+		  cleaner[model]->stopPointMode(stopPointMode_p);
+		  cleaner[model]->ignoreCenterBox(True);
+		  converging=cleaner[model]->clean( subDeltaImage, progress_p );
 		  //diverging
 		  if(converging==-3)
 		    stop=True;
-		  if(converging==-2){
+		  //reduce scales on main field only
+		  if(converging==-2 && model==0){
 		    if(userScaleSizes_p.nelements() > 1){
 		       userScaleSizes_p.resize(userScaleSizes_p.nelements()-1, True);
-		       cleaner->setscales(userScaleSizes_p); 
+		       cleaner[model]->setscales(userScaleSizes_p); 
 		    }
 		    else
 		      stop=True;
 		  }
-		  iterations[model](chan)=cleaner->numberIterations();
+		  iterations[model](chan)=cleaner[model]->numberIterations();
 		  maxIterations=(iterations[model](chan)>maxIterations) ?
 		    iterations[model](chan) : maxIterations;
 		  os << "Clean used " << iterations[model](chan) << " iterations" 
@@ -391,7 +392,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		  
 		  subImage.copyData( LatticeExpr<Float>( subImage + subDeltaImage));
 		  
-		  if (cleaner->queryStopPointMode()) {
+		  if (cleaner[model]->queryStopPointMode()) {
 		    stop = True;		
 		    os << "MSClean terminating because we hit " 
 		       << stopPointMode_p
@@ -429,7 +430,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
     os << "Residual images for all fields are up-to-date" << LogIO::POST;
   }
 
-  if(cleaner) delete cleaner; cleaner=0;
+  //if(cleaner) delete cleaner; cleaner=0;
 
   return(converged);
 };
