@@ -168,8 +168,16 @@ Simulator::Simulator(MeasurementSet &theMs)
     os << "Can't find antenna information for loaded MS" << LogIO::WARN;
   if (!sim_p->getSpWindows(nSpw,spWindowName_p,nChan_p,startFreq_p,freqInc_p,stokesString_p))
     os << "Can't find spectral window information for loaded MS" << LogIO::WARN;
+  if (!sim_p->getFields(nField,sourceName_p,sourceDirection_p,calCode_p))
+    os << "Can't find Field/Source information for loaded MS" << LogIO::WARN;
+
+  if (!sim_p->getFeedMode(feedMode_p))
+    os << "Can't find Feed information for loaded MS" << LogIO::WARN;
+  else
+    feedsHaveBeenSet=True;
 
 }
+
 
 
 Simulator::Simulator(const Simulator &other)
