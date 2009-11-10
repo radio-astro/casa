@@ -643,6 +643,42 @@ void NewMSSimulator::initFields(const String& sourceName,
 
 };
 
+
+  bool NewMSSimulator::getFields(Int& nField,
+				 Vector<String>& sourceName, 
+				 Vector<MDirection>& sourceDirection,
+				 Vector<String>& calCode)
+{
+  LogIO os(LogOrigin("MSsimulator", "getFields()", WHERE));
+  
+//  os << sourceName_p 
+//     << "  " << formatDirection(sourceDirection_p)
+//     << "  " << calCode_p
+
+  MSColumns msc(*ms_p);
+  MSFieldColumns& fieldc=msc.field();
+  nField=fieldc.nrow();
+
+  sourceName.resize(nField);
+  sourceDirection.resize(nField);
+  calCode.resize(nField);
+
+  for (Int i=0;i<nField;i++) {
+    fieldc.name().get(i, sourceName[i]);
+    fieldc.code().get(i, calCode[i]);
+    Vector<MDirection> direction;
+    fieldc.referenceDirMeasCol().get(i,direction,True);
+    // and if theres a varying reference direction per row, we'll just all go 
+    // merrily off into lala land.
+    sourceDirection[i]=direction[0];
+  }
+
+  return (nField>0);
+
+};
+
+
+
 void NewMSSimulator::initSpWindows(const String& spWindowName,
 				   const Int& nChan,
 				   const Quantity& startFreq,
@@ -745,16 +781,13 @@ bool NewMSSimulator::getSpWindows(Int& nSpw,
 				  Vector<Quantity>& freqInc,
 				  Vector<String>& stokesString)
 {
-  
-  LogIO os(LogOrigin("MSsimulator", "getSpWindows()", WHERE)); 
-  
-//  os << spWindowName_p 	 
-//     << "  " << nChan_p
-//     << "  " << startFreq_p.getValue("GHz")
-//     << "  " << freqInc_p.getValue("MHz")
-//     << "  " << freqRes_p.getValue("MHz")
-//     << "  " << stokesString_p
 
+#ifdef RI_DEBUG  
+  LogIO os(LogOrigin("MSsimulator", "getSpWindows()", WHERE)); 
+#else
+  LogIO os(LogOrigin("MSsimulator", "getSpWindows()")); 
+#endif
+  
   MSColumns msc(*ms_p);
   MSSpWindowColumns& spwc=msc.spectralWindow();
   MSDataDescColumns& ddc=msc.dataDescription();
@@ -767,6 +800,8 @@ bool NewMSSimulator::getSpWindows(Int& nSpw,
   freqInc.resize(nSpw);
   stokesString.resize(nSpw);
 
+  Int nPols(polc.nrow());
+  Vector<Int> stokes(4);
   for (Int i=0;i<nSpw;i++) {
     spwc.name().get(i,spWindowName[i]);
     spwc.numChan().get(i,nChan[i]);
@@ -781,14 +816,24 @@ bool NewMSSimulator::getSpWindows(Int& nSpw,
     // need to translate enum Stokes::type back into strings... there's no
     // easy way to do that in C++, but there is a Stokes Name function:
     Int nCorr;
-    polc.numCorr().get(i, nCorr);
-    Vector<Int> stokes(4);
-    polc.corrType().get(i,stokes);
+    if (nPols==nSpw) {
+      polc.numCorr().get(i, nCorr);
+      stokes.resize(nCorr);
+      polc.corrType().get(i,stokes);
+    } else if (nPols<=0) {
+      throw(AipsError("Polarations not defined in MSSimulator::getSpWindows"));
+    } else {
+      // if not specified for all spw, use the first one for all spw.
+      polc.numCorr().get(0, nCorr);
+      stokes.resize(nCorr);
+      polc.corrType().get(0,stokes);
+    }
     String t;
     for (uInt j=0; j<nCorr; j++) 
       t += Stokes::name(Stokes::StokesTypes(stokes(j))) + " ";
     stokesString[i]=t;
   }  
+  return True;
 }
 
 

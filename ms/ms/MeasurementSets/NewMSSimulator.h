@@ -130,6 +130,11 @@ public:
 		  const MDirection& sourceDirection,
 		  const String& calCode);
 
+  bool getFields(Int& nField,
+		 Vector<String>& sourceName, 
+		 Vector<MDirection>& sourceDirection,
+		 Vector<String>& calCode);
+
   // set the Feeds;  brain dead version
   void initFeeds(const String& mode);
 
