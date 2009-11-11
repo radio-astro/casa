@@ -5550,7 +5550,10 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	      diskrestore.setImageInfo(ii);
 	      diskrestore.setUnits(Unit("Jy/beam"));
 	      if(restored.hasRegion("mask0")){
-		diskrestore.defineRegion("mask0", restored.getRegion("mask0"), RegionHandler::Masks, True);
+		ImageRegion outreg=diskrestore.makeMask("mask0", False, True);
+		LCRegion& outmask=outreg.asMask();
+		outmask.copyData(restored.getRegion("mask0").asLCRegion());
+		diskrestore.defineRegion("mask0", outreg, RegionHandler::Masks, True);
 		diskrestore.setDefaultMask("mask0");
 	      }
 		 
