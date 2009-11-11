@@ -244,7 +244,8 @@ class Imager
 	     const Bool doSquint,
 	     const Quantity &parAngleInc,
 	     const Quantity &skyPosThreshold,
-	     String defaultTel="");
+	     String defaultTel="",
+             const Bool verbose=true);
 
   // Set the scales to be searched in Multi Scale clean
   Bool setscales(const String& scaleMethod,          // "nscales"  or  "uservector"
