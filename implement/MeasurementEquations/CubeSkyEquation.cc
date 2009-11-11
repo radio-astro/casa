@@ -470,7 +470,7 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 	  planeMax =  LEN.getFloat();
 	  if(planeMax !=0){
 	    psfSub.copyData( (LatticeExpr<Float>) 
-			     (iif(abs(ggSSub) > (0.0), 
+			     (iif(ggSSub > (0.0), 
 				  (gSSub/planeMax),0.0)));
 	    
 	  }
@@ -1233,12 +1233,14 @@ void CubeSkyEquation::fixImageScale()
 	      ///lets be conservative and go to 1% of ggsmin2
 	      if(planeMax !=0){
 		fscalesub.copyData( (LatticeExpr<Float>) 
-				    (iif(ggSSub < (ggSMin2/100000.0), 
+				    (iif(ggSSub < (ggSMin2/100.0), 
 					 0.0, sqrt(ggSSub/planeMax))));
 		ggSSub.copyData( (LatticeExpr<Float>) 
-				 (iif(ggSSub < (ggSMin2/100000.0), 0.0, 
+				 (iif(ggSSub < (ggSMin2/100.0), 0.0, 
 				      sqrt(planeMax*ggSSub))));
-	
+		//ggSSub.copyData( (LatticeExpr<Float>) 
+		//		 (iif(ggSSub < (ggSMin2/100.0), 0.0, 
+		//		      planeMax)));
 	
 
 	      }
