@@ -1299,8 +1299,25 @@ void VisJones::createJones() {
 
 void VisJones::syncWtScale() {
 
-  // Ensure proper size
-  currWtScale().resize(nPar(),nAnt());
+  // Ensure proper size according to Jones matrix type
+  switch (this->jonesType()) {
+  case Jones::Scalar: {
+    currWtScale().resize(1,nAnt());
+    break;
+  }
+  case Jones::Diagonal: {
+    currWtScale().resize(2,nAnt());
+    break;
+  }
+  default: {
+    // Only diag and scalar versions can adjust weights
+    //    cout<< "Turning off calWt()" << endl;
+    calWt()=False;
+    return;
+    break;
+  }
+  }
+
   currWtScale()=0.0;
 
   IPosition blc(3,0,0,0);

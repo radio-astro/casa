@@ -798,6 +798,10 @@ public:
 
   virtual ~KJones();
 
+  // Local setApply to enforce calWt=F for delays
+  virtual void setApply(const Record& apply);
+  using GJones::setApply;
+
   // Return the type enum
   virtual Type type() { return VisCal::K; };
 
