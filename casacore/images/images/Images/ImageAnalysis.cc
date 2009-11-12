@@ -596,16 +596,15 @@ Bool ImageAnalysis::imagefromfits(const String& outfile,
 		}
 		//
 		if (whichrep < 0) {
-			*itsLog
-					<< "The Coordinate Representation index must be non-negative"
-					<< LogIO::EXCEPTION;
+			*itsLog	<< "The Coordinate Representation index must be non-negative"
+				<< LogIO::EXCEPTION;
 		}
 		//
 		ImageInterface<Float>* pOut = 0;
 		String error;
 		ImageFITSConverter::FITSToImage(pOut, error, outfile, fitsfile,
-				whichrep, whichhdu, HostInfo::memoryFree() / 1024, overwrite,
-				zeroBlanks);
+						whichrep, whichhdu, HostInfo::memoryFree() / 1024, overwrite,
+						zeroBlanks);
 		//
 		if (pOut == 0) {
 			*itsLog << error << LogIO::EXCEPTION;
@@ -1616,60 +1615,62 @@ Record ImageAnalysis::deconvolvecomponentlist(Record& compList) {
 	return retval;
 }
 
-Bool ImageAnalysis::remove() {
-	*itsLog << LogOrigin("ImageAnalysis", "remove");
-	Bool rstat(False);
+Bool ImageAnalysis::remove(Bool verbose)
+{
+  *itsLog << LogOrigin("ImageAnalysis", "remove");
+  Bool rstat(False);
 
-	// Let's see if it exists.  If it doesn't, then the user has
-	// deleted it, or its a readonly expression
-	if (!pImage_p->isPersistent()) {
-		*itsLog << LogIO::WARN
-				<< "This image tool is not associated with a persistent disk file. It cannot be deleted"
-				<< LogIO::POST;
-		return False;
-	}
-	Bool strippath(False);
-	String fileName = pImage_p->name(strippath);
-	if (fileName.empty()) {
-		*itsLog << LogIO::WARN << "Filename is empty or does not exist."
-				<< LogIO::POST;
-		return False;
-	}
-	File f(fileName);
-	if (!f.exists()) {
-		*itsLog << LogIO::WARN << fileName << " does not exist." << LogIO::POST;
-		return False;
-	}
+  // Let's see if it exists.  If it doesn't, then the user has
+  // deleted it, or its a readonly expression
+  if (!pImage_p->isPersistent()) {
+    *itsLog << LogIO::WARN
+            << "This image tool is not associated with a persistent disk file. It cannot be deleted"
+            << LogIO::POST;
+    return False;
+  }
+  Bool strippath(False);
+  String fileName = pImage_p->name(strippath);
+  if (fileName.empty()) {
+    *itsLog << LogIO::WARN << "Filename is empty or does not exist."
+            << LogIO::POST;
+    return False;
+  }
+  File f(fileName);
+  if (!f.exists()) {
+    *itsLog << LogIO::WARN << fileName << " does not exist." << LogIO::POST;
+    return False;
+  }
 
-	// OK the file exists. Close ourselves first.  This deletes
-	// the temporary persistent image as well, if any and destroys
-	// the DDs associated with this image (they reference the image
-	// and will prevent us from deleting it)
-	if (pImage_p != 0) {
-		*itsLog << LogIO::NORMAL << "Detaching from image" << LogIO::POST;
-		delete pImage_p;
-	}
-	pImage_p = 0;
-	deleteHistAndStats();
+  // OK the file exists. Close ourselves first.  This deletes
+  // the temporary persistent image as well, if any and destroys
+  // the DDs associated with this image (they reference the image
+  // and will prevent us from deleting it)
+  if (pImage_p != 0) {
+    *itsLog << (verbose ? LogIO::NORMAL : LogIO::DEBUG1)
+            << "Detaching from image" << LogIO::POST;
+    delete pImage_p;
+  }
+  pImage_p = 0;
+  deleteHistAndStats();
 
-	// Now try and blow it away.  If it's open, tabledelete won't delete it.
-	String message;
-	if (Table::canDeleteTable(message, fileName, True)) {
-		try {
-			Table::deleteTable(fileName, True);
-			rstat = True;
-			*itsLog << LogIO::NORMAL << "deleted table " << fileName
-					<< LogIO::POST;
-		} catch (AipsError x) {
-			*itsLog << LogIO::SEVERE << "Failed to delete file " << fileName
-					<< " because " << x.getMesg() << LogIO::POST;
-		};
-	} else {
-		*itsLog << LogIO::SEVERE << "Cannot delete file " << fileName
-				<< " because " << message << LogIO::POST;
-	}
+  // Now try and blow it away.  If it's open, tabledelete won't delete it.
+  String message;
+  if (Table::canDeleteTable(message, fileName, True)) {
+    try {
+      Table::deleteTable(fileName, True);
+      rstat = True;
+      *itsLog << (verbose ? LogIO::NORMAL : LogIO::DEBUG1)
+              << "deleted table " << fileName << LogIO::POST;
+    } catch (AipsError x) {
+      *itsLog << LogIO::SEVERE << "Failed to delete file " << fileName
+              << " because " << x.getMesg() << LogIO::POST;
+    };
+  } else {
+    *itsLog << LogIO::SEVERE << "Cannot delete file " << fileName
+            << " because " << message << LogIO::POST;
+  }
 
-	return rstat;
+  return rstat;
 }
 
 Bool ImageAnalysis::fft(const String& realOut, const String& imagOut,

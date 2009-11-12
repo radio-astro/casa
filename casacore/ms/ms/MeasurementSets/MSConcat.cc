@@ -430,18 +430,22 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       oid = obsIds[r];
     }
     thisObsId.put(curRow, oid);
-
-    if(!scanOffsetForOid.isDefined(oid)){ // offset not set, use default
-      scanOffsetForOid.define(oid, defaultScanOffset);
+    
+    if(oid != obsIds[r]){ // obsid actually changed
+      if(!scanOffsetForOid.isDefined(oid)){ // offset not set, use default
+	scanOffsetForOid.define(oid, defaultScanOffset);
+      }
+      if(!encountered.isDefined(oid)){
+	log << LogIO::NORMAL << "Will offset scan numbers by " <<  scanOffsetForOid(oid)
+	    << " for observations with Obs ID " << oid
+	    << " in order to make scan numbers unique." << LogIO::POST;
+	encountered.define(oid,0);
+      }
+      thisScan.put(curRow, otherScan(r) + scanOffsetForOid(oid));
     }
-    if(!encountered.isDefined(oid)){
-      log << LogIO::NORMAL << "Will offset scan numbers by " <<  scanOffsetForOid(oid)
-	  << " for observations with Obs ID " << oid
-	  << " in order to make scan numbers unique." << LogIO::POST;
-      encountered.define(oid,0);
+    else{
+      thisScan.put(curRow, otherScan(r));
     }
-
-    thisScan.put(curRow, otherScan(r) + scanOffsetForOid(oid));
 
 
     thisStateId.put(curRow, otherStateId, r);

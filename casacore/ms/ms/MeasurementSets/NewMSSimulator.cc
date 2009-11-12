@@ -643,6 +643,42 @@ void NewMSSimulator::initFields(const String& sourceName,
 
 };
 
+
+  bool NewMSSimulator::getFields(Int& nField,
+				 Vector<String>& sourceName, 
+				 Vector<MDirection>& sourceDirection,
+				 Vector<String>& calCode)
+{
+  LogIO os(LogOrigin("MSsimulator", "getFields()", WHERE));
+  
+//  os << sourceName_p 
+//     << "  " << formatDirection(sourceDirection_p)
+//     << "  " << calCode_p
+
+  MSColumns msc(*ms_p);
+  MSFieldColumns& fieldc=msc.field();
+  nField=fieldc.nrow();
+
+  sourceName.resize(nField);
+  sourceDirection.resize(nField);
+  calCode.resize(nField);
+
+  for (Int i=0;i<nField;i++) {
+    fieldc.name().get(i, sourceName[i]);
+    fieldc.code().get(i, calCode[i]);
+    Vector<MDirection> direction;
+    fieldc.referenceDirMeasCol().get(i,direction,True);
+    // and if theres a varying reference direction per row, we'll just all go 
+    // merrily off into lala land.
+    sourceDirection[i]=direction[0];
+  }
+
+  return (nField>0);
+
+};
+
+
+
 void NewMSSimulator::initSpWindows(const String& spWindowName,
 				   const Int& nChan,
 				   const Quantity& startFreq,
@@ -736,6 +772,72 @@ void NewMSSimulator::initSpWindows(const String& spWindowName,
   }
 
 }
+
+// if known already e.g. from openfromms()
+bool NewMSSimulator::getSpWindows(Int& nSpw,
+				  Vector<String>& spWindowName,
+				  Vector<Int>& nChan,
+				  Vector<Quantity>& startFreq,
+				  Vector<Quantity>& freqInc,
+				  Vector<String>& stokesString)
+{
+
+#ifdef RI_DEBUG  
+  LogIO os(LogOrigin("MSsimulator", "getSpWindows()", WHERE)); 
+#else
+  LogIO os(LogOrigin("MSsimulator", "getSpWindows()")); 
+#endif
+  
+  MSColumns msc(*ms_p);
+  MSSpWindowColumns& spwc=msc.spectralWindow();
+  MSDataDescColumns& ddc=msc.dataDescription();
+  MSPolarizationColumns& polc=msc.polarization();
+  nSpw=spwc.nrow();
+
+  spWindowName.resize(nSpw);
+  nChan.resize(nSpw);
+  startFreq.resize(nSpw);
+  freqInc.resize(nSpw);
+  stokesString.resize(nSpw);
+
+  Int nPols(polc.nrow());
+  Vector<Int> stokes(4);
+  for (Int i=0;i<nSpw;i++) {
+    spwc.name().get(i,spWindowName[i]);
+    spwc.numChan().get(i,nChan[i]);
+    Double vStartFreq,vFreqInc,vBW;
+    spwc.refFrequency().get(i,vStartFreq);
+    startFreq[i].setValue(vStartFreq);
+    startFreq[i].setUnit("Hz");
+    spwc.totalBandwidth().get(i,vBW);
+    // yeah, ok - maybe they're not uniform.  we're doing what we can here.x
+    freqInc[i].setValue(vBW/nChan[i]);
+    freqInc[i].setUnit("Hz");
+    // need to translate enum Stokes::type back into strings... there's no
+    // easy way to do that in C++, but there is a Stokes Name function:
+    Int nCorr;
+    if (nPols==nSpw) {
+      polc.numCorr().get(i, nCorr);
+      stokes.resize(nCorr);
+      polc.corrType().get(i,stokes);
+    } else if (nPols<=0) {
+      throw(AipsError("Polarations not defined in MSSimulator::getSpWindows"));
+    } else {
+      // if not specified for all spw, use the first one for all spw.
+      polc.numCorr().get(0, nCorr);
+      stokes.resize(nCorr);
+      polc.corrType().get(0,stokes);
+    }
+    String t;
+    for (uInt j=0; j<nCorr; j++) 
+      t += Stokes::name(Stokes::StokesTypes(stokes(j))) + " ";
+    stokesString[i]=t;
+  }  
+  return True;
+}
+
+
+
 
 void NewMSSimulator::initFeeds(const String& mode) {
   LogIO os(LogOrigin("MSsimulator", "initFeeds()", WHERE));
@@ -884,6 +986,44 @@ void NewMSSimulator::initFeeds(const String& mode,
   }
   os << "Added rows to FEED table" << LogIO::POST;
 };
+
+
+
+
+bool NewMSSimulator::getFeedMode(String& mode)
+{
+  LogIO os(LogOrigin("MSsimulator", "getFeedMode()", WHERE));
+  
+  MSColumns msc(*ms_p);
+  MSAntennaColumns& antc=msc.antenna();
+  Int nAnt=antc.nrow();
+  
+  if (nAnt <= 0) {
+    os <<  LogIO::SEVERE << "NewMSSimulator::getFeeds: must call initAnt() first" << LogIO::POST;
+  }
+  
+  MSFeedColumns& feedc=msc.feed();
+  Int numFeeds=feedc.nrow();
+
+  if (numFeeds>nAnt)
+    mode="list";
+  else {
+    if (numFeeds<1) return False;
+    // quick and dirty - assume all ants the same kind 
+    Vector<String> feedPol(2);
+    feedc.polarizationType().get(0,feedPol,True);
+    // we only support setting perfect feeds in Simulator.
+    Int nF(0);
+    feedPol.shape(nF);
+    if (nF<2) 
+      mode=feedPol[0];
+    else
+      mode=feedPol[0]+" "+feedPol[1];
+  }
+  return True;
+}
+ 
+
 
 
 NewMSSimulator::~NewMSSimulator() 

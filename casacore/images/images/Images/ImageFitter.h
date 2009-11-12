@@ -87,7 +87,7 @@ namespace casa {
             // <li> residualInp - Name of residual image to save. Blank means do not save residual image</li>
             // <li> modelInp - Name of the model image to save. Blank means do not save model image</li>
             ImageFitter(
-                const String& imagename, const String& box="", const String& region="",
+                const String& imagename, const String& region, const String& box="",
                 const uInt chanInp=0, const String& stokes="I",
                 const String& maskInp="",
                 const Vector<Float>& includepix = Vector<Float>(0),
@@ -96,6 +96,18 @@ namespace casa {
                 const String& estiamtesFilename="", const String& logfile="",
                 const Bool& append=True, const String& newEstimatesInp=""
             ); 
+
+            ImageFitter(
+                const String& imagename, const Record* regionPtr, const String& box="",
+                const uInt chanInp=0, const String& stokes="I",
+                const String& maskInp="",
+                const Vector<Float>& includepix = Vector<Float>(0),
+                const Vector<Float>& excludepix = Vector<Float>(0),
+                const String& residualInp="", const String& modelInp="",
+                const String& estiamtesFilename="", const String& logfile="",
+                const Bool& append=True, const String& newEstimatesInp=""
+            );
+
 
             // destructor
             ~ImageFitter();
@@ -108,7 +120,7 @@ namespace casa {
 
             LogIO *itsLog;
             ImageInterface<Float> *image;
-            ImageRegion imRegion;
+            Record regionRecord;
             uInt chan;
             String stokesString, mask, residual, model, logfileName,
 				regionString, estimatesString, newEstimatesFileName;
@@ -122,16 +134,18 @@ namespace casa {
             // does the lion's share of constructing the object, ie checks validity of
             // inputs, etc.
             void _construct(
-                const String& imagename, const String& box, const String& region,
-                const String& estimatesFilename
+                const String& imagename, const String& box, const String& regionName,
+                const Record* regionPtr, const String& estimatesFilename
             );
 
             // determine the region based on the inputs
-            void _doRegion(const String& box, const String& region);
+            void _doRegion(const String& box, const String& region, const Record* regionPtr);
 
             // process the 'box' command line argument and return the associated region as
             // a record.
-            void _processBox(const String& box);
+            ImageRegion _processBox(const String& box);
+
+            ImageRegion _boxRegion(String blc1, String blc2, String trc1, String trc2);
 
             // check the validity of the image-related parameters.
             void _checkImageParameterValidity() const;

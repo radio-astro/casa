@@ -130,8 +130,15 @@ public:
 		  const MDirection& sourceDirection,
 		  const String& calCode);
 
+  bool getFields(Int& nField,
+		 Vector<String>& sourceName, 
+		 Vector<MDirection>& sourceDirection,
+		 Vector<String>& calCode);
+
   // set the Feeds;  brain dead version
   void initFeeds(const String& mode);
+
+  bool getFeedMode(String& mode);
 
   // set the Feeds;  Smart version
   void initFeeds(const String& mode,
@@ -146,6 +153,13 @@ public:
 		     const Quantity& freqInc,
 		     const Quantity& freqRes,
 		     const String& stokesString);
+
+  bool getSpWindows(Int& nSpw,
+		    Vector<String>& spWindowName,
+		    Vector<Int>& nChan,
+		    Vector<Quantity>& startFreq,
+		    Vector<Quantity>& freqInc,
+		    Vector<String>& stokesString);
 
   void setFractionBlockageLimit(const Double fraclimit) 
     { fractionBlockageLimit_p = fraclimit; }

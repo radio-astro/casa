@@ -69,7 +69,7 @@ void ImageFITSConverterImpl<HDUType>::FITSToImage(ImageInterface<Float>*& pNewIm
 						  uInt memoryInMB,
 						  Bool zeroBlanks)
 {
-    LogIO os(LogOrigin("ImageFITSConverterImpl", "FITSToImage", WHERE));
+    LogIO os(LogOrigin("ImageFITSConverterImpl", "FITSToImage"));
 
 // Crack the header and get what we need out of it.  DOn't get tricked
 // by the fact that HDUType is referring to the template type, not
@@ -150,7 +150,7 @@ void ImageFITSConverterImpl<HDUType>::FITSToImage(ImageInterface<Float>*& pNewIm
     if (bitpix < 0 && isBlanked) {
 	if (blankVal != -1) {
 	    // Warn that we only deal with NaN blanked FP image HDU's.
-	    os << LogIO::WARN << WHERE <<
+	    os << LogIO::WARN <<
 		"For floating point images, BLANK may only be set to -1<n" <<
 		blankVal << " is invalid. Ignoring (but will pass through "
 		"NaN's."  << LogIO::POST;

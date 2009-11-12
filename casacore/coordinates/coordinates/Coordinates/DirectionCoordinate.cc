@@ -679,6 +679,7 @@ Vector<String> DirectionCoordinate::axisNames(MDirection::Types type,
 	case MDirection::B1950_VLA:
 	case MDirection::BMEAN:
 	case MDirection::BTRUE:
+	case MDirection::ICRS:
 	    names[0] = "RA";
 	    names[1] = "DEC";
 	    break;
@@ -722,6 +723,7 @@ Vector<String> DirectionCoordinate::axisNames(MDirection::Types type,
 	case MDirection::B1950_VLA:
 	case MDirection::BMEAN:
 	case MDirection::BTRUE:
+	case MDirection::ICRS:
 	    names[0] = "Right Ascension";
 	    names[1] = "Declination";
 	    break;
