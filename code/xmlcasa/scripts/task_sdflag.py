@@ -4,7 +4,7 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 
-def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile, outform, overwrite, plotlevel):
+def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagrow, flagmode, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdflag')
 
@@ -143,16 +143,22 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
             scanns = s.getscannos()
             sn=list(scanns)
             nr=s.nrow()
-            #print "Number of scans to be flagged:", len(sn)
-            #print "Number of spectra to be flagged:", nr
-            casalog.post( "Number of spectra to be flagged: %d" % (nr) )
 
-            if (len(maskflag) == 0):
-                    raise Exception, 'maskflag is undefined'
+	    if (len(flagrow) == 0):
+                    #print "Number of scans to be flagged:", len(sn)
+                    #print "Number of spectra to be flagged:", nr
+                    casalog.post( "Number of spectra to be flagged: %d" % (nr) )
 
-            masks = s.create_mask(maskflag)
-            #print "Applying channel flagging..."
-            casalog.post( "Applying channel flagging..." )
+                    if (len(maskflag) == 0):
+                            raise Exception, 'maskflag is undefined'
+
+                    masks = s.create_mask(maskflag)
+                    #print "Applying channel flagging..."
+                    casalog.post( "Applying channel flagging..." )
+	    else:
+		    casalog.post( "Number of rows to be flagged: %d" % (len(flagrow)) )
+		    casalog.post( "Applying row flagging..." )
+		    
 
             #sc=s.copy()
             # Plot final spectrum
@@ -171,6 +177,7 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
             else:
                     nrow=4
                     ncol=4
+		    
             #print "nrow,ncol=", nrow, ncol
             casalog.post( "nrow,ncol= %d,%d" % (nrow, ncol) )
             if nr >16:
@@ -203,9 +210,16 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
                         x = s._getabcissa(row)
                         y = s._getspectrum(row)
                         oldmskarr = array(s._getmask(row))
-                        #marr = array(masks)
-                        marr = logical_not(array(masks))
-                        allmsk = logical_and(marr,oldmskarr)
+			if (len(flagrow) > 0):
+			  found = false
+			  for i in range(0, len(flagrow)):
+			    if (row == flagrow[i]):
+			      found = true
+			      break
+			  masks = [found and not(unflag)]*(s.nchan())
+			#marr = array(masks)
+			marr = logical_not(array(masks))
+			allmsk = logical_and(marr,oldmskarr)
                         ym = ma.masked_array(y,mask=logical_not(allmsk))
                         myp.plot(x,ym)
                         myp.palette(2)
@@ -230,7 +244,10 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
                     #Apply flag
                     ans=raw_input("Apply %s (y/n)?: " % flgmode)
                     if ans.upper() == 'Y':
-                        s.flag(masks,unflag)
+		        if (len(flagrow) == 0):
+				s.flag(masks,unflag)
+			else:
+				s.flag_row(flagrow, unflag)
                         params={}
                         if ( vars()['pols'] == [] ):
                                 params['pols']=list(s.getpolnos())
@@ -286,7 +303,10 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagmode, outfile
             else:
                     ans=raw_input("Apply %s (y/n)?: " % flgmode)
                     if ans.upper() == 'Y':
-                            s.flag(masks,unflag)
+			    if (len(flagrow) == 0):
+				    s.flag(masks,unflag)
+			    else:
+				    s.flag_row(flagrow, unflag)
                             params={}
                             if ( vars()['pols'] == [] ):
                                     params['pols']=list(s.getpolnos())

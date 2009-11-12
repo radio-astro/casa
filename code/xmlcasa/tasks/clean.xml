@@ -229,7 +229,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--========================================================= -->
     <param type="int" name="nchan" subparam="true">
 	    <description>Number of channels (planes) in output image</description>
-	    <value>1</value>
+	    <value>-1</value>
     </param>
 <!--========================================================= -->
     <param type="any" name="start" subparam="true">
@@ -479,12 +479,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="interpolation"><value type="string">nearest</value></default>
 		</equals>
 	        <equals value="velocity">
-			<default param="nchan"><value>1</value></default>
-			<default param="start"><value type="string">0.0km/s</value>
-			    <description>Velocity of first image channel: e.g \'0.0km/s\'</description>
+			<default param="nchan"><value>-1</value></default>
+			<default param="start"><value type="string"></value>
+			    <description>Velocity of first image channel: e.g \'0.0km/s\'(''=first channel specified in spw)</description>
 		    </default>
-		    <default param="width"><value type="string">1km/s</value>
-			    <description>image channel width in velocity units: e.g \'-1.0km/s\'</description>
+		    <default param="width"><value type="string"></value>
+			    <description>image channel width in velocity units: e.g \'-1.0km/s\'(''=width of first channeli specified in spw)</description>
 		    </default>
 		    <default param="interpolation"><value type="string">nearest</value></default>
 		    <default param="outframe"><value type="string"></value>
@@ -495,12 +495,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     </default>
 	        </equals>
 	        <equals value="frequency">
-			<default param="nchan"><value>1</value></default>
-			<default param="start"><value type="string">1.4GHz</value>
-			    <description>Frequency of first image channel: e.q. \'1.4GHz\'</description>
+			<default param="nchan"><value>-1</value></default>
+			<default param="start"><value type="string"></value>
+			    <description>Frequency of first image channel: e.q. \'1.4GHz\'(''= first channel specified in spw)</description>
 		    </default>
-		    <default param="width"><value type="string">10kHz</value>
-			    <description>Image channel width in frequency units: e.g \'1.0kHz\'</description>
+		    <default param="width"><value type="string"></value>
+			    <description>Image channel width in frequency units: e.g \'1.0kHz\'(''=width of first channel specified in spw)</description>
 		    </default>
 		    <default param="interpolation"><value type="string">nearest</value></default>
 		    <default param="outframe"><value type="string"></value></default>

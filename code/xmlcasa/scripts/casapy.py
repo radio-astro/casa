@@ -9,6 +9,49 @@ except ImportError, e:
 import os
 import sys
 import matplotlib
+import signal
+
+def termination_handler(signum, frame):
+
+    # Switch off this handler in order to avoid
+    # infinite looping
+    signal.signal(signum, signal.SIG_DFL)
+
+    # SIGTERM everything in this process' process group,
+    # and ignore SIGTERM
+    print "Clean up subprocesses..."
+
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    os.killpg(os.getpgid(0), signal.SIGTERM)
+    signal.signal(signal.SIGTERM, signal.SIG_DFL)
+
+    # Reraise the incoming signal, this time it
+    # will be handled by the default signal handler
+    os.kill(os.getpid(), signum)
+
+# Clean up child processes and terminate if any
+# of the following POSIX signals happen
+signal.signal(signal.SIGFPE, termination_handler)
+signal.signal(signal.SIGILL, termination_handler)
+signal.signal(signal.SIGQUIT, termination_handler)
+signal.signal(signal.SIGSEGV, termination_handler)
+signal.signal(signal.SIGABRT, termination_handler)
+signal.signal(signal.SIGTERM, termination_handler)
+signal.signal(signal.SIGBUS, termination_handler)
+signal.signal(signal.SIGHUP, termination_handler)
+
+# Do not handle the following POSIX signals
+#signal.signal(signal.SIGALRM, termination_handler)
+#signal.signal(signal.SIGPIPE, termination_handler)
+#signal.signal(signal.SIGUSR1, termination_handler)
+#signal.signal(signal.SIGUSR2, termination_handler)
+#signal.signal(signal.SIGKILL, termination_handler)
+#signal.signal(signal.SIGSTOP, termination_handler)
+#signal.signal(signal.SIGCONT, termination_handler)
+#signal.signal(signal.SIGTSTP, termination_handler)
+#signal.signal(signal.SIGTTIN, termination_handler)
+#signal.signal(signal.SIGTTOU, termination_handler)
+
 
 homedir = os.getenv('HOME')
 if homedir == None :
@@ -22,7 +65,8 @@ casa = { 'helpers': {
          'dirs': {
              'rc': homedir + '/.casa'
          },
-         'flags': { }
+         'flags': { },
+         'files': { }
        }
 
 a = [] + sys.argv             ## get a copy from goofy python
@@ -98,7 +142,7 @@ from taskinit import *
 
 logpid=[]
 
-def casalogger(logfile='casapy.log'):
+def casalogger(logfile=''):
     """
     Spawn a new casalogger using logfile as the filename.
     You should only call this if the casalogger dies or you close it
@@ -109,6 +153,14 @@ def casalogger(logfile='casapy.log'):
     we will figure out how to signal the casalogger with the new name but not
     for a while.
     """
+
+    if logfile == '':
+        if casa.has_key('files') and casa['files'].has_key('logfile') :
+            logfile = casa['files']['logfile']
+        else:
+            casa['files']['logfile'] = os.getcwd( ) + '/casapy.log'
+            logfile = 'casapy.log'
+
     pid=9999
     if (os.uname()[0]=='Darwin'):
 	if casa['helpers']['logger'] == 'console':
@@ -125,7 +177,7 @@ def casalogger(logfile='casapy.log'):
 
 showconsole = False
 
-thelogfile = 'casapy.log'
+thelogfile = ''
 
 showconsole = casa['flags'].has_key('--log2term')
 if casa['flags'].has_key('--logfile') :
@@ -235,6 +287,8 @@ def asap_init():
     from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
     from sdmath_cli import sdmath_cli as sdmath
     from sdimaging_cli import sdimaging_cli as sdimaging
+    from sdsim_cli import sdsim_cli as sdsim
+    from sdimprocess_cli import sdimprocess_cli as sdimprocess
     myf['sd']=sd
     myf['sdaverage']=sdaverage
     myf['sdsmooth']=sdsmooth
@@ -251,6 +305,8 @@ def asap_init():
     myf['sdtpimaging']=sdtpimaging
     myf['sdmath']=sdmath
     myf['sdimaging']=sdimaging
+    myf['sdsim']=sdsim
+    myf['sdimprocess']=sdimprocess
 
 
 def selectantenna(vis,minstring):

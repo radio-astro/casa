@@ -12,46 +12,59 @@
 #   The script will as well test the following features:                    #
 #                                                                           #
 #    Input Data           Process              Output Data                  #
-#                      used data from------>  ngc1333.ms  +                 #
-#                                             ngc1333.gcal                  #
+# NGC1333_1.UVFITS--->  importuvfits ----> ngc1333.ms                       #
+#                            |                                              #
+#                            v                                              #
+#                        flagdata    ----> ngc1333.ms                       #
+#                            |                                              #
+#                            v                                              #
+#                          setjy     ----> ngc1333.ms                       #
+#                            |                                              #
+#                            v                                              #
+#                         gaincal    ----> ngc1333.gcal                     #
+#                            |                                              #
+#                            v                                              #
 #                            |                                              #
 #                            v                                              #
 #                        smoothcal   ------>  ngc1333.smoothed              #
 #                                                                           #
 # Input data:                                                               #
-#    ngc1333.ms and ngc1333.gcal                                                         #
+#    N1333_1.UVFITS and ngc1333.ref.smoothed                                #
 #                                                                           #
+# Note: all input data have relative paths to the local directory           #
 #############################################################################
 
-import os
-import string
-import sys
-import time
 
+import os
+import time
+import regression_utility as tstutl
 from __main__ import default
 from tasks import *
 from taskinit import *
 
-import regression_utility as tstutl
 
 # Enable benchmarking?
 benchmarking = True
+usedasync = False
 
-# Start benchmarking
-if benchmarking:
-    startTime = time.time()
-    startProc = time.clock()
-
-# Paths
-pathname=os.environ.get('CASAPATH').split()[0]
+#
+# Set up some useful variables
+#
+# Get path to CASA home directory by stipping name from '$CASAPATH'
+#pathname=os.environ.get('CASAPATH').split()[0]
 
 # This is where the NGC1333 UVFITS data will be
-datapath=pathname+'/data/regression/smoothcal/'
-msfile=datapath+'ngc1333.ms'
-gtable=datapath+'ngc1333.gcal'
+#datapath=pathname+'/data/regression/ATST2/NGC1333/'
+#fitsdata=datapath+'N1333_1.UVFITS'
+fitsdata='N1333_1.UVFITS'
+reffile='ngc1333.ref.smoothed'
+
+# 3C147 model image for setjy
+#modelim=pathname+'/data/nrao/VLA/CalModels/3C147_Q.im'
+modelim='3C147_Q.im'
 
 # The testdir where all output files will be kept
-testdir='smoothcal_regression'
+testdir='ngc1333_regression'
 
 # The prefix to use for output files.
 prefix=testdir+"/"+'ngc1333'
@@ -60,137 +73,236 @@ prefix=testdir+"/"+'ngc1333'
 # (WARNING! Removes old test directory of the same name if one exists)
 tstutl.maketestdir(testdir)
 
+# Start benchmarking
+if benchmarking:
+    startTime = time.time()
+    startProc = time.clock()
 
+#
 #=====================================================================
 #
-# Apply smoothcal on gain table
+# Import the data from FITS to MS
 #
-print '--Smoothcal--'
-default('smoothcal')
+print '*** 02 MAY ***'
+print '--Import--'
 
-smtable = prefix + '.smoothed'
-smoothcal(vis=msfile,tablein=gtable,caltable=smtable,
-     smoothtype='mean',smoothtime=7200.0)
+# Safest to start from task defaults
+default('importuvfits')
 
-# smoothcal calibration completion time
+# Set up the MS filename and save as new global variable
+msfile = prefix + '.ms'
+
+# Use task importuvfits
+fitsfile = fitsdata
+vis = msfile
+antnamescheme="new"
+importuvfits()
+
+# Record import time
 if benchmarking:
+    importtime = time.time()
+
+#
+#=====================================================================
+#  Flagging
+#
+print '--Flagdata--'
+
+#
+# The following information on bad data comes from a test report
+# created by Debra Shepherd.  It is currently available at
+# http://aips2.nrao.edu/projectoffice/almatst1.1/TST1.1.data.description.pdf
+#
+# NGC 1333: bad data on 2 May:
+# o Correlator glitches
+#   - Spwid 1, field 1: 02-May-2003/21:44:00 to 21:50:00
+#   - Spwid 1, fields 2,3,4,5,6: 02-May-2003/21:40:00 to 21:51:00
+#   - Spwid 1, field 7: 02-May-2003/21:56:00 to 21:58:00
+#   - Spwid 2, fields 8,9,10,11,12: 02-May-2003/21:55:00 to 22:20:00
+# o Non-fringing antennas:
+#   - Ant 9 - everything: all spwids, all fields, all times
+#   - Ant 14 - spwid 1, 02-May-2003/18:36:00 to 18:53:00
+#   - Ant 14 - spwid 2, 02-May-2003/18:52:00 to 19:10:00
+# o Bad bandpass solutions:
+#   - Ant 22 - spwid 2 (pathological bandpass solution,
+#     don't trust this antenna).
+# o End channels:
+#   - Flag channels 1,2,3 and 61, 62, 63 (very noisy)
+#     Flag them to prevent higher noise in some image planes.
+# o Even after all this, the calibrated source data still has amplitudes
+# that vary from a maximum of 10Jy/channel to 30Jy/channel.
+# The uv weighting will properly downweight the poor data.
+#
+
+# Use flagdata() in vector mode
+default('flagdata')
+vis = msfile
+mode = 'manualflag'
+
+
+##################################################
+#
+# Get rid of the autocorrelations from the MS
+#
+# Flag antenna with antennaid 8
+#
+# Flag all data whose amplitude  are not in range [0.0,2.0] on the
+# parallel hands       ( not done )
+#
+# Flag data (which is bad) in a time range
+#
+# Flag all antenna 14, 15 data in the time ranges stated
+#
+# Sequential flagdata execution:
+#
+# flagdata(vis=msfile1, autocorr=True, mode='manualflag')
+# flagdata(vis=msfile1,antenna='9', mode='manualflag')
+# flagdata(vis=msfile1,mode='manualflag',clipexpr='ABS RR',
+#          clipminmax=[0.0,2.0],clipoutside=True)
+#
+# flagdata(vis=msfile1,mode='manualflag',clipexpr='ABS LL',
+#          clipminmax=[0.0,2.0],clipoutside=True)
+# flagdata(vis=msfile1,mode='manualflag',timerange='2003/05/02/21:40:58~2003/05/02/22:01:30')
+#
+# flagdata(vis=msfile1,mode='manualflag', antenna='14',
+#          timerange='2003/05/02/18:50:50~2003/05/02/19:13:30')
+# flagdata(vis=msfile1,mode='manualflag', antenna='15', spw='0',
+#          timerange='2003/05/02/22:38:49~2003/05/02/22:39:11')
+
+# Parallel flagdata execution:
+autocorr  = [true, false , false, false , false ]
+antenna   = [''  , 'VA09', ''   , 'VA14', 'VA15']
+timerange = [''  , ''    , '2003/05/02/21:40:58~2003/05/02/22:01:30', \
+                           '2003/05/02/18:50:50~2003/05/02/19:13:30', \
+                           '2003/05/02/22:38:49~2003/05/02/22:39:11'] 
+spw       = [''  , ''    , ''   , ''    , '0'   ]
+
+
+###################################################
+# Finally, apply all the flag specifications
+#
+
+flagdata()
+
+
+# Record flagging completion time
+if benchmarking:
+    flagtime = time.time()
+
+
+#
+#=====================================================================
+#
+# Set the fluxes of the primary calibrator(s)
+#
+print '--Setjy--'
+default('setjy')
+
+setjy(vis=msfile,field='0542+498_1',modimage=modelim) 
+setjy(vis=msfile,field='0542+498_2',modimage=modelim)
+
+# Record setjy completion time
+if benchmarking:
+    setjytime = time.time()
+
+#
+#=====================================================================
+#
+# Gain calibration
+#
+print '--Gaincal--'
+default('gaincal')
+
+gtable = prefix + '.gcal'
+gaincal(vis=msfile,caltable=gtable,
+    field='0,12,14',spw='0:4~58', gaintype='G',
+    opacity=0.06,solint='int',combine='',refant='VA27',minsnr=2.,gaincurve=True)
+
+
+# gaincal calibration completion time
+if benchmarking:
+    gaintime = time.time()
+
+#
+#=====================================================================
+#
+# Smoothcal the gain table
+#
+try:
+    
+    regstate = True
+    ret_status = None
+    print '--Smoothcal--'
+    default('smoothcal')
+
+    smtable = prefix + '.smoothed'
+    ret_status = smoothcal(vis=msfile,tablein=gtable,caltable=smtable,smoothtype='mean',smoothtime=7200.0)
+    if ret_status == False :
+        regstate = False
+        print >> sys.stderr, "Smoothcal failed to execute!"  
+    
+    # gaincal calibration completion time
+    if benchmarking:
+        smtime = time.time()
+ 
     endProc = time.clock()
     endTime = time.time()
-
-#=====================================================================
-# Do regression test
-#
-
-EPS  = 1e-5;  # Logical "zero"
-
-# Reference statistics for gtable and smtable
-# GAIN table
-#gmax = 1.0
-#gmean = 0.55299845106360213
-#gmedabsdevmed = 0.1120542585849762
-#gmedian = 0.46294707059860229
-#gmin = 0.045811429619789124
-#gnpts = 14500.0
-#gquartile = 0.36033809185028076
-#grms = 0.60084819793701172
-#gstddev = 0.2349788425923284
-#gsum = 8018.477540422231
-#gsumsq = 5234.7687634427484
-#gvar = 0.055215056466030248
-
-
-# SMOOTHED table
-smax = 1.0
-smean = 0.53380899890332389
-smedabsdevmed = 0.090539306402206421
-smedian = 0.45989406108856201
-smin = 0.25960710644721985
-snpts = 14500.0
-squartile = 0.26996403932571411
-srms = 0.573993980884552
-sstddev = 0.21099782732171318
-ssum = 7740.230484098196
-ssumsq = 4777.301371364324
-svar = 0.044520083134483496
-
-try:
-    regstate = False;
-
-#    tb.open(gtable)
-#    gstats = tb.statistics(column='GAIN',complex_value='amp')
-#    tb.close()
  
-     # Get the difference between new and reference values 
-    # Original Gain table
-#    dif_max = gmax - gstats['GAIN']['max'] 
-#    dif_mean = gmean - gstats['GAIN']['mean']
-#    dif_medabsdevmed = gmedabsdevmed - gstats['GAIN']['medabsdevmed']
-#    dif_median = gmedian - gstats['GAIN']['median']
-#    dif_min = gmin - gstats['GAIN']['min']
-#    dif_npts = gnpts - gstats['GAIN']['npts']
-#    dif_quartile = gquartile - gstats['GAIN']['quartile']
-#    dif_rms = grms - gstats['GAIN']['rms']
-#    dif_stddev = gstddev - gstats['GAIN']['stddev']
-#    dif_sum = gsum - gstats['GAIN']['sum']
-#    dif_sumsq = gsumsq - gstats['GAIN']['sumsq']
-#    dif_var = gvar - gstats['GAIN']['var']
-       
-    print '--Statistics of smoothed table--'
-    tb.open(smtable)
-    sstats = tb.statistics(column='GAIN',complex_value='amp')
-    tb.close()
-    
-    
-    # Get the difference between new and reference values 
-    # Smoothed table
-    dif_max = smax - sstats['GAIN']['max'] 
-    dif_mean = smean - sstats['GAIN']['mean']
-    dif_medabsdevmed = smedabsdevmed - sstats['GAIN']['medabsdevmed']
-    dif_median = smedian - sstats['GAIN']['median']
-    dif_min = smin - sstats['GAIN']['min']
-    dif_npts = snpts - sstats['GAIN']['npts']
-    dif_quartile = squartile - sstats['GAIN']['quartile']
-    dif_rms = srms - sstats['GAIN']['rms']
-    dif_stddev = sstddev - sstats['GAIN']['stddev']
-    dif_sum = ssum - sstats['GAIN']['sum']
-    dif_sumsq = ssumsq - sstats['GAIN']['sumsq']
-    dif_var = svar - sstats['GAIN']['var']
+    #=====================================================================
+    # Do regression test
+    #   
+    EPS  = 1e-5;  # Logical "zero"
+    total = 0
+    fail = 0
 
-#    print dif_max,dif_mean,dif_medabsdevmed,dif_median,dif_min,dif_npts, \
-#              dif_quartile,dif_rms,dif_stddev,dif_sum,dif_sumsq,dif_var
-    
-    print ''
-    
-    if ((abs(dif_max) > EPS) or
-        (abs(dif_mean) > EPS) or
-        (abs(dif_medabsdevmed) > EPS) or
-        (abs(dif_median) > EPS) or
-        (abs(dif_min) > EPS) or
-        (abs(dif_npts) > EPS) or
-        (abs(dif_quartile) > EPS) or
-        (abs(dif_rms) > EPS) or
-        (abs(dif_stddev) > EPS) or
-        (abs(dif_sum) > EPS) or
-        (abs(dif_sumsq) > EPS) or
-        (abs(dif_var)> EPS)
-        ) :
+   # Compare the values of both tables
+    tb.open(reffile)
+    refcol = tb.getvarcol('GAIN')
+    tb.close()
+   
+    tb.open(smtable)
+    smcol = tb.getvarcol('GAIN')
+    tb.close()
+   
+    # get the length of rows
+    nrows = len(refcol)
+    print "-- Comparing the values of %s rows --" %nrows
+
+     # Loop over every row,pol and get the data
+    for i in range(1,nrows,1) :
+      row = 'r%s'%i     
+      # polarization is 0-1
+      for pol in range(0,2) :     
+        total += 1
+        refdata = refcol[row][pol]
+        smdata = smcol[row][pol]
+#        print refdata,smdata
+        if (abs(refdata - smdata) > EPS) :
+            fail += 1
+            
+    # raise an exception if values are not within a maximum   
+    if fail > 0 :
+        perc = fail*100/total
         regstate = False
-        print >> sys.stderr, "Smoothcal regression tests failed!"
-        print ''
+        print >> sys.stderr, "Regression test failed: %s %% of values are different "\
+                        "by more than the allowed maximum %s" %(perc,EPS)
     else :
         regstate = True
-        print "Smoothcal regression tests passed."
-        print ''
+        print >> sys.stdout, "Regression tests passed"
 
-    if benchmarking:
-        print '********* Benchmarking *****************'
-        print '*                                      *'
-        print 'Total wall clock time was: ', endTime - startTime
-        print 'Total CPU        time was: ', endProc - startProc
+    print >>sys.stdout,'********* Benchmarking *****************'
+    print >>sys.stdout,'*                                      *'
+    print >>sys.stdout,'Total wall clock time was: '+str(endTime - startTime)
+    print >>sys.stdout,'Total CPU        time was: '+str(endProc - startProc)
+    print >>sys.stdout,'* Breakdown:                           *'
+    print >>sys.stdout,'*   import       time was: '+str(importtime-startTime)
+    print >>sys.stdout,'*   flagdata     time was: '+str(flagtime-importtime)
+    print >>sys.stdout,'*   setjy        time was: '+str(setjytime-flagtime)
+    print >>sys.stdout,'*   gaincal      time was: '+str(gaintime-setjytime)
+    print >>sys.stdout,'*   smoothcal    time was: '+str(smtime-gaintime)
+    print >>sys.stdout,'*****************************************'
 
-
+ 
 except Exception, instance:
     print >> sys.stderr, "Regression test failed for smoothcal instance = ", instance
-
-
 

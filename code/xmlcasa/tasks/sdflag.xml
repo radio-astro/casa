@@ -52,6 +52,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value></value>
     </param>
 
+    <param type="intArray" name="flagrow">
+            <description>list of row numbers to apply row-based flagging/unflagging</description>
+            <value></value>
+    </param>
+
     <param type="string" name="flagmode">
             <description>flag mode (flag,unflag,restore)</description>
             <value>flag</value>
@@ -123,6 +128,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         maskflag -- list of mask regions to apply flag/unflag 
                 default: [] (entire spectrum)
                 example: [[1000,3000],[5000,7000]]
+                WARNING: if one or more rows are given in flagrow, 
+                         this parameter is ignored
+        flagrow -- list of row numbers to apply flag/unflag (row-based)
+                default: [] (no row selection)
+                example: [0, 2, 3]
+                WARNING: this parameter is effective only when 
+                         one or more row numbers are given explicitly
         flagmode -- flag mode
                 default: 'flag'
                 options: 'flag','unflag','restore'

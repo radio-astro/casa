@@ -633,7 +633,8 @@ ms::statistics(const std::string& column,
          }
 
          
-         *itsLog << "Use " << itsMS->tableName() << LogIO::POST;
+         *itsLog << "Use " << itsMS->tableName() <<
+           ", useflags = " << useflags << LogIO::POST;
          *itsLog << "Compute statistics on " << column;
          
          if (complex_value != "") {
@@ -693,13 +694,25 @@ ms::statistics(const std::string& column,
              Array<Bool> data_bool_chunk;
              Array<Int> data_int_chunk;
 
-             if (useflags && false) {
+             if (useflags) {
                Cube<Bool> flag_chunk;
                vi.flag(static_cast<Cube<Bool>&>(flag_chunk));
-               append<Bool>(flags, flags_length, nrow, flag_chunk, "FLAG");
 
                Vector<Bool> flagrow_chunk;
                vi.flagRow(static_cast<Vector<Bool>&>(flagrow_chunk));
+
+               /* If FLAG_ROW is set, update flags */
+               for (unsigned i = 0; i < flagrow_chunk.nelements(); i++) {
+                 if (flagrow_chunk(i)) {
+                   for (unsigned channel = 0; channel < (unsigned)flag_chunk.shape()(0); channel++) {
+                     for (unsigned pol = 0; pol < (unsigned)flag_chunk.shape()(1); pol++) {
+                       flag_chunk(i, channel, pol) = true;
+                     }
+                   }
+                 }
+               }
+
+               append<Bool>(flags, flags_length, nrow, flag_chunk, "FLAG");
                append<Bool>(flagrows, flagrows_length, nrow, flagrow_chunk, "FLAG_ROW");
              }
 
@@ -791,7 +804,7 @@ ms::statistics(const std::string& column,
                  vi.timeInterval(static_cast<Vector<Double>&>(data_double_chunk));
                  append<Double>(data_double, length, nrow, data_double_chunk, column);
              }
-             else if (column == "SCAN_NUMBER") {
+             else if (column == "SCAN_NUMBER" || column == "SCAN") {
                  vi.scan(static_cast<Vector<Int>&>(data_int_chunk));
                  append<Int>(data_int, length, nrow, data_int_chunk, column);
              }
@@ -840,7 +853,7 @@ ms::statistics(const std::string& column,
          }
          
          Vector<Bool> f;
-         if (useflags && false) {
+         if (useflags) {
            if (dimension == 1) {
              f = flagrows;
            }
@@ -857,7 +870,7 @@ ms::statistics(const std::string& column,
            }
          }
          else {
-           f = Vector<Bool>(n);
+           f = Vector<Bool>(n, false);
          }
 
          bool supported = true;
@@ -872,7 +885,7 @@ ms::statistics(const std::string& column,
          else if (data_double.nelements() > 0) {
              if (dimension == 2) {
                  f.resize(0);
-                 f = Vector<Bool>(data_double.shape()(1));
+                 f = Vector<Bool>(data_double.shape()(1), false);
                  retval = fromRecord(Statistics<Double>::get_stats_array(static_cast<Matrix<Double> >(data_double),
                                                                      f,
                                                                      column,
@@ -895,7 +908,7 @@ ms::statistics(const std::string& column,
          else if (data_float.nelements() > 0) {
              if (dimension == 2) {
                  f.resize(0);
-                 f = Vector<Bool>(data_float.shape()(1));
+                 f = Vector<Bool>(data_float.shape()(1), false);
                  retval = fromRecord(Statistics<Float>::get_stats_array(static_cast<Matrix<Float> >(data_float),
                                                                         f,
                                                                         column,
@@ -1177,8 +1190,6 @@ ms::cvel(const std::string& mode,
 
     *itsLog << LogOrigin("ms", "cvel");
     
-    *itsLog << LogIO::NORMAL << "Selecting data ..." << LogIO::POST;
-    
     String t_interp = toCasaString(interp);
     String t_phasec = toCasaString(phasec);
     String t_mode = toCasaString(mode);
@@ -1194,7 +1205,7 @@ ms::cvel(const std::string& mode,
     Double t_width = -1.; // default value indicating that the original channel width of the SPW should be used
 
     if(!start.toString().empty()){ // start was set
-      if(t_mode == "channel"){
+      if(t_mode == "channel" || t_mode == "channel_b"){
 	t_start = Double(atoi(start.toString().c_str()));
       }
       else if(t_mode == "frequency"){
@@ -1209,9 +1220,9 @@ ms::cvel(const std::string& mode,
       }
     
       // determine channel width
-      if(t_mode == "channel"){
+      if(t_mode == "channel" || t_mode == "channel_b"){
 	if(!width.toString().empty()){
-	  t_width = Double(atoi(width.toString().c_str()));
+	  t_width = abs(Double(atoi(width.toString().c_str())));
 	}
 	else{
 	  t_width = 1;
@@ -1219,7 +1230,7 @@ ms::cvel(const std::string& mode,
       }
       else if(t_mode == "frequency"){
 	if(!width.toString().empty()){
-	  t_width = casaQuantity(width).getValue("Hz");
+	  t_width = abs(casaQuantity(width).getValue("Hz"));
 	}
 	else{
 	  *itsLog << LogIO::WARN << "In frequency mode, need to set channel width if start is set." << LogIO::POST;
@@ -1228,7 +1239,7 @@ ms::cvel(const std::string& mode,
       }
       else if(t_mode == "velocity"){
 	if(!width.toString().empty()){
-	  t_width = casaQuantity(width).getValue("m/s");
+	  t_width = abs(casaQuantity(width).getValue("m/s"));
 	}   
 	else{
 	  *itsLog << LogIO::WARN << "In velocity mode, need to set channel width if start is set." << LogIO::POST;
@@ -1237,7 +1248,7 @@ ms::cvel(const std::string& mode,
       }
       // determine bandwidth and center
       if(nchan > 0){ // we are not using the default, which is all channels
-	if(t_mode == "channel"){
+	if(t_mode == "channel" || t_mode == "channel_b"){
 	  t_bandwidth = Double(nchan*t_width);
 	  t_center = floor(t_bandwidth/2. + t_start);
 	}
@@ -1248,7 +1259,7 @@ ms::cvel(const std::string& mode,
       }
     }
     else { // start was not set
-      if(t_mode == "channel"){
+      if(t_mode == "channel" || t_mode == "channel_b" ){
 	t_start = 0;
 	if(!width.toString().empty()){
 	  t_width = Double(atoi(width.toString().c_str()));
@@ -1293,6 +1304,9 @@ ms::cvel(const std::string& mode,
     String t_veltype = toCasaString(veltype); 
     String t_regridQuantity;
     if(t_mode == "channel"){
+      t_regridQuantity = "freq";
+    }
+    if(t_mode == "channel_b"){
       t_regridQuantity = "chan";
     }
     else if(t_mode == "frequency"){
@@ -1307,9 +1321,9 @@ ms::cvel(const std::string& mode,
       if(t_veltype == "optical"){
 	t_regridQuantity = "vopt";
       }
-      else{
-	*itsLog << LogIO::SEVERE << "Invalid velocity type "<< veltype << LogIO::POST; 
-	return False;
+      else if(t_veltype != "radio"){
+	*itsLog << LogIO::WARN << "Invalid velocity type "<< veltype 
+		<< ", setting type to \"radio\"" << LogIO::POST; 
       }
     }   
     
@@ -1325,7 +1339,7 @@ ms::cvel(const std::string& mode,
        || phasec.type()==::casac::variant::INTVEC
        || phasec.type()==::casac::variant::INT){
       t_phasec_fieldid = phasec.toInt();	
-      if(t_phasec_fieldid >= itsMS->field().nrow() || t_phasec_fieldid < 0){
+      if(t_phasec_fieldid >= (Int)itsMS->field().nrow() || t_phasec_fieldid < 0){
 	*itsLog << LogIO::SEVERE << "Field id " << t_phasec_fieldid
 		<< " selected to be used as phasecenter does not exist." << LogIO::POST;
 	return False;
@@ -1347,6 +1361,15 @@ ms::cvel(const std::string& mode,
 
     // end prepare regridding parameters
 
+    // check disk space: need at least twice the size of the original for safety
+    if (2 * DOos::totalSize(itsMS->tableName(), True) >
+	DOos::freeSpace(Vector<String>(1, itsMS->tableName()), True)(0)) {
+      *itsLog << "Not enough disk space. To be on the safe side, need at least "
+	      << 2 * DOos::totalSize(itsMS->tableName(), True)/1E6
+	      << " MBytes on the filesystem containing " << itsMS->tableName()
+	      << " for the SPW combination and regridding to succeed." << LogIO::EXCEPTION;
+    }
+
     // need exclusive rights to this MS, will re-open it after combineSpws
     String originalName = itsMS->tableName();
     itsMS->flush();
@@ -1364,10 +1387,44 @@ ms::cvel(const std::string& mode,
       return False;
     }
 
+    // set final parameters for channel mode
+    if(t_mode == "channel"){
+      // get lower edge and width of first selected channel
+      Table spwtable(originalName+"/SPECTRAL_WINDOW");
+      ROArrayColumn<Double> chanwidths(spwtable, "CHAN_WIDTH");
+      ROArrayColumn<Double> chanfreqs(spwtable, "CHAN_FREQ");
+
+      Vector<Double> cw(chanwidths(0));
+      Vector<Double> cf(chanfreqs(0));
+      Int totNumChan = cw.size();
+      Int firstChan = (Int)floor(t_start);
+      
+      Double firstChanWidth = cw(firstChan);
+      Double lastChanWidth = cw(totNumChan-1);
+      Double firstChanLoEdge = cf(firstChan)-firstChanWidth/2.;
+      Double lastChanHiEdge = cf(totNumChan-1)+lastChanWidth/2.;
+	
+      if(t_width<=0){
+	t_width = firstChanWidth;
+      }
+      else{
+	t_width = t_width * firstChanWidth;
+      }
+      if(t_bandwidth>0){
+	t_bandwidth = t_bandwidth * firstChanWidth;
+      }
+      else{ // select maximum bandwidth
+	t_bandwidth = lastChanHiEdge - firstChanLoEdge;
+      }
+      t_center = firstChanLoEdge + t_bandwidth/2.;
+    } 
+    
+    // cout << "trq " << t_regridQuantity << " tc " << t_center << " tb " << t_bandwidth << " tw " << t_width << endl; 
+
     // Regrid
     Int rval;
     String regridMessage;
-    
+
     if((rval = sms->regridSpw(regridMessage,
 			      t_outframe,
 			      t_regridQuantity,

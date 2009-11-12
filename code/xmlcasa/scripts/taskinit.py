@@ -1,5 +1,23 @@
 import casac
+import inspect
+import sys
 import os
+
+def __taskinit_setlogfile( logger ) :
+	####
+	#### needed to allow pushing of the global 'casa' state dictionary
+	####
+	a=inspect.stack()
+	stacklevel=0    
+	for k in range(len(a)):
+		if a[k][1] == "<string>":
+			stacklevel=k
+
+	myf=sys._getframe(stacklevel).f_globals
+
+	if myf.has_key('casa') and myf['casa'].has_key('files') and myf['casa']['files'].has_key('logfile') :
+		logger.setlogfile(myf['casa']['files']['logfile'])
+
 
 #
 ##allow globals for taskby default
@@ -54,6 +72,7 @@ vftask = vftaskhome.create()
 vlafiller=vftask.fill
 loghome =  casac.homefinder.find_home_by_name('logsinkHome')
 casalog = loghome.create()
+__taskinit_setlogfile(casalog)
 casalog.setglobal(True)
 attool = casac.homefinder.find_home_by_name('atmosphereHome')
 at = attool.create()

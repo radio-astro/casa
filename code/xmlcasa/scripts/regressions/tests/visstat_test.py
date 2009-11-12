@@ -23,21 +23,28 @@ def run():
                           'npts': 2854278.0,
                           'mean': 4.5292537106667607}},
                 'flagdatatest.ms':
-                {'DATA': {'rms': 0.19930592179298401,
-                          'medabsdevmed': 0.036990493535995483,
-                          'min': 0.0,
+                {'DATA': {'rms': 0.20004846155643463,
+                          'medabsdevmed': 0.03666001558303833,
+                          'min': 0.051132798194885254,
                           'max': 0.32321548461914062,
-                          'sum': 386384.63405715674,
-                          'quartile': 0.074486657977104187,
-                          'median': 0.19719454646110535,
-                          'sumsq': 79473.508742819497,
-                          'stddev': 0.049251333048233308,
-                          'var': 0.0024256938070279983,
-                          'npts': 2000700.0,
-                          'mean': 0.19312472337539699}}}
-    
+                          'sum': 383808.85242924839,
+                          'quartile': 0.073834389448165894,
+                          'median': 0.19774448871612549,
+                          'sumsq': 78930.040667924215,
+                          'stddev': 0.046370050438953939,
+                          'var': 0.0021501815777111321,
+                          'npts': 1972295.0,
+                          'mean': 0.19460012443840724}}}
+
+
+
+
+
 
     for vis in ['ngc5921.ms', 'flagdatatest.ms']:
+
+        # ngc5921.ms is unflagged
+        # flagdatatest.ms is partially flagged
 
         print "Getting data", vis, "..."
         
@@ -49,6 +56,9 @@ def run():
             os.system('cp -R ' + os.environ.get('CASAPATH').split()[0] +\
                       '/data/regression/flagdata/flagdatatest.ms ' + vis)
 
+        listobs(vis=vis)
+
+        flagdata(vis=vis, mode='summary')
 
         s = visstat(vis=vis, axis='amp', datacolumn='data')
 
@@ -151,15 +161,42 @@ def run():
 
             # Note there's a counting from 0 or 1 issue here
             # with the antenna numbering
-            if abs((s['ANTENNA1']['mean']-1) - a > epsilon):
+            if vis == 'ngc5921.ms':
+                offset = 1
+            else:
+                offset = 0
+            if abs((s['ANTENNA1']['mean']+offset) - a) > epsilon:
                 raise Exception("Error!")
 
         for scan in range(1, 8):
             s = visstat(vis=vis, axis='SCAN_NUMBER', scan=str(scan))
             
             print "scan =", scan, "; mean = ", s['SCAN_NUMBER']['mean']
-            if abs(s['SCAN_NUMBER']['mean'] - scan > epsilon):
+            if abs(s['SCAN_NUMBER']['mean'] - scan) > epsilon:
                 raise Exception("Error!")
+
+        # Test that flagging impacts statistics
+        s = visstat(vis=vis, axis='scan_number', scan='>=1')
+        print "min = ", s['SCAN_NUMBER']['min']
+        if abs(s['SCAN_NUMBER']['min'] - 1) > epsilon:
+            raise Exception("Error")
+
+        flagdata(vis=vis, scan="1")
+        s = visstat(vis=vis, axis='scan_number', scan='>=1')
+        print "min = ", s['SCAN_NUMBER']['min']
+        if abs(s['SCAN_NUMBER']['min'] - 2) > epsilon:
+            raise Exception("Error")
+
+        flagdata(vis=vis, scan="2")
+        s = visstat(vis=vis, axis='scan_number', scan='>=1')
+        print "min = ", s['SCAN_NUMBER']['min']
+        if abs(s['SCAN_NUMBER']['min'] - 3) > epsilon:
+            raise Exception("Error")
+
+        s = visstat(vis=vis, axis='scan_number', useflags=False, scan='>=1')
+        print "min = ", s['SCAN_NUMBER']['min']
+        if abs(s['SCAN_NUMBER']['min'] - 1) > epsilon:
+            raise Exception("Error")
 
     return []
 

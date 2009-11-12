@@ -2,7 +2,9 @@ from IPython.kernel import client
 from IPython.kernel.multiengineclient import PendingResult
 from mindpipes import mindpipes
 import subprocess
+import inspect
 import signal
+import string
 import atexit
 import time
 import sets
@@ -90,9 +92,14 @@ class taskmanager(object):
         result_name = "result_%04d" % count
         engine['current task'] = taskname
         self.__hub['result map'][count] = { 'engine': engine,
-                                            'result': self.__hub['mec'].execute( "casalog.origin('taskmanager'); casalog.post('##### async task launch:     " + taskname + " ########################'); " + \
+                                            'result': self.__hub['mec'].execute( "casalog.origin('taskmanager'); " + \
+                                                                                 "casalog.post('##### async task launch:     " + taskname + " ########################'); " + \
+                                                                                 "os.chdir( '" + os.getcwd( ) + "' ); " + \
                                                                                  result_name + " = " + taskname + "(*args,**kwargs); " + \
-                                                                                 "casalog.origin('taskmanager'); casalog.post('##### async task completion: " + taskname + " ########################')", block=False,targets=targets) }
+                                                                                 "os.chdir( _startup_dir_ ); " + \
+                                                                                 "casalog.origin('taskmanager'); " + \
+                                                                                 "casalog.post('##### async task completion: " + taskname + " ########################')", \
+                                                                                     block=False,targets=targets) }
         ## not sure if any pause is necessary or not...
         time.sleep(0.25)
         return count
@@ -231,13 +238,29 @@ class taskmanager(object):
 
     def __setup_engine(self,engine) :
         if engine['setup'] is not True:
+
+            ####
+            #### needed to allow pushing of the global 'casa' state dictionary
+            ####
+            a=inspect.stack()
+            stacklevel=0    
+            for k in range(len(a)):
+                if (string.find(a[k][1], 'ipython console') > 0):
+                    stacklevel=k
+            myf=sys._getframe(stacklevel).f_globals
+
             block = True
             targets = [ engine['index'] ]
+            x = self.__hub['mec'].push( {'casa': myf['casa'] }, targets=targets )
+
             x = self.__hub['mec'].execute('import sys',targets=targets)
             path = self.__hub['task path'][:]
             path.reverse( )
             for p in path:
                 x = self.__hub['mec'].execute("sys.path.insert(0,'" + p + "')",block=block,targets=targets)
+
+            x = self.__hub['mec'].execute('import os',block=block,targets=targets)
+            x = self.__hub['mec'].execute('_startup_dir_ = os.getcwd( )',block=block,targets=targets)
             x = self.__hub['mec'].execute('import signal',block=block,targets=targets)
             x = self.__hub['mec'].execute("original_sigint_handler = signal.signal(signal.SIGINT,signal.SIG_IGN)",block=block,targets=targets)
             x = self.__hub['mec'].execute('from taskinit import casalog',targets=targets)

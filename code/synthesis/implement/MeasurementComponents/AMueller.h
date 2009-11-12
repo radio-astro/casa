@@ -31,6 +31,7 @@
 #include <casa/aips.h>
 #include <casa/BasicSL/Complex.h>
 #include <synthesis/MeasurementComponents/StandardVisCal.h>
+#include <synthesis/MeasurementComponents/CalCorruptor.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -66,32 +67,6 @@ public:
 };
 
 
-class ANoiseCorruptor : public CalCorruptor {
-
-  public:
-    ANoiseCorruptor();
-    virtual ~ANoiseCorruptor();
-    Float &amp() {return amplitude_; };
-    virtual void initialize() {
-      initialize(1234,1.0);
-    }
-    void initialize(const Int seed, const Float amp) {
-      rndGen_p = new MLCG(seed);
-      nDist_p = new Normal(rndGen_p, 0.0, 1.0); // sigma=1.
-      amplitude_=amp;
-    };
-    //Array<Complex> noise(const IPosition shape);
-    Array<Complex> noise(const Int nrow, const Int ncol);
-    inline String& mode() {return mode_; };
-
-  private:
-    Float amplitude_;
-    MLCG *rndGen_p;
-    Normal *nDist_p;
-    String mode_;
-    
-  };
-
 
 // Additive noise
 // In practice, this is not really solvable, but it
@@ -114,7 +89,7 @@ public:
 
   // Algebraic type of Mueller matrix 
   //  (this is the key distinguishing characteristic)
-  virtual Mueller::MuellerType muellerType() { return Mueller::AddDiag; };
+  virtual Mueller::MuellerType muellerType() { return Mueller::AddDiag2; };
 
   // Overide solvability
   virtual Bool isSolvable() { return False; };

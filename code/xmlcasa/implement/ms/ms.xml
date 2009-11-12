@@ -1963,7 +1963,7 @@ Date/Time:                         RR:                      RL:                 
   <input>
   
      <param type="string" direction="in" name="mode">
-     <description> "channel", "velocity", or "frequency", default = "channel"
+     <description> "channel", "velocity", "frequency", or "channel_b", default = "channel"
      </description>
      <value>channel</value>
      </param>

@@ -137,6 +137,9 @@ private:
     int cube;
 
     Vector<Double> lastX, lastY;
+    Vector<Float> z_xval;
+    Vector<Float> z_yval;
+    QString region;
 
     QString getRaDec(double x, double y);
 };

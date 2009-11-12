@@ -184,13 +184,15 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 	    self.rkey = key
 	    self.__async__[key] = result
           else :
+              tname = '<xsl:value-of select="$taskname"/>'
+              spaces = ' '*(18-len(tname))
               casalog.post('')
               casalog.post('##########################################')
-              casalog.post('##### Begin Task: <xsl:value-of select="$taskname"/>           #####')
+              casalog.post('##### Begin Task: ' + tname + spaces + ' #####')
               casalog.post('')
               result = <xsl:value-of select="$taskname"/>(<xsl:call-template name="doargs2"/>)
               casalog.post('')
-              casalog.post('##### End Task: <xsl:value-of select="$taskname"/>           #####')
+              casalog.post('##### End Task: ' + tname + '  ' + spaces + ' #####')
               casalog.post('##########################################')
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">

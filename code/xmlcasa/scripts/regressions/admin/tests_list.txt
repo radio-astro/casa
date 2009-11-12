@@ -9,6 +9,7 @@
 #       2nd column = email notification
 
 3C129                           gmoellen@aoc.nrao.edu
+accum_test                      scastro@eso.org
 asdm-import                     dpetry@eso.org
 asdmv1-import                   dpetry@eso.org
 async-segfault                  dpetry@eso.org

@@ -73,6 +73,7 @@ Regrid an MS to a new spectral window / channel structure or frame
 	    <value>channel</value>
 	    <value>velocity</value>
 	    <value>frequency</value>
+	    <value>channel_b</value>
         </allowed>
         </param>
 
@@ -160,6 +161,14 @@ Regrid an MS to a new spectral window / channel structure or frame
             </when>
 	    <when param="mode">
 		<equals value="channel">
+			<default param="nchan"><value type="int">-1</value></default>
+			<default param="start"><value type="int">0</value>
+			    <description>first input channel to use</description>
+			</default>
+			<default param="width"><value type="int">1</value></default>
+			<default param="interpolation"><value type="string">linear</value></default>
+		</equals>
+		<equals value="channel_b">
 			<default param="nchan"><value type="int">-1</value></default>
 			<default param="start"><value type="int">0</value>
 			    <description>first input channel to use</description>
@@ -286,11 +295,14 @@ Regrid an MS to a new spectral window / channel structure or frame
                NOTE: See examples below:
                default: 'channel'
                  mode = 'channel'; Use with nchan, start, width to specify
-                         output spw.  See examples below
+                         output spw. Produces equidistant grid based on first
+                         selected channel. See examples below.
                  mode = 'velocity', means channels are specified in 
  		      velocity.
                  mode = 'frequency', means channels are specified in 
  		      frequency.
+                 mode = 'channel_b', alternative 'channel' mode.
+		         Does not force an equidistant grid. Faster.
 
   &gt;&gt;&gt; mode expandable parameters 
                Start, width are given in units of channels, frequency 

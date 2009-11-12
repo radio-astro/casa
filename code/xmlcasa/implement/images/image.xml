@@ -3419,6 +3419,10 @@ print 'pa=',recout['fit']['pa']
      <description>Destroy this tool after deletion</description>
      <value>false</value>
      </param>
+     <param type="bool" direction="in" name="verbose">
+     <description>Send a progress report to the logger.</description>
+     <value>true</value>
+     </param>
 </input>
 
 <returns type="bool"/>
@@ -3426,9 +3430,9 @@ print 'pa=',recout['fit']['pa']
 
 This function first <link anchor="images:image.close.function">closes</link> the
 \imagetool\ which detaches it from its underlying \imagefile.  It then
-deletes that \imagefile.  If {\stfaf done=F}, the \imagetool\ is still
+deletes that \imagefile.  If {\stfaf done=False}, the \imagetool\ is still
 viable, and can be used with function <link anchor="images:image.open.function">open</link>
-to open a new \imagefile.  Otherwise the \imagetool\ is destroyed. 
+to open a new \imagefile.  Otherwise the \imagetool\ is destroyed.  If {\stfaf verbose=True}, the logger will receive a progress report.
 
 </description>
 <example>
@@ -3496,6 +3500,10 @@ ia.removefile('myimage')
      <param type="bool" direction="in" name="remove">
      <description>Delete disk file as well?</description>
      <value>false</value>
+     </param>
+     <param type="bool" direction="in" name="verbose">
+     <description>Send a progress report to the logger.</description>
+     <value>true</value>
      </param>
 </input>
 <returns type="bool"/>

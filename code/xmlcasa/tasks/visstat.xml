@@ -33,7 +33,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="useflags">
-        <description>Take flagging into account? (not implemented)</description>
+        <description>Take flagging into account?</description>
         <value>True</value>
         <example>useflags=True</example>
     </param>
@@ -136,7 +136,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         The following axes are supported: uvw, flag, weight, sigma, imaging_weight,
         antenna1, antenna2, feed1, feed2, field_id, array_id, data_desc_id, flag_row,
-        interval, scan_number, time, weight_spectrum, amp, amplitude, phase, real, 
+        interval, scan, scan_number, time, weight_spectrum, amp, amplitude, phase, real, 
         imag, imaginary, uvrange.
 
         If selectdata = True, the statistical information is computed based only
@@ -168,7 +168,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 datacolumn='corrected'
                 datacolumn='model'
 
-        useflags -- Take MS flags into account (not implemented)
+        useflags -- Take MS flags into account?
                 default: False
                 useflag=False
                 useflag=True

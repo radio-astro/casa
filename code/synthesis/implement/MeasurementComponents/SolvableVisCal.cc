@@ -25,6 +25,7 @@
 //#
 //# $Id: VisCal.cc,v 1.15 2006/02/06 19:23:11 gmoellen Exp $
 
+#include <synthesis/MeasurementComponents/CalCorruptor.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 
 #include <msvis/MSVis/VisBuffer.h>
@@ -425,19 +426,6 @@ void SolvableVisCal::setApply(const Record& apply) {
 // ===================================================
 
 #define PRTLEV 0
-
-CalCorruptor::CalCorruptor(const Int nSim) : 
-  nSim_(nSim),
-  initialized_(False),
-  prtlev_(PRTLEV),
-  curr_slot_(-1),
-  curr_spw_(-1), nSpw_(0),
-  curr_ant_(-1), nAnt_(0) 
-{}
-
-CalCorruptor::~CalCorruptor() {}
-
-
 
 void SolvableVisCal::setSimulate(const Record& simpar) {
 
@@ -986,14 +974,22 @@ void SolvableVisCal::specify(const Record& specify) {
   IPosition ip0(4,0,0,0,0);
   IPosition ip1(4,0,0,0,0);
 
+  if (specify.isDefined("caltype")) {
+    String caltype=specify.asString("caltype");
+    if (upcase(caltype).contains("PH"))
+      apmode()="P";
+    else
+      apmode()="A";
+  }
+
+ /*
   if (specify.isDefined("time")) {
     // TBD: the time label
     cout << "time = " << specify.asString("time") << endl;
-
     cout << "refTime() = " << refTime() << endl;
-
-
   }
+ */
+
   if (specify.isDefined("spw")) {
     // TBD: the spws (in order) identifying the solutions
     spws=specify.asArrayInt("spw");
@@ -1014,7 +1010,7 @@ void SolvableVisCal::specify(const Record& specify) {
   if (specify.isDefined("antenna")) {
     // TBD: the antennas (in order) identifying the solutions
     antennas=specify.asArrayInt("antenna");
-    cout << "antenna indices = " << antennas << endl;
+    //    cout << "antenna indices = " << antennas << endl;
     Nant=antennas.nelements();
     if (Nant<1) {
       // Use specified values for _all_ antennas implicitly
@@ -1031,7 +1027,7 @@ void SolvableVisCal::specify(const Record& specify) {
   if (specify.isDefined("pol")) {
     // TBD: the pols (in order) identifying the solutions
     String polstr=specify.asString("pol");
-    cout << "pol = " << polstr << endl;
+    //    cout << "pol = " << polstr << endl;
     if (polstr=="R" || polstr=="X") 
       // Fill in only first pol
       pols=Vector<Int>(1,0);
@@ -1069,15 +1065,22 @@ void SolvableVisCal::specify(const Record& specify) {
   }
   if (specify.isDefined("parameter")) {
     // TBD: the actual cal values
-    cout << "parameter = " << specify.asArrayDouble("parameter") << endl;
 
     parameters=specify.asArrayDouble("parameter");
 
   }
-  
-  cout << "Shapes = " << parameters.nelements() << " " 
-       << (repspw ? (Ntime*Nant*Npol) : (Nspw*Ntime*Nant*Npol)) << endl;
 
+  Int nparam=parameters.nelements();
+
+  // Test for correct number of specified parameters
+  //  Either all params are enumerated, or one is specified
+  //  for all, [TBD:or a polarization pair is specified for all]
+  //  else throw
+  if (nparam!=(repspw ? (Ntime*Nant*Npol) : (Nspw*Ntime*Nant*Npol)) && 
+      nparam!=1 )                // one for all
+    //      (Npol==2 && nparam%2!=0) )  // poln pair for all
+    throw(AipsError("Inconsistent number of parameters specified."));
+  
   Int ipar(0);
   for (Int ispw=0;ispw<Nspw;++ispw) {
     // reset par index if we are repeating for all spws
@@ -1098,9 +1101,21 @@ void SolvableVisCal::specify(const Record& specify) {
 	    ip1(0)=ip0(0)=pols(ipol);
 	  
 	  Array<Complex> slice(cs().par(spws(ispw))(ip0,ip1));
-	  // Default accumultion in multiplication
-	  slice*=Complex(parameters(ipar));
+	  // Default accumultion is multiplication
+	  if (apmode()=="P") {
+	    // Phases have been specified
+	    Double phase=parameters(ipar)*C::pi/180.0;
+	    slice*=Complex(cos(phase),sin(phase));
+	  }
+	  else
+	    // Assume amplitude
+	    slice*=Complex(parameters(ipar));
+
+
+	  // increment ipar, but be sure not to run off the end
 	  ++ipar;
+	  ipar = ipar%nparam;
+
 	}
       }
     }
@@ -1340,6 +1355,8 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
     cout << endl;
   }
 
+  // this sets the vi to send chunks by iterInterval (e.g. integration time)
+  // instead of default which would go until the scan changed
   vs.resetVisIter(columns,iterInterval);
   
   // Number of VisIter chunks per spw
@@ -1428,19 +1445,15 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
     cout << "nchunk = " << chunk << endl;
   }
 
-  // RI sol+1 somehow made all the antennas 0 except #1.
-  //Int nSol(sol+2);
   Int nSol(sol+1);
-//  if (nSol>2) {
-//    solTimes[nSol-1]=2*solTimes[nSol-2]-solTimes[nSol-3];
-//  } else {
-//    // sol=0 means only one solint, so no interp:
-//    solTimes[nSol-1]=solTimes[nSol-2];
-//  }
-//  nChunkPerSol[nSol-1]=0;
-  
+
   nChunkPerSol.resize(nSol,True);
   solTimes.resize(nSol,True);
+
+  if (prtlev()>3) {
+    cout << "    solTimes = " << solTimes-4.84694e+09 << endl;
+    cout << "nChunkPerSol = " << nChunkPerSol << " " << sum(nChunkPerSol) << endl;
+  }
   
   // Set Nominal per-spw channelization
   setSolveChannelization(vs);

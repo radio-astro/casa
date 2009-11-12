@@ -59,7 +59,7 @@ class runTest:
                  cleanup=True,
                  profile=False):
         """cleanup: set to False to keep data around.
-        profile: set to True to enable C++ profiling. This requires that the command 'sudo opcontrol' must work,
+        profile: set to True to enable C++ profiling. This requires that the commands 'sudo opcontrol' and 'dot' must work.      
         Note, a profile is created only for the casapy process. If you want to include profiles for async / child
         processes, refer to the documentation for opreport."""
         casalog.showconsole(onconsole=True)
@@ -150,7 +150,6 @@ class runTest:
                     pyt,
                     pp,
                     testName, RESULT_DIR, profilepage, process_data)
-                time1=time.time()
                 presentDir=os.getcwd()
                 os.chdir(self.tester.workingDirectory)
 
@@ -164,10 +163,13 @@ class runTest:
                 prof = cProfile.Profile()
                 
                 try:
-                    #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry, profile)", globals(), locals())
-                    #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry, profile)", gl, lo)
-                    #prof.run("(leResult, leImages) = self.tester.runtests(testName, k, dry, profile)")
-                    (leResult, leImages) = prof.runcall(self.tester.runtests, testName, k, dry, profile)
+                    self.op_init(profile)
+                    time1=time.time()
+
+                    #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", globals(), locals())
+                    #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", gl, lo)
+                    #prof.run("(leResult, leImages) = self.tester.runtests(testName, k, dry)")
+                    (leResult, leImages) = prof.runcall(self.tester.runtests, testName, k, dry)
 
                     # returns absolute_paths, relative_paths
                     exec_success = True
@@ -178,14 +180,17 @@ class runTest:
                     traceback.print_exc() # print and swallow exception
                     self.resultRow.append([self.tester.testname(k), 'Failed with exception', 0, '', ''])
 
+                time2=time.time()
+                time2=(time2-time1)/60.0
+                
                 try:
                     print "now in ", os.getcwd()
                     prof.dump_stats(self.resultsubdir+'/cProfile.profile')
                 except:
                     print >> sys.stderr, "Failed to write profiling data!"
-                time2=time.time()
-                time2=(time2-time1)/60.0
-                
+               
+                self.op_done(profile)
+
                 # Dump contents of any *.log file produced
                 # by the regression script
                 #
@@ -414,6 +419,26 @@ class runTest:
         # end for k...
                 
         print "Created ", self.resultsubdir
+
+
+    def op_init(self, oprofile):
+        if oprofile:
+            os.system("sudo opcontrol --deinit && sudo opcontrol --init && sudo opcontrol --reset && sudo opcontrol --start --callgraph=999 --no-vmlinux --separate=lib --event=\"default\"")
+
+    def op_done(self, oprofile):
+        if oprofile:
+            casapy = os.environ["CASAPATH"].split()[0] + '/' + \
+                     os.environ["CASAPATH"].split()[1] + '/bin/casapy'
+
+            gprof2dot = os.environ["CASAPATH"].split()[0] + \
+                        '/code/xmlcasa/scripts/regressions/admin/gprof2dot.py'
+            
+            os.system("sudo opcontrol --stop && sudo opcontrol --dump")
+            os.system("opreport -clf image-exclude:/no-vmlinux " + casapy + " > cpp_profile.txt")
+            os.system("cat cpp_profile.txt | " + gprof2dot + " -e0.1 -n1 -f oprofile > cpp_profile.dot")
+            os.system("cat cpp_profile.dot | dot -Tpng -o cpp_profile.png")
+            os.system("opannotate --source > cpp_profile.cc")
+
 
     def polImageTest(self, imageName, templateImage, testName, WORKING_DIR, RESULT_DIR, numPol=2):
         a = ImageTest(imageName, write=True,

@@ -279,7 +279,7 @@ class Imager
                           const Bool unflagged_only, const Bool must_have_imwt);
 
   // Return the image coordinates
-  Bool imagecoordinates(CoordinateSystem& coordInfo);
+  Bool imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose=true);
 
   // Return the image shape
   IPosition imageshape() const;
@@ -299,12 +299,9 @@ class Imager
   // Sensitivity
   Bool sensitivity(Quantity& pointsourcesens, Double& relativesens, Double& sumwt);
   
-  // Make plain image
-  Bool makeimage(const String& type, const String& imageName);
-
-  // Make plain image: keep the complex image as well
+  // Make plain image + keep the complex image as well if complexImageName != "".
   Bool makeimage(const String& type, const String& imageName,
-	     const String& complexImageName);
+                 const String& complexImageName="", const Bool verbose=true);
   
   // Fill in a region of a mask
   Bool boxmask(const String& mask, const Vector<Int>& blc,
@@ -361,7 +358,8 @@ class Imager
 	     const Vector<String>& mask,
 	     const Vector<String>& restored,
 	     const Vector<String>& residual,
-	     const Vector<String>& psf=Vector<String>(0));
+	     const Vector<String>& psf=Vector<String>(0),
+             const Bool firstrun=true);
   
   // MEM algorithm
   Bool mem(const String& algorithm,
@@ -721,7 +719,8 @@ protected:
   int clean_panel_p;
   int image_id_p;
   int mask_id_p;
-
+  int prev_image_id_p;
+  int prev_mask_id_p;
 };
 
 

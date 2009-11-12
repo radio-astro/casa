@@ -210,7 +210,7 @@ Int PKSMS2reader::open(
     cFloatDataCol.reference(msCols.floatData());
   }
   cFlagCol.reference(msCols.flag());
-
+  cFlagRowCol.reference(msCols.flagRow());
 
   if (cGetXPol = (cPKSMS.isColumn(MSMainEnums::DATA) && (!cALMA))) {
     if ((cHaveXCalFctr = cPKSMS.tableDesc().isColumn("XCALFCTR"))) {
@@ -619,6 +619,7 @@ Int PKSMS2reader::read(
         Matrix<Float>   &baseSub,
         Matrix<Float>   &spectra,
         Matrix<uChar>   &flagged,
+	uInt            &flagrow,
         Complex         &xCalFctr,
         Vector<Complex> &xPol)
 **/
@@ -1059,6 +1060,9 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
         }
       }
     }
+
+    // Row-based flagging info. (True:1, False:0)
+    pksrec.flagrow = (cFlagRowCol(cIdx) ? 1 : 0);
   }
 
   // Get cross-polarization data.

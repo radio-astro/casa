@@ -123,6 +123,28 @@ reform_array(ROTableColumn &rotc,
     return v;
 }
 
+static
+void
+apply_flags(Vector<Float> &v,
+            const Vector<Bool> flags)
+{
+    IPosition unflagged(1);
+    IPosition indx(1);
+    unflagged(0) = 0;
+
+    for (unsigned i = 0; i < v.nelements(); i++) {
+        indx(0) = i;
+        if (!flags(indx)) {
+            
+            v(unflagged) = v(indx);
+            unflagged(0) += 1;
+        }
+    }
+
+    bool copy_values = true;
+    v.resize(unflagged, copy_values);
+}
+
 template <class T>
 Record
 Statistics<T>::get_stats(const Vector<T> v,
@@ -142,11 +164,13 @@ Statistics<T>::get_stats(const Vector<T> v,
         Vector<Float> data_float(v.shape());
 
         IPosition indx(1);
+
         for (unsigned i = 0; i < (unsigned)v.shape()(0); i++) {
             indx(0) = i;
             data_float(indx) = v(indx);
         }
         
+        apply_flags(data_float, flags);
         get_statistics_1d(result, column, data_float);
     }
 
@@ -160,7 +184,7 @@ Statistics<T>::get_stats(const Vector<T> v,
           bool &supported)
 {
   return get_stats(v, 
-                   Vector<Bool>(v.nelements()),
+                   Vector<Bool>(v.nelements(), false),
                    column, 
                    supported);
 }
@@ -224,6 +248,7 @@ Statistics<T>::get_stats_complex(const Vector<Complex> v,
         assert(false);
       }
       
+      apply_flags(data_float, flags);
       get_statistics_1d(result, column, data_float);
     }
     return result;
@@ -238,7 +263,7 @@ Statistics<T>::get_stats_complex(const Vector<Complex> v,
                                  const std::string complex_value)
 {
   return get_stats_complex(v, 
-                           Vector<Bool>(v.nelements()),
+                           Vector<Bool>(v.nelements(), false),
                            column,
                            supported,
                            complex_value);
@@ -259,7 +284,7 @@ get_stats_array_table(const Table &t,
     Matrix<T> v = ro_col.getColumn();
 
     result = Statistics<T>::get_stats_array(v,
-                                            Vector<Bool>(v.shape()(1)),
+                                            Vector<Bool>(v.shape()(1), false),
                                             column,
                                             supported);
 
@@ -298,6 +323,7 @@ Statistics<T>::get_stats_array(const Matrix<T> v,
         std::stringstream s;
         s << column << "_" << i;
         
+        apply_flags(data_float, flags);
         get_statistics_1d(result, s.str(), data_float);
     }
 

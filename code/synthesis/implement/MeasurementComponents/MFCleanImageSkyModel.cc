@@ -109,9 +109,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   LogIO os(LogOrigin("MFCleanImageSkyModel","solve"));
   Bool converged=True;
   //Make the PSFs, one per field
-  if(!donePSF_p && (numberIterations() >0)) {
-    makeApproxPSFs(se);
-  }
+  /*back out for now
   if(modified_p){ 
       makeNewtonRaphsonStep(se, False);
   }
@@ -119,6 +117,12 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       // Why waste the time to set up
       return True;
   }
+  */
+
+  if(!donePSF_p) {
+    makeApproxPSFs(se);
+  }
+
   // Validate PSFs for each field
   Vector<Float> psfmax(numberOfModels()); psfmax=0.0;
   Vector<Float> psfmaxouter(numberOfModels()); psfmaxouter=0.0;
@@ -128,6 +132,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   Int psfpatch=51;
   Float maxSidelobe=0.0;
   Int model;
+  os << LogIO::NORMAL1;   // Loglevel INFO
   for (model=0;model<numberOfModels();model++) {
     if(isSolveable(model)) {
       
@@ -309,20 +314,22 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   Float maxggS=0.0;
 
   while(absmax>=threshold()&&maxIterations<numberIterations()&&!stop) {
-
-    os << "*** Starting major cycle " << cycle << LogIO::POST;
+    os << LogIO::NORMAL2 << "*** Starting major cycle " << cycle << LogIO::POST; // Loglevel PROGRESS
     cycle++;
 
     // Make the residual images. We do an incremental update
     // for cycles after the first one. If we have only one
     // model then we use convolutions to speed the processing
-    os << "Making residual images for all fields" << LogIO::POST;
+    os << LogIO::NORMAL2 << "Making residual images for all fields" << LogIO::POST; // Loglevel PROGRESS
     if(modified_p){ 
       makeNewtonRaphsonStep(se, False);
       //makeNewtonRaphsonStep(se, (cycle>1));
     }
 
-
+    if(numberIterations() < 1){
+      // Why waste the time to set up
+      return True;
+    }
     
 
     if(0) {
@@ -348,7 +355,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	  thisImage.copyData(ggS(0));
 	}
       }
-      os << "Maximum sensitivity = " << 1.0/sqrt(maxggS)
+      os << LogIO::NORMAL1 // Loglevel INFO
+         << "Maximum sensitivity = " << 1.0/sqrt(maxggS)
 	 << " Jy/beam" << LogIO::POST;
     }
 
@@ -363,6 +371,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 
     absmax=maxField(resmax, resmin);
 
+    os << LogIO::NORMAL1; // Loglevel INFO
     for (model=0;model<numberOfModels();model++) {
       os << "Model " << model << ": max, min (weighted) residuals = "
 	 << resmax(model) << ", " << resmin(model) << endl;
@@ -371,7 +380,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 
     // Can we stop?
     if(absmax<threshold()) {
-      os << "Reached stopping peak residual = " << absmax << LogIO::POST;
+      os << LogIO::NORMAL2 // Loglevel PROGRESS
+         << "Reached stopping peak residual = " << absmax << LogIO::POST;
       stop=True;
     }
     else {
@@ -382,8 +392,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       if (fudge > 0.8) fudge = 0.8;   // painfully slow!
 
       cycleThreshold=max(0.95*threshold(), fudge * absmax);
-      os << "Maximum residual = " << absmax << ", cleaning down to "
-	 << cycleThreshold << LogIO::POST;
+      os << LogIO::NORMAL1 << "Maximum residual = " << absmax // Loglevel INFO
+         << ", cleaning down to " << cycleThreshold << LogIO::POST;
       
       for (model=0;model<numberOfModels();model++) {
 	
@@ -414,7 +424,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
           if((abs(resmax(model))>cycleThreshold)||
 	     (abs(resmin(model))>cycleThreshold)) {
 
-	    os << "Processing model " << model << LogIO::POST;
+	    os << LogIO::NORMAL2 << "Processing model " << model << LogIO::POST; // Loglevel PROGRESS
 	    
 	    IPosition onePlane(4, nx, ny, 1, 1);
 	    IPosition oneCube(4, nx, ny, npolcube, 1);
@@ -458,13 +468,15 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		   ggSli++,chan++) {
 	      if(!doPolJoint_p){
 		if(chan==0){
-		  os << "Doing stokes "<< stokesID(ipol) << " image" <<LogIO::POST;
+		  os << LogIO::NORMAL2 // Loglevel PROGRESS
+                     << "Doing stokes "<< stokesID(ipol) << " image" <<LogIO::POST;
 		}
 		if(chan==nchan){
 		  chan=0;
 		  psfli.reset();
 		  ++ipol;
-		  os << "Doing stokes "<< stokesID(ipol) << " image" <<LogIO::POST;
+		  os << LogIO::NORMAL2 // Loglevel PROGRESS
+                     << "Doing stokes "<< stokesID(ipol) << " image" <<LogIO::POST;
 		}
 	      }
 	      if(hasMask(model) && isCubeMask[model] && chan >0) {
@@ -474,7 +486,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	      if(psfmax(model)>0.0) {
 
 		if(nchan>1) {
-		  os<<"Processing channel "<<chan<<" of "<<nchan<<LogIO::POST;
+		  os << LogIO::NORMAL2 // Loglevel PROGRESS
+                     << "Processing channel "<<chan<<" of "<<nchan<<LogIO::POST;
 		}
 
 		// Renormalize by the weights 
@@ -529,7 +542,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 			 (void*) &HogbomCleanImageSkyModelmsgput,
 			 (void*) &HogbomCleanImageSkyModelstopnow);
 
-		  os<<"Finished Hogbom clean inner cycle " << LogIO::POST;
+		  os << LogIO::NORMAL2 // Loglevel PROGRESS
+                     << "Finished Hogbom clean inner cycle " << LogIO::POST;
 		  
 		  imageStepli.rwCursor().putStorage (limageStep_data, delete_its);
 		  deltaimageli.rwCursor().putStorage (ldeltaimage_data, delete_itdi);
@@ -608,7 +622,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		  //imageli.rwCursor()+=deltaimageli.cursor();
 		  eqn.residual(imageStepli.rwCursor(), cleaner);
 		  
-		  os<<"Finished Clark clean inner cycle " << LogIO::POST;
+		  os << LogIO::NORMAL2 // Loglevel PROGRESS
+                     <<"Finished Clark clean inner cycle " << LogIO::POST;
 		}
 		if(maxIterations==0) {
 		  stop=True;
@@ -616,15 +631,18 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		else{
 		  stop=False;
 		}
-		os << "Clean used " << iterations[model](chan*npolcube+ipol) << " iterations" 
+		os << LogIO::NORMAL2 << "Clean used " // Loglevel PROGRESS
+                   << iterations[model](chan*npolcube+ipol) << " iterations" 
 		   << " to approach a threshold of " << cycleThreshold
 		   << LogIO::POST; 
 	      }
 	    }
 	  }
 	  else {
-	    os<<"No need to clean model "<<model<<" :peak residual below threshold"
-	      <<LogIO::POST;
+	    os << LogIO::NORMAL1 // Loglevel INFO
+               << "No need to clean model " << model
+               << ": peak residual below threshold"
+               << LogIO::POST;
 	  }
 	}
       }
@@ -634,14 +652,16 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	blankOverlappingModels();
 	for(Int model=0; model < numberOfModels(); ++model){
 	  image(model).copyData( LatticeExpr<Float>((image(model))+(deltaImage(model))));
-	  os << LatticeExprNode(sum(image(model))).getFloat() 
-	     << " Jy is the sum of clean components of model " 
+	  os << LogIO::NORMAL1 << LatticeExprNode(sum(image(model))).getFloat()  // Loglevel INFO
+	     << " Jy <- sum of clean components of model " 
 	     << model << LogIO::POST;
 	}
 
       }
       else {
-	os << "No more clean occured in this major cycle - stopping now" << LogIO::POST;
+	os << LogIO::NORMAL
+           << "No more iterations left in this major cycle - stopping now"
+           << LogIO::POST;
 	stop=True;
 	converged=True;
       }
@@ -665,19 +685,22 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   }
   
   if(modified_p) {
-    os << "Finalizing residual images for all fields" << LogIO::POST;
+    os << LogIO::NORMAL2 // Loglevel PROGRESS
+       << "Finalizing residual images for all fields" << LogIO::POST;
     makeNewtonRaphsonStep(se, False, True); //committing model to MS
     Float finalabsmax=maxField(resmax, resmin);
     
-    os << "Final maximum residual = " << finalabsmax << LogIO::POST;
+    os << LogIO::NORMAL1 << "Final maximum residual = " << finalabsmax << LogIO::POST; // Loglevel INFO
     converged=(finalabsmax < 1.05 * threshold());
+    os << LogIO::NORMAL1; // Loglevel INFO
     for (model=0;model<numberOfModels();model++) {
       os << "Model " << model << ": max, min residuals = "
 	 << resmax(model) << ", " << resmin(model) << endl;
     }
   }
   else {
-    os << "Residual images for all fields are up-to-date" << LogIO::POST;
+    os << LogIO::NORMAL2 // Loglevel PROGRESS
+       << "Residual images for all fields are up-to-date" << LogIO::POST;
   }
 
   os << LogIO::POST;

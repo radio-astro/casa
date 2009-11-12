@@ -294,7 +294,7 @@ quanta::define(const std::string& name, const ::casac::variant& v)
 {
   const casa::Quantity q(casaQuantity(v));  // Don't repeatedly parse v.
   
-  //UnitMap::removeUser(q);
+  UnitMap::removeUser(name);
   UnitMap::putUser(name, UnitVal(q.getValue(), q.getUnit()), "User defined");
   return true;
 }

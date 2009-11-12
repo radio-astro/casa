@@ -33,6 +33,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/MeasurementComponents/VisCal.h>
+#include <synthesis/MeasurementComponents/CalCorruptor.h>
 #include <synthesis/MeasurementComponents/Mueller.h>
 #include <synthesis/MeasurementComponents/Jones.h>
 #include <synthesis/MeasurementComponents/VisVector.h>
@@ -59,56 +60,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward
 class VisEquation;
-
-// for simulating corruptions
-class CalCorruptor {
-  
- public:
-  
-  CalCorruptor(const Int nSim);
-  virtual ~CalCorruptor();
-  inline Int& nSim() { return nSim_; };
-  inline Bool& initialized() { return initialized_; };
-  inline Int& prtlev() { return prtlev_; };
-  inline Int& curr_slot() { return curr_slot_; };
-  inline Double& curr_time() { return curr_time_; };
-  inline Double& startTime() { return starttime_; };
-  inline Double& stopTime() { return stoptime_; };
-  inline Double& slot_time(const Int i) { return slot_times_(i); };
-  inline Double& slot_time() { return slot_times_(curr_slot()); };
-  inline Int& currAnt() { return curr_ant_; };
-  inline Int& currSpw() { return curr_spw_; };
-  inline Int& currCorr() { return curr_corr_; };
-  inline Int& nCorr() { return nCorr_; };
-  inline Int& nAnt() { return nAnt_; };
-  inline Int& nSpw() { return nSpw_; };  
-  inline Int& currChan() { return curr_chan_; };  
-  inline Int& nChan() { return fnChan_[currSpw()]; };  
-  inline Vector<Float>& fRefFreq() { return fRefFreq_; };
-  inline Vector<Float>& fWidth() { return fWidth_; };
-  inline Vector<Int>& fnChan() { return fnChan_; };
-  inline Float& amp() { return amp_;};
-  virtual void initialize() {}; //=0;
- 
- protected:
-   
-   Int nSim_;
-   Bool initialized_;
-   Int prtlev_;
-   Int curr_slot_;
-   Int nAnt_,curr_ant_,nCorr_,curr_corr_;
-   Int nSpw_,curr_spw_,curr_chan_;
-   Double curr_time_,starttime_,stoptime_;
-   Float amp_;
-   Vector<Double> slot_times_;   
-   Vector<Float> fRefFreq_,fWidth_; // for each spw
-   Vector<Int> fnChan_;
-
- private:
-
-};
-
-
 
 class SolvableVisCal : virtual public VisCal {
 public:

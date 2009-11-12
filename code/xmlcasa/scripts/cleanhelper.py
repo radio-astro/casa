@@ -1,7 +1,8 @@
 import casac
 import os
 import commands
-import pdb
+import math
+#import pdb
 
 ###some helper tools
 mstool = casac.homefinder.find_home_by_name('msHome')
@@ -51,7 +52,8 @@ class cleanhelper:
         self.csys={}
 
     def defineimages(self, imsize, cell, stokes, mode, spw, nchan, start,
-                      width, restfreq, field, phasecenter, facets=1, outframe='', veltype='radio'):
+                     width, restfreq, field, phasecenter, facets=1, outframe='',
+                     veltype='radio'):
         if((type(cell)==list) and (len(cell)==1)):
             cell.append(cell[0])
         elif ((type(cell)==str) or (type(cell)==int) or (type(cell)==float)):
@@ -132,13 +134,15 @@ class cleanhelper:
 
     def definemultiimages(self, rootname, imsizes, cell, stokes, mode, spw,
                           nchan, start, width, restfreq, field, phasecenters,
-                          names=[], facets=1, outframe='',veltype='radio',  makepbim=False):
+                          names=[], facets=1, outframe='', veltype='radio',
+                          makepbim=False):
         #pdb.set_trace()
         #will do loop in reverse assuming first image is main field
         if not hasattr(imsizes, '__len__'):
             imsizes = [imsizes]
         self.nimages=len(imsizes)
-        if((len(imsizes)<=2) and ((type(imsizes[0])==int) or (type(imsizes[0]==long)))):
+        if((len(imsizes)<=2) and ((type(imsizes[0])==int) or
+                                  (type(imsizes[0])==long))):
             self.nimages=1
             if(len(imsizes)==2):
                 imsizes=[(imsizes[0], imsizes[1])]
@@ -188,7 +192,8 @@ class cleanhelper:
                 ###need to get the pointing so select the fields
                 self.im.selectvis(field=field)
 		self.im.setvp(dovp=True)
-                self.im.makeimage(type='pb', image=self.imagelist[n]+'.flux')
+                self.im.makeimage(type='pb', image=self.imagelist[n]+'.flux',
+                                  compleximage="", verbose=False)
 		self.im.setvp(dovp=False)
     
     def makemultifieldmask(self, maskobject=''):
@@ -236,7 +241,7 @@ class cleanhelper:
                                  infile=self.imagelist[k])
                     ia.open(self.maskimages[self.imagelist[k]])
                     ia.set(pixels=0.0)
-                    ia.done()
+                    ia.done(verbose=False)
                 if(circles.has_key(self.imageids[k]) and boxes.has_key(self.imageids[k])):
                     self.im.regiontoimagemask(mask=self.maskimages[self.imagelist[k]],
                                               boxes=boxes[self.imageids[k]],
@@ -251,7 +256,7 @@ class cleanhelper:
                     ###need to make masks that select that whole image
                     ia.open(self.maskimages[self.imagelist[k]])
                     ia.set(pixels=1.0)
-                    ia.done()
+                    ia.done(verbose=False)
 
     def makemultifieldmask2(self, maskobject='',slice=-1):
         """
@@ -292,7 +297,7 @@ class cleanhelper:
                         infile=self.imagelist[k])
                 ia.open(self.maskimages[self.imagelist[k]])
                 ia.set(pixels=0.0)
-                ia.done()
+                ia.done(verbose=False)
 
         # assume a file name list for each field
         masktext=[]
@@ -323,7 +328,7 @@ class cleanhelper:
                                 ia.open(self.imagelist[maskid])
                                 self.csys=ia.coordsys().torecord()
                                 shp = ia.shape()
-                                ia.done()
+                                ia.done(verbose=False)
                                 if slice>-1:
                                     self.getchanimage(masklets,masklets+'chanim',slice)
                                     self.copymaskimage(masklets+'chanim',shp,'__tmp_mask')
@@ -333,7 +338,7 @@ class cleanhelper:
                                 #self.copymaskimage(masklets,shp,'__tmp_mask')
                                 ia.open(self.maskimages[self.imagelist[maskid]])
                                 ia.calc(pixels='+ __tmp_mask')
-                                ia.done()
+                                ia.done(verbose=False)
                                 ia.removefile('__tmp_mask')
 
                         elif(commands.getoutput('file '+masklets).count('text')):
@@ -353,7 +358,7 @@ class cleanhelper:
             #                     infile=self.imagelist[maskid])
             #        ia.open(self.maskimages[self.imagelist[maskid]])
             #        ia.set(pixels=0.0)
-            #        ia.done()
+            #        ia.done(verbose=False)
             #        print "INITIALIZED: ",self.maskimages[self.imagelist[maskid]]
 
             # handle boxes in lists
@@ -391,7 +396,7 @@ class cleanhelper:
                 fsum=ia.statistics()['sum']
                 if(fsum[0]==0.0):
                     ia.set(pixels=1.0)
-                ia.done()
+                ia.done(verbose=False)
                 
         
     def makemaskimage(self, outputmask='', imagename='', maskobject=[], slice=-1):
@@ -454,7 +459,7 @@ class cleanhelper:
             ia.removefile('__temp_mask')
             ia.open(outputmask)
             ia.regrid(outfile='__temp_mask',shape=shp,axes=[0,1], csys=self.csys,overwrite=True)
-            ia.done()
+            ia.done(verbose=False)
             ia.removefile(outputmask)
             os.rename('__temp_mask',outputmask)
         else:
@@ -474,12 +479,12 @@ class cleanhelper:
                 #ia.open(ima)
                 #ia.regrid(outfile='__temp_mask',shape=shp,csys=self.csys,
                 #          overwrite=True)
-                #ia.done()
+                #ia.done(verbose=False)
                 os.rename(outputmask,'__temp_mask2')
                 ia.imagecalc(outfile=outputmask,
                              pixels='__temp_mask + __temp_mask2',
                              overwrite=True)
-                ia.done()
+                ia.done(verbose=False)
                 ia.removefile('__temp_mask')
                 ia.removefile('__temp_mask2')
             #make image a mask image i.e 1 and 0 only
@@ -618,7 +623,7 @@ class cleanhelper:
                 newshape=ia.shape()
                 ia.open(modim)
                 ib=ia.regrid(outfile=modelos[k], shape=newshape, axes=[0,1,3], csys=newcsys.torecord(), overwrite=True)
-                ib.done()
+                ib.done(verbose=False)
                 
             k=k+1
             ia.close()
@@ -852,7 +857,7 @@ class cleanhelper:
             tmpshp[1]=shp[1]
             ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[0,1], csys=self.csys, overwrite=True)
             #dat=ib.getchunk()
-            ib.done()
+            ib.done(verbose=False)
             ia.fromshape(outfile=outfile, shape=shp, csys=self.csys, overwrite=True)
             ##getchunk is a massive memory hog
             ###so going round in a funny fashion
@@ -867,12 +872,12 @@ class cleanhelper:
             #            arr[:,:,k,j]=dat[:,:,0,0]
             #ia.putchunk(arr)
             ia.calc('__temp_mask[index3 in [0]]+__looloo') 
-            ia.done()
+            ia.done(verbose=False)
             ia.removefile('__looloo')
         else:
             ib=ia.regrid(outfile=outfile ,shape=shp, axes=[0,1], csys=self.csys, overwrite=True)
-            ia.done()
-            ib.done()
+            ia.done(verbose=False)
+            ib.done(verbose=False)
 
 
     def flatten(self,l):
@@ -916,11 +921,115 @@ class cleanhelper:
         ia.close()
         return True
 
+    def setChannelization(self,mode,spw,field,nchan,start,width,frame,veltype):
+        """
+        determine appropriate values for channelization
+        parameters when default values are used
+        for mode='velocity' or 'frequency'
+        """
+        # frequency only 
+        # nchan = -1 => determine nchan from start and width
+        #               start='' and width='' use first channel of spw
+        #               or both start and width need to be given
+        # nchan given => start='' and width='' use first channel of spw
+        #               or both start and width must be given
+        # 
+        if mode=='velocity':
+            if start=='' or width=='':
+                if veltype!='radio':
+                    raise TypeError, "Currently default start and width for velocity mode works with the default veltype(='radio') "
+                # convert to frequency
+                if start!='':
+                    start=self.convertvf(start,frame,field)     
+        if (start==''):
+            if (width==''):
+                loc_width=1
+            else:
+                if(qa.quantity(width)['unit'].find('m/s') > -1):
+                    loc_width=1
+                elif(qa.quantity(width)['unit'].find('Hz') < 0):
+                    raise TypeError, "width parameter is not a valid frequency quantity "
+                else:
+                    loc_width=width
+            (freqlist, finc)=self.getfreqs(nchan,spw,0,loc_width)
+            retnchan = len(freqlist)
+            if mode=='velocity' and nchan==-1:
+               vmin=self.convertvf(str(freqlist[-1])+'Hz',frame,field) 
+               vmax=self.convertvf(str(freqlist[0])+'Hz',frame,field) 
+               if width=='':
+                   vwidth=qa.sub(qa.quantity(vmax),qa.quantity(self.convertvf(str(freqlist[1])+'Hz',frame,field)))
+               else:
+                   vwidth=width
+               vrange=qa.sub(qa.quantity(vmax),qa.quantity(vmin))
+               retnchan=min(int(math.ceil(qa.div(vrange,qa.abs(qa.quantity(vwidth)))['value']))+1,retnchan)
+        else:
+            if (width==''):
+                #if (nchan==-1):
+                #    raise TypeError, "width parameter is need to be set "
+                #else:
+                (freqlist,finc)=self.getfreqs(nchan,spw,start,1)
+            else:
+                (freqlist,finc)=self.getfreqs(nchan,spw,start,width)
+
+            retnchan = len(freqlist)
+        if mode=='frequency':
+            retstart = str(freqlist[0])+'Hz'
+            retwidth = str(finc)+'Hz'
+        elif mode=='velocity':
+            #convert back to velocities
+            retstart = self.convertvf(str(freqlist[0])+'Hz',frame,field)
+            if width=='':
+                w1 = self.convertvf(str(freqlist[1])+'Hz',frame,field)
+                w0 = self.convertvf(str(freqlist[0])+'Hz',frame,field)
+                retwidth=qa.quantity(qa.sub(qa.quantity(w1),qa.quantity(w0)))['value']
+            else:
+                retwidth=width
+        else:
+            raise TypeError, "Specified mode is not support"
+ 
+        return retnchan, retstart, retwidth
+
+    def convertvf(self,vf,frame,field):
+        """
+        returns doppler(velocity) or frequency in string
+        """
+        docalcf=False
+        if frame=='': frame='LSRK'
+        if(qa.quantity(vf)['unit'].find('m/s') > -1):
+            docalcf=True
+        elif(qa.quantity(vf)['unit'].find('Hz') > -1):
+            docalcf=False
+        else:
+            raise TypeError, "Unrecognized unit for the velocity or frequnecy parameter"
+        fldinds=ms.msseltoindex(self.vis, field=field)['field'].tolist()
+        if(len(fldinds) == 0):
+            fldid0=0
+        else:
+            fldid0=fldinds[0]
+        tb.open(self.vis+'/FIELD')
+        srcid=tb.getcell('SOURCE_ID',fldid0)
+        tb.close()
+        tb.open(self.vis+'/SOURCE')
+        rfreq=tb.getcell('REST_FREQUENCY',fldid0)
+        if rfreq<=0:
+            raise TypeError, "Rest frequency does not seems to be properly set, check the data"
+        tb.close()
+        if docalcf:
+            dop=me.doppler('radio', qa.quantity(vf)) 
+            rvf=me.tofrequency(frame, dop, qa.quantity(rfreq[0],'Hz'))
+        else:
+            frq=me.frequency(frame, qa.quantity(vf))
+            rvf=me.todoppler('radio',frq, qa.quantity(rfreq[0],'Hz')) 
+        ret=str(rvf['m0']['value'])+rvf['m0']['unit']
+        return ret 
+
+
     def getfreqs(self,nchan,spw,start,width):
         """
-        return a list of frequencies to be use in output clean image
+        returns a list of frequencies to be use in output clean image
         """
         freqlist=[]
+        finc=1
 
         if spw in (-1, '-1', '*', '', ' '):
             spwinds = -1
@@ -955,20 +1064,157 @@ class cleanhelper:
             spw0=0
         else:
             spw0=spwinds[0]
-        #pdb.set_trace() 
         tb.open(self.vis+'/SPECTRAL_WINDOW')
         chanfreqscol=tb.getcol('CHAN_FREQ')
         tb.close()
         # assume spw[0]  
         chanfreqs=chanfreqscol.transpose()
         chanfreqs1d=chanfreqs[spw0:].flatten() 
-        if start > len(chanfreqs1d):
-            raise TypeError, "start channel exceed data range"
-        startf = chanfreqs1d[start]
-        finc=(chanfreqs1d[start+1]-chanfreqs1d[start])*width
-        for i in range(nchan):
+            
+        if type(start)==int or type(start)==float:
+            if start > len(chanfreqs1d):
+                raise TypeError, "Start channel is outside the data range"
+            startf = chanfreqs1d[start]
+        elif type(start)==str:
+            if(qa.quantity(start)['unit'].find('Hz') > -1):
+                startf=qa.convert(qa.quantity(start),'Hz')['value']
+            else:
+                raise TypeError, "Unrecognized start parameter"
+        if type(width)==int or type(width)==float:
+            if type(start)==int or type(start)==float:
+                finc=(chanfreqs1d[start+1]-chanfreqs1d[start])*width
+            elif type(start)==str:
+                if(qa.quantity(start)['unit'].find('Hz') > -1):
+                   # assume called from setChannelization with local width=1
+                   # for the default width(of clean task parameter)='' for
+                   # velocity and frequency modes. This case set width to 
+                   # first channel width 
+                   finc=chanfreqs1d[1]-chanfreqs1d[0]
+        elif type(width)==str:
+            if(qa.quantity(width)['unit'].find('Hz') > -1):
+                finc=qa.convert(qa.quantity(width),'Hz')['value']
+        if nchan ==-1:
+            if(qa.quantity(start)['unit'].find('Hz') > -1): 
+                bw=chanfreqs1d[-1]-startf
+            else:
+                bw=chanfreqs1d[-1]-chanfreqs1d[start]
+            if bw < 0:
+                raise TypeError, "Start parameter is outside the data range"
+            if(qa.quantity(width)['unit'].find('Hz') > -1):
+                qnchan=qa.div(qa.quantity(bw,'Hz'),qa.quantity(width))
+                loc_nchan=int(math.ceil(qnchan['value']))+1
+            else:
+                loc_nchan=int(math.ceil(bw/finc))+1
+        else:
+            loc_nchan=nchan
+        for i in range(int(loc_nchan)):
             if i==0: 
                 freqlist.append(startf)
             else:
                 freqlist.append(freqlist[-1]+finc) 
         return freqlist, finc
+
+
+def getFTMachine(gridmode, imagermode, mode, wprojplanes, userftm):
+    """
+    A utility function which implements the logic to determine the
+    ftmachine name to be used in the under-laying tool.
+    """
+    ftm = userftm;
+    if ((gridmode == 'widefield') and(wprojplanes > 1)): ftm = 'wproject';
+    if (gridmode == 'aprojection'):                      ftm = 'pbwproject';
+    if (imagermode == 'csclean'):                        ftm = 'ft';
+        
+    return ftm;
+
+def getAlgorithm(psfmode, imagermode, gridmode, mode, 
+                 multiscale, multifield, facets, nterms, useralg):
+    """
+    A utility function which implements the logic to determine the
+    deconvolution algorithm to be used in the under-laying tool.
+    """
+    alg=useralg
+    addMultiField=False;
+
+    if((type(multiscale)==list) and 
+       (len(multiscale) > 0) and
+       (sum(multiscale) > 0)): alg = 'multiscale';
+    elif ((psfmode == 'clark') or (psfmode == 'hogbom')): alg=psfmode;
+
+    if ((imagermode == '') and (multifield)): addMultiField=True;
+    if (imagermode == 'mosaic'):              addMultiField=True;
+    if (imagermode == 'csclean'):             addMultiField = True; #!!!!
+
+    if ((mode == 'mfs') and (nterms > 1)): 
+        alg = 'msmfs';
+        if (multifield): addMultiField = True;
+
+    if (gridmode == 'widefield'): alg='mfclark';
+
+    if (gridmode == 'widefield'):
+        addMultiField=True;
+        if((psfmode == 'clark') or (psfmode == 'hogbom')):
+            if(facets > 1):  alg='wf'+psfmode;
+            else:            addMultiField=True
+            if(alg.count('multiscale') > 0):
+                if(facets >1):
+                    raise Exception, 'multiscale with facets > 1 not allowed for now';
+
+
+    if (addMultiField and (alg[0:2] != 'mf')):  alg = 'mf' + alg;
+    return alg;
+
+# Function to compute Calculate alpha
+def SimCalcAlphaBeta(imtemplate="",taylorlist=[],namealpha="",namebeta="",threshold=0.001):
+    nterms = len(taylorlist);
+    if(nterms>1):
+     if(not os.path.exists(namealpha)):
+       cpcmd = 'cp -r ' + imtemplate + ' ' + namealpha;
+       os.system(cpcmd);
+    if(nterms>2):
+     if(not os.path.exists(namebeta)):
+       cpcmd = 'cp -r ' + imtemplate + ' ' + namebeta;
+       os.system(cpcmd);
+    if(nterms>0):
+     ia.open(taylorlist[0]);
+     ptay0 = ia.getchunk();
+     ia.close();
+    if(nterms>1):
+     ia.open(taylorlist[1]);
+     ptay1 = ia.getchunk();
+     ia.close();
+     ia.open(namealpha);
+     alpha = ia.getchunk();
+     alpha.fill(0.0);
+     ia.close();
+    if(nterms>2):
+     ia.open(taylorlist[2]);
+     ptay2 = ia.getchunk();
+     ia.close();
+     ia.open(namebeta);
+     beta = ia.getchunk();
+     beta.fill(0.0);
+     ia.close();
+   # Calc alpha,beta from ptay0,ptay1,ptay2
+    N = ptay0.shape[0];
+    if(nterms>1):
+     for ii in range(0,N):
+       for jj in range(0,N):
+         if(ptay0[ii,jj,0,0]>threshold):
+	    mtay0 = ptay0[ii,jj,0,0];
+	    mtay1 = ptay1[ii,jj,0,0];
+	    alphaval = mtay1/mtay0;
+	    alpha[ii,jj,0,0] = alphaval;
+	    if(nterms>2):
+	       mtay2 = ptay2[ii,jj,0,0];
+	       beta[ii,jj,0,0] = (mtay2/mtay0) - 0.5*alphaval*(alphaval-1);
+       if(ii%100 == 0):
+	 print ii;
+    if(nterms>1):
+     ia.open(namealpha);
+     ia.putchunk(alpha);
+     ia.close();
+    if(nterms>2):
+     ia.open(namebeta);
+     ia.putchunk(beta);
+     ia.close();

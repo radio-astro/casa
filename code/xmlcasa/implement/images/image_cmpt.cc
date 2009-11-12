@@ -419,24 +419,6 @@ image::fromfits(const std::string& outfile, const std::string& fitsfile,
        rstat= 
          itsImage->imagefromfits(outfile, fitsfile, whichrep, whichhdu, 
 	         		      zeroBlanks, overwrite);
-	 // Well this here be a work around until we get proper use of the cfitsio
-	 // routines by rewriting the underlying fits writer stuff.
-       /*
-    Table::relinquishAutoLocks(True);
-    if(!fork()){
-       try {
-       } catch (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-       } catch (...) {
-          *itsLog << LogIO::SEVERE << "Unknown Exception Reported " << LogIO::POST;
-       }
-        exit(rstat);
-    }
-    int dummy;
-    wait(&dummy);
-    if(dummy)
-	    rstat=true;
-	    */
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
@@ -1032,7 +1014,7 @@ image::deconvolvefrombeam(const ::casac::variant& source,
 
 }
 bool
-image::remove(const bool finished)
+image::remove(const bool finished, const bool verbose)
 {
   bool rstat(false);
   try {
@@ -1040,7 +1022,7 @@ image::remove(const bool finished)
 
     if (detached()) return rstat;
 
-    if(itsImage->remove()){
+    if(itsImage->remove(verbose)){
       // Now done the image tool if desired.
       if (finished) done();
       rstat = true;
@@ -1091,14 +1073,14 @@ image::removefile(const std::string& filename)
 
 
 bool
-image::done(const bool remove)
+image::done(const bool remove, const bool verbose)
 {
   bool rstat(false);
   try {
     *itsLog << LogOrigin("image", "done");
 
     if (remove && !detached()) {
-      if(!itsImage->remove()){
+      if(!itsImage->remove(verbose)){
 	*itsLog << LogIO::WARN << "Failed to remove image file" << LogIO::POST;
       }
     }

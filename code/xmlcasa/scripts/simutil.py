@@ -601,6 +601,7 @@ class simutil:
         iny=[]
         inz=[]
         ind=[]
+        id=[] # pad id
         nant=0
         line='    '
         params={}
@@ -618,7 +619,7 @@ class simutil:
                             params[paramlist[0].strip()]=paramlist[1].strip()
                 else:
                 ### ignoring line that has less than 4 elements
-                ### all coord systems should have x,y,z,diam, where xyz varies
+                ### all coord systems should have x,y,z,diam,id, where xyz varies
                     #print line.split()
                     if(len(line.split()) >3):
                         splitline=line.split()
@@ -626,6 +627,10 @@ class simutil:
                         iny.append(float(splitline[1]))
                         inz.append(float(splitline[2]))
                         ind.append(float(splitline[3]))
+                        if len(splitline)>3:
+                            id.append(splitline[4])
+                        else:
+                            id.append('A%02d'%nant)                            
                         nant+=1                 
             except:
                 break
@@ -711,7 +716,7 @@ class simutil:
                             return -1
                         self.msg("geodetic coordinates not implemented yet :(",color="31")
                     
-        return (stnx, stny, stnz, pl.array(ind), nant, params["observatory"])
+        return (stnx, stny, stnz, pl.array(ind), id, nant, params["observatory"])
 
 
 
@@ -1150,9 +1155,9 @@ class simutil:
             nlqk = nlqk - (nlf / nlfprm)
 
         y0 = (1.+nlqk)*(z-dz)
-        x0 = sqrt((x-dx)**2 + (y-dy)**2)
-        lat=atan2(y0,x0)
-        lon=atan2(y-dy,x-dx)
+        x0 = pl.sqrt((x-dx)**2 + (y-dy)**2)
+        lat=pl.arctan2(y0,x0)
+        lon=pl.arctan2(y-dy,x-dx)
         #print x-dx,y-dy,z-dz,x0,y0
                 
         return lon,lat
@@ -1197,3 +1202,64 @@ class simutil:
     
         return x, y, z
 
+
+
+
+    def irtf2loc(self, x,y,z, cx,cy,cz):
+        """
+        itrf xyz and COFA cx,cy,cz -> latlon WGS84
+        """
+        clon,clat = self.xyz2long(cx,cy,cz,'WGS84')
+        ccoslon=pl.cos(clon)
+        csinlon=pl.sin(clon)        
+        csinlat=pl.sin(clat)
+        n=x.__len__()
+        lat=pl.zeros(n)
+        lon=pl.zeros(n)
+
+        # do like MsPlotConvert
+        for i in range(n):
+            # translate w/o rotating:
+            xtrans=x[i]-cx
+            ytrans=y[i]-cy
+            ztrans=z[i]-cz
+            # rotate
+            lat[i] = (-csinlon*xtrans) + (ccoslon*ytrans)
+            lon[i] = (-csinlat*ccoslon*xtrans) - (csinlat*csinlon*ytrans) + ztrans
+                
+        return lat,lon
+
+
+
+    def plotants(self,x,y,z,d,name):
+        # given globals
+        
+        #stnx, stny, stnz, stnd, nant, telescopename = util.readantenna(antennalist)
+        cx=pl.mean(x)
+        cy=pl.mean(y)
+        cz=pl.mean(z)
+        lat,lon = self.irtf2loc(x,y,z,cx,cy,cz)
+        n=lat.__len__()
+        
+        dolam=0
+        # TODO convert to klam: (d too)
+        ###
+                
+        ra=max(lat)-min(lat)
+        r2=max(lon)-min(lon)
+        if r2>range:
+            ra=r2
+        if max(d)>0.01*ra:
+            pl.plot(lat,lon,',')            
+            #print max(d),ra
+            for i in range(n):
+                pl.gca().add_patch(pl.Circle((lat[i],lon[i]),radius=0.5*d[i],fc="#dddd66"))
+                pl.text(lat[i],lon[i],name[i],horizontalalignment='center',verticalalignment='center')
+        else:
+            pl.plot(lat,lon,'o',c="#dddd66")
+            for i in range(n):
+                pl.text(lat[i],lon[i],name[i],horizontalalignment='center',fontsize=8)
+
+#        if dolam:
+#            pl.xlabel("kilolamda")
+#            pl.ylabel("kilolamda")

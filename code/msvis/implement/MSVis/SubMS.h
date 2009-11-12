@@ -386,6 +386,7 @@ class SubMS
   Vector<Int> arrayId_p;
   Vector<Double> newTimeVal_p;
   Vector<uInt> tOI_p; //timeOrderIndex
+  Vector<uInt> spw2ddid_p;
 
   Vector<Int> arrayRemapper_p, scanRemapper_p, stateRemapper_p; 
 

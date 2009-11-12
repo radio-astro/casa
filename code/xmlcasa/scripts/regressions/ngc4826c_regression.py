@@ -98,10 +98,11 @@ clean(vis='n4826_both.ms', imagename='n4826_tjoint1',
       mode='channel',
       psfmode='clark',
       niter=500,
+      cyclefactor=4,
       imagermode='mosaic',
       ftmachine='mosaic',
       modelimage='n4826_t12mchan.im',
-      scaletype='SAULT', minpb=0.01)
+      scaletype='SAULT', minpb=0.1)
 sdmodeltime = time.time()
 #Combo:   Max: 1.891995e+00    Flux: 1.391578e+02 Jy   Rms: 9.056366e-02
 #Pcombo:  Max: 1.681789e+00    Flux: 1.454376e+02 Jy   Rms: 8.196454e-02
@@ -144,8 +145,9 @@ clean(vis='n4826_both.ms', imagename='n4826_tjoint2',
       imagermode='mosaic',
       ftmachine='mosaic',
       niter=500,
+      cyclefactor=4,
       modelimage='n4826_tjoint2',
-      scaletype='SAULT', minpb=0.01)
+      scaletype='SAULT', minpb=0.1)
 
 jointtime = time.time()
 
@@ -198,14 +200,14 @@ f2_flux=105.4628
 #f3_max=1.67
 f3_max=1.52
 f3_flux=104.25
-jc1_max=1.61
+jc1_max=1.67
 #jc1_max=1.71
 #jc1_flux=168.87
-jc1_flux=243.57
+jc1_flux=224.1
 #jc2_max=1.68
-jc2_max=1.50
+jc2_max=1.53
 #jc2_flux=67.27
-jc2_flux=144.49
+jc2_flux=147.7
 
 diff_f1=abs((f1_max-feather1_immax)/f1_max)
 diff_f1f=abs((f1_flux-feather1_flux)/f1_flux)

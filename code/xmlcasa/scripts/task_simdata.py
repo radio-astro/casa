@@ -49,11 +49,11 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         ##################################################################
         # read antenna file:
 
-        stnx, stny, stnz, stnd, nant, telescopename = util.readantenna(antennalist)
+        stnx, stny, stnz, stnd, antnames, nant, telescopename = util.readantenna(antennalist)
         if stnx==False:
             return
-        antnames=[]
-        for k in range(0,nant): antnames.append('A%02d'%k)
+#        antnames=[]
+#        for k in range(0,nant): antnames.append('A%02d'%k)
         aveant=stnd.mean()
 
         # (set back to simdata after calls to util -
@@ -230,9 +230,11 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
         if nfld==1:
             imagermode=''
+            ftmachine="ft"
             msg("phase center = " + centralpointing)
         else:
             imagermode="mosaic"
+            ftmachine="mosaic"
             msg("mosaic center = " + imcenter + "; phase center = " + centralpointing)
             if verbose: 
                 for dir in pointings:
@@ -514,14 +516,17 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             util.ephemeris(refdate)  # util already knows the direction from above
             
             pl.subplot(224)
-            pl.plot(range(2),'o')
+            util.plotants(stnx, stny, stnz, stnd, antnames)
+#            pl.plot(range(2),'o')
             ax=pl.gca()
             l=ax.get_xticklabels()
             pl.setp(l,fontsize="x-small")
             l=ax.get_yticklabels()
             pl.setp(l,fontsize="x-small")
-            pl.xlabel("coming soon",fontsize="x-small")
-            pl.subplots_adjust(left=0.05,right=0.98,bottom=0.08,top=0.96,hspace=0.2,wspace=0.2)
+#            pl.xlabel("coming soon",fontsize="x-small")
+            pl.xlabel(telescopename,fontsize="x-small")
+            
+            pl.subplots_adjust(left=0.05,right=0.98,bottom=0.09,top=0.95,hspace=0.2,wspace=0.2)
             
             if checkinputs=="only":
                 if verbose: msg("Stopping after checking inputs as requested")
@@ -553,7 +558,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         ##################################################################
         # set up observatory, feeds, etc
         # (has to be here since we may have changed nchan)
-
+        
         if verbose:
             msg("preparing empty measurement set")
 
@@ -609,7 +614,8 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         sm.setvp()
 
         msg("done setting up observations (blank visibilities)")
-
+        if verbose:
+            sm.summary()
 
 
 
@@ -857,9 +863,10 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             cleanstr=cleanstr+",psfmode='"+psfmode+"'"
         if imagermode != "":
             cleanstr=cleanstr+",imagermode='"+imagermode+"'"
+        cleanstr=cleanstr+",ftmachine='"+ftmachine+"'"
         #",ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],start=0,width=1,"
         cleanstr=cleanstr+",imsize="+str(imsize)+",cell='"+str(cell)+"',phasecenter='"+str(centralpointing)+"'"
-        ",restfreq=''"
+        #",restfreq=''"
         if stokes != "I":
             cleanstr=cleanstr+",stokes='"+stokes+"'"
         if weighting != "natural":
@@ -873,8 +880,8 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
         if doclean: 
             clean(vis=mstoimage, imagename=image, mode=cleanmode, nchan=nchan,
-                  niter=niter, threshold=threshold,
-                  psfmode=psfmode, imagermode=imagermode, ftmachine="mosaic",
+                  niter=niter, threshold=threshold, selectdata=False,
+                  psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
                   imsize=imsize, cell=cell, phasecenter=centralpointing,
                   stokes=stokes, weighting=weighting, robust=robust,
                   uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,

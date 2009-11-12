@@ -79,7 +79,9 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
          coordinate("world"), coordinateType(""),
          fileName(name), position(""), yUnit(""), yUnitPrefix(""), 
 	 xpos(""), ypos(""),
-	 cube(0), lastX(Vector<Double>()), lastY(Vector<Double>()) 
+	 cube(0), lastX(Vector<Double>()), lastY(Vector<Double>()),
+         z_xval(Vector<Float>()), z_yval(Vector<Float>()),
+         region("") 
 {
 
     initPlotterResource();
@@ -407,20 +409,8 @@ void QtProfile::writeText()
         return ;
     QTextStream ts(&file);
     
-    Vector<Double> xy(2);
-    bool xv = 0, yv = 0; 
-    double x = xpos.toDouble(&xv);
-    double y = ypos.toDouble(&yv);
-    if (!xv || !yv) 
-       return;
-    xy[0]=x; xy[1]=y;
-    Vector<Float> z_xval;
-    Vector<Float> z_yval;
-    Bool ok = False;
-    ok=analysis->getFreqProfile(xy, z_xval, z_yval, 
-                          coordinate, coordinateType);
-
-    ts << "#title: Image profile - " << fileName << " " << position << "\n";
+    ts << "#title: Image profile - " << fileName << " " 
+       << region << "(" << position << ")\n";
     ts << "#coordintate: " << QString(coordinate.chars()) << "\n";
     ts << "#xLabel: " << QString(coordinateType.chars()) << "\n";
     ts << "#yLabel: " << "(" << yUnit << ")\n";
@@ -508,6 +498,8 @@ void QtProfile::closeEvent (QCloseEvent* event) {
    //qDebug() << "closeEvent";
   lastX.resize(0);
   lastY.resize(0);
+  z_xval.resize(0);
+  z_yval.resize(0);
   emit hideProfile();
 }
 
@@ -634,12 +626,15 @@ void QtProfile::wcChanged(const String c,
     if (ns < 1) return;
     if (ns == 1) {
         pc->setTitle("Single Point Profile");
+        region = "Point";
     }
     else if (ns == 2) {
         pc->setTitle("Rectangle Region Profile");
+        region = "Rect";
     }
     else {
         pc->setTitle("Polygon Region Profile");
+        region = "Poly";
     }
     pc->setWelcome("");
 
@@ -658,8 +653,6 @@ void QtProfile::wcChanged(const String c,
     //qDebug() << "position:" << position;
     te->setText(position);
 
-    Vector<Float> z_xval;
-    Vector<Float> z_yval;
     //Get Profile Flux density v/s velocity
     Bool ok = False;
     ok=analysis->getFreqProfile(xv, yv, z_xval, z_yval, 

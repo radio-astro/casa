@@ -97,11 +97,11 @@ class image
 
     ::casac::record* deconvolvefrombeam(const ::casac::variant& source = ::casac::initialize_variant(""), const ::casac::variant& beam = ::casac::initialize_variant(""));
 
-    bool remove(const bool done = false);
+  bool remove(const bool done = false, const bool verbose = true);
 
     bool removefile(const std::string& file);
 
-    bool done(const bool remove = false);
+    bool done(const bool remove = false, const bool verbose = true);
 
     bool fft(const std::string& real = "", const std::string& imag = "", const std::string& amp = "", const std::string& phase = "", const std::vector<int>& axes = std::vector<int> (1, -1), const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""));
 

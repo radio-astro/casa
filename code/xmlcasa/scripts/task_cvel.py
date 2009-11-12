@@ -190,6 +190,12 @@ def cvel(vis, outputvis,
             # all spws and fields selected, nothing to pass through
             passall = False
 
+        doselection = True
+        if(field=='*' and spw=='*' and
+           (not selectdata or (selectdata and antenna=='' and timerange=='' and scan=='' and array==''))
+           ):
+            doselection = False
+
         if(type(phasecenter)==str):
             ### blank means take field 0
             if (phasecenter==''):
@@ -260,7 +266,7 @@ def cvel(vis, outputvis,
                     raise TypeError, "in velocity mode, width parameter must be set if start parameter is set"
             if(not(width=="") and (qa.quantity(width)['unit'].find('m/s') < 0)):
                 raise TypeError, "width parameter %s is not a valid velocity quantity " %width
-        elif(mode=='channel'):
+        elif(mode=='channel' or mode=='channel_b'):
             if((type(width) != int) or (type(start) != int)):
                 raise TypeError, "start, width have to be integers with mode %s" %mode            
 
@@ -283,23 +289,30 @@ def cvel(vis, outputvis,
         else:
             ms.close()
             raise Exception, "Can only handle MSs with all three data columns or just one."
-            
-        casalog.post("Creating SubMS ...", 'INFO')
-        ms.split(outputms=outputvis, field=field,
-                 spw=spw,            step=[1],
-                 baseline=antenna,   subarray=array,
-                 timebin='-1s',    time=timerange,
-                 whichcol=datacolumn,
-                 scan=scan,          uvrange="")
-        ms.close()
 
-        # time sort it (required for cvel)
-	ms.open(outputvis, nomodify=False)
-        ms.timesort()        
-        ms.close()
+        if(doselection):
+            casalog.post("Creating selected SubMS ...", 'INFO')
+            ms.split(outputms=outputvis, field=field,
+                     spw=spw,            step=[1],
+                     baseline=antenna,   subarray=array,
+                     timebin='-1s',    time=timerange,
+                     whichcol=datacolumn,
+                     scan=scan,          uvrange="")
+            ms.close()
+
+            # time sort it (required for cvel)
+            ms.open(outputvis, nomodify=False)
+            casalog.post("Sorting SubMS main table by time ...", 'INFO')
+            ms.timesort()        
+            ms.close()
+        else:
+            # no selection necessary, do SubMS creation and timesort in one go
+            casalog.post("Creating SubMS with time-sorted main table ...", 'INFO')
+            ms.timesort(newmsname=outputvis)
+            ms.close()
 
         # Regrid it
-        casalog.post("Regridding SubMS ...", 'INFO')
+        casalog.post("Combining and regridding spectral window(s) in SubMS ...", 'INFO')
 	ms.open(outputvis, nomodify=False)
 
         message = "Using " + phasecentername + " as phase center."

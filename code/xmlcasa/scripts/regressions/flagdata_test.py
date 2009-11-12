@@ -30,6 +30,9 @@ else:
 
 flagdata(vis=vis, unflag=true)
 
+
+
+
 print "Test of vector mode"
 default(flagdata)
 vis = 'flagdatatest.ms'
@@ -74,12 +77,25 @@ if len(fg.getflagversionlist()) != 6:
 fg.done()
 
 
-print "Test of channel average"
+print "Test of autoflag, algorithm=timemed"
 vis='ngc5921.ms'
 os.system('rm -rf ' + vis)
 importuvfits(os.environ.get('CASAPATH').split()[0] + \
              '/data/regression/ngc5921/ngc5921.fits', \
              vis)
+
+
+flagdata(vis=vis, mode='autoflag', algorithm='timemed', window=3)
+test_eq(flagdata(vis=vis, mode='summary'), 2854278, 4725)
+flagdata(vis=vis, unflag=true)
+
+print "Test of autoflag, algorithm=freqmed"
+flagdata(vis=vis, mode='autoflag', algorithm='freqmed')
+test_eq(flagdata(vis=vis, mode='summary'), 2854278, 28916)
+flagdata(vis=vis, unflag=true)
+
+
+print "Test of channel average"
 flagdata(vis=vis, channelavg=False, clipminmax=[30, 60])
 test_eq(flagdata(vis=vis, mode='summary'), 2854278, 1414186)
 flagdata(vis=vis, unflag=true)

@@ -824,6 +824,9 @@ simulator::setnoise(const std::string& mode, const std::string& table,
     
     if(itsSim !=0){
       
+      LogIO os(LogOrigin("simulator", "setnoise"));
+      os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise2" << LogIO::POST;
+      
       casa::Quantity qnoise(casaQuantity(simplenoise));
       rstat=itsSim->setnoise(mode, qnoise, table, antefficiency, correfficiency, spillefficiency, tau, trx, tatmos, tcmb);
     }

@@ -116,6 +116,7 @@ class PKSMS2writer : public PKSwriter
         const Matrix<Float>   baseSub,
         const Matrix<Float>   &spectra,
         const Matrix<uChar>   &flagged,
+	const uInt            flagrow,
         const Complex         xCalFctr,
         const Vector<Complex> &xPol);
 **/

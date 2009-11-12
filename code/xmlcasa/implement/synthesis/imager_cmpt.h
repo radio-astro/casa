@@ -84,7 +84,7 @@ class imager
 
     bool make(const std::string& image = "", const bool async = false);
 
-    bool makeimage(const std::string& type = "observed", const std::string& image = "", const std::string& compleximage = "", const bool async = false);
+    bool makeimage(const std::string& type = "observed", const std::string& image = "", const std::string& compleximage = "", const bool verbose = true, const bool async = false);
 
     bool makemodelfromsd(const std::string& sdimage = "", const std::string& modelimage = "", const std::string& sdpsf = "", const std::string& maskimage = "");
 

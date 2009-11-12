@@ -1652,6 +1652,11 @@ ia.imagecalc('sdimage',
      <value></value>  
      </param>
 
+     <param type="bool" name="verbose">
+     <description>Report things like the center frequency to the logger</description>
+     <value>true</value>
+     </param>
+
      <param type="bool" name="async">
      <description>Run asynchronously in the background</description>
      <value>false</value>

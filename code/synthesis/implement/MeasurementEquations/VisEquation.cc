@@ -332,9 +332,9 @@ void VisEquation::collapseForSim(VisBuffer& vb) {
   
   // zero the data. correct will operate in place on data, so 
   // if we don't have an AMueller we don't get anything from this.  
-  //vb.setVisCube(0.0);
+  vb.setVisCube(0.0);
   // RI KLUDGE FOR BROKEN ANOISE
-  vb.setVisCube(Complex(0.0001,0.0));
+  // vb.setVisCube(Complex(0.0001,0.0));
   
   // Correct DATA up to pivot 
   while (lidx<napp_ && vc()[lidx]->type() < pivot_) {

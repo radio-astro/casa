@@ -853,7 +853,10 @@ clean(vis='ngc4826.tutorial.16apr98.src.split.ms',
       mode='channel',nchan=36,start=35,width=4,
       psfmode='clark',imagermode='mosaic',ftmachine='mosaic',
       scaletype='SAULT',
-      cyclefactor=1.5,niter=10000,threshold='45mJy',
+### As we moved to clean by default in flat sigma rather than
+### flat snr it converges less well
+ ###     cyclefactor=1.5,niter=10000,threshold='45mJy',
+      cyclefactor=4,niter=10000,threshold='45mJy',
       minpb=0.3,pbcor=False)
 
 ### NOTE: mosaic data ...Sault weighting implies a noise unform image
@@ -1318,20 +1321,21 @@ if benchmarking:
 
 #New values STM 2009-06-19 Patch4 (released version)
 #for 400x400 clean
+#new values for flat noise clean
 testdate = '2009-06-19 (STM)'
 testvers = 'CASA Version 2.4.0 Rev 8115'
-clean_image_max = 1.418478
-clean_offsrc_rms = 0.043584
-clean_offline_rms = 0.056824
-clean_momentzero_max = 171.601685
-clean_momentzero_rms = 15.532441
-clean_momentone_median = 428.499237
+clean_image_max = 1.46
+clean_offsrc_rms = 0.0573
+clean_offline_rms = 0.05429
+clean_momentzero_max = 166.
+clean_momentzero_rms = 17.3
+clean_momentone_median = 427.666351
 clean_momentone_planezero = 688.575012
 clean_momentone_planelast = 119.659264
 vis_mean_cal = 194.915497
 vis_mean_src = 54.627127
-model_sum = 70.707405
-model_pbcor_sum = 63.006854
+model_sum = 74.374
+model_pbcor_sum = 65.319
 
 canonical = {}
 canonical['exist'] = True

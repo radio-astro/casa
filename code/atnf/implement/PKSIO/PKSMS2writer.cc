@@ -449,6 +449,7 @@ Int PKSMS2writer::write(
         const Matrix<Float>   baseSub,
         const Matrix<Float>   &spectra,
         const Matrix<uChar>   &flagged,
+	const uInt            flagrow,
         const Complex         xCalFctr,
         const Vector<Complex> &xPol)
 **/
@@ -587,7 +588,9 @@ Int PKSMS2writer::write(
   Cube<Bool> flags(nPol, nChan, 1, False);
   //cMSCols->flag().put(irow, flags.xyPlane(0));
   cMSCols->flagCategory().put(irow, flags);
-  cMSCols->flagRow().put(irow, False);
+  // Row-based flagging info. (True:>0, False:0)
+  cMSCols->flagRow().put(irow, (pksrec.flagrow > 0));
+
 
   return 0;
 }

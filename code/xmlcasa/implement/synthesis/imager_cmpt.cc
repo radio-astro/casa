@@ -243,7 +243,7 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 	     itsImager->clean(String(algorithm), 0, gain, 
 			      casaQuantity(threshold), displayprogress,
 			      amodel, fixed, String(complist), amask,  
-			      aimage, aresidual);
+			      aimage, aresidual, Vector<String>(0), false);
 	     for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
 	       continter=itsImager->interactivemask(aresidual[nIm], amask[nIm], 
 						    elniter, nloop,thresh);
@@ -279,7 +279,7 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 					displayprogress,
 					amodel, fixed, String(complist), 
 					amask,  
-					aimage, aresidual, elpsf);
+					aimage, aresidual, elpsf, k == 0);
 	       //if clean converged... equivalent to stop
 	       if(rstat){
 		 continter=2;
@@ -590,8 +590,7 @@ imager::linearmosaic(const std::vector<std::string>& images, const std::string& 
     return rstat;
 }
 
-bool
-imager::make(const std::string& image, const bool async)
+bool imager::make(const std::string& image, const bool async)
 {
 
    Bool rstat(False);
@@ -608,45 +607,45 @@ imager::make(const std::string& image, const bool async)
     return rstat;
 }
 
-bool
-imager::makeimage(const std::string& type, const std::string& image, const std::string& compleximage, const bool async)
+bool imager::makeimage(const std::string& type, const std::string& image,
+                       const std::string& compleximage, const bool verbose,
+                       const bool async)
 {
    Bool rstat(False);
    if(hasValidMS_p){
       try {
-         rstat = itsImager->makeimage(String(type), String(image), String(compleximage));
+        rstat = itsImager->makeimage(String(type), String(image), String(compleximage),
+                                     verbose);
       } catch  (AipsError x) {
          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	 RETHROW(x);
       }
    } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+      *itsLog << LogIO::SEVERE
+              << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
    }
    return rstat;
 }
 
-bool
-imager::makemodelfromsd(const std::string& sdimage, const std::string& modelimage, const std::string& sdpsf, const std::string& maskimage)
+bool imager::makemodelfromsd(const std::string& sdimage, const std::string& modelimage,
+                             const std::string& sdpsf, const std::string& maskimage)
 {
-  
-
-    try {
-   
-      String mask(maskimage);
-      if(mask==String(""))
-	mask=String(modelimage)+String(".sdmask");
-      return itsImager->makemodelfromsd(String(sdimage), String(modelimage), 
-					String(sdpsf), mask);
+  try {
+    String mask(maskimage);
+    if(mask==String(""))
+      mask=String(modelimage)+String(".sdmask");
+    return itsImager->makemodelfromsd(String(sdimage), String(modelimage), 
+                                      String(sdpsf), mask);
       
-    } catch  (AipsError x) {
-      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-      RETHROW(x);
-    }
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
   return False;
 }
 
-bool
-imager::mask(const std::string& image, const std::string& mask, const ::casac::variant& threshold, const bool async)
+bool imager::mask(const std::string& image, const std::string& mask,
+                  const ::casac::variant& threshold, const bool async)
 {
    Bool rstat(False);
    if(hasValidMS_p){

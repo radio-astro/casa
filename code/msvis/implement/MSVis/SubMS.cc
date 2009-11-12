@@ -48,7 +48,6 @@
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
-
 #include <tables/Tables/IncrementalStMan.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ScaColDesc.h>
@@ -66,13 +65,12 @@
 #include <tables/Tables/TiledDataStMan.h>
 #include <tables/Tables/TiledStManAccessor.h>
 #include <ms/MeasurementSets/MSTileLayout.h>
-
 #include <scimath/Mathematics/InterpolateArray1D.h>
-
 #include <casa/sstream.h>
-
+#include <casa/iomanip.h>
 #include <functional>
 #include <set>
+
 
 namespace casa {
   
@@ -201,6 +199,58 @@ namespace casa {
         }
       }
       chanStep_p = widths;
+    }
+    
+    // Check for and filter out selected spws that aren't included in
+    // DATA_DESCRIPTION.  (See CAS-1673 for an example.)
+    ROScalarColumn<Int> spws_in_dd(ms_p.dataDescription(), 
+	     MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID));
+    std::set<Int> uniqSpwsInDD;
+    uInt nspwsInDD = spws_in_dd.nrow();
+    for(uInt ddrow = 0; ddrow < nspwsInDD; ++ddrow)
+      uniqSpwsInDD.insert(spws_in_dd(ddrow));
+    std::set<Int>::iterator ddend = uniqSpwsInDD.end();
+    std::set<Int> badSelSpwSlots;
+    uInt nSelSpw = spw_p.nelements();
+    for(uInt k = 0; k < nSelSpw; ++k){
+      if(uniqSpwsInDD.find(spw_p[k]) == ddend){
+        badSelSpwSlots.insert(k);
+      }
+    }
+    uInt nbadSelSpwSlots = badSelSpwSlots.size();
+    if(nbadSelSpwSlots > 0){
+      os << LogIO::WARN << "Selected input spw(s)\n";
+      for(std::set<Int>::iterator bbit = badSelSpwSlots.begin();
+          bbit != badSelSpwSlots.end(); ++bbit)
+        os << spw_p[*bbit] << " ";
+      os << "\nnot found in DATA_DESCRIPTION and being excluded."
+         << LogIO::POST;
+
+      uInt ngoodSelSpwSlots = nSelSpw - nbadSelSpwSlots;
+      Vector<Int> spwc(ngoodSelSpwSlots);
+      Vector<Int> chanStartc(ngoodSelSpwSlots);
+      Vector<Int> nchanc(ngoodSelSpwSlots);
+      Vector<Int> chanStepc(ngoodSelSpwSlots);
+      std::set<Int>::iterator bsend = badSelSpwSlots.end();
+      
+      uInt j = 0;
+      for(uInt k = 0; k < nSelSpw; ++k){
+        if(badSelSpwSlots.find(k) == bsend){
+          spwc[j]       = spw_p[k];
+          chanStartc[j] = chanStart_p[k];
+          nchanc[j]     = nchan_p[k];
+          chanStepc[j]  = chanStep_p[k];
+          ++j;
+        }
+      }
+      spw_p.resize(ngoodSelSpwSlots);
+      spw_p = spwc;
+      chanStart_p.resize(ngoodSelSpwSlots);
+      chanStart_p = chanStartc;
+      nchan_p.resize(ngoodSelSpwSlots);
+      nchan_p = nchanc;
+      chanStep_p.resize(ngoodSelSpwSlots);
+      chanStep_p = chanStepc;
     }
     
     averageChannel_p = averchan;
@@ -723,9 +773,53 @@ namespace casa {
       ROArrayColumn<Int> pols(poltable, 
 			      MSPolarization::columnName(MSPolarization::CORR_TYPE));
       
-      npol_p.resize(spw_p.shape()); 
-      for (uInt k = 0; k < npol_p.nelements(); ++k) 
-	npol_p[k] = pols(polId(spw_p[k])).nelements();
+      ROScalarColumn<Int> spwId(ddtable, 
+				MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID));
+
+      uInt nddids = polId.nrow();
+      uInt nSpws = spw_p.nelements();
+
+      Vector<uInt> npols_per_spw;
+      Int highestSpw = max(spw_p);
+      if(highestSpw < 0)
+        highestSpw = 0;
+      spw2ddid_p.resize(highestSpw + 1);
+      npols_per_spw.resize(highestSpw + 1);
+      spw2ddid_p.set(0);                 // This is a row #, so must be >= 0.
+      npols_per_spw.set(0);
+      for(uInt j = 0; j < nddids; ++j){
+        Int spw = spwId(j);
+        for(uInt k = 0; k < nSpws; ++k){
+          if(spw == spw_p[k]){
+            ++npols_per_spw[spw_p[k]];
+            spw2ddid_p[spw_p[k]] = j;
+          }
+        }
+      }
+
+      Bool ddidprob = false;
+      for(uInt k = 0; k < nSpws; ++k){
+        if(npols_per_spw[spw_p[k]] != 1){
+          ddidprob = true;
+          os << LogIO::SEVERE
+             << "Selected input spw " << spw_p[k] << " matches "
+             << npols_per_spw[spw_p[k]] << " POLARIZATION_IDs." << LogIO::POST;
+        }
+      }
+      if(ddidprob){
+          os << LogIO::SEVERE
+             << "split currently requires one POLARIZATION_ID per selected "
+             << "\nSPECTRAL_WINDOW_ID in the DATA_DESCRIPTION table."
+             << LogIO::POST;
+          return false;
+      }
+
+      Vector<Int> ddids;
+      ddids.resize(nSpws);
+
+      npol_p.resize(nSpws); 
+      for(uInt k = 0; k < nSpws; ++k)
+	npol_p[k] = pols(polId(spw2ddid_p[spw_p[k]])).nelements();
     }
     
     // Now remake the selected ms
@@ -1017,10 +1111,10 @@ namespace casa {
 	  newPolId[k]=j;
       }
       msOut_p.polarization().addRow();
-      msPol.numCorr().put(k, numCorr(polId(spw_uniq_p[k])));
-      msPol.corrType().put(k,corrType(polId(spw_uniq_p[k])));
-      msPol.corrProduct().put(k,corrProd(polId(spw_uniq_p[k])));
-      msPol.flagRow().put(k,polFlagRow(polId(spw_uniq_p[k])));
+      msPol.numCorr().put(k, numCorr(polId(spw2ddid_p[spw_uniq_p[k]])));
+      msPol.corrType().put(k, corrType(polId(spw2ddid_p[spw_uniq_p[k]])));
+      msPol.corrProduct().put(k, corrProd(polId(spw2ddid_p[spw_uniq_p[k]])));
+      msPol.flagRow().put(k, polFlagRow(polId(spw2ddid_p[spw_uniq_p[k]])));
     }
 
     for(uInt k = 0; k < spw_p.nelements(); ++k)
@@ -1710,7 +1804,6 @@ namespace casa {
       if(needRegridding){
 
 	// remove the "partner" columns
-	// rename hypercolumns
 	if(!CORRECTED_DATACol.isNull()){
 	  ms_p.removeColumn("oldCORRECTED_DATA");
 	}
@@ -1742,6 +1835,23 @@ namespace casa {
 	  ms_p.removeColumn("oldFLAG_CATEGORY");
 	}
       }
+      
+      //
+      // If all scratch columns are in the new MS, set the CHANNEL_SELECTION
+      // keyword for the MODEL_DATA column.  This is apparently used
+      // in at least imager to decide if MODEL_DATA and CORRECTED_DATA
+      // columns should be initialized or not.
+      //
+      if (!CORRECTED_DATACol.isNull() && !MODEL_DATACol.isNull() && !IMAGING_WEIGHTCol.isNull()){
+	MSSpWindowColumns msSpW(ms_p.spectralWindow());
+	Int nSpw=ms_p.spectralWindow().nrow();
+	if(nSpw==0) nSpw=1;
+	Matrix<Int> selection(2,nSpw);
+	selection.row(0)=0; //start
+	selection.row(1)=msSpW.numChan().getColumn();
+	ArrayColumn<Complex> mcd(ms_p,MS::columnName(MS::MODEL_DATA));
+	mcd.rwKeywordSet().define("CHANNEL_SELECTION",selection);
+      }
 
       ms_p.flush();
       rval = 1; // successful modification
@@ -1767,7 +1877,9 @@ namespace casa {
       String hcName(myColDesc.dataManagerGroup());
       String oldHcName = hcName;
       String newHcName = hcName + "B";
-      ms_p.renameHypercolumn(newHcName, oldHcName);
+      if(!oldHcName.empty() && ms_p.actualTableDesc().isHypercolumn(oldHcName)){
+	ms_p.renameHypercolumn(newHcName, oldHcName);
+      }
       // rename the datamanager
       DataManager* myDM = ms_p.findDataManager(oldHcName);
       ((TiledStMan*) myDM)->setDataManagerName(newHcName);
@@ -1895,8 +2007,8 @@ namespace casa {
 	//    otherwise the center channel is the lower edge of the new center channel
 	Int startChan;
 	Double tnumChan = regridBandwidthChan/regridChanWidthChan;
-	if(tnumChan/2 != tnumChan/2.){
-          // odd multiple or center channel given by user 
+	if((Int)tnumChan/2 != tnumChan/2.){
+          // odd multiple 
 	  startChan = regridCenterChan-regridChanWidthChan/2;
 	}
 	else{
@@ -1910,6 +2022,8 @@ namespace casa {
 	  }
 	  else{
             // create narrower channels at the edges if necessary
+	    oss << " *** Last channel at upper edge of new SPW made only " << bwUpperEndChan-i+1 
+		<< " original channels wide to fit given total bandwidth." << endl;
 	    hiNCBup.push_back(bwUpperEndChan);
 	  }
 	}
@@ -1923,6 +2037,8 @@ namespace casa {
 	  }
 	  else{
             // create narrower channels at the edges if necessary
+	    oss << " *** First channel at lower edge of new SPW made only " << i-bwLowerEndChan+1 
+		<< " original channels wide to fit given total bandwidth." << endl;
 	    loNCBdown.push_back(bwLowerEndChan);
 	  }
 	}
@@ -2133,12 +2249,10 @@ namespace casa {
 	  oss << " *** Requested new channel width exceeds defined SPW width. Shrinking to maximum size." << endl;
 	}
 	else{ // check if too small
-	  // determine smallest channel width in the new band
+	  // determine smallest channel width
 	  Double smallestChanWidth = 1E30;
 	  for(Int i=0; i<oldNUM_CHAN; i++){
-	    if(theRegridCenterF - theRegridBWF / 2. < transNewXin[i] &&
-               transNewXin[i] < theRegridCenterF+theRegridBWF/2.  &&
-               transCHAN_WIDTH[i] < smallestChanWidth){ 
+	    if(transCHAN_WIDTH[i] < smallestChanWidth){ 
 	      smallestChanWidth = transCHAN_WIDTH[i];
 	    }
 	  }
@@ -2170,6 +2284,8 @@ namespace casa {
       vector<Double> hiFBdown; // the lower bounds for the new channels
                                // starting from the central channel going down
       
+      Double edgeTolerance = theCentralChanWidthF*0.01; // needed to avoid numerical accuracy problems
+
       if(regridQuant=="vrad"){
 	// regridding in radio velocity ...
 	
@@ -2186,8 +2302,8 @@ namespace casa {
 	//    the new center channel if the bandwidth is an odd multiple of the
         //    new channel width,
 	//    otherwise the center channel is the lower edge of the new center channel
-	Int tnumChan = (Int) rint(theRegridBWF/theCentralChanWidthF);
-	if((tnumChan/2. - tnumChan/2)>0.1){
+	Double tnumChan = theRegridBWF/theCentralChanWidthF;
+	if((tnumChan/2. - (Int)tnumChan/2)>0.1){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
@@ -2215,11 +2331,11 @@ namespace casa {
 	while(upperEndV - theChanWidthX/10. < velHi){ // (preventing accuracy problems)
 	  // calc frequency of the upper end (in freq) of the next channel
 	  Double freqHi = freq_from_vrad(velHi,regridVeloRestfrq);
-	  if(freqHi<=upperEndF){ // end of bandwidth not yet reached
+	  if(freqHi<=upperEndF+edgeTolerance){ // end of bandwidth not yet reached
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(freqHi);
 	  }
-	  else if(freqHi<upperEndF*1.001){ // permit 1 permille accuracy
+	  else if(freqHi<upperEndF+edgeTolerance){ 
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(upperEndF);
 	    break;
@@ -2241,11 +2357,11 @@ namespace casa {
 	while(velLo < lowerEndV + theChanWidthX/10.){ // (preventing accuracy problems)  
 	  // calc frequency of the lower end (in freq) of the next channel
 	  Double freqLo = freq_from_vrad(velLo,regridVeloRestfrq);
-	  if(freqLo>=lowerEndF){ // end of bandwidth not yet reached
+	  if(freqLo>=lowerEndF-edgeTolerance){ // end of bandwidth not yet reached
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(freqLo);
 	  }
-	  else if(freqLo>lowerEndF*0.999){ // permit 1 permille accuracy
+	  else if(freqLo>lowerEndF-edgeTolerance){ 
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(lowerEndF);
 	    break;
@@ -2262,7 +2378,7 @@ namespace casa {
       else if(regridQuant=="vopt"){
 	// regridding in optical velocity ...
 	
-	// create freq boundaries equidistant and contiguous in radio velocity
+	// create freq boundaries equidistant and contiguous in optical velocity
 	Double upperEndF = theRegridCenterF + theRegridBWF/2.;
 	Double lowerEndF = theRegridCenterF - theRegridBWF/2.;
 	Double upperEndV = vopt(upperEndF,regridVeloRestfrq);
@@ -2275,8 +2391,8 @@ namespace casa {
 	//    new channel width,
 	//    otherwise the center channel is the lower edge of the new center
 	//    channel
-	Int tnumChan = (Int) rint(theRegridBWF/theCentralChanWidthF);
-	if((tnumChan/2. - tnumChan/2)>0.1){
+	Double tnumChan = theRegridBWF/theCentralChanWidthF;
+	if((tnumChan/2. - (Int)tnumChan/2)>0.1){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
@@ -2303,11 +2419,11 @@ namespace casa {
 	while(upperEndV - velHi < theChanWidthX/10.){ // (preventing accuracy problems)
 	  // calc frequency of the upper end (in freq) of the next channel
 	  Double freqHi = freq_from_vopt(velHi,regridVeloRestfrq);
-	  if(freqHi<=upperEndF){ // end of bandwidth not yet reached
+	  if(freqHi<=upperEndF+edgeTolerance){ // end of bandwidth not yet reached
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(freqHi);
 	  }
-	  else if(freqHi<upperEndF*1.001){ // permit 1 permille accuracy
+	  else if(freqHi<upperEndF+edgeTolerance){ 
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(upperEndF);
 	    break;
@@ -2329,11 +2445,11 @@ namespace casa {
 	while(velLo - lowerEndV < theChanWidthX/10.){ // (preventing accuracy problems)  
 	  // calc frequency of the lower end (in freq) of the next channel
 	  Double freqLo = freq_from_vopt(velLo,regridVeloRestfrq);
-	  if(freqLo>=lowerEndF){ // end of bandwidth not yet reached
+	  if(freqLo>=lowerEndF-edgeTolerance){ // end of bandwidth not yet reached
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(freqLo);
 	  }
-	  else if(freqLo>lowerEndF*0.999){ // permit 1 permille accuracy
+	  else if(freqLo>lowerEndF-edgeTolerance){ 
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(lowerEndF);
 	    break;
@@ -2359,7 +2475,7 @@ namespace casa {
         //    new channel width, 
 	//    otherwise the center channel is the lower edge of the new center channel
 	Double tnumChan = theRegridBWF/theCentralChanWidthF;
-	if((tnumChan/2. - tnumChan/2)>0.1){
+	if((tnumChan/2. - (Int)tnumChan/2)>0.1){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
@@ -2373,10 +2489,10 @@ namespace casa {
 	  hiFBdown.push_back(theRegridCenterF+theCentralChanWidthF);
 	}
 
-	while(hiFBup.back()< upperEndF){
+	while(hiFBup.back()< upperEndF+edgeTolerance){
 	  // calc frequency of the upper end of the next channel
 	  Double freqHi = hiFBup.back() + theCentralChanWidthF;
-	  if(freqHi<=upperEndF){ // end of bandwidth not yet reached
+	  if(freqHi<=upperEndF+edgeTolerance){ // end of bandwidth not yet reached
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(freqHi);
 	  }
@@ -2385,10 +2501,10 @@ namespace casa {
 	  }
 	}
 
-	while(loFBdown.back() > lowerEndF){
+	while(loFBdown.back() > lowerEndF-edgeTolerance){
 	  // calc frequency of the lower end of the next channel
 	  Double freqLo = loFBdown.back() - theCentralChanWidthF;
-	  if(freqLo>=lowerEndF){ // end of bandwidth not yet reached
+	  if(freqLo>=lowerEndF-edgeTolerance){ // end of bandwidth not yet reached
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(freqLo);
 	  }
@@ -2413,8 +2529,8 @@ namespace casa {
 	//    new channel width, 
 	//    otherwise the center channel is the lower edge of the new center
 	//    channel
-	Int tnumChan = (Int) rint(theRegridBWF/theCentralChanWidthF);
-	if((tnumChan/2. - tnumChan/2)>0.1){
+	Double tnumChan = theRegridBWF/theCentralChanWidthF;
+	if((tnumChan/2. - (Int)tnumChan/2)>0.1){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
 	  hiFBup.push_back(theRegridCenterF+theCentralChanWidthF/2.);
@@ -2440,11 +2556,11 @@ namespace casa {
 	while(upperEndL - lambdaHi < theChanWidthX/10.){ // (preventing accuracy problems)
 	  // calc frequency of the upper end (in freq) of the next channel
 	  Double freqHi = freq_from_lambda(lambdaHi);
-	  if(freqHi<=upperEndF){ // end of bandwidth not yet reached
+	  if(freqHi<=upperEndF+edgeTolerance){ // end of bandwidth not yet reached
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(freqHi);
 	  }
-	  else if(freqHi<upperEndF*1.001){ // permit 1 permille accuracy
+	  else if(freqHi<upperEndF+edgeTolerance){ 
 	    loFBup.push_back(hiFBup.back());
 	    hiFBup.push_back(upperEndF);
 	    break;
@@ -2467,11 +2583,11 @@ namespace casa {
 	while(lambdaLo - lowerEndL < theChanWidthX/10.){  // (preventing accuracy problems) 
 	  // calc frequency of the lower end (in freq) of the next channel
 	  Double freqLo = freq_from_lambda(lambdaLo);
-	  if(freqLo>=lowerEndF){ // end of bandwidth not yet reached
+	  if(freqLo>=lowerEndF-edgeTolerance){ // end of bandwidth not yet reached
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(freqLo);
 	  }
-	  else if(freqLo>lowerEndF*0.999){ // permit 1 permille accuracy
+	  else if(freqLo>lowerEndF-edgeTolerance){ 
 	    hiFBdown.push_back(loFBdown.back());
 	    loFBdown.push_back(lowerEndF);
 	    break;
@@ -2965,9 +3081,9 @@ namespace casa {
 	      newRESOLUTION[i] = newCHAN_WIDTH[i]; // to be revisited
 	      newEFFECTIVE_BW[i] = newCHAN_WIDTH[i]; // to be revisited
 	    }
-	    // set the reference frequency to the lower edge of the new spw,
+	    // set the reference frequency to the central frequency of the first channel,
 	    // keeping the already changed frame
-	    MVFrequency mvf(newChanLoBound[0]);
+	    MVFrequency mvf(newXout[0]);
 	    newREF_FREQUENCY.set(mvf);
 	    
 	    // trivial definition of the bandwidth
@@ -3186,6 +3302,8 @@ namespace casa {
 
     String tempNewName = ms_p.tableName()+".spwCombined"; // temporary name for the MS to store the result
 
+    Bool allScratchColsPresent = False;
+
     { // begin scope for MS related objects
 
       // find all existing spws, 
@@ -3216,14 +3334,14 @@ namespace casa {
 	os << LogIO::NORMAL << "Less than two SPWs selected. No combination necessary."
 	   << LogIO::POST;
 	return True;
-      }      
-
+      }
+      
       // sort the spwids
       std::sort(spwsToCombine.begin(), spwsToCombine.end());
 
       uInt nSpwsToCombine = spwsToCombine.size();
 
-      // prepare storage for parameters of new spw table row
+      // prepare access to the SPW table
       MSSpWindowColumns SPWCols(spwtable);
       ScalarColumn<Int> numChanCol = SPWCols.numChan(); 
       ArrayColumn<Double> chanFreqCol = SPWCols.chanFreq(); 
@@ -3236,6 +3354,24 @@ namespace casa {
       ArrayColumn<Double> resolutionCol = SPWCols.resolution(); 
       ScalarColumn<Double> totalBandwidthCol = SPWCols.totalBandwidth();
 
+      // create a list of the spw ids sorted by first channel frequency
+      vector<Int> spwsSorted(origNumSPWs);
+      {
+	Double* firstFreq = new Double[origNumSPWs];
+	for(uInt i=0; (Int)i<origNumSPWs; i++){
+	  Vector<Double> CHAN_FREQ(chanFreqCol(i));
+	  firstFreq[i] = CHAN_FREQ(0);
+	}
+	Sort sort;
+	sort.sortKey (firstFreq, TpDouble); // define sort key
+	Vector<uInt> inx(origNumSPWs);
+	sort.sort(inx, (uInt)origNumSPWs);
+	for (uInt i=0; (Int)i<origNumSPWs; i++) {
+	  spwsSorted[i] = spwsToCombine[inx(i)];
+	}
+	delete[] firstFreq;
+      }
+
       // Create new row in the SPW table (with ID nextSPWId) by copying
       // all information from row theSPWId
       if(!spwtable.canAddRow()){
@@ -3245,7 +3381,7 @@ namespace casa {
 	return False; 
       }
       TableRow SPWRow(spwtable);
-      Int id0 = spwsToCombine[0];
+      Int id0 = spwsSorted[0];
       TableRecord spwRecord = SPWRow.get(id0);
 
       Int newNUM_CHAN = numChanCol(id0);
@@ -3278,12 +3414,21 @@ namespace casa {
 	averageChanFrac.push_back(tvd);
       }
 
-      os << LogIO::NORMAL << "Number of channels in original SPWs:" << LogIO::POST;
-      os << LogIO::NORMAL << "     SPW " << id0 << ": " << newNUM_CHAN << " channels " << LogIO::POST;
+
+      os << LogIO::NORMAL << "Original SPWs sorted by first channel frequency:" << LogIO::POST;
+      {
+	ostringstream oss; // needed for iomanip functions
+	oss << "   SPW " << std::setw(3) << id0 << ": " << std::setw(5) << newNUM_CHAN 
+	    << " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << newCHAN_FREQ(0) << " Hz";
+	if(newNUM_CHAN>1){
+	  oss << ", last channel = " << std::setprecision(9) << std::setw(14) << std::scientific << newCHAN_FREQ(newNUM_CHAN-1) << " Hz";
+	}
+	os << LogIO::NORMAL << oss.str() << LogIO::POST;
+      }
 
       // loop over remaining given spws
       for(uInt i=1; i<nSpwsToCombine; i++){
-	Int idi = spwsToCombine[i];
+	Int idi = spwsSorted[i];
       
 	Int newNUM_CHANi = numChanCol(idi);
 	Vector<Double> newCHAN_FREQi(chanFreqCol(idi));
@@ -3295,7 +3440,13 @@ namespace casa {
 	Vector<Double> newRESOLUTIONi(resolutionCol(idi));
 	//Double newTOTAL_BANDWIDTHi = totalBandwidthCol(idi);
 
-	os << LogIO::NORMAL << "     SPW " << idi << ": " << newNUM_CHANi << " channels" << LogIO::POST;
+	ostringstream oss; // needed for iomanip functions
+	oss << "   SPW " << std::setw(3) << idi << ": " << std::setw(5) << newNUM_CHANi 
+	    << " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << newCHAN_FREQi(0) << " Hz";
+	if(newNUM_CHANi>1){
+	  oss << ", last channel = " << std::setprecision(9) << std::setw(14) << std::scientific << newCHAN_FREQi(newNUM_CHANi-1) << " Hz";
+	}
+	os << LogIO::NORMAL << oss.str() << LogIO::POST;
       
 	vector<Double> mergedChanFreq;
 	vector<Double> mergedChanWidth;
@@ -3831,6 +3982,8 @@ namespace casa {
       Bool FLAGColIsOK = !FLAGCol.isNull();
       Bool FLAG_CATEGORYColIsOK = False; // to be set to the correct value further below
       
+      allScratchColsPresent = CORRECTED_DATAColIsOK && MODEL_DATAColIsOK && IMAGING_WEIGHTColIsOK;
+
       // initialize arrays to store combined column data
       if(CORRECTED_DATAColIsOK){
 	newCorrectedData.resize(newShape);
@@ -4294,7 +4447,7 @@ namespace casa {
       newMain.flush(True); 
 
     } // end scope for MS related objects
-
+ 
     String oldName(ms_p.tableName());
 
     // detach old MS
@@ -4311,6 +4464,23 @@ namespace casa {
     // attach new MS
     ms_p = MeasurementSet(oldName, Table::Update);
     mssel_p = ms_p;
+
+    //
+    // If all scratch columns are in the new MS, set the CHANNEL_SELECTION
+    // keyword for the MODEL_DATA column.  This is apparently used
+    // in at least imager to decide if MODEL_DATA and CORRECTED_DATA
+    // columns should be initialized or not.
+    //
+    if(allScratchColsPresent){
+      MSSpWindowColumns msSpW(ms_p.spectralWindow());
+      Int nSpw=ms_p.spectralWindow().nrow();
+      if(nSpw==0) nSpw=1;
+      Matrix<Int> selection(2,nSpw);
+      selection.row(0)=0; //start
+      selection.row(1)=msSpW.numChan().getColumn();
+      ArrayColumn<Complex> mcd(ms_p, MS::columnName(MS::MODEL_DATA));
+      mcd.rwKeywordSet().define("CHANNEL_SELECTION",selection);
+    }
 
     os << LogIO::NORMAL << "Spectral window combination complete." << LogIO::POST;
 
@@ -5358,7 +5528,7 @@ uInt SubMS::rowProps2slotKey(const Int ant1, const Int ant2,
       const Vector<Int>&    state        = mscIn_p->stateId().getColumn();
       const Vector<Bool>&   rowFlag      = mscIn_p->flagRow().getColumn();
 
-      std::set<Int> slotSet;
+      //std::set<Int> slotSet;
       
       GenSortIndirect<Double>::sort(tOI_p, timeRows);
 

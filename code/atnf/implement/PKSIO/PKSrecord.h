@@ -91,6 +91,7 @@ class PKSrecord
     Matrix<Float>   baseSub;
     Matrix<Float>   spectra;
     Matrix<uChar>   flagged;
+    uInt            flagrow;
     Complex         xCalFctr;
     Vector<Complex> xPol;
     Int             polNo ;

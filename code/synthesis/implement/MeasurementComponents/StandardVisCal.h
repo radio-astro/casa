@@ -33,60 +33,15 @@
 #include <casa/BasicSL/Complex.h>
 #include <synthesis/MeasurementComponents/VisCal.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
-// for simulation 
-#include <casa/BasicMath/Random.h>
-#include <scimath/Mathematics/FFTServer.h>
-
-using namespace std;
-
-#ifndef CASA_STANDALONE
-#include <ATMRefractiveIndexProfile.h>
-#include <ATMPercent.h>
-#include <ATMPressure.h>
-#include <ATMNumberDensity.h>
-#include <ATMMassDensity.h>
-#include <ATMTemperature.h>
-#include <ATMLength.h>
-#include <ATMInverseLength.h>
-#include <ATMOpacity.h>
-#include <ATMHumidity.h>
-#include <ATMFrequency.h>
-#include <ATMWaterVaporRadiometer.h>
-#include <ATMWVRMeasurement.h>
-#include <ATMAtmosphereType.h>
-#include <ATMType.h>
-#include <ATMProfile.h>
-#include <ATMSpectralGrid.h>
-#include <ATMRefractiveIndex.h>
-#include <ATMSkyStatus.h>
-#include <ATMTypeName.h>
-#include <ATMAngle.h>
-#else
-//#ATM Not available; mimic the classes and functions used
-namespace atm{
-class Angle
-{
-public:
-  double get(string) const {return 0.0;}
-};
-class RefractiveIndexProfile
-{
-public:
-  Angle getDispersiveWetPhaseDelay(int,int) const {return Angle();}
-};
-class AtmProfile;
-class SkyStatus;
-class SpectralGrid;
-
-}
-#endif
+#include <synthesis/MeasurementComponents/CalCorruptor.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-// Forward declaration
+// Forward declarations
 class VisEquation;
-
-
+class TJonesCorruptor;
+//class MMCorruptor;
+//class MfMCorruptor;
 
 
 // **********************************************************
@@ -155,50 +110,6 @@ private:
 //  TJones
 //
 
-class TJonesCorruptor : public CalCorruptor {
-
- public:
-   TJonesCorruptor(const Int nSim);
-   virtual ~TJonesCorruptor();
-
-   Float& pwv(const Int i); 
-   Vector<Float>* pwv();
-   void initAtm();
-   inline String& mode() { return mode_; };
-   inline Float& mean_pwv() { return mean_pwv_; };
-   inline Matrix<Float>& screen() { return *screen_p; };
-   inline Float screen(const Int i, const Int j) { 
-     // RI_TODO out of bounds check or is that done by Vector?
-     return screen_p->operator()(i,j); };
-   virtual void initialize();
-   void initialize(const Int Seed, const Float Beta, const Float scale);
-   void initialize(const Int Seed, const Float Beta, const Float scale,
-		   const ROMSAntennaColumns& antcols);
-   Complex gain(const Int islot);
-   Complex gain(const Int ix, const Int iy, const Int islot);
-   inline Vector<Float>& antx() { return antx_; };
-   inline Vector<Float>& anty() { return anty_; };
-   inline Float& windspeed() { return windspeed_; };
-   inline Float& pixsize() { return pixsize_; };
-
- protected:
-
- private:   
-   Float mean_pwv_,windspeed_,pixsize_;
-   String mode_; // general parameter for different kinds of corruptions
-   Matrix<Float>* screen_p; 
-
-   atm::AtmProfile *itsatm;
-   atm::RefractiveIndexProfile *itsRIP;
-   atm::SkyStatus *itsSkyStatus;
-   atm::SpectralGrid *itsSpecGrid;
-
-   PtrBlock<Vector<Float>*> pwv_p;
-   Vector<Float> antx_,anty_;   
-};
-
-
-
 class TJones : public SolvableVisJones {
 public:
 
@@ -258,30 +169,6 @@ private:
 
 
 
-// this generates fractional brownian motion aka generalized 1/f noise
-// class fBM : public Array<Double> {
-class fBM {
-
- public:
-
-  fBM(uInt i1);
-  fBM(uInt i1, uInt i2);
-  fBM(uInt i1, uInt i2, uInt i3);
-  // virtual ~fBM(); // not ness if we don't derive from this
-  inline Bool& initialized() { return initialized_; };
-  void initialize(const Int seed, const Float beta);
-
-  inline Array<Float> data() { return *data_; };
-  inline Float data(uInt i1) { return data_->operator()(IPosition(1,i1)); };
-  inline Float data(uInt i1, uInt i2) { return data_->operator()(IPosition(2,i1,i2)); };
-  inline Float data(uInt i1, uInt i2, uInt i3) { return data_->operator()(IPosition(3,i1,i2,i3)); };
-
-
- private:
-  Bool initialized_;
-  Array<Float>* data_;
-
-};
 
 
 
@@ -638,54 +525,6 @@ private:
 //  M: baseline-based (closure) 
 //
 
-class MMCorruptor : public CalCorruptor {
-
- public:
-  MMCorruptor();
-  virtual ~MMCorruptor();
-  Float &amp() {return amplitude_; };
-  virtual void initialize() {
-    throw(AipsError("MMCorruptor initialize error - you should not be here!"));
-  }
-  void initialize(const Float amp, const Record& simpar) {
-    amplitude_=amp;
-    simpar_=simpar;
-  };
-  Array<Complex> gain();
-  inline String& mode() {return mode_; };
-  inline Record& simpar() {return simpar_;}
-  
- protected:
-  Record simpar_;
-  
- private:
-  Float amplitude_;
-  String mode_;
-  
-};
-
-
-
-
-class MfMCorruptor : public MMCorruptor {
-
- public:
-  MfMCorruptor();
-  virtual ~MfMCorruptor();
-  void initAtm();
-  inline Float& pwv() { return pwv_; };
-  
- private:   
-  Float pwv_;
-  atm::AtmProfile *itsatm;
-  atm::RefractiveIndexProfile *itsRIP;
-  atm::SkyStatus *itsSkyStatus;
-  atm::SpectralGrid *itsSpecGrid;
-};
-
-
-
-
 
 class MMueller : public SolvableVisMueller {
 public:
@@ -737,7 +576,7 @@ protected:
   virtual Bool trivialMuellerElem() { return True; };
 
 private:
-  MMCorruptor *mcorruptor_p;
+  AtmosCorruptor *atmcorruptor_p;
 
 };
 
@@ -949,7 +788,7 @@ private:
 
 
 
-// K Jones provides support for delays
+// K Jones provides support for SBD delays
 class KJones : public GJones {
 public:
 
@@ -964,7 +803,7 @@ public:
 
   // Return type name as string
   virtual String typeName()     { return "K Jones"; };
-  virtual String longTypeName() { return "K Jones (array geometry and clocks)"; };
+  virtual String longTypeName() { return "K Jones (single-band delay)"; };
 
   // Type of Jones matrix according to nPar()
   virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
@@ -972,7 +811,6 @@ public:
   // Freq dependence (delays)
   virtual Bool freqDepPar() { return False; };
   virtual Bool freqDepMat() { return True; };
-
 
   // Default parameter value
   virtual Complex defaultPar() { return Complex(0.0); };
@@ -1011,15 +849,89 @@ protected:
   // Initialize trivial dJs
   virtual void initTrivDJ() {};
 
+  // Reference frequencies
+  Vector<Double> KrefFreqs_;
+
 private:
 
-  Vector<Double> KrefFreqs_;
   
 };
 
 
+// KMBD Jones provides support for multi-band delays
+class KMBDJones : public KJones {
+public:
+
+  // Constructor
+  KMBDJones(VisSet& vs);
+  KMBDJones(const Int& nAnt);
+
+  virtual ~KMBDJones();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::K; };
+
+  // Return type name as string
+  virtual String typeName()     { return "KMBD Jones"; };
+  virtual String longTypeName() { return "KMBD Jones (multi-band delay)"; };
+
+ 
+};
 
 
+
+class KAntPosJones : public KJones {
+public:
+
+  // Constructor
+  KAntPosJones(VisSet& vs);
+  KAntPosJones(const Int& nAnt);
+
+  virtual ~KAntPosJones();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::KAntPos; };
+
+  // Return type name as string
+  virtual String typeName()     { return "KAntPos Jones"; };
+  virtual String longTypeName() { return "KAntPos Jones (antenna position errors)"; };
+
+  // This is a scalar Jones matrix
+  virtual Jones::JonesType jonesType() { return Jones::Scalar; };
+
+  virtual Bool timeDepMat() { return True; };
+
+  // Local setApply to enforce spwmap=0 for all spw
+  virtual void setApply(const Record& apply);
+  using KJones::setApply;
+
+  // Type-specific specify
+  virtual void specify(const Record& specify);
+
+  // Calculate phase(chan) from delay
+  virtual void calcAllJones();
+
+protected:
+
+  // AntPos has three "real" parameters (dBx, dBy, dBz)
+  virtual Int nPar() { return 3; };
+
+  // Jones matrix elements are not trivial
+  virtual Bool trivialJonesElem() { return False; };
+
+  // dG/dp are not trivial
+  virtual Bool trivialDJ() { return False; };
+
+  // Initialize trivial dJs
+  virtual void initTrivDJ() {};
+
+private:
+  
+  // Some info from the MS we need for Measures work
+  ArrayMeasColumn<MDirection> dirmeas_p;
+  String epochref_p;
+
+};
 
 } //# NAMESPACE CASA - END
 

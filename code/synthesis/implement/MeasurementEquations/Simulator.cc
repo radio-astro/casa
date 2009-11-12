@@ -96,8 +96,6 @@
 
 #include <casa/namespace.h>
 
-#define RI_DEBUG
-
 
 Simulator::Simulator(): 
   msname_p(String("")), ms_p(0), mssel_p(0), vs_p(0), 
@@ -107,7 +105,8 @@ Simulator::Simulator():
   ac_p(0), vp_p(0), gvp_p(0), 
   sim_p(0),
   // epJ_p(0),
-  epJTableName_p()
+  epJTableName_p(),
+  nSpw(0)
 {
 }
 
@@ -121,7 +120,11 @@ Simulator::Simulator(String& msname)
     // epJ_p(0),
     epJTableName_p()
 {
+#ifdef RI_DEBUG
   LogIO os(LogOrigin("simulator", "simulator(String& msname)", WHERE));
+#else
+  LogIO os(LogOrigin("simulator", "simulator(String& msname)"));
+#endif
 
   defaults();
 
@@ -161,8 +164,20 @@ Simulator::Simulator(MeasurementSet &theMs)
   AlwaysAssert(ms_p, AipsError);
 
   // get info from the MS into Simulator:
-  if (!getconfig()) os << "Can't find antenna information for loaded MS" << LogIO::WARN;
+  if (!getconfig()) 
+    os << "Can't find antenna information for loaded MS" << LogIO::WARN;
+  if (!sim_p->getSpWindows(nSpw,spWindowName_p,nChan_p,startFreq_p,freqInc_p,stokesString_p))
+    os << "Can't find spectral window information for loaded MS" << LogIO::WARN;
+  if (!sim_p->getFields(nField,sourceName_p,sourceDirection_p,calCode_p))
+    os << "Can't find Field/Source information for loaded MS" << LogIO::WARN;
+
+  if (!sim_p->getFeedMode(feedMode_p))
+    os << "Can't find Feed information for loaded MS" << LogIO::WARN;
+  else
+    feedsHaveBeenSet=True;
+
 }
+
 
 
 Simulator::Simulator(const Simulator &other)
@@ -272,16 +287,27 @@ void Simulator::defaults()
   nmodels_p = 0;
 
   // info for fields and schedule:
-  sourceName_p="UNSET";
-  calCode_p="";
+  nField=0;
+  sourceName_p.resize(1);
+  sourceName_p[0]="UNSET";
+  calCode_p.resize(1);
+  calCode_p[0]="";
+  sourceDirection_p.resize(1);  
 
   // info for spectral windows
-  spWindowName_p="UNSET";
-  nChan_p=1;
-  startFreq_p=Quantity(50., "GHz");
-  freqInc_p=Quantity(0.1, "MHz");
-  freqRes_p=Quantity(0.1, "MHz");
-  stokesString_p="RR RL LR LL";
+  nSpw=0;
+  spWindowName_p.resize(1);
+  nChan_p.resize(1);
+  startFreq_p.resize(1);
+  freqInc_p.resize(1);
+  freqRes_p.resize(1);
+  stokesString_p.resize(1);
+  spWindowName_p[0]="UNSET";
+  nChan_p[0]=1;
+  startFreq_p[0]=Quantity(50., "GHz");
+  freqInc_p[0]=Quantity(0.1, "MHz");
+  freqRes_p[0]=Quantity(0.1, "MHz");
+  stokesString_p[0]="RR RL LR LL";
 
   // feeds
   feedMode_p = "perfect R L";
@@ -458,13 +484,14 @@ Bool Simulator::configSummary(LogIO& os)
   } else {
     os << "----------------------------------------------------------------------" << LogIO::POST;
     os << "Generating (u,v,w) using this configuration: " << LogIO::POST;
-    os << "   x     y     z     diam     mount " << LogIO::POST;
+    os << "   x     y     z     diam     mount     name " << LogIO::POST;
     for (uInt i=0; i< x_p.nelements(); i++) {
       os << x_p(i)
 	 << "  " << y_p(i)
 	 << "  " << z_p(i)
 	 << "  " << diam_p(i)
 	 << "  " << mount_p(i)
+	 << "  " << antName_p(i)
 	 << LogIO::POST;
     }
     os << " Coordsystem = " << coordsystem_p << LogIO::POST;
@@ -481,11 +508,15 @@ Bool Simulator::fieldSummary(LogIO& os)
 {
   os << "----------------------------------------------------------------------" << LogIO::POST;
   os << " Field information: " << LogIO::POST;
-  os << " Name  direction  calcode" << LogIO::POST; 
-  os << sourceName_p 
-     << "  " << formatDirection(sourceDirection_p)
-     << "  " << calCode_p
-     << LogIO::POST;
+  if (nField==0)
+    os << "NO Field window information set" << LogIO::POST;
+  else 
+    os << " Name  direction  calcode" << LogIO::POST; 
+  for (Int i=0;i<nField;i++) 
+    os << sourceName_p[i] 
+       << "  " << formatDirection(sourceDirection_p[i])
+       << "  " << calCode_p[i]
+       << LogIO::POST;
   return True;
 }
 
@@ -512,14 +543,18 @@ Bool Simulator::spWindowSummary(LogIO& os)
 {
   os << "----------------------------------------------------------------------" << LogIO::POST;
   os << " Spectral Windows information: " << LogIO::POST;
-  os << " Name  nchan  freq[GHz]  freqInc[MHz]  freqRes[MHz]  stokes" << LogIO::POST;
-  os << spWindowName_p 	 
-     << "  " << nChan_p
-     << "  " << startFreq_p.getValue("GHz")
-     << "  " << freqInc_p.getValue("MHz")
-     << "  " << freqRes_p.getValue("MHz")
-     << "  " << stokesString_p
-     << LogIO::POST;
+  if (nSpw==0)
+    os << "NO Spectral window information set" << LogIO::POST;
+  else 
+    os << " Name  nchan  freq[GHz]  freqInc[MHz]  freqRes[MHz]  stokes" << LogIO::POST;
+  for (Int i=0;i<nSpw;i++) 
+    os << spWindowName_p[i] 	 
+       << "  " << nChan_p[i]
+       << "  " << startFreq_p[i].getValue("GHz")
+       << "  " << freqInc_p[i].getValue("MHz")
+       << "  " << freqRes_p[i].getValue("MHz")
+       << "  " << stokesString_p[i]
+       << LogIO::POST;
   return True;
 }
 
@@ -763,24 +798,38 @@ Bool Simulator::setfield(const String& sourceName,
 			 const Quantity& distance)
 {
   LogIO os(LogOrigin("Simulator", "setfield()", WHERE));
-
+#ifndef RI_DEBUG
   try {
+#else 
+    os << LogIO::WARN << "debug mode - not catching errors." << LogIO::POST;  
+#endif
+    
     if (sourceName == "") {
       os << LogIO::SEVERE << "must provide a source name" << LogIO::POST;  
       return False;
     }
 
-    distance_p=distance;
-    sourceName_p=sourceName;
-    sourceDirection_p=sourceDirection;
-    calCode_p=calCode;
+    nField++;    
+#ifdef RI_DEBUG
+    os << "nField = " << nField << LogIO::POST;  
+#endif
+    distance_p.resize(nField,True);
+    distance_p[nField-1]=distance;
+    sourceName_p.resize(nField,True);
+    sourceName_p[nField-1]=sourceName;
+    sourceDirection_p.resize(nField,True);
+    sourceDirection_p[nField-1]=sourceDirection;
+    calCode_p.resize(nField,True);
+    calCode_p[nField-1]=calCode;
 
     sim_p->initFields(sourceName, sourceDirection, calCode);
 
+#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
+#endif
   return True;
 };
 
@@ -856,27 +905,47 @@ Bool Simulator::setspwindow(const String& spwName,
 
 {
   LogIO os(LogOrigin("Simulator", "setspwindow()", WHERE));
-
+#ifndef RI_DEBUG
   try {
+#else 
+    os << LogIO::WARN << "debug mode - not catching errors." << LogIO::POST;  
+#endif
     if (nChan == 0) {
       os << LogIO::SEVERE << "must provide nchannels" << LogIO::POST;  
       return False;
     }
 
-    spWindowName_p = spwName;   
-    nChan_p = nChan;          
-    startFreq_p = freq;      
-    freqInc_p = deltafreq;        
-    freqRes_p = freqresolution;        
-    stokesString_p = stokes;   
+    nSpw++;    
+#ifdef RI_DEBUG
+    os << "nspw = " << nSpw << LogIO::POST;  
+#endif
+    spWindowName_p.resize(nSpw,True);
+    spWindowName_p[nSpw-1] = spwName;   
+    nChan_p.resize(nSpw,True);
+    nChan_p[nSpw-1] = nChan;
+    startFreq_p.resize(nSpw,True);
+    startFreq_p[nSpw-1] = freq;
+    freqInc_p.resize(nSpw,True);
+    freqInc_p[nSpw-1] = deltafreq;
+    freqRes_p.resize(nSpw,True);
+    freqRes_p[nSpw-1] = freqresolution;        
+    stokesString_p.resize(nSpw,True);
+    stokesString_p[nSpw-1] = stokes;   
 
-    sim_p->initSpWindows(spWindowName_p, nChan_p, startFreq_p, freqInc_p, 
-			 freqRes_p, stokesString_p);
+#ifdef RI_DEBUG
+    os << "sending init to MSSim for spw = " << spWindowName_p[nSpw-1] << LogIO::POST;  
+#endif
 
+    sim_p->initSpWindows(spWindowName_p[nSpw-1], nChan_p[nSpw-1], 
+			 startFreq_p[nSpw-1], freqInc_p[nSpw-1], 
+			 freqRes_p[nSpw-1], stokesString_p[nSpw-1]);
+
+#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
+#endif
   return True;
 };
 
@@ -998,10 +1067,27 @@ Bool Simulator::setnoise2(const String& mode,
     simparDesc.addField ("tground"	  ,TpFloat);
     simparDesc.addField ("tcmb"           ,TpFloat);
 
-    String caltbl(caltable);
-    if (String(caltbl).matches (Regex(Regex::fromPattern("cal$")))) {      
-      caltbl.resize(caltable.length()-3);
-    }
+    String caltbl=caltable;
+    caltbl.trim();
+    string::size_type strlen;
+    strlen=caltbl.length();
+    if (strlen>3) 
+      if (caltbl.substr(strlen-3,3)=="cal") {
+	//    if (String(caltbl).matches (Regex(Regex::fromPattern("cal$")))) {
+	caltbl.resize(strlen-3);
+	strlen-=3;
+      }
+    if (strlen>1)
+      if (caltbl.substr(strlen-1,1)==".") {
+	caltbl.resize(strlen-1);
+	strlen-=1;
+      }
+    if (strlen>1)
+      if (caltbl.substr(strlen-1,1)=="_") {
+	caltbl.resize(strlen-1);
+	strlen-=1;
+      }
+
     
     Record simpar(simparDesc);
     simpar.define ("type", "A Noise");
@@ -1046,6 +1132,11 @@ Bool Simulator::setnoise2(const String& mode,
 
 
       // simpar.define ("amplitude", tsys );
+      // RI TODO setnoise2: create an Mf or M depending on user prefs
+
+      // tau from ATM with user unput pwv or user can input a freq-indep tau
+      // need mode="calculate-atm" and calculate-tau ?
+
       simpar.define ("type", "M");
       simpar.define ("caltable", caltbl+".M.cal");
       simpar.define ("mode", "tsys");  
@@ -1058,12 +1149,6 @@ Bool Simulator::setnoise2(const String& mode,
       
       // calculate the M 
       calc_corrupt(svc,simpar);
-
-      // RI TODO Sim::setnoise2: change M,Topac to use an anoisecorruptor?
-      // tau from ATM with user unput pwv or user can input a freq-indep tau
-      // need mode="calculate-atm" and calculate-tau ?
-
-      // RI TODO Sim::setnoise2 create a Topac based in tau, or need a TOpacf that knows to use ATM and pwv
      
     } 
 
@@ -1292,8 +1377,10 @@ Bool Simulator::setnoise(const String& mode,
   LogIO os(LogOrigin("Simulator", "setnoise()", WHERE));
   try {
     
-    os << "In Simulator::setnoise() " << endl;
+    //os << "In Simulator::setnoise() " << endl;
     noisemode_p = mode;
+
+    os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise2" << LogIO::POST;
 
     if(mode=="table") {
       os << LogIO::SEVERE << "Cannot yet read from table" << LogIO::POST;
@@ -1457,7 +1544,7 @@ SolvableVisCal *Simulator::create_corrupt(const Record& simpar)
     svc = createSolvableVisCal(upType,*vs_p);
 
     // debugging info
-    svc->setPrtlev(3);
+    svc->setPrtlev(2);
 
     // Generic VisCal setSimulate will throw an exception -- 
     //   each VC needs to have its own.
@@ -1571,10 +1658,22 @@ Bool Simulator::calc_corrupt(SolvableVisCal *svc, const Record& simpar)
     columns[2]=MS::FIELD_ID;
     columns[3]=MS::DATA_DESC_ID;
     columns[4]=MS::TIME;
-    vs_p->resetVisIter(columns,0.0);
+
+    // drop chunking time interval down to the simulation interval, else will 
+    // chunk by entuire scans.
+    Double iterInterval(max(svc->interval(),DBL_MIN));
+    if (svc->interval() < 0.0) {   // means no interval (infinite solint)
+      iterInterval=0.0;
+      svc->interval()=DBL_MAX;   //RI TODO Sim::calc sets svc:interval ->max interval
+    }
+    vs_p->resetVisIter(columns,iterInterval);
+  
+
     VisIter& vi(vs_p->iter());
     //    VisBuffer vb(vi);
     
+    // there's a member variable in Simulator nSpw, should we verify that 
+    // this is the same? probably.
     Int nSpw=vs_p->numberSpw();
     // same as cs_p->nSpw() ?    
     //AlwaysAssert(nSpw == svc->cs().nSpw(), AipsError);
@@ -1586,8 +1685,8 @@ Bool Simulator::calc_corrupt(SolvableVisCal *svc, const Record& simpar)
     Double t0(0.);
 
     // debug:
-    cout << "nChunkPerSim = ";
-    cout << 0 << " | " << nChunkPerSim[0] << " ; " << nSim-1 << " | " << nChunkPerSim[nSim-1] << endl;
+    //    cout << "nChunkPerSim = ";
+    //    cout << 0 << " | " << nChunkPerSim[0] << " ; " << nSim-1 << " | " << nChunkPerSim[nSim-1] << endl;
 
     for (Int isim=0;isim<nSim && vi.moreChunks();++isim) {      
       Int thisSpw=svc->spwMap()(vi.spectralWindow());
@@ -1617,6 +1716,8 @@ Bool Simulator::calc_corrupt(SolvableVisCal *svc, const Record& simpar)
 //      svc->inflate(Vector<Int>(1,((const SolvableVisCal*)svc)->nChanPar()),
 //		   Vector<Int>(1,0), 
 //		   Vector<Int>(1,slotidx(thisSpw)));
+//
+// George claims that if freqDepPar is set the channel sizing is automagic.
       
 	if (!svc->simPar(vi,nChunkPerSim[isim])) 
 	  throw(AipsError("Error calculating simulated VC")); 
@@ -1846,6 +1947,12 @@ Bool Simulator::corrupt() {
 	    // Deposit corrupted visibilities into DATA
 	    // vi.setVis(vb.modelVisCube(), VisibilityIterator::Observed);
 	    vi.setVis(vb.visCube(), VisibilityIterator::Observed);
+	    // for now, Also deposit in corrected 
+	    // (until newmmssimulator doesn't make corrected anymore)
+	    // actually we should have this check if corrected is there, 
+	    // and if it is for some reason, copy data into it.
+	    // RI TODO Sim::corrupt check for existence of Corrected
+	    vi.setVis(vb.visCube(), VisibilityIterator::Corrected);
 
 	    // RI TODO is this 100% right?
 	    vi.setWeightMat(vb.weightMat());
@@ -1857,22 +1964,19 @@ Bool Simulator::corrupt() {
       }
     }
 
-    // Old-fashioned noise, for now
-//    if(ac_p != NULL){
-//      os << LogIO::NORMAL << "Doing noise corruption " 
-//	 << LogIO::POST;
-//      for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-//	for (vi.origin(); vi.more(); vi++) {
-//
-//	  ac_p->apply(vb);
-//	  vi.setVis(vb.visibility(), VisibilityIterator::Observed);
-//	  vi.setVis(vb.visibility(), VisibilityIterator::Corrected);
-//	}
-//      }
-//    }
 
-    // Clear scratch columns - this is private, should it be?
-    // vs_p->removeCalSet(*ms_p);
+    // Old-fashioned noise, for now
+    if(ac_p != NULL){
+      os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise2" << LogIO::POST;
+      for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+	for (vi.origin(); vi.more(); vi++) {
+	  
+	  ac_p->apply(vb);
+	  vi.setVis(vb.visibility(), VisibilityIterator::Observed);
+	  vi.setVis(vb.visibility(), VisibilityIterator::Corrected);
+	}
+      }
+    }
 
     // Flush to disk
     vs_p->flush();
@@ -1949,6 +2053,8 @@ Bool Simulator::observe(const String&   sourcename,
   } 
   return True;
 }
+
+
 
 Bool Simulator::predict(const Vector<String>& modelImage, 
 			   const String& compList,
@@ -2085,13 +2191,14 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	    images_p[model]=new PagedImage<Float>(image(model));
 
 	    AlwaysAssert(images_p[model], AipsError);
+	    // RI TODO is this a logic problem with more than one source??
 	    // Add distance
-	    if(abs(distance_p.get().getValue())>0.0) {
-	      os << "  Refocusing to distance " << distance_p.get("km").getValue()
+	    if(abs(distance_p[nField-1].get().getValue())>0.0) {
+	      os << "  Refocusing to distance " << distance_p[nField-1].get("km").getValue()
 		 << " km" << LogIO::POST;
 	    }
 	    Record info(images_p[model]->miscInfo());
-	    info.define("distance", distance_p.get("m").getValue());
+	    info.define("distance", distance_p[nField-1].get("m").getValue());
 	    images_p[model]->setMiscInfo(info);
 	    if(sm_p->add(*images_p[model])!=model) {
 	      os << LogIO::SEVERE << "Error adding model " << model+1 << LogIO::POST;
@@ -2134,7 +2241,8 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       }
       else if(ftmachine_p=="mosaic") {
 	os << "Performing Mosaic gridding" << LogIO::POST;
-	ft_p = new MosaicFT(gvp_p, mLocation_p, stokesString_p, cache_p/2, tile_p, True);
+	// RI TODO need stokesString for current spw - e.g. currSpw()?
+	ft_p = new MosaicFT(gvp_p, mLocation_p, stokesString_p[0], cache_p/2, tile_p, True);
       }
       else if(ftmachine_p=="both") {
 	os << "Performing single dish gridding with convolution function "
@@ -2158,14 +2266,15 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       //    if(wprojPlanes_p>1) {
       if (ftmachine_p=="wproject") {
 	os << "Fourier transforms will use specified common tangent point:" << LogIO::POST;
-	os << formatDirection(sourceDirection_p) << LogIO::POST;
+	// RI TODO how does this work with more than one field?
+	os << formatDirection(sourceDirection_p[nField-1]) << LogIO::POST;
 	//      ft_p = new WProjectFT(*ams, facets_p, cache_p/2, tile_p, False);
 	ft_p = new WProjectFT(wprojPlanes_p, mLocation_p, cache_p/2, tile_p, False);
       }
       else if (ftmachine_p=="pbwproject") {
 	os << "Fourier transfroms will use specified common tangent point and PBs" 
 	   << LogIO::POST;
-	os << formatDirection(sourceDirection_p) << LogIO::POST;
+	os << formatDirection(sourceDirection_p[nField-1]) << LogIO::POST;
 	
 	//	if (!epJ_p)
 	  os << "Antenna pointing related term (EPJones) not set.  "
@@ -2530,7 +2639,8 @@ Bool Simulator::setdata(const Vector<Int>& spectralwindowids,
       Int fieldsel=0;
       if(fieldids.nelements() >0)
 	fieldsel=fieldids(0);
-      sourceDirection_p=(vs_p->iter()).msColumns().field().phaseDirMeas(fieldsel); 
+      // RI TODO sim:setdata need nField=fieldids.nelements()?
+      sourceDirection_p[nField-1]=(vs_p->iter()).msColumns().field().phaseDirMeas(fieldsel); 
     }
     return True;
   } catch (AipsError x) {

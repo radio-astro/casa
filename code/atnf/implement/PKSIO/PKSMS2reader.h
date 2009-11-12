@@ -221,6 +221,7 @@ class PKSMS2reader : public PKSreader
     ROArrayColumn<Float>    cBaseSubCol;
     ROArrayColumn<Float>    cFloatDataCol;
     ROArrayColumn<Bool>     cFlagCol;
+    ROScalarColumn<Bool>    cFlagRowCol;
     ROScalarColumn<Complex> cXCalFctrCol;
     ROArrayColumn<Complex>  cDataCol;
     ROArrayColumn<Complex>  cCorrectedDataCol;

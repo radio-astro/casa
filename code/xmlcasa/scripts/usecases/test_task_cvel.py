@@ -7,6 +7,7 @@ vis_a = 'ngc4826.ms'
 vis_b = 'test.ms'
 vis_c = 'jupiter6cm.demo.ms'
 vis_d = 'ngc4826.tutorial.ngc4826.ll.5.ms'
+vis_e = 'g19_d2usb_targets_line-shortened.ms'
 
 if(not os.path.exists(vis_a)):
     importuvfits(fitsfile=os.environ['CASADATA']+'/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', vis=vis_a)
@@ -16,6 +17,8 @@ if(not os.path.exists(vis_c)):
     importuvfits(fitsfile=os.environ['CASADATA']+'/regression/jupiter6cm/jupiter6cm.fits', vis=vis_c)
 if(not os.path.exists(vis_d)):
     importuvfits(fitsfile=os.environ['CASADATA']+'/regression/ngc4826/fitsfiles/ngc4826.ll.fits5', vis=vis_d)
+if(not os.path.exists(vis_e)):
+    os.system('cp -R '+os.environ['CASADATA']+'/regression/cvel/input/g19_d2usb_targets_line-shortened.ms .')
 
 def verify_ms(msname, expnumspws, expnumchan, inspw):
     tb.open(msname+'/SPECTRAL_WINDOW')
@@ -41,7 +44,7 @@ keeptestlist = True
 try:
     print "List of tests to be executed ...", testlist
 except:
-    print "Global variable testlist not set. Executing all tests."
+    print "Global variable testlist not set."
     testlist = []
 if (testlist==[]):
     print "testlist empty. Executing all tests."
@@ -537,7 +540,7 @@ if (testnumber in testlist):
         os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
         verify_ms(omsname, 2, 10, 0)
     except:
-        print myname, ': *** Unxpected error ***'   
+        print myname, ': *** Unexpected error ***'   
         failures += 1
 
 testnumber = 18
@@ -571,8 +574,361 @@ if (testnumber in testlist):
         os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
         verify_ms(omsname, 2, 10, 0)
     except:
-        print myname, ': *** Unxpected error ***'   
+        print myname, ': *** Unexpected error ***'   
         failures += 1
+
+testnumber = 19
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    vis = 'myinput.ms'
+    outputvis = 'cvel-output.ms'
+    # regrid
+    mode='channel'
+    nchan = 10
+    start = 100
+    width = 2
+    phasecenter = "J2000 18h25m56.09 -12d04m28.20"
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 24 spws to combine, channel mode, 10 output channels"
+        rval = cvel()
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 1, 10, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
+testnumber = 20
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    vis = 'myinput.ms'
+    outputvis = 'cvel-output.ms'
+    # regrid
+    mode='channel'
+    nchan = 111
+    start = 201
+    width = 3
+    phasecenter = "J2000 18h25m56.09 -12d04m28.20"
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 24 spws to combine, channel mode, 111 output channels"
+        rval = cvel()
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 1, 111, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
+testnumber = 21
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    vis = 'myinput.ms'
+    outputvis = 'cvel-output.ms'
+    # regrid
+    mode='frequency'
+    nchan = 21
+    start = '229586.0MHz'
+    width = '1600kHz'
+    phasecenter = "J2000 18h25m56.09 -12d04m28.20"
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 24 spws to combine, frequency mode, 21 output channels"
+        rval = cvel()
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 1, 21, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
+testnumber = 22
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    vis = 'myinput.ms'
+    outputvis = 'cvel-output.ms'
+    # regrid
+    mode='frequency'
+    nchan = 210
+    start = '229586.0MHz'
+    width = '-2400kHz'
+    phasecenter = "J2000 18h25m56.09 -12d04m28.20"
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 24 spws to combine, frequency mode, 210 output channels, negative width (sign will be ignored)"
+        rval = cvel()
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 1, 210, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
+testnumber = 23
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    vis = 'myinput.ms'
+    outputvis = 'cvel-output.ms'
+    # regrid
+    mode='velocity'
+    nchan = 30
+    restfreq = '220398.676MHz'
+    vrad = (220398.676E6 - 229586E6)/220398.676E6 * 2.99792E8
+    start = str(vrad)+'m/s'
+    vwidth = ((220398.676E6 - 229586E6+1600E3)/220398.676E6 * 2.99792E8) - vrad
+    width = str(vwidth)+'m/s'
+    phasecenter = "J2000 18h25m56.09 -12d04m28.20"
+    veltype = 'radio'
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 24 spws to combine, radio velocity mode, 30 output channels"
+        print "start = ", start, ", width = ", width
+        rval = cvel()
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 1, 30, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
+testnumber = 24
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    vis = 'myinput.ms'
+    outputvis = 'cvel-output.ms'
+    # regrid
+    mode='velocity'
+    nchan = 35
+    restfreq = '220398.676MHz'
+    vrad = (220398.676E6 - 229586E6)/220398.676E6 * 2.99792E8
+    start = str(vrad)+'m/s'
+    vwidth = ((220398.676E6 - 229586E6+3200E3)/220398.676E6 * 2.99792E8) - vrad
+    width = str(vwidth)+'m/s'
+    phasecenter = "J2000 18h25m56.09 -12d04m28.20"
+    veltype = 'radio'
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 24 spws to combine, radio velocity mode, 35 output channels"
+        print "start = ", start, ", width = ", width
+        rval = cvel()
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 1, 35, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
+testnumber = 25
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    vis = 'myinput.ms'
+    outputvis = 'cvel-output.ms'
+    # regrid
+    mode='velocity'
+    nchan = 40
+    restfreq = '220398.676MHz'
+    lambda0 = 2.99792E8/220398.676E6
+    lambda1 = 2.99792E8/229586E6
+    vopt = (lambda1-lambda0)/lambda0 * 2.99792E8
+    start = str(vopt)+'m/s'
+    lambda2 = 2.99792E8/(229586E6+1600E3)
+    vwidth = vopt - (lambda2-lambda0)/lambda0 * 2.99792E8
+    width = str(vwidth)+'m/s'
+    phasecenter = "J2000 18h25m56.09 -12d04m28.20"
+    veltype = 'optical'
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 24 spws to combine, optical velocity mode, 40 output channels"
+        print "start = ", start, ", width = ", width
+        rval = cvel()
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 1, 40, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
+testnumber = 26
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    vis = 'myinput.ms'
+    outputvis = 'cvel-output.ms'
+    # regrid
+    mode='velocity'
+    nchan = 41
+    restfreq = '220398.676MHz'
+    lambda0 = 2.99792E8/220398.676E6
+    lambda1 = 2.99792E8/229586E6
+    vopt = (lambda1-lambda0)/lambda0 * 2.99792E8
+    start = str(vopt)+'m/s'
+    lambda2 = 2.99792E8/(229586E6+1200E3)
+    vwidth = vopt - (lambda2-lambda0)/lambda0 * 2.99792E8
+    width = str(vwidth)+'m/s'
+    phasecenter = "J2000 18h25m56.09 -12d04m28.20"
+    veltype = 'optical'
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 24 spws to combine, optical velocity mode, 40 output channels"
+        print "start = ", start, ", width = ", width
+        rval = cvel()
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 1, 41, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
+testnumber = 27
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    vis = 'myinput.ms'
+    outputvis = 'cvel-output.ms'
+    # no regrid
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 24 spws to combine, scratch columns, no regridding"
+        print "start = ", start, ", width = ", width
+        rval = cvel()
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 1, 2439, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
+testnumber = 28
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    vis = 'myinput.ms'
+    outputvis = 'cvel-output.ms'
+    # no regrid
+    mode="channel"
+    start=1500
+    width=2
+    nchan=30
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 24 spws to combine, scratch columns, channel mode, 30 channels "
+        rval = cvel()
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 1, 30, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+        
+testnumber = 29
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    vis = 'myinput.ms'
+    outputvis = 'cvel-output.ms'
+    # no regrid
+    mode="channel"
+    start=1500
+    width=2
+    nchan=31
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 24 spws to combine, scratch columns, channel mode, 31 channels "
+        rval = cvel()
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 1, 31, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
+testnumber = 30
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    vis = 'myinput.ms'
+    outputvis = 'cvel-output.ms'
+    # no regrid
+    mode="channel_b"
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 24 spws to combine, scratch columns, mode channel_b, no regridding"
+        rval = cvel()
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 1, 2425, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
 
 
 

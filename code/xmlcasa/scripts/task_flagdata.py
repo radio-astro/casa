@@ -226,6 +226,15 @@ def flagdata(vis = None,
                 #raise
         fg.done()
 
+        
+        #write history
+        ms.open(vis,nomodify=False)
+        ms.writehistory(message='taskname = flagdata', origin='flagdata')
+        ms.writehistory(message='vis      = "' + str(vis) + '"', origin='flagdata')
+        ms.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata')
+        ms.close()
+
+        return
 
 #
 # Handle mode = 'manualflag' and mode = 'quack'
@@ -308,22 +317,6 @@ def manualflag_quack(mode, selectdata, flagbackup, **params):
                         rename_params(param_i)
                         if debug: print param_i
                         fg.setmanualflags(**param_i)
-#                                 fg.setmanualflags(field=params['field'][i], \
-#                                                   spw=params['spw'][i], \
-#                                                   array=params['array'][i], \
-#                                                   feed=params['feed'][i], \
-#                                                   scan=params['scan'][i], \
-#                                                   baseline=params['antenna'][i], \
-#                                                   uvrange=params['uvrange'][i], \
-#                                                   time=params['timerange'][i], \
-#                                                   correlation=params['correlation'][i], \
-#                                                   autocorrelation=params['autocorr'][i], \
-#                                                   unflag=params['unflag'][i], \
-#                                                   clipexpr=params['clipexpr'][i], \
-#                                                   cliprange=params['clipminmax'][i], \
-#                                                   clipcolumn=params['clipcolumn'][i], \
-#                                                   outside=params['clipoutside'][i])
-#                                                   quackinterval=quackinterval[i])
 
         if flagbackup:
                 backup_flags(mode)

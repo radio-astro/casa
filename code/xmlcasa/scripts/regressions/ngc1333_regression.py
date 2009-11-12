@@ -993,8 +993,11 @@ cal1_8may=5.988 # (channel averaged)
 cal2_8may=7.232 # (channel averaged)
 src2may=3.091   # (channel averaged)
 src8may=8.823   # (channel averaged)
-immax=0.493
-imrms=0.0671
+#immax=0.493
+#imrms=0.0671
+#new values after changing to flat sigma image
+immax=0.7339
+imrms=0.07303
 
 diff_cal1_2may=abs((cal1_2may-gcal1_2may)/cal1_2may)
 diff_cal2_2may=abs((cal2_2may-gcal2_2may)/cal2_2may)

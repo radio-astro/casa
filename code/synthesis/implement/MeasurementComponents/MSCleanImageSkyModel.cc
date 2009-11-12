@@ -225,6 +225,8 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	  }
 	  else {
 	    cleaner.setMask( subMask );
+	    //Using mask so the user knows best.
+	    cleaner.ignoreCenterBox(True);
 	  }
 	}
 
