@@ -824,6 +824,26 @@ class scantable(Scantable):
             else: raise
         self._add_history("flag", varlist)
 
+    def flag_row(self, rows=[], unflag=False):
+        """
+        Flag the selected data in row-based manner.
+        Parameters:
+            rows:   list of row numbers to be flagged. Default is no row (must be explicitly specified to execute row-based flagging).
+            unflag: if True, unflag the data.
+        """
+        varlist = vars()
+        try:
+            self._flag_row(rows, unflag)
+        except RuntimeError, msg:
+            if rcParams['verbose']:
+                print_log()
+                asaplog.push(msg.message)
+                print_log('ERROR')
+                return
+            else: raise
+        self._add_history("flag_row", varlist)
+        
+        
     def lag_flag(self, frequency, width=0.0, unit="GHz", insitu=None):
         """
         Flag the data in 'lag' space by providing a frequency to remove.
@@ -1577,13 +1597,13 @@ class scantable(Scantable):
             else:
                 f.set_function(poly=order)
 
-            rows = range(self.nrow())
+            rows = range(workscan.nrow())
             if len(rows) > 0:
                 self.blpars = []
             
             for r in rows:
                 # take into account flagtra info (CAS-1434)
-                flagtra = self._getmask(r)
+                flagtra = workscan._getmask(r)
                 actualmask = mask[:]
                 if len(actualmask) == 0:
                     actualmask = list(flagtra[:])
@@ -1593,12 +1613,11 @@ class scantable(Scantable):
                     else:
                         for i in range(0, len(actualmask)):
                             actualmask[i] = actualmask[i] and flagtra[i]
-                f.set_scan(self, actualmask)
-                f.x = self._getabcissa(r)
-                f.y = self._getspectrum(r)
+                f.set_scan(workscan, actualmask)
+                f.x = workscan._getabcissa(r)
+                f.y = workscan._getspectrum(r)
                 f.data = None
                 f.fit()
-                fpar = f.get_parameters()
                 if plot:
                     f.plot(residual=True)
                     x = raw_input("Accept fit ( [y]/n ): ")
@@ -1606,15 +1625,11 @@ class scantable(Scantable):
                         self.blpars.append(None)
                         continue
                 workscan._setspectrum(f.fitter.getresidual(), r)
-                self.blpars.append(fpar)
+                self.blpars.append(f.get_parameters())
+
             if plot:
                 f._p.unmap()
                 f._p = None
-            #f.set_scan(self, mask)
-            #s = f.auto_fit(insitu, plot=plot)
-            ## Save parameters of baseline fits as a class attribute.
-            ## NOTICE: It does not reflect changes in scantable!
-            #self.blpars = f.blpars
             workscan._add_history("poly_baseline", varlist)
             print_log()
             if insitu: self._assign(workscan)
@@ -1758,7 +1773,6 @@ class scantable(Scantable):
             msg = "mask range: "+str(masklist)
             asaplog.push(msg, False)
 
-            fpar = f.get_parameters()
             if plot:
                 f.plot(residual=True)
                 x = raw_input("Accept fit ( [y]/n ): ")
@@ -1766,8 +1780,9 @@ class scantable(Scantable):
                     self.blpars.append(None)
                     self.masklists.append(None)
                     continue
+
             workscan._setspectrum(f.fitter.getresidual(), r)
-            self.blpars.append(fpar)
+            self.blpars.append(f.get_parameters())
             self.masklists.append(masklist)
         if plot:
             f._p.unmap()

@@ -1,3 +1,4 @@
+
 //#---------------------------------------------------------------------------
 //# STAsciiWriter.cc: ASAP class to write out single dish spectra as FITS images
 //#---------------------------------------------------------------------------
@@ -26,7 +27,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STAsciiWriter.cpp 1446 2008-11-12 06:04:01Z TakTsutsumi $
+//# $Id: STAsciiWriter.cpp 1657 2009-11-05 10:50:20Z WataruKawasaki $
 //#---------------------------------------------------------------------------
 
 #include <casa/aips.h>
@@ -127,8 +128,13 @@ Bool STAsciiWriter::write(const Scantable& stable, const String& fileName)
     //        stable.molecules().getRestFrequency(rec.asuInt("MOLECULE_ID") ));
     addLine(of, "Rest Freq.", restfreqs[0]);
     for ( unsigned int i=1; i<nf; ++i) {
-        addLine(of, " ", restfreqs[i]);
-    } 
+      addLine(of, " ", restfreqs[i]);
+    }
+    ostringstream osflagrow;
+    for ( unsigned int i=0; i<t.nrow(); ++i) {
+      osflagrow << "Pol" << i << ":" << ((row.get(i).asuInt("FLAGROW") > 0) ? "True" : "False") << " ";
+    }
+    addLine(of, "Row_Flagged", String(osflagrow));
     of << setfill('#') << setw(70) << "" << setfill(' ') << endl;
 
     of << std::left << setw(16) << "x";

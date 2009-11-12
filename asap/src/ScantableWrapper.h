@@ -107,6 +107,12 @@ public:
   void flag(const std::vector<bool>& msk=std::vector<bool>(), bool unflag=false)
     { table_->flag(msk, unflag); }
 
+  void flagRow(const std::vector<casa::uInt>& rows=std::vector<casa::uInt>(), bool unflag=false)
+    { table_->flagRow(rows, unflag); }
+
+  bool getFlagRow(int whichrow=0) const
+    { return table_->getFlagRow(whichrow); }
+
   std::string getSourceName(int whichrow=0) const
     { return table_->getSourceName(whichrow); }
 

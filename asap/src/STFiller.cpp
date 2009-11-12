@@ -439,6 +439,10 @@ int asap::STFiller::read( )
       table_->table().addRow();
       row.put(table_->table().nrow()-1, rec);
     }
+
+    RecordFieldPtr< uInt > flagrowCol(rec, "FLAGROW");
+    *flagrowCol = pksrec.flagrow;
+
     if ( haveXPol_[0] ) {
       // no tsys given for xpol, so emulate it
       tsysvec = sqrt(pksrec.tsys[0]*pksrec.tsys[1]);

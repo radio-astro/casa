@@ -108,6 +108,7 @@ Scantable::Scantable(const std::string& name, Table::TableType ttype) :
   type_(ttype)
 {
   initFactories();
+
   Table tab(name, Table::Update);
   uInt version = tab.keywordSet().asuInt("VERSION");
   if (version != version_) {
@@ -123,6 +124,27 @@ Scantable::Scantable(const std::string& name, Table::TableType ttype) :
   originalTable_ = table_;
   attach();
 }
+/*
+Scantable::Scantable(const std::string& name, Table::TableType ttype) :
+  type_(ttype)
+{
+  initFactories();
+  Table tab(name, Table::Update);
+  uInt version = tab.keywordSet().asuInt("VERSION");
+  if (version != version_) {
+    throw(AipsError("Unsupported version of ASAP file."));
+  }
+  if ( type_ == Table::Memory ) {
+    table_ = tab.copyToMemoryTable(generateName());
+  } else {
+    table_ = tab;
+  }
+
+  attachSubtables();
+  originalTable_ = table_;
+  attach();
+}
+*/
 
 Scantable::Scantable( const Scantable& other, bool clear )
 {
@@ -203,6 +225,8 @@ void Scantable::setupMainTable()
   td.addColumn(ScalarColumnDesc<uInt>("MOLECULE_ID"));
   td.addColumn(ScalarColumnDesc<Int>("REFBEAMNO"));
 
+  td.addColumn(ScalarColumnDesc<uInt>("FLAGROW"));
+
   td.addColumn(ScalarColumnDesc<Double>("TIME"));
   TableMeasRefDesc measRef(MEpoch::UTC); // UTC as default
   TableMeasValueDesc measVal(td, "TIME");
@@ -261,7 +285,6 @@ void Scantable::setupMainTable()
   originalTable_ = table_;
 }
 
-
 void Scantable::attach()
 {
   timeCol_.attach(table_, "TIME");
@@ -288,6 +311,64 @@ void Scantable::attach()
   mtcalidCol_.attach(table_, "TCAL_ID");
   mfocusidCol_.attach(table_, "FOCUS_ID");
   mmolidCol_.attach(table_, "MOLECULE_ID");
+
+  //Add auxiliary column for row-based flagging (CAS-1433 Wataru Kawasaki)
+  attachAuxColumnDef(flagrowCol_, "FLAGROW", 0);
+
+}
+
+template<class T, class T2>
+void Scantable::attachAuxColumnDef(ScalarColumn<T>& col,
+				   const String& colName,
+				   const T2& defValue)
+{
+  try {
+    col.attach(table_, colName);
+  } catch (TableError& err) {
+    String errMesg = err.getMesg();
+    if (errMesg == "Table column " + colName + " is unknown") {
+      table_.addColumn(ScalarColumnDesc<T>(colName));
+      col.attach(table_, colName);
+      col.fillColumn(static_cast<T>(defValue));
+    } else {
+      throw;
+    }
+  } catch (...) {
+    throw;
+  }
+}
+
+template<class T, class T2>
+void Scantable::attachAuxColumnDef(ArrayColumn<T>& col,
+				   const String& colName,
+				   const Array<T2>& defValue)
+{
+  try {
+    col.attach(table_, colName);
+  } catch (TableError& err) {
+    String errMesg = err.getMesg();
+    if (errMesg == "Table column " + colName + " is unknown") {
+      table_.addColumn(ArrayColumnDesc<T>(colName));
+      col.attach(table_, colName);
+
+      int size = 0;
+      ArrayIterator<T2>& it = defValue.begin();
+      while (it != defValue.end()) {
+	++size;
+	++it;
+      }
+      IPosition ip(1, size);
+      Array<T>& arr(ip);
+      for (int i = 0; i < size; ++i)
+	arr[i] = static_cast<T>(defValue[i]);
+      
+      col.fillColumn(arr);
+    } else {
+      throw;
+    }
+  } catch (...) {
+    throw;
+  }
 }
 
 void Scantable::setHeader(const STHeader& sdh)
@@ -667,6 +748,17 @@ void Scantable::flag(const std::vector<bool>& msk, bool unflag)
     }
     flagsCol_.put(i, flgs);
   }
+}
+
+void Scantable::flagRow(const std::vector<uInt>& rows, bool unflag)
+{
+  if ( selector_.empty() && (rows.size() == table_.nrow()) )
+    throw(AipsError("Trying to flag whole scantable."));
+
+  uInt rowflag = (unflag ? 0 : 1);
+  std::vector<uInt>::const_iterator it;
+  for (it = rows.begin(); it != rows.end(); ++it)
+    flagrowCol_.put(*it, rowflag);
 }
 
 std::vector<bool> Scantable::getMask(int whichrow) const

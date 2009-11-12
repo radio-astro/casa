@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_Scantable.cpp 1446 2008-11-12 06:04:01Z TakTsutsumi $
+//# $Id: python_Scantable.cpp 1656 2009-11-05 10:47:49Z WataruKawasaki $
 //#---------------------------------------------------------------------------
 #include <vector>
 
@@ -104,6 +104,9 @@ void python_Scantable() {
          (boost::python::arg("whichrow")=0) )
     .def("get_antennaname", &ScantableWrapper::getAntennaName)
     .def("_flag", &ScantableWrapper::flag)
+    .def("_flag_row", &ScantableWrapper::flagRow)
+    .def("_getflagrow", &ScantableWrapper::getFlagRow,
+	 (boost::python::arg("whichrow")=0) )
     .def("_save",  &ScantableWrapper::makePersistent)
     .def("_summary",  &ScantableWrapper::summary,
          (boost::python::arg("verbose")=true) )
