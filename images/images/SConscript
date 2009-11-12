@@ -46,17 +46,26 @@ testenv = myenv.Clone()
 # SGlob works in build dir, so only for cc files
 imtests = testenv.SGlob("Images/test/*.cc")
 wnbttests = testenv.SGlob("Wnbt/test/*.cc")
+regtests = testenv.SGlob("Regions/test/*.cc")
 # point to tests local includes
 testenv.PrependUnique(LIBPATH=[testenv["BUILDDIR"]])
 # allow either linking against shared or static, static if both present
 testenv.PrependUnique(LIBS=slib)
+testenvnoaux = testenv.Clone()
 testenv2 = testenv.Clone()
+iotests = testenv2.SGlob("IO/test/*.cc")
 # add files necessary for testing which are not names tXYZ.*
-testenv["ASSAYAUX"] = testenv.SGlob("*/test/*.fits")
-testenv["ASSAYAUX"] += testenv.SGlob("*/test/*.im")
-map(testenv.addAssayTest, imtests)
+testenv["ASSAYAUX"] = testenv.SGlob("Images/test/*.fits")
+testenv["ASSAYAUX"] += testenv.SGlob("Images/test/*.im")
+testenv["ASSAYAUX"] += testenv.SGlob("Images/test/*.txt")
 
-map(testenv2.addAssayTest, wnbttests)
+testenv2["ASSAYAUX"] = testenv2.SGlob("IO/test/*.fits")
+testenv2["ASSAYAUX"] += testenv2.SGlob("IO/test/*.txt")
+map(testenv2.addAssayTest, iotests) 
+
+map(testenv.addAssayTest, imtests)
+map(testenvnoaux.addAssayTest, wnbttests)
+map(testenvnoaux.addAssayTest, regtests)
 
 # install headers, only works with absolute dir.
 installer.AddHeaders( rootdir, "*.h", "casacore", True )
