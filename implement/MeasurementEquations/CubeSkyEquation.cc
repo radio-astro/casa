@@ -1226,7 +1226,8 @@ void CubeSkyEquation::fixImageScale()
 
 	      ///////////
 	      LatticeExprNode LEN1 = min( ggSSub );
-	      cout << "Max " << planeMax << " min " << LEN1.getFloat() << endl;
+	      os << LogIO::DEBUG1
+                 << "Max " << planeMax << " min " << LEN1.getFloat() << LogIO::POST;
 
 	      //////////
 	      ///As we chop the image later...the weight can vary per channel
