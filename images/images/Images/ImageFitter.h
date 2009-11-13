@@ -116,6 +116,9 @@ namespace casa {
             // that object.
             ComponentList fit();
 
+            // Did the fit converge? Throw AipsError if the fit has not yet been done.
+			Bool converged() const;
+
         private:
 
             LogIO *itsLog;
@@ -127,7 +130,7 @@ namespace casa {
             Vector<Float> includePixelRange, excludePixelRange;
             ComponentList estimates, results;
             Vector<String> fixed;
-            Bool logfileAppend;
+            Bool logfileAppend, fitConverged, fitDone;
             Vector<Quantity> peakIntensities, fluxDensities, majorAxes, minorAxes, positionAngles;
             Vector<Vector<Double> > pixelPositions;
 
@@ -151,7 +154,7 @@ namespace casa {
             void _checkImageParameterValidity() const;
 
             // summarize the results in a nicely formatted string
-            String _resultsToString(Bool converged);
+            String _resultsToString();
 
             // summarize the position details in a nicely formatted string
             String _positionToString(const uInt compNumber);
@@ -187,6 +190,8 @@ namespace casa {
             void _setFluxes();
             // Set the convolved sizes of the fitted components.
             void _setSizes();
+
+
     };
 }
 
