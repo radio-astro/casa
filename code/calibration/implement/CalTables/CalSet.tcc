@@ -180,7 +180,6 @@ template<class T> CalSet<T>::CalSet(const String& calTableName,
 }
 
 template<class T> CalSet<T>::~CalSet() {
-  cout << "~CS" << endl;
   deflate();
 }
 

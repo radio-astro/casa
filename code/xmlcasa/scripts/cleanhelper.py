@@ -194,7 +194,7 @@ class cleanhelper:
 		self.im.setvp(dovp=True)
                 self.im.makeimage(type='pb', image=self.imagelist[n]+'.flux',
                                   compleximage="", verbose=False)
-		self.im.setvp(dovp=False)
+		self.im.setvp(dovp=False, verbose=False)
     
     def makemultifieldmask(self, maskobject=''):
         """

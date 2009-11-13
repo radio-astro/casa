@@ -4160,6 +4160,11 @@ This will be corrected shortly.
   one in encoded in MS </description>
      <value></value>
      </param>
+
+     <param type="bool" name="verbose">
+     <description>If false, suppress some messages from being sent to the logger.</description>
+     <value>true</value>
+     </param>
 </input>
 <returns type="bool"/>
 <example>

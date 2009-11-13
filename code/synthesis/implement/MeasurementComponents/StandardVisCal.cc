@@ -3162,6 +3162,19 @@ KJones::~KJones() {
   if (prtlev()>2) cout << "K::~K()" << endl;
 }
 
+void KJones::setApply(const Record& apply) {
+
+  // Call parent to do conventional things
+  GJones::setApply(apply);
+
+  if (calWt()) 
+    logSink() << " (" << this->typeName() << ": Enforcing calWt()=False for phase/delay-like terms)" << LogIO::POST;
+
+  // Enforce calWt() = False for delays
+  calWt()=False;
+
+}
+
 
 void KJones::specify(const Record& specify) {
 
@@ -3316,8 +3329,6 @@ void KJones::specify(const Record& specify) {
 void KJones::calcAllJones() {
 
   if (prtlev()>6) cout << "       VJ::calcAllJones()" << endl;
-
-  cout << "calcAllJones" << endl;
 
   if (False) {
     Vector<Complex> x(16,Complex(1.0));

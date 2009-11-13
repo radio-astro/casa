@@ -140,7 +140,7 @@ class imager
 
     bool setsdoptions(const double scale = 1.0, const double weight = 1.0, const int convsupport = -1, const std::string& pointingcolumntouse = "DIRECTION");
 
-    bool setvp(const bool dovp = false, const bool usedefaultvp = true, const std::string& vptable = "", const bool dosquint = false, const ::casac::variant& parangleinc = ::casac::initialize_variant("360deg"), const ::casac::variant& skyposthreshold = ::casac::initialize_variant("180deg"), const std::string& telescope = "");
+  bool setvp(const bool dovp = false, const bool usedefaultvp = true, const std::string& vptable = "", const bool dosquint = false, const ::casac::variant& parangleinc = ::casac::initialize_variant("360deg"), const ::casac::variant& skyposthreshold = ::casac::initialize_variant("180deg"), const std::string& telescope = "", const bool verbose=true);
 
     bool smooth(const std::vector<std::string>& model = std::vector<std::string> (1, ""), const std::vector<std::string>& image = std::vector<std::string> (1, ""), const bool usefit = true, const ::casac::variant& bmaj = ::casac::initialize_variant("5.arcsec"), const ::casac::variant& bmin = ::casac::initialize_variant("5.arcsec"), const ::casac::variant& bpa = ::casac::initialize_variant("0deg"), const bool normalize = true, const bool async = false);
 

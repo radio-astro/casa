@@ -2302,7 +2302,7 @@ namespace casa {
 	//    the new center channel if the bandwidth is an odd multiple of the
         //    new channel width,
 	//    otherwise the center channel is the lower edge of the new center channel
-	Double tnumChan = theRegridBWF/theCentralChanWidthF;
+	Double tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
 	if((tnumChan/2. - (Int)tnumChan/2)>0.1){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
@@ -2391,7 +2391,7 @@ namespace casa {
 	//    new channel width,
 	//    otherwise the center channel is the lower edge of the new center
 	//    channel
-	Double tnumChan = theRegridBWF/theCentralChanWidthF;
+	Double tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
 	if((tnumChan/2. - (Int)tnumChan/2)>0.1){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
@@ -2474,7 +2474,7 @@ namespace casa {
 	//    the new center channel if the bandwidth is an odd multiple of the
         //    new channel width, 
 	//    otherwise the center channel is the lower edge of the new center channel
-	Double tnumChan = theRegridBWF/theCentralChanWidthF;
+	Double tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
 	if((tnumChan/2. - (Int)tnumChan/2)>0.1){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
@@ -2529,7 +2529,7 @@ namespace casa {
 	//    new channel width, 
 	//    otherwise the center channel is the lower edge of the new center
 	//    channel
-	Double tnumChan = theRegridBWF/theCentralChanWidthF;
+	Double tnumChan = floor((theRegridBWF+edgeTolerance)/theCentralChanWidthF);
 	if((tnumChan/2. - (Int)tnumChan/2)>0.1){
           // odd multiple 
 	  loFBup.push_back(theRegridCenterF-theCentralChanWidthF/2.);
@@ -2946,13 +2946,17 @@ namespace casa {
 
 	// storage for values with complete freq trafo + regridding applied
 	// (set to default values for the case of no regridding)
-	Vector<Double> newXout(transNewXin);
+	Vector<Double> newXout;
+	newXout.assign(transNewXin);
 	Int newNUM_CHAN = oldNUM_CHAN;
-	Vector<Double> newCHAN_WIDTH(transCHAN_WIDTH);
+	Vector<Double> newCHAN_WIDTH;
+	newCHAN_WIDTH.assign(transCHAN_WIDTH);
 	MFrequency newREF_FREQUENCY = transREF_FREQUENCY;
-	Vector<Double> newRESOLUTION(transRESOLUTION);
+	Vector<Double> newRESOLUTION;
+	newRESOLUTION.assign(transRESOLUTION);
 	Double newTOTAL_BANDWIDTH = transTOTAL_BANDWIDTH;
-	Vector<Double> newEFFECTIVE_BW(oldEFFECTIVE_BW);
+	Vector<Double> newEFFECTIVE_BW;
+	newEFFECTIVE_BW.assign(oldEFFECTIVE_BW);
 	//	InterpolateArray1D<Double,Complex>::InterpolationMethod theMethod;
 	// This is a temporary fix until InterpolateArray1D<Double, Complex> works.
 	InterpolateArray1D<Float,Complex>::InterpolationMethod theMethod;
@@ -3102,7 +3106,7 @@ namespace casa {
 // 	    for(Int i=0; i<newNUM_CHAN; i++){
 // 	      newEFFECTIVE_BW[i] = sqrt(newEffBWSquared[i]);
 // 	    }
-	    
+
 	    if(!allEQ(newXout, transNewXin)){ // grids are different
 	      doRegrid = True;
 	    }
@@ -3688,7 +3692,7 @@ namespace casa {
 
       } // end loop over SPWs
       
-      os << LogIO::NORMAL << "New combined SPW will have " << newNUM_CHAN << " channels." << LogIO::POST;
+      os << LogIO::NORMAL << "Combined SPW will have " << newNUM_CHAN << " channels. May change in later regridding." << LogIO::POST;
 
       // normalise channel fractions
       Vector<Double> newNorm(newNUM_CHAN, 0); 

@@ -1625,8 +1625,11 @@ imager::setsdoptions(const double scale, const double weight, const int convsupp
    return rstat;
 }
 
-bool
-imager::setvp(const bool dovp, const bool usedefaultvp, const std::string& vptable, const bool dosquint, const ::casac::variant& parangleinc, const ::casac::variant& skyposthreshold, const std::string& telescope)
+bool imager::setvp(const bool dovp, const bool usedefaultvp,
+                   const std::string& vptable, const bool dosquint,
+                   const ::casac::variant& parangleinc,
+                   const ::casac::variant& skyposthreshold,
+                   const std::string& telescope, const bool verbose)
 {
    Bool rstat(False);
    try {
@@ -1639,7 +1642,7 @@ imager::setvp(const bool dovp, const bool usedefaultvp, const std::string& vptab
 	 (String(skyposthreshold.toString()) != casa::String("[]")))
        skyposthr=casaQuantity(skyposthreshold);
      rstat = itsImager->setvp(dovp, usedefaultvp, vptable, dosquint, parang, 
-			      skyposthr, telescope);
+			      skyposthr, telescope, verbose);
    } catch  (AipsError x) {
      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
      RETHROW(x);

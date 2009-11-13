@@ -2330,7 +2330,8 @@ Bool Imager::setvp(const Bool dovp,
 		   const Bool doSquint,
 		   const Quantity &parAngleInc,
 		   const Quantity &skyPosThreshold,
-		   String defaultTel)
+		   String defaultTel,
+                   const Bool verbose)
 {
 
 #ifdef PABLO_IO
@@ -2366,22 +2367,23 @@ Bool Imager::setvp(const Bool dovp,
   parAngleInc_p = parAngleInc;
 
   skyPosThreshold_p = skyPosThreshold;
-  os << LogIO::NORMAL // Loglevel INFO
+  os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3) // Loglevel INFO
      <<"Sky position tolerance is "<<skyPosThreshold_p.getValue("deg")
      << " degrees" << LogIO::POST;
 
   if (doDefaultVP_p) {
-    os << LogIO::NORMAL // Loglevel INFO
+    os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3) // Loglevel INFO
        << "Using system default voltage patterns for each telescope" << LogIO::POST;
   } else {
-    os << LogIO::NORMAL // Loglevel INFO
+    os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3) // Loglevel INFO
        << "Using user defined voltage patterns in Table "
        <<  vpTableStr_p << LogIO::POST;
   }
   if (doSquint) {
-    os << LogIO::NORMAL // Loglevel INFO
+    os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3) // Loglevel INFO
        << "Beam Squint will be included in the VP model" <<  LogIO::POST;
-    os << LogIO::NORMAL << "and the Parallactic Angle increment is "  // Loglevel INFO
+    os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
+       << "and the Parallactic Angle increment is "  // Loglevel INFO
        << parAngleInc_p.getValue("deg") << " degrees"  << LogIO::POST;
   }
 
@@ -2392,7 +2394,6 @@ Bool Imager::setvp(const Bool dovp,
   // muddled with the state of SkyEquation..so redo it
   destroySkyEquation();
   return True;
-
 }
 
 Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int tile,

@@ -1379,6 +1379,8 @@ ms::cvel(const std::string& mode,
 
     SubMS *sms = new SubMS(originalName);
 
+    *itsLog << LogIO::NORMAL << "Starting combination of spectral windows ..." << LogIO::POST;
+
     // combine Spws
     if(!sms->combineSpws()){
       *itsLog << LogIO::SEVERE << "Error combining spectral windows." << LogIO::POST;
@@ -1386,6 +1388,8 @@ ms::cvel(const std::string& mode,
       open(originalName,  Table::Update, False); 
       return False;
     }
+
+    *itsLog << LogIO::NORMAL << endl << LogIO::POST; 
 
     // set final parameters for channel mode
     if(t_mode == "channel"){
@@ -1422,6 +1426,9 @@ ms::cvel(const std::string& mode,
     // cout << "trq " << t_regridQuantity << " tc " << t_center << " tb " << t_bandwidth << " tw " << t_width << endl; 
 
     // Regrid
+
+    *itsLog << LogIO::NORMAL << "Testing if spectral frame transformation/regridding is needed ..." << LogIO::POST;
+
     Int rval;
     String regridMessage;
 
@@ -1461,6 +1468,45 @@ ms::cvel(const std::string& mode,
       *itsLog << LogIO::NORMAL << "SubMS not modified by regridding." << LogIO::POST;
       rstat = True;
     }       
+
+    if(rstat){
+      // print parameters of final SPW
+      Table spwtable(originalName+"/SPECTRAL_WINDOW");
+      ROArrayColumn<Double> chanwidths(spwtable, "CHAN_WIDTH");
+      ROArrayColumn<Double> chanfreqs(spwtable, "CHAN_FREQ");
+      
+      Vector<Double> cw(chanwidths(0));
+      Vector<Double> cf(chanfreqs(0));
+      Int totNumChan = cw.size();
+      
+      Bool isEquidistant = True;
+      for(Int i=0; i< totNumChan; i++){
+	if(cw(i)-cw(0)>1.){
+	  isEquidistant = False;
+	}
+      }
+      Double minWidth = min(cw);
+      Double maxWidth = max(cw);
+      
+      ostringstream oss;
+      if(isEquidistant){
+	oss <<  "Final spectral window has " << totNumChan 
+	    << " channels of width " << scientific << setprecision(6) << setw(6) << cw(0) << " Hz";
+      }
+      else{
+	oss << "Final spectral window has " << totNumChan 
+	    << " channels of varying width: minimum width = " << scientific << setprecision(6) << setw(6) << minWidth 
+	    << " Hz, maximum width = " << scientific << setprecision(6) << setw(6) << maxWidth << " Hz";
+      }
+      *itsLog << LogIO::NORMAL  << oss.str() << LogIO::POST;
+      if(totNumChan > 1){
+	*itsLog << LogIO::NORMAL  << "First channel center = " << cf(0) 
+		<< " Hz, last channel center = " << cf(totNumChan-1) << " Hz" << LogIO::POST;
+      }
+      else{
+	*itsLog << LogIO::NORMAL << "First channel center = " << cf(0) << " Hz" << LogIO::POST;
+      }
+    } 
     
     delete sms;
     open(originalName,  Table::Update, False);

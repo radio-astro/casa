@@ -846,7 +846,7 @@ if (testnumber in testlist):
             raise Exception
         omsname = "test"+str(testnumber)+outputvis
         os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
-        verify_ms(omsname, 1, 2439, 0)
+        verify_ms(omsname, 1, 2440, 0)
     except:
         print myname, ': *** Unexpected error ***'   
         failures += 1

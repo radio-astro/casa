@@ -311,8 +311,7 @@ def cvel(vis, outputvis,
             ms.timesort(newmsname=outputvis)
             ms.close()
 
-        # Regrid it
-        casalog.post("Combining and regridding spectral window(s) in SubMS ...", 'INFO')
+        # Combine and if necessary regrid it
 	ms.open(outputvis, nomodify=False)
 
         message = "Using " + phasecentername + " as phase center."
