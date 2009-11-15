@@ -397,12 +397,9 @@ void QtProfile::writeText()
     fn = fn.section('/', -1);
 
 
-    char* t = "plt";
     QString ext = fn.section('.', -1);
-    if (ext == "txt" || ext == "plt")
-        t = (char*)ext.toLocal8Bit().constData();
-    else 
-        fn.append(".plt"); 
+    if (ext != "txt" && ext != "plt")
+        fn.append(".txt"); 
 
     QFile file(fn);
     if (!file.open(QFile::WriteOnly | QIODevice::Text))

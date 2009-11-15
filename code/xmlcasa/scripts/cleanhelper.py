@@ -925,24 +925,46 @@ class cleanhelper:
         """
         determine appropriate values for channelization
         parameters when default values are used
-        for mode='velocity' or 'frequency'
+        for mode='velocity' or 'frequency' or 'channel'
         """
-        # frequency only 
-        # nchan = -1 => determine nchan from start and width
-        #               start='' and width='' use first channel of spw
-        #               or both start and width need to be given
-        # nchan given => start='' and width='' use first channel of spw
-        #               or both start and width must be given
-        # 
-        if mode=='velocity':
-            if start=='' or width=='':
-                if veltype!='radio':
-                    raise TypeError, "Currently default start and width for velocity mode works with the default veltype(='radio') "
+        #pdb.set_trace()
+        #if (mode!='frequency' and mode!='velocity') or (nchan!=-1 and start!='' and width!=''):
+        if(mode=='channel'):
+            if(type(start)!=int):
+                raise TypeError, "Wrong type for start parameter. Int is expected for the channel mode." 
+            if(type(width)!=int):
+                raise TypeError, "Wrong type for width parameter. Int is expected for the channel mode." 
+        elif(mode=='frequency' or mode=='velocity'):
+            if(type(start)!=str or type(width)!=str):
+                raise TypeError, "Start and width parameters must be given in strings, for mode=%s" % mode
+            
+        if(nchan!=-1 and start!='' and width!=''):
+            # do nothing
+            retnchan=nchan
+            retstart=start
+            retwidth=width 
+            return retnchan,retstart,retwidth
+
+        if(mode=='channel'):
+            if(nchan==-1):
+                (freqlist,finc)=self.getfreqs(nchan,spw,start,width)
+                retnchan=len(freqlist)
+            else:
+                retnchan=nchan
+            retstart=start
+            retwidth=width 
+            return retnchan,retstart,retwidth
+
+        if(mode=='velocity'): 
+            if((start=='' or width=='') or nchan==-1):
+                if(veltype!='radio'):
+                    raise TypeError, "Currently default nchan, start and width for velocity mode work with the default veltype(='radio') only "
                 # convert to frequency
-                if start!='':
-                    start=self.convertvf(start,frame,field)     
-        if (start==''):
-            if (width==''):
+            if(start!=''):
+                start=self.convertvf(start,frame,field)     
+        # deal with frequency or velocity mode
+        if(start==''):
+            if(width==''):
                 loc_width=1
             else:
                 if(qa.quantity(width)['unit'].find('m/s') > -1):
@@ -953,35 +975,45 @@ class cleanhelper:
                     loc_width=width
             (freqlist, finc)=self.getfreqs(nchan,spw,0,loc_width)
             retnchan = len(freqlist)
-            if mode=='velocity' and nchan==-1:
-               vmin=self.convertvf(str(freqlist[-1])+'Hz',frame,field) 
-               vmax=self.convertvf(str(freqlist[0])+'Hz',frame,field) 
-               if width=='':
-                   vwidth=qa.sub(qa.quantity(vmax),qa.quantity(self.convertvf(str(freqlist[1])+'Hz',frame,field)))
-               else:
-                   vwidth=width
-               vrange=qa.sub(qa.quantity(vmax),qa.quantity(vmin))
-               retnchan=min(int(math.ceil(qa.div(vrange,qa.abs(qa.quantity(vwidth)))['value']))+1,retnchan)
+        #    if(mode=='velocity' and nchan==-1):
+        #       vmin=self.convertvf(str(freqlist[-1])+'Hz',frame,field) 
+        #       vmax=self.convertvf(str(freqlist[0])+'Hz',frame,field) 
+        #       if(width==''):
+        #           vwidth=qa.sub(qa.quantity(vmax),qa.quantity(self.convertvf(str(freqlist[1])+'Hz',frame,field)))
+        #       else:
+        #           vwidth=qa.convert(width,'m/s')
+        #       vrange=qa.sub(qa.quantity(vmax),qa.quantity(vmin))
+        #       retnchan=min(int(math.ceil(qa.div(vrange,qa.abs(qa.quantity(vwidth)))['value']))+1,retnchan)
         else:
-            if (width==''):
-                #if (nchan==-1):
-                #    raise TypeError, "width parameter is need to be set "
-                #else:
+            if(width==''):
                 (freqlist,finc)=self.getfreqs(nchan,spw,start,1)
             else:
-                (freqlist,finc)=self.getfreqs(nchan,spw,start,width)
-
+                if(mode=='velocity'):
+                    loc_width=1
+                else:
+                    loc_width=width
+                (freqlist,finc)=self.getfreqs(nchan,spw,start,loc_width)
             retnchan = len(freqlist)
-        if mode=='frequency':
+        if(mode=='velocity' and nchan==-1):
+            vmin=self.convertvf(str(freqlist[-1])+'Hz',frame,field) 
+            vmax=self.convertvf(str(freqlist[0])+'Hz',frame,field) 
+            if(width==''):
+                vwidth=qa.sub(qa.quantity(vmax),qa.quantity(self.convertvf(str(freqlist[1])+'Hz',frame,field)))
+            else:
+                vwidth=qa.convert(width,'m/s')
+            vrange=qa.sub(qa.quantity(vmax),qa.quantity(vmin))
+            retnchan=min(int(math.ceil(qa.div(vrange,qa.abs(qa.quantity(vwidth)))['value']))+1,retnchan)
+
+        if(mode=='frequency'):
             retstart = str(freqlist[0])+'Hz'
             retwidth = str(finc)+'Hz'
-        elif mode=='velocity':
+        elif(mode=='velocity'):
             #convert back to velocities
             retstart = self.convertvf(str(freqlist[0])+'Hz',frame,field)
-            if width=='':
+            if(width==''):
                 w1 = self.convertvf(str(freqlist[1])+'Hz',frame,field)
                 w0 = self.convertvf(str(freqlist[0])+'Hz',frame,field)
-                retwidth=qa.quantity(qa.sub(qa.quantity(w1),qa.quantity(w0)))['value']
+                retwidth=str(qa.quantity(qa.sub(qa.quantity(w1),qa.quantity(w0)))['value'])+'m/s'
             else:
                 retwidth=width
         else:
@@ -994,13 +1026,13 @@ class cleanhelper:
         returns doppler(velocity) or frequency in string
         """
         docalcf=False
-        if frame=='': frame='LSRK'
+        if(frame==''): frame='LSRK'
         if(qa.quantity(vf)['unit'].find('m/s') > -1):
             docalcf=True
         elif(qa.quantity(vf)['unit'].find('Hz') > -1):
             docalcf=False
         else:
-            raise TypeError, "Unrecognized unit for the velocity or frequnecy parameter"
+            raise TypeError, "Unrecognized unit for the velocity or frequency parameter"
         fldinds=ms.msseltoindex(self.vis, field=field)['field'].tolist()
         if(len(fldinds) == 0):
             fldid0=0
@@ -1011,10 +1043,10 @@ class cleanhelper:
         tb.close()
         tb.open(self.vis+'/SOURCE')
         rfreq=tb.getcell('REST_FREQUENCY',fldid0)
-        if rfreq<=0:
+        if(rfreq<=0):
             raise TypeError, "Rest frequency does not seems to be properly set, check the data"
         tb.close()
-        if docalcf:
+        if(docalcf):
             dop=me.doppler('radio', qa.quantity(vf)) 
             rvf=me.tofrequency(frame, dop, qa.quantity(rfreq[0],'Hz'))
         else:
@@ -1026,10 +1058,11 @@ class cleanhelper:
 
     def getfreqs(self,nchan,spw,start,width):
         """
-        returns a list of frequencies to be use in output clean image
+        returns a list of frequencies to be used in output clean image
         """
         freqlist=[]
         finc=1
+        loc_nchan=0
 
         if spw in (-1, '-1', '*', '', ' '):
             spwinds = -1
@@ -1038,28 +1071,7 @@ class cleanhelper:
             if(len(spwinds) == 0):
                 spwinds = -1
 
-        #if type(spw)==int:
-        #    spw0=spw
-        #elif type(spw)==str:
-        #    spwinds=[]
-        #    ind=0
-        #    spws=spw.split(',')
-        #    for spwexp in spws:
-        #        indx1=spwexp.find(':')
-        #        indx2=spwexp.find('~') 
-        #        if indx1>-1:
-        #           if indx2>indx1:
-        #               spwinds.append(int(spwexp[:indx1])) 
-        #           else:
-        #               spwinds.append(int(spwexp[:indx2]))
-        #        else:
-        #           if indx2>-1:
-        #               spwinds.append(int(spwexp[:indx2]))
-        #           else:
-        #               spwinds.append(int(spwexp))
-        #spwinds.sort()
-        #spw0=spwinds[0]       
-        if spwinds==-1:
+        if(spwinds==-1):
             # first row
             spw0=0
         else:
@@ -1071,34 +1083,34 @@ class cleanhelper:
         chanfreqs=chanfreqscol.transpose()
         chanfreqs1d=chanfreqs[spw0:].flatten() 
             
-        if type(start)==int or type(start)==float:
-            if start > len(chanfreqs1d):
+        if(type(start)==int or type(start)==float):
+            if(start > len(chanfreqs1d)):
                 raise TypeError, "Start channel is outside the data range"
             startf = chanfreqs1d[start]
-        elif type(start)==str:
+        elif(type(start)==str):
             if(qa.quantity(start)['unit'].find('Hz') > -1):
                 startf=qa.convert(qa.quantity(start),'Hz')['value']
             else:
                 raise TypeError, "Unrecognized start parameter"
-        if type(width)==int or type(width)==float:
-            if type(start)==int or type(start)==float:
+        if(type(width)==int or type(width)==float):
+            if(type(start)==int or type(start)==float):
                 finc=(chanfreqs1d[start+1]-chanfreqs1d[start])*width
-            elif type(start)==str:
+            elif(type(start)==str):
                 if(qa.quantity(start)['unit'].find('Hz') > -1):
                    # assume called from setChannelization with local width=1
                    # for the default width(of clean task parameter)='' for
                    # velocity and frequency modes. This case set width to 
                    # first channel width 
                    finc=chanfreqs1d[1]-chanfreqs1d[0]
-        elif type(width)==str:
+        elif(type(width)==str):
             if(qa.quantity(width)['unit'].find('Hz') > -1):
                 finc=qa.convert(qa.quantity(width),'Hz')['value']
-        if nchan ==-1:
+        if(nchan ==-1):
             if(qa.quantity(start)['unit'].find('Hz') > -1): 
                 bw=chanfreqs1d[-1]-startf
             else:
                 bw=chanfreqs1d[-1]-chanfreqs1d[start]
-            if bw < 0:
+            if(bw < 0):
                 raise TypeError, "Start parameter is outside the data range"
             if(qa.quantity(width)['unit'].find('Hz') > -1):
                 qnchan=qa.div(qa.quantity(bw,'Hz'),qa.quantity(width))
@@ -1108,7 +1120,7 @@ class cleanhelper:
         else:
             loc_nchan=nchan
         for i in range(int(loc_nchan)):
-            if i==0: 
+            if(i==0): 
                 freqlist.append(startf)
             else:
                 freqlist.append(freqlist[-1]+finc) 

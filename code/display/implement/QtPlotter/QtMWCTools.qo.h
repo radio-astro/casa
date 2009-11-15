@@ -113,7 +113,7 @@ public:
   virtual void crosshairReady(const String& evtype);
 
 public slots:
-  void setCoordType(const String& t) { QtMWCTool::setCoordType(t);  }
+  void setCoordType(const String& t);
 
 signals:
   void wcNotify(const String c, 

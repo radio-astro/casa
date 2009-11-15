@@ -193,16 +193,18 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
     makeNewtonRaphsonStep(se);
   
   //Make the PSF
-  if(!donePSF_p && (numberIterations() >0))
+  if(!donePSF_p)
     makeApproxPSFs(se);
+
+  if(numberIterations() < 1){
+    return True;
+  }
   
   if(!isSolveable(0)) {
     os << "Model 1 is not solveable!" << LogIO::EXCEPTION;
   }
   
-  if(numberIterations() < 1){
-    return True;
-  }
+  
 
   Int nx=image(0).shape()(0);
   Int ny=image(0).shape()(1);

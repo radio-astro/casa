@@ -80,7 +80,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
     makeNewtonRaphsonStep(se);
   
   //Make the PSF
-  if(!donePSF_p && (numberIterations() >0))
+  if(!donePSF_p)
     makeApproxPSFs(se);
 
   if(numberIterations() < 1){

@@ -113,6 +113,11 @@ void QtCrossTool::crosshairReady(const String &evtype) {
   emit wcNotify(coordType, xx, yy);
 }
 
+void QtCrossTool::setCoordType(const String& t) {
+  QtMWCTool::setCoordType(t);
+  crosshairReady("");
+}
+
 
 }
 

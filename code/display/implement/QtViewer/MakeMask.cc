@@ -461,6 +461,10 @@ void MakeMask::loadRegionFromFile() {
       }
       //cout << "number of boxes =" << outRegPtrs.nelements() << endl;
       for (uInt m = 0; m < outRegPtrs.nelements(); m++) {
+         //if (m < 3) {
+         //   cout << "record " << m << ":" << endl;
+         //   cout << outRegPtrs[m]->toRecord("") << endl;
+         //}
          uInt nreg=unionRegions_p.nelements();
          unionRegions_p.resize(nreg + 1, True);
          WCRegion* regM = const_cast<WCRegion*>(outRegPtrs[m]);
@@ -640,6 +644,8 @@ void MakeMask::addRegionsToShape(RSComposite*& theShapes,
     String pola = rest.after("polExt:");
     //cout << "chanExt=" << chan << endl;
     //cout << "polExt=" << pola << endl;
+    //  cout << "aRegion\n\n" << endl;
+    //  cout << wcreg->toRecord("") << endl;
 
     if (!planeAllowed(chan, pola))
        return;
@@ -674,6 +680,76 @@ void MakeMask::addRegionsToShape(RSComposite*& theShapes,
         }
         trc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
       }
+
+      Vector<Int> chanRange(2);
+      Int spcInd=coords->findCoordinate(Coordinate::SPECTRAL);
+      //cout << "speInd=" << spcInd << endl;
+      if (blcrec.size() <= (uInt)spcInd || trcrec.size() <= (uInt)spcInd) {
+         //set spectral range -1, -1 to indicate all chans
+         chanRange(0) = -1;
+         chanRange(1) = -1;
+      }
+      else {
+         const RecordInterface& specRec0=blcrec.asRecord(spcInd);
+         const RecordInterface& specRec1=trcrec.asRecord(spcInd);
+         //cout << "spec0=" << specRec0 << endl;
+         //cout << "spec1=" << specRec1 << endl;
+
+         SpectralCoordinate spectralCoord =
+           coords->spectralCoordinate(spcInd);
+
+         String error;
+         Vector<String> units(1); units = "Hz";
+         spectralCoord.setWorldAxisUnits(units);        
+         Vector<Double> spectralWorld(1);
+         Vector<Double> spectralPixel(1);
+
+         if (!h.fromRecord(error, specRec0)) {
+            throw (AipsError 
+            ("WCBox::fromRecord - could not recover trc because "+error));
+         }
+         if (specRec0.asString("unit") == "pix") {
+            chanRange(0) = (Int)h.asQuantumDouble().getValue("pix");
+            //cout << "pix_val_1=" << chanRange(0) << endl;
+         }
+         else {
+            Double hz1 = h.asQuantumDouble().getValue("Hz");
+            spectralWorld(0) = hz1;
+            spectralCoord.toPixel(spectralWorld, spectralPixel);
+            chanRange(0)  = (Int)spectralPixel(0);
+            //cout << "hz_val_1=" << chanRange(0) << endl;
+         }
+
+         if (!h.fromRecord(error, specRec1)) {
+             throw (AipsError 
+             ("WCBox::fromRecord - could not recover trc because "+error));
+         }
+         if (specRec1.asString("unit") == "pix") {
+            chanRange(1) = (Int)h.asQuantumDouble().getValue("pix");
+            //cout << "pix_val_2=" << chanRange(1) << endl;
+         }
+         else {
+            Double hz2 = h.asQuantumDouble().getValue("Hz");
+            spectralWorld(0) = hz2;
+            spectralCoord.toPixel(spectralWorld, spectralPixel);
+            chanRange(1)  = (Int)spectralPixel(0);
+            //cout << "hz_val_2=" << chanRange(1) << endl;
+         }
+      }
+
+      QString chans = "";
+      if (chanRange(0) > 0 && chanRange(1) > 0) {
+         chanRange(0) = chanRange(0) - 1;
+         chanRange(1) = chanRange(1) - 1;
+      }
+      if (chanRange(0) > -1 && chanRange(1) > -1) {
+         chans = QString::number(chanRange(0)) + 
+                 QString("~") +
+                 QString::number(chanRange(1));
+      }
+      //qDebug() << chans;
+      if (!planeAllowed(chans.toStdString(), ""))
+         return;
       
       double xw = fabs(trc(0)-blc(0));
       double xh = fabs(trc(1)-blc(1));
@@ -716,7 +792,48 @@ void MakeMask::addRegionsToShape(RSComposite*& theShapes,
         +error));
       }
       y = h.asQuantumVectorDouble().getValue(RegionShape::UNIT);
+      /*
+      Int spcInd=coords->findCoordinate(Coordinate::SPECTRAL);
+      const RecordInterface& specRec0=blcrec.asRecord(spcInd);
+      const RecordInterface& specRec1=trcrec.asRecord(spcInd);
+      //cout << "spec0=" << specRec0 << endl;
+      //cout << "spec1=" << specRec1 << endl;
+      SpectralCoordinate spectralCoord =
+           coords->spectralCoordinate(spcInd);
 
+      String error;
+      Vector<String> units(1); units = "Hz";
+      spectralCoord.setWorldAxisUnits(units);        
+      Vector<Double> spectralWorld(1);
+      Vector<Double> spectralPixel(1);
+      Vector<Int> chanRange(2);
+
+      if (!h.fromRecord(error, specRec0)) {
+           throw (AipsError 
+            ("WCBox::fromRecord - could not recover trc because "+error));
+      }
+      Double hz1 = h.asQuantumDouble().getValue("Hz");
+      spectralWorld(0) = hz1;
+      spectralCoord.toPixel(spectralWorld, spectralPixel);
+      chanRange(0)  = (Int)spectralPixel(0);
+
+      if (!h.fromRecord(error, specRec1)) {
+           throw (AipsError 
+            ("WCBox::fromRecord - could not recover trc because "+error));
+      }
+      Double hz2 = h.asQuantumDouble().getValue("Hz");
+      spectralWorld(0) = hz2;
+      spectralCoord.toPixel(spectralWorld, spectralPixel);
+      chanRange(1)  = (Int)spectralPixel(0);
+
+      QString chans = QString::number(chanRange(0)) + 
+                      QString("~") +
+                      QString::number(chanRange(1));
+      //qDebug() << chans;
+      if (!planeAllowed(chans.toStdString(), ""))
+         return;
+      */
+      
       RSPolygon *poly= (cb == -1) ?
            new RSPolygon(y,x,dirType) : new RSPolygon(x,y,dirType);
       poly->setLineColor(color->currentText().toStdString());

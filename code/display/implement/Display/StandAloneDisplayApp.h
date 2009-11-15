@@ -58,17 +58,24 @@ extern "C" {
 			                      int *, int);
   extern void (*late_binding_pgplot_driver_3)(int *, float *, int *, char *,
 			                      int *, int);
+#if defined(__USE_WS_X11__)
+  extern void add_late_binding_pgdriver(void (*driver)(int *, float *, int *, char *, int *, int *, int));
+  extern void wcdriv_(int *, float *, int *, char *, int *, int *, int);
+#define INITIALIZE_PGPLOT add_late_binding_pgdriver(wcdriv_);
+#else
   extern void wcdriv_(int *, float *, int *, char *, int *, int);
+  #define INITIALIZE_PGPLOT                                               \
+	      if ( ! late_binding_pgplot_driver_1 )                               \
+	          late_binding_pgplot_driver_1 = wcdriv_;                         \
+	      else if ( ! late_binding_pgplot_driver_2 )                          \
+	          late_binding_pgplot_driver_2 = wcdriv_;                         \
+	      else if ( ! late_binding_pgplot_driver_3 )                          \
+	          late_binding_pgplot_driver_3 = wcdriv_;                         \
+	      else                                                                \
+	          std::cerr << "no free late-binding driver slots" << std::endl;
 
-#define INITIALIZE_PGPLOT                                               \
-    if ( ! late_binding_pgplot_driver_1 )                               \
-        late_binding_pgplot_driver_1 = wcdriv_;                         \
-    else if ( ! late_binding_pgplot_driver_2 )                          \
-        late_binding_pgplot_driver_2 = wcdriv_;                         \
-    else if ( ! late_binding_pgplot_driver_3 )                          \
-        late_binding_pgplot_driver_3 = wcdriv_;                         \
-    else                                                                \
-        std::cerr << "no free late-binding driver slots" << std::endl;
+#endif
+
 
 #else
   #define INITIALIZE_PGPLOT

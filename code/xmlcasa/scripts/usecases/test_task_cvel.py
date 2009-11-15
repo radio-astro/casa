@@ -340,9 +340,9 @@ if (testnumber in testlist):
         omsname = "test"+str(testnumber)+outputvis
         os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
         verify_ms(omsname, 1, 1, 0)
-        failures += 1
     except:
-        print myname, ': *** Expected error (problem with input vis) ***'   
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
 
 testnumber = 12
 if (testnumber in testlist):

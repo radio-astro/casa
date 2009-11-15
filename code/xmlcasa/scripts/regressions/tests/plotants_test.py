@@ -1,66 +1,41 @@
-#############################################################################
-## $Id:$
-# Test Name:                                                                #
-#    Regression Test Script for plotants                                    #
-#                                                                           #
-# Rationale for Inclusion:                                                  #
-#    It ensures that the task is working properly.                          #
-#                                                                           # 
-# Features tested:                                                          #
-#    1) Is the task working properly?                                       #
-#    2) Is the task saving a plot when asked?                               #
-#                                                                           #
-# Input data:                                                               #
-#    ic2233_1.ms                                                            #
-#                                                                           #
-#############################################################################
+########################################################################
+#       This script will call the main regression script               #
+#       plotants_regression.py. The returned data set from it          #
+#       is copied by the runTest() method to the working               #
+#       directory, defaulted to /tmp.                                  #
+#       Exceptions will be handled if plotants() fails to run or if    #
+#       the regression tests do not pass.                              #
+#                                                                      #
+########################################################################
 
+import sys
 import os
 import string
-import sys
-import time
+from locatescript import locatescript
+import inspect
 
-from __main__ import default
-from tasks import *
-from taskinit import *
-
-startTime = time.time()
-
-input_file="ic2233_1.ms"
-plotfile="ic2233_1.plot.png"
-stars = "*************"
+a=inspect.stack()
+stacklevel=0
+for k in range(len(a)):
+    if (string.find(a[k][1], 'ipython console') > 0):
+        stacklevel=k
+        break
+gl=sys._getframe(stacklevel).f_globals
 
 def description():
-    return "Test of plotants using ic2233_1.ms"
-
-def data():
-    return [input_file]
+    return "Test the plotants task. It calls plotants_regression.py."
 
 def run():
-        
-    print "Will plot the positions of 29 antennas"
-    
-    # Switch off the displaying of the GUI
-    tp.setgui(gui=False)
-    
-    # Call the plotants task and check return status
-    status = plotants(vis=input_file,figfile=plotfile)
-    
-    # Switch GUI back on
-    tp.setgui(gui=True)
-    
-    if status == False:
-        raise Exception, "Input file does not exist"
-    
-    # Check if plot exists
-    if not os.path.isfile(plotfile):
-        raise Exception, "Failed to save plot"
-    
-    print " -- Test plotants succeeded --"
-     
+    lepath=locatescript('plotants_regression.py')
+    gl['regstate']=True
+    execfile(lepath, gl)
+    print 'regstate =', gl['regstate']
+    if not gl['regstate']:
+        raise Exception, 'regstate = False'
+
     return []
 
-
-
-
+def data():
+    ### return the data files that is needed by the regression script
+    return ['ic2233_1.ms']
 

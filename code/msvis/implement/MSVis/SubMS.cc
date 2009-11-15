@@ -29,6 +29,7 @@
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/RefRows.h>
 #include <ms/MeasurementSets/MSColumns.h>
+#include <coordinates/Coordinates/CoordinateUtil.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -2890,32 +2891,18 @@ namespace casa {
 
 	  transNewXin.resize(oldNUM_CHAN);
 	  // set up conversion
-	  MFrequency::Ref fromFrame;
-	  if(theOldRefFrame == MFrequency::TOPO){ 
-	    fromFrame = MFrequency::Ref(theOldRefFrame,
-                                        MeasFrame(theFieldDir, mObsPos, theObsTime));
-	  }
-	  else if(theOldRefFrame == MFrequency::GEO){ 
-	    fromFrame = MFrequency::Ref(theOldRefFrame,
-                                        MeasFrame(theFieldDir, theObsTime));
-	  }
-	  else {
-	    fromFrame = MFrequency::Ref(theOldRefFrame, MeasFrame(theFieldDir));
-	  }
-
-	  MFrequency::Ref toFrame;
-	  if(theFrame == MFrequency::TOPO){ 
-	    toFrame = MFrequency::Ref(theFrame,
-                                      MeasFrame(theFieldDir, mObsPos, theObsTime));
-	  }
-	  else if(theFrame == MFrequency::GEO){ 
-	    toFrame = MFrequency::Ref(theFrame, MeasFrame(theFieldDir, theObsTime));
-	  }
-	  else {
-	    toFrame = MFrequency::Ref(theFrame, MeasFrame(theFieldDir));
-	  }
 	  Unit unit(String("Hz"));
-	  MFrequency::Convert freqTrans(unit, fromFrame, toFrame);
+	  MFrequency::Convert freqTrans;
+
+	  if(!CoordinateUtil::makeFrequencyMachine(os, freqTrans,
+						   theFrame, theOldRefFrame,  
+						   theFieldDir, theFieldDir,
+						   theObsTime, theObsTime,
+						   mObsPos, mObsPos,
+						   unit)
+	     ){
+	    return False;
+	  }
 
 	  for(Int i=0; i<oldNUM_CHAN; i++){
 	    transNewXin[i] = freqTrans(newXin[i]).get(unit).getValue();

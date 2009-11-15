@@ -63,7 +63,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                       multiscale, multifield, facets, nterms,
                                       '')
         #some default value handling for channelization
-        if (mode=='velocity' or mode=='frequency'):
+        if (mode=='velocity' or mode=='frequency' or mode=='channel'):
             (localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype)
         else:
             localnchan=nchan
@@ -112,8 +112,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 imagename=[tmppath[indx]+os.path.basename(imn)+'.ch'+str(j)
                            for indx, imn in enumerate(finalimagename)]
 
-                print "Processing for Ch %s starts..." % j
-                casalog.post("Processing for Channel %s "% j)
+                print "Processing for channel %s starts..." % j
+                casalog.post("Processing channel %s "% j)
 
             # change to handle multifield masks
             maskimage=''

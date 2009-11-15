@@ -471,7 +471,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="reffreq"><value type="string"></value></default>
 		</equals>
 		<equals value="channel">
-			<default param="nchan"><value>1</value></default>
+			<default param="nchan"><value>-1</value></default>
 			<default param="start"><value>0</value>
 			    <description>first input channel to use</description>
 			</default>
@@ -484,7 +484,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			    <description>Velocity of first image channel: e.g \'0.0km/s\'(''=first channel specified in spw)</description>
 		    </default>
 		    <default param="width"><value type="string"></value>
-			    <description>image channel width in velocity units: e.g \'-1.0km/s\'(''=width of first channeli specified in spw)</description>
+			    <description>image channel width in velocity units: e.g \'-1.0km/s\'(''=width of first channel specified in spw)</description>
 		    </default>
 		    <default param="interpolation"><value type="string">nearest</value></default>
 		    <default param="outframe"><value type="string"></value>
