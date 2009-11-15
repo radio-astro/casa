@@ -1378,7 +1378,7 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
 	       << LogIO::EXCEPTION;
       }
   nAnt=bt.nrows();
-  nAntMax=nAnt-1;
+  if (nAnt-1 > nAntMax) nAntMax=nAnt-1;
 
   if (itsEVLA) receptorAngle_p.resize(2*(nAntMax+1));
   else receptorAngle_p.resize(2*nAnt);

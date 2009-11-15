@@ -70,8 +70,8 @@ namespace casa {
 		residual(residualInp),model(modelInp), logfileName(logfile),
 		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
-		estimates(), fixed(0), logfileAppend(append), peakIntensities(),
-		pixelPositions() {
+		estimates(), fixed(0), logfileAppend(append), fitConverged(False),
+		fitDone(False), peakIntensities(), pixelPositions() {
         _construct(imagename, box, region, 0, estimatesFilename);
     }
 
@@ -87,8 +87,8 @@ namespace casa {
 		residual(residualInp),model(modelInp), logfileName(logfile),
 		regionString(""), estimatesString(""), newEstimatesFileName(newEstimatesInp),
 		includePixelRange(includepix), excludePixelRange(excludepix),
-		estimates(), fixed(0), logfileAppend(append), peakIntensities(),
-		pixelPositions() {
+		estimates(), fixed(0), logfileAppend(append), fitConverged(False),
+		fitDone(False), peakIntensities(), pixelPositions() {
         _construct(imagename, box, "", regionPtr, estimatesFilename);
     }
 
@@ -121,22 +121,34 @@ namespace casa {
             excludePixelRange, fit, deconvolve, list,
             residual, model
         );
-		_setSizes();
-        _setFluxes();
-		pixelPositions.resize(results.nelements());
-		for(uInt i=0; i<results.nelements(); i++) {
-			Vector<Double> x(2);
-			pixelPositions[i] = x;
-		}
-        String resultsString = _resultsToString(converged);
+        fitDone = True;
+        fitConverged = converged;
+        if(converged) {
+        	_setSizes();
+        	_setFluxes();
+        	pixelPositions.resize(results.nelements());
+        	for(uInt i=0; i<results.nelements(); i++) {
+        		Vector<Double> x(2);
+        		pixelPositions[i] = x;
+        	}
+            if (! newEstimatesFileName.empty()) {
+            	_writeNewEstimatesFile();
+            }
+        }
+        String resultsString = _resultsToString();
         *itsLog << LogIO::NORMAL << resultsString << LogIO::POST;
         if (! logfileName.empty()) {
         	_writeLogfile(resultsString);
         }
-        if (! newEstimatesFileName.empty()) {
-        	_writeNewEstimatesFile();
-        }
+
         return results;
+    }
+
+    Bool ImageFitter::converged() const {
+    	if (! fitDone) {
+    		throw AipsError("fit has not yet been perfomred");
+    	}
+    	return fitConverged;
     }
 
     void ImageFitter::_construct(
@@ -277,7 +289,7 @@ namespace casa {
         return ImageRegion(wcBox);
     }
 
-    String ImageFitter::_resultsToString(Bool converged) {
+    String ImageFitter::_resultsToString() {
     	ostringstream summary;
     	summary << "****** Fit performed at " << Time().toString() << "******" << endl << endl;
     	summary << "Input parameters ---" << endl;
@@ -290,7 +302,7 @@ namespace casa {
     	summary << "       --- exclude pixel ragne: " << excludePixelRange << endl;
     	summary << "       --- initial estimates:   " << estimatesString << endl;
 
-    	if (converged) {
+    	if (converged()) {
     		for (uInt i = 0; i < results.nelements(); i++) {
     			summary << "Fit on " << image->name(True) << " component " << i << endl;
     			summary << _positionToString(i) << endl;
