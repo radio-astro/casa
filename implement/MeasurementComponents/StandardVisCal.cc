@@ -54,9 +54,6 @@
 
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
-
-#define RI_DEBUG
-
 // math.h ?
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -330,40 +327,20 @@ void TJones::initTrivDJ() {
 //============================================================
 
 
+void TJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim) {
+  LogIO os(LogOrigin("T", "createCorruptor()", WHERE));
 
-Int TJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes)
-{
+  tcorruptor_p = new AtmosCorruptor(nSim);
+  corruptor_p=tcorruptor_p;
 
-  LogIO os(LogOrigin("T", "setupSim()", WHERE));
-
-  prtlev()=4; // debug
-
-  if (prtlev()>2) cout << "   T::setupSim()" << endl;
-  AlwaysAssert((isSimulated()),AipsError);
-  // assume only one ms attached to the VI. need vi for mscolumns.
-  VisIter& vi(vs.iter());
+  // call generic parent to set corr,spw,etc info
+  SolvableVisCal::createCorruptor(vi,simpar,nSim);
   
-
-  Int nSim = sizeUpSim(vs,nChunkPerSol,solTimes);
-  if (prtlev()>2) cout << " sized for Sim, " << nSim << " slots." << endl;
-
-  // we can use the private access directly the corruptor
-  // RIATM 
-  tcorruptor_p = new TJonesCorruptor(nSim);
-  //tcorruptor_p = new AtmosCorruptor(nSim);
-  // but set the public one 
-  corruptor_p = tcorruptor_p;
-  if (prtlev()>4) cout << " TCorruptor created." << endl;
-
-  corruptor_p->startTime()=min(solTimes);
-  corruptor_p->stopTime()=max(solTimes);
-  corruptor_p->prtlev()=prtlev();
-
   Int Seed(1234);
   if (simpar.isDefined("seed")) {    
     Seed=simpar.asInt("seed");
   }
-
+  
   Float Beta(1.1); // exponent for generalized 1/f noise
   if (simpar.isDefined("beta")) {    
     Beta=simpar.asFloat("beta");
@@ -373,8 +350,8 @@ Int TJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
     tcorruptor_p->mean_pwv() = simpar.asFloat("mean_pwv");
   
   if (tcorruptor_p->mean_pwv()<=0)
-    throw(AipsError("TCorruptor attempted initialization with undefined PWV"));
-
+    throw(AipsError("AtmCorruptor attempted initialization with undefined PWV"));
+  
   Float Scale(.15); // scale of fluctuations rel to mean
   if (simpar.isDefined("delta_pwv") and simpar.isDefined("mean_pwv")) {    
     Scale=simpar.asFloat("delta_pwv")/simpar.asFloat("mean_pwv");
@@ -384,207 +361,48 @@ Int TJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
     }
   }
 
-
-  // initialize spw etc information in Corruptor
-  // the "initialize" function that's corruptor-specific calculates the 
-  // corruption values
-  // this preparation is just to tell the corruptor about its VC - maybe 
-  // the logic should be changed so the corruptor doesn't have to know 
-
-  const ROMSSpWindowColumns& spwcols = vi.msColumns().spectralWindow();
-
-  if (prtlev()>3) cout << " SpwCols accessed:" << endl;
-  if (prtlev()>3) cout << "   nSpw()= " << nSpw() << endl;
-  if (prtlev()>3) cout << "   spwcols.nrow()= " << nSpw() << endl;
-
-  AlwaysAssert(nSpw()==spwcols.nrow(),AipsError);
-
-  // things will break if spw mapping, ie not in same order as in vs
-  corruptor_p->nSpw()=nSpw();
-  corruptor_p->nAnt()=nAnt();
-  corruptor_p->currAnt()=0;
-  corruptor_p->currSpw()=0;
-  corruptor_p->fRefFreq().resize(nSpw());
-  corruptor_p->fnChan().resize(nSpw());
-  corruptor_p->fWidth().resize(nSpw());
-
-  for (Int irow=0;irow<nSpw();++irow) { 
-    corruptor_p->fRefFreq()[irow]=spwcols.refFrequency()(irow);
-    corruptor_p->fnChan()[irow]=spwcols.numChan()(irow);
-    corruptor_p->fWidth()[irow]=spwcols.totalBandwidth()(irow); 
-    // totalBandwidthQuant ?  in other places its assumed to be in Hz
-  }
-  // see MSsummary.cc for more info/examples
-
   if (simpar.isDefined("mode")) {    
-    if (prtlev()>2)
-      cout << "initializing TCorruptor with mode " << simpar.asString("mode") << endl;
-
+    if (prtlev()>2) 
+      cout << "initializing T:Corruptor with mode " << simpar.asString("mode") << endl;
+    
     if (simpar.asString("mode") == "test")
       tcorruptor_p->initialize();
-    else if (simpar.asString("mode") == "individual") 
-      tcorruptor_p->initialize(Seed,Beta,Scale);
-    else if (simpar.asString("mode") == "screen") {
-      const ROMSAntennaColumns& antcols(vi.msColumns().antenna());
-      if (simpar.isDefined("windspeed")) {
-	tcorruptor_p->windspeed()=simpar.asFloat("windspeed");
-	tcorruptor_p->initialize(Seed,Beta,Scale,antcols);
-      } else
-	throw(AipsError("Unknown wind speed for TJonesCorruptor"));        
-    } else 
-      throw(AipsError("Unknown Mode for TJonesCorruptor"));        
+    else {
+
+      // slot_times for a fBM-based corruption need to be even even if solTimes are not
+      // so will define startTime and stopTime and reset nsim() here.
+      
+      if (simpar.isDefined("startTime")) {    
+	corruptor_p->startTime() = simpar.asDouble("startTime");
+      } else {
+	throw(AipsError("start/stop time not defined"));
+      }
+      if (simpar.isDefined("stopTime")) {    
+	corruptor_p->stopTime() = simpar.asDouble("stopTime");
+      } else {
+	throw(AipsError("start/stop time not defined"));
+      }
+      
+      // RI todo T::createCorr make min screen granularity a user parameter
+      Float fBM_interval=max(interval(),10.); // generate screens on >10s intervals
+      corruptor_p->setEvenSlots(fBM_interval);
+
+      if (simpar.asString("mode") == "individual") 
+	tcorruptor_p->initialize(Seed,Beta,Scale);
+      else if (simpar.asString("mode") == "screen") {
+	const ROMSAntennaColumns& antcols(vi.msColumns().antenna());
+	if (simpar.isDefined("windspeed")) {
+	  tcorruptor_p->windspeed()=simpar.asFloat("windspeed");
+	  tcorruptor_p->initialize(Seed,Beta,Scale,antcols);
+	} else
+	  throw(AipsError("Unknown wind speed for T:Corruptor"));        
+      } else 
+	throw(AipsError("Unknown mode for T:Corruptor"));        
+    }
   } else {
-    throw(AipsError("No Mode specified for TJones corruptor."));
-  }
-  
-  return nSim;
+    throw(AipsError("No Mode specified for T:Corruptor."));
+  }  
 }
-
-
-
-
-
-
-Bool TJones::simPar(VisIter& vi, const Int nChunks){
-
-  LogIO os(LogOrigin("T", "simPar()", WHERE));
-
-  if (prtlev()>4) cout << "   T::simPar()" << endl;
-
-  AlwaysAssert((isSimulated()),AipsError);
-  
-  // sizeUpSim did solveCPar().resize(nPar(),nChanPar(),nAnt());
-
-  // RI TODO T:simPar loop through correlations or use corridx ?
-
-#ifndef RI_DEBUG
-    try {
-#endif
-    
-    Vector<Int> a1;
-    Vector<Int> a2;
-    Matrix<Bool> flags;
-
-    solveCPar()=Complex(0.0);
-    // n good VI elements averaged in each CPar() entry:
-    IPosition cparshape=solveCPar().shape();
-    Cube<Complex> nGood(cparshape);
-    solveParOK()=False;
-
-    if (corruptor_p->curr_slot()<1 and prtlev()>3) 
-      cout << "  shape of solveCPar = " << cparshape << 
-	"  and cs().shape(spw=" << corruptor_p->currSpw() << ") = " << 
-	cs().shape(corruptor_p->currSpw()) << endl;
-
-    Vector<Double> timevec;
-    Double starttime,stoptime;
-    starttime=vi.time(timevec)[0];
-
-    for (Int ichunk=0;ichunk<nChunks;++ichunk) {
-      Int spw(vi.spectralWindow());
-      corruptor_p->currSpw()=spw;
-
-      for (vi.origin(); vi.more(); vi++) {
-        // these need to be updated whenever the VI scrolls forward
-        vi.antenna1(a1);
-        vi.antenna2(a2);
-        vi.flag(flags);
-        vi.time(timevec);
-    
-	for (Int irow=0;irow<vi.nRow();++irow) {
-
-	  if (nfalse(flags.column(irow))> 0 ) {
-	    if ( a1(irow)==a2(irow) ) {
-	      // autocorrels should get 1. for multiplicative VC
-	      solveCPar()(0,focusChan(),a1(irow))=1.0;
-	    } else {
-
-            if (corruptor_p->curr_time()!=timevec[irow]) {
-              corruptor_p->curr_time()=timevec[irow];
-              // find new slot if required
-              Double dt(1e10),dt0(-1);
-              dt0 = abs(corruptor_p->slot_time() - timevec[irow]);
-
-              if (timevec[irow]<corruptor_p->curr_time()) {
-                for (Int newslot=corruptor_p->curr_slot()-1;
-                     newslot>=0;newslot--) {
-                  dt=abs(corruptor_p->slot_time(newslot) - timevec[irow]);
-                  if (dt<dt0) {
-                    // use this check for on-depand corruptors to get new val.
-                    corruptor_p->curr_slot()=newslot;
-                    dt0 = dt;
-                    if (prtlev()>4)
-                      cout << "    G:simPar retreating to time " <<
-                        timevec[irow] << endl;
-                  }
-                }
-              } else {
-                for (Int newslot=corruptor_p->curr_slot()+1;
-                     newslot<corruptor_p->nSim();newslot++) {
-                  dt=abs(corruptor_p->slot_time(newslot) - timevec[irow]);
-                  if (dt<dt0) {
-                    // use this check for on-depand corruptors to get new val.
-                    corruptor_p->curr_slot()=newslot;
-                    dt0 = dt;
-                    if (prtlev()>4)
-                      cout << "    G:simPar advancing to time " <<
-                        timevec[irow] << endl;
-                  }
-                }
-              }
-            }
-
-            corruptor_p->currAnt()=a1(irow);
-
-	    // chan loop has to be outside of this because George has 
-	    // hardcoded that a SVJ only has one channel.
-	    if(tcorruptor_p->mode()=="test" or tcorruptor_p->mode()=="1d")
-	      solveCPar()(0,focusChan(),a1(irow))=tcorruptor_p->gain(focusChan());
-	    else if (tcorruptor_p->mode()=="2d") {
-	      // RI_TODO modify x,y by tan(zenith angle)*(layer altitude)
-	      Int ix(Int(tcorruptor_p->antx()[a1(irow)]));
-	      Int iy(Int(tcorruptor_p->anty()[a1(irow)]));
-	      if (prtlev()>5) 
-		cout << " getting gain for antenna ix,iy = " << ix << "," << iy << endl;  
-	      solveCPar()(0,focusChan(),a1(irow))=tcorruptor_p->gain(ix,iy,focusChan());
-	    } else 
-	      throw(AipsError("T: unknown corruptor mode "+tcorruptor_p->mode()));
-	    } // if not autocorr
-	  }// if not flagged
-	}// row
-      }// vi
-      if (vi.moreChunks()) vi.nextChunk();
-    } // chunk loop
-
-    // RI TODO T::simPar  don't divide by zero  **
-    for (Int i=0;i<cparshape(2);i++)
-      solveCPar().xyPlane(i) =  solveCPar().xyPlane(i) / nGood.xyPlane(i);
-
-    vi.time(timevec);
-    Int tvsize;
-    timevec.shape(tvsize);
-    stoptime=timevec[tvsize-1];
-    refTime() = 0.5*(starttime+stoptime);
-    interval() = (stoptime-starttime);
-    currField() = vi.fieldId();
-
-#ifndef RI_DEBUG    
-  } catch (AipsError x) {
-    if (tcorruptor_p) delete tcorruptor_p;
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return False;
-  } 
-#endif
-  return True;
-}
-
-
-
-
-
-
-
-
 
 
 
@@ -793,32 +611,18 @@ void GJones::initTrivDJ() {
 }
 
 
-Int GJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes)
+void GJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim) {
 {
 
-  LogIO os(LogOrigin("G", "setupSim()", WHERE));
-  //prtlev()=4; // debug
-
-  if (prtlev()>2) cout << "   G::setupSim()" << endl;
-  AlwaysAssert((isSimulated()),AipsError);
-  VisIter& vi(vs.iter());
-  
-  Int nSim = sizeUpSim(vs,nChunkPerSol,solTimes);
-  if (prtlev()>2) cout << " sized for Sim with " << nSim << " slots."<< endl;
+  LogIO os(LogOrigin("G", "createCorruptor()", WHERE));  
+  if (prtlev()>2) cout << "   G::createCorruptor()" << endl;
 
   gcorruptor_p = new GJonesCorruptor(nSim);
   corruptor_p = gcorruptor_p;
-  if (prtlev()>3) cout << " GCorruptor created." << endl;
 
-  //Vector<Int> corrType; vi.corrType(corrType);
-  //uInt nCorr = corrType.nelements();
-  corruptor_p->nCorr()=vi.nCorr();
-  cout << "nCorr= " << vi.nCorr() <<endl;
-      
-  corruptor_p->startTime()=min(solTimes);
-  corruptor_p->stopTime()=max(solTimes);
-  corruptor_p->prtlev()=prtlev();
-
+  // call generic parent to set corr,spw,etc info
+  SolvableVisCal::createCorruptor(vi,simpar,nSim);
+  
   Int Seed(1234);
   if (simpar.isDefined("seed")) {    
     Seed=simpar.asInt("seed");
@@ -842,259 +646,33 @@ Int GJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol
     }
   }
 
-  const ROMSSpWindowColumns& spwcols = vi.msColumns().spectralWindow();
-
-  if (prtlev()>3) cout << " SpwCols accessed:" << endl;
-  if (prtlev()>3) cout << "   nSpw()= " << nSpw() << endl;
-  if (prtlev()>3) cout << "   spwcols.nrow()= " << nSpw() << endl;
-
-  AlwaysAssert(nSpw()==spwcols.nrow(),AipsError);
-
-  // things will break if spw mapping, ie not in same order as in vs
-  corruptor_p->nSpw()=nSpw();
-  corruptor_p->nAnt()=nAnt();
-  corruptor_p->currAnt()=0;
-  corruptor_p->currSpw()=0;
-  corruptor_p->fRefFreq().resize(nSpw());
-  corruptor_p->fnChan().resize(nSpw());
-  corruptor_p->fWidth().resize(nSpw());
-
-  for (Int irow=0;irow<nSpw();++irow) { 
-    corruptor_p->fRefFreq()[irow]=spwcols.refFrequency()(irow);
-    corruptor_p->fnChan()[irow]=spwcols.numChan()(irow);
-    corruptor_p->fWidth()[irow]=spwcols.totalBandwidth()(irow); 
-    // totalBandwidthQuant ?  in other places its assumed to be in Hz
-  }
-  // see MSsummary.cc for more info/examples
-
-  gcorruptor_p->initialize(Seed,Beta,Scale);
-  
-  //if (prtlev()>2) cout << "   G::setupSim()  nSim = " << nSim << endl;
-  return nSim;
-}
-
-
-
-
-
-
-Bool GJones::simPar(VisIter& vi, const Int nChunks){
-  LogIO os(LogOrigin("G", "simPar()", WHERE));
-  if (prtlev()>4) cout << "   G::simPar()" << endl;
-  
-  AlwaysAssert((isSimulated()),AipsError);
-#ifndef RI_DEBUG
-  try {
-#endif
-    Vector<Int> a1;
-    Vector<Int> a2;
-    Matrix<Bool> flags;
-
-    solveCPar()=Complex(0.0);
-    // n good VI elements averaged in each CPar() entry:
-    IPosition cparshape=solveCPar().shape();
-    Cube<Complex> nGood(cparshape);
-    solveParOK()=False;
+  if (simpar.isDefined("mode")) {    
+    if (prtlev()>2)
+      cout << "initializing GCorruptor with mode " << simpar.asString("mode") << endl;
     
-    Vector<Double> timevec;
-    Double starttime,stoptime;
-    starttime=vi.time(timevec)[0];
+    // slot_times for a fBM-based corruption need to be even even if solTimes are not
+    // so will define startTime and stopTime and reset nsim() here.
     
-    for (Int ichunk=0;ichunk<nChunks;++ichunk) {
-      Int spw(vi.spectralWindow());
-      corruptor_p->currSpw()=spw; 
-
-      for (vi.origin(); vi.more(); vi++) {
-        // these need to be updated whenever the VI scrolls forward
-        vi.antenna1(a1);
-        vi.antenna2(a2);
-        vi.flag(flags);
-	vi.time(timevec);
-
-	for (Int irow=0;irow<vi.nRow();++irow) {
-      
-	  if (nfalse(flags.column(irow))> 0 ) {
-	    if ( a1(irow)==a2(irow) ) {
-	      // autocorrels should get 1. for multiplicative VC
-	      for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) 
-		solveCPar().xyPlane(a1(irow)).row(icorr) = Complex(1.);	      
-	      nGood.xyPlane(a1(irow)) = nGood.xyPlane(a1(irow)) + Complex(1.);
-	    } else {
-	
-	    if (corruptor_p->curr_time()!=timevec[irow]) {	  
-	      corruptor_p->curr_time()=timevec[irow];          
-	      // find new slot if required
-	      Double dt(1e10),dt0(-1);
-	      dt0 = abs(corruptor_p->slot_time() - timevec[irow]);
-	  
-	      if (timevec[irow]<corruptor_p->curr_time()) {
-		for (Int newslot=corruptor_p->curr_slot()-1;
-		     newslot>=0;newslot--) {
-		  dt=abs(corruptor_p->slot_time(newslot) - timevec[irow]);
-		  if (dt<dt0) {
-		    // use this check for on-depand corruptors to get new val.
-		    corruptor_p->curr_slot()=newslot;
-		    dt0 = dt;
-		    if (prtlev()>4) 
-		      cout << "    G:simPar retreating to time " << 
-			timevec[irow] << endl;
-		  }
-		}
-	      } else {          
-		for (Int newslot=corruptor_p->curr_slot()+1;
-		     newslot<corruptor_p->nSim();newslot++) {
-		  dt=abs(corruptor_p->slot_time(newslot) - timevec[irow]);
-		  if (dt<dt0) {
-		    // use this check for on-demand corruptors to get new val.
-		    corruptor_p->curr_slot()=newslot;
-		    dt0 = dt;
-		    if (prtlev()>4) 
-		      cout << "    G:simPar advancing to time " << 
-			timevec[irow] << endl;
-		  }         
-		}
-	      }
-	    }
-
-	    corruptor_p->currAnt()=a1(irow);
-
-	    // Gcorruptor::gain doesn't currently depend on chan/freq:
-	    // RI TODO Gcorruptor needs freqDepPar and switch in gain()
-
-	    if (freqDepPar()) { 
-	      // then this is actually a B which is a Gf
-	      for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) {
-		solveCPar()(icorr,focusChan(),a1(irow)) = 
-		  gcorruptor_p->gain(icorr,focusChan());
-		nGood(icorr,focusChan(),a1(irow)) += Complex(1.);
-		solveParOK()(icorr,focusChan(),a1(irow)) = True;
-	      }
-	    } else {
-	      // do all channels:
-	      for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) 
-		solveCPar().xyPlane(a1(irow)).row(icorr) = 
-		  gcorruptor_p->gain(icorr,0);
-	      nGood.xyPlane(a1(irow)) = nGood.xyPlane(a1(irow)) + Complex(1.);
-	      solveParOK().xyPlane(a1(irow)) = True;
-	    }	    
-	    } // if not autocorr
-	  } // if not flagged 
-	} // irow loop
-      } // vi loop
-      if (vi.moreChunks()) vi.nextChunk();
-    } // chunk loop
-
-    // RI TODO G::simPar  don't divide by zero  **
-    for (Int i=0;i<cparshape(2);i++)
-      solveCPar().xyPlane(i) =  solveCPar().xyPlane(i) / nGood.xyPlane(i);
-    
-    vi.time(timevec);
-    Int tvsize;
-    timevec.shape(tvsize);
-    stoptime=timevec[tvsize-1];
-    refTime() = 0.5*(starttime+stoptime);
-    interval() = (stoptime-starttime);
-    currField() = vi.fieldId();
-
-#ifndef RI_DEBUG
-  } catch (AipsError x) {
-    if (gcorruptor_p) delete gcorruptor_p;
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return False;
-  } 
-#endif
-  return True;
-}
-
-
-
-
-GJonesCorruptor::GJonesCorruptor(const Int nSim) : 
-  CalCorruptor(nSim),  // parent
-  tsys_(0.0)
-{}
-
-GJonesCorruptor::~GJonesCorruptor() {
-  if (prtlev()>2) cout << "GCorruptor::~GCorruptor()" << endl;
-}
-
-
-
-Matrix<Complex>* GJonesCorruptor::drift() { 
-  if (currAnt()<=drift_p.nelements())
-    return drift_p[currAnt()];
-  else
-    return NULL;
-};
- 
-
-void GJonesCorruptor::initialize() {
-  // for testing only
-  if (prtlev()>2) cout << "GCorruptor::init [test]" << endl;
-}
-
-void GJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float scale) {
-  // individual delays for each antenna
-
-  fBM* myfbm = new fBM(nSim());
-  drift_p.resize(nAnt(),False,True);
-  for (Int iant=0;iant<nAnt();++iant) {
-    drift_p[iant] = new Matrix<Complex>(nCorr(),nSim());
-    for (Int icorr=0;icorr<nCorr();++icorr){
-      myfbm->initialize(Seed+iant+icorr,Beta); // (re)initialize
-      Float pmean = mean(myfbm->data());
-      Float rms = sqrt(mean( ((myfbm->data())-pmean)*((myfbm->data())-pmean) ));
-      if (prtlev()>3 and currAnt()<2) {
-	cout << "RMS fBM fluctuation for antenna " << iant 
-	     << " = " << rms << " ( " << pmean << " ; beta = " << Beta << " ) " << endl;      
-      }
-      // amp
-      Vector<Float> amp = (myfbm->data()) * scale/rms;
-      for (Int i=0;i<nSim();++i)  {
-	(*(drift_p[iant]))(icorr,i) = Complex(1.+amp[i],0);
-      }
-      
-      // phase
-      myfbm->initialize((Seed+iant+icorr)*100,Beta); // (re)initialize
-      pmean = mean(myfbm->data());
-      rms = sqrt(mean( ((myfbm->data())-pmean)*((myfbm->data())-pmean) ));
-      Vector<Float> angle = (myfbm->data()) * scale/rms * 3.141592; // *2 ?
-      for (Int i=0;i<nSim();++i)  {
-	(*(drift_p[iant]))(icorr,i) *= exp(Complex(0,angle[i]));
-      }
-
-      currAnt()=iant;
+    if (simpar.isDefined("startTime")) {    
+      corruptor_p->startTime() = simpar.asDouble("startTime");
+    } else {
+      throw(AipsError("start/stop time not defined"));
     }
-  }
-
-  if (slot_times_.nelements()<=0) {
-    slot_times_.resize(nSim());
-    Double dtime( (stopTime()-startTime()) / Double(nSim()-1) );
-    for (Int i=0;i<nSim();i++) 
-      slot_time(i) = startTime() + (Double(i)+0.5) * dtime;
-  }
-  curr_slot()=0;      
-  curr_time()=slot_time();  
-
-  initialized()=True;
-  if (prtlev()>2) cout << "GCorruptor::init" << endl;
-
+    if (simpar.isDefined("stopTime")) {    
+      corruptor_p->stopTime() = simpar.asDouble("stopTime");
+    } else {
+      throw(AipsError("start/stop time not defined"));
+    }
+        
+    Float fBM_interval=max(interval(),5.); // generate screens on 5s intervals or longer
+    corruptor_p->setEvenSlots(fBM_interval);
+   
+    gcorruptor_p->initialize(Seed,Beta,Scale);
+    
+  } else 
+    throw(AipsError("Unknown Mode for GJonesCorruptor"));        
+ }
 }
-
-
-Complex GJonesCorruptor::gain(const Int icorr,const Int ichan) {
-  if (curr_slot()>=0 and curr_slot()<nSim() and icorr>=0 and icorr<nCorr()) {    
-    if (currAnt()>drift_p.nelements())
-      throw(AipsError("GJonesCorruptor internal error accessing drift()"));  
-    Complex delta = (*drift_p[currAnt()])(icorr,curr_slot());    
-    return delta;
-  } else {
-    cout << "GCorruptor::gain: slot " << curr_slot() << "out of range!" <<endl;
-    return Complex(1.);
-  }
-}
-
-
 
 
 
@@ -1281,6 +859,9 @@ void BJones::fillChanGapArray(Array<Complex>& sol,
   } // done
 
 }
+
+
+
 
 // **********************************************************
 //  DJones Implementations
@@ -1655,107 +1236,6 @@ void DJones::initTrivDJ() {
 
 
 
-Int DJones::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes)
-{
-
-  LogIO os(LogOrigin("D", "setupSim()", WHERE));
-
-  if (prtlev()>2) cout << "   D::setupSim()" << endl;
-  AlwaysAssert((isSimulated()),AipsError);
-
-  // this is trivial since we don't need slots, just a constant D with time.
-
-  Int nSim = 1;
-  // still need a corruptor to have a curr_time in it
-  corruptor_p = new CalCorruptor(nSim);
-  corruptor_p->prtlev()=prtlev();
-    Vector<Double> timevec;
-  corruptor_p->curr_time()=vs.iter().time(timevec)[0];
-  corruptor_p->amp()=simpar.asFloat("amplitude");
-
-  return nSim;
-}
-
-
-
-
-
-
-Bool DJones::simPar(VisIter& vi, const Int nChunks){
-  LogIO os(LogOrigin("D", "simPar()", WHERE));
-  if (prtlev()>4) cout << "   D::simPar()" << endl;
-  
-  AlwaysAssert((isSimulated()),AipsError);
-#ifndef RI_DEBUG
-  try {
-#endif
-    Vector<Int> a1;
-    Vector<Int> a2;
-    Matrix<Bool> flags;
-    Float& amp(corruptor_p->amp());
-
-    solveCPar()=Complex(0.0);
-    // n good VI elements averaged in each CPar() entry:
-    solveParOK()=False;
-    
-    Vector<Double> timevec;
-    Double starttime,stoptime;
-    starttime=vi.time(timevec)[0];
-    
-    for (Int ichunk=0;ichunk<nChunks;++ichunk) {
-      Int spw(vi.spectralWindow());
-      corruptor_p->currSpw()=spw; 
-
-      for (vi.origin(); vi.more(); vi++) {
-        // these need to be updated whenever the VI scrolls forward
-        vi.antenna1(a1);
-        vi.antenna2(a2);
-        vi.flag(flags);
-	vi.time(timevec);
-
-	for (Int irow=0;irow<vi.nRow();++irow) {
-      
-	  if (nfalse(flags.column(irow))> 0 ) { 	    
-	    corruptor_p->currAnt()=a1(irow);
-	    for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) {
-	      if ( a1(irow)==a2(irow) ) {
-		solveCPar().xyPlane(a1(irow)).row(icorr) = Complex(1.0); 
-	      } else {	       	      
-		solveCPar().xyPlane(a1(irow)).row(icorr) = amp; 
-	      }		
-	      solveParOK().xyPlane(a1(irow)) = True;
-	    }
-	  } // if not flagged 
-	} // irow loop
-      } // vi loop
-      if (vi.moreChunks()) vi.nextChunk();
-    } // chunk loop
-
-    
-    vi.time(timevec);
-    Int tvsize;
-    timevec.shape(tvsize);
-    stoptime=timevec[tvsize-1];
-    refTime() = 0.5*(starttime+stoptime);
-    interval() = (stoptime-starttime);
-    currField() = vi.fieldId();
-
-#ifndef RI_DEBUG
-  } catch (AipsError x) {
-    if (gcorruptor_p) delete gcorruptor_p;
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return False;
-  } 
-#endif
-  return True;
-}
-
-
-
-
-
-
-
 // **********************************************************
 //  DfJones Implementations
 //
@@ -1900,6 +1380,10 @@ void JJones::initTrivDJ() {
   diffJElem()(IPosition(4,3,3,0,0))=Complex(1.0);
 
 }
+
+
+
+
 
 // **********************************************************
 //  MMueller: baseline-based (closure) solution
@@ -2314,206 +1798,21 @@ void MMueller::keep(const Int& slot) {
 
 
 
-Int MMueller::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes)
+void MMueller::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim) 
 {
-  // prtlev()=4; // debug
-  if (prtlev()>2) cout << "   MM::setupSim()" << endl;
-  AlwaysAssert((isSimulated()),AipsError);
-
-  Int nSim = sizeUpSim(vs,nChunkPerSol,solTimes);
-  if (prtlev()>3) cout << " sized for Sim." << endl;
+  if (prtlev()>2) cout << "   MM::setSimulate()" << endl;
 
   atmcorruptor_p = new AtmosCorruptor();
   corruptor_p = atmcorruptor_p;
-  if (prtlev()>3) cout << " AtmosCorruptor created." << endl;
 
-  atmcorruptor_p->freqDep()=freqDepPar();
+  // call generic parent to set corr,spw,etc info
+  SolvableVisCal::createCorruptor(vi,simpar,nSim);
 
-  // RI TODO mm:setupSim move spw info to generic setupSim?
-  VisIter& vi(vs.iter());
-  const ROMSSpWindowColumns& spwcols = vi.msColumns().spectralWindow();
-
-  if (prtlev()>3) cout << " SpwCols accessed:" << endl;
-  if (prtlev()>3) cout << "   nSpw()= " << nSpw() << endl;
-  if (prtlev()>3) cout << "   spwcols.nrow()= " << nSpw() << endl;
-
-  AlwaysAssert(nSpw()==spwcols.nrow(),AipsError);
-
-  // things will break if spw mapping, ie not in same order as in vs
-  corruptor_p->nSpw()=nSpw();
-  corruptor_p->nAnt()=nAnt();
-  corruptor_p->currAnt()=0;
-  corruptor_p->currSpw()=0;
-  corruptor_p->fRefFreq().resize(nSpw());
-  corruptor_p->fnChan().resize(nSpw());
-  corruptor_p->fWidth().resize(nSpw());
-
-  for (Int irow=0;irow<nSpw();++irow) { 
-    corruptor_p->fRefFreq()[irow]=spwcols.refFrequency()(irow);
-    corruptor_p->fnChan()[irow]=spwcols.numChan()(irow);
-    corruptor_p->fWidth()[irow]=spwcols.totalBandwidth()(irow); 
-    // totalBandwidthQuant ?  in other places its assumed to be in Hz
-  }
-  // see MSsummary.cc for more info/examples
-
-
-  atmcorruptor_p->initialize(simpar);
-  
-  return nSim;
+  // RI TODO ::createCorr make sure this atmcorruptor initializer works as  intended
+  // this is the M type corruptor - maybe we should make the corruptor 
+  // take the VC as an argument
+  atmcorruptor_p->initialize(vi,simpar); 
 }
-
-
-
-
-Bool MMueller::simPar(VisIter& vi,const Int nChunks) {
-  if (prtlev()>4) cout << "  MM::simPar()" << endl;
-
-  AlwaysAssert((isSimulated()),AipsError);
-  try {
-    
-    Vector<Int> a1;
-    Vector<Int> a2;
-    Matrix<Bool> flags;  // matrix foreach row and chan - if want pol send cube.
-    Vector<Double> antDiams = vi.msColumns().antenna().dishDiameter().getColumn();
-    Vector<Double> timevec;
-    Double starttime,stoptime;
-    Int ibln;
-    
-    // initSolvePar: solveCPar().resize(nPar(),nChanPar(),nBln());
-    solveCPar()=Complex(0.0);
-    IPosition cparshape=solveCPar().shape();
-
-    // n good VI elements to average in each CPar entry
-    Cube<Complex> nGood(cparshape);
-    solveParOK()=False;
-    
-    // RI TODO MM::simPar CPar and VI shape checks?
-    
-    starttime=vi.time(timevec)[0];
-
-    Complex factor(1.0);
-    Float tau0(0.),airmass1(1.0),airmass2(1.0),A(1.0),tsys(0.),tau(0.),factor0(1.0);
-    factor0 = atmcorruptor_p->amp();
-    
-    if (atmcorruptor_p->mode() == "tsys") {
-      // live dangerously: assume all vis have the same tint
-      Double tint = vi.msColumns().exposure()(0);  
-      Int iSpW = vi.spectralWindow();
-      Float deltaNu = 
-	vi.msColumns().spectralWindow().totalBandwidth()(iSpW) / 
-	Float(vi.msColumns().spectralWindow().numChan()(iSpW));	    
-      factor0 /= sqrt( deltaNu * tint ) ;  
-    }
-    Float el1(1.5708);    
-    Float el2(1.5708);
-      
-    for (Int ichunk=0;ichunk<nChunks;++ichunk) {
-      Int spw(vi.spectralWindow());	
-      corruptor_p->currSpw()=spw;
-      currSpw()=spw;
-      
-      // assume one time slot per chunk
-      Vector<MDirection> antazel(vi.azel(refTime()));
-            
-      for (vi.origin(); vi.more(); vi++) {
-	
-	vi.antenna1(a1);
-	vi.antenna2(a2);
-	vi.flag(flags);
-	
-	for (Int irow=0;irow<vi.nRow();++irow)
-	  if ( nfalse(flags.column(irow)) > 0 ) {   
-	    if ( a1(irow)==a2(irow) ) {
-	    if (freqDepPar()) {
-	      for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) {		
-		solveCPar()(icorr,focusChan(),ibln) += Complex(1.);
-		nGood(icorr,focusChan(),ibln) += + Complex(1.);	    
-		solveParOK()(icorr,focusChan(),ibln) = True;
-	      }
-	    } else {
-	      solveCPar().xyPlane(ibln) = solveCPar().xyPlane(ibln) + Complex(1.);
-	      nGood.xyPlane(ibln) = nGood.xyPlane(ibln) + Complex(1.);	    
-	      solveParOK().xyPlane(ibln) = True;
-	    }
-	    } else {	       
-	    // don't need loop to find the corruptor time slot here,
-	    // since just drawing from random distribution.
-	    
-	    factor=factor0;
-
-	    if (atmcorruptor_p->mode() == "tsys") {	      
-	      el1 = antazel(a1(irow)).getAngle("rad").getValue()(1);
-	      el2 = antazel(a2(irow)).getAngle("rad").getValue()(1);
-	      
-	      if (el1 > 0.0 && el2 > 0.0) {
-		airmass1 = 1.0/ sin(el1);
-		airmass2 = 1.0/ sin(el2);
-	      } else {
-		airmass1 = 1.0;
-		airmass2 = 1.0;
-	      }
-
-	      if (freqDepPar()) {
-		tau = atmcorruptor_p->opac(focusChan());
-	      }	else {
-		tau = 1.;
-	      }
-	      // user could be overriding the tau scale, but keep the
-	      // ATM freq dependence - see atmcorruptor::initialize
-	      tau *= atmcorruptor_p->tauscale();
-
-	      A = exp(-tau *0.5*(airmass1+airmass2));	      
-	      // this is tsys above atmosphere
-	      tsys = atmcorruptor_p->tsys0() + A*atmcorruptor_p->tsys1();
-	      	      
-	      factor *= tsys / antDiams(a1(irow)) / antDiams(a2(irow));
-	    }
-	    
-	    // corr,chan,bln = xyz
-	    ibln=blnidx(a1(irow),a2(irow));
-	    if (freqDepPar()) {
-	      for (Int icorr=0;icorr<corruptor_p->nCorr();icorr++) {		
-		solveCPar()(icorr,focusChan(),ibln) += factor;
-		nGood(icorr,focusChan(),ibln) += + Complex(1.);	    
-		solveParOK()(icorr,focusChan(),ibln) = True;
-	      }
-	    } else {
-	      solveCPar().xyPlane(ibln) = solveCPar().xyPlane(ibln) + factor;   
-	      nGood.xyPlane(ibln) = nGood.xyPlane(ibln) + Complex(1.);	    
-	      solveParOK().xyPlane(ibln) = True;
-	    }
-	    }// if not autocorr	    
-	  } // if good row
-      } // advancing VI
-      if (vi.moreChunks()) vi.nextChunk();
-    } // nchunks loop
-    
-    vi.time(timevec);
-    Int tvsize;
-    timevec.shape(tvsize);
-    stoptime=timevec[tvsize-1];
-    
-    // RI TODO MM::simPar  don't divide by zero **
-    for (Int i=0;i<cparshape(2);i++)
-      solveCPar().xyPlane(i) =  solveCPar().xyPlane(i) / nGood.xyPlane(i);
-    
-    // since we're not going to syncMeta to a VBA in Simulator, we need to set
-    // various things here by hand so that keep() has them:
-    // refTime(), currSpw(), currField(), and interval()
-    refTime() = 0.5*(starttime+stoptime);
-    interval() = (stoptime-starttime);
-    currField() = vi.fieldId();
-    
-  } catch (AipsError x) {
-    if (corruptor_p) delete corruptor_p;
-    cout << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    return False;
-  }
-  return True;
-}
-
-
-
 
 
 

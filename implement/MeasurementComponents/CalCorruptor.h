@@ -33,6 +33,8 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <casa/Containers/Record.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
+#include <ms/MeasurementSets/MSColumns.h>
+#include <synthesis/MeasurementComponents/VisCal.h>
 
 using namespace std;
 
@@ -90,54 +92,63 @@ class CalCorruptor {
   CalCorruptor(const Int nSim);
   virtual ~CalCorruptor();
   inline Int& nSim() { return nSim_; };
-  inline Bool& initialized() { return initialized_; };
+  inline Bool& times_initialized() { return times_initialized_; };
   inline Int& curr_slot() { return curr_slot_; };
   inline Double& curr_time() { return curr_time_; };
   inline Double& startTime() { return starttime_; };
   inline Double& stopTime() { return stoptime_; };
   inline Double& slot_time(const Int i) { return slot_times_(i); };
   inline Double& slot_time() { return slot_times_(curr_slot()); };
+  inline Vector<Double>& slot_times() { return slot_times_; };
   inline Float& amp() { return amp_;};
   virtual void initialize() {};
 
   // a generic initializer that just takes amplitude and simpar
   void initialize(const Float amp, const Record& simpar) {
     amp_=amp;
-    simpar_=simpar;
-    initialized_=True;
+    simpar_=simpar;   
   };
   inline Record& simpar() {return simpar_;}
   inline String& mode() { return mode_; };
 
-  inline Int& currCorr() { return curr_corr_; };
-  inline Int& nCorr() { return nCorr_; };
-  inline Int& currChan() { return curr_chan_; };  
-  inline Int& nChan() { return fnChan_[currSpw()]; };  
+  void setEvenSlots(const Double& dt);
+  virtual Complex simPar(const VisIter& vi, VisCal::Type type,Int ipar);
 
+//  inline Int& currCorr() { return curr_corr_; };
+//  inline Int& nCorr() { return nCorr_; };
+  inline Int& nPar() { return nPar_; };
+//  inline Int& currChan() { return curr_chan_; };  
+  inline Int& nChan() { return fnChan_[currSpw()]; };  
+  inline Int& focusChan() {return curr_chan_;};
+  
   // inherited from VC
   inline Int& prtlev() { return prtlev_; };
   inline Int& nAnt() { return nAnt_; };
   inline Int& nSpw() { return nSpw_; };  
   inline Int& currAnt() { return curr_ant_; };
+  inline Int& currAnt2() { return curr_ant2_; };
   inline Int& currSpw() { return curr_spw_; };
   inline Vector<Float>& fRefFreq() { return fRefFreq_; };
   inline Vector<Float>& fWidth() { return fWidth_; };
   inline Vector<Int>& fnChan() { return fnChan_; };
+
+  inline Bool& freqDepPar() { return freqdep_; };
  
  protected:
    
    Int nSim_;
-   Bool initialized_;
    Int curr_slot_;
-   Int nCorr_,curr_corr_,curr_chan_;
+   Bool times_initialized_,freqdep_;
+   //Int nCorr_,curr_corr_;
+   Int nPar_;
    Double curr_time_,starttime_,stoptime_;
    Float amp_;
    Vector<Double> slot_times_;   
    Record simpar_;
    String mode_; // general parameter for different kinds of corruptions
 
-   Int prtlev_;
-   Int nAnt_,curr_ant_,nSpw_,curr_spw_;
+   Int prtlev_;   
+   Int nAnt_,curr_ant_,nSpw_,curr_spw_,curr_chan_,curr_ant2_;
    Vector<Float> fRefFreq_,fWidth_; // for each spw
    Vector<Int> fnChan_;
 
@@ -156,7 +167,6 @@ class ANoiseCorruptor : public CalCorruptor {
   public:
     ANoiseCorruptor();
     virtual ~ANoiseCorruptor();
-    //Float &amp() {return amplitude_; };
     virtual void initialize() {
       initialize(1234,1.0);
     }
@@ -164,13 +174,10 @@ class ANoiseCorruptor : public CalCorruptor {
       rndGen_p = new MLCG(seed);
       nDist_p = new Normal(rndGen_p, 0.0, 1.0); // sigma=1.
       amp_=amp;
-      initialized_=True;
     };
-    //Array<Complex> noise(const IPosition shape);
-    Array<Complex> noise(const Int nrow, const Int ncol);
+    virtual Complex simPar(const VisIter& vi,VisCal::Type type,Int ipar);
 
   private:
-    //Float amplitude_;
     MLCG *rndGen_p;
     Normal *nDist_p;
   };
@@ -181,48 +188,6 @@ class ANoiseCorruptor : public CalCorruptor {
 
 
 
-
-
-
-class TJonesCorruptor : public CalCorruptor {
-
- public:
-   TJonesCorruptor(const Int nSim);
-   virtual ~TJonesCorruptor();
-
-   Float& pwv(const Int i); 
-   Vector<Float>* pwv();
-   void initAtm();
-   inline Float& mean_pwv() { return mean_pwv_; };
-   inline Matrix<Float>& screen() { return *screen_p; };
-   inline Float screen(const Int i, const Int j) { 
-     // RI_TODO out of bounds check or is that done by Vector?
-     return screen_p->operator()(i,j); };
-   virtual void initialize();
-   void initialize(const Int Seed, const Float Beta, const Float scale);
-   void initialize(const Int Seed, const Float Beta, const Float scale,
-		   const ROMSAntennaColumns& antcols);
-   Complex gain(const Int islot);
-   Complex gain(const Int ix, const Int iy, const Int islot);
-   inline Vector<Float>& antx() { return antx_; };
-   inline Vector<Float>& anty() { return anty_; };
-   inline Float& windspeed() { return windspeed_; };
-   inline Float& pixsize() { return pixsize_; };
-
- protected:
-
- private:   
-   Float mean_pwv_,windspeed_,pixsize_;
-   Matrix<Float>* screen_p; 
-
-   atm::AtmProfile *itsatm;
-   atm::RefractiveIndexProfile *itsRIP;
-   atm::SkyStatus *itsSkyStatus;
-   atm::SpectralGrid *itsSpecGrid;
-
-   PtrBlock<Vector<Float>*> pwv_p;
-   Vector<Float> antx_,anty_;   
-};
 
 
 
@@ -256,12 +221,6 @@ class fBM {
 
 
 
-
-
-
-
-/// intended successor to TCorruptor, TfCorruptor, MMcorruptor, MfMcorruptor
-
 class AtmosCorruptor : public CalCorruptor {
 
  public:
@@ -276,11 +235,12 @@ class AtmosCorruptor : public CalCorruptor {
    // pwv screen e.g. for a T
    inline Matrix<Float>& screen() { return *screen_p; };
    inline Float screen(const Int i, const Int j) { 
-     // RI_TODO out of bounds check or is that done by Vector?
      return screen_p->operator()(i,j); };
    virtual void initialize();
-  // use ATM but no time dependence - e.g. for B[Tsys]
-   void initialize(const Record& simpar);
+   // use ATM but no time dependence - e.g. for B[Tsys]
+   void initialize(const VisIter& vi, const Record& simpar);
+   Vector<Double> antDiams;
+
    void initialize(const Int Seed, const Float Beta, const Float scale);
    void initialize(const Int Seed, const Float Beta, const Float scale,
 		   const ROMSAntennaColumns& antcols);
@@ -294,15 +254,16 @@ class AtmosCorruptor : public CalCorruptor {
    Float opac(const Int ichan);
    inline Float& tsys0() { return tsys0_; };  // const in T_A* scale
    inline Float& tsys1() { return tsys1_; };  // scale with exp(+tau)
-   inline Bool& freqDep() { return freqdep_; };
    inline Float& tauscale() { return tauscale_; };
+
+   virtual Complex simPar(const VisIter& vi, VisCal::Type type,Int ipar);
+
 
  protected:
 
  private:   
    Float mean_pwv_,windspeed_,pixsize_,tsys0_,tsys1_,tauscale_;
    Matrix<Float>* screen_p; 
-   Bool freqdep_;
 
    atm::AtmProfile *itsatm;
    atm::RefractiveIndexProfile *itsRIP;
@@ -312,6 +273,33 @@ class AtmosCorruptor : public CalCorruptor {
    PtrBlock<Vector<Float>*> pwv_p;
    Vector<Float> antx_,anty_;   
 };
+
+
+
+
+
+class GJonesCorruptor : public CalCorruptor {
+
+ public:
+   GJonesCorruptor(const Int nSim);
+   virtual ~GJonesCorruptor();
+
+   //Complex& drift(const Int i);  // drift as fBM
+   Matrix<Complex>* drift();   
+   inline Float& tsys() { return tsys_; };
+   virtual void initialize();
+   void initialize(const Int Seed, const Float Beta, const Float scale);
+   Complex gain(const Int icorr, const Int islot);  // tsys scale and time-dep drift   
+   virtual Complex simPar(const VisIter& vi, VisCal::Type type,Int ipar);
+
+ protected:
+
+ private:   
+   Float tsys_;
+   PtrBlock<Matrix<Complex>*> drift_p;
+};
+
+
 
 
 

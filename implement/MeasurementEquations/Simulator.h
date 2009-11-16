@@ -304,10 +304,7 @@ private:
   
   // Arrange to corrupt with simulated calibration
   //   (cf Calibrater setapply)
-  SolvableVisCal *create_corrupt(const Record& simpar);
-
-  // calculate the corruption terms and save in a caltable
-  Bool calc_corrupt(SolvableVisCal *svc, const Record& simpar);
+  Bool create_corrupt(Record& simpar);
 
   // Prints an error message if the newsimulator DO is detached and returns True.
   Bool detached() const;
