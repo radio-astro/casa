@@ -202,7 +202,6 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
     
 #ifndef RI_DEBUG    
   } catch (AipsError x) {
-    if (tcorruptor_p) delete tcorruptor_p;
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
   } 
 #endif
