@@ -4,7 +4,7 @@ from glob import glob
 import locale
 import os
 
-def lsms(musthave=[], mspat="*.ms", combine='or', remind=True):
+def lsms(musthave=[], mspat="*[-_.][Mm][Ss]", combine='or', remind=True):
     """
     Summarize measurement sets matching certain criteria.
 
@@ -16,7 +16,8 @@ def lsms(musthave=[], mspat="*.ms", combine='or', remind=True):
               internally uppercased.
 
     mspat:    A filename pattern, relative to the current directory, that the
-              directory names matching of the MSes must match.  Default: '*.ms'
+              directory names matching of the MSes must match.
+              Default: '*[-_.][Mm][Ss]'
 
     combine:  Controls whether the conditions of musthave are combined with
               'or' (default) or 'and'.
@@ -26,9 +27,10 @@ def lsms(musthave=[], mspat="*.ms", combine='or', remind=True):
 
     Note that to fit in better with *sh behavior the argument order is reversed
     when calling from a non-python shell.  i.e. if you enter
-      lsms *_MS source polarization
+      lsms \*_MS source polarization
     in a *sh session, it will run with
       mspat='*_MS' and musthave=['SOURCE', 'POLARIZATION'].
+    (remember to quote wildcards to avoid sh expansion)
     """
     msdict, use_tb = matchingMSes(musthave, mspat, combine)
     mses = msdict.keys()
@@ -434,7 +436,11 @@ def matchingMSes(musthave=[], mspat="*.ms", combine='or'):
         try:
             use_tb = hasattr(tb, 'colnames')
         except:
-            print "Could not find the tb tool (try running inside a casapy session)."
+            try:
+                from taskinit import tb
+                use_tb = hasattr(tb, 'colnames')
+            except:
+                print "Could not find the tb tool (try running inside a casapy session)."
         if need_tb and not use_tb:
             print "Removing", ', '.join(need_tb), "from the criteria for matching."
             musthave.difference_update(need_tb)

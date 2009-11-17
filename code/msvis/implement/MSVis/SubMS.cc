@@ -1415,7 +1415,8 @@ namespace casa {
 		       const Double regridBandwidth, 
 		       const Double regridChanWidth,
 		       const Int phaseCenterFieldId,
-		       MDirection phaseCenter
+		       MDirection phaseCenter,
+		       const Bool centerIsStart
 		  ){
     
     LogIO os(LogOrigin("SubMS", "regridSpw()"));
@@ -1437,13 +1438,18 @@ namespace casa {
     vector<Int> oldFieldId;
     vector<Int> newDataDescId;
     vector<Bool> regrid;
+    vector<Bool> transform;
+    vector<MDirection> theFieldDirV;
+    vector<MPosition> mObsPosV;
+    vector<MFrequency::Types> theFrameV;
+    vector<MFrequency::Ref> fromFrameV;
     vector< Vector<Double> > xout; 
     vector< Vector<Double> > xin; 
     //    vector< InterpolateArray1D<Double,Complex>::InterpolationMethod > method;
     // This is a temporary fix until InterpolateArray1D<Double, Complex> works.
     vector< InterpolateArray1D<Float,Complex>::InterpolationMethod > method;
     vector< InterpolateArray1D<Double,Float>::InterpolationMethod > methodF;
-
+    
 
     Bool msModified = False;
 
@@ -1452,6 +1458,11 @@ namespace casa {
 			    oldFieldId,
 			    newDataDescId,
 			    regrid,
+			    transform,
+			    theFieldDirV,
+			    mObsPosV,
+			    theFrameV,
+			    fromFrameV,
 			    xout, 
 			    xin, 
 			    method,
@@ -1461,14 +1472,15 @@ namespace casa {
 			    regridQuant,
 			    regridVeloRestfrq,
 			    regridInterpMeth,
-			    regridCenter, 
+			    regridCenter,
 			    regridBandwidth, 
 			    regridChanWidth,
 			    phaseCenterFieldId,
 			    phaseCenter,
 			    False, // <-----
 			    os,
-			    regridMessage
+			    regridMessage,
+			    centerIsStart
 			    )){ // an error occured
       return -1;
     }
@@ -1479,6 +1491,11 @@ namespace casa {
 			    oldFieldId,
 			    newDataDescId,
 			    regrid,
+			    transform,
+			    theFieldDirV,
+			    mObsPosV,
+			    theFrameV,
+			    fromFrameV,
 			    xout, 
 			    xin, 
 			    method,
@@ -1488,14 +1505,15 @@ namespace casa {
 			    regridQuant,
 			    regridVeloRestfrq,
 			    regridInterpMeth,
-			    regridCenter, 
+			    regridCenter,
 			    regridBandwidth, 
 			    regridChanWidth,
 			    phaseCenterFieldId,
 			    phaseCenter,
 			    True, // <-----
 			    os,
-			    regridMessage
+			    regridMessage,
+			    centerIsStart
 			    )){ // an error occured
       if(msModified){
 	return 0;
@@ -1604,7 +1622,8 @@ namespace casa {
     // administrational columns needed from the main table
     ScalarColumn<Int> fieldIdCol = mainCols.fieldId();
     ScalarColumn<Int> DDIdCol = mainCols.dataDescId();
-    
+    ScalarMeasColumn<MEpoch> mainTimeMeasCol = mainCols.timeMeas();
+   
     // columns needed from subtables
     MSDataDescription ddtable=ms_p.dataDescription();
     MSDataDescColumns DDCols(ddtable);
@@ -1631,6 +1650,8 @@ namespace casa {
       Int theDataDescId = DDIdCol(mainTabRow);
       // and the SPW_ID extracted from the corresponding row in the DATA_DESCRIPTION table.
       Int theSPWId = SPWIdCol(theDataDescId);
+
+      MEpoch theObsTime = mainTimeMeasCol(mainTabRow);
       
       //  The pair (theFieldId, theSPWId) is looked up in the "done table". 
       Int iDone = -1;
@@ -1657,6 +1678,9 @@ namespace casa {
       //Furthermore, if regrid[iDone] is true, the visibilities and all 
       // channel-number-dependent arrays need to be regridded.
       if(regrid[iDone]){
+
+	Bool doExtrapolate = False;
+
 	// regrid the complex columns
 	Array<Complex> yout;
 	Array<Bool> youtFlags;
@@ -1667,12 +1691,30 @@ namespace casa {
 	// Note: to use a  Vector<Float> here instead of the original Vector<Double>
 	// is a temporary fix until InterpolateArray1D<Double, Complex> works.
 	Vector<Float> xinff(xin[iDone].size());
-	Vector<Float> xoutff(xout[iDone].size());
-	for(uInt i=0; i<xin[iDone].size(); i++){
+	Vector<Float> xoutff(xout[iDone].size()); 
+	Vector<Double> xoutdd(xout[iDone].size());
+	for(uInt i=0; i<xin[iDone].size(); i++){ // cannot use assign due to different data type
 	  xinff[i] = xin[iDone][i];
 	}
-	for(uInt i=0; i<xout[iDone].size(); i++){
-	  xoutff[i] = xout[iDone][i];
+
+	if(transform[iDone]){
+	  doExtrapolate = True;
+	  // create frequency machine for this time stamp
+	  MFrequency::Ref toFrame = MFrequency::Ref(theFrameV[iDone], MeasFrame(theFieldDirV[iDone], mObsPosV[iDone], theObsTime));
+	  Unit unit(String("Hz"));
+	  MFrequency::Convert freqTrans2(unit, fromFrameV[iDone], toFrame);
+	
+	  // transform to this time stamp
+	  for(uInt i=0; i<xoutdd.size(); i++){
+	    xoutdd[i] = freqTrans2(xout[iDone][i]).get(unit).getValue();
+	    xoutff[i] = xoutdd[i];
+	  }
+	}
+	else{ // no additional transformation of output grid
+	  for(uInt i=0; i<xout[iDone].size(); i++){
+	    xoutdd[i] = xout[iDone][i];
+	    xoutff[i] = xoutdd[i];
+	  }
 	}
 	
 	if(!CORRECTED_DATACol.isNull()){
@@ -1685,7 +1727,7 @@ namespace casa {
 							  yinFlags,// the old flags
 							  method[iDone], // the interpol method
 							  False, // for flagging: good is not true
-							  False // do not extrapolate
+							  doExtrapolate // do not extrapolate
 							  );
 	  CORRECTED_DATACol.put(mainTabRow, yout);
 	  if(!youtFlagsWritten){ 
@@ -1696,7 +1738,7 @@ namespace casa {
 	if(!DATACol.isNull()){
 	  yin.assign((*oldDATAColP)(mainTabRow));
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, youtFlags, xoutff, xinff, 
-							  yin, yinFlags, method[iDone], False, False);
+							  yin, yinFlags, method[iDone], False, doExtrapolate);
 	  DATACol.put(mainTabRow, yout);
 	  if(!youtFlagsWritten){ 
 	    FLAGCol.put(mainTabRow, youtFlags);
@@ -1706,13 +1748,13 @@ namespace casa {
 	if(!LAG_DATACol.isNull()){
 	  yin.assign((*oldLAG_DATAColP)(mainTabRow));
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, youtFlags, xoutff, xinff, 
-							  yin, yinFlags, method[iDone], False, False);
+							  yin, yinFlags, method[iDone], False, doExtrapolate);
 	  LAG_DATACol.put(mainTabRow, yout);
 	}
 	if(!MODEL_DATACol.isNull()){
 	  yin.assign((*oldMODEL_DATAColP)(mainTabRow));
 	  InterpolateArray1D<Float, Complex>::interpolate(yout, youtFlags, xoutff, xinff, 
-							  yin, yinFlags, method[iDone], False, False);
+							  yin, yinFlags, method[iDone], False, doExtrapolate);
 	  MODEL_DATACol.put(mainTabRow, yout);
 	  if(!youtFlagsWritten){ 
 	    FLAGCol.put(mainTabRow, youtFlags);
@@ -1725,8 +1767,8 @@ namespace casa {
 	Array<Float> youtf;
 	if(!FLOAT_DATACol.isNull()){
 	  yinf.assign((*oldFLOAT_DATAColP)(mainTabRow));
-	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xin[iDone], 
-							 yinf, yinFlags, methodF[iDone], False, False);
+	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xoutdd, xin[iDone], 
+							 yinf, yinFlags, methodF[iDone], False, doExtrapolate);
 	  FLOAT_DATACol.put(mainTabRow, youtf);
 	  if(!youtFlagsWritten){ 
 	    FLAGCol.put(mainTabRow, youtFlags);
@@ -1735,21 +1777,21 @@ namespace casa {
 	}
 	if(!IMAGING_WEIGHTCol.isNull()){
 	  yinf.assign((*oldIMAGING_WEIGHTColP)(mainTabRow));
-	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xin[iDone], 
-							 yinf, yinFlags, methodF[iDone], False, False);
+	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xoutdd, xin[iDone], 
+							 yinf, yinFlags, methodF[iDone], False, doExtrapolate);
 	  IMAGING_WEIGHTCol.put(mainTabRow, youtf);
 	}
 	if(!SIGMA_SPECTRUMCol.isNull()){
 	  yinf.assign((*oldSIGMA_SPECTRUMColP)(mainTabRow));
-	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xin[iDone], 
-							 yinf, yinFlags, methodF[iDone], False, False);
+	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xoutdd, xin[iDone], 
+							 yinf, yinFlags, methodF[iDone], False, doExtrapolate);
 	  SIGMA_SPECTRUMCol.put(mainTabRow, youtf);
 	}
 	if(!WEIGHT_SPECTRUMCol.isNull() && oldWEIGHT_SPECTRUMColP->isDefined(mainTabRow)){ // required column, but can be empty
 	  yinf.assign((*oldWEIGHT_SPECTRUMColP)(mainTabRow));
-	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone],
+	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xoutdd,
                                                          xin[iDone], yinf, yinFlags,
-                                                         methodF[iDone], False, False);
+                                                         methodF[iDone], False, doExtrapolate);
 	  WEIGHT_SPECTRUMCol.put(mainTabRow, youtf);
 	}
 	
@@ -1774,7 +1816,7 @@ namespace casa {
 	    Slicer slicer (start, length, stride, Slicer::endIsLast);
 	    yinFlags.assign(flagCat(slicer));
 	    InterpolateArray1D<Double, Float>::interpolate(dummyYout, youtFlags,
-                                                           xout[iDone], xin[iDone], 
+                                                           xoutdd, xin[iDone], 
 							   dummyYin, yinFlags,
                                                            methodF[iDone], False, False);
 	    // write the slice to the array flagCatOut
@@ -1897,14 +1939,15 @@ namespace casa {
 
   Bool SubMS::regridChanBounds(Vector<Double>& newChanLoBound, 
 			       Vector<Double>& newChanHiBound,
-			       const Double regridCenter,  
+			       const Double regridCenter,
 			       const Double regridBandwidth, 
 			       const Double regridChanWidth, 
 			       const Double regridVeloRestfrq, 
 			       const String regridQuant,
 			       const Vector<Double>& transNewXin, 
 			       const Vector<Double>& transCHAN_WIDTH,
-			       String& message
+			       String& message,
+			       const Bool centerIsStartC
 			       ){
     ostringstream oss;
 
@@ -1912,6 +1955,8 @@ namespace casa {
     // Note: these are in the units given by regridQuant!
 
     Int oldNUM_CHAN = transNewXin.size();
+
+    Bool centerIsStart = centerIsStartC;
 
     if(regridQuant=="chan"){ ////////////////////////
       // channel numbers ...
@@ -1928,12 +1973,19 @@ namespace casa {
 	    break;
 	  }
 	}
+	centerIsStart = False;
       }
       else if(0. <= regridCenter && regridCenter < Double(oldNUM_CHAN)){ // valid input
 	regridCenterChan = (Int) floor(regridCenter);  
       }
       else { // invalid
-	oss << "SPW center " << regridCenter << " outside valid range which is "
+	if(centerIsStart){
+	  oss << "SPW start ";
+	}
+	else{
+	  oss << "SPW center ";
+	}
+	oss << regridCenter << " outside valid range which is "
 	    << 0 << " - " << oldNUM_CHAN-1 <<".";
 	message = oss.str();
 	return False;  
@@ -1944,6 +1996,11 @@ namespace casa {
       }
       else{
 	regridBandwidthChan = (Int) floor(regridBandwidth);
+      }
+
+      if(centerIsStart){
+	regridCenterChan = regridCenterChan + regridBandwidthChan/2;
+	centerIsStart = False;
       }
 
       if(regridCenterChan-regridBandwidthChan/2 < 0) { // center too close to lower edge
@@ -2111,8 +2168,15 @@ namespace casa {
 	else{ // center was not specified
 	  regridCenterF = (transNewXin[0]+transNewXin[oldNUM_CHAN-1])/2.;
 	  regridCenterVel = vrad(regridCenterF,regridVeloRestfrq);
+	  centerIsStart = False;
 	}
-	if(regridBandwidth > 0.){ 
+	if(regridBandwidth > 0.){
+	  // can convert start to center
+	  if(centerIsStart){
+	    regridCenterVel = regridCenter - regridBandwidth/2.;
+	    regridCenterF = freq_from_vrad(regridCenterVel,regridVeloRestfrq);
+	    centerIsStart = False;
+	  }
 	  Double bwUpperEndF = freq_from_vrad(regridCenterVel - regridBandwidth/2.,
                                               regridVeloRestfrq);
 	  regridBandwidthF = 2.* (bwUpperEndF - regridCenterF); 
@@ -2122,6 +2186,7 @@ namespace casa {
                                                  regridVeloRestfrq);
 	  regridChanWidthF = 2.* (chanUpperEdgeF - regridCenterF); 
 	}
+
       }
       else if(regridQuant=="vopt"){ ///////////
 	// optical velocity ...
@@ -2146,8 +2211,15 @@ namespace casa {
 	else{ // center was not specified
 	  regridCenterF = (transNewXin[0]+transNewXin[oldNUM_CHAN-1])/2.;
 	  regridCenterVel = vopt(regridCenterF,regridVeloRestfrq);
+	  centerIsStart = False;
 	}
 	if(regridBandwidth > 0.){
+	  // can convert start to center
+	  if(centerIsStart){
+	    regridCenterVel = regridCenter - regridBandwidth/2.;
+	    regridCenterF = freq_from_vopt(regridCenterVel,regridVeloRestfrq);
+	    centerIsStart = False;
+	  }
 	  Double bwUpperEndF =  freq_from_vopt(regridCenterVel - regridBandwidth/2.,
                                                regridVeloRestfrq);
 	  regridBandwidthF = 2.* (bwUpperEndF- regridCenterF); 
@@ -2173,8 +2245,15 @@ namespace casa {
 	else{ // center was not specified
 	  regridCenterF = (transNewXin[0] + transNewXin[oldNUM_CHAN-1])/2.;
 	  regridCenterWav = lambda(regridCenterF);
+	  centerIsStart = False;
 	}
 	if(regridBandwidth > 0. && regridBandwidth/2. < regridCenterWav){
+	  // can convert start to center
+	  if(centerIsStart){
+	    regridCenterWav = regridCenter - regridBandwidth/2.;
+	    regridCenterF = freq_from_lambda(regridCenterWav);
+	    centerIsStart = False;
+	  }
 	  Double bwUpperEndF =  lambda(regridCenterWav - regridBandwidth/2.);
 	  regridBandwidthF = 2.* (bwUpperEndF - regridCenterF); 
 	}
@@ -2201,27 +2280,38 @@ namespace casa {
       if(regridCenterF < 0.){ //  means "not set"
 	// keep regrid center as it is in the data
 	theRegridCenterF = (transNewXin[0] + transNewXin[oldNUM_CHAN-1])/2.;
+	centerIsStart = False;
       }
       else { // regridCenterF was set
 	// keep center in limits
 	theRegridCenterF = regridCenterF;
-	if(theRegridCenterF > transNewXin[oldNUM_CHAN-1]){
-	  theRegridCenterF = transNewXin[oldNUM_CHAN-1];
+	if(theRegridCenterF > transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.){
+	  theRegridCenterF = transNewXin[oldNUM_CHAN-1]+transCHAN_WIDTH[oldNUM_CHAN-1]/2.;
 	}
-	else if(theRegridCenterF < transNewXin[0]){
-	  theRegridCenterF = transNewXin[0];
+	else if(theRegridCenterF < transNewXin[0]-transCHAN_WIDTH[0]/2.){
+	  theRegridCenterF = transNewXin[0]-transCHAN_WIDTH[0]/2.;
 	}
       }
       if(regridBandwidthF<=0.){ // "not set"
 	// keep bandwidth as is
 	theRegridBWF = transNewXin[oldNUM_CHAN-1] - transNewXin[0] 
 	  + transCHAN_WIDTH[0]/2. + transCHAN_WIDTH[oldNUM_CHAN-1]/2.;
+	// now can convert start to center
+	if(centerIsStart){
+	  theRegridCenterF = theRegridCenterF + theRegridBWF/2.;
+	  centerIsStart = False;
+	}
       }
       else { // regridBandwidthF was set
 	// determine actually possible bandwidth:
 	// width will be truncated to the maximum width possible symmetrically
 	// around the value given by "regrid_center"
 	theRegridBWF = regridBandwidthF;
+	// now can convert start to center
+	if(centerIsStart){
+	  theRegridCenterF = theRegridCenterF + theRegridBWF/2.;
+	  centerIsStart = False;
+	}
 	if(theRegridCenterF + theRegridBWF / 2. >
            transNewXin[oldNUM_CHAN-1] + transCHAN_WIDTH[oldNUM_CHAN-1]/2.){
 	  theRegridBWF = (transNewXin[oldNUM_CHAN-1] +
@@ -2644,6 +2734,11 @@ namespace casa {
 				  vector<Int>& oldFieldId,
 				  vector<Int>& newDataDescId,
 				  vector<Bool>& regrid,
+				  vector<Bool>& transform,
+				  vector<MDirection>& theFieldDirV,
+				  vector<MPosition>& mObsPosV,
+				  vector<MFrequency::Types>& theFrameV,
+				  vector<MFrequency::Ref>& fromFrameV,
 				  vector< Vector<Double> >& xout, 
 				  vector< Vector<Double> >& xin, 
 				  // This is a temporary fix until
@@ -2663,7 +2758,8 @@ namespace casa {
 				  const MDirection regridPhaseCenter,
 				  const Bool writeTables,
 				  LogIO& os,
-				  String& regridMessage
+				  String& regridMessage,
+				  const Bool centerIsStart
 				  )
   {
     Bool rval = True;
@@ -2674,9 +2770,15 @@ namespace casa {
     oldFieldId.resize(0);
     xin.resize(0);
     xout.resize(0);
+    theFieldDirV.resize(0);
+    mObsPosV.resize(0);
+    theFrameV.resize(0);
+    fromFrameV.resize(0);
+    MFrequency::Ref fromFrame;
     method.resize(0);
     methodF.resize(0);
     regrid.resize(0);	
+    transform.resize(0);	
     
     // Determine the highest data_desc_id from the DATA_DESCRIPTION table
     // (= number of rows).
@@ -2903,6 +3005,8 @@ namespace casa {
 	     ){
 	    return False;
 	  }
+	  // also create the reference for storage in the "Done" table
+	  fromFrame = MFrequency::Ref(theOldRefFrame, MeasFrame(theFieldDir, mObsPos, theObsTime));
 
 	  for(Int i=0; i<oldNUM_CHAN; i++){
 	    transNewXin[i] = freqTrans(newXin[i]).get(unit).getValue();
@@ -3047,7 +3151,8 @@ namespace casa {
 				 regridQuant,
 				 transNewXin, 
 				 transCHAN_WIDTH,
-				 message
+				 message,
+				 centerIsStart
 				 )
 	       ){ // there was an error
 	      os << LogIO::SEVERE << message << LogIO::POST;
@@ -3057,8 +3162,9 @@ namespace casa {
 	    // we have a useful set of channel boundaries
 	    newNUM_CHAN = newChanLoBound.size();
 	    
-	    message = " output frame = " + MFrequency::showType(theFrame) +
-              "\n" + message + " Interpolation Method = " + methodName;
+	    message = "input frame = " + MFrequency::showType(theOldRefFrame) 
+	      + ", output frame = " + MFrequency::showType(theFrame)
+              + "\n" + message + " Interpolation Method = " + methodName;
 	    
 	    // complete the calculation of the new spectral window parameters
 	    // from newNUM_CHAN, newChanLoBound, and newChanHiBound 
@@ -3234,7 +3340,12 @@ namespace casa {
 	method.push_back(theMethod);
 	methodF.push_back(theMethodF);
 	regrid.push_back(doRegrid);
-	
+	transform.push_back(needTransform);
+	theFieldDirV.push_back(theFieldDir);
+	mObsPosV.push_back(mObsPos);
+	theFrameV.push_back(theFrame);
+	fromFrameV.push_back(fromFrame);
+
       } // end if(!alreadyDone)
       // reference frame transformation and regridding of channel definition completed
       ////////////////////

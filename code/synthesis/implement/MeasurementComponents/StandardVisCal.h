@@ -40,8 +40,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Forward declarations
 class VisEquation;
 class TJonesCorruptor;
-//class MMCorruptor;
-//class MfMCorruptor;
 
 
 // **********************************************************
@@ -138,12 +136,8 @@ public:
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);
 
-  // Set up simulated params
-  Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
-//  virtual void setupSim(const Int& nSim, VisSet& vs, const Record& simpar);
-
-  // Simulate/calculate parameters for given sim interval
-  virtual Bool simPar(VisIter& vi, const Int nChunks);
+  // Set up corruptor
+  virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
 
 protected:
 
@@ -161,9 +155,9 @@ protected:
 
 private:
 
-  // object that can simulate the corruption terms - internal to T, its
-  // a TJCorruptor, but public access is only to the CalCorruptor parts
-  TJonesCorruptor *tcorruptor_p;
+  // object that can simulate the corruption terms - internal to T;
+  // public access is only to the CalCorruptor parts
+  AtmosCorruptor *tcorruptor_p;
 
 };
 
@@ -216,26 +210,6 @@ private:
 //  GJones
 //
 
-class GJonesCorruptor : public CalCorruptor {
-
- public:
-   GJonesCorruptor(const Int nSim);
-   virtual ~GJonesCorruptor();
-
-   //Complex& drift(const Int i);  // drift as fBM
-   Matrix<Complex>* drift();   
-   inline Float& tsys() { return tsys_; };
-   virtual void initialize();
-   void initialize(const Int Seed, const Float Beta, const Float scale);
-   Complex gain(const Int icorr, const Int islot);  // tsys scale and time-dep drift   
-
- protected:
-
- private:   
-   Float tsys_;
-   PtrBlock<Matrix<Complex>*> drift_p;
-};
-
 class GJones : public SolvableVisJones {
 public:
 
@@ -264,10 +238,7 @@ public:
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);
 
-  Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
-
-  // Simulate/calculate parameters for given sim interval
-  virtual Bool simPar(VisIter& vi, const Int nChunks);
+  virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
 
 protected:
 
@@ -381,11 +352,6 @@ public:
 
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);
-
-  Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
-  
-  // Simulate/calculate parameters for given sim interval
-  virtual Bool simPar(VisIter& vi, const Int nChunks);
 
   // Update the parameters from solving
   //  (in linear approx, we always set the source update to zero, for now!)
@@ -562,11 +528,7 @@ public:
 
   virtual void keep(const Int& slot);
 
-  // Set up simulated params
-  Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
-
-  virtual Bool simPar(VisIter& vi, const Int nChunks);
-
+  virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
 protected:
 
   // M currently has just 2 complex parameters, i.e., both parallel hands

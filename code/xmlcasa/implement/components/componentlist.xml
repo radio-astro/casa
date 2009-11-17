@@ -1093,13 +1093,14 @@ and available in Glish as mycl.
     
      <param type="string" name="spectrumtype">
      <description>The spectrum type,
-     A string that is either 'constant' or 'spectral index'</description>
+     a string that is either 'constant' or 'spectral index'</description>
      <value>spectral index</value>
      <value>constant</value>
      </param>
     
      <param type="double" name="index">
      <description>The spectral index</description>
+     <value>1.0</value>
      </param>
     
      <param type="string" name="label">

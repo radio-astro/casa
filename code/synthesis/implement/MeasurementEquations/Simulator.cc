@@ -35,6 +35,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/File.h>
 #include <casa/Containers/Record.h>
+#include <casa/Containers/RecordInterface.h>
 
 #include <tables/Tables/TableParse.h>
 #include <tables/Tables/TableRecord.h>
@@ -1057,6 +1058,8 @@ Bool Simulator::setnoise2(const String& mode,
     simparDesc.addField ("mode", TpString);
     simparDesc.addField ("amplitude", TpFloat);  // for constant scale
     simparDesc.addField ("scale", TpFloat);  // for fractional fluctuations
+      simparDesc.addField ("startTime", TpDouble);
+      simparDesc.addField ("stopTime", TpDouble);
 
     simparDesc.addField ("antefficiency"  ,TpFloat);
     simparDesc.addField ("correfficiency" ,TpFloat);
@@ -1066,6 +1069,7 @@ Bool Simulator::setnoise2(const String& mode,
     simparDesc.addField ("tatmos"	  ,TpFloat);
     simparDesc.addField ("tground"	  ,TpFloat);
     simparDesc.addField ("tcmb"           ,TpFloat);
+    simparDesc.addField ("combine"        ,TpString);
 
     String caltbl=caltable;
     caltbl.trim();
@@ -1073,7 +1077,6 @@ Bool Simulator::setnoise2(const String& mode,
     strlen=caltbl.length();
     if (strlen>3) 
       if (caltbl.substr(strlen-3,3)=="cal") {
-	//    if (String(caltbl).matches (Regex(Regex::fromPattern("cal$")))) {
 	caltbl.resize(strlen-3);
 	strlen-=3;
       }
@@ -1087,12 +1090,12 @@ Bool Simulator::setnoise2(const String& mode,
 	caltbl.resize(strlen-1);
 	strlen-=1;
       }
-
     
-    Record simpar(simparDesc);
+    Record simpar(simparDesc,RecordInterface::Variable);
     simpar.define ("type", "A Noise");
     simpar.define ("caltable", caltbl+".A.cal");
     simpar.define ("mode", mode);
+    simpar.define ("combine", ""); // SPW,FIELD, etc
 
     if (mode=="simple") {
       os << "Using simple noise model with noise level of " << simplenoise.getValue("Jy")
@@ -1110,15 +1113,10 @@ Bool Simulator::setnoise2(const String& mode,
       throw(AipsError("unsupported mode "+mode+" in setnoise2()"));
     }
 
-    // create the A
-    SolvableVisCal *svc = create_corrupt(simpar);
-    
-    // set combination parameters in a way that make sense
-    svc->combine()="";
-    
-    // calculate the A
-    calc_corrupt(svc,simpar);
-    
+    // create the ANoise
+    if (!create_corrupt(simpar)) 
+      throw(AipsError("could not create ANoise in Simulator::setnoise"));
+        
     if (mode=="calculate") {
 
       simpar.define ("antefficiency"  ,antefficiency  ); 
@@ -1130,7 +1128,6 @@ Bool Simulator::setnoise2(const String& mode,
       simpar.define ("tground"	      ,tground	      );
       simpar.define ("tcmb"           ,tcmb           );
 
-
       // simpar.define ("amplitude", tsys );
       // RI TODO setnoise2: create an Mf or M depending on user prefs
 
@@ -1141,25 +1138,18 @@ Bool Simulator::setnoise2(const String& mode,
       simpar.define ("caltable", caltbl+".M.cal");
       simpar.define ("mode", "tsys");  
       
-      SolvableVisCal *svc = create_corrupt(simpar);
-      
-      // set combination parameters in a way that make sense
-      svc->combine()="SCAN,FIELD,SPW";
-      svc->combine()="";
-      
-      // calculate the M 
-      calc_corrupt(svc,simpar);
-     
+      // create the M
+      if (!create_corrupt(simpar)) 
+	throw(AipsError("could not create M in Simulator::setnoise"));        
     } 
 
-    return True;
 #ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
-  return True;
 #endif
+  return True;
 }
 
 
@@ -1191,36 +1181,33 @@ Bool Simulator::setgain(const String& mode,
 	simparDesc.addField ("caltable", TpString);
 	simparDesc.addField ("timescale", TpFloat);
 	simparDesc.addField ("amplitude", TpFloat);
+	simparDesc.addField ("combine", TpString);
+      simparDesc.addField ("startTime", TpDouble);
+      simparDesc.addField ("stopTime", TpDouble);
     
 	// Create record with the requisite field values
-	Record simpar(simparDesc);
+	Record simpar(simparDesc,RecordInterface::Variable);
 	simpar.define ("type", "G JONES");
 	simpar.define ("timescale", timescale);
 	simpar.define ("amplitude", rms);
 	simpar.define ("caltable", caltable);
+	simpar.define ("combine", "");
 	
-	// create the VC and set basic stuff
-	SolvableVisCal *svc = create_corrupt(simpar);
-	
-	// set combination parameters in a way that make sense
-	svc->combine()="SCAN,FIELD,SPW";
-	svc->combine()="";
-	
-	// actually calculate the corruptions
-	calc_corrupt(svc,simpar);
+	// create the G
+	if (!create_corrupt(simpar)) 
+	  throw(AipsError("could not create G in Simulator::setgain"));        
 	
       } else {
 	throw(AipsError("unsupported mode "+mode+" in setgain()"));
       }
     }
-    return True;
 #ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
-  return True;
 #endif
+  return True;
 }
 
 
@@ -1253,9 +1240,12 @@ Bool Simulator::settrop(const String& mode,
       simparDesc.addField ("delta_pwv", TpFloat);
       simparDesc.addField ("beta", TpFloat);
       simparDesc.addField ("windspeed", TpFloat);
+      simparDesc.addField ("combine", TpString);
+      simparDesc.addField ("startTime", TpDouble);
+      simparDesc.addField ("stopTime", TpDouble);
             
       // create record with the requisite field values
-      Record simpar(simparDesc);
+      Record simpar(simparDesc,RecordInterface::Variable);
       simpar.define ("type", "TF");
       simpar.define ("caltable", caltable);
       simpar.define ("mean_pwv", pwv);
@@ -1263,31 +1253,23 @@ Bool Simulator::settrop(const String& mode,
       simpar.define ("delta_pwv", deltapwv);
       simpar.define ("beta", beta);
       simpar.define ("windspeed", deltapwv);
+      simpar.define ("combine", "");
 
-      // RI TODO Sim:settrop check timescale and set to smaller if required
-
-      // create the VC and set basic stuff
-      SolvableVisCal *svc = create_corrupt(simpar);
-      
-      // set combination parameters in a way that make sense
-      svc->combine()="SCAN,FIELD,SPW";
-      svc->combine()="";
-    
-      // actually calculate the corruptions
-      calc_corrupt(svc,simpar);
+      // create the T
+      if (!create_corrupt(simpar)) 
+	throw(AipsError("could not create T in Simulator::settrop"));        
 
     } else {
       throw(AipsError("unsupported mode "+mode+" in settrop()"));
     }
 
-    return True;
 #ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
-  return True;
 #endif
+  return True;
 }
 
 
@@ -1310,31 +1292,28 @@ Bool Simulator::setleakage(const String& mode, const String& table,
     simparDesc.addField ("type", TpString);
     simparDesc.addField ("caltable", TpString);
     simparDesc.addField ("amplitude", TpFloat);
+    simparDesc.addField ("combine", TpFloat);
+      simparDesc.addField ("startTime", TpDouble);
+      simparDesc.addField ("stopTime", TpDouble);
             
     // create record with the requisite field values
-    Record simpar(simparDesc);
+    Record simpar(simparDesc,RecordInterface::Variable);
     simpar.define ("type", "D");
     simpar.define ("caltable", table);
     simpar.define ("amplitude", amplitude);
-
-    // create the VC and set basic stuff
-    SolvableVisCal *svc = create_corrupt(simpar);
+    simpar.define ("combine", "");
     
-    // set combination parameters in a way that make sense
-    svc->combine()="SCAN,FIELD,SPW";
-    svc->combine()="";
-    
-    // actually calculate the corruptions
-    calc_corrupt(svc,simpar);
+    // create the D
+    if (!create_corrupt(simpar)) 
+      throw(AipsError("could not create D in Simulator::setleakage"));        
 
-    return True;
 #ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
-  return True;
 #endif
+  return True;
 }
 
 
@@ -1444,6 +1423,8 @@ Bool Simulator::setpa(const String& mode, const String& table,
 };
 
 
+
+
 Bool Simulator::setbandpass(const String& mode, const String& table,
 			    const Quantity& interval,
 			    const Vector<Double>& amplitude) {
@@ -1520,246 +1501,48 @@ Bool Simulator::setpointingerror(const String& epJTableName,
 
 
 
-SolvableVisCal *Simulator::create_corrupt(const Record& simpar)
+Bool Simulator::create_corrupt(Record& simpar)
 {
   LogIO os(LogOrigin("Simulator", "create_corrupt()", WHERE));
-
   SolvableVisCal *svc(NULL);
-
-  // RI TODO sim::create_corrupt assert that ms has certain structure - 
-  // either has been predict()ed or sm opened from a real ms.  
-    
-  try {
-
-    // if VisSet goes away we'll have to change this.
+  
+  // RI todo sim::create_corrupt assert that ms has certain structure
+  
+#ifndef RI_DEBUG
+    try {
+#endif
     makeVisSet();
     
     String upType=simpar.asString("type");
     upType.upcase();
-    
-    os << LogIO::NORMAL
-       << "Arranging to CORRUPT with:"
-       << LogIO::POST;
+    os << LogIO::NORMAL << "Creating "<< upType <<" Calibration structure for data corruption." << LogIO::POST;
     
     svc = createSolvableVisCal(upType,*vs_p);
 
-    // debugging info
-    svc->setPrtlev(2);
+#ifdef RI_DEBUG
+    svc->setPrtlev(3);
+#endif
 
-    // Generic VisCal setSimulate will throw an exception -- 
-    //   each VC needs to have its own.
-    // specializations should call SolvableVisCal::setSimulate though
-    svc->setSimulate(simpar);
-    // note that when setSimulate creates the CalSet it doesn't know 
-    // nChan(Spw()) yet so the calSet needs to be inflated for each 
-    // Spw, using 
-    // void SolvableVisCal::inflate(const Vector<Int>& nChan,
-    // const Vector<Int>& startChan,
-    // const Vector<Int>& nSlot) {
-
-    // 2009 oct - setsimulate doesn't make a calset anymore - that's done in 
-    // calc_corrupt
-
-    // makes a calset, but spwOK starts out F for the shape-based constructor
-    // used here and in the solve context, in contrast to the caltable-based
-    // constructor used in setapply
-    // do we need VC->setsimulate to do VC.spwOK=T like VC::setapply? 
-    // no - we'll set that in calc_corrupt
+    Vector<Double> solTimes;
+    svc->setSimulate(*vs_p,simpar,solTimes);
     
-    os << LogIO::NORMAL << ".   "
-       << svc->siminfo()
-       << LogIO::POST;
-
+    // add to the pointer block of VCs:
     uInt napp=vc_p.nelements();
     vc_p.resize(napp+1,False,True);
     vc_p[napp] = (VisCal*) svc;
     // svc=NULL;
-
-    // Maintain apply/corrupt list and sort the vc_p list
     ve_p.setapply(vc_p);
-
-    return svc;
-    
-  } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
-    if (svc) delete svc;
-    throw(AipsError("Error in Simulator::createcorrupt"));
-    return NULL;
-  }
-  // return NULL;
-}
-
-
-
-
-
-
-
-Bool Simulator::calc_corrupt(SolvableVisCal *svc, const Record& simpar)
-{
-  LogIO os(LogOrigin("Simulator", "calc_corrupt()", WHERE));
-
+            
 #ifndef RI_DEBUG
-    try {
-#endif
-
-    AlwaysAssert((svc->isSimulated()),AipsError);
-
-    // we could make this work without a VisSet, but if someone wants 
-    // to corrupt an existing MS, this is the easiest way to get the 
-    // shape of the MS, and if we're making a new MS, this will also work.
-    makeVisSet();
-    AlwaysAssert(vs_p, AipsError);
-
-    // adapted from Calibrater::standardSolve3()
-    // but here we need to setup the entire observation at once 
-    // in each VC's simcorrupter, so that it can ensure continuity
-    // across time in a physics-specific way.   
-
-    // we made sure this was in seconds above
-    Double &interval = svc->interval();  
-    
-    // enforce that the caltable not be on any finer cadence 
-    // than the actual data / integration time
-    // RI TODO relax min sim_interval ?     
-    if (interval < integrationTime_p.getValue("s"))
-      interval = integrationTime_p.getValue("s");
-        
-    // sizeUpSim also deals with nCorr for us
-    // sizeUpSim does inflate the CalSet - did we make one?
-    // sizeUpSim does setSolveChannelization() and initSolvePar();
-    // initSolvePar does solveCPar().resize(nPar(),1,nAnt());
-    
-    Vector<Int> nChunkPerSim;
-    Vector<Double> solTimes;
-    Int nSim = svc->setupSim(*vs_p,simpar,nChunkPerSim,solTimes);
-
-    // setupSim (sizeUpSim) is supposed to be inflating the calset
-    // after running setSolveChannelization, so why is nChanPar
-    // not correct in the cs?
-    
-    // setupSim might be a good place to set the VI sort order and 
-    // reset the VI (in which case it needs a pointer to the VisSet)
-    
-    if (!(svc->corruptor_p))
-      throw(AipsError("Error in Simulator::calc_corrupt: corruptor doesn't exist!"));
-    
-    // GM sez: organize calibration correction/corruption according to 
-    // multi-spw consistency; e.g. move time ahead of data_desc_id so that 
-    // data_desc_id (spw) changes faster than time, even within scans.
-    
-    // Arrange for iteration over data
-    Block<Int> columns;
-    // include scan iteration
-    columns.resize(5);
-    columns[0]=MS::ARRAY_ID;
-    columns[1]=MS::SCAN_NUMBER;
-    columns[2]=MS::FIELD_ID;
-    columns[3]=MS::DATA_DESC_ID;
-    columns[4]=MS::TIME;
-
-    // drop chunking time interval down to the simulation interval, else will 
-    // chunk by entuire scans.
-    Double iterInterval(max(svc->interval(),DBL_MIN));
-    if (svc->interval() < 0.0) {   // means no interval (infinite solint)
-      iterInterval=0.0;
-      svc->interval()=DBL_MAX;   //RI TODO Sim::calc sets svc:interval ->max interval
-    }
-    vs_p->resetVisIter(columns,iterInterval);
-  
-
-    VisIter& vi(vs_p->iter());
-    //    VisBuffer vb(vi);
-    
-    // there's a member variable in Simulator nSpw, should we verify that 
-    // this is the same? probably.
-    Int nSpw=vs_p->numberSpw();
-    // same as cs_p->nSpw() ?    
-    //AlwaysAssert(nSpw == svc->cs().nSpw(), AipsError);
-
-    Vector<Int> slotidx(nSpw,-1);
-    
-    Int nGood(0);
-    vi.originChunks();
-    Double t0(0.);
-
-    // debug:
-    //    cout << "nChunkPerSim = ";
-    //    cout << 0 << " | " << nChunkPerSim[0] << " ; " << nSim-1 << " | " << nChunkPerSim[nSim-1] << endl;
-
-    for (Int isim=0;isim<nSim && vi.moreChunks();++isim) {      
-      Int thisSpw=svc->spwMap()(vi.spectralWindow());
-      slotidx(thisSpw)++;
-      
-      // I'd really like to do all channels at once but George has 
-      // a lot of stuff coded for a SVJ that requires one channel 
-      // at a time - we'd need to change SolvableVisCal SVJ:initSolvePar()
-      for (Int ich=((const SolvableVisCal*)svc)->nChanPar()-1;ich>-1;--ich) {
-	svc->focusChan()=ich;
-
-// need to inflate calset to right shape (is this a function of spw - probably)
-// since it was created without Chan info:
-// new CalSet<Complex>(nSpw(),nPar(),Vector<Int>(1,1),nElem(),Vector<Int>(1,1));
-
-//			     const Vector<Int>& startChan,
-//			     const Vector<Int>& nSlot) {
-// 	cs().resize(nPar(),nChan,nElem(),nSlot);
-//
-// this call assumes all channels want to be simulated:      
-// we should be able to do this for all spw together, right?  
-// but that requires figuring out the spwmap and nchan per spw - 
-// does the VisSet know this already or is there some way to do it?
-// George probably knows....
-// also, do we want to inflate completely to nSim, or just to current slotidx?
-// the cast to SVC is annoying but nChanPar() is private for some reason...
-//      svc->inflate(Vector<Int>(1,((const SolvableVisCal*)svc)->nChanPar()),
-//		   Vector<Int>(1,0), 
-//		   Vector<Int>(1,slotidx(thisSpw)));
-//
-// George claims that if freqDepPar is set the channel sizing is automagic.
-      
-	if (!svc->simPar(vi,nChunkPerSim[isim])) 
-	  throw(AipsError("Error calculating simulated VC")); 
-	svc->keep(slotidx(thisSpw));
-      }
-    }
-    
-    // this doesn't seem to be getting all spws... is nSpw() set? 
-    svc->setSpwOK();
-    cout << "Sim::calc_corr vc.SpwOK = " << svc->spwOK() << endl;
-    // calls these protected methods:   
-    //svc->cs().setSpwOK();  // checks if nTime()!=0;  hopefully nTime is getting set
-    //svc->ci().setSpwOK();  // gets that from cs()
-    
-
-    if (svc->calTableName()!="<none>") {      
-      // RI TODO Sim::create_corrupt check if user wants to overwrite calTable
-      os << LogIO::NORMAL 
-	 << "Writing calTable = "+svc->calTableName()+" ("+svc->typeName()+")" 
-	 << endl << LogIO::POST;      
-      // write the table
-      // append()=False set by setSimulate()
-      svc->store();
-    } else {
-      os << LogIO::NORMAL 
-	 << "calTable name not set - not writing to disk." 
-	 << endl << LogIO::POST;
-    }
-
-    return True;
-#ifndef RI_DEBUG    
   } catch (AipsError x) {
-    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::POST;
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     if (svc) delete svc;
-    throw(AipsError("Error in Simulator::calc_corrupt"));
+    throw(AipsError("Error in Simulator::create_corrupt"));
     return False;
   }
-  return False;
 #endif
+  return True;
 }
-
 
 
 

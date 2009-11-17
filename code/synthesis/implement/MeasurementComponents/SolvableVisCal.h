@@ -299,13 +299,10 @@ public:
 
   // -------------
   // Set the simulation parameters
-  virtual void setSimulate(const Record& simpar);
+  virtual void setSimulate(VisSet& vs, Record& simpar, Vector<Double>& solTimes);
 
-  // Set up simulated params wrt visset
-  virtual Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
-
-  // Calculate simulated parameters by some means 
-  virtual Bool simPar(VisIter& vi, const Int nChunks);
+  // make a corruptor in a VC-specific way
+  virtual void createCorruptor(const VisIter& vi,const Record& simpar, const int nSim);
 
   // access to simulation variables that are general to all VisCals
   inline String& simint() { return simint_; };

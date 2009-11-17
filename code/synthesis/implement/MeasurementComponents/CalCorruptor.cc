@@ -29,7 +29,6 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 
-#define RI_DEBUG
 #define PRTLEV 3
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -37,7 +36,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 CalCorruptor::CalCorruptor(const Int nSim) : 
   nSim_(nSim),
-  initialized_(False),
+  times_initialized_(False),
   prtlev_(PRTLEV),
   curr_slot_(-1),
   curr_spw_(-1), nSpw_(0),
@@ -46,20 +45,45 @@ CalCorruptor::CalCorruptor(const Int nSim) :
 
 CalCorruptor::~CalCorruptor() {}
 
+Complex CalCorruptor::simPar(const VisIter& vi,VisCal::Type type, Int ipar){  
+  // per par (e.g. for D,G, nPar=2, could have diff gains for diff polns)
+  if (prtlev()>2) cout << "   Corruptor::simPar("<<VisCal::nameOfType(type)<<")" << endl;  
 
-
-
-
-Array<Complex> ANoiseCorruptor::noise(const Int nrow,const Int ncol) {
-  Matrix<Complex> foo(nrow,ncol);
-  for (Int j=0;j<ncol;j++)
-    for (Int i=0;i<nrow;i++) {
-      //foo(i,j,k) = Complex((*nDist_p)(),(*nDist_p)())/amp();
-      foo(i,j).real() = (*nDist_p)()*amp();
-      foo(i,j).imag() = (*nDist_p)()*amp();
-    }
-  return foo;
+  if (type==VisCal::D) {
+    return amp();
+ 
+ } else {	
+    // Every CalCorruptor needs to have its own checks - maybe put D here?
+    throw(AipsError("This Corruptor doesn't yet support simulation of this VisCal type"));
+  }
 }
+
+void CalCorruptor::setEvenSlots(const Double& dt) {
+  // set slots to constant intervals dt
+  Int nslots = Int( (stopTime()-startTime())/dt + 1 );
+  if (nslots<=0) throw(AipsError("logic problem Corruptor::setEvenSlots called before start/stopTime set"));
+
+  nSim()=nslots;
+  slot_times().resize(nSim(),False);
+  for (Int i=0;i<nSim();i++) 
+    slot_time(i) = startTime() + (Double(i)+0.5) * dt;   
+  times_initialized()=True;
+  
+  curr_slot()=0;      
+  curr_time()=slot_time();  
+}
+
+
+
+Complex ANoiseCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar) {
+  if (type==VisCal::ANoise) {
+    // RI TODO make sure 1 timeslot set in AN::setSimulate
+    cout << "ANC::simPar " << ipar << endl;
+    return Complex((*nDist_p)()*amp(),(*nDist_p)()*amp());
+  } else throw(AipsError("unknown VC type "+VisCal::nameOfType(type)+" in AnoiseCorruptor::simPar"));
+}
+
+
 ANoiseCorruptor::ANoiseCorruptor(): CalCorruptor(0) {};
 
 ANoiseCorruptor::~ANoiseCorruptor() {};
@@ -69,334 +93,6 @@ ANoiseCorruptor::~ANoiseCorruptor() {};
 
 
 
-TJonesCorruptor::TJonesCorruptor(const Int nSim) : 
-  CalCorruptor(nSim),  // parent
-  mean_pwv_(-1.)
-{}
-
-TJonesCorruptor::~TJonesCorruptor() {
-  if (prtlev()>2) cout << "TCorruptor::~TCorruptor()" << endl;
-}
-
-
-
-Vector<Float>* TJonesCorruptor::pwv() { 
-  if (currAnt()<=pwv_p.nelements())
-    return pwv_p[currAnt()];
-  else
-    return NULL;
-};
- 
-Float& TJonesCorruptor::pwv(const Int islot) { 
-  if (currAnt()<=pwv_p.nelements())
-    return (*pwv_p[currAnt()])(islot);
-  else
-    throw(AipsError("TJonesCorruptor internal error accessing delay()"));;
-};
-
-
-
-
-
-
-
-
-void TJonesCorruptor::initialize() {
-  // for testing only
-
-  mode()="test";
-  if (slot_times_.nelements()<=0) {
-    slot_times_.resize(nSim());
-    Double dtime( (stopTime()-startTime()) / Double(nSim()-1) );
-    for (Int i=0;i<nSim();i++) 
-      slot_time(i) = startTime() + (Double(i)+0.5) * dtime;
-  }
-  curr_slot()=0;      
-  curr_time()=slot_time();  
-
-  initAtm();
-  pwv_p.resize(nAnt(),False,True);
-  for (Int ia=0;ia<nAnt();++ia) {
-    pwv_p[ia] = new Vector<Float>(nSim());
-    // not really pwv, but this is a test mode
-    for (Int i=0;i<nSim();++i) 
-      (*(pwv_p[ia]))(i) = (Float(i)/Float(nSim()) + Float(ia)/Float(nAnt()))*mean_pwv()*10;  
-  }
-
-  initialized()=True;
-  if (prtlev()>2) cout << "TCorruptor::init [test]" << endl;
-}
-
-
-
-
-void TJonesCorruptor::initAtm() {
-
-#ifndef CASA_STANDALONE
-  atm::Temperature  T( 270.0,"K" );   // Ground temperature
-  atm::Pressure     P( 560.0,"mb");   // Ground Pressure
-  atm::Humidity     H(  20,"%" );     // Ground Relative Humidity (indication)
-  atm::Length       Alt(  5000,"m" ); // Altitude of the site 
-  atm::Length       WVL(   2.0,"km"); // Water vapor scale height
-
-  // RI TODO get Alt etc from observatory info in Simulator
-
-  double TLR = -5.6;     // Tropospheric lapse rate (must be in K/km)
-  atm::Length  topAtm(  48.0,"km");   // Upper atm. boundary for calculations
-  atm::Pressure Pstep(  10.0,"mb");   // Primary pressure step
-  double PstepFact = 1.2; // Pressure step ratio between two consecutive layers
-  atm::Atmospheretype atmType = atm::tropical;
-
-  itsatm = new atm::AtmProfile(Alt, P, T, TLR, 
-			       H, WVL, Pstep, PstepFact, 
-			       topAtm, atmType);
-
-  if (nSpw()<=0)
-    throw(AipsError("TCorruptor::initAtm called before spw setup."));
-
-  // first SpW:
-  double fRes(fWidth()[0]/fnChan()[0]);
-  itsSpecGrid = new atm::SpectralGrid(fnChan()[0],0, 
-				      atm::Frequency(fRefFreq()[0],"Hz"),
-				      atm::Frequency(fRes,"Hz"));
-  // any more?
-  for (Int ispw=1;ispw<nSpw();ispw++) {
-    fRes = fWidth()[ispw]/fnChan()[ispw];
-    itsSpecGrid->add(fnChan()[ispw],0,
-		     atm::Frequency(fRefFreq()[ispw],"Hz"),
-		     atm::Frequency(fRes,"Hz"));
-  }
-
-  itsRIP = new atm::RefractiveIndexProfile(*itsSpecGrid,*itsatm);
-  
-  if (prtlev()>2) cout << "TCorruptor::getDispersiveWetPathLength = " 
-		       << itsRIP->getDispersiveWetPathLength().get("micron") 
-		       << " microns at " 
-		       << fRefFreq()[0]/1e9 << " GHz" << endl;
-
-  //  itsSkyStatus = new atm::SkyStatus(*itsRIP);
-
-#endif
-}
-
-
-
-
-void TJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float scale) {
-  // individual delays for each antenna
-
-  initAtm();
-
-  mode()="1d";
-  fBM* myfbm = new fBM(nSim());
-  pwv_p.resize(nAnt(),False,True);
-  for (Int iant=0;iant<nAnt();++iant){
-    pwv_p[iant] = new Vector<Float>(nSim());
-    myfbm->initialize(Seed+iant,Beta); // (re)initialize
-    *(pwv_p[iant]) = myfbm->data(); // iAnt()=iant; delay() = myfbm->data();
-    Float pmean = mean(*(pwv_p[iant]));
-    Float rms = sqrt(mean( (*(pwv_p[iant])-pmean)*(*(pwv_p[iant])-pmean) ));
-    if (prtlev()>2 and currAnt()<2) {
-      cout << "RMS fBM fluctuation for antenna " << iant 
-	   << " = " << rms << " ( " << pmean << " ; beta = " << Beta << " ) " << endl;      
-    }
-    // scale is set above to delta/meanpwv
-    // Float lscale = log(scale)/rms;
-    for (Int islot=0;islot<nSim();++islot)
-      (*(pwv_p[iant]))[islot] = (*(pwv_p[iant]))[islot]*scale/rms;  
-    if (prtlev()>2 and currAnt()<2) {
-      Float pmean = mean(*(pwv_p[iant]));
-      Float rms = sqrt(mean( (*(pwv_p[iant])-pmean)*(*(pwv_p[iant])-pmean) ));
-      cout << "RMS fractional fluctuation for antenna " << iant 
-	   << " = " << rms << " ( " << pmean << " ) " 
-	// << " lscale = " << lscale 
-	   << endl;      
-    }
-    currAnt()=iant;
-  }
-
-  if (slot_times_.nelements()<=0) {
-    slot_times_.resize(nSim());
-    Double dtime( (stopTime()-startTime()) / Double(nSim()-1) );
-    for (Int i=0;i<nSim();i++) 
-      slot_time(i) = startTime() + (Double(i)+0.5) * dtime;
-  }
-  curr_slot()=0;      
-  curr_time()=slot_time();  
-
-  initialized()=True;
-  if (prtlev()>2) cout << "TCorruptor::init [1d]" << endl;
-
-}
-
-
-
-  
-  void TJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float scale, const ROMSAntennaColumns& antcols) {
-  // 2d delay screen
-
-  initAtm();
-
-  mode()="2d";
-  
-  // RI_TODO calc xsize ysize from windspeed, track length, & array size
-      
-  // figure out where the antennas are, for blowing a phase screen over them
-  // and how big they are, to set the pixel scale of the screen
-  Float mindiam = min(antcols.dishDiameter().getColumn()); // units? dDQuant()?
-  pixsize() = 0.5*mindiam; // RI_TODO temp compensate for lack of screen interpolation
-  nAnt()=antcols.nrow();
-  antx().resize(nAnt());
-  anty().resize(nAnt());
-  MVPosition ant;
-  for (Int i=0;i<nAnt();i++) {	
-    ant = antcols.positionMeas()(i).getValue();
-    // have to convert to ENU or WGS84
-    // ant = MPosition::Convert(ant,MPosition::WGS84)().getValue();
-    // RI_TODO do this projection properly
-    antx()[i] = ant.getLong()*6371000.;
-    anty()[i] = ant.getLat()*6371000.; // m
-  }     
-  // from SDTableIterator
-  //// but this expects ITRF XYZ, so make a Position and convert
-  //obsPos = MPosition(Quantity(siteElev_.asdouble(thisRow_), "m"),
-  //			 Quantity(siteLong_.asdouble(thisRow_), "deg"),
-  //			 Quantity(siteLat_.asdouble(thisRow_), "deg"),
-  //			 MPosition::WGS84);
-  //obsPos = MPosition::Convert(obsPos, MPosition::ITRF)();
-  Float meanlat=mean(anty())/6371000.;
-  antx()=antx()*cos(meanlat);
-  if (prtlev()>5) 
-    cout << antx() << endl << anty() << endl;
-  Int buffer(2); // # pix border
-  //antx()=antx()-mean(antx());
-  //anty()=anty()-mean(anty());
-  antx()=antx()-min(antx());
-  anty()=anty()-min(anty());
-  antx()=antx()/pixsize();
-  anty()=anty()/pixsize();
-  if (prtlev()>4) 
-    cout << antx() << endl << anty() << endl;
-
-  Int ysize(Int(ceil(max(anty())+buffer)));
-
-  const Float tracklength = stopTime()-startTime();    
-  const Float blowlength = windspeed()*tracklength*1.05; // 5% margin
-  if (prtlev()>3) 
-    cout << "blowlength: " << blowlength << " track time = " << tracklength << endl;
-  
-  Int xsize(Int(ceil(max(antx())+buffer+blowlength/pixsize()))); 
-
-  if (prtlev()>3) 
-    cout << "xy screen size = " << xsize << "," << ysize << 
-      " pixels (" << pixsize() << "m)" << endl;
-  // if the array is too elongated, FFT sometimes gets upset;
-  if (Float(xsize)/Float(ysize)>5) ysize=xsize/5;
-  
-  if (prtlev()>3) 
-    cout << "new fBM of size " << xsize << "," << ysize << endl;
-  fBM* myfbm = new fBM(xsize,ysize);
-  screen_p = new Matrix<Float>(xsize,ysize);
-  myfbm->initialize(Seed,Beta); 
-  *screen_p=myfbm->data();
-
-  Float pmean = mean(*screen_p);
-  Float rms = sqrt(mean( ((*screen_p)-pmean)*((*screen_p)-pmean) ));
-  // if (prtlev()>4) cout << (*screen_p)[10] << endl;
-  if (prtlev()>3 and currAnt()<2) {
-    cout << "RMS screen fluctuation " 
-	 << " = " << rms << " ( " << pmean << " ; beta = " << Beta << " ) " << endl;
-  }
-  // scale is set above to delta/meanpwv
-  *screen_p = myfbm->data() * scale/rms;
-
-  if (slot_times_.nelements()<=0) {
-    slot_times_.resize(nSim());
-    Double dtime( (stopTime()-startTime()) / Double(nSim()-1) );
-    for (Int i=0;i<nSim();i++) 
-      slot_time(i) = startTime() + (Double(i)+0.5) * dtime;
-  }
-  curr_slot()=0;      
-  curr_time()=slot_time();  
-
-  initialized()=True;
-  if (prtlev()>2) cout << "TCorruptor::init [2d]" << endl;
-
-}
-
-
-
-
-
-Complex TJonesCorruptor::gain(const Int ix, const Int iy, const Int ichan) {
-  // expects pixel positions in screen - already converted using the pixscale
-  // of the screen, and modified for off-zenith pointing
-
-  AlwaysAssert(mode()=="2d",AipsError);
-  Float delay;
-  ostringstream o; 
- 
-  if (curr_slot()>=0 and curr_slot()<nSim()) {
-    // blow
-    Int blown(Int(floor( (slot_time(curr_slot())-slot_time(0)) *
-			 windspeed()/pixsize() ))); 
-    if (prtlev()>4 and currAnt()<2) cout << "blown " << blown << endl;
-
-    if ((ix+blown)>(screen_p->shape())[0]) {
-      o << "Delay screen blown out of range (" << ix << "+" 
-	<< blown << "," << iy << ") (" << screen_p->shape() << ")" << endl;
-      throw(AipsError(o));
-    }
-    // RI TODO Tcorr::gain  interpolate screen!
-    Float deltapwv = (*screen_p)(ix+blown,iy);
-    delay = itsRIP->getDispersiveWetPhaseDelay(currSpw(),ichan).get("rad") 
-      * deltapwv / 57.2958; // convert from deg to rad
-    return Complex(cos(delay),sin(delay));
-  } else {    
-    o << "TCorruptor::gain: slot " << curr_slot() << "out of range!" <<endl;
-    throw(AipsError(o));
-    return Complex(1.);
-  }
-}
-
-
-Complex TJonesCorruptor::gain(const Int ichan) {
-  AlwaysAssert(mode()=="1d" or mode()=="test",AipsError);
-  Float delay;
-  
-  if (curr_slot()>=0 and curr_slot()<nSim()) {
-    // Float freq = fRefFreq()[currSpw()] + 
-    //   Float(ichan) * (fWidth()[currSpw()]/Float(fnChan()[currSpw()]));
-    
-    if (currAnt()<=pwv_p.nelements()) {
-      Float deltapwv = (*pwv_p[currAnt()])(curr_slot());
-      delay = itsRIP->getDispersiveWetPhaseDelay(currSpw(),ichan).get("rad") 
-	* deltapwv / 57.2958; // convert from deg to rad
-#ifdef RI_DEBUG      
-      if (prtlev()>5) 
-	cout << itsRIP->getDispersiveWetPhaseDelay(0,ichan).get("rad") << " "
-	     << itsRIP->getDispersiveWetPhaseDelay(1,ichan).get("rad") << " "
-	     << itsRIP->getDispersiveWetPhaseDelay(2,ichan).get("rad") << " "
-	     << itsRIP->getDispersiveWetPhaseDelay(3,ichan).get("rad") << endl;
-#endif	
-    } else
-      throw(AipsError("TJonesCorruptor internal error accessing pwv()"));  
-    return Complex(cos(delay),sin(delay));
-  } else {
-    cout << "TCorruptor::gain: slot " << curr_slot() << "out of range!" <<endl;
-    return Complex(1.);
-  }
-}
-
-
-
-
-
-
-
-
-
-//################ atmcorruptor - this will replace Tcorr, 
 // and also produce MfM and Topac corruptions
 
 
@@ -434,35 +130,82 @@ Float& AtmosCorruptor::pwv(const Int islot) {
 
 
 
+Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
 
+  LogIO os(LogOrigin("AtmCorr", "simPar("+VisCal::nameOfType(type)+")", WHERE));
+  if (prtlev()>4) cout << "  Atm::simPar("<<VisCal::nameOfType(type)<<") ipar=" <<ipar<< endl;
+  
+#ifndef RI_DEBUG
+  try {
+#endif
+    if (type==VisCal::T) {
 
+      if(mode()=="test" or mode()=="1d")
+	return cphase(focusChan()); 
+      
+      else if (mode()=="2d") {
+	// RI TODO Atmcorr:simPar  modify x,y by tan(zenith angle)*(layer altitude)
+	Int ix(Int( antx()(currAnt()) ));
+	Int iy(Int( anty()(currAnt()) ));
+	if (prtlev()>5) 
+	  cout << " getting gain for antenna ix,iy = " << ix << "," << iy << endl;  
+	return cphase(ix,iy,focusChan()); // init all elts of gain vector with scalar 
+      } else 
+	throw(AipsError("AtmosCorruptor: unknown corruptor mode "+mode()));
+    } else if (type==VisCal::M) {
+      Float airmass1(1.0),airmass2(1.0),A(1.0),tsys(0.),tau(0.);
+      Double factor(1.0);
+      Float el1(1.5708), el2(1.5708);
 
-void AtmosCorruptor::initialize() {
-  // for testing only
+      if (mode() == "tsys") {
+	Double tint = vi.msColumns().exposure()(0);  
+	Int iSpW = vi.spectralWindow();
+	Double deltaNu = 
+	  vi.msColumns().spectralWindow().totalBandwidth()(iSpW) / 
+	  Float(vi.msColumns().spectralWindow().numChan()(iSpW));	    
+	factor = amp() / sqrt( deltaNu * tint ) ;
+	
+	// RI verify accuracy of how refTime set in SVC
+	Vector<MDirection> antazel(vi.azel(curr_time()));
+	
+	el1 = antazel(currAnt()).getAngle("rad").getValue()(1);
+	el2 = antazel(currAnt2()).getAngle("rad").getValue()(1);
+	
+	if (el1 > 0.0 && el2 > 0.0) {
+	  airmass1 = 1.0/ sin(el1);
+	  airmass2 = 1.0/ sin(el2);
+	} else {
+	  airmass1 = 1.0;
+	  airmass2 = 1.0;
+	}
+	
+	if (freqDepPar()) {
+	  tau = opac(focusChan());
+	}	else {
+	  tau = 1.;
+	}
+	// user could be overriding the tau scale, but keep the
+	// ATM freq dependence - see atmcorruptor::initialize
+	tau *= tauscale();
+	
+	A = exp(-tau *0.5*(airmass1+airmass2));	      
+	// this is tsys above atmosphere
+	tsys = tsys0() + A*tsys1();
+	
+	return Complex( factor * tsys / antDiams(currAnt()) / antDiams(currAnt2()));
 
-  mode()="test";
-  if (slot_times_.nelements()<=0) {
-    slot_times_.resize(nSim());
-    Double dtime( (stopTime()-startTime()) / Double(nSim()-1) );
-    for (Int i=0;i<nSim();i++) 
-      slot_time(i) = startTime() + (Double(i)+0.5) * dtime;
-  }
-  curr_slot()=0;      
-  curr_time()=slot_time();  
-
-  initAtm();
-  pwv_p.resize(nAnt(),False,True);
-  for (Int ia=0;ia<nAnt();++ia) {
-    pwv_p[ia] = new Vector<Float>(nSim());
-    // not really pwv, but this is a test mode
-    for (Int i=0;i<nSim();++i) 
-      (*(pwv_p[ia]))(i) = (Float(i)/Float(nSim()) + Float(ia)/Float(nAnt()))*mean_pwv()*10;  
-  }
-
-  initialized()=True;
-  if (prtlev()>2) cout << "AtmosCorruptor::init [test]" << endl;
+      } else return Complex(amp()); // for constant amp MfM
+      
+    } else {
+      throw(AipsError("AtmosCorruptor: unknown VisCal type "+VisCal::nameOfType(type)));
+    }
+    
+#ifndef RI_DEBUG    
+  } catch (AipsError x) {
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
+  } 
+#endif
 }
-
 
 
 
@@ -518,8 +261,33 @@ void AtmosCorruptor::initAtm() {
 
 
 
-void AtmosCorruptor::initialize(const Record& simpar) {
-  simpar_=simpar;
+void AtmosCorruptor::initialize() {
+  // for testing only
+
+  mode()="test";
+  if (!times_initialized())
+    throw(AipsError("logic error in AtmCorr::init(Seed,Beta,scale) - slot times not initialized."));
+
+  initAtm();
+  pwv_p.resize(nAnt(),False,True);
+  for (Int ia=0;ia<nAnt();++ia) {
+    pwv_p[ia] = new Vector<Float>(nSim());
+    // not really pwv, but this is a test mode
+    for (Int i=0;i<nSim();++i) 
+      (*(pwv_p[ia]))(i) = (Float(i)/Float(nSim()) + Float(ia)/Float(nAnt()))*mean_pwv()*10;  
+  }
+
+  if (prtlev()>2) cout << "AtmosCorruptor::init [test]" << endl;
+}
+
+
+
+// this one is for the M - maybe we should just make one Corruptor and 
+// pass the VisCal::Type to it - the concept of the corruptor taking a VC
+// instead of being a member of it.
+
+void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar) {
+  //simpar_=simpar;
 
   // start with amp defined as something
   amp()=1.0;
@@ -530,13 +298,15 @@ void AtmosCorruptor::initialize(const Record& simpar) {
   if (simpar.isDefined("mode")) mode()=simpar.asString("mode");  
 
   if (mode()=="simple") {
-    freqDep()=False; 
+    freqDepPar()=False; 
     if (prtlev()>2) cout << "AtmosCorruptor::init [simple scale by " << amp() << "]" << endl;
 
   } else {
-
+        
+    antDiams = vi.msColumns().antenna().dishDiameter().getColumn();
+    
     // use ATM but no time dependence - e.g. for Tf [Tsys scaling, also Mf]
-    if (freqDep()) initAtm();
+    if (freqDepPar()) initAtm();
     
     // RI TODO AtmCorr::initialize catch other modes?  
     // if (mode()=="tsys") {
@@ -548,7 +318,7 @@ void AtmosCorruptor::initialize(const Record& simpar) {
       tauscale()=simpar.asFloat("tau0");
       // (if tau0 is not set, scale is 1.)    
       // find tau in center of band for current ATM parameters
-      if (freqDep()) tauscale()/=opac(nChan()/2);
+      if (freqDepPar()) tauscale()/=opac(nChan()/2);
       // if freqDep then opac will be called in simPar and multiplied by tauscale
     }
     
@@ -564,9 +334,8 @@ void AtmosCorruptor::initialize(const Record& simpar) {
       ( simpar.asFloat("antefficiency") * 
 	simpar.asFloat("correfficiency") * C::pi );
 
-    if (prtlev()>2) cout << "AtmosCorruptor::init [tsys scale, freqDep=" << freqDep() << "]" << endl;
+    if (prtlev()>2) cout << "AtmosCorruptor::init [tsys scale, freqDepPar=" << freqDepPar() << "]" << endl;
   }
-  initialized()=True;    
 }
 
 
@@ -590,6 +359,11 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
   initAtm();
 
   mode()="1d";
+  // assumes nSim already changed to be even intervals in time by the caller - 
+  // i.e. if the solTimes are not even, this has been dealt with.
+  if (!times_initialized())
+    throw(AipsError("logic error in AtmCorr::init(Seed,Beta,scale) - slot times not initialized."));
+
   fBM* myfbm = new fBM(nSim());
   pwv_p.resize(nAnt(),False,True);
   for (Int iant=0;iant<nAnt();++iant){
@@ -598,7 +372,7 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
     *(pwv_p[iant]) = myfbm->data(); // iAnt()=iant; delay() = myfbm->data();
     Float pmean = mean(*(pwv_p[iant]));
     Float rms = sqrt(mean( (*(pwv_p[iant])-pmean)*(*(pwv_p[iant])-pmean) ));
-    if (prtlev()>2 and currAnt()<2) {
+    if (prtlev()>3 and currAnt()<2) {
       cout << "RMS fBM fluctuation for antenna " << iant 
 	   << " = " << rms << " ( " << pmean << " ; beta = " << Beta << " ) " << endl;      
     }
@@ -606,7 +380,7 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
     // Float lscale = log(scale)/rms;
     for (Int islot=0;islot<nSim();++islot)
       (*(pwv_p[iant]))[islot] = (*(pwv_p[iant]))[islot]*scale/rms;  
-    if (prtlev()>2 and currAnt()<2) {
+    if (prtlev()>2 and currAnt()<5) {
       Float pmean = mean(*(pwv_p[iant]));
       Float rms = sqrt(mean( (*(pwv_p[iant])-pmean)*(*(pwv_p[iant])-pmean) ));
       cout << "RMS fractional fluctuation for antenna " << iant 
@@ -617,16 +391,6 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
     currAnt()=iant;
   }
 
-  if (slot_times_.nelements()<=0) {
-    slot_times_.resize(nSim());
-    Double dtime( (stopTime()-startTime()) / Double(nSim()-1) );
-    for (Int i=0;i<nSim();i++) 
-      slot_time(i) = startTime() + (Double(i)+0.5) * dtime;
-  }
-  curr_slot()=0;      
-  curr_time()=slot_time();  
-
-  initialized()=True;
   if (prtlev()>2) cout << "AtmosCorruptor::init [1d]" << endl;
 
 }
@@ -636,14 +400,15 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
   
   void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float scale, const ROMSAntennaColumns& antcols) {
   // 2d delay screen
-
+  LogIO os(LogOrigin("AtmCorr", "init(Seed,Beta,Scale,AntCols)", WHERE));
   initAtm();
 
   mode()="2d";
+
+  if (!times_initialized())
+    throw(AipsError("logic error in AtmCorr::init(Seed,Beta,scale) - slot times not initialized."));
   
-  // RI_TODO calc xsize ysize from windspeed, track length, & array size
-      
-  // figure out where the antennas are, for blowing a phase screen over them
+   // figure out where the antennas are, for blowing a phase screen over them
   // and how big they are, to set the pixel scale of the screen
   Float mindiam = min(antcols.dishDiameter().getColumn()); // units? dDQuant()?
   pixsize() = 0.5*mindiam; // RI_TODO temp compensate for lack of screen interpolation
@@ -695,12 +460,16 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
   // if the array is too elongated, FFT sometimes gets upset;
   if (Float(xsize)/Float(ysize)>5) ysize=xsize/5;
   
-  if (prtlev()>3) 
-    cout << "new fBM of size " << xsize << "," << ysize << endl;
+  if (prtlev()>2) 
+    cout << "creating new fBM of size " << xsize << "," << ysize << " (may take a few minutes) ... " << endl;
+  os << LogIO::POST << "creating new fBM of size " << xsize << "," << ysize << " (may take a few minutes) ... " << LogIO::POST;
+
   fBM* myfbm = new fBM(xsize,ysize);
   screen_p = new Matrix<Float>(xsize,ysize);
   myfbm->initialize(Seed,Beta); 
   *screen_p=myfbm->data();
+  if (prtlev()>3) 
+    cout << " fBM created" << endl;
 
   Float pmean = mean(*screen_p);
   Float rms = sqrt(mean( ((*screen_p)-pmean)*((*screen_p)-pmean) ));
@@ -712,19 +481,10 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
   // scale is set above to delta/meanpwv
   *screen_p = myfbm->data() * scale/rms;
 
-  if (slot_times_.nelements()<=0) {
-    slot_times_.resize(nSim());
-    Double dtime( (stopTime()-startTime()) / Double(nSim()-1) );
-    for (Int i=0;i<nSim();i++) 
-      slot_time(i) = startTime() + (Double(i)+0.5) * dtime;
-  }
-  curr_slot()=0;      
-  curr_time()=slot_time();  
-
-  initialized()=True;
   if (prtlev()>2) cout << "AtmosCorruptor::init [2d]" << endl;
 
 }
+
 
 
 
@@ -943,4 +703,99 @@ void fBM::initialize(const Int seed, const Float beta) {
 
 
 
+
+
+
+
+
+
+
+//###################################  
+
+Complex GJonesCorruptor::simPar(const VisIter& vi,VisCal::Type type,Int ipar) {    
+  if (type==VisCal::G || type==VisCal::B) {
+      return gain(ipar,focusChan());
+  } else  throw(AipsError("GCorruptor: incompatible VisCal type "+type));
 }
+
+
+GJonesCorruptor::GJonesCorruptor(const Int nSim) : 
+  CalCorruptor(nSim),  // parent
+  tsys_(0.0)
+{}
+
+GJonesCorruptor::~GJonesCorruptor() {
+  if (prtlev()>2) cout << "GCorruptor::~GCorruptor()" << endl;
+}
+
+
+Matrix<Complex>* GJonesCorruptor::drift() { 
+  if (currAnt()<=drift_p.nelements())
+    return drift_p[currAnt()];
+  else
+    return NULL;
+};
+ 
+
+void GJonesCorruptor::initialize() {
+  // for testing only
+  if (prtlev()>2) cout << "GCorruptor::init [test]" << endl;
+}
+
+void GJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float scale) {
+  // individual delays for each antenna
+
+  fBM* myfbm = new fBM(nSim());
+  drift_p.resize(nAnt(),False,True);
+  for (Int iant=0;iant<nAnt();++iant) {
+    drift_p[iant] = new Matrix<Complex>(nPar(),nSim());
+    for (Int icorr=0;icorr<nPar();++icorr){
+      myfbm->initialize(Seed+iant+icorr,Beta); // (re)initialize
+      Float pmean = mean(myfbm->data());
+      Float rms = sqrt(mean( ((myfbm->data())-pmean)*((myfbm->data())-pmean) ));
+      if (prtlev()>3 and currAnt()<2) {
+	cout << "RMS fBM fluctuation for antenna " << iant 
+	     << " = " << rms << " ( " << pmean << " ; beta = " << Beta << " ) " << endl;      
+      }
+      // amp
+      Vector<Float> amp = (myfbm->data()) * scale/rms;
+      for (Int i=0;i<nSim();++i)  {
+	(*(drift_p[iant]))(icorr,i) = Complex(1.+amp[i],0);
+      }
+      
+      // phase
+      myfbm->initialize((Seed+iant+icorr)*100,Beta); // (re)initialize
+      pmean = mean(myfbm->data());
+      rms = sqrt(mean( ((myfbm->data())-pmean)*((myfbm->data())-pmean) ));
+      Vector<Float> angle = (myfbm->data()) * scale/rms * 3.141592; // *2 ?
+      for (Int i=0;i<nSim();++i)  {
+	(*(drift_p[iant]))(icorr,i) *= exp(Complex(0,angle[i]));
+      }
+
+      currAnt()=iant;
+    }
+  }
+
+  if (prtlev()>2) cout << "GCorruptor::init" << endl;
+
+}
+
+
+Complex GJonesCorruptor::gain(const Int icorr,const Int ichan) {
+  if (curr_slot()>=0 and curr_slot()<nSim() and icorr>=0 and icorr<nPar()) {    
+    if (currAnt()>drift_p.nelements())
+      throw(AipsError("GJonesCorruptor internal error accessing drift()"));  
+    Complex delta = (*drift_p[currAnt()])(icorr,curr_slot());    
+    return delta;
+  } else {
+    cout << "GCorruptor::gain: slot " << curr_slot() << "out of range!" <<endl;
+    return Complex(1.);
+  }
+}
+
+
+
+
+
+
+} //casa namespace

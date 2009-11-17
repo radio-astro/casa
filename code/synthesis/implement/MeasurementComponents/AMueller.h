@@ -94,16 +94,10 @@ public:
   // Overide solvability
   virtual Bool isSolvable() { return False; };
 
-  // Insert noise generation method (per VisBuffer?) here, and
-  //   implement it in AMueller.cc
-  //   Is this simPar?
+  // this is inherently freqdep:
+  virtual Bool freqDepPar() { return True; };
 
-  virtual Bool simPar(VisIter& vi, const Int nChunks);
-
-  // Also need setSimPar, etc., I think
-  // use SVC::setSimulate for now
-  
-  Int setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
+  virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
 
 protected:
   // umm... 2 like an M, for each of parallel hands?

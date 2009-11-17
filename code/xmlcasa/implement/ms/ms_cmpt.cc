@@ -1200,7 +1200,6 @@ ms::cvel(const std::string& mode,
 
     // Determine grid
     Double t_start = -9e99; // default value indicating that the original start of the SPW should be used
-    Double t_center= -3E30; // default value indicating that the original center of the SPW should be used
     Double t_bandwidth = -1.; // default value indicating that the original width of the SPW should be used
     Double t_width = -1.; // default value indicating that the original channel width of the SPW should be used
 
@@ -1232,29 +1231,16 @@ ms::cvel(const std::string& mode,
 	if(!width.toString().empty()){
 	  t_width = abs(casaQuantity(width).getValue("Hz"));
 	}
-	else{
-	  *itsLog << LogIO::WARN << "In frequency mode, need to set channel width if start is set." << LogIO::POST;
-	  return false;
-	}
       }
       else if(t_mode == "velocity"){
 	if(!width.toString().empty()){
 	  t_width = abs(casaQuantity(width).getValue("m/s"));
 	}   
-	else{
-	  *itsLog << LogIO::WARN << "In velocity mode, need to set channel width if start is set." << LogIO::POST;
-	  return false;
-	}
       }
-      // determine bandwidth and center
+      // determine bandwidth
       if(nchan > 0){ // we are not using the default, which is all channels
 	if(t_mode == "channel" || t_mode == "channel_b"){
 	  t_bandwidth = Double(nchan*t_width);
-	  t_center = floor(t_bandwidth/2. + t_start);
-	}
-	else{
-	  t_bandwidth = nchan*t_width;
-	  t_center = t_bandwidth/2. + t_start;
 	}
       }
     }
@@ -1391,8 +1377,8 @@ ms::cvel(const std::string& mode,
 
     *itsLog << LogIO::NORMAL << endl << LogIO::POST; 
 
-    // set final parameters for channel mode
-    if(t_mode == "channel"){
+    // set final parameters for channel, frequency or velocity mode
+    if(t_mode == "channel" || t_mode == "frequency" || t_mode == "velocity"){
       // get lower edge and width of first selected channel
       Table spwtable(originalName+"/SPECTRAL_WINDOW");
       ROArrayColumn<Double> chanwidths(spwtable, "CHAN_WIDTH");
@@ -1400,30 +1386,32 @@ ms::cvel(const std::string& mode,
 
       Vector<Double> cw(chanwidths(0));
       Vector<Double> cf(chanfreqs(0));
-      Int totNumChan = cw.size();
       Int firstChan = (Int)floor(t_start);
-      
       Double firstChanWidth = cw(firstChan);
-      Double lastChanWidth = cw(totNumChan-1);
       Double firstChanLoEdge = cf(firstChan)-firstChanWidth/2.;
-      Double lastChanHiEdge = cf(totNumChan-1)+lastChanWidth/2.;
-	
-      if(t_width<=0){
-	t_width = firstChanWidth;
+
+      if(t_mode == "channel"){
+	if(t_start>0){
+	  t_start = firstChanLoEdge;
+	}
+	if(t_width>0){
+	  t_width = t_width * firstChanWidth;
+	}
+	if(t_bandwidth>0){
+	  t_bandwidth = t_bandwidth * firstChanWidth;
+	}
       }
       else{
-	t_width = t_width * firstChanWidth;
+	if(nchan > 0){
+	  if(t_width<=0){
+	    t_width = firstChanWidth;
+	  }
+	  t_bandwidth = Double(nchan*t_width);
+	}
       }
-      if(t_bandwidth>0){
-	t_bandwidth = t_bandwidth * firstChanWidth;
-      }
-      else{ // select maximum bandwidth
-	t_bandwidth = lastChanHiEdge - firstChanLoEdge;
-      }
-      t_center = firstChanLoEdge + t_bandwidth/2.;
     } 
     
-    // cout << "trq " << t_regridQuantity << " tc " << t_center << " tb " << t_bandwidth << " tw " << t_width << endl; 
+    // cout << "trq " << t_regridQuantity << " ts " << t_start << " tb " << t_bandwidth << " tw " << t_width << endl; 
 
     // Regrid
 
@@ -1437,11 +1425,12 @@ ms::cvel(const std::string& mode,
 			      t_regridQuantity,
 			      t_restfreq,
 			      t_regridInterpMeth,
-			      t_center, 
+			      t_start, 
 			      t_bandwidth,
 			      t_width,
 			      t_phasec_fieldid, // == -1 if t_phaseCenter is valid
-			      t_phaseCenter
+			      t_phaseCenter,
+			      True // use "center is start" mode
 			      )
 	)==1){ // successful modification of the MS took place
       *itsLog << LogIO::NORMAL << "Spectral frame transformation/regridding completed." << LogIO::POST;
@@ -1457,7 +1446,7 @@ ms::cvel(const std::string& mode,
       // Update HISTORY table of the unsuccessfully modfied MS
       ostringstream param;
       param << "Original input parameters: outframe=" << t_outframe << " mode= " <<  t_regridQuantity
-	    << " center= " << t_center << " bandwidth=" << t_bandwidth
+	    << " start= " << t_start << " bandwidth=" << t_bandwidth
 	    << " chanwidth= " << t_width << " restfreq= " << t_restfreq 
 	    << " interpolation= " << t_regridInterpMeth;
       String paramstr=param.str();

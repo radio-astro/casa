@@ -222,7 +222,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         this task directly accesses the Measurement Set data only because of the data access 
         efficiency. So it differs from other single-dish tasks that mostly operate on the 
         ASAP scantable data format.  By setting calmode='none', one can run sdtpimaging to 
-        plot the data (raw or calibrated, if exists) and further imaging by setting createimage=True. 
+        plot the data (raw or calibrated, if exists) and further imaging by setting 
+        createimage=True. 
         The calibration available at this moment is just a simple baseline subtraction for
         each scan. The fitted regions set by masklist are the common for all the scans. 
         Selection of the antennas can be made by setting antennaid(s) or antenna name(s)
@@ -231,15 +232,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         So a separate sdtpimaging task needs to be ran for each antenna.
         It currently assumes that the data has a single spw(=0) and fieldid(=0).
         By setting flaglist, one can set flag by scan numbers to be excluded from imaging.
-        (Note: 'scan numbers' are determined from state id and related to SUB_SCAN column in STATE
-         subtable and not to SCAN_NUMBER in MS.) 
-        The selection of polarizations can be made by specify the polarization name in stokes, 
+        (Note: 'scan numbers' are determined from state id and related to SUB_SCAN column 
+        in STATE subtable and not to SCAN_NUMBER in MS.) 
+        The selection of polarizations can be made by specifying the polarization name in stokes, 
         such as 'XX' or 'YY' for linear polarizations. For example, with createimage=True,
-        stokes='XXYY' will produces an image cube with each plane contains image of one of i
-        the polarizations while stokes='' or stokes='I' will produces a 'total intensity' or Stokes I image. 
-        Among the imaging sub-parameters, ephemsrcname is used to set to a name of the moving source
-        such as planets to produce a stationary image (can be omitted), and pointingcolumn is
-        used to specify which pointing data column to use for imaging. 
+        stokes='XXYY' will produces an image cube with each plane contains the image of one of
+        the polarizations while stokes='' or stokes='I' will produces a 'total intensity' or 
+        Stokes I image. 
+        Among the imaging sub-parameters, ephemsrcname is used to set the name of 
+        a moving source such as planets to produce a stationary image (can be omitted), and 
+        pointingcolumn is used to specify which pointing data column to use for imaging. 
   </example>
 
 </task>

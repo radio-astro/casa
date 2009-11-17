@@ -73,7 +73,7 @@ class componentlist
 
     bool simulate(const int howmany = 1, const bool log = true);
 
-    bool addcomponent(const ::casac::variant& flux, const std::string& fluxunit, const std::string& polarization, const ::casac::variant& dir, const std::string& shape, const ::casac::variant& majoraxis, const ::casac::variant& minoraxis, const ::casac::variant& positionangle, const ::casac::variant& freq, const std::string& spectrumtype, const double index, const std::string& label = "");
+    bool addcomponent(const ::casac::variant& flux = ::casac::initialize_variant(""), const std::string& fluxunit = "Jy", const std::string& polarization = "Stokes", const ::casac::variant& dir = ::casac::initialize_variant("J2000 00h00m00.0 90d00m00.0"), const std::string& shape = "point", const ::casac::variant& majoraxis = ::casac::initialize_variant("2.0arcmin"), const ::casac::variant& minoraxis = ::casac::initialize_variant("1.0arcmin"), const ::casac::variant& positionangle = ::casac::initialize_variant("0.0deg"), const ::casac::variant& freq = ::casac::initialize_variant("LSRK 1.415GHz"), const std::string& spectrumtype = "constant", const double index = 1.0, const std::string& label = "");
 
     bool close(const bool log = true);
 

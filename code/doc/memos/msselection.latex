@@ -31,6 +31,10 @@
 \maketitle
 \normalsize
 \markboth{MeasurementSet Selection Syntax}{S. Bhatnagar}
+\begin{center}
+  \htmladdnormallinkfoot{PDF
+    Version}{http://www.aoc.nrao.edu/~sbhatnag/misc/msselection.pdf}
+\end{center}
 
 \begin{abstract}
 This note describes the syntax for the various expressions for
@@ -90,22 +94,23 @@ the floating point value is truncated to the nearest integer.
 \subsection{Range specification}
 
 Range of numbers (integers or real numbers) can be given in the format
-N0$\sim$N1.  Integer ranges are expanded into a list of integers starting
-from N0 (inclusive) to N1 (inclusive).  Range of real numbers is used
-to select all values between N0 and N1 (including the
+N0$\sim$N1.  Integer ranges are expanded into a list of integers
+starting from N0 (inclusive) to N1 (inclusive).  Range of real numbers
+is used to select all values between N0 and N1 (including the
 boundaries). E.g.
 
 Integer ranges:
 
 \begin{itemize}
-\item   10$\sim$30 implies all integers in the range [10,30]
-\item   10.1$\sim$30.5 implies all integers in the range [10,30]
+\item 10$\sim$30 implies all integers in the range [10,30]
+\item 10.1$\sim$30.5 implies all integers in the range [10,30]
 \end{itemize}
 Floating point ranges:
 \begin{itemize}
-\item   10$\sim$30 implies all values in the range [10.0, 30.0]
-\item   10.5$\sim$30.7 implies all values in the range [10.5, 30.7]
-\item   1.05e1 $\sim$ 3.07e1 implies all values in the range [10.5, 30.7]
+\item 10$\sim$30 implies all values in the range [10.0, 30.0]
+\item 10.5$\sim$30.7 implies all values in the range [10.5, 30.7]
+\item 1.05e1 $\sim$ 3.07e1 implies all values in the range [10.5,
+  30.7]
 \end{itemize}
 
 \subsection{Units}
@@ -117,7 +122,8 @@ the end) and it applies to both the range boundaries. E.g.
 
 \begin{itemize}
 \item   1421.07MHz implies 1421.07e6 Hz
-\item   1421$\sim$1500MHz implies all frequencies in the range [1421.0, 1500.0]MHz. 
+\item 1421$\sim$1500MHz implies all frequencies in the range [1421.0,
+  1500.0]MHz.
 \end{itemize}
 
 \subsection{Strings}
@@ -148,50 +154,53 @@ Strings can include any character except the following:
 (these are reserved characters for MSSelection expression syntax).
 Strings that do not contain any of the characters used to construct
 regular expressions or patterns are used for exact matches.  Although
-it is highly discouraged to have name in the database containing the above
-mentioned reserved characters, if one DOES choose to include the
+it is highly discouraged to have name in the database containing the
+above mentioned reserved characters, if one DOES choose to include the
 reserved characters are part of names etc., those names can only be
 matched against quoted strings (since regular expression and patterns
 are super-set of literal strings. I.e. literal string is a valid
 regular expression also).  This leaves the list '"', '*', '?', '{' and
-'}' as the list of printable character that cannot be part of a name
+  '}' as the list of printable character that cannot be part of a name
 (i.e., a name containing this character can never be matched in a
 MSSelection expression).  If a need is felt to include these as well,
 an escape mechanism can be included later (but I would prefer to
-enforce that {\bf at least} these characters not be part of any name!).
-Following are some examples of strings/regular expressions/patterns:
+enforce that {\bf at least} these characters not be part of any
+name!).  Following are some examples of strings/regular
+expressions/patterns:
 
 \begin{itemize}
-\item The string LBAND will be used as a literal string for exact match.
-     This will match only "LBAND".
+\item The string LBAND will be used as a literal string for exact
+  match.  This will match only "LBAND".
    
-\item The string {\tt *BAND*} will be used as a string pattern for matching.
-     This will match any string which has "BAND" in it.
+\item The string {\tt *BAND*} will be used as a string pattern for
+  matching.  This will match any string which has "BAND" in it.
  
-\item The string {\tt"*BAND*"} will be used as a string pattern for matching.
-     This will also match any string which has the string "BAND" in it.
+\item The string {\tt"*BAND*"} will be used as a string pattern for
+  matching.  This will also match any string which has the string
+  "BAND" in it.
 
-\item The string /.+BAND.+/ will be used as a regular expression.  This
-     will also match any string which as the string "BAND" in it.  (.+
-     operator has the same meaning as the '*' operator of patterns).
+\item The string /.+BAND.+/ will be used as a regular expression.
+  This will also match any string which as the string "BAND" in it.
+  (.+ operator has the same meaning as the '*' operator of patterns).
 \end{itemize}
 
 \subsection{Handling of blanks}
 
 In most cases, blanks are treated as white-spaces (i.e., insertion of
 blanks anywhere in the expression has no effect), except in the case
-of Field Selection Expressions (see Section~\ref{FIELDEXPR}).  Blanks are allowed as part of the
-field names.  Blanks around the delimiting characters (',' , ';' , '\&'
-etc.) are ignored.  For field names, blanks after the first valid name
-character and before the last valid name character are included as
-part of the name.  Hence
+of Field Selection Expressions (see Section~\ref{FIELDEXPR}).  Blanks
+are allowed as part of the field names.  Blanks around the delimiting
+characters (',' , ';' , '\&' etc.) are ignored.  For field names,
+blanks after the first valid name character and before the last valid
+name character are included as part of the name.  Hence
 
 \begin{itemize}
 \item field={\tt A , B , C} is same as field={\tt A,B,C}
-\item field={\tt A , BB  BB , C} is same as field={\tt A,BB BB,C}
-     (first name is "A", second name is "BB BB" and the third name is "C")
-\item baseline={\tt 1 , 2 , 3 \& 4 , 5 , 6  ; 10 $\sim$ 11 \& 20 $\sim$ 30} is same as\\
-     baseline={\tt 1,2,3\&4,5,6;10$\sim$11\&20$\sim$30}
+\item field={\tt A , BB BB , C} is same as field={\tt A,BB BB,C}
+  (first name is "A", second name is "BB BB" and the third name is
+  "C")
+\item baseline={\tt 1 , 2 , 3 \& 4 , 5 , 6 ; 10 $\sim$ 11 \& 20 $\sim$
+  30} is same as\\ baseline={\tt 1,2,3\&4,5,6;10$\sim$11\&20$\sim$30}
 \end{itemize}
 
 \section{Time selection}
@@ -207,36 +216,36 @@ T0, T1 and dT in the following description are time specifications.
 \subsection{Syntax}
 
 \begin{itemize}
-\item time={\tt T0$\sim$T1}
+\item time~=~~{\tt T0$\sim$T1}
 
-      Selects all time stamps starting from T0 to T1.
-      Fields missing in T0 are replaced by the fields in the time
-      stamp of the first valid selected row in the MS.  Fields missing
-      in T1 are replaced by the corresponding fields of T0 (after its
-      defaults are set).
-\item time={\tt T0}
+      Selects all time stamps starting from T0 to T1.  Fields missing
+      in T0 are replaced by the fields in the time stamp of the first
+      valid selected row in the MS.  Fields missing in T1 are replaced
+      by the corresponding fields of T0 (after its defaults are set).
+\item time~=~~{\tt T0}
 
-      Selects all time stamps that are within an integration
-      time of T0.  Integration time is determined from the first valid
+      Selects all time stamps that are within an integration time of
+      T0.  Integration time is determined from the first valid
       selected row (more rigorously, an average integration time
       should be computed).  Default settings for the missing fields of
       T0 are as described in bullet (1) above.
-\item time={\tt T0+dT}
+\item time~=~~{\tt T0+dT}
 
-      Selects all time stamps starting from T0 and ending
-      with time value given by T0+dT. Defaults of T0 are set as usual
-      described in bullet (1) above.  Defaults for dT are set from the
-      time corresponding to MJD=0.  I.e. dT is an specification of
-      length of time from nominal "start of time" (the time stamp of
-      the first valid selected row of the MS).
+      Selects all time stamps starting from T0 and ending with time
+      value given by T0+dT. Defaults of T0 are set as usual described
+      in bullet (1) above.  Defaults for dT are set from the time
+      corresponding to MJD=0.  I.e. dT is an specification of length
+      of time from nominal "start of time" (the time stamp of the
+      first valid selected row of the MS).
 
-\item time={\tt $>$T0} 
+\item time~=~~{\tt$>$T0} 
 
       Selects all times greater than T0. 
 
-\item time={\tt $<$T0} 
+\item time~=~~{\tt$<$T0} 
 
-      Selects all times less than T0. Default settings for T0 are as above.
+      Selects all times less than T0. Default settings for T0 are as
+      above.
 \end{itemize}
 
 \section{Antenna/Baseline Selection}
@@ -256,17 +265,21 @@ separated list of baseline specifications.
 
 \subsubsection{Antenna specification}
 
-An ANT can be given as a single string
-(literal/pattern/regular expression), single integer ID, a range of
-integer IDs or a comma separated list of integers.  For VLA-specific
-reasons (see Section~\ref{VLACONVENTION}), {\bf only} for antenna specifications, integers are
-first converted to strings and matched against the antenna names.  E.g.
+An ANT can be given as a single string (literal/pattern/regular
+expression), single integer ID, a range of integer IDs or a comma
+separated list of integers.  For VLA-specific reasons (see
+Section~\ref{VLACONVENTION}), {\bf only} for antenna specifications,
+integers are first converted to strings and matched against the
+antenna names.  E.g.
 
 \begin{itemize}
-\item {\tt VLA:N1}  corresponds to antenna named "VLA:N1".
-\item {\tt 1,2,3}   corresponds to antennas {\bf named} "1", "2" and "3".
-\item {\tt 1$\sim$3}     corresponds to antennas {\bf named} "1", "2" and "3".
-\item {\tt VLA:N*}  corresponds to all antennas who's name starts with "VLA:N". 
+\item {\tt VLA:N1} corresponds to antenna named "VLA:N1".
+\item {\tt 1,2,3} corresponds to antennas {\bf named} "1", "2" and
+  "3".
+\item {\tt 1$\sim$3} corresponds to antennas {\bf named} "1", "2" and
+  "3".
+\item {\tt VLA:N*} corresponds to all antennas who's name starts with
+  "VLA:N".
 \end{itemize}
 
 Antenna specifications are first matched against the antenna names
@@ -281,12 +294,13 @@ of the MS).
 A baseline specification consists of an ANT, an ANT followed by an
 operator or a pair of antenna specifications separated by an operator.
 Operator can be one, two or three ampersands ({\tt '\&'}) -- {\tt
-'\&'} selects {\it only} cross-correlation baselines, {\tt '\&\&'}
+  '\&'} selects {\it only} cross-correlation baselines, {\tt '\&\&'}
 selection cross- {\it and} auto-correlation baselines and {\tt
-'\&\&\&'} selection {\it only} auto-correlation baselines.  Formally,
-baseline specification is of the form {\tt [!]ANT[$<$OP$>$[ANT]]} (where
-the parts in square brackets are optional and {\tt $<$OP$>$} can be {\tt
-'\&', '\&\&'} or {\tt '\&\&\&'}).
+  '\&\&\&'} selection {\it only} auto-correlation baselines.
+Formally, baseline specification is of the form {\tt
+  [!]ANT[$<$OP$>$[ANT]]} (where the parts in square brackets are
+optional and {\tt $<$OP$>$} can be {\tt '\&', '\&\&'} or {\tt
+  '\&\&\&'}).
 
 Possible forms of baseline specifications are tabulated in
 Table~\ref{BASELINE:TAB}.
@@ -333,20 +347,20 @@ ANT1 ; !ANT2 & ANT1 and ANT2 can be any of the above expressions. This\\
 
 The negation operator '!' can be used to exclude a baseline
 specification from the final selection. {\it Note that this is a
-baseline negation operator and not an antenna negation operator}.  The
-negation operator applies only to the baseline specification {\it
-immediately} following it.  E.g.,
+  baseline negation operator and not an antenna negation operator}.
+The negation operator applies only to the baseline specification {\it
+  immediately} following it.  E.g.,
 
 \begin{itemize}
-\item baseline={\tt !15} excludes all baselines with the antenna
-  {\bf named} "15"
+\item baseline={\tt !15} excludes all baselines with the antenna {\bf
+  named} "15"
 \item baseline={\tt!1$\sim$10} excludes {\bf all} baselines involving
   the antennas {\bf named} between "1" and "10"
-\item  baseline={\tt !1,3,5,7,9} excludes all baselines involving
+\item baseline={\tt !1,3,5,7,9} excludes all baselines involving
   antennas {\bf named} "1", "3", "5", "7" and "9"
-\item  baseline={\tt 1$\sim$10;!5} selects all baselines
-  involving antennas {\bf named} between "1" and "10" {\it except}
-  those involving antenna {\bf named} "5".
+\item baseline={\tt 1$\sim$10;!5} selects all baselines involving
+  antennas {\bf named} between "1" and "10" {\it except} those
+  involving antenna {\bf named} "5".
 \end{itemize}
 
 Note that the negation operator {\it cannot} be applied to individual
@@ -354,26 +368,28 @@ members of the antenna specification/antenna list.  E.g. the
 expression {\tt "1,2,!5,8"} is syntactically incorrect.
 
 \subsubsection{Examples}
-In the most comman usage, an atomic ANT selects all baselines
+In the most common usage, an atomic ANT selects all baselines
 containing all the antennas in ANT.  ANT\& selects only baselines
 between the list of antennas in the antenna specification.  ANT1\&ANT2
 selects baselines between antennas in ANT1 and ANT2 only.  E.g.
 
 \begin{itemize}
-\item baseline={\tt 1,2,3}  selects baseline between antennas 1, 2 and 3
-                   and all other antennas.
-\item baseline={\tt 1,2,3\&} selects baseline between antennas 1,2 and 3 only. 
-\item baseline={\tt 1,2,3 \& 4,5,6} selects baselines between antennas 1,2,3 and 4,5,6.
+\item baseline={\tt 1,2,3} selects baseline between antennas 1, 2 and
+  3 and all other antennas.
+\item baseline={\tt 1,2,3\&} selects baseline between antennas 1,2 and
+  3 only.
+\item baseline={\tt 1,2,3 \& 4,5,6} selects baselines between antennas
+  1,2,3 and 4,5,6.
 \end{itemize}
 Following are more examples of baseline specification using ranges and
 names:
 \begin{itemize}
 \item baseline={\tt 1$\sim$3} same as baseline=1,2,3
 \item baseline={\tt 1$\sim$3\&} same as baseline=1,2,3\&
-\item baseline={\tt 1$\sim$3 \& 4$\sim$5} same as baseline={\tt 1,2,3\&4,5,6}
+\item baseline={\tt 1$\sim$3 \& 4$\sim$5} same as baseline={\tt
+  1,2,3\&4,5,6}
 \item baseline={\tt VLA:N* \& VLA:E*} selects all baselines between
-                            antennas with names starting with "VLA:N"
-                            and "VLA:E".
+  antennas with names starting with "VLA:N" and "VLA:E".
 \item baseline={\tt 21;!15} selects baselines between antenna {\bf
   named} "21" and all other available antennas, {\it except} antenna
   {\bf named} "15".  I.e, baseline "21-15" (or its conjugate, if
@@ -384,7 +400,8 @@ The full baseline selection expression is any of the examples shown
 above or a semi-colon-separated list of baseline specifications.  E.g.
 
 \begin{itemize}
-\item baseline={\tt 1$\sim$3\& ; 4$\sim$5\&10$\sim$15 ; VLA:N* \& VLA:E*}
+\item baseline={\tt 1$\sim$3\& ; 4$\sim$5\&10$\sim$15 ; VLA:N* \&
+  VLA:E*}
 \end{itemize}
 with each elements of the semi-colon separated list being interpreted
 as explained above.
@@ -402,9 +419,9 @@ following logic is used:
 
 \begin{description}
 \item[] Just for antenna selection, a user supplied integer (or
-integer list) is converted to a string and matched against the antenna
-name.  If  that fails, the normal logic of using an integer as an
-integer and  matching it with antenna index is done.
+  integer list) is converted to a string and matched against the
+  antenna name.  If that fails, the normal logic of using an integer
+  as an integer and matching it with antenna index is done.
 \end{description}
 Hence if the antenna with ID 17 is named "21", the string
 \begin{verbatim}
@@ -454,11 +471,10 @@ The field selection expression is a comma-separated list of field
 specifications.  E.g.
 
 \begin{itemize}
-\item field={\tt 1,2,3,4}  selects field IDs 1,2,3 and 4
-\item field={\tt 1$\sim$4}      same as above
-\item field={\tt 1$\sim$4, VIRGO A , 3C*}  selects field IDs 1,2,3,4 field named
-                               "VIRGO A" and all fields with names
-                               starting with "3C". 
+\item field={\tt 1,2,3,4} selects field IDs 1,2,3 and 4
+\item field={\tt 1$\sim$4} same as above
+\item field={\tt 1$\sim$4, VIRGO A , 3C*} selects field IDs 1,2,3,4
+  field named "VIRGO A" and all fields with names starting with "3C".
 \end{itemize}
 
 \section{UV Distance Selection}
@@ -475,18 +491,18 @@ with the default unit being meter.  Units can be specified as "m"/"M"
 converted to internal Measurement Set units using the spectral window
 sensitive reference frequency.
 
-If only a single UVDIST is specified, all rows that exactly match
-the given UVDIST are selected.  When UVDIST is given as a range in the
+If only a single UVDIST is specified, all rows that exactly match the
+given UVDIST are selected.  When UVDIST is given as a range in the
 format N0$\sim$N1[UNIT] (where N0 and N1 are valid numbers), all rows
 corresponding to the uv-distance between N0 and N1 (N0 and N1
 included) are selected.
 
 Rows can also be selected via boolean expressions.  When specified in
-the format "$>$UVDIST", all rows with uv-distance greater than the given
-uv-distance (converted to the appropriate units) are selected.  When
-specified in the format "$<$UVDIST", all rows with uv-distance less than
-the given uv-distance (converted to the appropriate units) are
-selected.
+the format "$>$UVDIST", all rows with uv-distance greater than the
+given uv-distance (converted to the appropriate units) are selected.
+When specified in the format "$<$UVDIST", all rows with uv-distance
+less than the given uv-distance (converted to the appropriate units)
+are selected.
 
 To selected rows with uv-distance within an equal range on either side
 of a given value, UVDIST can be specified as a percentage of the given
@@ -497,16 +513,16 @@ The full uv-distance selection expression is a comma-separated list of
 any of the above mentioned uv-distance specifications.  E.g.
 
 \begin{itemize}
-\item uvdist={\tt 100Klambda}   selects all baselines for which $\sqrt{u^2+v^2}$ is
-                    equal to 100 K$\lambda$.
-\item uvdist={\tt 100Km}   selects all baselines for which $\sqrt{u^2+v^2}$ is
-                    equal to 100 Km.
-\item uvdist={\tt 100$\sim$200Klambda} selects all baselines for which $\sqrt{u^2+v^2}$ is
-                      in the range [100, 200] K$\lambda$.
-\item uvdist={\tt $>$100Klambda}   selects all baselines for which $\sqrt{u^2 + v^2}$
-                      is greater than 100 K$\lambda$.
-\item uvdist={\tt $<$100Klambda}   selects all baselines for which $\sqrt{u^2 + v^2}$
-                      is less than 100 K$\lambda$.
+\item uvdist={\tt 100Klambda} selects all baselines for which
+  $\sqrt{u^2+v^2}$ is equal to 100 K$\lambda$.
+\item uvdist={\tt 100Km} selects all baselines for which
+  $\sqrt{u^2+v^2}$ is equal to 100 Km.
+\item uvdist={\tt 100$\sim$200Klambda} selects all baselines for which
+  $\sqrt{u^2+v^2}$ is in the range [100, 200] K$\lambda$.
+\item uvdist={\tt $>$100Klambda} selects all baselines for which
+  $\sqrt{u^2 + v^2}$ is greater than 100 K$\lambda$.
+\item uvdist={\tt $<$100Klambda} selects all baselines for which
+  $\sqrt{u^2 + v^2}$ is less than 100 K$\lambda$.
 \end{itemize}
 
 \section{Frequency Selection}
@@ -533,87 +549,92 @@ with the syntax for CHANSPEC list.
 Spectral windows (SPW) specification can be a single ID or a list of
 spectral window integer IDs, a spectral window name (as a literal
 string (for exact match)/regular expression/pattern) or a reference
-frequency value (value with a unit).  A single frequency specification is used
-for exact match with the REF\_FREQUENCY column of the SPECTRAL\_WINDOW
-sub-table.  A range of frequencies are used to select all SPWs which
-are within the given range.  The allowed units are Hz, KHz, MHz, GHz
-or THz.
+frequency value (value with a unit).  A single frequency specification
+is used for exact match with the REF\_FREQUENCY column of the
+SPECTRAL\_WINDOW sub-table.  A range of frequencies are used to select
+all SPWs which are within the given range.  The allowed units are Hz,
+KHz, MHz, GHz or THz.
 
 SPWs can also be selected via a boolean expression for integer IDs.
 
 \begin{itemize}
-\item "$>$ID" will select all SPWs with ID greater than the specified value.
-
-\item "$<$ID" will select all SPWs with ID lesser than the specified value.
-
-\item "$>$FREQ" will select all SPWs, the reference frequencies of which are
-     greater than the given frequency converted to Hz.
-
-\item "$<$FREQ" will select all SPWs, the reference frequencies of which are
-     greater than the given frequency converted to Hz.
+\item "$>$ID" will select all SPWs with ID greater than the specified
+  value.
+\item "$<$ID" will select all SPWs with ID lesser than the specified
+  value.
+\item "$>$FREQ" will select all SPWs, the reference frequencies of
+  which are greater than the given frequency converted to Hz.
+\item "$<$FREQ" will select all SPWs, the reference frequencies of
+  which are greater than the given frequency converted to Hz.
 \end{itemize}
 E.g.
 \begin{itemize}
-\item spw={\tt 1,2,3}   selects spectral window IDs 1,2 and 3
-\item spw={\tt 1;2;3}   same as above.  This style can be used along with CHANSPEC
-\item spw={\tt 1$\sim$3}     same as above
-\item spw={\tt 327MHz}  selects spectral window with a reference frequency equal to 327.0 MHz
-\item spw={\tt 327$\sim$610MHz} selects all spectral windows with reference frequencies in the range [327.0, 610.0] MHz. 
-\item spw={\tt 1421MHz, 1422MHz, 1423MHz}   selects SPWs with reference frequency 1421.0, 1422.0 and 1423.0 MHz.
-\item spw={\tt 1421MHz; 1422MHz; 1423MHz}  same as above.  This style can be used along with CHANSPEC.
-\item spw={\tt $>$327MHz}    selects all spectral windows with reference
-                    frequency greater than 327.0 MHz
-\item spw={\tt $<$327MHz}    selects all spectral windows with reference
-                    frequency less than 327.0 MHz
+\item spw={\tt 1,2,3} selects spectral window IDs 1,2 and 3
+\item spw={\tt 1;2;3} same as above.  This style can be used along
+  with CHANSPEC
+\item spw={\tt 1$\sim$3} same as above
+\item spw={\tt 327MHz} selects spectral window with a reference
+  frequency equal to 327.0 MHz
+\item spw={\tt 327$\sim$610MHz} selects all spectral windows with
+  reference frequencies in the range [327.0, 610.0] MHz.
+\item spw={\tt 1421MHz, 1422MHz, 1423MHz} selects SPWs with reference
+  frequency 1421.0, 1422.0 and 1423.0 MHz.
+\item spw={\tt 1421MHz; 1422MHz; 1423MHz} same as above.  This style
+  can be used along with CHANSPEC.
+\item spw={\tt $>$327MHz} selects all spectral windows with reference
+  frequency greater than 327.0 MHz
+\item spw={\tt $<$327MHz} selects all spectral windows with reference
+  frequency less than 327.0 MHz
 \end{itemize}
 
 \subsection{Channel Selection Syntax}
 
-Channel specification\footnote{\it MSSelection module is currently used to only parse the
-channel selection expression to produce the START,STOP,STEP tuples.
-No channel based selection is actually applied to the data.  The list
-of tuples per SPW is passed to the application program layer and the
-interpretation of the tuples for actual selection depends on the
-application programmer.} (referred to as CHANSPEC in the following
-description) is a START,STOP,STEP tuple corresponding to the first
-frequency channel, the last frequency channel and the step size to
-increment from the first to the last channel.  The START and STOP part
-of the tuple can be range specification for the range [START, STOP]
-followed by an optional STEP size.
+Channel specification\footnote{\it MSSelection module is currently
+  used to only parse the channel selection expression to produce the
+  START,STOP,STEP tuples.  No channel based selection is actually
+  applied to the data.  The list of tuples per SPW is passed to the
+  application program layer and the interpretation of the tuples for
+  actual selection depends on the application programmer.} (referred
+to as CHANSPEC in the following description) is a START,STOP,STEP
+tuple corresponding to the first frequency channel, the last frequency
+channel and the step size to increment from the first to the last
+channel.  The START and STOP part of the tuple can be range
+specification for the range [START, STOP] followed by an optional STEP
+size.
 
 START and STOP part of the tuple can be specified as a single integer
 or physical quantity or as a range of integers or physical quantities.
 A single integer is treated as a channel index and the tuple
 corresponds to [ID,ID,1].  A single physical quantity is matched with
 the exact frequency value of the channels and tuple of matched channel
-index is constructed as [ID,ID,1].  A range of integers given as N0$\sim$N1
-is used to construct a tuple [N0,N1,1].  Similarly for a range of
-physical quantities.
+index is constructed as [ID,ID,1].  A range of integers given as
+N0$\sim$N1 is used to construct a tuple [N0,N1,1].  Similarly for a
+range of physical quantities.
 
 If a START,STOP part of the tuple specification is followed by
-"\char94 STEP", the STEP is used as the third value of the tuple.  STEP
-specification is a single integer or physical quantity.
-E.g. 0$\sim$10\char94 2
-is converted to a START,STOP,STEP tuple [0,10,2].  
+"\char94 STEP", the STEP is used as the third value of the tuple.
+STEP specification is a single integer or physical quantity.
+E.g. 0$\sim$10\char94 2 is converted to a START,STOP,STEP tuple
+[0,10,2].
 
 A channel selection expression is a semi-colon separated list of
 channel specifications.  E.g.
 
 \begin{itemize}
-\item chan={\tt 1;2;3}  selects channels 1,2 and 3.
-\item chan={\tt 1$\sim$3}    selects channels 1,2 and 3.
-\item chan={\tt 0$\sim$10\char94 2} selects channels in the range [0,10] with a step size
-                of 2
-\item chan={\tt 1421MHz} selects a frequency channel corresponding to the
-                  frequency 1421.0 MHz
-\item chan={\tt 1421$\sim$1500MHz} selects all channels in the range [1412.0,
-                       1500.0] MHz
-\item chan={\tt 1421$\sim$1500MHz\char94 10KHz} selects all channels in the range
-                             [1421.0, 1500.0] MHz in steps of 10 KHz. 
-\item chan={\tt 1421$\sim$1500MHz\char94 10KHz ; 0$\sim$10\char94 2 ; 20 ; 30; 40}
-          selects all channels in the range [1421.0, 1500.0] MHz in
-          steps of 10KHz, all channels with indexes in the range
-          [0,10] in steps of 2 channels and channels 10, 20 and 30. 
+\item chan={\tt 1;2;3} selects channels 1,2 and 3.
+\item chan={\tt 1$\sim$3} selects channels 1,2 and 3.
+\item chan={\tt 0$\sim$10\char94 2} selects channels in the range
+  [0,10] with a step size of 2
+\item chan={\tt 1421MHz} selects a frequency channel corresponding to
+  the frequency 1421.0 MHz
+\item chan={\tt 1421$\sim$1500MHz} selects all channels in the range
+  [1412.0, 1500.0] MHz
+\item chan={\tt 1421$\sim$1500MHz\char94 10KHz} selects all channels
+  in the range [1421.0, 1500.0] MHz in steps of 10 KHz.
+\item chan={\tt 1421$\sim$1500MHz\char94 10KHz ; 0$\sim$10\char94 2 ;
+  20 ; 30; 40} selects all channels in the range [1421.0, 1500.0] MHz
+  in steps of 10KHz, all channels with indexes in the range [0,10] in
+  steps of 2 channels and channels 10, 20 and 30.
 \end{itemize}
 
 \subsection{ Frequency Selection Syntax}
@@ -627,29 +648,35 @@ SPWs selected by the SPWSPEC on the left of ':'.  E.g.
 
 \begin{itemize}
 \item freq={\tt LBAND:1421$\sim$1500MHz\char94 10KHz ,
-327MHz:300$\sim$400MHz, 0$\sim$4:0$\sim$10\char94 2 , 5:20;30;40}
+  327MHz:300$\sim$400MHz, 0$\sim$4:0$\sim$10\char94 2 , 5:20;30;40}
 
        selects 
 
 \begin{itemize}
-	\item all channels corresponding to channels in the range [1421.0,
-        	1500.0] MHz for the SPW named "LBAND", and
-	\item all channels corresponding to the range [300.0, 400.0]MHz for
-        	the SPW with a reference frequency of 327.0 MHz, and
-	\item Channels in the range [0,10] in steps of 2 for all SPWs with
-	        IDs in the range [0,4], and
+	\item all channels corresponding to channels in the range
+          [1421.0, 1500.0] MHz for the SPW named "LBAND", and
+	\item all channels corresponding to the range [300.0,
+          400.0]MHz for the SPW with a reference frequency of 327.0
+          MHz, and
+	\item Channels in the range [0,10] in steps of 2 for all SPWs
+          with IDs in the range [0,4], and
 	\item Channels 20, 30 and 40 for SPW 5
 \end{itemize}          
 
-\item freq={\tt 1421Mhz;1422Mhz;1423Mhz : 0;1;2;10$\sim$20;30$\sim$100$\sim$10 ,0$\sim$3:10$\sim$30}
+\item freq={\tt 1421Mhz;1422Mhz;1423Mhz :
+  0;1;2;10$\sim$20;30$\sim$100$\sim$10 ,0$\sim$3:10$\sim$30}
 
 	 selects
 
 \begin{itemize}
-    \item Channels 0, 1, 2 for SPWs with reference frequency of 1421.0, 1422.0 and 1423.0 MHz.
-    \item Channels 10 to 20 in step of 1 channel for SPWs with reference frequency of 1421.0, 1422.0 and 1423.0 MHz.
-    \item Channels 30 to 100 in steps of 10 channel for SPWs with reference frequency of 1421.0, 1422.0 and 1423.0 MHz.
-    \item Channels 10 to 30 in step of 1 channel for SPW IDs 0 to 3 in step of 1. 
+    \item Channels 0, 1, 2 for SPWs with reference frequency of
+      1421.0, 1422.0 and 1423.0 MHz.
+    \item Channels 10 to 20 in step of 1 channel for SPWs with
+      reference frequency of 1421.0, 1422.0 and 1423.0 MHz.
+    \item Channels 30 to 100 in steps of 10 channel for SPWs with
+      reference frequency of 1421.0, 1422.0 and 1423.0 MHz.
+    \item Channels 10 to 30 in step of 1 channel for SPW IDs 0 to 3 in
+      step of 1.
 \end{itemize}          
 
 \end{itemize}          
@@ -657,25 +684,26 @@ SPWs selected by the SPWSPEC on the left of ':'.  E.g.
 \subsubsection{Notes}
 
 \begin{enumerate}
-\item For channel specificities of the type {\tt N1$\sim$N2:c0;c1;c2;c3MHz} the list of channel selection
-      is applied to all SPWs in the range [N0, N1].  c3 is converted
-      from physical units to channel index by using the channel width
-      from SPW N1. Is it better to use the min. chan. among the
-      selected SPWs? 
+\item For channel specifications of the type {\tt
+  N1$\sim$N2:c0;c1;c2;c3MHz} the list of channel selection is applied
+  to all SPWs in the range [N0, N1].  c3 is converted from physical
+  units to channel index by using the channel width from SPW N1. Is it
+  better to use the min. chan. among the selected SPWs?
 
-\item If channel range is out of bounds, it will be brought within bounds
-      per SPW.  If the lower limit of a range is greater than the available outer
-      limit, exception is generated.  If the lower limit is less than
-      zero, it is set to zero.  If upper limit is greater than the available outer
-      limit, it is set to the available outer limit.
+\item If channel range is out of bounds, it will be brought within
+  bounds per SPW.  If the lower limit of a range is greater than the
+  available outer limit, exception is generated.  If the lower limit
+  is less than zero, it is set to zero.  If upper limit is greater
+  than the available outer limit, it is set to the available outer
+  limit.
 
-      If a single channel specification is greater than the available outer limit, an
-      exception is thrown.  If it is less than zero, it is set to
-      zero.
+  If a single channel specification is greater than the available
+  outer limit, an exception is thrown.  If it is less than zero, it is
+  set to zero.
 
 \item For ranges of physical values, it is assumed that the spectral
-      window sub-table's CHAN\_FREQ column has ordered list of channel
-      frequencies.
+  window sub-table's CHAN\_FREQ column has ordered list of channel
+  frequencies.
 \end{enumerate}
 
 \section{Polarization Selection}
@@ -703,7 +731,7 @@ are of the type {\tt [SPW:]POL}\footnote{A full specification of the
   Section~\ref{SPWEXPR}) -- except that the channel specifications are
   not allowed here.
 
-As for other expressions, the polarization selection expression
+As with other expressions, the polarization selection expression also
 consists of comma separated list of full specifications.  The
 separator for lists for the individual parts of the specification
 (i.e. {\tt SPW}, {\tt POL}, etc.) is semi-colon. However note that if
@@ -780,6 +808,7 @@ The MSSelection sub-system reports errors via the C++ exception
 mechanism.  The objects thrown have the following inheritance
 hierarchy:
 
+\begin{center}
 \begin{verbatim}
                           AipsError
                               o
@@ -795,12 +824,14 @@ hierarchy:
                               |
    MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray}ParseError
 \end{verbatim}
+\end{center}
 
-All parsing errors are reported by throwing the
-{\tt MSSelection\{Time, Spw, Field, UvDist, Antenna, Scan, Subarray\}ParseError} exception.  All other
-forms of errors (e.g. illegal range specification N0$\sim$N1 where N0 $>$ N1)
-are reported by throwing an exception of type
-{\tt MSSelection\{Time, Spw, Field, UvDist, Antenna, Scan, Subarray\}Error}.
+All parsing errors are reported by throwing the {\tt
+  MSSelection\{Time, Spw, Field, UvDist, Antenna, Scan,
+  Subarray\}ParseError} exception.  All other forms of errors
+(e.g. illegal range specification N0$\sim$N1 where N0 $>$ N1) are
+reported by throwing an exception of type {\tt MSSelection\{Time, Spw,
+  Field, UvDist, Antenna, Scan, Subarray\}Error}.
 
 Hence, to catch all errors thrown from the MSSelection sub-system,
 catch the MSSelectionError object.  For more specific exception
@@ -1037,7 +1068,7 @@ spw        = 1
 baseline   = 1~3 & 4~6
 scan       =
 array      =
-uvdist     = 0~5kl
+uvdist     = 0~5klambda
 mssplit>go
 Ant1 = [21, 10, 17]
 Ant2 = [4, 24, 3]
@@ -1069,7 +1100,7 @@ spw        = 1
 baseline   = 1~3 & 4~6 ; 10&11
 scan       =
 array      =
-uvdist     = 0~5kl
+uvdist     = 0~5klambda
 mssplit>go
 Ant1 = [21, 10, 17, 6]
 Ant2 = [4, 24, 3, 1]
@@ -1100,7 +1131,7 @@ spw        = 1
 baseline   = 1~3 & 4~6 ; 10&11
 scan       =
 array      =
-uvdist     = 0~5kl
+uvdist     = 0~5klambda
 mssplit>go
 First selected timestamp = 26-Apr-2003/03:20:45.0
 ###MSSelectionError: MSSelection time error: Parse error at or near

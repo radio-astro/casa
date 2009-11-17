@@ -42,10 +42,12 @@
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
+#include <ms/MeasurementSets/MSSpWindowColumns.h>
 #include <ms/MeasurementSets/MSFieldColumns.h>
 #include <casa/sstream.h>
 #include <casa/iostream.h>
 #include <casa/iomanip.h>
+#include <casa/Containers/RecordField.h>
 
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
@@ -78,7 +80,7 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   solved_(False),
   apmode_(""),
   solint_("inf"),
-  simint_("inf"),
+  simint_("integration"),
   simulated_(False),
   solnorm_(False),
   minSNR_(0.0f),
@@ -425,33 +427,79 @@ void SolvableVisCal::setApply(const Record& apply) {
 
 // ===================================================
 
-#define PRTLEV 0
+void SolvableVisCal::createCorruptor(const VisIter& vi,const Record& simpar, const Int nSim) {
+  LogIO os(LogOrigin("SVC", "createCorruptor", WHERE));
 
-void SolvableVisCal::setSimulate(const Record& simpar) {
+  // this is the generic create and init 
+  // ** specialists should call this after createing their corruptor.
 
+  if (!corruptor_p) {
+    corruptor_p = new CalCorruptor(nSim);  
+    os << LogIO::WARN << "creating generic CalCorruptor" << LogIO::POST;
+  }
+
+  // would be nice to reduce the amount of stuff passed down to the corruptor; 
+  // fnChan is used in AtmosCorruptor, currAnt and curr Spw are used generically
+
+  corruptor_p->prtlev()=prtlev();
+  corruptor_p->freqDepPar()=freqDepPar();
+
+//  corruptor_p->nCorr()=vi.nCorr();
+//  if (prtlev()>3) 
+//    os << LogIO::POST << "nCorr= " << vi.nCorr() << LogIO::POST;      
+  // what matters is nPar not nCorr - then apply uses coridx
+  corruptor_p->nPar()=nPar();
+
+  const ROMSSpWindowColumns& spwcols = vi.msColumns().spectralWindow();  
+  if (prtlev()>3) cout << " SpwCols accessed:" << endl;
+  if (prtlev()>3) cout << "   nSpw()= " << nSpw() << endl;
+  if (prtlev()>3) cout << "   spwcols.nrow()= " << spwcols.nrow() << endl;  
+  AlwaysAssert(nSpw()==spwcols.nrow(),AipsError);
+  // there's a member variable in Simulator nSpw, should we verify that 
+  // this is the same? probably.
+
+  // things will break if spw mapping, ie not in same order as in vs
+  corruptor_p->nSpw()=nSpw();
+  corruptor_p->nAnt()=nAnt();
+  corruptor_p->currAnt()=0;
+  corruptor_p->currSpw()=0;
+  corruptor_p->fRefFreq().resize(nSpw());
+  corruptor_p->fnChan().resize(nSpw());
+  corruptor_p->fWidth().resize(nSpw());
+  
+  for (Int irow=0;irow<nSpw();++irow) { 
+    corruptor_p->fRefFreq()[irow]=spwcols.refFrequency()(irow);
+    // RI TODO T::setupSim change fnChan to 1 if not freqDepPar()?
+    corruptor_p->fnChan()[irow]=spwcols.numChan()(irow);    
+    corruptor_p->fWidth()[irow]=spwcols.totalBandwidth()(irow); 
+    // totalBandwidthQuant ?  in other places its assumed to be in Hz
+  }
+  // see MSsummary.cc for more info/examples
+
+}
+
+
+
+void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& solTimes) {
+
+  LogIO os(LogOrigin("SVC", "setSimulate()", WHERE));
   if (prtlev()>2) cout << "SVC::setSimulate(simpar)" << endl;
-
-  // RI TODO interpolation params have to get sent to SolvableVisCal::setApply or setSolve.
-
-  // deal with general parameters ( this general setSimulate will be 
-  // called by any derived classes before dealing with their specific parms )
 
   // Extract calWt
   if (simpar.isDefined("calwt"))
     calWt()=simpar.asBool("calwt");
   
   // (copied from SolvableVisCal::setSolve)
-
   if (simpar.isDefined("simint"))
     simint()=simpar.asString("simint");
   
   if (upcase(simint()).contains("INF") || simint()=="") {
-    simint()="inf";
+    simint()="infinite";
     interval()=-1.0;
-  }
-  else if (upcase(simint()).contains("INT"))
+  } else if (upcase(simint()).contains("INT")) {
+    simint()="integration";
     interval()=0.0;
-  else {
+  } else {
     QuantumHolder qhsimint;
     String error;
     Quantity qsimint;
@@ -459,7 +507,7 @@ void SolvableVisCal::setSimulate(const Record& simpar) {
     if (error.length()!=0)
       throw(AipsError("Unrecognized units for simint."));
     qsimint=qhsimint.asQuantumDouble();
-
+    
     if (qsimint.isConform("s"))
       interval()=qsimint.get("s").getValue();
     else {
@@ -487,52 +535,262 @@ void SolvableVisCal::setSimulate(const Record& simpar) {
   setApplied(True); 
   setSimulated(True);
 
-  // yikes, without this, CI gets created without a sensible time
+  // without this, CI gets created without a sensible time
   // interpolation, and ends up bombing
   tInterpType()="nearest";
 
-  // Don't do this yet - wait until sizeUpSim
-  // make cs with calinterp but by shape not from existing caltable:
-  // makeCalSet(True); 
-  // we'll need to inflate the CalSet for 
-  // each Spw before simPar!  (and possibly recreate the CI?)
-}
 
+  // ----------------
+  // assess size of ms:
 
+  // how to combine data in sizeUp e.g. SPW,SCAN
+  if (simpar.isDefined("combine"))
+    combine()=simpar.asString("combine");
+  else
+    throw(AipsError("MS combination information not set"));
 
+  // GM sez: organize calibration correction/corruption according to 
+  // multi-spw consistency; e.g. move time ahead of data_desc_id so that 
+  // data_desc_id (spw) changes faster than time, even within scans.
 
-
-// Set up simulated params
-Int SolvableVisCal::setupSim(VisSet& vs, const Record& simpar, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes)
-{
-  if (prtlev()>2) cout << "      SVC::setupSim()" << endl;
-
-  // This method only called in simulate context!
-  AlwaysAssert((isSimulated()),AipsError);
-
-  // Every VC needs to have its own version of this!
-  throw(AipsError("This VisCal doesn't yet support simulation"));
- 
-}
-
-
-
-Bool SolvableVisCal::simPar(VisIter& vi, const Int nChunks){
+  // I'm not sure this is working yet for multi-spw - below, we make
+  // assumptions about spw not changing within a chunk which is probably 
+  // inconsistent with GM's order.
   
-  if (prtlev()>2) cout << "      SVC::simPar()" << endl;
-  // This method only called in simulate context!
-  AlwaysAssert((isSimulated()),AipsError);
+  // Arrange for iteration over data
+  Block<Int> columns;
+  // include scan iteration
+  columns.resize(5);
+  columns[0]=MS::ARRAY_ID;
+  columns[1]=MS::SCAN_NUMBER;
+  columns[2]=MS::FIELD_ID;
+  // GM's order:
+  //columns[3]=MS::DATA_DESC_ID;
+  //columns[4]=MS::TIME;
+  // put spw after time:
+  columns[4]=MS::DATA_DESC_ID;
+  columns[3]=MS::TIME;
+  
 
-  // Every VC needs to have its own version of this!
-  throw(AipsError("This VisCal doesn't yet support simulation"));
-  return False;
+  // drop chunking time interval down to the simulation interval, else will 
+  // chunk by entuire scans.
+  Double iterInterval(max(interval(),DBL_MIN));
+  if (interval() < 0.0) {   // means no interval (infinite solint)
+    iterInterval=0.0;
+    interval()=DBL_MAX;   //RI TODO Sim::calc sets svc:interval ->max interval
+  }
+  vs.resetVisIter(columns,iterInterval);
+
+  // assume only one ms attached to the VI. need vi for mscolumns.
+  VisIter& vi(vs.iter());
+  
+  Vector<Int> nChunkPerSol;
+  // independent of simpar details
+  Int nSim = sizeUpSim(vs,nChunkPerSol,solTimes);
+  if (prtlev()>2) cout << " sized for Sim, " << nSim << " slots." << endl;
+  if (prtlev()>4) cout << " solTimes = " << solTimes << endl;
+
+  if (!(simpar.isDefined("startTime"))) {    
+    throw(AipsError("can't add startTime field to Record"));
+    // Record seems to have been designed by deranged monkeys, so this doesn't work:
+//    RecordDesc simParDesc = simpar.description();
+//    simParDesc.addField("startTime",TpDouble);
+//    simpar.restructure(simParDesc);
+  }
+  simpar.define("startTime",min(solTimes));
+
+  if (!(simpar.isDefined("stopTime"))) {    
+    throw(AipsError("can't add stopTime field to Record"));
+//    RecordDesc simParDesc = simpar.description();
+//    simParDesc.addField("stopTime",TpDouble);
+//    simpar.restructure(simParDesc);
+  }
+  simpar.define("stopTime",max(solTimes));
+
+
+  // -------------------
+  // create (and initialize) a corruptor in a VC-specific way - 
+  // specializations need to call the generic SVC::createCorruptor to get 
+  // spw etc information passed down.
+  createCorruptor(vi,simpar,nSim);
+  
+  // set times in the corruptor if createCorruptor didn't:
+  if (!corruptor_p->times_initialized()) {
+    corruptor_p->slot_times().resize(nSim);
+    corruptor_p->slot_times()=solTimes;
+    corruptor_p->startTime()=min(solTimes);
+    corruptor_p->stopTime()=max(solTimes);
+    corruptor_p->times_initialized()=True;
+  }
+
+  if (prtlev()>3) 
+    cout << " slot_times= " 
+	 << corruptor_p->slot_time(1)-corruptor_p->slot_time(0) << " " 
+	 << corruptor_p->slot_time(2)-corruptor_p->slot_time(0) << " " 
+	 << corruptor_p->slot_time(3)-corruptor_p->slot_time(0) << " " 
+	 << corruptor_p->slot_time(4)-corruptor_p->slot_time(0) << " " 
+	 << corruptor_p->slot_time(5)-corruptor_p->slot_time(0) << " " 
+	 << corruptor_p->slot_time(6)-corruptor_p->slot_time(0) << " " 
+	 << corruptor_p->slot_time(7)-corruptor_p->slot_time(0) << " " 
+	 << endl;  
+
+
+  os << LogIO::NORMAL << "Calculating corruption terms for " << siminfo() << LogIO::POST;
+  //-------------------
+  // actually calculate the calset
+  // which was inflated by sizeupSim to the right size
+
+  Vector<Int> slotidx(nSpw(),-1);
+
+  vi.originChunks();
+  Double t0(0.);
+  
+  Vector<Int> a1;
+  Vector<Int> a2;
+  Matrix<Bool> flags;
+
+  Int decleft=10;
+  if (prtlev()>1) {
+    cout << "SVC::Simulate :";  // progress indicator
+  }
+
+  for (Int isim=0;isim<nSim && vi.moreChunks();++isim) {      
+
+    Int thisSpw=spwMap()(vi.spectralWindow());
+    currSpw()=thisSpw;
+    corruptor_p->currSpw()=thisSpw;
+    slotidx(thisSpw)++;
+
+    IPosition cparshape=solveCPar().shape();
+    // this will get changed to T by keep() depending on solveParOK
+    cs().solutionOK(currSpw())(slotidx(thisSpw))=False;  // all Pars, all Chans, all Ants
+
+    if (corruptor_p->curr_slot()<1 and prtlev()>2) 
+      cout << "  shape of solveCPar = " << cparshape << 
+	"  and cs().shape(spw=" << corruptor_p->currSpw() << ") = " << 
+	cs().shape(corruptor_p->currSpw()) << endl;
+
+    Vector<Double> timevec;
+    Double starttime,stoptime;
+    starttime=vi.time(timevec)[0];
+
+    IPosition blc(3,0,       0,0); // par,chan=focuschan,elem=ant
+    IPosition trc(3,nPar()-1,0,0);
+    
+    for (Int ichunk=0;ichunk<nChunkPerSol[isim];++ichunk) {
+      // RI todo: SVC:setSim if Spw were combined, we have to set it here, but that gets ugly
+
+      for (vi.origin(); vi.more(); vi++) {
+
+	vi.antenna1(a1);
+        vi.antenna2(a2);
+        vi.flag(flags);
+        vi.time(timevec);
+	// assume that the corruptor slot i.e. time is the same for all rows.
+	// (to the accuracy of simint())
+	
+	// set things for SVC::keep:
+	Int tvsize;
+	timevec.shape(tvsize);
+	stoptime=timevec[tvsize-1];
+	refTime() = 0.5*(starttime+stoptime);
+	interval() = (stoptime-starttime);
+	currField() = vi.fieldId();
+
+	// make sure we have the right slot in the corruptor 
+	// RI todo SVC::setSim can the corruptor slot be the same for all chunks?
+	// we were setting curr_time() to timevec[0], but I think refTime is more 
+	// accurate
+	if (corruptor_p->curr_time()!=refTime()) {
+	  corruptor_p->curr_time()=refTime();
+	  // find new slot if required
+	  Double dt(1e10),dt0(-1);
+	  dt0 = abs(corruptor_p->slot_time() - refTime());
+	  
+	  for (Int newslot=0;newslot<corruptor_p->nSim();newslot++) {
+	    dt=abs(corruptor_p->slot_time(newslot) - refTime());
+	    // is this newslot closer to the current time?
+	    if (dt<dt0) {
+	      corruptor_p->curr_slot()=newslot;
+	      dt0 = dt;
+	    }
+	  }
+	}
+	
+	// for some reason George requires the chan loop to be outside 
+	// the row loop
+	for (Int ich=nChanPar()-1;ich>-1;--ich) {
+
+	  focusChan()=ich;
+	  corruptor_p->focusChan()=ich;
+	  
+	  solveCPar()=Complex(0.0);
+	  solveParOK()=False;
+	  
+	  for (Int irow=0;irow<vi.nRow();++irow) {
+	    
+	    if (nfalse(flags.column(irow))> 0 ) {
+	      
+	      blc(2)=a1(irow);
+	      trc(2)=a1(irow);
+	      corruptor_p->currAnt()=a1(irow);
+	      // not always used - split out some of this loop to be overridden?
+	      corruptor_p->currAnt2()=a2(irow);
+	      
+	      if ( a1(irow)==a2(irow) ) {
+		// autocorrels should get 1. for multiplicative VC
+		if (type()==VisCal::ANoise or type()==VisCal::A)
+		  solveCPar()(blc,trc)=0.0;
+		else
+		  solveCPar()(blc,trc)=1.0;
+	      } else {
+		// specialized simPar for each VC - may depend on mode etc
+		for (Int ipar=0;ipar<nPar();ipar++) 
+		  solveCPar()(blc,trc)[ipar,0,0] = corruptor_p->simPar(vi,type(),ipar);		
+	      }
+	      if (prtlev()>5) cout << "row "<<irow<< " set"<<endl;
+	      solveParOK()(blc,trc)=True;	      
+	    }// if not flagged
+	  }// row
+	  //if (prtlev()>4) cout << "slot="<<slotidx(thisSpw)<<" par="<<solveCPar()<<endl;
+	  keep(slotidx(thisSpw));
+	}// channel
+      }// vi
+      if (vi.moreChunks()) vi.nextChunk();
+    } // chunk loop
+
+    // is this required?
+    setSpwOK();
+
+    // progress indicator
+    if (prtlev()>1) 
+      if (Float(isim)/nSim > 1.-Float(decleft)/10) {
+	decleft--;
+	cout << decleft;
+      }
+
+  }// nsim loop
+
+  if (calTableName()!="<none>") {      
+    // RI TODO SVC::setSimulate check if user wants to overwrite calTable
+    os << LogIO::NORMAL 
+       << "Writing calTable = "+calTableName()+" ("+typeName()+")" 
+       << endl << LogIO::POST;      
+    // write the table
+    append()=False; 
+    store();
+  } else {
+    os << LogIO::NORMAL 
+       << "calTable name not set - not writing to disk." 
+       << endl << LogIO::POST;
+  }  
 }
+
 
 
 String SolvableVisCal::siminfo() {
 
   ostringstream o;
-  //o << boolalpha
   o << "simulated " << typeName() 
     << ": output table="      << calTableName()
     << " simint="     << simint()
@@ -1320,7 +1578,7 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
 
   // New version that counts solutions (which may overlap in 
   //   field and/or ddid) rather than chunks
-
+  LogIO os(LogOrigin("SVC", "sizeUpSim()", WHERE));
 
   // Interpret solution interval for the VisIter
   Double iterInterval(max(interval(),DBL_MIN));
@@ -1440,18 +1698,13 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
     
   }
   
-  if (prtlev()>2) {
-    cout << "nChunkPerSpw = " << nChunkPerSpw << " " << sum(nChunkPerSpw) << endl;
-    cout << "nchunk = " << chunk << endl;
-  }
-
   Int nSol(sol+1);
 
   nChunkPerSol.resize(nSol,True);
   solTimes.resize(nSol,True);
 
-  if (prtlev()>3) {
-    cout << "    solTimes = " << solTimes-4.84694e+09 << endl;
+  if (prtlev()>4) {
+    cout << "    solTimes = " << solTimes-4.6e+09 << endl;
     cout << "nChunkPerSol = " << nChunkPerSol << " " << sum(nChunkPerSol) << endl;
   }
   
@@ -1512,8 +1765,8 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   if (prtlev()>2) {
     cout << " spwMap()  = " << spwMap() << endl;
     cout << " spwlist = " << spwlist << endl;
-    cout << "nChunkPerSpw = " << nChunkPerSpw << " " << sum(nChunkPerSpw) << endl;
-    cout << "Total solutions = " << nSol << endl;
+    cout << "nChunkPerSpw = " << nChunkPerSpw << " " << sum(nChunkPerSpw) << " = " << nSol << endl;
+    //cout << "Total solutions = " << nSol << endl;
   }
   if (prtlev()>4) 
     cout << "nChunkPerSim = " << nChunkPerSol << endl;
@@ -1527,7 +1780,7 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
     logSink() << "Combining fields." << LogIO::POST;
   
 
-  logSink() << "For simint = " << solint() << ", found "
+  logSink() << "For simint = " << simint() << ", found "
 	    <<  nSol << " solution intervals."
 	    << LogIO::POST;
 
@@ -2403,7 +2656,7 @@ void SolvableVisCal::keep(const Int& slot) {
     cs().solutionOK(currSpw())(slot) = anyEQ(solveParOK(),True);
 
 //    if ( cs().solutionOK(currSpw())(slot) != True) 
-//      cout << solveCPar().shape() << " : " << solveCPar()[0,0,0,0] << " -> " << solveParOK()[0,0,0,0] << endl;
+//      cout << "soln !OK " << solveCPar().shape() << " : " << solveCPar() << " -> " << solveParOK() << endl;
   }
   else {    
     throw(AipsError("SVJ::keep: Attempt to store solution in non-existent CalSet slot"));

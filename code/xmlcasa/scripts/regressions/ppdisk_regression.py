@@ -27,7 +27,7 @@ antennalist=repodir+"/data/alma/simmos/alma.out20.cfg"
 direction="J2000 18h00m00.03s -45d59m59.6s"
 pointingspacing="0.5arcsec"
 refdate="2012/06/21/03:25:00"
-totaltime="3600s"
+totaltime="21600s"
 integration="10s"
 psfmode="clark"
 niter=1000
@@ -50,7 +50,7 @@ else:
     display=False
     fidelity=False
 noise_thermal=True
-tau0=0.001  # just to test machinery
+tau0=0.001  # unreasonably low just to test machinery
 t_amb=100.
 inp()
 go()

@@ -775,7 +775,6 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             # type = B BPOLY G GSPLINE D P T TOPAC GAINCURVE
             # visibilities referenced to above atmosphere 
             # sm.setapply(type='TOPAC',opacity=tau0);  # opac corruption
-            # SimACohCalc needs 2-temp formula not just t_atm
 #            sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
 #                        antefficiency=eta_a,trx=t_rx,
 #                        tau=tau0,tatmos=t_atm,tcmb=t_cmb,

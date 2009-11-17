@@ -61,6 +61,25 @@ public:
   // Enumeration of parameter types (Complex, Real, or Both)
   enum ParType{Co,Re,CoRe};
 
+  static String nameOfType(Type type) {
+    switch (type) {
+    case ANoise: return "ANoise";
+    case M: return "M";
+    case K: return "K";
+    case B: return "B";
+    case J: return "J";
+    case D: return "D";
+    case X: return "X";
+    case C: return "C";
+    case P: return "P";
+    case E: return "E";
+    case T: return "T";
+    case F: return "F";
+    case A: return "A";
+    default: return "0";
+    }
+  }
+
   VisCal(VisSet& vs);
   
   VisCal(const Int& nAnt);
