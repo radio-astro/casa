@@ -131,11 +131,12 @@ namespace casa {
         		Vector<Double> x(2);
         		pixelPositions[i] = x;
         	}
-            if (! newEstimatesFileName.empty()) {
-            	_writeNewEstimatesFile();
-            }
+
         }
         String resultsString = _resultsToString();
+        if (converged && ! newEstimatesFileName.empty()) {
+        	_writeNewEstimatesFile();
+        }
         *itsLog << LogIO::NORMAL << resultsString << LogIO::POST;
         if (! logfileName.empty()) {
         	_writeLogfile(resultsString);
@@ -145,11 +146,11 @@ namespace casa {
     }
 
     Bool ImageFitter::converged() const {
-    	if (! fitDone) {
-    		throw AipsError("fit has not yet been perfomred");
-    	}
-    	return fitConverged;
-    }
+	if (!fitDone) {
+		throw AipsError("fit has not yet been performed");
+	}
+	return fitConverged;
+}
 
     void ImageFitter::_construct(
         const String& imagename, const String& box, const String& regionName,
@@ -804,7 +805,7 @@ namespace casa {
     void ImageFitter::_writeNewEstimatesFile() const {
     	ostringstream out;
     	for (uInt i=0; i<results.nelements(); i++) {
-    		out << peakIntensities[i].getValue(image->units()) << ", "
+    		out << peakIntensities[i].getValue() << ", "
     				<< pixelPositions[i][0] << ", " << pixelPositions[i][1] << ", "
     				<< majorAxes[i] << ", " << minorAxes[i] << ", "
     				<< positionAngles[i] << endl;
