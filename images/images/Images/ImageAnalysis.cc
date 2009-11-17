@@ -4867,7 +4867,6 @@ Bool ImageAnalysis::statistics(Record& statsout, const Vector<Int>& axes,
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	String mtmp = mask;
-	//std::cerr << "Mask is *" <<mtmp<< "*" << std::endl;
 	if (mtmp == "false" || mtmp == "[]")
 		mtmp = "";
 	SubImage<Float> subImage = makeSubImage(pRegionRegion, pMaskRegion,
