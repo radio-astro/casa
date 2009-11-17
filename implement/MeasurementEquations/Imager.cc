@@ -3389,8 +3389,8 @@ Bool Imager::linearmosaic(const String& mosaic,
   itrcmos=itrcmos-Int(1);
   LCBox lboxmos(iblcmos, itrcmos, mosaicImage.shape());
   ImageRegion imagregMos(WCBox(lboxmos, mosaicImage.coordinates()));
-   ImageRegrid<Float> regridder;
- 
+  ImageRegrid<Float> regridder;
+  
   ROMSColumns msc(*ms_p);
   for (uInt i=0; i < images.nelements(); ++i) {
     if(!Table::isReadable(images(i))) {   
@@ -5554,6 +5554,8 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 		ImageRegion outreg=diskrestore.makeMask("mask0", False, True);
 		LCRegion& outmask=outreg.asMask();
 		outmask.copyData(restored.getRegion("mask0").asLCRegion());
+		LatticeExpr<Float> myexpr(iif(outmask, diskrestore, 0.0) );
+		diskrestore.copyData(myexpr);
 		diskrestore.defineRegion("mask0", outreg, RegionHandler::Masks, True);
 		diskrestore.setDefaultMask("mask0");
 	      }
@@ -9017,7 +9019,7 @@ bool interactive_clean_callback::callback( const DBus::Message &msg ) {
 }
 
 Int Imager::interactivemask(const String& image, const String& mask, 
-			    Int& niter, Int& ncycles, String& thresh){
+			    Int& niter, Int& ncycles, String& thresh, const Bool forceReload){
 
   LogIO os(LogOrigin("Imager", "interactivemask()", WHERE));
    if(Table::isReadable(mask)) {
@@ -9047,8 +9049,12 @@ Int Imager::interactivemask(const String& image, const String& mask,
      clean_panel_p = panel_id.getInt( );
    }
 
-   if ( image_id_p == 0 || mask_id_p == 0 ) {
+   if ( image_id_p == 0 || mask_id_p == 0 || forceReload ) {
      //Make sure image left after a "no more" is pressed is cleared
+     if(forceReload && image_id_p !=0)
+       prev_image_id_p=image_id_p;
+     if(forceReload && mask_id_p !=0)
+       prev_mask_id_p=mask_id_p;
      if(prev_image_id_p !=0)
        viewer_p->unload( prev_image_id_p );
      if(prev_mask_id_p)

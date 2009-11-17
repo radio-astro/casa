@@ -485,8 +485,9 @@ class Imager
 
 
   //Interactive mask drawing
+  //forceReload..forces the viewer to dump previous image that is being displayed
   Int interactivemask(const String& imagename, const String& maskname, 
-		      Int& niter, Int& ncycles, String& threshold);
+		      Int& niter, Int& ncycles, String& threshold, const Bool forceReload=False);
 
 protected:
 
