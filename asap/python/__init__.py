@@ -348,7 +348,6 @@ sys.stdout = sys.__stdout__
 sys.stderr = sys.__stderr__
 
 # Logging
-from taskinit import *
 from asap._asap import Log as _asaplog
 global asaplog
 asaplog=_asaplog()
@@ -358,6 +357,7 @@ else:
     asaplog.disable()
 
 def print_log(level='INFO'):
+    from taskinit import casalog
     log = asaplog.pop()
     #if len(log) and rcParams['verbose']: print log
     if len(log) and rcParams['verbose']: casalog.post( log, priority=level )
@@ -400,7 +400,7 @@ if rcParams['useplotter']:
         asaplog.post( "Matplotlib not installed. No plotting available")
         print_log('WARN')
 
-__date__ = '$Date: 2009-09-02 23:15:48 -0600 (Wed, 02 Sep 2009) $'.split()[1]
+__date__ = '$Date: 2009-11-17 01:56:29 -0700 (Tue, 17 Nov 2009) $'.split()[1]
 __version__  = '2.3.1 alma'
 # nrao casapy specific, get revision number
 #__revision__ = ' unknown '

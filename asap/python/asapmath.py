@@ -910,7 +910,6 @@ def almacal( scantab, scannos=[], calmode='none', verify=False ):
     scal = scantable( stm.cwcal( ssub, calmode, antname ) )
     return scal
 
-### Start mod: 2009.10.16 kana ###
 def splitant(filename, outprefix='',overwrite=False):
     """
     Split Measurement set by antenna name, save data as a scantables,
@@ -1011,7 +1010,7 @@ def splitant(filename, outprefix='',overwrite=False):
         ctab = stab.copy(tmpms,deep=True)
         stab.close()
         ctab.close()
-        scan=scantable(tmpms,False)
+        scan=scantable(tmpms,average=False,getpt=True)
         outname=prefix+antnames[antid]+'.asap'
         scan.save(outname,format='ASAP',overwrite=overwrite)
         # Modify scantable header
@@ -1026,4 +1025,3 @@ def splitant(filename, outprefix='',overwrite=False):
     del tb, tb2
     os.system('rm -rf '+tmpms)
     return outfiles
-### End mod ######################

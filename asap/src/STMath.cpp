@@ -58,7 +58,7 @@ using namespace asap;
 
 // tolerance for direction comparison (rad)
 #define TOL_OTF    1.0e-15
-#define TOL_POINT  1.0e-5  // 2 arcsec
+#define TOL_POINT  9.6963e-5  // 20 arcsec
 
 STMath::STMath(bool insitu) :
   insitu_(insitu)
