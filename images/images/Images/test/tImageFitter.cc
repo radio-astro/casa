@@ -89,7 +89,17 @@ int main() {
                 "test fitter using all available image pixels with model with no noise"
             );
             ImageFitter fitter = ImageFitter("gaussian_model.fits", "", "");
+            // test to ensure exception is thrown if convergence is checked for before fit is done
+            try {
+            	fitter.converged();
+            	// should never get there
+            	AlwaysAssert(false, AipsError);
+            }
+            catch (AipsError) {
+            	// got here, just continue
+            }
             ComponentList compList = fitter.fit();
+            AlwaysAssert(fitter.converged(), AipsError);
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
             // I stokes flux test
@@ -118,6 +128,7 @@ int main() {
             );
             ImageFitter fitter = ImageFitter(noisyImage, 0, "");
             ComponentList compList = fitter.fit();
+            AlwaysAssert(fitter.converged(), AipsError);
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
             // I stokes flux test
@@ -145,6 +156,7 @@ int main() {
             );
             ImageFitter fitter(noisyImage, 0, "130,89,170,129");
             ComponentList compList = fitter.fit();
+            AlwaysAssert(fitter.converged(), AipsError);
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
             // I stokes flux test
@@ -192,6 +204,8 @@ int main() {
         	Record regionRecord(rg.toRecord(""));
         	ImageFitter fitter(noisyImage, &regionRecord);
         	ComponentList compList = fitter.fit();
+            AlwaysAssert(fitter.converged(), AipsError);
+
         	Vector<Quantity> flux;
         	compList.getFlux(flux,0);
         	// I stokes flux test
@@ -244,8 +258,8 @@ int main() {
                 ImageFitter fitter(
                 	noisyImage, "", "", 0, "I", mask, includepix, excludepix
                 );
-                cout << "ran " << i << endl;
                 ComponentList compList = fitter.fit();
+                AlwaysAssert(fitter.converged(), AipsError);
                 Vector<Quantity> flux;
                 compList.getFlux(flux,0);
                 // I stokes flux test
@@ -283,6 +297,7 @@ int main() {
             	modelImage
             );
             fitter.fit();
+            AlwaysAssert(fitter.converged(), AipsError);
             writeTestString("test residual image correctness");
             checkImage(
             	residImage, "gaussian_model_with_noise_resid.fits",
@@ -300,6 +315,7 @@ int main() {
         	writeTestString("test fitting model gaussian that has been convolved with a beam");
         	ImageFitter fitter(convolvedModel, "", "");
         	ComponentList compList = fitter.fit();
+            AlwaysAssert(fitter.converged(), AipsError);
             Vector<Quantity> flux;
 
         	compList.getFlux(flux,0);
@@ -333,6 +349,7 @@ int main() {
              	"", "estimates_convolved.txt"
             );
         	ComponentList compList = fitter.fit();
+            AlwaysAssert(fitter.converged(), AipsError);
             Vector<Quantity> flux;
 
         	compList.getFlux(flux,0);
@@ -364,6 +381,7 @@ int main() {
               	"", "estimates_2gauss.txt"
             );
          	ComponentList compList = fitter.fit();
+            AlwaysAssert(fitter.converged(), AipsError);
             Vector<Quantity> flux;
             MDirection direction;
             Vector<Double> parameters;
@@ -407,7 +425,13 @@ int main() {
              	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
              	AlwaysAssert(near(positionAngle, expectedPositionAngle[i], 1e-7), AipsError);
             }
-         }
+        }
+        {
+        	writeTestString("Test of nonconvergence");
+            ImageFitter fitter(noisyImage, "", "0,0,20,20");
+            fitter.fit();
+            AlwaysAssert(! fitter.converged(), AipsError);
+        }
         cout << "ok" << endl;
     }
     catch (AipsError x) {
