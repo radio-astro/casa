@@ -5605,7 +5605,7 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
 	    se_p->getCoverageImage(thismodel, coverimage);
             cover=&(coverimage);
 	    //Do the sqrt
-	    coverimage.copyData(( LatticeExpr<Float> )(sqrt(coverimage)));
+	    coverimage.copyData(( LatticeExpr<Float> )(iif(coverimage > 0.0, sqrt(coverimage), 0.0)));
             coverimage.table().unmarkForDelete();
 	    LatticeExpr<Bool> lemask(iif((*cover) < sqrt(cutoffval), 
 				       False, True));
