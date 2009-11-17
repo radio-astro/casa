@@ -1800,7 +1800,7 @@ void MMueller::keep(const Int& slot) {
 
 void MMueller::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim) 
 {
-  if (prtlev()>2) cout << "   MM::setSimulate()" << endl;
+  if (prtlev()>1) cout << "   MM::setSimulate()" << endl;
 
   atmcorruptor_p = new AtmosCorruptor();
   corruptor_p = atmcorruptor_p;

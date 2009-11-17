@@ -77,8 +77,7 @@ void CalCorruptor::setEvenSlots(const Double& dt) {
 
 Complex ANoiseCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar) {
   if (type==VisCal::ANoise) {
-    // RI TODO make sure 1 timeslot set in AN::setSimulate
-    cout << "ANC::simPar " << ipar << endl;
+    // RI TODO make sure 1 timeslot set in AN::setSimulate    
     return Complex((*nDist_p)()*amp(),(*nDist_p)()*amp());
   } else throw(AipsError("unknown VC type "+VisCal::nameOfType(type)+" in AnoiseCorruptor::simPar"));
 }
@@ -208,7 +207,7 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
 }
 
 
-
+ 
 void AtmosCorruptor::initAtm() {
 
 #ifndef CASA_STANDALONE
@@ -287,8 +286,9 @@ void AtmosCorruptor::initialize() {
 // instead of being a member of it.
 
 void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar) {
-  //simpar_=simpar;
 
+  LogIO os(LogOrigin("AtmosCorr", "init()", WHERE));
+  
   // start with amp defined as something
   amp()=1.0;
   if (simpar.isDefined("amplitude")) amp()=simpar.asFloat("amplitude");
@@ -334,14 +334,22 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar) {
       ( simpar.asFloat("antefficiency") * 
 	simpar.asFloat("correfficiency") * C::pi );
 
-    if (prtlev()>2) cout << "AtmosCorruptor::init [tsys scale, freqDepPar=" << freqDepPar() << "]" << endl;
+    os << LogIO::NORMAL 
+       << "Tsys = " << tsys0() << " + exp(" << tauscale() << ") * " 
+       << tsys1() << " => " << tsys0()+tauscale()*tsys1() 
+       << " [freq dep="<<freqDepPar() << "]"<< LogIO::POST;    
+    if (prtlev()>1) 
+      cout << "AtmosCorruptor::init "
+	   << "Tsys = " << tsys0() << " + exp(" << tauscale() << ") * " 
+	   << tsys1() << " => " << tsys0()+tauscale()*tsys1() 
+	   << " [freq dep="<<freqDepPar() << "]"<< endl;    
   }
 }
 
 
 
-// opacity - for screens, we'll need other versions of this like the different cphase calls
-// that multiply wetopacity by the fluctuation in pwv
+// opacity - for screens, we'll need other versions of this like 
+// the different cphase calls that multiply wetopacity by fluctuation in pwv
 Float AtmosCorruptor::opac(const Int ichan) {
   Float opac = itsRIP->getDryOpacity(currSpw(),ichan).get() + 
     itsRIP->getWetOpacity(currSpw(),ichan).get()  ;
@@ -533,13 +541,11 @@ Complex AtmosCorruptor::cphase(const Int ichan) {
       Float deltapwv = (*pwv_p[currAnt()])(curr_slot());
       delay = itsRIP->getDispersiveWetPhaseDelay(currSpw(),ichan).get("rad") 
 	* deltapwv / 57.2958; // convert from deg to rad
-#ifdef RI_DEBUG      
       if (prtlev()>5) 
 	cout << itsRIP->getDispersiveWetPhaseDelay(0,ichan).get("rad") << " "
 	     << itsRIP->getDispersiveWetPhaseDelay(1,ichan).get("rad") << " "
 	     << itsRIP->getDispersiveWetPhaseDelay(2,ichan).get("rad") << " "
 	     << itsRIP->getDispersiveWetPhaseDelay(3,ichan).get("rad") << endl;
-#endif	
     } else
       throw(AipsError("AtmosCorruptor internal error accessing pwv()"));  
     return Complex(cos(delay),sin(delay));

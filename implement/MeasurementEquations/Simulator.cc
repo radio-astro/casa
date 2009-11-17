@@ -1521,6 +1521,8 @@ Bool Simulator::create_corrupt(Record& simpar)
 
 #ifdef RI_DEBUG
     svc->setPrtlev(3);
+#else 
+    svc->setPrtlev(2);
 #endif
 
     Vector<Double> solTimes;

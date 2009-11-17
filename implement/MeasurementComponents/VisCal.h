@@ -157,6 +157,9 @@ public:
   // Set the print level
   inline void setPrtlev(const Int& prtlev) { prtlev_=prtlev; };
 
+  // Baseline index from antenna indices: (assumes a1<=a2 !!)
+  inline Int blnidx(const Int& a1, 
+		    const Int& a2) { return  a1*nAnt() - a1*(a1+1)/2 + a2; };
 
 protected:
 
@@ -413,9 +416,6 @@ protected:
   // Update the wt vector for a baseline
   virtual void updateWt(Vector<Float>& wt,const Int& a1,const Int& a2);
 
-  // Baseline index from antenna indices: (assumes a1<=a2 !!)
-  inline Int blnidx(const Int& a1, 
-		    const Int& a2) { return  a1*nAnt() - a1*(a1+1)/2 + a2; };
 
 private:
 

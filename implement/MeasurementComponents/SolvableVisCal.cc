@@ -616,6 +616,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
   
   // set times in the corruptor if createCorruptor didn't:
   if (!corruptor_p->times_initialized()) {
+    corruptor_p->curr_slot()=0;
     corruptor_p->slot_times().resize(nSim);
     corruptor_p->slot_times()=solTimes;
     corruptor_p->startTime()=min(solTimes);
@@ -650,7 +651,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
   Matrix<Bool> flags;
 
   Int decleft=10;
-  if (prtlev()>1) {
+  if (prtlev()>0) {
     cout << "SVC::Simulate :";  // progress indicator
   }
 
@@ -665,10 +666,10 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     // this will get changed to T by keep() depending on solveParOK
     cs().solutionOK(currSpw())(slotidx(thisSpw))=False;  // all Pars, all Chans, all Ants
 
-    if (corruptor_p->curr_slot()<1 and prtlev()>2) 
-      cout << "  shape of solveCPar = " << cparshape << 
-	"  and cs().shape(spw=" << corruptor_p->currSpw() << ") = " << 
-	cs().shape(corruptor_p->currSpw()) << endl;
+//    if (corruptor_p->curr_slot()<1 and prtlev()>2) 
+//      cout << "  shape of solveCPar = " << cparshape << 
+//	"  and cs().shape(spw=" << corruptor_p->currSpw() << ") = " << 
+//	cs().shape(corruptor_p->currSpw()) << endl;
 
     Vector<Double> timevec;
     Double starttime,stoptime;
@@ -677,6 +678,9 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     IPosition blc(3,0,       0,0); // par,chan=focuschan,elem=ant
     IPosition trc(3,nPar()-1,0,0);
     
+    Bool useBase(False);
+    if (nElem()==nBln()) useBase=True;
+
     for (Int ichunk=0;ichunk<nChunkPerSol[isim];++ichunk) {
       // RI todo: SVC:setSim if Spw were combined, we have to set it here, but that gets ugly
 
@@ -723,19 +727,27 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
 
 	  focusChan()=ich;
 	  corruptor_p->focusChan()=ich;
-	  
+
 	  solveCPar()=Complex(0.0);
 	  solveParOK()=False;
 	  
 	  for (Int irow=0;irow<vi.nRow();++irow) {
 	    
 	    if (nfalse(flags.column(irow))> 0 ) {
-	      
-	      blc(2)=a1(irow);
-	      trc(2)=a1(irow);
+
 	      corruptor_p->currAnt()=a1(irow);
-	      // not always used - split out some of this loop to be overridden?
+	      // only used for baseline-based SVCs
 	      corruptor_p->currAnt2()=a2(irow);
+	      
+
+	      // baseline or antenna-based?
+	      if (useBase) {
+		blc(2)=blnidx(a1(irow),a2(irow));
+		trc(2)=blc(2);
+	      } else {
+		blc(2)=a1(irow);
+		trc(2)=a1(irow);
+	      }
 	      
 	      if ( a1(irow)==a2(irow) ) {
 		// autocorrels should get 1. for multiplicative VC
@@ -754,6 +766,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
 	  }// row
 	  //if (prtlev()>4) cout << "slot="<<slotidx(thisSpw)<<" par="<<solveCPar()<<endl;
 	  keep(slotidx(thisSpw));
+	  
 	}// channel
       }// vi
       if (vi.moreChunks()) vi.nextChunk();
@@ -763,10 +776,10 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     setSpwOK();
 
     // progress indicator
-    if (prtlev()>1) 
+    if (prtlev()>0) 
       if (Float(isim)/nSim > 1.-Float(decleft)/10) {
 	decleft--;
-	cout << decleft;
+	cout << "..." << decleft;
       }
 
   }// nsim loop
@@ -785,6 +798,10 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
        << endl << LogIO::POST;
   }  
 }
+
+
+
+
 
 
 
