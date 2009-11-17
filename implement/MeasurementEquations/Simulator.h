@@ -243,23 +243,17 @@ public:
 
   Bool setnoise2(const String& mode, 
 		 const Quantity& simplenoise,
-		 const String& table,
+		 const String& caltable,
+		 const Float tau,
 		 const Float antefficiency,
 		 const Float correfficiency,
 		 const Float spillefficiency,
-		 const Float tau,
 		 const Float trx,
 		 const Float tatmos, 
 		 const Float tground, 
 		 const Float tcmb);
-  // const Quantity& trx,
-  // const Quantity& tatmos, 
-  // const Quantity& tcmb);
 
-  // calculate errors and apply them to the data in our MS
-  // RI TODO once the SimACohs are gone this won't actually 
-  // RI TODO calculate anymore, it'll just apply the VisCals that have 
-  // RI TODO been setSimulated
+  // apply errors to the data in our MS
   Bool corrupt();
 
   // Set limits

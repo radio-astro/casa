@@ -162,7 +162,7 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
 	Double deltaNu = 
 	  vi.msColumns().spectralWindow().totalBandwidth()(iSpW) / 
 	  Float(vi.msColumns().spectralWindow().numChan()(iSpW));	    
-	factor = amp() / sqrt( deltaNu * tint ) ;
+	factor = amp() / sqrt( 2 * deltaNu * tint ) ;
 	
 	// RI verify accuracy of how refTime set in SVC
 	Vector<MDirection> antazel(vi.azel(curr_time()));
@@ -179,21 +179,23 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
 	}
 	
 	if (freqDepPar()) {
+	  // if tau0 is set, tauscale = tau0/tau(band center) else scale=1
 	  tau = opac(focusChan());
 	}	else {
+	  // if tau0 is set, tauscale=tau0, else exception was thrown in init
 	  tau = 1.;
 	}
 	// user could be overriding the tau scale, but keep the
 	// ATM freq dependence - see atmcorruptor::initialize
 	tau *= tauscale();
 	
-	A = exp(-tau *0.5*(airmass1+airmass2));	      
+	A = exp(tau *0.5*(airmass1+airmass2));	      
 	// this is tsys above atmosphere
 	tsys = tsys0() + A*tsys1();
 	
-	return Complex( factor * tsys / antDiams(currAnt()) / antDiams(currAnt2()));
+	return Complex( antDiams(currAnt())*antDiams(currAnt2()) /factor /tsys);
 
-      } else return Complex(amp()); // for constant amp MfM
+      } else return Complex( 1./amp() ); // for constant amp MfM
       
     } else {
       throw(AipsError("AtmosCorruptor: unknown VisCal type "+VisCal::nameOfType(type)));
@@ -305,10 +307,10 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar) {
         
     antDiams = vi.msColumns().antenna().dishDiameter().getColumn();
     
-    // use ATM but no time dependence - e.g. for Tf [Tsys scaling, also Mf]
+    // use ATM but no time dependence of atm - e.g. Tf [Tsys scaling, also Mf]
     if (freqDepPar()) initAtm();
     
-    // RI TODO AtmCorr::initialize catch other modes?  
+    // RI todo AtmCorr::initialize catch other modes?  
     // if (mode()=="tsys") {
 
     // go with ATM straight up:
@@ -320,6 +322,8 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar) {
       // find tau in center of band for current ATM parameters
       if (freqDepPar()) tauscale()/=opac(nChan()/2);
       // if freqDep then opac will be called in simPar and multiplied by tauscale
+    } else {
+      if (freqDepPar()) throw(AipsError("Must define tau0 if not using ATM to scale Tsys"));
     }
     
     // modified from mm::simPar:  
