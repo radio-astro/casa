@@ -168,7 +168,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	CoordinateSystem cs=PSF(model).coordinates();
 	Vector<String> unitas=cs.worldAxisUnits();
 	unitas(0)="arcsec";
-	unitas(2)="arcsec";
+	unitas(1)="arcsec";
 	cs.setWorldAxisUnits(unitas);
 	//Get the minimum increment in arcsec
 	Double incr=abs(min(cs.increment()(0), cs.increment()(1)));
