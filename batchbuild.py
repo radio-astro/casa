@@ -100,4 +100,3 @@ if "-c" in args or "--clean" in args:
     # clean up highest level package first
     tobuild.reverse()
 run_scons(tobuild, args)
-print "back here"
