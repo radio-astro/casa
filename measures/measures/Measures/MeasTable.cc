@@ -6265,10 +6265,10 @@ const Euler &MeasTable::polarMotion(Double ut) {
 	LogIO os(LogOrigin("MeasTable",
 			   String("PolarMotion(Double)"),
 			   WHERE));
-	os <<
-	  String("No requested polar motion data available from IERS tables. "
-		 "\nProceeding with probably less precision.") <<
-	  LogIO::POST;
+//	os <<
+//	  String("No requested polar motion data available from IERS tables. "
+//		 "\nProceeding with probably less precision.") <<
+//	  LogIO::POST;
       };
     };
     res(0) *= -C::arcsec;
@@ -6437,7 +6437,7 @@ Double MeasTable::dUT1(Double utc) {
 	LogIO os(LogOrigin("MeasTable",
 			   String("dUT1(Double)"),
 			   WHERE));
-	os <<
+	os << LogIO::NORMAL <<
 	  String("No requested dUT1 data available from IERS tables. "
 		 "\nProceeding with probably less precision.") <<
 	  LogIO::POST;
