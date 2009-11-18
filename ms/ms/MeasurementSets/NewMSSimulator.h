@@ -117,12 +117,13 @@ public:
 	       const Vector<Double>& offset,
 	       const Vector<String>& mount,
 	       const Vector<String>& name,
+	       const Vector<String>& padname,
 	       const String& coordsystem,
 	       const MPosition& mRefLocation);
   // get the info back 
   bool getAnt(String& telescope, Int& nAnt, Matrix<Double>* antXYZ, 
 	      Vector<Double>& antDiam, Vector<Double>& offset,
-	      Vector<String>& mount, Vector<String>& name,
+	      Vector<String>& mount, Vector<String>& name, Vector<String>& padname,
 	      String& coordsystem, MPosition& mRefLocation );
 
   // set the observed fields
