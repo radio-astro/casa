@@ -77,13 +77,12 @@ void CalCorruptor::setEvenSlots(const Double& dt) {
 
 Complex ANoiseCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar) {
   if (type==VisCal::ANoise) {
-    // RI TODO make sure 1 timeslot set in AN::setSimulate    
     return Complex((*nDist_p)()*amp(),(*nDist_p)()*amp());
   } else throw(AipsError("unknown VC type "+VisCal::nameOfType(type)+" in AnoiseCorruptor::simPar"));
 }
 
 
-ANoiseCorruptor::ANoiseCorruptor(): CalCorruptor(0) {};
+ANoiseCorruptor::ANoiseCorruptor(): CalCorruptor(1) {};
 
 ANoiseCorruptor::~ANoiseCorruptor() {};
 
@@ -340,13 +339,13 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar) {
 
     os << LogIO::NORMAL 
        << "Tsys = " << tsys0() << " + exp(" << tauscale() << ") * " 
-       << tsys1() << " => " << tsys0()+tauscale()*tsys1() 
-       << " [freq dep="<<freqDepPar() << "]"<< LogIO::POST;    
+       << tsys1() << " => " << tsys0()+exp(tauscale())*tsys1() 
+       << " [freqDepPar="<<freqDepPar()<<"]"<< LogIO::POST;    
     if (prtlev()>1) 
       cout << "AtmosCorruptor::init "
 	   << "Tsys = " << tsys0() << " + exp(" << tauscale() << ") * " 
-	   << tsys1() << " => " << tsys0()+tauscale()*tsys1() 
-	   << " [freq dep="<<freqDepPar() << "]"<< endl;    
+	   << tsys1() << " => " << tsys0()+exp(tauscale())*tsys1() 
+	   << " [freqDepPar="<<freqDepPar() << "]"<< endl;    
   }
 }
 
@@ -538,6 +537,8 @@ Complex AtmosCorruptor::cphase(const Int ichan) {
   Float delay;
   
   if (curr_slot()>=0 and curr_slot()<nSim()) {
+    // if this gets used in the future, 
+    // be careful about using freq if not freqDepPar()
     // Float freq = fRefFreq()[currSpw()] + 
     //   Float(ichan) * (fWidth()[currSpw()]/Float(fnChan()[currSpw()]));
     

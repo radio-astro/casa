@@ -664,13 +664,15 @@ void GJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
       throw(AipsError("start/stop time not defined"));
     }
         
-    Float fBM_interval=max(interval(),5.); // generate screens on 5s intervals or longer
-    corruptor_p->setEvenSlots(fBM_interval);
-   
+    if (simpar.asString("mode")=="fbm") {
+      Float fBM_interval=max(interval(),5.); // generate screens on 5s intervals or longer
+      corruptor_p->setEvenSlots(fBM_interval);
+    }
+      
     gcorruptor_p->initialize(Seed,Beta,Scale);
     
   } else 
-    throw(AipsError("Unknown Mode for GJonesCorruptor"));        
+    throw(AipsError("Unknown mode for GJonesCorruptor"));        
  }
 }
 
@@ -1800,7 +1802,7 @@ void MMueller::keep(const Int& slot) {
 
 void MMueller::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim) 
 {
-  if (prtlev()>1) cout << "   MM::setSimulate()" << endl;
+  if (prtlev()>2) cout << "   MM::setSimulate()" << endl;
 
   atmcorruptor_p = new AtmosCorruptor();
   corruptor_p = atmcorruptor_p;
