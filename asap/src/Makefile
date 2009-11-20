@@ -34,12 +34,12 @@ ifndef CXX
 endif
 
 # compiler flags
-CXXFLAGS := -fPIC -O3 -g -arch i386
+CXXFLAGS := -fPIC -O3 -g
 CXXFLAGS += -ansi -Wno-long-long -Wall
 
 # darwin specific flags
 ifeq "$(CASAARCH)" "darwin"
-   CXXFLAGS +=-DAIPS_DARWIN
+   CXXFLAGS +=-DAIPS_DARWIN -arch i386
 endif
 
 # cfitsio
