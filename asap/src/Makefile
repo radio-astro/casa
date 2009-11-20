@@ -20,6 +20,7 @@ PYTHONROOT := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=P
 PYTHONLIBD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONLIBD eval_vars) && echo $$PYTHONLIBD)
 PYTHONINCD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONINCD eval_vars) && echo $$PYTHONINCD)
 PYTHONLIB := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONLIB eval_vars) && echo $$PYTHONLIB)
+PYTHONVER := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=PYTHONVER eval_vars) && echo $$PYTHONVER)
 BOOSTROOT := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=BOOSTROOT eval_vars) && echo $$BOOSTROOT)
 RPFITSLIBD := $(shell $(shell make -s -f $(CASAROOT)/$(CASAARCH)/makedefs VARS=RPFITSLIBD eval_vars) && echo $$RPFITSLIBD)
 
@@ -33,7 +34,7 @@ ifndef CXX
 endif
 
 # compiler flags
-CXXFLAGS := -fPIC -O3 -g
+CXXFLAGS := -fPIC -O3 -g -arch i386
 CXXFLAGS += -ansi -Wno-long-long -Wall
 
 # darwin specific flags
@@ -71,9 +72,9 @@ PYTHONLIB := -L$(PYTHONLIBD) $(PYTHONLIB)
 
 # use python universal build
 ifeq "$(CASAARCH)" "darwin"
-   PYVERSION := 2.5
+   #PYVERSION := 2.5
    #PYTHONROOT := /Library/Frameworks/Python.framework/Versions/$(PYVERSION)
-   PYTHONINC := -I$(PYTHONROOT)/include/python$(PYVERSION)
+   PYTHONINC := -I$(PYTHONROOT)/include/python$(PYTHONVER)
    #PYTHONLIB := -F$(PYTHONROOT)/lib -framework Python
 endif
 
@@ -86,7 +87,7 @@ BOOSTINC  := -I$(BOOSTROOT)/include/boost -I$(BOOSTROOT)/include
 
 LDFLAGS   := -shared -Wl$(TARGET) -s -Xlinker -rpath -Xlinker $(BOOSTROOT)/lib:$(PYTHONROOT)/lib:$(CASALIB)
 ifeq "$(CASAARCH)" "darwin"
-   LDFLAGS   := -bundle
+   LDFLAGS   := -bundle -arch i386
 endif
 
 

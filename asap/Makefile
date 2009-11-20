@@ -6,7 +6,8 @@
 #PREFIX := /opt/casa/darwin
 #for linux
 PREFIX := $(word 1, $(CASAPATH))/$(word 2,$(CASAPATH))
-PYDIR := $(PREFIX)/python/2.5
+PYTHONVER := $(shell $(shell make -s -f $(PREFIX)/makedefs VARS=PYTHONVER eval_vars) && echo $$PYTHONVER)
+PYDIR := $(PREFIX)/python/$(PYTHONVER)
 
 ifndef ASAPROOT
    ASAPROOT := $(shell pwd)
