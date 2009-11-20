@@ -97,7 +97,7 @@ Bool MeasIERS::get(Double &returnValue,
 	LogIO os(LogOrigin("MeasIERS",
 			   String("fillMeas(MeasIERS::Files, Double)"),
 			   WHERE));
-	os <<
+	os << LogIO::NORMAL << 
 	  String("Requested JD ") << date << String(" is outside "
 		 "the IERS table data range."
 		 "\nCalculations will proceed with less precision") << 

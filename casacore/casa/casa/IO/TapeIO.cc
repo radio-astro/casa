@@ -36,13 +36,11 @@
 #include <casa/string.h>          // needed for strerror
 
 // No tape support on Cray XT3 or OSX 10.6
-#ifndef AIPS_CRAY_PGIP
-#ifndef __MAC_10_6
+#ifndef CASA_NOTAPE
 #include <sys/mtio.h>             // needed for ioctl
 #if defined(AIPS_SOLARIS) || defined(AIPS_DARWIN)
 #include <sys/ioctl.h>            // needed for ioctl
 #include <sys/types.h>            // needed for ioctl
-#endif
 #endif
 #endif
 
@@ -138,8 +136,7 @@ Int TapeIO::read(uInt size, void* buf, Bool throwException) {
 }
 
 void TapeIO::rewind() {
-#ifndef AIPS_CRAY_PGI
-#ifndef __MAC_10_6
+#ifndef CASA_NOTAPE
   struct mtop tapeCommand;
   tapeCommand.mt_op = MTREW;
   tapeCommand.mt_count = 1;
@@ -149,12 +146,10 @@ void TapeIO::rewind() {
 		    + strerror(errno)));
   }
 #endif
-#endif
 }
 
 void TapeIO::skip(uInt howMany) {
-#ifndef AIPS_CRAY_PGI
-#ifndef __MAC_10_6
+#ifndef CASA_NOTAPE
   if (howMany > 0) {
     struct mtop tapeCommand;
     tapeCommand.mt_op = MTFSF;
@@ -166,12 +161,10 @@ void TapeIO::skip(uInt howMany) {
     }
   }
 #endif
-#endif
 }
 
 void TapeIO::mark(uInt howMany) {
-#ifndef AIPS_CRAY_PGI
-#ifndef __MAC_10_6
+#ifndef CASA_NOTAPE
   DebugAssert(isWritable(), AipsError);
   if (howMany > 0) {
     struct mtop tapeCommand;
@@ -183,7 +176,6 @@ void TapeIO::mark(uInt howMany) {
 		      + strerror(errno)));
     }
   }
-#endif
 #endif
 }
 
@@ -206,7 +198,7 @@ void TapeIO::setVariableBlockSize() {
 #endif
 }
 
-#if (defined(AIPS_SOLARIS) || defined(AIPS_LINUX)) && !(defined(AIPS_CRAY_PGI) || defined(__MAC_10_6))
+#if (defined(AIPS_SOLARIS) || defined(AIPS_LINUX)) && !defined(CASA_NOTAPE )
 void TapeIO::setBlockSize(uInt sizeInBytes) {
   struct mtop tapeCommand;
 #if defined(AIPS_LINUX) 
@@ -227,7 +219,7 @@ void TapeIO::setBlockSize(uInt) {
 }
 
 uInt TapeIO::getBlockSize() const {
-#if (defined(AIPS_SOLARIS) || defined(AIPS_LINUX)) && !(defined(AIPS_CRAY_PGI) || defined(__MAC_10_6))
+#if (defined(AIPS_SOLARIS) || defined(AIPS_LINUX)) && !defined(CASA_NOTAPE)
 #if defined(AIPS_LINUX) 
   struct mtget tapeInquiry;
   Int error = ::ioctl(itsDevice, MTIOCGET, &tapeInquiry);
