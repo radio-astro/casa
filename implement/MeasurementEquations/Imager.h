@@ -489,6 +489,11 @@ class Imager
   Int interactivemask(const String& imagename, const String& maskname, 
 		      Int& niter, Int& ncycles, String& threshold, const Bool forceReload=False);
 
+
+  //helper function to copy a mask from one image to another
+
+  Bool copyMask(ImageInterface<Float>& out, const ImageInterface<Float>& in, String maskname="mask0", Bool setdefault=True); 
+
 protected:
 
   CountedPtr<MeasurementSet> ms_p;

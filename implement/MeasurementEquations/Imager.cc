@@ -5550,15 +5550,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	      ii.setRestoringBeam(bmaj_p, bmin_p, bpa_p); 
 	      diskrestore.setImageInfo(ii);
 	      diskrestore.setUnits(Unit("Jy/beam"));
-	      if(restored.hasRegion("mask0")){
-		ImageRegion outreg=diskrestore.makeMask("mask0", False, True);
-		LCRegion& outmask=outreg.asMask();
-		outmask.copyData(restored.getRegion("mask0").asLCRegion());
-		LatticeExpr<Float> myexpr(iif(outmask, diskrestore, 0.0) );
-		diskrestore.copyData(myexpr);
-		diskrestore.defineRegion("mask0", outreg, RegionHandler::Masks, True);
-		diskrestore.setDefaultMask("mask0");
-	      }
+	      copyMask(diskrestore, restored, "mask0");
 		 
 	    }
 	  }
@@ -5577,6 +5569,31 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
     os << LogIO::SEVERE << "Exception: " << x.what() << LogIO::POST;
     return False;
   }
+  return True;
+}
+
+Bool Imager::copyMask(ImageInterface<Float>& out, const ImageInterface<Float>& in, String maskname, Bool setdef){
+  try{
+    if(in.hasRegion(maskname) && !out.hasRegion(maskname)){
+      ImageRegion outreg=out.makeMask(maskname, False, True);
+      LCRegion& outmask=outreg.asMask();
+      outmask.copyData(in.getRegion("mask0").asLCRegion());
+      LatticeExpr<Float> myexpr(iif(outmask, out, 0.0) );
+      out.copyData(myexpr);
+      out.defineRegion(maskname, outreg, RegionHandler::Masks, True);
+      if(setdef)
+	out.setDefaultMask(maskname);
+    }
+    else
+      return False;
+    
+  }
+  catch(exception &x){
+    throw(AipsError(x.what()));
+    return False;
+  }
+
+
   return True;
 }
 
@@ -7515,8 +7532,13 @@ Bool Imager::createFTMachine()
 	 << "No of WProjection planes set too low for W projection - recommend at least 128"
 	 << LogIO::POST;
     }
+    Bool useDoublePrecGrid=False;
+    //few channels use Double precision
+    //till we find a better algorithm to determine when to use Double prec gridding
+    if(imageNchan_p < 5)
+      useDoublePrecGrid=True;
     ft_p = new WProjectFT(wprojPlanes_p,  mLocation_p,
-			  cache_p/2, tile_p, True, padding_p);
+			  cache_p/2, tile_p, True, padding_p, useDoublePrecGrid);
     AlwaysAssert(ft_p, AipsError);
     cft_p = new SimpleComponentFTMachine();
     AlwaysAssert(cft_p, AipsError);
