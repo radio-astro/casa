@@ -21,6 +21,12 @@ namespace sdmbin {
     correlationMode_(corrMode),
     v_atmPhaseCorrection_(v_atmPhaseCorrection)
   {
+    /*
+     * Do v_switchCycleId and v_dataDescriptionIdArray have the same size ?
+     */
+    if ( v_switchCycleId.size() != v_dataDescriptionIdArray.size() )
+      Error(FATAL, "It seems that the arrays 'switchCycleId' and 'dataDescriptionId' do not have the same size in one row of the ConfigDescription table !");
+
     bool coutest=false;
 
     e_cm_   = corrMode;
@@ -238,8 +244,20 @@ namespace sdmbin {
 	  if (coutest) cout << "spectralWindowId=" << rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getSpectralWindowId().toString() << endl;
 	  if (autoPolarizationId.toString()=="null_0")
 	    Error(FATAL,"Missing row in the Polarization table for autocorrelation data.");
+	  if (coutest) cout << "Looking for a DataDescription row with polarizationId == "
+			    << autoPolarizationId.toString()
+			    << " and spectralWindowId = "
+			    << (rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getSpectralWindowId()).toString()
+			    << endl;
 	  ddRowPtr = rddSet.lookup( autoPolarizationId, 
 				    rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getSpectralWindowId());
+	  if (ddRowPtr == (DataDescriptionRow *) 0) {
+	    ostringstream oss;
+	    oss << "Could not find a row in the Polarization table with 'polarizationId=" << autoPolarizationId.toString()
+		<< "' and 'spectralWindowId=" << (rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getSpectralWindowId()).toString()
+		<< "'.";
+	    Error(FATAL, oss.str());
+	  }
 	  ddId = ddRowPtr->getDataDescriptionId();
 	  v_autoDataDescriptionId_.push_back(ddId);
 	  v_pairDataDescriptionId_.push_back(true);

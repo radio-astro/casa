@@ -30,7 +30,7 @@
 
 #include <graphics/X11/X_enter.h>
 #include <QApplication>
-//#include <QtGui>
+#include <QtGui>
 #include <graphics/X11/X_exit.h>
 
 #include <casa/namespace.h>

@@ -213,7 +213,10 @@ class SubMS
 		const Double regridChanWidth=-1., // default = "not set" 
 		const Int phaseCenterFieldId=-2, // -2 = use pahse center from field table
 		MDirection phaseCenter=MDirection(), // this direction is used if phaseCenterFieldId==-1
-		const Bool centerIsStart=False // if true, the parameter regridCenter specifies the start
+		const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
+		const Int nchan=0, // if >0: used instead of regridBandwidth
+		const Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
+		const Int start=-1 // if >=0 and regridQuant=="freq": used instead of regridCenter
 		);
 
   // the following inline convenience methods for regridSpw bypass the whole CASA measure system
@@ -247,7 +250,10 @@ class SubMS
 			const Vector<Double>& transNewXin, 
 			const Vector<Double>& transCHAN_WIDTH,
 			String& message, // message to the user, epsecially in case of error 
-			const Bool centerIsStart=False // if true, the parameter regridCenter specifies the start
+			const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
+			const Int nchan=0, // if >0: used instead of regridBandwidth
+			const Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
+			const Int start=-1 // if >=0 and regridQuant=="freq": used instead of regridCenter
 			);
 
   // Support method for regridSpw():
@@ -282,7 +288,10 @@ class SubMS
 			   const Bool writeTables,
 			   LogIO& os,
 			   String& regridMessage,
-			   const Bool centerIsStart=False // if true, the parameter regridCenter specifies the start
+			   const Bool centerIsStart=False, // if true, the parameter regridCenter specifies the start
+			   const Int nchan=0, // if >0: used instead of regridBandwidth
+			   const Int width=0, // if >0 and regridQuant=="freq": used instead of regridChanWidth
+			   const Int start=-1 // if >=0 and regridQuant=="freq": used instead of regridCenter
 			   );
 
   // combineSpws():

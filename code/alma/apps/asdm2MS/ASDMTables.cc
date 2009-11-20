@@ -36,7 +36,7 @@ ASDM_MAIN::ASDM_MAIN() {
   name_ = "ASDM_MAIN";
   tableDesc_.comment() = "The verbatim copy of the ASDM's dataset Main table";
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("time", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("time", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("configDescriptionId", "blabla"));
   		
@@ -83,7 +83,7 @@ void ASDM_MAIN::fill(const ASDM& asdm) {
 	unsigned int rowIndex = table_p_->nrow();
 	table_p_->addRow(rows.size());
   		
-    ScalarColumn<String> time(*table_p_, "time");             
+    ScalarColumn<double> time(*table_p_, "time");             
   		
     ScalarColumn<String> configDescriptionId(*table_p_, "configDescriptionId");             
   		
@@ -117,7 +117,7 @@ void ASDM_MAIN::fill(const ASDM& asdm) {
 	for (unsigned int i = 0; i < rows.size(); i++) {
 		
 	
-	time.put(rowIndex, rows.at(i)->getTime().toString());
+	time.put(rowIndex, rows.at(i)->getTime().get()/(1.0e9));
 	
 
 	
@@ -248,7 +248,7 @@ ASDM_ANNOTATION::ASDM_ANNOTATION() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("annotationId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("time", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("time", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("issue", "blabla"));
   		
@@ -297,7 +297,7 @@ void ASDM_ANNOTATION::fill(const ASDM& asdm) {
     ScalarColumn<String> annotationId(*table_p_, "annotationId");             
   		
   		
-    ScalarColumn<String> time(*table_p_, "time");             
+    ScalarColumn<double> time(*table_p_, "time");             
   		
     ScalarColumn<String> issue(*table_p_, "issue");             
   		
@@ -335,7 +335,7 @@ void ASDM_ANNOTATION::fill(const ASDM& asdm) {
 
 		
 	
-	time.put(rowIndex, rows.at(i)->getTime().toString());
+	time.put(rowIndex, rows.at(i)->getTime().get()/(1.0e9));
 	
 
 	
@@ -426,7 +426,7 @@ ASDM_ANTENNA::ASDM_ANTENNA() {
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("offset", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("time", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("time", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("stationId", "blabla"));
   		
@@ -465,7 +465,7 @@ void ASDM_ANTENNA::fill(const ASDM& asdm) {
   		
     ArrayColumn<double> offset(*table_p_, "offset");             
   		
-    ScalarColumn<String> time(*table_p_, "time");             
+    ScalarColumn<double> time(*table_p_, "time");             
   		
     ScalarColumn<String> stationId(*table_p_, "stationId");             
   		
@@ -505,7 +505,7 @@ void ASDM_ANTENNA::fill(const ASDM& asdm) {
 	
 
 	
-	time.put(rowIndex, rows.at(i)->getTime().toString());
+	time.put(rowIndex, rows.at(i)->getTime().get()/(1.0e9));
 	
 
 	
@@ -585,9 +585,9 @@ ASDM_CALAMPLI::ASDM_CALAMPLI() {
   		
   tableDesc_.addColumn(ArrayColumnDesc<String>("polarizationTypes", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("frequencyRange", "blabla"));
   		
@@ -630,9 +630,9 @@ void ASDM_CALAMPLI::fill(const ASDM& asdm) {
   		
     ArrayColumn<String> polarizationTypes(*table_p_, "polarizationTypes");             
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ArrayColumn<double> frequencyRange(*table_p_, "frequencyRange");             
   		
@@ -676,11 +676,11 @@ void ASDM_CALAMPLI::fill(const ASDM& asdm) {
 	
 
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -719,9 +719,9 @@ ASDM_CALATMOSPHERE::ASDM_CALATMOSPHERE() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numFreq", "blabla"));
   		
@@ -808,9 +808,9 @@ void ASDM_CALATMOSPHERE::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ScalarColumn<int> numFreq(*table_p_, "numFreq");             
   		
@@ -892,11 +892,11 @@ void ASDM_CALATMOSPHERE::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -1046,9 +1046,9 @@ ASDM_CALBANDPASS::ASDM_CALBANDPASS() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numAntenna", "blabla"));
   		
@@ -1105,9 +1105,9 @@ void ASDM_CALBANDPASS::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ScalarColumn<int> numAntenna(*table_p_, "numAntenna");             
   		
@@ -1165,11 +1165,11 @@ void ASDM_CALBANDPASS::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -1239,9 +1239,9 @@ ASDM_CALCURVE::ASDM_CALCURVE() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("frequencyRange", "blabla"));
   		
@@ -1294,9 +1294,9 @@ void ASDM_CALCURVE::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ArrayColumn<double> frequencyRange(*table_p_, "frequencyRange");             
   		
@@ -1346,11 +1346,11 @@ void ASDM_CALCURVE::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -1412,9 +1412,9 @@ ASDM_CALDATA::ASDM_CALDATA() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calDataId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startTimeObserved", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startTimeObserved", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endTimeObserved", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endTimeObserved", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("execBlockUID", "blabla"));
   		
@@ -1459,9 +1459,9 @@ void ASDM_CALDATA::fill(const ASDM& asdm) {
     ScalarColumn<String> calDataId(*table_p_, "calDataId");             
   		
   		
-    ScalarColumn<String> startTimeObserved(*table_p_, "startTimeObserved");             
+    ScalarColumn<double> startTimeObserved(*table_p_, "startTimeObserved");             
   		
-    ScalarColumn<String> endTimeObserved(*table_p_, "endTimeObserved");             
+    ScalarColumn<double> endTimeObserved(*table_p_, "endTimeObserved");             
   		
     ScalarColumn<String> execBlockUID(*table_p_, "execBlockUID");             
   		
@@ -1495,11 +1495,11 @@ void ASDM_CALDATA::fill(const ASDM& asdm) {
 
 		
 	
-	startTimeObserved.put(rowIndex, rows.at(i)->getStartTimeObserved().toString());
+	startTimeObserved.put(rowIndex, rows.at(i)->getStartTimeObserved().get()/(1.0e9));
 	
 
 	
-	endTimeObserved.put(rowIndex, rows.at(i)->getEndTimeObserved().toString());
+	endTimeObserved.put(rowIndex, rows.at(i)->getEndTimeObserved().get()/(1.0e9));
 	
 
 	
@@ -1575,9 +1575,9 @@ ASDM_CALDELAY::ASDM_CALDELAY() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("refAntennaName", "blabla"));
   		
@@ -1634,9 +1634,9 @@ void ASDM_CALDELAY::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ScalarColumn<String> refAntennaName(*table_p_, "refAntennaName");             
   		
@@ -1692,11 +1692,11 @@ void ASDM_CALDELAY::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -1767,7 +1767,7 @@ ASDM_CALDEVICE::ASDM_CALDEVICE() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("spectralWindowId", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("feedId", "blabla"));
   		
@@ -1806,7 +1806,7 @@ void ASDM_CALDEVICE::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> spectralWindowId(*table_p_, "spectralWindowId");             
   		
-    ScalarColumn<String> timeInterval(*table_p_, "timeInterval");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
     ScalarColumn<int> feedId(*table_p_, "feedId");             
   		
@@ -1836,7 +1836,7 @@ void ASDM_CALDEVICE::fill(const ASDM& asdm) {
 	
 
 	
-	timeInterval.put(rowIndex, rows.at(i)->getTimeInterval().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 	
@@ -1889,9 +1889,9 @@ ASDM_CALFLUX::ASDM_CALFLUX() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numFrequencyRanges", "blabla"));
   		
@@ -1948,9 +1948,9 @@ void ASDM_CALFLUX::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ScalarColumn<int> numFrequencyRanges(*table_p_, "numFrequencyRanges");             
   		
@@ -2000,11 +2000,11 @@ void ASDM_CALFLUX::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -2094,9 +2094,9 @@ ASDM_CALFOCUS::ASDM_CALFOCUS() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("ambientTemperature", "blabla"));
   		
@@ -2169,9 +2169,9 @@ void ASDM_CALFOCUS::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ScalarColumn<double> ambientTemperature(*table_p_, "ambientTemperature");             
   		
@@ -2239,11 +2239,11 @@ void ASDM_CALFOCUS::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -2365,9 +2365,9 @@ ASDM_CALFOCUSMODEL::ASDM_CALFOCUSMODEL() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("antennaMake", "blabla"));
   		
@@ -2420,9 +2420,9 @@ void ASDM_CALFOCUSMODEL::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ScalarColumn<String> antennaMake(*table_p_, "antennaMake");             
   		
@@ -2472,11 +2472,11 @@ void ASDM_CALFOCUSMODEL::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -2538,9 +2538,9 @@ ASDM_CALGAIN::ASDM_CALGAIN() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<float>("gain", "blabla"));
   		
@@ -2579,9 +2579,9 @@ void ASDM_CALGAIN::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ScalarColumn<float> gain(*table_p_, "gain");             
   		
@@ -2611,11 +2611,11 @@ void ASDM_CALGAIN::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -2665,9 +2665,9 @@ ASDM_CALHOLOGRAPHY::ASDM_CALHOLOGRAPHY() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("antennaMake", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("ambientTemperature", "blabla"));
   		
@@ -2738,9 +2738,9 @@ void ASDM_CALHOLOGRAPHY::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> antennaMake(*table_p_, "antennaMake");             
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ScalarColumn<double> ambientTemperature(*table_p_, "ambientTemperature");             
   		
@@ -2806,11 +2806,11 @@ void ASDM_CALHOLOGRAPHY::fill(const ASDM& asdm) {
 	
 
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -2926,9 +2926,9 @@ ASDM_CALPHASE::ASDM_CALPHASE() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numBaseline", "blabla"));
   		
@@ -2987,9 +2987,9 @@ void ASDM_CALPHASE::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ScalarColumn<int> numBaseline(*table_p_, "numBaseline");             
   		
@@ -3045,11 +3045,11 @@ void ASDM_CALPHASE::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -3128,9 +3128,9 @@ ASDM_CALPOINTING::ASDM_CALPOINTING() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("ambientTemperature", "blabla"));
   		
@@ -3213,9 +3213,9 @@ void ASDM_CALPOINTING::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ScalarColumn<double> ambientTemperature(*table_p_, "ambientTemperature");             
   		
@@ -3293,11 +3293,11 @@ void ASDM_CALPOINTING::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -3440,9 +3440,9 @@ ASDM_CALPOINTINGMODEL::ASDM_CALPOINTINGMODEL() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("antennaMake", "blabla"));
   		
@@ -3499,9 +3499,9 @@ void ASDM_CALPOINTINGMODEL::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ScalarColumn<String> antennaMake(*table_p_, "antennaMake");             
   		
@@ -3553,11 +3553,11 @@ void ASDM_CALPOINTINGMODEL::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -3637,9 +3637,9 @@ ASDM_CALPOSITION::ASDM_CALPOSITION() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("antennaPosition", "blabla"));
   		
@@ -3698,9 +3698,9 @@ void ASDM_CALPOSITION::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ArrayColumn<double> antennaPosition(*table_p_, "antennaPosition");             
   		
@@ -3754,11 +3754,11 @@ void ASDM_CALPOSITION::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -3842,9 +3842,9 @@ ASDM_CALPRIMARYBEAM::ASDM_CALPRIMARYBEAM() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("antennaMake", "blabla"));
   		
@@ -3887,9 +3887,9 @@ void ASDM_CALPRIMARYBEAM::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ScalarColumn<String> antennaMake(*table_p_, "antennaMake");             
   		
@@ -3927,11 +3927,11 @@ void ASDM_CALPRIMARYBEAM::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -3987,7 +3987,7 @@ ASDM_CALREDUCTION::ASDM_CALREDUCTION() {
   		
   tableDesc_.addColumn(ArrayColumnDesc<String>("invalidConditions", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeReduced", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("timeReduced", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("messages", "blabla"));
   		
@@ -4028,7 +4028,7 @@ void ASDM_CALREDUCTION::fill(const ASDM& asdm) {
   		
     ArrayColumn<String> invalidConditions(*table_p_, "invalidConditions");             
   		
-    ScalarColumn<String> timeReduced(*table_p_, "timeReduced");             
+    ScalarColumn<double> timeReduced(*table_p_, "timeReduced");             
   		
     ScalarColumn<String> messages(*table_p_, "messages");             
   		
@@ -4070,7 +4070,7 @@ void ASDM_CALREDUCTION::fill(const ASDM& asdm) {
 	
 
 	
-	timeReduced.put(rowIndex, rows.at(i)->getTimeReduced().toString());
+	timeReduced.put(rowIndex, rows.at(i)->getTimeReduced().get()/(1.0e9));
 	
 
 	
@@ -4102,9 +4102,9 @@ ASDM_CALSEEING::ASDM_CALSEEING() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("frequencyRange", "blabla"));
   		
@@ -4151,9 +4151,9 @@ void ASDM_CALSEEING::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ArrayColumn<double> frequencyRange(*table_p_, "frequencyRange");             
   		
@@ -4193,11 +4193,11 @@ void ASDM_CALSEEING::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -4260,9 +4260,9 @@ ASDM_CALWVR::ASDM_CALWVR() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endValidTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("wvrMethod", "blabla"));
   		
@@ -4315,9 +4315,9 @@ void ASDM_CALWVR::fill(const ASDM& asdm) {
     ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
   		
   		
-    ScalarColumn<String> startValidTime(*table_p_, "startValidTime");             
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
   		
-    ScalarColumn<String> endValidTime(*table_p_, "endValidTime");             
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
   		
     ScalarColumn<String> wvrMethod(*table_p_, "wvrMethod");             
   		
@@ -4363,11 +4363,11 @@ void ASDM_CALWVR::fill(const ASDM& asdm) {
 
 		
 	
-	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().toString());
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
 	
 
 	
-	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().toString());
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
 	
 
 	
@@ -4791,10 +4791,10 @@ ASDM_DELAYMODEL::ASDM_DELAYMODEL() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("antennaId", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeOrigin", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("timeOrigin", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numPoly", "blabla"));
   		
@@ -4832,10 +4832,10 @@ void ASDM_DELAYMODEL::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> antennaId(*table_p_, "antennaId");             
   		
-    ScalarColumn<String> timeInterval(*table_p_, "timeInterval");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
   		
-    ScalarColumn<String> timeOrigin(*table_p_, "timeOrigin");             
+    ScalarColumn<double> timeOrigin(*table_p_, "timeOrigin");             
   		
     ScalarColumn<int> numPoly(*table_p_, "numPoly");             
   		
@@ -4862,12 +4862,12 @@ void ASDM_DELAYMODEL::fill(const ASDM& asdm) {
 	
 
 	
-	timeInterval.put(rowIndex, rows.at(i)->getTimeInterval().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 		
 	
-	timeOrigin.put(rowIndex, rows.at(i)->getTimeOrigin().toString());
+	timeOrigin.put(rowIndex, rows.at(i)->getTimeOrigin().get()/(1.0e9));
 	
 
 	
@@ -5028,9 +5028,9 @@ ASDM_EXECBLOCK::ASDM_EXECBLOCK() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("execBlockId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("execBlockNum", "blabla"));
   		
@@ -5077,7 +5077,7 @@ ASDM_EXECBLOCK::ASDM_EXECBLOCK() {
   tableDesc_.addColumn(ScalarColumnDesc<String>("sBSummaryId", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("releaseDate", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("releaseDate", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<bool>("flagRow", "blabla"));
   		  		
@@ -5101,9 +5101,9 @@ void ASDM_EXECBLOCK::fill(const ASDM& asdm) {
     ScalarColumn<String> execBlockId(*table_p_, "execBlockId");             
   		
   		
-    ScalarColumn<String> startTime(*table_p_, "startTime");             
+    ScalarColumn<double> startTime(*table_p_, "startTime");             
   		
-    ScalarColumn<String> endTime(*table_p_, "endTime");             
+    ScalarColumn<double> endTime(*table_p_, "endTime");             
   		
     ScalarColumn<int> execBlockNum(*table_p_, "execBlockNum");             
   		
@@ -5150,7 +5150,7 @@ void ASDM_EXECBLOCK::fill(const ASDM& asdm) {
     ScalarColumn<String> sBSummaryId(*table_p_, "sBSummaryId");             
   		
   		
-    ScalarColumn<String> releaseDate(*table_p_, "releaseDate");             
+    ScalarColumn<double> releaseDate(*table_p_, "releaseDate");             
   		
     ScalarColumn<bool> flagRow(*table_p_, "flagRow");             
   		  	
@@ -5163,11 +5163,11 @@ void ASDM_EXECBLOCK::fill(const ASDM& asdm) {
 
 		
 	
-	startTime.put(rowIndex, rows.at(i)->getStartTime().toString());
+	startTime.put(rowIndex, rows.at(i)->getStartTime().get()/(1.0e9));
 	
 
 	
-	endTime.put(rowIndex, rows.at(i)->getEndTime().toString());
+	endTime.put(rowIndex, rows.at(i)->getEndTime().get()/(1.0e9));
 	
 
 	
@@ -5261,7 +5261,7 @@ void ASDM_EXECBLOCK::fill(const ASDM& asdm) {
 		
 	
 	if (rows.at(i)->isReleaseDateExists())
-		releaseDate.put(rowIndex, rows.at(i)->getReleaseDate().toString());
+		releaseDate.put(rowIndex, rows.at(i)->getReleaseDate().get()/(1.0e9));
 	
 
 	
@@ -5282,7 +5282,7 @@ ASDM_FEED::ASDM_FEED() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("spectralWindowId", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("feedId", "blabla"));
   		
@@ -5331,7 +5331,7 @@ void ASDM_FEED::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> spectralWindowId(*table_p_, "spectralWindowId");             
   		
-    ScalarColumn<String> timeInterval(*table_p_, "timeInterval");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
     ScalarColumn<int> feedId(*table_p_, "feedId");             
   		
@@ -5371,7 +5371,7 @@ void ASDM_FEED::fill(const ASDM& asdm) {
 	
 
 	
-	timeInterval.put(rowIndex, rows.at(i)->getTimeInterval().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 	
@@ -5453,11 +5453,11 @@ ASDM_FIELD::ASDM_FIELD() {
   tableDesc_.addColumn(ArrayColumnDesc<double>("referenceDir", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("time", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("time", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("directionCode", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("directionEquinox", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("directionEquinox", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("assocNature", "blabla"));
   		
@@ -5500,11 +5500,11 @@ void ASDM_FIELD::fill(const ASDM& asdm) {
     ArrayColumn<double> referenceDir(*table_p_, "referenceDir");             
   		
   		
-    ScalarColumn<String> time(*table_p_, "time");             
+    ScalarColumn<double> time(*table_p_, "time");             
   		
     ScalarColumn<String> directionCode(*table_p_, "directionCode");             
   		
-    ScalarColumn<String> directionEquinox(*table_p_, "directionEquinox");             
+    ScalarColumn<double> directionEquinox(*table_p_, "directionEquinox");             
   		
     ScalarColumn<String> assocNature(*table_p_, "assocNature");             
   		
@@ -5549,7 +5549,7 @@ void ASDM_FIELD::fill(const ASDM& asdm) {
 		
 	
 	if (rows.at(i)->isTimeExists())
-		time.put(rowIndex, rows.at(i)->getTime().toString());
+		time.put(rowIndex, rows.at(i)->getTime().get()/(1.0e9));
 	
 
 	
@@ -5559,7 +5559,7 @@ void ASDM_FIELD::fill(const ASDM& asdm) {
 
 	
 	if (rows.at(i)->isDirectionEquinoxExists())
-		directionEquinox.put(rowIndex, rows.at(i)->getDirectionEquinox().toString());
+		directionEquinox.put(rowIndex, rows.at(i)->getDirectionEquinox().get()/(1.0e9));
 	
 
 	
@@ -5591,7 +5591,7 @@ ASDM_FLAGCMD::ASDM_FLAGCMD() {
   name_ = "ASDM_FLAGCMD";
   tableDesc_.comment() = "The verbatim copy of the ASDM's dataset FlagCmd table";
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("type", "blabla"));
@@ -5624,7 +5624,7 @@ void ASDM_FLAGCMD::fill(const ASDM& asdm) {
 	unsigned int rowIndex = table_p_->nrow();
 	table_p_->addRow(rows.size());
   		
-    ScalarColumn<String> timeInterval(*table_p_, "timeInterval");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
   		
     ScalarColumn<String> type(*table_p_, "type");             
@@ -5644,7 +5644,7 @@ void ASDM_FLAGCMD::fill(const ASDM& asdm) {
 	for (unsigned int i = 0; i < rows.size(); i++) {
 		
 	
-	timeInterval.put(rowIndex, rows.at(i)->getTimeInterval().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 		
@@ -5684,7 +5684,7 @@ ASDM_FOCUS::ASDM_FOCUS() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("antennaId", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   		
   tableDesc_.addColumn(ScalarColumnDesc<bool>("focusTracking", "blabla"));
@@ -5715,7 +5715,7 @@ void ASDM_FOCUS::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> antennaId(*table_p_, "antennaId");             
   		
-    ScalarColumn<String> timeInterval(*table_p_, "timeInterval");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
   		
     ScalarColumn<bool> focusTracking(*table_p_, "focusTracking");             
@@ -5735,7 +5735,7 @@ void ASDM_FOCUS::fill(const ASDM& asdm) {
 	
 
 	
-	timeInterval.put(rowIndex, rows.at(i)->getTimeInterval().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 		
@@ -5885,7 +5885,7 @@ ASDM_FREQOFFSET::ASDM_FREQOFFSET() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("spectralWindowId", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("feedId", "blabla"));
   		
@@ -5914,7 +5914,7 @@ void ASDM_FREQOFFSET::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> spectralWindowId(*table_p_, "spectralWindowId");             
   		
-    ScalarColumn<String> timeInterval(*table_p_, "timeInterval");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
     ScalarColumn<int> feedId(*table_p_, "feedId");             
   		
@@ -5934,7 +5934,7 @@ void ASDM_FREQOFFSET::fill(const ASDM& asdm) {
 	
 
 	
-	timeInterval.put(rowIndex, rows.at(i)->getTimeInterval().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 	
@@ -5960,7 +5960,7 @@ ASDM_GAINTRACKING::ASDM_GAINTRACKING() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("spectralWindowId", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("feedId", "blabla"));
   		
@@ -6017,7 +6017,7 @@ void ASDM_GAINTRACKING::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> spectralWindowId(*table_p_, "spectralWindowId");             
   		
-    ScalarColumn<String> timeInterval(*table_p_, "timeInterval");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
     ScalarColumn<int> feedId(*table_p_, "feedId");             
   		
@@ -6065,7 +6065,7 @@ void ASDM_GAINTRACKING::fill(const ASDM& asdm) {
 	
 
 	
-	timeInterval.put(rowIndex, rows.at(i)->getTimeInterval().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 	
@@ -6152,7 +6152,7 @@ ASDM_HISTORY::ASDM_HISTORY() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("execBlockId", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("time", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("time", "blabla"));
   		
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("message", "blabla"));
@@ -6189,7 +6189,7 @@ void ASDM_HISTORY::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> execBlockId(*table_p_, "execBlockId");             
   		
-    ScalarColumn<String> time(*table_p_, "time");             
+    ScalarColumn<double> time(*table_p_, "time");             
   		
   		
     ScalarColumn<String> message(*table_p_, "message");             
@@ -6215,7 +6215,7 @@ void ASDM_HISTORY::fill(const ASDM& asdm) {
 	
 
 	
-	time.put(rowIndex, rows.at(i)->getTime().toString());
+	time.put(rowIndex, rows.at(i)->getTime().get()/(1.0e9));
 	
 
 		
@@ -6377,7 +6377,7 @@ ASDM_POINTING::ASDM_POINTING() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("antennaId", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numSample", "blabla"));
@@ -6388,7 +6388,7 @@ ASDM_POINTING::ASDM_POINTING() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<bool>("usePolynomials", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeOrigin", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("timeOrigin", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numTerm", "blabla"));
   		
@@ -6407,9 +6407,9 @@ ASDM_POINTING::ASDM_POINTING() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("sourceOffsetReferenceCode", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("sourceOffsetEquinox", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("sourceOffsetEquinox", "blabla"));
   		
-  tableDesc_.addColumn(ArrayColumnDesc<String>("sampledTimeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("sampledTimeInterval", "blabla"));
   		  		
 }
 
@@ -6430,7 +6430,7 @@ void ASDM_POINTING::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> antennaId(*table_p_, "antennaId");             
   		
-    ScalarColumn<String> timeInterval(*table_p_, "timeInterval");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
   		
     ScalarColumn<int> numSample(*table_p_, "numSample");             
@@ -6441,7 +6441,7 @@ void ASDM_POINTING::fill(const ASDM& asdm) {
   		
     ScalarColumn<bool> usePolynomials(*table_p_, "usePolynomials");             
   		
-    ScalarColumn<String> timeOrigin(*table_p_, "timeOrigin");             
+    ScalarColumn<double> timeOrigin(*table_p_, "timeOrigin");             
   		
     ScalarColumn<int> numTerm(*table_p_, "numTerm");             
   		
@@ -6460,9 +6460,9 @@ void ASDM_POINTING::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> sourceOffsetReferenceCode(*table_p_, "sourceOffsetReferenceCode");             
   		
-    ScalarColumn<String> sourceOffsetEquinox(*table_p_, "sourceOffsetEquinox");             
+    ScalarColumn<double> sourceOffsetEquinox(*table_p_, "sourceOffsetEquinox");             
   		
-    ArrayColumn<String> sampledTimeInterval(*table_p_, "sampledTimeInterval");             
+    ArrayColumn<double> sampledTimeInterval(*table_p_, "sampledTimeInterval");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -6472,7 +6472,7 @@ void ASDM_POINTING::fill(const ASDM& asdm) {
 	
 
 	
-	timeInterval.put(rowIndex, rows.at(i)->getTimeInterval().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 		
@@ -6493,7 +6493,7 @@ void ASDM_POINTING::fill(const ASDM& asdm) {
 	
 
 	
-	timeOrigin.put(rowIndex, rows.at(i)->getTimeOrigin().toString());
+	timeOrigin.put(rowIndex, rows.at(i)->getTimeOrigin().get()/(1.0e9));
 	
 
 	
@@ -6534,12 +6534,12 @@ void ASDM_POINTING::fill(const ASDM& asdm) {
 
 	
 	if (rows.at(i)->isSourceOffsetEquinoxExists())
-		sourceOffsetEquinox.put(rowIndex, rows.at(i)->getSourceOffsetEquinox().toString());
+		sourceOffsetEquinox.put(rowIndex, rows.at(i)->getSourceOffsetEquinox().get()/(1.0e9));
 	
 
 	
 	if (rows.at(i)->isSampledTimeIntervalExists())
-		sampledTimeInterval.put(rowIndex, _2CASAString1D<ArrayTimeInterval,String>(rows.at(i)->getSampledTimeInterval()));
+		sampledTimeInterval.put(rowIndex, ati2CASA2D<double>(rows.at(i)->getSampledTimeInterval()));
 	
 
 		rowIndex++;		
@@ -6814,7 +6814,7 @@ ASDM_RECEIVER::ASDM_RECEIVER() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("spectralWindowId", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("name", "blabla"));
@@ -6851,7 +6851,7 @@ void ASDM_RECEIVER::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> spectralWindowId(*table_p_, "spectralWindowId");             
   		
-    ScalarColumn<String> timeInterval(*table_p_, "timeInterval");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
   		
     ScalarColumn<String> name(*table_p_, "name");             
@@ -6879,7 +6879,7 @@ void ASDM_RECEIVER::fill(const ASDM& asdm) {
 	
 
 	
-	timeInterval.put(rowIndex, rows.at(i)->getTimeInterval().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 		
@@ -6953,7 +6953,7 @@ ASDM_SBSUMMARY::ASDM_SBSUMMARY() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("centerDirectionCode", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("centerDirectionEquinox", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("centerDirectionEquinox", "blabla"));
   		  		
 }
 
@@ -7008,7 +7008,7 @@ void ASDM_SBSUMMARY::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> centerDirectionCode(*table_p_, "centerDirectionCode");             
   		
-    ScalarColumn<String> centerDirectionEquinox(*table_p_, "centerDirectionEquinox");             
+    ScalarColumn<double> centerDirectionEquinox(*table_p_, "centerDirectionEquinox");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -7086,7 +7086,7 @@ void ASDM_SBSUMMARY::fill(const ASDM& asdm) {
 
 	
 	if (rows.at(i)->isCenterDirectionEquinoxExists())
-		centerDirectionEquinox.put(rowIndex, rows.at(i)->getCenterDirectionEquinox().toString());
+		centerDirectionEquinox.put(rowIndex, rows.at(i)->getCenterDirectionEquinox().get()/(1.0e9));
 	
 
 		rowIndex++;		
@@ -7103,9 +7103,9 @@ ASDM_SCAN::ASDM_SCAN() {
   tableDesc_.addColumn(ScalarColumnDesc<int>("scanNumber", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numIntent", "blabla"));
   		
@@ -7154,9 +7154,9 @@ void ASDM_SCAN::fill(const ASDM& asdm) {
     ScalarColumn<int> scanNumber(*table_p_, "scanNumber");             
   		
   		
-    ScalarColumn<String> startTime(*table_p_, "startTime");             
+    ScalarColumn<double> startTime(*table_p_, "startTime");             
   		
-    ScalarColumn<String> endTime(*table_p_, "endTime");             
+    ScalarColumn<double> endTime(*table_p_, "endTime");             
   		
     ScalarColumn<int> numIntent(*table_p_, "numIntent");             
   		
@@ -7196,11 +7196,11 @@ void ASDM_SCAN::fill(const ASDM& asdm) {
 
 		
 	
-	startTime.put(rowIndex, rows.at(i)->getStartTime().toString());
+	startTime.put(rowIndex, rows.at(i)->getStartTime().get()/(1.0e9));
 	
 
 	
-	endTime.put(rowIndex, rows.at(i)->getEndTime().toString());
+	endTime.put(rowIndex, rows.at(i)->getEndTime().get()/(1.0e9));
 	
 
 	
@@ -7267,7 +7267,7 @@ ASDM_SEEING::ASDM_SEEING() {
   name_ = "ASDM_SEEING";
   tableDesc_.comment() = "The verbatim copy of the ASDM's dataset Seeing table";
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("numBaseLength", "blabla"));
@@ -7298,7 +7298,7 @@ void ASDM_SEEING::fill(const ASDM& asdm) {
 	unsigned int rowIndex = table_p_->nrow();
 	table_p_->addRow(rows.size());
   		
-    ScalarColumn<String> timeInterval(*table_p_, "timeInterval");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
   		
     ScalarColumn<int> numBaseLength(*table_p_, "numBaseLength");             
@@ -7316,7 +7316,7 @@ void ASDM_SEEING::fill(const ASDM& asdm) {
 	for (unsigned int i = 0; i < rows.size(); i++) {
 		
 	
-	timeInterval.put(rowIndex, rows.at(i)->getTimeInterval().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 		
@@ -7352,7 +7352,7 @@ ASDM_SOURCE::ASDM_SOURCE() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("sourceId", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("spectralWindowId", "blabla"));
   		
@@ -7368,7 +7368,7 @@ ASDM_SOURCE::ASDM_SOURCE() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("directionCode", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("directionEquinox", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("directionEquinox", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("calibrationGroup", "blabla"));
   		
@@ -7433,7 +7433,7 @@ void ASDM_SOURCE::fill(const ASDM& asdm) {
   		
     ScalarColumn<int> sourceId(*table_p_, "sourceId");             
   		
-    ScalarColumn<String> timeInterval(*table_p_, "timeInterval");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
     ScalarColumn<String> spectralWindowId(*table_p_, "spectralWindowId");             
   		
@@ -7449,7 +7449,7 @@ void ASDM_SOURCE::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> directionCode(*table_p_, "directionCode");             
   		
-    ScalarColumn<String> directionEquinox(*table_p_, "directionEquinox");             
+    ScalarColumn<double> directionEquinox(*table_p_, "directionEquinox");             
   		
     ScalarColumn<int> calibrationGroup(*table_p_, "calibrationGroup");             
   		
@@ -7503,7 +7503,7 @@ void ASDM_SOURCE::fill(const ASDM& asdm) {
 	
 
 	
-	timeInterval.put(rowIndex, rows.at(i)->getTimeInterval().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 	
@@ -7535,7 +7535,7 @@ void ASDM_SOURCE::fill(const ASDM& asdm) {
 
 	
 	if (rows.at(i)->isDirectionEquinoxExists())
-		directionEquinox.put(rowIndex, rows.at(i)->getDirectionEquinox().toString());
+		directionEquinox.put(rowIndex, rows.at(i)->getDirectionEquinox().get()/(1.0e9));
 	
 
 	
@@ -8180,9 +8180,9 @@ ASDM_SUBSCAN::ASDM_SUBSCAN() {
   tableDesc_.addColumn(ScalarColumnDesc<int>("subscanNumber", "blabla"));
   		
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("startTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startTime", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("endTime", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endTime", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("fieldName", "blabla"));
   		
@@ -8223,9 +8223,9 @@ void ASDM_SUBSCAN::fill(const ASDM& asdm) {
     ScalarColumn<int> subscanNumber(*table_p_, "subscanNumber");             
   		
   		
-    ScalarColumn<String> startTime(*table_p_, "startTime");             
+    ScalarColumn<double> startTime(*table_p_, "startTime");             
   		
-    ScalarColumn<String> endTime(*table_p_, "endTime");             
+    ScalarColumn<double> endTime(*table_p_, "endTime");             
   		
     ScalarColumn<String> fieldName(*table_p_, "fieldName");             
   		
@@ -8259,11 +8259,11 @@ void ASDM_SUBSCAN::fill(const ASDM& asdm) {
 
 		
 	
-	startTime.put(rowIndex, rows.at(i)->getStartTime().toString());
+	startTime.put(rowIndex, rows.at(i)->getStartTime().get()/(1.0e9));
 	
 
 	
-	endTime.put(rowIndex, rows.at(i)->getEndTime().toString());
+	endTime.put(rowIndex, rows.at(i)->getEndTime().get()/(1.0e9));
 	
 
 	
@@ -8322,7 +8322,7 @@ ASDM_SWITCHCYCLE::ASDM_SWITCHCYCLE() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("directionCode", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("directionEquinox", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("directionEquinox", "blabla"));
   		  		
 }
 
@@ -8357,7 +8357,7 @@ void ASDM_SWITCHCYCLE::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> directionCode(*table_p_, "directionCode");             
   		
-    ScalarColumn<String> directionEquinox(*table_p_, "directionEquinox");             
+    ScalarColumn<double> directionEquinox(*table_p_, "directionEquinox");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
@@ -8395,7 +8395,7 @@ void ASDM_SWITCHCYCLE::fill(const ASDM& asdm) {
 
 	
 	if (rows.at(i)->isDirectionEquinoxExists())
-		directionEquinox.put(rowIndex, rows.at(i)->getDirectionEquinox().toString());
+		directionEquinox.put(rowIndex, rows.at(i)->getDirectionEquinox().get()/(1.0e9));
 	
 
 		rowIndex++;		
@@ -8411,7 +8411,7 @@ ASDM_SYSCAL::ASDM_SYSCAL() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("spectralWindowId", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("feedId", "blabla"));
   		
@@ -8470,7 +8470,7 @@ void ASDM_SYSCAL::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> spectralWindowId(*table_p_, "spectralWindowId");             
   		
-    ScalarColumn<String> timeInterval(*table_p_, "timeInterval");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
     ScalarColumn<int> feedId(*table_p_, "feedId");             
   		
@@ -8520,7 +8520,7 @@ void ASDM_SYSCAL::fill(const ASDM& asdm) {
 	
 
 	
-	timeInterval.put(rowIndex, rows.at(i)->getTimeInterval().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 	
@@ -8616,7 +8616,7 @@ ASDM_TOTALPOWER::ASDM_TOTALPOWER() {
   name_ = "ASDM_TOTALPOWER";
   tableDesc_.comment() = "The verbatim copy of the ASDM's dataset TotalPower table";
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("time", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<double>("time", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("configDescriptionId", "blabla"));
   		
@@ -8633,7 +8633,7 @@ ASDM_TOTALPOWER::ASDM_TOTALPOWER() {
   		
   tableDesc_.addColumn(ArrayColumnDesc<double>("exposure", "blabla"));
   		
-  tableDesc_.addColumn(ArrayColumnDesc<String>("timeCentroid", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeCentroid", "blabla"));
   		
   tableDesc_.addColumn(ArrayColumnDesc<float>("floatData", "blabla"));
   		
@@ -8669,7 +8669,7 @@ void ASDM_TOTALPOWER::fill(const ASDM& asdm) {
 	unsigned int rowIndex = table_p_->nrow();
 	table_p_->addRow(rows.size());
   		
-    ScalarColumn<String> time(*table_p_, "time");             
+    ScalarColumn<double> time(*table_p_, "time");             
   		
     ScalarColumn<String> configDescriptionId(*table_p_, "configDescriptionId");             
   		
@@ -8686,7 +8686,7 @@ void ASDM_TOTALPOWER::fill(const ASDM& asdm) {
   		
     ArrayColumn<double> exposure(*table_p_, "exposure");             
   		
-    ArrayColumn<String> timeCentroid(*table_p_, "timeCentroid");             
+    ArrayColumn<double> timeCentroid(*table_p_, "timeCentroid");             
   		
     ArrayColumn<float> floatData(*table_p_, "floatData");             
   		
@@ -8709,7 +8709,7 @@ void ASDM_TOTALPOWER::fill(const ASDM& asdm) {
 	for (unsigned int i = 0; i < rows.size(); i++) {
 		
 	
-	time.put(rowIndex, rows.at(i)->getTime().toString());
+	time.put(rowIndex, rows.at(i)->getTime().get()/(1.0e9));
 	
 
 	
@@ -8742,7 +8742,7 @@ void ASDM_TOTALPOWER::fill(const ASDM& asdm) {
 	
 
 	
-	timeCentroid.put(rowIndex, _2CASAString2D<ArrayTime,String>(rows.at(i)->getTimeCentroid()));
+	timeCentroid.put(rowIndex, at2CASA2D<double>(rows.at(i)->getTimeCentroid()));
 	
 
 	
@@ -8792,7 +8792,7 @@ ASDM_WVMCAL::ASDM_WVMCAL() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("spectralWindowId", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("wvrMethod", "blabla"));
@@ -8829,7 +8829,7 @@ void ASDM_WVMCAL::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> spectralWindowId(*table_p_, "spectralWindowId");             
   		
-    ScalarColumn<String> timeInterval(*table_p_, "timeInterval");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
   		
     ScalarColumn<String> wvrMethod(*table_p_, "wvrMethod");             
@@ -8857,7 +8857,7 @@ void ASDM_WVMCAL::fill(const ASDM& asdm) {
 	
 
 	
-	timeInterval.put(rowIndex, rows.at(i)->getTimeInterval().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 		
@@ -8897,7 +8897,7 @@ ASDM_WEATHER::ASDM_WEATHER() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("stationId", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("timeInterval", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
   		
   		
   tableDesc_.addColumn(ScalarColumnDesc<double>("pressure", "blabla"));
@@ -8948,7 +8948,7 @@ void ASDM_WEATHER::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> stationId(*table_p_, "stationId");             
   		
-    ScalarColumn<String> timeInterval(*table_p_, "timeInterval");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
   		
   		
     ScalarColumn<double> pressure(*table_p_, "pressure");             
@@ -8988,7 +8988,7 @@ void ASDM_WEATHER::fill(const ASDM& asdm) {
 	
 
 	
-	timeInterval.put(rowIndex, rows.at(i)->getTimeInterval().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
 	
 
 		

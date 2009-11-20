@@ -248,8 +248,6 @@ def cvel(vis, outputvis,
             if not(start==""):
                 if (qa.quantity(start)['unit'].find('Hz') < 0):
                     raise TypeError, "start parameter is not a valid frequency quantity " %start
-                if(width==""):
-                    raise TypeError, "in frequency mode, width parameter must be set if start parameter is set"
             if(not(width=="") and (qa.quantity(width)['unit'].find('Hz') < 0)):
                 raise TypeError, "width parameter %s is not a valid frequency quantity " %width	
         elif(mode=='velocity'):
@@ -262,13 +260,11 @@ def cvel(vis, outputvis,
             if not(start==""):
                 if (qa.quantity(start)['unit'].find('m/s') < 0):
                     raise TypeError, "start parameter %s is not a valid velocity quantity " %start
-                if(width==""):
-                    raise TypeError, "in velocity mode, width parameter must be set if start parameter is set"
             if(not(width=="") and (qa.quantity(width)['unit'].find('m/s') < 0)):
                 raise TypeError, "width parameter %s is not a valid velocity quantity " %width
         elif(mode=='channel' or mode=='channel_b'):
             if((type(width) != int) or (type(start) != int)):
-                raise TypeError, "start, width have to be integers with mode %s" %mode            
+                raise TypeError, "start and width have to be integers with mode = %s" %mode            
 
         
         # determine parameters data columns
@@ -295,7 +291,7 @@ def cvel(vis, outputvis,
             ms.split(outputms=outputvis, field=field,
                      spw=spw,            step=[1],
                      baseline=antenna,   subarray=array,
-                     timebin='-1s',    time=timerange,
+                     timebin='-1s',      time=timerange,
                      whichcol=datacolumn,
                      scan=scan,          uvrange="")
             ms.close()

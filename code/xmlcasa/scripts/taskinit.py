@@ -251,7 +251,7 @@ def announce_async_task(taskname):
 	casalog.origin(taskname)
 	casalog.post('')
 	casalog.post('###############################################')
-	casalog.post('###  Begin Task: " + taskname + " ###')
+	casalog.post('###  Begin Task: ' + taskname + ' ' * (27 - len(taskname)) + '###')
 	casalog.post("")
 	casalog.post("Use: ")
 	casalog.post("      tm.retrieve(return_value) # to retrieve the status")
@@ -259,7 +259,7 @@ def announce_async_task(taskname):
 	
 def write_task_obit(taskname):
 	"""Eulogize the task in the logger."""
-	casalog.post('###  End Task: ' + taskname + '  ###')
+	casalog.post('###  End Task: ' + taskname + ' ' * (29 - len(taskname)) + '###')
 	casalog.post('###############################################')
 	casalog.post('')
 

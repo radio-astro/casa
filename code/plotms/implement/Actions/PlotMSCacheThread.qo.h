@@ -58,7 +58,7 @@ public:
     // after the loading, and optional post-thread method parameters.
     PlotMSCacheThread(PlotMSPlot* plot, PlotMSData* data,
 		      const vector<PMS::Axis>& axes, 
-		      const vector<PMS::DataColumn>& data,
+		      const vector<PMS::DataColumn>& data2,
 		      const String& msname, 
 		      const PlotMSSelection& selection, 
 		      const PlotMSAveraging& averaging, 

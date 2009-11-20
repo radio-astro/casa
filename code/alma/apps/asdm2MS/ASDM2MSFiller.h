@@ -410,7 +410,9 @@ int  addUniqueState(Bool sig_,
 		  bool   wind_speed_flag_,
 		  bool   has_dew_point_,
 		  float  dew_point_,
-		  bool   dew_point_flag_);
+		  bool   dew_point_flag_,
+		  int    wx_station_id_,
+		  double* wx_station_position_);
 
   void end(double time_);
 };

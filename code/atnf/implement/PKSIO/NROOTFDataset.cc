@@ -33,6 +33,7 @@
 #include <atnf/PKSIO/NROOTFDataset.h>
 
 #include <iostream>
+#include <cstring>
 
 using namespace std ;
 

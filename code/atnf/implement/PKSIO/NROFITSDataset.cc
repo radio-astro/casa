@@ -35,8 +35,8 @@
 
 #include <iostream>
 #include <fstream>
-#include <math.h>
-#include <iomanip.h>
+#include <casa/math.h>
+#include <casa/iomanip.h>
 
 using namespace std ;
 

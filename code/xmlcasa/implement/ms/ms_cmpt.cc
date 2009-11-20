@@ -1199,100 +1199,61 @@ ms::cvel(const std::string& mode,
     }
 
     // Determine grid
-    Double t_start = -9e99; // default value indicating that the original start of the SPW should be used
+    Double t_cstart = -9e99; // default value indicating that the original start of the SPW should be used
     Double t_bandwidth = -1.; // default value indicating that the original width of the SPW should be used
-    Double t_width = -1.; // default value indicating that the original channel width of the SPW should be used
+    Double t_cwidth = -1.; // default value indicating that the original channel width of the SPW should be used
+    Int t_nchan = 0; 
+    Int t_width = 0;
+    Int t_start = -1;
 
     if(!start.toString().empty()){ // start was set
-      if(t_mode == "channel" || t_mode == "channel_b"){
-	t_start = Double(atoi(start.toString().c_str()));
+      if(t_mode == "channel"){
+	t_start = atoi(start.toString().c_str());
+      }
+      if(t_mode == "channel_b"){
+	t_cstart = Double(atoi(start.toString().c_str()));
       }
       else if(t_mode == "frequency"){
-	t_start = casaQuantity(start).getValue("Hz");
+	t_cstart = casaQuantity(start).getValue("Hz");
       }
       else if(t_mode == "velocity"){
-	t_start = casaQuantity(start).getValue("m/s");
-      }
-      else{
-	*itsLog << LogIO::WARN << "Invalid mode " << t_mode << LogIO::POST;
-	return false;
-      }
-    
-      // determine channel width
-      if(t_mode == "channel" || t_mode == "channel_b"){
-	if(!width.toString().empty()){
-	  t_width = abs(Double(atoi(width.toString().c_str())));
-	}
-	else{
-	  t_width = 1;
-	}
-      }
-      else if(t_mode == "frequency"){
-	if(!width.toString().empty()){
-	  t_width = abs(casaQuantity(width).getValue("Hz"));
-	}
-      }
-      else if(t_mode == "velocity"){
-	if(!width.toString().empty()){
-	  t_width = abs(casaQuantity(width).getValue("m/s"));
-	}   
-      }
-      // determine bandwidth
-      if(nchan > 0){ // we are not using the default, which is all channels
-	if(t_mode == "channel" || t_mode == "channel_b"){
-	  t_bandwidth = Double(nchan*t_width);
-	}
+	t_cstart = casaQuantity(start).getValue("m/s");
       }
     }
-    else { // start was not set
-      if(t_mode == "channel" || t_mode == "channel_b" ){
-	t_start = 0;
-	if(!width.toString().empty()){
-	  t_width = Double(atoi(width.toString().c_str()));
-	}
-	else{
-	  t_width = 1;
-	}
-	if(nchan > 0){
-	  t_bandwidth = Double(nchan*t_width);
-	}
+    if(!width.toString().empty()){ // channel width was set
+      if(t_mode == "channel"){
+	t_width = abs(Double(atoi(width.toString().c_str())));
+      }
+      else if(t_mode == "channel_b"){
+	t_cwidth = abs(Double(atoi(width.toString().c_str())));
       }
       else if(t_mode == "frequency"){
-	if(!width.toString().empty()){
-	  if(nchan<=0){
-	    *itsLog << LogIO::WARN << "In frequency mode, need to set nchan if width is set." << LogIO::POST;
-	    return false;
-	  }
-	  else{
-	    t_width = casaQuantity(width).getValue("Hz");
-	    t_bandwidth = nchan*t_width;
-	  }	
-	}
+	t_cwidth = abs(casaQuantity(width).getValue("Hz"));
       }
       else if(t_mode == "velocity"){
-	if(!width.toString().empty()){
-	  if(nchan<=0){
-	    *itsLog << LogIO::WARN << "In velocity mode, need to set nchan if width is set." << LogIO::POST;
-	    return false;
-	  }
-	  else{
-	    t_width = casaQuantity(width).getValue("m/s");
-	    t_bandwidth = nchan*t_width;
-	  }	
+	t_cwidth = abs(casaQuantity(width).getValue("m/s"));   
+      }
+    }
+    if(nchan > 0){ // number of output channels was set
+      if(t_mode == "channel_b"){
+	if(t_cwidth>0){
+	  t_bandwidth = Double(nchan*t_cwidth);
+	}
+	else{
+	  t_bandwidth = Double(nchan);	  
 	}
       }
       else{
-	*itsLog << LogIO::WARN << "Invalid mode " << t_mode << LogIO::POST;
-	return false;
+	t_nchan = nchan;
       }
-    } // end if start was set
+    }
 
     String t_veltype = toCasaString(veltype); 
     String t_regridQuantity;
     if(t_mode == "channel"){
       t_regridQuantity = "freq";
     }
-    if(t_mode == "channel_b"){
+    else if(t_mode == "channel_b"){
       t_regridQuantity = "chan";
     }
     else if(t_mode == "frequency"){
@@ -1312,6 +1273,10 @@ ms::cvel(const std::string& mode,
 		<< ", setting type to \"radio\"" << LogIO::POST; 
       }
     }   
+    else{
+      *itsLog << LogIO::WARN << "Invalid mode " << t_mode << LogIO::POST;
+      return false;
+    }
     
     String t_outframe=toCasaString(outframe);
     String t_regridInterpMeth=toCasaString(interp);
@@ -1375,43 +1340,10 @@ ms::cvel(const std::string& mode,
       return False;
     }
 
-    *itsLog << LogIO::NORMAL << endl << LogIO::POST; 
+    *itsLog << LogIO::NORMAL << " " << LogIO::POST; 
 
-    // set final parameters for channel, frequency or velocity mode
-    if(t_mode == "channel" || t_mode == "frequency" || t_mode == "velocity"){
-      // get lower edge and width of first selected channel
-      Table spwtable(originalName+"/SPECTRAL_WINDOW");
-      ROArrayColumn<Double> chanwidths(spwtable, "CHAN_WIDTH");
-      ROArrayColumn<Double> chanfreqs(spwtable, "CHAN_FREQ");
-
-      Vector<Double> cw(chanwidths(0));
-      Vector<Double> cf(chanfreqs(0));
-      Int firstChan = (Int)floor(t_start);
-      Double firstChanWidth = cw(firstChan);
-      Double firstChanLoEdge = cf(firstChan)-firstChanWidth/2.;
-
-      if(t_mode == "channel"){
-	if(t_start>0){
-	  t_start = firstChanLoEdge;
-	}
-	if(t_width>0){
-	  t_width = t_width * firstChanWidth;
-	}
-	if(t_bandwidth>0){
-	  t_bandwidth = t_bandwidth * firstChanWidth;
-	}
-      }
-      else{
-	if(nchan > 0){
-	  if(t_width<=0){
-	    t_width = firstChanWidth;
-	  }
-	  t_bandwidth = Double(nchan*t_width);
-	}
-      }
-    } 
-    
-    // cout << "trq " << t_regridQuantity << " ts " << t_start << " tb " << t_bandwidth << " tw " << t_width << endl; 
+    // cout << "trq " << t_regridQuantity << " ts " << t_start << " tcs " << t_cstart << " tb " 
+    //	 << t_bandwidth << " tcw " << t_cwidth << " tw " << t_width << " tn " << t_nchan << endl; 
 
     // Regrid
 
@@ -1425,12 +1357,15 @@ ms::cvel(const std::string& mode,
 			      t_regridQuantity,
 			      t_restfreq,
 			      t_regridInterpMeth,
-			      t_start, 
+			      t_cstart, 
 			      t_bandwidth,
-			      t_width,
+			      t_cwidth,
 			      t_phasec_fieldid, // == -1 if t_phaseCenter is valid
 			      t_phaseCenter,
-			      True // use "center is start" mode
+			      True, // use "center is start" mode
+			      t_nchan,
+			      t_width,
+			      t_start
 			      )
 	)==1){ // successful modification of the MS took place
       *itsLog << LogIO::NORMAL << "Spectral frame transformation/regridding completed." << LogIO::POST;

@@ -97,7 +97,7 @@ class MWCPTRegion : public MWCPolyTool {
   virtual void regionReady() { };
 
   // get the world coords of the current polygon region
-  void getWorldCoords(Vector<Double> &x, Vector<Double> &x);
+  void getWorldCoords(Vector<Double> &x, Vector<Double> &y);
 
   // get the linear coords of the current ploygon region
   void getLinearCoords(Vector<Double> &x, Vector<Double> &y);

@@ -492,22 +492,24 @@ if (testnumber in testlist):
     spw = '0'
     passall = False
     # regrid
-    mode='frequency'
+    mode='channel'
     nchan = 10
-    start = '114.966GHz'
+    start = 2
     outframe = 'lsrd'
     phasecenter = 2
     total += 1
     try:
         print "\n>>>> Test ", testnumber, ", input MS: ", myvis
-        print "Input and output vis set, input vis with one spw, two fields selected, passall = False, regridding 8..."
+        print "Input and output vis set, input vis with one spw, two fields selected, passall = False, regridding 9..."
         rval = cvel()
         if not rval:
             raise Exception
-        print myname, ': *** Expected error did not occur ***'   
-        failures += 1
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 2, 10, 0)
     except:
-        print myname, ': *** Expected error ***'   
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
 
 testnumber = 17
 if (testnumber in testlist):
@@ -925,6 +927,32 @@ if (testnumber in testlist):
         omsname = "test"+str(testnumber)+outputvis
         os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
         verify_ms(omsname, 1, 2425, 0)
+    except:
+        print myname, ': *** Unexpected error ***'   
+        failures += 1
+
+testnumber = 31
+if (testnumber in testlist):
+    myvis = vis_e
+    os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')
+    os.system('cp -R ' + myvis + ' myinput.ms')
+    default('cvel')
+    vis = 'myinput.ms'
+    outputvis = 'cvel-output.ms'
+    # no regrid
+    mode="channel"
+    outframe = "BARY"
+    phasecenter = "J2000 18h25m56.09 -12d04m28.20"
+    total += 1
+    try:
+        print "\n>>>> Test ", testnumber, ", input MS: ", myvis
+        print "SMA input MS, 24 spws to combine, scratch columns, mode channel, frame trafo"
+        rval = cvel()
+        if not rval:
+            raise Exception
+        omsname = "test"+str(testnumber)+outputvis
+        os.system('rm -rf '+omsname+'; mv cvel-output.ms '+omsname)
+        verify_ms(omsname, 2, 2440, 0)
     except:
         print myname, ': *** Unexpected error ***'   
         failures += 1

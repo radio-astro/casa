@@ -1,6 +1,8 @@
-#include <stdio.h>
+#include <casa/stdio.h>
+#include <cstdlib>
 #include "xmlcasa/variant.h"
 #include "xmlcasa/record.h"
+#include <cstring>
 
 namespace casac {
 

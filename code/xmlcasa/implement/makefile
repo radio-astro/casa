@@ -1,10 +1,10 @@
 # $Id$
 
-COMPONENTS := ms msplot
+# Use the generic AIPS++ class implementation makefile.
+#------------------------------------------------------
+include $(word 1, $(CASAPATH))/code/install/makefile.imp
 
-XLIBLIST:= CCMTOOLS PYTHON CFITSIO
-
-# Use the generic AIPS++ application makefile.
-#---------------------------------------------
-include $(word 1, $(CASAPATH))/code/xmlcasa/install/makefile.cimp
-
+# Set up a parallel make if PARALLEL_MAKE is defined in makedefs.
+ifdef PARALLEL_MAKE
+  MAKE := $(PARALLEL_MAKE)
+endif

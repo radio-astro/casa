@@ -140,7 +140,7 @@ namespace casa{
 	    v *= v;
 #ifdef USETABLES	      
 	    area += ExpTable(-(u+v)/(4*sigma));
-#elif
+#else
 	    area += exp(-(u+v)/(4*sigma));
 #endif	      
 	  }

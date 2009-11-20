@@ -915,10 +915,10 @@ if ipython:
 
 # assignment protection
 #
-pathname=os.environ.get('CASAPATH').split()[0]
-uname=os.uname()
-unameminusa=str.lower(uname[0])
-fullpath=pathname+'/'+unameminusa+'/python/2.5/assignmentFilter.py'
+#pathname=os.environ.get('CASAPATH').split()[0]
+#uname=os.uname()
+#unameminusa=str.lower(uname[0])
+fullpath='/CASASUBST/python_library_directory//assignmentFilter.py'
 casalog.origin('casa')
 
 #

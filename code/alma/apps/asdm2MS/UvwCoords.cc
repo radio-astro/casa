@@ -1,4 +1,5 @@
 #include "UvwCoords.h"
+#include "Error.h"
 
 #include <measures/Measures/MFrequency.h>
 
@@ -47,6 +48,10 @@ UvwCoords::UvwCoords( ASDM* const datasetPtr )
     unsigned int numspw = v_configDesc[n]->getDataDescriptionId().size();
     arrayParam.nrepeat = 0;
     vector<SwitchCycleRow*> v_sr= v_configDesc[n]->getSwitchCycles();
+
+    if (v_sr.size() != numspw)
+      Error(FATAL, "It seems that the arrays 'switchCycleId' and 'dataDescriptionId' do not have the same size in one row of the ConfigDescription table !");
+
     for(unsigned int nspw=0; nspw<numspw; nspw++)
       arrayParam.nrepeat += v_sr[nspw]->getNumStep();
     // INFORM: that we assume that when there are 2 APCs the data are in two MS columns i.e. on the same row

@@ -1033,43 +1033,53 @@ Bool Simulator::setvp(const Bool dovp,
 // NEW NOISE WITH ANoise
 
 Bool Simulator::setnoise2(const String& mode, 
-			 const Quantity& simplenoise,
-			 const String& caltable,
-			 const Float antefficiency=0.80,
-			 const Float correfficiency=0.85,
-			 const Float spillefficiency=0.85,
-			 const Float tau=0.0,
-			 const Float trx=150.0, 
-			 const Float tatmos=250.0, 
-			 const Float tground=270.0, 
-			 const Float tcmb=2.7) {
+			  const Quantity& simplenoise,
+			  // if blank, not stored
+			  const String& caltable,
+			  // user-override of tau0
+			  const Float tau=0.0,
+			  // for ATM calculation
+			  const Float antefficiency=0.80,
+			  const Float correfficiency=0.85,
+			  const Float spillefficiency=0.85,
+			  const Float trx=150.0, 
+			  const Float tatmos=250.0, 
+			  const Float tground=270.0, 
+			  const Float tcmb=2.7) {
   
   LogIO os(LogOrigin("Simulator", "setnoise2()", WHERE));
 #ifndef RI_DEBUG
   try {
 #endif
     
-    os << "In Simulator::setnoise2() " << endl;
     noisemode_p = mode;
 
     RecordDesc simparDesc;
     simparDesc.addField ("type", TpString);
     simparDesc.addField ("caltable", TpString);
     simparDesc.addField ("mode", TpString);
+
     simparDesc.addField ("amplitude", TpFloat);  // for constant scale
-    simparDesc.addField ("scale", TpFloat);  // for fractional fluctuations
-      simparDesc.addField ("startTime", TpDouble);
-      simparDesc.addField ("stopTime", TpDouble);
+    // simparDesc.addField ("scale", TpFloat);  // for fractional fluctuations
+    simparDesc.addField ("combine"        ,TpString);
+
+    // have to be defined here or else have to be added later
+    simparDesc.addField ("startTime", TpDouble);
+    simparDesc.addField ("stopTime", TpDouble);
 
     simparDesc.addField ("antefficiency"  ,TpFloat);
     simparDesc.addField ("correfficiency" ,TpFloat);
     simparDesc.addField ("spillefficiency",TpFloat);
-    simparDesc.addField ("tau"		  ,TpFloat);
     simparDesc.addField ("trx"		  ,TpFloat);
     simparDesc.addField ("tatmos"	  ,TpFloat);
     simparDesc.addField ("tground"	  ,TpFloat);
     simparDesc.addField ("tcmb"           ,TpFloat);
-    simparDesc.addField ("combine"        ,TpString);
+
+    // user-override of ATM calculated tau
+    simparDesc.addField ("tau0"		  ,TpFloat);
+
+    // insert check here so that if tau0 is not defined, use freqdep
+    // tsys
 
     String caltbl=caltable;
     caltbl.trim();
@@ -1122,11 +1132,12 @@ Bool Simulator::setnoise2(const String& mode,
       simpar.define ("antefficiency"  ,antefficiency  ); 
       simpar.define ("correfficiency" ,correfficiency );
       simpar.define ("spillefficiency",spillefficiency);
-      simpar.define ("tau"	      ,tau	      );
       simpar.define ("trx"	      ,trx	      );
       simpar.define ("tatmos"	      ,tatmos	      );
       simpar.define ("tground"	      ,tground	      );
       simpar.define ("tcmb"           ,tcmb           );
+      // user can override the ATM calculated optical depth
+      simpar.define ("tau0"	      ,tau	      );
 
       // simpar.define ("amplitude", tsys );
       // RI TODO setnoise2: create an Mf or M depending on user prefs
@@ -1356,7 +1367,6 @@ Bool Simulator::setnoise(const String& mode,
   LogIO os(LogOrigin("Simulator", "setnoise()", WHERE));
   try {
     
-    //os << "In Simulator::setnoise() " << endl;
     noisemode_p = mode;
 
     os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise2" << LogIO::POST;
@@ -1521,6 +1531,8 @@ Bool Simulator::create_corrupt(Record& simpar)
 
 #ifdef RI_DEBUG
     svc->setPrtlev(3);
+#else 
+    svc->setPrtlev(2);
 #endif
 
     Vector<Double> solTimes;

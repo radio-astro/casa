@@ -252,6 +252,13 @@ LAPACKINCD  =
 LAPACKLIBD  = $(LAPACKROOT)/lib
 LAPACKLIB  := -llapack -lblas
 
+#FFTW libraries and include
+FFTWROOT = /usr
+FFTWINCD = $(FFTWROOT)/include
+FFTWLIBD = $(FFTWROOT)/lib
+FFTWLIB :=  -lfftw3f_threads -lfftw3_threads -lfftw3f -lfftw3 -lgomp
+#
+
 # FORTRAN compiler.
 F77ROOT  := $(C++ROOT)
 F77 = $(F77ROOT)/bin/gfortran
@@ -345,7 +352,7 @@ BOOSTROOT  := /usr/local/boost
 BOOSTDEFS  := 
 BOOSTINCD   = $(BOOSTROOT)/include
 BOOSTLIBD   = $(BOOSTROOT)/lib
-BOOSTLIB   := -lboost_regex -lboost_program_options
+BOOSTLIB   := -lboost_regex -lboost_program_options -lboost_filesystem
 
 #Python
 PYTHONROOT := /usr/lib/casapy

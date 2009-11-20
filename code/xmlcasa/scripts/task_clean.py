@@ -91,9 +91,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 else:
                     #tmppath=os.path.dirname(imname)+'/'+tmpdir
                     tmppath.append(os.path.dirname(imname)+'/'+tmpdir)
-                    if os.path.isdir(tmppath[-1]):
-                        os.system('rm -rf '+tmppath[-1])
-                    os.mkdir(tmppath[-1])
+                if os.path.isdir(tmppath[-1]):
+                    os.system('rm -rf '+tmppath[-1])
+                os.mkdir(tmppath[-1])
 
             #internally converted to frequency mode for mode='channel'
             #to ensure correct frequency axis for output image

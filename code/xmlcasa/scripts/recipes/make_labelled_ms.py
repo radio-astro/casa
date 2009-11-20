@@ -1,3 +1,4 @@
+from taskutil import get_global_namespace
 import numpy
 import os
 import shutil
@@ -22,8 +23,10 @@ def make_labelled_ms(srcms, outputms, labelbases, ow=False):
     label, and number is how quickly the label changes with the index.  quant
     should be one of 'SCAN_NUMBER', 'DATA_DESC_ID', 'ANTENNA1', 'ANTENNA2',
     'ARRAY_ID', 'FEED1', 'FEED2', 'FIELD_ID', 'OBSERVATION_ID', 'PROCESSOR_ID',
-    'STATE_ID', 'chan(nel)', or 'pol(whatever)' (case insensitive), but you
-    will be let off with a warning if it isn't.
+    'STATE_ID', 'time', 'time_centroid', 'chan(nel)', or 'pol(whatever)'
+    (case insensitive), but you will be let off with a warning if it isn't.
+    TIME and TIME_CENTROID tend to hover around 4.7e9, so they are offset and scaled
+    by subtracting the first value and dividing by the first integration interval.
     Example labelbases:
 	labelbases = {'channel': 1.0, 'antenna1': complex(0, 1)}
         The data column in the output will be complex(channel index, antenna1).
@@ -38,6 +41,26 @@ def make_labelled_ms(srcms, outputms, labelbases, ow=False):
 
     Returns True or False as a success guess.
     """
+    # Make sure we have tb, casalog, clearcal, and ms.
+    have_tools = False
+    try:
+        # Members that likely they have, but imposters (if any) do not.
+        have_tools = hasattr(tb, 'colnames') and hasattr(ms, 'selectchannel')
+        have_tools &= hasattr(casalog, 'post') and hasattr(clearcal, 'check_params')
+    except NameError:
+        pass  # through to next clause...
+    if not have_tools:
+        try:
+            from taskutil import get_global_namespace
+            my_globals = get_global_namespace()
+            tb = my_globals['tb']
+            ms = my_globals['ms']
+            casalog = my_globals['casalog']
+            clearcal = my_globals['clearcal']
+        except NameError:
+            print "Could not find tb and ms.  my_globals =",
+            print "\n\t".join(my_globals.keys())
+
     casalog.origin("make_labelled_ms")
     try:
         if outputms != srcms:
@@ -55,6 +78,7 @@ def make_labelled_ms(srcms, outputms, labelbases, ow=False):
         return
 
     make_writable_recursively(outputms)
+        
     tb.open(outputms, nomodify=False)
 
     # This shouldn't _really_ be necessary, but currently very strange things
@@ -77,10 +101,13 @@ def make_labelled_ms(srcms, outputms, labelbases, ow=False):
                              'OBSERVATION_ID', 'PROCESSOR_ID',
                              'STATE_ID']:
             rowcols[quant] = tb.getcol(quant.upper())
-
-            # For timish quantities, I suggest you subtract the first value and
-            # divide by the first integration time.
-            
+        elif quant[:4].upper() == 'TIME':
+            rowcols[quant] = tb.getcol(quant.upper())
+            print quant, "is a timelike quantity, so it will be offset and scaled"
+            print "by subtracting the first value and dividing by the first integration"
+            print "interval."
+            rowcols[quant] -= rowcols[quant][0]
+            rowcols[quant] /= tb.getcell('INTERVAL')
         elif quant[:3].upper() == 'POL':
             polbase = labelbases[quant]
         elif quant[:4].upper() == 'CHAN':

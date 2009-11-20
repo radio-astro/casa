@@ -246,7 +246,7 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 			      aimage, aresidual, Vector<String>(0), false);
 	     for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
 	       continter=itsImager->interactivemask(aresidual[nIm], amask[nIm], 
-						    elniter, nloop,thresh);
+						    elniter, nloop,thresh, (aresidual.nelements() >1));
 	       if(continter>=1)
 		 nointerac(nIm)=True;
 	       if(continter==2)
@@ -292,7 +292,7 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 			continter=itsImager->interactivemask(aresidual[nIm], amask[nIm],
 							     
 							     elniter, remainloop, 
-							     thresh);
+							     thresh, (aresidual.nelements() >1));
 			if(continter>=1)
 			  nointerac(nIm)=True;
 			if(continter==2)
@@ -300,7 +300,6 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 		   }
 		 }
 		 k=nloop-remainloop-1;
-
 		 if(allEQ(nointerac,True)){
 		   elniter=niter-(k+1)*npercycle;
 		   //make it do one more loop/clean but with remaining niter 

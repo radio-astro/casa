@@ -1726,7 +1726,7 @@ namespace casa {
 		  // iterate over visbuffers
 		  for( vi.origin(); vi.more() && nactive; vi++,itime++ ) {
 
-		    progmeter.update(itime);
+		    progmeter.update(Double(itime));
 		    chunk.newTime();
 		    Bool anyActive = False;
 		    anyActive=False;
@@ -1826,7 +1826,7 @@ namespace casa {
 		      acc[ival]->startDry();
 		  for( uInt itime=0; itime<chunk.num(TIME) && ndry; itime++ )
 		    {
-		      progmeter.update(itime);
+		      progmeter.update(Double(itime));
 		      // now, call individual VisBuffer iterators
 		      for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
 			if ( iter_mode(ival) == RFA::DRY )
@@ -1864,7 +1864,7 @@ namespace casa {
 		  acc[i]->startFlag();
 	      uInt itime=0;
 	      for( vi.origin(); vi.more(); vi++,itime++ ) {
-		  progmeter.update(itime);
+		  progmeter.update(Double(itime));
 		  
 		  chunk.newTime();
 		  //		  inRowFlags += sum(chunk.nrfIfr());

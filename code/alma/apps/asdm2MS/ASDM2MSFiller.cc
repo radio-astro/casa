@@ -349,10 +349,7 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
 
   //cout << "createMS SetupNewTable\n";
     
-  // Choose the Tile size per column to be ~ 16K
-  // While this size is somewhat arbitrary, it is known
-  // that tile sizes above 128K trigger a performance bottleneck
-  // in later I/O caching.
+  // Choose the Tile size per column to be ~ 4096K
   const Int nTileCorr = 1;
   const Int nTileChan = 1024;
   const Int tileSizeKBytes = 16;
@@ -673,6 +670,13 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
     MSWeather::addColumnToDesc (td, MSWeather::WIND_DIRECTION_FLAG);
     MSWeather::addColumnToDesc (td, MSWeather::WIND_SPEED);
     MSWeather::addColumnToDesc (td, MSWeather::WIND_SPEED_FLAG);
+    td.addColumn(ScalarColumnDesc<int>("NS_WX_STATION_ID",
+				       "An identifier to identify uniquely a weather station"));
+    td.addColumn(ArrayColumnDesc<double>("NS_WX_STATION_POSITION",
+					 "The position of the station",
+					 IPosition(1,3),
+					 ColumnDesc::Direct));
+		 
     SetupNewTable tabSetup(itsMS->weatherTableName(), td, Table::New);
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::WEATHER),
 				      Table(tabSetup));   
@@ -1871,7 +1875,9 @@ void ASDM2MSFiller::addWeather(int    antenna_id_,
 			       bool   wind_speed_flag_,
 			       bool   has_dew_point_,
 			       float  dew_point_,
-			       bool   dew_point_flag_) {
+			       bool   dew_point_flag_,
+			       int    wx_station_id_,
+			       double* wx_station_position_) {
   
   MSWeather msweather = itsMS -> weather();
   MSWeatherColumns msweatherCol(msweather);
@@ -1899,6 +1905,11 @@ void ASDM2MSFiller::addWeather(int    antenna_id_,
     msweatherCol.dewPoint().put(crow, dew_point_);
     msweatherCol.dewPointFlag().put(crow, dew_point_flag_);
   }
+
+  ScalarColumn<int> nsWXStationId(msweather, "NS_WX_STATION_ID");
+  nsWXStationId.put(crow, wx_station_id_);
+  ArrayColumn<double> nsWXStationPosition(msweather, "NS_WX_STATION_POSITION");
+  nsWXStationPosition.put(crow, Vector<double>(IPosition(1, 3), wx_station_position_, SHARE));
 
   msweather.flush();
 }

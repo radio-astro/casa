@@ -49,7 +49,7 @@ class WorldCanvas;
 extern "C" {
 #endif
 
-#if defined(__APPLE__)  && ! defined(__USE_WS_X11__)
+#if defined(__APPLE__)  && ! (defined(__MAC_10_6) || defined(__USE_WS_X11__))
   void wcdriv_(int * opc, float * rbuf, int * nbuf,
 	       char * chr, int * lchr, int len);
 #else

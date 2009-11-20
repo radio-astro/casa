@@ -33,6 +33,7 @@
 #include <graphics/GenericPlotter/Plotter.h>
 
 #include <fstream>
+#include <ctime>
 
 namespace casa {
 

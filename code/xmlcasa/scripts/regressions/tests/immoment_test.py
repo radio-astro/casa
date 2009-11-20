@@ -842,80 +842,34 @@ def moments_test():
     # Calculate the 1st moment and compare with previous results
     # using imval to check a few data points in the image.
     #
-    # Note: that the images we are comparing with come from the
-    #       ngc1333_regression.py so when this changes, these
-    #       test will also need to change.
     _momentTest_debug_msg( 58 )
     err_margin=0.95  # Needs to take into acct. the noise of the image
                      # no bigger then the value of 1 sigma on the source.
-
+    infile = "immoment_image"
+    expected = "first_moment.im"
+    got = "moment_test.mom1"
+    difference = "first_moment_diff"
     try:
-        results=immoments( 'n1333_both.image', moments=[1], axis='spec', chans='2~15', includepix=[0.02,100.0],excludepix=[-1],outfile = 'moment_test.mom1' )
+        results=immoments( infile, moments=[1], axis='spec', chans='2~15', includepix=[0.02,100.0],excludepix=[-1],outfile = got )
     except Exception, e:
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Unable to very moment 1.\n"\
                    + str( e )
     else:
-        if ( not os.path.exists( 'moment_test.mom1' ) or results == None ):
+        if ( not os.path.exists( got ) or results == None ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
-                      +"\nError: Moment file, 'moment_test.mom1', was not created."
-
-    # Output some stats on the moment file created.  Just for
-    # debugging purposes.  This part could be commented out if
-    # its felt to be not needed.
-    _momentTest_debug_msg( 59 )
-    stats = imstat( 'moment_test.mom1' )
-    casalog.post( str(stats), 'NORMAL3' )
-
-    # Check 1% of the data points in the image to see if
-    # they match.
-    err_margin=0.00001
-    for i in range( int( (800+800+1+1)*.01 ) ):
-        x = random.randint( 0, 799 )
-        y = random.randint( 0, 799 )
-        sky=str(x)+','+str(y)
-        stokes = 'I'
-        chan = 0
-        current = imval( 'moment_test.mom1', box=sky, stokes=stokes, chans=str(chan) )
-        #current = imval( '/tmp/casa_regression_work/moment_test.mom1', box=sky, stokes=stokes, chans=str(chan) )
-        orig    = imval( 'n1333_both.src.tmom1.all', box=sky, stokes=stokes, chans=str(chan) )
-        if (
-            abs(current['data'][0]-orig['data'][0]) > err_margin ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                      +"\nError: Moment test 1 values differ at "+str(x)\
-                      +','+str(y)+',I,0.\nThe values are '+str(current)\
-                      +" and "+str(orig)
-
-    # Find the residual of the original 1st moment and the one
-    # we just calculated.  Checking the min/max values to see
-    # if they are within our error margin.
-    immath( outfile='moment_test.resid1', expr='"moment_test.mom1"-"n1333_both.src.tmom1.all"' )
-    resid1_stats = imstat( 'moment_test.resid1' )
-    resid1_max   = float(resid1_stats['max'][0])
-    resid1_min   = float(resid1_stats['min'][0])
-    #
-    # err_margin set to be a larger value.  The residual for the
-    # 1st moment varies be 3.2 km/s for some reason.  This is a
-    # rather large difference and likely the 1st moment needs to
-    # be recalculated.  However, for the time being in the interest
-    # of having a passing test we alter the err_margin.  Note that
-    # the errors shouldn't be more then about 1.2
-    err_margin=3.4
-    if ( (resid1_max > 0 and resid1_max > err_margin ) or \
-         (resid1_min < 0 and resid1_min < (-1*err_margin) ) ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                      +"\nError: Moment test 1 residual file varies too"\
-                      +" much. Values range from "\
-                      +str(float(resid1_stats['min'][0]))+" to "\
-                      +str(float(resid1_stats['max'][0]))
-
-    casalog.post( "Done MOMENT CALCULATION tests", 'NORMAL2' )
+                      +"\nError: Moment file, " + got + ", was not created."
+    
+    immath( outfile=difference, expr='"' + got + '"-"' + expected + '"' )
+    ia.open(difference)
+    stats = ia.statistics()
+    casalog.post("moment 1 difference image stats " + str(stats))
+    if (stats['sumsq'][0] != 0):
+        retValue['error_msgs'] += "\nError: first moment test did not produce expected image"
+        retValue['success']=False
     return retValue
-
 
 ####################################################################
 # Testing the correctness of the include/exclude pix parameters
@@ -1145,13 +1099,13 @@ def description():
 
 def data():
     _momentTest_debug_msg( 1 ) 
-    return ['n1333_both.image', 'n1333_both.src.tmom0.blu', 'n1333_both.src.tmom0.red', 'n1333_both.src.tmom0.all', 'n1333_both.src.tmom1.all', 'n1333_both.image.rgn'] 
+    return ['n1333_both.image', 'n1333_both.src.tmom0.blu', 'n1333_both.src.tmom0.red', 'n1333_both.src.tmom0.all', 'n1333_both.src.tmom1.all', 'n1333_both.image.rgn', 'immoment_image', 'first_moment.im'] 
 
 
 def doCopy():
     _momentTest_debug_msg( 2 ) 
     print "\n\nIN IMMOMENTS DATA ROUTINE\n\n"
-    return [1, 1, 1, 1, 1, 1]
+    return [1, 1, 1, 1, 1, 1, 0, 0]
 
 def run():
     _momentTest_debug_msg( 3 ) 

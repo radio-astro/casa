@@ -1,9 +1,9 @@
+#include <casaqt/QtBrowser/TBMain.qo.h>
 
 #include <xercesc/util/PlatformUtils.hpp>
 
 #include <QApplication>
-#include <casaqt/QtBrowser/TBMain.qo.h>
-//#include <QtGui>
+#include <QtGui>
 
 #include <casa/namespace.h>
 

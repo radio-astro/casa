@@ -5,24 +5,26 @@ def startup():
       print """___________________________________________________________
 Available tasks:
 
-   accum         fixvis         listcal      sdlist       vishead
-   applycal      flagdata       listhistory  sdmath       visstat 
-   bandpass      flagmanager    listobs      sdplot       widefield 
-   blcal         fluxscale      listvis      sdsave 
-   browsetable   ft             makemask     sdscale 
-   calstat       gaincal        mosaic       sdsmooth 
-   clean         hanningsmooth  plotants     sdstat
-   clearcal      imcontsub      plotcal      sdtpimaging  
-   clearplot     imhead         plotms       setjy
-   clearstat     immoments      plotxy       smoothcal
-   concat        importfits     sdaverage    specfit
-   deconvolve    importuvfits   sdbaseline   split
-   exportfits    importvla      sdcal        tget 
-   exportuvfits  imregrid       sdcoadd      uvcontsub
-   feather       imsmooth       sdfit        uvcontsub2
-   filecatalog   imstat         sdflag       uvmodelfit
-   find          imval          sdimaging    viewer 
+   accum         fixvis         listcal      sdimprocess  uvmodelfit
+   applycal      flagdata       listhistory  sdlist       viewer
+   bandpass      flagmanager    listobs      sdmath       vishead 
+   blcal         fluxscale      listvis      sdplot       visstat  
+   browsetable   ft             makemask     sdsave       widefield 
+   calstat       gaincal        mosaic       sdscale 
+   clean         hanningsmooth  plotants     sdsim
+   clearcal      imcontsub      plotcal      sdsmooth  
+   clearplot     imhead         plotms       sdstat
+   clearstat     immoments      plotxy       sdtpimaging
+   concat        importfits     sdaverage    setjy
+   deconvolve    importuvfits   sdbaseline   smoothcal
+   exportfits    importvla      sdcal        specfit 
+   exportuvfits  imregrid       sdcoadd      split
+   feather       imsmooth       sdfit        tget
+   filecatalog   imstat         sdflag       uvcontsub
+   find          imval          sdimaging    uvcontsub2 
                 
+sd* tasks are available after asap_init() is run
+
 Additional tasks available for ALMA commissioning use
          (still alpha code as of Beta release):
 
@@ -91,6 +93,7 @@ def toolhelp():
       print ' vp : Voltage pattern/primary beam utilties'
       print ' ---'
       print ' pl : pylab functions (e.g., pl.title, etc)'
+      print ' sd : (after running asap_init()) Single dish utilities'
       print ' ---'
 
 
@@ -125,7 +128,7 @@ def tasklist():
       print 'hanningsmooth'
       print '                                                 '
       print ''
-      print 'Image Analysis   Simulation   Single Dish'
+      print 'Image Analysis   Simulation   Single Dish (after running asap_init())'
       print '--------------   ----------   -----------'
       print 'imcontsub        simdata      sdaverage'
       print 'imhead                        sdbaseline'
@@ -134,11 +137,13 @@ def tasklist():
       print 'imregrid                      sdfit'
       print 'imsmooth                      sdflag'
       print 'imstat                        sdimaging'
-      print 'imval                         sdlist'
-      print '(specfit)                     sdmath'
+      print 'imval                         sdimprocess'
+      print '(specfit)                     sdlist'
+      print '                              sdmath'
       print '                              sdplot'
       print '                              sdsave'
       print '                              sdscale'
+      print '                              (sdsim)'
       print '                              sdsmooth'
       print '                              sdstat'
       print '                              sdtpimaging'

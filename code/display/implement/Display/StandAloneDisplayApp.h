@@ -58,7 +58,7 @@ extern "C" {
 			                      int *, int);
   extern void (*late_binding_pgplot_driver_3)(int *, float *, int *, char *,
 			                      int *, int);
-#if defined(__USE_WS_X11__)
+#if defined(__USE_WS_X11__) || defined(__MAC_10_6)
   extern void add_late_binding_pgdriver(void (*driver)(int *, float *, int *, char *, int *, int *, int));
   extern void wcdriv_(int *, float *, int *, char *, int *, int *, int);
 #define INITIALIZE_PGPLOT add_late_binding_pgdriver(wcdriv_);

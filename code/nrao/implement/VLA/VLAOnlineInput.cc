@@ -31,6 +31,7 @@
 #include <casa/IO/MemoryIO.h>
 #include <casa/IO/ByteIO.h>
 #include <nrao/VLA/nreal.h>
+#include <casa/stdlib.h>
 
 
 // this is an expediant, we should get it from the IERS table

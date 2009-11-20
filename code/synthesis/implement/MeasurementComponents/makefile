@@ -1,5 +1,5 @@
 # $Id$
-XLIBLIST := WCSLIB ATM
+XLIBLIST := WCSLIB ATM FFTW
 # Use the generic AIPS++ class implementation makefile.
 #------------------------------------------------------
 include $(word 1, $(CASAPATH))/code/install/makefile.imp

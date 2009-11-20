@@ -22,6 +22,8 @@
 using namespace casa;
 
 #include "ASDM.h"
+#include "ArrayTime.h"
+#include "ArrayTimeInterval.h"
 using namespace asdm;
 
 template<typename T>
@@ -172,41 +174,6 @@ class ASDM_TABLE_BASE {
     return result;
   }
 
-  template<typename T, typename U> 
-   Vector<U> interval2CASA1D(const vector<T>& v) {
-    Vector<U> result;
-    if (v.size()==0) return result;
-
-    result.resize(v.size());
-    for (unsigned int i = 0; i < v.size(); i++)
-      result(i) = v.at(i).get()/1e09;
-    return result;
-  }
-
-  template<typename T, typename U> 
-   Matrix<U> interval2CASA2D(const vector<vector<T> >& v) {
-    Matrix<U> result;
-    if (v.size()==0 || v.at(0).size()) return result;
-
-    result.resize(v.size(), v.at(0).size());
-    for (unsigned int i = 0; i < v.size(); i++)
-      for (unsigned int j = 0; j < v.at(0).size(); j++)
-	result(i,j) = v.at(i).at(j).get()/1.e09;
-    return result;
-  }
-
-  template<typename T, typename U>
-   Cube<U> interval2CASA3D(const vector<vector< vector<T> > >& v) {
-    Cube<U> result;
-    if (v.size()==0 || v.at(0).size() || v.at(0).at(0).size()) return result;
-
-    result.resize(v.size(), v.at(0).size(), v.at(0).at(0).size());
-    for (unsigned int i = 0; i < v.size(); i++)
-      for (unsigned int j = 0; j < v.at(0).size(); j++)
-	for (unsigned int k = 0; k < v.at(0).at(0).size(); k++)
-	  result(i,j,k) = v.at(i).at(j).at(k).get()/1.e09;
-    return result;
-  }
 
   template<typename enumT, typename CenumT>  Vector<String> enum2CASA1D (const vector<enumT>& v) {
     Vector<String> result;
@@ -231,7 +198,7 @@ class ASDM_TABLE_BASE {
 
   template<typename enumT, typename CenumT>  Cube<String> enum2CASA3D (const vector<vector<vector<enumT> > >& v) {
     Cube<String> result;
-    if (v.size() == 0 || v.at(0).size() == 0 || v.at(0).at(0)) return result;
+    if (v.size() == 0 || v.at(0).size() == 0 || v.at(0).at(0) == 0) return result;
 
     result.resize(v.size(), v.at(0).size(), v.at(0).at(0).size());
     for (unsigned int i = 0; i < v.size(); i++)
@@ -240,5 +207,105 @@ class ASDM_TABLE_BASE {
 	  result(i,j,k) = CenumT::name(v.at(i).at(j).at(k));
     return result;
   }
+
+  template<typename T, typename U> Vector<U> interval2CASA1D(const vector<T>& v) {
+    Vector<U> result;
+    if (v.size()==0) return result;
+
+    result.resize(v.size());
+    for (unsigned int i = 0; i < v.size(); i++)
+      result(i) = v.at(i).get()/1e09;
+    return result;
+  }
+
+  template<typename T, typename U> Matrix<U> interval2CASA2D(const vector<vector<T> >& v) {
+    Matrix<U> result;
+    if (v.size()==0 || v.at(0).size()) return result;
+
+    result.resize(v.size(), v.at(0).size());
+    for (unsigned int i = 0; i < v.size(); i++)
+      for (unsigned int j = 0; j < v.at(0).size(); j++)
+	result(i,j) = v.at(i).at(j).get()/1.e09;
+    return result;
+  }
+
+  template<typename T, typename U> Cube<U> interval2CASA3D(const vector<vector< vector<T> > >& v) {
+    Cube<U> result;
+    if (v.size() == 0 || v.at(0).size() == 0 || v.at(0).at(0).size() == 0) return result;
+
+    result.resize(v.size(), v.at(0).size(), v.at(0).at(0).size());
+    for (unsigned int i = 0; i < v.size(); i++)
+      for (unsigned int j = 0; j < v.at(0).size(); j++)
+	for (unsigned int k = 0; k < v.at(0).at(0).size(); k++)
+	  result(i,j,k) = v.at(i).at(j).at(k).get()/1.e09;
+    return result;
+  }
+
+  template<typename U>  Vector<U> at2CASA1D(const vector<ArrayTime>& v) {
+    Vector<U> result;
+    if (v.size()==0) return result;
+
+    result.resize(v.size());
+    for (unsigned int i = 0; i < v.size(); i++)
+      result(i) = v.at(i).get()/1e09;
+    return result;
+  }
+
+  template<typename U> Matrix<U> at2CASA2D(const vector<vector<ArrayTime> >& v) {
+    Matrix<U> result;
+    if (v.size()==0 || v.at(0).size()) return result;
+
+    result.resize(v.size(), v.at(0).size());
+    for (unsigned int i = 0; i < v.size(); i++)
+      for (unsigned int j = 0; j < v.at(0).size(); j++)
+	result(i,j) = v.at(i).at(j).get()/1.e09;
+    return result;
+  }
+
+  template<typename U>  Cube<U> at2CASA3D(const vector<vector< vector<ArrayTime> > >& v) {
+    Cube<U> result;
+    if (v.size() == 0 || v.at(0).size() == 0 || v.at(0).at(0).size() == 0) return result;
+
+    result.resize(v.size(), v.at(0).size(), v.at(0).at(0).size());
+    for (unsigned int i = 0; i < v.size(); i++)
+      for (unsigned int j = 0; j < v.at(0).size(); j++)
+	for (unsigned int k = 0; k < v.at(0).at(0).size(); k++)
+	  result(i,j,k) = v.at(i).at(j).at(k).get()/1.e09;
+    return result;
+  }
+
+  template<typename U> Vector<U> ati2CASA1D(const ArrayTimeInterval& ati) {
+    Vector<U> result(2);
+    result(0) = ((double) ati.getStart().get()) / ArrayTime::unitsInASecond;
+    result(1) = ((double) ati.getDuration().get()) / ArrayTime::unitsInASecond;
+    return result;
+  }
+
+  template<typename U> Matrix<U> ati2CASA2D(const vector<ArrayTimeInterval>& v) {
+    Matrix<U> result;
+    if (v.size() == 0) return result;
+
+    result.resize(v.size(), 2);
+    for (vector<ArrayTimeInterval>::size_type i = 0; i < v.size(); i++) {
+      result(i, 0) = ((double) v[i].getStart().get()) / ArrayTime::unitsInASecond;
+      result(i, 1) = ((double) v[i].getDuration().get()) / ArrayTime::unitsInASecond;
+    }
+    return result;
+  }
+
+  template<typename U> Cube<U> ati2CASA3D(const vector<vector<ArrayTimeInterval> >& v) {
+    Cube<U> result;
+    if (v.size() == 0 || v.at(0).size() == 0) return result;
+
+    result.resize(v.size(), v.at(0).size(), 2);
+    for (vector<vector<ArrayTimeInterval> >::size_type i = 0; i < v.size(); i++) {
+      for (vector<ArrayTimeInterval>::size_type j = 0; j < v.at(0).size(); j++) {
+	result(i, j, 0) = ((double) v[i][j].getStart().get()) / ArrayTime::unitsInASecond;
+	result(i, j, 1) = ((double) v[i][j].getDuration().get()) / ArrayTime::unitsInASecond;
+      }
+    }
+    return result;
+  }
+
 };
 #endif // _ASDMTABLEBASE_H_

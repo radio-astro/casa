@@ -25,8 +25,8 @@
 //# $Id: $
 
 
-#include <iostream.h>
-#include <fstream.h>
+#include <casa/iostream.h>
+#include <casa/fstream.h>
 #include <casa/System/ProgressMeter.h>
 #include <casaqt/QtProgressMeter/progress.qo.h>
 

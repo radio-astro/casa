@@ -89,7 +89,7 @@ using namespace std;
 #include <boost/regex.hpp> 
 using namespace boost;
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
 #include <machine/endian.h>
 #else 
 #include <endian.h>

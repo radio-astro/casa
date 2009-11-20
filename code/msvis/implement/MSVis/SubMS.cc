@@ -29,7 +29,6 @@
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/RefRows.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -392,7 +391,7 @@ namespace casa {
     }
     else{
       Matrix<Int> chansel=selrec.asArrayInt("channel");
-      if(chansel.nelements() !=0){
+      if(chansel.nelements() != 0){
 	inchan.resize(chansel.nrow());
 	istep.resize(chansel.nrow());
 	istart.resize(chansel.nrow());
@@ -1416,7 +1415,10 @@ namespace casa {
 		       const Double regridChanWidth,
 		       const Int phaseCenterFieldId,
 		       MDirection phaseCenter,
-		       const Bool centerIsStart
+		       const Bool centerIsStart,
+		       const Int nchan,
+		       const Int width,
+		       const Int start
 		  ){
     
     LogIO os(LogOrigin("SubMS", "regridSpw()"));
@@ -1480,7 +1482,10 @@ namespace casa {
 			    False, // <-----
 			    os,
 			    regridMessage,
-			    centerIsStart
+			    centerIsStart,
+			    nchan,
+			    width,
+			    start
 			    )){ // an error occured
       return -1;
     }
@@ -1513,7 +1518,10 @@ namespace casa {
 			    True, // <-----
 			    os,
 			    regridMessage,
-			    centerIsStart
+			    centerIsStart,
+			    nchan,
+			    width,
+			    start
 			    )){ // an error occured
       if(msModified){
 	return 0;
@@ -1939,15 +1947,18 @@ namespace casa {
 
   Bool SubMS::regridChanBounds(Vector<Double>& newChanLoBound, 
 			       Vector<Double>& newChanHiBound,
-			       const Double regridCenter,
+			       const Double regridCenterC,
 			       const Double regridBandwidth, 
-			       const Double regridChanWidth, 
+			       const Double regridChanWidthC, 
 			       const Double regridVeloRestfrq, 
 			       const String regridQuant,
 			       const Vector<Double>& transNewXin, 
 			       const Vector<Double>& transCHAN_WIDTH,
 			       String& message,
-			       const Bool centerIsStartC
+			       const Bool centerIsStartC,
+			       const Int nchan,
+			       const Int width,
+			       const Int start
 			       ){
     ostringstream oss;
 
@@ -1957,7 +1968,9 @@ namespace casa {
     Int oldNUM_CHAN = transNewXin.size();
 
     Bool centerIsStart = centerIsStartC;
-
+    Double regridChanWidth = regridChanWidthC;
+    Double regridCenter = regridCenterC;
+    
     if(regridQuant=="chan"){ ////////////////////////
       // channel numbers ...
       Int regridCenterChan = -1;
@@ -1991,8 +2004,13 @@ namespace casa {
 	return False;  
       }  
       
-      if(regridBandwidth<=0.){ // not set
-	regridBandwidthChan = oldNUM_CHAN;
+      if(regridBandwidth<=0.|| nchan>0){ // not set or nchan set
+	if(nchan>0){
+	  regridBandwidthChan = nchan;
+	}
+	else{
+	  regridBandwidthChan = oldNUM_CHAN;
+	}
       }
       else{
 	regridBandwidthChan = (Int) floor(regridBandwidth);
@@ -2021,6 +2039,9 @@ namespace casa {
       }
       else { // valid input
 	regridChanWidthChan = (Int) floor(regridChanWidth);
+	if(nchan>0){
+	  regridBandwidthChan = nchan * regridChanWidthChan;
+	}
       }
       
       if(regridBandwidthChan != floor(regridBandwidth)){
@@ -2231,8 +2252,21 @@ namespace casa {
 	}
       } 
       else if(regridQuant=="freq"){ ////////////////////////
+	if(start>=0){
+	  Int firstChan = start;
+	  if(start >= (Int)transNewXin.size()){
+	    oss << " *** Parameter start exceeds total number of channels which is "
+		<< transNewXin.size() << ". Set to 0." << endl;
+	    firstChan = 0;
+	  }	    
+	  regridCenter = transNewXin[firstChan]-transCHAN_WIDTH[firstChan]/2.;
+	  centerIsStart = True;
+	}
 	regridCenterF = regridCenter;
 	regridBandwidthF = regridBandwidth;
+	if(width>0){ // width parameter overrides regridChanWidth
+	  regridChanWidth = width*transCHAN_WIDTH[0];
+	}
 	regridChanWidthF = regridChanWidth;
       }
       else if(regridQuant=="wave"){ ///////////////////////
@@ -2292,10 +2326,20 @@ namespace casa {
 	  theRegridCenterF = transNewXin[0]-transCHAN_WIDTH[0]/2.;
 	}
       }
-      if(regridBandwidthF<=0.){ // "not set"
-	// keep bandwidth as is
-	theRegridBWF = transNewXin[oldNUM_CHAN-1] - transNewXin[0] 
-	  + transCHAN_WIDTH[0]/2. + transCHAN_WIDTH[oldNUM_CHAN-1]/2.;
+      if(regridBandwidthF<=0.|| nchan>0){ // "not set" or use nchan instead
+	if(nchan>0){ // use nchan parameter if available
+	  if(regridChanWidthF <= 0.){ // channel width not set
+	    theRegridBWF = transCHAN_WIDTH[0]*nchan;
+	  }
+	  else{
+	    theRegridBWF = regridChanWidthF*nchan;
+	  }	    
+	}
+	else{
+	  // keep bandwidth as is
+	  theRegridBWF = transNewXin[oldNUM_CHAN-1] - transNewXin[0] 
+	    + transCHAN_WIDTH[0]/2. + transCHAN_WIDTH[oldNUM_CHAN-1]/2.;
+	}
 	// now can convert start to center
 	if(centerIsStart){
 	  theRegridCenterF = theRegridCenterF + theRegridBWF/2.;
@@ -2326,11 +2370,14 @@ namespace casa {
 	}
       }
       if(regridChanWidthF <= 0.){ // "not set"
-	// keep channel width similar to the old one 
-	theCentralChanWidthF = transCHAN_WIDTH[oldNUM_CHAN/2]; // use channel
-                                                               // width from
-                                                               // near central
-                                                               // channel
+	if(nchan>0){ // use first channel
+	  theCentralChanWidthF = transCHAN_WIDTH[0];
+	}
+	else{
+	  // keep channel width similar to the old one 
+	  theCentralChanWidthF = transCHAN_WIDTH[oldNUM_CHAN/2]; // use channel width from
+	                                                         // near central channel
+	}
       }
       else { // regridChanWidthF was set
 	// keep in limits
@@ -2353,7 +2400,7 @@ namespace casa {
 	    oss << " *** Requested new channel width is smaller than smallest original channel width." << endl
 		<< " Increasing channel width to minimum possible size." << endl;
 	  }
-	  else { // input channel width was OK, memorize 
+	  else { // input channel width was OK, memorize
 	    theChanWidthX = regridChanWidth;
 	  }
 	}   	    
@@ -2759,7 +2806,10 @@ namespace casa {
 				  const Bool writeTables,
 				  LogIO& os,
 				  String& regridMessage,
-				  const Bool centerIsStart
+				  const Bool centerIsStart,
+				  const Int nchan,
+				  const Int width,
+				  const Int start
 				  )
   {
     Bool rval = True;
@@ -2994,17 +3044,10 @@ namespace casa {
 	  transNewXin.resize(oldNUM_CHAN);
 	  // set up conversion
 	  Unit unit(String("Hz"));
-	  MFrequency::Convert freqTrans;
-
-	  if(!CoordinateUtil::makeFrequencyMachine(os, freqTrans,
-						   theFrame, theOldRefFrame,  
-						   theFieldDir, theFieldDir,
-						   theObsTime, theObsTime,
-						   mObsPos, mObsPos,
-						   unit)
-	     ){
-	    return False;
-	  }
+	  MFrequency::Ref fromFrame = MFrequency::Ref(theOldRefFrame, MeasFrame(theFieldDir, mObsPos, theObsTime));
+	  MFrequency::Ref toFrame = MFrequency::Ref(theFrame, MeasFrame(theFieldDir, mObsPos, theObsTime));
+	  MFrequency::Convert freqTrans(unit, fromFrame, toFrame);
+	  
 	  // also create the reference for storage in the "Done" table
 	  fromFrame = MFrequency::Ref(theOldRefFrame, MeasFrame(theFieldDir, mObsPos, theObsTime));
 
@@ -3089,7 +3132,7 @@ namespace casa {
 	  
 	  if(regridQuant=="" ||
 	     (regridCenter<-1E30 &&  regridBandwidth <= 0. && regridChanWidth <= 1. 
-	      && (regridQuant=="chan" || regridQuant=="freq"))
+	      && regridQuant=="chan")
 	     ){
 	    // No regridding will take place.
 	    // Set the interpol methods to some dummy value
@@ -3152,7 +3195,10 @@ namespace casa {
 				 transNewXin, 
 				 transCHAN_WIDTH,
 				 message,
-				 centerIsStart
+				 centerIsStart,
+				 nchan,
+				 width,
+				 start
 				 )
 	       ){ // there was an error
 	      os << LogIO::SEVERE << message << LogIO::POST;
@@ -3803,7 +3849,8 @@ namespace casa {
       }	
       for(Int i=0; i<newNUM_CHAN; i++){
 	for(Int j=0; j<averageN[i]; j++){
-	  averageChanFrac[i][j] /= newNorm(i);
+          if(newNorm[i] != 0.0)
+            averageChanFrac[i][j] /= newNorm[i];
 	}
       }	
 
@@ -4391,7 +4438,8 @@ namespace casa {
 		  for(uInt k=0; k<nCorrelators; k++){
 		    if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){ // this channel is not flagged for the given SPW and correlator
 
-		      weight = averageChanFrac[i][j]/modNorm(k); // renormalize for the case of missing SPW coverage
+                      // renormalize for the case of missing SPW coverage
+		      weight = averageChanFrac[i][j] / modNorm(k);
 
 		      if(CORRECTED_DATAColIsOK){
 			newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
@@ -5024,7 +5072,8 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
 	Int inSidVal = inSId(inrn);
 	Int inSPWVal = inSPW(inrn);  // -1 means the source is valid for any SPW.
 	
-	if(inSidVal > -1 && sourceRelabel_p[inSidVal] > -1){
+	if(inSidVal > -1 && sourceRelabel_p[inSidVal] > -1
+           && (inSPWVal == -1 || spwRelabel_p[inSPWVal] > -1)){
 	  // Copy inrn to outrn.
 	  TableCopy::copyRows(newSource, oldSource, outrn, inrn, 1);
 	  outSId.put(outrn, sourceRelabel_p[inSidVal]);
@@ -5333,8 +5382,8 @@ Bool SubMS::writeSimilarSpwShape(const Vector<String>& columnNames){
   ROArrayColumn<Float> wgtSpec;
 
   ROArrayColumn<Bool> flag(mscIn_p->flag());
-  for(uInt ni = 0; ni < ntok; ni++){
-    data.reference(right_column(mscIn_p, columnNames[ni]));
+  for(uInt colind = 0; colind < ntok; colind++){
+    data.reference(right_column(mscIn_p, columnNames[colind]));
     if(doSpWeight){ 
       outspweight.resize(npol_p[0], nchan_p[0], nrow);
       wgtSpec.reference(mscIn_p->weightSpectrum());
@@ -5345,7 +5394,7 @@ Bool SubMS::writeSimilarSpwShape(const Vector<String>& columnNames){
       flag.get(row, inflagtmp);
 
       if(doSpWeight)
-	wgtSpec.get(row, inwgtspectmp);
+        wgtSpec.get(row, inwgtspectmp);
 
       Int ck = 0;
       Int chancounter = 0;
@@ -5355,50 +5404,55 @@ Bool SubMS::writeSimilarSpwShape(const Vector<String>& columnNames){
       
       for(Int k = chanStart_p[0]; k < (nchan_p[0] * chanStep_p[0] +
                                        chanStart_p[0]); ++k){
-	if(chancounter == chanStep_p[0]){
-	  outdatatmp.set(0); outwgtspectmp.set(0);
-	  chancounter = 0;
-	  avcounter.set(0);
-	}
-	++chancounter;
-	for(Int j = 0; j < npol_p[0]; ++j){
-	  Int offset = j + k * npol_p[0];
-	  if(!iflg[offset]){
-	    if(doSpWeight){
-	      outdatatmp[j] += iptr[offset] * inwptr[offset];
-	      outwgtspectmp[j] += inwptr[offset];
-	    }
-	    else
-	      outdatatmp[j] += iptr[offset];	   
-	    ++avcounter[j];
-	  }
+        if(chancounter == chanStep_p[0]){
+          outdatatmp.set(0); outwgtspectmp.set(0);
+          chancounter = 0;
+          avcounter.set(0);
+        }
+        ++chancounter;
+        for(Int j = 0; j < npol_p[0]; ++j){
+          Int offset = j + k * npol_p[0];
+          if(!iflg[offset]){
+            if(doSpWeight){
+              outdatatmp[j] += iptr[offset] * inwptr[offset];
+              outwgtspectmp[j] += inwptr[offset];
+            }
+            else
+              outdatatmp[j] += iptr[offset];	   
+            ++avcounter[j];
+          }
 
-	  if(chancounter == chanStep_p[0]){
-	    if(avcounter[j] != 0){
-	      if(doSpWeight){
-		outdata(j, ck, row) = outdatatmp[j] / outwgtspectmp[j];	 
-		outspweight(j, ck, row) = outwgtspectmp[j];
-	      }
-	      else{
-		outdata(j, ck, row) = outdatatmp[j] / avcounter[j];	    
-	      }
-              if(ni == 0)                       // Only initialize it
+          if(chancounter == chanStep_p[0]){
+            if(avcounter[j] != 0){
+              if(doSpWeight){
+                if(outwgtspectmp[j] != 0.0)
+                  outdata(j, ck, row) = outdatatmp[j] / outwgtspectmp[j];
+                else{
+                  outdata(j, ck, row) = 0.0;
+                  outflag(j, ck, row) = True;
+                }
+                outspweight(j, ck, row) = outwgtspectmp[j];
+              }
+              else{
+                outdata(j, ck, row) = outdatatmp[j] / avcounter[j];	    
+              }
+              if(colind == 0)                   // Only initialize it
                 outflag(j, ck, row) = False;    // on the 1st pass, to
-	    }                                   // avoid overwriting a true
-	    else{	                        // from another column.
-	      outdata(j, ck, row) = 0;          // Should there be a warning if
-	      outflag(j, ck, row) = True;       // one data column wants flagging
-	      if(doSpWeight)                    // and another does not?
-		outspweight(j, ck, row) = 0;
-	    }	
-	  }
-	}
-	if(chancounter == chanStep_p[0])
-	  ++ck;
+            }                                   // avoid overwriting a true
+            else{	                        // from another column.
+              outdata(j, ck, row) = 0;          // Should there be a warning if
+              outflag(j, ck, row) = True;       // one data column wants flagging
+              if(doSpWeight)                    // and another does not?
+                outspweight(j, ck, row) = 0;
+            }	
+          }
+        }
+        if(chancounter == chanStep_p[0])
+          ++ck;
       }
     }
     
-    putDataColumn(*msc_p, outdata, columnNames[ni], (ntok == 1));
+    putDataColumn(*msc_p, outdata, columnNames[colind], (ntok == 1));
   }
   
   msc_p->flag().putColumn(outflag);
@@ -6057,14 +6111,22 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
       if(product(outRowWeight.column(orn)) > 0.0){ // Can product be profitably
                                                    // replaced with some sort
                                                    // of all()?
-        Array<Complex> grumble;   			// Referenceable copy
-
         if(doSpWeight){
-          for(uInt datacol = 0; datacol < ntok; ++datacol)
-            outData[datacol].xyPlane(orn) = outData[datacol].xyPlane(orn)
-              / outSpWeight.xyPlane(orn);
+          Matrix<Float>::const_iterator oSpWtIter;
+          const Matrix<Float>::const_iterator oSpWtEnd(outSpWeight.xyPlane(orn).end());
+          
+          for(uInt datacol = 0; datacol < ntok; ++datacol){
+            oSpWtIter = outSpWeight.xyPlane(orn).begin();            
+            for(Matrix<Complex>::iterator oDIter = outData[datacol].xyPlane(orn).begin();
+                oSpWtIter != oSpWtEnd; ++oSpWtIter){
+              if(*oSpWtIter != 0.0)
+                *oDIter /= *oSpWtIter;
+              ++oDIter;
+            }
+          }
         }
         else{
+          Array<Complex> grumble;   			 // Referenceable copy
           Vector<Float> groan(outRowWeight.column(orn)); // Referenceable copy
 
           for(uInt datacol = 0; datacol < ntok; ++datacol){

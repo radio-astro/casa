@@ -323,10 +323,12 @@ int main( int argc, char **argv ) {
     //
     */
 
+    /*
     std::cout << "CASA Version ";
     casa::VersionInfo::report(std::cout);
     std::cout << std::endl << "  Built on: "<< casa::VersionInfo::date() << std::endl;
     std::cout << std::endl;
+    */
     CCM_Python::Py::init( argc, argv_mod, path );
     CCM_Python::Py py;
 

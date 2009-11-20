@@ -1,4 +1,5 @@
 # $Id$
+XLIBLIST := FFTW
 
 # Use the generic AIPS++ class implementation makefile
 #-----------------------------------------------------

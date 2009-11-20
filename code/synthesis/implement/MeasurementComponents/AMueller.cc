@@ -78,7 +78,7 @@ void AMueller::corrupt(VisBuffer& vb) {
 
 void ANoise::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim)
 {
-  if (prtlev()>2) cout << "   AN::setupSim()" << endl;
+  if (prtlev()>2) cout << "   AN::createCorruptor()" << endl;
   AlwaysAssert((isSimulated()),AipsError);
 
   acorruptor_p = new ANoiseCorruptor();

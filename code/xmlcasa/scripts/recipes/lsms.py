@@ -32,6 +32,8 @@ def lsms(musthave=[], mspat="*[-_.][Mm][Ss]", combine='or', remind=True):
       mspat='*_MS' and musthave=['SOURCE', 'POLARIZATION'].
     (remember to quote wildcards to avoid sh expansion)
     """
+    if type(musthave) == str:
+        musthave = [s.replace(',', '') for s in musthave.split()]
     msdict, use_tb = matchingMSes(musthave, mspat, combine)
     mses = msdict.keys()
     
@@ -437,7 +439,12 @@ def matchingMSes(musthave=[], mspat="*.ms", combine='or'):
             use_tb = hasattr(tb, 'colnames')
         except:
             try:
-                from taskinit import tb
+                import sys
+                sys.path.append(os.environ["CASAPATH"].split()[0] +
+                                '/code/xmlcasa/scripts/recipes')
+                from taskutil import get_global_namespace
+                my_globals = get_global_namespace()
+                tb = my_globals['tb']
                 use_tb = hasattr(tb, 'colnames')
             except:
                 print "Could not find the tb tool (try running inside a casapy session)."
@@ -525,7 +532,9 @@ def termprops(stream):
         try:
             import curses
             curses.setupterm()
-            return curses.tigetnum("colors") > 2
+            termwidth = curses.tigetnum('cols')
+            if curses.tigetnum("colors") > 2:
+                have_colors = True
         except:
             pass
     return have_colors, termwidth
