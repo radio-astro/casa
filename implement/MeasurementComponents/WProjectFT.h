@@ -138,16 +138,16 @@ public:
   // <group>
   WProjectFT(
 	   Int nFacets, Long cachesize, Int tilesize=16, 
-	   Bool usezero=True);
+	   Bool usezero=True, Bool useDoublePrec=False);
   //Constructor without tangent direction
   WProjectFT(Int nFacets, MPosition mLocation,
 	     Long cachesize, Int tilesize=16, 
-	     Bool usezero=True, Float padding=1.0);
+	     Bool usezero=True, Float padding=1.0, Bool useDoublePrec=False);
   //Deprecated no longer need ms in constructor
   WProjectFT(
 	     Int nFacets, MDirection mTangent, MPosition mLocation,
 	     Long cachesize, Int tilesize=16, 
-	   Bool usezero=True, Float padding=1.0);
+	     Bool usezero=True, Float padding=1.0, Bool useDoublePrec=False);
   // </group>
 
   // Construct from a Record containing the WProjectFT state
@@ -277,7 +277,7 @@ protected:
 
   // Array for non-tiled gridding
   Array<Complex> griddedData;
-
+  Array<DComplex> griddedData2;
 
   DirectionCoordinate directionCoord;
 
@@ -292,6 +292,8 @@ protected:
   // Grid/degrid zero spacing points?
   Bool usezero_p;
 
+  //Use douple precision grid in gridding process
+  Bool useDoubleGrid_p;
   Cube<Complex> convFunc;
   Int convSampling;
   Int convSize;
