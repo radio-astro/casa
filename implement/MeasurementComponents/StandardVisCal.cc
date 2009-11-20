@@ -637,12 +637,12 @@ void GJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
     gcorruptor_p->tsys() = simpar.asFloat("tsys");
   } 
   
-  Float Scale(.15); // scale of fluctuations rel to mean
-  if (simpar.isDefined("scale")) {
-    Scale=simpar.asFloat("scale");
-    if (Scale>.5) {
-      Scale=.5;
-      os << LogIO::WARN << " decreasing PWV fluctuation magnitude to half of the mean PWV, " << simpar.asFloat("mean_pwv") << LogIO::POST;  
+  Float Scale(.15); // scale of fluctuations 
+  if (simpar.isDefined("amplitude")) {
+    Scale=simpar.asFloat("amplitude");
+    if (Scale>=.9) {
+      os << LogIO::WARN << " decreasing gain fluctuations from " << Scale << " to 0.9 " << LogIO::POST;  
+      Scale=.9;
     }
   }
 

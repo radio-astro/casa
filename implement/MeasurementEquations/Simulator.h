@@ -197,8 +197,8 @@ public:
   // Apply antenna-based gain errors
   Bool setgain(const String& mode, 
 	       const String& table,
-	       const Float timescale,
-	       const Float rms);
+	       const Quantity& interval,
+	       const Double amplitude);
 
   Bool settrop(const String& mode, 
 	       const String& table,

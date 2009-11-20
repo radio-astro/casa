@@ -1047,9 +1047,9 @@ Bool Simulator::setnoise(const String& mode,
 			  const Quantity& simplenoise,
 			  // if blank, not stored
 			  const String& caltable,
-			  // user-override of tau0
+			  // user-specified tau 
 			  const Float tau=0.0,
-			  // for ATM calculation
+			  // or ATM calculation
 			  const Float antefficiency=0.80,
 			  const Float correfficiency=0.85,
 			  const Float spillefficiency=0.85,
@@ -1183,11 +1183,10 @@ Bool Simulator::setnoise(const String& mode,
 
 
 
-
 Bool Simulator::setgain(const String& mode, 
 			const String& caltable,
-			const Float timescale,
-			const Float rms) {
+			const Quantity& interval, 
+			const Double amplitude) {
   
   LogIO os(LogOrigin("Simulator", "setgain()", WHERE));
 
@@ -1208,8 +1207,8 @@ Bool Simulator::setgain(const String& mode,
 	simparDesc.addField ("type", TpString);
 	simparDesc.addField ("caltable", TpString);
 	simparDesc.addField ("mode", TpString);
-	simparDesc.addField ("timescale", TpFloat);
-	simparDesc.addField ("amplitude", TpFloat);
+	simparDesc.addField ("interval", TpDouble);
+	simparDesc.addField ("amplitude", TpDouble);
 	simparDesc.addField ("combine", TpString);
 	simparDesc.addField ("startTime", TpDouble);
 	simparDesc.addField ("stopTime", TpDouble);
@@ -1217,9 +1216,9 @@ Bool Simulator::setgain(const String& mode,
 	// Create record with the requisite field values
 	Record simpar(simparDesc,RecordInterface::Variable);
 	simpar.define ("type", "G JONES");
-	simpar.define ("timescale", timescale);
+	simpar.define ("interval", interval.getValue("s"));
 	simpar.define ("mode", mode);
-	simpar.define ("amplitude", rms);
+	simpar.define ("amplitude", amplitude);
 	simpar.define ("caltable", caltable);
 	simpar.define ("combine", "");
 	
@@ -1323,6 +1322,7 @@ Bool Simulator::setleakage(const String& mode, const String& table,
     simparDesc.addField ("caltable", TpString);
     simparDesc.addField ("amplitude", TpDouble);
     simparDesc.addField ("combine", TpString);
+    simparDesc.addField ("interval", TpDouble);
     simparDesc.addField ("startTime", TpDouble);
     simparDesc.addField ("stopTime", TpDouble);
             
@@ -1331,6 +1331,7 @@ Bool Simulator::setleakage(const String& mode, const String& table,
     simpar.define ("type", "D");
     simpar.define ("caltable", table);
     simpar.define ("amplitude", amplitude);
+    simpar.define ("interval", interval.getValue("s"));
     simpar.define ("combine", "");
     
     // create the D
@@ -1388,7 +1389,7 @@ Bool Simulator::oldsetnoise(const String& mode,
     
     noisemode_p = mode;
 
-    os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise" << LogIO::POST;
+    os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise unless you are simulating single dish data" << LogIO::POST;
 
     if(mode=="table") {
       os << LogIO::SEVERE << "Cannot yet read from table" << LogIO::POST;
@@ -1781,7 +1782,7 @@ Bool Simulator::corrupt() {
 
     // Old-fashioned noise, for now
     if(ac_p != NULL){
-      os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise" << LogIO::POST;
+      //      os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise" << LogIO::POST;
       for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
 	for (vi.origin(); vi.more(); vi++) {
 	  
