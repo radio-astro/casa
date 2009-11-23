@@ -4275,6 +4275,18 @@ Bool Imager::restore(const Vector<String>& model,
       os << LogIO::NORMAL // Loglevel PROGRESS
          << "Restoring " << model.nelements() << " models" << LogIO::POST;
     }
+
+    ///if the skymodel is already set...no need to get rid of the psf and ftmachine state
+    //as long as the images match
+    if(!redoSkyModel_p){
+      Bool coordMatch=True; 
+      for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
+	CoordinateSystem cs=(sm_p->image(thismodel)).coordinates();
+	coordMatch= coordMatch || checkCoord(cs, model(thismodel));
+      }
+      if(!coordMatch)
+	destroySkyEquation();
+    }
     
     if(redoSkyModel_p){
       Vector<String> imageNames(image);
@@ -4335,15 +4347,13 @@ Bool Imager::restore(const Vector<String>& model,
       }
     
       //      if (!se_p)
-	if(!createSkyEquation(model, complist)) return False;
+      if(!createSkyEquation(model, complist)) return False;
       
       addResidualsToSkyEquation(residualNames);
     }
     sm_p->solveResiduals(*se_p);
     
     restoreImages(image);
-
-    destroySkyEquation();
     
     this->unlock();
     return True;
@@ -8647,8 +8657,8 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 }
 
 
-Bool Imager::checkCoord(CoordinateSystem& coordsys,  
-			String& imageName){ 
+Bool Imager::checkCoord(const CoordinateSystem& coordsys,  
+			const String& imageName){ 
 
   PagedImage<Float> image(imageName);
   CoordinateSystem imageCoord= image.coordinates();
@@ -9077,8 +9087,9 @@ Int Imager::interactivemask(const String& image, const String& mask,
        prev_image_id_p=image_id_p;
      if(forceReload && mask_id_p !=0)
        prev_mask_id_p=mask_id_p;
-     if(prev_image_id_p !=0)
+     if(prev_image_id_p){
        viewer_p->unload( prev_image_id_p );
+     }
      if(prev_mask_id_p)
        viewer_p->unload( prev_mask_id_p );
      prev_image_id_p=0;
@@ -9166,10 +9177,11 @@ Int Imager::interactivemask(const String& image, const String& mask,
       os << "failed to get a vaild result for viewer" << LogIO::WARN << LogIO::POST;
       return False;
     }
+    prev_image_id_p=image_id_p;
+    prev_mask_id_p=mask_id_p;
+
     if(result==1){
       //Keep the image up but clear the next time called
-      prev_image_id_p=image_id_p;
-      prev_mask_id_p=mask_id_p;
       image_id_p=0;
       mask_id_p=0;
     }
@@ -9186,8 +9198,6 @@ Int Imager::interactivemask(const String& image, const String& mask,
       clean_panel_p=0;
       image_id_p=0;
       mask_id_p=0;
-      prev_image_id_p=0;
-      prev_mask_id_p=0;
     }
 
     // return 0 if "continue"

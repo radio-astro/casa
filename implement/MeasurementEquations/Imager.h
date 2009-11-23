@@ -103,8 +103,8 @@ class Imager
 				 MRadialVelocity& mDataStep);
   //Utility function to check coordinate match with existing image
 
-  virtual Bool checkCoord(CoordinateSystem& coordsys, 
-			  String& imageName); 
+  virtual Bool checkCoord(const CoordinateSystem& coordsys, 
+			  const String& imageName); 
 
   virtual void setImageParam(Int& nx, Int& ny, Int& npol, Int& nchan); 
 
