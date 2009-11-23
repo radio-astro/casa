@@ -9072,7 +9072,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
        return False;
      }
    }
-   if ( clean_panel_p == 0 ) {
+   if ( clean_panel_p == 0) {
      dbus::variant panel_id = viewer_p->panel( "clean" );
      if ( panel_id.type() != dbus::variant::INT ) {
        os << LogIO::WARN << "failed to create clean panel" << LogIO::POST;
@@ -9108,7 +9108,9 @@ Int Imager::interactivemask(const String& image, const String& mask,
       }
       mask_id_p = mask_id.getInt( );
    } else {
-     viewer_p->reload( clean_panel_p );
+     //viewer_p->reload( clean_panel_p );
+     viewer_p->reload(image_id_p);
+     viewer_p->reload(mask_id_p);
    }
 
    
