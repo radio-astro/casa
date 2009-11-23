@@ -193,18 +193,25 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
   <example>
         Keyword arguments:
         sdfile -- name of input SD dataset
-        telescopeparm -- the telescope name or characteristics
-                options: (str) name or (list) list of gain info
-                default: '' (none set)
-                example: telescopeparm='' if GBT or AT telescopes
-                         telescopeparm=[104.9,0.43] diameter(m), ap.eff.
-                         telescopeparm=[0.743] gain in Jy/K
-                         telescopeparm='FIX' to change default fluxunit
-                         see description below
         fluxunit -- units for line flux
                 options: 'K','Jy',''
                 default: '' (keep current fluxunit)
                 WARNING: For GBT data, see description below.
+            &gt;&gt;&gt; fluxunit expandable parameter
+                 telescopeparm -- the telescope characteristics
+                        options: (str) name or (list) list of gain info
+                        default: '' (none set)
+                        example: if telescopeparm='', it tries to get the telescope
+                                 name from the data.
+                                 Full antenna parameters (diameter,ap.eff.) known
+                                 to ASAP are
+                                 'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
+                                 'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
+                                 to 'K' first then convert to a new fluxunit.
+                                 telescopeparm=[104.9,0.43] diameter(m), ap.eff.
+                                 telescopeparm=[0.743] gain in Jy/K
+                                 telescopeparm='FIX' to change default fluxunit
+                                 see description below
         specunit -- units for spectral axis
                 options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
                 default: '' (=current)

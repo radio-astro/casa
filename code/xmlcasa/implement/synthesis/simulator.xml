@@ -218,7 +218,7 @@ an existing MS.  Data can be predicted and/or corrupted on the MS's given coordi
 sm.openfromms('3C273XC1.MS');
 sm.predict('3C273XC1.imagename');
 sm.setnoise(simplenoise='10mJy');
-sm.setgain(interval='100s', amplitude=[0.01, 0.01]);
+sm.setgain(interval='100s', amplitude=0.01);
 sm.corrupt();
 sm.close();
 
@@ -467,7 +467,13 @@ control which voltage pattern is applied to the data.
 
      <param type="stringArray" name="antname">
      <description>Vector of names of all antennas</description>
-     <value>ALT-AZ</value>
+     <value>A</value>
+     <choice>[]</choice>
+     </param>
+
+     <param type="stringArray" name="padname">
+     <description>Vector of names of pads or stations</description>
+     <value>P</value>
      <choice>[]</choice>
      </param>
 
@@ -999,11 +1005,13 @@ DATA and CORRECTED_DATA columns.   Note that {\tt corrupt} handles
 only visibility-plane effects, not image-plane effects such as
 pointing errors and voltage patterns, which get applied in {\tt predict}.
 
+<!--
 NB: Note that simulator currently only supports specification of these errors
 via use of the {\tt setapply} (i.e., existing cal tables, a la calibrater)
 and {\tt setnoise} methods.  The setgain, setbandpass, and setleakage methods 
 are currently disabled.  These methods will be re-activated in the near 
 future. (2008Apr03 gmoellen)
+-->
 
 </description>
 <returns type="bool">Boolean</returns>
@@ -1140,45 +1148,38 @@ calibrater.setapply.
    <shortdescription>Set the gains</shortdescription>
    
 <description>
-Set the level of gain errors. The error distributions are normal, mean
-zero, with the variances as specified.
+Set the level of gain errors.  Gain drift is implemented as fractional brownian
+motion with rms amplitude as specified.  Interval is not currently used, 
+but future statistical models for gain errors (e.g. simple Gaussian) will use it.
+<!--
+The error distributions are normal, mean zero, with the variances as specified.
+-->
 </description>
 <input>
 
      <param type="string" name="mode">
-     <description>Mode of operation. String: 'calculate'|'table'</description>
-     <value>calculate</value>
-     <choice>'calculate'</choice>
+     <description>Mode of operation. String: 'fbm'</description>
+     <value>fbm</value>
+     <choice>'fbm'</choice>
      </param>
 
      <param type="string" name="table">
-     <description>Name of table</description>
+     <description>Optional name of table to write</description>
      <value></value>
      <choice>''</choice>
      </param>
 
-     <param type="double" name="timescale">
-     <description>timescale for gain variations</description>
-     <value>10.0</value>
-     </param>
-
-     <param type="double" name="rms">
-     <description>amplitude scale for gain variations</description>
-     <value>1.0</value>
-     </param>
-
-<!--
      <param type="any" name="interval" >
-     <description>Coherence interval e.g. '10s'</description>
+     <description>timescale for gain variations NOT USED</description>
      <any type="variant" />
      <value>10s</value>
      </param>
 
-     <param type="doubleArray" name="amplitude">
-     <description>Variances of errors in amplitude and phase</description>
-     <value>0</value>
+     <param type="double" name="amplitude">
+     <description>amplitude scale (RMS) for gain variations</description>
+     <value>0.01</value>
      </param>
--->
+
 </input>
 <returns type='bool'>Bool</returns>
 </method>
@@ -1265,17 +1266,19 @@ Set the pointing error from a calpointing table
    
 <description>
 Set the level of polarization leakage between feeds.
+Currently, only constant leakage is possible - i.e. interval is not used.
+Time-variable leakage will be implemented soon.
 </description>
 <input>
 
      <param type="string" name="mode">
-     <description>Mode of operation. String: 'calculate'|'table'</description>
-     <value>calculate</value>
-     <choice>'calculate'</choice>
+     <description>Mode of operation. String: 'constant'</description>
+     <value>constant</value>
+     <choice>'constant'</choice>
      </param>
 
      <param type="string" name="table">
-     <description>Name of table</description>
+     <description>Optional name of table to write</description>
      <value></value>
      <choice>''</choice>
      </param>
@@ -1287,7 +1290,7 @@ Set the level of polarization leakage between feeds.
      </param>
 
      <param type="double" name="amplitude">
-     <description>Variance of pol leakage amplitude errors; currently, just real</description>
+     <description>Magnitude of pol leakage</description>
      <value>0.0</value>
      <choice>0.0</choice>
      </param>
@@ -1296,9 +1299,9 @@ Set the level of polarization leakage between feeds.
 </method>
 
  
-   <method type="function" name="setnoise">
+   <method type="function" name="oldsetnoise">
    <shortdescription>Set the noise level fixed sigma (mode=simplenoise) or
-   Brown's equation (mode=calculate)</shortdescription>
+   Brown's equation (mode=calculate) OBSOLETE VERSION</shortdescription>
    
 <description>
 Set various system parameters from which the thermal (ie, random additive) noise level 
@@ -1319,20 +1322,21 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
 <input>
 
      <param type="string" name="mode">
-     <description>Mode of operation. String: 'table'|'simplenoise'|'calculate' 
+     <description>Mode of operation. String: 'simplenoise'|'calculate' 
      </description>
      <value>calculate</value>
+     <choice>'simplenoise'</choice>
      <choice>'calculate'</choice>
      </param>
 
      <param type="string" name="table">
-     <description>Name of noise table if not simplenoise or not calculated</description>
+     <description>Name of noise table - not currently implemented</description>
      <value></value>
      <choice>''</choice>
      </param>
 
      <param type="any" name="simplenoise" >
-     <description>Level of noise if not Table or not Calculated</description>
+     <description>Level of noise if simplenoise</description>
      <any type="variant" />
      <value>0.0Jy</value>
      </param>
@@ -1382,31 +1386,33 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
 <returns type='bool'>Bool</returns>
 </method>
 
+
  
-   <method type="function" name="setnoise2">
+
+   <method type="function" name="setnoise">
    <shortdescription>Set the noise level fixed sigma (mode=simple) or
-   Brown's equation (mode=calculate)</shortdescription>
+   Brown's equation using the ATM model for frequency-dependent atmospheric
+   opacity (mode=tsys) or Brown's equation, manually specifying the zenith
+   opacity (constant across the band, tsys-manual)</shortdescription>
    
-<description>
-TESTING ONLY
-</description>
 <input>
 
      <param type="string" name="mode">
-     <description>Mode of operation. String: 'table'|'simplenoise'|'calculate' 
-     </description>
-     <value>calculate</value>
-     <choice>'calculate'</choice>
+     <description>Mode of operation.</description>
+     <value>tsys</value>
+     <choice>'simplenoise'</choice>
+     <choice>'tsys'</choice>
+     <choice>'tsys-manual'</choice>
      </param>
 
      <param type="string" name="table">
-     <description>Name of noise table if not simplenoise or not calculated</description>
+     <description>Name of optional cal table to write</description>
      <value></value>
      <choice>''</choice>
      </param>
 
      <param type="any" name="simplenoise" >
-     <description>Level of noise if not Table or not Calculated</description>
+     <description>Level of noise if not calculated</description>
      <any type="variant" />
      <value>0.0Jy</value>
      </param>
@@ -1414,49 +1420,41 @@ TESTING ONLY
      <param type="double" name="antefficiency">
      <description>antenna efficiency</description>
      <value>0.8</value>
-     <choice>0.8</choice>
      </param>
 
      <param type="double" name="correfficiency">
      <description>Correlation efficiency</description>
      <value>0.85</value>
-     <choice>0.85</choice>
      </param>
 
      <param type="double" name="spillefficiency">
      <description>Forward spillover efficiency</description>
      <value>0.85</value>
-     <choice>0.85</choice>
      </param>
 
      <param type="double" name="tau">
-     <description>Atmospheric Opacity</description>
+     <description>Atmospheric Opacity (if tsys-manual)</description>
      <value>0.0</value>
-     <choice>0.0</choice>
      </param>
 
      <param type="double" name="trx">
      <description>Receiver temp (ie, all non-atmospheric Tsys contributions) [K]</description>
      <value>50</value>
-     <choice>50</choice>
      </param>
 
      <param type="double" name="tatmos">
      <description>Temperature of atmosphere [k]</description>
      <value>250.0</value>
-     <choice>250.0</choice>
      </param>
 
      <param type="double" name="tground">
      <description>Temperature of ground/spill [K]</description>
      <value>280.0</value>
-     <choice>280.0</choice>
      </param>
 
      <param type="double" name="tcmb">
      <description>Temperature of cosmic microwave background [K]</description>
      <value>2.7</value>
-     <choice>2.7</choice>
      </param>
 </input>
 <returns type='bool'>Bool</returns>

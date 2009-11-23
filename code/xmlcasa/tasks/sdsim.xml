@@ -344,7 +344,7 @@ single dish simulation task (prototype):
                 options: (bool) True, False
                 default: False
                 * [alpha] currently only knows about ALMA receivers 
-         >>> modifymodel expandable parameters
+         >>> noise_thermal expandable parameters
                 t_atm -- atmospheric temperature in K 
                        default: 260.0
                 tau0 -- zenith opacity at observing frequency

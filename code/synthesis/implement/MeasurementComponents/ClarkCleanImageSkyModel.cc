@@ -87,175 +87,199 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 
     return True;
   }
+
   
-  Int nx=image(0).shape()(0);
-  Int ny=image(0).shape()(1);
-  Int npol=image(0).shape()(2);
-  Int nchan=image(0).shape()(3);
-  Int polloop=1;
-  Vector<String> stokesID(npol, "");
-  if (!doPolJoint_p) {
-    polloop=npol;
-    CoordinateSystem cs=image(0).coordinates();
-    Int stokesindex=cs.findCoordinate(Coordinate::STOKES);
-    StokesCoordinate stcoord=cs.stokesCoordinate(stokesindex);
-    for (Int jj=0; jj < npol ; ++jj){
-      stokesID(jj)=Stokes::name(Stokes::type(stcoord.stokes()(jj)));      
-    }
+  if(hasMask(0))
+    clean(image(0), residual(0), PSF(0), mask(0), gain(), numberIterations(),  
+	  threshold(), cycleFactor_p, True, doPolJoint_p);
+  else{
+    ImageInterface<Float> *tmpMask=0;
+    clean(image(0), residual(0), PSF(0), *tmpMask, gain(), numberIterations(),  
+	  threshold(), cycleFactor_p, False, doPolJoint_p);
   }
-  
-  
-  Int newNx=nx;
-  Int newNy=ny;
-
-  Int xbeg, xend, ybeg, yend;
-  //default clean box
-  xbeg=nx/4; 
-  xend=3*nx/4-1;
-  ybeg=ny/4; 
-  yend=3*ny/4-1;
-
-  Bool isCubeMask=False; 
-  //AlwaysAssert((npol==1)||(npol==2)||(npol==4), AipsError);
-  
-  Lattice<Float>* mask_sl = 0;
-  RO_LatticeIterator<Float>* maskli = 0;
-  
-  if(hasMask(0)) {
-    // AlwaysAssert(mask(0).shape()(0)==nx, AipsError);
-    // AlwaysAssert(mask(0).shape()(1)==ny, AipsError);
-    if((mask(0).shape()(0)!=nx) || (mask(0).shape()(1)!=ny)){
-      throw(AipsError("Mask image shape is different from dirty image"));
-    }
-    if(nchan >1){
-      if(mask(0).shape()(3)==nchan){
-	isCubeMask=True;
-	os << "Using multichannel mask" << LogIO::POST;
-      }
-      else{
-	os << "Image cube and mask donot match in number of channels" 
-	   << LogIO::WARN;
-	os << "Will use first plane of the mask for all channels" 
-	   << LogIO::WARN;
-      }
-    }
-    LatticeStepper mls(mask(0).shape(),
-		       IPosition(4, nx, ny, 1, 1),
-		       IPosition(4, 0, 1, 3, 2));
-    maskli= new RO_LatticeIterator<Float>(mask(0), mls);
-    maskli->reset();
-    mask_sl=makeMaskSubLat(nx, ny, newNx, newNy, *maskli, xbeg, xend, 
-			   ybeg, yend);
-  }
-
-
-  for (Int ichan=0; ichan < nchan; ichan++) {
-    if(hasMask(0) && isCubeMask && ichan >0) {
-      (*maskli)++;
-      if(mask_sl) delete mask_sl;
-      mask_sl=0;
-      mask_sl=makeMaskSubLat(nx, ny, newNx, newNy, *maskli, xbeg, 
-			     xend, ybeg, yend);       
-    }
-
-    if(nchan>1) {
-	os<<"Processing channel "<<ichan+1<<" of "<<nchan<<LogIO::POST;
-    }
-    for (Int ipol=0; ipol < polloop; ++ipol){
-      Int polbeg=0;
-      Int polend=npol-1;
-      if(!doPolJoint_p){
-	polbeg=ipol;
-	polend=ipol;
-	os << "Doing stokes "<< stokesID(ipol) << " image" <<LogIO::POST;
-      }
-      LCBox imagebox(IPosition(4, xbeg, ybeg, polbeg, ichan), 
-		     IPosition(4, xend, yend, polend, ichan),
-		     image(0).shape());
-      LCBox psfbox(IPosition(4, 0, 0, 0, ichan), 
-		   IPosition(4, nx-1, ny-1, 0, ichan),
-		   PSF(0).shape());
-
-      SubLattice<Float> psf_sl(PSF(0), psfbox, False);
-      SubLattice<Float>  residual_sl(residual(0), imagebox, True);
-      SubLattice<Float>  model_sl=SubLattice<Float>   (image(0), imagebox, True);
-    
-    
-      ArrayLattice<Float> psftmp;
-      
-      if(nx != newNx){
-	
-	psftmp=ArrayLattice<Float> (IPosition(4, newNx, newNy, 1, 1));
-	psftmp.set(0.0);
-	Array<Float> tmparr=psf_sl.get();
-	psftmp.putSlice(tmparr, IPosition(4, (newNx-nx)/2, (newNy-ny)/2, 0,0));
-	psf_sl=SubLattice<Float>(psftmp, True);
- 
-      }
-      
-      TempLattice<Float> dirty_sl( residual_sl.shape());
-      dirty_sl.copyData(residual_sl);
-      TempLattice<Float> localmodel(model_sl.shape());
-      localmodel.set(0.0);
-      
-      Float psfmax;
-      {
-	LatticeExprNode node = max(psf_sl);
-	psfmax = node.getFloat();
-      }
-      
-      if((psfmax==0.0) ||(hasMask(0) && (mask_sl == 0)) ) {
-	os << LogIO::NORMAL // Loglevel INFO
-           << "No data or blank mask for this channel: skipping" << LogIO::POST;
-      } else {
-	LatConvEquation eqn(psf_sl, residual_sl);
-	ClarkCleanLatModel cleaner( localmodel );
-	cleaner.setResidual(dirty_sl);
-	if (mask_sl != 0 ) cleaner.setMask( *mask_sl );
-	
-	ClarkCleanProgress *cpp  = 0;
-	if (displayProgress_p) {
-	  cpp = new ClarkCleanProgress( pgplotter_p );
-	  cleaner.setProgress(*cpp);
-	}
-	
-	cleaner.setGain(gain());
-	cleaner.setNumberIterations(numberIterations());
-	cleaner.setThreshold(threshold()); 
-	cleaner.setPsfPatchSize(IPosition(2,51,51)); 
-	cleaner.setHistLength(1024);
-	cleaner.setMaxNumPix(32*1024);
-	cleaner.setCycleFactor(cycleFactor_p);
-	// clean if there is no mask or if it has mask AND mask is not empty 
-	cleaner.solve(eqn);
-	cleaner.setChoose(False);
-	os << LogIO::NORMAL // Loglevel INFO
-           << "Clean used " << cleaner.numberIterations() << " iterations" 
-	   << " in this round to get to a max residual of " << cleaner.threshold()
-           << LogIO::POST;
-	
-	LatticeExpr<Float> expr= model_sl + localmodel; 
-	model_sl.copyData(expr);
-	
- 
-	converged =  (cleaner.getMaxResidual() < threshold()) 
-	  || (cleaner.numberIterations()==0);
-	//      if (cpp != 0 ) delete cpp; cpp=0;
-	//      if (pgp != 0 ) delete pgp; pgp=0;
-      }
-    }
-  }
-  if (mask_sl != 0)  {
-    delete mask_sl;
-    mask_sl=0;
-  }
-  os << LogIO::NORMAL // Loglevel INFO
-     << LatticeExprNode(sum(image(0))).getFloat()
-     << " Jy <- The sum of the clean components"
-     << LogIO::POST;
   modified_p=True;
   return(converged);
 };
+
+
+  Bool ClarkCleanImageSkyModel::clean(ImageInterface<Float>& image, ImageInterface<Float> & residual, 
+				      ImageInterface<Float>& psf, ImageInterface<Float>& mask, Float gain, Int numIter,  
+				      Float thresh, Float cycleFactor, Bool useMask, Bool doPolJoint){
+
+    Bool converged=False;
+    LogIO os(LogOrigin("ClarkCleanImageSkyModel","clean",WHERE)); 
+    Int nx=image.shape()(0);
+    Int ny=image.shape()(1);
+    Int npol=image.shape()(2);
+    Int nchan=image.shape()(3);
+    Int polloop=1;
+    Vector<String> stokesID(npol, "");
+    if (!doPolJoint) {
+      polloop=npol;
+      CoordinateSystem cs=image.coordinates();
+      Int stokesindex=cs.findCoordinate(Coordinate::STOKES);
+      StokesCoordinate stcoord=cs.stokesCoordinate(stokesindex);
+      for (Int jj=0; jj < npol ; ++jj){
+	stokesID(jj)=Stokes::name(Stokes::type(stcoord.stokes()(jj)));      
+      }
+    }
+  
+  
+    Int newNx=nx;
+    Int newNy=ny;
+
+    Int xbeg, xend, ybeg, yend;
+    //default clean box
+    xbeg=nx/4; 
+    xend=3*nx/4-1;
+    ybeg=ny/4; 
+    yend=3*ny/4-1;
+
+    Bool isCubeMask=False; 
+    //AlwaysAssert((npol==1)||(npol==2)||(npol==4), AipsError);
+  
+    Lattice<Float>* mask_sl = 0;
+    RO_LatticeIterator<Float>* maskli = 0;
+  
+    if(useMask) {
+      // AlwaysAssert(mask(0).shape()(0)==nx, AipsError);
+      // AlwaysAssert(mask(0).shape()(1)==ny, AipsError);
+      if((mask.shape()(0)!=nx) || (mask.shape()(1)!=ny)){
+	throw(AipsError("Mask image shape is different from dirty image"));
+      }
+      if(nchan >1){
+	if(mask.shape()(3)==nchan){
+	  isCubeMask=True;
+	  os << "Using multichannel mask" << LogIO::POST;
+	}
+	else{
+	  os << "Image cube and mask donot match in number of channels" 
+	     << LogIO::WARN;
+	  os << "Will use first plane of the mask for all channels" 
+	     << LogIO::WARN;
+	}
+      }
+      LatticeStepper mls(mask.shape(),
+			 IPosition(4, nx, ny, 1, 1),
+			 IPosition(4, 0, 1, 3, 2));
+      maskli= new RO_LatticeIterator<Float>(mask, mls);
+      maskli->reset();
+      mask_sl=makeMaskSubLat(nx, ny, newNx, newNy, *maskli, xbeg, xend, 
+			     ybeg, yend);
+    }
+
+
+    for (Int ichan=0; ichan < nchan; ichan++) {
+      if(useMask && isCubeMask && ichan >0) {
+	(*maskli)++;
+	if(mask_sl) delete mask_sl;
+	mask_sl=0;
+	mask_sl=makeMaskSubLat(nx, ny, newNx, newNy, *maskli, xbeg, 
+			       xend, ybeg, yend);       
+      }
+
+      if(nchan>1) {
+	os<<"Processing channel "<<ichan+1<<" of "<<nchan<<LogIO::POST;
+      }
+      for (Int ipol=0; ipol < polloop; ++ipol){
+	Int polbeg=0;
+	Int polend=npol-1;
+	if(!doPolJoint){
+	  polbeg=ipol;
+	  polend=ipol;
+	  os << "Doing stokes "<< stokesID(ipol) << " image" <<LogIO::POST;
+	}
+	LCBox imagebox(IPosition(4, xbeg, ybeg, polbeg, ichan), 
+		       IPosition(4, xend, yend, polend, ichan),
+		       image.shape());
+	LCBox psfbox(IPosition(4, 0, 0, 0, ichan), 
+		     IPosition(4, nx-1, ny-1, 0, ichan),
+		     psf.shape());
+
+	SubLattice<Float> psf_sl(psf, psfbox, False);
+	SubLattice<Float>  residual_sl(residual, imagebox, True);
+	SubLattice<Float>  model_sl=SubLattice<Float>   (image, imagebox, True);
+    
+    
+	ArrayLattice<Float> psftmp;
+	
+	if(nx != newNx){
+	  
+	  psftmp=ArrayLattice<Float> (IPosition(4, newNx, newNy, 1, 1));
+	  psftmp.set(0.0);
+	  Array<Float> tmparr=psf_sl.get();
+	  psftmp.putSlice(tmparr, IPosition(4, (newNx-nx)/2, (newNy-ny)/2, 0,0));
+	  psf_sl=SubLattice<Float>(psftmp, True);
+ 
+	}
+      
+	TempLattice<Float> dirty_sl( residual_sl.shape());
+	dirty_sl.copyData(residual_sl);
+	TempLattice<Float> localmodel(model_sl.shape());
+	localmodel.set(0.0);
+      
+	Float psfmax;
+	{
+	  LatticeExprNode node = max(psf_sl);
+	  psfmax = node.getFloat();
+	}
+      
+	if((psfmax==0.0) ||(useMask && (mask_sl == 0)) ) {
+	  os << LogIO::NORMAL // Loglevel INFO
+	     << "No data or blank mask for this channel: skipping" << LogIO::POST;
+	} else {
+	  LatConvEquation eqn(psf_sl, residual_sl);
+	  ClarkCleanLatModel cleaner( localmodel );
+	  cleaner.setResidual(dirty_sl);
+	  if (mask_sl != 0 ) cleaner.setMask( *mask_sl );
+	
+	  /*
+	  ClarkCleanProgress *cpp  = 0;
+	  if (displayProgress_p) {
+	    cpp = new ClarkCleanProgress( pgplotter_p );
+	    cleaner.setProgress(*cpp);
+	  }
+	  */
+	
+	  cleaner.setGain(gain);
+	  cleaner.setNumberIterations(numIter);
+	  cleaner.setThreshold(thresh); 
+	  cleaner.setPsfPatchSize(IPosition(2,51,51)); 
+	  cleaner.setHistLength(1024);
+	  cleaner.setMaxNumPix(32*1024);
+	  cleaner.setCycleFactor(cycleFactor);
+	  // clean if there is no mask or if it has mask AND mask is not empty 
+	  cleaner.solve(eqn);
+	  cleaner.setChoose(False);
+	  os << LogIO::NORMAL // Loglevel INFO
+	     << "Clean used " << cleaner.numberIterations() << " iterations" 
+	     << " in this round to get to a max residual of " << cleaner.threshold()
+	     << LogIO::POST;
+	  
+	  LatticeExpr<Float> expr= model_sl + localmodel; 
+	  model_sl.copyData(expr);
+	
+ 
+	  converged =  (cleaner.getMaxResidual() < thresh) 
+	    || (cleaner.numberIterations()==0);
+	  //      if (cpp != 0 ) delete cpp; cpp=0;
+	  //      if (pgp != 0 ) delete pgp; pgp=0;
+	}
+      }
+    }
+    if (mask_sl != 0)  {
+      delete mask_sl;
+      mask_sl=0;
+    }
+    os << LogIO::NORMAL // Loglevel INFO
+       << LatticeExprNode(sum(image)).getFloat()
+       << " Jy <- The sum of the clean components"
+       << LogIO::POST;
+
+    return converged;
+
+
+  }
 
 Lattice<Float>* ClarkCleanImageSkyModel::makeMaskSubLat(const Int& nx, 
 							    const Int& ny, 

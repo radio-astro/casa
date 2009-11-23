@@ -136,6 +136,7 @@ public:
 		 const Vector<Double>& offset,
 		 const Vector<String>& mount,
 		 const Vector<String>& antName,
+		 const Vector<String>& padName,
 		 const String& coordsystem,
 		 const MPosition& referenceLocation);
   // get info back from e.g. loaded ms in newmssimulator
@@ -196,8 +197,8 @@ public:
   // Apply antenna-based gain errors
   Bool setgain(const String& mode, 
 	       const String& table,
-	       const Float timescale,
-	       const Float rms);
+	       const Quantity& interval,
+	       const Double amplitude);
 
   Bool settrop(const String& mode, 
 	       const String& table,
@@ -225,9 +226,7 @@ public:
 
   // Simulate quasi-realistic thermal noise, which can depend upon
   // elevation, bandwidth, antenna diameter, as expected
-  // RI TODO this will turn into something that makes an additive Mueller
-  // RI TODO and setSimulates with it.
-  Bool setnoise(const String& mode, 
+  Bool oldsetnoise(const String& mode, 
 		const Quantity& simplenoise,
 		const String& table,
 		const Float antefficiency,
@@ -241,7 +240,7 @@ public:
 		// const Quantity& tatmos, 
 		// const Quantity& tcmb);
 
-  Bool setnoise2(const String& mode, 
+  Bool setnoise(const String& mode, 
 		 const Quantity& simplenoise,
 		 const String& caltable,
 		 const Float tau,
@@ -385,6 +384,7 @@ private:
   Vector<Double>  offset_p;
   Vector<String> mount_p;
   Vector<String> antName_p;
+  Vector<String> padName_p;
   String         coordsystem_p;
   MPosition      mRefLocation_p;
   // </group>

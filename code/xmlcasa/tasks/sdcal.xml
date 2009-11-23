@@ -376,7 +376,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         average -- averaging on spectral data 
                 options: (bool) True,False
                 default: False
-                &gt;&gt;&gt;average expandable parameter
+
+            &gt;&gt;&gt;average expandable parameter
                  scanaverage -- average integrations within scans
                          options: (bool) True,False
                          default: False
@@ -405,18 +406,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          options: 'none'
                                   'var'  (1/var(spec) weighted)
                                   'tsys' (1/Tsys**2 weighted)
+
         tau -- atmospheric optical depth
                 default: 0.0 (no correction)
         kernel -- type of spectral smoothing
                 options: 'none','hanning','gaussian','boxcar'
                 default: 'none'
-                &gt;&gt;&gt;kernel expandable parameter
+
+            &gt;&gt;&gt;kernel expandable parameter
                  kwidth -- width of spectral smoothing kernel
                          options: (int) in channels
                          default: 5
                          example: 5 or 10 seem to be popular for boxcar
                                   ignored for hanning (fixed at 5 chans)
                                   (0 will turn off gaussian or boxcar)
+
         blmode -- mode for baseline fitting
                 options: (str) 'none','auto','list','interact'
                 default: 'none'
@@ -499,12 +503,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         baseline fitting for single-dish spectra. This task internally calls the
         tasks, sdaverage, sdsmooth, and sdbaseline and it can be used to run all the
         three steps in one task execution.
-        By setting calmode='none'
-        one can run sdcal on already calibrated data, for further selection
-        , averaging and atmospheric optical depth correction.
+        By setting calmode='none', one can run sdcal on already calibrated data,
+        for further selection, averaging and atmospheric optical depth correction.
 
         If you give multiple IFs in iflist, then your scantable will have
-        multiple IFs.  This can be handled, but there can be funny interactions
+        multiple IFs. This can be handled, but there can be funny interactions
         later on.  We recommend you split each IF out into separate files
         by re-running sdcal with each IF in turn.
 

@@ -637,12 +637,12 @@ void GJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
     gcorruptor_p->tsys() = simpar.asFloat("tsys");
   } 
   
-  Float Scale(.15); // scale of fluctuations rel to mean
-  if (simpar.isDefined("scale")) {
-    Scale=simpar.asFloat("scale");
-    if (Scale>.5) {
-      Scale=.5;
-      os << LogIO::WARN << " decreasing PWV fluctuation magnitude to half of the mean PWV, " << simpar.asFloat("mean_pwv") << LogIO::POST;  
+  Float Scale(.15); // scale of fluctuations 
+  if (simpar.isDefined("amplitude")) {
+    Scale=simpar.asFloat("amplitude");
+    if (Scale>=.9) {
+      os << LogIO::WARN << " decreasing gain fluctuations from " << Scale << " to 0.9 " << LogIO::POST;  
+      Scale=.9;
     }
   }
 
@@ -664,13 +664,15 @@ void GJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
       throw(AipsError("start/stop time not defined"));
     }
         
-    Float fBM_interval=max(interval(),5.); // generate screens on 5s intervals or longer
-    corruptor_p->setEvenSlots(fBM_interval);
-   
+    if (simpar.asString("mode")=="fbm") {
+      Float fBM_interval=max(interval(),5.); // generate screens on 5s intervals or longer
+      corruptor_p->setEvenSlots(fBM_interval);
+    }
+      
     gcorruptor_p->initialize(Seed,Beta,Scale);
     
   } else 
-    throw(AipsError("Unknown Mode for GJonesCorruptor"));        
+    throw(AipsError("Unknown mode for GJonesCorruptor"));        
  }
 }
 
@@ -1800,7 +1802,7 @@ void MMueller::keep(const Int& slot) {
 
 void MMueller::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim) 
 {
-  if (prtlev()>1) cout << "   MM::setSimulate()" << endl;
+  if (prtlev()>2) cout << "   MM::setSimulate()" << endl;
 
   atmcorruptor_p = new AtmosCorruptor();
   corruptor_p = atmcorruptor_p;

@@ -413,14 +413,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value></value>
     </param>
 <!--========================================================= -->
-    <param type="string" name="chaniter" subparam="true">
-            <description>Do interactive CLEAN on spectral data cube per channel or jointly all channels? (\'channel\' to clean per channel)</description>
-            <value>joint</value>
-            <allowed kind="enum">
-            <value>joint</value>
-            <value>chan</value>
-            <value>channel</value>
-            </allowed>
+    <param type="bool" name="chaniter" subparam="true">
+            <description>Do interactive CLEAN on spectral data cube per channel or jointly all channels? (\'True\' to clean per channel)</description>
+            <value>False</value>
     </param>
 <!--========================================================= -->
     <constraints>
@@ -541,7 +536,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<equals type="bool" value="False"/>
 		<equals type="bool" value="True">
 		      <default param="npercycle"><value>100</value></default>
-                      <default param="chaniter"><value type='string'>joint</value></default>
+                      <default param="chaniter"><value type='bool'>False</value></default>
 	        </equals>
             </when>
 	    <when param="imagermode">

@@ -185,12 +185,14 @@ def plotms(vis=None, xaxis=None, xdatacolumn=None, yaxis=None,
         pm.setPlotMSFilename(vis, False)
         pm.setPlotAxes(xaxis, yaxis, xdatacolumn, ydatacolumn, False)
         
+
         # Set selection
-        if not selectdata:
-            field = spw = timerange = uvrange = antenna = scan = correlation = array = msselect = ''
+        if (selectdata):
+            pm.setPlotMSSelection(field, spw, timerange, uvrange, antenna, scan, correlation, array, msselect, False)
+        else:
+            pm.setPlotMSSelection('','','','','','','','','',False)
             
-        pm.setPlotMSSelection(field, spw, timerange, uvrange, antenna, scan, correlation, array, msselect, False)
-        
+            
         # Set averaging
         if not averagedata:
             avgchannel = avgtime = ''

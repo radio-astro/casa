@@ -280,12 +280,12 @@ class taskmanager(object):
         self.__hub['engine hosts'] = engines
         self.__hub['task path'] = task_path
 
-        self.__furl['engine'] = self.__dir['furl'] + '/ipcontroller-engine.furl'
-        self.__furl['mec'] = self.__dir['furl'] + '/ipcontroller-mec.furl'
-        self.__furl['tc'] = self.__dir['furl'] + '/ipcontroller-tc.furl'
+        self.__furl['engine'] = self.__dir['furl'] + '/ipcontroller-engine.' + str(os.getpid()) + '.furl'
+        self.__furl['mec'] = self.__dir['furl'] + '/ipcontroller-mec.' + str(os.getpid()) + '.furl'
+        self.__furl['tc'] = self.__dir['furl'] + '/ipcontroller-tc.' + str(os.getpid()) + '.furl'
 
-        self.__cert['client'] = self.__dir['furl'] + '/ipcontroller-client.pem'
-        self.__cert['engine'] = self.__dir['furl'] + '/ipcontroller-engine.pem'
+        self.__cert['client'] = self.__dir['furl'] + '/ipcontroller-client.' + str(os.getpid()) + '.pem'
+        self.__cert['engine'] = self.__dir['furl'] + '/ipcontroller-engine.' + str(os.getpid()) + '.pem'
 
         if self.__hub['init atend'] :
             atexit.register(taskmanager.__finalize,self)

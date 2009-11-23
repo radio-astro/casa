@@ -5233,6 +5233,7 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
                 }
 		
 		locflag.resize(npol_p[spw], nchan_p[spw], rowsnow);
+                locflag.set(false);
 		const Bool* iflag=inFlag.getStorage(idelete);
 		const Complex* idata=vis.getStorage(idelete);
 		const Float* iweight=inSpWeight.getStorage(idelete);
@@ -5266,10 +5267,8 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
                                     oSpWt[outoffset] += iweight[inoffset];
                                   }
                                 }
-                                if(oSpWt[outoffset] <= 0.0){
+                                if(oSpWt[outoffset] != 0.0)
                                   odata[outoffset] /= oSpWt[outoffset];
-                                  oflag[outoffset] = False;
-                                }
                                 else
                                   oflag[outoffset] = True;
                               }
@@ -5285,14 +5284,11 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
                                     ++counter;
                                   }
                                 }
-                                if(counter > 0){
+                                if(counter > 0)
 				  odata[outoffset] /= counter;
-				  oflag[outoffset] = False;
-				}
-                                else{
-				  // odata[outoffset]=0; // It's 0 anyway.
+                                else
 				  oflag[outoffset] = True;
-				}
+				  // odata[outoffset]=0; // It's 0 anyway.
                               }
                             }
                           }
@@ -5375,6 +5371,8 @@ Bool SubMS::writeSimilarSpwShape(const Vector<String>& columnNames){
 
   Cube<Complex> outdata(npol_p[0], nchan_p[0], nrow);
   Cube<Bool> outflag(npol_p[0], nchan_p[0], nrow);
+  outflag.set(false);
+
   Cube<Float> outspweight;
     
   const uInt ntok = columnNames.nelements();
@@ -5424,6 +5422,8 @@ Bool SubMS::writeSimilarSpwShape(const Vector<String>& columnNames){
 
           if(chancounter == chanStep_p[0]){
             if(avcounter[j] != 0){
+              // Should there be a warning if one data column wants flagging
+              // and another does not?
               if(doSpWeight){
                 if(outwgtspectmp[j] != 0.0)
                   outdata(j, ck, row) = outdatatmp[j] / outwgtspectmp[j];
@@ -5436,13 +5436,11 @@ Bool SubMS::writeSimilarSpwShape(const Vector<String>& columnNames){
               else{
                 outdata(j, ck, row) = outdatatmp[j] / avcounter[j];	    
               }
-              if(colind == 0)                   // Only initialize it
-                outflag(j, ck, row) = False;    // on the 1st pass, to
-            }                                   // avoid overwriting a true
-            else{	                        // from another column.
-              outdata(j, ck, row) = 0;          // Should there be a warning if
-              outflag(j, ck, row) = True;       // one data column wants flagging
-              if(doSpWeight)                    // and another does not?
+            }
+            else{
+              outdata(j, ck, row) = 0;
+              outflag(j, ck, row) = True;
+              if(doSpWeight)
                 outspweight(j, ck, row) = 0;
             }	
           }

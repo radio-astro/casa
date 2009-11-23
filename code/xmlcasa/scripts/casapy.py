@@ -58,7 +58,16 @@ if homedir == None :
    print "Environment variable HOME is not set, please set it"
    exit(1)
 
-casa = { 'helpers': {
+casa = { 'build': {
+             'time': '/CASASUBST/build_time',
+             'version': '/CASASUBST/casa_version',
+             'number': '/CASASUBST/casa_build'
+         },
+         'source': {
+             'url': '/CASASUBST/subversion_url',
+             'revision': '/CASASUBST/subversion_revision'
+         },
+         'helpers': {
              'logger': 'casalogger',
              'viewer': 'casaviewer'
          },
@@ -68,6 +77,8 @@ casa = { 'helpers': {
          'flags': { },
          'files': { }
        }
+
+print "CASA Version " + casa['build']['version'] + " (build #" + casa['build']['number'] + ")\n  Compiled on: " + casa['build']['time']
 
 a = [] + sys.argv             ## get a copy from goofy python
 a.reverse( )

@@ -84,7 +84,7 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
 
 
             # read antenna file:
-            stnx, stny, stnz, stnd, nant, telescopename = util.readantenna(antennalist)
+            stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
             ant=' '.join(' '.join(''.join(antenna.split()).split(',')).split(';'))
             if ant=='' and nant==1: ant='0'
             if ant=='' or len(ant.split(' ')) != 1 or ant.find('&') != -1:
@@ -95,6 +95,7 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
             stny=[stny[ant]]
             stnz=[stnz[ant]]
             stnd=[stnd[ant]]
+            padnames=[padnames[ant]]
             antnames=[telescopename]
             if nant > 1: antnames=[telescopename+('SD%02d'%ant)]
             nant = 1
@@ -106,9 +107,13 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
             diam=stnd;
             if not isinstance(diam, list): diam=diam.tolist()
             # Add rows to ANTENNA table
+            #sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
+            #             dishdiameter=diam, 
+            #             mount=['alt-az'], antname=antnames,
+            #             coordsystem='global', referencelocation=posobs)
             sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
                          dishdiameter=diam, 
-                         mount=['alt-az'], antname=antnames,
+                         mount=['alt-az'], antname=antnames,padname=padnames,
                          coordsystem='global', referencelocation=posobs)
             #
             sm.setspwindow(spwname=fband, freq=startfreq, deltafreq=chanwidth, 
@@ -388,10 +393,14 @@ def sdsim(modelimage, modifymodel, refdirection, refpixel, incell, inbright, ant
                 # XXX check for and copy flagversions file as well
             
                 sm.openfromms(noisymsfile);    # an existing MS
-                sm.setdata();                  # currently defaults to fld=0,spw=0
-                # sm.setapply(type='TOPAC',opacity=tau0);  # opac corruption
+                sm.setdata(fieldid=range(0,nfld))
+                sm.setapply(type='TOPAC',opacity=tau0);  # opac corruption
                 # SimACohCalc needs 2-temp formula not just t_atm
-                sm.setnoise(mode="calculate",table=noisymsroot,
+                #sm.setnoise(mode="calculate",table=noisymsroot,
+                #            antefficiency=eta_a,correfficiency=eta_q,
+                #            spillefficiency=eta_s,tau=tau0,trx=t_rx,
+                #            tatmos=t_atm,tcmb=t_cmb)
+                sm.oldsetnoise(mode="calculate",table=noisymsroot,
                             antefficiency=eta_a,correfficiency=eta_q,
                             spillefficiency=eta_s,tau=tau0,trx=t_rx,
                             tatmos=t_atm,tcmb=t_cmb)

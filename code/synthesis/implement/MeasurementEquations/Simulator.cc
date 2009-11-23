@@ -485,14 +485,14 @@ Bool Simulator::configSummary(LogIO& os)
   } else {
     os << "----------------------------------------------------------------------" << LogIO::POST;
     os << "Generating (u,v,w) using this configuration: " << LogIO::POST;
-    os << "   x     y     z     diam     mount     name " << LogIO::POST;
+    os << "   x     y     z     diam     mount     station " << LogIO::POST;
     for (uInt i=0; i< x_p.nelements(); i++) {
       os << x_p(i)
 	 << "  " << y_p(i)
 	 << "  " << z_p(i)
 	 << "  " << diam_p(i)
 	 << "  " << mount_p(i)
-	 << "  " << antName_p(i)
+	 << "  " << padName_p(i)
 	 << LogIO::POST;
     }
     os << " Coordsystem = " << coordsystem_p << LogIO::POST;
@@ -701,6 +701,7 @@ Bool Simulator::setconfig(const String& telname,
 			     const Vector<Double>& offset,
 			     const Vector<String>& mount,
 			     const Vector<String>& antName,
+			     const Vector<String>& padName,
 			     const String& coordsystem,
 			     const MPosition& mRefLocation) 
 {
@@ -720,6 +721,8 @@ Bool Simulator::setconfig(const String& telname,
   mount_p = mount;
   antName_p.resize(antName.nelements());
   antName_p = antName;
+  padName_p.resize(padName.nelements());
+  padName_p = padName;
   coordsystem_p = coordsystem;
   mRefLocation_p = mRefLocation;
 
@@ -753,6 +756,14 @@ Bool Simulator::setconfig(const String& telname,
     antName_p.resize(nn);
     antName_p.set("UNKNOWN");
   }
+  if (padName_p.nelements() == 1) {
+    padName_p.resize(nn);
+    padName_p.set(padName(0));
+  }
+  if (padName_p.nelements() == 0) {
+    padName_p.resize(nn);
+    padName_p.set("UNKNOWN");
+  }
 
   AlwaysAssert( (nn == y_p.nelements())  , AipsError);
   AlwaysAssert( (nn == z_p.nelements())  , AipsError);
@@ -762,7 +773,7 @@ Bool Simulator::setconfig(const String& telname,
 
   areStationCoordsSet_p = True;
   
-  sim_p->initAnt(telescope_p, x_p, y_p, z_p, diam_p, offset_p, mount_p, antName_p, 
+  sim_p->initAnt(telescope_p, x_p, y_p, z_p, diam_p, offset_p, mount_p, antName_p, padName_p,
 		 coordsystem_p, mRefLocation_p);
   
   return True;  
@@ -774,7 +785,7 @@ Bool Simulator::getconfig() {
   // get it from NewMSSimulator
   Matrix<Double> xyz_p;
   Int nAnt;
-  if (sim_p->getAnt(telescope_p, nAnt, &xyz_p, diam_p, offset_p, mount_p, antName_p, 
+  if (sim_p->getAnt(telescope_p, nAnt, &xyz_p, diam_p, offset_p, mount_p, antName_p, padName_p, 
 		    coordsystem_p, mRefLocation_p)) {
     x_p.resize(nAnt);
     y_p.resize(nAnt);
@@ -799,11 +810,11 @@ Bool Simulator::setfield(const String& sourceName,
 			 const Quantity& distance)
 {
   LogIO os(LogOrigin("Simulator", "setfield()", WHERE));
-#ifndef RI_DEBUG
+  //#ifndef RI_DEBUG
   try {
-#else 
-    os << LogIO::WARN << "debug mode - not catching errors." << LogIO::POST;  
-#endif
+//#else 
+//    os << LogIO::WARN << "debug mode - not catching errors." << LogIO::POST;  
+//#endif
     
     if (sourceName == "") {
       os << LogIO::SEVERE << "must provide a source name" << LogIO::POST;  
@@ -825,12 +836,12 @@ Bool Simulator::setfield(const String& sourceName,
 
     sim_p->initFields(sourceName, sourceDirection, calCode);
 
-#ifndef RI_DEBUG
+    //#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
-#endif
+  //#endif
   return True;
 };
 
@@ -906,11 +917,11 @@ Bool Simulator::setspwindow(const String& spwName,
 
 {
   LogIO os(LogOrigin("Simulator", "setspwindow()", WHERE));
-#ifndef RI_DEBUG
+  //#ifndef RI_DEBUG
   try {
-#else 
-    os << LogIO::WARN << "debug mode - not catching errors." << LogIO::POST;  
-#endif
+//#else 
+//    os << LogIO::WARN << "debug mode - not catching errors." << LogIO::POST;  
+//#endif
     if (nChan == 0) {
       os << LogIO::SEVERE << "must provide nchannels" << LogIO::POST;  
       return False;
@@ -941,12 +952,12 @@ Bool Simulator::setspwindow(const String& spwName,
 			 startFreq_p[nSpw-1], freqInc_p[nSpw-1], 
 			 freqRes_p[nSpw-1], stokesString_p[nSpw-1]);
 
-#ifndef RI_DEBUG
+    //#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
-#endif
+  //#endif
   return True;
 };
 
@@ -1032,13 +1043,13 @@ Bool Simulator::setvp(const Bool dovp,
 
 // NEW NOISE WITH ANoise
 
-Bool Simulator::setnoise2(const String& mode, 
+Bool Simulator::setnoise(const String& mode, 
 			  const Quantity& simplenoise,
 			  // if blank, not stored
 			  const String& caltable,
-			  // user-override of tau0
+			  // user-specified tau 
 			  const Float tau=0.0,
-			  // for ATM calculation
+			  // or ATM calculation
 			  const Float antefficiency=0.80,
 			  const Float correfficiency=0.85,
 			  const Float spillefficiency=0.85,
@@ -1103,7 +1114,8 @@ Bool Simulator::setnoise2(const String& mode,
     
     Record simpar(simparDesc,RecordInterface::Variable);
     simpar.define ("type", "A Noise");
-    simpar.define ("caltable", caltbl+".A.cal");
+    if (strlen>1) 
+      simpar.define ("caltable", caltbl+".A.cal");      
     simpar.define ("mode", mode);
     simpar.define ("combine", ""); // SPW,FIELD, etc
 
@@ -1113,21 +1125,21 @@ Bool Simulator::setnoise2(const String& mode,
       simpar.define ("amplitude", Float(simplenoise.getValue("Jy")) );
       simpar.define ("mode", "simple");
 
-    } else if (mode=="calculate") {
+    } else if (mode=="tsys" or mode=="tsys-manual") {
       os << "adding noise with unity amplitude" << LogIO::POST;
       // do be scaled in a minute by a Tsys-derived M below
       simpar.define ("amplitude", Float(1.0) );
       simpar.define ("mode", "calc");
 
     } else {
-      throw(AipsError("unsupported mode "+mode+" in setnoise2()"));
+      throw(AipsError("unsupported mode "+mode+" in setnoise()"));
     }
 
     // create the ANoise
     if (!create_corrupt(simpar)) 
       throw(AipsError("could not create ANoise in Simulator::setnoise"));
         
-    if (mode=="calculate") {
+    if (mode=="tsys" or mode=="tsys-manual") {
 
       simpar.define ("antefficiency"  ,antefficiency  ); 
       simpar.define ("correfficiency" ,correfficiency );
@@ -1136,17 +1148,22 @@ Bool Simulator::setnoise2(const String& mode,
       simpar.define ("tatmos"	      ,tatmos	      );
       simpar.define ("tground"	      ,tground	      );
       simpar.define ("tcmb"           ,tcmb           );
-      // user can override the ATM calculated optical depth
-      simpar.define ("tau0"	      ,tau	      );
 
-      // simpar.define ("amplitude", tsys );
-      // RI TODO setnoise2: create an Mf or M depending on user prefs
+      if (mode=="tsys-manual") {
+	// user can override the ATM calculated optical depth
+	simpar.define ("tau0"	      ,tau	      );      
+	// with tau0 to be used over the entire SPW,
+	simpar.define ("type", "M");
+      } else {
+	// otherwise ATM will be used to calculate tau from pwv
+	// RI TODO input pwv from simdata to Simulator
+	// simpar.define ("pwv", pwv);
+	// as a function of frequency
+	simpar.define ("type", "MF");
+      }
 
-      // tau from ATM with user unput pwv or user can input a freq-indep tau
-      // need mode="calculate-atm" and calculate-tau ?
-
-      simpar.define ("type", "M");
-      simpar.define ("caltable", caltbl+".M.cal");
+      if (strlen>1) 
+	simpar.define ("caltable", caltbl+".M.cal");
       simpar.define ("mode", "tsys");  
       
       // create the M
@@ -1166,11 +1183,10 @@ Bool Simulator::setnoise2(const String& mode,
 
 
 
-
 Bool Simulator::setgain(const String& mode, 
 			const String& caltable,
-			const Float timescale,
-			const Float rms) {
+			const Quantity& interval, 
+			const Double amplitude) {
   
   LogIO os(LogOrigin("Simulator", "setgain()", WHERE));
 
@@ -1183,24 +1199,26 @@ Bool Simulator::setgain(const String& mode,
       return False;
     }
     else {
-      // RI TODO Sim::setgain add mode=simple
-      if(mode=="calculate") {
-
+      // RI TODO Sim::setgain add mode=simple and =normal
+      if(mode=="fbm") {
+	
 	// set record format for calibration table simulation information
 	RecordDesc simparDesc;
 	simparDesc.addField ("type", TpString);
 	simparDesc.addField ("caltable", TpString);
-	simparDesc.addField ("timescale", TpFloat);
-	simparDesc.addField ("amplitude", TpFloat);
+	simparDesc.addField ("mode", TpString);
+	simparDesc.addField ("interval", TpDouble);
+	simparDesc.addField ("amplitude", TpDouble);
 	simparDesc.addField ("combine", TpString);
-      simparDesc.addField ("startTime", TpDouble);
-      simparDesc.addField ("stopTime", TpDouble);
-    
+	simparDesc.addField ("startTime", TpDouble);
+	simparDesc.addField ("stopTime", TpDouble);
+	
 	// Create record with the requisite field values
 	Record simpar(simparDesc,RecordInterface::Variable);
 	simpar.define ("type", "G JONES");
-	simpar.define ("timescale", timescale);
-	simpar.define ("amplitude", rms);
+	simpar.define ("interval", interval.getValue("s"));
+	simpar.define ("mode", mode);
+	simpar.define ("amplitude", amplitude);
 	simpar.define ("caltable", caltable);
 	simpar.define ("combine", "");
 	
@@ -1302,16 +1320,18 @@ Bool Simulator::setleakage(const String& mode, const String& table,
     RecordDesc simparDesc;
     simparDesc.addField ("type", TpString);
     simparDesc.addField ("caltable", TpString);
-    simparDesc.addField ("amplitude", TpFloat);
-    simparDesc.addField ("combine", TpFloat);
-      simparDesc.addField ("startTime", TpDouble);
-      simparDesc.addField ("stopTime", TpDouble);
+    simparDesc.addField ("amplitude", TpDouble);
+    simparDesc.addField ("combine", TpString);
+    simparDesc.addField ("interval", TpDouble);
+    simparDesc.addField ("startTime", TpDouble);
+    simparDesc.addField ("stopTime", TpDouble);
             
     // create record with the requisite field values
     Record simpar(simparDesc,RecordInterface::Variable);
     simpar.define ("type", "D");
     simpar.define ("caltable", table);
     simpar.define ("amplitude", amplitude);
+    simpar.define ("interval", interval.getValue("s"));
     simpar.define ("combine", "");
     
     // create the D
@@ -1350,7 +1370,7 @@ Bool Simulator::setleakage(const String& mode, const String& table,
 
 // OLD NOISE WITH ACoh
 
-Bool Simulator::setnoise(const String& mode, 
+Bool Simulator::oldsetnoise(const String& mode, 
 			 const Quantity& simplenoise,
 			 const String& table,
 			 const Float antefficiency=0.80,
@@ -1364,12 +1384,12 @@ Bool Simulator::setnoise(const String& mode,
                          // const Quantity& tatmos=250.0, 
                          // const Quantity& tcmb=2.7) {
   
-  LogIO os(LogOrigin("Simulator", "setnoise()", WHERE));
+  LogIO os(LogOrigin("Simulator", "oldsetnoise()", WHERE));
   try {
     
     noisemode_p = mode;
 
-    os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise2" << LogIO::POST;
+    os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise unless you are simulating single dish data" << LogIO::POST;
 
     if(mode=="table") {
       os << LogIO::SEVERE << "Cannot yet read from table" << LogIO::POST;
@@ -1532,7 +1552,7 @@ Bool Simulator::create_corrupt(Record& simpar)
 #ifdef RI_DEBUG
     svc->setPrtlev(3);
 #else 
-    svc->setPrtlev(2);
+    svc->setPrtlev(0);
 #endif
 
     Vector<Double> solTimes;
@@ -1563,7 +1583,7 @@ Bool Simulator::create_corrupt(Record& simpar)
 
 
 //========================================================================
-//       currupt and setapply, for actually changing visibilities 
+//       corrupt and setapply, for actually changing visibilities 
 
 
 /// this can be used to load any table, just that it has to have the right form
@@ -1762,10 +1782,11 @@ Bool Simulator::corrupt() {
 
     // Old-fashioned noise, for now
     if(ac_p != NULL){
-      os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise2" << LogIO::POST;
+      //      os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise" << LogIO::POST;
       for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
 	for (vi.origin(); vi.more(); vi++) {
 	  
+	  // affects vb.visibility() i.e. Observed
 	  ac_p->apply(vb);
 	  vi.setVis(vb.visibility(), VisibilityIterator::Observed);
 	  vi.setVis(vb.visibility(), VisibilityIterator::Corrected);
@@ -1839,7 +1860,6 @@ Bool Simulator::observe(const String&   sourcename,
 			      Table::Update);
 
     ms_p->flush();
-
     ms_p->unlock();
 
   } catch (AipsError x) {

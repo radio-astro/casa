@@ -442,10 +442,16 @@ def plotxy(vis=None,xaxis=None,yaxis=None,datacolumn=None,iteration=None,
                     raise Exception, 'Failure occured when averaging data!'
 
                 #print "scan=", scan, "uvrange=", uvrange
-                ok=mp.setdata(baseline=antenna,field=field,scan=scan,
-			      uvrange=uvrange,array=array,feed=feed,
-			      spw=spw,correlation=correlation,
-			      time=timerange)
+		if (selectdata):
+			ok=mp.setdata(baseline=antenna,field=field,scan=scan,
+				      uvrange=uvrange,array=array,feed=feed,
+				      spw=spw,correlation=correlation,
+				      time=timerange)
+		else:
+			ok=mp.setdata(baseline='',field=field,scan='',
+				      uvrange='',array='',feed='',
+				      spw=spw,correlation='',
+				      time='')			
                 # check if data selection was okay
                 if (not ok):
                    raise Exception, 'Data selection resulted in no data!'

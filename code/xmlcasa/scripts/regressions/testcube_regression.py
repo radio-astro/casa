@@ -74,6 +74,12 @@ refstats = { 'max': 0.01185+0.002285j,
              'sum': 553.4-34.36j,
              'std': 0.001324 }
 
+# 200101119 skyequation/clean changes
+refstats = { 'max': 0.0117+0.00249j,
+             'min':-0.0140+0.000962j,
+             'sum': 481.-65.0j,
+             'std': 0.00133 }
+
 ### tight 
 reftol   = {'max':  5e-3,
             'min':  5e-3,

@@ -4,6 +4,7 @@ from cleanhelper import *
 from immath import immath
 from sys import stdout
 from math import ceil
+from math import floor
 from math import sqrt
 import numpy
 
@@ -386,12 +387,17 @@ def get_islands(imagename='', Npeak=3, island_threshold=0, peak_threshold=0,
 # instead of surrounding them by a box-shaped or circular clean region
 def mask_island(imagename='', island=None, pixels=None):
     ia.open(imagename+'.mask')
+    csys = ia.coordsys()
     mask = ia.getregion()
     mask[pixels['x'], pixels['y']] = 1
     ia.putchunk(mask)
     ia.close()
     casalog.post('Adding irregular region for peak of %f ' %
              island['peak_flux'] + 'inside box ' + str(island['box']))
+    #TMP# for now, can only write boxes out to a region file.  So for a
+    #     temporary fix, will continue putting irregular region in mask,
+    #     but will also output a box covering the island to the .rgn file.
+    box_to_regionfile(imagename, island['box'])
 
 
 # Chooses appropriate shape (box or circle) for clean region
@@ -409,13 +415,13 @@ def mask_region(imagename='', island=None, shape=0, boxstretch=0, ichan=0):
             shape = 1
 
     if(shape):
-        add_box(imagename, ichan, box, peak_flux, boxstretch)
+        add_box(imagename, box, peak_flux, boxstretch)
     else:
-        add_circle(imagename, ichan, box, peak_flux, boxstretch)
+        add_circle(imagename, box, peak_flux, boxstretch)
 
 
 # Add a circular region to the mask image
-def add_circle(imagename, ichan, box, peak_flux, boxstretch=0):
+def add_circle(imagename, box, peak_flux, boxstretch=0):
     #TMP# At some point im.regiontoimagemask should allow circles that
     #     specify a particular channel
     xsize = box[2] - box[0]
@@ -427,10 +433,18 @@ def add_circle(imagename, ichan, box, peak_flux, boxstretch=0):
     im.regiontoimagemask(mask=imagename+'.mask', circles=circle)
     casalog.post('Adding circle for peak of %f with center (%.1f,%.1f) and '
              'radius %.1f' % (peak_flux, xcen, ycen, radius))
+    #TMP# can't write out circular regions to a region file,
+    #     so for now add a box that encompasses the circle
+    #     Since we increased size of circle to include potential "corners"
+    #     of emission outside a smaller (max(xsize,ysize)) radius, must
+    #     now make a box that completely encompasses the circle
+    newbox = [floor(xcen - radius), floor(ycen - radius),
+              ceil(xcen + radius), ceil(ycen + radius)]
+    box_to_regionfile(imagename, newbox)
 
 
 # Add a box region to the mask image; save new region in region file
-def add_box(imagename, ichan, box, peak_flux, boxstretch=0):
+def add_box(imagename, box, peak_flux, boxstretch=0):
     box[0:2] -= boxstretch
     box[2:4] += boxstretch
     # in case we used boxstretch < 0 and a one-pixel sized box:
@@ -443,26 +457,7 @@ def add_box(imagename, ichan, box, peak_flux, boxstretch=0):
     im.regiontoimagemask(mask=imagename+'.mask', boxes=box)
     casalog.post('Adding box for peak of %f ' % peak_flux + 'with coordinates '
                  + str(box))
-    ia.open(imagename+'.mask')
-    csys = ia.coordsys()
-    # need pixel corners, not pixel centers, for region file
-    blccoord = [box[0]-0.5, box[1]-0.5, 0, ichan]
-    trccoord = [box[2]+0.5, box[3]-0.5, 0, ichan]
-    blccoord = [pos - 0.5 for pos in box[0:2]]
-    trccoord = [pos + 0.5 for pos in box[2:4]]
-    blc = ia.toworld(blccoord, 's')['string']
-    trc = ia.toworld(trccoord, 's')['string']
-    ia.close()
-    newregion = rg.wbox(blc=blc, trc=trc, csys=csys.torecord())
-    regionfile = imagename+'.rgn'
-    if(os.path.exists(regionfile)):
-        oldregion = rg.fromfiletorecord(regionfile)
-        regions = {'0':oldregion, '1':newregion}
-        unionregion = rg.makeunion(regions)
-        os.system('rm -f '+regionfile)
-    else:
-        unionregion = newregion
-    rg.tofile(regionfile, unionregion)
+    box_to_regionfile(imagename, box)
 
 
 # concatenate multiple-channel images
@@ -489,3 +484,23 @@ def concat_regions(imagename='', suffix='', number=0):
             rg.tofile(regionfile, rg.makeunion(regions))
         else:
             rg.tofile(regionfile, regions[file])
+
+def box_to_regionfile(imagename, box):
+    ia.open(imagename+'.image')
+    csys = ia.coordsys()
+    # need pixel corners, not pixel centers, for region file
+    blccoord = [box[0]-0.5, box[1]-0.5]
+    trccoord = [box[2]+0.5, box[3]+0.5]
+    blc = ia.toworld(blccoord, 's')['string']
+    trc = ia.toworld(trccoord, 's')['string']
+    ia.close()
+    newregion = rg.wbox(blc=blc, trc=trc, csys=csys.torecord())
+    regionfile = imagename+'.rgn'
+    if(os.path.exists(regionfile)):
+        oldregion = rg.fromfiletorecord(regionfile)
+        regions = {'0':oldregion, '1':newregion}
+        unionregion = rg.makeunion(regions)
+        os.system('rm -f '+regionfile)
+    else:
+        unionregion = newregion
+    rg.tofile(regionfile, unionregion)

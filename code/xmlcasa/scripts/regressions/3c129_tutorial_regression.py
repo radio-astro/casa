@@ -8,6 +8,7 @@
 # Original version GMoellenbrok 2008-06-08  Patch 2 summer school        #
 # Modified/merge   STM          2008-07-31  Clean up                     #
 # Updated version  STM          2008-08-07  finishing touches            #
+# Updated version  GMoellenbrock2009-11-20  Add evlabands=F              #
 #                                                                        #
 # Based on 2008 Synthesis Imaging Workshop script                        #
 #                                                                        #
@@ -110,7 +111,7 @@ print ""
 #=====================================================================
 # Fill B-config data at C-band (5 GHz)
 print "--Import (Bconfig)--"
-importvla(archivefiles=['AT166_1', 'AT166_2'],vis=msnameB,bandname='C'); 
+importvla(archivefiles=['AT166_1', 'AT166_2'],vis=msnameB,bandname='C',evlabands=F); 
  
 #=====================================================================
 # List a summary of the dataset in the logger
@@ -324,7 +325,7 @@ print ""
  
 # Fill C-config data at C-band (5 GHz)
 print "--Import (Cconfig)--"
-importvla(archivefiles='AT166_3',vis=msnameC,bandname='C'); 
+importvla(archivefiles='AT166_3',vis=msnameC,bandname='C',evlabands=F); 
  
 #=====================================================================
 # List a summary of the dataset in the logger

@@ -250,6 +250,24 @@ deconvolver::clipimage(const std::string& clippedimage, const std::string& input
   return false;
 }
 
+  bool deconvolver::fullclarkclean(const int niter, const double gain, const ::casac::variant& threshold, const std::string& model, const std::string& mask, const double cyclefactor){
+    try {
+      casa::Quantity thresh(0.0, "Jy");
+      if(String(threshold.toString()) != String("")){
+	thresh=casaQuantity(threshold);
+      }
+      return itsDeconv->clarkclean(niter, gain, thresh, String(model), String(mask), cyclefactor);
+
+    }
+    catch  (AipsError x) {
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      RETHROW(x);
+    }
+    
+    return false;
+  }
+
+
 bool
 deconvolver::clarkclean(const int niter, const double gain, const ::casac::variant& threshold, const bool displayprogress, const std::string& model, const std::string& mask, const int histbins, const std::vector<int>& psfpatchsize, const double maxextpsf, const double speedup, const int maxnumpix, const int maxnummajcycles, const int maxnummineriter)
 {

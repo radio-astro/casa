@@ -24,6 +24,16 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     padding=1.0;
     if (facets > 1):
         padding=1.2;
+
+    # Handle selectdata explicitly
+    #   (avoid use of hidden globals)
+    if (not selectdata):
+        timerange=''
+        uvrange=''
+        antenna=''
+        scan=''
+
+    
     try:
         if nterms > 1:
             qat=qatool.create();
@@ -64,7 +74,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                       '')
         #some default value handling for channelization
         if (mode=='velocity' or mode=='frequency' or mode=='channel'):
-            (localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype)
+            (localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype,restfreq)
         else:
             localnchan=nchan
             localstart=start
@@ -72,7 +82,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
         #setup for 'per channel' clean
         dochaniter=False
-        if interactive and (chaniter=='chan' or chaniter=='channel'):
+        if interactive and chaniter:
             if localnchan > 1:
                 dochaniter=True
 

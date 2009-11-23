@@ -152,13 +152,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	kernel -- type of spectral smoothing
 	        options: 'hanning','gaussian','boxcar'
 	        default: 'hanning'
-                &gt;&gt;&gt;kernel expandable parameter
+
+            &gt;&gt;&gt;kernel expandable parameter
                  kwidth -- width of spectral smoothing kernel
 	                 options: (int) in channels 
 	                 default: 5
 		         example: 5 or 10 seem to be popular for boxcar
 		                  ignored for hanning (fixed at 5 chans)
                                   (0 will turn off gaussian or boxcar)
+
         verify -- verify the results of smoothing
                 options: (bool) True,False
                 default: False

@@ -79,6 +79,13 @@ refstats = { 'flux': 0.0366,
              'rms': 1.3e-04,
              'sigma': 9.7e-05 }
 
+# new noise 20091118
+refstats = { 'flux': 0.03715,
+             'max': 5.1e-04,
+             'min': -1.1e-04,
+             'rms': 1.35e-04,
+             'sigma': 1.0e-04 }
+
 reftol   = {'flux':  1e-2,
             'max':   0.1,
             'min':   0.1,

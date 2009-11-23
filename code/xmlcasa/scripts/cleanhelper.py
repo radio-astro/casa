@@ -2,7 +2,7 @@ import casac
 import os
 import commands
 import math
-#import pdb
+import pdb
 
 ###some helper tools
 mstool = casac.homefinder.find_home_by_name('msHome')
@@ -921,7 +921,7 @@ class cleanhelper:
         ia.close()
         return True
 
-    def setChannelization(self,mode,spw,field,nchan,start,width,frame,veltype):
+    def setChannelization(self,mode,spw,field,nchan,start,width,frame,veltype,restf):
         """
         determine appropriate values for channelization
         parameters when default values are used
@@ -929,6 +929,8 @@ class cleanhelper:
         """
         #pdb.set_trace()
         #if (mode!='frequency' and mode!='velocity') or (nchan!=-1 and start!='' and width!=''):
+        instartunit=''
+        inwidthunit=''
         if(mode=='channel'):
             if(type(start)!=int):
                 raise TypeError, "Wrong type for start parameter. Int is expected for the channel mode." 
@@ -936,7 +938,17 @@ class cleanhelper:
                 raise TypeError, "Wrong type for width parameter. Int is expected for the channel mode." 
         elif(mode=='frequency' or mode=='velocity'):
             if(type(start)!=str or type(width)!=str):
-                raise TypeError, "Start and width parameters must be given in strings, for mode=%s" % mode
+                if type(start)==int:
+                    if start==0:
+                        #assume the default is not properly set
+                        start=''
+                if type(width)==int:
+                    if width==1:
+                       # assume the default is not properly set 
+                        width=''
+                else:      
+                    raise TypeError, "Start and width parameters must be given in strings, for mode=%s" % mode
+                #raise TypeError, "Start and width parameters must be given in strings, for mode=%s" % mode
             
         if(nchan!=-1 and start!='' and width!=''):
             # do nothing
@@ -956,12 +968,23 @@ class cleanhelper:
             return retnchan,retstart,retwidth
 
         if(mode=='velocity'): 
+            # keep original unit
+            if(qa.quantity(start)['unit'].find('m/s') > -1):
+                instartunit=qa.quantity(start)['unit']
+            if(qa.quantity(width)['unit'].find('m/s') > -1):
+                inwidthunit=qa.quantity(start)['unit']
             if((start=='' or width=='') or nchan==-1):
                 if(veltype!='radio'):
                     raise TypeError, "Currently default nchan, start and width for velocity mode work with the default veltype(='radio') only "
                 # convert to frequency
             if(start!=''):
-                start=self.convertvf(start,frame,field)     
+                start=self.convertvf(start,frame,field,restf)     
+        if(mode=='frequency'): 
+            # keep original unit
+            if(qa.quantity(start)['unit'].find('Hz') > -1):
+                instartunit=qa.quantity(start)['unit']
+            if(qa.quantity(width)['unit'].find('Hz') > -1):
+                inwidthunit=qa.quantity(width)['unit']
         # deal with frequency or velocity mode
         if(start==''):
             if(width==''):
@@ -995,24 +1018,32 @@ class cleanhelper:
                 (freqlist,finc)=self.getfreqs(nchan,spw,start,loc_width)
             retnchan = len(freqlist)
         if(mode=='velocity' and nchan==-1):
-            vmin=self.convertvf(str(freqlist[-1])+'Hz',frame,field) 
-            vmax=self.convertvf(str(freqlist[0])+'Hz',frame,field) 
+            vmin=self.convertvf(str(freqlist[-1])+'Hz',frame,field,restf) 
+            vmax=self.convertvf(str(freqlist[0])+'Hz',frame,field,restf) 
             if(width==''):
-                vwidth=qa.sub(qa.quantity(vmax),qa.quantity(self.convertvf(str(freqlist[1])+'Hz',frame,field)))
+                vwidth=qa.sub(qa.quantity(vmax),qa.quantity(self.convertvf(str(freqlist[1])+'Hz',frame,field,restf)))
             else:
                 vwidth=qa.convert(width,'m/s')
             vrange=qa.sub(qa.quantity(vmax),qa.quantity(vmin))
             retnchan=min(int(math.ceil(qa.div(vrange,qa.abs(qa.quantity(vwidth)))['value']))+1,retnchan)
 
         if(mode=='frequency'):
-            retstart = str(freqlist[0])+'Hz'
-            retwidth = str(finc)+'Hz'
+            # returned values are in Hz
+            if instartunit=='':
+                retstart = str(freqlist[0])+'Hz'
+            else:
+                retstart = self.qatostring(qa.convert(str(freqlist[0])+'Hz',instartunit))
+            if inwidthunit=='':
+                retwidth = str(finc)+'Hz'
+            else:
+                retwidth = self.qatostring(qa.convert(str(finc)+'Hz',inwidthunit))
+             
         elif(mode=='velocity'):
             #convert back to velocities
-            retstart = self.convertvf(str(freqlist[0])+'Hz',frame,field)
+            retstart = self.convertvf(str(freqlist[0])+'Hz',frame,field,restf)
             if(width==''):
-                w1 = self.convertvf(str(freqlist[1])+'Hz',frame,field)
-                w0 = self.convertvf(str(freqlist[0])+'Hz',frame,field)
+                w1 = self.convertvf(str(freqlist[1])+'Hz',frame,field,restf)
+                w0 = self.convertvf(str(freqlist[0])+'Hz',frame,field,restf)
                 retwidth=str(qa.quantity(qa.sub(qa.quantity(w1),qa.quantity(w0)))['value'])+'m/s'
             else:
                 retwidth=width
@@ -1021,10 +1052,20 @@ class cleanhelper:
  
         return retnchan, retstart, retwidth
 
-    def convertvf(self,vf,frame,field):
+    def qatostring(self,q):
+        """
+        return a quantity in string
+        """
+        if not q.has_key('unit'):
+            raise TypeError, "Does not seems to be quantity"
+        return str(q['value'])+q['unit']
+
+    def convertvf(self,vf,frame,field,restf):
         """
         returns doppler(velocity) or frequency in string
+        # currently use first rest frequency
         """
+        #pdb.set_trace()
         docalcf=False
         if(frame==''): frame='LSRK'
         if(qa.quantity(vf)['unit'].find('m/s') > -1):
@@ -1038,14 +1079,24 @@ class cleanhelper:
             fldid0=0
         else:
             fldid0=fldinds[0]
-        tb.open(self.vis+'/FIELD')
-        srcid=tb.getcell('SOURCE_ID',fldid0)
-        tb.close()
-        tb.open(self.vis+'/SOURCE')
-        rfreq=tb.getcell('REST_FREQUENCY',fldid0)
-        if(rfreq<=0):
-            raise TypeError, "Rest frequency does not seems to be properly set, check the data"
-        tb.close()
+        if restf=='':
+            tb.open(self.vis+'/FIELD')
+            srcid=tb.getcell('SOURCE_ID',fldid0)
+            tb.close()
+            if fldid0==-1:
+                raise TypeError, "Rest frequency info is not supplied"
+            tb.open(self.vis+'/SOURCE')
+            rfreq=tb.getcell('REST_FREQUENCY',fldid0)
+            if(rfreq<=0):
+                raise TypeError, "Rest frequency does not seems to be properly set, check the data"
+            tb.close()
+        else:
+            if type(restf)==str: restf=[restf]
+            if(qa.quantity(restf[0])['unit'].find('Hz') > -1):
+                rfreq=[qa.convert(qa.quantity(restf[0]),'Hz')['value']] 
+                #print "using user input rest freq=",rfreq
+            else:
+                raise TypeError, "Unrecognized unit or type for restfreq"
         if(docalcf):
             dop=me.doppler('radio', qa.quantity(vf)) 
             rvf=me.tofrequency(frame, dop, qa.quantity(rfreq[0],'Hz'))
@@ -1060,6 +1111,7 @@ class cleanhelper:
         """
         returns a list of frequencies to be used in output clean image
         """
+        #pdb.set_trace()
         freqlist=[]
         finc=1
         loc_nchan=0
@@ -1113,7 +1165,7 @@ class cleanhelper:
             if(bw < 0):
                 raise TypeError, "Start parameter is outside the data range"
             if(qa.quantity(width)['unit'].find('Hz') > -1):
-                qnchan=qa.div(qa.quantity(bw,'Hz'),qa.quantity(width))
+                qnchan=qa.convert(qa.div(qa.quantity(bw,'Hz'),qa.quantity(width)))
                 loc_nchan=int(math.ceil(qnchan['value']))+1
             else:
                 loc_nchan=int(math.ceil(bw/finc))+1

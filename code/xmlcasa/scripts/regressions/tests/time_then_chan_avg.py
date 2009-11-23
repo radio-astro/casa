@@ -1,4 +1,5 @@
 import casac, os, re, shutil
+import inspect, string, sys
 from tasks import *
 from taskinit import *
 
@@ -25,8 +26,6 @@ expected = {'phoenix_test.ms': {'': {'nrows_aft_tavg': 1260,
                                             'datshp': set([(1, 2, 1), (1, 1, 1)])}
                                 }
             }
-
-import inspect, string, sys
 
 def description():
     return "Tests time and channel averaging with split using %s." % input_ms
@@ -56,6 +55,7 @@ def time_then_chan_avg(inms, tbin, chanbin, outms="", zaptemp=True, zaporig=Fals
                 errors.  Not that you should rely on casapy to detect your bad
                 selection strings...
     """
+    casalog.origin('time_then_chan_avg')
     inms_root = inms.rpartition(".ms")[0]
     if not inms_root:
         inms_root = inms
@@ -94,14 +94,16 @@ def time_then_chan_avg(inms, tbin, chanbin, outms="", zaptemp=True, zaporig=Fals
         nrows_aft_tavg = ms.nrow()
         ms.close()
     except Exception, e:
-        print "Error", e, """from split(vis='%s', outputvis='%s',
-                                        timebin='%s', spw='%s',
-                                        datacolumn='%s').""" % (inms, tms,
+        casalog.post(
+"""Error from split(vis='%s', outputvis='%s',
+                 timebin='%s', spw='%s', datacolumn='%s').""" % (inms, tms,
                                                                 tbin,
                                                                 timechansel,
-                                                                datacolstr)
+                                                                datacolstr),
+                     'SEVERE')
         if os.path.isdir(tms):
-            print "\t", tms, "has been left on disk for your inspection."
+           casalog.post("\t%s has been left on disk for your inspection." % tms,
+                        'SEVERE')
         raise e
 
     if outms == "":
@@ -124,15 +126,16 @@ def time_then_chan_avg(inms, tbin, chanbin, outms="", zaptemp=True, zaporig=Fals
             nrows_aft_cavg = shape_aft_cavg[-1]
         tb.close()
     except Exception, e:
-        print "Error", e, """from split(vis='%s', outputvis='%s',
-                                        datacolumn='data', width=%d,
-                                        spw='%s').""" % (tms, outms, chanbin,
-                                                         chanselstr)
+        casalog.post(
+"""Error from split(vis='%s', outputvis='%s',
+                 datacolumn='data', width=%d, spw='%s').""" % (tms, outms, chanbin,
+                                                               chanselstr),
+                     'SEVERE')
         raise e
     if zaptemp:
         shutil.rmtree(tms)
     if zaporig:
-        print "Warning!  Following your instruction to rm -rf", inms
+        casalog.post("Following your instruction to rm -rf %s" % inms, 'WARN')
         shutil.rmtree(inms)
     return nrows_aft_tavg, nrows_aft_cavg, shape_aft_cavg
 

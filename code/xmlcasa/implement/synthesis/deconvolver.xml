@@ -530,7 +530,58 @@ convolution.
 <returns type="bool"/>
 </method>
 
+  <method type="function" name="fullclarkclean">
+   <shortdescription>Make a clean image using the Clark Clean
+a threshold</shortdescription>
+   
+<description>
 
+This is similar to clarkclean except that it accepts casa standard images. I.e it has to have 4 axes with the canonical order of
+(direction1, direction2, stokes, spectral). 
+This function further will clean more than the quarter of the image if the mask coverage is larger than a quarter of the image size.
+It is useful for CLI level parallelization, i.e use imager to make a dirty image and psf and use this function to deconvolve. 
+If in doubt use 
+<link anchor="deconvolver:deconvolver.clarkclean.function">clarkclean</link>
+ 
+</description>
+<input>
+
+     <param type="int" name="niter">
+     <description>Number of iterations</description>
+     <value>1000</value>
+     </param>
+
+     <param type="double" name="gain">
+     <description>Loop Gain for CLEANing</description>
+     <value>0.1</value>
+     </param>
+
+     <param type="any" name="threshold">
+     <any type="variant"/>
+     <description>Flux level at which to stop CLEANing</description>
+     <value>0Jy</value>
+     </param>
+
+     <param type="string" name="model">
+     <description>Name of model image that will contain the clean components</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="mask">
+     <description>Name of mask image used for CLEANing</description>
+     <value></value>
+     </param>
+
+
+     <param type="double" name="cyclefactor">
+     <description>Factor to determine how deep to go in a Clark minor cycle</description>
+     <value>1.5</value>
+     </param>
+
+ 
+</input>
+<returns type="bool"/>
+</method>
  
    <method type="function" name="dirtyname">
    <shortdescription>Return the name of the dirty-image table</shortdescription>

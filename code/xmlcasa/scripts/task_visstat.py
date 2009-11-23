@@ -24,7 +24,14 @@ def visstat(vis=None,
         complex_type = ''
         col = axis
 
-
+    if (not selectdata):
+        antenna=''
+        uvrange=''
+        timerange=''
+        correlation=''
+        scan=''
+        array=''
+        
     s = ms.statistics(column=col.upper(),
                       complex_value=complex_type,
                       useflags=useflags,

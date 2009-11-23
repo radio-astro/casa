@@ -95,16 +95,18 @@ public:
   // Solve for this SkyModel
   virtual Bool solve (SkyEquation& me);
 
+  //Do the image-based clean
+  static Bool clean(ImageInterface<Float>& image, ImageInterface<Float> & residual, ImageInterface<Float>& psf, 
+		    ImageInterface<Float>& mask, Float gain, Int numIter,  Float thresh, Float cycleFactor, Bool useMask=False, Bool doPolJoint=True);
+ 
+private:
+   //make a mask sub-lattice
 
-  //make a mask sub-lattice
-
-  Lattice<Float>* makeMaskSubLat(const Int& nx, 
+  static Lattice<Float>* makeMaskSubLat(const Int& nx, 
 				 const Int& ny, Int& newNx, Int& newNy,
 				    RO_LatticeIterator<Float>& maskIter,
 				    Int& xbeg, Int& xend, 
 				    Int& ybeg, Int& yend);
-
-private:
 
   ClarkCleanProgress *itsProgress;
 

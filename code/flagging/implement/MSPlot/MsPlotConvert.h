@@ -993,9 +993,12 @@ class MSPlotConvertArrayPositions : public TPConvertBase
           retValue = toItrf( retValue );
       }
        }  else {
-      String err = String( "Error: Unable to plot telescope array" )
-          + String( " the name of the telescope is not stored in " )
-          + String( " the measurement set. " );
+	 String err = String( "Error: Unable to plot telescope array" );
+	 if (telescope.length()<=0)
+	   err += String( " the name of the telescope is not stored in " )
+	     + String( " the measurement set. " );
+	 else
+	   err += String(" - ")+telescope+String(" unknown to CASA.  Please contact the helpdesk");
       log->out( err, fnname, clname, LogMessage::SEVERE, True );
       // Should never get here, and exception occurs in logMessage()
       return retValue;          

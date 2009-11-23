@@ -177,6 +177,14 @@ def cvel(vis, outputvis,
 	if os.path.exists(outputvis):
 	    raise Exception, "Output MS %s already exists - will not overwrite." % outputvis
 			    
+        # Handle selectdata explicitly
+        #  (avoid hidden globals)
+        if (selectdata==False):
+            timerange=''
+            array=''
+            antenna=''
+            scan=''
+
 	if(type(antenna) == list):
 	    antenna = ', '.join([str(ant) for ant in antenna])
 

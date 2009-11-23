@@ -627,7 +627,7 @@ class simutil:
                         iny.append(float(splitline[1]))
                         inz.append(float(splitline[2]))
                         ind.append(float(splitline[3]))
-                        if len(splitline)>3:
+                        if len(splitline)>4:
                             id.append(splitline[4])
                         else:
                             id.append('A%02d'%nant)                            

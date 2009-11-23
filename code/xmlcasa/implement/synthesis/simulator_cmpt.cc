@@ -299,7 +299,7 @@ simulator::setauto(const double autocorrwt)
 }
 
 bool
-simulator::setconfig(const std::string& telescopename, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, const std::vector<double>& dishdiameter, const std::vector<double>& offset, const std::vector<std::string>& mount, const std::vector<std::string>& antname, const std::string& coordsystem, const ::casac::variant& referencelocation)
+simulator::setconfig(const std::string& telescopename, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, const std::vector<double>& dishdiameter, const std::vector<double>& offset, const std::vector<std::string>& mount, const std::vector<std::string>& antname, const std::vector<std::string>& padname, const std::string& coordsystem, const ::casac::variant& referencelocation)
 {
   Bool rstat(False);
   try {
@@ -315,6 +315,7 @@ simulator::setconfig(const std::string& telescopename, const std::vector<double>
       }
       rstat=itsSim->setconfig(telescopename, x, y, z, dishdiameter, offset,  
 			      toVectorString(mount), toVectorString(antname), 
+			      toVectorString(padname), 
 			      coordsystem, mpos );
     }
 
@@ -729,22 +730,19 @@ simulator::settrop(const std::string& mode, const std::string& table,
 
 
 
-// RI TODO make timescale and rms variants here and quantities in Simulator.cc
-//simulator::setgain(const std::string& mode, const std::string& table, 
-//		   const ::casac::variant& interval, 
-//		   const std::vector<double>& amplitude)
 
 bool
 simulator::setgain(const std::string& mode, const std::string& table, 
-		   const double timescale, const double rms)
+		   const ::casac::variant& interval, 
+		   const double amplitude)
 {
   Bool rstat(False);
   try {
     
     if(itsSim !=0){
       
-      //      casa::Quantity qinter(casaQuantity(interval));
-      rstat=itsSim->setgain(mode, table, timescale, rms);
+      casa::Quantity qint(casaQuantity(interval));
+      rstat=itsSim->setgain(mode, table, qint, amplitude);
     }
     
     
@@ -786,6 +784,8 @@ simulator::setpointingerror(const std::string& epjtablename,
 
 }
 
+
+
 bool
 simulator::setleakage(const std::string& mode, const std::string& table, 
 		      const ::casac::variant& interval, const double amplitude)
@@ -797,7 +797,7 @@ simulator::setleakage(const std::string& mode, const std::string& table,
     if(itsSim !=0){
       
       casa::Quantity qinter(casaQuantity(interval));
-      rstat=itsSim->setleakage(mode, table, qinter, amplitude);
+      rstat=itsSim->setleakage(mode, table, qinter, Float(amplitude));
     }
     
     
@@ -813,7 +813,7 @@ simulator::setleakage(const std::string& mode, const std::string& table,
 }
 
 bool
-simulator::setnoise(const std::string& mode, const std::string& table, 
+simulator::oldsetnoise(const std::string& mode, const std::string& table, 
 		    const ::casac::variant& simplenoise, 
 		    const double antefficiency, const double correfficiency, 
 		    const double spillefficiency, const double tau, 
@@ -824,11 +824,11 @@ simulator::setnoise(const std::string& mode, const std::string& table,
     
     if(itsSim !=0){
       
-      LogIO os(LogOrigin("simulator", "setnoise"));
-      os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise2" << LogIO::POST;
+      LogIO os(LogOrigin("simulator", "oldsetnoise"));
+      os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise" << LogIO::POST;
       
       casa::Quantity qnoise(casaQuantity(simplenoise));
-      rstat=itsSim->setnoise(mode, qnoise, table, antefficiency, correfficiency, spillefficiency, tau, trx, tatmos, tcmb);
+      rstat=itsSim->oldsetnoise(mode, qnoise, table, antefficiency, correfficiency, spillefficiency, tau, trx, tatmos, tcmb);
     }
     
     
@@ -842,7 +842,7 @@ simulator::setnoise(const std::string& mode, const std::string& table,
 
 
 bool
-simulator::setnoise2(const std::string& mode, const std::string& table, 
+simulator::setnoise(const std::string& mode, const std::string& table, 
 		     const ::casac::variant& simplenoise, 
 		     const double antefficiency, const double correfficiency, 
 		     const double spillefficiency, const double tau, 
@@ -855,7 +855,7 @@ simulator::setnoise2(const std::string& mode, const std::string& table,
     if(itsSim !=0){
       
       casa::Quantity qnoise(casaQuantity(simplenoise));
-      rstat=itsSim->setnoise2(mode, qnoise, table, antefficiency, correfficiency, spillefficiency, tau, trx, tatmos, tground, tcmb);
+      rstat=itsSim->setnoise(mode, qnoise, table, antefficiency, correfficiency, spillefficiency, tau, trx, tatmos, tground, tcmb);
     }
     
     

@@ -52,6 +52,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/System/Aipsrc.h>
+#include <casa/System/ProgressMeter.h>
 
 #include <fstream>
 
@@ -469,7 +470,9 @@ void SolvableVisCal::createCorruptor(const VisIter& vi,const Record& simpar, con
   
   for (Int irow=0;irow<nSpw();++irow) { 
     corruptor_p->fRefFreq()[irow]=spwcols.refFrequency()(irow);
-    // RI TODO T::setupSim change fnChan to 1 if not freqDepPar()?
+    // don't need to change fnChan to 1 if not freqDepPar()
+    // because fnChan is only used in AtmosCorruptor if 
+    // freqDepPar() is set i.e. in initAtm().
     corruptor_p->fnChan()[irow]=spwcols.numChan()(irow);    
     corruptor_p->fWidth()[irow]=spwcols.totalBandwidth()(irow); 
     // totalBandwidthQuant ?  in other places its assumed to be in Hz
@@ -520,7 +523,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
   // check if want to write a table:
   if (simpar.isDefined("caltable")) {
     calTableName()=simpar.asString("caltable");
-    // RI TODO SVC::setSimulate deal with over-writing existing caltables
+    // RI todo SVC::setSimulate deal with over-writing existing caltables
     // verifyCalTable(calTableName());
     append()=False;
   } else {
@@ -577,7 +580,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
   Double iterInterval(max(interval(),DBL_MIN));
   if (interval() < 0.0) {   // means no interval (infinite solint)
     iterInterval=0.0;
-    interval()=DBL_MAX;   //RI TODO Sim::calc sets svc:interval ->max interval
+    interval()=DBL_MAX;   
   }
   vs.resetVisIter(columns,iterInterval);
 
@@ -587,7 +590,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
   Vector<Int> nChunkPerSol;
   // independent of simpar details
   Int nSim = sizeUpSim(vs,nChunkPerSol,solTimes);
-  if (prtlev()>2) cout << " sized for Sim, " << nSim << " slots." << endl;
+  if (prtlev()>1 and prtlev()<3) cout << " VisCal sized for Simulation with " << nSim << " slots." << endl;
   if (prtlev()>4) cout << " solTimes = " << solTimes << endl;
 
   if (!(simpar.isDefined("startTime"))) {    
@@ -649,11 +652,8 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
   Vector<Int> a1;
   Vector<Int> a2;
   Matrix<Bool> flags;
-
-  Int decleft=10;
-  if (prtlev()>0) {
-    cout << "SVC::Simulate :";  // progress indicator
-  }
+  
+  ProgressMeter meter(0.,1. , "Simulating "+nameOfType(type())+" ", "", "", "", True, .1);
 
   for (Int isim=0;isim<nSim && vi.moreChunks();++isim) {      
 
@@ -665,11 +665,6 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     IPosition cparshape=solveCPar().shape();
     // this will get changed to T by keep() depending on solveParOK
     cs().solutionOK(currSpw())(slotidx(thisSpw))=False;  // all Pars, all Chans, all Ants
-
-//    if (corruptor_p->curr_slot()<1 and prtlev()>2) 
-//      cout << "  shape of solveCPar = " << cparshape << 
-//	"  and cs().shape(spw=" << corruptor_p->currSpw() << ") = " << 
-//	cs().shape(corruptor_p->currSpw()) << endl;
 
     Vector<Double> timevec;
     Double starttime,stoptime;
@@ -764,7 +759,6 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
 	      solveParOK()(blc,trc)=True;	      
 	    }// if not flagged
 	  }// row
-	  //if (prtlev()>4) cout << "slot="<<slotidx(thisSpw)<<" par="<<solveCPar()<<endl;
 	  keep(slotidx(thisSpw));
 	  
 	}// channel
@@ -776,16 +770,12 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     setSpwOK();
 
     // progress indicator
-    if (prtlev()>0) 
-      if (Float(isim)/nSim > 1.-Float(decleft)/10) {
-	decleft--;
-	cout << "..." << decleft;
-      }
+    meter.update(Double(isim)/nSim);
 
   }// nsim loop
 
   if (calTableName()!="<none>") {      
-    // RI TODO SVC::setSimulate check if user wants to overwrite calTable
+    // RI todo SVC::setSimulate check if user wants to overwrite calTable
     os << LogIO::NORMAL 
        << "Writing calTable = "+calTableName()+" ("+typeName()+")" 
        << endl << LogIO::POST;      
@@ -1605,10 +1595,10 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   }
 
   if (prtlev()>2) {
-    cout << "simint = " << interval() << endl;
-    cout << boolalpha << "combscan() = " << combscan() << endl;
-    cout << boolalpha << "combfld()  = " << combfld() << endl;
-    cout << boolalpha << "combspw()  = " << combspw() << endl;
+    cout << " simint = " << interval() ;
+    cout << " combscan() = " << combscan();
+    cout << " combfld()  = " << combfld() ;
+    cout << " combspw()  = " << combspw() ;
   }
 
   Int nsortcol(4+Int(!combscan()));  // include room for scan
@@ -1624,7 +1614,7 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   if (combspw()) columns[i++]=MS::DATA_DESC_ID;  // effectively ignore spw boundaries
   
   if (prtlev()>2) {
-    cout << "Sort columns: ";
+    cout << " Sort columns: ";
     for (Int i=0;i<nsortcol;++i) 
       cout << columns[i] << " ";
     cout << endl;
@@ -1780,30 +1770,29 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   }
 
   if (prtlev()>2) {
-    cout << " spwMap()  = " << spwMap() << endl;
-    cout << " spwlist = " << spwlist << endl;
-    cout << "nChunkPerSpw = " << nChunkPerSpw << " " << sum(nChunkPerSpw) << " = " << nSol << endl;
+    cout << " spwMap()  = " << spwMap() ;
+    cout << " spwlist = " << spwlist ;
+    cout << " nChunkPerSpw = " << nChunkPerSpw << " " << sum(nChunkPerSpw) << " = " << nSol << endl;
     //cout << "Total solutions = " << nSol << endl;
   }
   if (prtlev()>4) 
     cout << "nChunkPerSim = " << nChunkPerSol << endl;
   
-
-  if (combscan())
-    logSink() << "Combining scans." << LogIO::POST;
-  if (combspw()) 
-    logSink() << "Combining spws: " << spwlist << " -> " << spwlab << LogIO::POST;
-  if (combfld()) 
-    logSink() << "Combining fields." << LogIO::POST;
   
-
-  logSink() << "For simint = " << simint() << ", found "
-	    <<  nSol << " solution intervals."
-	    << LogIO::POST;
-
+  if (combscan())
+    os << "Combining scans." << LogIO::POST;
+  if (combspw()) 
+    os << "Combining spws: " << spwlist << " -> " << spwlab << LogIO::POST;
+  if (combfld()) 
+    os << "Combining fields." << LogIO::POST;
+  
+  os << "For simint = " << simint() << ", found "
+     <<  nSol << " solution intervals."
+     << LogIO::POST;
+  
   // Inflate the CalSet - RI TODO redundant with create above - also need to inflate for each spw...
   inflate(nChanParList(),startChanList(),nChunkPerSpw);
-
+  
   // Size the solvePar arrays
   initSolvePar();
 

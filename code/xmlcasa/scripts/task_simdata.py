@@ -49,11 +49,11 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         ##################################################################
         # read antenna file:
 
-        stnx, stny, stnz, stnd, antnames, nant, telescopename = util.readantenna(antennalist)
+        stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
         if stnx==False:
             return
-#        antnames=[]
-#        for k in range(0,nant): antnames.append('A%02d'%k)
+        antnames=[]
+        for k in range(0,nant): antnames.append('A%02d'%k)
         aveant=stnd.mean()
 
         # (set back to simdata after calls to util -
@@ -516,7 +516,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             util.ephemeris(refdate)  # util already knows the direction from above
             
             pl.subplot(224)
-            util.plotants(stnx, stny, stnz, stnd, antnames)
+            util.plotants(stnx, stny, stnz, stnd, padnames)
 #            pl.plot(range(2),'o')
             ax=pl.gca()
             l=ax.get_xticklabels()
@@ -567,7 +567,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         diam=stnd;
         sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
                  dishdiameter=diam.tolist(), 
-                 mount=['alt-az'], antname=antnames,
+                 mount=['alt-az'], antname=antnames, padname=padnames, 
                  coordsystem='global', referencelocation=posobs)
         midfreq=qa.add(qa.quantity(startfreq),qa.div(bandwidth,qa.quantity("2")))
         if str.upper(telescopename).find('VLA')>0:
@@ -596,6 +596,9 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         scansec=qa.convert(qa.quantity(scantime),'s')['value']
         nscan=int(totalsec/scansec)
         kfld=0
+        # RI todo progress meter for simdata Sim::observe
+        # print "calculating ";
+        
         for k in range(0,nscan) :
             sttime=-totalsec/2.0+scansec*k
             endtime=sttime+scansec
@@ -768,22 +771,24 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             if os.path.exists(noisymsfile):
                 cu.removetable(noisymsfile)
             os.system("cp -r "+msfile+" "+noisymsfile)
-            # XXX check for and copy flagversions file as well
+            # RI todo check for and copy flagversions file as well
             
             sm.openfromms(noisymsfile);    # an existing MS
             sm.setdata();                # currently defaults to fld=0,spw=0
             # type = B BPOLY G GSPLINE D P T TOPAC GAINCURVE
             # visibilities referenced to above atmosphere 
             # sm.setapply(type='TOPAC',opacity=tau0);  # opac corruption
-#            sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+#            sm.oldsetnoise(spillefficiency=eta_s,correfficiency=eta_q,
 #                        antefficiency=eta_a,trx=t_rx,
 #                        tau=tau0,tatmos=t_atm,tcmb=t_cmb,
 #                        mode="calculate")
 # use ANoise version
-            sm.setnoise2(spillefficiency=eta_s,correfficiency=eta_q,
+            sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                         antefficiency=eta_a,trx=t_rx,
                         tau=tau0,tatmos=t_atm,tground=t_ground,tcmb=t_cmb,
-                        mode="calculate",table=noisymsroot)
+                        mode="tsys-manual")
+            # don't set table, that way it won't save to disk
+#                        mode="calculate",table=noisymsroot)
             sm.corrupt();
             sm.done();
 
@@ -869,7 +874,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         if stokes != "I":
             cleanstr=cleanstr+",stokes='"+stokes+"'"
         if weighting != "natural":
-            cleanstr=cleanstr+",weighting='"+weighting+"',robust="+str(robust)+",noise="+str(noise)+",npixels="+str(npixels)
+            cleanstr=cleanstr+",weighting='"+weighting+"',robust="+str(robust)+",noise='"+str(noise)+"',npixels="+str(npixels)
         if uvtaper:
             cleanstr=cleanstr+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)
         #+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,"        

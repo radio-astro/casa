@@ -245,6 +245,11 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 			      amodel, fixed, String(complist), amask,  
 			      aimage, aresidual, Vector<String>(0), false);
 	     for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
+	       if(Table::isReadable(aimage[nIm]) && Table::isWritable(aresidual[nIm]) ){
+		 PagedImage<Float> rest(aimage[nIm]);
+		 PagedImage<Float> resi(aresidual[nIm]);
+		 itsImager->copyMask(resi, rest, "mask0");
+	       }
 	       continter=itsImager->interactivemask(aresidual[nIm], amask[nIm], 
 						    elniter, nloop,thresh, (aresidual.nelements() >1));
 	       if(continter>=1)
@@ -289,14 +294,14 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 		 Int remainloop=nloop-k-1;
 		 for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
 		   if(!nointerac(nIm)){
-			continter=itsImager->interactivemask(aresidual[nIm], amask[nIm],
+		     continter=itsImager->interactivemask(aresidual[nIm], amask[nIm],
 							     
-							     elniter, remainloop, 
-							     thresh, (aresidual.nelements() >1));
-			if(continter>=1)
-			  nointerac(nIm)=True;
-			if(continter==2)
-			  fixed(nIm)=True;
+							  elniter, remainloop, 
+							  thresh, (aresidual.nelements() >1));
+		     if(continter>=1)
+		       nointerac(nIm)=True;
+		     if(continter==2)
+		       fixed(nIm)=True;
 		   }
 		 }
 		 k=nloop-remainloop-1;
@@ -306,6 +311,16 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 		   k=nloop-2;
 		 }
 	       } 
+	     }
+	   }
+	   //Unset the mask in the residual 
+	   // Cause as requested in CAS-1768...
+	   for (uInt nIm=0; nIm < aresidual.nelements(); ++nIm){
+	     if(Table::isWritable(aresidual[nIm]) ){
+		 PagedImage<Float> resi(aresidual[nIm]);
+		 if(resi.hasRegion("mask0", RegionHandler::Masks)){
+		     resi.setDefaultMask("");
+		 }
 	     }
 	   }
 	 }

@@ -77,7 +77,7 @@ public:
   // Spwmap-sensitive spwOK()
   inline Vector<Bool> spwOK() { return spwOK_; };
 
-  // Set spwOK_ according to spwmap  RI made public 200
+  // Set spwOK_ according to spwmap  RI made public 200910
   void setSpwOK();
 
 protected:

@@ -182,6 +182,14 @@ public:
 	     const Bool displayProgress,
              const String& model, const String& mask);
 
+  //Clark Clean but image, psf, mask has to be 4-axes in the canonical casa order.
+  //Useful for cleaning dirty images made in CASA
+  //if mask is larger than a quarter of the image it will do a full image clean ...unlike the one below
+  Bool clarkclean(const Int niter, 
+		  const Float gain, const Quantity& threshold, 
+		  const String& model, const String& maskName, 
+		  Float cycleFactor=1.5);
+
   // Clark Clean algorithm
   Bool clarkclean(const Int niter, 
 		  const Float gain, const Quantity& threshold, 
