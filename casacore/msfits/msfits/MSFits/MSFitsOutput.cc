@@ -1208,7 +1208,23 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
     //   (ATCA looks like VLBI in UVFITS, but is already RHed.)
     // It looks as if WSRT needs y-axis reflection for UVFIX.
     Bool doRefl=((arrayName=="WSRT")  ||
-		((arrayName!="ATCA") && allLE(abs(arraypos),1000.0)));
+		 ((arrayName!="ATCA" &&
+		   arrayName!="EVLA") && allLE(abs(arraypos),1000.0)));
+
+    // EVLA wants full ITRF per antenna and arraypos=(0,0,0)
+    if (arrayName=="EVLA")
+      arraypos.set(0.0);
+
+    // Discern the position reference frame
+    ROMSAntennaColumns antCols (ms.antenna());
+
+    // Nominally arraypos+antpos will be ITRF (see below), 
+    //   unless we tinker with it, in which case it is
+    //   a local convention
+    String posref("ITRF");
+    if (doRot || doRefl)
+      posref=arrayName;
+
 
     // #### Header
     Record header;
@@ -1230,6 +1246,10 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
     header.define("NUMORB", 0);                      // NUMORB
     header.define("NOPCAL", 0);                      // NOPCAL
     header.define("POLTYPE", "        ");            // POLTYPE
+
+
+    // Added Nov 2009, following AIPS addition
+    header.define("FRAME",posref);                   // FRAME
 
     // NOT in going aips
     // header.define("DATUTC", 0.0);

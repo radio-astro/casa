@@ -438,6 +438,7 @@ void NewMSSimulator::initAnt(const String& telescope,
 			     const Vector<Double>&,
 			     const Vector<String>& mount,
 			     const Vector<String>& name,
+			     const Vector<String>& padname,
 			     const String& coordsystem,
 			     const MPosition& mRefLocation) 
 {
@@ -496,7 +497,8 @@ void NewMSSimulator::initAnt(const String& telescope,
   antc.name().putColumnRange(antSlice,name);
   //  antc.offset().putColumnRange(antSlice,offset);
   antc.position().putColumnRange(antSlice, antXYZ);
-  antc.station().fillColumn("");  // RI TODO add
+  //antc.station().fillColumn("");  
+  antc.station().putColumnRange(antSlice,padname);
   antc.flagRow().fillColumn(False);
   antc.type().fillColumn("GROUND-BASED");
   os << "Added rows to ANTENNA table" << LogIO::POST;
@@ -506,7 +508,7 @@ void NewMSSimulator::initAnt(const String& telescope,
 //		    coordsystem_p, mRefLocation_p)) {
 bool NewMSSimulator::getAnt(String& telescope, Int& nAnt, Matrix<Double>* antXYZ, 
 			    Vector<Double>& antDiam, Vector<Double>& /*offset*/,
-			    Vector<String>& mount, Vector<String>& name,
+			    Vector<String>& mount, Vector<String>& name, Vector<String>& padname,
 			    String& coordsystem, MPosition& mRefLocation ) {
   // return already set config info
   LogIO os(LogOrigin("NewMSSimulator", "getAnt()", WHERE));
@@ -526,6 +528,7 @@ bool NewMSSimulator::getAnt(String& telescope, Int& nAnt, Matrix<Double>* antXYZ
   //antc.offset().getColumn(offset);
   antc.mount().getColumn(mount);
   antc.name().getColumn(name);
+  antc.station().getColumn(padname);
 
   coordsystem="global";
   MVPosition mvzero(0.,0.,0.);
@@ -1121,15 +1124,15 @@ void NewMSSimulator::observe(const String& sourceName,
   Matrix<Int> corrProduct;
   polc.corrProduct().get(baseSpWID,corrProduct);
   Int nCorr=corrProduct.ncolumn();
-  {
-    ostringstream oss;
-    oss << "Spectral window : "<<spWindowName<<endl
-	<< "     reference frequency : " << startFreq/1.0e9 << "GHz" << endl
-	<< "     number of channels : " << nChan << endl
-	<< "     total bandwidth : " << nChan*freqInc/1.0e9 << "GHz" << endl
-	<< "     number of correlations : " << nCorr << endl;
-    os<<String(oss)<<LogIO::POST;
-  }
+//  {
+//    ostringstream oss;
+//    oss << "Spectral window : "<<spWindowName<<endl
+//	<< "     reference frequency : " << startFreq/1.0e9 << "GHz" << endl
+//	<< "     number of channels : " << nChan << endl
+//	<< "     total bandwidth : " << nChan*freqInc/1.0e9 << "GHz" << endl
+//	<< "     number of correlations : " << nCorr << endl;
+//    os<<String(oss)<<LogIO::DEBUG1;
+//  }
   
   // Field
   MSFieldColumns& fieldc=msc.field();
@@ -1160,8 +1163,8 @@ void NewMSSimulator::observe(const String& sourceName,
   msd.setFieldCenter(fcs(0));
   MDirection fieldCenter=fcs(0);
   {
-    os << "Observing source : "<<sourceName<<endl
-       << "     direction : " << formatDirection(fieldCenter)<<LogIO::POST;
+    os << "Observing source : "<< sourceName
+       << " in direction : " << formatDirection(fieldCenter)<<LogIO::DEBUG1;
   }
 
   // A bit ugly solution to extract the information about beam offsets
@@ -1191,18 +1194,18 @@ void NewMSSimulator::observe(const String& sourceName,
       msd.setFieldCenter(fieldCenter);
       t_offset_p = - msd.hourAngle() * 3600.0 * 180.0/C::pi / 15.0; // in seconds
       hourAngleDefined_p=True;
-      os << "Times specified are interpreted as hour angles for first source observed" << endl
-	 << "     offset in time = " << t_offset_p / 3600.0 << " hours from "
-	 << formatTime(taiRefTime.get("s").getValue("s")) << LogIO::POST;
+//      os << "Times specified are interpreted as hour angles for first source observed" << endl
+//	 << "     offset in time = " << t_offset_p / 3600.0 << " hours from "
+//	 << formatTime(taiRefTime.get("s").getValue("s")) << LogIO::DEBUG1;
     }
     
     Tstart = qStartTime.getValue("s") + 
       taiRefTime.get("s").getValue("s") + t_offset_p;
     Tend = qStopTime.getValue("s") + 
       taiRefTime.get("s").getValue("s") + t_offset_p;
-    os << "Time range : " << endl
-       << "     start : " << formatTime(Tstart) << endl
-       << "     stop  : " << formatTime(Tend) << LogIO::POST;
+//    os << "Time range : " << endl
+//       << "     start : " << formatTime(Tstart) << endl
+//       << "     stop  : " << formatTime(Tend) << endl << LogIO::DEBUG1;
   }
 
   // fill Observation Table for every call. Eventually we should fill
@@ -1278,14 +1281,14 @@ void NewMSSimulator::observe(const String& sourceName,
   }
   if(needNewHyperCube) {
     hyperCubeID_p++;
-    os << "Creating new hypercube " << hyperCubeID_p+1 << LogIO::POST;
+    //    os << "Creating new hypercube " << hyperCubeID_p+1 << LogIO::DEBUG1;
     addHyperCubes(hyperCubeID_p, nBaselines, nChan, nCorr);
     dataWritten_p=0;
     lastSpWID_p=baseSpWID;
     lastNchan_p=nChan;
   }
   // ... Next extend the table
-  os << "Adding " << nNewRows << " rows" << LogIO::POST;
+  //  os << "Adding " << nNewRows << " rows" << LogIO::DEBUG1;
   ms_p->addRow(nNewRows);
 
   // ... Finally extend the hypercubes
@@ -1304,7 +1307,7 @@ void NewMSSimulator::observe(const String& sourceName,
     // Size of scratch columns
     Double thisChunk=16.0*Double(nChan)*Double(nCorr)*Double(nNewRows);
     dataWritten_p+=thisChunk;
-    os << "Written " << thisChunk/(1024.0*1024.0) << " Mbytes to scratch columns" << LogIO::POST;
+    //    os << "Written " << thisChunk/(1024.0*1024.0) << " Mbytes to scratch columns" << LogIO::DEBUG1;
   }
 
   Matrix<Complex> data(nCorr,nChan); 
@@ -1318,11 +1321,11 @@ void NewMSSimulator::observe(const String& sourceName,
 
 
  
-  os << "Calculating uvw coordinates for " << nIntegrations << " integrations" << LogIO::POST;
+  //  os << "Calculating uvw coordinates for " << nIntegrations << " integrations" << LogIO::DEBUG1;
 
   for(Int feed=0; feed<nFeed; feed++) {
-    if (nFeed) 
-       os << "Processing feed "<<feed<< LogIO::POST;
+    //if (nFeed) 
+      //       os << "Processing feed "<<feed<< LogIO::DEBUG1;
     // for now assume that all feeds have the same offsets w.r.t.
     // antenna frame for all antennas
     RigidVector<Double, 2> beamOffset=beam_offsets(0,0,feed);
@@ -1502,13 +1505,13 @@ void NewMSSimulator::observe(const String& sourceName,
 	}
 	if (firstTime) {
 	  firstTime = False;
-	  Double ha1 = msd.hourAngle() *  180.0/C::pi / 15.0;
-	  os << "Starting conditions for antenna 1: " << LogIO::POST;
-	  os << "     time = " << formatTime(Time) << LogIO::POST;
-	  os << "     scan = " << scan+1 << LogIO::POST;
-	  os << "     az   = " << azel(0) *  180.0/C::pi << " deg" << LogIO::POST;
-	  os << "     el   = " << azel(1) *  180.0/C::pi<< " deg" << LogIO::POST;
-	  os << "     ha   = " << ha1 << " hours" << LogIO::POST;
+//	  Double ha1 = msd.hourAngle() *  180.0/C::pi / 15.0;
+//	  os << "Starting conditions for antenna 1: " << LogIO::DEBUG1;
+//	  os << "     time = " << formatTime(Time) << LogIO::DEBUG1;
+//	  os << "     scan = " << scan+1 << LogIO::DEBUG1;
+//	  os << "     az   = " << azel(0) *  180.0/C::pi << " deg" << LogIO::DEBUG1;
+//	  os << "     el   = " << azel(1) *  180.0/C::pi<< " deg" << LogIO::DEBUG1;
+//	  os << "     ha   = " << ha1 << " hours" << LogIO::DEBUG1;
 	}
     }    
 
@@ -1554,19 +1557,20 @@ void NewMSSimulator::observe(const String& sourceName,
     msd.setAntenna(0);
     Vector<Double> azel=msd.azel().getAngle("rad").getValue("rad");
 
-    Double ha1 = msd.hourAngle() *  180.0/C::pi / 15.0;
-    os << "Stopping conditions for antenna 1: " << LogIO::POST;
-    os << "     time = " << formatTime(Time) << LogIO::POST;
-    os << "     scan = " << scan+1 << LogIO::POST;
-    os << "     az   = " << azel(0) *  180.0/C::pi << " deg" << LogIO::POST;
-    os << "     el   = " << azel(1) *  180.0/C::pi << " deg" << LogIO::POST;
-    os << "     ha   = " << ha1 << " hours" << LogIO::POST;
+// sadly, messages from Core don't get filtered very well by casapy.
+//    Double ha1 = msd.hourAngle() *  180.0/C::pi / 15.0;
+//    os << "Stopping conditions for antenna 1: " << LogIO::DEBUG1;
+//    os << "     time = " << formatTime(Time) << LogIO::DEBUG1;
+//    os << "     scan = " << scan+1 << LogIO::DEBUG1;
+//    os << "     az   = " << azel(0) *  180.0/C::pi << " deg" << LogIO::DEBUG1;
+//    os << "     el   = " << azel(1) *  180.0/C::pi << " deg" << LogIO::DEBUG1;
+//    os << "     ha   = " << ha1 << " hours" << LogIO::DEBUG1;
   }
   
-  os << (row+1) << " visibilities simulated " << LogIO::POST;
-  os << nShadowed << " visibilities flagged due to shadowing " << LogIO::POST;
-  os << nSubElevation << " visibilities flagged due to elevation limit of " << 
-    elevationLimit_p.getValue("deg") << " degrees " << LogIO::POST;
+//  os << (row+1) << " visibilities simulated " << LogIO::DEBUG1;
+//  os << nShadowed << " visibilities flagged due to shadowing " << LogIO::DEBUG1;
+//  os << nSubElevation << " visibilities flagged due to elevation limit of " << 
+//    elevationLimit_p.getValue("deg") << " degrees " << endl << LogIO::DEBUG1;
   
 };
 
