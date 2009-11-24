@@ -917,11 +917,7 @@ Bool Simulator::setspwindow(const String& spwName,
 
 {
   LogIO os(LogOrigin("Simulator", "setspwindow()", WHERE));
-  //#ifndef RI_DEBUG
   try {
-//#else 
-//    os << LogIO::WARN << "debug mode - not catching errors." << LogIO::POST;  
-//#endif
     if (nChan == 0) {
       os << LogIO::SEVERE << "must provide nchannels" << LogIO::POST;  
       return False;
@@ -952,12 +948,10 @@ Bool Simulator::setspwindow(const String& spwName,
 			 startFreq_p[nSpw-1], freqInc_p[nSpw-1], 
 			 freqRes_p[nSpw-1], stokesString_p[nSpw-1]);
 
-    //#ifndef RI_DEBUG
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
-  //#endif
   return True;
 };
 
@@ -1044,31 +1038,44 @@ Bool Simulator::setvp(const Bool dovp,
 // NEW NOISE WITH ANoise
 
 Bool Simulator::setnoise(const String& mode, 
-			  const Quantity& simplenoise,
-			  // if blank, not stored
-			  const String& caltable,
-			  // user-specified tau 
-			  const Float tau=0.0,
-			  // or ATM calculation
-			  const Float antefficiency=0.80,
-			  const Float correfficiency=0.85,
-			  const Float spillefficiency=0.85,
-			  const Float trx=150.0, 
-			  const Float tatmos=250.0, 
-			  const Float tground=270.0, 
-			  const Float tcmb=2.7) {
+			 const String& caltable, // if blank, not stored
+			 const Quantity& simplenoise,
+			 // ATM calculation
+			 const Quantity& pground,
+			 const Float relhum,
+			 const Quantity& altitude,
+			 const Quantity& waterheight,
+			 const Quantity& pwv,
+//			 const Quantity& pground=Quantity(560,"mbar"),
+//			 const Float relhum=20.,
+//			 const Quantity& altitude=Quantity(5000,"m"),
+//			 const Quantity& waterheight=Quantity(2,"km"),
+//			 const Quantity& pwv=Quantity(1,"mm"),
+			 // OR user-specified tau and tatmos 
+			 const Float tatmos=250.0, 
+			 const Float tau=0.1,
+			 // antenna parameters used for either option
+			 const Float antefficiency=0.80,
+			 const Float spillefficiency=0.85,
+			 const Float correfficiency=0.85,
+			 const Float trx=150.0, 
+			 const Float tground=270.0, 
+			 const Float tcmb=2.7
+			 ) {
   
   LogIO os(LogOrigin("Simulator", "setnoise2()", WHERE));
 #ifndef RI_DEBUG
   try {
+#else
+    cout<<pground<<" "<<relhum<<" "<<altitude<<" "<<waterheight<<" "<<pwv<<endl;
 #endif
-    
+
     noisemode_p = mode;
 
     RecordDesc simparDesc;
     simparDesc.addField ("type", TpString);
-    simparDesc.addField ("caltable", TpString);
     simparDesc.addField ("mode", TpString);
+    simparDesc.addField ("caltable", TpString);
 
     simparDesc.addField ("amplitude", TpFloat);  // for constant scale
     // simparDesc.addField ("scale", TpFloat);  // for fractional fluctuations
@@ -1079,18 +1086,23 @@ Bool Simulator::setnoise(const String& mode,
     simparDesc.addField ("stopTime", TpDouble);
 
     simparDesc.addField ("antefficiency"  ,TpFloat);
-    simparDesc.addField ("correfficiency" ,TpFloat);
     simparDesc.addField ("spillefficiency",TpFloat);
+    simparDesc.addField ("correfficiency" ,TpFloat);
     simparDesc.addField ("trx"		  ,TpFloat);
-    simparDesc.addField ("tatmos"	  ,TpFloat);
     simparDesc.addField ("tground"	  ,TpFloat);
     simparDesc.addField ("tcmb"           ,TpFloat);
 
     // user-override of ATM calculated tau
+    simparDesc.addField ("tatmos"	  ,TpFloat);
     simparDesc.addField ("tau0"		  ,TpFloat);
 
-    // insert check here so that if tau0 is not defined, use freqdep
-    // tsys
+    simparDesc.addField ("pwv"	          ,TpDouble);
+    simparDesc.addField ("pground"	  ,TpDouble);
+    simparDesc.addField ("relhum"	  ,TpFloat);
+    simparDesc.addField ("altitude"	  ,TpDouble);
+    simparDesc.addField ("waterheight"	  ,TpDouble);
+
+    // RI todo setnoise2 if tau0 is not defined, use freqdep
 
     String caltbl=caltable;
     caltbl.trim();
@@ -1125,11 +1137,11 @@ Bool Simulator::setnoise(const String& mode,
       simpar.define ("amplitude", Float(simplenoise.getValue("Jy")) );
       simpar.define ("mode", "simple");
 
-    } else if (mode=="tsys" or mode=="tsys-manual") {
+    } else if (mode=="tsys-atm" or mode=="tsys-manual") {
       os << "adding noise with unity amplitude" << LogIO::POST;
       // do be scaled in a minute by a Tsys-derived M below
       simpar.define ("amplitude", Float(1.0) );
-      simpar.define ("mode", "calc");
+      simpar.define ("mode", mode);
 
     } else {
       throw(AipsError("unsupported mode "+mode+" in setnoise()"));
@@ -1139,32 +1151,68 @@ Bool Simulator::setnoise(const String& mode,
     if (!create_corrupt(simpar)) 
       throw(AipsError("could not create ANoise in Simulator::setnoise"));
         
-    if (mode=="tsys" or mode=="tsys-manual") {
+    if (mode=="tsys-atm" or mode=="tsys-manual") {
 
       simpar.define ("antefficiency"  ,antefficiency  ); 
       simpar.define ("correfficiency" ,correfficiency );
       simpar.define ("spillefficiency",spillefficiency);
       simpar.define ("trx"	      ,trx	      );
-      simpar.define ("tatmos"	      ,tatmos	      );
       simpar.define ("tground"	      ,tground	      );
       simpar.define ("tcmb"           ,tcmb           );
 
       if (mode=="tsys-manual") {
 	// user can override the ATM calculated optical depth
-	simpar.define ("tau0"	      ,tau	      );      
 	// with tau0 to be used over the entire SPW,
+	simpar.define ("tau0"	      ,tau	      );      
+	if (tatmos>10)
+	  simpar.define ("tatmos"	      ,tatmos	      );
+	else
+	  simpar.define ("tatmos"	      ,250.	      );
+	// AtmosCorruptor cal deal with 
+	// an MF in tsys-manual mode - it will use ATM to calculate 
+	// the relative opacity across the band, but it won't properly
+	// integrate the atmosphere to get T_ebb.  
+	// so for now we'll just make tsys-manual mean freqDepPar=False
 	simpar.define ("type", "M");
       } else {
 	// otherwise ATM will be used to calculate tau from pwv
-	// RI TODO input pwv from simdata to Simulator
-	// simpar.define ("pwv", pwv);
-	// as a function of frequency
+	// catch uninitialized variant @#$^@! XML interface
+	if (pground.getValue("mbar")>100.)
+	  simpar.define ("pground", pground.getValue("mbar"));
+	else {
+	  simpar.define ("pground", Double(560.));
+	  os<<"User has not set ground pressure, using 560mb"<<LogIO::POST;
+	}
+	if (relhum>0)
+	  simpar.define ("relhum", relhum);
+	else {
+	  simpar.define ("relhum", 20.);
+	  os<<"User has not set ground relative humidity, using 20%"<<LogIO::POST;
+	}
+	if (altitude.getValue("m")>0.)
+	  simpar.define ("altitude", altitude.getValue("m"));
+	else {
+	  simpar.define ("altitude", Double(5000.));
+	  os<<"User has not set site altitude, using 5000m"<<LogIO::POST;
+	}
+	if (waterheight.getValue("m")>100.)
+	  simpar.define ("waterheight", waterheight.getValue("km"));
+	else {
+	  simpar.define ("waterheight", Double(2.));
+	  os<<"User has not set water scale height, using 2km"<<LogIO::POST;
+	}
+	if (pwv.getValue("mm")>0.)
+	  simpar.define ("pwv", pwv.getValue("mm"));
+	else {
+	  simpar.define ("pwv", Double(1.));
+	  os<<"User has not set PWV, using 1mm"<<LogIO::POST;
+	}
+	// as a function of frequency  (freqDepPar=True)
 	simpar.define ("type", "MF");
       }
 
       if (strlen>1) 
 	simpar.define ("caltable", caltbl+".M.cal");
-      simpar.define ("mode", "tsys");  
       
       // create the M
       if (!create_corrupt(simpar)) 
@@ -1272,7 +1320,13 @@ Bool Simulator::settrop(const String& mode,
       simparDesc.addField ("combine", TpString);
       simparDesc.addField ("startTime", TpDouble);
       simparDesc.addField ("stopTime", TpDouble);
-            
+
+      simparDesc.addField ("tground"	  ,TpFloat);
+      simparDesc.addField ("pground"	  ,TpDouble);
+      simparDesc.addField ("relhum"	  ,TpFloat);
+      simparDesc.addField ("altitude"	  ,TpDouble);
+      simparDesc.addField ("waterheight"	  ,TpDouble);
+    
       // create record with the requisite field values
       Record simpar(simparDesc,RecordInterface::Variable);
       simpar.define ("type", "TF");
@@ -1283,6 +1337,37 @@ Bool Simulator::settrop(const String& mode,
       simpar.define ("beta", beta);
       simpar.define ("windspeed", deltapwv);
       simpar.define ("combine", "");
+
+//      if (tground>100.)
+//	simpar.define ("tground", tground);
+//      else {
+	simpar.define ("tground", Float(270.));
+//	os<<"User has not set ground temperature, using 270K"<<LogIO::POST;
+//      }
+//      if (pground.getValue("mbar")>100.)
+//	simpar.define ("pground", pground.getValue("mbar"));
+//      else {
+	simpar.define ("pground", Double(560.));
+//	os<<"User has not set ground pressure, using 560mb"<<LogIO::POST;
+//      }
+//      if (relhum>0)
+//	simpar.define ("relhum", relhum);
+//      else {
+	simpar.define ("relhum", Float(20.));
+//	os<<"User has not set ground relative humidity, using 20%"<<LogIO::POST;
+//      }
+//      if (altitude.getValue("m")>0.)
+//	simpar.define ("altitude", altitude.getValue("m"));
+//      else {
+	simpar.define ("altitude", Double(5000.));
+//	os<<"User has not set site altitude, using 5000m"<<LogIO::POST;
+//      }
+//      if (waterheight.getValue("m")>100.)
+//	simpar.define ("waterheight", waterheight.getValue("km"));
+//      else {
+	simpar.define ("waterheight", Double(2.));
+//	os<<"User has not set water scale height, using 2km"<<LogIO::POST;
+//      }
 
       // create the T
       if (!create_corrupt(simpar)) 
@@ -1371,18 +1456,15 @@ Bool Simulator::setleakage(const String& mode, const String& table,
 // OLD NOISE WITH ACoh
 
 Bool Simulator::oldsetnoise(const String& mode, 
-			 const Quantity& simplenoise,
-			 const String& table,
-			 const Float antefficiency=0.80,
-			 const Float correfficiency=0.85,
-			 const Float spillefficiency=0.85,
-			 const Float tau=0.0,
-			 const Float trx=50.0, 
-			 const Float tatmos=250.0, 
-			 const Float tcmb=2.7) {
-                         // const Quantity& trx=50.0, 
-                         // const Quantity& tatmos=250.0, 
-                         // const Quantity& tcmb=2.7) {
+			    const String& table,
+			    const Quantity& simplenoise,
+			    const Float antefficiency=0.80,
+			    const Float correfficiency=0.85,
+			    const Float spillefficiency=0.85,
+			    const Float tau=0.0,
+			    const Float trx=50.0, 
+			    const Float tatmos=250.0, 
+			    const Float tcmb=2.7) {
   
   LogIO os(LogOrigin("Simulator", "oldsetnoise()", WHERE));
   try {
@@ -1550,7 +1632,7 @@ Bool Simulator::create_corrupt(Record& simpar)
     svc = createSolvableVisCal(upType,*vs_p);
 
 #ifdef RI_DEBUG
-    svc->setPrtlev(3);
+    svc->setPrtlev(4);
 #else 
     svc->setPrtlev(0);
 #endif
