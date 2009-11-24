@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STWriter.cpp 1603 2009-07-17 20:35:47Z TakTsutsumi $
+//# $Id: STWriter.cpp 1661 2009-11-21 05:37:32Z KanaSugimoto $
 //#---------------------------------------------------------------------------
 
 #include <string>
@@ -244,6 +244,7 @@ Int STWriter::write(const CountedPtr<Scantable> in,
           pksrec.baseSub.resize(npol,9);
           pksrec.baseSub   = 0.0f;
           pksrec.xCalFctr  = 0.0;
+	  pksrec.flagrow = rec.asuInt("FLAGROW");
 
           status = writer_->write(pksrec);
           if ( status ) {
