@@ -1038,10 +1038,11 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       }
       Vector<Double> freqs(imageNchan_p);
       freqs=0.0;
+      Double chanVelResolution=0.0;
       if(Double(mImageStep_p.getValue())!=0.0) {
 	MRadialVelocity mRadVel=mImageStart_p;
+	MDoppler mdoppler;
 	for (Int chan=0;chan<imageNchan_p;++chan) {
-	  MDoppler mdoppler;
 	  if(imageMode_p.contains("OPTICAL")){
 	    mdoppler=MDoppler(mRadVel.getValue().get(), MDoppler::OPTICAL);
 	  } 
@@ -1051,6 +1052,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	  freqs(chan)=
 	    MFrequency::fromDoppler(mdoppler, restFreq).getValue().getValue();
 	  mRadVel.set(mRadVel.getValue()+mImageStep_p.getValue());
+	  if(imageNchan_p==1)
+	    chanVelResolution=MFrequency::fromDoppler(mdoppler, restFreq).getValue().getValue()-freqs(0);
 	}
       }
       else {
@@ -1061,8 +1064,19 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       // Use this next line when non-linear is working
       // when selecting in velocity its specfied freqframe or REST 
       MFrequency::Types imfreqref=(obsFreqRef==MFrequency::REST) ? MFrequency::REST : freqFrame_p;
-      mySpectral = new SpectralCoordinate(imfreqref, freqs,
-					  restFreq);
+  
+      if(imageNchan_p==1){
+	if(chanVelResolution==0.0)
+	  chanVelResolution=freqResolution(0);
+	mySpectral = new SpectralCoordinate(imfreqref,
+					    freqs(0),
+					    chanVelResolution,
+					    refChan, restFreq);
+      }
+      else{
+	mySpectral = new SpectralCoordinate(imfreqref, freqs,
+					    restFreq);
+      }
       // mySpectral = new SpectralCoordinate(MFrequency::DEFAULT, freqs(0),
       //				       freqs(1)-freqs(0), refChan,
       //				        restFreq);
