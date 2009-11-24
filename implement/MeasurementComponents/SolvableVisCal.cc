@@ -482,7 +482,8 @@ void SolvableVisCal::createCorruptor(const VisIter& vi,const Record& simpar, con
     // totalBandwidthQuant ?  in other places its assumed to be in Hz
   }
   // see MSsummary.cc for more info/examples
-
+  if (prtlev()>3) 
+    cout << "SVC::fnChan = "<<corruptor_p->fnChan()<<" reffreq = "<<corruptor_p->fRefFreq()<<" fWidth = "<<corruptor_p->fWidth()<<endl;
 }
 
 

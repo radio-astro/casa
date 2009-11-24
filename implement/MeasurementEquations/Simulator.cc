@@ -1046,11 +1046,6 @@ Bool Simulator::setnoise(const String& mode,
 			 const Quantity& altitude,
 			 const Quantity& waterheight,
 			 const Quantity& pwv,
-//			 const Quantity& pground=Quantity(560,"mbar"),
-//			 const Float relhum=20.,
-//			 const Quantity& altitude=Quantity(5000,"m"),
-//			 const Quantity& waterheight=Quantity(2,"km"),
-//			 const Quantity& pwv=Quantity(1,"mm"),
 			 // OR user-specified tau and tatmos 
 			 const Float tatmos=250.0, 
 			 const Float tau=0.1,
@@ -1096,7 +1091,7 @@ Bool Simulator::setnoise(const String& mode,
     simparDesc.addField ("tatmos"	  ,TpFloat);
     simparDesc.addField ("tau0"		  ,TpFloat);
 
-    simparDesc.addField ("pwv"	          ,TpDouble);
+    simparDesc.addField ("mean_pwv"	  ,TpDouble);
     simparDesc.addField ("pground"	  ,TpDouble);
     simparDesc.addField ("relhum"	  ,TpFloat);
     simparDesc.addField ("altitude"	  ,TpDouble);
@@ -1160,6 +1155,14 @@ Bool Simulator::setnoise(const String& mode,
       simpar.define ("tground"	      ,tground	      );
       simpar.define ("tcmb"           ,tcmb           );
 
+      if (pwv.getValue("mm")>0.)
+	simpar.define ("mean_pwv", pwv.getValue("mm"));
+      else {
+	simpar.define ("mean_pwv", Double(1.));
+	// we want to set it, but it doesn't get used unless ATM is being used
+	if (mode=="tsys-atm") os<<"User has not set PWV, using 1mm"<<LogIO::POST;
+      }
+      
       if (mode=="tsys-manual") {
 	// user can override the ATM calculated optical depth
 	// with tau0 to be used over the entire SPW,
@@ -1200,12 +1203,6 @@ Bool Simulator::setnoise(const String& mode,
 	else {
 	  simpar.define ("waterheight", Double(2.));
 	  os<<"User has not set water scale height, using 2km"<<LogIO::POST;
-	}
-	if (pwv.getValue("mm")>0.)
-	  simpar.define ("pwv", pwv.getValue("mm"));
-	else {
-	  simpar.define ("pwv", Double(1.));
-	  os<<"User has not set PWV, using 1mm"<<LogIO::POST;
 	}
 	// as a function of frequency  (freqDepPar=True)
 	simpar.define ("type", "MF");
@@ -1320,6 +1317,13 @@ Bool Simulator::settrop(const String& mode,
       simparDesc.addField ("combine", TpString);
       simparDesc.addField ("startTime", TpDouble);
       simparDesc.addField ("stopTime", TpDouble);
+
+      simparDesc.addField ("antefficiency"  ,TpFloat);
+      simparDesc.addField ("spillefficiency",TpFloat);
+      simparDesc.addField ("correfficiency" ,TpFloat);
+      simparDesc.addField ("trx"		  ,TpFloat);
+      simparDesc.addField ("tcmb"           ,TpFloat);
+      simparDesc.addField ("tatmos"           ,TpFloat);
 
       simparDesc.addField ("tground"	  ,TpFloat);
       simparDesc.addField ("pground"	  ,TpDouble);

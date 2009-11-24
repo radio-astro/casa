@@ -229,7 +229,7 @@ void AtmosCorruptor::initAtm() {
   double PstepFact = 1.2; // Pressure step ratio between two consecutive layers
   atm::Atmospheretype atmType = atm::tropical;
   
-  os << "Initializing ATM with Tground="<<T.get("K")<<"|"<<simpar().asFloat("tground")<<" Pground="<<P.get("atm")<<" "<<H.get()<<" humidity altitude "<<Alt.get("m")<<" and water scale height "<<WVL.get("m")<<LogIO::POST;
+  os << "Initializing ATM with Tground="<<T.get("K")<<"K, Pground="<<P.get("mbar")<<"mb, "<<H.get()<<"% humidity, altitude "<<Alt.get("m")<<"m and water scale height "<<WVL.get("m")<<"m"<<LogIO::POST;
 
   itsatm = new atm::AtmProfile(Alt, P, T, TLR, 
 			       H, WVL, Pstep, PstepFact, 
@@ -253,13 +253,18 @@ void AtmosCorruptor::initAtm() {
 
   itsRIP = new atm::RefractiveIndexProfile(*itsSpecGrid,*itsatm);
   
-  os << "AtmosCorruptor::getDispersiveWetPathLength = " 
-     << itsRIP->getDispersiveWetPathLength().get("micron") 
-     << " microns at " 
-     << fRefFreq()[0]/1e9 << " GHz" << LogIO::POST;
-
   // used for Tebb(spw,chan)
   itsSkyStatus = new atm::SkyStatus(*itsRIP);
+
+  os << "DispersiveWetPathLength = " 
+     << itsRIP->getDispersiveWetPathLength().get("micron") 
+     << " microns at " 
+     << fRefFreq()[0]/1e9 << " GHz; dryOpacity = " 
+     << itsRIP->getDryOpacity(currSpw(),focusChan()).get() << LogIO::POST;
+  os << "  Tebb = "
+     << itsSkyStatus->getTebbSky(currSpw(),focusChan(),mean_pwv(),1.0,
+				 spilleff(),tground()).get()
+     << LogIO::POST;
 
 #endif
 }
@@ -274,8 +279,14 @@ void AtmosCorruptor::initialize() {
   if (!times_initialized())
     throw(AipsError("logic error in AtmCorr::init(Seed,Beta,scale) - slot times not initialized."));
 
+  mean_pwv() = simpar().asFloat("mean_pwv");
+  spilleff() = simpar().asFloat("spillefficiency");
+  tground() = simpar().asFloat("tground");
+  tatmos() = simpar().asFloat("tatmos");  // only used in manual mode
+  tcmb() = simpar().asFloat("tcmb");
+  trx() = simpar().asFloat("trx");
   // RI todo AtmCor:init() test is mean_pwv() ever set?
-  initAtm();
+  if (freqDepPar()) initAtm();
   pwv_p.resize(nAnt(),False,True);
   for (Int ia=0;ia<nAnt();++ia) {
     pwv_p[ia] = new Vector<Float>(nSim());
@@ -312,15 +323,14 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar) {
   } else {
     antDiams = vi.msColumns().antenna().dishDiameter().getColumn();
     
-    // use ATM but no time fluctuation of atm - e.g. Tf [Tsys scaling, also Mf]
-    if (freqDepPar()) initAtm();
-    if (prtlev()>2) cout << "atmosphere initialized" << endl;
-    mean_pwv() = simpar.asFloat("pwv");
+    mean_pwv() = simpar.asFloat("mean_pwv");
     spilleff() = simpar.asFloat("spillefficiency");
     tground() = simpar.asFloat("tground");
     tatmos() = simpar.asFloat("tatmos");  // only used in manual mode
     tcmb() = simpar.asFloat("tcmb");
     trx() = simpar.asFloat("trx");
+    // use ATM but no time fluctuation of atm - e.g. Tf [Tsys scaling, also Mf]
+    if (freqDepPar()) initAtm();
 
     if (mode()=="tsys-manual") {
       // user is specifying Tatmos and tau.
@@ -340,18 +350,23 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar) {
 
     } else {
       // tsys-atm 
-      currSpw()=0;
-      setFocusChan(nChan()/2);
       tauscale()=1.;
       // RI todo AtmCorr::init throw exception if not freqDepPar() here?
     }
- 
+
+    // even if not freqdeppar, we need to set this so that tsys and focusFreq work
+    currSpw()=0;
+    setFocusChan(floor(nChan()/2));
+    
     os << LogIO::NORMAL 
        << "Tsys at center of first Spectral Window = " << tsys(1.0) 
-       << " tau=" << opac(focusChan()) << " pwv="<< mean_pwv() 
        << " tground=" << tground() << " spillover=" << spilleff()
        << LogIO::POST;      
-    os << "log 2.7 = "<< log(2.7)  << LogIO::POST;
+    if (tsys(1.0)>10000 or tsys(1.0)<=0) throw(AipsError("error in ATM setup - Tsys poorly defined - check inputs"));
+    if (freqDepPar()) 
+      os << " pwv="<< mean_pwv() << " tau=" << opac(focusChan()) << LogIO::POST;
+    else
+      os << " tauscale=" << tauscale() << LogIO::POST;
    
     // conversion to Jy, when divided by D1D2
     amp() = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 / 		
@@ -376,32 +391,47 @@ Float AtmosCorruptor::tsys(const Float& airmass) {
       atm::Temperature tatmosatm = 
 	itsSkyStatus->getTebbSky(currSpw(),focusChan(),mean_pwv(),airmass,
 				 spilleff(),tground());
-      R = 1./(exp(hn_k/tcmb())-1.) +
+//      R = 1./(exp(hn_k/tcmb())-1.) +
+//	exp(tau) *
+//	( 1./(exp(hn_k/tatmosatm.get("K"))-1.) + 
+//	  1./(exp(hn_k/trx())-1.) );
+      // 1/e(hn/kt)-1 recalculated every setFocusChan
+      R = Rtcmb() +
 	exp(tau) *
 	( 1./(exp(hn_k/tatmosatm.get("K"))-1.) + 
-	  1./(exp(hn_k/trx())-1.) );
+	  Rtrx() );
       
     } else {
       tau = tau*tauscale();
       // manual: tauscale = tau0/opac(band center)
-      R = 1./(exp(hn_k/tcmb())-1.) +
+//      R = 1./(exp(hn_k/tcmb())-1.) +
+//	exp(tau) *
+//	( spilleff() * (1.-exp(-tau)) / (exp(hn_k/tatmos())-1.) + 
+//	  (1.-spilleff()) / (exp(hn_k/tground())-1.) +
+//	  1./(exp(hn_k/trx())- 1.) );
+      R = Rtcmb() +
 	exp(tau) *
-	( spilleff() * (1.-exp(-tau)) / (exp(hn_k/tatmos())-1.) + 
-	  (1.-spilleff()) / (exp(hn_k/tground())-1.) +
-	  1./(exp(hn_k/trx())- 1.) );
+	( spilleff() * (1.-exp(-tau)) * Rtatmos() + 
+	  (1.-spilleff()) * Rtground() +
+	  Rtrx() );
     }
   } else {
     // not freqDep
     if (mode()=="tsys-atm") 
-      throw(AipsError("non-freqDep AtmosCorr::tsys called in ATM mode"));
+      throw(AipsError("non-freqDep AtmosCorr::tsys called in unsopported ATM mode"));
     else {
-      tau=tauscale()*airmass;
+      tau=tauscale()*airmass; // no reference to ATM here - it's not initialized!
       // manual: tauscale = tau0
-      R = 1./(exp(hn_k/tcmb())-1.) +
+//      R = 1./(exp(hn_k/tcmb())-1.) +
+//	exp(tau) *
+//	( spilleff() * (1.-exp(-tau)) / (exp(hn_k/tatmos())-1.) + 
+//	  (1.-spilleff()) / (exp(hn_k/tground())-1.) +
+//	  1./(exp(hn_k/trx())- 1.) );
+      R = Rtcmb() +
 	exp(tau) *
-	( spilleff() * (1.-exp(-tau)) / (exp(hn_k/tatmos())-1.) + 
-	  (1.-spilleff()) / (exp(hn_k/tground())-1.) +
-	  1./(exp(hn_k/trx())- 1.) );
+	( spilleff() * (1.-exp(-tau)) / Rtatmos() + 
+	  (1.-spilleff()) / Rtground() +
+	  Rtrx() );
     }
   }
   return hn_k/log(1.+1./R);
@@ -424,6 +454,12 @@ Float AtmosCorruptor::opac(const Int ichan) {
 void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float scale) {
   // individual delays for each antenna
 
+  mean_pwv() = simpar().asFloat("mean_pwv");
+  spilleff() = simpar().asFloat("spillefficiency");
+  tground() = simpar().asFloat("tground");
+  tatmos() = simpar().asFloat("tatmos");  // only used in manual mode
+  tcmb() = simpar().asFloat("tcmb");
+  trx() = simpar().asFloat("trx");
   initAtm();
 
   mode()="1d";
@@ -436,10 +472,13 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
   pwv_p.resize(nAnt(),False,True);
   for (Int iant=0;iant<nAnt();++iant){
     pwv_p[iant] = new Vector<Float>(nSim());
-    myfbm->initialize(Seed+iant,Beta); // (re)initialize
-    *(pwv_p[iant]) = myfbm->data(); // iAnt()=iant; delay() = myfbm->data();
-    Float pmean = mean(*(pwv_p[iant]));
-    Float rms = sqrt(mean( (*(pwv_p[iant])-pmean)*(*(pwv_p[iant])-pmean) ));
+    Float pmean(0.),rms(0.);
+    do {
+      myfbm->initialize(Seed+iant,Beta); // (re)initialize
+      *(pwv_p[iant]) = myfbm->data(); // iAnt()=iant; delay() = myfbm->data();
+      pmean = mean(*(pwv_p[iant]));
+      rms = sqrt(mean( (*(pwv_p[iant])-pmean)*(*(pwv_p[iant])-pmean) ));
+    } while (!isnormal(rms));
     if (prtlev()>3 and currAnt()<2) {
       cout << "RMS fBM fluctuation for antenna " << iant 
 	   << " = " << rms << " ( " << pmean << " ; beta = " << Beta << " ) " << endl;      
@@ -469,6 +508,12 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
   void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float scale, const ROMSAntennaColumns& antcols) {
   // 2d delay screen
   LogIO os(LogOrigin("AtmCorr", "init(Seed,Beta,Scale,AntCols)", WHERE));
+  mean_pwv() = simpar().asFloat("mean_pwv");
+  spilleff() = simpar().asFloat("spillefficiency");
+  tground() = simpar().asFloat("tground");
+  tatmos() = simpar().asFloat("tatmos");  // only used in manual mode
+  tcmb() = simpar().asFloat("tcmb");
+  trx() = simpar().asFloat("trx");
   initAtm();
 
   mode()="2d";
@@ -536,13 +581,14 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
 
   fBM* myfbm = new fBM(xsize,ysize);
   screen_p = new Matrix<Float>(xsize,ysize);
-  myfbm->initialize(Seed,Beta); 
-  *screen_p=myfbm->data();
-  if (prtlev()>3) 
-    cout << " fBM created" << endl;
-
-  Float pmean = mean(*screen_p);
-  Float rms = sqrt(mean( ((*screen_p)-pmean)*((*screen_p)-pmean) ));
+  Float pmean(0.),rms(0.);
+  do {
+    myfbm->initialize(Seed,Beta); 
+    *screen_p=myfbm->data();
+    if (prtlev()>3) cout << " fBM created" << endl;   
+    pmean = mean(*screen_p);
+    rms = sqrt(mean( ((*screen_p)-pmean)*((*screen_p)-pmean) ));
+  } while (!isnormal(rms));
   // if (prtlev()>4) cout << (*screen_p)[10] << endl;
   if (currAnt()<2) {
     if (prtlev()>3)

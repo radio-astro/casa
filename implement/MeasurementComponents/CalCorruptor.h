@@ -118,18 +118,12 @@ class CalCorruptor {
   inline Int& nChan() { return fnChan_[currSpw()]; };  
   inline const Int& focusChan() {return curr_chan_[currSpw()];};
   inline const Double& focusFreq() {return curr_freq_;};
-  void setFocusChan(Int chan) {
-#ifdef RI_DEBUG
-    if (prtlev()>5) cout << "setFocusChan  .. ";
-#endif
+  virtual void setFocusChan(Int chan) {
     curr_chan_[currSpw()]=chan;
     // WARN:  this assumes constant channel width - more detailed 
     // channel freq may be inaccurate
     Double fRes(fWidth()[currSpw()]/Double(fnChan()[currSpw()]));
     curr_freq_=fRefFreq()[currSpw()]+chan*fRes;
-#ifdef RI_DEBUG
-    if (prtlev()>5) cout << chan << endl;
-#endif
   };
   
   // inherited from VC
@@ -267,18 +261,39 @@ class AtmosCorruptor : public CalCorruptor {
    Float tsys(const Float& airmass);
    Float opac(const Int ichan);
    inline Float& spilleff() { return spilleff_; };
+
    inline Float& tground() { return tground_; };
    inline Float& tatmos() { return tatmos_; };
    inline Float& trx() { return trx_; };
    inline Float& tcmb() { return tcmb_; };
+   // gets slow to calculate 1/exp(hv/kt)-1 all the time so 
+   inline Double& Rtground() { return Rtground_; };
+   inline Double& Rtatmos() { return Rtatmos_; };
+   inline Double& Rtrx() { return Rtrx_; };
+   inline Double& Rtcmb() { return Rtcmb_; };
 
    virtual Complex simPar(const VisIter& vi, VisCal::Type type,Int ipar);
+   
+   virtual void setFocusChan(Int chan) {
+     curr_chan_[currSpw()]=chan;
+     // WARN:  this assumes constant channel width - more detailed 
+     // channel freq may be inaccurate
+     Double fRes(fWidth()[currSpw()]/Double(fnChan()[currSpw()]));
+     curr_freq_=fRefFreq()[currSpw()]+chan*fRes;
+     // for temp calculations, recalculate the radiances 1/exp(hn/kt)-1
+     double hn_k = 0.04799274551*1e-9*focusFreq(); 
+     Rtcmb() = 1./(exp(hn_k/tcmb())-1.);
+     Rtground() = 1./(exp(hn_k/tground())-1.);
+     Rtrx() = 1./(exp(hn_k/trx())-1.);
+     Rtatmos() = 1./(exp(hn_k/tatmos())-1.);
+  };
 
  protected:
 
  private:   
    Float mean_pwv_,windspeed_,pixsize_,tauscale_,
      tground_,spilleff_,trx_,tatmos_,tcmb_;
+   Double Rtatmos_,Rtcmb_,Rtrx_,Rtground_;
    Matrix<Float>* screen_p; 
 
    atm::AtmProfile *itsatm;
