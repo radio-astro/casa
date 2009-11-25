@@ -1,10 +1,10 @@
-# (partial) TODO list - also search for XXX in the code
-# Find timerange when at least one of the inputs is up, limit the
+# (partial) TODO list 
+# RI todo Find timerange when at least one of the inputs is up, limit the
 #       observing time to it, and warn or abort (printing the valid
 #       timerange) depending on how badly the user missed it.
-# look for antenna list in default repository also
-# allow user to report statistics in Jy/bm instead of Jy/pixel
-# Pad input image to a composite number of pixels on a side.  I don't
+# RI todo look for antenna list in default repository also
+# RI todo allow user to report statistics in Jy/bm instead of Jy/pixel
+# RI todo Pad input image to a composite number of pixels on a side.  I don't
 #       know if it would speed things up much, but it would suppress a warning.
 #       Large primes are surprisingly common.
 
@@ -484,7 +484,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         # check inputs - need to add atmospheric window, better display of
         # where the actual observation block lies on the ephemeris window
 
-        # XXX this should use modelflat, but modelflat is calculated from
+        # RI todo this should use modelflat, but modelflat is calculated from
         # modelimage4d, which doesn't exist until after sm.observe and
         # im.defineimage; so... maybe we have to run the empy ms before
         # checkinputs, and then delete it if checkinputs=only?
@@ -569,19 +569,20 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                  dishdiameter=diam.tolist(), 
                  mount=['alt-az'], antname=antnames, padname=padnames, 
                  coordsystem='global', referencelocation=posobs)
-        midfreq=qa.add(qa.quantity(startfreq),qa.div(bandwidth,qa.quantity("2")))
+        # sm.setspwindow now expects startfreq as argument
+        # midfreq=qa.add(qa.quantity(startfreq),qa.div(bandwidth,qa.quantity("2")))
         if str.upper(telescopename).find('VLA')>0:
-            sm.setspwindow(spwname=fband, freq=midfreq, deltafreq=chanwidth, 
+            sm.setspwindow(spwname=fband, freq=startfreq, deltafreq=chanwidth, 
                            freqresolution=chanwidth, nchannels=nchan, 
                            stokes='RR LL')
             sm.setfeed(mode='perfect R L',pol=[''])
         else:            
-            sm.setspwindow(spwname=fband, freq=midfreq, deltafreq=chanwidth, 
+            sm.setspwindow(spwname=fband, freq=startfreq, deltafreq=chanwidth, 
                            freqresolution=chanwidth, nchannels=nchan, 
                            stokes='XX YY')
             sm.setfeed(mode='perfect X Y',pol=[''])
             
-        if verbose: msg(" spectral window set centered at %s" % str(midfreq))
+        if verbose: msg(" spectral window set at %s" % str(startfreq))
         sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
         sm.setauto(0.0)
         for k in range(0,nfld):
@@ -632,12 +633,12 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         im.open(msfile)    
         im.selectvis(field=range(nfld), spw=0)
 
-        # XXX pad to composite
+        # RI todo pad to composite
 
-        # XXX should we center this at imcenter or at centralpointing?
+        # RI todo should we center this at imcenter or at centralpointing?
         # the user may be surprised if the center of their image moves. 
         
-        # XXX if the input cube is in VEL, we need to actually
+        # RI todo if the input cube is in VEL, we need to actually
         # make sure it is getting importfitted to turn into freq -
         # if it started as fits, then it got transformed on ia.open,
         # but if it started as an image, then it won't get converted.
@@ -649,7 +650,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                        ", restfreq='"+str(model_restfreq)+"')")
 
 
-        # XXX LSRK is not used - put that in outframe!
+        # RI todo  LSRK is not used - put that in outframe!
         im.defineimage(nx=in_shape[axmap[0]], ny=in_shape[axmap[1]],
                        cellx=model_cell,celly=model_cell, stokes=model_stokes,
                        phasecenter=model_refdir, nchan=in_shape[axmap[3]], 
@@ -783,6 +784,13 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 #                        tau=tau0,tatmos=t_atm,tcmb=t_cmb,
 #                        mode="calculate")
 # use ANoise version
+# RI TODO switch to tsys-atm
+            if verbose:
+                msg("sm.setnoise(spillefficiency="+str(eta_s)+
+                    ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
+                    ",trx="+str(t_rx)+",tau="+str(tau0)+
+                    ",tatmos="+str(t_atm)+",tground="+str(t_ground)+
+                    ",tcmb="+str(t_cmb)+",mode='tsys-manual')");
             sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                         antefficiency=eta_a,trx=t_rx,
                         tau=tau0,tatmos=t_atm,tground=t_ground,tcmb=t_cmb,
@@ -891,6 +899,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                   uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,
                   noise=noise, npixels=npixels)
         else:
+            msg("(not actually cleaning or inverting, as requested by user)")
             image=project
 
 
@@ -986,7 +995,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                              csys=outflatcoordsys.torecord(),shape=outflatshape)
             imrr.done()
     
-            # XXX when we get to using both clean components and model image,
+            # RI todo when we get to using both clean components and model image,
             # we should add them together here if not before.
     
             ia.done()
@@ -1078,7 +1087,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             if display==True:
                 tt=pl.array(range(25))*pl.pi/12
                 pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant*3600.*180/pl.pi
-                # XXX change this to use tb.open(ms/POINTINGS)/direction
+                # RI todo change this to use tb.open(ms/POINTINGS)/direction
                 # and them make it a helper function
                 for i in range(offsets.shape[1]):
                     pl.plot(pl.cos(tt)*pb/2+offsets[0,i]*3600,pl.sin(tt)*pb/2+offsets[1,i]*3600,'w')
@@ -1095,7 +1104,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
         if display:
             tb.open(mstoimage)
-            # XXX use rob's FFT of the PB instead
+            # RI todo use rob's FFT of the PB instead
             rawdata=tb.getcol("UVW")
             tb.done()
             if fidelity == True:

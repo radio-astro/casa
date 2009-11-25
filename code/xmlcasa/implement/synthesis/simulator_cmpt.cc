@@ -828,7 +828,7 @@ simulator::oldsetnoise(const std::string& mode, const std::string& table,
       os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise" << LogIO::POST;
       
       casa::Quantity qnoise(casaQuantity(simplenoise));
-      rstat=itsSim->oldsetnoise(mode, qnoise, table, antefficiency, correfficiency, spillefficiency, tau, trx, tatmos, tcmb);
+      rstat=itsSim->oldsetnoise(mode, table, qnoise, antefficiency, correfficiency, spillefficiency, tau, trx, tatmos, tcmb);
     }
     
     
@@ -842,23 +842,43 @@ simulator::oldsetnoise(const std::string& mode, const std::string& table,
 
 
 bool
-simulator::setnoise(const std::string& mode, const std::string& table, 
-		     const ::casac::variant& simplenoise, 
-		     const double antefficiency, const double correfficiency, 
-		     const double spillefficiency, const double tau, 
-		     const double trx, const double tatmos, 
-		     const double tground, const double tcmb)
-{
+simulator::setnoise(const std::string& mode, 
+		    const std::string& table, 
+		    const ::casac::variant& simplenoise, 
+		    // atm parameters
+		    const ::casac::variant& pground,
+		    const double relhum,
+		    const ::casac::variant& altitude,
+		    const ::casac::variant& waterheight,
+		    const ::casac::variant& pwv,
+		    // OR specify tau and tatmos 
+		    const double tatmos, 
+		    const double tau,
+		    // antenna parameters
+		    const double antefficiency, 
+		    const double spillefficiency, 
+		    const double correfficiency,	    
+		    const double trx, 
+		    const double tground, 
+		    const double tcmb
+		    ) {
   Bool rstat(False);
   try {
-    
-    if(itsSim !=0){
-      
+    if(itsSim !=0){      
       casa::Quantity qnoise(casaQuantity(simplenoise));
-      rstat=itsSim->setnoise(mode, qnoise, table, antefficiency, correfficiency, spillefficiency, tau, trx, tatmos, tground, tcmb);
-    }
-    
-    
+      casa::Quantity qpress(casaQuantity(pground));
+      casa::Quantity qalt(casaQuantity(altitude));
+      casa::Quantity qwaterht(casaQuantity(waterheight));
+      casa::Quantity qpwv(casaQuantity(pwv));
+#ifdef RI_DEBUG
+      cout<<qnoise<<" "<<qpress<<" "<<qalt<<" "<<qwaterht<<" "<<qpwv<<endl;
+#endif
+      rstat=itsSim->setnoise(mode, table, qnoise, 
+			     qpress,relhum,qalt,qwaterht,qpwv,
+			     tatmos,tau,
+			     antefficiency, spillefficiency, correfficiency, 
+			     trx, tground, tcmb);
+    }    
  } catch  (AipsError x) {
    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
 	   << LogIO::POST;

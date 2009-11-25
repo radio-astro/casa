@@ -65,12 +65,14 @@ def architecture(s):
     return arch
 
 def distribution(s):
+
+    try:
+        rev,name = re.compile(' ([^\s]+) \(([^\)]+)\)').search(s).groups()
+    except:
+        rev,name = "???", "???"
+        
     if s.find('Linux') >= 0:
         base = 'Linux'
-        try:
-            rev,name = re.compile(' ([^\s]+) \(([^\)]+)\)').search(s).groups()
-        except:
-            rev,name = "???", "???"
         if s.find('Fedora Core') >= 0:
             distro = 'FC'
         elif s.find('Fedora') >= 0:
@@ -86,10 +88,9 @@ def distribution(s):
         return base, distro, rev, name    
         # e.g.  Linux, RHEL, 5.2, Tikanga
     elif s.find('Darwin') >= 0:
-        base = 'Darwin'   #fixme: detect this at runtime
+        base = 'Darwin'
         distro = 'OS X'
-        rev = '10.5.5'
-        name = 'Leopard'
+
         return base, distro, rev, name
     else:
         return "???", "???", "???", "???"
@@ -359,7 +360,9 @@ class report:
             fd.write('[ All versions ]  <a href="../CASA_latest/test-report.html">[ Latest test release ]</a><p>')
         else:
             fd.write('<a href="../CASA/test-report.html">[ All versions ]</a>  [ Latest test release ]<p>')
+#        fd.write('  <a href="../CASA_230/test-report.html">[ CASA 2.3.0 ]</a>')
 
+#        fd.write('<p>')
         fd.write('Generated on <i>'+time.strftime('%a %Y %b %d %H:%M:%S %Z')+'</i>')
 
         fd.write('<br>Summary of <i>'+str(len(data))+'</i> tests, archive size is <i>'+ \

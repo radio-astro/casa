@@ -84,6 +84,9 @@ void ANoise::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
   acorruptor_p = new ANoiseCorruptor();
   corruptor_p = acorruptor_p;
 
+  // call generic parent to set corr,spw,etc info
+  SolvableVisCal::createCorruptor(vi,simpar,nSim);
+
   Int Seed(1234);
   if (simpar.isDefined("seed")) {    
     Seed=simpar.asInt("seed");

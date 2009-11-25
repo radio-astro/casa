@@ -67,7 +67,8 @@ class PlotFlag:
         self.PyBind.quit(True);
 
     def setup_custom_features(self,cfigman):
-        #print 'Setup custom features'
+        if (rcParams['backend'] == 'Agg'):
+            return
 	self.toolbar = cfigman.toolbar;
         self.canvas = self.toolbar.canvas;
 	self.window = cfigman.window;
@@ -114,7 +115,7 @@ class PlotFlag:
 
     def _NewButton(self, frame, text, file, command, side=Tk.LEFT):
 	#file = os.path.join(rcParams['datapath'], 'images', file)
-	#file = '/CASASUBST/task_directory/' + file;
+	#file = '/opt/casa/stable/darwin/python/2.5' + file;
 	#im = Tk.PhotoImage(master=frame, file=file)
         if(os.uname()[0] == 'Darwin'):
                 b = Tk.Button(master=frame, text=text, command=command)
@@ -243,62 +244,92 @@ class PlotFlag:
         self.canvas.figure.savefig(fname);
 
     def enable_iter_button(self):
+        if (rcParams['backend'] == 'Agg'):
+            return
 	if( self.toolbar.bIterNext is not None ):
 		self.toolbar.bIterNext.config(state='normal');
 
     def disable_iter_button(self):
+        if (rcParams['backend'] == 'Agg'):
+            return
 	if( self.toolbar.bIterNext is not None ):
 		self.toolbar.bIterNext.config(state='disabled');
 
     def enable_markregion_button(self):
+        if (rcParams['backend'] == 'Agg'):
+            return
 	if( self.toolbar.bMarkRegion is not None ):
 		self.toolbar.bMarkRegion.config(state='normal');
 
     def disable_markregion_button(self):
+        if (rcParams['backend'] == 'Agg'):
+            return
 	if( self.toolbar.bMarkRegion is not None ):
 		self.toolbar.bMarkRegion.config(state='disabled');
 
     def enable_flag_button(self):
+        if (rcParams['backend'] == 'Agg'):
+            return
 	if( self.toolbar.bFlag is not None ):
 		self.toolbar.bFlag.config(state='normal');
 
     def disable_flag_button(self):
+        if (rcParams['backend'] == 'Agg'):
+            return
 	if( self.toolbar.bFlag is not None ):
 		self.toolbar.bFlag.config(state='disabled');
 
     def enable_unflag_button(self):
+        if (rcParams['backend'] == 'Agg'):
+            return
 	if( self.toolbar.bUnflag is not None ):
 		self.toolbar.bUnflag.config(state='normal');
 
     def disable_unflag_button(self):
+        if (rcParams['backend'] == 'Agg'):
+            return
 	if( self.toolbar.bUnflag is not None ):
 		self.toolbar.bUnflag.config(state='disabled');
 
     def enable_locate_button(self):
+        if (rcParams['backend'] == 'Agg'):
+            return
 	if( self.toolbar.bLocate is not None ):
 		self.toolbar.bLocate.config(state='normal');
 
     def disable_locate_button(self):
+        if (rcParams['backend'] == 'Agg'):
+            return
 	if( self.toolbar.bLocate is not None ):
 		self.toolbar.bLocate.config(state='disabled');
 
     def enable_clear_button(self):
+        if (rcParams['backend'] == 'Agg'):
+            return
 	if( self.toolbar.bClear is not None ):
 		self.toolbar.bClear.config(state='normal');
 
     def disable_clear_button(self):
+        if (rcParams['backend'] == 'Agg'):
+            return
 	if( self.toolbar.bClear is not None ):
 		self.toolbar.bClear.config(state='disabled');
 
     def enable_quit_button(self):
+        if (rcParams['backend'] == 'Agg'):
+            return
 	if( self.toolbar.bQuit is not None ):
 		self.toolbar.bQuit.config(state='normal');
 
     def disable_quit_button(self):
+        if (rcParams['backend'] == 'Agg'):
+            return
 	if( self.toolbar.bQuit is not None ):
 		self.toolbar.bQuit.config(state='disabled');
 
     def draw_rubberband(self, event, x0, y0, x1, y1):
+        if (rcParams['backend'] == 'Agg'):
+            return
         height = self.canvas.figure.bbox.height()
         y0 =  height-y0
         y1 =  height-y1
@@ -322,6 +353,8 @@ class PlotFlag:
 
     def erase_rects(self):
         #print "erase rects"
+        if (rcParams['backend'] == 'Agg'):
+            return
 	for q in self.regionlist:
 	  self.canvas._tkcanvas.delete(q);
 	self.regionlist = [];
@@ -387,27 +420,37 @@ class PlotFlag:
 
     def home(self, *args):
         'restore the original view'
+        if (rcParams['backend'] == 'Agg'):
+            return
 	self.toolbar.home();
 	self.redraw_rects();
 
     def back(self, *args):
         'move back up the view lim stack'
+        if (rcParams['backend'] == 'Agg'):
+            return
 	self.toolbar.back();
 	self.redraw_rects();
 
     def forward(self, *args):
         'move forward in the view lim stack'
+        if (rcParams['backend'] == 'Agg'):
+            return
 	self.toolbar.forward();
 	self.redraw_rects();
 
     def configure_subplots(self):
 	'configure subplots'
+        if (rcParams['backend'] == 'Agg'):
+            return
 	self.toolbar.configure_subplots();
 	self.redraw_rects();
 
 
     def markregion(self, *args):
         'activate mark-region mode'
+        if (rcParams['backend'] == 'Agg'):
+            return
         if self.toolbar._active == 'MARKREGION':
 	    #self.toolbar._active = None
             self.erase_rects();
@@ -440,6 +483,8 @@ class PlotFlag:
 
     def press_markregion(self, event):
         'the press mouse button in mark region mode callback'
+        if (rcParams['backend'] == 'Agg'):
+            return
         if event.button == 1:
             self.toolbar._button_pressed=1
         elif  event.button == 3:
@@ -470,6 +515,8 @@ class PlotFlag:
 
     def release_markregion(self, event):
         'the release mouse button callback in mark region mode'
+        if (rcParams['backend'] == 'Agg'):
+            return
         if not self.toolbar._xypress: return
 
         for cur_xypress in self.toolbar._xypress:
@@ -523,6 +570,8 @@ class PlotFlag:
 
     def zoom(self, *args):
         'activate zoom to rect mode'
+        if (rcParams['backend'] == 'Agg'):
+            return
         if self.toolbar._active == 'ZOOM':
 	    #self.toolbar._active = None
 	    self.update_relief(newmode=None);
@@ -554,6 +603,8 @@ class PlotFlag:
 
     def press_zoom(self, event):
         'the press mouse button in zoom to rect mode callback'
+        if (rcParams['backend'] == 'Agg'):
+            return
         if event.button == 1:
             self.toolbar._button_pressed=1
         elif  event.button == 3:
@@ -580,6 +631,8 @@ class PlotFlag:
 
     def release_zoom(self, event):
         'the release mouse button callback in zoom to rect mode'
+        if (rcParams['backend'] == 'Agg'):
+            return
         if not self.toolbar._xypress: return
 
         for cur_xypress in self.toolbar._xypress:
@@ -658,6 +711,8 @@ class PlotFlag:
         'Activate the pan/zoom tool. pan with left button, zoom with right'
         # set the pointer icon and button press funcs to the
         # appropriate callbacks
+        if (rcParams['backend'] == 'Agg'):
+            return
 
         if self.toolbar._active == 'PAN':
 	    #self.toolbar._active = None
@@ -692,6 +747,8 @@ class PlotFlag:
 
     def press_pan(self, event):
         'the press mouse button in pan/zoom mode callback'
+        if (rcParams['backend'] == 'Agg'):
+            return
 
         if event.button == 1:
             self.toolbar._button_pressed=1
@@ -721,6 +778,8 @@ class PlotFlag:
 
     def release_pan(self, event):
         'the release mouse button callback in pan/zoom mode'
+        if (rcParams['backend'] == 'Agg'):
+            return
         self.canvas.mpl_disconnect(self.toolbar._idDrag)
         self.toolbar._idDrag=self.canvas.mpl_connect('motion_notify_event', self.mouse_move)
         if not self.toolbar._xypress: return
@@ -734,6 +793,8 @@ class PlotFlag:
 
     def drag_pan(self, event):
         'the drag callback in pan/zoom mode'
+        if (rcParams['backend'] == 'Agg'):
+            return
 
         def format_deltas(event,dx,dy):
             if event.key=='control':
@@ -822,6 +883,8 @@ class PlotFlag:
 
     def mouse_move(self, event):
         #print 'mouse_move', event.button
+        if (rcParams['backend'] == 'Agg'):
+            return
 
         if not event.inaxes or not self.toolbar._active:
             if self.toolbar._lastCursor != cursors.POINTER:
@@ -866,6 +929,8 @@ class PlotFlag:
 
     def update_relief(self,newmode):
         'activate new mode'
+        if (rcParams['backend'] == 'Agg'):
+            return
         if self.toolbar._active == 'ZOOM':
 	    self.toolbar.bZoom.config(relief='raised');
         if self.toolbar._active == 'PAN':

@@ -29,6 +29,7 @@
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/RefRows.h>
 #include <ms/MeasurementSets/MSColumns.h>
+#include <coordinates/Coordinates/CoordinateUtil.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -1443,8 +1444,9 @@ namespace casa {
     vector<Bool> transform;
     vector<MDirection> theFieldDirV;
     vector<MPosition> mObsPosV;
-    vector<MFrequency::Types> theFrameV;
-    vector<MFrequency::Ref> fromFrameV;
+    vector<MFrequency::Types> fromFrameTypeV;
+    vector<MFrequency::Ref> outFrameV;
+    vector< Vector<Double> > xold; 
     vector< Vector<Double> > xout; 
     vector< Vector<Double> > xin; 
     //    vector< InterpolateArray1D<Double,Complex>::InterpolationMethod > method;
@@ -1463,8 +1465,9 @@ namespace casa {
 			    transform,
 			    theFieldDirV,
 			    mObsPosV,
-			    theFrameV,
-			    fromFrameV,
+			    fromFrameTypeV,
+			    outFrameV,
+			    xold,
 			    xout, 
 			    xin, 
 			    method,
@@ -1499,8 +1502,9 @@ namespace casa {
 			    transform,
 			    theFieldDirV,
 			    mObsPosV,
-			    theFrameV,
-			    fromFrameV,
+			    fromFrameTypeV,
+			    outFrameV,
+			    xold,
 			    xout, 
 			    xin, 
 			    method,
@@ -1664,7 +1668,8 @@ namespace casa {
       //  The pair (theFieldId, theSPWId) is looked up in the "done table". 
       Int iDone = -1;
       for (uInt i=0; i<oldSpwId.size(); i++){
-	if(oldSpwId[i]==theSPWId && oldFieldId[i]==theFieldId){
+	if(oldSpwId[i]==theSPWId && (oldFieldId[i]==theFieldId || phaseCenterFieldId>=-1)){
+	  // if common phase center is given, treat all fields the same
 	  iDone = i;
 	  break;
 	}
@@ -1698,30 +1703,38 @@ namespace casa {
 	
 	// Note: to use a  Vector<Float> here instead of the original Vector<Double>
 	// is a temporary fix until InterpolateArray1D<Double, Complex> works.
-	Vector<Float> xinff(xin[iDone].size());
+	Vector<Float> xinff(xold[iDone].size());
+	Vector<Double> xindd(xold[iDone].size());
 	Vector<Float> xoutff(xout[iDone].size()); 
-	Vector<Double> xoutdd(xout[iDone].size());
-	for(uInt i=0; i<xin[iDone].size(); i++){ // cannot use assign due to different data type
-	  xinff[i] = xin[iDone][i];
+	for(uInt i=0; i<xout[iDone].size(); i++){
+	  xoutff[i] = xout[iDone][i];
 	}
 
 	if(transform[iDone]){
 	  doExtrapolate = True;
 	  // create frequency machine for this time stamp
-	  MFrequency::Ref toFrame = MFrequency::Ref(theFrameV[iDone], MeasFrame(theFieldDirV[iDone], mObsPosV[iDone], theObsTime));
+	  MFrequency::Ref fromFrame = MFrequency::Ref(fromFrameTypeV[iDone], MeasFrame(theFieldDirV[iDone], mObsPosV[iDone], theObsTime));
 	  Unit unit(String("Hz"));
-	  MFrequency::Convert freqTrans2(unit, fromFrameV[iDone], toFrame);
+	  MFrequency::Convert freqTrans2(unit, fromFrame, outFrameV[iDone]);
 	
-	  // transform to this time stamp
-	  for(uInt i=0; i<xoutdd.size(); i++){
-	    xoutdd[i] = freqTrans2(xout[iDone][i]).get(unit).getValue();
-	    xoutff[i] = xoutdd[i];
+	  // transform from this timestamp to the one of the output SPW
+	  for(uInt i=0; i<xindd.size(); i++){
+	    xindd[i] = freqTrans2(xold[iDone][i]).get(unit).getValue();
+	    xinff[i] = xindd[i];
 	  }
+// 	  if(mainTabRow==0){ // debug output
+// 	    Int i = 25;
+// 	    cout << "i " << i << " xin " << setprecision(9) << xin[iDone][i] << " xindd " << setprecision(9) << xindd[i] 
+// 		 << " xout " << setprecision(9) << xout[iDone][i] << endl;
+// 	    cout << "i " << i << " vradxin " << setprecision(9) << vrad(xin[iDone][i], regridVeloRestfrq) 
+// 		 << " vradxindd " << setprecision(9) << vrad(xindd[i], regridVeloRestfrq)  
+// 		 << " xout " << setprecision(9) << vrad(xout[iDone][i], regridVeloRestfrq) << endl;
+// 	  }
 	}
-	else{ // no additional transformation of output grid
-	  for(uInt i=0; i<xout[iDone].size(); i++){
-	    xoutdd[i] = xout[iDone][i];
-	    xoutff[i] = xoutdd[i];
+	else{ // no additional transformation of input grid
+	  for(uInt i=0; i<xin[iDone].size(); i++){ // cannot use assign due to different data type
+	    xindd[i] = xin[iDone][i];
+	    xinff[i] = xindd[i];
 	  }
 	}
 	
@@ -1775,7 +1788,7 @@ namespace casa {
 	Array<Float> youtf;
 	if(!FLOAT_DATACol.isNull()){
 	  yinf.assign((*oldFLOAT_DATAColP)(mainTabRow));
-	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xoutdd, xin[iDone], 
+	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xindd, 
 							 yinf, yinFlags, methodF[iDone], False, doExtrapolate);
 	  FLOAT_DATACol.put(mainTabRow, youtf);
 	  if(!youtFlagsWritten){ 
@@ -1785,20 +1798,20 @@ namespace casa {
 	}
 	if(!IMAGING_WEIGHTCol.isNull()){
 	  yinf.assign((*oldIMAGING_WEIGHTColP)(mainTabRow));
-	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xoutdd, xin[iDone], 
+	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xindd, 
 							 yinf, yinFlags, methodF[iDone], False, doExtrapolate);
 	  IMAGING_WEIGHTCol.put(mainTabRow, youtf);
 	}
 	if(!SIGMA_SPECTRUMCol.isNull()){
 	  yinf.assign((*oldSIGMA_SPECTRUMColP)(mainTabRow));
-	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xoutdd, xin[iDone], 
+	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone], xindd, 
 							 yinf, yinFlags, methodF[iDone], False, doExtrapolate);
 	  SIGMA_SPECTRUMCol.put(mainTabRow, youtf);
 	}
 	if(!WEIGHT_SPECTRUMCol.isNull() && oldWEIGHT_SPECTRUMColP->isDefined(mainTabRow)){ // required column, but can be empty
 	  yinf.assign((*oldWEIGHT_SPECTRUMColP)(mainTabRow));
-	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xoutdd,
-                                                         xin[iDone], yinf, yinFlags,
+	  InterpolateArray1D<Double, Float>::interpolate(youtf, youtFlags, xout[iDone],
+                                                         xindd, yinf, yinFlags,
                                                          methodF[iDone], False, doExtrapolate);
 	  WEIGHT_SPECTRUMCol.put(mainTabRow, youtf);
 	}
@@ -1824,7 +1837,7 @@ namespace casa {
 	    Slicer slicer (start, length, stride, Slicer::endIsLast);
 	    yinFlags.assign(flagCat(slicer));
 	    InterpolateArray1D<Double, Float>::interpolate(dummyYout, youtFlags,
-                                                           xoutdd, xin[iDone], 
+                                                           xout[iDone], xindd, 
 							   dummyYin, yinFlags,
                                                            methodF[iDone], False, False);
 	    // write the slice to the array flagCatOut
@@ -2784,8 +2797,9 @@ namespace casa {
 				  vector<Bool>& transform,
 				  vector<MDirection>& theFieldDirV,
 				  vector<MPosition>& mObsPosV,
-				  vector<MFrequency::Types>& theFrameV,
-				  vector<MFrequency::Ref>& fromFrameV,
+				  vector<MFrequency::Types>& fromFrameTypeV,
+				  vector<MFrequency::Ref>& outFrameV,
+				  vector< Vector<Double> >& xold, 
 				  vector< Vector<Double> >& xout, 
 				  vector< Vector<Double> >& xin, 
 				  // This is a temporary fix until
@@ -2818,13 +2832,14 @@ namespace casa {
     newDataDescId.resize(0);
     oldSpwId.resize(0);
     oldFieldId.resize(0);
+    xold.resize(0);
     xin.resize(0);
     xout.resize(0);
     theFieldDirV.resize(0);
     mObsPosV.resize(0);
-    theFrameV.resize(0);
-    fromFrameV.resize(0);
-    MFrequency::Ref fromFrame;
+    fromFrameTypeV.resize(0);
+    outFrameV.resize(0);
+    MFrequency::Ref outFrame;
     method.resize(0);
     methodF.resize(0);
     regrid.resize(0);	
@@ -2950,7 +2965,8 @@ namespace casa {
       //  The pair (theFieldId, theSPWId) is looked up in the "done table". 
       Int iDone = -1;
       for (uInt i=0; i<oldSpwId.size(); i++){
-	if(oldSpwId[i]==theSPWId && oldFieldId[i]==theFieldId){
+	if(oldSpwId[i]==theSPWId && (oldFieldId[i]==theFieldId || regridPhaseCenterFieldId>=-1)){ 
+	  // if common phase center is given, treat all fields the same
 	  iDone = i;
 	  break;
 	}
@@ -2971,9 +2987,6 @@ namespace casa {
 	//      -> store in oldRefFrame[numNewDataDesc] (further below)
 	//   3) in case either the original or the destination reference frame
 	//      is TOPO or GEO, we need the observation time
-////      (taken from the TIME cell corresponding to theFieldId in the FIELD table)
-////      -> store in obsTime[numNewDataDesc] (further below)
-// 	MEpoch theObsTime = timeMeasCol(theFieldId);
 	//      (taken from the time of the first integration for this (theFieldId, theSPWId) pair)
 	//      -> store in obsTime[numNewDataDesc] (further below)
        	MEpoch theObsTime = mainTimeMeasCol(mainTabRow);
@@ -3039,7 +3052,7 @@ namespace casa {
 	Double transTOTAL_BANDWIDTH;
 	Vector<Double> transRESOLUTION(oldNUM_CHAN);;
 
-	if(needTransform){
+	if(needTransform && False){
 
 	  transNewXin.resize(oldNUM_CHAN);
 	  // set up conversion
@@ -3049,7 +3062,7 @@ namespace casa {
 	  MFrequency::Convert freqTrans(unit, fromFrame, toFrame);
 	  
 	  // also create the reference for storage in the "Done" table
-	  fromFrame = MFrequency::Ref(theOldRefFrame, MeasFrame(theFieldDir, mObsPos, theObsTime));
+	  outFrame = MFrequency::Ref(theFrame, MeasFrame(theFieldDir, mObsPos, theObsTime));
 
 	  for(Int i=0; i<oldNUM_CHAN; i++){
 	    transNewXin[i] = freqTrans(newXin[i]).get(unit).getValue();
@@ -3381,6 +3394,7 @@ namespace casa {
         // anticipate the deletion of the original DD rows
 	newDataDescId.push_back(theDataDescId - origNumDataDescs);
 
+	xold.push_back(newXin);
 	xin.push_back(transNewXin);
 	xout.push_back(newXout);
 	method.push_back(theMethod);
@@ -3389,8 +3403,8 @@ namespace casa {
 	transform.push_back(needTransform);
 	theFieldDirV.push_back(theFieldDir);
 	mObsPosV.push_back(mObsPos);
-	theFrameV.push_back(theFrame);
-	fromFrameV.push_back(fromFrame);
+	fromFrameTypeV.push_back(theOldRefFrame);
+	outFrameV.push_back(outFrame);
 
       } // end if(!alreadyDone)
       // reference frame transformation and regridding of channel definition completed
@@ -4788,8 +4802,8 @@ namespace casa {
       for(uInt k = 0; k < ant1.nelements(); ++k){
 	ant1[k]  = antNewIndex_p[ant1[k]];
 	ant2[k]  = antNewIndex_p[ant2[k]];
-	feed1[k] = feedNewIndex_p[feed1[k]];
-	feed2[k] = feedNewIndex_p[feed2[k]];
+	feed1[k] = feedNewIndex_p(ant1[k], feed1[k]);
+	feed2[k] = feedNewIndex_p(ant2[k], feed2[k]);
       }
       msc_p->antenna1().putColumn(ant1);
       msc_p->antenna2().putColumn(ant2);
@@ -4986,7 +5000,6 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
 
     if(!antennaSel_p){
       TableCopy::copyRows(newFeed, oldFeed);
-      return True;
     }
     else{
       Vector<Bool> feedRowSel(oldFeed.nrow());
@@ -4994,16 +5007,21 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
       const Vector<Int>&  antIds = incols.antennaId().getColumn();
       const Vector<Int>& feedIds = incols.feedId().getColumn();
 
-      feedNewIndex_p.resize(max(feedIds)+1);
+      const uInt maxantp1 = max(antIds) + 1;
+      feedNewIndex_p.resize(maxantp1, max(feedIds) + 1);
       feedNewIndex_p.set(-1);
-      uInt feedSelected=0;
+      Vector<uInt> feeds_per_ant(maxantp1);
+      feeds_per_ant.set(0);
       uInt nAnts = antIds.nelements();
+      uInt totalSelFeeds = 0;
       for (uInt k = 0; k < nAnts; ++k){
 	if(antNewIndex_p[antIds[k]] > -1){
 	  feedRowSel[k]=True;
-	  feedNewIndex_p[feedIds[k]]=feedSelected;
-	  TableCopy::copyRows(newFeed, oldFeed, feedSelected, k, 1);
-	  ++feedSelected;
+	  feedNewIndex_p(antIds[k], feedIds[k]) = feeds_per_ant[antIds[k]];
+          //                  outtab   intab    outrow       inrow nrows
+	  TableCopy::copyRows(newFeed, oldFeed, totalSelFeeds, k, 1);
+	  ++feeds_per_ant[antIds[k]];
+          ++totalSelFeeds;
 	}
       }
       ScalarColumn<Int>& antCol = outcols.antennaId();
@@ -5011,14 +5029,12 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
 
       Vector<Int> newAntIds = antCol.getColumn();
       Vector<Int> newFeedIds = feedCol.getColumn();
-      for (uInt k=0; k< feedSelected; ++k){
-	newAntIds[k]=antNewIndex_p[newAntIds[k]];
-	newFeedIds[k]=feedNewIndex_p[newFeedIds[k]];
-      } 
+      for(uInt k = 0; k < totalSelFeeds; ++k){
+	newFeedIds[k] = feedNewIndex_p(newAntIds[k], newFeedIds[k]);
+	newAntIds[k]  = antNewIndex_p[newAntIds[k]];
+      }
       antCol.putColumn(newAntIds);
       feedCol.putColumn(newFeedIds);
-      
-      return True;
     }
     return True;
   }
@@ -5827,6 +5843,10 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
   // need to worry about them here.
   //const ROScalarColumn<Bool> rowFlag(mscIn_p->flagRow());
 
+  // ...but new row flags can be made for completely flagged or unweighted rows.
+  Vector<Bool> outRowFlag(outNrow);
+  outRowFlag.set(false);
+
   const ROScalarColumn<Int> scanNum(mscIn_p->scanNumber());
   const ROScalarColumn<Int> dataDescIn(mscIn_p->dataDescId());
   const ROArrayColumn<Double> inUVW(mscIn_p->uvw());
@@ -5926,34 +5946,50 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
   //os << LogIO::NORMAL << "npol_p = " << npol_p << LogIO::POST;
   //os << LogIO::NORMAL << "nchan_p = " << nchan_p << LogIO::POST;
 
+  IPosition blc, trc, sliceShape;
+  uInt chanStop;
   Array<Float> unflgWtSpec;
   Array<Complex> data_toikit;
   Vector<Float> unflaggedwt;
     
   // Iterate through timebins.
   uInt orn = 0; 		      // row number in output.
+  // Guarantee oldDDID != ddID on 1st iteration.
+  Int oldDDID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(bin_slots_p[0].begin()->second[0])]] - 1;
   for(uInt tbn = 0; tbn < bin_slots_p.nelements(); ++tbn){
     // Iterate through slots.
     for(ui2vmap::iterator slotit = bin_slots_p[tbn].begin();
-		slotit != bin_slots_p[tbn].end(); ++slotit){
+        slotit != bin_slots_p[tbn].end(); ++slotit){
       uivector& slotv = slotit->second;
       uInt slotv0 = slotv[0];
       Double totslotwt = 0.0;
 
       Int ddID = spwRelabel_p[oldDDSpwMatch_p[dataDescIn(slotv0)]];
-      if(ddID < 0)                      // Paranoia
-        ddID = 0;
-      
-      IPosition blc(2, 0, chanStart_p[ddID]);
-      IPosition trc(2, npol_p[ddID] - 1, nchan_p[ddID] + chanStart_p[ddID] - 1);
-      uInt chanStop = nchan_p[ddID] * chanStep_p[ddID] + chanStart_p[ddID];
+      Bool newDDID = (ddID != oldDDID);
+      if(newDDID){
+        oldDDID = ddID;
 
-      IPosition sliceShape(trc - blc + 1);
-      unflgWtSpec.resize(sliceShape);
-      data_toikit.resize(sliceShape);
-      os << LogIO::DEBUG1
-         << "unflgWtSpec.shape() = " << unflgWtSpec.shape()
-         << LogIO::POST;
+        if(ddID < 0){                      // Paranoia
+          if(newDDID)
+            os << LogIO::WARN
+               << "Treating DATA_DESCRIPTION_ID " << ddID << " as 0."
+               << LogIO::POST;
+          ddID = 0;
+        }
+      
+        blc = IPosition(2, 0, chanStart_p[ddID]);
+        trc = IPosition(2, npol_p[ddID] - 1, nchan_p[ddID] + chanStart_p[ddID] - 1);
+        chanStop = nchan_p[ddID] * chanStep_p[ddID] + chanStart_p[ddID];
+
+        IPosition sliceShape(trc - blc + 1);
+        if(doSpWeight)
+          unflgWtSpec.resize(sliceShape);
+        unflaggedwt.resize(npol_p[ddID]);
+        data_toikit.resize(sliceShape);
+        os << LogIO::DEBUG1
+           << "sliceShape = " << sliceShape
+           << LogIO::POST;
+      }
 
       // Iterate through mscIn_p's rows that belong to the slot.
       Double swv = 0.0; // Sum of the weighted visibilities.
@@ -5963,25 +5999,29 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
         // chanModification_p==true means the input channels cannot simply
         // be copied through to the output channels.
         // It's a bit faster if no slicing is done...so avoid it if possible.
-        unflaggedwt.resize(npol_p[ddID]);
-        unflaggedwt = inRowWeight(*toikit);
 
+        // Set flagged weights to 0 in the unflagged weights...
+        unflaggedwt = inRowWeight(*toikit);
         for(Int polind = 0; polind < npol_p[ddID]; ++polind){
-          // Vector<Bool> polflags((chanModification_p ? flag(*toikit)(blc, trc) :
-          //                        flag(*toikit))(IPosition(2, polind, 0),
-          //                                       IPosition(2, polind,
-          //                                                 nchan_p[ddID] - 1)));
-          
-          if(allTrue((chanModification_p ? flag(*toikit)(blc, trc) :
-                      flag(*toikit))(IPosition(2, polind, 0),
-                                     IPosition(2, polind,
-                                               nchan_p[ddID] - 1))))
+          if(allTrue(flag(*toikit)(IPosition(2, polind, chanStart_p[ddID]),
+                                   IPosition(2, polind,
+                                             nchan_p[ddID] + chanStart_p[ddID] - 1))))
             unflaggedwt[polind] = 0.0;
+        }
+        if(doSpWeight){
+          if(chanModification_p){
+            unflgWtSpec = wgtSpec(*toikit)(blc, trc);
+            unflgWtSpec(flag(*toikit)(blc, trc)) = 0.0;
+          }
+          else{
+            unflgWtSpec = wgtSpec(*toikit);
+            unflgWtSpec(flag(*toikit)) = 0.0;
+          }            
         }
         
         // The input row may be completely flagged even if the row flag is
         // false.
-        totrowwt = sum(unflaggedwt);
+        totrowwt = sum(doSpWeight ? unflgWtSpec : unflaggedwt);
         if(totrowwt > 0.0){
           // Accumulate the averaging values from *toikit.
           //  	    os << LogIO::DEBUG1 << "inRowWeight(*toikit).shape() = "
@@ -6013,16 +6053,7 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
             //       << outSpWeight.xyPlane(orn)(blc)
             //       << LogIO::POST;
             
-            if(chanModification_p){
-              outSpWeight.xyPlane(orn) = outSpWeight.xyPlane(orn) +
-                wgtSpec(*toikit)(blc, trc);
-              outSpWeight.xyPlane(orn)(flag(*toikit)(blc, trc)) = 0.0;
-            }
-            else{
-              outSpWeight.xyPlane(orn) = outSpWeight.xyPlane(orn) +
-                wgtSpec(*toikit);
-              outSpWeight.xyPlane(orn)(flag(*toikit)) = 0.0;
-            }
+            outSpWeight.xyPlane(orn) = outSpWeight.xyPlane(orn) + unflgWtSpec;
             
             // os << LogIO::DEBUG1
             //    << "outSpWeight.xyPlane(orn)(blc) (after) = "
@@ -6033,15 +6064,14 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
             //    << LogIO::POST;
             for(uInt datacol = 0; datacol < ntok; ++datacol){
               if(chanModification_p){
-                data_toikit = data[datacol](*toikit)(blc, trc) *
-                  wgtSpec(*toikit)(blc, trc);
+                data_toikit = data[datacol](*toikit)(blc, trc) * unflgWtSpec;
 
                 // It's already multiplied by a zero weight, but zero it again
                 // just in case some flagged NaNs or infinities snuck in there.
                 data_toikit(flag(*toikit)(blc, trc)) = 0.0;
               }
               else{
-                data_toikit = data[datacol](*toikit) * wgtSpec(*toikit);
+                data_toikit = data[datacol](*toikit) * unflgWtSpec;
                 data_toikit(flag(*toikit)) = 0.0;
               }
               
@@ -6091,7 +6121,7 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
         }
       } // End of loop through the slot's rows.
 
-      // If there were no weights > 0, plop in a reasonable UVW just for
+      // If there were no weights > 0, plop in a reasonable values just for
       // appearance's sake.
       if(swv <= 0.0)
         outUVW.column(orn) = inUVW(slotv0);
@@ -6105,39 +6135,56 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
             outImagingWeight(c, orn) /= totslotwt;
         }
       }
+      else{
+        // outExposure[orn] = 0.0;      // Already is.
+        // outImagingWeight(c, orn) = 0.0;  // Ditto.
+        outTC[orn] = inTC(slotv0);      // Looks better than 1858.
+        outRowFlag[orn] = true;
+      }
+
       slotv.clear();  // Free some memory.
-      if(product(outRowWeight.column(orn)) > 0.0){ // Can product be profitably
-                                                   // replaced with some sort
-                                                   // of all()?
-        if(doSpWeight){
-          Matrix<Float>::const_iterator oSpWtIter;
-          const Matrix<Float>::const_iterator oSpWtEnd(outSpWeight.xyPlane(orn).end());
+      if(doSpWeight){
+        Matrix<Float>::const_iterator oSpWtIter;
+        const Matrix<Float>::const_iterator oSpWtEnd(outSpWeight.xyPlane(orn).end());
           
+        for(uInt datacol = 0; datacol < ntok; ++datacol){
+          oSpWtIter = outSpWeight.xyPlane(orn).begin();            
+          for(Matrix<Complex>::iterator oDIter = outData[datacol].xyPlane(orn).begin();
+              oSpWtIter != oSpWtEnd; ++oSpWtIter){
+            if(*oSpWtIter != 0.0)
+              *oDIter /= *oSpWtIter;
+            ++oDIter;
+          }
+        }
+      }
+      else{
+        uInt npol  = outRowWeight.column(orn).nelements();
+        uInt nchan = chanStop - chanStart_p[ddID];
+        
+        for(uInt polind = 0; polind < npol; ++polind){
+          Float rowwtpol = outRowWeight.column(orn)[polind];
           for(uInt datacol = 0; datacol < ntok; ++datacol){
-            oSpWtIter = outSpWeight.xyPlane(orn).begin();            
-            for(Matrix<Complex>::iterator oDIter = outData[datacol].xyPlane(orn).begin();
-                oSpWtIter != oSpWtEnd; ++oSpWtIter){
-              if(*oSpWtIter != 0.0)
-                *oDIter /= *oSpWtIter;
-              ++oDIter;
+
+            if(rowwtpol != 0.0){
+              for(uInt c = 0; c < nchan; ++c)
+                outData[datacol](polind, c, orn) /= rowwtpol;
+            }
+            else{
+              for(uInt c = 0; c < nchan; ++c)
+                outData[datacol](polind, c, orn) = 0.0;
             }
           }
         }
-        else{
-          Array<Complex> grumble;   			 // Referenceable copy
-          Vector<Float> groan(outRowWeight.column(orn)); // Referenceable copy
+      }
 
-          for(uInt datacol = 0; datacol < ntok; ++datacol){
-            grumble = outData[datacol].xyPlane(orn);
-	  
-            binOpExpandInPlace(grumble, groan, casa::Divides<Complex, Float>());
-            outData[datacol].xyPlane(orn) = grumble;
-          }
-        }
-	
-        for(uInt polind = 0; polind < outRowWeight.column(orn).nelements();
-            ++polind)
-          outSigma(polind, orn) = 1.0 / sqrt(outRowWeight(polind, orn));
+      for(uInt polind = 0; polind < outRowWeight.column(orn).nelements();
+          ++polind){
+        Float orw = outRowWeight(polind, orn);
+        
+        if(orw > 0.0)
+          outSigma(polind, orn) = sqrt(1.0 / orw);
+        else
+          outSigma(polind, orn) = -1.0; // Seems safer than 0.0.
       }
 
       // Fill in the nonaveraging values from slotv0.
@@ -6148,8 +6195,8 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
       if(antennaSel_p){
         outAnt1[orn]  = antIndexer_p[ant1(slotv0)];
         outAnt2[orn]  = antIndexer_p[ant2(slotv0)];
-        outFeed1[orn] = feedNewIndex_p[inFeed1(slotv0)];
-        outFeed2[orn] = feedNewIndex_p[inFeed2(slotv0)];
+        outFeed1[orn] = feedNewIndex_p(ant1(slotv0), inFeed1(slotv0));
+        outFeed2[orn] = feedNewIndex_p(ant2(slotv0), inFeed2(slotv0));
       }
       else{
         outAnt1[orn]  = ant1(slotv0);
@@ -6198,9 +6245,6 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
   msc_p->feed2().putColumn(outFeed2);
   msc_p->fieldId().putColumn(outField);
 
-  // No flagged rows are written, so just set the whole flagRow column to false.
-  Vector<Bool> outRowFlag(outNrow);
-  outRowFlag.set(false);
   msc_p->flagRow().putColumn(outRowFlag);
 
   // interval is done in fillAverMainTable().

@@ -289,6 +289,12 @@ logsink::showconsole(const bool onconsole)
       thelogsink->cerrToo(onconsole);
    return rstat;
 }
+std::string
+logsink::logfile()
+{
+  return theLogName;
+}
+
 
 } // casac namespace
 

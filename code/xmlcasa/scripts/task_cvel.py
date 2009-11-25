@@ -446,7 +446,6 @@ def cvel(vis, outputvis,
 
     except Exception, instance:
         casalog.post("Error ...", 'SEVERE')
-        ms.close()
 	raise Exception, instance
     
 

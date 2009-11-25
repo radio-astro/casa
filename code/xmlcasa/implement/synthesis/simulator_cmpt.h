@@ -114,7 +114,26 @@ class simulator
 
     bool oldsetnoise(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& simplenoise = ::casac::initialize_variant("0.0Jy"), const double antefficiency = 0.8, const double correfficiency = 0.85, const double spillefficiency = 0.85, const double tau = 0.0, const double trx = 50, const double tatmos = 250.0, const double tcmb = 2.7);
 
-    bool setnoise(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& simplenoise = ::casac::initialize_variant("0.0Jy"), const double antefficiency = 0.8, const double correfficiency = 0.85, const double spillefficiency = 0.85, const double tau = 0.0, const double trx = 50, const double tatmos = 250.0, const double tground = 250.0, const double tcmb = 2.7);
+    bool setnoise(const std::string& mode = "calculate", 
+		  const std::string& table = "", 
+		  const ::casac::variant& simplenoise = ::casac::initialize_variant("0.0Jy"), 
+		  // or atm parameters
+		  const ::casac::variant& pground = ::casac::initialize_variant("560mbar"),
+		  const double relhum = 20, //%
+		  const ::casac::variant& altitude = ::casac::initialize_variant("5000m"), 
+		  const ::casac::variant& waterheight = ::casac::initialize_variant("2km"),
+		  const ::casac::variant& pwv = ::casac::initialize_variant("1mm"),
+		  // specify tau and tatmos
+		  const double tatmos = 250.0, 
+		  const double tau = 0.0, 
+		  //
+		  const double antefficiency = 0.8, 
+		  const double spillefficiency = 0.85, 
+		  const double correfficiency = 0.85, 		  
+		  const double trx = 50, 
+		  const double tground = 250.0, 
+		  const double tcmb = 2.7
+);
 
     bool setpa(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& interval = ::casac::initialize_variant("10s"));
 

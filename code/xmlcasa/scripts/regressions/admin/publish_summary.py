@@ -59,9 +59,8 @@ class runTest:
                  cleanup=True,
                  profile=False):
         """cleanup: set to False to keep data around.
-        profile: set to True to enable C++ profiling. This requires that the commands 'sudo opcontrol' and 'dot' must work.      
-        Note, a profile is created only for the casapy process. If you want to include profiles for async / child
-        processes, refer to the documentation for opreport."""
+        profile: set to True to enable C++ profiling.  This requires that the command 'sudo opcontrol' must work.  You also need the 'dot' tool distributed as part of graphviz.  Run 'dot -Txxx' to verify that your dot installation supports PNG images.
+        Note, a profile is created only for the casapy process. If you want to include profiles for async / child processes, refer to the documentation for opreport."""
         casalog.showconsole(onconsole=True)
         
         TEMPLATE_RESULT_DIR=AIPS_DIR+'/data/regression/'
@@ -678,11 +677,26 @@ class runTest:
                 WORDSIZE = "??"
 
             if OS == "Darwin":
-                WORDSIZE = "32"      # !!hardcoded... fix that
-                
+                if commands.getoutput("sysctl  -n hw.optional.x86_64").find("1") >= 0:
+                    WORDSIZE = "64"
+                else:
+                    WORDSIZE = "32"
+
+                vers = commands.getoutput("/usr/bin/sw_vers -productVersion")
+                if vers.find("10.4") >= 0:
+                    name = "Tiger"
+                elif vers.find("10.5") >= 0:
+                    name = "Leopard"
+                elif vers.find("10.6") >= 0:
+                    name = "Snow Leopard"
+
+                DIST = commands.getoutput("/usr/bin/sw_vers -productName") + " " + \
+                       vers + " (" + name + " " + \
+                       commands.getoutput("/usr/bin/sw_vers -buildVersion") + ")"
+
             return "%s %s %s-bit" % (OS, MACH, WORDSIZE), DIST
-            #return "%s %s %s (%s %s %s)" % (OS, DIST, REV, PSUEDONAME, KERNEL, MACH)
-            #return "%s %s %s (%s)" % (OS, DIST, REV, PSUEDONAME)
+            #return "%s %s %s (%s %s %s)" % (OS, DIST, REV, PSEUDONAME, KERNEL, MACH)
+            #return "%s %s %s (%s)" % (OS, DIST, REV, PSEUDONAME)
         else:
             return "??? ??? ??-bit", "???"
 

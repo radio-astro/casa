@@ -58,7 +58,6 @@ extern	void	ftime( struct timeb * );	/* this is the funtion */
 #else
 #endif
 
-#include <casa/Logging.h>
 
 void	myTimer( double *cpu_time ,		/* cpu timer */
 		 double *real_time ,		/* real timer */
@@ -103,15 +102,22 @@ ASDM2MSFiller* msFiller;
 string appName;
 bool verbose = true;
 
+//LogIO os;
+
+#include <casa/Logging/StreamLogSink.h>
+#include <casa/Logging/LogSink.h>
+
 void info (const string& message) {
-  if (verbose)
-    LogSink::postGlobally(LogMessage(message,
-				     LogOrigin(appName, WHERE)));
+  
+  if (!verbose){
+	  return;
+  }
+  LogSink::postGlobally(LogMessage(message, LogOrigin(appName,WHERE), LogMessage::NORMAL));
 }
 
-void error(string message) {
-  LogSink::postGlobally(LogMessage(message,
-				   LogOrigin(appName, WHERE)));
+void error(const string& message) {
+	LogSink::postGlobally(LogMessage(message, LogOrigin(appName,WHERE), LogMessage::SEVERE));
+  //os << LogIO::POST;
   exit(1);
 }
 
@@ -997,6 +1003,7 @@ int main(int argc, char *argv[]) {
   boost::filesystem::path msPath;
 
   appName = string(argv[0]);
+  ofstream ofs;
 
   LogSinkInterface& lsif = LogSink::globalSink();
 
@@ -1025,6 +1032,7 @@ int main(int argc, char *argv[]) {
       ("compression,c", "produces compressed columns in the resulting measurement set (not set by default). When this option is selected the string '-compressed' is inserted in the pathname of the resulting measurement set.")
       ("asis", po::value<string>(), "creates verbatim copies of the ASDM tables in the output measurement set. The value given to this option must be a quoted string containing a list of table names separated by space characters; the wildcard character '*' is allowed in table names.")
       ("wvr-corrected-data", po::value<string>()->default_value("no"),  "specifies wich values are considered in the ASDM binary data to fill the DATA column in the MAIN table of the MS. Expected values for this option are 'no' for the uncorrected data (this is the default), 'yes' for the corrected data and 'both' for corrected and uncorrected data. In the latter case, two measurement sets are created, one containing the uncorrected data and the other one, whose name is suffixed by '-wvr-corrected', containing the corrected data.")
+      ("logfile,l", po::value<string>(), "specifies the log filename. If the option is not used then the logged informations are written to the standard error stream.")
       ("verbose,v", "logs numerous informations as the filler is working.")
       ("revision,r", "logs information about the revision of this application.");
 
@@ -1051,6 +1059,14 @@ int main(int argc, char *argv[]) {
 
     po::notify(vm);
     
+    // Where do the log messages should go ?
+    if (vm.count("logfile")) {
+      //LogSinkInterface *theSink;
+      ofs.open(vm["logfile"].as<string>().c_str(), ios_base::app);
+      LogSinkInterface *theSink = new casa::StreamLogSink(&ofs);
+      LogSink::globalSink(theSink);
+    }
+
     // Help ? displays help's content and don't go further.
 
     if (vm.count("help")) {
@@ -1062,7 +1078,7 @@ int main(int argc, char *argv[]) {
     // Revision ? displays revision's info and don't go further.
     if (vm.count("revision")) {
       errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.33 2009/11/17 18:23:38 mcaillat Exp $" << "\n" ;
+      errstream << "$Id: asdm2MS.cpp,v 1.34 2009/11/24 13:38:53 mcaillat Exp $" << "\n" ;
       error(errstream.str());
     }
 
@@ -1216,7 +1232,7 @@ int main(int argc, char *argv[]) {
     errstream << e.what();
     error(errstream.str());
   }
-  
+
   //
   // Try to open an ASDM dataset whose name has been passed as a parameter on the command line
   //
@@ -1252,6 +1268,7 @@ int main(int argc, char *argv[]) {
     error(errstream.str());
   }
   
+
   mode = 1; myTimer(&cpu_time_parse_xml, &real_time_parse_xml, &mode);
   infostream.str("");
   infostream << "Time spent parsing the ASDM medata : " << cpu_time_parse_xml << " s.";
@@ -2794,4 +2811,3 @@ int main(int argc, char *argv[]) {
   delete ds;
   return 0;
 }
-

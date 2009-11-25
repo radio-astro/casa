@@ -4,7 +4,8 @@ import os
 import shutil
 import stat
 
-def make_labelled_ms(srcms, outputms, labelbases, ow=False):
+def make_labelled_ms(srcms, outputms, labelbases, ow=False, debug=False,
+                     whichdatacol='DATA'):
     """
     Transform one measurement set into another with the same (ideally small but
     nontrivial) shape and reference frames, but data set to a sequence
@@ -39,6 +40,12 @@ def make_labelled_ms(srcms, outputms, labelbases, ow=False):
 
     ow: Whether or not outputms can be overwritten if it exists.
 
+    debug: If True and it hits an error, it will try to return what it has so
+           far instead of raising an exception.
+
+    whichdatacol: Which of DATA, MODEL_DATA, or CORRECTED_DATA to modify in the output.
+                  Case insensitive.
+
     Returns True or False as a success guess.
     """
     # Make sure we have tb, casalog, clearcal, and ms.
@@ -62,6 +69,12 @@ def make_labelled_ms(srcms, outputms, labelbases, ow=False):
             print "\n\t".join(my_globals.keys())
 
     casalog.origin("make_labelled_ms")
+
+    whichdatacol = whichdatacol.upper()
+    if whichdatacol not in ['DATA', 'MODEL_DATA', 'CORRECTED_DATA']:
+        casalog.post(whichdatacol + "is not one of DATA, MODEL_DATA, or CORRECTED_DATA.",
+                     'EXCEPTION')
+
     try:
         if outputms != srcms:
             if os.path.isdir(outputms):
@@ -81,39 +94,43 @@ def make_labelled_ms(srcms, outputms, labelbases, ow=False):
         
     tb.open(outputms, nomodify=False)
 
-    # This shouldn't _really_ be necessary, but currently very strange things
-    # happen if you do the obvious thing and use an input MS that only has
-    # DATA.
-    colnames = tb.colnames()
-    if colnames.count('CORRECTED_DATA') != 1:
-        casalog.post("Adding scratch columns to " + outputms +
-                     " to avoid trouble.  (See CAS-1654)", 'INFO')
+    if whichdatacol not in tb.colnames():
+        casalog.post("Adding scratch columns to " + outputms, 'INFO')
+        tb.close()
         clearcal(outputms)
+        tb.open(outputms, nomodify=False)
 
     # Setup rowcols, polbase, and chanbase
     polbase = 0.0
     chanbase = 0.0
     rowcols = {}
     for quant in labelbases:
-        if quant.upper() in ['SCAN_NUMBER', 'DATA_DESC_ID',
-                             'ANTENNA1', 'ANTENNA2', 'ARRAY_ID',
-                             'FEED1', 'FEED2', 'FIELD_ID',
-                             'OBSERVATION_ID', 'PROCESSOR_ID',
-                             'STATE_ID']:
-            rowcols[quant] = tb.getcol(quant.upper())
-        elif quant[:4].upper() == 'TIME':
-            rowcols[quant] = tb.getcol(quant.upper())
-            print quant, "is a timelike quantity, so it will be offset and scaled"
-            print "by subtracting the first value and dividing by the first integration"
-            print "interval."
-            rowcols[quant] -= rowcols[quant][0]
-            rowcols[quant] /= tb.getcell('INTERVAL')
-        elif quant[:3].upper() == 'POL':
-            polbase = labelbases[quant]
-        elif quant[:4].upper() == 'CHAN':
-            chanbase = labelbases[quant]
-        else:
-            casalog.post("Do not know how to label %s." % quant, 'WARN')
+        try:
+            if quant.upper() in ['SCAN_NUMBER', 'DATA_DESC_ID',
+                                 'ANTENNA1', 'ANTENNA2', 'ARRAY_ID',
+                                 'FEED1', 'FEED2', 'FIELD_ID',
+                                 'OBSERVATION_ID', 'PROCESSOR_ID',
+                                 'STATE_ID']:
+                rowcols[quant] = tb.getcol(quant.upper())
+            elif quant[:4].upper() == 'TIME':
+                rowcols[quant] = tb.getcol(quant.upper())
+                print quant, "is a timelike quantity, so it will be offset and scaled"
+                print "by subtracting the first value and dividing by the first integration"
+                print "interval."
+                rowcols[quant] -= rowcols[quant][0]
+                rowcols[quant] /= tb.getcell('INTERVAL')
+            elif quant[:3].upper() == 'POL':
+                polbase = labelbases[quant]
+            elif quant[:4].upper() == 'CHAN':
+                chanbase = labelbases[quant]
+            else:
+                casalog.post("Do not know how to label %s." % quant, 'WARN')
+        except Exception, e:
+            print "Error getting", quant
+            if debug:
+                return rowcols
+            else:
+                raise e
 
     dat = numpy.array(tb.getcol('DATA'))
     for rowind in xrange(dat.shape[2]):
@@ -127,11 +144,8 @@ def make_labelled_ms(srcms, outputms, labelbases, ow=False):
             for chanind in xrange(dat.shape[1]):
                 label = pollabel + chanind * chanbase
                 dat[polind, chanind, rowind] = label
-    tb.putcol('DATA', dat.tolist())
+    tb.putcol(whichdatacol, dat.tolist())
     tb.close()
-
-    # Copy DATA to CORRECTED_DATA.  Paranoia, but CAS-1654 freaks me out.
-    clearcal(outputms)
 
     try:
         addendum = srcms + " labelled by labelbases = {\n"

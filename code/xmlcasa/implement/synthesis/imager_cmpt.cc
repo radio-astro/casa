@@ -226,6 +226,7 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 	     fixed.resize(amodel.nelements());
 	     fixed.set(False);
 	   }
+	   Bool forceReload=True;
 	   Int nloop=0;
 	   if(npercycle != 0)
 	     nloop=niter/npercycle;
@@ -250,8 +251,10 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 		 PagedImage<Float> resi(aresidual[nIm]);
 		 itsImager->copyMask(resi, rest, "mask0");
 	       }
+	       forceReload=forceReload || (aresidual.nelements() >1);
 	       continter=itsImager->interactivemask(aresidual[nIm], amask[nIm], 
-						    elniter, nloop,thresh, (aresidual.nelements() >1));
+						    elniter, nloop,thresh, forceReload);
+	       forceReload=False;
 	       if(continter>=1)
 		 nointerac(nIm)=True;
 	       if(continter==2)
@@ -262,7 +265,7 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 		   elniter=niter;
 		   //make it do one more loop/clean but with all niter 
 		   nloop=1;
-		 }
+	     }
 	   }
 	   for (Int k=0; k < nloop; ++k){
 	     
@@ -278,7 +281,7 @@ bool imager::clean(const std::string& algorithm, const int niter, const double g
 	     //first time
 	     if(k==0)
 	       elpsf=apsf;
-	     if(anyEQ(fixed, False)){
+	     if(anyEQ(fixed, False)){ 
 	       rstat = itsImager->clean(String(algorithm), elniter, gain, 
 					thrsh, 
 					displayprogress,

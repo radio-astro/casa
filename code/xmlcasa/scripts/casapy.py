@@ -78,7 +78,7 @@ casa = { 'build': {
          'files': { }
        }
 
-print "CASA Version " + casa['build']['version'] + " (build #" + casa['build']['number'] + ")\n  Compiled on: " + casa['build']['time']
+print "CASA Version " + casa['build']['version'] + " (#" + casa['source']['revision'] + ")\n  Compiled on: " + casa['build']['time']
 
 a = [] + sys.argv             ## get a copy from goofy python
 a.reverse( )

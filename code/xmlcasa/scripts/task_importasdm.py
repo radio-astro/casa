@@ -21,7 +21,7 @@ def importasdm(asdm=None, vis=None, corr_mode=None, srt=None, time_sampling=None
 		else :
 		   viso = asdm + '.ms'
 		   vis = asdm
-		execute_string='asdm2MS  --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' + time_sampling+ '\" --ocm \"' + ocorr_mode + '\" --wvr-corrected-data \"' + wvr_corrected_data + '\" --asis \"' + asis + '\"'
+		execute_string='asdm2MS  --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' + time_sampling+ '\" --ocm \"' + ocorr_mode + '\" --wvr-corrected-data \"' + wvr_corrected_data + '\" --asis \"' + asis + '\" --logfile \"' +casalog.logfile() +'\"'
 		if(compression) :
 		   execute_string= execute_string +' --compression'
 		if(verbose) :

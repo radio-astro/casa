@@ -1,4 +1,4 @@
-//# StandardVisCal.h: Declaration of standard (Solvable)VisCal types
+//# CalCorruptor.h
 //# Copyright (C) 1996,1997,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -114,12 +114,17 @@ class CalCorruptor {
   void setEvenSlots(const Double& dt);
   virtual Complex simPar(const VisIter& vi, VisCal::Type type,Int ipar);
 
-//  inline Int& currCorr() { return curr_corr_; };
-//  inline Int& nCorr() { return nCorr_; };
   inline Int& nPar() { return nPar_; };
-//  inline Int& currChan() { return curr_chan_; };  
   inline Int& nChan() { return fnChan_[currSpw()]; };  
-  inline Int& focusChan() {return curr_chan_;};
+  inline const Int& focusChan() {return curr_chan_[currSpw()];};
+  inline const Double& focusFreq() {return curr_freq_;};
+  virtual void setFocusChan(Int chan) {
+    curr_chan_[currSpw()]=chan;
+    // WARN:  this assumes constant channel width - more detailed 
+    // channel freq may be inaccurate
+    Double fRes(fWidth()[currSpw()]/Double(fnChan()[currSpw()]));
+    curr_freq_=fRefFreq()[currSpw()]+chan*fRes;
+  };
   
   // inherited from VC
   inline Int& prtlev() { return prtlev_; };
@@ -131,6 +136,7 @@ class CalCorruptor {
   inline Vector<Float>& fRefFreq() { return fRefFreq_; };
   inline Vector<Float>& fWidth() { return fWidth_; };
   inline Vector<Int>& fnChan() { return fnChan_; };
+  inline Vector<Int>& currChans() { return curr_chan_; };
 
   inline Bool& freqDepPar() { return freqdep_; };
  
@@ -139,18 +145,17 @@ class CalCorruptor {
    Int nSim_;
    Int curr_slot_;
    Bool times_initialized_,freqdep_;
-   //Int nCorr_,curr_corr_;
    Int nPar_;
-   Double curr_time_,starttime_,stoptime_;
+   Double curr_time_,starttime_,stoptime_,curr_freq_;
    Float amp_;
    Vector<Double> slot_times_;   
    Record simpar_;
    String mode_; // general parameter for different kinds of corruptions
 
    Int prtlev_;   
-   Int nAnt_,curr_ant_,nSpw_,curr_spw_,curr_chan_,curr_ant2_;
+   Int nAnt_,curr_ant_,nSpw_,curr_spw_,curr_ant2_;
    Vector<Float> fRefFreq_,fWidth_; // for each spw
-   Vector<Int> fnChan_;
+   Vector<Int> fnChan_,curr_chan_;
 
  private:
 
@@ -251,18 +256,44 @@ class AtmosCorruptor : public CalCorruptor {
    inline Vector<Float>& anty() { return anty_; };
    inline Float& windspeed() { return windspeed_; };
    inline Float& pixsize() { return pixsize_; };
-   Float opac(const Int ichan);
-   inline Float& tsys0() { return tsys0_; };  // const in T_A* scale
-   inline Float& tsys1() { return tsys1_; };  // scale with exp(+tau)
+
    inline Float& tauscale() { return tauscale_; };
+   Float tsys(const Float& airmass);
+   Float opac(const Int ichan);
+   inline Float& spilleff() { return spilleff_; };
+
+   inline Float& tground() { return tground_; };
+   inline Float& tatmos() { return tatmos_; };
+   inline Float& trx() { return trx_; };
+   inline Float& tcmb() { return tcmb_; };
+   // gets slow to calculate 1/exp(hv/kt)-1 all the time so 
+   inline Double& Rtground() { return Rtground_; };
+   inline Double& Rtatmos() { return Rtatmos_; };
+   inline Double& Rtrx() { return Rtrx_; };
+   inline Double& Rtcmb() { return Rtcmb_; };
 
    virtual Complex simPar(const VisIter& vi, VisCal::Type type,Int ipar);
-
+   
+   virtual void setFocusChan(Int chan) {
+     curr_chan_[currSpw()]=chan;
+     // WARN:  this assumes constant channel width - more detailed 
+     // channel freq may be inaccurate
+     Double fRes(fWidth()[currSpw()]/Double(fnChan()[currSpw()]));
+     curr_freq_=fRefFreq()[currSpw()]+chan*fRes;
+     // for temp calculations, recalculate the radiances 1/exp(hn/kt)-1
+     double hn_k = 0.04799274551*1e-9*focusFreq(); 
+     Rtcmb() = 1./(exp(hn_k/tcmb())-1.);
+     Rtground() = 1./(exp(hn_k/tground())-1.);
+     Rtrx() = 1./(exp(hn_k/trx())-1.);
+     Rtatmos() = 1./(exp(hn_k/tatmos())-1.);
+  };
 
  protected:
 
  private:   
-   Float mean_pwv_,windspeed_,pixsize_,tsys0_,tsys1_,tauscale_;
+   Float mean_pwv_,windspeed_,pixsize_,tauscale_,
+     tground_,spilleff_,trx_,tatmos_,tcmb_;
+   Double Rtatmos_,Rtcmb_,Rtrx_,Rtground_;
    Matrix<Float>* screen_p; 
 
    atm::AtmProfile *itsatm;

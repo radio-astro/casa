@@ -227,30 +227,36 @@ public:
   // Simulate quasi-realistic thermal noise, which can depend upon
   // elevation, bandwidth, antenna diameter, as expected
   Bool oldsetnoise(const String& mode, 
-		const Quantity& simplenoise,
-		const String& table,
-		const Float antefficiency,
-		const Float correfficiency,
-		const Float spillefficiency,
-		const Float tau,
-		const Float trx,
-		const Float tatmos, 
-		const Float tcmb);
-		// const Quantity& trx,
-		// const Quantity& tatmos, 
-		// const Quantity& tcmb);
+		   const String& table,
+		   const Quantity& simplenoise,
+		   const Float antefficiency,
+		   const Float correfficiency,
+		   const Float spillefficiency,
+		   const Float tau,
+		   const Float trx,
+		   const Float tatmos, 
+		   const Float tcmb);
 
   Bool setnoise(const String& mode, 
-		 const Quantity& simplenoise,
-		 const String& caltable,
-		 const Float tau,
-		 const Float antefficiency,
-		 const Float correfficiency,
-		 const Float spillefficiency,
-		 const Float trx,
-		 const Float tatmos, 
-		 const Float tground, 
-		 const Float tcmb);
+		const String& caltable,			 
+		const Quantity& simplenoise,
+		// if blank, not stored
+		// or ATM calculation
+		const Quantity& pground,
+		const Float relhum,
+		const Quantity& altitude,
+		const Quantity& waterheight,
+		const Quantity& pwv,
+		// user-specified tau and tatmos 
+		const Float tatmos, 
+		const Float tau,
+		//
+		const Float antefficiency,
+		const Float spillefficiency,
+		const Float correfficiency,
+		const Float trx, 
+		const Float tground,		
+		const Float tcmb);
 
   // apply errors to the data in our MS
   Bool corrupt();

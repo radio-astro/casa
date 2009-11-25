@@ -1361,8 +1361,8 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
 
      <param type="double" name="tau">
      <description>Atmospheric Opacity</description>
-     <value>0.0</value>
-     <choice>0.0</choice>
+     <value>0.1</value>
+     <choice>0.1</choice>
      </param>
 
      <param type="double" name="trx">
@@ -1393,7 +1393,8 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
    <shortdescription>Set the noise level fixed sigma (mode=simple) or
    Brown's equation using the ATM model for frequency-dependent atmospheric
    opacity (mode=tsys) or Brown's equation, manually specifying the zenith
-   opacity (constant across the band, tsys-manual)</shortdescription>
+   opacity (constant across the band) and atmospheric temperature 
+   (mode=tsys-manual)</shortdescription>
    
 <input>
 
@@ -1401,7 +1402,7 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      <description>Mode of operation.</description>
      <value>tsys</value>
      <choice>'simplenoise'</choice>
-     <choice>'tsys'</choice>
+     <choice>'tsys-atm'</choice>
      <choice>'tsys-manual'</choice>
      </param>
 
@@ -1417,14 +1418,53 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      <value>0.0Jy</value>
      </param>
 
+
+
+     <param type="any" name="pground" >
+     <description>Ground pressure for ATM model (if tsys-atm)</description>
+     <any type="variant" />
+     <value>560mbar</value>
+     </param>
+
+     <param type="double" name="relhum">
+     <description>ground relative humidity for ATM model (if tsys-atm)</description>
+     <value>20.0</value>
+     </param>
+
+     <param type="any" name="altitude" >
+     <description>site atltitude for ATM model (if tsys-atm)</description>
+     <any type="variant" />
+     <value>5000m</value>
+     </param>
+
+     <param type="any" name="waterheight" >
+     <description>Height of water layer for ATM model (if tsys-atm)</description>
+     <any type="variant" />
+     <value>2km</value>
+     </param>
+
+     <param type="any" name="pwv" >
+     <description>Precipitable Water Vapor ATM model (if tsys-atm)</description>
+     <any type="variant" />
+     <value>1mm</value>
+     </param>
+
+
+     <param type="double" name="tatmos">
+     <description>Temperature of atmosphere [K] (if tsys-manual)</description>
+     <value>250.0</value>
+     </param>
+
+     <param type="double" name="tau">
+     <description>Atmospheric Opacity (if tsys-manual)</description>
+     <value>0.1</value>
+     </param>
+
+
+
      <param type="double" name="antefficiency">
      <description>antenna efficiency</description>
      <value>0.8</value>
-     </param>
-
-     <param type="double" name="correfficiency">
-     <description>Correlation efficiency</description>
-     <value>0.85</value>
      </param>
 
      <param type="double" name="spillefficiency">
@@ -1432,19 +1472,14 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      <value>0.85</value>
      </param>
 
-     <param type="double" name="tau">
-     <description>Atmospheric Opacity (if tsys-manual)</description>
-     <value>0.0</value>
+     <param type="double" name="correfficiency">
+     <description>Correlation efficiency</description>
+     <value>0.85</value>
      </param>
 
      <param type="double" name="trx">
      <description>Receiver temp (ie, all non-atmospheric Tsys contributions) [K]</description>
      <value>50</value>
-     </param>
-
-     <param type="double" name="tatmos">
-     <description>Temperature of atmosphere [k]</description>
-     <value>250.0</value>
      </param>
 
      <param type="double" name="tground">
@@ -1456,6 +1491,11 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      <description>Temperature of cosmic microwave background [K]</description>
      <value>2.7</value>
      </param>
+
+
+
+
+
 </input>
 <returns type='bool'>Bool</returns>
 </method>

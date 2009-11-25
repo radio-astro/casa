@@ -1184,11 +1184,12 @@ def getFTMachine(gridmode, imagermode, mode, wprojplanes, userftm):
     A utility function which implements the logic to determine the
     ftmachine name to be used in the under-laying tool.
     """
-    ftm = userftm;
+#    ftm = userftm;
+    ftm='ft';
     if ((gridmode == 'widefield') and(wprojplanes > 1)): ftm = 'wproject';
-    if (gridmode == 'aprojection'):                      ftm = 'pbwproject';
-    if (imagermode == 'csclean'):                        ftm = 'ft';
-        
+    elif (gridmode == 'aprojection'):                    ftm = 'pbwproject';
+    elif (imagermode == 'csclean'):                      ftm = 'ft';
+    elif (imagermode == 'mosaic'):                       ftm = userftm;
     return ftm;
 
 def getAlgorithm(psfmode, imagermode, gridmode, mode, 
@@ -1213,16 +1214,23 @@ def getAlgorithm(psfmode, imagermode, gridmode, mode,
         alg = 'msmfs';
         if (multifield): addMultiField = True;
 
-    if (gridmode == 'widefield'): alg='mfclark';
+#    if (gridmode == 'widefield'): alg='mfclark';
 
     if (gridmode == 'widefield'):
         addMultiField=True;
-        if((psfmode == 'clark') or (psfmode == 'hogbom')):
-            if(facets > 1):  alg='wf'+psfmode;
-            else:            addMultiField=True
+        if (facets > 1):
             if(alg.count('multiscale') > 0):
-                if(facets >1):
-                    raise Exception, 'multiscale with facets > 1 not allowed for now';
+                raise Exception, 'multiscale with facets > 1 not allowed for now';
+            if (psfmode==''): psfmode='clark';
+            if((psfmode == 'clark') or (psfmode == 'hogbom')):
+                alg='wf'+psfmode;
+                addMultiField=False;
+            else:
+                addMultiField=True;
+#            addMultiField=False;
+
+#
+# if facets > 1 && mutliscale ==> fail
 
 
     if (addMultiField and (alg[0:2] != 'mf')):  alg = 'mf' + alg;

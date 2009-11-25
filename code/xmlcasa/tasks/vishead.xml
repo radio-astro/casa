@@ -31,7 +31,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <!--<value>add</value>
             <value>del</value>-->
         </allowed>
-        <value>list</value>
+        <value>summary</value>
         <example>mode=''->'list'; mode='get'</example>
     </param>
 

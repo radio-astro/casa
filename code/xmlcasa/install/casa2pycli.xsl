@@ -284,12 +284,14 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
       else:
           myf=ipython_globals
 
-      value = myf['cu'].expandparam(param, value)
-      if(type(value) == numpy.ndarray) :
-         myf[param] = value.tolist()
-      else :
-         myf[param] = value
-      return myf['cu'].verifyparam({param:value})
+      if str(type(value)) != "&lt;type &apos;instance&apos;&gt;" :
+         value = myf['cu'].expandparam(param, value)
+         if(type(value) == numpy.ndarray) :
+            myf[param] = value.tolist()
+         else :
+            myf[param] = value
+         value = myf['cu'].verifyparam({param:value})
+      return value
 #
 #
     def description(self, key=&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;, subkey=None):
@@ -319,6 +321,10 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:text>
 <xsl:for-each select="aps:input">
 <xsl:call-template name="setdefaults3"/>
+        #a = sys._getframe(len(inspect.stack())-1).f_globals
+<xsl:for-each select="aps:constraints">
+<xsl:call-template name="setdefaults4"/>
+</xsl:for-each>
 <xsl:text>
         if a.has_key(paramname) :
 	      return a[paramname]
@@ -590,6 +596,76 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = <xsl:if test="@units!=''">&apos;</xsl:if><xsl:value-of select="aps:value"/><xsl:if test="@units!=''"><xsl:value-of select="@units"/>&apos;</xsl:if><xsl:text>&#10;</xsl:text>
 </xsl:otherwise>
 </xsl:choose>
+</xsl:for-each>
+</xsl:template>
+
+<xsl:template name="setdefaults4">
+<xsl:for-each select="aps:when">
+<xsl:call-template name="contextdefs2">
+<xsl:with-param name="paramname"><xsl:value-of select="@param"/></xsl:with-param>
+</xsl:call-template>
+</xsl:for-each>
+</xsl:template>
+
+
+<xsl:template name="contextdefs2">
+<xsl:param name="paramname"></xsl:param>
+<xsl:for-each select="aps:equals">
+<xsl:choose>
+<xsl:when test="count(aps:default)">
+<xsl:choose>
+<xsl:when test="@type">
+<xsl:choose>
+<xsl:when test="@type='string'">
+        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> == &apos;<xsl:value-of select="@value"/>&apos;:
+</xsl:when>
+<xsl:otherwise>
+        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> == <xsl:value-of select="@value"/>:
+</xsl:otherwise>
+</xsl:choose>
+</xsl:when>
+<xsl:otherwise>
+        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> == &apos;<xsl:value-of select="@value"/>&apos;:
+</xsl:otherwise>
+</xsl:choose>
+</xsl:when>
+</xsl:choose>
+<xsl:for-each select="aps:default">   
+<xsl:text disable-output-escaping="yes">            a[&apos;</xsl:text> <xsl:value-of select="@param"/>&apos;] = <xsl:call-template name="handlevalue"/>
+<xsl:text>
+</xsl:text>
+</xsl:for-each>
+
+
+</xsl:for-each>
+
+<xsl:for-each select="aps:notequals">
+
+<xsl:choose>
+<xsl:when test="count(aps:default)">
+<xsl:choose>
+<xsl:when test="@type">
+<xsl:choose>
+<xsl:when test="@type='string'">
+        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> != &apos;<xsl:value-of select="@value"/>&apos;:
+</xsl:when>
+<xsl:otherwise>
+        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> != <xsl:value-of select="@value"/>:
+</xsl:otherwise>
+</xsl:choose>
+</xsl:when>
+<xsl:otherwise>
+        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> != &apos;<xsl:value-of select="@value"/>&apos;:
+</xsl:otherwise>
+</xsl:choose>
+</xsl:when>
+</xsl:choose>
+
+<xsl:for-each select="aps:default">   
+<xsl:text disable-output-escaping="yes">            a[&apos;</xsl:text> <xsl:value-of select="@param"/>&apos;] = <xsl:call-template name="handlevalue"/>
+<xsl:text>
+</xsl:text>
+</xsl:for-each>
 </xsl:for-each>
 </xsl:template>
 

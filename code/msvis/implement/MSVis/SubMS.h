@@ -191,7 +191,7 @@ class SubMS
   static uInt addOptionalColumns(const M& inTab, M& outTab,
 				 const Vector<String>& possColNames,
 				 const Bool beLazy=false);
-  
+
   // Declared static because it's used in setupMS().  Therefore it can't use
   // any member variables.  It is also used in MSFixvis.cc.
   static const Vector<String>& parseColumnNames(const String colNameList);
@@ -268,8 +268,9 @@ class SubMS
 			   vector<Bool>& transform,
 			   vector<MDirection>& theFieldDirV,
 			   vector<MPosition>& mObsPosV,
-			   vector<MFrequency::Types>& theFrameV,
-			   vector<MFrequency::Ref>& fromFrameV,
+			   vector<MFrequency::Types>& fromFrameTypeV,
+			   vector<MFrequency::Ref>& outFrameV,
+			   vector< Vector<Double> >& xold, 
 			   vector< Vector<Double> >& xout, 
 			   vector< Vector<Double> >& xin, 
 			   // This is a temporary fix until InterpolateArray1D<Double, Complex>& works.
@@ -399,7 +400,10 @@ class SubMS
   Vector<Int> antennaId_p;
   Vector<Int> antIndexer_p;
   Vector<Int> antNewIndex_p;
-  Vector<Int> feedNewIndex_p;
+
+  // feedNewIndex_p(oldAntID, oldFeedID) = newFeedID for that antenna.
+  Matrix<Int> feedNewIndex_p;
+
   Vector<Int> arrayId_p;
   Vector<Double> newTimeVal_p;
   Vector<uInt> tOI_p; //timeOrderIndex

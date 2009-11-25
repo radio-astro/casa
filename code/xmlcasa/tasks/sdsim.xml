@@ -12,6 +12,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     This is a task which will simulate single dish data.  
     Notice this is still a preliminary prototype task and only has 
     limited functionality. 
+    !!!NOTICE!!! sdsim currently can simulate only 2D images and
+    not available for 3D and 4D data cubes. The functionality will 
+    be implemented in the next patch release (CASA 3.0.1). 
   </description>
   
   <input>
@@ -267,6 +270,9 @@ single dish simulation task (prototype):
     preliminary prototype task and functionalities are limited. 
     New functionality is actively  being added, so if you have changed 
     versions of CASA, check the inputs carefully.
+    !!!NOTICE!!! sdsim currently can simulate only 2D images and
+    not available for 3D and 4D data cubes. The functionality will 
+    be implemented in the next patch release (CASA 3.0.1). 
     -------------------------------
     Keyword arguments:
     -------------------------------

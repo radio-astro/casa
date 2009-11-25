@@ -177,6 +177,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </input>
 	<returns type="bool"/>
 </method>
+<method type="function" name="logfile">
+  <shortdescription>Returns the full path of the log file</shortdescription>
+  <description>Returns the full path of the log file</description>
+  <input/>
+  <returns type="string"/>
+  <example>logfile = casalog.logfile()</example>
+
+</method>
 
 </tool>
 

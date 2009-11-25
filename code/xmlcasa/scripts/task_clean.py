@@ -69,9 +69,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
         localFTMachine = getFTMachine(gridmode, imagermode, mode, wprojplanes,
                                       ftmachine);
-        localAlgorithm = getAlgorithm(psfmode, imagermode, gridmode, mode, 
-                                      multiscale, multifield, facets, nterms,
-                                      '')
         #some default value handling for channelization
         if (mode=='velocity' or mode=='frequency' or mode=='channel'):
             (localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype,restfreq)
@@ -159,6 +156,13 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                  phasecenters=phasecenter
                  imageids=imagename
 
+#
+# Moved getAlgorithm() to here so that multifield is set using outlier file.
+#
+            localAlgorithm = getAlgorithm(psfmode, imagermode, gridmode, mode, 
+                                          multiscale, multifield, facets, nterms,
+                                          'clark');
+
             ###PBCOR or not 
             sclt='SAULT'
             makepbim=False
@@ -198,12 +202,12 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     # to ensure correct frequencies in
                     # output images(especially for multi-spw)
                     # Use freq list instead
-                    imstart=q(freqs[j],'Hz')
-                    localwidth=q(finc,'Hz')
+                    imstart=imset.qatostring(q(freqs[j],'Hz'))
+                    localwidth=imset.qatostring(q(finc,'Hz'))
                 elif localstart.find('m/s')>0:
-                    imstart=qat.add(q(localstart),qat.mul(j,q(localwidth)))
+                    imstart=imset.qatostring(qat.add(q(localstart),qat.mul(j,q(localwidth))))
                 elif localstart.find('Hz')>0:
-                    imstart=qat.add(q(localstart),qat.mul(j,q(localwidth)))
+                    imstart=imset.qatostring(qat.add(q(localstart),qat.mul(j,q(localwidth))))
 
             else:
                 imnchan=localnchan

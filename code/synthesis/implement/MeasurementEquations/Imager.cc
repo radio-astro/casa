@@ -1038,10 +1038,11 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       }
       Vector<Double> freqs(imageNchan_p);
       freqs=0.0;
+      Double chanVelResolution=0.0;
       if(Double(mImageStep_p.getValue())!=0.0) {
 	MRadialVelocity mRadVel=mImageStart_p;
+	MDoppler mdoppler;
 	for (Int chan=0;chan<imageNchan_p;++chan) {
-	  MDoppler mdoppler;
 	  if(imageMode_p.contains("OPTICAL")){
 	    mdoppler=MDoppler(mRadVel.getValue().get(), MDoppler::OPTICAL);
 	  } 
@@ -1051,6 +1052,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	  freqs(chan)=
 	    MFrequency::fromDoppler(mdoppler, restFreq).getValue().getValue();
 	  mRadVel.set(mRadVel.getValue()+mImageStep_p.getValue());
+	  if(imageNchan_p==1)
+	    chanVelResolution=MFrequency::fromDoppler(mdoppler, restFreq).getValue().getValue()-freqs(0);
 	}
       }
       else {
@@ -1061,8 +1064,19 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       // Use this next line when non-linear is working
       // when selecting in velocity its specfied freqframe or REST 
       MFrequency::Types imfreqref=(obsFreqRef==MFrequency::REST) ? MFrequency::REST : freqFrame_p;
-      mySpectral = new SpectralCoordinate(imfreqref, freqs,
-					  restFreq);
+  
+      if(imageNchan_p==1){
+	if(chanVelResolution==0.0)
+	  chanVelResolution=freqResolution(0);
+	mySpectral = new SpectralCoordinate(imfreqref,
+					    freqs(0),
+					    chanVelResolution,
+					    refChan, restFreq);
+      }
+      else{
+	mySpectral = new SpectralCoordinate(imfreqref, freqs,
+					    restFreq);
+      }
       // mySpectral = new SpectralCoordinate(MFrequency::DEFAULT, freqs(0),
       //				       freqs(1)-freqs(0), refChan,
       //				        restFreq);
@@ -4275,6 +4289,18 @@ Bool Imager::restore(const Vector<String>& model,
       os << LogIO::NORMAL // Loglevel PROGRESS
          << "Restoring " << model.nelements() << " models" << LogIO::POST;
     }
+
+    ///if the skymodel is already set...no need to get rid of the psf and ftmachine state
+    //as long as the images match
+    if(!redoSkyModel_p){
+      Bool coordMatch=True; 
+      for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
+	CoordinateSystem cs=(sm_p->image(thismodel)).coordinates();
+	coordMatch= coordMatch || checkCoord(cs, model(thismodel));
+      }
+      if(!coordMatch)
+	destroySkyEquation();
+    }
     
     if(redoSkyModel_p){
       Vector<String> imageNames(image);
@@ -4335,15 +4361,13 @@ Bool Imager::restore(const Vector<String>& model,
       }
     
       //      if (!se_p)
-	if(!createSkyEquation(model, complist)) return False;
+      if(!createSkyEquation(model, complist)) return False;
       
       addResidualsToSkyEquation(residualNames);
     }
     sm_p->solveResiduals(*se_p);
     
     restoreImages(image);
-
-    destroySkyEquation();
     
     this->unlock();
     return True;
@@ -8647,8 +8671,8 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 }
 
 
-Bool Imager::checkCoord(CoordinateSystem& coordsys,  
-			String& imageName){ 
+Bool Imager::checkCoord(const CoordinateSystem& coordsys,  
+			const String& imageName){ 
 
   PagedImage<Float> image(imageName);
   CoordinateSystem imageCoord= image.coordinates();
@@ -9062,7 +9086,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
        return False;
      }
    }
-   if ( clean_panel_p == 0 ) {
+   if ( clean_panel_p == 0) {
      dbus::variant panel_id = viewer_p->panel( "clean" );
      if ( panel_id.type() != dbus::variant::INT ) {
        os << LogIO::WARN << "failed to create clean panel" << LogIO::POST;
@@ -9077,8 +9101,9 @@ Int Imager::interactivemask(const String& image, const String& mask,
        prev_image_id_p=image_id_p;
      if(forceReload && mask_id_p !=0)
        prev_mask_id_p=mask_id_p;
-     if(prev_image_id_p !=0)
+     if(prev_image_id_p){
        viewer_p->unload( prev_image_id_p );
+     }
      if(prev_mask_id_p)
        viewer_p->unload( prev_mask_id_p );
      prev_image_id_p=0;
@@ -9097,7 +9122,9 @@ Int Imager::interactivemask(const String& image, const String& mask,
       }
       mask_id_p = mask_id.getInt( );
    } else {
-     viewer_p->reload( clean_panel_p );
+     //viewer_p->reload( clean_panel_p );
+     viewer_p->reload(image_id_p);
+     viewer_p->reload(mask_id_p);
    }
 
    
@@ -9166,10 +9193,11 @@ Int Imager::interactivemask(const String& image, const String& mask,
       os << "failed to get a vaild result for viewer" << LogIO::WARN << LogIO::POST;
       return False;
     }
+    prev_image_id_p=image_id_p;
+    prev_mask_id_p=mask_id_p;
+
     if(result==1){
       //Keep the image up but clear the next time called
-      prev_image_id_p=image_id_p;
-      prev_mask_id_p=mask_id_p;
       image_id_p=0;
       mask_id_p=0;
     }
@@ -9186,8 +9214,6 @@ Int Imager::interactivemask(const String& image, const String& mask,
       clean_panel_p=0;
       image_id_p=0;
       mask_id_p=0;
-      prev_image_id_p=0;
-      prev_mask_id_p=0;
     }
 
     // return 0 if "continue"
