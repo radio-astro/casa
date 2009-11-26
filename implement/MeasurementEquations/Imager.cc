@@ -841,11 +841,15 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	restFreq=restFreqVec[0];
       }
       MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : freqFrame_p; 
+      //  mySpectral = new SpectralCoordinate(mfreqref,
+      //					  mfImageStart_p.get("Hz").getValue()+
+      //mfImageStep_p.get("Hz").getValue()/2.0,
+      //					  mfImageStep_p.get("Hz").getValue(),
+      //					  refChan, restFreq);
       mySpectral = new SpectralCoordinate(mfreqref,
-					  mfImageStart_p.get("Hz").getValue()+
-					  mfImageStep_p.get("Hz").getValue()/2.0,
-					  mfImageStep_p.get("Hz").getValue(),
-					  refChan, restFreq);
+      					  mfImageStart_p.get("Hz").getValue(),
+      					  mfImageStep_p.get("Hz").getValue(),
+      					  refChan, restFreq);
       os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
          << "Start frequency = " // Loglevel INFO
 	 << mfImageStart_p.get("GHz").getValue()
