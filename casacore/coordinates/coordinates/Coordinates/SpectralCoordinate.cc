@@ -1600,10 +1600,10 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
     if (pixelValues().nelements() != 0) {
 	Vector<Double> pixel = pixelValues();
 	Vector<Double> world = worldValues();
-	Double crpix, cdelt, crval;
-	crpix = referencePixel()(0);
-	cdelt = increment()(0);
-	crval = referenceValue()(0);
+	Double dcrpix, dcdelt, dcrval;
+	dcrpix = referencePixel()(0);
+	dcdelt = increment()(0);
+	dcrval = referenceValue()(0);
 	Double maxDeviation = 0.0;
 	Vector<Double> tmpworld(1), tmppixel(1);
 	for (uInt i=0; i<pixel.nelements(); i++) {
@@ -1615,13 +1615,17 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 		break;
 	    }
 	    Double actual = tmpworld(0);
-	    Double linear = crval + cdelt*(pixel(i) - crpix);
-	    maxDeviation = max(abs(actual-linear), maxDeviation);
-	    if (maxDeviation != 0.0) {
-		logger << LogIO::SEVERE << "Error in linearizing frequency "
-		    "axis for FITS is " << maxDeviation << " " <<
-		    worldAxisUnits()(0) << LogIO::POST;
+	    Double linear = dcrval + dcdelt*(pixel(i) - dcrpix);
+// 	    cout << " dcrval " << dcrval << " dcdelt " << dcdelt << " i " << i 
+// 		 << " pixel(i) " << pixel(i) << " dcrpix " << dcrpix << " actual " << actual << " linear " << linear << endl;
+	    if(maxDeviation<abs(actual-linear)){
+	      maxDeviation = abs(actual-linear);
 	    }
+	}
+	if (maxDeviation > 0.0) {
+	  logger << LogIO::WARN << "Spectral axis is non-linear but CASA can presently only write linear axes to FITS." << endl
+		 << "In this image, the maximum deviation from linearity is " << maxDeviation << " "
+		 << worldAxisUnits()(0) << LogIO::POST;
 	}
     }
 
@@ -1689,52 +1693,6 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 	header.define("cunit", cunit);
     }
 }
-
-// Bool SpectralCoordinate::fromFITSOld(SpectralCoordinate &out, String &,
-// 				  const RecordInterface &header, 
-// 				  uInt whichAxis, LogIO &logger,
-// 				  Bool oneRelative)
-// {
-//     Int spectralAxis;
-//     Double referenceChannel, referenceFrequency, deltaFrequency;
-//     Vector<Double> frequencies;
-//     MFrequency::Types refFrame;
-//     MDoppler::Types velocityPreference;
-//     Double restFrequency;
-// //    
-//     Bool ok = FITSSpectralUtil::fromFITSHeader(spectralAxis,
-// 					       referenceChannel,
-// 					       referenceFrequency,
-// 					       deltaFrequency,
-// 					       frequencies,
-// 					       refFrame,
-// 					       velocityPreference,
-// 					       restFrequency,
-// 					       logger,
-// 					       header,
-// 					       'c',
-// 					       oneRelative);
-// //
-//     if (casa::near(deltaFrequency,Double(0.0), Double(1.0e-6))) {
-//        logger << LogIO::WARN << "The increment is zero.  Arbitrarily setting to 10% of the reference value" << LogIO::POST;
-//        deltaFrequency = referenceFrequency / 10.0;
-//     }
-//     restFrequency = max(0.0, restFrequency);
-// //
-//     if (ok) {
-//        if (spectralAxis == Int(whichAxis)) {
-//           SpectralCoordinate tmp(refFrame, referenceFrequency, deltaFrequency, 
-//                                  referenceChannel, restFrequency);
-//           out = tmp;
-//        } else {
-//           logger << LogIO::SEVERE << "Disgreement about where the spectral axis is. " <<
-// 	    spectralAxis << " vs. " << whichAxis << LogIO::POST;
-//           ok = False;
-//        }
-//     }
-// //					       
-//     return ok;
-// }
 
 
 Coordinate* SpectralCoordinate::makeFourierCoordinate (const Vector<Bool>& axes,
