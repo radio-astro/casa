@@ -1820,9 +1820,9 @@ Date/Time:                         RR:                      RL:                 
      <param type="string" direction="in" name="outframe">
      <description>Name of the reference frame to transform to (LSRK, LSRD, BARY, GALACTO,  
       LGROUP, CMB, GEO, or TOPO). If no reference frame is given, the present reference frame  
-      given by the data is used, i.e. the reference frame is not changed. Transformation  
-      to/from TOPO or GEO is presently using the observation dates from the FIELD table for  
-      all data.</description>
+      given by the data is used, i.e. the reference frame is not changed. The observatory
+      position is taken as the average of all antenna positions.
+      </description>
      </param>
 
      <param type="string" direction="in" name="mode">
@@ -1914,8 +1914,6 @@ Date/Time:                         RR:                      RL:                 
   frame) in parameter "outframe".
   For each field in the MS, the channel frequencies are transformed from their present 
   reference frame to the one given by parameter "outframe".
-  Note that for transformation to/from TOPO or GEO the observation dates from the
-  corresponding FIELD table entries are used.
 
   If the regridding parameters are set, they are interpreted in the "outframe" reference
   frame. The regridding is applied to the data after the reference frame transformation.

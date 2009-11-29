@@ -31,6 +31,7 @@ ic2233_regression               sbhatnag@aoc.nrao.edu
 imagepoltest_regression         rreid@nrao.edu
 imagetest_regression            dpetry@eso.org
 imcontsub_test                  dmehring@nrao.edu
+imfit_test                      dmehring@nrao.edu
 imhead_test                     dmehring@nrao.edu
 immath_test                     dmehring@nrao.edu
 immoment_test                   dmehring@nrao.edu

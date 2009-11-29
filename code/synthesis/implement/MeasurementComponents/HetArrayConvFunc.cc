@@ -386,7 +386,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
 	  found=True;
 	  // if it drops by more than 2 magnitudes per pixel
-	  trial=3;
+	  trial=5;
 	}
 				 
 	if(found) {

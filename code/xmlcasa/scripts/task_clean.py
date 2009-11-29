@@ -431,6 +431,13 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                         image=restoredimage, psfimage=psfimage,
                         mask=maskimage, interactive=interactive,
                         npercycle=npercycle);
+                      
+            #In the interactive mode, deconvlution can be skipped and in that case
+            #psf is not generated. So check if all psfs are there if not, generate
+            if interactive:
+                for psfim in psfimage:
+                    if not os.path.isdir(psfim):
+                        imCln.approximatepsf(psf=psfim)
         imCln.close()
         #
         # If MS-MFS was used, comput alpha (spectral index)
@@ -459,6 +466,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                        relax=True, overwrite=True)
                         ia.close()
                         #os.system('rm -rf %s' % tmpdir+imf+'.ch*'+imext)
+                # concat text files
                 masktextf=open(imf+imagext[-1]+'.text','w')
                 for k in xrange(localnchan):
                     if os.path.isfile(tmppath[indx] + os.path.basename(imf)

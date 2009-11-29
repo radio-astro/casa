@@ -19,7 +19,7 @@
 
 		<param type="any" name="flagfile">
 			<description>Name of output visibility file (MS)</description>
-			<any type="variant" limittypes="string stringArra"/>
+			<any type="variant" limittypes="string stringArray"/>
 			<value type="string"></value>
 		</param>
 

@@ -468,9 +468,9 @@ def update_params(func, printtext=True, ipython_globals=None):
             cu.setconstraints('file://'+xmlfile);
 
     a=myf[myf['taskname']].defaults("paramkeys",myf)
-    itsdef=myf[myf['taskname']].itsdefault
+    itsdef=myf[myf['taskname']].defaults
+    itsparams=myf[myf['taskname']].parameters
     params=a
-    itsparams = {}
     for k in range(len(params)):
         paramval = obj.defaults(params[k], myf)
 
@@ -480,10 +480,12 @@ def update_params(func, printtext=True, ipython_globals=None):
         if(type(paramval)==dict):
             if(paramval.has_key(0)):
                 notdict=False
-        
+        if(myf.has_key(params[k])):
+            itsparams.update({params[k]:myf[params[k]]})
         if (notdict ):
             if(not myf.has_key(params[k])):
                 myf.update({params[k]:paramval})
+                itsparams.update({params[k]:paramval})
             if(printtext):
                 if(hascheck):
                     noerror = obj.check_params(params[k],myf[params[k]],myf)
@@ -515,29 +517,34 @@ def update_params(func, printtext=True, ipython_globals=None):
                     elif(somedict.has_key('notvalue') and myf.has_key(params[k])):
                         if(somedict['notvalue']!=myf[params[k]]):
                             userdict=somedict
-                ###The behaviour is to use the task.itsdefault
+                ###The behaviour is to use the task.defaults
                 ### for all non set parameters and parameters that
                 ### have no meaning for this selection
                 for j in range(len(subdict)):
                     subkey=subdict[j].keys()
+                   
                     for kk in range(len(subkey)):
                         
                         if( (subkey[kk] != 'value') & (subkey[kk] != 'notvalue') ):
                             #if user selecteddict
                             #does not have the key
                             ##put default
-                            if((not userdict.has_key(subkey[kk])) and (not subkeyupdated[subkey[kk]]) and (not myf.has_key(subkey[kk]))):
-                                myf.update({subkey[kk]:itsdef(subkey[kk])})
+                            if(userdict.has_key(subkey[kk])):
+                                if(myf.has_key(subkey[kk])):
+                                    itsparams.update({subkey[kk]:myf[subkey[kk]]})
+                                else:
+                                    itsparams.update({subkey[kk]:itsdef(params[k], None, myf[params[k]], subkey[kk])})
                                 subkeyupdated[subkey[kk]]=True
-                    ###put default if not there
-                            if(not myf.has_key(subkey[kk])):
-                                myf.update({subkey[kk]:itsdef(subkey[kk])})
-                    ###put default if not there
+                            elif((not subkeyupdated[subkey[kk]])):
+                                itsparams.update({subkey[kk]:itsdef(params[k], None, myf[params[k]], subkey[kk])})
+                                subkeyupdated[subkey[kk]]=True
             ### need to do default when user has not set val
             if(not myf.has_key(params[k])):
                 if(paramval[0].has_key('notvalue')):
+                    itsparams.update({params[k]:paramval[0]['notvalue']})
                     myf.update({params[k]:paramval[0]['notvalue']})
                 else:
+                    itsparams.update({params[k]:paramval[0]['notvalue']})
                     myf.update({params[k]:paramval[0]['value']})
             userval=myf[params[k]]
             choice=0
@@ -581,8 +588,7 @@ def update_params(func, printtext=True, ipython_globals=None):
                             print_params_col(subkey[j],myf[subkey[j]],obj.description(subkey[j],userval),'spdef',comment, noerror)
                         else:
                             print_params_col(subkey[j],myf[subkey[j]],obj.description(subkey[j],userval),'spnondef',comment, noerror)
-		        itsparams[params[k]] = myf[params[k]]
-    #print itsparams                    
+		        itsparams[params[k]] = myf[params[k]]                    
     #
     # Verify the complete record, with errors being reported to the user
     #
@@ -794,7 +800,7 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None):
         for j in range(len(f)):
             k=f[j][0]
 	    if not myparams.has_key(k) and k != 'self' :
-		    myparams[k] = myf[k]
+		    myparams[k] = myf[taskname].parameters[k]
             if(k != 'self' and type(myparams[k])==str):
                 if ( myparams[k].count( '"' ) < 1 ):
                     # if the string doesn't contain double quotes then

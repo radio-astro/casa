@@ -85,6 +85,8 @@ a \fits\ file:
 
 \item <link anchor="images:image.findsources.function">findsources</link> - Find strong point sources in sky
 
+\item <link anchor="images:image.fitcomponents.function">fitcomponents</link> - Fit model components to an image.
+
 \item <link anchor="images:image.fitsky.function">fitsky</link> - fit 2-dimensional models to the sky
 (see also the <link anchor="images:imagefitter">imagefitter</link> \tool.
 
@@ -4259,6 +4261,85 @@ estimate.
 </example>
 </method>
 
+<method type="function" name="fitcomponents">
+    <shortdescription>Fit 2-dimensional models to an image.</shortdescription>
+    <input>
+        <param type="string" direction="in" name="box">
+        <value></value>
+        <description>One or more boxes to use for fit region(s). Default is to use the entire plane.</description>
+        </param>
+        
+        <param type="any" direction="in" name="region">
+            <any type="variant"/>
+            <description>The 2-D region of interest to fit. Default is entire plane. If both box and region are specified, box is used and region is not.</description>
+            <value></value>
+        </param>
+        
+        <param type="int" direction="in" name="chan">
+            <description>The frequency plane to use in the fit. Default is 0 (first plane).</description>
+            <value>0</value>
+        </param>
+        
+        <param type="string" direction="in" name="stokes">
+            <description>The polarization to use in the fit. Default is I.</description>
+            <value>I</value>
+        </param>
+        
+        <param type="any" direction="in" name="mask">
+            <any type="variant"/>
+            <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
+            <value></value>
+        </param>
+    
+        <param type="doubleArray" direction="in" name="includepix">
+            <description>Range of pixel values to include.  Default is to include all pixels.</description>
+            <value>-1</value>
+        </param>
+    
+        <param type="doubleArray" direction="in" name="excludepix">
+            <description>Range of pixel values to exclude.  Default is to exclude no pixels.</description>
+            <value>-1</value>
+        </param>
+    
+        <param type="string" direction="in" name="residual">
+            <description>Name of the residual image to write. Default is not to write the residual.</description>
+            <value></value>
+        </param>
+    
+        <param type="string" direction="in" name="model">
+            <description>Name of the model image to write. Default is not to write the model.</description>
+            <value></value>
+        </param>
+    
+        <param type="string" direction="in" name="estimates">
+            <description>Name of the input estimates file. Default is to auto-estimate in which case a single gaussian will be fit.</description>
+            <value></value>
+        </param>
+        
+        <param type="string" direction="in" name="logfile">
+            <description>File in which to log results. Default is not to write a logfile.</description>
+            <value></value>
+        </param>
+        
+        <param type="bool" direction="in" name="append">
+            <description>Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.</description>
+            <value>true</value>
+        </param>
+        
+        <param type="string" direction="in" name="newestimates">
+            <description>File to which to write results in "estimates" format suitable as estimates input for another run. Default is do not write an estimates file.</description>
+            <value></value>
+        </param>
+    
+    </input>
+    <returns type="any"><any type="record"/>Componentlist tool or fail</returns>
+    <description>
+    My description goes here.
+    </description>
+    <example>
+    My example goes here
+    </example>
+</method>
 
 
 

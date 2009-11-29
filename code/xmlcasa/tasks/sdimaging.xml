@@ -25,8 +25,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="specunit">
 	    <description>units for spectral axis (channel,km/s,GHz)</description>
-	    <value>channel</value>
+	    <value></value>
 	    <allowed kind="enum">
+                <value></value>
  	        <value>channel</value>
  	        <value>km/s</value>
 	        <value>GHz</value>

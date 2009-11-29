@@ -115,6 +115,8 @@ class image
 
     ::casac::record* fitsky(const ::casac::record& region = ::casac::initialize_record(""), const int chan = 0, const std::string& stokes = "I", const ::casac::variant& mask = ::casac::initialize_variant(""), const std::vector<std::string>& models = std::vector<std::string> (1, "gaussian"), const ::casac::record& estimate = ::casac::initialize_record(""), const std::vector<std::string>& fixedparams = std::vector<std::string> (1, ""), const std::vector<double>& includepix = std::vector<double> (1, -1), const std::vector<double>& excludepix = std::vector<double> (1, -1), const bool fit = true, const bool deconvolve = false, const bool list = true);
 
+    ::casac::record* fitcomponents(const std::string& box = "", const ::casac::variant& region = ::casac::initialize_variant(""), const int chan = 0, const std::string& stokes = "I", const ::casac::variant& vmask = ::casac::initialize_variant(""), const std::vector<double>& in_includepix = std::vector<double> (1, -1), const std::vector<double>& in_excludepix = std::vector<double> (1, -1), const std::string& residual = "", const std::string& model = "", const std::string& estimates = "", const std::string& logfile = "", const bool append = true, const std::string& newestimates = "");
+
     bool fromrecord(const ::casac::record& record, const std::string& outfile = "");
 
     ::casac::variant* getchunk(const std::vector<int>& blc = std::vector<int> (1, -1), const std::vector<int>& trc = std::vector<int> (1, -1), const std::vector<int>& inc = std::vector<int> (1, 1), const std::vector<int>& axes = std::vector<int> (1, -1), const bool list = false, const bool dropdeg = false, const bool getmask = false);

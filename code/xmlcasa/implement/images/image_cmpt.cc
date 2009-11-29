@@ -54,6 +54,7 @@
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
+#include <images/Images/ImageFitter.h>
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
@@ -1264,6 +1265,79 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
     RETHROW(x);
   }
   return rstat;
+}
+
+
+::casac::record* image::fitcomponents(
+	const std::string& box, const ::casac::variant& region, const int chan,
+	const std::string& stokes, const ::casac::variant& vmask,
+	const std::vector<double>& in_includepix,
+	const std::vector<double>& in_excludepix,
+	const std::string& residual, const std::string& model,
+	const std::string& estimates, const std::string& logfile,
+	const bool append, const std::string& newestimates
+) {
+    if (detached()) {
+    	return 0;
+    }
+    int num = in_includepix.size();
+    Vector<Float> includepix(num);
+    num = in_excludepix.size();
+    Vector<Float> excludepix(num);
+    convertArray(includepix, Vector<Double>(in_includepix));
+    convertArray(excludepix, Vector<Double>(in_excludepix));
+    if (includepix.size() == 1 && includepix[0] == -1) {
+        includepix.resize();
+    }
+    if (excludepix.size() == 1 && excludepix[0] == -1) {
+        excludepix.resize();
+    }
+    ::casac::record *rstat = 0;
+	*itsLog << LogOrigin("image", "fitcomponent");
+    String mask = vmask.toString();
+    if(mask == "[]") {
+	    mask = "";
+    }
+	try {
+		ImageFitter *fitter = 0;
+		String imName = itsImage->name();
+		if (region.type() == ::casac::variant::STRING || region.size() == 0) {
+			String regionString = (region.size() == 0) ? "" : region.toString();
+			fitter = new ImageFitter(
+				imName, regionString, box, chan, stokes, mask, includepix, excludepix,
+				residual, model, estimates, logfile, append, newestimates
+			);
+		}
+		else if (region.type() == ::casac::variant::RECORD) {
+			::casac::variant regionCopy = region;
+			Record *regionRecord = toRecord(regionCopy.asRecord());
+			fitter = new ImageFitter(
+				imName, regionRecord, box, chan, stokes, mask, includepix, excludepix,
+				residual, model, estimates, logfile, append, newestimates
+			);
+		}
+		else {
+			*itsLog << "Unsupported type for region " << region.type() << LogIO::EXCEPTION;
+		}
+		ComponentList compList = fitter->fit();
+		bool converged = fitter->converged();
+		delete fitter;
+		Record returnRecord, compListRecord;
+		String error;
+	    if (! compList.toRecord(error, compListRecord)) {
+	        *itsLog << "Failed to generate output record from result. " << error
+	                << LogIO::POST;
+	    }
+		returnRecord.defineRecord("results", compListRecord);
+		returnRecord.define("converged", converged);
+	    rstat = fromRecord(returnRecord);
+
+	}catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+
+	return rstat;
 }
 
 ::casac::record*
@@ -2501,7 +2575,6 @@ image::statistics(const std::vector<int>& axes,
 
     Record *regionRec = toRecord(region);
     String mtmp = mask.toString();
-    //std::cerr << "Mask is *" <<mtmp<< "*" << std::endl;
     if(mtmp == "false" || mtmp == "[]")
 	    mtmp = "";
 

@@ -50,6 +50,8 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
     def __init__(self) :
        self.__bases__ = (</xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_,)
        self.__doc__ = self.__call__.__doc__</xsl:text>
+
+       self.parameters=<xsl:text>{</xsl:text><xsl:apply-templates select="aps:input" mode="quotes"/> &apos;async&apos;:None}
 <xsl:text disable-output-escaping="yes">
 
     def result(self, key=None):
@@ -65,7 +67,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 	    return None
 
 </xsl:text>
-    def __call__<xsl:text>(self, </xsl:text><xsl:apply-templates select="aps:input"/>
+    def __call__<xsl:text>(self, </xsl:text><xsl:apply-templates select="aps:input" mode="noquotes"/> async=None):
 <xsl:text>
         """</xsl:text>
 <xsl:apply-templates select="aps:shortdescription"></xsl:apply-templates>
@@ -109,7 +111,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 		      exec('myparams[key] = ' + key + ' = keyVal[len(keyVal)-1][\'value\']')
 
 	else :
-            async = self.__globals__['async']
+            async = self.parameters['async']
 </xsl:text>
 <xsl:for-each select="aps:input">
 <xsl:apply-templates select="aps:param"/>
@@ -233,7 +235,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 #
 #
 #
-    def defaults(self, param=None, ipython_globals=None):
+    def defaults(self, param=None, ipython_globals=None, paramvalue=None, subparam=None):
         self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
         if ipython_globals == None:
             myf=self.__globals__
@@ -272,8 +274,27 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
         elif(param == 'paramkeys'):
                 return a.keys()
         else:
-	        if(a.has_key(param)):
-		      return a[param]
+            if(paramvalue==None):
+               if(a.has_key(param)):
+                  return a[param]
+               else:
+                  return self.itsdefault(param)
+            else:
+               retval=a[param]
+               if(type(a[param])==dict):
+                  for k in range(len(a[param])):
+                     valornotval='value'
+                     if(a[param][k].has_key('notvalue')):
+                        valornotval='notvalue'
+                     if((a[param][k][valornotval])==paramvalue):
+                        retval=a[param][k].copy()
+                        retval.pop(valornotval)
+                        if(subparam != None):
+                           if(retval.has_key(subparam)):
+                              retval=retval[subparam]
+                           else:
+                              retval=self.itsdefault(subparam)
+               return retval
 
 
 #
@@ -335,7 +356,9 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:value-of select="$taskname"/>_cli = <xsl:value-of select="$taskname"/>_cli_()
 </xsl:template>
 
-<xsl:template match="aps:input"> <xsl:call-template name="doargs"></xsl:call-template>
+<xsl:template match="aps:input" mode="noquotes"> <xsl:call-template name="doargs"></xsl:call-template>
+</xsl:template>
+<xsl:template match="aps:input" mode="quotes"> <xsl:call-template name="doqargs"></xsl:call-template>
 </xsl:template>
 <xsl:template match="aps:shortdescription"><xsl:value-of select="."/></xsl:template>
 <xsl:template match="aps:example"><xsl:value-of select="replace(., '\\.*\{verbatim\}', '')" disable-output-escaping="yes"/></xsl:template>
@@ -351,7 +374,11 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:template>
 
 <xsl:template name="doargs">
-<xsl:for-each select="aps:param"><xsl:value-of select="@name"/>=None, </xsl:for-each>async=None):
+	<xsl:for-each select="aps:param"><xsl:value-of select="@name"/>=None, </xsl:for-each>
+</xsl:template>
+
+<xsl:template name="doqargs">
+	<xsl:for-each select="aps:param">&apos;<xsl:value-of select="@name"/>&apos;:None, </xsl:for-each>
 </xsl:template>
 
 <xsl:template name="doargs2">
@@ -359,7 +386,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:template>
  
 <xsl:template match="aps:param">
-	<xsl:text>            myparams[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;] = <xsl:value-of select="@name"/> = self.__globals__[&apos;<xsl:value-of select="@name"/>&apos;]
+	<xsl:text>            myparams[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;] = <xsl:value-of select="@name"/> = self.parameters[&apos;<xsl:value-of select="@name"/>&apos;]
 </xsl:template>
 
 <xsl:template name="oneliners">

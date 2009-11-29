@@ -120,6 +120,7 @@ Regrid an MS to a new spectral window / channel structure or frame
 		<description>Output frame (\'\'=keep input frame)</description>
 		<value></value>
 		<allowed kind="enum">
+			<value>topo</value>
 			<value>lsrk</value>
 			<value>lsrd</value>
 			<value>bary</value>

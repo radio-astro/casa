@@ -2339,19 +2339,21 @@ namespace casa {
 	  theRegridCenterF = transNewXin[0]-transCHAN_WIDTH[0]/2.;
 	}
       }
-      if(regridBandwidthF<=0.|| nchan>0){ // "not set" or use nchan instead
-	if(nchan>0){ // use nchan parameter if available
-	  if(regridChanWidthF <= 0.){ // channel width not set
+      if(regridBandwidthF<=0.|| nchan!=0){ // "not set" or use nchan instead
+	// keep bandwidth as is
+	theRegridBWF = transNewXin[oldNUM_CHAN-1] - transNewXin[0] 
+	  + transCHAN_WIDTH[0]/2. + transCHAN_WIDTH[oldNUM_CHAN-1]/2.;
+	if(nchan!=0){ // use nchan parameter if available
+	  if(nchan<0){
+	    // define via width of first channel to avoid numerical problems
+	    theRegridBWF = transCHAN_WIDTH[0]*floor((theRegridBWF+transCHAN_WIDTH[0]*0.01)/transCHAN_WIDTH[0]);
+	  }
+	  else if(regridChanWidthF <= 0.){ // channel width not set
 	    theRegridBWF = transCHAN_WIDTH[0]*nchan;
 	  }
 	  else{
 	    theRegridBWF = regridChanWidthF*nchan;
 	  }	    
-	}
-	else{
-	  // keep bandwidth as is
-	  theRegridBWF = transNewXin[oldNUM_CHAN-1] - transNewXin[0] 
-	    + transCHAN_WIDTH[0]/2. + transCHAN_WIDTH[oldNUM_CHAN-1]/2.;
 	}
 	// now can convert start to center
 	if(centerIsStart){
@@ -2383,7 +2385,7 @@ namespace casa {
 	}
       }
       if(regridChanWidthF <= 0.){ // "not set"
-	if(nchan>0){ // use first channel
+	if(nchan!=0 || centerIsStartC){ // use first channel
 	  theCentralChanWidthF = transCHAN_WIDTH[0];
 	}
 	else{
@@ -3052,7 +3054,7 @@ namespace casa {
 	Double transTOTAL_BANDWIDTH;
 	Vector<Double> transRESOLUTION(oldNUM_CHAN);;
 
-	if(needTransform && False){
+	if(needTransform){
 
 	  transNewXin.resize(oldNUM_CHAN);
 	  // set up conversion
@@ -5947,7 +5949,9 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
   //os << LogIO::NORMAL << "nchan_p = " << nchan_p << LogIO::POST;
 
   IPosition blc, trc, sliceShape;
-  uInt chanStop;
+
+  // The real initialization is inside the loop - this just prevents a compiler warning.
+  uInt chanStop = nchan_p[0] * chanStep_p[0] + chanStart_p[0];
   Array<Float> unflgWtSpec;
   Array<Complex> data_toikit;
   Vector<Float> unflaggedwt;

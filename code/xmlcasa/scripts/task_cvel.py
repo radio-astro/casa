@@ -165,6 +165,18 @@ def cvel(vis, outputvis,
 
     try:
 	casalog.origin('cvel')
+
+	parsummary = 'vis="'+str(vis)+'", outputvis="'+str(outputvis)+'", passall="'+str(passall)+'", '
+	parsummary += 'field="'+str(field)+'", spw='+str(spw)+', antenna="'+str(antenna)+'", timerange="'
+        parsummary += str(timerange)+'",'
+        casalog.post(parsummary,'INFO')
+        parsummary = 'mode='+str(mode)+', nchan='+str(nchan)+', start='+str(start)+', width='+str(width)
+        parsummary += ', interpolation = '+str(interpolation)+', outframe="'+str(outframe)+'",'
+        casalog.post(parsummary,'INFO')
+        parsummary = 'phasecenter="'+str(phasecenter)+'", restfreq="'+str(restfreq)+'", veltype="'+str(veltype)
+        parsummary += '", hanning="'+str(hanning)+'"'
+        casalog.post(parsummary,'INFO')
+
 	
 	if ((type(vis)==str) & (os.path.exists(vis))):
 	    ms.open(vis)

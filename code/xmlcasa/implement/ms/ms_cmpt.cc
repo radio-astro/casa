@@ -1202,7 +1202,7 @@ ms::cvel(const std::string& mode,
     Double t_cstart = -9e99; // default value indicating that the original start of the SPW should be used
     Double t_bandwidth = -1.; // default value indicating that the original width of the SPW should be used
     Double t_cwidth = -1.; // default value indicating that the original channel width of the SPW should be used
-    Int t_nchan = 0; 
+    Int t_nchan = -1; 
     Int t_width = 0;
     Int t_start = -1;
 

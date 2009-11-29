@@ -92,8 +92,8 @@ def importgmrt( fitsfile, flagfile, vis ):
         vis = ''
         fits_list=fitsfile.split( '.' )
         last = len(fits_list)
-        if ( fits_list[last-1].lower == 'fits' or \
-             fits_list[last-1].lower == 'fit' ):
+        if ( fits_list[last-1].lower() == 'fits' or \
+             fits_list[last-1].lower() == 'fit' ):
             last = last -1
         for i in range( last ):
             if ( len ( vis ) < 1 ):

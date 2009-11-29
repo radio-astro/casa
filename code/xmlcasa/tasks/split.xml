@@ -36,16 +36,16 @@ time and frequency in one execution: they must be done separately.
 		<value></value>
 	</param>
 
-	<param type="string" name="datacolumn">
-		<description>Which data column to split out</description>
+	<param type="string" name="datacolumn" ignorecase="True">
+		<description>Which data column(s) to split out</description>
 		<value>corrected</value>
 		<allowed kind="enum" ignorecase="True">
 			<value>data</value>
 			<value>corrected</value>
 			<value>model</value>
-                        <value>data,corrected</value>
+<!--                        <value>data,corrected</value>
                         <value>data,model</value>
-                        <value>model,corrected</value>
+                        <value>model,corrected</value> -->
                         <value>data,model,corrected</value>
                         <value>all</value>
 		</allowed>

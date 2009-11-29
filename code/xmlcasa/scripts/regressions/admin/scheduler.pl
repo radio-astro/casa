@@ -161,7 +161,7 @@ if ($load_average_15 < $la_limit) {
             }
 	    if (-d "$workdir/result") {
 		rename("$workdir/result/", "$workdir/Result/") or die $!;
-		$result_files = "Result/";
+		$result_files = "Result";
 	    }
 	    else {
 		$result_files = "";
@@ -179,7 +179,7 @@ if ($load_average_15 < $la_limit) {
 		}
 	    }
 	    else {
-		$cmd = "cp -R $result_files Log/ $res_dir";
+		$cmd = "cp -R $result_files Log $res_dir";
 		if (system($cmd) != 0) {
 		    print STDERR "$cmd: $!";
 		}
