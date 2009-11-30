@@ -385,7 +385,7 @@ def inp(taskname=None):
         for k in range(len(a)):
             if (string.find(a[k][1], 'ipython console') > 0):
                 stacklevel=k
-        myf=sys._getframe(stacklevel).f_globals
+        myf=sys._getframe(len(inspect.stack())-1).f_globals
         if((taskname==None) and (not myf.has_key('taskname'))):
             print 'No task name defined for inputs display'
             return
@@ -544,7 +544,7 @@ def update_params(func, printtext=True, ipython_globals=None):
                     itsparams.update({params[k]:paramval[0]['notvalue']})
                     myf.update({params[k]:paramval[0]['notvalue']})
                 else:
-                    itsparams.update({params[k]:paramval[0]['notvalue']})
+                    itsparams.update({params[k]:paramval[0]['value']})
                     myf.update({params[k]:paramval[0]['value']})
             userval=myf[params[k]]
             choice=0
