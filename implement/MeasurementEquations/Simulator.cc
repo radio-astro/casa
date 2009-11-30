@@ -1396,7 +1396,9 @@ Bool Simulator::settrop(const String& mode,
 
 
 Bool Simulator::setleakage(const String& mode, const String& table,
-			      const Quantity& interval, const Double amplitude) 
+			   //const Quantity& interval, 
+			   const Vector<Double>& amplitude,
+			   const Vector<Double>& offset)
 {
   
   LogIO os(LogOrigin("Simulator", "setleakage()", WHERE));
@@ -1409,9 +1411,13 @@ Bool Simulator::setleakage(const String& mode, const String& table,
     RecordDesc simparDesc;
     simparDesc.addField ("type", TpString);
     simparDesc.addField ("caltable", TpString);
+    // leave this one for generic SVC::createCorruptor
     simparDesc.addField ("amplitude", TpDouble);
+    simparDesc.addField ("camp", TpComplex);
+    simparDesc.addField ("offset", TpComplex);
     simparDesc.addField ("combine", TpString);
-    simparDesc.addField ("interval", TpDouble);
+    //simparDesc.addField ("interval", TpDouble);
+    simparDesc.addField ("simint", TpString);
     simparDesc.addField ("startTime", TpDouble);
     simparDesc.addField ("stopTime", TpDouble);
             
@@ -1419,9 +1425,26 @@ Bool Simulator::setleakage(const String& mode, const String& table,
     Record simpar(simparDesc,RecordInterface::Variable);
     simpar.define ("type", "D");
     simpar.define ("caltable", table);
-    simpar.define ("amplitude", amplitude);
-    simpar.define ("interval", interval.getValue("s"));
+    Complex camp(0.1,0.1);
+    if (amplitude.size()==1)
+      camp=Complex(amplitude[0],amplitude[0]);
+    else 
+      camp=Complex(amplitude[0],amplitude[1]);
+    simpar.define ("camp", camp);
+    simpar.define ("amplitude", Double(abs(camp)));
+    Complex off(0.,0.);
+    if (offset.size()==1)
+      off=Complex(offset[0],offset[0]);
+    else 
+      off=Complex(offset[0],offset[1]);
+    simpar.define ("offset", off);
+
+    //simpar.define ("interval", interval.getValue("s"));
+    // provide infinite interval
+    simpar.define ("simint", "infinite");
+
     simpar.define ("combine", "");
+
     
     // create the D
     if (!create_corrupt(simpar)) 

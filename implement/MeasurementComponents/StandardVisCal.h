@@ -373,6 +373,7 @@ public:
   // Method to list the D results
   virtual void logResults();
 
+  virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
 protected:
 
   // D has two Complex parameters
@@ -394,6 +395,8 @@ protected:
 private:
 
   Int solvePol_;
+  DJonesCorruptor *dcorruptor_p;
+  
 
   
 };

@@ -170,7 +170,7 @@ class CalCorruptor {
 class ANoiseCorruptor : public CalCorruptor {
 
   public:
-    ANoiseCorruptor();
+    ANoiseCorruptor(): CalCorruptor(1) {};
     virtual ~ANoiseCorruptor();
     virtual void initialize() {
       initialize(1234,1.0);
@@ -189,6 +189,33 @@ class ANoiseCorruptor : public CalCorruptor {
 
 
 
+
+
+// D is like ANoise but has a complex amplitude (different sigma in real/imag), and 
+// a systematic offset
+class DJonesCorruptor : public CalCorruptor {
+
+  public:
+    DJonesCorruptor(): CalCorruptor(1) {};
+    virtual ~DJonesCorruptor();
+    virtual void initialize() {
+      initialize(1234,Complex(1.0,1.0),Complex(0.0));
+    }
+    void initialize(const Int seed, const Complex camp, const Complex offset) {
+      rndGen_p = new MLCG(seed);
+      nDist_p = new Normal(rndGen_p, 0.0, 1.0); // sigma=1.
+      camp_=camp;
+      offset_=offset;
+    };
+    virtual Complex simPar(const VisIter& vi,VisCal::Type type,Int ipar);
+    inline Complex& camp() { return camp_; };
+    inline Complex& offset() { return offset_; };
+
+  private:
+    MLCG *rndGen_p;
+    Normal *nDist_p;
+    Complex camp_,offset_;
+  };
 
 
 
