@@ -350,11 +350,23 @@ class GJonesCorruptor : public CalCorruptor {
    Complex gain(const Int icorr, const Int islot);  // tsys scale and time-dep drift   
    virtual Complex simPar(const VisIter& vi, VisCal::Type type,Int ipar);
 
+   // for the residual/gaussian noise
+   void initialize(const Int seed, const Complex camp) {
+     rndGen_p = new MLCG(seed);
+     nDist_p = new Normal(rndGen_p, 0.0, 1.0); // sigma=1.
+     camp_=camp;
+    };
+    inline Complex& camp() { return camp_; };
+
  protected:
 
  private:   
    Float tsys_;
    PtrBlock<Matrix<Complex>*> drift_p;
+   // RI todo rearrange so there's a Gauss corruptor for AN,D,G, a fBMcorrupt,etc
+   MLCG *rndGen_p;
+   Normal *nDist_p;
+   Complex camp_;
 };
 
 

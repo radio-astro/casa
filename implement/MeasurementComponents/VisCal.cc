@@ -200,7 +200,7 @@ void VisCal::correct(VisBuffer& vb) {
 
 void VisCal::corrupt(VisBuffer& vb) {
 
-  if (prtlev()>3) cout << "VC::corrupt(vb)" << endl;
+  if (prtlev()>4) cout << "VC::corrupt(vb)" << endl;
 
   // Call non-in-place version, in-place-wise:
   corrupt(vb,vb.modelVisCube());
@@ -225,7 +225,7 @@ void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout) {
 
 void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
 
-  if (prtlev()>3) cout << " VC::corrupt()" << endl;
+  if (prtlev()>4) cout << " VC::corrupt()" << endl;
 
 
   // Ensure weight calibration off internally for corrupt
@@ -1017,7 +1017,7 @@ void VisJones::state() {
 // Apply this calibration to VisBuffer visibilities
 void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
 
-  if (prtlev()>3) cout << "  VJ::applyCal()" << endl;
+  if (prtlev()>4) cout << "  VJ::applyCal()" << endl;
 
   // CURRENTLY ASSUMES ONLY *ONE* TIMESTAMP IN VISBUFFER
 
