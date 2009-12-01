@@ -1266,8 +1266,7 @@ Set the pointing error from a calpointing table
    
 <description>
 Set the level of polarization leakage between feeds.
-Currently, only constant leakage is possible - i.e. interval is not used.
-Time-variable leakage will be implemented soon.
+Currently, no time dependence is available.
 </description>
 <input>
 
@@ -1283,16 +1282,24 @@ Time-variable leakage will be implemented soon.
      <choice>''</choice>
      </param>
 
+<!--
      <param type="any" name="interval" >
      <description>Coherence interval e.g. '5.0h'</description>
      <any type="variant" />
      <value>18000s</value>
      </param>
+-->
 
-     <param type="double" name="amplitude">
-     <description>Magnitude of pol leakage</description>
-     <value>0.0</value>
-     <choice>0.0</choice>
+     <param type="doubleArray" name="amplitude">
+     <description>Magnitude of pol leakage [real,imag]</description>
+     <value>0.01</value>
+     <choice>[]</choice>
+     </param>
+
+     <param type="doubleArray" name="offset">
+     <description>Meam of pol leakage [real,imag]</description>
+     <value>0.</value>
+     <choice>[]</choice>
      </param>
 </input>
 <returns type='bool'>Bool</returns>

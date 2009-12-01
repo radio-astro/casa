@@ -3756,8 +3756,8 @@ namespace casa {
 	    mergedChanWidth.push_back(newCHAN_WIDTH(j));
 	    mergedEffBW.push_back(newEFFECTIVE_BW(j));
 	    mergedRes.push_back(newRESOLUTION(j));
-	    Double overlap_frac = 0.;
 	    for(Int k=0; k<newNUM_CHANi; k++){
+	      Double overlap_frac = 0.;
 	      // does channel j in spw id0 overlap with channel k in spw idi?
 	      Double uboundj = newCHAN_FREQ(j) + newCHAN_WIDTH(j)/2.;
 	      Double uboundk = newCHAN_FREQi(k) + newCHAN_WIDTHi(k)/2.;
@@ -3766,15 +3766,23 @@ namespace casa {
 	      // determine fraction 
 	      if(lboundj <= lboundk && uboundk <= uboundj){ // chan k is completely covered by chan j
 		overlap_frac = 1.;
+		//cout << "j " << j << " k " << k << " case 1" << endl;
+		//cout << "overlap " << overlap_frac << endl;
 	      }
 	      else if(lboundk <= lboundj && uboundj <= uboundk){ // chan j is completely covered by chan k 
 		overlap_frac = newCHAN_WIDTH(j)/newCHAN_WIDTHi(k);
+		//cout << "j " << j << " k " << k << " case 2" << endl;
+		//cout << "overlap " << overlap_frac << endl;
 	      }
-	      else if(lboundj <= lboundk && uboundj < uboundk){ // lower end of k is overlapping with j
+	      else if(lboundj < lboundk && lboundk < uboundj && uboundj < uboundk){ // lower end of k is overlapping with j
 		overlap_frac = (uboundj - lboundk)/newCHAN_WIDTHi(k);
+		//cout << "j " << j << " k " << k << " case 3" << endl;
+		//cout << "overlap " << overlap_frac << endl;
 	      }
-	      else if(lboundj < lboundk && lboundj > lboundk){ // upper end of k is overlapping with j 
+	      else if(lboundk < lboundj && lboundj < uboundk && lboundj < uboundk){ // upper end of k is overlapping with j 
 		overlap_frac = (uboundk - lboundj)/newCHAN_WIDTHi(k);
+		//cout << "j " << j << " k " << k << " case 4" << endl;
+		//cout << "overlap " << overlap_frac << endl;
 	      }
 	      if(overlap_frac > 0.){ // update averaging info
 		averageN[j] += 1;
@@ -3806,16 +3814,38 @@ namespace casa {
 	      }
 	    }
 	    // k's the one 
-	    if(lboundk < uboundj && uboundj < uboundk ){ // actual overlap, need to merge channel k with channel j
-	      Double newWidth = uboundk - lboundj;
-	      Double newCenter = lboundj + newWidth/2.;
-	      mergedChanFreq[j] =  newCenter;
-	      mergedChanWidth[j] = newWidth;
-	      mergedEffBW[j] = newWidth; 
-	      mergedRes[j] = newWidth; 
-	      mergedAverageChanFrac[j][mergedAverageN[j]-1] = 1.; // set overlap fraction to 1.
+ 	    if(lboundk < uboundj && uboundj < uboundk ){ // actual overlap
+	      Double overlap_frac = (uboundj - lboundk)/newCHAN_WIDTHi(k);
+	      if(overlap_frac>0.5){ // merge channel k completely with channel j 
+		Double newWidth = uboundk - lboundj;
+		Double newCenter = (lboundj+uboundk)/2.;
+		mergedChanFreq[j] =  newCenter;
+		mergedChanWidth[j] = newWidth;
+		mergedEffBW[j] = newWidth; 
+		mergedRes[j] = newWidth; 
+		mergedAverageChanFrac[j][mergedAverageN[j]-1] = 1. - overlap_frac; 
+	      }
+	      else{ // create separate, more narrow channel
+		Double newWidth = uboundk - uboundj;
+		Double newCenter = (uboundj+uboundk)/2.;
+		vector<Int> tv;
+		tv.push_back(idi); // origin is spw idi
+		vector<Int> tv2;
+		tv2.push_back(0);
+		vector<Double> tvd;
+		tvd.push_back(1.); // fraction is 1.
+		mergedChanFreq.push_back(newCenter);
+		mergedChanWidth.push_back(newWidth);
+		mergedEffBW.push_back(newWidth);
+		mergedRes.push_back(newWidth);
+		mergedAverageN.push_back(1); // so far only one channel
+		mergedAverageWhichSPW.push_back(tv);
+		tv2[0] = k;
+		mergedAverageWhichChan.push_back(tv2); // channel number is k
+		mergedAverageChanFrac.push_back(tvd);
+	      }
 	      k++; // start appending remaining channels after k
-	    }
+ 	    }
 	    // append the remaining channels
 	    vector<Int> tv;
 	    tv.push_back(idi); // origin is spw idi
@@ -3836,6 +3866,7 @@ namespace casa {
 	    }
 	  } // end if spw idi still continues
 	} // end if there is overlap    
+
 
 	newNUM_CHAN = mergedChanFreq.size();
 	newCHAN_FREQ.assign(Vector<Double>(mergedChanFreq));
@@ -3859,14 +3890,18 @@ namespace casa {
       for(Int i=0; i<newNUM_CHAN; i++){
 	for(Int j=0; j<averageN[i]; j++){
 	  newNorm(i) += averageChanFrac[i][j];
-	  //	  cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
-	  //	       << " averageWhichSPW[i][j] " << averageWhichSPW[i][j] << endl;
+	  //cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
+	  //     << " averageWhichSPW[i][j] " << averageWhichSPW[i][j] << endl;
+	  //cout << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
 	}
       }	
       for(Int i=0; i<newNUM_CHAN; i++){
+	//cout << "i " << i << " newNorm[i] " << newNorm[i] << endl;
 	for(Int j=0; j<averageN[i]; j++){
-          if(newNorm[i] != 0.0)
+          if(newNorm[i] != 0.0){
             averageChanFrac[i][j] /= newNorm[i];
+	  }
+	  //cout << "j " << j << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
 	}
       }	
 

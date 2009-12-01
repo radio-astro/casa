@@ -214,7 +214,9 @@ public:
 
   // Apply polarization leakage errors
   Bool setleakage(const String& mode, const String& table,
-		  const Quantity& interval, const Double amplitude);
+		  //const Quantity& interval, 
+		  const Vector<Double>& amplitude,
+		  const Vector<Double>& offset);
 
   // Apply bandpass errors
   Bool setbandpass(const String& mode, const String& table,

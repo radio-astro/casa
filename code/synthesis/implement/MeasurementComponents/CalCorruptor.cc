@@ -45,6 +45,7 @@ CalCorruptor::CalCorruptor(const Int nSim) :
 
 CalCorruptor::~CalCorruptor() {}
 
+
 Complex CalCorruptor::simPar(const VisIter& vi,VisCal::Type type, Int ipar){  
   // per par (e.g. for D,G, nPar=2, could have diff gains for diff polns)
   if (prtlev()>2) cout << "   Corruptor::simPar("<<VisCal::nameOfType(type)<<")" << endl;  
@@ -57,6 +58,7 @@ Complex CalCorruptor::simPar(const VisIter& vi,VisCal::Type type, Int ipar){
     throw(AipsError("This Corruptor doesn't yet support simulation of this VisCal type"));
   }
 }
+
 
 void CalCorruptor::setEvenSlots(const Double& dt) {
   // set slots to constant intervals dt
@@ -75,6 +77,8 @@ void CalCorruptor::setEvenSlots(const Double& dt) {
 
 
 
+
+
 Complex ANoiseCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar) {
   if (prtlev()>5) cout << "AN::simPar ";
   if (type==VisCal::ANoise) {
@@ -83,10 +87,27 @@ Complex ANoiseCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar) {
 }
 
 
-ANoiseCorruptor::ANoiseCorruptor(): CalCorruptor(1) {};
-
 ANoiseCorruptor::~ANoiseCorruptor() {};
 
+
+
+
+
+Complex DJonesCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar) {
+  if (type==VisCal::D) {
+    Complex g((*nDist_p)()*camp().real(),(*nDist_p)()*camp().imag());    
+    if (prtlev()>5) cout << "D::simPar ";    
+    if (ipar>0) {
+      g += Complex(-offset().real(),offset().imag());
+    } else {      
+      g += offset();
+    }
+    return g;
+  } else throw(AipsError("unknown VC type "+VisCal::nameOfType(type)+" in DCorruptor::simPar"));
+}
+
+
+DJonesCorruptor::~DJonesCorruptor() {};
 
 
 

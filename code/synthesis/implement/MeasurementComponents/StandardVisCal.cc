@@ -1238,6 +1238,43 @@ void DJones::initTrivDJ() {
 
 
 
+void DJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim)
+{
+  
+  LogIO os(LogOrigin("D", "createCorruptor()", WHERE));  
+  if (prtlev()>2) cout << "   D::createCorruptor()" << endl;
+  
+  // this may not be the best place for this:
+  solvePol_=2;
+
+  // no nSim since not time dependent (yet)
+  dcorruptor_p = new DJonesCorruptor();
+  corruptor_p = dcorruptor_p;
+
+  // call generic parent to set corr,spw,etc info
+  SolvableVisCal::createCorruptor(vi,simpar,nSim);
+  
+  Int Seed(1234);
+  if (simpar.isDefined("seed")) {    
+    Seed=simpar.asInt("seed");
+  }
+
+  Complex Scale(0.1,0.1); // scale of fluctuations 
+  if (simpar.isDefined("camp")) {
+    Scale=simpar.asComplex("camp");
+  }
+
+  Complex Offset(0.,0.); 
+  if (simpar.isDefined("offset")) {
+    Offset=simpar.asComplex("offset");
+  }
+
+  dcorruptor_p->initialize(Seed,Scale,Offset);
+   
+}
+
+
+
 // **********************************************************
 //  DfJones Implementations
 //

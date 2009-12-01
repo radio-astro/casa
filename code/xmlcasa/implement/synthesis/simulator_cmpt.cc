@@ -788,7 +788,9 @@ simulator::setpointingerror(const std::string& epjtablename,
 
 bool
 simulator::setleakage(const std::string& mode, const std::string& table, 
-		      const ::casac::variant& interval, const double amplitude)
+		      //const ::casac::variant& interval, 
+		      const std::vector<double>& amplitude,
+		      const std::vector<double>& offset)
 {
 
   Bool rstat(False);
@@ -796,8 +798,9 @@ simulator::setleakage(const std::string& mode, const std::string& table,
     
     if(itsSim !=0){
       
-      casa::Quantity qinter(casaQuantity(interval));
-      rstat=itsSim->setleakage(mode, table, qinter, Float(amplitude));
+      //casa::Quantity qinter(casaQuantity(interval));
+      //rstat=itsSim->setleakage(mode, table, qinter, amplitude);
+      rstat=itsSim->setleakage(mode, table, amplitude, offset);
     }
     
     

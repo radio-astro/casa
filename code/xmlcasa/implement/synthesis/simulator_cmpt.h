@@ -110,7 +110,11 @@ class simulator
 
     bool setpointingerror(const std::string& epjtablename = "", const bool applypointingoffsets = false, const bool dopbcorrection = false);
 
-    bool setleakage(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& interval = ::casac::initialize_variant("18000s"), const double amplitude = 0.0);
+    bool setleakage(const std::string& mode = "calculate", 
+		    const std::string& table = "", 
+		    //const ::casac::variant& interval = ::casac::initialize_variant("18000s"), 
+		    const std::vector<double>& amplitude = std::vector<double> (2, 0.1),
+		    const std::vector<double>& offset = std::vector<double> (2, 0.));
 
     bool oldsetnoise(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& simplenoise = ::casac::initialize_variant("0.0Jy"), const double antefficiency = 0.8, const double correfficiency = 0.85, const double spillefficiency = 0.85, const double tau = 0.0, const double trx = 50, const double tatmos = 250.0, const double tcmb = 2.7);
 

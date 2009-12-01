@@ -482,6 +482,8 @@ def update_params(func, printtext=True, ipython_globals=None):
                 notdict=False
         if(myf.has_key(params[k])):
             itsparams.update({params[k]:myf[params[k]]})
+        else:
+            itsparams.update({params[k]:itsdef(params[k])})
         if (notdict ):
             if(not myf.has_key(params[k])):
                 myf.update({params[k]:paramval})
@@ -533,10 +535,10 @@ def update_params(func, printtext=True, ipython_globals=None):
                                 if(myf.has_key(subkey[kk])):
                                     itsparams.update({subkey[kk]:myf[subkey[kk]]})
                                 else:
-                                    itsparams.update({subkey[kk]:itsdef(params[k], None, myf[params[k]], subkey[kk])})
+                                    itsparams.update({subkey[kk]:itsdef(params[k], None, itsparams[params[k]], subkey[kk])})
                                 subkeyupdated[subkey[kk]]=True
                             elif((not subkeyupdated[subkey[kk]])):
-                                itsparams.update({subkey[kk]:itsdef(params[k], None, myf[params[k]], subkey[kk])})
+                                itsparams.update({subkey[kk]:itsdef(params[k], None, itsparams[params[k]], subkey[kk])})
                                 subkeyupdated[subkey[kk]]=True
             ### need to do default when user has not set val
             if(not myf.has_key(params[k])):

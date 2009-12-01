@@ -56,7 +56,7 @@
 #include <QtGui>
 #include <iostream>
 #include <graphics/X11/X_exit.h>
-
+#include <QMessageBox>
 
 namespace casa { 
 
@@ -201,22 +201,14 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     ctype = new QComboBox(this);
 
     // get reference frame info for freq axis label
-    MFrequency::Types freqtype;
-    {
-      CoordinateSystem cSys=img->coordinates();
-      Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
-      SpectralCoordinate specCoor=cSys.spectralCoordinate(specAx);
-      MEpoch myepoch; 
-      MPosition myposition;
-      MDirection mydirection;
-      specCoor.getReferenceConversion(freqtype, myepoch, myposition, mydirection);
-    }
+    MFrequency::Types freqtype = determineRefFrame(img);
+
     QString nativeRefFrameName = QString(MFrequency::showType(freqtype).c_str());
-    ctype->addItem("true velocity ("+nativeRefFrameName+")");
+    //    ctype->addItem("true velocity ("+nativeRefFrameName+")");
     ctype->addItem("radio velocity ("+nativeRefFrameName+")"); 
     ctype->addItem("optical velocity ("+nativeRefFrameName+")");
     ctype->addItem("frequency ("+nativeRefFrameName+")");
-    ctype->addItem("pixel");
+    ctype->addItem("channel");
 
     coordinateType = String(ctype->itemText(0).toStdString());
 
@@ -263,6 +255,61 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
 
     pc->setAutoScale(autoScale->checkState());
        
+}
+
+MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img)
+{ 
+  MFrequency::Types freqtype;
+  
+  CoordinateSystem cSys=img->coordinates();
+  Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
+  SpectralCoordinate specCoor=cSys.spectralCoordinate(specAx);
+  MFrequency::Types tfreqtype;
+  MEpoch tepoch; 
+  MPosition tposition;
+  MDirection tdirection;
+  specCoor.getReferenceConversion(tfreqtype, tepoch, tposition, tdirection);
+  freqtype = specCoor.frequencySystem(False); // false means: get the native type
+  
+  if(tfreqtype != freqtype){ // there is an active conversion layer
+    // ask user if he/she wants to change to native frame
+    String title = "Change display reference frame?";
+    String message = "Native reference frame is " + MFrequency::showType(freqtype)
+      + ",\n display frame is " + MFrequency::showType(tfreqtype) + ".\n"
+      + "Change display frame permanently to " + MFrequency::showType(freqtype) + "?\n"
+      + "(Needs write access to image.)";
+    if(QMessageBox::question(this, title.c_str(), message.c_str(),
+			     QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes){
+      // user wants to change
+      try {
+	// set the reference conversion to the native type, effectively switching it off
+	if(!specCoor.setReferenceConversion(freqtype, tepoch, tposition, tdirection)
+	   || !cSys.replaceCoordinate(specCoor, specAx) 
+	   || !img->setCoordinateInfo(cSys)){
+	  
+	  img->coordinates().spectralCoordinate(specAx).getReferenceConversion(tfreqtype, tepoch, tposition, tdirection);
+	  title = "Failure";
+	  message = "casaviewer: Error setting reference frame conversion to native frame (" 
+	    + MFrequency::showType(freqtype) + ")\nWill use " + MFrequency::showType(tfreqtype) + " instead";
+	  QMessageBox::warning(this, title.c_str(), message.c_str(),
+			       QMessageBox::Ok, QMessageBox::NoButton);
+	  freqtype = tfreqtype;
+	}
+      } catch (AipsError x) {
+	title = "Failure";
+	message = "Error when trying to change display reference frame:\n" + x.getMesg();
+	QMessageBox::warning(this, title.c_str(), message.c_str(),
+			     QMessageBox::Ok, QMessageBox::NoButton);
+	freqtype = tfreqtype;
+      } 
+    }
+    else{ // user does not want to change
+      freqtype = tfreqtype;
+    }
+  } // end if there is a conv layer
+
+  return freqtype;
+
 }
 
 void QtProfile::zoomOut()
@@ -545,22 +592,14 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
     // reset the combo box for selecting the coordinate type
     ctype->clear();
     // get reference frame info for freq axis label
-    MFrequency::Types freqtype;
-    {
-      CoordinateSystem cSys=img->coordinates();
-      Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
-      SpectralCoordinate specCoor=cSys.spectralCoordinate(specAx);
-      MEpoch myepoch; 
-      MPosition myposition;
-      MDirection mydirection;
-      specCoor.getReferenceConversion(freqtype, myepoch, myposition, mydirection);
-    }
+    MFrequency::Types freqtype = determineRefFrame(img);
+
     QString nativeRefFrameName = QString(MFrequency::showType(freqtype).c_str());
-    ctype->addItem("true velocity ("+nativeRefFrameName+")");
+    //    ctype->addItem("true velocity ("+nativeRefFrameName+")");
     ctype->addItem("radio velocity ("+nativeRefFrameName+")"); 
     ctype->addItem("optical velocity ("+nativeRefFrameName+")");
     ctype->addItem("frequency ("+nativeRefFrameName+")");
-    ctype->addItem("pixel");    
+    ctype->addItem("channel");    
 
     coordinateType = String(ctype->itemText(0).toStdString());
 

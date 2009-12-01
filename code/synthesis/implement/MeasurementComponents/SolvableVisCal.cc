@@ -446,6 +446,11 @@ void SolvableVisCal::createCorruptor(const VisIter& vi,const Record& simpar, con
   corruptor_p->prtlev()=prtlev();
   corruptor_p->freqDepPar()=freqDepPar();
   corruptor_p->simpar()=simpar;
+  // initialize is supposed to be called in a specialization, but 
+  // if we end up only using the generic CalCorruptor and this generic 
+  // createCorruptor, we still want amplitude to be passed on.
+  if (simpar.isDefined("amplitude")) 
+    corruptor_p->amp()=simpar.asFloat("amplitude");
 
 //  corruptor_p->nCorr()=vi.nCorr();
 //  if (prtlev()>3) 
@@ -573,7 +578,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
   // GM's order:
   //columns[3]=MS::DATA_DESC_ID;
   //columns[4]=MS::TIME;
-  // put spw after time:
+  // RI put spw after time
   columns[4]=MS::DATA_DESC_ID;
   columns[3]=MS::TIME;
   
@@ -672,9 +677,12 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     Vector<Double> timevec;
     Double starttime,stoptime;
     starttime=vi.time(timevec)[0];
-
-    IPosition blc(3,0,       0,0); // par,chan=focuschan,elem=ant
-    IPosition trc(3,nPar()-1,0,0);
+    
+    //IPosition blc(3,0,       0,0); // par,chan=focuschan,elem=ant
+    //IPosition trc(3,nPar()-1,0,0);
+    IPosition blc(3,0,       0,           0); // par,chan=focuschan,elem=ant
+    IPosition trc(3,nPar()-1,nChanPar()-1,0);
+    IPosition gpos(3,0,0,0);
     
     Bool useBase(False);
     if (nElem()==nBln()) useBase=True;
@@ -734,11 +742,13 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
 	    
 	    // baseline or antenna-based?
 	    if (useBase) {
-	      blc(2)=blnidx(a1(irow),a2(irow));
-	      trc(2)=blc(2);
+	      //blc(2)=blnidx(a1(irow),a2(irow));
+	      //trc(2)=blc(2);
+	      gpos(2)=blnidx(a1(irow),a2(irow));
 	    } else {
-	      blc(2)=a1(irow);
-	      trc(2)=a1(irow);
+	      //blc(2)=a1(irow);
+	      //trc(2)=a1(irow);
+	      gpos(2)=a1(irow);
 	    }
 	    
 	    // RI TODO make some freqDepPar VCs return all ch at once
@@ -746,24 +756,43 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
 	    for (Int ich=nChanPar()-1;ich>-1;--ich) {		
 	      focusChan()=ich;
 	      corruptor_p->setFocusChan(ich);
-	      blc(1)=ich;
-	      trc(1)=ich;
+	      //blc(1)=ich;
+	      //trc(1)=ich;
+	      gpos(1)=ich;
 
-	      if ( a1(irow)==a2(irow) ) {
-		// autocorrels should get 1. for multiplicative VC
-		if (type()==VisCal::ANoise or type()==VisCal::A)
-		  solveCPar()(blc,trc)=0.0;
-		else
-		  solveCPar()(blc,trc)=1.0;
-	      } else {
-		// specialized simPar for each VC - may depend on mode etc
-		for (Int ipar=0;ipar<nPar();ipar++) 
-		  solveCPar()(blc,trc)[ipar,0,0] = corruptor_p->simPar(vi,type(),ipar);		
-	      }		      
-	    }      
+	      for (Int ipar=0;ipar<nPar();ipar++) {
+		gpos(0)=ipar;
+		if ( a1(irow)==a2(irow) ) {
+		  // autocorrels should get 1. for multiplicative VC
+		  if (type()==VisCal::ANoise or type()==VisCal::A)
+		    solveCPar()(gpos)=0.0;
+		  else
+		    solveCPar()(gpos)=1.0;
+		} else {
+		  // specialized simPar for each VC - may depend on mode etc
+		  solveCPar()(gpos) = corruptor_p->simPar(vi,type(),ipar); 
+		}
+	      }
+
+//	      if ( a1(irow)==a2(irow) ) {
+//		// autocorrels should get 1. for multiplicative VC
+//		if (type()==VisCal::ANoise or type()==VisCal::A)
+//		  solveCPar()(blc,trc)=0.0;
+//		else
+//		  solveCPar()(blc,trc)=1.0;
+//	      } else {
+//		// specialized simPar for each VC - may depend on mode etc
+//		for (Int ipar=0;ipar<nPar();ipar++) 
+//		  solveCPar()(blc,trc)[ipar,0,0] = corruptor_p->simPar(vi,type(),ipar);		
+//	      }		      
+
+	    }   
 	    if (prtlev()>4) cout << "row "<<irow<< " set; cparshape="<<solveCPar().shape()<<endl;
-	    blc(1)=0;
-	    trc(1)=nChanPar()-1;
+	    // if using gpos and not changing these then they stay set this way
+	    //blc(1)=0;
+	    //trc(1)=nChanPar()-1;
+	    blc(2)=gpos(2);
+	    trc(2)=gpos(2);
 	    solveParOK()(blc,trc)=True;	      
 	  }// if not flagged
 	}// row
