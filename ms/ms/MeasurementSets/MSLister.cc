@@ -1,5 +1,5 @@
-//# MSLister.cc:  Class for listing records from a MeasurementSet
-//# Copyright (C) 1998,1999,2000,2001
+//# mslister.cc:  class for listing records from a measurementset
+//# copyright (c) 1998,1999,2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -33,6 +33,7 @@
 #include <ms/MeasurementSets/MSLister.h>
 #include <ms/MeasurementSets/MSSummary.h>
 #include <ms/MeasurementSets/MSRange.h>
+#include <ms/MeasurementSets/MSIter.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MaskedArray.h>
@@ -554,9 +555,25 @@ void MSLister::listData(const int pageRows,
   
     // Get ranges of selected data to ranges_p for use in field-width/precision 
     // setting
-    getRanges(*pMSSel_p);
+    //getRanges(*pMSSel_p);
     
-    
+    //cout << "pMSSel_p.nrows=" << pMSSel_p->nrow() << endl;
+
+/////////////////////////////////////////////////////
+//////read whole ms into mem is not practical, slow and waste memory
+//////so we split it into 5 mimutes chunk
+    Block<int> sort(2);
+    sort[0] = MS::ANTENNA1;
+    sort[1] = MS::ANTENNA2;
+    Double timeInterval = 300; // 5 minutes
+    MSIter msIter(*pMSSel_p, sort, timeInterval);
+    for (msIter.origin(); msIter.more(); msIter++) {
+
+    MS splitMS = msIter.table();
+    //cout << "splitMS.nrow()=" << splitMS.nrow() << endl;
+
+    getRanges(splitMS);
+
     // UNCOMMENT TO: PRINT RECORD OF RANGES (Records can be written to ostreams, but not to LogIO.)
     // cout << "ranges_p = " << endl << ranges_p << endl; 
  
@@ -566,7 +583,7 @@ void MSLister::listData(const int pageRows,
     
     // Initialise the MSSelector object.  By default, initSelection() takes all
     // polarizations and the first spectral channel.
-    mss_p.setMS(*pMSSel_p);
+    mss_p.setMS(splitMS);
     logStream_p << LogIO::DEBUG1 << "mss_p.setMS(*pMSSel_p) finished" << LogIO::POST;
     mss_p.initSelection();
     logStream_p << LogIO::DEBUG1 << "mss_p.initSelection() finished" << LogIO::POST;
@@ -948,9 +965,9 @@ void MSLister::listData(const int pageRows,
       logStream_p << LogIO::DEBUG1 << "spwRows (rows in chanList_p) = " << spwRows << LogIO::POST;
       
       // Loop through the rows of the MS. (not rows of MSLister::listData output)
+      Bool endOutput=False;
       for (Int tableRow=0; tableRow<nTableRows; tableRow++) {
           date_p = MVTime(rowTime(tableRow)).string(MVTime::YMD_ONLY);
-          Bool endOutput=False;
           
           // The spectral window ID for this row of the MS is 'spwinid(tableRow)'.
           
@@ -963,8 +980,10 @@ void MSLister::listData(const int pageRows,
                        ichan+= max(chanList_p(rowCL,3),1) ) { 
                   // If page length reached, or new day, then paginate
                   if (pageRows &&  // require pageRows > 0 for pagination
-                      ( (countPageRow/pageRows)*pageRows == countPageRow || 
-                       date_p != lastdate_p) ) {
+                      ( (countPageRow/pageRows)*pageRows == countPageRow 
+                          //|| date_p != lastdate_p
+                        //|| tableRow == (nTableRows - 1) 
+                      )) {
                       // query the user, if we are interactive
                       if (prompt && countPageRow != 0) {
                           string contStr;
@@ -1022,6 +1041,7 @@ void MSLister::listData(const int pageRows,
           if (endOutput) {break;} // break out of row loop
       } // row loop
       cout << hSeparator << endl;
+      if (endOutput) {break;} // break out of msIter 
       
       // Post it
       logStream_p.post();
@@ -1031,6 +1051,10 @@ void MSLister::listData(const int pageRows,
           cout.rdbuf(sbuf);
       
       cout.fill(cfill);
+
+
+     }
+////////////////////////////////////
       
   } // end try
     catch(AipsError x){
