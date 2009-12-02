@@ -237,6 +237,8 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::P
 	case MS::CORRECTED_DATA:	  
 	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
 	  break;
+	default:
+	  throw (AipsError("Programmer made a wrong call"));
 	}
 	cohDone+=vb.nRow();
 	pm.update(Double(cohDone));
@@ -290,6 +292,8 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
 	    vb.setModelVisCube(Complex(0.0,0.0));
 	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
 	    break;
+	  default:
+	    throw (AipsError("Programmer made a wrong call"));
 	  }
 	}
       }
@@ -348,6 +352,8 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
 	  case MS::CORRECTED_DATA:
 	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);	      
 	    break;
+	  default:
+	    throw (AipsError("Programmer made a wrong call"));
 	  }
 	  cohDone+=vb.nRow();
 	  pm.update(Double(cohDone));
@@ -800,6 +806,8 @@ VisBuffer& SkyEquation::get(VisBuffer& result, Int model,
     result.correctedVisCube(); 
     result.setModelVisCube(result.correctedVisCube()); 
     break;
+  default:
+    throw (AipsError("Programmer made a wrong call"));
   }
 
   //result.modelVisCube(); // get the visibility so vb will have it
