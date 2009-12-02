@@ -979,24 +979,27 @@ void MSLister::listData(const int pageRows,
                        ichan<=chanList_p(rowCL,2);
                        ichan+= max(chanList_p(rowCL,3),1) ) { 
                   // If page length reached, or new day, then paginate
-                  if (pageRows &&  // require pageRows > 0 for pagination
-                      ( (countPageRow/pageRows)*pageRows == countPageRow 
+                  if (pageRows // require pageRows > 0 for pagination
+                      && (countPageRow/pageRows)*pageRows == countPageRow 
                           //|| date_p != lastdate_p
-                        //|| tableRow == (nTableRows - 1) 
-                      )) {
+                      ) {
                       // query the user, if we are interactive
-                      if (prompt && countPageRow != 0) {
+                      if (listfile == "" &&  prompt && countPageRow != 0) {
                           string contStr;
-                          cout << "Type Q to quit, A to list all, or RETURN to continue [continue]: ";
+                          cout << "Type Q to quit, A to toggle long/short list, or RETURN to continue [continue]: ";
                           getline(cin,contStr);
                           if ( (contStr.compare(0,1,"q") == 0) or
                               (contStr.compare(0,1,"Q") == 0) ) { endOutput=True; }
                           if ( (contStr.compare(0,1,"a") == 0) or
-                              (contStr.compare(0,1,"A") == 0) ) { prompt = False; }
+                              (contStr.compare(0,1,"A") == 0) ) { 
+                              prompt = !prompt; 
+                          }
                       }
                       if (endOutput) {break;} // break out of if block
-                      listColumnHeader();
-                      cout << hSeparator << endl;
+                      if (prompt) {
+                         listColumnHeader();
+                         cout << hSeparator << endl;
+                      }
                   }
                   lastdate_p = date_p;
                   if (endOutput) {break;} // break out of chan loop
@@ -1040,8 +1043,17 @@ void MSLister::listData(const int pageRows,
           } // spw loop
           if (endOutput) {break;} // break out of row loop
       } // row loop
-      cout << hSeparator << endl;
       if (endOutput) {break;} // break out of msIter 
+      if (listfile == "") {
+         cout << hSeparator << endl;
+         string contStr;
+         cout << "Type Q to quit, A to toggle long/short list, or RETURN to continue [continue]: ";
+         getline(cin,contStr);
+         if ( (contStr.compare(0,1,"q") == 0) or
+            (contStr.compare(0,1,"Q") == 0) ) { break; }
+         if ( (contStr.compare(0,1,"a") == 0) or
+            (contStr.compare(0,1,"A") == 0) ) { prompt = !prompt; }
+      }
       
       // Post it
       logStream_p.post();
