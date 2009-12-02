@@ -260,7 +260,7 @@ public:
 			     Bool incremental);
   
 
-  virtual VisBuffer& get(VisBuffer& vb, Int model, Bool incremental);
+  virtual VisBuffer& get(VisBuffer& vb, Int model, Bool incremental, MS::PredefinedColumns Type=MS::MODEL_DATA);
   virtual void finalizeGet();
   virtual void initializePut(const VisBuffer &vb, Int model);
   
