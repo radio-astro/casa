@@ -628,24 +628,10 @@ void GJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
     Seed=simpar.asInt("seed");
   }
 
-  Float Beta(1.1); // exponent for generalized 1/f noise
-  if (simpar.isDefined("beta")) {    
-    Beta=simpar.asFloat("beta");
-  }
-  
   if (simpar.isDefined("tsys")) {
     gcorruptor_p->tsys() = simpar.asFloat("tsys");
   } 
   
-  Float Scale(.15); // scale of fluctuations 
-  if (simpar.isDefined("amplitude")) {
-    Scale=simpar.asFloat("amplitude");
-    if (Scale>=.9) {
-      os << LogIO::WARN << " decreasing gain fluctuations from " << Scale << " to 0.9 " << LogIO::POST;  
-      Scale=.9;
-    }
-  }
-
   if (simpar.isDefined("mode")) {    
     if (prtlev()>2)
       cout << "initializing GCorruptor with mode " << simpar.asString("mode") << endl;
@@ -665,11 +651,35 @@ void GJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int 
     }
         
     if (simpar.asString("mode")=="fbm") {
+
+      Float Beta(1.1); // exponent for generalized 1/f noise
+      if (simpar.isDefined("beta")) {    
+	Beta=simpar.asFloat("beta");
+      }
+      
+      Float Scale(.15); // scale of fluctuations 
+      if (simpar.isDefined("amplitude")) {
+	Scale=simpar.asFloat("amplitude");
+	if (Scale>=.9) {
+	  os << LogIO::WARN << " decreasing gain fluctuations from " << Scale << " to 0.9 " << LogIO::POST;  
+	  Scale=.9;
+	}
+      }
+
       Float fBM_interval=max(interval(),5.); // generate screens on 5s intervals or longer
       corruptor_p->setEvenSlots(fBM_interval);
-    }
+      gcorruptor_p->initialize(Seed,Beta,Scale);
+    
+    } else if (simpar.asString("mode")=="random") {
+
+      Complex Scale(0.1,0.1); // scale of fluctuations 
+      if (simpar.isDefined("camp")) {
+	Scale=simpar.asComplex("camp");
+      }
+      gcorruptor_p->initialize(Seed,Scale);
+
+    } else throw AipsError("incompatible mode "+simpar.asString("mode"));
       
-    gcorruptor_p->initialize(Seed,Beta,Scale);
     
   } else 
     throw(AipsError("Unknown mode for GJonesCorruptor"));        

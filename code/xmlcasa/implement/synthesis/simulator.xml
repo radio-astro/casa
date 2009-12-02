@@ -1005,13 +1005,7 @@ DATA and CORRECTED_DATA columns.   Note that {\tt corrupt} handles
 only visibility-plane effects, not image-plane effects such as
 pointing errors and voltage patterns, which get applied in {\tt predict}.
 
-<!--
-NB: Note that simulator currently only supports specification of these errors
-via use of the {\tt setapply} (i.e., existing cal tables, a la calibrater)
-and {\tt setnoise} methods.  The setgain, setbandpass, and setleakage methods 
-are currently disabled.  These methods will be re-activated in the near 
-future. (2008Apr03 gmoellen)
--->
+
 
 </description>
 <returns type="bool">Boolean</returns>
@@ -1175,9 +1169,10 @@ The error distributions are normal, mean zero, with the variances as specified.
      <value>10s</value>
      </param>
 
-     <param type="double" name="amplitude">
-     <description>amplitude scale (RMS) for gain variations</description>
+     <param type="doubleArray" name="amplitude">
+     <description>amplitude scale (RMS) for gain variations [real,imag] or scalar</description>
      <value>0.01</value>
+     <choice>[]</choice>
      </param>
 
 </input>

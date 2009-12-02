@@ -198,7 +198,7 @@ public:
   Bool setgain(const String& mode, 
 	       const String& table,
 	       const Quantity& interval,
-	       const Double amplitude);
+	       const Vector<Double>& amplitude);
 
   Bool settrop(const String& mode, 
 	       const String& table,

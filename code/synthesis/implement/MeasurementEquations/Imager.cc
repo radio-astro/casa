@@ -288,6 +288,7 @@ traceEvent(1,"Entering imager::defaults",25);
   logSink_p=LogSink(LogMessage::NORMAL, False);
   imwgt_p=VisImagingWeight();
   smallScaleBias_p=0.6;
+  freqFrame_p=MFrequency::LSRK;
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
@@ -5524,6 +5525,16 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 	      LatticeExpr<Float> le(restored+(residIm)); 
 	      restored.copyData(le);
 	    }
+	    if(freqFrameValid_p){
+	      CoordinateSystem cs=residIm.coordinates();
+	      String errorMsg;
+	      if (CoordinateUtil::setSpectralConversion (errorMsg, cs,MFrequency::showType(freqFrame_p))) {
+		residIm.setCoordinateInfo(cs);
+		if(dorestore)
+		  restored.setCoordinateInfo(cs);
+	      }
+	    } 
+	    
 	    //should be able to do that only on testing dofluxscale
 	    // ftmachines or sm_p should tell us that
 	    
@@ -5555,6 +5566,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 		LatticeExpr<Float> le1(iif(cover < minPB_p, 
 					   0,(residIm/(sm_p->fluxScale(thismodel)))));
 		residIm.copyData(le1);
+		
 	      }
 	      
 	      //Setting the bit-mask for mosaic image

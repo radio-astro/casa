@@ -1231,8 +1231,8 @@ Bool Simulator::setnoise(const String& mode,
 Bool Simulator::setgain(const String& mode, 
 			const String& caltable,
 			const Quantity& interval, 
-			const Double amplitude) {
-  
+			const Vector<Double>& amplitude)
+{ 
   LogIO os(LogOrigin("Simulator", "setgain()", WHERE));
 
 #ifndef RI_DEBUG
@@ -1245,7 +1245,7 @@ Bool Simulator::setgain(const String& mode,
     }
     else {
       // RI TODO Sim::setgain add mode=simple and =normal
-      if(mode=="fbm") {
+      if (mode=="fbm" or mode=="random") {
 	
 	// set record format for calibration table simulation information
 	RecordDesc simparDesc;
@@ -1253,6 +1253,7 @@ Bool Simulator::setgain(const String& mode,
 	simparDesc.addField ("caltable", TpString);
 	simparDesc.addField ("mode", TpString);
 	simparDesc.addField ("interval", TpDouble);
+	simparDesc.addField ("camp", TpComplex);
 	simparDesc.addField ("amplitude", TpDouble);
 	simparDesc.addField ("combine", TpString);
 	simparDesc.addField ("startTime", TpDouble);
@@ -1263,7 +1264,15 @@ Bool Simulator::setgain(const String& mode,
 	simpar.define ("type", "G JONES");
 	simpar.define ("interval", interval.getValue("s"));
 	simpar.define ("mode", mode);
-	simpar.define ("amplitude", amplitude);
+	Complex camp(0.1,0.1);
+	if (amplitude.size()==1)
+	  camp=Complex(amplitude[0],amplitude[0]);
+	else 
+	  camp=Complex(amplitude[0],amplitude[1]);
+	simpar.define ("camp", camp);
+	os << LogIO::NORMAL << "Gain corruption with complex RMS amplitude = " << camp << LogIO::POST;
+	simpar.define ("amplitude", Double(abs(camp)));
+	//simpar.define ("amplitude", amplitude);
 	simpar.define ("caltable", caltable);
 	simpar.define ("combine", "");
 	

@@ -734,7 +734,7 @@ simulator::settrop(const std::string& mode, const std::string& table,
 bool
 simulator::setgain(const std::string& mode, const std::string& table, 
 		   const ::casac::variant& interval, 
-		   const double amplitude)
+		   const std::vector<double>& amplitude)
 {
   Bool rstat(False);
   try {

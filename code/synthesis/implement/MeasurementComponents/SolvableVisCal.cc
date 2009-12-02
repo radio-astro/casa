@@ -452,6 +452,9 @@ void SolvableVisCal::createCorruptor(const VisIter& vi,const Record& simpar, con
   if (simpar.isDefined("amplitude")) 
     corruptor_p->amp()=simpar.asFloat("amplitude");
 
+  if (simpar.isDefined("mode")) 
+    corruptor_p->mode()=simpar.asString("mode");
+
 //  corruptor_p->nCorr()=vi.nCorr();
 //  if (prtlev()>3) 
 //    os << LogIO::POST << "nCorr= " << vi.nCorr() << LogIO::POST;      

@@ -861,8 +861,12 @@ void fBM::initialize(const Int seed, const Float beta) {
 
 Complex GJonesCorruptor::simPar(const VisIter& vi,VisCal::Type type,Int ipar) {    
   if (type==VisCal::G || type==VisCal::B) {
+    if (mode()=="fbm") {
       return gain(ipar,focusChan());
-  } else  throw(AipsError("GCorruptor: incompatible VisCal type "+type));
+    } else if (mode()=="random") {
+      return Complex((*nDist_p)()*camp().real(),(*nDist_p)()*camp().imag());    
+    } else throw(AipsError("unknown corruptor mode "+mode()));
+  } else  throw(AipsError("GCorruptor: incompatible VisCal type "+VisCal::nameOfType(type)));
 }
 
 
@@ -891,6 +895,7 @@ void GJonesCorruptor::initialize() {
 
 void GJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float scale) {
   // individual delays for each antenna
+  if (mode()!="fbm") throw(AipsError("Attempt to use fBM initializer but mode is "+mode()));
 
   fBM* myfbm = new fBM(nSim());
   drift_p.resize(nAnt(),False,True);

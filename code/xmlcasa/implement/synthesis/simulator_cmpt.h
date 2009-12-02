@@ -104,7 +104,7 @@ class simulator
 
     bool setgain(const std::string& mode = "calculate", const std::string& table = "", 
 		 const ::casac::variant& interval = ::casac::initialize_variant("10s"), 
-		 const double amplitude = 0.01);
+		 const std::vector<double>& amplitude = std::vector<double> (2, 0.1));
 
     bool settrop(const std::string& mode = "calculate", const std::string& table = "", const double pwv = 3.0, const double deltapwv = 0.5, const double beta = 2.6, const double windspeed = 7);
 
