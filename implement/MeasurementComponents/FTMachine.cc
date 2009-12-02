@@ -82,7 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   spectralCoord_p=SpectralCoordinate();
-
+  isIOnly=False;
 }
 
 
@@ -410,7 +410,7 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
       //For now don't read data to just interpolate flags...need a interpolate 
       //flag only function
       flag.resize(vb.nCorr(), imageFreq_p.nelements(), vb.nRow());
-      flag.set(False);
+      flag.set(True);
       ArrayIterator<Bool> iter(flag, IPosition(2,0,2));
       ReadOnlyArrayIterator<Bool> origiter(vb.flagCube(), IPosition(2,0,2));
       Int channum=0;
@@ -422,6 +422,7 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 	//if(closest >=vb.nChannel()) closest=vb.nChannel()-1;
         origiter.origin();
 	if((closest >=0) && (closest <  vb.nChannel())){
+	  iter.array().set(False);
 	  for (Int k=0; k < closest; ++k){
 	    origiter.next();
 	  }
@@ -430,7 +431,6 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 	iter.next();
 	++channum;
       }
-
     }
    
     Matrix<Float> flipweight;
@@ -450,7 +450,6 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 
     chanMap.resize(imageFreq_p.nelements());
     indgen(chanMap);
-    
     return True;
   }
 
