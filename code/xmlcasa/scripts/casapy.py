@@ -77,8 +77,7 @@ casa = { 'build': {
          'flags': { },
          'files': { }
        }
-
-print "CASA Version " + casa['build']['version'] + " (#" + casa['source']['revision'] + ")\n  Compiled on: " + casa['build']['time']
+print "CASA Version " + casa['build']['version'] + " (r" + casa['source']['revision'] + ")\n  Compiled on: " + casa['build']['time']
 
 a = [] + sys.argv             ## get a copy from goofy python
 a.reverse( )
@@ -483,7 +482,7 @@ def update_params(func, printtext=True, ipython_globals=None):
         if(myf.has_key(params[k])):
             itsparams.update({params[k]:myf[params[k]]})
         else:
-            itsparams.update({params[k]:itsdef(params[k])})
+            itsparams.update({params[k]:obj.itsdefault(params[k])})
         if (notdict ):
             if(not myf.has_key(params[k])):
                 myf.update({params[k]:paramval})
@@ -964,6 +963,20 @@ if os.environ.has_key('__CASAPY_PYTHONDIR'):
     fullpath=os.environ['__CASAPY_PYTHONDIR'] + '/assignmentFilter.py'
 
 if ipython:
+
+    if os.path.exists('ipython.log') and not os.access('ipython.log', os.W_OK):
+        print "Error: ipython.log is not writable"
+        sys.exit(1) 
+
+    if not os.path.exists('ipython.log'):
+        try:
+           f = open('ipython.log', 'w')
+           f.close()
+        except:
+           print "Error: the directory is not writable"
+           sys.exit(1) 
+    
+   
     if casa['flags'].has_key('-c') :
         print 'will execute script',casa['flags']['-c']
         if os.path.exists( casa['dirs']['rc']+'/ipython/ipy_user_conf.py' ) :

@@ -117,9 +117,9 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
         else:  # we have a model image already
             components_only=False
-            if (complist != ''):
-                msg("WARN: I will use clean components and model image to calculate visibilities,",color="31",origin="setup model")
-                msg("         but the difference image won't have the clean components in it",color="31",origin="setup model")
+#            if (complist != ''):
+#                msg("WARN: I will use clean components and model image to calculate visibilities,",color="31",origin="setup model")
+#                msg("         but the difference image won't have the clean components in it",color="31",origin="setup model")
         
 
 
@@ -722,10 +722,13 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         # do actual calculation of visibilities from the model image:
 
         if not components_only:
-            # right now this is ok - if we only had components,
+            # if we only have components,
             # we have created modelimage4d from them but if
-            # we had components and model image they are not yet combined
-            msg("predicting from "+modelimage4d)
+            # we have components and model image they are not yet combined
+            if len(complist)>1:
+                msg("predicting from "+modelimage4d+" and "+complist)
+            else:
+                msg("predicting from "+modelimage4d)
             if arr.nbytes > 5e7:
                 msg("WARN: your model is large - this may take a while")
             sm.predict(imagename=[modelimage4d],complist=complist)
@@ -993,10 +996,17 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             ia.open(modelflat)
             imrr = ia.regrid(outfile=modelregrid, overwrite=True,
                              csys=outflatcoordsys.torecord(),shape=outflatshape)
+
+            # add clean components and model image; 
+            # it'll be convolved to restored beam in the fidelity calc below
+            if (os.path.exists(complist)):
+                cl.open(complist)
+                imrr.modify(cl.torecord(),subtract=False)
+                cl.done()
+
             imrr.done()
     
-            # RI todo when we get to using both clean components and model image,
-            # we should add them together here if not before.
+
     
             ia.done()
             outflatcoordsys.done()

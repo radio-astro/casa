@@ -11,9 +11,7 @@ startProc = time.clock()
 
 print '--Running simdata of 30 Doradus--'
 # configs are in the repository
-l=locals() 
-if not l.has_key("repodir"): 
-    repodir=os.getenv("CASAPATH").split(' ')[0]
+repodir=os.getenv("CASAPATH").split(' ')[0]
 print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
@@ -22,6 +20,13 @@ default("simdata")
 project="ghii"
 
 modelimage="30dor.image"
+
+cl.done()
+cl.addcomponent(dir="J2000 05h18m48.6s -68d42m00s",flux=0.5,freq="650GHz")
+cl.rename("ghii.cl")
+cl.done()
+complist="ghii.cl"
+
 ignorecoord=False
 antennalist=cfgdir+"alma.out05.cfg"
 direction="J2000 05h18m48.0s -68d42m00s"
@@ -29,6 +34,7 @@ pointingspacing="3.4arcsec"
 refdate="2012/06/21/03:25:00"
 totaltime="7200s"
 integration="10s"
+scanlength=30 # not super-realistic but cuts down on execution time
 startfreq="650GHz"   
 chanwidth="4GHz" 
 nchan=1
@@ -43,13 +49,11 @@ niter=0
 weighting="briggs"
 robust=0.0
 
-if not l.has_key('interactive'): interactive=False
-if interactive:
-    checkinputs="yes"
-else:
-    checkinputs="no"
-    display=False
-    fidelity=False
+checkinputs="no"
+#display=False
+#fidelity=False
+display=True
+fidelity=True
 
 inp()
 go()
@@ -84,12 +88,12 @@ refstats = { 'flux': 0.92547,
              'rms': 0.022,
              'sigma': 0.022 }
 
-# 20091126 massive changes to imager
-refstats = { 'flux': 0.04982,
-             'max': 0.3105,
-             'min': -0.0506,
-             'rms': 0.0265,
-             'sigma': 0.0265 }
+# 20091201 added a component
+refstats = { 'flux': 0.21939,
+             'max': 0.32986,
+             'min': -0.06691,
+             'rms': 0.0276,
+             'sigma': 0.0276 }
 
 ### tight 
 reftol   = {'flux':  1e-1,

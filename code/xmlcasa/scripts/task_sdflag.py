@@ -211,10 +211,10 @@ def sdflag(sdfile, scanlist, field, iflist, pollist, maskflag, flagrow, flagmode
                         y = s._getspectrum(row)
                         oldmskarr = array(s._getmask(row))
 			if (len(flagrow) > 0):
-			  found = false
+			  found = False
 			  for i in range(0, len(flagrow)):
 			    if (row == flagrow[i]):
-			      found = true
+			      found = True
 			      break
 			  masks = [found and not(unflag)]*(s.nchan())
 			#marr = array(masks)

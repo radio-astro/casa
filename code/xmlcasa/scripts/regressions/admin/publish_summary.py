@@ -605,16 +605,7 @@ class runTest:
                 stacklevel=k     
         myf=sys._getframe(stacklevel).f_globals
 
-        (errorcode, svnversion) = commands.getstatusoutput( \
-            'casapyinfo --svnversion')
-        if errorcode != 0 or \
-               svnversion.find('casa') >= 0:  # or if an error happened but it didn't return non-zero
-            return myf['casalog'].version()
-
-        # This didn't work in practise (getting the svnversion number from another process)
-        #return myf['casalog'].version() + \
-        #       ' r' + svnversion
-        return myf['casalog'].version()
+        return "CASA Version " + myf['casa']['build']['version'] + " (r"+myf['casa']['source']['revision'] + ")"
 
     def create_log(self, product_file):
         filename = "%s/result-%s-%s.txt" % \

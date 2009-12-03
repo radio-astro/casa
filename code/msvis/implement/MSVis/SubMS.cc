@@ -709,7 +709,7 @@ namespace casa {
 	   << "Time averaging of differing spw shapes is not handled yet."
 	   << LogIO::POST;
 	os << LogIO::WARN
-	   << "Work around: split-average different shape spws separately and then concatenate." 
+	   << "Work around: average differently shaped spws separately and then concatenate." 
            << LogIO::POST;
 	return False;
       }
@@ -1969,7 +1969,7 @@ namespace casa {
 			       const Vector<Double>& transCHAN_WIDTH,
 			       String& message,
 			       const Bool centerIsStartC,
-			       const Int nchan,
+			       const Int nchanC,
 			       const Int width,
 			       const Int start
 			       ){
@@ -1983,6 +1983,7 @@ namespace casa {
     Bool centerIsStart = centerIsStartC;
     Double regridChanWidth = regridChanWidthC;
     Double regridCenter = regridCenterC;
+    Int nchan = nchanC;
     
     if(regridQuant=="chan"){ ////////////////////////
       // channel numbers ...
@@ -2247,7 +2248,32 @@ namespace casa {
 	  regridCenterVel = vopt(regridCenterF,regridVeloRestfrq);
 	  centerIsStart = False;
 	}
-	if(regridBandwidth > 0.){
+	if(nchan>0){
+	  Double cw;
+	  Double divbytwo = 0.5;
+	  if(centerIsStart){
+	    divbytwo = 1.;
+	  }
+	  if(regridChanWidth > 0.){
+	    cw = regridChanWidth;
+	  }
+	  else{ // determine channel width from first channel
+	    Double upEdge = vopt(transNewXin[0]-transCHAN_WIDTH[0],regridVeloRestfrq);
+	    Double loEdge = vopt(transNewXin[0]+transCHAN_WIDTH[0],regridVeloRestfrq);
+	    cw = abs(upEdge-loEdge); 
+	  }
+	  Double bwUpperEndF = freq_from_vopt(regridCenterVel - (Double)nchan*cw*divbytwo,
+					 regridVeloRestfrq);
+	  regridBandwidthF = (bwUpperEndF-regridCenterF)/divbytwo; 
+	  // can convert start to center
+	  if(centerIsStart){
+	    regridCenterVel = regridCenterVel - (Double)nchan*cw/2.;
+	    regridCenterF = freq_from_vopt(regridCenterVel,regridVeloRestfrq);
+	    centerIsStart = False;
+	  }
+	  nchan=0; // indicate that nchan should not be used in the following
+	}
+	else if(regridBandwidth > 0.){
 	  // can convert start to center
 	  if(centerIsStart){
 	    regridCenterVel = regridCenter - regridBandwidth/2.;
@@ -2294,7 +2320,31 @@ namespace casa {
 	  regridCenterWav = lambda(regridCenterF);
 	  centerIsStart = False;
 	}
-	if(regridBandwidth > 0. && regridBandwidth/2. < regridCenterWav){
+	if(nchan>0){
+	  Double cw;
+	  Double divbytwo = 0.5;
+	  if(centerIsStart){
+	    divbytwo = 1.;
+	  }
+	  if(regridChanWidth > 0.){
+	    cw = regridChanWidth;
+	  }
+	  else{ // determine channel width from first channel
+	    Double upEdge = lambda(transNewXin[0]-transCHAN_WIDTH[0]);
+	    Double loEdge = lambda(transNewXin[0]+transCHAN_WIDTH[0]);
+	    cw = abs(upEdge-loEdge); 
+	  }
+	  Double bwUpperEndF = freq_from_lambda(regridCenterWav - (Double)nchan*cw*divbytwo);
+	  regridBandwidthF = (bwUpperEndF-regridCenterF)/divbytwo; 
+	  // can convert start to center
+	  if(centerIsStart){
+	    regridCenterWav = regridCenterWav - (Double)nchan*cw/2.;
+	    regridCenterF = freq_from_lambda(regridCenterWav);
+	    centerIsStart = False;
+	  }
+	  nchan=0; // indicate that nchan should not be used in the following
+	}
+	else if(regridBandwidth > 0. && regridBandwidth/2. < regridCenterWav){
 	  // can convert start to center
 	  if(centerIsStart){
 	    regridCenterWav = regridCenter - regridBandwidth/2.;
@@ -2351,7 +2401,7 @@ namespace casa {
 	  else if(regridChanWidthF <= 0.){ // channel width not set
 	    theRegridBWF = transCHAN_WIDTH[0]*nchan;
 	  }
-	  else{
+	  else{ 
 	    theRegridBWF = regridChanWidthF*nchan;
 	  }	    
 	}
@@ -3823,7 +3873,7 @@ namespace casa {
 		mergedChanWidth[j] = newWidth;
 		mergedEffBW[j] = newWidth; 
 		mergedRes[j] = newWidth; 
-		mergedAverageChanFrac[j][mergedAverageN[j]-1] = 1. - overlap_frac; 
+		mergedAverageChanFrac[j][mergedAverageN[j]-1] = 1.; 
 	      }
 	      else{ // create separate, more narrow channel
 		Double newWidth = uboundk - uboundj;
@@ -4827,26 +4877,20 @@ namespace casa {
     if(!antennaSel_p){
       msc_p->antenna1().putColumn(mscIn_p->antenna1());
       msc_p->antenna2().putColumn(mscIn_p->antenna2());
-      msc_p->feed1().putColumn(mscIn_p->feed1());
-      msc_p->feed2().putColumn(mscIn_p->feed2());
     }
     else{
       Vector<Int> ant1  = mscIn_p->antenna1().getColumn();
       Vector<Int> ant2  = mscIn_p->antenna2().getColumn();
-      Vector<Int> feed1 = mscIn_p->feed1().getColumn();
-      Vector<Int> feed2 = mscIn_p->feed2().getColumn();
       
       for(uInt k = 0; k < ant1.nelements(); ++k){
-	ant1[k]  = antNewIndex_p[ant1[k]];
-	ant2[k]  = antNewIndex_p[ant2[k]];
-	feed1[k] = feedNewIndex_p(ant1[k], feed1[k]);
-	feed2[k] = feedNewIndex_p(ant2[k], feed2[k]);
+	ant1[k] = antNewIndex_p[ant1[k]];
+	ant2[k] = antNewIndex_p[ant2[k]];
       }
       msc_p->antenna1().putColumn(ant1);
       msc_p->antenna2().putColumn(ant2);
-      msc_p->feed1().putColumn(feed1);
-      msc_p->feed2().putColumn(feed2);
     }
+    msc_p->feed1().putColumn(mscIn_p->feed1());
+    msc_p->feed2().putColumn(mscIn_p->feed2());
 
     msc_p->exposure().putColumn(mscIn_p->exposure());
     //  msc_p->flag().putColumn(mscIn_p->flag());
@@ -5035,43 +5079,43 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
     outcols.setEpochRef(MEpoch::castType(incols.timeMeas().getMeasRef().getType()));
     outcols.setPositionRef(MPosition::castType(incols.positionMeas().getMeasRef().getType()));
 
-    if(!antennaSel_p){
+    if(!antennaSel_p && allEQ(spwRelabel_p, spw_p)){
       TableCopy::copyRows(newFeed, oldFeed);
     }
     else{
-      Vector<Bool> feedRowSel(oldFeed.nrow());
-      feedRowSel.set(False);
-      const Vector<Int>&  antIds = incols.antennaId().getColumn();
-      const Vector<Int>& feedIds = incols.feedId().getColumn();
+      if(!antennaSel_p){        // Prep antNewIndex_p.
+        antNewIndex_p.resize(mssel_p.antenna().nrow());
+        indgen(antNewIndex_p);
+      }
+      
+      const Vector<Int>& antIds = incols.antennaId().getColumn();
+      const Vector<Int>& spwIds = incols.spectralWindowId().getColumn();
 
-      const uInt maxantp1 = max(antIds) + 1;
-      feedNewIndex_p.resize(maxantp1, max(feedIds) + 1);
-      feedNewIndex_p.set(-1);
-      Vector<uInt> feeds_per_ant(maxantp1);
-      feeds_per_ant.set(0);
-      uInt nAnts = antIds.nelements();
+      // Copy selected rows.
+      uInt totNFeeds = antIds.nelements();
       uInt totalSelFeeds = 0;
-      for (uInt k = 0; k < nAnts; ++k){
-	if(antNewIndex_p[antIds[k]] > -1){
-	  feedRowSel[k]=True;
-	  feedNewIndex_p(antIds[k], feedIds[k]) = feeds_per_ant[antIds[k]];
+      for (uInt k = 0; k < totNFeeds; ++k){
+        // antenna must be selected, and spwId must be -1 (any) or selected.
+	if(antNewIndex_p[antIds[k]] > -1 &&
+           (spwIds[k] < 0 || spwRelabel_p[spwIds[k]] > -1)){
           //                  outtab   intab    outrow       inrow nrows
 	  TableCopy::copyRows(newFeed, oldFeed, totalSelFeeds, k, 1);
-	  ++feeds_per_ant[antIds[k]];
           ++totalSelFeeds;
 	}
       }
-      ScalarColumn<Int>& antCol = outcols.antennaId();
-      ScalarColumn<Int>& feedCol = outcols.feedId();
 
+      // Remap antenna and spw #s.
+      ScalarColumn<Int>& antCol = outcols.antennaId();
+      ScalarColumn<Int>& spwCol = outcols.spectralWindowId();
       Vector<Int> newAntIds = antCol.getColumn();
-      Vector<Int> newFeedIds = feedCol.getColumn();
+      Vector<Int> newSpwIds = spwCol.getColumn();
+
       for(uInt k = 0; k < totalSelFeeds; ++k){
-	newFeedIds[k] = feedNewIndex_p(newAntIds[k], newFeedIds[k]);
-	newAntIds[k]  = antNewIndex_p[newAntIds[k]];
+	newAntIds[k] = antNewIndex_p[newAntIds[k]];
+	newSpwIds[k] = spwRelabel_p[newSpwIds[k]];
       }
       antCol.putColumn(newAntIds);
-      feedCol.putColumn(newFeedIds);
+      spwCol.putColumn(newSpwIds);
     }
     return True;
   }
@@ -6234,15 +6278,13 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
       if(antennaSel_p){
         outAnt1[orn]  = antIndexer_p[ant1(slotv0)];
         outAnt2[orn]  = antIndexer_p[ant2(slotv0)];
-        outFeed1[orn] = feedNewIndex_p(ant1(slotv0), inFeed1(slotv0));
-        outFeed2[orn] = feedNewIndex_p(ant2(slotv0), inFeed2(slotv0));
       }
       else{
         outAnt1[orn]  = ant1(slotv0);
         outAnt2[orn]  = ant2(slotv0);
-        outFeed1[orn] = inFeed1(slotv0);
-        outFeed2[orn] = inFeed2(slotv0);
       }		
+      outFeed1[orn] = inFeed1(slotv0);
+      outFeed2[orn] = inFeed2(slotv0);
       outField[orn]   = fieldRelabel_p[fieldID(slotv0)];
       outState[orn]   = remapped(state(slotv0), stateRemapper_p,
                                  abs(state(slotv0)));

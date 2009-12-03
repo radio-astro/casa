@@ -237,6 +237,8 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::P
 	case MS::CORRECTED_DATA:	  
 	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
 	  break;
+	default:
+	  throw (AipsError("Programmer made a wrong call"));
 	}
 	cohDone+=vb.nRow();
 	pm.update(Double(cohDone));
@@ -247,10 +249,6 @@ void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::P
 
 
 }
-
-//void SkyEquation::predict(Bool incremental) {
-//  predict(incremental,MS::MODEL_DATA);
-//}
 
 void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
 
@@ -270,6 +268,8 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
   // Reset the visibilities only if this is not an incremental
   // change to the model
   Bool initialized=False;
+  // **** predictcomponents doesn't do anything if incremental!
+  // it gets components into vb.model, and writes to vi::(Type)
   predictComponents(incremental, initialized, Type);
  
   // Now do the images
@@ -292,6 +292,8 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
 	    vb.setModelVisCube(Complex(0.0,0.0));
 	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
 	    break;
+	  default:
+	    throw (AipsError("Programmer made a wrong call"));
 	  }
 	}
       }
@@ -334,8 +336,12 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
 	    vb.setModelVisCube(Complex(0.0,0.0));
 	    //	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
 	  }
-	  // get the model visibility and write it to the Model MS
-	  get(vb,model,incremental);
+	  // get the model visibility (adds to vb.model)
+	  //get(vb,model,incremental);
+	  // this version takes Type and reads existing Type col instead 
+	  // of hardcoded existing MODEL co
+	  get(vb,model,incremental,Type);
+	  // and write it to VI	  
 	  switch(Type) {
 	  case MS::MODEL_DATA:
 	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);	      
@@ -346,6 +352,8 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
 	  case MS::CORRECTED_DATA:
 	    vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);	      
 	    break;
+	  default:
+	    throw (AipsError("Programmer made a wrong call"));
 	  }
 	  cohDone+=vb.nRow();
 	  pm.update(Double(cohDone));
@@ -777,11 +785,32 @@ void SkyEquation::initializeGet(const VisBuffer& vb, Int row, Int model,
 
 // Add the sky visibility for this coherence sample
 VisBuffer& SkyEquation::get(VisBuffer& result, Int model,
-			    Bool incremental) {
+			    Bool incremental,
+			    MS::PredefinedColumns Type) {
+
   AlwaysAssert(ok(),AipsError);
   Int nRow=result.nRow();
 
-  result.modelVisCube(); // get the visibility so vb will have it
+  // we'll always return MODEL, but maybe expect existing data in another col 
+  // yes this is a bit convoluted - probably should change whatever calls 
+  // get to expect different columns.
+  switch(Type) {
+  case MS::MODEL_DATA:	  
+    result.modelVisCube(); 
+    break;
+  case MS::DATA:	  
+    result.visCube(); 
+    result.setModelVisCube(result.visCube()); 
+    break;
+  case MS::CORRECTED_DATA:	  
+    result.correctedVisCube(); 
+    result.setModelVisCube(result.correctedVisCube()); 
+    break;
+  default:
+    throw (AipsError("Programmer made a wrong call"));
+  }
+
+  //result.modelVisCube(); // get the visibility so vb will have it
   VisBuffer vb(result);
 
   Bool FTChanged=changedFTMachine(vb);
@@ -869,10 +898,13 @@ VisBuffer& SkyEquation::get(VisBuffer& result,
   return result;
 }
 
+
+
 // Add the sky visibility for this component
 VisBuffer& SkyEquation::get(VisBuffer& result,
 			    const ComponentList& compList)
-{
+//			    MS::PredefinedColumns Type) {
+  {
 
   AlwaysAssert(sm_,AipsError);
   AlwaysAssert(cft_,AipsError);

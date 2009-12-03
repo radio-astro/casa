@@ -166,9 +166,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         DESCRIPTION:
 
-        Task sdflag performs simple channel based flagging on spectra.
-        The flag regions in channels can be specified in maskflag. This
-        is not interactive flagging. If plotlevel&gt;=1, the task asks
+        Task sdflag performs simple channel/row based flagging on spectra.
+        Channel based flagging and row based flagging can not be executed
+        simultaneously: channel based flagging can be executed using the 
+        flag regions specified in maskflag if no row is given in flagrow,
+        whereas row based flagging is executed when one or more rows are
+        specified in flagrow.
+        This is not interactive flagging. If plotlevel&gt;=1, the task asks
         you if you really apply the flags before it is actually written 
         to the data with a plot indicating flagged regions.
         The flags are not written to the current (input) datasets unless 
