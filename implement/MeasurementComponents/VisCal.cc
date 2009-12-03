@@ -200,7 +200,7 @@ void VisCal::correct(VisBuffer& vb) {
 
 void VisCal::corrupt(VisBuffer& vb) {
 
-  if (prtlev()>4) cout << "VC::corrupt(vb)" << endl;
+  if (prtlev()>3) cout << "VC::corrupt(vb)" << endl;
 
   // Call non-in-place version, in-place-wise:
   corrupt(vb,vb.modelVisCube());
@@ -225,7 +225,7 @@ void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout) {
 
 void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
 
-  if (prtlev()>4) cout << " VC::corrupt()" << endl;
+  if (prtlev()>3) cout << " VC::corrupt()" << endl;
 
 
   // Ensure weight calibration off internally for corrupt
@@ -1017,7 +1017,7 @@ void VisJones::state() {
 // Apply this calibration to VisBuffer visibilities
 void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout) {
 
-  if (prtlev()>4) cout << "  VJ::applyCal()" << endl;
+  if (prtlev()>3) cout << "  VJ::applyCal()" << endl;
 
   // CURRENTLY ASSUMES ONLY *ONE* TIMESTAMP IN VISBUFFER
 
@@ -1299,14 +1299,13 @@ void VisJones::createJones() {
 
 void VisJones::syncWtScale() {
 
+  Int nWtScale=jonesNPar(jonesType());
+
   // Ensure proper size according to Jones matrix type
   switch (this->jonesType()) {
-  case Jones::Scalar: {
-    currWtScale().resize(1,nAnt());
-    break;
-  }
+  case Jones::Scalar: 
   case Jones::Diagonal: {
-    currWtScale().resize(2,nAnt());
+    currWtScale().resize(nWtScale,nAnt());
     break;
   }
   default: {
@@ -1321,7 +1320,9 @@ void VisJones::syncWtScale() {
   currWtScale()=0.0;
 
   IPosition blc(3,0,0,0);
-  IPosition trc(3,nPar()-1,0,nAnt()-1);
+  IPosition trc(3,nWtScale-1,0,nAnt()-1);
+
+  /*
 
   Cube<Float> cWS;
   cWS.reference(currWtScale().reform(currJElem()(blc,trc).shape()));
@@ -1333,6 +1334,35 @@ void VisJones::syncWtScale() {
     cWS += amplitude(currJElem()(blc,trc));
   }
   currWtScale()/=Float(nChanMat());
+
+  */
+
+  Cube<Float> cWS;
+  cWS.reference(currWtScale().reform(currJElem()(blc,trc).shape()));
+  Cube<Float> cWSswt(cWS.shape(),0.0);
+  Cube<Float> cWSi(cWS.shape(),0.0);
+  Cube<Float> cWSiwt(cWS.shape(),0.0);
+
+  // Accumulate channels to form freq-INdep wt scale 
+  //  (handle flagged channels properly)
+  for (Int ich=0;ich<nChanMat();++ich) {
+    blc(1)=trc(1)=ich;
+    //    cout << "amps = " << amplitude(currJElem()(blc,trc));
+
+    cWSi=amplitude(currJElem()(blc,trc));
+    cWSi(!currJElemOK()(blc,trc))=0.0;     // zero flagged amps
+
+    cWSiwt=0.0;
+    cWSiwt(currJElemOK()(blc,trc))=1.0;
+
+    // Add them in
+    cWS += cWSi;
+    cWSswt += cWSiwt;
+  }
+
+  cWS(cWSswt<FLT_MIN)=0.0;
+  cWSswt(cWSswt<FLT_MIN)=1.0;  // avoid /0 below
+  cWS/=cWSswt;
 
   // Square it
   currWtScale()=square(currWtScale());
@@ -1365,19 +1395,34 @@ void VisJones::updateWt(Vector<Float>& wt,const Int& a1,const Int& a2) {
 	 << ws2(0%nPar()) << " ";
  */
 
-  switch (V().type()) {
-  case VisVector::Two: {
-    for (uInt ip=0;ip<2;++ip) {
-      wt(ip)*=ws1(ip);
-      wt(ip)*=ws2(ip);
-    }
+  switch(jonesNPar(jonesType())) {
+  case 1: {
+    // pol-indep corrections very simple; all correlations
+    //  corrected by same value
+    Float ws=(ws1(0)*ws2(0));
+    wt*=ws;
+    break;
   }
-  default: {
-    for (uInt ip=0;ip<wt.nelements();++ip) {
-      wt(ip)*=ws1(ip/nPar());
-      wt(ip)*=ws2(ip%nPar());
+  case 2: {
+    switch (V().type()) {
+    case VisVector::Two: {
+      for (uInt ip=0;ip<2;++ip) 
+	wt(ip)*=(ws1(ip)*ws2(ip));
+      break;
     }
+    default: {
+      for (uInt ip=0;ip<wt.nelements();++ip) {
+	wt(ip)*=ws1(ip/nPar());
+	wt(ip)*=ws2(ip%nPar());
+      }
+      break;
+    }
+    }
+    break;
   }
+  default:
+    // We don't support calwt for JonesNPar>2 (general Jones)
+    break;
   }
 
 /*
