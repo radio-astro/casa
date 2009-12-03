@@ -521,7 +521,7 @@ void MSLister::listData(const int pageRows,
     ofstream file;
     streambuf* sbuf = cout.rdbuf();
     if(listfile!="") { // non-interactive
-      prompt = False;
+      //prompt = False;
   
       // Guard against trampling existing file
       File diskfile(listfile);
@@ -584,15 +584,15 @@ void MSLister::listData(const int pageRows,
     // Initialise the MSSelector object.  By default, initSelection() takes all
     // polarizations and the first spectral channel.
     mss_p.setMS(splitMS);
-    logStream_p << LogIO::DEBUG1 << "mss_p.setMS(*pMSSel_p) finished" << LogIO::POST;
+    //logStream_p << LogIO::DEBUG1 << "mss_p.setMS(*pMSSel_p) finished" << LogIO::POST;
     mss_p.initSelection();
-    logStream_p << LogIO::DEBUG1 << "mss_p.initSelection() finished" << LogIO::POST;
+    //logStream_p << LogIO::DEBUG1 << "mss_p.initSelection() finished" << LogIO::POST;
       
     // Now extract the selected data Record.  Note that mss_p is the *selected*
     // data, and mss_p.getData() is an implicit Record object
-    logStream_p << LogIO::DEBUG2 << "Getting data from mss_p" << LogIO::POST;
+    //logStream_p << LogIO::DEBUG2 << "Getting data from mss_p" << LogIO::POST;
     dataRecords_p = mss_p.getData(items_p,False);
-    logStream_p << LogIO::DEBUG2 << "Done getting data from mss_p" << LogIO::POST;
+    //logStream_p << LogIO::DEBUG2 << "Done getting data from mss_p" << LogIO::POST;
  
     // Construct arrays for the Record items.  
     //  The V-float declaration
@@ -646,11 +646,11 @@ void MSLister::listData(const int pageRows,
     // logStream_p << LogIO::DEBUG2 << "antNames " << ant1 << LogIO::POST;
     // logStream_p << LogIO::DEBUG2 << "ant1 = " << ant1 << LogIO::POST;
 
-    logStream_p << LogIO::DEBUG2 << "Ant1-Ant2" << LogIO::POST;
-    for (Int i=0; i<10 && i<ant1Length; i++) {
-      logStream_p << LogIO::DEBUG2 << antNames1(i) << "-" 
-                                   << antNames2(i) << LogIO::POST;
-    }                               
+    //logStream_p << LogIO::DEBUG2 << "Ant1-Ant2" << LogIO::POST;
+    //for (Int i=0; i<10 && i<ant1Length; i++) {
+    //  logStream_p << LogIO::DEBUG2 << antNames1(i) << "-" 
+    //                               << antNames2(i) << LogIO::POST;
+    //}                               
 
     //  flag, uvdist, datadescid, fieldid
     flag = dataRecords_p.asArrayBool(RecordFieldId("flag"));
@@ -700,14 +700,14 @@ void MSLister::listData(const int pageRows,
     // converted values (so we can use ranges_p for field width and 
     // precision setting):
   
-    logStream_p << LogIO::DEBUG2 << "Beginning to fill record ranges_p" << LogIO::POST;
-    logStream_p << LogIO::DEBUG2 << "  Setting uvdist min and max values" << LogIO::POST;
+    //logStream_p << LogIO::DEBUG2 << "Beginning to fill record ranges_p" << LogIO::POST;
+    //logStream_p << LogIO::DEBUG2 << "  Setting uvdist min and max values" << LogIO::POST;
     Vector<Double> uvminmax(2);
     uvminmax(0)=min(uvdist);
     uvminmax(1)=max(uvdist);
     ranges_p.define("uvdist",uvminmax);
     
-    logStream_p << LogIO::DEBUG2 << "  Setting data amplitude min and max values" << LogIO::POST;    
+    //logStream_p << LogIO::DEBUG2 << "  Setting data amplitude min and max values" << LogIO::POST;    
     Vector<Float> amplminmax(2);
     amplminmax(0)=min(ampl(ampl>0.0f));
     amplminmax(1)=max(ampl);
@@ -716,7 +716,7 @@ void MSLister::listData(const int pageRows,
     // Find the range of phase.  Take care to avoid creating a 0-element
     //  MaskedArray, if all elements of phase are 0.0f.  A 0-element
     //  array will crash function min.
-    logStream_p << LogIO::DEBUG2 << "  Setting data phase min and max values" << LogIO::POST;
+    //logStream_p << LogIO::DEBUG2 << "  Setting data phase min and max values" << LogIO::POST;
     Vector<Float> phminmax(2);
     phminmax(0) = min(abs(phase));
     phminmax(1) = max(abs(phase));
@@ -751,7 +751,7 @@ void MSLister::listData(const int pageRows,
 //    }
     ranges_p.define(dataColSel(1),phminmax);
   
-    logStream_p << LogIO::DEBUG2 << "Setting the weight min and max." << LogIO::POST;
+    //logStream_p << LogIO::DEBUG2 << "Setting the weight min and max." << LogIO::POST;
     Vector<Float> wtminmax(2);
     wtminmax(0)=min(abs(weight));
     wtminmax(1)=max(abs(weight));
@@ -759,7 +759,7 @@ void MSLister::listData(const int pageRows,
         { cout << "All selected data has WEIGHT = " << wtminmax(0) << endl; }
     ranges_p.define("weight",wtminmax);
 
-    logStream_p << LogIO::DEBUG2 << "Setting the uvw min and max." << LogIO::POST;
+    //logStream_p << LogIO::DEBUG2 << "Setting the uvw min and max." << LogIO::POST;
     Vector<Float> uvwminmax(2);
     uvwminmax(0)=min(abs(uvw));
     uvwminmax(1)=max(abs(uvw));
@@ -770,7 +770,7 @@ void MSLister::listData(const int pageRows,
     // Records currently only support output to stdio, not to LogIO!
     //cout << "Printing out the Record ranges_p:" << endl
     //     << ranges_p << endl;
-    logStream_p << LogIO::DEBUG2 << "Setting flags for output:" << LogIO::POST;
+    //logStream_p << LogIO::DEBUG2 << "Setting flags for output:" << LogIO::POST;
   
     // TURN THIS FLAG SETTING INTO A NEW FUNCTION
     // Make flags for showing index columns.
@@ -782,8 +782,8 @@ void MSLister::listData(const int pageRows,
       doFld_p = True;
     } else {
       doFld_p = False;
-      logStream_p << LogIO::NORMAL << "All selected data has FIELD = "
-                  << fieldid(0) << LogIO::POST;
+      //logStream_p << LogIO::NORMAL << "All selected data has FIELD = "
+      //            << fieldid(0) << LogIO::POST;
       cout << "All selected data has FIELD = " << fieldid(0) << endl;
     }
     // doSpW_p = (ranges_p.asArrayInt(RecordFieldId("data_desc_id")).nelements() > 1);
@@ -791,16 +791,16 @@ void MSLister::listData(const int pageRows,
       doSpW_p = True;
     } else {
       doSpW_p = False;
-      logStream_p << LogIO::NORMAL << "All selected data has SPW = "
-                << datadescid(0) << LogIO::POST;
+      //logStream_p << LogIO::NORMAL << "All selected data has SPW = "
+      //          << datadescid(0) << LogIO::POST;
       cout << "All selected data has SPW = " << datadescid(0) << endl;
     }
     if (multiChan_p) {
       doChn_p = True; // Output a CHANNEL column
     } else {
       doChn_p = False;
-      logStream_p << LogIO::NORMAL << "All selected data has CHANNEL = "
-                  << chanList_p(0,1) << LogIO::POST;
+      //logStream_p << LogIO::NORMAL << "All selected data has CHANNEL = "
+      //            << chanList_p(0,1) << LogIO::POST;
       cout << "All selected data has CHANNEL = " << chanList_p(0,1) << endl;
     }
   
@@ -931,13 +931,14 @@ void MSLister::listData(const int pageRows,
     // Output something about the number of channels being listed.
     // But what exactly to say, since number of channels can vary between
     // spws?
-    logStream_p << LogIO::NORMAL << "Listing " << rowTime.nelements()
-              << " data records satisfying selection criteria, " << endl
-              << "for each of " << npols_p << " polarisation(s) and " << (chanList_p(0,2)+1)
-              << " spectral channel(s)." << LogIO::POST;
+    //logStream_p << LogIO::NORMAL << "Listing " << rowTime.nelements()
+    //          << " data records satisfying selection criteria, " << endl
+    //          << "for each of " << npols_p << " polarisation(s) and " << (chanList_p(0,2)+1)
+    //          << " spectral channel(s)." << LogIO::POST;
   
     Int countPageRow=0;
   
+    //cout << "pageRows=" << pageRows << endl;
     if(pageRows == 0) { // Do not paginate; print header only once.
       listColumnHeader();
       cout << hSeparator << endl;
@@ -962,7 +963,7 @@ void MSLister::listData(const int pageRows,
  */ 
 
       const uInt spwRows = chanList_p.nrow(); // Rows of spws in chanList_p
-      logStream_p << LogIO::DEBUG1 << "spwRows (rows in chanList_p) = " << spwRows << LogIO::POST;
+      //logStream_p << LogIO::DEBUG1 << "spwRows (rows in chanList_p) = " << spwRows << LogIO::POST;
       
       // Loop through the rows of the MS. (not rows of MSLister::listData output)
       Bool endOutput=False;
@@ -996,10 +997,10 @@ void MSLister::listData(const int pageRows,
                           }
                       }
                       if (endOutput) {break;} // break out of if block
-                      if (prompt) {
+                      //if (prompt) {
                          listColumnHeader();
                          cout << hSeparator << endl;
-                      }
+                      //}
                   }
                   lastdate_p = date_p;
                   if (endOutput) {break;} // break out of chan loop
@@ -1044,8 +1045,8 @@ void MSLister::listData(const int pageRows,
           if (endOutput) {break;} // break out of row loop
       } // row loop
       if (endOutput) {break;} // break out of msIter 
-      if (listfile == "") {
          cout << hSeparator << endl;
+      if (listfile == "") {
          string contStr;
          cout << "Type Q to quit, A to toggle long/short list, or RETURN to continue [continue]: ";
          getline(cin,contStr);
@@ -1057,6 +1058,10 @@ void MSLister::listData(const int pageRows,
       
       // Post it
       logStream_p.post();
+
+     }
+////////////////////////////////////
+      
       
       // RESTORE COUT (if redirected to file)
       if(listfile!="")
@@ -1064,10 +1069,10 @@ void MSLister::listData(const int pageRows,
       
       cout.fill(cfill);
 
+      logStream_p << LogIO::DEBUG1 << "End: MSLister::listData" 
+                  << LogIO::POST;
 
-     }
-////////////////////////////////////
-      
+
   } // end try
     catch(AipsError x){
         logStream_p << LogIO::SEVERE << "Caught exception: " << x.getMesg()
