@@ -474,7 +474,7 @@ class scantable(Scantable):
             x=f.readlines()
             f.close()
             for xx in x:
-                asaplog.push( xx )
+                asaplog.push( xx, False )
             print_log()
         #else:
             #retval = { 'axesnames': ['scanno', 'beamno', 'ifno', 'polno', 'cycleno'],

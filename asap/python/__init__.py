@@ -400,7 +400,7 @@ if rcParams['useplotter']:
         asaplog.post( "Matplotlib not installed. No plotting available")
         print_log('WARN')
 
-__date__ = '$Date: 2009-11-17 01:56:29 -0700 (Tue, 17 Nov 2009) $'.split()[1]
+__date__ = '$Date: 2009-11-26 21:54:30 -0700 (Thu, 26 Nov 2009) $'.split()[1]
 __version__  = '2.3.1 alma'
 # nrao casapy specific, get revision number
 #__revision__ = ' unknown '
@@ -420,6 +420,7 @@ if os.path.isfile(revinfo):
     f.readline()
     revsionno=f.readline()
     f.close()
+    del f
     __revision__ = revsionno.rstrip()
 else:
     __revision__ = ' unknown '
