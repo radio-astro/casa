@@ -240,7 +240,7 @@ Bool MSSelector::initSelection(const Vector<Int>& dataDescId, Bool reset)
 	<< LogIO::POST;
     }
     selectPolarization(polSel);
-    os<< LogIO::NORMAL << "Selection initialized ok"<< LogIO::POST;
+    os<< LogIO::DEBUG1 << "Selection initialized ok"<< LogIO::POST;
   }
   return constantShape;
 }
@@ -313,7 +313,7 @@ Bool MSSelector::selectChannel(Int nChan, Int start, Int width, Int incr)
       }
     }
   }
-  os << LogIO::NORMAL<< "Channel selection: #chan="<<nChan<<
+  os << LogIO::DEBUG1 << "Channel selection: #chan="<<nChan<<
     ", start="<<start+1<<", width="<<width<<", incr="<<incr<<LogIO::POST;
   return True;
 }
@@ -413,7 +413,7 @@ Bool MSSelector::selectPolarization(const Vector<String>& wantedPol)
   useSlicer_p=(!polSlice_p.all()||!chanSlice_p.all());
   if (useSlicer_p) slicer_p=Slicer(polSlice_p,chanSlice_p);
   polSelection_p.resize(wantedPol.nelements()); polSelection_p=wantedPol;
-  os << LogIO::NORMAL<< "Polarization selection: "<< wantedPol << LogIO::POST;
+  os << LogIO::DEBUG1<< "Polarization selection: "<< wantedPol << LogIO::POST;
   return True;
 }
 
