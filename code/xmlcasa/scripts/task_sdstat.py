@@ -476,7 +476,7 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                             if s.npol(-1) > 1: out +=  ' Pol[%d] ' % (s.getpol(i))
 			    #out += '= %3.3f\n' % (eqw[i])
 			    out += ('= %'+formstr) % (eqw[i]) + '\n'
-                            out +=  "--------------------------------------------------\n"
+                            out +=  "--------------------------------------------------\n "
 			    # Construct integrated flux
 			    integratef = integratef +[suml[i]*dabc]
 			    outp += 'Scan[%d] (%s) ' % (s.getscan(i), s._getsourcename(i))
@@ -486,7 +486,7 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 			    if s.npol(-1) > 1: outp +=  ' Pol[%d] ' % (s.getpol(i))
 			    #outp += '= %3.3f\n' % (integratef[i])
 			    outp += ('= %'+formstr) % (integratef[i])+'\n'
-			    outp +=  "--------------------------------------------------\n"
+			    outp +=  "--------------------------------------------------\n "
 
                     if sd.rcParams['verbose']:
                             # Print equivalent width
@@ -495,7 +495,7 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                             print >> f, " ", "eqw [",abclbl,"]"
                             print >> f, "--------------------------------------------------"
                             print >> f, out
-                            print >> f, ''
+                            #print >> f, ''
                             f.close()
                             f = open(tmpfile,'r')
                             rlines = f.readlines()
@@ -510,7 +510,7 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                             print >> f,  " ", "Integrated intensity [", intlbl, "]"
                             print >> f, "--------------------------------------------------"
                             print >> f, outp
-                            print >> f, ''
+                            #print >> f, ''
                             f.close()
                             f = open(tmpfile,'r')
                             rlines = f.readlines()
@@ -555,7 +555,7 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
                     if s.npol(-1) > 1: out +=  ' Pol[%d] ' % (s.getpol(0))
 		    #out += '= %3.3f\n' % (eqw)
 		    out += ('= %'+formstr) % (eqw) + '\n'
-                    out +=  "--------------------------------------------------\n"
+                    out +=  "--------------------------------------------------\n "
                     
 		    # Construct integrated flux
 		    integratef = suml[0]*dabc
@@ -566,7 +566,7 @@ def sdstat(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, 
 		    if s.npol(-1) > 1: outp +=  ' Pol[%d] ' % (s.getpol(0))
 		    #outp += '= %3.3f\n' % (integratef)
 		    outp += ('= %'+formstr) % (integratef) + '\n'
-		    outp +=  "--------------------------------------------------\n"
+		    outp +=  "--------------------------------------------------\n "
 
                     if sd.rcParams['verbose']:
                             # Print equivalent width

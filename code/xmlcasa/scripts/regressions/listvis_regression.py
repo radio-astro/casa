@@ -335,7 +335,7 @@ print ""
 
 prefix = regressionDir+'/test'+str(testNum)+'/'
 outputFilename = prefix + 'listvis.jupiter6cm.default.out'
-standardFilename = localData+'listvis.default.out'
+standardFilename = localData+'listvis.1_10.out'
 
 tstutl.maketestdir(prefix) # create test dir, overwrite preexisting
 #Remove existing data or load data from scratch?

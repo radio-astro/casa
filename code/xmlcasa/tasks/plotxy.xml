@@ -437,6 +437,7 @@
 				</equals>
 			</when>
 			<when param="averagemode">
+			        <equals value=""/>
 				<equals value="vector">
 					<default param="timebin"><value type="string">0</value></default>
 					<default param="crossscans"><value type="bool">False</value></default>

@@ -401,6 +401,9 @@ class SubMS
   Vector<Int> antIndexer_p;
   Vector<Int> antNewIndex_p;
 
+  // feedNewIndex_p(oldAntID, oldFeedID) = newFeedID for that antenna.
+  Matrix<Int> feedNewIndex_p;
+
   Vector<Int> arrayId_p;
   Vector<Double> newTimeVal_p;
   Vector<uInt> tOI_p; //timeOrderIndex

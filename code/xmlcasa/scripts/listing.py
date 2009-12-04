@@ -183,7 +183,8 @@ def diffAmpPhsFloat(test, standard, prefix="", precision="1e-6"):
     precision = decimal.Decimal(precision) # Allowed precision
 
     # For each line, compare Amp-Phs in both files
-    for linenum in range(10):#len(testList)):
+    
+    for linenum in range(min(10, len(testList))):
         # Generate a list of all floats
         tFloatList = floatPat.findall(testList[linenum])
         sFloatList = floatPat.findall(standardList[linenum])

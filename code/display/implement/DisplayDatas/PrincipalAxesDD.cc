@@ -25,6 +25,9 @@
 //#
 //# $Id$
 
+#include <cctype>
+#include <string>
+#include <algorithm>
 #include <casa/stdio.h>
 #include <casa/aips.h>
 #include <casa/Exceptions.h>
@@ -294,6 +297,7 @@ String PrincipalAxesDD::showPosition(const Vector<Double> &world,
      } else {
         j = i;
      }
+
      ostringstream oss;
      if (itsFractionalPixels) {
         oss << itsFullPixelTmp4(j)+offset;
@@ -329,13 +333,6 @@ String PrincipalAxesDD::showPosition(const Vector<Double> &world,
      int coordNum, axisInCoord;
      itsPosTrackCoordSys.findWorldAxis(coordNum, axisInCoord, j);     
      
-     /*
-     Coordinate::formatType format = Coordinate::DEFAULT;
-     if (itsPosTrackCoordSys.type(coordNum) == Coordinate::SPECTRAL) {
-         format = itsNotation;
-     }
-     */
-
      Coordinate::formatType notation = itsNotation;
      if (showAbs &&
          itsPosTrackCoordSys.type(coordNum) == Coordinate::DIRECTION) {    
@@ -353,6 +350,15 @@ String PrincipalAxesDD::showPosition(const Vector<Double> &world,
      
      retval += fmtdCoord;
      if(i < n - 1) retval += "  ";
+
+     if (itsPosTrackCoordSys.type(coordNum) == Coordinate::SPECTRAL) {
+	SpectralCoordinate spec_coord = itsPosTrackCoordSys.spectralCoordinate(coordNum);
+	MFrequency::Types freq_type = spec_coord.frequencySystem( );	// effective type (passing False would return the native type)
+	String ftype = MFrequency::showType(freq_type);
+	std::transform(ftype.begin(), ftype.end(), ftype.begin(), tolower);
+	retval += " (" + ftype + ")";
+     }
+
   }
   
   // Old world or pixel code:
