@@ -34,11 +34,17 @@ def termination_handler(signum, frame):
 signal.signal(signal.SIGFPE, termination_handler)
 signal.signal(signal.SIGILL, termination_handler)
 signal.signal(signal.SIGQUIT, termination_handler)
-signal.signal(signal.SIGSEGV, termination_handler)
 signal.signal(signal.SIGABRT, termination_handler)
 signal.signal(signal.SIGTERM, termination_handler)
 signal.signal(signal.SIGBUS, termination_handler)
 signal.signal(signal.SIGHUP, termination_handler)
+
+# Unfortunately, trying to catch SIGSEGV (with even
+# the most trivial signal handler) might trigger a mode of
+# infinite looping where another SIGSEGV happens already
+# before the user signal handler is invoked (in the python
+# interpreter?). The effect is infinite looping, which is
+# even worse than segfaulting. Therefore do not catch SIGSEGV.
 
 # Do not handle the following POSIX signals
 #signal.signal(signal.SIGALRM, termination_handler)

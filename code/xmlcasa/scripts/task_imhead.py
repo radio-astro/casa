@@ -93,6 +93,7 @@
 
 import numpy
 import os
+
 from taskinit import *
 
 # TODO Holy moly is this code screaming to be refactored.
@@ -936,6 +937,8 @@ def imhead(imagename=None,mode=None,hdkey=None,hdvalue=None,hdtype=None,hdcommen
                 csys.setprojection( hdvalue )
             elif ( hdkey=='telescope' ):
                 csys.settelescope( str(hdvalue) )
+            elif( hdkey=='reffreqtype'):
+                csys.setconversiontype(spectral=str(hdvalue))
             elif ( hdkey=='restfreq' ):
                 # TODO handle a list of rest frequencies
                 #print "NEW REST FREQUENCY: ", hdvalue, "  ", type(hdvalue)

@@ -301,7 +301,8 @@ class PrincipalAxesDD : public DisplayData {
   // Set Spectral formatting
   void setSpectralFormatting (CoordinateSystem& cSys, 
                               const String& velTypeString, 
-                              const String& unitString);
+                              const String& unitString,
+                              const String& frequency_system = "");
 
   // Determine the active image (if any).
   // (Deprecated (7/04).  Use  confromsToZIndex(wch)  instead).

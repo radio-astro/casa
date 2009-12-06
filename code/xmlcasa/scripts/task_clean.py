@@ -223,7 +223,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                     field=field, phasecenters=phasecenters,
                                     names=imageids, facets=facets,
                                     outframe=outframe, veltype=veltype,
-                                    makepbim=makepbim) 
+                                    makepbim=makepbim, checkpsf=dochaniter) 
 
             imset.datselweightfilter(field=field, spw=spw,
                                      timerange=timerange, uvrange=uvrange,
@@ -249,6 +249,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 for k in range(len(imset.maskimages)):
                     maskimage.append(imset.maskimages[imset.imagelist[k]])
 
+            if imset.skipclean: # for chaniter=T, and if the channel is flagged.
+                imset.makeEmptyimages()
             imCln.setoptions(ftmachine=localFTMachine,
                              wprojplanes=wprojplanes,
                              freqinterp=interpolation, padding=padding,
@@ -424,20 +426,20 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                         maskimage = imset.imagelist[0] + '.mask'
                         imset.maskimages[imset.imagelist[0]] = maskimage
 
-
-            imCln.clean(algorithm=localAlgorithm, niter=niter, gain=gain,
-                        threshold=qa.quantity(threshold,'mJy'),
-                        model=modelimages, residual=residualimage,
-                        image=restoredimage, psfimage=psfimage,
-                        mask=maskimage, interactive=interactive,
-                        npercycle=npercycle);
+            if not imset.skipclean: 
+                imCln.clean(algorithm=localAlgorithm, niter=niter, gain=gain,
+                            threshold=qa.quantity(threshold,'mJy'),
+                            model=modelimages, residual=residualimage,
+                            image=restoredimage, psfimage=psfimage,
+                            mask=maskimage, interactive=interactive,
+                            npercycle=npercycle);
                       
-            #In the interactive mode, deconvlution can be skipped and in that case
-            #psf is not generated. So check if all psfs are there if not, generate
-            if interactive:
-                for psfim in psfimage:
-                    if not os.path.isdir(psfim):
-                        imCln.approximatepsf(psf=psfim)
+                #In the interactive mode, deconvlution can be skipped and in that case
+                #psf is not generated. So check if all psfs are there if not, generate
+                if interactive:
+                    for psfim in psfimage:
+                        if not os.path.isdir(psfim):
+                            imCln.approximatepsf(psf=psfim)
         imCln.close()
         #
         # If MS-MFS was used, comput alpha (spectral index)

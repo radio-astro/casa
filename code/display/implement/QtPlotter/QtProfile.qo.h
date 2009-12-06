@@ -75,7 +75,7 @@ class QtProfile : public QWidget//, public MWCCrosshairTool
 public:
     QtProfile(ImageInterface<Float>* img, const char *name = 0, QWidget *parent = 0);
     ~QtProfile();
-    MFrequency::Types determineRefFrame(ImageInterface<Float>* img);
+    MFrequency::Types determineRefFrame( ImageInterface<Float>* img, bool check_native_frame = false );
 public slots:
     void zoomIn();
     void zoomOut();

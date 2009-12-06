@@ -3935,25 +3935,14 @@ namespace casa {
       
       os << LogIO::NORMAL << "Combined SPW will have " << newNUM_CHAN << " channels. May change in later regridding." << LogIO::POST;
 
-      // normalise channel fractions
-      Vector<Double> newNorm(newNUM_CHAN, 0); 
-      for(Int i=0; i<newNUM_CHAN; i++){
-	for(Int j=0; j<averageN[i]; j++){
-	  newNorm(i) += averageChanFrac[i][j];
-	  //cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
-	  //     << " averageWhichSPW[i][j] " << averageWhichSPW[i][j] << endl;
-	  //cout << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
-	}
-      }	
-      for(Int i=0; i<newNUM_CHAN; i++){
-	//cout << "i " << i << " newNorm[i] " << newNorm[i] << endl;
-	for(Int j=0; j<averageN[i]; j++){
-          if(newNorm[i] != 0.0){
-            averageChanFrac[i][j] /= newNorm[i];
-	  }
-	  //cout << "j " << j << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
-	}
-      }	
+//       // print channel fractions for debugging
+//       for(Int i=0; i<newNUM_CHAN; i++){
+// 	for(Int j=0; j<averageN[i]; j++){
+// 	  cout << " i, j " << i << ", " << j << " averageWhichChan[i][j] " << averageWhichChan[i][j]
+// 	       << " averageWhichSPW[i][j] " << averageWhichSPW[i][j] << endl;
+// 	  cout << " averageChanFrac[i][j] " << averageChanFrac[i][j] << endl;
+// 	}
+//       }	
 
       // write new spw to spw table (ID =  newSpwId)
       spwtable.addRow();
@@ -4511,12 +4500,16 @@ namespace casa {
 	    }
 
 	    Bool haveCoverage = False;
+	    Vector<Double> numNominal(nCorrelators, 0.);
 	    Vector<Double> modNorm(nCorrelators, 0.); // normalization for the averaging of the contributions from the SPWs
 	    for(Int j=0; j<averageN[i]; j++){
 	      if(SPWtoRowIndex.isDefined(averageWhichSPW[i][j])){
 		for(uInt k=0; k<nCorrelators; k++){
 		  if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){
 		    haveCoverage = True;
+		    if(averageChanFrac[i][j]==1.){ // count number of channels right on this frequency
+		      numNominal(k) += 1.;
+		    }
 		    modNorm(k) += averageChanFrac[i][j];
 		    if(FLAGColIsOK){
 		      newFlag(k,i) = False; // there is valid data for this channel => don't flag in output
@@ -4540,7 +4533,17 @@ namespace casa {
 		    if(!newFlagI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] )){ // this channel is not flagged for the given SPW and correlator
 
                       // renormalize for the case of missing SPW coverage
-		      weight = averageChanFrac[i][j] / modNorm(k);
+		      if(numNominal(k)>0.){ // there are channels right on this frequency
+			if(averageChanFrac[i][j]==1.){ // this is one of them
+			  weight = 1./numNominal(k);
+			}
+			else{
+			  weight = 0.;
+			}
+		      }
+		      else { // need to interpolate
+			weight = averageChanFrac[i][j] / modNorm(k);
+		      }
 
 		      if(CORRECTED_DATAColIsOK){
 			newCorrectedData(k,i) += newCorrectedDataI[ averageWhichSPW[i][j] ]( k, averageWhichChan[i][j] ) * weight;
@@ -5117,8 +5120,9 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
       Vector<Int> newAntIds = antCol.getColumn();
       Vector<Int> newFeedIds = feedCol.getColumn();
       for(uInt k = 0; k < totalSelFeeds; ++k){
-	newFeedIds[k] = feedNewIndex_p(newAntIds[k], newFeedIds[k]);
-	newAntIds[k]  = antNewIndex_p[newAntIds[k]];
+	newAntIds[k] = antNewIndex_p[newAntIds[k]];
+        if(newSpwIds[k] > -1)
+          newSpwIds[k] = spwRelabel_p[newSpwIds[k]];
       }
       antCol.putColumn(newAntIds);
       feedCol.putColumn(newFeedIds);

@@ -353,10 +353,13 @@ String PrincipalAxesDD::showPosition(const Vector<Double> &world,
 
      if (itsPosTrackCoordSys.type(coordNum) == Coordinate::SPECTRAL) {
 	SpectralCoordinate spec_coord = itsPosTrackCoordSys.spectralCoordinate(coordNum);
-	MFrequency::Types freq_type = spec_coord.frequencySystem( );	// effective type (passing False would return the native type)
-	String ftype = MFrequency::showType(freq_type);
-	std::transform(ftype.begin(), ftype.end(), ftype.begin(), tolower);
-	retval += " (" + ftype + ")";
+	MFrequency::Types freq_type = spec_coord.frequencySystem(true);		// effective type (passing false would return the native type)
+	String frequency = MFrequency::showType(freq_type);
+	std::transform(frequency.begin(), frequency.end(), frequency.begin(), tolower);
+	MDoppler::Types velocity_type = spec_coord.velocityDoppler( );
+	String velocity = MDoppler::showType(velocity_type);
+	std::transform(velocity.begin(), velocity.end(), velocity.begin(), tolower);
+	retval += " (" + frequency + "/" + velocity + ")";
      }
 
   }
@@ -1691,10 +1694,14 @@ Bool PrincipalAxesDD::setOptions(Record &rec, Record &recOut)
 // Deal with local things; Position tracking stuff. Set the formatting state
 // in the CS used for position tracking
 
+  String frequency_system("");
   Bool vtchg = readOptionRecord(itsDoppler, error, rec, "velocitytype");
   Bool spchg = readOptionRecord(itsSpectralUnit, error, rec, "spectralunit");
-  if(vtchg || spchg) setSpectralFormatting(itsPosTrackCoordSys, itsDoppler,
-                                           itsSpectralUnit);
+  Bool refframechg = readOptionRecord(frequency_system, error, rec, "axislabelfrequencysystem");
+  if(vtchg || spchg || refframechg ) {
+	setSpectralFormatting(itsPosTrackCoordSys, itsDoppler, itsSpectralUnit, frequency_system);
+	setSpectralFormatting(itsCoordSys, itsDoppler, itsSpectralUnit, frequency_system);
+  }
 
 //
   String value;
@@ -2066,14 +2073,21 @@ Record PrincipalAxesDD::getLabellerOptions(){
 }
 
 void PrincipalAxesDD::setSpectralFormatting  (CoordinateSystem& cSys,
-                                              const String& doppler,
-                                              const String& unit)
+                                              const String &doppler,
+                                              const String &unit,
+					      const String &freq_sys)
 {
    static LogIO os(LogOrigin("PrincipleAxesDD", "setSpectralFormatting", WHERE));
    String errorMsg;
-   if(!CoordinateUtil::setSpectralFormatting(errorMsg, cSys, unit, doppler)) {
+   if( doppler.length() > 0 && unit.length( ) > 0 &&
+       ! CoordinateUtil::setSpectralFormatting(errorMsg, cSys, unit, doppler) ) {
       os << LogIO::WARN 
          << "Failed to update SpectralCoordinate formatting because"
+         << errorMsg << LogIO::POST;
+   }
+   if( freq_sys.length( ) > 0 && ! CoordinateUtil::setSpectralConversion(errorMsg, cSys, freq_sys) ) {
+      os << LogIO::WARN
+         << "Failed to update SpectralCoordinate reference frame because"
          << errorMsg << LogIO::POST;
    }
 }

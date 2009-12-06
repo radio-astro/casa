@@ -135,7 +135,7 @@ class cleanhelper:
     def definemultiimages(self, rootname, imsizes, cell, stokes, mode, spw,
                           nchan, start, width, restfreq, field, phasecenters,
                           names=[], facets=1, outframe='', veltype='radio',
-                          makepbim=False):
+                          makepbim=False, checkpsf=False):
         #pdb.set_trace()
         #will do loop in reverse assuming first image is main field
         if not hasattr(imsizes, '__len__'):
@@ -167,6 +167,7 @@ class cleanhelper:
             errmsg = "Mismatch between the number of phasecenters (%d), image sizes (%d) , and images (%d)" % (len(phasecenters), len(imsizes), self.nimages)
             self._casalog.post(errmsg, 'SEVERE')
             raise ValueError, errmsg
+        self.skipclean=False
         lerange=range(self.nimages)
         lerange.reverse()
         for n in lerange:
@@ -195,6 +196,28 @@ class cleanhelper:
                 self.im.makeimage(type='pb', image=self.imagelist[n]+'.flux',
                                   compleximage="", verbose=False)
 		self.im.setvp(dovp=False, verbose=False)
+            if(checkpsf):
+                # make sure psf can be created
+                self.im.makeimage(type='psf', image=self.imagelist[n]+'.test.psf')
+                ia.open(self.imagelist[n]+'.test.psf')
+                imdata=ia.getchunk()
+                if self.skipclean:
+                    pass
+                elif imdata.sum()==0.0:
+                    self.skipclean=True
+
+    def makeEmptyimages(self):
+        """
+        Create empty images (0.0 pixel values) for 
+        image, residual, psf
+        must run after definemultiimages()
+        """ 
+        lerange=range(self.nimages)
+        for n in lerange:
+            os.system('cp -r '+self.imagelist[n]+' '+self.imagelist[n]+'.image')
+            os.system('cp -r '+self.imagelist[n]+' '+self.imagelist[n]+'.residual')
+            os.system('cp -r '+self.imagelist[n]+' '+self.imagelist[n]+'.psf')
+
     
     def makemultifieldmask(self, maskobject=''):
         """
@@ -932,6 +955,8 @@ class cleanhelper:
         instartunit=''
         inwidthunit=''
         if(mode=='channel'):
+            ###for mode channel ignore the frame to use the data frame 
+            frame=''
             if(type(start)!=int):
                 raise TypeError, "Wrong type for start parameter. Int is expected for the channel mode." 
             if(type(width)!=int):

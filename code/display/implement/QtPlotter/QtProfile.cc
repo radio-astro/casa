@@ -257,7 +257,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
        
 }
 
-MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img)
+MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool check_native_frame )
 { 
   MFrequency::Types freqtype;
   
@@ -271,7 +271,7 @@ MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img)
   specCoor.getReferenceConversion(tfreqtype, tepoch, tposition, tdirection);
   freqtype = specCoor.frequencySystem(False); // false means: get the native type
   
-  if(tfreqtype != freqtype){ // there is an active conversion layer
+  if( check_native_frame && tfreqtype != freqtype ){ // there is an active conversion layer
     // ask user if he/she wants to change to native frame
     String title = "Change display reference frame?";
     String message = "Native reference frame is " + MFrequency::showType(freqtype)
