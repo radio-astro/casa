@@ -160,8 +160,9 @@ class interactivemask:
 			self.p.plot(self.scan)
 			for panel in self.p._plotter.subplots:
 				xmin, xmax = panel['axes'].get_xlim()
-				marg = 0.05*(xmax-xmin)
+				marg = 0.05*abs(xmax-xmin)
 				panel['axes'].set_xlim(xmin-marg, xmax+marg)
+				if rcParams['plotter.ganged']: break
 			self.p._plotter.show()
 
 		# Plot initial mask region
