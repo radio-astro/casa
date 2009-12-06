@@ -181,6 +181,7 @@ void Annotations::removeLockedFromCurrent(const uInt& removeMe) {
 }
 
 void Annotations::setKey(const Display::KeySym& newSym) {
+  cout << "setKey=" << newSym << endl;
   itsKey = newSym;
 }
 
@@ -200,6 +201,7 @@ void Annotations::handleKeyUp() {
 
 
 void Annotations::handleNormalCreation(const Vector<Float>& createPix) {
+  cout << "handle normal" << endl;
   try {
     itsShapes[itsActiveShape]->setCenter(createPix[0] , createPix[1]);
   } catch (const AipsError& x) {
@@ -341,6 +343,7 @@ void Annotations::handleArrowCreation(const Vector<Float>& createPix) {
 }
 
 void Annotations::select(const Int i) {
+  cout << "select" << endl;
   if (itsActiveShape != -1) {
     itsShapes[itsActiveShape]->setDrawHandles(False);
   }
@@ -353,6 +356,8 @@ void Annotations::select(const Int i) {
 }
 
 void Annotations::handleCreation(const PCPositionEvent& ev) {
+
+  cout << "handle creation" << endl;
   
   Vector<Float> createPix(2); 
   createPix[0] = ev.x(); createPix[1] = ev.y();
@@ -380,7 +385,7 @@ void Annotations::handleCreation(const PCPositionEvent& ev) {
 Bool Annotations::determineState(const PCPositionEvent& ev) {
   Bool refresh = False;  
   itsActiveHandle = -1;
-  
+ cout << "determineState" << endl; 
   if (itsActiveShape != -1 && 
       itsShapes[itsActiveShape]->whichHandle(ev.x(), ev.y(),
 					     itsActiveHandle)) {
@@ -398,6 +403,7 @@ Bool Annotations::determineState(const PCPositionEvent& ev) {
   // Ok we are either starting from scratch, or not on the current shape's
   // handles.
   
+ cout << "determineState   -----------1" << endl; 
   if (itsActiveShape != -1 && !itsShapes[itsActiveShape]->inObject(ev.x(),
 								   ev.y())) {
     // Current shape no longer valid
@@ -408,6 +414,7 @@ Bool Annotations::determineState(const PCPositionEvent& ev) {
   // Find all the objects that we are inside of....
   Bool foundNew = False;
   
+ cout << "determineState   -----------2" << endl; 
   for (uInt i=0; i<itsShapes.nelements() ; i++) {
     if (itsActiveShape == -1 && itsShapes[i]->inObject(ev.x(), ev.y())) {
       select(i);
@@ -422,6 +429,7 @@ Bool Annotations::determineState(const PCPositionEvent& ev) {
     }
   }
   
+ cout << "determineState   -----------3" << endl; 
   if (!foundNew) {
     // We haven't found a new shape, either we are not in a shape, 
     // or the index could be less than the active shape's. Check them
@@ -439,6 +447,7 @@ Bool Annotations::determineState(const PCPositionEvent& ev) {
     } 
   } else refresh = True;
   
+ cout << "determineState   -----------5" << endl; 
   // Ok, at this point... either itsActiveShape == -1 or
   // it equals the correct shape id.
   if (itsActiveShape != -1) {
@@ -470,12 +479,18 @@ Bool Annotations::determineState(const PCPositionEvent& ev) {
       itsActiveHandle = -1;
     }
   }
+ cout << "determineState   -----------6" << endl; 
   return refresh;
 }
 
 void Annotations::operator()(const PCPositionEvent& ev) {
-
+cout << "position------" << endl;
   Bool refresh(False);
+  cout << "ev.key=" << ev.key() << " itsKey=" << itsKey << endl;
+  cout << "itsEnabled=" << itsEnabled << endl;
+  cout << "ev.keystate()=" << ev.keystate() << endl;
+  cout << "itsState=" << itsState << endl;
+  cout << "itsActiveShape=" << itsActiveShape << endl;
   if (ev.key() == itsKey && itsEnabled) {
     
     if (!ev.keystate()) {
@@ -483,6 +498,7 @@ void Annotations::operator()(const PCPositionEvent& ev) {
     } else { 
       // Key Down
 
+      itsState = Annotations::Creation;
       // First check if this is building a shape
       if (itsState == Annotations::Creation) { 
 	handleCreation(ev);
@@ -618,6 +634,7 @@ Record Annotations::shapesSummary() {
 }
 
 void Annotations::operator()(const PCMotionEvent& ev) {
+//cout << "motion------" << endl;
   Bool refresh(False);
 
   if (!itsEnabled) return;
@@ -706,7 +723,7 @@ void Annotations::changedWC() {
 
 
 void Annotations::operator()(const PCRefreshEvent& ev) {
-
+  cout << "refresh--------" << endl;
   itsRefreshedYet = True;
   
   if (!validateWCs()) {
@@ -770,6 +787,7 @@ ostream & operator << (ostream & os, Annotations::State st) {
 }
 
 void Annotations::createShape(Record& settings) {
+  cout << "create shape" << endl;
   if (itsState == Annotations::Creation) {
     // User was about to make a shape then changed their mind
     deleteShape(itsActiveShape);
