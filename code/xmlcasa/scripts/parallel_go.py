@@ -783,9 +783,17 @@ class cluster(object):
       #return self.__client.execute('exec(job)',block=False,targets=tasks.keys())
 
    def parallel_go_commands(self,*args,**kwargs):
+      '''Parallel execution of commands and/or dictionary of commands
+
+
+      '''
       self.pgc(*args,**kwargs)
  
    def pgk(self, **kwargs):
+      '''Parallel execution to set keywords
+
+
+      '''
 
       # set default action
       pgTask=None
@@ -889,13 +897,25 @@ class cluster(object):
          return
                
    def parallel_go_keywords(self, **kwargs):
+      '''Parallel execution to set keywords
+
+
+      '''
       self.pgk(**kwargs)
 
    def hello(self):
+      '''Parallel execution to print 'hello' message from all engines
+
+
+      '''
       print "Hello CASA Controller"
       return self.__client.execute('print "Hello CASA Node"')
 
    def __set_cwds(self, clusterdir):
+      '''Set current working dir for all engines
+
+
+      '''
       # this is not very useful because dirs are generally
       # different cross nodes 
       self.__client.execute('import os')
@@ -914,9 +934,17 @@ class cluster(object):
    #def get_ids(cluster):
    #   return cluster._cluster__client.get_ids()
    def get_ids(self):
+      '''get ids for all available engines
+
+
+      '''
       return self.__client.get_ids()
 
    def get_nodes(self):
+      '''get hostnames for all available engines
+
+
+      '''
       from sets import Set 
       elist=[]
       for i in self.__engines:
@@ -924,39 +952,89 @@ class cluster(object):
       return list(Set(elist))
 
    def get_engines(self):
+      '''get current status of the engines
+
+
+      '''
       return self.__engines
 
    def get_stdout(self,cmd):
+      '''get the standard output from all engines for execting a comment
+
+
+      '''
       return commands.getstatusoutput(cmd)      
 
    def pdo(self,job):
+      '''parallel execution of a job
+
+
+      '''
       return self.__client.execute(job)
 
    def odo(self,job,nodes):
+      '''execute a job on a subset of engines
+
+
+      '''
       return self.__client.execute(job,block=False,targets=nodes)
   
    def queue_status(self):
+      '''query to queue status
+
+
+      '''
       return self.__client.queue_status()
 
    def clear_queue(self):
+      '''remove all jobs from the queue
+
+
+      '''
       return self.__client.clear_queue()
 
    def get_properties(self):
+      '''get the set properties from all engines
+
+
+      '''
       return self.__client.get_properties()
 
    def keys(self):
+      '''get all keys from all engines
+
+
+      '''
       return self.__client.keys()
 
    def pull(self, key, targets='all'):
+      '''get the value of a key
+      @param key the var of interest
+      @param targets, the engines of interest
+
+
+      '''
       return self.__client.pull(key,targets)
 
    def get_result(self, i):
+      '''get the result of previous execution
+
+
+      '''
       return self.__client.get_result(i)
 
    def activate(self):
+      '''set the cluster to parallel execution mode
+
+  
+      '''
       return self.__client.activate()
 
    def check_job(self, job, verbose=True):
+      '''check the status of an asynch job
+
+  
+      '''
       try:
          x=job.get_result(block=False)
          if x==None:
@@ -972,7 +1050,7 @@ class cluster(object):
          return False
 
    def howto(self):
-      print '''
+      print '''A simple example for use the cluster
 from parallel_go import *
 c=cluster()
 c.start_engine('casa-dev-08',2,'/home/casa-dev-08/hye/cluster')
@@ -1011,7 +1089,7 @@ c.pgc('a=commands.getstatusoutput("ls ")')
 '''
 
    def use_often(self):
-      print '''
+      print '''Frequently used commands
 from parallel_go import *
 c=cluster()
 c.hello()

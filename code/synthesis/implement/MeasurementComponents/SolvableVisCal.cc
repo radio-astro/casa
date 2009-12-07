@@ -1510,6 +1510,8 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
   // Number of VisIter chunks per spw
   Vector<Int> nChunkPerSpw(vs.numberSpw(),0);
 
+  Vector<Int> nSolPerSpw(vs.numberSpw(),0);
+
   // Number of VisIter chunks per solution
   nChunkPerSol.resize(100);
   nChunkPerSol=0;
@@ -1547,6 +1549,10 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
 	 (sol==-1))  {                              // this is the first interval
       soltime1=time1;
       sol++;
+
+      // Increment solution count per spw
+      nSolPerSpw(thisspw)++;
+
       if (verby) {
 	cout << "--------------------------------" << endl;
 	cout << "sol = " << sol << endl;
@@ -1585,6 +1591,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
   }
   
   if (verby) {
+    cout << "nSolPerSpw = " << nSolPerSpw << endl;
     cout << "nChunkPerSpw = " << nChunkPerSpw << " " << sum(nChunkPerSpw) << endl;
     cout << "nchunk = " << chunk << endl;
   }
@@ -1613,11 +1620,16 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
 
     nChunkPerSpw = 0;
     nChunkPerSpw(spwlab)=nSol;
+
+    nSolPerSpw=0;
+    nSolPerSpw(spwlab)=nSol;
+
   }
 
   if (verby) {
     cout << " spwMap()  = " << spwMap() << endl;
     cout << " spwlist = " << spwlist << endl;
+    cout << "nSolPerSpw = " << nSolPerSpw << endl;
     cout << "nChunkPerSpw = " << nChunkPerSpw << " " << sum(nChunkPerSpw) << endl;
     cout << "Total solutions = " << nSol << endl;
     cout << "nChunkPerSol = " << nChunkPerSol << endl;
@@ -1632,14 +1644,15 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
   
 
   //if (!isSimulated()) {
-    logSink() << "For solint = " << solint() << ", found "
-	      <<  nSol << " solution intervals."
-	      << LogIO::POST;
+  logSink() << "For solint = " << solint() << ", found "
+	    <<  nSol << " solution intervals."
+	    << LogIO::POST;
   //}
 
   // Inflate the CalSet
-  inflate(nChanParList(),startChanList(),nChunkPerSpw);
-
+  //  inflate(nChanParList(),startChanList(),nChunkPerSpw);
+  inflate(nChanParList(),startChanList(),nSolPerSpw);
+    
   // Size the solvePar arrays
   initSolvePar();
 
@@ -4197,9 +4210,13 @@ void SolvableVisJones::applyRefAnt() {
 
   Bool usedaltrefant(False);
 
+  //  cout << "refantlist = " << refantlist << endl;
+
   for (Int ispw=0;ispw<nSpw();++ispw) {
 
     currSpw()=ispw;
+
+    //    cout << "currSpw() = " << currSpw() << " nTime = " << cs().nTime(ispw) << endl;
 
     // TBD: use spwOK here when spwOK is activated in solve context
     if (cs().nTime(ispw)>0) {
@@ -4212,6 +4229,11 @@ void SolvableVisJones::applyRefAnt() {
     Vector<uInt> ord;
     genSort(ord,cs().time(ispw));
     Int nslots(ord.nelements());
+
+
+    //    cout << "ord = " << ord << endl;
+
+    //    cout << "sok = " << sok << endl;
 
     // Reference each channel and par independently (?)
     for (Int ichan=0;ichan<nChanPar();++ichan) {
@@ -4266,8 +4288,14 @@ void SolvableVisJones::applyRefAnt() {
 
 		// Adjust each good ant by this phasor
 		for (Int iant=0;iant<nAnt();++iant) 
-		  if (sok(IPosition(4,ipar,ichan,iant,ord(0)))) 
+		  if (sok(IPosition(4,ipar,ichan,iant,ord(0)))) {
 		    sol(IPosition(4,ipar,ichan,iant,ord(0)))/=rph;
+		    // Ensure phase (imag part) is zero)
+		    if (iant==currrefant) 
+		      sol(IPosition(4,ipar,ichan,iant,ord(0)))=
+			Complex(abs(sol(IPosition(4,ipar,ichan,iant,ord(0)))),0.0);
+
+		  }
 	      }
 	      else
 		// This shouldn't happen
@@ -4374,6 +4402,11 @@ void SolvableVisJones::applyRefAnt() {
 		    for (Int iant=0;iant<nAnt();++iant) 
 		      if (sok(IPosition(4,ipar,ichan,iant,ord(islot1)))) {
 			sol(IPosition(4,ipar,ichan,iant,ord(islot1)))/=rph;
+
+			// Ensure phase (imag part) is zero)
+			if (iant==currrefant) 
+			  sol(IPosition(4,ipar,ichan,iant,ord(islot1)))=
+			    Complex(abs(sol(IPosition(4,ipar,ichan,iant,ord(islot1)))),0.0);
 			
 			// TBD: attempt to optimize precision
 			//DComplex stmp=sol(IPosition(4,ipar,ichan,iant,ord(islot1)));
@@ -4414,7 +4447,7 @@ void SolvableVisJones::applyRefAnt() {
 	    
 	    // Zero initial refant phase
 	    if (refantph!=0.0) {
-	      //	    cout << "refantph = " << refantph*180.0/C::pi << endl;
+	      cout << "refantph = " << refantph*180.0/C::pi << endl;
 	      rph=Complex(cos(refantph),sin(refantph));
 	      for (Int islot=0;islot<nslots;++islot)
 		for (Int iant=0;iant<nAnt();++iant) 

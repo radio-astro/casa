@@ -258,6 +258,7 @@ else:
 
 default(listvis)
 vis                 = msname #  Name of input visibility file
+spw                 = '0'    #  Do not list too much 
 listfile            = outputFilename        #  Output file
 go(listvis)
 

@@ -191,6 +191,8 @@ def casalogger(logfile=''):
 
     if (pid!=9999): logpid.append(pid)
 
+
+
 showconsole = False
 
 thelogfile = ''
@@ -210,7 +212,7 @@ if casa['flags'].has_key('--nologger') :
     deploylogger = False
 
 if deploylogger and (thelogfile != 'null') :
-	casalogger( thelogfile)
+    casalogger( thelogfile)
 
 ###################
 #setup file catalog
@@ -390,7 +392,7 @@ def inp(taskname=None):
         for k in range(len(a)):
             if (string.find(a[k][1], 'ipython console') > 0):
                 stacklevel=k
-        myf=sys._getframe(len(inspect.stack())-1).f_globals
+        myf=sys._getframe(stacklevel).f_globals
         if((taskname==None) and (not myf.has_key('taskname'))):
             print 'No task name defined for inputs display'
             return
@@ -997,7 +999,15 @@ if ipython:
         ipshell.IP.runlines('execfile("'+fullpath+'")')
 
 #ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython'], user_ns=globals() )
+
 casalog.setlogfile(thelogfile)
+
+try:
+    casalog.post('---')
+except:
+    print "Error: the logfile is not writable"
+    exit(1)
+
 casalog.showconsole(showconsole)
 casalog.version()
 
