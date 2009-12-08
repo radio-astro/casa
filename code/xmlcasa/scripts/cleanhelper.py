@@ -30,7 +30,8 @@ class cleanhelper:
             self.initsinglems(imtool, vis, usescratch)
         self.maskimages={}
         self.usescratch=usescratch
-
+        self.dataspecframe='LSRK'
+        self.usespecframe=''
         if not casalog:  # Not good!
             loghome =  casac.homefinder.find_home_by_name('logsinkHome')
             casalog = loghome.create()
@@ -75,17 +76,23 @@ class cleanhelper:
         elif(type(imsize) != list):
             raise TypeError, "parameter imsize is not understood"
             
-	
+	elstart=start
         if(mode=='frequency'):
         ##check that start and step have units
             if(qa.quantity(start)['unit'].find('Hz') < 0):
                 raise TypeError, "start parameter is not a valid frequency quantity "
+            ###make sure we respect outframe
+            if(self.usespecframe != ''):
+                elstart=me.frequency(self.usespecframe, start)
             if(qa.quantity(width)['unit'].find('Hz') < 0):
                 raise TypeError, "width parameter is not a valid frequency quantity "	
         elif(mode=='velocity'):
         ##check that start and step have units
             if(qa.quantity(start)['unit'].find('m/s') < 0):
                 raise TypeError, "start parameter is not a valid velocity quantity "
+            ###make sure we respect outframe
+            if(self.usespecframe != ''):
+                elstart=me.radialvelocity(self.usespecframe, start)
             if(qa.quantity(width)['unit'].find('m/s') < 0):
                 raise TypeError, "width parameter is not a valid velocity quantity "	
         else:
@@ -126,7 +133,7 @@ class cleanhelper:
         self.im.defineimage(nx=imsize[0],      ny=imsize[1],
                             cellx=cellx,       celly=celly,
                             mode=mode,         nchan=nchan,
-                            start=start,       step=width,
+                            start=elstart,       step=width,
                             spw=spwindex,      stokes=stokes,
                             restfreq=restfreq, outframe=outframe,
                             veltype=veltype, phasecenter=phasecenter,
@@ -974,7 +981,10 @@ class cleanhelper:
                 else:      
                     raise TypeError, "Start and width parameters must be given in strings, for mode=%s" % mode
                 #raise TypeError, "Start and width parameters must be given in strings, for mode=%s" % mode
-            
+
+        ####use the frame defined by user
+        if(frame != ''):
+            self.usespecframe=frame    
         if(nchan!=-1 and start!='' and width!=''):
             # do nothing
             retnchan=nchan
@@ -1022,6 +1032,8 @@ class cleanhelper:
                 else:
                     loc_width=width
             (freqlist, finc)=self.getfreqs(nchan,spw,0,loc_width)
+            ###use the bloody frame of the data to define the start for defaults
+            self.usespecframe=self.dataspecframe
             retnchan = len(freqlist)
         #    if(mode=='velocity' and nchan==-1):
         #       vmin=self.convertvf(str(freqlist[-1])+'Hz',frame,field) 
@@ -1041,6 +1053,9 @@ class cleanhelper:
                 else:
                     loc_width=width
                 (freqlist,finc)=self.getfreqs(nchan,spw,start,loc_width)
+            ###at this stage it is safe to declare now that the user want the data frame
+            if(self.usespecframe==''):
+                self.usespecframe=self.dataspecframe
             retnchan = len(freqlist)
         if(mode=='velocity' and nchan==-1):
             vmin=self.convertvf(str(freqlist[-1])+'Hz',frame,field,restf) 
@@ -1058,6 +1073,7 @@ class cleanhelper:
                 retstart = str(freqlist[0])+'Hz'
             else:
                 retstart = self.qatostring(qa.convert(str(freqlist[0])+'Hz',instartunit))
+
             if inwidthunit=='':
                 retwidth = str(finc)+'Hz'
             else:
@@ -1155,8 +1171,19 @@ class cleanhelper:
             spw0=spwinds[0]
         tb.open(self.vis+'/SPECTRAL_WINDOW')
         chanfreqscol=tb.getcol('CHAN_FREQ')
+        spwframe=tb.getcol('MEAS_FREQ_REF');
         tb.close()
         # assume spw[0]  
+        elspecframe=["REST",
+                     "LSRK",
+                     "LSRD",
+                     "BARY",
+                     "GEO",	    
+                     "TOPO",
+                     "GALACTO",
+                     "LGROUP",
+                     "CMB"]
+        self.dataspecframe=elspecframe[spwframe[spw0]];
         chanfreqs=chanfreqscol.transpose()
         chanfreqs1d=chanfreqs[spw0:].flatten() 
             
