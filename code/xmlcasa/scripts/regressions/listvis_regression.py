@@ -336,7 +336,7 @@ print ""
 
 prefix = regressionDir+'/test'+str(testNum)+'/'
 outputFilename = prefix + 'listvis.jupiter6cm.default.out'
-standardFilename = localData+'listvis.1_10.out'
+standardFilename = localData+'listvis.default.out'
 
 tstutl.maketestdir(prefix) # create test dir, overwrite preexisting
 #Remove existing data or load data from scratch?
@@ -350,8 +350,7 @@ else:
 default(listvis)
 vis                 = msname            #  Name of input visibility file
 selectdata          =       True        #  Other data selection parameters
-antenna             =       '10'        #  Antenna/baselines: ''==>all, antenna = '3'
-scan                =        '1'        #  Scan numbers
+scan                =        '76'        #  Scan numbers
 listfile            = outputFilename    #  Output file
 go(listvis)
 

@@ -463,7 +463,7 @@ Float AtmosCorruptor::tsys(const Float& airmass) {
 // the different cphase calls that multiply wetopacity by fluctuation in pwv
 Float AtmosCorruptor::opac(const Int ichan) {
   Float opac = itsRIP->getDryOpacity(currSpw(),ichan).get() + 
-    itsRIP->getWetOpacity(currSpw(),ichan).get()  ;
+    mean_pwv()*(itsRIP->getWetOpacity(currSpw(),ichan).get())  ;
   return opac;
 }
 

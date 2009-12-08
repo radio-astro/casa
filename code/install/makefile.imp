@@ -709,7 +709,7 @@ ifeq "$(MAKEMODE)" "programmer"
 	  done
 
     doxygen :
-	@ mkdir -p doxygen; \
+	@ amkdir -p doxygen; \
            cp $(DOXYGENCFG) doxygen/doxygen.cfg; \
            if [ "$(DOXYDOT)" != "" ]; then \
              echo "HAVE_DOT         = YES" >> doxygen/doxygen.cfg; \

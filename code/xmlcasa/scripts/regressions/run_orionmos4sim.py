@@ -30,7 +30,7 @@
 #====================================================================
 # IMPORTANT: VERSIONING HERE
 #====================================================================
-myscriptvers = '2008-08-28 STM'
+myscriptvers = '2009-12-02 STM'
 
 import time
 import os
@@ -126,7 +126,8 @@ myminpb = 0.2
 
 #Sim params
 myflux = 1.0
-mynoise = "0.019Jy"
+mynoise = ""
+#mynoise = "0.019Jy"
 # EVLA X-band SEFD is 300Jy (1Hz,1sec) so 50MHz,5sec would be 19mJy per vis
 
 print "Will use template MS "+ templatems
@@ -271,16 +272,15 @@ print "Copying "+templatems+" to "+msfile
 os.system('cp -rf '+templatems+' '+msfile)
 
 sm.openfromms(msfile)
-if mynoise!="":
-    sm.setvp(dovp=T, usedefaultvp=T, dosquint=F)
-else:
-    sm.setvp(dovp=F)
+sm.setvp(dovp=T, usedefaultvp=T, dosquint=F)
 
 #Add components
 sm.predict(complist=clfile)
 
 #Add noise if desired
 if mynoise!="":
+    print 'Adding noise '+mynoise
+    sm.setvp(dovp=F)
     sm.setnoise(mode='simplenoise',simplenoise=mynoise)
     sm.corrupt()
 

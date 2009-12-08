@@ -7,6 +7,7 @@
 # Revised      STM 2009-07-06 (Beta Patch 4, v2.4) final                 #
 # Revised      STM 2009-07-13 (Release R0, v3.0) initial                 #
 # Revised      STM 2009-10-07 (Release R0, v3.0) final status            #
+# Revised      STM 2009-12-01 (Release R0, v3.0) new imfit               #
 #                                                                        #
 # Features Tested:                                                       #
 #    The script illustrates end-to-end processing with CASA              #
@@ -28,7 +29,7 @@
 #                       gaincal    -->  <prefix>.gcal                    #
 #                          |                                             #
 #                          v                                             #
-#                      applycal    -->  <prefix>.ms                      #
+#                      applycal                                          #
 #                          |                                             #
 #                          v                                             #
 #                        split     -->  <prefix>.<src>.split.ms          #
@@ -44,7 +45,7 @@
 #                       gaincal    -->  <prefix>.selfcal                 #
 #                          |                                             #
 #                          v                                             #
-#                      applycal    -->  <prefix>.<src>.split.ms          #
+#                      applycal                                          #
 #                          |                                             #
 #                          v                                             #
 #                        clean     -->  <prefix>.clean2.image +          #
@@ -1063,11 +1064,6 @@ default('imfit')
 
 imagename = clnimage
 
-# Let it "deconvolve" from clean beam
-# NOTE: THIS CURRENTLY DOESNT WORK IN THE OUTPUT CL
-#usecleanbeam = True
-usecleanbeam = False
-
 # This will currently fit only a single component at a time
 # This is OK since the components are well-separated and not blended
 
@@ -1076,25 +1072,23 @@ box = '121,121,136,136'
 
 # Will return a component list
 # Look in the logger for better formatted output
-xfit_A_cl = imfit()
-
-# Use toolkit to convert componentlist to dictionary
-xfit_A = xfit_A_cl.getcomponent(0)
+xfit_A_res = imfit()
+xfit_A = xfit_A_res['results']['component0']
 
 # Now component B
 box = '108,114,120,126'
-xfit_B_cl = imfit()
-xfit_B = xfit_B_cl.getcomponent(0)
+xfit_B_res = imfit()
+xfit_B = xfit_B_res['results']['component0']
 
 # Now component C
 box = '108,84,120,96'
-xfit_C_cl = imfit()
-xfit_C = xfit_C_cl.getcomponent(0)
+xfit_C_res= imfit()
+xfit_C = xfit_C_res['results']['component0']
 
 # Finally component D
 box = '144,98,157,110'
-xfit_D_cl = imfit()
-xfit_D = xfit_D_cl.getcomponent(0)
+xfit_D_res = imfit()
+xfit_D = xfit_D_res['results']['component0']
 
 print ""
 print "  Imfit Results:"

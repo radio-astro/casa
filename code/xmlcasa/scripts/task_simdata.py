@@ -18,7 +18,7 @@ import pylab as pl
 import pdb
 
 
-def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, antennalist=None, checkinputs=None, project=None, refdate=None, totaltime=None, integration=None, scanlength=None, startfreq=None, chanwidth=None, nchan=None, direction=None, pointingspacing=None, relmargin=None, cell=None, imsize=None, niter=None, threshold=None, psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, noise_thermal=None, t_atm=None, t_ground=None, tau0=None, fidelity=None, display=None, verbose=False, async=None):
+def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, antennalist=None, checkinputs=None, project=None, refdate=None, totaltime=None, integration=None, scanlength=None, startfreq=None, chanwidth=None, nchan=None, direction=None, pointingspacing=None, relmargin=None, cell=None, imsize=None, niter=None, threshold=None, psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, noise_thermal=None, noise_mode=None, user_pwv=None, t_ground=None, t_sky=None, tau0=None, fidelity=None, display=None, verbose=False, async=None):
 
 
     # scanlength=5 # number of integrations
@@ -784,20 +784,33 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             # sm.setapply(type='TOPAC',opacity=tau0);  # opac corruption
 #            sm.oldsetnoise(spillefficiency=eta_s,correfficiency=eta_q,
 #                        antefficiency=eta_a,trx=t_rx,
-#                        tau=tau0,tatmos=t_atm,tcmb=t_cmb,
+#                        tau=tau0,tatmos=t_sky,tcmb=t_cmb,
 #                        mode="calculate")
 # use ANoise version
-# RI TODO switch to tsys-atm
-            if verbose:
-                msg("sm.setnoise(spillefficiency="+str(eta_s)+
-                    ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
-                    ",trx="+str(t_rx)+",tau="+str(tau0)+
-                    ",tatmos="+str(t_atm)+",tground="+str(t_ground)+
-                    ",tcmb="+str(t_cmb)+",mode='tsys-manual')");
-            sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
-                        antefficiency=eta_a,trx=t_rx,
-                        tau=tau0,tatmos=t_atm,tground=t_ground,tcmb=t_cmb,
-                        mode="tsys-manual")
+            if noise_mode=="tsys-manual":
+                if verbose:
+                    msg("sm.setnoise(spillefficiency="+str(eta_s)+
+                        ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
+                        ",trx="+str(t_rx)+",tau="+str(tau0)+
+                        ",tatmos="+str(t_sky)+",tground="+str(t_ground)+
+                        ",tcmb="+str(t_cmb)+",mode='tsys-manual')");
+                    msg("** this may take a few minutes, but will be faster in the next CASA release")
+                sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+                            antefficiency=eta_a,trx=t_rx,
+                            tau=tau0,tatmos=t_sky,tground=t_ground,tcmb=t_cmb,
+                            mode="tsys-manual")
+            else:
+                if verbose:
+                    msg("sm.setnoise(spillefficiency="+str(eta_s)+
+                        ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
+                        ",trx="+str(t_rx)+",tground="+str(t_ground)+
+                        ",tcmb="+str(t_cmb)+",mode='tsys-atm'"+
+                        ",pground='650mb',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
+                    msg("** this may take a few minutes, but will be faster in the next CASA release")
+                sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+                            antefficiency=eta_a,trx=t_rx,
+                            tground=t_ground,tcmb=t_cmb,pwv=str(user_pwv)+"mm",
+                            mode="tsys-atm")
             # don't set table, that way it won't save to disk
 #                        mode="calculate",table=noisymsroot)
             sm.corrupt();
@@ -1173,12 +1186,16 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         
         # if not displaying still print stats:
         if doclean:
-            msg('Simulation rms: '+str(sim_rms),origin="analysis")
-            msg('Simulation max: '+str(sim_max),origin="analysis")
+            bmarea=beam['major']['value']*beam['minor']['value']*pl.pi/4 #arcsec2
+            bmarea=bmarea/(out_cell['value'])**2 # bm area in pix
+            msg('Simulation rms: '+str(sim_rms)+" Jy/pix = "+
+                str(sim_rms*bmarea)+" Jy/bm",origin="analysis")
+            msg('Simulation max: '+str(sim_max)+" Jy/pix = "+
+                str(sim_max*bmarea)+" Jy/bm",origin="analysis")
         
         if display == True or fidelity == True:
-            msg('Model rms: '+str(model_rms),origin="analysis")
-            msg('Model max: '+str(model_max),origin="analysis")
+            msg('Model rms: '+str(model_rms)+" Jy/pix",origin="analysis")
+            msg('Model max: '+str(model_max)+" Jy/pix",origin="analysis")
             msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']),origin="analysis")
 
 

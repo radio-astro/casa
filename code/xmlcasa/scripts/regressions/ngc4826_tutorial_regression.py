@@ -24,6 +24,7 @@
 # Updated by STM    2008-12-01                  Patch 3 release          #
 # Updated by STM    2008-06-03                  Patch 4 vals, fix error  #
 # Updated by STM    2009-06-19                  Patch 4 release          #
+# Updated by STM    2009-12-07                  Release 3.0 final        #
 #                                                                        #
 # N4826 - BIMA SONG Data                                                 #
 #                                                                        #
@@ -79,7 +80,7 @@ prefix='ngc4826.tutorial'
 msfile = prefix + '.16apr98.ms'
 
 print 'Tutorial Regression Script for BIMASONG NGC4826 Mosaic'
-print 'Version for Beta Patch 4 (2.4.0) 19-June-2009'
+print 'Version for Release 0 (3.0.0) 7-Dec-2009'
 print 'Will do: import, flagging, calibration, imaging'
 print ''
 #
@@ -1321,21 +1322,56 @@ if benchmarking:
 
 #New values STM 2009-06-19 Patch4 (released version)
 #for 400x400 clean
+#testdate = '2009-06-19 (STM)'
+#testvers = 'CASA Version 2.4.0 Rev 8115'
+#clean_image_max = 1.418478
+#clean_offsrc_rms = 0.043584
+#clean_offline_rms = 0.056824
+#clean_momentzero_max = 171.601685
+#clean_momentzero_rms = 15.532441
+#clean_momentone_median = 428.499237
+#clean_momentone_planezero = 688.575012
+#clean_momentone_planelast = 119.659264
+#vis_mean_cal = 194.915497
+#vis_mean_src = 54.627127
+#model_sum = 70.707405
+#model_pbcor_sum = 63.006854
+
+#New values KG 2009-11-01 Release 0 (prerelease version)
+#for 400x400 clean
 #new values for flat noise clean
-testdate = '2009-06-19 (STM)'
-testvers = 'CASA Version 2.4.0 Rev 8115'
-clean_image_max = 1.46
-clean_offsrc_rms = 0.0573
-clean_offline_rms = 0.05429
-clean_momentzero_max = 165.7
-clean_momentzero_rms = 15.1
-clean_momentone_median = 422.84
+#testdate = '2009-12-02 (KG)'
+#testvers = 'CASA Version 3.0.0 Rev 9692'
+#clean_image_max = 1.46
+#clean_offsrc_rms = 0.0573
+#clean_offline_rms = 0.05429
+#clean_momentzero_max = 165.7
+#clean_momentzero_rms = 15.1
+#clean_momentone_median = 422.84
+#clean_momentone_planezero = 688.575012
+#clean_momentone_planelast = 119.659264
+#vis_mean_cal = 194.915497
+#vis_mean_src = 54.627127
+#model_sum = 74.374
+#model_pbcor_sum = 65.319
+
+#New values STM 2009-12-02 Release 0 (prerelease version)
+#for 400x400 clean
+#new values for flat noise clean
+testdate = '2009-12-02 (STM)'
+testvers = 'CASA Version 3.0.0 Rev 9692'
+clean_image_max = 1.454770
+clean_offsrc_rms = 0.057324
+clean_offline_rms = 0.054325
+clean_momentzero_max = 165.231247
+clean_momentzero_rms = 15.065811
+clean_momentone_median = 420.62667847
 clean_momentone_planezero = 688.575012
 clean_momentone_planelast = 119.659264
-vis_mean_cal = 194.915497
-vis_mean_src = 54.627127
-model_sum = 74.374
-model_pbcor_sum = 65.319
+vis_mean_cal = 194.915085
+vis_mean_src = 54.627020
+model_sum = 72.618549
+model_pbcor_sum = 64.304426
 
 canonical = {}
 canonical['exist'] = True

@@ -403,7 +403,7 @@ possible_subtables = set(mstables['req'].keys() + mstables['opt'].keys())
 def matchingMSes(musthave=[], mspat="*.ms", combine='or'):
     """
     Returns a dict of MSes that match musthave and mspat as in
-      lsms(musthave, mspat, combine), and whether or not if found the tb tool.
+    lsms(musthave, mspat, combine), and whether or not it found the tb tool.
     """
     retval = {}
 

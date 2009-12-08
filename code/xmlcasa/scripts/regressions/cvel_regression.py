@@ -98,8 +98,16 @@ cvel_imstats = { 'frequency': copy.deepcopy(mode_imstats),
 cleanonly_imstats = copy.deepcopy(cvel_imstats)
 
 # loop over all possible output reference frames
-frames_to_do = ['TOPO','LSRK', 'LSRD', 'BARY', 'GALACTO', 'LGROUP', 'CMB']
+
+# these are all possible frames: 
+#frames_to_do = ['TOPO','LSRK', 'LSRD', 'BARY', 'GALACTO', 'LGROUP', 'CMB']
+
+# the most critical one is CMB (largest freq shift)
 #frames_to_do = ['CMB']
+
+# in order to shorten the test, leave out LSRD, GALACTO, and LGROUP
+frames_to_do = ['TOPO', 'LSRK', 'BARY', 'CMB']
+
 
 for frame in frames_to_do:
     
@@ -359,7 +367,9 @@ for frame in frames_to_do:
 # Analysis
 
 passed = True
-tolerance = 0.003
+tolerance = 0.0021
+numpoints = 0.
+avdev = 0.
 problems = 0
 for frame in frames_to_do:
     for mode in ['frequency', 'radio velocity', 'optical velocity']:
@@ -375,7 +385,10 @@ for frame in frames_to_do:
                 passed = False
                 isok = False
                 problems +=1
-                
+
+            avdev += abs(c1-c2)
+            numpoints += 1.
+            
             s1 = cleanonly_imstats[mode][chan][frame]['maxposf']
             s2 = cvel_imstats[mode][chan][frame]['maxposf']
             if(not s1 == s2):
@@ -389,7 +402,10 @@ for frame in frames_to_do:
                 print "  World coordinates identical == ", s2
 
             if isok:
-                print "... OK"
+                print "... OK"      
+
+if(numpoints > 0.):
+    print numpoints, ' spectral points compared, average deviation = ', avdev/numpoints, " Jy"
                     
 if passed:
     print "PASSED"

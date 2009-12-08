@@ -241,7 +241,7 @@ def input_test( imageList ):
 
     results = None
     try:
-        results = immath( imageList[0], outfile='input_test4' )
+        results = immath( imageList[0], outfile='input_test4', expr='IM0*1' )
     except:
         pass
     else:
@@ -253,7 +253,7 @@ def input_test( imageList ):
 
     results = None
     try:
-        results = immath( imageList[0], outfile={0: 'test', 1: 'magic'} )
+        results = immath( imageList[0], outfile={0: 'test', 1: 'magic'}, expr='IM0*1' )
     except:
         pass
     else:
@@ -265,7 +265,7 @@ def input_test( imageList ):
             
     results = None
     try:
-        results = immath( imageList[0], outfile='input_test5' )
+        results = immath( imageList[0], outfile='input_test5', expr='IM0*1' )
     except:
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\

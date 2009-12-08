@@ -4,23 +4,31 @@
 
 import os, time
 
-# Clear out results from previous runs.
-os.system('rm -rf psim.* diskmodel.im')
-tb.clearlocks()
+# configs are in the repository
+l=locals() 
+if not l.has_key("repodir"): 
+    repodir=os.getenv("CASAPATH").split(' ')[0]
 
 startTime = time.time()
 startProc = time.clock()
 
 print '--Running simdata of input672GHz_50pc.image--'
-# configs are in the repository
-l=locals() 
-if not l.has_key("repodir"): 
-    repodir=os.getenv("CASAPATH").split(' ')[0]
+
+#my_project="ppsim.pwv12"
+my_project="ppsim.pwv05"
+#my_project="psim"
+my_modelimage="diskmodel.im"
+
+# Clear out results from previous runs.
+os.system('rm -rf '+my_project+'.* '+my_modelimage)
+tb.clearlocks()
+
 print 'I think the data repository is at '+repodir
-importfits(fitsimage=repodir+"/data/alma/simmos/input50pc_672GHz.fits",imagename="diskmodel.im")
+importfits(fitsimage=repodir+"/data/alma/simmos/input50pc_672GHz.fits",imagename=my_modelimage)
+
 default("simdata")
-project="psim"
-modelimage="diskmodel.im"
+project=my_project
+modelimage=my_modelimage
 #complist=repodir+"star672GHz.cl"
 ignorecoord=True
 antennalist=repodir+"/data/alma/simmos/alma.out20.cfg"
@@ -36,7 +44,6 @@ startfreq="668.0GHz"
 chanwidth="8.0GHz"
 nchan=1
 cell="0.004arcsec" 
-#inbright="7.2e-7"
 inbright="unchanged"
 imsize=[192, 192]
 stokes="I"
@@ -50,7 +57,8 @@ else:
     display=False
     fidelity=False
 noise_thermal=True
-tau0=0.01  # unreasonably low just to test machinery - mostly Rx noise
+user_pwv=0.5
+#user_pwv=1.2
 inp()
 go()
 
@@ -79,12 +87,19 @@ refstats = { 'flux': 0.0366,
              'rms': 1.3e-04,
              'sigma': 9.7e-05 }
 
-# new noise 20091118
-refstats = { 'flux': 0.03674,
+# new noise 20091118, imager 200912
+refstats = { 'flux': 0.0365,
              'max': 4.6e-04,
-             'min': -4.2e-05,
-             'rms': 1.32e-04,
-             'sigma': 0.95e-04 }
+             'min': -0.59e-04,
+             'rms': 1.3e-04,
+             'sigma': 0.96e-04 }
+
+# tsys-atm
+refstats = { 'flux': 0.0365,
+             'max': 5.8e-04,
+             'min': -2.3e-04,
+             'rms': 1.5e-04,
+             'sigma': 1.2e-04 }
 
 reftol   = {'flux':  1e-2,
             'max':   0.1,
