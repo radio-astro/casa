@@ -841,7 +841,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       if(getRestFreq(restFreqVec, spectralwindowids_p(0))){
 	restFreq=restFreqVec[0];
       }
-      MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : freqFrame_p; 
+      MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : MFrequency::castType(mfImageStart_p.getRef().getType()) ; 
       //  mySpectral = new SpectralCoordinate(mfreqref,
       //					  mfImageStart_p.get("Hz").getValue()+
       //mfImageStep_p.get("Hz").getValue()/2.0,
@@ -1001,7 +1001,11 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	}
       }
 
-      MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : freqFrame_p; 
+      MFrequency::Types mfreqref=MFrequency::LSRK;
+      //Can't convert to frame in mImageStart
+      if(!MFrequency::getType(mfreqref, (MRadialVelocity::showType(mImageStart_p.getRef().getType()))))
+	mfreqref=freqFrame_p;
+      mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : mfreqref; 
       mySpectral = new SpectralCoordinate(mfreqref, freqs(0),
 					  freqs(1)-freqs(0), refChan,
 					  restFreq);
