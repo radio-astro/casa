@@ -4291,9 +4291,11 @@ void SolvableVisJones::applyRefAnt() {
 		  if (sok(IPosition(4,ipar,ichan,iant,ord(0)))) {
 		    sol(IPosition(4,ipar,ichan,iant,ord(0)))/=rph;
 		    // Ensure phase (imag part) is zero)
-		    if (iant==currrefant) 
-		      sol(IPosition(4,ipar,ichan,iant,ord(0)))=
-			Complex(abs(sol(IPosition(4,ipar,ichan,iant,ord(0)))),0.0);
+		    // This isn't quite right because alt refants won't have zero phase!
+		    //  gmoellen (20091208)
+		    //		    if (iant==currrefant) 
+		    //		      sol(IPosition(4,ipar,ichan,iant,ord(0)))=
+		    //			Complex(abs(sol(IPosition(4,ipar,ichan,iant,ord(0)))),0.0);
 
 		  }
 	      }
@@ -4404,9 +4406,11 @@ void SolvableVisJones::applyRefAnt() {
 			sol(IPosition(4,ipar,ichan,iant,ord(islot1)))/=rph;
 
 			// Ensure phase (imag part) is zero)
-			if (iant==currrefant) 
-			  sol(IPosition(4,ipar,ichan,iant,ord(islot1)))=
-			    Complex(abs(sol(IPosition(4,ipar,ichan,iant,ord(islot1)))),0.0);
+			// This isn't quite right because alt refants won't have zero phase!
+			//  gmoellen (20091208)
+			//			if (iant==currrefant) 
+			//			  sol(IPosition(4,ipar,ichan,iant,ord(islot1)))=
+			//			    Complex(abs(sol(IPosition(4,ipar,ichan,iant,ord(islot1)))),0.0);
 			
 			// TBD: attempt to optimize precision
 			//DComplex stmp=sol(IPosition(4,ipar,ichan,iant,ord(islot1)));
