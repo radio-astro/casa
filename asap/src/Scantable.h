@@ -157,41 +157,40 @@ public:
 
   casa::MEpoch::Types getTimeReference() const;
 
+
+  casa::MEpoch getEpoch(int whichrow) const;
+
   /**
    * Get global antenna position
    * @return casa::MPosition
    */
   casa::MPosition getAntennaPosition() const;
 
-	/**
-	 * the @ref casa::MDirection for a specific row
-	 * @param[in] whichrow the row number
-	 * return casa::MDirection
-	 */
+  /**
+   * the @ref casa::MDirection for a specific row
+   * @param[in] whichrow the row number
+   * return casa::MDirection
+   */
   casa::MDirection getDirection( int whichrow ) const;
-
-	/**
-	 * get the direction as a string
-	 * @param[in] whichrow the row number
-	 * return the direction string
-	 */
+  
+  /**
+   * get the direction type as a string, e.g. "J2000"
+   * @param[in] whichrow the row number
+   * return the direction string
+   */
   std::string getDirectionString( int whichrow ) const;
 
-	/**
-	 * set the direction type as a string, e.g. "J2000"
-	 * @param[in] refstr the direction type
-	 */
+  /**
+   * set the direction type as a string, e.g. "J2000"
+   * @param[in] refstr the direction type
+   */
   void setDirectionRefString(const std::string& refstr="");
+
   /**
    * get the direction reference string
    * @return a string describing the direction reference
    */
-  std::string getDirectionRefString() const;	/**
-	 * get the direction type as a string, e.g. "J2000"
-	 * param[in] whichrow the row number
-	 * return the direction string
-	 */
-
+  std::string getDirectionRefString() const;	
 
   /**
    *  Return the Flux unit of the data, e.g. "Jy" or "K"
@@ -229,6 +228,19 @@ public:
    */
   //void flag( const std::vector<bool>& msk = std::vector<bool>());
   void flag( const std::vector<bool>& msk = std::vector<bool>(), bool unflag=false);
+
+  /**
+   * Flag the data in a row-based manner. (CAS-1433 Wataru Kawasaki)
+   * param[in] rows    list of row numbers to be flagged
+   */
+  void flagRow( const std::vector<casa::uInt>& rows = std::vector<casa::uInt>(), bool unflag=false);
+
+  /**
+   * Get flagRow info at the specified row. If true, the whole data 
+   * at the row should be flagged.
+   */
+  bool getFlagRow(int whichrow) const
+    { return (flagrowCol_(whichrow) > 0); }
 
   /**
    * Return a list of row numbers with respect to the original table.
@@ -309,6 +321,8 @@ public:
     { return azCol_(whichrow); }
   float getParAngle(int whichrow) const
     { return paraCol_(whichrow); }
+  int getTcalId(int whichrow) const
+    { return mtcalidCol_(whichrow); }
 
   std::string getSourceName(int whichrow) const
     { return srcnCol_(whichrow); }
@@ -445,6 +459,7 @@ public:
    **/
   void regridChannel( int nchan, double dnu ) ;
   void regridChannel( int nchan, double dnu, int irow ) ;
+
  
 private:
 
@@ -521,7 +536,7 @@ private:
   casa::ScalarColumn<casa::Float> elCol_;
   casa::ScalarColumn<casa::Float> paraCol_;
   casa::ScalarColumn<casa::String> srcnCol_, fldnCol_;
-  casa::ScalarColumn<casa::uInt> scanCol_, beamCol_, ifCol_, polCol_, cycleCol_;
+  casa::ScalarColumn<casa::uInt> scanCol_, beamCol_, ifCol_, polCol_, cycleCol_, flagrowCol_;
   casa::ScalarColumn<casa::Int> rbeamCol_, srctCol_;
   casa::ArrayColumn<casa::Float> specCol_, tsysCol_;
   casa::ArrayColumn<casa::uChar> flagsCol_;
@@ -542,6 +557,22 @@ private:
   static std::map<std::string, STPol::STPolFactory *> factories_;
   void initFactories();
 
+  /**
+   * Add an auxiliary column to the main table and attach it to a 
+   * cached column. Use for adding new columns that the original asap2
+   * tables do not have. 
+   * @param[in] col      reference to the cached column to be attached
+   * @param[in] colName  column name in asap table
+   * @param[in] defValue default value to fill in the column
+   *
+   * 25/10/2009 Wataru Kawasaki
+   */
+  template<class T, class T2> void attachAuxColumnDef(casa::ScalarColumn<T>&,
+						       const casa::String&,
+						       const T2&);
+  template<class T, class T2> void attachAuxColumnDef(casa::ArrayColumn<T>&,
+						      const casa::String&,
+						      const casa::Array<T2>&);
 };
 
 

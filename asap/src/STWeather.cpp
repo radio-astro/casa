@@ -107,7 +107,7 @@ uInt STWeather::addEntry( Float temp, Float pressure, Float humidity,
 
 void STWeather::getEntry( Float& temperature, Float& pressure,
                           Float& humidity, Float& windspeed, Float& windaz,
-                          uInt id )
+                          uInt id ) const
 {
   Table t = table_(table_.col("ID") == Int(id) );
   if (t.nrow() == 0 ) {

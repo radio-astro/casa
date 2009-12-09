@@ -64,7 +64,7 @@ public:
   /**
     * average a vector of Scantables
     * @param in the vector of Scantables to average
-    * @param an optional mask to apply on specific weights
+    * @param mask an optional mask to apply on specific weights
     * @param weight weighting scheme
     * @param avmode the mode ov averaging. Per "SCAN" or "ALL".
     * @return a casa::CountedPtr<Scantable> which either holds a new Scantable
@@ -198,6 +198,44 @@ public:
                                     casa::Float tau=0.0,
                                     casa::Float tcal=0.0 );
 
+  /**
+   * Calibrate data with Chopper-Wheel like calibration method 
+   * which adopts position switching by antenna motion, 
+   * wobbler (nutator) switching and On-The-Fly observation.
+   * 
+   * The method is applicable to APEX, and other telescopes other than GBT.
+   *
+   * @param a Scantable which contains ON and OFF scans
+   * @param a string that indicates calibration mode 
+   * @param a string that indicates antenna name
+   **/
+  casa::CountedPtr<Scantable> cwcal( const casa::CountedPtr<Scantable>& s,
+                                       const casa::String calmode, 
+                                       const casa::String antname );
+
+  /**
+   * Calibrate frequency switched scans with Chopper-Wheel like 
+   * calibration method.
+   *
+   * The method is applicable to APEX, and other telescopes other than GBT.
+   * 
+   * @param a Scantable which contains ON and OFF scans
+   * @param a string that indicates antenna name
+   **/
+  casa::CountedPtr<Scantable> cwcalfs( const casa::CountedPtr<Scantable>& s,
+                                       const casa::String antname );
+
+
+  /**
+   * Folding frequency-switch data
+   * @param sig
+   * @param ref
+   * @param choffset
+   **/
+  casa::CountedPtr<Scantable> dofold( const casa::CountedPtr<Scantable> &sig,
+                                      const casa::CountedPtr<Scantable> &ref,
+                                      casa::Double choffset,
+                                      casa::Double choffset = 0.0 );
 
   casa::CountedPtr<Scantable>
     freqSwitch( const casa::CountedPtr<Scantable>& in );
@@ -278,7 +316,6 @@ public:
 		 const std::string& avmode = "SCAN" )
     throw (casa::AipsError) ;
 
-
 private:
   casa::CountedPtr<Scantable>  applyToPol( const casa::CountedPtr<Scantable>& in,
                                            STPol::polOperation fptr,
@@ -314,8 +351,36 @@ private:
   casa::MaskedArray<casa::Float>
     maskedArray( const casa::Vector<casa::Float>& s,
                  const casa::Vector<casa::uChar>& f );
+  casa::MaskedArray<casa::Double>
+    maskedArray( const casa::Vector<casa::Double>& s,
+                 const casa::Vector<casa::uChar>& f );
   casa::Vector<casa::uChar>
     flagsFromMA(const casa::MaskedArray<casa::Float>& ma);
+
+  vector<float> getSpectrumFromTime( string reftime, casa::CountedPtr<Scantable>& s, string mode = "before" ) ;
+  vector<float> getTcalFromTime( string reftime, casa::CountedPtr<Scantable>& s, string mode="before" ) ;
+  vector<float> getTsysFromTime( string reftime, casa::CountedPtr<Scantable>& s, string mode="before" ) ;
+  vector<int> getRowIdFromTime( string reftime, casa::CountedPtr<Scantable>& s ) ;
+  vector<float> getCalibratedSpectra( casa::CountedPtr<Scantable>& on,
+                                      casa::CountedPtr<Scantable>& off,
+                                      casa::CountedPtr<Scantable>& sky,
+                                      casa::CountedPtr<Scantable>& hot,
+                                      casa::CountedPtr<Scantable>& cold,
+                                      int index,
+                                      string antname ) ;
+  vector<float> getFSCalibratedSpectra( casa::CountedPtr<Scantable>& sig,
+                                        casa::CountedPtr<Scantable>& ref,
+                                        casa::CountedPtr<Scantable>& sky,
+                                        casa::CountedPtr<Scantable>& hot,
+                                        casa::CountedPtr<Scantable>& cold,
+                                        int index ) ;
+  vector<float> getFSCalibratedSpectra( casa::CountedPtr<Scantable>& sig,
+                                        casa::CountedPtr<Scantable>& ref,
+                                        vector< casa::CountedPtr<Scantable> >& sky,
+                                        vector< casa::CountedPtr<Scantable> >& hot,
+                                        vector< casa::CountedPtr<Scantable> >& cold,
+                                        int index ) ;
+  double getMJD( string strtime ) ;
 
   bool insitu_;
 };

@@ -30,6 +30,7 @@
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Containers/RecordField.h>
 #include <casa/Utilities/GenSort.h>
+#include <casa/Logging/LogIO.h>
 
 #include <tables/Tables/TableParse.h>
 #include <tables/Tables/TableDesc.h>
@@ -107,6 +108,7 @@ Scantable::Scantable(const std::string& name, Table::TableType ttype) :
   type_(ttype)
 {
   initFactories();
+
   Table tab(name, Table::Update);
   uInt version = tab.keywordSet().asuInt("VERSION");
   if (version != version_) {
@@ -122,6 +124,27 @@ Scantable::Scantable(const std::string& name, Table::TableType ttype) :
   originalTable_ = table_;
   attach();
 }
+/*
+Scantable::Scantable(const std::string& name, Table::TableType ttype) :
+  type_(ttype)
+{
+  initFactories();
+  Table tab(name, Table::Update);
+  uInt version = tab.keywordSet().asuInt("VERSION");
+  if (version != version_) {
+    throw(AipsError("Unsupported version of ASAP file."));
+  }
+  if ( type_ == Table::Memory ) {
+    table_ = tab.copyToMemoryTable(generateName());
+  } else {
+    table_ = tab;
+  }
+
+  attachSubtables();
+  originalTable_ = table_;
+  attach();
+}
+*/
 
 Scantable::Scantable( const Scantable& other, bool clear )
 {
@@ -202,6 +225,8 @@ void Scantable::setupMainTable()
   td.addColumn(ScalarColumnDesc<uInt>("MOLECULE_ID"));
   td.addColumn(ScalarColumnDesc<Int>("REFBEAMNO"));
 
+  td.addColumn(ScalarColumnDesc<uInt>("FLAGROW"));
+
   td.addColumn(ScalarColumnDesc<Double>("TIME"));
   TableMeasRefDesc measRef(MEpoch::UTC); // UTC as default
   TableMeasValueDesc measVal(td, "TIME");
@@ -212,7 +237,9 @@ void Scantable::setupMainTable()
 
   td.addColumn(ScalarColumnDesc<String>("SRCNAME"));
   // Type of source (on=0, off=1, other=-1)
-  td.addColumn(ScalarColumnDesc<Int>("SRCTYPE", Int(-1)));
+  ScalarColumnDesc<Int> stypeColumn("SRCTYPE");
+  stypeColumn.setDefault(Int(-1));
+  td.addColumn(stypeColumn);
   td.addColumn(ScalarColumnDesc<String>("FIELDNAME"));
 
   //The actual Data Vectors
@@ -258,7 +285,6 @@ void Scantable::setupMainTable()
   originalTable_ = table_;
 }
 
-
 void Scantable::attach()
 {
   timeCol_.attach(table_, "TIME");
@@ -285,6 +311,64 @@ void Scantable::attach()
   mtcalidCol_.attach(table_, "TCAL_ID");
   mfocusidCol_.attach(table_, "FOCUS_ID");
   mmolidCol_.attach(table_, "MOLECULE_ID");
+
+  //Add auxiliary column for row-based flagging (CAS-1433 Wataru Kawasaki)
+  attachAuxColumnDef(flagrowCol_, "FLAGROW", 0);
+
+}
+
+template<class T, class T2>
+void Scantable::attachAuxColumnDef(ScalarColumn<T>& col,
+				   const String& colName,
+				   const T2& defValue)
+{
+  try {
+    col.attach(table_, colName);
+  } catch (TableError& err) {
+    String errMesg = err.getMesg();
+    if (errMesg == "Table column " + colName + " is unknown") {
+      table_.addColumn(ScalarColumnDesc<T>(colName));
+      col.attach(table_, colName);
+      col.fillColumn(static_cast<T>(defValue));
+    } else {
+      throw;
+    }
+  } catch (...) {
+    throw;
+  }
+}
+
+template<class T, class T2>
+void Scantable::attachAuxColumnDef(ArrayColumn<T>& col,
+				   const String& colName,
+				   const Array<T2>& defValue)
+{
+  try {
+    col.attach(table_, colName);
+  } catch (TableError& err) {
+    String errMesg = err.getMesg();
+    if (errMesg == "Table column " + colName + " is unknown") {
+      table_.addColumn(ArrayColumnDesc<T>(colName));
+      col.attach(table_, colName);
+
+      int size = 0;
+      ArrayIterator<T2>& it = defValue.begin();
+      while (it != defValue.end()) {
+	++size;
+	++it;
+      }
+      IPosition ip(1, size);
+      Array<T>& arr(ip);
+      for (int i = 0; i < size; ++i)
+	arr[i] = static_cast<T>(defValue[i]);
+      
+      col.fillColumn(arr);
+    } else {
+      throw;
+    }
+  } catch (...) {
+    throw;
+  }
 }
 
 void Scantable::setHeader(const STHeader& sdh)
@@ -534,7 +618,8 @@ int Scantable::nchan( int ifno ) const
     table_.keywordSet().get("nChan",n);
     return int(n);
   } else {
-    // take the first SCANNO,POLNO,BEAMNO,CYCLENO as nbeam shouldn't vary with these
+    // take the first SCANNO,POLNO,BEAMNO,CYCLENO as nbeam shouldn't
+    // vary with these
     Table t = table_(table_.col("IFNO") == ifno);
     if ( t.nrow() == 0 ) return 0;
     ROArrayColumn<Float> v(t, "SPECTRA");
@@ -663,6 +748,17 @@ void Scantable::flag(const std::vector<bool>& msk, bool unflag)
     }
     flagsCol_.put(i, flgs);
   }
+}
+
+void Scantable::flagRow(const std::vector<uInt>& rows, bool unflag)
+{
+  if ( selector_.empty() && (rows.size() == table_.nrow()) )
+    throw(AipsError("Trying to flag whole scantable."));
+
+  uInt rowflag = (unflag ? 0 : 1);
+  std::vector<uInt>::const_iterator it;
+  for (it = rows.begin(); it != rows.end(); ++it)
+    flagrowCol_.put(*it, rowflag);
 }
 
 std::vector<bool> Scantable::getMask(int whichrow) const
@@ -884,6 +980,17 @@ std::string Scantable::getTime(int whichrow, bool showdate) const
   return formatTime(me, showdate);
 }
 
+MEpoch Scantable::getEpoch(int whichrow) const
+{
+  if (whichrow > -1) {
+    return timeCol_(uInt(whichrow));
+  } else {
+    Double tm;
+    table_.keywordSet().get("UTC",tm);
+    return MEpoch(MVEpoch(tm));  
+  }
+}
+
 std::string Scantable::getDirectionString(int whichrow) const
 {
   return formatDirection(getDirection(uInt(whichrow)));
@@ -891,7 +998,7 @@ std::string Scantable::getDirectionString(int whichrow) const
 
 std::vector< double > Scantable::getAbcissa( int whichrow ) const
 {
-  if ( whichrow > int(table_.nrow()) ) throw(AipsError("Illegal ro number"));
+  if ( whichrow > int(table_.nrow()) ) throw(AipsError("Illegal row number"));
   std::vector<double> stlout;
   int nchan = specCol_(whichrow).nelements();
   String us = freqTable_.getUnitString();
@@ -1052,7 +1159,9 @@ MEpoch::Types Scantable::getTimeReference( ) const
 
 void Scantable::addFit( const STFitEntry& fit, int row )
 {
-  cout << mfitidCol_(uInt(row)) << endl;
+  //cout << mfitidCol_(uInt(row)) << endl;
+  LogIO os( LogOrigin( "Scantable", "addFit()", WHERE ) ) ;
+  os << mfitidCol_(uInt(row)) << LogIO::POST ;
   uInt id = fitTable_.addEntry(fit, mfitidCol_(uInt(row)));
   mfitidCol_.put(uInt(row), id);
 }
@@ -1086,7 +1195,9 @@ int asap::Scantable::checkScanInfo(const std::vector<int>& scanlist) const
     for (int i = 0; i < nscan; i++) {
       Table subt = t( t.col("SCAN") == scanlist[i]+1 );
       if (subt.nrow()==0) {
-        cerr <<"Scan "<<scanlist[i]<<" cannot be found in the scantable."<<endl;
+        //cerr <<"Scan "<<scanlist[i]<<" cannot be found in the scantable."<<endl;
+        LogIO os( LogOrigin( "Scantable", "checkScanInfo()", WHERE ) ) ;
+        os <<LogIO::WARN<<"Scan "<<scanlist[i]<<" cannot be found in the scantable."<<LogIO::POST;
         ret = 1;
         break;
       }
@@ -1098,7 +1209,10 @@ int asap::Scantable::checkScanInfo(const std::vector<int>& scanlist) const
         if ( i < nscan-1 ) {
           Table subt2 = t( t.col("SCAN") == scanlist[i+1]+1 );
           if ( subt2.nrow() == 0) {
-            cerr<<"Scan "<<scanlist[i+1]<<" cannot be found in the scantable."<<endl;
+            LogIO os( LogOrigin( "Scantable", "checkScanInfo()", WHERE ) ) ;
+
+            //cerr<<"Scan "<<scanlist[i+1]<<" cannot be found in the scantable."<<endl;
+            os<<LogIO::WARN<<"Scan "<<scanlist[i+1]<<" cannot be found in the scantable."<<LogIO::POST;
             ret = 1;
             break;
           }
@@ -1108,35 +1222,47 @@ int asap::Scantable::checkScanInfo(const std::vector<int>& scanlist) const
           int laston2 = rec2.asuInt("LASTON");
           if (scan1seqn == 1 && scan2seqn == 2) {
             if (laston1 == laston2) {
-              cerr<<"A valid scan pair ["<<scanlist[i]<<","<<scanlist[i+1]<<"]"<<endl;
+              LogIO os( LogOrigin( "Scantable", "checkScanInfo()", WHERE ) ) ;
+              //cerr<<"A valid scan pair ["<<scanlist[i]<<","<<scanlist[i+1]<<"]"<<endl;
+              os<<"A valid scan pair ["<<scanlist[i]<<","<<scanlist[i+1]<<"]"<<LogIO::POST;
               i +=1;
             }
             else {
-              cerr<<"Incorrect scan pair ["<<scanlist[i]<<","<<scanlist[i+1]<<"]"<<endl;
+              LogIO os( LogOrigin( "Scantable", "checkScanInfo()", WHERE ) ) ;
+              //cerr<<"Incorrect scan pair ["<<scanlist[i]<<","<<scanlist[i+1]<<"]"<<endl;
+              os<<LogIO::WARN<<"Incorrect scan pair ["<<scanlist[i]<<","<<scanlist[i+1]<<"]"<<LogIO::POST;
             }
           }
           else if (scan1seqn==2 && scan2seqn == 1) {
             if (laston1 == laston2) {
-              cerr<<"["<<scanlist[i]<<","<<scanlist[i+1]<<"] is a valid scan pair but in incorrect order."<<endl;
+              LogIO os( LogOrigin( "Scantable", "checkScanInfo()", WHERE ) ) ;
+              //cerr<<"["<<scanlist[i]<<","<<scanlist[i+1]<<"] is a valid scan pair but in incorrect order."<<endl;
+              os<<LogIO::WARN<<"["<<scanlist[i]<<","<<scanlist[i+1]<<"] is a valid scan pair but in incorrect order."<<LogIO::POST;
               ret = 1;
               break;
             }
           }
           else {
-            cerr<<"The other scan for  "<<scanlist[i]<<" appears to be missing. Check the input scan numbers."<<endl;
+            LogIO os( LogOrigin( "Scantable", "checkScanInfo()", WHERE ) ) ;
+            //cerr<<"The other scan for  "<<scanlist[i]<<" appears to be missing. Check the input scan numbers."<<endl;
+            os<<LogIO::WARN<<"The other scan for  "<<scanlist[i]<<" appears to be missing. Check the input scan numbers."<<LogIO::POST;
             ret = 1;
             break;
           }
         }
       }
       else {
-        cerr<<"The scan does not appear to be standard obsevation."<<endl;
+        LogIO os( LogOrigin( "Scantable", "checkScanInfo()", WHERE ) ) ;
+        //cerr<<"The scan does not appear to be standard obsevation."<<endl;
+        os<<LogIO::WARN<<"The scan does not appear to be standard obsevation."<<LogIO::POST;
       }
     //if ( i >= nscan ) break;
     }
   }
   else {
-    cerr<<"No reference to GBT_GO table."<<endl;
+    LogIO os( LogOrigin( "Scantable", "checkScanInfo()", WHERE ) ) ;
+    //cerr<<"No reference to GBT_GO table."<<endl;
+    os<<LogIO::WARN<<"No reference to GBT_GO table."<<LogIO::POST;
     ret = 1;
   }
   return ret;
@@ -1170,8 +1296,9 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax )
     int tmp = nmax ;
     nmax = nmin ;
     nmin = tmp ;
-    cout << "Swap values. Applied range is [" 
-	 << nmin << ", " << nmax << "]" << endl ;
+    LogIO os( LogOrigin( "Scantable", "reshapeSpectrum()", WHERE ) ) ;
+    os << "Swap values. Applied range is [" 
+       << nmin << ", " << nmax << "]" << LogIO::POST ;
   }
   
   // if nmin exceeds nChan, nothing to do
@@ -1183,12 +1310,14 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax )
   if ( nmax >= nChan ) {
     if ( nmin == 0 ) {
       // nothing to do
-      cout << "Whole range is selected. Nothing to do." << endl ;
+      LogIO os( LogOrigin( "Scantable", "reshapeSpectrum()", WHERE ) ) ;
+      os << "Whole range is selected. Nothing to do." << LogIO::POST ;
       return ;
     }
     else {
-      cout << "Specified maximum exceeds nChan. Applied range is ["
-	   << nmin << ", " << nChan-1 << "]." << endl ;
+      LogIO os( LogOrigin( "Scantable", "reshapeSpectrum()", WHERE ) ) ;
+      os << "Specified maximum exceeds nChan. Applied range is ["
+         << nmin << ", " << nChan-1 << "]." << LogIO::POST ;
       nmax = nChan - 1 ;
     }
   }
@@ -1241,20 +1370,21 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax, int irow )
 
 void asap::Scantable::regridChannel( int nChan, double dnu )
 {
-  cout << "Regrid abcissa with channel number " << nChan << " and spectral resoultion " << dnu << "Hz." << endl ;
+  LogIO os( LogOrigin( "Scantable", "regridChannel()", WHERE ) ) ;
+  os << "Regrid abcissa with channel number " << nChan << " and spectral resoultion " << dnu << "Hz." << LogIO::POST ;
   // assumed that all rows have same nChan
   Vector<Float> arr = specCol_( 0 ) ;
   int oldsize = arr.nelements() ;
 
   // if oldsize == nChan, nothing to do
   if ( oldsize == nChan ) {
-    cout << "Specified channel number is same as current one. Nothing to do." << endl ;
+    os << "Specified channel number is same as current one. Nothing to do." << LogIO::POST ;
     return ;
   }
 
   // if oldChan < nChan, unphysical operation
   if ( oldsize < nChan ) {
-    cout << "Unphysical operation. Nothing to do." << endl ;
+    os << "Unphysical operation. Nothing to do." << LogIO::POST ;
     return ;
   }
 
@@ -1293,96 +1423,207 @@ void asap::Scantable::regridChannel( int nChan, double dnu, int irow )
   vector<double> abcissa = getAbcissa( irow ) ;
   int oldsize = abcissa.size() ;
   double olddnu = abcissa[1] - abcissa[0] ;
-  int refChan = 0 ;
-  double frac = 0.0 ;
-  double wedge = 0.0 ;
-  double pile = 0.0 ;
+  //int refChan = 0 ;
+  //double frac = 0.0 ;
+  //double wedge = 0.0 ;
+  //double pile = 0.0 ;
+  int ichan = 0 ;
   double wsum = 0.0 ;
-  /*** 
-   * ichan = 0
-   ***/
-  //ofs << "olddnu = " << olddnu << ", dnu = " << dnu << endl ;
-  pile += dnu ;
-  wedge = olddnu * ( refChan + 1 ) ;
-  while ( wedge < pile ) {
-    newspec[0] += olddnu * oldspec[refChan] ;
-    newflag[0] = newflag[0] || oldflag[refChan] ;
-    //ofs << "channel " << refChan << " is included in new channel 0" << endl ;
-    refChan++ ;
-    wedge += olddnu ;
-    wsum += olddnu ;
-    //ofs << "newspec[0] = " << newspec[0] << " wsum = " << wsum << endl ;
-  }
-  frac = ( wedge - pile ) / olddnu ;
-  wsum += ( 1.0 - frac ) * olddnu ;
-  newspec[0] += ( 1.0 - frac ) * olddnu * oldspec[refChan] ;
-  newflag[0] = newflag[0] || oldflag[refChan] ;
-  //ofs << "channel " << refChan << " is partly included in new channel 0" << " with fraction of " << ( 1.0 - frac ) << endl ;
-  //ofs << "newspec[0] = " << newspec[0] << " wsum = " << wsum << endl ;
-  newspec[0] /= wsum ;
-  //ofs << "newspec[0] = " << newspec[0] << endl ;
-  //ofs << "wedge = " << wedge << ", pile = " << pile << endl ;
-
-  /***
-   * ichan = 1 - nChan-2
-   ***/
-  for ( int ichan = 1 ; ichan < nChan - 1 ; ichan++ ) {
-    pile += dnu ;
-    newspec[ichan] += frac * olddnu * oldspec[refChan] ;
-    newflag[ichan] = newflag[ichan] || oldflag[refChan] ;
-    //ofs << "channel " << refChan << " is partly included in new channel " << ichan << " with fraction of " << frac << endl ;
-    refChan++ ;
-    wedge += olddnu ;
-    wsum = frac * olddnu ;
-    //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << " wsum = " << wsum << endl ;
-    while ( wedge < pile ) {
-      newspec[ichan] += olddnu * oldspec[refChan] ;
-      newflag[ichan] = newflag[ichan] || oldflag[refChan] ;
-      //ofs << "channel " << refChan << " is included in new channel " << ichan << endl ;
-      refChan++ ;
-      wedge += olddnu ;
-      wsum += olddnu ;
-      //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << " wsum = " << wsum << endl ;
+  Vector<Float> z( nChan ) ;
+  z[0] = abcissa[0] - 0.5 * olddnu + 0.5 * dnu ;
+  for ( int ii = 1 ; ii < nChan ; ii++ )
+    z[ii] = z[ii-1] + dnu ;
+  Vector<Float> zi( nChan+1 ) ;
+  Vector<Float> yi( oldsize + 1 ) ;
+  zi[0] = z[0] - 0.5 * dnu ;
+  zi[1] = z[0] + 0.5 * dnu ;
+  for ( int ii = 2 ; ii < nChan ; ii++ ) 
+    zi[ii] = zi[ii-1] + dnu ;
+  zi[nChan] = z[nChan-1] + 0.5 * dnu ;
+  yi[0] = abcissa[0] - 0.5 * olddnu ;
+  yi[1] = abcissa[1] + 0.5 * olddnu ;
+  for ( int ii = 2 ; ii < oldsize ; ii++ )
+    yi[ii] = abcissa[ii-1] + olddnu ;
+  yi[oldsize] = abcissa[oldsize-1] + 0.5 * olddnu ; 
+  if ( dnu > 0.0 ) {
+    for ( int ii = 0 ; ii < nChan ; ii++ ) {
+      double zl = zi[ii] ;
+      double zr = zi[ii+1] ;
+      for ( int j = ichan ; j < oldsize ; j++ ) {
+        double yl = yi[j] ;
+        double yr = yi[j+1] ;
+        if ( yl <= zl ) {
+          if ( yr <= zl ) {
+            continue ;
+          }
+          else if ( yr <= zr ) {
+            newspec[ii] += oldspec[j] * ( yr - zl ) ;
+            newflag[ii] = newflag[ii] || oldflag[j] ;
+            wsum += ( yr - zl ) ;
+          }
+          else {
+            newspec[ii] += oldspec[j] * dnu ;
+            newflag[ii] = newflag[ii] || oldflag[j] ;
+            wsum += dnu ;
+            ichan = j ;
+            break ;
+          }
+        }
+        else if ( yl < zr ) {
+          if ( yr <= zr ) {
+              newspec[ii] += oldspec[j] * ( yr - yl ) ;
+              newflag[ii] = newflag[ii] || oldflag[j] ;
+              wsum += ( yr - yl ) ;
+          }
+          else {
+            newspec[ii] += oldspec[j] * ( zr - yl ) ;
+            newflag[ii] = newflag[ii] || oldflag[j] ;
+            wsum += ( zr - yl ) ;
+            ichan = j ;
+            break ;
+          }
+        }
+        else {
+          ichan = j - 1 ;
+          break ;
+        }
+      }
+      newspec[ii] /= wsum ;
+      wsum = 0.0 ;
     }
-    frac = ( wedge - pile ) / olddnu ;
-    wsum += ( 1.0 - frac ) * olddnu ;
-    newspec[ichan] += ( 1.0 - frac ) * olddnu * oldspec[refChan] ;
-    newflag[ichan] = newflag[ichan] || oldflag[refChan] ;
-    //ofs << "channel " << refChan << " is partly included in new channel " << ichan << " with fraction of " << ( 1.0 - frac ) << endl ;
-    //ofs << "wedge = " << wedge << ", pile = " << pile << endl ;
-    //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << " wsum = " << wsum << endl ;
-    newspec[ichan] /= wsum ;
-    //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << endl ;
   }
+  else if ( dnu < 0.0 ) {
+    for ( int ii = 0 ; ii < nChan ; ii++ ) {
+      double zl = zi[ii] ;
+      double zr = zi[ii+1] ;
+      for ( int j = ichan ; j < oldsize ; j++ ) {
+        double yl = yi[j] ;
+        double yr = yi[j+1] ;
+        if ( yl >= zl ) {
+          if ( yr >= zl ) {
+            continue ;
+          }
+          else if ( yr >= zr ) {
+            newspec[ii] += oldspec[j] * abs( yr - zl ) ;
+            newflag[ii] = newflag[ii] || oldflag[j] ;
+            wsum += abs( yr - zl ) ;
+          }
+          else {
+            newspec[ii] += oldspec[j] * abs( dnu ) ;
+            newflag[ii] = newflag[ii] || oldflag[j] ;
+            wsum += abs( dnu ) ;
+            ichan = j ;
+            break ;
+          }
+        }
+        else if ( yl > zr ) {
+          if ( yr >= zr ) {
+            newspec[ii] += oldspec[j] * abs( yr - yl ) ;
+            newflag[ii] = newflag[ii] || oldflag[j] ;
+            wsum += abs( yr - yl ) ;
+          }
+          else {
+            newspec[ii] += oldspec[j] * abs( zr - yl ) ;
+            newflag[ii] = newflag[ii] || oldflag[j] ;
+            wsum += abs( zr - yl ) ;
+            ichan = j ;
+            break ;
+          }
+        }
+        else {
+          ichan = j - 1 ;
+          break ;
+        }
+      }
+      newspec[ii] /= wsum ;
+      wsum = 0.0 ;
+    }
+  }
+//    * ichan = 0
+//    ***/
+//   //ofs << "olddnu = " << olddnu << ", dnu = " << dnu << endl ;
+//   pile += dnu ;
+//   wedge = olddnu * ( refChan + 1 ) ;
+//   while ( wedge < pile ) {
+//     newspec[0] += olddnu * oldspec[refChan] ;
+//     newflag[0] = newflag[0] || oldflag[refChan] ;
+//     //ofs << "channel " << refChan << " is included in new channel 0" << endl ;
+//     refChan++ ;
+//     wedge += olddnu ;
+//     wsum += olddnu ;
+//     //ofs << "newspec[0] = " << newspec[0] << " wsum = " << wsum << endl ;
+//   }
+//   frac = ( wedge - pile ) / olddnu ;
+//   wsum += ( 1.0 - frac ) * olddnu ;
+//   newspec[0] += ( 1.0 - frac ) * olddnu * oldspec[refChan] ;
+//   newflag[0] = newflag[0] || oldflag[refChan] ;
+//   //ofs << "channel " << refChan << " is partly included in new channel 0" << " with fraction of " << ( 1.0 - frac ) << endl ;
+//   //ofs << "newspec[0] = " << newspec[0] << " wsum = " << wsum << endl ;
+//   newspec[0] /= wsum ;
+//   //ofs << "newspec[0] = " << newspec[0] << endl ;
+//   //ofs << "wedge = " << wedge << ", pile = " << pile << endl ;
 
-  /***
-   * ichan = nChan-1
-   ***/
-  // NOTE: Assumed that all spectra have the same bandwidth
-  pile += dnu ; 
-  newspec[nChan-1] += frac * olddnu * oldspec[refChan] ;
-  newflag[nChan-1] = newflag[nChan-1] || oldflag[refChan] ;
-  //ofs << "channel " << refChan << " is partly included in new channel " << nChan-1 << " with fraction of " << frac << endl ;
-  refChan++ ;
-  wedge += olddnu ;
-  wsum = frac * olddnu ;
-  //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << " wsum = " << wsum << endl ;
-  for ( int jchan = refChan ; jchan < oldsize ; jchan++ ) {
-    newspec[nChan-1] += olddnu * oldspec[jchan] ;
-    newflag[nChan-1] = newflag[nChan-1] || oldflag[jchan] ;
-    wsum += olddnu ;
-    //ofs << "channel " << jchan << " is included in new channel " << nChan-1 << " with fraction of " << frac << endl ;
-    //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << " wsum = " << wsum << endl ;
-  }
-  //ofs << "wedge = " << wedge << ", pile = " << pile << endl ;
-  //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << " wsum = " << wsum << endl ;
-  newspec[nChan-1] /= wsum ;
-  //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << endl ;
+//   /***
+//    * ichan = 1 - nChan-2
+//    ***/
+//   for ( int ichan = 1 ; ichan < nChan - 1 ; ichan++ ) {
+//     pile += dnu ;
+//     newspec[ichan] += frac * olddnu * oldspec[refChan] ;
+//     newflag[ichan] = newflag[ichan] || oldflag[refChan] ;
+//     //ofs << "channel " << refChan << " is partly included in new channel " << ichan << " with fraction of " << frac << endl ;
+//     refChan++ ;
+//     wedge += olddnu ;
+//     wsum = frac * olddnu ;
+//     //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << " wsum = " << wsum << endl ;
+//     while ( wedge < pile ) {
+//       newspec[ichan] += olddnu * oldspec[refChan] ;
+//       newflag[ichan] = newflag[ichan] || oldflag[refChan] ;
+//       //ofs << "channel " << refChan << " is included in new channel " << ichan << endl ;
+//       refChan++ ;
+//       wedge += olddnu ;
+//       wsum += olddnu ;
+//       //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << " wsum = " << wsum << endl ;
+//     }
+//     frac = ( wedge - pile ) / olddnu ;
+//     wsum += ( 1.0 - frac ) * olddnu ;
+//     newspec[ichan] += ( 1.0 - frac ) * olddnu * oldspec[refChan] ;
+//     newflag[ichan] = newflag[ichan] || oldflag[refChan] ;
+//     //ofs << "channel " << refChan << " is partly included in new channel " << ichan << " with fraction of " << ( 1.0 - frac ) << endl ;
+//     //ofs << "wedge = " << wedge << ", pile = " << pile << endl ;
+//     //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << " wsum = " << wsum << endl ;
+//     newspec[ichan] /= wsum ;
+//     //ofs << "newspec[" << ichan << "] = " << newspec[ichan] << endl ;
+//   }
+
+//   /***
+//    * ichan = nChan-1
+//    ***/
+//   // NOTE: Assumed that all spectra have the same bandwidth
+//   pile += dnu ; 
+//   newspec[nChan-1] += frac * olddnu * oldspec[refChan] ;
+//   newflag[nChan-1] = newflag[nChan-1] || oldflag[refChan] ;
+//   //ofs << "channel " << refChan << " is partly included in new channel " << nChan-1 << " with fraction of " << frac << endl ;
+//   refChan++ ;
+//   wedge += olddnu ;
+//   wsum = frac * olddnu ;
+//   //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << " wsum = " << wsum << endl ;
+//   for ( int jchan = refChan ; jchan < oldsize ; jchan++ ) {
+//     newspec[nChan-1] += olddnu * oldspec[jchan] ;
+//     newflag[nChan-1] = newflag[nChan-1] || oldflag[jchan] ;
+//     wsum += olddnu ;
+//     //ofs << "channel " << jchan << " is included in new channel " << nChan-1 << " with fraction of " << frac << endl ;
+//     //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << " wsum = " << wsum << endl ;
+//   }
+//   //ofs << "wedge = " << wedge << ", pile = " << pile << endl ;
+//   //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << " wsum = " << wsum << endl ;
+//   newspec[nChan-1] /= wsum ;
+//   //ofs << "newspec[" << nChan - 1 << "] = " << newspec[nChan-1] << endl ;
   
-  specCol_.put( irow, newspec ) ;
-  flagsCol_.put( irow, newflag ) ;
+//   specCol_.put( irow, newspec ) ;
+//   flagsCol_.put( irow, newflag ) ;
 
-  // ofs.close() ;
+//   // ofs.close() ;
+
 
   return ;
 }

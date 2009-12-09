@@ -44,7 +44,9 @@ class scantable(Scantable):
         if isinstance(filename, Scantable):
             Scantable.__init__(self, filename)
         else:
-            if isinstance(filename, str):
+            if isinstance(filename, str):# or \
+#                (isinstance(filename, list) or isinstance(filename, tuple)) \
+#                  and isinstance(filename[-1], str):
                 import os.path
                 filename = os.path.expandvars(filename)
                 filename = os.path.expanduser(filename)
@@ -52,7 +54,8 @@ class scantable(Scantable):
                     s = "File '%s' not found." % (filename)
                     if rcParams['verbose']:
                         asaplog.push(s)
-                        print asaplog.pop().strip()
+                        #print asaplog.pop().strip()
+                        print_log('ERROR')
                         return
                     raise IOError(s)
                 if os.path.isdir(filename) \
@@ -69,7 +72,9 @@ class scantable(Scantable):
                         msg = "The given file '%s'is not a valid " \
                               "asap table." % (filename)
                         if rcParams['verbose']:
-                            print msg
+                            #print msg
+                            asaplog.push( msg )
+                            print_log( 'ERROR' )
                             return
                         else:
                             raise IOError(msg)
@@ -95,6 +100,9 @@ class scantable(Scantable):
                                        'ASCII' (saves as ascii text file)
                                        'MS2' (saves as an aips++
                                               MeasurementSet V2)
+                                       'FITS' (save as image FITS - not 
+                                               readable by class)
+                                       'CLASS' (save as FITS readable by CLASS)
             overwrite:   If the file should be overwritten if it exists.
                          The default False is to return with warning
                          without writing the output. USE WITH CARE.
@@ -114,7 +122,9 @@ class scantable(Scantable):
             if not overwrite:
                 msg = "File %s exists." % name
                 if rcParams['verbose']:
-                    print msg
+                    #print msg
+                    asaplog.push( msg )
+                    print_log( 'ERROR' )
                     return
                 else:
                     raise IOError(msg)
@@ -153,7 +163,9 @@ class scantable(Scantable):
         from asap import unique
         if not _is_valid(scanid):
             if rcParams['verbose']:
-                print "Please specify a scanno to drop from the scantable"
+                #print "Please specify a scanno to drop from the scantable"
+                asaplog.push( 'Please specify a scanno to drop from the scantable' )
+                print_log( 'ERROR' )
                 return
             else:
                 raise RuntimeError("No scan given")
@@ -165,7 +177,10 @@ class scantable(Scantable):
                 raise ValueError("Can't remove all scans")
         except ValueError:
             if rcParams['verbose']:
-                print "Couldn't find any match."
+                #print "Couldn't find any match."
+                print_log()
+                asaplog.push( "Couldn't find any match." )
+                print_log( 'ERROR' )
                 return
             else: raise
         try:
@@ -178,7 +193,10 @@ class scantable(Scantable):
             return scantable(scopy)
         except RuntimeError:
             if rcParams['verbose']:
-                print "Couldn't find any match."
+                #print "Couldn't find any match."
+                print_log()
+                asaplog.push( "Couldn't find any match." )
+                print_log( 'ERROR' )
             else:
                 raise
 
@@ -203,8 +221,10 @@ class scantable(Scantable):
         """
         if scanid is None:
             if rcParams['verbose']:
-                print "Please specify a scan no or name to " \
-                      "retrieve from the scantable"
+                #print "Please specify a scan no or name to " \
+                #      "retrieve from the scantable"
+                asaplog.push( 'Please specify a scan no or name to retrieve from the scantable' )
+                print_log( 'ERROR' )
                 return
             else:
                 raise RuntimeError("No scan given")
@@ -233,11 +253,17 @@ class scantable(Scantable):
             else:
                 msg = "Illegal scanid type, use 'int' or 'list' if ints."
                 if rcParams['verbose']:
-                    print msg
+                    #print msg
+                    asaplog.push( msg )
+                    print_log( 'ERROR' )
                 else:
                     raise TypeError(msg)
         except RuntimeError:
-            if rcParams['verbose']: print "Couldn't find any match."
+            if rcParams['verbose']:
+                #print "Couldn't find any match."
+                print_log()
+                asaplog.push( "Couldn't find any match." )
+                print_log( 'ERROR' )
             else: raise
 
     def __str__(self):
@@ -266,7 +292,9 @@ class scantable(Scantable):
             else:
                 msg = "Illegal file name '%s'." % (filename)
                 if rcParams['verbose']:
-                    print msg
+                    #print msg
+                    asaplog.push( msg )
+                    print_log( 'ERROR' )
                 else:
                     raise IOError(msg)
         if rcParams['verbose']:
@@ -278,6 +306,28 @@ class scantable(Scantable):
         else:
             return info
 
+    def get_spectrum(self, rowno):
+        """Return the spectrum for the current row in the scantable as a list.
+        Parameters:
+             rowno:   the row number to retrieve the spectrum from        
+        """
+        return self._getspectrum(rowno)
+
+    def get_mask(self, rowno):
+        """Return the mask for the current row in the scantable as a list.
+        Parameters:
+             rowno:   the row number to retrieve the mask from        
+        """
+        return self._getmask(rowno)
+
+    def set_spectrum(self, spec, rowno):
+        """Return the spectrum for the current row in the scantable as a list.
+        Parameters:
+             spec:   the spectrum
+             rowno:    the row number to set the spectrum for        
+        """
+        assert(len(spec) == self.nchan())
+        return self._setspectrum(spec, rowno)
 
     def get_selection(self):
         """
@@ -339,7 +389,8 @@ class scantable(Scantable):
         else:
             return workscan
 
-    def stats(self, stat='stddev', mask=None):
+    #def stats(self, stat='stddev', mask=None):
+    def stats(self, stat='stddev', mask=None, form='3.3f'):
         """
         Determine the specified statistic of the current beam/if/pol
         Takes a 'mask' as an optional parameter to specify which
@@ -349,6 +400,7 @@ class scantable(Scantable):
                      'mean', 'var', 'stddev', 'avdev', 'rms', 'median'
             mask:    an optional mask specifying where the statistic
                      should be determined.
+            form:    format string to print statistic values
         Example:
             scan.set_unit('channel')
             msk = scan.create_mask([100, 200], [500, 600])
@@ -388,24 +440,42 @@ class scantable(Scantable):
                 qx, qy = self.chan2data(rowno=i, chan=chan[i])
                 if rtnabc:
                     statvals.append(qx['value'])
-                    refstr = '(value: %3.3f' % (qy['value'])+' ['+qy['unit']+'])'
+                    #refstr = '(value: %3.3f' % (qy['value'])+' ['+qy['unit']+'])'
+                    refstr = ('(value: %'+form) % (qy['value'])+' ['+qy['unit']+'])'
                     statunit= '['+qx['unit']+']'
                 else:
-                    refstr = '(@ %3.3f' % (qx['value'])+' ['+qx['unit']+'])'
+                    #refstr = '(@ %3.3f' % (qx['value'])+' ['+qx['unit']+'])'
+                    refstr = ('(@ %'+form) % (qx['value'])+' ['+qx['unit']+'])'
                     #statunit= ' ['+qy['unit']+']'
             out += 'Scan[%d] (%s) ' % (axis[0], src)
             out += 'Time[%s]:\n' % (tm)
             if self.nbeam(-1) > 1: out +=  ' Beam[%d] ' % (axis[1])
             if self.nif(-1) > 1: out +=  ' IF[%d] ' % (axis[2])
             if self.npol(-1) > 1: out +=  ' Pol[%d] ' % (axis[3])
-            out += '= %3.3f   ' % (statvals[i]) +refstr+'\n' 
+            #out += '= %3.3f   ' % (statvals[i]) +refstr+'\n' 
+            out += ('= %'+form) % (statvals[i]) +'   '+refstr+'\n' 
             out +=  "--------------------------------------------------\n"
 
         if rcParams['verbose']:
-            print "--------------------------------------------------"
-            print " ", stat, statunit
-            print "--------------------------------------------------"
-            print out
+            import os
+            if os.environ.has_key( 'USER' ):
+                usr=os.environ['USER']
+            else:
+                import commands
+                usr=commands.getoutput( 'whoami' )
+            tmpfile='/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
+            f=open(tmpfile,'w')
+            print >> f, "--------------------------------------------------"
+            print >> f, " ", stat, statunit
+            print >> f, "--------------------------------------------------"
+            print >> f, out
+            f.close()
+            f=open(tmpfile,'r')
+            x=f.readlines()
+            f.close()
+            for xx in x:
+                asaplog.push( xx, False )
+            print_log()
         #else:
             #retval = { 'axesnames': ['scanno', 'beamno', 'ifno', 'polno', 'cycleno'],
             #           'axes' : axes,
@@ -485,10 +555,11 @@ class scantable(Scantable):
             out += '= %3.3f\n' % (outvec[i])
             out +=  "--------------------------------------------------\n"
         if rcParams['verbose']:
-            print "--------------------------------------------------"
-            print " %s" % (label)
-            print "--------------------------------------------------"
-            print out
+            asaplog.push("--------------------------------------------------")
+            asaplog.push(" %s" % (label))
+            asaplog.push("--------------------------------------------------")
+            asaplog.push(out)
+            print_log()
         # disabled because the vector seems more useful
         #retval = {'axesnames': axesnames, 'axes': axes, 'data': outvec}
         return outvec
@@ -517,7 +588,7 @@ class scantable(Scantable):
         from datetime import datetime
         times = self._get_column(self._gettime, row)
         if not asdatetime:
-            return times 
+            return times
         format = "%Y/%m/%d/%H:%M:%S"
         if isinstance(times, list):
             return [datetime(*strptime(i, format)[:6]) for i in times]
@@ -675,7 +746,9 @@ class scantable(Scantable):
         else:
             msg  = "Please specify a valid freq type. Valid types are:\n", valid
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push( msg )
+                print_log( 'ERROR' )
             else:
                 raise TypeError(msg)
         print_log()
@@ -694,7 +767,10 @@ class scantable(Scantable):
             Scantable.set_dirframe(self, frame)
         except RuntimeError, msg:
             if rcParams['verbose']:
-                print msg
+                #print msg
+                print_log()
+                asaplog.push( msg.message )
+                print_log( 'ERROR' )
             else:
                 raise
         self._add_history("set_dirframe", varlist)
@@ -740,11 +816,34 @@ class scantable(Scantable):
             self._flag(mask, unflag)
         except RuntimeError, msg:
             if rcParams['verbose']:
-                print msg
+                #print msg
+                print_log()
+                asaplog.push( msg.message )
+                print_log( 'ERROR' )
                 return
             else: raise
         self._add_history("flag", varlist)
 
+    def flag_row(self, rows=[], unflag=False):
+        """
+        Flag the selected data in row-based manner.
+        Parameters:
+            rows:   list of row numbers to be flagged. Default is no row (must be explicitly specified to execute row-based flagging).
+            unflag: if True, unflag the data.
+        """
+        varlist = vars()
+        try:
+            self._flag_row(rows, unflag)
+        except RuntimeError, msg:
+            if rcParams['verbose']:
+                print_log()
+                asaplog.push(msg.message)
+                print_log('ERROR')
+                return
+            else: raise
+        self._add_history("flag_row", varlist)
+        
+        
     def lag_flag(self, frequency, width=0.0, unit="GHz", insitu=None):
         """
         Flag the data in 'lag' space by providing a frequency to remove.
@@ -754,7 +853,7 @@ class scantable(Scantable):
             frequency:    the frequency (really a period within the bandwidth) 
                           to remove
             width:        the width of the frequency to remove, to remove a 
-                          range of frequencies aroung the centre.
+                          range of frequencies around the centre.
             unit:         the frequency unit (default "GHz")
         Notes:
             It is recommended to flag edges of the band or strong 
@@ -771,7 +870,10 @@ class scantable(Scantable):
                                                width*base[unit]))
         except RuntimeError, msg:
             if rcParams['verbose']:
-                print msg
+                #print msg
+                print_log()
+                asaplog.push( msg.message )
+                print_log( 'ERROR' )
                 return
             else: raise
         s._add_history("lag_flag", varlist)
@@ -963,7 +1065,7 @@ class scantable(Scantable):
         E.g. 'freqs=[1e9, 2e9]'  would mean IF 0 gets restfreq 1e9 and
         IF 1 gets restfreq 2e9.
         ********NEED TO BE UPDATED end************
-        You can also specify the frequencies via a linecatalog/
+        You can also specify the frequencies via a linecatalog.
 
         Parameters:
             freqs:   list of rest frequency values or string idenitfiers
@@ -1090,7 +1192,9 @@ class scantable(Scantable):
             else:
                 msg = "Illegal file name '%s'." % (filename)
                 if rcParams['verbose']:
-                    print msg
+                    #print msg
+                    asaplog.push( msg )
+                    print_log( 'ERROR' )
                 else:
                     raise IOError(msg)
         if rcParams['verbose']:
@@ -1148,7 +1252,10 @@ class scantable(Scantable):
                               scanav))
         except RuntimeError, msg:
             if rcParams['verbose']:
-                print msg
+                #print msg
+                print_log()
+                asaplog.push( msg.message )
+                print_log( 'ERROR' )
                 return
             else: raise
         s._add_history("average_time", varlist)
@@ -1372,7 +1479,10 @@ class scantable(Scantable):
             s = scantable(self._math._convertpol(self, poltype))
         except RuntimeError, msg:
             if rcParams['verbose']:
-                print msg
+                #print msg
+                print_log()
+                asaplog.push( msg.message )
+                print_log( 'ERROR' )
                 return
             else:
                 raise
@@ -1380,7 +1490,8 @@ class scantable(Scantable):
         print_log()
         return s
 
-    def smooth(self, kernel="hanning", width=5.0, insitu=None):
+    #def smooth(self, kernel="hanning", width=5.0, insitu=None):
+    def smooth(self, kernel="hanning", width=5.0, plot=False, insitu=None):
         """
         Smooth the spectrum by the specified kernel (conserving flux).
         Parameters:
@@ -1392,6 +1503,9 @@ class scantable(Scantable):
                         For 'gaussian' it is the Full Width Half
                         Maximum. For 'boxcar' it is the full width.
                         For 'rmedian' it is the half width.
+            plot:       plot the original and the smoothed spectra.
+                        In this each indivual fit has to be approved, by
+                        typing 'y' or 'n'
             insitu:     if False a new scantable is returned.
                         Otherwise, the scaling is done in-situ
                         The default is taken from .asaprc (False)
@@ -1401,8 +1515,48 @@ class scantable(Scantable):
         if insitu is None: insitu = rcParams['insitu']
         self._math._setinsitu(insitu)
         varlist = vars()
+
+        if plot: orgscan = self.copy()
+
         s = scantable(self._math._smooth(self, kernel.lower(), width))
         s._add_history("smooth", varlist)
+
+        if plot:
+            if rcParams['plotter.gui']:
+                from asap.asaplotgui import asaplotgui as asaplot
+            else:
+                from asap.asaplot import asaplot
+            self._p=asaplot()
+            self._p.set_panels()
+            ylab=s._get_ordinate_label()
+            #self._p.palette(0,["#777777","red"])
+            for r in xrange(s.nrow()):
+                xsm=s._getabcissa(r)
+                ysm=s._getspectrum(r)
+                xorg=orgscan._getabcissa(r)
+                yorg=orgscan._getspectrum(r)
+                self._p.clear()
+                self._p.hold()
+                self._p.set_axes('ylabel',ylab)
+                self._p.set_axes('xlabel',s._getabcissalabel(r))
+                self._p.set_axes('title',s._getsourcename(r))
+                self._p.set_line(label='Original',color="#777777")
+                self._p.plot(xorg,yorg)
+                self._p.set_line(label='Smoothed',color="red")
+                self._p.plot(xsm,ysm)
+                ### Ugly part for legend
+                for i in [0,1]:
+                    self._p.subplots[0]['lines'].append([self._p.subplots[0]['axes'].lines[i]])
+                self._p.release()
+                ### Ugly part for legend
+                self._p.subplots[0]['lines']=[]
+                res = raw_input("Accept smoothing ([y]/n): ")
+                if res.upper() == 'N':
+                    s._setspectrum(yorg, r)
+            self._p.unmap()
+            self._p = None
+            del orgscan
+
         print_log()
         if insitu: self._assign(s)
         else: return s
@@ -1427,29 +1581,66 @@ class scantable(Scantable):
             bscan = scan.poly_baseline(order=3)
         """
         if insitu is None: insitu = rcParams['insitu']
+        if not insitu:
+            workscan = self.copy()
+        else:
+            workscan = self
         varlist = vars()
         if mask is None:
             mask = [True for i in xrange(self.nchan(-1))]
+        
         from asap.asapfitter import fitter
         try:
             f = fitter()
-            f.set_scan(self, mask)
             if uselin:
                 f.set_function(lpoly=order)
             else:
                 f.set_function(poly=order)
-            s = f.auto_fit(insitu, plot=plot)
-            # Save parameters of baseline fits as a class attribute.
-            # NOTICE: It does not reflect changes in scantable!
-            self.blpars = f.blpars
-            s._add_history("poly_baseline", varlist)
+
+            rows = range(workscan.nrow())
+            if len(rows) > 0:
+                self.blpars = []
+            
+            for r in rows:
+                # take into account flagtra info (CAS-1434)
+                flagtra = workscan._getmask(r)
+                actualmask = mask[:]
+                if len(actualmask) == 0:
+                    actualmask = list(flagtra[:])
+                else:
+                    if len(actualmask) != len(flagtra):
+                        raise RuntimeError, "Mask and flagtra have different length"
+                    else:
+                        for i in range(0, len(actualmask)):
+                            actualmask[i] = actualmask[i] and flagtra[i]
+                f.set_scan(workscan, actualmask)
+                f.x = workscan._getabcissa(r)
+                f.y = workscan._getspectrum(r)
+                f.data = None
+                f.fit()
+                if plot:
+                    f.plot(residual=True)
+                    x = raw_input("Accept fit ( [y]/n ): ")
+                    if x.upper() == 'N':
+                        self.blpars.append(None)
+                        continue
+                workscan._setspectrum(f.fitter.getresidual(), r)
+                self.blpars.append(f.get_parameters())
+
+            if plot:
+                f._p.unmap()
+                f._p = None
+            workscan._add_history("poly_baseline", varlist)
             print_log()
-            if insitu: self._assign(s)
-            else: return s
+            if insitu: self._assign(workscan)
+            else: return workscan 
         except RuntimeError:
             msg = "The fit failed, possibly because it didn't converge."
             if rcParams['verbose']:
-                print msg
+                #print msg
+                print_log()
+                asaplog.push( msg.message )
+                print_log( 'ERROR' )
                 return
             else:
                 raise RuntimeError(msg)
@@ -1556,8 +1747,20 @@ class scantable(Scantable):
                                         "be less than the number of IFs"
                     curedge = edge[workscan.getif(r)]
 
+            # take into account flagtra info (CAS-1434)
+            flagtra = workscan._getmask(r)
+            actualmask = mask[:]
+            if len(actualmask) == 0:
+                actualmask = list(flagtra[:])
+            else:
+                if len(actualmask) != len(flagtra):
+                    raise RuntimeError, "Mask and flagtra have different length"
+                else:
+                    for i in range(0, len(actualmask)):
+                        actualmask[i] = actualmask[i] and flagtra[i]
+
             # setup line finder
-            fl.find_lines(r, mask, curedge)
+            fl.find_lines(r, actualmask, curedge)
             outmask=fl.get_mask()
             f.set_scan(workscan, fl.get_mask())
             f.x = workscan._getabcissa(r)
@@ -1570,7 +1773,6 @@ class scantable(Scantable):
             msg = "mask range: "+str(masklist)
             asaplog.push(msg, False)
 
-            fpar = f.get_parameters()
             if plot:
                 f.plot(residual=True)
                 x = raw_input("Accept fit ( [y]/n ): ")
@@ -1578,8 +1780,9 @@ class scantable(Scantable):
                     self.blpars.append(None)
                     self.masklists.append(None)
                     continue
+
             workscan._setspectrum(f.fitter.getresidual(), r)
-            self.blpars.append(fpar)
+            self.blpars.append(f.get_parameters())
             self.masklists.append(masklist)
         if plot:
             f._p.unmap()
@@ -1686,10 +1889,46 @@ class scantable(Scantable):
         else:
             return s
 
-    def auto_quotient(self, preserve=True, mode='paired'):
+    def set_sourcetype(self, match, matchtype="pattern",
+                       sourcetype="reference"):
+        """
+        Set the type of the source to be an source or reference scan
+        using the provided pattern:
+        Parameters:
+            match:          a Unix style pattern, regular expression or selector
+            matchtype:      'pattern' (default) UNIX style pattern or
+                            'regex' regular expression
+            sourcetype:     the type of the source to use (source/reference)
+        """
+        varlist = vars()
+        basesel = self.get_selection()
+        stype = -1
+        if sourcetype.lower().startswith("r"):
+            stype = 1
+        elif sourcetype.lower().startswith("s"):
+            stype = 0
+        else:
+            raise ValueError("Illegal sourcetype use s(ource) or r(eference)")
+        if matchtype.lower().startswith("p"):
+            matchtype = "pattern"
+        elif matchtype.lower().startswith("r"):
+            matchtype = "regex"
+        else:
+            raise ValueError("Illegal matchtype, use p(attern) or r(egex)")
+        sel = selector()
+        if isinstance(match, selector):
+            sel = match
+        else:
+            sel.set_query("SRCNAME == %s('%s')" % (matchtype, match))
+        self.set_selection(basesel+sel)
+        self._setsourcetype(stype)
+        self.set_selection(basesel)
+        s._add_history("set_sourcetype", varlist)
+
+    def auto_quotient(self, preserve=True, mode='paired', verify=False):
         """
         This function allows to build quotients automatically.
-        It assumes the observation to have the same numer of
+        It assumes the observation to have the same number of
         "ons" and "offs"
         Parameters:
             preserve:       you can preserve (default) the continuum or
@@ -1702,8 +1941,8 @@ class scantable(Scantable):
                             trailing '_R' (Mopra/Parkes) or
                             '_e'/'_w' (Tid) and matches
                             on/off pairs from the observing pattern
-                'time'
-                   finds the closest off in time
+                            'time'
+                            finds the closest off in time
 
         """
         modes = ["time", "paired"]
@@ -1858,12 +2097,36 @@ class scantable(Scantable):
         from asap.asapfit import asapfit
         fit = asapfit(self._getfit(row))
         if rcParams['verbose']:
-            print fit
+            #print fit
+            asaplog.push( '%s' %(fit) )
+            print_log()
             return
         else:
             return fit.as_dict()
 
+    def flag_nans(self):
+        """
+        Utility function to flag NaN values in the scantable.
+        """
+        import numpy
+        basesel = self.get_selection()
+        for i in range(self.nrow()):
+            sel = selector()+basesel
+            sel.set_scans(self.getscan(i))
+            sel.set_beams(self.getbeam(i))
+            sel.set_ifs(self.getif(i))
+            sel.set_polarisations(self.getpol(i))
+            self.set_selection(sel)
+            nans = numpy.isnan(self._getspectrum(0))
+        if numpy.any(nans):
+            bnans = [ bool(v) for v in nans]
+            self.flag(bnans)
+        self.set_selection(basesel)
+        
+
     def _add_history(self, funcname, parameters):
+        if not rcParams['scantable.history']:
+            return
         # create date
         sep = "##"
         from datetime import datetime
@@ -1943,7 +2206,8 @@ class scantable(Scantable):
                 msg = "File '%s' does not exists" % (name)
                 if rcParams['verbose']:
                     asaplog.push(msg)
-                    print asaplog.pop().strip()
+                    #print asaplog.pop().strip()
+                    print_log( 'ERROR' )
                     return
                 raise IOError(msg)
             fullnames.append(name)
@@ -1953,18 +2217,17 @@ class scantable(Scantable):
         for name in fullnames:
             tbl = Scantable(stype)
             r = stfiller(tbl)
+            rx = rcParams['scantable.reference']
+            r._setreferenceexpr(rx)
             msg = "Importing %s..." % (name)
             asaplog.push(msg, False)
             print_log()
             r._open(name, -1, -1, getpt)
             r._read()
-            #tbl = r._getdata()
             if average:
                 tbl = self._math._average((tbl, ), (), 'NONE', 'SCAN')
-                #tbl = tbl2
             if not first:
                 tbl = self._math._merge([self, tbl])
-                #tbl = tbl2
             Scantable.__init__(self, tbl)
             r._close()
             del r, tbl
@@ -1973,3 +2236,26 @@ class scantable(Scantable):
             self.set_fluxunit(unit)
         #self.set_freqframe(rcParams['scantable.freqframe'])
 
+    def __getitem__(self, key):
+        if key < 0:
+            key += self.nrow()
+        if key >= self.nrow():
+            raise IndexError("Row index out of range.")
+        return self._getspectrum(key)
+
+    def __setitem__(self, key, value):
+        if key < 0:
+            key += self.nrow()
+        if key >= self.nrow():
+            raise IndexError("Row index out of range.")
+        if not hasattr(value, "__len__") or \
+                len(value) > self.nchan(self.getif(key)):
+            raise ValueError("Spectrum length doesn't match.")
+        return self._setspectrum(value, key)
+
+    def __len__(self):
+        return self.nrow()
+
+    def __iter__(self):
+        for i in range(len(self)):
+            yield self[i]

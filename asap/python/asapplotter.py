@@ -1,4 +1,5 @@
 from asap import rcParams, print_log, selector
+from asap import asaplog
 import matplotlib.axes
 import re
 
@@ -73,7 +74,9 @@ class asapplotter:
         if not self._data and not scan:
             msg = "Input is not a scantable"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push( msg )
+                print_log( 'ERROR' )
                 return
             raise TypeError(msg)
         if isinstance(scan, scantable):
@@ -168,7 +171,9 @@ class asapplotter:
         if not self.set_panelling(panelling) or \
                not self.set_stacking(stacking):
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push( msg )
+                print_log( 'ERROR' )
                 return
             else:
                 raise TypeError(msg)
@@ -521,7 +526,9 @@ class asapplotter:
         if not self._data:
             msg = "Can only set mask after a first call to plot()"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push( msg )
+                print_log( 'ERROR' )
                 return
             else:
                 raise RuntimeError(msg)
@@ -592,14 +599,13 @@ class asapplotter:
         else: nstack = len(nstack0)
         maxpanel, maxstack = 16,8
         if n > maxpanel or nstack > maxstack:
-            from asap import asaplog
             maxn = 0
             if nstack > maxstack: maxn = maxstack
             if n > maxpanel: maxn = maxpanel
             msg ="Scan to be plotted contains more than %d selections.\n" \
                   "Selecting first %d selections..." % (maxn, maxn)
             asaplog.push(msg)
-            print_log()
+            print_log('WARN')
             n = min(n,maxpanel)
             nstack = min(nstack,maxstack)
         if n > 1:
@@ -874,7 +880,9 @@ class asapplotter:
         if not self._data and not scan:
             msg = "Input is not a scantable"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push( msg )
+                print_log( 'ERROR' )
                 return
             raise TypeError(msg)
         if isinstance(scan, scantable):

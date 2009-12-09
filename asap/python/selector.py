@@ -46,7 +46,9 @@ class selector(_selector):
             raise TypeError('Unknown pol type. Please use [0,1...] or ["XX","YY"...]')
     
     # for the americans
-    set_polarization = set_polarisations
+    set_polarizations = set_polarisations
+    # for the lazy
+    set_pols = set_polarisations
 
     def set_ifs(self, ifs=[]):
         """
@@ -145,6 +147,20 @@ class selector(_selector):
         """
         self._setorder(order)
 
+    def set_rows(self, rows=[]):
+        """
+        Set a sequence of row numbers (0-based). Power users Only!
+        NOTICE row numbers can be changed easily by sorting,
+        prior selection, etc. 
+        Parameters:
+            rows:    a list of integers. Default [] is to unset the selection.
+        """
+        vec = _to_list(rows, int) 
+        if isinstance(vec,list):
+            self._setrows(vec)
+        else:
+            raise TypeError('Unknown row number type. Use lists of integers.')
+
     def get_scans(self):
         return list(self._getscans())
     def get_cycles(self):
@@ -162,6 +178,7 @@ class selector(_selector):
     def get_query(self):
 	prefix = "SELECT FROM $1 WHERE "
         return self._gettaql().replace(prefix, "")
+
     def get_name(self):
         print "NYI"
         s = self._gettaql()

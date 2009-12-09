@@ -4,7 +4,7 @@
 // Description:
 //
 //
-// Author: Malte Marquarding <asap@atnf.csiro.au>, (C) 2006
+// Author: Malte Marquarding <asap@atnf.csiro.au>, (C) 2006-2007
 //
 // Copyright: See COPYING file that comes with this distribution
 //
@@ -27,11 +27,17 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MeasConvert.h>
 
+#include <atnf/PKSIO/PKSrecord.h>
 #include <atnf/PKSIO/PKSreader.h>
+#ifdef HAS_ALMA
+ #include <casa/System/ProgressMeter.h>
+#endif
 #include <casa/System/ProgressMeter.h>
 #include <atnf/PKSIO/NROReader.h>
+#include <casa/Logging/LogIO.h>
 
 #include <time.h>
+
 
 #include "STDefs.h"
 #include "STAttr.h"
@@ -47,6 +53,7 @@ STFiller::STFiller() :
   reader_(0),
   header_(0),
   table_(0),
+  refRx_(".*(e|w|_R)$"),
   nreader_(0)
 {
 }
@@ -55,6 +62,7 @@ STFiller::STFiller( CountedPtr< Scantable > stbl ) :
   reader_(0),
   header_(0),
   table_(stbl),
+  refRx_(".*(e|w|_R)$"),
   nreader_(0)
 {
 }
@@ -63,6 +71,7 @@ STFiller::STFiller(const std::string& filename, int whichIF, int whichBeam ) :
   reader_(0),
   header_(0),
   table_(0),
+  refRx_(".*(e|w|_R)$"),
   nreader_(0)
 {
   open(filename, whichIF, whichBeam);
@@ -140,11 +149,12 @@ void STFiller::open( const std::string& filename, int whichIF, int whichBeam, ca
 
   Int status = reader_->getHeader(header_->observer, header_->project,
                                   header_->antennaname, header_->antennaposition,
-                                  header_->obstype,header_->equinox,
+                                  header_->obstype,
+                                  header_->fluxunit,
+                                  header_->equinox,
                                   header_->freqref,
                                   header_->utc, header_->reffreq,
-                                  header_->bandwidth,
-                                  header_->fluxunit);
+                                  header_->bandwidth);
 
   if (status) {
     delete reader_;
@@ -165,9 +175,14 @@ void STFiller::open( const std::string& filename, int whichIF, int whichBeam, ca
 
   Bool throwIt = False;
   Instrument inst = STAttr::convertInstrument(header_->antennaname, throwIt);
-  //header_->fluxunit = "Jy";
+
   if (inst==ATMOPRA || inst==TIDBINBILLA) {
-     header_->fluxunit = "K";
+    header_->fluxunit = "K";
+  } else {
+    // downcase for use with Quanta
+    if (header_->fluxunit == "JY") {
+      header_->fluxunit = "Jy";
+    }
   }
   STAttr stattr;
   header_->poltype = stattr.feedPolType(inst);
@@ -274,6 +289,7 @@ int asap::STFiller::read( )
   }
   //
 
+/**
   Int    beamNo, IFno, refBeam, scanNo, cycleNo;
   Float  azimuth, elevation, focusAxi, focusRot, focusTan,
     humidity, parAngle, pressure, temperature, windAz, windSpeed;
@@ -286,26 +302,36 @@ int asap::STFiller::read( )
   Matrix<uChar>   flagtra;
   Complex         xCalFctr;
   Vector<Complex> xPol;
+**/
+
   Double min = 0.0;
   Double max = nInDataRow;
+#ifdef HAS_ALMA
   ProgressMeter fillpm(min, max, "Data importing progress");
+#endif
+  PKSrecord pksrec;
   int n = 0;
+  bool isGBTFITS = false ;
+  if ((header_->antennaname.find( "GBT" ) != String::npos) && File(filename_).isRegular()) {
+    FILE *fp = fopen( filename_.c_str(), "r" ) ;
+    fseek( fp, 640, SEEK_SET ) ;
+    char buf[81] ;
+    fread( buf, 80, 1, fp ) ;
+    buf[80] = '\0' ;
+    if ( strstr( buf, "NRAO_GBT" ) != NULL ) {
+      isGBTFITS = true ;
+    }
+    fclose( fp ) ;
+  } 
   while ( status == 0 ) {
-    status = reader_->read(scanNo, cycleNo, mjd, interval, fieldName,
-                          srcName, srcDir, srcPM, srcVel, obsType, IFno,
-                          refFreq, bandwidth, freqInc, restFreq, tcal, tcalTime,
-                          azimuth, elevation, parAngle, focusAxi,
-                          focusTan, focusRot, temperature, pressure,
-                          humidity, windSpeed, windAz, refBeam,
-                          beamNo, direction, scanRate,
-                          tsys, sigma, calFctr, baseLin, baseSub,
-                          spectra, flagtra, xCalFctr, xPol);
+    status = reader_->read(pksrec);
     if ( status != 0 ) break;
     n += 1;
-    
+
     Regex filterrx(".*[SL|PA]$");
     Regex obsrx("^AT.+");
-    if ( header_->antennaname.matches(obsrx) && obsType.matches(filterrx)) {
+    if ( header_->antennaname.matches(obsrx) &&
+         pksrec.obsType.matches(filterrx)) {
         //cerr << "ignoring paddle scan" << endl;
         continue;
     }
@@ -313,77 +339,82 @@ int asap::STFiller::read( )
     TableRecord& rec = row.record();
     // fields that don't get used and are just passed through asap
     RecordFieldPtr<Array<Double> > srateCol(rec, "SCANRATE");
-    *srateCol = scanRate;
+    // MRC changed type from double to float
+    Vector<Double> sratedbl(pksrec.scanRate.nelements());
+    convertArray(sratedbl, pksrec.scanRate);
+    *srateCol = sratedbl;
     RecordFieldPtr<Array<Double> > spmCol(rec, "SRCPROPERMOTION");
-    *spmCol = srcPM;
+    *spmCol = pksrec.srcPM;
     RecordFieldPtr<Array<Double> > sdirCol(rec, "SRCDIRECTION");
-    *sdirCol = srcDir;
+    *sdirCol = pksrec.srcDir;
     RecordFieldPtr<Double> svelCol(rec, "SRCVELOCITY");
-    *svelCol = srcVel;
+    *svelCol = pksrec.srcVel;
     // the real stuff
     RecordFieldPtr<Int> fitCol(rec, "FIT_ID");
     *fitCol = -1;
     RecordFieldPtr<uInt> scanoCol(rec, "SCANNO");
-    *scanoCol = scanNo-1;
+    *scanoCol = pksrec.scanNo-1;
     RecordFieldPtr<uInt> cyclenoCol(rec, "CYCLENO");
-    *cyclenoCol = cycleNo-1;
+    *cyclenoCol = pksrec.cycleNo-1;
     RecordFieldPtr<Double> mjdCol(rec, "TIME");
-    *mjdCol = mjd;
+    *mjdCol = pksrec.mjd;
     RecordFieldPtr<Double> intCol(rec, "INTERVAL");
-    *intCol = interval;
+    *intCol = pksrec.interval;
     RecordFieldPtr<String> srcnCol(rec, "SRCNAME");
     RecordFieldPtr<Int> srctCol(rec, "SRCTYPE");
     RecordFieldPtr<String> fieldnCol(rec, "FIELDNAME");
-    *fieldnCol = fieldName;
+    *fieldnCol = pksrec.fieldName;
     // try to auto-identify if it is on or off.
-    Regex rx(".*[e|w|_R]$");
+    Regex rx(refRx_);
     Regex rx2("_S$");
-    Int match = srcName.matches(rx);
+    Int match = pksrec.srcName.matches(rx);
     if (match) {
-      *srcnCol = srcName;
+      *srcnCol = pksrec.srcName;
     } else {
-      *srcnCol = srcName.before(rx2);
+      *srcnCol = pksrec.srcName.before(rx2);
     }
-    //*srcnCol = srcName;//.before(rx2);
+    //*srcnCol = pksrec.srcName;//.before(rx2);
     *srctCol = match;
     RecordFieldPtr<uInt> beamCol(rec, "BEAMNO");
-    *beamCol = beamNo-beamOffset_-1;
+    *beamCol = pksrec.beamNo-beamOffset_-1;
     RecordFieldPtr<Int> rbCol(rec, "REFBEAMNO");
     Int rb = -1;
-    if (nBeam_ > 1 ) rb = refBeam-1;
+    if (nBeam_ > 1 ) rb = pksrec.refBeam-1;
     *rbCol = rb;
     RecordFieldPtr<uInt> ifCol(rec, "IFNO");
-    *ifCol = IFno-ifOffset_- 1;
+    *ifCol = pksrec.IFno-ifOffset_- 1;
     uInt id;
     /// @todo this has to change when nchan isn't global anymore
     id = table_->frequencies().addEntry(Double(header_->nchan/2),
-                                            refFreq, freqInc);
+                                            pksrec.refFreq, pksrec.freqInc);
     RecordFieldPtr<uInt> mfreqidCol(rec, "FREQ_ID");
     *mfreqidCol = id;
 
-    id = table_->molecules().addEntry(restFreq);
+    id = table_->molecules().addEntry(pksrec.restFreq);
     RecordFieldPtr<uInt> molidCol(rec, "MOLECULE_ID");
     *molidCol = id;
 
-    id = table_->tcal().addEntry(tcalTime, tcal);
+    id = table_->tcal().addEntry(pksrec.tcalTime, pksrec.tcal);
     RecordFieldPtr<uInt> mcalidCol(rec, "TCAL_ID");
     *mcalidCol = id;
-    id = table_->weather().addEntry(temperature, pressure, humidity,
-                                    windSpeed, windAz);
+    id = table_->weather().addEntry(pksrec.temperature, pksrec.pressure,
+                                    pksrec.humidity, pksrec.windSpeed,
+                                    pksrec.windAz);
     RecordFieldPtr<uInt> mweatheridCol(rec, "WEATHER_ID");
     *mweatheridCol = id;
     RecordFieldPtr<uInt> mfocusidCol(rec, "FOCUS_ID");
-    id = table_->focus().addEntry(focusAxi, focusTan, focusRot);
+    id = table_->focus().addEntry(pksrec.focusAxi, pksrec.focusTan,
+                                  pksrec.focusRot);
     *mfocusidCol = id;
     RecordFieldPtr<Array<Double> > dirCol(rec, "DIRECTION");
-    *dirCol = direction;
+    *dirCol = pksrec.direction;
     RecordFieldPtr<Float> azCol(rec, "AZIMUTH");
-    *azCol = azimuth;
+    *azCol = pksrec.azimuth;
     RecordFieldPtr<Float> elCol(rec, "ELEVATION");
-    *elCol = elevation;
+    *elCol = pksrec.elevation;
 
     RecordFieldPtr<Float> parCol(rec, "PARANGLE");
-    *parCol = parAngle;
+    *parCol = pksrec.parAngle;
 
     RecordFieldPtr< Array<Float> > specCol(rec, "SPECTRA");
     RecordFieldPtr< Array<uChar> > flagCol(rec, "FLAGTRA");
@@ -394,44 +425,55 @@ int asap::STFiller::read( )
     // into 2-4 rows in the scantable
     Vector<Float> tsysvec(1);
     // Why is spectra.ncolumn() == 3 for haveXPol_ == True
-    uInt npol = (spectra.ncolumn()==1 ? 1: 2);
+    uInt npol = (pksrec.spectra.ncolumn()==1 ? 1: 2);
     for ( uInt i=0; i< npol; ++i ) {
-      tsysvec = tsys(i);
+      tsysvec = pksrec.tsys(i);
       *tsysCol = tsysvec;
-      *polnoCol = i;
+      if (isGBTFITS)
+        *polnoCol = pksrec.polNo ;
+      else
+        *polnoCol = i;
 
-      *specCol = spectra.column(i);
-      *flagCol = flagtra.column(i);
+      *specCol = pksrec.spectra.column(i);
+      *flagCol = pksrec.flagged.column(i);
       table_->table().addRow();
       row.put(table_->table().nrow()-1, rec);
     }
+
+    RecordFieldPtr< uInt > flagrowCol(rec, "FLAGROW");
+    *flagrowCol = pksrec.flagrow;
+
     if ( haveXPol_[0] ) {
       // no tsys given for xpol, so emulate it
-      tsysvec = sqrt(tsys[0]*tsys[1]);
+      tsysvec = sqrt(pksrec.tsys[0]*pksrec.tsys[1]);
       *tsysCol = tsysvec;
       // add real part of cross pol
       *polnoCol = 2;
-      Vector<Float> r(real(xPol));
+      Vector<Float> r(real(pksrec.xPol));
       *specCol = r;
       // make up flags from linears
       /// @fixme this has to be a bitwise or of both pols
-      *flagCol = flagtra.column(0);// | flagtra.column(1);
+      *flagCol = pksrec.flagged.column(0);// | pksrec.flagged.column(1);
       table_->table().addRow();
       row.put(table_->table().nrow()-1, rec);
       // ad imaginary part of cross pol
       *polnoCol = 3;
-      Vector<Float> im(imag(xPol));
+      Vector<Float> im(imag(pksrec.xPol));
       *specCol = im;
       table_->table().addRow();
       row.put(table_->table().nrow()-1, rec);
     }
+#ifdef HAS_ALMA
     fillpm._update(n);
+#endif
   }
   if (status > 0) {
     close();
     throw(AipsError("Reading error occured, data possibly corrupted."));
   }
+#ifdef HAS_ALMA
   fillpm.done();
+#endif
   return status;
 }
 
@@ -447,13 +489,19 @@ void STFiller::openNRO( int whichIF, int whichBeam )
   time_t t0 ;
   time( &t0 ) ;
   tm *ttm = localtime( &t0 ) ;
-  
-  cout << "STFiller::openNRO()  Start time = " << t0 
-       << " (" 
-       << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-       << " " 
-       << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
-       << ")" << endl ;
+  LogIO os( LogOrigin( "STFiller", "openNRO()", WHERE ) ) ;
+//   cout << "STFiller::openNRO()  Start time = " << t0 
+//        << " (" 
+//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+//        << " " 
+//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+//        << ")" << endl ;
+  os << "Start time = " << t0 
+     << " (" 
+     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+     << " " 
+     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+     << ")" << LogIO::POST ;
 
   // fill STHeader
   header_ = new STHeader() ;
@@ -475,8 +523,9 @@ void STFiller::openNRO( int whichIF, int whichBeam )
                                 header_->fluxunit,
                                 header_->epoch,
                                 header_->poltype ) ) {
-    cout << "STFiller::openNRO()  Failed to get header information." << endl ;
-    return ;
+//     cout << "STFiller::openNRO()  Failed to get header information." << endl ;
+//     return ;
+    throw( AipsError("Failed to get header information.") ) ;
   }
 
   // set frame keyword of FREQUENCIES table
@@ -503,10 +552,6 @@ void STFiller::openNRO( int whichIF, int whichBeam )
     }
   }
 
-  // DEBUG
-  //cout << "STFiller::openNRO()  nIF " << endl ;
-  //
-
   beamOffset_ = 0;
   vector<Bool> beams = nreader_->getBeams() ;
   if (whichBeam>=0) {
@@ -526,10 +571,6 @@ void STFiller::openNRO( int whichIF, int whichBeam )
     }
   }
 
-  // DEBUG
-  //cout << "STFiller::openNRO()  nBeam " << endl ;
-  //
-
   header_->nbeam = nBeam_ ;
   header_->nif = nIF_ ;
 
@@ -537,19 +578,24 @@ void STFiller::openNRO( int whichIF, int whichBeam )
   table_->setHeader( *header_ ) ;
 
   // DEBUG
-  //cout << "STFiller::openNRO() Velocity Definition = " << nheader->getVDEF() << endl ;
-
-  // DEBUG
   time_t t1 ;
   time( &t1 ) ;
   ttm = localtime( &t1 ) ;
-  cout << "STFiller::openNRO()  End time = " << t1 
-       << " (" 
-       << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-       << " " 
-       << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
-       << ")" << endl ;
-  cout << "STFiller::openNRO()  Elapsed time = " << t1 - t0 << " sec" << endl ;
+//   cout << "STFiller::openNRO()  End time = " << t1 
+//        << " (" 
+//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+//        << " " 
+//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+//        << ")" << endl ;
+//   cout << "STFiller::openNRO()  Elapsed time = " << t1 - t0 << " sec" << endl ;
+  os << "End time = " << t1 
+     << " (" 
+     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+     << " " 
+     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+     << ")" << endl ;
+  os << "Elapsed time = " << t1 - t0 << " sec" << endl ;
+  os.post() ;
   //
 
   return ;
@@ -561,12 +607,19 @@ int STFiller::readNRO()
   time_t t0 ;
   time( &t0 ) ;
   tm *ttm = localtime( &t0 ) ;
-  cout << "STFiller::readNRO()  Start time = " << t0 
-       << " (" 
-       << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-       << " " 
-       << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
-       << ")" << endl ;
+  LogIO os( LogOrigin( "STFiller", "readNRO()", WHERE ) ) ;
+//   cout << "STFiller::readNRO()  Start time = " << t0 
+//        << " (" 
+//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+//        << " " 
+//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+//        << ")" << endl ;
+  os << "Start time = " << t0 
+     << " (" 
+     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+     << " " 
+     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+     << ")" << LogIO::POST ;
   //
 
   // fill row
@@ -607,27 +660,22 @@ int STFiller::readNRO()
   Vector<Double> srcdir ;
   Array<Double> scanrate ;
   for ( i = 0 ; i < imax ; i++ ) {
-//     if( nreader_->getDataset()->getRecord( i ) == NULL ) {
-//       cerr << "STFiller::readNRO()  error while reading row " << i << endl ;
-//       return -1 ;
-//     }
-
     string scanType = nreader_->getScanType( i ) ;
     Int srcType = -1 ;
     if ( scanType.compare( 0, 2, "ON") == 0 ) {
-      // cout << "ON srcType: " << i << endl ;
+      // os << "ON srcType: " << i << LogIO::POST ;
       srcType = 0 ;
     }
     else if ( scanType.compare( 0, 3, "OFF" ) == 0 ) {
-      //cout << "OFF srcType: " << i << endl ;
+      //os << "OFF srcType: " << i << LogIO::POST ;
       srcType = 1 ;
     }
     else if ( scanType.compare( 0, 4, "ZERO" ) == 0 ) {
-      //cout << "ZERO srcType: " << i << endl ;
+      //os << "ZERO srcType: " << i << LogIO::POST ;
       srcType = 2 ;
     }
     else {
-      //cout << "Undefined srcType: " << i << endl ;
+      //os << "Undefined srcType: " << i << LogIO::POST ;
       srcType = 3 ;
     }
  
@@ -668,8 +716,9 @@ int STFiller::readNRO()
                                   propermotion,
                                   srcdir,
                                   scanrate ) ) {
-        cerr << "STFiller::readNRO()  Failed to get scan information." << endl ;
-        return 1 ;
+//         cerr << "STFiller::readNRO()  Failed to get scan information." << endl ;
+//         return 1 ;
+        throw( AipsError("Failed to get scan information.") ) ;
       }
 
       RecordFieldPtr<uInt> scannoCol( rec, "SCANNO" ) ;
@@ -693,9 +742,9 @@ int STFiller::readNRO()
       else {
         int iadd = -1 ;
         for ( uInt iif = 0 ; iif < freqs.size() ; iif++ ) {
-          //cout << "STFiller::readNRO()  freqs[" << iif << "][1] = " << freqs[iif][1] << endl ;
+          //os << "freqs[" << iif << "][1] = " << freqs[iif][1] << LogIO::POST ;
           double fdiff = abs( freqs[iif][1] - fqs[1] ) / freqs[iif][1] ;
-          //cout << "STFiller::readNRO()  fdiff = " << fdiff << endl ;
+          //os << "fdiff = " << fdiff << LogIO::POST ;
           if ( fdiff < 1.0e-8 ) {
             iadd = iif ;
             break ;
@@ -775,7 +824,7 @@ int STFiller::readNRO()
     }
     // DEBUG
     //int rownum = nreader_->getRowNum() ;
-    //cout << "STFiller::readNRO() Finished row " << i << "/" << rownum << endl ;
+    //os << "Finished row " << i << "/" << rownum << LogIO::POST ;
     //
   }
 
@@ -783,16 +832,28 @@ int STFiller::readNRO()
   time_t t1 ;
   time( &t1 ) ;
   ttm = localtime( &t1 ) ;
-  cout << "STFiller::readNRO()  Processed " << i << " rows" << endl ;
-  cout << "STFiller::readNRO()  Added " << i - count << " rows (ignored " 
-       << count << " \"ZERO\" scans)" << endl ;
-  cout << "STFiller::readNRO()  End time = " << t1 
-       << " (" 
-       << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
-       << " " 
-       << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
-       << ")" << endl ;
-  cout << "STFiller::readNRO()  Elapsed time = " << t1 - t0 << " sec" << endl ;
+//   cout << "STFiller::readNRO()  Processed " << i << " rows" << endl ;
+//   cout << "STFiller::readNRO()  Added " << i - count << " rows (ignored " 
+//        << count << " \"ZERO\" scans)" << endl ;
+//   cout << "STFiller::readNRO()  End time = " << t1 
+//        << " (" 
+//        << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+//        << " " 
+//        << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+//        << ")" << endl ;
+//   cout << "STFiller::readNRO()  Elapsed time = " << t1 - t0 << " sec" << endl ;
+  os << "Processed " << i << " rows" << endl ;
+  os << "Added " << i - count << " rows (ignored " 
+     << count << " \"ZERO\" scans)" << endl ;
+  os.post() ;
+  os << "End time = " << t1 
+     << " (" 
+     << ttm->tm_year + 1900 << "/" << ttm->tm_mon + 1 << "/" << ttm->tm_mday 
+     << " " 
+     << ttm->tm_hour << ":" << ttm->tm_min << ":" << ttm->tm_sec 
+     << ")" << endl ;
+  os << "Elapsed time = " << t1 - t0 << " sec" << endl ;
+  os.post() ;
   //
 
   return 0 ;

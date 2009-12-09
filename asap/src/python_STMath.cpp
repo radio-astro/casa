@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: python_STMath.cpp 1516 2009-02-24 03:12:51Z KanaSugimoto $
+//# $Id: python_STMath.cpp 1633 2009-09-16 07:11:16Z TakeshiNakazato $
 //#---------------------------------------------------------------------------
 #include <vector>
 #include <boost/python.hpp>
@@ -75,6 +75,8 @@ namespace asap {
         .def("_lag_flag", &STMathWrapper::lagFlag)
 	// testing average spectra with different channel/resolution
         .def("_new_average", &STMathWrapper::new_average)
+        // cwcal
+        .def("cwcal", &STMathWrapper::cwcal)
           ;
     };
 

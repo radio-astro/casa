@@ -43,7 +43,7 @@ public:
   void getEntry( casa::Float& temperature, casa::Float& pressure,
                        casa::Float& humidity,
                        casa::Float& windspeed, casa::Float& windaz,
-                       casa::uInt id);
+                       casa::uInt id) const;
 
   const casa::String& name() const { return name_; }
 

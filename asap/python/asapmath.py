@@ -2,6 +2,8 @@ from asap.scantable import scantable
 from asap import rcParams
 from asap import print_log
 from asap import selector
+from asap import asaplog
+from asap import asaplotgui
 
 def average_time(*args, **kwargs):
     """
@@ -65,7 +67,9 @@ def average_time(*args, **kwargs):
         if not isinstance(s,scantable):
             msg = "Please give a list of scantables"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise TypeError(msg)
@@ -155,7 +159,7 @@ def dosigref(sig, ref, smooth, tsysval=0.0, tauval=0.0):
     print_log()
     return s
 
-def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
+def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, verify=False):
     """
     Calibrate GBT position switched data
     Adopted from GBTIDL getps
@@ -183,7 +187,9 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
     if s is None:
         msg = "The input data appear to contain no position-switch mode data."
         if rcParams['verbose']:
-            print msg
+            #print msg
+            asaplog.push(msg)
+            print_log('ERROR')
             return
         else:
             raise TypeError(msg)
@@ -191,7 +197,9 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
     if ssub is None:
         msg = "No data was found with given scan numbers!"
         if rcParams['verbose']:
-            print msg
+            #print msg
+            asaplog.push(msg)
+            print_log('ERROR')
             return
         else:
             raise TypeError(msg)
@@ -200,7 +208,9 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
     if ssubon.nrow() != ssuboff.nrow():
         msg = "mismatch in numbers of CAL on/off scans. Cannot calibrate. Check the scan numbers."
         if rcParams['verbose']:
-            print msg
+            #print msg
+            asaplog.push(msg)
+            print_log('ERROR')
             return
         else:
             raise TypeError(msg)
@@ -210,7 +220,9 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
     if sig.nscan() != ref.nscan():
         msg = "mismatch in numbers of on/off scans. Cannot calibrate. Check the scan numbers."
         if rcParams['verbose']:
-            print msg
+            #print msg
+            asaplog.push(msg)
+            print_log('ERROR')
             return
         else:
             raise TypeError(msg)
@@ -220,7 +232,9 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
         if tauval<=0.0:
             msg = "Need to supply a valid tau to use the supplied Tsys"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise TypeError(msg)
@@ -239,11 +253,151 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
 
     #ress = dosigref(sig, ref, smooth, tsysval)
     ress = dosigref(sig, ref, smooth, tsysval, tauval)
+    ###
+    if verify:
+        # get data
+        import numpy
+        precal={}
+        postcal=[]
+        keys=['ps','ps_calon','psr','psr_calon']
+        ifnos=list(ssub.getifnos())
+        polnos=list(ssub.getpolnos())
+        sel=selector()
+        for i in range(2):
+            ss=ssuboff.get_scan('*'+keys[2*i])
+            ll=[]
+            for j in range(len(ifnos)):
+                for k in range(len(polnos)):
+                    sel.set_ifs(ifnos[j])
+                    sel.set_polarizations(polnos[k])
+                    try:
+                        ss.set_selection(sel)
+                    except:
+                        continue
+                    ll.append(numpy.array(ss._getspectrum(0)))
+                    sel.reset()
+                    ss.set_selection()
+            precal[keys[2*i]]=ll
+            del ss
+            ss=ssubon.get_scan('*'+keys[2*i+1])
+            ll=[]
+            for j in range(len(ifnos)):
+                for k in range(len(polnos)):
+                    sel.set_ifs(ifnos[j])
+                    sel.set_polarizations(polnos[k])
+                    try:
+                        ss.set_selection(sel)
+                    except:
+                        continue
+                    ll.append(numpy.array(ss._getspectrum(0)))
+                    sel.reset()
+                    ss.set_selection()
+            precal[keys[2*i+1]]=ll
+            del ss
+        for j in range(len(ifnos)):
+            for k in range(len(polnos)):
+                sel.set_ifs(ifnos[j])
+                sel.set_polarizations(polnos[k])
+                try:
+                    ress.set_selection(sel)
+                except:
+                    continue
+                postcal.append(numpy.array(ress._getspectrum(0)))
+                sel.reset()
+                ress.set_selection()
+        del sel
+        # plot
+        print_log()
+        asaplog.push('Plot only first spectrum for each [if,pol] pairs to verify calibration.')
+        print_log('WARN')
+        p=asaplotgui.asaplotgui()
+        #nr=min(6,len(ifnos)*len(polnos))
+        nr=len(ifnos)*len(polnos)
+        titles=[]
+        btics=[]
+        if nr<4:
+            p.set_panels(rows=nr,cols=2,nplots=2*nr,ganged=False)
+            for i in range(2*nr):
+                b=False
+                if i >= 2*nr-2:
+                    b=True
+                btics.append(b)
+        elif nr==4:
+            p.set_panels(rows=2,cols=4,nplots=8,ganged=False)
+            for i in range(2*nr):
+                b=False
+                if i >= 2*nr-4:
+                    b=True
+                btics.append(b)
+        elif nr<7:
+            p.set_panels(rows=3,cols=4,nplots=2*nr,ganged=False)
+            for i in range(2*nr):
+                if i >= 2*nr-4:
+                    b=True
+                btics.append(b)
+        else:
+            print_log()
+            asaplog.push('Only first 6 [if,pol] pairs are plotted.')
+            print_log('WARN')
+            nr=6
+            for i in range(2*nr):
+                b=False
+                if i >= 2*nr-4:
+                    b=True
+                btics.append(b)
+            p.set_panels(rows=3,cols=4,nplots=2*nr,ganged=False)
+        for i in range(nr):
+            p.subplot(2*i)
+            p.color=0
+            title='raw data IF%s POL%s' % (ifnos[int(i/len(polnos))],polnos[i%len(polnos)])
+            titles.append(title)
+            #p.set_axes('title',title,fontsize=40)
+            ymin=1.0e100
+            ymax=-1.0e100
+            nchan=s.nchan()
+            edge=int(nchan*0.01)
+            for j in range(4):
+                spmin=min(precal[keys[j]][i][edge:nchan-edge])
+                spmax=max(precal[keys[j]][i][edge:nchan-edge])
+                ymin=min(ymin,spmin)
+                ymax=max(ymax,spmax)
+            for j in range(4):
+                if i==0:
+                    p.set_line(label=keys[j])
+                else:
+                    p.legend()
+                p.plot(precal[keys[j]][i])
+            p.axes.set_ylim(ymin-0.1*abs(ymin),ymax+0.1*abs(ymax))
+            if not btics[2*i]:
+                p.axes.set_xticks([])
+            p.subplot(2*i+1)
+            p.color=0
+            title='cal data IF%s POL%s' % (ifnos[int(i/len(polnos))],polnos[i%len(polnos)])
+            titles.append(title)
+            #p.set_axes('title',title)
+            p.legend()
+            ymin=postcal[i][edge:nchan-edge].min()
+            ymax=postcal[i][edge:nchan-edge].max()
+            p.plot(postcal[i])
+            p.axes.set_ylim(ymin-0.1*abs(ymin),ymax+0.1*abs(ymax))
+            if not btics[2*i+1]:
+                p.axes.set_xticks([])
+        for i in range(2*nr):
+            p.subplot(i)
+            p.set_axes('title',titles[i],fontsize='medium')
+        x=raw_input('Accept calibration ([y]/n): ' )
+        if x.upper() == 'N':
+            p.unmap()
+            del p
+            return scabtab
+        p.unmap()
+        del p
+    ###
     ress._add_history("calps", varlist)
     print_log()
     return ress
 
-def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
+def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, verify=False):
     """
     Do full (but a pair of scans at time) processing of GBT Nod data
     calibration.
@@ -266,7 +420,9 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
     if s is None:
         msg = "The input data appear to contain no Nod observing mode data."
         if rcParams['verbose']:
-            print msg
+            #print msg
+            asaplog.push(msg)
+            print_log('ERROR')
             return
         else:
             raise TypeError(msg)
@@ -303,18 +459,163 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
         if tauval<=0.0:
             msg = "Need to supply a valid tau to use the supplied Tsys"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise TypeError(msg)
         else:
             scantab.recalc_azel()
     resspec = scantable(stm._donod(scantab, pairScans, smooth, tsysval,tauval,tcalval))
+    ###
+    if verify:
+        # get data
+        import numpy
+        precal={}
+        postcal=[]
+        keys=['nod','nod_calon']
+        ifnos=list(scantab.getifnos())
+        polnos=list(scantab.getpolnos())
+        sel=selector()
+        for i in range(2):
+            ss=scantab.get_scan('*'+keys[i])
+            ll=[]
+            ll2=[]
+            for j in range(len(ifnos)):
+                for k in range(len(polnos)):
+                    sel.set_ifs(ifnos[j])
+                    sel.set_polarizations(polnos[k])
+                    sel.set_scans(pairScans[0])
+                    try:
+                        ss.set_selection(sel)
+                    except:
+                        continue
+                    ll.append(numpy.array(ss._getspectrum(0)))
+                    sel.reset()
+                    ss.set_selection()
+                    sel.set_ifs(ifnos[j])
+                    sel.set_polarizations(polnos[k])
+                    sel.set_scans(pairScans[1])
+                    try:
+                        ss.set_selection(sel)
+                    except:
+                        ll.pop()
+                        continue
+                    ll2.append(numpy.array(ss._getspectrum(0)))
+                    sel.reset()
+                    ss.set_selection()
+            key='%s%s' %(pairScans[0],keys[i].lstrip('nod'))
+            precal[key]=ll
+            key='%s%s' %(pairScans[1],keys[i].lstrip('nod'))
+            precal[key]=ll2
+            del ss
+        keys=precal.keys()
+        for j in range(len(ifnos)):
+            for k in range(len(polnos)):
+                sel.set_ifs(ifnos[j])
+                sel.set_polarizations(polnos[k])
+                sel.set_scans(pairScans[0])
+                try:
+                    resspec.set_selection(sel)
+                except:
+                    continue
+                postcal.append(numpy.array(resspec._getspectrum(0)))
+                sel.reset()
+                resspec.set_selection()
+        del sel
+        # plot
+        print_log()
+        asaplog.push('Plot only first spectrum for each [if,pol] pairs to verify calibration.')
+        print_log('WARN')
+        p=asaplotgui.asaplotgui()
+        #nr=min(6,len(ifnos)*len(polnos))
+        nr=len(ifnos)*len(polnos)
+        titles=[]
+        btics=[]
+        if nr<4:
+            p.set_panels(rows=nr,cols=2,nplots=2*nr,ganged=False)
+            for i in range(2*nr):
+                b=False
+                if i >= 2*nr-2:
+                    b=True
+                btics.append(b)
+        elif nr==4:
+            p.set_panels(rows=2,cols=4,nplots=8,ganged=False)
+            for i in range(2*nr):
+                b=False
+                if i >= 2*nr-4:
+                    b=True
+                btics.append(b)
+        elif nr<7:
+            p.set_panels(rows=3,cols=4,nplots=2*nr,ganged=False)
+            for i in range(2*nr):
+                if i >= 2*nr-4:
+                    b=True
+                btics.append(b)
+        else:
+            print_log()
+            asaplog.push('Only first 6 [if,pol] pairs are plotted.')
+            print_log('WARN')
+            nr=6
+            for i in range(2*nr):
+                b=False
+                if i >= 2*nr-4:
+                    b=True
+                btics.append(b)
+            p.set_panels(rows=3,cols=4,nplots=2*nr,ganged=False)
+        for i in range(nr):
+            p.subplot(2*i)
+            p.color=0
+            title='raw data IF%s POL%s' % (ifnos[int(i/len(polnos))],polnos[i%len(polnos)])
+            titles.append(title)
+            #p.set_axes('title',title,fontsize=40)
+            ymin=1.0e100
+            ymax=-1.0e100
+            nchan=scantab.nchan()
+            edge=int(nchan*0.01)
+            for j in range(4):
+                spmin=min(precal[keys[j]][i][edge:nchan-edge])
+                spmax=max(precal[keys[j]][i][edge:nchan-edge])
+                ymin=min(ymin,spmin)
+                ymax=max(ymax,spmax)
+            for j in range(4):
+                if i==0:
+                    p.set_line(label=keys[j])
+                else:
+                    p.legend()
+                p.plot(precal[keys[j]][i])
+            p.axes.set_ylim(ymin-0.1*abs(ymin),ymax+0.1*abs(ymax))
+            if not btics[2*i]:
+                p.axes.set_xticks([])
+            p.subplot(2*i+1)
+            p.color=0
+            title='cal data IF%s POL%s' % (ifnos[int(i/len(polnos))],polnos[i%len(polnos)])
+            titles.append(title)
+            #p.set_axes('title',title)
+            p.legend()
+            ymin=postcal[i][edge:nchan-edge].min()
+            ymax=postcal[i][edge:nchan-edge].max()
+            p.plot(postcal[i])
+            p.axes.set_ylim(ymin-0.1*abs(ymin),ymax+0.1*abs(ymax))
+            if not btics[2*i+1]:
+                p.axes.set_xticks([])
+        for i in range(2*nr):
+            p.subplot(i)
+            p.set_axes('title',titles[i],fontsize='medium')
+        x=raw_input('Accept calibration ([y]/n): ' )
+        if x.upper() == 'N':
+            p.unmap()
+            del p
+            return scabtab
+        p.unmap()
+        del p
+    ###
     resspec._add_history("calnod",varlist)
     print_log()
     return resspec
 
-def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
+def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, verify=False):
     """
     Calibrate GBT frequency switched data.
     Adopted from GBTIDL getfs.
@@ -351,6 +652,144 @@ def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0):
     del scantab
 
     resspec = scantable(stm._dofs(s, scannos, smooth, tsysval,tauval,tcalval))
+    ###
+    if verify:
+        # get data
+        ssub = s.get_scan(scannos)
+        ssubon = ssub.get_scan('*calon')
+        ssuboff = ssub.get_scan('*[^calon]')
+        import numpy
+        precal={}
+        postcal=[]
+        keys=['fs','fs_calon','fsr','fsr_calon']
+        ifnos=list(ssub.getifnos())
+        polnos=list(ssub.getpolnos())
+        sel=selector()
+        for i in range(2):
+            ss=ssuboff.get_scan('*'+keys[2*i])
+            ll=[]
+            for j in range(len(ifnos)):
+                for k in range(len(polnos)):
+                    sel.set_ifs(ifnos[j])
+                    sel.set_polarizations(polnos[k])
+                    try:
+                        ss.set_selection(sel)
+                    except:
+                        continue
+                    ll.append(numpy.array(ss._getspectrum(0)))
+                    sel.reset()
+                    ss.set_selection()
+            precal[keys[2*i]]=ll
+            del ss
+            ss=ssubon.get_scan('*'+keys[2*i+1])
+            ll=[]
+            for j in range(len(ifnos)):
+                for k in range(len(polnos)):
+                    sel.set_ifs(ifnos[j])
+                    sel.set_polarizations(polnos[k])
+                    try:
+                        ss.set_selection(sel)
+                    except:
+                        continue
+                    ll.append(numpy.array(ss._getspectrum(0)))
+                    sel.reset()
+                    ss.set_selection()
+            precal[keys[2*i+1]]=ll
+            del ss
+        sig=resspec.get_scan('*_fs')
+        ref=resspec.get_scan('*_fsr')
+        for k in range(len(polnos)):
+            for j in range(len(ifnos)):
+                sel.set_ifs(ifnos[j])
+                sel.set_polarizations(polnos[k])
+                try:
+                    sig.set_selection(sel)
+                    postcal.append(numpy.array(sig._getspectrum(0)))
+                except:
+                    ref.set_selection(sel)
+                    postcal.append(numpy.array(ref._getspectrum(0)))
+                sel.reset()
+                resspec.set_selection()
+        del sel
+        # plot
+        print_log()
+        asaplog.push('Plot only first spectrum for each [if,pol] pairs to verify calibration.')
+        print_log('WARN')
+        p=asaplotgui.asaplotgui()
+        #nr=min(6,len(ifnos)*len(polnos))
+        nr=len(ifnos)/2*len(polnos)
+        titles=[]
+        btics=[]
+        if nr>3:
+            print_log()
+            asaplog.push('Only first 3 [if,pol] pairs are plotted.')
+            print_log('WARN')
+            nr=3
+        p.set_panels(rows=nr,cols=3,nplots=3*nr,ganged=False)
+        for i in range(3*nr):
+            b=False
+            if i >= 3*nr-3:
+                b=True
+            btics.append(b)
+        for i in range(nr):
+            p.subplot(3*i)
+            p.color=0
+            title='raw data IF%s,%s POL%s' % (ifnos[2*int(i/len(polnos))],ifnos[2*int(i/len(polnos))+1],polnos[i%len(polnos)])
+            titles.append(title)
+            #p.set_axes('title',title,fontsize=40)
+            ymin=1.0e100
+            ymax=-1.0e100
+            nchan=s.nchan()
+            edge=int(nchan*0.01)
+            for j in range(4):
+                spmin=min(precal[keys[j]][i][edge:nchan-edge])
+                spmax=max(precal[keys[j]][i][edge:nchan-edge])
+                ymin=min(ymin,spmin)
+                ymax=max(ymax,spmax)
+            for j in range(4):
+                if i==0:
+                    p.set_line(label=keys[j])
+                else:
+                    p.legend()
+                p.plot(precal[keys[j]][i])
+            p.axes.set_ylim(ymin-0.1*abs(ymin),ymax+0.1*abs(ymax))
+            if not btics[3*i]:
+                p.axes.set_xticks([])
+            p.subplot(3*i+1)
+            p.color=0
+            title='sig data IF%s POL%s' % (ifnos[2*int(i/len(polnos))],polnos[i%len(polnos)])
+            titles.append(title)
+            #p.set_axes('title',title)
+            p.legend()
+            ymin=postcal[2*i][edge:nchan-edge].min()
+            ymax=postcal[2*i][edge:nchan-edge].max()
+            p.plot(postcal[2*i])
+            p.axes.set_ylim(ymin-0.1*abs(ymin),ymax+0.1*abs(ymax))
+            if not btics[3*i+1]:
+                p.axes.set_xticks([])
+            p.subplot(3*i+2)
+            p.color=0
+            title='ref data IF%s POL%s' % (ifnos[2*int(i/len(polnos))+1],polnos[i%len(polnos)])
+            titles.append(title)
+            #p.set_axes('title',title)
+            p.legend()
+            ymin=postcal[2*i+1][edge:nchan-edge].min()
+            ymax=postcal[2*i+1][edge:nchan-edge].max()
+            p.plot(postcal[2*i+1])
+            p.axes.set_ylim(ymin-0.1*abs(ymin),ymax+0.1*abs(ymax))
+            if not btics[3*i+2]:
+                p.axes.set_xticks([])
+        for i in range(3*nr):
+            p.subplot(i)
+            p.set_axes('title',titles[i],fontsize='medium')
+        x=raw_input('Accept calibration ([y]/n): ' )
+        if x.upper() == 'N':
+            p.unmap()
+            del p
+            return scabtab
+        p.unmap()
+        del p
+    ###
     resspec._add_history("calfs",varlist)
     print_log()
     return resspec
@@ -368,7 +807,9 @@ def simple_math(left, right, op='add', tsys=True):
         tsys:          if True (default) then apply the operation to Tsys
                        as well as the data
     """
-    print "simple_math is deprecated use +=/* instead."
+    #print "simple_math is deprecated use +=/* instead."
+    asaplog.push( "simple_math is deprecated use +=/* instead." )
+    print_log('WARN')
 
 def merge(*args):
     """
@@ -397,7 +838,9 @@ def merge(*args):
         if not isinstance(s,scantable):
             msg = "Please give a list of scantables"
             if rcParams['verbose']:
-                print msg
+                #print msg
+                asaplog.push(msg)
+                print_log('ERROR')
                 return
             else:
                 raise TypeError(msg)
@@ -406,3 +849,179 @@ def merge(*args):
     print_log()
     return s
 
+def calibrate( scantab, scannos=[], calmode='none', verify=None ):
+    """
+    Calibrate data.
+    
+    Parameters:
+        scantab:       scantable
+        scannos:       list of scan number
+        calmode:       calibration mode
+        verify:        verify calibration     
+    """
+    antname = scantab.get_antennaname()
+    if ( calmode == 'nod' ):
+        asaplog.push( 'Calibrating nod data.' )
+        print_log()
+        scal = calnod( scantab, scannos=scannos, verify=verify )
+    elif ( calmode == 'quotient' ):
+        asaplog.push( 'Calibrating using quotient.' )
+        print_log()
+        scal = scantab.auto_quotient( verify=verify )
+    elif ( calmode == 'ps' ):
+        asaplog.push( 'Calibrating %s position-switched data.' % antname )
+        print_log()
+        if ( antname.find( 'APEX' ) != -1 or antname.find( 'ALMA' ) != -1 ):
+            scal = almacal( scantab, scannos, calmode, verify )
+        else:
+            scal = calps( scantab, scannos=scannos, verify=verify )
+    elif ( calmode == 'fs' or calmode == 'fsotf' ):
+        asaplog.push( 'Calibrating %s frequency-switched data.' % antname )
+        print_log()
+        if ( antname.find( 'APEX' ) != -1 or antname.find( 'ALMA' ) != -1 ):
+            scal = almacal( scantab, scannos, calmode, verify )
+        else:
+            scal = calfs( scantab, scannos=scannos, verify=verify )
+    elif ( calmode == 'otf' ):
+        asaplog.push( 'Calibrating %s On-The-Fly data.' % antname )
+        print_log()
+        scal = almacal( scantab, scannos, calmode, verify )
+    else:
+        asaplog.push( 'No calibration.' )
+        scal = scantab.copy()
+
+    return scal 
+
+def almacal( scantab, scannos=[], calmode='none', verify=False ):
+    """
+    Calibrate APEX and ALMA data
+
+    Parameters:
+        scantab:       scantable
+        scannos:       list of scan number
+        calmode:       calibration mode
+
+        verify:        verify calibration     
+    """
+    from asap._asap import stmath
+    stm = stmath()
+    antname = scantab.get_antennaname()
+    ssub = scantab.get_scan( scannos )
+    scal = scantable( stm.cwcal( ssub, calmode, antname ) )
+    return scal
+
+def splitant(filename, outprefix='',overwrite=False):
+    """
+    Split Measurement set by antenna name, save data as a scantables,
+    and return a list of filename.
+    Notice this method can only be available from CASA. 
+    Prameter
+       filename:    the name of Measurement set to be read. 
+       outprefix:   the prefix of output scantable name.
+                    the names of output scantable will be
+                    outprefix.antenna1, outprefix.antenna2, ....
+                    If not specified, outprefix = filename is assumed.
+       overwrite    If the file should be overwritten if it exists.
+                    The default False is to return with warning
+                    without writing the output. USE WITH CARE.
+                    
+    """
+    # Import the table toolkit from CASA
+    try:
+        import casac
+    except ImportError:
+        if rcParams['verbose']:
+            #print "failed to load casa"
+            print_log()
+            asaplog.push("failed to load casa")
+            print_log('ERROR')
+        else: raise
+        return False
+    try:
+        tbtool = casac.homefinder.find_home_by_name('tableHome')
+        tb = tbtool.create()
+        tb2 = tbtool.create()
+    except:
+        if rcParams['verbose']:
+            #print "failed to load a table tool:\n", e
+            print_log()
+            asaplog.push("failed to load table tool")
+            print_log('ERROR')
+        else: raise
+        return False
+    # Check the input filename
+    if isinstance(filename, str):
+        import os.path
+        filename = os.path.expandvars(filename)
+        filename = os.path.expanduser(filename)
+        if not os.path.exists(filename):
+            s = "File '%s' not found." % (filename)
+            if rcParams['verbose']:
+                print_log()
+                asaplog.push(s)
+                print_log('ERROR')
+                return
+            raise IOError(s)
+        # check if input file is MS
+        if not os.path.isdir(filename) \
+               or not os.path.exists(filename+'/ANTENNA') \
+               or not os.path.exists(filename+'/table.f1'): 
+            s = "File '%s' is not a Measurement set." % (filename)
+            if rcParams['verbose']:
+                print_log()
+                asaplog.push(s)
+                print_log('ERROR')
+                return
+            raise IOError(s)
+    else:
+        s = "The filename should be string. "
+        if rcParams['verbose']:
+            print_log()
+            asaplog.push(s)
+            print_log('ERROR')
+            return
+        raise TypeError(s)
+    # Check out put file name
+    outname=''
+    if len(outprefix) > 0: prefix=outprefix+'.'
+    else:
+        prefix=filename
+    # Now do the actual splitting.
+    outfiles=[]
+    tmpms="temp_antsplit.ms"
+    if os.path.exists(tmpms):
+        ans=raw_input('Temporal file '+tmpms+' exists. Delete it and continue? [y/N]: ')
+        if ans.upper() == 'Y':
+            os.system('rm -rf '+tmpms)
+            asaplog.push('The file '+tmpms+' deleted.')
+        else:
+            asaplog.push('Exit without splitting.')
+            return
+    tb.open(tablename=filename+'/ANTENNA',nomodify=True)
+    nant=tb.nrows()
+    antnames=tb.getcol('NAME',0,nant,1)
+    antpos=tb.getcol('POSITION',0,nant,1).transpose()
+    tb.close()
+    tb.open(tablename=filename,nomodify=True)
+    ant1=tb.getcol('ANTENNA1',0,-1,1)
+    for antid in set(ant1):
+        qstr="ANTENNA1 == "+str(antid)
+        stab = tb.queryC(qstr)
+        ctab = stab.copy(tmpms,deep=True)
+        stab.close()
+        ctab.close()
+        scan=scantable(tmpms,average=False,getpt=True)
+        outname=prefix+antnames[antid]+'.asap'
+        scan.save(outname,format='ASAP',overwrite=overwrite)
+        # Modify scantable header
+        tb2.open(tablename=outname,nomodify=False)
+        tb2.putkeyword(keyword='AntennaName',value=antnames[antid])
+        tb2.putkeyword(keyword='AntennaPosition',value=antpos[antid])
+        tb2.flush()
+        tb2.close()
+        del scan, ctab, stab
+        outfiles.append(outname)
+    tb.close()
+    del tb, tb2
+    os.system('rm -rf '+tmpms)
+    return outfiles

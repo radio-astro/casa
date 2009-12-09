@@ -43,6 +43,9 @@
 #include <scimath/Mathematics/Convolver.h>
 #include <scimath/Functionals/Polynomial.h>
 
+#include <casa/Logging/LogIO.h>
+#include <sstream>
+
 #include "MathUtils.h"
 #include "RowAccumulator.h"
 #include "STAttr.h"
@@ -52,6 +55,10 @@
 using namespace casa;
 
 using namespace asap;
+
+// tolerance for direction comparison (rad)
+#define TOL_OTF    1.0e-15
+#define TOL_POINT  9.6963e-5  // 20 arcsec
 
 STMath::STMath(bool insitu) :
   insitu_(insitu)
@@ -69,10 +76,21 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
                  const std::string& weight,
                  const std::string& avmode)
 {
+  LogIO os( LogOrigin( "STMath", "average()", WHERE ) ) ;
   if ( avmode == "SCAN" && in.size() != 1 )
     throw(AipsError("Can't perform 'SCAN' averaging on multiple tables.\n"
                     "Use merge first."));
   WeightType wtype = stringToWeight(weight);
+
+  // check if OTF observation
+  String obstype = in[0]->getHeader().obstype ;
+  Double tol = 0.0 ;
+  if ( obstype.find( "OTF" ) != String::npos ) {
+    tol = TOL_OTF ;
+  }
+  else {
+    tol = TOL_POINT ;
+  }
 
   // output
   // clone as this is non insitu
@@ -120,16 +138,53 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
   }
   uInt outrowCount = 0;
   TableIterator iter(baset, cols);
+//   int count = 0 ;
   while (!iter.pastEnd()) {
     Table subt = iter.table();
-    // copy the first row of this selection into the new table
-    tout.addRow();
-    TableCopy::copyRows(tout, subt, outrowCount, 0, 1);
-    // re-index to 0
-    if ( avmode != "SCAN" && avmode != "SOURCE" ) {
-      scanColOut.put(outrowCount, uInt(0));
+//     // copy the first row of this selection into the new table
+//     tout.addRow();
+//     TableCopy::copyRows(tout, subt, outrowCount, 0, 1);
+//     // re-index to 0
+//     if ( avmode != "SCAN" && avmode != "SOURCE" ) {
+//       scanColOut.put(outrowCount, uInt(0));
+//     }
+//     ++outrowCount;
+    MDirection::ScalarColumn dircol ;
+    dircol.attach( subt, "DIRECTION" ) ;
+    Int length = subt.nrow() ;
+    vector< Vector<Double> > dirs ;
+    vector<int> indexes ;
+    for ( Int i = 0 ; i < length ; i++ ) {
+      Vector<Double> t = dircol(i).getAngle(Unit(String("rad"))).getValue() ;
+      //os << << count++ << ": " ;
+      //os << "[" << t[0] << "," << t[1] << "]" << LogIO::POST ;
+      bool adddir = true ;
+      for ( uInt j = 0 ; j < dirs.size() ; j++ ) {
+        //if ( allTrue( t == dirs[j] ) ) {
+        Double dx = t[0] - dirs[j][0] ;
+        Double dy = t[1] - dirs[j][1] ;
+        Double dd = sqrt( dx * dx + dy * dy ) ;
+        //if ( allNearAbs( t, dirs[j], tol ) ) {
+        if ( dd <= tol ) {
+          adddir = false ;
+          break ;
+        }
+      }
+      if ( adddir ) {
+        dirs.push_back( t ) ;
+        indexes.push_back( i ) ;
+      }
     }
-    ++outrowCount;
+    uInt rowNum = dirs.size() ;
+    tout.addRow( rowNum ) ;
+    for ( uInt i = 0 ; i < rowNum ; i++ ) {
+      TableCopy::copyRows( tout, subt, outrowCount+i, indexes[i], 1 ) ;
+      // re-index to 0
+      if ( avmode != "SCAN" && avmode != "SOURCE" ) {
+        scanColOut.put(outrowCount+i, uInt(0));
+      }        
+    }
+    outrowCount += rowNum ;
     ++iter;
   }
   RowAccumulator acc(wtype);
@@ -162,6 +217,28 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
       } else {
         subt = basesubt;
       }
+
+      vector<uInt> removeRows ;
+      uInt nrsubt = subt.nrow() ;
+      for ( uInt irow = 0 ; irow < nrsubt ; irow++ ) {
+        //if ( !allTrue((subt.col("DIRECTION").getArrayDouble(TableExprId(irow)))==rec.asArrayDouble("DIRECTION")) ) {
+        Vector<Double> x0 = (subt.col("DIRECTION").getArrayDouble(TableExprId(irow))) ;
+        Vector<Double> x1 = rec.asArrayDouble("DIRECTION") ;
+        double dx = x0[0] - x1[0] ;
+        double dy = x0[0] - x1[0] ;
+        Double dd = sqrt( dx * dx + dy * dy ) ;
+        //if ( !allNearAbs((subt.col("DIRECTION").getArrayDouble(TableExprId(irow))), rec.asArrayDouble("DIRECTION"), tol ) ) {
+        if ( dd > tol ) {
+          removeRows.push_back( irow ) ;
+        }
+      }
+      if ( removeRows.size() != 0 ) {
+        subt.removeRow( removeRows ) ;
+      }
+      
+      if ( nrsubt == removeRows.size() )
+        throw(AipsError("Averaging data is empty.")) ;
+
       specCol.attach(subt,"SPECTRA");
       flagCol.attach(subt,"FLAGTRA");
       tsysCol.attach(subt,"TSYS");
@@ -215,7 +292,8 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
     acc.reset();
   }
   if (rowstodelete.nelements() > 0) {
-    cout << rowstodelete << endl;
+    //cout << rowstodelete << endl;
+    os << rowstodelete << LogIO::POST ;
     tout.removeRow(rowstodelete);
     if (tout.nrow() == 0) {
       throw(AipsError("Can't average fully flagged data."));
@@ -229,6 +307,16 @@ CountedPtr< Scantable >
                           const std::string & mode,
                           const std::string& avmode )
 {
+  // check if OTF observation
+  String obstype = in->getHeader().obstype ;
+  Double tol = 0.0 ;
+  if ( obstype.find( "OTF" ) != String::npos ) {
+    tol = TOL_OTF ;
+  }
+  else {
+    tol = TOL_POINT ;
+  }
+
   // clone as this is non insitu
   bool insitu = insitu_;
   setInsitu(false);
@@ -260,34 +348,109 @@ CountedPtr< Scantable >
     specCol.attach(subt,"SPECTRA");
     flagCol.attach(subt,"FLAGTRA");
     tsysCol.attach(subt,"TSYS");
-    tout.addRow();
-    TableCopy::copyRows(tout, subt, outrowCount, 0, 1);
-    if ( avmode != "SCAN") {
-      scanColOut.put(outrowCount, uInt(0));
+//     tout.addRow();
+//     TableCopy::copyRows(tout, subt, outrowCount, 0, 1);
+//     if ( avmode != "SCAN") {
+//       scanColOut.put(outrowCount, uInt(0));
+//     }
+//     Vector<Float> tmp;
+//     specCol.get(0, tmp);
+//     uInt nchan = tmp.nelements();
+//     // have to do channel by channel here as MaskedArrMath
+//     // doesn't have partialMedians
+//     Vector<uChar> flags = flagCol.getColumn(Slicer(Slice(0)));
+//     Vector<Float> outspec(nchan);
+//     Vector<uChar> outflag(nchan,0);
+//     Vector<Float> outtsys(1);/// @fixme when tsys is channel based
+//     for (uInt i=0; i<nchan; ++i) {
+//       Vector<Float> specs = specCol.getColumn(Slicer(Slice(i)));
+//       MaskedArray<Float> ma = maskedArray(specs,flags);
+//       outspec[i] = median(ma);
+//       if ( allEQ(ma.getMask(), False) )
+//         outflag[i] = userflag;// flag data
+//     }
+//     outtsys[0] = median(tsysCol.getColumn());
+//     specColOut.put(outrowCount, outspec);
+//     flagColOut.put(outrowCount, outflag);
+//     tsysColOut.put(outrowCount, outtsys);
+//     Double intsum = sum(intCol.getColumn());
+//     intColOut.put(outrowCount, intsum);
+//     ++outrowCount;
+//     ++iter;
+    MDirection::ScalarColumn dircol ;
+    dircol.attach( subt, "DIRECTION" ) ;
+    Int length = subt.nrow() ;
+    vector< Vector<Double> > dirs ;
+    vector<int> indexes ;
+    for ( Int i = 0 ; i < length ; i++ ) {
+      Vector<Double> t = dircol(i).getAngle(Unit(String("rad"))).getValue() ;
+      bool adddir = true ;
+      for ( uInt j = 0 ; j < dirs.size() ; j++ ) {
+        //if ( allTrue( t == dirs[j] ) ) {
+        Double dx = t[0] - dirs[j][0] ;
+        Double dy = t[1] - dirs[j][1] ;
+        Double dd = sqrt( dx * dx + dy * dy ) ;
+        //if ( allNearAbs( t, dirs[j], tol ) ) {
+        if ( dd <= tol ) {
+          adddir = false ;
+          break ;
+        }
+      }
+      if ( adddir ) {
+        dirs.push_back( t ) ;
+        indexes.push_back( i ) ;
+      }
     }
-    Vector<Float> tmp;
-    specCol.get(0, tmp);
-    uInt nchan = tmp.nelements();
-    // have to do channel by channel here as MaskedArrMath
-    // doesn't have partialMedians
-    Vector<uChar> flags = flagCol.getColumn(Slicer(Slice(0)));
-    Vector<Float> outspec(nchan);
-    Vector<uChar> outflag(nchan,0);
-    Vector<Float> outtsys(1);/// @fixme when tsys is channel based
-    for (uInt i=0; i<nchan; ++i) {
-      Vector<Float> specs = specCol.getColumn(Slicer(Slice(i)));
-      MaskedArray<Float> ma = maskedArray(specs,flags);
-      outspec[i] = median(ma);
-      if ( allEQ(ma.getMask(), False) )
-        outflag[i] = userflag;// flag data
+    uInt rowNum = dirs.size() ;
+    tout.addRow( rowNum );
+    for ( uInt i = 0 ; i < rowNum ; i++ ) {
+      TableCopy::copyRows(tout, subt, outrowCount+i, indexes[i], 1) ;
+      if ( avmode != "SCAN") {
+        //scanColOut.put(outrowCount+i, uInt(0));
+      }
     }
-    outtsys[0] = median(tsysCol.getColumn());
-    specColOut.put(outrowCount, outspec);
-    flagColOut.put(outrowCount, outflag);
-    tsysColOut.put(outrowCount, outtsys);
-    Double intsum = sum(intCol.getColumn());
-    intColOut.put(outrowCount, intsum);
-    ++outrowCount;
+    MDirection::ScalarColumn dircolOut ;
+    dircolOut.attach( tout, "DIRECTION" ) ;
+    for ( uInt irow = 0 ; irow < rowNum ; irow++ ) {
+      Vector<Double> t = dircolOut(outrowCount+irow).getAngle(Unit(String("rad"))).getValue() ;
+      Vector<Float> tmp;
+      specCol.get(0, tmp);
+      uInt nchan = tmp.nelements();
+      // have to do channel by channel here as MaskedArrMath
+      // doesn't have partialMedians
+      Vector<uChar> flags = flagCol.getColumn(Slicer(Slice(0)));
+      // mask spectra for different DIRECTION
+      for ( uInt jrow = 0 ; jrow < subt.nrow() ; jrow++ ) {
+        Vector<Double> direction = dircol(jrow).getAngle(Unit(String("rad"))).getValue() ;
+        //if ( t[0] != direction[0] || t[1] != direction[1] ) {
+        Double dx = t[0] - direction[0] ;
+        Double dy = t[1] - direction[1] ;
+        Double dd = sqrt( dx * dx + dy * dy ) ;
+        //if ( !allNearAbs( t, direction, tol ) ) {
+        if ( dd > tol ) {
+          flags[jrow] = userflag ;
+        }
+      }
+      Vector<Float> outspec(nchan);
+      Vector<uChar> outflag(nchan,0);
+      Vector<Float> outtsys(1);/// @fixme when tsys is channel based
+      for (uInt i=0; i<nchan; ++i) {
+        Vector<Float> specs = specCol.getColumn(Slicer(Slice(i)));
+        MaskedArray<Float> ma = maskedArray(specs,flags);
+        outspec[i] = median(ma);
+        if ( allEQ(ma.getMask(), False) )
+          outflag[i] = userflag;// flag data
+      }
+      outtsys[0] = median(tsysCol.getColumn());
+      specColOut.put(outrowCount+irow, outspec);
+      flagColOut.put(outrowCount+irow, outflag);
+      tsysColOut.put(outrowCount+irow, outtsys);
+      Vector<Double> integ = intCol.getColumn() ;
+      MaskedArray<Double> mi = maskedArray( integ, flags ) ;
+      Double intsum = sum(mi);
+      intColOut.put(outrowCount+irow, intsum);
+    }
+    outrowCount += rowNum ;
     ++iter;
   }
   return out;
@@ -296,11 +459,12 @@ CountedPtr< Scantable >
 CountedPtr< Scantable > STMath::getScantable(const CountedPtr< Scantable >& in,
                                              bool droprows)
 {
-  if (insitu_) return in;
+  if (insitu_) {
+    return in;
+  }
   else {
     // clone
-    Scantable* tabp = new Scantable(*in, Bool(droprows));
-    return CountedPtr<Scantable>(tabp);
+    return CountedPtr<Scantable>(new Scantable(*in, Bool(droprows)));
   }
 }
 
@@ -393,6 +557,15 @@ MaskedArray<Float> STMath::maskedArray( const Vector<Float>& s,
   mask.resize(f.shape());
   convertArray(mask, f);
   return MaskedArray<Float>(s,!mask);
+}
+
+MaskedArray<Double> STMath::maskedArray( const Vector<Double>& s,
+                                         const Vector<uChar>& f)
+{
+  Vector<Bool> mask;
+  mask.resize(f.shape());
+  convertArray(mask, f);
+  return MaskedArray<Double>(s,!mask);
 }
 
 Vector<uChar> STMath::flagsFromMA(const MaskedArray<Float>& ma)
@@ -650,6 +823,8 @@ if ( ! calon->conformant(*caloff) ) {
       if (noff && ndiff) {
          //Debug
          //if(noff!=ndiff) cerr<<"noff and ndiff is not equal"<<endl;
+         //LogIO os( LogOrigin( "STMath", "dototalpower()", WHERE ) ) ; 
+         //if(noff!=ndiff) os<<"noff and ndiff is not equal"<<LogIO::POST;
          meanoff = sum(spoff)/noff;
          meandiff = sum(spdiff)/ndiff;
          meantsys= (meanoff/meandiff )*tcalUsed + tcalUsed/2;
@@ -769,6 +944,8 @@ if ( ! ref->conformant(*sig) ) {
 
       //Debug
       //cerr<<"Tsys used="<<tsysrefscalar<<endl;
+      //LogIO os( LogOrigin( "STMath", "dosigref", WHERE ) ) ;
+      //os<<"Tsys used="<<tsysrefscalar<<LogIO::POST;
       // fill the result, replay signal tsys by reference tsys
       outintCol.put(i, resint);
       outspecCol.put(i, specres.getArray());
@@ -935,6 +1112,8 @@ CountedPtr< Scantable > STMath::donod(const casa::CountedPtr<Scantable>& s,
       MaskedArray<Float> avspec =  invsumwt * (wt1*mspec1 + wt2*mspec2);
       //Array<Float> avtsys =  Float(0.5) * (tsys1 + tsys2);
       // cerr<< "Tsys1="<<tsys1<<" Tsys2="<<tsys2<<endl;
+      // LogIO os( LogOrigin( "STMath", "donod", WHERE ) ) ;
+      // os<< "Tsys1="<<tsys1<<" Tsys2="<<tsys2<<LogIO::POST;
       tsys1[0] = sqrt(tsyssq1 + tsyssq2);
       Array<Float> avtsys =  tsys1;
 
@@ -990,7 +1169,7 @@ CountedPtr< Scantable > STMath::dofs( const CountedPtr< Scantable >& s,
   Table& tabout1=out1->table();
   Table& tabout2=out2->table();
   ROScalarColumn<uInt> freqidCol1(tabout1, "FREQ_ID");
-  ROScalarColumn<uInt> freqidCol2(tabout2, "FREQ_ID");
+  ScalarColumn<uInt> freqidCol2(tabout2, "FREQ_ID");
   ROArrayColumn<Float> specCol(tabout2, "SPECTRA");
   Vector<Float> spec; specCol.get(0, spec);
   uInt nchan = spec.nelements();
@@ -999,27 +1178,294 @@ CountedPtr< Scantable > STMath::dofs( const CountedPtr< Scantable >& s,
   Double rp1, rp2, rv1, rv2, inc1, inc2;
   out1->frequencies().getEntry(rp1, rv1, inc1, freqid1);
   out2->frequencies().getEntry(rp2, rv2, inc2, freqid2);
+  //cerr << out1->frequencies().table().nrow() << " " << out2->frequencies().table().nrow() << endl ;
+  //LogIO os( LogOrigin( "STMath", "dofs()", WHERE ) ) ;
+  //os << out1->frequencies().table().nrow() << " " << out2->frequencies().table().nrow() << LogIO::POST ;
   if (rp1==rp2) {
     Double foffset = rv1 - rv2;
     uInt choffset = static_cast<uInt>(foffset/abs(inc2));
     if (choffset >= nchan) {
-      cerr<<"out-band frequency switching, no folding"<<endl;
+      //cerr<<"out-band frequency switching, no folding"<<endl;
+      LogIO os( LogOrigin( "STMath", "dofs()", WHERE ) ) ;
+      os<<"out-band frequency switching, no folding"<<LogIO::POST;
       nofold = True;
     }
   }
- 
+
   if (nofold) {
     std::vector< CountedPtr< Scantable > > tabs; 
     tabs.push_back(out1);
     tabs.push_back(out2);
     out = merge(tabs);
   }
-  else { //folding is not implemented yet
-    out = out1;
+  else {
+    //out = out1;
+    Double choffset = ( rv1 - rv2 ) / inc2 ;
+    out = dofold( out1, out2, choffset ) ;
   }
     
   return out;
 }
+
+CountedPtr<Scantable> STMath::dofold( const CountedPtr<Scantable> &sig,
+                                      const CountedPtr<Scantable> &ref,
+                                      Double choffset,
+                                      Double choffset2 )
+{
+  LogIO os( LogOrigin( "STMath", "dofold", WHERE ) ) ;
+  os << "choffset=" << choffset << " choffset2=" << choffset2 << LogIO::POST ;
+
+  // output scantable
+  CountedPtr<Scantable> out = getScantable( sig, false ) ;
+
+  // separate choffset to integer part and decimal part
+  Int ioffset = (Int)choffset ;
+  Double doffset = choffset - ioffset ;
+  Int ioffset2 = (Int)choffset2 ;
+  Double doffset2 = choffset2 - ioffset2 ;
+  os << "ioffset=" << ioffset << " doffset=" << doffset << LogIO::POST ;
+  os << "ioffset2=" << ioffset2 << " doffset2=" << doffset2 << LogIO::POST ;  
+
+  // get column
+  ROArrayColumn<Float> specCol1( sig->table(), "SPECTRA" ) ;
+  ROArrayColumn<Float> specCol2( ref->table(), "SPECTRA" ) ;
+  ROArrayColumn<Float> tsysCol1( sig->table(), "TSYS" ) ;
+  ROArrayColumn<Float> tsysCol2( ref->table(), "TSYS" ) ;
+  ROArrayColumn<uChar> flagCol1( sig->table(), "FLAGTRA" ) ;
+  ROArrayColumn<uChar> flagCol2( ref->table(), "FLAGTRA" ) ;
+  ROScalarColumn<Double> mjdCol1( sig->table(), "TIME" ) ;
+  ROScalarColumn<Double> mjdCol2( ref->table(), "TIME" ) ;
+  ROScalarColumn<Double> intervalCol1( sig->table(), "INTERVAL" ) ;
+  ROScalarColumn<Double> intervalCol2( ref->table(), "INTERVAL" ) ;
+
+  // check
+  if ( ioffset == 0 ) {
+    LogIO os( LogOrigin( "STMath", "dofold()", WHERE ) ) ;
+    os << "channel offset is zero, no folding" << LogIO::POST ;
+    return out ;
+  }
+  int nchan = ref->nchan() ;
+  if ( abs(ioffset) >= nchan ) {
+    LogIO os( LogOrigin( "STMath", "dofold()", WHERE ) ) ;
+    os << "out-band frequency switching, no folding" << LogIO::POST ;
+    return out ;
+  }
+
+  // attach column for output scantable
+  ArrayColumn<Float> specColOut( out->table(), "SPECTRA" ) ;
+  ArrayColumn<uChar> flagColOut( out->table(), "FLAGTRA" ) ;
+  ArrayColumn<Float> tsysColOut( out->table(), "TSYS" ) ;
+  ScalarColumn<Double> mjdColOut( out->table(), "TIME" ) ;
+  ScalarColumn<Double> intervalColOut( out->table(), "INTERVAL" ) ;
+  ScalarColumn<uInt> fidColOut( out->table(), "FREQ_ID" ) ;
+
+  // for each row
+  // assume that the data order are same between sig and ref
+  RowAccumulator acc( asap::TINTSYS ) ; 
+  for ( int i = 0 ; i < sig->nrow() ; i++ ) {
+    // get values
+    Vector<Float> spsig ;
+    specCol1.get( i, spsig ) ;
+    Vector<Float> spref ;
+    specCol2.get( i, spref ) ;
+    Vector<Float> tsyssig ;
+    tsysCol1.get( i, tsyssig ) ;
+    Vector<Float> tsysref ;
+    tsysCol2.get( i, tsysref ) ;
+    Vector<uChar> flagsig ;
+    flagCol1.get( i, flagsig ) ;
+    Vector<uChar> flagref ;
+    flagCol2.get( i, flagref ) ;
+    Double timesig ;
+    mjdCol1.get( i, timesig ) ;
+    Double timeref ;
+    mjdCol2.get( i, timeref ) ;
+    Double intsig ;
+    intervalCol1.get( i, intsig ) ;
+    Double intref ;
+    intervalCol2.get( i, intref ) ;
+
+    // shift reference spectra
+    int refchan = spref.nelements() ;
+    Vector<Float> sspref( spref.nelements() ) ;
+    Vector<Float> stsysref( tsysref.nelements() ) ;
+    Vector<uChar> sflagref( flagref.nelements() ) ;
+    if ( ioffset > 0 ) {
+      // SPECTRA and FLAGTRA
+      for ( int j = 0 ; j < refchan-ioffset ; j++ ) {
+        sspref[j] = spref[j+ioffset] ; 
+        sflagref[j] = flagref[j+ioffset] ;
+      }
+      for ( int j = refchan-ioffset ; j < refchan ; j++ ) {
+        sspref[j] = spref[j-refchan+ioffset] ;
+        sflagref[j] = flagref[j-refchan+ioffset] ;
+      }
+      spref = sspref.copy() ;
+      flagref = sflagref.copy() ;
+      for ( int j = 0 ; j < refchan - 1 ; j++ ) {
+        sspref[j] = doffset * spref[j+1] + ( 1.0 - doffset ) * spref[j] ;
+        sflagref[j] = flagref[j+1] + flagref[j] ;
+      }
+      sspref[refchan-1] = doffset * spref[0] + ( 1.0 - doffset ) * spref[refchan-1] ;
+      sflagref[refchan-1] = flagref[0] + flagref[refchan-1] ; 
+
+      // TSYS
+      if ( spref.nelements() == tsysref.nelements() ) {
+        for ( int j = 0 ; j < refchan-ioffset ; j++ ) {
+          stsysref[j] = tsysref[j+ioffset] ;
+        }
+        for ( int j = refchan-ioffset ; j < refchan ; j++ ) {
+          stsysref[j] = tsysref[j-refchan+ioffset] ;
+        }
+        tsysref = stsysref.copy() ;
+        for ( int j = 0 ; j < refchan - 1 ; j++ ) {
+          stsysref[j] = doffset * tsysref[j+1] + ( 1.0 - doffset ) * tsysref[j] ;
+        }
+        stsysref[refchan-1] = doffset * tsysref[0] + ( 1.0 - doffset ) * tsysref[refchan-1] ;
+      }
+    }
+    else {
+      // SPECTRA and FLAGTRA
+      for ( int j = 0 ; j < abs(ioffset) ; j++ ) {
+        sspref[j] = spref[refchan+ioffset+j] ;
+        sflagref[j] = flagref[refchan+ioffset+j] ;
+      }
+      for ( int j = abs(ioffset) ; j < refchan ; j++ ) {
+        sspref[j] = spref[j+ioffset] ;
+        sflagref[j] = flagref[j+ioffset] ;
+      }
+      spref = sspref.copy() ;
+      flagref = sflagref.copy() ;
+      sspref[0] = doffset * spref[refchan-1] + ( 1.0 - doffset ) * spref[0] ;
+      sflagref[0] = flagref[0] + flagref[refchan-1] ; 
+      for ( int j = 1 ; j < refchan ; j++ ) {
+        sspref[j] = doffset * spref[j-1] + ( 1.0 - doffset ) * spref[j] ;
+        sflagref[j] = flagref[j-1] + flagref[j] ;
+      }
+      // TSYS
+      if ( spref.nelements() == tsysref.nelements() ) {
+        for ( int j = 0 ; j < abs(ioffset) ; j++ ) {
+          stsysref[j] = tsysref[refchan+ioffset+j] ;
+        }
+        for ( int j = abs(ioffset) ; j < refchan ; j++ ) {
+          stsysref[j] = tsysref[j+ioffset] ;
+        }
+        tsysref = stsysref.copy() ;
+        stsysref[0] = doffset * tsysref[refchan-1] + ( 1.0 - doffset ) * tsysref[0] ;
+        for ( int j = 1 ; j < refchan ; j++ ) {
+          stsysref[j] = doffset * tsysref[j-1] + ( 1.0 - doffset ) * tsysref[j] ;
+        }
+      }
+    }
+
+    // shift signal spectra if necessary (only for APEX?)
+    if ( choffset2 != 0.0 ) {
+      int sigchan = spsig.nelements() ;
+      Vector<Float> sspsig( spsig.nelements() ) ;
+      Vector<Float> stsyssig( tsyssig.nelements() ) ;
+      Vector<uChar> sflagsig( flagsig.nelements() ) ;
+      if ( ioffset2 > 0 ) {
+        // SPECTRA and FLAGTRA
+        for ( int j = 0 ; j < sigchan-ioffset2 ; j++ ) {
+          sspsig[j] = spsig[j+ioffset2] ; 
+          sflagsig[j] = flagsig[j+ioffset2] ;
+        }
+        for ( int j = sigchan-ioffset2 ; j < sigchan ; j++ ) {
+          sspsig[j] = spsig[j-sigchan+ioffset2] ;
+          sflagsig[j] = flagsig[j-sigchan+ioffset2] ;
+        }
+        spsig = sspsig.copy() ;
+        flagsig = sflagsig.copy() ;
+        for ( int j = 0 ; j < sigchan - 1 ; j++ ) {
+          sspsig[j] = doffset2 * spsig[j+1] + ( 1.0 - doffset2 ) * spsig[j] ;
+          sflagsig[j] = flagsig[j+1] || flagsig[j] ;
+        }
+        sspsig[sigchan-1] = doffset2 * spsig[0] + ( 1.0 - doffset2 ) * spsig[sigchan-1] ;
+        sflagsig[sigchan-1] = flagsig[0] || flagsig[sigchan-1] ; 
+        // TSTS
+        if ( spsig.nelements() == tsyssig.nelements() ) {
+          for ( int j = 0 ; j < sigchan-ioffset2 ; j++ ) {
+            stsyssig[j] = tsyssig[j+ioffset2] ;
+          }
+          for ( int j = sigchan-ioffset2 ; j < sigchan ; j++ ) {
+            stsyssig[j] = tsyssig[j-sigchan+ioffset2] ;
+          }
+          tsyssig = stsyssig.copy() ;
+          for ( int j = 0 ; j < sigchan - 1 ; j++ ) {
+            stsyssig[j] = doffset2 * tsyssig[j+1] + ( 1.0 - doffset2 ) * tsyssig[j] ;
+          }
+          stsyssig[sigchan-1] = doffset2 * tsyssig[0] + ( 1.0 - doffset2 ) * tsyssig[sigchan-1] ;
+        }
+      }
+      else {
+        // SPECTRA and FLAGTRA
+        for ( int j = 0 ; j < abs(ioffset2) ; j++ ) {
+          sspsig[j] = spsig[sigchan+ioffset2+j] ;
+          sflagsig[j] = flagsig[sigchan+ioffset2+j] ;
+        }
+        for ( int j = abs(ioffset2) ; j < sigchan ; j++ ) {
+          sspsig[j] = spsig[j+ioffset2] ;
+          sflagsig[j] = flagsig[j+ioffset2] ;
+        }
+        spsig = sspsig.copy() ;
+        flagsig = sflagsig.copy() ;
+        sspsig[0] = doffset2 * spsig[sigchan-1] + ( 1.0 - doffset2 ) * spsig[0] ;
+        sflagsig[0] = flagsig[0] + flagsig[sigchan-1] ; 
+        for ( int j = 1 ; j < sigchan ; j++ ) {
+          sspsig[j] = doffset2 * spsig[j-1] + ( 1.0 - doffset2 ) * spsig[j] ;
+          sflagsig[j] = flagsig[j-1] + flagsig[j] ;
+        }
+        // TSYS
+        if ( spsig.nelements() == tsyssig.nelements() ) {
+          for ( int j = 0 ; j < abs(ioffset2) ; j++ ) {
+            stsyssig[j] = tsyssig[sigchan+ioffset2+j] ;
+          }
+          for ( int j = abs(ioffset2) ; j < sigchan ; j++ ) {
+            stsyssig[j] = tsyssig[j+ioffset2] ;
+          }
+          tsyssig = stsyssig.copy() ;
+          stsyssig[0] = doffset2 * tsyssig[sigchan-1] + ( 1.0 - doffset2 ) * tsyssig[0] ;
+          for ( int j = 1 ; j < sigchan ; j++ ) {
+            stsyssig[j] = doffset2 * tsyssig[j-1] + ( 1.0 - doffset2 ) * tsyssig[j] ;
+          }
+        }
+      }
+    }
+
+    // folding
+    acc.add( spsig, !flagsig, tsyssig, intsig, timesig ) ;
+    acc.add( sspref, !sflagref, stsysref, intref, timeref ) ;
+    
+    // put result
+    specColOut.put( i, acc.getSpectrum() ) ;
+    const Vector<Bool> &msk = acc.getMask() ;
+    Vector<uChar> flg( msk.shape() ) ;
+    convertArray( flg, !msk ) ;
+    flagColOut.put( i, flg ) ;
+    tsysColOut.put( i, acc.getTsys() ) ;
+    intervalColOut.put( i, acc.getInterval() ) ;
+    mjdColOut.put( i, acc.getTime() ) ;
+    // change FREQ_ID to unshifted IF setting (only for APEX?)
+    if ( choffset2 != 0.0 ) {
+      int freqid = fidColOut( 0 ) ; // assume single-IF data
+      double refpix, refval, increment ;
+      out->frequencies().getEntry( refpix, refval, increment, freqid ) ;
+      refval -= choffset * increment ;
+      uInt newfreqid = out->frequencies().addEntry( refpix, refval, increment ) ;
+      Vector<uInt> freqids = fidColOut.getColumn() ;
+      for ( uInt j = 0 ; j < freqids.nelements() ; j++ ) {
+        if ( freqids[j] == freqid ) 
+          freqids[j] = newfreqid ;
+      }
+      fidColOut.putColumn( freqids ) ;
+    }
+
+    acc.reset() ;
+  }
+
+  return out ;
+}
+
 
 CountedPtr< Scantable > STMath::freqSwitch( const CountedPtr< Scantable >& in )
 {
@@ -1512,6 +1958,7 @@ CountedPtr< Scantable > STMath::opacity( const CountedPtr< Scantable > & in,
   ROScalarColumn<Float> elev(tab, "ELEVATION");
   ArrayColumn<Float> specCol(tab, "SPECTRA");
   ArrayColumn<uChar> flagCol(tab, "FLAGTRA");
+  ArrayColumn<Float> tsysCol(tab, "TSYS");
   for ( uInt i=0; i<tab.nrow(); ++i) {
     Float zdist = Float(C::pi_2) - elev(i);
     Float factor = exp(tau/cos(zdist));
@@ -1519,6 +1966,10 @@ CountedPtr< Scantable > STMath::opacity( const CountedPtr< Scantable > & in,
     ma *= factor;
     specCol.put(i, ma.getArray());
     flagCol.put(i, flagsFromMA(ma));
+    Vector<Float> tsys;
+    tsysCol.get(i, tsys);
+    tsys *= factor;
+    tsysCol.put(i, tsys);
   }
   return out;
 }
@@ -1613,11 +2064,8 @@ CountedPtr< Scantable >
   ++it;
   while ( it != in.end() ){
     if ( ! (*it)->conformant(*out) ) {
-      // log message: "ignoring scantable i, as it isn't
-      // conformant with the other(s)"
-      cerr << "oh oh" << endl;
-      ++it;
-      continue;
+      // non conformant.
+      pushLog(String("Warning: Can't merge scantables as header info differs."));
     }
     out->appendToHistoryTable((*it)->history());
     const Table& tab = (*it)->table();
@@ -1627,7 +2075,7 @@ CountedPtr< Scantable >
       while ( !freqit.pastEnd() ) {
         Table thetab = freqit.table();
         uInt nrow = tout.nrow();
-        //tout.addRow(thetab.nrow());
+        tout.addRow(thetab.nrow());
         TableCopy::copyRows(tout, thetab, nrow, 0, thetab.nrow());
         ROTableRow row(thetab);
         for ( uInt i=0; i<thetab.nrow(); ++i) {
@@ -1825,12 +2273,17 @@ CountedPtr< Scantable >
   MPosition refPos = in->getAntennaPosition();
 
   InterpolateArray1D<Double,Float>::InterpolationMethod interp = stringToIMethod(method);
+  /*
+  // Comment from MV.
+  // the following code has been commented out because different FREQ_IDs have to be aligned together even
+  // if the frame doesn't change. So far, lack of this check didn't cause any problems.
   // test if user frame is different to base frame
   if ( in->frequencies().getFrameString(true)
        == in->frequencies().getFrameString(false) ) {
     throw(AipsError("Can't convert as no output frame has been set"
                     " (use set_freqframe) or it is aligned already."));
   }
+  */
   MFrequency::Types system = in->frequencies().getFrame();
   MVTime mvt(refEpoch.getValue());
   String epochout = mvt.string(MVTime::YMD) + String(" (") + refEpoch.getRefString() + String(")");
@@ -1856,33 +2309,45 @@ CountedPtr< Scantable >
     // we are iterating over BEAMNO and IFNO    // we should have constant direction
 
     ROArrayColumn<Float> sCol(t, "SPECTRA");
-    MDirection direction = dirCol(0);
-    uInt nchan = sCol(0).nelements();
+    const MDirection direction = dirCol(0);
+    const uInt nchan = sCol(0).nelements();
+
+    // skip operations if there is nothing to align
+    if (fiter.pastEnd()) {
+        continue;
+    }
+
+    Table ftab = fiter.table();
+    // align all frequency ids with respect to the first encountered id
+    ScalarColumn<uInt> freqidCol(ftab, "FREQ_ID");
+    // get the SpectralCoordinate for the freqid, which we are iterating over
+    SpectralCoordinate sC = in->frequencies().getSpectralCoordinate(freqidCol(0));
+    FrequencyAligner<Float> fa( sC, nchan, refEpoch,
+                                direction, refPos, system );
+    // realign the SpectralCoordinate and put into the output Scantable
+    Vector<String> units(1);
+    units = String("Hz");
+    Bool linear=True;
+    SpectralCoordinate sc2 = fa.alignedSpectralCoordinate(linear);
+    sc2.setWorldAxisUnits(units);
+    const uInt id = out->frequencies().addEntry(sc2.referencePixel()[0],
+                                                sc2.referenceValue()[0],
+                                                sc2.increment()[0]);
     while ( !fiter.pastEnd() ) {
-      Table ftab = fiter.table();
-      ScalarColumn<uInt> freqidCol(ftab, "FREQ_ID");
-      // get the SpectralCoordinate for the freqid, which we are iterating over
-      SpectralCoordinate sC = in->frequencies().getSpectralCoordinate(freqidCol(0));
-      FrequencyAligner<Float> fa( sC, nchan, refEpoch,
-                                  direction, refPos, system );
-      // realign the SpectralCoordinate and put into the output Scantable
-      Vector<String> units(1);
-      units = String("Hz");
-      Bool linear=True;
-      SpectralCoordinate sc2 = fa.alignedSpectralCoordinate(linear);
-      sc2.setWorldAxisUnits(units);
-      uInt id = out->frequencies().addEntry(sc2.referencePixel()[0],
-                                            sc2.referenceValue()[0],
-                                            sc2.increment()[0]);
-      TableVector<uInt> tvec(ftab, "FREQ_ID");
-      tvec = id;
+      ftab = fiter.table();
+      // spectral coordinate for the current FREQ_ID
+      ScalarColumn<uInt> freqidCol2(ftab, "FREQ_ID");
+      sC = in->frequencies().getSpectralCoordinate(freqidCol2(0));
       // create the "global" abcissa for alignment with same FREQ_ID
       Vector<Double> abc(nchan);
-      Double w;
       for (uInt i=0; i<nchan; i++) {
-        sC.toWorld(w,Double(i));
-        abc[i] = w;
+           Double w;
+           sC.toWorld(w,Double(i));
+           abc[i] = w;
       }
+      TableVector<uInt> tvec(ftab, "FREQ_ID");
+      // assign new frequency id to all rows
+      tvec = id;
       // cache abcissa for same time stamps, so iterate over those
       TableIterator timeiter(ftab, "TIME");
       while ( !timeiter.pastEnd() ) {
@@ -1891,8 +2356,8 @@ CountedPtr< Scantable >
         ArrayColumn<uChar> flagCol(tab, "FLAGTRA");
         MEpoch::ROScalarColumn timeCol(tab, "TIME");
         // use align abcissa cache after the first row
-        bool first = true;
         // these rows should be just be POLNO
+        bool first = true;
         for (int i=0; i<int(tab.nrow()); ++i) {
           // input values
           Vector<uChar> flag = flagCol(i);
@@ -2066,17 +2531,28 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 		     const std::string& avmode )
   throw ( casa::AipsError )
 {
+  LogIO os( LogOrigin( "STMath", "new_average()", WHERE ) ) ;
   if ( avmode == "SCAN" && in.size() != 1 )
     throw(AipsError("Can't perform 'SCAN' averaging on multiple tables.\n"
                     "Use merge first."));
   
+  // check if OTF observation
+  String obstype = in[0]->getHeader().obstype ;
+  Double tol = 0.0 ;
+  if ( obstype.find( "OTF" ) != String::npos ) {
+    tol = TOL_OTF ;
+  }
+  else {
+    tol = TOL_POINT ;
+  }
+
   CountedPtr<Scantable> out ;     // processed result 
   if ( compel ) {
     std::vector< CountedPtr<Scantable> > newin ; // input for average process
-    uInt insize = in.size() ;    // number of scantables 
+    uInt insize = in.size() ;    // number of input scantables 
 
     // TEST: do normal average in each table before IF grouping
-    cout << "Do preliminary averaging" << endl ;
+    os << "Do preliminary averaging" << LogIO::POST ;
     vector< CountedPtr<Scantable> > tmpin( insize ) ;
     for ( uInt itable = 0 ; itable < insize ; itable++ ) {
       vector< CountedPtr<Scantable> > v( 1, in[itable] ) ;
@@ -2084,8 +2560,7 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     }
 
     // warning
-    cout << "Average spectra with different spectral resolution" << endl ;
-    cout << endl ;
+    os << "Average spectra with different spectral resolution" << LogIO::POST ;
 
     // temporarily set coordinfo
     vector<string> oldinfo( insize ) ;
@@ -2103,7 +2578,20 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 
 
     // check IF frequency coverage
-    //cout << "Check IF settings in each table" << endl ;
+    // freqid: list of FREQ_ID, which is used, in each table  
+    // iffreq: list of minimum and maximum frequency for each FREQ_ID in 
+    //         each table
+    // freqid[insize][numIF]
+    // freqid: [[id00, id01, ...],
+    //          [id10, id11, ...],
+    //          ...
+    //          [idn0, idn1, ...]]
+    // iffreq[insize][numIF*2]
+    // iffreq: [[min_id00, max_id00, min_id01, max_id01, ...],
+    //          [min_id10, max_id10, min_id11, max_id11, ...],
+    //          ...
+    //          [min_idn0, max_idn0, min_idn1, max_idn1, ...]]
+    //os << "Check IF settings in each table" << LogIO::POST ;
     vector< vector<uInt> > freqid( insize );
     vector< vector<double> > iffreq( insize ) ;
     for ( uInt itable = 0 ; itable < insize ; itable++ ) {
@@ -2118,7 +2606,7 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	  ifnoCol.attach( tmpin[itable]->table(), "IFNO" ) ;
 	  uInt id = freqIDCol( irow ) ;
 	  if ( freqid[itable].size() == 0 || count( freqid[itable].begin(), freqid[itable].end(), id ) == 0 ) {
-	    //cout << "itable = " << itable << ": IF " << id << " is included in the list" << endl ;
+	    //os << "itable = " << itable << ": IF " << id << " is included in the list" << LogIO::POST ;
 	    vector<double> abcissa = tmpin[itable]->getAbcissa( irow ) ;
 	    freqid[itable].push_back( id ) ;
 	    iffreq[itable].push_back( abcissa[0] - 0.5 * ( abcissa[1] - abcissa[0] ) ) ;
@@ -2129,25 +2617,27 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     }
 
     // debug
-    //cout << "IF settings summary:" << endl ;
+    //os << "IF settings summary:" << endl ;
     //for ( uInt i = 0 ; i < freqid.size() ; i++ ) {
-    //cout << "   Table" << i << endl ;
+    //os << "   Table" << i << endl ;
     //for ( uInt j = 0 ; j < freqid[i].size() ; j++ ) {
-    //cout << "      id = " << freqid[i][j] << " (min,max) = (" << iffreq[i][2*j] << "," << iffreq[i][2*j+1] << ")" << endl ;
+    //os << "      id = " << freqid[i][j] << " (min,max) = (" << iffreq[i][2*j] << "," << iffreq[i][2*j+1] << ")" << endl ;
     //}
     //}
-    //cout << endl ;
+    //os << endl ;
+    //os.post() ;
 
     // IF grouping based on their frequency coverage
-    //cout << "IF grouping based on their frequency coverage" << endl ;
-
-    // IF group 
+    // ifgrp: list of table index and FREQ_ID for all members in each IF group
+    // ifgfreq: list of minimum and maximum frequency in each IF group
     // ifgrp[numgrp][nummember*2]
-    // ifgrp = [table00, freqrow00, table01, freqrow01, ...],
-    //         [table11, freqrow11, table11, freqrow11, ...],
+    // ifgrp: [[table00, freqrow00, table01, freqrow01, ...],
+    //         [table10, freqrow10, table11, freqrow11, ...],
     //         ...
+    //         [tablen0, freqrown0, tablen1, freqrown1, ...]]
     // ifgfreq[numgrp*2] 
-    // ifgfreq = [min0, max0, min1, max1, ...]
+    // ifgfreq: [min0_grp0, max0_grp0, min1_grp1, max1_grp1, ...]
+    //os << "IF grouping based on their frequency coverage" << LogIO::POST ;
     vector< vector<uInt> > ifgrp ;
     vector<double> ifgfreq ;
 
@@ -2203,12 +2693,16 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
       }
     }
 
+    // Grouping continuous IF groups (without frequency gap)
+    // freqgrp: list of IF group indexes in each frequency group
+    // freqrange: list of minimum and maximum frequency in each frequency group
     // freqgrp[numgrp][nummember]
-    // freqgrp = [ifgrp00, ifgrp01, ifgrp02, ...],
+    // freqgrp: [[ifgrp00, ifgrp01, ifgrp02, ...],
     //           [ifgrp10, ifgrp11, ifgrp12, ...],
     //           ...
+    //           [ifgrpn0, ifgrpn1, ifgrpn2, ...]]
     // freqrange[numgrp*2]
-    // freqrange = [min0, max0, min1, max1, ...]
+    // freqrange: [min_grp0, max_grp0, min_grp1, max_grp1, ...]
     vector< vector<uInt> > freqgrp ;
     double freqrange = 0.0 ;
     uInt grpnum = 0 ;
@@ -2227,31 +2721,41 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	
 
     // print IF groups
-    cout << "IF Group summary: " << endl ;
-    cout << "   GROUP_ID [FREQ_MIN, FREQ_MAX]: (TABLE_ID, FREQ_ID)" << endl ;
+    ostringstream oss ;
+    oss << "IF Group summary: " << endl ;
+    oss << "   GROUP_ID [FREQ_MIN, FREQ_MAX]: (TABLE_ID, FREQ_ID)" << endl ;
     for ( uInt i = 0 ; i < ifgrp.size() ; i++ ) {
-      cout << "   GROUP " << setw( 2 ) << i << " [" << ifgfreq[2*i] << "," << ifgfreq[2*i+1] << "]: " ;
+      oss << "   GROUP " << setw( 2 ) << i << " [" << ifgfreq[2*i] << "," << ifgfreq[2*i+1] << "]: " ;
       for ( uInt j = 0 ; j < ifgrp[i].size()/2 ; j++ ) {
-	cout << "(" << ifgrp[i][2*j] << "," << ifgrp[i][2*j+1] << ") " ; 
+	oss << "(" << ifgrp[i][2*j] << "," << ifgrp[i][2*j+1] << ") " ; 
       }
-      cout << endl ;
+      oss << endl ;
     }
-    cout << endl ;
+    oss << endl ;
+    os << oss.str() << LogIO::POST ;
     
     // print frequency group
-    cout << "Frequency Group summary: " << endl ;
-    cout << "   GROUP_ID [FREQ_MIN, FREQ_MAX]: IF_GROUP_ID" << endl ;
+    oss.str("") ;
+    oss << "Frequency Group summary: " << endl ;
+    oss << "   GROUP_ID [FREQ_MIN, FREQ_MAX]: IF_GROUP_ID" << endl ;
     for ( uInt i = 0 ; i < freqgrp.size() ; i++ ) {
-      cout << "   GROUP " << setw( 2 ) << i << " [" << ifgfreq[2*freqgrp[i][0]] << "," << ifgfreq[2*freqgrp[i][freqgrp[i].size()-1]+1] << "]: " ;
+      oss << "   GROUP " << setw( 2 ) << i << " [" << ifgfreq[2*freqgrp[i][0]] << "," << ifgfreq[2*freqgrp[i][freqgrp[i].size()-1]+1] << "]: " ;
       for ( uInt j = 0 ; j < freqgrp[i].size() ; j++ ) {
-	cout << freqgrp[i][j] << " " ;
+	oss << freqgrp[i][j] << " " ;
       }
-      cout << endl ;
+      oss << endl ;
     }
-    cout << endl ;
+    oss << endl ;
+    os << oss.str() << LogIO::POST ;
 
     // membership check
+    // groups: list of IF group indexes whose frequency range overlaps with 
+    //         that of each table and IF
     // groups[numtable][numIF][nummembership]
+    // groups: [[[grp, grp,...], [grp, grp,...],...],
+    //          [[grp, grp,...], [grp, grp,...],...],
+    //          ...
+    //          [[grp, grp,...], [grp, grp,...],...]] 
     vector< vector< vector<uInt> > > groups( insize ) ;
     for ( uInt i = 0 ; i < insize ; i++ ) {
       groups[i].resize( freqid[i].size() ) ;
@@ -2268,16 +2772,18 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     }
 
     // print membership
+    //oss.str("") ;
     //for ( uInt i = 0 ; i < insize ; i++ ) {
-    //cout << "Table " << i << endl ;
+    //oss << "Table " << i << endl ;
     //for ( uInt j = 0 ; j < groups[i].size() ; j++ ) {
-    //cout << "   FREQ_ID " <<  setw( 2 ) << freqid[i][j] << ": " ;
+    //oss << "   FREQ_ID " <<  setw( 2 ) << freqid[i][j] << ": " ;
     //for ( uInt k = 0 ; k < groups[i][j].size() ; k++ ) {
-    //cout << setw( 2 ) << groups[i][j][k] << " " ;
+    //oss << setw( 2 ) << groups[i][j][k] << " " ;
     //}
-    //cout << endl ;
+    //oss << endl ;
     //}
     //}
+    //os << oss.str() << LogIO::POST ;
 
     // set back coordinfo
     for ( uInt itable = 0 ; itable < insize ; itable++ ) {
@@ -2294,13 +2800,13 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     vector<uInt> newtableids( insize ) ;
     vector<uInt> newifids( insize, 0 ) ;
     for ( uInt itable = 0 ; itable < insize ; itable++ ) {
-      //cout << "Table " << setw(2) << itable << ": " ;
+      //os << "Table " << itable << ": " ;
       for ( uInt ifrow = 0 ; ifrow < groups[itable].size() ; ifrow++ ) {
 	addrow[itable].push_back( groups[itable][ifrow].size()-1 ) ;
-	//cout << addrow[itable][ifrow] << " " ;
+	//os << addrow[itable][ifrow] << " " ;
       }
       addtable[itable] = *max_element( addrow[itable].begin(), addrow[itable].end() ) ;
-      //cout << "(" << addtable[itable] << ")" << endl ;
+      //os << "(" << addtable[itable] << ")" << LogIO::POST ;
     }
     newin.resize( insize ) ;
     copy( tmpin.begin(), tmpin.end(), newin.begin() ) ;
@@ -2326,7 +2832,7 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	    taqlstream << "]" ;
 	}
 	string taql = taqlstream.str() ;
-	//cout << "taql = " << taql << endl ;
+	//os << "taql = " << taql << LogIO::POST ;
 	STSelector selector = STSelector() ;
 	selector.setTaQL( taql ) ;
 	add->setSelection( selector ) ;
@@ -2353,21 +2859,22 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     }
 
     // print IF groups again for debug
-    //cout << "IF Group summary: " << endl ;
-    //cout << "   GROUP_ID [FREQ_MIN, FREQ_MAX]: (TABLE_ID, FREQ_ID)" << endl ;
+    //oss.str( "" ) ;
+    //oss << "IF Group summary: " << endl ;
+    //oss << "   GROUP_ID [FREQ_MIN, FREQ_MAX]: (TABLE_ID, FREQ_ID)" << endl ;
     //for ( uInt i = 0 ; i < ifgrp.size() ; i++ ) {
-    //cout << "   GROUP " << setw( 2 ) << i << " [" << ifgfreq[2*i] << "," << ifgfreq[2*i+1] << "]: " ;
+    //oss << "   GROUP " << setw( 2 ) << i << " [" << ifgfreq[2*i] << "," << ifgfreq[2*i+1] << "]: " ;
     //for ( uInt j = 0 ; j < ifgrp[i].size()/2 ; j++ ) {
-    //cout << "(" << ifgrp[i][2*j] << "," << ifgrp[i][2*j+1] << ") " ; 
+    //oss << "(" << ifgrp[i][2*j] << "," << ifgrp[i][2*j+1] << ") " ; 
     //}
-    //cout << endl ;
+    //oss << endl ;
     //}
-    //cout << endl ;
+    //oss << endl ;
+    //os << oss.str() << LogIO::POST ;
 
-    // reset SCANNO and IF: IF number is reset by the result of sortation 
-    cout << "All scan number is set to 0" << endl ;
-    //cout << "All IF number is set to IF group index" << endl ;
-    cout << endl ;
+    // reset SCANNO and IFNO/FREQ_ID: IF is reset by the result of sortation 
+    os << "All scan number is set to 0" << LogIO::POST ;
+    //os << "All IF number is set to IF group index" << LogIO::POST ;
     insize = newin.size() ;
     for ( uInt itable = 0 ; itable < insize ; itable++ ) {
       uInt rows = newin[itable]->nrow() ;
@@ -2418,7 +2925,7 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     }
 
     // reset spectra and flagtra: pick up common part of frequency coverage
-    //cout << "Pick common frequency range and align resolution" << endl ;
+    //os << "Pick common frequency range and align resolution" << LogIO::POST ;
     for ( uInt itable = 0 ; itable < insize ; itable++ ) {
       uInt rows = newin[itable]->nrow() ;
       int nminchan = -1 ;
@@ -2428,11 +2935,11 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	uInt ifno = ifNoVec[itable][irow] ;  // IFNO is reset by group index
 	double minfreq = ifgfreq[2*ifno] ;
 	double maxfreq = ifgfreq[2*ifno+1] ;
-	//cout << "frequency range: [" << minfreq << "," << maxfreq << "]" << endl ;
+	//os << "frequency range: [" << minfreq << "," << maxfreq << "]" << LogIO::POST ;
 	vector<double> abcissa = newin[itable]->getAbcissa( irow ) ;
 	int nchan = abcissa.size() ;
 	double resol = abcissa[1] - abcissa[0] ;
-	//cout << "abcissa range  : [" << abcissa[0] << "," << abcissa[nchan-1] << "]" << endl ;
+	//os << "abcissa range  : [" << abcissa[0] << "," << abcissa[nchan-1] << "]" << LogIO::POST ;
 	if ( minfreq <= abcissa[0] ) 
 	  nminchan = 0 ;
 	else {
@@ -2447,7 +2954,7 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	  double cfreq = ( abcissa[abcissa.size()-1] - maxfreq + 0.5 * resol ) / resol ;
 	  nmaxchan = abcissa.size() - 1 - int(cfreq) - ( ( cfreq - int(cfreq) >= 0.5 ) ? 1 : 0 ) ;
 	}
-	//cout << "channel range (" << irow << "): [" << nminchan << "," << nmaxchan << "]" << endl ;
+	//os << "channel range (" << irow << "): [" << nminchan << "," << nmaxchan << "]" << LogIO::POST ;
 	if ( nmaxchan > nminchan ) {
 	  newin[itable]->reshapeSpectrum( nminchan, nmaxchan, irow ) ;
 	  int newchan = nmaxchan - nminchan + 1 ;
@@ -2474,7 +2981,13 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 
     
     // reset spectra and flagtra: align spectral resolution
-    //cout << "Align spectral resolution" << endl ;
+    //os << "Align spectral resolution" << LogIO::POST ;
+    // gmaxdnu: the coarsest frequency resolution in the frequency group
+    // gmemid: member index that have a resolution equal to gmaxdnu
+    // gmaxdnu[numfreqgrp]
+    // gmaxdnu: [dnu0, dnu1, ...]
+    // gmemid[numfreqgrp]
+    // gmemid: [id0, id1, ...]
     vector<double> gmaxdnu( freqgrp.size(), 0.0 ) ;
     vector<uInt> gmemid( freqgrp.size(), 0 ) ;
     for ( uInt igrp = 0 ; igrp < ifgrp.size() ; igrp++ ) {
@@ -2497,7 +3010,7 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	    vector<double> abcissa = newin[tableid]->getAbcissa( index ) ;
 	    int nchan = abcissa.size() ;
 	    double dnu = abcissa[1] - abcissa[0] ;
-	    //cout << "GROUP " << igrp << " (" << tableid << "," << rowid << "): nchan = " << nchan << " (minchan = " << minchan << ")" << endl ; 
+	    //os << "GROUP " << igrp << " (" << tableid << "," << rowid << "): nchan = " << nchan << " (minchan = " << minchan << ")" << LogIO::POST ; 
 	    if ( nchan < minchan ) {
 	      minchan = nchan ;
 	      maxdnu = dnu ;
@@ -2508,27 +3021,27 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	  }
 	}
 	// regrid spectra in each group
-	cout << "GROUP " << igrp << endl ;
-	cout << "   Channel number is adjusted to " << minchan << endl ;
-	cout << "   Corresponding frequency resolution is " << maxdnu << "Hz" << endl ;
+	os << "GROUP " << igrp << endl ;
+	os << "   Channel number is adjusted to " << minchan << endl ;
+	os << "   Corresponding frequency resolution is " << maxdnu << "Hz" << LogIO::POST ;
 	for ( uInt imem = 0 ; imem < ifgrp[igrp].size()/2 ; imem++ ) {
 	  uInt tableid = ifgrp[igrp][2*imem] ;
 	  uInt rowid = ifgrp[igrp][2*imem+1] ;
 	  freqIDCol.attach( newin[tableid]->table(), "FREQ_ID" ) ;
-	  //cout << "tableid = " << tableid << " rowid = " << rowid << ": " << endl ;
-	  //cout << "   regridChannel applied to " ;
+	  //os << "tableid = " << tableid << " rowid = " << rowid << ": " << LogIO::POST ;
+	  //os << "   regridChannel applied to " ;
 	  if ( tableid != reftable ) 
 	    refreqid = newin[tableid]->frequencies().addEntry( refpixref, refvalref, refinc ) ;
 	  for ( uInt irow = 0 ; irow < newin[tableid]->table().nrow() ; irow++ ) {
 	    uInt tfreqid = freqIdVec[tableid][irow] ;
 	    if ( tfreqid == rowid ) {	  
-	      //cout << irow << " " ;
+	      //os << irow << " " ;
 	      newin[tableid]->regridChannel( minchan, maxdnu, irow ) ;
 	      freqIDCol.put( irow, refreqid ) ;
 	      freqIdVec[tableid][irow] = refreqid ;
 	    }
 	  }
-	  //cout << endl ;
+	  //os << LogIO::POST ;
 	} 
       }
       else {
@@ -2552,7 +3065,6 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	}
       }
     }
-    cout << endl ;
 
     // set back coordinfo
     for ( uInt itable = 0 ; itable < insize ; itable++ ) {
@@ -2577,8 +3089,8 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     //return tmpout ;
 
     // combine frequency group
-    cout << "Combine spectra based on frequency grouping" << endl ;
-    cout << "IFNO is renumbered as frequency group ID (see above)" << endl ;
+    os << "Combine spectra based on frequency grouping" << LogIO::POST ;
+    os << "IFNO is renumbered as frequency group ID (see above)" << LogIO::POST ;
     vector<string> coordinfo = tmpout->getCoordInfo() ;
     oldinfo[0] = coordinfo[0] ;
     coordinfo[0] = "Hz" ;
@@ -2594,7 +3106,7 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
 	taqlstream << "]" ;
     }
     string taql = taqlstream.str() ;
-    //cout << "taql = " << taql << endl ;
+    //os << "taql = " << taql << LogIO::POST ;
     STSelector selector = STSelector() ;
     selector.setTaQL( taql ) ;
     oldInsitu = insitu_ ;
@@ -2627,8 +3139,13 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
     polnoColOut.attach( out->table(), "POLNO" ) ;
     ScalarColumn<uInt> freqidColOut ;
     freqidColOut.attach( out->table(), "FREQ_ID" ) ;
+    MDirection::ScalarColumn dirColOut ;
+    dirColOut.attach( out->table(), "DIRECTION" ) ;
     Table &tab = tmpout->table() ;
-    TableIterator iter( tab, "POLNO" ) ;
+    Block<String> cols(1);
+    cols[0] = String("POLNO") ;
+    TableIterator iter( tab, cols ) ;
+    bool done = false ;
     vector< vector<uInt> > sizes( freqgrp.size() ) ;
     while( !iter.pastEnd() ) {
       vector< vector<Float> > specout( freqgrp.size() ) ;
@@ -2640,41 +3157,105 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
       ifnoCol.attach( iter.table(), "IFNO" ) ;
       ScalarColumn<uInt> polnos ;
       polnos.attach( iter.table(), "POLNO" ) ;
+      MDirection::ScalarColumn dircol ;
+      dircol.attach( iter.table(), "DIRECTION" ) ;
       uInt polno = polnos( 0 ) ;
-      //cout << "POLNO iteration: " << polno << endl ;
-      for ( uInt igrp = 0 ; igrp < freqgrp.size() ; igrp++ ) {
-	sizes[igrp].resize( freqgrp[igrp].size() ) ;
-	for ( uInt imem = 0 ; imem < freqgrp[igrp].size() ; imem++ ) {
-	  for ( uInt irow = 0 ; irow < iter.table().nrow() ; irow++ ) {
-	    uInt ifno = ifnoCol( irow ) ;
-	    if ( ifno == freqgrp[igrp][imem] ) {
-	      Vector<Float> spec = specCols( irow ) ;
-	      Vector<uChar> flag = flagCols( irow ) ;
-	      vector<Float> svec ;
-	      spec.tovector( svec ) ;
-	      vector<uChar> fvec ;
-	      flag.tovector( fvec ) ;
-	      //cout << "spec.size() = " << svec.size() << " fvec.size() = " << fvec.size() << endl ;
-	      specout[igrp].insert( specout[igrp].end(), svec.begin(), svec.end() ) ;
-	      flagout[igrp].insert( flagout[igrp].end(), fvec.begin(), fvec.end() ) ;
-	      //cout << "specout[" << igrp << "].size() = " << specout[igrp].size() << endl ;
-	      sizes[igrp][imem] = spec.nelements() ;
-	    }
-	  }
-	}
-	for ( uInt irow = 0 ; irow < out->table().nrow() ; irow++ ) {
-	  uInt ifout = ifnoColOut( irow ) ;
-	  uInt polout = polnoColOut( irow ) ;
-	  if ( ifout == gmemid[igrp] && polout == polno ) {
-	    // set SPECTRA and FRAGTRA
-	    Vector<Float> newspec( specout[igrp] ) ;
-	    Vector<uChar> newflag( flagout[igrp] ) ;
-	    specColOut.put( irow, newspec ) ;
-	    flagColOut.put( irow, newflag ) ;
-	    // IFNO renumbering
-	    ifnoColOut.put( irow, igrp ) ;
-	  }
-	} 
+      //os << "POLNO iteration: " << polno << LogIO::POST ;
+//       for ( uInt igrp = 0 ; igrp < freqgrp.size() ; igrp++ ) {
+// 	sizes[igrp].resize( freqgrp[igrp].size() ) ;
+// 	for ( uInt imem = 0 ; imem < freqgrp[igrp].size() ; imem++ ) {
+// 	  for ( uInt irow = 0 ; irow < iter.table().nrow() ; irow++ ) {
+// 	    uInt ifno = ifnoCol( irow ) ;
+// 	    if ( ifno == freqgrp[igrp][imem] ) {
+// 	      Vector<Float> spec = specCols( irow ) ;
+// 	      Vector<uChar> flag = flagCols( irow ) ;
+// 	      vector<Float> svec ;
+// 	      spec.tovector( svec ) ;
+// 	      vector<uChar> fvec ;
+// 	      flag.tovector( fvec ) ;
+// 	      //os << "spec.size() = " << svec.size() << " fvec.size() = " << fvec.size() << LogIO::POST ;
+// 	      specout[igrp].insert( specout[igrp].end(), svec.begin(), svec.end() ) ;
+// 	      flagout[igrp].insert( flagout[igrp].end(), fvec.begin(), fvec.end() ) ;
+// 	      //os << "specout[" << igrp << "].size() = " << specout[igrp].size() << LogIO::POST ;
+// 	      sizes[igrp][imem] = spec.nelements() ;
+// 	    }
+// 	  }
+// 	}
+// 	for ( uInt irow = 0 ; irow < out->table().nrow() ; irow++ ) {
+// 	  uInt ifout = ifnoColOut( irow ) ;
+// 	  uInt polout = polnoColOut( irow ) ;
+// 	  if ( ifout == gmemid[igrp] && polout == polno ) {
+// 	    // set SPECTRA and FRAGTRA
+// 	    Vector<Float> newspec( specout[igrp] ) ;
+// 	    Vector<uChar> newflag( flagout[igrp] ) ;
+// 	    specColOut.put( irow, newspec ) ;
+// 	    flagColOut.put( irow, newflag ) ;
+// 	    // IFNO renumbering
+// 	    ifnoColOut.put( irow, igrp ) ;
+// 	  }
+// 	} 
+//       }
+      // get a list of number of channels for each frequency group member
+      if ( !done ) {
+        for ( uInt igrp = 0 ; igrp < freqgrp.size() ; igrp++ ) {
+          sizes[igrp].resize( freqgrp[igrp].size() ) ;
+          for ( uInt imem = 0 ; imem < freqgrp[igrp].size() ; imem++ ) {
+            for ( uInt irow = 0 ; irow < iter.table().nrow() ; irow++ ) {
+              uInt ifno = ifnoCol( irow ) ;
+              if ( ifno == freqgrp[igrp][imem] ) {
+                Vector<Float> spec = specCols( irow ) ;
+                sizes[igrp][imem] = spec.nelements() ;
+                break ;
+              }                
+            }
+          }
+        }
+        done = true ;
+      }
+      // combine spectra
+      for ( uInt irow = 0 ; irow < out->table().nrow() ; irow++ ) {
+        uInt polout = polnoColOut( irow ) ;
+        if ( polout == polno ) {
+          uInt ifout = ifnoColOut( irow ) ;
+          Vector<Double> direction = dirColOut(irow).getAngle(Unit(String("rad"))).getValue() ;
+          uInt igrp ;
+          for ( uInt jgrp = 0 ; jgrp < freqgrp.size() ; jgrp++ ) {
+            if ( ifout == gmemid[jgrp] ) {
+              igrp = jgrp ;
+              break ;
+            }
+          }
+          for ( uInt imem = 0 ; imem < freqgrp[igrp].size() ; imem++ ) {
+            for ( uInt jrow = 0 ; jrow < iter.table().nrow() ; jrow++ ) {
+              uInt ifno = ifnoCol( jrow ) ;
+              Vector<Double> tdir = dircol(jrow).getAngle(Unit(String("rad"))).getValue() ;
+              //if ( ifno == freqgrp[igrp][imem] && allTrue( tdir == direction  ) ) {
+              Double dx = tdir[0] - direction[0] ;
+              Double dy = tdir[1] - direction[1] ;
+              Double dd = sqrt( dx * dx + dy * dy ) ;
+              //if ( ifno == freqgrp[igrp][imem] && allNearAbs( tdir, direction, tol ) ) {
+              if ( ifno == freqgrp[igrp][imem] && dd <= tol ) {
+                Vector<Float> spec = specCols( jrow ) ;
+                Vector<uChar> flag = flagCols( jrow ) ;
+                vector<Float> svec ;
+                spec.tovector( svec ) ;
+                vector<uChar> fvec ;
+                flag.tovector( fvec ) ;
+                //os << "spec.size() = " << svec.size() << " fvec.size() = " << fvec.size() << LogIO::POST ;
+                specout[igrp].insert( specout[igrp].end(), svec.begin(), svec.end() ) ;
+                flagout[igrp].insert( flagout[igrp].end(), fvec.begin(), fvec.end() ) ;
+                //os << "specout[" << igrp << "].size() = " << specout[igrp].size() << LogIO::POST ;
+              }
+            }
+          }
+          // set SPECTRA and FRAGTRA
+          Vector<Float> newspec( specout[igrp] ) ;
+          Vector<uChar> newflag( flagout[igrp] ) ;
+          specColOut.put( irow, newspec ) ;
+          flagColOut.put( irow, newflag ) ;
+          // IFNO renumbering
+          ifnoColOut.put( irow, igrp ) ; 
+        }
       }
       iter++ ;
     }
@@ -2689,7 +3270,7 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
       for ( uInt irow = 0 ; irow < out->table().nrow() ; irow++ ) {
 	if ( ifnoColOut( irow ) == gmemid[igrp] && !updated[igrp] ) {
 	  uInt freqidOut = freqidColOut( irow ) ;
-	  //cout << "freqgrp " << igrp << " freqidOut = " << freqidOut << endl ;
+	  //os << "freqgrp " << igrp << " freqidOut = " << freqidOut << LogIO::POST ;
 	  double refpix ;
 	  double refval ;
 	  double increm ;
@@ -2713,4 +3294,1149 @@ STMath::new_average( const std::vector<CountedPtr<Scantable> >& in,
   }
   
   return out ;
+}
+
+CountedPtr<Scantable> STMath::cwcal( const CountedPtr<Scantable>& s,
+                                     const String calmode, 
+                                     const String antname )
+{
+  // frequency switch
+  if ( calmode == "fs" ) {
+    return cwcalfs( s, antname ) ;
+  }
+  else {
+    string skystr = "*_sky" ;
+    string hotstr = "*_hot" ;
+    string coldstr = "*_cold" ;
+    string onstr = "*_" ;
+    string offstr = "*_" ;
+    
+    if ( calmode == "ps" || calmode == "otf" ) {
+      onstr += "pson" ;
+      offstr += "psoff" ;
+    }
+    else if ( calmode == "wob" ) {
+      onstr += "wobon" ;
+      offstr += "woboff" ;
+    }
+    
+    vector<bool> masks = s->getMask( 0 ) ;
+    
+    // sky scan
+    STSelector sel = STSelector() ;
+    sel.setName( skystr ) ;
+    s->setSelection( sel ) ;
+    vector< CountedPtr<Scantable> > tmp( 1, getScantable( s, false ) ) ;
+    CountedPtr<Scantable> asky = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+
+    // hot scan
+    sel.setName( hotstr ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> ahot = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // cold scan
+    sel.setName( coldstr ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> acold = average( tmp, masks, "TINT", "SCNAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+
+    // off scan
+    sel.setName( offstr ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> aoff = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // on scan
+    bool insitu = insitu_ ;
+    insitu_ = false ;
+    CountedPtr<Scantable> out = getScantable( s, true ) ;
+    insitu_ = insitu ;
+    sel.setName( onstr ) ;
+    s->setSelection( sel ) ;
+    TableCopy::copyRows( out->table(), s->table() ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // process each on scan
+    ArrayColumn<Float> tsysCol ;
+    tsysCol.attach( out->table(), "TSYS" ) ;
+    for ( int i = 0 ; i < out->nrow() ; i++ ) {
+      vector<float> sp = getCalibratedSpectra( out, aoff, asky, ahot, acold, i, antname ) ;
+      out->setSpectrum( sp, i ) ;
+      string reftime = out->getTime( i ) ;
+      vector<int> ii( 1, out->getIF( i ) ) ;
+      vector<int> ib( 1, out->getBeam( i ) ) ;
+      vector<int> ip( 1, out->getPol( i ) ) ;
+      sel.setIFs( ii ) ;
+      sel.setBeams( ib ) ;
+      sel.setPolarizations( ip ) ;
+      asky->setSelection( sel ) ;    
+      vector<float> sptsys = getTsysFromTime( reftime, asky, "linear" ) ;
+      const Vector<Float> Vtsys( sptsys ) ;
+      tsysCol.put( i, Vtsys ) ;
+      asky->unsetSelection() ;
+      sel.reset() ;
+    }
+
+    // remove additional string from SRCNAME
+    ScalarColumn<String> srcnameCol ;
+    srcnameCol.attach( out->table(), "SRCNAME" ) ;
+    Vector<String> srcnames( srcnameCol.getColumn() ) ;
+    for ( uInt i = 0 ; i < srcnames.nelements() ; i++ ) {
+      srcnames[i] = srcnames[i].substr( 0, srcnames[i].find( onstr.substr(1,onstr.size()-1) ) ) ;
+    }
+    srcnameCol.putColumn( srcnames ) ;
+
+    // flux unit
+    out->setFluxUnit( "K" ) ;
+
+    return out ;
+  }
+}
+  
+CountedPtr<Scantable> STMath::cwcalfs( const CountedPtr<Scantable>& s,
+                                       const String antname )
+{
+  string skystr = "*_sky" ;
+  string skystr1 = "*_fslo_sky" ;
+  string skystr2 = "*_fshi_sky" ;
+  string hotstr = "*_hot" ;
+  string hotstr1 = "*_fslo_hot" ;
+  string hotstr2 = "*_fshi_hot" ;
+  string coldstr = "*_cold" ;
+  string coldstr1 = "*_fslo_cold" ;
+  string coldstr2 = "*_fshi_cold" ;
+  string offstr1 = "*_fslo_off" ;
+  string offstr2 = "*_fshi_off" ;
+  string sigstr = "*_" ;
+  string refstr = "*_" ;
+
+  // APEX calibration mode
+  int apexcalmode = 1 ;
+ 
+  if ( antname.find( "APEX" ) != string::npos ) {
+    sigstr += "fslo" ;
+    refstr += "fshi" ;    
+
+    // check if off scan exists or not
+    STSelector sel = STSelector() ;
+    sel.setName( offstr1 ) ;
+    try {
+      s->setSelection( sel ) ;
+    }
+    catch ( AipsError &e ) {
+      apexcalmode = 0 ;
+    }
+  }
+  else {
+    sigstr += "fssig" ;
+    refstr += "fsref" ;
+  }
+
+  vector<bool> masks = s->getMask( 0 ) ;
+  CountedPtr<Scantable> ssig, sref ;
+  CountedPtr<Scantable> out ;
+
+  if ( antname.find( "APEX" ) != string::npos && apexcalmode == 0 ) {
+    // APEX fs data without off scan
+    // sky scan
+    STSelector sel = STSelector() ;
+    sel.setName( skystr1 ) ;
+    s->setSelection( sel ) ;
+    vector< CountedPtr<Scantable> > tmp( 1, getScantable( s, false ) ) ;
+    CountedPtr<Scantable> askylo = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    sel.setName( skystr2 ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> askyhi = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // hot scan
+    sel.setName( hotstr1 ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> ahotlo = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    sel.setName( hotstr2 ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> ahothi = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // cold scan
+    sel.setName( coldstr1 ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> acoldlo = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    sel.setName( coldstr2 ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> acoldhi = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // ref scan
+    bool insitu = insitu_ ;
+    insitu_ = false ;
+    sref = getScantable( s, true ) ;
+    insitu_ = insitu ;
+    sel.setName( refstr ) ;
+    s->setSelection( sel ) ;
+    TableCopy::copyRows( sref->table(), s->table() ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // sig scan
+    insitu_ = false ;
+    ssig = getScantable( s, true ) ;
+    insitu_ = insitu ;
+    sel.setName( sigstr ) ;
+    s->setSelection( sel ) ;
+    TableCopy::copyRows( ssig->table(), s->table() ) ;
+    s->unsetSelection() ;
+    sel.reset() ;  
+
+    // process each sig and ref scan
+    ArrayColumn<Float> tsysCollo ;
+    tsysCollo.attach( ssig->table(), "TSYS" ) ;
+    ArrayColumn<Float> tsysColhi ;
+    tsysColhi.attach( sref->table(), "TSYS" ) ;
+    for ( int i = 0 ; i < ssig->nrow() ; i++ ) {
+      vector< CountedPtr<Scantable> > sky( 2 ) ;
+      sky[0] = askylo ;
+      sky[1] = askyhi ;
+      vector< CountedPtr<Scantable> > hot( 2 ) ;
+      hot[0] = ahotlo ;
+      hot[1] = ahothi ;
+      vector< CountedPtr<Scantable> > cold( 2 ) ;
+      cold[0] = acoldlo ;
+      cold[1] = acoldhi ;
+      vector<float> sp = getFSCalibratedSpectra( ssig, sref, sky, hot, cold, i ) ;
+      ssig->setSpectrum( sp, i ) ;
+      string reftime = ssig->getTime( i ) ;
+      vector<int> ii( 1, ssig->getIF( i ) ) ;
+      vector<int> ib( 1, ssig->getBeam( i ) ) ;
+      vector<int> ip( 1, ssig->getPol( i ) ) ;
+      sel.setIFs( ii ) ;
+      sel.setBeams( ib ) ;
+      sel.setPolarizations( ip ) ;
+      askylo->setSelection( sel ) ;
+      vector<float> sptsys = getTsysFromTime( reftime, askylo, "linear" ) ;
+      const Vector<Float> Vtsyslo( sptsys ) ;
+      tsysCollo.put( i, Vtsyslo ) ;
+      askylo->unsetSelection() ;
+      sel.reset() ;
+      sky[0] = askyhi ;
+      sky[1] = askylo ;
+      hot[0] = ahothi ;
+      hot[1] = ahotlo ;
+      cold[0] = acoldhi ;
+      cold[1] = acoldlo ;
+      sp = getFSCalibratedSpectra( sref, ssig, sky, hot, cold, i ) ;
+      sref->setSpectrum( sp, i ) ;
+      reftime = sref->getTime( i ) ;
+      ii[0] = sref->getIF( i )  ;
+      ib[0] = sref->getBeam( i ) ;
+      ip[0] = sref->getPol( i ) ;
+      sel.setIFs( ii ) ;
+      sel.setBeams( ib ) ;
+      sel.setPolarizations( ip ) ;
+      askyhi->setSelection( sel ) ;    
+      sptsys = getTsysFromTime( reftime, askyhi, "linear" ) ;
+      const Vector<Float> Vtsyshi( sptsys ) ;
+      tsysColhi.put( i, Vtsyshi ) ;
+      askyhi->unsetSelection() ;
+      sel.reset() ;
+    }
+
+  }
+  else if ( antname.find( "APEX" ) != string::npos && apexcalmode == 1 ) {
+    // APEX fs data with off scan
+    // sky scan
+    STSelector sel = STSelector() ;
+    sel.setName( skystr1 ) ;
+    s->setSelection( sel ) ;
+    vector< CountedPtr<Scantable> > tmp( 1, getScantable( s, false ) ) ;
+    CountedPtr<Scantable> askylo = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    sel.setName( skystr2 ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> askyhi = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // hot scan
+    sel.setName( hotstr1 ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> ahotlo = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    sel.setName( hotstr2 ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> ahothi = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // cold scan
+    sel.setName( coldstr1 ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> acoldlo = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    sel.setName( coldstr2 ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> acoldhi = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+
+    // off scan
+    sel.setName( offstr1 ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> aofflo = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    sel.setName( offstr2 ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> aoffhi = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // ref scan
+    bool insitu = insitu_ ;
+    insitu_ = false ;
+    sref = getScantable( s, true ) ;
+    insitu_ = insitu ;
+    sel.setName( refstr ) ;
+    s->setSelection( sel ) ;
+    TableCopy::copyRows( sref->table(), s->table() ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // sig scan
+    insitu_ = false ;
+    ssig = getScantable( s, true ) ;
+    insitu_ = insitu ;
+    sel.setName( sigstr ) ;
+    s->setSelection( sel ) ;
+    TableCopy::copyRows( ssig->table(), s->table() ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+
+    // process each sig and ref scan
+    ArrayColumn<Float> tsysCollo ;
+    tsysCollo.attach( ssig->table(), "TSYS" ) ;
+    ArrayColumn<Float> tsysColhi ;
+    tsysColhi.attach( sref->table(), "TSYS" ) ;
+    for ( int i = 0 ; i < ssig->nrow() ; i++ ) {
+      vector<float> sp = getCalibratedSpectra( ssig, aofflo, askylo, ahotlo, acoldlo, i, antname ) ;
+      ssig->setSpectrum( sp, i ) ;
+      sp = getCalibratedSpectra( sref, aoffhi, askyhi, ahothi, acoldhi, i, antname ) ; 
+      string reftime = ssig->getTime( i ) ;
+      vector<int> ii( 1, ssig->getIF( i ) ) ;
+      vector<int> ib( 1, ssig->getBeam( i ) ) ;
+      vector<int> ip( 1, ssig->getPol( i ) ) ;
+      sel.setIFs( ii ) ;
+      sel.setBeams( ib ) ;
+      sel.setPolarizations( ip ) ;
+      askylo->setSelection( sel ) ;
+      vector<float> sptsys = getTsysFromTime( reftime, askylo, "linear" ) ;
+      const Vector<Float> Vtsyslo( sptsys ) ;
+      tsysCollo.put( i, Vtsyslo ) ;
+      askylo->unsetSelection() ;
+      sel.reset() ;
+      sref->setSpectrum( sp, i ) ;
+      reftime = sref->getTime( i ) ;
+      ii[0] = sref->getIF( i )  ;
+      ib[0] = sref->getBeam( i ) ;
+      ip[0] = sref->getPol( i ) ;
+      sel.setIFs( ii ) ;
+      sel.setBeams( ib ) ;
+      sel.setPolarizations( ip ) ;
+      askyhi->setSelection( sel ) ;    
+      sptsys = getTsysFromTime( reftime, askyhi, "linear" ) ;
+      const Vector<Float> Vtsyshi( sptsys ) ;
+      tsysColhi.put( i, Vtsyshi ) ;
+      askyhi->unsetSelection() ;
+      sel.reset() ;
+    }
+  }
+  else if ( antname.find( "APEX" ) == string::npos ) {
+    // non-APEX fs data
+    // sky scan
+    STSelector sel = STSelector() ;
+    sel.setName( skystr ) ;
+    s->setSelection( sel ) ;
+    vector< CountedPtr<Scantable> > tmp( 1, getScantable( s, false ) ) ;
+    CountedPtr<Scantable> asky = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // hot scan
+    sel.setName( hotstr ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> ahot = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+
+     // cold scan
+    sel.setName( coldstr ) ;
+    s->setSelection( sel ) ;
+    tmp[0] = getScantable( s, false ) ;
+    CountedPtr<Scantable> acold = average( tmp, masks, "TINT", "SCAN" ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+   
+    // ref scan
+    bool insitu = insitu_ ;
+    insitu_ = false ;
+    sref = getScantable( s, true ) ;
+    insitu_ = insitu ;
+    sel.setName( refstr ) ;
+    s->setSelection( sel ) ;
+    TableCopy::copyRows( sref->table(), s->table() ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+    
+    // sig scan
+    insitu_ = false ;
+    ssig = getScantable( s, true ) ;
+    insitu_ = insitu ;
+    sel.setName( sigstr ) ;
+    s->setSelection( sel ) ;
+    TableCopy::copyRows( ssig->table(), s->table() ) ;
+    s->unsetSelection() ;
+    sel.reset() ;
+
+    // process each sig and ref scan
+    ArrayColumn<Float> tsysColsig ;
+    tsysColsig.attach( ssig->table(), "TSYS" ) ;
+    ArrayColumn<Float> tsysColref ;
+    tsysColref.attach( ssig->table(), "TSYS" ) ;
+    for ( int i = 0 ; i < ssig->nrow() ; i++ ) {
+      vector<float> sp = getFSCalibratedSpectra( ssig, sref, asky, ahot, acold, i ) ;
+      ssig->setSpectrum( sp, i ) ;
+      string reftime = ssig->getTime( i ) ;
+      vector<int> ii( 1, ssig->getIF( i ) ) ;
+      vector<int> ib( 1, ssig->getBeam( i ) ) ;
+      vector<int> ip( 1, ssig->getPol( i ) ) ;
+      sel.setIFs( ii ) ;
+      sel.setBeams( ib ) ;
+      sel.setPolarizations( ip ) ;
+      asky->setSelection( sel ) ;
+      vector<float> sptsys = getTsysFromTime( reftime, asky, "linear" ) ;
+      const Vector<Float> Vtsys( sptsys ) ;
+      tsysColsig.put( i, Vtsys ) ;
+      asky->unsetSelection() ;
+      sel.reset() ;
+      sp = getFSCalibratedSpectra( sref, ssig, asky, ahot, acold, i ) ;
+      sref->setSpectrum( sp, i ) ;
+      tsysColref.put( i, Vtsys ) ;
+    }
+  }
+
+  // do folding if necessary
+  Table sigtab = ssig->table() ;
+  Table reftab = sref->table() ;
+  ScalarColumn<uInt> sigifnoCol ;
+  ScalarColumn<uInt> refifnoCol ;
+  ScalarColumn<uInt> sigfidCol ;
+  ScalarColumn<uInt> reffidCol ;
+  uInt nchan = (uInt)ssig->nchan() ;
+  sigifnoCol.attach( sigtab, "IFNO" ) ;
+  refifnoCol.attach( reftab, "IFNO" ) ;
+  sigfidCol.attach( sigtab, "FREQ_ID" ) ;
+  reffidCol.attach( reftab, "FREQ_ID" ) ;
+  Vector<uInt> sfids( sigfidCol.getColumn() ) ;
+  Vector<uInt> rfids( reffidCol.getColumn() ) ;
+  vector<uInt> sfids_unique ;
+  vector<uInt> rfids_unique ;
+  vector<uInt> sifno_unique ;
+  vector<uInt> rifno_unique ;
+  for ( uInt i = 0 ; i < sfids.nelements() ; i++ ) {
+    if ( count( sfids_unique.begin(), sfids_unique.end(), sfids[i] ) == 0 ) {
+      sfids_unique.push_back( sfids[i] ) ;
+      sifno_unique.push_back( ssig->getIF( i ) ) ;
+    }
+    if ( count( rfids_unique.begin(), rfids_unique.end(),  rfids[i] ) == 0 ) {
+      rfids_unique.push_back( rfids[i] ) ;
+      rifno_unique.push_back( sref->getIF( i ) ) ;
+    }
+  }
+  double refpix_sig, refval_sig, increment_sig ;
+  double refpix_ref, refval_ref, increment_ref ;
+  vector< CountedPtr<Scantable> > tmp( sfids_unique.size() ) ;
+  for ( uInt i = 0 ; i < sfids_unique.size() ; i++ ) {
+    ssig->frequencies().getEntry( refpix_sig, refval_sig, increment_sig, sfids_unique[i] ) ;
+    sref->frequencies().getEntry( refpix_ref, refval_ref, increment_ref, rfids_unique[i] ) ;
+    if ( refpix_sig == refpix_ref ) {
+      double foffset = refval_ref - refval_sig ;
+      int choffset = static_cast<int>(foffset/increment_sig) ;
+      double doffset = foffset / increment_sig ;
+      if ( abs(choffset) >= nchan ) {
+        LogIO os( LogOrigin( "STMath", "cwcalfs", WHERE ) ) ;
+        os << "FREQ_ID=[" << sfids_unique[i] << "," << rfids_unique[i] << "]: out-band frequency switching, no folding" << LogIO::POST ;
+        os << "Just return signal data" << LogIO::POST ;
+        //std::vector< CountedPtr<Scantable> > tabs ;
+        //tabs.push_back( ssig ) ;
+        //tabs.push_back( sref ) ;
+        //out = merge( tabs ) ;
+        tmp[i] = ssig ;
+      }
+      else {
+        STSelector sel = STSelector() ;
+        vector<int> v( 1, sifno_unique[i] ) ; 
+        sel.setIFs( v ) ;
+        ssig->setSelection( sel ) ;
+        sel.reset() ;
+        v[0] = rifno_unique[i] ;
+        sel.setIFs( v ) ;
+        sref->setSelection( sel ) ;
+        sel.reset() ;
+        if ( antname.find( "APEX" ) != string::npos ) {
+          tmp[i] = dofold( ssig, sref, 0.5*doffset, -0.5*doffset ) ;
+          //tmp[i] = dofold( ssig, sref, doffset ) ;
+        }
+        else {
+          tmp[i] = dofold( ssig, sref, doffset ) ;
+        }
+        // remove additional string from SRCNAME
+        ScalarColumn<String> srcnameCol ;
+        srcnameCol.attach( tmp[i]->table(), "SRCNAME" ) ;
+        Vector<String> srcnames( srcnameCol.getColumn() ) ;
+        for ( uInt i = 0 ; i < srcnames.nelements() ; i++ ) {
+          srcnames[i] = srcnames[i].substr( 0, srcnames[i].find( sigstr.substr(1,sigstr.size()-1) ) ) ;
+        }
+        srcnameCol.putColumn( srcnames ) ;
+        ssig->unsetSelection() ;
+        sref->unsetSelection() ;
+      }
+    }
+  }
+
+  if ( tmp.size() > 1 ) {
+    out = merge( tmp ) ;
+  }
+  else {
+    out = tmp[0] ;
+  }
+
+  // flux unit
+  out->setFluxUnit( "K" ) ;
+
+  return out ;
+}
+
+vector<float> STMath::getSpectrumFromTime( string reftime, 
+                                           CountedPtr<Scantable>& s,
+                                           string mode ) 
+{
+  LogIO os( LogOrigin( "STMath", "getSpectrumFromTime", WHERE ) ) ;
+  vector<float> sp ;
+
+  if ( s->nrow() == 0 ) {
+    os << LogIO::SEVERE << "No spectra in the input scantable. Return empty spectrum." << LogIO::POST ;
+    return sp ;
+  }
+  else if ( s->nrow() == 1 ) {
+    os << "use row " << 0 << " (scanno = " << s->getScan( 0 ) << ")" << LogIO::POST ;
+    return s->getSpectrum( 0 ) ; 
+  }
+  else {
+    vector<int> idx = getRowIdFromTime( reftime, s ) ;
+    if ( mode == "before" ) {
+      int id = -1 ;
+      if ( idx[0] != -1 ) {
+        id = idx[0] ;
+      }
+      else if ( idx[1] != -1 ) {
+        os << LogIO::WARN << "Failed to find a scan before reftime. return a spectrum just after the reftime." << LogIO::POST ;
+        id = idx[1] ;
+      }
+      os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
+      sp = s->getSpectrum( id ) ;
+    }
+    else if ( mode == "after" ) {
+      int id = -1 ;
+      if ( idx[1] != -1 ) {
+        id = idx[1] ;
+      }
+      else if ( idx[0] != -1 ) {
+        os << LogIO::WARN << "Failed to find a scan after reftime. return a spectrum just before the reftime." << LogIO::POST ;
+        id = idx[1] ;
+      }
+      os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
+      sp = s->getSpectrum( id ) ;
+    }
+    else if ( mode == "nearest" ) {
+      int id = -1 ;
+      if ( idx[0] == -1 ) {
+        id = idx[1] ;
+      }
+      else if ( idx[1] == -1 ) {
+        id = idx[0] ;
+      }
+      else if ( idx[0] == idx[1] ) {
+        id = idx[0] ;
+      }
+      else {
+        double t0 = getMJD( s->getTime( idx[0] ) ) ;
+        double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        double tref = getMJD( reftime ) ;
+        if ( abs( t0 - tref ) > abs( t1 - tref ) ) {
+          id = idx[1] ;
+        }
+        else {
+          id = idx[0] ;
+        }
+      }
+      os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
+      sp = s->getSpectrum( id ) ;      
+    }
+    else if ( mode == "linear" ) {
+      if ( idx[0] == -1 ) {
+        // use after
+        os << LogIO::WARN << "Failed to interpolate. return a spectrum just after the reftime." << LogIO::POST ;
+        int id = idx[1] ;
+        os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
+        sp = s->getSpectrum( id ) ;
+      }
+      else if ( idx[1] == -1 ) {
+        // use before
+        os << LogIO::WARN << "Failed to interpolate. return a spectrum just before the reftime." << LogIO::POST ;
+        int id = idx[0] ;
+        os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
+        sp = s->getSpectrum( id ) ;
+      }
+      else if ( idx[0] == idx[1] ) {
+        // use before
+        os << "No need to interporate." << LogIO::POST ;
+        int id = idx[0] ;
+        os << "use row " << id << " (scanno = " << s->getScan( id ) << ")" << LogIO::POST ;
+        sp = s->getSpectrum( id ) ;
+      }
+      else {
+        // do interpolation
+        os << "interpolate between " << idx[0] << " and " << idx[1] << " (scanno: " << s->getScan( idx[0] ) << ", " << s->getScan( idx[1] ) << ")" << LogIO::POST ;
+        double t0 = getMJD( s->getTime( idx[0] ) ) ;
+        double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        double tref = getMJD( reftime ) ;
+        vector<float> sp0 = s->getSpectrum( idx[0] ) ;
+        vector<float> sp1 = s->getSpectrum( idx[1] ) ;
+        for ( unsigned int i = 0 ; i < sp0.size() ; i++ ) {
+          float v = ( sp1[i] - sp0[i] ) / ( t1 - t0 ) * ( tref - t0 ) + sp0[i] ;
+          sp.push_back( v ) ;
+        }
+      }
+    }
+    else {
+      os << LogIO::SEVERE << "Unknown mode" << LogIO::POST ;
+    }
+    return sp ;
+  }
+}
+
+double STMath::getMJD( string strtime ) 
+{
+  if ( strtime.find("/") == string::npos ) {
+    // MJD time string
+    return atof( strtime.c_str() ) ;
+  }
+  else {
+    // string in YYYY/MM/DD/HH:MM:SS format
+    uInt year = atoi( strtime.substr( 0, 4 ).c_str() ) ;
+    uInt month = atoi( strtime.substr( 5, 2 ).c_str() ) ;
+    uInt day = atoi( strtime.substr( 8, 2 ).c_str() ) ;
+    uInt hour = atoi( strtime.substr( 11, 2 ).c_str() ) ;
+    uInt minute = atoi( strtime.substr( 14, 2 ).c_str() ) ;
+    uInt sec = atoi( strtime.substr( 17, 2 ).c_str() ) ;
+    Time t( year, month, day, hour, minute, sec ) ;
+    return t.modifiedJulianDay() ;
+  }
+}
+
+vector<int> STMath::getRowIdFromTime( string reftime, CountedPtr<Scantable> &s )
+{
+  double reft = getMJD( reftime ) ;
+  double dtmin = 1.0e100 ;
+  double dtmax = -1.0e100 ;
+  vector<double> dt ;
+  int just_before = -1 ;
+  int just_after = -1 ;
+  for ( int i = 0 ; i < s->nrow() ; i++ ) {
+    dt.push_back( getMJD( s->getTime( i ) ) - reft ) ; 
+  }
+  for ( unsigned int i = 0 ; i < dt.size() ; i++ ) {
+    if ( dt[i] > 0.0 ) {
+      // after reftime
+      if ( dt[i] < dtmin ) {
+        just_after = i ;
+        dtmin = dt[i] ;
+      }
+    }
+    else if ( dt[i] < 0.0 ) {
+      // before reftime
+      if ( dt[i] > dtmax ) {
+        just_before = i ;
+        dtmax = dt[i] ;
+      }
+    }
+    else {
+      // just a reftime
+      just_before = i ;
+      just_after = i ;
+      dtmax = 0 ;
+      dtmin = 0 ;
+      break ;
+    }
+  }
+
+  vector<int> v ;
+  v.push_back( just_before ) ;
+  v.push_back( just_after ) ;
+
+  return v ;
+}
+
+vector<float> STMath::getTcalFromTime( string reftime, 
+                                       CountedPtr<Scantable>& s,
+                                       string mode ) 
+{
+  LogIO os( LogOrigin( "STMath", "getTcalFromTime", WHERE ) ) ;
+  vector<float> tcal ;
+  STTcal tcalTable = s->tcal() ;
+  String time ;
+  Vector<Float> tcalval ;
+  if ( s->nrow() == 0 ) {
+    os << LogIO::SEVERE << "No row in the input scantable. Return empty tcal." << LogIO::POST ;
+    return tcal ;
+  }
+  else if ( s->nrow() == 1 ) {
+    uInt tcalid = s->getTcalId( 0 ) ;
+    os << "use row " << 0 << " (tcalid = " << tcalid << ")" << LogIO::POST ;
+    tcalTable.getEntry( time, tcalval, tcalid ) ;
+    tcalval.tovector( tcal ) ;
+    return tcal ;
+  }
+  else {
+    vector<int> idx = getRowIdFromTime( reftime, s ) ;
+    if ( mode == "before" ) {
+      int id = -1 ;
+      if ( idx[0] != -1 ) {
+        id = idx[0] ;
+      }
+      else if ( idx[1] != -1 ) {
+        os << LogIO::WARN << "Failed to find a scan before reftime. return a spectrum just after the reftime." << LogIO::POST ;
+        id = idx[1] ;
+      }
+      uInt tcalid = s->getTcalId( id ) ;
+      os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
+      tcalTable.getEntry( time, tcalval, tcalid ) ;
+      tcalval.tovector( tcal ) ;
+    }
+    else if ( mode == "after" ) {
+      int id = -1 ;
+      if ( idx[1] != -1 ) {
+        id = idx[1] ;
+      }
+      else if ( idx[0] != -1 ) {
+        os << LogIO::WARN << "Failed to find a scan after reftime. return a spectrum just before the reftime." << LogIO::POST ;
+        id = idx[1] ;
+      }
+      uInt tcalid = s->getTcalId( id ) ;
+      os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
+      tcalTable.getEntry( time, tcalval, tcalid ) ;
+      tcalval.tovector( tcal ) ;
+    }
+    else if ( mode == "nearest" ) {
+      int id = -1 ;
+      if ( idx[0] == -1 ) {
+        id = idx[1] ;
+      }
+      else if ( idx[1] == -1 ) {
+        id = idx[0] ;
+      }
+      else if ( idx[0] == idx[1] ) {
+        id = idx[0] ;
+      }
+      else {
+        double t0 = getMJD( s->getTime( idx[0] ) ) ;
+        double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        double tref = getMJD( reftime ) ;
+        if ( abs( t0 - tref ) > abs( t1 - tref ) ) {
+          id = idx[1] ;
+        }
+        else {
+          id = idx[0] ;
+        }
+      }
+      uInt tcalid = s->getTcalId( id ) ;
+      os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
+      tcalTable.getEntry( time, tcalval, tcalid ) ;
+      tcalval.tovector( tcal ) ;
+    }
+    else if ( mode == "linear" ) {
+      if ( idx[0] == -1 ) {
+        // use after
+        os << LogIO::WARN << "Failed to interpolate. return a spectrum just after the reftime." << LogIO::POST ;
+        int id = idx[1] ;
+        uInt tcalid = s->getTcalId( id ) ;
+        os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
+        tcalTable.getEntry( time, tcalval, tcalid ) ;
+        tcalval.tovector( tcal ) ;
+      }
+      else if ( idx[1] == -1 ) {
+        // use before
+        os << LogIO::WARN << "Failed to interpolate. return a spectrum just before the reftime." << LogIO::POST ;
+        int id = idx[0] ;
+        uInt tcalid = s->getTcalId( id ) ;
+        os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
+        tcalTable.getEntry( time, tcalval, tcalid ) ;
+        tcalval.tovector( tcal ) ;
+      }
+      else if ( idx[0] == idx[1] ) {
+        // use before
+        os << "No need to interporate." << LogIO::POST ;
+        int id = idx[0] ;
+        uInt tcalid = s->getTcalId( id ) ;
+        os << "use row " << id << " (tcalid = " << tcalid << ")" << LogIO::POST ;
+        tcalTable.getEntry( time, tcalval, tcalid ) ;
+        tcalval.tovector( tcal ) ;
+      }
+      else {
+        // do interpolation
+        os << "interpolate between " << idx[0] << " and " << idx[1] << " (scanno: " << s->getScan( idx[0] ) << ", " << s->getScan( idx[1] ) << ")" << LogIO::POST ;
+        double t0 = getMJD( s->getTime( idx[0] ) ) ;
+        double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        double tref = getMJD( reftime ) ;
+        vector<float> tcal0 ;
+        vector<float> tcal1 ;
+        uInt tcalid0 = s->getTcalId( idx[0] ) ;
+        uInt tcalid1 = s->getTcalId( idx[1] ) ;
+        tcalTable.getEntry( time, tcalval, tcalid0 ) ;
+        tcalval.tovector( tcal0 ) ;
+        tcalTable.getEntry( time, tcalval, tcalid1 ) ;
+        tcalval.tovector( tcal1 ) ;        
+        for ( unsigned int i = 0 ; i < tcal0.size() ; i++ ) {
+          float v = ( tcal1[i] - tcal0[i] ) / ( t1 - t0 ) * ( tref - t0 ) + tcal0[i] ;
+          tcal.push_back( v ) ;
+        }
+      }
+    }
+    else {
+      os << LogIO::SEVERE << "Unknown mode" << LogIO::POST ;
+    }
+    return tcal ;
+  }
+}
+
+vector<float> STMath::getTsysFromTime( string reftime, 
+                                       CountedPtr<Scantable>& s,
+                                       string mode ) 
+{
+  LogIO os( LogOrigin( "STMath", "getTsysFromTime", WHERE ) ) ;
+  ArrayColumn<Float> tsysCol ;
+  tsysCol.attach( s->table(), "TSYS" ) ;
+  vector<float> tsys ;
+  String time ;
+  Vector<Float> tsysval ;
+  if ( s->nrow() == 0 ) {
+    os << LogIO::SEVERE << "No row in the input scantable. Return empty tsys." << LogIO::POST ;
+    return tsys ;
+  }
+  else if ( s->nrow() == 1 ) {
+    os << "use row " << 0 << LogIO::POST ;
+    tsysval = tsysCol( 0 ) ;
+    tsysval.tovector( tsys ) ;
+    return tsys ;
+  }
+  else {
+    vector<int> idx = getRowIdFromTime( reftime, s ) ;
+    if ( mode == "before" ) {
+      int id = -1 ;
+      if ( idx[0] != -1 ) {
+        id = idx[0] ;
+      }
+      else if ( idx[1] != -1 ) {
+        os << LogIO::WARN << "Failed to find a scan before reftime. return a spectrum just after the reftime." << LogIO::POST ;
+        id = idx[1] ;
+      }
+      os << "use row " << id << LogIO::POST ;
+      tsysval = tsysCol( id ) ;
+      tsysval.tovector( tsys ) ;
+    }
+    else if ( mode == "after" ) {
+      int id = -1 ;
+      if ( idx[1] != -1 ) {
+        id = idx[1] ;
+      }
+      else if ( idx[0] != -1 ) {
+        os << LogIO::WARN << "Failed to find a scan after reftime. return a spectrum just before the reftime." << LogIO::POST ;
+        id = idx[1] ;
+      }
+      os << "use row " << id << LogIO::POST ;
+      tsysval = tsysCol( id ) ;
+      tsysval.tovector( tsys ) ;
+    }
+    else if ( mode == "nearest" ) {
+      int id = -1 ;
+      if ( idx[0] == -1 ) {
+        id = idx[1] ;
+      }
+      else if ( idx[1] == -1 ) {
+        id = idx[0] ;
+      }
+      else if ( idx[0] == idx[1] ) {
+        id = idx[0] ;
+      }
+      else {
+        double t0 = getMJD( s->getTime( idx[0] ) ) ;
+        double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        double tref = getMJD( reftime ) ;
+        if ( abs( t0 - tref ) > abs( t1 - tref ) ) {
+          id = idx[1] ;
+        }
+        else {
+          id = idx[0] ;
+        }
+      }
+      os << "use row " << id << LogIO::POST ;
+      tsysval = tsysCol( id ) ;
+      tsysval.tovector( tsys ) ;
+    }
+    else if ( mode == "linear" ) {
+      if ( idx[0] == -1 ) {
+        // use after
+        os << LogIO::WARN << "Failed to interpolate. return a spectrum just after the reftime." << LogIO::POST ;
+        int id = idx[1] ;
+        os << "use row " << id << LogIO::POST ;
+        tsysval = tsysCol( id ) ;
+        tsysval.tovector( tsys ) ;
+      }
+      else if ( idx[1] == -1 ) {
+        // use before
+        os << LogIO::WARN << "Failed to interpolate. return a spectrum just before the reftime." << LogIO::POST ;
+        int id = idx[0] ;
+        os << "use row " << id << LogIO::POST ;
+        tsysval = tsysCol( id ) ;
+        tsysval.tovector( tsys ) ;
+      }
+      else if ( idx[0] == idx[1] ) {
+        // use before
+        os << "No need to interporate." << LogIO::POST ;
+        int id = idx[0] ;
+        os << "use row " << id << LogIO::POST ;
+        tsysval = tsysCol( id ) ;
+        tsysval.tovector( tsys ) ;
+      }
+      else {
+        // do interpolation
+        os << "interpolate between " << idx[0] << " and " << idx[1] << " (scanno: " << s->getScan( idx[0] ) << ", " << s->getScan( idx[1] ) << ")" << LogIO::POST ;
+        double t0 = getMJD( s->getTime( idx[0] ) ) ;
+        double t1 = getMJD( s->getTime( idx[1] ) ) ;
+        double tref = getMJD( reftime ) ;
+        vector<float> tsys0 ;
+        vector<float> tsys1 ;
+        tsysval = tsysCol( idx[0] ) ;
+        tsysval.tovector( tsys0 ) ;
+        tsysval = tsysCol( idx[1] ) ;
+        tsysval.tovector( tsys1 ) ;        
+        for ( unsigned int i = 0 ; i < tsys0.size() ; i++ ) {
+          float v = ( tsys1[i] - tsys0[i] ) / ( t1 - t0 ) * ( tref - t0 ) + tsys0[i] ;
+          tsys.push_back( v ) ;
+        }
+      }
+    }
+    else {
+      os << LogIO::SEVERE << "Unknown mode" << LogIO::POST ;
+    }
+    return tsys ;
+  }
+}
+
+vector<float> STMath::getCalibratedSpectra( CountedPtr<Scantable>& on,
+                                            CountedPtr<Scantable>& off,
+                                            CountedPtr<Scantable>& sky,
+                                            CountedPtr<Scantable>& hot,
+                                            CountedPtr<Scantable>& cold,
+                                            int index,
+                                            string antname ) 
+{
+  string reftime = on->getTime( index ) ;
+  vector<int> ii( 1, on->getIF( index ) ) ;
+  vector<int> ib( 1, on->getBeam( index ) ) ;
+  vector<int> ip( 1, on->getPol( index ) ) ;
+  vector<int> ic( 1, on->getScan( index ) ) ;
+  STSelector sel = STSelector() ;
+  sel.setIFs( ii ) ;
+  sel.setBeams( ib ) ;
+  sel.setPolarizations( ip ) ;
+  sky->setSelection( sel ) ;
+  hot->setSelection( sel ) ;
+  cold->setSelection( sel ) ;
+  off->setSelection( sel ) ;
+  vector<float> spsky = getSpectrumFromTime( reftime, sky, "linear" ) ;
+  vector<float> sphot = getSpectrumFromTime( reftime, hot, "linear" ) ;
+  vector<float> spcold = getSpectrumFromTime( reftime, cold, "linear" ) ;
+  vector<float> spoff = getSpectrumFromTime( reftime, off, "linear" ) ;
+  vector<float> spec = on->getSpectrum( index ) ;
+  vector<float> tcal = getTcalFromTime( reftime, sky, "linear" ) ;
+  vector<float> sp( tcal.size() ) ;
+  if ( antname.find( "APEX" ) != string::npos ) {
+    // using gain array
+    for ( unsigned int j = 0 ; j < tcal.size() ; j++ ) {
+      float v = ( ( spec[j] - spoff[j] ) / spoff[j] )
+        * ( spsky[j] / ( sphot[j] - spsky[j] ) ) * tcal[j] ;
+      sp[j] = v ;
+    }
+  }
+  else if ( antname.find( "ALMA" ) != string::npos ) {
+    // two-load calibration
+    // from equation 5 and 12 of ALMA memo 318 (Mangum 2000) 
+    //
+    // 2009/09/09 Takeshi Nakazato
+    for ( unsigned int j = 0 ; j < tcal.size() ; j++ ) {
+      // 
+      // in case that Tcal is assumed as signal gain
+      //
+      //float K = ( sphot[j] - spcold[j] ) / ( thot - tcold ) ;
+      //float v = ( spec[j] - spoff[j] ) * exp( tsig ) / ( K * tcal[j] * eta ) ; 
+      //
+      // in case that Tcal is defined as 
+      //
+      //    Tcal = ( K * Gs * eta_l * exp( - tau_s ) )^-1
+      // 
+      float v = tcal[j] * ( spec[j] - spsky[j] ) ;
+      sp[j] = v ;
+    }
+  }
+  else {
+    // Chopper-Wheel calibration (Ulich & Haas 1976)
+    for ( unsigned int j = 0 ; j < tcal.size() ; j++ ) {
+      float v = ( spec[j] - spoff[j] ) / ( sphot[j] - spsky[j] ) * tcal[j] ;
+      sp[j] = v ;
+    }
+  }
+  sel.reset() ;
+  sky->unsetSelection() ;
+  hot->unsetSelection() ;
+  cold->unsetSelection() ;
+  off->unsetSelection() ;
+
+  return sp ;
+}
+
+vector<float> STMath::getFSCalibratedSpectra( CountedPtr<Scantable>& sig,
+                                              CountedPtr<Scantable>& ref,
+                                              CountedPtr<Scantable>& sky,
+                                              CountedPtr<Scantable>& hot,
+                                              CountedPtr<Scantable>& cold,
+                                              int index ) 
+{
+  string reftime = sig->getTime( index ) ;
+  vector<int> ii( 1, sig->getIF( index ) ) ;
+  vector<int> ib( 1, sig->getBeam( index ) ) ;
+  vector<int> ip( 1, sig->getPol( index ) ) ;
+  vector<int> ic( 1, sig->getScan( index ) ) ;
+  STSelector sel = STSelector() ;
+  sel.setIFs( ii ) ;
+  sel.setBeams( ib ) ;
+  sel.setPolarizations( ip ) ;
+  sky->setSelection( sel ) ;
+  hot->setSelection( sel ) ;
+  cold->setSelection( sel ) ;
+  vector<float> spsky = getSpectrumFromTime( reftime, sky, "linear" ) ;
+  vector<float> sphot = getSpectrumFromTime( reftime, hot, "linear" ) ;
+  vector<float> spcold = getSpectrumFromTime( reftime, cold, "linear" ) ;
+  vector<float> spref = ref->getSpectrum( index ) ;
+  vector<float> spsig = sig->getSpectrum( index ) ;
+  vector<float> tcal = getTcalFromTime( reftime, sky, "linear" ) ;
+  vector<float> sp( tcal.size() ) ;
+  for ( unsigned int j = 0 ; j < tcal.size() ; j++ ) {
+    float v = tcal[j] * spsky[j] / ( sphot[j] - spsky[j] ) * ( spsig[j] - spref[j] ) / spref[j] ;
+    sp[j] = v ;
+  }
+  sel.reset() ;
+  sky->unsetSelection() ;
+  hot->unsetSelection() ;
+  cold->unsetSelection() ;
+
+  return sp ;
+}
+
+vector<float> STMath::getFSCalibratedSpectra( CountedPtr<Scantable>& sig,
+                                              CountedPtr<Scantable>& ref,
+                                              vector< CountedPtr<Scantable> >& sky,
+                                              vector< CountedPtr<Scantable> >& hot,
+                                              vector< CountedPtr<Scantable> >& cold,
+                                              int index ) 
+{
+  string reftime = sig->getTime( index ) ;
+  vector<int> ii( 1, sig->getIF( index ) ) ;
+  vector<int> ib( 1, sig->getBeam( index ) ) ;
+  vector<int> ip( 1, sig->getPol( index ) ) ;
+  vector<int> ic( 1, sig->getScan( index ) ) ;
+  STSelector sel = STSelector() ;
+  sel.setIFs( ii ) ;
+  sel.setBeams( ib ) ;
+  sel.setPolarizations( ip ) ;
+  sky[0]->setSelection( sel ) ;
+  hot[0]->setSelection( sel ) ;
+  cold[0]->setSelection( sel ) ;
+  vector<float> spskys = getSpectrumFromTime( reftime, sky[0], "linear" ) ;
+  vector<float> sphots = getSpectrumFromTime( reftime, hot[0], "linear" ) ;
+  vector<float> spcolds = getSpectrumFromTime( reftime, cold[0], "linear" ) ;
+  vector<float> tcals = getTcalFromTime( reftime, sky[0], "linear" ) ;
+  sel.reset() ;
+  ii[0] = ref->getIF( index ) ;
+  sel.setIFs( ii ) ;
+  sel.setBeams( ib ) ;
+  sel.setPolarizations( ip ) ;
+  sky[1]->setSelection( sel ) ;
+  hot[1]->setSelection( sel ) ;
+  cold[1]->setSelection( sel ) ;
+  vector<float> spskyr = getSpectrumFromTime( reftime, sky[1], "linear" ) ;
+  vector<float> sphotr = getSpectrumFromTime( reftime, hot[1], "linear" ) ;
+  vector<float> spcoldr = getSpectrumFromTime( reftime, cold[1], "linear" ) ;
+  vector<float> tcalr = getTcalFromTime( reftime, sky[1], "linear" ) ;  
+  vector<float> spref = ref->getSpectrum( index ) ;
+  vector<float> spsig = sig->getSpectrum( index ) ;
+  vector<float> sp( tcals.size() ) ;
+  for ( unsigned int j = 0 ; j < tcals.size() ; j++ ) {
+    float v = tcals[j] * spsig[j] / ( sphots[j] - spskys[j] ) - tcalr[j] * spref[j] / ( sphotr[j] - spskyr[j] ) ;
+    sp[j] = v ;
+  }
+  sel.reset() ;
+  sky[0]->unsetSelection() ;
+  hot[0]->unsetSelection() ;
+  cold[0]->unsetSelection() ;
+  sky[1]->unsetSelection() ;
+  hot[1]->unsetSelection() ;
+  cold[1]->unsetSelection() ;
+
+  return sp ;
 }

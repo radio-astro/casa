@@ -34,6 +34,7 @@
 #include <casa/Arrays/Slice.h>
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/MaskArrMath.h>
+#include <casa/Arrays/VectorSTLIterator.h>
 #include <casa/BasicSL/String.h>
 #include <scimath/Mathematics/MedianSlider.h>
 #include <casa/Exceptions/Error.h>
@@ -105,8 +106,8 @@ void mathutil::replaceMaskByZero(Vector<Float>& data, const Vector<Bool>& mask)
 std::vector<std::string> mathutil::tovectorstring(const Vector<String>& in)
 {
   std::vector<std::string> out;
-  Vector<String>::const_iterator it = in.begin();
-  for (uInt i=0; it != in.end(); ++it,++i) {
+  out.reserve(in.nelements());
+  for (Array<String>::const_iterator it = in.begin(); it != in.end(); ++it) {
     out.push_back(*it);
   }
   return out;
@@ -115,10 +116,10 @@ std::vector<std::string> mathutil::tovectorstring(const Vector<String>& in)
 Vector<String> mathutil::toVectorString(const std::vector<std::string>& in)
 {
   Vector<String> out(in.size());
-  uInt i=0;
-  std::vector<std::string>::const_iterator it;
-  for (it=in.begin();it != in.end();++it,++i) {
-    out[i] = casa::String(*it);
+  Array<String>::iterator oit = out.begin();
+  for (std::vector<std::string>::const_iterator it=in.begin() ;
+       it != in.end(); ++it,++oit) {
+    *oit = *it;
   }
   return out;
 }

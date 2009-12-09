@@ -61,9 +61,8 @@ void LineCatalog::setFrequencyLimits(double fmin, double fmax)
 
 void LineCatalog::setPattern(const std::string& name, const std::string& stype)
 {
-  //std::string mode = stype+"('"+name+"')";
-  std::string taql = "SELECT FROM $1 WHERE Column1 == pattern('"+name+"')";
-  cerr << taql << endl;
+  std::string mode = stype+"('"+name+"')";
+  std::string taql = "SELECT FROM $1 WHERE Column1 == " + mode;
   Table tmp = tableCommand(taql, table_);
   if (tmp.nrow() > 0) table_ = tmp.sort("Column2");
   else throw(AipsError("No match."));
@@ -109,31 +108,38 @@ std::string LineCatalog::summary(int row) const
         throw(AipsError("Row doesn't exist"));
       }
   }
-  /// @todo implement me
   return String(oss);
 }
 
-/*!
-    \fn asap::LineCatalog::getName(int row)
- */
+
 std::string LineCatalog::getName(uint row) const
 {
   ROScalarColumn<String> col(table_, "Column1");
   return col(row);
 }
 
-double asap::LineCatalog::getFrequency(uint row) const
+double LineCatalog::getFrequency(uint row) const
 {
-  ROScalarColumn<Double> col(table_, "Column2");
-  return col(row);
+  return getDouble("Column2", row);
 }
 
-double asap::LineCatalog::getStrength(uint row) const
+double LineCatalog::getStrength(uint row) const
 {
-  ROScalarColumn<Double> col(table_, "Column3");
-  return col(row);
+  return getDouble("Column4", row);
 }
 
+double LineCatalog::getDouble(const std::string& colname, uint row) const {
+  DataType dtype = table_.tableDesc().columnDesc(colname).dataType();
+  if (dtype == TpDouble) {
+    ROScalarColumn<Double> col(table_, colname);
+    return col(row);
+  } else if (dtype == TpInt) {
+    ROScalarColumn<Int> col(table_, colname);
+    return Double(col(row));
+  } else {
+    throw AipsError("Column " + colname + "doesn't contain numerical values." );
+  }
+}
 
 } // namespace
 
