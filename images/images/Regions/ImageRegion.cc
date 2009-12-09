@@ -96,7 +96,8 @@ ImageRegion& ImageRegion::operator= (const ImageRegion& other)
 {
     if (this != &other) {
 	LattRegionHolder::operator= (other);
-        delete itsWC;
+	if(itsWC)
+           delete itsWC;
 	itsWC = other.itsWC;
 	if (itsWC != 0) {
 	    itsWC = itsWC->cloneRegion();

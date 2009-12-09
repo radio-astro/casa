@@ -75,17 +75,22 @@ Int String::freq(const Char *s) const {
 
 Double String::toDouble(const String& string) {
     istringstream instr(string);
-    Double var;
+    Double var(0.0);
     instr >> var;
+    
+    if(instr.fail())         // making sure things get reset
+	                     // cause sometimes they don't
+	    var = 0.0;
     return var;
 }
 
 Float String::toFloat(const String& string) {
     istringstream instr(string);
-    Float var;
+    Float var(0.0);
     // Initialize in case the string is empty or non-numeric.
-    var = 0;
     instr >> var;
+    if(instr.fail())         // making sure things get reset
+	    var = 0.0;
     return var;
 }
 
@@ -311,11 +316,20 @@ String::size_type String::rfind(const RegexBase &r, size_type pos) const {
 }
 
 Bool String::matches(const string &str, Int pos) const {
-  return ((pos < 0) ? index(str, pos) == 0 :
-	  length() != 0 && str.length() != 0 &&
+  Bool rstat(False);
+  if(pos < 0){
+	  if(this->index(str,pos) == 0)
+		  rstat = True;
+	  else
+		  cerr << "No Match " << this->index(str, pos) << endl;
+  } else {
+	  if (length() != 0 && str.length() != 0 &&
 	  length() == pos+str.length() &&
 	  static_cast<size_type>(pos) < length() &&
-	  index(str, pos) == static_cast<size_type>(pos)) ;
+	  index(str, pos) == static_cast<size_type>(pos))
+		  rstat = True;
+  }
+  return rstat;
 }
 
 Bool String::contains(const RegexBase &r) const {

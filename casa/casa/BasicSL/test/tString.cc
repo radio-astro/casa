@@ -395,6 +395,18 @@ void trim() {
     assert(myString.empty());
 }
 
+void matchtest(){
+    String myString("dir");
+    myString.upcase();
+    cerr << myString.matches(Regex("D"), -1) << endl;
+    cerr << myString.matches(Regex("DI"), -2) << endl;
+    cerr << myString.matches(Regex("DIR"), -3) << endl;
+    cerr << myString.index("D", -1) << endl;
+    cerr << myString.index("DI", -2) << endl;
+    cerr << myString.index("DIR", -3) << endl;
+     cerr << endl;
+}
+
 /* void hashtest()
 {
   String *xp, a, x[] = {
@@ -437,6 +449,7 @@ int main() {
   toDouble();
   toFloat();
   trim();
+  matchtest();
   cout << "\nEnd of test\n";
   return(0);
 }
