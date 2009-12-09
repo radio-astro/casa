@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DiskShape.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: DiskShape.cc 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #include <components/ComponentModels/DiskShape.h>
 #include <components/ComponentModels/Flux.h>
@@ -283,6 +283,11 @@ Bool DiskShape::ok() const {
   }
   return True;
 }
+
+const ComponentShape* DiskShape::getPtr() const {
+    return this;
+}
+
 
 Double DiskShape::calcVis(Double u, Double v, const Double factor) const {
   u *= itsMinValue;

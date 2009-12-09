@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StreamIO.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: StreamIO.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <casa/IO/StreamIO.h>
 #include <casa/BasicSL/String.h>
@@ -129,7 +129,7 @@ Int StreamIO::read(uInt size, void* buf, Bool throwException) {
   return size - bytesToRead;
 }
 
-Int64 StreamIO::doSeek (Int64 offset, ByteIO::SeekOption dir) {
+Int64 StreamIO::doSeek (Int64, ByteIO::SeekOption) {
   throw(AipsError("StreamIO::doSeek - streams are not seekable."));
   return -1;
 }

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ComponentList.cc 20262 2008-02-25 23:32:52Z gervandiepen $
+//# $Id: ComponentList.cc 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/ComponentType.h>
@@ -299,6 +299,33 @@ void ComponentList::setLabel(const Vector<Int>& which,
   DebugAssert(ok(), AipsError);
 }
 
+void ComponentList::getFlux(Vector<Quantity>& fluxQuant, const Int& which) const {
+   SkyComponent comp = component(which);
+   // each element in the returned vector represents a different polarization.
+   // NumericTraits::Conjugate is just a confusing way of saying Complex if you
+   // look at how comp.flux().value() is implemented.
+   Vector<Complex> flux(comp.flux().value().nelements());
+   convertArray(flux,comp.flux().value());
+   Unit unit = comp.flux().unit();
+   fluxQuant.resize(flux.nelements());
+   for (uInt i=0; i<flux.nelements(); ++i) {
+       fluxQuant[i] = Quantity(real(flux[i]), unit);
+   }
+}
+
+void ComponentList::getFlux(Vector<Quantum<Complex> >& fluxQuant, const Int& which) {
+   SkyComponent comp = component(which);
+   Vector<Complex> flux(comp.flux().value().nelements());
+   convertArray(flux,comp.flux().value());
+   Unit unit = comp.flux().unit();
+   fluxQuant.resize(flux.nelements());
+   for (uInt i=0; i<flux.nelements(); ++i) {
+       fluxQuant[i] = Quantum<Complex>(flux[i], unit);
+   }
+}
+
+   
+
 void ComponentList::setFlux(const Vector<Int>& which,
 			    const Flux<Double>& newFlux) {
   uInt c;
@@ -308,6 +335,36 @@ void ComponentList::setFlux(const Vector<Int>& which,
     component(c).flux() = newFlux;
   }
   DebugAssert(ok(), AipsError);
+}
+
+Vector<String> ComponentList::getStokes(const Int& which) const {
+    SkyComponent comp = component(which);
+    ComponentType::Polarisation stokesType = comp.flux().pol();
+    Vector<String> polarization(4);
+    // the polarization determination logic needs to be refactored into
+    // a method in a more appropriate class
+    if (stokesType == ComponentType::STOKES) {
+        polarization[0] = "I";
+        polarization[1] = "Q";
+        polarization[2] = "U";
+        polarization[3] = "V";
+    }
+    else if (stokesType == ComponentType::LINEAR) {
+        polarization[0] = "XX";
+        polarization[1] = "XY";
+        polarization[2] = "YX";
+        polarization[3] = "YY";
+    }
+    else if (stokesType == ComponentType::CIRCULAR) {
+        polarization[0] = "RR";
+        polarization[1] = "RL";
+        polarization[2] = "LR";
+        polarization[3] = "LL";
+    }
+    else {
+        polarization.set("UNKNOWN");
+    }
+    return polarization;
 }
 
 void ComponentList::convertFluxUnit(const Vector<Int>& which,
@@ -379,6 +436,12 @@ void ComponentList::convertRefDirection(const Vector<Int>& which,
   DebugAssert(ok(), AipsError);
 }
 
+MDirection ComponentList::getRefDirection(Int which) const {
+    const ComponentShape& compShape = component(which).shape();
+    MDirection refDir = compShape.refDirection();
+    return refDir;
+}
+
 void ComponentList::setShape(const Vector<Int>& which,
 			     const ComponentShape& newShape) {
   uInt c;
@@ -389,6 +452,11 @@ void ComponentList::setShape(const Vector<Int>& which,
   }
   DebugAssert(ok(), AipsError);
 }
+
+const ComponentShape* ComponentList::getShape(Int which) const {
+    return component(which).shape().getPtr();
+}
+
 
 void ComponentList::setShapeParms(const Vector<Int>& which,
 				  const ComponentShape& newShape) {
@@ -1003,7 +1071,7 @@ void ComponentList::readTable(const Path& fileName, const Bool readOnly) {
   itsROFlag = readOnly;
 }
 
-Bool ComponentList::toRecord(String& error, RecordInterface& outRec){
+Bool ComponentList::toRecord(String& error, RecordInterface& outRec) const {
 
   Bool retval=True;
 
@@ -1021,35 +1089,35 @@ Bool ComponentList::toRecord(String& error, RecordInterface& outRec){
 
 Bool ComponentList::fromRecord(String& error, const RecordInterface& inRec){
 
-  Bool retval= True;
-  if(itsNelements > 0){
-    LogIO logErr(LogOrigin("ComponentList", "fromRecord()"));
-    logErr << LogIO::SEVERE 
-	   << "Trying to overwrite a non-empty componentList  from Record"
-           << LogIO::POST;
-     return False;
+	Bool retval= True;
+	if(itsNelements > 0){
+		LogIO logErr(LogOrigin("ComponentList", "fromRecord()"));
+		logErr << LogIO::SEVERE
+		<< "Trying to overwrite a non-empty componentList  from Record"
+		<< LogIO::POST;
+		return False;
 
-  }  
+	}
 
-  uInt nelements=0;
-  if (inRec.isDefined("nelements")) {
-    inRec.get("nelements", nelements);
-    if(nelements >0){
-      for(uInt k=0; k < nelements; ++k){
-	String componentId=String("component")+String::toString(k);
-	Record componentRecord=inRec.asRecord(componentId);
-	SkyComponent  tempComponent;
-	retval=(retval && tempComponent.fromRecord(error, componentRecord));
-	if(retval){
-	  add(tempComponent);
+	uInt nelements=0;
+	if (inRec.isDefined("nelements")) {
+		inRec.get("nelements", nelements);
+		if(nelements >0){
+			for(uInt k=0; k < nelements; ++k){
+				String componentId=String("component")+String::toString(k);
+				Record componentRecord=inRec.asRecord(componentId);
+				SkyComponent  tempComponent;
+				retval=(retval && tempComponent.fromRecord(error, componentRecord));
+				if(retval){
+					add(tempComponent);
+				}
+				else{
+					return retval;
+				}
+			}
+		}
 	}
-	else{
-	  return retval;
-	}
-      }
-    }
-  }
-  return retval;
+	return retval;
 }
 // Local Variables: 
 // compile-command: "gmake ComponentList"

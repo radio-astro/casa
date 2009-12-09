@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TileStepper.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: TileStepper.cc 20637 2009-06-16 05:36:59Z gervandiepen $
 
 #include <lattices/Lattices/TileStepper.h>
 #include <casa/Utilities/Assert.h>
@@ -86,7 +86,8 @@ TileStepper::TileStepper(const IPosition& latticeShape,
 
 // the copy constructor which uses copy semantics.
 TileStepper::TileStepper(const TileStepper& other)
-: itsBlc(other.itsBlc),
+: LatticeNavigator(),
+  itsBlc(other.itsBlc),
   itsTrc(other.itsTrc),
   itsInc(other.itsInc),
   itsSubSection(other.itsSubSection),
@@ -387,7 +388,9 @@ const IPosition& TileStepper::axisPath() const
   return itsAxisPath;
 }
 
-uInt TileStepper::calcCacheSize (const ROTiledStManAccessor&, uInt) const
+uInt TileStepper::calcCacheSize (const IPosition&,
+                                 const IPosition&,
+                                 uInt, uInt) const
 {
   // Cache needs to be 1 tile only.
   return 1;

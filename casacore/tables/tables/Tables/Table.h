@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Table.h 20335 2008-06-12 07:37:36Z gervandiepen $
+//# $Id: Table.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #ifndef TABLES_TABLE_H
 #define TABLES_TABLE_H
@@ -404,6 +404,14 @@ public:
     // If <src>all=False</src> only tables requested by another process
     // will be unlocked.
     static void relinquishAutoLocks (Bool all = False);
+
+    // Get the names of tables locked in this process.
+    // By default all locked tables are given (note that a write lock
+    // implies a read lock), but it is possible to select on lock type
+    // FileLocker::Write and on option (TableLock::AutoLocking,
+    // TableLock::ReadLocking, or TableLock::PermanentLocking).
+    static Vector<String> getLockedTables(FileLocker::LockType=FileLocker::Read,
+                                          int lockOption=-1);
 
     // Determine if column or keyword table data have changed
     // (or is being changed) since the last time this function was called.
@@ -899,6 +907,8 @@ public:
     // </note>
     void renameColumn (const String& newName, const String& oldName);
 
+    void renameHypercolumn (const String& newName, const String& oldName);
+
     // Write a table to AipsIO (for <src>TypedKeywords<Table></src>).
     // This will only write the table name.
     friend AipsIO& operator<< (AipsIO&, const Table&);
@@ -917,6 +927,10 @@ public:
     // Write a table to ostream (for <src>TypedKeywords<Table></src>).
     // This only shows its name and number of columns and rows.
     friend ostream& operator<< (ostream&, const Table&);
+
+    // Find the data manager with the given name.
+    DataManager* findDataManager (const String& datamanagerName) const;
+
 
 protected:
     BaseTable*  baseTabPtr_p;                 //# ptr to table representation
@@ -962,8 +976,6 @@ private:
     BaseTable* lookCache (const String& name, int tableOption,
 			  const TableLock& tableInfo);
 
-    // Find the data manager with the given name.
-    DataManager* findDataManager (const String& datamanagerName) const;
 };
 
 
@@ -1088,6 +1100,8 @@ inline void Table::removeColumn (const Vector<String>& columnNames)
     { baseTabPtr_p->removeColumn (columnNames); }
 inline void Table::renameColumn (const String& newName, const String& oldName)
     { baseTabPtr_p->renameColumn (newName, oldName); }
+inline void Table::renameHypercolumn (const String& newName, const String& oldName)
+    { baseTabPtr_p->renameHypercolumn (newName, oldName); }
 
 inline DataManager* Table::findDataManager (const String& name) const
 {

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVPosition.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: MVPosition.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <casa/Utilities/Assert.h>
@@ -53,9 +53,11 @@ MVPosition::MVPosition() :
 }
 
 MVPosition::MVPosition(const MVPosition &other) : 
-  xyz(3) {
-    xyz = other.xyz;
-  }
+  MeasValue(),
+  xyz(3)
+{
+  xyz = other.xyz;
+}
 
 MVPosition &MVPosition::operator=(const MVPosition &other) {
   if (this != &other) {

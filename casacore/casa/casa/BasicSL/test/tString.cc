@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tString.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: tString.cc 20749 2009-09-30 14:24:05Z gervandiepen $
 
 //# Includes
 
@@ -41,7 +41,7 @@ String X = "Hello";
 String Y = "world";
 String N = "123";
 String c;
-Char*  s = ",";
+const Char*  s = ",";
 Regex  r = String("e[a-z]*o");
 
 void decltest() {
@@ -360,6 +360,26 @@ void freqtest() {
   assert(x.freq(y) == 1);	// SubString
 }
 
+void toDouble() {
+    String x = "1.5";
+    Double y = String::toDouble(x);
+    assert(y == 1.5);
+    x = "frodo";
+    y = String::toDouble(x);
+    // should be 0, but account for finite machine precision
+    assert(y < 1e-316 && y > -1e-316);
+}
+
+void toFloat() {
+    String x = "1.5";
+    Float y = String::toFloat(x);
+    assert(y == 1.5);
+    x = "frodo";
+    y = String::toFloat(x);
+    // should be 0, but account for finite machine precision
+    assert(y < 1e-316 && y > -1e-316);
+}
+
 /* void hashtest()
 {
   String *xp, a, x[] = {
@@ -399,6 +419,8 @@ int main() {
 	       "just another useless string.");
   ///  hashtest();
   iotest();
+  toDouble();
+  toFloat();
   cout << "\nEnd of test\n";
   return(0);
 }

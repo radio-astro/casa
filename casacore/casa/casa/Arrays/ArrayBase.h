@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayBase.h 20338 2008-06-19 05:58:02Z gervandiepen $
+//# $Id: ArrayBase.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #ifndef CASA_ARRAYBASE_H
 #define CASA_ARRAYBASE_H
@@ -94,9 +94,9 @@ public:
 
   // How many elements does this array have? Product of all axis lengths.
   // <group>
-  uInt nelements() const
+  size_t nelements() const
     { return nels_p; }
-  uInt size() const
+  size_t size() const
     { return nels_p; }
   // </group>
 
@@ -182,10 +182,10 @@ protected:
   // Make a subset of an array.
   // It checks if start,end,incr are within the array limits.
   // It returns the offset of the subset in the array.
-  Int makeSubset (ArrayBase& out,
-		  const IPosition& b,
-		  const IPosition& e,
-		  const IPosition& i);
+  size_t makeSubset (ArrayBase& out,
+                     const IPosition& b,
+                     const IPosition& e,
+                     const IPosition& i);
 
   // Are the shapes identical?
   Bool conform2 (const ArrayBase& other) const
@@ -213,7 +213,7 @@ public:
 
 protected:
   // Number of elements in the array. Cached rather than computed.
-  uInt nels_p;
+  size_t nels_p;
   // Dimensionality of the array.
   uInt ndimen_p;
   // Are the data contiguous?
@@ -248,18 +248,20 @@ protected:
 // 
 // What is the volume of an N-dimensional array. 
 // Shape[0]*Shape[1]*...*Shape[N-1]. An Array helper function.
-uInt ArrayVolume (uInt Ndim, const Int* Shape);
+//# Implemented in Array2.cc.
+size_t ArrayVolume (uInt Ndim, const Int* Shape);
 
 // 
 // What is the linear index into an "Ndim" dimensional array of the given
 // "Shape", "Origin", and "Increment" for a given IPosition Index.
 //  An Array helper function.
 // <group>
-uInt ArrayIndexOffset (uInt Ndim, const Int* Shape, 
-		       const Int* Origin, const Int* Inc, 
-		       const IPosition& Index);
-uInt ArrayIndexOffset (uInt Ndim, const Int* Shape, 
-		       const Int* Inc, const IPosition& Index);
+//# Implemented in Array2.cc.
+size_t ArrayIndexOffset (uInt Ndim, const ssize_t* Shape, 
+                         const ssize_t* Origin, const ssize_t* Inc, 
+                         const IPosition& Index);
+size_t ArrayIndexOffset (uInt Ndim, const ssize_t* Shape, 
+                         const ssize_t* Inc, const IPosition& Index);
 // </group>
 
 // </group>

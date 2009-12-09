@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSSpwIndex.cc 20749 2009-09-30 14:24:05Z gervandiepen $
 
 #include <measures/Measures/MDoppler.h>
 #include <ms/MeasurementSets/MSSpwIndex.h>
@@ -416,7 +416,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	      else
 		{
-		  Float start=freqList(j),stop=freqList(j+1),step=freqList(j+2);
+		  //Float start=freqList(j),stop=freqList(j+1),step=freqList(j+2);
 		  //
 		  // Now that I think about this, veloctiy based
 		  // selection in MSSelection does not make sense.
@@ -442,7 +442,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  	  {
  	    localFreqList(j++)=0;
  	    localFreqList(j++)=numChans(spw(i))-1;
- 	    localFreqList(j++)=1;
+ 	    localFreqList(j++)=-1;
  	  }
        }
 
@@ -467,7 +467,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		(freqList(j+3) == MSSpwIndex::MSSPW_INDEXRANGE))
 		{
 		  Int start=(Int)freqList(j), stop=(Int)freqList(j+1), step=(Int)freqList(j+2);
-		  if (step==0) step=1;
+		  //		  if (step==0) step=1;
+		  step = step <= 0? 1 : step;
 		  Int n=0;
 		  for(Int ii=start;ii<=stop;ii+=step) n++;
 		  localFreqList.resize(n+localFreqList.nelements(),True);

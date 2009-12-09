@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: MSTimeGram.yy 20309 2008-05-20 08:09:14Z gervandiepen $
+    $Id: MSTimeGram.yy 20704 2009-09-03 08:53:52Z gervandiepen $
 */
 
 %{
@@ -124,7 +124,7 @@ timeexpr: singletimeexpr
         | upboundtimeexpr
         ;
 
-wildNumber: STAR {$$ = -1}
+wildNumber: STAR {$$ = -1;}
           | NUMBER {$$ = $1;}
           ;
 wildFloat: wildNumber {$$ = $1;}

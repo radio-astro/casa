@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: AppInfo.h 18763 2005-06-17 16:55:37Z ddebonis $
+//# $Id: AppInfo.h 20648 2009-06-29 07:22:00Z gervandiepen $
 
 #ifndef CASA_APPINFO_H
 #define CASA_APPINFO_H

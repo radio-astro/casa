@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CoordinateUtil.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: CoordinateUtil.cc 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -688,7 +688,7 @@ Bool CoordinateUtil::makeDirectionMachine(LogIO& os, MDirection::Convert& machin
  
 
 Bool CoordinateUtil::makeFrequencyMachine(LogIO& os, MFrequency::Convert& machine,
-                                          Int coordinateTo, Int coordinateFrom,
+                                          Int, Int,
                                           const CoordinateSystem& coordsTo,
                                           const CoordinateSystem& coordsFrom, 
                                           const Unit& unit)
@@ -838,31 +838,31 @@ Bool CoordinateUtil::makeFrequencyMachine(LogIO& os, MFrequency::Convert& machin
 }
 
 
-Bool CoordinateUtil::isSky (LogIO& os, const CoordinateSystem& cSys)
-{   
-   const uInt nPixelAxes = cSys.nPixelAxes();
-   if (nPixelAxes != 2) {
-      os << "The CoordinateSystem is not two dimensional" << LogIO::EXCEPTION;
-}  
-   Bool xIsLong = True;
-   Int dirCoordinate = cSys.findCoordinate(Coordinate::DIRECTION);
-   if (dirCoordinate==-1) {
-      os << "There is no DirectionCoordinate (sky) in this CoordinateSystem" << LogIO::EXCEPTION;
-   }
-//
-   Vector<Int> dirPixelAxes = cSys.pixelAxes(dirCoordinate);
-   if (dirPixelAxes(0) == -1 || dirPixelAxes(1) == -1) {
-      os << "The pixel axes for the DirectionCoordinate have been removed" << LogIO::EXCEPTION;
-   }
- 
-// Which axis is longitude and which is latitude
+Bool CoordinateUtil::isSky (LogIO& os, const CoordinateSystem& cSys) {   
+    const uInt nPixelAxes = cSys.nPixelAxes();
 
-   if(dirPixelAxes(0)==0 && dirPixelAxes(1)==1) {
-      xIsLong = True;
-   } else {
-      xIsLong = False;
-   }
-   return xIsLong;
+    if (nPixelAxes != 2) {
+        os << "The CoordinateSystem is not two dimensional. It has " 
+            << nPixelAxes << " dimensions" << LogIO::EXCEPTION;
+    }  
+    Bool xIsLong = True;
+    Int dirCoordinate = cSys.findCoordinate(Coordinate::DIRECTION);
+    if (dirCoordinate==-1) {
+        os << "There is no DirectionCoordinate (sky) in this CoordinateSystem" << LogIO::EXCEPTION;
+    }
+    Vector<Int> dirPixelAxes = cSys.pixelAxes(dirCoordinate);
+    if (dirPixelAxes(0) == -1 || dirPixelAxes(1) == -1) {
+        os << "The pixel axes for the DirectionCoordinate have been removed" << LogIO::EXCEPTION;
+    }
+ 
+    // Which axis is longitude and which is latitude
+
+    if(dirPixelAxes(0)==0 && dirPixelAxes(1)==1) {
+        xIsLong = True;
+    } else {
+        xIsLong = False;
+    }
+    return xIsLong;
 } 
 
 
@@ -1293,7 +1293,7 @@ Bool CoordinateUtil::setSpectralFormatting (String& errorMsg,
      
 // Set format Unit
            
-      Bool ok = sCoord.setFormatUnit (unit);
+      sCoord.setFormatUnit (unit);
       
 // Velocity State
 

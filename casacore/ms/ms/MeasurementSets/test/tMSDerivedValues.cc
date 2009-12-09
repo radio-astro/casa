@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMSDerivedValues.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tMSDerivedValues.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 #include <ms/MeasurementSets/MSDerivedValues.h>
 #include <casa/iostream.h>
@@ -34,7 +34,7 @@
 #include <casa/Arrays/ArrayIO.h>
 
 #include <casa/namespace.h>
-int main(int argc, const char* argv[])
+int main()
 {
   try {
     Quantity longitude; Quantity::read(longitude,"149.33.00.5");

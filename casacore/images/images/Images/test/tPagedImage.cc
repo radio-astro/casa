@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tPagedImage.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tPagedImage.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInfo.h>
@@ -110,7 +110,6 @@ int main()
        PagedImage<Float> pIm(tiledShape, cSys, 
                              String("tPagedImage_tmp.img2"));
     }
-    Table::deleteTable(String("tPagedImage_tmp.img2"));
     {
        PagedImage<Float> pIm(tiledShape, cSys, 
                              String("tPagedImage_tmp.img3"),

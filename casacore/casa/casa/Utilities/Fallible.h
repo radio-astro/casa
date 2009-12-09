@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Fallible.h 20475 2008-12-19 08:22:38Z gervandiepen $
+//# $Id: Fallible.h 20622 2009-06-11 13:52:35Z gervandiepen $
 
 #ifndef CASA_FALLIBLE_H
 #define CASA_FALLIBLE_H
@@ -123,7 +123,7 @@ template<class T> class Fallible
 {
 public: 
     // The default constructor creates an invalid object.
-    Fallible() : isValid_p(False) {}
+    Fallible() : value_p(T()), isValid_p(False) {}
 
     // Create a valid object
     Fallible(const T &value) : value_p(value), isValid_p(True) {}

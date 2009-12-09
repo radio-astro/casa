@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasFrame.cc 19962 2007-02-28 03:27:40Z gervandiepen $
+//# $Id: MeasFrame.cc 20612 2009-06-05 05:39:45Z gervandiepen $
 
 //# Includes
 #include <measures/Measures/MeasFrame.h>
@@ -292,27 +292,27 @@ void MeasFrame::resetComet(const MeasComet &val) {
   };
 }
 
-const Measure *const MeasFrame::epoch() const{
+const Measure* MeasFrame::epoch() const{
   if (rep) return rep->epval;
   return 0;
 }
 
-const Measure *const MeasFrame::position() const{
+const Measure* MeasFrame::position() const{
   if (rep) return rep->posval;
   return 0;
 }
 
-const Measure *const MeasFrame::direction() const{
+const Measure* MeasFrame::direction() const{
   if (rep) return rep->dirval;
   return 0;
 }
 
-const Measure *const MeasFrame::radialVelocity() const{
+const Measure* MeasFrame::radialVelocity() const{
   if (rep) return rep->radval;
   return 0;
 }
 
-const MeasComet *const MeasFrame::comet() const{
+const MeasComet* MeasFrame::comet() const{
   if (rep) return rep->comval;
   return 0;
 }

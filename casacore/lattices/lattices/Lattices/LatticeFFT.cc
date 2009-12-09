@@ -25,7 +25,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LatticeFFT.cc 20055 2007-03-22 02:17:34Z Malte.Marquarding $
+//# $Id: LatticeFFT.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 #include <lattices/Lattices/LatticeFFT.h>
 #include <casa/Arrays/IPosition.h>
@@ -54,7 +54,10 @@ void LatticeFFT::cfft2d(Lattice<Complex>& cLattice, const Bool toFrequency) {
   IPosition slabShape = cLattice.niceCursorShape(maxPixels);
   const uInt nx = slabShape(0) = latticeShape(0);
   const uInt ny = slabShape(1) = latticeShape(1);
-  Long cacheSize=(HostInfo::memoryTotal()/(sizeof(Complex)*8))*1024; //use 1/8 of memory for FFT of a plane at most 
+  // use 1/8 of memory for FFT of a plane at most 
+  //Long cacheSize = (HostInfo::memoryTotal()/(sizeof(Complex)*8))*1024;
+  //use aipsrc value for memory size if exists
+  Long cacheSize = (HostInfo::memoryTotal(true)/(sizeof(Complex)*8))*1024;
 
   // For small transforms, we do everything in one plane
   if (((Long)(nx)*(Long)(ny)) <= cacheSize) {

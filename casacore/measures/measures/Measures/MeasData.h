@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasData.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MeasData.h 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #ifndef MEASURES_MEASDATA_H
 #define MEASURES_MEASDATA_H
@@ -76,7 +76,8 @@ class RotMatrix;
 // <br> References:<br> Explanatory supplements to the Astronomical Almanac
 // <br> C. Ron and J. Vondrak, Bull. Astron. Inst. Czechosl. 37, p96, 1986
 // <br> M. Soma, Th. Hirayama and H. Kinoshita, Celest. Mech. 41, p389, 1988
-// <br> V.S. Gubanov, Astron. Zh. 49, p1112, 1992
+// <br> V.S. Gubanov, Astron. Zh. 49, p1112, 1972 (English translation:
+//      Sov. Astronomy - AJ, Vol. 16, No. 5, p. 907)
 // </synopsis>
 //
 // <example>

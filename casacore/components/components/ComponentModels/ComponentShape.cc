@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ComponentShape.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: ComponentShape.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <components/ComponentModels/ComponentShape.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -66,7 +66,8 @@ ComponentShape::ComponentShape(const MDirection& direction)
 }
 
 ComponentShape::ComponentShape(const ComponentShape& other)
-  :itsDir(other.itsDir),
+  :RecordTransformable(),
+   itsDir(other.itsDir),
    itsDirErrLat(other.itsDirErrLat),
    itsDirErrLong(other.itsDirErrLong)
 {

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WrapperData.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: WrapperData.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #ifndef SCIMATH_WRAPPERDATA_H
 #define SCIMATH_WRAPPERDATA_H
@@ -410,7 +410,7 @@ public:
     WrapperBase<T>(dim), pf_p(f) {};
   virtual ~WrapperData_VF() {};
   virtual T eval(typename Function<T>::FunctionArg x,
-		 const Vector<T> &par) const {
+		 const Vector<T> &) const {
     if (pf_p) {
       for (uInt i=0; i<ndim_p; ++i) arg_p[i] = x[i];
       return pf_p(arg_p); };

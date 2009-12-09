@@ -24,8 +24,12 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-$Id$
+$Id: MSFieldGram.ll 20704 2009-09-03 08:53:52Z gervandiepen $
 */
+
+/* yy_unput is not used, so let flex not generate it, otherwise picky
+   compilers will issue warnings. */
+%option nounput
 
 %{
 #undef YY_INPUT
@@ -53,7 +57,7 @@ NRQ       [^\\\n\/]+
 NAME        ([A-za-z0-0_'{''}''+''-'])
 */
 IDENTIFIER  ([A-Za-z0-9_\{\}\+\-\.]+|STRING)
-SIDENTIFIER ({WHITE}[A-Za-z0-9_'{''}''+''-''*''?' ]+{WHITE})
+SIDENTIFIER ({WHITE}[A-Za-z0-9_'+''-''{''}''*''?' ]+{WHITE})
 
 %x QS RS ESC
 /* rules */
@@ -112,14 +116,14 @@ SIDENTIFIER ({WHITE}[A-Za-z0-9_'{''}''+''-''*''?' ]+{WHITE})
 {IDENTIFIER} { msFieldGramPosition() += yyleng;
                lvalp->str = (char *)malloc((strlen(MSFieldGramtext) + 1) * sizeof(char));
                strcpy(lvalp->str, MSFieldGramtext);
- 	       //cout << "ID = \"" << MSFieldGramtext << "\" \"" << lvalp->str << "\"" << endl;
+	       // cout << "ID = \"" << MSFieldGramtext << "\" \"" << lvalp->str << "\"" << endl;
 
                return IDENTIFIER;
              }
 {SIDENTIFIER} { msFieldGramPosition() += yyleng;
                 lvalp->str = (char *)malloc((strlen(MSFieldGramtext) + 1) * sizeof(char));
                 strcpy(lvalp->str, stripWhite(MSFieldGramtext).c_str());
- 		//cout << "SID = \"" << MSFieldGramtext << "\" \"" << lvalp->str << "\"" << endl;
+ 		// cout << "SID = \"" << MSFieldGramtext << "\" \"" << lvalp->str << "\"" << endl;
                 return QSTRING;
               }
 "("       { msFieldGramPosition() += yyleng; return LPAREN;}

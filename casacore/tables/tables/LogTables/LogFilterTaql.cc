@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LogFilterTaql.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LogFilterTaql.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <tables/LogTables/LogFilterTaql.h>
 #include <tables/LogTables/LogFilterExpr.h>
@@ -38,7 +38,8 @@ LogFilterTaql::LogFilterTaql (const String& expr)
 }
 
 LogFilterTaql::LogFilterTaql (const LogFilterTaql& other)
-: expr_p  (0)
+: LogFilterInterface(),
+  expr_p  (0)
 {
   if (other.expr_p != 0) {
     expr_p = new LogFilterExpr (*other.expr_p);

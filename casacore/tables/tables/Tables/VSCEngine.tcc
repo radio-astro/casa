@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VSCEngine.tcc 19858 2007-02-13 02:42:36Z Malte.Marquarding $
+//# $Id: VSCEngine.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/VSCEngine.h>
@@ -44,7 +44,9 @@ VSCEngine<T>::VSCEngine (const String& sourceColumnName)
 
 template<class T>
 VSCEngine<T>::VSCEngine (const VSCEngine<T>& that)
-: sourceName_p (that.sourceName_p)
+: VirtualColumnEngine(),
+  VirtualScalarColumn<T>(),
+  sourceName_p (that.sourceName_p)
 {}
 
 template<class T>

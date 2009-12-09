@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageExprParse.cc 20416 2008-10-29 15:23:33Z gervandiepen $
+//# $Id: ImageExprParse.cc 20702 2009-09-03 06:55:24Z gervandiepen $
 
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageExprGram.h>
@@ -131,12 +131,10 @@ Table& ImageExprParse::getRegionTable (void*, Bool)
   return theLastTable;
 }
 
-#ifdef HAVE_LIBHDF5
 const CountedPtr<HDF5File>& ImageExprParse::getRegionHDF5 (void*)
 {
   return theLastHDF5;
 }
-#endif
 
 void ImageExprParse::addNode (LatticeExprNode* node)
 {
@@ -528,7 +526,7 @@ LatticeExprNode ImageExprParse::makeIndexinNode (const LatticeExprNode& axis,
 						 const vector<Slice>& slices)
 {
   // Determine maximum end value.
-  Int maxEnd = 0;
+  size_t maxEnd = 0;
   for (uInt i=0; i<slices.size(); i++) {
     if (slices[i].end() > maxEnd) {
       maxEnd = slices[i].end();
@@ -539,7 +537,7 @@ LatticeExprNode ImageExprParse::makeIndexinNode (const LatticeExprNode& axis,
   Vector<Bool> flags(maxEnd+1, False);
   for (uInt i=0; i<slices.size(); i++) {
     const Slice& slice = slices[i];
-    for (Int j=slice.start(); j<=slice.end(); j+=slice.inc()) {
+    for (size_t j=slice.start(); j<=slice.end(); j+=slice.inc()) {
       flags[j] = True;
     }
   }
@@ -619,12 +617,10 @@ LatticeExprNode ImageExprParse::makeLRNode() const
       RegionHandlerTable regHand(getRegionTable, 0);
       regPtr = regHand.getRegion (names(index), RegionHandler::Any, False);
     }
-#ifdef HAVE_LIBHDF5
     if (! theLastHDF5.null()) {
       RegionHandlerHDF5 regHand(getRegionHDF5, 0);
       regPtr = regHand.getRegion (names(index), RegionHandler::Any, False);
     }
-#endif
     if (regPtr == 0) {
       if (index == 0) {
 	throw (AipsError ("ImageExprParse: '" + itsSval +

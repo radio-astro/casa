@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PointShape.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: PointShape.cc 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #include <components/ComponentModels/PointShape.h>
 #include <components/ComponentModels/Flux.h>
@@ -137,21 +137,16 @@ void PointShape::sample(Vector<Double>& scale,
   if (deleteValue) delete compDirValue;
 }
 
-DComplex PointShape::visibility(const Vector<Double>& uvw,
-				const Double& frequency) const {
+DComplex PointShape::visibility(const Vector<Double>&,
+				const Double&) const {
   DebugAssert(ok(), AipsError);
-  DebugAssert(uvw.nelements() == 3, AipsError);
-  DebugAssert(frequency > 0, AipsError);
   return DComplex(1.0, 0.0);
 }
 
 void PointShape::visibility(Vector<DComplex>& scale, 
-			    const Matrix<Double>& uvw,
-			    const Double& frequency) const {
+			    const Matrix<Double>&,
+			    const Double&) const {
   DebugAssert(ok(), AipsError);
-  DebugAssert(uvw.ncolumn() == scale.nelements(), AipsError);
-  DebugAssert(uvw.nrow() == 3, AipsError);
-  DebugAssert(frequency > 0, AipsError);
   scale = DComplex(1.0, 0.0);
 }
 
@@ -217,6 +212,9 @@ Bool PointShape::ok() const {
   return ComponentShape::ok();
 }
 
+const ComponentShape* PointShape::getPtr() const {
+    return this;
+}
 
 
 Double PointShape::dirIsInPixel (Double longSize, Double latSize, Double nearSize,

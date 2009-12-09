@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayLogical.tcc 20553 2009-03-31 03:20:57Z gervandiepen $
+//# $Id: ArrayLogical.tcc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayUtil.h>
@@ -700,7 +700,7 @@ template<class T> Bool anyNearAbs (const T &val, const Array<T> &array,
 }
 
 
-template<class T> uInt nfalse (const Array<T> &array)
+template<class T> size_t nfalse (const Array<T> &array)
 {
   return (array.contiguousStorage() ?
           std::count (array.cbegin(), array.cend(), T()) :

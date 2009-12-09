@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RebinLattice.tcc 20114 2007-08-28 11:13:41Z gervandiepen $
+//# $Id: RebinLattice.tcc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <lattices/Lattices/RebinLattice.h>
 
@@ -77,7 +77,8 @@ RebinLattice<T>::RebinLattice (const MaskedLattice<T>& lattice,
 
 template<class T>
 RebinLattice<T>::RebinLattice (const RebinLattice<T>& other)
-: itsLatticePtr(0)
+: MaskedLattice<T>(),
+  itsLatticePtr(0)
 {
   operator= (other);
 }
@@ -219,9 +220,9 @@ Bool RebinLattice<T>::doGetSlice (Array<T>& buffer, const Slicer& section)
 
 
 template<class T>
-void RebinLattice<T>::doPutSlice (const Array<T>& sourceBuffer,
-                                  const IPosition& where, 
-                                  const IPosition& stride)
+void RebinLattice<T>::doPutSlice (const Array<T>&,
+                                  const IPosition&, 
+                                  const IPosition&)
 {
   throw (AipsError ("RebinLattice::putSlice - non-writable lattice"));
 }
@@ -423,8 +424,8 @@ Slicer RebinLattice<T>::findOriginalSlicer (const Slicer& section) const
       blcOrig[i] = blc[i] * itsBin[i];
       trcOrig[i] = trc[i] * itsBin[i] + (itsBin[i] - 1);
 //
-      blcOrig[i] = max(0, min(blcOrig[i], shapeOrig[i]-1));
-      trcOrig[i] = max(0, min(trcOrig[i], shapeOrig[i]-1));
+      blcOrig[i] = std::max(ssize_t(0), std::min(blcOrig[i], shapeOrig[i]-1));
+      trcOrig[i] = std::max(ssize_t(0), std::min(trcOrig[i], shapeOrig[i]-1));
    }
 //
    IPosition strideOrig(nDim,1);

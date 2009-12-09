@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConstantSpectrum.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: ConstantSpectrum.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <components/ComponentModels/ConstantSpectrum.h>
 #include <casa/Arrays/Vector.h>
@@ -68,10 +68,9 @@ Double ConstantSpectrum::sample(const MFrequency&) const {
 }
 
 void ConstantSpectrum::sample(Vector<Double>& scale, 
-			      const Vector<MFrequency::MVType>& frequencies, 
-			      const MFrequency::Ref& refFrame) const {
+			      const Vector<MFrequency::MVType>&, 
+			      const MFrequency::Ref&) const {
   DebugAssert(ok(), AipsError);
-  DebugAssert(scale.nelements() == frequencies.nelements(), AipsError);
   scale = 1.0;
 }
 

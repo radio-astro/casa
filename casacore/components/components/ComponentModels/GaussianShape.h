@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: GaussianShape.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: GaussianShape.h 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #ifndef COMPONENTS_GAUSSIANSHAPE_H
 #define COMPONENTS_GAUSSIANSHAPE_H
@@ -241,6 +241,15 @@ public:
   // dimensionality and consistent values. Returns True if everything is fine
   // otherwise returns False.
   virtual Bool ok() const;
+
+  // return a pointer to this object.
+  virtual const ComponentShape* getPtr() const; 
+
+  // TODO This probably should be made a pure virtual method in TwoSidedShape
+  // Return the effective area of the Gaussian (pi/(4*ln(2))*maj*min.
+  // Units of the returned Quantity are steradians.
+  virtual Quantity getArea() const;
+
 
 private:
   //# Updates the parameters of the itsFT object

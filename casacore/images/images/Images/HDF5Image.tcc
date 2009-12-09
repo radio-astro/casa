@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Image.tcc 20400 2008-09-11 13:20:37Z gervandiepen $
+//# $Id: HDF5Image.tcc 20704 2009-09-03 08:53:52Z gervandiepen $
 
 
 #include <images/Images/HDF5Image.h>
@@ -60,8 +60,6 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-#ifdef HAVE_LIBHDF5
-
 template <class T> 
 HDF5Image<T>::HDF5Image (const TiledShape& shape, 
 			 const CoordinateSystem& coordinateInfo, 
@@ -69,17 +67,8 @@ HDF5Image<T>::HDF5Image (const TiledShape& shape,
 : ImageInterface<T>(RegionHandlerHDF5(getFile, this)),
   regionPtr_p      (0)
 {
-  logSink() << LogOrigin("HDF5Image<T>", 
-			 "HDF5Image(const TiledShape& shape,  "
-			 "const CoordinateSystem& coordinateInfo, "
-			 "const String& fileName)", WHERE);
-  logSink() << LogIO::DEBUGGING
-	    << "Creating an image in a new HDF5 file called"
-	    << " '" << fileName << "'" << endl
-	    << "The image shape is " << shape.shape() << endl;
   map_p = HDF5Lattice<T>(shape, fileName, "map");
   attach_logtable();
-  logSink() << LogIO::NORMAL;
   AlwaysAssert(setCoordinateInfo(coordinateInfo), AipsError);
 }
 
@@ -89,16 +78,8 @@ HDF5Image<T>::HDF5Image (const String& fileName,
 : ImageInterface<T>(RegionHandlerHDF5(getFile, this)),
   regionPtr_p      (0)
 {
-  logSink() << LogOrigin("HDF5Image<T>", 
-			 "HDF5Image(const String& fileName, "
-			 "MaskSpecifier)", WHERE);
-  logSink() << LogIO::DEBUGGING
-	    << "Reading an image from an HDF5 file called"
-	    << " '" << fileName << "'" << endl;
   map_p = HDF5Lattice<T>(fileName, "map");
   attach_logtable();
-  logSink() << LogIO::DEBUGGING << "The image shape is " << map_p.shape() << endl;
-  logSink() << LogIO::DEBUGGING;
   restoreAll();
   applyMaskSpecifier (spec);
 }
@@ -219,7 +200,7 @@ void HDF5Image<T>::applyMaskSpecifier (const MaskSpecifier& spec)
   if (spec.useDefault()) {
     name = getDefaultMask();
     if (! hasRegion (name, RegionHandler::Masks)) {
-      name = "";
+      name = String();
     }
   }
   applyMask (name);
@@ -349,13 +330,7 @@ Bool HDF5Image<T>::ok() const
 template <class T> 
 HDF5Image<T>& HDF5Image<T>::operator+= (const Lattice<T>& other)
 {
-  logSink() << LogOrigin("HDF5Image<T>", 
-			 "operator+=(const Lattice<T>& other)", WHERE) <<
-    LogIO::DEBUGGING << "Adding other to our pixels" << endl;
-  
   check_conformance(other);
-  logSink() << LogIO::POST;
-  logSink() << LogIO::NORMAL;
   LatticeExpr<T> expr(*this + other);
   copyData (expr);
   return *this;
@@ -373,15 +348,12 @@ template<class T>
 void HDF5Image<T>::attach_logtable()
 {
   open_logtable();
-  logSink() << LogIO::NORMAL;
 }
 
 template<class T> 
 void HDF5Image<T>::open_logtable()
 {
-  // Open logtable as readonly if main table is not writable.
-  ///  Table& tab = table();
-  ///  setLogMember (LoggerHolder (name() + "/logtable", tab.isWritable()));
+  // No log table (yet?).
 }
 
 template <class T>
@@ -409,8 +381,6 @@ void HDF5Image<T>::restoreAll()
 template <class T> 
 Bool HDF5Image<T>::setCoordinateInfo (const CoordinateSystem& coords)
 {
-  logSink() << LogOrigin ("HDF5Image<T>", "setCoordinateInfo(const "
-			  "CoordinateSystem& coords)",  WHERE);
   Bool ok = ImageInterface<T>::setCoordinateInfo(coords);
   if (ok) {
     Record rec;
@@ -455,9 +425,9 @@ void HDF5Image<T>::restoreUnits (const RecordInterface& rec)
   if (rec.isDefined("units")) {
     if (rec.dataType("units") != TpString) {
       LogIO os;
-      os << LogOrigin("HDF5Image<T>", "units()", WHERE) <<
-	"'units' keyword in hdf5image is not a string! Units not restored." 
-		<< LogIO::SEVERE << LogIO::POST;
+      os << LogOrigin("HDF5Image<T>", "units()", WHERE)
+	 << "'units' keyword in hdf5image is not a string! Units not restored." 
+         << LogIO::SEVERE << LogIO::POST;
     } else {
       rec.get("units", unitName);
     }
@@ -476,11 +446,9 @@ void HDF5Image<T>::restoreUnits (const RecordInterface& rec)
     }
     if (!UnitVal::check(unitName)) {
       LogIO os;
-      UnitMap::putUser(unitName, UnitVal::UnitVal(1.0, UnitDim::Dnon), unitName);
-      os << LogIO::WARN << "FITS unit \"" << unitName << "\" unknown to CASA - will treat it as non-dimensional."
-	 << LogIO::POST;
-      retval.setName(unitName);
-      retval.setValue(UnitVal::UnitVal(1.0, UnitDim::Dnon));
+      os << LogOrigin("HDF5Image<T>", "units()", WHERE)
+         << LogIO::SEVERE << "Unit '" << unitName
+         << "' is unknown. Not restoring units" << LogIO::POST;
     } else {
       retval = Unit(unitName);
     }
@@ -492,8 +460,6 @@ void HDF5Image<T>::restoreUnits (const RecordInterface& rec)
 template<class T>
 Bool HDF5Image<T>::setImageInfo (const ImageInfo& info) 
 {
-  logSink() << LogOrigin ("HDF5Image<T>", "setImageInfo(const "
-			  "ImageInfo& info)",  WHERE);
   Bool ok = ImageInterface<T>::setImageInfo(info);
   if (ok) {
     // Update the ImageInfo
@@ -502,8 +468,9 @@ Bool HDF5Image<T>::setImageInfo (const ImageInfo& info)
     if (imageInfo().toRecord(error, rec)) {
       HDF5Record::writeRecord (*map_p.file(), "imageinfo", rec);
     } else {
-      logSink() << LogIO::SEVERE << "Error saving ImageInfo in record because " 
-	+ error << LogIO::POST;
+      LogIO os;
+      os << LogIO::SEVERE << "Error saving ImageInfo in record because " 
+         << error << LogIO::POST;
       ok = False;
     }
   }
@@ -518,8 +485,9 @@ void HDF5Image<T>::restoreImageInfo (const RecordInterface& rec)
     ImageInfo info;
     Bool ok = info.fromRecord (error, rec.asRecord("imageinfo"));
     if (!ok) {
-      logSink() << LogIO::WARN << "Failed to restore the ImageInfo because " 
-	+ error << LogIO::POST;
+      LogIO os;
+      os << LogIO::WARN << "Failed to restore the ImageInfo because " 
+         << error << LogIO::POST;
     } else {
       setImageInfoMember (info);
     }
@@ -533,7 +501,7 @@ void HDF5Image<T>::removeRegion (const String& name,
 {
   // Remove the default mask if it is the region to be removed.
   if (name == getDefaultMask()) {
-    setDefaultMask ("");
+    setDefaultMask (String());
   }
   ImageInterface<T>::removeRegion (name, type, throwIfUnknown);
 }
@@ -543,8 +511,7 @@ template<class T>
 void HDF5Image<T>::check_conformance(const Lattice<T>& other)
 {
   if (! this->conform(other)) {
-    logSink() << "this and other do not conform (" << this->shape() 
-	      << " != " << other.shape() << ")" << LogIO::EXCEPTION;
+    throw AipsError("Shapes of image " + name() + " and other lattice do not conform");
   }
 }
 
@@ -571,80 +538,5 @@ void HDF5Image<T>::flush()
   // Save the mask/region info.
   dynamic_cast<RegionHandlerHDF5*>(this->getRegionHandler())->save();
 }
-
-
-#else
-
-template<class T> 
-HDF5Image<T>::HDF5Image (const TiledShape&,
-			 const CoordinateSystem&,
-			 const String&)
-{
-  throw AipsError ("Error: HDF5Image is not configured in");
-}
-  
-template<class T> 
-HDF5Image<T>::HDF5Image (const String&, MaskSpecifier)
-{
-  throw AipsError ("Error: HDF5Image is not configured in");
-}
-
-  
-template<class T> 
-HDF5Image<T>::HDF5Image (const HDF5Image<T>& other)
-  : ImageInterface<T>(other)
-{}
-
-template<class T> 
-HDF5Image<T>::~HDF5Image()
-{}
-  
-template<class T> 
-HDF5Image<T>& HDF5Image<T>::operator= (const HDF5Image<T>& other)
-{
-  ImageInterface<T>::operator= (other);
-  return *this;
-}
-  
-template<class T> 
-ImageInterface<T>* HDF5Image<T>::cloneII() const
-  { return 0; }
-
-template<class T>
-String HDF5Image<T>::imageType() const
-  { return "HDF5Image"; }
-
-template <class T> 
-String HDF5Image<T>::name (Bool) const 
-  { return String(); }
-
-template<class T> 
-void HDF5Image<T>::resize(const TiledShape&)
-{}
-
-template<class T> 
-Bool HDF5Image<T>::ok() const
-  { return True; }
-
-template<class T> 
-IPosition HDF5Image<T>::shape() const
-  { return IPosition(); }
-
-template<class T> 
-Bool HDF5Image<T>::doGetSlice (Array<T>& buffer, const Slicer& theSlice)
-  { return False; }
-  
-template<class T> 
-void HDF5Image<T>::doPutSlice (const Array<T>& sourceBuffer,
-			     const IPosition& where,
-			     const IPosition& stride)
-{}
-
-template<class T> 
-const LatticeRegion* HDF5Image<T>::getRegionPtr() const
-  { return 0; }
-
-
-#endif
 
 } //# NAMESPACE CASA - END

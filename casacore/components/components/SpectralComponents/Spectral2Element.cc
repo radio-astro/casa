@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Spectral2Element.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: Spectral2Element.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <components/SpectralComponents/SpectralElement.h>
@@ -39,7 +39,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Member functions 
-Bool SpectralElement::toRecord(String &error, RecordInterface &out) const {
+Bool SpectralElement::toRecord(String &, RecordInterface &out) const {
   out.define(RecordFieldId("type"), fromType(tp_p));
 
   Vector<Double> ptmp(par_p.copy());

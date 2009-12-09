@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeExpr.tcc 19909 2007-02-23 02:08:02Z Malte.Marquarding $
+//# $Id: LatticeExpr.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/LELArray.h>
@@ -114,9 +114,10 @@ LatticeExpr<T>::~LatticeExpr()
 
 template <class T>
 LatticeExpr<T>::LatticeExpr (const LatticeExpr<T>& other)
-: expr_p  (other.expr_p),
-  shape_p (other.shape_p),
-  lastChunkPtr_p (0)
+: MaskedLattice<T>(),
+  expr_p          (other.expr_p),
+  shape_p         (other.shape_p),
+  lastChunkPtr_p  (0)
 {}
 
 template <class T>

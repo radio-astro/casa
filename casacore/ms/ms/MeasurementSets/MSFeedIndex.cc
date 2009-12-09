@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFeedIndex.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSFeedIndex.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <ms/MeasurementSets/MSFeedIndex.h>
 
@@ -131,7 +131,7 @@ Vector<Int> MSFeedIndex::matchFeedPolznAndAngle (const Int& antennaId,
   // angles are matched to within the specified tolerance in deg.
   //
   // Do the receptor polarization match per row
-  uInt nReceptors = min (polznType.nelements(), receptorAngle.nelements());
+  uInt nReceptors = std::min (polznType.nelements(), receptorAngle.nelements());
   uInt nrows = msFeedCols_p->nrow();
   Vector<Bool> receptorMatch(nrows, False);
   for (uInt row=0; row<nrows; row++) {

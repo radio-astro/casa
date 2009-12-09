@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeBase.h 20286 2008-03-13 13:02:22Z gervandiepen $
+//# $Id: LatticeBase.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #ifndef LATTICES_LATTICEBASE_H
 #define LATTICES_LATTICEBASE_H
@@ -160,8 +160,12 @@ public:
   
   // Return the total number of elements in this Lattice.
   // <br>The default implementation returns shape().product().
-  virtual uInt nelements() const;
-  
+  // <group>
+  virtual size_t nelements() const;
+  size_t size() const
+    { return nelements(); }
+  // </group>
+
   // Return a value of "True" if this instance of Lattice and 'other' have 
   // the same shape, otherwise returns a value of "False".
   Bool conform (const LatticeBase& other) const

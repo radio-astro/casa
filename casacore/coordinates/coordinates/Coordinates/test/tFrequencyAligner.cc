@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFrequencyAligner.cc 19931 2007-02-27 04:59:23Z Malte.Marquarding $
+//# $Id: tFrequencyAligner.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 //#
 
  
@@ -207,8 +207,9 @@ int main()
 //
          uInt axis = 0;
 //
-         Bool ok = fa.alignMany (yOutMany, maskOutMany, yInMany, maskInMany, axis, epoch, 
-                                 method, extrapolate);
+         Bool ok = fa.alignMany (yOutMany, maskOutMany, yInMany, maskInMany,
+                                 axis, epoch, method, extrapolate);
+         AlwaysAssert(ok, AipsError);
          ReadOnlyVectorIterator<Float> it(yOutMany,axis);
          Vector<Float> data1;
          Vector<Bool> mask1;

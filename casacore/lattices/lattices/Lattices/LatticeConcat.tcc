@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeConcat.tcc 19909 2007-02-23 02:08:02Z Malte.Marquarding $
+//# $Id: LatticeConcat.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <lattices/Lattices/LatticeConcat.h>
@@ -66,7 +66,8 @@ LatticeConcat<T>::LatticeConcat(uInt axis, Bool tempClose)
 
 template<class T>
 LatticeConcat<T>::LatticeConcat (const LatticeConcat<T>&other) 
-: lattices_p(other.lattices_p.nelements()),
+: MaskedLattice<T>(),
+  lattices_p(other.lattices_p.nelements()),
   axis_p (other.axis_p),
   shape_p(other.shape_p),
   isMasked_p(other.isMasked_p),

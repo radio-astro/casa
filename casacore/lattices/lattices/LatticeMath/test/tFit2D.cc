@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFit2D.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tFit2D.cc 20632 2009-06-14 12:16:13Z gervandiepen $
 
 #include <scimath/Fitting.h>
 #include <lattices/LatticeMath/Fit2D.h>
@@ -57,7 +57,7 @@ int main(int argc, const char *argv[])
 // Inputs
 // 
    Input inputs(1);
-   inputs.version ("$Revision: 20329 $");
+   inputs.version ("$Revision: 20632 $");
    inputs.create("nmodels", "1", "nmodels"); 
    inputs.create("noise", "0.0001", "Noise");
    inputs.create("major", "10.0", "major");
@@ -78,8 +78,7 @@ int main(int argc, const char *argv[])
    Double pa = inputs.getDouble("pa") * C::pi / 180.0;          // +x -> +y
    const Int nx = inputs.getInt("nx");   
    const Int ny = inputs.getInt("ny");   
-   const Bool norm = inputs.getBool("norm");
-   if (norm) ;			// Stop warning
+   ///const Bool norm = inputs.getBool("norm");
    const Block<Int> mask = inputs.getIntArray("mask");
    const Block<Double> includeRange = inputs.getDoubleArray("include");
    const Block<Double> excludeRange = inputs.getDoubleArray("exclude");

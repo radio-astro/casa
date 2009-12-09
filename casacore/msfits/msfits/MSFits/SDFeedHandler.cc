@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SDFeedHandler.cc 19980 2007-02-28 10:07:45Z Malte.Marquarding $
+//# $Id: SDFeedHandler.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <msfits/MSFits/SDFeedHandler.h>
@@ -112,7 +112,7 @@ void SDFeedHandler::resetRow(const Record &row)
     initRow(dummyCols, row);
 }
 
-void SDFeedHandler::fill(const Record &row, Int antennaId, Int spwinId, const Vector<Int> &stokes)
+void SDFeedHandler::fill(const Record &, Int antennaId, Int spwinId, const Vector<Int> &stokes)
 {
     // don't bother unless there is something there
     if (msFeed_p) {

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNode.cc 20575 2009-04-23 05:37:59Z gervandiepen $
+//# $Id: ExprNode.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/ExprNodeSet.h>
@@ -1349,6 +1349,7 @@ DataType TableExprNode::dataType() const
             return TpOther;
 	}
     }
+    return TpOther;
 }
 
 } //# NAMESPACE CASA - END

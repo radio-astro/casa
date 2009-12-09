@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RecordGram.h 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: RecordGram.h 20630 2009-06-12 04:14:37Z gervandiepen $
 
 #ifndef TABLES_RECORDGRAM_H
 #define TABLES_RECORDGRAM_H
@@ -79,7 +79,7 @@ int recordGramParseCommand (const String& command);
 
 // The yyerror function for the parser.
 // It throws an exception with the current token.
-void RecordGramerror (char*);
+void RecordGramerror (const char*);
 
 // Give the current position in the string.
 // This can be used when parse errors occur.

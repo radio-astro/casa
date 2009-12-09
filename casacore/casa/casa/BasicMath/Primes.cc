@@ -23,11 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Primes.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: Primes.cc 20634 2009-06-16 05:34:25Z gervandiepen $
 
 //# Includes
 
-#include <scimath/Mathematics/Primes.h>
+#include <casa/BasicMath/Primes.h>
 #include <casa/BasicMath/Math.h>			// For sqrt only
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -74,7 +74,7 @@ uInt Primes::nextLargerPrimeThan( uInt number )
     if ( cacheTable.nelements() < MINSIZE ) {
 	initializeCache();
     }
-    while( !isPrime( ++number ) );
+    while( !isPrime( ++number ) ) {}
     uInt index = cacheTable.nelements();
     for( i = cacheTable.nelements(); i > 0; i-- ) {
 	if ( cacheTable[(i-1)] == number ) {

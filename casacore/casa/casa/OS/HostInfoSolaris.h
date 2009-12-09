@@ -1,5 +1,5 @@
 //# HostInfo_solaris.h: Solaris specific memory, swap, and CPU code.
-//# $Id: HostInfoSolaris.h 18308 2005-01-24 19:03:23Z wyoung $
+//# $Id: HostInfoSolaris.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
  /*
  **  This is a greatly MODIFIED version of a "top" machine dependent file.
@@ -119,13 +119,13 @@ friend class HostInfo;
 
     int cpus;
 
-    int memory_total;
-    int memory_used;
-    int memory_free;
+    ssize_t memory_total;
+    ssize_t memory_used;
+    ssize_t memory_free;
 
-    int swap_total;
-    int swap_used;
-    int swap_free;
+    ssize_t swap_total;
+    ssize_t swap_used;
+    ssize_t swap_free;
 };
 
 // </group>

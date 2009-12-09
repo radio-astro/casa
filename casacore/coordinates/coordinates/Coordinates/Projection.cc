@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Projection.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: Projection.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <coordinates/Coordinates/Projection.h>
 #include <casa/BasicMath/Math.h>
@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 	parameters_p = parameters;
 //
-	validate();
+	validate(True);
     }
     
     
@@ -295,9 +295,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     
     
-    void Projection::validate()
-    {
-	
+    void Projection::validate(const Bool verbose)
+    {	
 	uInt requiredSize = nParameters(which_p);
 	uInt minSize = nMinParameters(which_p);
 	uInt actualSize = parameters_p.nelements();
@@ -305,10 +304,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    throw(AipsError("Projection::validate() - there are missing"
 			    "obligatory parameters"));
 	}
-	else if (requiredSize < actualSize){
-	    throw(AipsError("Projection::validate() - too many projection"
-			    " parameters supplied"));
-	}
+ 	else if (requiredSize < actualSize && verbose){
+ 	    cerr << "Projection::validate() - too many projection parameters supplied, will try to continue ..."
+ 		 << endl;
+ 	}
 	else if (actualSize < requiredSize){ // take care of default values 
 	    parameters_p.resize(requiredSize);
 	    // set the default values for the undefined parameters
@@ -316,7 +315,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    case AZP: 
 	    case SIN: 
 	    case ZPN:
-	        for (int i=actualSize; i<requiredSize; i++){
+	        for (uInt i=actualSize; i<requiredSize; i++){
 		    parameters_p(i) = 0.; // all default to 0
 		}
 		break;
@@ -325,7 +324,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		break;
 	    case CYP: 
 	    case CEA: 
-	        for (int i=actualSize; i<requiredSize; i++){
+	        for (uInt i=actualSize; i<requiredSize; i++){
 		    parameters_p(i) = 1.; // all default to 1.
 		}
 		break;
@@ -352,6 +351,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		break;
 	    }    
 	} // end if
+	return;
     }
 
 Projection::Type Projection::type (String& ctypeLong,

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLinearFitSVD.cc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: tLinearFitSVD.cc 20634 2009-06-16 05:34:25Z gervandiepen $
 
 #include <scimath/Fitting/LinearFitSVD.h>
 #include <casa/Arrays/ArrayIO.h>
@@ -35,7 +35,7 @@
 #include <scimath/Functionals/HyperPlane.h>
 #include <scimath/Functionals/Polynomial.h>
 #include <casa/BasicSL/Complex.h>
-#include <scimath/Mathematics/Primes.h>
+#include <casa/BasicMath/Primes.h>
 #include <casa/BasicMath/Random.h>
 #include <casa/Utilities/Assert.h>
 

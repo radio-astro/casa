@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dWorldMap.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: dWorldMap.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/Arrays.h>
@@ -39,7 +39,7 @@ void list (Bool ok, Bool ok2, Vector<Int>& wmap, Vector<Int>& wtranspose,
            CoordinateSystem& cSys2);
 
 
-int main (int argc, const char* argv[])
+int main()
 //
 // Test out the {world,pixel}Map function in CoordinateSystem
 //

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SubImage.tcc 19940 2007-02-27 05:35:22Z Malte.Marquarding $
+//# $Id: SubImage.tcc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <images/Images/SubImage.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
@@ -294,7 +294,7 @@ uInt SubImage<T>::ndim() const
 }
 
 template<class T>
-uInt SubImage<T>::nelements() const
+size_t SubImage<T>::nelements() const
 {
   return itsSubLatPtr->nelements();
 }

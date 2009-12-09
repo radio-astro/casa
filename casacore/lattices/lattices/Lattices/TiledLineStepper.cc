@@ -23,10 +23,9 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledLineStepper.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: TiledLineStepper.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <lattices/Lattices/TiledLineStepper.h>
-#include <tables/Tables/TiledStManAccessor.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
@@ -73,7 +72,8 @@ TiledLineStepper::TiledLineStepper (const IPosition& latticeShape,
 
 // the copy constructor which uses copy semantics.
 TiledLineStepper::TiledLineStepper (const TiledLineStepper& other)
-: itsBlc(other.itsBlc),
+: LatticeNavigator(),
+  itsBlc(other.itsBlc),
   itsTrc(other.itsTrc),
   itsInc(other.itsInc),
   itsSubSection(other.itsSubSection),
@@ -265,8 +265,8 @@ void TiledLineStepper::reset()
   //# so make it the tile shape for convenience (but not exceeding lattice).
   IPosition tilerBlc = itsBlc / itsTileShape * itsTileShape;
   IPosition tilerTrc = itsTrc;
-  tilerTrc(itsAxis) = min(latticeShape()(itsAxis) - 1,
-			  tilerBlc(itsAxis) + itsTileShape(itsAxis) - 1);
+  tilerTrc(itsAxis) = std::min(latticeShape()(itsAxis) - 1,
+                               tilerBlc(itsAxis) + itsTileShape(itsAxis) - 1);
   itsTiler.fullSize();
   itsTiler.subSection (tilerBlc, tilerTrc);
   itsTilerCursorPos = 0;
@@ -424,12 +424,15 @@ const IPosition& TiledLineStepper::axisPath() const
   return itsAxisPath;
 }
 
-uInt TiledLineStepper::calcCacheSize (const ROTiledStManAccessor& accessor,
-				      uInt rowNumber) const
+uInt TiledLineStepper::calcCacheSize (const IPosition&,
+                                      const IPosition& tileShape,
+                                      uInt, uInt bucketSize) const
 {
-  // Tile per tile is accessed, but the main axis needs the entire window.
+  if (bucketSize == 0) {
+    return 0;
+  }
+  // Tile by tile is accessed, but the main axis needs the entire window.
   // So calculate the start and end tile for the window.
-  IPosition tileShape = accessor.tileShape (rowNumber);
   Int tilesz = tileShape(itsAxis);
   Int stTile = itsBlc(itsAxis) / tilesz;
   Int endTile = itsTrc(itsAxis) / tilesz;

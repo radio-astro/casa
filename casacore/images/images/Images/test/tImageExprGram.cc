@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tImageExprGram.cc 20416 2008-10-29 15:23:33Z gervandiepen $
+//# $Id: tImageExprGram.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageExpr.h>
@@ -61,7 +61,7 @@ String substituteOID (Block<LatticeExprNode>& nodes,
 }
 void makeRegionBlock (PtrBlock<const ImageRegion*>& regions,
 		      const Record&,
-		      LogIO& os)
+		      LogIO&)
 {
    for (uInt j=0; j<regions.nelements(); j++) {
       delete regions[j];

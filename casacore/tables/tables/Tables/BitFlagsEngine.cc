@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BitFlagsEngine.cc 20559 2009-04-06 16:27:56Z gervandiepen $
+//# $Id: BitFlagsEngine.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/BitFlagsEngine.h>
@@ -43,8 +43,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   BFEngineMask::BFEngineMask (const Array<String>& keys,
                               uInt defaultMask)
-    : itsMask     (defaultMask),
-      itsMaskKeys (keys)
+    : itsMaskKeys (keys),
+      itsMask     (defaultMask)
   {}
 
   void BFEngineMask::fromRecord (const RecordInterface& spec,

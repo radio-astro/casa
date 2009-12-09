@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tComponentImager.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tComponentImager.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 #include <casa/aips.h>
 #include <images/Images/ComponentImager.h>
@@ -64,7 +64,6 @@ int main() {
   try {
     const uInt nx = 4;
     const uInt ny = nx;
-    const uInt nPol = 1;
     const uInt nFreq = 3;
 
     ComponentList clist;

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSelectionError.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSSelectionError.h 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #ifndef MS_MSSELECTIONERROR_H
 #define MS_MSSELECTIONERROR_H
@@ -241,7 +241,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   };
 
 
-  String constructMessage(const Int pos, const String& command);
+  //  String constructMessage(const Int pos, const String& command);
   //
   //-------------------------------------------------------------------
   //  
@@ -255,6 +255,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // <synopsis> 
   // </synopsis> 
   
+  //
+  //-------------------------------------------------------------------
+  //  
   class MSSelectionArrayError : public MSSelectionError {
   public:
     // Add given message to string "MSSelection time error: ".
@@ -273,7 +276,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MSSelectionArrayWarning (const String& message,Category c=GENERAL);
     ~MSSelectionArrayWarning () throw();
   };
+  //
+  //-------------------------------------------------------------------
+  //  
+  class MSSelectionPolnError : public MSSelectionError {
+  public:
+    // Add given message to string "MSSelection time error: ".
+    MSSelectionPolnError (const String& message,Category c=GENERAL);
+    ~MSSelectionPolnError () throw();
+  };
+  
+  class MSSelectionPolnParseError: public MSSelectionPolnError {
+  public:
+    MSSelectionPolnParseError (const String& message,Category c=GENERAL);
+    ~MSSelectionPolnParseError () throw();
+  };
 
+  class MSSelectionPolnWarning: public MSSelectionPolnError {
+  public:
+    MSSelectionPolnWarning (const String& message,Category c=GENERAL);
+    ~MSSelectionPolnWarning () throw();
+  };
+
+  //
+  //-------------------------------------------------------------------
+  //  
 
   String constructMessage(const Int pos, const String& command);
 } //# NAMESPACE CASA - END

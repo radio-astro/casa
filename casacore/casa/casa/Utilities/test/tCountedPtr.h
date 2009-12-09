@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tCountedPtr.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tCountedPtr.h 20627 2009-06-12 00:45:54Z gervandiepen $
 
 // Split off from the original tCountedPtr.cc
 // in order to satisfy the automated building of the test program.
@@ -57,9 +57,9 @@
 
 
 class myobj {
-    char *store;
+    const char *store;
 public:
-    myobj(char *str) : store(str) { 
+    myobj(const char *str) : store(str) { 
 	cout << "myobj(" << store << ") ctor" << endl;
     }
     ~myobj() { cout << "myobj(" << store << ") dtor" << endl;}

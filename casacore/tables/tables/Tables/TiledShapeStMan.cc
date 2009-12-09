@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledShapeStMan.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: TiledShapeStMan.cc 20624 2009-06-11 23:41:09Z gervandiepen $
 
 #include <tables/Tables/TiledShapeStMan.h>
 #include <tables/Tables/TSMColumn.h>
@@ -363,7 +363,7 @@ void TiledShapeStMan::updateRowMap (uInt cubeNr, uInt pos, uInt rownr)
     // If so, determine if it matches previous or next entry.
     // To match, the cube has to be the same and the position has to
     // be consecutive.
-    Bool atB = (rownr == 0  ||  index > 0  &&  rownr-1 == rowMap_p[index-1]);
+    Bool atB = (rownr == 0  ||  (index > 0  &&  rownr-1 == rowMap_p[index-1]));
     Bool atE = found;
     Bool eqP = False;
     Bool eqN = False;

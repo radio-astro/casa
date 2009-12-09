@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayQuantColumn.tcc 19918 2007-02-23 03:29:05Z Malte.Marquarding $
+//# $Id: ArrayQuantColumn.tcc 20628 2009-06-12 02:56:35Z gervandiepen $
 
 //# Includes
 #include <measures/TableMeasures/ArrayQuantColumn.h>
@@ -223,7 +223,7 @@ void ROArrayQuantColumn<T>::getData (uInt rownr, Array<Quantum<T> >& q,
   Bool deleteQuant;
   Quantum<T>* q_p = q.getStorage(deleteQuant);
   
-  const String* u_p;
+  const String* u_p=0;
   Bool deleteUnits;
   Array<String> tmpUnitsCol;
   Vector<Unit> localUnit(itsUnit);

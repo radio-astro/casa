@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: PointShape.h 19524 2006-07-24 05:27:40Z mmarquar $
+//# $Id: PointShape.h 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #ifndef COMPONENTS_POINTSHAPE_H
 #define COMPONENTS_POINTSHAPE_H
@@ -253,6 +253,9 @@ public:
   // Function which checks the internal data of this class for consistent
   // values. Returns True if everything is fine otherwise returns False.
   virtual Bool ok() const;
+
+  // return a pointer to this object.
+  virtual const ComponentShape* getPtr() const; 
 
 private:
 

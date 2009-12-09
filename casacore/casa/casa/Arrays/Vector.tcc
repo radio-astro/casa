@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Vector.tcc 19988 2007-02-28 10:34:10Z Malte.Marquarding $
+//# $Id: Vector.tcc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayError.h>
@@ -159,7 +159,7 @@ template<class T> void Vector<T>::resize(const IPosition &l, Bool copyValues)
     if (copyValues) {
         Vector<T> oldref(*this);
 	Array<T>::resize(l);
-	uInt minNels = min(this->nelements(), oldref.nelements());
+	size_t minNels = std::min(this->nelements(), oldref.nelements());
 	objcopy(this->begin_p, oldref.begin_p, minNels,
 		uInt(this->inc_p(0)), uInt(oldref.inc_p(0)));
     } else {

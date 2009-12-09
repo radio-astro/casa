@@ -1,5 +1,5 @@
 //# NewMSSimulator.h: this defines the MeasurementSet Simulator
-//# Copyright (C) 1995,1996,1998,1999,2000,2002
+//# Copyright (C) 1995-2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NewMSSimulator.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: NewMSSimulator.h 20752 2009-10-01 07:14:04Z gervandiepen $
 
 #ifndef MS_NEWMSSIMULATOR_H
 #define MS_NEWMSSIMULATOR_H
@@ -52,7 +52,7 @@ class MeasurementSet;
 //
 // <prerequisite>
 //# Classes you should understand before using this one.
-//   <li> MeasurementSet
+//  <li> MeasurementSet
 // </prerequisite>
 //
 // <etymology>
@@ -60,7 +60,7 @@ class MeasurementSet;
 // 'fake' data from a set of parameters for instrument and sources.
 // </etymology>
 //
-// <synopsis>
+// <synopsis> 
 // This class creates a MeasurementSet from a set of parameters for instrument
 // and sources. It does not simulate the data, only the coordinates of a 
 // measurement. The application "simulator" uses this class to create a true
@@ -117,16 +117,29 @@ public:
 	       const Vector<Double>& offset,
 	       const Vector<String>& mount,
 	       const Vector<String>& name,
+	       const Vector<String>& padname,
 	       const String& coordsystem,
 	       const MPosition& mRefLocation);
+  // get the info back 
+  bool getAnt(String& telescope, Int& nAnt, Matrix<Double>* antXYZ, 
+	      Vector<Double>& antDiam, Vector<Double>& offset,
+	      Vector<String>& mount, Vector<String>& name, Vector<String>& padname,
+	      String& coordsystem, MPosition& mRefLocation );
 
   // set the observed fields
   void initFields(const String& sourceName, 
 		  const MDirection& sourceDirection,
 		  const String& calCode);
 
+  bool getFields(Int& nField,
+		 Vector<String>& sourceName, 
+		 Vector<MDirection>& sourceDirection,
+		 Vector<String>& calCode);
+
   // set the Feeds;  brain dead version
   void initFeeds(const String& mode);
+
+  bool getFeedMode(String& mode);
 
   // set the Feeds;  Smart version
   void initFeeds(const String& mode,
@@ -141,6 +154,13 @@ public:
 		     const Quantity& freqInc,
 		     const Quantity& freqRes,
 		     const String& stokesString);
+
+  bool getSpWindows(Int& nSpw,
+		    Vector<String>& spWindowName,
+		    Vector<Int>& nChan,
+		    Vector<Quantity>& startFreq,
+		    Vector<Quantity>& freqInc,
+		    Vector<String>& stokesString);
 
   void setFractionBlockageLimit(const Double fraclimit) 
     { fractionBlockageLimit_p = fraclimit; }
@@ -219,6 +239,10 @@ private:
   void addHyperCubes(const Int id, const Int nBase, const Int nChan, const Int nCorr);
 
   void defaults();
+
+  Bool calcAntUVW(MEpoch& epoch, MDirection& refdir, 
+			Matrix<Double>& uvwAnt);
+
 
 };
 

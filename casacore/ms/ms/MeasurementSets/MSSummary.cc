@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSummary.cc 20337 2008-06-18 07:34:37Z gervandiepen $
+//# $Id: MSSummary.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 //#
 #include <casa/aips.h>
 #include <casa/Arrays.h>
@@ -374,15 +374,22 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	    Bool samescan;
 	    samescan=(thisscan==lastscan);
 
-	    samescan= samescan & samefld & sameddi;
+	    samescan = samescan && samefld && sameddi;
 
 	    // If state changed, then print out last scan's info
 	    if (!samescan) {
-
-	      if (thisnrow>0) 
+// 	      cout << "thisscan " << thisscan << "lastscan " << lastscan
+// 		   << " fldids " << fldids << " lastfldids " << lastfldids
+// 		   << " ddids " << ddids << " lastddids " << lastddids
+// 		   << " samescan " << (thisscan==lastscan) <<  " samefld " << samefld << " sameddi " << sameddi
+// 		   << " meanIntTim " << meanIntTim << " thisnrow " << thisnrow << " inttim.makeVector().size() " 
+// 		   <<  inttim.makeVector().size() << " meanIntTim/thisnrow " << meanIntTim/thisnrow << endl; 
+	      if (thisnrow>0){
 		meanIntTim/=thisnrow;
-	      else
+	      }
+	      else {
 		meanIntTim=0.0;
+	      }
 
 	      // this MJD
 	      day=floor(MVTime(btime/C::day).day());
@@ -426,6 +433,7 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	      lastday=day;
 
 	      thisnrow=0;
+	      meanIntTim=0.;
 	    }
 
 	    // etime keeps pace with thistime
@@ -444,8 +452,8 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 	  meanIntTim+=sum(inttim.makeVector());
 
 	  // for comparison at next timestamp
-	  lastfldids.resize(); lastfldids=fldids;
-	  lastddids.resize(); lastddids=ddids;
+	  lastfldids.assign(fldids);
+	  lastddids.assign(ddids);
 	  lastscan=thisscan;
 
 	  // push iteration

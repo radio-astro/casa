@@ -82,7 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Int tabCoord = -1;
 	while ((tabCoord = cSys.findCoordinate(Coordinate::TABULAR, tabCoord)) > 0) {
 	    if (cSys.tabularCoordinate(tabCoord).pixelValues().nelements() > 0) {
-		os << LogIO::WARN <<
+		os << LogIO::NORMAL <<
 		    "Note: Your coordinate system has one or more TABULAR axes.\n"
 		    "The lookup table will be lost in the conversion to FITS, and\n"
 		    "will be replaced by averaged (i.e. linearized) axes." <<
@@ -283,7 +283,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    else {
 		// determine which axis is the "latitude" axis, i.e. DEC or xLAT
 		int theLatAxisNum = -1;
-		for (int k=0; k<ctype.nelements(); k++){
+		for (uInt k=0; k<ctype.nelements(); k++){
 		    string theType(ctype[k]);
 		    if (theType.substr(0,3) == "DEC" || theType.substr(1,3) == "LAT"){
 			theLatAxisNum = k;
@@ -292,7 +292,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		if (theLatAxisNum == -1){
 		    header.define("pv2_", pvi_ma);
-		    os << LogIO::WARN << 
+		    os << LogIO::NORMAL << 
 			"There is no axis with type DEC or LAT. Cannot identify latitude axis for WCS."
 			" Will assume axis 2 as default." <<
 			LogIO::POST;
@@ -379,7 +379,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
 
-    Bool FITSCoordinateUtil::generateFITSKeywords (LogIO& os, Bool& isNCP, 
+    Bool FITSCoordinateUtil::generateFITSKeywords (LogIO&, Bool& isNCP, 
 						   Double& longPole,  Double& latPole,
 						   Vector<Double>& crval,
 						   Vector<Double>& crpix,
@@ -392,8 +392,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						   const CoordinateSystem& cSys,
 						   Int skyCoord, Int longAxis, 
 						   Int latAxis, Int specAxis, 
-						   Int stokesAxis, Bool writeWCS, 
-						   Double offset, const String& sprefix) const
+						   Int stokesAxis, Bool, 
+						   Double offset, const String&) const
     {
 	const Int n = cSys.nWorldAxes();
 	crval = cSys.referenceValue();
@@ -483,10 +483,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Convert header to char* for wcs parser
 
+        // Keep obsgeo-x,y,z because wcspih removes them, but they are needed
+        // by ObsInfo.
+        vector<String> saveCards;
 	int nkeys = header.nelements();
 	String all;
 	for (int i=0; i<nkeys; i++) {
-	    int hsize=header[i].size();
+            if (header[i].substr(0,7) == "OBSGEO-") {
+                saveCards.push_back (header[i]);
+            }
+	    int hsize = header[i].size();
 	    if (hsize >= 19 &&       // kludge changes 'RA--SIN ' to 'RA---SIN', etc.
 		header[i][0]=='C' && header[i][1]=='T' && header[i][2]=='Y' &&
 		header[i][3]=='P' && header[i][4]=='E' &&
@@ -496,7 +502,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		strncpy(tmp,header[i].c_str(),hsize+1);
 		tmp[18]=tmp[17];tmp[17]=tmp[16];tmp[16]=tmp[15];tmp[15]=tmp[14];
 		all = all.append(tmp);
-		os << LogIO::WARN
+		os << LogIO::NORMAL
 		   << "Header\n"<< header[i] << "\nwas interpreted as\n" << tmp << LogIO::POST;
 	    } else if (hsize >= 19 &&	  // change GLON-FLT to GLON-CAR, etc.
 		       header[i][0]=='C' && header[i][1]=='T' && header[i][2]=='Y' &&
@@ -508,7 +514,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		strncpy(tmp,header[i].c_str(),hsize+1);
 		tmp[16]='C'; tmp[17]='A'; tmp[18]='R';
 		all = all.append(tmp);
-		os << LogIO::WARN
+		os << LogIO::NORMAL
 		   << "Header\n"<< header[i] << "\nwas interpreted as\n" << tmp << LogIO::POST;
 	    } else if (hsize >= 19 &&	  // change 'GLON    ' to 'GLON-CAR', etc.
 		       header[i][0]=='C' && header[i][1]=='T' && header[i][2]=='Y' &&
@@ -520,7 +526,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		strncpy(tmp,header[i].c_str(),hsize+1);
 		tmp[15]='-'; tmp[16]='C'; tmp[17]='A'; tmp[18]='R';
 		all = all.append(tmp);
-		os << LogIO::WARN
+		os << LogIO::NORMAL
 		   << "Header\n"<< header[i] << "\nwas interpreted as\n" << tmp << LogIO::POST;
 	    } else if (hsize >= 19 &&	  // change 'OBSFREQ' to 'RESTFRQ'
 		       header[i][0]=='O' && header[i][1]=='B' && header[i][2]=='S' &&
@@ -532,7 +538,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		tmp[0]='R'; tmp[1]='E'; tmp[2]='S'; tmp[3]='T';
 		tmp[4]='F'; tmp[5]='R'; tmp[6]='Q'; tmp[7]=' ';
 		all = all.append(tmp);
-		os << LogIO::WARN
+		os << LogIO::NORMAL
 		   << "Header\n"<< header[i] << "\nwas interpreted as\n" << tmp << LogIO::POST;
 	    } else if (hsize >= 24 &&       // ignore "-SIP"
 		       header[i][0]=='C' && header[i][1]=='T' && header[i][2]=='Y' &&
@@ -545,7 +551,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		strncpy(tmp,header[i].c_str(),hsize+1);
 		tmp[19]='\'';tmp[20]=tmp[21]=tmp[22]=tmp[23]=' ';
 		all = all.append(tmp);
-		os << LogIO::WARN
+		os << LogIO::NORMAL
 		   << "The SIP convention for representing distortion in FITS headers\n  is not part of FITS standard v3.0"
 		   << " and not yet supported by CASA.\n  Header\n  "<< header[i] << "\n  was interpreted as\n  " << tmp << LogIO::POST;
 	    } else {
@@ -557,16 +563,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Print cards for debugging
   
 	Bool print(False);
-	if (print) {
+        if (print) {
 	    cerr << "Header Cards " << endl;
 	    for (Int i=0; i<nkeys; i++) {
 		uInt pt = i*80;
 		char* pChar3 = &pChar2[pt];
 		String s(pChar3,80);
 		cerr << s << endl;
-	    }
+            }
 	    cerr << endl;
-	}
+        }
   
 // Parse FITS header cards with wcs and remove wcs cards from char header
 
@@ -581,13 +587,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    return False;
 	}
 	if (uInt(nwcs) == 0) {
-	    os << LogIO::WARN << "No WCS compliant coordinate representation found. Will try to continue ..." << LogIO::POST;
+	    os << LogIO::NORMAL << "No WCS compliant coordinate representation found. Will try to continue ..." << LogIO::POST;
 	    cardsToRecord (os, recHeader, pChar2);
 	    return False;
 	}
 	else if (which >= uInt(nwcs)) {
-	    os << LogIO::SEVERE << "Requested WCS # " << which << " exceeds the number available " << nwcs << LogIO::POST;
+	    os << LogIO::WARN << "Requested WCS # " << which << " exceeds the number available " << nwcs << LogIO::POST;
 	}
+
+// Add the saved OBSGEO keywords.
+// This is a bit tricky because pChar2 is in fact the char* of String 'all'.
+// So make a new string and add them to it.
+        String newHdr;
+        if (saveCards.size() > 0) {
+            newHdr = String(pChar2);
+            for (uInt i=0; i<saveCards.size(); ++i) {
+                newHdr.append (saveCards[i]);
+            }
+            pChar2 = const_cast<char*>(newHdr.chars());
+        }
 
 // Put the rest of the header into a Record for subsequent use
 	cardsToRecord (os, recHeader, pChar2);
@@ -622,16 +640,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	wcsNames(CYLFIX) =  String("cylfix");
 //
 	int stat[NWCSFIX];
-	ctrl = 7;                                             // Do all unsafe unit corrections
-	if (wcsfix(ctrl, shape.storage(), &wcsPtr[which], stat) > 0) {
+	ctrl = 7;                         // Do all unsafe unit corrections
+        // wcsfix needs Int shape, so copy it.
+        std::vector<Int> tmpshp(shape.begin(), shape.end());
+        if (wcsfix(ctrl, &(tmpshp[0]), &wcsPtr[which], stat) > 0) {
 	    for (int i=0; i<NWCSFIX; i++) {
 		int err = stat[i];
 		if (err>0) {
 		    if (i==DATFIX) {
-			os << LogIO::WARN << wcsNames(i) << " incurred the error " << wcsfix_errmsg[err] <<  LogIO::POST;
-			os << LogIO::WARN << "this probably isn't fatal so continuing" << LogIO::POST;
+			os << LogIO::NORMAL << wcsNames(i) << " incurred the error " << wcsfix_errmsg[err] <<  LogIO::POST;
+			os << LogIO::NORMAL << "this probably isn't fatal so continuing" << LogIO::POST;
 		    } else {
-			os << LogIO::SEVERE << "The wcs function '"
+			os << LogIO::NORMAL << "The wcs function '"
 			   << wcsNames(i) << "' failed with error: "
 			   << wcsfix_errmsg[err] <<  LogIO::POST;
 //
@@ -1203,7 +1223,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     {
 	if (wcs.specsys[0]=='\0') {
-	    os << LogIO::WARN << "No frequency system is defined - TopoCentric assumed" << LogIO::POST;
+	    os << LogIO::NORMAL << "No frequency system is defined - TopoCentric assumed" << LogIO::POST;
 	    type = MFrequency::TOPO;
 	    return True;
 	}
@@ -1224,7 +1244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    return True;
 	} else if (specSys=="HELIOCEN") {
 	    type = MFrequency::BARY;
-	    os << LogIO::WARN << "The HELIOCENTRIC frequency system is deprecated in FITS - it is assumed BARYCENTIC was meant" << LogIO::POST;
+	    os << LogIO::NORMAL << "The HELIOCENTRIC frequency system is deprecated in FITS - it is assumed BARYCENTIC was meant" << LogIO::POST;
 	    return True;
 	} else if (specSys=="LSRK") {
 	    type = MFrequency::LSRK;
@@ -1291,7 +1311,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 	    if (stokes(k)==0) {
 		if (warnStokes) {
-		    os << LogIO::WARN 
+		    os << LogIO::NORMAL 
 		       << "Detected Stokes coordinate = 0; this is an unoffical" << endl;
 		    os << "Convention for an image containing a beam.  Putting Stokes=Undefined" << endl;
 		    os << "Better would be to write your FITS image with the correct Stokes" << LogIO::POST;
@@ -1380,7 +1400,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if (FITSDateUtil::fromFITS(time, timeSystem, dateObsStr, timeSysStr)) {
 		oi.setObsDate(MEpoch(time.get(), timeSystem));
 	    } else {
-		os << LogIO::WARN << "Failed to decode DATE-OBS & TIMESYS keywords - no date set" << LogIO::POST;
+		os << LogIO::NORMAL << "Failed to decode DATE-OBS & TIMESYS keywords - no date set" << LogIO::POST;
 	    }
 	}
 
@@ -1398,7 +1418,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Vector<String> FITSCoordinateUtil::cTypeFromDirection(Bool& isNCP, const Projection& proj,
 							  const Vector<String>& axisNames,
-							  Double refLat, Bool printError) 
+							  Double, Bool printError) 
     //
     // RefLat in radians
     //
@@ -1691,7 +1711,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    }
 	    case 5:                                 // Floating point
 	    {
-		Float value(keys[i].keyvalue.f);
+		Double value(keys[i].keyvalue.f);
 		subRec.define("value", value);
 		break;
 	    }
@@ -1734,7 +1754,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Define sub record 
 
 		if (rec.isDefined(name)) {
-		    os << LogIO::WARN << "Duplicate card '" <<  name << "'in header - only first will be used" << LogIO::POST;
+		    os << LogIO::NORMAL << "Duplicate card '" <<  name << "'in header - only first will be used" << LogIO::POST;
 		} else {
 		    rec.defineRecord(name, subRec);
 		}

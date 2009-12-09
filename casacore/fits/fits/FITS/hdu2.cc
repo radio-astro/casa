@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: hdu2.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: hdu2.cc 20749 2009-09-30 14:24:05Z gervandiepen $
 
 # include <fits/FITS/fits.h>
 # include <fits/FITS/hdu.h>
@@ -114,14 +114,13 @@ FitsField<FitsBit> & FitsArray<FitsBit>::operator () (int d0, int d1, int d2,
 //== HeaderDataUnit ===========================================================
 
 void HeaderDataUnit::errmsg(HDUErrs e, const char *s) {
+    static char msgstring[180]; // storage for composing error messages
     ostringstream msgline;
     msgline << "HDU error:  " << s << endl;
     err_status = e;
     // all of the errors which use this function are SEVERE
-    //const char * mptr = msgline.str().data();
-	 const char * mptr = (msgline.str()).c_str();
-    errfn(mptr, FITSError::SEVERE);
-    // delete [] mptr;
+    strncpy(msgstring, msgline.str().c_str(), sizeof(msgstring)-1);
+    errfn(msgstring, FITSError::SEVERE);
 }
 //== determine_type of HeaderDataUnit ========================================
 
@@ -603,7 +602,7 @@ HeaderDataUnit::HeaderDataUnit(FitsKeywordList &k, FITS::HDUType t,
 // Use this constructor to construct objects that write only required keywords to fitsfile.
 // the write method to call by these object should be those for the specific
 // hdu, such as write_binTbl_hdr().
-HeaderDataUnit::HeaderDataUnit( FITS::HDUType t, 
+HeaderDataUnit::HeaderDataUnit( FITS::HDUType, 
 			       FITSErrorHandler errhandler, FitsInput *f ) 
     : kwlist_(*new FitsKeywordList()), constkwlist_( kwlist_),fin(f),
 	   errfn(errhandler), err_status(OK), no_dims(0),
@@ -1037,7 +1036,7 @@ void AsciiTableExtension::at_assign() {
 	    }
             n = 0;
             format[i][n++] = '%';
-	    for (s = tform(i); *s == ' '; ++s); // skip leading blanks
+	    for (s = tform(i); *s == ' '; ++s) {} // skip leading blanks
 	    typecode = *s++; // code indicating kind of field
 	    fits_width[i] = 1; // get the fits field width
 	    if (FITS::isa_digit(*s)) {
@@ -1227,7 +1226,7 @@ int AsciiTableExtension::writerow(FitsOutput &fout) {
 			break;
 		    case FITS::DOUBLE:
 			sprintf(tmp,format[i],*((double *)(fld[i]->data())));
-			for (t = &tmp[strlen(tmp) - 2]; *t != 'E'; --t);
+			for (t = &tmp[strlen(tmp) - 2]; *t != 'E'; --t) {}
 			*t = 'D'; // Change the 'E' to a 'D' in the format
          memcpy(&fitsrow[fits_offset[i]],tmp,fits_width[i]);
 			break;
@@ -1543,7 +1542,7 @@ void BinaryTableExtension::bt_assign() {
 	    return;
 	}
 	for (i = 0; i < tfields(); ++i) {
-	    for (s = tform(i); *s == ' '; ++s); // skip leading blanks
+            for (s = tform(i); *s == ' '; ++s) {} // skip leading blanks
 	    ne = 1; // ne is the number of elements in the field
 	    if (FITS::isa_digit(*s)) {
 		ne = FITS::digit2bin(*s++);

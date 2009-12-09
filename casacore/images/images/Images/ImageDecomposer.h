@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageDecomposer.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: ImageDecomposer.h 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #ifndef IMAGES_IMAGEDECOMPOSER_H
 #define IMAGES_IMAGEDECOMPOSER_H
@@ -234,7 +234,10 @@ public:
   void displayContourMap(const Vector<T>& clevels) const;
   void printComponents() const;
 // </group>
-
+// Boxes each region in the componentmap:
+// blc is set to the lowest coordinate value in each region;
+// trc is set to one above the highest coordinate value in each region.
+  void boundRegions(Block<IPosition>& blc, Block<IPosition>& trc);
 private:
   ImageInterface<T> *itsImagePtr;// Points to the target image.
   Lattice<Int> *itsMapPtr;       // The actual component map.  
@@ -327,10 +330,7 @@ private:
 // component list.
   void clear();
 
-// Boxes each region in the componentmap:
-// blc is set to the lowest coordinate value in each region;
-// trc is set to one above the highest coordinate value in each region.
-  void boundRegions(Block<IPosition>& blc, Block<IPosition>& trc);
+
 
 // Finds the greatest value inside the specified rectangular area of the
 // target image.

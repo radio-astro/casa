@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Coordinate.cc 19706 2006-10-19 05:30:44Z gvandiep $
+//# $Id: Coordinate.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <coordinates/Coordinates/Coordinate.h>
@@ -397,18 +397,42 @@ String Coordinate::format(String& units,
       worldValue = q.getValue(currentUnitU);
    }
        
+   ostringstream oss;
+   bool precision_set = false;
+
+// ensure that there is enough precision... may need more tweaking...
+   Vector<Double> inc(increment());
+   if ( inc.nelements( ) > 0 ) {
+      static Quantum<Double> qdelta;
+      qdelta.setValue(inc(0));
+      qdelta.setUnit(nativeUnitU);
+      Double worldIncr = qdelta.getValue(currentUnitU);
+      int needed_precision = 1;
+      for ( Double compare = 1.0; fabs(worldValue) > compare; compare *= 10 ) { ++needed_precision; }
+      if ( fabs(worldIncr) < 1.0 )
+          for ( Double compare = 0.1; fabs(worldIncr) < compare; compare /= 10 ) { ++needed_precision; }
+      else {
+          int adjust = 1;
+          for ( Double compare = 1.0; fabs(worldIncr) > compare; compare *= 10 ) { ++adjust; }
+          if ( adjust < needed_precision ) needed_precision -= adjust;
+      }
+      if ( needed_precision > 5 ) {
+         oss.precision( needed_precision + 1 );
+         precision_set = true;
+      }
+   }
+
 // Format and get units.
   
-   ostringstream oss;
    if (form == Coordinate::MIXED) {
       oss << worldValue;
    } else if (form == Coordinate::SCIENTIFIC) {
       oss.setf(ios::scientific, ios::floatfield);
-      oss.precision(prec);
+      if ( precision_set == false ) oss.precision(prec);
       oss << worldValue;
    } else if (form == Coordinate::FIXED) {
       oss.setf(ios::fixed, ios::floatfield);
-      oss.precision(prec);
+      if ( precision_set == false ) oss.precision(prec);
       oss << worldValue;
    }
 // 
@@ -500,11 +524,12 @@ void Coordinate::set_error(const String &errorMsg) const
 
 
 
-Coordinate* Coordinate::makeFourierCoordinate (const Vector<Bool>& axes,
-                                               const Vector<Int>& shape)  const
+Coordinate* Coordinate::makeFourierCoordinate (const Vector<Bool>&,
+                                               const Vector<Int>&)  const
 {
-   String tmp = String("Coordinates of type ") + showType() + String(" cannot be Fourier Transformed");
-   throw(AipsError(tmp));
+   String tmp = String("Coordinates of type ") + showType() +
+                String(" cannot be Fourier Transformed");
+   throw AipsError(tmp);
 }
 
 

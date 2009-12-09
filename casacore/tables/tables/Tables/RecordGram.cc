@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RecordGram.cc 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: RecordGram.cc 20630 2009-06-12 04:14:37Z gervandiepen $
 
 // RecordGram; grammar for record command lines
 
@@ -101,7 +101,7 @@ int recordGramInput (char* buf, int max_size)
     return nr;
 }
 
-void RecordGramerror (char*)
+void RecordGramerror (const char*)
 {
     throw (TableInvExpr ("Parse error at or near '" +
 			 String(RecordGramtext) + "'"));
@@ -255,8 +255,7 @@ TableExprNode RecordGram::handleRegex (const TableExprNode& left,
   }
   TableExprNode lnode(left);
   if (caseInsensitive) {
-    str.downcase();
-    lnode = downcase(left);
+    str = Regex::makeCaseInsensitive (str);
   }
   TableExprNode rnode((Regex(str)));
   if (negate) {

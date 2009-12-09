@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSTableIndex.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSTableIndex.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #ifndef MS_MSTABLEINDEX_H
 #define MS_MSTABLEINDEX_H
@@ -154,7 +154,7 @@ private:
     Vector<uInt> lastSearch_p;
 
     // last nearest
-    uInt lastNearest_p;
+    Int lastNearest_p;
     Bool nearestFound_p, nearestReady_p;
 
     // last known sub-table size

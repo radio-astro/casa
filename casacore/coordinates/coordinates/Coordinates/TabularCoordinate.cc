@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: TabularCoordinate.cc 18823 2005-07-07 20:36:33Z ddebonis $
+//# $Id: TabularCoordinate.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <coordinates/Coordinates/TabularCoordinate.h>
@@ -155,7 +155,8 @@ void TabularCoordinate::clear_self()
 
 
 TabularCoordinate::TabularCoordinate(const TabularCoordinate &other)
-: crval_p(0.0), 
+: Coordinate(),
+  crval_p(0.0), 
   cdelt_p(0.0), 
   crpix_p(0.0), 
   matrix_p(0.0), 

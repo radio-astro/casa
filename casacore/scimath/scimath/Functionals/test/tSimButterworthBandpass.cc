@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSimButterworthBandpass.cc 20211 2008-01-18 03:29:02Z Malte.Marquarding $
+//# $Id: tSimButterworthBandpass.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 #define DIAGNOSTICS
 #ifdef DEBUG 
@@ -69,7 +69,9 @@ int main() {
     butt.setMaxCutoff(9.0);
     AlwaysAssertExit(butt.getMaxCutoff() == 9.0);
 
-    Double pk = butt.getPeak(), cen = butt.getCenter(), irt2 = 1.0/sqrt(2.0);
+    Double pk = butt.getPeak();
+    Double cen = butt.getCenter();
+    //Double irt2 = 1.0/sqrt(2.0);
     AlwaysAssertExit(butt(cen) == pk);
     //AlwaysAssertExit(butt(fabs(butt.getMinCutoff()) - irt2*pk) < DBL_EPSILON && 
 //	             butt(fabs(butt.getMaxCutoff()) - irt2*pk) < DBL_EPSILON);

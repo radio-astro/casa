@@ -24,10 +24,11 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: HostInfo.cc 20110 2007-08-22 08:09:30Z jcguzmantanaka $
+//# $Id: HostInfo.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <casa/BasicSL/String.h>
 #include <casa/OS/HostInfo.h>
+#include <casa/System/Aipsrc.h>
 #include <casa/Utilities/Assert.h>
 
 #include <unistd.h>
@@ -117,52 +118,89 @@ Double HostInfo::secondsFrom1970()
 }
 #endif
 
-#define HOSTINFO_IMPLEMENT_MEMBERS			\
-Int HostInfo::numCPUs( )				\
-{							\
-    if ( ! info ) info = new HostMachineInfo( );	\
-    return info->valid ? info->cpus : 0;		\
-}							\
-							\
-Int HostInfo::memoryTotal( ) 				\
-{							\
-    if ( ! info ) info = new HostMachineInfo( );	\
-    return info->valid ? info->memory_total : -1;	\
-}							\
-							\
-Int HostInfo::memoryUsed( )				\
-{							\
-    if ( ! info ) info = new HostMachineInfo( );	\
-    info->update_info( );				\
-    return info->valid ? info->memory_used : -1;	\
-}							\
-							\
-Int HostInfo::memoryFree( )				\
-{							\
-    if ( ! info ) info = new HostMachineInfo( );	\
-    info->update_info( );				\
-    return info->valid ? info->memory_free : -1;	\
-}							\
-							\
-Int HostInfo::swapTotal( )				\
-{							\
-    if ( ! info ) info = new HostMachineInfo( );	\
-    info->update_info( );				\
-    return info->valid ? info->swap_total : -1;		\
-}							\
-							\
-int HostInfo::swapUsed( )				\
-{							\
-    if ( ! info ) info = new HostMachineInfo( );	\
-    info->update_info( );				\
-    return info->valid ? info->swap_used : -1;		\
-}							\
-							\
-int HostInfo::swapFree( )				\
-{							\
-    if ( ! info ) info = new HostMachineInfo( );	\
-    info->update_info( );				\
-    return info->valid ? info->swap_free : -1;		\
+#define HOSTINFO_IMPLEMENT_MEMBERS				\
+Int HostInfo::numCPUs(bool use_aipsrc)				\
+{								\
+    static const String keyword("system.resources.cores");	\
+    if ( use_aipsrc ) {						\
+	String value;						\
+	if ( Aipsrc::find(value, keyword) ) {			\
+	    char buf[256];					\
+	    int result;						\
+	    if ( sscanf( value.c_str( ), "%d", &result ) == 1 )	\
+		return (Int) result;				\
+	}							\
+    }								\
+								\
+    if ( ! info ) info = new HostMachineInfo( );		\
+    return info->valid ? info->cpus : 0;			\
+}								\
+								\
+ssize_t HostInfo::memoryTotal(bool use_aipsrc) 			\
+{								\
+    static const String memory("system.resources.memory");	\
+    static const String fraction("system.resources.memfrac");	\
+    int frac = 0;						\
+    /** aipsrc memory is in megabytes whereas this **/		\
+    /** returns the memory in kilobytes...         **/		\
+    if ( use_aipsrc ) {						\
+	String value;						\
+	if ( Aipsrc::find(value, memory) ) {			\
+	    int result;						\
+	    if ( sscanf( value.c_str( ), "%d", &result ) == 1 )	\
+		return (ssize_t) result * 1024;			\
+	} else if ( Aipsrc::find(value,	fraction) ) {		\
+	    int result;						\
+	    if ( sscanf( value.c_str( ), "%d", &result ) == 1 )	\
+		frac = result;					\
+	}							\
+    }								\
+								\
+    if ( ! info ) info = new HostMachineInfo( );		\
+								\
+    if ( ! info->valid )					\
+	return -1;						\
+    else if ( frac == 0 )					\
+	return info->memory_total;				\
+    else {							\
+	double f = ((double) frac / 100.0);			\
+	return (ssize_t) ((double ) info->memory_total * f);	\
+    }								\
+}								\
+								\
+ssize_t HostInfo::memoryUsed( )					\
+{								\
+    if ( ! info ) info = new HostMachineInfo( );		\
+    info->update_info( );					\
+    return info->valid ? info->memory_used : -1;		\
+}								\
+								\
+ssize_t HostInfo::memoryFree( )					\
+{								\
+    if ( ! info ) info = new HostMachineInfo( );		\
+    info->update_info( );					\
+    return info->valid ? info->memory_free : -1;		\
+}								\
+								\
+ssize_t HostInfo::swapTotal( )					\
+{								\
+    if ( ! info ) info = new HostMachineInfo( );		\
+    info->update_info( );					\
+    return info->valid ? info->swap_total : -1;			\
+}								\
+								\
+ssize_t HostInfo::swapUsed( )					\
+{								\
+    if ( ! info ) info = new HostMachineInfo( );		\
+    info->update_info( );					\
+    return info->valid ? info->swap_used : -1;			\
+}								\
+								\
+ssize_t HostInfo::swapFree( )					\
+{								\
+    if ( ! info ) info = new HostMachineInfo( );		\
+    info->update_info( );					\
+    return info->valid ? info->swap_free : -1;			\
 }
 
 
@@ -213,12 +251,12 @@ HOSTINFO_IMPLEMENT_MEMBERS
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Int HostInfo::numCPUs( ) { return 0; }
-Int HostInfo::memoryTotal( ) { return -1; }
-Int HostInfo::memoryUsed( ) { return -1; }
-Int HostInfo::memoryFree( ) { return -1; }
-Int HostInfo::swapTotal( ) { return -1; }
-int HostInfo::swapUsed( ) { return -1; }
-int HostInfo::swapFree( ) { return -1; }
+ssize_t HostInfo::memoryTotal( ) { return -1; }
+ssize_t HostInfo::memoryUsed( )  { return -1; }
+ssize_t HostInfo::memoryFree( )  { return -1; }
+ssize_t HostInfo::swapTotal( )   { return -1; }
+ssize_t HostInfo::swapUsed( )    { return -1; }
+ssize_t HostInfo::swapFree( )    { return -1; }
 
 } //# NAMESPACE CASA - END
 

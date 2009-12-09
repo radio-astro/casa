@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ObsInfo.h 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: ObsInfo.h 20730 2009-09-24 11:17:08Z gervandiepen $
 
 #ifndef COORDINATES_OBSINFO_H
 #define COORDINATES_OBSINFO_H
@@ -34,6 +34,7 @@
 
 #include <casa/BasicSL/String.h>
 #include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MPosition.h>
 #include <casa/Quanta/MVDirection.h>
 
 //# Forward declarations
@@ -113,9 +114,19 @@ public:
     // Telescope identifier. If this is a "standard" telescope, you should use
     // the same name as is available in the Observatories method of class
     // <linkto class=MeasTable>MeasTable</linkto>. Defaults to "UNKNOWN".
+    // <br>
+    // The telescope position can be set and will be converted to ITRF.
+    // If the telescope position has not been set explicitly, it will be
+    // set for a standard telescope found in the MeasTable.
     // <group>
     String telescope() const;
     ObsInfo& setTelescope(const String &telescope);
+    Bool isTelescopePositionSet() const
+      { return isTelPositionSet_p; }
+    const MPosition& telescopePosition() const
+      { return telPosition_p; }
+    String telescopePositionString() const;
+    ObsInfo& setTelescopePosition(const MPosition&);
     // </group>
 
     // The name (or initials) of the observer. Defaults to "UNKNOWN".
@@ -199,6 +210,8 @@ private:
     String telescope_p;
     String observer_p;
     MEpoch obsdate_p;
+    MPosition telPosition_p;
+    Bool isTelPositionSet_p;
     MVDirection pointingCenter_p;
     Bool isPointingCenterInitial_p;    // True when ObsInfo contructed. 
                                        // False after setPointingCenter called

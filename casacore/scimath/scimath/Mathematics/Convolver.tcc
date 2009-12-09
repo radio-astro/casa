@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Convolver.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: Convolver.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <scimath/Mathematics/Convolver.h>
 #include <casa/Arrays/Vector.h>
@@ -33,7 +33,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class FType> Convolver<FType>::
-Convolver(const Array<FType>& psf, Bool cachePsf){
+Convolver(const Array<FType>& psf, Bool){
   //  if (cachePsf) thePsf = psf;
   thePsf = psf;
   valid = False;
@@ -42,9 +42,9 @@ Convolver(const Array<FType>& psf, Bool cachePsf){
 
 template<class FType> Convolver<FType>::
 Convolver(const Array<FType>& psf, 
-	  const IPosition& imageSize,
-	  Bool fullSize,
-	  Bool cachePsf){
+	  const IPosition&,
+	  Bool,
+	  Bool){
   //  if (cachePsf) thePsf = psf;
   thePsf = psf;
   valid = False;
@@ -120,11 +120,11 @@ makeXfr(const Array<FType>& psf,
       theFFTSize = thePsfSize+extractShape(thePsfSize, imageNDSize);
     else
       for (uInt i = 0; i < psfDim; i++)
-	theFFTSize(i) = max(thePsfSize(i), 
-			    convImageSize(i)+2*Int((thePsfSize(i)+3)/4));
+	theFFTSize(i) = std::max(thePsfSize(i), 
+                                 convImageSize(i)+2*Int((thePsfSize(i)+3)/4));
   else 
     for (uInt i = 0; i < psfDim; i++)
-      theFFTSize(i) = max(thePsfSize(i), convImageSize(i));
+      theFFTSize(i) = std::max(thePsfSize(i), convImageSize(i));
   {
     IPosition tmp = theXfr.shape();
     tmp = 0;
@@ -195,8 +195,8 @@ linearConv(Array<FType>& result,
   else {
     Bool doResize = False;
     for (uInt i = 0; i < thePsfSize.nelements(); i++) {
-      if (theFFTSize < max(thePsfSize(i), 
-			   imageSize(i)+2*Int((thePsfSize(i)+3)/4)))
+      if (theFFTSize < std::max(thePsfSize(i), 
+                                imageSize(i)+2*Int((thePsfSize(i)+3)/4)))
 	doResize=True;
     }
     if (doResize)
@@ -279,7 +279,7 @@ doConvolution(Array<FType>& result,
 }
   
 template<class FType> void Convolver<FType>::
-setPsf(const Array<FType>& psf, Bool cachePsf){
+setPsf(const Array<FType>& psf, Bool){
   thePsf.resize(psf.shape());
   thePsf = psf;
   valid=False;
@@ -288,9 +288,9 @@ setPsf(const Array<FType>& psf, Bool cachePsf){
   
 template<class FType> void Convolver<FType>::
 setPsf(const Array<FType>& psf, 
-       IPosition imageSize, 
-       Bool fullSize,
-       Bool cachePsf){
+       IPosition, 
+       Bool,
+       Bool){
   thePsf.resize(psf.shape());
   thePsf = psf;
   valid=False;

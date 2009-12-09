@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageRegion.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: ImageRegion.h 20567 2009-04-09 23:12:39Z gervandiepen $
 
 #ifndef IMAGES_IMAGEREGION_H
 #define IMAGES_IMAGEREGION_H
@@ -174,6 +174,14 @@ public:
                                         (const LattRegionHolder& other) const;
     virtual LattRegionHolder* makeComplement() const;
     // </group>
+
+    // moved from ImageAnalysis
+    // TODO: From Ger:
+    // In fact I doubt if that tweaked function is really needed.
+    // The fromRecord function in e.g. LCBox use toArrayFloat which converts a double array
+    // to a float array.
+    // You should try if the code works fine without doing the tweakrecord.
+    static  Record * tweakedRegionRecord(Record *Region);
 
 private:
     WCRegion*   itsWC;

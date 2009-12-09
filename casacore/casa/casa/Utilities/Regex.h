@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Regex.h 19763 2006-11-24 04:07:49Z gvandiep $
+//# $Id: Regex.h 20698 2009-08-31 12:02:32Z gervandiepen $
 
 #ifndef CASA_REGEX_H
 #define CASA_REGEX_H
@@ -53,7 +53,10 @@ struct re_registers;
 // matching and searching in strings, comparison of expressions, and
 // input/output. It is built on the regular expression functions in the
 // GNU library (see files cregex.h and cregex.cc).
-// <br>
+// <br> Apart from proper regular expressions, it also supports glob patterns
+// (UNIX file name patterns) by means of a conversion to a proper regex.
+// Also ordinary strings can be converted to a proper regex.
+// <p>
 // cregex.cc supports many syntaxes. Regex supports
 // only one syntax, the extended regular expression with { and not \\{
 // as a special character. The special characters are:
@@ -94,6 +97,8 @@ struct re_registers;
 //  <dd> grouping to change the normal operator precedence.
 //  <dt> |
 //  <dd> or operator. Matches left side or right side.
+//  <dt> \\1 till \\9. Backreference to a subexpression. Matches part of string
+//       equal to string part that matched the subexpression.
 // </dl>
 // Special characters have to be escaped with a backslash to use them
 // literally. Only inside the square brackets, escaping should not be done.
@@ -156,6 +161,10 @@ struct re_registers;
 // string to a regular expression. This function escapes characters in
 // the string which are special in a regular expression. In this way a
 // normal string can be passed to a function taking a regular expression.
+//
+// The static member function <src>makeCaseInsensitive</src> returns a
+// new regular expression string containing the case-insensitive version of
+// the given expression string.
 // </synopsis> 
 
 // <example>
@@ -206,7 +215,7 @@ public:
     // </thrown>
     Regex(const String &exp, Bool fast = False, Int sz = 40, 
 	  const Char *translation = 0);
-    
+
     // Copy constructor (copy semantics).
     // <thrown>
     //  <li> invalid_argument
@@ -240,11 +249,19 @@ public:
     // on regular expressions.
     static String fromString(const String &strng);
 
+    // Create a case-insensitive reular expression string from the given
+    // regular expression string.
+    // It does it by inserting the lowercase and uppercase version of
+    // characters in the input string into the output string.
+    static String makeCaseInsensitive (const String &strng);
+
     // Get the regular expression string.
-    const String &regexp() const;
+    const String &regexp() const
+      { return *str; }
     
     // Get the translation table (can be a zero pointer).
-    const Char *transtable() const;
+    const Char *transtable() const
+      { return trans; }
     
     // Test if the regular expression matches (part of) string <src>s</src>.
     // The return value gives the length of the matching string part,
@@ -293,7 +310,7 @@ public:
     friend ostream &operator<<(ostream &ios, const Regex &exp);
     
 protected:
-    String*            str;                 // the reg. exp.
+    String*            str;                 // the reg. exp. string
     Int                fastval;             // fast flag
     Int                bufsz;               // buffer size given
     Char*              trans;               // possible translation table

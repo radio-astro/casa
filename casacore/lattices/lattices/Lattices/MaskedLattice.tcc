@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskedLattice.tcc 19909 2007-02-23 02:08:02Z Malte.Marquarding $
+//# $Id: MaskedLattice.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 
 #include <lattices/Lattices/MaskedLattice.h>
@@ -39,7 +39,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <class T>
 MaskedLattice<T>::MaskedLattice (const MaskedLattice<T>& that)
-: itsDefRegPtr (0)
+: Lattice<T>(),
+  itsDefRegPtr (0)
 {
   if (that.itsDefRegPtr != 0) {
     itsDefRegPtr = new LatticeRegion (*that.itsDefRegPtr);

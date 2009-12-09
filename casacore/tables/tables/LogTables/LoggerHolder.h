@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LoggerHolder.h 19779 2006-12-12 23:20:42Z gvandiep $
+//# $Id: LoggerHolder.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #ifndef TABLES_LOGGERHOLDER_H
 #define TABLES_LOGGERHOLDER_H
@@ -516,7 +516,7 @@ public:
   // </group>
 
   // Is the iterator not at the end yet?
-  Bool operator!= (const LoggerHolderIterator& that)
+  Bool operator!= (const LoggerHolderIterator&)
     { return itsNotAtEnd; }
 
   // Get the entry.

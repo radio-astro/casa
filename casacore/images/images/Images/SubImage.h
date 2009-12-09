@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SubImage.h 20505 2009-01-19 14:37:24Z gervandiepen $
+//# $Id: SubImage.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #ifndef IMAGES_SUBIMAGE_H
 #define IMAGES_SUBIMAGE_H
@@ -177,7 +177,7 @@ public:
   virtual uInt ndim() const;
   
   // Returns the total number of elements in this SubImage.
-  virtual uInt nelements() const;
+  virtual size_t nelements() const;
   
   // returns a value of "True" if this instance of Lattice and 'other' have 
   // the same shape, otherwise returns a value of "False".

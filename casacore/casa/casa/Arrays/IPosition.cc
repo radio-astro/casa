@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition.cc 20336 2008-06-18 07:33:38Z gervandiepen $
+//# $Id: IPosition.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/ArrayError.h>
@@ -34,6 +34,22 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+IPosition::IPosition (uInt length)
+: size_p (length),
+  data_p (buffer_p)
+{
+    if (length > BufferLength) {
+	allocateBuffer();
+    }
+}
+
+IPosition::~IPosition()
+{
+    if (data_p != &buffer_p[0]) {
+        delete [] data_p;
+    }
+}
+
 // <thrown>
 //    <item> AllocError
 // </thrown>
@@ -42,7 +58,7 @@ void IPosition::allocateBuffer()
     if (size_p <= BufferLength) {
         data_p = buffer_p;
     } else {
-	data_p = new Int[size_p];
+	data_p = new ssize_t[size_p];
 	if (data_p == 0) {
 	    throw(AllocError("IPosition::allocateBuffer() - "
 			     "Cannot allocate storage", size_p));
@@ -51,7 +67,7 @@ void IPosition::allocateBuffer()
     DebugAssert(ok(), AipsError);
 }
 
-IPosition::IPosition (uInt length, Int val)
+IPosition::IPosition (uInt length, ssize_t val)
 : size_p (length),
   data_p (buffer_p)
 {
@@ -66,9 +82,9 @@ IPosition::IPosition (uInt length, Int val)
 // <thrown>
 //    <item> AipsError
 // </thrown>
-IPosition::IPosition (uInt length, Int val0, Int val1, Int val2, Int val3, 
-		      Int val4, Int val5, Int val6, Int val7, Int val8, 
-		      Int val9)
+IPosition::IPosition (uInt length, ssize_t val0, ssize_t val1, ssize_t val2,
+                      ssize_t val3, ssize_t val4, ssize_t val5, ssize_t val6,
+                      ssize_t val7, ssize_t val8, ssize_t val9)
 : size_p (length),
   data_p (buffer_p)
 {
@@ -142,7 +158,7 @@ IPosition IPosition::nonDegenerate (const IPosition& ignoreAxes) const
     uInt i;
     IPosition keepAxes(size_p, 0);
     for (i=0; i<ignoreAxes.nelements(); i++) {
-	AlwaysAssert (ignoreAxes(i) < Int(size_p), AipsError);
+	AlwaysAssert (ignoreAxes(i) < ssize_t(size_p), AipsError);
 	keepAxes(ignoreAxes(i)) = 1;
     }
     // Now count all axes to keep.
@@ -179,7 +195,7 @@ void IPosition::resize (uInt newSize, Bool copy)
     if (newSize == size_p) {
 	return;
     }
-    Int* oldData = data_p;
+    ssize_t* oldData = data_p;
     uInt oldSize = size_p;
     size_p = newSize;
     allocateBuffer();
@@ -217,7 +233,7 @@ IPosition& IPosition::operator= (const IPosition& other)
     return *this;
 }
 
-IPosition& IPosition::operator= (Int value)
+IPosition& IPosition::operator= (ssize_t value)
 {
     DebugAssert(ok(), AipsError);
     for (uInt i=0; i<size_p; i++) {
@@ -366,7 +382,7 @@ void IPosition::operator /= (const IPosition& other)
     }
 }
 
-void IPosition::operator += (Int val)
+void IPosition::operator += (ssize_t val)
 {
     DebugAssert(ok(), AipsError);
     for (uInt i=0; i<size_p; i++) {
@@ -374,7 +390,7 @@ void IPosition::operator += (Int val)
     }
 }
 
-void IPosition::operator -= (Int val)
+void IPosition::operator -= (ssize_t val)
 {
     DebugAssert(ok(), AipsError);
     for (uInt i=0; i<size_p; i++) {
@@ -382,7 +398,7 @@ void IPosition::operator -= (Int val)
     }
 }
 
-void IPosition::operator *= (Int val)
+void IPosition::operator *= (ssize_t val)
 {
     DebugAssert(ok(), AipsError);
     for (uInt i=0; i<size_p; i++) {
@@ -390,7 +406,7 @@ void IPosition::operator *= (Int val)
     }
 }
 
-void IPosition::operator /= (Int val)
+void IPosition::operator /= (ssize_t val)
 {
     DebugAssert(ok(), AipsError);
     for (uInt i=0; i<size_p; i++) {
@@ -533,35 +549,35 @@ IPosition operator / (const IPosition& left, const IPosition& right)
     return result;
 }
 
-IPosition operator + (const IPosition& left, Int val)
+IPosition operator + (const IPosition& left, ssize_t val)
 {
     IPosition result(left);
     result += val;
     return result;
 }
 
-IPosition operator - (const IPosition& left, Int val)
+IPosition operator - (const IPosition& left, ssize_t val)
 {
     IPosition result(left);
     result -= val;
     return result;
 }
 
-IPosition operator * (const IPosition& left, Int val)
+IPosition operator * (const IPosition& left, ssize_t val)
 {
     IPosition result(left);
     result *= val;
     return result;
 }
 
-IPosition operator / (const IPosition& left, Int val)
+IPosition operator / (const IPosition& left, ssize_t val)
 {
     IPosition result(left);
     result /= val;
     return result;
 }
 
-IPosition operator + (Int val, const IPosition& right)
+IPosition operator + (ssize_t val, const IPosition& right)
 {
     IPosition result(right.nelements());
     result = val;
@@ -569,7 +585,7 @@ IPosition operator + (Int val, const IPosition& right)
     return result;
 }
 
-IPosition operator - (Int val, const IPosition& right)
+IPosition operator - (ssize_t val, const IPosition& right)
 {
     IPosition result(right.nelements());
     result = val;
@@ -577,7 +593,7 @@ IPosition operator - (Int val, const IPosition& right)
     return result;
 }
 
-IPosition operator * (Int val, const IPosition& right)
+IPosition operator * (ssize_t val, const IPosition& right)
 {
     IPosition result(right.nelements());
     result = val;
@@ -585,7 +601,7 @@ IPosition operator * (Int val, const IPosition& right)
     return result;
 }
 
-IPosition operator / (Int val, const IPosition& right)
+IPosition operator / (ssize_t val, const IPosition& right)
 {
     IPosition result(right.nelements());
     result = val;
@@ -602,7 +618,7 @@ IPosition max (const IPosition& left, const IPosition& right)
     }
     IPosition result(left);
     const uInt ndim = result.nelements();
-    Int max;
+    ssize_t max;
     for (uInt i = 0; i < ndim; i++) {
       if (result(i) < (max = right(i))) {
         result(i) = max;
@@ -623,7 +639,7 @@ IPosition min (const IPosition& left, const IPosition& right)
     }
     IPosition result(left);
     const uInt ndim = result.nelements();
-    Int min;
+    ssize_t min;
     for (uInt i = 0; i < ndim; i++) {
       if (result(i) > (min = right(i))) {
         result(i) = min;
@@ -635,14 +651,14 @@ IPosition min (const IPosition& left, const IPosition& right)
 // <thrown>
 //    <item> ArrayConformanceError
 // </thrown>
-Int IPosition::product() const
+Int64 IPosition::product() const
 {
     if (nelements() ==  0) {
 	return 0;
     }
-    Int total = 1;
+    Int64 total = 1;
     for (uInt i=0; i<nelements(); i++) {
-	total *= (*this)(i);
+	total *= (*this)[i];
     }
     return total;
 }
@@ -785,7 +801,7 @@ Bool operator >= (const IPosition& left, const IPosition& right)
     return result;
 }
 
-Bool operator == (const IPosition& left, Int val)
+Bool operator == (const IPosition& left, ssize_t val)
 {
     Bool result = True;
     uInt n = left.nelements();
@@ -800,7 +816,7 @@ Bool operator == (const IPosition& left, Int val)
     return result;
 }
 
-Bool operator != (const IPosition& left, Int val)
+Bool operator != (const IPosition& left, ssize_t val)
 {
     Bool result = False;
     uInt n = left.nelements();
@@ -815,7 +831,7 @@ Bool operator != (const IPosition& left, Int val)
     return result;
 }
 
-Bool operator < (const IPosition& left, Int val)
+Bool operator < (const IPosition& left, ssize_t val)
 {
     Bool result = True;
     uInt n = left.nelements();
@@ -830,7 +846,7 @@ Bool operator < (const IPosition& left, Int val)
     return result;
 }
 
-Bool operator <= (const IPosition& left, Int val)
+Bool operator <= (const IPosition& left, ssize_t val)
 {
     Bool result = True;
     uInt n = left.nelements();
@@ -845,7 +861,7 @@ Bool operator <= (const IPosition& left, Int val)
     return result;
 }
 
-Bool operator > (const IPosition& left, Int val)
+Bool operator > (const IPosition& left, ssize_t val)
 {
     Bool result = True;
     uInt n = left.nelements();
@@ -860,7 +876,7 @@ Bool operator > (const IPosition& left, Int val)
     return result;
 }
 
-Bool operator >= (const IPosition& left, Int val)
+Bool operator >= (const IPosition& left, ssize_t val)
 {
     Bool result = True;
     uInt n = left.nelements();
@@ -875,7 +891,7 @@ Bool operator >= (const IPosition& left, Int val)
     return result;
 }
 
-Bool operator == (Int val, const IPosition& right)
+Bool operator == (ssize_t val, const IPosition& right)
 {
     Bool result = True;
     uInt n = right.nelements();
@@ -890,7 +906,7 @@ Bool operator == (Int val, const IPosition& right)
     return result;
 }
 
-Bool operator != (Int val, const IPosition& right)
+Bool operator != (ssize_t val, const IPosition& right)
 {
     Bool result = False;
     uInt n = right.nelements();
@@ -905,7 +921,7 @@ Bool operator != (Int val, const IPosition& right)
     return result;
 }
 
-Bool operator < (Int val, const IPosition& right)
+Bool operator < (ssize_t val, const IPosition& right)
 {
     Bool result = True;
     uInt n = right.nelements();
@@ -920,7 +936,7 @@ Bool operator < (Int val, const IPosition& right)
     return result;
 }
 
-Bool operator <= (Int val, const IPosition& right)
+Bool operator <= (ssize_t val, const IPosition& right)
 {
     Bool result = True;
     uInt n = right.nelements();
@@ -935,7 +951,7 @@ Bool operator <= (Int val, const IPosition& right)
     return result;
 }
 
-Bool operator > (Int val, const IPosition& right)
+Bool operator > (ssize_t val, const IPosition& right)
 {
     Bool result = True;
     uInt n = right.nelements();
@@ -950,7 +966,7 @@ Bool operator > (Int val, const IPosition& right)
     return result;
 }
 
-Bool operator >= (Int val, const IPosition& right)
+Bool operator >= (ssize_t val, const IPosition& right)
 {
     Bool result = True;
     uInt n = right.nelements();
@@ -987,17 +1003,17 @@ Bool IPosition::ok() const
 }
 
 
-IPosition toIPositionInArray (const uInt offset, const IPosition& shape)
+IPosition toIPositionInArray (Int64 offset, const IPosition& shape)
 {
     if (! isInsideArray (offset, shape) ) {
 	throw (ArrayIndexError(
-            "IPosition ::toIPositionInArray (const uInt offset,"
+            "IPosition ::toIPositionInArray (Int64 offset,"
             " const IPosition& shape)"
              " - Invalid offset."));
     }
 
     IPosition iposition (shape.nelements());
-    uInt divisor = 1;
+    Int64 divisor = 1;
 
     uInt ndim = shape.nelements();
     for (uInt idim = 0; idim < ndim; idim++) {
@@ -1009,24 +1025,24 @@ IPosition toIPositionInArray (const uInt offset, const IPosition& shape)
 
 }
 
-uInt toOffsetInArray (const IPosition& iposition, const IPosition& shape)
+Int64 toOffsetInArray (const IPosition& iposition, const IPosition& shape)
 {
     if (! (iposition.conform(shape)) ) {
 	throw (ArrayConformanceError(
-            "uInt ::toOffsetInArray (const IPosition& iposition,"
+            "Int64 ::toOffsetInArray (const IPosition& iposition,"
             " const IPosition& shape)"
              " - IPositions do not conform"));
     }
 
     if (! isInsideArray (iposition, shape) ) {
 	throw (ArrayIndexError(
-            "uInt ::toOffsetInArray (const IPosition& iposition,"
+            "Int64 ::toOffsetInArray (const IPosition& iposition,"
             " const IPosition& shape)"
              " - Invalid iposition."));
     }
 
-    uInt offset = 0;
-    uInt multiplier = 1;
+    Int64 offset = 0;
+    Int64 multiplier = 1;
 
     uInt ndim = shape.nelements();
     for (uInt idim = 0; idim < ndim; idim++) {
@@ -1038,16 +1054,9 @@ uInt toOffsetInArray (const IPosition& iposition, const IPosition& shape)
 }
 
 
-Bool isInsideArray (const uInt offset, const IPosition& shape)
+Bool isInsideArray (Int64 offset, const IPosition& shape)
 {
-    uInt nelements = 1;
-
-    uInt ndim = shape.nelements();
-    for (uInt idim = 0; idim < ndim; idim++) {
-        nelements *= shape(idim);
-    }
-
-    return (offset < nelements) ? True : False;
+    return (offset < shape.product()) ? True : False;
 }
 
 
@@ -1061,7 +1070,7 @@ Bool isInsideArray (const IPosition& iposition, const IPosition& shape)
     }
 
     Bool result = True;
-    Int ioff;
+    ssize_t ioff;
 
     uInt ndim = shape.nelements();
     for (uInt idim = 0; idim < ndim; idim++) {
@@ -1108,7 +1117,7 @@ IPosition IPosition::otherAxes (uInt nrdim, const IPosition& axes)
 
 void IPosition::throwIndexError() const
 {
-    // This should be a IndexError<uInt> - but that causes multiply
+    // This should be an IndexError<uInt> - but that causes multiply
     // defined symbols with the current objectcenter.
     throw(AipsError("IPosition::operator() - index error"));
 }

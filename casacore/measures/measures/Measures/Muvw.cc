@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Muvw.cc 20117 2007-09-05 04:38:35Z Malte.Marquarding $
+//# $Id: Muvw.cc 20612 2009-06-05 05:39:45Z gervandiepen $
 
 //# Includes
 #include <measures/Measures/Muvw.h>
@@ -132,8 +132,8 @@ const String &Muvw::showType(uInt tp) {
   return Muvw::showType(Muvw::castType(tp));
 }
 
-const String *const Muvw::allMyTypes(Int &nall, Int &nextra,
-					  const uInt *&typ) {
+const String* Muvw::allMyTypes(Int &nall, Int &nextra,
+                               const uInt *&typ) {
   static const Int N_name  = 24;
   static const Int N_extra = 0;
   static const String tname[N_name] = {
@@ -195,8 +195,8 @@ const String *const Muvw::allMyTypes(Int &nall, Int &nextra,
   return tname;
 }
 
-const String *const Muvw::allTypes(Int &nall, Int &nextra,
-					const uInt *&typ) const {
+const String* Muvw::allTypes(Int &nall, Int &nextra,
+                             const uInt *&typ) const {
   return Muvw::allMyTypes(nall, nextra, typ);
 }
 

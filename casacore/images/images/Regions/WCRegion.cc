@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCRegion.cc 18563 2005-04-07 11:50:30Z nkilleen $
+//# $Id: WCRegion.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 
 #include <images/Regions/WCRegion.h>
@@ -241,7 +241,8 @@ LCRegion* WCRegion::toLCRegionAxes (const CoordinateSystem& cSys,
     IPosition extendAxes(ndout-ndreg);
     IPosition extendShape(ndout-ndreg);
     Vector<uInt> inx(ndreg);
-    GenSortIndirect<Int>::sort (inx, outOrder.storage(), ndreg);
+    std::vector<Int> tmp(outOrder.begin(), outOrder.end());
+    GenSortIndirect<Int>::sort (inx, &(tmp[0]), ndreg);
     for (i=0; i<ndreg; i++) {
         pixAxesMap(i) = pixelAxesMap(i);
 	outOrd(inx(i)) = i;

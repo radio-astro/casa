@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskedLattice.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: MaskedLattice.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #ifndef LATTICES_MASKEDLATTICE_H
 #define LATTICES_MASKEDLATTICE_H
@@ -109,7 +109,7 @@ class LatticeRegion;
 //   const IPosition cursorShape = lat.niceCursorShape(cursorSize);
 //   const IPosition latticeShape = lat.shape();
 //   Complex currentSum = 0.0f;
-//   uInt nPixels = 0u;
+//   size_t nPixels = 0;
 //   RO_LatticeIterator<Complex> iter(lat, 
 // 				   LatticeStepper(latticeShape, cursorShape));
 //   for (iter.reset(); !iter.atEnd(); iter++){

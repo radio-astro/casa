@@ -24,10 +24,13 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ObsInfo.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: ObsInfo.cc 20730 2009-09-24 11:17:08Z gervandiepen $
 
 #include <coordinates/Coordinates/ObsInfo.h>
 #include <measures/Measures/MeasureHolder.h>
+#include <measures/Measures/MeasTable.h>
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MCPosition.h>
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/MVDirection.h>
@@ -66,6 +69,7 @@ ObsInfo::ObsInfo()
  : telescope_p(defaultTelescope()), 
    observer_p(defaultObserver()), 
    obsdate_p(defaultObsDate()),
+   isTelPositionSet_p(False),
    pointingCenter_p(defaultPointingCenter()),
    isPointingCenterInitial_p(True)
 {
@@ -83,12 +87,15 @@ void ObsInfo::copy_other(const ObsInfo &other)
 	telescope_p = other.telescope_p;
 	observer_p = other.observer_p;
 	obsdate_p = other.obsdate_p;
+        telPosition_p = other.telPosition_p;
+        isTelPositionSet_p = other.isTelPositionSet_p;
         pointingCenter_p = other.pointingCenter_p;
         isPointingCenterInitial_p = other.isPointingCenterInitial_p;
     }
 }
 
 ObsInfo::ObsInfo(const ObsInfo &other)
+  : RecordTransformable()
 {
     copy_other(other);
 }
@@ -107,7 +114,32 @@ String ObsInfo::telescope() const
 ObsInfo& ObsInfo::setTelescope(const String &telescope)
 {
     telescope_p = telescope;
+    if (!isTelPositionSet_p) {
+      MPosition pos;
+      if (MeasTable::Observatory (pos, telescope)) {
+        setTelescopePosition (pos);
+      }
+    }
     return *this;
+}
+
+ObsInfo& ObsInfo::setTelescopePosition(const MPosition &pos)
+{
+    telPosition_p = MPosition::Convert(pos, MPosition::ITRF)();
+    isTelPositionSet_p = True;
+    return *this;
+}
+
+String ObsInfo::telescopePositionString() const
+{
+    ostringstream oss;
+    if (isTelPositionSet_p) {
+        MVPosition pos1 = telPosition_p.getValue();
+        oss << "[" << pos1.getValue()[0] << "m, "
+            << pos1.getValue()[1] << "m, "
+            << pos1.getValue()[2] << "m] (ITRF)";
+    }
+    return oss.str();
 }
 
 String ObsInfo::observer() const
@@ -176,6 +208,14 @@ Bool ObsInfo::toRecord(String & error, RecordInterface & outRecord) const
        outRecord.defineRecord("pointingcenter", rec);
     }
 //
+    if (isTelPositionSet_p) {
+       MeasureHolder mh(telPosition_p);
+       Record rec;
+       ok = mh.toRecord(error, rec);
+       if (ok) {
+          outRecord.defineRecord("telescopeposition", rec);
+       }
+    }
     return ok;
 }
 
@@ -220,6 +260,26 @@ Bool ObsInfo::fromRecord(String & error, const RecordInterface & inRecord)
 	    return False;
 	}
 	setObsDate(mh.asMEpoch());
+    }
+//
+    field = inRecord.fieldNumber("telescopeposition");
+    if (field >= 0) {
+	if (inRecord.type(field) != TpRecord) {
+	    error = "Type of telescopeposition field is not Record!";
+	    return False;
+	}
+	MeasureHolder mh;
+	Bool ok = mh.fromRecord(error, inRecord.asRecord(field));
+	if (!ok) {
+	    return False;
+	}
+	if (!mh.isMPosition()) {
+	    error = "obsdate field is not an MPosition!";
+	    return False;
+	}
+	setTelescopePosition(mh.asMPosition());
+    } else {
+        isTelPositionSet_p = False;
     }
 //
     field = inRecord.fieldNumber("pointingcenter");
@@ -349,6 +409,26 @@ Bool ObsInfo::toFITS(String & error, RecordInterface & outRecord) const
        }
     }
 //
+    Vector<String> names(3);
+    names[0] = "obsgeo-x";
+    names[1] = "obsgeo-y";
+    names[2] = "obsgeo-z";
+    if (isTelPositionSet_p) {
+       // Store position in ITRF meters.
+       MVPosition mvpos = telPosition_p.getValue();
+       for (int i=0; i<3; ++i) {
+         outRecord.define (names[i], mvpos.getValue()[i]);
+       }
+    } else {
+       // Remove it if it already exists
+       for (int i=0; i<3; ++i) {
+          Int field = outRecord.fieldNumber(names[i]);
+          if (field >= 0 && !outRecord.isFixed()) {
+             outRecord.removeField(field);
+          }
+       }
+    }
+//
     return True;
 }
 
@@ -454,6 +534,28 @@ Bool ObsInfo::fromFITS(Vector<String>& error, const RecordInterface & rec)
    	   setPointingCenter(mvd);
         }
     }
+
+// Item 4
+
+    Int fieldx = rec.fieldNumber("obsgeo-x");
+    Int fieldy = rec.fieldNumber("obsgeo-y");
+    Int fieldz = rec.fieldNumber("obsgeo-z");
+    if (fieldx>=0 && fieldy>=0 && fieldz>=0) {
+       Record subRec1 = rec.asRecord(fieldx);
+       Record subRec2 = rec.asRecord(fieldy);
+       Record subRec3 = rec.asRecord(fieldz);
+	if (subRec1.dataType("value") != TpDouble ||
+            subRec2.dataType("value") != TpDouble ||
+            subRec3.dataType("value") != TpDouble) {
+	    error(3) = "Type of OBSGEO fields is not Double!";
+	    ok = False;
+	} else {
+           MVPosition mvp(subRec1.asDouble("value"),
+                          subRec2.asDouble("value"),
+                          subRec3.asDouble("value"));
+   	   setTelescopePosition(MPosition(mvp, MPosition::ITRF));
+        }
+    }
 //
     if (ok) error.resize(0);
     return ok;
@@ -463,19 +565,26 @@ Bool ObsInfo::fromFITS(Vector<String>& error, const RecordInterface & rec)
 
 Vector<String> ObsInfo::keywordNamesFITS()
 {
-    Vector<String> vs(6);
+    Vector<String> vs(9);
     vs(0) = "telescop";
     vs(1) = "observer";
     vs(2) = "date-obs";
     vs(3) = "timesys";
     vs(4) = "obsra";
     vs(5) = "obsdec";
+    vs(6) = "obsgeo-x";
+    vs(7) = "obsgeo-y";
+    vs(8) = "obsgeo-z";
     return vs;
 }
 
 ostream &operator<<(ostream &os, const ObsInfo &info)
 {
-    os << "Telescope: " << info.telescope() << " Observer: " <<
+    os << "Telescope: " << info.telescope();
+    if (info.isTelescopePositionSet()) {
+        os << " Position: " << info.telescopePositionString();
+    }
+    os << " Observer: " <<
 	info.observer() << " Date Observed: " << info.obsDate() <<
         " Pointing Center: " << info.pointingCenter();
     return os;

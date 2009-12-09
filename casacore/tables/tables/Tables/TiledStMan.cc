@@ -279,6 +279,9 @@ IPosition TiledStMan::makeTileShape (const IPosition& hypercubeShape,
 String TiledStMan::dataManagerName() const
     { return hypercolumnName_p; }
 
+void TiledStMan::setDataManagerName(const String& newHypercolumnName)
+    { hypercolumnName_p = newHypercolumnName; }
+
 Record TiledStMan::dataManagerSpec() const
 {
     Record rec;
@@ -1004,7 +1007,7 @@ void TiledStMan::headerFilePut (AipsIO& headerFile, uInt nrCube)
     headerFile << hypercolumnName_p;
     headerFile << persMaxCacheSize_p;
     headerFile << nrdim_p;
-    headerFile << fileSet_p.nelements();
+    headerFile << uInt(fileSet_p.nelements());
     for (i=0; i<fileSet_p.nelements(); i++) {
 	if (fileSet_p[i] == 0) {
 	    headerFile << False;

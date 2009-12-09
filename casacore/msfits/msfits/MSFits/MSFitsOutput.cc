@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFitsOutput.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: MSFitsOutput.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <msfits/MSFits/MSFitsOutput.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
@@ -63,6 +63,7 @@
 
 #include <casa/Logging/LogIO.h>
 
+#include <set>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -134,8 +135,43 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
   Vector<Int> spwids;
   uInt nrspw;
   {
-    ROScalarColumn<Int> ddidcol(ms, MS::columnName(MS::DATA_DESC_ID));
-    nrspw = makeIdMap (spwidMap, spwids, ddidcol.getColumn(), isSubset);
+    
+    /* Note: The MAIN table does not point directly to 
+       spwIDs but to the DATA_DESC_ID table, which in turn points
+       to entries in the SPECTRAL_WINDOW table (the spwid).
+       First, determine which spwIDs are referenced from the MAIN table.
+    */
+    
+    Vector<Int> ddidcol (ROScalarColumn<Int>(ms, MS::columnName(MS::DATA_DESC_ID)).getColumn());
+    Vector<Int> spwidcol(ROScalarColumn<Int>(ms.dataDescription(), 
+                                        MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID))
+                         .getColumn());
+
+    std::set<Int> allIDs;
+    for (uInt i = 0; i < ddidcol.nelements(); i++) {
+      Int ddid = ddidcol(i);
+      if (ddid < spwidcol.nelements()) {
+        Int spwid = spwidcol(ddid);
+        
+        allIDs.insert(spwid);
+      }
+      else {
+        os << LogIO::SEVERE << ms.tableName() << " row " << i << ": " <<
+          "Invalid data description ID = " << ddid << ". DATA_DESC_ID table " << 
+          "has " << spwidcol.nelements() << " rows" << LogIO::POST;
+      }
+    }
+
+    /* Convert to vector */
+    Vector<Int> allids(allIDs.size());
+    uInt j = 0;
+    for (std::set<Int>::iterator i = allIDs.begin();
+         i != allIDs.end(); 
+         i++){
+      allids[j++] = *i;
+    }
+
+    nrspw = makeIdMap(spwidMap, spwids, allids);
   }
 
   // If not asMultiSource, check if multiple sources are present.
@@ -152,7 +188,7 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
       }
     }
     Vector<Int> fieldids;
-    nrfield = makeIdMap (fieldidMap, fieldids, fldid, isSubset);
+    nrfield = makeIdMap (fieldidMap, fieldids, fldid);
   }  
 
   // Write main table. Get freq and channel-width back.
@@ -197,19 +233,29 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
   // This is needed for WSRT MS's, where the first time in the SYSCAL
   // table is the average at the middle of the observation.
   if (ok && writeSysCal) {
-    Table syscal = handleSysCal (ms, spwids, isSubset);
-
-    os << LogIO::NORMAL << "writing AIPS TY table" << LogIO::POST;
-    ok = writeTY(fitsOutput, ms, syscal, spwidMap, nrspw, combineSpw);
-    if (!ok) {
-      os << LogIO::SEVERE << "Could not write TY table\n" << LogIO::POST;
-    } else {
-      os << LogIO::NORMAL << "Writing AIPS GC table" << LogIO::POST;
-      ok = writeGC(fitsOutput, ms, syscal, spwidMap, nrspw, combineSpw,
-		   sensitivity, refPixelFreq, refFreq, chanbw);
+    if (ms.sysCal().tableDesc().ncolumn() == 0) {
+      os << LogIO::WARN << "MS has no or empty SYSCAL subtable, " << 
+        "could not write AIPS TY table and AIPS GC table" << LogIO::POST;
     }
-    if (!ok) {
-      os << LogIO::SEVERE << "Could not write GC table\n" << LogIO::POST;
+    else if (ms.sysCal().nrow() == 0) {
+      os << LogIO::WARN << "MS has empty SYSCAL subtable, " <<
+        "could not write AIPS TY table and AIPS GC table" << LogIO::POST;
+    }
+    else {
+      Table syscal = handleSysCal (ms, spwids, isSubset);
+    
+      os << LogIO::NORMAL << "writing AIPS TY table" << LogIO::POST;
+      ok = writeTY(fitsOutput, ms, syscal, spwidMap, nrspw, combineSpw);
+      if (!ok) {
+        os << LogIO::SEVERE << "Could not write TY table\n" << LogIO::POST;
+      } else {
+        os << LogIO::NORMAL << "Writing AIPS GC table" << LogIO::POST;
+        ok = writeGC(fitsOutput, ms, syscal, spwidMap, nrspw, combineSpw,
+                     sensitivity, refPixelFreq, refFreq, chanbw);
+      }
+      if (!ok) {
+        os << LogIO::SEVERE << "Could not write GC table\n" << LogIO::POST;
+      }
     }
   }
 
@@ -1019,7 +1065,7 @@ Bool MSFitsOutput::writeFQ(FitsOutput *output, const MeasurementSet &ms,
 
   header.define("EXTNAME", "AIPS FQ");             // EXTNAME
   header.define("EXTVER", 1);                      // EXTVER
-  header.define("NO_IF", shape(0));                // NO_IF
+  header.define("NO_IF", Int(shape(0)));                // NO_IF
 
   // Table description
   RecordDesc desc;
@@ -1162,7 +1208,23 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
     //   (ATCA looks like VLBI in UVFITS, but is already RHed.)
     // It looks as if WSRT needs y-axis reflection for UVFIX.
     Bool doRefl=((arrayName=="WSRT")  ||
-		((arrayName!="ATCA") && allLE(abs(arraypos),1000.0)));
+		 ((arrayName!="ATCA" &&
+		   arrayName!="EVLA") && allLE(abs(arraypos),1000.0)));
+
+    // EVLA wants full ITRF per antenna and arraypos=(0,0,0)
+    if (arrayName=="EVLA")
+      arraypos.set(0.0);
+
+    // Discern the position reference frame
+    ROMSAntennaColumns antCols (ms.antenna());
+
+    // Nominally arraypos+antpos will be ITRF (see below), 
+    //   unless we tinker with it, in which case it is
+    //   a local convention
+    String posref("ITRF");
+    if (doRot || doRefl)
+      posref=arrayName;
+
 
     // #### Header
     Record header;
@@ -1184,6 +1246,10 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
     header.define("NUMORB", 0);                      // NUMORB
     header.define("NOPCAL", 0);                      // NOPCAL
     header.define("POLTYPE", "        ");            // POLTYPE
+
+
+    // Added Nov 2009, following AIPS addition
+    header.define("FRAME",posref);                   // FRAME
 
     // NOT in going aips
     // header.define("DATUTC", 0.0);
@@ -1377,7 +1443,7 @@ Bool MSFitsOutput::writeAN(FitsOutput *output, const MeasurementSet &ms,
 
 Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
 			   const Block<Int>& fieldidMap, Int nrfield,
-			   const Block<Int>& spwidMap, Int nrspw)
+			   const Block<Int>& /*spwidMap*/, Int nrspw)
 {
   LogIO os(LogOrigin("MSFitsOutput", "writeSU"));
   // Basically we make the FIELD_ID the source ID.
@@ -1730,7 +1796,7 @@ Bool MSFitsOutput::writeTY(FitsOutput *output, const MeasurementSet &ms,
 }
 
 Bool MSFitsOutput::writeGC(FitsOutput *output, const MeasurementSet &ms,
-			   const Table& syscal, const Block<Int>& spwidMap,
+			   const Table& syscal, const Block<Int>& /*spwidMap*/,
 			   uInt nrif, Bool combineSpw, Double sensitivity,
 			   Int refPixelFreq, Double refFreq, Double chanbw)
 {
@@ -1830,7 +1896,7 @@ Bool MSFitsOutput::writeGC(FitsOutput *output, const MeasurementSet &ms,
   header.define("REF_FREQ", refFreq);              // REF_FREQ
   header.define("CHAN_BW", abs(chanbw));      // CHAN_BW
   header.define("REF_PIXL", Double(1+refPixelFreq)); // REF_PIXL (==CRPIX4)
-  header.define("NO_TABS", shape(0));              // NO_TABS
+  header.define("NO_TABS", Int(shape(0)));              // NO_TABS
   header.define("TABREV", 2);                      // TABREV
     
   // Table description
@@ -2068,49 +2134,51 @@ Table MSFitsOutput::handleSysCal (const MeasurementSet& ms,
 }
 
 
+/*
+  allids: (input)  IDs to consider
+  map:    (output) map from allids to 0,1,...,nr
+  selids: (output) inverse of map
+
+  returns: nr, number of different IDs in allids
+ */
 Int MSFitsOutput::makeIdMap (Block<Int>& map, Vector<Int>& selids,
-			     const Vector<Int>& allids, Bool isSubset)
+			     const Vector<Int>& allids)
 {
   // Determine the number of ids and make a mapping of
   // id number in the table to id number in fits.
-  // Only if the MS is a subset, we have to determine this mapping
-  // explicitly (because then some ids might be left out).
+  // Even if the MS is not a subset (by selection), we have to
+  // determine this mapping explicitly (because then some ids
+  // might be left out).
+
   Int nrid = 1 + max(allids);
   map.resize (nrid, True, True);
   map = -1;
-  if (!isSubset) {
-    selids.resize (nrid);
-    for (Int i=0; i<nrid; i++) {
-      map[i] = i;
-      selids(i) = i;
-    }
-  } else {
-    // Find out which fields are actually used, because only those
-    // fields need to be written from the FIELD table.
-    Bool deleteIt;
-    const Int* data = allids.getStorage (deleteIt);
-    Block<Bool> idUsed(nrid, False);
-    Int nrow = allids.nelements();
-    for (Int i=0; i<nrow; i++) {
-      idUsed[data[i]] = True;
-    }
-    allids.freeStorage (data, deleteIt);
-    Int nr = 0;
-    for (Int i=0; i<nrid; i++) {
-      if (idUsed[i]) {
-	map[i] = nr++;                // form the mapping
-      }
-    }
-    selids.resize (nr);
-    nr = 0;
-    for (Int i=0; i<nrid; i++) {
-      if (idUsed[i]) {
-	selids(nr++) = i;             // determine which ids are selected
-      }
-    }
-    nrid = nr;
+
+  // Find out which fields are actually used, because only those
+  // fields need to be written from the FIELD table.
+  Bool deleteIt;
+  const Int* data = allids.getStorage (deleteIt);
+  Block<Bool> idUsed(nrid, False);
+  Int nrow = allids.nelements();
+  for (Int i=0; i<nrow; i++) {
+    idUsed[data[i]] = True;
   }
-  return nrid;
+  allids.freeStorage (data, deleteIt);
+  Int nr = 0;
+  for (Int i=0; i<nrid; i++) {
+    if (idUsed[i]) {
+      map[i] = nr++;                // form the mapping
+    }
+  }
+  selids.resize (nr);
+  nr = 0;
+  for (Int i=0; i<nrid; i++) {
+    if (idUsed[i]) {
+      selids(nr++) = i;             // determine which ids are selected
+    }
+  }
+
+  return nr;
 }
 
 

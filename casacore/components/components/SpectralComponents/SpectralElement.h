@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SpectralElement.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: SpectralElement.h 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #ifndef COMPONENTS_SPECTRALELEMENT_H
 #define COMPONENTS_SPECTRALELEMENT_H
@@ -150,8 +150,8 @@ class SpectralElement : public RecordTransformable {
 
   //# Member functions
   // Get all the types available as String and codes, and number available
-  static const String *const allTypes(Int &nall,
-				      const SpectralElement::Types *&typ);
+  static const String* allTypes(Int &nall,
+                                const SpectralElement::Types *&typ);
   // Get a string from the type
   static const String &fromType(SpectralElement::Types tp);
   // Get a type from a (non-case sensitive; minimum match) String

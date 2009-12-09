@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tList.cc 20170 2007-11-22 00:28:11Z Malte.Marquarding $
+//# $Id: tList.cc 20632 2009-06-14 12:16:13Z gervandiepen $
 
 //# Includes
 
@@ -279,7 +279,7 @@ int main() {
   onePc.toStart();
 
   onePb.swapRight(onePa);
-  for(;onePb.atEnd() != True;onePb++);
+  for(;onePb.atEnd() != True;onePb++) {}
   onePb.swapRight(onePc);
 
   cout << "<b:onePa> - ";

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNodeSet.cc 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: ExprNodeSet.cc 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #include <tables/Tables/ExprNodeSet.h>
 #include <tables/Tables/ExprNode.h>
@@ -495,9 +495,9 @@ void TableExprNodeSetElem::matchInt (Bool* match, const Int64* value,
 	while (match < lastVal) {
 	    Int64 tmp = *value;
 	    if ((itsStart == 0
-             ||  tmp > start  ||  itsLeftClosed  &&  tmp == start)
+             ||  tmp > start  ||  (itsLeftClosed  &&  tmp == start))
 	    &&  (itsEnd == 0
-             ||  tmp < end  ||  itsRightClosed  &&  tmp == end)) {
+             ||  tmp < end  ||  (itsRightClosed  &&  tmp == end))) {
 		*match = True;
 	    }
 	    value++;
@@ -540,9 +540,9 @@ void TableExprNodeSetElem::matchDouble (Bool* match, const Double* value,
 	while (match < lastVal) {
 	    Double tmp = *value;
 	    if ((itsStart == 0
-             ||  tmp > start  ||  itsLeftClosed  &&  tmp == start)
+             ||  tmp > start  ||  (itsLeftClosed  &&  tmp == start))
 	    &&  (itsEnd == 0
-             ||  tmp < end  ||  itsRightClosed  &&  tmp == end)) {
+             ||  tmp < end  ||  (itsRightClosed  &&  tmp == end))) {
 		*match = True;
 	    }
 	    value++;
@@ -590,9 +590,9 @@ void TableExprNodeSetElem::matchString (Bool* match, const String* value,
     }else{
 	while (match < lastVal) {
 	    if ((itsStart == 0
-             ||  *value > start  ||  itsLeftClosed  &&  *value == start)
+             ||  *value > start  ||  (itsLeftClosed  &&  *value == start))
 	    &&  (itsEnd == 0
-             ||  *value < end  ||  itsRightClosed  &&  *value == end)) {
+             ||  *value < end  ||  (itsRightClosed  &&  *value == end))) {
 		*match = True;
 	    }
 	    value++;
@@ -636,9 +636,9 @@ void TableExprNodeSetElem::matchDate (Bool* match, const MVTime* value,
 	while (match < lastVal) {
 	    Double tmp = *value;
 	    if ((itsStart == 0
-             ||  tmp > start  ||  itsLeftClosed  &&  tmp == start)
+             ||  tmp > start  ||  (itsLeftClosed  &&  tmp == start))
 	    &&  (itsEnd == 0
-             ||  tmp < end  ||  itsRightClosed  &&  tmp == end)) {
+             ||  tmp < end  ||  (itsRightClosed  &&  tmp == end))) {
 		*match = True;
 	    }
 	    value++;
@@ -671,7 +671,7 @@ TableExprNodeSet::TableExprNodeSet (const IPosition& indices)
     uInt n = indices.nelements();
     itsElems.resize (n);
     for (uInt i=0; i<n; i++) {
-	itsElems[i] = new TableExprNodeSetElem (TableExprNode (indices(i)));
+      itsElems[i] = new TableExprNodeSetElem (TableExprNode (Int64(indices(i))));
     }
 }
 
@@ -693,14 +693,14 @@ TableExprNodeSet::TableExprNodeSet (const Slicer& indices)
     for (uInt i=0; i<n; i++) {
 	startp = endp = 0;
 	if (indices.start()(i) != Slicer::MimicSource) {
-	    start = TableExprNode (indices.start()(i));
+          start = TableExprNode (Int64(indices.start()(i)));
 	    startp = &start;
 	}
 	if (indices.end()(i) != Slicer::MimicSource) {
-	    end = TableExprNode (indices.end()(i));
+          end = TableExprNode (Int64(indices.end()(i)));
 	    endp = &end;
 	}
-	TableExprNode incr (indices.stride()(i));
+	TableExprNode incr (Int64(indices.stride()(i)));
 	itsElems[i] = new TableExprNodeSetElem (startp, endp, &incr);
     }
 }
@@ -1190,7 +1190,7 @@ TableExprNodeRep* TableExprNodeSet::setOrArray() const
 TableExprNodeRep* TableExprNodeSet::toArray() const
 {
     // Construct the correct const array object.
-    TableExprNodeRep* tsnptr;
+    TableExprNodeRep* tsnptr=0;
     switch (dataType()) {
     case NTBool:
 	tsnptr = new TableExprNodeArrayConstBool (toArrayBool(0));

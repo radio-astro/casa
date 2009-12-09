@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasIERS.cc 20362 2008-06-27 04:54:24Z Malte.Marquarding $
+//# $Id: MeasIERS.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 //# Includes
 #include <measures/Measures/MeasIERS.h>
@@ -97,10 +97,10 @@ Bool MeasIERS::get(Double &returnValue,
 	LogIO os(LogOrigin("MeasIERS",
 			   String("fillMeas(MeasIERS::Files, Double)"),
 			   WHERE));
-	os << 
+	os << LogIO::NORMAL << 
 	  String("Requested JD ") << date << String(" is outside "
 		 "the IERS table data range."
-		 "\nCalculations will proceed with less precision.") << 
+		 "\nCalculations will proceed with less precision") << 
 	  LogIO::POST;
       };
       return False;
@@ -144,7 +144,7 @@ Bool MeasIERS::initMeas(MeasIERS::Files which) {
       LogIO os(LogOrigin("MeasIERS",
 			 String("initMeas(MeasIERS::Files)"),
 			 WHERE));
-      os << 
+      os <<
 	String("Cannot read IERS table ") + tp[which] +
 	  "\nCalculations will proceed with lower precision" << 
 	LogIO::POST;
@@ -349,8 +349,8 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
 			      "const String &, const String &)"),
 		       WHERE));
     os << String("A ") + name + 
-      " table has been read that seems corrupted."
-      "\nNotify the CASA system manager about it." << LogIO::EXCEPTION;
+      " table has been read that seems corrupted"
+      "\nNotify the CASA system manager about it" << LogIO::EXCEPTION;
     return False;
   };
   table = tab;

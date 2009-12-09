@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableGram.h 18777 2005-06-21 07:51:15Z gvandiep $
+//# $Id: TableGram.h 20630 2009-06-12 04:14:37Z gervandiepen $
 
 #ifndef TABLES_TABLEGRAM_H
 #define TABLES_TABLEGRAM_H
@@ -74,7 +74,7 @@ int tableGramParseCommand (const String& command);
 
 // The yyerror function for the parser.
 // It throws an exception with the current token.
-void TableGramerror (char*);
+void TableGramerror (const char*);
 
 // Give the current position in the string.
 // This can be used when parse errors occur.

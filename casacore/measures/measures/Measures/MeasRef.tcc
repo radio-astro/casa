@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasRef.tcc 20112 2007-08-26 11:18:09Z Malte.Marquarding $
+//# $Id: MeasRef.tcc 20612 2009-06-05 05:39:45Z gervandiepen $
 
 //# Includes
 #include <casa/Exceptions/Error.h>
@@ -201,7 +201,7 @@ const MeasFrame &MeasRef<Ms>::frameComet(MRBase &ref1,
 }
 
 template<class Ms>
-const Measure *const MeasRef<Ms>::offset() const {
+const Measure* MeasRef<Ms>::offset() const {
   return ( rep ? rep->offmp : 0);
 }
 

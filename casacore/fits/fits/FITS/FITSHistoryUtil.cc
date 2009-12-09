@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FITSHistoryUtil.cc 20255 2008-02-23 19:36:01Z gervandiepen $
+//# $Id: FITSHistoryUtil.cc 20723 2009-09-16 12:07:49Z gervandiepen $
 
 #include <fits/FITS/FITSHistoryUtil.h>
 
@@ -328,7 +328,10 @@ uInt FITSHistoryUtil::toHISTORY(Vector<String>& history, Bool& aipsppFormat,
        }
     }
 //
-    firstLine += aipsppFormat ? nstrings/2 : nstrings;
+    // If nstrings==0, aipsppFormat may not be set yet. So test it.
+    if (nstrings > 0) {
+      firstLine += aipsppFormat ? nstrings/2 : nstrings;
+    }
     return firstLine;
 }
 

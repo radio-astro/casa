@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Directory.h 19846 2007-02-12 03:11:58Z Malte.Marquarding $
+//# $Id: Directory.h 20749 2009-09-30 14:24:05Z gervandiepen $
 
 #ifndef CASA_DIRECTORY_H
 #define CASA_DIRECTORY_H
@@ -220,7 +220,10 @@ public:
     // name, no matching is done on the path, just the trailing file name.
     // Throws an AipsError if the shell pattern is illegal.
     static Vector<String> shellExpand (const Vector<String>& files, Bool stripPath=False);
-
+    // Return the total size  of everything in the Directory. If the Directory
+    // does not exist, an exception will be thrown.
+    virtual Int64 size() const;
+    
 private:
     // Check if the path defines a directory.
     // Also resolve possible symlinks.

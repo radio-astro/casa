@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MIRIADImage.cc 19940 2007-02-27 05:35:22Z Malte.Marquarding $
+//# $Id: MIRIADImage.cc 20648 2009-06-29 07:22:00Z gervandiepen $
 
 #include <images/Images/MIRIADImage.h>
 
@@ -463,7 +463,7 @@ void MIRIADImage::open()
 
 void MIRIADImage::getImageAttributes (CoordinateSystem& cSys,
                                       IPosition& shape, ImageInfo& imageInfo,
-                                      Unit& brightnessUnit, Record& miscInfo, 
+                                      Unit& brightnessUnit, Record&, 
                                       Bool& hasBlanks, const String& name)
 {
   LogIO os(LogOrigin("MIRIADImage", "getImageAttributes", WHERE));

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableAttr.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: TableAttr.h 20624 2009-06-11 23:41:09Z gervandiepen $
 
 #ifndef TABLES_TABLEATTR_H
 #define TABLES_TABLEATTR_H
@@ -116,7 +116,7 @@ public:
     // <group>
     const String& name() const
       { return name_p; }
-    const Bool openWritable() const
+    Bool openWritable() const
       { return openWritable_p; }
     const TableLock& lockOptions() const
       { return lockOptions_p; }

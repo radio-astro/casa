@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasTable.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MeasTable.h 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #ifndef MEASURES_MEASTABLE_H
 #define MEASURES_MEASTABLE_H
@@ -74,7 +74,7 @@ class Euler;
 // <br> References:<br> Explanatory supplements to the Astronomical Almanac
 // <br> C. Ron and J. Vondrak, Bull. Astron. Inst. Czechosl. 37, p96, 1986
 // <br> M. Soma, Th. Hirayama and H. Kinoshita, Celest. Mech. 41, p389, 1988
-// <br> V.S. Gubanov, Astron. Zh. 49, p1112, 1992
+// <br> V.S. Gubanov, Astron. Zh. 49, p1112, 1972
 //
 // Where strings are passed in as arguments (observatory names, sources), they
 // will be case insensitive, and minimum match.
@@ -240,7 +240,7 @@ public:
   // Get list of all observatories
   static const Vector<String> &Observatories();
   // Get position of observatory nam (False if not present)
-  static const Bool Observatory(MPosition &obs, const String &nam);
+  static Bool Observatory(MPosition &obs, const String &nam);
   // </group>
 
   // Source list positions
@@ -250,7 +250,7 @@ public:
   // Get list of all sources
   static const Vector<String> &Sources();
   // get position of source nam (False if not present)
-  static const Bool Source(MDirection &obs, const String &nam);
+  static Bool Source(MDirection &obs, const String &nam);
   // </group>
   
   // Rest frequencies
@@ -260,7 +260,7 @@ public:
   // Get list of all frequencies
   static const Vector<String> &Lines();
   // Get frequency of line name (False if not present)
-  static const Bool Line(MFrequency &obs, const String &nam);
+  static Bool Line(MFrequency &obs, const String &nam);
   // </group>
 
   // Earth magnetic field (IGRF) data
@@ -280,7 +280,7 @@ public:
   static const Polynomial<Double> &aber1950Arg(uInt which);
   // </group>
   
-  // Generate the which' vector of the aberration series arguments
+  // Generate the 'which' vector of the aberration series arguments
   // <group>
   static const Vector<Char> &mulAberArg(uInt which);
   static const Vector<Char> &mulAber1950Arg(uInt which);
@@ -288,9 +288,9 @@ public:
   static const Vector<Char> &mulAberEarthArg(uInt which);
   // </group>
   
-  // Generate the which' vector of the aberration series multipliers
-  // at T, measured in Julian centuries since J2000.0 (or comparable for
-  // B1950).
+  // Generate the 'which' vector of the aberration series multipliers
+  // at T, measured in Julian centuries since J2000.0 (or J1900.0, yes,
+  // J1900.0, for B1950).
   // <group>
   static const Vector<Double> &mulAber(uInt which, Double T);
   static const Vector<Double> &mulAber1950(uInt which, Double T);

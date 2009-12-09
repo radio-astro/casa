@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSArrayGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
+//# $Id: MSArrayGram.cc 20630 2009-06-12 04:14:37Z gervandiepen $
 
 // MSArrayGram; grammar for scan command lines
 
@@ -91,7 +91,7 @@ const TableExprNode* msArrayGramParseNode()
 {
     return MSArrayParse::node();
 }
-const void msArrayGramParseDeleteNode()
+void msArrayGramParseDeleteNode()
 {
     return MSArrayParse::cleanup();
 }
@@ -115,7 +115,7 @@ int msArrayGramInput (char* buf, int max_size)
     return nr;
 }
 
-void MSArrayGramerror (char* t)
+void MSArrayGramerror (const char*)
 {
   throw (MSSelectionArrayError ("Array Expression: Parse error at or near '" +
 			       String(MSArrayGramtext) + "'"));

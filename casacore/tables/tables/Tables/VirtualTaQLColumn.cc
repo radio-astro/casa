@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VirtualTaQLColumn.cc 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: VirtualTaQLColumn.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <tables/Tables/VirtualTaQLColumn.h>
 #include <tables/Tables/Table.h>
@@ -246,7 +246,7 @@ IPosition VirtualTaQLColumn::shape (uInt rownr)
   return itsCurShape;
 }
 
-Bool VirtualTaQLColumn::isShapeDefined (uInt rownr)
+Bool VirtualTaQLColumn::isShapeDefined (uInt)
 {
   return True;
 }

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageOpener.cc 20476 2008-12-29 11:01:15Z gervandiepen $
+//# $Id: ImageOpener.cc 20729 2009-09-24 11:15:26Z gervandiepen $
 //
 
 #include <images/Images/ImageOpener.h>
@@ -45,7 +45,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 SimpleOrderedMap<ImageOpener::ImageTypes,ImageOpener::OpenImageFunction*>
      ImageOpener::theirOpenFuncMap(&ImageOpener::unknownImageOpen);
 
-LatticeBase* ImageOpener::unknownImageOpen (const String& name,
+LatticeBase* ImageOpener::unknownImageOpen (const String&,
 					    const MaskSpecifier&)
 {
   return 0;
@@ -59,9 +59,6 @@ void ImageOpener::registerOpenImageFunction (ImageTypes type,
 
 ImageOpener::ImageTypes ImageOpener::imageType (const String& name)
 {
-  if (HDF5File::isHDF5(name)) {
-    return HDF5;
-  }
   File file(name);
   if (file.isDirectory()) {
     if (Table::isReadable(name)) {
@@ -99,6 +96,9 @@ ImageOpener::ImageTypes ImageOpener::imageType (const String& name)
       if (str.matches (Regex("^SIMPLE *= *T.*"))) {
 	return FITS;
       }
+    }
+    if (HDF5File::isHDF5(name)) {
+      return HDF5;
     }
   }
   return UNKNOWN;

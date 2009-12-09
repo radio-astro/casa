@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Error.h 20516 2009-02-05 11:31:59Z gervandiepen $
+//# $Id: Error.h 20705 2009-09-03 09:04:46Z gervandiepen $
 
 #ifndef CASA_ERROR_H
 #define CASA_ERROR_H
@@ -97,6 +97,8 @@ public:
   // <group>
   AipsError (const Char *str, Category c = GENERAL);
   AipsError (const String &str, Category c = GENERAL);
+  AipsError (const String &msg, const String &filename, uInt lineNumber,
+             Category c = GENERAL);
   AipsError (Category c = GENERAL) : message(), category(c) {};
   // </group>
 
@@ -365,6 +367,12 @@ public:
 
 
 } //# NAMESPACE CASA - END
+
+#ifdef AIPS_NEEDS_RETHROW
+#ifndef CASACORE_NEEDS_RETHROW
+#define CASACORE_NEEDS_RETHROW
+#endif
+#endif
 
 #ifdef CASACORE_NEEDS_RETHROW
 #define RETHROW(X) throw(X);

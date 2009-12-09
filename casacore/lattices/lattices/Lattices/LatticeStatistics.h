@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: LatticeStatistics.h 20695 2009-08-31 11:59:50Z gervandiepen $
 
 #ifndef LATTICES_LATTICESTATISTICS_H
 #define LATTICES_LATTICESTATISTICS_H
@@ -429,7 +429,7 @@ private:
                             LatticeStatsBase::StatisticsTypes type,
                             Bool dropDeg);
 
-// Convert a <AccumType> to a <Float> for plotting
+// Convert a AccumType to a Float for plotting.
    static Float convertATtoF (AccumType value) {return Float(std::real(value));};
 
 // Find the next good or bad point in an array

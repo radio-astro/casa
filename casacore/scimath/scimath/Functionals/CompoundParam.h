@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: CompoundParam.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: CompoundParam.h 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #ifndef SCIMATH_COMPOUNDPARAM_H
 #define SCIMATH_COMPOUNDPARAM_H
@@ -182,15 +182,15 @@ public:
     return *(functionPtr_p[which]); };
   // </group>
   // Get the offset in function parameterlist for function which
-  const uInt parameterOffset(uInt which) const {
+  uInt parameterOffset(uInt which) const {
     DebugAssert(nFunctions() > which, AipsError); return paroff_p[which]; };
   // Get the function number belonging to parameter list element which
-  const uInt parameterFunction(uInt which) const {
+  uInt parameterFunction(uInt which) const {
     DebugAssert(nparameters() > which, AipsError);
     return funpar_p[which];
   };
   // Return locpar
-  const uInt parameterLocation(uInt which) const {
+  uInt parameterLocation(uInt which) const {
     DebugAssert(nparameters() > which, AipsError);
     return locpar_p[which];
   };

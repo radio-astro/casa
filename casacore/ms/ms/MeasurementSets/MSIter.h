@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSIter.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MSIter.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #ifndef MS_MSITER_H
 #define MS_MSITER_H
@@ -330,6 +330,14 @@ public:
 			 Double freqStart, Double freqEnd, 
 			 Double freqStep);
 
+  //Get the number of actual ms's associated wth this iterator
+  Int numMS() const;
+
+  //Get a reference to the nth ms in the list of ms associated with this 
+  // iterator. If larger than the list of ms's current ms is returned
+  // So better check wth numMS() before making the call
+  const MS& ms(const uInt n) const;
+
 protected:
   // handle the construction details
   void construct(const Block<Int>& sortColumns, Bool addDefaultSortColumns);
@@ -409,6 +417,7 @@ inline Bool MSIter::newField() const { return newField_p;}
 inline Bool MSIter::newSpectralWindow() const 
 { return newSpectralWindow_p;}
 inline Int MSIter::msId() const { return curMS_p;}
+inline Int MSIter::numMS() const { return nMS_p;}
 inline Int MSIter::arrayId() const {return curArray_p;}
 inline Int MSIter::fieldId() const { return curField_p;}
 inline const String& MSIter::fieldName() const { return curFieldName_p;}

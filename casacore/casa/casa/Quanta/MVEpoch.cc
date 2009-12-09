@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVEpoch.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: MVEpoch.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <casa/iostream.h>
@@ -45,9 +45,11 @@ const Double MVEpoch::secInDay(3600*24);
 MVEpoch::MVEpoch() :
   wday(0), frday(0) {}
 
-MVEpoch::MVEpoch(const MVEpoch &other) {
-  wday = other.wday;
-  frday = other.frday;
+MVEpoch::MVEpoch(const MVEpoch &other) :
+  MeasValue(),
+  wday (other.wday),
+  frday (other.frday)
+{
   adjust();
 }
 

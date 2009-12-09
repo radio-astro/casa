@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: $
+//# $Id: MSConcat.h 20648 2009-06-29 07:22:00Z gervandiepen $
 
 #ifndef MS_MSCONCAT_H
 #define MS_MSCONCAT_H

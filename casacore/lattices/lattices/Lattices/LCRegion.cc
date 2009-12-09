@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LCRegion.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LCRegion.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <lattices/Lattices/LCRegion.h>
 #include <lattices/Lattices/RegionType.h>
@@ -44,7 +44,8 @@ LCRegion::LCRegion (const IPosition& latticeShape)
 {}
 
 LCRegion::LCRegion (const LCRegion& other)
-: itsShape       (other.itsShape),
+: Lattice<Bool>(),
+  itsShape       (other.itsShape),
   itsBoundingBox (other.itsBoundingBox),
   itsComment     (other.itsComment)
 {}

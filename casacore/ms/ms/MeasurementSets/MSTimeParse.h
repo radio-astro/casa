@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTimeParse.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MSTimeParse.h 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #ifndef MS_MSTIMEPARSE_H
 #define MS_MSTIMEPARSE_H
@@ -131,16 +131,16 @@ public:
   // Get table expression node object.
   static const TableExprNode* node();
 
-  const Int year0() {return defaultYear;};
-  const Int month0() {return defaultMonth;};
-  const Int day0() {return defaultDay;};
-  const Int hour0() {return defaultHour;};
-  const Int minute0() {return defaultMinute;};
-  const Int second0() {return defaultSeconds;};
-  const Int fractionalsec0() {return defaultFractionalSec;};
-  const Double defaultInteg() {return defaultExposure;};
+  Int year0() {return defaultYear;};
+  Int month0() {return defaultMonth;};
+  Int day0() {return defaultDay;};
+  Int hour0() {return defaultHour;};
+  Int minute0() {return defaultMinute;};
+  Int second0() {return defaultSeconds;};
+  Int fractionalsec0() {return defaultFractionalSec;};
+  Double defaultInteg() {return defaultExposure;};
 
-  static const void validate(const TimeFields& tf);
+  static void validate(const TimeFields& tf);
   static void reset(){timeList.resize(2,0);};
   static void cleanup() {if (node_p) delete node_p;node_p=0x0;};
 
@@ -151,7 +151,7 @@ public:
   static Bool defaultTimeComputed;
   MVTime firstRowTime;
   static MeasurementSet *ms_p;
-  static const Double toTAIInSec(const MEpoch& time);
+  static Double toTAIInSec(const MEpoch& time);
   static MEpoch* yeartime;
   static MEpoch* daytime;
   Int defaultYear, defaultMonth, defaultDay,

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageRegrid.tcc 20386 2008-08-28 00:23:09Z Malte.Marquarding $
+//# $Id: ImageRegrid.tcc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <images/Images/ImageRegrid.h>
 
@@ -560,7 +560,7 @@ Bool ImageRegrid<T>::insert (ImageInterface<T>& outImage,
       inBlc(i) -= d;
 //
       t = outTrc(i);
-      outTrc(i) = min(outShape(i)-1, outTrc(i));
+      outTrc(i) = std::min(outShape(i)-1, outTrc(i));
       d = t - outTrc(i);
       inTrc(i) -= d;
    }
@@ -1375,7 +1375,7 @@ void ImageRegrid<T>::make2DCoordinateGrid (Cube<Double>& in2DPos,
                                            const Vector<Double>& pixelScale,
                                            uInt xInAxis, uInt yInAxis,
                                            uInt xOutAxis, uInt yOutAxis,
-                                           uInt xInCorrAxis, uInt yInCorrAxis,
+                                           uInt, uInt,
                                            uInt xOutCorrAxis, uInt yOutCorrAxis,
                                            const IPosition& outPos, 
                                            const IPosition& outCursorShape)
@@ -2230,7 +2230,7 @@ void ImageRegrid<T>::get2DCoordinateGrid (Cube<Double> &grid,
 template<class T>
 void ImageRegrid<T>::set2DCoordinateGrid (const Cube<Double> &grid, 
                                           const Matrix<Bool> &gridMask,
-                                          Bool notify)
+                                          Bool)
 {
    itsUser2DCoordinateGrid.resize();
    itsUser2DCoordinateGrid = grid;

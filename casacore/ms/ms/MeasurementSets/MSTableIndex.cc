@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTableIndex.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSTableIndex.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 
@@ -218,8 +218,8 @@ void MSTableIndex::nearestTime()
     // this is only called when we know it is a strict time search and there
     // are elements in lastSearch_p, etc, etc.
     // this should probably be done with a call to binSearch
-    uInt thisElem = 0;
-    uInt nElem = lastSearch_p.nelements();
+    Int thisElem = 0;
+    Int nElem = lastSearch_p.nelements();
     Bool deleteIt;
     const uInt *rowPtr = lastSearch_p.getStorage(deleteIt);
     while (!nearestFound_p && thisElem < nElem) {
@@ -232,7 +232,7 @@ void MSTableIndex::nearestTime()
 	thisElem--;
 	// thisElem is the element where time_p became less that the timeColumn at that row
 	// so, is it closer to thisElem or the one before
-	if (thisElem == 0) {
+	if (thisElem <= 0) {
 	    thisElem = 0;
 	} else {
 	    Double lowDiff = time_p - timeVals_p[rowPtr[thisElem-1]];

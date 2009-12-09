@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayIter.cc 20321 2008-06-04 04:49:44Z Malte.Marquarding $
+//# $Id: tArrayIter.cc 20622 2009-06-11 13:52:35Z gervandiepen $
 
 //# Includes
 
@@ -301,6 +301,7 @@ int main()
       int nstep=0;
       while (!iter.pastEnd()) {
 	Array<Int>& darr = iter.array();
+        AlwaysAssertExit (darr.shape() == IPosition(1,2));
 	iter.next();
 	nstep++;
       }
@@ -311,7 +312,6 @@ int main()
       ArrayIterator<Int> iter(arr, 1);
       int nstep=0;
       while (!iter.pastEnd()) {
-	Array<Int>& darr = iter.array();
 	iter.next();
 	nstep++;
       }

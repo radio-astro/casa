@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefTable.cc 20519 2009-02-05 13:39:01Z gervandiepen $
+//# $Id: RefTable.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <tables/Tables/RefTable.h>
 #include <tables/Tables/RefColumn.h>
@@ -264,7 +264,7 @@ Bool RefTable::adjustRownrs (uInt nr, Vector<uInt>& rowStorage,
 
 
 //# Write a reference table into a file.
-void RefTable::writeRefTable (Bool fsync)
+void RefTable::writeRefTable (Bool)
 {
     //# Write name and type of root and write object data.
     //# Do this only when something has changed.
@@ -677,6 +677,12 @@ void RefTable::renameColumn (const String& newName, const String& oldName)
     tdescPtr_p->renameColumn (newName, oldName);
     colMap_p.rename (newName, oldName);
     nameMap_p.rename (newName, oldName);
+    changed_p = True;
+}
+
+void RefTable::renameHypercolumn (const String& newName, const String& oldName)
+{
+    tdescPtr_p->renameHypercolumn (newName, oldName);
     changed_p = True;
 }
 

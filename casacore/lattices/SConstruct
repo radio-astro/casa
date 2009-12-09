@@ -9,6 +9,13 @@ DEPS = ["casa", "tables", "scimath_f", "scimath"]
 opts = Variables( 'options.cfg', ARGUMENTS )
 opts.Add(PathVariable("casacoreroot", "The location of casacore/casa",
                     "/usr/local"))
+opts.Add(("fftwroot",
+          "The root directory where fftw is installed", None))
+opts.Add(("fftwincdir", "The fftw header location", None))
+opts.Add(("fftwlibdir", "The fftw library location", None))
+opts.Add(("fftwlib",
+          "The fftw library name (e.g. for specialized AMD libraries",
+          None))
 opts.Add(("lapackroot", 
           "The root directory where lapack is installed", None))
 opts.Add(("lapacklibdir", "The lapack library location", None))
@@ -29,7 +36,7 @@ opts.Add(("hdf5libdir", "The hdf5 library location", None))
 env = Environment(ENV = { 'PATH' : os.environ[ 'PATH' ],
 			  'HOME' : os.environ[ 'HOME' ] 
 			  },
-		  options=opts
+		  variables=opts
 		  )
 # keep a local sconsign database, rather than in very directory
 env.SConsignFile()
@@ -77,6 +84,17 @@ if not env.GetOption('clean'):
         if not conf.CheckLib(l, autoadd=0): Exit(1)
         conf.env.PrependUnique(LIBS=l)
 
+    fftwname = conf.env.get("fftwlib", "fftw3f_threads,fftw3_threads,fftw3f,fftw3").split(",")
+    conf.env.AddCustomPackage("fftw")
+    fftwname.reverse()
+    for l in fftwname:
+        if not conf.CheckLib(l, autoadd=0): Exit(1)
+        conf.env.PrependUnique(LIBS=l)
+
+
+    if not conf.CheckLib("dl"): Exit(1)
+    conf.env.PrependUnique(LIBS=['dl'])
+
     # HDF5 is not mandatory
     conf.env.AddCustomPackage('hdf5')
     if conf.CheckLib('hdf5', autoadd=0):
@@ -97,8 +115,6 @@ env.AppendUnique(CPPPATH=env["casaincdir"])
 env.AppendUnique(LIBPATH=env["casalibdir"])
 for dep in DEPS:
     env.Prepend(LIBS=["casa_"+dep])
-
-env.CustomCasaCom()
 
 for bopt in env["build"]:
     # create an environment copy with teh dbg/opt compiler flags

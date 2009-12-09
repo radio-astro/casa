@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FrequencyAligner.tcc 19934 2007-02-27 05:05:56Z Malte.Marquarding $
+//# $Id: FrequencyAligner.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <coordinates/Coordinates/FrequencyAligner.h>
 
@@ -209,7 +209,7 @@ Bool FrequencyAligner<T>::alignMany (Array<T>& yOut, Array<Bool>& maskOut,
    AlwaysAssert(shp.isEqual(maskIn.shape()), AipsError);
    const Int n = itsRefFreqX.nelements();
    AlwaysAssert(n>1, AipsError);
-   AlwaysAssert(axis>=0&&axis<shp.nelements(),AipsError);
+   AlwaysAssert(axis<shp.nelements(),AipsError);
    AlwaysAssert(shp(axis)==n,AipsError);
 //
    yOut.resize(yIn.shape());

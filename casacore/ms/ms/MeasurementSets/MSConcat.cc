@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: $
+//# $Id: MSConcat.cc 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #include <ms/MeasurementSets/MSConcat.h>
 #include <casa/Arrays/Vector.h>
@@ -55,6 +55,8 @@
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableRow.h>
+#include <tables/Tables/TableVector.h>
+#include <tables/Tables/TabVecMath.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
 #include <casa/iostream.h>
@@ -119,11 +121,10 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 
   void MSConcat::concatenate(const MeasurementSet& otherMS)
 {
-  LogIO log(LogOrigin("MSConcat", "concatenate"));
+  LogIO log(LogOrigin("MSConcat", "concatenate", WHERE));
 
   log << "Appending " << otherMS.tableName() 
-      << " to " << itsMS.tableName() << LogIO::POST;
-
+      << " to " << itsMS.tableName() << endl << LogIO::POST;
 
   // check if certain columns are present and set flags accordingly
   Bool doCorrectedData=False, doImagingWeight=False, doModelData=False;
@@ -186,6 +187,8 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     checkCategories(otherMainCols);
   }
 
+  log << LogIO::DEBUG1 << "ms shapes verified " << endl << LogIO::POST;
+
 
   // merge ANTENNA and FEED
   uInt oldRows = itsMS.antenna().nrow();
@@ -241,7 +244,13 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   // I need to check that the Measures and units are the same.
   const uInt newRows = otherMS.nrow();
   uInt curRow = itsMS.nrow();
+  if (!itsMS.canAddRow()) {
+    log << LogIO::WARN << "Can't add rows to this ms!  Something is serious wrong with " << itsMS.tableName() << endl << LogIO::POST;
+  }
+
+  log << LogIO::DEBUG1 << "trying to add " << newRows << " data rows to the ms, now at: " << itsMS.nrow() << endl << LogIO::POST;
   itsMS.addRow(newRows);
+  log << LogIO::DEBUG1 << "added " << newRows << " data rows to the ms, now at: " << itsMS.nrow() << endl << LogIO::POST;
 
   ROArrayColumn<Complex> otherModelData, otherCorrectedData;
   ROArrayColumn<Float> otherImagingWeight;
@@ -322,7 +331,9 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   copyObservation(otherMS.observation());
 
   // POINTING
-  copyPointing(otherMS.pointing(), newAntIndices);
+  if(!copyPointing(otherMS.pointing(), newAntIndices)){
+    log << LogIO::WARN << "Could not merge Pointing subtables " << LogIO::POST ;
+  }
 
   ScalarColumn<Int>& thisObsId = observationId();
   const ROArrayColumn<Float>& otherWeightSp = otherMainCols.weightSpectrum();
@@ -339,8 +350,65 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       }
     }
   }  
-      
+     
+  // SCAN NUMBER
+  // find the distinct ObsIds in use in this MS
+  // and the maximum scan ID in each of them
+  SimpleOrderedMap <Int, Int> scanOffsetForOid(-1);
+  SimpleOrderedMap <Int, Int> encountered(-1);
+  vector<Int> distinctObsIdSet;
+  vector<Int> minScan;
+  Int maxScanThis=0;
+  for(uInt r = 0; r < curRow; r++) {
+    Int oid = thisObsId(r);
+    Int scanid = thisScan(r);
+    Bool found = False;
+    uInt i;
+    for(i=0; i<distinctObsIdSet.size(); i++){
+      if(distinctObsIdSet[i]==oid){
+	found = True;
+	break;
+      }
+    }
+    if(found){
+      if(scanid<minScan[i]){
+	minScan[i] = scanid;
+      }
+    }
+    else {
+      distinctObsIdSet.push_back(oid);
+      minScan.push_back(scanid); 
+    }
+    if(scanid>maxScanThis){
+      maxScanThis = scanid;
+    }
+  }
+  // set the offset added to scan numbers in each observation
+  for(uInt i=0; i<distinctObsIdSet.size(); i++){
+    Int scanOffset;
+    scanOffset = minScan[i] - 1; // assume scan numbers originally start at 1
+    if(scanOffset<0){
+      log << LogIO::WARN << "Zero or negative scan numbers in MS. May lead to duplicate scan numbers in concatenated MS." 
+	  << LogIO::POST;
+      scanOffset = 0;
+    }
+    if(scanOffset==0){
+      encountered.define(distinctObsIdSet[i],0); // used later to decide whether to notify user
+    }
+    scanOffsetForOid.define(distinctObsIdSet[i], scanOffset); 
+  }
+
+  Int defaultScanOffset=0;
+  {
+    ROTableVector<Int> ScanTabVectOther(otherScan);
+    Int minScanOther = min(ScanTabVectOther);
+    defaultScanOffset = maxScanThis + 1 - minScanOther;
+  }
+ 
+  // MAIN
+
   for (uInt r = 0; r < newRows; r++, curRow++) {
+
     thisTime.put(curRow, otherTime, r);
     thisAnt1.put(curRow, newAntIndices[otherAnt1(r)]);
     thisAnt2.put(curRow, newAntIndices[otherAnt2(r)]);
@@ -351,19 +419,38 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     thisInterval.put(curRow, otherInterval, r);
     thisExposure.put(curRow, otherExposure, r);
     thisTimeCen.put(curRow, otherTimeCen, r);
-    thisScan.put(curRow, otherScan, r);
     thisArrayId.put(curRow, otherArrayId, r);
 
+    Int oid = 0;
     if(doObsB_p && newObsIndexB_p.isDefined(obsIds[r])){ 
       // the obs ids have been changed for the table to be appended
-      thisObsId.put(curRow, newObsIndexB_p(obsIds[r]));
+      oid = newObsIndexB_p(obsIds[r]); 
     }
-    else { // this OBS id didn't change
-      thisObsId.put(curRow, obsIds[r]);
+    else { // this OBS id didn't change 
+      oid = obsIds[r];
     }
+    thisObsId.put(curRow, oid);
+    
+    if(oid != obsIds[r]){ // obsid actually changed
+      if(!scanOffsetForOid.isDefined(oid)){ // offset not set, use default
+	scanOffsetForOid.define(oid, defaultScanOffset);
+      }
+      if(!encountered.isDefined(oid)){
+	log << LogIO::NORMAL << "Will offset scan numbers by " <<  scanOffsetForOid(oid)
+	    << " for observations with Obs ID " << oid
+	    << " in order to make scan numbers unique." << LogIO::POST;
+	encountered.define(oid,0);
+      }
+      thisScan.put(curRow, otherScan(r) + scanOffsetForOid(oid));
+    }
+    else{
+      thisScan.put(curRow, otherScan(r));
+    }
+
 
     thisStateId.put(curRow, otherStateId, r);
     thisUvw.put(curRow, otherUvw, r);
+    
     if(itsChanReversed[otherDDId(r)]){
       Vector<Int> datShape;
       Matrix<Complex> reversedData;
@@ -518,19 +605,22 @@ Bool MSConcat::copyPointing(const MSPointing& otherPoint,const
 
   LogIO os(LogOrigin("MSConcat", "concatenate"));
 
-  if(itsMS.pointing().isNull()|| (itsMS.pointing().nrow() == 0)){
-    //We do not have a valid pointing table so we don't care
+  if((itsMS.pointing().isNull() || (itsMS.pointing().nrow() == 0))
+     && (otherPoint.isNull() || (otherPoint.nrow() == 0))
+     ){ // neither of the two MSs do have valid pointing tables
+    os << LogIO::NORMAL << "No valid pointing tables present. Result won't have one either." << LogIO::POST;
+    return True;
+  }
+  else if((itsMS.pointing().isNull() || (itsMS.pointing().nrow() == 0)) &&
+     !(otherPoint.isNull() && (otherPoint.nrow() == 0))
+     ){ // only the second  of the two MSs does have a valid pointing table
+    os << LogIO::WARN << itsMS.tableName() << "does not have a valid pointing table, "
+       << " the MS to be appended, however, has one. Result won't have one." << LogIO::POST;
     return False;
   }
-  if(otherPoint.isNull() || (otherPoint.nrow() == 0)){
-
-    os << LogIO::WARN 
-       << "No valid pointing table in ms that is being concatenated" 
-       << LogIO::POST;
-    os << LogIO::WARN 
-       << "It may be a problem for e.g mosaicing,\n so all pointing information is being deleted" 
-       << LogIO::POST;
-
+  else if(otherPoint.isNull() || (otherPoint.nrow() == 0)){
+    os << LogIO::WARN << "MS to be appended does not have a valid pointing table, "
+       << itsMS.tableName() << ", however, has one. Result won't have one." << LogIO::POST;
              
     Vector<uInt> delrows(itsMS.pointing().nrow());
     indgen(delrows);
@@ -887,7 +977,7 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
       // Check if there are redundant rows and remove them creating map for copyField
       // loop over the columns of the merged source table 
       Vector<Bool> rowToBeRemoved(numrows_this, False);
-      vector<uint> rowsToBeRemoved;
+      vector<uInt> rowsToBeRemoved;
       for (uint j=0 ; j < numrows_this ; ++j){
 	// check if row j has an equivalent row somewhere else in the table
 	for (uint k=0 ; k < numrows_this ; ++k){

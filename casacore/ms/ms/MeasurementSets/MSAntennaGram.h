@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSAntennaGram.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSAntennaGram.h 20630 2009-06-12 04:14:37Z gervandiepen $
 
 #ifndef MS_MSANTENNAGRAM_H
 #define MS_MSANTENNAGRAM_H
@@ -77,11 +77,11 @@ class TableExprNode;
 
 // The yyerror function for the parser.
 // It throws an exception with the current token.
-void MSAntennaGramerror (char*);
+void MSAntennaGramerror (const char*);
 
 // Give the table expression node.
 const TableExprNode *msAntennaGramParseNode();
-const void msAntennaGramParseDeleteNode();
+void msAntennaGramParseDeleteNode();
 
 // Give the current position in the string.
 // This can be used when parse errors occur.

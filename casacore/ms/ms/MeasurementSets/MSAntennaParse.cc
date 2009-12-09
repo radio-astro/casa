@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSAntennaParse.cc 20528 2009-02-20 22:36:59Z bhatnagar.sanjay $
+//# $Id: MSAntennaParse.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <ms/MeasurementSets/MSAntennaParse.h>
 #include <ms/MeasurementSets/MSAntennaIndex.h>
@@ -240,7 +240,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return node();
   }
   
-  const TableExprNode* MSAntennaParse::selectFromIdsAndCPs(const Int index, const String& cp)
+  const TableExprNode* MSAntennaParse::selectFromIdsAndCPs(const Int, const String&)
   {
     LogIO os(LogOrigin("MSAntennaParse", "selectFromIdsAndCPs()", WHERE));
     os << " selectFromIdsAndCPs is not available "  << LogIO::POST;
@@ -251,10 +251,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return node();
   }
   
-  const TableExprNode* MSAntennaParse::selectFromIdsAndCPs(const Int firstIndex, 
-							   const String& firstcp, 
-							   const Int secondIndex, 
-							   const String& secondcp)
+  const TableExprNode* MSAntennaParse::selectFromIdsAndCPs(const Int, 
+							   const String&, 
+							   const Int, 
+							   const String&)
   {
     LogIO os(LogOrigin("MSAntennaParse", "selectFromIdsAndCPs()", WHERE));
     os << " selectFromIdsAndCPs is not available "  << LogIO::POST;
@@ -298,7 +298,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void MSAntennaParse::makeBaselineList(const Vector<Int>& a1, const Vector<Int>&a2, 
 					Matrix<Int>& baselist, 
 					BaselineListType autoCorr,
-					Bool negate)
+					Bool /*negate*/)
   {
     Int n1,n2,nb0;
     n1=a1.nelements();  n2=a2.nelements();

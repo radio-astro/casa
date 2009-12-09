@@ -1,5 +1,5 @@
 //# HostInfo_linux.h: Linux specific memory, swap, and CPU code.
-//# $Id: HostInfoLinux.h 20110 2007-08-22 08:09:30Z jcguzmantanaka $
+//# $Id: HostInfoLinux.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
  /*
  **  This is a greatly MODIFIED version of a "top" machine dependent file.
@@ -89,13 +89,13 @@ friend class HostInfo;
     int valid;
     int cpus;
 
-    int memory_total;
-    int memory_used;
-    int memory_free;
+    ssize_t memory_total;
+    ssize_t memory_used;
+    ssize_t memory_free;
 
-    int swap_total;
-    int swap_used;
-    int swap_free;
+    ssize_t swap_total;
+    ssize_t swap_used;
+    ssize_t swap_free;
 };
 
 // </group>
@@ -139,7 +139,7 @@ HostMachineInfo::HostMachineInfo( ) : valid(1)
     {
 	cpus = 0;
 	FILE *fptr = fopen(CPUINFO, "r");
-	while ( p = fgets( buffer, sizeof(buffer), fptr ) ) {
+	while ( (p = fgets( buffer, sizeof(buffer), fptr )) ) {
 	    if ( ! strncmp( p, "processor", 9 ) ) ++cpus;
 	}
 	fclose(fptr);

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: String.h 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: String.h 20749 2009-09-30 14:24:05Z gervandiepen $
 
 #ifndef CASA_STRING_H
 #define CASA_STRING_H
@@ -570,6 +570,18 @@ class String : public string {
   String substr(size_type pos=0, size_type n=npos) const {
     return String(*this, pos, n); }
 
+
+  // Convert a string to a Double. If the specified string does not represent
+  // a Double, 0 is returned.
+  static Double toDouble(const String& string);
+
+  // Convert a string to a Float. If the specified string does not represent
+  // a Float, 0 is returned.
+  static Float toFloat(const String& string);
+
+  // Remove beginning and ending whitespace.
+  void trim();
+
   // Search functions. Returns either npos (if not found); else position.
   // <note role=warning> The RegexBase ones are ** aips++ additions</note>
   // <group>
@@ -964,12 +976,6 @@ inline Bool String::contains(const Char *s, Int pos) const {
 inline Bool String::contains(const RegexBase &r, Int pos) const {
   return (index(r, pos) != npos); }
 
-inline Bool String::matches(const string &str, Int pos) const {
-  return ((pos < 0) ? index(str, pos) == 0 :
-	  length() != 0 && str.length() != 0 &&
-	  length() == pos+str.length() &&
-	  static_cast<size_type>(pos) < length() &&
-	  index(str, pos) == static_cast<size_type>(pos)) ; }
 inline ostream &operator<<(ostream &s, const String &x) {
   s << x.c_str(); return s; }
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Interpolate1D.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: Interpolate1D.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <scimath/Functionals/Interpolate1D.h>
 #include <scimath/Functionals/SampledFunctional.h>
@@ -117,6 +117,7 @@ setData(const SampledFunctional<Domain> &x,
 
 template <class Domain, class Range> Interpolate1D<Domain, Range>::
 Interpolate1D(const Interpolate1D<Domain, Range> & other):
+  Function1D<Domain, Range> (other),
   curMethod(other.curMethod),
   nElements(other.nElements),
   xValues(other.xValues),

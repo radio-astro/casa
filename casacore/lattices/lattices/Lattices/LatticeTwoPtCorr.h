@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LatticeTwoPtCorr.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: LatticeTwoPtCorr.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #ifndef LATTICES_LATTICETWOPTCORR_H
 #define LATTICES_LATTICETWOPTCORR_H
@@ -96,16 +96,12 @@ enum Method {
 
 
 // Default constructor
-   LatticeTwoPtCorr();
-
-// Copy constructor (copy semantics)
-   LatticeTwoPtCorr (const LatticeTwoPtCorr<T>& other);
-
-// Assignment (copy semantics)
-   LatticeTwoPtCorr& operator=(const LatticeTwoPtCorr<T>& other);
+   LatticeTwoPtCorr()
+   {}
 
 // Destructor
-   ~LatticeTwoPtCorr();
+   ~LatticeTwoPtCorr()
+   {}
 
 // Compute specified autocorrelation function for the planes of the given TWO axes.
 // If the output lattice has a mask, it will first be set to False (bad)

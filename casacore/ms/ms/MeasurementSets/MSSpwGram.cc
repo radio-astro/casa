@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSpwGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
+//# $Id: MSSpwGram.cc 20704 2009-09-03 08:53:52Z gervandiepen $
 
 // MSSpwGram; grammar for field command lines
 
@@ -122,7 +122,7 @@ const TableExprNode* msSpwGramParseNode()
   return MSSpwParse::node();
 }
 
-const void msSpwGramParseDeleteNode()
+void msSpwGramParseDeleteNode()
 {
   MSSpwParse::cleanup();
 }
@@ -146,44 +146,10 @@ int msSpwGramInput (char* buf, int max_size)
     return nr;
 }
 
-void MSSpwGramerror (char*)
+void MSSpwGramerror (const char*)
 {
   throw (MSSelectionSpwParseError("Spw Expression: Parse error at or near '" +
 				  String(MSSpwGramtext) + "'"));
 }
-
-// String msSpwGramRemoveEscapes (const String& in)
-// {
-//     String out;
-//     int leng = in.length();
-//     for (int i=0; i<leng; i++) {
-// 	if (in[i] == '\\') {
-// 	    i++;
-// 	}
-// 	out += in[i];
-//     }
-//     return out;
-// }
-
-// String msSpwGramRemoveQuotes (const String& in)
-// {
-//     //# A string is formed as "..."'...''...' etc.
-//     //# All ... parts will be extracted and concatenated into an output string.
-//     String out;
-//     String str = in;
-//     int leng = str.length();
-//     int pos = 0;
-//     while (pos < leng) {
-// 	//# Find next occurrence of leading ' or ""
-// 	int inx = str.index (str[pos], pos+1);
-// 	if (inx < 0) {
-// 	    throw (AipsError ("MSSpwParse - Ill-formed quoted string: " +
-// 			      str));
-// 	}
-// 	out += str.at (pos+1, inx-pos-1);             // add substring
-// 	pos = inx+1;
-//     }
-//     return out;
-// }
 
 } //# NAMESPACE CASA - END

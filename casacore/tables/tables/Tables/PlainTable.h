@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PlainTable.h 19292 2006-02-28 14:10:26Z gvandiep $
+//# $Id: PlainTable.h 20623 2009-06-11 23:30:06Z gervandiepen $
 
 #ifndef TABLES_PLAINTABLE_H
 #define TABLES_PLAINTABLE_H
@@ -229,6 +229,10 @@ public:
     // Rename a column.
     virtual void renameColumn (const String& newName, const String& oldName);
 
+    // Rename a hypercolumn.
+    virtual void renameHypercolumn (const String& newName,
+				    const String& oldName);
+
     // Find the data manager with the given name.
     virtual DataManager* findDataManager (const String& dataManagerName) const;
 
@@ -245,6 +249,9 @@ private:
     // some more knowledge (like table name of result).
     // Declaring it private, makes it unusable.
     PlainTable& operator= (const PlainTable&);
+
+    // Close the object which is called by the destructor.
+    void closeObject();
 
     // Rename the subtables (used by rename function).
     virtual void renameSubTables (const String& newName,

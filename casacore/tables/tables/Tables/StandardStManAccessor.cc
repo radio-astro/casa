@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StandardStManAccessor.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: StandardStManAccessor.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/StandardStManAccessor.h>
@@ -56,7 +56,8 @@ ROStandardStManAccessor::~ROStandardStManAccessor()
 
 ROStandardStManAccessor::ROStandardStManAccessor
                                (const ROStandardStManAccessor& that)
-: itsSSMPtr (that.itsSSMPtr)
+: RODataManAccessor(that),
+  itsSSMPtr (that.itsSSMPtr)
 {}
 
 ROStandardStManAccessor& ROStandardStManAccessor::operator=

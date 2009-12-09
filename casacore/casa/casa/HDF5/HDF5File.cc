@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5File.cc 20398 2008-09-11 13:17:49Z gervandiepen $
+//# $Id: HDF5File.cc 20718 2009-09-15 09:56:55Z gervandiepen $
 
 //# Includes
 #include <casa/HDF5/HDF5File.h>
@@ -31,9 +31,9 @@
 #include <casa/HDF5/HDF5Error.h>
 #include <casa/OS/RegularFile.h>
 
-#ifdef HAVE_LIBHDF5
-
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+#ifdef HAVE_HDF5
 
   HDF5File::HDF5File (const String& name,
 		      ByteIO::OpenOption option)
@@ -42,7 +42,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     // Disable automatic printing of errors.
     H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
-    setName (name);
+    // Use absolute expanded path name.
+    setName (Path(name).absoluteName());
     doOpen();
   }
 
@@ -144,6 +145,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
 
-}
+#else
+
+  HDF5File::HDF5File (const String& name,
+		      ByteIO::OpenOption option)
+    : itsOption (option),
+      itsDelete (False)
+  {
+    setName (name);
+    doOpen();
+  }
+
+  HDF5File::~HDF5File()
+  {}
+
+  Bool HDF5File::isHDF5 (const String&)
+  {
+    return False;
+  }
+
+  void HDF5File::reopenRW()
+  {}
+
+  void HDF5File::close()
+  {}
+    
+  void HDF5File::reopen()
+  {}
+
+  void HDF5File::flush()
+  {}
+
+  void HDF5File::doOpen()
+  {
+    throw HDF5Error("HDF5 support is not compiled into this casacore version");
+  }
 
 #endif
+
+}

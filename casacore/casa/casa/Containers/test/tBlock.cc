@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tBlock.cc 20338 2008-06-19 05:58:02Z gervandiepen $
+//# $Id: tBlock.cc 20711 2009-09-03 13:11:20Z gervandiepen $
 
 //# Includes
 
@@ -34,6 +34,8 @@
 
 #include <casa/aips.h>
 #include <casa/Containers/Block.h>
+#include <casa/Containers/BlockIO.h>
+#include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
 #include <vector>
@@ -180,9 +182,33 @@ void doit()
                                       // Block::~Block called at end of fn
 }
 
+void testIO()
+{
+  Block<Int> bl(10000);
+  for (uInt i=0; i<bl.size(); ++i) {
+    bl[i] = i+1;
+  }
+  {
+    // Create AipsIO file and write block.
+    AipsIO aio("tBlock_tmp.dat", ByteIO::New);
+    aio << bl;
+  }
+  {
+    // Read back block and check it.
+    AipsIO aio("tBlock_tmp.dat");
+    Block<Int> bl2;
+    aio >> bl2;
+    AlwaysAssertExit (bl2.size() == bl.size());
+    for (uInt i=0; i<bl2.size(); ++i) {
+      AlwaysAssertExit (bl[i] == Int(i+1));
+    }
+  }
+}
+
 int main()
 {
     doit();
+    testIO();
     cout << "OK\n";
     return 0;
 }

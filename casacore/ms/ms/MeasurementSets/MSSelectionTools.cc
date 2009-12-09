@@ -23,11 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSelectionTools.cc 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSSelectionTools.cc 20749 2009-09-30 14:24:05Z gervandiepen $
 //# Includes
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 #include <ms/MeasurementSets/MSSelection.h>
+#include <string.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //----------------------------------------------------------------------------
@@ -88,7 +89,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const String& spwExpr,
 		  const String& uvDistExpr,
 		  const String& taQLExpr,
-		  const String& corrExpr,
+		  const String& polnExpr,
 		  const String& scanExpr,
 		  const String& arrayExpr
 		  )
@@ -99,8 +100,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
 	
     MSSelection *mss = new MSSelection(ms,MSSelection::PARSE_NOW,
-		    timeExpr,antennaExpr,fieldExpr,spwExpr,
-		    uvDistExpr,taQLExpr,corrExpr,scanExpr,arrayExpr);
+				       timeExpr,antennaExpr,fieldExpr,spwExpr,
+				       uvDistExpr,taQLExpr,polnExpr,scanExpr,arrayExpr);
     //
     // Apply the internal accumulated TEN to the MS and produce the
     // selected MS.  
@@ -109,6 +110,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // return True.
     //
     Bool rstat = mss->getSelectedMS(selectedMS,outMSName);
+    delete mss;
+    return rstat;
+  }
+  //
+  //----------------------------------------------------------------------------
+  //
+  Bool mssSetData(const MeasurementSet& ms, 
+		  MeasurementSet& selectedMS,
+		  Vector<Vector<Slice> >& chanSlices,
+		  Vector<Vector<Slice> >& corrSlices,
+		  const String& outMSName,
+		  const String& timeExpr,
+		  const String& antennaExpr,
+		  const String& fieldExpr,
+		  const String& spwExpr,
+		  const String& uvDistExpr,
+		  const String& taQLExpr,
+		  const String& polnExpr,
+		  const String& scanExpr,
+		  const String& arrayExpr,
+		  const Int defaultChanStep
+		  )
+  {
+    //
+    // Parse the various expressions and produce the accmuluated TEN
+    // internally.
+    //
+	
+    MSSelection *mss = new MSSelection(ms,MSSelection::PARSE_NOW,
+				       timeExpr,antennaExpr,fieldExpr,spwExpr,
+				       uvDistExpr,taQLExpr,polnExpr,scanExpr,arrayExpr);
+    //
+    // Apply the internal accumulated TEN to the MS and produce the
+    // selected MS.  
+    //
+    // If the accumulated TEN is NULL, this returns False.  Else
+    // return True.
+    //
+    Bool rstat = mss->getSelectedMS(selectedMS,outMSName);
+
+    // Get in-row selection info
+    mss->getChanSlices(chanSlices,&ms,defaultChanStep);
+    mss->getCorrSlices(corrSlices,&ms);
+
     delete mss;
     return rstat;
   }
@@ -125,5 +170,47 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	while(str[j1] == ' ') j1--;
       }
     return str.substr(j0,j1-j0+1);
+  }
+  //
+  //----------------------------------------------------------------------------
+  //
+  int tokenize(const String& str, const String& sep, Vector<String>& tokens,
+	       Bool upcase)
+  {
+    String tmpStr(str);
+    /* String::size_type tokpos,startpos=0; */
+    if (upcase) tmpStr.upcase();
+    char *sep_p=(char *)sep.c_str();
+
+    char *tok=strtok((char *)tmpStr.c_str(), sep_p);
+    if (tok)
+      {
+	tokens.resize(1);
+	tokens(0)=tok;
+	while((tok=strtok((char*)NULL,sep_p)))
+	  {
+	    tokens.resize(tokens.nelements()+1,True);
+	    tokens(tokens.nelements()-1)=stripWhite(String(tok),True).c_str();
+	  }
+      }
+    else
+      {tokens.resize(1); tokens(0)=tmpStr;}
+    return tokens.nelements();
+    /*    
+    while ((tokpos=tmpStr.index(sep,startpos)))
+      {
+	tokens.resize(tokens.nelements()+1,True);
+	if (tokpos==String::npos)
+	  tokens(tokens.nelements()-1)=tmpStr.after(startpos-1);
+	else
+	  tokens(tokens.nelements()-1)=tmpStr.before(sep,startpos);
+	
+	if (tokpos==String::npos) break;
+	
+	startpos=tokpos+1;
+      }
+
+    return (int)(tokens.nelements());
+    */
   }
 };

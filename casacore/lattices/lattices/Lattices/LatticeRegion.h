@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LatticeRegion.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LatticeRegion.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #ifndef LATTICES_LATTICEREGION_H
 #define LATTICES_LATTICEREGION_H
@@ -152,7 +152,7 @@ public:
     virtual uInt ndim() const;
 
     // Returns the total number of elements in this LatticeRegion.
-    virtual uInt nelements() const;
+    virtual size_t nelements() const;
 
     // Check class internals - used for debugging. Should always return True
     virtual Bool ok() const;

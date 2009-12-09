@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TapeIO.cc 19799 2006-12-20 00:19:50Z gvandiep $
+//# $Id: TapeIO.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #include <casa/IO/TapeIO.h>
 #include <casa/OS/Path.h>
@@ -35,8 +35,8 @@
 #include <errno.h>                // needed for errno
 #include <casa/string.h>          // needed for strerror
 
-// No tape support on Cray XT3
-#ifndef AIPS_CRAY_PGI
+// No tape support on Cray XT3 or OSX 10.6
+#ifndef CASA_NOTAPE
 #include <sys/mtio.h>             // needed for ioctl
 #if defined(AIPS_SOLARIS) || defined(AIPS_DARWIN)
 #include <sys/ioctl.h>            // needed for ioctl
@@ -136,7 +136,7 @@ Int TapeIO::read(uInt size, void* buf, Bool throwException) {
 }
 
 void TapeIO::rewind() {
-#ifndef AIPS_CRAY_PGI
+#ifndef CASA_NOTAPE
   struct mtop tapeCommand;
   tapeCommand.mt_op = MTREW;
   tapeCommand.mt_count = 1;
@@ -149,7 +149,7 @@ void TapeIO::rewind() {
 }
 
 void TapeIO::skip(uInt howMany) {
-#ifndef AIPS_CRAY_PGI
+#ifndef CASA_NOTAPE
   if (howMany > 0) {
     struct mtop tapeCommand;
     tapeCommand.mt_op = MTFSF;
@@ -164,7 +164,7 @@ void TapeIO::skip(uInt howMany) {
 }
 
 void TapeIO::mark(uInt howMany) {
-#ifndef AIPS_CRAY_PGI
+#ifndef CASA_NOTAPE
   DebugAssert(isWritable(), AipsError);
   if (howMany > 0) {
     struct mtop tapeCommand;
@@ -198,8 +198,8 @@ void TapeIO::setVariableBlockSize() {
 #endif
 }
 
+#if (defined(AIPS_SOLARIS) || defined(AIPS_LINUX)) && !defined(CASA_NOTAPE )
 void TapeIO::setBlockSize(uInt sizeInBytes) {
-#if (defined(AIPS_SOLARIS) || defined(AIPS_LINUX)) && !defined(AIPS_CRAY_PGI)
   struct mtop tapeCommand;
 #if defined(AIPS_LINUX) 
   tapeCommand.mt_op = MTSETBLK;
@@ -213,11 +213,13 @@ void TapeIO::setBlockSize(uInt sizeInBytes) {
 		    String("error returned by ioctl: ") 
 		    + strerror(errno)));
   }
+#else
+void TapeIO::setBlockSize(uInt) {
 #endif
 }
 
 uInt TapeIO::getBlockSize() const {
-#if (defined(AIPS_SOLARIS) || defined(AIPS_LINUX)) && !defined(AIPS_CRAY_PGI)
+#if (defined(AIPS_SOLARIS) || defined(AIPS_LINUX)) && !defined(CASA_NOTAPE)
 #if defined(AIPS_LINUX) 
   struct mtget tapeInquiry;
   Int error = ::ioctl(itsDevice, MTIOCGET, &tapeInquiry);

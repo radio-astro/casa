@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTableGram.cc 20402 2008-09-12 08:56:47Z gervandiepen $
+//# $Id: tTableGram.cc 20602 2009-05-11 09:36:26Z gervandiepen $
 
 #include <tables/Tables/TableParse.h>
 #include <tables/Tables/Table.h>
@@ -322,17 +322,37 @@ void showExpr(const TableExprNode& expr)
 // Sort and select data.
 void seltab (const String& str)
 {
+  // If no command is given, assume it is CALC.
+  String::size_type spos = str.find_first_not_of (' ');
+  Bool addCalc = False;
+  if (spos != String::npos) {
+    String::size_type epos = str.find (' ', spos);
+    if (epos == String::npos) {
+      addCalc = True;
+    } else {
+      String s = str.substr(spos, epos-spos);
+      s.downcase();
+      addCalc = !(s=="select" || s=="update" || s=="insert" || s=="calc" ||
+                  s=="delete" || s=="create" || s=="createtable" ||
+                  s=="using"  || s=="usingstyle");
+    }
+  } 
+  String strc(str);
+  if (addCalc) {
+    strc = "CALC " + str;
+  }
+  cout << strc << endl;
+  // Parse and execute the command.
+  TaQLResult result;
   Table* tabp = 0;
   uInt i;
   Vector<String> vecstr;
   String cmd;
-  cout << str << endl;
-  TaQLResult result;
-  String::size_type semipos = str.find(';');
+  // A semicolon can be used to specify a possible table after it (for $1).
+  String::size_type semipos = strc.find(';');
   if (semipos == String::npos) {
-    result = tableCommand (str, vecstr, cmd);
+    result = tableCommand (strc, vecstr, cmd);
   } else {
-    String strc(str);
     Table tab(strc.after(semipos));
     std::vector<const Table*> tabblock(1, &tab);
     result = tableCommand (strc.before(semipos), tabblock, vecstr, cmd);

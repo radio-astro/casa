@@ -68,7 +68,7 @@ namespace casa {
       bool isPixelRegion(const ImageRegion& reg);
       bool isWorldRegion(const ImageRegion& reg);
       void setcoordsys(const CoordinateSystem& csys);
-
+      const CoordinateSystem& getcoordsys() const ;
       
       //LCSlicer box
       Record* box(const Vector<Double>& blc, const Vector<Double>& trc, 
@@ -82,8 +82,17 @@ namespace casa {
 			const Vector<Int>& pixelaxes, 
 			const CoordinateSystem& csys,
 			const String& absrel, const String& comment);
+      Record* wbox(const Vector<String>& blc, 
+			const Vector<String>& trc, 
+			const Vector<Int>& pixelaxes, 
+			const CoordinateSystem& csys,
+			const String& absrel, const String& comment);
       Record* wbox(const Vector<Quantity>& blc, 
 			const Vector<Quantity>& trc, 
+			const Vector<Int>& pixelaxes, 
+			const String& absrel, const String& comment);
+      Record* wbox(const Vector<String>& blc, 
+			const Vector<String>& trc, 
 			const Vector<Int>& pixelaxes, 
 			const String& absrel, const String& comment);
       ImageRegion* wbox(const Vector<Quantity>& blc, 
@@ -145,8 +154,10 @@ namespace casa {
        ** Routines for reading/writing regions                     **
        **************************************************************/
 
-      //Reading of a file containing an ImageRegion
+      //Reading of a file containing an ImageRegion in the AipsIO format dump
       Record* readImageFile( String filename, String regionname );
+      //Writing a file of the AipsIO dump of the record representation of the region
+      Bool writeImageFile(const String& file, const String& regionname, const Record& regionRecord);
 
       
       //save region into a table (image, blank table or any other such)
@@ -172,6 +183,8 @@ namespace casa {
       // Function to return the internal Table object to the RegionHandler.
       static Table& getTable (void* ptr, Bool writable);
       RegionType::AbsRelType regionTypeFromString(const String& absreltype);
+      //Convert a string to Quantity
+      void toQuantity(Quantity& out, const String& in);
       LogIO *itsLog;
       CoordinateSystem* itsCSys;
       Table tab_p;

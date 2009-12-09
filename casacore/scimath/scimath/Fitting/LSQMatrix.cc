@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LSQMatrix.cc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: LSQMatrix.cc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 //# Includes
 #include <scimath/Fitting/LSQMatrix.h>
@@ -54,7 +54,8 @@ LSQMatrix::LSQMatrix(uInt n, Bool)
 }
 
 LSQMatrix::LSQMatrix(const LSQMatrix &other) 
-  : n_p(other.n_p),
+  : RecordTransformable(),
+    n_p(other.n_p),
     len_p(0), nm1_p(0), n2m1_p(0), n2p1_p(0),
     trian_p(0) {
   init();

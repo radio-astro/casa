@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Measure.h 19817 2006-12-22 05:24:00Z gvandiep $
+//# $Id: Measure.h 20612 2009-06-05 05:39:45Z gervandiepen $
 
 #ifndef MEASURES_MEASURE_H
 #define MEASURES_MEASURE_H
@@ -350,12 +350,12 @@ public:
   // end of list). typ returns the list of corresponding types.
   // All should have
   // <srcblock>
-  //  static const String *const allMyTypes(Int &nall, Int &nextra,
-  //					    const uInt *&typ);
+  //  static const String* allMyTypes(Int &nall, Int &nextra,
+  //			              const uInt *&typ);
   // </srcblock>
   // <group>
-  virtual const String *const allTypes(Int &nall, Int &nextra,
-				       const uInt *&typ) const;
+  virtual const String* allTypes(Int &nall, Int &nextra,
+                                 const uInt *&typ) const;
   // </group>
   //
   // Check if all internal tables of types (both enum and String) are 
@@ -407,7 +407,7 @@ public:
   virtual const Unit &getUnit() const = 0;
   
   // Get data pointer (used by MeasConvert)
-  virtual const MeasValue *const getData() const = 0;
+  virtual const MeasValue* getData() const = 0;
   
   // Get general reference pointer
   virtual MRBase *getRefPtr() const = 0;

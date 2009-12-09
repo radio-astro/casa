@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Slicer.h 20505 2009-01-19 14:37:24Z gervandiepen $
+//# $Id: Slicer.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #ifndef CASA_SLICER_H
 #define CASA_SLICER_H
@@ -402,11 +402,11 @@ private:
     IPosition    len_p;         // Length of input
     Bool         fixed_p;       // no MimicSource used
 
-    // Define a private constructor taking an Int.
+    // Define a private constructor taking an ssize_t.
     // This is to prevent the user from the unexpected and meaningless
-    // Slicer that would result when the Int argument is promoted to
+    // Slicer that would result when the ssize_t argument is promoted to
     // an IPosition.
-    Slicer (Int);
+    Slicer (ssize_t);
 
     // Check the given start, end/length and stride.
     // Fill in the length or end.
@@ -414,7 +414,8 @@ private:
     void fillEndLen();
 
     // Fill in start, len and stride from a Slice.
-    void fillSlice (const Slice&, Int& start, Int& length, Int& stride);
+    void fillSlice (const Slice&, ssize_t& start, ssize_t& length,
+                    ssize_t& stride);
 
     // Fill the fixed flag.
     void fillFixed();

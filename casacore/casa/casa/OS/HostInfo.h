@@ -24,12 +24,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: HostInfo.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: HostInfo.h 20703 2009-09-03 06:56:12Z gervandiepen $
 
 #ifndef CASA_HOSTINFO_H
 #define CASA_HOSTINFO_H
 
 #include <casa/aips.h>
+#include <cstring>
+#include <unistd.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -111,20 +113,22 @@ public:
     static Bool bigEndian();
 
     // Returns 0 if unable to determine the number of CPUs.
-    static Int numCPUs( );
+    static Int numCPUs(bool use_aipsrc=false);
 
+    // Get memory info (in KBytes).
     // Returns -1 if unable to determine memory info.
     // <group>
-    static Int memoryTotal();
-    static Int memoryUsed();
-    static Int memoryFree();
+    static ssize_t memoryTotal(bool use_aipsrc=false);
+    static ssize_t memoryUsed();
+    static ssize_t memoryFree();
     // </group>
 
+    // Get swap space info (in KBytes).
     // Returns -1 if unable to determine swap info.
     // <group>
-    static Int swapTotal();
-    static Int swapUsed();
-    static Int swapFree();
+    static ssize_t swapTotal();
+    static ssize_t swapUsed();
+    static ssize_t swapFree();
     // </group>
 
 private:

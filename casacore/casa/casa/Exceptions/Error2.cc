@@ -23,13 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Error2.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: Error2.cc 20705 2009-09-03 09:04:46Z gervandiepen $
 
 #include <casa/Exceptions/Error.h>
 #include <casa/stdlib.h>
 #include <casa/iostream.h>
 
-#define CASACORE_NOEXIT 1
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -40,6 +39,15 @@ AipsError::AipsError(const Char *str,Category c)
 AipsError::AipsError(const String &str,Category c)
   : message(str), category(c)
 {}
+
+AipsError::AipsError (const String &msg, const String& filename,
+                      uInt lineNumber, Category c)
+  : category(c)
+{
+  ostringstream os;
+  os << msg << " at File: " << filename << ", line: " << lineNumber;
+  message = os.str();
+}
 
 AipsError::~AipsError() throw()
 {}
@@ -63,9 +71,9 @@ AbortError::AbortError(const Char *str,Category c)
 {
     cerr << "An unrecoverable error occurred: " << endl;
     cerr << str << endl;
-    #ifndef CASACORE_NOEXIT
-       exit(1);
-    #endif
+#ifndef CASACORE_NOEXIT
+    exit(1);
+#endif
 }
 
 AbortError::AbortError(const String &str,Category c)
@@ -73,9 +81,9 @@ AbortError::AbortError(const String &str,Category c)
 {
     cerr << "An unrecoverable error occurred: " << endl;
     cerr << str << endl;
-    #ifndef CASACORE_NOEXIT
-       exit(1);
-    #endif
+#ifndef CASACORE_NOEXIT
+    exit(1);
+#endif
 }
 
 AbortError::~AbortError() throw()

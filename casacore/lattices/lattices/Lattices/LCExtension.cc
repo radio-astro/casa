@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LCExtension.cc 20279 2008-02-29 16:52:56Z gervandiepen $
+//# $Id: LCExtension.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 
 #include <lattices/Lattices/LCExtension.h>
@@ -208,7 +208,7 @@ void LCExtension::fill (const IPosition& extendAxes, const LCBox& extendBox)
     Vector<Float> boxLatBlc(nre);
     Vector<Float> boxLatTrc(nre);
     Vector<uInt> reginx(nre);
-    GenSortIndirect<Int>::sort (reginx, extendAxes.storage(), nre);
+    GenSortIndirect<ssize_t>::sort (reginx, extendAxes.storage(), nre);
     Int first = -1;
     for (uInt i=0; i<nre; i++) {
         uInt axis = reginx(i);

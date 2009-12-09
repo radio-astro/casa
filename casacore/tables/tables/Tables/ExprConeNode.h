@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprConeNode.h 18582 2005-04-19 08:12:16Z gvandiep $
+//# $Id: ExprConeNode.h 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #ifndef TABLES_EXPRCONENODE_H
 #define TABLES_EXPRCONENODE_H
@@ -75,10 +75,10 @@ public:
 
   // 'get' Functions to get the desired result of a function.
   // <group>
-  Bool     getBool   (const TableExprId& id);
-  Double   getDouble (const TableExprId& id);
-  Array<Bool>   getArrayBool   (const TableExprId& id);
-  Array<Double> getArrayDouble (const TableExprId& id);
+  Bool  getBool (const TableExprId& id);
+  Int64 getInt  (const TableExprId& id);
+  Array<Bool>  getArrayBool (const TableExprId& id);
+  Array<Int64> getArrayInt  (const TableExprId& id);
   // </group>
 
   // Check the data and value types of the operands.

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//#   $Id: ImageFit1D.tcc 19940 2007-02-27 05:35:22Z Malte.Marquarding $
+//#   $Id: ImageFit1D.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
 
 #include <images/Images/ImageFit1D.h>
 
@@ -406,7 +406,7 @@ void ImageFit1D<T>::checkType() const
 // at the moment.  Later X<T> and Y<T> can be separated
  //
 {
-   FitterType* p;
+   FitterType* p=0;
    DataType tp = whatType(p);
    AlwaysAssert(tp==TpDouble, AipsError);
 }

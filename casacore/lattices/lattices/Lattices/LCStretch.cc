@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LCStretch.cc 20279 2008-02-29 16:52:56Z gervandiepen $
+//# $Id: LCStretch.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 
 #include <lattices/Lattices/LCStretch.h>
@@ -182,7 +182,7 @@ void LCStretch::fill (const IPosition& stretchAxes, const LCBox& stretchBox)
     Vector<Float> boxLatBlc(nrs);
     Vector<Float> boxLatTrc(nrs);
     Vector<uInt> reginx(nrs);
-    GenSortIndirect<Int>::sort (reginx, stretchAxes.storage(), nrs);
+    GenSortIndirect<ssize_t>::sort (reginx, stretchAxes.storage(), nrs);
     Int first = -1;
     for (uInt i=0; i<nrs; i++) {
         uInt axis = reginx(i);

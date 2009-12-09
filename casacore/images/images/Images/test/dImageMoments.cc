@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dImageMoments.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: dImageMoments.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 //
 // IMOMENT generate moments from an image.  The use may specify the moment
 // axis and the moments to output.  The term "moment" is used loosely
@@ -172,7 +172,7 @@
 #include <images/Images/ImageMoments.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>
-#include <images/Images/ImageRegion.h>
+#include <images/Regions/ImageRegion.h>
 #include <casa/System/PGPlotter.h>
 #include <lattices/Lattices/LCSlicer.h>
 #include <lattices/Lattices/LCBox.h>
@@ -190,7 +190,7 @@ int main (int argc, const char* argv[])
 try {
 
    Input inputs(1);
-   inputs.version ("$Revision: 20329 $");
+   inputs.version ("$Revision: 20567 $");
 
 
 // Get inputs

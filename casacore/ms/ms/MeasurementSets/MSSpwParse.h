@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSpwParse.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSSpwParse.h 20628 2009-06-12 02:56:35Z gervandiepen $
 
 #ifndef MS_MSSPWPARSE_H
 #define MS_MSSPWPARSE_H
@@ -96,12 +96,12 @@ public:
   const TableExprNode *selectSpwIdsFromIDList(const Vector<Int>& spwIds);
   const TableExprNode *selectSpwIdsFromFreqList(const Vector<Float>& spwIds,
 						const Float factor);
-  const void selectChannelsFromIDList(Vector<Int>& spwIds,
-				      Vector<Int>& chanIDList,
-				      Int nFSpec);
+  void selectChannelsFromIDList(Vector<Int>& spwIds,
+                                Vector<Int>& chanIDList,
+                                Int nFSpec);
 
-  const void selectChannelsFromDefaultList(Vector<Int>& spwIds,
-					   Vector<Int>& chanDefaultList);
+  void selectChannelsFromDefaultList(Vector<Int>& spwIds,
+                                     Vector<Int>& chanDefaultList);
 
   //    const TableExprNode *selectSpwOrSource(const String& fieldName);
 

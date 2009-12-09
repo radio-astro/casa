@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LatticeCleaner.h 20577 2009-04-23 13:05:42Z max.voronkov $
+//# $Id: LatticeCleaner.h 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #ifndef LATTICES_LATTICECLEANER_H
 #define LATTICES_LATTICECLEANER_H
@@ -158,7 +158,13 @@ public:
   void startingIteration(const Int starting = 0) {itsStartingIter = starting; }
 
   // Clean an image. 
-  Bool clean(Lattice<T> & model, LatticeCleanProgress* progress=0);
+  //return value gives you a hint of what's happening
+  //  1 = converged
+  //  0 = not converged but behaving normally
+  // -1 = not converged and stopped on cleaning consecutive smallest scale
+  // -2 = not converged and either large scale hit negative or diverging 
+  // -3 = clean is diverging rather than converging 
+  Int clean(Lattice<T> & model, LatticeCleanProgress* progress=0);
 
   // Set the mask
   // mask - input mask lattice

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVAngle.cc 20254 2008-02-23 16:37:46Z gervandiepen $
+//# $Id: MVAngle.cc 20732 2009-09-25 10:11:45Z gervandiepen $
 
 //# Includes
 #include <casa/Quanta/MVAngle.h>
@@ -362,11 +362,11 @@ Bool MVAngle::read(Quantity &res, MUString &in, Bool chk) {
       r *= s;
       tp = 4;
     }
-  }else if (in.tSkipCharNC('d')) {
+  }else if (in.tSkipOneCharNC('d')) {
     tp = 1;
-  } else if (in.tSkipCharNC('h')) {
+  } else if (in.tSkipOneCharNC('h')) {
     tp = 2;
-  } else if (in.tSkipChar(':')) {
+  } else if (in.tSkipOneChar(':')) {
     tp = 3;
   }
   switch (tp) {
@@ -378,19 +378,18 @@ Bool MVAngle::read(Quantity &res, MUString &in, Bool chk) {
       tp = 0;
     } else {
       Char tc = 'm';
-      if (tp == 3) tc = ':';
+      if (tp == 3)
+	tc = ':';
       in.push();
       Double r1 = in.getuInt();
-      if (in.tSkipCharNC(tc)) {
+      if (in.tSkipOneCharNC(tc)) {
 	r += r1/60.0 + in.getDouble()/3600.;
-	if (tp != 3) in.tSkipCharNC('s');
-      } else if (tp == 1 && r1 == 0 && !in.testCharNC('.') &&
-		 !in.testCharNC('/')) {
-	r += r1/60.0;
+	if (tp != 3) in.tSkipOneCharNC('s');
       } else if (tp == 3 && !in.testCharNC('.') &&
 		 !in.testCharNC('/') && !in.testAlpha()) {
 	r += r1/60.0;
-      } else {
+      } else if ( !(tp == 1 && r1 == 0 && !in.testCharNC('.') &&
+                    !in.testCharNC('/'))) {
 	tp = 0;
       }
       in.unpush();
@@ -404,9 +403,9 @@ Bool MVAngle::read(Quantity &res, MUString &in, Bool chk) {
   }
 
   if (chk) {
-
     in.skipBlank();
-    if (!in.eos()) tp = 0;	     // incorrect
+    if (!in.eos())
+      tp = 0;	     // incorrect
   }
   switch (tp) {
 

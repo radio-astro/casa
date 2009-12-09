@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: CoordinateSystem.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: CoordinateSystem.cc 20730 2009-09-24 11:17:08Z gervandiepen $
 
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -149,7 +149,8 @@ void CoordinateSystem::clear()
 }
 
 CoordinateSystem::CoordinateSystem(const CoordinateSystem &other)
-    : coordinates_p(0), 
+    : Coordinate(),
+      coordinates_p(0), 
       world_maps_p(0), world_tmps_p(0), world_replacement_values_p(0),
       pixel_maps_p(0), pixel_tmps_p(0), pixel_replacement_values_p(0),
       worldAxes_tmps_p(0), pixelAxes_tmps_p(0),
@@ -2942,6 +2943,9 @@ Vector<String> CoordinateSystem::list (LogIO& os,
    } else {
       os << "Date observation    : " << "UNKNOWN" << endl;
    }
+   if (obsinfo_p.isTelescopePositionSet()) {
+      os << "Telescope position: " << obsinfo_p.telescopePositionString() << endl;
+   }
    os << endl;
 
 // Determine the widths for all the fields that we want to list
@@ -3215,7 +3219,7 @@ void CoordinateSystem::listHeader (LogIO& os,  Coordinate* pc, uInt& widthAxis, 
                                    Int coordinate, Int axisInCoordinate,  
                                    Int pixelAxis, Int precRefValSci, 
                                    Int precRefValFloat, Int precRefValRADEC, Int precRefPixFloat, 
-                                   Int precIncSci, const IPosition& latticeShape, const IPosition& tileShape) const
+                                   Int, const IPosition& latticeShape, const IPosition& tileShape) const
 //
 // List all the good stuff
 //
@@ -3493,7 +3497,8 @@ void CoordinateSystem::listVelocity (LogIO& os,  Coordinate* pc, uInt widthAxis,
                                     Bool findWidths, Int axisInCoordinate, 
                                     Int pixelAxis, MDoppler::Types doppler,
                                     Int precRefValSci, Int precRefValFloat, 
-                                    Int precRefValRADEC, Int precRefPixFloat, Int precIncSci) const
+                                    Int precRefValRADEC, Int precRefPixFloat,
+                                    Int precIncSci) const
 //
 // List all the good stuff
 //

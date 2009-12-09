@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasRef.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: MeasRef.h 20612 2009-06-05 05:39:45Z gervandiepen $
 
 #ifndef MEASURES_MEASREF_H
 #define MEASURES_MEASREF_H
@@ -149,7 +149,7 @@ public:
 				     MRBase &ref2);
   // </group>
   // Return the offset (or 0)
-  virtual const Measure *const offset() const;
+  virtual const Measure* offset() const;
   // Set the type
   // <thrown>
   //   <li> AipsError if wrong Measure

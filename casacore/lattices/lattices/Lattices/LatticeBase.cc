@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeBase.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LatticeBase.cc 20699 2009-09-02 12:21:07Z gervandiepen $
 
 
 #include <lattices/Lattices/LatticeBase.h>
@@ -85,7 +85,7 @@ uInt LatticeBase::ndim() const
   return shape().nelements();
 }
 
-uInt LatticeBase::nelements() const
+size_t LatticeBase::nelements() const
 {
   return shape().product(); 
 }

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeIndexer.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LatticeIndexer.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
 #ifndef LATTICES_LATTICEINDEXER_H
 #define LATTICES_LATTICEINDEXER_H
@@ -168,7 +168,7 @@ public:
 
   // Function which returns the number of elements in the sub-Lattice; 
   // this value is equal to the product of shape().
-  uInt nelements() const;
+  size_t nelements() const;
 
   // Function which increments (incr=True) or decrements (incr=False) the
   // cursor position (the first IPosition argument) by a cursor shape (the
@@ -256,7 +256,7 @@ inline uInt LatticeIndexer::ndim() const
 {
   return itsNdim;
 }
-inline uInt LatticeIndexer::nelements() const
+inline size_t LatticeIndexer::nelements() const
 {
   return itsShape.product();
 }

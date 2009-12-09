@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableParse.cc 20574 2009-04-21 15:41:47Z gervandiepen $
+//# $Id: TableParse.cc 20663 2009-07-07 07:33:13Z gervandiepen $
 
 #include <tables/Tables/TaQLNode.h>
 #include <tables/Tables/TaQLNodeHandler.h>
@@ -1611,7 +1611,7 @@ void TableParseSelect::updateValue2 (const TableExprId& rowid,
     // Expression node has a scalar value, so get it.
     TNODE val;
     node.get (rowid, val);
-    TCOL value(val);
+    TCOL value(static_cast<TCOL>(val));
     if (isScalarCol) {
       // The column is a scalar too, so put it.
       col.putScalar (row, value);

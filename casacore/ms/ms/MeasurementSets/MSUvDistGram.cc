@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSUvDistGram.cc 20478 2008-12-29 11:03:41Z gervandiepen $
+//# $Id: MSUvDistGram.cc 20630 2009-06-12 04:14:37Z gervandiepen $
 
 // MSUvDistGram; grammar for UV distribution command lines
 
@@ -118,7 +118,7 @@ const TableExprNode* msUvDistGramParseNode()
 {
     return MSUvDistParse::node();
 }
-const void msUvDistGramParseDeleteNode()
+void msUvDistGramParseDeleteNode()
 {
     return MSUvDistParse::cleanup();
 }
@@ -142,7 +142,7 @@ int msUvDistGramInput (char* buf, int max_size)
     return nr;
 }
 
-void MSUvDistGramerror (char*)
+void MSUvDistGramerror (const char*)
 {
   throw (MSSelectionUvDistParseError("UV Distribution Expression: Parse error at or near '"+
 				     String(MSUvDistGramtext) + "'"));

@@ -1,5 +1,5 @@
 //# HostInfo_osf1.h: DEC OSF/1 specific memory, swap, and CPU code.
-//# $Id: HostInfoOsf1.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: HostInfoOsf1.h 20699 2009-09-02 12:21:07Z gervandiepen $
 
  /*
  **  This is a greatly MODIFIED version of a "top" machine dependent file.
@@ -101,13 +101,13 @@ friend class HostInfo;
     int valid;
     int cpus;
 
-    int swap_total;
-    int swap_used;
-    int swap_free;
+    ssize_t swap_total;
+    ssize_t swap_used;
+    ssize_t swap_free;
 
-    int memory_total;
-    int memory_used;
-    int memory_free;
+    ssize_t memory_total;
+    ssize_t memory_used;
+    ssize_t memory_free;
 
     int pageshift;		/* log base 2 of the pagesize */
 };
@@ -141,7 +141,7 @@ HostMachineInfo::HostMachineInfo( ) : valid(1) {
     if ( ret != KERN_SUCCESS ) {
 	valid = 0;
     } else {
-	memory_total = (int) (basic_info.memory_size / 1024);
+	memory_total = basic_info.memory_size / 1024;
 	cpus = basic_info.avail_cpus;
     }
 }

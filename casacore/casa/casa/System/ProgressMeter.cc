@@ -122,7 +122,7 @@ static void stderr_done_function(Int id)
 static void stderr_update_function(Int id, Double value)
 {
     if (id < 0 || id > Int(stderr_min.nelements())) {
-	cerr << __FILE__ << " illegal id " << id << endl;
+	    cerr << __FILE__ << " illegal id " << id << endl;
 	return;
     }
     id--; // 0-relative
@@ -137,11 +137,11 @@ static void stderr_update_function(Int id, Double value)
 	// "missing" ..'s etc if we have jumped a lot since our last updated.
 	for (Int i=lastpercent+1; i<=percent; i++) {
 	    if (i%2 == 0 && i%10 != 0) {
-		cerr << ".";
+		    cerr << ".";
 	    } else if (i %10 == 0) {
-		cerr << i;
+		    cerr << i;
 		if (i >= 100) {
-		    cerr << "%\n";
+			cerr << "%" << endl;
 		}
 	    }
 	}	

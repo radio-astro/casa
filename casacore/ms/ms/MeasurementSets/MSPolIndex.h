@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSPolIndex.h 18464 2005-03-16 18:44:32Z dguo $
+//# $Id: MSPolIndex.h 20704 2009-09-03 08:53:52Z gervandiepen $
 
 #ifndef MS_MSPOLINDEX_H
 #define MS_MSPOLINDEX_H
@@ -96,7 +96,7 @@ public:
   // ///////////////////  Add for MS selection //////////////////////////////
   // Only Look up POLARIZATION_ID's for a given set of polarization correlation
   // types
-  Vector<Int> matchCorrType(const Vector<Int>& corrType);
+  Vector<Int> matchCorrType(const Vector<Int>& corrType,Bool exactMatch=True);
 
 private:
   // Disallow null constructor

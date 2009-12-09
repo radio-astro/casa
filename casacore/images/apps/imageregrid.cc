@@ -92,7 +92,7 @@ int main(int argc, const char* argv[]) {
       cout << "Trying to load FITS Image \"" << in << "\"" << endl;
       pImage = new FITSImage(in);
     } else {
-      cout << "Trying to load AIPS++ Image \"" << in << "\"" << endl;
+      cout << "Trying to load CASA Image \"" << in << "\"" << endl;
       pImage = new PagedImage<Float>(in);
     }
     

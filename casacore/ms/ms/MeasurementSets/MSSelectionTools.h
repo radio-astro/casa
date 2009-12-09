@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSelectionTools.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSSelectionTools.h 20749 2009-09-30 14:24:05Z gervandiepen $
 
 #ifndef MS_MSSELECTIONTOOLS_H
 #define MS_MSSELECTIONTOOLS_H
@@ -38,6 +38,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Vector<Int> set_intersection(const Vector<Int>& v1, const Vector<Int>& v2);
   Vector<Int> set_union(const Vector<Int>& v1, const Vector<Int>& v2);
 
+  // Collective selection 
   Bool mssSetData(const MeasurementSet& ms, 
 		  MeasurementSet& selectedMS,
 		  const String& outMSName="",
@@ -47,11 +48,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const String& spwExpr="",
 		  const String& uvDistExpr="",
 		  const String& taQLExpr="",
-		  const String& corrExpr="",
+		  const String& polnExpr="",
 		  const String& scanExpr="",
 		  const String& arrayExpr=""
 		  );
+  // Collective selection also returning in-row (corr/chan) slices
+  Bool mssSetData(const MeasurementSet& ms, 
+		  MeasurementSet& selectedMS,
+		  Vector<Vector<Slice> >& chanSlices,
+		  Vector<Vector<Slice> >& corrSlices,
+		  const String& outMSName="",
+		  const String& timeExpr="",
+		  const String& antennaExpr="",
+		  const String& fieldExpr="",
+		  const String& spwExpr="",
+		  const String& uvDistExpr="",
+		  const String& taQLExpr="",
+		  const String& polnExpr="",
+		  const String& scanExpr="",
+		  const String& arrayExpr="",
+		  const Int defaultChanStep=1
+		  );
+
   String stripWhite(const String& str, Bool onlyends=True);
+  int tokenize(const String& str, const String& sep, Vector<String>& tokens,Bool upCase=False);
 };
 
 #endif

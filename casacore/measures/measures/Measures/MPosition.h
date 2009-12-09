@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MPosition.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MPosition.h 20612 2009-06-05 05:39:45Z gervandiepen $
 
 #ifndef MEASURES_MPOSITION_H
 #define MEASURES_MPOSITION_H
@@ -69,6 +69,16 @@ template <class M> class ROScalarMeasColumn;
 // </synopsis>
 //
 // <example>
+//   // inRec is a RecordInterface (see GridFT::fromRecord()).
+//   Vector<Double> dirValue(3);
+//   String dirUnit;
+//   inRec.get("dirvalue", dirValue);
+//   inRec.get("dirunit", dirUnit);
+//   MVPosition dummyMVPos(dirValue(0), dirValue(1), dirValue(2));
+//   MPosition mLocation(dummyMVPos, MPosition::ITRF);
+//   ...
+//   dirValue = mLocation.get("m").getValue();
+//   dirUnit = mLocation.get("m").getUnit();
 // </example>
 //
 // <motivation>
@@ -185,10 +195,10 @@ class MPosition : public MeasBase<MVPosition, MeasRef<MPosition> > {
   // nextra the number of specials (like planets) that should be at 
   // end of list). typ returns the list of corresponding types.
   // <group>
-  virtual const String *const allTypes(Int &nall, Int &nextra,
-				       const uInt *&typ) const;
-  static const String *const allMyTypes(Int &nall, Int &nextra,
-					const uInt *&typ);
+  virtual const String* allTypes(Int &nall, Int &nextra,
+                                 const uInt *&typ) const;
+  static const String* allMyTypes(Int &nall, Int &nextra,
+                                  const uInt *&typ);
   // </group>
   // Check if all internal tables of types (both enum and String) are 
   // complete and correct. This function is called automatically if and when

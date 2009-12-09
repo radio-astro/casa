@@ -1,5 +1,5 @@
 //# NewMSSimulator.cc:  this defines NewMSSimulator, which simulates a MeasurementSet
-//# Copyright (C) 1995,1996,1998,1999,2000,2001,2002,2003
+//# Copyright (C) 1995-2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NewMSSimulator.cc 19944 2007-02-27 11:14:34Z Malte.Marquarding $
+//# $Id: NewMSSimulator.cc 20749 2009-09-30 14:24:05Z gervandiepen $
 
 //# Includes
 #include <ms/MeasurementSets/NewMSSimulator.h>
@@ -52,13 +52,17 @@
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/MatrixMath.h>
 #include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayIO.h>
 #include <casa/Arrays/Slice.h>
 #include <measures/Measures/Stokes.h>
 #include <measures/Measures/MeasFrame.h>
+#include <casa/Quanta/MVuvw.h>
 #include <casa/Quanta/MVDirection.h>
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/MVTime.h>
+#include <measures/Measures/MeasTable.h>
+#include <measures/Measures/MBaseline.h>
+#include <measures/Measures/MCBaseline.h>
+#include <measures/Measures/Muvw.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MPosition.h>
@@ -155,6 +159,7 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
   
   // Add index columns for tiling. We use three tiles: data, sigma, and flag.
   // Some of these contain more than one column
+  /*
   msDesc.addColumn(ScalarColumnDesc<Int>(dataTileId,
 					 "Index for Data tiling"));
   msDesc.addColumn(ScalarColumnDesc<Int>(scratchDataTileId,
@@ -165,45 +170,73 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
   					 "Index for Imaging Weight tiling"));
   msDesc.addColumn(ScalarColumnDesc<Int>(flagTileId,
 					 "Index for Flag Category tiling"));
-
+  */
   // setup hypercolumns for the data/flag/flag_catagory/sigma & weight columns.
   {
-    Vector<String> dataCols(2);
+    Vector<String> dataCols(1);
     dataCols(0) = MeasurementSet::columnName(MeasurementSet::DATA);
-    dataCols(1) = MeasurementSet::columnName(MeasurementSet::FLAG);
     const Vector<String> coordCols(0);
     const Vector<String> idCols(1, dataTileId);
-    msDesc.defineHypercolumn(dataCol, 3, dataCols, coordCols, idCols);
+    //msDesc.defineHypercolumn(dataCol, 3, dataCols, coordCols, idCols);
+    msDesc.defineHypercolumn(dataCol, 3, dataCols);
+  }
+{
+    Vector<String> dataCols(1);
+    dataCols(0) = MeasurementSet::columnName(MeasurementSet::FLAG);
+    const Vector<String> coordCols(0);
+    const Vector<String> idCols(1, dataTileId);
+    //msDesc.defineHypercolumn(dataCol, 3, dataCols, coordCols, idCols);
+    msDesc.defineHypercolumn("FlagColumn", 3, dataCols);
   }
   {
-    Vector<String> dataCols(2);
+    Vector<String> dataCols(1);
     dataCols(0) = MeasurementSet::columnName(MeasurementSet::MODEL_DATA);
-    dataCols(1) = MeasurementSet::columnName(MeasurementSet::CORRECTED_DATA);
     const Vector<String> coordCols(0);
     const Vector<String> idCols(1, scratchDataTileId);
-    msDesc.defineHypercolumn(scratchDataCol, 3, dataCols, coordCols, idCols);
+    //    msDesc.defineHypercolumn(scratchDataCol, 3, dataCols, coordCols, idCols);
+    msDesc.defineHypercolumn("ModelDataColumn", 3, dataCols);
   }
+ {
+    Vector<String> dataCols(1);
+    dataCols(0) = MeasurementSet::columnName(MeasurementSet::CORRECTED_DATA);
+    const Vector<String> coordCols(0);
+    const Vector<String> idCols(1, scratchDataTileId);
+    //msDesc.defineHypercolumn(scratchDataCol, 3, dataCols, coordCols, idCols);
+    msDesc.defineHypercolumn("CorrectedDataColumn", 3, dataCols);
+  }
+
   {
-    Vector<String> dataCols(2);
+    Vector<String> dataCols(1);
     dataCols(0) = MeasurementSet::columnName(MeasurementSet::SIGMA);
-    dataCols(1) = MeasurementSet::columnName(MeasurementSet::WEIGHT);
     const Vector<String> coordCols(0);
     const Vector<String> idCols(1, sigmaTileId);
-    msDesc.defineHypercolumn(sigmaCol, 2, dataCols, coordCols, idCols);
+    //msDesc.defineHypercolumn(sigmaCol, 2, dataCols, coordCols, idCols);
+    msDesc.defineHypercolumn("SigmaColumn", 2, dataCols);
   }
+  {
+    Vector<String> dataCols(1);
+    dataCols(0) = MeasurementSet::columnName(MeasurementSet::WEIGHT);
+    const Vector<String> coordCols(0);
+    const Vector<String> idCols(1, sigmaTileId);
+    // msDesc.defineHypercolumn(sigmaCol, 2, dataCols, coordCols, idCols);
+    msDesc.defineHypercolumn("WeightColumn", 2, dataCols);
+  }
+
   {
     Vector<String> dataCols(1);
     dataCols(0) = MeasurementSet::columnName(MeasurementSet::IMAGING_WEIGHT);
     const Vector<String> coordCols(0);
     const Vector<String> idCols(1, imweightTileId);
-    msDesc.defineHypercolumn(imweightCol, 2, dataCols, coordCols, idCols);
+    //msDesc.defineHypercolumn(imweightCol, 2, dataCols, coordCols, idCols);
+    msDesc.defineHypercolumn(imweightCol, 2, dataCols);
   }
   {
     Vector<String> dataCols(1);
     dataCols(0) = MeasurementSet::columnName(MeasurementSet::FLAG_CATEGORY);
     const Vector<String> coordCols(0);
     const Vector<String> idCols(1, flagTileId);
-    msDesc.defineHypercolumn(flagCol, 4, dataCols, coordCols, idCols);
+    //    msDesc.defineHypercolumn(flagCol, 4, dataCols, coordCols, idCols);
+    msDesc.defineHypercolumn(flagCol, 4, dataCols);
   }
 
   SetupNewTable newMS(MSName, msDesc, Table::New);
@@ -224,49 +257,72 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
     newMS.bindColumn(MS::columnName(MS::ANTENNA2), ssm);
   }
   
+  IPosition tileShape(3, 4, 100, 100);
   // These columns contain the bulk of the data so save them in a tiled way
   {
-    TiledDataStMan dataMan(dataCol);
+    TiledShapeStMan dataMan(dataCol, tileShape);
     newMS.bindColumn(MeasurementSet::
 		     columnName(MeasurementSet::DATA), dataMan);
+  }
+  {
+    TiledShapeStMan dataMan("FlagColumn", tileShape);
     newMS.bindColumn(MeasurementSet::
 		     columnName(MeasurementSet::FLAG), dataMan);
-    newMS.bindColumn(dataTileId, dataMan);
   }
   {
-    TiledDataStMan dataMan(scratchDataCol);
+    TiledShapeStMan dataMan("ModelDataColumn", tileShape);
     newMS.bindColumn(MeasurementSet::
 		     columnName(MeasurementSet::MODEL_DATA), dataMan);
+  }
+  {
+    TiledShapeStMan dataMan("CorrectedDataColumn", tileShape);
     newMS.bindColumn(MeasurementSet::
 		     columnName(MeasurementSet::CORRECTED_DATA), dataMan);
-    newMS.bindColumn(scratchDataTileId, dataMan);
   }
   {
-    TiledDataStMan dataMan(sigmaCol);
+    TiledShapeStMan dataMan("SigmaColumn", IPosition(2,tileShape(0), tileShape(2)));
     newMS.bindColumn(MeasurementSet::
  		     columnName(MeasurementSet::SIGMA), dataMan);
+  }
+  {
+   TiledShapeStMan dataMan("WeightColumn", IPosition(2,tileShape(0), tileShape(2))); 
     newMS.bindColumn(MeasurementSet::
  		     columnName(MeasurementSet::WEIGHT), dataMan);
-    newMS.bindColumn(sigmaTileId, dataMan);
   }
 
   {
-    TiledDataStMan dataMan(imweightCol);
+    TiledShapeStMan dataMan(imweightCol, IPosition(2,tileShape(1), 
+						   tileShape(2)));
     newMS.bindColumn(MeasurementSet::
  		     columnName(MeasurementSet::IMAGING_WEIGHT), dataMan);
-    newMS.bindColumn(imweightTileId, dataMan);
+    // newMS.bindColumn(imweightTileId, dataMan);
   }
 
   {
-    TiledDataStMan dataMan(flagCol);
+    TiledShapeStMan dataMan(flagCol, 
+			    IPosition(4,tileShape(0),tileShape(1), 1,
+				      tileShape(2)));
     newMS.bindColumn(MeasurementSet::
    		     columnName(MeasurementSet::FLAG_CATEGORY), dataMan);
-    newMS.bindColumn(flagTileId, dataMan);
+    // newMS.bindColumn(flagTileId, dataMan);
   }
 
   // Now we can create the MeasurementSet and add the (empty) subtables
   ms_p=new MeasurementSet(newMS,0);
   ms_p->createDefaultSubtables(Table::New);
+
+  // add the SOURCE table  [copied from SimpleSimulator]
+  TableDesc tdesc; // = MSSource::requiredTableDesc();
+  for (uInt i = 1 ; i<=MSSource::NUMBER_PREDEFINED_COLUMNS; i++) {
+    MSSource::addColumnToDesc(tdesc, MSSource::PredefinedColumns(i));
+  }
+  MSSource::addColumnToDesc(tdesc, MSSourceEnums::REST_FREQUENCY, 1);
+  SetupNewTable sourceSetup(ms_p->sourceTableName(),tdesc,Table::New);
+  ms_p->rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
+				   Table(sourceSetup));
+  // intialize the references to the subtables just added
+  ms_p->initRefs();
+  //
   ms_p->flush();
   
   // Set the TableInfo
@@ -279,19 +335,20 @@ NewMSSimulator::NewMSSimulator(const String& MSName) :
   }
 
   // Now we can make the accessors to be used when adding hypercolumns
+  /*
   dataAcc_p = TiledDataStManAccessor(*ms_p, dataCol);
   scratchDataAcc_p = TiledDataStManAccessor(*ms_p, scratchDataCol);
   sigmaAcc_p = TiledDataStManAccessor(*ms_p, sigmaCol);
   flagAcc_p = TiledDataStManAccessor(*ms_p, flagCol);
   imweightAcc_p = TiledDataStManAccessor(*ms_p, imweightCol);
-
+  */
   // We're done - wasn't that easy?
 
   dataWritten_p=0.0;
   hyperCubeID_p=-1;
   lastSpWID_p=-1;
   lastNchan_p=-1;
-  hasHyperCubes_p=True;
+  hasHyperCubes_p=False;
 }
 
 NewMSSimulator::NewMSSimulator(MeasurementSet& theMS) :
@@ -329,6 +386,7 @@ NewMSSimulator::NewMSSimulator(MeasurementSet& theMS) :
     MSSpWindowColumns& spwc=msc.spectralWindow();
     lastSpWID_p=spwc.nrow();
     lastNchan_p=spwc.chanFreq()(lastSpWID_p-1).nelements();
+
     os << "   last spectral window ID = " << lastSpWID_p << LogIO::POST;
   }
 }
@@ -377,9 +435,10 @@ void NewMSSimulator::initAnt(const String& telescope,
 			     const Vector<Double>& y, 
 			     const Vector<Double>& z,
 			     const Vector<Double>& dishDiameter,
-			     const Vector<Double>& offset,
+			     const Vector<Double>&,
 			     const Vector<String>& mount,
 			     const Vector<String>& name,
+			     const Vector<String>& padname,
 			     const String& coordsystem,
 			     const MPosition& mRefLocation) 
 {
@@ -438,11 +497,50 @@ void NewMSSimulator::initAnt(const String& telescope,
   antc.name().putColumnRange(antSlice,name);
   //  antc.offset().putColumnRange(antSlice,offset);
   antc.position().putColumnRange(antSlice, antXYZ);
-  antc.station().fillColumn("");
+  //antc.station().fillColumn("");  
+  antc.station().putColumnRange(antSlice,padname);
   antc.flagRow().fillColumn(False);
   antc.type().fillColumn("GROUND-BASED");
   os << "Added rows to ANTENNA table" << LogIO::POST;
 }
+
+//getAnt(telescope_p, nAnt, xyz_p, diam_p, offset_p, mount_p, antName_p, 
+//		    coordsystem_p, mRefLocation_p)) {
+bool NewMSSimulator::getAnt(String& telescope, Int& nAnt, Matrix<Double>* antXYZ, 
+			    Vector<Double>& antDiam, Vector<Double>& /*offset*/,
+			    Vector<String>& mount, Vector<String>& name, Vector<String>& padname,
+			    String& coordsystem, MPosition& mRefLocation ) {
+  // return already set config info
+  LogIO os(LogOrigin("NewMSSimulator", "getAnt()", WHERE));
+  
+  MSColumns msc(*ms_p);
+  MSAntennaColumns& antc=msc.antenna();
+  if(antc.nrow()==0) {
+    os << "Antenna information not yet defined" << LogIO::WARN;
+    return False;
+  }
+  telescope=telescope_p;
+  nAnt=antc.nrow();
+  if (!antXYZ) antXYZ = new Matrix<Double>(3,nAnt);
+  antXYZ->resize(3,nAnt);
+  antc.position().getColumn(*antXYZ);
+  antc.dishDiameter().getColumn(antDiam);
+  //antc.offset().getColumn(offset);
+  antc.mount().getColumn(mount);
+  antc.name().getColumn(name);
+  antc.station().getColumn(padname);
+
+  coordsystem="global";
+  MVPosition mvzero(0.,0.,0.);
+  MPosition mzero(mvzero,MPosition::ITRF);
+  mRefLocation=mzero;
+
+  return True;
+}
+
+
+
+
 
 void NewMSSimulator::local2global(Vector<Double>& xGeo,
 				  Vector<Double>& yGeo,
@@ -483,13 +581,13 @@ void NewMSSimulator::local2global(Vector<Double>& xGeo,
   
 };
 
-void NewMSSimulator::longlat2global(Vector<Double>& xReturned,
-				    Vector<Double>& yReturned,
-				    Vector<Double>& zReturned,
-				    const MPosition& mRefLocation,
-				    const Vector<Double>& xIn,
-				    const Vector<Double>& yIn,
-				    const Vector<Double>& zIn)
+void NewMSSimulator::longlat2global(Vector<Double>&,
+				    Vector<Double>&,
+				    Vector<Double>&,
+				    const MPosition&,
+				    const Vector<Double>&,
+				    const Vector<Double>&,
+				    const Vector<Double>&)
 {
   LogIO os(LogOrigin("NewMSSimulator", "longlat2global()", WHERE));
   os <<  LogIO::SEVERE << "NewMSSimulator::longlat2global not yet implemented" << LogIO::POST;
@@ -521,13 +619,74 @@ void NewMSSimulator::initFields(const String& sourceName,
   fieldc.phaseDirMeasCol().put(baseFieldID,direction);
   fieldc.referenceDirMeasCol().put(baseFieldID,direction);
 
+  MSSourceColumns& sourcec=msc.source();
+  Int baseSrcID=sourcec.nrow();
+
+  os << "Creating new source " << sourceName << ", ID "
+     << baseSrcID+1 << LogIO::DEBUG1;
+
+  ms_p->source().addRow(1); //SINGLE DISH CASE
+  sourcec.name().put(baseSrcID, sourceName);
+  sourcec.code().put(baseSrcID, calCode);
+  sourcec.time().put(baseSrcID, 0.0);
+  sourcec.sourceId().put(baseSrcID,0);
+  sourcec.directionMeas().put(baseSrcID,sourceDirection);
+  sourcec.spectralWindowId().put(baseSrcID,-1);
+  sourcec.properMotion().put(baseSrcID,Vector<Double>(1));
+  MSSpWindowColumns& spwc=msc.spectralWindow();
+  if(spwc.nrow()>0) {
+    sourcec.spectralWindowId().put(baseSrcID,1); 
+    Vector<Double> freq(1);
+    spwc.refFrequency().get(0,freq(0));
+    sourcec.restFrequency().put(baseSrcID,freq); 
+  }
+  
+
+  //directionMeas_p.setDescRefCode(ref);
+
 };
+
+
+  bool NewMSSimulator::getFields(Int& nField,
+				 Vector<String>& sourceName, 
+				 Vector<MDirection>& sourceDirection,
+				 Vector<String>& calCode)
+{
+  LogIO os(LogOrigin("MSsimulator", "getFields()", WHERE));
+  
+//  os << sourceName_p 
+//     << "  " << formatDirection(sourceDirection_p)
+//     << "  " << calCode_p
+
+  MSColumns msc(*ms_p);
+  MSFieldColumns& fieldc=msc.field();
+  nField=fieldc.nrow();
+
+  sourceName.resize(nField);
+  sourceDirection.resize(nField);
+  calCode.resize(nField);
+
+  for (Int i=0;i<nField;i++) {
+    fieldc.name().get(i, sourceName[i]);
+    fieldc.code().get(i, calCode[i]);
+    Vector<MDirection> direction;
+    fieldc.referenceDirMeasCol().get(i,direction,True);
+    // and if theres a varying reference direction per row, we'll just all go 
+    // merrily off into lala land.
+    sourceDirection[i]=direction[0];
+  }
+
+  return (nField>0);
+
+};
+
+
 
 void NewMSSimulator::initSpWindows(const String& spWindowName,
 				   const Int& nChan,
 				   const Quantity& startFreq,
 				   const Quantity& freqInc,
-				   const Quantity& freqRes,
+				   const Quantity&,
 				   const String& stokesString)
 {
   
@@ -616,6 +775,72 @@ void NewMSSimulator::initSpWindows(const String& spWindowName,
   }
 
 }
+
+// if known already e.g. from openfromms()
+bool NewMSSimulator::getSpWindows(Int& nSpw,
+				  Vector<String>& spWindowName,
+				  Vector<Int>& nChan,
+				  Vector<Quantity>& startFreq,
+				  Vector<Quantity>& freqInc,
+				  Vector<String>& stokesString)
+{
+
+#ifdef RI_DEBUG  
+  LogIO os(LogOrigin("MSsimulator", "getSpWindows()", WHERE)); 
+#else
+  LogIO os(LogOrigin("MSsimulator", "getSpWindows()")); 
+#endif
+  
+  MSColumns msc(*ms_p);
+  MSSpWindowColumns& spwc=msc.spectralWindow();
+  MSDataDescColumns& ddc=msc.dataDescription();
+  MSPolarizationColumns& polc=msc.polarization();
+  nSpw=spwc.nrow();
+
+  spWindowName.resize(nSpw);
+  nChan.resize(nSpw);
+  startFreq.resize(nSpw);
+  freqInc.resize(nSpw);
+  stokesString.resize(nSpw);
+
+  Int nPols(polc.nrow());
+  Vector<Int> stokes(4);
+  for (Int i=0;i<nSpw;i++) {
+    spwc.name().get(i,spWindowName[i]);
+    spwc.numChan().get(i,nChan[i]);
+    Double vStartFreq,vFreqInc,vBW;
+    spwc.refFrequency().get(i,vStartFreq);
+    startFreq[i].setValue(vStartFreq);
+    startFreq[i].setUnit("Hz");
+    spwc.totalBandwidth().get(i,vBW);
+    // yeah, ok - maybe they're not uniform.  we're doing what we can here.x
+    freqInc[i].setValue(vBW/nChan[i]);
+    freqInc[i].setUnit("Hz");
+    // need to translate enum Stokes::type back into strings... there's no
+    // easy way to do that in C++, but there is a Stokes Name function:
+    Int nCorr;
+    if (nPols==nSpw) {
+      polc.numCorr().get(i, nCorr);
+      stokes.resize(nCorr);
+      polc.corrType().get(i,stokes);
+    } else if (nPols<=0) {
+      throw(AipsError("Polarations not defined in MSSimulator::getSpWindows"));
+    } else {
+      // if not specified for all spw, use the first one for all spw.
+      polc.numCorr().get(0, nCorr);
+      stokes.resize(nCorr);
+      polc.corrType().get(0,stokes);
+    }
+    String t;
+    for (uInt j=0; j<nCorr; j++) 
+      t += Stokes::name(Stokes::StokesTypes(stokes(j))) + " ";
+    stokesString[i]=t;
+  }  
+  return True;
+}
+
+
+
 
 void NewMSSimulator::initFeeds(const String& mode) {
   LogIO os(LogOrigin("MSsimulator", "initFeeds()", WHERE));
@@ -766,8 +991,51 @@ void NewMSSimulator::initFeeds(const String& mode,
 };
 
 
+
+
+bool NewMSSimulator::getFeedMode(String& mode)
+{
+  LogIO os(LogOrigin("MSsimulator", "getFeedMode()", WHERE));
+  
+  MSColumns msc(*ms_p);
+  MSAntennaColumns& antc=msc.antenna();
+  Int nAnt=antc.nrow();
+  
+  if (nAnt <= 0) {
+    os <<  LogIO::SEVERE << "NewMSSimulator::getFeeds: must call initAnt() first" << LogIO::POST;
+  }
+  
+  MSFeedColumns& feedc=msc.feed();
+  Int numFeeds=feedc.nrow();
+
+  if (numFeeds>nAnt)
+    mode="list";
+  else {
+    if (numFeeds<1) return False;
+    // quick and dirty - assume all ants the same kind 
+    Vector<String> feedPol(2);
+    feedc.polarizationType().get(0,feedPol,True);
+    // we only support setting perfect feeds in Simulator.
+    Int nF(0);
+    feedPol.shape(nF);
+    if (nF<2) 
+      mode=feedPol[0];
+    else
+      mode=feedPol[0]+" "+feedPol[1];
+  }
+  return True;
+}
+ 
+
+
+
 NewMSSimulator::~NewMSSimulator() 
 {
+
+  if(ms_p)
+    delete ms_p;
+  ms_p=0;
+
 }
 
 
@@ -856,15 +1124,15 @@ void NewMSSimulator::observe(const String& sourceName,
   Matrix<Int> corrProduct;
   polc.corrProduct().get(baseSpWID,corrProduct);
   Int nCorr=corrProduct.ncolumn();
-  {
-    ostringstream oss;
-    oss << "Spectral window : "<<spWindowName<<endl
-	<< "     reference frequency : " << startFreq/1.0e9 << "GHz" << endl
-	<< "     number of channels : " << nChan << endl
-	<< "     total bandwidth : " << nChan*freqInc/1.0e9 << "GHz" << endl
-	<< "     number of correlations : " << nCorr << endl;
-    os<<String(oss)<<LogIO::POST;
-  }
+//  {
+//    ostringstream oss;
+//    oss << "Spectral window : "<<spWindowName<<endl
+//	<< "     reference frequency : " << startFreq/1.0e9 << "GHz" << endl
+//	<< "     number of channels : " << nChan << endl
+//	<< "     total bandwidth : " << nChan*freqInc/1.0e9 << "GHz" << endl
+//	<< "     number of correlations : " << nCorr << endl;
+//    os<<String(oss)<<LogIO::DEBUG1;
+//  }
   
   // Field
   MSFieldColumns& fieldc=msc.field();
@@ -895,8 +1163,8 @@ void NewMSSimulator::observe(const String& sourceName,
   msd.setFieldCenter(fcs(0));
   MDirection fieldCenter=fcs(0);
   {
-    os << "Observing source : "<<sourceName<<endl
-       << "     direction : " << formatDirection(fieldCenter)<<LogIO::POST;
+    os << "Observing source : "<< sourceName
+       << " in direction : " << formatDirection(fieldCenter)<<LogIO::DEBUG1;
   }
 
   // A bit ugly solution to extract the information about beam offsets
@@ -926,18 +1194,18 @@ void NewMSSimulator::observe(const String& sourceName,
       msd.setFieldCenter(fieldCenter);
       t_offset_p = - msd.hourAngle() * 3600.0 * 180.0/C::pi / 15.0; // in seconds
       hourAngleDefined_p=True;
-      os << "Times specified are interpreted as hour angles for first source observed" << endl
-	 << "     offset in time = " << t_offset_p / 3600.0 << " hours from "
-	 << formatTime(taiRefTime.get("s").getValue("s")) << LogIO::POST;
+//      os << "Times specified are interpreted as hour angles for first source observed" << endl
+//	 << "     offset in time = " << t_offset_p / 3600.0 << " hours from "
+//	 << formatTime(taiRefTime.get("s").getValue("s")) << LogIO::DEBUG1;
     }
     
     Tstart = qStartTime.getValue("s") + 
       taiRefTime.get("s").getValue("s") + t_offset_p;
     Tend = qStopTime.getValue("s") + 
       taiRefTime.get("s").getValue("s") + t_offset_p;
-    os << "Time range : " << endl
-       << "     start : " << formatTime(Tstart) << endl
-       << "     stop  : " << formatTime(Tend) << LogIO::POST;
+//    os << "Time range : " << endl
+//       << "     start : " << formatTime(Tstart) << endl
+//       << "     stop  : " << formatTime(Tend) << endl << LogIO::DEBUG1;
   }
 
   // fill Observation Table for every call. Eventually we should fill
@@ -1004,7 +1272,7 @@ void NewMSSimulator::observe(const String& sourceName,
     if(lastSpWID_p<0) {
       needNewHyperCube=True;
     }
-    else if((baseSpWID!=lastSpWID_p)&&(lastNchan_p!=nChan)) {
+    else if((baseSpWID!=lastSpWID_p) &&(lastNchan_p!=nChan)) {
       needNewHyperCube=True;
     }
     if((maxData_p>0)&&(dataWritten_p>maxData_p)) {
@@ -1013,14 +1281,14 @@ void NewMSSimulator::observe(const String& sourceName,
   }
   if(needNewHyperCube) {
     hyperCubeID_p++;
-    os << "Creating new hypercube " << hyperCubeID_p+1 << LogIO::POST;
+    //    os << "Creating new hypercube " << hyperCubeID_p+1 << LogIO::DEBUG1;
     addHyperCubes(hyperCubeID_p, nBaselines, nChan, nCorr);
     dataWritten_p=0;
     lastSpWID_p=baseSpWID;
     lastNchan_p=nChan;
   }
   // ... Next extend the table
-  os << "Adding " << nNewRows << " rows" << LogIO::POST;
+  //  os << "Adding " << nNewRows << " rows" << LogIO::DEBUG1;
   ms_p->addRow(nNewRows);
 
   // ... Finally extend the hypercubes
@@ -1039,7 +1307,7 @@ void NewMSSimulator::observe(const String& sourceName,
     // Size of scratch columns
     Double thisChunk=16.0*Double(nChan)*Double(nCorr)*Double(nNewRows);
     dataWritten_p+=thisChunk;
-    os << "Written " << thisChunk/(1024.0*1024.0) << " Mbytes to scratch columns" << LogIO::POST;
+    //    os << "Written " << thisChunk/(1024.0*1024.0) << " Mbytes to scratch columns" << LogIO::DEBUG1;
   }
 
   Matrix<Complex> data(nCorr,nChan); 
@@ -1051,11 +1319,13 @@ void NewMSSimulator::observe(const String& sourceName,
   Vector<Float> imagingWeight(nChan);
   imagingWeight.set(1.0);
 
-  os << "Calculating uvw coordinates for " << nIntegrations << " integrations" << LogIO::POST;
+
+ 
+  //  os << "Calculating uvw coordinates for " << nIntegrations << " integrations" << LogIO::DEBUG1;
 
   for(Int feed=0; feed<nFeed; feed++) {
-    if (nFeed) 
-       os << "Processing feed "<<feed<< LogIO::POST;
+    //if (nFeed) 
+      //       os << "Processing feed "<<feed<< LogIO::DEBUG1;
     // for now assume that all feeds have the same offsets w.r.t.
     // antenna frame for all antennas
     RigidVector<Double, 2> beamOffset=beam_offsets(0,0,feed);
@@ -1068,7 +1338,7 @@ void NewMSSimulator::observe(const String& sourceName,
       Double gmst = epGMST1().get("d").getValue("d");
       gmst = (gmst - Int(gmst)) * C::_2pi;  // Into Radians
     
-      MEpoch ep(Quantity((Time + Tint/2), "s"));
+      MEpoch ep(Quantity((Time + Tint/2), "s"), MEpoch::UT1);
       msd.setEpoch(ep);
       
       // current phase center for a beam without offset
@@ -1094,6 +1364,7 @@ void NewMSSimulator::observe(const String& sourceName,
       msc.fieldId().put(row+1,baseFieldID);
       msc.dataDescId().put(row+1,baseSpWID);
       msc.time().put(row+1,Time+Tint/2);
+      msc.timeCentroid().put(row+1,Time+Tint/2);
       msc.arrayId().put(row+1,maxArrayId);
       msc.processorId().put(row+1,0);
       msc.exposure().put(row+1,Tint);
@@ -1120,24 +1391,28 @@ void NewMSSimulator::observe(const String& sourceName,
       }
       // x direction is flipped to convert az-el type frame to ra-dec
       feed_phc.shift(-beamOffset(0),beamOffset(1),True);
+      ///Below code is replaced with calcUVW that does a baseline conversion
+      ///to J2000 too
     
-      Double ra, dec; // current phase center
-      ra = feed_phc.getAngle().getValue()(0);
-      dec = feed_phc.getAngle().getValue()(1);
+      //      Double ra, dec; // current phase center
+      //      ra = feed_phc.getAngle().getValue()(0);
+      //      dec = feed_phc.getAngle().getValue()(1);
 
       // Transformation from antenna position difference (ant2-ant1) to uvw
-      Double H0 = gmst-ra, sH0=sin(H0), cH0=cos(H0), sd=sin(dec), cd=cos(dec);
-      Matrix<Double> trans(3,3,0);
-      trans(0,0) = -sH0;    trans(0,1) = -cH0;
-      trans(1,0) =  sd*cH0; trans(1,1) = -sd*sH0; trans(1,2) = -cd;
-      trans(2,0) = -cd*cH0; trans(2,1) = cd*sH0;  trans(2,2) = -sd; 
- 
+      //      Double H0 = gmst-ra, sH0=sin(H0), cH0=cos(H0), sd=sin(dec), cd=cos(dec);
+      //      Matrix<Double> trans(3,3,0);
+      //      trans(0,0) = -sH0;    trans(0,1) = -cH0;
+      //      trans(1,0) =  sd*cH0; trans(1,1) = -sd*sH0; trans(1,2) = -cd;
+      //      trans(2,0) = -cd*cH0; trans(2,1) = cd*sH0;  trans(2,2) = -sd; 
+      //      Matrix<Double> antUVW(3,nAnt);	 
+
+      // for (Int ant1=0; ant1<nAnt; ant1++)
+      //           antUVW.column(ant1)=product(trans,antXYZ.column(ant1)); 
       // Rotate antennas to correct frame
       Matrix<Double> antUVW(3,nAnt);	      
-      for (Int ant1=0; ant1<nAnt; ant1++)
-           antUVW.column(ant1)=product(trans,antXYZ.column(ant1));
-    
-    
+      calcAntUVW(ep, feed_phc, antUVW);
+
+   
       for(Int ant1=0; ant1<nAnt; ant1++) {
 	Double x1=antUVW(0,ant1), y1=antUVW(1,ant1), z1=antUVW(2,ant1);
 	Int startAnt2=ant1+1;
@@ -1230,13 +1505,13 @@ void NewMSSimulator::observe(const String& sourceName,
 	}
 	if (firstTime) {
 	  firstTime = False;
-	  Double ha1 = msd.hourAngle() *  180.0/C::pi / 15.0;
-	  os << "Starting conditions for antenna 1: " << LogIO::POST;
-	  os << "     time = " << formatTime(Time) << LogIO::POST;
-	  os << "     scan = " << scan+1 << LogIO::POST;
-	  os << "     az   = " << azel(0) *  180.0/C::pi << " deg" << LogIO::POST;
-	  os << "     el   = " << azel(1) *  180.0/C::pi<< " deg" << LogIO::POST;
-	  os << "     ha   = " << ha1 << " hours" << LogIO::POST;
+//	  Double ha1 = msd.hourAngle() *  180.0/C::pi / 15.0;
+//	  os << "Starting conditions for antenna 1: " << LogIO::DEBUG1;
+//	  os << "     time = " << formatTime(Time) << LogIO::DEBUG1;
+//	  os << "     scan = " << scan+1 << LogIO::DEBUG1;
+//	  os << "     az   = " << azel(0) *  180.0/C::pi << " deg" << LogIO::DEBUG1;
+//	  os << "     el   = " << azel(1) *  180.0/C::pi<< " deg" << LogIO::DEBUG1;
+//	  os << "     ha   = " << ha1 << " hours" << LogIO::DEBUG1;
 	}
     }    
 
@@ -1282,19 +1557,20 @@ void NewMSSimulator::observe(const String& sourceName,
     msd.setAntenna(0);
     Vector<Double> azel=msd.azel().getAngle("rad").getValue("rad");
 
-    Double ha1 = msd.hourAngle() *  180.0/C::pi / 15.0;
-    os << "Stopping conditions for antenna 1: " << LogIO::POST;
-    os << "     time = " << formatTime(Time) << LogIO::POST;
-    os << "     scan = " << scan+1 << LogIO::POST;
-    os << "     az   = " << azel(0) *  180.0/C::pi << " deg" << LogIO::POST;
-    os << "     el   = " << azel(1) *  180.0/C::pi << " deg" << LogIO::POST;
-    os << "     ha   = " << ha1 << " hours" << LogIO::POST;
+// sadly, messages from Core don't get filtered very well by casapy.
+//    Double ha1 = msd.hourAngle() *  180.0/C::pi / 15.0;
+//    os << "Stopping conditions for antenna 1: " << LogIO::DEBUG1;
+//    os << "     time = " << formatTime(Time) << LogIO::DEBUG1;
+//    os << "     scan = " << scan+1 << LogIO::DEBUG1;
+//    os << "     az   = " << azel(0) *  180.0/C::pi << " deg" << LogIO::DEBUG1;
+//    os << "     el   = " << azel(1) *  180.0/C::pi << " deg" << LogIO::DEBUG1;
+//    os << "     ha   = " << ha1 << " hours" << LogIO::DEBUG1;
   }
   
-  os << (row+1) << " visibilities simulated " << LogIO::POST;
-  os << nShadowed << " visibilities flagged due to shadowing " << LogIO::POST;
-  os << nSubElevation << " visibilities flagged due to elevation limit of " << 
-    elevationLimit_p.getValue("deg") << " degrees " << LogIO::POST;
+//  os << (row+1) << " visibilities simulated " << LogIO::DEBUG1;
+//  os << nShadowed << " visibilities flagged due to shadowing " << LogIO::DEBUG1;
+//  os << nSubElevation << " visibilities flagged due to elevation limit of " << 
+//    elevationLimit_p.getValue("deg") << " degrees " << endl << LogIO::DEBUG1;
   
 };
 
@@ -1360,6 +1636,52 @@ String NewMSSimulator::formatTime(const Double time) {
   MVTime mvtime(Quantity(time, "s"));
   return mvtime.string(MVTime::DMY,7);
 }
+
+Bool NewMSSimulator::calcAntUVW(MEpoch& epoch, MDirection& refdir, 
+				      Matrix<Double>& uvwAnt){
+
+  MSColumns msc(*ms_p);
+ // Lets define a Measframe with the telescope nominal position
+  MPosition obsPos;
+  if(!MeasTable::Observatory(obsPos, telescope_p)){
+    //not a known observatory then lets use antenna(0) position...as ref pos
+    //does not matter really as the difference will make the baseline
+    obsPos=msc.antenna().positionMeas()(0);    
+  }
+
+  MVPosition basePos=obsPos.getValue();
+  MeasFrame measFrame(obsPos);
+  measFrame.set(epoch);
+  measFrame.set(refdir);
+  MVBaseline mvbl;
+  MBaseline basMeas;
+  MBaseline::Ref basref(MBaseline::ITRF, measFrame);
+  basMeas.set(mvbl, basref);
+  basMeas.getRefPtr()->set(measFrame);
+  // going to convert from ITRF vector to J2000 baseline vector I guess !
+  if(refdir.getRef().getType() != MDirection::J2000)
+    throw(AipsError("Ref direction is not in  J2000 "));
+
+  Int nAnt=msc.antenna().nrow();
+  uvwAnt.resize(3,nAnt);
+  MBaseline::Convert elconv(basMeas, MBaseline::Ref(MBaseline::J2000));
+  Muvw::Convert uvwconv(Muvw(), Muvw::Ref(Muvw::J2000, measFrame));
+  for(Int k=0; k< nAnt; ++k){
+    MPosition antpos=msc.antenna().positionMeas()(k);
+ 
+    MVBaseline mvblA(obsPos.getValue(), antpos.getValue());
+    basMeas.set(mvblA, basref);
+    MBaseline bas2000 =  elconv(basMeas);
+    MVuvw uvw2000 (bas2000.getValue(), refdir.getValue());
+    const Vector<double>& xyz = uvw2000.getValue();
+    uvwAnt.column(k)=xyz;
+  }
+
+  return True;
+
+}
+
+
 
 } //# NAMESPACE CASA - END
 

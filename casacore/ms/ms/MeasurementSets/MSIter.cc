@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSIter.cc 20749 2009-09-30 14:24:05Z gervandiepen $
 
 #include <ms/MeasurementSets/MSIter.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -97,7 +97,7 @@ Bool MSIter::isSubSet (const Vector<uInt>& r1, const Vector<uInt>& r2) {
   const uInt* p2=r2.getStorage(freeR2);
   Int i,j;
   for (i=0,j=0; i<n1 && j<n2; i++) {
-    while (p1[i]!=p2[j++] && j<n2);
+    while (p1[i]!=p2[j++] && j<n2) {}
   }
   Bool ok=(j<n2 || (i==n1 && p1[n1-1]==p2[n2-1]));
   r1.freeStorage(p1,freeR1);
@@ -219,7 +219,7 @@ void MSIter::construct(const Block<Int>& sortColumns,
 	!allEQ(bms_p[i].keywordSet().asArrayString("SORT_COLUMNS"),
 	       Vector<String>(columns))) {
       // if not, sort and store it (if possible)
-      store=bms_p[i].isWritable();
+      store=(bms_p[i].isWritable() && (bms_p[i].tableType() != Table::Memory));
     } else {
       sorted = bms_p[i].keywordSet().asTable("SORTED_TABLE");
       // if sorted table is smaller it can't be useful, remake it
@@ -308,6 +308,18 @@ MSIter::operator=(const MSIter& other)
   interval_p=other.interval_p;
   //  origin();
   return *this;
+}
+
+
+const MS& MSIter::ms(const uInt id) const {
+
+  if(id < bms_p.nelements()){
+    return bms_p[id];
+  }
+  else{
+    return bms_p[curMS_p];
+  }
+  
 }
 
 void MSIter::setInterval(Double timeInterval)
