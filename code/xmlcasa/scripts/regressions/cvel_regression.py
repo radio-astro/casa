@@ -97,6 +97,13 @@ cvel_imstats = { 'frequency': copy.deepcopy(mode_imstats),
                  'channel': copy.deepcopy(mode_imstats) }
 cleanonly_imstats = copy.deepcopy(cvel_imstats)
 
+
+# clean needs write access to the input MS.
+# For the clean-only path, make a copy of the input MS
+os.system('cp -RL '+dataset_name+' inputms_local_copy.ms')
+clean_inputvis_local_copy = 'inputms_local_copy.ms'
+
+
 # loop over all possible output reference frames
 
 # these are all possible frames: 
@@ -164,7 +171,7 @@ for frame in frames_to_do:
     
     casalog.post(iname, 'INFO')
     
-    clean(vis=dataset_name,
+    clean(vis=clean_inputvis_local_copy,
           imagename=iname,
           field='', spw='',
           cell=[0.01,0.01],imsize=[256,256],
@@ -205,7 +212,7 @@ for frame in frames_to_do:
     
     casalog.post(outvis, 'INFO')
     
-    cvel(vis='ANTEN_sort_hann_for_cvel_reg.ms',outputvis=outvis,
+    cvel(vis=dataset_name,outputvis=outvis,
          mode='velocity',nchan=49,
          start=vradstart,
          width=vradwidth,
@@ -249,7 +256,7 @@ for frame in frames_to_do:
     
     casalog.post(iname, 'INFO')
     
-    clean(vis=dataset_name,
+    clean(vis=clean_inputvis_local_copy,
           imagename=iname,
           field='', spw='',
           cell=[0.01,0.01],imsize=[256,256],
@@ -336,7 +343,7 @@ for frame in frames_to_do:
     
     casalog.post(iname, 'INFO')
     
-    clean(vis=dataset_name,
+    clean(vis=clean_inputvis_local_copy,
           imagename=iname,
           field='', spw='',
           cell=[0.01,0.01],imsize=[256,256],
