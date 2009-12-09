@@ -110,7 +110,6 @@ namespace atm {
     vv_N_O3LinesPtr_.reserve(a.v_chanFreq_.size());
     vv_N_COLinesPtr_.reserve(a.v_chanFreq_.size());
     vv_N_N2OLinesPtr_.reserve(a.v_chanFreq_.size());
-
     
 
     vector<complex<double> >* v_N_H2OLinesPtr;     
@@ -136,7 +135,6 @@ namespace atm {
       for(unsigned int n=0; n<numLayer_; n++){
 	
 	// cout << "numLayer_=" << nc << " " << n << endl; // COMMENTED OUT BY JUAN MAY/16/2005
-	
 	v_N_H2OLinesPtr->push_back(a.vv_N_H2OLinesPtr_[nc]->at(n));
 	v_N_H2OContPtr->push_back(a.vv_N_H2OContPtr_[nc]->at(n));
 	v_N_O2LinesPtr->push_back(a.vv_N_O2LinesPtr_[nc]->at(n));
@@ -165,7 +163,8 @@ namespace atm {
   
   RefractiveIndexProfile::~RefractiveIndexProfile()
   {
-    void rmRefractiveIndexProfile();
+    //void rmRefractiveIndexProfile();
+    rmRefractiveIndexProfile();
   }
   
   void RefractiveIndexProfile::rmRefractiveIndexProfile(){
@@ -360,6 +359,8 @@ namespace atm {
 	  
 	  v_N_H2OLinesPtr->push_back(atm.getRefractivity_h2o(v_layerTemperature_[j],v_layerPressure_[j],wvt,nu));
 	  
+	} else {
+	  v_N_H2OLinesPtr->push_back(0.0);
 	}
 	
 
@@ -375,18 +376,24 @@ namespace atm {
 	  //			atm.getMeaningfulSpecificRefractivity_16o18o16o(v_layerTemperature_[j],v_layerPressure_[j],nu)*(abun_18o))
 	  //		       *abun_O3*1e6/(1.0+3.0*(abun_18o+abun_17o)));  // m^-1
 
+	} else {
+	  v_N_O3LinesPtr->push_back(0.0);
 	}
 
 	
 	if(v_layerCO_[j]>0){
 	  abun_CO=v_layerCO_[j]*1E-6;  // in cm^-3
 	  v_N_COLinesPtr->push_back(atm.getMeaningfulSpecificRefractivity_co(v_layerTemperature_[j],v_layerPressure_[j],nu)*abun_CO*1e6);  // m^2 * m^-3 = m^-1
+	} else {
+	  v_N_COLinesPtr->push_back(0.0);
 	}
 	
 
 	if(v_layerN2O_[j]>0){        
 	  abun_N2O=v_layerN2O_[j]*1E-6;
 	  v_N_N2OLinesPtr->push_back(atm.getMeaningfulSpecificRefractivity_n2o(v_layerTemperature_[j],v_layerPressure_[j],nu)*abun_N2O*1e6);  // m^2 * m^-3 = m^-1
+	} else {
+	  v_N_N2OLinesPtr->push_back(0.0);
 	}
 
 
