@@ -59,8 +59,6 @@ class image
 
     bool fromfits(const std::string& outfile = "", const std::string& infile = "", const int whichrep = 0, const int whichhdu = 0, const bool zeroblanks = false, const bool overwrite = false);
 
-    bool fromforeign(const std::string& outfile = "", const std::string& infile = "", const std::string& format = "miriad", const bool overwrite = false);
-
     bool fromimage(const std::string& outfile = "", const std::string& infile = "", const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const bool dropdeg = false, const bool overwrite = false);
 
     bool fromshape(const std::string& outfile = "", const std::vector<int>& shape = std::vector<int> (1, 0), const ::casac::record& csys = ::casac::initialize_record(""), const bool linear = false, const bool overwrite = false, const bool log = true);
@@ -93,17 +91,17 @@ class image
 
     ::casac::record* coordmeasures(const std::vector<double>& pixel = std::vector<double> (1, -1));
 
-    ::casac::variant* decompose(const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const bool simple = false, const double threshold = -1, const int ncontour = 11, const int minrange = 1, const int naxis = 2, const bool fit = true, const double maxrms = -1, const int maxretry = -1, const int maxiter = 256, const double convcriteria = 0.0001);
+    ::casac::record* decompose(const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const bool simple = false, const double threshold = -1, const int ncontour = 11, const int minrange = 1, const int naxis = 2, const bool fit = true, const double maxrms = -1, const int maxretry = -1, const int maxiter = 256, const double convcriteria = 0.0001);
 
     ::casac::record* deconvolvecomponentlist(const ::casac::record& complist);
 
     ::casac::record* deconvolvefrombeam(const ::casac::variant& source = ::casac::initialize_variant(""), const ::casac::variant& beam = ::casac::initialize_variant(""));
 
-    bool remove(const bool done = false);
+  bool remove(const bool done = false, const bool verbose = true);
 
     bool removefile(const std::string& file);
 
-    bool done(const bool remove = false);
+    bool done(const bool remove = false, const bool verbose = true);
 
     bool fft(const std::string& real = "", const std::string& imag = "", const std::string& amp = "", const std::string& phase = "", const std::vector<int>& axes = std::vector<int> (1, -1), const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""));
 
@@ -115,7 +113,9 @@ class image
 
     ::casac::image * fitpolynomial(const std::string& residfile = "", const std::string& fitfile = "", const std::string& sigmafile = "", const int axis = -1, const int order = 0, const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const bool overwrite = false);
 
-    ::casac::record* fitsky(const ::casac::record& region = ::casac::initialize_record(""), const ::casac::variant& mask = ::casac::initialize_variant(""), const std::vector<std::string>& models = std::vector<std::string> (1, "gaussian"), const ::casac::record& estimate = ::casac::initialize_record(""), const std::vector<std::string>& fixedparams = std::vector<std::string> (1, ""), const std::vector<double>& includepix = std::vector<double> (1, -1), const std::vector<double>& excludepix = std::vector<double> (1, -1), const bool fit = true, const bool deconvolve = false, const bool list = true);
+    ::casac::record* fitsky(const ::casac::record& region = ::casac::initialize_record(""), const int chan = 0, const std::string& stokes = "I", const ::casac::variant& mask = ::casac::initialize_variant(""), const std::vector<std::string>& models = std::vector<std::string> (1, "gaussian"), const ::casac::record& estimate = ::casac::initialize_record(""), const std::vector<std::string>& fixedparams = std::vector<std::string> (1, ""), const std::vector<double>& includepix = std::vector<double> (1, -1), const std::vector<double>& excludepix = std::vector<double> (1, -1), const bool fit = true, const bool deconvolve = false, const bool list = true);
+
+    ::casac::record* fitcomponents(const std::string& box = "", const ::casac::variant& region = ::casac::initialize_variant(""), const int chan = 0, const std::string& stokes = "I", const ::casac::variant& vmask = ::casac::initialize_variant(""), const std::vector<double>& in_includepix = std::vector<double> (1, -1), const std::vector<double>& in_excludepix = std::vector<double> (1, -1), const std::string& residual = "", const std::string& model = "", const std::string& estimates = "", const std::string& logfile = "", const bool append = true, const std::string& newestimates = "");
 
     bool fromrecord(const ::casac::record& record, const std::string& outfile = "");
 

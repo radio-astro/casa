@@ -3,7 +3,7 @@ import pdb
 from taskinit import *
 from cleanhelper import *
 
-def widefield(vis, imagename, outlierfile, field, spw, selectdata, timerange, uvrange, antenna, scan, mode, niter, gain, threshold, psfmode, ftmachine, facets, wprojplanes,multiscale, negcomponent, interactive, mask, nchan, start, width, imsize, cell, phasecenter, restfreq, stokes, weighting, robust, npixels, noise, cyclefactor, cyclespeedup, npercycle, uvtaper, outertaper, innertaper, restoringbeam):
+def widefield(vis, imagename, outlierfile, field, spw, selectdata, timerange, uvrange, antenna, scan, mode, niter, gain, threshold, psfmode, ftmachine, facets, wprojplanes,multiscale, negcomponent, interactive, mask, nchan, start, width, imsize, cell, phasecenter, restfreq, stokes, weighting, robust, npixels, noise, cyclefactor, cyclespeedup, npercycle, uvtaper, outertaper, innertaper, restoringbeam, calready):
 	"""Calculate a wide-field deconvolved image with selected algorithm:
 
 	"""
@@ -39,7 +39,7 @@ def widefield(vis, imagename, outlierfile, field, spw, selectdata, timerange, uv
 		if(multims):
 			imset=cleanhelper()
 		else:
-			imset=cleanhelper(im1, vis)
+			imset=cleanhelper(im1, vis, calready)
 #
 #                if(multims):
 #			visi=vis[len(vis)-1]
@@ -128,7 +128,8 @@ def widefield(vis, imagename, outlierfile, field, spw, selectdata, timerange, uv
 					 noise=noise, npixels=npixels,
 					 mosweight=False,
 					 innertaper=innertaper,
-					 outertaper=outertaper)
+					 outertaper=outertaper,
+						 calready=calready)
                 ############End of Data Selection
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'

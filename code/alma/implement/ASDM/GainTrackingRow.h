@@ -90,6 +90,21 @@ using namespace enumerations;
 	
 
 	
+#include "CPolarizationType.h"
+using namespace PolarizationTypeMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
 
 	
 
@@ -118,7 +133,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file GainTracking.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -126,11 +141,11 @@ namespace asdm {
 //class asdm::GainTrackingTable;
 
 
-// class asdm::SpectralWindowRow;
-class SpectralWindowRow;
-
 // class asdm::AntennaRow;
 class AntennaRow;
+
+// class asdm::SpectralWindowRow;
+class SpectralWindowRow;
 
 // class asdm::FeedRow;
 class FeedRow;
@@ -139,7 +154,7 @@ class FeedRow;
 /**
  * The GainTrackingRow class is a row of a GainTrackingTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class GainTrackingRow {
@@ -166,8 +181,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct GainTrackingRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (GainTrackingRowIDL x) throw(ConversionException);
+	void setFromIDL (GainTrackingRowIDL x) ;
 #endif
 	
 	/**
@@ -180,8 +196,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the GainTrackingTable to which the row built by deserialization will be parented.
+	  */
+	 static GainTrackingRow* fromBin(EndianISStream& eiss, GainTrackingTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -250,6 +280,339 @@ public:
 
 
 	
+	// ===> Attribute numLO
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numLO.
+ 	 * @return numLO as int
+ 	 */
+ 	int getNumLO() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numLO with the specified int.
+ 	 * @param numLO The int value to which numLO is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumLO (int numLO);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numReceptor
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
+ 	 */
+ 	int getNumReceptor() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumReceptor (int numReceptor);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute cableDelay
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get cableDelay.
+ 	 * @return cableDelay as vector<double >
+ 	 */
+ 	vector<double > getCableDelay() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set cableDelay with the specified vector<double >.
+ 	 * @param cableDelay The vector<double > value to which cableDelay is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCableDelay (vector<double > cableDelay);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute crossPolarizationDelay
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get crossPolarizationDelay.
+ 	 * @return crossPolarizationDelay as double
+ 	 */
+ 	double getCrossPolarizationDelay() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set crossPolarizationDelay with the specified double.
+ 	 * @param crossPolarizationDelay The double value to which crossPolarizationDelay is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCrossPolarizationDelay (double crossPolarizationDelay);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute loPropagationDelay
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get loPropagationDelay.
+ 	 * @return loPropagationDelay as vector<double >
+ 	 */
+ 	vector<double > getLoPropagationDelay() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set loPropagationDelay with the specified vector<double >.
+ 	 * @param loPropagationDelay The vector<double > value to which loPropagationDelay is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setLoPropagationDelay (vector<double > loPropagationDelay);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute polarizationTypes
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get polarizationTypes.
+ 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
+ 	 */
+ 	vector<PolarizationTypeMod::PolarizationType > getPolarizationTypes() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute receiverDelay
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get receiverDelay.
+ 	 * @return receiverDelay as vector<double >
+ 	 */
+ 	vector<double > getReceiverDelay() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set receiverDelay with the specified vector<double >.
+ 	 * @param receiverDelay The vector<double > value to which receiverDelay is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setReceiverDelay (vector<double > receiverDelay);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute delayOffset, which is optional
+	
+	
+	
+	/**
+	 * The attribute delayOffset is optional. Return true if this attribute exists.
+	 * @return true if and only if the delayOffset attribute exists. 
+	 */
+	bool isDelayOffsetExists() const;
+	
+
+	
+ 	/**
+ 	 * Get delayOffset, which is optional.
+ 	 * @return delayOffset as double
+ 	 * @throws IllegalAccessException If delayOffset does not exist.
+ 	 */
+ 	double getDelayOffset() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set delayOffset with the specified double.
+ 	 * @param delayOffset The double value to which delayOffset is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setDelayOffset (double delayOffset);
+		
+	
+	
+	
+	/**
+	 * Mark delayOffset, which is an optional field, as non-existent.
+	 */
+	void clearDelayOffset ();
+	
+
+
+	
+	// ===> Attribute freqOffset, which is optional
+	
+	
+	
+	/**
+	 * The attribute freqOffset is optional. Return true if this attribute exists.
+	 * @return true if and only if the freqOffset attribute exists. 
+	 */
+	bool isFreqOffsetExists() const;
+	
+
+	
+ 	/**
+ 	 * Get freqOffset, which is optional.
+ 	 * @return freqOffset as vector<Frequency >
+ 	 * @throws IllegalAccessException If freqOffset does not exist.
+ 	 */
+ 	vector<Frequency > getFreqOffset() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set freqOffset with the specified vector<Frequency >.
+ 	 * @param freqOffset The vector<Frequency > value to which freqOffset is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setFreqOffset (vector<Frequency > freqOffset);
+		
+	
+	
+	
+	/**
+	 * Mark freqOffset, which is an optional field, as non-existent.
+	 */
+	void clearFreqOffset ();
+	
+
+
+	
+	// ===> Attribute phaseOffset, which is optional
+	
+	
+	
+	/**
+	 * The attribute phaseOffset is optional. Return true if this attribute exists.
+	 * @return true if and only if the phaseOffset attribute exists. 
+	 */
+	bool isPhaseOffsetExists() const;
+	
+
+	
+ 	/**
+ 	 * Get phaseOffset, which is optional.
+ 	 * @return phaseOffset as vector<Angle >
+ 	 * @throws IllegalAccessException If phaseOffset does not exist.
+ 	 */
+ 	vector<Angle > getPhaseOffset() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set phaseOffset with the specified vector<Angle >.
+ 	 * @param phaseOffset The vector<Angle > value to which phaseOffset is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setPhaseOffset (vector<Angle > phaseOffset);
+		
+	
+	
+	
+	/**
+	 * Mark phaseOffset, which is an optional field, as non-existent.
+	 */
+	void clearPhaseOffset ();
+	
+
+
+	
 	// ===> Attribute samplingLevel, which is optional
 	
 	
@@ -267,7 +630,7 @@ public:
  	 * @return samplingLevel as float
  	 * @throws IllegalAccessException If samplingLevel does not exist.
  	 */
- 	float getSamplingLevel() const throw(IllegalAccessException);
+ 	float getSamplingLevel() const;
 	
  
  	
@@ -291,223 +654,125 @@ public:
 
 
 	
-	// ===> Attribute delayoff1
-	
-	
-	
-
-	
- 	/**
- 	 * Get delayoff1.
- 	 * @return delayoff1 as Interval
- 	 */
- 	Interval getDelayoff1() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set delayoff1 with the specified Interval.
- 	 * @param delayoff1 The Interval value to which delayoff1 is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setDelayoff1 (Interval delayoff1);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute delayoff2
-	
-	
-	
-
-	
- 	/**
- 	 * Get delayoff2.
- 	 * @return delayoff2 as Interval
- 	 */
- 	Interval getDelayoff2() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set delayoff2 with the specified Interval.
- 	 * @param delayoff2 The Interval value to which delayoff2 is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setDelayoff2 (Interval delayoff2);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute phaseoff1
-	
-	
-	
-
-	
- 	/**
- 	 * Get phaseoff1.
- 	 * @return phaseoff1 as Angle
- 	 */
- 	Angle getPhaseoff1() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set phaseoff1 with the specified Angle.
- 	 * @param phaseoff1 The Angle value to which phaseoff1 is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setPhaseoff1 (Angle phaseoff1);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute phaseoff2
-	
-	
-	
-
-	
- 	/**
- 	 * Get phaseoff2.
- 	 * @return phaseoff2 as Angle
- 	 */
- 	Angle getPhaseoff2() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set phaseoff2 with the specified Angle.
- 	 * @param phaseoff2 The Angle value to which phaseoff2 is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setPhaseoff2 (Angle phaseoff2);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute rateoff1
-	
-	
-	
-
-	
- 	/**
- 	 * Get rateoff1.
- 	 * @return rateoff1 as AngularRate
- 	 */
- 	AngularRate getRateoff1() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set rateoff1 with the specified AngularRate.
- 	 * @param rateoff1 The AngularRate value to which rateoff1 is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setRateoff1 (AngularRate rateoff1);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute rateoff2
-	
-	
-	
-
-	
- 	/**
- 	 * Get rateoff2.
- 	 * @return rateoff2 as AngularRate
- 	 */
- 	AngularRate getRateoff2() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set rateoff2 with the specified AngularRate.
- 	 * @param rateoff2 The AngularRate value to which rateoff2 is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setRateoff2 (AngularRate rateoff2);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute phaseRefOffset, which is optional
+	// ===> Attribute numAttFreq, which is optional
 	
 	
 	
 	/**
-	 * The attribute phaseRefOffset is optional. Return true if this attribute exists.
-	 * @return true if and only if the phaseRefOffset attribute exists. 
+	 * The attribute numAttFreq is optional. Return true if this attribute exists.
+	 * @return true if and only if the numAttFreq attribute exists. 
 	 */
-	bool isPhaseRefOffsetExists() const;
+	bool isNumAttFreqExists() const;
 	
 
 	
  	/**
- 	 * Get phaseRefOffset, which is optional.
- 	 * @return phaseRefOffset as Angle
- 	 * @throws IllegalAccessException If phaseRefOffset does not exist.
+ 	 * Get numAttFreq, which is optional.
+ 	 * @return numAttFreq as int
+ 	 * @throws IllegalAccessException If numAttFreq does not exist.
  	 */
- 	Angle getPhaseRefOffset() const throw(IllegalAccessException);
+ 	int getNumAttFreq() const;
 	
  
  	
  	
  	/**
- 	 * Set phaseRefOffset with the specified Angle.
- 	 * @param phaseRefOffset The Angle value to which phaseRefOffset is to be set.
+ 	 * Set numAttFreq with the specified int.
+ 	 * @param numAttFreq The int value to which numAttFreq is to be set.
  	 
  		
  	 */
- 	void setPhaseRefOffset (Angle phaseRefOffset);
+ 	void setNumAttFreq (int numAttFreq);
 		
 	
 	
 	
 	/**
-	 * Mark phaseRefOffset, which is an optional field, as non-existent.
+	 * Mark numAttFreq, which is an optional field, as non-existent.
 	 */
-	void clearPhaseRefOffset ();
+	void clearNumAttFreq ();
+	
+
+
+	
+	// ===> Attribute attFreq, which is optional
+	
+	
+	
+	/**
+	 * The attribute attFreq is optional. Return true if this attribute exists.
+	 * @return true if and only if the attFreq attribute exists. 
+	 */
+	bool isAttFreqExists() const;
+	
+
+	
+ 	/**
+ 	 * Get attFreq, which is optional.
+ 	 * @return attFreq as vector<double >
+ 	 * @throws IllegalAccessException If attFreq does not exist.
+ 	 */
+ 	vector<double > getAttFreq() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set attFreq with the specified vector<double >.
+ 	 * @param attFreq The vector<double > value to which attFreq is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setAttFreq (vector<double > attFreq);
+		
+	
+	
+	
+	/**
+	 * Mark attFreq, which is an optional field, as non-existent.
+	 */
+	void clearAttFreq ();
+	
+
+
+	
+	// ===> Attribute attSpectrum, which is optional
+	
+	
+	
+	/**
+	 * The attribute attSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the attSpectrum attribute exists. 
+	 */
+	bool isAttSpectrumExists() const;
+	
+
+	
+ 	/**
+ 	 * Get attSpectrum, which is optional.
+ 	 * @return attSpectrum as vector<Complex >
+ 	 * @throws IllegalAccessException If attSpectrum does not exist.
+ 	 */
+ 	vector<Complex > getAttSpectrum() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set attSpectrum with the specified vector<Complex >.
+ 	 * @param attSpectrum The vector<Complex > value to which attSpectrum is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setAttSpectrum (vector<Complex > attSpectrum);
+		
+	
+	
+	
+	/**
+	 * Mark attSpectrum, which is an optional field, as non-existent.
+	 */
+	void clearAttSpectrum ();
 	
 
 
@@ -620,12 +885,12 @@ public:
 	
 		
 	/**
-	 * spectralWindowId pointer to the row in the SpectralWindow table having SpectralWindow.spectralWindowId == spectralWindowId
-	 * @return a SpectralWindowRow*
+	 * antennaId pointer to the row in the Antenna table having Antenna.antennaId == antennaId
+	 * @return a AntennaRow*
 	 * 
 	 
 	 */
-	 SpectralWindowRow* getSpectralWindowUsingSpectralWindowId();
+	 AntennaRow* getAntennaUsingAntennaId();
 	 
 
 	
@@ -635,12 +900,12 @@ public:
 	
 		
 	/**
-	 * antennaId pointer to the row in the Antenna table having Antenna.antennaId == antennaId
-	 * @return a AntennaRow*
+	 * spectralWindowId pointer to the row in the SpectralWindow table having SpectralWindow.spectralWindowId == spectralWindowId
+	 * @return a SpectralWindowRow*
 	 * 
 	 
 	 */
-	 AntennaRow* getAntennaUsingAntennaId();
+	 SpectralWindowRow* getSpectralWindowUsingSpectralWindowId();
 	 
 
 	
@@ -669,12 +934,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this GainTrackingRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, float attenuator, Interval delayoff1, Interval delayoff2, Angle phaseoff1, Angle phaseoff2, AngularRate rateoff1, AngularRate rateoff2);
+	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, float attenuator, int numLO, int numReceptor, vector<double > cableDelay, double crossPolarizationDelay, vector<double > loPropagationDelay, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > receiverDelay);
 	
 	
 
 	
-	bool compareRequiredValue(float attenuator, Interval delayoff1, Interval delayoff2, Angle phaseoff1, Angle phaseoff2, AngularRate rateoff1, AngularRate rateoff2); 
+	bool compareRequiredValue(float attenuator, int numLO, int numReceptor, vector<double > cableDelay, double crossPolarizationDelay, vector<double > loPropagationDelay, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > receiverDelay); 
 		 
 	
 	/**
@@ -757,6 +1022,122 @@ private:
  	
 
 	
+	// ===> Attribute numLO
+	
+	
+
+	int numLO;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numReceptor
+	
+	
+
+	int numReceptor;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute cableDelay
+	
+	
+
+	vector<double > cableDelay;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute crossPolarizationDelay
+	
+	
+
+	double crossPolarizationDelay;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute loPropagationDelay
+	
+	
+
+	vector<double > loPropagationDelay;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute polarizationTypes
+	
+	
+
+	vector<PolarizationTypeMod::PolarizationType > polarizationTypes;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute receiverDelay
+	
+	
+
+	vector<double > receiverDelay;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute delayOffset, which is optional
+	
+	
+	bool delayOffsetExists;
+	
+
+	double delayOffset;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute freqOffset, which is optional
+	
+	
+	bool freqOffsetExists;
+	
+
+	vector<Frequency > freqOffset;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute phaseOffset, which is optional
+	
+	
+	bool phaseOffsetExists;
+	
+
+	vector<Angle > phaseOffset;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute samplingLevel, which is optional
 	
 	
@@ -770,79 +1151,39 @@ private:
  	
 
 	
-	// ===> Attribute delayoff1
+	// ===> Attribute numAttFreq, which is optional
 	
 	
-
-	Interval delayoff1;
-
-	
-	
- 	
-
-	
-	// ===> Attribute delayoff2
-	
+	bool numAttFreqExists;
 	
 
-	Interval delayoff2;
+	int numAttFreq;
 
 	
 	
  	
 
 	
-	// ===> Attribute phaseoff1
+	// ===> Attribute attFreq, which is optional
 	
 	
-
-	Angle phaseoff1;
-
-	
-	
- 	
-
-	
-	// ===> Attribute phaseoff2
-	
+	bool attFreqExists;
 	
 
-	Angle phaseoff2;
+	vector<double > attFreq;
 
 	
 	
  	
 
 	
-	// ===> Attribute rateoff1
+	// ===> Attribute attSpectrum, which is optional
 	
 	
-
-	AngularRate rateoff1;
-
-	
-	
- 	
-
-	
-	// ===> Attribute rateoff2
-	
+	bool attSpectrumExists;
 	
 
-	AngularRate rateoff2;
-
-	
-	
- 	
-
-	
-	// ===> Attribute phaseRefOffset, which is optional
-	
-	
-	bool phaseRefOffsetExists;
-	
-
-	Angle phaseRefOffset;
+	vector<Complex > attSpectrum;
 
 	
 	

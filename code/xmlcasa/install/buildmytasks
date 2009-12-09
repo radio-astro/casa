@@ -80,10 +80,18 @@ do
    verbose "generating `basename $xmlfile` task ... "
    xmlgenpy $xmlfile
    ${SAXON} ${xmlfile}.xml ${CASAROOT}/share/xml/casa2tsum2.xsl >> ${INFOFILE}
-   sed -i .bak -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}.py
+   mv ${xmlfile}.py ${xmlfile}.py.bak
+   sed -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}.py.bak > ${xmlfile}.py
+   mv ${xmlfile}_cli.py ${xmlfile}_cli.py.bak
+   sed -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}_cli.py.bak > ${xmlfile}_cli.py
+   if [ -e ${xmlfile}_pg.py ] ; then
+      mv ${xmlfile}_pg.py ${xmlfile}_pg.py.bak
+      sed -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}_pg.py.bak > ${xmlfile}_pg.y
+   fi
    if [[ "${INSTALLDIR}" != "${WORKDIR}" ]]; then
       mv ${xmlfile}.py ${INSTALLDIR}
       mv ${xmlfile}_cli.py ${INSTALLDIR}
+      mv ${xmlfile}_pg.py ${INSTALLDIR}
       cp ${xmlfile}.xml ${INSTALLDIR}
       cp task_${xmlfile}.py ${INSTALLDIR}
    fi

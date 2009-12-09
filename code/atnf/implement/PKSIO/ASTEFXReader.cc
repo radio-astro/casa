@@ -43,7 +43,7 @@ ASTEFXReader::ASTEFXReader( string name )
   : ASTEReader( name )
 {
   // DEBUG
-  cout << "ASTEFXReader::ASTEFXReader()" << endl ;
+  //cout << "ASTEFXReader::ASTEFXReader()" << endl ;
   //
 }
 
@@ -55,6 +55,8 @@ ASTEFXReader::~ASTEFXReader()
 // Read data header
 Int ASTEFXReader::read() 
 {
+  LogIO os( LogOrigin( "ASTEFXReader", "read()", WHERE ) ) ;
+
   int status = 0 ;
 
   // create ASTEFXDataset
@@ -64,7 +66,8 @@ Int ASTEFXReader::read()
   status = dataset_->fillHeader() ;
 
   if ( status != 0 ) {
-    cerr << "Failed to fill data header." << endl ;
+    //cerr << "Failed to fill data header." << endl ;
+    os << LogIO::SEVERE << "Failed to fill data header." << LogIO::EXCEPTION ;
   }
 
   return status ;

@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdaverage -->
 
-<task type="function" name="sdaverage" startup="false">
+<task type="function" name="sdaverage" startup="false" category="single dish">
 
   <shortdescription>ASAP SD task: do data selection, calibration, and averaging</shortdescription>
 
@@ -146,6 +146,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>0.0</value>
     </param>
 
+    <param type="bool" name="verify">
+            <description>verify the results of calibration</description>
+            <value>False</value>
+    </param>
+
     <param type="string" name="outfile">
 	    <description>output file name</description>
 	    <value></value>
@@ -222,21 +227,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 options: 'K','Jy',''
                 default: '' (keep current fluxunit)
                 WARNING: For GBT data, see description below.
+
             &gt;&gt;&gt; fluxunit expandable parameter
                  telescopeparm -- the telescope characteristics
-                        options: (str) name or (list) list of gain info
-                        default: '' (none set)
-                        example: if telescopeparm='', it tries to get the telescope
-                                 name from the data.
-                                 Full antenna parameters (diameter,ap.eff.) known
-                                 to ASAP are
-                                 'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
-                                 'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
-                                 to 'K' first then convert to a new fluxunit.
-                                 telescopeparm=[104.9,0.43] diameter(m), ap.eff.
-                                 telescopeparm=[0.743] gain in Jy/K
-                                 telescopeparm='FIX' to change default fluxunit
-                                 see description below
+                         options: (str) name or (list) list of gain info
+                         default: '' (none set)
+                         example: if telescopeparm='', it tries to get the telescope
+                                  name from the data.
+                                  Full antenna parameters (diameter,ap.eff.) known
+                                  to ASAP are
+                                  'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
+                                  'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
+                                  to 'K' first then convert to a new fluxunit.
+                                  telescopeparm=[104.9,0.43] diameter(m), ap.eff.
+                                  telescopeparm=[0.743] gain in Jy/K
+                                  telescopeparm='FIX' to change default fluxunit
+                                  see description below
 
         specunit -- units for spectral axis
                 options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
@@ -290,7 +296,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 options: (bool) True,False
                 default: False
                 example: if True, this happens after calibration
-                &gt;&gt;&gt;timeaverage expandable parameter
+
+            &gt;&gt;&gt;timeaverage expandable parameter
                  tweight -- weighting for time average
                          options: 'none' 
                                   'var'   (1/var(spec) weighted)
@@ -299,21 +306,32 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                   'tintsys'  (Tint/Tsys**2)
                                   'median'  ( median averaging)
                          default: 'none'
+
                  averageall -- average multi-resolution spectra
                                spectra are averaged by referring 
                                their frequency coverage
                          default: False
+
         polaverage -- average polarizations
                 options: (bool) True,False
                 default: False
-                &gt;&gt;&gt;polaverage expandable parameter
+
+            &gt;&gt;&gt;polaverage expandable parameter
                  pweight -- weighting for polarization average
                          options: 'none'
                                   'var'  (1/var(spec) weighted)
                                   'tsys' (1/Tsys**2 weighted)
                          default: 'none'
+
         tau -- atmospheric optical depth
                 default: 0.0 (no correction)
+        verify -- verify the results of calibration. Only effective if 
+                  calmode is not 'none'.
+                options: (bool) True,False
+                default: False
+                WARNING: Currently this just asks whether you accept
+                         the displayed calibration and if not, continues
+                         without doing any calibration. 
         outfile -- Name of output file
                 default: '' (&lt;sdfile&gt;_cal)
         outform -- format of output file
@@ -339,12 +357,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         DESCRIPTION:
 
         Task sdaverage performs data selection, calibration for single-dish
-        spectra.  By setting calmode='none'
-        one can run sdaverage on already calibrated data, for further selection
-        , averaging and atmospheric optical depth correction.
+        spectra.  By setting calmode='none', one can run sdaverage on already 
+        calibrated data, for further selection , averaging and atmospheric 
+        optical depth correction.
 
         If you give multiple IFs in iflist, then your scantable will have
-        multiple IFs.  This can be handled, but there can be funny interactions
+        multiple IFs. This can be handled, but there can be funny interactions
         later on.  We recommend you split each IF out into separate files
         by re-running sdaverage with each IF in turn.
 

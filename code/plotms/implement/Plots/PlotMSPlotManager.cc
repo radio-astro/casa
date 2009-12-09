@@ -26,7 +26,10 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSPlotManager.h>
 
+#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Plots/PlotMSMultiPlot.h>
+#include <plotms/Plots/PlotMSSinglePlot.h>
 
 namespace casa {
 
@@ -63,6 +66,16 @@ void PlotMSPlotManager::addWatcher(PlotMSPlotManagerWatcher* watcher) {
     itsWatchers_.push_back(watcher);
 }
 
+void PlotMSPlotManager::removeWatcher(PlotMSPlotManagerWatcher* watcher) {
+    if(watcher == NULL) return;
+    for(unsigned int i = 0; i < itsWatchers_.size(); i++) {
+        if(itsWatchers_[i] == watcher) {
+            itsWatchers_.erase(itsWatchers_.begin() + i);
+            break;
+        }
+    }
+}
+
 unsigned int PlotMSPlotManager::numPlots() const { return itsPlots_.size(); }
 
 const vector<PlotMSPlot*>& PlotMSPlotManager::plots() const {
@@ -86,20 +99,19 @@ PlotMSPlotParameters* PlotMSPlotManager::plotParameters(unsigned int index) {
     else return itsPlotParameters_[index];
 }
 
-PlotMSSinglePlotParameters*
-PlotMSPlotManager::singlePlotParameters(unsigned int index) {
-    if(index >= itsPlotParameters_.size()) return NULL;
-    else return dynamic_cast<PlotMSSinglePlotParameters*>(
-                itsPlotParameters_[index]);
+PlotMSSinglePlot* PlotMSPlotManager::addSinglePlot(
+        const PlotMSPlotParameters* params) {
+    if(itsParent_ == NULL) return NULL;
+    PlotMSSinglePlot* plot = new PlotMSSinglePlot(itsParent_);
+    addPlot(plot, params);
+    return plot;
 }
 
-PlotMSSinglePlot* PlotMSPlotManager::addSinglePlot(PlotMS* parent,
-        const PlotMSSinglePlotParameters* params) {
-    PlotMSSinglePlot* plot = new PlotMSSinglePlot(parent);
-    if(params != NULL) plot->singleParameters() = *params;
-    itsPlots_.push_back(plot);
-    itsPlotParameters_.push_back(&plot->parameters());
-    addPlotToPlotter(plot);
+PlotMSMultiPlot* PlotMSPlotManager::addMultiPlot(
+        const PlotMSPlotParameters* params) {
+    if(itsParent_ == NULL) return NULL;
+    PlotMSMultiPlot* plot = new PlotMSMultiPlot(itsParent_);
+    addPlot(plot, params);
     return plot;
 }
 
@@ -113,8 +125,10 @@ void PlotMSPlotManager::clearPlotsAndCanvases() {
     itsPlotParameters_.clear();
     itsPages_.clearPages();
     
-    for(unsigned int i = 0; i < plotsCopy.size(); i++)
+    for(unsigned int i = 0; i < plotsCopy.size(); i++) {
+        plotsCopy[i]->detachFromCanvases();
         delete plotsCopy[i];
+    }
     
     notifyWatchers();
 }
@@ -122,20 +136,19 @@ void PlotMSPlotManager::clearPlotsAndCanvases() {
 
 // Private Methods //
 
-void PlotMSPlotManager::addPlotToPlotter(PlotMSPlot* plot) {
-    if(plot == NULL) return;    
+void PlotMSPlotManager::addPlot(PlotMSPlot* plot,
+        const PlotMSPlotParameters* params) {
+    if(plot == NULL) return;
     
-    // Generate canvases.
-    vector<PlotCanvasPtr> canvases = plot->generateCanvases(itsPages_);
+    if(params != NULL) plot->parameters() = *params;
+    
+    itsPlots_.push_back(plot);
+    itsPlotParameters_.push_back(&plot->parameters());
+    
     itsPages_.setupCurrentPage();
     
-    // Initialize plots.
-    bool hold = itsParent_->getPlotter()->allDrawingHeld();
-    if(!hold) itsParent_->getPlotter()->holdDrawing();
-    plot->initializePlot(canvases);
-    if(!hold) itsParent_->getPlotter()->releaseDrawing();
+    plot->initializePlot(itsPages_);
     
-    // Notify watchers.
     notifyWatchers();
 }
 

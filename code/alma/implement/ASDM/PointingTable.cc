@@ -48,23 +48,19 @@ using asdm::PointingTable;
 using asdm::PointingRow;
 using asdm::Parser;
 
-#include <EndianStream.h>
-using asdm::EndianOSStream;
-using asdm::EndianISStream;
-
 #include <iostream>
 #include <sstream>
 #include <set>
+using namespace std;
 
 #include <Misc.h>
-
-using namespace std;
 using namespace asdm;
 
 
 namespace asdm {
 
 	string PointingTable::tableName = "Pointing";
+	
 
 	/**
 	 * The list of field names that make up key key.
@@ -96,31 +92,22 @@ namespace asdm {
 		entity.setEntityTypeName("PointingTable");
 		entity.setEntityVersion("1");
 		entity.setInstanceVersion("1");
-
-		// Archive binary
+		
+		// Archive XML
 		archiveAsBin = true;
 		
-		// File binary
-		fileAsBin = true;	
+		// File XML
+		fileAsBin = true;
 	}
 	
 /**
  * A destructor for PointingTable.
- */	
-
-	
-		
+ */
+ 
 	PointingTable::~PointingTable() {
-		map<string, TIME_ROWS >::iterator mapIter;
-		vector<PointingRow *>::iterator rowIter;
-		
-		for(mapIter=context.begin(); mapIter!=context.end(); mapIter++)
-			for(rowIter=((*mapIter).second).begin(); rowIter!=((*mapIter).second).end(); rowIter++)
-				delete (*rowIter);
-	}	
-		
-	
-
+		for (unsigned int i = 0; i < privateRows.size(); i++) 
+			delete(privateRows.at(i));
+	}
 
 	/**
 	 * Container to which this table belongs.
@@ -179,10 +166,11 @@ namespace asdm {
 	PointingRow *PointingTable::newRow() {
 		return new PointingRow (*this);
 	}
-
+	
 	PointingRow *PointingTable::newRowEmpty() {
-		return new PointingRow (*this);
+		return newRow ();
 	}
+
 
 	/**
 	 * Create a new row initialized to the specified values.
@@ -192,11 +180,17 @@ namespace asdm {
 	
  	 * @param timeInterval. 
 	
- 	 * @param pointingModelId. 
+ 	 * @param numSample. 
 	
- 	 * @param numPoly. 
+ 	 * @param encoder. 
+	
+ 	 * @param pointingTracking. 
+	
+ 	 * @param usePolynomials. 
 	
  	 * @param timeOrigin. 
+	
+ 	 * @param numTerm. 
 	
  	 * @param pointingDirection. 
 	
@@ -204,23 +198,27 @@ namespace asdm {
 	
  	 * @param offset. 
 	
- 	 * @param encoder. 
-	
- 	 * @param pointingTracking. 
+ 	 * @param pointingModelId. 
 	
      */
-	PointingRow* PointingTable::newRow(Tag antennaId, ArrayTimeInterval timeInterval, int pointingModelId, int numPoly, ArrayTime timeOrigin, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, vector<Angle > encoder, bool pointingTracking){
+	PointingRow* PointingTable::newRow(Tag antennaId, ArrayTimeInterval timeInterval, int numSample, vector<vector<Angle > > encoder, bool pointingTracking, bool usePolynomials, ArrayTime timeOrigin, int numTerm, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, int pointingModelId){
 		PointingRow *row = new PointingRow(*this);
 			
 		row->setAntennaId(antennaId);
 			
 		row->setTimeInterval(timeInterval);
 			
-		row->setPointingModelId(pointingModelId);
+		row->setNumSample(numSample);
 			
-		row->setNumPoly(numPoly);
+		row->setEncoder(encoder);
+			
+		row->setPointingTracking(pointingTracking);
+			
+		row->setUsePolynomials(usePolynomials);
 			
 		row->setTimeOrigin(timeOrigin);
+			
+		row->setNumTerm(numTerm);
 			
 		row->setPointingDirection(pointingDirection);
 			
@@ -228,25 +226,29 @@ namespace asdm {
 			
 		row->setOffset(offset);
 			
-		row->setEncoder(encoder);
-			
-		row->setPointingTracking(pointingTracking);
+		row->setPointingModelId(pointingModelId);
 	
 		return row;		
 	}	
-	
-	PointingRow* PointingTable::newRowFull(Tag antennaId, ArrayTimeInterval timeInterval, int pointingModelId, int numPoly, ArrayTime timeOrigin, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, vector<Angle > encoder, bool pointingTracking){
+
+	PointingRow* PointingTable::newRowFull(Tag antennaId, ArrayTimeInterval timeInterval, int numSample, vector<vector<Angle > > encoder, bool pointingTracking, bool usePolynomials, ArrayTime timeOrigin, int numTerm, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, int pointingModelId)	{
 		PointingRow *row = new PointingRow(*this);
 			
 		row->setAntennaId(antennaId);
 			
 		row->setTimeInterval(timeInterval);
 			
-		row->setPointingModelId(pointingModelId);
+		row->setNumSample(numSample);
 			
-		row->setNumPoly(numPoly);
+		row->setEncoder(encoder);
+			
+		row->setPointingTracking(pointingTracking);
+			
+		row->setUsePolynomials(usePolynomials);
 			
 		row->setTimeOrigin(timeOrigin);
+			
+		row->setNumTerm(numTerm);
 			
 		row->setPointingDirection(pointingDirection);
 			
@@ -254,13 +256,11 @@ namespace asdm {
 			
 		row->setOffset(offset);
 			
-		row->setEncoder(encoder);
-			
-		row->setPointingTracking(pointingTracking);
+		row->setPointingModelId(pointingModelId);
 	
-		return row;		
-	}		
-
+		return row;				
+	}
+	
 
 
 PointingRow* PointingTable::newRow(PointingRow* row) {
@@ -270,6 +270,7 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
 PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 	return new PointingRow(*this, *row);
 }
+
 	//
 	// Append a row to its table.
 	//
@@ -291,8 +292,10 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 			;
 		return ostrstr.str();	 	
 	 }
-
-	PointingRow* PointingTable::add(PointingRow* x) {		 
+	 
+			
+			
+	PointingRow* PointingTable::add(PointingRow* x) {
 		ArrayTime startTime = x->getTimeInterval().getStart();
 
 		/*
@@ -311,7 +314,8 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}	
+	}
+			
 		
 	
 
@@ -328,21 +332,22 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 		
 		
 			
-	PointingRow*  PointingTable::checkAndAdd(PointingRow* x) throw (DuplicateKey) {
-		
-		string k = Key( 
+			
+			
+			
+	PointingRow*  PointingTable::checkAndAdd(PointingRow* x) {
+		string keystr = Key( 
 						x->getAntennaId() 
-					   );
-					   
-		TIME_ROWS dummyRow;
-
-		// Do we already have rows with that value of AntennaId
-		if (context.find(k) == context.end()) {
-			context[k] = dummyRow;
+					   ); 
+		if (context.find(keystr) == context.end()) {
+			vector<PointingRow *> v;
+			context[keystr] = v;
 		}
-
-		return insertByStartTime(x, context[k]);
+		
+		vector<PointingRow*>& found = context.find(keystr)->second;
+		return insertByStartTime(x, found);			
 	}
+			
 					
 		
 
@@ -393,13 +398,16 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 		
 			
 			
+			
 /*
  ** Returns a PointingRow* given a key.
  ** @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  ** no row exists for that key.
  **
  */
- 	PointingRow* PointingTable::getRowByKey(Tag antennaId, ArrayTimeInterval timeInterval)  {
+ 				
+				
+	PointingRow* PointingTable::getRowByKey(Tag antennaId, ArrayTimeInterval timeInterval)  {
  		string keystr = Key(antennaId);
  		vector<PointingRow *> row;
  		
@@ -433,28 +441,29 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
  		int k1 = row.size() - 1;
  		PointingRow* r = 0;
  		while (k0!=k1) {
-
-		 
-		  // is the start time contained in the time interval of row #k0 ?
-		  r = row.at(k0);
-		  if (r->getTimeInterval().contains(timeInterval.getStart())) return r;
-		 
-		  // is the start time contained in the time interval of row #k1 ?		  
-		  r = row.at(k1);
-		  if (r->getTimeInterval().contains(timeInterval.getStart())) return r;
-		  
-		  // Are the rows #k0 and #k1 consecutive
-		  // Then we know for sure that there is no row containing the start of timeInterval.
-		  if (k1 == k0 + 1) return 0;
-		  
-		  r = row.at((k0+k1)/2);
-		  if ( timeInterval.getStart().get() <= r->getTimeInterval().getStart().get())
-		    k1 = (k0 + k1) / 2;
-		  else
-		    k0 = (k0 + k1) / 2;
+ 		
+ 			// Is the start time contained in the time interval of row #k0
+ 			r = row.at(k0);
+ 			if (r->getTimeInterval().contains(timeInterval.getStart())) return r;
+ 			
+ 			// Is the start contained in the time interval of row #k1
+ 			r = row.at(k1);
+			if (r->getTimeInterval().contains(timeInterval.getStart())) return r;
+			
+			// Are the rows #k0 and #k1 consecutive
+			// Then we know for sure that there is no row containing the start of timeInterval
+			if (k1==(k0+1)) return 0;
+			
+			// Proceed to the next step of dichotomy.
+			r = row.at((k0+k1)/2);
+			if ( timeInterval.getStart().get() <= r->getTimeInterval().getStart().get())
+				k1 = (k0 + k1) / 2;
+			else
+				k0 = (k0 + k1) / 2;
 		}
 		return 0;	
-	}			
+	}
+							
 			
 		
 		
@@ -480,7 +489,7 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 #endif
 	
 #ifndef WITHOUT_ACS
-	void PointingTable::fromIDL(PointingTableIDL x) throw(DuplicateKey,ConversionException) {
+	void PointingTable::fromIDL(PointingTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			PointingRow *tmp = newRow();
@@ -491,28 +500,27 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 	}
 #endif
 
-	char *PointingTable::toFITS() const throw(ConversionException) {
+	char *PointingTable::toFITS() const  {
 		throw ConversionException("Not implemented","Pointing");
 	}
 
-	void PointingTable::fromFITS(char *fits) throw(ConversionException) {
+	void PointingTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Pointing");
 	}
 
-	string PointingTable::toVOTable() const throw(ConversionException) {
+	string PointingTable::toVOTable() const {
 		throw ConversionException("Not implemented","Pointing");
 	}
 
-	void PointingTable::fromVOTable(string vo) throw(ConversionException) {
+	void PointingTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Pointing");
 	}
 
-	string PointingTable::toXML()  throw(ConversionException) {
+	
+	string PointingTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<PointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/PointingTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<PointingTable> ");
+		buf.append("<PointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/PointingTable\" xsi:schemaLocation=\"http://Alma/XASDM/PointingTable http://almaobservatory.org/XML/XASDM/2/PointingTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -528,8 +536,9 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 		buf.append("</PointingTable> ");
 		return buf;
 	}
+
 	
-	void PointingTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void PointingTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<PointingTable")) 
 			error();
@@ -570,8 +579,14 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 		if (!xml.isStr("</PointingTable>")) 
 			error();
 	}
+
 	
-	string PointingTable::toMIME() {		
+	void PointingTable::error()  {
+		throw ConversionException("Invalid xml document","Pointing");
+	}
+	
+	
+	string PointingTable::toMIME() {
 		EndianOSStream eoss;
 		
 		string UID = getEntity().getEntityId().toString();
@@ -632,6 +647,7 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 		return eoss.str();	
 	}
 
+	
 	void PointingTable::setFromMIME(const string & mimeMsg) {
 		// cout << "Entering setFromMIME" << endl;
 	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
@@ -666,11 +682,8 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 			throw ConversionException("Error while reading binary data , the message was "
 					+ e.getMessage(), "Pointing");
 		} 		 	
-	 }
-	 
-	void PointingTable::error() throw(ConversionException) {
-		throw ConversionException("Invalid xml document","Pointing");
 	}
+
 	
 	void PointingTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -700,8 +713,9 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 			if (tableout.rdstate() == ostream::failbit)
 				throw ConversionException("Could not close file " + fileName, "Pointing");
 		}
-	}		
+	}
 
+	
 	void PointingTable::setFromFile(const string& directory) {
 		string tablename;
 		if (fileAsBin)
@@ -740,9 +754,17 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 		if (fileAsBin) 
 			setFromMIME(ss.str());
 		else
-			fromXML(ss.str());				
-	}
-						
+			fromXML(ss.str());	
+	}			
+
+	
+
+	
+
+			
+	
+		
+		
 	/**
 	 * Insert a PointingRow* in a vector of PointingRow* so that it's ordered by ascending start time.
 	 *
@@ -756,7 +778,6 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 		
 		ArrayTime start = x->timeInterval.getStart();
 
-		// cout << "row size " << row.size() << endl;
     	// Is the row vector empty ?
     	if (row.size() == 0) {
     		row.push_back(x);
@@ -769,32 +790,32 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
     	PointingRow* last = *(row.end()-1);
         
     	if ( start > last->timeInterval.getStart() ) {
-	  //
-	  // Modify the duration of last if and only if the start time of x
-	  // is located strictly before the end time of last.
-	  // 
-	  if ( start < (last->timeInterval.getStart() + last->timeInterval.getDuration()))
-	    last->timeInterval.setDuration(start - last->timeInterval.getStart());
-	  row.push_back(x);
-	  privateRows.push_back(x);
-	  x->isAdded();
-	  return x;
+ 	    	//
+	    	// Modify the duration of last if and only if the start time of x
+	    	// is located strictly before the end time of last.
+	    	//
+	  		if ( start < (last->timeInterval.getStart() + last->timeInterval.getDuration()))   		
+    			last->timeInterval.setDuration(start - last->timeInterval.getStart());
+    		row.push_back(x);
+    		privateRows.push_back(x);
+    		x->isAdded();
+    		return x;
     	}
     	
     	// Optimization for the case of insertion by descending time.
     	PointingRow* first = *(row.begin());
         
     	if ( start < first->timeInterval.getStart() ) {
-	  //
-	  // Modify the duration of x if and only if the start time of first
-	  // is located strictly before the end time of x.
-	  //
-	  if ( first->timeInterval.getStart() < (start + x->timeInterval.getDuration()) )
-	    x->timeInterval.setDuration(first->timeInterval.getStart() - start);
-	  row.insert(row.begin(), x);
-	  privateRows.push_back(x);
-	  x->isAdded();
-	  return x;
+			//
+	  		// Modify the duration of x if and only if the start time of first
+	  		// is located strictly before the end time of x.
+	  		//
+	  		if ( first->timeInterval.getStart() < (start + x->timeInterval.getDuration()) )	  		
+    			x->timeInterval.setDuration(first->timeInterval.getStart() - start);
+    		row.insert(row.begin(), x);
+    		privateRows.push_back(x);
+    		x->isAdded();
+    		return x;
     	}
     	
     	// Case where x has to be inserted inside row; let's use a dichotomy
@@ -829,7 +850,8 @@ PointingRow* PointingTable::newRowCopy(PointingRow* row) {
 		privateRows.push_back(x);
    		x->isAdded();
 		return x;   
-    }   	
+    } 
+    	
 	
 	
 

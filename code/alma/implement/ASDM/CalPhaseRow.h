@@ -81,16 +81,8 @@ using namespace BasebandNameMod;
 	
 
 	
-
-	
-
-	
-
-	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
-	
-
 	
 
 	
@@ -99,24 +91,32 @@ using namespace AtmPhaseCorrectionMod;
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
 #include "CPolarizationType.h"
 using namespace PolarizationTypeMod;
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -148,7 +148,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalPhase.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -166,7 +166,7 @@ class CalReductionRow;
 /**
  * The CalPhaseRow class is a row of a CalPhaseTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class CalPhaseRow {
@@ -193,8 +193,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalPhaseRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalPhaseRowIDL x) throw(ConversionException);
+	void setFromIDL (CalPhaseRowIDL x) ;
 #endif
 	
 	/**
@@ -207,8 +208,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalPhaseTable to which the row built by deserialization will be parented.
+	  */
+	 static CalPhaseRow* fromBin(EndianISStream& eiss, CalPhaseTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -247,96 +262,6 @@ public:
 
 
 	
-	// ===> Attribute numBaseline
-	
-	
-	
-
-	
- 	/**
- 	 * Get numBaseline.
- 	 * @return numBaseline as int
- 	 */
- 	int getNumBaseline() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numBaseline with the specified int.
- 	 * @param numBaseline The int value to which numBaseline is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumBaseline (int numBaseline);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute numAPC
-	
-	
-	
-
-	
- 	/**
- 	 * Get numAPC.
- 	 * @return numAPC as int
- 	 */
- 	int getNumAPC() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numAPC with the specified int.
- 	 * @param numAPC The int value to which numAPC is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumAPC (int numAPC);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute numReceptor
-	
-	
-	
-
-	
- 	/**
- 	 * Get numReceptor.
- 	 * @return numReceptor as int
- 	 */
- 	int getNumReceptor() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numReceptor with the specified int.
- 	 * @param numReceptor The int value to which numReceptor is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumReceptor (int numReceptor);
-  		
-	
-	
-	
-
-
-	
 	// ===> Attribute receiverBand
 	
 	
@@ -358,6 +283,8 @@ public:
  	 
  		
  			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
  	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
   		
@@ -367,89 +294,31 @@ public:
 
 
 	
-	// ===> Attribute antennaNames
+	// ===> Attribute atmPhaseCorrection
 	
 	
 	
 
 	
  	/**
- 	 * Get antennaNames.
- 	 * @return antennaNames as vector<vector<string > >
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
  	 */
- 	vector<vector<string > > getAntennaNames() const;
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection getAtmPhaseCorrection() const;
 	
  
  	
  	
  	/**
- 	 * Set antennaNames with the specified vector<vector<string > >.
- 	 * @param antennaNames The vector<vector<string > > value to which antennaNames is to be set.
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
  	 
  		
  			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setAntennaNames (vector<vector<string > > antennaNames);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute atmPhaseCorrections
-	
-	
-	
-
-	
- 	/**
- 	 * Get atmPhaseCorrections.
- 	 * @return atmPhaseCorrections as vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >
- 	 */
- 	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > getAtmPhaseCorrections() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set atmPhaseCorrections with the specified vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >.
- 	 * @param atmPhaseCorrections The vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > value to which atmPhaseCorrections is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setAtmPhaseCorrections (vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute polarizationTypes
-	
-	
-	
-
-	
- 	/**
- 	 * Get polarizationTypes.
- 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
- 	 */
- 	vector<PolarizationTypeMod::PolarizationType > getPolarizationTypes() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
- 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes);
+ 	void setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection);
   		
 	
 	
@@ -517,29 +386,59 @@ public:
 
 
 	
-	// ===> Attribute frequencyRange
+	// ===> Attribute numBaseline
 	
 	
 	
 
 	
  	/**
- 	 * Get frequencyRange.
- 	 * @return frequencyRange as vector<Frequency >
+ 	 * Get numBaseline.
+ 	 * @return numBaseline as int
  	 */
- 	vector<Frequency > getFrequencyRange() const;
+ 	int getNumBaseline() const;
 	
  
  	
  	
  	/**
- 	 * Set frequencyRange with the specified vector<Frequency >.
- 	 * @param frequencyRange The vector<Frequency > value to which frequencyRange is to be set.
+ 	 * Set numBaseline with the specified int.
+ 	 * @param numBaseline The int value to which numBaseline is to be set.
  	 
  		
  			
  	 */
- 	void setFrequencyRange (vector<Frequency > frequencyRange);
+ 	void setNumBaseline (int numBaseline);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numReceptor
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
+ 	 */
+ 	int getNumReceptor() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumReceptor (int numReceptor);
   		
 	
 	
@@ -555,21 +454,21 @@ public:
 	
  	/**
  	 * Get ampli.
- 	 * @return ampli as vector<vector<vector<float > > >
+ 	 * @return ampli as vector<vector<float > >
  	 */
- 	vector<vector<vector<float > > > getAmpli() const;
+ 	vector<vector<float > > getAmpli() const;
 	
  
  	
  	
  	/**
- 	 * Set ampli with the specified vector<vector<vector<float > > >.
- 	 * @param ampli The vector<vector<vector<float > > > value to which ampli is to be set.
+ 	 * Set ampli with the specified vector<vector<float > >.
+ 	 * @param ampli The vector<vector<float > > value to which ampli is to be set.
  	 
  		
  			
  	 */
- 	void setAmpli (vector<vector<vector<float > > > ampli);
+ 	void setAmpli (vector<vector<float > > ampli);
   		
 	
 	
@@ -577,160 +476,29 @@ public:
 
 
 	
-	// ===> Attribute phase
+	// ===> Attribute antennaNames
 	
 	
 	
 
 	
  	/**
- 	 * Get phase.
- 	 * @return phase as vector<vector<vector<float > > >
+ 	 * Get antennaNames.
+ 	 * @return antennaNames as vector<vector<string > >
  	 */
- 	vector<vector<vector<float > > > getPhase() const;
+ 	vector<vector<string > > getAntennaNames() const;
 	
  
  	
  	
  	/**
- 	 * Set phase with the specified vector<vector<vector<float > > >.
- 	 * @param phase The vector<vector<vector<float > > > value to which phase is to be set.
+ 	 * Set antennaNames with the specified vector<vector<string > >.
+ 	 * @param antennaNames The vector<vector<string > > value to which antennaNames is to be set.
  	 
  		
  			
  	 */
- 	void setPhase (vector<vector<vector<float > > > phase);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute phaseRms
-	
-	
-	
-
-	
- 	/**
- 	 * Get phaseRms.
- 	 * @return phaseRms as vector<vector<vector<Angle > > >
- 	 */
- 	vector<vector<vector<Angle > > > getPhaseRms() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set phaseRms with the specified vector<vector<vector<Angle > > >.
- 	 * @param phaseRms The vector<vector<vector<Angle > > > value to which phaseRms is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setPhaseRms (vector<vector<vector<Angle > > > phaseRms);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute statPhaseRms
-	
-	
-	
-
-	
- 	/**
- 	 * Get statPhaseRms.
- 	 * @return statPhaseRms as vector<vector<Angle > >
- 	 */
- 	vector<vector<Angle > > getStatPhaseRms() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set statPhaseRms with the specified vector<vector<Angle > >.
- 	 * @param statPhaseRms The vector<vector<Angle > > value to which statPhaseRms is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setStatPhaseRms (vector<vector<Angle > > statPhaseRms);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute correctionValidity, which is optional
-	
-	
-	
-	/**
-	 * The attribute correctionValidity is optional. Return true if this attribute exists.
-	 * @return true if and only if the correctionValidity attribute exists. 
-	 */
-	bool isCorrectionValidityExists() const;
-	
-
-	
- 	/**
- 	 * Get correctionValidity, which is optional.
- 	 * @return correctionValidity as vector<bool >
- 	 * @throws IllegalAccessException If correctionValidity does not exist.
- 	 */
- 	vector<bool > getCorrectionValidity() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set correctionValidity with the specified vector<bool >.
- 	 * @param correctionValidity The vector<bool > value to which correctionValidity is to be set.
- 	 
- 		
- 	 */
- 	void setCorrectionValidity (vector<bool > correctionValidity);
-		
-	
-	
-	
-	/**
-	 * Mark correctionValidity, which is an optional field, as non-existent.
-	 */
-	void clearCorrectionValidity ();
-	
-
-
-	
-	// ===> Attribute decorrelationFactor
-	
-	
-	
-
-	
- 	/**
- 	 * Get decorrelationFactor.
- 	 * @return decorrelationFactor as vector<vector<float > >
- 	 */
- 	vector<vector<float > > getDecorrelationFactor() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set decorrelationFactor with the specified vector<vector<float > >.
- 	 * @param decorrelationFactor The vector<vector<float > > value to which decorrelationFactor is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setDecorrelationFactor (vector<vector<float > > decorrelationFactor);
+ 	void setAntennaNames (vector<vector<string > > antennaNames);
   		
 	
 	
@@ -768,6 +536,36 @@ public:
 
 
 	
+	// ===> Attribute decorrelationFactor
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get decorrelationFactor.
+ 	 * @return decorrelationFactor as vector<vector<float > >
+ 	 */
+ 	vector<vector<float > > getDecorrelationFactor() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set decorrelationFactor with the specified vector<vector<float > >.
+ 	 * @param decorrelationFactor The vector<vector<float > > value to which decorrelationFactor is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setDecorrelationFactor (vector<vector<float > > decorrelationFactor);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute direction
 	
 	
@@ -794,6 +592,227 @@ public:
   		
 	
 	
+	
+
+
+	
+	// ===> Attribute frequencyRange
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get frequencyRange.
+ 	 * @return frequencyRange as vector<Frequency >
+ 	 */
+ 	vector<Frequency > getFrequencyRange() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set frequencyRange with the specified vector<Frequency >.
+ 	 * @param frequencyRange The vector<Frequency > value to which frequencyRange is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setFrequencyRange (vector<Frequency > frequencyRange);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute integrationTime
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get integrationTime.
+ 	 * @return integrationTime as Interval
+ 	 */
+ 	Interval getIntegrationTime() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set integrationTime with the specified Interval.
+ 	 * @param integrationTime The Interval value to which integrationTime is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setIntegrationTime (Interval integrationTime);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute phase
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get phase.
+ 	 * @return phase as vector<vector<float > >
+ 	 */
+ 	vector<vector<float > > getPhase() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set phase with the specified vector<vector<float > >.
+ 	 * @param phase The vector<vector<float > > value to which phase is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setPhase (vector<vector<float > > phase);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute polarizationTypes
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get polarizationTypes.
+ 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
+ 	 */
+ 	vector<PolarizationTypeMod::PolarizationType > getPolarizationTypes() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute phaseRMS
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get phaseRMS.
+ 	 * @return phaseRMS as vector<vector<float > >
+ 	 */
+ 	vector<vector<float > > getPhaseRMS() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set phaseRMS with the specified vector<vector<float > >.
+ 	 * @param phaseRMS The vector<vector<float > > value to which phaseRMS is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setPhaseRMS (vector<vector<float > > phaseRMS);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute statPhaseRMS
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get statPhaseRMS.
+ 	 * @return statPhaseRMS as vector<vector<float > >
+ 	 */
+ 	vector<vector<float > > getStatPhaseRMS() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set statPhaseRMS with the specified vector<vector<float > >.
+ 	 * @param statPhaseRMS The vector<vector<float > > value to which statPhaseRMS is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setStatPhaseRMS (vector<vector<float > > statPhaseRMS);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute correctionValidity, which is optional
+	
+	
+	
+	/**
+	 * The attribute correctionValidity is optional. Return true if this attribute exists.
+	 * @return true if and only if the correctionValidity attribute exists. 
+	 */
+	bool isCorrectionValidityExists() const;
+	
+
+	
+ 	/**
+ 	 * Get correctionValidity, which is optional.
+ 	 * @return correctionValidity as vector<bool >
+ 	 * @throws IllegalAccessException If correctionValidity does not exist.
+ 	 */
+ 	vector<bool > getCorrectionValidity() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set correctionValidity with the specified vector<bool >.
+ 	 * @param correctionValidity The vector<bool > value to which correctionValidity is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setCorrectionValidity (vector<bool > correctionValidity);
+		
+	
+	
+	
+	/**
+	 * Mark correctionValidity, which is an optional field, as non-existent.
+	 */
+	void clearCorrectionValidity ();
 	
 
 
@@ -906,12 +925,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this CalPhaseRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numBaseline, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<vector<string > > antennaNames, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<vector<vector<float > > > ampli, vector<vector<vector<float > > > phase, vector<vector<vector<Angle > > > phaseRms, vector<vector<Angle > > statPhaseRms, vector<vector<float > > decorrelationFactor, vector<Length > baselineLengths, vector<Angle > direction);
+	bool compareNoAutoInc(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numBaseline, int numReceptor, vector<vector<float > > ampli, vector<vector<string > > antennaNames, vector<Length > baselineLengths, vector<vector<float > > decorrelationFactor, vector<Angle > direction, vector<Frequency > frequencyRange, Interval integrationTime, vector<vector<float > > phase, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > phaseRMS, vector<vector<float > > statPhaseRMS);
 	
 	
 
 	
-	bool compareRequiredValue(int numBaseline, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<vector<string > > antennaNames, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<vector<vector<float > > > ampli, vector<vector<vector<float > > > phase, vector<vector<vector<Angle > > > phaseRms, vector<vector<Angle > > statPhaseRms, vector<vector<float > > decorrelationFactor, vector<Length > baselineLengths, vector<Angle > direction); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, int numBaseline, int numReceptor, vector<vector<float > > ampli, vector<vector<string > > antennaNames, vector<Length > baselineLengths, vector<vector<float > > decorrelationFactor, vector<Angle > direction, vector<Frequency > frequencyRange, Interval integrationTime, vector<vector<float > > phase, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > phaseRMS, vector<vector<float > > statPhaseRMS); 
 		 
 	
 	/**
@@ -983,39 +1002,6 @@ private:
  	
 
 	
-	// ===> Attribute numBaseline
-	
-	
-
-	int numBaseline;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numAPC
-	
-	
-
-	int numAPC;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numReceptor
-	
-	
-
-	int numReceptor;
-
-	
-	
- 	
-
-	
 	// ===> Attribute receiverBand
 	
 	
@@ -1027,33 +1013,11 @@ private:
  	
 
 	
-	// ===> Attribute antennaNames
+	// ===> Attribute atmPhaseCorrection
 	
 	
 
-	vector<vector<string > > antennaNames;
-
-	
-	
- 	
-
-	
-	// ===> Attribute atmPhaseCorrections
-	
-	
-
-	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections;
-
-	
-	
- 	
-
-	
-	// ===> Attribute polarizationTypes
-	
-	
-
-	vector<PolarizationTypeMod::PolarizationType > polarizationTypes;
+	AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection;
 
 	
 	
@@ -1082,11 +1046,22 @@ private:
  	
 
 	
-	// ===> Attribute frequencyRange
+	// ===> Attribute numBaseline
 	
 	
 
-	vector<Frequency > frequencyRange;
+	int numBaseline;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numReceptor
+	
+	
+
+	int numReceptor;
 
 	
 	
@@ -1097,64 +1072,18 @@ private:
 	
 	
 
-	vector<vector<vector<float > > > ampli;
+	vector<vector<float > > ampli;
 
 	
 	
  	
 
 	
-	// ===> Attribute phase
+	// ===> Attribute antennaNames
 	
 	
 
-	vector<vector<vector<float > > > phase;
-
-	
-	
- 	
-
-	
-	// ===> Attribute phaseRms
-	
-	
-
-	vector<vector<vector<Angle > > > phaseRms;
-
-	
-	
- 	
-
-	
-	// ===> Attribute statPhaseRms
-	
-	
-
-	vector<vector<Angle > > statPhaseRms;
-
-	
-	
- 	
-
-	
-	// ===> Attribute correctionValidity, which is optional
-	
-	
-	bool correctionValidityExists;
-	
-
-	vector<bool > correctionValidity;
-
-	
-	
- 	
-
-	
-	// ===> Attribute decorrelationFactor
-	
-	
-
-	vector<vector<float > > decorrelationFactor;
+	vector<vector<string > > antennaNames;
 
 	
 	
@@ -1172,11 +1101,101 @@ private:
  	
 
 	
+	// ===> Attribute decorrelationFactor
+	
+	
+
+	vector<vector<float > > decorrelationFactor;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute direction
 	
 	
 
 	vector<Angle > direction;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute frequencyRange
+	
+	
+
+	vector<Frequency > frequencyRange;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute integrationTime
+	
+	
+
+	Interval integrationTime;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute phase
+	
+	
+
+	vector<vector<float > > phase;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute polarizationTypes
+	
+	
+
+	vector<PolarizationTypeMod::PolarizationType > polarizationTypes;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute phaseRMS
+	
+	
+
+	vector<vector<float > > phaseRMS;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute statPhaseRMS
+	
+	
+
+	vector<vector<float > > statPhaseRMS;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute correctionValidity, which is optional
+	
+	
+	bool correctionValidityExists;
+	
+
+	vector<bool > correctionValidity;
 
 	
 	

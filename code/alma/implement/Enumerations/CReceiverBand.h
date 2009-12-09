@@ -42,29 +42,58 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the ReceiverBand enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace ReceiverBandMod
 {
+  //! ReceiverBand.
+  //!  [ASDM.Receiver] Receiver band names
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum ReceiverBand
   { 
-    ALMA_RB_01 ,
-    ALMA_RB_02 ,
-    ALMA_RB_03 ,
-    ALMA_RB_04 ,
-    ALMA_RB_05 ,
-    ALMA_RB_06 ,
-    ALMA_RB_07 ,
-    ALMA_RB_08 ,
-    ALMA_RB_09 ,
-    ALMA_RB_10 ,
-    ALMA_HOLOGRAPHY_RECEIVER ,
-    BURE_01 ,
-    BURE_02 ,
-    BURE_03 ,
-    BURE_04 ,
-    UNSPECIFIED 
+    ALMA_RB_01 /*!< ALMA Receiver band 01 */
+     ,
+    ALMA_RB_02 /*!< ALMA Receiver band 02 */
+     ,
+    ALMA_RB_03 /*!< ALMA Receiver band 03 */
+     ,
+    ALMA_RB_04 /*!< ALMA Receiver band 04 */
+     ,
+    ALMA_RB_05 /*!< ALMA Receiver band 05 */
+     ,
+    ALMA_RB_06 /*!< ALMA Receiver band 06 */
+     ,
+    ALMA_RB_07 /*!< ALMA Receiver band 07 */
+     ,
+    ALMA_RB_08 /*!< ALMA Receiver band 08 */
+     ,
+    ALMA_RB_09 /*!< ALMA Receiver band 09 */
+     ,
+    ALMA_RB_10 /*!< ALMA Receiver band 10 */
+     ,
+    ALMA_RB_ALL /*!< all ALMA receiver bands. */
+     ,
+    ALMA_HOLOGRAPHY_RECEIVER /*!< Alma transmitter Holography receiver. */
+     ,
+    BURE_01 /*!< Plateau de Bure receiver band #1. */
+     ,
+    BURE_02 /*!< Plateau de Bure receiver band #2. */
+     ,
+    BURE_03 /*!< Plateau de Bure receiver band #3. */
+     ,
+    BURE_04 /*!< Plateau de Bure receiver band #4 */
+     ,
+    UNSPECIFIED /*!< receiver band of unspecified origin. */
+     
   };
   typedef ReceiverBand &ReceiverBand_out;
 } 
@@ -72,120 +101,121 @@ namespace ReceiverBandMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration ReceiverBand.
+  * 
+  */
 class CReceiverBand {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the ReceiverBand enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sALMA_RB_01;
+	static const std::string& sALMA_RB_01; /*!< A const string equal to "ALMA_RB_01".*/
 	
-	static const std::string& sALMA_RB_02;
+	static const std::string& sALMA_RB_02; /*!< A const string equal to "ALMA_RB_02".*/
 	
-	static const std::string& sALMA_RB_03;
+	static const std::string& sALMA_RB_03; /*!< A const string equal to "ALMA_RB_03".*/
 	
-	static const std::string& sALMA_RB_04;
+	static const std::string& sALMA_RB_04; /*!< A const string equal to "ALMA_RB_04".*/
 	
-	static const std::string& sALMA_RB_05;
+	static const std::string& sALMA_RB_05; /*!< A const string equal to "ALMA_RB_05".*/
 	
-	static const std::string& sALMA_RB_06;
+	static const std::string& sALMA_RB_06; /*!< A const string equal to "ALMA_RB_06".*/
 	
-	static const std::string& sALMA_RB_07;
+	static const std::string& sALMA_RB_07; /*!< A const string equal to "ALMA_RB_07".*/
 	
-	static const std::string& sALMA_RB_08;
+	static const std::string& sALMA_RB_08; /*!< A const string equal to "ALMA_RB_08".*/
 	
-	static const std::string& sALMA_RB_09;
+	static const std::string& sALMA_RB_09; /*!< A const string equal to "ALMA_RB_09".*/
 	
-	static const std::string& sALMA_RB_10;
+	static const std::string& sALMA_RB_10; /*!< A const string equal to "ALMA_RB_10".*/
 	
-	static const std::string& sALMA_HOLOGRAPHY_RECEIVER;
+	static const std::string& sALMA_RB_ALL; /*!< A const string equal to "ALMA_RB_ALL".*/
 	
-	static const std::string& sBURE_01;
+	static const std::string& sALMA_HOLOGRAPHY_RECEIVER; /*!< A const string equal to "ALMA_HOLOGRAPHY_RECEIVER".*/
 	
-	static const std::string& sBURE_02;
+	static const std::string& sBURE_01; /*!< A const string equal to "BURE_01".*/
 	
-	static const std::string& sBURE_03;
+	static const std::string& sBURE_02; /*!< A const string equal to "BURE_02".*/
 	
-	static const std::string& sBURE_04;
+	static const std::string& sBURE_03; /*!< A const string equal to "BURE_03".*/
 	
-	static const std::string& sUNSPECIFIED;
+	static const std::string& sBURE_04; /*!< A const string equal to "BURE_04".*/
 	
-    static const std::vector<std::string> sReceiverBandSet();	 
+	static const std::string& sUNSPECIFIED; /*!< A const string equal to "UNSPECIFIED".*/
+	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in ReceiverBandMod::ReceiverBand.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of ReceiverBandMod::ReceiverBand.
+      * @return a string.
+      */
+	static std::string name(const ReceiverBandMod::ReceiverBand& e);
 	
-
-	
-	// Explanations associated with the ReceiverBand Enumeration.
-		
-	static const std::string& hALMA_RB_01;
-		
-	static const std::string& hALMA_RB_02;
-		
-	static const std::string& hALMA_RB_03;
-		
-	static const std::string& hALMA_RB_04;
-		
-	static const std::string& hALMA_RB_05;
-		
-	static const std::string& hALMA_RB_06;
-		
-	static const std::string& hALMA_RB_07;
-		
-	static const std::string& hALMA_RB_08;
-		
-	static const std::string& hALMA_RB_09;
-		
-	static const std::string& hALMA_RB_10;
-		
-	static const std::string& hALMA_HOLOGRAPHY_RECEIVER;
-		
-	static const std::string& hBURE_01;
-		
-	static const std::string& hBURE_02;
-		
-	static const std::string& hBURE_03;
-		
-	static const std::string& hBURE_04;
-		
-	static const std::string& hUNSPECIFIED;
-		
-	static const std::vector<std::string> hReceiverBandSet();
-   	
-
-   	// Is an integer number associated with the ReceiverBand enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the ReceiverBand enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  ReceiverBand enumeration.
-	static std::string name(const ReceiverBandMod::ReceiverBand& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const ReceiverBandMod::ReceiverBand& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified ReceiverBand enumeration.
-	static std::string help(const ReceiverBandMod::ReceiverBand& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a ReceiverBand enumeration object by specifying its name.
    	static ReceiverBandMod::ReceiverBand newReceiverBand(const std::string& name);
    	
-   	// Create a ReceiverBand enumeration object by specifying its name.
+   	/*! Return a ReceiverBand's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a ReceiverBandMod::ReceiverBand's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static ReceiverBandMod::ReceiverBand literal(const std::string& name);
  	
-    // Create a ReceiverBand enumeration object by specifying its position index (0 based).
+    /*! Return a ReceiverBand's enumerator given an unsigned int.
+      * @param i the index of the enumerator in ReceiverBandMod::ReceiverBand.
+      * @return a ReceiverBandMod::ReceiverBand's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static ReceiverBandMod::ReceiverBand from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CReceiverBand();
     CReceiverBand(const CReceiverBand&);
     CReceiverBand& operator=(const CReceiverBand&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CReceiverBand_H*/

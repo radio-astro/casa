@@ -80,6 +80,9 @@ using namespace enumerations;
 	
 
 	
+#include "CDopplerReferenceCode.h"
+using namespace DopplerReferenceCodeMod;
+	
 
 
 
@@ -104,7 +107,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Doppler.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -119,7 +122,7 @@ class SourceRow;
 /**
  * The DopplerRow class is a row of a DopplerTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class DopplerRow {
@@ -146,8 +149,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct DopplerRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (DopplerRowIDL x) throw(ConversionException);
+	void setFromIDL (DopplerRowIDL x) ;
 #endif
 	
 	/**
@@ -160,8 +164,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the DopplerTable to which the row built by deserialization will be parented.
+	  */
+	 static DopplerRow* fromBin(EndianISStream& eiss, DopplerTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -226,21 +244,21 @@ public:
 	
  	/**
  	 * Get velDef.
- 	 * @return velDef as Speed
+ 	 * @return velDef as DopplerReferenceCodeMod::DopplerReferenceCode
  	 */
- 	Speed getVelDef() const;
+ 	DopplerReferenceCodeMod::DopplerReferenceCode getVelDef() const;
 	
  
  	
  	
  	/**
- 	 * Set velDef with the specified Speed.
- 	 * @param velDef The Speed value to which velDef is to be set.
+ 	 * Set velDef with the specified DopplerReferenceCodeMod::DopplerReferenceCode.
+ 	 * @param velDef The DopplerReferenceCodeMod::DopplerReferenceCode value to which velDef is to be set.
  	 
  		
  			
  	 */
- 	void setVelDef (Speed velDef);
+ 	void setVelDef (DopplerReferenceCodeMod::DopplerReferenceCode velDef);
   		
 	
 	
@@ -311,12 +329,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this DopplerRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(int sourceId, int transitionIndex, Speed velDef);
+	bool compareNoAutoInc(int sourceId, int transitionIndex, DopplerReferenceCodeMod::DopplerReferenceCode velDef);
 	
 	
 
 	
-	bool compareRequiredValue(int transitionIndex, Speed velDef); 
+	bool compareRequiredValue(int transitionIndex, DopplerReferenceCodeMod::DopplerReferenceCode velDef); 
 		 
 	
 	/**
@@ -415,7 +433,7 @@ private:
 	
 	
 
-	Speed velDef;
+	DopplerReferenceCodeMod::DopplerReferenceCode velDef;
 
 	
 	

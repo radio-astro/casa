@@ -31,6 +31,7 @@
 #include <casa/aips.h>
 #include <casa/BasicSL/Complex.h>
 #include <synthesis/MeasurementComponents/StandardVisCal.h>
+#include <synthesis/MeasurementComponents/CalCorruptor.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -62,6 +63,51 @@ public:
   // Specialize corrupt to pre-zero model for corruption
   virtual void corrupt(VisBuffer& vb);
   using VisMueller::corrupt;
+
+};
+
+
+
+// Additive noise
+// In practice, this is not really solvable, but it
+//   is a SVM because we need access to general simulation methods
+class ANoise : public SolvableVisMueller {
+public:
+
+  // Constructor
+  ANoise(VisSet& vs);
+  ANoise(const Int& nAnt);
+
+  virtual ~ANoise();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::ANoise; };
+
+  // Return type name as string
+  virtual String typeName()     { return "A Noise"; };
+  virtual String longTypeName() { return "A Noise (baseline-based)"; };
+
+  // Algebraic type of Mueller matrix 
+  //  (this is the key distinguishing characteristic)
+  virtual Mueller::MuellerType muellerType() { return Mueller::AddDiag2; };
+
+  // Overide solvability
+  virtual Bool isSolvable() { return False; };
+
+  // this is inherently freqdep:
+  virtual Bool freqDepPar() { return True; };
+
+  virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
+
+protected:
+  // umm... 2 like an M, for each of parallel hands?
+  virtual Int nPar() { return 2; };
+
+  // Jones matrix elements are trivial
+  virtual Bool trivialMuellerElem() { return True; };
+
+private:
+  ANoiseCorruptor *acorruptor_p;
 
 };
 

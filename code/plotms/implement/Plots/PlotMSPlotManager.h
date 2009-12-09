@@ -27,15 +27,20 @@
 #ifndef PLOTMSPLOTMANAGER_H_
 #define PLOTMSPLOTMANAGER_H_
 
+#include <graphics/GenericPlotter/PlotFactory.h>
 #include <plotms/Plots/PlotMSPage.h>
-#include <plotms/Plots/PlotMSSinglePlot.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
 
 //# Forward Declararations
+class PlotMS;
+class PlotMSMultiPlot;
+class PlotMSPlot;
 class PlotMSPlotManagerWatcher;
+class PlotMSPlotParameters;
+class PlotMSSinglePlot;
 
 
 // Class which manages PlotMSPlots for plotms.  Mainly handles adding new plots
@@ -43,6 +48,10 @@ class PlotMSPlotManagerWatcher;
 // Plotter.  Any PlotMSPlots should be owned by the manager, which will handle
 // deletion as necessary.
 class PlotMSPlotManager {
+    
+    //# Friend class declarations.
+    friend class PlotMSMultiPlot;
+    
 public:
     // Constructor.  Parent must be set using setParent() before manager can be
     // used.
@@ -64,6 +73,9 @@ public:
     // Adds the given watcher to this manager.
     void addWatcher(PlotMSPlotManagerWatcher* watcher);
     
+    // Removes the given watcher from this manager.
+    void removeWatcher(PlotMSPlotManagerWatcher* watcher);
+    
     
     // Returns the number of plots.
     unsigned int numPlots() const;
@@ -79,16 +91,18 @@ public:
     // <group>
     const vector<PlotMSPlotParameters*>& plotParameters() const;
     PlotMSPlotParameters* plotParameters(unsigned int index);
-    PlotMSSinglePlotParameters* singlePlotParameters(unsigned int index);
     // </group>
     
     
     // Creates a new PlotMSSinglePlot, initializes it properly, adds it to the
     // plotter, and returns a pointer to it.  If parameters are given, they are
     // used; otherwise the defaults are used.
-    PlotMSSinglePlot* addSinglePlot(PlotMS* parent,
-            const PlotMSSinglePlotParameters* p = NULL);
+    PlotMSSinglePlot* addSinglePlot(const PlotMSPlotParameters* p = NULL);
     
+    // Creates a new PlotMSMultiPlot, initializes it properly, adds it to the
+    // plotter, and returns a pointer to it.  If parameters are given, they are
+    // used; otherwise the defaults are used.
+    PlotMSMultiPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
     
     // Clears out all plots and canvases.
     void clearPlotsAndCanvases();
@@ -116,12 +130,8 @@ private:
     PlotMSPages itsPages_;
     
     
-    // Adds the given plot to the plotter, by creating new canvases,
-    // initializing the plot and assigning it canvases, and then putting the
-    // canvases in the plotter layout.  For now, multiple plots are handled
-    // by putting new canvases either to the right of or below the old
-    // canvases, whichever is the most "square".
-    void addPlotToPlotter(PlotMSPlot* plot);
+    // Helper method for add*Plot methods.
+    void addPlot(PlotMSPlot* plot, const PlotMSPlotParameters* p);
     
     // Notifies any watchers that the managed plots have changed.
     void notifyWatchers() const;

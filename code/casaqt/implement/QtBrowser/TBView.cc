@@ -29,6 +29,7 @@
 #include <casaqt/QtBrowser/TBFilterRules.qo.h>
 #include <casaqt/QtBrowser/TBFormat.qo.h>
 #include <casaqt/QtBrowser/TBData.h>
+#include <casaqt/QtUtilities/QtFileDialog.qo.h>
 
 #include <fstream>
 #include <sys/stat.h>
@@ -59,7 +60,7 @@ TBTableView::~TBTableView() { }
 
 // Constructors/Destructors //
 
-TBView::TBView() { }
+TBView::TBView() : histLimit(QtFileDialog::historyLimit()) { }
 
 TBView::~TBView() {
     for(unsigned int i = 0; i < views.size(); i++)
@@ -85,6 +86,9 @@ String TBView::getLastOpenedDirectory() {
     return lastOpenedDir;
 }
 
+int TBView::chooserHistoryLimit() const { return histLimit; }
+void TBView::setChooserHistoryLimit(int limit) { histLimit = limit; }
+
 // Public Methods //
 
 bool TBView::saveToFile(String file) {
@@ -101,6 +105,10 @@ bool TBView::saveToFile(String file) {
                 viewElem->setAttribute(TBConstants::xstr(
                                        TBConstants::VIEW_LASTDIR),
                                        TBConstants::xstr(lastOpenedDir));
+            viewElem->setAttribute(TBConstants::xstr(
+                                   TBConstants::VIEW_HISTLIMIT),
+                                   TBConstants::xstr(
+                                   TBConstants::itoa(histLimit)));
             rootElem->appendChild(viewElem);
             
             for(unsigned int i = 0; i < views.size(); i++) {
@@ -366,6 +374,14 @@ TBView* TBView::loadFromFile(String file) {
                 String lastdir = TBConstants::xstr(e->getAttribute(
                         TBConstants::xstr(TBConstants::VIEW_LASTDIR)));
                 if(!lastdir.empty()) view->lastOpenedDir = lastdir;
+                
+                String histstr = TBConstants::xstr(e->getAttribute(
+                        TBConstants::xstr(TBConstants::VIEW_HISTLIMIT)));
+                if(!histstr.empty()) {
+                    int historylimit;
+                    if(TBConstants::atoi(histstr, &historylimit) >= 1)
+                        view->histLimit = historylimit;
+                }
                 
                 // get table views
                 nodes = e->getElementsByTagName(TBConstants::xstr(

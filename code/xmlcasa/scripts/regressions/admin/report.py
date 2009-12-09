@@ -32,13 +32,13 @@ colormania = True    #
 
 SOURCE_DIR = os.environ["CASAPATH"].split()[0]
 known_releases = ["CASA Version 2.3.0 (build #6654)",
-                  "CASA Version 2.3.1 (build #6826)"]
+                  "CASA Version 2.3.1 (build #6826)",
+                  "CASA Version 2.4.0 (build #8115)"]
 
-#exclude_host = ['pc011896.hq.eso.org']
-#exclude_test = ['fits-import-export']
 exclude_host = []
-exclude_test = []
-same_version_per_host = False  # if False the latest run for each test is reported
+exclude_test = {}
+exclude_test['pointing_regression'] = ["CASA Version 2.4.0 (build #8115)"]
+same_version_per_host = False # if False, the latest run for each test is reported
 
 def cmp_exec(a, b):
     if a[1] == 'exec':
@@ -65,12 +65,14 @@ def architecture(s):
     return arch
 
 def distribution(s):
+
+    try:
+        rev,name = re.compile(' ([^\s]+) \(([^\)]+)\)').search(s).groups()
+    except:
+        rev,name = "???", "???"
+        
     if s.find('Linux') >= 0:
         base = 'Linux'
-        try:
-            rev,name = re.compile(' ([^\s]+) \(([^\)]+)\)').search(s).groups()
-        except:
-            rev,name = "???", "???"
         if s.find('Fedora Core') >= 0:
             distro = 'FC'
         elif s.find('Fedora') >= 0:
@@ -86,10 +88,9 @@ def distribution(s):
         return base, distro, rev, name    
         # e.g.  Linux, RHEL, 5.2, Tikanga
     elif s.find('Darwin') >= 0:
-        base = 'Darwin'   #fixme: detect this at runtime
+        base = 'Darwin'
         distro = 'OS X'
-        rev = '10.5.5'
-        name = 'Leopard'
+
         return base, distro, rev, name
     else:
         return "???", "???", "???", "???"
@@ -116,7 +117,7 @@ def selected_revisions(data):
     # 32,48,64,80,96   (density=1/16 in range < 125)
     # etc.
     #
-    # and also 5,6,7,8,9
+    # and also 5,6,7,8,9, ... 4b-1
     #
     b = 5
     d = 4
@@ -128,7 +129,7 @@ def selected_revisions(data):
         for j in range(20):
             # loops until b^20 (i.e. long enough)
             if (c < interval and (c % density) == 0) or \
-                   (c < 2*b) :
+                   (c < 4*b) :
 
                 use_it = True
                 break
@@ -197,10 +198,11 @@ class report:
         #
         # collect some general data
         #
-        hosts_set    = sets.Set()
-        tests_set    = sets.Set()
-        self.subtests = {}
-        casas_set    = sets.Set()
+        hosts_set         = sets.Set()
+        tests_set         = sets.Set()
+        self.tests_v      = {}          # tests per version
+        self.subtests     = {}
+        casas_set         = sets.Set()
         for log in data:
             # Use only the hostname as key
             # (the 'platform' string format might change
@@ -214,12 +216,17 @@ class report:
             test = log['testid']
             if not self.subtests.has_key(test):
                 self.subtests[test] = sets.Set()
+
+            if not self.tests_v.has_key(log['CASA']):
+                self.tests_v[log['CASA']] = sets.Set()
+
+            self.tests_v[log['CASA']].add(log['testid'])
                 
             if log['type'] == 'exec':
                 self.subtests[test].add(('', log['type']))
             else:
                 self.subtests[test].add((log['image'],log['type']))
-            
+           
         #
         # Identify also hosts from entries in ./Log but no ./Result logfile exist
         if False:
@@ -349,6 +356,13 @@ class report:
         archive_size = commands.getoutput("du -hs " + result_dir + " | awk '{print $1}'")
         fd.write('<title>CASA regression tests</title>\n')
         fd.write('<body>\n')
+        if revision == 'all':
+            fd.write('[ All versions ]  <a href="../CASA_latest/test-report.html">[ Latest test release ]</a><p>')
+        else:
+            fd.write('<a href="../CASA/test-report.html">[ All versions ]</a>  [ Latest test release ]<p>')
+#        fd.write('  <a href="../CASA_230/test-report.html">[ CASA 2.3.0 ]</a>')
+
+#        fd.write('<p>')
         fd.write('Generated on <i>'+time.strftime('%a %Y %b %d %H:%M:%S %Z')+'</i>')
 
         fd.write('<br>Summary of <i>'+str(len(data))+'</i> tests, archive size is <i>'+ \
@@ -358,10 +372,6 @@ class report:
         fd.write('<dd><a href="#revision_platform_full">Revision vs. platform</a> (full)')
         fd.write('<dd><a href="#test_platform_full">Test vs. platform</a> (full)')
         fd.write('</dl>')
-        if revision == 'all':
-            fd.write('<a href="../CASA_latest/test-report.html">--> Latest test release</a><br>')
-        else:
-            fd.write('<a href="../CASA/test-report.html">--> All revisions</a><br>')
         fd.write('<center>')
 
         if revision != 'all':
@@ -374,7 +384,7 @@ class report:
                 raise Exception, "Could not parse revision number '%s'" \
                       % (latest_on_stable)
 
-            fd.write('<br><h2>Revision '+revision+' only, stable only</h2>')
+            fd.write('<br><h2>Revision '+revision+' only, stable branch only</h2>')
             fd.write('<hr>')
 
             # Filter out all other versions
@@ -394,7 +404,7 @@ class report:
         extended = False
         self.generate_host_vs_revision('Revision vs. platform',
                                        reg_dir, report_dir,
-                                       self.tests,
+                                       self.tests_v,
                                        False, extended, data, fd)
 
         self.dump_legend(fd)
@@ -410,7 +420,7 @@ class report:
         extended = True
         self.generate_host_vs_revision('Revision vs. platform',
                                        reg_dir, report_dir,
-                                       self.tests,
+                                       self.tests_v,
                                        gen_plot, extended, data, fd)
 
         fd.write('<hr>')
@@ -452,16 +462,16 @@ class report:
                 summary[host][casa]['pass'] = 0
                 summary[host][casa]['fail'] = 0
                 summary[host][casa]['undetermined'] = 0
-                for test in tests:
+                for test in tests[casa]:
                     status  [host][casa][test] = {}
                     run_date[host][casa][test] = {}
                     l       [host][casa][test] = {}
 
         for log in data:
-            if log['testid'] in tests:
-                host = log['host']
-                casa = log['CASA']
-                test = log['testid']
+            host = log['host']
+            casa = log['CASA']
+            test = log['testid']
+            if test in tests[casa]:
                 if log['type'] == 'exec':
                     subtest = ('', log['type'])
                 else:
@@ -489,7 +499,7 @@ class report:
         for host in self.hosts:
             for casa in self.casas:
                 # Count number of pass/fail/undet.
-                for test in tests:
+                for test in tests[casa]:
                     for subtest in self.subtests[test]:
                         if status[host][casa][test].has_key(subtest):
                             s = status[host][casa][test][subtest]
@@ -638,33 +648,23 @@ class report:
         fd.write('<TD><b>Stable summary</b></TD>')
         fd.write('</TR>\n')    
 
-        # identify subtests for each test
-        subtests = {}
-        for test in self.tests:
-            subtests[test] = sets.Set()
         subtests_list = {}
-            
-        for log in data:
-            test = log['testid']
 
-            if log['type'] == 'exec':
-                subtests[test].add(('', log['type']))
-            else:
-                subtests[test].add((log['image'],log['type']))
-
-        for test in self.tests:
+        for test in self.tests:      # Loop through set of all tests,
+                                     # not just test for any particular version
 
             # loop through the subtests so that the 'exec' subtest
             # is always processed first
-            subtests_list[test] = [s for s in subtests[test]]
+            subtests_list[test] = [s for s in self.subtests[test]]
             subtests_list[test].sort(cmp=cmp_exec)
             
             print "Subtests for", test, "=", subtests_list[test]
 
             summary_filename = report_dir+"/summary_"+test+".html"
             fd.write('<TR>')
-            fd.write('<TD rowspan='+str(1+len(subtests[test]))+' align=center><big><b>')
+            fd.write('<TD rowspan='+str(1+len(self.subtests[test]))+' align=center><big><b>')
             if extended:
+                fd.write('<a name="'+test+'"></a>')
                 fd.write('<a href="summary_'+test+'.html">'+shorten(test)+'</a>')
 
                 f = open(summary_filename, "w")
@@ -672,17 +672,23 @@ class report:
                 f.write('<html><head></head><body><center>\n')
 
                 print "Creating %s..." % (summary_filename)
+
+                # For every CASA version, make a summary of only
+                # the current test
+                tests_to_consider = {}
+                for casa in self.casas:
+                    tests_to_consider[casa] = [test]
                 
                 self.generate_host_vs_revision(test+' all subtests',
                                                reg_dir, report_dir,
-                                               [test],
+                                               tests_to_consider,
                                                False, False,
                                                data, f)
                 self.dump_legend(f)
                 f.write('</center></body></html>')
                 f.close()               
             else:
-                fd.write('<a href="summary_'+test+'.html">'+shorten(test, 10)+'</a>')
+                fd.write('<a href="#'+test+'">'+shorten(test, 10)+'</a>')
                 
             fd.write('</big></b>')
             if extended and self.test_description.has_key(test):
@@ -804,7 +810,7 @@ class report:
         fd.write('</TABLE>\n')
 
     def dump_legend(self, fd):
-        fd.write('Legend: <br>Released versions in <b>bold</b> <table border="1" cellpadding=0 cellspacing=0><tr>')
+        fd.write('Legend: <br>Releases in <b>bold</b> <table border="1" cellpadding=0 cellspacing=0><tr>')
         self.dump_td_start(fd, 1, 0, 0, " align=center")
         fd.write('All tests passed')
         self.dump_td_end(fd)
@@ -830,17 +836,17 @@ class report:
 
         result_dir = reg_dir + '/Result'
 
-        # Find the latest run
+        # Find the latest run; CASA version has 1st priority, date has 2nd priority
         log = None
-        latest_date = '0000'
+        latest_run = 'A'
         for l in data:
             if l['host'] == host and \
                (same_version_per_host == False or l['CASA'] == self.casa_revision[host]) and \
                l['testid'] == test and \
                l['type'] == subtest[1] and \
                (subtest[0] == '' or l['image'] == subtest[0]):
-                if l['date'] > latest_date:
-                    latest_date = l['date']
+                if (l['CASA'] + l['date']) > latest_run:
+                    latest_run = (l['CASA'] + l['date'])
                     log = l
         coords = ' title="'+test+' \\ '+host+'"'
         
@@ -1014,7 +1020,7 @@ class report:
                             if log.has_key('image_'+pol+'_ra'):
                                 f.write('<pre>')
                                 for i in [0, 1]:
-                                    f.write('Pol %s: %s:\nra %s  dec %s \nbmax %s bmin %s \nbpa %s flux %s' %
+                                    f.write('Pol %s: %s:\nra %s  dec %s \nbmaj %s bmin %s \nbpa %s flux %s' %
                                              (pol, \
                                               ['Component found', 'Template'][i],
                                               log[['image_', 'ref_'][i]+pol+'_ra'],
@@ -1025,17 +1031,19 @@ class report:
                                               log[['image_', 'ref_'][i]+pol+'_flux']))
                                     f.write('<br>')
                                 f.write('</pre>')
+                                f.write('<br>')
                             if log.has_key('image_'+pol+'_min'):
                                 f.write('<pre>')                        
-                                f.write('Image    min: %g\nmax: %g\nrms: %g \n' %
+                                f.write('Image '+pol+'\n    min: %g\n    max: %g\n    rms: %g\n' %
                                          (float(log['image_'+pol+'_min']),
                                           float(log['image_'+pol+'_max']),
                                           float(log['image_'+pol+'_rms'])))
-                                f.write('Template min: %g\nmax: %g\nrms: %g \n' %
+                                f.write('Template '+pol+'\n    min: %g\n    max: %g\n    rms: %g\n' %
                                          (float(log['ref_'+pol+'_min']),
                                           float(log['ref_'+pol+'_max']),
                                           float(log['ref_'+pol+'_rms'])))
                                 f.write('</pre>')
+                                f.write('<br>')
                     else:
                         raise Exception, 'Unknown test type '+log['type']
                     
@@ -1049,9 +1057,9 @@ class report:
             fd.write('<td align=center '+coords+'>')
             if extended:
                 if subtest[1] == 'exec':
-                    fd.write('Test not run')
+                    fd.write('Test not run (yet)')
                 else:
-                    fd.write('Test not done')
+                    fd.write('Test not done (yet)')
             summary_host[host]['undet'] += 1
             if host.find('tst') >= 0 or \
                    host.find('ma014655') >= 0:
@@ -1063,9 +1071,67 @@ class report:
             if log.has_key('data_version'):
                 fd.write('<br>Data: '+log['data_version'])
 
+            if log['type'] == 'exec':
+                from_dir = os.path.dirname('%s/%s' % (result_dir, log['logfile']))
+                to_dir   = os.path.dirname('%s/%s' % (report_dir, log['logfile']))
 
-        if extended and subtest[1] == 'exec':
-            framework_log = 'run-'+test+'-'+host+'.log'
+                prof_file = from_dir + "/cProfile.profile"
+                plot_file = "python_profile-"+test+"-"+host+".png"
+                if os.path.isfile(prof_file):
+                    print "Creating python callgraph..."
+                    # This might fail with a "... marshal blah, blah ..." error
+                    # if there's a mismatch between this python and
+                    # CASA's python which created the binary cProfile.profile
+                    os.system("/usr/lib/casapy/bin/python /tmp/gprof2dot.py -f pstats " +\
+                              prof_file + " | dot -Tpng -o " +\
+                              report_dir + '/' + plot_file)
+                    fd.write('<br><a href="'+plot_file+'">Python profile</a>')
+
+
+                cpp_dot  = from_dir + '/cpp_profile.dot'
+                cpp_txt  = from_dir + '/cpp_profile.txt'
+                cpp_src  = from_dir + '/cpp_profile.cc'
+                cpp_png  = from_dir + '/cpp_profile.png'
+                cpp_html = to_dir + '/cpp_profile.html'
+                if os.path.isfile(cpp_dot):
+                    print "Creating C++ profile ", cpp_dot
+                    #cmd = "cat " + cpp_dot + " | dot -Tpng -o " + to_dir + '/cpp_profile.png'
+                    #print cmd
+                    #os.system(cmd)
+
+                    if os.path.isfile(cpp_txt):
+                        shutil.copyfile(from_dir+'/cpp_profile.txt',
+                                        to_dir  +'/cpp_profile.txt')
+                    if os.path.isfile(cpp_src):
+                        shutil.copyfile(from_dir+'/cpp_profile.cc',
+                                        to_dir  +'/cpp_profile.cc')
+                    if os.path.isfile(cpp_png):
+                        shutil.copyfile(from_dir+'/cpp_profile.png',
+                                        to_dir  +'/cpp_profile.png')
+                    elif os.path.isfile(cpp_dot):
+                        # If the dot tool wasn't on the test machine
+                        # create the .png now
+                        os.system("cat " + cpp_dot + " | dot -Tpng -o " + \
+                                  to_dir + '/cpp_profile.png')
+
+                    fd.write('<br><a href="'+os.path.dirname(log['logfile'])+'/cpp_profile.html">C++ profile</a>')
+                    f = open(cpp_html, 'w')
+                    f.write('<html><head><title>'+cpp_html+'</title></head><body>')
+                    f.write('<table cellpadding="10">')
+                    f.write('<tr><td rowspan="2">'+test+' timing profile</td><td>as <a href="cpp_profile.png">callgraph</a><br></td></tr><tr><td>as <a href="cpp_profile.txt">text</a></td></tr>')
+                    f.write('<tr><td colspan="2">'+test+' <a href="cpp_profile.cc">annotated source</a></td></tr>')
+                    f.write('</table>')
+                    f.write('<p>Note: The timing profile includes CPU time only. Time spent waiting for I/O is not included. Check <a href="../profile-'+test+'-'+host+'.html">here</a> to see if this test is CPU bound or I/O bound.')
+                    f.write('<p>Note: The timing profile covers the casapy process including any threads. Time which was spent in casapy subprocesses (such as asdm2MS) is not included.')
+                    f.write('<p>Note: The graphical and textual profiles contain the same information but displayed in different ways. However, functions (nodes) accounting for less than 1 percent of the total execution time, as well as function calls (edges) accounting for less than 0.1 percent of the overall execution time, are excluded from the graphical representation. For that reason, the percentages may not add up exactly.')
+                    f.write('<p>For further information see <a href="http://oprofile.sourceforge.net">oprofile</a> ')
+                    f.write('and <a href="http://code.google.com/p/jrfonseca/wiki/Gprof2Dot">Gprof2Dot</a>.')
+                    f.write('</body></html>')
+                    f.close()
+            
+        if extended and subtest[1] == 'exec':          
+            framework_log = 'run-'     + test + '-' + host + '.log'
+
             if os.path.isfile(reg_dir + '/Log/' + framework_log):
                 shutil.copyfile(reg_dir + '/Log/' + framework_log, \
                                 report_dir + '/' + framework_log)
@@ -1178,6 +1244,16 @@ class report:
             data_file['logfile'] = logfile.split(result_dir)[1].lstrip('/')
             while line:
                 #print line
+
+                # workarounds for casapyinfo not returning
+                # non-zero on error
+                line = re.sub(" rcasapyinfo.*", "' # changed by report", line)
+                if re.compile("^ ").search(line):
+                    line = fd.readline().rstrip()
+                    lineno += 1
+                    continue
+                           
+
                 try:
                     k, v, c = re.compile(r"""
                     ^(\w+)              # key
@@ -1197,6 +1273,7 @@ class report:
                 #print k, "=", v, "=", c
                 #data_file[k] = (v, c)  # include comments
                 data_file[k] = v
+                
                 # next line
                 line = fd.readline().rstrip()
                 lineno += 1
@@ -1239,14 +1316,17 @@ class report:
                 if not found_ref:
                     is_valid = False
 
-            if is_valid and \
-                   not data_file['host'] in exclude_host and \
-                   not (data_file['testid'] in exclude_test \
-                        and \
-                        (data_file['host'].find('tst') >= 0 or \
-                         data_file['host'].find('ma014655') >= 0 \
-                         )):                # ignore pc011896 for now; it is out of date
 
+            if is_valid and data_file['host'] in exclude_host:
+                is_valid = False
+
+            if is_valid and \
+                   exclude_test.has_key(data_file['testid']) and \
+                   data_file['CASA'] in exclude_test[data_file['testid']]:
+                #print "Excluding", data_file['testid'], "in version", data_file['CASA']
+                is_valid = False
+                               
+            if is_valid:
                 if revision == 'all' or \
                        data_file['host'].find('tst') >= 0 or \
                        data_file['host'].find('ma014655') >= 0:
@@ -1480,7 +1560,7 @@ class report:
         pl.xlabel('time (sec)')
         pl.ylabel('CPU usage (percent)')
         font=FontProperties(size='small')
-        pl.legend(('user', 'idle', 'wait', 'system'),
+        pl.legend(('user', 'idle', 'iowait', 'system'),
                   loc=[0.7,0.85], prop=font)
 
         pl.title('Machine CPU usage for '+testname+' on '+host)

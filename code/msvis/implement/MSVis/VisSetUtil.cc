@@ -78,12 +78,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <todo asof="">
 // </todo>
-
 void VisSetUtil::WeightNatural(VisSet& vs, Double& sumwt) {
+  VisIter& vi(vs.iter());
+  VisSetUtil::WeightNatural(vi,sumwt);
+
+}
+void VisSetUtil::WeightNatural(VisibilityIterator& vi, Double& sumwt) {
   
   LogIO os(LogOrigin("VisSetUtil", "WeightNatural()", WHERE));
   
-  VisIter& vi(vs.iter());
+  
   VisBuffer vb(vi);
   
   sumwt=0.0;
@@ -110,8 +114,18 @@ void VisSetUtil::WeightNatural(VisSet& vs, Double& sumwt) {
     os << LogIO::WARN << "Sum of weights is not positive: check that some data is unflagged and that the WEIGHT column is positive" << LogIO::POST;
   }
 }
-
 void VisSetUtil::WeightUniform(VisSet& vs,
+			       const String& rmode, const Quantity& noise,
+			       const Double robust, const Int nx, const Int ny,
+			       const Quantity& cellx, const Quantity& celly,
+			       Double& sumwt,
+			       const Int uBox, const Int vBox) {
+  VisIter& vi(vs.iter());
+  VisSetUtil::WeightUniform(vi,rmode, noise,robust,nx, ny, cellx,celly,
+			    sumwt,uBox, vBox);
+
+}
+void VisSetUtil::WeightUniform(VisibilityIterator& vi,
 			       const String& rmode, const Quantity& noise,
 			       const Double robust, const Int nx, const Int ny,
 			       const Quantity& cellx, const Quantity& celly,
@@ -122,7 +136,7 @@ void VisSetUtil::WeightUniform(VisSet& vs,
   
   sumwt=0.0;
 
-  VisIter& vi(vs.iter());
+  
   VisBuffer vb(vi);
   
   Float uscale, vscale;
@@ -183,7 +197,7 @@ void VisSetUtil::WeightUniform(VisSet& vs,
   
   Float f2, d2;
   if (rmode=="norm") {
-    os << "Normal robustness, robust = " << robust << LogIO::POST;
+    os << LogIO::DEBUG1 << "Normal robustness, robust = " << robust << LogIO::POST;
     Double sumlocwt = 0.;
     for(Int vgrid=0;vgrid<ny;vgrid++) {
       for(Int ugrid=0;ugrid<nx;ugrid++) {
@@ -194,7 +208,8 @@ void VisSetUtil::WeightUniform(VisSet& vs,
     d2 = 1.0;
   }
   else if (rmode=="abs") {
-    os << "Absolute robustness, robust = " << robust << ", noise = "
+    os << LogIO::DEBUG1
+       << "Absolute robustness, robust = " << robust << ", noise = "
        << noise.get("Jy").getValue() << "Jy" << LogIO::POST;
     f2 = square(robust);
     d2 = 2.0 * square(noise.get("Jy").getValue());
@@ -237,14 +252,17 @@ void VisSetUtil::WeightUniform(VisSet& vs,
     os << LogIO::WARN << "Sum of weights is not positive: check that some data is unflagged and that the WEIGHT column is positive" << LogIO::POST;
   }
 }
-
 void VisSetUtil::WeightRadial(VisSet& vs, Double& sumwt) {
+  VisIter& vi(vs.iter());
+  VisSetUtil::WeightRadial(vi, sumwt);
+}
+void VisSetUtil::WeightRadial(VisibilityIterator& vi, Double& sumwt) {
   
   LogIO os(LogOrigin("VisSetUtil", "WeightRadial()", WHERE));
   
   sumwt=0.0;
 
-  VisIter& vi(vs.iter());
+  
   VisBuffer vb(vi);
   
   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
@@ -276,6 +294,14 @@ void VisSetUtil::Filter(VisSet& vs, const String& type, const Quantity& bmaj,
 			const Quantity& bmin, const Quantity& bpa,
 			Double& sumwt, Double& minfilter, Double& maxfilter)
 {
+  VisIter& vi(vs.iter());
+  VisSetUtil::Filter(vi, type,bmaj,bmin, bpa, sumwt, minfilter, maxfilter);
+}
+
+void VisSetUtil::Filter(VisibilityIterator& vi, const String& type, const Quantity& bmaj,
+			const Quantity& bmin, const Quantity& bpa,
+			Double& sumwt, Double& minfilter, Double& maxfilter)
+{
 
   LogIO os(LogOrigin("VisSetUtil", "filter()", WHERE));
   
@@ -283,7 +309,7 @@ void VisSetUtil::Filter(VisSet& vs, const String& type, const Quantity& bmaj,
   maxfilter=0.0;
   minfilter=1.0;
   
-  VisIter& vi(vs.iter());
+  
   VisBuffer vb(vi);
 
   if (type=="gaussian") {
@@ -353,13 +379,20 @@ void VisSetUtil::Filter(VisSet& vs, const String& type, const Quantity& bmaj,
 
 
 // Implement a uv range
+
 void VisSetUtil::UVRange(VisSet &vs, const Double& uvmin, const Double& uvmax,
+			 Double& sumwt)
+{
+  VisIter& vi(vs.iter());
+  VisSetUtil::UVRange(vi, uvmin, uvmax,sumwt);
+}
+void VisSetUtil::UVRange(VisIter& vi, const Double& uvmin, const Double& uvmax,
 			 Double& sumwt)
 {
   LogIO os(LogOrigin("VisSetUtil", "UVRange()", WHERE));
   
   sumwt=0.0;
-  VisIter& vi(vs.iter());
+ 
   VisBuffer vb(vi);
 
   if(uvmax<uvmin||uvmin<0.0) {
@@ -392,15 +425,22 @@ void VisSetUtil::UVRange(VisSet &vs, const Double& uvmin, const Double& uvmax,
 }
 
 // Calculate sensitivity
-void VisSetUtil::Sensitivity(VisSet &vs, Quantity& pointsourcesens, Double& relativesens,
-			     Double& sumwt)
+void VisSetUtil::Sensitivity(VisSet &vs, Quantity& pointsourcesens, 
+			     Double& relativesens, Double& sumwt)
+{
+  ROVisIter& vi(vs.iter());
+   VisSetUtil::Sensitivity(vi, pointsourcesens, relativesens,sumwt);
+
+}
+void VisSetUtil::Sensitivity(ROVisIter &vi, Quantity& pointsourcesens, 
+			     Double& relativesens, Double& sumwt)
 {
   LogIO os(LogOrigin("VisSetUtil", "Sensitivity()", WHERE));
   
   sumwt=0.0;
   Double sumwtsq=0.0;
   Double sumInverseVariance=0.0;
-  ROVisIter& vi(vs.iter());
+  
   VisBuffer vb(vi);
 
   // Now iterate through the data
@@ -435,12 +475,16 @@ void VisSetUtil::Sensitivity(VisSet &vs, Quantity& pointsourcesens, Double& rela
   pointsourcesens=Quantity(sqrt(sumwtsq)/sumwt, "Jy");
   relativesens=sqrt(sumwtsq)/sumwt/naturalsens;
 }
-
 void VisSetUtil::HanningSmooth(VisSet &vs)
+{
+  VisIter& vi(vs.iter());
+  VisSetUtil::HanningSmooth(vi);
+}
+void VisSetUtil::HanningSmooth(VisIter &vi)
 {
   LogIO os(LogOrigin("VisSetUtil", "HanningSmooth()"));
 
-  VisIter& vi(vs.iter());
+  
   VisBuffer vb(vi);
 
   Int row, chn, pol;
@@ -529,12 +573,16 @@ void VisSetUtil::HanningSmooth(VisSet &vs)
     }
   }
 }
-
 void VisSetUtil::UVSub(VisSet &vs, Bool reverse)
+{
+  VisIter& vi(vs.iter());
+  VisSetUtil::UVSub(vi, reverse);
+}
+void VisSetUtil::UVSub(VisIter &vi, Bool reverse)
 {
   LogIO os(LogOrigin("VisSetUtil", "UVSub()"));
 
-  VisIter& vi(vs.iter());
+
   VisBuffer vb(vi);
 
   Int row, chn, pol;

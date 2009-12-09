@@ -26,6 +26,7 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotMSSelection.h>
 
+#include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
 
 namespace casa {
@@ -68,22 +69,15 @@ Record PlotMSSelection::toRecord() const {
 }
 
 void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
-        Matrix<Int>& chansel) const {    
+			    Vector<Vector<Slice> >& chansel,
+			    Vector<Vector<Slice> >& corrsel) const {    
     // Set the selected MeasurementSet to be the same initially as the input
     // MeasurementSet
     selMS = ms;
 
-    if (corr()!="") {
-      cout << "WARNING: Sorry, Correlation selection is not yet working." << endl;
-      cout << "         Proceding with no correlation selection." << endl;
-    }
-
-    mssSetData(ms, selMS, "", timerange(), antenna(), field(), spw(),
-               uvrange(), msselect(), "", scan(), array());
-
-    MSSelection mss;
-    mss.setSpwExpr(spw());
-    chansel=mss.getChanList(&selMS);
+    mssSetData(ms, selMS, chansel,corrsel, "", 
+	       timerange(), antenna(), field(), spw(),
+	       uvrange(), msselect(), corr(), scan(), array());
 }
 
 

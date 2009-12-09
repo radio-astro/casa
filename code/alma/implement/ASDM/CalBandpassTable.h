@@ -80,17 +80,18 @@ using namespace BasebandNameMod;
 	
 
 	
-
+#include "CNetSideband.h"
+using namespace NetSidebandMod;
 	
 
 	
-
+#include "CAtmPhaseCorrection.h"
+using namespace AtmPhaseCorrectionMod;
 	
 
 	
-
-	
-
+#include "CCalCurveType.h"
+using namespace CalCurveTypeMod;
 	
 
 	
@@ -103,17 +104,20 @@ using namespace ReceiverBandMod;
 	
 
 	
-#include "CAtmPhaseCorrection.h"
-using namespace AtmPhaseCorrectionMod;
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
 #include "CPolarizationType.h"
 using namespace PolarizationTypeMod;
-	
-
-	
-
 	
 
 	
@@ -164,152 +168,182 @@ class ASDM;
 class CalBandpassRow;
 /**
  * The CalBandpassTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Result of passband calibration performed on-line by TelCal.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalBandpass </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> basebandName </TD>
+ 		 
+ * <TD> BasebandNameMod::BasebandName</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies the baseband. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> sideband </TD>
+ 		 
+ * <TD> NetSidebandMod::NetSideband</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies the first LO sideband. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> basebandName </TD> 
- * <TD> BasebandNameMod::BasebandName </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> atmPhaseCorrection </TD>
+ 		 
+ * <TD> AtmPhaseCorrectionMod::AtmPhaseCorrection</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;qualifies how the atmospheric phase correction has been applied. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> typeCurve </TD>
+ 		 
+ * <TD> CalCurveTypeMod::CalCurveType</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies the type of curve. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> receiverBand </TD>
+ 		 
+ * <TD> ReceiverBandMod::ReceiverBand</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies the receiver band. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalReduction Table. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> numAntenna </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numBaseline </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numAPC </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numReceptor </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> startValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the end time of result validity period. </TD>
  * </TR>
 	
  * <TR>
- * <TD> freqLimits </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>  2 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> receiverBand </TD> 
- * <TD> ReceiverBandMod::ReceiverBand </TD>
+ * <TD> numAntenna </TD> 
+ * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of antennas. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numPoly </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of coefficients of the polynomial. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numReceptor </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of receptors. </TD>
  * </TR>
 	
  * <TR>
  * <TD> antennaNames </TD> 
  * <TD> vector<string > </TD>
  * <TD>  numAntenna </TD> 
+ * <TD> &nbsp;the names of the antennas. </TD>
  * </TR>
 	
  * <TR>
  * <TD> refAntennaName </TD> 
  * <TD> string </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the name of the reference antenna. </TD>
  * </TR>
 	
  * <TR>
- * <TD> atmPhaseCorrections </TD> 
- * <TD> vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > </TD>
- * <TD>  numAPC </TD> 
+ * <TD> freqLimits </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  2 </TD> 
+ * <TD> &nbsp;the frequency range for the polynomial description of the passband. </TD>
  * </TR>
 	
  * <TR>
  * <TD> polarizationTypes </TD> 
  * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
  * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the polarizations of the receptors (one value per receptor). </TD>
  * </TR>
 	
  * <TR>
- * <TD> numAmpliPoly </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> ampliCurve </TD> 
- * <TD> vector<vector<vector<vector<float > > > > </TD>
- * <TD>  numAntenna, numAPC, numReceptor, numAmpliPoly </TD> 
- * </TR>
-	
- * <TR>
- * <TD> ampliRms </TD> 
+ * <TD> curve </TD> 
  * <TD> vector<vector<vector<float > > > </TD>
- * <TD>  numBaseline, numAPC, numReceptor </TD> 
+ * <TD>  numAntenna, numReceptor, numPoly </TD> 
+ * <TD> &nbsp;the amplitude or phase coefficients, depending on the value of typeCurve (one array of numPoly values per antenna per receptor). </TD>
  * </TR>
 	
  * <TR>
- * <TD> numPhasePoly </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> phaseCurve </TD> 
- * <TD> vector<vector<vector<vector<Angle > > > > </TD>
- * <TD>  numAntenna, numAPC, numReceptor, numPhasePoly </TD> 
- * </TR>
-	
- * <TR>
- * <TD> phaseRms </TD> 
- * <TD> vector<vector<vector<float > > > </TD>
- * <TD>  numBaseline, numAPC, numReceptor </TD> 
+ * <TD> reducedChiSquared </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;measures the quality of the least squares fits (one value per receptor). </TD>
  * </TR>
 	
 
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
+	
+ * <TR>
+ * <TD> numBaseline </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the number of baselines. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> rms </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numBaseline  </TD>
+ * <TD>&nbsp; the amplitude or phase residuals ( one array of numBaseline values per receptor). </TD>
+ * </TR>
+	
 
  * </TABLE>
  */
@@ -382,56 +416,50 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param basebandName. 
+	
+ 	 * @param sideband. 
+	
+ 	 * @param atmPhaseCorrection. 
+	
+ 	 * @param typeCurve. 
+	
+ 	 * @param receiverBand. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
-	
- 	 * @param basebandName. 
-	
- 	 * @param numAntenna. 
-	
- 	 * @param numBaseline. 
-	
- 	 * @param numAPC. 
-	
- 	 * @param numReceptor. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param freqLimits. 
+ 	 * @param numAntenna. 
 	
- 	 * @param receiverBand. 
+ 	 * @param numPoly. 
+	
+ 	 * @param numReceptor. 
 	
  	 * @param antennaNames. 
 	
  	 * @param refAntennaName. 
 	
- 	 * @param atmPhaseCorrections. 
+ 	 * @param freqLimits. 
 	
  	 * @param polarizationTypes. 
 	
- 	 * @param numAmpliPoly. 
+ 	 * @param curve. 
 	
- 	 * @param ampliCurve. 
-	
- 	 * @param ampliRms. 
-	
- 	 * @param numPhasePoly. 
-	
- 	 * @param phaseCurve. 
-	
- 	 * @param phaseRms. 
+ 	 * @param reducedChiSquared. 
 	
      */
-	CalBandpassRow *newRow(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numAntenna, int numBaseline, int numAPC, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > freqLimits, ReceiverBandMod::ReceiverBand receiverBand, vector<string > antennaNames, string refAntennaName, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numAmpliPoly, vector<vector<vector<vector<float > > > > ampliCurve, vector<vector<vector<float > > > ampliRms, int numPhasePoly, vector<vector<vector<vector<Angle > > > > phaseCurve, vector<vector<vector<float > > > phaseRms);
+	CalBandpassRow *newRow(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband sideband, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<Frequency > freqLimits, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalBandpassRow *newRowFull(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numAntenna, int numBaseline, int numAPC, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > freqLimits, ReceiverBandMod::ReceiverBand receiverBand, vector<string > antennaNames, string refAntennaName, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numAmpliPoly, vector<vector<vector<vector<float > > > > ampliCurve, vector<vector<vector<float > > > ampliRms, int numPhasePoly, vector<vector<vector<vector<Angle > > > > phaseCurve, vector<vector<vector<float > > > phaseRms);
+	CalBandpassRow *newRowFull(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband sideband, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<Frequency > freqLimits, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared);
 
 
 	/**
@@ -497,15 +525,23 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param basebandName. 
+	
+	 * @param sideband. 
+	
+	 * @param atmPhaseCorrection. 
+	
+	 * @param typeCurve. 
+	
+	 * @param receiverBand. 
+	
 	 * @param calDataId. 
 	
 	 * @param calReductionId. 
 	
-	 * @param basebandName. 
-	
  	 *
 	 */
- 	CalBandpassRow* getRowByKey(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName);
+ 	CalBandpassRow* getRowByKey(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband sideband, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId);
 
  	 	
 
@@ -517,50 +553,44 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
+ 	 * @param basebandName.
+ 	 		
+ 	 * @param sideband.
+ 	 		
+ 	 * @param atmPhaseCorrection.
+ 	 		
+ 	 * @param typeCurve.
+ 	 		
+ 	 * @param receiverBand.
+ 	 		
  	 * @param calDataId.
  	 		
  	 * @param calReductionId.
- 	 		
- 	 * @param basebandName.
- 	 		
- 	 * @param numAntenna.
- 	 		
- 	 * @param numBaseline.
- 	 		
- 	 * @param numAPC.
- 	 		
- 	 * @param numReceptor.
  	 		
  	 * @param startValidTime.
  	 		
  	 * @param endValidTime.
  	 		
- 	 * @param freqLimits.
+ 	 * @param numAntenna.
  	 		
- 	 * @param receiverBand.
+ 	 * @param numPoly.
+ 	 		
+ 	 * @param numReceptor.
  	 		
  	 * @param antennaNames.
  	 		
  	 * @param refAntennaName.
  	 		
- 	 * @param atmPhaseCorrections.
+ 	 * @param freqLimits.
  	 		
  	 * @param polarizationTypes.
  	 		
- 	 * @param numAmpliPoly.
+ 	 * @param curve.
  	 		
- 	 * @param ampliCurve.
- 	 		
- 	 * @param ampliRms.
- 	 		
- 	 * @param numPhasePoly.
- 	 		
- 	 * @param phaseCurve.
- 	 		
- 	 * @param phaseRms.
+ 	 * @param reducedChiSquared.
  	 		 
  	 */
-	CalBandpassRow* lookup(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numAntenna, int numBaseline, int numAPC, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > freqLimits, ReceiverBandMod::ReceiverBand receiverBand, vector<string > antennaNames, string refAntennaName, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numAmpliPoly, vector<vector<vector<vector<float > > > > ampliCurve, vector<vector<vector<float > > > ampliRms, int numPhasePoly, vector<vector<vector<vector<Angle > > > > phaseCurve, vector<vector<vector<float > > > phaseRms); 
+	CalBandpassRow* lookup(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband sideband, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<Frequency > freqLimits, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared); 
 
 
 #ifndef WITHOUT_ACS
@@ -580,43 +610,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalBandpassTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalBandpassTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalBandpass (CalBandpassTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalBandpass (CalBandpassTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -691,8 +727,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalBandpassRow* checkAndAdd(CalBandpassRow* x) throw (DuplicateKey);
+	CalBandpassRow* checkAndAdd(CalBandpassRow* x) ;
 
 
 
@@ -706,7 +744,7 @@ private:
 	vector<CalBandpassRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

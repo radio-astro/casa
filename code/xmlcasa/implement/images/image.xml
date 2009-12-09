@@ -73,17 +73,6 @@ a \fits\ file:
 
 \end{itemize}
 
-Finally, some foreign image formats (e.g. Miriad, GIPSY) can be converted to \casa\
-(if the foreign packages are installed locally) via an intermediate
-\fits\ file.   
-
-\begin{itemize}
-
-\item <link anchor="images:image.fromforeign.constructor">fromforeign</link> - Currently
-supported are Miriad and GIPSY files.
-
-\end{itemize}
-
 \item {\bf Analysis - } 
 
 \begin{itemize}
@@ -95,6 +84,8 @@ supported are Miriad and GIPSY files.
 \item <link anchor="images:image.fft.function">fft</link> - FFT the image
 
 \item <link anchor="images:image.findsources.function">findsources</link> - Find strong point sources in sky
+
+\item <link anchor="images:image.fitcomponents.function">fitcomponents</link> - Fit model components to an image.
 
 \item <link anchor="images:image.fitsky.function">fitsky</link> - fit 2-dimensional models to the sky
 (see also the <link anchor="images:imagefitter">imagefitter</link> \tool.
@@ -466,9 +457,8 @@ you access the image.
 
 If you find performance is not good enough or you want a writable image,
 then use appropriate function
-(<link anchor="images:image.fromfits.constructor">fromfits</link> or
-<link anchor="images:image.fromforeign.constructor">fromforeign</link>) to
-convert to a native \casa\ image. 
+(<link anchor="images:image.fromfits.constructor">fromfits</link>
+to convert to a native \casa\ image. 
 
 \medskip
 \noindent {\label{IMAGE:VIRTUALIMAGES}\bf Virtual Images}
@@ -1727,60 +1717,6 @@ the example we list the names of the fields in this record.
 </method>
 
  
-   <method type="function" name="fromforeign">
-   <shortdescription>Construct a \casa\ image from a foreign package image file.  NOT IMPLEMENTED.  DEPENDS ON EXTERNAL PACKAGES.</shortdescription>
-   
-<input>
-  
-     <param type="string" direction="in" name="outfile">
-     <description>Output image file name.  Default is unset.</description>
-     <value></value>
-     </param>
-  
-     <param type="string" direction="in" name="infile">
-     <description>Input foreign image disk file name.  Must be specified.</description>
-     <value></value>
-     </param>
-  
-     <param type="string" direction="in" name="format">
-     <description>Format type, 'miriad or gipsy</description>
-     <value>miriad</value>
-     </param>
-  
-     <param type="bool" direction="in" name="overwrite">
-     <description>Overwrite (unprompted) pre-existing output file?</description>
-     <value>false</value>
-     </param>
-</input>
-<returns type="bool"/>
-<description>
-
-This function is used to convert a foreign package image file to a
-\casa\ image.  This is done via an intermediary \fits\ file which is
-created by the foreign package.  In order for this function to work,
-you must have the foreign package installed; it is not part of \casa. 
-Currently supported are Miriad and Gipsy files. 
-
-If {\stfaf outfile} is given, the image is written to the specified disk
-file.  If {\stfaf outfile} is unset, the Image \tool\ is associated
-with a temporary image.  This temporary image may be in memory or on
-disk, depending on its size.  When you close the Image \tool\ 
-(with the <link anchor="images:image.close.function">close</link> function) this
-temporary image is deleted. 
-
-</description>
-<example>
-\begin{verbatim}
-"""
-#
-#ia.fromforeign('ia.app', 'ia.miriad', format='miriad')
-#
-"""
-\end{verbatim}
-
-</example>
-</method>
-
  
    <method type="function" name="fromimage">
    <shortdescription>Construct a (sub)image from a region of a \casa\ image</shortdescription>
@@ -3299,7 +3235,7 @@ at a particular location at a particular time.
      <value>0.0001</value>
      </param>
 </input>
-<returns type="any"><any type="variant"/>Returns component list as a Matrix.</returns>
+<returns type="any"><any type="record"/>Returns a record that contains component list as a Matrix and blcs and trcs of regions found.</returns>
 
 <description>
 This function is an image decomposition tool that performs several tasks,
@@ -3327,6 +3263,14 @@ speed up calculations on very large images or if either primary method causes
 trouble, but in general this will impede the accuracy of the fit.
 
 The function works with both two and three dimensional images.
+
+The return value is a record (or dictionary) that has 3 keys: {\tt 'components', 'blc', 'trc'}.\\
+The {\tt 'components'} element is a matrix each row of which contains the gaussian parameters of the component fitted.\\
+The {\tt 'blc'} element is a matrix of the bottom left corners (blc) of the regions found. Each row correspond to a region blc.\\
+The {\tt 'trc'} element is a matrix of the top right corners (trc) of the regions found. Each row correspond to a region trc.\\
+{\bf Please Note} that the returned blc's and trc's are relative to {\tt region} defined by the user. A {\tt blc } of  [0,0] implies the bottom left of the region selected and not  the bottom left of the image. Obviously if no region is defined then it is the bottom left of the image. 
+ 
+
 </description>
 <example>
 \begin{verbatim}
@@ -3334,21 +3278,30 @@ The function works with both two and three dimensional images.
 #
 print "\t----\t decompose Ex 1 \t----"
 ia.maketestimage()
-print ia.decompose(threshold=2.5, maxrms=1.0)
-#Attempt 1: Converged after 22 iterations
-#Attempt 1: Converged after 16 iterations
+out=ia.decompose(threshold=2.5, maxrms=1.0)
+#Attempt 1: Converged after 21 iterations
+#Attempt 1: Converged after 15 iterations
 #1: Peak: 17.955  Mu: [0.000327928, 8.62573e-05]
 #               Axes: [0.00175981, 0.00142841]  Rotation: 1.29539
 #2: Peak: 19.8093  Mu: [1.67927e-06, -0.000374393]
 #                Axes: [0.00179054, 0.00132541]  Rotation: 1.78404
 #3: Peak: 10.1155  Mu: [6.28252, -7.09688e-05]
 #                Axes: [0.00180877, 0.00104523]  Rotation: 1.78847
+print out['components']
 #[[  1.79549522e+01   3.27928370e-04   8.62573434e-05   1.75980886e-03
 #    8.11686337e-01   1.29538655e+00]
 # [  1.98093319e+01   1.67927124e-06  -3.74393392e-04   1.79054437e-03
 #    7.40229547e-01   1.78403902e+00]
 # [  1.01155214e+01   6.28252172e+00  -7.09688029e-05   1.80877140e-03
 #    5.77867746e-01   1.78847444e+00]]
+print out['blc']
+#[[37 31]
+# [47 25]
+# [67 33]]
+print out['trc']
+#[[54 47]
+# [66 38]
+# [78 40]]
 ia.close()
 #
 """
@@ -3468,6 +3421,10 @@ print 'pa=',recout['fit']['pa']
      <description>Destroy this tool after deletion</description>
      <value>false</value>
      </param>
+     <param type="bool" direction="in" name="verbose">
+     <description>Send a progress report to the logger.</description>
+     <value>true</value>
+     </param>
 </input>
 
 <returns type="bool"/>
@@ -3475,9 +3432,9 @@ print 'pa=',recout['fit']['pa']
 
 This function first <link anchor="images:image.close.function">closes</link> the
 \imagetool\ which detaches it from its underlying \imagefile.  It then
-deletes that \imagefile.  If {\stfaf done=F}, the \imagetool\ is still
+deletes that \imagefile.  If {\stfaf done=False}, the \imagetool\ is still
 viable, and can be used with function <link anchor="images:image.open.function">open</link>
-to open a new \imagefile.  Otherwise the \imagetool\ is destroyed. 
+to open a new \imagefile.  Otherwise the \imagetool\ is destroyed.  If {\stfaf verbose=True}, the logger will receive a progress report.
 
 </description>
 <example>
@@ -3545,6 +3502,10 @@ ia.removefile('myimage')
      <param type="bool" direction="in" name="remove">
      <description>Delete disk file as well?</description>
      <value>false</value>
+     </param>
+     <param type="bool" direction="in" name="verbose">
+     <description>Send a progress report to the logger.</description>
+     <value>true</value>
      </param>
 </input>
 <returns type="bool"/>
@@ -4094,7 +4055,17 @@ tool attached to the residual (continuum subtracted) image.
      <description>The 2-D region of interest to fit. Default is whole image.</description>
      <value></value>
      </param>
-  
+
+     <param type="int" direction="in" name="chan">
+     <description>Spectral plane to use to fit gaussian(s)</description>
+     <value>0</value>
+     </param>
+
+     <param type="string" direction="in" name="stokes">
+     <description>Stokes (polarization) plane to use to fit gaussian(s).</description>
+     <value>I</value>
+     </param>
+   
      <param type="any" direction="in" name="mask">
 	     <any type="variant"/>
      <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
@@ -4290,6 +4261,85 @@ estimate.
 </example>
 </method>
 
+<method type="function" name="fitcomponents">
+    <shortdescription>Fit 2-dimensional models to an image.</shortdescription>
+    <input>
+        <param type="string" direction="in" name="box">
+        <value></value>
+        <description>One or more boxes to use for fit region(s). Default is to use the entire plane.</description>
+        </param>
+        
+        <param type="any" direction="in" name="region">
+            <any type="variant"/>
+            <description>The 2-D region of interest to fit. Default is entire plane. If both box and region are specified, box is used and region is not.</description>
+            <value></value>
+        </param>
+        
+        <param type="int" direction="in" name="chan">
+            <description>The frequency plane to use in the fit. Default is 0 (first plane).</description>
+            <value>0</value>
+        </param>
+        
+        <param type="string" direction="in" name="stokes">
+            <description>The polarization to use in the fit. Default is I.</description>
+            <value>I</value>
+        </param>
+        
+        <param type="any" direction="in" name="mask">
+            <any type="variant"/>
+            <description>OTF mask, Boolean LEL expression or mask region.  Default is none.</description>
+            <value></value>
+        </param>
+    
+        <param type="doubleArray" direction="in" name="includepix">
+            <description>Range of pixel values to include.  Default is to include all pixels.</description>
+            <value>-1</value>
+        </param>
+    
+        <param type="doubleArray" direction="in" name="excludepix">
+            <description>Range of pixel values to exclude.  Default is to exclude no pixels.</description>
+            <value>-1</value>
+        </param>
+    
+        <param type="string" direction="in" name="residual">
+            <description>Name of the residual image to write. Default is not to write the residual.</description>
+            <value></value>
+        </param>
+    
+        <param type="string" direction="in" name="model">
+            <description>Name of the model image to write. Default is not to write the model.</description>
+            <value></value>
+        </param>
+    
+        <param type="string" direction="in" name="estimates">
+            <description>Name of the input estimates file. Default is to auto-estimate in which case a single gaussian will be fit.</description>
+            <value></value>
+        </param>
+        
+        <param type="string" direction="in" name="logfile">
+            <description>File in which to log results. Default is not to write a logfile.</description>
+            <value></value>
+        </param>
+        
+        <param type="bool" direction="in" name="append">
+            <description>Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.</description>
+            <value>true</value>
+        </param>
+        
+        <param type="string" direction="in" name="newestimates">
+            <description>File to which to write results in "estimates" format suitable as estimates input for another run. Default is do not write an estimates file.</description>
+            <value></value>
+        </param>
+    
+    </input>
+    <returns type="any"><any type="record"/>Componentlist tool or fail</returns>
+    <description>
+    My description goes here.
+    </description>
+    <example>
+    My example goes here
+    </example>
+</method>
 
 
 

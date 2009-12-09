@@ -42,17 +42,32 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the ReceiverSideband enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace ReceiverSidebandMod
 {
+  //! ReceiverSideband.
+  //!  [ASDM.SpectralWindow] The type of receiver output a spectral window is fed with
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum ReceiverSideband
   { 
-    NOSB ,
-    DSB ,
-    SSB ,
-    TSB 
+    NOSB /*!< direct output signal (no frequency conversion). */
+     ,
+    DSB /*!< double side band ouput. */
+     ,
+    SSB /*!< single side band receiver. */
+     ,
+    TSB /*!< receiver with dual output. */
+     
   };
   typedef ReceiverSideband &ReceiverSideband_out;
 } 
@@ -60,72 +75,95 @@ namespace ReceiverSidebandMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration ReceiverSideband.
+  * 
+  */
 class CReceiverSideband {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the ReceiverSideband enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sNOSB;
+	static const std::string& sNOSB; /*!< A const string equal to "NOSB".*/
 	
-	static const std::string& sDSB;
+	static const std::string& sDSB; /*!< A const string equal to "DSB".*/
 	
-	static const std::string& sSSB;
+	static const std::string& sSSB; /*!< A const string equal to "SSB".*/
 	
-	static const std::string& sTSB;
-	
-    static const std::vector<std::string> sReceiverSidebandSet();	 
-
+	static const std::string& sTSB; /*!< A const string equal to "TSB".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in ReceiverSidebandMod::ReceiverSideband.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of ReceiverSidebandMod::ReceiverSideband.
+      * @return a string.
+      */
+	static std::string name(const ReceiverSidebandMod::ReceiverSideband& e);
 	
-	// Explanations associated with the ReceiverSideband Enumeration.
-		
-	static const std::string& hNOSB;
-		
-	static const std::string& hDSB;
-		
-	static const std::string& hSSB;
-		
-	static const std::string& hTSB;
-		
-	static const std::vector<std::string> hReceiverSidebandSet();
-   	
-
-   	// Is an integer number associated with the ReceiverSideband enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the ReceiverSideband enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  ReceiverSideband enumeration.
-	static std::string name(const ReceiverSidebandMod::ReceiverSideband& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const ReceiverSidebandMod::ReceiverSideband& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified ReceiverSideband enumeration.
-	static std::string help(const ReceiverSidebandMod::ReceiverSideband& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a ReceiverSideband enumeration object by specifying its name.
    	static ReceiverSidebandMod::ReceiverSideband newReceiverSideband(const std::string& name);
    	
-   	// Create a ReceiverSideband enumeration object by specifying its name.
+   	/*! Return a ReceiverSideband's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a ReceiverSidebandMod::ReceiverSideband's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static ReceiverSidebandMod::ReceiverSideband literal(const std::string& name);
  	
-    // Create a ReceiverSideband enumeration object by specifying its position index (0 based).
+    /*! Return a ReceiverSideband's enumerator given an unsigned int.
+      * @param i the index of the enumerator in ReceiverSidebandMod::ReceiverSideband.
+      * @return a ReceiverSidebandMod::ReceiverSideband's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static ReceiverSidebandMod::ReceiverSideband from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CReceiverSideband();
     CReceiverSideband(const CReceiverSideband&);
     CReceiverSideband& operator=(const CReceiverSideband&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CReceiverSideband_H*/

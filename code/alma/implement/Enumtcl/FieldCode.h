@@ -38,7 +38,7 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<FieldCode,EnumPar<void> >
-     (FieldCodeMod::NONE,ep((int)FieldCodeMod::NONE,"NONE","")));
+     (FieldCodeMod::NONE,ep((int)FieldCodeMod::NONE,"NONE","un-documented")));
     return true;
   }
   static map<FieldCode,EnumPar<void> > m_;

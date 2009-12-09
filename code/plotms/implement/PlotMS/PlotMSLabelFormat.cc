@@ -26,7 +26,7 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotMSLabelFormat.h>
 
-#include <plotms/Plots/PlotMSSinglePlotParameters.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
 namespace casa {
 
@@ -228,15 +228,6 @@ String PlotMSLabelFormat::getLabel(PMS::Axis xAxis, PMS::Axis yAxis,
         double yRefValue) const {
     return getLabel(format, xAxis, xAxis, yAxis, xRefValueSet, xRefValue,
                     xRefValueSet, xRefValue, yRefValueSet, yRefValue);
-}
-
-String PlotMSLabelFormat::getLabel(const PlotMSSinglePlotParameters& p,
-        bool useX) const {
-    return getLabel(format, useX ? p.xAxis() : p.yAxis(), p.xAxis(), p.yAxis(),
-            useX ? p.xReferenceValueSet() : p.yReferenceValueSet(),
-            useX ? p.xReferenceValue() : p.yReferenceValue(),
-            p.xReferenceValueSet(), p.xReferenceValue(),
-            p.yReferenceValueSet(), p.yReferenceValue());
 }
 
 bool PlotMSLabelFormat::operator==(const PlotMSLabelFormat& other) const {

@@ -149,14 +149,15 @@ namespace asdm {
 	}
 #endif
 
-	void EntityRef::setFromXML(string xml) throw(InvalidArgumentException) {
+	void EntityRef::setFromXML(string xml)  {
 		entityId.setId(getXMLValue(xml,"entityId"));
 		partId.setId(getXMLValue(xml,"partId"));
 		entityTypeName = getXMLValue(xml,"entityTypeName");
 		instanceVersion = getXMLValue(xml,"documentVersion");
 		string msg = validXML();
-		if (msg.length() != 0) 
-			throw InvalidArgumentException(msg);
+		if (msg.length() != 0) {
+		  throw InvalidArgumentException(msg);
+		}
 	}
 	
 	void EntityRef::toBin(EndianOSStream& eoss) {

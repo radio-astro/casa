@@ -39,7 +39,22 @@ namespace casa {
       // Default constructor with no ms                                        
 
       ImagerMultiMS();
-      
+      //Copy the sub ms to memory useful when imaging only 
+      //a few channels 
+      virtual Bool setDataToMemory(const String& msname, const String& mode, 
+				   const Vector<Int>& nchan, 
+				   const Vector<Int>& start,
+				   const Vector<Int>& step,
+				   const Vector<Int>& spectralwindowids,
+				   const Vector<Int>& fieldids,
+				   const String& msSelect,
+				   const String& timerng,
+				   const String& fieldnames,
+				   const Vector<Int>& antIndex,
+				   const String& antnames,
+				   const String& spwstring,
+				   const String& uvdist,
+				   const String& scan);
       // Set the data selection on for each ms seperately
       virtual  Bool setDataPerMS(const String& msname, const String& mode, 
 				 const Vector<Int>& nchan, 
@@ -54,7 +69,8 @@ namespace casa {
 				 const String& antnames="",
 				 const String& spwstring="",
 				 const String& uvdist="",
-				 const String& scan="");
+                                 const String& scan="",
+                                 const Bool useModel=False);
 
 
        // Set image construction parameters
@@ -89,7 +105,20 @@ namespace casa {
       Block<Vector<Int> > blockStep_p;
       Block<Vector<Int> > blockSpw_p;
       Block<MeasurementSet> blockMSSel_p;
-	
+      Bool setDataOnThisMS(MeasurementSet& ms, const String& mode="none", 
+			   const Vector<Int>& nchan=Vector<Int>(0), 
+			   const Vector<Int>& start=Vector<Int>(1,0),
+			   const Vector<Int>& step=Vector<Int>(1,1),
+			   const Vector<Int>& spectralwindowids=Vector<Int>(0),
+			   const Vector<Int>& fieldids=Vector<Int>(0),
+			   const String& msSelect="",
+			   const String& timerng="",
+			   const String& fieldnames="",
+			   const Vector<Int>& antIndex=Vector<Int>(),
+			   const String& antnames="",
+			   const String& spwstring="",
+			   const String& uvdist="",
+			   const String& scan="");
       Int numMS_p;
       Bool dataSet_p;
 

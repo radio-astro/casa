@@ -78,6 +78,9 @@ using namespace enumerations;
 	
 
 	
+#include "CWVRMethod.h"
+using namespace WVRMethodMod;
+	
 
 	
 
@@ -112,7 +115,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file WVMCal.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -130,7 +133,7 @@ class AntennaRow;
 /**
  * The WVMCalRow class is a row of a WVMCalTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class WVMCalRow {
@@ -157,8 +160,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct WVMCalRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (WVMCalRowIDL x) throw(ConversionException);
+	void setFromIDL (WVMCalRowIDL x) ;
 #endif
 	
 	/**
@@ -171,51 +175,146 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the WVMCalTable to which the row built by deserialization will be parented.
+	  */
+	 static WVMCalRow* fromBin(EndianISStream& eiss, WVMCalTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
 	
-	// ===> Attribute operationMode, which is optional
+	// ===> Attribute timeInterval
 	
 	
-	
-	/**
-	 * The attribute operationMode is optional. Return true if this attribute exists.
-	 * @return true if and only if the operationMode attribute exists. 
-	 */
-	bool isOperationModeExists() const;
 	
 
 	
  	/**
- 	 * Get operationMode, which is optional.
- 	 * @return operationMode as string
- 	 * @throws IllegalAccessException If operationMode does not exist.
+ 	 * Get timeInterval.
+ 	 * @return timeInterval as ArrayTimeInterval
  	 */
- 	string getOperationMode() const throw(IllegalAccessException);
+ 	ArrayTimeInterval getTimeInterval() const;
 	
  
  	
  	
  	/**
- 	 * Set operationMode with the specified string.
- 	 * @param operationMode The string value to which operationMode is to be set.
+ 	 * Set timeInterval with the specified ArrayTimeInterval.
+ 	 * @param timeInterval The ArrayTimeInterval value to which timeInterval is to be set.
  	 
  		
+ 			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setOperationMode (string operationMode);
-		
+ 	void setTimeInterval (ArrayTimeInterval timeInterval);
+  		
 	
 	
 	
-	/**
-	 * Mark operationMode, which is an optional field, as non-existent.
-	 */
-	void clearOperationMode ();
+
+
+	
+	// ===> Attribute wvrMethod
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get wvrMethod.
+ 	 * @return wvrMethod as WVRMethodMod::WVRMethod
+ 	 */
+ 	WVRMethodMod::WVRMethod getWvrMethod() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set wvrMethod with the specified WVRMethodMod::WVRMethod.
+ 	 * @param wvrMethod The WVRMethodMod::WVRMethod value to which wvrMethod is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setWvrMethod (WVRMethodMod::WVRMethod wvrMethod);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute polyFreqLimits
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get polyFreqLimits.
+ 	 * @return polyFreqLimits as vector<Frequency >
+ 	 */
+ 	vector<Frequency > getPolyFreqLimits() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set polyFreqLimits with the specified vector<Frequency >.
+ 	 * @param polyFreqLimits The vector<Frequency > value to which polyFreqLimits is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setPolyFreqLimits (vector<Frequency > polyFreqLimits);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numChan
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numChan.
+ 	 * @return numChan as int
+ 	 */
+ 	int getNumChan() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numChan with the specified int.
+ 	 * @param numChan The int value to which numChan is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumChan (int numChan);
+  		
+	
+	
 	
 
 
@@ -250,68 +349,6 @@ public:
 
 
 	
-	// ===> Attribute freqOrigin
-	
-	
-	
-
-	
- 	/**
- 	 * Get freqOrigin.
- 	 * @return freqOrigin as Frequency
- 	 */
- 	Frequency getFreqOrigin() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set freqOrigin with the specified Frequency.
- 	 * @param freqOrigin The Frequency value to which freqOrigin is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setFreqOrigin (Frequency freqOrigin);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute timeInterval
-	
-	
-	
-
-	
- 	/**
- 	 * Get timeInterval.
- 	 * @return timeInterval as ArrayTimeInterval
- 	 */
- 	ArrayTimeInterval getTimeInterval() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set timeInterval with the specified ArrayTimeInterval.
- 	 * @param timeInterval The ArrayTimeInterval value to which timeInterval is to be set.
- 	 
- 		
- 			
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 		
- 	 */
- 	void setTimeInterval (ArrayTimeInterval timeInterval);
-  		
-	
-	
-	
-
-
-	
 	// ===> Attribute pathCoeff
 	
 	
@@ -320,21 +357,21 @@ public:
 	
  	/**
  	 * Get pathCoeff.
- 	 * @return pathCoeff as vector<double >
+ 	 * @return pathCoeff as vector<vector<double > >
  	 */
- 	vector<double > getPathCoeff() const;
+ 	vector<vector<double > > getPathCoeff() const;
 	
  
  	
  	
  	/**
- 	 * Set pathCoeff with the specified vector<double >.
- 	 * @param pathCoeff The vector<double > value to which pathCoeff is to be set.
+ 	 * Set pathCoeff with the specified vector<vector<double > >.
+ 	 * @param pathCoeff The vector<vector<double > > value to which pathCoeff is to be set.
  	 
  		
  			
  	 */
- 	void setPathCoeff (vector<double > pathCoeff);
+ 	void setPathCoeff (vector<vector<double > > pathCoeff);
   		
 	
 	
@@ -342,73 +379,32 @@ public:
 
 
 	
-	// ===> Attribute calibrationMode
+	// ===> Attribute refTemp
 	
 	
 	
 
 	
  	/**
- 	 * Get calibrationMode.
- 	 * @return calibrationMode as string
+ 	 * Get refTemp.
+ 	 * @return refTemp as vector<double >
  	 */
- 	string getCalibrationMode() const;
+ 	vector<double > getRefTemp() const;
 	
  
  	
  	
  	/**
- 	 * Set calibrationMode with the specified string.
- 	 * @param calibrationMode The string value to which calibrationMode is to be set.
+ 	 * Set refTemp with the specified vector<double >.
+ 	 * @param refTemp The vector<double > value to which refTemp is to be set.
  	 
  		
  			
  	 */
- 	void setCalibrationMode (string calibrationMode);
+ 	void setRefTemp (vector<double > refTemp);
   		
 	
 	
-	
-
-
-	
-	// ===> Attribute wvrefModel, which is optional
-	
-	
-	
-	/**
-	 * The attribute wvrefModel is optional. Return true if this attribute exists.
-	 * @return true if and only if the wvrefModel attribute exists. 
-	 */
-	bool isWvrefModelExists() const;
-	
-
-	
- 	/**
- 	 * Get wvrefModel, which is optional.
- 	 * @return wvrefModel as float
- 	 * @throws IllegalAccessException If wvrefModel does not exist.
- 	 */
- 	float getWvrefModel() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set wvrefModel with the specified float.
- 	 * @param wvrefModel The float value to which wvrefModel is to be set.
- 	 
- 		
- 	 */
- 	void setWvrefModel (float wvrefModel);
-		
-	
-	
-	
-	/**
-	 * Mark wvrefModel, which is an optional field, as non-existent.
-	 */
-	void clearWvrefModel ();
 	
 
 
@@ -521,12 +517,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this WVMCalRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numPoly, Frequency freqOrigin, vector<double > pathCoeff, string calibrationMode);
+	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<double > > pathCoeff, vector<double > refTemp);
 	
 	
 
 	
-	bool compareRequiredValue(int numPoly, Frequency freqOrigin, vector<double > pathCoeff, string calibrationMode); 
+	bool compareRequiredValue(WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > polyFreqLimits, int numChan, int numPoly, vector<vector<double > > pathCoeff, vector<double > refTemp); 
 		 
 	
 	/**
@@ -587,13 +583,44 @@ private:
 	////////////////////////////////
 	
 	
-	// ===> Attribute operationMode, which is optional
+	// ===> Attribute timeInterval
 	
-	
-	bool operationModeExists;
 	
 
-	string operationMode;
+	ArrayTimeInterval timeInterval;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute wvrMethod
+	
+	
+
+	WVRMethodMod::WVRMethod wvrMethod;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute polyFreqLimits
+	
+	
+
+	vector<Frequency > polyFreqLimits;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numChan
+	
+	
+
+	int numChan;
 
 	
 	
@@ -611,57 +638,22 @@ private:
  	
 
 	
-	// ===> Attribute freqOrigin
-	
-	
-
-	Frequency freqOrigin;
-
-	
-	
- 	
-
-	
-	// ===> Attribute timeInterval
-	
-	
-
-	ArrayTimeInterval timeInterval;
-
-	
-	
- 	
-
-	
 	// ===> Attribute pathCoeff
 	
 	
 
-	vector<double > pathCoeff;
+	vector<vector<double > > pathCoeff;
 
 	
 	
  	
 
 	
-	// ===> Attribute calibrationMode
+	// ===> Attribute refTemp
 	
 	
 
-	string calibrationMode;
-
-	
-	
- 	
-
-	
-	// ===> Attribute wvrefModel, which is optional
-	
-	
-	bool wvrefModelExists;
-	
-
-	float wvrefModel;
+	vector<double > refTemp;
 
 	
 	

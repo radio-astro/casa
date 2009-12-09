@@ -30,6 +30,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/File.h>
 #include <xmlcasa/utils/stdBaseInterface.h>
+#include <xmlcasa/ms/Statistics.h>
 //begin modification
 //july 4 2007
 #include <xmlcasa/xerces/asdmCasaXMLUtil.h>
@@ -82,8 +83,10 @@ table::open(const std::string& tablename, const ::casac::record& lockoptions, co
 	 Record *tlock = toRecord(lockoptions);
 	 //TableLock *itsLock = getLockOptions(tlock);
 	 if(nomodify){
+	     if(itsTable)close();
              itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Old);
 	 } else {
+	     if(itsTable)close();
              itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Update);
 	 }
 	 delete tlock;
@@ -644,71 +647,84 @@ table::addreadmeline(const std::string& value)
  }
  return rstat;
 }
+
 bool
 table::summary(const bool recurse)
 {
  Bool rstat(False);
  try {
-	 if(itsTable){
-		 *itsLog << LogOrigin("summary",name()) << LogIO::NORMAL << "Table summary: " << name() << LogIO::POST;
-		 *itsLog << LogOrigin("summary",name()) << LogIO::NORMAL << "Shape: " << ncols() << " columns by " << nrows() << LogIO::POST;
-		 Record tabinfo = itsTable->tableInfo();
-		 ostringstream tabinfo_string;
-		 tabinfo_string << tabinfo;
-		 *itsLog << LogOrigin("summary",name()) << LogIO::NORMAL << "Info: " << tabinfo_string.str() << LogIO::POST;
-                 Record tabkeys = itsTable->getKeywordSet(String());
-		 if(tabkeys.nfields() > 0){
-		    ostringstream keys_string;
-		    keys_string << tabkeys;
-		    *itsLog << LogOrigin("summary",name()) << LogIO::NORMAL << "Table keywords: " << keys_string.str() << LogIO::POST;
-		    if(recurse){
-		       for(int i=0;i<tabkeys.nfields();i++){
-			   switch(tabkeys.type(i)){
-				   case TpTable :
-		                          *itsLog << LogOrigin("summary",name()) << LogIO::WARN << "No recursion just yet " << LogIO::POST;
-					   break;
-				   case TpString :
-					  {
-					  String theString = tabkeys.asString(i);
-					  if(theString.contains("Table:")){
-						  table *subtab = new table;
-						  record dummy;
-						  subtab->open(string(theString.from((size_t)7).chars()), dummy);
-						  subtab->summary(false);
-						  subtab->close();
-						  delete subtab;
-					  }
-					  }
-					   break;
-				   default :
-					   break;
-			   }
-		       }
-		    }
-		 }
-		 vector<string> cols = colnames();
-		 if(cols.size() > 0){
-		    *itsLog << LogOrigin("summary",name()) << LogIO::NORMAL << "Columns: ";
-		    for(unsigned int i=0;i<cols.size();i++)
-			   *itsLog  << cols[i] << " ";
-		    *itsLog << LogIO::POST;
-		    for(unsigned int i=0;i<cols.size();i++){
-		       Record colkeys = itsTable->getKeywordSet(cols[i]);
-		       ostringstream outs;
-		       if(colkeys.nfields() > 0)
-		          outs << cols[i] << " keywords: " << colkeys; 
-		       else
-		          outs << cols[i] << " keywords: None";
-		       *itsLog << LogOrigin("summary",name()) << LogIO::NORMAL << outs.str() << LogIO::POST;
-		    }
-		 }
-                 rstat = True;
-	 } else {
-		 *itsLog << LogOrigin("table","summary") << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
-	 }
-	      // TODO : IMPLEMENT ME HERE !
+   if(itsTable){
+     *itsLog << LogOrigin("summary",name()) << LogIO::NORMAL
+             << "Table summary: " << name() << LogIO::POST;
+     *itsLog << LogOrigin("summary",name()) << LogIO::NORMAL
+             << "Shape: " << ncols() << " columns by " << nrows() << LogIO::POST;
+     Record tabinfo = itsTable->tableInfo();
+     ostringstream tabinfo_string;
+     tabinfo_string << tabinfo;
+     *itsLog << LogOrigin("summary",name()) << LogIO::NORMAL
+             << "Info: " << tabinfo_string.str() << LogIO::POST;
+     Record tabkeys = itsTable->getKeywordSet(String());
+     if(tabkeys.nfields() > 0){
+       ostringstream keys_string;
+       keys_string << tabkeys;
+       *itsLog << LogOrigin("summary", name()) 
+               << LogIO::NORMAL 
+               << "Table keywords: " << keys_string.str() 
+               << LogIO::POST;
+       if(recurse){
+         for(unsigned int i = 0; i < tabkeys.nfields(); ++i){
+           switch(tabkeys.type(i)){
+           case TpTable :
+             *itsLog << LogOrigin("summary",name())
+                     << LogIO::WARN
+                     << "No recursion just yet " << LogIO::POST;
+             break;
+           case TpString :
+             {
+               String theString = tabkeys.asString(i);
+               if(theString.contains("Table:")){
+                 table *subtab = new table;
+                 record dummy;
+                 subtab->open(string(theString.from((size_t)7).chars()),
+                              dummy);
+                 subtab->summary(false);
+                 subtab->close();
+                 delete subtab;
+               }
+             }
+             break;
+           default :
+             break;
+           }
+         }
+       }
+     }
+     vector<string> cols = colnames();
+     if(cols.size() > 0){
+       *itsLog << LogOrigin("summary",name()) << LogIO::NORMAL << "Columns: ";
+       for(unsigned int i = 0; i < cols.size(); ++i)
+         *itsLog  << cols[i] << " ";
+       *itsLog << LogIO::POST;
+       for(unsigned int i = 0; i < cols.size(); ++i){
+         Record colkeys = itsTable->getKeywordSet(cols[i]);
+         ostringstream outs;
+         if(colkeys.nfields() > 0)
+           outs << cols[i] << " keywords: " << colkeys; 
+         else
+           outs << cols[i] << " keywords: None";
+         *itsLog << LogOrigin("summary",name()) << LogIO::NORMAL
+                 << outs.str() << LogIO::POST;
+       }
+     }
+     rstat = True;
+   } else {
+     *itsLog << LogOrigin("table","summary") << LogIO::WARN
+             << "No table specified, please open first" << LogIO::POST;
+   }
+   // TODO : IMPLEMENT ME HERE !
  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: "
+            << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }
  return rstat;
@@ -1665,7 +1681,7 @@ return rstatus;
 //begin modification
 //july 2 2007
 //This function will write the final table. The table will
-//depened on the structure of incoming Record, which was
+//depend on the structure of incoming Record, which was
 //built using the XML ASDM table structure.
 
 void test_record(Record &myRecord)
@@ -1792,12 +1808,41 @@ bool rstatus(false);
  } catch (AipsError x) {
       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
-   }
-
-
+ }
 
 return rstatus;
 }
 //end modification
+
+
+::casac::record* 
+table::statistics(const std::string& column, 
+                  const std::string& complex_value, 
+                  const bool useflags)
+{
+    ::casac::record *retval(NULL);
+
+    try {
+        if(itsTable){
+
+            if (itsTable->nrows() == 0) {
+                throw AipsError("Table has zero rows, cannot continue");
+            }
+
+            retval = fromRecord(casac::Statistics<Int>::get_statistics(itsTable->table(),
+                                                                  column,
+                                                                  complex_value,
+                                                                  itsLog));
+
+        } else {
+            *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
+        }
+    } catch (AipsError x) {
+        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+        RETHROW(x);
+    }
+    return retval;
+}
+
 } // casac namespace
 

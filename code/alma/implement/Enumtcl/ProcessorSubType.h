@@ -25,7 +25,7 @@
 using namespace ProcessorSubTypeMod;
 
 template<>
- struct enum_set_traits<ProcessorSubType> : public enum_set_traiter<ProcessorSubType,3,ProcessorSubTypeMod::HOLOGRAPHY> {};
+ struct enum_set_traits<ProcessorSubType> : public enum_set_traiter<ProcessorSubType,4,ProcessorSubTypeMod::ALMA_RADIOMETER> {};
 
 template<>
 class enum_map_traits<ProcessorSubType,void> : public enum_map_traiter<ProcessorSubType,void> {
@@ -38,11 +38,13 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<ProcessorSubType,EnumPar<void> >
-     (ProcessorSubTypeMod::ALMA_CORRELATOR_MODE,ep((int)ProcessorSubTypeMod::ALMA_CORRELATOR_MODE,"ALMA_CORRELATOR_MODE","ALMA_CORRELATOR_MODE")));
+     (ProcessorSubTypeMod::ALMA_CORRELATOR_MODE,ep((int)ProcessorSubTypeMod::ALMA_CORRELATOR_MODE,"ALMA_CORRELATOR_MODE","un-documented")));
     m_.insert(pair<ProcessorSubType,EnumPar<void> >
-     (ProcessorSubTypeMod::SQUARE_LAW_DETECTOR,ep((int)ProcessorSubTypeMod::SQUARE_LAW_DETECTOR,"SQUARE_LAW_DETECTOR","SQUARE_LAW_DETECTOR")));
+     (ProcessorSubTypeMod::SQUARE_LAW_DETECTOR,ep((int)ProcessorSubTypeMod::SQUARE_LAW_DETECTOR,"SQUARE_LAW_DETECTOR","un-documented")));
     m_.insert(pair<ProcessorSubType,EnumPar<void> >
-     (ProcessorSubTypeMod::HOLOGRAPHY,ep((int)ProcessorSubTypeMod::HOLOGRAPHY,"HOLOGRAPHY","HOLOGRAPHY")));
+     (ProcessorSubTypeMod::HOLOGRAPHY,ep((int)ProcessorSubTypeMod::HOLOGRAPHY,"HOLOGRAPHY","un-documented")));
+    m_.insert(pair<ProcessorSubType,EnumPar<void> >
+     (ProcessorSubTypeMod::ALMA_RADIOMETER,ep((int)ProcessorSubTypeMod::ALMA_RADIOMETER,"ALMA_RADIOMETER","un-documented")));
     return true;
   }
   static map<ProcessorSubType,EnumPar<void> > m_;

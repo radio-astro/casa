@@ -82,11 +82,11 @@ namespace asdm {
 	
 		key.push_back("antennaId");
 	
-		key.push_back("feedId");
-	
 		key.push_back("spectralWindowId");
 	
 		key.push_back("timeInterval");
+	
+		key.push_back("feedId");
 	
 
 
@@ -182,49 +182,49 @@ namespace asdm {
 	
  	 * @param antennaId. 
 	
- 	 * @param feedId. 
-	
  	 * @param spectralWindowId. 
 	
  	 * @param timeInterval. 
 	
+ 	 * @param feedId. 
+	
  	 * @param numCalload. 
 	
- 	 * @param calLoadName. 
+ 	 * @param calLoadNames. 
 	
      */
-	CalDeviceRow* CalDeviceTable::newRow(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadName){
+	CalDeviceRow* CalDeviceTable::newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadNames){
 		CalDeviceRow *row = new CalDeviceRow(*this);
 			
 		row->setAntennaId(antennaId);
-			
-		row->setFeedId(feedId);
 			
 		row->setSpectralWindowId(spectralWindowId);
 			
 		row->setTimeInterval(timeInterval);
 			
+		row->setFeedId(feedId);
+			
 		row->setNumCalload(numCalload);
 			
-		row->setCalLoadName(calLoadName);
+		row->setCalLoadNames(calLoadNames);
 	
 		return row;		
 	}	
 
-	CalDeviceRow* CalDeviceTable::newRowFull(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadName)	{
+	CalDeviceRow* CalDeviceTable::newRowFull(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadNames)	{
 		CalDeviceRow *row = new CalDeviceRow(*this);
 			
 		row->setAntennaId(antennaId);
-			
-		row->setFeedId(feedId);
 			
 		row->setSpectralWindowId(spectralWindowId);
 			
 		row->setTimeInterval(timeInterval);
 			
+		row->setFeedId(feedId);
+			
 		row->setNumCalload(numCalload);
 			
-		row->setCalLoadName(calLoadName);
+		row->setCalLoadNames(calLoadNames);
 	
 		return row;				
 	}
@@ -251,15 +251,15 @@ CalDeviceRow* CalDeviceTable::newRowCopy(CalDeviceRow* row) {
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
 	 */
-	 string CalDeviceTable::Key(Tag antennaId, int feedId, Tag spectralWindowId) {
+	 string CalDeviceTable::Key(Tag antennaId, Tag spectralWindowId, int feedId) {
 	 	ostringstream ostrstr;
 	 		ostrstr  
 			
 				<<  antennaId.toString()  << "_"
 			
-				<<   feedId  << "_"
-			
 				<<  spectralWindowId.toString()  << "_"
+			
+				<<   feedId  << "_"
 			
 			;
 		return ostrstr.str();	 	
@@ -277,9 +277,9 @@ CalDeviceRow* CalDeviceTable::newRowCopy(CalDeviceRow* row) {
 		string k = Key(
 						x->getAntennaId()
 					   ,
-						x->getFeedId()
-					   ,
 						x->getSpectralWindowId()
+					   ,
+						x->getFeedId()
 					   );
  
 		if (context.find(k) == context.end()) { 
@@ -311,13 +311,13 @@ CalDeviceRow* CalDeviceTable::newRowCopy(CalDeviceRow* row) {
 			
 			
 			
-	CalDeviceRow*  CalDeviceTable::checkAndAdd(CalDeviceRow* x) throw (DuplicateKey) {
+	CalDeviceRow*  CalDeviceTable::checkAndAdd(CalDeviceRow* x) {
 		string keystr = Key( 
 						x->getAntennaId() 
 					   , 
-						x->getFeedId() 
-					   , 
 						x->getSpectralWindowId() 
+					   , 
+						x->getFeedId() 
 					   ); 
 		if (context.find(keystr) == context.end()) {
 			vector<CalDeviceRow *> v;
@@ -363,8 +363,8 @@ CalDeviceRow* CalDeviceTable::newRowCopy(CalDeviceRow* row) {
 	 */
 	 }
 	 
-	 vector<CalDeviceRow *> *CalDeviceTable::getByContext(Tag antennaId, int feedId, Tag spectralWindowId) {
-	  	string k = Key(antennaId, feedId, spectralWindowId);
+	 vector<CalDeviceRow *> *CalDeviceTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
+	  	string k = Key(antennaId, spectralWindowId, feedId);
  
 	    if (context.find(k) == context.end()) return 0;
  	   else return &(context[k]);		
@@ -387,8 +387,8 @@ CalDeviceRow* CalDeviceTable::newRowCopy(CalDeviceRow* row) {
  */
  				
 				
-	CalDeviceRow* CalDeviceTable::getRowByKey(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval)  {
- 		string keystr = Key(antennaId, feedId, spectralWindowId);
+	CalDeviceRow* CalDeviceTable::getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId)  {
+ 		string keystr = Key(antennaId, spectralWindowId, feedId);
  		vector<CalDeviceRow *> row;
  		
  		if ( context.find(keystr)  == context.end()) return 0;
@@ -469,7 +469,7 @@ CalDeviceRow* CalDeviceTable::newRowCopy(CalDeviceRow* row) {
 #endif
 	
 #ifndef WITHOUT_ACS
-	void CalDeviceTable::fromIDL(CalDeviceTableIDL x) throw(DuplicateKey,ConversionException) {
+	void CalDeviceTable::fromIDL(CalDeviceTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			CalDeviceRow *tmp = newRow();
@@ -480,28 +480,27 @@ CalDeviceRow* CalDeviceTable::newRowCopy(CalDeviceRow* row) {
 	}
 #endif
 
-	char *CalDeviceTable::toFITS() const throw(ConversionException) {
+	char *CalDeviceTable::toFITS() const  {
 		throw ConversionException("Not implemented","CalDevice");
 	}
 
-	void CalDeviceTable::fromFITS(char *fits) throw(ConversionException) {
+	void CalDeviceTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","CalDevice");
 	}
 
-	string CalDeviceTable::toVOTable() const throw(ConversionException) {
+	string CalDeviceTable::toVOTable() const {
 		throw ConversionException("Not implemented","CalDevice");
 	}
 
-	void CalDeviceTable::fromVOTable(string vo) throw(ConversionException) {
+	void CalDeviceTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","CalDevice");
 	}
 
-	string CalDeviceTable::toXML()  throw(ConversionException) {
+	
+	string CalDeviceTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/CalDeviceTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<CalDeviceTable> ");
+		buf.append("<CalDeviceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalDeviceTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalDeviceTable http://almaobservatory.org/XML/XASDM/2/CalDeviceTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -517,8 +516,9 @@ CalDeviceRow* CalDeviceTable::newRowCopy(CalDeviceRow* row) {
 		buf.append("</CalDeviceTable> ");
 		return buf;
 	}
+
 	
-	void CalDeviceTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void CalDeviceTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalDeviceTable")) 
 			error();
@@ -560,20 +560,110 @@ CalDeviceRow* CalDeviceTable::newRowCopy(CalDeviceRow* row) {
 			error();
 	}
 
-	void CalDeviceTable::error() throw(ConversionException) {
+	
+	void CalDeviceTable::error()  {
 		throw ConversionException("Invalid xml document","CalDevice");
 	}
 	
+	
 	string CalDeviceTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void CalDeviceTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalDevice");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			CalDeviceRow* aRow = CalDeviceRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "CalDevice");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "CalDevice");
+		} 		 	
+	}
+
 	
 	void CalDeviceTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -604,6 +694,7 @@ CalDeviceRow* CalDeviceTable::newRowCopy(CalDeviceRow* row) {
 				throw ConversionException("Could not close file " + fileName, "CalDevice");
 		}
 	}
+
 	
 	void CalDeviceTable::setFromFile(const string& directory) {
 		string tablename;
@@ -645,6 +736,11 @@ CalDeviceRow* CalDeviceTable::newRowCopy(CalDeviceRow* row) {
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 		

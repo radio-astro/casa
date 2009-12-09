@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CReceiverBand::version() {
+	return ReceiverBandMod::version;
+	}
+	
+string CReceiverBand::revision () {
+	return ReceiverBandMod::revision;
+}
+
+unsigned int CReceiverBand::size() {
+	return 17;
+	}
+	
 	
 const std::string& CReceiverBand::sALMA_RB_01 = "ALMA_RB_01";
 	
@@ -58,6 +71,8 @@ const std::string& CReceiverBand::sALMA_RB_09 = "ALMA_RB_09";
 	
 const std::string& CReceiverBand::sALMA_RB_10 = "ALMA_RB_10";
 	
+const std::string& CReceiverBand::sALMA_RB_ALL = "ALMA_RB_ALL";
+	
 const std::string& CReceiverBand::sALMA_HOLOGRAPHY_RECEIVER = "ALMA_HOLOGRAPHY_RECEIVER";
 	
 const std::string& CReceiverBand::sBURE_01 = "BURE_01";
@@ -70,7 +85,7 @@ const std::string& CReceiverBand::sBURE_04 = "BURE_04";
 	
 const std::string& CReceiverBand::sUNSPECIFIED = "UNSPECIFIED";
 	
-const std::vector<std::string> CReceiverBand::sReceiverBandSet() {
+const std::vector<std::string> CReceiverBand::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CReceiverBand::sALMA_RB_01);
@@ -93,6 +108,8 @@ const std::vector<std::string> CReceiverBand::sReceiverBandSet() {
     
     enumSet.insert(enumSet.end(), CReceiverBand::sALMA_RB_10);
     
+    enumSet.insert(enumSet.end(), CReceiverBand::sALMA_RB_ALL);
+    
     enumSet.insert(enumSet.end(), CReceiverBand::sALMA_HOLOGRAPHY_RECEIVER);
     
     enumSet.insert(enumSet.end(), CReceiverBand::sBURE_01);
@@ -107,81 +124,6 @@ const std::vector<std::string> CReceiverBand::sReceiverBandSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CReceiverBand::hALMA_RB_01 = "ALMA Receiver band 01";
-	
-const std::string& CReceiverBand::hALMA_RB_02 = "ALMA Receiver band 02";
-	
-const std::string& CReceiverBand::hALMA_RB_03 = "ALMA Receiver band 03";
-	
-const std::string& CReceiverBand::hALMA_RB_04 = "ALMA Receiver band 04";
-	
-const std::string& CReceiverBand::hALMA_RB_05 = "ALMA Receiver band 05";
-	
-const std::string& CReceiverBand::hALMA_RB_06 = "ALMA Receiver band 06";
-	
-const std::string& CReceiverBand::hALMA_RB_07 = "ALMA Receiver band 07";
-	
-const std::string& CReceiverBand::hALMA_RB_08 = "ALMA Receiver band 08";
-	
-const std::string& CReceiverBand::hALMA_RB_09 = "ALMA Receiver band 09";
-	
-const std::string& CReceiverBand::hALMA_RB_10 = "ALMA Receiver band 10";
-	
-const std::string& CReceiverBand::hALMA_HOLOGRAPHY_RECEIVER = "Alma transmitter Holography receiver.";
-	
-const std::string& CReceiverBand::hBURE_01 = "Plateau de Bure receiver band #1.";
-	
-const std::string& CReceiverBand::hBURE_02 = "Plateau de Bure receiver band #2.";
-	
-const std::string& CReceiverBand::hBURE_03 = "Plateau de Bure receiver band #3.";
-	
-const std::string& CReceiverBand::hBURE_04 = "Plateau de Bure receiver band #4";
-	
-const std::string& CReceiverBand::hUNSPECIFIED = "receiver band of unspecified origin.";
-	
-const std::vector<std::string> CReceiverBand::hReceiverBandSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hALMA_RB_01);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hALMA_RB_02);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hALMA_RB_03);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hALMA_RB_04);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hALMA_RB_05);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hALMA_RB_06);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hALMA_RB_07);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hALMA_RB_08);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hALMA_RB_09);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hALMA_RB_10);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hALMA_HOLOGRAPHY_RECEIVER);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hBURE_01);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hBURE_02);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hBURE_03);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hBURE_04);
-    
-    enumSet.insert(enumSet.end(), CReceiverBand::hUNSPECIFIED);
-        
-    return enumSet;
-}
-   	
 
 std::string CReceiverBand::name(const ReceiverBandMod::ReceiverBand& f) {
     switch (f) {
@@ -216,6 +158,9 @@ std::string CReceiverBand::name(const ReceiverBandMod::ReceiverBand& f) {
     case ReceiverBandMod::ALMA_RB_10:
       return CReceiverBand::sALMA_RB_10;
     
+    case ReceiverBandMod::ALMA_RB_ALL:
+      return CReceiverBand::sALMA_RB_ALL;
+    
     case ReceiverBandMod::ALMA_HOLOGRAPHY_RECEIVER:
       return CReceiverBand::sALMA_HOLOGRAPHY_RECEIVER;
     
@@ -235,67 +180,9 @@ std::string CReceiverBand::name(const ReceiverBandMod::ReceiverBand& f) {
       return CReceiverBand::sUNSPECIFIED;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CReceiverBand::help(const ReceiverBandMod::ReceiverBand& f) {
-    switch (f) {
-    
-    case ReceiverBandMod::ALMA_RB_01:
-      return CReceiverBand::hALMA_RB_01;
-    
-    case ReceiverBandMod::ALMA_RB_02:
-      return CReceiverBand::hALMA_RB_02;
-    
-    case ReceiverBandMod::ALMA_RB_03:
-      return CReceiverBand::hALMA_RB_03;
-    
-    case ReceiverBandMod::ALMA_RB_04:
-      return CReceiverBand::hALMA_RB_04;
-    
-    case ReceiverBandMod::ALMA_RB_05:
-      return CReceiverBand::hALMA_RB_05;
-    
-    case ReceiverBandMod::ALMA_RB_06:
-      return CReceiverBand::hALMA_RB_06;
-    
-    case ReceiverBandMod::ALMA_RB_07:
-      return CReceiverBand::hALMA_RB_07;
-    
-    case ReceiverBandMod::ALMA_RB_08:
-      return CReceiverBand::hALMA_RB_08;
-    
-    case ReceiverBandMod::ALMA_RB_09:
-      return CReceiverBand::hALMA_RB_09;
-    
-    case ReceiverBandMod::ALMA_RB_10:
-      return CReceiverBand::hALMA_RB_10;
-    
-    case ReceiverBandMod::ALMA_HOLOGRAPHY_RECEIVER:
-      return CReceiverBand::hALMA_HOLOGRAPHY_RECEIVER;
-    
-    case ReceiverBandMod::BURE_01:
-      return CReceiverBand::hBURE_01;
-    
-    case ReceiverBandMod::BURE_02:
-      return CReceiverBand::hBURE_02;
-    
-    case ReceiverBandMod::BURE_03:
-      return CReceiverBand::hBURE_03;
-    
-    case ReceiverBandMod::BURE_04:
-      return CReceiverBand::hBURE_04;
-    
-    case ReceiverBandMod::UNSPECIFIED:
-      return CReceiverBand::hUNSPECIFIED;
-    	
-    }
-    return std::string("");
-}
-   	
 
 ReceiverBandMod::ReceiverBand CReceiverBand::newReceiverBand(const std::string& name) {
 		
@@ -337,6 +224,10 @@ ReceiverBandMod::ReceiverBand CReceiverBand::newReceiverBand(const std::string& 
     	
     if (name == CReceiverBand::sALMA_RB_10) {
         return ReceiverBandMod::ALMA_RB_10;
+    }
+    	
+    if (name == CReceiverBand::sALMA_RB_ALL) {
+        return ReceiverBandMod::ALMA_RB_ALL;
     }
     	
     if (name == CReceiverBand::sALMA_HOLOGRAPHY_RECEIVER) {
@@ -408,6 +299,10 @@ ReceiverBandMod::ReceiverBand CReceiverBand::literal(const std::string& name) {
         return ReceiverBandMod::ALMA_RB_10;
     }
     	
+    if (name == CReceiverBand::sALMA_RB_ALL) {
+        return ReceiverBandMod::ALMA_RB_ALL;
+    }
+    	
     if (name == CReceiverBand::sALMA_HOLOGRAPHY_RECEIVER) {
         return ReceiverBandMod::ALMA_HOLOGRAPHY_RECEIVER;
     }
@@ -436,12 +331,10 @@ ReceiverBandMod::ReceiverBand CReceiverBand::literal(const std::string& name) {
 }
 
 ReceiverBandMod::ReceiverBand CReceiverBand::from_int(unsigned int i) {
-	vector<string> names = sReceiverBandSet();
-	if (i >= names.size()) throw badInt(i);
-	return newReceiverBand(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newReceiverBand(names_.at(i));
 }
-
-	
 
 string CReceiverBand::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'ReceiverBand'.";

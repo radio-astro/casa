@@ -81,8 +81,6 @@ using namespace enumerations;
 	
 
 	
-
-	
 #include "CCorrelationMode.h"
 using namespace CorrelationModeMod;
 	
@@ -94,6 +92,20 @@ using namespace CorrelationModeMod;
 	
 #include "CAtmPhaseCorrection.h"
 using namespace AtmPhaseCorrectionMod;
+	
+
+	
+#include "CProcessorType.h"
+using namespace ProcessorTypeMod;
+	
+
+	
+
+	
+#include "CSpectralResolutionType.h"
+using namespace SpectralResolutionTypeMod;
+	
+
 	
 
 	
@@ -141,113 +153,154 @@ class ASDM;
 class ConfigDescriptionRow;
 /**
  * The ConfigDescriptionTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Defines the hardware configuration used to  obtain the science data.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of ConfigDescription </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> configDescriptionId </I></TD> 
+ 		
+ * <TD><I> configDescriptionId </I></TD>
+ 		 
  * <TD> Tag</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a unique row in the table. </TD>
  * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> antennaId </TD> 
- * <TD> vector<Tag>  </TD>
- * <TD>  numAntenna </TD> 
- * </TR>
-	
- * <TR>
- * <TD> dataDescriptionId </TD> 
- * <TD> vector<Tag>  </TD>
- * <TD>   </TD> 
- * </TR>
-	
- * <TR>
- * <TD> feedId </TD> 
- * <TD> vector<int>  </TD>
- * <TD>  numAntenna*numFeed </TD> 
- * </TR>
-	
- * <TR>
- * <TD> processorId </TD> 
- * <TD> Tag </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> switchCycleId </TD> 
- * <TD> vector<Tag>  </TD>
- * <TD>   </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> numAntenna </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of antennas. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numDataDescription </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of data descriptions. </TD>
  * </TR>
 	
  * <TR>
  * <TD> numFeed </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numSubBand </TD> 
- * <TD> vector<int > </TD>
- * <TD>   </TD> 
+ * <TD> &nbsp;the number of feeds. </TD>
  * </TR>
 	
  * <TR>
  * <TD> correlationMode </TD> 
  * <TD> CorrelationModeMod::CorrelationMode </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the correlation mode. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numAtmPhaseCorrection </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of descriptions of the atmospheric phase correction. </TD>
  * </TR>
 	
  * <TR>
  * <TD> atmPhaseCorrection </TD> 
  * <TD> vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > </TD>
- * <TD>   </TD> 
+ * <TD>  numAtmPhaseCorrection </TD> 
+ * <TD> &nbsp;describe how the atmospheric phase corrections have been applied (one value per correction). </TD>
  * </TR>
-	
-
-
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
- * <TD> assocConfigDescriptionId </TD> 
- * <TD> vector<Tag>  </TD>
- * <TD>    </TD>
+ * <TD> processorType </TD> 
+ * <TD> ProcessorTypeMod::ProcessorType </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the generic processor's type. </TD>
  * </TR>
+	
+ * <TR>
+ * <TD> spectralType </TD> 
+ * <TD> SpectralResolutionTypeMod::SpectralResolutionType </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the spectral type of the data. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> antennaId </TD> 
+ * <TD> vector<Tag>  </TD>
+ * <TD>  numAntenna </TD> 
+ * <TD> &nbsp;identifies numAntenna rows in AntennaTable. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> feedId </TD> 
+ * <TD> vector<int>  </TD>
+ * <TD>  numAntenna*numFeed </TD> 
+ * <TD> &nbsp;refers to many collections of rows in the Feed Table. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> switchCycleId </TD> 
+ * <TD> vector<Tag>  </TD>
+ * <TD>  numDataDescription </TD> 
+ * <TD> &nbsp;refers to a unique row in the SwitchCycle Table. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> dataDescriptionId </TD> 
+ * <TD> vector<Tag>  </TD>
+ * <TD>  numDataDescription </TD> 
+ * <TD> &nbsp;refers to one or more rows in DataDescriptionTable. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> processorId </TD> 
+ * <TD> Tag </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;refers to a unique row in ProcessorTable. </TD>
+ * </TR>
+	
+
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> phasedArrayList </TD> 
  * <TD> vector<int > </TD>
  * <TD>  numAntenna  </TD>
+ * <TD>&nbsp; phased array identifiers. </TD>
  * </TR>
 	
  * <TR>
- * <TD> flagAnt </TD> 
- * <TD> vector<bool > </TD>
- * <TD>  numAntenna  </TD>
+ * <TD> numAssocValues </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the number of associated config descriptions. </TD>
  * </TR>
 	
  * <TR>
  * <TD> assocNature </TD> 
  * <TD> vector<SpectralResolutionTypeMod::SpectralResolutionType > </TD>
- * <TD>    </TD>
+ * <TD>  numAssocValues  </TD>
+ * <TD>&nbsp; the natures of the associations with other config descriptions (one value per association). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> assocConfigDescriptionId </TD> 
+ * <TD> vector<Tag>  </TD>
+ * <TD>  numAssocValues  </TD>
+ * <TD>&nbsp; refers to one or more rows in ConfigDescriptionTable. </TD>
  * </TR>
 	
 
@@ -322,34 +375,40 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param antennaId. 
-	
- 	 * @param dataDescriptionId. 
-	
- 	 * @param feedId. 
-	
- 	 * @param processorId. 
-	
- 	 * @param switchCycleId. 
-	
  	 * @param numAntenna. 
+	
+ 	 * @param numDataDescription. 
 	
  	 * @param numFeed. 
 	
- 	 * @param numSubBand. 
-	
  	 * @param correlationMode. 
+	
+ 	 * @param numAtmPhaseCorrection. 
 	
  	 * @param atmPhaseCorrection. 
 	
+ 	 * @param processorType. 
+	
+ 	 * @param spectralType. 
+	
+ 	 * @param antennaId. 
+	
+ 	 * @param feedId. 
+	
+ 	 * @param switchCycleId. 
+	
+ 	 * @param dataDescriptionId. 
+	
+ 	 * @param processorId. 
+	
      */
-	ConfigDescriptionRow *newRow(vector<Tag>  antennaId, vector<Tag>  dataDescriptionId, vector<int>  feedId, Tag processorId, vector<Tag>  switchCycleId, int numAntenna, int numFeed, vector<int > numSubBand, CorrelationModeMod::CorrelationMode correlationMode, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection);
+	ConfigDescriptionRow *newRow(int numAntenna, int numDataDescription, int numFeed, CorrelationModeMod::CorrelationMode correlationMode, int numAtmPhaseCorrection, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection, ProcessorTypeMod::ProcessorType processorType, SpectralResolutionTypeMod::SpectralResolutionType spectralType, vector<Tag>  antennaId, vector<int>  feedId, vector<Tag>  switchCycleId, vector<Tag>  dataDescriptionId, Tag processorId);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	ConfigDescriptionRow *newRowFull(vector<Tag>  antennaId, vector<Tag>  dataDescriptionId, vector<int>  feedId, Tag processorId, vector<Tag>  switchCycleId, int numAntenna, int numFeed, vector<int > numSubBand, CorrelationModeMod::CorrelationMode correlationMode, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection);
+	ConfigDescriptionRow *newRowFull(int numAntenna, int numDataDescription, int numFeed, CorrelationModeMod::CorrelationMode correlationMode, int numAtmPhaseCorrection, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection, ProcessorTypeMod::ProcessorType processorType, SpectralResolutionTypeMod::SpectralResolutionType spectralType, vector<Tag>  antennaId, vector<int>  feedId, vector<Tag>  switchCycleId, vector<Tag>  dataDescriptionId, Tag processorId);
 
 
 	/**
@@ -428,28 +487,34 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param antennaId.
- 	 		
- 	 * @param dataDescriptionId.
- 	 		
- 	 * @param feedId.
- 	 		
- 	 * @param processorId.
- 	 		
- 	 * @param switchCycleId.
- 	 		
  	 * @param numAntenna.
+ 	 		
+ 	 * @param numDataDescription.
  	 		
  	 * @param numFeed.
  	 		
- 	 * @param numSubBand.
- 	 		
  	 * @param correlationMode.
  	 		
+ 	 * @param numAtmPhaseCorrection.
+ 	 		
  	 * @param atmPhaseCorrection.
+ 	 		
+ 	 * @param processorType.
+ 	 		
+ 	 * @param spectralType.
+ 	 		
+ 	 * @param antennaId.
+ 	 		
+ 	 * @param feedId.
+ 	 		
+ 	 * @param switchCycleId.
+ 	 		
+ 	 * @param dataDescriptionId.
+ 	 		
+ 	 * @param processorId.
  	 		 
  	 */
-	ConfigDescriptionRow* lookup(vector<Tag>  antennaId, vector<Tag>  dataDescriptionId, vector<int>  feedId, Tag processorId, vector<Tag>  switchCycleId, int numAntenna, int numFeed, vector<int > numSubBand, CorrelationModeMod::CorrelationMode correlationMode, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection); 
+	ConfigDescriptionRow* lookup(int numAntenna, int numDataDescription, int numFeed, CorrelationModeMod::CorrelationMode correlationMode, int numAtmPhaseCorrection, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection, ProcessorTypeMod::ProcessorType processorType, SpectralResolutionTypeMod::SpectralResolutionType spectralType, vector<Tag>  antennaId, vector<int>  feedId, vector<Tag>  switchCycleId, vector<Tag>  dataDescriptionId, Tag processorId); 
 
 
 #ifndef WITHOUT_ACS
@@ -469,43 +534,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(ConfigDescriptionTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(ConfigDescriptionTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for ConfigDescription (ConfigDescriptionTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a ConfigDescription (ConfigDescriptionTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -584,8 +655,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	ConfigDescriptionRow* checkAndAdd(ConfigDescriptionRow* x) throw (DuplicateKey, UniquenessViolationException);
+	ConfigDescriptionRow* checkAndAdd(ConfigDescriptionRow* x) ;
 
 
 
@@ -599,7 +674,7 @@ private:
 	vector<ConfigDescriptionRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

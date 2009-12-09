@@ -96,16 +96,6 @@ using namespace AntennaTypeMod;
 
 	
 
-	
-
-	
-
-	
-
-	
-
-	
-
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
@@ -146,113 +136,98 @@ class ASDM;
 class AntennaRow;
 /**
  * The AntennaTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Antenna characteristics.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Antenna </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> antennaId </I></TD> 
+ 		
+ * <TD><I> antennaId </I></TD>
+ 		 
  * <TD> Tag</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a unique row in the table. </TD>
  * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> stationId </TD> 
- * <TD> Tag </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> name </TD> 
  * <TD> string </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the antenna's name. </TD>
  * </TR>
 	
  * <TR>
  * <TD> antennaMake </TD> 
  * <TD> AntennaMakeMod::AntennaMake </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the antenna's make. </TD>
  * </TR>
 	
  * <TR>
  * <TD> antennaType </TD> 
  * <TD> AntennaTypeMod::AntennaType </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> xPosition </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> yPosition </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> zPosition </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> time </TD> 
- * <TD> ArrayTime </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> xOffset </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> yOffset </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> zOffset </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the antenna's type. </TD>
  * </TR>
 	
  * <TR>
  * <TD> dishDiameter </TD> 
  * <TD> Length </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the diameter of the main reflector. </TD>
  * </TR>
 	
  * <TR>
- * <TD> flagRow </TD> 
- * <TD> bool </TD>
+ * <TD> position </TD> 
+ * <TD> vector<Length > </TD>
+ * <TD>  3 </TD> 
+ * <TD> &nbsp;the antenna's position. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> offset </TD> 
+ * <TD> vector<Length > </TD>
+ * <TD>  3 </TD> 
+ * <TD> &nbsp;the position's offset. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> time </TD> 
+ * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the time of position's measurement. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> stationId </TD> 
+ * <TD> Tag </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;refers to the station where this antenna is located (i.e. one row in the Station table). </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> assocAntennaId </TD> 
  * <TD> Tag </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; refers to an associate antenna (i.e. one row in the Antenna table). </TD>
  * </TR>
 	
 
@@ -327,40 +302,30 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param stationId. 
-	
  	 * @param name. 
 	
  	 * @param antennaMake. 
 	
  	 * @param antennaType. 
 	
- 	 * @param xPosition. 
+ 	 * @param dishDiameter. 
 	
- 	 * @param yPosition. 
+ 	 * @param position. 
 	
- 	 * @param zPosition. 
+ 	 * @param offset. 
 	
  	 * @param time. 
 	
- 	 * @param xOffset. 
-	
- 	 * @param yOffset. 
-	
- 	 * @param zOffset. 
-	
- 	 * @param dishDiameter. 
-	
- 	 * @param flagRow. 
+ 	 * @param stationId. 
 	
      */
-	AntennaRow *newRow(Tag stationId, string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length xPosition, Length yPosition, Length zPosition, ArrayTime time, Length xOffset, Length yOffset, Length zOffset, Length dishDiameter, bool flagRow);
+	AntennaRow *newRow(string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length dishDiameter, vector<Length > position, vector<Length > offset, ArrayTime time, Tag stationId);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	AntennaRow *newRowFull(Tag stationId, string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length xPosition, Length yPosition, Length zPosition, ArrayTime time, Length xOffset, Length yOffset, Length zOffset, Length dishDiameter, bool flagRow);
+	AntennaRow *newRowFull(string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length dishDiameter, vector<Length > position, vector<Length > offset, ArrayTime time, Tag stationId);
 
 
 	/**
@@ -439,34 +404,24 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param stationId.
- 	 		
  	 * @param name.
  	 		
  	 * @param antennaMake.
  	 		
  	 * @param antennaType.
  	 		
- 	 * @param xPosition.
+ 	 * @param dishDiameter.
  	 		
- 	 * @param yPosition.
+ 	 * @param position.
  	 		
- 	 * @param zPosition.
+ 	 * @param offset.
  	 		
  	 * @param time.
  	 		
- 	 * @param xOffset.
- 	 		
- 	 * @param yOffset.
- 	 		
- 	 * @param zOffset.
- 	 		
- 	 * @param dishDiameter.
- 	 		
- 	 * @param flagRow.
+ 	 * @param stationId.
  	 		 
  	 */
-	AntennaRow* lookup(Tag stationId, string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length xPosition, Length yPosition, Length zPosition, ArrayTime time, Length xOffset, Length yOffset, Length zOffset, Length dishDiameter, bool flagRow); 
+	AntennaRow* lookup(string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length dishDiameter, vector<Length > position, vector<Length > offset, ArrayTime time, Tag stationId); 
 
 
 #ifndef WITHOUT_ACS
@@ -486,43 +441,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(AntennaTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(AntennaTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for Antenna (AntennaTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a Antenna (AntennaTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -601,8 +562,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	AntennaRow* checkAndAdd(AntennaRow* x) throw (DuplicateKey, UniquenessViolationException);
+	AntennaRow* checkAndAdd(AntennaRow* x) ;
 
 
 
@@ -616,7 +581,7 @@ private:
 	vector<AntennaRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

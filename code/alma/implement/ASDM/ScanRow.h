@@ -86,10 +86,32 @@ using namespace enumerations;
 	
 
 	
-
-	
 #include "CScanIntent.h"
 using namespace ScanIntentMod;
+	
+
+	
+#include "CCalDataOrigin.h"
+using namespace CalDataOriginMod;
+	
+
+	
+
+	
+#include "CCalibrationFunction.h"
+using namespace CalibrationFunctionMod;
+	
+
+	
+#include "CCalibrationSet.h"
+using namespace CalibrationSetMod;
+	
+
+	
+#include "CAntennaMotionPattern.h"
+using namespace AntennaMotionPatternMod;
+	
+
 	
 
 	
@@ -121,7 +143,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Scan.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -136,7 +158,7 @@ class ExecBlockRow;
 /**
  * The ScanRow class is a row of a ScanTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class ScanRow {
@@ -163,8 +185,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct ScanRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (ScanRowIDL x) throw(ConversionException);
+	void setFromIDL (ScanRowIDL x) ;
 #endif
 	
 	/**
@@ -177,8 +200,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the ScanTable to which the row built by deserialization will be parented.
+	  */
+	 static ScanRow* fromBin(EndianISStream& eiss, ScanTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -277,36 +314,6 @@ public:
 
 
 	
-	// ===> Attribute numSubScan
-	
-	
-	
-
-	
- 	/**
- 	 * Get numSubScan.
- 	 * @return numSubScan as int
- 	 */
- 	int getNumSubScan() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numSubScan with the specified int.
- 	 * @param numSubScan The int value to which numSubScan is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumSubScan (int numSubScan);
-  		
-	
-	
-	
-
-
-	
 	// ===> Attribute numIntent
 	
 	
@@ -337,43 +344,32 @@ public:
 
 
 	
-	// ===> Attribute numField, which is optional
+	// ===> Attribute numSubScan
 	
 	
-	
-	/**
-	 * The attribute numField is optional. Return true if this attribute exists.
-	 * @return true if and only if the numField attribute exists. 
-	 */
-	bool isNumFieldExists() const;
 	
 
 	
  	/**
- 	 * Get numField, which is optional.
- 	 * @return numField as int
- 	 * @throws IllegalAccessException If numField does not exist.
+ 	 * Get numSubScan.
+ 	 * @return numSubScan as int
  	 */
- 	int getNumField() const throw(IllegalAccessException);
+ 	int getNumSubScan() const;
 	
  
  	
  	
  	/**
- 	 * Set numField with the specified int.
- 	 * @param numField The int value to which numField is to be set.
+ 	 * Set numSubScan with the specified int.
+ 	 * @param numSubScan The int value to which numSubScan is to be set.
  	 
  		
+ 			
  	 */
- 	void setNumField (int numField);
-		
+ 	void setNumSubScan (int numSubScan);
+  		
 	
 	
-	
-	/**
-	 * Mark numField, which is an optional field, as non-existent.
-	 */
-	void clearNumField ();
 	
 
 
@@ -408,43 +404,226 @@ public:
 
 
 	
-	// ===> Attribute sourceName, which is optional
+	// ===> Attribute calDataType
 	
 	
-	
-	/**
-	 * The attribute sourceName is optional. Return true if this attribute exists.
-	 * @return true if and only if the sourceName attribute exists. 
-	 */
-	bool isSourceNameExists() const;
 	
 
 	
  	/**
- 	 * Get sourceName, which is optional.
- 	 * @return sourceName as string
- 	 * @throws IllegalAccessException If sourceName does not exist.
+ 	 * Get calDataType.
+ 	 * @return calDataType as vector<CalDataOriginMod::CalDataOrigin >
  	 */
- 	string getSourceName() const throw(IllegalAccessException);
+ 	vector<CalDataOriginMod::CalDataOrigin > getCalDataType() const;
 	
  
  	
  	
  	/**
- 	 * Set sourceName with the specified string.
- 	 * @param sourceName The string value to which sourceName is to be set.
+ 	 * Set calDataType with the specified vector<CalDataOriginMod::CalDataOrigin >.
+ 	 * @param calDataType The vector<CalDataOriginMod::CalDataOrigin > value to which calDataType is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCalDataType (vector<CalDataOriginMod::CalDataOrigin > calDataType);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute calibrationOnLine
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get calibrationOnLine.
+ 	 * @return calibrationOnLine as vector<bool >
+ 	 */
+ 	vector<bool > getCalibrationOnLine() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set calibrationOnLine with the specified vector<bool >.
+ 	 * @param calibrationOnLine The vector<bool > value to which calibrationOnLine is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCalibrationOnLine (vector<bool > calibrationOnLine);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute calibrationFunction, which is optional
+	
+	
+	
+	/**
+	 * The attribute calibrationFunction is optional. Return true if this attribute exists.
+	 * @return true if and only if the calibrationFunction attribute exists. 
+	 */
+	bool isCalibrationFunctionExists() const;
+	
+
+	
+ 	/**
+ 	 * Get calibrationFunction, which is optional.
+ 	 * @return calibrationFunction as vector<CalibrationFunctionMod::CalibrationFunction >
+ 	 * @throws IllegalAccessException If calibrationFunction does not exist.
+ 	 */
+ 	vector<CalibrationFunctionMod::CalibrationFunction > getCalibrationFunction() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set calibrationFunction with the specified vector<CalibrationFunctionMod::CalibrationFunction >.
+ 	 * @param calibrationFunction The vector<CalibrationFunctionMod::CalibrationFunction > value to which calibrationFunction is to be set.
  	 
  		
  	 */
- 	void setSourceName (string sourceName);
+ 	void setCalibrationFunction (vector<CalibrationFunctionMod::CalibrationFunction > calibrationFunction);
 		
 	
 	
 	
 	/**
-	 * Mark sourceName, which is an optional field, as non-existent.
+	 * Mark calibrationFunction, which is an optional field, as non-existent.
 	 */
-	void clearSourceName ();
+	void clearCalibrationFunction ();
+	
+
+
+	
+	// ===> Attribute calibrationSet, which is optional
+	
+	
+	
+	/**
+	 * The attribute calibrationSet is optional. Return true if this attribute exists.
+	 * @return true if and only if the calibrationSet attribute exists. 
+	 */
+	bool isCalibrationSetExists() const;
+	
+
+	
+ 	/**
+ 	 * Get calibrationSet, which is optional.
+ 	 * @return calibrationSet as vector<CalibrationSetMod::CalibrationSet >
+ 	 * @throws IllegalAccessException If calibrationSet does not exist.
+ 	 */
+ 	vector<CalibrationSetMod::CalibrationSet > getCalibrationSet() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set calibrationSet with the specified vector<CalibrationSetMod::CalibrationSet >.
+ 	 * @param calibrationSet The vector<CalibrationSetMod::CalibrationSet > value to which calibrationSet is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setCalibrationSet (vector<CalibrationSetMod::CalibrationSet > calibrationSet);
+		
+	
+	
+	
+	/**
+	 * Mark calibrationSet, which is an optional field, as non-existent.
+	 */
+	void clearCalibrationSet ();
+	
+
+
+	
+	// ===> Attribute calPattern, which is optional
+	
+	
+	
+	/**
+	 * The attribute calPattern is optional. Return true if this attribute exists.
+	 * @return true if and only if the calPattern attribute exists. 
+	 */
+	bool isCalPatternExists() const;
+	
+
+	
+ 	/**
+ 	 * Get calPattern, which is optional.
+ 	 * @return calPattern as vector<AntennaMotionPatternMod::AntennaMotionPattern >
+ 	 * @throws IllegalAccessException If calPattern does not exist.
+ 	 */
+ 	vector<AntennaMotionPatternMod::AntennaMotionPattern > getCalPattern() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set calPattern with the specified vector<AntennaMotionPatternMod::AntennaMotionPattern >.
+ 	 * @param calPattern The vector<AntennaMotionPatternMod::AntennaMotionPattern > value to which calPattern is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setCalPattern (vector<AntennaMotionPatternMod::AntennaMotionPattern > calPattern);
+		
+	
+	
+	
+	/**
+	 * Mark calPattern, which is an optional field, as non-existent.
+	 */
+	void clearCalPattern ();
+	
+
+
+	
+	// ===> Attribute numField, which is optional
+	
+	
+	
+	/**
+	 * The attribute numField is optional. Return true if this attribute exists.
+	 * @return true if and only if the numField attribute exists. 
+	 */
+	bool isNumFieldExists() const;
+	
+
+	
+ 	/**
+ 	 * Get numField, which is optional.
+ 	 * @return numField as int
+ 	 * @throws IllegalAccessException If numField does not exist.
+ 	 */
+ 	int getNumField() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numField with the specified int.
+ 	 * @param numField The int value to which numField is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setNumField (int numField);
+		
+	
+	
+	
+	/**
+	 * Mark numField, which is an optional field, as non-existent.
+	 */
+	void clearNumField ();
 	
 
 
@@ -466,7 +645,7 @@ public:
  	 * @return fieldName as vector<string >
  	 * @throws IllegalAccessException If fieldName does not exist.
  	 */
- 	vector<string > getFieldName() const throw(IllegalAccessException);
+ 	vector<string > getFieldName() const;
 	
  
  	
@@ -486,6 +665,47 @@ public:
 	 * Mark fieldName, which is an optional field, as non-existent.
 	 */
 	void clearFieldName ();
+	
+
+
+	
+	// ===> Attribute sourceName, which is optional
+	
+	
+	
+	/**
+	 * The attribute sourceName is optional. Return true if this attribute exists.
+	 * @return true if and only if the sourceName attribute exists. 
+	 */
+	bool isSourceNameExists() const;
+	
+
+	
+ 	/**
+ 	 * Get sourceName, which is optional.
+ 	 * @return sourceName as string
+ 	 * @throws IllegalAccessException If sourceName does not exist.
+ 	 */
+ 	string getSourceName() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set sourceName with the specified string.
+ 	 * @param sourceName The string value to which sourceName is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSourceName (string sourceName);
+		
+	
+	
+	
+	/**
+	 * Mark sourceName, which is an optional field, as non-existent.
+	 */
+	void clearSourceName ();
 	
 
 
@@ -581,12 +801,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this ScanRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numSubScan, int numIntent, vector<ScanIntentMod::ScanIntent > scanIntent, bool flagRow);
+	bool compareNoAutoInc(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubScan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine, bool flagRow);
 	
 	
 
 	
-	bool compareRequiredValue(ArrayTime startTime, ArrayTime endTime, int numSubScan, int numIntent, vector<ScanIntentMod::ScanIntent > scanIntent, bool flagRow); 
+	bool compareRequiredValue(ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubScan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine, bool flagRow); 
 		 
 	
 	/**
@@ -680,6 +900,17 @@ private:
  	
 
 	
+	// ===> Attribute numIntent
+	
+	
+
+	int numIntent;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute numSubScan
 	
 	
@@ -691,11 +922,72 @@ private:
  	
 
 	
-	// ===> Attribute numIntent
+	// ===> Attribute scanIntent
 	
 	
 
-	int numIntent;
+	vector<ScanIntentMod::ScanIntent > scanIntent;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute calDataType
+	
+	
+
+	vector<CalDataOriginMod::CalDataOrigin > calDataType;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute calibrationOnLine
+	
+	
+
+	vector<bool > calibrationOnLine;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute calibrationFunction, which is optional
+	
+	
+	bool calibrationFunctionExists;
+	
+
+	vector<CalibrationFunctionMod::CalibrationFunction > calibrationFunction;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute calibrationSet, which is optional
+	
+	
+	bool calibrationSetExists;
+	
+
+	vector<CalibrationSetMod::CalibrationSet > calibrationSet;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute calPattern, which is optional
+	
+	
+	bool calPatternExists;
+	
+
+	vector<AntennaMotionPatternMod::AntennaMotionPattern > calPattern;
 
 	
 	
@@ -715,11 +1007,13 @@ private:
  	
 
 	
-	// ===> Attribute scanIntent
+	// ===> Attribute fieldName, which is optional
 	
+	
+	bool fieldNameExists;
 	
 
-	vector<ScanIntentMod::ScanIntent > scanIntent;
+	vector<string > fieldName;
 
 	
 	
@@ -733,19 +1027,6 @@ private:
 	
 
 	string sourceName;
-
-	
-	
- 	
-
-	
-	// ===> Attribute fieldName, which is optional
-	
-	
-	bool fieldNameExists;
-	
-
-	vector<string > fieldName;
 
 	
 	

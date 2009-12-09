@@ -38,13 +38,13 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<NetSideband,EnumPar<void> >
-     (NetSidebandMod::NOSB,ep((int)NetSidebandMod::NOSB,"NOSB","No side band (no frequency conversion)")));
+     (NetSidebandMod::NOSB,ep((int)NetSidebandMod::NOSB,"NOSB","un-documented")));
     m_.insert(pair<NetSideband,EnumPar<void> >
-     (NetSidebandMod::LSB,ep((int)NetSidebandMod::LSB,"LSB","Lower side band")));
+     (NetSidebandMod::LSB,ep((int)NetSidebandMod::LSB,"LSB","un-documented")));
     m_.insert(pair<NetSideband,EnumPar<void> >
-     (NetSidebandMod::USB,ep((int)NetSidebandMod::USB,"USB","Upper side band")));
+     (NetSidebandMod::USB,ep((int)NetSidebandMod::USB,"USB","un-documented")));
     m_.insert(pair<NetSideband,EnumPar<void> >
-     (NetSidebandMod::DSB,ep((int)NetSidebandMod::DSB,"DSB","Double side band")));
+     (NetSidebandMod::DSB,ep((int)NetSidebandMod::DSB,"DSB","un-documented")));
     return true;
   }
   static map<NetSideband,EnumPar<void> > m_;

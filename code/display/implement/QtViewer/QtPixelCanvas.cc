@@ -165,7 +165,6 @@ q_text::q_text(const QPoint &pt, const String& txt, const QFont& fnt, double ang
         Display::TextAlign align, const QPen &p) : q_draw(p), point(pt), text(txt),
         font(fnt), angle(ang), alignment(align) { }
 
-}
 
 
 
@@ -274,7 +273,6 @@ void QtPixelCanvas::refresh(const Display::RefreshReason &reason,
   
   //#dk (disabled until interaction with allowBackToFront_ determined....)
   //  if(holdcount_>0) { needsRefresh_ = True; return;  }
-  
   
   if (reason == Display::ClearPriorToColorChange) return;
 		// obsolete, no-op now...
@@ -670,6 +668,8 @@ void QtPixelCanvas::drawMarker(const Int& x1, const Int& y1,
 
   
 void QtPixelCanvas::drawRectangle(Int x1, Int y1, Int x2, Int y2) {
+    //cout << "draw: " << x1 << " " << y1 << " "
+    //     << x2 << " " << y2 << endl;   
     if ( cache_label_and_axis == False ) {
 	p_.setPen(itsPen);
 	p_.drawRect(qrect_(x1,y1,x2,y2));
@@ -1570,6 +1570,7 @@ Bool QtPixelCanvas::resizeColorTable(uInt newSize) {
 Bool QtPixelCanvas::resizeColorTable(uInt nReds, uInt nGreens, uInt nBlues) {
   return False;  }
   
+}
 
 
 /*	//  other trials...

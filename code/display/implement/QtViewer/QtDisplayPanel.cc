@@ -72,8 +72,9 @@ QtDisplayPanel::QtDisplayPanel(QtViewerBase* v, QWidget *parent) :
 		animRate_(10), minRate_(1), maxRate_(50), animating_(0),
 		blankCBPanel_(0), mainPanelSize_(1.),
 		hasRgn_(False), rgnExtent_(0), qsm_(0),
-		lastMotionEvent_(0), bkgdClrOpt_(0), printStats(True),
-                extChan_(""), extPol_("")  {
+		lastMotionEvent_(0), bkgdClrOpt_(0), 
+                extChan_(""), extPol_("")  ,
+                printStats(True){
     
   setWindowTitle("Viewer Display Panel");
   
@@ -242,6 +243,12 @@ void QtDisplayPanel::setupMouseTools_() {
   connect( ptregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 		        SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
   
+  connect( rtregion_, SIGNAL(echoClicked(Record)),
+		        SLOT(clicked(Record)) );
+  
+  connect( ptregion_, SIGNAL(echoClicked(Record)),
+		        SLOT(clicked(Record)) );
+  
   QtMouseToolState* mBtns = v_->mouseBtns();
 	// Central storage for current active mouse button of each tool.
   
@@ -300,7 +307,7 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
 
   emit mouseRegionReady(mouseRegion, wch);  // echo mouseTool signal.
   
-  Bool rgnSaved = False;
+  //Bool rgnSaved = False;
     
   for(ListIter<QtDisplayData*> qdds(qdds_); 
         !qdds.atEnd(); qdds++) {
@@ -338,6 +345,14 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
 	// rgnImgPath_: pathname of the active image used to make the region.
 	// Will be transformed into regionPathname() if saved to disk.
       //   rgnSaved = True;  }
+     resetRTRegion();
+
+
+     //this reset is necessary but cannot do
+     //because the bug that polygon tool prematurely
+     //emit 'reagion ready'.
+     //enable this after that bug cas-1393 fix
+     resetPTRegion();
     
     
     delete imReg;  }  }  
@@ -1924,6 +1939,8 @@ String QtDisplayPanel::dpState(String restorefilename) {
     
     WorldCanvas* wc = wcs->getRight();
     
+    // Save Zoom
+
     QDomElement zoom = restoredoc.createElement("zoom");
     dpSettings.appendChild(zoom);
     
@@ -2209,6 +2226,60 @@ Bool QtDisplayPanel::restorePanelState(String filename) {
   return setPanelState(restoredoc, restoredir);  }
   
 
+QtDisplayPanel::panel_state QtDisplayPanel::getPanelState( ) const {
+
+    // Zoom state.  Preferable to get it from wc [0] than zoomer (God
+    // knows what obsolete rubbishy state that may be in).  (Zoomer will
+    // be used to _restore_ zoom state though...).
+    Vector<Double> blc(2), trc(2);
+    ListIter<WorldCanvas* >* wcs = pd_->wcs();
+    wcs->toStart();
+    if ( ! wcs->atEnd() ) {
+        WorldCanvas* wc = wcs->getRight();
+	blc[0] = wc->linXMin(); blc[1] = wc->linYMin();
+	trc[0] = wc->linXMax(); trc[1] = wc->linYMax();
+    }
+
+    panel_state::colormap_map colormapstate;
+    Vector<Float> shiftSlope, brtCont;
+    for ( ConstListIter<QtDisplayData*> dds = registeredDDs(); ! dds.atEnd(); dds++ ) {
+	QtDisplayData* dd = dds.getRight();
+	if ( dd->hasColormap( ) ) {
+	    dd->getCMShiftSlope(shiftSlope);
+	    dd->getCMBrtCont(brtCont);
+	    colormapstate.insert( panel_state::colormap_map::value_type(dd->path( ), panel_state::colormap_state(dd->getColormap( ),shiftSlope,brtCont)) );
+	}
+    }
+
+    return panel_state( panel_state::zoom_state(blc,trc),
+			colormapstate );
+}
+
+
+const QtDisplayPanel::panel_state::colormap_state *QtDisplayPanel::panel_state::colormap( const std::string &path ) const {
+    colormap_map::const_iterator iter = colormaps_.find( path );
+    if ( iter == colormaps_.end( ) )
+	return 0;
+    return &iter->second;
+}
+
+void QtDisplayPanel::setPanelState( const panel_state &state ) {
+    zoom_->zoom( state.blc( ), state.trc( ) );
+    
+    Vector<Float> shiftSlope, brtCont;
+    ListIter<QtDisplayData*> iter(qdds_);
+    iter.toStart( );
+    while ( ! iter.atEnd( ) ) {
+	QtDisplayData* dd = iter.getRight();
+	const QtDisplayPanel::panel_state::colormap_state *colormap = state.colormap(dd->path());
+	if ( colormap ) {
+	    dd->setColormap(colormap->name( ));
+	    dd->setCMShiftSlope(colormap->shift( ));
+	    dd->setCMBrtCont(colormap->brightness( ));
+	}
+	++iter;
+    }
+}
 
 
 Bool QtDisplayPanel::ddFileMatch_(String path, String dataType,
@@ -2412,6 +2483,10 @@ void QtDisplayPanel::extendRegion(
      String chans, String pols){
   extChan_ = chans;
   extPol_ = pols;
+}
+
+void QtDisplayPanel::clicked(Record rec) {
+  emit activate(rec);
 }
 
 

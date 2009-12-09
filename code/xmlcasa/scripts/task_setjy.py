@@ -69,7 +69,7 @@ def setjy(vis=None,field=None,spw=None,modimage=None,fluxdensity=None,standard=N
          casalog.origin('setjy')
 
          if ((type(vis)==str) & (os.path.exists(vis))):
-                     im.open(vis)
+                     im.open(vis, usescratch=True)
          else:
                      raise Exception, 'Visibility data set not found - please verify the name'
 

@@ -28,6 +28,9 @@
 //# @author 
 //# @version 
 //////////////////////////////////////////////////////////////////////////////
+#include <sys/types.h>
+#include <setjmp.h>
+#include <signal.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
     struct interrupt {
@@ -37,6 +40,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	static void off( );
 	static void on( );
     };
+
+    extern sigjmp_buf jmp_buf;
+    extern bool longjmp_ok;
+    extern void (*signal_handler)(int);
+
 };
 
 #endif

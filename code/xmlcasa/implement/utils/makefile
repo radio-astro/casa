@@ -1,6 +1,6 @@
 # $Id$
 
-XLIBLIST := XERCES READLINE CCMTOOLS
+XLIBLIST := XERCES READLINE CCMTOOLS QT4
 
 # Use the generic AIPS++ class implementation makefile.
 #------------------------------------------------------

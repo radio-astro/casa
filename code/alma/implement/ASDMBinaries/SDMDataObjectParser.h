@@ -56,6 +56,9 @@ using namespace AtmPhaseCorrectionMod;
 #include "CPrimitiveDataType.h"
 using namespace PrimitiveDataTypeMod; 
 
+#include "CCorrelatorType.h"
+using namespace CorrelatorTypeMod;
+
 using namespace std;
 
 namespace asdmbinaries {
@@ -135,7 +138,7 @@ namespace asdmbinaries {
     
     void parseCorrelationMode(xmlNode* a_node, SDMDataObject& sdmDataObject);
     void parseSpectralResolution(xmlNode* a_node, SDMDataObject& sdmDataObject);
-
+    void parseProcessorType(xmlNode* a_node, SDMDataObject& sdmDataObject);
     void parseDataStruct (xmlNode* a_node, SDMDataObject& sdmDataObject);
     
     SDMDataObject::Baseband  parseBaseband(xmlNode* a_node, SDMDataObject& sdmDataObject);
@@ -143,12 +146,17 @@ namespace asdmbinaries {
     void  parseSpectralWindow(xmlNode* a_node, SDMDataObject& sdmDataObject, vector<SDMDataObject::SpectralWindow>& spectralWindow);
     
     SDMDataObject::BinaryPart parseBinaryPart(xmlNode* a_node, const string& attachmentName);
+    SDMDataObject::AutoDataBinaryPart parseAutoDataBinaryPart(xmlNode* a_node, const string& attachmentName);
+    SDMDataObject::ZeroLagsBinaryPart parseZeroLagsBinaryPart(xmlNode* a_node, const string& attachmentName);
+
     //      SDMDataObject::TypedBinaryPart  parseTypedBinaryPart(xmlNode* a_node, const string& attachmentName);
     
     xmlDoc *doc;
     
     static const regex  PROJECTPATH3;
     const static string SDMDATAHEADER;
+    const static string SCHEMAVERSION;
+    const static string BYTEORDER;
     const static string PROJECTPATH;
     const static string STARTTIME;
     const static string DATAOID;
@@ -167,6 +175,7 @@ namespace asdmbinaries {
     
     const static string CORRELATIONMODE;
     const static string SPECTRALRESOLUTION;
+    const static string PROCESSORTYPE;
     const static string DATASTRUCT;
     const static string APC;
     const static string REF;
@@ -175,21 +184,24 @@ namespace asdmbinaries {
     const static string NAME;
     
     const static string SPECTRALWINDOW;
+    const static string SW;
+    const static string SWBB;
     const static string CROSSPOLPRODUCTS;
     const static string SDPOLPRODUCTS;
     const static string SCALEFACTOR;
     const static string NUMSPECTRALPOINT;
     const static string NUMBIN;
     const static string SIDEBAND;
-    const static string ID;
     const static string IMAGE;
     
     const static string FLAGS;
     const static string ACTUALTIMES;
     const static string ACTUALDURATIONS;
     const static string ZEROLAGS;
+    const static string CORRELATORTYPE;
     const static string CROSSDATA;
     const static string AUTODATA;
+    const static string NORMALIZED;
     
     const static string SIZE;
     const static string AXES;
@@ -320,10 +332,13 @@ namespace asdmbinaries {
     static string parseString(xmlNode* a_node);
     static long long parseLongLong(xmlNode* a_node);
     static int   parseInt(xmlNode* a_node);
+    static bool  parseBool(xmlNode* a_node);
     static float parseFloat(xmlNode* a_node);
     static int   parseIntAttr(xmlNode* a_node, const string& attrName);
+    static bool  parseBoolAttr(xmlNode* a_node, const string& attrName);
     static float parseFloatAttr(xmlNode* a_node, const string& attrName);
     static string parseStringAttr(xmlNode* a_node, const string& attrName);
+    static const ByteOrder* parseByteOrderAttr(xmlNode* a_node, const string& attrName);
 
     template<class Enum, class EnumHelper> static Enum parseStringAttr(xmlNode* a_node, const string& attrName) {
       xmlAttr* attr = 0;
@@ -384,11 +399,14 @@ namespace asdmbinaries {
 
     static vector<unsigned int> parseProjectPath(xmlNode* a_node, unsigned int len);
 
+    static vector<unsigned int> parseProjectPath(xmlNode* a_node);
+
     private:    
 
     static const regex PROJECTPATH3;
     static const regex PROJECTPATH4;
     static const regex PROJECTPATH5;
+    static const regex PROJECTPATH4OR5;
 
     HeaderParser headerParser;
     CorrSubsetHeaderParser corrSubsetHeaderParser;

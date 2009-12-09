@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="listobs">
+<task type="function" name="listobs" category="information">
 	<shortdescription>List data set summary in the logger</shortdescription>
 	<description>
        List data set summary in the logger:

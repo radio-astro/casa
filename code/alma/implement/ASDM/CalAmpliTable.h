@@ -77,17 +77,15 @@ using namespace enumerations;
 	
 
 	
+#include "CAtmPhaseCorrection.h"
+using namespace AtmPhaseCorrectionMod;
+	
 
 	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
 	
 
-	
-
-	
-#include "CAtmPhaseCorrection.h"
-using namespace AtmPhaseCorrectionMod;
 	
 
 	
@@ -147,111 +145,127 @@ class ASDM;
 class CalAmpliRow;
 /**
  * The CalAmpliTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Amplitude Calibration Result from Telescope Calibration. This calibration checks that observing amplitude calibrators provide reasonable results: From the antenna-based fringe amplitudes rough aperture efficiencies are determined.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalAmpli </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaName </TD>
+ 		 
+ * <TD> string</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the antenna's name. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> atmPhaseCorrection </TD>
+ 		 
+ * <TD> AtmPhaseCorrectionMod::AtmPhaseCorrection</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;qualifies how the atmospheric phase correction has been applied. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> antennaName </TD> 
- * <TD> string </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> receiverBand </TD>
+ 		 
+ * <TD> ReceiverBandMod::ReceiverBand</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the name of the receiver band. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalReduction Table. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> numAPC </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> numReceptor </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> receiverBand </TD> 
- * <TD> ReceiverBandMod::ReceiverBand </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> atmPhaseCorrections </TD> 
- * <TD> vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > </TD>
- * <TD>  numAPC </TD> 
+ * <TD> &nbsp;the number of receptors. </TD>
  * </TR>
 	
  * <TR>
  * <TD> polarizationTypes </TD> 
  * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
  * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the polarizations of the receptors (an array containing one value per receptor). </TD>
  * </TR>
 	
  * <TR>
  * <TD> startValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the end time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> frequencyRange </TD> 
  * <TD> vector<Frequency > </TD>
  * <TD>  2 </TD> 
+ * <TD> &nbsp;the frequency range over which the result is valid. </TD>
  * </TR>
-	
-
-
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> apertureEfficiency </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>  numAPC, numReceptor  </TD>
+ * <TD> vector<float > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the aperture efficiency without correction. </TD>
  * </TR>
 	
  * <TR>
  * <TD> apertureEfficiencyError </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>  numAPC, numReceptor  </TD>
+ * <TD> vector<float > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the aperture efficiency error. </TD>
  * </TR>
+	
+
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> correctionValidity </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the correction validity. </TD>
  * </TR>
 	
 
@@ -326,19 +340,17 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param antennaName. 
+	
+ 	 * @param atmPhaseCorrection. 
+	
+ 	 * @param receiverBand. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
 	
- 	 * @param antennaName. 
-	
- 	 * @param numAPC. 
-	
  	 * @param numReceptor. 
-	
- 	 * @param receiverBand. 
-	
- 	 * @param atmPhaseCorrections. 
 	
  	 * @param polarizationTypes. 
 	
@@ -348,14 +360,18 @@ public:
 	
  	 * @param frequencyRange. 
 	
+ 	 * @param apertureEfficiency. 
+	
+ 	 * @param apertureEfficiencyError. 
+	
      */
-	CalAmpliRow *newRow(Tag calDataId, Tag calReductionId, string antennaName, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange);
+	CalAmpliRow *newRow(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<float > apertureEfficiency, vector<float > apertureEfficiencyError);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalAmpliRow *newRowFull(Tag calDataId, Tag calReductionId, string antennaName, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange);
+	CalAmpliRow *newRowFull(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<float > apertureEfficiency, vector<float > apertureEfficiencyError);
 
 
 	/**
@@ -421,15 +437,19 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param antennaName. 
+	
+	 * @param atmPhaseCorrection. 
+	
+	 * @param receiverBand. 
+	
 	 * @param calDataId. 
 	
 	 * @param calReductionId. 
 	
-	 * @param antennaName. 
-	
  	 *
 	 */
- 	CalAmpliRow* getRowByKey(Tag calDataId, Tag calReductionId, string antennaName);
+ 	CalAmpliRow* getRowByKey(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId);
 
  	 	
 
@@ -441,19 +461,17 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
+ 	 * @param antennaName.
+ 	 		
+ 	 * @param atmPhaseCorrection.
+ 	 		
+ 	 * @param receiverBand.
+ 	 		
  	 * @param calDataId.
  	 		
  	 * @param calReductionId.
  	 		
- 	 * @param antennaName.
- 	 		
- 	 * @param numAPC.
- 	 		
  	 * @param numReceptor.
- 	 		
- 	 * @param receiverBand.
- 	 		
- 	 * @param atmPhaseCorrections.
  	 		
  	 * @param polarizationTypes.
  	 		
@@ -462,9 +480,13 @@ public:
  	 * @param endValidTime.
  	 		
  	 * @param frequencyRange.
+ 	 		
+ 	 * @param apertureEfficiency.
+ 	 		
+ 	 * @param apertureEfficiencyError.
  	 		 
  	 */
-	CalAmpliRow* lookup(Tag calDataId, Tag calReductionId, string antennaName, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange); 
+	CalAmpliRow* lookup(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<float > apertureEfficiency, vector<float > apertureEfficiencyError); 
 
 
 #ifndef WITHOUT_ACS
@@ -484,43 +506,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalAmpliTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalAmpliTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalAmpli (CalAmpliTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalAmpli (CalAmpliTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -595,8 +623,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalAmpliRow* checkAndAdd(CalAmpliRow* x) throw (DuplicateKey);
+	CalAmpliRow* checkAndAdd(CalAmpliRow* x) ;
 
 
 
@@ -610,7 +640,7 @@ private:
 	vector<CalAmpliRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

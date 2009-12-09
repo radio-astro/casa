@@ -5,15 +5,13 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="feather">
+<task type="function" name="feather" category="imaging">
 	<shortdescription>Combine two images using their Fourier transforms</shortdescription>
 	<description>
-The algorithm converts each image to the gridded visibility
-plane, combines them, and reconverts them into an combined
-image.  The images must have a well-defined beam shape (clean beam),
-given in the image, in order for feathering to work well.
-The two images must be on the same grid and have the same
-flux density normalization scale.
+The algorithm converts each image to the gridded visibility plane, combines
+them, and reconverts them into an combined image.  Each image must include a
+well-defined beam shape (clean beam) in order for feathering to work well.  The
+two images must have the same flux density normalization scale.
 
 	</description>
 	<input>
@@ -36,21 +34,23 @@ flux density normalization scale.
 	This algorithm, called feathering, is a simple method for combining two
         images with different spatial resolution.  The processing steps are:
 
+	       0. regrid the low resolution image to a temporary copy matching the
+	          high resolution image,
                1. transform each image to the gridded visibility plane,
                2. sum the gridded visibilities
-               3. trasnform back to the image plane.
+               3. transform back to the image plane.
 
         The task name comes from the  smooth switching from
 	one data set to the other using weights assigned according to the
 	sensitivity of each at any given spatial frequency.  Gaps, if any,
         between the spatial frequency ranges are not filled.
 
-	Each image have a well-defined beam shape (clean beam)
-	for feathering to work well.  The two images must be on the same grid and
-	have the same flux density normalization scale.
+	Each image must have a well-defined beam shape (clean beam) for
+	feathering to work well.  The two images must have the same flux
+	density normalization scale.
 
         This task is somewhat experimental and will improve as more experience
-        with single-dish and interferometric data are obtained over the next few years.
+        with single-dish and interferometric data is obtained over the next few years.
 
 
 	Keyword arguments:
@@ -68,20 +68,22 @@ flux density normalization scale.
 
         Comments:
 
-            The advantage of feathering is that one does not have to go back to the
-            visibility data and then image and deconvolve.  It starts with the
-            high-quality image (with the accurate clean beam).  This is particularly
-            useful for combining a high-resolution interferometric image with a
-            lower-resolution single-dish image, although D-configuration and A-configuration
-            EVLA data can also be combined.   There are often uncertainties in the
-            relative flux density scales between the two images, and the current
-            implementation of feathers does not adjustment.
+            The advantage of feathering is that one does not have to go back to
+            the visibility data and then image and deconvolve.  It starts with
+            the high-quality image (with the accurate clean beam).  This is
+            particularly useful for combining a high-resolution interferometric
+            image with a lower-resolution single-dish image, although
+            D-configuration and A-configuration EVLA data can also be combined.
+            There are often uncertainties in the relative flux density scales
+            between the two images, and the current implementation of feathers
+            does not adjustment.
 
-            The clean task also has a method of combining two sets of data with different
-            resolution.  The high resolution visibility data begins deconvolution, starting
-            with a modelimage of the lower-resolution image.  The lower-resolution image must
-            be clean components (or a sky model), not the low resolution image with its
-            intrinsic resolution.
+            The clean task also has a method of combining two sets of data with
+            different resolution.  The high resolution visibility data begins
+            deconvolution, starting with a modelimage of the lower-resolution
+            image.  The lower-resolution image must be clean components (or a
+            sky model), not the low resolution image with its intrinsic
+            resolution.
 
 </example>
 </task>

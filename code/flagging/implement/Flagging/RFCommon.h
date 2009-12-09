@@ -35,7 +35,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
- // RFAs use bitwise flags
+// RFAs use bitwise flags
 typedef uInt RFlagWord;
 typedef Vector<RFlagWord> FlagVector;
 typedef Matrix<RFlagWord> FlagMatrix;
@@ -76,7 +76,7 @@ const char
     RF_FLAGRANGE[] = "flagrange",
     RF_MIN[]       = "min",
     RF_MAX[]       = "max",
-    
+    RF_CHANAVG[]   = "chanavg",
     
     RF_NDEG[]    = "ndeg",
     RF_SPWID[]   = "spwid", 
@@ -97,12 +97,15 @@ const char
     RF_ARRAY[]   = "array",
     RF_FEED[]    = "feed",
     RF_UVRANGE[] = "uvrange",
+    RF_DIAMETER[] = "diameter",
     
     RF_TIMERANGE[] = "timerng",
     RF_CENTERTIME[] = "timeslot",
     RF_TIMEDELTA[] = "dtime",
     
-    RF_QUACK[] = "quack",
+    RF_QUACK[]     = "quack",
+    RF_QUACKMODE[] = "quackmode",
+    RF_QUACKINC[]  = "quackinc",
 
     RF_NCHAN[] = "nchan",
     RF_START[] = "start",

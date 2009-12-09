@@ -8,6 +8,9 @@ namespace asdmbinaries {
   const string SDMDataObjectWriter::MIMEBOUNDARY_1  = $MIMEBOUNDARY1;
   const string SDMDataObjectWriter::MIMEBOUNDARY_2  = $MIMEBOUNDARY2;
 
+  vector<AxisName> SDMDataObjectWriter::WVRDATAAXES;
+  vector<AxisName> SDMDataObjectWriter::WVRDATAFLAGSAXES;
+
   const bool SDMDataObjectWriter::initClass_ = SDMDataObjectWriter::initClass();
   
   SDMDataObjectWriter::SDMDataObjectWriter(const string& uid, const string& title) {
@@ -18,6 +21,10 @@ namespace asdmbinaries {
     preamble();
     done_ = false;
     sdmDataSubsetNum_ = 0;
+    numBytes_ = 0;
+
+    sdmDataObject_.schemaVersion_ = SCHEMAVERSION;
+    sdmDataObject_.byteOrder_ = ByteOrder::Machine_Endianity;
   }
   
   SDMDataObjectWriter::SDMDataObjectWriter(ostringstream* oss, const string& uid,  const string& title) {
@@ -30,6 +37,10 @@ namespace asdmbinaries {
     preamble();
     done_ = false;
     sdmDataSubsetNum_ = 0;
+    numBytes_ = 0;
+
+    sdmDataObject_.schemaVersion_ = SCHEMAVERSION;
+    sdmDataObject_.byteOrder_ = ByteOrder::Machine_Endianity;
   }
   
   SDMDataObjectWriter::SDMDataObjectWriter(ofstream* ofs, const string& uid,  const string& title) {
@@ -42,6 +53,10 @@ namespace asdmbinaries {
     preamble();
     done_ = false;
     sdmDataSubsetNum_ = 0;
+    numBytes_ = 0;
+
+    sdmDataObject_.schemaVersion_ = SCHEMAVERSION;
+    sdmDataObject_.byteOrder_ = ByteOrder::Machine_Endianity;
   }
 
   SDMDataObjectWriter::~SDMDataObjectWriter() {
@@ -67,10 +82,12 @@ namespace asdmbinaries {
       // Do nothing special
       break;
     }
+    numBytes_ = 0;
     done_ = true;
   }
   
   void SDMDataObjectWriter::output(const string& s) {
+    numBytes_ += (unsigned long long) s.size();
     switch (otype_) {
     case STDOUT:
       cout << s;
@@ -159,6 +176,7 @@ namespace asdmbinaries {
     sdmDataObject_.numAntenna_ = numAntenna;
     sdmDataObject_.correlationMode_ = AUTO_ONLY;
     sdmDataObject_.spectralResolutionType_ = BASEBAND_WIDE;
+    sdmDataObject_.processorType_ = RADIOMETER;
     sdmDataObject_.dataStruct_ = dataStruct;
 
     outputln("--"+MIMEBOUNDARY_1);
@@ -281,7 +299,7 @@ namespace asdmbinaries {
 
     SDMDataObject::DataStruct dataStruct;
     dataStruct.basebands_ = basebands;
-    dataStruct.autoData_  = SDMDataObject::BinaryPart(autoData.size(), autoDataAxes);
+    dataStruct.autoData_  = SDMDataObject::AutoDataBinaryPart(autoData.size(), autoDataAxes, false);
     
     sdmDataObject_.valid_ = true;
 
@@ -297,6 +315,7 @@ namespace asdmbinaries {
     sdmDataObject_.numAntenna_ = numAntenna;
     sdmDataObject_.correlationMode_ = AUTO_ONLY;
     sdmDataObject_.spectralResolutionType_ = BASEBAND_WIDE;
+    sdmDataObject_.processorType_ = RADIOMETER;
     sdmDataObject_.dataStruct_ = dataStruct;
 
     outputln("--"+MIMEBOUNDARY_1);
@@ -358,7 +377,7 @@ namespace asdmbinaries {
     if (flags.size()) dataStruct.flags_ = SDMDataObject::BinaryPart(flags.size(), flagsAxes);
     if (actualTimes.size()) dataStruct.actualTimes_ = SDMDataObject::BinaryPart(actualTimes.size(), actualTimesAxes);
     if (actualDurations.size()) dataStruct.actualDurations_ = SDMDataObject::BinaryPart(actualDurations.size(), actualDurationsAxes);
-    dataStruct.autoData_  = SDMDataObject::BinaryPart(autoData.size(), autoDataAxes);
+    dataStruct.autoData_  = SDMDataObject::AutoDataBinaryPart(autoData.size(), autoDataAxes, false);
     
     sdmDataObject_.valid_ = true;
 
@@ -374,6 +393,7 @@ namespace asdmbinaries {
     sdmDataObject_.numAntenna_ = numAntenna;
     sdmDataObject_.correlationMode_ = AUTO_ONLY;
     sdmDataObject_.spectralResolutionType_ = BASEBAND_WIDE;
+    sdmDataObject_.processorType_ = RADIOMETER;
     sdmDataObject_.dataStruct_ = dataStruct;
 
     outputln("--"+MIMEBOUNDARY_1);
@@ -472,6 +492,122 @@ namespace asdmbinaries {
     outputln<float>(autoData);
     outputln("--"+MIMEBOUNDARY_2+"--");
   }
+
+  void SDMDataObjectWriter::wvrData (const string & 		execBlockUID,
+				     unsigned int 		execBlockNum,
+				     unsigned int 		scanNum,
+				     unsigned int 		subscanNum,
+				     unsigned int 		numTimes,
+				     unsigned int 		numAntennas,
+				     unsigned int 		numChannels,
+				     NetSideband  		netSideband,
+				     unsigned long long 	time,
+				     unsigned long long 	interval,
+				     const vector<float>& 	wvrData,
+				     const vector<unsigned long>& flags) {
+    checkState(T_WVRDATA, "wvrData");
+
+    //
+    //
+    // Check situations which raise exceptions.
+    //
+    ostringstream oss;
+    if (numTimes == 0 || numAntennas == 0 || numChannels == 0) {
+      oss << "At least one of these arguments is nul : numTimes (" << numTimes << "), "
+	  << "numAntennas (" << numAntennas << "'), "
+	  << "numChannels (" << numChannels << "')."
+	  << endl;
+      throw SDMDataObjectWriterException(oss.str());
+    }
+
+    if (wvrData.size() != numTimes * numAntennas * numChannels) {
+      oss << "The size of 'wvrData' is " << wvrData.size()
+	  << ". It is expected to be " << numTimes * numAntennas * numChannels
+	  << "." << endl;
+      throw SDMDataObjectWriterException(oss.str());
+    }
+
+    if (flags.size() !=0 && flags.size() != numTimes * numAntennas) {
+      oss << "The size of 'flags' is " << flags.size() 
+	  << ". It is expected to be wether null or equal to " 
+	  << numTimes * numAntennas << endl;
+      throw SDMDataObjectWriterException(oss.str());
+    }
+
+    //
+    // Prepare the embedded SDMDataObject Main header
+    // 
+    vector<StokesParameter> 			sdPolProducts(1, I);
+    vector<SDMDataObject::SpectralWindow> 	spectralWindows(1, SDMDataObject::SpectralWindow(sdPolProducts, numChannels, 1, netSideband));
+    vector<SDMDataObject::Baseband> 		baseBands(1, SDMDataObject::Baseband(NOBB, spectralWindows));
+
+    sdmDataObject_.valid_                  = true;
+    sdmDataObject_.startTime_      	   = time - interval / 2;
+    sdmDataObject_.dataOID_        	   = uid_;
+    sdmDataObject_.title_          	   = title_;
+    sdmDataObject_.dimensionality_ 	   = 0;
+    sdmDataObject_.numTime_        	   = numTimes;
+    sdmDataObject_.execBlockUID_   	   = execBlockUID;
+    sdmDataObject_.execBlockNum_           = execBlockNum;
+    sdmDataObject_.scanNum_                = scanNum;
+    sdmDataObject_.subscanNum_             = subscanNum;
+    sdmDataObject_.numAntenna_             = numAntennas;
+    sdmDataObject_.correlationMode_        = AUTO_ONLY;
+    sdmDataObject_.spectralResolutionType_ = FULL_RESOLUTION;
+    sdmDataObject_.processorType_          = RADIOMETER;
+    sdmDataObject_.dataStruct_.basebands_  = baseBands;
+    sdmDataObject_.dataStruct_.autoData_   = SDMDataObject::AutoDataBinaryPart(wvrData.size(), WVRDATAAXES, true);
+    if (flags.size()) sdmDataObject_.dataStruct_.flags_ = SDMDataObject::BinaryPart(flags.size(), WVRDATAFLAGSAXES); 
+    
+    //
+    // And output it.
+    outputln("--"+MIMEBOUNDARY_1);
+    outputln("Content-Type: text/xml; charset=\"UTF-8\"");
+    outputln("Content-Transfer-Encoding: 8bit");
+    outputln("Content-Location: " + sdmDataObject_.projectPath() + "desc.xml");
+    outputln();
+
+    outputln(sdmDataObject_.toXML());
+    outputln("--"+MIMEBOUNDARY_1);
+    outputln("Content-Type: Multipart/Related; boundary=\""+MIMEBOUNDARY_2+"\";type=\"text/xml\"; start=\"<DataSubset.xml>\"");
+    outputln("Content-Description: Data and metadata subset");
+    outputln("--"+MIMEBOUNDARY_2);
+    outputln("Content-Type: text/xml; charset=\"UTF-8\"");
+    outputln("Content-Location: " + sdmDataObject_.projectPath() + "desc.xml");
+    outputln();
+
+    //
+    //
+    // Prepare the unique SDMDataSubset
+    //
+    SDMDataSubset wvrDataSubset(&sdmDataObject_,
+			       time,
+			       interval,
+			       wvrData);
+    wvrDataSubset.flags_ = (wvrDataSubset.nFlags_ = flags.size()) ? &wvrDataSubset.flags_[0] : 0;
+    
+    //
+    // And output it.
+    // 
+    outputln(wvrDataSubset.toXML());
+
+    if (flags.size() != 0) {
+      outputln("--"+MIMEBOUNDARY_2);
+      outputln("Content-Type: binary/octet-stream");
+      outputln("Content-Location: " + wvrDataSubset.projectPath() + "flags.bin");
+      outputln();
+      outputln<unsigned long int>(flags);
+    }
+    
+    outputln("--"+MIMEBOUNDARY_2);
+    outputln("Content-Type: binary/octet-stream");
+    outputln("Content-Location: " + wvrDataSubset.projectPath() + "autoData.bin");
+    outputln();
+    
+    outputln<float>(wvrData);
+    outputln("--"+MIMEBOUNDARY_2+"--");
+  }
+  
   
   /**
    * Writes the XML global header into its attachment on the MIME message stream.
@@ -483,7 +619,7 @@ namespace asdmbinaries {
 					   unsigned int subscanNum,
 					   unsigned int numAntenna,
 					   CorrelationMode correlationMode,
-					   SpectralResolutionType spectralResolutionType,
+					   const OptionalSpectralResolutionType& spectralResolutionType,
 					   SDMDataObject::DataStruct& dataStruct) {
     checkState(T_CORRDATAHEADER, "corrDataHeader");
     
@@ -505,8 +641,9 @@ namespace asdmbinaries {
     sdmDataObject_.numAntenna_ = numAntenna;
     sdmDataObject_.correlationMode_ = correlationMode;
     sdmDataObject_.spectralResolutionType_ = spectralResolutionType;
+    sdmDataObject_.processorType_ = CORRELATOR;
     sdmDataObject_.dataStruct_ = dataStruct;
-    
+
     outputln("--"+MIMEBOUNDARY_1);
     outputln("Content-Type: text/xml; charset=\"UTF-8\"");
     outputln("Content-Transfer-Encoding: 8bit");
@@ -535,8 +672,7 @@ namespace asdmbinaries {
     
     // integrationNum and subintegrationNum.
     sdmDataSubset.integrationNum_    = integrationNum;
-    if (sdmDataSubset.owner_->spectralResolutionType_ == CHANNEL_AVERAGE) 
-      sdmDataSubset.subintegrationNum_ = subintegrationNum;
+    sdmDataSubset.subintegrationNum_ = subintegrationNum?subintegrationNum:0;
 
     // The time.
     sdmDataSubset.time_ = time;
@@ -546,28 +682,35 @@ namespace asdmbinaries {
 
     // The crossDataType.
     if (longCrossData.size() != 0) 
-      sdmDataSubset.crossDataType_ = INT_TYPE;
+      sdmDataSubset.crossDataType_ = INT32_TYPE;
 
     else if (shortCrossData.size() != 0)
-      sdmDataSubset.crossDataType_ = SHORT_TYPE;
+      sdmDataSubset.crossDataType_ = INT16_TYPE;
 
     else if (floatCrossData.size() != 0) 
-      sdmDataSubset.crossDataType_ = FLOAT_TYPE;
+      sdmDataSubset.crossDataType_ = FLOAT32_TYPE;
 
     // Attachments size;
     sdmDataSubset.nActualTimes_     = actualTimes.size();
     sdmDataSubset.nActualDurations_ = actualDurations.size();
-    sdmDataSubset.nZeroLags_        = zeroLags.size();
+    
+    // Ignore unconditionally zeroLags for FXF ~ ACA)
+    if (sdmDataObject_.correlatorType() != FX) {
+      sdmDataSubset.nZeroLags_        = zeroLags.size();
+    }
+    else
+      sdmDataSubset.nZeroLags_ = 0;
+
     sdmDataSubset.nFlags_   = flags.size();
     sdmDataSubset.nFlags_   = flags.size();
     switch (sdmDataSubset.crossDataType_) {
-    case INT_TYPE:
+    case INT32_TYPE:
       sdmDataSubset.nCrossData_ = longCrossData.size();
       break;
-    case SHORT_TYPE:
+    case INT16_TYPE:
       sdmDataSubset.nCrossData_ = shortCrossData.size();
       break;
-    case FLOAT_TYPE:
+    case FLOAT32_TYPE:
       sdmDataSubset.nCrossData_ = floatCrossData.size();
       break;
     default:
@@ -645,13 +788,13 @@ namespace asdmbinaries {
       int numCrossData = sdmDataObject_.dataStruct_.crossData_.size();
       int numCrossDataV = 0; //= longCrossData.size() ? longCrossData.size():shortCrossData.size();
       switch(sdmDataSubset.crossDataType_) {
-      case INT_TYPE:
+      case INT32_TYPE:
 	numCrossDataV = longCrossData.size();
 	break;
-      case SHORT_TYPE:
+      case INT16_TYPE:
 	numCrossDataV = shortCrossData.size();
 	break;
-      case FLOAT_TYPE:
+      case FLOAT32_TYPE:
 	numCrossDataV = floatCrossData.size();
 	break;
       default:
@@ -670,13 +813,13 @@ namespace asdmbinaries {
       outputlnLocation("crossData", sdmDataSubset);
       outputln();
       switch (sdmDataSubset.crossDataType_) {
-      case INT_TYPE:
+      case INT32_TYPE:
 	outputln<int>(longCrossData);
 	break;
-      case SHORT_TYPE:
+      case INT16_TYPE:
 	outputln<short>(shortCrossData);
 	break;
-      case FLOAT_TYPE:
+      case FLOAT32_TYPE:
 	outputln<float>(floatCrossData);
 	break;
       default: 
@@ -890,9 +1033,24 @@ namespace asdmbinaries {
 	    crossData,
 	    autoData);		
   }
+
+  unsigned long long SDMDataObjectWriter::numBytes() { return numBytes_; }
   
   
   bool SDMDataObjectWriter::initClass() {
+    //
+    // WVR data are stored in the following order : TIM, ANT, SPP  (SPP varying faster then ANT varying itself faster than TIM)
+    //
+    WVRDATAAXES.push_back(TIM); 
+    WVRDATAAXES.push_back(ANT); 
+    WVRDATAAXES.push_back(SPP);
+
+    //
+    // WVR data flags are stored in the following order : TIM, ANT (ANT varying itself faster than TIM)
+    //
+    WVRDATAFLAGSAXES.push_back(TIM); 
+    WVRDATAFLAGSAXES.push_back(ANT); 
+ 
     return true;
   }
 
@@ -911,6 +1069,10 @@ namespace asdmbinaries {
 	currentState_ = S_CORRDATAHEADER;
 	return;
       }
+      else if (t == T_WVRDATA) {
+	currentState_ = S_WVRDATA;
+	  return;
+      }
       break;
 
     case S_TPDATA:
@@ -919,6 +1081,7 @@ namespace asdmbinaries {
 	return;
       }
       break;
+
       
     case S_TPDATAHEADER:
       if (t == T_ADDTPSUBSCAN) {
@@ -929,6 +1092,13 @@ namespace asdmbinaries {
 
     case S_ADDTPSUBSCAN:
       if ( t == T_DONE ) {
+	currentState_ = END;
+	return;
+      }
+      break;
+
+    case S_WVRDATA:
+      if (t == T_DONE) {
 	currentState_ = END;
 	return;
       }

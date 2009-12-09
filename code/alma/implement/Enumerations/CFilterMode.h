@@ -42,16 +42,32 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the FilterMode enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace FilterModeMod
 {
+  //! FilterMode.
+  //!  [APDM.Correlator] Modes of correlator input filtering
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum FilterMode
   { 
-    FILTER_NA ,
-    FILTER_TDM ,
-    FILTER_TFB 
+    FILTER_NA /*!<  Not Applicable (2 antenna prototype). The Tunable Filter Banks are not implemented */
+     ,
+    FILTER_TDM /*!< Time Division Mode. In this mode the Tunable Filter banks are bypassed */
+     ,
+    FILTER_TFB /*!< The Tunable Filter Bank is implemented and used */
+     ,
+    UNDEFINED /*!< Not defined or not applicable. */
+     
   };
   typedef FilterMode &FilterMode_out;
 } 
@@ -59,68 +75,95 @@ namespace FilterModeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration FilterMode.
+  * 
+  */
 class CFilterMode {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the FilterMode enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sFILTER_NA;
+	static const std::string& sFILTER_NA; /*!< A const string equal to "FILTER_NA".*/
 	
-	static const std::string& sFILTER_TDM;
+	static const std::string& sFILTER_TDM; /*!< A const string equal to "FILTER_TDM".*/
 	
-	static const std::string& sFILTER_TFB;
+	static const std::string& sFILTER_TFB; /*!< A const string equal to "FILTER_TFB".*/
 	
-    static const std::vector<std::string> sFilterModeSet();	 
+	static const std::string& sUNDEFINED; /*!< A const string equal to "UNDEFINED".*/
+	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in FilterModeMod::FilterMode.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of FilterModeMod::FilterMode.
+      * @return a string.
+      */
+	static std::string name(const FilterModeMod::FilterMode& e);
 	
-
-	
-	// Explanations associated with the FilterMode Enumeration.
-		
-	static const std::string& hFILTER_NA;
-		
-	static const std::string& hFILTER_TDM;
-		
-	static const std::string& hFILTER_TFB;
-		
-	static const std::vector<std::string> hFilterModeSet();
-   	
-
-   	// Is an integer number associated with the FilterMode enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the FilterMode enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  FilterMode enumeration.
-	static std::string name(const FilterModeMod::FilterMode& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const FilterModeMod::FilterMode& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified FilterMode enumeration.
-	static std::string help(const FilterModeMod::FilterMode& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a FilterMode enumeration object by specifying its name.
    	static FilterModeMod::FilterMode newFilterMode(const std::string& name);
    	
-   	// Create a FilterMode enumeration object by specifying its name.
+   	/*! Return a FilterMode's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a FilterModeMod::FilterMode's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static FilterModeMod::FilterMode literal(const std::string& name);
  	
-    // Create a FilterMode enumeration object by specifying its position index (0 based).
+    /*! Return a FilterMode's enumerator given an unsigned int.
+      * @param i the index of the enumerator in FilterModeMod::FilterMode.
+      * @return a FilterModeMod::FilterMode's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static FilterModeMod::FilterMode from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CFilterMode();
     CFilterMode(const CFilterMode&);
     CFilterMode& operator=(const CFilterMode&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CFilterMode_H*/

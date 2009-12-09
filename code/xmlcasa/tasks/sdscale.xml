@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- This is the param set for sdscale -->
 
-<task type="function" name="sdscale" startup="false">
+<task type="function" name="sdscale" startup="false" category="single dish">
 
   <shortdescription>ASAP SD task: scale the sd spectra</shortdescription>
 
@@ -67,12 +67,13 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 
         Task sdscale performs scaling of single-dish spectra.
         By setting scaletsys = True, associated Tsys is also scaled.
-        Tsys informations are written into the file 'sdscale.log' 
-        as well as they are displayed in the terminal window. 
+        Tsys informations are written in the casalogger and they are 
+        automatically stored in 'casapy.log'. 
         The sdfile can be any of ASAP, MS, SDFITS, or RPFITS format.
-        If outfile name is given or outfile=''(default), the scaled data is written
-        to a new file with the same format as the input data (Note: in case of the
-        RPFITS format input data, it will be written to SDFITS format).
+        If outfile name is given or outfile=''(default), the scaled data 
+        is written to a new file with the same format as the input data 
+        (Note: in case of the RPFITS format input data, it will be written 
+        to SDFITS format).
 
   </example>
 

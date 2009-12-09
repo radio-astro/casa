@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CProcessorType::version() {
+	return ProcessorTypeMod::version;
+	}
+	
+string CProcessorType::revision () {
+	return ProcessorTypeMod::revision;
+}
+
+unsigned int CProcessorType::size() {
+	return 3;
+	}
+	
 	
 const std::string& CProcessorType::sCORRELATOR = "CORRELATOR";
 	
@@ -44,7 +57,7 @@ const std::string& CProcessorType::sRADIOMETER = "RADIOMETER";
 	
 const std::string& CProcessorType::sSPECTROMETER = "SPECTROMETER";
 	
-const std::vector<std::string> CProcessorType::sProcessorTypeSet() {
+const std::vector<std::string> CProcessorType::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CProcessorType::sCORRELATOR);
@@ -55,29 +68,6 @@ const std::vector<std::string> CProcessorType::sProcessorTypeSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CProcessorType::hCORRELATOR = "A digital correlator";
-	
-const std::string& CProcessorType::hRADIOMETER = "A radiometer";
-	
-const std::string& CProcessorType::hSPECTROMETER = "An (analogue) multi-channel spectrometer";
-	
-const std::vector<std::string> CProcessorType::hProcessorTypeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CProcessorType::hCORRELATOR);
-    
-    enumSet.insert(enumSet.end(), CProcessorType::hRADIOMETER);
-    
-    enumSet.insert(enumSet.end(), CProcessorType::hSPECTROMETER);
-        
-    return enumSet;
-}
-   	
 
 std::string CProcessorType::name(const ProcessorTypeMod::ProcessorType& f) {
     switch (f) {
@@ -92,28 +82,9 @@ std::string CProcessorType::name(const ProcessorTypeMod::ProcessorType& f) {
       return CProcessorType::sSPECTROMETER;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CProcessorType::help(const ProcessorTypeMod::ProcessorType& f) {
-    switch (f) {
-    
-    case ProcessorTypeMod::CORRELATOR:
-      return CProcessorType::hCORRELATOR;
-    
-    case ProcessorTypeMod::RADIOMETER:
-      return CProcessorType::hRADIOMETER;
-    
-    case ProcessorTypeMod::SPECTROMETER:
-      return CProcessorType::hSPECTROMETER;
-    	
-    }
-    return std::string("");
-}
-   	
 
 ProcessorTypeMod::ProcessorType CProcessorType::newProcessorType(const std::string& name) {
 		
@@ -150,12 +121,10 @@ ProcessorTypeMod::ProcessorType CProcessorType::literal(const std::string& name)
 }
 
 ProcessorTypeMod::ProcessorType CProcessorType::from_int(unsigned int i) {
-	vector<string> names = sProcessorTypeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newProcessorType(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newProcessorType(names_.at(i));
 }
-
-	
 
 string CProcessorType::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'ProcessorType'.";

@@ -59,6 +59,7 @@ __calibraterhome__ = casac.homefinder.find_home_by_name('calibraterHome')
 __mshome__ = casac.homefinder.find_home_by_name('msHome')
 __tableplothome__ = casac.homefinder.find_home_by_name('tableplotHome')
 __msplothome__ = casac.homefinder.find_home_by_name('msplotHome')
+__plotmshome__ = casac.homefinder.find_home_by_name('plotmsHome')
 __calplothome__ = casac.homefinder.find_home_by_name('calplotHome')
 __tablehome__ = casac.homefinder.find_home_by_name('tableHome')
 __flaggerhome__ = casac.homefinder.find_home_by_name('flaggerHome')
@@ -82,6 +83,7 @@ calibrater = __calibraterhome__.create( )
 ms = __mshome__.create( )
 tableplot = __tableplothome__.create( )
 msplot = __msplothome__.create( )
+pmtool = __plotmshome__.create( )
 calplot = __calplothome__.create( )
 table = __tablehome__.create( )
 flagger = __flaggerhome__.create( )
@@ -98,67 +100,69 @@ vpmanager = __vpmanagerhome__.create( )
 vlafillertask = __vlafillertaskhome__.create( )
 atmosphere = __atmospherehome__.create( )
 
-from imstat import imstat
-from fringecal import fringecal
-from oldclean import oldclean
-from flagdata import flagdata
-from split import split
-from importvla import importvla
-from hanningsmooth import hanningsmooth
-from widefield import widefield
-from immoments import immoments
-from uvcontsub import uvcontsub
-from listhistory import listhistory
-from mosaic import mosaic
-from importfits import importfits
-from imfit import imfit
-from invert import invert
-from deconvolve import deconvolve
-from simdata import simdata
-from importasdm import importasdm
-from uvmodelfit import uvmodelfit
-from polcal import polcal
-from clearcal import clearcal
-from bandpass import bandpass
-from clearplot import clearplot
-from listvis import listvis
 from accum import accum
-from concat import concat
-from listobs import listobs
-from feather import feather
-from imregrid import imregrid
-from newclean import newclean
-from listcal import listcal
-from plotxy import plotxy
-from ft import ft
-from importuvfits import importuvfits
-from setjy import setjy
-from clean import clean
-from immath import immath
-from imhead import imhead
-from find import find
-from gaincal import gaincal
-from fluxscale import fluxscale
 from applycal import applycal
-from plotants import plotants
-from exportuvfits import exportuvfits
-from plotcal import plotcal
-from flagmanager import flagmanager
-from specfit import specfit
-from viewer import viewer
-from exportfits import exportfits
+from bandpass import bandpass
 from blcal import blcal
-from uvsub import uvsub
-from imcontsub import imcontsub
-from imstat import imstat
-from newflagdata import newflagdata
-from clearstat import clearstat
-from flagautocorr import flagautocorr
 from browsetable import browsetable
-from makemask import makemask
-from smoothcal import smoothcal
+from calstat import calstat
+from clean import clean
+from clearcal import clearcal
+from clearplot import clearplot
+from clearstat import clearstat
+from concat import concat
+from deconvolve import deconvolve
+from exportfits import exportfits
+from exportuvfits import exportuvfits
+from feather import feather
+from find import find
+from flagautocorr import flagautocorr
+from flagdata import flagdata
+from flagmanager import flagmanager
+from fringecal import fringecal
+from ft import ft
+from fluxscale import fluxscale
+from gaincal import gaincal
+from hanningsmooth import hanningsmooth
+from imcontsub import imcontsub
+from imfit import imfit
+from imhead import imhead
+from immath import immath
+from immoments import immoments
+from importasdm import importasdm
+from importfits import importfits
+from importgmrt import importgmrt
+from importvla import importvla
+from importuvfits import importuvfits
+from imregrid import imregrid
+from imstat import imstat
 from imval import imval
+from listcal import listcal
+from listhistory import listhistory
+from listobs import listobs
+from listvis import listvis
+from makemask import makemask
+from mosaic import mosaic
+from newclean import newclean
+from newflagdata import newflagdata
+from oldclean import oldclean
+from plotants import plotants
+from plotcal import plotcal
+from plotxy import plotxy
+from polcal import polcal
+from plotms import plotms
+from setjy import setjy
+from simdata import simdata
+from smoothcal import smoothcal
+from specfit import specfit
+from split import split
+from uvcontsub import uvcontsub
+from uvmodelfit import uvmodelfit
+from uvsub import uvsub
+from viewer import viewer
 from vishead import vishead
+from visstat import visstat
+from widefield import widefield
 
 
 ##

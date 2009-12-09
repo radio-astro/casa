@@ -141,12 +141,11 @@ def immoments( imagename, moments, axis, region, box, chans, stokes, mask, inclu
                     reg=rg.fromtabletorecord( imagename, region, False )
                 else:
                     reg=rg.fromtabletorecord( reg_names[0], reg_names[1], False )
-	else: 
+	else:
 	    reg=imregion( imagename, chans, stokes, box, '', '' )
             
         if ( len( reg .keys() ) < 1 ):
             raise Exception, 'Ill-formed region: '+str(reg)+'. can not continue.'
-        
         casalog.post( 'Momements to be found in region: '+str(reg), 'DEBUG2' )
 
         # NEXT Two lines are just for debugging purposes.
@@ -155,13 +154,12 @@ def immoments( imagename, moments, axis, region, box, chans, stokes, mask, inclu
         #casalog.post( 'Image Statistics of image, '+imagename'\
         #+', with specified region, mask, and pixels is: '+str(results),\
         #'DEBUG2' )
-        
-	ia.open(imagename)
-	retValue = ia.moments( moments=moments,axis=int(axis),mask=mask,region=reg,includepix=includepix,excludepix=excludepix,outfile=outfile,drop=False)
-        
-	ia.close()
+        ia.open( imagename ) 
+        retValue = ia.moments( moments=moments,axis=int(axis),mask=mask,region=reg,includepix=includepix,excludepix=excludepix,outfile=outfile,drop=False)
+	ia.done()
         return retValue
     except Exception, instance:
+        ia.done()
 	print '*** Error ***',instance
 	raise Exception, instance
 	    

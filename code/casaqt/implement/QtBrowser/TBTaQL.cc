@@ -26,7 +26,7 @@
 //# $Id: $
 #include <casaqt/QtBrowser/TBTaQL.qo.h>
 
-#include <casaqt/QtBrowser/TBFileDialog.qo.h>
+#include <casaqt/QtUtilities/QtFileDialog.qo.h>
 
 namespace casa {
 
@@ -82,7 +82,7 @@ TBTaQL::~TBTaQL() { }
 // Private Slots //
 
 void TBTaQL::doBrowse() {
-    QString f = TBFileDialog::getExistingTable(this, tr("Find Data"));
+    QString f = QtFileDialog::qgetExistingDir(this, tr("Find Data"));
     if(!f.isEmpty()) locationEdit->setText(f);
 }
 

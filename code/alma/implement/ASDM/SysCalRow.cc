@@ -41,28 +41,28 @@ using std::set;
 #include <SysCalRow.h>
 #include <SysCalTable.h>
 
-#include <SpectralWindowTable.h>
-#include <SpectralWindowRow.h>
+#include <AntennaTable.h>
+#include <AntennaRow.h>
 
 #include <FeedTable.h>
 #include <FeedRow.h>
 
-#include <AntennaTable.h>
-#include <AntennaRow.h>
+#include <SpectralWindowTable.h>
+#include <SpectralWindowRow.h>
 	
 
 using asdm::ASDM;
 using asdm::SysCalRow;
 using asdm::SysCalTable;
 
-using asdm::SpectralWindowTable;
-using asdm::SpectralWindowRow;
+using asdm::AntennaTable;
+using asdm::AntennaRow;
 
 using asdm::FeedTable;
 using asdm::FeedRow;
 
-using asdm::AntennaTable;
-using asdm::AntennaRow;
+using asdm::SpectralWindowTable;
+using asdm::SpectralWindowRow;
 
 
 #include <Parser.h>
@@ -114,12 +114,10 @@ namespace asdm {
 	
   		
 		
-		x->numLoadExists = numLoadExists;
-		
 		
 			
 				
-		x->numLoad = numLoad;
+		x->numReceptor = numReceptor;
  				
  			
 		
@@ -128,81 +126,10 @@ namespace asdm {
 	
   		
 		
-		x->calLoadExists = calLoadExists;
-		
-		
-			
-		x->calLoad.length(calLoad.size());
-		for (unsigned int i = 0; i < calLoad.size(); ++i) {
-			
-				
-			x->calLoad[i] = calLoad.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->feffExists = feffExists;
-		
-		
-			
-		x->feff.length(feff.size());
-		for (unsigned int i = 0; i < feff.size(); ++i) {
-			
-				
-			x->feff[i] = feff.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->aeffExists = aeffExists;
-		
-		
-			
-		x->aeff.length(aeff.size());
-		for (unsigned int i = 0; i < aeff.size(); ++i) {
-			
-				
-			x->aeff[i] = aeff.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->phaseDiffExists = phaseDiffExists;
-		
-		
-			
-		x->phaseDiff = phaseDiff.toIDLAngle();
-			
-		
-	
-
-	
-  		
-		
-		x->sbgainExists = sbgainExists;
-		
 		
 			
 				
-		x->sbgain = sbgain;
+		x->numChan = numChan;
  				
  			
 		
@@ -211,227 +138,14 @@ namespace asdm {
 	
   		
 		
-		x->tauExists = tauExists;
+		x->tcalFlagExists = tcalFlagExists;
 		
 		
-			
-		x->tau.length(tau.size());
-		for (unsigned int i = 0; i < tau.size(); ++i) {
-			
-			x->tau[i] = tau.at(i).toIDLTemperature();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->tcalExists = tcalExists;
-		
-		
-			
-		x->tcal.length(tcal.size());
-		for (unsigned int i = 0; i < tcal.size(); ++i) {
-			
-			x->tcal[i] = tcal.at(i).toIDLTemperature();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->trxExists = trxExists;
-		
-		
-			
-		x->trx.length(trx.size());
-		for (unsigned int i = 0; i < trx.size(); ++i) {
-			
-			x->trx[i] = trx.at(i).toIDLTemperature();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->tskyExists = tskyExists;
-		
-		
-			
-		x->tsky.length(tsky.size());
-		for (unsigned int i = 0; i < tsky.size(); ++i) {
-			
-			x->tsky[i] = tsky.at(i).toIDLTemperature();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->tsysExists = tsysExists;
-		
-		
-			
-		x->tsys.length(tsys.size());
-		for (unsigned int i = 0; i < tsys.size(); ++i) {
-			
-			x->tsys[i] = tsys.at(i).toIDLTemperature();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->tantExists = tantExists;
-		
-		
-			
-		x->tant.length(tant.size());
-		for (unsigned int i = 0; i < tant.size(); ++i) {
-			
-			x->tant[i] = tant.at(i).toIDLTemperature();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->tantTsysExists = tantTsysExists;
-		
-		
-			
-		x->tantTsys.length(tantTsys.size());
-		for (unsigned int i = 0; i < tantTsys.size(); ++i) {
 			
 				
-			x->tantTsys[i] = tantTsys.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->pwvPathExists = pwvPathExists;
-		
-		
-			
-		x->pwvPath.length(pwvPath.size());
-		for (unsigned int i = 0; i < pwvPath.size(); ++i) {
-			
-			x->pwvPath[i] = pwvPath.at(i).toIDLLength();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->dpwvPathExists = dpwvPathExists;
-		
-		
-			
-		x->dpwvPath.length(dpwvPath.size());
-		for (unsigned int i = 0; i < dpwvPath.size(); ++i) {
-			
-				
-			x->dpwvPath[i] = dpwvPath.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->feffSpectrumExists = feffSpectrumExists;
-		
-		
-			
-		x->feffSpectrum.length(feffSpectrum.size());
-		for (unsigned int i = 0; i < feffSpectrum.size(); i++) {
-			x->feffSpectrum[i].length(feffSpectrum.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < feffSpectrum.size() ; i++)
-			for (unsigned int j = 0; j < feffSpectrum.at(i).size(); j++)
-					
-						
-				x->feffSpectrum[i][j] = feffSpectrum.at(i).at(j);
-		 				
-			 						
-		
-			
-		
-	
-
-	
-  		
-		
-		x->sbgainSpectrumExists = sbgainSpectrumExists;
-		
-		
-			
-		x->sbgainSpectrum.length(sbgainSpectrum.size());
-		for (unsigned int i = 0; i < sbgainSpectrum.size(); i++) {
-			x->sbgainSpectrum[i].length(sbgainSpectrum.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < sbgainSpectrum.size() ; i++)
-			for (unsigned int j = 0; j < sbgainSpectrum.at(i).size(); j++)
-					
-						
-				x->sbgainSpectrum[i][j] = sbgainSpectrum.at(i).at(j);
-		 				
-			 						
-		
-			
-		
-	
-
-	
-  		
-		
-		x->tauSpectrumExists = tauSpectrumExists;
-		
-		
-			
-		x->tauSpectrum.length(tauSpectrum.size());
-		for (unsigned int i = 0; i < tauSpectrum.size(); i++) {
-			x->tauSpectrum[i].length(tauSpectrum.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < tauSpectrum.size() ; i++)
-			for (unsigned int j = 0; j < tauSpectrum.at(i).size(); j++)
-					
-				x->tauSpectrum[i][j]= tauSpectrum.at(i).at(j).toIDLTemperature();
-									
-		
-			
+		x->tcalFlag = tcalFlag;
+ 				
+ 			
 		
 	
 
@@ -460,17 +174,50 @@ namespace asdm {
 	
   		
 		
+		x->trxFlagExists = trxFlagExists;
+		
+		
+			
+				
+		x->trxFlag = trxFlag;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
 		x->trxSpectrumExists = trxSpectrumExists;
 		
 		
 			
 		x->trxSpectrum.length(trxSpectrum.size());
-		for (unsigned int i = 0; i < trxSpectrum.size(); ++i) {
+		for (unsigned int i = 0; i < trxSpectrum.size(); i++) {
+			x->trxSpectrum[i].length(trxSpectrum.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < trxSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < trxSpectrum.at(i).size(); j++)
+					
+				x->trxSpectrum[i][j]= trxSpectrum.at(i).at(j).toIDLTemperature();
+									
+		
 			
-			x->trxSpectrum[i] = trxSpectrum.at(i).toIDLTemperature();
+		
+	
+
+	
+  		
+		
+		x->tskyFlagExists = tskyFlagExists;
+		
+		
 			
-	 	}
-			
+				
+		x->tskyFlag = tskyFlag;
+ 				
+ 			
 		
 	
 
@@ -499,6 +246,20 @@ namespace asdm {
 	
   		
 		
+		x->tsysFlagExists = tsysFlagExists;
+		
+		
+			
+				
+		x->tsysFlag = tsysFlag;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
 		x->tsysSpectrumExists = tsysSpectrumExists;
 		
 		
@@ -521,6 +282,20 @@ namespace asdm {
 	
   		
 		
+		x->tantFlagExists = tantFlagExists;
+		
+		
+			
+				
+		x->tantFlag = tantFlag;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
 		x->tantSpectrumExists = tantSpectrumExists;
 		
 		
@@ -533,10 +308,26 @@ namespace asdm {
 		for (unsigned int i = 0; i < tantSpectrum.size() ; i++)
 			for (unsigned int j = 0; j < tantSpectrum.at(i).size(); j++)
 					
-				x->tantSpectrum[i][j]= tantSpectrum.at(i).at(j).toIDLTemperature();
-									
+						
+				x->tantSpectrum[i][j] = tantSpectrum.at(i).at(j);
+		 				
+			 						
 		
 			
+		
+	
+
+	
+  		
+		
+		x->tantTsysFlagExists = tantTsysFlagExists;
+		
+		
+			
+				
+		x->tantTsysFlag = tantTsysFlag;
+ 				
+ 			
 		
 	
 
@@ -567,48 +358,12 @@ namespace asdm {
 	
   		
 		
-		x->pwvPathSpectrumExists = pwvPathSpectrumExists;
-		
-		
-			
-		x->pwvPathSpectrum.length(pwvPathSpectrum.size());
-		for (unsigned int i = 0; i < pwvPathSpectrum.size(); ++i) {
-			
-			x->pwvPathSpectrum[i] = pwvPathSpectrum.at(i).toIDLLength();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->dpwvPathSpectrumExists = dpwvPathSpectrumExists;
-		
-		
-			
-		x->dpwvPathSpectrum.length(dpwvPathSpectrum.size());
-		for (unsigned int i = 0; i < dpwvPathSpectrum.size(); ++i) {
-			
-				
-			x->dpwvPathSpectrum[i] = dpwvPathSpectrum.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x->numPolyExists = numPolyExists;
+		x->phaseDiffFlagExists = phaseDiffFlagExists;
 		
 		
 			
 				
-		x->numPoly = numPoly;
+		x->phaseDiffFlag = phaseDiffFlag;
  				
  			
 		
@@ -617,270 +372,24 @@ namespace asdm {
 	
   		
 		
-		x->numPolyFreqExists = numPolyFreqExists;
+		x->phaseDiffSpectrumExists = phaseDiffSpectrumExists;
 		
 		
 			
-				
-		x->numPolyFreq = numPolyFreq;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->timeOriginExists = timeOriginExists;
-		
-		
-			
-		x->timeOrigin = timeOrigin.toIDLArrayTime();
-			
-		
-	
-
-	
-  		
-		
-		x->freqOriginExists = freqOriginExists;
-		
-		
-			
-		x->freqOrigin = freqOrigin.toIDLFrequency();
-			
-		
-	
-
-	
-  		
-		
-		x->phaseCurveExists = phaseCurveExists;
-		
-		
-			
-		x->phaseCurve.length(phaseCurve.size());
-		for (unsigned int i = 0; i < phaseCurve.size(); i++) {
-			x->phaseCurve[i].length(phaseCurve.at(i).size());			 		
+		x->phaseDiffSpectrum.length(phaseDiffSpectrum.size());
+		for (unsigned int i = 0; i < phaseDiffSpectrum.size(); i++) {
+			x->phaseDiffSpectrum[i].length(phaseDiffSpectrum.at(i).size());			 		
 		}
 		
-		for (unsigned int i = 0; i < phaseCurve.size() ; i++)
-			for (unsigned int j = 0; j < phaseCurve.at(i).size(); j++)
-					
-				x->phaseCurve[i][j]= phaseCurve.at(i).at(j).toIDLAngle();
-									
-		
-			
-		
-	
-
-	
-  		
-		
-		x->delayCurveExists = delayCurveExists;
-		
-		
-			
-		x->delayCurve.length(delayCurve.size());
-		for (unsigned int i = 0; i < delayCurve.size(); i++) {
-			x->delayCurve[i].length(delayCurve.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < delayCurve.size() ; i++)
-			for (unsigned int j = 0; j < delayCurve.at(i).size(); j++)
-					
-				x->delayCurve[i][j]= delayCurve.at(i).at(j).toIDLInterval();
-									
-		
-			
-		
-	
-
-	
-  		
-		
-		x->ampliCurveExists = ampliCurveExists;
-		
-		
-			
-		x->ampliCurve.length(ampliCurve.size());
-		for (unsigned int i = 0; i < ampliCurve.size(); i++) {
-			x->ampliCurve[i].length(ampliCurve.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < ampliCurve.size() ; i++)
-			for (unsigned int j = 0; j < ampliCurve.at(i).size(); j++)
+		for (unsigned int i = 0; i < phaseDiffSpectrum.size() ; i++)
+			for (unsigned int j = 0; j < phaseDiffSpectrum.at(i).size(); j++)
 					
 						
-				x->ampliCurve[i][j] = ampliCurve.at(i).at(j);
+				x->phaseDiffSpectrum[i][j] = phaseDiffSpectrum.at(i).at(j);
 		 				
 			 						
 		
 			
-		
-	
-
-	
-  		
-		
-		x->bandpassCurveExists = bandpassCurveExists;
-		
-		
-			
-		x->bandpassCurve.length(bandpassCurve.size());
-		for (unsigned int i = 0; i < bandpassCurve.size(); i++) {
-			x->bandpassCurve[i].length(bandpassCurve.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < bandpassCurve.size() ; i++)
-			for (unsigned int j = 0; j < bandpassCurve.at(i).size(); j++)
-					
-						
-				x->bandpassCurve[i][j] = bandpassCurve.at(i).at(j);
-		 				
-			 						
-		
-			
-		
-	
-
-	
-  		
-		
-		x->phasediffFlagExists = phasediffFlagExists;
-		
-		
-			
-				
-		x->phasediffFlag = phasediffFlag;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->sbgainFlagExists = sbgainFlagExists;
-		
-		
-			
-				
-		x->sbgainFlag = sbgainFlag;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->tauFlagExists = tauFlagExists;
-		
-		
-			
-				
-		x->tauFlag = tauFlag;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->tcalFlagExists = tcalFlagExists;
-		
-		
-			
-				
-		x->tcalFlag = tcalFlag;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->trxFlagExists = trxFlagExists;
-		
-		
-			
-				
-		x->trxFlag = trxFlag;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->tskyFlagExists = tskyFlagExists;
-		
-		
-			
-				
-		x->tskyFlag = tskyFlag;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->tsysFlagExists = tsysFlagExists;
-		
-		
-			
-				
-		x->tsysFlag = tsysFlag;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->tantFlagExists = tantFlagExists;
-		
-		
-			
-				
-		x->tantFlag = tantFlag;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->tantTsysFlagExists = tantTsysFlagExists;
-		
-		
-			
-				
-		x->tantTsysFlag = tantTsysFlag;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->pwvPathFlagExists = pwvPathFlagExists;
-		
-		
-			
-				
-		x->pwvPathFlag = pwvPathFlag;
- 				
- 			
 		
 	
 
@@ -942,7 +451,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct SysCalRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void SysCalRow::setFromIDL (SysCalRowIDL x) throw(ConversionException) {
+	void SysCalRow::setFromIDL (SysCalRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -959,359 +468,34 @@ namespace asdm {
 
 	
 		
-		numLoadExists = x.numLoadExists;
-		if (x.numLoadExists) {
-		
 		
 			
-		setNumLoad(x.numLoad);
+		setNumReceptor(x.numReceptor);
   			
  		
 		
-		}
-		
 	
 
 	
 		
-		calLoadExists = x.calLoadExists;
-		if (x.calLoadExists) {
-		
 		
 			
-		calLoad .clear();
-		for (unsigned int i = 0; i <x.calLoad.length(); ++i) {
-			
-			calLoad.push_back(x.calLoad[i]);
-  			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		feffExists = x.feffExists;
-		if (x.feffExists) {
-		
-		
-			
-		feff .clear();
-		for (unsigned int i = 0; i <x.feff.length(); ++i) {
-			
-			feff.push_back(x.feff[i]);
-  			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		aeffExists = x.aeffExists;
-		if (x.aeffExists) {
-		
-		
-			
-		aeff .clear();
-		for (unsigned int i = 0; i <x.aeff.length(); ++i) {
-			
-			aeff.push_back(x.aeff[i]);
-  			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		phaseDiffExists = x.phaseDiffExists;
-		if (x.phaseDiffExists) {
-		
-		
-			
-		setPhaseDiff(Angle (x.phaseDiff));
-			
- 		
-		
-		}
-		
-	
-
-	
-		
-		sbgainExists = x.sbgainExists;
-		if (x.sbgainExists) {
-		
-		
-			
-		setSbgain(x.sbgain);
+		setNumChan(x.numChan);
   			
  		
 		
-		}
-		
 	
 
 	
 		
-		tauExists = x.tauExists;
-		if (x.tauExists) {
+		tcalFlagExists = x.tcalFlagExists;
+		if (x.tcalFlagExists) {
 		
 		
 			
-		tau .clear();
-		for (unsigned int i = 0; i <x.tau.length(); ++i) {
-			
-			tau.push_back(Temperature (x.tau[i]));
-			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		tcalExists = x.tcalExists;
-		if (x.tcalExists) {
-		
-		
-			
-		tcal .clear();
-		for (unsigned int i = 0; i <x.tcal.length(); ++i) {
-			
-			tcal.push_back(Temperature (x.tcal[i]));
-			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		trxExists = x.trxExists;
-		if (x.trxExists) {
-		
-		
-			
-		trx .clear();
-		for (unsigned int i = 0; i <x.trx.length(); ++i) {
-			
-			trx.push_back(Temperature (x.trx[i]));
-			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		tskyExists = x.tskyExists;
-		if (x.tskyExists) {
-		
-		
-			
-		tsky .clear();
-		for (unsigned int i = 0; i <x.tsky.length(); ++i) {
-			
-			tsky.push_back(Temperature (x.tsky[i]));
-			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		tsysExists = x.tsysExists;
-		if (x.tsysExists) {
-		
-		
-			
-		tsys .clear();
-		for (unsigned int i = 0; i <x.tsys.length(); ++i) {
-			
-			tsys.push_back(Temperature (x.tsys[i]));
-			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		tantExists = x.tantExists;
-		if (x.tantExists) {
-		
-		
-			
-		tant .clear();
-		for (unsigned int i = 0; i <x.tant.length(); ++i) {
-			
-			tant.push_back(Temperature (x.tant[i]));
-			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		tantTsysExists = x.tantTsysExists;
-		if (x.tantTsysExists) {
-		
-		
-			
-		tantTsys .clear();
-		for (unsigned int i = 0; i <x.tantTsys.length(); ++i) {
-			
-			tantTsys.push_back(x.tantTsys[i]);
+		setTcalFlag(x.tcalFlag);
   			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		pwvPathExists = x.pwvPathExists;
-		if (x.pwvPathExists) {
-		
-		
-			
-		pwvPath .clear();
-		for (unsigned int i = 0; i <x.pwvPath.length(); ++i) {
-			
-			pwvPath.push_back(Length (x.pwvPath[i]));
-			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		dpwvPathExists = x.dpwvPathExists;
-		if (x.dpwvPathExists) {
-		
-		
-			
-		dpwvPath .clear();
-		for (unsigned int i = 0; i <x.dpwvPath.length(); ++i) {
-			
-			dpwvPath.push_back(x.dpwvPath[i]);
-  			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		feffSpectrumExists = x.feffSpectrumExists;
-		if (x.feffSpectrumExists) {
-		
-		
-			
-		feffSpectrum .clear();
-		vector<float> v_aux_feffSpectrum;
-		for (unsigned int i = 0; i < x.feffSpectrum.length(); ++i) {
-			v_aux_feffSpectrum.clear();
-			for (unsigned int j = 0; j < x.feffSpectrum[0].length(); ++j) {
-				
-				v_aux_feffSpectrum.push_back(x.feffSpectrum[i][j]);
-	  			
-  			}
-  			feffSpectrum.push_back(v_aux_feffSpectrum);			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		sbgainSpectrumExists = x.sbgainSpectrumExists;
-		if (x.sbgainSpectrumExists) {
-		
-		
-			
-		sbgainSpectrum .clear();
-		vector<float> v_aux_sbgainSpectrum;
-		for (unsigned int i = 0; i < x.sbgainSpectrum.length(); ++i) {
-			v_aux_sbgainSpectrum.clear();
-			for (unsigned int j = 0; j < x.sbgainSpectrum[0].length(); ++j) {
-				
-				v_aux_sbgainSpectrum.push_back(x.sbgainSpectrum[i][j]);
-	  			
-  			}
-  			sbgainSpectrum.push_back(v_aux_sbgainSpectrum);			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		tauSpectrumExists = x.tauSpectrumExists;
-		if (x.tauSpectrumExists) {
-		
-		
-			
-		tauSpectrum .clear();
-		vector<Temperature> v_aux_tauSpectrum;
-		for (unsigned int i = 0; i < x.tauSpectrum.length(); ++i) {
-			v_aux_tauSpectrum.clear();
-			for (unsigned int j = 0; j < x.tauSpectrum[0].length(); ++j) {
-				
-				v_aux_tauSpectrum.push_back(Temperature (x.tauSpectrum[i][j]));
-				
-  			}
-  			tauSpectrum.push_back(v_aux_tauSpectrum);			
-		}
-			
-  		
+ 		
 		
 		}
 		
@@ -1344,19 +528,54 @@ namespace asdm {
 
 	
 		
+		trxFlagExists = x.trxFlagExists;
+		if (x.trxFlagExists) {
+		
+		
+			
+		setTrxFlag(x.trxFlag);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
 		trxSpectrumExists = x.trxSpectrumExists;
 		if (x.trxSpectrumExists) {
 		
 		
 			
 		trxSpectrum .clear();
-		for (unsigned int i = 0; i <x.trxSpectrum.length(); ++i) {
-			
-			trxSpectrum.push_back(Temperature (x.trxSpectrum[i]));
-			
+		vector<Temperature> v_aux_trxSpectrum;
+		for (unsigned int i = 0; i < x.trxSpectrum.length(); ++i) {
+			v_aux_trxSpectrum.clear();
+			for (unsigned int j = 0; j < x.trxSpectrum[0].length(); ++j) {
+				
+				v_aux_trxSpectrum.push_back(Temperature (x.trxSpectrum[i][j]));
+				
+  			}
+  			trxSpectrum.push_back(v_aux_trxSpectrum);			
 		}
 			
   		
+		
+		}
+		
+	
+
+	
+		
+		tskyFlagExists = x.tskyFlagExists;
+		if (x.tskyFlagExists) {
+		
+		
+			
+		setTskyFlag(x.tskyFlag);
+  			
+ 		
 		
 		}
 		
@@ -1389,6 +608,21 @@ namespace asdm {
 
 	
 		
+		tsysFlagExists = x.tsysFlagExists;
+		if (x.tsysFlagExists) {
+		
+		
+			
+		setTsysFlag(x.tsysFlag);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
 		tsysSpectrumExists = x.tsysSpectrumExists;
 		if (x.tsysSpectrumExists) {
 		
@@ -1414,24 +648,54 @@ namespace asdm {
 
 	
 		
+		tantFlagExists = x.tantFlagExists;
+		if (x.tantFlagExists) {
+		
+		
+			
+		setTantFlag(x.tantFlag);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
 		tantSpectrumExists = x.tantSpectrumExists;
 		if (x.tantSpectrumExists) {
 		
 		
 			
 		tantSpectrum .clear();
-		vector<Temperature> v_aux_tantSpectrum;
+		vector<float> v_aux_tantSpectrum;
 		for (unsigned int i = 0; i < x.tantSpectrum.length(); ++i) {
 			v_aux_tantSpectrum.clear();
 			for (unsigned int j = 0; j < x.tantSpectrum[0].length(); ++j) {
 				
-				v_aux_tantSpectrum.push_back(Temperature (x.tantSpectrum[i][j]));
-				
+				v_aux_tantSpectrum.push_back(x.tantSpectrum[i][j]);
+	  			
   			}
   			tantSpectrum.push_back(v_aux_tantSpectrum);			
 		}
 			
   		
+		
+		}
+		
+	
+
+	
+		
+		tantTsysFlagExists = x.tantTsysFlagExists;
+		if (x.tantTsysFlagExists) {
+		
+		
+			
+		setTantTsysFlag(x.tantTsysFlag);
+  			
+ 		
 		
 		}
 		
@@ -1464,52 +728,12 @@ namespace asdm {
 
 	
 		
-		pwvPathSpectrumExists = x.pwvPathSpectrumExists;
-		if (x.pwvPathSpectrumExists) {
+		phaseDiffFlagExists = x.phaseDiffFlagExists;
+		if (x.phaseDiffFlagExists) {
 		
 		
 			
-		pwvPathSpectrum .clear();
-		for (unsigned int i = 0; i <x.pwvPathSpectrum.length(); ++i) {
-			
-			pwvPathSpectrum.push_back(Length (x.pwvPathSpectrum[i]));
-			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		dpwvPathSpectrumExists = x.dpwvPathSpectrumExists;
-		if (x.dpwvPathSpectrumExists) {
-		
-		
-			
-		dpwvPathSpectrum .clear();
-		for (unsigned int i = 0; i <x.dpwvPathSpectrum.length(); ++i) {
-			
-			dpwvPathSpectrum.push_back(x.dpwvPathSpectrum[i]);
-  			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		numPolyExists = x.numPolyExists;
-		if (x.numPolyExists) {
-		
-		
-			
-		setNumPoly(x.numPoly);
+		setPhaseDiffFlag(x.phaseDiffFlag);
   			
  		
 		
@@ -1519,294 +743,24 @@ namespace asdm {
 
 	
 		
-		numPolyFreqExists = x.numPolyFreqExists;
-		if (x.numPolyFreqExists) {
+		phaseDiffSpectrumExists = x.phaseDiffSpectrumExists;
+		if (x.phaseDiffSpectrumExists) {
 		
 		
 			
-		setNumPolyFreq(x.numPolyFreq);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		timeOriginExists = x.timeOriginExists;
-		if (x.timeOriginExists) {
-		
-		
-			
-		setTimeOrigin(ArrayTime (x.timeOrigin));
-			
- 		
-		
-		}
-		
-	
-
-	
-		
-		freqOriginExists = x.freqOriginExists;
-		if (x.freqOriginExists) {
-		
-		
-			
-		setFreqOrigin(Frequency (x.freqOrigin));
-			
- 		
-		
-		}
-		
-	
-
-	
-		
-		phaseCurveExists = x.phaseCurveExists;
-		if (x.phaseCurveExists) {
-		
-		
-			
-		phaseCurve .clear();
-		vector<Angle> v_aux_phaseCurve;
-		for (unsigned int i = 0; i < x.phaseCurve.length(); ++i) {
-			v_aux_phaseCurve.clear();
-			for (unsigned int j = 0; j < x.phaseCurve[0].length(); ++j) {
+		phaseDiffSpectrum .clear();
+		vector<float> v_aux_phaseDiffSpectrum;
+		for (unsigned int i = 0; i < x.phaseDiffSpectrum.length(); ++i) {
+			v_aux_phaseDiffSpectrum.clear();
+			for (unsigned int j = 0; j < x.phaseDiffSpectrum[0].length(); ++j) {
 				
-				v_aux_phaseCurve.push_back(Angle (x.phaseCurve[i][j]));
-				
-  			}
-  			phaseCurve.push_back(v_aux_phaseCurve);			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		delayCurveExists = x.delayCurveExists;
-		if (x.delayCurveExists) {
-		
-		
-			
-		delayCurve .clear();
-		vector<Interval> v_aux_delayCurve;
-		for (unsigned int i = 0; i < x.delayCurve.length(); ++i) {
-			v_aux_delayCurve.clear();
-			for (unsigned int j = 0; j < x.delayCurve[0].length(); ++j) {
-				
-				v_aux_delayCurve.push_back(Interval (x.delayCurve[i][j]));
-				
-  			}
-  			delayCurve.push_back(v_aux_delayCurve);			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		ampliCurveExists = x.ampliCurveExists;
-		if (x.ampliCurveExists) {
-		
-		
-			
-		ampliCurve .clear();
-		vector<float> v_aux_ampliCurve;
-		for (unsigned int i = 0; i < x.ampliCurve.length(); ++i) {
-			v_aux_ampliCurve.clear();
-			for (unsigned int j = 0; j < x.ampliCurve[0].length(); ++j) {
-				
-				v_aux_ampliCurve.push_back(x.ampliCurve[i][j]);
+				v_aux_phaseDiffSpectrum.push_back(x.phaseDiffSpectrum[i][j]);
 	  			
   			}
-  			ampliCurve.push_back(v_aux_ampliCurve);			
+  			phaseDiffSpectrum.push_back(v_aux_phaseDiffSpectrum);			
 		}
 			
   		
-		
-		}
-		
-	
-
-	
-		
-		bandpassCurveExists = x.bandpassCurveExists;
-		if (x.bandpassCurveExists) {
-		
-		
-			
-		bandpassCurve .clear();
-		vector<float> v_aux_bandpassCurve;
-		for (unsigned int i = 0; i < x.bandpassCurve.length(); ++i) {
-			v_aux_bandpassCurve.clear();
-			for (unsigned int j = 0; j < x.bandpassCurve[0].length(); ++j) {
-				
-				v_aux_bandpassCurve.push_back(x.bandpassCurve[i][j]);
-	  			
-  			}
-  			bandpassCurve.push_back(v_aux_bandpassCurve);			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
-		
-		phasediffFlagExists = x.phasediffFlagExists;
-		if (x.phasediffFlagExists) {
-		
-		
-			
-		setPhasediffFlag(x.phasediffFlag);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		sbgainFlagExists = x.sbgainFlagExists;
-		if (x.sbgainFlagExists) {
-		
-		
-			
-		setSbgainFlag(x.sbgainFlag);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		tauFlagExists = x.tauFlagExists;
-		if (x.tauFlagExists) {
-		
-		
-			
-		setTauFlag(x.tauFlag);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		tcalFlagExists = x.tcalFlagExists;
-		if (x.tcalFlagExists) {
-		
-		
-			
-		setTcalFlag(x.tcalFlag);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		trxFlagExists = x.trxFlagExists;
-		if (x.trxFlagExists) {
-		
-		
-			
-		setTrxFlag(x.trxFlag);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		tskyFlagExists = x.tskyFlagExists;
-		if (x.tskyFlagExists) {
-		
-		
-			
-		setTskyFlag(x.tskyFlag);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		tsysFlagExists = x.tsysFlagExists;
-		if (x.tsysFlagExists) {
-		
-		
-			
-		setTsysFlag(x.tsysFlag);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		tantFlagExists = x.tantFlagExists;
-		if (x.tantFlagExists) {
-		
-		
-			
-		setTantFlag(x.tantFlag);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		tantTsysFlagExists = x.tantTsysFlagExists;
-		if (x.tantTsysFlagExists) {
-		
-		
-			
-		setTantTsysFlag(x.tantTsysFlag);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		pwvPathFlagExists = x.pwvPathFlagExists;
-		if (x.pwvPathFlagExists) {
-		
-		
-			
-		setPwvPathFlag(x.pwvPathFlag);
-  			
- 		
 		
 		}
 		
@@ -1854,7 +808,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"SysCal");
+			throw ConversionException (err.getMessage(),"SysCal");
 		}
 	}
 #endif
@@ -1879,214 +833,26 @@ namespace asdm {
 
   	
  		
-		if (numLoadExists) {
 		
+		Parser::toXML(numReceptor, "numReceptor", buf);
 		
-		Parser::toXML(numLoad, "numLoad", buf);
-		
-		
-		}
 		
 	
 
   	
  		
-		if (calLoadExists) {
 		
+		Parser::toXML(numChan, "numChan", buf);
 		
-		Parser::toXML(calLoad, "calLoad", buf);
-		
-		
-		}
 		
 	
 
   	
  		
-		if (feffExists) {
+		if (tcalFlagExists) {
 		
 		
-		Parser::toXML(feff, "feff", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (aeffExists) {
-		
-		
-		Parser::toXML(aeff, "aeff", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (phaseDiffExists) {
-		
-		
-		Parser::toXML(phaseDiff, "phaseDiff", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (sbgainExists) {
-		
-		
-		Parser::toXML(sbgain, "sbgain", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (tauExists) {
-		
-		
-		Parser::toXML(tau, "tau", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (tcalExists) {
-		
-		
-		Parser::toXML(tcal, "tcal", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (trxExists) {
-		
-		
-		Parser::toXML(trx, "trx", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (tskyExists) {
-		
-		
-		Parser::toXML(tsky, "tsky", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (tsysExists) {
-		
-		
-		Parser::toXML(tsys, "tsys", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (tantExists) {
-		
-		
-		Parser::toXML(tant, "tant", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (tantTsysExists) {
-		
-		
-		Parser::toXML(tantTsys, "tantTsys", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (pwvPathExists) {
-		
-		
-		Parser::toXML(pwvPath, "pwvPath", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (dpwvPathExists) {
-		
-		
-		Parser::toXML(dpwvPath, "dpwvPath", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (feffSpectrumExists) {
-		
-		
-		Parser::toXML(feffSpectrum, "feffSpectrum", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (sbgainSpectrumExists) {
-		
-		
-		Parser::toXML(sbgainSpectrum, "sbgainSpectrum", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (tauSpectrumExists) {
-		
-		
-		Parser::toXML(tauSpectrum, "tauSpectrum", buf);
+		Parser::toXML(tcalFlag, "tcalFlag", buf);
 		
 		
 		}
@@ -2107,238 +873,22 @@ namespace asdm {
 
   	
  		
-		if (trxSpectrumExists) {
-		
-		
-		Parser::toXML(trxSpectrum, "trxSpectrum", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (tskySpectrumExists) {
-		
-		
-		Parser::toXML(tskySpectrum, "tskySpectrum", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (tsysSpectrumExists) {
-		
-		
-		Parser::toXML(tsysSpectrum, "tsysSpectrum", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (tantSpectrumExists) {
-		
-		
-		Parser::toXML(tantSpectrum, "tantSpectrum", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (tantTsysSpectrumExists) {
-		
-		
-		Parser::toXML(tantTsysSpectrum, "tantTsysSpectrum", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (pwvPathSpectrumExists) {
-		
-		
-		Parser::toXML(pwvPathSpectrum, "pwvPathSpectrum", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (dpwvPathSpectrumExists) {
-		
-		
-		Parser::toXML(dpwvPathSpectrum, "dpwvPathSpectrum", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (numPolyExists) {
-		
-		
-		Parser::toXML(numPoly, "numPoly", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (numPolyFreqExists) {
-		
-		
-		Parser::toXML(numPolyFreq, "numPolyFreq", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (timeOriginExists) {
-		
-		
-		Parser::toXML(timeOrigin, "timeOrigin", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (freqOriginExists) {
-		
-		
-		Parser::toXML(freqOrigin, "freqOrigin", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (phaseCurveExists) {
-		
-		
-		Parser::toXML(phaseCurve, "phaseCurve", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (delayCurveExists) {
-		
-		
-		Parser::toXML(delayCurve, "delayCurve", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (ampliCurveExists) {
-		
-		
-		Parser::toXML(ampliCurve, "ampliCurve", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (bandpassCurveExists) {
-		
-		
-		Parser::toXML(bandpassCurve, "bandpassCurve", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (phasediffFlagExists) {
-		
-		
-		Parser::toXML(phasediffFlag, "phasediffFlag", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (sbgainFlagExists) {
-		
-		
-		Parser::toXML(sbgainFlag, "sbgainFlag", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (tauFlagExists) {
-		
-		
-		Parser::toXML(tauFlag, "tauFlag", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (tcalFlagExists) {
-		
-		
-		Parser::toXML(tcalFlag, "tcalFlag", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
 		if (trxFlagExists) {
 		
 		
 		Parser::toXML(trxFlag, "trxFlag", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (trxSpectrumExists) {
+		
+		
+		Parser::toXML(trxSpectrum, "trxSpectrum", buf);
 		
 		
 		}
@@ -2359,10 +909,34 @@ namespace asdm {
 
   	
  		
+		if (tskySpectrumExists) {
+		
+		
+		Parser::toXML(tskySpectrum, "tskySpectrum", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
 		if (tsysFlagExists) {
 		
 		
 		Parser::toXML(tsysFlag, "tsysFlag", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (tsysSpectrumExists) {
+		
+		
+		Parser::toXML(tsysSpectrum, "tsysSpectrum", buf);
 		
 		
 		}
@@ -2383,6 +957,18 @@ namespace asdm {
 
   	
  		
+		if (tantSpectrumExists) {
+		
+		
+		Parser::toXML(tantSpectrum, "tantSpectrum", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
 		if (tantTsysFlagExists) {
 		
 		
@@ -2395,10 +981,34 @@ namespace asdm {
 
   	
  		
-		if (pwvPathFlagExists) {
+		if (tantTsysSpectrumExists) {
 		
 		
-		Parser::toXML(pwvPathFlag, "pwvPathFlag", buf);
+		Parser::toXML(tantTsysSpectrum, "tantTsysSpectrum", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (phaseDiffFlagExists) {
+		
+		
+		Parser::toXML(phaseDiffFlag, "phaseDiffFlag", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (phaseDiffSpectrumExists) {
+		
+		
+		Parser::toXML(phaseDiffSpectrum, "phaseDiffSpectrum", buf);
 		
 		
 		}
@@ -2450,7 +1060,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void SysCalRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void SysCalRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -2466,210 +1076,26 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<numLoad>")) {
 			
-	  		setNumLoad(Parser::getInteger("numLoad","SysCal",rowDoc));
+	  	setNumReceptor(Parser::getInteger("numReceptor","SysCal",rowDoc));
 			
-		}
- 		
+		
 	
 
 	
   		
-        if (row.isStr("<calLoad>")) {
 			
-								
-	  		setCalLoad(Parser::get1DInteger("calLoad","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
+	  	setNumChan(Parser::getInteger("numChan","SysCal",rowDoc));
+			
+		
 	
 
 	
   		
-        if (row.isStr("<feff>")) {
+        if (row.isStr("<tcalFlag>")) {
 			
-								
-	  		setFeff(Parser::get1DFloat("feff","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<aeff>")) {
+	  		setTcalFlag(Parser::getBoolean("tcalFlag","SysCal",rowDoc));
 			
-								
-	  		setAeff(Parser::get1DFloat("aeff","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<phaseDiff>")) {
-			
-	  		setPhaseDiff(Parser::getAngle("phaseDiff","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<sbgain>")) {
-			
-	  		setSbgain(Parser::getFloat("sbgain","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<tau>")) {
-			
-								
-	  		setTau(Parser::get1DTemperature("tau","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<tcal>")) {
-			
-								
-	  		setTcal(Parser::get1DTemperature("tcal","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<trx>")) {
-			
-								
-	  		setTrx(Parser::get1DTemperature("trx","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<tsky>")) {
-			
-								
-	  		setTsky(Parser::get1DTemperature("tsky","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<tsys>")) {
-			
-								
-	  		setTsys(Parser::get1DTemperature("tsys","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<tant>")) {
-			
-								
-	  		setTant(Parser::get1DTemperature("tant","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<tantTsys>")) {
-			
-								
-	  		setTantTsys(Parser::get1DFloat("tantTsys","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<pwvPath>")) {
-			
-								
-	  		setPwvPath(Parser::get1DLength("pwvPath","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<dpwvPath>")) {
-			
-								
-	  		setDpwvPath(Parser::get1DFloat("dpwvPath","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<feffSpectrum>")) {
-			
-								
-	  		setFeffSpectrum(Parser::get2DFloat("feffSpectrum","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<sbgainSpectrum>")) {
-			
-								
-	  		setSbgainSpectrum(Parser::get2DFloat("sbgainSpectrum","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<tauSpectrum>")) {
-			
-								
-	  		setTauSpectrum(Parser::get2DTemperature("tauSpectrum","SysCal",rowDoc));
-	  			
-	  		
 		}
  		
 	
@@ -2688,12 +1114,32 @@ namespace asdm {
 
 	
   		
+        if (row.isStr("<trxFlag>")) {
+			
+	  		setTrxFlag(Parser::getBoolean("trxFlag","SysCal",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
         if (row.isStr("<trxSpectrum>")) {
 			
 								
-	  		setTrxSpectrum(Parser::get1DTemperature("trxSpectrum","SysCal",rowDoc));
+	  		setTrxSpectrum(Parser::get2DTemperature("trxSpectrum","SysCal",rowDoc));
 	  			
 	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<tskyFlag>")) {
+			
+	  		setTskyFlag(Parser::getBoolean("tskyFlag","SysCal",rowDoc));
+			
 		}
  		
 	
@@ -2712,6 +1158,16 @@ namespace asdm {
 
 	
   		
+        if (row.isStr("<tsysFlag>")) {
+			
+	  		setTsysFlag(Parser::getBoolean("tsysFlag","SysCal",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
         if (row.isStr("<tsysSpectrum>")) {
 			
 								
@@ -2724,12 +1180,32 @@ namespace asdm {
 
 	
   		
+        if (row.isStr("<tantFlag>")) {
+			
+	  		setTantFlag(Parser::getBoolean("tantFlag","SysCal",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
         if (row.isStr("<tantSpectrum>")) {
 			
 								
-	  		setTantSpectrum(Parser::get2DTemperature("tantSpectrum","SysCal",rowDoc));
+	  		setTantSpectrum(Parser::get2DFloat("tantSpectrum","SysCal",rowDoc));
 	  			
 	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<tantTsysFlag>")) {
+			
+	  		setTantTsysFlag(Parser::getBoolean("tantTsysFlag","SysCal",rowDoc));
+			
 		}
  		
 	
@@ -2748,212 +1224,22 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<pwvPathSpectrum>")) {
+        if (row.isStr("<phaseDiffFlag>")) {
+			
+	  		setPhaseDiffFlag(Parser::getBoolean("phaseDiffFlag","SysCal",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<phaseDiffSpectrum>")) {
 			
 								
-	  		setPwvPathSpectrum(Parser::get1DLength("pwvPathSpectrum","SysCal",rowDoc));
+	  		setPhaseDiffSpectrum(Parser::get2DFloat("phaseDiffSpectrum","SysCal",rowDoc));
 	  			
 	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<dpwvPathSpectrum>")) {
-			
-								
-	  		setDpwvPathSpectrum(Parser::get1DFloat("dpwvPathSpectrum","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<numPoly>")) {
-			
-	  		setNumPoly(Parser::getInteger("numPoly","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<numPolyFreq>")) {
-			
-	  		setNumPolyFreq(Parser::getInteger("numPolyFreq","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<timeOrigin>")) {
-			
-	  		setTimeOrigin(Parser::getArrayTime("timeOrigin","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<freqOrigin>")) {
-			
-	  		setFreqOrigin(Parser::getFrequency("freqOrigin","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<phaseCurve>")) {
-			
-								
-	  		setPhaseCurve(Parser::get2DAngle("phaseCurve","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<delayCurve>")) {
-			
-								
-	  		setDelayCurve(Parser::get2DInterval("delayCurve","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<ampliCurve>")) {
-			
-								
-	  		setAmpliCurve(Parser::get2DFloat("ampliCurve","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<bandpassCurve>")) {
-			
-								
-	  		setBandpassCurve(Parser::get2DFloat("bandpassCurve","SysCal",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<phasediffFlag>")) {
-			
-	  		setPhasediffFlag(Parser::getBoolean("phasediffFlag","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<sbgainFlag>")) {
-			
-	  		setSbgainFlag(Parser::getBoolean("sbgainFlag","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<tauFlag>")) {
-			
-	  		setTauFlag(Parser::getBoolean("tauFlag","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<tcalFlag>")) {
-			
-	  		setTcalFlag(Parser::getBoolean("tcalFlag","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<trxFlag>")) {
-			
-	  		setTrxFlag(Parser::getBoolean("trxFlag","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<tskyFlag>")) {
-			
-	  		setTskyFlag(Parser::getBoolean("tskyFlag","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<tsysFlag>")) {
-			
-	  		setTsysFlag(Parser::getBoolean("tsysFlag","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<tantFlag>")) {
-			
-	  		setTantFlag(Parser::getBoolean("tantFlag","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<tantTsysFlag>")) {
-			
-	  		setTantTsysFlag(Parser::getBoolean("tantTsysFlag","SysCal",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<pwvPathFlag>")) {
-			
-	  		setPwvPathFlag(Parser::getBoolean("pwvPathFlag","SysCal",rowDoc));
-			
 		}
  		
 	
@@ -2998,6 +1284,583 @@ namespace asdm {
 		}
 	}
 	
+	void SysCalRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	antennaId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	spectralWindowId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	timeInterval.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(feedId);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numReceptor);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numChan);
+				
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(tcalFlagExists);
+	if (tcalFlagExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(tcalFlag);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(tcalSpectrumExists);
+	if (tcalSpectrumExists) {
+	
+	
+	
+		
+	Temperature::toBin(tcalSpectrum, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(trxFlagExists);
+	if (trxFlagExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(trxFlag);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(trxSpectrumExists);
+	if (trxSpectrumExists) {
+	
+	
+	
+		
+	Temperature::toBin(trxSpectrum, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(tskyFlagExists);
+	if (tskyFlagExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(tskyFlag);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(tskySpectrumExists);
+	if (tskySpectrumExists) {
+	
+	
+	
+		
+	Temperature::toBin(tskySpectrum, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(tsysFlagExists);
+	if (tsysFlagExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(tsysFlag);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(tsysSpectrumExists);
+	if (tsysSpectrumExists) {
+	
+	
+	
+		
+	Temperature::toBin(tsysSpectrum, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(tantFlagExists);
+	if (tantFlagExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(tantFlag);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(tantSpectrumExists);
+	if (tantSpectrumExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) tantSpectrum.size());
+		eoss.writeInt((int) tantSpectrum.at(0).size());
+		for (unsigned int i = 0; i < tantSpectrum.size(); i++) 
+			for (unsigned int j = 0;  j < tantSpectrum.at(0).size(); j++) 
+							 
+				eoss.writeFloat(tantSpectrum.at(i).at(j));
+				
+	
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(tantTsysFlagExists);
+	if (tantTsysFlagExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(tantTsysFlag);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(tantTsysSpectrumExists);
+	if (tantTsysSpectrumExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) tantTsysSpectrum.size());
+		eoss.writeInt((int) tantTsysSpectrum.at(0).size());
+		for (unsigned int i = 0; i < tantTsysSpectrum.size(); i++) 
+			for (unsigned int j = 0;  j < tantTsysSpectrum.at(0).size(); j++) 
+							 
+				eoss.writeFloat(tantTsysSpectrum.at(i).at(j));
+				
+	
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(phaseDiffFlagExists);
+	if (phaseDiffFlagExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(phaseDiffFlag);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(phaseDiffSpectrumExists);
+	if (phaseDiffSpectrumExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) phaseDiffSpectrum.size());
+		eoss.writeInt((int) phaseDiffSpectrum.at(0).size());
+		for (unsigned int i = 0; i < phaseDiffSpectrum.size(); i++) 
+			for (unsigned int j = 0;  j < phaseDiffSpectrum.at(0).size(); j++) 
+							 
+				eoss.writeFloat(phaseDiffSpectrum.at(i).at(j));
+				
+	
+						
+		
+	
+
+	}
+
+	}
+	
+	SysCalRow* SysCalRow::fromBin(EndianISStream& eiss, SysCalTable& table) {
+		SysCalRow* row = new  SysCalRow(table);
+		
+		
+		
+	
+		
+		
+		row->antennaId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->spectralWindowId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->feedId =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numReceptor =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numChan =  eiss.readInt();
+			
+		
+	
+
+		
+		
+		
+	row->tcalFlagExists = eiss.readBoolean();
+	if (row->tcalFlagExists) {
+		
+	
+	
+		
+			
+		row->tcalFlag =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+	row->tcalSpectrumExists = eiss.readBoolean();
+	if (row->tcalSpectrumExists) {
+		
+	
+		
+		
+			
+	
+	row->tcalSpectrum = Temperature::from2DBin(eiss);		
+	
+
+		
+	
+
+	}
+
+	row->trxFlagExists = eiss.readBoolean();
+	if (row->trxFlagExists) {
+		
+	
+	
+		
+			
+		row->trxFlag =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+	row->trxSpectrumExists = eiss.readBoolean();
+	if (row->trxSpectrumExists) {
+		
+	
+		
+		
+			
+	
+	row->trxSpectrum = Temperature::from2DBin(eiss);		
+	
+
+		
+	
+
+	}
+
+	row->tskyFlagExists = eiss.readBoolean();
+	if (row->tskyFlagExists) {
+		
+	
+	
+		
+			
+		row->tskyFlag =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+	row->tskySpectrumExists = eiss.readBoolean();
+	if (row->tskySpectrumExists) {
+		
+	
+		
+		
+			
+	
+	row->tskySpectrum = Temperature::from2DBin(eiss);		
+	
+
+		
+	
+
+	}
+
+	row->tsysFlagExists = eiss.readBoolean();
+	if (row->tsysFlagExists) {
+		
+	
+	
+		
+			
+		row->tsysFlag =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+	row->tsysSpectrumExists = eiss.readBoolean();
+	if (row->tsysSpectrumExists) {
+		
+	
+		
+		
+			
+	
+	row->tsysSpectrum = Temperature::from2DBin(eiss);		
+	
+
+		
+	
+
+	}
+
+	row->tantFlagExists = eiss.readBoolean();
+	if (row->tantFlagExists) {
+		
+	
+	
+		
+			
+		row->tantFlag =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+	row->tantSpectrumExists = eiss.readBoolean();
+	if (row->tantSpectrumExists) {
+		
+	
+	
+		
+			
+	
+		row->tantSpectrum.clear();
+		
+		unsigned int tantSpectrumDim1 = eiss.readInt();
+		unsigned int tantSpectrumDim2 = eiss.readInt();
+		vector <float> tantSpectrumAux1;
+		for (unsigned int i = 0; i < tantSpectrumDim1; i++) {
+			tantSpectrumAux1.clear();
+			for (unsigned int j = 0; j < tantSpectrumDim2 ; j++)			
+			
+			tantSpectrumAux1.push_back(eiss.readFloat());
+			
+			row->tantSpectrum.push_back(tantSpectrumAux1);
+		}
+	
+	
+
+		
+	
+
+	}
+
+	row->tantTsysFlagExists = eiss.readBoolean();
+	if (row->tantTsysFlagExists) {
+		
+	
+	
+		
+			
+		row->tantTsysFlag =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+	row->tantTsysSpectrumExists = eiss.readBoolean();
+	if (row->tantTsysSpectrumExists) {
+		
+	
+	
+		
+			
+	
+		row->tantTsysSpectrum.clear();
+		
+		unsigned int tantTsysSpectrumDim1 = eiss.readInt();
+		unsigned int tantTsysSpectrumDim2 = eiss.readInt();
+		vector <float> tantTsysSpectrumAux1;
+		for (unsigned int i = 0; i < tantTsysSpectrumDim1; i++) {
+			tantTsysSpectrumAux1.clear();
+			for (unsigned int j = 0; j < tantTsysSpectrumDim2 ; j++)			
+			
+			tantTsysSpectrumAux1.push_back(eiss.readFloat());
+			
+			row->tantTsysSpectrum.push_back(tantTsysSpectrumAux1);
+		}
+	
+	
+
+		
+	
+
+	}
+
+	row->phaseDiffFlagExists = eiss.readBoolean();
+	if (row->phaseDiffFlagExists) {
+		
+	
+	
+		
+			
+		row->phaseDiffFlag =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+	row->phaseDiffSpectrumExists = eiss.readBoolean();
+	if (row->phaseDiffSpectrumExists) {
+		
+	
+	
+		
+			
+	
+		row->phaseDiffSpectrum.clear();
+		
+		unsigned int phaseDiffSpectrumDim1 = eiss.readInt();
+		unsigned int phaseDiffSpectrumDim2 = eiss.readInt();
+		vector <float> phaseDiffSpectrumAux1;
+		for (unsigned int i = 0; i < phaseDiffSpectrumDim1; i++) {
+			phaseDiffSpectrumAux1.clear();
+			for (unsigned int j = 0; j < phaseDiffSpectrumDim2 ; j++)			
+			
+			phaseDiffSpectrumAux1.push_back(eiss.readFloat());
+			
+			row->phaseDiffSpectrum.push_back(phaseDiffSpectrumAux1);
+		}
+	
+	
+
+		
+	
+
+	}
+
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
@@ -3039,1742 +1902,67 @@ namespace asdm {
 	
 
 	
-	/**
-	 * The attribute numLoad is optional. Return true if this attribute exists.
-	 * @return true if and only if the numLoad attribute exists. 
-	 */
-	bool SysCalRow::isNumLoadExists() const {
-		return numLoadExists;
-	}
-	
 
 	
  	/**
- 	 * Get numLoad, which is optional.
- 	 * @return numLoad as int
- 	 * @throw IllegalAccessException If numLoad does not exist.
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
  	 */
- 	int SysCalRow::getNumLoad() const throw(IllegalAccessException) {
-		if (!numLoadExists) {
-			throw IllegalAccessException("numLoad", "SysCal");
-		}
+ 	int SysCalRow::getNumReceptor() const {
 	
-  		return numLoad;
+  		return numReceptor;
  	}
 
  	/**
- 	 * Set numLoad with the specified int.
- 	 * @param numLoad The int value to which numLoad is to be set.
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
  	 
  	
+ 		
  	 */
- 	void SysCalRow::setNumLoad (int numLoad) {
-	
- 		this->numLoad = numLoad;
-	
-		numLoadExists = true;
+ 	void SysCalRow::setNumReceptor (int numReceptor)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numReceptor = numReceptor;
 	
  	}
 	
 	
-	/**
-	 * Mark numLoad, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearNumLoad () {
-		numLoadExists = false;
-	}
-	
 
-	
-	/**
-	 * The attribute calLoad is optional. Return true if this attribute exists.
-	 * @return true if and only if the calLoad attribute exists. 
-	 */
-	bool SysCalRow::isCalLoadExists() const {
-		return calLoadExists;
-	}
 	
 
 	
  	/**
- 	 * Get calLoad, which is optional.
- 	 * @return calLoad as vector<int >
- 	 * @throw IllegalAccessException If calLoad does not exist.
+ 	 * Get numChan.
+ 	 * @return numChan as int
  	 */
- 	vector<int > SysCalRow::getCalLoad() const throw(IllegalAccessException) {
-		if (!calLoadExists) {
-			throw IllegalAccessException("calLoad", "SysCal");
-		}
+ 	int SysCalRow::getNumChan() const {
 	
-  		return calLoad;
+  		return numChan;
  	}
 
  	/**
- 	 * Set calLoad with the specified vector<int >.
- 	 * @param calLoad The vector<int > value to which calLoad is to be set.
+ 	 * Set numChan with the specified int.
+ 	 * @param numChan The int value to which numChan is to be set.
  	 
  	
+ 		
  	 */
- 	void SysCalRow::setCalLoad (vector<int > calLoad) {
+ 	void SysCalRow::setNumChan (int numChan)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numChan = numChan;
 	
- 		this->calLoad = calLoad;
-	
-		calLoadExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark calLoad, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearCalLoad () {
-		calLoadExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute feff is optional. Return true if this attribute exists.
-	 * @return true if and only if the feff attribute exists. 
-	 */
-	bool SysCalRow::isFeffExists() const {
-		return feffExists;
-	}
-	
-
-	
- 	/**
- 	 * Get feff, which is optional.
- 	 * @return feff as vector<float >
- 	 * @throw IllegalAccessException If feff does not exist.
- 	 */
- 	vector<float > SysCalRow::getFeff() const throw(IllegalAccessException) {
-		if (!feffExists) {
-			throw IllegalAccessException("feff", "SysCal");
-		}
-	
-  		return feff;
- 	}
-
- 	/**
- 	 * Set feff with the specified vector<float >.
- 	 * @param feff The vector<float > value to which feff is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setFeff (vector<float > feff) {
-	
- 		this->feff = feff;
-	
-		feffExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark feff, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearFeff () {
-		feffExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute aeff is optional. Return true if this attribute exists.
-	 * @return true if and only if the aeff attribute exists. 
-	 */
-	bool SysCalRow::isAeffExists() const {
-		return aeffExists;
-	}
-	
-
-	
- 	/**
- 	 * Get aeff, which is optional.
- 	 * @return aeff as vector<float >
- 	 * @throw IllegalAccessException If aeff does not exist.
- 	 */
- 	vector<float > SysCalRow::getAeff() const throw(IllegalAccessException) {
-		if (!aeffExists) {
-			throw IllegalAccessException("aeff", "SysCal");
-		}
-	
-  		return aeff;
- 	}
-
- 	/**
- 	 * Set aeff with the specified vector<float >.
- 	 * @param aeff The vector<float > value to which aeff is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setAeff (vector<float > aeff) {
-	
- 		this->aeff = aeff;
-	
-		aeffExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark aeff, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearAeff () {
-		aeffExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute phaseDiff is optional. Return true if this attribute exists.
-	 * @return true if and only if the phaseDiff attribute exists. 
-	 */
-	bool SysCalRow::isPhaseDiffExists() const {
-		return phaseDiffExists;
-	}
-	
-
-	
- 	/**
- 	 * Get phaseDiff, which is optional.
- 	 * @return phaseDiff as Angle
- 	 * @throw IllegalAccessException If phaseDiff does not exist.
- 	 */
- 	Angle SysCalRow::getPhaseDiff() const throw(IllegalAccessException) {
-		if (!phaseDiffExists) {
-			throw IllegalAccessException("phaseDiff", "SysCal");
-		}
-	
-  		return phaseDiff;
- 	}
-
- 	/**
- 	 * Set phaseDiff with the specified Angle.
- 	 * @param phaseDiff The Angle value to which phaseDiff is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setPhaseDiff (Angle phaseDiff) {
-	
- 		this->phaseDiff = phaseDiff;
-	
-		phaseDiffExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark phaseDiff, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearPhaseDiff () {
-		phaseDiffExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute sbgain is optional. Return true if this attribute exists.
-	 * @return true if and only if the sbgain attribute exists. 
-	 */
-	bool SysCalRow::isSbgainExists() const {
-		return sbgainExists;
-	}
-	
-
-	
- 	/**
- 	 * Get sbgain, which is optional.
- 	 * @return sbgain as float
- 	 * @throw IllegalAccessException If sbgain does not exist.
- 	 */
- 	float SysCalRow::getSbgain() const throw(IllegalAccessException) {
-		if (!sbgainExists) {
-			throw IllegalAccessException("sbgain", "SysCal");
-		}
-	
-  		return sbgain;
- 	}
-
- 	/**
- 	 * Set sbgain with the specified float.
- 	 * @param sbgain The float value to which sbgain is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setSbgain (float sbgain) {
-	
- 		this->sbgain = sbgain;
-	
-		sbgainExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark sbgain, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearSbgain () {
-		sbgainExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tau is optional. Return true if this attribute exists.
-	 * @return true if and only if the tau attribute exists. 
-	 */
-	bool SysCalRow::isTauExists() const {
-		return tauExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tau, which is optional.
- 	 * @return tau as vector<Temperature >
- 	 * @throw IllegalAccessException If tau does not exist.
- 	 */
- 	vector<Temperature > SysCalRow::getTau() const throw(IllegalAccessException) {
-		if (!tauExists) {
-			throw IllegalAccessException("tau", "SysCal");
-		}
-	
-  		return tau;
- 	}
-
- 	/**
- 	 * Set tau with the specified vector<Temperature >.
- 	 * @param tau The vector<Temperature > value to which tau is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTau (vector<Temperature > tau) {
-	
- 		this->tau = tau;
-	
-		tauExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tau, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTau () {
-		tauExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tcal is optional. Return true if this attribute exists.
-	 * @return true if and only if the tcal attribute exists. 
-	 */
-	bool SysCalRow::isTcalExists() const {
-		return tcalExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tcal, which is optional.
- 	 * @return tcal as vector<Temperature >
- 	 * @throw IllegalAccessException If tcal does not exist.
- 	 */
- 	vector<Temperature > SysCalRow::getTcal() const throw(IllegalAccessException) {
-		if (!tcalExists) {
-			throw IllegalAccessException("tcal", "SysCal");
-		}
-	
-  		return tcal;
- 	}
-
- 	/**
- 	 * Set tcal with the specified vector<Temperature >.
- 	 * @param tcal The vector<Temperature > value to which tcal is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTcal (vector<Temperature > tcal) {
-	
- 		this->tcal = tcal;
-	
-		tcalExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tcal, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTcal () {
-		tcalExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute trx is optional. Return true if this attribute exists.
-	 * @return true if and only if the trx attribute exists. 
-	 */
-	bool SysCalRow::isTrxExists() const {
-		return trxExists;
-	}
-	
-
-	
- 	/**
- 	 * Get trx, which is optional.
- 	 * @return trx as vector<Temperature >
- 	 * @throw IllegalAccessException If trx does not exist.
- 	 */
- 	vector<Temperature > SysCalRow::getTrx() const throw(IllegalAccessException) {
-		if (!trxExists) {
-			throw IllegalAccessException("trx", "SysCal");
-		}
-	
-  		return trx;
- 	}
-
- 	/**
- 	 * Set trx with the specified vector<Temperature >.
- 	 * @param trx The vector<Temperature > value to which trx is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTrx (vector<Temperature > trx) {
-	
- 		this->trx = trx;
-	
-		trxExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark trx, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTrx () {
-		trxExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tsky is optional. Return true if this attribute exists.
-	 * @return true if and only if the tsky attribute exists. 
-	 */
-	bool SysCalRow::isTskyExists() const {
-		return tskyExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tsky, which is optional.
- 	 * @return tsky as vector<Temperature >
- 	 * @throw IllegalAccessException If tsky does not exist.
- 	 */
- 	vector<Temperature > SysCalRow::getTsky() const throw(IllegalAccessException) {
-		if (!tskyExists) {
-			throw IllegalAccessException("tsky", "SysCal");
-		}
-	
-  		return tsky;
- 	}
-
- 	/**
- 	 * Set tsky with the specified vector<Temperature >.
- 	 * @param tsky The vector<Temperature > value to which tsky is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTsky (vector<Temperature > tsky) {
-	
- 		this->tsky = tsky;
-	
-		tskyExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tsky, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTsky () {
-		tskyExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tsys is optional. Return true if this attribute exists.
-	 * @return true if and only if the tsys attribute exists. 
-	 */
-	bool SysCalRow::isTsysExists() const {
-		return tsysExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tsys, which is optional.
- 	 * @return tsys as vector<Temperature >
- 	 * @throw IllegalAccessException If tsys does not exist.
- 	 */
- 	vector<Temperature > SysCalRow::getTsys() const throw(IllegalAccessException) {
-		if (!tsysExists) {
-			throw IllegalAccessException("tsys", "SysCal");
-		}
-	
-  		return tsys;
- 	}
-
- 	/**
- 	 * Set tsys with the specified vector<Temperature >.
- 	 * @param tsys The vector<Temperature > value to which tsys is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTsys (vector<Temperature > tsys) {
-	
- 		this->tsys = tsys;
-	
-		tsysExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tsys, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTsys () {
-		tsysExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tant is optional. Return true if this attribute exists.
-	 * @return true if and only if the tant attribute exists. 
-	 */
-	bool SysCalRow::isTantExists() const {
-		return tantExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tant, which is optional.
- 	 * @return tant as vector<Temperature >
- 	 * @throw IllegalAccessException If tant does not exist.
- 	 */
- 	vector<Temperature > SysCalRow::getTant() const throw(IllegalAccessException) {
-		if (!tantExists) {
-			throw IllegalAccessException("tant", "SysCal");
-		}
-	
-  		return tant;
- 	}
-
- 	/**
- 	 * Set tant with the specified vector<Temperature >.
- 	 * @param tant The vector<Temperature > value to which tant is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTant (vector<Temperature > tant) {
-	
- 		this->tant = tant;
-	
-		tantExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tant, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTant () {
-		tantExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tantTsys is optional. Return true if this attribute exists.
-	 * @return true if and only if the tantTsys attribute exists. 
-	 */
-	bool SysCalRow::isTantTsysExists() const {
-		return tantTsysExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tantTsys, which is optional.
- 	 * @return tantTsys as vector<float >
- 	 * @throw IllegalAccessException If tantTsys does not exist.
- 	 */
- 	vector<float > SysCalRow::getTantTsys() const throw(IllegalAccessException) {
-		if (!tantTsysExists) {
-			throw IllegalAccessException("tantTsys", "SysCal");
-		}
-	
-  		return tantTsys;
- 	}
-
- 	/**
- 	 * Set tantTsys with the specified vector<float >.
- 	 * @param tantTsys The vector<float > value to which tantTsys is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTantTsys (vector<float > tantTsys) {
-	
- 		this->tantTsys = tantTsys;
-	
-		tantTsysExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tantTsys, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTantTsys () {
-		tantTsysExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute pwvPath is optional. Return true if this attribute exists.
-	 * @return true if and only if the pwvPath attribute exists. 
-	 */
-	bool SysCalRow::isPwvPathExists() const {
-		return pwvPathExists;
-	}
-	
-
-	
- 	/**
- 	 * Get pwvPath, which is optional.
- 	 * @return pwvPath as vector<Length >
- 	 * @throw IllegalAccessException If pwvPath does not exist.
- 	 */
- 	vector<Length > SysCalRow::getPwvPath() const throw(IllegalAccessException) {
-		if (!pwvPathExists) {
-			throw IllegalAccessException("pwvPath", "SysCal");
-		}
-	
-  		return pwvPath;
- 	}
-
- 	/**
- 	 * Set pwvPath with the specified vector<Length >.
- 	 * @param pwvPath The vector<Length > value to which pwvPath is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setPwvPath (vector<Length > pwvPath) {
-	
- 		this->pwvPath = pwvPath;
-	
-		pwvPathExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark pwvPath, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearPwvPath () {
-		pwvPathExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute dpwvPath is optional. Return true if this attribute exists.
-	 * @return true if and only if the dpwvPath attribute exists. 
-	 */
-	bool SysCalRow::isDpwvPathExists() const {
-		return dpwvPathExists;
-	}
-	
-
-	
- 	/**
- 	 * Get dpwvPath, which is optional.
- 	 * @return dpwvPath as vector<float >
- 	 * @throw IllegalAccessException If dpwvPath does not exist.
- 	 */
- 	vector<float > SysCalRow::getDpwvPath() const throw(IllegalAccessException) {
-		if (!dpwvPathExists) {
-			throw IllegalAccessException("dpwvPath", "SysCal");
-		}
-	
-  		return dpwvPath;
- 	}
-
- 	/**
- 	 * Set dpwvPath with the specified vector<float >.
- 	 * @param dpwvPath The vector<float > value to which dpwvPath is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setDpwvPath (vector<float > dpwvPath) {
-	
- 		this->dpwvPath = dpwvPath;
-	
-		dpwvPathExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark dpwvPath, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearDpwvPath () {
-		dpwvPathExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute feffSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the feffSpectrum attribute exists. 
-	 */
-	bool SysCalRow::isFeffSpectrumExists() const {
-		return feffSpectrumExists;
-	}
-	
-
-	
- 	/**
- 	 * Get feffSpectrum, which is optional.
- 	 * @return feffSpectrum as vector<vector<float > >
- 	 * @throw IllegalAccessException If feffSpectrum does not exist.
- 	 */
- 	vector<vector<float > > SysCalRow::getFeffSpectrum() const throw(IllegalAccessException) {
-		if (!feffSpectrumExists) {
-			throw IllegalAccessException("feffSpectrum", "SysCal");
-		}
-	
-  		return feffSpectrum;
- 	}
-
- 	/**
- 	 * Set feffSpectrum with the specified vector<vector<float > >.
- 	 * @param feffSpectrum The vector<vector<float > > value to which feffSpectrum is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setFeffSpectrum (vector<vector<float > > feffSpectrum) {
-	
- 		this->feffSpectrum = feffSpectrum;
-	
-		feffSpectrumExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark feffSpectrum, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearFeffSpectrum () {
-		feffSpectrumExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute sbgainSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the sbgainSpectrum attribute exists. 
-	 */
-	bool SysCalRow::isSbgainSpectrumExists() const {
-		return sbgainSpectrumExists;
-	}
-	
-
-	
- 	/**
- 	 * Get sbgainSpectrum, which is optional.
- 	 * @return sbgainSpectrum as vector<vector<float > >
- 	 * @throw IllegalAccessException If sbgainSpectrum does not exist.
- 	 */
- 	vector<vector<float > > SysCalRow::getSbgainSpectrum() const throw(IllegalAccessException) {
-		if (!sbgainSpectrumExists) {
-			throw IllegalAccessException("sbgainSpectrum", "SysCal");
-		}
-	
-  		return sbgainSpectrum;
- 	}
-
- 	/**
- 	 * Set sbgainSpectrum with the specified vector<vector<float > >.
- 	 * @param sbgainSpectrum The vector<vector<float > > value to which sbgainSpectrum is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setSbgainSpectrum (vector<vector<float > > sbgainSpectrum) {
-	
- 		this->sbgainSpectrum = sbgainSpectrum;
-	
-		sbgainSpectrumExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark sbgainSpectrum, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearSbgainSpectrum () {
-		sbgainSpectrumExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tauSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the tauSpectrum attribute exists. 
-	 */
-	bool SysCalRow::isTauSpectrumExists() const {
-		return tauSpectrumExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tauSpectrum, which is optional.
- 	 * @return tauSpectrum as vector<vector<Temperature > >
- 	 * @throw IllegalAccessException If tauSpectrum does not exist.
- 	 */
- 	vector<vector<Temperature > > SysCalRow::getTauSpectrum() const throw(IllegalAccessException) {
-		if (!tauSpectrumExists) {
-			throw IllegalAccessException("tauSpectrum", "SysCal");
-		}
-	
-  		return tauSpectrum;
- 	}
-
- 	/**
- 	 * Set tauSpectrum with the specified vector<vector<Temperature > >.
- 	 * @param tauSpectrum The vector<vector<Temperature > > value to which tauSpectrum is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTauSpectrum (vector<vector<Temperature > > tauSpectrum) {
-	
- 		this->tauSpectrum = tauSpectrum;
-	
-		tauSpectrumExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tauSpectrum, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTauSpectrum () {
-		tauSpectrumExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tcalSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the tcalSpectrum attribute exists. 
-	 */
-	bool SysCalRow::isTcalSpectrumExists() const {
-		return tcalSpectrumExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tcalSpectrum, which is optional.
- 	 * @return tcalSpectrum as vector<vector<Temperature > >
- 	 * @throw IllegalAccessException If tcalSpectrum does not exist.
- 	 */
- 	vector<vector<Temperature > > SysCalRow::getTcalSpectrum() const throw(IllegalAccessException) {
-		if (!tcalSpectrumExists) {
-			throw IllegalAccessException("tcalSpectrum", "SysCal");
-		}
-	
-  		return tcalSpectrum;
- 	}
-
- 	/**
- 	 * Set tcalSpectrum with the specified vector<vector<Temperature > >.
- 	 * @param tcalSpectrum The vector<vector<Temperature > > value to which tcalSpectrum is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTcalSpectrum (vector<vector<Temperature > > tcalSpectrum) {
-	
- 		this->tcalSpectrum = tcalSpectrum;
-	
-		tcalSpectrumExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tcalSpectrum, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTcalSpectrum () {
-		tcalSpectrumExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute trxSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the trxSpectrum attribute exists. 
-	 */
-	bool SysCalRow::isTrxSpectrumExists() const {
-		return trxSpectrumExists;
-	}
-	
-
-	
- 	/**
- 	 * Get trxSpectrum, which is optional.
- 	 * @return trxSpectrum as vector<Temperature >
- 	 * @throw IllegalAccessException If trxSpectrum does not exist.
- 	 */
- 	vector<Temperature > SysCalRow::getTrxSpectrum() const throw(IllegalAccessException) {
-		if (!trxSpectrumExists) {
-			throw IllegalAccessException("trxSpectrum", "SysCal");
-		}
-	
-  		return trxSpectrum;
- 	}
-
- 	/**
- 	 * Set trxSpectrum with the specified vector<Temperature >.
- 	 * @param trxSpectrum The vector<Temperature > value to which trxSpectrum is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTrxSpectrum (vector<Temperature > trxSpectrum) {
-	
- 		this->trxSpectrum = trxSpectrum;
-	
-		trxSpectrumExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark trxSpectrum, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTrxSpectrum () {
-		trxSpectrumExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tskySpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the tskySpectrum attribute exists. 
-	 */
-	bool SysCalRow::isTskySpectrumExists() const {
-		return tskySpectrumExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tskySpectrum, which is optional.
- 	 * @return tskySpectrum as vector<vector<Temperature > >
- 	 * @throw IllegalAccessException If tskySpectrum does not exist.
- 	 */
- 	vector<vector<Temperature > > SysCalRow::getTskySpectrum() const throw(IllegalAccessException) {
-		if (!tskySpectrumExists) {
-			throw IllegalAccessException("tskySpectrum", "SysCal");
-		}
-	
-  		return tskySpectrum;
- 	}
-
- 	/**
- 	 * Set tskySpectrum with the specified vector<vector<Temperature > >.
- 	 * @param tskySpectrum The vector<vector<Temperature > > value to which tskySpectrum is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTskySpectrum (vector<vector<Temperature > > tskySpectrum) {
-	
- 		this->tskySpectrum = tskySpectrum;
-	
-		tskySpectrumExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tskySpectrum, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTskySpectrum () {
-		tskySpectrumExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tsysSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the tsysSpectrum attribute exists. 
-	 */
-	bool SysCalRow::isTsysSpectrumExists() const {
-		return tsysSpectrumExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tsysSpectrum, which is optional.
- 	 * @return tsysSpectrum as vector<vector<Temperature > >
- 	 * @throw IllegalAccessException If tsysSpectrum does not exist.
- 	 */
- 	vector<vector<Temperature > > SysCalRow::getTsysSpectrum() const throw(IllegalAccessException) {
-		if (!tsysSpectrumExists) {
-			throw IllegalAccessException("tsysSpectrum", "SysCal");
-		}
-	
-  		return tsysSpectrum;
- 	}
-
- 	/**
- 	 * Set tsysSpectrum with the specified vector<vector<Temperature > >.
- 	 * @param tsysSpectrum The vector<vector<Temperature > > value to which tsysSpectrum is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTsysSpectrum (vector<vector<Temperature > > tsysSpectrum) {
-	
- 		this->tsysSpectrum = tsysSpectrum;
-	
-		tsysSpectrumExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tsysSpectrum, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTsysSpectrum () {
-		tsysSpectrumExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tantSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the tantSpectrum attribute exists. 
-	 */
-	bool SysCalRow::isTantSpectrumExists() const {
-		return tantSpectrumExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tantSpectrum, which is optional.
- 	 * @return tantSpectrum as vector<vector<Temperature > >
- 	 * @throw IllegalAccessException If tantSpectrum does not exist.
- 	 */
- 	vector<vector<Temperature > > SysCalRow::getTantSpectrum() const throw(IllegalAccessException) {
-		if (!tantSpectrumExists) {
-			throw IllegalAccessException("tantSpectrum", "SysCal");
-		}
-	
-  		return tantSpectrum;
- 	}
-
- 	/**
- 	 * Set tantSpectrum with the specified vector<vector<Temperature > >.
- 	 * @param tantSpectrum The vector<vector<Temperature > > value to which tantSpectrum is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTantSpectrum (vector<vector<Temperature > > tantSpectrum) {
-	
- 		this->tantSpectrum = tantSpectrum;
-	
-		tantSpectrumExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tantSpectrum, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTantSpectrum () {
-		tantSpectrumExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tantTsysSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the tantTsysSpectrum attribute exists. 
-	 */
-	bool SysCalRow::isTantTsysSpectrumExists() const {
-		return tantTsysSpectrumExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tantTsysSpectrum, which is optional.
- 	 * @return tantTsysSpectrum as vector<vector<float > >
- 	 * @throw IllegalAccessException If tantTsysSpectrum does not exist.
- 	 */
- 	vector<vector<float > > SysCalRow::getTantTsysSpectrum() const throw(IllegalAccessException) {
-		if (!tantTsysSpectrumExists) {
-			throw IllegalAccessException("tantTsysSpectrum", "SysCal");
-		}
-	
-  		return tantTsysSpectrum;
- 	}
-
- 	/**
- 	 * Set tantTsysSpectrum with the specified vector<vector<float > >.
- 	 * @param tantTsysSpectrum The vector<vector<float > > value to which tantTsysSpectrum is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTantTsysSpectrum (vector<vector<float > > tantTsysSpectrum) {
-	
- 		this->tantTsysSpectrum = tantTsysSpectrum;
-	
-		tantTsysSpectrumExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark tantTsysSpectrum, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTantTsysSpectrum () {
-		tantTsysSpectrumExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute pwvPathSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the pwvPathSpectrum attribute exists. 
-	 */
-	bool SysCalRow::isPwvPathSpectrumExists() const {
-		return pwvPathSpectrumExists;
-	}
-	
-
-	
- 	/**
- 	 * Get pwvPathSpectrum, which is optional.
- 	 * @return pwvPathSpectrum as vector<Length >
- 	 * @throw IllegalAccessException If pwvPathSpectrum does not exist.
- 	 */
- 	vector<Length > SysCalRow::getPwvPathSpectrum() const throw(IllegalAccessException) {
-		if (!pwvPathSpectrumExists) {
-			throw IllegalAccessException("pwvPathSpectrum", "SysCal");
-		}
-	
-  		return pwvPathSpectrum;
- 	}
-
- 	/**
- 	 * Set pwvPathSpectrum with the specified vector<Length >.
- 	 * @param pwvPathSpectrum The vector<Length > value to which pwvPathSpectrum is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setPwvPathSpectrum (vector<Length > pwvPathSpectrum) {
-	
- 		this->pwvPathSpectrum = pwvPathSpectrum;
-	
-		pwvPathSpectrumExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark pwvPathSpectrum, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearPwvPathSpectrum () {
-		pwvPathSpectrumExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute dpwvPathSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the dpwvPathSpectrum attribute exists. 
-	 */
-	bool SysCalRow::isDpwvPathSpectrumExists() const {
-		return dpwvPathSpectrumExists;
-	}
-	
-
-	
- 	/**
- 	 * Get dpwvPathSpectrum, which is optional.
- 	 * @return dpwvPathSpectrum as vector<float >
- 	 * @throw IllegalAccessException If dpwvPathSpectrum does not exist.
- 	 */
- 	vector<float > SysCalRow::getDpwvPathSpectrum() const throw(IllegalAccessException) {
-		if (!dpwvPathSpectrumExists) {
-			throw IllegalAccessException("dpwvPathSpectrum", "SysCal");
-		}
-	
-  		return dpwvPathSpectrum;
- 	}
-
- 	/**
- 	 * Set dpwvPathSpectrum with the specified vector<float >.
- 	 * @param dpwvPathSpectrum The vector<float > value to which dpwvPathSpectrum is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setDpwvPathSpectrum (vector<float > dpwvPathSpectrum) {
-	
- 		this->dpwvPathSpectrum = dpwvPathSpectrum;
-	
-		dpwvPathSpectrumExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark dpwvPathSpectrum, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearDpwvPathSpectrum () {
-		dpwvPathSpectrumExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute numPoly is optional. Return true if this attribute exists.
-	 * @return true if and only if the numPoly attribute exists. 
-	 */
-	bool SysCalRow::isNumPolyExists() const {
-		return numPolyExists;
-	}
-	
-
-	
- 	/**
- 	 * Get numPoly, which is optional.
- 	 * @return numPoly as int
- 	 * @throw IllegalAccessException If numPoly does not exist.
- 	 */
- 	int SysCalRow::getNumPoly() const throw(IllegalAccessException) {
-		if (!numPolyExists) {
-			throw IllegalAccessException("numPoly", "SysCal");
-		}
-	
-  		return numPoly;
- 	}
-
- 	/**
- 	 * Set numPoly with the specified int.
- 	 * @param numPoly The int value to which numPoly is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setNumPoly (int numPoly) {
-	
- 		this->numPoly = numPoly;
-	
-		numPolyExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark numPoly, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearNumPoly () {
-		numPolyExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute numPolyFreq is optional. Return true if this attribute exists.
-	 * @return true if and only if the numPolyFreq attribute exists. 
-	 */
-	bool SysCalRow::isNumPolyFreqExists() const {
-		return numPolyFreqExists;
-	}
-	
-
-	
- 	/**
- 	 * Get numPolyFreq, which is optional.
- 	 * @return numPolyFreq as int
- 	 * @throw IllegalAccessException If numPolyFreq does not exist.
- 	 */
- 	int SysCalRow::getNumPolyFreq() const throw(IllegalAccessException) {
-		if (!numPolyFreqExists) {
-			throw IllegalAccessException("numPolyFreq", "SysCal");
-		}
-	
-  		return numPolyFreq;
- 	}
-
- 	/**
- 	 * Set numPolyFreq with the specified int.
- 	 * @param numPolyFreq The int value to which numPolyFreq is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setNumPolyFreq (int numPolyFreq) {
-	
- 		this->numPolyFreq = numPolyFreq;
-	
-		numPolyFreqExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark numPolyFreq, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearNumPolyFreq () {
-		numPolyFreqExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute timeOrigin is optional. Return true if this attribute exists.
-	 * @return true if and only if the timeOrigin attribute exists. 
-	 */
-	bool SysCalRow::isTimeOriginExists() const {
-		return timeOriginExists;
-	}
-	
-
-	
- 	/**
- 	 * Get timeOrigin, which is optional.
- 	 * @return timeOrigin as ArrayTime
- 	 * @throw IllegalAccessException If timeOrigin does not exist.
- 	 */
- 	ArrayTime SysCalRow::getTimeOrigin() const throw(IllegalAccessException) {
-		if (!timeOriginExists) {
-			throw IllegalAccessException("timeOrigin", "SysCal");
-		}
-	
-  		return timeOrigin;
- 	}
-
- 	/**
- 	 * Set timeOrigin with the specified ArrayTime.
- 	 * @param timeOrigin The ArrayTime value to which timeOrigin is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTimeOrigin (ArrayTime timeOrigin) {
-	
- 		this->timeOrigin = timeOrigin;
-	
-		timeOriginExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark timeOrigin, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTimeOrigin () {
-		timeOriginExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute freqOrigin is optional. Return true if this attribute exists.
-	 * @return true if and only if the freqOrigin attribute exists. 
-	 */
-	bool SysCalRow::isFreqOriginExists() const {
-		return freqOriginExists;
-	}
-	
-
-	
- 	/**
- 	 * Get freqOrigin, which is optional.
- 	 * @return freqOrigin as Frequency
- 	 * @throw IllegalAccessException If freqOrigin does not exist.
- 	 */
- 	Frequency SysCalRow::getFreqOrigin() const throw(IllegalAccessException) {
-		if (!freqOriginExists) {
-			throw IllegalAccessException("freqOrigin", "SysCal");
-		}
-	
-  		return freqOrigin;
- 	}
-
- 	/**
- 	 * Set freqOrigin with the specified Frequency.
- 	 * @param freqOrigin The Frequency value to which freqOrigin is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setFreqOrigin (Frequency freqOrigin) {
-	
- 		this->freqOrigin = freqOrigin;
-	
-		freqOriginExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark freqOrigin, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearFreqOrigin () {
-		freqOriginExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute phaseCurve is optional. Return true if this attribute exists.
-	 * @return true if and only if the phaseCurve attribute exists. 
-	 */
-	bool SysCalRow::isPhaseCurveExists() const {
-		return phaseCurveExists;
-	}
-	
-
-	
- 	/**
- 	 * Get phaseCurve, which is optional.
- 	 * @return phaseCurve as vector<vector<Angle > >
- 	 * @throw IllegalAccessException If phaseCurve does not exist.
- 	 */
- 	vector<vector<Angle > > SysCalRow::getPhaseCurve() const throw(IllegalAccessException) {
-		if (!phaseCurveExists) {
-			throw IllegalAccessException("phaseCurve", "SysCal");
-		}
-	
-  		return phaseCurve;
- 	}
-
- 	/**
- 	 * Set phaseCurve with the specified vector<vector<Angle > >.
- 	 * @param phaseCurve The vector<vector<Angle > > value to which phaseCurve is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setPhaseCurve (vector<vector<Angle > > phaseCurve) {
-	
- 		this->phaseCurve = phaseCurve;
-	
-		phaseCurveExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark phaseCurve, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearPhaseCurve () {
-		phaseCurveExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute delayCurve is optional. Return true if this attribute exists.
-	 * @return true if and only if the delayCurve attribute exists. 
-	 */
-	bool SysCalRow::isDelayCurveExists() const {
-		return delayCurveExists;
-	}
-	
-
-	
- 	/**
- 	 * Get delayCurve, which is optional.
- 	 * @return delayCurve as vector<vector<Interval > >
- 	 * @throw IllegalAccessException If delayCurve does not exist.
- 	 */
- 	vector<vector<Interval > > SysCalRow::getDelayCurve() const throw(IllegalAccessException) {
-		if (!delayCurveExists) {
-			throw IllegalAccessException("delayCurve", "SysCal");
-		}
-	
-  		return delayCurve;
- 	}
-
- 	/**
- 	 * Set delayCurve with the specified vector<vector<Interval > >.
- 	 * @param delayCurve The vector<vector<Interval > > value to which delayCurve is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setDelayCurve (vector<vector<Interval > > delayCurve) {
-	
- 		this->delayCurve = delayCurve;
-	
-		delayCurveExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark delayCurve, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearDelayCurve () {
-		delayCurveExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute ampliCurve is optional. Return true if this attribute exists.
-	 * @return true if and only if the ampliCurve attribute exists. 
-	 */
-	bool SysCalRow::isAmpliCurveExists() const {
-		return ampliCurveExists;
-	}
-	
-
-	
- 	/**
- 	 * Get ampliCurve, which is optional.
- 	 * @return ampliCurve as vector<vector<float > >
- 	 * @throw IllegalAccessException If ampliCurve does not exist.
- 	 */
- 	vector<vector<float > > SysCalRow::getAmpliCurve() const throw(IllegalAccessException) {
-		if (!ampliCurveExists) {
-			throw IllegalAccessException("ampliCurve", "SysCal");
-		}
-	
-  		return ampliCurve;
  	}
-
- 	/**
- 	 * Set ampliCurve with the specified vector<vector<float > >.
- 	 * @param ampliCurve The vector<vector<float > > value to which ampliCurve is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setAmpliCurve (vector<vector<float > > ampliCurve) {
-	
- 		this->ampliCurve = ampliCurve;
-	
-		ampliCurveExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark ampliCurve, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearAmpliCurve () {
-		ampliCurveExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute bandpassCurve is optional. Return true if this attribute exists.
-	 * @return true if and only if the bandpassCurve attribute exists. 
-	 */
-	bool SysCalRow::isBandpassCurveExists() const {
-		return bandpassCurveExists;
-	}
-	
-
-	
- 	/**
- 	 * Get bandpassCurve, which is optional.
- 	 * @return bandpassCurve as vector<vector<float > >
- 	 * @throw IllegalAccessException If bandpassCurve does not exist.
- 	 */
- 	vector<vector<float > > SysCalRow::getBandpassCurve() const throw(IllegalAccessException) {
-		if (!bandpassCurveExists) {
-			throw IllegalAccessException("bandpassCurve", "SysCal");
-		}
-	
-  		return bandpassCurve;
- 	}
-
- 	/**
- 	 * Set bandpassCurve with the specified vector<vector<float > >.
- 	 * @param bandpassCurve The vector<vector<float > > value to which bandpassCurve is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setBandpassCurve (vector<vector<float > > bandpassCurve) {
-	
- 		this->bandpassCurve = bandpassCurve;
-	
-		bandpassCurveExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark bandpassCurve, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearBandpassCurve () {
-		bandpassCurveExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute phasediffFlag is optional. Return true if this attribute exists.
-	 * @return true if and only if the phasediffFlag attribute exists. 
-	 */
-	bool SysCalRow::isPhasediffFlagExists() const {
-		return phasediffFlagExists;
-	}
-	
-
-	
- 	/**
- 	 * Get phasediffFlag, which is optional.
- 	 * @return phasediffFlag as bool
- 	 * @throw IllegalAccessException If phasediffFlag does not exist.
- 	 */
- 	bool SysCalRow::getPhasediffFlag() const throw(IllegalAccessException) {
-		if (!phasediffFlagExists) {
-			throw IllegalAccessException("phasediffFlag", "SysCal");
-		}
-	
-  		return phasediffFlag;
- 	}
-
- 	/**
- 	 * Set phasediffFlag with the specified bool.
- 	 * @param phasediffFlag The bool value to which phasediffFlag is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setPhasediffFlag (bool phasediffFlag) {
-	
- 		this->phasediffFlag = phasediffFlag;
-	
-		phasediffFlagExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark phasediffFlag, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearPhasediffFlag () {
-		phasediffFlagExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute sbgainFlag is optional. Return true if this attribute exists.
-	 * @return true if and only if the sbgainFlag attribute exists. 
-	 */
-	bool SysCalRow::isSbgainFlagExists() const {
-		return sbgainFlagExists;
-	}
-	
-
-	
- 	/**
- 	 * Get sbgainFlag, which is optional.
- 	 * @return sbgainFlag as bool
- 	 * @throw IllegalAccessException If sbgainFlag does not exist.
- 	 */
- 	bool SysCalRow::getSbgainFlag() const throw(IllegalAccessException) {
-		if (!sbgainFlagExists) {
-			throw IllegalAccessException("sbgainFlag", "SysCal");
-		}
-	
-  		return sbgainFlag;
- 	}
-
- 	/**
- 	 * Set sbgainFlag with the specified bool.
- 	 * @param sbgainFlag The bool value to which sbgainFlag is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setSbgainFlag (bool sbgainFlag) {
-	
- 		this->sbgainFlag = sbgainFlag;
-	
-		sbgainFlagExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark sbgainFlag, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearSbgainFlag () {
-		sbgainFlagExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute tauFlag is optional. Return true if this attribute exists.
-	 * @return true if and only if the tauFlag attribute exists. 
-	 */
-	bool SysCalRow::isTauFlagExists() const {
-		return tauFlagExists;
-	}
-	
-
-	
- 	/**
- 	 * Get tauFlag, which is optional.
- 	 * @return tauFlag as bool
- 	 * @throw IllegalAccessException If tauFlag does not exist.
- 	 */
- 	bool SysCalRow::getTauFlag() const throw(IllegalAccessException) {
-		if (!tauFlagExists) {
-			throw IllegalAccessException("tauFlag", "SysCal");
-		}
-	
-  		return tauFlag;
- 	}
-
- 	/**
- 	 * Set tauFlag with the specified bool.
- 	 * @param tauFlag The bool value to which tauFlag is to be set.
- 	 
- 	
- 	 */
- 	void SysCalRow::setTauFlag (bool tauFlag) {
-	
- 		this->tauFlag = tauFlag;
-	
-		tauFlagExists = true;
-	
- 	}
-	
 	
-	/**
-	 * Mark tauFlag, which is an optional field, as non-existent.
-	 */
-	void SysCalRow::clearTauFlag () {
-		tauFlagExists = false;
-	}
 	
 
 	
@@ -4793,7 +1981,7 @@ namespace asdm {
  	 * @return tcalFlag as bool
  	 * @throw IllegalAccessException If tcalFlag does not exist.
  	 */
- 	bool SysCalRow::getTcalFlag() const throw(IllegalAccessException) {
+ 	bool SysCalRow::getTcalFlag() const  {
 		if (!tcalFlagExists) {
 			throw IllegalAccessException("tcalFlag", "SysCal");
 		}
@@ -4826,6 +2014,53 @@ namespace asdm {
 
 	
 	/**
+	 * The attribute tcalSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the tcalSpectrum attribute exists. 
+	 */
+	bool SysCalRow::isTcalSpectrumExists() const {
+		return tcalSpectrumExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get tcalSpectrum, which is optional.
+ 	 * @return tcalSpectrum as vector<vector<Temperature > >
+ 	 * @throw IllegalAccessException If tcalSpectrum does not exist.
+ 	 */
+ 	vector<vector<Temperature > > SysCalRow::getTcalSpectrum() const  {
+		if (!tcalSpectrumExists) {
+			throw IllegalAccessException("tcalSpectrum", "SysCal");
+		}
+	
+  		return tcalSpectrum;
+ 	}
+
+ 	/**
+ 	 * Set tcalSpectrum with the specified vector<vector<Temperature > >.
+ 	 * @param tcalSpectrum The vector<vector<Temperature > > value to which tcalSpectrum is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SysCalRow::setTcalSpectrum (vector<vector<Temperature > > tcalSpectrum) {
+	
+ 		this->tcalSpectrum = tcalSpectrum;
+	
+		tcalSpectrumExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark tcalSpectrum, which is an optional field, as non-existent.
+	 */
+	void SysCalRow::clearTcalSpectrum () {
+		tcalSpectrumExists = false;
+	}
+	
+
+	
+	/**
 	 * The attribute trxFlag is optional. Return true if this attribute exists.
 	 * @return true if and only if the trxFlag attribute exists. 
 	 */
@@ -4840,7 +2075,7 @@ namespace asdm {
  	 * @return trxFlag as bool
  	 * @throw IllegalAccessException If trxFlag does not exist.
  	 */
- 	bool SysCalRow::getTrxFlag() const throw(IllegalAccessException) {
+ 	bool SysCalRow::getTrxFlag() const  {
 		if (!trxFlagExists) {
 			throw IllegalAccessException("trxFlag", "SysCal");
 		}
@@ -4873,6 +2108,53 @@ namespace asdm {
 
 	
 	/**
+	 * The attribute trxSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the trxSpectrum attribute exists. 
+	 */
+	bool SysCalRow::isTrxSpectrumExists() const {
+		return trxSpectrumExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get trxSpectrum, which is optional.
+ 	 * @return trxSpectrum as vector<vector<Temperature > >
+ 	 * @throw IllegalAccessException If trxSpectrum does not exist.
+ 	 */
+ 	vector<vector<Temperature > > SysCalRow::getTrxSpectrum() const  {
+		if (!trxSpectrumExists) {
+			throw IllegalAccessException("trxSpectrum", "SysCal");
+		}
+	
+  		return trxSpectrum;
+ 	}
+
+ 	/**
+ 	 * Set trxSpectrum with the specified vector<vector<Temperature > >.
+ 	 * @param trxSpectrum The vector<vector<Temperature > > value to which trxSpectrum is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SysCalRow::setTrxSpectrum (vector<vector<Temperature > > trxSpectrum) {
+	
+ 		this->trxSpectrum = trxSpectrum;
+	
+		trxSpectrumExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark trxSpectrum, which is an optional field, as non-existent.
+	 */
+	void SysCalRow::clearTrxSpectrum () {
+		trxSpectrumExists = false;
+	}
+	
+
+	
+	/**
 	 * The attribute tskyFlag is optional. Return true if this attribute exists.
 	 * @return true if and only if the tskyFlag attribute exists. 
 	 */
@@ -4887,7 +2169,7 @@ namespace asdm {
  	 * @return tskyFlag as bool
  	 * @throw IllegalAccessException If tskyFlag does not exist.
  	 */
- 	bool SysCalRow::getTskyFlag() const throw(IllegalAccessException) {
+ 	bool SysCalRow::getTskyFlag() const  {
 		if (!tskyFlagExists) {
 			throw IllegalAccessException("tskyFlag", "SysCal");
 		}
@@ -4920,6 +2202,53 @@ namespace asdm {
 
 	
 	/**
+	 * The attribute tskySpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the tskySpectrum attribute exists. 
+	 */
+	bool SysCalRow::isTskySpectrumExists() const {
+		return tskySpectrumExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get tskySpectrum, which is optional.
+ 	 * @return tskySpectrum as vector<vector<Temperature > >
+ 	 * @throw IllegalAccessException If tskySpectrum does not exist.
+ 	 */
+ 	vector<vector<Temperature > > SysCalRow::getTskySpectrum() const  {
+		if (!tskySpectrumExists) {
+			throw IllegalAccessException("tskySpectrum", "SysCal");
+		}
+	
+  		return tskySpectrum;
+ 	}
+
+ 	/**
+ 	 * Set tskySpectrum with the specified vector<vector<Temperature > >.
+ 	 * @param tskySpectrum The vector<vector<Temperature > > value to which tskySpectrum is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SysCalRow::setTskySpectrum (vector<vector<Temperature > > tskySpectrum) {
+	
+ 		this->tskySpectrum = tskySpectrum;
+	
+		tskySpectrumExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark tskySpectrum, which is an optional field, as non-existent.
+	 */
+	void SysCalRow::clearTskySpectrum () {
+		tskySpectrumExists = false;
+	}
+	
+
+	
+	/**
 	 * The attribute tsysFlag is optional. Return true if this attribute exists.
 	 * @return true if and only if the tsysFlag attribute exists. 
 	 */
@@ -4934,7 +2263,7 @@ namespace asdm {
  	 * @return tsysFlag as bool
  	 * @throw IllegalAccessException If tsysFlag does not exist.
  	 */
- 	bool SysCalRow::getTsysFlag() const throw(IllegalAccessException) {
+ 	bool SysCalRow::getTsysFlag() const  {
 		if (!tsysFlagExists) {
 			throw IllegalAccessException("tsysFlag", "SysCal");
 		}
@@ -4967,6 +2296,53 @@ namespace asdm {
 
 	
 	/**
+	 * The attribute tsysSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the tsysSpectrum attribute exists. 
+	 */
+	bool SysCalRow::isTsysSpectrumExists() const {
+		return tsysSpectrumExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get tsysSpectrum, which is optional.
+ 	 * @return tsysSpectrum as vector<vector<Temperature > >
+ 	 * @throw IllegalAccessException If tsysSpectrum does not exist.
+ 	 */
+ 	vector<vector<Temperature > > SysCalRow::getTsysSpectrum() const  {
+		if (!tsysSpectrumExists) {
+			throw IllegalAccessException("tsysSpectrum", "SysCal");
+		}
+	
+  		return tsysSpectrum;
+ 	}
+
+ 	/**
+ 	 * Set tsysSpectrum with the specified vector<vector<Temperature > >.
+ 	 * @param tsysSpectrum The vector<vector<Temperature > > value to which tsysSpectrum is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SysCalRow::setTsysSpectrum (vector<vector<Temperature > > tsysSpectrum) {
+	
+ 		this->tsysSpectrum = tsysSpectrum;
+	
+		tsysSpectrumExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark tsysSpectrum, which is an optional field, as non-existent.
+	 */
+	void SysCalRow::clearTsysSpectrum () {
+		tsysSpectrumExists = false;
+	}
+	
+
+	
+	/**
 	 * The attribute tantFlag is optional. Return true if this attribute exists.
 	 * @return true if and only if the tantFlag attribute exists. 
 	 */
@@ -4981,7 +2357,7 @@ namespace asdm {
  	 * @return tantFlag as bool
  	 * @throw IllegalAccessException If tantFlag does not exist.
  	 */
- 	bool SysCalRow::getTantFlag() const throw(IllegalAccessException) {
+ 	bool SysCalRow::getTantFlag() const  {
 		if (!tantFlagExists) {
 			throw IllegalAccessException("tantFlag", "SysCal");
 		}
@@ -5014,6 +2390,53 @@ namespace asdm {
 
 	
 	/**
+	 * The attribute tantSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the tantSpectrum attribute exists. 
+	 */
+	bool SysCalRow::isTantSpectrumExists() const {
+		return tantSpectrumExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get tantSpectrum, which is optional.
+ 	 * @return tantSpectrum as vector<vector<float > >
+ 	 * @throw IllegalAccessException If tantSpectrum does not exist.
+ 	 */
+ 	vector<vector<float > > SysCalRow::getTantSpectrum() const  {
+		if (!tantSpectrumExists) {
+			throw IllegalAccessException("tantSpectrum", "SysCal");
+		}
+	
+  		return tantSpectrum;
+ 	}
+
+ 	/**
+ 	 * Set tantSpectrum with the specified vector<vector<float > >.
+ 	 * @param tantSpectrum The vector<vector<float > > value to which tantSpectrum is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SysCalRow::setTantSpectrum (vector<vector<float > > tantSpectrum) {
+	
+ 		this->tantSpectrum = tantSpectrum;
+	
+		tantSpectrumExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark tantSpectrum, which is an optional field, as non-existent.
+	 */
+	void SysCalRow::clearTantSpectrum () {
+		tantSpectrumExists = false;
+	}
+	
+
+	
+	/**
 	 * The attribute tantTsysFlag is optional. Return true if this attribute exists.
 	 * @return true if and only if the tantTsysFlag attribute exists. 
 	 */
@@ -5028,7 +2451,7 @@ namespace asdm {
  	 * @return tantTsysFlag as bool
  	 * @throw IllegalAccessException If tantTsysFlag does not exist.
  	 */
- 	bool SysCalRow::getTantTsysFlag() const throw(IllegalAccessException) {
+ 	bool SysCalRow::getTantTsysFlag() const  {
 		if (!tantTsysFlagExists) {
 			throw IllegalAccessException("tantTsysFlag", "SysCal");
 		}
@@ -5061,48 +2484,142 @@ namespace asdm {
 
 	
 	/**
-	 * The attribute pwvPathFlag is optional. Return true if this attribute exists.
-	 * @return true if and only if the pwvPathFlag attribute exists. 
+	 * The attribute tantTsysSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the tantTsysSpectrum attribute exists. 
 	 */
-	bool SysCalRow::isPwvPathFlagExists() const {
-		return pwvPathFlagExists;
+	bool SysCalRow::isTantTsysSpectrumExists() const {
+		return tantTsysSpectrumExists;
 	}
 	
 
 	
  	/**
- 	 * Get pwvPathFlag, which is optional.
- 	 * @return pwvPathFlag as bool
- 	 * @throw IllegalAccessException If pwvPathFlag does not exist.
+ 	 * Get tantTsysSpectrum, which is optional.
+ 	 * @return tantTsysSpectrum as vector<vector<float > >
+ 	 * @throw IllegalAccessException If tantTsysSpectrum does not exist.
  	 */
- 	bool SysCalRow::getPwvPathFlag() const throw(IllegalAccessException) {
-		if (!pwvPathFlagExists) {
-			throw IllegalAccessException("pwvPathFlag", "SysCal");
+ 	vector<vector<float > > SysCalRow::getTantTsysSpectrum() const  {
+		if (!tantTsysSpectrumExists) {
+			throw IllegalAccessException("tantTsysSpectrum", "SysCal");
 		}
 	
-  		return pwvPathFlag;
+  		return tantTsysSpectrum;
  	}
 
  	/**
- 	 * Set pwvPathFlag with the specified bool.
- 	 * @param pwvPathFlag The bool value to which pwvPathFlag is to be set.
+ 	 * Set tantTsysSpectrum with the specified vector<vector<float > >.
+ 	 * @param tantTsysSpectrum The vector<vector<float > > value to which tantTsysSpectrum is to be set.
  	 
  	
  	 */
- 	void SysCalRow::setPwvPathFlag (bool pwvPathFlag) {
+ 	void SysCalRow::setTantTsysSpectrum (vector<vector<float > > tantTsysSpectrum) {
 	
- 		this->pwvPathFlag = pwvPathFlag;
+ 		this->tantTsysSpectrum = tantTsysSpectrum;
 	
-		pwvPathFlagExists = true;
+		tantTsysSpectrumExists = true;
 	
  	}
 	
 	
 	/**
-	 * Mark pwvPathFlag, which is an optional field, as non-existent.
+	 * Mark tantTsysSpectrum, which is an optional field, as non-existent.
 	 */
-	void SysCalRow::clearPwvPathFlag () {
-		pwvPathFlagExists = false;
+	void SysCalRow::clearTantTsysSpectrum () {
+		tantTsysSpectrumExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute phaseDiffFlag is optional. Return true if this attribute exists.
+	 * @return true if and only if the phaseDiffFlag attribute exists. 
+	 */
+	bool SysCalRow::isPhaseDiffFlagExists() const {
+		return phaseDiffFlagExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get phaseDiffFlag, which is optional.
+ 	 * @return phaseDiffFlag as bool
+ 	 * @throw IllegalAccessException If phaseDiffFlag does not exist.
+ 	 */
+ 	bool SysCalRow::getPhaseDiffFlag() const  {
+		if (!phaseDiffFlagExists) {
+			throw IllegalAccessException("phaseDiffFlag", "SysCal");
+		}
+	
+  		return phaseDiffFlag;
+ 	}
+
+ 	/**
+ 	 * Set phaseDiffFlag with the specified bool.
+ 	 * @param phaseDiffFlag The bool value to which phaseDiffFlag is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SysCalRow::setPhaseDiffFlag (bool phaseDiffFlag) {
+	
+ 		this->phaseDiffFlag = phaseDiffFlag;
+	
+		phaseDiffFlagExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark phaseDiffFlag, which is an optional field, as non-existent.
+	 */
+	void SysCalRow::clearPhaseDiffFlag () {
+		phaseDiffFlagExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute phaseDiffSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the phaseDiffSpectrum attribute exists. 
+	 */
+	bool SysCalRow::isPhaseDiffSpectrumExists() const {
+		return phaseDiffSpectrumExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get phaseDiffSpectrum, which is optional.
+ 	 * @return phaseDiffSpectrum as vector<vector<float > >
+ 	 * @throw IllegalAccessException If phaseDiffSpectrum does not exist.
+ 	 */
+ 	vector<vector<float > > SysCalRow::getPhaseDiffSpectrum() const  {
+		if (!phaseDiffSpectrumExists) {
+			throw IllegalAccessException("phaseDiffSpectrum", "SysCal");
+		}
+	
+  		return phaseDiffSpectrum;
+ 	}
+
+ 	/**
+ 	 * Set phaseDiffSpectrum with the specified vector<vector<float > >.
+ 	 * @param phaseDiffSpectrum The vector<vector<float > > value to which phaseDiffSpectrum is to be set.
+ 	 
+ 	
+ 	 */
+ 	void SysCalRow::setPhaseDiffSpectrum (vector<vector<float > > phaseDiffSpectrum) {
+	
+ 		this->phaseDiffSpectrum = phaseDiffSpectrum;
+	
+		phaseDiffSpectrumExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark phaseDiffSpectrum, which is an optional field, as non-existent.
+	 */
+	void SysCalRow::clearPhaseDiffSpectrum () {
+		phaseDiffSpectrumExists = false;
 	}
 	
 
@@ -5229,14 +2746,14 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the SpectralWindow table having SpectralWindow.spectralWindowId == spectralWindowId
-	 * @return a SpectralWindowRow*
+	 * Returns the pointer to the row in the Antenna table having Antenna.antennaId == antennaId
+	 * @return a AntennaRow*
 	 * 
 	 
 	 */
-	 SpectralWindowRow* SysCalRow::getSpectralWindowUsingSpectralWindowId() {
+	 AntennaRow* SysCalRow::getAntennaUsingAntennaId() {
 	 
-	 	return table.getContainer().getSpectralWindow().getRowByKey(spectralWindowId);
+	 	return table.getContainer().getAntenna().getRowByKey(antennaId);
 	 }
 	 
 
@@ -5267,14 +2784,14 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the Antenna table having Antenna.antennaId == antennaId
-	 * @return a AntennaRow*
+	 * Returns the pointer to the row in the SpectralWindow table having SpectralWindow.spectralWindowId == spectralWindowId
+	 * @return a SpectralWindowRow*
 	 * 
 	 
 	 */
-	 AntennaRow* SysCalRow::getAntennaUsingAntennaId() {
+	 SpectralWindowRow* SysCalRow::getSpectralWindowUsingSpectralWindowId() {
 	 
-	 	return table.getContainer().getAntenna().getRowByKey(antennaId);
+	 	return table.getContainer().getSpectralWindow().getRowByKey(spectralWindowId);
 	 }
 	 
 
@@ -5296,151 +2813,7 @@ namespace asdm {
 	
 
 	
-		numLoadExists = false;
-	
 
-	
-		calLoadExists = false;
-	
-
-	
-		feffExists = false;
-	
-
-	
-		aeffExists = false;
-	
-
-	
-		phaseDiffExists = false;
-	
-
-	
-		sbgainExists = false;
-	
-
-	
-		tauExists = false;
-	
-
-	
-		tcalExists = false;
-	
-
-	
-		trxExists = false;
-	
-
-	
-		tskyExists = false;
-	
-
-	
-		tsysExists = false;
-	
-
-	
-		tantExists = false;
-	
-
-	
-		tantTsysExists = false;
-	
-
-	
-		pwvPathExists = false;
-	
-
-	
-		dpwvPathExists = false;
-	
-
-	
-		feffSpectrumExists = false;
-	
-
-	
-		sbgainSpectrumExists = false;
-	
-
-	
-		tauSpectrumExists = false;
-	
-
-	
-		tcalSpectrumExists = false;
-	
-
-	
-		trxSpectrumExists = false;
-	
-
-	
-		tskySpectrumExists = false;
-	
-
-	
-		tsysSpectrumExists = false;
-	
-
-	
-		tantSpectrumExists = false;
-	
-
-	
-		tantTsysSpectrumExists = false;
-	
-
-	
-		pwvPathSpectrumExists = false;
-	
-
-	
-		dpwvPathSpectrumExists = false;
-	
-
-	
-		numPolyExists = false;
-	
-
-	
-		numPolyFreqExists = false;
-	
-
-	
-		timeOriginExists = false;
-	
-
-	
-		freqOriginExists = false;
-	
-
-	
-		phaseCurveExists = false;
-	
-
-	
-		delayCurveExists = false;
-	
-
-	
-		ampliCurveExists = false;
-	
-
-	
-		bandpassCurveExists = false;
-	
-
-	
-		phasediffFlagExists = false;
-	
-
-	
-		sbgainFlagExists = false;
-	
-
-	
-		tauFlagExists = false;
 	
 
 	
@@ -5448,7 +2821,15 @@ namespace asdm {
 	
 
 	
+		tcalSpectrumExists = false;
+	
+
+	
 		trxFlagExists = false;
+	
+
+	
+		trxSpectrumExists = false;
 	
 
 	
@@ -5456,7 +2837,15 @@ namespace asdm {
 	
 
 	
+		tskySpectrumExists = false;
+	
+
+	
 		tsysFlagExists = false;
+	
+
+	
+		tsysSpectrumExists = false;
 	
 
 	
@@ -5464,11 +2853,23 @@ namespace asdm {
 	
 
 	
+		tantSpectrumExists = false;
+	
+
+	
 		tantTsysFlagExists = false;
 	
 
 	
-		pwvPathFlagExists = false;
+		tantTsysSpectrumExists = false;
+	
+
+	
+		phaseDiffFlagExists = false;
+	
+
+	
+		phaseDiffSpectrumExists = false;
 	
 
 	
@@ -5481,62 +2882,6 @@ namespace asdm {
 	
 	
 	
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -5582,151 +2927,7 @@ namespace asdm {
 	
 
 	
-		numLoadExists = false;
-	
 
-	
-		calLoadExists = false;
-	
-
-	
-		feffExists = false;
-	
-
-	
-		aeffExists = false;
-	
-
-	
-		phaseDiffExists = false;
-	
-
-	
-		sbgainExists = false;
-	
-
-	
-		tauExists = false;
-	
-
-	
-		tcalExists = false;
-	
-
-	
-		trxExists = false;
-	
-
-	
-		tskyExists = false;
-	
-
-	
-		tsysExists = false;
-	
-
-	
-		tantExists = false;
-	
-
-	
-		tantTsysExists = false;
-	
-
-	
-		pwvPathExists = false;
-	
-
-	
-		dpwvPathExists = false;
-	
-
-	
-		feffSpectrumExists = false;
-	
-
-	
-		sbgainSpectrumExists = false;
-	
-
-	
-		tauSpectrumExists = false;
-	
-
-	
-		tcalSpectrumExists = false;
-	
-
-	
-		trxSpectrumExists = false;
-	
-
-	
-		tskySpectrumExists = false;
-	
-
-	
-		tsysSpectrumExists = false;
-	
-
-	
-		tantSpectrumExists = false;
-	
-
-	
-		tantTsysSpectrumExists = false;
-	
-
-	
-		pwvPathSpectrumExists = false;
-	
-
-	
-		dpwvPathSpectrumExists = false;
-	
-
-	
-		numPolyExists = false;
-	
-
-	
-		numPolyFreqExists = false;
-	
-
-	
-		timeOriginExists = false;
-	
-
-	
-		freqOriginExists = false;
-	
-
-	
-		phaseCurveExists = false;
-	
-
-	
-		delayCurveExists = false;
-	
-
-	
-		ampliCurveExists = false;
-	
-
-	
-		bandpassCurveExists = false;
-	
-
-	
-		phasediffFlagExists = false;
-	
-
-	
-		sbgainFlagExists = false;
-	
-
-	
-		tauFlagExists = false;
 	
 
 	
@@ -5734,7 +2935,15 @@ namespace asdm {
 	
 
 	
+		tcalSpectrumExists = false;
+	
+
+	
 		trxFlagExists = false;
+	
+
+	
+		trxSpectrumExists = false;
 	
 
 	
@@ -5742,7 +2951,15 @@ namespace asdm {
 	
 
 	
+		tskySpectrumExists = false;
+	
+
+	
 		tsysFlagExists = false;
+	
+
+	
+		tsysSpectrumExists = false;
 	
 
 	
@@ -5750,11 +2967,23 @@ namespace asdm {
 	
 
 	
+		tantSpectrumExists = false;
+	
+
+	
 		tantTsysFlagExists = false;
 	
 
 	
-		pwvPathFlagExists = false;
+		tantTsysSpectrumExists = false;
+	
+
+	
+		phaseDiffFlagExists = false;
+	
+
+	
+		phaseDiffSpectrumExists = false;
 	
 
 	
@@ -5770,276 +2999,21 @@ namespace asdm {
 		
 			antennaId = row.antennaId;
 		
-			feedId = row.feedId;
-		
 			spectralWindowId = row.spectralWindowId;
 		
 			timeInterval = row.timeInterval;
 		
+			feedId = row.feedId;
 		
 		
 		
 		
+			numReceptor = row.numReceptor;
+		
+			numChan = row.numChan;
 		
 		
-		if (row.numLoadExists) {
-			numLoad = row.numLoad;		
-			numLoadExists = true;
-		}
-		else
-			numLoadExists = false;
 		
-		if (row.calLoadExists) {
-			calLoad = row.calLoad;		
-			calLoadExists = true;
-		}
-		else
-			calLoadExists = false;
-		
-		if (row.feffExists) {
-			feff = row.feff;		
-			feffExists = true;
-		}
-		else
-			feffExists = false;
-		
-		if (row.aeffExists) {
-			aeff = row.aeff;		
-			aeffExists = true;
-		}
-		else
-			aeffExists = false;
-		
-		if (row.phaseDiffExists) {
-			phaseDiff = row.phaseDiff;		
-			phaseDiffExists = true;
-		}
-		else
-			phaseDiffExists = false;
-		
-		if (row.sbgainExists) {
-			sbgain = row.sbgain;		
-			sbgainExists = true;
-		}
-		else
-			sbgainExists = false;
-		
-		if (row.tauExists) {
-			tau = row.tau;		
-			tauExists = true;
-		}
-		else
-			tauExists = false;
-		
-		if (row.tcalExists) {
-			tcal = row.tcal;		
-			tcalExists = true;
-		}
-		else
-			tcalExists = false;
-		
-		if (row.trxExists) {
-			trx = row.trx;		
-			trxExists = true;
-		}
-		else
-			trxExists = false;
-		
-		if (row.tskyExists) {
-			tsky = row.tsky;		
-			tskyExists = true;
-		}
-		else
-			tskyExists = false;
-		
-		if (row.tsysExists) {
-			tsys = row.tsys;		
-			tsysExists = true;
-		}
-		else
-			tsysExists = false;
-		
-		if (row.tantExists) {
-			tant = row.tant;		
-			tantExists = true;
-		}
-		else
-			tantExists = false;
-		
-		if (row.tantTsysExists) {
-			tantTsys = row.tantTsys;		
-			tantTsysExists = true;
-		}
-		else
-			tantTsysExists = false;
-		
-		if (row.pwvPathExists) {
-			pwvPath = row.pwvPath;		
-			pwvPathExists = true;
-		}
-		else
-			pwvPathExists = false;
-		
-		if (row.dpwvPathExists) {
-			dpwvPath = row.dpwvPath;		
-			dpwvPathExists = true;
-		}
-		else
-			dpwvPathExists = false;
-		
-		if (row.feffSpectrumExists) {
-			feffSpectrum = row.feffSpectrum;		
-			feffSpectrumExists = true;
-		}
-		else
-			feffSpectrumExists = false;
-		
-		if (row.sbgainSpectrumExists) {
-			sbgainSpectrum = row.sbgainSpectrum;		
-			sbgainSpectrumExists = true;
-		}
-		else
-			sbgainSpectrumExists = false;
-		
-		if (row.tauSpectrumExists) {
-			tauSpectrum = row.tauSpectrum;		
-			tauSpectrumExists = true;
-		}
-		else
-			tauSpectrumExists = false;
-		
-		if (row.tcalSpectrumExists) {
-			tcalSpectrum = row.tcalSpectrum;		
-			tcalSpectrumExists = true;
-		}
-		else
-			tcalSpectrumExists = false;
-		
-		if (row.trxSpectrumExists) {
-			trxSpectrum = row.trxSpectrum;		
-			trxSpectrumExists = true;
-		}
-		else
-			trxSpectrumExists = false;
-		
-		if (row.tskySpectrumExists) {
-			tskySpectrum = row.tskySpectrum;		
-			tskySpectrumExists = true;
-		}
-		else
-			tskySpectrumExists = false;
-		
-		if (row.tsysSpectrumExists) {
-			tsysSpectrum = row.tsysSpectrum;		
-			tsysSpectrumExists = true;
-		}
-		else
-			tsysSpectrumExists = false;
-		
-		if (row.tantSpectrumExists) {
-			tantSpectrum = row.tantSpectrum;		
-			tantSpectrumExists = true;
-		}
-		else
-			tantSpectrumExists = false;
-		
-		if (row.tantTsysSpectrumExists) {
-			tantTsysSpectrum = row.tantTsysSpectrum;		
-			tantTsysSpectrumExists = true;
-		}
-		else
-			tantTsysSpectrumExists = false;
-		
-		if (row.pwvPathSpectrumExists) {
-			pwvPathSpectrum = row.pwvPathSpectrum;		
-			pwvPathSpectrumExists = true;
-		}
-		else
-			pwvPathSpectrumExists = false;
-		
-		if (row.dpwvPathSpectrumExists) {
-			dpwvPathSpectrum = row.dpwvPathSpectrum;		
-			dpwvPathSpectrumExists = true;
-		}
-		else
-			dpwvPathSpectrumExists = false;
-		
-		if (row.numPolyExists) {
-			numPoly = row.numPoly;		
-			numPolyExists = true;
-		}
-		else
-			numPolyExists = false;
-		
-		if (row.numPolyFreqExists) {
-			numPolyFreq = row.numPolyFreq;		
-			numPolyFreqExists = true;
-		}
-		else
-			numPolyFreqExists = false;
-		
-		if (row.timeOriginExists) {
-			timeOrigin = row.timeOrigin;		
-			timeOriginExists = true;
-		}
-		else
-			timeOriginExists = false;
-		
-		if (row.freqOriginExists) {
-			freqOrigin = row.freqOrigin;		
-			freqOriginExists = true;
-		}
-		else
-			freqOriginExists = false;
-		
-		if (row.phaseCurveExists) {
-			phaseCurve = row.phaseCurve;		
-			phaseCurveExists = true;
-		}
-		else
-			phaseCurveExists = false;
-		
-		if (row.delayCurveExists) {
-			delayCurve = row.delayCurve;		
-			delayCurveExists = true;
-		}
-		else
-			delayCurveExists = false;
-		
-		if (row.ampliCurveExists) {
-			ampliCurve = row.ampliCurve;		
-			ampliCurveExists = true;
-		}
-		else
-			ampliCurveExists = false;
-		
-		if (row.bandpassCurveExists) {
-			bandpassCurve = row.bandpassCurve;		
-			bandpassCurveExists = true;
-		}
-		else
-			bandpassCurveExists = false;
-		
-		if (row.phasediffFlagExists) {
-			phasediffFlag = row.phasediffFlag;		
-			phasediffFlagExists = true;
-		}
-		else
-			phasediffFlagExists = false;
-		
-		if (row.sbgainFlagExists) {
-			sbgainFlag = row.sbgainFlag;		
-			sbgainFlagExists = true;
-		}
-		else
-			sbgainFlagExists = false;
-		
-		if (row.tauFlagExists) {
-			tauFlag = row.tauFlag;		
-			tauFlagExists = true;
-		}
-		else
-			tauFlagExists = false;
 		
 		if (row.tcalFlagExists) {
 			tcalFlag = row.tcalFlag;		
@@ -6048,12 +3022,26 @@ namespace asdm {
 		else
 			tcalFlagExists = false;
 		
+		if (row.tcalSpectrumExists) {
+			tcalSpectrum = row.tcalSpectrum;		
+			tcalSpectrumExists = true;
+		}
+		else
+			tcalSpectrumExists = false;
+		
 		if (row.trxFlagExists) {
 			trxFlag = row.trxFlag;		
 			trxFlagExists = true;
 		}
 		else
 			trxFlagExists = false;
+		
+		if (row.trxSpectrumExists) {
+			trxSpectrum = row.trxSpectrum;		
+			trxSpectrumExists = true;
+		}
+		else
+			trxSpectrumExists = false;
 		
 		if (row.tskyFlagExists) {
 			tskyFlag = row.tskyFlag;		
@@ -6062,12 +3050,26 @@ namespace asdm {
 		else
 			tskyFlagExists = false;
 		
+		if (row.tskySpectrumExists) {
+			tskySpectrum = row.tskySpectrum;		
+			tskySpectrumExists = true;
+		}
+		else
+			tskySpectrumExists = false;
+		
 		if (row.tsysFlagExists) {
 			tsysFlag = row.tsysFlag;		
 			tsysFlagExists = true;
 		}
 		else
 			tsysFlagExists = false;
+		
+		if (row.tsysSpectrumExists) {
+			tsysSpectrum = row.tsysSpectrum;		
+			tsysSpectrumExists = true;
+		}
+		else
+			tsysSpectrumExists = false;
 		
 		if (row.tantFlagExists) {
 			tantFlag = row.tantFlag;		
@@ -6076,6 +3078,13 @@ namespace asdm {
 		else
 			tantFlagExists = false;
 		
+		if (row.tantSpectrumExists) {
+			tantSpectrum = row.tantSpectrum;		
+			tantSpectrumExists = true;
+		}
+		else
+			tantSpectrumExists = false;
+		
 		if (row.tantTsysFlagExists) {
 			tantTsysFlag = row.tantTsysFlag;		
 			tantTsysFlagExists = true;
@@ -6083,31 +3092,38 @@ namespace asdm {
 		else
 			tantTsysFlagExists = false;
 		
-		if (row.pwvPathFlagExists) {
-			pwvPathFlag = row.pwvPathFlag;		
-			pwvPathFlagExists = true;
+		if (row.tantTsysSpectrumExists) {
+			tantTsysSpectrum = row.tantTsysSpectrum;		
+			tantTsysSpectrumExists = true;
 		}
 		else
-			pwvPathFlagExists = false;
+			tantTsysSpectrumExists = false;
+		
+		if (row.phaseDiffFlagExists) {
+			phaseDiffFlag = row.phaseDiffFlag;		
+			phaseDiffFlagExists = true;
+		}
+		else
+			phaseDiffFlagExists = false;
+		
+		if (row.phaseDiffSpectrumExists) {
+			phaseDiffSpectrum = row.phaseDiffSpectrum;		
+			phaseDiffSpectrumExists = true;
+		}
+		else
+			phaseDiffSpectrumExists = false;
 		
 		}	
 	}
 
 	
-	bool SysCalRow::compareNoAutoInc(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval) {
+	bool SysCalRow::compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numReceptor, int numChan) {
 		bool result;
 		result = true;
 		
 	
 		
 		result = result && (this->antennaId == antennaId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->feedId == feedId);
 		
 		if (!result) return false;
 	
@@ -6126,10 +3142,46 @@ namespace asdm {
 		if (!result) return false;
 	
 
+	
+		
+		result = result && (this->feedId == feedId);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numReceptor == numReceptor);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numChan == numChan);
+		
+		if (!result) return false;
+	
+
 		return result;
 	}	
 	
 	
+	
+	bool SysCalRow::compareRequiredValue(int numReceptor, int numChan) {
+		bool result;
+		result = true;
+		
+	
+		if (!(this->numReceptor == numReceptor)) return false;
+	
+
+	
+		if (!(this->numChan == numChan)) return false;
+	
+
+		return result;
+	}
 	
 	
 	/**
@@ -6141,6 +3193,12 @@ namespace asdm {
 	 * @return a boolean.
 	 */
 	bool SysCalRow::equalByRequiredValue(SysCalRow* x) {
+		
+			
+		if (this->numReceptor != x->numReceptor) return false;
+			
+		if (this->numChan != x->numChan) return false;
+			
 		
 		return true;
 	}	

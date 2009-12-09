@@ -203,7 +203,7 @@ struct NRODataRecord
   // 2009/02/26 Takeshi Nakazato  Moved to NROReader
   char *LDATA ;
   // Spectral data for FITS data
-  vector<int> JDATA ;
+  //vector<int> JDATA ;
 } ;
 
 #endif /* NRO_DATA_RECORD_H */

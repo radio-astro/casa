@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="listhistory">
+<task type="function" name="listhistory" category="information">
 	<shortdescription>List the processing history of a dataset:</shortdescription>
 	<description>
 	List the processing history of a dataset:

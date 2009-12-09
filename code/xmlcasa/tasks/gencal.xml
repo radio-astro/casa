@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="gencal" category="calibration">
+	<shortdescription>Specify Calibration Values of Various Types</shortdescription>
+	<description>
+
+        Specify calibration externally.
+
+	</description>
+	<input>
+		<param type="string" name="vis" mustexist="true">
+			<description>Name of input visibility file</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="caltable">
+			<description>The new/existing calibration table</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="caltype">
+			<description>The calibration type: \'amp\',\'ph\',\'sbd\',\'mbd\',\'antpos\',\'antposvla\'</description>
+			<value></value>
+                        <allowed kind="enum">
+                            <value>amp</value>
+                            <value>ph</value>
+                            <value>sbd</value>
+                            <value>mbd</value>
+                            <value>antpos</value>
+                            <value>antposvla</value>
+                        </allowed>
+		</param>
+
+		<param type="string" name="spw">
+
+			<description>Calibration spw(s) selection</description>
+			<value></value>
+		</param>
+		<param type="string" name="antenna">
+			<description>Calibration antenna(s) selection</description>
+			<value></value>
+		</param>
+		<param type="string" name="pol">
+			<description>Calibration polarizations(s) selection</description>
+			<value></value>
+		</param>
+
+		<param type="doubleArray" name="parameter">
+			<description>The calibration values</description>
+			<value></value>
+		</param>
+
+	</input>
+<returns type="void"/>
+
+<example>
+
+     The gencal task provides a means of specifying antenna-based
+     calibration values manually.  The values are put in designated
+     tables and applied to the data using applycal.
+
+     Current antenna-based gencal options (caltype) are:
+        'amp'= amplitude correction
+        'ph' = phase correction
+        'sbd'= single-band delay (phase-frequency slope for each spw)
+        'mbd'= multi-band delay (phase-frequency slope over all spw)
+        'antpos' = ITRF antenna position corrections
+        'antposvla' = VLA-centric antenna position corrections 
+
+     The calibration specifications are not time-variable in the
+     present implementation.  Calibration values can be assigned to
+     each spw, antenna and pol selection, where applicable.  The 
+     same caltable can be specified for multipl runs of gencal, 
+     in which case the specified parameters will be incorporated 
+     cumulatively.  E.g., amplitude parameters (caltype='amp')
+     multiply and phase-like parameters ('ph', 'sbd','mbd','antpos') 
+     add.  'amp' and 'ph' parameters can be incorporated into the 
+     same caltable (in separate runs), but each of the other types
+     require their own unique caltable.   A mechanism for
+     specifying manual corrections via a text file will be provided in
+     the future.
+
+     The caltables are applied to the data by using applycal.  Other
+     calibration tables must also be present, if applicable.
+
+     For antenna position corrections (caltype='antpos'), the antenna 
+     position offsets are specified in the ITRF frame.  For VLA position
+     corrections in the VLA-centric frame, use caltype='antposvla', and gencal
+     will rotate them to ITRF before storing them in the output caltable.
+
+     Keyword arguments:
+
+     vis -- Name of input visibility file
+             default: none.  example: vis='ngc5921.ms'
+     caltable -- Name of input/output caltable.  If it does not
+                  exist, it will be created.  Specifying an
+                  existing table will result in the parameters
+                  being applied cumulatively. Only a single
+                  time-stamp for all calibrations are supported,
+                  currently.  Do not use a caltable
+                  created by gaincal, bandpass, etc.  
+                  default: none.  example: caltable='test.G'
+     caltype -- The calibration parameter type being specified.
+                 Options include:
+                 'amp' = gain (G) amplitude (1 real parameter per
+                         pol, antenna, spw)
+                 'ph'  = gain (G) phase (deg) (1 real parameter per
+                         pol, antenna, spw)
+                 'sbd' = single-band delays (nsec) (1 real parameter 
+                         per pol, antenna, spw)
+                 'mbd' = multi-band delay (nsec) (1 real parameter 
+                         per pol, antenna, spw)
+                 'antpos' = antenna position corrections (m) (3 real
+                            ITRF offset parameters per antenna; spw, pol
+                            selection will be ignored)
+                 'antposvla' = antenna position corrections (m) specified
+                               in the old VLA-centric coordinate system
+                 default: none.
+                 example: caltype='ph'
+     spw -- Spectral window selection for specified parameters. 
+             default: spw='' (specified parameters apply to all spws)
+             example: spw = '2,3,4'
+     antenna -- Antenna selection for specified parameters. 
+                 default: antenna='' (specified parameters apply to all antennas)
+                 example: antenna='EA02, EA03' (specified parameter(s) to
+                           apply to EA02 and EA03 only)
+     pol -- Polarization selection for specified parameters.
+             default: pol='' (specified parameters apply to all polarizations)
+             example: pol='R' (specified parameters to apply to
+                                 R only)
+     parameter -- The calibration parameters, specified as a list, to 
+                   store in the caltable for the spw, antenna, and pol 
+                   selection.  The required length of the list is 
+                   determined by the caltype and the spw, antenna, pol
+                   selection.  One "set" of parameters (e.g., one value
+                   for 'amp', 'ph', etc., three values for 'antpos')
+                   specified the same value for all indicated spw, antenna,
+                   and pol.
+                   OR, 
+                   When specifying a long list of calibration parameter values,
+                   these should be ordered first (fastest) by pol (if pol!=''),
+                   then by antenna (if antenna!=''), and finally (sloweset) by 
+                   spw (if spw!='').  Unspecified selection axes must not be
+                   enumerated in the parameter list
+      
+     Examples:
+
+       gencal(vis='test.ms',caltable='test.G',caltype='amp',
+              spw='',antenna='',pol='',
+              parameter=[3])
+
+         --> Antenna-based gain amplitude corrections for all spws, antennas, 
+              and polarizations will be multiplied by 3.  When applied
+              to visibility data, this correction will produce a
+              corrected visibility than is (1/3*1/3) less than the 
+              uncorrected visibility.
+
+       gencal(vis='test.ms',caltable='test.G',caltype='ph',
+              spw='',antenna='EA03,EA04',pol='',
+              parameter=[45,120])
+
+         --> Gain phase corrections for antennas EA03 and EA04
+              will be adjusted (additive) by 45 and 120 
+              degrees (respectively), for all spws and polarizations.
+              When these phases are applied to visibility data, the
+              visibility phases will decrease or increase by the
+              specified amount where the selected antennas occur
+              first or second (respectively) in each baseline.  E.g., 
+              the phase of baseline EA03-EA04 will change by (-45+120)
+              = + 75 degrees.  Baseline EA01-EA03's phase will change
+              by +45 degrees; baseline EA04-EA05's phase will change
+              by -120 degrees.  The same phase sign convention is
+              used for delay and antenna position corrections.
+
+       gencal(vis='test.ms',caltable='test.G',caltype='ph',
+              spw='',antenna='EA05,EA06',pol='R',
+              parameter=[63,-34])
+
+         --> Gain phase corrections for antennas EA05 and EA06
+              will be adjusted (additive) by 63 and -34 
+              degrees (respectively), in R only, for all spws
+
+       gencal(vis='test.ms',caltable='test.G',caltype='ph',
+              spw='',antenna='EA09,EA10',pol='R,L',
+              parameter=[14,-23,-130,145])
+
+         --> Gain phase corrections in all spws will be adjusted for 
+              antenna EA09 by 14 deg in R and -23 deg in L, and for
+              antenna EA10 by -130 deg in R and 145 deg in L.
+
+       gencal(vis='test.ms',caltable='test.G',caltype='ph',
+              spw='2,3',antenna='EA09,EA10',pol='',
+              parameter=[14,-23,-130,145])
+
+         --> Gain phases corrections in both polarizations will be adjusted for 
+              antenna EA09 by 14 deg in spw 2 and -23 deg in spw 3, and for
+              antenna EA10 by -130 deg in spw 2 and 145 deg in spw 3.
+
+       gencal(vis='test.ms',caltable='test.G',caltype='sbd',
+              spw='2,3',antenna='EA09,EA10',pol='',
+              parameter=[14,-23,-130,145])
+
+         --> Delay corrections in both polarizations will be adjusted for 
+              antenna EA09 by 14 nsec in spw 2 and -23 nsec in spw 3, and for
+              antenna EA10 by -130 nsec in spw 2 and 145 nsec in spw
+              3.  See the above example for caltype='ph' for details
+              of the sign convention adopted when applying delay corrections.
+
+       gencal(vis='test.ms',caltable='test.G',caltype='antpos',
+              antenna='EA09,EA10',
+              parameter=[0.01,0.02,0.03, -0.03,-0.01,-0.02])
+
+         --> Antenna position corrections in meters (in ITRF) for
+              antenna EA09 (dBx=0.01, dBy=0.02, dBz=0.03) and for
+              antenna EA10 (dBx=-0.03, dBy=-0.01, dBz=-0.02)
+              See the above example for caltype='ph' for details
+              of the sign convention adopted when applying antpos 
+              corrections.
+
+       gencal(vis='test.ms',caltable='test.G',caltype='antposvla',
+              antenna='EA09,EA10',
+              parameter=[0.01,0.02,0.03, -0.03,-0.01,-0.02])
+
+         --> Antenna position corrections (in the traditional VLA-centric
+              frame) will be introduced in meters for
+              antenna EA09 (dBx=0.01, dBy=0.02, dBz=0.03) and for
+              antenna EA10 (dBx=-0.03, dBy=-0.01, dBz=-0.02)
+              These offsets will be rotated to the ITRF frame before
+              storing them in the caltable.
+              See the above example for caltype='ph' for details
+              of the sign convention adopted when applying antpos 
+              corrections.
+
+ </example>
+ </task>
+ </casaxml>
+
+

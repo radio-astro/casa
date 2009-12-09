@@ -87,16 +87,16 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
-
-	
-
-	
 #include "CInvalidatingCondition.h"
 using namespace InvalidatingConditionMod;
+	
+
+	
+
+	
+
+	
+
 	
 
 
@@ -139,85 +139,101 @@ class ASDM;
 class CalReductionRow;
 /**
  * The CalReductionTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Generic items describing the data reduction process.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalReduction </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> calReductionId </I></TD> 
+ 		
+ * <TD><I> calReductionId </I></TD>
+ 		 
  * <TD> Tag</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a unique row in the table. </TD>
  * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> numApplied </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of applied calibrations prior the reduction. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> appliedCalibrations </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numApplied </TD> 
+ * <TD> &nbsp;the list of applied calibrations (one string per calibration). </TD>
  * </TR>
 	
  * <TR>
  * <TD> numParam </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> timeReduced </TD> 
- * <TD> ArrayTime </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> calAppliedArray </TD> 
- * <TD> vector<string > </TD>
- * <TD>  numApplied </TD> 
+ * <TD> &nbsp;the number of listed parameters used for calibration. </TD>
  * </TR>
 	
  * <TR>
  * <TD> paramSet </TD> 
  * <TD> vector<string > </TD>
  * <TD>  numParam </TD> 
- * </TR>
-	
- * <TR>
- * <TD> messages </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> software </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> softwareVersion </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the input parameters expressed as (keyword,value) pairs (one string per parameter). </TD>
  * </TR>
 	
  * <TR>
  * <TD> numInvalidConditions </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of invalidating conditions. </TD>
  * </TR>
 	
  * <TR>
  * <TD> invalidConditions </TD> 
  * <TD> vector<InvalidatingConditionMod::InvalidatingCondition > </TD>
  * <TD>  numInvalidConditions </TD> 
+ * <TD> &nbsp;invalidating use cases (one string per case). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> timeReduced </TD> 
+ * <TD> ArrayTime </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the epoch at which the data reduction was finished. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> messages </TD> 
+ * <TD> string </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;messages issued by the data reduction software. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> software </TD> 
+ * <TD> string </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the name of the data reduction software reduction used. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> softwareVersion </TD> 
+ * <TD> string </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;version information about the data reduction software used. </TD>
  * </TR>
 	
 
@@ -295,13 +311,17 @@ public:
 	
  	 * @param numApplied. 
 	
+ 	 * @param appliedCalibrations. 
+	
  	 * @param numParam. 
 	
- 	 * @param timeReduced. 
-	
- 	 * @param calAppliedArray. 
-	
  	 * @param paramSet. 
+	
+ 	 * @param numInvalidConditions. 
+	
+ 	 * @param invalidConditions. 
+	
+ 	 * @param timeReduced. 
 	
  	 * @param messages. 
 	
@@ -309,18 +329,14 @@ public:
 	
  	 * @param softwareVersion. 
 	
- 	 * @param numInvalidConditions. 
-	
- 	 * @param invalidConditions. 
-	
      */
-	CalReductionRow *newRow(int numApplied, int numParam, ArrayTime timeReduced, vector<string > calAppliedArray, vector<string > paramSet, string messages, string software, string softwareVersion, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions);
+	CalReductionRow *newRow(int numApplied, vector<string > appliedCalibrations, int numParam, vector<string > paramSet, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions, ArrayTime timeReduced, string messages, string software, string softwareVersion);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalReductionRow *newRowFull(int numApplied, int numParam, ArrayTime timeReduced, vector<string > calAppliedArray, vector<string > paramSet, string messages, string software, string softwareVersion, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions);
+	CalReductionRow *newRowFull(int numApplied, vector<string > appliedCalibrations, int numParam, vector<string > paramSet, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions, ArrayTime timeReduced, string messages, string software, string softwareVersion);
 
 
 	/**
@@ -401,26 +417,26 @@ public:
 			
  	 * @param numApplied.
  	 		
+ 	 * @param appliedCalibrations.
+ 	 		
  	 * @param numParam.
  	 		
- 	 * @param timeReduced.
- 	 		
- 	 * @param calAppliedArray.
- 	 		
  	 * @param paramSet.
+ 	 		
+ 	 * @param numInvalidConditions.
+ 	 		
+ 	 * @param invalidConditions.
+ 	 		
+ 	 * @param timeReduced.
  	 		
  	 * @param messages.
  	 		
  	 * @param software.
  	 		
  	 * @param softwareVersion.
- 	 		
- 	 * @param numInvalidConditions.
- 	 		
- 	 * @param invalidConditions.
  	 		 
  	 */
-	CalReductionRow* lookup(int numApplied, int numParam, ArrayTime timeReduced, vector<string > calAppliedArray, vector<string > paramSet, string messages, string software, string softwareVersion, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions); 
+	CalReductionRow* lookup(int numApplied, vector<string > appliedCalibrations, int numParam, vector<string > paramSet, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions, ArrayTime timeReduced, string messages, string software, string softwareVersion); 
 
 
 #ifndef WITHOUT_ACS
@@ -440,43 +456,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalReductionTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalReductionTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalReduction (CalReductionTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalReduction (CalReductionTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -555,8 +577,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	CalReductionRow* checkAndAdd(CalReductionRow* x) throw (DuplicateKey, UniquenessViolationException);
+	CalReductionRow* checkAndAdd(CalReductionRow* x) ;
 
 
 
@@ -570,7 +596,7 @@ private:
 	vector<CalReductionRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

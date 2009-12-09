@@ -243,9 +243,25 @@ Note that fg.setmanualflags() can be called multiple times before a call to fg.r
      <value>true</value>
      </param>
     
+     <param type="bool" name="channelavg">
+     <description>Average data over channels before clipping ? [ True / False ]
+     </description>
+     <value>false</value>
+     </param>
+    
      <param type="double" name="quackinterval">
      <description>Quack Length in seconds : example : 30.0</description>
      <value>0.0</value>
+     </param>
+
+     <param type="string" name="quackmode">
+     <description>Quack mode</description>
+     <value>beg</value>
+     </param>
+
+     <param type="bool" name="quackincrement">
+     <description>Quack incrementally?</description>
+     <value>false</value>
      </param>
 
 </input>
@@ -426,6 +442,12 @@ Defines data selection parameters.
      <value>""</value>
      </param>
 
+     <param type="double" name="diameter">
+     <description>Antenna diameter to use. If negative,
+     the default dish sizes stored in the MS are used : example : diameter = '30'
+     </description>
+     <value>-1.0</value>
+     </param>
 <!-- Selection parameters : end -->
  
 </input>
@@ -734,7 +756,7 @@ Executes a flagging run.
      <value>false</value>
      </param>
 </input>
-<returns type="bool"/>
+<returns type="record"/>
 <example>
 </example>
 </method>
@@ -893,10 +915,15 @@ T
    <shortdescription>*** \n Print out a list of saved flag_versions. 
  			  ***</shortdescription>
 <description> 
+Print out the list of flag versions in the MS, unless the parameter printflags=False. The list of names is returned.
 </description>
 <input>
+     <param type="bool" name="printflags">
+     <description>Print flagversions in logger?</description>
+     <value>true</value>
+     </param>
 </input>
-<returns type="bool"/>
+<returns type="stringArray"/>
 <example>
 \begin{verbatim}
 \end{verbatim}

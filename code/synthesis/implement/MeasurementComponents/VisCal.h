@@ -39,7 +39,10 @@
 #include <synthesis/MeasurementComponents/VisVector.h>
 #include <msvis/MSVis/VisSet.h>
 
+#include <msvis/MSVis/VisBuffGroupAcc.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // **********************************************************
 //  VisCal
@@ -51,12 +54,31 @@ class VisCal {
 
 public:
 
-  // Allowed types of VisCal matrices
+  // Allowed types of VisCal matrices - 'correct' order
   //  enum Type{UVMOD,Mf,M,K,B,G,D,C,E,P,T,EP,F};
-  enum Type{Test=0,M,K,B,G,J,D,X,C,P,E,T,F,A};
+  enum Type{Test=0,ANoise,M,KAntPos,K,B,G,J,D,X,C,P,E,T,F,A,ALL};
 
   // Enumeration of parameter types (Complex, Real, or Both)
   enum ParType{Co,Re,CoRe};
+
+  static String nameOfType(Type type) {
+    switch (type) {
+    case ANoise: return "ANoise";
+    case M: return "M";
+    case K: return "K";
+    case B: return "B";
+    case J: return "J";
+    case D: return "D";
+    case X: return "X";
+    case C: return "C";
+    case P: return "P";
+    case E: return "E";
+    case T: return "T";
+    case F: return "F";
+    case A: return "A";
+    default: return "0";
+    }
+  }
 
   VisCal(VisSet& vs);
   
@@ -111,6 +133,10 @@ public:
   // Apply info/params, suitable for logging
   virtual String applyinfo();
 
+  // simulation params - for a VC, sim is apply; for a SVC this will get 
+  // overriden
+  inline virtual String siminfo() { return applyinfo(); };
+
   // Trigger calibration of weights
   inline Bool& calWt() { return calWt_; };
 
@@ -130,6 +156,10 @@ public:
 
   // Set the print level
   inline void setPrtlev(const Int& prtlev) { prtlev_=prtlev; };
+
+  // Baseline index from antenna indices: (assumes a1<=a2 !!)
+  inline Int blnidx(const Int& a1, 
+		    const Int& a2) { return  a1*nAnt() - a1*(a1+1)/2 + a2; };
 
 protected:
 
@@ -230,6 +260,7 @@ protected:
   // Return print (cout) level
   inline Int& prtlev() { return prtlev_; };
 
+
 private:
 
   // Defalt ctor is private
@@ -276,6 +307,9 @@ private:
 
   // Application flag
   Bool applied_;
+
+  // In-focus channel for single-chan solves on multi-chan data
+  Int focusChan_;
 
   // VisVector wrapper (per Spw)
   PtrBlock<VisVector*> V_;
@@ -382,9 +416,6 @@ protected:
   // Update the wt vector for a baseline
   virtual void updateWt(Vector<Float>& wt,const Int& a1,const Int& a2);
 
-  // Baseline index from antenna indices: (assumes a1<=a2 !!)
-  inline Int blnidx(const Int& a1, 
-		    const Int& a2) { return  a1*nAnt() - a1*(a1+1)/2 + a2; };
 
 private:
 

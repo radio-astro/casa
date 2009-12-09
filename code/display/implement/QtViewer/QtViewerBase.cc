@@ -580,7 +580,7 @@ Bool QtViewerBase::dataDisplaysAs(String datatype, String& displaytype) {
   
 
 
-
+bool QtViewerBase::qtviewer_app_exit = false;
 void QtViewerBase::quit() {
   // Close all open panels, which will exit Qt loop.  (Note that the
   // loop might be restarted (and is, in interactive clean, e.g.),
@@ -588,7 +588,8 @@ void QtViewerBase::quit() {
   // objects or exit the process, although the driver program might 
   // do that.  Also, some of the panels may have WA_DeleteOnClose set,
   // which would cause their deletion (see, e.g., QtViewer::createDPG()).
-  
+
+  qtviewer_app_exit = true;
   QtApp::app()->closeAllWindows();  }
     
 

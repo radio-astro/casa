@@ -31,9 +31,14 @@
 
 #include <casa/aips.h>
 #include <msvis/MSVis/VisBuffer.h>
-
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MFrequency.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
+#include <scimath/Mathematics/InterpolateArray1D.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
-
+//forward 
+class VisBuffer;
 // <summary> 
 // </summary>
 
@@ -58,9 +63,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <todo asof="">
 // </todo>
+class VisBufferUtil{
 
-// Make PSF VisBuffer
-void makePSFVisBuffer(VisBuffer& vb);
+public:
+
+  //Empty Constructor
+  VisBufferUtil();
+  // Make PSF VisBuffer
+  void makePSFVisBuffer(VisBuffer& vb);
+  
+
+  //Regrid the data on a new frequency grid (defined by outFreqGrid) , on the frequency 
+  //frame (defined by freqFrame). It will pass back the interpolated data and flags 
+ 
+  static Bool interpolateFrequency(Cube<Complex>& data, 
+				   Cube<Bool>& flags, 
+				   const VisBuffer& vb,
+				   const Vector<Float>& outFreqGrid, const MS::PredefinedColumns whichCol=MS::DATA,
+				   const MFrequency::Types freqFrame=MFrequency::LSRK,
+				   const InterpolateArray1D< Float, Complex>::InterpolationMethod interp = 
+				   (InterpolateArray1D<Float,Complex>::nearestNeighbour));
+
+  // Converts the frequency in this visbuffer to the frame requested
+  static void convertFrequency(Vector<Double>& outFreq, const VisBuffer& vb, 
+			       const MFrequency::Types freqFrame);
+
+ private:
+  static void swapyz(Cube<Bool>& out, const Cube<Bool>& in);
+  static void swapyz(Cube<Complex>& out, const Cube<Complex>& in);
+
+};
 
 } //# NAMESPACE CASA - END
 

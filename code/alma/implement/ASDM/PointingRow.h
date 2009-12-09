@@ -67,9 +67,49 @@ using asdmIDL::PointingRowIDL;
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
-#include <EndianStream.h>
+/*
+#include <Enumerations.h>
+using namespace enumerations;
+ */
 
- 
+
+
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+#include "CDirectionReferenceCode.h"
+using namespace DirectionReferenceCodeMod;
+	
+
+	
+
+	
+
+
+
 using asdm::Angle;
 using asdm::AngularRate;
 using asdm::ArrayTime;
@@ -90,23 +130,27 @@ using asdm::ConversionException;
 using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
-using asdm::EndianOSStream;
-using asdm::EndianISStream;
+/*\file Pointing.h
+    \brief Generated from model's revision "1.52", branch "HEAD"
+*/
 
 namespace asdm {
 
 //class asdm::PointingTable;
 
 
-// class asdm::AntennaRow;
-class AntennaRow;
-
 // class asdm::PointingModelRow;
 class PointingModelRow;
+
+// class asdm::AntennaRow;
+class AntennaRow;
 	
 
 /**
  * The PointingRow class is a row of a PointingTable.
+ * 
+ * Generated from model's revision "1.52", branch "HEAD"
+ *
  */
 class PointingRow {
 friend class asdm::PointingTable;
@@ -132,8 +176,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct PointingRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (PointingRowIDL x) throw(ConversionException);
+	void setFromIDL (PointingRowIDL x) ;
 #endif
 	
 	/**
@@ -141,13 +186,14 @@ public:
 	 * @return The values of this row as an XML string.
 	 */
 	string toXML() const;
-	
+
 	/**
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.
@@ -160,8 +206,8 @@ public:
 	  * @param eiss the EndianISStream to be read.
 	  * @table the PointingTable to which the row built by deserialization will be parented.
 	  */
-	 static PointingRow* fromBin(EndianISStream& eiss, PointingTable& table);
-
+	 static PointingRow* fromBin(EndianISStream& eiss, PointingTable& table);	 
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
@@ -185,217 +231,46 @@ public:
  	/**
  	 * Set timeInterval with the specified ArrayTimeInterval.
  	 * @param timeInterval The ArrayTimeInterval value to which timeInterval is to be set.
+ 	 
  		
+ 			
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setTimeInterval (ArrayTimeInterval timeInterval) throw(IllegalAccessException);
+ 	void setTimeInterval (ArrayTimeInterval timeInterval);
   		
 	
-	// ===> Attribute name, which is optional
+	
+	
+
+
+	
+	// ===> Attribute numSample
 	
 	
 	
-	/**
-	 * The attribute name is optional. Return true if this attribute exists.
-	 * @return true if and only if the name attribute exists. 
-	 */
-	bool isNameExists() const;
+
 	
  	/**
- 	 * Get name, which is optional.
- 	 * @return name as string
- 	 * @throws IllegalAccessException If name does not exist.
+ 	 * Get numSample.
+ 	 * @return numSample as int
  	 */
- 	string getName() const throw(IllegalAccessException);
+ 	int getNumSample() const;
 	
  
  	
  	
  	/**
- 	 * Set name with the specified string.
- 	 * @param name The string value to which name is to be set.
+ 	 * Set numSample with the specified int.
+ 	 * @param numSample The int value to which numSample is to be set.
+ 	 
  		
+ 			
  	 */
- 	void setName (string name);
-		
-	/**
-	 * Mark name, which is an optional field, as non-existent.
-	 */
-	void clearName ();	
+ 	void setNumSample (int numSample);
+  		
 	
 	
-	// ===> Attribute numPoly
-	
-	
-	
-
-	
- 	/**
- 	 * Get numPoly.
- 	 * @return numPoly as int
- 	 */
- 	int getNumPoly() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numPoly with the specified int.
- 	 * @param numPoly The int value to which numPoly is to be set.
- 		
- 	 */
- 	void setNumPoly (int numPoly);
-		
-	
-	
-	
-
-
-	
-	// ===> Attribute timeOrigin
-	
-	
-	
-
-	
- 	/**
- 	 * Get timeOrigin.
- 	 * @return timeOrigin as ArrayTime
- 	 */
- 	ArrayTime getTimeOrigin() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set timeOrigin with the specified ArrayTime.
- 	 * @param timeOrigin The ArrayTime value to which timeOrigin is to be set.
- 		
- 	 */
- 	void setTimeOrigin (ArrayTime timeOrigin);
-		
-	
-	
-	
-
-
-	
-	// ===> Attribute pointingDirection
-	
-	
-	
-
-	
- 	/**
- 	 * Get pointingDirection.
- 	 * @return pointingDirection as vector<vector<Angle > >
- 	 */
- 	vector<vector<Angle > > getPointingDirection() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set pointingDirection with the specified vector<vector<Angle > >.
- 	 * @param pointingDirection The vector<vector<Angle > > value to which pointingDirection is to be set.
- 		
- 	 */
- 	void setPointingDirection (vector<vector<Angle > > pointingDirection);
-		
-	
-	
-	
-
-
-	
-	// ===> Attribute target
-	
-	
-	
-
-	
- 	/**
- 	 * Get target.
- 	 * @return target as vector<vector<Angle > >
- 	 */
- 	vector<vector<Angle > > getTarget() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set target with the specified vector<vector<Angle > >.
- 	 * @param target The vector<vector<Angle > > value to which target is to be set.
- 		
- 	 */
- 	void setTarget (vector<vector<Angle > > target);
-		
-	
-	
-	
-
-
-	
-	// ===> Attribute offset
-	
-	
-	
-
-	
- 	/**
- 	 * Get offset.
- 	 * @return offset as vector<vector<Angle > >
- 	 */
- 	vector<vector<Angle > > getOffset() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set offset with the specified vector<vector<Angle > >.
- 	 * @param offset The vector<vector<Angle > > value to which offset is to be set.
- 		
- 	 */
- 	void setOffset (vector<vector<Angle > > offset);
-		
-
-	
-	// ===> Attribute sourceOffset, which is optional
-	
-	
-	
-	/**
-	 * The attribute sourceOffset is optional. Return true if this attribute exists.
-	 * @return true if and only if the sourceOffset attribute exists. 
-	 */
-	bool isSourceOffsetExists() const;
-	
-
-	
- 	/**
- 	 * Get sourceOffset, which is optional.
- 	 * @return sourceOffset as vector<vector<Angle > >
- 	 * @throws IllegalAccessException If sourceOffset does not exist.
- 	 */
- 	vector<vector<Angle > > getSourceOffset() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set sourceOffset with the specified vector<vector<Angle > >.
- 	 * @param sourceOffset The vector<vector<Angle > > value to which sourceOffset is to be set.
- 		
- 	 */
- 	void setSourceOffset (vector<vector<Angle > > sourceOffset);
-		
-	
-	
-	
-	/**
-	 * Mark sourceOffset, which is an optional field, as non-existent.
-	 */
-	void clearSourceOffset ();
 	
 
 
@@ -408,20 +283,22 @@ public:
 	
  	/**
  	 * Get encoder.
- 	 * @return encoder as vector<Angle >
+ 	 * @return encoder as vector<vector<Angle > >
  	 */
- 	vector<Angle > getEncoder() const;
+ 	vector<vector<Angle > > getEncoder() const;
 	
  
  	
  	
  	/**
- 	 * Set encoder with the specified vector<Angle >.
- 	 * @param encoder The vector<Angle > value to which encoder is to be set.
+ 	 * Set encoder with the specified vector<vector<Angle > >.
+ 	 * @param encoder The vector<vector<Angle > > value to which encoder is to be set.
+ 	 
  		
+ 			
  	 */
- 	void setEncoder (vector<Angle > encoder);
-		
+ 	void setEncoder (vector<vector<Angle > > encoder);
+  		
 	
 	
 	
@@ -446,48 +323,195 @@ public:
  	/**
  	 * Set pointingTracking with the specified bool.
  	 * @param pointingTracking The bool value to which pointingTracking is to be set.
+ 	 
  		
+ 			
  	 */
  	void setPointingTracking (bool pointingTracking);
-		
+  		
 	
-	// ===> Attribute phaseTracking, which is optional
+	
 	
 
-	/**
-	 * The attribute phaseTracking is optional. Return true if this attribute exists.
-	 * @return true if and only if the phaseTracking attribute exists. 
-	 */
-	bool isPhaseTrackingExists() const;
+
+	
+	// ===> Attribute usePolynomials
 	
 	
 	
 
 	
  	/**
- 	 * Get phaseTracking, which is optional.
- 	 * @return phaseTracking as bool
- 	 * @throws IllegalAccessException If phaseTracking does not exist.
+ 	 * Get usePolynomials.
+ 	 * @return usePolynomials as bool
  	 */
- 	bool getPhaseTracking() const throw(IllegalAccessException);
+ 	bool getUsePolynomials() const;
 	
  
  	
  	
  	/**
- 	 * Set phaseTracking with the specified bool.
- 	 * @param phaseTracking The bool value to which phaseTracking is to be set.
+ 	 * Set usePolynomials with the specified bool.
+ 	 * @param usePolynomials The bool value to which usePolynomials is to be set.
+ 	 
  		
+ 			
  	 */
- 	void setPhaseTracking (bool phaseTracking);
-		
+ 	void setUsePolynomials (bool usePolynomials);
+  		
 	
 	
 	
-	/**
-	 * Mark phaseTracking, which is an optional field, as non-existent.
-	 */
-	void clearPhaseTracking ();	
+
+
+	
+	// ===> Attribute timeOrigin
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get timeOrigin.
+ 	 * @return timeOrigin as ArrayTime
+ 	 */
+ 	ArrayTime getTimeOrigin() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set timeOrigin with the specified ArrayTime.
+ 	 * @param timeOrigin The ArrayTime value to which timeOrigin is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setTimeOrigin (ArrayTime timeOrigin);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numTerm
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numTerm.
+ 	 * @return numTerm as int
+ 	 */
+ 	int getNumTerm() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numTerm with the specified int.
+ 	 * @param numTerm The int value to which numTerm is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumTerm (int numTerm);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute pointingDirection
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get pointingDirection.
+ 	 * @return pointingDirection as vector<vector<Angle > >
+ 	 */
+ 	vector<vector<Angle > > getPointingDirection() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set pointingDirection with the specified vector<vector<Angle > >.
+ 	 * @param pointingDirection The vector<vector<Angle > > value to which pointingDirection is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setPointingDirection (vector<vector<Angle > > pointingDirection);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute target
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get target.
+ 	 * @return target as vector<vector<Angle > >
+ 	 */
+ 	vector<vector<Angle > > getTarget() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set target with the specified vector<vector<Angle > >.
+ 	 * @param target The vector<vector<Angle > > value to which target is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setTarget (vector<vector<Angle > > target);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute offset
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get offset.
+ 	 * @return offset as vector<vector<Angle > >
+ 	 */
+ 	vector<vector<Angle > > getOffset() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set offset with the specified vector<vector<Angle > >.
+ 	 * @param offset The vector<vector<Angle > > value to which offset is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setOffset (vector<vector<Angle > > offset);
+  		
+	
+	
+	
 
 
 	
@@ -508,7 +532,7 @@ public:
  	 * @return overTheTop as bool
  	 * @throws IllegalAccessException If overTheTop does not exist.
  	 */
- 	bool getOverTheTop() const throw(IllegalAccessException);
+ 	bool getOverTheTop() const;
 	
  
  	
@@ -516,6 +540,7 @@ public:
  	/**
  	 * Set overTheTop with the specified bool.
  	 * @param overTheTop The bool value to which overTheTop is to be set.
+ 	 
  		
  	 */
  	void setOverTheTop (bool overTheTop);
@@ -527,6 +552,170 @@ public:
 	 * Mark overTheTop, which is an optional field, as non-existent.
 	 */
 	void clearOverTheTop ();
+	
+
+
+	
+	// ===> Attribute sourceOffset, which is optional
+	
+	
+	
+	/**
+	 * The attribute sourceOffset is optional. Return true if this attribute exists.
+	 * @return true if and only if the sourceOffset attribute exists. 
+	 */
+	bool isSourceOffsetExists() const;
+	
+
+	
+ 	/**
+ 	 * Get sourceOffset, which is optional.
+ 	 * @return sourceOffset as vector<vector<Angle > >
+ 	 * @throws IllegalAccessException If sourceOffset does not exist.
+ 	 */
+ 	vector<vector<Angle > > getSourceOffset() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set sourceOffset with the specified vector<vector<Angle > >.
+ 	 * @param sourceOffset The vector<vector<Angle > > value to which sourceOffset is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSourceOffset (vector<vector<Angle > > sourceOffset);
+		
+	
+	
+	
+	/**
+	 * Mark sourceOffset, which is an optional field, as non-existent.
+	 */
+	void clearSourceOffset ();
+	
+
+
+	
+	// ===> Attribute sourceOffsetReferenceCode, which is optional
+	
+	
+	
+	/**
+	 * The attribute sourceOffsetReferenceCode is optional. Return true if this attribute exists.
+	 * @return true if and only if the sourceOffsetReferenceCode attribute exists. 
+	 */
+	bool isSourceOffsetReferenceCodeExists() const;
+	
+
+	
+ 	/**
+ 	 * Get sourceOffsetReferenceCode, which is optional.
+ 	 * @return sourceOffsetReferenceCode as DirectionReferenceCodeMod::DirectionReferenceCode
+ 	 * @throws IllegalAccessException If sourceOffsetReferenceCode does not exist.
+ 	 */
+ 	DirectionReferenceCodeMod::DirectionReferenceCode getSourceOffsetReferenceCode() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set sourceOffsetReferenceCode with the specified DirectionReferenceCodeMod::DirectionReferenceCode.
+ 	 * @param sourceOffsetReferenceCode The DirectionReferenceCodeMod::DirectionReferenceCode value to which sourceOffsetReferenceCode is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSourceOffsetReferenceCode (DirectionReferenceCodeMod::DirectionReferenceCode sourceOffsetReferenceCode);
+		
+	
+	
+	
+	/**
+	 * Mark sourceOffsetReferenceCode, which is an optional field, as non-existent.
+	 */
+	void clearSourceOffsetReferenceCode ();
+	
+
+
+	
+	// ===> Attribute sourceOffsetEquinox, which is optional
+	
+	
+	
+	/**
+	 * The attribute sourceOffsetEquinox is optional. Return true if this attribute exists.
+	 * @return true if and only if the sourceOffsetEquinox attribute exists. 
+	 */
+	bool isSourceOffsetEquinoxExists() const;
+	
+
+	
+ 	/**
+ 	 * Get sourceOffsetEquinox, which is optional.
+ 	 * @return sourceOffsetEquinox as ArrayTime
+ 	 * @throws IllegalAccessException If sourceOffsetEquinox does not exist.
+ 	 */
+ 	ArrayTime getSourceOffsetEquinox() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set sourceOffsetEquinox with the specified ArrayTime.
+ 	 * @param sourceOffsetEquinox The ArrayTime value to which sourceOffsetEquinox is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSourceOffsetEquinox (ArrayTime sourceOffsetEquinox);
+		
+	
+	
+	
+	/**
+	 * Mark sourceOffsetEquinox, which is an optional field, as non-existent.
+	 */
+	void clearSourceOffsetEquinox ();
+	
+
+
+	
+	// ===> Attribute sampledTimeInterval, which is optional
+	
+	
+	
+	/**
+	 * The attribute sampledTimeInterval is optional. Return true if this attribute exists.
+	 * @return true if and only if the sampledTimeInterval attribute exists. 
+	 */
+	bool isSampledTimeIntervalExists() const;
+	
+
+	
+ 	/**
+ 	 * Get sampledTimeInterval, which is optional.
+ 	 * @return sampledTimeInterval as vector<ArrayTimeInterval >
+ 	 * @throws IllegalAccessException If sampledTimeInterval does not exist.
+ 	 */
+ 	vector<ArrayTimeInterval > getSampledTimeInterval() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set sampledTimeInterval with the specified vector<ArrayTimeInterval >.
+ 	 * @param sampledTimeInterval The vector<ArrayTimeInterval > value to which sampledTimeInterval is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSampledTimeInterval (vector<ArrayTimeInterval > sampledTimeInterval);
+		
+	
+	
+	
+	/**
+	 * Mark sampledTimeInterval, which is an optional field, as non-existent.
+	 */
+	void clearSampledTimeInterval ();
 	
 
 
@@ -553,10 +742,13 @@ public:
  	/**
  	 * Set antennaId with the specified Tag.
  	 * @param antennaId The Tag value to which antennaId is to be set.
+ 	 
  		
+ 			
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setAntennaId (Tag antennaId) throw(IllegalAccessException);
+ 	void setAntennaId (Tag antennaId);
   		
 	
 	
@@ -582,10 +774,12 @@ public:
  	/**
  	 * Set pointingModelId with the specified int.
  	 * @param pointingModelId The int value to which pointingModelId is to be set.
+ 	 
  		
+ 			
  	 */
  	void setPointingModelId (int pointingModelId);
-		
+  		
 	
 	
 	
@@ -595,21 +789,6 @@ public:
 	// Links //
 	///////////
 	
-	
-
-	
-		
-	/**
-	 * antennaId pointer to the row in the Antenna table having Antenna.antennaId == antennaId
-	 * @return a AntennaRow*
-	 * 
-	 
-	 */
-	 AntennaRow* getAntennaUsingAntennaId();
-	 
-
-	
-
 	
 
 	
@@ -628,17 +807,33 @@ public:
 	
 
 	
+
+	
+		
+	/**
+	 * antennaId pointer to the row in the Antenna table having Antenna.antennaId == antennaId
+	 * @return a AntennaRow*
+	 * 
+	 
+	 */
+	 AntennaRow* getAntennaUsingAntennaId();
+	 
+
+	
+
+	
 	
 	
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this PointingRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag antennaId, ArrayTimeInterval timeInterval, int pointingModelId, int numPoly, ArrayTime timeOrigin, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, vector<Angle > encoder, bool pointingTracking);
+	bool compareNoAutoInc(Tag antennaId, ArrayTimeInterval timeInterval, int numSample, vector<vector<Angle > > encoder, bool pointingTracking, bool usePolynomials, ArrayTime timeOrigin, int numTerm, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, int pointingModelId);
+	
 	
 
 	
-	bool compareRequiredValue(int pointingModelId, int numPoly, ArrayTime timeOrigin, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, vector<Angle > encoder, bool pointingTracking); 
+	bool compareRequiredValue(int numSample, vector<vector<Angle > > encoder, bool pointingTracking, bool usePolynomials, ArrayTime timeOrigin, int numTerm, vector<vector<Angle > > pointingDirection, vector<vector<Angle > > target, vector<vector<Angle > > offset, int pointingModelId); 
 		 
 	
 	/**
@@ -702,27 +897,53 @@ private:
 	// ===> Attribute timeInterval
 	
 	
+
 	ArrayTimeInterval timeInterval;
+
 	
 	
  	
 
 	
-	// ===> Attribute name, which is optional
+	// ===> Attribute numSample
 	
 	
-	bool nameExists;
-	
-	string name;
+
+	int numSample;
+
 	
 	
  	
 
 	
-	// ===> Attribute numPoly
+	// ===> Attribute encoder
 	
 	
-	int numPoly;
+
+	vector<vector<Angle > > encoder;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute pointingTracking
+	
+	
+
+	bool pointingTracking;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute usePolynomials
+	
+	
+
+	bool usePolynomials;
+
 	
 	
  	
@@ -731,7 +952,20 @@ private:
 	// ===> Attribute timeOrigin
 	
 	
+
 	ArrayTime timeOrigin;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numTerm
+	
+	
+
+	int numTerm;
+
 	
 	
  	
@@ -740,7 +974,9 @@ private:
 	// ===> Attribute pointingDirection
 	
 	
+
 	vector<vector<Angle > > pointingDirection;
+
 	
 	
  	
@@ -749,7 +985,9 @@ private:
 	// ===> Attribute target
 	
 	
+
 	vector<vector<Angle > > target;
+
 	
 	
  	
@@ -758,7 +996,22 @@ private:
 	// ===> Attribute offset
 	
 	
+
 	vector<vector<Angle > > offset;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute overTheTop, which is optional
+	
+	
+	bool overTheTopExists;
+	
+
+	bool overTheTop;
+
 	
 	
  	
@@ -769,42 +1022,48 @@ private:
 	
 	bool sourceOffsetExists;
 	
+
 	vector<vector<Angle > > sourceOffset;
+
 	
 	
  	
 
 	
-	// ===> Attribute encoder
+	// ===> Attribute sourceOffsetReferenceCode, which is optional
 	
 	
-	vector<Angle > encoder;
+	bool sourceOffsetReferenceCodeExists;
+	
+
+	DirectionReferenceCodeMod::DirectionReferenceCode sourceOffsetReferenceCode;
+
 	
 	
  	
 
 	
-	// ===> Attribute pointingTracking
+	// ===> Attribute sourceOffsetEquinox, which is optional
 	
 	
-	bool pointingTracking;
+	bool sourceOffsetEquinoxExists;
+	
+
+	ArrayTime sourceOffsetEquinox;
+
 	
 	
-	// ===> Attribute phaseTracking, which is optional
+ 	
+
+	
+	// ===> Attribute sampledTimeInterval, which is optional
 	
 	
-	bool phaseTrackingExists;
+	bool sampledTimeIntervalExists;
 	
-	bool phaseTracking;
-	
-	
-	
-	// ===> Attribute overTheTop, which is optional
-	
-	
-	bool overTheTopExists;
-	
-	bool overTheTop;
+
+	vector<ArrayTimeInterval > sampledTimeInterval;
+
 	
 	
  	
@@ -817,7 +1076,9 @@ private:
 	// ===> Attribute antennaId
 	
 	
+
 	Tag antennaId;
+
 	
 	
  	
@@ -826,7 +1087,9 @@ private:
 	// ===> Attribute pointingModelId
 	
 	
+
 	int pointingModelId;
+
 	
 	
  	
@@ -838,13 +1101,13 @@ private:
 	
 		
 
-	 
 
 	
 
 	
 		
 
+	 
 
 	
 

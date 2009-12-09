@@ -674,19 +674,22 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   else {
     Bool del;
-    IPosition s(flags.shape());
+    //    IPosition s(flags.shape());
+    const IPosition &fs=flags.shape();
+    std::vector<Int> s(fs.begin(),fs.end());
+    
     Bool gridcopy;
     DComplex *gridstor=griddedData2.getStorage(gridcopy);
     ggrid(uvw.getStorage(del),
 	    dphase.getStorage(del),
 	    datStorage,
-	    &s(0),
-	    &s(1),
+	    &s[0],
+	    &s[1],
 	    &idopsf,
 	    flags.getStorage(del),
 	    rowFlags.getStorage(del),
 	    wgtStorage,
-	    &s(2),
+	    &s[2],
 	    &row,
 	    uvScale.getStorage(del),
 	    uvOffset.getStorage(del),
@@ -848,15 +851,18 @@ void GridFT::get(VisBuffer& vb, Int row)
   else {
     Bool del;
     
-    IPosition s(data.shape());
+    //    IPosition s(data.shape());
+    const IPosition &fs=data.shape();
+    std::vector<Int> s(fs.begin(), fs.end());
+    
     dgrid(uvw.getStorage(del),
 	    dphase.getStorage(del),
 	    datStorage,
-	    &s(0),
-	    &s(1),
+	    &s[0],
+	    &s[1],
 	    flags.getStorage(del),
 	    rowFlags.getStorage(del),
-	    &s(2),
+	    &s[2],
 	    &row,
 	    uvScale.getStorage(del),
 	    uvOffset.getStorage(del),

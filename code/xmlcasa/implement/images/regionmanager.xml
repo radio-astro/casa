@@ -160,8 +160,8 @@ The \regionmanager\ has a command line interface, but there are plans
 to have it interact directly with the 
 <link anchor="">CASA viewer</link>\tool. in the future.
 Currently the only way to interact is to save the regions created
-with the viewer to a file, and use the \regionmanager\ function
-fromfiletorecord to read the contents of the file.
+with the viewer to a file or as a region in the image , and use the \regionmanager\ function
+fromfiletorecord or fromtabletorecord, repsectively, to bring the regions in the CLI.
 
 It is probably fair to say that for the simplest regions, such as a 
 pixel box, there is little to choose between making a region with the  
@@ -1462,6 +1462,52 @@ of strings (else \glish\ will take the empty string as a region).
 </example>
 </method>
 
+
+<method type="function" name="tofile">
+   <shortdescription>Create a region record file that can be read by from filetorecord.</shortdescription>
+   
+<input>  
+     <param type="string" direction="in" name="filename">
+     <description>List of files containing the Image Regions</description>
+     <value></value>
+     <choice>File name(s)</choice>
+     </param>
+
+     <param type="any" direction="in" name="region">
+     <description>region record/dict to store in the file</description>
+     <any type="record"/>
+     <value></value>
+     </param>
+
+
+
+</input>
+
+<returns type="bool"></returns>
+
+<description>
+This function is to store a region created by the regionmanager in a disk file for future use
+
+</description>
+
+<example>
+\begin{verbatim}
+- img = ia.open('hcn')
+- imcs=ia.coordsys()
+- blc = ['16:28:25.50',  '+040.49.05.61']
+- trc = ['16:24:28.67', '+041.45.28.43']
+- r1 = rg.wbox(blc=blc,trc=trc,pixelaxes=[0,1],csys=imcs.torecord())
+- rg.tofile('myboxregion', r1)
+- r1readback=rg.fromfiletorecord('myboxregion')
+\end{verbatim}
+ 
+In this example we create a box region using world coordinates for blc and trc. We save that on disk in a file called {\tt 'myboxregion'}.
+Then we read it back using the function rg.fromfiletorecord and store it in a variable {\tt r1readback}. {\tt r1} and {\tt r1readback} should be
+identical. 
+
+</example>
+
+</method>
  
    <method type="function" name="fromglobaltotable">
    <shortdescription>Save regions into a Table</shortdescription>

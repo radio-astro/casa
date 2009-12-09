@@ -26,9 +26,11 @@
 //# $Id: $
 #include <xmlcasa/plotms/plotms_cmpt.h>
 
-#include <casaqt/PlotterImplementations/PlotterImplementations.h>
+#include <plotms/PlotMS/PlotMSDBusApp.h>
 #include <xmlcasa/StdCasa/CasacSupport.h>
-#include <display/QtViewer/QtApp.h>
+#include <xmlcasa/utils/dbus_cmpt.h>
+
+#include <unistd.h>
 
 namespace casac {
 
@@ -36,96 +38,132 @@ namespace casac {
 // PLOTMS DEFINITIONS //
 ////////////////////////
 
+// Static //
+
+const unsigned int plotms::LAUNCH_WAIT_INTERVAL_US = 1000;
+const unsigned int plotms::LAUNCH_TOTAL_WAIT_US    = 5000000;
+
+
 // Constructors/Destructors //
 
-plotms::plotms() : itsCurrentPlotMS_(NULL), itsWatcher_(this) { }
+plotms::plotms() : itsWatcher_(*this) { }
 
-plotms::~plotms() {
-    if(itsCurrentPlotMS_) delete itsCurrentPlotMS_;
-}
+plotms::~plotms() { closeApp(); }
 
 
 // Public Methods //
 
-// convenience macro
-#define PC_PMSP                                                               \
-    PlotMSParameters& p = (itsCurrentPlotMS_ != NULL) ?                       \
-            itsCurrentPlotMS_->getParameters() : itsParameters_;
+// Convenience macros for setting/getting a single value using a record.
+#define SETSINGLE(METHOD, PKEY, PVALUE)                                       \
+    Record params;                                                            \
+    params.define(PlotMSDBusApp::PARAM_##PKEY, PVALUE);                       \
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, itsDBusName_,             \
+            PlotMSDBusApp::METHOD_##METHOD, params, true);
 
-void plotms::setLogLevel(const string& logLevel, const bool logDebug) {
-    bool ok;
-    PlotMSLogger::Level level = PlotMSLogger::level(logLevel, &ok);
+#define SETSINGLEPLOT(PKEY, PVALUE)                                           \
+    Record params;                                                            \
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);                 \
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately); \
+    params.define(PlotMSDBusApp::PARAM_##PKEY, PVALUE);                       \
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, itsDBusName_,             \
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);
 
-    // use current log level if invalid
-    if(!ok) level = PlotMSLogger::level(getLogLevel());
+#define GETSINGLE(METHOD, PKEY, PTYPE, PASTYPE, PDEFVAL)                      \
+    Record result;                                                            \
+    QtDBusXmlApp::dbusXmlCall(dbus::FROM_NAME, itsDBusName_,                  \
+            PlotMSDBusApp::METHOD_##METHOD, Record(), result);                \
+    if(result.isDefined(PlotMSDBusApp::PARAM_##PKEY) &&                       \
+       result.dataType(PlotMSDBusApp::PARAM_##PKEY) == PTYPE )                \
+        return result. PASTYPE (PlotMSDBusApp::PARAM_##PKEY);                 \
+    else return PDEFVAL;
 
-    PC_PMSP
-    p.setLogLevel(level, logDebug);
+#define GETSINGLEPLOT(PKEY, PTYPE, PASTYPE, PDEFVAL)                          \
+    Record params;                                                            \
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);                 \
+    Record result;                                                            \
+    QtDBusXmlApp::dbusXmlCall(dbus::FROM_NAME, itsDBusName_,                  \
+            PlotMSDBusApp::METHOD_GETPLOTPARAMS, params, result);             \
+    if(result.isDefined(PlotMSDBusApp::PARAM_##PKEY) &&                       \
+       result.dataType(PlotMSDBusApp::PARAM_##PKEY) == PTYPE )                \
+        return result. PASTYPE (PlotMSDBusApp::PARAM_##PKEY);                 \
+    else return PDEFVAL;
+
+#define GETSINGLEPLOTREC(PKEY)                                                \
+    Record params;                                                            \
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);                 \
+    Record result;                                                            \
+    QtDBusXmlApp::dbusXmlCall(dbus::FROM_NAME, itsDBusName_,                  \
+            PlotMSDBusApp::METHOD_GETPLOTPARAMS, params, result);             \
+    if(result.isDefined(PlotMSDBusApp::PARAM_##PKEY) &&                       \
+       result.dataType(PlotMSDBusApp::PARAM_##PKEY) == TpRecord)              \
+        return fromRecord(result.asRecord(PlotMSDBusApp::PARAM_##PKEY));      \
+    else return new record();
+
+#define GETSINGLEBOOL(METHOD, PKEY) GETSINGLE(METHOD,PKEY,TpBool,asBool,false)
+#define GETSINGLESTR(METHOD, PKEY) GETSINGLE(METHOD,PKEY,TpString,asString,"")
+#define GETSINGLEINT(METHOD, PKEY) GETSINGLE(METHOD, PKEY, TpInt, asInt, 0)
+
+#define GETSINGLEPLOTSTR(PKEY) GETSINGLEPLOT(PKEY, TpString, asString, "")
+
+void plotms::setLogFilename(const std::string& logFilename) {
+    if(itsDBusName_.empty()) itsLogFilename_ = logFilename;
+    else {
+        SETSINGLE(SETLOGPARAMS, FILENAME, logFilename)
+    }
 }
-
-string plotms::getLogLevel() {
-    const PC_PMSP
-    return PlotMSLogger::level(p.logLevel());
-}
-
-bool plotms::getLogDebug() {
-    const PC_PMSP
-    return p.logDebug();
-}
-
-void plotms::setClearSelectionOnAxesChange(const bool clearSelection) {
-    PC_PMSP
-    p.setClearSelectionsOnAxesChange(clearSelection);
-}
-
-bool plotms::getClearSelectionOnAxesChange() {
-    const PC_PMSP
-    return p.clearSelectionsOnAxesChange();
-}
-
-void plotms::setCachedImageSize(const int width, const int height) {
-    PC_PMSP
-    p.setCachedImageSize(width, height);
-}
-
-void plotms::setCachedImageSizeToScreenResolution() {
-    PC_PMSP
-    p.setCachedImageSizeToResolution();
-}
-
-int plotms::getCachedImageWidth() {
-    const PC_PMSP
-    return p.cachedImageSize().first;
-}
-
-int plotms::getCachedImageHeight() {
-    const PC_PMSP
-    return p.cachedImageSize().second;
-}
-
-
-void plotms::setPlotMSFilename(const string& msFilename2,
-        const bool updateImmediately, const int plotIndex2) {
-    int plotIndex = plotIndex2;
-    bool resized = plotParameters(plotIndex);
-    PlotMSSinglePlotParameters& p = itsPlotParameters_[plotIndex];
-    String msFilename(msFilename2);
-    if(!resized && p.filename() == msFilename) return;
-    p.setFilename(msFilename);
-    if(updateImmediately && itsCurrentPlotMS_ != NULL &&
-       itsCurrentPlotMS_->guiShown()) {
-        if(resized)
-            itsCurrentPlotMS_->addSinglePlot(&p);
-        else
-            *itsCurrentPlotMS_->getPlotManager().singlePlotParameters(
-                    plotIndex) = p;
+string plotms::getLogFilename() {
+    if(itsDBusName_.empty()) return itsLogFilename_;
+    else {
+        GETSINGLESTR(GETLOGPARAMS, FILENAME)
     }
 }
 
-string plotms::getPlotMSFilename(const int plotIndex) {
-    if(plotIndex < 0 || plotIndex >= (int)itsPlotParameters_.size()) return "";
-    else return itsPlotParameters_[plotIndex].filename();
+void plotms::setLogFilter(const std::string& priority) {
+    if(itsDBusName_.empty()) itsLogFilter_ = priority;
+    else {
+        SETSINGLE(SETLOGPARAMS, PRIORITY, priority)
+    }
 }
+string plotms::getLogFilter() {
+    if(itsDBusName_.empty()) return itsLogFilter_;
+    else {
+        GETSINGLESTR(GETLOGPARAMS, PRIORITY)
+    }
+}
+
+void plotms::setClearSelectionOnAxesChange(const bool clearSelection) {
+    launchApp();
+    SETSINGLE(SETPLOTMSPARAMS, CLEARSELECTIONS, clearSelection) }
+bool plotms::getClearSelectionOnAxesChange() {
+    launchApp();
+    GETSINGLEBOOL(GETPLOTMSPARAMS, CLEARSELECTIONS) }
+
+void plotms::setCachedImageSize(const int width, const int height) {
+    launchApp();
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_WIDTH, width);
+    params.define(PlotMSDBusApp::PARAM_HEIGHT, height);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, itsDBusName_,
+            PlotMSDBusApp::METHOD_SETPLOTMSPARAMS, params, true);
+}
+
+void plotms::setCachedImageSizeToScreenResolution() {
+    callAsync(PlotMSDBusApp::METHOD_SETCACHEDIMAGESIZETOSCREENRES); }
+int plotms::getCachedImageWidth() {
+    launchApp();
+    GETSINGLEINT(GETPLOTMSPARAMS, WIDTH) }
+int plotms::getCachedImageHeight() {
+    launchApp();
+    GETSINGLEINT(GETPLOTMSPARAMS, HEIGHT) }
+
+
+void plotms::setPlotMSFilename(const string& msFilename,
+        const bool updateImmediately, const int plotIndex) {
+    launchApp();
+    SETSINGLEPLOT(FILENAME, msFilename) }
+string plotms::getPlotMSFilename(const int plotIndex) {
+    launchApp();
+    GETSINGLEPLOTSTR(FILENAME) }
 
 void plotms::setPlotMSSelection(const string& field, const string& spw,
         const string& timerange, const string& uvrange,
@@ -133,6 +171,7 @@ void plotms::setPlotMSSelection(const string& field, const string& spw,
         const string& array, const string& msselect,
         const bool updateImmediately, const int plotIndex) {
     PlotMSSelection sel;
+    
     sel.setField(field);
     sel.setSpw(spw);
     sel.setTimerange(timerange);
@@ -142,288 +181,248 @@ void plotms::setPlotMSSelection(const string& field, const string& spw,
     sel.setCorr(corr);
     sel.setArray(array);
     sel.setMsselect(msselect);
-    setPlotMSSelection(sel, updateImmediately, plotIndex);
+    
+    setPlotMSSelection_(sel, updateImmediately, plotIndex);
 }
 
 void plotms::setPlotMSSelectionRec(const record& selection,
 		const bool updateImmediately, const int plotIndex) {
+    Record* sel1 = toRecord(selection);
     PlotMSSelection sel;
-    sel.fromRecord(*toRecord(selection));
-    setPlotMSSelection(sel, updateImmediately, plotIndex);
+    sel.fromRecord(*sel1);
+    delete sel1;
+    
+    setPlotMSSelection_(sel, updateImmediately, plotIndex);
 }
 
 record* plotms::getPlotMSSelection(const int plotIndex) {
-    if(plotIndex < 0 || plotIndex >= (int)itsPlotParameters_.size())
-        return new record();
-    else
-    	return fromRecord(
-    			itsPlotParameters_[plotIndex].selection().toRecord());
-}
+    launchApp();
+    GETSINGLEPLOTREC(SELECTION) }
 
-void plotms::setPlotMSAveraging(const bool channel, const double channelValue,
-        const bool time, const double timeValue, const bool scan,
-        const bool field, const bool baseline, const bool antenna,
-        const bool spw, const bool updateImmediately, const int plotIndex) {
+void plotms::setPlotMSAveraging(const string& channel, const string& time,
+        const bool scan, const bool field, const bool baseline,
+        const bool antenna, const bool spw, const bool updateImmediately,
+        const int plotIndex) {
     PlotMSAveraging avg;
+    
     avg.setChannel(channel);
-    avg.setChannelValue(channelValue);
     avg.setTime(time);
-    avg.setTimeValue(timeValue);
     avg.setScan(scan);
     avg.setField(field);
     avg.setBaseline(baseline);
     avg.setAntenna(antenna);
     avg.setSpw(spw);
-    setPlotMSAveraging(avg, updateImmediately, plotIndex);
+    
+    setPlotMSAveraging_(avg, updateImmediately, plotIndex);
 }
 
 void plotms::setPlotMSAveragingRec(const record& averaging,
 		const bool updateImmediately, const int plotIndex) {
+    Record* avg1 = toRecord(averaging);
     PlotMSAveraging avg;
-    avg.fromRecord(*toRecord(averaging));
-    setPlotMSAveraging(avg, updateImmediately, plotIndex);
+    avg.fromRecord(*avg1);
+    delete avg1;
+    
+    setPlotMSAveraging_(avg, updateImmediately, plotIndex);
 }
 
 record* plotms::getPlotMSAveraging(const int plotIndex) {
-    if(plotIndex < 0 || plotIndex >= (int)itsPlotParameters_.size())
-        return new record();
-    else
-    	return fromRecord(
-    			itsPlotParameters_[plotIndex].averaging().toRecord());
-}
+    launchApp();
+    GETSINGLEPLOTREC(AVERAGING) }
 
 
 void plotms::setPlotXAxis(const string& xAxis, const string& xDataColumn,
 		const bool updateImmediately, const int plotIndex) {
-    bool ok;
-    PMS::Axis axis = PMS::axis(xAxis, &ok);
-    if(!ok) return;
-    PMS::DataColumn data = PMS::dataColumn(xDataColumn, &ok);
-    if(!ok) data = PMS::DEFAULT_DATACOLUMN;
-    setPlotAxes(axis, axis, data, data, true, false, updateImmediately,
-                plotIndex);
-}
-
+    setPlotAxes(xAxis, xDataColumn, "", "", updateImmediately, plotIndex); }
 void plotms::setPlotYAxis(const string& yAxis, const string& yDataColumn,
 		const bool updateImmediately, const int plotIndex) {
-    bool ok;
-    PMS::Axis axis = PMS::axis(yAxis, &ok);
-    if(!ok) return;
-    PMS::DataColumn data = PMS::dataColumn(yDataColumn, &ok);
-    if(!ok) data = PMS::DEFAULT_DATACOLUMN;
-    setPlotAxes(axis, axis, data, data, false, true, updateImmediately,
-                plotIndex);
-}
+    setPlotAxes("", "", yAxis, yDataColumn, updateImmediately, plotIndex); }
 
 void plotms::setPlotAxes(const string& xAxis, const string& yAxis,
         const string& xDataColumn, const string& yDataColumn,
         const bool updateImmediately, const int plotIndex) {
-    bool useX, useY, ok;
-    PMS::Axis x = PMS::axis(xAxis, &useX), y = PMS::axis(yAxis, &useY);
-    if(!useX && !useY) return;
-    PMS::DataColumn xd = PMS::dataColumn(xDataColumn, &ok);
-    if(!ok) xd = PMS::DEFAULT_DATACOLUMN;
-    PMS::DataColumn yd = PMS::dataColumn(yDataColumn, &ok);
-    if(!ok) yd = PMS::DEFAULT_DATACOLUMN;
-    setPlotAxes(x, y, xd, yd, useX, useY, updateImmediately, plotIndex);
+    launchApp();
+    Record params;
+    if(!xAxis.empty()) params.define(PlotMSDBusApp::PARAM_AXIS_X, xAxis);
+    if(!xDataColumn.empty())
+        params.define(PlotMSDBusApp::PARAM_DATACOLUMN_X, xDataColumn);
+    if(!yAxis.empty()) params.define(PlotMSDBusApp::PARAM_AXIS_Y, yAxis);
+    if(!yDataColumn.empty())
+        params.define(PlotMSDBusApp::PARAM_DATACOLUMN_Y, yDataColumn);
+    if(params.nfields() == 0) return;
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, itsDBusName_,
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);
 }
 
 string plotms::getPlotXAxis(const int plotIndex) {
-    if(plotIndex < 0 || plotIndex >= (int)itsPlotParameters_.size()) return "";
-    else return PMS::axis(itsPlotParameters_[plotIndex].xAxis());
-}
-
+    launchApp();
+    GETSINGLEPLOTSTR(AXIS_X) }
 string plotms::getPlotXDataColumn(const int plotIndex) {
-    if(plotIndex < 0 || plotIndex >= (int)itsPlotParameters_.size()) return "";
-    else return PMS::dataColumn(itsPlotParameters_[plotIndex].xDataColumn());
-}
-
+    launchApp();
+    GETSINGLEPLOTSTR(DATACOLUMN_X) }
 string plotms::getPlotYAxis(const int plotIndex) {
-    if(plotIndex < 0 || plotIndex >= (int)itsPlotParameters_.size()) return "";
-    else return PMS::axis(itsPlotParameters_[plotIndex].yAxis());
-}
-
+    launchApp();
+    GETSINGLEPLOTSTR(AXIS_Y) }
 string plotms::getPlotYDataColumn(const int plotIndex) {
-    if(plotIndex < 0 || plotIndex >= (int)itsPlotParameters_.size()) return "";
-    else return PMS::dataColumn(itsPlotParameters_[plotIndex].yDataColumn());
+    launchApp();
+    GETSINGLEPLOTSTR(DATACOLUMN_Y) }
+
+record* plotms::getPlotParams(const int plotIndex) {
+    launchApp();
+    Record params, retValue;
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCall(dbus::FROM_NAME, itsDBusName_,
+            PlotMSDBusApp::METHOD_GETPLOTPARAMS, params, retValue);
+    return fromRecord(retValue);
 }
 
 
-void plotms::update() {
-    if(itsCurrentPlotMS_ == NULL) return;
-
-    unsigned int n = itsCurrentPlotMS_->getPlotManager().plotParameters()
-                     .size();
-
-    // check for added plots
-    if(itsPlotParameters_.size() > n) {
-        vector<PlotMSSinglePlotParameters> v(itsPlotParameters_.size() -
-                n, PlotMSSinglePlotParameters(plotterImplementation()));
-        for(unsigned int i = 0; i < v.size(); i++)
-            v[i] = itsPlotParameters_[i + n];
-        for(unsigned int i = 0; i < v.size(); i++)
-            itsCurrentPlotMS_->addSinglePlot(&v[i]);
-    }
-
-    PlotMSSinglePlotParameters* p;
-    for(unsigned int i = 0; i < n; i++) {
-        p = itsCurrentPlotMS_->getPlotManager().singlePlotParameters(i);
-        if(p == NULL) continue;
-        if(*p != itsPlotParameters_[i]) *p = itsPlotParameters_[i];
-    }
+void plotms::setFlagExtension(const bool extend, const string& correlation,
+        const bool channel, const bool spw, const string& antenna,
+        const bool time, const bool scans, const bool field,
+        const record& alternateSelection) {
+    PlotMSFlagging flag;
+    
+    flag.setExtend(extend);
+    flag.setCorr(correlation);
+    flag.setChannel(channel);
+    flag.setSpw(spw);
+    flag.setAntenna(antenna);
+    flag.setTime(time);
+    flag.setScans(scans);
+    flag.setField(field);
+    
+    if(alternateSelection.size() > 0) {
+        Record* sel1 = toRecord(alternateSelection);
+        PlotMSSelection sel;
+        sel.fromRecord(*sel1);
+        delete sel1;
+        flag.setSelectionAlternate(true);
+        flag.setSelectionAlternateSelection(sel);
+    } else flag.setSelectionSelected(true);
+    
+    setFlagging_(flag);
 }
 
-int plotms::execLoop() {
-    if(itsCurrentPlotMS_ == NULL) {
-	casa::QtApp::init();
-        itsCurrentPlotMS_ = new PlotMS(itsParameters_);
-        PlotMSPlotManager& m = itsCurrentPlotMS_->getPlotManager();
-        m.addWatcher(&itsWatcher_);
+void plotms::setFlagExtensionRec(const record& flagExtension) {
+    Record* flag1 = toRecord(flagExtension);
+    PlotMSFlagging flag;
+    flag.fromRecord(*flag1);
+    delete flag1;
+    
+    setFlagging_(flag);
+}
 
-        itsCurrentPlotMS_->showGUI(true);
-
-        if(itsPlotParameters_.size() == 0)
-            itsPlotParameters_.resize(1,
-                    PlotMSSinglePlotParameters(plotterImplementation()));
-
-        for(unsigned int i = 0; i < itsPlotParameters_.size(); i++) {
-            itsCurrentPlotMS_->addSinglePlot(&itsPlotParameters_[i]);
-            m.plot(i)->parameters().addWatcher(&itsWatcher_);
-        }
-
-    } else {
-        itsCurrentPlotMS_->showGUI(true);
-        update();
-    }
-
-    return itsCurrentPlotMS_->execLoop();
+record* plotms::getFlagExtension() {
+    launchApp();
+    Record result;
+    QtDBusXmlApp::dbusXmlCall(dbus::FROM_NAME, itsDBusName_,
+            PlotMSDBusApp::METHOD_GETFLAGGING, Record(), result);
+    return fromRecord(result);
 }
 
 
-/*
-bool plotms::exportPlot(const string& filename, const bool highResolution,
-		const int dpi, const int width, const int height, const int plotIndex){
-	if(plotIndex < 0 || plotIndex >= (int)itsPlotParameters_.size() ||
-	   itsCurrentPlotMS_ == NULL) return false; // TODO
-
-	PlotMSAction action(PlotMSAction::PLOT_EXPORT);
-	action.setParameter(PlotMSAction::P_FILE, filename);
-	action.setParameter(PlotMSAction::P_HIGHRES, highResolution);
-	action.setParameter(PlotMSAction::P_DPI, dpi);
-	action.setParameter(PlotMSAction::P_WIDTH, width);
-	action.setParameter(PlotMSAction::P_HEIGHT, height);
-	action.setParameter(PlotMSAction::P_PLOT,
-			itsCurrentPlotMS_->getPlotManager().plot(plotIndex));
-
-	// TODO
-
-	return false;
-}
-*/
+void plotms::update() { callAsync(PlotMSDBusApp::METHOD_UPDATE); }
+void plotms::show()   { callAsync(PlotMSDBusApp::METHOD_SHOW);   }
+void plotms::hide()   { callAsync(PlotMSDBusApp::METHOD_HIDE);   }
 
 
 // Private Methods //
 
-void plotms::parametersHaveChanged(const PlotMSWatchedParameters& params,
-        int updateFlag, bool redrawRequired) {
-    if(&params == &itsCurrentPlotMS_->getParameters()) {
-        itsParameters_ = dynamic_cast<const PlotMSParameters&>(params);
+bool plotms::displaySet() {
+    bool set = getenv("DISPLAY") != NULL;
+    if(!set) {
+        itsDBusName_ = "";
+        cerr << "ERROR: DISPLAY environment variable is not set!  Cannot open"
+                " plotms." << endl;
+    }
+    return set;
+}
 
+void plotms::launchApp() {
+    if(!itsDBusName_.empty() || !displaySet()) return;
+    
+    // Launch PlotMS application with the DBus switch.
+    pid_t pid = fork();
+    if(pid == 0) {
+        String file = itsLogFilename_.empty() ? "" :
+                      PlotMSDBusApp::APP_LOGFILENAME_SWITCH + "=" +
+                      itsLogFilename_;
+        String filter = itsLogFilter_.empty() ? "" :
+                        PlotMSDBusApp::APP_LOGFILTER_SWITCH + "=" +
+                        itsLogFilter_;
+        
+        execlp(PlotMSDBusApp::APP_NAME.c_str(),
+               PlotMSDBusApp::APP_NAME.c_str(),
+               PlotMSDBusApp::APP_CASAPY_SWITCH.c_str(),
+               file.c_str(), filter.c_str(),
+               NULL);
+        
     } else {
-        const vector<PlotMSPlotParameters*>& p =
-            itsCurrentPlotMS_->getPlotManager().plotParameters();
-        unsigned int index = 0;
-        for(; index < p.size(); index++) if(&params == p[index]) break;
-        if(index >= itsPlotParameters_.size()) return; // shouldn't happen
-        itsPlotParameters_[index] =
-            *dynamic_cast<const PlotMSSinglePlotParameters*>(p[index]);
+	itsDBusName_ = to_string(QtDBusApp::dbusServiceName(PlotMSDBusApp::name( ),pid));
+        
+        // Wait for it to have launched...
+        unsigned int slept = 0;
+        bool launched = false;
+        while(!launched && slept < LAUNCH_TOTAL_WAIT_US) {
+            usleep(LAUNCH_WAIT_INTERVAL_US);
+            launched = QtDBusApp::serviceIsAvailable(itsDBusName_);
+            slept += LAUNCH_WAIT_INTERVAL_US;
+        }
+        
+        if(launched) {        
+            itsLogFilename_ = "";
+            itsLogFilter_ = "";
+            
+        } else {
+            itsDBusName_ = "";
+            cerr << "ERROR: plotms application did not launch within specified"
+                    " time window.  Check running processes and try again if "
+                    "desired." << endl;
+        }
     }
 }
 
-void plotms::plotsChanged(const PlotMSPlotManager& manager) {
-    const vector<PlotMSPlotParameters*>& p = manager.plotParameters();
-    itsPlotParameters_.resize(p.size(), PlotMSSinglePlotParameters(
-            plotterImplementation()));
-    for(unsigned int i = 0; i < p.size(); i++)
-        itsPlotParameters_[i] =
-            *dynamic_cast<const PlotMSSinglePlotParameters*>(p[i]);
+void plotms::closeApp() {
+    // Tell PlotMS application to quit.
+    if(!itsDBusName_.empty()) callAsync(PlotMSDBusApp::METHOD_QUIT);
 }
 
-bool plotms::plotParameters(int& plotIndex) const {
-    if(plotIndex < 0) plotIndex = 0;
-    if((unsigned int)plotIndex > itsPlotParameters_.size())
-        plotIndex = itsPlotParameters_.size();
-
-    bool resized = false;
-    if((unsigned int)plotIndex >= itsPlotParameters_.size()) {
-        resized = true;
-        const_cast<plotms*>(this)->itsPlotParameters_.resize(
-                plotIndex + 1,
-                PlotMSSinglePlotParameters(plotterImplementation()));
-    }
-
-    return resized;
+void plotms::callAsync(const String& methodName) {
+    launchApp();
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, itsDBusName_, methodName,
+                                   Record(), true);
 }
 
-void plotms::setPlotMSSelection(const PlotMSSelection& selection,
-        bool updateImmediately, int plotIndex) {
-    bool resized = plotParameters(plotIndex);
-    PlotMSSinglePlotParameters& p = itsPlotParameters_[plotIndex];
-    if(!resized && p.selection() == selection) return;
-    p.setSelection(selection);
-    if(updateImmediately && itsCurrentPlotMS_ != NULL &&
-       itsCurrentPlotMS_->guiShown()) {
-        if(resized)
-            itsCurrentPlotMS_->addSinglePlot(&p);
-        else
-            *itsCurrentPlotMS_->getPlotManager().singlePlotParameters(
-                    plotIndex) = p;
-    }
+void plotms::setPlotMSSelection_(const PlotMSSelection& selection,
+        const bool updateImmediately, const int plotIndex) {
+    launchApp();
+    Record params;
+    params.defineRecord(PlotMSDBusApp::PARAM_SELECTION, selection.toRecord());
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, itsDBusName_,
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);
 }
 
-void plotms::setPlotMSAveraging(const PlotMSAveraging& averaging,
-        bool updateImmediately, int plotIndex) {
-    bool resized = plotParameters(plotIndex);
-    PlotMSSinglePlotParameters& p = itsPlotParameters_[plotIndex];
-    if(!resized && p.averaging() == averaging) return;
-    p.setAveraging(averaging);
-    if(updateImmediately && itsCurrentPlotMS_ != NULL &&
-       itsCurrentPlotMS_->guiShown()) {
-        if(resized)
-            itsCurrentPlotMS_->addSinglePlot(&p);
-        else
-            *itsCurrentPlotMS_->getPlotManager().singlePlotParameters(
-                    plotIndex) = p;
-    }
+void plotms::setPlotMSAveraging_(const PlotMSAveraging& averaging,
+        const bool updateImmediately, const int plotIndex) {
+    launchApp();
+    Record params;
+    params.defineRecord(PlotMSDBusApp::PARAM_AVERAGING, averaging.toRecord());
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, itsDBusName_,
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);
 }
 
-void plotms::setPlotAxes(PMS::Axis xAxis, PMS::Axis yAxis,
-        PMS::DataColumn xDataColumn, PMS::DataColumn yDataColumn, bool useX,
-        bool useY, bool updateImmediately, int plotIndex) {
-    if(!useX && !useY) return;
-    bool resized = plotParameters(plotIndex);
-    PlotMSSinglePlotParameters& p = itsPlotParameters_[plotIndex];
-    if(!resized && ((useX && xAxis == p.xAxis() &&
-       xDataColumn == p.xDataColumn()) || (useY && yAxis == p.yAxis() &&
-       yDataColumn == p.yDataColumn()))) return;
-
-    if(useX) {
-        p.setXAxis(xAxis);
-        p.setXDataColumn(xDataColumn);
-    }
-    if(useY) {
-        p.setYAxis(yAxis);
-        p.setYDataColumn(yDataColumn);
-    }
-
-    if(updateImmediately && itsCurrentPlotMS_ != NULL &&
-       itsCurrentPlotMS_->guiShown()) {
-        if(resized)
-            itsCurrentPlotMS_->addSinglePlot(&p);
-        else
-            *itsCurrentPlotMS_->getPlotManager().singlePlotParameters(
-                    plotIndex) = p;
-    }
+void plotms::setFlagging_(const PlotMSFlagging& flagging) {
+    launchApp();
+    Record params = flagging.toRecord();
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, itsDBusName_,
+            PlotMSDBusApp::METHOD_SETFLAGGING, params, true);
 }
 
 }

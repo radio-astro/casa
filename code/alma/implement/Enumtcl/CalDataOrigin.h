@@ -25,7 +25,7 @@
 using namespace CalDataOriginMod;
 
 template<>
- struct enum_set_traits<CalDataOrigin> : public enum_set_traiter<CalDataOrigin,8,CalDataOriginMod::HOLOGRAPHY> {};
+ struct enum_set_traits<CalDataOrigin> : public enum_set_traiter<CalDataOrigin,9,CalDataOriginMod::NONE> {};
 
 template<>
 class enum_map_traits<CalDataOrigin,void> : public enum_map_traiter<CalDataOrigin,void> {
@@ -38,21 +38,23 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<CalDataOrigin,EnumPar<void> >
-     (CalDataOriginMod::TOTAL_POWER,ep((int)CalDataOriginMod::TOTAL_POWER,"TOTAL_POWER","Total Power data (from detectors)")));
+     (CalDataOriginMod::TOTAL_POWER,ep((int)CalDataOriginMod::TOTAL_POWER,"TOTAL_POWER","un-documented")));
     m_.insert(pair<CalDataOrigin,EnumPar<void> >
-     (CalDataOriginMod::WVR,ep((int)CalDataOriginMod::WVR,"WVR","Water vapour radiometrers")));
+     (CalDataOriginMod::WVR,ep((int)CalDataOriginMod::WVR,"WVR","un-documented")));
     m_.insert(pair<CalDataOrigin,EnumPar<void> >
-     (CalDataOriginMod::CHANNEL_AVERAGE_AUTO,ep((int)CalDataOriginMod::CHANNEL_AVERAGE_AUTO,"CHANNEL_AVERAGE_AUTO","Autocorrelations from channel average data")));
+     (CalDataOriginMod::CHANNEL_AVERAGE_AUTO,ep((int)CalDataOriginMod::CHANNEL_AVERAGE_AUTO,"CHANNEL_AVERAGE_AUTO","un-documented")));
     m_.insert(pair<CalDataOrigin,EnumPar<void> >
-     (CalDataOriginMod::CHANNEL_AVERAGE_CROSS,ep((int)CalDataOriginMod::CHANNEL_AVERAGE_CROSS,"CHANNEL_AVERAGE_CROSS","Crosscorrelations from channel average data")));
+     (CalDataOriginMod::CHANNEL_AVERAGE_CROSS,ep((int)CalDataOriginMod::CHANNEL_AVERAGE_CROSS,"CHANNEL_AVERAGE_CROSS","un-documented")));
     m_.insert(pair<CalDataOrigin,EnumPar<void> >
-     (CalDataOriginMod::FULL_RESOLUTION_AUTO,ep((int)CalDataOriginMod::FULL_RESOLUTION_AUTO,"FULL_RESOLUTION_AUTO","Autocorrelations from full-resolution data")));
+     (CalDataOriginMod::FULL_RESOLUTION_AUTO,ep((int)CalDataOriginMod::FULL_RESOLUTION_AUTO,"FULL_RESOLUTION_AUTO","un-documented")));
     m_.insert(pair<CalDataOrigin,EnumPar<void> >
-     (CalDataOriginMod::FULL_RESOLUTION_CROSS,ep((int)CalDataOriginMod::FULL_RESOLUTION_CROSS,"FULL_RESOLUTION_CROSS","Cross correlations from full-resolution data")));
+     (CalDataOriginMod::FULL_RESOLUTION_CROSS,ep((int)CalDataOriginMod::FULL_RESOLUTION_CROSS,"FULL_RESOLUTION_CROSS","un-documented")));
     m_.insert(pair<CalDataOrigin,EnumPar<void> >
-     (CalDataOriginMod::OPTICAL_POINTING,ep((int)CalDataOriginMod::OPTICAL_POINTING,"OPTICAL_POINTING","Optical pointing data")));
+     (CalDataOriginMod::OPTICAL_POINTING,ep((int)CalDataOriginMod::OPTICAL_POINTING,"OPTICAL_POINTING","un-documented")));
     m_.insert(pair<CalDataOrigin,EnumPar<void> >
-     (CalDataOriginMod::HOLOGRAPHY,ep((int)CalDataOriginMod::HOLOGRAPHY,"HOLOGRAPHY","data from holography receivers")));
+     (CalDataOriginMod::HOLOGRAPHY,ep((int)CalDataOriginMod::HOLOGRAPHY,"HOLOGRAPHY","un-documented")));
+    m_.insert(pair<CalDataOrigin,EnumPar<void> >
+     (CalDataOriginMod::NONE,ep((int)CalDataOriginMod::NONE,"NONE","un-documented")));
     return true;
   }
   static map<CalDataOrigin,EnumPar<void> > m_;

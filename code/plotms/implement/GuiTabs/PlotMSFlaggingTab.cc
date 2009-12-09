@@ -26,8 +26,6 @@
 //# $Id: $
 #include <plotms/GuiTabs/PlotMSFlaggingTab.qo.h>
 
-#include <casaqt/QtUtilities/QtActionGroup.qo.h>
-#include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 
 namespace casa {
@@ -41,19 +39,15 @@ PlotMSFlaggingTab::PlotMSFlaggingTab(PlotMSPlotter* parent) :
     setupUi(this);
     
     // Synchronize go button with flag action.
-    QtActionSynchronizer* sync = new QtActionSynchronizer(parent);
-    sync->synchronize(parent->plotActionMap()[PlotMSAction::SEL_FLAG],
-            goButton);
+    itsPlotter_->synchronizeAction(PlotMSAction::SEL_FLAG, goButton);
 }
 
 PlotMSFlaggingTab::~PlotMSFlaggingTab() { }
 
 
-QList<QToolButton*> PlotMSFlaggingTab::toolButtons() const {
-    return QList<QToolButton*>(); }
-
-
 PlotMSFlagging PlotMSFlaggingTab::getValue(PlotMSPlot* plot) const {
     return flaggingWidget->getValue(plot); }
+void PlotMSFlaggingTab::setValue(const PlotMSFlagging& value) {
+    flaggingWidget->setValue(value); }
 
 }

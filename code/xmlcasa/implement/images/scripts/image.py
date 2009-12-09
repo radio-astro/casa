@@ -74,15 +74,6 @@ a \fits\ file:
 
 \end{itemize}
 
-Finally, some foreign image formats (e.g. Miriad, GIPSY) can be converted to \casa\
-(if the foreign packages are installed locally) via an intermediate
-\fits\ file.   
-
-\begin{itemize}
-
-\item <link anchor="images:image.fromforeign.constructor">fromforeign</link> - Currently
-supported are Miriad and GIPSY files.
-
 \end{itemize}
 
 \item {\bf Analysis - } 
@@ -467,8 +458,7 @@ you access the image.
 
 If you find performance is not good enough or you want a writable image,
 then use appropriate function
-(<link anchor="images:image.fromfits.constructor">fromfits</link> or
-<link anchor="images:image.fromforeign.constructor">fromforeign</link>) to
+(<link anchor="images:image.fromfits.constructor">fromfits</link> to
 convert to a native \casa\ image. 
 
 \medskip
@@ -1733,60 +1723,6 @@ the example we list the names of the fields in this record.
 </method>
 
  
-   <method type="function" name="fromforeign">
-   <shortdescription>Construct a \casa\ image from a foreign package image file.  NOT IMPLEMENTED.  DEPENDS ON EXTERNAL PACKAGES.</shortdescription>
-   
-<input>
-  
-     <param type="string" direction="in" name="outfile">
-     <description>Output image file name.  Default is unset.</description>
-     <value></value>
-     </param>
-  
-     <param type="string" direction="in" name="infile">
-     <description>Input foreign image disk file name.  Must be specified.</description>
-     <value></value>
-     </param>
-  
-     <param type="string" direction="in" name="format">
-     <description>Format type, 'miriad or gipsy</description>
-     <value>miriad</value>
-     </param>
-  
-     <param type="bool" direction="in" name="overwrite">
-     <description>Overwrite (unprompted) pre-existing output file?</description>
-     <value>false</value>
-     </param>
-</input>
-<returns type="bool"/>
-<description>
-
-This function is used to convert a foreign package image file to a
-\casa\ image.  This is done via an intermediary \fits\ file which is
-created by the foreign package.  In order for this function to work,
-you must have the foreign package installed; it is not part of \casa. 
-Currently supported are Miriad and Gipsy files. 
-
-If {\stfaf outfile} is given, the image is written to the specified disk
-file.  If {\stfaf outfile} is unset, the Image \tool\ is associated
-with a temporary image.  This temporary image may be in memory or on
-disk, depending on its size.  When you close the Image \tool\ 
-(with the <link anchor="images:image.close.function">close</link> function) this
-temporary image is deleted. 
-
-</description>
-<example>
-\begin{verbatim}
-"""
-#
-#ia.fromforeign('ia.app', 'ia.miriad', format='miriad')
-#
-"""
-\end{verbatim}
-
-</example>
-</method>
-
  
    <method type="function" name="fromimage">
    <shortdescription>Construct a (sub)image from a region of a \casa\ image</shortdescription>

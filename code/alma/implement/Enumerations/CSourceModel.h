@@ -42,16 +42,30 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the SourceModel enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace SourceModelMod
 {
+  //! SourceModel.
+  //!  [CalDM.CalFlux] Source Model
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum SourceModel
   { 
-    GAUSSIAN ,
-    POINT ,
-    DISK 
+    GAUSSIAN /*!< Gaussian source */
+     ,
+    POINT /*!< Point Source */
+     ,
+    DISK /*!< Uniform Disk */
+     
   };
   typedef SourceModel &SourceModel_out;
 } 
@@ -59,68 +73,93 @@ namespace SourceModelMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration SourceModel.
+  * 
+  */
 class CSourceModel {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the SourceModel enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sGAUSSIAN;
+	static const std::string& sGAUSSIAN; /*!< A const string equal to "GAUSSIAN".*/
 	
-	static const std::string& sPOINT;
+	static const std::string& sPOINT; /*!< A const string equal to "POINT".*/
 	
-	static const std::string& sDISK;
-	
-    static const std::vector<std::string> sSourceModelSet();	 
-
+	static const std::string& sDISK; /*!< A const string equal to "DISK".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in SourceModelMod::SourceModel.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of SourceModelMod::SourceModel.
+      * @return a string.
+      */
+	static std::string name(const SourceModelMod::SourceModel& e);
 	
-	// Explanations associated with the SourceModel Enumeration.
-		
-	static const std::string& hGAUSSIAN;
-		
-	static const std::string& hPOINT;
-		
-	static const std::string& hDISK;
-		
-	static const std::vector<std::string> hSourceModelSet();
-   	
-
-   	// Is an integer number associated with the SourceModel enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the SourceModel enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  SourceModel enumeration.
-	static std::string name(const SourceModelMod::SourceModel& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const SourceModelMod::SourceModel& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified SourceModel enumeration.
-	static std::string help(const SourceModelMod::SourceModel& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a SourceModel enumeration object by specifying its name.
    	static SourceModelMod::SourceModel newSourceModel(const std::string& name);
    	
-   	// Create a SourceModel enumeration object by specifying its name.
+   	/*! Return a SourceModel's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a SourceModelMod::SourceModel's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static SourceModelMod::SourceModel literal(const std::string& name);
  	
-    // Create a SourceModel enumeration object by specifying its position index (0 based).
+    /*! Return a SourceModel's enumerator given an unsigned int.
+      * @param i the index of the enumerator in SourceModelMod::SourceModel.
+      * @return a SourceModelMod::SourceModel's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static SourceModelMod::SourceModel from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CSourceModel();
     CSourceModel(const CSourceModel&);
     CSourceModel& operator=(const CSourceModel&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CSourceModel_H*/

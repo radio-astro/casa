@@ -148,42 +148,12 @@ quanta::formxxx(const ::casac::variant& v, const std::string& format)
 {
   string out("");
   try {
+    casa::Quantity quant = casaQuantity(v);
 
-    //hms, dms, deg, rad, +deg.
-    casa::String form(format);
-    form.downcase();
-    casa::Quantity quant=casaQuantity(v);
-    MVAngle ang(quant);
-    if(form == "dms"){
-      out=ang(-0.5).string(MVAngle::ANGLE,8).c_str();
-    }
-    else if(form == "hms"){
-      out=ang.string(MVAngle::TIME,8).c_str();
-    }
-    else if(form == "deg"){
-      ostringstream os;
-      os << ang().degree() ;
-      out=os.str();
-    }
-    else if(form == "rad"){
-      
-      ostringstream os;
-      os << ang().radian() ;
-      out=os.str();
-    }
-    else if(form == "+deg"){
-      ostringstream os;
-      os << ang(0.0).degree() ;
-      out=os.str();
-    }
-    else{
+    if(!ang_as_formatted_str(out, quant, format))
       *itsLog << LogIO::WARN << "Don't understand " << format << LogIO::POST;
-      
-    }
-
-
-
-  } catch (AipsError x) {
+  }
+  catch(AipsError x){
     RETHROW(x);
   }
   return out;
@@ -303,16 +273,18 @@ quanta::canon(const ::casac::variant& v)
 ::casac::record*
 quanta::convert(const ::casac::variant& v, const ::casac::variant& outunit)
 {
-  QuantumHolder qh = quantumHolderFromVar(v);
-  if (qh.isQuantumVectorDouble() ) {
-    Quantum<Vector<Double> > qv = qh.asQuantumVectorDouble();    
-    return recordFromQuantity(casaQuantity(outunit).getUnit().empty() ?
-			      qv.get() :
-			      qv.get(casaQuantity(outunit).getUnit()));
+  // Strangely, this cannot be declared const because of the possible
+  // .asQuantumVectorDouble() calls.
+  QuantumHolder qh(quantumHolderFromVar(v));
+
+  const Unit outU(casaQuantity(outunit).getUnit());
+
+  if (qh.isQuantumVectorDouble()) {
+    return recordFromQuantity(outU.empty() ? qh.asQuantumVectorDouble().get() :
+                              qh.asQuantumVectorDouble().get(outU));
   } else {
-    return recordFromQuantity(casaQuantity(outunit).getUnit().empty() ?
-			      casaQuantity(v).get() :
-			      casaQuantity(v).get(casaQuantity(outunit)));
+    return recordFromQuantity(outU.empty() ? casaQuantity(v).get() :
+			      casaQuantity(v).get(outU));
   }
 }
 
@@ -320,9 +292,10 @@ quanta::convert(const ::casac::variant& v, const ::casac::variant& outunit)
 bool
 quanta::define(const std::string& name, const ::casac::variant& v)
 {
-  UnitMap::putUser(name, UnitVal(casaQuantity(v).getValue(),
-				 casaQuantity(v).getUnit()),
-		   "User defined");
+  const casa::Quantity q(casaQuantity(v));  // Don't repeatedly parse v.
+  
+  UnitMap::removeUser(name);
+  UnitMap::putUser(name, UnitVal(q.getValue(), q.getUnit()), "User defined");
   return true;
 }
 

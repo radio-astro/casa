@@ -45,12 +45,12 @@ namespace casa {
 
 // Macros to reset tool stacks as needed.
 #define PRE_REPLOT                                                            \
-    vector<pair<double, double> > preAxes(4);                                 \
+    vector<prange_t> preAxes(4);                                              \
     preAxes[0] = axisRange(X_BOTTOM); preAxes[1] = axisRange(X_TOP);          \
     preAxes[2] = axisRange(Y_LEFT); preAxes[3] = axisRange(Y_RIGHT);
 
 #define POST_REPLOT                                                           \
-    vector<pair<double, double> > postAxes(4);                                \
+    vector<prange_t> postAxes(4);                                             \
     postAxes[0] = axisRange(X_BOTTOM); postAxes[1] = axisRange(X_TOP);        \
     postAxes[2] = axisRange(Y_LEFT); postAxes[3] = axisRange(Y_RIGHT);        \
     if(preAxes[0] != postAxes[0] || preAxes[1] != postAxes[1] ||              \
@@ -110,7 +110,7 @@ bool QPCanvas::exportHelper(vector<PlotCanvasPtr>& canvases,
     vector<PlotLoggerPtr> loggers;
     PlotLoggerPtr logger;
     for(unsigned int i = 0; i < qcanvases.size(); i++) {        
-        logger = qcanvases[i]->loggerForEvent(PlotLogger::EXPORT_TOTAL);
+        logger = qcanvases[i]->logger();
         if(logger.null()) continue;
         
         found = false;
@@ -121,7 +121,8 @@ bool QPCanvas::exportHelper(vector<PlotCanvasPtr>& canvases,
     
     // Start logging.
     for(unsigned int i = 0; i < loggers.size(); i++)
-        loggers[i]->markMeasurement(CLASS_NAME, EXPORT_NAME);
+        loggers[i]->markMeasurement(CLASS_NAME, EXPORT_NAME,
+                                    PlotLogger::EXPORT_TOTAL);
     
     // Image
     if(format.type == PlotExportFormat::JPG ||
@@ -424,7 +425,7 @@ void QPCanvas::setCursor(PlotCursor cursor) {
 void QPCanvas::refresh() {
     logMethod(CLASS_NAME, "refresh", true);
     PRE_REPLOT
-    QCoreApplication::processEvents();
+    QApplication::processEvents();
     m_canvas.replot();
     POST_REPLOT
     logMethod(CLASS_NAME, "refresh", false);
@@ -435,7 +436,7 @@ void QPCanvas::refresh(int drawLayersFlag) {
     
     if(drawLayersFlag != 0) {
         PRE_REPLOT
-        QCoreApplication::processEvents();
+        QApplication::processEvents();
         m_canvas.setLayersChanged(drawLayersFlag);
         m_canvas.replot();
         POST_REPLOT
@@ -530,7 +531,7 @@ void QPCanvas::showColorBar(bool show, PlotAxis axis) {
         return;
     }
     
-    pair<double, double> v = r->rasterData()->valueRange();
+    prange_t v = r->rasterData()->valueRange();
     scale->setColorBarEnabled(true);
     
     if(r->dataFormat() == PlotRasterData::SPECTROGRAM) {
@@ -549,12 +550,12 @@ void QPCanvas::showColorBar(bool show, PlotAxis axis) {
 }
 
 
-pair<double, double> QPCanvas::axisRange(PlotAxis axis) const {
+prange_t QPCanvas::axisRange(PlotAxis axis) const {
     const QwtScaleDiv* div = m_canvas.axisScaleDiv(QPOptions::axis(axis));
 #if QWT_VERSION < 0x050200
-    return pair<double, double>(div->lBound(), div->hBound());
+    return prange_t(div->lBound(), div->hBound());
 #else
-    return pair<double, double>(div->lowerBound(), div->upperBound());
+    return prange_t(div->lowerBound(), div->upperBound());
 #endif
 }
 
@@ -944,7 +945,7 @@ void QPCanvas::holdDrawing() { m_canvas.holdDrawing(); }
 void QPCanvas::releaseDrawing() {
     logMethod(CLASS_NAME, "releaseDrawing", true);
     PRE_REPLOT
-    QCoreApplication::processEvents();
+    QApplication::processEvents();
     m_canvas.releaseDrawing();
     POST_REPLOT
     logMethod(CLASS_NAME, "releaseDrawing", false);
@@ -1099,7 +1100,7 @@ PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,
     
     if(coord.system() == PlotCoordinate::WORLD) {
         if(newSystem == PlotCoordinate::NORMALIZED_WORLD) {
-            pair<double, double> range = axisRange(X_BOTTOM);
+            prange_t range = axisRange(X_BOTTOM);
             double x = (coord.x() - range.first)/(range.second - range.first);            
             range = axisRange(Y_LEFT);
             double y = (coord.y() - range.first)/(range.second - range.first);
@@ -1118,7 +1119,7 @@ PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,
     } else if(coord.system() == PlotCoordinate::NORMALIZED_WORLD) {
         if(newSystem == PlotCoordinate::WORLD ||
            newSystem == PlotCoordinate::PIXEL) {
-            pair<double, double> range = axisRange(X_BOTTOM);
+            prange_t range = axisRange(X_BOTTOM);
             double x = (coord.x()*(range.first - range.second)) + range.first;
             range = axisRange(Y_LEFT);
             double y = (coord.y()*(range.first - range.second)) + range.first;
@@ -1143,7 +1144,7 @@ PlotCoordinate QPCanvas::convertCoordinate(const PlotCoordinate& coord,
             double y = map.invTransform(coord.y());
             
             if(newSystem == PlotCoordinate::NORMALIZED_WORLD) {
-                pair<double, double> r = axisRange(X_BOTTOM);
+                prange_t r = axisRange(X_BOTTOM);
                 x = (x - r.first) / (r.second - r.first);
                 r = axisRange(Y_LEFT);
                 y = (y - r.first) / (r.second - r.first);
@@ -1192,7 +1193,7 @@ QSize QPCanvas::minimumSizeHint() const { return QSize(); }
 void QPCanvas::setQPPlotter(QPPlotter* parent) {
     m_parent = parent;
     if(parent != NULL) {
-        PlotLoggerPtr log = loggerForEvent(PlotLogger::OBJECTS_MAJOR);
+        PlotLoggerPtr log = logger();
         if(!log.null())
             for(unsigned int i = 0; i < m_queuedLogs.size(); i++)
                 log->postMessage(m_queuedLogs[i]);
@@ -1200,11 +1201,9 @@ void QPCanvas::setQPPlotter(QPPlotter* parent) {
     }
 }
 
-PlotLoggerPtr QPCanvas::loggerForEvent(PlotLogger::Event event) const {
-    if(event == PlotLogger::NO_EVENTS || m_parent == NULL)
-        return PlotLoggerPtr();
-    if(event & m_parent->logEventFlags()) return m_parent->logger();
-    else                                  return PlotLoggerPtr();
+PlotLoggerPtr QPCanvas::logger() const {
+    if(m_parent == NULL) return PlotLoggerPtr();
+    else                 return m_parent->logger();
 }
 
 void QPCanvas::logObject(const String& className, void* address, bool creation,
@@ -1213,7 +1212,8 @@ void QPCanvas::logObject(const String& className, void* address, bool creation,
         m_parent->logObject(className, address, creation, message);
     else
         m_queuedLogs.push_back(
-                PlotLogObject(className, address, creation, message));
+                PlotLogObject(className, address, creation, message,
+                              PlotLogger::OBJECTS_MAJOR));
 }
 
 void QPCanvas::logMethod(const String& className, const String& methodName,

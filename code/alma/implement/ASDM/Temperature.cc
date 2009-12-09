@@ -49,4 +49,79 @@ string Temperature::toString(double x) {
 	return Double::toString(x);
 }
 
+
+void Temperature::toBin(EndianOSStream& eoss) {
+	eoss.writeDouble(	value);
+}
+
+void Temperature::toBin(const vector<Temperature>& temp,  EndianOSStream& eoss) {
+	eoss.writeInt((int) temp.size());
+	for (unsigned int i = 0; i < temp.size(); i++)
+		eoss.writeDouble(temp.at(i).value);
+}
+
+void Temperature::toBin(const vector<vector<Temperature> >& temp,  EndianOSStream& eoss) {
+	eoss.writeInt((int) temp.size());
+	eoss.writeInt((int) temp.at(0).size());
+	for (unsigned int i = 0; i < temp.size(); i++)
+		for (unsigned int j = 0; j < temp.at(0).size(); j++)
+			eoss.writeDouble(temp.at(i).at(j).value);
+}
+
+void Temperature::toBin(const vector< vector<vector<Temperature> > >& temp,  EndianOSStream& eoss) {
+	eoss.writeInt((int) temp.size());
+	eoss.writeInt((int) temp.at(0).size());
+	eoss.writeInt((int) temp.at(0).at(0).size());	
+	for (unsigned int i = 0; i < temp.size(); i++)
+		for (unsigned int j = 0; j < temp.at(0).size(); j++)
+				for (unsigned int k = 0; k < temp.at(0).at(0).size(); j++)
+					eoss.writeDouble(temp.at(i).at(j).at(k).value);
+}
+
+Temperature Temperature::fromBin(EndianISStream & eiss) {
+	return Temperature(eiss.readDouble());
+}
+
+vector<Temperature> Temperature::from1DBin(EndianISStream & eiss) {
+	int dim1 = eiss.readInt();
+	vector<Temperature> result;
+	for (int i = 0; i < dim1; i++)
+		result.push_back(Temperature(eiss.readDouble()));
+	return result;	
+}
+
+vector<vector<Temperature > > Temperature::from2DBin(EndianISStream & eiss) {
+	int dim1 = eiss.readInt();
+	int dim2 = eiss.readInt();
+	vector< vector<Temperature> >result;
+	vector <Temperature> aux;
+	for (int i = 0; i < dim1; i++) {
+		aux.clear();
+		for (int j = 0; j < dim2; j++)
+			aux.push_back(Temperature(eiss.readDouble()));
+		result.push_back(aux);
+	}
+	return result;	
+}
+
+vector<vector<vector<Temperature > > > Temperature::from3DBin(EndianISStream & eiss) {
+	int dim1 = eiss.readInt();
+	int dim2 = eiss.readInt();
+	int dim3 = eiss.readInt();
+	vector<vector< vector<Temperature> > >result;
+	vector < vector<Temperature> >aux1;
+	vector <Temperature> aux2;
+	for (int i = 0; i < dim1; i++) {
+		aux1.clear();
+		for (int j = 0; j < dim2; j++) {
+			aux2.clear();
+			for (int k = 0; k < dim3; k++)
+				aux2.push_back(Temperature(eiss.readDouble()));
+			aux1.push_back(aux2);
+		}
+		result.push_back(aux1);
+	}
+	return result;	
+}
+
 } // End namespace asdm

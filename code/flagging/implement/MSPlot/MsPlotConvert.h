@@ -42,11 +42,13 @@
 //# General CASA includes
 #include <casa/BasicSL/String.h>
 
-//# Measurment and table related includes
+//# Measurement and table related includes
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
 #include <ms/MeasurementSets/MSDerivedValues.h>
+
+#include <measures/Measures/MeasTable.h>
 
 #include <tableplot/TablePlot/SLog.h>
 
@@ -991,9 +993,12 @@ class MSPlotConvertArrayPositions : public TPConvertBase
           retValue = toItrf( retValue );
       }
        }  else {
-      String err = String( "Error: Unable to plot telescope array" )
-          + String( " the name of the telescope is not stored in " )
-          + String( " the measurement set. " );
+	 String err = String( "Error: Unable to plot telescope array" );
+	 if (telescope.length()<=0)
+	   err += String( " the name of the telescope is not stored in " )
+	     + String( " the measurement set. " );
+	 else
+	   err += String(" - ")+telescope+String(" unknown to CASA.  Please contact the helpdesk");
       log->out( err, fnname, clname, LogMessage::SEVERE, True );
       // Should never get here, and exception occurs in logMessage()
       return retValue;          
@@ -1052,10 +1057,17 @@ class MSPlotConvertArrayPositions : public TPConvertBase
        Double obsSinLongitude   = sin( obsLongitude );
        //Double obsCosLatitude    = cos( obsLatitude );
        Double obsSinLatitude    = sin( obsLatitude );
+
+       //       cout << endl << "observatory: " << observatory << endl << 
+       //	 "lonlat = " << obsLongitude*180/3.1415 << " , " << obsLatitude*180/3.1415 << endl;
+       //       cout << "obsXYZ = " << obsXYZ << endl;
        
        // Now do the conversion.
        for( uInt i=0; i < numAnts; i++ )
        {
+	 //	 if (i<3)
+	 //	   cout << i << ": " << antPositions[i] << " from " <<  (MPosition::Types)antPositions[i].type() << " to " << observatory.type() << ": ";
+
       if ( antPositions[i].type() != observatory.type() )
           antPositions[i] = MPosition::Convert( antPositions[i],
                      (MPosition::Types)observatory.type() )();
@@ -1067,6 +1079,8 @@ class MSPlotConvertArrayPositions : public TPConvertBase
       yTrans[i] = antXYZ[1] - obsXYZ[1];
       zTrans[i] = antXYZ[2] - obsXYZ[2];
       
+      //      if (i<3) cout << "Trans = " << xTrans[i] << "," << yTrans[i] << "," << zTrans[i] << endl;
+
       // Now rotate and store the new position information
       itsXValues[i] = ( -obsSinLongitude * xTrans[i] )
           + ( obsCosLongitude * yTrans[i] );

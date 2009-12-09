@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CSourceModel::version() {
+	return SourceModelMod::version;
+	}
+	
+string CSourceModel::revision () {
+	return SourceModelMod::revision;
+}
+
+unsigned int CSourceModel::size() {
+	return 3;
+	}
+	
 	
 const std::string& CSourceModel::sGAUSSIAN = "GAUSSIAN";
 	
@@ -44,7 +57,7 @@ const std::string& CSourceModel::sPOINT = "POINT";
 	
 const std::string& CSourceModel::sDISK = "DISK";
 	
-const std::vector<std::string> CSourceModel::sSourceModelSet() {
+const std::vector<std::string> CSourceModel::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CSourceModel::sGAUSSIAN);
@@ -55,29 +68,6 @@ const std::vector<std::string> CSourceModel::sSourceModelSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CSourceModel::hGAUSSIAN = "Gaussian source";
-	
-const std::string& CSourceModel::hPOINT = "Point Source";
-	
-const std::string& CSourceModel::hDISK = "Uniform Disk";
-	
-const std::vector<std::string> CSourceModel::hSourceModelSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CSourceModel::hGAUSSIAN);
-    
-    enumSet.insert(enumSet.end(), CSourceModel::hPOINT);
-    
-    enumSet.insert(enumSet.end(), CSourceModel::hDISK);
-        
-    return enumSet;
-}
-   	
 
 std::string CSourceModel::name(const SourceModelMod::SourceModel& f) {
     switch (f) {
@@ -92,28 +82,9 @@ std::string CSourceModel::name(const SourceModelMod::SourceModel& f) {
       return CSourceModel::sDISK;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CSourceModel::help(const SourceModelMod::SourceModel& f) {
-    switch (f) {
-    
-    case SourceModelMod::GAUSSIAN:
-      return CSourceModel::hGAUSSIAN;
-    
-    case SourceModelMod::POINT:
-      return CSourceModel::hPOINT;
-    
-    case SourceModelMod::DISK:
-      return CSourceModel::hDISK;
-    	
-    }
-    return std::string("");
-}
-   	
 
 SourceModelMod::SourceModel CSourceModel::newSourceModel(const std::string& name) {
 		
@@ -150,12 +121,10 @@ SourceModelMod::SourceModel CSourceModel::literal(const std::string& name) {
 }
 
 SourceModelMod::SourceModel CSourceModel::from_int(unsigned int i) {
-	vector<string> names = sSourceModelSet();
-	if (i >= names.size()) throw badInt(i);
-	return newSourceModel(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newSourceModel(names_.at(i));
 }
-
-	
 
 string CSourceModel::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'SourceModel'.";

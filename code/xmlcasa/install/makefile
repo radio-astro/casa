@@ -46,7 +46,7 @@ SCRIPTS  := mksetupdotpy.sh setsvneditor.sh setsvneditor.csh svn_editor xmlgenpy
 
 JARS := saxon8.jar
 
-XSLTS := casa2py.xsl casa2tsum.xsl casa2tsum2.xsl casa2pycli.xsl casa2pyimp.xsl
+XSLTS := casa2py.xsl casa2tsum.xsl casa2tsum2.xsl casa2pycli.xsl casa2pyimp.xsl casa2pypg.xsl
 
 # Pattern rules.
 #---------------

@@ -123,6 +123,12 @@ public:
 
     // Returns the last opened directory for this view.
     String getLastOpenedDirectory();
+    
+    // Gets/Sets the file chooser history limit.
+    // <group>
+    int chooserHistoryLimit() const;
+    void setChooserHistoryLimit(int histLimit);
+    // </group>
 
     
     // Saves this view in XML format to the given file.
@@ -146,6 +152,9 @@ public:
 private:
     // Last opened directory.
     String lastOpenedDir;
+    
+    // File chooser history limit.
+    int histLimit;
     
     // Table views.
     vector<TBTableView*> views;

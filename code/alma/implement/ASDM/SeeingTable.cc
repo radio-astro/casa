@@ -264,7 +264,7 @@ SeeingRow* SeeingTable::newRowCopy(SeeingRow* row) {
 		
 		
 			
-	SeeingRow*  SeeingTable::checkAndAdd(SeeingRow* x) throw (DuplicateKey) {
+	SeeingRow*  SeeingTable::checkAndAdd(SeeingRow* x) {
 		if (getRowByKey(
 		
 			x->getTimeInterval()
@@ -343,7 +343,7 @@ SeeingRow* SeeingTable::newRowCopy(SeeingRow* row) {
 #endif
 	
 #ifndef WITHOUT_ACS
-	void SeeingTable::fromIDL(SeeingTableIDL x) throw(DuplicateKey,ConversionException) {
+	void SeeingTable::fromIDL(SeeingTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			SeeingRow *tmp = newRow();
@@ -354,28 +354,27 @@ SeeingRow* SeeingTable::newRowCopy(SeeingRow* row) {
 	}
 #endif
 
-	char *SeeingTable::toFITS() const throw(ConversionException) {
+	char *SeeingTable::toFITS() const  {
 		throw ConversionException("Not implemented","Seeing");
 	}
 
-	void SeeingTable::fromFITS(char *fits) throw(ConversionException) {
+	void SeeingTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Seeing");
 	}
 
-	string SeeingTable::toVOTable() const throw(ConversionException) {
+	string SeeingTable::toVOTable() const {
 		throw ConversionException("Not implemented","Seeing");
 	}
 
-	void SeeingTable::fromVOTable(string vo) throw(ConversionException) {
+	void SeeingTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Seeing");
 	}
 
-	string SeeingTable::toXML()  throw(ConversionException) {
+	
+	string SeeingTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<SeeingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/SeeingTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<SeeingTable> ");
+		buf.append("<SeeingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/SeeingTable\" xsi:schemaLocation=\"http://Alma/XASDM/SeeingTable http://almaobservatory.org/XML/XASDM/2/SeeingTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -391,8 +390,9 @@ SeeingRow* SeeingTable::newRowCopy(SeeingRow* row) {
 		buf.append("</SeeingTable> ");
 		return buf;
 	}
+
 	
-	void SeeingTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void SeeingTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SeeingTable")) 
 			error();
@@ -434,20 +434,110 @@ SeeingRow* SeeingTable::newRowCopy(SeeingRow* row) {
 			error();
 	}
 
-	void SeeingTable::error() throw(ConversionException) {
+	
+	void SeeingTable::error()  {
 		throw ConversionException("Invalid xml document","Seeing");
 	}
 	
+	
 	string SeeingTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void SeeingTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Seeing");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			SeeingRow* aRow = SeeingRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Seeing");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Seeing");
+		} 		 	
+	}
+
 	
 	void SeeingTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -478,6 +568,7 @@ SeeingRow* SeeingTable::newRowCopy(SeeingRow* row) {
 				throw ConversionException("Could not close file " + fileName, "Seeing");
 		}
 	}
+
 	
 	void SeeingTable::setFromFile(const string& directory) {
 		string tablename;
@@ -519,6 +610,11 @@ SeeingRow* SeeingTable::newRowCopy(SeeingRow* row) {
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 		

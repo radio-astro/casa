@@ -11,6 +11,7 @@
 #include <casa/Logging/NullLogSink.h>
 #include <sys/stat.h>
 
+#include <casa/BasicSL/String.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/Unit.h>
 
@@ -383,7 +384,7 @@ variant *stdBaseInterface::expandEnum(variant &allowed, const variant &value, ca
    int count = 0;
    if(allowed.type() == variant::STRINGVEC){
       if(value.type() == variant::STRING && value.getString().length() > 0){
-         for(int i=0;i<allowed.asStringVec().size();i++){
+         for(unsigned int i=0;i<allowed.asStringVec().size();i++){
             // cerr << i << " " << allowed.asStringVec()[i] << endl;
             if(!allowed.asStringVec()[i].compare(0, value.getString().length(), value.getString())){
 	       rstat = new variant(allowed.asStringVec()[i]);
@@ -423,9 +424,26 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 	//
 	bool checkit(true);
 	variant  &dflt = constraintsRec["value"];
-	if(constraintsRec["type"].asString() == "any" || constraintsRec["type"].asString() == "variant"){
+	if(constraintsRec["type"].asString() == "any" || constraintsRec["type"].asString()  == "variant"){
+	   if(constraintsRec.count("limittypes") &&  constraintsRec["type"].asString().size()){
+	      string theAllowedTypes = constraintsRec["limittypes"].asString();
+	      string myType = user.typeString();
+	      if(theAllowedTypes.find(myType) != string::npos){
+		      rstat = true;
+	      } else {
+	         if(myType == "int" && theAllowedTypes.find("double") != string::npos){
+			rstat = true;
+	          } else if(myType == "intvec" && theAllowedTypes.find("doublevec") != string::npos){
+			rstat = true;
+		  } else {
+		      rstat = false;
+		  }
+	       }
+	   }
 	   checkit = false;
-	   // need to change this so that if  constraintsRec has a limittypes option this can be checked
+	   // 
+	   if(!user.size())
+		   rstat = true;
 	}
 	if(user.type() != dflt.type() && user.size() && dflt.size() && checkit){
 		 switch(dflt.type()){
@@ -589,12 +607,38 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		  case variant::STRING:
 		     {
 		      unsigned int i=0;
+		      bool ignorecase(false);
+		      if(constraintsRec.count("ignorecase")){
+		         casa::String ignoreit(constraintsRec["ignorecase"].asString());
+		         ignoreit.downcase();
+		         if(ignoreit == "true"){
+                            ignorecase=true;
+		         }
+		      }
 		      vector<string> &theEnums = dflt.asStringVec();
 		      while(i<theEnums.size()){
-			      // std::cerr << "*"<< theEnums[i] << "*"<< user.asString() << "*"<< std::endl;
-			if(!theEnums[i].compare(0, user.asString().length(), user.asString())){
-			   user.asString() = theEnums[i];
-			   break;
+			// std::cerr << i << "*"<< theEnums[i] << "*"<< user.asString() << "*"<< std::endl;
+			if(ignorecase){
+			   casa::String theval(user.asString());
+			   theval.downcase();
+			   if(user.asString().length()){
+			      if(!theEnums[i].compare(0, user.asString().length(), theval)){
+			         user.asString() = theEnums[i];
+			         break;
+			      }
+			   } else {
+			      if(user.asString() == theEnums[i])
+				 break;
+			   }
+			}else {
+			   if(user.asString().length()){
+			      if(!theEnums[i].compare(0, user.asString().length(), user.asString())){
+			         user.asString() = theEnums[i];
+			         break;
+			      }
+			   } else if(user.asString() == theEnums[i]) {
+				 break;
+			   }
 			}
 			 i++;
 		       }
@@ -610,8 +654,12 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		      while(j<userVals.size()){
 		         unsigned int i=0;
 		         while(i<theEnums.size()){
-			   if(!theEnums[i].compare(0, userVals[j].length(), userVals[j]))
-			      break;
+		            if(userVals[j].length()){
+			    if(!theEnums[i].compare(0, userVals[j].length(), userVals[j]))
+			       break;
+			    } else if(userVals[j] == theEnums[i]){
+			       break;
+			    }
 			    i++;
 		          }
 		          if(i == theEnums.size())

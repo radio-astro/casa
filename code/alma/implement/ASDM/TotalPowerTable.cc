@@ -51,17 +51,16 @@ using asdm::Parser;
 #include <iostream>
 #include <sstream>
 #include <set>
+using namespace std;
 
 #include <Misc.h>
-
-using namespace std;
 using namespace asdm;
 
 
 namespace asdm {
 
 	string TotalPowerTable::tableName = "TotalPower";
-
+	
 
 	/**
 	 * The list of field names that make up key key.
@@ -95,24 +94,22 @@ namespace asdm {
 		entity.setEntityTypeName("TotalPowerTable");
 		entity.setEntityVersion("1");
 		entity.setInstanceVersion("1");
-				
-		// Archive binary
+		
+		// Archive XML
 		archiveAsBin = true;
 		
-		// File binary
-		fileAsBin = true;	
+		// File XML
+		fileAsBin = true;
 	}
 	
 /**
  * A destructor for TotalPowerTable.
- */	
-	
+ */
+ 
 	TotalPowerTable::~TotalPowerTable() {
-		for (unsigned int i = 0; i < privateRows.size(); ++i) {
-			delete privateRows[i];
-		}
+		for (unsigned int i = 0; i < privateRows.size(); i++) 
+			delete(privateRows.at(i));
 	}
-
 
 	/**
 	 * Container to which this table belongs.
@@ -124,10 +121,20 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-
+	
+	
+		
 	unsigned int TotalPowerTable::size() {
-		return privateRows.size();
+		int result = 0;
+		
+		map<string, TIME_ROWS >::iterator mapIter;
+		for (mapIter=context.begin(); mapIter!=context.end(); mapIter++) 
+			result += ((*mapIter).second).size();
+			
+		return result;
 	}	
+		
+	
 	
 	
 	/**
@@ -161,24 +168,21 @@ namespace asdm {
 	TotalPowerRow *TotalPowerTable::newRow() {
 		return new TotalPowerRow (*this);
 	}
-
+	
 	TotalPowerRow *TotalPowerTable::newRowEmpty() {
-		return new TotalPowerRow (*this);
+		return newRow ();
 	}
+
 
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param time. 
+	
  	 * @param configDescriptionId. 
 	
  	 * @param fieldId. 
-	
- 	 * @param time. 
-	
- 	 * @param execBlockId. 
-	
- 	 * @param stateId. 
 	
  	 * @param scanNumber. 
 	
@@ -202,19 +206,19 @@ namespace asdm {
 	
  	 * @param interval. 
 	
+ 	 * @param stateId. 
+	
+ 	 * @param execBlockId. 
+	
      */
-	TotalPowerRow* TotalPowerTable::newRow(Tag configDescriptionId, Tag fieldId, ArrayTime time, Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval){
+	TotalPowerRow* TotalPowerTable::newRow(ArrayTime time, Tag configDescriptionId, Tag fieldId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval, vector<Tag>  stateId, Tag execBlockId){
 		TotalPowerRow *row = new TotalPowerRow(*this);
+			
+		row->setTime(time);
 			
 		row->setConfigDescriptionId(configDescriptionId);
 			
 		row->setFieldId(fieldId);
-			
-		row->setTime(time);
-			
-		row->setExecBlockId(execBlockId);
-			
-		row->setStateId(stateId);
 			
 		row->setScanNumber(scanNumber);
 			
@@ -237,22 +241,22 @@ namespace asdm {
 		row->setFlagRow(flagRow);
 			
 		row->setInterval(interval);
+			
+		row->setStateId(stateId);
+			
+		row->setExecBlockId(execBlockId);
 	
 		return row;		
 	}	
 
-	TotalPowerRow* TotalPowerTable::newRowFull(Tag configDescriptionId, Tag fieldId, ArrayTime time, Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval){
+	TotalPowerRow* TotalPowerTable::newRowFull(ArrayTime time, Tag configDescriptionId, Tag fieldId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval, vector<Tag>  stateId, Tag execBlockId)	{
 		TotalPowerRow *row = new TotalPowerRow(*this);
+			
+		row->setTime(time);
 			
 		row->setConfigDescriptionId(configDescriptionId);
 			
 		row->setFieldId(fieldId);
-			
-		row->setTime(time);
-			
-		row->setExecBlockId(execBlockId);
-			
-		row->setStateId(stateId);
 			
 		row->setScanNumber(scanNumber);
 			
@@ -275,10 +279,16 @@ namespace asdm {
 		row->setFlagRow(flagRow);
 			
 		row->setInterval(interval);
+			
+		row->setStateId(stateId);
+			
+		row->setExecBlockId(execBlockId);
 	
-		return row;		
-	}	
+		return row;				
+	}
 	
+
+
 TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 	return new TotalPowerRow(*this, *row);
 }
@@ -286,26 +296,50 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 TotalPowerRow* TotalPowerTable::newRowCopy(TotalPowerRow* row) {
 	return new TotalPowerRow(*this, *row);
 }
+
 	//
 	// Append a row to its table.
 	//
 
 	
-	 
-	/**
-	 * Add a row.
-	 * @throws DuplicateKey Thrown if the new row has a key that is already in the table.
-	 * @param x A pointer to the row to be added.
-	 * @return x
+	
+		
+		
+	/** 
+	 * Returns a string built by concatenating the ascii representation of the
+	 * parameters values suffixed with a "_" character.
 	 */
+	 string TotalPowerTable::Key(Tag configDescriptionId, Tag fieldId) {
+	 	ostringstream ostrstr;
+	 		ostrstr  
+			
+				<<  configDescriptionId.toString()  << "_"
+			
+				<<  fieldId.toString()  << "_"
+			
+			;
+		return ostrstr.str();	 	
+	 }
+	 
+			
+			
 	TotalPowerRow* TotalPowerTable::add(TotalPowerRow* x) {
-		string keystr = Key(x->configDescriptionId, x->fieldId); 
+		string keystr = Key(
+						x->getConfigDescriptionId()
+					   ,
+						x->getFieldId()
+					   );
 		if (context.find(keystr) == context.end()) {
 			vector<TotalPowerRow *> v;
 			context[keystr] = v;
 		}
-		return insertByTime(x, context[keystr]);		
+		return insertByTime(x, context[keystr]);					
 	}
+			
+		
+	
+
+
 
 
 	// 
@@ -313,112 +347,90 @@ TotalPowerRow* TotalPowerTable::newRowCopy(TotalPowerRow* row) {
 	// methods.
 	//
 
-	TotalPowerRow * TotalPowerTable::insertByTime(TotalPowerRow* x, vector<TotalPowerRow *>&row) {
-		ArrayTime start = x->getTime();
-		
-		// Is the vector empty ?
-		if (row.size() == 0) {
-			row.push_back(x);
-			privateRows.push_back(x);
-			x->isAdded();
-			return x;
-		}
-		
-		// Optimization for the case of insertion by ascending time.
-		TotalPowerRow* last = row.at(row.size()-1);
-		
-		if (start.get() > last->getTime().get()) {
-			row.push_back(x);
-			privateRows.push_back(x);
-			x->isAdded();
-			return x;
-		}
-		
-		// Optimization for the case of insertion by descending time.
-		TotalPowerRow* first = row.at(0);
-		
-		if (start.get() < first->getTime().get()) {
-			row.insert(row.begin(), x);
-			privateRows.push_back(x);
-			x->isAdded();
-			return x;
-		}
-		
-		// Case where x has to be inserted inside row; let's use a dichotomy
-		// method to find the insertion index.		
-		int k0 = 0;
-		int k1 = row.size() - 1;    	  
-		while (k0 != (k1 - 1)) {
-			if (start.get() == row.at(k0)->getTime().get()) {
-				if (row.at(k0)->equalByRequiredValue(x))
-					return row.at(k0);
-				else
-					throw new DuplicateKey("DuplicateKey exception in ", "TotalPowerTable");	
-			}
-			else if (start.get() == row.at(k1)->getTime().get()) {
-				if (row.at(k1)->equalByRequiredValue(x))
-					return row.at(k1);
-				else
-					throw new DuplicateKey("DuplicateKey exception in ", "TotalPowerTable");	
-			}
-			else {
-				if (start.get() <= row.at((k0+k1)/2)->getTime().get())
-					k1 = (k0 + k1) / 2;
-				else
-					k0 = (k0 + k1) / 2;				
-			} 	
-		}
-		row.insert(row.begin()+(k0+1), x);
-		privateRows.push_back(x);
-		x->isAdded();
-		return x; 						
-	}
 	
-	/**
-	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
-	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
-	 * Append x to its table.
-	 * @param x a pointer on the row to be appended.
-	 * @returns a pointer on x.
-	 */
-	TotalPowerRow*  TotalPowerTable::checkAndAdd(TotalPowerRow* x) throw (DuplicateKey) {
-		string keystr = Key(x->configDescriptionId, x->fieldId); 
+	
+		
+		
+			
+			
+			
+			
+	TotalPowerRow*  TotalPowerTable::checkAndAdd(TotalPowerRow* x) {
+		string keystr = Key( 
+						x->getConfigDescriptionId() 
+					   , 
+						x->getFieldId() 
+					   ); 
 		if (context.find(keystr) == context.end()) {
 			vector<TotalPowerRow *> v;
 			context[keystr] = v;
 		}
 		
 		vector<TotalPowerRow*>& found = context.find(keystr)->second;
-//		return insertByTime(context[keystr], x);
 		return insertByTime(x, found);	
-	}	
+	}				
+			
+					
+		
 
-	//
-	// ====> Methods returning rows.
-	//	
+
+
+
+
+
+
+	
+
+	
+	
+		
 	/**
 	 * Get all rows.
 	 * @return Alls rows as an array of TotalPowerRow
 	 */
-	vector<TotalPowerRow *> TotalPowerTable::get() {
-		return privateRows;
-	}
-
-
+	 vector<TotalPowerRow *> TotalPowerTable::get() {
+	    return privateRows;
+	    
+	 /*
+	 	vector<TotalPowerRow *> v;
+	 	map<string, TIME_ROWS>::iterator mapIter;
+	 	vector<TotalPowerRow *>::iterator rowIter;
+	 	
+	 	for (mapIter=context.begin(); mapIter!=context.end(); mapIter++) {
+	 		for (rowIter=((*mapIter).second).begin(); rowIter!=((*mapIter).second).end(); rowIter++) 
+	 			v.push_back(*rowIter); 
+	 	}
+	 	
+	 	return v;
+	 */
+	 }
+	 
 	 vector<TotalPowerRow *> *TotalPowerTable::getByContext(Tag configDescriptionId, Tag fieldId) {
 	  	string k = Key(configDescriptionId, fieldId);
  
 	    if (context.find(k) == context.end()) return 0;
  	   else return &(context[k]);		
 	}		
+		
+	
+
+
+	
+		
+		
+			
+			
+			
 /*
  ** Returns a TotalPowerRow* given a key.
  ** @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  ** no row exists for that key.
  **
  */
- 	TotalPowerRow* TotalPowerTable::getRowByKey(Tag configDescriptionId, Tag fieldId, ArrayTime time)  {
- 		string keystr = Key(configDescriptionId, fieldId);
+ 				
+				
+ 	TotalPowerRow* TotalPowerTable::getRowByKey(ArrayTime time, Tag configDescriptionId, Tag fieldId)  {
+		string keystr = Key(configDescriptionId, fieldId);
  		
  		if (context.find(keystr) == context.end()) return 0;
  		
@@ -460,62 +472,13 @@ TotalPowerRow* TotalPowerTable::newRowCopy(TotalPowerRow* row) {
 			} 	
 		}
 		return 0; 			
-	}
-	
-
-	
-/**
- * Look up the table for a row whose all attributes 
- * are equal to the corresponding parameters of the method.
- * @return a pointer on this row if any, 0 otherwise.
- *
+	}								
+							
 			
- * @param configDescriptionId.
- 	 		
- * @param fieldId.
- 	 		
- * @param time.
- 	 		
- * @param execBlockId.
- 	 		
- * @param stateId.
- 	 		
- * @param scanNumber.
- 	 		
- * @param subscanNumber.
- 	 		
- * @param integrationNumber.
- 	 		
- * @param uvw.
- 	 		
- * @param exposure.
- 	 		
- * @param timeCentroid.
- 	 		
- * @param floatData.
- 	 		
- * @param flagAnt.
- 	 		
- * @param flagPol.
- 	 		
- * @param flagRow.
- 	 		
- * @param interval.
- 	 		 
- */
-TotalPowerRow* TotalPowerTable::lookup(Tag configDescriptionId, Tag fieldId, ArrayTime time, Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, int integrationNumber, vector<vector<Length > > uvw, vector<vector<Interval > > exposure, vector<vector<ArrayTime > > timeCentroid, vector<vector<vector<float > > > floatData, vector<int > flagAnt, vector<vector<int > > flagPol, bool flagRow, Interval interval) {
-		TotalPowerRow* aRow;
-		for (unsigned int i = 0; i < size(); i++) {
-			aRow =privateRows.at(i); 
-			if (aRow->compareNoAutoInc(configDescriptionId, fieldId, time, execBlockId, stateId, scanNumber, subscanNumber, integrationNumber, uvw, exposure, timeCentroid, floatData, flagAnt, flagPol, flagRow, interval)) return aRow;
-		}			
-		return 0;	
-} 
+		
+		
+		
 	
- 	 	
-
-	
-
 
 
 
@@ -536,7 +499,7 @@ TotalPowerRow* TotalPowerTable::lookup(Tag configDescriptionId, Tag fieldId, Arr
 #endif
 	
 #ifndef WITHOUT_ACS
-	void TotalPowerTable::fromIDL(TotalPowerTableIDL x) throw(DuplicateKey,ConversionException) {
+	void TotalPowerTable::fromIDL(TotalPowerTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			TotalPowerRow *tmp = newRow();
@@ -547,28 +510,27 @@ TotalPowerRow* TotalPowerTable::lookup(Tag configDescriptionId, Tag fieldId, Arr
 	}
 #endif
 
-	char *TotalPowerTable::toFITS() const throw(ConversionException) {
+	char *TotalPowerTable::toFITS() const  {
 		throw ConversionException("Not implemented","TotalPower");
 	}
 
-	void TotalPowerTable::fromFITS(char *fits) throw(ConversionException) {
+	void TotalPowerTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","TotalPower");
 	}
 
-	string TotalPowerTable::toVOTable() const throw(ConversionException) {
+	string TotalPowerTable::toVOTable() const {
 		throw ConversionException("Not implemented","TotalPower");
 	}
 
-	void TotalPowerTable::fromVOTable(string vo) throw(ConversionException) {
+	void TotalPowerTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","TotalPower");
 	}
 
-	string TotalPowerTable::toXML()  throw(ConversionException) {
+	
+	string TotalPowerTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<TotalPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/TotalPowerTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<TotalPowerTable> ");
+		buf.append("<TotalPowerTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/TotalPowerTable\" xsi:schemaLocation=\"http://Alma/XASDM/TotalPowerTable http://almaobservatory.org/XML/XASDM/2/TotalPowerTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -584,8 +546,9 @@ TotalPowerRow* TotalPowerTable::lookup(Tag configDescriptionId, Tag fieldId, Arr
 		buf.append("</TotalPowerTable> ");
 		return buf;
 	}
+
 	
-	void TotalPowerTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void TotalPowerTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<TotalPowerTable")) 
 			error();
@@ -627,7 +590,13 @@ TotalPowerRow* TotalPowerTable::lookup(Tag configDescriptionId, Tag fieldId, Arr
 			error();
 	}
 
-	string TotalPowerTable::toMIME() {		
+	
+	void TotalPowerTable::error()  {
+		throw ConversionException("Invalid xml document","TotalPower");
+	}
+	
+	
+	string TotalPowerTable::toMIME() {
 		EndianOSStream eoss;
 		
 		string UID = getEntity().getEntityId().toString();
@@ -654,7 +623,7 @@ TotalPowerRow* TotalPowerTable::lookup(Tag configDescriptionId, Tag fieldId, Arr
 		eoss <<"Content-ID: <header.xml>";
 		eoss <<"\n";
 		eoss <<"\n";
-
+		
 		// The MIME XML part content.
 		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		eoss << "\n";
@@ -687,8 +656,10 @@ TotalPowerRow* TotalPowerTable::lookup(Tag configDescriptionId, Tag fieldId, Arr
 		
 		return eoss.str();	
 	}
+
 	
 	void TotalPowerTable::setFromMIME(const string & mimeMsg) {
+		// cout << "Entering setFromMIME" << endl;
 	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
 	 	
 	 	// Look for the string announcing the binary part.
@@ -697,15 +668,15 @@ TotalPowerRow* TotalPowerTable::lookup(Tag configDescriptionId, Tag fieldId, Arr
 	 	if ( loc == string::npos ) {
 	 		throw ConversionException("Failed to detect the beginning of the binary part", "TotalPower");
 	 	}
-	 	
+	
 	 	// Create an EndianISStream from the substring containing the binary part.
 	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
 	 	
 	 	entity = Entity::fromBin(eiss);
-
+	 	
 	 	// We do nothing with that but we have to read it.
 	 	Entity containerEntity = Entity::fromBin(eiss);
-	 	
+	 		 	
 	 	int numRows = eiss.readInt();
 	 	try {
 	 		for (int i = 0; i < numRows; i++) {
@@ -720,12 +691,9 @@ TotalPowerRow* TotalPowerTable::lookup(Tag configDescriptionId, Tag fieldId, Arr
 		catch (TagFormatException e) {
 			throw ConversionException("Error while reading binary data , the message was "
 					+ e.getMessage(), "TotalPower");
-		}	 		 	
-	 }	
-
-	void TotalPowerTable::error() throw(ConversionException) {
-		throw ConversionException("Invalid xml document","TotalPower");
+		} 		 	
 	}
+
 	
 	void TotalPowerTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -756,6 +724,7 @@ TotalPowerRow* TotalPowerTable::lookup(Tag configDescriptionId, Tag fieldId, Arr
 				throw ConversionException("Could not close file " + fileName, "TotalPower");
 		}
 	}
+
 	
 	void TotalPowerTable::setFromFile(const string& directory) {
 		string tablename;
@@ -769,7 +738,7 @@ TotalPowerRow* TotalPowerTable::lookup(Tag configDescriptionId, Tag fieldId, Arr
 		ifstream tablefile(tablename.c_str(), ios::in|ios::binary|ios::ate);
 
  		if (tablefile.is_open()) { 
-  				size = tablefile.tellg();
+  				size = tablefile.tellg(); 
   		}
 		else {
 				throw ConversionException("Could not open file " + tablename, "TotalPower");
@@ -795,13 +764,81 @@ TotalPowerRow* TotalPowerTable::lookup(Tag configDescriptionId, Tag fieldId, Arr
 		if (fileAsBin) 
 			setFromMIME(ss.str());
 		else
-			fromXML(ss.str());			
-	}		
+			fromXML(ss.str());	
+	}			
+
 	
-	string TotalPowerTable:: Key(const Tag& configDescriptionId, const Tag& fieldId) {
-		ostringstream result;
-		result << configDescriptionId.toString() << "_" << fieldId.toString() ;
-		return result.str();
-	}
+
+	
+
+			
+	
+		
+    	
+ 	TotalPowerRow * TotalPowerTable::insertByTime(TotalPowerRow* x, vector<TotalPowerRow *>&row ) {
+		ArrayTime start = x->getTime();
+		
+		// Is the vector empty ?
+		if (row.size() == 0) {
+			row.push_back(x);
+			privateRows.push_back(x);
+			x->isAdded();
+			return x;
+		}
+		
+		// Optimization for the case of insertion by ascending time.
+		TotalPowerRow* last = row.at(row.size()-1);
+		
+		if (start.get() > last->getTime().get()) {
+			row.push_back(x);
+			privateRows.push_back(x);
+			x->isAdded();
+			return x;
+		}
+		
+		// Optimization for the case of insertion by descending time.
+		TotalPowerRow* first = row.at(0);
+		
+		if (start.get() < first->getTime().get()) {
+			row.insert(row.begin(), x);
+			privateRows.push_back(x);
+			x->isAdded();
+			return x;
+		}
+		
+		// Case where x has to be inserted inside row; let's use a dichotomy
+		// method to find the insertion index.		
+		int k0 = 0;
+		int k1 = row.size() - 1;    	  
+		while (k0 != (k1 - 1)) {
+			if (start.get() == row.at(k0)->getTime().get()) {
+				if (row.at(k0)->equalByRequiredValue(x))
+					return row.at(k0);
+				else
+					throw DuplicateKey("DuplicateKey exception in ", "TotalPowerTable");	
+			}
+			else if (start.get() == row.at(k1)->getTime().get()) {
+				if (row.at(k1)->equalByRequiredValue(x))
+					return row.at(k1);
+				else
+					throw  DuplicateKey("DuplicateKey exception in ", "TotalPowerTable");	
+			}
+			else {
+				if (start.get() <= row.at((k0+k1)/2)->getTime().get())
+					k1 = (k0 + k1) / 2;
+				else
+					k0 = (k0 + k1) / 2;				
+			} 	
+		}
+		row.insert(row.begin()+(k0+1), x);
+		privateRows.push_back(x);
+		x->isAdded();
+		return x; 						
+	}   	
+    	
+	
+	
+
+	
 } // End namespace asdm
  

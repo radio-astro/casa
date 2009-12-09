@@ -78,13 +78,8 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
-
-	
-
+#include "CAtmPhaseCorrection.h"
+using namespace AtmPhaseCorrectionMod;
 	
 
 	
@@ -100,6 +95,23 @@ using namespace enumerations;
 	
 #include "CPositionMethod.h"
 using namespace PositionMethodMod;
+	
+
+	
+#include "CReceiverBand.h"
+using namespace ReceiverBandMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -133,7 +145,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalPosition.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -141,17 +153,17 @@ namespace asdm {
 //class asdm::CalPositionTable;
 
 
-// class asdm::CalReductionRow;
-class CalReductionRow;
-
 // class asdm::CalDataRow;
 class CalDataRow;
+
+// class asdm::CalReductionRow;
+class CalReductionRow;
 	
 
 /**
  * The CalPositionRow class is a row of a CalPositionTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class CalPositionRow {
@@ -178,8 +190,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalPositionRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalPositionRowIDL x) throw(ConversionException);
+	void setFromIDL (CalPositionRowIDL x) ;
 #endif
 	
 	/**
@@ -192,8 +205,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalPositionTable to which the row built by deserialization will be parented.
+	  */
+	 static CalPositionRow* fromBin(EndianISStream& eiss, CalPositionTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -232,29 +259,31 @@ public:
 
 
 	
-	// ===> Attribute numAntenna
+	// ===> Attribute atmPhaseCorrection
 	
 	
 	
 
 	
  	/**
- 	 * Get numAntenna.
- 	 * @return numAntenna as int
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
  	 */
- 	int getNumAntenna() const;
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection getAtmPhaseCorrection() const;
 	
  
  	
  	
  	/**
- 	 * Set numAntenna with the specified int.
- 	 * @param numAntenna The int value to which numAntenna is to be set.
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
  	 
  		
  			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setNumAntenna (int numAntenna);
+ 	void setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection);
   		
 	
 	
@@ -322,6 +351,306 @@ public:
 
 
 	
+	// ===> Attribute antennaPosition
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get antennaPosition.
+ 	 * @return antennaPosition as vector<Length >
+ 	 */
+ 	vector<Length > getAntennaPosition() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set antennaPosition with the specified vector<Length >.
+ 	 * @param antennaPosition The vector<Length > value to which antennaPosition is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setAntennaPosition (vector<Length > antennaPosition);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute stationName
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get stationName.
+ 	 * @return stationName as string
+ 	 */
+ 	string getStationName() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set stationName with the specified string.
+ 	 * @param stationName The string value to which stationName is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setStationName (string stationName);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute stationPosition
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get stationPosition.
+ 	 * @return stationPosition as vector<Length >
+ 	 */
+ 	vector<Length > getStationPosition() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set stationPosition with the specified vector<Length >.
+ 	 * @param stationPosition The vector<Length > value to which stationPosition is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setStationPosition (vector<Length > stationPosition);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute positionMethod
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get positionMethod.
+ 	 * @return positionMethod as PositionMethodMod::PositionMethod
+ 	 */
+ 	PositionMethodMod::PositionMethod getPositionMethod() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set positionMethod with the specified PositionMethodMod::PositionMethod.
+ 	 * @param positionMethod The PositionMethodMod::PositionMethod value to which positionMethod is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setPositionMethod (PositionMethodMod::PositionMethod positionMethod);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute receiverBand
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 */
+ 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numAntenna
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numAntenna.
+ 	 * @return numAntenna as int
+ 	 */
+ 	int getNumAntenna() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numAntenna with the specified int.
+ 	 * @param numAntenna The int value to which numAntenna is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumAntenna (int numAntenna);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute refAntennaNames
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get refAntennaNames.
+ 	 * @return refAntennaNames as vector<string >
+ 	 */
+ 	vector<string > getRefAntennaNames() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set refAntennaNames with the specified vector<string >.
+ 	 * @param refAntennaNames The vector<string > value to which refAntennaNames is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setRefAntennaNames (vector<string > refAntennaNames);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute axesOffset
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get axesOffset.
+ 	 * @return axesOffset as Length
+ 	 */
+ 	Length getAxesOffset() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set axesOffset with the specified Length.
+ 	 * @param axesOffset The Length value to which axesOffset is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setAxesOffset (Length axesOffset);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute axesOffsetErr
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get axesOffsetErr.
+ 	 * @return axesOffsetErr as Length
+ 	 */
+ 	Length getAxesOffsetErr() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set axesOffsetErr with the specified Length.
+ 	 * @param axesOffsetErr The Length value to which axesOffsetErr is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setAxesOffsetErr (Length axesOffsetErr);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute axesOffsetFixed
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get axesOffsetFixed.
+ 	 * @return axesOffsetFixed as bool
+ 	 */
+ 	bool getAxesOffsetFixed() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set axesOffsetFixed with the specified bool.
+ 	 * @param axesOffsetFixed The bool value to which axesOffsetFixed is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setAxesOffsetFixed (bool axesOffsetFixed);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute positionOffset
 	
 	
@@ -382,29 +711,29 @@ public:
 
 
 	
-	// ===> Attribute delayRms
+	// ===> Attribute reducedChiSquared
 	
 	
 	
 
 	
  	/**
- 	 * Get delayRms.
- 	 * @return delayRms as Interval
+ 	 * Get reducedChiSquared.
+ 	 * @return reducedChiSquared as double
  	 */
- 	Interval getDelayRms() const;
+ 	double getReducedChiSquared() const;
 	
  
  	
  	
  	/**
- 	 * Set delayRms with the specified Interval.
- 	 * @param delayRms The Interval value to which delayRms is to be set.
+ 	 * Set reducedChiSquared with the specified double.
+ 	 * @param reducedChiSquared The double value to which reducedChiSquared is to be set.
  	 
  		
  			
  	 */
- 	void setDelayRms (Interval delayRms);
+ 	void setReducedChiSquared (double reducedChiSquared);
   		
 	
 	
@@ -412,15 +741,63 @@ public:
 
 
 	
-	// ===> Attribute phaseRms
+	// ===> Attribute delayRms, which is optional
 	
 	
+	
+	/**
+	 * The attribute delayRms is optional. Return true if this attribute exists.
+	 * @return true if and only if the delayRms attribute exists. 
+	 */
+	bool isDelayRmsExists() const;
 	
 
 	
  	/**
- 	 * Get phaseRms.
+ 	 * Get delayRms, which is optional.
+ 	 * @return delayRms as double
+ 	 * @throws IllegalAccessException If delayRms does not exist.
+ 	 */
+ 	double getDelayRms() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set delayRms with the specified double.
+ 	 * @param delayRms The double value to which delayRms is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setDelayRms (double delayRms);
+		
+	
+	
+	
+	/**
+	 * Mark delayRms, which is an optional field, as non-existent.
+	 */
+	void clearDelayRms ();
+	
+
+
+	
+	// ===> Attribute phaseRms, which is optional
+	
+	
+	
+	/**
+	 * The attribute phaseRms is optional. Return true if this attribute exists.
+	 * @return true if and only if the phaseRms attribute exists. 
+	 */
+	bool isPhaseRmsExists() const;
+	
+
+	
+ 	/**
+ 	 * Get phaseRms, which is optional.
  	 * @return phaseRms as Angle
+ 	 * @throws IllegalAccessException If phaseRms does not exist.
  	 */
  	Angle getPhaseRms() const;
 	
@@ -432,252 +809,16 @@ public:
  	 * @param phaseRms The Angle value to which phaseRms is to be set.
  	 
  		
- 			
  	 */
  	void setPhaseRms (Angle phaseRms);
-  		
+		
 	
 	
 	
-
-
-	
-	// ===> Attribute axesOffset
-	
-	
-	
-
-	
- 	/**
- 	 * Get axesOffset.
- 	 * @return axesOffset as Length
- 	 */
- 	Length getAxesOffset() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set axesOffset with the specified Length.
- 	 * @param axesOffset The Length value to which axesOffset is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setAxesOffset (Length axesOffset);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute axesOffsetFixed
-	
-	
-	
-
-	
- 	/**
- 	 * Get axesOffsetFixed.
- 	 * @return axesOffsetFixed as bool
- 	 */
- 	bool getAxesOffsetFixed() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set axesOffsetFixed with the specified bool.
- 	 * @param axesOffsetFixed The bool value to which axesOffsetFixed is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setAxesOffsetFixed (bool axesOffsetFixed);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute axesOffsetErr
-	
-	
-	
-
-	
- 	/**
- 	 * Get axesOffsetErr.
- 	 * @return axesOffsetErr as Length
- 	 */
- 	Length getAxesOffsetErr() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set axesOffsetErr with the specified Length.
- 	 * @param axesOffsetErr The Length value to which axesOffsetErr is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setAxesOffsetErr (Length axesOffsetErr);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute positionMethod
-	
-	
-	
-
-	
- 	/**
- 	 * Get positionMethod.
- 	 * @return positionMethod as PositionMethodMod::PositionMethod
- 	 */
- 	PositionMethodMod::PositionMethod getPositionMethod() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set positionMethod with the specified PositionMethodMod::PositionMethod.
- 	 * @param positionMethod The PositionMethodMod::PositionMethod value to which positionMethod is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setPositionMethod (PositionMethodMod::PositionMethod positionMethod);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute refAntennaNames
-	
-	
-	
-
-	
- 	/**
- 	 * Get refAntennaNames.
- 	 * @return refAntennaNames as vector<string >
- 	 */
- 	vector<string > getRefAntennaNames() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set refAntennaNames with the specified vector<string >.
- 	 * @param refAntennaNames The vector<string > value to which refAntennaNames is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setRefAntennaNames (vector<string > refAntennaNames);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute stationName
-	
-	
-	
-
-	
- 	/**
- 	 * Get stationName.
- 	 * @return stationName as string
- 	 */
- 	string getStationName() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set stationName with the specified string.
- 	 * @param stationName The string value to which stationName is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setStationName (string stationName);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute antennaPosition
-	
-	
-	
-
-	
- 	/**
- 	 * Get antennaPosition.
- 	 * @return antennaPosition as vector<Length >
- 	 */
- 	vector<Length > getAntennaPosition() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set antennaPosition with the specified vector<Length >.
- 	 * @param antennaPosition The vector<Length > value to which antennaPosition is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setAntennaPosition (vector<Length > antennaPosition);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute stationPosition
-	
-	
-	
-
-	
- 	/**
- 	 * Get stationPosition.
- 	 * @return stationPosition as vector<Length >
- 	 */
- 	vector<Length > getStationPosition() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set stationPosition with the specified vector<Length >.
- 	 * @param stationPosition The vector<Length > value to which stationPosition is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setStationPosition (vector<Length > stationPosition);
-  		
-	
-	
+	/**
+	 * Mark phaseRms, which is an optional field, as non-existent.
+	 */
+	void clearPhaseRms ();
 	
 
 
@@ -758,21 +899,6 @@ public:
 	
 		
 	/**
-	 * calReductionId pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
-	 * @return a CalReductionRow*
-	 * 
-	 
-	 */
-	 CalReductionRow* getCalReductionUsingCalReductionId();
-	 
-
-	
-
-	
-
-	
-		
-	/**
 	 * calDataId pointer to the row in the CalData table having CalData.calDataId == calDataId
 	 * @return a CalDataRow*
 	 * 
@@ -784,18 +910,33 @@ public:
 	
 
 	
+
+	
+		
+	/**
+	 * calReductionId pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
+	 * @return a CalReductionRow*
+	 * 
+	 
+	 */
+	 CalReductionRow* getCalReductionUsingCalReductionId();
+	 
+
+	
+
+	
 	
 	
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this CalPositionRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, int numAntenna, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > positionOffset, vector<Length > positionErr, Interval delayRms, Angle phaseRms, Length axesOffset, bool axesOffsetFixed, Length axesOffsetErr, PositionMethodMod::PositionMethod positionMethod, vector<string > refAntennaNames, string stationName, vector<Length > antennaPosition, vector<Length > stationPosition);
+	bool compareNoAutoInc(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > antennaPosition, string stationName, vector<Length > stationPosition, PositionMethodMod::PositionMethod positionMethod, ReceiverBandMod::ReceiverBand receiverBand, int numAntenna, vector<string > refAntennaNames, Length axesOffset, Length axesOffsetErr, bool axesOffsetFixed, vector<Length > positionOffset, vector<Length > positionErr, double reducedChiSquared);
 	
 	
 
 	
-	bool compareRequiredValue(int numAntenna, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > positionOffset, vector<Length > positionErr, Interval delayRms, Angle phaseRms, Length axesOffset, bool axesOffsetFixed, Length axesOffsetErr, PositionMethodMod::PositionMethod positionMethod, vector<string > refAntennaNames, string stationName, vector<Length > antennaPosition, vector<Length > stationPosition); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > antennaPosition, string stationName, vector<Length > stationPosition, PositionMethodMod::PositionMethod positionMethod, ReceiverBandMod::ReceiverBand receiverBand, int numAntenna, vector<string > refAntennaNames, Length axesOffset, Length axesOffsetErr, bool axesOffsetFixed, vector<Length > positionOffset, vector<Length > positionErr, double reducedChiSquared); 
 		 
 	
 	/**
@@ -867,11 +1008,11 @@ private:
  	
 
 	
-	// ===> Attribute numAntenna
+	// ===> Attribute atmPhaseCorrection
 	
 	
 
-	int numAntenna;
+	AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection;
 
 	
 	
@@ -900,6 +1041,116 @@ private:
  	
 
 	
+	// ===> Attribute antennaPosition
+	
+	
+
+	vector<Length > antennaPosition;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute stationName
+	
+	
+
+	string stationName;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute stationPosition
+	
+	
+
+	vector<Length > stationPosition;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute positionMethod
+	
+	
+
+	PositionMethodMod::PositionMethod positionMethod;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute receiverBand
+	
+	
+
+	ReceiverBandMod::ReceiverBand receiverBand;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numAntenna
+	
+	
+
+	int numAntenna;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute refAntennaNames
+	
+	
+
+	vector<string > refAntennaNames;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute axesOffset
+	
+	
+
+	Length axesOffset;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute axesOffsetErr
+	
+	
+
+	Length axesOffsetErr;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute axesOffsetFixed
+	
+	
+
+	bool axesOffsetFixed;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute positionOffset
 	
 	
@@ -922,110 +1173,37 @@ private:
  	
 
 	
-	// ===> Attribute delayRms
+	// ===> Attribute reducedChiSquared
 	
 	
 
-	Interval delayRms;
+	double reducedChiSquared;
 
 	
 	
  	
 
 	
-	// ===> Attribute phaseRms
+	// ===> Attribute delayRms, which is optional
 	
+	
+	bool delayRmsExists;
+	
+
+	double delayRms;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute phaseRms, which is optional
+	
+	
+	bool phaseRmsExists;
 	
 
 	Angle phaseRms;
-
-	
-	
- 	
-
-	
-	// ===> Attribute axesOffset
-	
-	
-
-	Length axesOffset;
-
-	
-	
- 	
-
-	
-	// ===> Attribute axesOffsetFixed
-	
-	
-
-	bool axesOffsetFixed;
-
-	
-	
- 	
-
-	
-	// ===> Attribute axesOffsetErr
-	
-	
-
-	Length axesOffsetErr;
-
-	
-	
- 	
-
-	
-	// ===> Attribute positionMethod
-	
-	
-
-	PositionMethodMod::PositionMethod positionMethod;
-
-	
-	
- 	
-
-	
-	// ===> Attribute refAntennaNames
-	
-	
-
-	vector<string > refAntennaNames;
-
-	
-	
- 	
-
-	
-	// ===> Attribute stationName
-	
-	
-
-	string stationName;
-
-	
-	
- 	
-
-	
-	// ===> Attribute antennaPosition
-	
-	
-
-	vector<Length > antennaPosition;
-
-	
-	
- 	
-
-	
-	// ===> Attribute stationPosition
-	
-	
-
-	vector<Length > stationPosition;
 
 	
 	

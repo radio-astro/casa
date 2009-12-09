@@ -180,7 +180,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct FlagCmdRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void FlagCmdRow::setFromIDL (FlagCmdRowIDL x) throw(ConversionException) {
+	void FlagCmdRow::setFromIDL (FlagCmdRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -259,7 +259,7 @@ namespace asdm {
 	
 		
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"FlagCmd");
+			throw ConversionException (err.getMessage(),"FlagCmd");
 		}
 	}
 #endif
@@ -343,7 +343,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void FlagCmdRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void FlagCmdRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -411,6 +411,148 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"FlagCmd");
 		}
+	}
+	
+	void FlagCmdRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	timeInterval.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(type);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(reason);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(level);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(severity);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(applied);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(command);
+				
+		
+	
+
+
+	
+	
+	}
+	
+	FlagCmdRow* FlagCmdRow::fromBin(EndianISStream& eiss, FlagCmdTable& table) {
+		FlagCmdRow* row = new  FlagCmdRow(table);
+		
+		
+		
+	
+		
+		
+		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->type =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->reason =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->level =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->severity =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->applied =  eiss.readBoolean();
+			
+		
+	
+
+	
+	
+		
+			
+		row->command =  eiss.readString();
+			
+		
+	
+
+		
+		
+		
+		
+		return row;
 	}
 	
 	////////////////////////////////

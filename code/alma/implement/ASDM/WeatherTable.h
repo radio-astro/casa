@@ -144,121 +144,142 @@ class ASDM;
 class WeatherRow;
 /**
  * The WeatherTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Weather station information.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Weather </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> stationId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> stationId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in StationTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> timeInterval </TD> 
- * <TD> ArrayTimeInterval </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> timeInterval </TD>
+ 		 
+ * <TD> ArrayTimeInterval</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the time interval for which the row's content is valid. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> pressure </TD> 
  * <TD> Pressure </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> relHumidity </TD> 
- * <TD> Humidity </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> temperature </TD> 
- * <TD> Temperature </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> windDirection </TD> 
- * <TD> Angle </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> windSpeed </TD> 
- * <TD> Speed </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> windMax </TD> 
- * <TD> Speed </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the ambient pressure. </TD>
  * </TR>
 	
  * <TR>
  * <TD> pressureFlag </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the ambient pressure's value  is invalid (true) or valid (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> relHumidity </TD> 
+ * <TD> Humidity </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the relative humidity. </TD>
  * </TR>
 	
  * <TR>
  * <TD> relHumidityFlag </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the relative humidity's value  is invalid (true) or valid (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> temperature </TD> 
+ * <TD> Temperature </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the ambient temperature. </TD>
  * </TR>
 	
  * <TR>
  * <TD> temperatureFlag </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the ambient temperature's value is invalid (true) or valid (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> windDirection </TD> 
+ * <TD> Angle </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the wind direction. </TD>
  * </TR>
 	
  * <TR>
  * <TD> windDirectionFlag </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the wind direction's value is invalid (true) or valid (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> windSpeed </TD> 
+ * <TD> Speed </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the wind speed. </TD>
  * </TR>
 	
  * <TR>
  * <TD> windSpeedFlag </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the  wind speed value is invalid (true) or valid (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> windMax </TD> 
+ * <TD> Speed </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the maximum wind speed </TD>
  * </TR>
 	
  * <TR>
  * <TD> windMaxFlag </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the maximum wind speed value is invalid (true) or valid (false). </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> dewPoint </TD> 
  * <TD> Temperature </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the dew point's value. </TD>
  * </TR>
 	
  * <TR>
  * <TD> dewPointFlag </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the dew point's value is invalid (true) or valid (false). </TD>
  * </TR>
 	
 
@@ -339,36 +360,36 @@ public:
 	
  	 * @param pressure. 
 	
- 	 * @param relHumidity. 
-	
- 	 * @param temperature. 
-	
- 	 * @param windDirection. 
-	
- 	 * @param windSpeed. 
-	
- 	 * @param windMax. 
-	
  	 * @param pressureFlag. 
+	
+ 	 * @param relHumidity. 
 	
  	 * @param relHumidityFlag. 
 	
+ 	 * @param temperature. 
+	
  	 * @param temperatureFlag. 
+	
+ 	 * @param windDirection. 
 	
  	 * @param windDirectionFlag. 
 	
+ 	 * @param windSpeed. 
+	
  	 * @param windSpeedFlag. 
+	
+ 	 * @param windMax. 
 	
  	 * @param windMaxFlag. 
 	
      */
-	WeatherRow *newRow(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, Humidity relHumidity, Temperature temperature, Angle windDirection, Speed windSpeed, Speed windMax, bool pressureFlag, bool relHumidityFlag, bool temperatureFlag, bool windDirectionFlag, bool windSpeedFlag, bool windMaxFlag);
+	WeatherRow *newRow(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	WeatherRow *newRowFull(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, Humidity relHumidity, Temperature temperature, Angle windDirection, Speed windSpeed, Speed windMax, bool pressureFlag, bool relHumidityFlag, bool temperatureFlag, bool windDirectionFlag, bool windSpeedFlag, bool windMaxFlag);
+	WeatherRow *newRowFull(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag);
 
 
 	/**
@@ -472,30 +493,30 @@ public:
  	 		
  	 * @param pressure.
  	 		
- 	 * @param relHumidity.
- 	 		
- 	 * @param temperature.
- 	 		
- 	 * @param windDirection.
- 	 		
- 	 * @param windSpeed.
- 	 		
- 	 * @param windMax.
- 	 		
  	 * @param pressureFlag.
+ 	 		
+ 	 * @param relHumidity.
  	 		
  	 * @param relHumidityFlag.
  	 		
+ 	 * @param temperature.
+ 	 		
  	 * @param temperatureFlag.
+ 	 		
+ 	 * @param windDirection.
  	 		
  	 * @param windDirectionFlag.
  	 		
+ 	 * @param windSpeed.
+ 	 		
  	 * @param windSpeedFlag.
+ 	 		
+ 	 * @param windMax.
  	 		
  	 * @param windMaxFlag.
  	 		 
  	 */
-	WeatherRow* lookup(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, Humidity relHumidity, Temperature temperature, Angle windDirection, Speed windSpeed, Speed windMax, bool pressureFlag, bool relHumidityFlag, bool temperatureFlag, bool windDirectionFlag, bool windSpeedFlag, bool windMaxFlag); 
+	WeatherRow* lookup(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag); 
 
 
 #ifndef WITHOUT_ACS
@@ -515,43 +536,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(WeatherTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(WeatherTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for Weather (WeatherTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a Weather (WeatherTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -626,8 +653,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	WeatherRow* checkAndAdd(WeatherRow* x) throw (DuplicateKey);
+	WeatherRow* checkAndAdd(WeatherRow* x) ;
 
 
 	
@@ -676,7 +705,7 @@ private:
 	
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <casa/sstream.h>
 #include <casa/System/PGPlotter.h>
-    
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // when no plotter is specified for screen/report,
@@ -82,26 +82,25 @@ PGPlotterInterface & RFChunkStats::pgprep() const
 void RFChunkStats::setReportPanels (Int nx,Int ny) const 
 { flagger.setReportPanels(nx,ny); }
 
-void RFChunkStats::newChunk ()
+void RFChunkStats::newChunk(bool init_quack)
 {
   itime=-1;
   chunk_no++;
 // setup shapes
-  visshape = visiter.visibilityShape();
+  visshape = visiter.visibilityShape(); //4
   counts[POLZN] = visshape(0);
   counts[CHAN] = visshape(1);
+
   counts[TIME] = visiter.nSubInterval();
-//  counts[TIME] = flagger.numTime();
-//  Flagger::logSink()<<LogIO::WARN<< 
-//    "RFChunkStats::newChunk(): "
-//    "VisIter::nSubInterval() not yet implemented. Using global NTIME instead\n"<<LogIO::POST;
   counts[ROW]  = visiter.nRowChunk();
+
 // get correlation types
   visiter.corrType(corrtypes);
 // reset min/max time slots
   start_time = end_time = current_time = 0;
 
 // setups statistics
+
   nrf_time.resize(num(TIME));
   nrf_time.set(0);
   nrf_ifr.resize(num(IFR));
@@ -122,10 +121,9 @@ void RFChunkStats::newChunk ()
 //  nf_corr_time.resize(num(CORR),num(TIME));
 //  nf_corr_time.set(0);
 
-  nf_chan_ifr_time.resize(num(CHAN),num(IFR),num(TIME));
-  nf_chan_ifr_time.set(0);
-
-//  cout << "Ifr : " << num(IFR) << " Chan : " << num(CHAN) << " Corr : " << num(CORR) << " Time : " << num(TIME) << endl;
+  if (0) {
+    cout << "Ifr : " << num(IFR) << " Chan : " << num(CHAN) << " Corr : " << num(CORR) << " Time : " << num(TIME) << endl;
+  }
       
 // build up description of correlations
   corr_string = "";
@@ -136,6 +134,88 @@ void RFChunkStats::newChunk ()
   sprintf(s,"Chunk %d : [field: %d, spw: %d] %s, %d channels, %d time slots, %d baselines, %d rows\n", chunk_no,visBuf().fieldId(),visBuf().spectralWindow(),corr_string.chars(),num(CHAN),num(TIME),num(IFR),num(ROW));
  // Flagger::logSink()<<s<<LogIO::POST;
 
+  if (init_quack) {
+      // figure out all scan's start and end times
+      // for use in quack mode
+      for (visiter.origin(); 
+           visiter.more(); 
+           visiter++) {
+          
+          int scan = visbuf.scan()(0);
+
+          if (scan < 0) {
+
+            std::string s;
+            std::stringstream ss;
+            ss << scan;
+            s = ss.str();
+	    throw AipsError("Scan number must be non-negative, is " + s);
+          }
+          const Vector<Double> &times(visbuf.time());
+
+          double t0 = times(0);
+
+          /* Figure out if anything is flagged in this buffer */
+          Bool any_unflagged = false;
+          casa::Bool dataIsAcopy;
+          casa::Bool * flags = visbuf.flagCube().getStorage(dataIsAcopy);
+          
+          unsigned n = visbuf.flagCube().nelements();
+          for (unsigned i = 0; i < n; i++) {
+            //cout << "flags[" << i << " = " << flags[i] << endl;
+            if (!flags[i]) {
+              any_unflagged = true;
+              break;
+            }
+          }
+          visbuf.flagCube().putStorage(flags, dataIsAcopy);
+
+          //cout << "flagCube() = " << visbuf.flagCube() << endl;
+          //cout << "flag() = " << visbuf.flag() << endl;
+          //cout << "flagRow() = " << visbuf.flagRow() << endl;
+
+          if (scan_start.size() < (unsigned) scan+1) {
+            // initialize to -1
+            scan_start     .resize(scan+1, -1.0);
+            scan_start_flag.resize(scan+1, -1.0);
+            scan_end     .resize(scan+1, -1.0);
+            scan_end_flag.resize(scan+1, -1.0);
+          }
+          if (scan_start[scan] < 0 ||
+              t0 < scan_start[scan]) {
+            scan_start[scan] = t0;
+          }
+          if (scan_end[scan] < 0 ||
+              t0 > scan_end[scan-1]) {
+            scan_end[scan] = t0;
+          }
+
+          if (0) cout << "any_unflags = " << any_unflagged << endl;
+          if (any_unflagged) {
+            if (scan_start_flag[scan] < 0 ||
+                t0 < scan_start_flag[scan]) {
+              scan_start_flag[scan] = t0;
+            }
+            if (scan_end_flag[scan] < 0 ||
+                t0 > scan_end_flag[scan-1]) {
+              scan_end_flag[scan] = t0;
+            }
+          }
+      }
+      if (0) for (unsigned int i = 0; i < scan_start.size(); i++) {
+        
+        cerr << "scan " << i << " start      = " << 
+          MVTime( scan_start[i]/C::day).string(MVTime::DMY,7)
+             << " end = " << 
+          MVTime( scan_end[i]/C::day).string(MVTime::DMY,7) << endl;
+
+        cerr << "scan " << i << " start flag = " << 
+          MVTime( scan_start_flag[i]/C::day).string(MVTime::DMY,7)
+             << " end = " << 
+          MVTime( scan_end_flag[i]/C::day).string(MVTime::DMY,7) << endl;
+
+      }
+  }
 }
 
 void RFChunkStats::newPass (uInt npass)
@@ -161,6 +241,7 @@ void RFChunkStats::newTime ()
     start_time = current_time;
   if( current_time>end_time )
     end_time = current_time;
+
   itime++;
 //  dprintf(os,"newTime: %d\n",itime);
 }

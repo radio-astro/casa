@@ -47,6 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 class VisSet;
 class VisBuffer;
+class ROVisibilityIterator;
 class UVWMachine;
 
 // <summary> defines interface for the Fourier Transform Machine </summary>
@@ -181,7 +182,11 @@ public:
 			 VisSet& vs,
 			 ImageInterface<Complex>& image,
 			 Matrix<Float>& weight);
-
+  // Make the entire image using a ROVisIter
+  virtual void makeImage(FTMachine::Type type,
+			 ROVisibilityIterator& vi,
+			 ImageInterface<Complex>& image,
+			 Matrix<Float>& weight);
   // Rotate the uvw from the observed phase center to the
   // desired phase center.
   void rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
@@ -227,6 +232,13 @@ public:
 
   //set frequency interpolation type
   virtual void setFreqInterpolation(const String& method);
+
+  //tell ftmachine which Pointing table column to use for Direction
+  //Mosaic or Single dish ft use this for example
+  virtual void setPointingDirColumn(const String& column="DIRECTION");
+
+  virtual String getPointingDirColumnInUse();
+
 
 protected:
 
@@ -322,8 +334,11 @@ protected:
   Vector<Bool> doConversion_p;
   Bool freqFrameValid_p;
   Vector<Float> imageFreq_p;
+  //Vector of float lsrfreq needed for regridding
+  Vector<Double> lsrFreq_p;
   Vector<Double> interpVisFreq_p;
   InterpolateArray1D<Float,Complex>::InterpolationMethod freqInterpMethod_p;
+  String pointingDirCol_p;
  private:
   //Some temporary wasteful function for swapping axes because we don't 
   //Interpolation along the second axis...will need to implement 

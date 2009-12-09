@@ -5,61 +5,71 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="flagmanager">
-	<shortdescription>Enable list, save, restore and delete flag version files.</shortdescription>
-	<description>
+<task type="function" name="flagmanager" category="data editing">
+        <shortdescription>Enable list, save, restore, delete and rename flag version files.</shortdescription>
+        <description>
         These flag version files are copies of the flag column for a
         measurement set.  They can be restored to the data set to get
         back to a previous flag version.  On running importvla, a flag
         version call 'Original' is automatically produced.
-	</description>
-	<input>
-		<param type="string" name="vis" mustexist="true">
-			<description>Name of input visibility file (MS)</description>
-			<value></value>
+        </description>
+        <input>
+                <param type="string" name="vis" mustexist="true">
+                        <description>Name of input visibility file (MS)</description>
+                        <value></value>
                         <example>vis='ngc5921.ms'</example>
-		</param>
+                </param>
 
-		<param type="string" name="mode">
-			<description>Operation: list, save, restore, delete</description>
-			<value>list</value>
-			<allowed kind="enum">
-				<value>list</value>
-				<value>save</value>
-				<value>restore</value>
-				<value>delete</value>
-			</allowed>
-		</param>
-		<param type="string" name="versionname" subparam="true">
-			<description>Flag version name</description>
-			<value></value>
-		</param>
-		<param type="string" name="comment" subparam="true">
-			<description>Short description of a versionname (used for mode=\'save\')</description>
-			<value></value>
-		</param>
-		<param type="string" name="merge" subparam="true">
-			<description>Merge option: replace will save or over-write the flags</description>
-			<value>replace</value>
-		</param>
+                <param type="string" name="mode">
+                        <description>Operation: list, save, restore, delete, rename</description>
+                        <value>list</value>
+                        <allowed kind="enum">
+                                <value>list</value>
+                                <value>save</value>
+                                <value>restore</value>
+                                <value>delete</value>
+                                <value>rename</value>
+                        </allowed>
+                </param>
+                <param type="string" name="versionname" subparam="true">
+                        <description>Flag version name</description>
+                        <value></value>
+                </param>
+                <param type="string" name="oldname" subparam="true">
+                        <description>Flag version to rename</description>
+                        <value></value>
+                </param>
+                <param type="string" name="comment" subparam="true">
+                        <description>Short description of a versionname</description>
+                        <value></value>
+                </param>
+                <param type="string" name="merge" subparam="true">
+                        <description>Merge option: replace will save or over-write the flags</description>
+                        <value>replace</value>
+                </param>
                 <constraints>
-			<when param="mode">
-				<equals value="list"/>
-				<equals value="save">
-					<default param="versionname"><value type="string"></value></default>
-					<default param="comment"><value type="string"></value></default>
-					<default param="merge"><value type="string">replace</value></default>
-				</equals>
-				<equals value="restore">
-					<default param="versionname"><value type="string"></value></default>
-					<default param="merge"><value type="string">replace</value></default>
-				</equals>
-				<equals value="delete">
-					<default param="versionname"><value type="string"></value></default>
-				</equals>
-			</when>
-		</constraints>
-	</input>
+                        <when param="mode">
+                                <equals value="list"/>
+                                <equals value="save">
+                                        <default param="versionname"><value type="string"></value></default>
+                                        <default param="comment"><value type="string"></value></default>
+                                        <default param="merge"><value type="string">replace</value></default>
+                                </equals>
+                                <equals value="restore">
+                                        <default param="versionname"><value type="string"></value></default>
+                                        <default param="merge"><value type="string">replace</value></default>
+                                </equals>
+                                <equals value="delete">
+                                        <default param="versionname"><value type="string"></value></default>
+                                </equals>
+                                <equals value="rename">
+                                        <default param="oldname"><value type="string"></value></default>
+                                        <default param="versionname"><value type="string"></value></default>
+                                        <default param="comment"><value type="string"></value></default>
+                                </equals>
+                        </when>
+                </constraints>
+        </input>
 <returns type="void"/>
 
 <example>
@@ -78,13 +88,15 @@
                 default: 'list'; to list existing flagtables
                 'save' will save flag column from vis to a specified flag file
                 'restore' will place the specified flag file into vis
-                'delete ' will delete specified flag file
+                'delete' will delete specified flag file
+                'rename' will rename a specified flag file
         versionname -- Flag version name
                 default: none; example: versionname='original_data'
                 No imbedded blanks in the versionname
-        comment -- Short description of a versionname (used for mode='save')
+        comment -- Short description of a versionname, when mode is 'save' or 'rename'
                 default: ''; example: comment='Clip above 1.85'
                 comment = versionname
+        oldname -- When mode='rename', the flag file to rename
         merge -- Merge operation
                 Options: 'or','and', but not recommended for now.
 

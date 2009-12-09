@@ -197,23 +197,23 @@ $(LIBDBG)(%.o) : $(PCKGDBGD)/%.o ;
 $(PCKGDBGD)/%.o : $(PCKGDBGD)/%.lock ;
 
 $(PCKGDBGD)/%.lock : $(PCKGDBGD)/%.LOCK $(PCKGDBGD)/%.lcc $(PCKGDBGD)/%.ycc
-	-@ echo ""
-	-@ echo "$(basename $(@F)) (dbg)"
+	@ echo ""
+	@ echo "$(basename $(@F)) (dbg)"
 	 @ cd $(PCKGDBGD) && $(C++) $(CPPDBG) $(AIPSINCL) -I. $(C++DBG) -c $(@F:%.lock=$(CODEDIR)/%.cc)
-	-@ $(TIMER)
-	-@ $(RM) $@ $<
+	@ $(TIMER)
+	@ $(RM) $@ $<
 
 $(PCKGDBGD)/%.LOCK : $(CODEDIR)/%.cc
-	-@ echo "$(JOBIDENT)" > $(@:.LOCK=.lock)
+	@ echo "$(JOBIDENT)" > $(@:.LOCK=.lock)
 
 $(PCKGDBGD)/%.lcc : $(CODEDIR)/%.l
-	-@ echo ""
+	@ echo ""
 	$(FLEX) -t -P$(<F:.l=) $< > $@
 
 $(PCKGDBGD)/%.lcc : ;
 
 $(PCKGDBGD)/%.ycc : $(CODEDIR)/%.y
-	-@ echo ""
+	@ echo ""
 	$(BISON) -p $(<F:.y=) -o $@ $<
 
 $(PCKGDBGD)/%.ycc : ;
@@ -223,23 +223,23 @@ $(LIBOPT)(%.o) : $(PCKGOPTD)/%.o ;
 $(PCKGOPTD)/%.o : $(PCKGOPTD)/%.lock ;
 
 $(PCKGOPTD)/%.lock : $(PCKGOPTD)/%.LOCK $(PCKGOPTD)/%.lcc $(PCKGOPTD)/%.ycc
-	-@ echo ""
-	-@ echo -e "\e[32;1m$(basename $(@F)) (opt)\e[0m"
-	 @ cd $(PCKGOPTD) && $(C++) $(CPPOPT) $(AIPSINCL) -I. $(C++OPT) -c $(@F:%.lock=$(CODEDIR)/%.cc)
-	-@ $(TIMER)
-	-@ $(RM) $@ $<
+	@ echo ""
+	@ echo $(ECHOESC) "\e[32;1m$(basename $(@F)) (opt)\e[0m"
+	@ cd $(PCKGOPTD) && $(C++) $(CPPOPT) $(AIPSINCL) -I. $(C++OPT) -c $(@F:%.lock=$(CODEDIR)/%.cc)
+	@ $(TIMER)
+	@ $(RM) $@ $<
 
 $(PCKGOPTD)/%.LOCK : $(CODEDIR)/%.cc
-	-@ echo "$(JOBIDENT)" > $(@:.LOCK=.lock)
+	@ echo "$(JOBIDENT)" > $(@:.LOCK=.lock)
 
 $(PCKGOPTD)/%.lcc : $(CODEDIR)/%.l
-	-@ echo ""
+	@ echo ""
 	$(FLEX) -t -P$(<F:.l=) $< > $@
 
 $(PCKGOPTD)/%.lcc : ;
 
 $(PCKGOPTD)/%.ycc : $(CODEDIR)/%.y
-	-@ echo ""
+	@ echo ""
 	$(BISON) -p $(<F:.y=) -o $@ $<
 
 $(PCKGOPTD)/%.ycc : ;
@@ -257,7 +257,7 @@ $(LIBICOND)/% : $(CODEDIR)/%
 	@ chmod 664 $@
 
 $(SCANTIME)(%) : $(CODEDIR)/%.h
-	-@ echo "	$*"
+	 @ echo "	$*"
 	 @ trap "$(RM) $(TMPPCKGD)/$*" 1 2 3 15 ; \
 	   cat /dev/null > $(TMPPCKGD)/$* ; \
 	   cxx2html -root $(AIPSCODE) -db $(SCANDB) -scan $< ; \
@@ -265,7 +265,7 @@ $(SCANTIME)(%) : $(CODEDIR)/%.h
 	   $(RM) $(TMPPCKGD)/$*
 
 $(EXTRTIME)(%) : $(CODEDIR)/%.h $(SCANTIME)
-	-@ echo "	$*"
+	 @ echo "	$*"
 	 @ trap "$(RM) $(TMPPCKGD)/$*" 1 2 3 15 ; \
 	   cat /dev/null > $(TMPPCKGD)/$* ; \
 	   cxx2html -root $(AIPSCODE) -db $(SCANDB) -dir $(AIPSDOCS) -rel $< ; \
@@ -434,50 +434,50 @@ dependsys : $(DPNDLIST)
 $(DPNDLIST) : $(ARCHBIND)/depend $(DPNDTIME) ;
 
 $(ARCHBIND)/depend : $(CODEINSD)/depend
-	-@ $(RM) $@
+	@ $(RM) $@
 	   cp $< $@
-	-@ chmod 775 $@
+	@ chmod 775 $@
 
 #$(DPNDTIME) : $(addprefix $(CODEDIR)/,$(AIPSIMPS)) \
 #    $(addprefix $(AIPSCODE)/,$(AIPSINCS))
 $(DPNDTIME) : $(addprefix $(CODEDIR)/,$(AIPSIMPS))
-	-@ echo ""
-	-@ $(TIMER)
-	 @ $(ARCHBIND)/depend -p $(PCKGMOD) \
+	@ echo ""
+	@ $(TIMER)
+	@ $(ARCHBIND)/depend -p $(PCKGMOD) \
 	      $(notdir $(filter %.cc,$?)) \
 	      $(subst $(AIPSCODE),,$(subst /implement,,$(filter %.h,$?)))
-	-@ $(TIMER)
+	@ $(TIMER)
 
 lib : build_lock $(AIPSINST) \
     $(foreach OBJ,$(AIPSIMPS:.cc=.o), $(addsuffix ($(OBJ)),$(AIPSLIBS))) \
     $(UPDATELIB) $(LIBEXECS) $(LIBICONS)
-	-@ $(RM) $(LOCKDBG)
-	-@ $(RM) $(LOCKOPT)
+	@ $(RM) $(LOCKDBG)
+	@ $(RM) $(LOCKOPT)
 
 build_lock :
-	-@ echo ""
-	-@ echo "Begin library rebuild"
-	-@ $(TIMER)
+	@ echo ""
+	@ echo "Begin library rebuild"
+	@ $(TIMER)
         ifneq "$(word 1,$(LIB$(PACKAGE)))" "defeat"
-	    @ adate > $(LOCKDBG)
-	   -@ echo ""
-	   -@ echo "Debug compile command is:"
-	   -@ echo "$(C++) $(CPPDBG) $(AIPSINCL) -I. $(C++DBG) -c ???.cc;"
+	   @ adate > $(LOCKDBG)
+	   @ echo ""
+	   @ echo "Debug compile command is:"
+	   @ echo "$(C++) $(CPPDBG) $(AIPSINCL) -I. $(C++DBG) -c ???.cc;"
         endif
         ifneq "$(word 2,$(LIB$(PACKAGE)))" "defeat"
-	    @ adate > $(LOCKOPT)
-	   -@ echo ""
-	   -@ echo "Optimized compile command is:"
-	   -@ echo "$(C++) $(CPPOPT) $(AIPSINCL) -I. $(C++OPT) -c ???.cc;"
+	   @ adate > $(LOCKOPT)
+	   @ echo ""
+	   @ echo "Optimized compile command is:"
+	   @ echo "$(C++) $(CPPOPT) $(AIPSINCL) -I. $(C++OPT) -c ???.cc;"
         endif
 
 instsys : $(CODEDIR)/tmplinst FORCE
 	 @ $(MAKE) -f $(CODEDIR)/makefile -C $< allsys
 
 $(CODEDIR)/tmplinst : $(CODEDIR)/templates
-	-@ echo ""
-	 @ amkdir -p ug=rwx,g+s,o=rx -v $@
-	-@ echo ""
+	@ echo ""
+	@ amkdir -p ug=rwx,g+s,o=rx -v $@
+	@ echo ""
 	 @ cd $@ && mkinst -q $<
 
 #version : $(addsuffix version.o,$(dir $(AIPSLIBS))) ;
@@ -491,7 +491,7 @@ $(LIBCASADBG)(version.o) : $(AIPSCODE)/VERSION
            $(AR) r $(LIBCASADBG) version.o; \
            updatelib -f xmlcasa; \
            $(RM) version.cc
-	-@ $(TIMER)
+	@ $(TIMER)
 
 $(LIBCASAOPT)(version.o) : $(AIPSCODE)/VERSION
 	@ cd $(PCKGOPTD) && doover > version.cc ; \
@@ -501,11 +501,11 @@ $(LIBCASAOPT)(version.o) : $(AIPSCODE)/VERSION
            $(AR) r $(LIBCASAOPT) version.o; \
            updatelib -f xmlcasa; \
            $(RM) version.cc
-	-@ $(TIMER)
+	@ $(TIMER)
 
 updatelib : 
-	 @ echo "" ; updatelib -f $(PACKAGE)
-	-@ $(RM) -f $(PCKGDBGD)/*.[ly]cc $(PCKGOPTD)/*.[ly]cc 
+	@ echo "" ; updatelib -f $(PACKAGE)
+	@ $(RM) -f $(PCKGDBGD)/*.[ly]cc $(PCKGOPTD)/*.[ly]cc 
 
 ranlib :
         ifneq "$(word 1,$(LIB$(PACKAGE)))" "defeat"
@@ -550,8 +550,8 @@ docextr : $(DOCSAREA) \
 	  done
 
 $(DOCSAREA) :
-	-@ echo ""
-	 @ amkdir -p ug=rwx,g+s,o=rx -v $@
+	@ echo ""
+	@ amkdir -p ug=rwx,g+s,o=rx -v $@
 
 runtests :
 	@ for i in $$SUBDIRS ; do \
@@ -709,7 +709,7 @@ ifeq "$(MAKEMODE)" "programmer"
 	  done
 
     doxygen :
-	@ mkdir -p doxygen; \
+	@ amkdir -p doxygen; \
            cp $(DOXYGENCFG) doxygen/doxygen.cfg; \
            if [ "$(DOXYDOT)" != "" ]; then \
              echo "HAVE_DOT         = YES" >> doxygen/doxygen.cfg; \

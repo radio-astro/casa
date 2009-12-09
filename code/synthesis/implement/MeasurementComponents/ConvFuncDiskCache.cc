@@ -128,9 +128,11 @@ namespace casa{
   void ConvFuncDiskCache::cacheConvFunction(Int which, Float pa, 
 					    Array<Complex>& cf, 
 					    CoordinateSystem& coords,
+					    CoordinateSystem& ftCoords,
 					    Int &convSize,
 					    Cube<Int> &convSupport, 
-					    Float convSampling)
+					    Float convSampling,
+					    String nameQualifier)
   {
     Int N=paList.nelements();
     if (Dir.length() == 0) return;
@@ -138,6 +140,89 @@ namespace casa{
     try
       {
 	IPosition newConvShape = cf.shape();
+	Int wConvSize = newConvShape(2), directionIndex;
+	for(Int iw=0;iw<wConvSize;iw++)
+	  {
+	    IPosition sliceStart(4,0,0,iw,0), 
+	      sliceLength(4,newConvShape(0),newConvShape(1),1,newConvShape(3));
+	
+	    //	    CoordinateSystem ftCoords(coords);
+	    ftCoords = coords;
+	    directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
+	    DirectionCoordinate dc=coords.directionCoordinate(directionIndex);
+	    //	AlwaysAssert(directionIndex>=0, AipsError);
+	    dc=coords.directionCoordinate(directionIndex);
+	    Vector<Bool> axes(2); axes(0)=axes(1)=True;//axes(2)=True;
+	    Vector<Int> shape(2); shape(0)=newConvShape(0);shape(1)=newConvShape(1);
+	    shape=convSize;
+	    Vector<Double>ref(4);
+	    ref(0)=ref(1)=ref(2)=ref(3)=0;
+	    dc.setReferencePixel(ref);
+	    Coordinate* ftdc=dc.makeFourierCoordinate(axes,shape);
+	    Vector<Double> refVal;
+	    refVal=ftdc->referenceValue();
+	    refVal(0)=refVal(1)=0;
+	    ftdc->setReferenceValue(refVal);
+	    ref(0)=newConvShape(0)/2-1;
+	    ref(1)=newConvShape(1)/2-1;
+	    ftdc->setReferencePixel(ref);
+	
+// 	    cout << ref << endl << refVal << endl << shape << endl;
+// 	    cout << dc.increment() << " " << ftdc->increment() << endl;
+	    ftCoords.replaceCoordinate(*ftdc, directionIndex);
+	    {
+	      ostringstream name;
+	      name << Dir << "/" << cfPrefix << nameQualifier << iw << "_" << which;
+	      
+	      IPosition screenShape(4,newConvShape(0),newConvShape(1),newConvShape(3),1);
+	      
+	      PagedImage<Complex> thisScreen(screenShape, ftCoords, name);
+	      
+	      Array<Complex> buf;
+	      buf=((cf(Slicer(sliceStart,sliceLength)).nonDegenerate()));
+	      thisScreen.put(buf);
+	    }
+	    delete ftdc; ftdc=0;
+	  }
+	IPosition s(3,wConvSize,1,N+1);
+	paList.resize(N+1,True);
+// 	XSup.resize(N+1,True); 
+// 	YSup.resize(N+1,True); 
+	XSup.resize(s,True);
+	YSup.resize(s,True);
+	Sampling.resize(N+1,True);
+	paList[N] = pa;
+	for(Int iw=0;iw<wConvSize;iw++)
+	  {
+	    YSup(iw,0,N) = convSupport(iw,0,which);
+	    XSup(iw,0,N) = convSupport(iw,0,which);
+	  }
+	Sampling[N]=convSampling;
+      }
+    catch (AipsError& x)
+      {
+	throw(SynthesisFTMachineError("Error while caching CF to disk in "
+				      "ConvFuncDiskCache::cacheConvFunction(): "
+				      +x.getMesg()));
+      }
+  }
+  //
+  //-------------------------------------------------------------------------
+  // Write the weight functions from the mem. cache to the disk cache.
+  //
+  void ConvFuncDiskCache::cacheWeightsFunction(Int which, Float pa, 
+					       Array<Complex>& cfWt, 
+					       CoordinateSystem& coords,
+					       Int &convSize,
+					       Cube<Int> &convSupport, 
+					       Float convSampling)
+  {
+    Int N=paList.nelements();
+    if (Dir.length() == 0) return;
+
+    try
+      {
+	IPosition newConvShape = cfWt.shape();
 	Int wConvSize = newConvShape(2), directionIndex;
 	for(Int iw=0;iw<wConvSize;iw++)
 	  {
@@ -171,14 +256,14 @@ namespace casa{
 	
 	    {
 	      ostringstream name;
-	      name << Dir << "/" << cfPrefix << iw << "_" << which;
+	      name << Dir << "/" << cfPrefix << "WT" << iw << "_" << which;
 	      
 	      IPosition screenShape(4,newConvShape(0),newConvShape(1),newConvShape(3),1);
 	      
 	      PagedImage<Complex> thisScreen(screenShape, ftCoords, name);
 	      
 	      Array<Complex> buf;
-	      buf=((cf(Slicer(sliceStart,sliceLength)).nonDegenerate()));
+	      buf=((cfWt(Slicer(sliceStart,sliceLength)).nonDegenerate()));
 	      thisScreen.put(buf);
 	    }
 	  }
@@ -199,7 +284,7 @@ namespace casa{
       }
     catch (AipsError& x)
       {
-	throw(SynthesisFTMachineError("Error while caching CF to disk in "
+	throw(SynthesisFTMachineError("Error while caching CFWT to disk in "
 				      "ConvFuncDiskCache::cacheConvFunction(): "
 				      +x.getMesg()));
       }
@@ -241,9 +326,9 @@ namespace casa{
   //-------------------------------------------------------------------------
   //  
   Bool ConvFuncDiskCache::searchConvFunction(const VisBuffer& vb, 
-					    ParAngleChangeDetector& vpSJ, 
-					    Int& which,
-					    Float &pa)
+					     ParAngleChangeDetector& vpSJ, 
+					     Int& which,
+					     Float &pa)
   {
     if (paList.nelements()==0) initCache();
     Int i,NPA=paList.nelements(); Bool paFound=False;
@@ -394,12 +479,13 @@ namespace casa{
 					   PtrBlock < Array<Complex> *> &convFuncCache,
 					   Cube<Int> &convSupport,
 					   Vector<Float>& convSampling,
-					   Double& cfRefFreq)
+					   Double& cfRefFreq, CoordinateSystem& coordSys,
+					   String prefix)
   {
     if (Dir.length() == 0) return False;
     if (where < (Int)convFuncCache.nelements() && (convFuncCache[where] != NULL)) return False;
 
-    Int wConvSize, polInUse;
+    Int wConvSize, polInUse=2;
     Int N=convFuncCache.nelements();
 
     //
@@ -417,19 +503,21 @@ namespace casa{
     // each w-plane image from the disk, and fills in the 3D
     // mem. cache for each computed PA.
     //
+    wConvSize = Nw;
     for(Int iw=0;iw<Nw;iw++)
       {
 	ostringstream name;
-	name << Dir << "/CF" << iw << "_" << where;
+	//	name << Dir << "/CF" << iw << "_" << where;
+	name << Dir << prefix << iw << "_" << where;
 	try
 	  {
 	    PagedImage<Complex> tmp(name.str().c_str());
 	    Int index= tmp.coordinates().findCoordinate(Coordinate::SPECTRAL);
-	    SpectralCoordinate spCS = tmp.coordinates().spectralCoordinate(index);
+	    coordSys = tmp.coordinates();
+	    SpectralCoordinate spCS = coordSys.spectralCoordinate(index);
 
 	    cfRefFreq=spCS.referenceValue()(0);
 	
-	    wConvSize = Nw;
 	    polInUse = tmp.shape()(2);
 	    IPosition ts=tmp.shape(),ndx(4,0,0,0,0),ts2(4,0,0,0,0);
 	    Array<Complex> buf=tmp.get();

@@ -149,7 +149,7 @@ void PlotHistogramData::recalculateBins(unsigned int numBins) {
 
 unsigned int PlotHistogramData::numBins() const { return m_bins.size(); }
 
-pair<double, double> PlotHistogramData::rangeAt(unsigned int i) const {
+prange_t PlotHistogramData::rangeAt(unsigned int i) const {
     return m_ranges[i]; }
 
 }

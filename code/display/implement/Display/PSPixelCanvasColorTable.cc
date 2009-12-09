@@ -33,6 +33,7 @@
 #include <casa/Arrays/VectorIter.h>
 #include <display/Display/PSPixelCanvasColorTable.h>
 #include <casa/iostream.h>
+#include <cstring>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

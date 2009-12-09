@@ -59,6 +59,8 @@ QPScatterPlot::QPScatterPlot(PlotPointDataPtr data, const String& title):
         if(p != NULL) m_maskedData = PlotMaskedPointDataPtr(p, false);
         PlotErrorData* e = dynamic_cast<PlotErrorData*>(&*data);
         if(e != NULL) m_errorData = PlotErrorDataPtr(e, false);
+        PlotBinnedData* b = dynamic_cast<PlotBinnedData*>(&*data);
+        if(b != NULL) m_coloredData = PlotBinnedDataPtr(b, false);
     }
     
     setItemAttribute(QwtPlotItem::AutoScale);
@@ -78,6 +80,8 @@ QPScatterPlot::QPScatterPlot(const ScatterPlot& copy) :
         if(p != NULL) m_maskedData = PlotMaskedPointDataPtr(p, false);
         PlotErrorData* e = dynamic_cast<PlotErrorData*>(&*m_data);
         if(e != NULL) m_errorData = PlotErrorDataPtr(e, false);
+        PlotBinnedData* b = dynamic_cast<PlotBinnedData*>(&*m_data);
+        if(b != NULL) m_coloredData = PlotBinnedDataPtr(b, false);
     }
     
     setLine(copy.line());
@@ -101,6 +105,8 @@ QPScatterPlot::QPScatterPlot(const ScatterPlot& copy) :
 }
 
 QPScatterPlot::~QPScatterPlot() {
+    foreach(QPColor* c, m_colors) delete c;
+    m_colors.clear();
     logDestruction();
 }
 
@@ -112,8 +118,7 @@ bool QPScatterPlot::isValid() const {
 
 
 bool QPScatterPlot::shouldDraw() const {
-    return isValid() && m_data->size() > 0;
-}
+    return isValid() && m_data->size() > 0; }
 
 QwtDoubleRect QPScatterPlot::boundingRect() const {
     bool ret;
@@ -186,6 +191,7 @@ PlotSymbolPtr QPScatterPlot::symbol() const {
 void QPScatterPlot::setSymbol(const PlotSymbol& sym) {
     if(sym != m_symbol) {
         m_symbol = sym;
+        updateBrushes();
         itemChanged();
     }
 }
@@ -226,6 +232,7 @@ PlotSymbolPtr QPScatterPlot::maskedSymbol() const {
 void QPScatterPlot::setMaskedSymbol(const PlotSymbol& symbol) {
     if(symbol != m_maskedSymbol) {
         m_maskedSymbol = symbol;
+        updateBrushes();
         itemChanged();
     }
 }
@@ -260,15 +267,37 @@ void QPScatterPlot::setErrorCapSize(unsigned int capSize) {
 }
 
 
+PlotBinnedDataPtr QPScatterPlot::binnedColorData() const {
+    return m_coloredData; }
+
+PlotColorPtr QPScatterPlot::colorForBin(unsigned int bin) const {
+    if((int)bin >= m_colors.size() || m_colors[bin] == NULL)
+        return PlotColorPtr();
+    else return new QPColor(*m_colors[bin]);
+}
+
+void QPScatterPlot::setColorForBin(unsigned int bin, const PlotColorPtr color){
+    // Add any intermediate entries, if needed.
+    for(unsigned int i = m_colors.size(); i < bin; i++)
+        m_colors.insert(bin, NULL);
+    
+    if(color.null()) m_colors.insert(bin, NULL);
+    else m_colors.insert(bin, new QPColor(*color));
+    
+    // Update brushes
+    updateBrushes();
+}
+
+
 // Protected Methods //
 
 void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& brect,
         unsigned int drawIndex, unsigned int drawCount) const {
-    logMethod("draw_", true);
+    //logMethod("draw_", true);
     unsigned int n = m_data->size();
     if(!isValid() || n == 0 || drawIndex >= n) {
-        logMethod("draw_", false);
+        //logMethod("draw_", false);
         return;
     }
         
@@ -413,7 +442,8 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
     // Draw normal/masked symbols
     bool drawSymbol = m_symbol.symbol() != PlotSymbol::NOSYMBOL,
          drawMaskedSymbol = !m_maskedData.null() &&
-                            m_maskedSymbol.symbol() != PlotSymbol::NOSYMBOL;
+                            m_maskedSymbol.symbol() != PlotSymbol::NOSYMBOL,
+         diffColor = !m_coloredData.null() && m_coloredData->isBinned();    
     if(drawSymbol || drawMaskedSymbol) {
         double tempx, tempy;
         
@@ -424,9 +454,24 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
                       & mpen = m_maskedSymbol.drawPen();
             const QBrush& brush = m_symbol.drawBrush(),
                         & mbrush = m_maskedSymbol.drawBrush();
+            bool samePen = pen == mpen, sameBrush = brush == mbrush;
+            
+            /*
+            QList<QBrush> brushes;
+            if(diffColor) {
+                bool allSame = true;
+                for(unsigned int i = 0; i < m_coloredData->numBins(); i++) {
+                    brushes << brush;
+                    if((int)i < m_colors.size() && m_colors[i] != NULL) {
+                        brushes[i].setColor(m_colors[i]->asQColor());
+                        allSame &= brushes[i].color() == brush.color();
+                    }
+                }
+                if(allSame) diffColor = false;
+            }
+            */
             
             // set the painter's pen/brush only once if possible
-            bool samePen = pen == mpen, sameBrush = brush == mbrush;
             if(!drawMaskedSymbol || samePen) p->setPen(pen);
             else if(!drawSymbol) p->setPen(mpen);
             if(!drawMaskedSymbol || sameBrush) p->setBrush(brush);
@@ -446,6 +491,8 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
                     if(drawMaskedSymbol) {
                         if(!samePen) p->setPen(pen);
                         if(!sameBrush) p->setBrush(brush);
+                    } else if(diffColor) {
+                        p->setBrush(m_coloredBrushes[m_coloredData->binAt(i)]);
                     }
                     m_symbol.draw(p, rect);
                 } else if(drawMaskedSymbol && mask) {
@@ -455,31 +502,72 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
                     if(drawSymbol) {
                         if(!samePen) p->setPen(mpen);
                         if(!sameBrush) p->setBrush(mbrush);
+                    } else if(diffColor) {
+                        p->setBrush(m_coloredBrushes[m_coloredData->binAt(i)]);
                     }
                     m_symbol.draw(p, mRect);
                 }
             }
-                        
+
         } else {
             // draw all symbols normally
+            const QBrush& brush = m_symbol.drawBrush();
             p->setPen(m_symbol.drawPen());
-            p->setBrush(m_symbol.drawBrush());
+            p->setBrush(brush);
+            
+            /*
+            QList<QBrush> brushes;
+            if(diffColor) {
+                bool allSame = true;
+                for(unsigned int i = 0; i < m_coloredData->numBins(); i++) {
+                    brushes << brush;
+                    if((int)i < m_colors.size() && m_colors[i] != NULL) {
+                        brushes[i].setColor(m_colors[i]->asQColor());
+                        allSame &= brushes[i].color() == brush.color();
+                    }
+                }
+                if(allSame) diffColor = false;
+            }
+            */
             
             QSize size = ((QwtSymbol&)m_symbol).size();
             QRect rect(0, 0, size.width(), size.height());
-            
+                        
             for(unsigned int i = drawIndex; i < n; i++) {
                 m_data->xAndYAt(i, tempx, tempy);
                 rect.moveCenter(QPoint(xMap.transform(tempx),
                                        yMap.transform(tempy)));
                 if(!brect.intersects(rect)) continue;
+                if(diffColor) {
+                    p->setBrush(m_coloredBrushes[m_coloredData->binAt(i)]);
+                }
                 m_symbol.draw(p, rect);
             }
         }
     }
 
     p->restore();
-    logMethod("draw_", false);
+    //logMethod("draw_", false);
+}
+
+
+// Private Methods //
+
+void QPScatterPlot::updateBrushes() {
+    m_coloredBrushes.clear();
+    if(m_coloredData.null()) return;
+
+    const QBrush& brush = m_symbol.drawBrush();
+
+    //bool allSame = true;
+    for(unsigned int i = 0; i < m_coloredData->numBins(); i++) {
+        m_coloredBrushes << brush;
+        if((int)i < m_colors.size() && m_colors[i] != NULL) {
+            m_coloredBrushes[i].setColor(m_colors[i]->asQColor());
+            //allSame &= brushes[i].color() == brush.color();
+        }
+    }
+    //if(allSame) diffColor = false;
 }
 
 }

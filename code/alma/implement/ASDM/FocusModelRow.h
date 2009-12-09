@@ -77,6 +77,26 @@ using namespace enumerations;
 
 	
 
+	
+#include "CPolarizationType.h"
+using namespace PolarizationTypeMod;
+	
+
+	
+#include "CReceiverBand.h"
+using namespace ReceiverBandMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 
 
 using asdm::Angle;
@@ -100,19 +120,25 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file FocusModel.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
 
 //class asdm::FocusModelTable;
 
+
+// class asdm::AntennaRow;
+class AntennaRow;
+
+// class asdm::FocusModelRow;
+class FocusModelRow;
 	
 
 /**
  * The FocusModelRow class is a row of a FocusModelTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class FocusModelRow {
@@ -139,8 +165,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct FocusModelRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (FocusModelRowIDL x) throw(ConversionException);
+	void setFromIDL (FocusModelRowIDL x) ;
 #endif
 	
 	/**
@@ -153,8 +180,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the FocusModelTable to which the row built by deserialization will be parented.
+	  */
+	 static FocusModelRow* fromBin(EndianISStream& eiss, FocusModelTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -169,9 +210,9 @@ public:
 	
  	/**
  	 * Get focusModelId.
- 	 * @return focusModelId as Tag
+ 	 * @return focusModelId as int
  	 */
- 	Tag getFocusModelId() const;
+ 	int getFocusModelId() const;
 	
  
  	
@@ -180,18 +221,331 @@ public:
 	
 
 
+	
+	// ===> Attribute polarizationType
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get polarizationType.
+ 	 * @return polarizationType as PolarizationTypeMod::PolarizationType
+ 	 */
+ 	PolarizationTypeMod::PolarizationType getPolarizationType() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set polarizationType with the specified PolarizationTypeMod::PolarizationType.
+ 	 * @param polarizationType The PolarizationTypeMod::PolarizationType value to which polarizationType is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setPolarizationType (PolarizationTypeMod::PolarizationType polarizationType);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute receiverBand
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 */
+ 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numCoeff
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numCoeff.
+ 	 * @return numCoeff as int
+ 	 */
+ 	int getNumCoeff() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numCoeff with the specified int.
+ 	 * @param numCoeff The int value to which numCoeff is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumCoeff (int numCoeff);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute coeffName
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get coeffName.
+ 	 * @return coeffName as vector<string >
+ 	 */
+ 	vector<string > getCoeffName() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set coeffName with the specified vector<string >.
+ 	 * @param coeffName The vector<string > value to which coeffName is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCoeffName (vector<string > coeffName);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute coeffFormula
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get coeffFormula.
+ 	 * @return coeffFormula as vector<string >
+ 	 */
+ 	vector<string > getCoeffFormula() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set coeffFormula with the specified vector<string >.
+ 	 * @param coeffFormula The vector<string > value to which coeffFormula is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCoeffFormula (vector<string > coeffFormula);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute coeffVal
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get coeffVal.
+ 	 * @return coeffVal as vector<float >
+ 	 */
+ 	vector<float > getCoeffVal() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set coeffVal with the specified vector<float >.
+ 	 * @param coeffVal The vector<float > value to which coeffVal is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCoeffVal (vector<float > coeffVal);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute assocNature
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get assocNature.
+ 	 * @return assocNature as string
+ 	 */
+ 	string getAssocNature() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set assocNature with the specified string.
+ 	 * @param assocNature The string value to which assocNature is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setAssocNature (string assocNature);
+  		
+	
+	
+	
+
+
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
 	
+	
+	// ===> Attribute antennaId
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get antennaId.
+ 	 * @return antennaId as Tag
+ 	 */
+ 	Tag getAntennaId() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set antennaId with the specified Tag.
+ 	 * @param antennaId The Tag value to which antennaId is to be set.
+ 	 
+ 		
+ 			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setAntennaId (Tag antennaId);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute assocFocusModelId
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get assocFocusModelId.
+ 	 * @return assocFocusModelId as int
+ 	 */
+ 	int getAssocFocusModelId() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set assocFocusModelId with the specified int.
+ 	 * @param assocFocusModelId The int value to which assocFocusModelId is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setAssocFocusModelId (int assocFocusModelId);
+  		
+	
+	
+	
+
+
 	///////////
 	// Links //
 	///////////
 	
 	
+
+	
+		
+	/**
+	 * antennaId pointer to the row in the Antenna table having Antenna.antennaId == antennaId
+	 * @return a AntennaRow*
+	 * 
+	 
+	 */
+	 AntennaRow* getAntennaUsingAntennaId();
+	 
+
+	
+
+	
+
+	
+		
+	// ===> Slice link from a row of FocusModel table to a collection of row of FocusModel table.
+	
+	/**
+	 * Get the collection of row in the FocusModel table having focusModelId == this.focusModelId
+	 * 
+	 * @return a vector of FocusModelRow *
+	 */
+	vector <FocusModelRow *> getFocusModels();
 	
 	
 
+	
+
+	
+	
+	
+	/**
+	 * Compare each mandatory attribute except the autoincrementable one of this FocusModelRow with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 */ 
+	bool compareNoAutoInc(Tag antennaId, PolarizationTypeMod::PolarizationType polarizationType, ReceiverBandMod::ReceiverBand receiverBand, int numCoeff, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffVal, string assocNature, int assocFocusModelId);
+	
+	
+
+	
+	bool compareRequiredValue(PolarizationTypeMod::PolarizationType polarizationType, ReceiverBandMod::ReceiverBand receiverBand, int numCoeff, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffVal, string assocNature, int assocFocusModelId); 
 		 
 	
 	/**
@@ -256,32 +610,144 @@ private:
 	
 	
 
-	Tag focusModelId;
+	int focusModelId;
 
 	
 	
  	
  	/**
- 	 * Set focusModelId with the specified Tag value.
- 	 * @param focusModelId The Tag value to which focusModelId is to be set.
+ 	 * Set focusModelId with the specified int value.
+ 	 * @param focusModelId The int value to which focusModelId is to be set.
 		
  		
 			
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
  	 		
  	 */
- 	void setFocusModelId (Tag focusModelId);
+ 	void setFocusModelId (int focusModelId);
   		
 	
+
+	
+	// ===> Attribute polarizationType
+	
+	
+
+	PolarizationTypeMod::PolarizationType polarizationType;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute receiverBand
+	
+	
+
+	ReceiverBandMod::ReceiverBand receiverBand;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numCoeff
+	
+	
+
+	int numCoeff;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute coeffName
+	
+	
+
+	vector<string > coeffName;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute coeffFormula
+	
+	
+
+	vector<string > coeffFormula;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute coeffVal
+	
+	
+
+	vector<float > coeffVal;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute assocNature
+	
+	
+
+	string assocNature;
+
+	
+	
+ 	
 
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
 	
+	
+	// ===> Attribute antennaId
+	
+	
+
+	Tag antennaId;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute assocFocusModelId
+	
+	
+
+	int assocFocusModelId;
+
+	
+	
+ 	
+
 	///////////
 	// Links //
 	///////////
 	
+	
+		
+
+	 
+
+	
+
+	
+		
+
+
+	
+
 
 };
 

@@ -38,11 +38,11 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<CorrelationMode,EnumPar<void> >
-     (CorrelationModeMod::CROSS_ONLY,ep((int)CorrelationModeMod::CROSS_ONLY,"CROSS_ONLY","Cross-correlations only [not for ALMA]")));
+     (CorrelationModeMod::CROSS_ONLY,ep((int)CorrelationModeMod::CROSS_ONLY,"CROSS_ONLY","un-documented")));
     m_.insert(pair<CorrelationMode,EnumPar<void> >
-     (CorrelationModeMod::AUTO_ONLY,ep((int)CorrelationModeMod::AUTO_ONLY,"AUTO_ONLY","Auto-correlations only")));
+     (CorrelationModeMod::AUTO_ONLY,ep((int)CorrelationModeMod::AUTO_ONLY,"AUTO_ONLY","un-documented")));
     m_.insert(pair<CorrelationMode,EnumPar<void> >
-     (CorrelationModeMod::CROSS_AND_AUTO,ep((int)CorrelationModeMod::CROSS_AND_AUTO,"CROSS_AND_AUTO","Auto-correlations and Cross-correlations")));
+     (CorrelationModeMod::CROSS_AND_AUTO,ep((int)CorrelationModeMod::CROSS_AND_AUTO,"CROSS_AND_AUTO","un-documented")));
     return true;
   }
   static map<CorrelationMode,EnumPar<void> > m_;

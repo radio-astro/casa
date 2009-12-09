@@ -87,10 +87,12 @@ public:
 protected:
   typedef struct ClipInfo {
       RFDataMapper *mapper; 
-      Float vmin,vmax; 
-      Bool clip;          // flag outside range if True (otherwise flag inside)
-      Float offset;       // offset added to value (used for angles, etc.)
+      Float vmin, vmax; 
+      Bool channel_average; // average data over channels?
+      Bool clip;            // flag outside range if True (otherwise flag inside)
+      Float offset;         // offset added to value (used for angles, etc.)
   } ClipInfo;
+  
     
   template<class T> Bool reformRange( Matrix<T> &rng,const Array<T> &arr );
   template<class T> Bool parseRange( Matrix<T> &rng,const RecordInterface &parm,const String &id );
@@ -100,11 +102,14 @@ protected:
   void addString   ( String &str,const String &s1,const char *sep=" " );
   virtual void processRow  ( uInt ifr,uInt it );
   Bool parseMinMax ( Float &vmin,Float &vmax,const RecordInterface &spec,uInt f0 );
-  void addClipInfo ( const Vector<String> &expr,Float vmin,Float vmax,Bool clip );
+  void addClipInfo ( const Vector<String> &expr,Float vmin,Float vmax,Bool clip, Bool channel_average );
   void parseClipField  ( const RecordInterface &spec,Bool clip );
   void addClipInfoDesc ( const Block<ClipInfo> &clip );
 
   // shadow mode
+  Double diameter;   /* diameter to use. If negative use 
+                        the diameters array (true antenna diameters)
+                     */
   Vector< Double > diameters;
   ROMSAntennaColumns *ac;
 
@@ -120,7 +125,9 @@ protected:
   Block<ClipInfo> sel_clip,sel_clip_row;
   LogicalVector  sel_clip_active;
   Bool            sum_sel_clip_active;
-  Double        quack_si,quack_dt,scan_start,scan_end;
+  Double        quack_si, quack_dt;
+  String        quack_mode;
+  Bool          quack_increment;
   Vector<Int>   sel_scannumber,sel_arrayid;
   String        sel_column;
 

@@ -52,7 +52,9 @@ VisEquation::VisEquation() :
   napp_(0),
   lfd_(-1),
   rfd_(9999),
+  freqAveOK_(False),
   svc_(NULL),
+  pivot_(VisCal::ALL),  // at the sky
   spwOK_(),
   prtlev_(VISEQPRTLEV)
 {
@@ -160,6 +162,18 @@ void VisEquation::setsolve(SolvableVisCal& svc) {
 
 
 //----------------------------------------------------------------------
+void VisEquation::setPivot(VisCal::Type pivot) {
+
+  if (prtlev()>0) cout << "VE::setPivot()" << endl;
+  
+  pivot_ = pivot;
+
+}
+  
+
+
+
+//----------------------------------------------------------------------
 // Correct in place the OBSERVED visibilities in a VisBuffer
 void VisEquation::correct(VisBuffer& vb) {
 
@@ -230,7 +244,7 @@ void VisEquation::collapse(VisBuffer& vb) {
   vb.weightMat();
   
   // Re-calculate weights from sigma column
-  // TBD: somehow avoid is not necessary?
+  // TBD: somehow avoid if not necessary?
   vb.resetWeightMat();
 
   // Ensure correlations in canonical order
@@ -250,10 +264,11 @@ void VisEquation::collapse(VisBuffer& vb) {
   // initialize LHS/RHS indices
   Int lidx=0;
   Int ridx=napp_-1;
-  
-  // If solve NOT freqDep, and data is, must freqAve before solve;
+
+  // If solve NOT freqDep, and data is, we want
+  //  to freqAve as soon as possible before solve;
   //   apply any freqDep cal first
-  if ( !svc().freqDepMat() && vb.nChannel()>1 ) {
+  if ( freqAveOK_ && !svc().freqDepMat() && vb.nChannel()>1 ) {
     
     // Correct OBSERVED data up to last freqDep term on LHS
     //  (type(lfd_) guaranteed < type(svc))
@@ -288,9 +303,63 @@ void VisEquation::collapse(VisBuffer& vb) {
   
 }
 
+//----------------------------------------------------------------------
+void VisEquation::collapseForSim(VisBuffer& vb) {
+
+  if (prtlev()>0) cout << "VE::collapse()" << endl;
+
+  // Handle origin of model data here (?):
+
+  // Ensure correlations in canonical order
+  // (this is a no-op if no sort necessary)
+  // TBD: optimize in combo with model origination?
+  vb.sortCorr();
+
+  // initialize LHS/RHS indices
+  Int lidx=0;
+  Int ridx=napp_-1;
+
+  // copy data to model, to be corrupted in place there.
+  // 20091030 RI changed skyequation to use Observed.  the below 
+  // should not require scratch columns 
+  vb.setModelVisCube(vb.visCube());
+
+  // Corrupt Model down to (and including) the pivot
+  while (ridx>-1    && vc()[ridx]->type() >= pivot_) {
+    vc()[ridx]->corrupt(vb);
+    ridx--;
+  }
+  
+  // zero the data. correct will operate in place on data, so 
+  // if we don't have an AMueller we don't get anything from this.  
+  vb.setVisCube(0.0);
+  // RI KLUDGE FOR BROKEN ANOISE
+  // vb.setVisCube(Complex(0.0001,0.0));
+  
+  // Correct DATA up to pivot 
+  while (lidx<napp_ && vc()[lidx]->type() < pivot_) {
+    vc()[lidx]->correct(vb);
+    lidx++;
+  }
+
+  // add corrected/scaled data (e.g. noise) to corrupted model
+  // vb.modelVisCube()+=vb.visCube();
+
+  // add corrupted Model to corrected/scaled data (i.e.. noise)
+  vb.visCube()+=vb.modelVisCube();
+
+  // Put correlations back in original order
+  //  (~no-op if already canonical)
+  vb.unSortCorr();
+
+}
+
 void VisEquation::state() {
 
   if (prtlev()>0) cout << "VE::state()" << endl;
+
+  cout << "freqAveOK_ = " << freqAveOK_ << endl;
+
 
   // Order in which DATA is corrected
   cout << "Correct order:" << endl;
@@ -537,6 +606,10 @@ void VisEquation::setFreqDep() {
   lfd_=-1;      // right-most freq-dep term on LHS
   rfd_=napp_;   // left-most freq-dep term on RHS
 
+  // Nominally averaging in frequency before normalization is NOT OK
+  //  (we will revise this when we can assert constant MODEL_DATA)
+  freqAveOK_=False;
+
   // Only if there are both apply-able and solve-able terms
   if (svc_ && napp_>0) {
 
@@ -546,10 +619,16 @@ void VisEquation::setFreqDep() {
     
     // freqdep to RIGHT of solvable type
     for (Int idx=(napp_-1); (idx>-1    && vc()[idx]->type()>=svc().type()); idx--)
-      if (vc()[idx]->freqDepMat()) rfd_=idx;
+      if (vc()[idx]->freqDepMat()) {
+	rfd_=idx;
+	// If we will corrupt the model with something freqdep, we can't
+	//  frequency average in collapse
+	freqAveOK_=False;
+      }
 
   }
   
+
 }
 
 Bool VisEquation::ok() {

@@ -38,11 +38,11 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<SBType,EnumPar<void> >
-     (SBTypeMod::OBSERVATORY,ep((int)SBTypeMod::OBSERVATORY,"OBSERVATORY","Observatory mode scheduling block")));
+     (SBTypeMod::OBSERVATORY,ep((int)SBTypeMod::OBSERVATORY,"OBSERVATORY","un-documented")));
     m_.insert(pair<SBType,EnumPar<void> >
-     (SBTypeMod::OBSERVER,ep((int)SBTypeMod::OBSERVER,"OBSERVER","Observer mode scheduling block")));
+     (SBTypeMod::OBSERVER,ep((int)SBTypeMod::OBSERVER,"OBSERVER","un-documented")));
     m_.insert(pair<SBType,EnumPar<void> >
-     (SBTypeMod::EXPERT,ep((int)SBTypeMod::EXPERT,"EXPERT","Expert mode scheduling block")));
+     (SBTypeMod::EXPERT,ep((int)SBTypeMod::EXPERT,"EXPERT","un-documented")));
     return true;
   }
   static map<SBType,EnumPar<void> > m_;

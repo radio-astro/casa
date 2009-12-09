@@ -25,12 +25,12 @@
 //# 
 //#$Id$
 
-#include <display/Display/WorldCanvasPGPlotDriver.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/iostream.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
+#include <display/Display/WorldCanvasPGPlotDriver.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -111,7 +111,7 @@ int returnString(char * out, const char * in, int outlen) {
 
 // called by fortran
 extern "C" {
-#if defined(__APPLE__)
+#if defined(__APPLE__)  && ! (defined(__MAC_10_6) ||defined(__USE_WS_X11__))
 void wcdriv_(int * opc, float * rbuf, int * nbuf,
 	     char * chr, int * lchr, int len)
 #else

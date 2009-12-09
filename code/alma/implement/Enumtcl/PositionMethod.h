@@ -38,9 +38,9 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<PositionMethod,EnumPar<void> >
-     (PositionMethodMod::DELAY_FITTING,ep((int)PositionMethodMod::DELAY_FITTING,"DELAY_FITTING","Delays are measured for each source; the delays are used for fitting antenna position errors.")));
+     (PositionMethodMod::DELAY_FITTING,ep((int)PositionMethodMod::DELAY_FITTING,"DELAY_FITTING","un-documented")));
     m_.insert(pair<PositionMethod,EnumPar<void> >
-     (PositionMethodMod::PHASE_FITTING,ep((int)PositionMethodMod::PHASE_FITTING,"PHASE_FITTING","Phases are measured for each source; these phases are used to fit antenna position errors.")));
+     (PositionMethodMod::PHASE_FITTING,ep((int)PositionMethodMod::PHASE_FITTING,"PHASE_FITTING","un-documented")));
     return true;
   }
   static map<PositionMethod,EnumPar<void> > m_;

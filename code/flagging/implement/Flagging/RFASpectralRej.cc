@@ -175,7 +175,7 @@ RFASpectralRej::RFASpectralRej  ( RFChunkStats &ch,const RecordInterface &parm )
 // At each new chunk, figure out which channels fit into the
 // specified fitting regions.
 // -----------------------------------------------------------------------
-Bool RFASpectralRej::newChunk (Int &maxmem)
+  Bool RFASpectralRej::newChunk (Int &maxmem)
 {
 // compute correlations mask, return False if fails
   corrmask = RFDataMapper::corrMask(chunk.visIter());

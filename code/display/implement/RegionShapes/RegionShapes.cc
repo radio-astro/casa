@@ -826,6 +826,7 @@ RSRectangle::RSRectangle(const RecordInterface& props) : m_spec(5), m_x(4),
 RSRectangle::~RSRectangle() { }
 
 bool RSRectangle::drawAndUpdateBoundingBox(WorldCanvasHolder& wch,String* err){
+
     if(m_spec[2] <= 0 || m_spec[3] <= 0 || !updateScreenCoordinates(wch,err)) {
         if(err && (m_spec[2] <= 0 || m_spec[3] <= 0)) {
             if(err->length() > 0) *err += "\n";
@@ -833,7 +834,7 @@ bool RSRectangle::drawAndUpdateBoundingBox(WorldCanvasHolder& wch,String* err){
         }
         return false;
     }
-    
+
     PixelCanvas* pc = wch.worldCanvas()->pixelCanvas();
     setLineProperties(pc);
 
@@ -871,7 +872,7 @@ bool RSRectangle::drawAndUpdateBoundingBox(WorldCanvasHolder& wch,String* err){
             y2 = (int)(m_screenY(2) + 0.5);
         }
     }
-    
+   
     if(!drawRect) pc->drawPolygon(m_screenX, m_screenY);
     else          pc->drawRectangle(x1, y1, x2, y2);
     

@@ -41,22 +41,22 @@ using std::set;
 #include <CalGainRow.h>
 #include <CalGainTable.h>
 
-#include <CalDataTable.h>
-#include <CalDataRow.h>
-
 #include <CalReductionTable.h>
 #include <CalReductionRow.h>
+
+#include <CalDataTable.h>
+#include <CalDataRow.h>
 	
 
 using asdm::ASDM;
 using asdm::CalGainRow;
 using asdm::CalGainTable;
 
-using asdm::CalDataTable;
-using asdm::CalDataRow;
-
 using asdm::CalReductionTable;
 using asdm::CalReductionRow;
+
+using asdm::CalDataTable;
+using asdm::CalDataRow;
 
 
 #include <Parser.h>
@@ -120,20 +120,10 @@ namespace asdm {
 		
 		
 			
-		x->gain.length(gain.size());
-		for (unsigned int i = 0; i < gain.size(); i++) {
-			x->gain[i].length(gain.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < gain.size() ; i++)
-			for (unsigned int j = 0; j < gain.at(i).size(); j++)
-					
-						
-				x->gain[i][j] = gain.at(i).at(j);
-		 				
-			 						
-		
-			
+				
+		x->gain = gain;
+ 				
+ 			
 		
 	
 
@@ -141,16 +131,11 @@ namespace asdm {
   		
 		
 		
-			
-		x->gainValid.length(gainValid.size());
-		for (unsigned int i = 0; i < gainValid.size(); ++i) {
 			
 				
-			x->gainValid[i] = gainValid.at(i);
-	 			
-	 		
-	 	}
-			
+		x->gainValid = gainValid;
+ 				
+ 			
 		
 	
 
@@ -158,38 +143,23 @@ namespace asdm {
   		
 		
 		
-			
-		x->fit.length(fit.size());
-		for (unsigned int i = 0; i < fit.size(); i++) {
-			x->fit[i].length(fit.at(i).size());			 		
-		}
-		
-		for (unsigned int i = 0; i < fit.size() ; i++)
-			for (unsigned int j = 0; j < fit.at(i).size(); j++)
-					
-						
-				x->fit[i][j] = fit.at(i).at(j);
-		 				
-			 						
-		
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->fitWeight.length(fitWeight.size());
-		for (unsigned int i = 0; i < fitWeight.size(); ++i) {
 			
 				
-			x->fitWeight[i] = fitWeight.at(i);
-	 			
-	 		
-	 	}
+		x->fit = fit;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
 			
+				
+		x->fitWeight = fitWeight;
+ 				
+ 			
 		
 	
 
@@ -272,7 +242,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalGainRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalGainRow::setFromIDL (CalGainRowIDL x) throw(ConversionException) {
+	void CalGainRow::setFromIDL (CalGainRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -301,34 +271,9 @@ namespace asdm {
 		
 		
 			
-		gain .clear();
-		vector<float> v_aux_gain;
-		for (unsigned int i = 0; i < x.gain.length(); ++i) {
-			v_aux_gain.clear();
-			for (unsigned int j = 0; j < x.gain[0].length(); ++j) {
-				
-				v_aux_gain.push_back(x.gain[i][j]);
-	  			
-  			}
-  			gain.push_back(v_aux_gain);			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		gainValid .clear();
-		for (unsigned int i = 0; i <x.gainValid.length(); ++i) {
-			
-			gainValid.push_back(x.gainValid[i]);
+		setGain(x.gain);
   			
-		}
-			
-  		
+ 		
 		
 	
 
@@ -336,34 +281,29 @@ namespace asdm {
 		
 		
 			
-		fit .clear();
-		vector<float> v_aux_fit;
-		for (unsigned int i = 0; i < x.fit.length(); ++i) {
-			v_aux_fit.clear();
-			for (unsigned int j = 0; j < x.fit[0].length(); ++j) {
-				
-				v_aux_fit.push_back(x.fit[i][j]);
-	  			
-  			}
-  			fit.push_back(v_aux_fit);			
-		}
-			
-  		
-		
-	
-
-	
-		
-		
-			
-		fitWeight .clear();
-		for (unsigned int i = 0; i <x.fitWeight.length(); ++i) {
-			
-			fitWeight.push_back(x.fitWeight[i]);
+		setGainValid(x.gainValid);
   			
-		}
+ 		
+		
+	
+
+	
+		
+		
 			
-  		
+		setFit(x.fit);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setFitWeight(x.fitWeight);
+  			
+ 		
 		
 	
 
@@ -427,7 +367,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalGain");
+			throw ConversionException (err.getMessage(),"CalGain");
 		}
 	}
 #endif
@@ -549,7 +489,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalGainRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalGainRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -574,40 +514,32 @@ namespace asdm {
 	
   		
 			
-					
-	  	setGain(Parser::get2DFloat("gain","CalGain",rowDoc));
-	  			
-	  		
+	  	setGain(Parser::getFloat("gain","CalGain",rowDoc));
+			
 		
 	
 
 	
   		
 			
-					
-	  	setGainValid(Parser::get1DBoolean("gainValid","CalGain",rowDoc));
-	  			
-	  		
+	  	setGainValid(Parser::getBoolean("gainValid","CalGain",rowDoc));
+			
 		
 	
 
 	
   		
 			
-					
-	  	setFit(Parser::get2DFloat("fit","CalGain",rowDoc));
-	  			
-	  		
+	  	setFit(Parser::getFloat("fit","CalGain",rowDoc));
+			
 		
 	
 
 	
   		
 			
-					
-	  	setFitWeight(Parser::get1DFloat("fitWeight","CalGain",rowDoc));
-	  			
-	  		
+	  	setFitWeight(Parser::getFloat("fitWeight","CalGain",rowDoc));
+			
 		
 	
 
@@ -663,6 +595,208 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"CalGain");
 		}
+	}
+	
+	void CalGainRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeFloat(gain);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(gainValid);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeFloat(fit);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeFloat(fitWeight);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(totalGainValid);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeFloat(totalFit);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeFloat(totalFitWeight);
+				
+		
+	
+
+
+	
+	
+	}
+	
+	CalGainRow* CalGainRow::fromBin(EndianISStream& eiss, CalGainTable& table) {
+		CalGainRow* row = new  CalGainRow(table);
+		
+		
+		
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->gain =  eiss.readFloat();
+			
+		
+	
+
+	
+	
+		
+			
+		row->gainValid =  eiss.readBoolean();
+			
+		
+	
+
+	
+	
+		
+			
+		row->fit =  eiss.readFloat();
+			
+		
+	
+
+	
+	
+		
+			
+		row->fitWeight =  eiss.readFloat();
+			
+		
+	
+
+	
+	
+		
+			
+		row->totalGainValid =  eiss.readBoolean();
+			
+		
+	
+
+	
+	
+		
+			
+		row->totalFit =  eiss.readFloat();
+			
+		
+	
+
+	
+	
+		
+			
+		row->totalFitWeight =  eiss.readFloat();
+			
+		
+	
+
+		
+		
+		
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -738,21 +872,21 @@ namespace asdm {
 	
  	/**
  	 * Get gain.
- 	 * @return gain as vector<vector<float > >
+ 	 * @return gain as float
  	 */
- 	vector<vector<float > > CalGainRow::getGain() const {
+ 	float CalGainRow::getGain() const {
 	
   		return gain;
  	}
 
  	/**
- 	 * Set gain with the specified vector<vector<float > >.
- 	 * @param gain The vector<vector<float > > value to which gain is to be set.
+ 	 * Set gain with the specified float.
+ 	 * @param gain The float value to which gain is to be set.
  	 
  	
  		
  	 */
- 	void CalGainRow::setGain (vector<vector<float > > gain)  {
+ 	void CalGainRow::setGain (float gain)  {
   	
   	
   		if (hasBeenAdded) {
@@ -770,21 +904,21 @@ namespace asdm {
 	
  	/**
  	 * Get gainValid.
- 	 * @return gainValid as vector<bool >
+ 	 * @return gainValid as bool
  	 */
- 	vector<bool > CalGainRow::getGainValid() const {
+ 	bool CalGainRow::getGainValid() const {
 	
   		return gainValid;
  	}
 
  	/**
- 	 * Set gainValid with the specified vector<bool >.
- 	 * @param gainValid The vector<bool > value to which gainValid is to be set.
+ 	 * Set gainValid with the specified bool.
+ 	 * @param gainValid The bool value to which gainValid is to be set.
  	 
  	
  		
  	 */
- 	void CalGainRow::setGainValid (vector<bool > gainValid)  {
+ 	void CalGainRow::setGainValid (bool gainValid)  {
   	
   	
   		if (hasBeenAdded) {
@@ -802,21 +936,21 @@ namespace asdm {
 	
  	/**
  	 * Get fit.
- 	 * @return fit as vector<vector<float > >
+ 	 * @return fit as float
  	 */
- 	vector<vector<float > > CalGainRow::getFit() const {
+ 	float CalGainRow::getFit() const {
 	
   		return fit;
  	}
 
  	/**
- 	 * Set fit with the specified vector<vector<float > >.
- 	 * @param fit The vector<vector<float > > value to which fit is to be set.
+ 	 * Set fit with the specified float.
+ 	 * @param fit The float value to which fit is to be set.
  	 
  	
  		
  	 */
- 	void CalGainRow::setFit (vector<vector<float > > fit)  {
+ 	void CalGainRow::setFit (float fit)  {
   	
   	
   		if (hasBeenAdded) {
@@ -834,21 +968,21 @@ namespace asdm {
 	
  	/**
  	 * Get fitWeight.
- 	 * @return fitWeight as vector<float >
+ 	 * @return fitWeight as float
  	 */
- 	vector<float > CalGainRow::getFitWeight() const {
+ 	float CalGainRow::getFitWeight() const {
 	
   		return fitWeight;
  	}
 
  	/**
- 	 * Set fitWeight with the specified vector<float >.
- 	 * @param fitWeight The vector<float > value to which fitWeight is to be set.
+ 	 * Set fitWeight with the specified float.
+ 	 * @param fitWeight The float value to which fitWeight is to be set.
  	 
  	
  		
  	 */
- 	void CalGainRow::setFitWeight (vector<float > fitWeight)  {
+ 	void CalGainRow::setFitWeight (float fitWeight)  {
   	
   	
   		if (hasBeenAdded) {
@@ -1044,14 +1178,14 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the CalData table having CalData.calDataId == calDataId
-	 * @return a CalDataRow*
+	 * Returns the pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
+	 * @return a CalReductionRow*
 	 * 
 	 
 	 */
-	 CalDataRow* CalGainRow::getCalDataUsingCalDataId() {
+	 CalReductionRow* CalGainRow::getCalReductionUsingCalReductionId() {
 	 
-	 	return table.getContainer().getCalData().getRowByKey(calDataId);
+	 	return table.getContainer().getCalReduction().getRowByKey(calReductionId);
 	 }
 	 
 
@@ -1063,14 +1197,14 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
-	 * @return a CalReductionRow*
+	 * Returns the pointer to the row in the CalData table having CalData.calDataId == calDataId
+	 * @return a CalDataRow*
 	 * 
 	 
 	 */
-	 CalReductionRow* CalGainRow::getCalReductionUsingCalReductionId() {
+	 CalDataRow* CalGainRow::getCalDataUsingCalDataId() {
 	 
-	 	return table.getContainer().getCalReduction().getRowByKey(calReductionId);
+	 	return table.getContainer().getCalData().getRowByKey(calDataId);
 	 }
 	 
 
@@ -1200,7 +1334,7 @@ namespace asdm {
 	}
 
 	
-	bool CalGainRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<vector<float > > gain, vector<bool > gainValid, vector<vector<float > > fit, vector<float > fitWeight, bool totalGainValid, float totalFit, float totalFitWeight) {
+	bool CalGainRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, float gain, bool gainValid, float fit, float fitWeight, bool totalGainValid, float totalFit, float totalFitWeight) {
 		bool result;
 		result = true;
 		
@@ -1286,7 +1420,7 @@ namespace asdm {
 	
 	
 	
-	bool CalGainRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, vector<vector<float > > gain, vector<bool > gainValid, vector<vector<float > > fit, vector<float > fitWeight, bool totalGainValid, float totalFit, float totalFitWeight) {
+	bool CalGainRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, float gain, bool gainValid, float fit, float fitWeight, bool totalGainValid, float totalFit, float totalFitWeight) {
 		bool result;
 		result = true;
 		

@@ -38,9 +38,9 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<FocusMethod,EnumPar<void> >
-     (FocusMethodMod::THREE_POINT,ep((int)FocusMethodMod::THREE_POINT,"THREE_POINT","Three-point measurement")));
+     (FocusMethodMod::THREE_POINT,ep((int)FocusMethodMod::THREE_POINT,"THREE_POINT","un-documented")));
     m_.insert(pair<FocusMethod,EnumPar<void> >
-     (FocusMethodMod::FIVE_POINT,ep((int)FocusMethodMod::FIVE_POINT,"FIVE_POINT","Five-point measurement")));
+     (FocusMethodMod::FIVE_POINT,ep((int)FocusMethodMod::FIVE_POINT,"FIVE_POINT","un-documented")));
     return true;
   }
   static map<FocusMethod,EnumPar<void> > m_;

@@ -25,7 +25,7 @@
 using namespace ReceiverBandMod;
 
 template<>
- struct enum_set_traits<ReceiverBand> : public enum_set_traiter<ReceiverBand,16,ReceiverBandMod::UNSPECIFIED> {};
+ struct enum_set_traits<ReceiverBand> : public enum_set_traiter<ReceiverBand,17,ReceiverBandMod::UNSPECIFIED> {};
 
 template<>
 class enum_map_traits<ReceiverBand,void> : public enum_map_traiter<ReceiverBand,void> {
@@ -38,37 +38,39 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::ALMA_RB_01,ep((int)ReceiverBandMod::ALMA_RB_01,"ALMA_RB_01","ALMA Receiver band 01")));
+     (ReceiverBandMod::ALMA_RB_01,ep((int)ReceiverBandMod::ALMA_RB_01,"ALMA_RB_01","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::ALMA_RB_02,ep((int)ReceiverBandMod::ALMA_RB_02,"ALMA_RB_02","ALMA Receiver band 02")));
+     (ReceiverBandMod::ALMA_RB_02,ep((int)ReceiverBandMod::ALMA_RB_02,"ALMA_RB_02","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::ALMA_RB_03,ep((int)ReceiverBandMod::ALMA_RB_03,"ALMA_RB_03","ALMA Receiver band 03")));
+     (ReceiverBandMod::ALMA_RB_03,ep((int)ReceiverBandMod::ALMA_RB_03,"ALMA_RB_03","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::ALMA_RB_04,ep((int)ReceiverBandMod::ALMA_RB_04,"ALMA_RB_04","ALMA Receiver band 04")));
+     (ReceiverBandMod::ALMA_RB_04,ep((int)ReceiverBandMod::ALMA_RB_04,"ALMA_RB_04","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::ALMA_RB_05,ep((int)ReceiverBandMod::ALMA_RB_05,"ALMA_RB_05","ALMA Receiver band 05")));
+     (ReceiverBandMod::ALMA_RB_05,ep((int)ReceiverBandMod::ALMA_RB_05,"ALMA_RB_05","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::ALMA_RB_06,ep((int)ReceiverBandMod::ALMA_RB_06,"ALMA_RB_06","ALMA Receiver band 06")));
+     (ReceiverBandMod::ALMA_RB_06,ep((int)ReceiverBandMod::ALMA_RB_06,"ALMA_RB_06","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::ALMA_RB_07,ep((int)ReceiverBandMod::ALMA_RB_07,"ALMA_RB_07","ALMA Receiver band 07")));
+     (ReceiverBandMod::ALMA_RB_07,ep((int)ReceiverBandMod::ALMA_RB_07,"ALMA_RB_07","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::ALMA_RB_08,ep((int)ReceiverBandMod::ALMA_RB_08,"ALMA_RB_08","ALMA Receiver band 08")));
+     (ReceiverBandMod::ALMA_RB_08,ep((int)ReceiverBandMod::ALMA_RB_08,"ALMA_RB_08","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::ALMA_RB_09,ep((int)ReceiverBandMod::ALMA_RB_09,"ALMA_RB_09","ALMA Receiver band 09")));
+     (ReceiverBandMod::ALMA_RB_09,ep((int)ReceiverBandMod::ALMA_RB_09,"ALMA_RB_09","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::ALMA_RB_10,ep((int)ReceiverBandMod::ALMA_RB_10,"ALMA_RB_10","ALMA Receiver band 10")));
+     (ReceiverBandMod::ALMA_RB_10,ep((int)ReceiverBandMod::ALMA_RB_10,"ALMA_RB_10","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::ALMA_HOLOGRAPHY_RECEIVER,ep((int)ReceiverBandMod::ALMA_HOLOGRAPHY_RECEIVER,"ALMA_HOLOGRAPHY_RECEIVER","Alma transmitter Holography receiver.")));
+     (ReceiverBandMod::ALMA_RB_ALL,ep((int)ReceiverBandMod::ALMA_RB_ALL,"ALMA_RB_ALL","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::BURE_01,ep((int)ReceiverBandMod::BURE_01,"BURE_01","Plateau de Bure receiver band #1.")));
+     (ReceiverBandMod::ALMA_HOLOGRAPHY_RECEIVER,ep((int)ReceiverBandMod::ALMA_HOLOGRAPHY_RECEIVER,"ALMA_HOLOGRAPHY_RECEIVER","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::BURE_02,ep((int)ReceiverBandMod::BURE_02,"BURE_02","Plateau de Bure receiver band #2.")));
+     (ReceiverBandMod::BURE_01,ep((int)ReceiverBandMod::BURE_01,"BURE_01","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::BURE_03,ep((int)ReceiverBandMod::BURE_03,"BURE_03","Plateau de Bure receiver band #3.")));
+     (ReceiverBandMod::BURE_02,ep((int)ReceiverBandMod::BURE_02,"BURE_02","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::BURE_04,ep((int)ReceiverBandMod::BURE_04,"BURE_04","Plateau de Bure receiver band #4")));
+     (ReceiverBandMod::BURE_03,ep((int)ReceiverBandMod::BURE_03,"BURE_03","un-documented")));
     m_.insert(pair<ReceiverBand,EnumPar<void> >
-     (ReceiverBandMod::UNSPECIFIED,ep((int)ReceiverBandMod::UNSPECIFIED,"UNSPECIFIED","receiver band of unspecified origin.")));
+     (ReceiverBandMod::BURE_04,ep((int)ReceiverBandMod::BURE_04,"BURE_04","un-documented")));
+    m_.insert(pair<ReceiverBand,EnumPar<void> >
+     (ReceiverBandMod::UNSPECIFIED,ep((int)ReceiverBandMod::UNSPECIFIED,"UNSPECIFIED","un-documented")));
     return true;
   }
   static map<ReceiverBand,EnumPar<void> > m_;

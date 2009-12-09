@@ -41,6 +41,9 @@ using std::set;
 #include <PointingModelRow.h>
 #include <PointingModelTable.h>
 
+#include <PointingModelTable.h>
+#include <PointingModelRow.h>
+
 #include <AntennaTable.h>
 #include <AntennaRow.h>
 	
@@ -48,6 +51,9 @@ using std::set;
 using asdm::ASDM;
 using asdm::PointingModelRow;
 using asdm::PointingModelTable;
+
+using asdm::PointingModelTable;
+using asdm::PointingModelRow;
 
 using asdm::AntennaTable;
 using asdm::AntennaRow;
@@ -150,13 +156,35 @@ namespace asdm {
 	
   		
 		
-		x->numFormulaExists = numFormulaExists;
+		
+			
+				
+		x->polarizationType = polarizationType;
+ 				
+ 			
+		
+	
+
+	
+  		
 		
 		
 			
 				
-		x->numFormula = numFormula;
+		x->receiverBand = receiverBand;
  				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->assocNature = CORBA::string_dup(assocNature.c_str());
+				
  			
 		
 	
@@ -195,7 +223,22 @@ namespace asdm {
   	
 
 	
+  	
+ 		
 		
+	 	
+			
+				
+		x->assocPointingModelId = assocPointingModelId;
+ 				
+ 			
+	 	 		
+  	
+
+	
+		
+	
+
 	
 
 		
@@ -210,7 +253,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct PointingModelRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void PointingModelRow::setFromIDL (PointingModelRowIDL x) throw(ConversionException) {
+	void PointingModelRow::setFromIDL (PointingModelRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -267,16 +310,31 @@ namespace asdm {
 
 	
 		
-		numFormulaExists = x.numFormulaExists;
-		if (x.numFormulaExists) {
-		
 		
 			
-		setNumFormula(x.numFormula);
+		setPolarizationType(x.polarizationType);
   			
  		
 		
-		}
+	
+
+	
+		
+		
+			
+		setReceiverBand(x.receiverBand);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setAssocNature(string (x.assocNature));
+			
+ 		
 		
 	
 
@@ -315,10 +373,22 @@ namespace asdm {
 
 	
 		
+		
+			
+		setAssocPointingModelId(x.assocPointingModelId);
+  			
+ 		
+		
+	
+
+	
+		
+	
+
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"PointingModel");
+			throw ConversionException (err.getMessage(),"PointingModel");
 		}
 	}
 #endif
@@ -367,13 +437,25 @@ namespace asdm {
 
   	
  		
-		if (numFormulaExists) {
+		
+			buf.append(EnumerationParser::toXML("polarizationType", polarizationType));
 		
 		
-		Parser::toXML(numFormula, "numFormula", buf);
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
 		
 		
-		}
+	
+
+  	
+ 		
+		
+		Parser::toXML(assocNature, "assocNature", buf);
+		
 		
 	
 
@@ -400,8 +482,18 @@ namespace asdm {
 		
 	
 
+  	
+ 		
+		
+		Parser::toXML(assocPointingModelId, "assocPointingModelId", buf);
+		
+		
+	
+
 	
 		
+	
+
 	
 
 		
@@ -414,7 +506,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void PointingModelRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void PointingModelRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -457,13 +549,31 @@ namespace asdm {
 	
 
 	
+		
+		
+		
+		polarizationType = EnumerationParser::getPolarizationType("polarizationType","PointingModel",rowDoc);
+		
+		
+		
+	
+
+	
+		
+		
+		
+		receiverBand = EnumerationParser::getReceiverBand("receiverBand","PointingModel",rowDoc);
+		
+		
+		
+	
+
+	
   		
-        if (row.isStr("<numFormula>")) {
 			
-	  		setNumFormula(Parser::getInteger("numFormula","PointingModel",rowDoc));
+	  	setAssocNature(Parser::getString("assocNature","PointingModel",rowDoc));
 			
-		}
- 		
+		
 	
 
 	
@@ -490,12 +600,270 @@ namespace asdm {
 	
 
 	
+  		
+			
+	  	setAssocPointingModelId(Parser::getInteger("assocPointingModelId","PointingModel",rowDoc));
+			
 		
+	
+
+	
+		
+	
+
 	
 
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"PointingModel");
 		}
+	}
+	
+	void PointingModelRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	antennaId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(pointingModelId);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numCoeff);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) coeffName.size());
+		for (unsigned int i = 0; i < coeffName.size(); i++)
+				
+			eoss.writeString(coeffName.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) coeffVal.size());
+		for (unsigned int i = 0; i < coeffVal.size(); i++)
+				
+			eoss.writeFloat(coeffVal.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(polarizationType);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(receiverBand);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(assocNature);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(assocPointingModelId);
+				
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(coeffFormulaExists);
+	if (coeffFormulaExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) coeffFormula.size());
+		for (unsigned int i = 0; i < coeffFormula.size(); i++)
+				
+			eoss.writeString(coeffFormula.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	}
+	
+	PointingModelRow* PointingModelRow::fromBin(EndianISStream& eiss, PointingModelTable& table) {
+		PointingModelRow* row = new  PointingModelRow(table);
+		
+		
+		
+	
+		
+		
+		row->antennaId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->pointingModelId =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numCoeff =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->coeffName.clear();
+		
+		unsigned int coeffNameDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < coeffNameDim1; i++)
+			
+			row->coeffName.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->coeffVal.clear();
+		
+		unsigned int coeffValDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < coeffValDim1; i++)
+			
+			row->coeffVal.push_back(eiss.readFloat());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->polarizationType = CPolarizationType::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->assocNature =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->assocPointingModelId =  eiss.readInt();
+			
+		
+	
+
+		
+		
+		
+	row->coeffFormulaExists = eiss.readBoolean();
+	if (row->coeffFormulaExists) {
+		
+	
+	
+		
+			
+	
+		row->coeffFormula.clear();
+		
+		unsigned int coeffFormulaDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < coeffFormulaDim1; i++)
+			
+			row->coeffFormula.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -635,50 +1003,99 @@ namespace asdm {
 	
 
 	
-	/**
-	 * The attribute numFormula is optional. Return true if this attribute exists.
-	 * @return true if and only if the numFormula attribute exists. 
-	 */
-	bool PointingModelRow::isNumFormulaExists() const {
-		return numFormulaExists;
-	}
-	
 
 	
  	/**
- 	 * Get numFormula, which is optional.
- 	 * @return numFormula as int
- 	 * @throw IllegalAccessException If numFormula does not exist.
+ 	 * Get polarizationType.
+ 	 * @return polarizationType as PolarizationTypeMod::PolarizationType
  	 */
- 	int PointingModelRow::getNumFormula() const throw(IllegalAccessException) {
-		if (!numFormulaExists) {
-			throw IllegalAccessException("numFormula", "PointingModel");
-		}
+ 	PolarizationTypeMod::PolarizationType PointingModelRow::getPolarizationType() const {
 	
-  		return numFormula;
+  		return polarizationType;
  	}
 
  	/**
- 	 * Set numFormula with the specified int.
- 	 * @param numFormula The int value to which numFormula is to be set.
+ 	 * Set polarizationType with the specified PolarizationTypeMod::PolarizationType.
+ 	 * @param polarizationType The PolarizationTypeMod::PolarizationType value to which polarizationType is to be set.
  	 
  	
+ 		
  	 */
- 	void PointingModelRow::setNumFormula (int numFormula) {
-	
- 		this->numFormula = numFormula;
-	
-		numFormulaExists = true;
+ 	void PointingModelRow::setPolarizationType (PolarizationTypeMod::PolarizationType polarizationType)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->polarizationType = polarizationType;
 	
  	}
 	
 	
-	/**
-	 * Mark numFormula, which is an optional field, as non-existent.
-	 */
-	void PointingModelRow::clearNumFormula () {
-		numFormulaExists = false;
-	}
+
+	
+
+	
+ 	/**
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 */
+ 	ReceiverBandMod::ReceiverBand PointingModelRow::getReceiverBand() const {
+	
+  		return receiverBand;
+ 	}
+
+ 	/**
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void PointingModelRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->receiverBand = receiverBand;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get assocNature.
+ 	 * @return assocNature as string
+ 	 */
+ 	string PointingModelRow::getAssocNature() const {
+	
+  		return assocNature;
+ 	}
+
+ 	/**
+ 	 * Set assocNature with the specified string.
+ 	 * @param assocNature The string value to which assocNature is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void PointingModelRow::setAssocNature (string assocNature)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->assocNature = assocNature;
+	
+ 	}
+	
 	
 
 	
@@ -697,7 +1114,7 @@ namespace asdm {
  	 * @return coeffFormula as vector<string >
  	 * @throw IllegalAccessException If coeffFormula does not exist.
  	 */
- 	vector<string > PointingModelRow::getCoeffFormula() const throw(IllegalAccessException) {
+ 	vector<string > PointingModelRow::getCoeffFormula() const  {
 		if (!coeffFormulaExists) {
 			throw IllegalAccessException("coeffFormula", "PointingModel");
 		}
@@ -769,10 +1186,61 @@ namespace asdm {
 	
 	
 
+	
+
+	
+ 	/**
+ 	 * Get assocPointingModelId.
+ 	 * @return assocPointingModelId as int
+ 	 */
+ 	int PointingModelRow::getAssocPointingModelId() const {
+	
+  		return assocPointingModelId;
+ 	}
+
+ 	/**
+ 	 * Set assocPointingModelId with the specified int.
+ 	 * @param assocPointingModelId The int value to which assocPointingModelId is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void PointingModelRow::setAssocPointingModelId (int assocPointingModelId)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->assocPointingModelId = assocPointingModelId;
+	
+ 	}
+	
+	
+
 	///////////
 	// Links //
 	///////////
 	
+	
+	
+	
+		
+
+	// ===> Slice link from a row of PointingModel table to a collection of row of PointingModel table.
+	
+	/**
+	 * Get the collection of row in the PointingModel table having their attribut pointingModelId == this->pointingModelId
+	 */
+	vector <PointingModelRow *> PointingModelRow::getPointingModels() {
+		
+			return table.getContainer().getPointingModel().getRowByPointingModelId(pointingModelId);
+		
+	}
+	
+
+	
+
 	
 	
 	
@@ -814,7 +1282,9 @@ namespace asdm {
 	
 
 	
-		numFormulaExists = false;
+
+	
+
 	
 
 	
@@ -825,6 +1295,8 @@ namespace asdm {
 	
 
 	
+
+	
 	
 	
 	
@@ -833,6 +1305,16 @@ namespace asdm {
 
 	
 
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+polarizationType = CPolarizationType::from_int(0);
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+receiverBand = CReceiverBand::from_int(0);
 	
 
 	
@@ -856,7 +1338,9 @@ namespace asdm {
 	
 
 	
-		numFormulaExists = false;
+
+	
+
 	
 
 	
@@ -865,14 +1349,16 @@ namespace asdm {
 
 	
 	
+
+	
 		
 		}
 		else {
 	
 		
-			pointingModelId = row.pointingModelId;
-		
 			antennaId = row.antennaId;
+		
+			pointingModelId = row.pointingModelId;
 		
 		
 		
@@ -883,15 +1369,16 @@ namespace asdm {
 		
 			coeffVal = row.coeffVal;
 		
+			polarizationType = row.polarizationType;
+		
+			receiverBand = row.receiverBand;
+		
+			assocNature = row.assocNature;
+		
+			assocPointingModelId = row.assocPointingModelId;
 		
 		
 		
-		if (row.numFormulaExists) {
-			numFormula = row.numFormula;		
-			numFormulaExists = true;
-		}
-		else
-			numFormulaExists = false;
 		
 		if (row.coeffFormulaExists) {
 			coeffFormula = row.coeffFormula;		
@@ -904,7 +1391,7 @@ namespace asdm {
 	}
 
 	
-	bool PointingModelRow::compareNoAutoInc(Tag antennaId, int numCoeff, vector<string > coeffName, vector<float > coeffVal) {
+	bool PointingModelRow::compareNoAutoInc(Tag antennaId, int numCoeff, vector<string > coeffName, vector<float > coeffVal, PolarizationTypeMod::PolarizationType polarizationType, ReceiverBandMod::ReceiverBand receiverBand, string assocNature, int assocPointingModelId) {
 		bool result;
 		result = true;
 		
@@ -936,12 +1423,40 @@ namespace asdm {
 		if (!result) return false;
 	
 
+	
+		
+		result = result && (this->polarizationType == polarizationType);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->receiverBand == receiverBand);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->assocNature == assocNature);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->assocPointingModelId == assocPointingModelId);
+		
+		if (!result) return false;
+	
+
 		return result;
 	}	
 	
 	
 	
-	bool PointingModelRow::compareRequiredValue(int numCoeff, vector<string > coeffName, vector<float > coeffVal) {
+	bool PointingModelRow::compareRequiredValue(int numCoeff, vector<string > coeffName, vector<float > coeffVal, PolarizationTypeMod::PolarizationType polarizationType, ReceiverBandMod::ReceiverBand receiverBand, string assocNature, int assocPointingModelId) {
 		bool result;
 		result = true;
 		
@@ -955,6 +1470,22 @@ namespace asdm {
 
 	
 		if (!(this->coeffVal == coeffVal)) return false;
+	
+
+	
+		if (!(this->polarizationType == polarizationType)) return false;
+	
+
+	
+		if (!(this->receiverBand == receiverBand)) return false;
+	
+
+	
+		if (!(this->assocNature == assocNature)) return false;
+	
+
+	
+		if (!(this->assocPointingModelId == assocPointingModelId)) return false;
 	
 
 		return result;
@@ -977,6 +1508,14 @@ namespace asdm {
 		if (this->coeffName != x->coeffName) return false;
 			
 		if (this->coeffVal != x->coeffVal) return false;
+			
+		if (this->polarizationType != x->polarizationType) return false;
+			
+		if (this->receiverBand != x->receiverBand) return false;
+			
+		if (this->assocNature != x->assocNature) return false;
+			
+		if (this->assocPointingModelId != x->assocPointingModelId) return false;
 			
 		
 		return true;

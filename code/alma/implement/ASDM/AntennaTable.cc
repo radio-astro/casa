@@ -164,37 +164,25 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param stationId. 
-	
  	 * @param name. 
 	
  	 * @param antennaMake. 
 	
  	 * @param antennaType. 
 	
- 	 * @param xPosition. 
+ 	 * @param dishDiameter. 
 	
- 	 * @param yPosition. 
+ 	 * @param position. 
 	
- 	 * @param zPosition. 
+ 	 * @param offset. 
 	
  	 * @param time. 
 	
- 	 * @param xOffset. 
-	
- 	 * @param yOffset. 
-	
- 	 * @param zOffset. 
-	
- 	 * @param dishDiameter. 
-	
- 	 * @param flagRow. 
+ 	 * @param stationId. 
 	
      */
-	AntennaRow* AntennaTable::newRow(Tag stationId, string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length xPosition, Length yPosition, Length zPosition, ArrayTime time, Length xOffset, Length yOffset, Length zOffset, Length dishDiameter, bool flagRow){
+	AntennaRow* AntennaTable::newRow(string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length dishDiameter, vector<Length > position, vector<Length > offset, ArrayTime time, Tag stationId){
 		AntennaRow *row = new AntennaRow(*this);
-			
-		row->setStationId(stationId);
 			
 		row->setName(name);
 			
@@ -202,31 +190,21 @@ namespace asdm {
 			
 		row->setAntennaType(antennaType);
 			
-		row->setXPosition(xPosition);
+		row->setDishDiameter(dishDiameter);
 			
-		row->setYPosition(yPosition);
+		row->setPosition(position);
 			
-		row->setZPosition(zPosition);
+		row->setOffset(offset);
 			
 		row->setTime(time);
 			
-		row->setXOffset(xOffset);
-			
-		row->setYOffset(yOffset);
-			
-		row->setZOffset(zOffset);
-			
-		row->setDishDiameter(dishDiameter);
-			
-		row->setFlagRow(flagRow);
+		row->setStationId(stationId);
 	
 		return row;		
 	}	
 
-	AntennaRow* AntennaTable::newRowFull(Tag stationId, string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length xPosition, Length yPosition, Length zPosition, ArrayTime time, Length xOffset, Length yOffset, Length zOffset, Length dishDiameter, bool flagRow)	{
+	AntennaRow* AntennaTable::newRowFull(string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length dishDiameter, vector<Length > position, vector<Length > offset, ArrayTime time, Tag stationId)	{
 		AntennaRow *row = new AntennaRow(*this);
-			
-		row->setStationId(stationId);
 			
 		row->setName(name);
 			
@@ -234,23 +212,15 @@ namespace asdm {
 			
 		row->setAntennaType(antennaType);
 			
-		row->setXPosition(xPosition);
+		row->setDishDiameter(dishDiameter);
 			
-		row->setYPosition(yPosition);
+		row->setPosition(position);
 			
-		row->setZPosition(zPosition);
+		row->setOffset(offset);
 			
 		row->setTime(time);
 			
-		row->setXOffset(xOffset);
-			
-		row->setYOffset(yOffset);
-			
-		row->setZOffset(zOffset);
-			
-		row->setDishDiameter(dishDiameter);
-			
-		row->setFlagRow(flagRow);
+		row->setStationId(stationId);
 	
 		return row;				
 	}
@@ -286,31 +256,21 @@ AntennaRow* AntennaTable::newRowCopy(AntennaRow* row) {
 			 
 		AntennaRow* aRow = lookup(
 				
-		x->getStationId()
-				,
 		x->getName()
 				,
 		x->getAntennaMake()
 				,
 		x->getAntennaType()
 				,
-		x->getXPosition()
+		x->getDishDiameter()
 				,
-		x->getYPosition()
+		x->getPosition()
 				,
-		x->getZPosition()
+		x->getOffset()
 				,
 		x->getTime()
 				,
-		x->getXOffset()
-				,
-		x->getYOffset()
-				,
-		x->getZOffset()
-				,
-		x->getDishDiameter()
-				,
-		x->getFlagRow()
+		x->getStationId()
 				
 		);
 		if (aRow) return aRow;
@@ -344,37 +304,31 @@ AntennaRow* AntennaTable::newRowCopy(AntennaRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	AntennaRow*  AntennaTable::checkAndAdd(AntennaRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	AntennaRow*  AntennaTable::checkAndAdd(AntennaRow* x)  {
 	 
 		 
 		if (lookup(
 			
-			x->getStationId()
-		,
 			x->getName()
 		,
 			x->getAntennaMake()
 		,
 			x->getAntennaType()
 		,
-			x->getXPosition()
+			x->getDishDiameter()
 		,
-			x->getYPosition()
+			x->getPosition()
 		,
-			x->getZPosition()
+			x->getOffset()
 		,
 			x->getTime()
 		,
-			x->getXOffset()
-		,
-			x->getYOffset()
-		,
-			x->getZOffset()
-		,
-			x->getDishDiameter()
-		,
-			x->getFlagRow()
+			x->getStationId()
 		
 		)) throw UniquenessViolationException("Uniqueness violation exception in table AntennaTable");
 		
@@ -441,38 +395,28 @@ AntennaRow* AntennaTable::newRowCopy(AntennaRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
- * @param stationId.
- 	 		
  * @param name.
  	 		
  * @param antennaMake.
  	 		
  * @param antennaType.
  	 		
- * @param xPosition.
+ * @param dishDiameter.
  	 		
- * @param yPosition.
+ * @param position.
  	 		
- * @param zPosition.
+ * @param offset.
  	 		
  * @param time.
  	 		
- * @param xOffset.
- 	 		
- * @param yOffset.
- 	 		
- * @param zOffset.
- 	 		
- * @param dishDiameter.
- 	 		
- * @param flagRow.
+ * @param stationId.
  	 		 
  */
-AntennaRow* AntennaTable::lookup(Tag stationId, string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length xPosition, Length yPosition, Length zPosition, ArrayTime time, Length xOffset, Length yOffset, Length zOffset, Length dishDiameter, bool flagRow) {
+AntennaRow* AntennaTable::lookup(string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length dishDiameter, vector<Length > position, vector<Length > offset, ArrayTime time, Tag stationId) {
 		AntennaRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(stationId, name, antennaMake, antennaType, xPosition, yPosition, zPosition, time, xOffset, yOffset, zOffset, dishDiameter, flagRow)) return aRow;
+			if (aRow->compareNoAutoInc(name, antennaMake, antennaType, dishDiameter, position, offset, time, stationId)) return aRow;
 		}			
 		return 0;	
 } 
@@ -480,7 +424,6 @@ AntennaRow* AntennaTable::lookup(Tag stationId, string name, AntennaMakeMod::Ant
  	 	
 
 	
-
 
 
 
@@ -501,7 +444,7 @@ AntennaRow* AntennaTable::lookup(Tag stationId, string name, AntennaMakeMod::Ant
 #endif
 	
 #ifndef WITHOUT_ACS
-	void AntennaTable::fromIDL(AntennaTableIDL x) throw(DuplicateKey,ConversionException) {
+	void AntennaTable::fromIDL(AntennaTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			AntennaRow *tmp = newRow();
@@ -512,28 +455,27 @@ AntennaRow* AntennaTable::lookup(Tag stationId, string name, AntennaMakeMod::Ant
 	}
 #endif
 
-	char *AntennaTable::toFITS() const throw(ConversionException) {
+	char *AntennaTable::toFITS() const  {
 		throw ConversionException("Not implemented","Antenna");
 	}
 
-	void AntennaTable::fromFITS(char *fits) throw(ConversionException) {
+	void AntennaTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Antenna");
 	}
 
-	string AntennaTable::toVOTable() const throw(ConversionException) {
+	string AntennaTable::toVOTable() const {
 		throw ConversionException("Not implemented","Antenna");
 	}
 
-	void AntennaTable::fromVOTable(string vo) throw(ConversionException) {
+	void AntennaTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Antenna");
 	}
 
-	string AntennaTable::toXML()  throw(ConversionException) {
+	
+	string AntennaTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<AntennaTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/AntennaTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<AntennaTable> ");
+		buf.append("<AntennaTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/AntennaTable\" xsi:schemaLocation=\"http://Alma/XASDM/AntennaTable http://almaobservatory.org/XML/XASDM/2/AntennaTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -549,8 +491,9 @@ AntennaRow* AntennaTable::lookup(Tag stationId, string name, AntennaMakeMod::Ant
 		buf.append("</AntennaTable> ");
 		return buf;
 	}
+
 	
-	void AntennaTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void AntennaTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<AntennaTable")) 
 			error();
@@ -592,20 +535,110 @@ AntennaRow* AntennaTable::lookup(Tag stationId, string name, AntennaMakeMod::Ant
 			error();
 	}
 
-	void AntennaTable::error() throw(ConversionException) {
+	
+	void AntennaTable::error()  {
 		throw ConversionException("Invalid xml document","Antenna");
 	}
 	
+	
 	string AntennaTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void AntennaTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Antenna");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			AntennaRow* aRow = AntennaRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Antenna");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Antenna");
+		} 		 	
+	}
+
 	
 	void AntennaTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -636,6 +669,7 @@ AntennaRow* AntennaTable::lookup(Tag stationId, string name, AntennaMakeMod::Ant
 				throw ConversionException("Could not close file " + fileName, "Antenna");
 		}
 	}
+
 	
 	void AntennaTable::setFromFile(const string& directory) {
 		string tablename;
@@ -677,6 +711,11 @@ AntennaRow* AntennaTable::lookup(Tag stationId, string name, AntennaMakeMod::Ant
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

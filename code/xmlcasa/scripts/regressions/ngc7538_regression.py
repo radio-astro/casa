@@ -16,8 +16,10 @@ datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/ATST1/NGC7538/'
 
 print '--Import--'
 default('importvla')
-importvla(archivefiles=[datapath+'AP314_A950519.xp1',datapath+'AP314_A950519.xp2',datapath+'AP314_A950519.xp3'],
-	  vis='ngc7538.ms',bandname='K',frequencytol=10000000.0)
+importvla(archivefiles=[datapath+'AP314_A950519.xp1',
+                        datapath+'AP314_A950519.xp2',
+                        datapath+'AP314_A950519.xp3'],
+	  vis='ngc7538.ms', bandname='K', frequencytol=10000000.0)
 importtime = time.time() 
 print '--Observation summary--'
 listobs(vis='ngc7538.ms')
@@ -32,52 +34,52 @@ setjy(vis='ngc7538.ms',field='0') #set flux density for 1331+305 (3C286)
 setjytime = time.time()
 print '--Gaincal--'
 default('gaincal')
-gaincal(vis='ngc7538.ms',caltable='ap314.gcal',
-	field='<2',spw='0~1:2~56',gaintype='G',
-	opacity=0.08,solint='inf',combine='',refant='VA19')
+gaincal(vis='ngc7538.ms', caltable='ap314.gcal',
+	field='<2', spw='0~1:2~56', gaintype='G',
+	opacity=0.08,solint='inf', combine='', refant='VA19')
 gaintime = time.time()
 print '--Bandpass--'
 default('bandpass')
-bandpass(vis='ngc7538.ms',caltable='1328.bcal',
-	 field='0',opacity=0.08,
-	 gaintable='ap314.gcal',interp='nearest',
+bandpass(vis='ngc7538.ms', caltable='1328.bcal',
+	 field='0', opacity=0.08,
+	 gaintable='ap314.gcal', interp='nearest',
 	 refant='VA19')
 bptime = time.time()
 print '--Fluxscale--'
 default('fluxscale')
-fluxscale(vis='ngc7538.ms',caltable='ap314.gcal',fluxtable='ap314.fluxcal',
-	  reference=['1328+307'],transfer=['2229+695'])
+fluxscale(vis='ngc7538.ms', caltable='ap314.gcal', fluxtable='ap314.fluxcal',
+	  reference=['1328+307'], transfer=['2229+695'])
 fstime = time.time()
 print '--Apply Cal--'
 default('applycal')
 applycal(vis='ngc7538.ms',
 	 field='1~5',
 	 opacity=0.08,
-	 gaintable=['ap314.fluxcal','1328.bcal'],
+	 gaintable=['ap314.fluxcal', '1328.bcal'],
 	 gainfield='1')
 	 
 correcttime = time.time()
 
 print '--Split (fluxcal data)--'
 default('split')
-split(vis='ngc7538.ms',outputvis='ngc7538_cal.split.ms',
+split(vis='ngc7538.ms', outputvis='ngc7538_cal.split.ms',
 #      field=0,spw=0,nchan=62,start=0,step=1,datacolumn='MODEL_DATA')
-	field='0',spw='0:0~61',datacolumn='model')
+	field='0',spw='0:0~61', datacolumn='model')
 print '--Split (continuum)--'
 default('split')
-split(vis='ngc7538.ms',outputvis='ngc7538d.cont.ms',
-      field='3',spw='0:2~56^55',datacolumn='corrected')
+split(vis='ngc7538.ms', outputvis='ngc7538d.cont.ms',
+      field='3',spw='0:2~56^55', datacolumn='corrected')
 	#,nchan=1,start=2,step=55,datacolumn='CORRECTED_DATA')
 print '--Split (mf cont,)--'
 default('split')
-split(vis='ngc7538.ms',outputvis='ngc7538.cont.ms',
-	field='3,4,5',spw='0:2~56^55',datacolumn='corrected')
+split(vis='ngc7538.ms', outputvis='ngc7538.cont.ms',
+	field='3,4,5',spw='0:2~56^55', datacolumn='corrected')
       #field=[3,4,5],spw=0,nchan=1,start=2,step=55,datacolumn='CORRECTED_DATA')
 print '--Split (bandcal data)--'
 default('split')
-split(vis='ngc7538.ms',outputvis='2229.cont2.ms',
+split(vis='ngc7538.ms', outputvis='2229.cont2.ms',
 #      field=1,spw=[0,1],nchan=1,start=2,step=55,datacolumn='CORRECTED_DATA')
-	field='1',spw='0:2~56^55,1:2~56^55',datacolumn='corrected')
+	field='1', spw='0:2~56^55,1:2~56^55', datacolumn='corrected')
 splitcaltime = time.time()
 default('split')
 split(vis='ngc7538.ms',outputvis='ngc7538d.line.ms',

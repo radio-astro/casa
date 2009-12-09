@@ -180,13 +180,9 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param spectralWindowId. 
-	
  	 * @param timeInterval. 
 	
- 	 * @param numLines. 
-	
- 	 * @param sourceName. 
+ 	 * @param spectralWindowId. 
 	
  	 * @param code. 
 	
@@ -194,43 +190,41 @@ namespace asdm {
 	
  	 * @param properMotion. 
 	
+ 	 * @param sourceName. 
+	
      */
-	SourceRow* SourceTable::newRow(Tag spectralWindowId, ArrayTimeInterval timeInterval, int numLines, string sourceName, string code, vector<Angle > direction, vector<AngularRate > properMotion){
+	SourceRow* SourceTable::newRow(ArrayTimeInterval timeInterval, Tag spectralWindowId, string code, vector<Angle > direction, vector<AngularRate > properMotion, string sourceName){
 		SourceRow *row = new SourceRow(*this);
-			
-		row->setSpectralWindowId(spectralWindowId);
 			
 		row->setTimeInterval(timeInterval);
 			
-		row->setNumLines(numLines);
-			
-		row->setSourceName(sourceName);
+		row->setSpectralWindowId(spectralWindowId);
 			
 		row->setCode(code);
 			
 		row->setDirection(direction);
 			
 		row->setProperMotion(properMotion);
+			
+		row->setSourceName(sourceName);
 	
 		return row;		
 	}	
 
-	SourceRow* SourceTable::newRowFull(Tag spectralWindowId, ArrayTimeInterval timeInterval, int numLines, string sourceName, string code, vector<Angle > direction, vector<AngularRate > properMotion)	{
+	SourceRow* SourceTable::newRowFull(ArrayTimeInterval timeInterval, Tag spectralWindowId, string code, vector<Angle > direction, vector<AngularRate > properMotion, string sourceName)	{
 		SourceRow *row = new SourceRow(*this);
-			
-		row->setSpectralWindowId(spectralWindowId);
 			
 		row->setTimeInterval(timeInterval);
 			
-		row->setNumLines(numLines);
-			
-		row->setSourceName(sourceName);
+		row->setSpectralWindowId(spectralWindowId);
 			
 		row->setCode(code);
 			
 		row->setDirection(direction);
 			
 		row->setProperMotion(properMotion);
+			
+		row->setSourceName(sourceName);
 	
 		return row;				
 	}
@@ -300,12 +294,6 @@ SourceRow* SourceTable::newRowCopy(SourceRow* row) {
 					if (context[k][i][j]->getTimeInterval().getStart().equals(startTime)) {
 						if (
 						
-						 (context[k][i][j]->getNumLines() == x->getNumLines())
-						 && 
-
-						 (context[k][i][j]->getSourceName() == x->getSourceName())
-						 && 
-
 						 (context[k][i][j]->getCode() == x->getCode())
 						 && 
 
@@ -313,6 +301,9 @@ SourceRow* SourceTable::newRowCopy(SourceRow* row) {
 						 && 
 
 						 (context[k][i][j]->getProperMotion() == x->getProperMotion())
+						 && 
+
+						 (context[k][i][j]->getSourceName() == x->getSourceName())
 						
 						) {
 							// cout << "A row equal to x has been found, I return it " << endl;
@@ -365,8 +356,10 @@ SourceRow* SourceTable::newRowCopy(SourceRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 * @throws UniquenessViolationException 
 	 */
-	SourceRow*  SourceTable::checkAndAdd(SourceRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	SourceRow*  SourceTable::checkAndAdd(SourceRow* x) {
 		ArrayTime startTime = x->getTimeInterval().getStart();		
 		
 		// Determine the entry in the context map from the appropriate attributes.
@@ -381,12 +374,6 @@ SourceRow* SourceTable::newRowCopy(SourceRow* row) {
 					if (
 						(context[k][i][j]->getTimeInterval().getStart().equals(startTime)) 
 					
-						 && (context[k][i][j]->getNumLines() == x->getNumLines())
-					
-
-						 && (context[k][i][j]->getSourceName() == x->getSourceName())
-					
-
 						 && (context[k][i][j]->getCode() == x->getCode())
 					
 
@@ -394,6 +381,9 @@ SourceRow* SourceTable::newRowCopy(SourceRow* row) {
 					
 
 						 && (context[k][i][j]->getProperMotion() == x->getProperMotion())
+					
+
+						 && (context[k][i][j]->getSourceName() == x->getSourceName())
 					
 					)
 						throw UniquenessViolationException("Uniqueness violation exception in table SourceTable");			
@@ -472,7 +462,7 @@ SourceRow* SourceTable::newRowCopy(SourceRow* row) {
  ** no row exists for that key.
  **
  */
- 	SourceRow* SourceTable::getRowByKey(int sourceId, Tag spectralWindowId, ArrayTimeInterval timeInterval)  {	
+ 	SourceRow* SourceTable::getRowByKey(int sourceId, ArrayTimeInterval timeInterval, Tag spectralWindowId)  {	
 		ArrayTime start = timeInterval.getStart();
 		
 		map<string, ID_TIME_ROWS >::iterator mapIter;
@@ -522,22 +512,20 @@ SourceRow* SourceTable::newRowCopy(SourceRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
- * @param <<ExtrinsicAttribute>> spectralWindowId.
- 	 		
  * @param <<ASDMAttribute>> timeInterval.
  	 		
- * @param <<ASDMAttribute>> numLines.
- 	 		
- * @param <<ASDMAttribute>> sourceName.
+ * @param <<ExtrinsicAttribute>> spectralWindowId.
  	 		
  * @param <<ASDMAttribute>> code.
  	 		
  * @param <<ArrayAttribute>> direction.
  	 		
  * @param <<ArrayAttribute>> properMotion.
+ 	 		
+ * @param <<ASDMAttribute>> sourceName.
  	 		 
  */
-SourceRow* SourceTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeInterval, int numLines, string sourceName, string code, vector<Angle > direction, vector<AngularRate > properMotion) {		
+SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindowId, string code, vector<Angle > direction, vector<AngularRate > properMotion, string sourceName) {		
 		using asdm::ArrayTimeInterval;
 		map<string, ID_TIME_ROWS >::iterator mapIter;
 		string k = Key(spectralWindowId);
@@ -547,7 +535,7 @@ SourceRow* SourceTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeInter
 				vector <SourceRow*>::iterator rowIter;
 				for (rowIter = (*planeIter).begin(); rowIter != (*planeIter).end(); rowIter++) {
 					if ((*rowIter)->getTimeInterval().contains(timeInterval)
-					    && (*rowIter)->compareRequiredValue(numLines, sourceName, code, direction, properMotion)) {
+					    && (*rowIter)->compareRequiredValue(code, direction, properMotion, sourceName)) {
 						return *rowIter;
 					} 
 				}
@@ -577,7 +565,7 @@ SourceRow* SourceTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeInter
 #endif
 	
 #ifndef WITHOUT_ACS
-	void SourceTable::fromIDL(SourceTableIDL x) throw(DuplicateKey,ConversionException) {
+	void SourceTable::fromIDL(SourceTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			SourceRow *tmp = newRow();
@@ -588,28 +576,27 @@ SourceRow* SourceTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeInter
 	}
 #endif
 
-	char *SourceTable::toFITS() const throw(ConversionException) {
+	char *SourceTable::toFITS() const  {
 		throw ConversionException("Not implemented","Source");
 	}
 
-	void SourceTable::fromFITS(char *fits) throw(ConversionException) {
+	void SourceTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Source");
 	}
 
-	string SourceTable::toVOTable() const throw(ConversionException) {
+	string SourceTable::toVOTable() const {
 		throw ConversionException("Not implemented","Source");
 	}
 
-	void SourceTable::fromVOTable(string vo) throw(ConversionException) {
+	void SourceTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Source");
 	}
 
-	string SourceTable::toXML()  throw(ConversionException) {
+	
+	string SourceTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/SourceTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<SourceTable> ");
+		buf.append("<SourceTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/SourceTable\" xsi:schemaLocation=\"http://Alma/XASDM/SourceTable http://almaobservatory.org/XML/XASDM/2/SourceTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -625,8 +612,9 @@ SourceRow* SourceTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeInter
 		buf.append("</SourceTable> ");
 		return buf;
 	}
+
 	
-	void SourceTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void SourceTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SourceTable")) 
 			error();
@@ -668,20 +656,110 @@ SourceRow* SourceTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeInter
 			error();
 	}
 
-	void SourceTable::error() throw(ConversionException) {
+	
+	void SourceTable::error()  {
 		throw ConversionException("Invalid xml document","Source");
 	}
 	
+	
 	string SourceTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void SourceTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Source");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			SourceRow* aRow = SourceRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Source");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Source");
+		} 		 	
+	}
+
 	
 	void SourceTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -712,6 +790,7 @@ SourceRow* SourceTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeInter
 				throw ConversionException("Could not close file " + fileName, "Source");
 		}
 	}
+
 	
 	void SourceTable::setFromFile(const string& directory) {
 		string tablename;
@@ -753,6 +832,11 @@ SourceRow* SourceTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeInter
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 		

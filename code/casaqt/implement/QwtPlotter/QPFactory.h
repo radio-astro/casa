@@ -31,8 +31,6 @@
 
 #include <graphics/GenericPlotter/PlotFactory.h>
 
-#include <QApplication>
-
 #include <casa/namespace.h>
 
 namespace casa {
@@ -259,18 +257,6 @@ public:
     
     // The default error bar cap, currently 10.
     static const unsigned int DEFAULT_ERROR_CAP;
-    
-private:
-    // For passing into QApplication constructor.
-    // <group>
-    int m_argc; char** m_argv;
-    // </group>
-    
-    // QApplication.
-    QApplication* m_app;
-    
-    // Flag for whether we created the application or not.
-    bool m_createdQApp;
 };
 
 }

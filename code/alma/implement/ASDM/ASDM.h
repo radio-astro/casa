@@ -59,7 +59,7 @@ using namespace asdmIDL;   /// <-------------------
 #endif
 
 /*\file ASDM.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -149,6 +149,9 @@ class CorrelatorModeTable;
 //class asdm::DataDescriptionTable;
 class DataDescriptionTable;
 
+//class asdm::DelayModelTable;
+class DelayModelTable;
+
 //class asdm::DopplerTable;
 class DopplerTable;
 
@@ -215,9 +218,6 @@ class SeeingTable;
 //class asdm::SourceTable;
 class SourceTable;
 
-//class asdm::SourceParameterTable;
-class SourceParameterTable;
-
 //class asdm::SpectralWindowTable;
 class SpectralWindowTable;
 
@@ -254,7 +254,7 @@ class WeatherTable;
  * creates a complete set of tables.
  *
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  */
 class ASDM : public Representable {
 
@@ -436,6 +436,12 @@ public:
 	DataDescriptionTable & getDataDescription () const;
 
 	/**
+	 * Get the table DelayModel.
+	 * @return The table DelayModel as a DelayModelTable.
+	 */
+	DelayModelTable & getDelayModel () const;
+
+	/**
 	 * Get the table Doppler.
 	 * @return The table Doppler as a DopplerTable.
 	 */
@@ -566,12 +572,6 @@ public:
 	 * @return The table Source as a SourceTable.
 	 */
 	SourceTable & getSource () const;
-
-	/**
-	 * Get the table SourceParameter.
-	 * @return The table SourceParameter as a SourceParameterTable.
-	 */
-	SourceParameterTable & getSourceParameter () const;
 
 	/**
 	 * Get the table SpectralWindow.
@@ -736,11 +736,11 @@ public:
 	virtual void fromIDL(ASDMDataSetIDL* x); 
 	#endif
 	
-	virtual string toVOTable() const throw(ConversionException);
-	virtual void fromVOTable(string vo) throw(ConversionException);
+	virtual string toVOTable() const ;
+	virtual void fromVOTable(string vo) ;
 	
-	virtual char * toFITS() const throw(ConversionException);
-	virtual void fromFITS(char * fits) throw(ConversionException);
+	virtual char * toFITS() const ;
+	virtual void fromFITS(char * fits) ;
 	
 	virtual Entity getEntity() const;
 
@@ -761,22 +761,25 @@ public:
 	 * Create an ASDM dataset from the ALMA archive, given the
 	 * entityId of its container.
 	 * @param datasetId The entityId of the container of the dataset.
+	 * @throws ConversionException
 	 */
-	static ASDM *fromArchive(EntityId datasetId) throw(ConversionException);
+	static ASDM *fromArchive(EntityId datasetId) ;
 #endif
 
 #ifndef WITHOUT_ACS
 	/**
 	 * Update an ASDM dataset that already exists in the ALMA archive.
+	 * @throws ConversionException
 	 */
-	void updateArchive() const throw(ConversionException);
+	void updateArchive() const ;
 #endif
 	
 	/**
 	 * Return the table, as a Representable object, with the
 	 * specified name.
+	 * @throws InvalidArgumentException
 	 */
-	Representable &getTable(string tableName) throw(InvalidArgumentException);
+	Representable &getTable(string tableName) ;
 
 	
 	
@@ -803,6 +806,66 @@ public:
  			
  	 */
  	void setTimeOfCreation (ArrayTime timeOfCreation);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute version
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get version.
+ 	 * @return version as int
+ 	 */
+ 	int getVersion() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set version with the specified int.
+ 	 * @param version The int value to which version is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setVersion (int version);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute xmlnsPrefix
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get xmlnsPrefix.
+ 	 * @return xmlnsPrefix as string
+ 	 */
+ 	string getXmlnsPrefix() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set xmlnsPrefix with the specified string.
+ 	 * @param xmlnsPrefix The string value to which xmlnsPrefix is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setXmlnsPrefix (string xmlnsPrefix);
   		
 	
 	
@@ -958,6 +1021,11 @@ private:
 	DataDescriptionTable * dataDescription;
 
 	/**
+	 * The table DelayModel
+	 */
+	DelayModelTable * delayModel;
+
+	/**
 	 * The table Doppler
 	 */
 	DopplerTable * doppler;
@@ -1068,11 +1136,6 @@ private:
 	SourceTable * source;
 
 	/**
-	 * The table SourceParameter
-	 */
-	SourceParameterTable * sourceParameter;
-
-	/**
 	 * The table SpectralWindow
 	 */
 	SpectralWindowTable * spectralWindow;
@@ -1151,9 +1214,31 @@ private:
  	
 
 	
-	void error() throw(ConversionException);
-	static string getXMLEntity(EntityId id) throw(ConversionException);
-	static void putXMLEntity(string xml) throw(ConversionException);
+	// ===> Attribute version
+	
+	
+
+	int version;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute xmlnsPrefix
+	
+	
+
+	string xmlnsPrefix;
+
+	
+	
+ 	
+
+	
+	void error() ; // throw(ConversionException);
+	static string getXMLEntity(EntityId id); // throw(ConversionException);
+	static void putXMLEntity(string xml); // throw(ConversionException);
 	
 };
 

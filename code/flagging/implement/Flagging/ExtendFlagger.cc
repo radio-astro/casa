@@ -123,6 +123,7 @@ ExtendFlagger::ExtendFlagger()
    cliprange.resize(0);
    clipcolumn = "DATA";
    outside = False;
+   channelavg = False;
    quackinterval = 0.0;
    opmode = "flag";
    extendCorr = "";
@@ -143,6 +144,7 @@ ExtendFlagger::ExtendFlagger(MeasurementSet& ms, const String& exchan,
    cliprange.resize(0);
    clipcolumn = "DATA";
    outside = False;
+   channelavg = False;
    quackinterval = 0.0;
    opmode = "flag";
    extendCorr = excorr;
@@ -219,11 +221,12 @@ Bool ExtendFlagger::setmanualflags(Bool unflag, Bool autocorr) {
    //     << " quackinterval=" << quackinterval << " opmode=" << opmode
    //     << endl;
    return flagger.setmanualflags(autocorr, unflag, clipexpr, 
-        cliprange, clipcolumn, outside, quackinterval, opmode);
+        cliprange, clipcolumn, outside, channelavg, quackinterval, "beg", false, opmode);
 }
 
 Bool ExtendFlagger::run(Bool trial, Bool reset) {
-   return flagger.run(trial, reset);
+  flagger.run(trial, reset);
+  return True;
 }
 
 Bool ExtendFlagger::extend2(const Vector<FlagID>& flagids) {
@@ -609,4 +612,3 @@ String ExtendFlagger::ableSpw(const Int spw) {
 
 
 } //# NAMESPACE CASA - END 
-

@@ -46,6 +46,7 @@
 #include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MeasFrame.h>
+#include <casa/Logging/LogIO.h>
 
 //#include <fitsio.h>
 
@@ -156,6 +157,7 @@ class NROReader
  protected:
   // convert time in character representation to MJD representation
   virtual double getMJD( char *time ) ;
+  virtual double getMJD( string strStartTime ) ;
 
   // Get spectrum
   virtual vector< vector<double> > getSpectrum() ;
@@ -172,23 +174,20 @@ class NROReader
   // Get Antenna Position in ITRF coordinate
   virtual vector<double> getAntennaPosition() = 0 ;
 
-  // Get Frequency Settings
-  virtual vector<double> getFrequencies( int i ) ;
-
   // Get SRCDIRECTION in RADEC(J2000)
   virtual Vector<Double> getSourceDirection() ;
 
   // Get DIRECTION in RADEC(J2000)
   virtual Vector<Double> getDirection( int i ) ;
 
-  // Get integer representation of ARRYT
-  virtual Int getIndex( int irow ) ;
-
   // filename 
   string filename_ ;
 
   // dataset
   NRODataset *dataset_ ;
+
+  // Logger
+  //LogIO os ;
 };
 
 #endif /* NRO_READER_H */

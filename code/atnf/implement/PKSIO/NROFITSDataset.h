@@ -57,9 +57,6 @@ class NROFITSDataset : public NRODataset
   // data initialization 
   virtual void initialize() ;
 
-  // data finalization
-  virtual void finalize() ;
-
   // fill header from file 
   virtual int fillHeader() ;
 
@@ -71,18 +68,19 @@ class NROFITSDataset : public NRODataset
   virtual vector<double> getSpectrum( int i ) ;
   virtual int getIndex( int irow ) ;
   virtual int getPolarizationNum() ;
+  virtual uInt getArrayId( string type ) ;
 
  protected:
   // fill header information
   int fillHeader( int sameEndian ) ;
 
   // Read char data
-  int readHeader( char *v, char *name ) ;
+  int readHeader( string &v, char *name ) ;
   int readTable( char *v, char *name ) ;
-  int readTable( char *v, char *name, int idx ) ;
+  int readTable( char *v, char *name, int clen, int idx ) ;
   int readTable( vector<char *> &v, char *name, int idx ) ;
-  int readColumn( vector<char *> &v, char *name ) ;
-  int readColumn( vector<char *> &v, char *name, int idx ) ;
+  int readColumn( vector<string> &v, char *name ) ;
+  int readColumn( vector<string> &v, char *name, int idx ) ;
 
   // Read int data
   int readHeader( int &v, char *name, int b ) ;
@@ -112,10 +110,10 @@ class NROFITSDataset : public NRODataset
   int readARRY() ;
 
   // Convert RA character representation to radian
-  double radRA( char *ra ) ;
+  double radRA( string ra ) ;
   
   // Convert DEC character representation to radian
-  double radDEC( char *dec ) ;
+  double radDEC( string dec ) ;
 
   // get field parameters for scan header
   void getField() ;
@@ -149,6 +147,9 @@ class NROFITSDataset : public NRODataset
 
   // field units
   vector<string> units_ ;
+
+  // spectral data
+  vector<int> JDATA ;
 } ;
 
 

@@ -1,6 +1,6 @@
 //# QtDisplayPanelGui.qo.h: Qt implementation of main viewer display window.
 //# with surrounding Gui functionality
-//# Copyright (C) 2005
+//# Copyright (C) 2005,2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -30,8 +30,6 @@
 #define QTDISPLAYPANELGUI_H
 
 #include <casa/aips.h>
-#include <display/QtViewer/QtDisplayPanel.qo.h>
-
 #include <graphics/X11/X_enter.h>
 #  include <QtCore>
 #  include <QtGui>
@@ -40,6 +38,8 @@
    //#   E.g. <QApplication> needs the X11 definition of 'Display'
 #  include <display/QtViewer/QtAnimatorGui.ui.h>
 #include <graphics/X11/X_exit.h>
+#include <casaqt/QtUtilities/QtPanelBase.qo.h>
+#include <display/QtViewer/QtDisplayPanel.qo.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -50,6 +50,8 @@ class QtViewerPrintGui;
 class QtMouseToolBar;
 class QtCanvasManager;
 class QtAnnotatorGui;
+class MakeMask;
+class MakeRegion;
 class QtProfile;
 class QtDisplayData;
 class TrackBox;
@@ -60,7 +62,7 @@ class QtRegionShapeManager;
 // The main display window for the Qt version of the viewer.
 // </summary>
 
-class QtDisplayPanelGui : public QMainWindow,
+class QtDisplayPanelGui : public QtPanelBase,
 		          protected Ui::QtAnimatorGui {
 
   Q_OBJECT;	//# Allows slot/signal definition.  Must only occur in
@@ -68,7 +70,8 @@ class QtDisplayPanelGui : public QMainWindow,
 		//# name of this file in 'mocs' section.
 
  public:
-  
+  enum SCRIPTING_OPTION { INTERACT, SETOPTIONS };
+
   QtDisplayPanelGui(QtViewer* v, QWidget* parent=0);
   ~QtDisplayPanelGui();
   
@@ -82,6 +85,16 @@ class QtDisplayPanelGui : public QMainWindow,
   virtual void setStatsPrint(Bool printStats=True) {
     qdp_->printStats = printStats;  }
 
+  virtual bool supports( SCRIPTING_OPTION option ) const;
+  virtual QVariant start_interact( const QVariant &input, int id );
+  virtual QVariant setoptions( const QMap<QString,QVariant> &input, int id);
+
+  // the QtDBusViewerAdaptor can handle loading & registering data itself,
+  // but to connect up extra functionality, the upper-level QtDisplayPanelGui
+  // (or in the current case, the derived QtCleanPanelGui) would have to be
+  // notified that data has been added. This will allow it to set up the
+  // callbacks for drawing regions...
+  virtual void addedData( QString type, QtDisplayData * );
  
  public slots:
  
@@ -101,6 +114,9 @@ class QtDisplayPanelGui : public QMainWindow,
 
   virtual void showAnnotatorPanel();
   virtual void hideAnnotatorPanel();
+
+  virtual void showMakeRegionPanel();
+  virtual void hideMakeRegionPanel();
  
   virtual void showImageProfile();
   virtual void hideImageProfile();
@@ -240,7 +256,9 @@ class QtDisplayPanelGui : public QMainWindow,
   QtDisplayPanel* qdp_;  	//# Central Widget this window operates.
   QtViewerPrintGui* qpm_;	//# Print dialog for this display panel.
   QtCanvasManager* qcm_;	//# display panel options window.
-  QtAnnotatorGui* qap_;
+  //QtAnnotatorGui* qap_;
+  MakeMask* qap_;
+  MakeRegion* qmr_;
   QtRegionManager* qrm_;      //# Region manager window.
   QtRegionShapeManager* qsm_; //# Region shape manager window.
   
@@ -255,8 +273,8 @@ class QtDisplayPanelGui : public QMainWindow,
   
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 	  *ddOpenAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_, 
-	  *zoomInAct_, *zoomOutAct_, *annotAct_, *profileAct_, *rgnMgrAct_,
-	  *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
+	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_,
+          *profileAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_; 
   
   QToolBar* mainToolBar_;
   QToolButton *ddRegBtn_, *ddCloseBtn_;
@@ -270,7 +288,6 @@ class QtDisplayPanelGui : public QMainWindow,
   QWidget*    trkgWidget_;
   
      
- 
  private:
   
   QtDisplayPanelGui() {  }		// (not intended for use)  

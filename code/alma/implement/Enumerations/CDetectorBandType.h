@@ -42,16 +42,32 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the DetectorBandType enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace DetectorBandTypeMod
 {
+  //! DetectorBandType.
+  //!  [ASDM.SquareLawDetector] Types of detectors
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum DetectorBandType
   { 
-    BASEBAND ,
-    DOWN_CONVERTER ,
-    HOLOGRAPHY_RECEIVER 
+    BASEBAND /*!< Detector in Baseband Processor */
+     ,
+    DOWN_CONVERTER /*!< Detector in Down - Converter */
+     ,
+    HOLOGRAPHY_RECEIVER /*!< Detector in Holography Receiver */
+     ,
+    SUBBAND /*!< Detector in subband (tunable digital filter). */
+     
   };
   typedef DetectorBandType &DetectorBandType_out;
 } 
@@ -59,68 +75,95 @@ namespace DetectorBandTypeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration DetectorBandType.
+  * 
+  */
 class CDetectorBandType {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the DetectorBandType enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sBASEBAND;
+	static const std::string& sBASEBAND; /*!< A const string equal to "BASEBAND".*/
 	
-	static const std::string& sDOWN_CONVERTER;
+	static const std::string& sDOWN_CONVERTER; /*!< A const string equal to "DOWN_CONVERTER".*/
 	
-	static const std::string& sHOLOGRAPHY_RECEIVER;
+	static const std::string& sHOLOGRAPHY_RECEIVER; /*!< A const string equal to "HOLOGRAPHY_RECEIVER".*/
 	
-    static const std::vector<std::string> sDetectorBandTypeSet();	 
+	static const std::string& sSUBBAND; /*!< A const string equal to "SUBBAND".*/
+	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in DetectorBandTypeMod::DetectorBandType.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of DetectorBandTypeMod::DetectorBandType.
+      * @return a string.
+      */
+	static std::string name(const DetectorBandTypeMod::DetectorBandType& e);
 	
-
-	
-	// Explanations associated with the DetectorBandType Enumeration.
-		
-	static const std::string& hBASEBAND;
-		
-	static const std::string& hDOWN_CONVERTER;
-		
-	static const std::string& hHOLOGRAPHY_RECEIVER;
-		
-	static const std::vector<std::string> hDetectorBandTypeSet();
-   	
-
-   	// Is an integer number associated with the DetectorBandType enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the DetectorBandType enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  DetectorBandType enumeration.
-	static std::string name(const DetectorBandTypeMod::DetectorBandType& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const DetectorBandTypeMod::DetectorBandType& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified DetectorBandType enumeration.
-	static std::string help(const DetectorBandTypeMod::DetectorBandType& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a DetectorBandType enumeration object by specifying its name.
    	static DetectorBandTypeMod::DetectorBandType newDetectorBandType(const std::string& name);
    	
-   	// Create a DetectorBandType enumeration object by specifying its name.
+   	/*! Return a DetectorBandType's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a DetectorBandTypeMod::DetectorBandType's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static DetectorBandTypeMod::DetectorBandType literal(const std::string& name);
  	
-    // Create a DetectorBandType enumeration object by specifying its position index (0 based).
+    /*! Return a DetectorBandType's enumerator given an unsigned int.
+      * @param i the index of the enumerator in DetectorBandTypeMod::DetectorBandType.
+      * @return a DetectorBandTypeMod::DetectorBandType's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static DetectorBandTypeMod::DetectorBandType from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CDetectorBandType();
     CDetectorBandType(const CDetectorBandType&);
     CDetectorBandType& operator=(const CDetectorBandType&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CDetectorBandType_H*/

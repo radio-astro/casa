@@ -38,11 +38,11 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<CorrelationBit,EnumPar<void> >
-     (CorrelationBitMod::BITS_2x2,ep((int)CorrelationBitMod::BITS_2x2,"BITS_2x2","two bit correlation")));
+     (CorrelationBitMod::BITS_2x2,ep((int)CorrelationBitMod::BITS_2x2,"BITS_2x2","un-documented")));
     m_.insert(pair<CorrelationBit,EnumPar<void> >
-     (CorrelationBitMod::BITS_3x3,ep((int)CorrelationBitMod::BITS_3x3,"BITS_3x3"," three bit correlation")));
+     (CorrelationBitMod::BITS_3x3,ep((int)CorrelationBitMod::BITS_3x3,"BITS_3x3","un-documented")));
     m_.insert(pair<CorrelationBit,EnumPar<void> >
-     (CorrelationBitMod::BITS_4x4,ep((int)CorrelationBitMod::BITS_4x4,"BITS_4x4","four bit correlation")));
+     (CorrelationBitMod::BITS_4x4,ep((int)CorrelationBitMod::BITS_4x4,"BITS_4x4","un-documented")));
     return true;
   }
   static map<CorrelationBit,EnumPar<void> > m_;

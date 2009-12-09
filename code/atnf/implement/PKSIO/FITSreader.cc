@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
 //# FITSreader.cc: ATNF single-dish FITS reader.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# Copyright (C) 2000-2007
 //# Mark Calabretta, ATNF
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -53,7 +53,8 @@ int FITSreader::select(
         const int getSpectra,
         const int getXPol,
         const int getFeedPos,
-        const int getPointing)
+        const int getPointing,
+        const int coordSys)
 {
   int maxNChan = 0;
 
@@ -84,6 +85,8 @@ int FITSreader::select(
   cGetSpectra = getSpectra && cHaveSpectra;
   cGetXPol    = getXPol    && cGetXPol;
   cGetFeedPos = getFeedPos;
+  cCoordSys   = coordSys;
+
 
   return maxNChan;
 }

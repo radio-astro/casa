@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
 //# PKSreader.h: Class to read Parkes multibeam data.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# Copyright (C) 2000-2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -33,17 +33,35 @@
 #ifndef ATNF_PKSREADER_H
 #define ATNF_PKSREADER_H
 
+#include <atnf/PKSIO/PKSrecord.h>
+
 #include <casa/aips.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/String.h>
 
+#include <casa/namespace.h>
+
 // <summary>
 // Class to read Parkes multibeam data.
 // </summary>
 
-#include <casa/namespace.h>
+// Return an appropriate PKSreader for a Parkes Multibeam dataset.
+class PKSreader* getPKSreader(
+        const String name,
+        const Int retry,
+        const Int interpolate,
+        String &format);
+
+// As above, but search a list of directories for it.
+class PKSreader* getPKSreader(
+        const String name,
+        const Vector<String> directories,
+        const Int retry,
+        const Int interpolate,
+        Int    &iDir,
+        String &format);
 
 // Open an appropriate PKSreader for a Parkes Multibeam dataset.
 class PKSreader* getPKSreader(
@@ -100,12 +118,12 @@ class PKSreader
         String &antName,
         Vector<Double> &antPosition,
         String &obsType,
+        String &bunit,
         Float  &equinox,
         String &dopplerFrame,
         Double &mjd,
         Double &refFreq,
-        Double &bandwidth,
-        String &fluxunit) = 0;
+        Double &bandwidth) = 0;
 
     // Get frequency parameters for each IF.
     virtual Int getFreqInfo(
@@ -114,6 +132,10 @@ class PKSreader
 
     // Set data selection criteria.  Channel numbering is 1-relative, zero or
     // negative channel numbers are taken to be offsets from the last channel.
+    // Coordinate system selection (only supported for SDFITS input):
+    //   0: equatorial (RA,Dec),
+    //   1: vertical (Az,El),
+    //   2: feed-plane.
     virtual uInt select(
         const Vector<Bool> beamSel,
         const Vector<Bool> IFsel,
@@ -123,7 +145,9 @@ class PKSreader
         const Bool getSpectra = True,
         const Bool getXPol    = False,
         const Bool getFeedPos = False,
-        const Bool getPointing = False) = 0;
+        const Bool getPointing = False,
+        const Int  coordSys   = 0) = 0;
+
 
     // Find the range of the data selected in time and position.
     virtual Int findRange(
@@ -132,7 +156,8 @@ class PKSreader
         Vector<Double> &timeSpan,
         Matrix<Double> &positions) = 0;
 
-    // Read the next data record.
+    // Read the next data record. 
+/**
     virtual Int read(
         Int             &scanNo,
         Int             &cycleNo,
@@ -175,7 +200,8 @@ class PKSreader
         Matrix<uChar>   &flagged,
         Complex         &xCalFctr,
         Vector<Complex> &xPol) = 0;
-
+**/
+/**
     // Read the next data record, just the basics.
     virtual Int read(
         Int           &IFno,
@@ -185,12 +211,15 @@ class PKSreader
         Matrix<Float> &baseSub,
         Matrix<Float> &spectra,
         Matrix<uChar> &flagged) = 0;
+**/
+    virtual Int read(PKSrecord &pksrec) = 0;
 
     // Close the input file.
     virtual void close() = 0;
 
   protected:
     Bool   cGetFeedPos, cGetSpectra, cGetXPol, cGetPointing;
+    Int   cCoordSys;
 
     Vector<uInt> cNChan, cNPol;
     Vector<Bool> cHaveXPol;

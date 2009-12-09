@@ -58,6 +58,9 @@ class utils
     std::string getrc(const std::string& rcvec = "");
     bool removetable(const std::vector<std::string>& tablenames = std::vector<std::string> (1, ""));
 
+    ::casac::record* tableinfo(const std::string &tablename);
+    std::vector<std::string> lockedtables( );
+    
     private:
 
 	#include <xmlcasa/utils/utils_private.h>

@@ -80,11 +80,13 @@ namespace asdm {
 	CalPositionTable::CalPositionTable(ASDM &c) : container(c) {
 
 	
+		key.push_back("antennaName");
+	
+		key.push_back("atmPhaseCorrection");
+	
 		key.push_back("calDataId");
 	
 		key.push_back("calReductionId");
-	
-		key.push_back("antennaName");
 	
 
 
@@ -168,123 +170,129 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param antennaName. 
+	
+ 	 * @param atmPhaseCorrection. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
-	
- 	 * @param antennaName. 
-	
- 	 * @param numAntenna. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
+ 	 * @param antennaPosition. 
+	
+ 	 * @param stationName. 
+	
+ 	 * @param stationPosition. 
+	
+ 	 * @param positionMethod. 
+	
+ 	 * @param receiverBand. 
+	
+ 	 * @param numAntenna. 
+	
+ 	 * @param refAntennaNames. 
+	
+ 	 * @param axesOffset. 
+	
+ 	 * @param axesOffsetErr. 
+	
+ 	 * @param axesOffsetFixed. 
+	
  	 * @param positionOffset. 
 	
  	 * @param positionErr. 
 	
- 	 * @param delayRms. 
-	
- 	 * @param phaseRms. 
-	
- 	 * @param axesOffset. 
-	
- 	 * @param axesOffsetFixed. 
-	
- 	 * @param axesOffsetErr. 
-	
- 	 * @param positionMethod. 
-	
- 	 * @param refAntennaNames. 
-	
- 	 * @param stationName. 
-	
- 	 * @param antennaPosition. 
-	
- 	 * @param stationPosition. 
+ 	 * @param reducedChiSquared. 
 	
      */
-	CalPositionRow* CalPositionTable::newRow(Tag calDataId, Tag calReductionId, string antennaName, int numAntenna, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > positionOffset, vector<Length > positionErr, Interval delayRms, Angle phaseRms, Length axesOffset, bool axesOffsetFixed, Length axesOffsetErr, PositionMethodMod::PositionMethod positionMethod, vector<string > refAntennaNames, string stationName, vector<Length > antennaPosition, vector<Length > stationPosition){
+	CalPositionRow* CalPositionTable::newRow(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > antennaPosition, string stationName, vector<Length > stationPosition, PositionMethodMod::PositionMethod positionMethod, ReceiverBandMod::ReceiverBand receiverBand, int numAntenna, vector<string > refAntennaNames, Length axesOffset, Length axesOffsetErr, bool axesOffsetFixed, vector<Length > positionOffset, vector<Length > positionErr, double reducedChiSquared){
 		CalPositionRow *row = new CalPositionRow(*this);
+			
+		row->setAntennaName(antennaName);
+			
+		row->setAtmPhaseCorrection(atmPhaseCorrection);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setAntennaName(antennaName);
-			
-		row->setNumAntenna(numAntenna);
-			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
+			
+		row->setAntennaPosition(antennaPosition);
+			
+		row->setStationName(stationName);
+			
+		row->setStationPosition(stationPosition);
+			
+		row->setPositionMethod(positionMethod);
+			
+		row->setReceiverBand(receiverBand);
+			
+		row->setNumAntenna(numAntenna);
+			
+		row->setRefAntennaNames(refAntennaNames);
+			
+		row->setAxesOffset(axesOffset);
+			
+		row->setAxesOffsetErr(axesOffsetErr);
+			
+		row->setAxesOffsetFixed(axesOffsetFixed);
 			
 		row->setPositionOffset(positionOffset);
 			
 		row->setPositionErr(positionErr);
 			
-		row->setDelayRms(delayRms);
-			
-		row->setPhaseRms(phaseRms);
-			
-		row->setAxesOffset(axesOffset);
-			
-		row->setAxesOffsetFixed(axesOffsetFixed);
-			
-		row->setAxesOffsetErr(axesOffsetErr);
-			
-		row->setPositionMethod(positionMethod);
-			
-		row->setRefAntennaNames(refAntennaNames);
-			
-		row->setStationName(stationName);
-			
-		row->setAntennaPosition(antennaPosition);
-			
-		row->setStationPosition(stationPosition);
+		row->setReducedChiSquared(reducedChiSquared);
 	
 		return row;		
 	}	
 
-	CalPositionRow* CalPositionTable::newRowFull(Tag calDataId, Tag calReductionId, string antennaName, int numAntenna, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > positionOffset, vector<Length > positionErr, Interval delayRms, Angle phaseRms, Length axesOffset, bool axesOffsetFixed, Length axesOffsetErr, PositionMethodMod::PositionMethod positionMethod, vector<string > refAntennaNames, string stationName, vector<Length > antennaPosition, vector<Length > stationPosition)	{
+	CalPositionRow* CalPositionTable::newRowFull(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > antennaPosition, string stationName, vector<Length > stationPosition, PositionMethodMod::PositionMethod positionMethod, ReceiverBandMod::ReceiverBand receiverBand, int numAntenna, vector<string > refAntennaNames, Length axesOffset, Length axesOffsetErr, bool axesOffsetFixed, vector<Length > positionOffset, vector<Length > positionErr, double reducedChiSquared)	{
 		CalPositionRow *row = new CalPositionRow(*this);
+			
+		row->setAntennaName(antennaName);
+			
+		row->setAtmPhaseCorrection(atmPhaseCorrection);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setAntennaName(antennaName);
-			
-		row->setNumAntenna(numAntenna);
-			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
+			
+		row->setAntennaPosition(antennaPosition);
+			
+		row->setStationName(stationName);
+			
+		row->setStationPosition(stationPosition);
+			
+		row->setPositionMethod(positionMethod);
+			
+		row->setReceiverBand(receiverBand);
+			
+		row->setNumAntenna(numAntenna);
+			
+		row->setRefAntennaNames(refAntennaNames);
+			
+		row->setAxesOffset(axesOffset);
+			
+		row->setAxesOffsetErr(axesOffsetErr);
+			
+		row->setAxesOffsetFixed(axesOffsetFixed);
 			
 		row->setPositionOffset(positionOffset);
 			
 		row->setPositionErr(positionErr);
 			
-		row->setDelayRms(delayRms);
-			
-		row->setPhaseRms(phaseRms);
-			
-		row->setAxesOffset(axesOffset);
-			
-		row->setAxesOffsetFixed(axesOffsetFixed);
-			
-		row->setAxesOffsetErr(axesOffsetErr);
-			
-		row->setPositionMethod(positionMethod);
-			
-		row->setRefAntennaNames(refAntennaNames);
-			
-		row->setStationName(stationName);
-			
-		row->setAntennaPosition(antennaPosition);
-			
-		row->setStationPosition(stationPosition);
+		row->setReducedChiSquared(reducedChiSquared);
 	
 		return row;				
 	}
@@ -314,13 +322,15 @@ CalPositionRow* CalPositionTable::newRowCopy(CalPositionRow* row) {
 	CalPositionRow* CalPositionTable::add(CalPositionRow* x) {
 		
 		if (getRowByKey(
+						x->getAntennaName()
+						,
+						x->getAtmPhaseCorrection()
+						,
 						x->getCalDataId()
 						,
 						x->getCalReductionId()
-						,
-						x->getAntennaName()
 						))
-			//throw DuplicateKey(x.getCalDataId() + "|" + x.getCalReductionId() + "|" + x.getAntennaName(),"CalPosition");
+			//throw DuplicateKey(x.getAntennaName() + "|" + x.getAtmPhaseCorrection() + "|" + x.getCalDataId() + "|" + x.getCalReductionId(),"CalPosition");
 			throw DuplicateKey("Duplicate key exception in ","CalPositionTable");
 		
 		row.push_back(x);
@@ -347,17 +357,21 @@ CalPositionRow* CalPositionTable::newRowCopy(CalPositionRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalPositionRow*  CalPositionTable::checkAndAdd(CalPositionRow* x) throw (DuplicateKey) {
+	CalPositionRow*  CalPositionTable::checkAndAdd(CalPositionRow* x)  {
 		
 		
 		if (getRowByKey(
 	
+			x->getAntennaName()
+	,
+			x->getAtmPhaseCorrection()
+	,
 			x->getCalDataId()
 	,
 			x->getCalReductionId()
-	,
-			x->getAntennaName()
 			
 		)) throw DuplicateKey("Duplicate key exception in ", "CalPositionTable");
 		
@@ -394,10 +408,18 @@ CalPositionRow* CalPositionTable::newRowCopy(CalPositionRow* row) {
  ** no row exists for that key.
  **
  */
- 	CalPositionRow* CalPositionTable::getRowByKey(Tag calDataId, Tag calReductionId, string antennaName)  {
+ 	CalPositionRow* CalPositionTable::getRowByKey(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId)  {
 	CalPositionRow* aRow = 0;
 	for (unsigned int i = 0; i < row.size(); i++) {
 		aRow = row.at(i);
+		
+			
+				if (aRow->antennaName != antennaName) continue;
+			
+		
+			
+				if (aRow->atmPhaseCorrection != atmPhaseCorrection) continue;
+			
 		
 			
 				if (aRow->calDataId != calDataId) continue;
@@ -405,10 +427,6 @@ CalPositionRow* CalPositionTable::newRowCopy(CalPositionRow* row) {
 		
 			
 				if (aRow->calReductionId != calReductionId) continue;
-			
-		
-			
-				if (aRow->antennaName != antennaName) continue;
 			
 		
 		return aRow;
@@ -424,48 +442,50 @@ CalPositionRow* CalPositionTable::newRowCopy(CalPositionRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
+ * @param antennaName.
+ 	 		
+ * @param atmPhaseCorrection.
+ 	 		
  * @param calDataId.
  	 		
  * @param calReductionId.
- 	 		
- * @param antennaName.
- 	 		
- * @param numAntenna.
  	 		
  * @param startValidTime.
  	 		
  * @param endValidTime.
  	 		
+ * @param antennaPosition.
+ 	 		
+ * @param stationName.
+ 	 		
+ * @param stationPosition.
+ 	 		
+ * @param positionMethod.
+ 	 		
+ * @param receiverBand.
+ 	 		
+ * @param numAntenna.
+ 	 		
+ * @param refAntennaNames.
+ 	 		
+ * @param axesOffset.
+ 	 		
+ * @param axesOffsetErr.
+ 	 		
+ * @param axesOffsetFixed.
+ 	 		
  * @param positionOffset.
  	 		
  * @param positionErr.
  	 		
- * @param delayRms.
- 	 		
- * @param phaseRms.
- 	 		
- * @param axesOffset.
- 	 		
- * @param axesOffsetFixed.
- 	 		
- * @param axesOffsetErr.
- 	 		
- * @param positionMethod.
- 	 		
- * @param refAntennaNames.
- 	 		
- * @param stationName.
- 	 		
- * @param antennaPosition.
- 	 		
- * @param stationPosition.
+ * @param reducedChiSquared.
  	 		 
  */
-CalPositionRow* CalPositionTable::lookup(Tag calDataId, Tag calReductionId, string antennaName, int numAntenna, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > positionOffset, vector<Length > positionErr, Interval delayRms, Angle phaseRms, Length axesOffset, bool axesOffsetFixed, Length axesOffsetErr, PositionMethodMod::PositionMethod positionMethod, vector<string > refAntennaNames, string stationName, vector<Length > antennaPosition, vector<Length > stationPosition) {
+CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > antennaPosition, string stationName, vector<Length > stationPosition, PositionMethodMod::PositionMethod positionMethod, ReceiverBandMod::ReceiverBand receiverBand, int numAntenna, vector<string > refAntennaNames, Length axesOffset, Length axesOffsetErr, bool axesOffsetFixed, vector<Length > positionOffset, vector<Length > positionErr, double reducedChiSquared) {
 		CalPositionRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(calDataId, calReductionId, antennaName, numAntenna, startValidTime, endValidTime, positionOffset, positionErr, delayRms, phaseRms, axesOffset, axesOffsetFixed, axesOffsetErr, positionMethod, refAntennaNames, stationName, antennaPosition, stationPosition)) return aRow;
+			if (aRow->compareNoAutoInc(antennaName, atmPhaseCorrection, calDataId, calReductionId, startValidTime, endValidTime, antennaPosition, stationName, stationPosition, positionMethod, receiverBand, numAntenna, refAntennaNames, axesOffset, axesOffsetErr, axesOffsetFixed, positionOffset, positionErr, reducedChiSquared)) return aRow;
 		}			
 		return 0;	
 } 
@@ -473,7 +493,6 @@ CalPositionRow* CalPositionTable::lookup(Tag calDataId, Tag calReductionId, stri
  	 	
 
 	
-
 
 
 
@@ -494,7 +513,7 @@ CalPositionRow* CalPositionTable::lookup(Tag calDataId, Tag calReductionId, stri
 #endif
 	
 #ifndef WITHOUT_ACS
-	void CalPositionTable::fromIDL(CalPositionTableIDL x) throw(DuplicateKey,ConversionException) {
+	void CalPositionTable::fromIDL(CalPositionTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			CalPositionRow *tmp = newRow();
@@ -505,28 +524,27 @@ CalPositionRow* CalPositionTable::lookup(Tag calDataId, Tag calReductionId, stri
 	}
 #endif
 
-	char *CalPositionTable::toFITS() const throw(ConversionException) {
+	char *CalPositionTable::toFITS() const  {
 		throw ConversionException("Not implemented","CalPosition");
 	}
 
-	void CalPositionTable::fromFITS(char *fits) throw(ConversionException) {
+	void CalPositionTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","CalPosition");
 	}
 
-	string CalPositionTable::toVOTable() const throw(ConversionException) {
+	string CalPositionTable::toVOTable() const {
 		throw ConversionException("Not implemented","CalPosition");
 	}
 
-	void CalPositionTable::fromVOTable(string vo) throw(ConversionException) {
+	void CalPositionTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","CalPosition");
 	}
 
-	string CalPositionTable::toXML()  throw(ConversionException) {
+	
+	string CalPositionTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/CalPositionTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<CalPositionTable> ");
+		buf.append("<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/2/CalPositionTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -542,8 +560,9 @@ CalPositionRow* CalPositionTable::lookup(Tag calDataId, Tag calReductionId, stri
 		buf.append("</CalPositionTable> ");
 		return buf;
 	}
+
 	
-	void CalPositionTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void CalPositionTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalPositionTable")) 
 			error();
@@ -585,20 +604,110 @@ CalPositionRow* CalPositionTable::lookup(Tag calDataId, Tag calReductionId, stri
 			error();
 	}
 
-	void CalPositionTable::error() throw(ConversionException) {
+	
+	void CalPositionTable::error()  {
 		throw ConversionException("Invalid xml document","CalPosition");
 	}
 	
+	
 	string CalPositionTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void CalPositionTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalPosition");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			CalPositionRow* aRow = CalPositionRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "CalPosition");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "CalPosition");
+		} 		 	
+	}
+
 	
 	void CalPositionTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -629,6 +738,7 @@ CalPositionRow* CalPositionTable::lookup(Tag calDataId, Tag calReductionId, stri
 				throw ConversionException("Could not close file " + fileName, "CalPosition");
 		}
 	}
+
 	
 	void CalPositionTable::setFromFile(const string& directory) {
 		string tablename;
@@ -670,6 +780,11 @@ CalPositionRow* CalPositionTable::lookup(Tag calDataId, Tag calReductionId, stri
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

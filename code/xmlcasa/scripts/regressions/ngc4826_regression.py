@@ -137,7 +137,7 @@ print '--image cal - 22apr98--'
 default('clean')
 clean(vis='gcal.split.ms',imagename='tgcal',
       cell=[1.,1.],imsize=[256,256],
-      field='0',spw='0',threshold=10.,
+      field='0',spw='0',threshold=10.,ftmachine='ft',
       psfmode='clark',niter=100,stokes='I')
 imagecal1time=time.time()
 ## Image the target source mosaic:
@@ -150,7 +150,7 @@ clean(vis='src.split.ms',imagename='tmosaicb',
        spw='0,1,2',field='0,1,2,3,4,5,6',
        cell=[1.,1.],imsize=[256,256],
        stokes='I',mode='channel',
-       psfmode='clark',imagermode='mosaic', niter=300,scaletype='SAULT', pbcor=False, minpb=0.01,cyclefactor=0.1)
+       psfmode='clark',imagermode='mosaic', ftmachine='mosaic', niter=300,scaletype='SAULT', pbcor=False, minpb=0.01,cyclefactor=0.01)
 imagesrc1time=time.time()
 ## Write image to a fits file:
 ##
@@ -249,7 +249,7 @@ print '--image cal - 16apr98 --'
 default('clean')
 clean(vis='gcala.split.ms',imagename='tgcala',
       cell=[1.,1.],imsize=[256,256],
-      field='0',spw='0',threshold=10.,
+      field='0',spw='0',threshold=10.,ftmachine='ft',
       psfmode='clark',niter=100,stokes='I')
 imagecal2time=time.time()
 #############################################################
@@ -264,15 +264,19 @@ clean(vis='srca.split.ms',imagename='tmosaica',
        spw='0~2',field='0~6',
        cell=[1.,1.],imsize=[256,256],
        stokes='I',mode='channel',
-       psfmode='clark',niter=300,imagermode='mosaic',scaletype='SAULT',cyclefactor=0.1)
+       psfmode='clark',niter=300,imagermode='mosaic', ftmachine='mosaic',scaletype='SAULT',cyclefactor=3)
 ###################################################
 ## Write image to a fits file:
 ##
 exportfits('tmosaica.image','tmosaica.fits')
 
 #Combine and Image
-print '-- Concatenate --'
+print '-- Initialize src.split.ms --'
 os.system('cp -r srca.split.ms n4826_tboth.ms');
+cb.open('src.split.ms')
+cb.initcalset()
+cb.close()
+print '-- Concatenate --'
 ms.open(thems='n4826_tboth.ms',nomodify=False);
 ms.concatenate(msfile='src.split.ms',freqtol='50MHz')
 ms.close()
@@ -285,8 +289,8 @@ clean(vis='n4826_tboth.ms',imagename='tmosaic',
 	 spw='0~2',field='0~6',
 	 cell=[1.,1.],imsize=[256,256],
 	 stokes='I',mode='channel',
-	 psfmode='clark',niter=500,imagermode='mosaic',scaletype='SAULT',
-	 cyclefactor=0.1)
+	 psfmode='clark',niter=500,imagermode='mosaic',ftmachine='mosaic',scaletype='SAULT',
+	 cyclefactor=3)
 
 ia.open(infile='tmosaic.image');
 ia.moments(outfile='n4826_tmom0.im',
@@ -347,17 +351,22 @@ ia.close()
 thistest_immax=statistics['max'][0]
 thistest_imrms=statistics['rms'][0]
 
+##changed values due to flat noise clean
 calmean22=10.51
 srcmean22=111.52
 calmax22=3.0459
-srcmax22=1.54
+#srcmax22=1.54
+srcmax22=1.407
 calmean16=4.3269
 srcmean16=156.992
 srcmax16=1.39
 calmax16=1.43
-srcmean=156.9898
-immax=151.4
-imrms=14.96
+#srcmean=156.9898
+srcmean=147.43
+#immax=151.4
+immax=168.18
+#imrms=14.96
+imrms=11.77
 
 # old (pre-minsnr=2)
 #calmean22=17.99

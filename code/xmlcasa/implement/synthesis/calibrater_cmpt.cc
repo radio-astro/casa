@@ -52,7 +52,8 @@ calibrater::~calibrater()
 }
 
 bool calibrater::open(const std::string& filename, 
-		 const bool compress)
+		      const bool compress,
+		      const bool addscratch)
 {
   bool rstat(False);
   try {
@@ -67,7 +68,7 @@ bool calibrater::open(const std::string& filename,
 			       TableLock(TableLock::AutoLocking),
 			       Table::Update);
     AlwaysAssert(itsMS, AipsError);
-    rstat = itsCalibrater->initialize(*itsMS, compress);
+    rstat = itsCalibrater->initialize(*itsMS, compress,addscratch);
 
     // Open LogSink for MS History table logging
     logSink_p=LogSink(LogMessage::NORMAL1, False);
@@ -645,6 +646,40 @@ calibrater::accumulate(const std::string& tablein,
   }
   return true;
 }
+
+bool 
+calibrater::specifycal(const std::string& caltable,
+		       const std::string& time,
+		       const std::string& spw,
+		       const std::string& antenna,
+		       const std::string& pol,
+		       const std::string& caltype, 
+		       const std::vector<double>& parameter) {
+
+  if (!itsMS) {
+    *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
+	    << endl << LogIO::POST;
+    return false;
+  }
+
+  try {
+
+    logSink_p.clearLocally();
+    LogIO os (LogOrigin ("calibrater", "specifycal"), logSink_p);
+    os << "Beginning specifycal-----------------------" << LogIO::POST;
+
+    itsCalibrater->specifycal(caltype,caltable,time,spw,antenna,pol,parameter);
+    
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return true;
+
+
+
+}
+
 
 
 bool

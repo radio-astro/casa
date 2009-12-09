@@ -30,22 +30,27 @@
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSFlagging.h>
-#include <plotms/PlotMS/PlotMSLogger.h>
 #include <plotms/Actions/PlotMSCacheThread.qo.h>
 #include <plotms/Data/PlotMSVBAverager.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays.h>
 #include <casa/Containers/Block.h>
+#include <msvis/MSVis/VisIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisSet.h>
 
 namespace casa {
 
+//# Forward declarations.
+class PlotMS;
+
+
 class PlotMSCache {
-  
-public:
     
+    // Friend class declarations.
+    friend class PlotMSData;
+  
+public:    
     static const PMS::Axis METADATA[];
     static const unsigned int N_METADATA;
     
@@ -53,14 +58,18 @@ public:
     
     static const unsigned int THREAD_SEGMENT;
 
-  // Constructor
-  PlotMSCache();
+  // Constructor which takes parent PlotMS.
+  PlotMSCache(PlotMS* parent);
   
   // Destructor
   ~PlotMSCache();
 
   // Report the number of chunks
   Int nChunk() const { return nChunk_; };
+
+  // Report the data shapes
+  inline Matrix<Int>& chunkShapes() {return chshapes_;};
+
 
   // Report the total number of points currently arranged for plotting
   //  (TBD: this is incorrect unless ALL cache spaces are full!!)
@@ -73,28 +82,34 @@ public:
   // underlying MS or MS selection is changed, thus invalidating stored data.
   void clear();
   
-  // Loads the cache using the given VisSet, for the given axes and data
+  // Loads the cache for the given axes and data
   // columns.  IMPORTANT: this method assumes that any currently loaded data is
   // valid for the given VisIter; i.e., if the meta-information or either of
   // the axes are already loaded, then they don't need to be reloaded.  If this
   // is not the case, then clear() should be called BEFORE append().  If a
   // PlotMSCacheThreadHelper object is given, it will be used to report
   // progress information.
-  void load(VisSet& visSet, const vector<PMS::Axis>& axes,
-            const vector<PMS::DataColumn>& data,
+  void load(const vector<PMS::Axis>& axes,const vector<PMS::DataColumn>& data,
+	    const String& msname,
+            const PlotMSSelection& selection,
             const PlotMSAveraging& averaging,
             PlotMSCacheThread* thread = NULL);
 
   // Convenience method for loading x and y axes.
-  void load(VisSet& visSet, PMS::Axis xAxis, PMS::Axis yAxis,
+  void load(PMS::Axis xAxis, PMS::Axis yAxis,
             PMS::DataColumn xData, PMS::DataColumn yData,
+            const String& msname,
+            const PlotMSSelection& selection,
             const PlotMSAveraging& averaging,
             PlotMSCacheThread* thread = NULL) {
+
+    cout << "AHHHHHHHHHHHH*********************" << endl;
+
       vector<PMS::Axis> axes(2);
       axes[0] = xAxis; axes[1] = yAxis;
       vector<PMS::DataColumn> data(2);
       data[0] = xData; data[1] = yData;
-      load(visSet, axes, data, averaging, thread);
+      load(axes, data, msname, selection, averaging, thread);
   }
   
   // Releases the given axes from the cache.
@@ -104,9 +119,12 @@ public:
   void setUpPlot(PMS::Axis xAxis, PMS::Axis yAxis);
   void getAxesMask(PMS::Axis axis,Vector<Bool>& axismask);
   
-  // Returns whether the cache is ready to return plotting data via the get
-  // methods or not.
-  bool readyForPlotting() const;
+  // Returns whether cache is filled
+  bool cacheReady() const { return dataLoaded_; }
+
+  // Returns whether the cache is filled AND ready to return plotting 
+  //  data via the get methods or not.
+  bool readyForPlotting() const { return cacheReady() && axesSet_; };
 
   // Get X and Y limits (amp vs freq hardwired version)
   void getRanges(Double& minX, Double& maxX, Double& minY, Double& maxY);
@@ -118,6 +136,46 @@ public:
   Double get(PMS::Axis axis);
 
   Bool getFlagMask(Int i);
+
+  // Access to flags per chunk
+  inline Array<Bool>& flag(Int chunk) { return *flag_[chunk]; };
+
+
+  // Axis-specific generic gets
+  inline Double getScan(Int chnk,Int irel)     { return scan_(chnk); };
+  inline Double getField(Int chnk,Int irel)    { return field_(chnk); };
+  inline Double getTime(Int chnk,Int irel)     { return time_(chnk); };
+  inline Double getTimeIntr(Int chnk,Int irel) { return timeIntr_(chnk); };
+  inline Double getSpw(Int chnk,Int irel)      { return spw_(chnk); };
+
+  inline Double getFreq(Int chnk,Int irel) { return *(freq_[chnk]->data()+irel); };
+  inline Double getChan(Int chnk,Int irel) { return *(chan_[chnk]->data()+irel); };
+  inline Double getCorr(Int chnk,Int irel) { return *(corr_[chnk]->data()+irel); };
+  inline Double getAnt1(Int chnk,Int irel) { return *(antenna1_[chnk]->data()+irel); };
+  inline Double getAnt2(Int chnk,Int irel) { return *(antenna2_[chnk]->data()+irel); };
+  inline Double getBsln(Int chnk,Int irel) { return *(baseline_[chnk]->data()+irel); };
+  inline Double getUVDist(Int chnk,Int irel) { return *(uvdist_[chnk]->data()+irel); };
+  inline Double getUVDistL(Int chnk,Int irel) { return *(uvdistL_[chnk]->data()+irel); };
+  inline Double getU(Int chnk,Int irel) { return *(u_[chnk]->data()+irel); };
+  inline Double getV(Int chnk,Int irel) { return *(v_[chnk]->data()+irel); };
+  inline Double getW(Int chnk,Int irel) { return *(w_[chnk]->data()+irel); };
+
+  inline Double getAmp(Int chnk,Int irel)  { return *(amp_[chnk]->data()+irel); };
+  inline Double getPha(Int chnk,Int irel)  { return *(pha_[chnk]->data()+irel); };
+  inline Double getReal(Int chnk,Int irel) { return *(real_[chnk]->data()+irel); };
+  inline Double getImag(Int chnk,Int irel) { return *(imag_[chnk]->data()+irel); };
+
+  inline Double getFlag(Int chnk,Int irel) { return *(flag_[chnk]->data()+irel); };
+  inline Double getFlagRow(Int chnk,Int irel) { return *(flagrow_[chnk]->data()+irel); };
+  inline Double getRow(Int chnk,Int irel) { return *(row_[chnk]->data()+irel); };
+
+  // These are antenna-based
+  inline Double getAntenna(Int chnk,Int irel) { return *(antenna_[chnk]->data()+irel); };
+  inline Double getAz(Int chnk,Int irel)      { return *(az_[chnk]->data()+irel); };
+  inline Double getEl(Int chnk,Int irel)      { return *(el_[chnk]->data()+irel); };
+  inline Double getParAng(Int chnk,Int irel)  { return *(parang_[chnk]->data()+irel); };
+
+
 
   // Axis-specific gets
   inline Double getScan()      { return scan_(currChunk_); };
@@ -138,11 +196,12 @@ public:
   inline Double getW() { return *(w_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
 
   inline Double getAmp()  { return *(amp_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); }; 
-  // flag_[currChunk_]->data()+(irel_%idatamax_(currChunk_)) ? -1.0 : 
   inline Double getPha()  { return  *(pha_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
-  // flag_[currChunk_]->data()+(irel_%idatamax_(currChunk_)) ? -999.0 : 
   inline Double getReal() { return *(real_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
-  inline Double getImag() { return *(imag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
+  //  inline Double getImag() { return *(imag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
+  inline Double getImag() { return getImag2(currChunk_,(irel_%idatamax_(currChunk_))); };
+  inline Double getImag2(Int ch, Int i) { return *(imag_[ch]->data()+i); };
+
   inline Double getFlag() { return *(flag_[currChunk_]->data()+(irel_%idatamax_(currChunk_))); };
   inline Double getFlagRow() { return *(flagrow_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
   inline Double getRow() { return *(row_[currChunk_]->data()+(irel_/nperbsln_(currChunk_))%ibslnmax_(currChunk_)); };
@@ -155,9 +214,15 @@ public:
 
   // Locate datum nearest to specified x,y (amp vs freq hardwired versions)
   PlotLogMessage* locateNearest(Double x, Double y);
-  PlotLogMessage* locateRange(Double xmin,Double xmax,Double ymin,Double ymax);
-  PlotLogMessage* flagRange(const PlotMSFlagging& flagging, Double xmin, Double xmax,
-			      Double ymin,Double ymax, Bool flag=True);
+  PlotLogMessage* locateRange(const Vector<PlotRegion>& regions);
+  PlotLogMessage* flagRange(const PlotMSFlagging& flagging,
+          const Vector<PlotRegion>& regions, Bool flag = True);
+
+  // Access to averaging state in the cache:
+  PlotMSAveraging& averaging() { return averaging_; }
+
+  // Access to channel averaging bounds
+  Matrix<Int>& chanAveBounds(Int spw) { return chanAveBounds_p(spw); };
 
   // Set flags in the cache
   void flagInCache(const PlotMSFlagging& flagging,Bool flag);
@@ -166,14 +231,13 @@ public:
   void setPlotMask(Int chunk);
 
   // Set flags in the MS
-  void flagInVisSet(const PlotMSFlagging& flagging,Vector<Int>& chunks, Vector<Int>& relids,Bool flag);
+  void flagInMS(const PlotMSFlagging& flagging,Vector<Int>& chunks, Vector<Int>& relids,Bool flag);
 
   // Returns which axes have been loaded into the cache, including metadata.
   // Also includes the size (number of points) for each axis (which will
   // eventually be used for a cache manager to let the user know the
   // relative memory use of each axis).
   vector<pair<PMS::Axis, unsigned int> > loadedAxes() const;
-
 
 private:
     
@@ -183,13 +247,26 @@ private:
   // Increase the number of chunks
   void increaseChunks(Int nc=0);
 
+  // Log info about averaging setup (as interpretted by PlotMSCache; this
+  //  probably could be move up to PlotMSAveraging)
+  void reportAveMode();
+
+
+  // Setup the VisIter
+  void setUpVisIter(const String& msname,
+		    const PlotMSSelection& selection,
+		    Bool readonly=True,
+		    Bool chanselect=True,
+		    Bool corrselect=True);
+
+
   // Loop over VisIter, filling the cache
-  void loadChunks(VisSet& vs,
+  void loadChunks(ROVisibilityIterator& vi,
 		  const vector<PMS::Axis> loadAxes,
 		  const vector<PMS::DataColumn> loadData,
 		  const PlotMSAveraging& averaging,
 		  PlotMSCacheThread* thread);
-  void loadChunks(VisSet& vs,
+  void loadChunks(ROVisibilityIterator& vi,
 		  const PlotMSAveraging& averaging,
 		  const Vector<Int>& nIterPerAve,
 		  const vector<PMS::Axis> loadAxes,
@@ -209,15 +286,15 @@ private:
 
 
   // Count the chunks required in the cache
-  void countChunks(VisSet& vs);  // old
-  void countChunks(VisSet& vs, Vector<Int>& nIterPerAve,  // supports time-averaging 
+  void countChunks(ROVisibilityIterator& vi);  // old
+  void countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,  // supports time-averaging 
 		   const PlotMSAveraging& averaging);
 
   // Fill a chunk with a VisBuffer.  
   void append(const VisBuffer& vb, Int vbnum, PMS::Axis xAxis, PMS::Axis yAxis,
               PMS::DataColumn xData, PMS::DataColumn yData);
   
-  // Issue mete info report to the given stringstream.
+  // Issue meta info report to the given stringstream.
   void reportMeta(Double x, Double y, stringstream& ss);
 
   // Set currChunk_ according to a supplied index
@@ -227,8 +304,8 @@ private:
   void deleteCache();
   
   // Loads the specific axis/metadata into the cache using the given VisBuffer.
-  void loadAxis(const VisBuffer& vb, Int vbnum, PMS::Axis axis,
-          PMS::DataColumn data = PMS::DEFAULT_DATACOLUMN);
+  void loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
+		PMS::DataColumn data = PMS::DEFAULT_DATACOLUMN);
   
   // Returns the number of points loaded for the given axis or 0 if not loaded.
   unsigned int nPointsForAxis(PMS::Axis axis) const;
@@ -236,8 +313,33 @@ private:
   // Computes the X and Y limits for the currently set axes.  In the future we
   // may want to cache ALL ranges for all loaded values to avoid recomputation.
   void computeRanges();
+  
+  // Convenience methods that call log() with the given method name and the
+  // appropriate event type.
+  // <group>
+  void logInfo(const String& method, const String& message) {
+      log(method, message, PlotLogger::MSG_INFO); }
+  void logDebug(const String& method, const String& message) {
+      log(method, message, PlotLogger::MSG_DEBUG); }
+  void logWarn(const String& method, const String& message) {
+      log(method, message, PlotLogger::MSG_WARN); }
+  void logError(const String& method, const String& message) {
+      log(method, message, PlotLogger::MSG_ERROR); }
+  
+  void logLoad(const String& message) {
+      log(PMS::LOG_ORIGIN_LOAD_CACHE, message, PMS::LOG_EVENT_LOAD_CACHE); }
+  void logFlag(const String& message) {
+      log(PMS::LOG_ORIGIN_FLAG, message, PMS::LOG_EVENT_FLAG); }
+  // </group>
+  
+  // Logs the given message from the given method name as the given event type
+  // (see PlotLogger).
+  void log(const String& method, const String& message, int eventType);
 
   // Private data
+  
+  // Parent plotms.
+  PlotMS* plotms_;
 
   // The number of antennas
   Int nAnt_;
@@ -250,6 +352,9 @@ private:
 
   // The cumulative running total of points
   Vector<Int> nPoints_;
+
+  // the net number of flagged, unflagged, total points
+  Int nTotalPoints_,nUnFlagPoints_, nFlagPoints_;
 
   // The reference time for this cache, in seconds
   Double refTime_p;
@@ -293,18 +398,26 @@ private:
 
   // Current setup/state.
   bool dataLoaded_;
-  bool currentSet_;
+  bool axesSet_;
   PMS::Axis currentX_, currentY_;
   map<PMS::Axis, bool> loadedAxes_;
   map<PMS::Axis, PMS::DataColumn> loadedAxesData_;
 
-  // A copy of the PlotMSAveraging object passed in by load
+  // A copy of the Data parameters 
+  String msname_;
+  PlotMSSelection selection_;
   PlotMSAveraging averaging_;
+
+  // A container for channel averaging bounds
+  Vector<Matrix<Int> > chanAveBounds_p;
 
   // Provisional flagging helpers
   Vector<Int> nVBPerAve_;
 
-
+  // VisIterator pointer
+  ROVisIterator* rvi_p;
+  VisIterator* wvi_p;
+    
 };
 typedef CountedPtr<PlotMSCache> PlotMSCachePtr;
 

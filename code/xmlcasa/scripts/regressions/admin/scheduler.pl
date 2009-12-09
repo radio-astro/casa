@@ -22,6 +22,7 @@ $res_dir = "" if (0);   # non-default result dir
 $noloop  = "" if (0);   # Iterate through tests only once
 $noclean = "" if (0);   # Do not cleanup result dir
 $all     = "" if (0);   # Loop through all tests?
+$profile = "" if (0);   # enable profiling? assumes sudo opcontrol
 
 $reg_dir  = $ARGV[0];
 $data_dir = $ARGV[1];
@@ -52,6 +53,9 @@ $file_tests = $reg_dir . "/tests_list.txt";
 (-d $reg_dir) or mkdir($reg_dir) or die "$reg_dir: $!";
 (-e $file_tests) or $file_tests = $admin_dir . "/tests_list.txt";
 
+if ($all) {
+    unlink($file_next);
+}
 
 repeat:
 
@@ -70,6 +74,8 @@ while(<FILE>) {
 	push @tests, $t[0];
     }
 }
+
+@tests = sort @tests;
 
 #print $#tests+1, " tests:\n";
 #print join("\n", @tests), "\n";
@@ -129,7 +135,7 @@ if ($load_average_15 < $la_limit) {
 
             $test_number = ($next + $base) % ($#tests+1);	    
 	    $testname = $tests[$test_number];
-	    $runcasa_log = "$workdir/Log/run-$testname-$hostname.log";
+	    $runcasa_log     = "$workdir/Log/run-$testname-$hostname.log";
 	    
 	    system("/bin/rm -rf $workdir") == 0 or die $!;
 	    mkdir("$workdir") or die;
@@ -139,16 +145,23 @@ if ($load_average_15 < $la_limit) {
 	    system("cp $admin_dir/*.py $admin_dir/*.pl $workdir/admin/") == 0 or die $!;
 	    
 	    $xdisplay = 7;
+	    $p = "0";
+	    if ($profile) {
+		$p = "1";
+	    }
 	    $cmd = 
 		"$admin_dir/process_manager.pl $timeout " .
-		"$admin_dir/runcasa_from_shell.sh $xdisplay $workdir/admin/execute.py $data_dir $workdir $testname";
+		"$admin_dir/runcasa_from_shell.sh $xdisplay $workdir/admin/execute.py $data_dir $workdir $testname $p";
 	    
 	    print gettime(), "Run test $test_number $testname: $cmd > $runcasa_log 2>&1\n";
 	    system("$cmd > $runcasa_log 2>&1"); # no check on return code
-	    
+            if ($profile) {
+		# be sure to stop the oprofile deamon if the casapy session did not
+                system("sudo opcontrol --stop") == 0 or die $!;
+            }
 	    if (-d "$workdir/result") {
 		rename("$workdir/result/", "$workdir/Result/") or die $!;
-		$result_files = "Result/";
+		$result_files = "Result";
 	    }
 	    else {
 		$result_files = "";
@@ -166,7 +179,7 @@ if ($load_average_15 < $la_limit) {
 		}
 	    }
 	    else {
-		$cmd = "cp -R $result_files Log/ $res_dir";
+		$cmd = "cp -R $result_files Log $res_dir";
 		if (system($cmd) != 0) {
 		    print STDERR "$cmd: $!";
 		}

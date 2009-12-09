@@ -281,81 +281,50 @@ print '--Flagdata--'
 
 
 
-# Use flagdata() in vector mode => parameters must be vectors
+# Use flagdata() in vector mode
 default('flagdata')
 vis = msfile1
 mode = 'manualflag'
 
-field = ['']*5
-spw = ['']*5
-antenna = ['']*5
-clipexpr = ['ABS RR']*5
-clipminmax = [[0,0]]*5
-clipcolumn = ['DATA']*5
-clipoutside = [true]*5
-autocorr = [false]*5
-unflag = [false]*5
-correlation = ['']*5
-uvrange = ['']*5
-timerange = ['']*5
-scan = ['']*5
-feed = ['']*5
-array = ['']*5
 
-#
 ##################################################
 #
 # Get rid of the autocorrelations from the MS
 #
-autocorr[0] = true
-
-#
-##################################################
-#
 # Flag antenna with antennaid 8
 #
-#flagdata(vis=msfile1,antenna='9', mode='manualflag')
-
-antenna[1] = 'VA09'
-
-#
-#################################################
-#
 # Flag all data whose amplitude  are not in range [0.0,2.0] on the
-# parallel hands
+# parallel hands       ( not done )
 #
-#default('flagdata')
-#flagdata(vis=msfile1,mode='manualflag',clipexpr='ABS RR',
-#         clipminmax=[0.0,2.0],clipoutside=True)
-#
-#flagdata(vis=msfile1,mode='manualflag',clipexpr='ABS LL',
-#         clipminmax=[0.0,2.0],clipoutside=True)
-
-#
-####################################################
 # Flag data (which is bad) in a time range
 #
-#flagdata(vis=msfile1,mode='manualflag',timerange='2003/05/02/21:40:58~2003/05/02/22:01:30')
-timerange[2]='2003/05/02/21:40:58~2003/05/02/22:01:30'
-
-#
-###################################################
 # Flag all antenna 14, 15 data in the time ranges stated
 #
-#flagdata(vis=msfile1,mode='manualflag', antenna='14',
-#         timerange='2003/05/02/18:50:50~2003/05/02/19:13:30')
-antenna[3] = 'VA14'
-timerange[3] = '2003/05/02/18:50:50~2003/05/02/19:13:30'
-
-
-#flagdata(vis=msfile1,mode='manualflag', antenna='15', spw='0',
-#         timerange='2003/05/02/22:38:49~2003/05/02/22:39:11')
-antenna[4] = 'VA15'
-spw[4] = '0'
-timerange[4] ='2003/05/02/22:38:49~2003/05/02/22:39:11'
-
-
+# Sequential flagdata execution:
 #
+# flagdata(vis=msfile1, autocorr=True, mode='manualflag')
+# flagdata(vis=msfile1,antenna='9', mode='manualflag')
+# flagdata(vis=msfile1,mode='manualflag',clipexpr='ABS RR',
+#          clipminmax=[0.0,2.0],clipoutside=True)
+#
+# flagdata(vis=msfile1,mode='manualflag',clipexpr='ABS LL',
+#          clipminmax=[0.0,2.0],clipoutside=True)
+# flagdata(vis=msfile1,mode='manualflag',timerange='2003/05/02/21:40:58~2003/05/02/22:01:30')
+#
+# flagdata(vis=msfile1,mode='manualflag', antenna='14',
+#          timerange='2003/05/02/18:50:50~2003/05/02/19:13:30')
+# flagdata(vis=msfile1,mode='manualflag', antenna='15', spw='0',
+#          timerange='2003/05/02/22:38:49~2003/05/02/22:39:11')
+
+# Parallel flagdata execution:
+autocorr  = [true, false , false, false , false ]
+antenna   = [''  , 'VA09', ''   , 'VA14', 'VA15']
+timerange = [''  , ''    , '2003/05/02/21:40:58~2003/05/02/22:01:30', \
+                           '2003/05/02/18:50:50~2003/05/02/19:13:30', \
+                           '2003/05/02/22:38:49~2003/05/02/22:39:11'] 
+spw       = [''  , ''    , ''   , ''    , '0'   ]
+
+
 ###################################################
 # Finally, apply all the flag specifications
 #
@@ -593,7 +562,7 @@ field = ['']*5
 spw = ['']*5
 antenna = ['']*5
 clipexpr = ['ABS RR']*5
-clipminmax = [[0,0]]*5
+clipminmax = [[0.0,0.0]]*5
 clipcolumn = ['DATA']*5
 clipoutside = [true]*5
 autocorr = [false]*5
@@ -1024,8 +993,11 @@ cal1_8may=5.988 # (channel averaged)
 cal2_8may=7.232 # (channel averaged)
 src2may=3.091   # (channel averaged)
 src8may=8.823   # (channel averaged)
-immax=0.493
-imrms=0.0671
+#immax=0.493
+#imrms=0.0671
+#new values after changing to flat sigma image
+immax=0.7339
+imrms=0.07303
 
 diff_cal1_2may=abs((cal1_2may-gcal1_2may)/cal1_2may)
 diff_cal2_2may=abs((cal2_2may-gcal2_2may)/cal2_2may)

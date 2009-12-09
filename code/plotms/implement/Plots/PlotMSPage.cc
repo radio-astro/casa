@@ -26,7 +26,10 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSPage.h>
 
+#include <plotms/Gui/PlotMSPlotter.qo.h>
+#include <plotms/GuiTabs/PlotMSToolsTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Plots/PlotMSPlot.h>
 
 namespace casa {
 

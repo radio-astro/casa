@@ -216,7 +216,7 @@ void QtRegionShapeManager::removeShape(RegionShape* shape, bool delShape) {
 
 void QtRegionShapeManager::deleteAll() {
     // clear widgets
-    QVBoxLayout* l = (QVBoxLayout*)frame->layout();
+    QVBoxLayout *l = dynamic_cast<QVBoxLayout*>(frame->layout( ));
     while(l->count() > 1) l->removeItem(l->itemAt(0));
 
     // delete shapes

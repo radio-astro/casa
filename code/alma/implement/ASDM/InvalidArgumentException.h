@@ -39,9 +39,24 @@ namespace asdm {
 class InvalidArgumentException {
 
 public:
+  /**
+   * An empty CTOR.
+   */
   InvalidArgumentException();
+
+  /**
+   * A CTOR with a message.
+   */
   InvalidArgumentException(const string &s);
+
+  /**
+   * The DTOR.
+   */
   ~InvalidArgumentException();
+
+  /**
+   * @return a text describing the exception.
+   */
   string getMessage() const;
 
 protected:
@@ -49,19 +64,6 @@ protected:
   string message;	
 
 };
-
- inline InvalidArgumentException::InvalidArgumentException() : 
-   message ("Invalid argument exception") {;}
-
- inline InvalidArgumentException::InvalidArgumentException (const string &s) : 
-   message(s) {
- }
-
- inline InvalidArgumentException::~InvalidArgumentException() {;}
-
- inline string InvalidArgumentException::getMessage()  const {
-   return message;
- }
  
 } // End namespace asdm
 

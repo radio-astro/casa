@@ -18,6 +18,8 @@
 #include "CCorrelationMode.h"
 #include "CPrimitiveDataType.h"
 #include "CSpectralResolutionType.h"
+#include "CProcessorType.h"
+#include "CCorrelatorType.h"
 #include "CStokesParameter.h"
 #include "CNetSideband.h"
 
@@ -27,6 +29,8 @@ using namespace BasebandNameMod;
 using namespace CorrelationModeMod;
 using namespace PrimitiveDataTypeMod;
 using namespace SpectralResolutionTypeMod;
+using namespace ProcessorTypeMod;
+using namespace CorrelatorTypeMod;
 using namespace StokesParameterMod;
 using namespace NetSidebandMod;
 
@@ -85,6 +89,12 @@ using namespace std;
 #include <boost/regex.hpp> 
 using namespace boost;
 
+#if defined(__APPLE__)
+#include <machine/endian.h>
+#else 
+#include <endian.h>
+#endif
+
 /*
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
@@ -98,13 +108,35 @@ using namespace boost::gregorian;
 /**
  * @mainpage
  *
- * This is the documentation of a set of C++ classes dedicated to the low level processing of ALMA binary data.
+ * This is the documentation of a set of C++ classes dedicated to the processing of ALMA binary data. 
+ * 
+ * @section low-level Low level classes.
+ * All those classess are grouped under the same namespace asdmbinaries.
+ * ALMA binary data are kept on storage media in files whose content is formally
+ * described by <b>the Science Data Model Binary Data Format</b> (BDF). The so called low level classes documented here
+ * provide their users with an in-memory representation of those ALMA binary data and tools to write BDF files from
+ * such representations and conversely to build in-memory representations from BDF files in a given number of use cases.
+ *
+ * <ul>
+ * <li> asdmbinaries::SDMDataObject is a class to represent in-memory ALMA binary data.</li>
+ * <li> asdmbinaries::SDMDataObjectWriter is a class to build an SDMDataObject and to write it as a BDF document. </li>
+ * <li> asdmbinaries::SDMDataObjectReader is a class to read a BDF document and to parse it into an SDMDataObject. </li>
+ * </ul>
+ * 
+ * 
  */
 
 /**
  * The asdmbinaries namespace contains all the classes dedicated to the processing of ALMA binary data.
  */
 namespace asdmbinaries {
+
+  /**
+   * The XML schema version of the XML instances that those classes claim to be compatible with.
+   */
+  const int SCHEMAVERSION=2;
+
+
   /**
    * A class to represent an exception thrown during an access to an SDMDataObject. 
    */ 
@@ -144,6 +176,98 @@ namespace asdmbinaries {
   inline string SDMDataObjectException::getMessage() const {
     return "SDMDataObjectException : " + message;
   }
+  
+  /**
+   * \defgroup optional Material related to optional values.
+   */
+
+  /**
+   * \ingroup optional
+   * A class to embed optional information.
+   *
+   */
+  template<class Enum, class EnumHelper> 
+    class Optional {
+    private:
+    bool present_;
+    Enum literal_;
+    
+    public:
+    /**
+     * The empty constructor.
+     * 
+     * To be used whenever an optional value has to be declared as absent.
+     */
+    Optional() {
+      present_=false;
+    }
+    
+    /**
+     * The full constructor.
+     *
+     * To be used whenever an optional value has to be declared as present.
+     *
+     * @param literal the value of type Enum to embed in the Optional class.
+     */
+    Optional(Enum literal) {
+      literal_ = literal;
+      present_ = true;
+    }
+    
+    /**
+     * Test of presence.
+     *
+     * @return true (resp. false)  if this represents a present (resp. false) optional value.
+     */
+    bool present() const { return present_; }
+
+    /**
+     * Returns the optional value 
+     *
+     * @return an Enum
+     *
+     * @note the returned value is meaningful if and only if present() == true !
+     *
+     */
+    Enum literal() const { return literal_; }
+  };
+
+  /**
+   * \ingroup optional
+   * A typedef definition for an optional spectral resolution type.
+   *
+   */
+  typedef Optional<SpectralResolutionType, CSpectralResolutionType> OptionalSpectralResolutionType;
+
+
+  /**
+   * A class to represent byte order information.
+   *
+   */
+  class ByteOrder {
+  public:
+    static const ByteOrder* Little_Endian; /*< A unique object to represent a little endian byte order. */
+    static const ByteOrder* Big_Endian;    /*< A unique object to represent a big endian byte order. */
+    static const ByteOrder* Machine_Endianity; /*< A unique object storing the endianity of the machine. */
+
+    /**
+     * Returns a string representation of this.
+     *
+     * <ul>
+     * <li> Little_Endian is returned as "Little_Endian", </li>
+     * <li> Big_Endian is returned as "Big_Endian", </li>
+     * </ul>
+     */
+    string toString() const ;
+
+  private:
+    string name_;
+    int endianity_;
+
+    ByteOrder(const string & name, int endianity);
+    virtual ~ByteOrder();
+    static const ByteOrder* machineEndianity(); 
+  };
 
   // forward declarations.
   class SDMDataSubset;
@@ -179,7 +303,8 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
    * <li> on input, while reading a MIME message containing ALMA binary data by using the class SDMDataObjectReader; the result of the parsing of the MIME message is returned in an SDMDataObject. </li>
    * </ul>
    * 
-   * @section quick-desc Quick description.
+   * @section content-access Accessing the different parts of an SDMDataObject.
+   * We give here a quick list of the method which allows to retrieve the different parts of an SDMDataObject :
    * <ul>
    * <li>title() : the general title for these binary data.</li>
    * <li>startTime() : Epoch when started the observation for the data collected in this SDMDataObject. This must be equal to the mid-point interval minus half the interval of the first data dump.
@@ -238,10 +363,10 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
       unsigned int numSpectralPoint_;
       unsigned int numBin_;
       NetSideband sideband_;
-      string strId_;
+      string strSw_;
       string strImage_;
-      void strId(const string& s);
-      const string & strId() const;
+      void strSw(const string& s);
+      const string & strSw() const;
       void strImage(const string& s);
       const string & strImage() const;
 
@@ -470,7 +595,90 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
       //      virtual void axes (const vector<AxisName>& axes); 
     }; // BinaryPart::
 
-  
+    /**
+     * A subclass of binaryPart to describe the autodata.
+     *
+     * The description of autodata contains one extra information stored in a boolean which indicates
+     * if the auto data are normalized or not. 
+     *
+     */
+    class AutoDataBinaryPart : public BinaryPart {
+      friend class DataStruct;
+      friend class SDMDataObject;
+      friend class HeaderParser;
+      friend class SDMDataObjectWriter;
+      
+    protected:
+      bool normalized_;
+
+    public:
+      /**
+       * An empty constructor.
+       */
+      AutoDataBinaryPart();
+      
+      /**
+       * The destructor.
+       */
+      ~AutoDataBinaryPart();
+      
+      /**
+       * The full constructor.
+       */
+      AutoDataBinaryPart(unsigned int size,
+			 const vector<AxisName>& axes,
+			 bool normalized);
+      
+      /**
+       * Returns true (resp.false) if auto data are normalized (resp. not normalized).
+       * @return a boolean.
+       */
+      virtual bool normalized() const;
+      
+    }; // AutoDataBinaryPart
+    
+    /**
+     * A subclass of binaryPart to describe the zeroLags.
+     *
+     * The description of zeroLags contains one extra information stored in a CorrelatorType field which indicates
+     * the type of correlator which has produced them.
+     *
+     */
+    class ZeroLagsBinaryPart : public BinaryPart {
+      friend class DataStruct;
+      friend class SDMDataObject;
+      friend class HeaderParser;
+      friend class SDMDataObjectWriter;
+
+    protected:
+      CorrelatorType correlatorType_;
+      
+    public:
+      
+      /**
+       * An empty constructor.
+       */
+      ZeroLagsBinaryPart() ;
+
+      /**
+       * The destructor.
+       */
+      ~ZeroLagsBinaryPart();
+
+      /**
+       * The full constructor.
+       */
+      ZeroLagsBinaryPart(unsigned int size,
+			 const vector<AxisName>& axes,
+			 CorrelatorType correlatorType);
+
+      /**
+       * Returns the correlator type.
+       * @return a value of the enumeration CorrelatorType.
+       */
+      virtual CorrelatorType correlatorType() const;
+    };
+
     // SDMDataObject::DataStruct:: declarations
     //
     /**
@@ -479,7 +687,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      * <ul>
      * <li> about atmospheric phase correction when relevant (correlationMode != AUTO_ONLY) (apc()).</li>
      * <li> about basebands (basebands()).</li>
-     * <li> about binary data (flags(), actualTimes(), actualDurations(), zeroLags(), crossData(), autoData()) .
+     * <li> about binary data (flags(), actualTimes(), actualDurations(), zeroLags(), crossData(), autoData()) .</li>
      * </ul>
      */
     class DataStruct {
@@ -503,20 +711,20 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
       /**
        * A full constructor.
        *
-       * @param apc a vector of AtmPhaseCorrection. If apc is not relevant (correlationMode == AUTO_ONLY), pass an empty vector.
+       * @param apc a vector of AtmPhaseCorrection. If apc is not relevant pass an empty vector.
        * @param basebands a vector of Baseband.
-       * @param flags a BinaryPart object describing the flags. If flags is not relevant (spectralResolutionType == BASEBAND_WIDE) 
+       * @param flags a BinaryPart object describing the flags. If flags is not relevant 
        * pass an empty BinaryPart object.
-       * @param actualTimes  a BinaryPart object describing the actual times. If actualTimes is not relevant (spectralResolutionType == BASEBAND_WIDE) 
+       * @param actualTimes  a BinaryPart object describing the actual times. If actualTimes is not relevant 
        * pass an empty BinaryPart object.
-       * @param actualDurations  a BinaryPart object describing the actual durations. If actualDurations is not relevant (spectralResolutionType == BASEBAND_WIDE) 
+       * @param actualDurations  a BinaryPart object describing the actual durations. If actualDurations is not relevant 
        * pass an empty BinaryPart object.
-       * @param zeroLags  a BinaryPart object describing the zero lags. If zeroLags is not relevant (spectralResolutionType != FULL_RESOLUTION) pass an empty 
+       * @param zeroLags  a ZeroLagsBinaryPart object describing the zero lags. If zeroLags is not relevant pass an empty 
+       * ZeroLagsBinaryPart object.
+       * @param crossData a BinaryPart object describing the cross data. If crossData is not relevant pass an empty 
        * BinaryPart object.
-       * @param crossData a BinaryPart object describing the cross data. If crossData is not relevant (correlationMode == AUTO_ONLY) pass an empty 
-       * BinaryPart object.
-       * @param autoData a BinaryPart object describing the auto data. If autoData is not relevant (correlationMode != AUTO_ONLY) pass an empty 
-       * BinaryPart object.
+       * @param autoData an AutoDataBinaryPart object describing the auto data. If autoData is not relevant pass an empty 
+       * AutoDataBinaryPart object.
        *
        */
       DataStruct(const vector<AtmPhaseCorrection>& apc,
@@ -524,9 +732,9 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 		 const BinaryPart& flags,
 		 const BinaryPart& actualTimes,
 		 const BinaryPart& actualDurations,
-		 const BinaryPart& zeroLags,
+		 const ZeroLagsBinaryPart& zeroLags,
 		 const BinaryPart& crossData,
-		 const BinaryPart& autoData);
+		 const AutoDataBinaryPart& autoData);
       
       
       /**
@@ -568,9 +776,9 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 
       /**
        * Returns the description the zeroLags attachment.
-       * @return a reference to a BinaryPart value.
+       * @return a reference to a ZeroLagsBinaryPart value.
        */
-      const BinaryPart& zeroLags() const;
+      const ZeroLagsBinaryPart& zeroLags() const;
       //      void zeroLags(const BinaryPart& value);
 
 
@@ -584,27 +792,25 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 
       /**
        * Returns the description the autoData attachment.
-       * @return a reference to a BinaryPart value.
+       * @return a reference to an AutoDataBinaryPart value.
        */
-      const BinaryPart& autoData() const;
+      const AutoDataBinaryPart& autoData() const;
       //      void autoData(const BinaryPart& value);
 
       /**
        * Defines an association "spw1 has image spw2" between two spectral windows spw1 and spw2.
        * Assuming that a spectral window can be located by a pair (ibb, ispw) of integer, where ibb denotes the index of the
        * baseband this spectral window belongs to, and ispw its index in that baseband, this method declares that
-       * the spectral window with coordinates (ibb1, ispw1) has the spectral window with coordinates (ibb2, ispw2) as an image.
+       * the spectral window with coordinates (ibb, ispw1) has the spectral window with coordinates (ibb, ispw2) as an image.
        *
-       * @param ibb1  1st coordinate of spw1
+       * @param ibb  1st common coordinate of spw1 and spw2
        * @param ispw1 2nd coordinate of spw1.
-       * @param ibb2  1st coordinate of spw2.
        * @param ispw2 2nd coordinate of spw2.
        *
        * @throw SDMDataObjectException
        */
-      void imageSPW(unsigned int ibb1,
+      void imageSPW(unsigned int ibb,
 		    unsigned int ispw1,
-		    unsigned int ibb2,
 		    unsigned int ispw2);
 
       /**
@@ -618,8 +824,8 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
        *
        * @throw SDMDataObjectException
        */
-      const SpectralWindow* imageSPW(unsigned int i,
-				     unsigned int j) const;
+      const SpectralWindow* imageSPW(unsigned int ibb,
+				     unsigned int ispw) const;
 
       /**
        * Defines an association "spw1 is image of spw2" between two spectral windows spw1 and spw2.
@@ -627,16 +833,14 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
        * baseband this spectral window belongs to, and ispw its index in that baseband, this method declares that
        * the spectral window with coordinates (ibb1, ispw1) is the image of the spectral window with coordinates (ibb2, ispw2).
        *
-       * @param ibb1  1st coordinate of spw1
+       * @param ibb  1st common coordinate of spw1
        * @param ispw1 2nd coordinate of spw1.
-       * @param ibb2  1st coordinate of spw2.
        * @param ispw2 2nd coordinate of spw2.
        *
        * @throw SDMDataObjectException
        */
-      void imageOfSPW(unsigned int ibb1,
+      void imageOfSPW(unsigned int ibb,
 		      unsigned int ispw1,
-		      unsigned int ibb2,
 		      unsigned int ispw2);
       
 
@@ -652,7 +856,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
        * @throw SDMDataObjectException
        */
       const SpectralWindow* imageOfSPW(unsigned int ibb,
-						      unsigned int ispw) const;
+				       unsigned int ispw) const;
       
 
     private:
@@ -661,9 +865,9 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
       BinaryPart flags_;
       BinaryPart actualTimes_;
       BinaryPart actualDurations_;
-      BinaryPart zeroLags_;
+      ZeroLagsBinaryPart zeroLags_;
       BinaryPart crossData_;
-      BinaryPart autoData_;
+      AutoDataBinaryPart autoData_;
 
       const SDMDataObject* owner_;
       void owner(const SDMDataObject* o);
@@ -672,9 +876,8 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
       map<string, string> imageOfSPW_;
 
       void checkCoordinate(unsigned int ibb, unsigned int ispw) const;
-      bool associatedSPW(unsigned int ibb1,
+      bool associatedSPW(unsigned int ibb,
 			 unsigned int ispw1,
-			 unsigned int ibb2,
 			 unsigned int ispw2);
 
       void divorceSPW(unsigned int ibb, unsigned int ispw)   ;
@@ -791,11 +994,28 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 
     /**
      * Returns the spectral resolution.
+     * Due to this optional nature, the spectral resolution type is not returned directly as a literal of the enumeration
+     * SpectralResolutionType, but as an instance of the class OptionalSpectralResolutionType. This instance can be queried to
+     * check if the spectral resolution type information is present and if it is its value as an SpectralResolutionType literal.
+     *
      * @return a value from enumeration SpectralResolutionType.
      */
-    SpectralResolutionType spectralResolutionType() const;
+    OptionalSpectralResolutionType spectralResolutionType() const;
+
+    /**
+     * Returns the processor type.
+     * @return a value from the enumeration ProcessorType.
+     */
+    ProcessorType processorType() const;
 
 
+    /**
+     * Returns the correlator type.
+     *
+     * @return a value from the enumeration CorrelatorType if processorType == CORRELATOR else an SDMDataObjectException is thrown.
+     * @throw SDMDataException
+     */
+    CorrelatorType correlatorType() const;
 
     /**
      * Returns true if the data are total power data and false otherwise.
@@ -847,7 +1067,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      * Returns true if the observation has been aborted.
      * This method must be used on an SDMDataObject containing correlator data,otherwise a SDMDataObjectException is thrown.
      *
-     * @return a boolean.
+     * @return a bool.
      * 
      * @throw SDMDataObjectException.
      */
@@ -915,6 +1135,10 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 
     // Global header variables.
     string title_;
+
+    const ByteOrder* byteOrder_;
+
+    int schemaVersion_;
     
     long long startTime_;
 
@@ -935,7 +1159,11 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
     unsigned int numAntenna_;
 
     CorrelationMode correlationMode_;
-    SpectralResolutionType spectralResolutionType_;
+
+    OptionalSpectralResolutionType spectralResolutionType_;
+
+    ProcessorType processorType_;
+
     DataStruct dataStruct_;
 
     map<string, unsigned int> str2index_;
@@ -974,7 +1202,9 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
      */
     string toXML() ;
     void toXML(const BinaryPart& binaryPart, const string& elementName,  ostringstream& oss) const;
-    void spectralWindowsToXML(const Baseband& baseband, ostringstream& oss) const;
+    void toXML(const AutoDataBinaryPart& autoDataBinaryPart, const string& elementName,  ostringstream& oss) const;
+    void toXML(const ZeroLagsBinaryPart& zeroLagsBinaryPart, const string& elementName,  ostringstream& oss) const;
+    void spectralWindowsToXML(const vector<Baseband>& basebands, unsigned int ibb,  ostringstream& oss) const;
     void basebandsToXML(ostringstream& oss) const; 
     void dataStructToXML(ostringstream& oss) ;
 
@@ -1218,6 +1448,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
   public:
     static void invalidCall(const string & methodName, const SDMDataObject* sdmDataObject);
     static string quote(const string& s);
+    static string quote(bool b);
     static string quote(int i);
     static string quote(unsigned int i);
     static string quote(long long l);

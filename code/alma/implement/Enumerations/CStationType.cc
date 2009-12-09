@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CStationType::version() {
+	return StationTypeMod::version;
+	}
+	
+string CStationType::revision () {
+	return StationTypeMod::revision;
+}
+
+unsigned int CStationType::size() {
+	return 3;
+	}
+	
 	
 const std::string& CStationType::sANTENNA_PAD = "ANTENNA_PAD";
 	
@@ -44,7 +57,7 @@ const std::string& CStationType::sMAINTENANCE_PAD = "MAINTENANCE_PAD";
 	
 const std::string& CStationType::sWEATHER_STATION = "WEATHER_STATION";
 	
-const std::vector<std::string> CStationType::sStationTypeSet() {
+const std::vector<std::string> CStationType::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CStationType::sANTENNA_PAD);
@@ -55,29 +68,6 @@ const std::vector<std::string> CStationType::sStationTypeSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CStationType::hANTENNA_PAD = "Astronomical Antenna station";
-	
-const std::string& CStationType::hMAINTENANCE_PAD = "Maintenance antenna station";
-	
-const std::string& CStationType::hWEATHER_STATION = "Weather station";
-	
-const std::vector<std::string> CStationType::hStationTypeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CStationType::hANTENNA_PAD);
-    
-    enumSet.insert(enumSet.end(), CStationType::hMAINTENANCE_PAD);
-    
-    enumSet.insert(enumSet.end(), CStationType::hWEATHER_STATION);
-        
-    return enumSet;
-}
-   	
 
 std::string CStationType::name(const StationTypeMod::StationType& f) {
     switch (f) {
@@ -92,28 +82,9 @@ std::string CStationType::name(const StationTypeMod::StationType& f) {
       return CStationType::sWEATHER_STATION;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CStationType::help(const StationTypeMod::StationType& f) {
-    switch (f) {
-    
-    case StationTypeMod::ANTENNA_PAD:
-      return CStationType::hANTENNA_PAD;
-    
-    case StationTypeMod::MAINTENANCE_PAD:
-      return CStationType::hMAINTENANCE_PAD;
-    
-    case StationTypeMod::WEATHER_STATION:
-      return CStationType::hWEATHER_STATION;
-    	
-    }
-    return std::string("");
-}
-   	
 
 StationTypeMod::StationType CStationType::newStationType(const std::string& name) {
 		
@@ -150,12 +121,10 @@ StationTypeMod::StationType CStationType::literal(const std::string& name) {
 }
 
 StationTypeMod::StationType CStationType::from_int(unsigned int i) {
-	vector<string> names = sStationTypeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newStationType(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newStationType(names_.at(i));
 }
-
-	
 
 string CStationType::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'StationType'.";

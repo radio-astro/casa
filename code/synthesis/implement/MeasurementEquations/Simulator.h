@@ -136,8 +136,11 @@ public:
 		 const Vector<Double>& offset,
 		 const Vector<String>& mount,
 		 const Vector<String>& antName,
+		 const Vector<String>& padName,
 		 const String& coordsystem,
 		 const MPosition& referenceLocation);
+  // get info back from e.g. loaded ms in newmssimulator
+  Bool getconfig();
 
   // set the observed fields for the simulation
   Bool setfield(const String& sourceName,           
@@ -192,8 +195,17 @@ public:
                  const Float& opacity);
 
   // Apply antenna-based gain errors
-  Bool setgain(const String& mode, const String& table,
-	       const Quantity& interval, const Vector<Double>& amplitude);
+  Bool setgain(const String& mode, 
+	       const String& table,
+	       const Quantity& interval,
+	       const Vector<Double>& amplitude);
+
+  Bool settrop(const String& mode, 
+	       const String& table,
+	       const Float pwv,
+	       const Float deltapwv,
+	       const Float beta,
+	       const Float windspeed);
 
   // Apply antenna pointing and squint errors
   Bool setpointingerror(const String& epJTableName,
@@ -202,7 +214,9 @@ public:
 
   // Apply polarization leakage errors
   Bool setleakage(const String& mode, const String& table,
-		  const Quantity& interval, const Double amplitude);
+		  //const Quantity& interval, 
+		  const Vector<Double>& amplitude,
+		  const Vector<Double>& offset);
 
   // Apply bandpass errors
   Bool setbandpass(const String& mode, const String& table,
@@ -214,21 +228,39 @@ public:
 
   // Simulate quasi-realistic thermal noise, which can depend upon
   // elevation, bandwidth, antenna diameter, as expected
-  Bool setnoise(const String& mode, 
-		const Quantity& simplenoise,
-		const String& table,
-		const Float antefficiency,
-		const Float correfficiency,
-		const Float spillefficiency,
-		const Float tau,
-		const Float trx,
-		const Float tatmos, 
-		const Float tcmb);
-		// const Quantity& trx,
-		// const Quantity& tatmos, 
-		// const Quantity& tcmb);
+  Bool oldsetnoise(const String& mode, 
+		   const String& table,
+		   const Quantity& simplenoise,
+		   const Float antefficiency,
+		   const Float correfficiency,
+		   const Float spillefficiency,
+		   const Float tau,
+		   const Float trx,
+		   const Float tatmos, 
+		   const Float tcmb);
 
-  // calculate errors and apply them to the data in our MS
+  Bool setnoise(const String& mode, 
+		const String& caltable,			 
+		const Quantity& simplenoise,
+		// if blank, not stored
+		// or ATM calculation
+		const Quantity& pground,
+		const Float relhum,
+		const Quantity& altitude,
+		const Quantity& waterheight,
+		const Quantity& pwv,
+		// user-specified tau and tatmos 
+		const Float tatmos, 
+		const Float tau,
+		//
+		const Float antefficiency,
+		const Float spillefficiency,
+		const Float correfficiency,
+		const Float trx, 
+		const Float tground,		
+		const Float tcmb);
+
+  // apply errors to the data in our MS
   Bool corrupt();
 
   // Set limits
@@ -271,6 +303,10 @@ public:
 private:
 
   
+  // Arrange to corrupt with simulated calibration
+  //   (cf Calibrater setapply)
+  Bool create_corrupt(Record& simpar);
+
   // Prints an error message if the newsimulator DO is detached and returns True.
   Bool detached() const;
 
@@ -356,6 +392,7 @@ private:
   Vector<Double>  offset_p;
   Vector<String> mount_p;
   Vector<String> antName_p;
+  Vector<String> padName_p;
   String         coordsystem_p;
   MPosition      mRefLocation_p;
   // </group>
@@ -363,9 +400,11 @@ private:
   // info for observed field parameters
   // <group>
 
-  String 	sourceName_p, calCode_p;
-  MDirection	sourceDirection_p;
-  Quantity      distance_p;
+  Int nField;
+  Vector<String> 	sourceName_p;
+  Vector<String>        calCode_p;
+  Vector<MDirection>	sourceDirection_p;
+  Vector<Quantity>      distance_p;
 
   // </group>
 
@@ -375,12 +414,17 @@ private:
 
   // spectral windows data
   // <group>
-  String 	spWindowName_p; 
-  Int		nChan_p;
-  Quantity     	startFreq_p;
-  Quantity     	freqInc_p;
-  Quantity     	freqRes_p;
-  String     	stokesString_p;   
+  // RI 20091107 durn. whoever build this didn't enable multiple spw.
+  // we'll at least get some functionality here, but there are probably
+  // combinations of pols etc that won't properly report here. 
+  // better than now, when it doesn't even report more than one spw.
+  Int nSpw;
+  Vector<String> 	spWindowName_p; 
+  Vector<Int>		nChan_p;
+  Vector<Quantity>     	startFreq_p;
+  Vector<Quantity>     	freqInc_p;
+  Vector<Quantity>     	freqRes_p;
+  Vector<String>     	stokesString_p;   
   // </group>
   // </group>
 

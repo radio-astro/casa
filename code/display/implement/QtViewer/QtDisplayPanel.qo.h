@@ -72,9 +72,44 @@ class QtDisplayPanel : public QWidget,
 		//# implement/.../*.h files; also, makefile must include
 		//# name of this file in 'mocs' section.
 
- public:
-  
-  QtDisplayPanel(QtViewerBase* v, QWidget* parent=0);
+public:
+
+    class panel_state {
+    public:
+
+	class colormap_state {
+	public:
+	    colormap_state( const std::string &n, const Vector<Float> &s, const Vector<Float> &b ) : name_(n), shift_(s), brightness_(b) { }
+	    colormap_state( const colormap_state &other ) : name_(other.name_), shift_(other.shift_), brightness_(other.brightness_) { }
+	    const std::string &name( ) const { return name_; }
+	    const Vector<Float> &shift( ) const { return shift_; }
+	    const Vector<Float> &brightness( ) const { return brightness_; }
+	    const std::string &colormap( ) const { return name_; }
+	private:
+	    std::string name_;
+	    Vector<Float> shift_;
+	    Vector<Float> brightness_;
+	};
+
+	typedef std::pair<Vector<Double>,Vector<Double> > zoom_state;
+	typedef std::map<std::string,colormap_state> colormap_map;
+
+	panel_state( const panel_state &other ) : zoom_(other.zoom_) { }
+	const Vector<Double> &blc( ) const { return zoom_.first; }
+	const Vector<Double> &trc( ) const { return zoom_.second; }
+	const colormap_state *colormap( const std::string &s ) const;
+
+    private:
+	panel_state( const zoom_state &z_, const colormap_map &cm ) : zoom_(z_), colormaps_(cm) { }
+
+	zoom_state zoom_;
+	colormap_map colormaps_;
+
+	friend class QtDisplayPanel;
+    };
+   
+
+ QtDisplayPanel(QtViewerBase* v, QWidget* parent=0);
   ~QtDisplayPanel();
   
   // True if DD is on our list.  (It may _not_ be on viewer's list
@@ -95,6 +130,7 @@ class QtDisplayPanel : public QWidget,
   // retrieve an (ordered) list of currently-registered DDs.
   // (This is a copy, not a reference).
   List<QtDisplayData*> registeredDDs() { return qdds_;  }
+  ConstListIter<QtDisplayData*> registeredDDs() const { return ConstListIter<QtDisplayData*>(qdds_); }
   
   // retrieve an (ordered) list of QtViewer's created DDs which
   // are _not_ currently registered.
@@ -298,8 +334,9 @@ class QtDisplayPanel : public QWidget,
   // [re]set panel state from a QDomDocument.
   virtual Bool setPanelState(QDomDocument& restoredoc,
 			     QString restorefiledir="");
-  
-  
+
+  panel_state getPanelState( ) const;
+  void setPanelState( const panel_state & );
 
  public slots:
 
@@ -497,6 +534,8 @@ class QtDisplayPanel : public QWidget,
   // (in particular) can respond by setting its own state from certain
   // elements of restoredoc.
   void restoring(QDomDocument* restoredoc);
+
+  void activate(Record);
   
  
  protected slots:
@@ -571,8 +610,7 @@ class QtDisplayPanel : public QWidget,
   // see operator()(WCMotionEvent) for that.) 
   virtual void refreshTracking_(QtDisplayData* qdd=0);
  
-
-   
+  void clicked(Record);
   
  protected:
   

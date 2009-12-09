@@ -82,8 +82,6 @@ using namespace enumerations;
 	
 
 	
-
-	
 #include "CCorrelationMode.h"
 using namespace CorrelationModeMod;
 	
@@ -95,6 +93,20 @@ using namespace CorrelationModeMod;
 	
 #include "CAtmPhaseCorrection.h"
 using namespace AtmPhaseCorrectionMod;
+	
+
+	
+#include "CProcessorType.h"
+using namespace ProcessorTypeMod;
+	
+
+	
+
+	
+#include "CSpectralResolutionType.h"
+using namespace SpectralResolutionTypeMod;
+	
+
 	
 
 	
@@ -125,7 +137,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file ConfigDescription.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -133,29 +145,29 @@ namespace asdm {
 //class asdm::ConfigDescriptionTable;
 
 
-// class asdm::ProcessorRow;
-class ProcessorRow;
+// class asdm::ConfigDescriptionRow;
+class ConfigDescriptionRow;
 
 // class asdm::AntennaRow;
 class AntennaRow;
 
-// class asdm::DataDescriptionRow;
-class DataDescriptionRow;
+// class asdm::FeedRow;
+class FeedRow;
 
 // class asdm::SwitchCycleRow;
 class SwitchCycleRow;
 
-// class asdm::FeedRow;
-class FeedRow;
+// class asdm::DataDescriptionRow;
+class DataDescriptionRow;
 
-// class asdm::ConfigDescriptionRow;
-class ConfigDescriptionRow;
+// class asdm::ProcessorRow;
+class ProcessorRow;
 	
 
 /**
  * The ConfigDescriptionRow class is a row of a ConfigDescriptionTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class ConfigDescriptionRow {
@@ -182,8 +194,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct ConfigDescriptionRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (ConfigDescriptionRowIDL x) throw(ConversionException);
+	void setFromIDL (ConfigDescriptionRowIDL x) ;
 #endif
 	
 	/**
@@ -196,8 +209,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the ConfigDescriptionTable to which the row built by deserialization will be parented.
+	  */
+	 static ConfigDescriptionRow* fromBin(EndianISStream& eiss, ConfigDescriptionTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -227,6 +254,36 @@ public:
  			
  	 */
  	void setNumAntenna (int numAntenna);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numDataDescription
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numDataDescription.
+ 	 * @return numDataDescription as int
+ 	 */
+ 	int getNumDataDescription() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numDataDescription with the specified int.
+ 	 * @param numDataDescription The int value to which numDataDescription is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumDataDescription (int numDataDescription);
   		
 	
 	
@@ -264,77 +321,6 @@ public:
 
 
 	
-	// ===> Attribute numSubBand
-	
-	
-	
-
-	
- 	/**
- 	 * Get numSubBand.
- 	 * @return numSubBand as vector<int >
- 	 */
- 	vector<int > getNumSubBand() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numSubBand with the specified vector<int >.
- 	 * @param numSubBand The vector<int > value to which numSubBand is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumSubBand (vector<int > numSubBand);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute phasedArrayList, which is optional
-	
-	
-	
-	/**
-	 * The attribute phasedArrayList is optional. Return true if this attribute exists.
-	 * @return true if and only if the phasedArrayList attribute exists. 
-	 */
-	bool isPhasedArrayListExists() const;
-	
-
-	
- 	/**
- 	 * Get phasedArrayList, which is optional.
- 	 * @return phasedArrayList as vector<int >
- 	 * @throws IllegalAccessException If phasedArrayList does not exist.
- 	 */
- 	vector<int > getPhasedArrayList() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set phasedArrayList with the specified vector<int >.
- 	 * @param phasedArrayList The vector<int > value to which phasedArrayList is to be set.
- 	 
- 		
- 	 */
- 	void setPhasedArrayList (vector<int > phasedArrayList);
-		
-	
-	
-	
-	/**
-	 * Mark phasedArrayList, which is an optional field, as non-existent.
-	 */
-	void clearPhasedArrayList ();
-	
-
-
-	
 	// ===> Attribute correlationMode
 	
 	
@@ -365,47 +351,6 @@ public:
 
 
 	
-	// ===> Attribute flagAnt, which is optional
-	
-	
-	
-	/**
-	 * The attribute flagAnt is optional. Return true if this attribute exists.
-	 * @return true if and only if the flagAnt attribute exists. 
-	 */
-	bool isFlagAntExists() const;
-	
-
-	
- 	/**
- 	 * Get flagAnt, which is optional.
- 	 * @return flagAnt as vector<bool >
- 	 * @throws IllegalAccessException If flagAnt does not exist.
- 	 */
- 	vector<bool > getFlagAnt() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set flagAnt with the specified vector<bool >.
- 	 * @param flagAnt The vector<bool > value to which flagAnt is to be set.
- 	 
- 		
- 	 */
- 	void setFlagAnt (vector<bool > flagAnt);
-		
-	
-	
-	
-	/**
-	 * Mark flagAnt, which is an optional field, as non-existent.
-	 */
-	void clearFlagAnt ();
-	
-
-
-	
 	// ===> Attribute configDescriptionId
 	
 	
@@ -421,6 +366,36 @@ public:
  
  	
  	
+	
+	
+
+
+	
+	// ===> Attribute numAtmPhaseCorrection
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numAtmPhaseCorrection.
+ 	 * @return numAtmPhaseCorrection as int
+ 	 */
+ 	int getNumAtmPhaseCorrection() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numAtmPhaseCorrection with the specified int.
+ 	 * @param numAtmPhaseCorrection The int value to which numAtmPhaseCorrection is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumAtmPhaseCorrection (int numAtmPhaseCorrection);
+  		
+	
 	
 	
 
@@ -456,6 +431,148 @@ public:
 
 
 	
+	// ===> Attribute processorType
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get processorType.
+ 	 * @return processorType as ProcessorTypeMod::ProcessorType
+ 	 */
+ 	ProcessorTypeMod::ProcessorType getProcessorType() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set processorType with the specified ProcessorTypeMod::ProcessorType.
+ 	 * @param processorType The ProcessorTypeMod::ProcessorType value to which processorType is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setProcessorType (ProcessorTypeMod::ProcessorType processorType);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute phasedArrayList, which is optional
+	
+	
+	
+	/**
+	 * The attribute phasedArrayList is optional. Return true if this attribute exists.
+	 * @return true if and only if the phasedArrayList attribute exists. 
+	 */
+	bool isPhasedArrayListExists() const;
+	
+
+	
+ 	/**
+ 	 * Get phasedArrayList, which is optional.
+ 	 * @return phasedArrayList as vector<int >
+ 	 * @throws IllegalAccessException If phasedArrayList does not exist.
+ 	 */
+ 	vector<int > getPhasedArrayList() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set phasedArrayList with the specified vector<int >.
+ 	 * @param phasedArrayList The vector<int > value to which phasedArrayList is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setPhasedArrayList (vector<int > phasedArrayList);
+		
+	
+	
+	
+	/**
+	 * Mark phasedArrayList, which is an optional field, as non-existent.
+	 */
+	void clearPhasedArrayList ();
+	
+
+
+	
+	// ===> Attribute spectralType
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get spectralType.
+ 	 * @return spectralType as SpectralResolutionTypeMod::SpectralResolutionType
+ 	 */
+ 	SpectralResolutionTypeMod::SpectralResolutionType getSpectralType() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set spectralType with the specified SpectralResolutionTypeMod::SpectralResolutionType.
+ 	 * @param spectralType The SpectralResolutionTypeMod::SpectralResolutionType value to which spectralType is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setSpectralType (SpectralResolutionTypeMod::SpectralResolutionType spectralType);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numAssocValues, which is optional
+	
+	
+	
+	/**
+	 * The attribute numAssocValues is optional. Return true if this attribute exists.
+	 * @return true if and only if the numAssocValues attribute exists. 
+	 */
+	bool isNumAssocValuesExists() const;
+	
+
+	
+ 	/**
+ 	 * Get numAssocValues, which is optional.
+ 	 * @return numAssocValues as int
+ 	 * @throws IllegalAccessException If numAssocValues does not exist.
+ 	 */
+ 	int getNumAssocValues() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numAssocValues with the specified int.
+ 	 * @param numAssocValues The int value to which numAssocValues is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setNumAssocValues (int numAssocValues);
+		
+	
+	
+	
+	/**
+	 * Mark numAssocValues, which is an optional field, as non-existent.
+	 */
+	void clearNumAssocValues ();
+	
+
+
+	
 	// ===> Attribute assocNature, which is optional
 	
 	
@@ -473,7 +590,7 @@ public:
  	 * @return assocNature as vector<SpectralResolutionTypeMod::SpectralResolutionType >
  	 * @throws IllegalAccessException If assocNature does not exist.
  	 */
- 	vector<SpectralResolutionTypeMod::SpectralResolutionType > getAssocNature() const throw(IllegalAccessException);
+ 	vector<SpectralResolutionTypeMod::SpectralResolutionType > getAssocNature() const;
 	
  
  	
@@ -548,7 +665,7 @@ public:
  	 * @return assocConfigDescriptionId as vector<Tag> 
  	 * @throws IllegalAccessException If assocConfigDescriptionId does not exist.
  	 */
- 	vector<Tag>  getAssocConfigDescriptionId() const throw(IllegalAccessException);
+ 	vector<Tag>  getAssocConfigDescriptionId() const;
 	
  
  	
@@ -696,17 +813,54 @@ public:
 	///////////
 	
 	
+ 		
+ 	/**
+ 	 * Set assocConfigDescriptionId[i] with the specified Tag.
+ 	 * @param i The index in assocConfigDescriptionId where to set the Tag value.
+ 	 * @param assocConfigDescriptionId The Tag value to which assocConfigDescriptionId[i] is to be set. 
+ 	 * @throws OutOfBoundsException
+  	 */
+  	void setAssocConfigDescriptionId (int i, Tag assocConfigDescriptionId)  ;
+ 			
+	
 
 	
-		
-	/**
-	 * processorId pointer to the row in the Processor table having Processor.processorId == processorId
-	 * @return a ProcessorRow*
-	 * 
-	 
-	 */
-	 ProcessorRow* getProcessorUsingProcessorId();
-	 
+		 
+/**
+ * Append a Tag to assocConfigDescriptionId.
+ * @param id the Tag to be appended to assocConfigDescriptionId
+ */
+ void addAssocConfigDescriptionId(Tag id); 
+
+/**
+ * Append a vector of Tag to assocConfigDescriptionId.
+ * @param id an array of Tag to be appended to assocConfigDescriptionId
+ */
+ void addAssocConfigDescriptionId(const vector<Tag> & id); 
+ 
+
+ /**
+  * Returns the Tag stored in assocConfigDescriptionId at position i.
+  * @param i the position in assocConfigDescriptionId where the Tag is retrieved.
+  * @return the Tag stored at position i in assocConfigDescriptionId.
+  */
+ const Tag getAssocConfigDescriptionId(int i);
+ 
+ /**
+  * Returns the ConfigDescriptionRow linked to this row via the tag stored in assocConfigDescriptionId
+  * at position i.
+  * @param i the position in assocConfigDescriptionId.
+  * @return a pointer on a ConfigDescriptionRow whose key (a Tag) is equal to the Tag stored at position
+  * i in the assocConfigDescriptionId. 
+  */
+ ConfigDescriptionRow* getConfigDescription(int i); 
+ 
+ /**
+  * Returns the vector of ConfigDescriptionRow* linked to this row via the Tags stored in assocConfigDescriptionId
+  * @return an array of pointers on ConfigDescriptionRow.
+  */
+ vector<ConfigDescriptionRow *> getConfigDescriptions(); 
+  
 
 	
 
@@ -766,53 +920,49 @@ public:
 	
  		
  	/**
- 	 * Set dataDescriptionId[i] with the specified Tag.
- 	 * @param i The index in dataDescriptionId where to set the Tag value.
- 	 * @param dataDescriptionId The Tag value to which dataDescriptionId[i] is to be set. 
+ 	 * Set feedId[i] with the specified int.
+ 	 * @param i The index in feedId where to set the int value.
+ 	 * @param feedId The int value to which feedId[i] is to be set. 
 	 		
  	 * @throws IndexOutOfBoundsException
   	 */
-  	void setDataDescriptionId (int i, Tag dataDescriptionId); 
+  	void setFeedId (int i, int feedId); 
  			
 	
 
 	
-		 
-/**
- * Append a Tag to dataDescriptionId.
- * @param id the Tag to be appended to dataDescriptionId
- */
- void addDataDescriptionId(Tag id); 
+		
 
-/**
- * Append a vector of Tag to dataDescriptionId.
- * @param id an array of Tag to be appended to dataDescriptionId
- */
- void addDataDescriptionId(const vector<Tag> & id); 
- 
+	// ===> Slices link from a row of ConfigDescription table to a collection of row of Feed table.	
 
- /**
-  * Returns the Tag stored in dataDescriptionId at position i.
-  * @param i the position in dataDescriptionId where the Tag is retrieved.
-  * @return the Tag stored at position i in dataDescriptionId.
-  */
- const Tag getDataDescriptionId(int i);
- 
- /**
-  * Returns the DataDescriptionRow linked to this row via the tag stored in dataDescriptionId
-  * at position i.
-  * @param i the position in dataDescriptionId.
-  * @return a pointer on a DataDescriptionRow whose key (a Tag) is equal to the Tag stored at position
-  * i in the dataDescriptionId. 
-  */
- DataDescriptionRow* getDataDescription(int i); 
- 
- /**
-  * Returns the vector of DataDescriptionRow* linked to this row via the Tags stored in dataDescriptionId
-  * @return an array of pointers on DataDescriptionRow.
-  */
- vector<DataDescriptionRow *> getDataDescriptions(); 
-  
+	/**
+	 * Append a new id to feedId
+	 * @param id the int value to be appended to feedId
+	 */
+	void addFeedId(int id); 
+	
+	/**
+	 * Append an array of ids to feedId
+	 * @param id a vector of int containing the values to append to feedId.
+	 */ 
+	void addFeedId(vector<int> id); 
+
+
+	/**
+	 * Get the collection of rows in the Feed table having feedId == feedId[i]
+	 * @return a vector of FeedRow *. 
+	 */	 
+	const vector <FeedRow *> getFeeds(int i);
+
+
+	/** 
+	 * Get the collection of rows in the Feed table having feedId == feedId[i]
+	 * for any i in [O..feedId.size()-1].
+	 * @return a vector of FeedRow *.
+	 */
+	const vector <FeedRow *> getFeeds();
+	
+
 
 	
 
@@ -872,101 +1022,68 @@ public:
 	
  		
  	/**
- 	 * Set feedId[i] with the specified int.
- 	 * @param i The index in feedId where to set the int value.
- 	 * @param feedId The int value to which feedId[i] is to be set. 
+ 	 * Set dataDescriptionId[i] with the specified Tag.
+ 	 * @param i The index in dataDescriptionId where to set the Tag value.
+ 	 * @param dataDescriptionId The Tag value to which dataDescriptionId[i] is to be set. 
 	 		
  	 * @throws IndexOutOfBoundsException
   	 */
-  	void setFeedId (int i, int feedId); 
- 			
-	
-
-	
-		
-
-	// ===> Slices link from a row of ConfigDescription table to a collection of row of Feed table.	
-
-	/**
-	 * Append a new id to feedId
-	 * @param id the int value to be appended to feedId
-	 */
-	void addFeedId(int id); 
-	
-	/**
-	 * Append an array of ids to feedId
-	 * @param id a vector of int containing the values to append to feedId.
-	 */ 
-	void addFeedId(vector<int> id); 
-
-
-	/**
-	 * Get the collection of rows in the Feed table having feedId == feedId[i]
-	 * @return a vector of FeedRow *. 
-	 */	 
-	const vector <FeedRow *> getFeeds(int i);
-
-
-	/** 
-	 * Get the collection of rows in the Feed table having feedId == feedId[i]
-	 * for any i in [O..feedId.size()-1].
-	 * @return a vector of FeedRow *.
-	 */
-	const vector <FeedRow *> getFeeds();
-	
-
-
-	
-
-	
- 		
- 	/**
- 	 * Set assocConfigDescriptionId[i] with the specified Tag.
- 	 * @param i The index in assocConfigDescriptionId where to set the Tag value.
- 	 * @param assocConfigDescriptionId The Tag value to which assocConfigDescriptionId[i] is to be set. 
- 	 * @throws OutOfBoundsException
-  	 */
-  	void setAssocConfigDescriptionId (int i, Tag assocConfigDescriptionId)  ;
+  	void setDataDescriptionId (int i, Tag dataDescriptionId); 
  			
 	
 
 	
 		 
 /**
- * Append a Tag to assocConfigDescriptionId.
- * @param id the Tag to be appended to assocConfigDescriptionId
+ * Append a Tag to dataDescriptionId.
+ * @param id the Tag to be appended to dataDescriptionId
  */
- void addAssocConfigDescriptionId(Tag id); 
+ void addDataDescriptionId(Tag id); 
 
 /**
- * Append a vector of Tag to assocConfigDescriptionId.
- * @param id an array of Tag to be appended to assocConfigDescriptionId
+ * Append a vector of Tag to dataDescriptionId.
+ * @param id an array of Tag to be appended to dataDescriptionId
  */
- void addAssocConfigDescriptionId(const vector<Tag> & id); 
+ void addDataDescriptionId(const vector<Tag> & id); 
  
 
  /**
-  * Returns the Tag stored in assocConfigDescriptionId at position i.
-  * @param i the position in assocConfigDescriptionId where the Tag is retrieved.
-  * @return the Tag stored at position i in assocConfigDescriptionId.
+  * Returns the Tag stored in dataDescriptionId at position i.
+  * @param i the position in dataDescriptionId where the Tag is retrieved.
+  * @return the Tag stored at position i in dataDescriptionId.
   */
- const Tag getAssocConfigDescriptionId(int i);
+ const Tag getDataDescriptionId(int i);
  
  /**
-  * Returns the ConfigDescriptionRow linked to this row via the tag stored in assocConfigDescriptionId
+  * Returns the DataDescriptionRow linked to this row via the tag stored in dataDescriptionId
   * at position i.
-  * @param i the position in assocConfigDescriptionId.
-  * @return a pointer on a ConfigDescriptionRow whose key (a Tag) is equal to the Tag stored at position
-  * i in the assocConfigDescriptionId. 
+  * @param i the position in dataDescriptionId.
+  * @return a pointer on a DataDescriptionRow whose key (a Tag) is equal to the Tag stored at position
+  * i in the dataDescriptionId. 
   */
- ConfigDescriptionRow* getConfigDescription(int i); 
+ DataDescriptionRow* getDataDescription(int i); 
  
  /**
-  * Returns the vector of ConfigDescriptionRow* linked to this row via the Tags stored in assocConfigDescriptionId
-  * @return an array of pointers on ConfigDescriptionRow.
+  * Returns the vector of DataDescriptionRow* linked to this row via the Tags stored in dataDescriptionId
+  * @return an array of pointers on DataDescriptionRow.
   */
- vector<ConfigDescriptionRow *> getConfigDescriptions(); 
+ vector<DataDescriptionRow *> getDataDescriptions(); 
   
+
+	
+
+	
+
+	
+		
+	/**
+	 * processorId pointer to the row in the Processor table having Processor.processorId == processorId
+	 * @return a ProcessorRow*
+	 * 
+	 
+	 */
+	 ProcessorRow* getProcessorUsingProcessorId();
+	 
 
 	
 
@@ -977,12 +1094,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this ConfigDescriptionRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(vector<Tag>  antennaId, vector<Tag>  dataDescriptionId, vector<int>  feedId, Tag processorId, vector<Tag>  switchCycleId, int numAntenna, int numFeed, vector<int > numSubBand, CorrelationModeMod::CorrelationMode correlationMode, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection);
+	bool compareNoAutoInc(int numAntenna, int numDataDescription, int numFeed, CorrelationModeMod::CorrelationMode correlationMode, int numAtmPhaseCorrection, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection, ProcessorTypeMod::ProcessorType processorType, SpectralResolutionTypeMod::SpectralResolutionType spectralType, vector<Tag>  antennaId, vector<int>  feedId, vector<Tag>  switchCycleId, vector<Tag>  dataDescriptionId, Tag processorId);
 	
 	
 
 	
-	bool compareRequiredValue(vector<Tag>  antennaId, vector<Tag>  dataDescriptionId, vector<int>  feedId, Tag processorId, vector<Tag>  switchCycleId, int numAntenna, int numFeed, vector<int > numSubBand, CorrelationModeMod::CorrelationMode correlationMode, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection); 
+	bool compareRequiredValue(int numAntenna, int numDataDescription, int numFeed, CorrelationModeMod::CorrelationMode correlationMode, int numAtmPhaseCorrection, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection, ProcessorTypeMod::ProcessorType processorType, SpectralResolutionTypeMod::SpectralResolutionType spectralType, vector<Tag>  antennaId, vector<int>  feedId, vector<Tag>  switchCycleId, vector<Tag>  dataDescriptionId, Tag processorId); 
 		 
 	
 	/**
@@ -1054,6 +1171,17 @@ private:
  	
 
 	
+	// ===> Attribute numDataDescription
+	
+	
+
+	int numDataDescription;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute numFeed
 	
 	
@@ -1065,48 +1193,11 @@ private:
  	
 
 	
-	// ===> Attribute numSubBand
-	
-	
-
-	vector<int > numSubBand;
-
-	
-	
- 	
-
-	
-	// ===> Attribute phasedArrayList, which is optional
-	
-	
-	bool phasedArrayListExists;
-	
-
-	vector<int > phasedArrayList;
-
-	
-	
- 	
-
-	
 	// ===> Attribute correlationMode
 	
 	
 
 	CorrelationModeMod::CorrelationMode correlationMode;
-
-	
-	
- 	
-
-	
-	// ===> Attribute flagAnt, which is optional
-	
-	
-	bool flagAntExists;
-	
-
-	vector<bool > flagAnt;
 
 	
 	
@@ -1136,11 +1227,70 @@ private:
 	
 
 	
+	// ===> Attribute numAtmPhaseCorrection
+	
+	
+
+	int numAtmPhaseCorrection;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute atmPhaseCorrection
 	
 	
 
 	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrection;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute processorType
+	
+	
+
+	ProcessorTypeMod::ProcessorType processorType;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute phasedArrayList, which is optional
+	
+	
+	bool phasedArrayListExists;
+	
+
+	vector<int > phasedArrayList;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute spectralType
+	
+	
+
+	SpectralResolutionTypeMod::SpectralResolutionType spectralType;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numAssocValues, which is optional
+	
+	
+	bool numAssocValuesExists;
+	
+
+	int numAssocValues;
 
 	
 	
@@ -1238,37 +1388,37 @@ private:
 	
 		
 
+
+	
+
+	
+		
+
+
+	
+
+	
+		
+	
+
+	
+
+	
+		
+
+
+	
+
+	
+		
+
+
+	
+
+	
+		
+
 	 
-
-	
-
-	
-		
-
-
-	
-
-	
-		
-
-
-	
-
-	
-		
-
-
-	
-
-	
-		
-	
-
-	
-
-	
-		
-
 
 	
 

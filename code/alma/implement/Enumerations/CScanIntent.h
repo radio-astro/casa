@@ -42,39 +42,62 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the ScanIntent enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace ScanIntentMod
 {
+  //! ScanIntent.
+  //!  [ASDM.Scan] Scan intents
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum ScanIntent
   { 
-    AMPLI_CAL ,
-    AMPLI_CURVE ,
-    ANTENNA_POSITIONS ,
-    ATMOSPHERE ,
-    BANDPASS ,
-    DELAY ,
-    FOCUS ,
-    HOLOGRAPHY ,
-    PHASE_CAL ,
-    PHASE_CURVE ,
-    POINTING ,
-    POINTING_MODEL ,
-    POLARIZATION ,
-    SKYDIP ,
-    TARGET ,
-    CALIBRATION ,
-    LAST ,
-    OFFLINE_PROCESSING ,
-    FOCUS_X ,
-    FOCUS_Y ,
-    SIDEBAND_RATIO ,
-    OPTICAL_POINTING ,
-    WVR_CAL ,
-    ASTRO_HOLOGRAPHY ,
-    BEAM_MAP ,
-    UNSPECIFIED 
+    CALIBRATE_AMPLI /*!< Amplitude calibration scan */
+     ,
+    CALIBRATE_ATMOSPHERE /*!< Atmosphere calibration scan */
+     ,
+    CALIBRATE_BANDPASS /*!< Bandpass calibration scan */
+     ,
+    CALIBRATE_DELAY /*!< Delay calibration scan */
+     ,
+    CALIBRATE_FLUX /*!< flux measurement scan. */
+     ,
+    CALIBRATE_FOCUS /*!< Focus calibration scan. Z coordinate to be derived */
+     ,
+    CALIBRATE_FOCUS_X /*!< Focus calibration scan; X focus coordinate to be derived */
+     ,
+    CALIBRATE_FOCUS_Y /*!< Focus calibration scan; Y focus coordinate to be derived */
+     ,
+    CALIBRATE_PHASE /*!< Phase calibration scan */
+     ,
+    CALIBRATE_POINTING /*!< Pointing calibration scan */
+     ,
+    CALIBRATE_POLARIZATION /*!< Polarization calibration scan */
+     ,
+    CALIBRATE_SIDEBAND_RATIO /*!< measure relative gains of sidebands. */
+     ,
+    CALIBRATE_WVR /*!< Data from the water vapor radiometers (and correlation data) are used to derive their calibration parameters. */
+     ,
+    DO_SKYDIP /*!< Skydip calibration scan */
+     ,
+    MAP_ANTENNA_SURFACE /*!< Holography calibration scan */
+     ,
+    MAP_PRIMARY_BEAM /*!< Data on a celestial calibration source are used to derive a map of the primary beam. */
+     ,
+    OBSERVE_TARGET /*!< Target source scan */
+     ,
+    TEST /*!< used for development. */
+     ,
+    UNSPECIFIED /*!< Unspecified scan intent */
+     
   };
   typedef ScanIntent &ScanIntent_out;
 } 
@@ -82,160 +105,125 @@ namespace ScanIntentMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration ScanIntent.
+  * 
+  */
 class CScanIntent {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the ScanIntent enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sAMPLI_CAL;
+	static const std::string& sCALIBRATE_AMPLI; /*!< A const string equal to "CALIBRATE_AMPLI".*/
 	
-	static const std::string& sAMPLI_CURVE;
+	static const std::string& sCALIBRATE_ATMOSPHERE; /*!< A const string equal to "CALIBRATE_ATMOSPHERE".*/
 	
-	static const std::string& sANTENNA_POSITIONS;
+	static const std::string& sCALIBRATE_BANDPASS; /*!< A const string equal to "CALIBRATE_BANDPASS".*/
 	
-	static const std::string& sATMOSPHERE;
+	static const std::string& sCALIBRATE_DELAY; /*!< A const string equal to "CALIBRATE_DELAY".*/
 	
-	static const std::string& sBANDPASS;
+	static const std::string& sCALIBRATE_FLUX; /*!< A const string equal to "CALIBRATE_FLUX".*/
 	
-	static const std::string& sDELAY;
+	static const std::string& sCALIBRATE_FOCUS; /*!< A const string equal to "CALIBRATE_FOCUS".*/
 	
-	static const std::string& sFOCUS;
+	static const std::string& sCALIBRATE_FOCUS_X; /*!< A const string equal to "CALIBRATE_FOCUS_X".*/
 	
-	static const std::string& sHOLOGRAPHY;
+	static const std::string& sCALIBRATE_FOCUS_Y; /*!< A const string equal to "CALIBRATE_FOCUS_Y".*/
 	
-	static const std::string& sPHASE_CAL;
+	static const std::string& sCALIBRATE_PHASE; /*!< A const string equal to "CALIBRATE_PHASE".*/
 	
-	static const std::string& sPHASE_CURVE;
+	static const std::string& sCALIBRATE_POINTING; /*!< A const string equal to "CALIBRATE_POINTING".*/
 	
-	static const std::string& sPOINTING;
+	static const std::string& sCALIBRATE_POLARIZATION; /*!< A const string equal to "CALIBRATE_POLARIZATION".*/
 	
-	static const std::string& sPOINTING_MODEL;
+	static const std::string& sCALIBRATE_SIDEBAND_RATIO; /*!< A const string equal to "CALIBRATE_SIDEBAND_RATIO".*/
 	
-	static const std::string& sPOLARIZATION;
+	static const std::string& sCALIBRATE_WVR; /*!< A const string equal to "CALIBRATE_WVR".*/
 	
-	static const std::string& sSKYDIP;
+	static const std::string& sDO_SKYDIP; /*!< A const string equal to "DO_SKYDIP".*/
 	
-	static const std::string& sTARGET;
+	static const std::string& sMAP_ANTENNA_SURFACE; /*!< A const string equal to "MAP_ANTENNA_SURFACE".*/
 	
-	static const std::string& sCALIBRATION;
+	static const std::string& sMAP_PRIMARY_BEAM; /*!< A const string equal to "MAP_PRIMARY_BEAM".*/
 	
-	static const std::string& sLAST;
+	static const std::string& sOBSERVE_TARGET; /*!< A const string equal to "OBSERVE_TARGET".*/
 	
-	static const std::string& sOFFLINE_PROCESSING;
+	static const std::string& sTEST; /*!< A const string equal to "TEST".*/
 	
-	static const std::string& sFOCUS_X;
-	
-	static const std::string& sFOCUS_Y;
-	
-	static const std::string& sSIDEBAND_RATIO;
-	
-	static const std::string& sOPTICAL_POINTING;
-	
-	static const std::string& sWVR_CAL;
-	
-	static const std::string& sASTRO_HOLOGRAPHY;
-	
-	static const std::string& sBEAM_MAP;
-	
-	static const std::string& sUNSPECIFIED;
-	
-    static const std::vector<std::string> sScanIntentSet();	 
-
+	static const std::string& sUNSPECIFIED; /*!< A const string equal to "UNSPECIFIED".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in ScanIntentMod::ScanIntent.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of ScanIntentMod::ScanIntent.
+      * @return a string.
+      */
+	static std::string name(const ScanIntentMod::ScanIntent& e);
 	
-	// Explanations associated with the ScanIntent Enumeration.
-		
-	static const std::string& hAMPLI_CAL;
-		
-	static const std::string& hAMPLI_CURVE;
-		
-	static const std::string& hANTENNA_POSITIONS;
-		
-	static const std::string& hATMOSPHERE;
-		
-	static const std::string& hBANDPASS;
-		
-	static const std::string& hDELAY;
-		
-	static const std::string& hFOCUS;
-		
-	static const std::string& hHOLOGRAPHY;
-		
-	static const std::string& hPHASE_CAL;
-		
-	static const std::string& hPHASE_CURVE;
-		
-	static const std::string& hPOINTING;
-		
-	static const std::string& hPOINTING_MODEL;
-		
-	static const std::string& hPOLARIZATION;
-		
-	static const std::string& hSKYDIP;
-		
-	static const std::string& hTARGET;
-		
-	static const std::string& hCALIBRATION;
-		
-	static const std::string& hLAST;
-		
-	static const std::string& hOFFLINE_PROCESSING;
-		
-	static const std::string& hFOCUS_X;
-		
-	static const std::string& hFOCUS_Y;
-		
-	static const std::string& hSIDEBAND_RATIO;
-		
-	static const std::string& hOPTICAL_POINTING;
-		
-	static const std::string& hWVR_CAL;
-		
-	static const std::string& hASTRO_HOLOGRAPHY;
-		
-	static const std::string& hBEAM_MAP;
-		
-	static const std::string& hUNSPECIFIED;
-		
-	static const std::vector<std::string> hScanIntentSet();
-   	
-
-   	// Is an integer number associated with the ScanIntent enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the ScanIntent enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  ScanIntent enumeration.
-	static std::string name(const ScanIntentMod::ScanIntent& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const ScanIntentMod::ScanIntent& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified ScanIntent enumeration.
-	static std::string help(const ScanIntentMod::ScanIntent& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a ScanIntent enumeration object by specifying its name.
    	static ScanIntentMod::ScanIntent newScanIntent(const std::string& name);
    	
-   	// Create a ScanIntent enumeration object by specifying its name.
+   	/*! Return a ScanIntent's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a ScanIntentMod::ScanIntent's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static ScanIntentMod::ScanIntent literal(const std::string& name);
  	
-    // Create a ScanIntent enumeration object by specifying its position index (0 based).
+    /*! Return a ScanIntent's enumerator given an unsigned int.
+      * @param i the index of the enumerator in ScanIntentMod::ScanIntent.
+      * @return a ScanIntentMod::ScanIntent's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static ScanIntentMod::ScanIntent from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CScanIntent();
     CScanIntent(const CScanIntent&);
     CScanIntent& operator=(const CScanIntent&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CScanIntent_H*/

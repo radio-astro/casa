@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CFluxCalibrationMethod::version() {
+	return FluxCalibrationMethodMod::version;
+	}
+	
+string CFluxCalibrationMethod::revision () {
+	return FluxCalibrationMethodMod::revision;
+}
+
+unsigned int CFluxCalibrationMethod::size() {
+	return 3;
+	}
+	
 	
 const std::string& CFluxCalibrationMethod::sABSOLUTE = "ABSOLUTE";
 	
@@ -44,7 +57,7 @@ const std::string& CFluxCalibrationMethod::sRELATIVE = "RELATIVE";
 	
 const std::string& CFluxCalibrationMethod::sEFFICIENCY = "EFFICIENCY";
 	
-const std::vector<std::string> CFluxCalibrationMethod::sFluxCalibrationMethodSet() {
+const std::vector<std::string> CFluxCalibrationMethod::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CFluxCalibrationMethod::sABSOLUTE);
@@ -55,29 +68,6 @@ const std::vector<std::string> CFluxCalibrationMethod::sFluxCalibrationMethodSet
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CFluxCalibrationMethod::hABSOLUTE = "Absolute flux calibration (based on standard antenna)";
-	
-const std::string& CFluxCalibrationMethod::hRELATIVE = "Relative flux calibration (based on a primary calibrator)";
-	
-const std::string& CFluxCalibrationMethod::hEFFICIENCY = "Flux calibrator based on tabulated antenna efficiciency";
-	
-const std::vector<std::string> CFluxCalibrationMethod::hFluxCalibrationMethodSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CFluxCalibrationMethod::hABSOLUTE);
-    
-    enumSet.insert(enumSet.end(), CFluxCalibrationMethod::hRELATIVE);
-    
-    enumSet.insert(enumSet.end(), CFluxCalibrationMethod::hEFFICIENCY);
-        
-    return enumSet;
-}
-   	
 
 std::string CFluxCalibrationMethod::name(const FluxCalibrationMethodMod::FluxCalibrationMethod& f) {
     switch (f) {
@@ -92,28 +82,9 @@ std::string CFluxCalibrationMethod::name(const FluxCalibrationMethodMod::FluxCal
       return CFluxCalibrationMethod::sEFFICIENCY;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CFluxCalibrationMethod::help(const FluxCalibrationMethodMod::FluxCalibrationMethod& f) {
-    switch (f) {
-    
-    case FluxCalibrationMethodMod::ABSOLUTE:
-      return CFluxCalibrationMethod::hABSOLUTE;
-    
-    case FluxCalibrationMethodMod::RELATIVE:
-      return CFluxCalibrationMethod::hRELATIVE;
-    
-    case FluxCalibrationMethodMod::EFFICIENCY:
-      return CFluxCalibrationMethod::hEFFICIENCY;
-    	
-    }
-    return std::string("");
-}
-   	
 
 FluxCalibrationMethodMod::FluxCalibrationMethod CFluxCalibrationMethod::newFluxCalibrationMethod(const std::string& name) {
 		
@@ -150,12 +121,10 @@ FluxCalibrationMethodMod::FluxCalibrationMethod CFluxCalibrationMethod::literal(
 }
 
 FluxCalibrationMethodMod::FluxCalibrationMethod CFluxCalibrationMethod::from_int(unsigned int i) {
-	vector<string> names = sFluxCalibrationMethodSet();
-	if (i >= names.size()) throw badInt(i);
-	return newFluxCalibrationMethod(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newFluxCalibrationMethod(names_.at(i));
 }
-
-	
 
 string CFluxCalibrationMethod::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'FluxCalibrationMethod'.";

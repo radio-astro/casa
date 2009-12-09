@@ -79,7 +79,7 @@ def deconvolve(imagename,model,psf,alg,niter,gain,threshold,mask,scales,sigma,ta
                else:
                    imagename=tmpImagename
             tmppsf=model+'.psf'
-            dc.open(imagename,psf='')
+            dc.open(imagename,psf='', warn=False)
             print 
             dc.makegaussian(tmppsf,bmaj=psf[0],bmin=psf[1],
                             bpa=psf[2], normalize=False)

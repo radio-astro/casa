@@ -5,24 +5,26 @@ def startup():
       print """___________________________________________________________
 Available tasks:
 
-   accum         flagdata       listcal      sdlist
-   applycal      flagmanager    listhistory  sdplot    
-   bandpass      fluxscale      listobs      sdsave    
-   blcal         ft             listvis      sdscale   
-   browsetable   gaincal        makemask     sdsmooth  
-   clean         hanningsmooth  mosaic       sdstat    
-   clearcal      imcontsub                   setjy     
-   clearplot     imhead         plotants     smoothcal 
-   clearstat     immoments      plotcal      specfit   
-   concat        importfits     plotxy       split     
-   deconvolve    importuvfits   sdaverage    tget      
-   exportfits    importvla      sdbaseline   uvcontsub 
-   exportuvfits  imregrid       sdcal        uvcontsub2
-   feather       imsmooth       sdcoadd      uvmodelfit
-   filecatalog   imstat         sdfit        viewer    
-   find          imval          sdflag       vishead  
-   fixvis        invert                      widefield        
+   accum         fixvis         listcal      sdimprocess  uvmodelfit
+   applycal      flagdata       listhistory  sdlist       viewer
+   bandpass      flagmanager    listobs      sdmath       vishead 
+   blcal         fluxscale      listvis      sdplot       visstat  
+   browsetable   ft             makemask     sdsave       widefield 
+   calstat       gaincal        mosaic       sdscale 
+   clean         hanningsmooth  plotants     sdsim
+   clearcal      imcontsub      plotcal      sdsmooth  
+   clearplot     imhead         plotms       sdstat
+   clearstat     immoments      plotxy       sdtpimaging
+   concat        importfits     sdaverage    setjy
+   deconvolve    importuvfits   sdbaseline   smoothcal
+   exportfits    importvla      sdcal        specfit 
+   exportuvfits  imregrid       sdcoadd      split
+   feather       imsmooth       sdfit        tget
+   filecatalog   imstat         sdflag       uvcontsub
+   find          imval          sdimaging    uvcontsub2 
                 
+sd* tasks are available after asap_init() is run
+
 Additional tasks available for ALMA commissioning use
          (still alpha code as of Beta release):
 
@@ -34,7 +36,7 @@ Available tools:
    ia (image analysis)   im (imager)      me (measures)
    mp (MS plot)          ms (MS)          qa (quanta)
    sm (simulation)       tb (table)       tp (table plot)
-   vp (voltage patterns)                  at (atmosphere)
+   vp (voltage patterns) pm (plotms)      at (atmosphere)
 
    pl (pylab functions)
    sd (ASAP functions - run asap_init() to import into CASA)
@@ -83,6 +85,7 @@ def toolhelp():
       print ' me : Measures utilities'
       print ' ms : MeasurementSet (MS) utilties'
       print ' mp : MS plotting (data (amp/phase) versus other quantities)'
+      print ' pm : PlotMS utilities'
       print ' tb : Table utilities (selection, extraction, etc)'
       print ' tp : Table plotting utilities'
       print ' qa : Quanta utilities'
@@ -90,6 +93,7 @@ def toolhelp():
       print ' vp : Voltage pattern/primary beam utilties'
       print ' ---'
       print ' pl : pylab functions (e.g., pl.title, etc)'
+      print ' sd : (after running asap_init()) Single dish utilities'
       print ' ---'
 
 
@@ -101,10 +105,11 @@ def tasklist():
       print 'importvla        listcal      (fixvis)      clearplot'
       print '(importasdm)     listhistory  flagautocorr  plotants '
       print 'importfits       listobs      flagdata      plotcal'    
-      print 'importuvfits     listvis      flagmanager   plotxy'
-      print 'exportfits       imhead       plotxy        viewer'
-      print 'exportuvfits     imstat'
+      print 'importuvfits     listvis      flagmanager   plotms'
+      print 'exportfits       imhead       plotms        plotxy'
+      print 'exportuvfits     imstat       plotxy        viewer'
       print '                 vishead'
+      print '                 visstat'
       print ''
       print 'Calibration      Imaging      Modelling     Utility'
       print '-----------      -------      ---------     -------'
@@ -112,17 +117,18 @@ def tasklist():
       print 'applycal         deconvolve   uvcontsub     help par.parameter'
       print 'bandpass         feather      (uvcontsub2)  taskhelp'
       print 'blcal            ft           uvmodelfit    tasklist'
-      print 'gaincal          invert                     browsetable'
-      print 'fluxscale        makemask                   clearplot'
-      print '(fringecal)      mosaic                     clearstat'
-      print 'clearcal         widefield                  concat'
-      print 'listcal                                     filecatalog'
-      print 'smoothcal                                   startup'
-      print 'polcal                                      split'
-      print 'hanningsmooth                               fixvis'
+      print 'calstat          makemask                   browsetable'
+      print 'gaincal          mosaic                     clearplot'
+      print 'fluxscale        widefield                  clearstat'
+      print '(fringecal)                                 concat'
+      print 'clearcal                                    filecatalog'
+      print 'listcal                                     startup'
+      print 'smoothcal                                   split'
+      print 'polcal                                      fixvis'
+      print 'hanningsmooth'
       print '                                                 '
       print ''
-      print 'Image Analysis   Simulation   Single Dish'
+      print 'Image Analysis   Simulation   Single Dish (after running asap_init())'
       print '--------------   ----------   -----------'
       print 'imcontsub        simdata      sdaverage'
       print 'imhead                        sdbaseline'
@@ -130,12 +136,17 @@ def tasklist():
       print 'immoments                     sdcoadd'
       print 'imregrid                      sdfit'
       print 'imsmooth                      sdflag'
-      print 'imstat                        sdlist'
-      print 'imval                         sdplot'
-      print '(specfit)                     sdsave'
+      print 'imstat                        sdimaging'
+      print 'imval                         sdimprocess'
+      print '(specfit)                     sdlist'
+      print '                              sdmath'
+      print '                              sdplot'
+      print '                              sdsave'
       print '                              sdscale'
+      print '                              (sdsim)'
       print '                              sdsmooth'
       print '                              sdstat'
+      print '                              sdtpimaging'
       if globals().has_key('mytasks') :
          print ''
          print 'User defined tasks'

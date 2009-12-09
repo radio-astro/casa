@@ -3733,7 +3733,7 @@ Bool SDTableIterator::parseSpecialFields(const Record &selection,
 	Vector<String> dates;
 	getSpecialVectors(axes, uts, dates,
 			  axes.nsdrecords(), tab_->nrow(), hasUT, hasDate);
-	uInt nels = max(uts.nelements(), dates.nelements());
+	uInt nels = std::max(uts.nelements(), dates.nelements());
 	if (nels > 0) {
 	    Vector<Bool> okRows(nels, True);
 	    Bool *okPtr, *okPtr0;

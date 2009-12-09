@@ -81,6 +81,8 @@ using namespace enumerations;
 	
 
 	
+
+	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
 	
@@ -93,17 +95,8 @@ using namespace ReceiverSidebandMod;
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
-
+#include "CNetSideband.h"
+using namespace NetSidebandMod;
 	
 
 
@@ -146,113 +139,94 @@ class ASDM;
 class ReceiverRow;
 /**
  * The ReceiverTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Receiver properties.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Receiver </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> receiverId </I></TD> 
+ 		
+ * <TD><I> receiverId </I></TD>
+ 		 
  * <TD> int</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;Receiver identifier </TD>
  * </TR>
- 		
 	
- 		
  * <TR>
- * <TD> spectralWindowId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> spectralWindowId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in SpectralwindowTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> timeInterval </TD> 
- * <TD> ArrayTimeInterval </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> timeInterval </TD>
+ 		 
+ * <TD> ArrayTimeInterval</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;time interval for which the content is valid. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> numLo </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> name </TD> 
  * <TD> string </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the name of the frontend. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numLO </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of frequencies of the local oscillator. </TD>
  * </TR>
 	
  * <TR>
  * <TD> frequencyBand </TD> 
  * <TD> ReceiverBandMod::ReceiverBand </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the band of frequencies. </TD>
  * </TR>
 	
  * <TR>
- * <TD> freqLo </TD> 
+ * <TD> freqLO </TD> 
  * <TD> vector<Frequency > </TD>
- * <TD>  numLo </TD> 
+ * <TD>  numLO </TD> 
+ * <TD> &nbsp;the frequencies of the local oscillator. </TD>
  * </TR>
 	
  * <TR>
  * <TD> receiverSideband </TD> 
  * <TD> ReceiverSidebandMod::ReceiverSideband </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the receiver sideband used. </TD>
  * </TR>
 	
  * <TR>
- * <TD> sidebandLo </TD> 
- * <TD> vector<int > </TD>
- * <TD>  numLo </TD> 
- * </TR>
-	
- * <TR>
- * <TD> tDewar </TD> 
- * <TD> Temperature </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> stabilityDuration </TD> 
- * <TD> Interval </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> stability </TD> 
- * <TD> double </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> sidebandLO </TD> 
+ * <TD> vector<NetSidebandMod::NetSideband > </TD>
+ * <TD>  numLO </TD> 
+ * <TD> &nbsp;the sideband conversions. </TD>
  * </TR>
 	
 
-
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
-	
- * <TR>
- * <TD> dewarName </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> stabilityflag </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
 
  * </TABLE>
  */
@@ -329,32 +303,26 @@ public:
 	
  	 * @param timeInterval. 
 	
- 	 * @param numLo. 
-	
  	 * @param name. 
+	
+ 	 * @param numLO. 
 	
  	 * @param frequencyBand. 
 	
- 	 * @param freqLo. 
+ 	 * @param freqLO. 
 	
  	 * @param receiverSideband. 
 	
- 	 * @param sidebandLo. 
-	
- 	 * @param tDewar. 
-	
- 	 * @param stabilityDuration. 
-	
- 	 * @param stability. 
+ 	 * @param sidebandLO. 
 	
      */
-	ReceiverRow *newRow(Tag spectralWindowId, ArrayTimeInterval timeInterval, int numLo, string name, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLo, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<int > sidebandLo, Temperature tDewar, Interval stabilityDuration, double stability);
+	ReceiverRow *newRow(Tag spectralWindowId, ArrayTimeInterval timeInterval, string name, int numLO, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLO, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<NetSidebandMod::NetSideband > sidebandLO);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	ReceiverRow *newRowFull(Tag spectralWindowId, ArrayTimeInterval timeInterval, int numLo, string name, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLo, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<int > sidebandLo, Temperature tDewar, Interval stabilityDuration, double stability);
+	ReceiverRow *newRowFull(Tag spectralWindowId, ArrayTimeInterval timeInterval, string name, int numLO, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLO, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<NetSidebandMod::NetSideband > sidebandLO);
 
 
 	/**
@@ -451,26 +419,20 @@ public:
  	 		
  	 * @param timeInterval.
  	 		
- 	 * @param numLo.
- 	 		
  	 * @param name.
+ 	 		
+ 	 * @param numLO.
  	 		
  	 * @param frequencyBand.
  	 		
- 	 * @param freqLo.
+ 	 * @param freqLO.
  	 		
  	 * @param receiverSideband.
  	 		
- 	 * @param sidebandLo.
- 	 		
- 	 * @param tDewar.
- 	 		
- 	 * @param stabilityDuration.
- 	 		
- 	 * @param stability.
+ 	 * @param sidebandLO.
  	 		 
  	 */
-	ReceiverRow* lookup(Tag spectralWindowId, ArrayTimeInterval timeInterval, int numLo, string name, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLo, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<int > sidebandLo, Temperature tDewar, Interval stabilityDuration, double stability); 
+	ReceiverRow* lookup(Tag spectralWindowId, ArrayTimeInterval timeInterval, string name, int numLO, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLO, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<NetSidebandMod::NetSideband > sidebandLO); 
 
 
 #ifndef WITHOUT_ACS
@@ -490,43 +452,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(ReceiverTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(ReceiverTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for Receiver (ReceiverTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a Receiver (ReceiverTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -601,8 +569,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	ReceiverRow* checkAndAdd(ReceiverRow* x) throw (DuplicateKey, UniquenessViolationException);
+	ReceiverRow* checkAndAdd(ReceiverRow* x) ;
 
 
 	
@@ -651,7 +623,7 @@ private:
 	
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

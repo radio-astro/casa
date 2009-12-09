@@ -82,6 +82,8 @@ using namespace enumerations;
 	
 
 	
+
+	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
 	
@@ -94,17 +96,8 @@ using namespace ReceiverSidebandMod;
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
-
+#include "CNetSideband.h"
+using namespace NetSidebandMod;
 	
 
 
@@ -130,7 +123,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Receiver.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -145,7 +138,7 @@ class SpectralWindowRow;
 /**
  * The ReceiverRow class is a row of a ReceiverTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class ReceiverRow {
@@ -172,8 +165,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct ReceiverRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (ReceiverRowIDL x) throw(ConversionException);
+	void setFromIDL (ReceiverRowIDL x) ;
 #endif
 	
 	/**
@@ -186,13 +180,47 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the ReceiverTable to which the row built by deserialization will be parented.
+	  */
+	 static ReceiverRow* fromBin(EndianISStream& eiss, ReceiverTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
+	
+	// ===> Attribute receiverId
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get receiverId.
+ 	 * @return receiverId as int
+ 	 */
+ 	int getReceiverId() const;
+	
+ 
+ 	
+ 	
+	
+	
+
+
 	
 	// ===> Attribute timeInterval
 	
@@ -219,36 +247,6 @@ public:
  	 		
  	 */
  	void setTimeInterval (ArrayTimeInterval timeInterval);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute numLo
-	
-	
-	
-
-	
- 	/**
- 	 * Get numLo.
- 	 * @return numLo as int
- 	 */
- 	int getNumLo() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numLo with the specified int.
- 	 * @param numLo The int value to which numLo is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumLo (int numLo);
   		
 	
 	
@@ -286,6 +284,36 @@ public:
 
 
 	
+	// ===> Attribute numLO
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numLO.
+ 	 * @return numLO as int
+ 	 */
+ 	int getNumLO() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numLO with the specified int.
+ 	 * @param numLO The int value to which numLO is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumLO (int numLO);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute frequencyBand
 	
 	
@@ -316,29 +344,29 @@ public:
 
 
 	
-	// ===> Attribute freqLo
+	// ===> Attribute freqLO
 	
 	
 	
 
 	
  	/**
- 	 * Get freqLo.
- 	 * @return freqLo as vector<Frequency >
+ 	 * Get freqLO.
+ 	 * @return freqLO as vector<Frequency >
  	 */
- 	vector<Frequency > getFreqLo() const;
+ 	vector<Frequency > getFreqLO() const;
 	
  
  	
  	
  	/**
- 	 * Set freqLo with the specified vector<Frequency >.
- 	 * @param freqLo The vector<Frequency > value to which freqLo is to be set.
+ 	 * Set freqLO with the specified vector<Frequency >.
+ 	 * @param freqLO The vector<Frequency > value to which freqLO is to be set.
  	 
  		
  			
  	 */
- 	void setFreqLo (vector<Frequency > freqLo);
+ 	void setFreqLO (vector<Frequency > freqLO);
   		
 	
 	
@@ -376,223 +404,31 @@ public:
 
 
 	
-	// ===> Attribute sidebandLo
+	// ===> Attribute sidebandLO
 	
 	
 	
 
 	
  	/**
- 	 * Get sidebandLo.
- 	 * @return sidebandLo as vector<int >
+ 	 * Get sidebandLO.
+ 	 * @return sidebandLO as vector<NetSidebandMod::NetSideband >
  	 */
- 	vector<int > getSidebandLo() const;
+ 	vector<NetSidebandMod::NetSideband > getSidebandLO() const;
 	
  
  	
  	
  	/**
- 	 * Set sidebandLo with the specified vector<int >.
- 	 * @param sidebandLo The vector<int > value to which sidebandLo is to be set.
+ 	 * Set sidebandLO with the specified vector<NetSidebandMod::NetSideband >.
+ 	 * @param sidebandLO The vector<NetSidebandMod::NetSideband > value to which sidebandLO is to be set.
  	 
  		
  			
  	 */
- 	void setSidebandLo (vector<int > sidebandLo);
+ 	void setSidebandLO (vector<NetSidebandMod::NetSideband > sidebandLO);
   		
 	
-	
-	
-
-
-	
-	// ===> Attribute dewarName, which is optional
-	
-	
-	
-	/**
-	 * The attribute dewarName is optional. Return true if this attribute exists.
-	 * @return true if and only if the dewarName attribute exists. 
-	 */
-	bool isDewarNameExists() const;
-	
-
-	
- 	/**
- 	 * Get dewarName, which is optional.
- 	 * @return dewarName as string
- 	 * @throws IllegalAccessException If dewarName does not exist.
- 	 */
- 	string getDewarName() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set dewarName with the specified string.
- 	 * @param dewarName The string value to which dewarName is to be set.
- 	 
- 		
- 	 */
- 	void setDewarName (string dewarName);
-		
-	
-	
-	
-	/**
-	 * Mark dewarName, which is an optional field, as non-existent.
-	 */
-	void clearDewarName ();
-	
-
-
-	
-	// ===> Attribute tDewar
-	
-	
-	
-
-	
- 	/**
- 	 * Get tDewar.
- 	 * @return tDewar as Temperature
- 	 */
- 	Temperature getTDewar() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set tDewar with the specified Temperature.
- 	 * @param tDewar The Temperature value to which tDewar is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setTDewar (Temperature tDewar);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute stabilityDuration
-	
-	
-	
-
-	
- 	/**
- 	 * Get stabilityDuration.
- 	 * @return stabilityDuration as Interval
- 	 */
- 	Interval getStabilityDuration() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set stabilityDuration with the specified Interval.
- 	 * @param stabilityDuration The Interval value to which stabilityDuration is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setStabilityDuration (Interval stabilityDuration);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute stability
-	
-	
-	
-
-	
- 	/**
- 	 * Get stability.
- 	 * @return stability as double
- 	 */
- 	double getStability() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set stability with the specified double.
- 	 * @param stability The double value to which stability is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setStability (double stability);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute stabilityflag, which is optional
-	
-	
-	
-	/**
-	 * The attribute stabilityflag is optional. Return true if this attribute exists.
-	 * @return true if and only if the stabilityflag attribute exists. 
-	 */
-	bool isStabilityflagExists() const;
-	
-
-	
- 	/**
- 	 * Get stabilityflag, which is optional.
- 	 * @return stabilityflag as bool
- 	 * @throws IllegalAccessException If stabilityflag does not exist.
- 	 */
- 	bool getStabilityflag() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set stabilityflag with the specified bool.
- 	 * @param stabilityflag The bool value to which stabilityflag is to be set.
- 	 
- 		
- 	 */
- 	void setStabilityflag (bool stabilityflag);
-		
-	
-	
-	
-	/**
-	 * Mark stabilityflag, which is an optional field, as non-existent.
-	 */
-	void clearStabilityflag ();
-	
-
-
-	
-	// ===> Attribute receiverId
-	
-	
-	
-
-	
- 	/**
- 	 * Get receiverId.
- 	 * @return receiverId as int
- 	 */
- 	int getReceiverId() const;
-	
- 
- 	
- 	
 	
 	
 
@@ -659,12 +495,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this ReceiverRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag spectralWindowId, ArrayTimeInterval timeInterval, int numLo, string name, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLo, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<int > sidebandLo, Temperature tDewar, Interval stabilityDuration, double stability);
+	bool compareNoAutoInc(Tag spectralWindowId, ArrayTimeInterval timeInterval, string name, int numLO, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLO, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<NetSidebandMod::NetSideband > sidebandLO);
 	
 	
 
 	
-	bool compareRequiredValue(int numLo, string name, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLo, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<int > sidebandLo, Temperature tDewar, Interval stabilityDuration, double stability); 
+	bool compareRequiredValue(string name, int numLO, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLO, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<NetSidebandMod::NetSideband > sidebandLO); 
 		 
 	
 	/**
@@ -725,142 +561,6 @@ private:
 	////////////////////////////////
 	
 	
-	// ===> Attribute timeInterval
-	
-	
-
-	ArrayTimeInterval timeInterval;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numLo
-	
-	
-
-	int numLo;
-
-	
-	
- 	
-
-	
-	// ===> Attribute name
-	
-	
-
-	string name;
-
-	
-	
- 	
-
-	
-	// ===> Attribute frequencyBand
-	
-	
-
-	ReceiverBandMod::ReceiverBand frequencyBand;
-
-	
-	
- 	
-
-	
-	// ===> Attribute freqLo
-	
-	
-
-	vector<Frequency > freqLo;
-
-	
-	
- 	
-
-	
-	// ===> Attribute receiverSideband
-	
-	
-
-	ReceiverSidebandMod::ReceiverSideband receiverSideband;
-
-	
-	
- 	
-
-	
-	// ===> Attribute sidebandLo
-	
-	
-
-	vector<int > sidebandLo;
-
-	
-	
- 	
-
-	
-	// ===> Attribute dewarName, which is optional
-	
-	
-	bool dewarNameExists;
-	
-
-	string dewarName;
-
-	
-	
- 	
-
-	
-	// ===> Attribute tDewar
-	
-	
-
-	Temperature tDewar;
-
-	
-	
- 	
-
-	
-	// ===> Attribute stabilityDuration
-	
-	
-
-	Interval stabilityDuration;
-
-	
-	
- 	
-
-	
-	// ===> Attribute stability
-	
-	
-
-	double stability;
-
-	
-	
- 	
-
-	
-	// ===> Attribute stabilityflag, which is optional
-	
-	
-	bool stabilityflagExists;
-	
-
-	bool stabilityflag;
-
-	
-	
- 	
-
-	
 	// ===> Attribute receiverId
 	
 	
@@ -882,6 +582,83 @@ private:
  	void setReceiverId (int receiverId);
   		
 	
+
+	
+	// ===> Attribute timeInterval
+	
+	
+
+	ArrayTimeInterval timeInterval;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute name
+	
+	
+
+	string name;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numLO
+	
+	
+
+	int numLO;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute frequencyBand
+	
+	
+
+	ReceiverBandMod::ReceiverBand frequencyBand;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute freqLO
+	
+	
+
+	vector<Frequency > freqLO;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute receiverSideband
+	
+	
+
+	ReceiverSidebandMod::ReceiverSideband receiverSideband;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute sidebandLO
+	
+	
+
+	vector<NetSidebandMod::NetSideband > sidebandLO;
+
+	
+	
+ 	
 
 	////////////////////////////////
 	// Extrinsic Table Attributes //

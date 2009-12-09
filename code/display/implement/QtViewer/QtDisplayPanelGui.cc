@@ -1,6 +1,6 @@
 //# QtDisplayPanelGui.cc: Qt implementation of main viewer display window.
 //# with surrounding Gui functionality
-//# Copyright (C) 2005
+//# Copyright (C) 2005,2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -31,7 +31,8 @@
 #include <display/QtViewer/QtViewerPrintGui.qo.h>
 #include <display/QtViewer/QtCanvasManager.qo.h>
 #include <display/QtViewer/QtRegionManager.qo.h>
-#include <display/QtViewer/QtAnnotatorGui.qo.h>
+#include <display/QtViewer/MakeMask.qo.h>
+#include <display/QtViewer/MakeRegion.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtMouseToolBar.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
@@ -45,10 +46,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
-		   QMainWindow(parent),
-		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qrm_(0),
+		   QtPanelBase(parent),
+		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qmr_(0), qrm_(0),
 		   qsm_(0), profile_(0), savedTool_(QtMouseToolNames::NONE),
-		   profileDD_(0) {
+		   profileDD_(0)  {
     
   setWindowTitle("Viewer Display Panel");
   
@@ -66,7 +67,6 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
 
   
   qrm_ = new QtRegionManager(qdp_);
-  
   
   qsm_ = new QtRegionShapeManager(qdp_);
   qsm_->setVisible(false);  
@@ -105,11 +105,15 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
                    dpMenu_->addAction(dpCloseAct_);
   
   tlMenu_        = menuBar()->addMenu("&Tools");
-   annotAct_     = tlMenu_->addAction("A&nnotations...");
-		   annotAct_->setEnabled(False);
-			// (disabled until it's working).
+   annotAct_     = tlMenu_->addAction("&File Box");
+   mkRgnAct_     = tlMenu_->addAction("&Image Region");
+   //annotAct_->setEnabled(False);
+
    profileAct_   = tlMenu_->addAction("Spectral Profi&le");
-   rgnMgrAct_    = tlMenu_->addAction("Region Manager...");
+   rgnMgrAct_    = new QAction("Region Manager...", 0);
+   //rgnMgrAct_    = tlMenu_->addAction("Region Manager...");
+   rgnMgrAct_->setEnabled(False);
+
    shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
   
   vwMenu_        = menuBar()->addMenu("&View");
@@ -131,7 +135,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent) :
 		   mainToolBar_->addAction(dpSaveAct_);
 		   mainToolBar_->addAction(dpRstrAct_);
 		   mainToolBar_->addSeparator();
-		   mainToolBar_->addAction(rgnMgrAct_);
+		   //mainToolBar_->addAction(rgnMgrAct_);
 		   mainToolBar_->addSeparator();
 		   mainToolBar_->addAction(printAct_);
 		   mainToolBar_->addSeparator();
@@ -460,6 +464,7 @@ cerr<<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy()
   connect(dpCloseAct_, SIGNAL(triggered()),  SLOT(close()));
   connect(dpQuitAct_,  SIGNAL(triggered()),  v_, SLOT(quit()));
   connect(annotAct_,   SIGNAL(triggered()),  SLOT(showAnnotatorPanel()));
+  connect(mkRgnAct_,   SIGNAL(triggered()),  SLOT(showMakeRegionPanel()));
   connect(profileAct_, SIGNAL(triggered()),  SLOT(showImageProfile()));
   connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
   connect(shpMgrAct_,  SIGNAL(triggered()), SLOT(showShapeManager()));
@@ -523,9 +528,6 @@ cerr<<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy()
                    SLOT(restoreGuiState_(QDomDocument*)) );
 	// Sets gui state from QDomDocument (window size, esp.)
 
-	    
-  
-  
   // FINAL INITIALIZATIONS
   
   
@@ -540,15 +542,25 @@ cerr<<"trDszPol:"<<trkgDockWidget_->sizePolicy().horizontalPolicy()
 
 
 QtDisplayPanelGui::~QtDisplayPanelGui() {
+  delete qdp_;	// (probably unnecessary because of Qt parenting...)
+		// (possibly wrong, for same reason?...).
+		// (indeed was wrong as the last deletion [at least] because the display panel also reference the qsm_)
   if(qpm_!=0) delete qpm_;
   if(qrm_!=0) delete qrm_;
   if(qsm_!=0) delete qsm_;
-  delete qdp_;	// (probably unnecessary because of Qt parenting...)
-		// (possibly wrong, for same reason?...).
 }
 
+bool QtDisplayPanelGui::supports( SCRIPTING_OPTION ) const {
+    return false;
+}
 
-
+QVariant QtDisplayPanelGui::start_interact( const QVariant &, int ) {
+    return QVariant(QString("*error* unimplemented (by design)"));
+}
+QVariant QtDisplayPanelGui::setoptions( const QMap<QString,QVariant> &, int ) {
+    return QVariant(QString("*error* nothing implemented yet"));
+}
+void QtDisplayPanelGui:: addedData( QString type, QtDisplayData * ) { }
 
 // Animation slots.
 
@@ -703,6 +715,21 @@ void QtDisplayPanelGui::hideCanvasManager() {
 
 void QtDisplayPanelGui::showRegionManager() {
   if(qrm_==0) return;
+  List<QtDisplayData*> rdds = qdp_->registeredDDs();
+  for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+     QtDisplayData* pdd = qdds.getRight();
+     if(pdd != 0 && pdd->dataType() == "image") {
+            
+        ImageInterface<float>* img = pdd->imageInterface();
+        PanelDisplay* ppd = qdp_->panelDisplay();
+        if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
+           connect(pdd, 
+                   SIGNAL(axisChanged(String, String, String)),
+                   qrm_, 
+                   SLOT(changeAxis(String, String, String)));
+        }
+      }
+  }
   qrm_->showNormal();
   qrm_->raise();  }
 
@@ -721,19 +748,68 @@ void QtDisplayPanelGui::hideShapeManager() {
   if(qsm_==0) return;
   qsm_->hide();  }
 
-
     
 void QtDisplayPanelGui::showAnnotatorPanel() {
-  //if(qap_==0) qap_ = new QtAnnotatorGui(qdp_);
-  //qap_->showNormal();
-  //qap_->raise();
+
+  if (qap_ == 0) 
+     qap_ = new MakeMask(qdp_);
+
+  List<QtDisplayData*> rdds = qdp_->registeredDDs();
+  for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+     QtDisplayData* pdd = qdds.getRight();
+     if(pdd != 0 && pdd->dataType() == "image") {
+            
+        ImageInterface<float>* img = pdd->imageInterface();
+        PanelDisplay* ppd = qdp_->panelDisplay();
+        if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
+           connect(pdd, 
+                   SIGNAL(axisChanged4(String, String, String, int)),
+                   qap_, 
+                   SLOT(changeAxis(String, String, String, int)));
+        }
+      }
+  }
+  qap_->showNormal();
+  qap_->raise();  
+
 }
 
 void QtDisplayPanelGui::hideAnnotatorPanel() {
-  if(qap_==0) return;
+  if (qap_==0) 
+     return;
   qap_->hide();  
 }
 
+void QtDisplayPanelGui::showMakeRegionPanel() {
+
+  if (qmr_ == 0) 
+     qmr_ = new MakeRegion(qdp_);
+
+  List<QtDisplayData*> rdds = qdp_->registeredDDs();
+  for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+     QtDisplayData* pdd = qdds.getRight();
+     if(pdd != 0 && pdd->dataType() == "image") {
+            
+        ImageInterface<float>* img = pdd->imageInterface();
+        PanelDisplay* ppd = qdp_->panelDisplay();
+        if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
+           connect(pdd, 
+                   SIGNAL(axisChanged4(String, String, String, int)),
+                   qmr_, 
+                   SLOT(changeAxis(String, String, String, int)));
+        }
+      }
+  }
+  qmr_->showNormal();
+  qmr_->raise();  
+
+}
+
+void QtDisplayPanelGui::hideMakeRegionPanel() {
+  if (qmr_==0) 
+     return;
+  qmr_->hide();  
+}
 
 void QtDisplayPanelGui::showImageProfile() {
 
@@ -741,6 +817,7 @@ void QtDisplayPanelGui::showImageProfile() {
     for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
          QtDisplayData* pdd = qdds.getRight();
          if(pdd != 0 && pdd->dataType() == "image") {
+            
             ImageInterface<float>* img = pdd->imageInterface();
             PanelDisplay* ppd = qdp_->panelDisplay();
             if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
@@ -748,7 +825,6 @@ void QtDisplayPanelGui::showImageProfile() {
 	      // pdd is a suitable QDD for profiling.
               
 	      if (!profile_) {
-	      
 	        // Set up profiler for first time.
 	        
                 profile_ = new QtProfile(img, pdd->name().chars());
@@ -761,10 +837,6 @@ void QtDisplayPanelGui::showImageProfile() {
                         profile_, 
                      SLOT(changeAxis(String, String, String)));
 
-                connect(pdd, 
-                     SIGNAL(axisChanged(String, String, String)),
-                        qrm_, 
-                     SLOT(changeAxis(String, String, String)));
                 QtCrossTool *pos = (QtCrossTool*)
                       (ppd->getTool(QtMouseToolNames::POSITION));
                 if (pos) {

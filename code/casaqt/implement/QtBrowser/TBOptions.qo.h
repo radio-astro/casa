@@ -70,7 +70,13 @@ public:
 
     // Sets the debug threshold via the QComboBox.
     void setDebugLevel(int newLevel);
-
+    
+    // Gets/Sets the file chooser history limit.
+    // <group>
+    int chooserHistoryLimit() const;
+    void setChooserHistoryLimit(int limit);
+    // </group>
+    
 signals:
     // saveOptions is emitted when the user has configured the options and
     // clicked the "Save" button.  A pointer to this TBOptions object is

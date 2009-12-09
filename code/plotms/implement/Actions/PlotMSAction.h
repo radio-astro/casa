@@ -171,6 +171,14 @@ public:
 
 
         // Plot actions //
+        
+        // Display MS summary info for the current plot.
+        // Required parameters: P_PLOT.
+        MS_SUMMARY,
+        
+        // Updates any set parameters, which updates the plots.
+        // No required parameters.
+        PLOT,
 
         // Exports a single PlotMSPlot to a file.  If format isn't given, it is
         // set using the file name.  If DPI, width, or height aren't set or are

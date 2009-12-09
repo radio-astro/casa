@@ -47,6 +47,7 @@
 
 #include <ms/MeasurementSets/MSDerivedValues.h>
 #include <msvis/MSVis/StokesVector.h>
+#include <msvis/MSVis/VisImagingWeight.h>
 #include <ms/MeasurementSets/MSIter.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -142,10 +143,18 @@ public:
 		       const Block<Int>& sortColumns, 
 		       Double timeInterval=0);
 
-  // Same as previous constructor, but with multiple MSs to iterate over.
+  ROVisibilityIterator(const MeasurementSet& ms, 
+		       const Block<Int>& sortColumns, const Bool addDefaultSortCols, 
+		       Double timeInterval=0);
+ 
+ // Same as previous constructor, but with multiple MSs to iterate over.
   ROVisibilityIterator(const Block<MeasurementSet>& mss,
 		       const Block<Int>& sortColumns, 
 		       Double timeInterval=0);
+   ROVisibilityIterator(const Block<MeasurementSet>& mss,
+			const Block<Int>& sortColumns, const Bool addDefaultSortCols, 
+			Double timeInterval=0);
+
 
   // Copy construct. This calls the assigment operator.
   ROVisibilityIterator(const ROVisibilityIterator & other);
@@ -154,7 +163,6 @@ public:
   ROVisibilityIterator & operator=(const ROVisibilityIterator &other);
 
   // Destructor
-
   virtual ~ROVisibilityIterator();
   
   // Members
@@ -195,6 +203,10 @@ public:
   Int msId() const
     { return msIter_p.msId();}
 
+  //reference to actual ms in interator 
+  const MeasurementSet& ms() const {
+    return msIter_p.ms();
+  }
  // Advance to the next Chunk of data
   ROVisibilityIterator& nextChunk();
 
@@ -213,7 +225,7 @@ public:
   // Return channel numbers in selected VisSet spectrum
   // (i.e. disregarding possible selection on the iterator, but
   //  including the selection set when creating the VisSet)
-  Vector<Int>& channel(Vector<Int>& chan) const;
+  virtual Vector<Int>& channel(Vector<Int>& chan) const;
 
   // Return feed configuration matrix for specified antenna
   Vector<SquareMatrix<Complex,2> >& 
@@ -262,7 +274,7 @@ public:
     { return msIter_p.sourceName(); }
 
   // Return flag for each polarization, channel and row
-  Cube<Bool>& flag(Cube<Bool>& flags) const;
+  virtual Cube<Bool>& flag(Cube<Bool>& flags) const;
 
   // Return flag for each channel & row
   Matrix<Bool>& flag(Matrix<Bool>& flags) const;
@@ -274,7 +286,7 @@ public:
   Vector<Int>& scan(Vector<Int>& scans) const;
 
   // Return current frequencies
-  Vector<Double>& frequency(Vector<Double>& freq) const;
+  virtual Vector<Double>& frequency(Vector<Double>& freq) const;
 
   // Return frequencies in selected velocity frame,
   // returns the same as frequency() if there is no vel selection active.
@@ -289,13 +301,13 @@ public:
   { return msIter_p.polFrame(); }
 
   // Return the correlation type (returns Stokes enums)
-  Vector<Int>& corrType(Vector<Int>& corrTypes) const;
+  virtual Vector<Int>& corrType(Vector<Int>& corrTypes) const;
 
   // Return sigma
   Vector<Float>& sigma(Vector<Float>& sig) const;
 
   // Return sigma matrix (pol-dep)
-  Matrix<Float>& sigmaMat(Matrix<Float>& sigmat) const;
+  virtual Matrix<Float>& sigmaMat(Matrix<Float>& sigmat) const;
 
   // Return current SpectralWindow
   Int spectralWindow() const
@@ -316,8 +328,8 @@ public:
   Vector<Double>& timeInterval(Vector<Double>& t) const;
 
   // Return the visibilities as found in the MS, Cube(npol,nchan,nrow).
-  Cube<Complex>& visibility(Cube<Complex>& vis,
-			    DataColumn whichOne) const;
+  virtual Cube<Complex>& visibility(Cube<Complex>& vis,
+				    DataColumn whichOne) const;
 
   // Return the visibility 4-vector of polarizations for each channel.
   // If the MS doesn't contain all polarizations, it is assumed it
@@ -336,13 +348,13 @@ public:
   Vector<Float>& weight(Vector<Float>& wt) const;
 
   // Return weight matrix
-  Matrix<Float>& weightMat(Matrix<Float>& wtmat) const;
+  virtual Matrix<Float>& weightMat(Matrix<Float>& wtmat) const;
 
   // Determine whether WEIGHT_SPECTRUM exists
   Bool existsWeightSpectrum() const;
 
   // Return weightspectrum (a weight for each channel)
-  Cube<Float>& weightSpectrum(Cube<Float>& wtsp) const;
+  virtual Cube<Float>& weightSpectrum(Cube<Float>& wtsp) const;
 
   // Return imaging weight (a weight for each channel)
   Matrix<Float>& imagingWeight(Matrix<Float>& wt) const;
@@ -470,6 +482,19 @@ public:
   // Returns True in convert if given spw was not observed 
   // in the LSRK frame
   void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert);
+  //assign a VisImagingWeight object to this iterator...necessary if no scracth
+  //imaging_weight column exists
+  void useImagingWeight(const VisImagingWeight& imWgt);
+  //return number  of Ant 
+  Int numberAnt();
+  //Return number of rows in all selected ms's
+  Int numberCoh();
+
+  // Return number of spws, polids, ddids
+  Int numberSpw();
+  Int numberPol();
+  Int numberDDId();
+
 
 protected:
   // advance the iteration
@@ -481,23 +506,28 @@ protected:
   // get the TOPO frequencies from the selected velocities and the obs. vel.
   void getTopoFreqs();
   // update the DATA slicer
-  void updateSlicer();
+  virtual void updateSlicer();
   // attach the column objects to the currently selected table
   virtual void attachColumns();
   // get the (velocity selected) interpolated visibilities, flags and weights
   void getInterpolatedVisFlagWeight(DataColumn whichOne) const;
   // get the visibility data (observed, corrected or model);
   // deals with Float and Complex observed data (DATA or FLOAT_DATA)
-  void getDataColumn(DataColumn whichOne, const Slicer& slicer, 
-		     Cube<Complex>& data) const;
-  void getDataColumn(DataColumn whichOne, Cube<Complex>& data) const;
+  virtual void getDataColumn(DataColumn whichOne, const Slicer& slicer, 
+			     Cube<Complex>& data) const;
+  virtual void getDataColumn(DataColumn whichOne, Cube<Complex>& data) const;
+
+  //constructor helpers
+  virtual void initsinglems();
+  virtual void initmultims(const Block<MeasurementSet>& mss);
 
   //Re-Do the channel selection in multi ms case 
   void doChannelSelection();
   //Set the tile cache size....when using slice access if tile cache size is 
   // not set memory usuage can go wild
   void setTileCache();
-
+  //Check if spw is in selected SPW for actual ms
+  Bool isInSelectedSPW(const Int& spw);
 
 
   ROVisibilityIterator* This;
@@ -571,6 +601,8 @@ protected:
   ROScalarColumn<Bool> colFlagRow;
   ROScalarColumn<Int> colScan;
   ROArrayColumn<Double> colUVW;
+  //object to calculate imaging weight in case of no imaging_weight column
+  VisImagingWeight imwgt_p;
 
 };
 
@@ -666,9 +698,15 @@ public:
   VisibilityIterator();
   VisibilityIterator(MeasurementSet & ms, const Block<Int>& sortColumns, 
        Double timeInterval=0);
+  VisibilityIterator(MeasurementSet & ms, const Block<Int>& sortColumns, 
+		     const Bool addDefaultSortCols,
+		     Double timeInterval=0);
   // Same as previous constructor, but with multiple MSs to iterate over.
   VisibilityIterator(Block<MeasurementSet>& mss,
 		       const Block<Int>& sortColumns, 
+		       Double timeInterval=0);
+  VisibilityIterator(Block<MeasurementSet>& mss,
+		     const Block<Int>& sortColumns, const Bool addDefaultSortCols, 
 		       Double timeInterval=0);
 
   VisibilityIterator(const VisibilityIterator & MSI);
@@ -753,6 +791,8 @@ protected:
   ArrayColumn<Float> RWcolImagingWeight;
   ArrayColumn<Bool> RWcolFlag;
   ScalarColumn<Bool> RWcolFlagRow;
+
+
 
 };
 

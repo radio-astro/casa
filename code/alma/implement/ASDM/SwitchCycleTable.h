@@ -86,6 +86,13 @@ using namespace enumerations;
 
 	
 
+	
+#include "CDirectionReferenceCode.h"
+using namespace DirectionReferenceCodeMod;
+	
+
+	
+
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
@@ -126,58 +133,86 @@ class ASDM;
 class SwitchCycleRow;
 /**
  * The SwitchCycleTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Cycle information in switching modes. Describe each step in a switching cycle.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SwitchCycle </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> switchCycleId </I></TD> 
+ 		
+ * <TD><I> switchCycleId </I></TD>
+ 		 
  * <TD> Tag</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a unique row in the table. </TD>
  * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> numStep </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of steps. </TD>
  * </TR>
 	
  * <TR>
  * <TD> weightArray </TD> 
  * <TD> vector<float > </TD>
  * <TD>  numStep </TD> 
+ * <TD> &nbsp;the weights (one value per step). </TD>
  * </TR>
 	
  * <TR>
  * <TD> dirOffsetArray </TD> 
  * <TD> vector<vector<Angle > > </TD>
  * <TD>  numStep, 2 </TD> 
+ * <TD> &nbsp;the pointing direction offsets (one pair per step). </TD>
  * </TR>
 	
  * <TR>
  * <TD> freqOffsetArray </TD> 
  * <TD> vector<Frequency > </TD>
  * <TD>  numStep </TD> 
+ * <TD> &nbsp;the frequencies offsets (one value per step). </TD>
  * </TR>
 	
  * <TR>
  * <TD> stepDurationArray </TD> 
  * <TD> vector<Interval > </TD>
  * <TD>  numStep </TD> 
+ * <TD> &nbsp;the duration of the steps (one value per steps). </TD>
  * </TR>
 	
 
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
+	
+ * <TR>
+ * <TD> directionCode </TD> 
+ * <TD> DirectionReferenceCodeMod::DirectionReferenceCode </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the reference frame associated to dirOffsetArray.t </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> directionEquinox </TD> 
+ * <TD> ArrayTime </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the equinox associated to directionCode (if required). </TD>
+ * </TR>
+	
 
  * </TABLE>
  */
@@ -377,43 +412,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(SwitchCycleTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(SwitchCycleTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for SwitchCycle (SwitchCycleTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a SwitchCycle (SwitchCycleTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -492,8 +533,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	SwitchCycleRow* checkAndAdd(SwitchCycleRow* x) throw (DuplicateKey, UniquenessViolationException);
+	SwitchCycleRow* checkAndAdd(SwitchCycleRow* x) ;
 
 
 
@@ -507,7 +552,7 @@ private:
 	vector<SwitchCycleRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

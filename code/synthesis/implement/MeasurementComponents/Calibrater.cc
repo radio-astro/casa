@@ -61,6 +61,7 @@ Calibrater::Calibrater():
   mssel_p(0), 
   vs_p(0), 
   ve_p(0),
+  scrOk_p(False),
   vc_p(),
   svc_p(0),
   histLockCounter_p(), 
@@ -79,6 +80,7 @@ Calibrater &Calibrater::operator=(const Calibrater & other)
   mssel_p=other.mssel_p;
   vs_p=other.vs_p;
   ve_p=other.ve_p;
+  scrOk_p=other.scrOk_p;
   histLockCounter_p=other.histLockCounter_p;
   hist_p=other.hist_p;
   historytab_p=other.historytab_p;
@@ -105,7 +107,9 @@ String Calibrater::timerString() {
   return o;
 };
 
-Bool Calibrater::initialize(MeasurementSet& inputMS, Bool compress)  {
+Bool Calibrater::initialize(MeasurementSet& inputMS, 
+			    Bool compress,
+			    Bool addScratch)  {
   
   logSink() << LogOrigin("Calibrater","") << LogIO::NORMAL3;
   
@@ -137,7 +141,7 @@ Bool Calibrater::initialize(MeasurementSet& inputMS, Bool compress)  {
 
     // Recognize if we'll need to initialize the imaging weights
     //  TBD: should Calibrater care?  (Imager doesn't know how to verify)
-    Bool needWeights=(!ms_p->tableDesc().isColumn("CORRECTED_DATA"));
+    Bool hadScratch=(ms_p->tableDesc().isColumn("CORRECTED_DATA"));
 
     msname_p=ms_p->tableName();
 
@@ -158,14 +162,14 @@ Bool Calibrater::initialize(MeasurementSet& inputMS, Bool compress)  {
     Block<Int> nosort(0);
     Matrix<Int> noselection;
     Double timeInterval=0;
-    vs_p=new VisSet(*ms_p,nosort,noselection,timeInterval,compress);
+    vs_p=new VisSet(*ms_p,nosort,noselection,addScratch,timeInterval,compress);
 
     // Size-up the chanmask PB
     initChanMask();
 
     // Initialize the weights if the scratch columns
     // were just created
-    if(needWeights) {
+    if(addScratch && !hadScratch) {
       Double sumwt=0.0;
       VisSetUtil::WeightNatural(*vs_p, sumwt);
     }
@@ -180,6 +184,9 @@ Bool Calibrater::initialize(MeasurementSet& inputMS, Bool compress)  {
 
     // Reset the apply/solve VisCals
     reset(True,True);
+
+    // Do we have the scratch columns (either previously, or created here)?
+    scrOk_p = hadScratch || addScratch;
 
     return True;
 
@@ -1025,6 +1032,12 @@ Bool Calibrater::correct() {
     if (!ok())
       throw(AipsError("Calibrater not prepared for correct!"));
 
+    // Nominally, we write out to the CORRECTED_DATA, unless absent
+    VisibilityIterator::DataColumn whichOutCol(VisibilityIterator::Corrected);
+    if (!scrOk_p)
+      // read from and write to DATA column (no going back!)
+      whichOutCol = VisibilityIterator::Observed;
+
     // Ensure apply list non-zero and properly sorted
     ve_p->setapply(vc_p);
 
@@ -1066,7 +1079,7 @@ Bool Calibrater::correct() {
 	  if (calwt) vb.resetWeightMat();
 	  
 	  ve_p->correct(vb);    // throws exception if nothing to apply
-	  vi.setVis(vb.visCube(),VisibilityIterator::Corrected);
+	  vi.setVis(vb.visCube(),whichOutCol);
 	  vi.setFlag(vb.flag());
 	  
 	  // Write out weight col, if it has changed
@@ -1104,6 +1117,13 @@ Bool Calibrater::corrupt() {
     if (!ok())
       throw(AipsError("Calibrater not prepared for corrupt!"));
 
+    // Nominally, we write out to the MODEL_DATA, unless absent
+    VisibilityIterator::DataColumn whichOutCol(VisibilityIterator::Model);
+    if (!scrOk_p)
+      // write to DATA column (no going back!)
+      // NB: this depends on overide by AMueller::corrupt below!!
+      whichOutCol = VisibilityIterator::Observed;
+
     // Ensure apply list non-zero and properly sorted
     ve_p->setapply(vc_p);
 
@@ -1134,7 +1154,7 @@ Bool Calibrater::corrupt() {
 	  // Corrupt the MODEL_DATA
 	  //  (note we are not treating weights and flags)
 	  ve_p->corrupt(vb);    // throws exception if nothing to apply
-	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
+	  vi.setVis(vb.modelVisCube(),whichOutCol);
 
 	}
       }
@@ -1259,6 +1279,22 @@ Bool Calibrater::standardSolve3() {
 	// Apply the channel mask (~no-op, if unnecessary)
 	svc_p->applyChanMask(vb);
 
+   /*  TBD.... (introduce various non-trivial model generation)
+	// Set I model to unity if MODEL_DATA not present
+	if (False && !scrOk_p) {
+	  vb.setModelVisCube(Complex(1.0));
+	  if (vb.nCorr()>2) {
+	    if (vb.corrType()(1)==Stokes::RL ||
+		vb.corrType()(1)==Stokes::XY)
+	      // zero 2nd,3rd [1,2] correlations (i.e., we have [RR,RL,LR,LL]
+	      vb.modelVisCube()(Slice(1,2,1),Slice(),Slice())=0.0;
+	    else
+	      // zero 3rd,4th [2,3] correlations (i.e., we gave [RR,LL,RL,LR]
+	      vb.modelVisCube()(Slice(2,2,1),Slice(),Slice())=0.0;
+	  }
+	}
+   */
+
 	// This forces the data/model/wt I/O, and applies
 	//   any prior calibrations
 	ve_p->collapse(vb);
@@ -1266,6 +1302,10 @@ Bool Calibrater::standardSolve3() {
 	// If permitted/required by solvable component, normalize
 	if (svc_p->normalizable()) 
 	  vb.normalize();
+
+	// If this solve not freqdep, and channels not averaged yet, do so
+	if (!svc_p->freqDepMat() && vb.nChannel()>1)
+	  vb.freqAveCubes();
 	
 	// Accumulate collapsed vb in a time average
 	vbga.accumulate(vb);
@@ -1419,6 +1459,10 @@ Bool Calibrater::standardSolve2() {
 	if (svc_p->normalizable()) 
 	  vb.normalize();
 	
+	// If this solve not freqdep, and channels not averaged yet, do so
+	if (!svc_p->freqDepMat() && vb.nChannel()>1)
+	  vb.freqAveCubes();
+
 	// Accumulate collapsed vb in a time average
 	vba.accumulate(vb);
 
@@ -1571,6 +1615,10 @@ Bool Calibrater::standardSolve() {
       if (svc_p->normalizable()) 
 	vb.normalize();
 
+      // If this solve not freqdep, and channels not averaged yet, do so
+      if (!svc_p->freqDepMat() && vb.nChannel()>1)
+	vb.freqAveCubes();
+      
       // Accumulate collapsed vb in a time average
       vba.accumulate(vb);
     }
@@ -2169,6 +2217,86 @@ void Calibrater::accumulate(const String& intab,
     if (incrcal_) delete incrcal_;
     
     throw(AipsError("Error in Calibrater::accumulate."));
+    return;
+  }
+  return;
+
+}
+
+void Calibrater::specifycal(const String& type,
+			    const String& caltable,
+			    const String& time,
+			    const String& spw,
+			    const String& antenna,
+			    const String& pol,
+			    const Vector<Double>& parameter) {
+
+  logSink() << LogOrigin("Calibrater","specifycal") << LogIO::NORMAL;
+
+  // SVJ objects:
+  SolvableVisCal *cal_(NULL);
+
+  try {
+ 			    
+    // Set record format for calibration table application information
+    RecordDesc specifyDesc;
+    specifyDesc.addField ("caltable", TpString);
+    specifyDesc.addField ("time", TpString);
+    specifyDesc.addField ("spw", TpArrayInt);
+    specifyDesc.addField ("antenna", TpArrayInt);
+    specifyDesc.addField ("pol", TpString);
+    specifyDesc.addField ("parameter", TpArrayDouble);
+    specifyDesc.addField ("caltype",TpString);
+
+    // Create record with the requisite field values
+    Record specify(specifyDesc);
+    specify.define ("caltable", caltable);
+    specify.define ("time", time);
+    if (spw=="*")
+      specify.define ("spw",Vector<Int>(1,-1));
+    else
+      specify.define ("spw",getSpwIdx(spw));
+    if (antenna=="*")
+      specify.define ("antenna",Vector<Int>(1,-1) );
+    else
+      specify.define ("antenna",getAntIdx(antenna));
+    specify.define ("pol",pol);
+    specify.define ("parameter",parameter);
+    specify.define ("caltype",type);
+
+    // Now do it
+    String utype=upcase(type);
+    if (utype=="G" || utype.contains("AMP") || utype.contains("PH"))
+      cal_ = createSolvableVisCal("G",*vs_p);
+    else if (utype=='K' || utype.contains("SBD") || utype.contains("DELAY"))
+      cal_ = createSolvableVisCal("K",*vs_p);
+    else if (utype.contains("MBD"))
+      cal_ = createSolvableVisCal("KMBD",*vs_p);
+    else if (utype.contains("ANTPOS"))
+      cal_ = createSolvableVisCal("KANTPOS",*vs_p);
+    else
+      throw(AipsError("Unrecognized caltype."));
+
+    // set up for specification (set up the CalSet)
+    cal_->setSpecify(specify);
+
+    // fill with specified values
+    cal_->specify(specify);
+
+    // Store result
+    cal_->store();
+
+    delete cal_;
+
+  } catch (AipsError x) {
+    logSink() << LogIO::SEVERE
+	      << "Caught Exception: "
+	      << x.getMesg()
+	      << LogIO::POST;
+
+    if (cal_) delete cal_;
+    
+    throw(AipsError("Error in Calibrater::specifycal."));
     return;
   }
   return;

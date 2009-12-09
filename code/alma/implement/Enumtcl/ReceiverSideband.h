@@ -38,13 +38,13 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<ReceiverSideband,EnumPar<void> >
-     (ReceiverSidebandMod::NOSB,ep((int)ReceiverSidebandMod::NOSB,"NOSB","Direct output signal (no frequency conversion)")));
+     (ReceiverSidebandMod::NOSB,ep((int)ReceiverSidebandMod::NOSB,"NOSB","un-documented")));
     m_.insert(pair<ReceiverSideband,EnumPar<void> >
-     (ReceiverSidebandMod::DSB,ep((int)ReceiverSidebandMod::DSB,"DSB","DOuble side-band ouput")));
+     (ReceiverSidebandMod::DSB,ep((int)ReceiverSidebandMod::DSB,"DSB","un-documented")));
     m_.insert(pair<ReceiverSideband,EnumPar<void> >
-     (ReceiverSidebandMod::SSB,ep((int)ReceiverSidebandMod::SSB,"SSB","Single-side band receiver.")));
+     (ReceiverSidebandMod::SSB,ep((int)ReceiverSidebandMod::SSB,"SSB","un-documented")));
     m_.insert(pair<ReceiverSideband,EnumPar<void> >
-     (ReceiverSidebandMod::TSB,ep((int)ReceiverSidebandMod::TSB,"TSB","Eeceiver with dual-output")));
+     (ReceiverSidebandMod::TSB,ep((int)ReceiverSidebandMod::TSB,"TSB","un-documented")));
     return true;
   }
   static map<ReceiverSideband,EnumPar<void> > m_;

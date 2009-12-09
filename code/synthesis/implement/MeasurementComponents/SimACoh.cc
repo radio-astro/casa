@@ -39,7 +39,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // called from a separate object in the exact same sequence as apply.
 
 SimACoh::SimACoh(Int seed, Double rms):rndGen_p(seed),
-noiseDist_p(&rndGen_p, 0.0, square(rms/2.0))
+				       //noiseDist_p(&rndGen_p, 0.0, square(rms/2.0))
+noiseDist_p(&rndGen_p, 0.0, square(rms))
 {
 }
 VisBuffer& SimACoh::apply(VisBuffer& vb)

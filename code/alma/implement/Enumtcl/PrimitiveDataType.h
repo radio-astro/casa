@@ -25,7 +25,7 @@
 using namespace PrimitiveDataTypeMod;
 
 template<>
- struct enum_set_traits<PrimitiveDataType> : public enum_set_traiter<PrimitiveDataType,11,PrimitiveDataTypeMod::STRING_TYPE> {};
+ struct enum_set_traits<PrimitiveDataType> : public enum_set_traiter<PrimitiveDataType,5,PrimitiveDataTypeMod::FLOAT64_TYPE> {};
 
 template<>
 class enum_map_traits<PrimitiveDataType,void> : public enum_map_traiter<PrimitiveDataType,void> {
@@ -38,27 +38,15 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<PrimitiveDataType,EnumPar<void> >
-     (PrimitiveDataTypeMod::BOOL_TYPE,ep((int)PrimitiveDataTypeMod::BOOL_TYPE,"BOOL_TYPE","")));
+     (PrimitiveDataTypeMod::INT16_TYPE,ep((int)PrimitiveDataTypeMod::INT16_TYPE,"INT16_TYPE","un-documented")));
     m_.insert(pair<PrimitiveDataType,EnumPar<void> >
-     (PrimitiveDataTypeMod::BYTE_TYPE,ep((int)PrimitiveDataTypeMod::BYTE_TYPE,"BYTE_TYPE","")));
+     (PrimitiveDataTypeMod::INT32_TYPE,ep((int)PrimitiveDataTypeMod::INT32_TYPE,"INT32_TYPE","un-documented")));
     m_.insert(pair<PrimitiveDataType,EnumPar<void> >
-     (PrimitiveDataTypeMod::SHORT_TYPE,ep((int)PrimitiveDataTypeMod::SHORT_TYPE,"SHORT_TYPE","")));
+     (PrimitiveDataTypeMod::INT64_TYPE,ep((int)PrimitiveDataTypeMod::INT64_TYPE,"INT64_TYPE","un-documented")));
     m_.insert(pair<PrimitiveDataType,EnumPar<void> >
-     (PrimitiveDataTypeMod::INT_TYPE,ep((int)PrimitiveDataTypeMod::INT_TYPE,"INT_TYPE","")));
+     (PrimitiveDataTypeMod::FLOAT32_TYPE,ep((int)PrimitiveDataTypeMod::FLOAT32_TYPE,"FLOAT32_TYPE","un-documented")));
     m_.insert(pair<PrimitiveDataType,EnumPar<void> >
-     (PrimitiveDataTypeMod::LONGLONG_TYPE,ep((int)PrimitiveDataTypeMod::LONGLONG_TYPE,"LONGLONG_TYPE","")));
-    m_.insert(pair<PrimitiveDataType,EnumPar<void> >
-     (PrimitiveDataTypeMod::UNSIGNED_SHORT_TYPE,ep((int)PrimitiveDataTypeMod::UNSIGNED_SHORT_TYPE,"UNSIGNED_SHORT_TYPE","")));
-    m_.insert(pair<PrimitiveDataType,EnumPar<void> >
-     (PrimitiveDataTypeMod::UNSIGNED_INT_TYPE,ep((int)PrimitiveDataTypeMod::UNSIGNED_INT_TYPE,"UNSIGNED_INT_TYPE","")));
-    m_.insert(pair<PrimitiveDataType,EnumPar<void> >
-     (PrimitiveDataTypeMod::UNSIGNED_LONGLONG_TYPE,ep((int)PrimitiveDataTypeMod::UNSIGNED_LONGLONG_TYPE,"UNSIGNED_LONGLONG_TYPE","")));
-    m_.insert(pair<PrimitiveDataType,EnumPar<void> >
-     (PrimitiveDataTypeMod::FLOAT_TYPE,ep((int)PrimitiveDataTypeMod::FLOAT_TYPE,"FLOAT_TYPE","")));
-    m_.insert(pair<PrimitiveDataType,EnumPar<void> >
-     (PrimitiveDataTypeMod::DOUBLE_TYPE,ep((int)PrimitiveDataTypeMod::DOUBLE_TYPE,"DOUBLE_TYPE","")));
-    m_.insert(pair<PrimitiveDataType,EnumPar<void> >
-     (PrimitiveDataTypeMod::STRING_TYPE,ep((int)PrimitiveDataTypeMod::STRING_TYPE,"STRING_TYPE","")));
+     (PrimitiveDataTypeMod::FLOAT64_TYPE,ep((int)PrimitiveDataTypeMod::FLOAT64_TYPE,"FLOAT64_TYPE","un-documented")));
     return true;
   }
   static map<PrimitiveDataType,EnumPar<void> > m_;

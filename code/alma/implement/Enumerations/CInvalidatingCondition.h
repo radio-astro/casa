@@ -42,18 +42,34 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the InvalidatingCondition enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace InvalidatingConditionMod
 {
+  //! InvalidatingCondition.
+  //!  [CalDM.CalReduction] Contitions invalidating result
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum InvalidatingCondition
   { 
-    ANTENNA_DISCONNECT ,
-    ANTENNA_MOVE ,
-    ANTENNA_POWER_DOWN ,
-    RECEIVER_EXCHANGE ,
-    RECEIVER_POWER_DOWN 
+    ANTENNA_DISCONNECT /*!< Antenna was disconnected */
+     ,
+    ANTENNA_MOVE /*!< Antenna was moved */
+     ,
+    ANTENNA_POWER_DOWN /*!< Antenna was powered down */
+     ,
+    RECEIVER_EXCHANGE /*!< Receiver was exchanged */
+     ,
+    RECEIVER_POWER_DOWN /*!< Receiver was powered down */
+     
   };
   typedef InvalidatingCondition &InvalidatingCondition_out;
 } 
@@ -61,76 +77,97 @@ namespace InvalidatingConditionMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration InvalidatingCondition.
+  * 
+  */
 class CInvalidatingCondition {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the InvalidatingCondition enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sANTENNA_DISCONNECT;
+	static const std::string& sANTENNA_DISCONNECT; /*!< A const string equal to "ANTENNA_DISCONNECT".*/
 	
-	static const std::string& sANTENNA_MOVE;
+	static const std::string& sANTENNA_MOVE; /*!< A const string equal to "ANTENNA_MOVE".*/
 	
-	static const std::string& sANTENNA_POWER_DOWN;
+	static const std::string& sANTENNA_POWER_DOWN; /*!< A const string equal to "ANTENNA_POWER_DOWN".*/
 	
-	static const std::string& sRECEIVER_EXCHANGE;
+	static const std::string& sRECEIVER_EXCHANGE; /*!< A const string equal to "RECEIVER_EXCHANGE".*/
 	
-	static const std::string& sRECEIVER_POWER_DOWN;
-	
-    static const std::vector<std::string> sInvalidatingConditionSet();	 
-
+	static const std::string& sRECEIVER_POWER_DOWN; /*!< A const string equal to "RECEIVER_POWER_DOWN".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in InvalidatingConditionMod::InvalidatingCondition.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of InvalidatingConditionMod::InvalidatingCondition.
+      * @return a string.
+      */
+	static std::string name(const InvalidatingConditionMod::InvalidatingCondition& e);
 	
-	// Explanations associated with the InvalidatingCondition Enumeration.
-		
-	static const std::string& hANTENNA_DISCONNECT;
-		
-	static const std::string& hANTENNA_MOVE;
-		
-	static const std::string& hANTENNA_POWER_DOWN;
-		
-	static const std::string& hRECEIVER_EXCHANGE;
-		
-	static const std::string& hRECEIVER_POWER_DOWN;
-		
-	static const std::vector<std::string> hInvalidatingConditionSet();
-   	
-
-   	// Is an integer number associated with the InvalidatingCondition enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the InvalidatingCondition enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  InvalidatingCondition enumeration.
-	static std::string name(const InvalidatingConditionMod::InvalidatingCondition& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const InvalidatingConditionMod::InvalidatingCondition& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified InvalidatingCondition enumeration.
-	static std::string help(const InvalidatingConditionMod::InvalidatingCondition& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a InvalidatingCondition enumeration object by specifying its name.
    	static InvalidatingConditionMod::InvalidatingCondition newInvalidatingCondition(const std::string& name);
    	
-   	// Create a InvalidatingCondition enumeration object by specifying its name.
+   	/*! Return a InvalidatingCondition's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a InvalidatingConditionMod::InvalidatingCondition's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static InvalidatingConditionMod::InvalidatingCondition literal(const std::string& name);
  	
-    // Create a InvalidatingCondition enumeration object by specifying its position index (0 based).
+    /*! Return a InvalidatingCondition's enumerator given an unsigned int.
+      * @param i the index of the enumerator in InvalidatingConditionMod::InvalidatingCondition.
+      * @return a InvalidatingConditionMod::InvalidatingCondition's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static InvalidatingConditionMod::InvalidatingCondition from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CInvalidatingCondition();
     CInvalidatingCondition(const CInvalidatingCondition&);
     CInvalidatingCondition& operator=(const CInvalidatingCondition&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CInvalidatingCondition_H*/

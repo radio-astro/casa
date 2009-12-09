@@ -1,37 +1,4 @@
-Dependencies for casa
-  Application:
-
-Dependencies for scimath
-  Application:
-
-Dependencies for tables
-  Application:
-
-Dependencies for measures
-  Application:
-
-Dependencies for fits
-  Application:
-
 Dependencies for graphics
-  Application:
-
-Dependencies for lattices
-  Application:
-
-Dependencies for coordinates
-  Application:
-
-Dependencies for components
-  Application:
-
-Dependencies for images
-  Application:
-
-Dependencies for ms
-  Application:
-
-Dependencies for msfits
   Application:
 
 Dependencies for msvis
@@ -55,28 +22,12 @@ Dependencies for simulators
 Dependencies for synthesis
   Application:
 
-Dependencies for tasking
-  Application:
-
 Dependencies for display
   Application:
     appdisplay => libcasa
     appdisplay => libgraphics
     appdisplay => libimages
-    appdisplay => libtasking
     appdisplay => libdisplay
-
-Dependencies for bima
-  Application:
-    appbima => libcasa
-    appbima => libtables
-    appbima => libmeasures
-    appbima => libms
-    appbima => libtasking
-    appbima => libbima
-
-Dependencies for nral
-  Application:
 
 Dependencies for nrao
   Application:
@@ -93,32 +44,25 @@ Dependencies for alma
     appalma => libtasking
     appalma => libalma
 
-Dependencies for appsglish
+Dependencies for appsxmlcasa
   Application:
-    appappsglish => libcasa
-    appappsglish => libscimath
-    appappsglish => libtables
-    appappsglish => libmeasures
-    appappsglish => libfits
-    appappsglish => liblattices
-    appappsglish => libcoordinates
-    appappsglish => libcomponents
-    appappsglish => libimages
-    appappsglish => libms
-    appappsglish => libmsfits
-    appappsglish => libmsvis
-    appappsglish => libionosphere
-    appappsglish => libflagging
-    appappsglish => libdish
-    appappsglish => libsynthesis
-    appappsglish => libtasking
-    appappsglish => libappsglish
-
-Dependencies for hia
-  Application:
-    apphia => libcasa
-    apphia => libtasking
-    apphia => libhia
+    appappsxmlcasa => libcasa
+    appappsxmlcasa => libscimath
+    appappsxmlcasa => libtables
+    appappsxmlcasa => libmeasures
+    appappsxmlcasa => libfits
+    appappsxmlcasa => liblattices
+    appappsxmlcasa => libcoordinates
+    appappsxmlcasa => libcomponents
+    appappsxmlcasa => libimages
+    appappsxmlcasa => libms
+    appappsxmlcasa => libmsfits
+    appappsxmlcasa => libmsvis
+    appappsxmlcasa => libionosphere
+    appappsxmlcasa => libflagging
+    appappsxmlcasa => libdish
+    appappsxmlcasa => libsynthesis
+    appappsxmlcasa => libappsxmlcasa
 
 Dependencies for jive
   Application:
@@ -132,7 +76,6 @@ Dependencies for nfra
     appnfra => libgraphics
     appnfra => libcomponents
     appnfra => libms
-    appnfra => libtasking
     appnfra => libnfra
 
 Dependencies for vlbi
@@ -148,17 +91,7 @@ Dependencies for atnf
     appatnf => libcoordinates
     appatnf => libimages
     appatnf => libms
-    appatnf => libtasking
     appatnf => libatnf
-
-Dependencies for contrib
-  Application:
-
-Dependencies for npoi
-  Application:
-    appnpoi => libcasa
-    appnpoi => libtasking
-    appnpoi => libnpoi
 
 Dependencies for vo
   Application:

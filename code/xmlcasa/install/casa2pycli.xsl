@@ -43,11 +43,16 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
     __name__ = "</xsl:text><xsl:value-of select="$taskname"/><xsl:text>"
     __async__ = {}
     rkey = None
+    i_am_a_casapy_task = None
+    # The existence of the i_am_a_casapy_task attribute allows help()
+    # (and other) to treat casapy tasks as a special case.
 
     def __init__(self) :
        self.__bases__ = (</xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_,)
        self.__doc__ = self.__call__.__doc__</xsl:text>
-<xsl:text>
+
+       self.parameters=<xsl:text>{</xsl:text><xsl:apply-templates select="aps:input" mode="quotes"/> &apos;async&apos;:None}
+<xsl:text disable-output-escaping="yes">
 
     def result(self, key=None):
 	    #### here we will scan the task-ids in __async__
@@ -62,7 +67,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 	    return None
 
 </xsl:text>
-    def __call__<xsl:text>(self, </xsl:text><xsl:apply-templates select="aps:input"/>
+    def __call__<xsl:text>(self, </xsl:text><xsl:apply-templates select="aps:input" mode="noquotes"/> async=None):
 <xsl:text>
         """</xsl:text>
 <xsl:apply-templates select="aps:shortdescription"></xsl:apply-templates>
@@ -70,17 +75,11 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:text>
         """</xsl:text>
 <xsl:text disable-output-escaping="yes">
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-          if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-                stacklevel=k
-                break
-        myf=sys._getframe(stacklevel).f_globals
-        myf['__last_task'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
-        myf['taskname'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
+        self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
+        self.__globals__['__last_task'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
+        self.__globals__['taskname'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         ###
-        myf['update_params'](func=myf['taskname'],printtext=False)
+        self.__globals__['update_params'](func=self.__globals__['taskname'],printtext=False,ipython_globals=self.__globals__)
         ###
         ###
         #Handle globals or user over-ride of arguments
@@ -98,7 +97,6 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
                         #user has set it - use over-ride
 			if (key != 'self') :
 			   useLocalDefaults = True
-                        #myf[key]=keyVal
 
 	myparams = {}
 	if useLocalDefaults :
@@ -113,7 +111,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 		      exec('myparams[key] = ' + key + ' = keyVal[len(keyVal)-1][\'value\']')
 
 	else :
-            async = myf['async']
+            async = self.parameters['async']
 </xsl:text>
 <xsl:for-each select="aps:input">
 <xsl:apply-templates select="aps:param"/>
@@ -154,10 +152,20 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:otherwise>
 </xsl:choose>
 </xsl:for-each>
+<xsl:choose>
+<xsl:when test="$async='never'">
+<xsl:text disable-output-escaping="yes">
+	#
+	# This task is never suppose to use the task manager to run async
+	#
+        async=False</xsl:text>
+</xsl:when>
+</xsl:choose>
 <xsl:text disable-output-escaping="yes">
         pathname='file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/'
         trec = casac.cu.torecord(pathname+</xsl:text>&apos;<xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">.xml&apos;)
 </xsl:text>
+
 <xsl:text disable-output-escaping="yes">
         casalog.origin(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;)
         if not trec.has_key(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;) or not casac.cu.verify(mytmp, trec[&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;]) :
@@ -173,24 +181,25 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 	       key = keybase + "_" + str(count)
             result = tm.execute(&apos;</xsl:text><xsl:value-of select="$taskname"/>&apos;, <xsl:call-template name="doargs2"/>)
 	    print "Use: "
-	    print "      tm.abort(return_value)    # to abort the asynchronous task "
 	    print "      tm.retrieve(return_value) # to retrieve the status"
 	    print 
 	    self.rkey = key
 	    self.__async__[key] = result
           else :
+              tname = '<xsl:value-of select="$taskname"/>'
+              spaces = ' '*(18-len(tname))
               casalog.post('')
               casalog.post('##########################################')
-              casalog.post('##### Begin Task: <xsl:value-of select="$taskname"/>           #####')
+              casalog.post('##### Begin Task: ' + tname + spaces + ' #####')
               casalog.post('')
               result = <xsl:value-of select="$taskname"/>(<xsl:call-template name="doargs2"/>)
               casalog.post('')
-              casalog.post('##### End Task: <xsl:value-of select="$taskname"/>           #####')
+              casalog.post('##### End Task: ' + tname + '  ' + spaces + ' #####')
               casalog.post('##########################################')
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
-          saveinputs = myf['saveinputs']
-          saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams)
+          saveinputs = self.__globals__['saveinputs']
+          saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams, self.__globals__)
 	except Exception, instance:
 	  print '**** Error **** ',instance
 </xsl:text>
@@ -203,21 +212,19 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 #
 #
 #
-    def paramgui(self, useGlobals=True):
+    def paramgui(self, useGlobals=True, ipython_globals=None):
         """
         Opens a parameter GUI for this task.  If useGlobals is true, then any relevant global parameter settings are used.
         """
         import paramgui
-
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-          if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-            stacklevel=k
-            break
-        myf = sys._getframe(stacklevel).f_globals
+        self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
 
         if useGlobals:
+	    if ipython_globals == None:
+                myf=self.__globals__
+            else:
+                myf=ipython_globals
+
             paramgui.setGlobals(myf)
         else:
             paramgui.setGlobals({})
@@ -228,14 +235,13 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 #
 #
 #
-    def defaults(self, param=None):
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-          if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-                stacklevel=k
-                break
-        myf=sys._getframe(stacklevel).f_globals
+    def defaults(self, param=None, ipython_globals=None, paramvalue=None, subparam=None):
+        self.__globals__=sys._getframe(len(inspect.stack())-1).f_globals
+        if ipython_globals == None:
+            myf=self.__globals__
+        else:
+            myf=ipython_globals
+
         a = odict()
 </xsl:text>
 <xsl:for-each select="aps:input">
@@ -268,30 +274,45 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
         elif(param == 'paramkeys'):
                 return a.keys()
         else:
-	        if(a.has_key(param)):
-		   #if(type(a[param]) == dict) :
-		   #   return a[param][len(a[param])-1]['value']
-	   	   #else :
-		      return a[param]
+            if(paramvalue==None):
+               if(a.has_key(param)):
+                  return a[param]
+               else:
+                  return self.itsdefault(param)
+            else:
+               retval=a[param]
+               if(type(a[param])==dict):
+                  for k in range(len(a[param])):
+                     valornotval='value'
+                     if(a[param][k].has_key('notvalue')):
+                        valornotval='notvalue'
+                     if((a[param][k][valornotval])==paramvalue):
+                        retval=a[param][k].copy()
+                        retval.pop(valornotval)
+                        if(subparam != None):
+                           if(retval.has_key(subparam)):
+                              retval=retval[subparam]
+                           else:
+                              retval=self.itsdefault(subparam)
+               return retval
 
 
 #
 #
-    def check_params(self, param=None, value=None):
-      a=inspect.stack() 
-      stacklevel=0
-      for k in range(len(a)):
-        if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-	    stacklevel=k
-	    break
-      myf=sys._getframe(stacklevel).f_globals
+    def check_params(self, param=None, value=None, ipython_globals=None):
+      if ipython_globals == None:
+          myf=self.__globals__
+      else:
+          myf=ipython_globals
 
-      value = myf['cu'].expandparam(param, value)
-      if(type(value) == numpy.ndarray) :
-         myf[param] = value.tolist()
-      else :
-         myf[param] = value
-      return myf['cu'].verifyparam({param:value})
+      if str(type(value)) != "&lt;type &apos;instance&apos;&gt;" :
+         value = myf['cu'].expandparam(param, value)
+         if(type(value) == numpy.ndarray) :
+            myf[param] = value.tolist()
+         else :
+            myf[param] = value
+         value = myf['cu'].verifyparam({param:value})
+      return value
 #
 #
     def description(self, key=&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;, subkey=None):
@@ -321,6 +342,10 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:text>
 <xsl:for-each select="aps:input">
 <xsl:call-template name="setdefaults3"/>
+        #a = sys._getframe(len(inspect.stack())-1).f_globals
+<xsl:for-each select="aps:constraints">
+<xsl:call-template name="setdefaults4"/>
+</xsl:for-each>
 <xsl:text>
         if a.has_key(paramname) :
 	      return a[paramname]
@@ -331,7 +356,9 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:value-of select="$taskname"/>_cli = <xsl:value-of select="$taskname"/>_cli_()
 </xsl:template>
 
-<xsl:template match="aps:input"> <xsl:call-template name="doargs"></xsl:call-template>
+<xsl:template match="aps:input" mode="noquotes"> <xsl:call-template name="doargs"></xsl:call-template>
+</xsl:template>
+<xsl:template match="aps:input" mode="quotes"> <xsl:call-template name="doqargs"></xsl:call-template>
 </xsl:template>
 <xsl:template match="aps:shortdescription"><xsl:value-of select="."/></xsl:template>
 <xsl:template match="aps:example"><xsl:value-of select="replace(., '\\.*\{verbatim\}', '')" disable-output-escaping="yes"/></xsl:template>
@@ -347,7 +374,11 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:template>
 
 <xsl:template name="doargs">
-<xsl:for-each select="aps:param"><xsl:value-of select="@name"/>=None, </xsl:for-each>async=None):
+	<xsl:for-each select="aps:param"><xsl:value-of select="@name"/>=None, </xsl:for-each>
+</xsl:template>
+
+<xsl:template name="doqargs">
+	<xsl:for-each select="aps:param">&apos;<xsl:value-of select="@name"/>&apos;:None, </xsl:for-each>
 </xsl:template>
 
 <xsl:template name="doargs2">
@@ -355,7 +386,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:template>
  
 <xsl:template match="aps:param">
-	<xsl:text>            myparams[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;] = <xsl:value-of select="@name"/> = myf[&apos;<xsl:value-of select="@name"/>&apos;]
+	<xsl:text>            myparams[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;] = <xsl:value-of select="@name"/> = self.parameters[&apos;<xsl:value-of select="@name"/>&apos;]
 </xsl:template>
 
 <xsl:template name="oneliners">
@@ -592,6 +623,76 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = <xsl:if test="@units!=''">&apos;</xsl:if><xsl:value-of select="aps:value"/><xsl:if test="@units!=''"><xsl:value-of select="@units"/>&apos;</xsl:if><xsl:text>&#10;</xsl:text>
 </xsl:otherwise>
 </xsl:choose>
+</xsl:for-each>
+</xsl:template>
+
+<xsl:template name="setdefaults4">
+<xsl:for-each select="aps:when">
+<xsl:call-template name="contextdefs2">
+<xsl:with-param name="paramname"><xsl:value-of select="@param"/></xsl:with-param>
+</xsl:call-template>
+</xsl:for-each>
+</xsl:template>
+
+
+<xsl:template name="contextdefs2">
+<xsl:param name="paramname"></xsl:param>
+<xsl:for-each select="aps:equals">
+<xsl:choose>
+<xsl:when test="count(aps:default)">
+<xsl:choose>
+<xsl:when test="@type">
+<xsl:choose>
+<xsl:when test="@type='string'">
+        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> == &apos;<xsl:value-of select="@value"/>&apos;:
+</xsl:when>
+<xsl:otherwise>
+        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> == <xsl:value-of select="@value"/>:
+</xsl:otherwise>
+</xsl:choose>
+</xsl:when>
+<xsl:otherwise>
+        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> == &apos;<xsl:value-of select="@value"/>&apos;:
+</xsl:otherwise>
+</xsl:choose>
+</xsl:when>
+</xsl:choose>
+<xsl:for-each select="aps:default">   
+<xsl:text disable-output-escaping="yes">            a[&apos;</xsl:text> <xsl:value-of select="@param"/>&apos;] = <xsl:call-template name="handlevalue"/>
+<xsl:text>
+</xsl:text>
+</xsl:for-each>
+
+
+</xsl:for-each>
+
+<xsl:for-each select="aps:notequals">
+
+<xsl:choose>
+<xsl:when test="count(aps:default)">
+<xsl:choose>
+<xsl:when test="@type">
+<xsl:choose>
+<xsl:when test="@type='string'">
+        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> != &apos;<xsl:value-of select="@value"/>&apos;:
+</xsl:when>
+<xsl:otherwise>
+        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> != <xsl:value-of select="@value"/>:
+</xsl:otherwise>
+</xsl:choose>
+</xsl:when>
+<xsl:otherwise>
+        if a[&apos;<xsl:value-of select="$paramname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;] </xsl:text> != &apos;<xsl:value-of select="@value"/>&apos;:
+</xsl:otherwise>
+</xsl:choose>
+</xsl:when>
+</xsl:choose>
+
+<xsl:for-each select="aps:default">   
+<xsl:text disable-output-escaping="yes">            a[&apos;</xsl:text> <xsl:value-of select="@param"/>&apos;] = <xsl:call-template name="handlevalue"/>
+<xsl:text>
+</xsl:text>
+</xsl:for-each>
 </xsl:for-each>
 </xsl:template>
 

@@ -150,8 +150,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       convSize=min(convSize,1024);
     }
     */
-
-    Int maxMemoryMB=HostInfo::memoryTotal()/1024;
+    // use memory size defined in aipsrc if exists
+    Int maxMemoryMB=HostInfo::memoryTotal(true)/1024;
     //nominal  512 wprojplanes above that you may (or not) go swapping
     Double maxConvSizeConsidered=sqrt(Double(maxMemoryMB)/8.0*1024.0*1024.0/512.0);
     CompositeNumber cn(Int(maxConvSizeConsidered/2.0)*2);
@@ -367,7 +367,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   else{
     *(convFunctions_p[actualConvIndex_p])=convFunc;
   }
-  Int maxMemoryMB=HostInfo::memoryTotal()/1024;
+  // read out memory size from aisprc if exists
+  Int maxMemoryMB=HostInfo::memoryTotal(true)/1024;
   Int memoryMB;
   memoryMB = Int(Double(convSize/2-1)*Double(convSize/2-1)*
 		 Double(wConvSize)*8.0/1024.0/1024.0);

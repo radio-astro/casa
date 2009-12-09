@@ -130,53 +130,63 @@ class ASDM;
 class PolarizationRow;
 /**
  * The PolarizationTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Polarization information.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Polarization </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> polarizationId </I></TD> 
+ 		
+ * <TD><I> polarizationId </I></TD>
+ 		 
  * <TD> Tag</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;Polarization Table identifier </TD>
  * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> numCorr </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;Number of correlation products </TD>
  * </TR>
 	
  * <TR>
  * <TD> corrType </TD> 
  * <TD> vector<StokesParameterMod::StokesParameter > </TD>
  * <TD>  numCorr </TD> 
+ * <TD> &nbsp;Correlation type </TD>
  * </TR>
 	
  * <TR>
  * <TD> corrProduct </TD> 
  * <TD> vector<vector<PolarizationTypeMod::PolarizationType > > </TD>
  * <TD>  numCorr, 2 </TD> 
+ * <TD> &nbsp;Correlation product. </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> flagRow </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; 'this row is valid (false) or not valid (true). </TD>
  * </TR>
 	
 
@@ -370,43 +380,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(PolarizationTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(PolarizationTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for Polarization (PolarizationTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a Polarization (PolarizationTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -485,8 +501,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	PolarizationRow* checkAndAdd(PolarizationRow* x) throw (DuplicateKey, UniquenessViolationException);
+	PolarizationRow* checkAndAdd(PolarizationRow* x) ;
 
 
 
@@ -500,7 +520,7 @@ private:
 	vector<PolarizationRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

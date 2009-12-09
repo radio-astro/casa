@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def importasdm(asdm=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None):
+def importasdm(asdm=None, vis=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, verbose=None, showversion=None):
 	""" Convert an ALMA Science Data Model observation into a CASA visibility file (MS)
 	The conversion of the ALMA SDM archive format into a measurement set.  This version
 	is under development and is geared to handling many spectral windows of different
@@ -15,18 +15,27 @@ def importasdm(asdm=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mo
 	#Python script
 	try:
 		casalog.origin('importasdm')
-		if(compression) :
-		   execute_string='asdm2MS '+asdm +' --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' + time_sampling+ '\" --ocm \"' + ocorr_mode + '\" --compression'
+		viso = ''
+		if(len(vis) > 0) :
+		   viso = vis + '.ms'
 		else :
-		   execute_string='asdm2MS '+asdm +' --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' + time_sampling+ '\" --ocm \"' + ocorr_mode +'\"'
+		   viso = asdm + '.ms'
+		   vis = asdm
+		execute_string='asdm2MS  --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' + time_sampling+ '\" --ocm \"' + ocorr_mode + '\" --wvr-corrected-data \"' + wvr_corrected_data + '\" --asis \"' + asis + '\" --logfile \"' +casalog.logfile() +'\"'
+		if(compression) :
+		   execute_string= execute_string +' --compression'
+		if(verbose) :
+		   execute_string= execute_string +' --verbose'
+		if(showversion) :
+		   execute_string= execute_string +' --revision'
+		execute_string = execute_string + ' ' + asdm + ' ' + viso
 		casalog.post('Running the asdm2MS standalone invoked as:')
 		#print execute_string
 		casalog.post(execute_string)
         	os.system(execute_string)
-		if(compression) :
-                   ok=fg.open(asdm+'.compressed.ms');
-		else :
-                   ok=fg.open(asdm+'.ms');
+		if compression :
+			viso = vis + '.compressed.ms'
+                ok=fg.open(viso);
                 ok=fg.saveflagversion('Original',comment='Original flags at import into CASA',merge='save')
                 ok=fg.done();
 	except Exception, instance:

@@ -38,15 +38,15 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<CalibrationMode,EnumPar<void> >
-     (CalibrationModeMod::HOLOGRAPHY,ep((int)CalibrationModeMod::HOLOGRAPHY,"HOLOGRAPHY","Holography receiver")));
+     (CalibrationModeMod::HOLOGRAPHY,ep((int)CalibrationModeMod::HOLOGRAPHY,"HOLOGRAPHY","un-documented")));
     m_.insert(pair<CalibrationMode,EnumPar<void> >
-     (CalibrationModeMod::INTERFEROMETRY,ep((int)CalibrationModeMod::INTERFEROMETRY,"INTERFEROMETRY","interferometry")));
+     (CalibrationModeMod::INTERFEROMETRY,ep((int)CalibrationModeMod::INTERFEROMETRY,"INTERFEROMETRY","un-documented")));
     m_.insert(pair<CalibrationMode,EnumPar<void> >
-     (CalibrationModeMod::OPTICAL,ep((int)CalibrationModeMod::OPTICAL,"OPTICAL","Optical telescope")));
+     (CalibrationModeMod::OPTICAL,ep((int)CalibrationModeMod::OPTICAL,"OPTICAL","un-documented")));
     m_.insert(pair<CalibrationMode,EnumPar<void> >
-     (CalibrationModeMod::RADIOMETRY,ep((int)CalibrationModeMod::RADIOMETRY,"RADIOMETRY","total power")));
+     (CalibrationModeMod::RADIOMETRY,ep((int)CalibrationModeMod::RADIOMETRY,"RADIOMETRY","un-documented")));
     m_.insert(pair<CalibrationMode,EnumPar<void> >
-     (CalibrationModeMod::WVR,ep((int)CalibrationModeMod::WVR,"WVR","water vapour radiometry receiver")));
+     (CalibrationModeMod::WVR,ep((int)CalibrationModeMod::WVR,"WVR","un-documented")));
     return true;
   }
   static map<CalibrationMode,EnumPar<void> > m_;

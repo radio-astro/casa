@@ -37,6 +37,21 @@
 #include <string>
 using namespace std;
 
+
+int CBasebandName::version() {
+	return BasebandNameMod::version;
+	}
+	
+string CBasebandName::revision () {
+	return BasebandNameMod::revision;
+}
+
+unsigned int CBasebandName::size() {
+	return 10;
+	}
+	
+	
+const std::string& CBasebandName::sNOBB = "NOBB";
 	
 const std::string& CBasebandName::sBB_1 = "BB_1";
 	
@@ -54,8 +69,12 @@ const std::string& CBasebandName::sBB_7 = "BB_7";
 	
 const std::string& CBasebandName::sBB_8 = "BB_8";
 	
-const std::vector<std::string> CBasebandName::sBasebandNameSet() {
+const std::string& CBasebandName::sBB_ALL = "BB_ALL";
+	
+const std::vector<std::string> CBasebandName::names() {
     std::vector<std::string> enumSet;
+    
+    enumSet.insert(enumSet.end(), CBasebandName::sNOBB);
     
     enumSet.insert(enumSet.end(), CBasebandName::sBB_1);
     
@@ -72,55 +91,17 @@ const std::vector<std::string> CBasebandName::sBasebandNameSet() {
     enumSet.insert(enumSet.end(), CBasebandName::sBB_7);
     
     enumSet.insert(enumSet.end(), CBasebandName::sBB_8);
+    
+    enumSet.insert(enumSet.end(), CBasebandName::sBB_ALL);
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CBasebandName::hBB_1 = "Baseband one";
-	
-const std::string& CBasebandName::hBB_2 = "Baseband two";
-	
-const std::string& CBasebandName::hBB_3 = "Baseband three";
-	
-const std::string& CBasebandName::hBB_4 = "Baseband four";
-	
-const std::string& CBasebandName::hBB_5 = "Baseband five (not ALMA)";
-	
-const std::string& CBasebandName::hBB_6 = "Baseband six (not ALMA)";
-	
-const std::string& CBasebandName::hBB_7 = "Baseband seven (not ALMA)";
-	
-const std::string& CBasebandName::hBB_8 = "Baseband eight (not ALMA)";
-	
-const std::vector<std::string> CBasebandName::hBasebandNameSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CBasebandName::hBB_1);
-    
-    enumSet.insert(enumSet.end(), CBasebandName::hBB_2);
-    
-    enumSet.insert(enumSet.end(), CBasebandName::hBB_3);
-    
-    enumSet.insert(enumSet.end(), CBasebandName::hBB_4);
-    
-    enumSet.insert(enumSet.end(), CBasebandName::hBB_5);
-    
-    enumSet.insert(enumSet.end(), CBasebandName::hBB_6);
-    
-    enumSet.insert(enumSet.end(), CBasebandName::hBB_7);
-    
-    enumSet.insert(enumSet.end(), CBasebandName::hBB_8);
-        
-    return enumSet;
-}
-   	
 
 std::string CBasebandName::name(const BasebandNameMod::BasebandName& f) {
     switch (f) {
+    
+    case BasebandNameMod::NOBB:
+      return CBasebandName::sNOBB;
     
     case BasebandNameMod::BB_1:
       return CBasebandName::sBB_1;
@@ -145,48 +126,21 @@ std::string CBasebandName::name(const BasebandNameMod::BasebandName& f) {
     
     case BasebandNameMod::BB_8:
       return CBasebandName::sBB_8;
+    
+    case BasebandNameMod::BB_ALL:
+      return CBasebandName::sBB_ALL;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CBasebandName::help(const BasebandNameMod::BasebandName& f) {
-    switch (f) {
-    
-    case BasebandNameMod::BB_1:
-      return CBasebandName::hBB_1;
-    
-    case BasebandNameMod::BB_2:
-      return CBasebandName::hBB_2;
-    
-    case BasebandNameMod::BB_3:
-      return CBasebandName::hBB_3;
-    
-    case BasebandNameMod::BB_4:
-      return CBasebandName::hBB_4;
-    
-    case BasebandNameMod::BB_5:
-      return CBasebandName::hBB_5;
-    
-    case BasebandNameMod::BB_6:
-      return CBasebandName::hBB_6;
-    
-    case BasebandNameMod::BB_7:
-      return CBasebandName::hBB_7;
-    
-    case BasebandNameMod::BB_8:
-      return CBasebandName::hBB_8;
-    	
-    }
-    return std::string("");
-}
-   	
 
 BasebandNameMod::BasebandName CBasebandName::newBasebandName(const std::string& name) {
 		
+    if (name == CBasebandName::sNOBB) {
+        return BasebandNameMod::NOBB;
+    }
+    	
     if (name == CBasebandName::sBB_1) {
         return BasebandNameMod::BB_1;
     }
@@ -217,6 +171,10 @@ BasebandNameMod::BasebandName CBasebandName::newBasebandName(const std::string& 
     	
     if (name == CBasebandName::sBB_8) {
         return BasebandNameMod::BB_8;
+    }
+    	
+    if (name == CBasebandName::sBB_ALL) {
+        return BasebandNameMod::BB_ALL;
     }
     
     throw badString(name);
@@ -224,6 +182,10 @@ BasebandNameMod::BasebandName CBasebandName::newBasebandName(const std::string& 
 
 BasebandNameMod::BasebandName CBasebandName::literal(const std::string& name) {
 		
+    if (name == CBasebandName::sNOBB) {
+        return BasebandNameMod::NOBB;
+    }
+    	
     if (name == CBasebandName::sBB_1) {
         return BasebandNameMod::BB_1;
     }
@@ -255,17 +217,19 @@ BasebandNameMod::BasebandName CBasebandName::literal(const std::string& name) {
     if (name == CBasebandName::sBB_8) {
         return BasebandNameMod::BB_8;
     }
+    	
+    if (name == CBasebandName::sBB_ALL) {
+        return BasebandNameMod::BB_ALL;
+    }
     
     throw badString(name);
 }
 
 BasebandNameMod::BasebandName CBasebandName::from_int(unsigned int i) {
-	vector<string> names = sBasebandNameSet();
-	if (i >= names.size()) throw badInt(i);
-	return newBasebandName(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newBasebandName(names_.at(i));
 }
-
-	
 
 string CBasebandName::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'BasebandName'.";

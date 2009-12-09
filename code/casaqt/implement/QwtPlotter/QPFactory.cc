@@ -37,6 +37,7 @@
 #include <casaqt/QwtPlotter/QPScatterPlot.h>
 #include <casaqt/QwtPlotter/QPShape.h>
 #include <casaqt/QwtPlotter/QPTool.qo.h>
+#include <display/QtViewer/QtApp.h>
 
 namespace casa {
 
@@ -44,22 +45,16 @@ namespace casa {
 // QPFACTORY DEFINITIONS //
 ///////////////////////////
 
-QPFactory::QPFactory() : m_argc(0), m_argv(NULL), m_app(NULL),
-        m_createdQApp(false) {
-    if(qApp == NULL) {
-        m_app = new QApplication(m_argc, m_argv);
-        m_createdQApp = true;
-    } else m_app = qApp;
+QPFactory::QPFactory() {
+    QtApp::init();
 }
 
-QPFactory::~QPFactory() {
-    if(m_createdQApp) delete m_app;
-}
+QPFactory::~QPFactory() { }
 
 
 int QPFactory::execLoop() {
     QApplication::processEvents();
-    return m_app->exec();
+    return QtApp::exec();
 }
 
 

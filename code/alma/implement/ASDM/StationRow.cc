@@ -88,6 +88,16 @@ namespace asdm {
 		
 		
 			
+		x->stationId = stationId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
 				
 		x->name = CORBA::string_dup(name.c_str());
 				
@@ -123,16 +133,6 @@ namespace asdm {
 	
 
 	
-  		
-		
-		
-			
-		x->stationId = stationId.toIDLTag();
-			
-		
-	
-
-	
 	
 		
 		
@@ -147,11 +147,21 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct StationRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void StationRow::setFromIDL (StationRowIDL x) throw(ConversionException) {
+	void StationRow::setFromIDL (StationRowIDL x){
 		try {
 		// Fill the values from x.
 	
 		
+	
+		
+		
+			
+		setStationId(Tag (x.stationId));
+			
+ 		
+		
+	
+
 	
 		
 		
@@ -188,20 +198,10 @@ namespace asdm {
 	
 
 	
-		
-		
-			
-		setStationId(Tag (x.stationId));
-			
- 		
-		
-	
-
-	
 	
 		
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Station");
+			throw ConversionException (err.getMessage(),"Station");
 		}
 	}
 #endif
@@ -216,6 +216,14 @@ namespace asdm {
 		
 	
 		
+  	
+ 		
+		
+		Parser::toXML(stationId, "stationId", buf);
+		
+		
+	
+
   	
  		
 		
@@ -240,14 +248,6 @@ namespace asdm {
 		
 	
 
-  	
- 		
-		
-		Parser::toXML(stationId, "stationId", buf);
-		
-		
-	
-
 	
 	
 		
@@ -261,12 +261,20 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void StationRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void StationRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
 	
 		
+	
+  		
+			
+	  	setStationId(Parser::getTag("stationId","Station",rowDoc));
+			
+		
+	
+
 	
   		
 			
@@ -296,14 +304,6 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setStationId(Parser::getTag("stationId","Station",rowDoc));
-			
-		
-	
-
-	
 	
 		
 		} catch (IllegalAccessException err) {
@@ -311,10 +311,134 @@ namespace asdm {
 		}
 	}
 	
+	void StationRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	stationId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(name);
+				
+		
+	
+
+	
+	
+		
+	Length::toBin(position, eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(type);
+				
+		
+	
+
+
+	
+	
+	}
+	
+	StationRow* StationRow::fromBin(EndianISStream& eiss, StationTable& table) {
+		StationRow* row = new  StationRow(table);
+		
+		
+		
+	
+		
+		
+		row->stationId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->name =  eiss.readString();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->position = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->type = CStationType::from_int(eiss.readInt());
+			
+		
+	
+
+		
+		
+		
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
+	
+
+	
+ 	/**
+ 	 * Get stationId.
+ 	 * @return stationId as Tag
+ 	 */
+ 	Tag StationRow::getStationId() const {
+	
+  		return stationId;
+ 	}
+
+ 	/**
+ 	 * Set stationId with the specified Tag.
+ 	 * @param stationId The Tag value to which stationId is to be set.
+ 	 
+ 	
+ 		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
+ 	 */
+ 	void StationRow::setStationId (Tag stationId)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+			throw IllegalAccessException("stationId", "Station");
+		
+  		}
+  	
+ 		this->stationId = stationId;
+	
+ 	}
+	
+	
+
 	
 
 	
@@ -412,42 +536,6 @@ namespace asdm {
 	
 
 	
-
-	
- 	/**
- 	 * Get stationId.
- 	 * @return stationId as Tag
- 	 */
- 	Tag StationRow::getStationId() const {
-	
-  		return stationId;
- 	}
-
- 	/**
- 	 * Set stationId with the specified Tag.
- 	 * @param stationId The Tag value to which stationId is to be set.
- 	 
- 	
- 		
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 	
- 	 */
- 	void StationRow::setStationId (Tag stationId)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-			throw IllegalAccessException("stationId", "Station");
-		
-  		}
-  	
- 		this->stationId = stationId;
-	
- 	}
-	
-	
-
-	
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -486,10 +574,10 @@ namespace asdm {
 	
 
 	
+
+	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 type = CStationType::from_int(0);
-	
-
 	
 	
 	}

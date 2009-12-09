@@ -77,21 +77,8 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
+#include "CBasebandName.h"
+using namespace BasebandNameMod;
 	
 
 	
@@ -100,13 +87,55 @@ using namespace NetSidebandMod;
 	
 
 	
+
+	
+
+	
 #include "CSidebandProcessingMode.h"
 using namespace SidebandProcessingModeMod;
 	
 
 	
-#include "CBasebandName.h"
-using namespace BasebandNameMod;
+
+	
+#include "CWindowFunction.h"
+using namespace WindowFunctionMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+#include "CCorrelationBit.h"
+using namespace CorrelationBitMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+#include "CFrequencyReferenceCode.h"
+using namespace FrequencyReferenceCodeMod;
+	
+
+	
+
+	
+
 	
 
 	
@@ -120,22 +149,6 @@ using namespace BasebandNameMod;
 	
 #include "CSpectralResolutionType.h"
 using namespace SpectralResolutionTypeMod;
-	
-
-	
-
-	
-#include "CWindowFunction.h"
-using namespace WindowFunctionMod;
-	
-
-	
-
-	
-#include "CCorrelationBit.h"
-using namespace CorrelationBitMod;
-	
-
 	
 
 
@@ -178,179 +191,245 @@ class ASDM;
 class SpectralWindowRow;
 /**
  * The SpectralWindowTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Spectral window description. The convention in ALMA is to describe the  frequency axis in the topocentric reference frame. If this is not  the case (for instance if active Doppler tracking is implemented) then  \texttt{measFreqRef} should be set accordingly.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SpectralWindow </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> spectralWindowId </I></TD> 
+ 		
+ * <TD><I> spectralWindowId </I></TD>
+ 		 
  * <TD> Tag</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a unique row in the table. </TD>
  * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
- * <TD> numChan </TD> 
- * <TD> int </TD>
+ * <TD> basebandName </TD> 
+ * <TD> BasebandNameMod::BasebandName </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> refFreq </TD> 
- * <TD> Frequency </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> chanFreq </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>  numChan </TD> 
- * </TR>
-	
- * <TR>
- * <TD> chanWidth </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>  numChan </TD> 
- * </TR>
-	
- * <TR>
- * <TD> effectiveBw </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>  numChan </TD> 
- * </TR>
-	
- * <TR>
- * <TD> resolution </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>  numChan </TD> 
- * </TR>
-	
- * <TR>
- * <TD> totBandwidth </TD> 
- * <TD> Frequency </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the baseband. </TD>
  * </TR>
 	
  * <TR>
  * <TD> netSideband </TD> 
  * <TD> NetSidebandMod::NetSideband </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the net sideband. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numChan </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of frequency channels. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> refFreq </TD> 
+ * <TD> Frequency </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the reference frequency. </TD>
  * </TR>
 	
  * <TR>
  * <TD> sidebandProcessingMode </TD> 
  * <TD> SidebandProcessingModeMod::SidebandProcessingMode </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the sideband processing mode. </TD>
  * </TR>
 	
  * <TR>
- * <TD> quantization </TD> 
- * <TD> bool </TD>
+ * <TD> totBandwidth </TD> 
+ * <TD> Frequency </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the total bandwidth. </TD>
  * </TR>
 	
  * <TR>
  * <TD> windowFunction </TD> 
  * <TD> WindowFunctionMod::WindowFunction </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the window function. </TD>
+ * </TR>
+	
+
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
+	
+ * <TR>
+ * <TD> chanFreqStart </TD> 
+ * <TD> Frequency </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the frequency of the first channel. </TD>
  * </TR>
 	
  * <TR>
- * <TD> oversampling </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> chanFreqStep </TD> 
+ * <TD> Frequency </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the increment between two successive frequencies. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> chanFreqArray </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  numChan  </TD>
+ * <TD>&nbsp; the frequencies defined as an array (\texttt{numChan} values). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> chanWidth </TD> 
+ * <TD> Frequency </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the width of the frequency channel (supposedly constant). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> chanWidthArray </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  numChan  </TD>
+ * <TD>&nbsp; Array of channel widths </TD>
  * </TR>
 	
  * <TR>
  * <TD> correlationBit </TD> 
  * <TD> CorrelationBitMod::CorrelationBit </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> flagRow </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
-
-
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
-	
- * <TR>
- * <TD> assocSpectralWindowId </TD> 
- * <TD> vector<Tag>  </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> dopplerId </TD> 
- * <TD> int </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; identifies the number of bits used in the signal representation. </TD>
  * </TR>
 	
  * <TR>
- * <TD> imageSpectralWindowId </TD> 
- * <TD> Tag </TD>
+ * <TD> effectiveBw </TD> 
+ * <TD> Frequency </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the effective noise bandwidth. </TD>
  * </TR>
 	
  * <TR>
- * <TD> name </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> measFreqRef </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> basebandName </TD> 
- * <TD> BasebandNameMod::BasebandName </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> bbcSideband </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> ifConvChain </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp; </TD>
+ * <TD> effectiveBwArray </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  numChan  </TD>
+ * <TD>&nbsp; array of effective bandwidths (one value per channel). </TD>
  * </TR>
 	
  * <TR>
  * <TD> freqGroup </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the frequency group number. </TD>
  * </TR>
 	
  * <TR>
  * <TD> freqGroupName </TD> 
  * <TD> string </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the frequency group name. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> lineArray </TD> 
+ * <TD> vector<bool > </TD>
+ * <TD>  numChan  </TD>
+ * <TD>&nbsp; indicates lines (true) versus baselines (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> measFreqRef </TD> 
+ * <TD> FrequencyReferenceCodeMod::FrequencyReferenceCode </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the reference frame of the frequencies. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> name </TD> 
+ * <TD> string </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; a name for this spectral window. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> oversampling </TD> 
+ * <TD> bool </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; data are "oversampled" (true) or not (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> quantization </TD> 
+ * <TD> bool </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; a quantization correction has been applied (true) or not applied (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> refChan </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the reference channel "number". </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> resolution </TD> 
+ * <TD> Frequency </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the half power frequency resolution (supposedly constant for all the channels). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> resolutionArray </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  numChan  </TD>
+ * <TD>&nbsp; the frequency resolutions (possibly variable )(one value per channel). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numAssocValues </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the number of associated values. </TD>
  * </TR>
 	
  * <TR>
  * <TD> assocNature </TD> 
  * <TD> vector<SpectralResolutionTypeMod::SpectralResolutionType > </TD>
- * <TD>    </TD>
+ * <TD>  numAssocValues  </TD>
+ * <TD>&nbsp; the natures of the associations with the rows refered to by assocSpectralWindowId. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> assocSpectralWindowId </TD> 
+ * <TD> vector<Tag>  </TD>
+ * <TD>  numAssocValues  </TD>
+ * <TD>&nbsp; refers to a collection of associated rows in the table. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> imageSpectralWindowId </TD> 
+ * <TD> Tag </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; refers to a unique row in the table (image sideband description). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> dopplerId </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; refers to a collection of rows in DopplerTable. </TD>
  * </TR>
 	
 
@@ -425,42 +504,28 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param basebandName. 
+	
+ 	 * @param netSideband. 
+	
  	 * @param numChan. 
 	
  	 * @param refFreq. 
 	
- 	 * @param chanFreq. 
-	
- 	 * @param chanWidth. 
-	
- 	 * @param effectiveBw. 
-	
- 	 * @param resolution. 
+ 	 * @param sidebandProcessingMode. 
 	
  	 * @param totBandwidth. 
 	
- 	 * @param netSideband. 
-	
- 	 * @param sidebandProcessingMode. 
-	
- 	 * @param quantization. 
-	
  	 * @param windowFunction. 
 	
- 	 * @param oversampling. 
-	
- 	 * @param correlationBit. 
-	
- 	 * @param flagRow. 
-	
      */
-	SpectralWindowRow *newRow(int numChan, Frequency refFreq, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<Frequency > effectiveBw, vector<Frequency > resolution, Frequency totBandwidth, NetSidebandMod::NetSideband netSideband, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, bool quantization, WindowFunctionMod::WindowFunction windowFunction, bool oversampling, CorrelationBitMod::CorrelationBit correlationBit, bool flagRow);
+	SpectralWindowRow *newRow(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband netSideband, int numChan, Frequency refFreq, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, Frequency totBandwidth, WindowFunctionMod::WindowFunction windowFunction);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	SpectralWindowRow *newRowFull(int numChan, Frequency refFreq, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<Frequency > effectiveBw, vector<Frequency > resolution, Frequency totBandwidth, NetSidebandMod::NetSideband netSideband, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, bool quantization, WindowFunctionMod::WindowFunction windowFunction, bool oversampling, CorrelationBitMod::CorrelationBit correlationBit, bool flagRow);
+	SpectralWindowRow *newRowFull(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband netSideband, int numChan, Frequency refFreq, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, Frequency totBandwidth, WindowFunctionMod::WindowFunction windowFunction);
 
 
 	/**
@@ -539,36 +604,22 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
+ 	 * @param basebandName.
+ 	 		
+ 	 * @param netSideband.
+ 	 		
  	 * @param numChan.
  	 		
  	 * @param refFreq.
  	 		
- 	 * @param chanFreq.
- 	 		
- 	 * @param chanWidth.
- 	 		
- 	 * @param effectiveBw.
- 	 		
- 	 * @param resolution.
+ 	 * @param sidebandProcessingMode.
  	 		
  	 * @param totBandwidth.
  	 		
- 	 * @param netSideband.
- 	 		
- 	 * @param sidebandProcessingMode.
- 	 		
- 	 * @param quantization.
- 	 		
  	 * @param windowFunction.
- 	 		
- 	 * @param oversampling.
- 	 		
- 	 * @param correlationBit.
- 	 		
- 	 * @param flagRow.
  	 		 
  	 */
-	SpectralWindowRow* lookup(int numChan, Frequency refFreq, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<Frequency > effectiveBw, vector<Frequency > resolution, Frequency totBandwidth, NetSidebandMod::NetSideband netSideband, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, bool quantization, WindowFunctionMod::WindowFunction windowFunction, bool oversampling, CorrelationBitMod::CorrelationBit correlationBit, bool flagRow); 
+	SpectralWindowRow* lookup(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband netSideband, int numChan, Frequency refFreq, SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode, Frequency totBandwidth, WindowFunctionMod::WindowFunction windowFunction); 
 
 
 #ifndef WITHOUT_ACS
@@ -588,43 +639,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(SpectralWindowTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(SpectralWindowTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for SpectralWindow (SpectralWindowTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a SpectralWindow (SpectralWindowTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -703,8 +760,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	SpectralWindowRow* checkAndAdd(SpectralWindowRow* x) throw (DuplicateKey, UniquenessViolationException);
+	SpectralWindowRow* checkAndAdd(SpectralWindowRow* x) ;
 
 
 
@@ -718,7 +779,7 @@ private:
 	vector<SpectralWindowRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

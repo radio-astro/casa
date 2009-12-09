@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="gaincal">
+<task type="function" name="gaincal" category="calibration">
 <shortdescription>Determine temporal gains from calibrator observations</shortdescription>
 <description>
 The complex gains for each antenna/spwid are determined from the

@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="split">
+<task type="function" name="split" category="utility">
      <shortdescription>Create a visibility subset from an existing visibility set</shortdescription>
 
 <description>
@@ -16,16 +16,14 @@ that is a subset of an existing data set.  General selection parameters
 are included, and any combination of the three data columns (data, model
 and/or corrected) can be selection.
 
-Split is often used after the initial calibration of the data to remove those
-sources which need additional flagging, imaging and self-calibration.  The data
-can be averaged over specified frequency channels of the input data set and time
-averaging is also available.  
+Split is often used after the initial calibration of the data to remove
+those sources which need additional flagging, imaging and
+self-calibration.  The data can be averaged over specified frequency
+channels of the input data set and time averaging is also available.
 
-Note: It is not yet possible to simultaneously average a data set in time and frequency
-in one execution:  they must be done separately
+Note: It is not yet possible to simultaneously average a data set in
+time and frequency in one execution: they must be done separately.
 </description>
-
-
 
 <input>
 	<param type="string" name="vis" mustexist="true">
@@ -38,16 +36,16 @@ in one execution:  they must be done separately
 		<value></value>
 	</param>
 
-	<param type="string" name="datacolumn">
-		<description>Which data column to split out</description>
+	<param type="string" name="datacolumn" ignorecase="True">
+		<description>Which data column(s) to split out</description>
 		<value>corrected</value>
 		<allowed kind="enum" ignorecase="True">
 			<value>data</value>
 			<value>corrected</value>
 			<value>model</value>
-                        <value>data,corrected</value>
+<!--                        <value>data,corrected</value>
                         <value>data,model</value>
-                        <value>model,corrected</value>
+                        <value>model,corrected</value> -->
                         <value>data,model,corrected</value>
                         <value>all</value>
 		</allowed>
@@ -90,11 +88,14 @@ in one execution:  they must be done separately
 		<description>select data based on scan numbers</description>
 		<value></value>
 	</param>
+        <param type="string" name="array">
+                <description>Select (sub)array by array ID number(s)</description>
+                <value></value>
+        </param>
 	<param type="string" name="uvrange" >
 		<description>select data based on uv distance range</description>
 		<value></value>
 	</param>
-
 </input>
 <example>
 
@@ -125,13 +126,14 @@ in one execution:  they must be done separately
                 'data,model','data,corrected','model,corrected',
                 note: 'all'='data,model,corrected' 
 
-        --- Data Selection (see help par.selectdata for more detailed information)
+        --- Data Selection (see help par.selectdata for more detailed
+            information)
 
         field -- Select field using field id(s) or field name(s).
                   [run listobs to obtain the list id's or names]
-               default: ''=all fields
-               If field string is a non-negative integer, it is assumed a field index
-                 otherwise, it is assumed a field name
+               default: ''=all fields If field string is a non-negative
+               integer, it is assumed to be a field index
+               otherwise, it is assumed to be a field name
                field='0~2'; field ids 0,1,2
                field='0,4,5~7'; field ids 0,4,5,6,7
                field='3C286,3C295'; field named 3C286 adn 3C295
@@ -141,24 +143,24 @@ in one execution:  they must be done separately
                spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
                spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
                spw='0:5~61'; spw 0, channels 5 to 61
-               spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, channels 3 to 45.
+               spw='0,10,3:3~45'; spw 0,10 all channels, spw 3 - chans 3 to 45.
                spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
                spw = '*:3~64'  channels 3 through 64 for all sp id's
                        spw = ' :3~64' will NOT work.
-               spw = '*:0;60~63'  channel 0 and channels 60,61,62,63 for all IF's 
+               spw = '*:0;60~63'  channel 0 and channels 60 to 63 for all IFs 
                       ';' needed to separate different channel ranges in one spw
                spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
                spw='0:0~10,1:20~30,2:1;2;4'; spw 0, channels 0-10,
-                        spw 1, channels 20-30, and spw 2, channels, 1,2 and 
+                        spw 1, channels 20-30, and spw 2, channels, 1, 2 and 4
 	width -- Defines the number of channel to average to form the one
 	         output channel.
 		 default: '1' =&gt; no channel averaging
 		 example: width=[2,3] =&gt; average 2 channels of 1st
 		          spectral window selected and 3 in the second one.
         antenna -- Select data based on antenna/baseline
-               default: '' (all)
-               If antenna string is a non-negative integer, it is assumed an antenna index
-                 otherwise, it is assumed as an antenna name
+               default: '' (all) If antenna string is a non-negative
+               integer, it is assumed to be an antenna index
+                 otherwise, it is assumed to be an antenna name.
                antenna='5&amp;6'; baseline between antenna index 5 and index 6.
                antenna='VA05&amp;VA06'; baseline between VLA antenna 5 and 6.
                antenna='5&amp;6;7&amp;8'; baseline 5-6 and 7-8
@@ -170,11 +172,15 @@ in one execution:  they must be done separately
         timerange  -- Select data based on time range:
                default = '' (all); examples,
                timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
-               Note: if YYYY/MM/DD is missing date, defaults to first day in data set
+               Note: if YYYY/MM/DD is missing date, timerange defaults to the
+               first day in the dataset
                timerange='09:14:0~09:54:0' picks 40 min on first day
-               timerange= '25:00:00~27:30:00' picks 1 hr to 3 hr 30min on next day
+               timerange='25:00:00~27:30:00' picks 1 hr to 3 hr 30min
+               on next day
                timerange='09:44:00' data within one integration of time
                timerange='&gt;10:24:00' data after this time
+        array  -- (Sub)array number range
+            default: ''=all
 	uvrange -- Select data within uvrange (default units meters)
             default: ''=all; example:
             uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda

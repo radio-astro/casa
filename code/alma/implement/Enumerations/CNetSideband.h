@@ -42,17 +42,32 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the NetSideband enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace NetSidebandMod
 {
+  //! NetSideband.
+  //!  [ASDM.SpectralWindow] Equivalent side band of spectrum frequency axis
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum NetSideband
   { 
-    NOSB ,
-    LSB ,
-    USB ,
-    DSB 
+    NOSB /*!< No side band (no frequency conversion) */
+     ,
+    LSB /*!< Lower side band */
+     ,
+    USB /*!< Upper side band */
+     ,
+    DSB /*!< Double side band */
+     
   };
   typedef NetSideband &NetSideband_out;
 } 
@@ -60,72 +75,95 @@ namespace NetSidebandMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration NetSideband.
+  * 
+  */
 class CNetSideband {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the NetSideband enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sNOSB;
+	static const std::string& sNOSB; /*!< A const string equal to "NOSB".*/
 	
-	static const std::string& sLSB;
+	static const std::string& sLSB; /*!< A const string equal to "LSB".*/
 	
-	static const std::string& sUSB;
+	static const std::string& sUSB; /*!< A const string equal to "USB".*/
 	
-	static const std::string& sDSB;
-	
-    static const std::vector<std::string> sNetSidebandSet();	 
-
+	static const std::string& sDSB; /*!< A const string equal to "DSB".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in NetSidebandMod::NetSideband.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of NetSidebandMod::NetSideband.
+      * @return a string.
+      */
+	static std::string name(const NetSidebandMod::NetSideband& e);
 	
-	// Explanations associated with the NetSideband Enumeration.
-		
-	static const std::string& hNOSB;
-		
-	static const std::string& hLSB;
-		
-	static const std::string& hUSB;
-		
-	static const std::string& hDSB;
-		
-	static const std::vector<std::string> hNetSidebandSet();
-   	
-
-   	// Is an integer number associated with the NetSideband enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the NetSideband enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  NetSideband enumeration.
-	static std::string name(const NetSidebandMod::NetSideband& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const NetSidebandMod::NetSideband& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified NetSideband enumeration.
-	static std::string help(const NetSidebandMod::NetSideband& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a NetSideband enumeration object by specifying its name.
    	static NetSidebandMod::NetSideband newNetSideband(const std::string& name);
    	
-   	// Create a NetSideband enumeration object by specifying its name.
+   	/*! Return a NetSideband's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a NetSidebandMod::NetSideband's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static NetSidebandMod::NetSideband literal(const std::string& name);
  	
-    // Create a NetSideband enumeration object by specifying its position index (0 based).
+    /*! Return a NetSideband's enumerator given an unsigned int.
+      * @param i the index of the enumerator in NetSidebandMod::NetSideband.
+      * @return a NetSidebandMod::NetSideband's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static NetSidebandMod::NetSideband from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CNetSideband();
     CNetSideband(const CNetSideband&);
     CNetSideband& operator=(const CNetSideband&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CNetSideband_H*/

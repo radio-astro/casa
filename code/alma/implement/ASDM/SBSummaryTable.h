@@ -83,6 +83,13 @@ using namespace enumerations;
 	
 
 	
+
+	
+#include "CReceiverBand.h"
+using namespace ReceiverBandMod;
+	
+
+	
 #include "CSBType.h"
 using namespace SBTypeMod;
 	
@@ -105,6 +112,9 @@ using namespace SBTypeMod;
 
 	
 
+	
+#include "CDirectionReferenceCode.h"
+using namespace DirectionReferenceCodeMod;
 	
 
 	
@@ -149,118 +159,156 @@ class ASDM;
 class SBSummaryRow;
 /**
  * The SBSummaryTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Characteristics of the Scheduling Block that has been executed. Much of the  data here is reproduced from the Scheduling block itself.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SBSummary </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> sbId </TD> 
- * <TD> EntityRef </TD>
+ 		
+ * <TD><I> sBSummaryId </I></TD>
+ 		 
+ * <TD> Tag</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in the table. </TD>
  * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
- * <TD> projectId </TD> 
+ * <TD> sbSummaryUID </TD> 
  * <TD> EntityRef </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the scheduling block archive's UID. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> projectUID </TD> 
+ * <TD> EntityRef </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the projet archive's UID. </TD>
  * </TR>
 	
  * <TR>
  * <TD> obsUnitSetId </TD> 
  * <TD> EntityRef </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> sbIntent </TD> 
- * <TD> string </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> sbType </TD> 
- * <TD> SBTypeMod::SBType </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> sbDuration </TD> 
- * <TD> Interval </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numScan </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> scanIntent </TD> 
- * <TD> vector<string > </TD>
- * <TD>  numScan </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numberRepeats </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> weatherConstraint </TD> 
- * <TD> vector<string > </TD>
- * <TD>   </TD> 
- * </TR>
-	
- * <TR>
- * <TD> scienceGoal </TD> 
- * <TD> vector<string > </TD>
- * <TD>   </TD> 
- * </TR>
-	
- * <TR>
- * <TD> raCenter </TD> 
- * <TD> double </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> decCenter </TD> 
- * <TD> double </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the observing unit set archive's UID. </TD>
  * </TR>
 	
  * <TR>
  * <TD> frequency </TD> 
  * <TD> double </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;a representative frequency. </TD>
  * </TR>
 	
  * <TR>
  * <TD> frequencyBand </TD> 
- * <TD> string </TD>
+ * <TD> ReceiverBandMod::ReceiverBand </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the frequency band. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sbType </TD> 
+ * <TD> SBTypeMod::SBType </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the type of scheduling block. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> sbDuration </TD> 
+ * <TD> Interval </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the duration of the scheduling block. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> centerDirection </TD> 
+ * <TD> vector<Angle > </TD>
+ * <TD>  2 </TD> 
+ * <TD> &nbsp;the representative target direction. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numObservingMode </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of observing modes. </TD>
  * </TR>
 	
  * <TR>
  * <TD> observingMode </TD> 
  * <TD> vector<string > </TD>
- * <TD>   </TD> 
+ * <TD>  numObservingMode </TD> 
+ * <TD> &nbsp;the observing modes. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numberRepeats </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of repeats. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numScienceGoal </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of scientific goals. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> scienceGoal </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numScienceGoal </TD> 
+ * <TD> &nbsp;the scientific goals. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numWeatherConstraint </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of weather constraints. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> weatherConstraint </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numWeatherConstraint </TD> 
+ * <TD> &nbsp;the weather constraints. </TD>
  * </TR>
 	
 
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
+	
+ * <TR>
+ * <TD> centerDirectionCode </TD> 
+ * <TD> DirectionReferenceCodeMod::DirectionReferenceCode </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; identifies the direction reference frame associated with centerDirection. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> centerDirectionEquinox </TD> 
+ * <TD> ArrayTime </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the equinox associated to centerDirectionReferenceCode (if needed). </TD>
+ * </TR>
+	
 
  * </TABLE>
  */
@@ -333,46 +381,44 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param sbId. 
+ 	 * @param sbSummaryUID. 
 	
- 	 * @param projectId. 
+ 	 * @param projectUID. 
 	
  	 * @param obsUnitSetId. 
-	
- 	 * @param sbIntent. 
-	
- 	 * @param sbType. 
-	
- 	 * @param sbDuration. 
-	
- 	 * @param numScan. 
-	
- 	 * @param scanIntent. 
-	
- 	 * @param numberRepeats. 
-	
- 	 * @param weatherConstraint. 
-	
- 	 * @param scienceGoal. 
-	
- 	 * @param raCenter. 
-	
- 	 * @param decCenter. 
 	
  	 * @param frequency. 
 	
  	 * @param frequencyBand. 
 	
+ 	 * @param sbType. 
+	
+ 	 * @param sbDuration. 
+	
+ 	 * @param centerDirection. 
+	
+ 	 * @param numObservingMode. 
+	
  	 * @param observingMode. 
 	
+ 	 * @param numberRepeats. 
+	
+ 	 * @param numScienceGoal. 
+	
+ 	 * @param scienceGoal. 
+	
+ 	 * @param numWeatherConstraint. 
+	
+ 	 * @param weatherConstraint. 
+	
      */
-	SBSummaryRow *newRow(EntityRef sbId, EntityRef projectId, EntityRef obsUnitSetId, string sbIntent, SBTypeMod::SBType sbType, Interval sbDuration, int numScan, vector<string > scanIntent, int numberRepeats, vector<string > weatherConstraint, vector<string > scienceGoal, double raCenter, double decCenter, double frequency, string frequencyBand, vector<string > observingMode);
+	SBSummaryRow *newRow(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	SBSummaryRow *newRowFull(EntityRef sbId, EntityRef projectId, EntityRef obsUnitSetId, string sbIntent, SBTypeMod::SBType sbType, Interval sbDuration, int numScan, vector<string > scanIntent, int numberRepeats, vector<string > weatherConstraint, vector<string > scienceGoal, double raCenter, double decCenter, double frequency, string frequencyBand, vector<string > observingMode);
+	SBSummaryRow *newRowFull(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint);
 
 
 	/**
@@ -398,23 +444,20 @@ public:
 	//
 	// ====> Append a row to its table.
 	//
- 
-	
-	/**
-	 * Add a row.
-	 * @param x a pointer to the SBSummaryRow to be added.
-	 *
-	 * @return a pointer to a SBSummaryRow. If the table contains a SBSummaryRow whose attributes (key and mandatory values) are equal to x ones
-	 * then returns a pointer on that SBSummaryRow, otherwise returns x.
-	 *
-	 * @throw DuplicateKey { thrown when the table contains a SBSummaryRow with a key equal to the x one but having
-	 * and a value section different from x one }
-	 *
-	
-	 */
-	SBSummaryRow* add(SBSummaryRow* x) ; 
 
- 
+	
+	
+	
+	/** 
+	 * Add a row.
+	 * If there table contains a row whose key's fields are equal
+	 * to x's ones then return a pointer on this row (i.e. no actual insertion is performed) 
+	 * otherwise add x to the table and return x.
+	 * @param x. A pointer on the row to be added.
+ 	 * @returns a SBSummaryRow pointer.
+	 */	 
+	 
+ 	 SBSummaryRow* add(SBSummaryRow* x) ;
 
 
 
@@ -438,56 +481,54 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
-	 * @param sbId. 
+	 * @param sBSummaryId. 
 	
  	 *
 	 */
- 	SBSummaryRow* getRowByKey(EntityRef sbId);
+ 	SBSummaryRow* getRowByKey(Tag sBSummaryId);
 
  	 	
 
 
 
 	/**
- 	 * Look up the table for a row whose all attributes 
+ 	 * Look up the table for a row whose all attributes  except the autoincrementable one 
  	 * are equal to the corresponding parameters of the method.
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param sbId.
+ 	 * @param sbSummaryUID.
  	 		
- 	 * @param projectId.
+ 	 * @param projectUID.
  	 		
  	 * @param obsUnitSetId.
- 	 		
- 	 * @param sbIntent.
- 	 		
- 	 * @param sbType.
- 	 		
- 	 * @param sbDuration.
- 	 		
- 	 * @param numScan.
- 	 		
- 	 * @param scanIntent.
- 	 		
- 	 * @param numberRepeats.
- 	 		
- 	 * @param weatherConstraint.
- 	 		
- 	 * @param scienceGoal.
- 	 		
- 	 * @param raCenter.
- 	 		
- 	 * @param decCenter.
  	 		
  	 * @param frequency.
  	 		
  	 * @param frequencyBand.
  	 		
+ 	 * @param sbType.
+ 	 		
+ 	 * @param sbDuration.
+ 	 		
+ 	 * @param centerDirection.
+ 	 		
+ 	 * @param numObservingMode.
+ 	 		
  	 * @param observingMode.
+ 	 		
+ 	 * @param numberRepeats.
+ 	 		
+ 	 * @param numScienceGoal.
+ 	 		
+ 	 * @param scienceGoal.
+ 	 		
+ 	 * @param numWeatherConstraint.
+ 	 		
+ 	 * @param weatherConstraint.
  	 		 
  	 */
-	SBSummaryRow* lookup(EntityRef sbId, EntityRef projectId, EntityRef obsUnitSetId, string sbIntent, SBTypeMod::SBType sbType, Interval sbDuration, int numScan, vector<string > scanIntent, int numberRepeats, vector<string > weatherConstraint, vector<string > scienceGoal, double raCenter, double decCenter, double frequency, string frequencyBand, vector<string > observingMode); 
+	SBSummaryRow* lookup(EntityRef sbSummaryUID, EntityRef projectUID, EntityRef obsUnitSetId, double frequency, ReceiverBandMod::ReceiverBand frequencyBand, SBTypeMod::SBType sbType, Interval sbDuration, vector<Angle > centerDirection, int numObservingMode, vector<string > observingMode, int numberRepeats, int numScienceGoal, vector<string > scienceGoal, int numWeatherConstraint, vector<string > weatherConstraint); 
 
 
 #ifndef WITHOUT_ACS
@@ -507,43 +548,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(SBSummaryTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(SBSummaryTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for SBSummary (SBSummaryTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a SBSummary (SBSummaryTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -601,6 +648,10 @@ private:
 	Entity entity;
 	
 
+	// A map for the autoincrementation algorithm
+	map<string,int>  noAutoIncIds;
+	void autoIncrement(string key, SBSummaryRow* x);
+
 
 	/**
 	 * The name of this table.
@@ -618,8 +669,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	SBSummaryRow* checkAndAdd(SBSummaryRow* x) throw (DuplicateKey);
+	SBSummaryRow* checkAndAdd(SBSummaryRow* x) ;
 
 
 
@@ -633,7 +688,7 @@ private:
 	vector<SBSummaryRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

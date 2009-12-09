@@ -100,9 +100,75 @@ namespace asdm {
 		
 		
 			
+		x->startValidTime = startValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->endValidTime = endValidTime.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
 				
 		x->antennaName = CORBA::string_dup(antennaName.c_str());
 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->receiverBand = receiverBand;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->ambientTemperature = ambientTemperature.toIDLTemperature();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->atmPhaseCorrection = atmPhaseCorrection;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->focusMethod = focusMethod;
+ 				
  			
 		
 	
@@ -127,80 +193,6 @@ namespace asdm {
 		
 		
 			
-		x->startValidTime = startValidTime.toIDLArrayTime();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->endValidTime = endValidTime.toIDLArrayTime();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->receiverBand = receiverBand;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->offset.length(offset.size());
-		for (unsigned int i = 0; i < offset.size(); ++i) {
-			
-			x->offset[i] = offset.at(i).toIDLLength();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->error.length(error.size());
-		for (unsigned int i = 0; i < error.size(); ++i) {
-			
-			x->error[i] = error.at(i).toIDLLength();
-			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->focusMethod = focusMethod;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
 		x->pointingDirection.length(pointingDirection.size());
 		for (unsigned int i = 0; i < pointingDirection.size(); ++i) {
 			
@@ -216,11 +208,23 @@ namespace asdm {
 		
 		
 			
-		x->wasFixed.length(wasFixed.size());
-		for (unsigned int i = 0; i < wasFixed.size(); ++i) {
+				
+		x->numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->polarizationTypes.length(polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
 			
 				
-			x->wasFixed[i] = wasFixed.at(i);
+			x->polarizationTypes[i] = polarizationTypes.at(i);
 	 			
 	 		
 	 	}
@@ -233,8 +237,272 @@ namespace asdm {
 		
 		
 			
-		x->ambientTemperature = ambientTemperature.toIDLTemperature();
+		x->wereFixed.length(wereFixed.size());
+		for (unsigned int i = 0; i < wereFixed.size(); ++i) {
 			
+				
+			x->wereFixed[i] = wereFixed.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->offset.length(offset.size());
+		for (unsigned int i = 0; i < offset.size(); i++) {
+			x->offset[i].length(offset.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < offset.size() ; i++)
+			for (unsigned int j = 0; j < offset.at(i).size(); j++)
+					
+				x->offset[i][j]= offset.at(i).at(j).toIDLLength();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->offsetError.length(offsetError.size());
+		for (unsigned int i = 0; i < offsetError.size(); i++) {
+			x->offsetError[i].length(offsetError.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < offsetError.size() ; i++)
+			for (unsigned int j = 0; j < offsetError.at(i).size(); j++)
+					
+				x->offsetError[i][j]= offsetError.at(i).at(j).toIDLLength();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->offsetWasTied.length(offsetWasTied.size());
+		for (unsigned int i = 0; i < offsetWasTied.size(); i++) {
+			x->offsetWasTied[i].length(offsetWasTied.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < offsetWasTied.size() ; i++)
+			for (unsigned int j = 0; j < offsetWasTied.at(i).size(); j++)
+					
+						
+				x->offsetWasTied[i][j] = offsetWasTied.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->reducedChiSquared.length(reducedChiSquared.size());
+		for (unsigned int i = 0; i < reducedChiSquared.size(); i++) {
+			x->reducedChiSquared[i].length(reducedChiSquared.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < reducedChiSquared.size() ; i++)
+			for (unsigned int j = 0; j < reducedChiSquared.at(i).size(); j++)
+					
+						
+				x->reducedChiSquared[i][j] = reducedChiSquared.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		x->polarizationsAveragedExists = polarizationsAveragedExists;
+		
+		
+			
+				
+		x->polarizationsAveraged = polarizationsAveraged;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->focusCurveWidthExists = focusCurveWidthExists;
+		
+		
+			
+		x->focusCurveWidth.length(focusCurveWidth.size());
+		for (unsigned int i = 0; i < focusCurveWidth.size(); i++) {
+			x->focusCurveWidth[i].length(focusCurveWidth.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < focusCurveWidth.size() ; i++)
+			for (unsigned int j = 0; j < focusCurveWidth.at(i).size(); j++)
+					
+				x->focusCurveWidth[i][j]= focusCurveWidth.at(i).at(j).toIDLLength();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x->focusCurveWidthErrorExists = focusCurveWidthErrorExists;
+		
+		
+			
+		x->focusCurveWidthError.length(focusCurveWidthError.size());
+		for (unsigned int i = 0; i < focusCurveWidthError.size(); i++) {
+			x->focusCurveWidthError[i].length(focusCurveWidthError.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < focusCurveWidthError.size() ; i++)
+			for (unsigned int j = 0; j < focusCurveWidthError.at(i).size(); j++)
+					
+				x->focusCurveWidthError[i][j]= focusCurveWidthError.at(i).at(j).toIDLLength();
+									
+		
+			
+		
+	
+
+	
+  		
+		
+		x->focusCurveWasFixedExists = focusCurveWasFixedExists;
+		
+		
+			
+		x->focusCurveWasFixed.length(focusCurveWasFixed.size());
+		for (unsigned int i = 0; i < focusCurveWasFixed.size(); ++i) {
+			
+				
+			x->focusCurveWasFixed[i] = focusCurveWasFixed.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->offIntensityExists = offIntensityExists;
+		
+		
+			
+		x->offIntensity.length(offIntensity.size());
+		for (unsigned int i = 0; i < offIntensity.size(); ++i) {
+			
+			x->offIntensity[i] = offIntensity.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->offIntensityErrorExists = offIntensityErrorExists;
+		
+		
+			
+		x->offIntensityError.length(offIntensityError.size());
+		for (unsigned int i = 0; i < offIntensityError.size(); ++i) {
+			
+			x->offIntensityError[i] = offIntensityError.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->offIntensityWasFixedExists = offIntensityWasFixedExists;
+		
+		
+			
+				
+		x->offIntensityWasFixed = offIntensityWasFixed;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->peakIntensityExists = peakIntensityExists;
+		
+		
+			
+		x->peakIntensity.length(peakIntensity.size());
+		for (unsigned int i = 0; i < peakIntensity.size(); ++i) {
+			
+			x->peakIntensity[i] = peakIntensity.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->peakIntensityErrorExists = peakIntensityErrorExists;
+		
+		
+			
+		x->peakIntensityError.length(peakIntensityError.size());
+		for (unsigned int i = 0; i < peakIntensityError.size(); ++i) {
+			
+			x->peakIntensityError[i] = peakIntensityError.at(i).toIDLTemperature();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->peakIntensityWasFixedExists = peakIntensityWasFixedExists;
+		
+		
+			
+				
+		x->peakIntensityWasFixed = peakIntensityWasFixed;
+ 				
+ 			
 		
 	
 
@@ -281,36 +549,11 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalFocusRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalFocusRow::setFromIDL (CalFocusRowIDL x) throw(ConversionException) {
+	void CalFocusRow::setFromIDL (CalFocusRowIDL x){
 		try {
 		// Fill the values from x.
 	
 		
-	
-		
-		
-			
-		setAntennaName(string (x.antennaName));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		frequencyRange .clear();
-		for (unsigned int i = 0; i <x.frequencyRange.length(); ++i) {
-			
-			frequencyRange.push_back(Frequency (x.frequencyRange[i]));
-			
-		}
-			
-  		
-		
-	
-
 	
 		
 		
@@ -335,6 +578,16 @@ namespace asdm {
 		
 		
 			
+		setAntennaName(string (x.antennaName));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
 		setReceiverBand(x.receiverBand);
   			
  		
@@ -345,14 +598,9 @@ namespace asdm {
 		
 		
 			
-		offset .clear();
-		for (unsigned int i = 0; i <x.offset.length(); ++i) {
+		setAmbientTemperature(Temperature (x.ambientTemperature));
 			
-			offset.push_back(Length (x.offset[i]));
-			
-		}
-			
-  		
+ 		
 		
 	
 
@@ -360,14 +608,9 @@ namespace asdm {
 		
 		
 			
-		error .clear();
-		for (unsigned int i = 0; i <x.error.length(); ++i) {
-			
-			error.push_back(Length (x.error[i]));
-			
-		}
-			
-  		
+		setAtmPhaseCorrection(x.atmPhaseCorrection);
+  			
+ 		
 		
 	
 
@@ -378,6 +621,21 @@ namespace asdm {
 		setFocusMethod(x.focusMethod);
   			
  		
+		
+	
+
+	
+		
+		
+			
+		frequencyRange .clear();
+		for (unsigned int i = 0; i <x.frequencyRange.length(); ++i) {
+			
+			frequencyRange.push_back(Frequency (x.frequencyRange[i]));
+			
+		}
+			
+  		
 		
 	
 
@@ -400,10 +658,20 @@ namespace asdm {
 		
 		
 			
-		wasFixed .clear();
-		for (unsigned int i = 0; i <x.wasFixed.length(); ++i) {
+		setNumReceptor(x.numReceptor);
+  			
+ 		
+		
+	
+
+	
+		
+		
 			
-			wasFixed.push_back(x.wasFixed[i]);
+		polarizationTypes .clear();
+		for (unsigned int i = 0; i <x.polarizationTypes.length(); ++i) {
+			
+			polarizationTypes.push_back(x.polarizationTypes[i]);
   			
 		}
 			
@@ -415,9 +683,289 @@ namespace asdm {
 		
 		
 			
-		setAmbientTemperature(Temperature (x.ambientTemperature));
+		wereFixed .clear();
+		for (unsigned int i = 0; i <x.wereFixed.length(); ++i) {
 			
+			wereFixed.push_back(x.wereFixed[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		offset .clear();
+		vector<Length> v_aux_offset;
+		for (unsigned int i = 0; i < x.offset.length(); ++i) {
+			v_aux_offset.clear();
+			for (unsigned int j = 0; j < x.offset[0].length(); ++j) {
+				
+				v_aux_offset.push_back(Length (x.offset[i][j]));
+				
+  			}
+  			offset.push_back(v_aux_offset);			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		offsetError .clear();
+		vector<Length> v_aux_offsetError;
+		for (unsigned int i = 0; i < x.offsetError.length(); ++i) {
+			v_aux_offsetError.clear();
+			for (unsigned int j = 0; j < x.offsetError[0].length(); ++j) {
+				
+				v_aux_offsetError.push_back(Length (x.offsetError[i][j]));
+				
+  			}
+  			offsetError.push_back(v_aux_offsetError);			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		offsetWasTied .clear();
+		vector<bool> v_aux_offsetWasTied;
+		for (unsigned int i = 0; i < x.offsetWasTied.length(); ++i) {
+			v_aux_offsetWasTied.clear();
+			for (unsigned int j = 0; j < x.offsetWasTied[0].length(); ++j) {
+				
+				v_aux_offsetWasTied.push_back(x.offsetWasTied[i][j]);
+	  			
+  			}
+  			offsetWasTied.push_back(v_aux_offsetWasTied);			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		reducedChiSquared .clear();
+		vector<double> v_aux_reducedChiSquared;
+		for (unsigned int i = 0; i < x.reducedChiSquared.length(); ++i) {
+			v_aux_reducedChiSquared.clear();
+			for (unsigned int j = 0; j < x.reducedChiSquared[0].length(); ++j) {
+				
+				v_aux_reducedChiSquared.push_back(x.reducedChiSquared[i][j]);
+	  			
+  			}
+  			reducedChiSquared.push_back(v_aux_reducedChiSquared);			
+		}
+			
+  		
+		
+	
+
+	
+		
+		polarizationsAveragedExists = x.polarizationsAveragedExists;
+		if (x.polarizationsAveragedExists) {
+		
+		
+			
+		setPolarizationsAveraged(x.polarizationsAveraged);
+  			
  		
+		
+		}
+		
+	
+
+	
+		
+		focusCurveWidthExists = x.focusCurveWidthExists;
+		if (x.focusCurveWidthExists) {
+		
+		
+			
+		focusCurveWidth .clear();
+		vector<Length> v_aux_focusCurveWidth;
+		for (unsigned int i = 0; i < x.focusCurveWidth.length(); ++i) {
+			v_aux_focusCurveWidth.clear();
+			for (unsigned int j = 0; j < x.focusCurveWidth[0].length(); ++j) {
+				
+				v_aux_focusCurveWidth.push_back(Length (x.focusCurveWidth[i][j]));
+				
+  			}
+  			focusCurveWidth.push_back(v_aux_focusCurveWidth);			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		focusCurveWidthErrorExists = x.focusCurveWidthErrorExists;
+		if (x.focusCurveWidthErrorExists) {
+		
+		
+			
+		focusCurveWidthError .clear();
+		vector<Length> v_aux_focusCurveWidthError;
+		for (unsigned int i = 0; i < x.focusCurveWidthError.length(); ++i) {
+			v_aux_focusCurveWidthError.clear();
+			for (unsigned int j = 0; j < x.focusCurveWidthError[0].length(); ++j) {
+				
+				v_aux_focusCurveWidthError.push_back(Length (x.focusCurveWidthError[i][j]));
+				
+  			}
+  			focusCurveWidthError.push_back(v_aux_focusCurveWidthError);			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		focusCurveWasFixedExists = x.focusCurveWasFixedExists;
+		if (x.focusCurveWasFixedExists) {
+		
+		
+			
+		focusCurveWasFixed .clear();
+		for (unsigned int i = 0; i <x.focusCurveWasFixed.length(); ++i) {
+			
+			focusCurveWasFixed.push_back(x.focusCurveWasFixed[i]);
+  			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		offIntensityExists = x.offIntensityExists;
+		if (x.offIntensityExists) {
+		
+		
+			
+		offIntensity .clear();
+		for (unsigned int i = 0; i <x.offIntensity.length(); ++i) {
+			
+			offIntensity.push_back(Temperature (x.offIntensity[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		offIntensityErrorExists = x.offIntensityErrorExists;
+		if (x.offIntensityErrorExists) {
+		
+		
+			
+		offIntensityError .clear();
+		for (unsigned int i = 0; i <x.offIntensityError.length(); ++i) {
+			
+			offIntensityError.push_back(Temperature (x.offIntensityError[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		offIntensityWasFixedExists = x.offIntensityWasFixedExists;
+		if (x.offIntensityWasFixedExists) {
+		
+		
+			
+		setOffIntensityWasFixed(x.offIntensityWasFixed);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		peakIntensityExists = x.peakIntensityExists;
+		if (x.peakIntensityExists) {
+		
+		
+			
+		peakIntensity .clear();
+		for (unsigned int i = 0; i <x.peakIntensity.length(); ++i) {
+			
+			peakIntensity.push_back(Temperature (x.peakIntensity[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		peakIntensityErrorExists = x.peakIntensityErrorExists;
+		if (x.peakIntensityErrorExists) {
+		
+		
+			
+		peakIntensityError .clear();
+		for (unsigned int i = 0; i <x.peakIntensityError.length(); ++i) {
+			
+			peakIntensityError.push_back(Temperature (x.peakIntensityError[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		peakIntensityWasFixedExists = x.peakIntensityWasFixedExists;
+		if (x.peakIntensityWasFixedExists) {
+		
+		
+			
+		setPeakIntensityWasFixed(x.peakIntensityWasFixed);
+  			
+ 		
+		
+		}
 		
 	
 
@@ -451,7 +999,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalFocus");
+			throw ConversionException (err.getMessage(),"CalFocus");
 		}
 	}
 #endif
@@ -466,22 +1014,6 @@ namespace asdm {
 		
 	
 		
-  	
- 		
-		
-		Parser::toXML(antennaName, "antennaName", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(frequencyRange, "frequencyRange", buf);
-		
-		
-	
-
   	
  		
 		
@@ -501,6 +1033,14 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(antennaName, "antennaName", buf);
+		
+		
+	
+
+  	
+ 		
+		
 			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
 		
 		
@@ -509,7 +1049,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(offset, "offset", buf);
+		Parser::toXML(ambientTemperature, "ambientTemperature", buf);
 		
 		
 	
@@ -517,7 +1057,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(error, "error", buf);
+			buf.append(EnumerationParser::toXML("atmPhaseCorrection", atmPhaseCorrection));
 		
 		
 	
@@ -533,6 +1073,14 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(frequencyRange, "frequencyRange", buf);
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(pointingDirection, "pointingDirection", buf);
 		
 		
@@ -541,7 +1089,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(wasFixed, "wasFixed", buf);
+		Parser::toXML(numReceptor, "numReceptor", buf);
 		
 		
 	
@@ -549,8 +1097,168 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(ambientTemperature, "ambientTemperature", buf);
+			buf.append(EnumerationParser::toXML("polarizationTypes", polarizationTypes));
 		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(wereFixed, "wereFixed", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(offset, "offset", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(offsetError, "offsetError", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(offsetWasTied, "offsetWasTied", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(reducedChiSquared, "reducedChiSquared", buf);
+		
+		
+	
+
+  	
+ 		
+		if (polarizationsAveragedExists) {
+		
+		
+		Parser::toXML(polarizationsAveraged, "polarizationsAveraged", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (focusCurveWidthExists) {
+		
+		
+		Parser::toXML(focusCurveWidth, "focusCurveWidth", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (focusCurveWidthErrorExists) {
+		
+		
+		Parser::toXML(focusCurveWidthError, "focusCurveWidthError", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (focusCurveWasFixedExists) {
+		
+		
+		Parser::toXML(focusCurveWasFixed, "focusCurveWasFixed", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (offIntensityExists) {
+		
+		
+		Parser::toXML(offIntensity, "offIntensity", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (offIntensityErrorExists) {
+		
+		
+		Parser::toXML(offIntensityError, "offIntensityError", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (offIntensityWasFixedExists) {
+		
+		
+		Parser::toXML(offIntensityWasFixed, "offIntensityWasFixed", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (peakIntensityExists) {
+		
+		
+		Parser::toXML(peakIntensity, "peakIntensity", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (peakIntensityErrorExists) {
+		
+		
+		Parser::toXML(peakIntensityError, "peakIntensityError", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (peakIntensityWasFixedExists) {
+		
+		
+		Parser::toXML(peakIntensityWasFixed, "peakIntensityWasFixed", buf);
+		
+		
+		}
 		
 	
 
@@ -589,30 +1297,12 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalFocusRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalFocusRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
 	
 		
-	
-  		
-			
-	  	setAntennaName(Parser::getString("antennaName","CalFocus",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-					
-	  	setFrequencyRange(Parser::get1DFrequency("frequencyRange","CalFocus",rowDoc));
-	  			
-	  		
-		
-	
-
 	
   		
 			
@@ -630,6 +1320,14 @@ namespace asdm {
 	
 
 	
+  		
+			
+	  	setAntennaName(Parser::getString("antennaName","CalFocus",rowDoc));
+			
+		
+	
+
+	
 		
 		
 		
@@ -642,20 +1340,18 @@ namespace asdm {
 	
   		
 			
-					
-	  	setOffset(Parser::get1DLength("offset","CalFocus",rowDoc));
-	  			
-	  		
+	  	setAmbientTemperature(Parser::getTemperature("ambientTemperature","CalFocus",rowDoc));
+			
 		
 	
 
 	
-  		
-			
-					
-	  	setError(Parser::get1DLength("error","CalFocus",rowDoc));
-	  			
-	  		
+		
+		
+		
+		atmPhaseCorrection = EnumerationParser::getAtmPhaseCorrection("atmPhaseCorrection","CalFocus",rowDoc);
+		
+		
 		
 	
 
@@ -673,7 +1369,7 @@ namespace asdm {
   		
 			
 					
-	  	setPointingDirection(Parser::get1DAngle("pointingDirection","CalFocus",rowDoc));
+	  	setFrequencyRange(Parser::get1DFrequency("frequencyRange","CalFocus",rowDoc));
 	  			
 	  		
 		
@@ -683,7 +1379,7 @@ namespace asdm {
   		
 			
 					
-	  	setWasFixed(Parser::get1DBoolean("wasFixed","CalFocus",rowDoc));
+	  	setPointingDirection(Parser::get1DAngle("pointingDirection","CalFocus",rowDoc));
 	  			
 	  		
 		
@@ -692,9 +1388,183 @@ namespace asdm {
 	
   		
 			
-	  	setAmbientTemperature(Parser::getTemperature("ambientTemperature","CalFocus",rowDoc));
+	  	setNumReceptor(Parser::getInteger("numReceptor","CalFocus",rowDoc));
 			
 		
+	
+
+	
+		
+		
+		
+		polarizationTypes = EnumerationParser::getPolarizationType1D("polarizationTypes","CalFocus",rowDoc);			
+		
+		
+		
+	
+
+	
+  		
+			
+					
+	  	setWereFixed(Parser::get1DBoolean("wereFixed","CalFocus",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+					
+	  	setOffset(Parser::get2DLength("offset","CalFocus",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+					
+	  	setOffsetError(Parser::get2DLength("offsetError","CalFocus",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+					
+	  	setOffsetWasTied(Parser::get2DBoolean("offsetWasTied","CalFocus",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+					
+	  	setReducedChiSquared(Parser::get2DDouble("reducedChiSquared","CalFocus",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+        if (row.isStr("<polarizationsAveraged>")) {
+			
+	  		setPolarizationsAveraged(Parser::getBoolean("polarizationsAveraged","CalFocus",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<focusCurveWidth>")) {
+			
+								
+	  		setFocusCurveWidth(Parser::get2DLength("focusCurveWidth","CalFocus",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<focusCurveWidthError>")) {
+			
+								
+	  		setFocusCurveWidthError(Parser::get2DLength("focusCurveWidthError","CalFocus",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<focusCurveWasFixed>")) {
+			
+								
+	  		setFocusCurveWasFixed(Parser::get1DBoolean("focusCurveWasFixed","CalFocus",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<offIntensity>")) {
+			
+								
+	  		setOffIntensity(Parser::get1DTemperature("offIntensity","CalFocus",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<offIntensityError>")) {
+			
+								
+	  		setOffIntensityError(Parser::get1DTemperature("offIntensityError","CalFocus",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<offIntensityWasFixed>")) {
+			
+	  		setOffIntensityWasFixed(Parser::getBoolean("offIntensityWasFixed","CalFocus",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<peakIntensity>")) {
+			
+								
+	  		setPeakIntensity(Parser::get1DTemperature("peakIntensity","CalFocus",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<peakIntensityError>")) {
+			
+								
+	  		setPeakIntensityError(Parser::get1DTemperature("peakIntensityError","CalFocus",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<peakIntensityWasFixed>")) {
+			
+	  		setPeakIntensityWasFixed(Parser::getBoolean("peakIntensityWasFixed","CalFocus",rowDoc));
+			
+		}
+ 		
 	
 
 	
@@ -727,78 +1597,702 @@ namespace asdm {
 		}
 	}
 	
+	void CalFocusRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+						
+			eoss.writeString(antennaName);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(receiverBand);
+				
+		
+	
+
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	ambientTemperature.toBin(eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(atmPhaseCorrection);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(focusMethod);
+				
+		
+	
+
+	
+	
+		
+	Frequency::toBin(frequencyRange, eoss);
+		
+	
+
+	
+	
+		
+	Angle::toBin(pointingDirection, eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numReceptor);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); i++)
+				
+			eoss.writeInt(polarizationTypes.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) wereFixed.size());
+		for (unsigned int i = 0; i < wereFixed.size(); i++)
+				
+			eoss.writeBoolean(wereFixed.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+	Length::toBin(offset, eoss);
+		
+	
+
+	
+	
+		
+	Length::toBin(offsetError, eoss);
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) offsetWasTied.size());
+		eoss.writeInt((int) offsetWasTied.at(0).size());
+		for (unsigned int i = 0; i < offsetWasTied.size(); i++) 
+			for (unsigned int j = 0;  j < offsetWasTied.at(0).size(); j++) 
+							 
+				eoss.writeBoolean(offsetWasTied.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) reducedChiSquared.size());
+		eoss.writeInt((int) reducedChiSquared.at(0).size());
+		for (unsigned int i = 0; i < reducedChiSquared.size(); i++) 
+			for (unsigned int j = 0;  j < reducedChiSquared.at(0).size(); j++) 
+							 
+				eoss.writeDouble(reducedChiSquared.at(i).at(j));
+				
+	
+						
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(polarizationsAveragedExists);
+	if (polarizationsAveragedExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(polarizationsAveraged);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(focusCurveWidthExists);
+	if (focusCurveWidthExists) {
+	
+	
+	
+		
+	Length::toBin(focusCurveWidth, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(focusCurveWidthErrorExists);
+	if (focusCurveWidthErrorExists) {
+	
+	
+	
+		
+	Length::toBin(focusCurveWidthError, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(focusCurveWasFixedExists);
+	if (focusCurveWasFixedExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) focusCurveWasFixed.size());
+		for (unsigned int i = 0; i < focusCurveWasFixed.size(); i++)
+				
+			eoss.writeBoolean(focusCurveWasFixed.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(offIntensityExists);
+	if (offIntensityExists) {
+	
+	
+	
+		
+	Temperature::toBin(offIntensity, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(offIntensityErrorExists);
+	if (offIntensityErrorExists) {
+	
+	
+	
+		
+	Temperature::toBin(offIntensityError, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(offIntensityWasFixedExists);
+	if (offIntensityWasFixedExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(offIntensityWasFixed);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(peakIntensityExists);
+	if (peakIntensityExists) {
+	
+	
+	
+		
+	Temperature::toBin(peakIntensity, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(peakIntensityErrorExists);
+	if (peakIntensityErrorExists) {
+	
+	
+	
+		
+	Temperature::toBin(peakIntensityError, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(peakIntensityWasFixedExists);
+	if (peakIntensityWasFixedExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(peakIntensityWasFixed);
+				
+		
+	
+
+	}
+
+	}
+	
+	CalFocusRow* CalFocusRow::fromBin(EndianISStream& eiss, CalFocusTable& table) {
+		CalFocusRow* row = new  CalFocusRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->antennaName =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->ambientTemperature =  Temperature::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->focusMethod = CFocusMethod::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->frequencyRange = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->pointingDirection = Angle::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->numReceptor =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->polarizationTypes.clear();
+		
+		unsigned int polarizationTypesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
+			
+			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->wereFixed.clear();
+		
+		unsigned int wereFixedDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < wereFixedDim1; i++)
+			
+			row->wereFixed.push_back(eiss.readBoolean());
+			
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->offset = Length::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->offsetError = Length::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->offsetWasTied.clear();
+		
+		unsigned int offsetWasTiedDim1 = eiss.readInt();
+		unsigned int offsetWasTiedDim2 = eiss.readInt();
+		vector <bool> offsetWasTiedAux1;
+		for (unsigned int i = 0; i < offsetWasTiedDim1; i++) {
+			offsetWasTiedAux1.clear();
+			for (unsigned int j = 0; j < offsetWasTiedDim2 ; j++)			
+			
+			offsetWasTiedAux1.push_back(eiss.readBoolean());
+			
+			row->offsetWasTied.push_back(offsetWasTiedAux1);
+		}
+	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->reducedChiSquared.clear();
+		
+		unsigned int reducedChiSquaredDim1 = eiss.readInt();
+		unsigned int reducedChiSquaredDim2 = eiss.readInt();
+		vector <double> reducedChiSquaredAux1;
+		for (unsigned int i = 0; i < reducedChiSquaredDim1; i++) {
+			reducedChiSquaredAux1.clear();
+			for (unsigned int j = 0; j < reducedChiSquaredDim2 ; j++)			
+			
+			reducedChiSquaredAux1.push_back(eiss.readDouble());
+			
+			row->reducedChiSquared.push_back(reducedChiSquaredAux1);
+		}
+	
+	
+
+		
+	
+
+		
+		
+		
+	row->polarizationsAveragedExists = eiss.readBoolean();
+	if (row->polarizationsAveragedExists) {
+		
+	
+	
+		
+			
+		row->polarizationsAveraged =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+	row->focusCurveWidthExists = eiss.readBoolean();
+	if (row->focusCurveWidthExists) {
+		
+	
+		
+		
+			
+	
+	row->focusCurveWidth = Length::from2DBin(eiss);		
+	
+
+		
+	
+
+	}
+
+	row->focusCurveWidthErrorExists = eiss.readBoolean();
+	if (row->focusCurveWidthErrorExists) {
+		
+	
+		
+		
+			
+	
+	row->focusCurveWidthError = Length::from2DBin(eiss);		
+	
+
+		
+	
+
+	}
+
+	row->focusCurveWasFixedExists = eiss.readBoolean();
+	if (row->focusCurveWasFixedExists) {
+		
+	
+	
+		
+			
+	
+		row->focusCurveWasFixed.clear();
+		
+		unsigned int focusCurveWasFixedDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < focusCurveWasFixedDim1; i++)
+			
+			row->focusCurveWasFixed.push_back(eiss.readBoolean());
+			
+	
+
+		
+	
+
+	}
+
+	row->offIntensityExists = eiss.readBoolean();
+	if (row->offIntensityExists) {
+		
+	
+		
+		
+			
+	
+	row->offIntensity = Temperature::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->offIntensityErrorExists = eiss.readBoolean();
+	if (row->offIntensityErrorExists) {
+		
+	
+		
+		
+			
+	
+	row->offIntensityError = Temperature::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->offIntensityWasFixedExists = eiss.readBoolean();
+	if (row->offIntensityWasFixedExists) {
+		
+	
+	
+		
+			
+		row->offIntensityWasFixed =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+	row->peakIntensityExists = eiss.readBoolean();
+	if (row->peakIntensityExists) {
+		
+	
+		
+		
+			
+	
+	row->peakIntensity = Temperature::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->peakIntensityErrorExists = eiss.readBoolean();
+	if (row->peakIntensityErrorExists) {
+		
+	
+		
+		
+			
+	
+	row->peakIntensityError = Temperature::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->peakIntensityWasFixedExists = eiss.readBoolean();
+	if (row->peakIntensityWasFixedExists) {
+		
+	
+	
+		
+			
+		row->peakIntensityWasFixed =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
-	
-
-	
- 	/**
- 	 * Get antennaName.
- 	 * @return antennaName as string
- 	 */
- 	string CalFocusRow::getAntennaName() const {
-	
-  		return antennaName;
- 	}
-
- 	/**
- 	 * Set antennaName with the specified string.
- 	 * @param antennaName The string value to which antennaName is to be set.
- 	 
- 	
- 		
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 	
- 	 */
- 	void CalFocusRow::setAntennaName (string antennaName)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-			throw IllegalAccessException("antennaName", "CalFocus");
-		
-  		}
-  	
- 		this->antennaName = antennaName;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get frequencyRange.
- 	 * @return frequencyRange as vector<Frequency >
- 	 */
- 	vector<Frequency > CalFocusRow::getFrequencyRange() const {
-	
-  		return frequencyRange;
- 	}
-
- 	/**
- 	 * Set frequencyRange with the specified vector<Frequency >.
- 	 * @param frequencyRange The vector<Frequency > value to which frequencyRange is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalFocusRow::setFrequencyRange (vector<Frequency > frequencyRange)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->frequencyRange = frequencyRange;
-	
- 	}
-	
-	
-
 	
 
 	
@@ -867,6 +2361,42 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get antennaName.
+ 	 * @return antennaName as string
+ 	 */
+ 	string CalFocusRow::getAntennaName() const {
+	
+  		return antennaName;
+ 	}
+
+ 	/**
+ 	 * Set antennaName with the specified string.
+ 	 * @param antennaName The string value to which antennaName is to be set.
+ 	 
+ 	
+ 		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
+ 	 */
+ 	void CalFocusRow::setAntennaName (string antennaName)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+			throw IllegalAccessException("antennaName", "CalFocus");
+		
+  		}
+  	
+ 		this->antennaName = antennaName;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get receiverBand.
  	 * @return receiverBand as ReceiverBandMod::ReceiverBand
  	 */
@@ -881,12 +2411,16 @@ namespace asdm {
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
  	void CalFocusRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("receiverBand", "CalFocus");
+		
   		}
   	
  		this->receiverBand = receiverBand;
@@ -899,29 +2433,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get offset.
- 	 * @return offset as vector<Length >
+ 	 * Get ambientTemperature.
+ 	 * @return ambientTemperature as Temperature
  	 */
- 	vector<Length > CalFocusRow::getOffset() const {
+ 	Temperature CalFocusRow::getAmbientTemperature() const {
 	
-  		return offset;
+  		return ambientTemperature;
  	}
 
  	/**
- 	 * Set offset with the specified vector<Length >.
- 	 * @param offset The vector<Length > value to which offset is to be set.
+ 	 * Set ambientTemperature with the specified Temperature.
+ 	 * @param ambientTemperature The Temperature value to which ambientTemperature is to be set.
  	 
  	
  		
  	 */
- 	void CalFocusRow::setOffset (vector<Length > offset)  {
+ 	void CalFocusRow::setAmbientTemperature (Temperature ambientTemperature)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->offset = offset;
+ 		this->ambientTemperature = ambientTemperature;
 	
  	}
 	
@@ -931,29 +2465,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get error.
- 	 * @return error as vector<Length >
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
  	 */
- 	vector<Length > CalFocusRow::getError() const {
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection CalFocusRow::getAtmPhaseCorrection() const {
 	
-  		return error;
+  		return atmPhaseCorrection;
  	}
 
  	/**
- 	 * Set error with the specified vector<Length >.
- 	 * @param error The vector<Length > value to which error is to be set.
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
  	 
  	
  		
  	 */
- 	void CalFocusRow::setError (vector<Length > error)  {
+ 	void CalFocusRow::setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->error = error;
+ 		this->atmPhaseCorrection = atmPhaseCorrection;
 	
  	}
 	
@@ -995,6 +2529,38 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get frequencyRange.
+ 	 * @return frequencyRange as vector<Frequency >
+ 	 */
+ 	vector<Frequency > CalFocusRow::getFrequencyRange() const {
+	
+  		return frequencyRange;
+ 	}
+
+ 	/**
+ 	 * Set frequencyRange with the specified vector<Frequency >.
+ 	 * @param frequencyRange The vector<Frequency > value to which frequencyRange is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalFocusRow::setFrequencyRange (vector<Frequency > frequencyRange)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->frequencyRange = frequencyRange;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get pointingDirection.
  	 * @return pointingDirection as vector<Angle >
  	 */
@@ -1027,29 +2593,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get wasFixed.
- 	 * @return wasFixed as vector<bool >
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
  	 */
- 	vector<bool > CalFocusRow::getWasFixed() const {
+ 	int CalFocusRow::getNumReceptor() const {
 	
-  		return wasFixed;
+  		return numReceptor;
  	}
 
  	/**
- 	 * Set wasFixed with the specified vector<bool >.
- 	 * @param wasFixed The vector<bool > value to which wasFixed is to be set.
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
  	 
  	
  		
  	 */
- 	void CalFocusRow::setWasFixed (vector<bool > wasFixed)  {
+ 	void CalFocusRow::setNumReceptor (int numReceptor)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->wasFixed = wasFixed;
+ 		this->numReceptor = numReceptor;
 	
  	}
 	
@@ -1059,32 +2625,662 @@ namespace asdm {
 
 	
  	/**
- 	 * Get ambientTemperature.
- 	 * @return ambientTemperature as Temperature
+ 	 * Get polarizationTypes.
+ 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
  	 */
- 	Temperature CalFocusRow::getAmbientTemperature() const {
+ 	vector<PolarizationTypeMod::PolarizationType > CalFocusRow::getPolarizationTypes() const {
 	
-  		return ambientTemperature;
+  		return polarizationTypes;
  	}
 
  	/**
- 	 * Set ambientTemperature with the specified Temperature.
- 	 * @param ambientTemperature The Temperature value to which ambientTemperature is to be set.
+ 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
  	 
  	
  		
  	 */
- 	void CalFocusRow::setAmbientTemperature (Temperature ambientTemperature)  {
+ 	void CalFocusRow::setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->ambientTemperature = ambientTemperature;
+ 		this->polarizationTypes = polarizationTypes;
 	
  	}
 	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get wereFixed.
+ 	 * @return wereFixed as vector<bool >
+ 	 */
+ 	vector<bool > CalFocusRow::getWereFixed() const {
+	
+  		return wereFixed;
+ 	}
+
+ 	/**
+ 	 * Set wereFixed with the specified vector<bool >.
+ 	 * @param wereFixed The vector<bool > value to which wereFixed is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalFocusRow::setWereFixed (vector<bool > wereFixed)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->wereFixed = wereFixed;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get offset.
+ 	 * @return offset as vector<vector<Length > >
+ 	 */
+ 	vector<vector<Length > > CalFocusRow::getOffset() const {
+	
+  		return offset;
+ 	}
+
+ 	/**
+ 	 * Set offset with the specified vector<vector<Length > >.
+ 	 * @param offset The vector<vector<Length > > value to which offset is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalFocusRow::setOffset (vector<vector<Length > > offset)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->offset = offset;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get offsetError.
+ 	 * @return offsetError as vector<vector<Length > >
+ 	 */
+ 	vector<vector<Length > > CalFocusRow::getOffsetError() const {
+	
+  		return offsetError;
+ 	}
+
+ 	/**
+ 	 * Set offsetError with the specified vector<vector<Length > >.
+ 	 * @param offsetError The vector<vector<Length > > value to which offsetError is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalFocusRow::setOffsetError (vector<vector<Length > > offsetError)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->offsetError = offsetError;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get offsetWasTied.
+ 	 * @return offsetWasTied as vector<vector<bool > >
+ 	 */
+ 	vector<vector<bool > > CalFocusRow::getOffsetWasTied() const {
+	
+  		return offsetWasTied;
+ 	}
+
+ 	/**
+ 	 * Set offsetWasTied with the specified vector<vector<bool > >.
+ 	 * @param offsetWasTied The vector<vector<bool > > value to which offsetWasTied is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalFocusRow::setOffsetWasTied (vector<vector<bool > > offsetWasTied)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->offsetWasTied = offsetWasTied;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get reducedChiSquared.
+ 	 * @return reducedChiSquared as vector<vector<double > >
+ 	 */
+ 	vector<vector<double > > CalFocusRow::getReducedChiSquared() const {
+	
+  		return reducedChiSquared;
+ 	}
+
+ 	/**
+ 	 * Set reducedChiSquared with the specified vector<vector<double > >.
+ 	 * @param reducedChiSquared The vector<vector<double > > value to which reducedChiSquared is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalFocusRow::setReducedChiSquared (vector<vector<double > > reducedChiSquared)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->reducedChiSquared = reducedChiSquared;
+	
+ 	}
+	
+	
+
+	
+	/**
+	 * The attribute polarizationsAveraged is optional. Return true if this attribute exists.
+	 * @return true if and only if the polarizationsAveraged attribute exists. 
+	 */
+	bool CalFocusRow::isPolarizationsAveragedExists() const {
+		return polarizationsAveragedExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get polarizationsAveraged, which is optional.
+ 	 * @return polarizationsAveraged as bool
+ 	 * @throw IllegalAccessException If polarizationsAveraged does not exist.
+ 	 */
+ 	bool CalFocusRow::getPolarizationsAveraged() const  {
+		if (!polarizationsAveragedExists) {
+			throw IllegalAccessException("polarizationsAveraged", "CalFocus");
+		}
+	
+  		return polarizationsAveraged;
+ 	}
+
+ 	/**
+ 	 * Set polarizationsAveraged with the specified bool.
+ 	 * @param polarizationsAveraged The bool value to which polarizationsAveraged is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalFocusRow::setPolarizationsAveraged (bool polarizationsAveraged) {
+	
+ 		this->polarizationsAveraged = polarizationsAveraged;
+	
+		polarizationsAveragedExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark polarizationsAveraged, which is an optional field, as non-existent.
+	 */
+	void CalFocusRow::clearPolarizationsAveraged () {
+		polarizationsAveragedExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute focusCurveWidth is optional. Return true if this attribute exists.
+	 * @return true if and only if the focusCurveWidth attribute exists. 
+	 */
+	bool CalFocusRow::isFocusCurveWidthExists() const {
+		return focusCurveWidthExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get focusCurveWidth, which is optional.
+ 	 * @return focusCurveWidth as vector<vector<Length > >
+ 	 * @throw IllegalAccessException If focusCurveWidth does not exist.
+ 	 */
+ 	vector<vector<Length > > CalFocusRow::getFocusCurveWidth() const  {
+		if (!focusCurveWidthExists) {
+			throw IllegalAccessException("focusCurveWidth", "CalFocus");
+		}
+	
+  		return focusCurveWidth;
+ 	}
+
+ 	/**
+ 	 * Set focusCurveWidth with the specified vector<vector<Length > >.
+ 	 * @param focusCurveWidth The vector<vector<Length > > value to which focusCurveWidth is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalFocusRow::setFocusCurveWidth (vector<vector<Length > > focusCurveWidth) {
+	
+ 		this->focusCurveWidth = focusCurveWidth;
+	
+		focusCurveWidthExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark focusCurveWidth, which is an optional field, as non-existent.
+	 */
+	void CalFocusRow::clearFocusCurveWidth () {
+		focusCurveWidthExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute focusCurveWidthError is optional. Return true if this attribute exists.
+	 * @return true if and only if the focusCurveWidthError attribute exists. 
+	 */
+	bool CalFocusRow::isFocusCurveWidthErrorExists() const {
+		return focusCurveWidthErrorExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get focusCurveWidthError, which is optional.
+ 	 * @return focusCurveWidthError as vector<vector<Length > >
+ 	 * @throw IllegalAccessException If focusCurveWidthError does not exist.
+ 	 */
+ 	vector<vector<Length > > CalFocusRow::getFocusCurveWidthError() const  {
+		if (!focusCurveWidthErrorExists) {
+			throw IllegalAccessException("focusCurveWidthError", "CalFocus");
+		}
+	
+  		return focusCurveWidthError;
+ 	}
+
+ 	/**
+ 	 * Set focusCurveWidthError with the specified vector<vector<Length > >.
+ 	 * @param focusCurveWidthError The vector<vector<Length > > value to which focusCurveWidthError is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalFocusRow::setFocusCurveWidthError (vector<vector<Length > > focusCurveWidthError) {
+	
+ 		this->focusCurveWidthError = focusCurveWidthError;
+	
+		focusCurveWidthErrorExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark focusCurveWidthError, which is an optional field, as non-existent.
+	 */
+	void CalFocusRow::clearFocusCurveWidthError () {
+		focusCurveWidthErrorExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute focusCurveWasFixed is optional. Return true if this attribute exists.
+	 * @return true if and only if the focusCurveWasFixed attribute exists. 
+	 */
+	bool CalFocusRow::isFocusCurveWasFixedExists() const {
+		return focusCurveWasFixedExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get focusCurveWasFixed, which is optional.
+ 	 * @return focusCurveWasFixed as vector<bool >
+ 	 * @throw IllegalAccessException If focusCurveWasFixed does not exist.
+ 	 */
+ 	vector<bool > CalFocusRow::getFocusCurveWasFixed() const  {
+		if (!focusCurveWasFixedExists) {
+			throw IllegalAccessException("focusCurveWasFixed", "CalFocus");
+		}
+	
+  		return focusCurveWasFixed;
+ 	}
+
+ 	/**
+ 	 * Set focusCurveWasFixed with the specified vector<bool >.
+ 	 * @param focusCurveWasFixed The vector<bool > value to which focusCurveWasFixed is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalFocusRow::setFocusCurveWasFixed (vector<bool > focusCurveWasFixed) {
+	
+ 		this->focusCurveWasFixed = focusCurveWasFixed;
+	
+		focusCurveWasFixedExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark focusCurveWasFixed, which is an optional field, as non-existent.
+	 */
+	void CalFocusRow::clearFocusCurveWasFixed () {
+		focusCurveWasFixedExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute offIntensity is optional. Return true if this attribute exists.
+	 * @return true if and only if the offIntensity attribute exists. 
+	 */
+	bool CalFocusRow::isOffIntensityExists() const {
+		return offIntensityExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get offIntensity, which is optional.
+ 	 * @return offIntensity as vector<Temperature >
+ 	 * @throw IllegalAccessException If offIntensity does not exist.
+ 	 */
+ 	vector<Temperature > CalFocusRow::getOffIntensity() const  {
+		if (!offIntensityExists) {
+			throw IllegalAccessException("offIntensity", "CalFocus");
+		}
+	
+  		return offIntensity;
+ 	}
+
+ 	/**
+ 	 * Set offIntensity with the specified vector<Temperature >.
+ 	 * @param offIntensity The vector<Temperature > value to which offIntensity is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalFocusRow::setOffIntensity (vector<Temperature > offIntensity) {
+	
+ 		this->offIntensity = offIntensity;
+	
+		offIntensityExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark offIntensity, which is an optional field, as non-existent.
+	 */
+	void CalFocusRow::clearOffIntensity () {
+		offIntensityExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute offIntensityError is optional. Return true if this attribute exists.
+	 * @return true if and only if the offIntensityError attribute exists. 
+	 */
+	bool CalFocusRow::isOffIntensityErrorExists() const {
+		return offIntensityErrorExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get offIntensityError, which is optional.
+ 	 * @return offIntensityError as vector<Temperature >
+ 	 * @throw IllegalAccessException If offIntensityError does not exist.
+ 	 */
+ 	vector<Temperature > CalFocusRow::getOffIntensityError() const  {
+		if (!offIntensityErrorExists) {
+			throw IllegalAccessException("offIntensityError", "CalFocus");
+		}
+	
+  		return offIntensityError;
+ 	}
+
+ 	/**
+ 	 * Set offIntensityError with the specified vector<Temperature >.
+ 	 * @param offIntensityError The vector<Temperature > value to which offIntensityError is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalFocusRow::setOffIntensityError (vector<Temperature > offIntensityError) {
+	
+ 		this->offIntensityError = offIntensityError;
+	
+		offIntensityErrorExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark offIntensityError, which is an optional field, as non-existent.
+	 */
+	void CalFocusRow::clearOffIntensityError () {
+		offIntensityErrorExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute offIntensityWasFixed is optional. Return true if this attribute exists.
+	 * @return true if and only if the offIntensityWasFixed attribute exists. 
+	 */
+	bool CalFocusRow::isOffIntensityWasFixedExists() const {
+		return offIntensityWasFixedExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get offIntensityWasFixed, which is optional.
+ 	 * @return offIntensityWasFixed as bool
+ 	 * @throw IllegalAccessException If offIntensityWasFixed does not exist.
+ 	 */
+ 	bool CalFocusRow::getOffIntensityWasFixed() const  {
+		if (!offIntensityWasFixedExists) {
+			throw IllegalAccessException("offIntensityWasFixed", "CalFocus");
+		}
+	
+  		return offIntensityWasFixed;
+ 	}
+
+ 	/**
+ 	 * Set offIntensityWasFixed with the specified bool.
+ 	 * @param offIntensityWasFixed The bool value to which offIntensityWasFixed is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalFocusRow::setOffIntensityWasFixed (bool offIntensityWasFixed) {
+	
+ 		this->offIntensityWasFixed = offIntensityWasFixed;
+	
+		offIntensityWasFixedExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark offIntensityWasFixed, which is an optional field, as non-existent.
+	 */
+	void CalFocusRow::clearOffIntensityWasFixed () {
+		offIntensityWasFixedExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute peakIntensity is optional. Return true if this attribute exists.
+	 * @return true if and only if the peakIntensity attribute exists. 
+	 */
+	bool CalFocusRow::isPeakIntensityExists() const {
+		return peakIntensityExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get peakIntensity, which is optional.
+ 	 * @return peakIntensity as vector<Temperature >
+ 	 * @throw IllegalAccessException If peakIntensity does not exist.
+ 	 */
+ 	vector<Temperature > CalFocusRow::getPeakIntensity() const  {
+		if (!peakIntensityExists) {
+			throw IllegalAccessException("peakIntensity", "CalFocus");
+		}
+	
+  		return peakIntensity;
+ 	}
+
+ 	/**
+ 	 * Set peakIntensity with the specified vector<Temperature >.
+ 	 * @param peakIntensity The vector<Temperature > value to which peakIntensity is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalFocusRow::setPeakIntensity (vector<Temperature > peakIntensity) {
+	
+ 		this->peakIntensity = peakIntensity;
+	
+		peakIntensityExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark peakIntensity, which is an optional field, as non-existent.
+	 */
+	void CalFocusRow::clearPeakIntensity () {
+		peakIntensityExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute peakIntensityError is optional. Return true if this attribute exists.
+	 * @return true if and only if the peakIntensityError attribute exists. 
+	 */
+	bool CalFocusRow::isPeakIntensityErrorExists() const {
+		return peakIntensityErrorExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get peakIntensityError, which is optional.
+ 	 * @return peakIntensityError as vector<Temperature >
+ 	 * @throw IllegalAccessException If peakIntensityError does not exist.
+ 	 */
+ 	vector<Temperature > CalFocusRow::getPeakIntensityError() const  {
+		if (!peakIntensityErrorExists) {
+			throw IllegalAccessException("peakIntensityError", "CalFocus");
+		}
+	
+  		return peakIntensityError;
+ 	}
+
+ 	/**
+ 	 * Set peakIntensityError with the specified vector<Temperature >.
+ 	 * @param peakIntensityError The vector<Temperature > value to which peakIntensityError is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalFocusRow::setPeakIntensityError (vector<Temperature > peakIntensityError) {
+	
+ 		this->peakIntensityError = peakIntensityError;
+	
+		peakIntensityErrorExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark peakIntensityError, which is an optional field, as non-existent.
+	 */
+	void CalFocusRow::clearPeakIntensityError () {
+		peakIntensityErrorExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute peakIntensityWasFixed is optional. Return true if this attribute exists.
+	 * @return true if and only if the peakIntensityWasFixed attribute exists. 
+	 */
+	bool CalFocusRow::isPeakIntensityWasFixedExists() const {
+		return peakIntensityWasFixedExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get peakIntensityWasFixed, which is optional.
+ 	 * @return peakIntensityWasFixed as bool
+ 	 * @throw IllegalAccessException If peakIntensityWasFixed does not exist.
+ 	 */
+ 	bool CalFocusRow::getPeakIntensityWasFixed() const  {
+		if (!peakIntensityWasFixedExists) {
+			throw IllegalAccessException("peakIntensityWasFixed", "CalFocus");
+		}
+	
+  		return peakIntensityWasFixed;
+ 	}
+
+ 	/**
+ 	 * Set peakIntensityWasFixed with the specified bool.
+ 	 * @param peakIntensityWasFixed The bool value to which peakIntensityWasFixed is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalFocusRow::setPeakIntensityWasFixed (bool peakIntensityWasFixed) {
+	
+ 		this->peakIntensityWasFixed = peakIntensityWasFixed;
+	
+		peakIntensityWasFixedExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark peakIntensityWasFixed, which is an optional field, as non-existent.
+	 */
+	void CalFocusRow::clearPeakIntensityWasFixed () {
+		peakIntensityWasFixedExists = false;
+	}
 	
 
 	
@@ -1242,6 +3438,56 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+
+	
+		polarizationsAveragedExists = false;
+	
+
+	
+		focusCurveWidthExists = false;
+	
+
+	
+		focusCurveWidthErrorExists = false;
+	
+
+	
+		focusCurveWasFixedExists = false;
+	
+
+	
+		offIntensityExists = false;
+	
+
+	
+		offIntensityErrorExists = false;
+	
+
+	
+		offIntensityWasFixedExists = false;
+	
+
+	
+		peakIntensityExists = false;
+	
+
+	
+		peakIntensityErrorExists = false;
+	
+
+	
+		peakIntensityWasFixedExists = false;
+	
+
+	
 	
 
 	
@@ -1249,8 +3495,6 @@ namespace asdm {
 	
 	
 	
-	
-
 	
 
 	
@@ -1265,10 +3509,45 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+atmPhaseCorrection = CAtmPhaseCorrection::from_int(0);
+	
 
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 focusMethod = CFocusMethod::from_int(0);
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -1308,6 +3587,56 @@ focusMethod = CFocusMethod::from_int(0);
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+
+	
+		polarizationsAveragedExists = false;
+	
+
+	
+		focusCurveWidthExists = false;
+	
+
+	
+		focusCurveWidthErrorExists = false;
+	
+
+	
+		focusCurveWasFixedExists = false;
+	
+
+	
+		offIntensityExists = false;
+	
+
+	
+		offIntensityErrorExists = false;
+	
+
+	
+		offIntensityWasFixedExists = false;
+	
+
+	
+		peakIntensityExists = false;
+	
+
+	
+		peakIntensityErrorExists = false;
+	
+
+	
+		peakIntensityWasFixedExists = false;
+	
+
+	
 	
 
 	
@@ -1316,46 +3645,140 @@ focusMethod = CFocusMethod::from_int(0);
 		else {
 	
 		
+			antennaName = row.antennaName;
+		
+			receiverBand = row.receiverBand;
+		
 			calDataId = row.calDataId;
 		
 			calReductionId = row.calReductionId;
 		
-			antennaName = row.antennaName;
 		
 		
-		
-		
-			frequencyRange = row.frequencyRange;
 		
 			startValidTime = row.startValidTime;
 		
 			endValidTime = row.endValidTime;
 		
-			receiverBand = row.receiverBand;
+			ambientTemperature = row.ambientTemperature;
 		
-			offset = row.offset;
-		
-			error = row.error;
+			atmPhaseCorrection = row.atmPhaseCorrection;
 		
 			focusMethod = row.focusMethod;
 		
+			frequencyRange = row.frequencyRange;
+		
 			pointingDirection = row.pointingDirection;
 		
-			wasFixed = row.wasFixed;
+			numReceptor = row.numReceptor;
 		
-			ambientTemperature = row.ambientTemperature;
+			polarizationTypes = row.polarizationTypes;
+		
+			wereFixed = row.wereFixed;
+		
+			offset = row.offset;
+		
+			offsetError = row.offsetError;
+		
+			offsetWasTied = row.offsetWasTied;
+		
+			reducedChiSquared = row.reducedChiSquared;
 		
 		
 		
+		
+		if (row.polarizationsAveragedExists) {
+			polarizationsAveraged = row.polarizationsAveraged;		
+			polarizationsAveragedExists = true;
+		}
+		else
+			polarizationsAveragedExists = false;
+		
+		if (row.focusCurveWidthExists) {
+			focusCurveWidth = row.focusCurveWidth;		
+			focusCurveWidthExists = true;
+		}
+		else
+			focusCurveWidthExists = false;
+		
+		if (row.focusCurveWidthErrorExists) {
+			focusCurveWidthError = row.focusCurveWidthError;		
+			focusCurveWidthErrorExists = true;
+		}
+		else
+			focusCurveWidthErrorExists = false;
+		
+		if (row.focusCurveWasFixedExists) {
+			focusCurveWasFixed = row.focusCurveWasFixed;		
+			focusCurveWasFixedExists = true;
+		}
+		else
+			focusCurveWasFixedExists = false;
+		
+		if (row.offIntensityExists) {
+			offIntensity = row.offIntensity;		
+			offIntensityExists = true;
+		}
+		else
+			offIntensityExists = false;
+		
+		if (row.offIntensityErrorExists) {
+			offIntensityError = row.offIntensityError;		
+			offIntensityErrorExists = true;
+		}
+		else
+			offIntensityErrorExists = false;
+		
+		if (row.offIntensityWasFixedExists) {
+			offIntensityWasFixed = row.offIntensityWasFixed;		
+			offIntensityWasFixedExists = true;
+		}
+		else
+			offIntensityWasFixedExists = false;
+		
+		if (row.peakIntensityExists) {
+			peakIntensity = row.peakIntensity;		
+			peakIntensityExists = true;
+		}
+		else
+			peakIntensityExists = false;
+		
+		if (row.peakIntensityErrorExists) {
+			peakIntensityError = row.peakIntensityError;		
+			peakIntensityErrorExists = true;
+		}
+		else
+			peakIntensityErrorExists = false;
+		
+		if (row.peakIntensityWasFixedExists) {
+			peakIntensityWasFixed = row.peakIntensityWasFixed;		
+			peakIntensityWasFixedExists = true;
+		}
+		else
+			peakIntensityWasFixedExists = false;
 		
 		}	
 	}
 
 	
-	bool CalFocusRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, vector<Frequency > frequencyRange, ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Length > offset, vector<Length > error, FocusMethodMod::FocusMethod focusMethod, vector<Angle > pointingDirection, vector<bool > wasFixed, Temperature ambientTemperature) {
+	bool CalFocusRow::compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared) {
 		bool result;
 		result = true;
 		
+	
+		
+		result = result && (this->antennaName == antennaName);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->receiverBand == receiverBand);
+		
+		if (!result) return false;
+	
+
 	
 		
 		result = result && (this->calDataId == calDataId);
@@ -1366,20 +3789,6 @@ focusMethod = CFocusMethod::from_int(0);
 	
 		
 		result = result && (this->calReductionId == calReductionId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->antennaName == antennaName);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->frequencyRange == frequencyRange);
 		
 		if (!result) return false;
 	
@@ -1400,21 +3809,14 @@ focusMethod = CFocusMethod::from_int(0);
 
 	
 		
-		result = result && (this->receiverBand == receiverBand);
+		result = result && (this->ambientTemperature == ambientTemperature);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->offset == offset);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->error == error);
+		result = result && (this->atmPhaseCorrection == atmPhaseCorrection);
 		
 		if (!result) return false;
 	
@@ -1428,6 +3830,13 @@ focusMethod = CFocusMethod::from_int(0);
 
 	
 		
+		result = result && (this->frequencyRange == frequencyRange);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->pointingDirection == pointingDirection);
 		
 		if (!result) return false;
@@ -1435,14 +3844,49 @@ focusMethod = CFocusMethod::from_int(0);
 
 	
 		
-		result = result && (this->wasFixed == wasFixed);
+		result = result && (this->numReceptor == numReceptor);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->ambientTemperature == ambientTemperature);
+		result = result && (this->polarizationTypes == polarizationTypes);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->wereFixed == wereFixed);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->offset == offset);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->offsetError == offsetError);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->offsetWasTied == offsetWasTied);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->reducedChiSquared == reducedChiSquared);
 		
 		if (!result) return false;
 	
@@ -1452,14 +3896,10 @@ focusMethod = CFocusMethod::from_int(0);
 	
 	
 	
-	bool CalFocusRow::compareRequiredValue(vector<Frequency > frequencyRange, ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Length > offset, vector<Length > error, FocusMethodMod::FocusMethod focusMethod, vector<Angle > pointingDirection, vector<bool > wasFixed, Temperature ambientTemperature) {
+	bool CalFocusRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, FocusMethodMod::FocusMethod focusMethod, vector<Frequency > frequencyRange, vector<Angle > pointingDirection, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<bool > wereFixed, vector<vector<Length > > offset, vector<vector<Length > > offsetError, vector<vector<bool > > offsetWasTied, vector<vector<double > > reducedChiSquared) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->frequencyRange == frequencyRange)) return false;
-	
-
 	
 		if (!(this->startValidTime == startValidTime)) return false;
 	
@@ -1469,15 +3909,11 @@ focusMethod = CFocusMethod::from_int(0);
 	
 
 	
-		if (!(this->receiverBand == receiverBand)) return false;
+		if (!(this->ambientTemperature == ambientTemperature)) return false;
 	
 
 	
-		if (!(this->offset == offset)) return false;
-	
-
-	
-		if (!(this->error == error)) return false;
+		if (!(this->atmPhaseCorrection == atmPhaseCorrection)) return false;
 	
 
 	
@@ -1485,15 +3921,39 @@ focusMethod = CFocusMethod::from_int(0);
 	
 
 	
+		if (!(this->frequencyRange == frequencyRange)) return false;
+	
+
+	
 		if (!(this->pointingDirection == pointingDirection)) return false;
 	
 
 	
-		if (!(this->wasFixed == wasFixed)) return false;
+		if (!(this->numReceptor == numReceptor)) return false;
 	
 
 	
-		if (!(this->ambientTemperature == ambientTemperature)) return false;
+		if (!(this->polarizationTypes == polarizationTypes)) return false;
+	
+
+	
+		if (!(this->wereFixed == wereFixed)) return false;
+	
+
+	
+		if (!(this->offset == offset)) return false;
+	
+
+	
+		if (!(this->offsetError == offsetError)) return false;
+	
+
+	
+		if (!(this->offsetWasTied == offsetWasTied)) return false;
+	
+
+	
+		if (!(this->reducedChiSquared == reducedChiSquared)) return false;
 	
 
 		return result;
@@ -1511,25 +3971,33 @@ focusMethod = CFocusMethod::from_int(0);
 	bool CalFocusRow::equalByRequiredValue(CalFocusRow* x) {
 		
 			
-		if (this->frequencyRange != x->frequencyRange) return false;
-			
 		if (this->startValidTime != x->startValidTime) return false;
 			
 		if (this->endValidTime != x->endValidTime) return false;
 			
-		if (this->receiverBand != x->receiverBand) return false;
+		if (this->ambientTemperature != x->ambientTemperature) return false;
 			
-		if (this->offset != x->offset) return false;
-			
-		if (this->error != x->error) return false;
+		if (this->atmPhaseCorrection != x->atmPhaseCorrection) return false;
 			
 		if (this->focusMethod != x->focusMethod) return false;
 			
+		if (this->frequencyRange != x->frequencyRange) return false;
+			
 		if (this->pointingDirection != x->pointingDirection) return false;
 			
-		if (this->wasFixed != x->wasFixed) return false;
+		if (this->numReceptor != x->numReceptor) return false;
 			
-		if (this->ambientTemperature != x->ambientTemperature) return false;
+		if (this->polarizationTypes != x->polarizationTypes) return false;
+			
+		if (this->wereFixed != x->wereFixed) return false;
+			
+		if (this->offset != x->offset) return false;
+			
+		if (this->offsetError != x->offsetError) return false;
+			
+		if (this->offsetWasTied != x->offsetWasTied) return false;
+			
+		if (this->reducedChiSquared != x->reducedChiSquared) return false;
 			
 		
 		return true;

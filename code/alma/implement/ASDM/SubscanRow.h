@@ -82,6 +82,10 @@ using namespace enumerations;
 	
 
 	
+
+	
+
+	
 #include "CSubscanIntent.h"
 using namespace SubscanIntentMod;
 	
@@ -89,8 +93,6 @@ using namespace SubscanIntentMod;
 	
 #include "CSwitchingMode.h"
 using namespace SwitchingModeMod;
-	
-
 	
 
 	
@@ -127,7 +129,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Subscan.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -142,7 +144,7 @@ class ExecBlockRow;
 /**
  * The SubscanRow class is a row of a SubscanTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class SubscanRow {
@@ -169,8 +171,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct SubscanRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (SubscanRowIDL x) throw(ConversionException);
+	void setFromIDL (SubscanRowIDL x) ;
 #endif
 	
 	/**
@@ -183,13 +186,59 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the SubscanTable to which the row built by deserialization will be parented.
+	  */
+	 static SubscanRow* fromBin(EndianISStream& eiss, SubscanTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
+	
+	// ===> Attribute scanNumber
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get scanNumber.
+ 	 * @return scanNumber as int
+ 	 */
+ 	int getScanNumber() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set scanNumber with the specified int.
+ 	 * @param scanNumber The int value to which scanNumber is to be set.
+ 	 
+ 		
+ 			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setScanNumber (int scanNumber);
+  		
+	
+	
+	
+
+
 	
 	// ===> Attribute subscanNumber
 	
@@ -283,6 +332,36 @@ public:
 
 
 	
+	// ===> Attribute fieldName
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get fieldName.
+ 	 * @return fieldName as string
+ 	 */
+ 	string getFieldName() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set fieldName with the specified string.
+ 	 * @param fieldName The string value to which fieldName is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setFieldName (string fieldName);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute subscanIntent
 	
 	
@@ -330,7 +409,7 @@ public:
  	 * @return subscanMode as SwitchingModeMod::SwitchingMode
  	 * @throws IllegalAccessException If subscanMode does not exist.
  	 */
- 	SwitchingModeMod::SwitchingMode getSubscanMode() const throw(IllegalAccessException);
+ 	SwitchingModeMod::SwitchingMode getSubscanMode() const;
 	
  
  	
@@ -444,36 +523,6 @@ public:
 
 
 	
-	// ===> Attribute fieldName
-	
-	
-	
-
-	
- 	/**
- 	 * Get fieldName.
- 	 * @return fieldName as string
- 	 */
- 	string getFieldName() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set fieldName with the specified string.
- 	 * @param fieldName The string value to which fieldName is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setFieldName (string fieldName);
-  		
-	
-	
-	
-
-
-	
 	// ===> Attribute correlatorCalibration, which is optional
 	
 	
@@ -491,7 +540,7 @@ public:
  	 * @return correlatorCalibration as CorrelatorCalibrationMod::CorrelatorCalibration
  	 * @throws IllegalAccessException If correlatorCalibration does not exist.
  	 */
- 	CorrelatorCalibrationMod::CorrelatorCalibration getCorrelatorCalibration() const throw(IllegalAccessException);
+ 	CorrelatorCalibrationMod::CorrelatorCalibration getCorrelatorCalibration() const;
 	
  
  	
@@ -550,38 +599,6 @@ public:
 	
 
 
-	
-	// ===> Attribute scanNumber
-	
-	
-	
-
-	
- 	/**
- 	 * Get scanNumber.
- 	 * @return scanNumber as int
- 	 */
- 	int getScanNumber() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set scanNumber with the specified int.
- 	 * @param scanNumber The int value to which scanNumber is to be set.
- 	 
- 		
- 			
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 		
- 	 */
- 	void setScanNumber (int scanNumber);
-  		
-	
-	
-	
-
-
 	///////////
 	// Links //
 	///////////
@@ -608,12 +625,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this SubscanRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow, string fieldName);
+	bool compareNoAutoInc(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow);
 	
 	
 
 	
-	bool compareRequiredValue(ArrayTime startTime, ArrayTime endTime, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow, string fieldName); 
+	bool compareRequiredValue(ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow); 
 		 
 	
 	/**
@@ -674,6 +691,17 @@ private:
 	////////////////////////////////
 	
 	
+	// ===> Attribute scanNumber
+	
+	
+
+	int scanNumber;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute subscanNumber
 	
 	
@@ -701,6 +729,17 @@ private:
 	
 
 	ArrayTime endTime;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute fieldName
+	
+	
+
+	string fieldName;
 
 	
 	
@@ -764,17 +803,6 @@ private:
  	
 
 	
-	// ===> Attribute fieldName
-	
-	
-
-	string fieldName;
-
-	
-	
- 	
-
-	
 	// ===> Attribute correlatorCalibration, which is optional
 	
 	
@@ -797,17 +825,6 @@ private:
 	
 
 	Tag execBlockId;
-
-	
-	
- 	
-
-	
-	// ===> Attribute scanNumber
-	
-	
-
-	int scanNumber;
 
 	
 	

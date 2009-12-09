@@ -32,16 +32,125 @@ namespace casa {
 // PLOTMSWATCHEDPARAMETERS DEFINITIONS //
 /////////////////////////////////////////
 
+// Static //
+
+const int PlotMSWatchedParameters::NO_UPDATES = 0;
+vector<int> PlotMSWatchedParameters::FLAGS = vector<int>();
+vector<String> PlotMSWatchedParameters::NAMES = vector<String>();
+
+
+int PlotMSWatchedParameters::REGISTER_UPDATE_FLAG(const String& name) {
+	/* This one fails
+    // Check if it's already registered.
+    for(unsigned int i = 0; i < NAMES.size(); i++)
+        if(NAMES[i] == name) return FLAGS[i];
+    
+    // Get the next flag value (next sequential bit value after the last).
+    int NEXT_FLAG = 1;
+    if(FLAGS.size() > 0) NEXT_FLAG = FLAGS[FLAGS.size() - 1] * 2;
+    
+    // Add new flag.
+    FLAGS.push_back(NEXT_FLAG);
+    NAMES.push_back(name);
+    return NEXT_FLAG;
+    */
+    
+    /* Old version.
+    static int NEXT_FLAG = 1;
+    for(unsigned int i = 0; i < NAMES.size(); i++)
+        if(NAMES[i] == name) return FLAGS[i];
+        
+    FLAGS.push_back(NEXT_FLAG);
+    NAMES.push_back(name);
+    NEXT_FLAG *= 2;
+    return FLAGS[FLAGS.size() - 1];
+    */
+    
+    /* Wes's magic version.
+    */
+    int NEXT_FLAG = 1;
+    if(!NAMES.size() && name != "REDRAW") {
+        NAMES.push_back("REDRAW");
+        FLAGS.push_back(NEXT_FLAG);
+    }
+    for(unsigned int i = 0; i < NAMES.size(); i++) {
+        NEXT_FLAG *= 2;
+        if(NAMES[i] == name) return FLAGS[i];
+    }
+    FLAGS.push_back(NEXT_FLAG);
+    NAMES.push_back(name);
+    return FLAGS[FLAGS.size() - 1];
+}
+
+void PlotMSWatchedParameters::UNREGISTER_UPDATE_FLAG(const String& name) {
+	// cerr << "UNREGISTER_UPDATE_FLAG " << name << endl;
+    for(unsigned int i = 0; i < NAMES.size(); i++) {
+        if(NAMES[i] == name) {
+            NAMES.erase(NAMES.begin() + i);
+            FLAGS.erase(FLAGS.begin() + i);
+            break;
+        }
+    }
+}
+void PlotMSWatchedParameters::UNREGISTER_UPDATE_FLAG(int flag) {
+	// cerr << "UNREGISTER_UPDATE_FLAG " << flag << endl;
+    for(unsigned int i = 0; i < FLAGS.size(); i++) {
+        if(FLAGS[i] == flag) {
+            FLAGS.erase(FLAGS.begin() + i);
+            NAMES.erase(NAMES.begin() + i);
+            break;
+        }
+    }
+}
+
+
+int PlotMSWatchedParameters::UPDATE_FLAG(const String& name) {
+    for(unsigned int i = 0; i < NAMES.size(); i++){
+	// cerr << "UPDATE_FLAG *" << NAMES[i] << "*" << endl;
+        if(NAMES[i] == name) return FLAGS[i];
+    }
+    // cerr << "UPDATE_FLAG *" << name << "*" << endl;
+    return NO_UPDATES;
+}
+
+String PlotMSWatchedParameters::UPDATE_FLAG(int flag) {
+    for(unsigned int i = 0; i < FLAGS.size(); i++)
+        if(FLAGS[i] == flag) return NAMES[i];
+    return "";
+}
+
+vector<int> PlotMSWatchedParameters::UPDATE_FLAGS() { return FLAGS; }
+vector<String> PlotMSWatchedParameters::UPDATE_FLAG_NAMES() { return NAMES; }
+
+int PlotMSWatchedParameters::ALL_UPDATE_FLAGS() {
+    int val = NO_UPDATES;
+    //cerr << "ALL_UPDATE_FLAGS ";
+    for(unsigned int i = 0; i < FLAGS.size(); i++){
+	    val |= FLAGS[i];
+	    // cerr << i << " ";
+    }
+    //cerr << val << endl;
+    return val;
+}
+
+vector<int> PlotMSWatchedParameters::UPDATE_FLAGS(int value) {
+    vector<int> v;
+    for(unsigned int i = 0; i < FLAGS.size(); i++)
+        if(value & FLAGS[i]) v.push_back(FLAGS[i]);
+    return v;
+}
+vector<String> PlotMSWatchedParameters::UPDATE_FLAG_NAMES(int value) {
+    vector<String> v;
+    for(unsigned int i = 0; i < FLAGS.size(); i++)
+        if(value & FLAGS[i]) v.push_back(NAMES[i]);
+    return v;
+}
+
+
 // Constructors/Destructors //
 
-PlotMSWatchedParameters::PlotMSWatchedParameters() : itsUpdateFlags_(NONE),
-        itsRedrawFlag_(false), itsUpdater_(NULL) { }
-
-PlotMSWatchedParameters::PlotMSWatchedParameters(
-        const PlotMSWatchedParameters& copy) : itsUpdateFlags_(NONE),
-        itsRedrawFlag_(false), itsUpdater_(NULL) {
-    operator=(copy);
-}
+PlotMSWatchedParameters::PlotMSWatchedParameters():itsUpdateFlags_(NO_UPDATES),
+        isHolding_(false), itsUpdater_(NULL) { }
 
 PlotMSWatchedParameters::~PlotMSWatchedParameters() { }
 
@@ -66,34 +175,17 @@ void PlotMSWatchedParameters::removeWatcher(PlotMSParametersWatcher* watcher) {
 }
 
 void PlotMSWatchedParameters::holdNotification(PlotMSParametersWatcher* updater) {
-    itsUpdater_ = updater;
-}
+    isHolding_ = true;
+    itsUpdater_ = updater; }
 
 void PlotMSWatchedParameters::releaseNotification() {
+    isHolding_ = false;
     for(unsigned int i = 0; i < itsWatchers_.size(); i++)
         if(itsUpdater_ == NULL || itsUpdater_ != itsWatchers_[i])
-            itsWatchers_[i]->parametersHaveChanged(*this, itsUpdateFlags_,
-                                                   itsRedrawFlag_);
+            itsWatchers_[i]->parametersHaveChanged(*this, itsUpdateFlags_);
 
-    itsUpdateFlags_ = NONE;
-    itsRedrawFlag_ = false;
+    itsUpdateFlags_ = NO_UPDATES;
     itsUpdater_ = NULL;
-}
-
-void PlotMSWatchedParameters::notifyWatchers(int updateFlags,
-        bool redrawRequired, PlotMSParametersWatcher* updater) {
-    holdNotification(updater);
-    itsUpdateFlags_ = updateFlags;
-    itsRedrawFlag_ = redrawRequired;
-    releaseNotification();
-}
-
-PlotMSWatchedParameters& PlotMSWatchedParameters::operator=(
-            const PlotMSWatchedParameters& copy) {
-    //itsUpdateFlags_ = copy.itsUpdateFlags_;
-    //itsWatchers_ = copy.itsWatchers_;
-    //itsUpdater_ = NULL;
-    return *this;
 }
 
 
@@ -101,39 +193,42 @@ PlotMSWatchedParameters& PlotMSWatchedParameters::operator=(
 
 int PlotMSWatchedParameters::currentUpdateFlag() const {
     return itsUpdateFlags_; }
-bool PlotMSWatchedParameters::currentRedrawRequired() const {
-    return itsRedrawFlag_; }
 
-void PlotMSWatchedParameters::updateFlag(UpdateFlag update, bool on,
-        bool redrawRequired) {
+void PlotMSWatchedParameters::updateFlag(int updateFlag, bool on) {
+    // Make sure given flag is registered.
+    bool found = false;
+    for(unsigned int i = 0; !found && i < FLAGS.size(); i++)
+        if(FLAGS[i] == updateFlag) found = true;
+    if(!found) return;
+    
     bool changed = false;
     
+    //cerr << "before itsUpdateFlags_ " << itsUpdateFlags_ << endl;
     if(on) {
-        changed = !(itsUpdateFlags_ & update);
-        if(changed) itsUpdateFlags_ |= update;
+        changed = !(itsUpdateFlags_ & updateFlag);
+        if(changed) itsUpdateFlags_ |= updateFlag;
     } else {
-        changed = itsUpdateFlags_ & update;
-        if(changed) itsUpdateFlags_ &= ~update;
+        changed = itsUpdateFlags_ & updateFlag;
+        if(changed) itsUpdateFlags_ &= ~updateFlag;
     }
-
-    if(itsRedrawFlag_ != (itsRedrawFlag_ || redrawRequired)) {
-        itsRedrawFlag_ |= redrawRequired;
-        changed = true;
-    }
+    //cerr << "after itsUpdateFlags_ " << itsUpdateFlags_ << endl;
     
     // Only notify watchers if something changed and notifications aren't
     // currently being held.
-    if(changed && itsUpdater_ == NULL) releaseNotification();
+    if(changed && !isHolding_) releaseNotification();
 }
 
-void PlotMSWatchedParameters::updateFlags(int updateFlags, bool redrawRequired) {
-    if(itsUpdateFlags_ != updateFlags ||
-       itsRedrawFlag_ != (itsRedrawFlag_ || redrawRequired)) {
+void PlotMSWatchedParameters::updateFlag(const String& updateFlagName,bool on){
+    updateFlag(UPDATE_FLAG(updateFlagName), on); }
+
+void PlotMSWatchedParameters::updateFlags(int updateFlags) {
+    if(itsUpdateFlags_ != updateFlags) {
+        //cerr << "before updateFlags " << itsUpdateFlags_ << endl;
         itsUpdateFlags_ = updateFlags;
-        itsRedrawFlag_ |= redrawRequired;
+        //cerr << "after updateFlags " << itsUpdateFlags_ << endl;
         
         // Only notify watchers if notifications aren't currently being held.
-        if(itsUpdater_ == NULL) releaseNotification();
+        if(!isHolding_) releaseNotification();
     }
 }
 

@@ -10,7 +10,7 @@ import os
 os.system('rm -rf n4826_t* mosaic.flux mosaic.model mosaic.image mosaic.residual n12m_gaussian.im')
 
 pathname=os.environ.get('CASAPATH').split()[0]
-datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/ATST3/NGC4826/'
+datapath = pathname + '/data/regression/ATST3/NGC4826/'
 
 print '--Copy data to local directory--'
 mspath='cp -r '+datapath+'n4826_both.ms .'
@@ -59,12 +59,23 @@ print '--Feather cube - create synth image--'
 #    BIMA calibrated visibilities: n4826_both.ms
 #    NRAO 12m OTF cube: NGC4826.12motf.chan.fits
 default('clean')
-clean(vis='n4826_both.ms',imagename='mosaic',nchan=30,start=46,width=4,spw='0~2',field='0~6',cell=[1.,1.],imsize=[256,256],stokes='I',mode='channel', psfmode='clark',imagermode='mosaic', niter=500,scaletype='SAULT',minpb=0.01)
+clean(vis='n4826_both.ms', imagename='mosaic',
+      nchan=30, start=46, width=4, spw='0~2',
+      field='0~6',
+      cell=[1., 1.], imsize=[256, 256],
+      stokes='I',
+      mode='channel',
+      psfmode='clark',
+      imagermode='mosaic',
+      ftmachine='mosaic',
+      niter=500,
+      gain=0.1,                     # Specified for certainty, 6/10/2009
+      scaletype='SAULT', minpb=0.1) # Changed from 0.01 6/10/2009
 default('importfits')
-importfits(datapath+'NGC4826.12motf.chan.fits','n4826_t12mchan2.im')
+importfits(datapath+'NGC4826.12motf.chan.fits', 'n4826_t12mchan2.im')
 default('imhead')
-imhead('n4826_t12mchan2.im',mode='put',hdkey='bunit',hdvalue='Jy/beam')
-#imhead('n4826_t12mchan2.im',mode='put',hdkey='beam',hdvalue='55arcsec, 55arcsec, 0deg')
+imhead('n4826_t12mchan2.im', mode='put', hdkey='bunit', hdvalue='Jy/beam')
+#imhead('n4826_t12mchan2.im',mode='put',hdkey='beam',hdvalue='55arcsec,55arcsec,0deg')
 imhead('n4826_t12mchan2.im',mode='put',hdkey='beammajor',hdvalue='55arcsec')
 imhead('n4826_t12mchan2.im',mode='put',hdkey='beamminor',hdvalue='55arcsec')
 imhead('n4826_t12mchan2.im',mode='put',hdkey='beampa',hdvalue='0deg')
@@ -79,7 +90,19 @@ print '--Single Dish as Model--'
 #    BIMA calibrated visibilities: n4826_both.ms
 #    NRAO 12m OTF cube: n4826_t12mchan.im
 default('clean')
-clean(vis='n4826_both.ms',imagename='n4826_tjoint1',nchan=30,start=46,width=4,spw='0~2',field='0~6',cell=[1.,1.],imsize=[256,256],stokes='I',mode='channel',psfmode='clark',niter=500, imagermode='mosaic', modelimage='n4826_t12mchan.im', scaletype='SAULT',minpb=0.01)
+clean(vis='n4826_both.ms', imagename='n4826_tjoint1',
+      nchan=30, start=46, width=4, spw='0~2',
+      field='0~6',
+      cell=[1., 1.], imsize=[256, 256],
+      stokes='I',
+      mode='channel',
+      psfmode='clark',
+      niter=500,
+      cyclefactor=4,
+      imagermode='mosaic',
+      ftmachine='mosaic',
+      modelimage='n4826_t12mchan.im',
+      scaletype='SAULT', minpb=0.1)
 sdmodeltime = time.time()
 #Combo:   Max: 1.891995e+00    Flux: 1.391578e+02 Jy   Rms: 9.056366e-02
 #Pcombo:  Max: 1.681789e+00    Flux: 1.454376e+02 Jy   Rms: 8.196454e-02
@@ -101,17 +124,31 @@ ia.open('n4826_t12mchan.im')
 ia.regrid(outfile='n4826_t12motf.chregrid.im',shape=[256,256,1,30],csys=csys.torecord())
 ia.close()
 #### deconvolve SD image with a guess of PB with msclean
-dc.open('n4826_t12motf.chregrid.im',psf='')
-dc.makegaussian('n12m_gaussian.im',bmaj='55arcsec',bmin='55arcsec',bpa='0deg',normalize=false)
+dc.open('n4826_t12motf.chregrid.im', psf='')
+dc.makegaussian('n12m_gaussian.im' ,bmaj='55arcsec', bmin='55arcsec', bpa='0deg',
+		normalize=false)
 dc.close()
-dc.open('n4826_t12motf.chregrid.im',psf='n12m_gaussian.im')
-dc.setscales(scalemethod='uservector',uservector=[30.,60.])
-dc.clean(algorithm='msclean',model='n4826_tjoint2',niter=100,gain=0.3)
+dc.open('n4826_t12motf.chregrid.im', psf='n12m_gaussian.im')
+dc.setscales(scalemethod='uservector', uservector=[30., 60.])
+dc.clean(algorithm='msclean', model='n4826_tjoint2', niter=100, gain=0.3)
 #dc.close()
 default('clean')
 ##### Mosaic the interferometer data...use model from obtain from deconvolve
 ##### SD image as starting model
-clean(vis='n4826_both.ms',imagename='n4826_tjoint2',nchan=30,start=46,width=4,spw='0~2',field='0~6',cell=[1.,1.],imsize=[256,256],stokes='I',mode='channel',psfmode='clark', imagermode='mosaic', niter=500,modelimage='n4826_tjoint2',scaletype='SAULT',minpb=0.01)
+clean(vis='n4826_both.ms', imagename='n4826_tjoint2',
+      nchan=30, start=46, width=4, spw='0~2',
+      field='0~6',
+      cell=[1., 1.], imsize=[256, 256],
+      stokes='I',
+      mode='channel',
+      psfmode='clark',
+      imagermode='mosaic',
+      ftmachine='mosaic',
+      niter=500,
+      cyclefactor=4,
+      modelimage='n4826_tjoint2',
+      scaletype='SAULT', minpb=0.1)
+
 jointtime = time.time()
 
 endProc = time.clock()
@@ -119,11 +156,11 @@ endTime = time.time()
 
 # Regression
 
-test_name_feather1 =   'NGC4826--Feather (Synthesis and SD Moment 0 images'
-test_name_feather2 =   'NGC4826--Feather Cube (Synthesis and SD data cube'
+test_name_feather1 = 'NGC4826--Feather (Synthesis and SD Moment 0 images'
+test_name_feather2 = 'NGC4826--Feather Cube (Synthesis and SD data cube'
 test_name_feather3 = 'NGC4826--Create Synth cube; feather with SD FITS cube'
 test_name_jc1      = 'NGC4826--Joint deconvolution with SD FITS cube as model'
-test_name_jc2      =   'NGC4826--Joint deconvolution with deconvolved SD FITS cube'
+test_name_jc2      = 'NGC4826--Joint deconvolution with deconvolved SD FITS cube'
 
 ia.open('n4826_tfeather.im')
 ia.setbrightnessunit('Jy/beam')
@@ -161,16 +198,17 @@ f1_flux=1523.515
 f2_max=1.8816
 f2_flux=105.4628
 #f3_max=1.67
-f3_max=1.52
+#f3_max=1.52
+f3_max=1.60     # 12/1/2009.  Are we converging?
 f3_flux=104.25
-jc1_max=1.61
+jc1_max=1.67
 #jc1_max=1.71
 #jc1_flux=168.87
-jc1_flux=243.57
+jc1_flux=224.1
 #jc2_max=1.68
-jc2_max=1.50
+jc2_max=1.53
 #jc2_flux=67.27
-jc2_flux=144.49
+jc2_flux=147.7
 
 diff_f1=abs((f1_max-feather1_immax)/f1_max)
 diff_f1f=abs((f1_flux-feather1_flux)/f1_flux)
@@ -186,34 +224,34 @@ diff_jc2f=abs((jc2_flux-joint2_flux)/jc2_flux)
 import datetime
 datestring=datetime.datetime.isoformat(datetime.datetime.today())
 outfile='ngc4826c.'+datestring+'.log'
-logfile=open(outfile,'w')
+logfile=open(outfile, 'w')
 
-print >>logfile,''
-print >>logfile,'********** Data Summary *********'
-print >>logfile,''
-print >>logfile,'*   Observer:      Project: t108c115.n48'
-print >>logfile,'*Observation: BIMA(10 antennas)'
-print >>logfile,'*  Telescope Observation Date    Observer       Project'
-print >>logfile,'*  BIMA      [                   4.39941e+09, 4.39942e+09]               t108c115.n48'
-print >>logfile,'*Data records: 109260       Total integration time = 628492 seconds'
-print >>logfile,'*   Observed from   04:04:31   to   10:39:23'
-print >>logfile,'*Fields: 7'
-print >>logfile,'*  ID   Name          Right Ascension  Declination   Epoch'
-print >>logfile,'*  0    NGC4826-F0    12:56:44.24      +21.41.05.10  J2000'
-print >>logfile,'*  1    NGC4826-F1    12:56:41.08      +21.41.05.10  J2000'
-print >>logfile,'*  2    NGC4826-F2    12:56:42.66      +21.41.43.20  J2000'
-print >>logfile,'*  3    NGC4826-F3    12:56:45.82      +21.41.43.20  J2000'
-print >>logfile,'*  4    NGC4826-F4    12:56:47.40      +21.41.05.10  J2000'
-print >>logfile,'*  5    NGC4826-F5    12:56:45.82      +21.40.27.00  J2000'
-print >>logfile,'*  6    NGC4826-F6    12:56:42.66      +21.40.27.00  J2000'
-print >>logfile,'*Spectral Windows:  (4 unique spectral windows and 1 unique polarization setups)'
-print >>logfile,'*  SpwID  #Chans Frame Ch1(MHz)    Resoln(kHz) TotBW(kHz)  Ref(MHz)    Corrs'
-print >>logfile,'*  0          64 LSRD  114950.387  1562.5      100000      115271.2    YY'
-print >>logfile,'*  1          64 LSRD  115040.402  1562.5      100000      115271.2    YY'
-print >>logfile,'*  2          64 LSRD  115130.143  1562.5      100000      115271.2    YY'
-print >>logfile,'*  3          64 LSRD  115220.157  1562.5      100000      115271.2    YY'
-print >>logfile,'*Antennas: 10'
-print >>logfile,'*   ID=   1-3: ANT1=UNKNOWN, ANT2=UNKNOWN, ANT3=UNKNOWN, ANT4=UNKNOWN,'
+print >>logfile, ''
+print >>logfile, '********** Data Summary *********'
+print >>logfile, ''
+print >>logfile, '*   Observer:      Project: t108c115.n48'
+print >>logfile, '*Observation: BIMA(10 antennas)'
+print >>logfile, '*  Telescope Observation Date    Observer       Project'
+print >>logfile, '*  BIMA      [                   4.39941e+09,  4.39942e+09]               t108c115.n48'
+print >>logfile, '*Data records: 109260       Total integration time = 628492 seconds'
+print >>logfile, '*   Observed from   04:04:31   to   10:39:23'
+print >>logfile, '*Fields: 7'
+print >>logfile, '*  ID   Name          Right Ascension  Declination   Epoch'
+print >>logfile, '*  0    NGC4826-F0    12:56:44.24      +21.41.05.10  J2000'
+print >>logfile, '*  1    NGC4826-F1    12:56:41.08      +21.41.05.10  J2000'
+print >>logfile, '*  2    NGC4826-F2    12:56:42.66      +21.41.43.20  J2000'
+print >>logfile, '*  3    NGC4826-F3    12:56:45.82      +21.41.43.20  J2000'
+print >>logfile, '*  4    NGC4826-F4    12:56:47.40      +21.41.05.10  J2000'
+print >>logfile, '*  5    NGC4826-F5    12:56:45.82      +21.40.27.00  J2000'
+print >>logfile, '*  6    NGC4826-F6    12:56:42.66      +21.40.27.00  J2000'
+print >>logfile, '*Spectral Windows:  (4 unique spectral windows and 1 unique polarization setups)'
+print >>logfile, '*  SpwID  #Chans Frame Ch1(MHz)    Resoln(kHz) TotBW(kHz)  Ref(MHz)    Corrs'
+print >>logfile, '*  0          64 LSRD  114950.387  1562.5      100000      115271.2    YY'
+print >>logfile, '*  1          64 LSRD  115040.402  1562.5      100000      115271.2    YY'
+print >>logfile, '*  2          64 LSRD  115130.143  1562.5      100000      115271.2    YY'
+print >>logfile, '*  3          64 LSRD  115220.157  1562.5      100000      115271.2    YY'
+print >>logfile, '*Antennas: 10'
+print >>logfile, '*   ID=   1-3: ANT1=UNKNOWN, ANT2=UNKNOWN, ANT3=UNKNOWN, ANT4=UNKNOWN,'
 print >>logfile,'*   ID=   5-7: ANT5=UNKNOWN, ANT6=UNKNOWN, ANT7=UNKNOWN, ANT8=UNKNOWN,'
 print >>logfile,'*   ID=   9-9: ANT9=UNKNOWN, ANT10=UNKNOWN'
 print >>logfile,'*********************************'

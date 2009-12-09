@@ -86,10 +86,10 @@ using namespace enumerations;
 	
 
 	
-
-	
 #include "CBasebandName.h"
 using namespace BasebandNameMod;
+	
+
 	
 
 	
@@ -129,7 +129,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Annotation.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -144,7 +144,7 @@ class AntennaRow;
 /**
  * The AnnotationRow class is a row of a AnnotationTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class AnnotationRow {
@@ -171,8 +171,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct AnnotationRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (AnnotationRowIDL x) throw(ConversionException);
+	void setFromIDL (AnnotationRowIDL x) ;
 #endif
 	
 	/**
@@ -185,13 +186,47 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the AnnotationTable to which the row built by deserialization will be parented.
+	  */
+	 static AnnotationRow* fromBin(EndianISStream& eiss, AnnotationTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
+	
+	// ===> Attribute annotationId
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get annotationId.
+ 	 * @return annotationId as Tag
+ 	 */
+ 	Tag getAnnotationId() const;
+	
+ 
+ 	
+ 	
+	
+	
+
+
 	
 	// ===> Attribute time
 	
@@ -283,47 +318,6 @@ public:
 
 
 	
-	// ===> Attribute interval, which is optional
-	
-	
-	
-	/**
-	 * The attribute interval is optional. Return true if this attribute exists.
-	 * @return true if and only if the interval attribute exists. 
-	 */
-	bool isIntervalExists() const;
-	
-
-	
- 	/**
- 	 * Get interval, which is optional.
- 	 * @return interval as Interval
- 	 * @throws IllegalAccessException If interval does not exist.
- 	 */
- 	Interval getInterval() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set interval with the specified Interval.
- 	 * @param interval The Interval value to which interval is to be set.
- 	 
- 		
- 	 */
- 	void setInterval (Interval interval);
-		
-	
-	
-	
-	/**
-	 * Mark interval, which is an optional field, as non-existent.
-	 */
-	void clearInterval ();
-	
-
-
-	
 	// ===> Attribute numAntenna, which is optional
 	
 	
@@ -341,7 +335,7 @@ public:
  	 * @return numAntenna as int
  	 * @throws IllegalAccessException If numAntenna does not exist.
  	 */
- 	int getNumAntenna() const throw(IllegalAccessException);
+ 	int getNumAntenna() const;
 	
  
  	
@@ -365,47 +359,6 @@ public:
 
 
 	
-	// ===> Attribute numBaseband, which is optional
-	
-	
-	
-	/**
-	 * The attribute numBaseband is optional. Return true if this attribute exists.
-	 * @return true if and only if the numBaseband attribute exists. 
-	 */
-	bool isNumBasebandExists() const;
-	
-
-	
- 	/**
- 	 * Get numBaseband, which is optional.
- 	 * @return numBaseband as int
- 	 * @throws IllegalAccessException If numBaseband does not exist.
- 	 */
- 	int getNumBaseband() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set numBaseband with the specified int.
- 	 * @param numBaseband The int value to which numBaseband is to be set.
- 	 
- 		
- 	 */
- 	void setNumBaseband (int numBaseband);
-		
-	
-	
-	
-	/**
-	 * Mark numBaseband, which is an optional field, as non-existent.
-	 */
-	void clearNumBaseband ();
-	
-
-
-	
 	// ===> Attribute basebandName, which is optional
 	
 	
@@ -423,7 +376,7 @@ public:
  	 * @return basebandName as vector<BasebandNameMod::BasebandName >
  	 * @throws IllegalAccessException If basebandName does not exist.
  	 */
- 	vector<BasebandNameMod::BasebandName > getBasebandName() const throw(IllegalAccessException);
+ 	vector<BasebandNameMod::BasebandName > getBasebandName() const;
 	
  
  	
@@ -447,6 +400,88 @@ public:
 
 
 	
+	// ===> Attribute numBaseband, which is optional
+	
+	
+	
+	/**
+	 * The attribute numBaseband is optional. Return true if this attribute exists.
+	 * @return true if and only if the numBaseband attribute exists. 
+	 */
+	bool isNumBasebandExists() const;
+	
+
+	
+ 	/**
+ 	 * Get numBaseband, which is optional.
+ 	 * @return numBaseband as int
+ 	 * @throws IllegalAccessException If numBaseband does not exist.
+ 	 */
+ 	int getNumBaseband() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numBaseband with the specified int.
+ 	 * @param numBaseband The int value to which numBaseband is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setNumBaseband (int numBaseband);
+		
+	
+	
+	
+	/**
+	 * Mark numBaseband, which is an optional field, as non-existent.
+	 */
+	void clearNumBaseband ();
+	
+
+
+	
+	// ===> Attribute interval, which is optional
+	
+	
+	
+	/**
+	 * The attribute interval is optional. Return true if this attribute exists.
+	 * @return true if and only if the interval attribute exists. 
+	 */
+	bool isIntervalExists() const;
+	
+
+	
+ 	/**
+ 	 * Get interval, which is optional.
+ 	 * @return interval as Interval
+ 	 * @throws IllegalAccessException If interval does not exist.
+ 	 */
+ 	Interval getInterval() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set interval with the specified Interval.
+ 	 * @param interval The Interval value to which interval is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setInterval (Interval interval);
+		
+	
+	
+	
+	/**
+	 * Mark interval, which is an optional field, as non-existent.
+	 */
+	void clearInterval ();
+	
+
+
+	
 	// ===> Attribute dValue, which is optional
 	
 	
@@ -464,7 +499,7 @@ public:
  	 * @return dValue as double
  	 * @throws IllegalAccessException If dValue does not exist.
  	 */
- 	double getDValue() const throw(IllegalAccessException);
+ 	double getDValue() const;
 	
  
  	
@@ -505,7 +540,7 @@ public:
  	 * @return vdValue as vector<double >
  	 * @throws IllegalAccessException If vdValue does not exist.
  	 */
- 	vector<double > getVdValue() const throw(IllegalAccessException);
+ 	vector<double > getVdValue() const;
 	
  
  	
@@ -546,7 +581,7 @@ public:
  	 * @return vvdValues as vector<vector<double > >
  	 * @throws IllegalAccessException If vvdValues does not exist.
  	 */
- 	vector<vector<double > > getVvdValues() const throw(IllegalAccessException);
+ 	vector<vector<double > > getVvdValues() const;
 	
  
  	
@@ -587,7 +622,7 @@ public:
  	 * @return llValue as long long
  	 * @throws IllegalAccessException If llValue does not exist.
  	 */
- 	long long getLlValue() const throw(IllegalAccessException);
+ 	long long getLlValue() const;
 	
  
  	
@@ -628,7 +663,7 @@ public:
  	 * @return vllValue as vector<long long >
  	 * @throws IllegalAccessException If vllValue does not exist.
  	 */
- 	vector<long long > getVllValue() const throw(IllegalAccessException);
+ 	vector<long long > getVllValue() const;
 	
  
  	
@@ -669,7 +704,7 @@ public:
  	 * @return vvllValue as vector<vector<long long > >
  	 * @throws IllegalAccessException If vvllValue does not exist.
  	 */
- 	vector<vector<long long > > getVvllValue() const throw(IllegalAccessException);
+ 	vector<vector<long long > > getVvllValue() const;
 	
  
  	
@@ -689,26 +724,6 @@ public:
 	 * Mark vvllValue, which is an optional field, as non-existent.
 	 */
 	void clearVvllValue ();
-	
-
-
-	
-	// ===> Attribute annotationId
-	
-	
-	
-
-	
- 	/**
- 	 * Get annotationId.
- 	 * @return annotationId as Tag
- 	 */
- 	Tag getAnnotationId() const;
-	
- 
- 	
- 	
-	
 	
 
 
@@ -734,7 +749,7 @@ public:
  	 * @return antennaId as vector<Tag> 
  	 * @throws IllegalAccessException If antennaId does not exist.
  	 */
- 	vector<Tag>  getAntennaId() const throw(IllegalAccessException);
+ 	vector<Tag>  getAntennaId() const;
 	
  
  	
@@ -886,6 +901,29 @@ private:
 	////////////////////////////////
 	
 	
+	// ===> Attribute annotationId
+	
+	
+
+	Tag annotationId;
+
+	
+	
+ 	
+ 	/**
+ 	 * Set annotationId with the specified Tag value.
+ 	 * @param annotationId The Tag value to which annotationId is to be set.
+		
+ 		
+			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setAnnotationId (Tag annotationId);
+  		
+	
+
+	
 	// ===> Attribute time
 	
 	
@@ -919,19 +957,6 @@ private:
  	
 
 	
-	// ===> Attribute interval, which is optional
-	
-	
-	bool intervalExists;
-	
-
-	Interval interval;
-
-	
-	
- 	
-
-	
 	// ===> Attribute numAntenna, which is optional
 	
 	
@@ -939,6 +964,19 @@ private:
 	
 
 	int numAntenna;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute basebandName, which is optional
+	
+	
+	bool basebandNameExists;
+	
+
+	vector<BasebandNameMod::BasebandName > basebandName;
 
 	
 	
@@ -958,13 +996,13 @@ private:
  	
 
 	
-	// ===> Attribute basebandName, which is optional
+	// ===> Attribute interval, which is optional
 	
 	
-	bool basebandNameExists;
+	bool intervalExists;
 	
 
-	vector<BasebandNameMod::BasebandName > basebandName;
+	Interval interval;
 
 	
 	
@@ -1047,29 +1085,6 @@ private:
 	
 	
  	
-
-	
-	// ===> Attribute annotationId
-	
-	
-
-	Tag annotationId;
-
-	
-	
- 	
- 	/**
- 	 * Set annotationId with the specified Tag value.
- 	 * @param annotationId The Tag value to which annotationId is to be set.
-		
- 		
-			
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 		
- 	 */
- 	void setAnnotationId (Tag annotationId);
-  		
-	
 
 	////////////////////////////////
 	// Extrinsic Table Attributes //

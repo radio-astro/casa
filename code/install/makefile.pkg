@@ -72,7 +72,7 @@ lib : $(MAKEIMPD) $(MAKEFTND) ;
 bin : $(MAKEAPSD) ;
 
 docscan docextr runtests :
-	-@ if [ "$Q" != "@" -o "$(MAKELEVEL)" = 0 ] ; then \
+	@ if [ "$Q" != "@" -o "$(MAKELEVEL)" = 0 ] ; then \
 	      echo "" ; \
 	      echo gmake[$(MAKELEVEL)]: $(MAKE) -C $(CODEDIR)/implement $@ ; \
 	   else \
@@ -103,37 +103,37 @@ endif
 
 
 show_local :
-	-@ echo ""
-	-@ echo "Variables defined in the package makefile"
-	-@ echo "========================================="
-	-@ echo ""
-	-@ echo "System"
-	-@ echo "------"
-	-@ echo "PCKGIMPD=$(PCKGIMPD)"
-	-@ echo "PCKGFTND=$(PCKGFTND)"
-	-@ echo "PCKGAPSD=$(PCKGAPSD)"
-	-@ echo ""
-	-@ echo "MAKEIMPD=$(MAKEIMPD)"
-	-@ echo "MAKEFTND=$(MAKEFTND)"
-	-@ echo "MAKEAPSD=$(MAKEAPSD)"
-	-@ echo ""
-	-@ echo "MAKEAUXD=$(MAKEAUXD)"
+	@ echo ""
+	@ echo "Variables defined in the package makefile"
+	@ echo "========================================="
+	@ echo ""
+	@ echo "System"
+	@ echo "------"
+	@ echo "PCKGIMPD=$(PCKGIMPD)"
+	@ echo "PCKGFTND=$(PCKGFTND)"
+	@ echo "PCKGAPSD=$(PCKGAPSD)"
+	@ echo ""
+	@ echo "MAKEIMPD=$(MAKEIMPD)"
+	@ echo "MAKEFTND=$(MAKEFTND)"
+	@ echo "MAKEAPSD=$(MAKEAPSD)"
+	@ echo ""
+	@ echo "MAKEAUXD=$(MAKEAUXD)"
 
 help ::
-	-@ echo ""
-	-@ echo "Targets defined in the package makefile"
-	-@ echo "======================================="
-	-@ echo ""
-	-@ echo "System"
-	-@ echo "------"
-	-@ echo "        lib: initiate 'gmake allsys' in the implement"
-	-@ echo "             and fortran subdirectories."
-	-@ echo "        bin: initiate 'gmake allsys' in the apps"
-	-@ echo "             subdirectory."
-	-@ echo "    docscan: scan C++ sources for class information."
-	-@ echo "    docextr: extract documentation from the C++ sources."
-	-@ echo "   runtests: run all test programs."
-	-@ echo ""
-	-@ echo "Programmer"
-	-@ echo "----------"
-	-@ echo "      check: build, run, and check all test programs."
+	@ echo ""
+	@ echo "Targets defined in the package makefile"
+	@ echo "======================================="
+	@ echo ""
+	@ echo "System"
+	@ echo "------"
+	@ echo "        lib: initiate 'gmake allsys' in the implement"
+	@ echo "             and fortran subdirectories."
+	@ echo "        bin: initiate 'gmake allsys' in the apps"
+	@ echo "             subdirectory."
+	@ echo "    docscan: scan C++ sources for class information."
+	@ echo "    docextr: extract documentation from the C++ sources."
+	@ echo "   runtests: run all test programs."
+	@ echo ""
+	@ echo "Programmer"
+	@ echo "----------"
+	@ echo "      check: build, run, and check all test programs."

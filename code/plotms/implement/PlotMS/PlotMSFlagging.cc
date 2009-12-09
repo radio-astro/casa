@@ -83,68 +83,67 @@ const String PlotMSFlagging::RKEY_SELVALUE = "SelectionValue";
 
 // Constructors/Destructors //
 
-PlotMSFlagging::PlotMSFlagging() : itsMS_(NULL), itsSelectedMS_(NULL),
-        itsVisSet_(NULL) {
-    setDefaults(); }
-
-PlotMSFlagging::PlotMSFlagging(MeasurementSet* ms, MeasurementSet* selectedMS,
-        VisSet* visSet) : itsMS_(ms), itsSelectedMS_(selectedMS),
-        itsVisSet_(visSet) {
-    setDefaults(); }
+PlotMSFlagging::PlotMSFlagging() {
+  setDefaults(); 
+}
 
 PlotMSFlagging::~PlotMSFlagging() { }
 
 
 // Public Methods //
 
-MeasurementSet* PlotMSFlagging::getMS() const { return itsMS_; }
-MeasurementSet* PlotMSFlagging::getSelectedMS() const{ return itsSelectedMS_; }
-VisSet* PlotMSFlagging::getVisSet() const { return itsVisSet_; }
-
-void PlotMSFlagging::setMS(MeasurementSet* ms, MeasurementSet* selectedMS,
-        VisSet* visSet) {
-    itsMS_ = ms;
-    itsSelectedMS_ = selectedMS;
-    itsVisSet_ = visSet;
-}
-
-
 void PlotMSFlagging::fromRecord(const RecordInterface& record) {
     const vector<String>& fields = fieldStrings();
     String sf; Field f;
     for(unsigned int i = 0; i < fields.size(); i++) {
         sf = fields[i]; f = field(sf);
-        if(record.isDefined(sf) && record.dataType(sf) == TpBool)
+        if(!record.isDefined(sf)) continue;
+        
+        // Set as bool/double/record.
+        if(record.dataType(sf) == TpBool) {
             setFlag(f, record.asBool(sf));
-        
-        if(fieldHasValue(f)) {
-            sf = fields[i] + RKEY_VALUE;
-            if(record.isDefined(sf) && record.dataType(sf) == TpDouble)
-                setValue(f, record.asDouble(sf));
-        }
-        
-        if(fieldHasSelectionValue(f)) {
-            sf = fields[i] + RKEY_SELVALUE;
-            if(record.isDefined(sf) && record.dataType(sf) == TpRecord) {
-                PlotMSSelection value;
-                value.fromRecord(record.asRecord(sf));
-                setSelectionValue(f, value);
+            if(fieldHasValue(f)) {
+                sf = fields[i] + RKEY_VALUE;
+                if(record.isDefined(sf) && record.dataType(sf) == TpDouble)
+                    setValue(f, record.asDouble(sf));
             }
+            
+            if(fieldHasSelectionValue(f)) {
+                sf = fields[i] + RKEY_SELVALUE;
+                if(record.isDefined(sf) && record.dataType(sf) == TpRecord) {
+                    PlotMSSelection value;
+                    value.fromRecord(record.asRecord(sf));
+                    setSelectionValue(f, value);
+                }
+            }
+            
+        // Set as String.
+        } else if(record.dataType(sf) == TpString) {
+            setValue(f, record.asString(sf));
         }
     }
 }
 
-Record PlotMSFlagging::toRecord() const {
+Record PlotMSFlagging::toRecord(bool useStrings) const {
     Record rec(Record::Variable);
     
     const vector<Field>& f = fields();
     for(unsigned int i = 0; i < f.size(); i++) {
-        rec.define(field(f[i]), getFlag(f[i]));
-        if(fieldHasValue(f[i]))
-            rec.define(field(f[i]) + RKEY_VALUE, getValue(f[i]));
-        if(fieldHasSelectionValue(f[i]))
-            rec.defineRecord(field(f[i]) + RKEY_SELVALUE,
-                    getSelectionValue(f[i]).toRecord());
+        // Set as String.
+        if(useStrings && (f[i] == CORR_ALL || f[i] == CORR_POLN_DEP ||
+           f[i] == ANTENNA_ANTENNA || f[i] == ANTENNA_BASELINES)) continue;
+        else if(useStrings && (f[i] == CORR || f[i] == ANTENNA)) {
+            rec.define(field(f[i]), getValueStr(f[i]));
+            
+        // Set as bool/double/record.
+        } else {
+            rec.define(field(f[i]), getFlag(f[i]));
+            if(fieldHasValue(f[i]))
+                rec.define(field(f[i]) + RKEY_VALUE, getValue(f[i]));
+            if(fieldHasSelectionValue(f[i]))
+                rec.defineRecord(field(f[i]) + RKEY_SELVALUE,
+                        getSelectionValue(f[i]).toRecord());
+        }
     }
     
     return rec;
@@ -182,6 +181,59 @@ double PlotMSFlagging::getValue(Field f) const {
 }
 void PlotMSFlagging::setValue(Field f, double value) {
     if(fieldHasValue(f)) itsValues_[f] = value; }
+
+String PlotMSFlagging::getValueStr(Field f) const {
+    if(f == CORR || f == CORR_ALL || f == CORR_POLN_DEP) {
+        if(!getFlag(CORR)) return "";
+        else if(getFlag(CORR_ALL)) return "all";
+        else if(getFlag(CORR_POLN_DEP)) return "poln-dep";
+        else return "";
+    } else if(f == ANTENNA || f == ANTENNA_ANTENNA || f == ANTENNA_BASELINES) {
+        if(!getFlag(ANTENNA)) return "";
+        else if(getFlag(ANTENNA_ANTENNA))
+            return String::toString(getValue(ANTENNA_ANTENNA));
+        else if(getFlag(ANTENNA_BASELINES)) return "all";
+        else return "";
+    } else return "";
+}
+
+void PlotMSFlagging::setValue(Field f, const String& value) {
+    String val = value;
+    val.downcase();
+    if(f == CORR || f == CORR_ALL || f == CORR_POLN_DEP) {
+        if(val.empty()) {
+            setFlag(CORR, false);
+            setFlag(CORR_ALL, false);
+            setFlag(CORR_POLN_DEP, false);
+        } else if(val == "all") {
+            setFlag(CORR, true);
+            setFlag(CORR_ALL, true);
+            setFlag(CORR_POLN_DEP, false);
+        } else if(val == "poln-dep") {
+            setFlag(CORR, true);
+            setFlag(CORR_ALL, false);
+            setFlag(CORR_POLN_DEP, true);
+        }
+    } else if(f == ANTENNA || f == ANTENNA_ANTENNA || f == ANTENNA_BASELINES) {
+        if(val.empty()) {
+            setFlag(ANTENNA, false);
+            setFlag(ANTENNA_ANTENNA, false);
+            setFlag(ANTENNA_BASELINES, false);
+        } else if(val == "all") {
+            setFlag(ANTENNA, true);
+            setFlag(ANTENNA_ANTENNA, false);
+            setFlag(ANTENNA_BASELINES, true);
+        } else {
+            double d;
+            if(sscanf(value.c_str(), "%lf", &d) >= 1) {
+                setFlag(ANTENNA, true);
+                setFlag(ANTENNA_ANTENNA, true);
+                setValue(ANTENNA_ANTENNA, d);
+                setFlag(ANTENNA_BASELINES, false);
+            }
+        }
+    }
+}
 
 
 PlotMSSelection PlotMSFlagging::getSelectionValue(Field f) const {

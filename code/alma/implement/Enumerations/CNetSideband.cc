@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CNetSideband::version() {
+	return NetSidebandMod::version;
+	}
+	
+string CNetSideband::revision () {
+	return NetSidebandMod::revision;
+}
+
+unsigned int CNetSideband::size() {
+	return 4;
+	}
+	
 	
 const std::string& CNetSideband::sNOSB = "NOSB";
 	
@@ -46,7 +59,7 @@ const std::string& CNetSideband::sUSB = "USB";
 	
 const std::string& CNetSideband::sDSB = "DSB";
 	
-const std::vector<std::string> CNetSideband::sNetSidebandSet() {
+const std::vector<std::string> CNetSideband::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CNetSideband::sNOSB);
@@ -59,33 +72,6 @@ const std::vector<std::string> CNetSideband::sNetSidebandSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CNetSideband::hNOSB = "No side band (no frequency conversion)";
-	
-const std::string& CNetSideband::hLSB = "Lower side band";
-	
-const std::string& CNetSideband::hUSB = "Upper side band";
-	
-const std::string& CNetSideband::hDSB = "Double side band";
-	
-const std::vector<std::string> CNetSideband::hNetSidebandSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CNetSideband::hNOSB);
-    
-    enumSet.insert(enumSet.end(), CNetSideband::hLSB);
-    
-    enumSet.insert(enumSet.end(), CNetSideband::hUSB);
-    
-    enumSet.insert(enumSet.end(), CNetSideband::hDSB);
-        
-    return enumSet;
-}
-   	
 
 std::string CNetSideband::name(const NetSidebandMod::NetSideband& f) {
     switch (f) {
@@ -103,31 +89,9 @@ std::string CNetSideband::name(const NetSidebandMod::NetSideband& f) {
       return CNetSideband::sDSB;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CNetSideband::help(const NetSidebandMod::NetSideband& f) {
-    switch (f) {
-    
-    case NetSidebandMod::NOSB:
-      return CNetSideband::hNOSB;
-    
-    case NetSidebandMod::LSB:
-      return CNetSideband::hLSB;
-    
-    case NetSidebandMod::USB:
-      return CNetSideband::hUSB;
-    
-    case NetSidebandMod::DSB:
-      return CNetSideband::hDSB;
-    	
-    }
-    return std::string("");
-}
-   	
 
 NetSidebandMod::NetSideband CNetSideband::newNetSideband(const std::string& name) {
 		
@@ -172,12 +136,10 @@ NetSidebandMod::NetSideband CNetSideband::literal(const std::string& name) {
 }
 
 NetSidebandMod::NetSideband CNetSideband::from_int(unsigned int i) {
-	vector<string> names = sNetSidebandSet();
-	if (i >= names.size()) throw badInt(i);
-	return newNetSideband(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newNetSideband(names_.at(i));
 }
-
-	
 
 string CNetSideband::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'NetSideband'.";

@@ -5,7 +5,7 @@
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 	file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="importvla">
+	<task type="function" name="importvla" category="import/export">
 importvla(archivefiles=None,vis=None,
               bandname=None,frequencytol=None,
               project=None,
@@ -41,10 +41,12 @@ importvla(archivefiles=None,vis=None,
 			   <value>4</value>
 			   <value>P</value>
 			   <value>L</value>
+			   <value>S</value>
 			   <value>C</value>
 			   <value>X</value>
 			   <value>U</value>
 			   <value>K</value>
+			   <value>Ka</value>
 			   <value>Q</value>
 			   <value></value>
 		   </allowed>
@@ -92,6 +94,11 @@ importvla(archivefiles=None,vis=None,
 
 	   <param type="bool" name="keepblanks" >
 		   <description>Fill scans with blank (empty) source names (e.g. tipping scans)</description>
+		   <value>False</value>
+	   </param>
+
+	   <param type="bool" name="evlabands" >
+		   <description>Use updated eVLA frequencies and bandwidths for bands and wavelengths</description>
 		   <value>False</value>
 	   </param>
    </input>
@@ -149,6 +156,9 @@ importvla(archivefiles=None,vis=None,
               default =&gt; false.  Do not fill
               These scans are tipping scans (as of June 1, 2009) and should not
               be filled in the visibility data set.
+      evlabands -- Use the EVLA's center frequency and bandwidths for frequencies
+              specified via wavelength or band. 
+	      default =&gt; True. 
       async --  Run asynchronously
               default = False; do not run asychronously
       </example>

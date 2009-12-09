@@ -13,7 +13,7 @@ for k in range(len(a)):
 gl=sys._getframe(stacklevel).f_globals
 
 def description():
-    return "Based on ngc2403_tutorial_regression.py"
+    return "VLA, NGC 2403 HI line data, import, flagging, calibration, imaging"
 
 def run():
     #####locate the regression script

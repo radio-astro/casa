@@ -26,6 +26,9 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotMS.h>
 
+#include <plotms/Gui/PlotMSPlotter.qo.h>
+#include <plotms/PlotMS/PlotMSDBusApp.h>
+
 namespace casa {
 
 // TODO PlotMSAction: iteration, release cache.  action for new plots.  update
@@ -47,60 +50,47 @@ namespace casa {
 // PLOTMS DEFINITIONS //
 ////////////////////////
 
-// Static //
-
-const String PlotMS::CLASS_NAME = "PlotMS";
-
-const String PlotMS::LOG_INITIALIZE_GUI = "initialize_gui";
-const String PlotMS::LOG_LOAD_CACHE = "load_cache";
-const String PlotMS::LOG_LOCATE = "locate";
-const String PlotMS::LOG_FLAG = "flag";
-const String PlotMS::LOG_UNFLAG = "unflag";
-
-
 // Constructors/Destructors //
 
-PlotMS::PlotMS() { initialize(); }
+PlotMS::PlotMS(bool connectToDBus) : itsDBus_(NULL) {
+    initialize(connectToDBus); }
 
-PlotMS::PlotMS(const PlotMSParameters& params) : itsPlotter_(NULL),
-        itsParameters_(params) {
-    // Update internal state to reflect parameters.
-    parametersHaveChanged(itsParameters_, PlotMSWatchedParameters::ALL, false);
-    
-    // We have to make a temporary PlotLogger to get measurements for the GUI
-    // initialization, since PlotMSLogger is waiting for the PlotMSPlotter to
-    // be built first to get a pointer to its logger!
-    PlotLogger* tempLogger = NULL;
-    if(itsLogEventFlag_ & PlotMSLogger::INITIALIZE_GUI)
-        tempLogger = new PlotLogger(NULL); // should be okay to pass NULL for a
-                                           // Plotter since we're just
-                                           // generating event messsages..
-    
-    PlotLogGeneric msg = (tempLogger == NULL) ? PlotLogGeneric("", "", "") :
-        tempLogger->markMeasurement(CLASS_NAME, LOG_INITIALIZE_GUI, false);
-    
-    initialize();
-    
-    // Post message if necessary, and clean up.
-    if(tempLogger != NULL) {
-        itsLogger_.postMessage(msg);
-        itsLogger_.postMessage(tempLogger->releaseMeasurement(false));
-        delete tempLogger;
-    }
+PlotMS::PlotMS(const PlotMSParameters& params, bool connectToDBus) :
+        itsPlotter_(NULL), itsParameters_(params), itsDBus_(NULL) {
+    initialize(connectToDBus); }
+
+PlotMS::~PlotMS() {
+    if(itsDBus_ != NULL) delete itsDBus_;
 }
-
-PlotMS::~PlotMS() { }
 
 
 // Public Methods //
 
+PlotMSPlotter* PlotMS::getPlotter() { return itsPlotter_; }
+void PlotMS::showGUI(bool show) { itsPlotter_->showGUI(show); }
+bool PlotMS::guiShown() const { return itsPlotter_->guiShown(); }
+int PlotMS::execLoop() { return itsPlotter_->execLoop(); }
+int PlotMS::showAndExec(bool show) { return itsPlotter_->showAndExec(show); }
+void PlotMS::close() { itsPlotter_->close(); }
+
+void PlotMS::showError(const String& message, const String& title,
+        bool isWarning) { itsPlotter_->showError(message, title, isWarning); }
+void PlotMS::showWarning(const String& message, const String& title) {
+    itsPlotter_->showError(message, title, true); }
+void PlotMS::showMessage(const String& message, const String& title) {
+    itsPlotter_->showMessage(message, title); }
+
+PlotMSParameters& PlotMS::getParameters() { return itsParameters_; }
+void PlotMS::setParameters(const PlotMSParameters& params) {
+    itsParameters_ = params; }
+
 void PlotMS::parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired) {
+            int updateFlag) {
+    // We only care about PlotMS's parameters.
     if(&params == &itsParameters_) {
-        // We only care about PlotMS's parameters.
-        itsLogEventFlag_ = PlotMSLogger::levelToEventFlag(
-                itsParameters_.logLevel(), itsParameters_.logDebug());
-        itsLogger_.setEventFlags_(itsLogEventFlag_);
+        itsLogger_->setSinkLocation(itsParameters_.logFilename());
+        itsLogger_->setFilterEventFlags(itsParameters_.logEvents());
+        itsLogger_->setFilterMinPriority(itsParameters_.logPriority());
         
         pair<int, int> cis = itsParameters_.cachedImageSize();
         if(itsPlotter_ != NULL && !itsPlotter_->getPlotter().null() &&
@@ -114,26 +104,35 @@ void PlotMS::parametersHaveChanged(const PlotMSWatchedParameters& params,
     }
 }
 
-PlotMSLogger* PlotMS::loggerFor(PlotMSLogger::Event event) {
-    if(itsLogEventFlag_ & event) return &itsLogger_;
-    else                               return NULL;
-}
+PlotLoggerPtr PlotMS::getLogger() { return itsLogger_; }
+PlotMSPlotManager& PlotMS::getPlotManager() { return itsPlotManager_; }
+
+PlotMSSinglePlot* PlotMS::addSinglePlot(const PlotMSPlotParameters* p) {
+    return itsPlotManager_.addSinglePlot(p); }
+
+PlotMSMultiPlot* PlotMS::addMultiPlot(const PlotMSPlotParameters* p) {
+    return itsPlotManager_.addMultiPlot(p); }
 
 
 // Private Methods //
 
-void PlotMS::initialize() {
+void PlotMS::initialize(bool connectToDBus) {
     itsParameters_.addWatcher(this);
     
     itsPlotter_ = new PlotMSPlotter(this);
     itsPlotter_->showIterationButtons(false);
-    itsPlotter_->setStatusText("Opened blank plotter.");
+    itsLogger_ = itsPlotter_->getPlotter()->logger();
     
-    itsLogger_.setParent(this);
     itsPlotManager_.setParent(this);
     
     // Update internal state to reflect parameters.
-    parametersHaveChanged(itsParameters_, PlotMSWatchedParameters::ALL, false);
+    parametersHaveChanged(itsParameters_,
+            PlotMSWatchedParameters::ALL_UPDATE_FLAGS());
+    
+    if(connectToDBus) {
+        itsDBus_ = new PlotMSDBusApp(*this);
+        itsDBus_->connectToDBus();
+    }
 }
 
 

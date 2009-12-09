@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for (new) sdcal -->
 
-<task type="function" name="sdcal" startup="false">
+<task type="function" name="sdcal" startup="false" category="single dish">
 
   <shortdescription>ASAP SD task: do sdaverage, sdsmooth, and sdbaseline in one task</shortdescription>
 
@@ -184,7 +184,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>5</value>
     </param>
 
-    <param type="bool" name="verify">
+    <param type="bool" name="verifycal">
+            <description>verify the results of calibration</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="verifysm">
+            <description>verify the results of smoothing</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="verifybl">
             <description>verify the results of baseline fitting</description>
             <value>False</value>
     </param>
@@ -366,7 +376,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         average -- averaging on spectral data 
                 options: (bool) True,False
                 default: False
-                &gt;&gt;&gt;average expandable parameter
+
+            &gt;&gt;&gt;average expandable parameter
                  scanaverage -- average integrations within scans
                          options: (bool) True,False
                          default: False
@@ -395,18 +406,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          options: 'none'
                                   'var'  (1/var(spec) weighted)
                                   'tsys' (1/Tsys**2 weighted)
+
         tau -- atmospheric optical depth
                 default: 0.0 (no correction)
         kernel -- type of spectral smoothing
                 options: 'none','hanning','gaussian','boxcar'
                 default: 'none'
-                &gt;&gt;&gt;kernel expandable parameter
+
+            &gt;&gt;&gt;kernel expandable parameter
                  kwidth -- width of spectral smoothing kernel
                          options: (int) in channels
                          default: 5
                          example: 5 or 10 seem to be popular for boxcar
                                   ignored for hanning (fixed at 5 chans)
                                   (0 will turn off gaussian or boxcar)
+
         blmode -- mode for baseline fitting
                 options: (str) 'none','auto','list','interact'
                 default: 'none'
@@ -444,12 +458,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: 5
                 example: typically in range 2-9 (higher values
                          seem to be needed for GBT)
-        verify -- verify the results of baseline fitting
+        verifycal -- verify the results of calibration
                 options: (bool) True,False
                 default: False
-                WARNING: Currently this just asks whether you accept
-                         the displayed fit and if not, continues
-                         without doing any baseline fit.
+                WARNING: Currently verifying parameters just asks whether you 
+                         accept the displayed calibraion/fit and if not, 
+                         continues without doing any calibraion/baseline fit.
+        verifysm -- verify the results of smoothing
+                options: (bool) True,False
+                default: False
+        verifybl -- verify the results of baseline fitting
+                options: (bool) True,False
+                default: False
         masklist -- list of mask regions to INCLUDE in BASELINE fit
                 default: [] (entire spectrum)
                 example: [[1000,3000],[5000,7000]]
@@ -483,12 +503,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         baseline fitting for single-dish spectra. This task internally calls the
         tasks, sdaverage, sdsmooth, and sdbaseline and it can be used to run all the
         three steps in one task execution.
-        By setting calmode='none'
-        one can run sdcal on already calibrated data, for further selection
-        , averaging and atmospheric optical depth correction.
+        By setting calmode='none', one can run sdcal on already calibrated data,
+        for further selection, averaging and atmospheric optical depth correction.
 
         If you give multiple IFs in iflist, then your scantable will have
-        multiple IFs.  This can be handled, but there can be funny interactions
+        multiple IFs. This can be handled, but there can be funny interactions
         later on.  We recommend you split each IF out into separate files
         by re-running sdcal with each IF in turn.
 

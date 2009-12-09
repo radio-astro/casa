@@ -52,148 +52,165 @@
 
 int main( int argc, char **argv ) {
 
- // don't let ^C [from casapy] kill the viewer...
- signal(SIGINT,SIG_IGN);
+    // don't let ^C [from casapy] kill the viewer...
+    signal(SIGINT,SIG_IGN);
 	
-	INITIALIZE_PGPLOT
+    INITIALIZE_PGPLOT
+
+    bool server_startup = false;
+
+    // pre-process the command line arguments (for now), it looks like
+    // the current scheme is to hard-wire a limited set of command line
+    // parameters... should be reworked in the future.
+    char **args = (char**) malloc(sizeof(char*)*argc);
+    int numargs = 0;
+
+    for ( int x = 0; x < argc; ++x ) {
+ 	if ( ! strcmp(argv[x],"--server"))
+	    server_startup = true;
+	else
+	    args[numargs++] = argv[x];
+    }
  
- try {
+    try {
   
-  QApplication qapp(argc, argv, true); 
+	QApplication qapp(numargs, args, true); 
     
-  String	   filename    = "",
+	String	   filename    = "",
 		   displaytype = "",
 		   datatype    = "",
 		   arg2        = "",
 		   arg3        = "";      
   
 
-  Int narg;
-
+	Int narg;
+  
 #ifndef AIPS_DARWIN
-  narg = qapp.argc();
-  if(narg>1) filename = qapp.argv()[1];
-  if(narg>2) arg2     = qapp.argv()[2];
-  if(narg>3) arg3     = qapp.argv()[3];
+	narg = qapp.argc();
+	if(narg>1) filename = qapp.argv()[1];
+	if(narg>2) arg2     = qapp.argv()[2];
+	if(narg>3) arg3     = qapp.argv()[3];
 #else
-  narg = argc;
-  if(narg>1) filename = argv[1];
-  if(narg>2) arg2     = argv[2];
-  if(narg>3) arg3     = argv[3];
+	narg = numargs;
+	if(narg>1) filename = args[1];
+	if(narg>2) arg2     = args[2];
+	if(narg>3) arg3     = args[3];
 #endif
-  
-  if(filename==".") filename="";
+
 	// Workaround for python task's "empty parameter" disability....
+	if(filename==".") filename="";
 
-  QtViewer* v = new QtViewer;
-  
-  QtDisplayPanelGui* dpg = new QtDisplayPanelGui(v);
-  
-  QtDisplayData* qdd = 0;
+	QtViewer* v = new QtViewer(server_startup);
 
-  // Data files are now typed automatically (see v_->filetype(filename),
-  // below; e.g.: "image" or "ms").  arg2 need be used only to specify a
-  // displaytype, and then only when it is not the default displaytype
-  // for the datatype (e.g.  viewer "my.im", "contour" ).
-  //
-  // The user can enter an lel expression in place of filename, but such
-  // an expression _cannot_ be automatically typed.  In this case the user
-  // must have "lel" in arg2 (or in arg3: the only case where arg3 is vaguely
-  // useful is something like:
-  //
-  //   casaviewer "'my.im'-'other.im'"  contour  lel 
-  //
-  // arg3 is not even offered in the viewer casapy task).
-  //
-  // The logic below allows displaytypes or datatypes to be entered in
-  // either order, and for old datatypes to be used other than "lel" (these
-  // are simply ignored).  This allows old (deprecated) parameter usage in
-  // scripts (such as viewer("my.ms", "ms")) to continue to be understood.
-  //
-  // However, the canonical 'allowed' parameter set (per user documentation)
-  // is now just:
-  //
-  //   viewer [filename [displaytype]]
-  //
+	if ( ! server_startup ) {  
+	    QtDisplayPanelGui* dpg = new QtDisplayPanelGui(v);
   
-  if(filename!="") {
+	    QtDisplayData* qdd = 0;
+
+	    // Data files are now typed automatically (see v_->filetype(filename),
+	    // below; e.g.: "image" or "ms").  arg2 need be used only to specify a
+	    // displaytype, and then only when it is not the default displaytype
+	    // for the datatype (e.g.  viewer "my.im", "contour" ).
+	    //
+	    // The user can enter an lel expression in place of filename, but such
+	    // an expression _cannot_ be automatically typed.  In this case the user
+	    // must have "lel" in arg2 (or in arg3: the only case where arg3 is vaguely
+	    // useful is something like:
+	    //
+	    //   casaviewer "'my.im'-'other.im'"  contour  lel 
+	    //
+	    // arg3 is not even offered in the viewer casapy task).
+	    //
+	    // The logic below allows displaytypes or datatypes to be entered in
+	    // either order, and for old datatypes to be used other than "lel" (these
+	    // are simply ignored).  This allows old (deprecated) parameter usage in
+	    // scripts (such as viewer("my.ms", "ms")) to continue to be understood.
+	    //
+	    // However, the canonical 'allowed' parameter set (per user documentation)
+	    // is now just:
+	    //
+	    //   viewer [filename [displaytype]]
+	    //
   
-    Bool tryDDcreate = True;
+	    if(filename!="") {
+  
+		Bool tryDDcreate = True;
     
-    if(arg3=="lel" || arg2=="lel") {
+		if(arg3=="lel" || arg2=="lel") {
       
-      // (this means that first ('filename') parameter is supposed to
-      // contain a valid lel (image expression) string; this is advanced
-      // (and undocumented) parameter usage).
+		    // (this means that first ('filename') parameter is supposed to
+		    // contain a valid lel (image expression) string; this is advanced
+		    // (and undocumented) parameter usage).
       
-      datatype = "lel";
-      displaytype = (arg3=="lel")? arg2 : arg3;
-      v->dataDisplaysAs(datatype, displaytype);  }
+		    datatype = "lel";
+		    displaytype = (arg3=="lel")? arg2 : arg3;
+		    v->dataDisplaysAs(datatype, displaytype);
+		} else {
       
-    else {
-      
-      datatype = v->filetype(filename);
+		    datatype = v->filetype(filename);
       
       
-      if(datatype=="restore") {
+		    if(datatype=="restore") {
 	
-	// filename is a restore file.
+			// filename is a restore file.
         
-	tryDDcreate = False;
+			tryDDcreate = False;
         
-        dpg->restorePanelState(filename);  }
+			dpg->restorePanelState(filename);  }
       
-      else {
+		    else {
 	
-	if(datatype=="nonexistent") {
-	  cerr << "***Can't find  " << filename << "***" << endl;
-	  tryDDcreate = False;  }
+			if(datatype=="nonexistent") {
+			    cerr << "***Can't find  " << filename << "***" << endl;
+			    tryDDcreate = False;
+			}
       
-	if(datatype=="unknown") {
-	  cerr << "***Unknown file type for  " << filename << "***" << endl;
-	  tryDDcreate = False;  }
+			if(datatype=="unknown") {
+			    cerr << "***Unknown file type for  " << filename << "***" << endl;
+			    tryDDcreate = False;
+			}
       
-	// filename names a normal data file.  If user has passed a valid
-	// displaytype in either arg2 or arg3, use it; otherwise, the
-	// default displaytype for datatype will be inserted.
+			// filename names a normal data file.  If user has passed a valid
+			// displaytype in either arg2 or arg3, use it; otherwise, the
+			// default displaytype for datatype will be inserted.
         
-	displaytype = arg2;
-        if(!v->dataDisplaysAs(datatype, displaytype)) {
-          displaytype = arg3;
-          v->dataDisplaysAs(datatype, displaytype);  }  }  }
+			displaytype = arg2;
+			if(!v->dataDisplaysAs(datatype, displaytype)) {
+			    displaytype = arg3;
+			    v->dataDisplaysAs(datatype, displaytype);
+			}
+		    }
+		}
     
     
-    if(tryDDcreate) {
+		if(tryDDcreate) {
 
-          
-      qdd = v->createDD(filename, datatype, displaytype);
+		    qdd = v->createDD(filename, datatype, displaytype);
   
       
-      if(qdd==0)  cerr << v->errMsg() << endl;  }  }
-    
-      
+		    if(qdd==0)  cerr << v->errMsg() << endl;
+		}
+	    }
   
-  dpg->show();
+	    dpg->show();
   
-  if(v->nDDs()==0) v->showDataManager();
+	    if(v->nDDs()==0) v->showDataManager();
   
-  
+	}  
 
-  Int stat = QtApp::exec();
+	Int stat = QtApp::exec();
   
   //delete dpg;		// Used to lead to crash (double-deletion
   			// of MWCTools); should work now.
   
-  delete v;
+	delete v;
   
   // cerr<<"Normal exit -- status: "<<stat<<endl;	//#diag
   
-  return stat;  }
-  
-
-    
- catch (const casa::AipsError& err) { cerr<<"**"<<err.getMesg()<<endl;  }
- catch (...) { cerr<<"**non-AipsError exception**"<<endl;  }
+	return stat;
+    }
+      
+    catch (const casa::AipsError& err) { cerr<<"**"<<err.getMesg()<<endl;  }
+    catch (...) { cerr<<"**non-AipsError exception**"<<endl;  }
 
 }
-

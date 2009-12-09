@@ -65,9 +65,10 @@ MFMSCleanImageSkyModel::MFMSCleanImageSkyModel()
 
 MFMSCleanImageSkyModel::MFMSCleanImageSkyModel(const Int nscales, 
 					       const Int sln,
-					       const Int spm)
+					       const Int spm,
+                                               const Float inbias)
 : method_p(NSCALES), nscales_p(nscales), progress_p(0),
-  stopLargeNegatives_p(sln), stopPointMode_p(spm)
+  stopLargeNegatives_p(sln), stopPointMode_p(spm),smallScaleBias_p(inbias)
 {
 
 
@@ -79,9 +80,10 @@ MFMSCleanImageSkyModel::MFMSCleanImageSkyModel(const Int nscales,
 
 MFMSCleanImageSkyModel::MFMSCleanImageSkyModel(const Vector<Float>& userScaleSizes, 
 					       const Int sln,
-					       const Int spm)
+					       const Int spm,
+                                               const Float inbias)
 : method_p(USERVECTOR), userScaleSizes_p(userScaleSizes), progress_p(0),
-  stopLargeNegatives_p(sln), stopPointMode_p(spm)
+  stopLargeNegatives_p(sln), stopPointMode_p(spm), smallScaleBias_p(inbias)
 {
 
   donePSF_p=False;
@@ -129,14 +131,24 @@ MFMSCleanImageSkyModel::~MFMSCleanImageSkyModel()
 Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 
   LogIO os(LogOrigin("MFMSCleanImageSkyModel","solve"));
+  /*backed out for now
+  if(modified_p){
+    makeNewtonRaphsonStep(se, False);
+  }
   
+  if(numberIterations() < 1){
+    return True;
+  }
+  */
   //Make the PSFs, one per field
   if(!donePSF_p){
     os << "Making approximate PSFs" << LogIO::POST;
     makeApproxPSFs(se);
   }
 
-  Bool converged=True;
+  Int converged=True;
+  Int converging=0;
+  
   // Validate PSFs for each field
   Vector<Float> psfmax(numberOfModels()); psfmax=0.0;
   Vector<Float> psfmin(numberOfModels()); psfmin=1.0;
@@ -191,7 +203,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
     progress_p = new LatticeCleanProgress( pgplotter_p );
   }
 
-  LatticeCleaner<Float>* cleaner;
+  Block<CountedPtr<LatticeCleaner<Float> > > cleaner(numberOfModels());
   cleaner=0;
 
   Int cycle=0;
@@ -200,6 +212,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 
     os << "*** Starting major cycle " << cycle+1 << LogIO::POST;
     cycle++;
+
 
     // Make the residual images. We do an incremental update
     // for cycles after the first one. If we have only one
@@ -220,6 +233,11 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
       }
     
     }
+    if(numberIterations() < 1){
+      // Why waste the time to set up
+      return True;
+    }
+
     absmax=maxField(resmax, resmin);
 
     for (model=0;model<numberOfModels();model++) {
@@ -292,7 +310,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	      // we simply make a new one for each channel
 	      if(nchan>1) {
 		os<<"Processing channel "<<chan+1<<" of "<<nchan<<LogIO::POST;
-		if(cleaner) delete cleaner; cleaner=0;
+		if(!cleaner[model].null()) cleaner[model]=0;
 	      }
 	      
 	      blcDirty(3) = chan;
@@ -322,39 +340,50 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		  }
 		}
 		if(!skipThisPlane){
-		  if(cleaner) {
+		  if(!cleaner[model].null()) {
 		    os << "Updating multiscale cleaner with new residual images"
 		       << LogIO::POST;
-		    cleaner->update(subResid);
+		    cleaner[model]->update(subResid);
 		  }
 		  else {
 		    os << "Creating multiscale cleaner with psf and residual images" << LogIO::POST;
-		    cleaner=new LatticeCleaner<Float>(subPSF, subResid);
-		    setScales(*cleaner);
+		    cleaner[model]=new LatticeCleaner<Float>(subPSF, subResid);
+		    setScales(*(cleaner[model]));
+                    cleaner[model]->setSmallScaleBias(smallScaleBias_p);
 		    if (doMask) {		  
-		      cleaner->setMask(*subMaskPointer);
+		      cleaner[model]->setMask(*subMaskPointer);
 		    }
 		  }
 		  subDeltaImage.set(0.0);
 		  
-		  cleaner->setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), 
+		  cleaner[model]->setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), 
 				      aThreshold, fThreshold, True);
 		  
 		  if (cycleSpeedup_p > 1) {
 		    os << "cycleSpeedup is " << cycleSpeedup_p << LogIO::POST;
-		    cleaner->speedup(cycleSpeedup_p);
+		    cleaner[model]->speedup(cycleSpeedup_p);
 		  }
 		
-		  cleaner->startingIteration( iterations[model](chan) );
+		  cleaner[model]->startingIteration( iterations[model](chan) );
 		  if (cycle <= stopLargeNegatives_p) {
-		    cleaner->stopAtLargeScaleNegative();
+		    cleaner[model]->stopAtLargeScaleNegative();
 		  }
-		  cleaner->stopPointMode(stopPointMode_p);
-		  cleaner->ignoreCenterBox(True);
-		  cleaner->clean( subDeltaImage, progress_p );
-		  
-		
-		  iterations[model](chan)=cleaner->numberIterations();
+		  cleaner[model]->stopPointMode(stopPointMode_p);
+		  cleaner[model]->ignoreCenterBox(True);
+		  converging=cleaner[model]->clean( subDeltaImage, progress_p );
+		  //diverging
+		  if(converging==-3)
+		    stop=True;
+		  //reduce scales on main field only
+		  if(converging==-2 && model==0){
+		    if(userScaleSizes_p.nelements() > 1){
+		       userScaleSizes_p.resize(userScaleSizes_p.nelements()-1, True);
+		       cleaner[model]->setscales(userScaleSizes_p); 
+		    }
+		    else
+		      stop=True;
+		  }
+		  iterations[model](chan)=cleaner[model]->numberIterations();
 		  maxIterations=(iterations[model](chan)>maxIterations) ?
 		    iterations[model](chan) : maxIterations;
 		  os << "Clean used " << iterations[model](chan) << " iterations" 
@@ -363,7 +392,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		  
 		  subImage.copyData( LatticeExpr<Float>( subImage + subDeltaImage));
 		  
-		  if (cleaner->queryStopPointMode()) {
+		  if (cleaner[model]->queryStopPointMode()) {
 		    stop = True;		
 		    os << "MSClean terminating because we hit " 
 		       << stopPointMode_p
@@ -401,7 +430,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
     os << "Residual images for all fields are up-to-date" << LogIO::POST;
   }
 
-  if(cleaner) delete cleaner; cleaner=0;
+  //if(cleaner) delete cleaner; cleaner=0;
 
   return(converged);
 };
@@ -439,6 +468,10 @@ MFMSCleanImageSkyModel::setScales(LatticeCleaner<Float>& cleaner)
 	 << " pixels" << LogIO::POST;
     }  
     cleaner.setscales(scaleSizes);   
+    //store the scales as user setscales..in case we need to reduce scales
+    userScaleSizes_p.resize();
+    userScaleSizes_p=scaleSizes;
+    method_p=USERVECTOR;
   }
 };
 

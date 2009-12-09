@@ -78,12 +78,15 @@ using namespace enumerations;
 	
 
 	
+
+	
 #include "CProcessorType.h"
 using namespace ProcessorTypeMod;
 	
 
 	
-
+#include "CProcessorSubType.h"
+using namespace ProcessorSubTypeMod;
 	
 
 
@@ -109,22 +112,19 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Processor.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
 
 //class asdm::ProcessorTable;
 
-
-// class asdm::CorrelatorModeRow;
-class CorrelatorModeRow;
 	
 
 /**
  * The ProcessorRow class is a row of a ProcessorTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class ProcessorRow {
@@ -151,8 +151,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct ProcessorRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (ProcessorRowIDL x) throw(ConversionException);
+	void setFromIDL (ProcessorRowIDL x) ;
 #endif
 	
 	/**
@@ -165,8 +166,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the ProcessorTable to which the row built by deserialization will be parented.
+	  */
+	 static ProcessorRow* fromBin(EndianISStream& eiss, ProcessorTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -193,29 +208,29 @@ public:
 
 
 	
-	// ===> Attribute type
+	// ===> Attribute modeId
 	
 	
 	
 
 	
  	/**
- 	 * Get type.
- 	 * @return type as ProcessorTypeMod::ProcessorType
+ 	 * Get modeId.
+ 	 * @return modeId as Tag
  	 */
- 	ProcessorTypeMod::ProcessorType getType() const;
+ 	Tag getModeId() const;
 	
  
  	
  	
  	/**
- 	 * Set type with the specified ProcessorTypeMod::ProcessorType.
- 	 * @param type The ProcessorTypeMod::ProcessorType value to which type is to be set.
+ 	 * Set modeId with the specified Tag.
+ 	 * @param modeId The Tag value to which modeId is to be set.
  	 
  		
  			
  	 */
- 	void setType (ProcessorTypeMod::ProcessorType type);
+ 	void setModeId (Tag modeId);
   		
 	
 	
@@ -223,29 +238,29 @@ public:
 
 
 	
-	// ===> Attribute subType
+	// ===> Attribute processorType
 	
 	
 	
 
 	
  	/**
- 	 * Get subType.
- 	 * @return subType as string
+ 	 * Get processorType.
+ 	 * @return processorType as ProcessorTypeMod::ProcessorType
  	 */
- 	string getSubType() const;
+ 	ProcessorTypeMod::ProcessorType getProcessorType() const;
 	
  
  	
  	
  	/**
- 	 * Set subType with the specified string.
- 	 * @param subType The string value to which subType is to be set.
+ 	 * Set processorType with the specified ProcessorTypeMod::ProcessorType.
+ 	 * @param processorType The ProcessorTypeMod::ProcessorType value to which processorType is to be set.
  	 
  		
  			
  	 */
- 	void setSubType (string subType);
+ 	void setProcessorType (ProcessorTypeMod::ProcessorType processorType);
   		
 	
 	
@@ -253,43 +268,32 @@ public:
 
 
 	
-	// ===> Attribute flagRow, which is optional
+	// ===> Attribute processorSubType
 	
 	
-	
-	/**
-	 * The attribute flagRow is optional. Return true if this attribute exists.
-	 * @return true if and only if the flagRow attribute exists. 
-	 */
-	bool isFlagRowExists() const;
 	
 
 	
  	/**
- 	 * Get flagRow, which is optional.
- 	 * @return flagRow as bool
- 	 * @throws IllegalAccessException If flagRow does not exist.
+ 	 * Get processorSubType.
+ 	 * @return processorSubType as ProcessorSubTypeMod::ProcessorSubType
  	 */
- 	bool getFlagRow() const throw(IllegalAccessException);
+ 	ProcessorSubTypeMod::ProcessorSubType getProcessorSubType() const;
 	
  
  	
  	
  	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
+ 	 * Set processorSubType with the specified ProcessorSubTypeMod::ProcessorSubType.
+ 	 * @param processorSubType The ProcessorSubTypeMod::ProcessorSubType value to which processorSubType is to be set.
  	 
  		
+ 			
  	 */
- 	void setFlagRow (bool flagRow);
-		
+ 	void setProcessorSubType (ProcessorSubTypeMod::ProcessorSubType processorSubType);
+  		
 	
 	
-	
-	/**
-	 * Mark flagRow, which is an optional field, as non-existent.
-	 */
-	void clearFlagRow ();
 	
 
 
@@ -297,55 +301,10 @@ public:
 	// Extrinsic Table Attributes //
 	////////////////////////////////
 	
-	
-	// ===> Attribute almaCorrelatorModeId
-	
-	
-	
-
-	
- 	/**
- 	 * Get almaCorrelatorModeId.
- 	 * @return almaCorrelatorModeId as Tag
- 	 */
- 	Tag getAlmaCorrelatorModeId() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set almaCorrelatorModeId with the specified Tag.
- 	 * @param almaCorrelatorModeId The Tag value to which almaCorrelatorModeId is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setAlmaCorrelatorModeId (Tag almaCorrelatorModeId);
-  		
-	
-	
-	
-
-
 	///////////
 	// Links //
 	///////////
 	
-	
-
-	
-		
-	/**
-	 * almaCorrelatorModeId pointer to the row in the CorrelatorMode table having CorrelatorMode.almaCorrelatorModeId == almaCorrelatorModeId
-	 * @return a CorrelatorModeRow*
-	 * 
-	 
-	 */
-	 CorrelatorModeRow* getCorrelatorModeUsingAlmaCorrelatorModeId();
-	 
-
-	
-
 	
 	
 	
@@ -353,12 +312,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this ProcessorRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag almaCorrelatorModeId, ProcessorTypeMod::ProcessorType type, string subType);
+	bool compareNoAutoInc(Tag modeId, ProcessorTypeMod::ProcessorType processorType, ProcessorSubTypeMod::ProcessorSubType processorSubType);
 	
 	
 
 	
-	bool compareRequiredValue(Tag almaCorrelatorModeId, ProcessorTypeMod::ProcessorType type, string subType); 
+	bool compareRequiredValue(Tag modeId, ProcessorTypeMod::ProcessorType processorType, ProcessorSubTypeMod::ProcessorSubType processorSubType); 
 		 
 	
 	/**
@@ -442,35 +401,33 @@ private:
 	
 
 	
-	// ===> Attribute type
+	// ===> Attribute modeId
 	
 	
 
-	ProcessorTypeMod::ProcessorType type;
-
-	
-	
- 	
-
-	
-	// ===> Attribute subType
-	
-	
-
-	string subType;
+	Tag modeId;
 
 	
 	
  	
 
 	
-	// ===> Attribute flagRow, which is optional
+	// ===> Attribute processorType
 	
-	
-	bool flagRowExists;
 	
 
-	bool flagRow;
+	ProcessorTypeMod::ProcessorType processorType;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute processorSubType
+	
+	
+
+	ProcessorSubTypeMod::ProcessorSubType processorSubType;
 
 	
 	
@@ -480,28 +437,10 @@ private:
 	// Extrinsic Table Attributes //
 	////////////////////////////////
 	
-	
-	// ===> Attribute almaCorrelatorModeId
-	
-	
-
-	Tag almaCorrelatorModeId;
-
-	
-	
- 	
-
 	///////////
 	// Links //
 	///////////
 	
-	
-		
-
-	 
-
-	
-
 
 };
 

@@ -258,6 +258,7 @@ else:
 
 default(listvis)
 vis                 = msname #  Name of input visibility file
+spw                 = '0'    #  Do not list too much 
 listfile            = outputFilename        #  Output file
 go(listvis)
 
@@ -349,8 +350,7 @@ else:
 default(listvis)
 vis                 = msname            #  Name of input visibility file
 selectdata          =       True        #  Other data selection parameters
-antenna             =       '10'        #  Antenna/baselines: ''==>all, antenna = '3'
-scan                =        '1'        #  Scan numbers
+scan                =        '76'        #  Scan numbers
 listfile            = outputFilename    #  Output file
 go(listvis)
 

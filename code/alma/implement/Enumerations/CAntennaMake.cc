@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CAntennaMake::version() {
+	return AntennaMakeMod::version;
+	}
+	
+string CAntennaMake::revision () {
+	return AntennaMakeMod::revision;
+}
+
+unsigned int CAntennaMake::size() {
+	return 9;
+	}
+	
 	
 const std::string& CAntennaMake::sAEM_12 = "AEM_12";
 	
@@ -54,7 +67,9 @@ const std::string& CAntennaMake::sVERTEX_12 = "VERTEX_12";
 	
 const std::string& CAntennaMake::sIRAM_15 = "IRAM_15";
 	
-const std::vector<std::string> CAntennaMake::sAntennaMakeSet() {
+const std::string& CAntennaMake::sUNDEFINED = "UNDEFINED";
+	
+const std::vector<std::string> CAntennaMake::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CAntennaMake::sAEM_12);
@@ -72,52 +87,11 @@ const std::vector<std::string> CAntennaMake::sAntennaMakeSet() {
     enumSet.insert(enumSet.end(), CAntennaMake::sVERTEX_12);
     
     enumSet.insert(enumSet.end(), CAntennaMake::sIRAM_15);
+    
+    enumSet.insert(enumSet.end(), CAntennaMake::sUNDEFINED);
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CAntennaMake::hAEM_12 = "12m AEM antenna";
-	
-const std::string& CAntennaMake::hMITSUBISHI_7 = "7-m Mitsubishi antenna (ACA)";
-	
-const std::string& CAntennaMake::hMITSUBISHI_12_A = "12-m Mitsubishi antenna (ACA) (refurbished prototype)";
-	
-const std::string& CAntennaMake::hMITSUBISHI_12_B = "12-m Mitsubishi antenna (ACA) (production)";
-	
-const std::string& CAntennaMake::hVERTEX_12_ATF = "12-m Vertex antenna prototype";
-	
-const std::string& CAntennaMake::hAEM_12_ATF = "12-m AEM  antenna prototype";
-	
-const std::string& CAntennaMake::hVERTEX_12 = "12-m Vertex antenna";
-	
-const std::string& CAntennaMake::hIRAM_15 = "15-m IRAM antenna";
-	
-const std::vector<std::string> CAntennaMake::hAntennaMakeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CAntennaMake::hAEM_12);
-    
-    enumSet.insert(enumSet.end(), CAntennaMake::hMITSUBISHI_7);
-    
-    enumSet.insert(enumSet.end(), CAntennaMake::hMITSUBISHI_12_A);
-    
-    enumSet.insert(enumSet.end(), CAntennaMake::hMITSUBISHI_12_B);
-    
-    enumSet.insert(enumSet.end(), CAntennaMake::hVERTEX_12_ATF);
-    
-    enumSet.insert(enumSet.end(), CAntennaMake::hAEM_12_ATF);
-    
-    enumSet.insert(enumSet.end(), CAntennaMake::hVERTEX_12);
-    
-    enumSet.insert(enumSet.end(), CAntennaMake::hIRAM_15);
-        
-    return enumSet;
-}
-   	
 
 std::string CAntennaMake::name(const AntennaMakeMod::AntennaMake& f) {
     switch (f) {
@@ -145,45 +119,14 @@ std::string CAntennaMake::name(const AntennaMakeMod::AntennaMake& f) {
     
     case AntennaMakeMod::IRAM_15:
       return CAntennaMake::sIRAM_15;
+    
+    case AntennaMakeMod::UNDEFINED:
+      return CAntennaMake::sUNDEFINED;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CAntennaMake::help(const AntennaMakeMod::AntennaMake& f) {
-    switch (f) {
-    
-    case AntennaMakeMod::AEM_12:
-      return CAntennaMake::hAEM_12;
-    
-    case AntennaMakeMod::MITSUBISHI_7:
-      return CAntennaMake::hMITSUBISHI_7;
-    
-    case AntennaMakeMod::MITSUBISHI_12_A:
-      return CAntennaMake::hMITSUBISHI_12_A;
-    
-    case AntennaMakeMod::MITSUBISHI_12_B:
-      return CAntennaMake::hMITSUBISHI_12_B;
-    
-    case AntennaMakeMod::VERTEX_12_ATF:
-      return CAntennaMake::hVERTEX_12_ATF;
-    
-    case AntennaMakeMod::AEM_12_ATF:
-      return CAntennaMake::hAEM_12_ATF;
-    
-    case AntennaMakeMod::VERTEX_12:
-      return CAntennaMake::hVERTEX_12;
-    
-    case AntennaMakeMod::IRAM_15:
-      return CAntennaMake::hIRAM_15;
-    	
-    }
-    return std::string("");
-}
-   	
 
 AntennaMakeMod::AntennaMake CAntennaMake::newAntennaMake(const std::string& name) {
 		
@@ -217,6 +160,10 @@ AntennaMakeMod::AntennaMake CAntennaMake::newAntennaMake(const std::string& name
     	
     if (name == CAntennaMake::sIRAM_15) {
         return AntennaMakeMod::IRAM_15;
+    }
+    	
+    if (name == CAntennaMake::sUNDEFINED) {
+        return AntennaMakeMod::UNDEFINED;
     }
     
     throw badString(name);
@@ -255,17 +202,19 @@ AntennaMakeMod::AntennaMake CAntennaMake::literal(const std::string& name) {
     if (name == CAntennaMake::sIRAM_15) {
         return AntennaMakeMod::IRAM_15;
     }
+    	
+    if (name == CAntennaMake::sUNDEFINED) {
+        return AntennaMakeMod::UNDEFINED;
+    }
     
     throw badString(name);
 }
 
 AntennaMakeMod::AntennaMake CAntennaMake::from_int(unsigned int i) {
-	vector<string> names = sAntennaMakeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newAntennaMake(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newAntennaMake(names_.at(i));
 }
-
-	
 
 string CAntennaMake::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'AntennaMake'.";

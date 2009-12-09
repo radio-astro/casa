@@ -25,7 +25,7 @@
 using namespace AtmPhaseCorrectionMod;
 
 template<>
- struct enum_set_traits<AtmPhaseCorrection> : public enum_set_traiter<AtmPhaseCorrection,3,AtmPhaseCorrectionMod::AP_MIXED> {};
+ struct enum_set_traits<AtmPhaseCorrection> : public enum_set_traiter<AtmPhaseCorrection,2,AtmPhaseCorrectionMod::AP_CORRECTED> {};
 
 template<>
 class enum_map_traits<AtmPhaseCorrection,void> : public enum_map_traiter<AtmPhaseCorrection,void> {
@@ -38,11 +38,9 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<AtmPhaseCorrection,EnumPar<void> >
-     (AtmPhaseCorrectionMod::AP_UNCORRECTED,ep((int)AtmPhaseCorrectionMod::AP_UNCORRECTED,"AP_UNCORRECTED","Data has no WVR phase correction")));
+     (AtmPhaseCorrectionMod::AP_UNCORRECTED,ep((int)AtmPhaseCorrectionMod::AP_UNCORRECTED,"AP_UNCORRECTED","un-documented")));
     m_.insert(pair<AtmPhaseCorrection,EnumPar<void> >
-     (AtmPhaseCorrectionMod::AP_CORRECTED,ep((int)AtmPhaseCorrectionMod::AP_CORRECTED,"AP_CORRECTED","Data phases have been corrected using WVR data")));
-    m_.insert(pair<AtmPhaseCorrection,EnumPar<void> >
-     (AtmPhaseCorrectionMod::AP_MIXED,ep((int)AtmPhaseCorrectionMod::AP_MIXED,"AP_MIXED","Data phases have been corrected on some baselines")));
+     (AtmPhaseCorrectionMod::AP_CORRECTED,ep((int)AtmPhaseCorrectionMod::AP_CORRECTED,"AP_CORRECTED","un-documented")));
     return true;
   }
   static map<AtmPhaseCorrection,EnumPar<void> > m_;

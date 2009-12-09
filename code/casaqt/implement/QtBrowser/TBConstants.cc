@@ -1038,6 +1038,7 @@ const String TBConstants::VIEW_SAVE_LOC = "view.tb";
 const String TBConstants::VIEW_DOCUMENT = "casabrowser";
 const String TBConstants::VIEW_VIEW = "view";
 const String TBConstants::VIEW_LASTDIR = "lastdir";
+const String TBConstants::VIEW_HISTLIMIT = "histlimit";
 const String TBConstants::VIEW_TABLE = "table";
 const String TBConstants::VIEW_LOCATION = "location";
 const String TBConstants::VIEW_SELECTED = "selected";

@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CCorrelationBit::version() {
+	return CorrelationBitMod::version;
+	}
+	
+string CCorrelationBit::revision () {
+	return CorrelationBitMod::revision;
+}
+
+unsigned int CCorrelationBit::size() {
+	return 3;
+	}
+	
 	
 const std::string& CCorrelationBit::sBITS_2x2 = "BITS_2x2";
 	
@@ -44,7 +57,7 @@ const std::string& CCorrelationBit::sBITS_3x3 = "BITS_3x3";
 	
 const std::string& CCorrelationBit::sBITS_4x4 = "BITS_4x4";
 	
-const std::vector<std::string> CCorrelationBit::sCorrelationBitSet() {
+const std::vector<std::string> CCorrelationBit::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CCorrelationBit::sBITS_2x2);
@@ -55,29 +68,6 @@ const std::vector<std::string> CCorrelationBit::sCorrelationBitSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CCorrelationBit::hBITS_2x2 = "two bit correlation";
-	
-const std::string& CCorrelationBit::hBITS_3x3 = " three bit correlation";
-	
-const std::string& CCorrelationBit::hBITS_4x4 = "four bit correlation";
-	
-const std::vector<std::string> CCorrelationBit::hCorrelationBitSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CCorrelationBit::hBITS_2x2);
-    
-    enumSet.insert(enumSet.end(), CCorrelationBit::hBITS_3x3);
-    
-    enumSet.insert(enumSet.end(), CCorrelationBit::hBITS_4x4);
-        
-    return enumSet;
-}
-   	
 
 std::string CCorrelationBit::name(const CorrelationBitMod::CorrelationBit& f) {
     switch (f) {
@@ -92,28 +82,9 @@ std::string CCorrelationBit::name(const CorrelationBitMod::CorrelationBit& f) {
       return CCorrelationBit::sBITS_4x4;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CCorrelationBit::help(const CorrelationBitMod::CorrelationBit& f) {
-    switch (f) {
-    
-    case CorrelationBitMod::BITS_2x2:
-      return CCorrelationBit::hBITS_2x2;
-    
-    case CorrelationBitMod::BITS_3x3:
-      return CCorrelationBit::hBITS_3x3;
-    
-    case CorrelationBitMod::BITS_4x4:
-      return CCorrelationBit::hBITS_4x4;
-    	
-    }
-    return std::string("");
-}
-   	
 
 CorrelationBitMod::CorrelationBit CCorrelationBit::newCorrelationBit(const std::string& name) {
 		
@@ -150,12 +121,10 @@ CorrelationBitMod::CorrelationBit CCorrelationBit::literal(const std::string& na
 }
 
 CorrelationBitMod::CorrelationBit CCorrelationBit::from_int(unsigned int i) {
-	vector<string> names = sCorrelationBitSet();
-	if (i >= names.size()) throw badInt(i);
-	return newCorrelationBit(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newCorrelationBit(names_.at(i));
 }
-
-	
 
 string CCorrelationBit::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'CorrelationBit'.";

@@ -38,11 +38,11 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<AssociatedFieldNature,EnumPar<void> >
-     (AssociatedFieldNatureMod::ON,ep((int)AssociatedFieldNatureMod::ON,"ON","The associated field is used as ON source data")));
+     (AssociatedFieldNatureMod::ON,ep((int)AssociatedFieldNatureMod::ON,"ON","un-documented")));
     m_.insert(pair<AssociatedFieldNature,EnumPar<void> >
-     (AssociatedFieldNatureMod::OFF,ep((int)AssociatedFieldNatureMod::OFF,"OFF","The associated field is used as OFF source data")));
+     (AssociatedFieldNatureMod::OFF,ep((int)AssociatedFieldNatureMod::OFF,"OFF","un-documented")));
     m_.insert(pair<AssociatedFieldNature,EnumPar<void> >
-     (AssociatedFieldNatureMod::PHASE_REFERENCE,ep((int)AssociatedFieldNatureMod::PHASE_REFERENCE,"PHASE_REFERENCE","The associated field is used as Phase reference data")));
+     (AssociatedFieldNatureMod::PHASE_REFERENCE,ep((int)AssociatedFieldNatureMod::PHASE_REFERENCE,"PHASE_REFERENCE","un-documented")));
     return true;
   }
   static map<AssociatedFieldNature,EnumPar<void> > m_;

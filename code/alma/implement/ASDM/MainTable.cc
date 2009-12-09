@@ -178,87 +178,93 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param time. 
+	
  	 * @param configDescriptionId. 
 	
  	 * @param fieldId. 
 	
- 	 * @param time. 
+ 	 * @param numAntenna. 
 	
- 	 * @param execBlockId. 
+ 	 * @param timeSampling. 
 	
- 	 * @param stateId. 
+ 	 * @param interval. 
+	
+ 	 * @param numIntegration. 
 	
  	 * @param scanNumber. 
 	
  	 * @param subscanNumber. 
 	
- 	 * @param timeSampling. 
-	
- 	 * @param numIntegration. 
+ 	 * @param dataSize. 
 	
  	 * @param dataOid. 
 	
- 	 * @param flagRow. 
+ 	 * @param stateId. 
 	
- 	 * @param interval. 
+ 	 * @param execBlockId. 
 	
      */
-	MainRow* MainTable::newRow(Tag configDescriptionId, Tag fieldId, ArrayTime time, Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, TimeSamplingMod::TimeSampling timeSampling, int numIntegration, EntityRef dataOid, bool flagRow, Interval interval){
+	MainRow* MainTable::newRow(ArrayTime time, Tag configDescriptionId, Tag fieldId, int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int dataSize, EntityRef dataOid, vector<Tag>  stateId, Tag execBlockId){
 		MainRow *row = new MainRow(*this);
+			
+		row->setTime(time);
 			
 		row->setConfigDescriptionId(configDescriptionId);
 			
 		row->setFieldId(fieldId);
 			
-		row->setTime(time);
+		row->setNumAntenna(numAntenna);
 			
-		row->setExecBlockId(execBlockId);
+		row->setTimeSampling(timeSampling);
 			
-		row->setStateId(stateId);
+		row->setInterval(interval);
+			
+		row->setNumIntegration(numIntegration);
 			
 		row->setScanNumber(scanNumber);
 			
 		row->setSubscanNumber(subscanNumber);
 			
-		row->setTimeSampling(timeSampling);
-			
-		row->setNumIntegration(numIntegration);
+		row->setDataSize(dataSize);
 			
 		row->setDataOid(dataOid);
 			
-		row->setFlagRow(flagRow);
+		row->setStateId(stateId);
 			
-		row->setInterval(interval);
+		row->setExecBlockId(execBlockId);
 	
 		return row;		
 	}	
 
-	MainRow* MainTable::newRowFull(Tag configDescriptionId, Tag fieldId, ArrayTime time, Tag execBlockId, vector<Tag>  stateId, int scanNumber, int subscanNumber, TimeSamplingMod::TimeSampling timeSampling, int numIntegration, EntityRef dataOid, bool flagRow, Interval interval)	{
+	MainRow* MainTable::newRowFull(ArrayTime time, Tag configDescriptionId, Tag fieldId, int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int dataSize, EntityRef dataOid, vector<Tag>  stateId, Tag execBlockId)	{
 		MainRow *row = new MainRow(*this);
+			
+		row->setTime(time);
 			
 		row->setConfigDescriptionId(configDescriptionId);
 			
 		row->setFieldId(fieldId);
 			
-		row->setTime(time);
+		row->setNumAntenna(numAntenna);
 			
-		row->setExecBlockId(execBlockId);
+		row->setTimeSampling(timeSampling);
 			
-		row->setStateId(stateId);
+		row->setInterval(interval);
+			
+		row->setNumIntegration(numIntegration);
 			
 		row->setScanNumber(scanNumber);
 			
 		row->setSubscanNumber(subscanNumber);
 			
-		row->setTimeSampling(timeSampling);
-			
-		row->setNumIntegration(numIntegration);
+		row->setDataSize(dataSize);
 			
 		row->setDataOid(dataOid);
 			
-		row->setFlagRow(flagRow);
+		row->setStateId(stateId);
 			
-		row->setInterval(interval);
+		row->setExecBlockId(execBlockId);
 	
 		return row;				
 	}
@@ -331,7 +337,7 @@ MainRow* MainTable::newRowCopy(MainRow* row) {
 			
 			
 			
-	MainRow*  MainTable::checkAndAdd(MainRow* x) throw (DuplicateKey) {
+	MainRow*  MainTable::checkAndAdd(MainRow* x) {
 		string keystr = Key( 
 						x->getConfigDescriptionId() 
 					   , 
@@ -405,7 +411,7 @@ MainRow* MainTable::newRowCopy(MainRow* row) {
  */
  				
 				
- 	MainRow* MainTable::getRowByKey(Tag configDescriptionId, Tag fieldId, ArrayTime time)  {
+ 	MainRow* MainTable::getRowByKey(ArrayTime time, Tag configDescriptionId, Tag fieldId)  {
 		string keystr = Key(configDescriptionId, fieldId);
  		
  		if (context.find(keystr) == context.end()) return 0;
@@ -475,7 +481,7 @@ MainRow* MainTable::newRowCopy(MainRow* row) {
 #endif
 	
 #ifndef WITHOUT_ACS
-	void MainTable::fromIDL(MainTableIDL x) throw(DuplicateKey,ConversionException) {
+	void MainTable::fromIDL(MainTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			MainRow *tmp = newRow();
@@ -486,28 +492,27 @@ MainRow* MainTable::newRowCopy(MainRow* row) {
 	}
 #endif
 
-	char *MainTable::toFITS() const throw(ConversionException) {
+	char *MainTable::toFITS() const  {
 		throw ConversionException("Not implemented","Main");
 	}
 
-	void MainTable::fromFITS(char *fits) throw(ConversionException) {
+	void MainTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Main");
 	}
 
-	string MainTable::toVOTable() const throw(ConversionException) {
+	string MainTable::toVOTable() const {
 		throw ConversionException("Not implemented","Main");
 	}
 
-	void MainTable::fromVOTable(string vo) throw(ConversionException) {
+	void MainTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Main");
 	}
 
-	string MainTable::toXML()  throw(ConversionException) {
+	
+	string MainTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<MainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/MainTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<MainTable> ");
+		buf.append("<MainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/MainTable\" xsi:schemaLocation=\"http://Alma/XASDM/MainTable http://almaobservatory.org/XML/XASDM/2/MainTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -523,8 +528,9 @@ MainRow* MainTable::newRowCopy(MainRow* row) {
 		buf.append("</MainTable> ");
 		return buf;
 	}
+
 	
-	void MainTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void MainTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<MainTable")) 
 			error();
@@ -566,20 +572,110 @@ MainRow* MainTable::newRowCopy(MainRow* row) {
 			error();
 	}
 
-	void MainTable::error() throw(ConversionException) {
+	
+	void MainTable::error()  {
 		throw ConversionException("Invalid xml document","Main");
 	}
 	
+	
 	string MainTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void MainTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Main");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			MainRow* aRow = MainRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Main");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Main");
+		} 		 	
+	}
+
 	
 	void MainTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -610,6 +706,7 @@ MainRow* MainTable::newRowCopy(MainRow* row) {
 				throw ConversionException("Could not close file " + fileName, "Main");
 		}
 	}
+
 	
 	void MainTable::setFromFile(const string& directory) {
 		string tablename;
@@ -651,6 +748,11 @@ MainRow* MainTable::newRowCopy(MainRow* row) {
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 		
@@ -695,13 +797,13 @@ MainRow* MainTable::newRowCopy(MainRow* row) {
 				if (row.at(k0)->equalByRequiredValue(x))
 					return row.at(k0);
 				else
-					throw new DuplicateKey("DuplicateKey exception in ", "MainTable");	
+					throw DuplicateKey("DuplicateKey exception in ", "MainTable");	
 			}
 			else if (start.get() == row.at(k1)->getTime().get()) {
 				if (row.at(k1)->equalByRequiredValue(x))
 					return row.at(k1);
 				else
-					throw new DuplicateKey("DuplicateKey exception in ", "MainTable");	
+					throw  DuplicateKey("DuplicateKey exception in ", "MainTable");	
 			}
 			else {
 				if (start.get() <= row.at((k0+k1)/2)->getTime().get())

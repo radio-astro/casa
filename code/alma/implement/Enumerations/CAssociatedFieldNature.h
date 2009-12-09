@@ -42,16 +42,30 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the AssociatedFieldNature enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace AssociatedFieldNatureMod
 {
+  //! AssociatedFieldNature.
+  //!  [ASDM.Field] Nature of the associated field
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum AssociatedFieldNature
   { 
-    ON ,
-    OFF ,
-    PHASE_REFERENCE 
+    ON /*!< The associated field is used as ON source data */
+     ,
+    OFF /*!< The associated field is used as OFF source data */
+     ,
+    PHASE_REFERENCE /*!< The associated field is used as Phase reference data */
+     
   };
   typedef AssociatedFieldNature &AssociatedFieldNature_out;
 } 
@@ -59,84 +73,93 @@ namespace AssociatedFieldNatureMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration AssociatedFieldNature.
+  * 
+  */
 class CAssociatedFieldNature {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the AssociatedFieldNature enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sON;
+	static const std::string& sON; /*!< A const string equal to "ON".*/
 	
-	static const std::string& sOFF;
+	static const std::string& sOFF; /*!< A const string equal to "OFF".*/
 	
-	static const std::string& sPHASE_REFERENCE;
+	static const std::string& sPHASE_REFERENCE; /*!< A const string equal to "PHASE_REFERENCE".*/
 	
-    static const std::vector<std::string> sAssociatedFieldNatureSet();	 
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in AssociatedFieldNatureMod::AssociatedFieldNature.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of AssociatedFieldNatureMod::AssociatedFieldNature.
+      * @return a string.
+      */
+	static std::string name(const AssociatedFieldNatureMod::AssociatedFieldNature& e);
 	
-	// Integer values associated with the AssociatedFieldNature enumeration.
-		
-	static const int iON;
-		
-	static const int iOFF;
-		
-	static const int iPHASE_REFERENCE;
-		
-	static const std::vector<int> iAssociatedFieldNatureSet();
-   	
-
-	
-	// Explanations associated with the AssociatedFieldNature Enumeration.
-		
-	static const std::string& hON;
-		
-	static const std::string& hOFF;
-		
-	static const std::string& hPHASE_REFERENCE;
-		
-	static const std::vector<std::string> hAssociatedFieldNatureSet();
-   	
-
-   	// Is an integer number associated with the AssociatedFieldNature enumeration?
-    static bool isNumber() { return true; }
-   	
-   	// Is a help text associated with the AssociatedFieldNature enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  AssociatedFieldNature enumeration.
-	static std::string name(const AssociatedFieldNatureMod::AssociatedFieldNature& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const AssociatedFieldNatureMod::AssociatedFieldNature& f) { return name(f); }
 
-	
-	// Get the integer number associated with the specified AssociatedFieldNature enumeration.
-    static int number(const AssociatedFieldNatureMod::AssociatedFieldNature& f);
-   	
-
-	
-	// Get the help text associated with the specified AssociatedFieldNature enumeration.
-	static std::string help(const AssociatedFieldNatureMod::AssociatedFieldNature& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a AssociatedFieldNature enumeration object by specifying its name.
    	static AssociatedFieldNatureMod::AssociatedFieldNature newAssociatedFieldNature(const std::string& name);
    	
-   	// Create a AssociatedFieldNature enumeration object by specifying its name.
+   	/*! Return a AssociatedFieldNature's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a AssociatedFieldNatureMod::AssociatedFieldNature's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static AssociatedFieldNatureMod::AssociatedFieldNature literal(const std::string& name);
  	
-    // Create a AssociatedFieldNature enumeration object by specifying its position index (0 based).
+    /*! Return a AssociatedFieldNature's enumerator given an unsigned int.
+      * @param i the index of the enumerator in AssociatedFieldNatureMod::AssociatedFieldNature.
+      * @return a AssociatedFieldNatureMod::AssociatedFieldNature's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static AssociatedFieldNatureMod::AssociatedFieldNature from_int(unsigned int i);	
  	
-	
-   	// Create a AssociatedFieldNature enumeration object by specifying its integer value.
-    static AssociatedFieldNatureMod::AssociatedFieldNature newAssociatedFieldNature(int number);
-    
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CAssociatedFieldNature();
     CAssociatedFieldNature(const CAssociatedFieldNature&);
     CAssociatedFieldNature& operator=(const CAssociatedFieldNature&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CAssociatedFieldNature_H*/

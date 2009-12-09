@@ -6,7 +6,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
-<task type="function" name="widefield">
+<task type="function" name="widefield" category="imaging">
 
   <shortdescription>Wide-field imaging and deconvolution with selected algorithm</shortdescription>
 
@@ -283,6 +283,12 @@ is also supported
       <description>Output Gaussian restoring beam for CLEAN image</description>
       <value></value>
     </param>
+
+    <param type="bool" name="calready">
+	    <description>Create scratch columns and store model visibilities so that selfcal can be run after clean</description>
+	    <value>False</value>
+    </param>
+
 
     <constraints>
       <when param="selectdata">
@@ -578,6 +584,12 @@ is also supported
                        FWHM 10" example:
                        restoringbeam=['10.0','5.0','45.0deg'] 10"x5"
                        at 45 degrees
+
+	calready -- if True will create scratch columns if they are 
+                not there. And after clean completes the predicted model 
+                visibility is from the clean components are
+                written to the ms.        
+
         async --  Run asynchronously
                 default = False; do not run asychronously
 

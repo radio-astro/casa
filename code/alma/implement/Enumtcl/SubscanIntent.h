@@ -25,7 +25,7 @@
 using namespace SubscanIntentMod;
 
 template<>
- struct enum_set_traits<SubscanIntent> : public enum_set_traiter<SubscanIntent,11,SubscanIntentMod::RASTER> {};
+ struct enum_set_traits<SubscanIntent> : public enum_set_traiter<SubscanIntent,9,SubscanIntentMod::UNSPECIFIED> {};
 
 template<>
 class enum_map_traits<SubscanIntent,void> : public enum_map_traiter<SubscanIntent,void> {
@@ -38,27 +38,23 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<SubscanIntent,EnumPar<void> >
-     (SubscanIntentMod::HOLOGRAPHY_RASTER,ep((int)SubscanIntentMod::HOLOGRAPHY_RASTER,"HOLOGRAPHY_RASTER","The scanning subscans in a holography raster map.")));
+     (SubscanIntentMod::ON_SOURCE,ep((int)SubscanIntentMod::ON_SOURCE,"ON_SOURCE","un-documented")));
     m_.insert(pair<SubscanIntent,EnumPar<void> >
-     (SubscanIntentMod::HOLOGRAPHY_PHASECAL,ep((int)SubscanIntentMod::HOLOGRAPHY_PHASECAL,"HOLOGRAPHY_PHASECAL","The boresight reference measurement for a holography raster map")));
+     (SubscanIntentMod::OFF_SOURCE,ep((int)SubscanIntentMod::OFF_SOURCE,"OFF_SOURCE","un-documented")));
     m_.insert(pair<SubscanIntent,EnumPar<void> >
-     (SubscanIntentMod::UNSPECIFIED,ep((int)SubscanIntentMod::UNSPECIFIED,"UNSPECIFIED","Unspecified")));
+     (SubscanIntentMod::MIXED,ep((int)SubscanIntentMod::MIXED,"MIXED","un-documented")));
     m_.insert(pair<SubscanIntent,EnumPar<void> >
-     (SubscanIntentMod::IN_FOCUS,ep((int)SubscanIntentMod::IN_FOCUS,"IN_FOCUS","In Focus measurement")));
+     (SubscanIntentMod::REFERENCE,ep((int)SubscanIntentMod::REFERENCE,"REFERENCE","un-documented")));
     m_.insert(pair<SubscanIntent,EnumPar<void> >
-     (SubscanIntentMod::OUT_OF_FOCUS,ep((int)SubscanIntentMod::OUT_OF_FOCUS,"OUT_OF_FOCUS","out of focus measurement")));
+     (SubscanIntentMod::SCANNING,ep((int)SubscanIntentMod::SCANNING,"SCANNING","un-documented")));
     m_.insert(pair<SubscanIntent,EnumPar<void> >
-     (SubscanIntentMod::ON_SOURCE,ep((int)SubscanIntentMod::ON_SOURCE,"ON_SOURCE","on-source measurement")));
+     (SubscanIntentMod::HOT,ep((int)SubscanIntentMod::HOT,"HOT","un-documented")));
     m_.insert(pair<SubscanIntent,EnumPar<void> >
-     (SubscanIntentMod::OFF_SOURCE,ep((int)SubscanIntentMod::OFF_SOURCE,"OFF_SOURCE","off-source measurement")));
+     (SubscanIntentMod::AMBIENT,ep((int)SubscanIntentMod::AMBIENT,"AMBIENT","un-documented")));
     m_.insert(pair<SubscanIntent,EnumPar<void> >
-     (SubscanIntentMod::MIXED_FOCUS,ep((int)SubscanIntentMod::MIXED_FOCUS,"MIXED_FOCUS","Focus measurement, some antennas in focus, some not")));
+     (SubscanIntentMod::TEST,ep((int)SubscanIntentMod::TEST,"TEST","un-documented")));
     m_.insert(pair<SubscanIntent,EnumPar<void> >
-     (SubscanIntentMod::MIXED_POINTING,ep((int)SubscanIntentMod::MIXED_POINTING,"MIXED_POINTING","Pointing measurement, some antennas are on -ource, some off-source")));
-    m_.insert(pair<SubscanIntent,EnumPar<void> >
-     (SubscanIntentMod::REFERENCE,ep((int)SubscanIntentMod::REFERENCE,"REFERENCE","reference measurement")));
-    m_.insert(pair<SubscanIntent,EnumPar<void> >
-     (SubscanIntentMod::RASTER,ep((int)SubscanIntentMod::RASTER,"RASTER","The scanning subscans in an astronomy raster map.")));
+     (SubscanIntentMod::UNSPECIFIED,ep((int)SubscanIntentMod::UNSPECIFIED,"UNSPECIFIED","un-documented")));
     return true;
   }
   static map<SubscanIntent,EnumPar<void> > m_;

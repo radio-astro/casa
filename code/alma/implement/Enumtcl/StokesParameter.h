@@ -38,69 +38,69 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::I,ep((int)StokesParameterMod::I,"I","")));
+     (StokesParameterMod::I,ep((int)StokesParameterMod::I,"I","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::Q,ep((int)StokesParameterMod::Q,"Q","")));
+     (StokesParameterMod::Q,ep((int)StokesParameterMod::Q,"Q","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::U,ep((int)StokesParameterMod::U,"U","")));
+     (StokesParameterMod::U,ep((int)StokesParameterMod::U,"U","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::V,ep((int)StokesParameterMod::V,"V","")));
+     (StokesParameterMod::V,ep((int)StokesParameterMod::V,"V","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::RR,ep((int)StokesParameterMod::RR,"RR","")));
+     (StokesParameterMod::RR,ep((int)StokesParameterMod::RR,"RR","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::RL,ep((int)StokesParameterMod::RL,"RL","")));
+     (StokesParameterMod::RL,ep((int)StokesParameterMod::RL,"RL","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::LR,ep((int)StokesParameterMod::LR,"LR","")));
+     (StokesParameterMod::LR,ep((int)StokesParameterMod::LR,"LR","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::LL,ep((int)StokesParameterMod::LL,"LL","")));
+     (StokesParameterMod::LL,ep((int)StokesParameterMod::LL,"LL","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::XX,ep((int)StokesParameterMod::XX,"XX","Linear correlation product")));
+     (StokesParameterMod::XX,ep((int)StokesParameterMod::XX,"XX","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::XY,ep((int)StokesParameterMod::XY,"XY","")));
+     (StokesParameterMod::XY,ep((int)StokesParameterMod::XY,"XY","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::YX,ep((int)StokesParameterMod::YX,"YX","")));
+     (StokesParameterMod::YX,ep((int)StokesParameterMod::YX,"YX","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::YY,ep((int)StokesParameterMod::YY,"YY","")));
+     (StokesParameterMod::YY,ep((int)StokesParameterMod::YY,"YY","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::RX,ep((int)StokesParameterMod::RX,"RX","Mixed correlation product")));
+     (StokesParameterMod::RX,ep((int)StokesParameterMod::RX,"RX","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::RY,ep((int)StokesParameterMod::RY,"RY","Mixed correlation product")));
+     (StokesParameterMod::RY,ep((int)StokesParameterMod::RY,"RY","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::LX,ep((int)StokesParameterMod::LX,"LX","Mixed LX product")));
+     (StokesParameterMod::LX,ep((int)StokesParameterMod::LX,"LX","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::LY,ep((int)StokesParameterMod::LY,"LY","Mixed LY correlation product")));
+     (StokesParameterMod::LY,ep((int)StokesParameterMod::LY,"LY","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::XR,ep((int)StokesParameterMod::XR,"XR","Mixed XR correlation product")));
+     (StokesParameterMod::XR,ep((int)StokesParameterMod::XR,"XR","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::XL,ep((int)StokesParameterMod::XL,"XL","Mixed XL correlation product")));
+     (StokesParameterMod::XL,ep((int)StokesParameterMod::XL,"XL","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::YR,ep((int)StokesParameterMod::YR,"YR","Mixed YR correlation product")));
+     (StokesParameterMod::YR,ep((int)StokesParameterMod::YR,"YR","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::YL,ep((int)StokesParameterMod::YL,"YL","Mixel YL correlation product")));
+     (StokesParameterMod::YL,ep((int)StokesParameterMod::YL,"YL","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::PP,ep((int)StokesParameterMod::PP,"PP","")));
+     (StokesParameterMod::PP,ep((int)StokesParameterMod::PP,"PP","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::PQ,ep((int)StokesParameterMod::PQ,"PQ","")));
+     (StokesParameterMod::PQ,ep((int)StokesParameterMod::PQ,"PQ","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::QP,ep((int)StokesParameterMod::QP,"QP","")));
+     (StokesParameterMod::QP,ep((int)StokesParameterMod::QP,"QP","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::QQ,ep((int)StokesParameterMod::QQ,"QQ","")));
+     (StokesParameterMod::QQ,ep((int)StokesParameterMod::QQ,"QQ","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::RCIRCULAR,ep((int)StokesParameterMod::RCIRCULAR,"RCIRCULAR","")));
+     (StokesParameterMod::RCIRCULAR,ep((int)StokesParameterMod::RCIRCULAR,"RCIRCULAR","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::LCIRCULAR,ep((int)StokesParameterMod::LCIRCULAR,"LCIRCULAR","")));
+     (StokesParameterMod::LCIRCULAR,ep((int)StokesParameterMod::LCIRCULAR,"LCIRCULAR","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::LINEAR,ep((int)StokesParameterMod::LINEAR,"LINEAR","single dish polarization type")));
+     (StokesParameterMod::LINEAR,ep((int)StokesParameterMod::LINEAR,"LINEAR","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::PTOTAL,ep((int)StokesParameterMod::PTOTAL,"PTOTAL","Polarized intensity ((Q^2+U^2+V^2)^(1/2))")));
+     (StokesParameterMod::PTOTAL,ep((int)StokesParameterMod::PTOTAL,"PTOTAL","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::PLINEAR,ep((int)StokesParameterMod::PLINEAR,"PLINEAR","Linearly Polarized intensity ((Q^2+U^2)^(1/2))")));
+     (StokesParameterMod::PLINEAR,ep((int)StokesParameterMod::PLINEAR,"PLINEAR","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::PFTOTAL,ep((int)StokesParameterMod::PFTOTAL,"PFTOTAL","Polarization Fraction (Ptotal/I)")));
+     (StokesParameterMod::PFTOTAL,ep((int)StokesParameterMod::PFTOTAL,"PFTOTAL","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::PFLINEAR,ep((int)StokesParameterMod::PFLINEAR,"PFLINEAR","Linear Polarization Fraction (Plinear/I)")));
+     (StokesParameterMod::PFLINEAR,ep((int)StokesParameterMod::PFLINEAR,"PFLINEAR","un-documented")));
     m_.insert(pair<StokesParameter,EnumPar<void> >
-     (StokesParameterMod::PANGLE,ep((int)StokesParameterMod::PANGLE,"PANGLE","Linear Polarization Angle (0.5 arctan(U/Q)) (in radians)")));
+     (StokesParameterMod::PANGLE,ep((int)StokesParameterMod::PANGLE,"PANGLE","un-documented")));
     return true;
   }
   static map<StokesParameter,EnumPar<void> > m_;

@@ -28,14 +28,21 @@
 
 #include <casaqt/PlotterImplementations/PlotterImplementations.h>
 #include <casaqt/QtUtilities/QtActionGroup.qo.h>
-#include <casaqt/QtUtilities/QtLayeredLayout.h>
+#include <casaqt/QtUtilities/QtProgressWidget.qo.h>
 #include <plotms/Actions/PlotMSDrawThread.qo.h>
+#include <plotms/GuiTabs/PlotMSAnnotatorTab.qo.h>
+#include <plotms/GuiTabs/PlotMSFlaggingTab.qo.h>
+#include <plotms/GuiTabs/PlotMSOptionsTab.qo.h>
+#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
+#include <plotms/GuiTabs/PlotMSToolsTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 
-#include <fstream>
-#include <limits>
-
-#include <casa/iomanip.h>
+#include <QCloseEvent>
+#include <QDockWidget>
+#include <QMessageBox>
+#include <QProcess>
+#include <QSet>
+#include <QSplitter>
 
 namespace casa {
 
@@ -68,7 +75,7 @@ void PlotMSPlotter::showGUI(bool show) {
 bool PlotMSPlotter::guiShown() const { return isVisible(); }
 
 int PlotMSPlotter::execLoop() {
-    QCoreApplication::processEvents();
+    QApplication::processEvents();
     
     if(isQt_) return itsFactory_->execLoop();
     else {
@@ -164,9 +171,10 @@ void PlotMSPlotter::releaseDrawing() {
 }
 
 bool PlotMSPlotter::allDrawingHeld() const {
+    if(itsPlotter_.null() || itsPlotter_->canvasLayout().null()) return false;
     vector<PlotCanvasPtr> canvases= itsPlotter_->canvasLayout()->allCanvases();
     for(unsigned int i = 0; i < canvases.size(); i++)
-        if(!canvases[i]->drawingIsHeld()) return false;
+        if(!canvases[i].null() && !canvases[i]->drawingIsHeld()) return false;
     return true;
 }
 
@@ -192,6 +200,11 @@ void PlotMSPlotter::setToolButtonStyle(Qt::ToolButtonStyle style) {
 
 const QMap<PlotMSAction::Type, QAction*>& PlotMSPlotter::plotActionMap() const{
     return itsActionMap_; }
+
+void PlotMSPlotter::synchronizeAction(PlotMSAction::Type action,
+        QAbstractButton* button) {
+    itsActionSynchronizer_.synchronize(itsActionMap_.value(action), button);
+}
 
 String PlotMSPlotter::actionText(PlotMSAction::Type type) {
     QAction* action = itsActionMap_.value(type);
@@ -320,6 +333,8 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     itsActionMap_.insert(PlotMSAction::CACHE_LOAD, actionCacheLoad);
     itsActionMap_.insert(PlotMSAction::CACHE_RELEASE, actionCacheRelease);
     
+    itsActionMap_.insert(PlotMSAction::MS_SUMMARY, actionMSSummary);
+    itsActionMap_.insert(PlotMSAction::PLOT, actionPlot);
     itsActionMap_.insert(PlotMSAction::PLOT_EXPORT, actionPlotExport);
     
     itsActionMap_.insert(PlotMSAction::HOLD_RELEASE_DRAWING, actionHoldRelease);
@@ -336,11 +351,11 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     // Set up tabs.
     itsPlotTab_ = new PlotMSPlotTab(this);
     itsFlaggingTab_ = new PlotMSFlaggingTab(this);
-    itsPlotTab_->addTab(itsFlaggingTab_);
     itsToolsTab_ = new PlotMSToolsTab(this);
     itsAnnotatorTab_ = new PlotMSAnnotatorTab(this);
     itsOptionsTab_ = new PlotMSOptionsTab(this);
     itsToolButtons_ << itsPlotTab_->toolButtons();
+    itsToolButtons_ << itsFlaggingTab_->toolButtons();
     itsToolButtons_ << itsToolsTab_->toolButtons();
     itsToolButtons_ << itsAnnotatorTab_->toolButtons();
     itsToolButtons_ << itsOptionsTab_->toolButtons();
@@ -353,8 +368,14 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     if(itsOptionsTab_->maximumWidth() < maxWidth)
         maxWidth = itsOptionsTab_->maximumWidth();
     tabWidget->setMaximumWidth(maxWidth);
+    itsPlotTab_->setupForMaxWidth(maxWidth);
+    itsFlaggingTab_->setupForMaxWidth(maxWidth);
+    itsToolsTab_->setupForMaxWidth(maxWidth);
+    itsAnnotatorTab_->setupForMaxWidth(maxWidth);
+    itsOptionsTab_->setupForMaxWidth(maxWidth);
     
     tabWidget->addTab(itsPlotTab_, itsPlotTab_->tabName());
+    tabWidget->addTab(itsFlaggingTab_, itsFlaggingTab_->tabName());
     tabWidget->addTab(itsToolsTab_, itsToolsTab_->tabName());
     tabWidget->addTab(itsAnnotatorTab_, itsAnnotatorTab_->tabName());
     tabWidget->addTab(itsOptionsTab_, itsOptionsTab_->tabName());
@@ -395,8 +416,8 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
             << actionIterLast << actionAnnotate << actionTrackerHover
             << actionTrackerDisplay << actionStackBack << actionStackBase
             << actionStackForward << actionCacheLoad << actionCacheRelease
-            << actionPlotExport << actionHoldRelease << actionClearPlots
-            << actionQuit;
+            << actionMSSummary << actionPlot << actionPlotExport
+            << actionHoldRelease << actionClearPlots << actionQuit;
     foreach(QAction* a, actions)
         connect(a, SIGNAL(triggered()), SLOT(action_()));
     
@@ -406,9 +427,7 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     
     // Set up plotter.
     itsPlotter_ = itsFactory_->plotter("PlotMS", false, false,
-            PlotMSLogger::levelToEventFlag(
-            itsParent_->getParameters().logLevel(),
-            itsParent_->getParameters().logDebug()), false);
+            itsParent_->getParameters().logEvents(), false);
     
     // If Qt, put in window.  Otherwise, just hope that it does something
     // sensible.
@@ -423,6 +442,7 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     
     // Force window to set size before drawing to avoid unnecessary redraws.
     QApplication::processEvents();
+    
     setMinimumHeight(600);
     resize(width(), 600);
     setVisible(false);

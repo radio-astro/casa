@@ -293,21 +293,24 @@ PlotSymbolWidget::~PlotSymbolWidget() { }
 
 PlotSymbolPtr PlotSymbolWidget::getSymbol() const {
     if(defaultButton->isChecked()) return itsFactory_->symbol(*itsDefault_);
-    else if(customButton->isChecked()) {
-        int i = SymbolWidget::style->currentIndex();
+    else {
         PlotSymbol::Symbol s = PlotSymbol::NOSYMBOL;
-        if(i == 0)      s = PlotSymbol::CIRCLE;
-        else if(i == 1) s = PlotSymbol::SQUARE;
-        else if(i == 2) s = PlotSymbol::DIAMOND;
-        else if(i == 3) s = PlotSymbol::PIXEL;
-        else if(i == 4) s = PlotSymbol::CHARACTER;
+        
+        if(customButton->isChecked()) {
+            int i = SymbolWidget::style->currentIndex();
+            if(i == 0)      s = PlotSymbol::CIRCLE;
+            else if(i == 1) s = PlotSymbol::SQUARE;
+            else if(i == 2) s = PlotSymbol::DIAMOND;
+            else if(i == 3) s = PlotSymbol::PIXEL;
+            else if(i == 4) s = PlotSymbol::CHARACTER;
+        }
         
         PlotSymbolPtr sym = itsFactory_->symbol(s);
         QString text = charEdit->text();
         if(s == PlotSymbol::CHARACTER && text.size() >= 1)
             sym->setUSymbol(text[0].unicode());
         
-        i = SymbolWidget::size->value();
+        int i = SymbolWidget::size->value();
         sym->setSize(i, i);
         sym->setAreaFill(itsFillWidget_->getFill());
         
@@ -319,7 +322,7 @@ PlotSymbolPtr PlotSymbolWidget::getSymbol() const {
             sym->setLine(itsLineWidget_->getLine());
         
         return sym;
-    } else return itsFactory_->symbol(PlotSymbol::NOSYMBOL);
+    }
 }
 
 void PlotSymbolWidget::setSymbol(PlotSymbolPtr symbol) {    

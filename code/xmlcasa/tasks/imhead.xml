@@ -52,7 +52,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- ***************************************************************** --> 
 <!-- ***************************************************************** --> 
 
-<task type="function" name="imhead">
+<task type="function" name="imhead" category="image analysis, information">
 
 <shortdescription>List, get and put image header parameters</shortdescription>
 

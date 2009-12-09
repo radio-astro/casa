@@ -70,8 +70,10 @@ def sdmath(expr, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, fi
                    #Apply the selection
                    scandic[skey].set_selection(sel)
                except Exception, instance:
-                   print '***Error***',instance
-                   print 'No output written.'
+                   #print '***Error***',instance
+                   #print 'No output written.'
+                   casalog.post( instance.message, priority = 'ERROR' )
+                   casalog.post( 'No output written.', priority = 'ERROR' )
                    return
 
                
@@ -90,7 +92,8 @@ def sdmath(expr, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, fi
             tmpout.save(outfile, outform, overwrite) 
 
         except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
         finally:
                 casalog.post('')

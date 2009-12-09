@@ -70,8 +70,9 @@
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasTable.h>
 
-
 #include <flagging/Flagging/RFANewMedianClip.h>
+
+#include <algorithm>
 
 namespace casa {
   
@@ -99,6 +100,8 @@ namespace casa {
     selectdata_p = False;
     // setupAgentDefaults();
     pgprep_nx = pgprep_ny = 1;
+
+    quack_agent_exists = false;
   }
   
   // -----------------------------------------------------------------------
@@ -121,6 +124,8 @@ namespace casa {
     selectdata_p = False;
     attach(mset);
     pgprep_nx = pgprep_ny = 1;
+
+    quack_agent_exists = false;
   }
   
     Flagger::~Flagger ()
@@ -193,9 +198,9 @@ namespace casa {
   // Flagger::attach
   // attaches to MS
   // -----------------------------------------------------------------------
+
   bool Flagger::attach( MeasurementSet &mset, Bool setAgentDefaults )
   {
-    
     nant = 0;
     setdata_p = False;
     selectdata_p = False;
@@ -223,20 +228,26 @@ namespace casa {
     bsort[1] = MS::DATA_DESC_ID;
     bsort[2] = MS::TIME;
     
-    vs_p = new VisSet(mset,bsort,noselection,0.0);
-    vs_p->resetVisIter(bsort, 0.0);
-    
     // extract various interesting info from the MS
     // obtain number of distinct time slots
     ROMSColumns msc(ms);
     Vector<Double> time( msc.time().getColumn() );
     uInt nrows = time.nelements();
-    Bool dum;
-    Sort sort( time.getStorage(dum),sizeof(Double) );
-    sort.sortKey((uInt)0,TpDouble);
-    Vector<uInt> index,uniq;
-    sort.sort(index,time.nelements());
-    ntime = sort.unique(uniq,index);
+    unsigned ntime;
+
+    if (nrows == 0) ntime = 0;
+    else {
+      Bool dum;
+      Double *tp = time.getStorage(dum);
+      
+      std::sort(tp, tp + nrows);
+      
+      ntime = 1;
+      for (unsigned i = 0; i < nrows-1; i++) {
+	if (tp[i] < tp[i+1]) ntime += 1;
+      }
+    }
+
     // obtain central frequencies of spws.
     const MSSpectralWindow spwin( ms.spectralWindow() );
     ROScalarColumn<Double> sfreqs(spwin, "REF_FREQUENCY");
@@ -258,13 +269,14 @@ namespace casa {
     ifr2ant1.set(-1);
     ifr2ant2.resize(nifr);
     ifr2ant2.set(-1);
-    for( uInt i1=0; i1<nant; i1++ )
-      for( uInt i2=0; i2<=i1; i2++ )
-	{
-	  uInt ifr = ifrNumber(i1,i2);
-	  ifr2ant1(ifr) = i1;
-	  ifr2ant2(ifr) = i2;
-	}
+    for( uInt i1=0; i1<nant; i1++ ) {
+      for( uInt i2=0; i2<=i1; i2++ ) {
+        uInt ifr = ifrNumber(i1,i2);
+        ifr2ant1(ifr) = i1;
+        ifr2ant2(ifr) = i2;
+      }
+    }
+
     // get feed info
     const MSFeed msfeed( ms.feed() );
     nfeed = msfeed.nrow();
@@ -273,7 +285,7 @@ namespace casa {
     sprintf(str,"attached MS %s: %d rows, %d times, %d baselines\n",ms.tableName().chars(),nrows,ntime,nifr);
     //os << "--------------------------------------------------" << LogIO::POST;
     os<<str<<LogIO::POST;
-    
+   
     return True;
   }    
   
@@ -509,7 +521,9 @@ namespace casa {
 	    throw AipsError("No measurement set selection available");
 	//vs_p = new VisSet(*mssel_p,sort,noselection,0.0);
 	
-	vs_p = new VisSet(*mssel_p,sort2,noselection,timeInterval);
+        Bool addScratch = False;
+	vs_p = new VisSet(*mssel_p, sort2, noselection, 
+                          addScratch, timeInterval);
 	// Use default sort order - and no scratch cols....
 	//vs_p = new VisSet(*mssel_p,noselection,0.0);
       }
@@ -522,6 +536,7 @@ namespace casa {
   }
 
   Bool Flagger::selectDataChannel(){
+
     if (!vs_p || !msselection_p) return False;
     /* Set channel selection in visiter */
     /* Set channel selection per spectral window - from msselection_p->getChanList(); */
@@ -539,7 +554,7 @@ namespace casa {
 	{
 	  Int j=0;
 	  for ( j=0;j<(spwchan.shape())[0];j++ )
-	    if ( spwchan(j,0) == spwlist[i] ) break;
+              if ( spwchan(j,0) == spwlist[i] ) break;
 	  vs_p->iter().selectChannel(1, Int(spwchan(j,1)), 
 				     Int(spwchan(j,2)-spwchan(j,1)+1),
 				     Int(spwchan(j,3)), spwlist[i]);
@@ -554,69 +569,6 @@ namespace casa {
   }
 
 
-  // Help function for setdata use
-#if 0
-  Bool Flagger::selectDataChannel(Vector<Int> &spwidnchans, Vector<Int>& spectralwindowids, 
-				  Vector<Int>& dataStart, 
-				  Vector<Int>& dataEnd, Vector<Int>& dataStep)
-  {
-    LogIO os(LogOrigin("Flagger", "selectDataChannel()", WHERE));
-    
-    if (dataEnd.nelements() != spectralwindowids.nelements()){
-      if (dataEnd.nelements()==1){
-	dataEnd.resize(spectralwindowids.nelements(), True);
-	for(uInt k=1; k < spectralwindowids.nelements(); ++k){
-	  dataEnd[k]=dataEnd[0];
-	}
-      }
-      else{
-	os << LogIO::SEVERE 
-	   << "Vector of endchan has to be of size 1 or be of the same shape as spw " 
-	   << LogIO::POST;
-	return False; 
-      }
-    }
-    if (dataStart.nelements() != spectralwindowids.nelements()){
-      if (dataStart.nelements()==1){
-	dataStart.resize(spectralwindowids.nelements(), True);
-	for(uInt k=1; k < spectralwindowids.nelements(); ++k){
-	  dataStart[k]=dataStart[0];
-	}
-      }
-      else{
-	os << LogIO::SEVERE 
-	   << "Vector of startchan has to be of size 1 or be of the same shape as spw " 
-	   << LogIO::POST;
-	return False; 
-      }
-    }
-    if (dataStep.nelements() != spectralwindowids.nelements()){
-      if (dataStep.nelements()==1){
-	dataStep.resize(spectralwindowids.nelements(), True);
-	for(uInt k=1; k < spectralwindowids.nelements(); ++k){
-	  dataStep[k]=dataStep[0];
-	}
-      }
-      else{
-	os << LogIO::SEVERE 
-	   << "Vector of stepchan has to be of size 1 or be of the same shape as spw " 
-	   << LogIO::POST;
-	return False; 
-      }
-    }
-    
-    for(uInt i=0;i<spectralwindowids.nelements();i++) {
-      if (dataStart[i]==-1 || dataStart[i]>=spwidnchans[i])
-	dataStart[i]=0;
-      if (dataEnd[i]==-1 || dataEnd[i]>=spwidnchans[i])
-	dataEnd[i] = spwidnchans[i]-1;
-      if (dataStep[i]==-1) dataStep[i]=1;
-      
-    }
-    
-    return True;
-  }
-#endif
   
   /************************** Set Manual Flags ***************************/
   
@@ -742,16 +694,27 @@ namespace casa {
 				 Vector<Double> cliprange, 
 				 String clipcolumn, 
 				 Bool outside, 
+                                 Bool channel_average,
 				 Double quackinterval, 
-				 String opmode)
+                                 String quackmode,
+                                 Bool quackincrement,
+                                 String opmode,
+                                 Double diameter)
     {
-     if (dbg)   cout << "setmanualflags: " 
-             << "autocorr=" << autocorr
-             << " unflag=" << unflag
-             << " clipexpr=" << clipexpr << " cliprange=" << cliprange
-             << " clipcolumn=" << clipcolumn << " outside=" << outside
-             << " quackinterval=" << quackinterval << " opmode=" << opmode
-             << endl;
+     if (dbg) 
+       cout << "setmanualflags: "
+            << "autocorr=" << autocorr
+            << " unflag=" << unflag
+            << " clipexpr=" << clipexpr
+            << " cliprange=" << cliprange
+            << " clipcolumn=" << clipcolumn
+            << " outside=" << outside
+            << " quackinterval=" << quackinterval
+            << " quackmode=" << quackmode
+            << " quackincrement=" << quackincrement
+            << " opmode=" << opmode
+            << " diameter=" << diameter
+            << endl;
 
     LogIO os(LogOrigin("Flagger", "setmanualflags()", WHERE));
     if (ms.isNull()) {
@@ -793,8 +756,12 @@ namespace casa {
 	if (upcase(opmode).matches("FLAG") ||
 	    upcase(opmode).matches("SHADOW")) {
 	    selrec.define("id", String("select"));
-	}
-	else if (upcase(opmode).matches("SUMMARY")) {
+            
+            if (upcase(opmode).matches("SHADOW")) {
+              selrec.define(RF_DIAMETER, Double(diameter));
+            }
+        }
+        else if (upcase(opmode).matches("SUMMARY")) {
 	    selrec.define("id", String("flagexaminer"));
 	}
 	else {
@@ -805,7 +772,6 @@ namespace casa {
 	fillSelections(selrec);
 	
 	if (separatespw) {
-	    
 	    /* SPW ID */
 	    {
 	      RecordDesc flagDesc;       
@@ -909,7 +875,7 @@ namespace casa {
 	*/
 	
 	/* Clip/FlagRange */
-	/*Jira Casa 212 : Check if "clipexpr" has multiple 
+	/* Jira Casa 212 : Check if "clipexpr" has multiple 
 	  comma-separated expressions
 	  and loop here, creating multiple clipRecs. 
 	  The RFASelector will handle it. */
@@ -928,10 +894,12 @@ namespace casa {
 		clipDesc.addField(RF_EXPR, TpString);
 		clipDesc.addField(RF_MIN, TpDouble);
 		clipDesc.addField(RF_MAX, TpDouble);
+                clipDesc.addField(RF_CHANAVG, TpBool);
 		Record clipRec(clipDesc);
 		clipRec.define(RF_EXPR, clipexpr);
 		clipRec.define(RF_MIN, cliprange[0]);
 		clipRec.define(RF_MAX, cliprange[1]);
+                clipRec.define(RF_CHANAVG, channel_average);
 		
 		if ( outside )
 		  {
@@ -954,33 +922,42 @@ namespace casa {
 		
 	    }
 	    
-	/* Quack ! */
-	if (quackinterval>0.0)
-	    {
-		//Reset the Visiter to have SCAN on top of sort
-		Block<int> sort2(5);
-		sort2[0] = MS::SCAN_NUMBER;
-		sort2[1]= MS::ARRAY_ID;
-		sort2[2]= MS::FIELD_ID;
-		sort2[3]= MS::DATA_DESC_ID;
-		sort2[4] = MS::TIME;
-		Double timeInterval = 7.0e9; //a few thousand years
-		
-		vs_p->resetVisIter(sort2, timeInterval);
-		//lets make sure the data channel selection is done
-		selectDataChannel();
-		
-		RecordDesc flagDesc;       
-		flagDesc.addField(RF_QUACK, TpArrayDouble);
-		Record flagRec(flagDesc);  
-		Vector<Double> quackparams(2);
-		quackparams[0] = quackinterval;
-		quackparams[1] = 0.0;
-		flagRec.define(RF_QUACK, quackparams);
-		selrec.mergeField(flagRec, RF_QUACK, RecordInterface::OverwriteDuplicates);
-	    }
+	/* Quack! */
+	if (quackinterval > 0.0) {
+            //Reset the Visiter to have SCAN on top of sort
+            Block<int> sort2(5);
+            sort2[0] = MS::SCAN_NUMBER;
+            sort2[1] = MS::ARRAY_ID;
+            sort2[2] = MS::FIELD_ID;
+            sort2[3] = MS::DATA_DESC_ID;
+            sort2[4] = MS::TIME;
+            Double timeInterval = 7.0e9; //a few thousand years
+            
+            vs_p->resetVisIter(sort2, timeInterval);
+            //lets make sure the data channel selection is done
+            selectDataChannel();
+            
+            RecordDesc flagDesc;       
+            flagDesc.addField(RF_QUACK, TpArrayDouble);
+            flagDesc.addField(RF_QUACKMODE, TpString);
+            flagDesc.addField(RF_QUACKINC, TpBool);
+            
+            Vector<Double> quackparams(2);
+            quackparams[0] = quackinterval;
+            quackparams[1] = 0.0;
+            
+            Record flagRec(flagDesc);
+            flagRec.define(RF_QUACK, quackparams);
+            flagRec.define(RF_QUACKMODE, quackmode);
+            flagRec.define(RF_QUACKINC, quackincrement);
+            selrec.mergeField(flagRec, RF_QUACK    , RecordInterface::OverwriteDuplicates);
+            selrec.mergeField(flagRec, RF_QUACKMODE, RecordInterface::OverwriteDuplicates);
+            selrec.mergeField(flagRec, RF_QUACKINC , RecordInterface::OverwriteDuplicates);
+
+	    quack_agent_exists = true;
+        }
 	/* end if opmode = ... */
-	
+        
 	/* Add this agent to the list */
 	addAgent(selrec);
     }
@@ -990,10 +967,8 @@ namespace casa {
   
   Bool Flagger::applyFlags(const std::vector<FlagIndex> &fi) {
   
-    Record agent(defaultAgents().asRecord("applyflags") );
-    
-    //cerr << __FILE__ << __LINE__ << "the hello agent = " << hello << endl;
-    
+    Record agent(defaultAgents().asRecord("applyflags"));
+       
     RFAApplyFlags::setIndices(&fi); // static memory!
 
     agent.define("id", String("applyflags"));
@@ -1022,10 +997,8 @@ namespace casa {
     selrec = getautoflagparams(algorithm);
     selrec.merge(parameters,Record::OverwriteDuplicates);
     
-    /* special case for "sprej".
-       need to parse a param.*/
-    if (algorithm.matches("sprej") && selrec.isDefined("fitspwchan"))
-      {
+    /* special case for "sprej". need to parse a param.*/
+    if (algorithm.matches("sprej") && selrec.isDefined("fitspwchan")) {
 	/* Get the "fitspwchan" string" */
 	/* Pass this through the msselection parser and getChanList */
 	/* Construct a list of regions records from this list */
@@ -1094,6 +1067,7 @@ namespace casa {
     return True;
   }
   
+
   Record Flagger::getautoflagparams(String algorithm)
   {
     LogIO os(LogOrigin("Flagger", "getautoflagparams()", WHERE));
@@ -1312,9 +1286,20 @@ namespace casa {
   // computes vector of IFR indeces, given two antennas
   Vector<Int> Flagger::ifrNumbers ( Vector<Int> ant1,Vector<Int> ant2 ) const
   {
-    Vector<Int> a1( ::casa::max(static_cast<Array<Int> >(ant1),static_cast<Array<Int> >(ant2)) ),
-      a2( ::casa::min(static_cast<Array<Int> >(ant1),static_cast<Array<Int> >(ant2)) );
-    return a1*(a1+1)/2 + a2;
+      unsigned n = ant1.nelements();
+      Vector<Int> r(n);
+
+      for (unsigned i = 0; i < n; i++) {
+	Int a1 = ant1(i);
+	Int a2 = ant2(i);
+	if (a1 > a2) {
+	  r(i) = a1*(a1+1)/2 + a2;
+	}
+	else {
+	  r(i) = a2*(a2+1)/2 + a1;
+	}
+      }
+      return r;  
   }
   
   void Flagger::ifrToAnt ( uInt &ant1,uInt &ant2,uInt ifr ) const
@@ -1381,7 +1366,10 @@ namespace casa {
   void Flagger::setReportPanels ( Int nx,Int ny )
   {
     if ( !nx && !ny ) // reset
-      pgprep_nx=pgprep_ny=0;
+	{
+	    pgprep_nx = 0;
+      pgprep_ny = 0;
+	}
     if ( pgp_report.isAttached() && (pgprep_nx!=nx || pgprep_ny!=ny) )
       {  
 	//    dprintf(os,"pgp_report.subp(%d,%d)\n",nx,ny);
@@ -1487,15 +1475,14 @@ namespace casa {
   // Flagger::run
   // Performs the actual flagging
   // -----------------------------------------------------------------------
-  //void Flagger::run ( const RecordInterface &agents,const RecordInterface &opt,uInt ind_base ) 
-  bool Flagger::run (Bool trial, Bool reset) 
+  Record Flagger::run (Bool trial, Bool reset) 
   {
     if (!agents_p)
       {
 	agentCount_p = 0;
 	agents_p = new Record;
 	if (dbg) cout << "creating new EMPTY agent and returning" << endl;
-	return False;
+	return Record();
       }
     Record agents = *agents_p;
     
@@ -1511,9 +1498,12 @@ namespace casa {
     if (!setdata_p) {
       os << LogIO::SEVERE << "Please run setdata with/without arguments before any setmethod"
 	 << LogIO::POST;
-      return False;
+      return Record();
     }
     
+
+    Record result;
+
     //printflagselections();
     
 #if 1  
@@ -1522,12 +1512,13 @@ namespace casa {
     
     RFABase::setIndexingBase(0);
     // set debug level
-    Int debug_level=0;
+    Int debug_level = 0;
     if ( opt.isDefined("debug") )
       debug_level = opt.asInt("debug");
     
     // reset existing flags?
     Bool reset_flags = isFieldSet(opt, RF_RESET);
+
     
     try { // all exceptions to be caught below
       
@@ -1562,13 +1553,10 @@ namespace casa {
       Record agcounts; // record of agent instance counts
       acc.resize(agents.nfields());
       
-      //cerr << __FILE__ << " " << __LINE__ << agents << endl;
-
       acc.set(NULL);
       uInt nacc = 0;
-      for( uInt i=0; i<agents.nfields(); i++ ) 
-	{
-	  if (  agents.dataType(i) != TpRecord )
+      for (uInt i=0; i<agents.nfields(); i++) {
+          if (  agents.dataType(i) != TpRecord )
 	    os << "Unrecognized field '" << agents.name(i) << "' in agents\n" << LogIO::EXCEPTION;
 
 	  const RecordInterface & agent_rec( agents.asRecord(i) );
@@ -1620,25 +1608,27 @@ namespace casa {
 	  if ( !agent )
 	    os<<"Unrecognized method name '"<<agents.name(i)<<"'\n"<<LogIO::EXCEPTION;
 	  agent->init();
+	  agent->setNAgent(agents.nfields());
 	  String inp,st;
 	  //    agent->logSink()<<agent->getDesc()<<endl<<LogIO::POST;
 	  acc[nacc++] = agent;
-	}
+      }
       
       acc.resize(nacc, True);
 
       // begin iterating over chunks
       uInt nchunk=0;
 
-      // process just the first chunk because something's screwy
       for (vi.originChunks(); 
 	   vi.moreChunks(); 
 	   vi.nextChunk(), nchunk++) {
 	  //Start of loop over chunks
 	  didSomething = 0;
-	  for( uInt i = 0; i<acc.nelements(); i++ ) acc[i]->initialize();
+	  for (uInt i = 0; i < acc.nelements(); i++) {
+            acc[i]->initialize();
+          }
 
-	  chunk.newChunk();
+	  chunk.newChunk(quack_agent_exists);
 
 	  // limit frequency of progmeter updates (duh!)
 	  Int pm_update_freq = chunk.num(TIME)/200;
@@ -1673,7 +1663,7 @@ namespace casa {
 	  Vector<Int> iter_mode(acc.nelements(),RFA::DATA);
 	  Vector<Bool> active(acc.nelements());
 	  
-	  for( uInt i = 0; i<acc.nelements(); i++ ) 
+	  for (uInt i = 0; i < acc.nelements(); i++)
 	    {
 	      Int maxmem;
 	      maxmem = availmem;
@@ -1735,15 +1725,17 @@ namespace casa {
 			acc[ival]->startDry();
 		  // iterate over visbuffers
 		  for( vi.origin(); vi.more() && nactive; vi++,itime++ ) {
-		    progmeter.update(itime);
+
+		    progmeter.update(Double(itime));
 		    chunk.newTime();
 		    Bool anyActive = False;
 		    anyActive=False;
 		    for( uInt i = 0; i<acc.nelements(); i++ ) 
 		      {
 			  //if ((acc[i]->getID() != "FlagExaminer") && 
-			  if (active_init(i))
+                        if (active_init(i)) {
 			      anyActive=True;
+                        }
 		      }
 
 		    for(uInt i=0;i<acc.nelements();i++) {
@@ -1776,8 +1768,9 @@ namespace casa {
 		      if ( active(ival) ) {
 			// call iterTime/iterDry as appropriate
 			RFA::IterMode res = RFA::STOP;
-			if ( iter_mode(ival) == RFA::DATA )
+			if ( iter_mode(ival) == RFA::DATA ) {
 			  res = acc[ival]->iterTime(itime);
+			}
 			else if ( iter_mode(ival) == RFA::DRY ) 
 			  res = acc[ival]->iterDry(itime);
 			// change requested? Deactivate agent
@@ -1791,7 +1784,7 @@ namespace casa {
 			      break;
 			  }
 		      }
-		    
+
 		    // also iterate over rows for data passes
 		    for( Int ir=0; ir<vb.nRow() && ndata; ir++ ) {
 		      for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
@@ -1808,7 +1801,9 @@ namespace casa {
 			      }
 			  }
 		    }
-		  }
+		  
+		  } /* for vi... */
+
 		  // end pass for all agents
 		  for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
 		    {
@@ -1831,7 +1826,7 @@ namespace casa {
 		      acc[ival]->startDry();
 		  for( uInt itime=0; itime<chunk.num(TIME) && ndry; itime++ )
 		    {
-		      progmeter.update(itime);
+		      progmeter.update(Double(itime));
 		      // now, call individual VisBuffer iterators
 		      for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
 			if ( iter_mode(ival) == RFA::DRY )
@@ -1854,7 +1849,7 @@ namespace casa {
 		      iter_mode(ival) = acc[ival]->endDry();
 		} // end of dry pass
 	    } // end loop over passes
-	  
+      
 	  //cout << opt << endl;
 	  //cout << "any active = " << active_init << endl;
 
@@ -1864,21 +1859,20 @@ namespace casa {
 		//cout << "-----------subtitle=" << subtitle << endl;
 
 	      ProgressMeter progmeter(1.0,static_cast<Double>(chunk.num(TIME)+0.001),title+"storing flags","","","",True,pm_update_freq);
-	      for( uInt i = 0; i<acc.nelements(); i++ ) 
-		if ( active_init(i) )
+	      for (uInt i = 0; i<acc.nelements(); i++)
+		if (active_init(i))
 		  acc[i]->startFlag();
 	      uInt itime=0;
 	      for( vi.origin(); vi.more(); vi++,itime++ ) {
-		  progmeter.update(itime);
-
+		  progmeter.update(Double(itime));
+		  
 		  chunk.newTime();
 		  //		  inRowFlags += sum(chunk.nrfIfr());
 
 		  Bool anyActive = False;
 		  anyActive=False;
-		  for( uInt i = 0; i<acc.nelements(); i++ ) 
-		    {
-		      //		      cout << i << " " << acc[i]->getID() << " " << active_init(i) << endl;
+		  for( uInt i = 0; i<acc.nelements(); i++ ) {
+                    //		      cout << i << " " << acc[i]->getID() << " " << active_init(i) << endl;
 			if ((acc[i]->getID() != "FlagExaminer") && 
 			    active_init(i))
 			    anyActive=True;
@@ -1896,17 +1890,17 @@ namespace casa {
 		  }
 		  
 		  //		  outRowFlags += sum(chunk.nrfIfr());
-		  {
-		      for(uInt ii=0; ii < vb.flagRow().nelements(); ii++)
-			  if (vb.flagRow()(ii) == True) outRowFlags++;
-		      for(Int ii = 0; ii < vb.flagCube().shape()(0); ii++)
-		      for(Int jj = 0; jj < vb.flagCube().shape()(1); jj++)
+		  
+		  for(uInt ii=0; ii < vb.flagRow().nelements(); ii++)
+		    if (vb.flagRow()(ii) == True) outRowFlags++;
+		  for(Int ii = 0; ii < vb.flagCube().shape()(0); ii++)
+		    for(Int jj = 0; jj < vb.flagCube().shape()(1); jj++)
 		      for(Int kk = 0; kk < vb.flagCube().shape()(2); kk++)
-			  if (vb.flagCube()(ii, jj, kk)) outDataFlags++;
-		  }
+			if (vb.flagCube()(ii, jj, kk)) outDataFlags++;
+
 	      }  // for (vi ... )
 	      if (didSomething) {
-		  for( uInt i = 0; i < acc.nelements(); i++ ) 
+		  for (uInt i = 0; i < acc.nelements(); i++)
 		      if (acc[i]) acc[i]->finalize();
 		  LogIO osss(LogOrigin("Flagger", "run"),logSink_p);
 		  
@@ -1916,15 +1910,15 @@ namespace casa {
 		       << endl;
 		  osss << "Input:    "
 		       << "  Rows flagged = " << inRowFlags << " " //" / " << totalRows << " "
-		       << "( " << 100.0*inRowFlags/totalRows << " %)."
+		       << "(" << 100.0*inRowFlags/totalRows << " %)."
 		       << "  Data flagged = " << inDataFlags << " " //" / " << totalData << " "
-		       << "( " << 100.0*inDataFlags/totalData << " %)."
+		       << "(" << 100.0*inDataFlags/totalData << " %)."
 		       << endl;
 		  osss << "This run: "
 		       << "  Rows flagged = " << outRowFlags - inRowFlags << " " //" / " << totalRows << " "
-		       << "( " << 100.0*(outRowFlags-inRowFlags)/totalRows << " %)."
+		       << "(" << 100.0*(outRowFlags-inRowFlags)/totalRows << " %)."
 		       << "  Data flagged = "  << outDataFlags - inDataFlags << " " //" / " << totalData << " " 
-		       << "( " << 100.0*(outDataFlags-inDataFlags)/totalData << " %)."
+		       << "(" << 100.0*(outDataFlags-inDataFlags)/totalData << " %)."
 		       << endl;
 		  osss << LogIO::POST;
 
@@ -1937,26 +1931,42 @@ namespace casa {
 // 		       << "outDataFlags = " << outDataFlags << " "
 // 		       << endl;
 		}
-	      for( uInt i = 0; i<acc.nelements(); i++ ) 
-		if ( active_init(i) )
+	      for (uInt i = 0; i < acc.nelements(); i++) {
+
+		if ( active_init(i) ) {
+
 		  acc[i]->endFlag();
-	      
+                  // summary mode prints here
+
+                  // cerr << "Agent = " << acc[i]->getID() << endl;
+                  // cerr << "Agent's name = " << acc[i]->name() << endl;
+                }
+              }
 	      {
 		logSink_p.clearLocally();
 		LogIO oss(LogOrigin("Flagger", "run()"), logSink_p);
 		os=oss;
 	      }
-	    }
+	    } /* end if not trial run and some agent is active */
+
 	  // call endChunk on all agents
 	  for( uInt i = 0; i<acc.nelements(); i++ ) 
 	    acc[i]->endChunk();
-	  
-	} // end loop over chunks
-      
-      if (dbg)
-	cout << "Total number of data chunks : " << nchunk << endl;
 
-    } 
+      } // end loop over chunks
+      
+      // get results for all agents
+      // (gets just last agent; doesn't work for multiple agents, 
+      // but only used in mode summary)
+      for (uInt i = 0; i < acc.nelements(); i++) {
+        result = acc[i]->getResult();
+      }
+
+      if (dbg) {
+	cout << "Total number of data chunks : " << nchunk << endl;
+      }
+
+    }
     catch( AipsError x )
       {
 	// clean up agents
@@ -1973,7 +1983,19 @@ namespace casa {
 	//cleanupPlotters();
 	// throw the exception on
 	throw x;
-      }  
+      }
+    catch(std::exception e) 
+      {
+	for( uInt i=0; i<acc.nelements(); i++ ) {
+          if ( acc[i] ) {
+            delete acc[i];
+            acc[i] = NULL;
+          }
+        }
+	acc.resize(0);
+
+        throw AipsError(e.what());
+      }
     //cleanupPlotters();
     ms.flush();
     //os<<"Flagging complete\n"<<LogIO::POST;
@@ -1983,7 +2005,7 @@ namespace casa {
     /* Clear the current flag selections */
     clearflagselections(0);
     
-    return True;
+    return result;
   }
   
   // -----------------------------------------------------------------------

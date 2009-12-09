@@ -387,7 +387,7 @@ static void numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<in
 }
 #endif
 
-NUMPY2VECTOR(int,int,npy_int32,(PyArray_TYPE(obj) == NPY_INT || PyArray_TYPE(obj) == NPY_LONG),? 1 : 0,COPY_BUILTIN,stringtoint,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
+NUMPY2VECTOR(int,int,npy_int,(PyArray_TYPE(obj) == NPY_INT || PyArray_TYPE(obj) == NPY_LONG),? 1 : 0,COPY_BUILTIN,stringtoint,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
 NUMPY2VECTOR(double,double,npy_double,(PyArray_TYPE(obj) == NPY_DOUBLE),? 1 : 0,COPY_BUILTIN,stringtodouble,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
 NUMPY2VECTOR(bool,bool,npy_bool,(PyArray_TYPE(obj) == NPY_BOOL),? 1 : 0,COPY_BUILTIN,stringtobool,CPXNONZERO,NODOCOMPLEX,,,,,*to = (bool) *from,1)
 
@@ -600,9 +600,15 @@ int convert_record_value_from_python_dict(PyObject *obj, void *s) {
 
 int convert_variant_value_from_python_obj(PyObject *obj, void *s) {
     ::WX::Utils::Value **to = (::WX::Utils::Value**)s;
-    variant vobj = pyobj2variant(obj);
-    *to = new VariantValue(new variant(vobj));
-    return 1;
+    int result = 1;
+    try {
+	variant vobj = pyobj2variant(obj,true);
+	*to = new VariantValue(new variant(vobj));
+    } catch (std::string err) {
+	PyErr_SetString( PyExc_StandardError, err.c_str( ) );
+	result = 0;
+    }
+    return result;
 }
 
 PyObject *convert_variant_value_to_python_obj( WX::Utils::SmartPtr<WX::Utils::Value> ptr ) {
@@ -779,7 +785,7 @@ inline PyObject *map_vector( const std::vector<TYPE> &vec ) {					\
     return map_vector_numpy( vec );								\
 }
 
-MAP_ARRAY_NUMPY(int, npy_int32, NPY_INT,*to = (npy_int32) *from)
+MAP_ARRAY_NUMPY(int, npy_int, NPY_INT,*to = (npy_int) *from)
 MAP_ARRAY_NUMPY(double, npy_double,NPY_DOUBLE,*to = (npy_double) *from)
 MAP_ARRAY_NUMPY(std::complex<double>, npy_cdouble, NPY_CDOUBLE,(*to).real = (*from).real(); (*to).imag = (*from).imag())
 MAP_ARRAY_NUMPY(casac::complex, npy_cdouble, NPY_CDOUBLE,(*to).real = (*from).re; (*to).imag = (*from).im)
@@ -998,7 +1004,7 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
     return 0;
 }
 
-#define PYOBJ2VARIANT(SINGLETON,CREATION)						\
+#define PYOBJ2VARIANT(SINGLETON,CREATION,DO_THROW)					\
     if ( PyBool_Check(obj) )								\
 	SINGLETON(obj == Py_True ? true : false );					\
 											\
@@ -1056,6 +1062,8 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
 		result.arrayshape() = oshape;						\
 		done = true;								\
 	    } else {									\
+		if ( DO_THROW )								\
+		    throw std::string("all list elements to not confrom to array shape"); \
 		result.asBool();							\
 	    }										\
 	}										\
@@ -1136,7 +1144,7 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
                PyArray_TYPE(val) == NPY_LONGDOUBLE || PyArray_TYPE(val) == NPY_CFLOAT ||\
                PyArray_TYPE(val) == NPY_CDOUBLE ||PyArray_TYPE(val) == NPY_CLONGDOUBLE||\
                PyArray_TYPE(val) == NPY_STRING))) {                                     \
-	        rec.insert(str,pyobj2variant(val));					\
+	      rec.insert(str,pyobj2variant(val,DO_THROW));				\
             }                                                                           \
                                                                                         \
 	    Py_XDECREF(strobj);								\
@@ -1144,7 +1152,7 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
     }
 
 static void pyobj2variant(PyObject *obj, variant &result) {
-    PYOBJ2VARIANT(result.push,)
+    PYOBJ2VARIANT(result.push,,false)
 }
 
 #define ARRAY2PYOBJ(TYPE,ELEMENT_CTOR,RHS,INCREF,STAGE)						\
@@ -1289,10 +1297,10 @@ PyObject *variant2pyobj(const variant &val) {
     return result;
 }
 
-variant pyobj2variant(PyObject *obj) {
+variant pyobj2variant(PyObject *obj, bool throw_error) {
     variant result;
 
-    PYOBJ2VARIANT(return variant,)
+    PYOBJ2VARIANT(return variant,,throw_error)
 
     return result;
 }

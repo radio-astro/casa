@@ -269,7 +269,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // reserve a minimum of memory for ourselves
   maxmem -= 1;
 // init flagging cube and off we go...
-  RFAFlagCubeBase::newChunk(maxmem);
+  RFAFlagCubeBase::newChunk(maxmem, nAgent);
 // see if full row is being flagged, i.e. no subset of channels was selected,
 // and no explicit correlations (or all correlations).
   select_fullrow = (!flagchan.nelements() && 

@@ -42,16 +42,30 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the StationType enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace StationTypeMod
 {
+  //! StationType.
+  //!  [ASDM.Station] Type of antenna station
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum StationType
   { 
-    ANTENNA_PAD ,
-    MAINTENANCE_PAD ,
-    WEATHER_STATION 
+    ANTENNA_PAD /*!< Astronomical Antenna station */
+     ,
+    MAINTENANCE_PAD /*!< Maintenance antenna station */
+     ,
+    WEATHER_STATION /*!< Weather station */
+     
   };
   typedef StationType &StationType_out;
 } 
@@ -59,68 +73,93 @@ namespace StationTypeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration StationType.
+  * 
+  */
 class CStationType {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the StationType enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sANTENNA_PAD;
+	static const std::string& sANTENNA_PAD; /*!< A const string equal to "ANTENNA_PAD".*/
 	
-	static const std::string& sMAINTENANCE_PAD;
+	static const std::string& sMAINTENANCE_PAD; /*!< A const string equal to "MAINTENANCE_PAD".*/
 	
-	static const std::string& sWEATHER_STATION;
-	
-    static const std::vector<std::string> sStationTypeSet();	 
-
+	static const std::string& sWEATHER_STATION; /*!< A const string equal to "WEATHER_STATION".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in StationTypeMod::StationType.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of StationTypeMod::StationType.
+      * @return a string.
+      */
+	static std::string name(const StationTypeMod::StationType& e);
 	
-	// Explanations associated with the StationType Enumeration.
-		
-	static const std::string& hANTENNA_PAD;
-		
-	static const std::string& hMAINTENANCE_PAD;
-		
-	static const std::string& hWEATHER_STATION;
-		
-	static const std::vector<std::string> hStationTypeSet();
-   	
-
-   	// Is an integer number associated with the StationType enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the StationType enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  StationType enumeration.
-	static std::string name(const StationTypeMod::StationType& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const StationTypeMod::StationType& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified StationType enumeration.
-	static std::string help(const StationTypeMod::StationType& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a StationType enumeration object by specifying its name.
    	static StationTypeMod::StationType newStationType(const std::string& name);
    	
-   	// Create a StationType enumeration object by specifying its name.
+   	/*! Return a StationType's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a StationTypeMod::StationType's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static StationTypeMod::StationType literal(const std::string& name);
  	
-    // Create a StationType enumeration object by specifying its position index (0 based).
+    /*! Return a StationType's enumerator given an unsigned int.
+      * @param i the index of the enumerator in StationTypeMod::StationType.
+      * @return a StationTypeMod::StationType's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static StationTypeMod::StationType from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CStationType();
     CStationType(const CStationType&);
     CStationType& operator=(const CStationType&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CStationType_H*/

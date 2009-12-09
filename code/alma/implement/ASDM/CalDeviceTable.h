@@ -79,14 +79,16 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
-
-	
 #include "CCalibrationDevice.h"
 using namespace CalibrationDeviceMod;
+	
+
+	
+
+	
+
+	
+
 	
 
 
@@ -129,83 +131,104 @@ class ASDM;
 class CalDeviceRow;
 /**
  * The CalDeviceTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Calibration device characteristics. This table is not part of the   Calibration Data Model but describes the actual observations; it refers to   the amplitude calibration device which includes the hot loads.     Calibration device properties are assumed independent of frequency   throughout a spectral window.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalDevice </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> antennaId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row  in AntennaTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> feedId </TD> 
- * <TD> int </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> spectralWindowId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in SpectralWindow Table. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> spectralWindowId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> timeInterval </TD>
+ 		 
+ * <TD> ArrayTimeInterval</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the period of validity of the data recorded in this row. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> timeInterval </TD> 
- * <TD> ArrayTimeInterval </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> feedId </TD>
+ 		 
+ * <TD> int</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to the collection of rows in FeedTable having this value of feedId in their key. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> numCalload </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of calibration loads. </TD>
  * </TR>
 	
  * <TR>
- * <TD> calLoadName </TD> 
+ * <TD> calLoadNames </TD> 
  * <TD> vector<CalibrationDeviceMod::CalibrationDevice > </TD>
  * <TD>  numCalload </TD> 
+ * <TD> &nbsp;identifies the calibration loads (an array with one value per load). </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
+	
+ * <TR>
+ * <TD> numReceptor </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the number of receptors. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> calEff </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numCalload  </TD>
+ * <TD>&nbsp; the calibration efficiencies (one value per receptor per load). </TD>
+ * </TR>
 	
  * <TR>
  * <TD> noiseCal </TD> 
  * <TD> vector<double > </TD>
  * <TD>  numCalload  </TD>
+ * <TD>&nbsp; the equivalent temperatures of the of the noise sources used (one value per load). </TD>
  * </TR>
 	
  * <TR>
  * <TD> temperatureLoad </TD> 
  * <TD> vector<Temperature > </TD>
  * <TD>  numCalload  </TD>
- * </TR>
-	
- * <TR>
- * <TD> calEff </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>  numCalload, Feed.numReceptor  </TD>
+ * <TD>&nbsp; the physical temperatures of the loads for a black body calibration source (one value per load). </TD>
  * </TR>
 	
 
@@ -282,24 +305,24 @@ public:
 	
  	 * @param antennaId. 
 	
- 	 * @param feedId. 
-	
  	 * @param spectralWindowId. 
 	
  	 * @param timeInterval. 
 	
+ 	 * @param feedId. 
+	
  	 * @param numCalload. 
 	
- 	 * @param calLoadName. 
+ 	 * @param calLoadNames. 
 	
      */
-	CalDeviceRow *newRow(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadName);
+	CalDeviceRow *newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadNames);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalDeviceRow *newRowFull(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadName);
+	CalDeviceRow *newRowFull(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadNames);
 
 
 	/**
@@ -339,7 +362,7 @@ public:
 	 *
 	
 	 * @note The row is inserted in the table in such a way that all the rows having the same value of
-	 * ( antennaId, feedId, spectralWindowId ) are stored by ascending time.
+	 * ( antennaId, spectralWindowId, feedId ) are stored by ascending time.
 	 * @see method getByContext.
 	
 	 */
@@ -363,12 +386,12 @@ public:
 
 	/**
 	 * Returns all the rows sorted by ascending startTime for a given context. 
-	 * The context is defined by a value of ( antennaId, feedId, spectralWindowId ).
+	 * The context is defined by a value of ( antennaId, spectralWindowId, feedId ).
 	 *
 	 * @return a pointer on a vector<CalDeviceRow *>. A null returned value means that the table contains
-	 * no CalDeviceRow for the given ( antennaId, feedId, spectralWindowId ).
+	 * no CalDeviceRow for the given ( antennaId, spectralWindowId, feedId ).
 	 */
-	 vector <CalDeviceRow*> *getByContext(Tag antennaId, int feedId, Tag spectralWindowId);
+	 vector <CalDeviceRow*> *getByContext(Tag antennaId, Tag spectralWindowId, int feedId);
 	 
 
 
@@ -381,15 +404,15 @@ public:
 	
 	 * @param antennaId. 
 	
-	 * @param feedId. 
-	
 	 * @param spectralWindowId. 
 	
 	 * @param timeInterval. 
 	
+	 * @param feedId. 
+	
  	 *
 	 */
- 	CalDeviceRow* getRowByKey(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval);
+ 	CalDeviceRow* getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId);
 
  	 	
 
@@ -403,18 +426,18 @@ public:
 			
  	 * @param antennaId.
  	 		
- 	 * @param feedId.
- 	 		
  	 * @param spectralWindowId.
  	 		
  	 * @param timeInterval.
  	 		
+ 	 * @param feedId.
+ 	 		
  	 * @param numCalload.
  	 		
- 	 * @param calLoadName.
+ 	 * @param calLoadNames.
  	 		 
  	 */
-	CalDeviceRow* lookup(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadName); 
+	CalDeviceRow* lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadNames); 
 
 
 #ifndef WITHOUT_ACS
@@ -434,43 +457,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalDeviceTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalDeviceTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalDevice (CalDeviceTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalDevice (CalDeviceTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -545,8 +574,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalDeviceRow* checkAndAdd(CalDeviceRow* x) throw (DuplicateKey);
+	CalDeviceRow* checkAndAdd(CalDeviceRow* x) ;
 
 
 	
@@ -581,7 +612,7 @@ private:
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
 	 */
-	 string Key(Tag antennaId, int feedId, Tag spectralWindowId) ;
+	 string Key(Tag antennaId, Tag spectralWindowId, int feedId) ;
 		 
 		
 	
@@ -591,11 +622,11 @@ private:
 	 * whose attributes are equal to the corresponding parameters of the method.
 	 *
 	 */
-	void getByKeyNoAutoIncNoTime(vector <CalDeviceRow*>& vin, vector <CalDeviceRow*>& vout,  Tag antennaId, int feedId, Tag spectralWindowId);
+	void getByKeyNoAutoIncNoTime(vector <CalDeviceRow*>& vin, vector <CalDeviceRow*>& vout,  Tag antennaId, Tag spectralWindowId, int feedId);
 	
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

@@ -13,7 +13,7 @@ for k in range(len(a)):
 gl=sys._getframe(stacklevel).f_globals
 
 def description():
-    return "Based on h121_regression.py"
+    return "PdB, calibration, imaging"
 
 def run():
     lepath=locatescript('h121_regression.py')

@@ -559,11 +559,14 @@ Record QtDisplayData::getOptions() {
 void QtDisplayData::checkAxis() {
    //cout << "checkAxis" << endl;
    Record rec = getOptions();
+   //cout << "dd=" << rec << endl;
    try {
        String xaxis = rec.subRecord("xaxis").asString("value");
        String yaxis = rec.subRecord("yaxis").asString("value");
        String zaxis = rec.subRecord("zaxis").asString("value");
        emit axisChanged(xaxis, yaxis, zaxis);
+       Int haxis = rec.subRecord("haxis1").asInt("value");
+       emit axisChanged4(xaxis, yaxis, zaxis, haxis);
    }
    catch(...) {
    } 
@@ -920,7 +923,10 @@ Bool QtDisplayData::setCMBrtCont(const Vector<Float>& params) {
   return True;  }
 
 
-
+void QtDisplayData::unlock( ) {
+    if ( im_ != 0 ) im_->unlock( );
+    if ( cim_ != 0 ) cim_->unlock( );
+}
 
 
 void QtDisplayData::registerNotice(QtDisplayPanel* qdp) {

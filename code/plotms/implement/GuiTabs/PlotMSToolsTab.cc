@@ -26,9 +26,8 @@
 //# $Id: $
 #include <plotms/GuiTabs/PlotMSToolsTab.qo.h>
 
-#include <casaqt/QtUtilities/QtActionGroup.qo.h>
 #include <plotms/Actions/PlotMSAction.h>
-#include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Gui/PlotMSPlotter.qo.h>
 
 namespace casa {
 
@@ -39,53 +38,43 @@ namespace casa {
 PlotMSToolsTab::PlotMSToolsTab(PlotMSPlotter* parent) : PlotMSTab(parent) {
     setupUi(this);
     
-    // Get the actions that buttons will be connected to.
-    const QMap<PlotMSAction::Type, QAction*>& actionMap =
-        itsPlotter_->plotActionMap();
-    
-    // Set up synchronizer
-    QtActionSynchronizer* sync = new QtActionSynchronizer(parent);
-    
     // Synchronize hand tool buttons
-    sync->synchronize(actionMap.value(PlotMSAction::TOOL_MARK_REGIONS),
+    itsPlotter_->synchronizeAction(PlotMSAction::TOOL_MARK_REGIONS,
             handMarkRegions);
-    sync->synchronize(actionMap.value(PlotMSAction::TOOL_ZOOM),
-            handZoom);
-    sync->synchronize(actionMap.value(PlotMSAction::TOOL_PAN),
-            handPan);
-    sync->synchronize(actionMap.value(PlotMSAction::TOOL_ANNOTATE_TEXT),
+    itsPlotter_->synchronizeAction(PlotMSAction::TOOL_MARK_REGIONS,
+            handMarkRegions);
+    itsPlotter_->synchronizeAction(PlotMSAction::TOOL_ZOOM, handZoom);
+    itsPlotter_->synchronizeAction(PlotMSAction::TOOL_PAN, handPan);
+    itsPlotter_->synchronizeAction(PlotMSAction::TOOL_ANNOTATE_TEXT,
             handAnnotateText);
-    sync->synchronize(actionMap.value(PlotMSAction::TOOL_ANNOTATE_RECTANGLE),
+    itsPlotter_->synchronizeAction(PlotMSAction::TOOL_ANNOTATE_RECTANGLE,
             handAnnotateRectangle);
     
     // Synchronize selected region buttons
-    sync->synchronize(actionMap.value(PlotMSAction::SEL_CLEAR_REGIONS),
+    itsPlotter_->synchronizeAction(PlotMSAction::SEL_CLEAR_REGIONS,
             regionsClear);
-    sync->synchronize(actionMap.value(PlotMSAction::SEL_FLAG), regionsFlag);
-    sync->synchronize(actionMap.value(PlotMSAction::SEL_UNFLAG),regionsUnflag);
-    sync->synchronize(actionMap.value(PlotMSAction::SEL_LOCATE),regionsLocate);
+    itsPlotter_->synchronizeAction(PlotMSAction::SEL_FLAG, regionsFlag);
+    itsPlotter_->synchronizeAction(PlotMSAction::SEL_UNFLAG,regionsUnflag);
+    itsPlotter_->synchronizeAction(PlotMSAction::SEL_LOCATE, regionsLocate);
     
     // Synchronize stack buttons
-    sync->synchronize(actionMap.value(PlotMSAction::STACK_BACK), stackBack);
-    sync->synchronize(actionMap.value(PlotMSAction::STACK_BASE), stackBase);
-    sync->synchronize(actionMap.value(PlotMSAction::STACK_FORWARD),
-            stackForward);
+    itsPlotter_->synchronizeAction(PlotMSAction::STACK_BACK, stackBack);
+    itsPlotter_->synchronizeAction(PlotMSAction::STACK_BASE, stackBase);
+    itsPlotter_->synchronizeAction(PlotMSAction::STACK_FORWARD, stackForward);
     
     // Synchronize tracker buttons
-    sync->synchronize(actionMap.value(PlotMSAction::TRACKER_HOVER),
-            trackerHover);
-    sync->synchronize(actionMap.value(PlotMSAction::TRACKER_DISPLAY),
+    itsPlotter_->synchronizeAction(PlotMSAction::TRACKER_HOVER, trackerHover);
+    itsPlotter_->synchronizeAction(PlotMSAction::TRACKER_DISPLAY,
             trackerDisplay);
     
     // Synchronize iteration buttons
-    sync->synchronize(actionMap.value(PlotMSAction::ITER_FIRST),
-            iterationFirst);
-    sync->synchronize(actionMap.value(PlotMSAction::ITER_PREV), iterationPrev);
-    sync->synchronize(actionMap.value(PlotMSAction::ITER_NEXT), iterationNext);
-    sync->synchronize(actionMap.value(PlotMSAction::ITER_LAST), iterationLast);
+    itsPlotter_->synchronizeAction(PlotMSAction::ITER_FIRST, iterationFirst);
+    itsPlotter_->synchronizeAction(PlotMSAction::ITER_PREV, iterationPrev);
+    itsPlotter_->synchronizeAction(PlotMSAction::ITER_NEXT, iterationNext);
+    itsPlotter_->synchronizeAction(PlotMSAction::ITER_LAST, iterationLast);
     
     // Synchronize hold/release button
-    sync->synchronize(actionMap.value(PlotMSAction::HOLD_RELEASE_DRAWING),
+    itsPlotter_->synchronizeAction(PlotMSAction::HOLD_RELEASE_DRAWING,
             holdReleaseDrawing);
 }
 
@@ -97,9 +86,6 @@ QList<QToolButton*> PlotMSToolsTab::toolButtons() const {
            << stackForward << iterationFirst << iterationPrev << iterationNext
            << iterationLast;
 }
-
-void PlotMSToolsTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
-        int updateFlag, bool redrawRequired) { }
 
 void PlotMSToolsTab::showIterationButtons(bool show) {
     iterationBox->setVisible(show); }

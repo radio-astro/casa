@@ -38,11 +38,11 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<FluxCalibrationMethod,EnumPar<void> >
-     (FluxCalibrationMethodMod::ABSOLUTE,ep((int)FluxCalibrationMethodMod::ABSOLUTE,"ABSOLUTE","Absolute flux calibration (based on standard antenna)")));
+     (FluxCalibrationMethodMod::ABSOLUTE,ep((int)FluxCalibrationMethodMod::ABSOLUTE,"ABSOLUTE","un-documented")));
     m_.insert(pair<FluxCalibrationMethod,EnumPar<void> >
-     (FluxCalibrationMethodMod::RELATIVE,ep((int)FluxCalibrationMethodMod::RELATIVE,"RELATIVE","Relative flux calibration (based on a primary calibrator)")));
+     (FluxCalibrationMethodMod::RELATIVE,ep((int)FluxCalibrationMethodMod::RELATIVE,"RELATIVE","un-documented")));
     m_.insert(pair<FluxCalibrationMethod,EnumPar<void> >
-     (FluxCalibrationMethodMod::EFFICIENCY,ep((int)FluxCalibrationMethodMod::EFFICIENCY,"EFFICIENCY","Flux calibrator based on tabulated antenna efficiciency")));
+     (FluxCalibrationMethodMod::EFFICIENCY,ep((int)FluxCalibrationMethodMod::EFFICIENCY,"EFFICIENCY","un-documented")));
     return true;
   }
   static map<FluxCalibrationMethod,EnumPar<void> > m_;

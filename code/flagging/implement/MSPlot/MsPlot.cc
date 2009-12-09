@@ -36,25 +36,15 @@
 //#                         time expressions in the plotrange option
 //
 
-
-//# System Includes
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <iostream>
-#include <cmath>
-
-//# General CASA includes
-#include <casa/Exceptions.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/GenSort.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/Arrays/ArrayMath.h>
-
 //# Table and TablePlot includes
 #include <tableplot/TablePlot/TablePlot.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/RefRows.h>
+
+//# Local (MsPlot) includes
+#include <flagging/MSPlot/MsPlot.h>
+#include <flagging/MSPlot/MsPlotConvert.h>
+#include <flagging/MSPlot/MsPlotHooks.h>
 
 //# Measurment and table related includes
 #include <ms/MeasurementSets/MeasurementSet.h>
@@ -71,10 +61,19 @@
 
 #include <msvis/MSVis/MsAverager.h>
 
-//# Local (MsPlot) includes
-#include <flagging/MSPlot/MsPlot.h>
-#include <flagging/MSPlot/MsPlotConvert.h>
-#include <flagging/MSPlot/MsPlotHooks.h>
+//# General CASA includes
+#include <casa/Exceptions.h>
+#include <casa/BasicSL/String.h>
+#include <casa/Utilities/GenSort.h>
+#include <casa/Quanta/MVTime.h>
+#include <casa/Arrays/ArrayMath.h>
+
+//# System Includes
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <iostream>
+#include <cmath>
 
 
 #define LOG0 0
@@ -5522,7 +5521,7 @@ MsPlot::validateCorrAndStokes( Vector<Vector<String> >& names )
 
        
        //do this to avoid crash by correlation='rr lr ll rl rl rr ll'
-       Int len = max(itsCorrelationIds[polId].nelements(),
+       Int len = std::max(itsCorrelationIds[polId].nelements(),
                      names[polId].nelements());
        Vector<String> validNames(len);
        Vector<Int> validIds(len);

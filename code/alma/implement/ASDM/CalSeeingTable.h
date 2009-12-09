@@ -75,6 +75,13 @@ using namespace enumerations;
 
 
 	
+#include "CAtmPhaseCorrection.h"
+using namespace AtmPhaseCorrectionMod;
+	
+
+	
+
+	
 
 	
 
@@ -136,103 +143,137 @@ class ASDM;
 class CalSeeingRow;
 /**
  * The CalSeeingTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * The seeing parameters deduced from TelCal calibrations.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalSeeing </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> atmPhaseCorrection </TD>
+ 		 
+ * <TD> AtmPhaseCorrectionMod::AtmPhaseCorrection</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;describes how the atmospheric phase correction has been applied. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalReduction Table. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> numBaseLength </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> startValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the end time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> frequencyRange </TD> 
  * <TD> vector<Frequency > </TD>
  * <TD>  2 </TD> 
+ * <TD> &nbsp;the range of frequencies over which this result is valid. </TD>
  * </TR>
 	
  * <TR>
- * <TD> baseLength </TD> 
+ * <TD> integrationTime </TD> 
+ * <TD> Interval </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the duration of averaging for the evaluation of the RMS. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numBaseLengths </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of baselines for which the the RMS phase data is evaluated. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> baselineLengths </TD> 
  * <TD> vector<Length > </TD>
- * <TD>  numBaseLength </TD> 
+ * <TD>  numBaseLengths </TD> 
+ * <TD> &nbsp;the lengths of the baselines (one value per baseline). </TD>
  * </TR>
 	
  * <TR>
- * <TD> corrPhaseRms </TD> 
+ * <TD> phaseRMS </TD> 
  * <TD> vector<Angle > </TD>
- * <TD>  numBaseLength </TD> 
- * </TR>
-	
- * <TR>
- * <TD> uncorrPhaseRms </TD> 
- * <TD> vector<Angle > </TD>
- * <TD>  numBaseLength </TD> 
+ * <TD>  numBaseLengths </TD> 
+ * <TD> &nbsp;the RMS of phase fluctuations (one value per baseline). </TD>
  * </TR>
 	
  * <TR>
  * <TD> seeing </TD> 
  * <TD> Angle </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the seeing parameter, deduced for the LO1. </TD>
  * </TR>
 	
  * <TR>
- * <TD> seeingFrequency </TD> 
- * <TD> Frequency </TD>
+ * <TD> seeingError </TD> 
+ * <TD> Angle </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> seeingFreqBandwidth </TD> 
- * <TD> Frequency </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the uncertainty on the seeing parameter. </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> exponent </TD> 
  * <TD> float </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the exponent of the spatial structure function. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> outerScale </TD> 
+ * <TD> Length </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the outer scale. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> outerScaleRMS </TD> 
+ * <TD> Angle </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the RMS of phase fluctuations at scale length outerScale. </TD>
  * </TR>
 	
 
@@ -307,11 +348,11 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param atmPhaseCorrection. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
-	
- 	 * @param numBaseLength. 
 	
  	 * @param startValidTime. 
 	
@@ -319,26 +360,26 @@ public:
 	
  	 * @param frequencyRange. 
 	
- 	 * @param baseLength. 
+ 	 * @param integrationTime. 
 	
- 	 * @param corrPhaseRms. 
+ 	 * @param numBaseLengths. 
 	
- 	 * @param uncorrPhaseRms. 
+ 	 * @param baselineLengths. 
+	
+ 	 * @param phaseRMS. 
 	
  	 * @param seeing. 
 	
- 	 * @param seeingFrequency. 
-	
- 	 * @param seeingFreqBandwidth. 
+ 	 * @param seeingError. 
 	
      */
-	CalSeeingRow *newRow(Tag calDataId, Tag calReductionId, int numBaseLength, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<Length > baseLength, vector<Angle > corrPhaseRms, vector<Angle > uncorrPhaseRms, Angle seeing, Frequency seeingFrequency, Frequency seeingFreqBandwidth);
+	CalSeeingRow *newRow(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, Interval integrationTime, int numBaseLengths, vector<Length > baselineLengths, vector<Angle > phaseRMS, Angle seeing, Angle seeingError);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalSeeingRow *newRowFull(Tag calDataId, Tag calReductionId, int numBaseLength, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<Length > baseLength, vector<Angle > corrPhaseRms, vector<Angle > uncorrPhaseRms, Angle seeing, Frequency seeingFrequency, Frequency seeingFreqBandwidth);
+	CalSeeingRow *newRowFull(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, Interval integrationTime, int numBaseLengths, vector<Length > baselineLengths, vector<Angle > phaseRMS, Angle seeing, Angle seeingError);
 
 
 	/**
@@ -404,13 +445,15 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param atmPhaseCorrection. 
+	
 	 * @param calDataId. 
 	
 	 * @param calReductionId. 
 	
  	 *
 	 */
- 	CalSeeingRow* getRowByKey(Tag calDataId, Tag calReductionId);
+ 	CalSeeingRow* getRowByKey(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId);
 
  	 	
 
@@ -422,11 +465,11 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
+ 	 * @param atmPhaseCorrection.
+ 	 		
  	 * @param calDataId.
  	 		
  	 * @param calReductionId.
- 	 		
- 	 * @param numBaseLength.
  	 		
  	 * @param startValidTime.
  	 		
@@ -434,20 +477,20 @@ public:
  	 		
  	 * @param frequencyRange.
  	 		
- 	 * @param baseLength.
+ 	 * @param integrationTime.
  	 		
- 	 * @param corrPhaseRms.
+ 	 * @param numBaseLengths.
  	 		
- 	 * @param uncorrPhaseRms.
+ 	 * @param baselineLengths.
+ 	 		
+ 	 * @param phaseRMS.
  	 		
  	 * @param seeing.
  	 		
- 	 * @param seeingFrequency.
- 	 		
- 	 * @param seeingFreqBandwidth.
+ 	 * @param seeingError.
  	 		 
  	 */
-	CalSeeingRow* lookup(Tag calDataId, Tag calReductionId, int numBaseLength, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<Length > baseLength, vector<Angle > corrPhaseRms, vector<Angle > uncorrPhaseRms, Angle seeing, Frequency seeingFrequency, Frequency seeingFreqBandwidth); 
+	CalSeeingRow* lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, Interval integrationTime, int numBaseLengths, vector<Length > baselineLengths, vector<Angle > phaseRMS, Angle seeing, Angle seeingError); 
 
 
 #ifndef WITHOUT_ACS
@@ -467,43 +510,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalSeeingTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalSeeingTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalSeeing (CalSeeingTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalSeeing (CalSeeingTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -578,8 +627,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalSeeingRow* checkAndAdd(CalSeeingRow* x) throw (DuplicateKey);
+	CalSeeingRow* checkAndAdd(CalSeeingRow* x) ;
 
 
 
@@ -593,7 +644,7 @@ private:
 	vector<CalSeeingRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

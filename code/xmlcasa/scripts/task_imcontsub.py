@@ -29,9 +29,8 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
         casalog.post( "The contfile paramter is empty, consequently the" \
                       +" continuum image will NOT be\nsaved on disk.", \
                       'WARN')
-        
     if ( filesExist ):
-    	raise Exception, 'Output file(s) already exist can not continue ...' 
+        return False
     
     reg = None
     try:
@@ -64,7 +63,9 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
 	    #reg=imregion( imagename, chans, stokes, box, '', '' )
             reg=imregion( imagename, '', stokes, box, '', '' )
         if ( len( reg .keys() ) < 1 ):
-            raise Exception, 'Ill-formed region: '+str(reg)+'. can not continue.' 
+            casalog.post('Ill-formed region: '+str(reg)+'. can not continue.',\
+                         'SEVERE' )
+            return False
             
         #print "REGION: ", reg
         
@@ -121,7 +122,7 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
 	# Cleanup
 	if ( reg != None ):
 	    del reg
-	ia.done
+	ia.done()
 	return True
         #return retValue
 		
@@ -130,7 +131,7 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
 	# Cleanup
 	if ( reg != None ):
 	    del reg
-	ia.done
+	ia.done()
 	return  False
 	
     return True
@@ -177,6 +178,6 @@ def _parse_chans( chanString='', min=0, max=0 ):
 	for i in range( startChan, endChan+1 ):
 	    retValue.append( i )
     else:
-	raise Exception, "Invalid channel specification: "+str(values)
+        raise Exception, "Invalid channel specification: "+str(values)
     
     return retValue

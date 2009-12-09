@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CCalibrationMode::version() {
+	return CalibrationModeMod::version;
+	}
+	
+string CCalibrationMode::revision () {
+	return CalibrationModeMod::revision;
+}
+
+unsigned int CCalibrationMode::size() {
+	return 5;
+	}
+	
 	
 const std::string& CCalibrationMode::sHOLOGRAPHY = "HOLOGRAPHY";
 	
@@ -48,7 +61,7 @@ const std::string& CCalibrationMode::sRADIOMETRY = "RADIOMETRY";
 	
 const std::string& CCalibrationMode::sWVR = "WVR";
 	
-const std::vector<std::string> CCalibrationMode::sCalibrationModeSet() {
+const std::vector<std::string> CCalibrationMode::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CCalibrationMode::sHOLOGRAPHY);
@@ -63,37 +76,6 @@ const std::vector<std::string> CCalibrationMode::sCalibrationModeSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CCalibrationMode::hHOLOGRAPHY = "Holography receiver";
-	
-const std::string& CCalibrationMode::hINTERFEROMETRY = "interferometry";
-	
-const std::string& CCalibrationMode::hOPTICAL = "Optical telescope";
-	
-const std::string& CCalibrationMode::hRADIOMETRY = "total power";
-	
-const std::string& CCalibrationMode::hWVR = "water vapour radiometry receiver";
-	
-const std::vector<std::string> CCalibrationMode::hCalibrationModeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CCalibrationMode::hHOLOGRAPHY);
-    
-    enumSet.insert(enumSet.end(), CCalibrationMode::hINTERFEROMETRY);
-    
-    enumSet.insert(enumSet.end(), CCalibrationMode::hOPTICAL);
-    
-    enumSet.insert(enumSet.end(), CCalibrationMode::hRADIOMETRY);
-    
-    enumSet.insert(enumSet.end(), CCalibrationMode::hWVR);
-        
-    return enumSet;
-}
-   	
 
 std::string CCalibrationMode::name(const CalibrationModeMod::CalibrationMode& f) {
     switch (f) {
@@ -114,34 +96,9 @@ std::string CCalibrationMode::name(const CalibrationModeMod::CalibrationMode& f)
       return CCalibrationMode::sWVR;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CCalibrationMode::help(const CalibrationModeMod::CalibrationMode& f) {
-    switch (f) {
-    
-    case CalibrationModeMod::HOLOGRAPHY:
-      return CCalibrationMode::hHOLOGRAPHY;
-    
-    case CalibrationModeMod::INTERFEROMETRY:
-      return CCalibrationMode::hINTERFEROMETRY;
-    
-    case CalibrationModeMod::OPTICAL:
-      return CCalibrationMode::hOPTICAL;
-    
-    case CalibrationModeMod::RADIOMETRY:
-      return CCalibrationMode::hRADIOMETRY;
-    
-    case CalibrationModeMod::WVR:
-      return CCalibrationMode::hWVR;
-    	
-    }
-    return std::string("");
-}
-   	
 
 CalibrationModeMod::CalibrationMode CCalibrationMode::newCalibrationMode(const std::string& name) {
 		
@@ -194,12 +151,10 @@ CalibrationModeMod::CalibrationMode CCalibrationMode::literal(const std::string&
 }
 
 CalibrationModeMod::CalibrationMode CCalibrationMode::from_int(unsigned int i) {
-	vector<string> names = sCalibrationModeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newCalibrationMode(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newCalibrationMode(names_.at(i));
 }
-
-	
 
 string CCalibrationMode::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'CalibrationMode'.";

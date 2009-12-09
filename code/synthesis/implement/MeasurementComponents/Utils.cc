@@ -10,6 +10,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <lattices/Lattices/LatticeExpr.h>
 #include <images/Images/PagedImage.h>
+#include <images/Images/ImageRegrid.h>
 #include <casa/Containers/Record.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/TiledLineStepper.h> 
@@ -451,5 +452,201 @@ namespace casa{
 
     return True;
   }
-  
+  //
+  //---------------------------------------------------------------
+  //Rotate a complex array using a the given coordinate system and the
+  //angle in radians.  Default interpolation method is "CUBIC".
+  //Axeses corresponding to Linear coordinates in the given
+  //CoordinateSystem object are rotated.  Rotation is done using
+  //ImageRegrid object, about the pixel given by (N+1)/2 where N is
+  //the number of pixels along the axis.
+  //
+  void SynthesisUtils::rotateComplexArray(LogIO& logio, Array<Complex>& inArray, 
+					  CoordinateSystem& inCS,
+					  Array<Complex>& outArray,
+					  Double dAngleRad,
+					  String interpMethod)
+  {
+//     logio << LogOrigin("SynthesisUtils", "rotateComplexArray")
+// 	  << "Rotating CF using " << interpMethod << " interpolation." 
+// 	  << LogIO::POST;
+    //
+    // If no rotation required, just copy the inArray to outArray.
+    //
+    if (dAngleRad==0.0) 
+      {
+	outArray.reference(inArray);
+	return;
+      }
+    //
+    // Re-grid inImage onto outImage
+    //
+    Vector<Int> pixelAxes;
+    Int linInd = -1, after=-1;
+    // Extract LINRAR coords from inCS.
+    // Extract axes2
+    Vector<Double> refPix = inCS.referencePixel();
+    refPix(0) = (inArray.shape()(0)+1)/2;
+    refPix(1) = (inArray.shape()(1)+1)/2;
+
+    inCS.setReferencePixel(refPix);
+    linInd = inCS.findCoordinate(Coordinate::LINEAR, after);
+    pixelAxes=inCS.pixelAxes(linInd);
+    IPosition axes2(pixelAxes);
+    // Set linear transformation matrix in inCS.
+//     CoordinateSystem outCS =
+//       ImageRegrid<Complex>::makeCoordinateSystem (logio, outCS, inCS, axes2);
+
+    CoordinateSystem outCS(inCS);
+
+    Matrix<Double> xf = outCS.coordinate(linInd).linearTransform();
+    Matrix<Double> rotm(2,2);
+    Double s = sin(dAngleRad);
+    Double c = cos(dAngleRad);
+
+    rotm(0,0) =  c; rotm(0,1) = s;
+    rotm(1,0) = -s; rotm(1,1) = c;
+
+    // Create new linear transform matrix
+    Matrix<Double> xform(2,2);
+    xform(0,0) = rotm(0,0)*xf(0,0)+rotm(0,1)*xf(1,0);
+    xform(0,1) = rotm(0,0)*xf(0,1)+rotm(0,1)*xf(1,1);
+    xform(1,0) = rotm(1,0)*xf(0,0)+rotm(1,1)*xf(1,0);
+    xform(1,1) = rotm(1,0)*xf(0,1)+rotm(1,1)*xf(1,1);
+
+    LinearCoordinate linCoords = outCS.linearCoordinate(linInd);
+    linCoords.setLinearTransform(xform);
+    outCS.replaceCoordinate(linCoords, linInd);
+    
+    outArray.resize(inArray.shape());
+    outArray.set(0);
+    //
+    // Make an image out of inArray and inCS --> inImage
+    //
+    //    TempImage<Complex> inImage(inArray.shape(), inCS);
+    {
+      TempImage<Float> inImage(inArray.shape(),inCS);
+      TempImage<Float> outImage(outArray.shape(), outCS);
+      ImageRegrid<Float> ir;
+      Interpolate2D::Method interpolationMethod = Interpolate2D::stringToMethod(interpMethod);
+      //------------------------------------------------------------------------
+      // Rotated the real part
+      //
+      inImage.copyData(LatticeExpr<Float>(real(ArrayLattice<Complex>(inArray))));
+      outImage.set(0.0);
+
+      ir.regrid(outImage, interpolationMethod, axes2, inImage);
+      setReal(outArray,outImage.get());
+      //------------------------------------------------------------------------
+      // Rotated the imaginary part
+      //
+      inImage.copyData(LatticeExpr<Float>(imag(ArrayLattice<Complex>(inArray))));
+      outImage.set(0.0);
+
+      ir.regrid(outImage, interpolationMethod, axes2, inImage);
+      setImag(outArray,outImage.get());
+    }
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void SynthesisUtils::findLatticeMax(const ImageInterface<Complex>& lattice,
+				      Vector<Float>& maxAbs,
+				      Vector<IPosition>& posMaxAbs) 
+  {
+    IPosition lshape(lattice.shape());
+    IPosition ndx(lshape);
+    Int nPol=lshape(2);
+    posMaxAbs.resize(nPol);
+    for(Int i=0;i<nPol;i++)
+      posMaxAbs(i)=IPosition(lattice.shape().nelements(), 0);
+    maxAbs.resize(nPol);
+    ndx=0;
+    
+    for(Int s2=0;s2<lshape(2);s2++)
+      for(Int s3=0;s3<lshape(3);s3++)
+	{
+	  ndx(2) = s2; ndx(3)=s3;
+	  {
+	    //
+	    // Locate the pixel with the peak value.  That's the
+	    // origin in pixel co-ordinates.
+	    //
+	    maxAbs(s2)=0;
+	    posMaxAbs(s2) = 0;
+	    for(ndx(1)=0;ndx(1)<lshape(1);ndx(1)++)
+	      for(ndx(0)=0;ndx(0)<lshape(0);ndx(0)++)
+		if (abs(lattice(ndx)) > maxAbs(s2)) 
+		  {posMaxAbs(s2) = ndx;maxAbs(s2)=abs(lattice(ndx));}
+	  }
+	}
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void SynthesisUtils::findLatticeMax(const Array<Complex>& lattice,
+				      Vector<Float>& maxAbs,
+				      Vector<IPosition>& posMaxAbs) 
+  {
+    IPosition lshape(lattice.shape());
+    IPosition ndx(lshape);
+    Int nPol=lshape(2);
+    posMaxAbs.resize(nPol);
+    for(Int i=0;i<nPol;i++)
+      posMaxAbs(i)=IPosition(lattice.shape().nelements(), 0);
+    maxAbs.resize(nPol);
+    ndx=0;
+    
+    for(Int s2=0;s2<lshape(2);s2++)
+      for(Int s3=0;s3<lshape(3);s3++)
+	{
+	  ndx(2) = s2; ndx(3)=s3;
+	  {
+	    //
+	    // Locate the pixel with the peak value.  That's the
+	    // origin in pixel co-ordinates.
+	    //
+	    maxAbs(s2)=0;
+	    posMaxAbs(s2) = 0;
+	    for(ndx(1)=0;ndx(1)<lshape(1);ndx(1)++)
+	      for(ndx(0)=0;ndx(0)<lshape(0);ndx(0)++)
+		if (abs(lattice(ndx)) > maxAbs(s2)) 
+		  {posMaxAbs(s2) = ndx;maxAbs(s2)=abs(lattice(ndx));}
+	  }
+	}
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void SynthesisUtils::findLatticeMax(const ImageInterface<Float>& lattice,
+				      Vector<Float>& maxAbs,
+				      Vector<IPosition>& posMaxAbs) 
+  {
+    IPosition lshape(lattice.shape());
+    IPosition ndx(lshape);
+    Int nPol=lshape(2);
+    posMaxAbs.resize(nPol);
+    for(Int i=0;i<nPol;i++)
+      posMaxAbs(i)=IPosition(lattice.shape().nelements(), 0);
+    maxAbs.resize(nPol);
+    ndx=0;
+    
+    for(Int s2=0;s2<lshape(2);s2++)
+      for(Int s3=0;s3<lshape(3);s3++)
+	{
+	  ndx(2) = s2; ndx(3)=s3;
+	  {
+	    //
+	    // Locate the pixel with the peak value.  That's the
+	    // origin in pixel co-ordinates.
+	    //
+	    maxAbs(s2)=0;
+	    posMaxAbs(s2) = 0;
+	    for(ndx(1)=0;ndx(1)<lshape(1);ndx(1)++)
+	      for(ndx(0)=0;ndx(0)<lshape(0);ndx(0)++)
+		if (abs(lattice(ndx)) > maxAbs(s2)) 
+		  {posMaxAbs(s2) = ndx;maxAbs(s2)=abs(lattice(ndx));}
+	  }
+	}
+  }
 } // namespace casa

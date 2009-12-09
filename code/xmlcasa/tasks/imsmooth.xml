@@ -15,7 +15,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--       Add support for user defined kernels                             -->
 <!--       Add support for altering the position angle for the kernel       -->
 
-<task type="function" name="imsmooth">
+<task type="function" name="imsmooth" category="image analysis">
 <shortdescription>Smooth an image or portion of an image</shortdescription>
 
 <description>
@@ -80,7 +80,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
 
-    <param type="string" name="outfile">
+    <param type="string" name="outfile" >
 	    <description>Output, smoothed, image file name </description>
 	<value></value>
     </param>
@@ -108,7 +108,8 @@ an image.
 	imagename -- Input spectral line image
 		Default: none; Example: imagename='ngc5921_task.im'
 	outfile -- Output smoothed image file name
-		default: ''; example: outfile='my.image.smooth';
+		default: 'imsmooth_results.im'; 
+                example: outfile='my.image.smooth';
         kernel -- Type of kernel to use when smoothing.  Currently,
                 only gassian is supported.
                 default: 'gauss'; example: kernel='gauss'

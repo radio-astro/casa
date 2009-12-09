@@ -173,7 +173,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct PolarizationRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void PolarizationRow::setFromIDL (PolarizationRowIDL x) throw(ConversionException) {
+	void PolarizationRow::setFromIDL (PolarizationRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -252,7 +252,7 @@ namespace asdm {
 	
 		
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Polarization");
+			throw ConversionException (err.getMessage(),"Polarization");
 		}
 	}
 #endif
@@ -324,7 +324,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void PolarizationRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void PolarizationRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -382,6 +382,159 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"Polarization");
 		}
+	}
+	
+	void PolarizationRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	polarizationId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numCorr);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) corrType.size());
+		for (unsigned int i = 0; i < corrType.size(); i++)
+				
+			eoss.writeInt(corrType.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) corrProduct.size());
+		eoss.writeInt((int) corrProduct.at(0).size());
+		for (unsigned int i = 0; i < corrProduct.size(); i++) 
+			for (unsigned int j = 0;  j < corrProduct.at(0).size(); j++) 
+				
+				eoss.writeInt(corrProduct.at(i).at(j));
+				
+	
+						
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(flagRowExists);
+	if (flagRowExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(flagRow);
+				
+		
+	
+
+	}
+
+	}
+	
+	PolarizationRow* PolarizationRow::fromBin(EndianISStream& eiss, PolarizationTable& table) {
+		PolarizationRow* row = new  PolarizationRow(table);
+		
+		
+		
+	
+		
+		
+		row->polarizationId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numCorr =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->corrType.clear();
+		
+		unsigned int corrTypeDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < corrTypeDim1; i++)
+			
+			row->corrType.push_back(CStokesParameter::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->corrProduct.clear();
+		
+		unsigned int corrProductDim1 = eiss.readInt();
+		unsigned int corrProductDim2 = eiss.readInt();
+		vector <PolarizationType> corrProductAux1;
+		for (unsigned int i = 0; i < corrProductDim1; i++) {
+			corrProductAux1.clear();
+			for (unsigned int j = 0; j < corrProductDim2 ; j++)			
+			
+			corrProductAux1.push_back(CPolarizationType::from_int(eiss.readInt()));
+			
+			row->corrProduct.push_back(corrProductAux1);
+		}
+	
+	
+
+		
+	
+
+		
+		
+		
+	row->flagRowExists = eiss.readBoolean();
+	if (row->flagRowExists) {
+		
+	
+	
+		
+			
+		row->flagRow =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -536,7 +689,7 @@ namespace asdm {
  	 * @return flagRow as bool
  	 * @throw IllegalAccessException If flagRow does not exist.
  	 */
- 	bool PolarizationRow::getFlagRow() const throw(IllegalAccessException) {
+ 	bool PolarizationRow::getFlagRow() const  {
 		if (!flagRowExists) {
 			throw IllegalAccessException("flagRow", "Polarization");
 		}

@@ -89,13 +89,13 @@ class MSCleanImageSkyModel : public CleanImageSkyModel {
 public:
 
   // Create a MSCleanImageSkyModel with nScales, we figure out what they are
-  MSCleanImageSkyModel(const Int nscales);
+  MSCleanImageSkyModel(const Int nscales, const Float& smallScaleBias);
 
   // Create a MSCleanImageSkyModel, you provide the scale sizes, IN PIXELS
   // for example:  Vector<Float> scales(4); scales(0) = 0.0;  scales(1) = 3.0;  
   // scales(2) = 10.0;  scales(3) = 30.0; 
-  MSCleanImageSkyModel(const Vector<Float>& useScaleSize);
-
+  MSCleanImageSkyModel(const Vector<Float>& useScaleSize, const Float& smallScaleBias);
+ 
   // destructor
   ~MSCleanImageSkyModel();
 
@@ -108,6 +108,7 @@ private:
 
   Int nscales_p;
   Vector<Float> userScaleSizes_p;
+  Float smallScaleBias_p; 
 
   LatticeCleanProgress  *progress_p;
 

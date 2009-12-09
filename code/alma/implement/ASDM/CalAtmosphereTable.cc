@@ -80,11 +80,13 @@ namespace asdm {
 	CalAtmosphereTable::CalAtmosphereTable(ASDM &c) : container(c) {
 
 	
+		key.push_back("antennaName");
+	
+		key.push_back("receiverBand");
+	
 		key.push_back("calDataId");
 	
 		key.push_back("calReductionId");
-	
-		key.push_back("antennaName");
 	
 
 
@@ -168,147 +170,189 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param antennaName. 
+	
+ 	 * @param receiverBand. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
 	
- 	 * @param antennaName. 
-	
- 	 * @param numReceptor. 
-	
- 	 * @param numFreq. 
+ 	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param startValidTime. 
+ 	 * @param numFreq. 
 	
- 	 * @param polarizationTypes. 
+ 	 * @param numLoad. 
 	
- 	 * @param frequencyRange. 
-	
- 	 * @param frequencySpectrum. 
-	
- 	 * @param syscalType. 
-	
- 	 * @param tSysSpectrum. 
-	
- 	 * @param tRecSpectrum. 
-	
- 	 * @param tAtmSpectrum. 
-	
- 	 * @param tauSpectrum. 
-	
- 	 * @param sbGainSpectrum. 
+ 	 * @param numReceptor. 
 	
  	 * @param forwardEffSpectrum. 
 	
- 	 * @param groundPressure. 
+ 	 * @param frequencyRange. 
 	
- 	 * @param groundTemperature. 
+ 	 * @param groundPressure. 
 	
  	 * @param groundRelHumidity. 
 	
- 	 * @param subType. 
+ 	 * @param frequencySpectrum. 
 	
- 	 * @param receiverBand. 
+ 	 * @param groundTemperature. 
+	
+ 	 * @param polarizationTypes. 
+	
+ 	 * @param powerSkySpectrum. 
+	
+ 	 * @param powerLoadSpectrum. 
+	
+ 	 * @param syscalType. 
+	
+ 	 * @param tAtmSpectrum. 
+	
+ 	 * @param tRecSpectrum. 
+	
+ 	 * @param tSysSpectrum. 
+	
+ 	 * @param tauSpectrum. 
+	
+ 	 * @param tAtm. 
+	
+ 	 * @param tRec. 
+	
+ 	 * @param tSys. 
+	
+ 	 * @param tau. 
+	
+ 	 * @param water. 
+	
+ 	 * @param waterError. 
 	
      */
-	CalAtmosphereRow* CalAtmosphereTable::newRow(Tag calDataId, Tag calReductionId, string antennaName, int numReceptor, int numFreq, ArrayTime endValidTime, ArrayTime startValidTime, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<Frequency > frequencyRange, vector<Frequency > frequencySpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tSysSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tAtmSpectrum, vector<vector<float > > tauSpectrum, vector<vector<float > > sbGainSpectrum, vector<vector<float > > forwardEffSpectrum, Pressure groundPressure, Temperature groundTemperature, Humidity groundRelHumidity, string subType, ReceiverBandMod::ReceiverBand receiverBand){
+	CalAtmosphereRow* CalAtmosphereTable::newRow(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError){
 		CalAtmosphereRow *row = new CalAtmosphereRow(*this);
+			
+		row->setAntennaName(antennaName);
+			
+		row->setReceiverBand(receiverBand);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setAntennaName(antennaName);
-			
-		row->setNumReceptor(numReceptor);
-			
-		row->setNumFreq(numFreq);
+		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
-		row->setStartValidTime(startValidTime);
+		row->setNumFreq(numFreq);
 			
-		row->setPolarizationTypes(polarizationTypes);
+		row->setNumLoad(numLoad);
 			
-		row->setFrequencyRange(frequencyRange);
-			
-		row->setFrequencySpectrum(frequencySpectrum);
-			
-		row->setSyscalType(syscalType);
-			
-		row->setTSysSpectrum(tSysSpectrum);
-			
-		row->setTRecSpectrum(tRecSpectrum);
-			
-		row->setTAtmSpectrum(tAtmSpectrum);
-			
-		row->setTauSpectrum(tauSpectrum);
-			
-		row->setSbGainSpectrum(sbGainSpectrum);
+		row->setNumReceptor(numReceptor);
 			
 		row->setForwardEffSpectrum(forwardEffSpectrum);
 			
-		row->setGroundPressure(groundPressure);
+		row->setFrequencyRange(frequencyRange);
 			
-		row->setGroundTemperature(groundTemperature);
+		row->setGroundPressure(groundPressure);
 			
 		row->setGroundRelHumidity(groundRelHumidity);
 			
-		row->setSubType(subType);
+		row->setFrequencySpectrum(frequencySpectrum);
 			
-		row->setReceiverBand(receiverBand);
+		row->setGroundTemperature(groundTemperature);
+			
+		row->setPolarizationTypes(polarizationTypes);
+			
+		row->setPowerSkySpectrum(powerSkySpectrum);
+			
+		row->setPowerLoadSpectrum(powerLoadSpectrum);
+			
+		row->setSyscalType(syscalType);
+			
+		row->setTAtmSpectrum(tAtmSpectrum);
+			
+		row->setTRecSpectrum(tRecSpectrum);
+			
+		row->setTSysSpectrum(tSysSpectrum);
+			
+		row->setTauSpectrum(tauSpectrum);
+			
+		row->setTAtm(tAtm);
+			
+		row->setTRec(tRec);
+			
+		row->setTSys(tSys);
+			
+		row->setTau(tau);
+			
+		row->setWater(water);
+			
+		row->setWaterError(waterError);
 	
 		return row;		
 	}	
 
-	CalAtmosphereRow* CalAtmosphereTable::newRowFull(Tag calDataId, Tag calReductionId, string antennaName, int numReceptor, int numFreq, ArrayTime endValidTime, ArrayTime startValidTime, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<Frequency > frequencyRange, vector<Frequency > frequencySpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tSysSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tAtmSpectrum, vector<vector<float > > tauSpectrum, vector<vector<float > > sbGainSpectrum, vector<vector<float > > forwardEffSpectrum, Pressure groundPressure, Temperature groundTemperature, Humidity groundRelHumidity, string subType, ReceiverBandMod::ReceiverBand receiverBand)	{
+	CalAtmosphereRow* CalAtmosphereTable::newRowFull(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError)	{
 		CalAtmosphereRow *row = new CalAtmosphereRow(*this);
+			
+		row->setAntennaName(antennaName);
+			
+		row->setReceiverBand(receiverBand);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setAntennaName(antennaName);
-			
-		row->setNumReceptor(numReceptor);
-			
-		row->setNumFreq(numFreq);
+		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
-		row->setStartValidTime(startValidTime);
+		row->setNumFreq(numFreq);
 			
-		row->setPolarizationTypes(polarizationTypes);
+		row->setNumLoad(numLoad);
 			
-		row->setFrequencyRange(frequencyRange);
-			
-		row->setFrequencySpectrum(frequencySpectrum);
-			
-		row->setSyscalType(syscalType);
-			
-		row->setTSysSpectrum(tSysSpectrum);
-			
-		row->setTRecSpectrum(tRecSpectrum);
-			
-		row->setTAtmSpectrum(tAtmSpectrum);
-			
-		row->setTauSpectrum(tauSpectrum);
-			
-		row->setSbGainSpectrum(sbGainSpectrum);
+		row->setNumReceptor(numReceptor);
 			
 		row->setForwardEffSpectrum(forwardEffSpectrum);
 			
-		row->setGroundPressure(groundPressure);
+		row->setFrequencyRange(frequencyRange);
 			
-		row->setGroundTemperature(groundTemperature);
+		row->setGroundPressure(groundPressure);
 			
 		row->setGroundRelHumidity(groundRelHumidity);
 			
-		row->setSubType(subType);
+		row->setFrequencySpectrum(frequencySpectrum);
 			
-		row->setReceiverBand(receiverBand);
+		row->setGroundTemperature(groundTemperature);
+			
+		row->setPolarizationTypes(polarizationTypes);
+			
+		row->setPowerSkySpectrum(powerSkySpectrum);
+			
+		row->setPowerLoadSpectrum(powerLoadSpectrum);
+			
+		row->setSyscalType(syscalType);
+			
+		row->setTAtmSpectrum(tAtmSpectrum);
+			
+		row->setTRecSpectrum(tRecSpectrum);
+			
+		row->setTSysSpectrum(tSysSpectrum);
+			
+		row->setTauSpectrum(tauSpectrum);
+			
+		row->setTAtm(tAtm);
+			
+		row->setTRec(tRec);
+			
+		row->setTSys(tSys);
+			
+		row->setTau(tau);
+			
+		row->setWater(water);
+			
+		row->setWaterError(waterError);
 	
 		return row;				
 	}
@@ -338,13 +382,15 @@ CalAtmosphereRow* CalAtmosphereTable::newRowCopy(CalAtmosphereRow* row) {
 	CalAtmosphereRow* CalAtmosphereTable::add(CalAtmosphereRow* x) {
 		
 		if (getRowByKey(
+						x->getAntennaName()
+						,
+						x->getReceiverBand()
+						,
 						x->getCalDataId()
 						,
 						x->getCalReductionId()
-						,
-						x->getAntennaName()
 						))
-			//throw DuplicateKey(x.getCalDataId() + "|" + x.getCalReductionId() + "|" + x.getAntennaName(),"CalAtmosphere");
+			//throw DuplicateKey(x.getAntennaName() + "|" + x.getReceiverBand() + "|" + x.getCalDataId() + "|" + x.getCalReductionId(),"CalAtmosphere");
 			throw DuplicateKey("Duplicate key exception in ","CalAtmosphereTable");
 		
 		row.push_back(x);
@@ -371,17 +417,21 @@ CalAtmosphereRow* CalAtmosphereTable::newRowCopy(CalAtmosphereRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalAtmosphereRow*  CalAtmosphereTable::checkAndAdd(CalAtmosphereRow* x) throw (DuplicateKey) {
+	CalAtmosphereRow*  CalAtmosphereTable::checkAndAdd(CalAtmosphereRow* x)  {
 		
 		
 		if (getRowByKey(
 	
+			x->getAntennaName()
+	,
+			x->getReceiverBand()
+	,
 			x->getCalDataId()
 	,
 			x->getCalReductionId()
-	,
-			x->getAntennaName()
 			
 		)) throw DuplicateKey("Duplicate key exception in ", "CalAtmosphereTable");
 		
@@ -418,10 +468,18 @@ CalAtmosphereRow* CalAtmosphereTable::newRowCopy(CalAtmosphereRow* row) {
  ** no row exists for that key.
  **
  */
- 	CalAtmosphereRow* CalAtmosphereTable::getRowByKey(Tag calDataId, Tag calReductionId, string antennaName)  {
+ 	CalAtmosphereRow* CalAtmosphereTable::getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
 	CalAtmosphereRow* aRow = 0;
 	for (unsigned int i = 0; i < row.size(); i++) {
 		aRow = row.at(i);
+		
+			
+				if (aRow->antennaName != antennaName) continue;
+			
+		
+			
+				if (aRow->receiverBand != receiverBand) continue;
+			
 		
 			
 				if (aRow->calDataId != calDataId) continue;
@@ -429,10 +487,6 @@ CalAtmosphereRow* CalAtmosphereTable::newRowCopy(CalAtmosphereRow* row) {
 		
 			
 				if (aRow->calReductionId != calReductionId) continue;
-			
-		
-			
-				if (aRow->antennaName != antennaName) continue;
 			
 		
 		return aRow;
@@ -448,56 +502,70 @@ CalAtmosphereRow* CalAtmosphereTable::newRowCopy(CalAtmosphereRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
+ * @param antennaName.
+ 	 		
+ * @param receiverBand.
+ 	 		
  * @param calDataId.
  	 		
  * @param calReductionId.
  	 		
- * @param antennaName.
- 	 		
- * @param numReceptor.
- 	 		
- * @param numFreq.
+ * @param startValidTime.
  	 		
  * @param endValidTime.
  	 		
- * @param startValidTime.
+ * @param numFreq.
  	 		
- * @param polarizationTypes.
+ * @param numLoad.
  	 		
- * @param frequencyRange.
- 	 		
- * @param frequencySpectrum.
- 	 		
- * @param syscalType.
- 	 		
- * @param tSysSpectrum.
- 	 		
- * @param tRecSpectrum.
- 	 		
- * @param tAtmSpectrum.
- 	 		
- * @param tauSpectrum.
- 	 		
- * @param sbGainSpectrum.
+ * @param numReceptor.
  	 		
  * @param forwardEffSpectrum.
  	 		
- * @param groundPressure.
+ * @param frequencyRange.
  	 		
- * @param groundTemperature.
+ * @param groundPressure.
  	 		
  * @param groundRelHumidity.
  	 		
- * @param subType.
+ * @param frequencySpectrum.
  	 		
- * @param receiverBand.
+ * @param groundTemperature.
+ 	 		
+ * @param polarizationTypes.
+ 	 		
+ * @param powerSkySpectrum.
+ 	 		
+ * @param powerLoadSpectrum.
+ 	 		
+ * @param syscalType.
+ 	 		
+ * @param tAtmSpectrum.
+ 	 		
+ * @param tRecSpectrum.
+ 	 		
+ * @param tSysSpectrum.
+ 	 		
+ * @param tauSpectrum.
+ 	 		
+ * @param tAtm.
+ 	 		
+ * @param tRec.
+ 	 		
+ * @param tSys.
+ 	 		
+ * @param tau.
+ 	 		
+ * @param water.
+ 	 		
+ * @param waterError.
  	 		 
  */
-CalAtmosphereRow* CalAtmosphereTable::lookup(Tag calDataId, Tag calReductionId, string antennaName, int numReceptor, int numFreq, ArrayTime endValidTime, ArrayTime startValidTime, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<Frequency > frequencyRange, vector<Frequency > frequencySpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tSysSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tAtmSpectrum, vector<vector<float > > tauSpectrum, vector<vector<float > > sbGainSpectrum, vector<vector<float > > forwardEffSpectrum, Pressure groundPressure, Temperature groundTemperature, Humidity groundRelHumidity, string subType, ReceiverBandMod::ReceiverBand receiverBand) {
+CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError) {
 		CalAtmosphereRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(calDataId, calReductionId, antennaName, numReceptor, numFreq, endValidTime, startValidTime, polarizationTypes, frequencyRange, frequencySpectrum, syscalType, tSysSpectrum, tRecSpectrum, tAtmSpectrum, tauSpectrum, sbGainSpectrum, forwardEffSpectrum, groundPressure, groundTemperature, groundRelHumidity, subType, receiverBand)) return aRow;
+			if (aRow->compareNoAutoInc(antennaName, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, numFreq, numLoad, numReceptor, forwardEffSpectrum, frequencyRange, groundPressure, groundRelHumidity, frequencySpectrum, groundTemperature, polarizationTypes, powerSkySpectrum, powerLoadSpectrum, syscalType, tAtmSpectrum, tRecSpectrum, tSysSpectrum, tauSpectrum, tAtm, tRec, tSys, tau, water, waterError)) return aRow;
 		}			
 		return 0;	
 } 
@@ -505,7 +573,6 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(Tag calDataId, Tag calReductionId, 
  	 	
 
 	
-
 
 
 
@@ -526,7 +593,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(Tag calDataId, Tag calReductionId, 
 #endif
 	
 #ifndef WITHOUT_ACS
-	void CalAtmosphereTable::fromIDL(CalAtmosphereTableIDL x) throw(DuplicateKey,ConversionException) {
+	void CalAtmosphereTable::fromIDL(CalAtmosphereTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			CalAtmosphereRow *tmp = newRow();
@@ -537,28 +604,27 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(Tag calDataId, Tag calReductionId, 
 	}
 #endif
 
-	char *CalAtmosphereTable::toFITS() const throw(ConversionException) {
+	char *CalAtmosphereTable::toFITS() const  {
 		throw ConversionException("Not implemented","CalAtmosphere");
 	}
 
-	void CalAtmosphereTable::fromFITS(char *fits) throw(ConversionException) {
+	void CalAtmosphereTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","CalAtmosphere");
 	}
 
-	string CalAtmosphereTable::toVOTable() const throw(ConversionException) {
+	string CalAtmosphereTable::toVOTable() const {
 		throw ConversionException("Not implemented","CalAtmosphere");
 	}
 
-	void CalAtmosphereTable::fromVOTable(string vo) throw(ConversionException) {
+	void CalAtmosphereTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","CalAtmosphere");
 	}
 
-	string CalAtmosphereTable::toXML()  throw(ConversionException) {
+	
+	string CalAtmosphereTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/CalAtmosphereTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<CalAtmosphereTable> ");
+		buf.append("<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/2/CalAtmosphereTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -574,8 +640,9 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(Tag calDataId, Tag calReductionId, 
 		buf.append("</CalAtmosphereTable> ");
 		return buf;
 	}
+
 	
-	void CalAtmosphereTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void CalAtmosphereTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalAtmosphereTable")) 
 			error();
@@ -617,20 +684,110 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(Tag calDataId, Tag calReductionId, 
 			error();
 	}
 
-	void CalAtmosphereTable::error() throw(ConversionException) {
+	
+	void CalAtmosphereTable::error()  {
 		throw ConversionException("Invalid xml document","CalAtmosphere");
 	}
 	
+	
 	string CalAtmosphereTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void CalAtmosphereTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalAtmosphere");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			CalAtmosphereRow* aRow = CalAtmosphereRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "CalAtmosphere");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "CalAtmosphere");
+		} 		 	
+	}
+
 	
 	void CalAtmosphereTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -661,6 +818,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(Tag calDataId, Tag calReductionId, 
 				throw ConversionException("Could not close file " + fileName, "CalAtmosphere");
 		}
 	}
+
 	
 	void CalAtmosphereTable::setFromFile(const string& directory) {
 		string tablename;
@@ -702,6 +860,11 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(Tag calDataId, Tag calReductionId, 
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

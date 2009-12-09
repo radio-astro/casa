@@ -60,7 +60,7 @@ WCCSAxisLabeller::WCCSAxisLabeller() :
   itsDirectionUnit("arcsec"),
   itsDirectionSystem("J2000"),
   itsFrequencySystem("LSRK"),
-  itsZLabelType("none"),
+  itsZLabelType("world"),
   uiBase_(1) {
   String worldorpix;
   Aipsrc::find(worldorpix,"display.axislabels.world","on");
@@ -118,7 +118,7 @@ void WCCSAxisLabeller::setDefaultOptions() {
   }
 //
   setAbsRelState();
-  itsZLabelType = String("none");
+  itsZLabelType = String("world");
 }
 
 
@@ -355,9 +355,9 @@ Record WCCSAxisLabeller::getOptions() const
     zlabeltype.define("listname", "Movie Axis label type");
     zlabeltype.define("ptype", "choice");
     Vector<String> vztype(3);
-    vztype(0) = "none";
-    vztype(1) = "world";
-    vztype(2) = "pixel";
+    vztype(0) = "world";
+    vztype(1) = "pixel";
+    vztype(2) = "none";
     zlabeltype.define("popt", vztype);
     zlabeltype.define("default", vztype(0));
     zlabeltype.define("value", itsZLabelType);

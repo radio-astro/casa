@@ -168,8 +168,6 @@ namespace asdm {
 	
  	 * @param code. 
 	
- 	 * @param time. 
-	
  	 * @param numPoly. 
 	
  	 * @param delayDir. 
@@ -178,17 +176,13 @@ namespace asdm {
 	
  	 * @param referenceDir. 
 	
- 	 * @param flagRow. 
-	
      */
-	FieldRow* FieldTable::newRow(string fieldName, string code, ArrayTime time, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir, bool flagRow){
+	FieldRow* FieldTable::newRow(string fieldName, string code, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir){
 		FieldRow *row = new FieldRow(*this);
 			
 		row->setFieldName(fieldName);
 			
 		row->setCode(code);
-			
-		row->setTime(time);
 			
 		row->setNumPoly(numPoly);
 			
@@ -197,20 +191,16 @@ namespace asdm {
 		row->setPhaseDir(phaseDir);
 			
 		row->setReferenceDir(referenceDir);
-			
-		row->setFlagRow(flagRow);
 	
 		return row;		
 	}	
 
-	FieldRow* FieldTable::newRowFull(string fieldName, string code, ArrayTime time, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir, bool flagRow)	{
+	FieldRow* FieldTable::newRowFull(string fieldName, string code, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir)	{
 		FieldRow *row = new FieldRow(*this);
 			
 		row->setFieldName(fieldName);
 			
 		row->setCode(code);
-			
-		row->setTime(time);
 			
 		row->setNumPoly(numPoly);
 			
@@ -219,8 +209,6 @@ namespace asdm {
 		row->setPhaseDir(phaseDir);
 			
 		row->setReferenceDir(referenceDir);
-			
-		row->setFlagRow(flagRow);
 	
 		return row;				
 	}
@@ -260,8 +248,6 @@ FieldRow* FieldTable::newRowCopy(FieldRow* row) {
 				,
 		x->getCode()
 				,
-		x->getTime()
-				,
 		x->getNumPoly()
 				,
 		x->getDelayDir()
@@ -269,8 +255,6 @@ FieldRow* FieldTable::newRowCopy(FieldRow* row) {
 		x->getPhaseDir()
 				,
 		x->getReferenceDir()
-				,
-		x->getFlagRow()
 				
 		);
 		if (aRow) return aRow;
@@ -304,8 +288,12 @@ FieldRow* FieldTable::newRowCopy(FieldRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	FieldRow*  FieldTable::checkAndAdd(FieldRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	FieldRow*  FieldTable::checkAndAdd(FieldRow* x)  {
 	 
 		 
 		if (lookup(
@@ -314,8 +302,6 @@ FieldRow* FieldTable::newRowCopy(FieldRow* row) {
 		,
 			x->getCode()
 		,
-			x->getTime()
-		,
 			x->getNumPoly()
 		,
 			x->getDelayDir()
@@ -323,8 +309,6 @@ FieldRow* FieldTable::newRowCopy(FieldRow* row) {
 			x->getPhaseDir()
 		,
 			x->getReferenceDir()
-		,
-			x->getFlagRow()
 		
 		)) throw UniquenessViolationException("Uniqueness violation exception in table FieldTable");
 		
@@ -395,8 +379,6 @@ FieldRow* FieldTable::newRowCopy(FieldRow* row) {
  	 		
  * @param code.
  	 		
- * @param time.
- 	 		
  * @param numPoly.
  	 		
  * @param delayDir.
@@ -404,15 +386,13 @@ FieldRow* FieldTable::newRowCopy(FieldRow* row) {
  * @param phaseDir.
  	 		
  * @param referenceDir.
- 	 		
- * @param flagRow.
  	 		 
  */
-FieldRow* FieldTable::lookup(string fieldName, string code, ArrayTime time, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir, bool flagRow) {
+FieldRow* FieldTable::lookup(string fieldName, string code, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir) {
 		FieldRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(fieldName, code, time, numPoly, delayDir, phaseDir, referenceDir, flagRow)) return aRow;
+			if (aRow->compareNoAutoInc(fieldName, code, numPoly, delayDir, phaseDir, referenceDir)) return aRow;
 		}			
 		return 0;	
 } 
@@ -420,7 +400,6 @@ FieldRow* FieldTable::lookup(string fieldName, string code, ArrayTime time, int 
  	 	
 
 	
-
 
 
 
@@ -441,7 +420,7 @@ FieldRow* FieldTable::lookup(string fieldName, string code, ArrayTime time, int 
 #endif
 	
 #ifndef WITHOUT_ACS
-	void FieldTable::fromIDL(FieldTableIDL x) throw(DuplicateKey,ConversionException) {
+	void FieldTable::fromIDL(FieldTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			FieldRow *tmp = newRow();
@@ -452,28 +431,27 @@ FieldRow* FieldTable::lookup(string fieldName, string code, ArrayTime time, int 
 	}
 #endif
 
-	char *FieldTable::toFITS() const throw(ConversionException) {
+	char *FieldTable::toFITS() const  {
 		throw ConversionException("Not implemented","Field");
 	}
 
-	void FieldTable::fromFITS(char *fits) throw(ConversionException) {
+	void FieldTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Field");
 	}
 
-	string FieldTable::toVOTable() const throw(ConversionException) {
+	string FieldTable::toVOTable() const {
 		throw ConversionException("Not implemented","Field");
 	}
 
-	void FieldTable::fromVOTable(string vo) throw(ConversionException) {
+	void FieldTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Field");
 	}
 
-	string FieldTable::toXML()  throw(ConversionException) {
+	
+	string FieldTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<FieldTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/FieldTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<FieldTable> ");
+		buf.append("<FieldTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/FieldTable\" xsi:schemaLocation=\"http://Alma/XASDM/FieldTable http://almaobservatory.org/XML/XASDM/2/FieldTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -489,8 +467,9 @@ FieldRow* FieldTable::lookup(string fieldName, string code, ArrayTime time, int 
 		buf.append("</FieldTable> ");
 		return buf;
 	}
+
 	
-	void FieldTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void FieldTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<FieldTable")) 
 			error();
@@ -532,20 +511,110 @@ FieldRow* FieldTable::lookup(string fieldName, string code, ArrayTime time, int 
 			error();
 	}
 
-	void FieldTable::error() throw(ConversionException) {
+	
+	void FieldTable::error()  {
 		throw ConversionException("Invalid xml document","Field");
 	}
 	
+	
 	string FieldTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void FieldTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Field");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			FieldRow* aRow = FieldRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Field");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Field");
+		} 		 	
+	}
+
 	
 	void FieldTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -576,6 +645,7 @@ FieldRow* FieldTable::lookup(string fieldName, string code, ArrayTime time, int 
 				throw ConversionException("Could not close file " + fileName, "Field");
 		}
 	}
+
 	
 	void FieldTable::setFromFile(const string& directory) {
 		string tablename;
@@ -617,6 +687,11 @@ FieldRow* FieldTable::lookup(string fieldName, string code, ArrayTime time, int 
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

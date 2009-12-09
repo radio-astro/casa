@@ -44,6 +44,9 @@ VisCal* createVisCal(const String& type, VisSet& vs) {
   if (uptype=="P" || uptype=="P JONES") 
     return new PJones(vs);
 
+  else if (uptype=="TFOPAC")  // Not yet solvable (even though an SVJ)
+    return new TfOpac(vs);
+
   else if (uptype=="TOPAC")  // Not yet solvable (even though an SVJ)
     return new TOpac(vs);
 
@@ -84,6 +87,9 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype=="GSPLINE") 
     return new GJonesSpline(vs);
   
+  else if (uptype=="TF" || uptype=="TF JONES") 
+    return new TfJones(vs);
+
   else if (uptype=="T" || uptype=="T JONES") 
     return new TJones(vs);
 
@@ -109,11 +115,23 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype=="A" || uptype=="A MUELLER")
     return new AMueller(vs);
 
+  else if (uptype=="N" || uptype=="A NOISE")
+    return new ANoise(vs);
+
   else if (uptype=="MF" || uptype=="MF MUELLER")
     return new MfMueller(vs);
      
   else if (uptype=="X" || uptype=="X MUELLER")
     return new XMueller(vs);
+
+  else if (uptype=="K" || uptype=="K JONES")
+    return new KJones(vs);
+
+  else if (uptype=="KMBD" || uptype=="KMBD JONES")
+    return new KMBDJones(vs);
+
+  else if (uptype.contains("KANTPOS") || uptype.contains("KANTPOS JONES"))
+    return new KAntPosJones(vs);
 
   else {
     cout << "attempted type = " << type << endl;

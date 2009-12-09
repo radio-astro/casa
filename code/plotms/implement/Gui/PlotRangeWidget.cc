@@ -26,7 +26,6 @@
 //# $Id: $
 #include <plotms/Gui/PlotRangeWidget.qo.h>
 
-#include <casaqt/QtUtilities/QtUtilities.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 
 #include <limits>
@@ -98,7 +97,7 @@ void PlotRangeWidget::setIsDate(bool isDate) {
 
 bool PlotRangeWidget::isCustom() const { return custom->isChecked(); }
 
-pair<double, double> PlotRangeWidget::getRange() const {
+prange_t PlotRangeWidget::getRange() const {
     if(isDate()) {
         QDate date = timeFrom->date(); QTime time = timeFrom->time();
         double from = PMS::dateDouble(date.year(), date.month(), date.day(),
@@ -109,11 +108,11 @@ pair<double, double> PlotRangeWidget::getRange() const {
         double to = PMS::dateDouble(date.year(), date.month(), date.day(),
                 time.hour(), time.minute(),
                 time.second() + (time.msec() / 1000.0));
-        return pair<double, double>(from, to);
+        return prange_t(from, to);
         
     } else
-        return pair<double, double>(doubleFrom->text().toDouble(),
-        		                    doubleTo->text().toDouble());
+        return prange_t(doubleFrom->text().toDouble(),
+        		        doubleTo->text().toDouble());
 }
 
 void PlotRangeWidget::setRange(bool isDate, bool isCustom, double from,
@@ -125,7 +124,7 @@ void PlotRangeWidget::setRange(bool isDate, bool isCustom, double from,
     
     bool changed = isDate != this->isDate() || isCustom != this->isCustom();
     if(!changed) {
-        pair<double, double> range = getRange();
+        prange_t range = getRange();
         changed = from != range.first || to != range.second;
     }
     
@@ -163,7 +162,7 @@ void PlotRangeWidget::addRadioButtonsToGroup(QButtonGroup* group) const {
 
 void PlotRangeWidget::rangeChanged() {
     emit changed();
-    pair<double, double> r = getRange();
+    prange_t r = getRange();
     if(isCustom() != isCustom_ || r.first != from_ || r.second != to_)
         emit differentFromSet();
 }

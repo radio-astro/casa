@@ -118,55 +118,65 @@ class ASDM;
 class FreqOffsetRow;
 /**
  * The FreqOffsetTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Frequency offset information. Contains an additional antenna-based frequency  offset relative to the frequencies in the Spectral Windows. Useful for such  thing as Doppler tracking.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of FreqOffset </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> antennaId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in AntennaTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> feedId </TD> 
- * <TD> int </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> spectralWindowId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in SpectralWindowTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> spectralWindowId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> timeInterval </TD>
+ 		 
+ * <TD> ArrayTimeInterval</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the time interval of validity of the row's content. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> timeInterval </TD> 
- * <TD> ArrayTimeInterval </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> feedId </TD>
+ 		 
+ * <TD> int</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a collection of rows in FeedTable. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> offset </TD> 
  * <TD> Frequency </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;frequency offset. </TD>
  * </TR>
 	
 
@@ -244,22 +254,22 @@ public:
 	
  	 * @param antennaId. 
 	
- 	 * @param feedId. 
-	
  	 * @param spectralWindowId. 
 	
  	 * @param timeInterval. 
 	
+ 	 * @param feedId. 
+	
  	 * @param offset. 
 	
      */
-	FreqOffsetRow *newRow(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, Frequency offset);
+	FreqOffsetRow *newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, Frequency offset);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	FreqOffsetRow *newRowFull(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, Frequency offset);
+	FreqOffsetRow *newRowFull(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, Frequency offset);
 
 
 	/**
@@ -299,7 +309,7 @@ public:
 	 *
 	
 	 * @note The row is inserted in the table in such a way that all the rows having the same value of
-	 * ( antennaId, feedId, spectralWindowId ) are stored by ascending time.
+	 * ( antennaId, spectralWindowId, feedId ) are stored by ascending time.
 	 * @see method getByContext.
 	
 	 */
@@ -323,12 +333,12 @@ public:
 
 	/**
 	 * Returns all the rows sorted by ascending startTime for a given context. 
-	 * The context is defined by a value of ( antennaId, feedId, spectralWindowId ).
+	 * The context is defined by a value of ( antennaId, spectralWindowId, feedId ).
 	 *
 	 * @return a pointer on a vector<FreqOffsetRow *>. A null returned value means that the table contains
-	 * no FreqOffsetRow for the given ( antennaId, feedId, spectralWindowId ).
+	 * no FreqOffsetRow for the given ( antennaId, spectralWindowId, feedId ).
 	 */
-	 vector <FreqOffsetRow*> *getByContext(Tag antennaId, int feedId, Tag spectralWindowId);
+	 vector <FreqOffsetRow*> *getByContext(Tag antennaId, Tag spectralWindowId, int feedId);
 	 
 
 
@@ -341,15 +351,15 @@ public:
 	
 	 * @param antennaId. 
 	
-	 * @param feedId. 
-	
 	 * @param spectralWindowId. 
 	
 	 * @param timeInterval. 
 	
+	 * @param feedId. 
+	
  	 *
 	 */
- 	FreqOffsetRow* getRowByKey(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval);
+ 	FreqOffsetRow* getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId);
 
  	 	
 
@@ -363,16 +373,16 @@ public:
 			
  	 * @param antennaId.
  	 		
- 	 * @param feedId.
- 	 		
  	 * @param spectralWindowId.
  	 		
  	 * @param timeInterval.
  	 		
+ 	 * @param feedId.
+ 	 		
  	 * @param offset.
  	 		 
  	 */
-	FreqOffsetRow* lookup(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, Frequency offset); 
+	FreqOffsetRow* lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, Frequency offset); 
 
 
 #ifndef WITHOUT_ACS
@@ -392,43 +402,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(FreqOffsetTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(FreqOffsetTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for FreqOffset (FreqOffsetTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a FreqOffset (FreqOffsetTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -503,8 +519,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	FreqOffsetRow* checkAndAdd(FreqOffsetRow* x) throw (DuplicateKey);
+	FreqOffsetRow* checkAndAdd(FreqOffsetRow* x) ;
 
 
 	
@@ -539,7 +557,7 @@ private:
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
 	 */
-	 string Key(Tag antennaId, int feedId, Tag spectralWindowId) ;
+	 string Key(Tag antennaId, Tag spectralWindowId, int feedId) ;
 		 
 		
 	
@@ -549,11 +567,11 @@ private:
 	 * whose attributes are equal to the corresponding parameters of the method.
 	 *
 	 */
-	void getByKeyNoAutoIncNoTime(vector <FreqOffsetRow*>& vin, vector <FreqOffsetRow*>& vout,  Tag antennaId, int feedId, Tag spectralWindowId);
+	void getByKeyNoAutoIncNoTime(vector <FreqOffsetRow*>& vin, vector <FreqOffsetRow*>& vout,  Tag antennaId, Tag spectralWindowId, int feedId);
 	
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

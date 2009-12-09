@@ -42,16 +42,28 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the AtmPhaseCorrection enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace AtmPhaseCorrectionMod
 {
+  //! AtmPhaseCorrection.
+  //!  Status of Phase correction
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum AtmPhaseCorrection
   { 
-    AP_UNCORRECTED ,
-    AP_CORRECTED ,
-    AP_MIXED 
+    AP_UNCORRECTED /*!< Data has no WVR phase correction */
+     ,
+    AP_CORRECTED /*!< Data phases have been corrected using WVR data */
+     
   };
   typedef AtmPhaseCorrection &AtmPhaseCorrection_out;
 } 
@@ -59,68 +71,91 @@ namespace AtmPhaseCorrectionMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration AtmPhaseCorrection.
+  * 
+  */
 class CAtmPhaseCorrection {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the AtmPhaseCorrection enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sAP_UNCORRECTED;
+	static const std::string& sAP_UNCORRECTED; /*!< A const string equal to "AP_UNCORRECTED".*/
 	
-	static const std::string& sAP_CORRECTED;
-	
-	static const std::string& sAP_MIXED;
-	
-    static const std::vector<std::string> sAtmPhaseCorrectionSet();	 
-
+	static const std::string& sAP_CORRECTED; /*!< A const string equal to "AP_CORRECTED".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in AtmPhaseCorrectionMod::AtmPhaseCorrection.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of AtmPhaseCorrectionMod::AtmPhaseCorrection.
+      * @return a string.
+      */
+	static std::string name(const AtmPhaseCorrectionMod::AtmPhaseCorrection& e);
 	
-	// Explanations associated with the AtmPhaseCorrection Enumeration.
-		
-	static const std::string& hAP_UNCORRECTED;
-		
-	static const std::string& hAP_CORRECTED;
-		
-	static const std::string& hAP_MIXED;
-		
-	static const std::vector<std::string> hAtmPhaseCorrectionSet();
-   	
-
-   	// Is an integer number associated with the AtmPhaseCorrection enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the AtmPhaseCorrection enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  AtmPhaseCorrection enumeration.
-	static std::string name(const AtmPhaseCorrectionMod::AtmPhaseCorrection& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const AtmPhaseCorrectionMod::AtmPhaseCorrection& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified AtmPhaseCorrection enumeration.
-	static std::string help(const AtmPhaseCorrectionMod::AtmPhaseCorrection& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a AtmPhaseCorrection enumeration object by specifying its name.
    	static AtmPhaseCorrectionMod::AtmPhaseCorrection newAtmPhaseCorrection(const std::string& name);
    	
-   	// Create a AtmPhaseCorrection enumeration object by specifying its name.
+   	/*! Return a AtmPhaseCorrection's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a AtmPhaseCorrectionMod::AtmPhaseCorrection's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static AtmPhaseCorrectionMod::AtmPhaseCorrection literal(const std::string& name);
  	
-    // Create a AtmPhaseCorrection enumeration object by specifying its position index (0 based).
+    /*! Return a AtmPhaseCorrection's enumerator given an unsigned int.
+      * @param i the index of the enumerator in AtmPhaseCorrectionMod::AtmPhaseCorrection.
+      * @return a AtmPhaseCorrectionMod::AtmPhaseCorrection's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static AtmPhaseCorrectionMod::AtmPhaseCorrection from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CAtmPhaseCorrection();
     CAtmPhaseCorrection(const CAtmPhaseCorrection&);
     CAtmPhaseCorrection& operator=(const CAtmPhaseCorrection&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CAtmPhaseCorrection_H*/

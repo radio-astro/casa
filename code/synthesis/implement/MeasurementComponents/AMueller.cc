@@ -24,6 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
+#include <synthesis/MeasurementComponents/CalCorruptor.h>
 #include <synthesis/MeasurementComponents/AMueller.h>
 
 #include <msvis/MSVis/VisBuffer.h>
@@ -34,6 +35,7 @@
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // **********************************************************
 //  AMueller
@@ -72,6 +74,60 @@ void AMueller::corrupt(VisBuffer& vb) {
   // Call general version:
   VisMueller::corrupt(vb);
 
+}
+
+void ANoise::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim)
+{
+  if (prtlev()>2) cout << "   AN::createCorruptor()" << endl;
+  AlwaysAssert((isSimulated()),AipsError);
+
+  acorruptor_p = new ANoiseCorruptor();
+  corruptor_p = acorruptor_p;
+
+  // call generic parent to set corr,spw,etc info
+  SolvableVisCal::createCorruptor(vi,simpar,nSim);
+
+  Int Seed(1234);
+  if (simpar.isDefined("seed")) {    
+    Seed=simpar.asInt("seed");
+  }
+
+  Float Amp(1.0);
+  if (simpar.isDefined("amplitude")) {    
+    Amp=simpar.asFloat("amplitude");
+  }
+
+  acorruptor_p->initialize(Seed,Amp);
+
+  String Mode("calc"); // calc means multiply by 1/sqrt(dnu dt)
+  if (simpar.isDefined("mode")) {    
+    Mode=simpar.asString("mode");
+  }
+
+  acorruptor_p->mode()=Mode;
+}
+
+
+
+
+ANoise::ANoise(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  SolvableVisMueller(vs)  // immediate parent
+{
+  if (prtlev()>2) cout << "ANoise::ANoise(vs)" << endl;
+}
+
+ANoise::ANoise(const Int& nAnt) :
+  VisCal(nAnt),
+  VisMueller(nAnt),
+  SolvableVisMueller(nAnt)
+{
+  if (prtlev()>2) cout << "ANoise::ANoise(nAnt)" << endl;
+}
+
+ANoise::~ANoise() {
+  if (prtlev()>2) cout << "ANoise::~ANoise()" << endl;
 }
 
 } //# NAMESPACE CASA - END

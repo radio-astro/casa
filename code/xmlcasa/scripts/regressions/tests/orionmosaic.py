@@ -13,7 +13,7 @@ for k in range(len(a)):
 gl=sys._getframe(stacklevel).f_globals
 
 def description():
-    return "Based on orion_regression.py"
+    return "feather, image mosaic"
 
 def run():
     lepath=locatescript('orion_regression.py')

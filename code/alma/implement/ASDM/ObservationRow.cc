@@ -108,7 +108,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct ObservationRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void ObservationRow::setFromIDL (ObservationRowIDL x) throw(ConversionException) {
+	void ObservationRow::setFromIDL (ObservationRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -127,7 +127,7 @@ namespace asdm {
 	
 		
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Observation");
+			throw ConversionException (err.getMessage(),"Observation");
 		}
 	}
 #endif
@@ -163,7 +163,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void ObservationRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void ObservationRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -183,6 +183,40 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"Observation");
 		}
+	}
+	
+	void ObservationRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	observationId.toBin(eoss);
+		
+	
+
+
+	
+	
+	}
+	
+	ObservationRow* ObservationRow::fromBin(EndianISStream& eiss, ObservationTable& table) {
+		ObservationRow* row = new  ObservationRow(table);
+		
+		
+		
+	
+		
+		
+		row->observationId =  Tag::fromBin(eiss);
+		
+	
+
+		
+		
+		
+		
+		return row;
 	}
 	
 	////////////////////////////////

@@ -26,22 +26,47 @@
 #ifndef PLOTMSPARAMETERS_H_
 #define PLOTMSPARAMETERS_H_
 
-#include <plotms/PlotMS/PlotMSLogger.h>
+#include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSWatchedParameters.h>
 
-//#include <casa/namespace.h>
+#include <casa/namespace.h>
 
 namespace casa {
 
 // Subclass of PlotMSWatchedParameters that hold parameters for the whole
 // plotter.  These parameters include:
-// * log level.
+// * log file name
+// * log events flag
+// * log minimum priority filter
+// * whether to clear any selections when axes are changed or not
+// * width and height for the cached image
 class PlotMSParameters : public PlotMSWatchedParameters {
 public:
-    // Constructor, with default parameter values.
-    PlotMSParameters(PlotMSLogger::Level logLevel = PlotMSLogger::OFF,
-            bool debug = false, bool clearSelection = true,
-            int cachedImageWidth = -1, int cachedImageHeight = -1);
+    // Static //
+    
+    // Update flags.
+    // <group>
+    static const int UPDATE_LOG;
+    static const int UPDATE_PLOTMS_OPTIONS;
+    // </group>
+    
+    // Gets/Sets the file chooser history limit.  (See QtFileDialog.)  Static
+    // parameter.
+    // <group>
+    static int chooserHistoryLimit();
+    static void setChooserListoryLimit(int histLimit);
+    // </group>
+    
+    
+    // Non-Static //
+    
+    // Constructor, with default values for parameters.
+    PlotMSParameters(const String& logFilename = PMS::DEFAULT_LOG_FILENAME,
+            int logEvents = PMS::DEFAULT_LOG_EVENTS,
+            LogMessage::Priority logPriority = PMS::DEFAULT_LOG_PRIORITY,
+            bool clearSelections = PMS::DEFAULT_CLEAR_SELECTIONS,
+            int cachedImageWidth = PMS::DEFAULT_CACHED_IMAGE_WIDTH,
+            int cachedImageHeight = PMS::DEFAULT_CACHED_IMAGE_HEIGHT);
     
     // Copy constructor.  See operator=().
     PlotMSParameters(const PlotMSParameters& copy);
@@ -50,19 +75,20 @@ public:
     ~PlotMSParameters();
 
     
-    // Include overloaded methods.
-    using PlotMSWatchedParameters::operator=;
-
+    // Gets/Sets the log sink location/filename.
+    // <group>
+    String logFilename() const;
+    void setLogFilename(const String& filename);
+    // </group>
     
-    // Returns the current log level.
-    PlotMSLogger::Level logLevel() const;
+    // Returns the current log events.
+    int logEvents() const;
     
-    // Returns the current log debug flag.
-    bool logDebug() const;
+    // Returns the current log minimum priority.
+    LogMessage::Priority logPriority() const;
     
-    // Sets the current log level.  Note: this will notify any watchers unless
-    // notifications are being held.
-    void setLogLevel(PlotMSLogger::Level level, bool debug);
+    // Sets the current log filter.
+    void setLogFilter(int logEvents, LogMessage::Priority priority);
     
     // Gets/Sets whether any selections are cleared when plot axes are changed
     // or not.
@@ -81,21 +107,23 @@ public:
     // Sets the cached image size to the current screen resolution.
     void setCachedImageSizeToResolution();
     
+    // Copy operator.
+    PlotMSParameters& operator=(const PlotMSParameters& copy);
+    
     
     // Implements PlotMSWatchedParameters::equals().  Will return false if the
     // other parameters are not of type PlotMSParameters.
-    bool equals(const PlotMSWatchedParameters& other,
-                            int updateFlags) const;
-    
-    // Copy operator.  See PlotMSWatchedParameters::operator=().
-    PlotMSParameters& operator=(const PlotMSParameters& copy);
+    bool equals(const PlotMSWatchedParameters& other, int updateFlags) const;
     
 private:
-    // Log level.
-    PlotMSLogger::Level itsLogLevel_;
+    // Log filename.
+    String itsLogFilename_;
     
-    // Log debug flag.
-    bool itsLogDebug_;
+    // Log events flag.
+    int itsLogEvents_;
+    
+    // Log minimum priority.
+    LogMessage::Priority itsLogPriority_;
     
     // Clear selections on axes change flag.
     bool itsClearSelectionsOnAxesChange_;

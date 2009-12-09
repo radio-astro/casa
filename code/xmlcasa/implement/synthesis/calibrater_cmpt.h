@@ -43,7 +43,7 @@ class calibrater
     calibrater();
     virtual ~calibrater();
 
-    bool open(const std::string& filename, const bool compress = false);
+    bool open(const std::string& filename, const bool compress = false, const bool addscratch = true);
 
     bool selectvis(const ::casac::variant& time = ::casac::initialize_variant(""), const ::casac::variant& spw = ::casac::initialize_variant(""), const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& baseline = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& chanmode = "none", const int nchan = 1, const int start = 0, const int step = 1, const Quantity& mstart = Quantity(std::vector<double> (1, 0.0),"km/s"), const Quantity& mstep = Quantity(std::vector<double> (1, 0.0),"km/s"), const std::string& msselect = "");
 
@@ -72,6 +72,8 @@ class calibrater
     bool fluxscale(std::vector<double>& fluxd, const std::string& tablein, const ::casac::variant& reference = ::casac::initialize_variant(""), const std::string& tableout = "", const ::casac::variant& transfer = ::casac::initialize_variant(""), const bool append = false, const std::vector<int>& refspwmap = std::vector<int> (1, -1));
 
     bool accumulate(const std::string& tablein = "", const std::string& incrtable = "", const std::string& tableout = "", const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& calfield = ::casac::initialize_variant(""), const std::string& interp = "linear", const double t = -1.0, const std::vector<int>& spwmap = std::vector<int> (1, -1));
+
+    bool specifycal(const std::string& caltable = "", const std::string& time = "", const std::string& spw = "", const std::string& antenna = "", const std::string& pol = "", const std::string& caltype = "", const std::vector<double>& parameter = std::vector<double> (1, 1.0));
 
     bool smooth(const std::string& tablein, const std::string& tableout, const ::casac::variant& field = ::casac::initialize_variant(""), const std::string& smoothtype = "median", const double smoothtime = 60.0);
 

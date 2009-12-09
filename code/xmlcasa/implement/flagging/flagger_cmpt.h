@@ -1,3 +1,4 @@
+
 /***
  * Framework independent header file for flagger...
  *
@@ -45,7 +46,7 @@ class flagger
 
     bool setdata(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """");
 
-    bool setmanualflags(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """", const bool autocorrelation = false, const bool unflag = false, const std::string& clipexpr = """", const std::vector<double>& cliprange = std::vector<double> (0), const std::string& clipcolumn = """", const bool outside = true, const double quackinterval = 0.0);
+    bool setmanualflags(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """", const bool autocorrelation = false, const bool unflag = false, const std::string& clipexpr = """", const std::vector<double>& cliprange = std::vector<double> (0), const std::string& clipcolumn = "DATA", const bool outside = true, const bool channelavg = false, const double quackinterval = 0.0, const std::string& quackmode = "beg", const bool quackincrement = false);
 
     bool printflagselection();
 
@@ -55,16 +56,15 @@ class flagger
 
     bool setautoflag(const std::string& algorithm = "none", const ::casac::record& parameters = ::casac::initialize_record(""));
 
-    bool setflagsummary(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """");
+    bool setshadowflags(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """", const double diameter = -1.0);
 
-    bool setshadowflags(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time, const std::string& correlation)
-	;
+    bool setflagsummary(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """");
 
     bool setqueryflag(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """", const std::string& what = "fieldid", const double fractionthreshold = 0.0, const int nflagsthreshold = 0, const bool morethan = true);
 
     bool setextendflag(const std::string& field, const std::string& spw, const std::string& array, const std::string& feed, const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """", const std::string& along = "allbaselines", const int width = 0);
 
-    bool run(const bool trial = false, const bool reset = false);
+    ::casac::record* run(const bool trial = false, const bool reset = false);
 
     bool writeflagstodisk();
 
@@ -78,7 +78,7 @@ class flagger
 
     bool deleteflagversion(const std::vector<std::string>& versionname = std::vector<std::string> (1, """"));
 
-    bool getflagversionlist();
+    std::vector<std::string> getflagversionlist(const bool printflags = true);
 
     private:
 

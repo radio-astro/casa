@@ -127,18 +127,6 @@ namespace asdm {
 		
 			
 				
-		x->numSubScan = numSubScan;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
 		x->numIntent = numIntent;
  				
  			
@@ -148,12 +136,10 @@ namespace asdm {
 	
   		
 		
-		x->numFieldExists = numFieldExists;
-		
 		
 			
 				
-		x->numField = numField;
+		x->numSubScan = numSubScan;
  				
  			
 		
@@ -179,13 +165,104 @@ namespace asdm {
 	
   		
 		
-		x->sourceNameExists = sourceNameExists;
+		
+			
+		x->calDataType.length(calDataType.size());
+		for (unsigned int i = 0; i < calDataType.size(); ++i) {
+			
+				
+			x->calDataType[i] = calDataType.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->calibrationOnLine.length(calibrationOnLine.size());
+		for (unsigned int i = 0; i < calibrationOnLine.size(); ++i) {
+			
+				
+			x->calibrationOnLine[i] = calibrationOnLine.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->calibrationFunctionExists = calibrationFunctionExists;
+		
+		
+			
+		x->calibrationFunction.length(calibrationFunction.size());
+		for (unsigned int i = 0; i < calibrationFunction.size(); ++i) {
+			
+				
+			x->calibrationFunction[i] = calibrationFunction.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->calibrationSetExists = calibrationSetExists;
+		
+		
+			
+		x->calibrationSet.length(calibrationSet.size());
+		for (unsigned int i = 0; i < calibrationSet.size(); ++i) {
+			
+				
+			x->calibrationSet[i] = calibrationSet.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->calPatternExists = calPatternExists;
+		
+		
+			
+		x->calPattern.length(calPattern.size());
+		for (unsigned int i = 0; i < calPattern.size(); ++i) {
+			
+				
+			x->calPattern[i] = calPattern.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->numFieldExists = numFieldExists;
 		
 		
 			
 				
-		x->sourceName = CORBA::string_dup(sourceName.c_str());
-				
+		x->numField = numField;
+ 				
  			
 		
 	
@@ -206,6 +283,20 @@ namespace asdm {
 	 		
 	 	}
 			
+		
+	
+
+	
+  		
+		
+		x->sourceNameExists = sourceNameExists;
+		
+		
+			
+				
+		x->sourceName = CORBA::string_dup(sourceName.c_str());
+				
+ 			
 		
 	
 
@@ -251,7 +342,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct ScanRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void ScanRow::setFromIDL (ScanRowIDL x) throw(ConversionException) {
+	void ScanRow::setFromIDL (ScanRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -290,16 +381,6 @@ namespace asdm {
 		
 		
 			
-		setNumSubScan(x.numSubScan);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
 		setNumIntent(x.numIntent);
   			
  		
@@ -308,16 +389,11 @@ namespace asdm {
 
 	
 		
-		numFieldExists = x.numFieldExists;
-		if (x.numFieldExists) {
-		
 		
 			
-		setNumField(x.numField);
+		setNumSubScan(x.numSubScan);
   			
  		
-		
-		}
 		
 	
 
@@ -338,13 +414,103 @@ namespace asdm {
 
 	
 		
-		sourceNameExists = x.sourceNameExists;
-		if (x.sourceNameExists) {
+		
+			
+		calDataType .clear();
+		for (unsigned int i = 0; i <x.calDataType.length(); ++i) {
+			
+			calDataType.push_back(x.calDataType[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
 		
 		
 			
-		setSourceName(string (x.sourceName));
+		calibrationOnLine .clear();
+		for (unsigned int i = 0; i <x.calibrationOnLine.length(); ++i) {
 			
+			calibrationOnLine.push_back(x.calibrationOnLine[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		calibrationFunctionExists = x.calibrationFunctionExists;
+		if (x.calibrationFunctionExists) {
+		
+		
+			
+		calibrationFunction .clear();
+		for (unsigned int i = 0; i <x.calibrationFunction.length(); ++i) {
+			
+			calibrationFunction.push_back(x.calibrationFunction[i]);
+  			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		calibrationSetExists = x.calibrationSetExists;
+		if (x.calibrationSetExists) {
+		
+		
+			
+		calibrationSet .clear();
+		for (unsigned int i = 0; i <x.calibrationSet.length(); ++i) {
+			
+			calibrationSet.push_back(x.calibrationSet[i]);
+  			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		calPatternExists = x.calPatternExists;
+		if (x.calPatternExists) {
+		
+		
+			
+		calPattern .clear();
+		for (unsigned int i = 0; i <x.calPattern.length(); ++i) {
+			
+			calPattern.push_back(x.calPattern[i]);
+  			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		numFieldExists = x.numFieldExists;
+		if (x.numFieldExists) {
+		
+		
+			
+		setNumField(x.numField);
+  			
  		
 		
 		}
@@ -366,6 +532,21 @@ namespace asdm {
 		}
 			
   		
+		
+		}
+		
+	
+
+	
+		
+		sourceNameExists = x.sourceNameExists;
+		if (x.sourceNameExists) {
+		
+		
+			
+		setSourceName(string (x.sourceName));
+			
+ 		
 		
 		}
 		
@@ -399,7 +580,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Scan");
+			throw ConversionException (err.getMessage(),"Scan");
 		}
 	}
 #endif
@@ -441,6 +622,14 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(numIntent, "numIntent", buf);
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(numSubScan, "numSubScan", buf);
 		
 		
@@ -449,8 +638,60 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numIntent, "numIntent", buf);
+			buf.append(EnumerationParser::toXML("scanIntent", scanIntent));
 		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("calDataType", calDataType));
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(calibrationOnLine, "calibrationOnLine", buf);
+		
+		
+	
+
+  	
+ 		
+		if (calibrationFunctionExists) {
+		
+		
+			buf.append(EnumerationParser::toXML("calibrationFunction", calibrationFunction));
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (calibrationSetExists) {
+		
+		
+			buf.append(EnumerationParser::toXML("calibrationSet", calibrationSet));
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (calPatternExists) {
+		
+		
+			buf.append(EnumerationParser::toXML("calPattern", calPattern));
+		
+		
+		}
 		
 	
 
@@ -468,9 +709,13 @@ namespace asdm {
 
   	
  		
+		if (fieldNameExists) {
 		
-			buf.append(EnumerationParser::toXML("scanIntent", scanIntent));
 		
+		Parser::toXML(fieldName, "fieldName", buf);
+		
+		
+		}
 		
 	
 
@@ -480,18 +725,6 @@ namespace asdm {
 		
 		
 		Parser::toXML(sourceName, "sourceName", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (fieldNameExists) {
-		
-		
-		Parser::toXML(fieldName, "fieldName", buf);
 		
 		
 		}
@@ -531,7 +764,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void ScanRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void ScanRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -564,7 +797,7 @@ namespace asdm {
 	
   		
 			
-	  	setNumSubScan(Parser::getInteger("numSubScan","Scan",rowDoc));
+	  	setNumIntent(Parser::getInteger("numIntent","Scan",rowDoc));
 			
 		
 	
@@ -572,8 +805,83 @@ namespace asdm {
 	
   		
 			
-	  	setNumIntent(Parser::getInteger("numIntent","Scan",rowDoc));
+	  	setNumSubScan(Parser::getInteger("numSubScan","Scan",rowDoc));
 			
+		
+	
+
+	
+		
+		
+		
+		scanIntent = EnumerationParser::getScanIntent1D("scanIntent","Scan",rowDoc);			
+		
+		
+		
+	
+
+	
+		
+		
+		
+		calDataType = EnumerationParser::getCalDataOrigin1D("calDataType","Scan",rowDoc);			
+		
+		
+		
+	
+
+	
+  		
+			
+					
+	  	setCalibrationOnLine(Parser::get1DBoolean("calibrationOnLine","Scan",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+		
+	if (row.isStr("<calibrationFunction>")) {
+		
+		
+		
+		calibrationFunction = EnumerationParser::getCalibrationFunction1D("calibrationFunction","Scan",rowDoc);			
+		
+		
+		
+		calibrationFunctionExists = true;
+	}
+		
+	
+
+	
+		
+	if (row.isStr("<calibrationSet>")) {
+		
+		
+		
+		calibrationSet = EnumerationParser::getCalibrationSet1D("calibrationSet","Scan",rowDoc);			
+		
+		
+		
+		calibrationSetExists = true;
+	}
+		
+	
+
+	
+		
+	if (row.isStr("<calPattern>")) {
+		
+		
+		
+		calPattern = EnumerationParser::getAntennaMotionPattern1D("calPattern","Scan",rowDoc);			
+		
+		
+		
+		calPatternExists = true;
+	}
 		
 	
 
@@ -588,13 +896,15 @@ namespace asdm {
 	
 
 	
-		
-		
-		
-		scanIntent = EnumerationParser::getScanIntent1D("scanIntent","Scan",rowDoc);			
-		
-		
-		
+  		
+        if (row.isStr("<fieldName>")) {
+			
+								
+	  		setFieldName(Parser::get1DString("fieldName","Scan",rowDoc));
+	  			
+	  		
+		}
+ 		
 	
 
 	
@@ -603,18 +913,6 @@ namespace asdm {
 			
 	  		setSourceName(Parser::getString("sourceName","Scan",rowDoc));
 			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<fieldName>")) {
-			
-								
-	  		setFieldName(Parser::get1DString("fieldName","Scan",rowDoc));
-	  			
-	  		
 		}
  		
 	
@@ -645,6 +943,460 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"Scan");
 		}
+	}
+	
+	void ScanRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	execBlockId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(scanNumber);
+				
+		
+	
+
+	
+	
+		
+	startTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numIntent);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numSubScan);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) scanIntent.size());
+		for (unsigned int i = 0; i < scanIntent.size(); i++)
+				
+			eoss.writeInt(scanIntent.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) calDataType.size());
+		for (unsigned int i = 0; i < calDataType.size(); i++)
+				
+			eoss.writeInt(calDataType.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) calibrationOnLine.size());
+		for (unsigned int i = 0; i < calibrationOnLine.size(); i++)
+				
+			eoss.writeBoolean(calibrationOnLine.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(flagRow);
+				
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(calibrationFunctionExists);
+	if (calibrationFunctionExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) calibrationFunction.size());
+		for (unsigned int i = 0; i < calibrationFunction.size(); i++)
+				
+			eoss.writeInt(calibrationFunction.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(calibrationSetExists);
+	if (calibrationSetExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) calibrationSet.size());
+		for (unsigned int i = 0; i < calibrationSet.size(); i++)
+				
+			eoss.writeInt(calibrationSet.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(calPatternExists);
+	if (calPatternExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) calPattern.size());
+		for (unsigned int i = 0; i < calPattern.size(); i++)
+				
+			eoss.writeInt(calPattern.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(numFieldExists);
+	if (numFieldExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numField);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(fieldNameExists);
+	if (fieldNameExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) fieldName.size());
+		for (unsigned int i = 0; i < fieldName.size(); i++)
+				
+			eoss.writeString(fieldName.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(sourceNameExists);
+	if (sourceNameExists) {
+	
+	
+	
+		
+						
+			eoss.writeString(sourceName);
+				
+		
+	
+
+	}
+
+	}
+	
+	ScanRow* ScanRow::fromBin(EndianISStream& eiss, ScanTable& table) {
+		ScanRow* row = new  ScanRow(table);
+		
+		
+		
+	
+		
+		
+		row->execBlockId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->scanNumber =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+		row->startTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numIntent =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numSubScan =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->scanIntent.clear();
+		
+		unsigned int scanIntentDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < scanIntentDim1; i++)
+			
+			row->scanIntent.push_back(CScanIntent::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->calDataType.clear();
+		
+		unsigned int calDataTypeDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < calDataTypeDim1; i++)
+			
+			row->calDataType.push_back(CCalDataOrigin::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->calibrationOnLine.clear();
+		
+		unsigned int calibrationOnLineDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < calibrationOnLineDim1; i++)
+			
+			row->calibrationOnLine.push_back(eiss.readBoolean());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->flagRow =  eiss.readBoolean();
+			
+		
+	
+
+		
+		
+		
+	row->calibrationFunctionExists = eiss.readBoolean();
+	if (row->calibrationFunctionExists) {
+		
+	
+	
+		
+			
+	
+		row->calibrationFunction.clear();
+		
+		unsigned int calibrationFunctionDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < calibrationFunctionDim1; i++)
+			
+			row->calibrationFunction.push_back(CCalibrationFunction::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	}
+
+	row->calibrationSetExists = eiss.readBoolean();
+	if (row->calibrationSetExists) {
+		
+	
+	
+		
+			
+	
+		row->calibrationSet.clear();
+		
+		unsigned int calibrationSetDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < calibrationSetDim1; i++)
+			
+			row->calibrationSet.push_back(CCalibrationSet::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	}
+
+	row->calPatternExists = eiss.readBoolean();
+	if (row->calPatternExists) {
+		
+	
+	
+		
+			
+	
+		row->calPattern.clear();
+		
+		unsigned int calPatternDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < calPatternDim1; i++)
+			
+			row->calPattern.push_back(CAntennaMotionPattern::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	}
+
+	row->numFieldExists = eiss.readBoolean();
+	if (row->numFieldExists) {
+		
+	
+	
+		
+			
+		row->numField =  eiss.readInt();
+			
+		
+	
+
+	}
+
+	row->fieldNameExists = eiss.readBoolean();
+	if (row->fieldNameExists) {
+		
+	
+	
+		
+			
+	
+		row->fieldName.clear();
+		
+		unsigned int fieldNameDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < fieldNameDim1; i++)
+			
+			row->fieldName.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	}
+
+	row->sourceNameExists = eiss.readBoolean();
+	if (row->sourceNameExists) {
+		
+	
+	
+		
+			
+		row->sourceName =  eiss.readString();
+			
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -755,38 +1507,6 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numSubScan.
- 	 * @return numSubScan as int
- 	 */
- 	int ScanRow::getNumSubScan() const {
-	
-  		return numSubScan;
- 	}
-
- 	/**
- 	 * Set numSubScan with the specified int.
- 	 * @param numSubScan The int value to which numSubScan is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ScanRow::setNumSubScan (int numSubScan)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numSubScan = numSubScan;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
  	 * Get numIntent.
  	 * @return numIntent as int
  	 */
@@ -816,50 +1536,35 @@ namespace asdm {
 	
 
 	
-	/**
-	 * The attribute numField is optional. Return true if this attribute exists.
-	 * @return true if and only if the numField attribute exists. 
-	 */
-	bool ScanRow::isNumFieldExists() const {
-		return numFieldExists;
-	}
-	
 
 	
  	/**
- 	 * Get numField, which is optional.
- 	 * @return numField as int
- 	 * @throw IllegalAccessException If numField does not exist.
+ 	 * Get numSubScan.
+ 	 * @return numSubScan as int
  	 */
- 	int ScanRow::getNumField() const throw(IllegalAccessException) {
-		if (!numFieldExists) {
-			throw IllegalAccessException("numField", "Scan");
-		}
+ 	int ScanRow::getNumSubScan() const {
 	
-  		return numField;
+  		return numSubScan;
  	}
 
  	/**
- 	 * Set numField with the specified int.
- 	 * @param numField The int value to which numField is to be set.
+ 	 * Set numSubScan with the specified int.
+ 	 * @param numSubScan The int value to which numSubScan is to be set.
  	 
  	
+ 		
  	 */
- 	void ScanRow::setNumField (int numField) {
-	
- 		this->numField = numField;
-	
-		numFieldExists = true;
+ 	void ScanRow::setNumSubScan (int numSubScan)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numSubScan = numSubScan;
 	
  	}
 	
-	
-	/**
-	 * Mark numField, which is an optional field, as non-existent.
-	 */
-	void ScanRow::clearNumField () {
-		numFieldExists = false;
-	}
 	
 
 	
@@ -895,49 +1600,254 @@ namespace asdm {
 	
 
 	
+
+	
+ 	/**
+ 	 * Get calDataType.
+ 	 * @return calDataType as vector<CalDataOriginMod::CalDataOrigin >
+ 	 */
+ 	vector<CalDataOriginMod::CalDataOrigin > ScanRow::getCalDataType() const {
+	
+  		return calDataType;
+ 	}
+
+ 	/**
+ 	 * Set calDataType with the specified vector<CalDataOriginMod::CalDataOrigin >.
+ 	 * @param calDataType The vector<CalDataOriginMod::CalDataOrigin > value to which calDataType is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ScanRow::setCalDataType (vector<CalDataOriginMod::CalDataOrigin > calDataType)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->calDataType = calDataType;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get calibrationOnLine.
+ 	 * @return calibrationOnLine as vector<bool >
+ 	 */
+ 	vector<bool > ScanRow::getCalibrationOnLine() const {
+	
+  		return calibrationOnLine;
+ 	}
+
+ 	/**
+ 	 * Set calibrationOnLine with the specified vector<bool >.
+ 	 * @param calibrationOnLine The vector<bool > value to which calibrationOnLine is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ScanRow::setCalibrationOnLine (vector<bool > calibrationOnLine)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->calibrationOnLine = calibrationOnLine;
+	
+ 	}
+	
+	
+
+	
 	/**
-	 * The attribute sourceName is optional. Return true if this attribute exists.
-	 * @return true if and only if the sourceName attribute exists. 
+	 * The attribute calibrationFunction is optional. Return true if this attribute exists.
+	 * @return true if and only if the calibrationFunction attribute exists. 
 	 */
-	bool ScanRow::isSourceNameExists() const {
-		return sourceNameExists;
+	bool ScanRow::isCalibrationFunctionExists() const {
+		return calibrationFunctionExists;
 	}
 	
 
 	
  	/**
- 	 * Get sourceName, which is optional.
- 	 * @return sourceName as string
- 	 * @throw IllegalAccessException If sourceName does not exist.
+ 	 * Get calibrationFunction, which is optional.
+ 	 * @return calibrationFunction as vector<CalibrationFunctionMod::CalibrationFunction >
+ 	 * @throw IllegalAccessException If calibrationFunction does not exist.
  	 */
- 	string ScanRow::getSourceName() const throw(IllegalAccessException) {
-		if (!sourceNameExists) {
-			throw IllegalAccessException("sourceName", "Scan");
+ 	vector<CalibrationFunctionMod::CalibrationFunction > ScanRow::getCalibrationFunction() const  {
+		if (!calibrationFunctionExists) {
+			throw IllegalAccessException("calibrationFunction", "Scan");
 		}
 	
-  		return sourceName;
+  		return calibrationFunction;
  	}
 
  	/**
- 	 * Set sourceName with the specified string.
- 	 * @param sourceName The string value to which sourceName is to be set.
+ 	 * Set calibrationFunction with the specified vector<CalibrationFunctionMod::CalibrationFunction >.
+ 	 * @param calibrationFunction The vector<CalibrationFunctionMod::CalibrationFunction > value to which calibrationFunction is to be set.
  	 
  	
  	 */
- 	void ScanRow::setSourceName (string sourceName) {
+ 	void ScanRow::setCalibrationFunction (vector<CalibrationFunctionMod::CalibrationFunction > calibrationFunction) {
 	
- 		this->sourceName = sourceName;
+ 		this->calibrationFunction = calibrationFunction;
 	
-		sourceNameExists = true;
+		calibrationFunctionExists = true;
 	
  	}
 	
 	
 	/**
-	 * Mark sourceName, which is an optional field, as non-existent.
+	 * Mark calibrationFunction, which is an optional field, as non-existent.
 	 */
-	void ScanRow::clearSourceName () {
-		sourceNameExists = false;
+	void ScanRow::clearCalibrationFunction () {
+		calibrationFunctionExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute calibrationSet is optional. Return true if this attribute exists.
+	 * @return true if and only if the calibrationSet attribute exists. 
+	 */
+	bool ScanRow::isCalibrationSetExists() const {
+		return calibrationSetExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get calibrationSet, which is optional.
+ 	 * @return calibrationSet as vector<CalibrationSetMod::CalibrationSet >
+ 	 * @throw IllegalAccessException If calibrationSet does not exist.
+ 	 */
+ 	vector<CalibrationSetMod::CalibrationSet > ScanRow::getCalibrationSet() const  {
+		if (!calibrationSetExists) {
+			throw IllegalAccessException("calibrationSet", "Scan");
+		}
+	
+  		return calibrationSet;
+ 	}
+
+ 	/**
+ 	 * Set calibrationSet with the specified vector<CalibrationSetMod::CalibrationSet >.
+ 	 * @param calibrationSet The vector<CalibrationSetMod::CalibrationSet > value to which calibrationSet is to be set.
+ 	 
+ 	
+ 	 */
+ 	void ScanRow::setCalibrationSet (vector<CalibrationSetMod::CalibrationSet > calibrationSet) {
+	
+ 		this->calibrationSet = calibrationSet;
+	
+		calibrationSetExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark calibrationSet, which is an optional field, as non-existent.
+	 */
+	void ScanRow::clearCalibrationSet () {
+		calibrationSetExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute calPattern is optional. Return true if this attribute exists.
+	 * @return true if and only if the calPattern attribute exists. 
+	 */
+	bool ScanRow::isCalPatternExists() const {
+		return calPatternExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get calPattern, which is optional.
+ 	 * @return calPattern as vector<AntennaMotionPatternMod::AntennaMotionPattern >
+ 	 * @throw IllegalAccessException If calPattern does not exist.
+ 	 */
+ 	vector<AntennaMotionPatternMod::AntennaMotionPattern > ScanRow::getCalPattern() const  {
+		if (!calPatternExists) {
+			throw IllegalAccessException("calPattern", "Scan");
+		}
+	
+  		return calPattern;
+ 	}
+
+ 	/**
+ 	 * Set calPattern with the specified vector<AntennaMotionPatternMod::AntennaMotionPattern >.
+ 	 * @param calPattern The vector<AntennaMotionPatternMod::AntennaMotionPattern > value to which calPattern is to be set.
+ 	 
+ 	
+ 	 */
+ 	void ScanRow::setCalPattern (vector<AntennaMotionPatternMod::AntennaMotionPattern > calPattern) {
+	
+ 		this->calPattern = calPattern;
+	
+		calPatternExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark calPattern, which is an optional field, as non-existent.
+	 */
+	void ScanRow::clearCalPattern () {
+		calPatternExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute numField is optional. Return true if this attribute exists.
+	 * @return true if and only if the numField attribute exists. 
+	 */
+	bool ScanRow::isNumFieldExists() const {
+		return numFieldExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get numField, which is optional.
+ 	 * @return numField as int
+ 	 * @throw IllegalAccessException If numField does not exist.
+ 	 */
+ 	int ScanRow::getNumField() const  {
+		if (!numFieldExists) {
+			throw IllegalAccessException("numField", "Scan");
+		}
+	
+  		return numField;
+ 	}
+
+ 	/**
+ 	 * Set numField with the specified int.
+ 	 * @param numField The int value to which numField is to be set.
+ 	 
+ 	
+ 	 */
+ 	void ScanRow::setNumField (int numField) {
+	
+ 		this->numField = numField;
+	
+		numFieldExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark numField, which is an optional field, as non-existent.
+	 */
+	void ScanRow::clearNumField () {
+		numFieldExists = false;
 	}
 	
 
@@ -957,7 +1867,7 @@ namespace asdm {
  	 * @return fieldName as vector<string >
  	 * @throw IllegalAccessException If fieldName does not exist.
  	 */
- 	vector<string > ScanRow::getFieldName() const throw(IllegalAccessException) {
+ 	vector<string > ScanRow::getFieldName() const  {
 		if (!fieldNameExists) {
 			throw IllegalAccessException("fieldName", "Scan");
 		}
@@ -985,6 +1895,53 @@ namespace asdm {
 	 */
 	void ScanRow::clearFieldName () {
 		fieldNameExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute sourceName is optional. Return true if this attribute exists.
+	 * @return true if and only if the sourceName attribute exists. 
+	 */
+	bool ScanRow::isSourceNameExists() const {
+		return sourceNameExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get sourceName, which is optional.
+ 	 * @return sourceName as string
+ 	 * @throw IllegalAccessException If sourceName does not exist.
+ 	 */
+ 	string ScanRow::getSourceName() const  {
+		if (!sourceNameExists) {
+			throw IllegalAccessException("sourceName", "Scan");
+		}
+	
+  		return sourceName;
+ 	}
+
+ 	/**
+ 	 * Set sourceName with the specified string.
+ 	 * @param sourceName The string value to which sourceName is to be set.
+ 	 
+ 	
+ 	 */
+ 	void ScanRow::setSourceName (string sourceName) {
+	
+ 		this->sourceName = sourceName;
+	
+		sourceNameExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark sourceName, which is an optional field, as non-existent.
+	 */
+	void ScanRow::clearSourceName () {
+		sourceNameExists = false;
 	}
 	
 
@@ -1108,13 +2065,25 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
+
+	
+		calibrationFunctionExists = false;
+	
+
+	
+		calibrationSetExists = false;
+	
+
+	
+		calPatternExists = false;
+	
+
+	
 		numFieldExists = false;
-	
-
-	
-
-	
-		sourceNameExists = false;
 	
 
 	
@@ -1122,6 +2091,10 @@ namespace asdm {
 	
 
 	
+		sourceNameExists = false;
+	
+
+	
 
 	
 	
@@ -1129,6 +2102,16 @@ namespace asdm {
 	
 	
 	
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -1168,17 +2151,33 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
+
+	
+		calibrationFunctionExists = false;
+	
+
+	
+		calibrationSetExists = false;
+	
+
+	
+		calPatternExists = false;
+	
+
+	
 		numFieldExists = false;
 	
 
 	
+		fieldNameExists = false;
+	
 
 	
 		sourceNameExists = false;
-	
-
-	
-		fieldNameExists = false;
 	
 
 	
@@ -1201,16 +2200,41 @@ namespace asdm {
 		
 			endTime = row.endTime;
 		
-			numSubScan = row.numSubScan;
-		
 			numIntent = row.numIntent;
 		
+			numSubScan = row.numSubScan;
+		
 			scanIntent = row.scanIntent;
+		
+			calDataType = row.calDataType;
+		
+			calibrationOnLine = row.calibrationOnLine;
 		
 			flagRow = row.flagRow;
 		
 		
 		
+		
+		if (row.calibrationFunctionExists) {
+			calibrationFunction = row.calibrationFunction;		
+			calibrationFunctionExists = true;
+		}
+		else
+			calibrationFunctionExists = false;
+		
+		if (row.calibrationSetExists) {
+			calibrationSet = row.calibrationSet;		
+			calibrationSetExists = true;
+		}
+		else
+			calibrationSetExists = false;
+		
+		if (row.calPatternExists) {
+			calPattern = row.calPattern;		
+			calPatternExists = true;
+		}
+		else
+			calPatternExists = false;
 		
 		if (row.numFieldExists) {
 			numField = row.numField;		
@@ -1219,13 +2243,6 @@ namespace asdm {
 		else
 			numFieldExists = false;
 		
-		if (row.sourceNameExists) {
-			sourceName = row.sourceName;		
-			sourceNameExists = true;
-		}
-		else
-			sourceNameExists = false;
-		
 		if (row.fieldNameExists) {
 			fieldName = row.fieldName;		
 			fieldNameExists = true;
@@ -1233,11 +2250,18 @@ namespace asdm {
 		else
 			fieldNameExists = false;
 		
+		if (row.sourceNameExists) {
+			sourceName = row.sourceName;		
+			sourceNameExists = true;
+		}
+		else
+			sourceNameExists = false;
+		
 		}	
 	}
 
 	
-	bool ScanRow::compareNoAutoInc(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numSubScan, int numIntent, vector<ScanIntentMod::ScanIntent > scanIntent, bool flagRow) {
+	bool ScanRow::compareNoAutoInc(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubScan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine, bool flagRow) {
 		bool result;
 		result = true;
 		
@@ -1271,13 +2295,6 @@ namespace asdm {
 
 	
 		
-		result = result && (this->numSubScan == numSubScan);
-		
-		if (!result) return false;
-	
-
-	
-		
 		result = result && (this->numIntent == numIntent);
 		
 		if (!result) return false;
@@ -1285,7 +2302,28 @@ namespace asdm {
 
 	
 		
+		result = result && (this->numSubScan == numSubScan);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->scanIntent == scanIntent);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->calDataType == calDataType);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->calibrationOnLine == calibrationOnLine);
 		
 		if (!result) return false;
 	
@@ -1302,7 +2340,7 @@ namespace asdm {
 	
 	
 	
-	bool ScanRow::compareRequiredValue(ArrayTime startTime, ArrayTime endTime, int numSubScan, int numIntent, vector<ScanIntentMod::ScanIntent > scanIntent, bool flagRow) {
+	bool ScanRow::compareRequiredValue(ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubScan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine, bool flagRow) {
 		bool result;
 		result = true;
 		
@@ -1315,15 +2353,23 @@ namespace asdm {
 	
 
 	
-		if (!(this->numSubScan == numSubScan)) return false;
-	
-
-	
 		if (!(this->numIntent == numIntent)) return false;
 	
 
 	
+		if (!(this->numSubScan == numSubScan)) return false;
+	
+
+	
 		if (!(this->scanIntent == scanIntent)) return false;
+	
+
+	
+		if (!(this->calDataType == calDataType)) return false;
+	
+
+	
+		if (!(this->calibrationOnLine == calibrationOnLine)) return false;
 	
 
 	
@@ -1349,11 +2395,15 @@ namespace asdm {
 			
 		if (this->endTime != x->endTime) return false;
 			
-		if (this->numSubScan != x->numSubScan) return false;
-			
 		if (this->numIntent != x->numIntent) return false;
 			
+		if (this->numSubScan != x->numSubScan) return false;
+			
 		if (this->scanIntent != x->scanIntent) return false;
+			
+		if (this->calDataType != x->calDataType) return false;
+			
+		if (this->calibrationOnLine != x->calibrationOnLine) return false;
 			
 		if (this->flagRow != x->flagRow) return false;
 			

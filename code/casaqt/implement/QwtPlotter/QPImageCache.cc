@@ -188,7 +188,7 @@ void QPAxesCache::Key::setValue(const QPCanvas& canvas) {
     
     QSetIterator<PlotAxis> iter(axes);
     PlotAxis axis;
-    pair<double, double> range;
+    prange_t range;
     while(iter.hasNext()) {
         axis = iter.next();
         range = canvas.axisRange(axis);

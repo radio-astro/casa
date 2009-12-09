@@ -42,21 +42,42 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the CalDataOrigin enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace CalDataOriginMod
 {
+  //! CalDataOrigin.
+  //! 
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum CalDataOrigin
   { 
-    TOTAL_POWER ,
-    WVR ,
-    CHANNEL_AVERAGE_AUTO ,
-    CHANNEL_AVERAGE_CROSS ,
-    FULL_RESOLUTION_AUTO ,
-    FULL_RESOLUTION_CROSS ,
-    OPTICAL_POINTING ,
-    HOLOGRAPHY 
+    TOTAL_POWER /*!< Total Power data (from detectors) */
+     ,
+    WVR /*!< Water vapour radiometrers */
+     ,
+    CHANNEL_AVERAGE_AUTO /*!< Autocorrelations from channel average data */
+     ,
+    CHANNEL_AVERAGE_CROSS /*!< Crosscorrelations from channel average data */
+     ,
+    FULL_RESOLUTION_AUTO /*!< Autocorrelations from full-resolution data */
+     ,
+    FULL_RESOLUTION_CROSS /*!< Cross correlations from full-resolution data */
+     ,
+    OPTICAL_POINTING /*!< Optical pointing data */
+     ,
+    HOLOGRAPHY /*!< data from holography receivers */
+     ,
+    NONE /*!< Not applicable */
+     
   };
   typedef CalDataOrigin &CalDataOrigin_out;
 } 
@@ -64,88 +85,105 @@ namespace CalDataOriginMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration CalDataOrigin.
+  * 
+  */
 class CCalDataOrigin {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the CalDataOrigin enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sTOTAL_POWER;
+	static const std::string& sTOTAL_POWER; /*!< A const string equal to "TOTAL_POWER".*/
 	
-	static const std::string& sWVR;
+	static const std::string& sWVR; /*!< A const string equal to "WVR".*/
 	
-	static const std::string& sCHANNEL_AVERAGE_AUTO;
+	static const std::string& sCHANNEL_AVERAGE_AUTO; /*!< A const string equal to "CHANNEL_AVERAGE_AUTO".*/
 	
-	static const std::string& sCHANNEL_AVERAGE_CROSS;
+	static const std::string& sCHANNEL_AVERAGE_CROSS; /*!< A const string equal to "CHANNEL_AVERAGE_CROSS".*/
 	
-	static const std::string& sFULL_RESOLUTION_AUTO;
+	static const std::string& sFULL_RESOLUTION_AUTO; /*!< A const string equal to "FULL_RESOLUTION_AUTO".*/
 	
-	static const std::string& sFULL_RESOLUTION_CROSS;
+	static const std::string& sFULL_RESOLUTION_CROSS; /*!< A const string equal to "FULL_RESOLUTION_CROSS".*/
 	
-	static const std::string& sOPTICAL_POINTING;
+	static const std::string& sOPTICAL_POINTING; /*!< A const string equal to "OPTICAL_POINTING".*/
 	
-	static const std::string& sHOLOGRAPHY;
+	static const std::string& sHOLOGRAPHY; /*!< A const string equal to "HOLOGRAPHY".*/
 	
-    static const std::vector<std::string> sCalDataOriginSet();	 
+	static const std::string& sNONE; /*!< A const string equal to "NONE".*/
+	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in CalDataOriginMod::CalDataOrigin.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of CalDataOriginMod::CalDataOrigin.
+      * @return a string.
+      */
+	static std::string name(const CalDataOriginMod::CalDataOrigin& e);
 	
-
-	
-	// Explanations associated with the CalDataOrigin Enumeration.
-		
-	static const std::string& hTOTAL_POWER;
-		
-	static const std::string& hWVR;
-		
-	static const std::string& hCHANNEL_AVERAGE_AUTO;
-		
-	static const std::string& hCHANNEL_AVERAGE_CROSS;
-		
-	static const std::string& hFULL_RESOLUTION_AUTO;
-		
-	static const std::string& hFULL_RESOLUTION_CROSS;
-		
-	static const std::string& hOPTICAL_POINTING;
-		
-	static const std::string& hHOLOGRAPHY;
-		
-	static const std::vector<std::string> hCalDataOriginSet();
-   	
-
-   	// Is an integer number associated with the CalDataOrigin enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the CalDataOrigin enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  CalDataOrigin enumeration.
-	static std::string name(const CalDataOriginMod::CalDataOrigin& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const CalDataOriginMod::CalDataOrigin& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified CalDataOrigin enumeration.
-	static std::string help(const CalDataOriginMod::CalDataOrigin& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a CalDataOrigin enumeration object by specifying its name.
    	static CalDataOriginMod::CalDataOrigin newCalDataOrigin(const std::string& name);
    	
-   	// Create a CalDataOrigin enumeration object by specifying its name.
+   	/*! Return a CalDataOrigin's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a CalDataOriginMod::CalDataOrigin's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static CalDataOriginMod::CalDataOrigin literal(const std::string& name);
  	
-    // Create a CalDataOrigin enumeration object by specifying its position index (0 based).
+    /*! Return a CalDataOrigin's enumerator given an unsigned int.
+      * @param i the index of the enumerator in CalDataOriginMod::CalDataOrigin.
+      * @return a CalDataOriginMod::CalDataOrigin's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static CalDataOriginMod::CalDataOrigin from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CCalDataOrigin();
     CCalDataOrigin(const CCalDataOrigin&);
     CCalDataOrigin& operator=(const CCalDataOrigin&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CCalDataOrigin_H*/

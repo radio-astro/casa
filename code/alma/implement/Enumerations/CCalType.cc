@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CCalType::version() {
+	return CalTypeMod::version;
+	}
+	
+string CCalType::revision () {
+	return CalTypeMod::revision;
+}
+
+unsigned int CCalType::size() {
+	return 17;
+	}
+	
 	
 const std::string& CCalType::sCAL_AMPLI = "CAL_AMPLI";
 	
@@ -72,7 +85,7 @@ const std::string& CCalType::sCAL_SEEING = "CAL_SEEING";
 	
 const std::string& CCalType::sCAL_WVR = "CAL_WVR";
 	
-const std::vector<std::string> CCalType::sCalTypeSet() {
+const std::vector<std::string> CCalType::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CCalType::sCAL_AMPLI);
@@ -111,85 +124,6 @@ const std::vector<std::string> CCalType::sCalTypeSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CCalType::hCAL_AMPLI = "";
-	
-const std::string& CCalType::hCAL_ATMOSPHERE = "";
-	
-const std::string& CCalType::hCAL_BANDPASS = "";
-	
-const std::string& CCalType::hCAL_CURVE = "";
-	
-const std::string& CCalType::hCAL_DELAY = "";
-	
-const std::string& CCalType::hCAL_FLUX = "";
-	
-const std::string& CCalType::hCAL_FOCUS = "";
-	
-const std::string& CCalType::hCAL_FOCUS_MODEL = "";
-	
-const std::string& CCalType::hCAL_GAIN = "";
-	
-const std::string& CCalType::hCAL_HOLOGRAPHY = "";
-	
-const std::string& CCalType::hCAL_PHASE = "";
-	
-const std::string& CCalType::hCAL_POINTING = "";
-	
-const std::string& CCalType::hCAL_POINTING_MODEL = "";
-	
-const std::string& CCalType::hCAL_POSITION = "";
-	
-const std::string& CCalType::hCAL_PRIMARY_BEAM = "";
-	
-const std::string& CCalType::hCAL_SEEING = "";
-	
-const std::string& CCalType::hCAL_WVR = "";
-	
-const std::vector<std::string> CCalType::hCalTypeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_AMPLI);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_ATMOSPHERE);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_BANDPASS);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_CURVE);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_DELAY);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_FLUX);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_FOCUS);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_FOCUS_MODEL);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_GAIN);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_HOLOGRAPHY);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_PHASE);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_POINTING);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_POINTING_MODEL);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_POSITION);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_PRIMARY_BEAM);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_SEEING);
-    
-    enumSet.insert(enumSet.end(), CCalType::hCAL_WVR);
-        
-    return enumSet;
-}
-   	
 
 std::string CCalType::name(const CalTypeMod::CalType& f) {
     switch (f) {
@@ -246,70 +180,9 @@ std::string CCalType::name(const CalTypeMod::CalType& f) {
       return CCalType::sCAL_WVR;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CCalType::help(const CalTypeMod::CalType& f) {
-    switch (f) {
-    
-    case CalTypeMod::CAL_AMPLI:
-      return CCalType::hCAL_AMPLI;
-    
-    case CalTypeMod::CAL_ATMOSPHERE:
-      return CCalType::hCAL_ATMOSPHERE;
-    
-    case CalTypeMod::CAL_BANDPASS:
-      return CCalType::hCAL_BANDPASS;
-    
-    case CalTypeMod::CAL_CURVE:
-      return CCalType::hCAL_CURVE;
-    
-    case CalTypeMod::CAL_DELAY:
-      return CCalType::hCAL_DELAY;
-    
-    case CalTypeMod::CAL_FLUX:
-      return CCalType::hCAL_FLUX;
-    
-    case CalTypeMod::CAL_FOCUS:
-      return CCalType::hCAL_FOCUS;
-    
-    case CalTypeMod::CAL_FOCUS_MODEL:
-      return CCalType::hCAL_FOCUS_MODEL;
-    
-    case CalTypeMod::CAL_GAIN:
-      return CCalType::hCAL_GAIN;
-    
-    case CalTypeMod::CAL_HOLOGRAPHY:
-      return CCalType::hCAL_HOLOGRAPHY;
-    
-    case CalTypeMod::CAL_PHASE:
-      return CCalType::hCAL_PHASE;
-    
-    case CalTypeMod::CAL_POINTING:
-      return CCalType::hCAL_POINTING;
-    
-    case CalTypeMod::CAL_POINTING_MODEL:
-      return CCalType::hCAL_POINTING_MODEL;
-    
-    case CalTypeMod::CAL_POSITION:
-      return CCalType::hCAL_POSITION;
-    
-    case CalTypeMod::CAL_PRIMARY_BEAM:
-      return CCalType::hCAL_PRIMARY_BEAM;
-    
-    case CalTypeMod::CAL_SEEING:
-      return CCalType::hCAL_SEEING;
-    
-    case CalTypeMod::CAL_WVR:
-      return CCalType::hCAL_WVR;
-    	
-    }
-    return std::string("");
-}
-   	
 
 CalTypeMod::CalType CCalType::newCalType(const std::string& name) {
 		
@@ -458,12 +331,10 @@ CalTypeMod::CalType CCalType::literal(const std::string& name) {
 }
 
 CalTypeMod::CalType CCalType::from_int(unsigned int i) {
-	vector<string> names = sCalTypeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newCalType(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newCalType(names_.at(i));
 }
-
-	
 
 string CCalType::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'CalType'.";

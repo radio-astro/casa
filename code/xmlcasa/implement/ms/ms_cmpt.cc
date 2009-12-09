@@ -27,12 +27,12 @@
 //# @version 
 //////////////////////////////////////////////////////////////////////////////
 
-
 #include <iostream>
 #include <sys/wait.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
 #include <xmlcasa/ms/ms_cmpt.h>
+#include <xmlcasa/ms/Statistics.h>
 #include <msfits/MSFits/MSFitsInput.h>
 #include <msfits/MSFits/MSFitsOutput.h>
 #include <ms/MeasurementSets/MSRange.h>
@@ -43,7 +43,6 @@
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
 #include <msvis/MSVis/SubMS.h>
-#include <msvis/MSVis/MSFixVis.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Logging/LogOrigin.h>
@@ -55,12 +54,17 @@
 #include <casa/Utilities/Assert.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisIterator.h>
 
+#include <lattices/Lattices/LatticeStatistics.h>
+#include <lattices/Lattices/SubLattice.h>
 
 #include <tables/Tables/SetupNewTab.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 
 #include <casa/namespace.h>
+#include <cassert>
 
 using namespace std;
 
@@ -204,7 +208,7 @@ try {
 	*itsLog << LogIO::NORMAL3 << "Opening fits file " << fitsfile << LogIO::POST;
        String namescheme(antnamescheme);
        namescheme.downcase();
-       MSFitsInput msfitsin(msfile, fitsfile, (namescheme=="new"));
+       MSFitsInput msfitsin(String(msfile), String(fitsfile), (namescheme=="new"));
        msfitsin.readFitsFile(obstype);
       *itsLog << LogIO::NORMAL3 << "Flushing MS " << msfile << " to disk" << LogIO::POST;
        /*
@@ -496,6 +500,446 @@ ms::range(const std::vector<std::string>& items, const bool useflags, const int 
    return retval;
 }
 
+template <typename T>
+static void
+append(Array<T> &data, unsigned &current_length, 
+       unsigned nrow,
+       const Array<T> &data_chunk, 
+       const string &column)
+{
+  unsigned dimension = data_chunk.shape().nelements();
+
+  if (data.nelements() == 0) {
+    /* Initialize.
+       Allocate the full buffer at once,
+       because there does not seem to exist an efficient way
+       to expand an Array<T> chunk by chunk.
+       (like std::vector<>::push_back()). 
+       Note that Array<T>::resize() takes linear time, it is inefficent
+       to use that in every iteration
+    */
+    IPosition shape = data_chunk.shape();
+    shape(dimension - 1) = nrow;
+    data.resize(shape);
+    current_length = 0;
+  }
+
+  if (dimension != data.shape().nelements()) {
+
+      stringstream ss;
+      ss << "Dimension of " << column << " values changed from " << 
+        data.shape().nelements() << " to " << dimension;
+      throw AipsError(ss.str());
+                 
+  }
+
+  /* Accumulate */              
+  if (dimension == 3) {
+    for (unsigned i = 0; i < (unsigned) data_chunk.shape()(0); i++) {
+      for (unsigned j = 0; j < (unsigned) data_chunk.shape()(1); j++) {
+        for (unsigned k = 0; k < (unsigned) data_chunk.shape()(2); k++) {
+          static_cast<Cube<T> >(data)(i, j, current_length+k) =
+            static_cast<Cube<T> >(data_chunk)(i, j, k);
+        }
+      }
+    }
+  }
+  else if (dimension == 2) {
+    for (unsigned i = 0; i < (unsigned) data_chunk.shape()(0); i++) {
+      for (unsigned j = 0; j < (unsigned) data_chunk.shape()(1); j++) {
+        static_cast<Matrix<T> >(data)(i, current_length+j) =
+          static_cast<Matrix<T> >(data_chunk)(i, j);
+      }
+    }
+  }
+  else if (dimension == 1) {
+    for (unsigned i = 0; i < (unsigned) data_chunk.shape()(0); i++) {
+      static_cast<Vector<T> >(data)(current_length+i) =
+        static_cast<Vector<T> >(data_chunk)(i);
+    }
+  }
+  else {
+    stringstream ss;
+    ss << "Unsupported dimension of " << column << ": " << dimension;
+    throw AipsError(ss.str());
+  }
+
+  current_length += data_chunk.shape()(dimension - 1);
+}
+
+
+::casac::record* 
+ms::statistics(const std::string& column, 
+               const std::string& complex_value,
+               const bool useflags, 
+               const std::string& spw, 
+               const std::string& field, 
+               const std::string& baseline, 
+               const std::string& uvrange, 
+               const std::string& time, 
+               const std::string& correlation,
+               const std::string& scan, 
+               const std::string& array)
+{
+    *itsLog << LogOrigin("ms", "statistics");
+
+    ::casac::record *retval(0);
+    try {
+       if(!detached()){
+
+         /* This tools built-in itsSel is of type
+            MSSelector.
+            That is something completely different than 
+            MSSelection.
+         */
+         const String dummyExpr = String("");
+
+         if (0) cerr << "selection: " << endl <<
+           "time = " << time << endl << 
+           "baseline = " << baseline << endl <<
+           "field = " << field << endl <<
+           "spw = " << spw << endl <<
+           "uvrange = " << uvrange << endl <<
+           "correlation = " << correlation << endl <<
+           "scan = " << scan << endl <<
+           "array = " << array << endl;
+
+         MSSelection mssel(*itsMS,
+                           MSSelection::PARSE_NOW, 
+                           time,
+                           baseline, 
+                           field,
+                           spw,
+                           uvrange,
+                           dummyExpr,   // taqlExpr
+                           correlation,
+                           scan,
+                           array);
+
+         MeasurementSet *sel_p;
+         MeasurementSet sel;
+         if (mssel.getSelectedMS(sel)) {
+           /* It is undocumented, but
+              getSelectedMS() seems to return True
+              if there's a non-trivial selection.
+              If it returns false, the output MS is null.
+           */
+
+           sel_p = &sel;
+           if (0) cout << "Got the subset MS!" << endl;
+         }
+         else {
+           sel_p = itsMS;
+         }
+
+         
+         *itsLog << "Use " << itsMS->tableName() <<
+           ", useflags = " << useflags << LogIO::POST;
+         *itsLog << "Compute statistics on " << column;
+         
+         if (complex_value != "") {
+           *itsLog << ", use " << complex_value;
+         }
+         *itsLog << "..." << LogIO::POST;
+
+
+
+         Block<Int> sortColumns;
+         ROVisIterator vi(*sel_p, sortColumns, 0.0);
+
+         unsigned nrow = sel_p->nrow();
+
+         VisBuffer vb(vi);
+
+         /* Apply selection */
+         Vector<Vector<Slice> > chanSlices;
+         Vector<Vector<Slice> > corrSlices;
+         mssel.getChanSlices(chanSlices, itsMS);
+         mssel.getCorrSlices(corrSlices, itsMS);
+         vi.selectChannel(chanSlices);
+         vi.selectCorrelation(corrSlices);
+
+         /* Now loop over the column, collect the data and compute statistics.
+            This is somewhat involved because:
+            - each column has its own accessor function
+            - each column has its own type
+            - each column has its own dimension
+
+            In the end, all collected values are linearized and 
+            converted to float.
+         */
+         Array<Complex> data_complex;
+         Array<Double> data_double;
+         Array<Float> data_float;
+         Array<Bool> data_bool;
+         Array<Int> data_int;
+         unsigned length;  // logical length of data array
+
+         Vector<Bool> flagrows;
+         Cube<Bool> flags;
+         unsigned flagrows_length;
+         unsigned flags_length;
+
+         for (vi.originChunks();
+              vi.moreChunks();
+              vi.nextChunk()) {
+           
+           for (vi.origin();
+                vi.more();
+                vi++) {
+            
+             Array<Complex> data_complex_chunk;
+             Array<Double> data_double_chunk;
+             Array<Float> data_float_chunk;
+             Array<Bool> data_bool_chunk;
+             Array<Int> data_int_chunk;
+
+             if (useflags) {
+               Cube<Bool> flag_chunk;
+               vi.flag(static_cast<Cube<Bool>&>(flag_chunk));
+
+               Vector<Bool> flagrow_chunk;
+               vi.flagRow(static_cast<Vector<Bool>&>(flagrow_chunk));
+
+               /* If FLAG_ROW is set, update flags */
+               for (unsigned i = 0; i < flagrow_chunk.nelements(); i++) {
+                 if (flagrow_chunk(i)) {
+                   for (unsigned channel = 0; channel < (unsigned)flag_chunk.shape()(0); channel++) {
+                     for (unsigned pol = 0; pol < (unsigned)flag_chunk.shape()(1); pol++) {
+                       flag_chunk(i, channel, pol) = true;
+                     }
+                   }
+                 }
+               }
+
+               append<Bool>(flags, flags_length, nrow, flag_chunk, "FLAG");
+               append<Bool>(flagrows, flagrows_length, nrow, flagrow_chunk, "FLAG_ROW");
+             }
+
+             if (column == "DATA" || column == "CORRECTED" || column == "MODEL") {
+                 ROVisibilityIterator::DataColumn dc;
+                 if (column == "DATA") dc = ROVisibilityIterator::Observed;
+                 else if (column == "CORRECTED") dc = ROVisibilityIterator::Corrected;
+                 else dc = ROVisibilityIterator::Model;
+                 
+                 vi.visibility(static_cast<Cube<Complex>&>(data_complex_chunk), dc);
+                 
+                 append<Complex>(data_complex, length, nrow, data_complex_chunk, column);
+             }
+             else if (column == "UVW") {
+                 Vector<RigidVector<Double, 3> > uvw;
+                 vi.uvw(uvw);
+                 
+                 data_double_chunk.resize(IPosition(2, 3, uvw.nelements()));
+                 for (unsigned i = 0; i < uvw.nelements(); i++) {
+                   static_cast<Matrix<Double> >(data_double_chunk)(0, i) = uvw(i)(0);
+                   static_cast<Matrix<Double> >(data_double_chunk)(1, i) = uvw(i)(1);
+                   static_cast<Matrix<Double> >(data_double_chunk)(2, i) = uvw(i)(2);
+                 }
+                 append<Double>(data_double, length, nrow, data_double_chunk, column);
+             }
+             else if (column == "UVRANGE") {
+                 Vector<RigidVector<Double, 3> > uvw;
+                 vi.uvw(uvw);
+                 
+                 data_double_chunk.resize(IPosition(1, uvw.nelements()));
+                 for (unsigned i = 0; i < uvw.nelements(); i++) {
+                   static_cast<Vector<Double> >(data_double_chunk)(i) = 
+                     sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
+                 }
+                 append<Double>(data_double, length, nrow, data_double_chunk, column);
+             }
+             else if (column == "FLAG") {
+                 vi.flag(static_cast<Cube<Bool>&>(data_bool_chunk));
+                 append<Bool>(data_bool, length, nrow, data_bool_chunk, column);
+             }
+             else if (column == "WEIGHT") {
+                 vi.weightMat(static_cast<Matrix<Float>&>(data_float_chunk));
+                 append<Float>(data_float, length, nrow, data_float_chunk, column);
+             }
+             else if (column == "SIGMA") {
+                 vi.sigmaMat(static_cast<Matrix<Float>&>(data_float_chunk));
+                 append<Float>(data_float, length, nrow, data_float_chunk, column);
+             }
+             else if (column == "IMAGING_WEIGHT") {
+                 vi.imagingWeight(static_cast<Matrix<Float>&>(data_float_chunk));
+                 append<Float>(data_float, length, nrow, data_float_chunk, column);
+             }
+             else if (column == "ANTENNA1") {
+                 vi.antenna1(static_cast<Vector<Int>&>(data_int_chunk));
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+             }
+             else if (column == "ANTENNA2") {
+                 vi.antenna2(static_cast<Vector<Int>&>(data_int_chunk));
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+             }
+             else if (column == "FEED1") {
+                 vi.feed1(static_cast<Vector<Int>&>(data_int_chunk));
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+             }
+             else if (column == "FEED2") {
+                 vi.feed2(static_cast<Vector<Int>&>(data_int_chunk));
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+             }
+             else if (column == "FIELD_ID") {
+                 data_int_chunk.resize(IPosition(1, 1));
+                 data_int_chunk(IPosition(1, 0)) = vi.fieldId();
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+             }
+             else if (column == "ARRAY_ID") {
+                 data_int_chunk.resize(IPosition(1, 1));
+                 data_int_chunk(IPosition(1, 0)) = vi.arrayId();
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+             }
+             else if (column == "DATA_DESC_ID") {
+                 data_int_chunk.resize(IPosition(1, 1));
+                 data_int_chunk(IPosition(1, 0)) = vi.dataDescriptionId();
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+             }
+             else if (column == "FLAG_ROW") {
+                 vi.flagRow(static_cast<Vector<Bool>&>(data_bool_chunk));
+                 append<Bool>(data_bool, length, nrow, data_bool_chunk, column);
+             }
+             else if (column == "INTERVAL") {
+                 vi.timeInterval(static_cast<Vector<Double>&>(data_double_chunk));
+                 append<Double>(data_double, length, nrow, data_double_chunk, column);
+             }
+             else if (column == "SCAN_NUMBER" || column == "SCAN") {
+                 vi.scan(static_cast<Vector<Int>&>(data_int_chunk));
+                 append<Int>(data_int, length, nrow, data_int_chunk, column);
+             }
+             else if (column == "TIME") {
+                 vi.time(static_cast<Vector<Double>&>(data_double_chunk));
+                 append<Double>(data_double, length, nrow, data_double_chunk, column);
+             }
+             else if (column == "WEIGHT_SPECTRUM") {
+                 vi.weightSpectrum(static_cast<Cube<Float>&>(data_float_chunk));
+                 append<Float>(data_float, length, nrow, data_float_chunk, column);
+             }
+             else {
+                 stringstream ss;
+                 ss << "Unsupported column name: " << column;
+                 throw AipsError(ss.str());
+             }
+             
+           }
+         }
+
+         
+         unsigned dimension;
+         unsigned n;
+         if (data_complex.nelements() > 0) {
+           dimension = data_complex.shape().nelements();
+           n = data_complex.shape().product();
+         }
+         else if (data_double.nelements() > 0) {
+           dimension = data_double.shape().nelements();
+           n = data_double.shape().product();
+         }
+         else if (data_float.nelements() > 0) {
+           dimension = data_float.shape().nelements();
+           n = data_float.shape().product();
+         }
+         else if (data_bool.nelements() > 0) {
+           dimension = data_bool.shape().nelements();
+           n = data_bool.shape().product();
+         }
+         else if (data_int.nelements() > 0) {
+           dimension = data_int.shape().nelements();
+           n = data_int.shape().product();
+         }
+         else {
+           throw AipsError("No data could be found!");
+         }
+         
+         Vector<Bool> f;
+         if (useflags) {
+           if (dimension == 1) {
+             f = flagrows;
+           }
+           else if (dimension == 2) {
+             f = flagrows;
+           }
+           else if (dimension == 3) {
+             f = flags.reform(IPosition(1, n));
+           }
+           else {
+             stringstream ss;
+             ss << "Unsupported column name: " << column;
+             throw AipsError(ss.str());
+           }
+         }
+         else {
+           f = Vector<Bool>(n, false);
+         }
+
+         bool supported = true;
+         if (data_complex.nelements() > 0) {
+
+           Vector<Complex> v(data_complex.reform(IPosition(1, data_complex.shape().product())));
+           retval = fromRecord(Statistics<Complex>::get_stats_complex(v, f,
+                                                                      column, 
+                                                                      supported,
+                                                                      complex_value));
+         }
+         else if (data_double.nelements() > 0) {
+             if (dimension == 2) {
+                 f.resize(0);
+                 f = Vector<Bool>(data_double.shape()(1), false);
+                 retval = fromRecord(Statistics<Double>::get_stats_array(static_cast<Matrix<Double> >(data_double),
+                                                                     f,
+                                                                     column,
+                                                                     supported));
+             
+           }
+           else {
+               retval = fromRecord(Statistics<Double>::get_stats(data_double.reform(IPosition(1, data_double.shape().product())),
+                                                               f,
+                                                               column,
+                                                               supported));
+           }
+         }
+         else if (data_bool.nelements() > 0) {
+             retval = fromRecord(Statistics<Bool>::get_stats(data_bool.reform(IPosition(1, data_bool.shape().product())),
+                                                             f,
+                                                             column,
+                                                             supported));
+         }
+         else if (data_float.nelements() > 0) {
+             if (dimension == 2) {
+                 f.resize(0);
+                 f = Vector<Bool>(data_float.shape()(1), false);
+                 retval = fromRecord(Statistics<Float>::get_stats_array(static_cast<Matrix<Float> >(data_float),
+                                                                        f,
+                                                                        column,
+                                                                        supported));
+             }
+             else {
+               retval = fromRecord(Statistics<Float>::get_stats(data_float.reform(IPosition(1, data_float.shape().product())),
+                                                                f,
+                                                                column,
+                                                                supported));
+             }
+         }
+         else if (data_int.nelements() > 0) {
+             retval = fromRecord(Statistics<Int>::get_stats(data_int.reform(IPosition(1, data_int.shape().product())),
+                                                            f,
+                                                            column,
+                                                            supported));
+         }
+         else {
+           throw AipsError("No data could be found!");
+         }
+       } // end if !detached
+   } catch (AipsError x) {
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       Table::relinquishAutoLocks();
+       RETHROW(x);
+   }
+   Table::relinquishAutoLocks();
+   return retval;
+}
+
 bool
 ms::lister(const std::string& options,
            const std::string& datacolumn,
@@ -628,6 +1072,378 @@ ms::selectpolarization(const std::vector<std::string>& wantedpol)
    Table::relinquishAutoLocks();
    return retval;
 }
+
+bool
+ms::regridspw(const std::string& outframe, 
+	      const std::string& regrid_quantity, 
+	      const double regrid_velo_restfrq, 
+	      const std::string& regrid_interp_meth,
+	      const double regrid_start, 
+	      const double regrid_center, 
+	      const double regrid_bandwidth, 
+	      const double regrid_chan_width 
+	      )
+{
+  Bool rstat(False);
+  try {
+     *itsLog << LogOrigin("ms", "regridspw");
+     if(!ready2write_()){
+       *itsLog << LogIO::SEVERE
+            << "Please open ms with parameter nomodify=false. Write access to ms is needed."
+            << LogIO::POST;
+
+       return False;
+     }
+
+     double center = regrid_center;
+     if(center > -1E30 && regrid_start > -1E30){
+       Bool agree(False);
+       if( regrid_quantity == "chan" ){
+	 agree = (center == floor(regrid_bandwidth/2. + regrid_start));
+       }
+       else{
+	 agree = (center == regrid_bandwidth/2. + regrid_start);
+       }	 
+       if(!agree){ // start and center don't agree
+	 *itsLog << LogIO::SEVERE
+		 << "Please give only the start (lower edge) or the center of the new spectral window, not both."
+		 << LogIO::POST;
+       return False;       
+       }
+     }
+     else if(regrid_start > -1E30){ // only start given, need to calculate center
+       if( regrid_quantity == "chan" ){
+	 center = floor(regrid_bandwidth/2. + regrid_start);
+       }
+       else{
+	 center = regrid_bandwidth/2. + regrid_start;
+       }
+     } 
+     
+     SubMS *subms = new SubMS(*itsMS);
+     *itsLog << LogIO::NORMAL << "Starting spectral frame transformation / regridding ..." << LogIO::POST;
+     String t_outframe=toCasaString(outframe);
+     String t_regridQuantity=toCasaString(regrid_quantity);
+     String t_regridInterpMeth=toCasaString(regrid_interp_meth);
+     Int rval;
+     String regridMessage;
+
+
+     if((rval = subms->regridSpw(regridMessage,
+				 t_outframe,
+				 t_regridQuantity,
+				 Double(regrid_velo_restfrq),
+				 t_regridInterpMeth,
+				 Double(center), 
+				 Double(regrid_bandwidth),
+				 Double(regrid_chan_width)
+				 )
+	 )==1){ // successful modification of the MS took place
+       *itsLog << LogIO::NORMAL << "Spectral frame transformation/regridding completed." << LogIO::POST;
+   
+       // Update HISTORY table of modfied MS
+       String message= "Transformed/regridded with regridspw";
+       writehistory(message, regridMessage, "ms::regridspw()", "", "ms"); // empty name writes to itsMS
+       rstat = True;
+     }
+     else if(rval==0) { // an unsuccessful modification of the MS took place
+       String message= "Frame transformation to " + t_outframe + " failed. MS probably invalid.";
+       *itsLog << LogIO::WARN << message << LogIO::POST;
+       // Update HISTORY table of the unsuccessfully modfied MS
+       ostringstream param;
+       param << "Original input parameters: outframe=" << t_outframe << " mode= " <<  t_regridQuantity
+	     << " center= " << center << " bandwidth=" << regrid_bandwidth
+	     << " chanwidth= " << regrid_chan_width << " restfreq= " << regrid_velo_restfrq 
+	     << " interpolation= " << t_regridInterpMeth;
+       String paramstr=param.str();
+       writehistory(message,paramstr,"ms::regridspw()", "", "ms"); // empty name writes to itsMS
+     }
+     else {
+       *itsLog << LogIO::NORMAL << "MS not modified." << LogIO::POST;
+       rstat = True;
+     }       
+
+     delete subms;
+
+  } catch (AipsError x) {
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       Table::relinquishAutoLocks();
+       RETHROW(x);
+  }
+  Table::relinquishAutoLocks();
+  return rstat;
+}
+
+
+bool
+ms::cvel(const std::string& mode, 
+	 const int nchan, 
+	 const ::casac::variant& start, const ::casac::variant& width,
+	 const std::string& interp, 
+	 const ::casac::variant& phasec, 
+	 const ::casac::variant& restfreq, 
+	 const std::string& outframe,
+	 const std::string& veltype)
+{
+  Bool rstat(False);
+  try {
+
+    *itsLog << LogOrigin("ms", "cvel");
+    
+    String t_interp = toCasaString(interp);
+    String t_phasec = toCasaString(phasec);
+    String t_mode = toCasaString(mode);
+    Double t_restfreq = 0.; // rest frequency, convert to Hz
+    if(!restfreq.toString().empty()){
+      t_restfreq = casaQuantity(restfreq).getValue("Hz");
+    }
+
+    // Determine grid
+    Double t_cstart = -9e99; // default value indicating that the original start of the SPW should be used
+    Double t_bandwidth = -1.; // default value indicating that the original width of the SPW should be used
+    Double t_cwidth = -1.; // default value indicating that the original channel width of the SPW should be used
+    Int t_nchan = -1; 
+    Int t_width = 0;
+    Int t_start = -1;
+
+    if(!start.toString().empty()){ // start was set
+      if(t_mode == "channel"){
+	t_start = atoi(start.toString().c_str());
+      }
+      if(t_mode == "channel_b"){
+	t_cstart = Double(atoi(start.toString().c_str()));
+      }
+      else if(t_mode == "frequency"){
+	t_cstart = casaQuantity(start).getValue("Hz");
+      }
+      else if(t_mode == "velocity"){
+	t_cstart = casaQuantity(start).getValue("m/s");
+      }
+    }
+    if(!width.toString().empty()){ // channel width was set
+      if(t_mode == "channel"){
+	t_width = abs(Double(atoi(width.toString().c_str())));
+      }
+      else if(t_mode == "channel_b"){
+	t_cwidth = abs(Double(atoi(width.toString().c_str())));
+      }
+      else if(t_mode == "frequency"){
+	t_cwidth = abs(casaQuantity(width).getValue("Hz"));
+      }
+      else if(t_mode == "velocity"){
+	t_cwidth = abs(casaQuantity(width).getValue("m/s"));   
+      }
+    }
+    if(nchan > 0){ // number of output channels was set
+      if(t_mode == "channel_b"){
+	if(t_cwidth>0){
+	  t_bandwidth = Double(nchan*t_cwidth);
+	}
+	else{
+	  t_bandwidth = Double(nchan);	  
+	}
+      }
+      else{
+	t_nchan = nchan;
+      }
+    }
+
+    String t_veltype = toCasaString(veltype); 
+    String t_regridQuantity;
+    if(t_mode == "channel"){
+      t_regridQuantity = "freq";
+    }
+    else if(t_mode == "channel_b"){
+      t_regridQuantity = "chan";
+    }
+    else if(t_mode == "frequency"){
+      t_regridQuantity = "freq";
+    }
+    else if(t_mode == "velocity"){
+      if(t_restfreq == 0.){
+	*itsLog << LogIO::SEVERE << "Need to set restfreq in velocity mode." << LogIO::POST; 
+	return False;
+      }	
+      t_regridQuantity = "vrad";
+      if(t_veltype == "optical"){
+	t_regridQuantity = "vopt";
+      }
+      else if(t_veltype != "radio"){
+	*itsLog << LogIO::WARN << "Invalid velocity type "<< veltype 
+		<< ", setting type to \"radio\"" << LogIO::POST; 
+      }
+    }   
+    else{
+      *itsLog << LogIO::WARN << "Invalid mode " << t_mode << LogIO::POST;
+      return false;
+    }
+    
+    String t_outframe=toCasaString(outframe);
+    String t_regridInterpMeth=toCasaString(interp);
+    
+    casa::MDirection  t_phaseCenter;
+    Int t_phasec_fieldid=-1;
+    //If phasecenter is a simple numeric value then it's taken as a fieldid 
+    //otherwise its converted to a MDirection
+    if(phasec.type()==::casac::variant::DOUBLEVEC 
+       || phasec.type()==::casac::variant::DOUBLE
+       || phasec.type()==::casac::variant::INTVEC
+       || phasec.type()==::casac::variant::INT){
+      t_phasec_fieldid = phasec.toInt();	
+      if(t_phasec_fieldid >= (Int)itsMS->field().nrow() || t_phasec_fieldid < 0){
+	*itsLog << LogIO::SEVERE << "Field id " << t_phasec_fieldid
+		<< " selected to be used as phasecenter does not exist." << LogIO::POST;
+	return False;
+      }
+    }
+    else{
+      if(t_phasec.empty()){
+	t_phasec_fieldid = 0;
+      }
+      else{
+	if(!casaMDirection(phasec, t_phaseCenter)){
+	  *itsLog << LogIO::SEVERE << "Could not interprete phasecenter parameter "
+		  << t_phasec << LogIO::POST;
+	  return False;
+	}
+	*itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
+      }
+    }
+
+    // end prepare regridding parameters
+
+    // check disk space: need at least twice the size of the original for safety
+    if (2 * DOos::totalSize(itsMS->tableName(), True) >
+	DOos::freeSpace(Vector<String>(1, itsMS->tableName()), True)(0)) {
+      *itsLog << "Not enough disk space. To be on the safe side, need at least "
+	      << 2 * DOos::totalSize(itsMS->tableName(), True)/1E6
+	      << " MBytes on the filesystem containing " << itsMS->tableName()
+	      << " for the SPW combination and regridding to succeed." << LogIO::EXCEPTION;
+    }
+
+    // need exclusive rights to this MS, will re-open it after combineSpws
+    String originalName = itsMS->tableName();
+    itsMS->flush();
+    close();
+
+    *itsLog << LogOrigin("ms", "cvel");
+
+    SubMS *sms = new SubMS(originalName);
+
+    *itsLog << LogIO::NORMAL << "Starting combination of spectral windows ..." << LogIO::POST;
+
+    // combine Spws
+    if(!sms->combineSpws()){
+      *itsLog << LogIO::SEVERE << "Error combining spectral windows." << LogIO::POST;
+      delete sms;
+      open(originalName,  Table::Update, False); 
+      return False;
+    }
+
+    *itsLog << LogIO::NORMAL << " " << LogIO::POST; 
+
+    // cout << "trq " << t_regridQuantity << " ts " << t_start << " tcs " << t_cstart << " tb " 
+    //	 << t_bandwidth << " tcw " << t_cwidth << " tw " << t_width << " tn " << t_nchan << endl; 
+
+    // Regrid
+
+    *itsLog << LogIO::NORMAL << "Testing if spectral frame transformation/regridding is needed ..." << LogIO::POST;
+
+    Int rval;
+    String regridMessage;
+
+    if((rval = sms->regridSpw(regridMessage,
+			      t_outframe,
+			      t_regridQuantity,
+			      t_restfreq,
+			      t_regridInterpMeth,
+			      t_cstart, 
+			      t_bandwidth,
+			      t_cwidth,
+			      t_phasec_fieldid, // == -1 if t_phaseCenter is valid
+			      t_phaseCenter,
+			      True, // use "center is start" mode
+			      t_nchan,
+			      t_width,
+			      t_start
+			      )
+	)==1){ // successful modification of the MS took place
+      *itsLog << LogIO::NORMAL << "Spectral frame transformation/regridding completed." << LogIO::POST;
+      
+      // Update HISTORY table of modfied MS
+      String message = "Transformed/regridded with cvel";
+      writehistory(message, regridMessage, "ms::cvel()", originalName, "ms"); 
+      rstat = True;
+    }
+    else if(rval==0) { // an unsuccessful modification of the MS took place
+      String message= "Frame transformation to " + t_outframe + " failed. MS probably invalid.";
+      *itsLog << LogIO::WARN << message << LogIO::POST;
+      // Update HISTORY table of the unsuccessfully modfied MS
+      ostringstream param;
+      param << "Original input parameters: outframe=" << t_outframe << " mode= " <<  t_regridQuantity
+	    << " start= " << t_start << " bandwidth=" << t_bandwidth
+	    << " chanwidth= " << t_width << " restfreq= " << t_restfreq 
+	    << " interpolation= " << t_regridInterpMeth;
+      String paramstr=param.str();
+      writehistory(message,paramstr,"ms::cvel()", originalName, "ms"); 
+      rstat = False;
+    }
+    else { // there was no need to regrid
+      *itsLog << LogIO::NORMAL << "SubMS not modified by regridding." << LogIO::POST;
+      rstat = True;
+    }       
+
+    if(rstat){
+      // print parameters of final SPW
+      Table spwtable(originalName+"/SPECTRAL_WINDOW");
+      ROArrayColumn<Double> chanwidths(spwtable, "CHAN_WIDTH");
+      ROArrayColumn<Double> chanfreqs(spwtable, "CHAN_FREQ");
+      
+      Vector<Double> cw(chanwidths(0));
+      Vector<Double> cf(chanfreqs(0));
+      Int totNumChan = cw.size();
+      
+      Bool isEquidistant = True;
+      for(Int i=0; i< totNumChan; i++){
+	if(cw(i)-cw(0)>1.){
+	  isEquidistant = False;
+	}
+      }
+      Double minWidth = min(cw);
+      Double maxWidth = max(cw);
+      
+      ostringstream oss;
+      if(isEquidistant){
+	oss <<  "Final spectral window has " << totNumChan 
+	    << " channels of width " << scientific << setprecision(6) << setw(6) << cw(0) << " Hz";
+      }
+      else{
+	oss << "Final spectral window has " << totNumChan 
+	    << " channels of varying width: minimum width = " << scientific << setprecision(6) << setw(6) << minWidth 
+	    << " Hz, maximum width = " << scientific << setprecision(6) << setw(6) << maxWidth << " Hz";
+      }
+      *itsLog << LogIO::NORMAL  << oss.str() << LogIO::POST;
+      if(totNumChan > 1){
+	*itsLog << LogIO::NORMAL  << "First channel center = " << cf(0) 
+		<< " Hz, last channel center = " << cf(totNumChan-1) << " Hz" << LogIO::POST;
+      }
+      else{
+	*itsLog << LogIO::NORMAL << "First channel center = " << cf(0) << " Hz" << LogIO::POST;
+      }
+    } 
+    
+    delete sms;
+    open(originalName,  Table::Update, False);
+
+  } catch (AipsError x) {
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      Table::relinquishAutoLocks();
+      RETHROW(x);
+  }
+  Table::relinquishAutoLocks();
+  return rstat;
+}
+
 
 ::casac::record*
 ms::getdata(const std::vector<std::string>& items, const bool ifraxis, const int ifraxisgap, const int increment, const bool average)
@@ -777,9 +1593,9 @@ ms::timesort(const std::string& msname)
 		    newMSmain = Table();
 		    // reopen 
 		    open(originalName,  Table::Update, False); 
+		    *itsLog << LogOrigin("ms", "timesort");
 		    String message = "Sorted by TIME in ascending order.";
 		    writehistory(std::string(message.data()), "", std::string("ms::timesort()"), originalName, "ms");
-
 		    *itsLog << LogIO::NORMAL << "Sorted main table of " << originalName << " by TIME." 
 			    << LogIO::POST;
 		}
@@ -807,42 +1623,66 @@ ms::timesort(const std::string& msname)
 }
 
 bool
-ms::split(const std::string& outputms, const ::casac::variant& field, 
-	  const ::casac::variant& spw, const std::vector<int>& nchan, 
-	  const std::vector<int>& start, const std::vector<int>& step, 
-	  const ::casac::variant& antenna, const ::casac::variant& timebin, 
-	  const std::string& timerange, const ::casac::variant& scan, 
-	  const ::casac::variant& uvrange, const std::string& taql, 
-	  const std::string& whichcol)
+ms::split(const std::string&      outputms,  const ::casac::variant& field, 
+	  const ::casac::variant& spw,       const std::vector<int>& step,
+          const ::casac::variant& antenna,   const ::casac::variant& timebin,
+          const std::string&      timerange, const ::casac::variant& scan,
+          const ::casac::variant& uvrange,   const std::string&      taql,
+          const std::string&      whichcol,  const ::casac::variant& tileShape,
+          const ::casac::variant& subarray,  const bool averchan)
 {
   Bool rstat(False);
   try {
      *itsLog << LogOrigin("ms", "split");
-     if(!ready2write_()){
+     /*if(!ready2write_()){
        *itsLog << LogIO::SEVERE
-            << "Please open ms with parameter nomodify=false. Write access to ms is needed by split to store some temporary selection information. "
+            << "Please open ms with parameter nomodify=false.  Write access to ms is needed by split to store some temporary selection information. "
             << LogIO::POST;
 
        return False;
      }
-
+     */
      SubMS *splitter = new SubMS(*itsMS);
      *itsLog << LogIO::NORMAL2 << "Sub MS created" << LogIO::POST;
      String t_field(m1toBlankCStr_(field));
      String t_spw(m1toBlankCStr_(spw));
-     String t_antenna=toCasaString(antenna);
-     String t_scan=toCasaString(scan);
-     String t_uvrange=toCasaString(uvrange);
+     if(t_spw == "")   // MSSelection doesn't respond well to "", and setting it
+       t_spw = "*";    // at the XML level does not work.
+
+     String t_antenna = toCasaString(antenna);
+     String t_scan    = toCasaString(scan);
+     String t_uvrange = toCasaString(uvrange);
      String t_taql(taql);
-     splitter->setmsselect(t_spw, t_field, t_antenna, t_scan, t_uvrange, 
-			   t_taql, 
-			   Vector<Int>(nchan), Vector<Int>(start), 
-			   Vector<Int>(step), True);
+     const String t_subarray = toCasaString(subarray);
+     
+     if(!splitter->setmsselect(t_spw, t_field, t_antenna, t_scan, t_uvrange, 
+                               t_taql, Vector<Int>(step), averchan,
+                               t_subarray)){
+       *itsLog << LogIO::SEVERE
+               << "Error selecting data."
+               << LogIO::POST;
+       delete splitter;
+       return false;
+     }
+       
      Double timeInSec=casaQuantity(timebin).get("s").getValue();
      splitter->selectTime(timeInSec, String(timerange));
      String t_outputms(outputms);
      String t_whichcol(whichcol);
-     splitter->makeSubMS(t_outputms, t_whichcol);
+     Vector<Int> t_tileshape(1,0);
+     if(toCasaString(tileShape) != String("")){
+       t_tileshape.resize();
+       t_tileshape=tileShape.toIntVec();
+     }
+     if(!splitter->makeSubMS(t_outputms, t_whichcol, t_tileshape)){
+       *itsLog << LogIO::SEVERE
+               << "Error splitting " << itsMS->tableName() << " to "
+               << t_outputms
+               << LogIO::POST;
+       delete splitter;
+       return false;
+     }
+       
      *itsLog << LogIO::NORMAL2 << "SubMS made" << LogIO::POST;
      delete splitter;
    
@@ -850,33 +1690,35 @@ ms::split(const std::string& outputms, const ::casac::variant& field,
        String message= toCasaString(outputms) + " split from " + itsMS->tableName();
        ostringstream param;
        param << "fieldids=" << t_field << " spwids=" << t_spw
-             << " nchan=" << Vector<Int>(nchan) << " start=" << Vector<Int>(start) << " step=" << Vector<Int>(step)
-             << " which='" << whichcol <<"'";
+             << " step=" << Vector<Int>(step) << " which='" << whichcol << "'";
        String paramstr=param.str();
-       writehistory(message,paramstr,"ms::split()",outputms, "ms");
+       writehistory(message, paramstr, "ms::split()", outputms, "ms");
      }
 
      rstat = True;
   } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-       Table::relinquishAutoLocks();
-       RETHROW(x);
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    Table::relinquishAutoLocks();
+    RETHROW(x);
   }
   Table::relinquishAutoLocks();
   return rstat;
 }
 
 bool
-ms::iterinit(const std::vector<std::string>& columns, const double interval, const int maxrows, const bool adddefaultsortcolumns)
+ms::iterinit(const std::vector<std::string>& columns, const double interval,
+             const int maxrows, const bool adddefaultsortcolumns)
 {
    Bool rstat(False);
    try {
       if(!detached())
-         rstat = itsSel->iterInit(toVectorString(columns), interval, maxrows, adddefaultsortcolumns);
+         rstat = itsSel->iterInit(toVectorString(columns), interval, maxrows,
+                                  adddefaultsortcolumns);
    } catch (AipsError x) {
-       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-       Table::relinquishAutoLocks();
-       RETHROW(x);
+     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+             << LogIO::POST;
+     Table::relinquishAutoLocks();
+     RETHROW(x);
    }
    Table::relinquishAutoLocks();
    return rstat; 
@@ -1159,66 +2001,6 @@ bool ms::continuumsub(const ::casac::variant& field,
  }
  Table::relinquishAutoLocks();
  return rstat;
-}
-
-bool ms::calcuvw(const std::vector<int>& fields, const std::string& refcode)
-{
-  Bool rstat(false);
-  try {
-    *itsLog << LogOrigin("ms", "calcuvw");
-    if(!ready2write_()){
-      *itsLog << LogIO::SEVERE
-	      << "Please open ms with parameter nomodify=false so the UVW column can be changed."
-	      << LogIO::POST;
-      return false;
-    }
-
-    *itsLog << LogIO::NORMAL2 << "calcuvw starting" << LogIO::POST;
-      
-    MSFixVis visfixer(*itsMS);
-    *itsLog << LogIO::NORMAL2 << "MSFixVis created" << LogIO::POST;
-    //visfixer.setField(m1toBlankCStr_(fields));
-    visfixer.setFields(fields);
-    rstat = visfixer.calc_uvw(String(refcode));
-    *itsLog << LogIO::NORMAL2 << "calcuvw finished" << LogIO::POST;  
-  }
-  catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
-    Table::relinquishAutoLocks();
-    RETHROW(x);
-  }
-  Table::relinquishAutoLocks();
-  return rstat;
-}
-
-bool ms::fixvis(const std::vector<int>& fields,
-		const ::casac::variant& phaseDirs, const std::string& refcode)
-{
-  Bool rstat(False);
-  try {
-    *itsLog << LogOrigin("ms", "fixvis");
-    if(!ready2write_()){
-      *itsLog << LogIO::SEVERE
-	      << "Please open ms with parameter nomodify=false."
-	      << LogIO::POST;
-      return false;
-    }
-    *itsLog << LogIO::NORMAL2 << "fixvis starting" << LogIO::POST;
-      
-    MSFixVis visfixer(*itsMS);
-    visfixer.setFields(Vector<Int>(fields));
-    //rstat = visfixer.fixvis();
-    *itsLog << LogIO::NORMAL2 << "fixvis finished" << LogIO::POST;  
-  }
-  catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-	    << LogIO::POST;
-    Table::relinquishAutoLocks();
-    RETHROW(x);
-  }
-  Table::relinquishAutoLocks();
-  return rstat;
 }
 
 /*

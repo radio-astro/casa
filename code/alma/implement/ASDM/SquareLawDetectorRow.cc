@@ -132,7 +132,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct SquareLawDetectorRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void SquareLawDetectorRow::setFromIDL (SquareLawDetectorRowIDL x) throw(ConversionException) {
+	void SquareLawDetectorRow::setFromIDL (SquareLawDetectorRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -171,7 +171,7 @@ namespace asdm {
 	
 		
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"SquareLawDetector");
+			throw ConversionException (err.getMessage(),"SquareLawDetector");
 		}
 	}
 #endif
@@ -223,7 +223,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void SquareLawDetectorRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void SquareLawDetectorRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -261,6 +261,76 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"SquareLawDetector");
 		}
+	}
+	
+	void SquareLawDetectorRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	squareLawDetectorId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numBand);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(bandType);
+				
+		
+	
+
+
+	
+	
+	}
+	
+	SquareLawDetectorRow* SquareLawDetectorRow::fromBin(EndianISStream& eiss, SquareLawDetectorTable& table) {
+		SquareLawDetectorRow* row = new  SquareLawDetectorRow(table);
+		
+		
+		
+	
+		
+		
+		row->squareLawDetectorId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->numBand =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->bandType = CDetectorBandType::from_int(eiss.readInt());
+			
+		
+	
+
+		
+		
+		
+		
+		return row;
 	}
 	
 	////////////////////////////////

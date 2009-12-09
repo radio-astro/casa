@@ -93,6 +93,8 @@ using namespace AccumModeMod;
 	
 
 	
+
+	
 #include "CAxisName.h"
 using namespace AxisNameMod;
 	
@@ -147,73 +149,94 @@ class ASDM;
 class CorrelatorModeRow;
 /**
  * The CorrelatorModeTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Contains information on a Correlator processor.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CorrelatorMode </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> almaCorrelatorModeId </I></TD> 
+ 		
+ * <TD><I> correlatorModeId </I></TD>
+ 		 
  * <TD> Tag</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in the table. </TD>
  * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> numBaseband </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of basebands. </TD>
  * </TR>
 	
  * <TR>
  * <TD> basebandNames </TD> 
  * <TD> vector<BasebandNameMod::BasebandName > </TD>
  * <TD>  numBaseband </TD> 
+ * <TD> &nbsp;identifies the basebands (one value per basebands). </TD>
  * </TR>
 	
  * <TR>
  * <TD> basebandConfig </TD> 
  * <TD> vector<int > </TD>
  * <TD>  numBaseband </TD> 
+ * <TD> &nbsp;encodes the basebands configurations (one value per baseband). </TD>
  * </TR>
 	
  * <TR>
  * <TD> accumMode </TD> 
  * <TD> AccumModeMod::AccumMode </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the accumulation mode.  </TD>
  * </TR>
 	
  * <TR>
  * <TD> binMode </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the binning mode. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numAxes </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of axes in the binary data blocks. </TD>
  * </TR>
 	
  * <TR>
  * <TD> axesOrderArray </TD> 
  * <TD> vector<AxisNameMod::AxisName > </TD>
- * <TD>   </TD> 
+ * <TD>  numAxes </TD> 
+ * <TD> &nbsp;the order of axes in the binary data blocks. </TD>
  * </TR>
 	
  * <TR>
  * <TD> filterMode </TD> 
  * <TD> vector<FilterModeMod::FilterMode > </TD>
  * <TD>  numBaseband </TD> 
+ * <TD> &nbsp;identifies the filters modes (one value per baseband). </TD>
  * </TR>
 	
  * <TR>
  * <TD> correlatorName </TD> 
  * <TD> CorrelatorNameMod::CorrelatorName </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the correlator's name. </TD>
  * </TR>
 	
 
@@ -299,6 +322,8 @@ public:
 	
  	 * @param binMode. 
 	
+ 	 * @param numAxes. 
+	
  	 * @param axesOrderArray. 
 	
  	 * @param filterMode. 
@@ -306,13 +331,13 @@ public:
  	 * @param correlatorName. 
 	
      */
-	CorrelatorModeRow *newRow(int numBaseband, vector<BasebandNameMod::BasebandName > basebandNames, vector<int > basebandConfig, AccumModeMod::AccumMode accumMode, int binMode, vector<AxisNameMod::AxisName > axesOrderArray, vector<FilterModeMod::FilterMode > filterMode, CorrelatorNameMod::CorrelatorName correlatorName);
+	CorrelatorModeRow *newRow(int numBaseband, vector<BasebandNameMod::BasebandName > basebandNames, vector<int > basebandConfig, AccumModeMod::AccumMode accumMode, int binMode, int numAxes, vector<AxisNameMod::AxisName > axesOrderArray, vector<FilterModeMod::FilterMode > filterMode, CorrelatorNameMod::CorrelatorName correlatorName);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CorrelatorModeRow *newRowFull(int numBaseband, vector<BasebandNameMod::BasebandName > basebandNames, vector<int > basebandConfig, AccumModeMod::AccumMode accumMode, int binMode, vector<AxisNameMod::AxisName > axesOrderArray, vector<FilterModeMod::FilterMode > filterMode, CorrelatorNameMod::CorrelatorName correlatorName);
+	CorrelatorModeRow *newRowFull(int numBaseband, vector<BasebandNameMod::BasebandName > basebandNames, vector<int > basebandConfig, AccumModeMod::AccumMode accumMode, int binMode, int numAxes, vector<AxisNameMod::AxisName > axesOrderArray, vector<FilterModeMod::FilterMode > filterMode, CorrelatorNameMod::CorrelatorName correlatorName);
 
 
 	/**
@@ -375,11 +400,11 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
-	 * @param almaCorrelatorModeId. 
+	 * @param correlatorModeId. 
 	
  	 *
 	 */
- 	CorrelatorModeRow* getRowByKey(Tag almaCorrelatorModeId);
+ 	CorrelatorModeRow* getRowByKey(Tag correlatorModeId);
 
  	 	
 
@@ -401,6 +426,8 @@ public:
  	 		
  	 * @param binMode.
  	 		
+ 	 * @param numAxes.
+ 	 		
  	 * @param axesOrderArray.
  	 		
  	 * @param filterMode.
@@ -408,7 +435,7 @@ public:
  	 * @param correlatorName.
  	 		 
  	 */
-	CorrelatorModeRow* lookup(int numBaseband, vector<BasebandNameMod::BasebandName > basebandNames, vector<int > basebandConfig, AccumModeMod::AccumMode accumMode, int binMode, vector<AxisNameMod::AxisName > axesOrderArray, vector<FilterModeMod::FilterMode > filterMode, CorrelatorNameMod::CorrelatorName correlatorName); 
+	CorrelatorModeRow* lookup(int numBaseband, vector<BasebandNameMod::BasebandName > basebandNames, vector<int > basebandConfig, AccumModeMod::AccumMode accumMode, int binMode, int numAxes, vector<AxisNameMod::AxisName > axesOrderArray, vector<FilterModeMod::FilterMode > filterMode, CorrelatorNameMod::CorrelatorName correlatorName); 
 
 
 #ifndef WITHOUT_ACS
@@ -428,43 +455,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CorrelatorModeTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CorrelatorModeTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CorrelatorMode (CorrelatorModeTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CorrelatorMode (CorrelatorModeTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -543,8 +576,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	CorrelatorModeRow* checkAndAdd(CorrelatorModeRow* x) throw (DuplicateKey, UniquenessViolationException);
+	CorrelatorModeRow* checkAndAdd(CorrelatorModeRow* x) ;
 
 
 
@@ -558,7 +595,7 @@ private:
 	vector<CorrelatorModeRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

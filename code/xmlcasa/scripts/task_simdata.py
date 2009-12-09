@@ -1,10 +1,10 @@
-# (partial) TODO list - also search for XXX in the code
-# Find timerange when at least one of the inputs is up, limit the
+# (partial) TODO list 
+# RI todo Find timerange when at least one of the inputs is up, limit the
 #       observing time to it, and warn or abort (printing the valid
 #       timerange) depending on how badly the user missed it.
-# look for antenna list in default repository also
-# allow user to report statistics in Jy/bm instead of Jy/arcsec
-# Pad input image to a composite number of pixels on a side.  I don't
+# RI todo look for antenna list in default repository also
+# RI todo allow user to report statistics in Jy/bm instead of Jy/pixel
+# RI todo Pad input image to a composite number of pixels on a side.  I don't
 #       know if it would speed things up much, but it would suppress a warning.
 #       Large primes are surprisingly common.
 
@@ -18,91 +18,10 @@ import pylab as pl
 import pdb
 
 
-def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, antennalist=None, checkinputs=None, project=None, refdate=None, totaltime=None, integration=None, startfreq=None, chanwidth=None, nchan=None, direction=None, pointingspacing=None, relmargin=None, cell=None, imsize=None, niter=None, threshold=None, psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, noise_thermal=None, t_amb=None, tau0=None, fidelity=None, display=None, verbose=False, async=None):
+def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, antennalist=None, checkinputs=None, project=None, refdate=None, totaltime=None, integration=None, scanlength=None, startfreq=None, chanwidth=None, nchan=None, direction=None, pointingspacing=None, relmargin=None, cell=None, imsize=None, niter=None, threshold=None, psfmode=None, weighting=None, robust=None, uvtaper=None, outertaper=None, innertaper=None, noise=None, npixels=None, stokes=None, noise_thermal=None, noise_mode=None, user_pwv=None, t_ground=None, t_sky=None, tau0=None, fidelity=None, display=None, verbose=False, async=None):
 
 
-
-
-# helper function to plot an image (optionally), and calculate its statistics
-# we could move this to the utility object
-
-    def statim(image,plot=True,incell=None):
-        ia.open(image)
-        imunit=ia.summary()['header']['unit']            
-        if imunit == 'Jy/beam':
-            # stupid for dirty image:
-            if len(ia.restoringbeam())>0:
-                bm=ia.summary()['header']['restoringbeam']['restoringbeam']
-                toJyarcsec=1./(qa.convert(bm['major'],'arcsec')['value']*
-                               qa.convert(bm['minor'],'arcsec')['value']*pl.pi/4)
-            else:
-                toJyarcsec=1.
-            pix=ia.summary()['header']['incr']
-            toJypix=toJyarcsec*abs(pix[0]*pix[1])*206265.0**2
-        elif imunit == 'Jy/pixel':
-            pix=ia.summary()['header']['incr']
-            toJyarcsec=1./abs(pix[0]*pix[1])/206265.0**2
-            toJypix=1.
-        else:
-            msg("WARN: don't know image units for %s" % image,origin="statim")
-            toJyarcsec=1.
-            toJypix=1.
-        stats=ia.statistics(robust=True)
-        #im_max=stats['max']*toJyarcsec
-        #im_min=stats['min']*toJyarcsec
-        im_max=stats['max']*toJypix
-        im_min=stats['min']*toJypix
-        imsize=ia.shape()[0:2]
-        reg1=rg.box([0,0],[imsize[0]*.25,imsize[1]*.25])
-        stats=ia.statistics(region=reg1)
-        #im_rms=stats['rms']*toJyarcsec
-        im_rms=stats['rms']*toJypix
-        if len(im_rms)==0: im_rms=0.
-        data_array=ia.getchunk([-1,-1,1,1],[-1,-1,1,1],[1],[],True,True,False)
-        data_array=pl.array(data_array)
-        tdata_array=pl.transpose(data_array)
-        ttrans_array=tdata_array.tolist()
-        ttrans_array.reverse()
-        if (plot):
-            csys=ia.coordsys()
-            pixsize= csys.increment()["numeric"][0:2]*180/pl.pi*3600 # to arcsec
-            if incell != None:
-                if type(incell)=='str':
-                    incell=qa.quantity(incell)
-                pixsize=qa.convert(incell,'arcsec')['value']+pl.zeros(2)
-            #if verbose: msg("pixel size= %s" % pixsize,origin="statim")
-            xextent=imsize[0]*abs(pixsize[0])*0.5
-            xextent=[xextent,-xextent]
-            yextent=imsize[1]*abs(pixsize[1])*0.5
-            yextent=[-yextent,yextent]
-            # remove top .5% of pixels:
-            nbin=200
-            imhist=ia.histograms(cumu=True,nbins=nbin)['histout']
-            ii=nbin-1
-            highcounts=imhist['counts'][ii]
-            while imhist['counts'][ii]>0.995*highcounts and ii>0: 
-                ii=ii-1
-            highvalue=imhist['values'][ii]
-            #
-            pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,vmax=highvalue)
-            ax=pl.gca()
-            l=ax.get_xticklabels()
-            pl.setp(l,fontsize="x-small")
-            l=ax.get_yticklabels()
-            pl.setp(l,fontsize="x-small")
-            pl.title(image,fontsize="x-small")
-            from matplotlib.font_manager import fontManager, FontProperties
-            font= FontProperties(size='x-small');
-            pl.legend(("min=%7.1e" % im_min,"max=%7.1e" % im_max,"RMS=%7.1e" % im_rms),pad=0.15,prop=font)
-        ia.done()
-        return im_min,im_max,im_rms
-
-
-
-
-
-    ############ main function ############################################
-
+    # scanlength=5 # number of integrations
 
     casalog.origin('simdata')
     if verbose: casalog.filter(level="DEBUG2")
@@ -130,7 +49,9 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         ##################################################################
         # read antenna file:
 
-        stnx, stny, stnz, stnd, nant, telescopename = util.readantenna(antennalist)
+        stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
+        if stnx==False:
+            return
         antnames=[]
         for k in range(0,nant): antnames.append('A%02d'%k)
         aveant=stnd.mean()
@@ -172,7 +93,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             if verbose: msg("creating an image from your clean components",origin="setup model")
             components_only=True
             modelimage=project+'.ccmodel'
-            ia.fromshape(modelimage,out_shape)
+            ia.fromshape(modelimage,out_shape,overwrite=True)
             cs=ia.coordsys()
             # use output direction to create model image:
             epoch,ra,dec=util.direction_splitter(direction)
@@ -181,7 +102,8 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             # this is okay - if none of the clean components fit in the output
             # image, then the simulated image will be blank.  user error.
             cell_rad=qa.convert(qa.quantity(out_cell),"rad")['value']
-            cs.setincrement([-cell_rad,cell_rad],'direction')
+            cs.setincrement([cell_rad,cell_rad],'direction')
+            #cs.setlineartransform('direction',pl.array([[-1,0],[0,1]]))
             cs.setreferencevalue([qa.convert(ra,'rad')['value']
                                    ,qa.convert(dec,'rad')['value']],type="direction")
             cs.setreferencevalue(startfreq,'spectral')
@@ -195,9 +117,9 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
         else:  # we have a model image already
             components_only=False
-            if (complist != ''):
-                msg("WARN: I will use clean components and model image to calculate visibilities,",color="31",origin="setup model")
-                msg("         but the difference image won't have the clean components in it",color="31",origin="setup model")
+#            if (complist != ''):
+#                msg("WARN: I will use clean components and model image to calculate visibilities,",color="31",origin="setup model")
+#                msg("         but the difference image won't have the clean components in it",color="31",origin="setup model")
         
 
 
@@ -224,18 +146,30 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         else:
             # model image pixel sizes
             increments=in_csys.increment(type="direction")['numeric']
-            incellx=abs(increments[0])
-            incelly=increments[1]
+            incellx=qa.quantity(abs(increments[0]),in_csys.units(type="direction")[0])
+            incelly=qa.quantity(abs(increments[1]),in_csys.units(type="direction")[1])
+            #incellx=qa.convert(incellx,'arcsec')['value']
+            #incelly=qa.convert(incelly,'arcsec')['value']
+            xform=in_csys.lineartransform(type="direction")
+            offdiag=max(abs(xform[0,1]),abs(xform[1,0]))
+            if offdiag > 1e-4:
+                msg("ERROR: Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",color="31")
+            factor=pl.sqrt(abs(pl.det(xform)))
+            # stupid fix for not having Rob's quanta fix
+            if int(casalog.version().split()[4][1:5]) < 8000:
+                factor=str(factor)
+            incellx=qa.mul(incellx,factor)
+            incelly=qa.mul(incelly,factor)
     
             # warn if input pixels are not square
-            if (abs(incellx)-abs(incelly))/abs(incellx) > 0.001 and not ignorecoord:
+            if (abs(incellx['value'])-abs(incelly['value']))/abs(incellx['value']) > 0.001 and not ignorecoord:
                 msg("input pixels are not square!",color="31",origin="setup model")
                 if verbose:
-                    msg("using cell = %s (not %s)" % (incellx,incelly),origin="setup model")
+                    msg("using cell = %s (not %s)" % (str(incellx),str(incelly)),origin="setup model")
                 else:
-                    msg("using cell = %s" % incellx,origin="setup model")
-            incellx=qa.quantity(incellx,'rad')
-            incelly=qa.quantity(incelly,'rad')
+                    msg("using cell = %s" % str(incellx),origin="setup model")
+            #incellx=qa.quantity(incellx,'rad')
+            #incelly=qa.quantity(incelly,'rad')
             in_cell=qa.convert(incellx,'arcsec')
             
 
@@ -284,7 +218,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         central=-1
         
         for i in range(nfld):
-            o=pl.sqrt(offsets[0,i]**2+offsets[1,i]*2)
+            o=pl.sqrt(offsets[0,i]**2+offsets[1,i]**2)
             if o<minoff:
                 minoff=o
                 central=i
@@ -296,9 +230,11 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
         if nfld==1:
             imagermode=''
+            ftmachine="ft"
             msg("phase center = " + centralpointing)
         else:
             imagermode="mosaic"
+            ftmachine="mosaic"
             msg("mosaic center = " + imcenter + "; phase center = " + centralpointing)
             if verbose: 
                 for dir in pointings:
@@ -319,8 +255,6 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             highvalue=stats['max']
             scalefactor=float(inbright)/highvalue.max()
 
-        if verbose: msg("scaling image brightness by a factor of %f" % scalefactor,origin="setup model")
-            
 
 
         # truncate model image name to craete new images in current dir:
@@ -549,6 +483,11 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         ##################################################################
         # check inputs - need to add atmospheric window, better display of
         # where the actual observation block lies on the ephemeris window
+
+        # RI todo this should use modelflat, but modelflat is calculated from
+        # modelimage4d, which doesn't exist until after sm.observe and
+        # im.defineimage; so... maybe we have to run the empy ms before
+        # checkinputs, and then delete it if checkinputs=only?
         
         if checkinputs=="yes" or checkinputs=="only":
             currfignum=0
@@ -556,7 +495,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             pl.ion()
             pl.clf()
             pl.subplot(121)
-            model_min,model_max, model_rms = statim(modelimage,plot=display,incell=in_cell)
+            model_min,model_max, model_rms = util.statim(modelimage,plot=display,incell=in_cell)
             lims=pl.xlim(),pl.ylim()
             tt=pl.array(range(25))*pl.pi/12
             pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant*3600.*180/pl.pi
@@ -577,23 +516,27 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             util.ephemeris(refdate)  # util already knows the direction from above
             
             pl.subplot(224)
-            pl.plot(range(2),'o')
+            util.plotants(stnx, stny, stnz, stnd, padnames)
+#            pl.plot(range(2),'o')
             ax=pl.gca()
             l=ax.get_xticklabels()
             pl.setp(l,fontsize="x-small")
             l=ax.get_yticklabels()
             pl.setp(l,fontsize="x-small")
-            pl.xlabel("coming soon",fontsize="x-small")
-            pl.subplots_adjust(left=0.05,right=0.98,bottom=0.08,top=0.96,hspace=0.2,wspace=0.2)
+#            pl.xlabel("coming soon",fontsize="x-small")
+            pl.xlabel(telescopename,fontsize="x-small")
+            
+            pl.subplots_adjust(left=0.05,right=0.98,bottom=0.09,top=0.95,hspace=0.2,wspace=0.2)
             
             if checkinputs=="only":
+                if verbose: msg("Stopping after checking inputs as requested")
                 return
             else:
                 if display==True:
                     pl.figure(currfignum+1)
                     pl.clf()
         else:
-            model_min,model_max, model_rms = statim(modelimage,plot=False,incell=in_cell)
+            model_min,model_max, model_rms = util.statim(modelimage,plot=False,incell=in_cell)
 
 
 
@@ -606,6 +549,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
         if verbose:
             msg("simulated image desired shape= %s" % out_shape,origin="setup model")
+            msg("simulated image desired channel width = %8.2e GHz" % qa.convert(model_step,'GHz')['value'],origin="setup model")
             msg("simulated image desired pixel size = %8.2e arcsec" % out_cell['value'],origin="setup model")
 
 
@@ -614,7 +558,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         ##################################################################
         # set up observatory, feeds, etc
         # (has to be here since we may have changed nchan)
-
+        
         if verbose:
             msg("preparing empty measurement set")
 
@@ -623,12 +567,22 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         diam=stnd;
         sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
                  dishdiameter=diam.tolist(), 
-                 mount=['alt-az'], antname=antnames,
+                 mount=['alt-az'], antname=antnames, padname=padnames, 
                  coordsystem='global', referencelocation=posobs)
-        sm.setspwindow(spwname=fband, freq=startfreq, deltafreq=chanwidth, 
-                   freqresolution=chanwidth, nchannels=nchan, 
-                   stokes='XX YY')
-        sm.setfeed(mode='perfect X Y',pol=[''])
+        # sm.setspwindow now expects startfreq as argument
+        # midfreq=qa.add(qa.quantity(startfreq),qa.div(bandwidth,qa.quantity("2")))
+        if str.upper(telescopename).find('VLA')>0:
+            sm.setspwindow(spwname=fband, freq=startfreq, deltafreq=chanwidth, 
+                           freqresolution=chanwidth, nchannels=nchan, 
+                           stokes='RR LL')
+            sm.setfeed(mode='perfect R L',pol=[''])
+        else:            
+            sm.setspwindow(spwname=fband, freq=startfreq, deltafreq=chanwidth, 
+                           freqresolution=chanwidth, nchannels=nchan, 
+                           stokes='XX YY')
+            sm.setfeed(mode='perfect X Y',pol=[''])
+            
+        if verbose: msg(" spectral window set at %s" % str(startfreq))
         sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
         sm.setauto(0.0)
         for k in range(0,nfld):
@@ -638,19 +592,34 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         reftime = me.epoch('TAI', refdate)
         sm.settimes(integrationtime=integration, usehourangle=True, 
                 referencetime=reftime)
-        for k in range(0,nfld) :
-            src=project+'_%d'%k
-            sttime=-qa.convert(qa.quantity(totaltime),'s')['value']/2.0+qa.convert(qa.quantity(totaltime),'s')['value']/nfld*k
-            endtime=-qa.convert(qa.quantity(totaltime),'s')['value']/2.0+qa.convert(qa.quantity(totaltime),'s')['value']/nfld*(k+1)
+        totalsec=qa.convert(qa.quantity(totaltime),'s')['value']
+        scantime=qa.mul(qa.quantity(integration),str(scanlength))
+        scansec=qa.convert(qa.quantity(scantime),'s')['value']
+        nscan=int(totalsec/scansec)
+        kfld=0
+        # RI todo progress meter for simdata Sim::observe
+        # print "calculating ";
+        
+        for k in range(0,nscan) :
+            sttime=-totalsec/2.0+scansec*k
+            endtime=sttime+scansec
+            src=project+'_%d'%kfld
+#        for k in range(0,nfld) :
+#            sttime=-qa.convert(qa.quantity(totaltime),'s')['value']/2.0+qa.convert(qa.quantity(totaltime),'s')['value']/nfld*k
+#            endtime=-qa.convert(qa.quantity(totaltime),'s')['value']/2.0+qa.convert(qa.quantity(totaltime),'s')['value']/nfld*(k+1)
+#            src=project+'_%d'%k
             # this only creates blank uv entries
             sm.observe(sourcename=src, spwname=fband,
                    starttime=qa.quantity(sttime, "s"),
                    stoptime=qa.quantity(endtime, "s"));
+            kfld=kfld+1
+            if kfld==nfld: kfld=0
         sm.setdata(fieldid=range(0,nfld))
         sm.setvp()
 
         msg("done setting up observations (blank visibilities)")
-
+        if verbose:
+            sm.summary()
 
 
 
@@ -664,10 +633,12 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         im.open(msfile)    
         im.selectvis(field=range(nfld), spw=0)
 
-        # XXX should we center this at imcenter or at centralpointing?
+        # RI todo pad to composite
+
+        # RI todo should we center this at imcenter or at centralpointing?
         # the user may be surprised if the center of their image moves. 
         
-        # XXXX if the input cube is in VEL, we need to actually
+        # RI todo if the input cube is in VEL, we need to actually
         # make sure it is getting importfitted to turn into freq -
         # if it started as fits, then it got transformed on ia.open,
         # but if it started as an image, then it won't get converted.
@@ -679,6 +650,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                        ", restfreq='"+str(model_restfreq)+"')")
 
 
+        # RI todo  LSRK is not used - put that in outframe!
         im.defineimage(nx=in_shape[axmap[0]], ny=in_shape[axmap[1]],
                        cellx=model_cell,celly=model_cell, stokes=model_stokes,
                        phasecenter=model_refdir, nchan=in_shape[axmap[3]], 
@@ -693,8 +665,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
 
 
-        # first assure that the ia image created by Imager has the expected
-        # order - Kumar has enough hardcoded that it is unlikely to be otherwise.
+        # first assure that the image created by Imager has the expected order 
         expected=['Direction', 'Direction', 'Stokes', 'Spectral']
         if modelcsys.axiscoordinatetypes() != expected:
             msg("ERROR: internal error with coordinate axis order created by Imager",color="31")
@@ -725,8 +696,11 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                         foo=arr[i0,i1,i2,i3]
                         if foo!=foo: arr[i0,i1,i2,i3]=0.0
 
-        if verbose: msg("model array minmax= %e %e" % (arr.min(),arr.max()),origin="setup model")
-        ia.putchunk(arr*scalefactor)                    
+        if verbose:
+            msg("model array minmax= %e %e" % (arr.min(),arr.max()),origin="setup model")        
+            msg("scaling model brightness by a factor of %f" % scalefactor,origin="setup model")   
+
+        ia.putchunk(arr*scalefactor)
         ia.close()
 
         in_ia.close()
@@ -748,10 +722,13 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         # do actual calculation of visibilities from the model image:
 
         if not components_only:
-            # right now this is ok - if we only had components,
+            # if we only have components,
             # we have created modelimage4d from them but if
-            # we had components and model image they are not yet combined
-            msg("predicting from "+modelimage4d)
+            # we have components and model image they are not yet combined
+            if len(complist)>1:
+                msg("predicting from "+modelimage4d+" and "+complist)
+            else:
+                msg("predicting from "+modelimage4d)
             if arr.nbytes > 5e7:
                 msg("WARN: your model is large - this may take a while")
             sm.predict(imagename=[modelimage4d],complist=complist)
@@ -780,37 +757,62 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             noise_any=True
 
             noisymsfile = project + ".noisy.ms"
+            noisymsroot = project + ".noisy"
             msg('adding thermal noise to ' + noisymsfile,origin="noise")
 
             eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp()
 
             # antenna efficiency
             eta_a = eta_p * eta_s * eta_b * eta_t
-            if verbose: msg('antenna efficiency = ' + str(eta_a),origin="noise")
+            if verbose: 
+                msg('antenna efficiency    = ' + str(eta_a),origin="noise")
+                msg('spillover efficiency  = ' + str(eta_s),origin="noise")
+                msg('correlator efficiency = ' + str(eta_q),origin="noise")
  
-            # Ambient surface radiation temperature in K. 
-            # FOR NOW, T_atm = T_ground = T_amb = parameter, also tau0=parameter
-            t_ground = t_amb
-            # Atmospheric radiation temperature in K. 
-            t_atm = t_amb
-
             # Cosmic background radiation temperature in K. 
             t_cmb = 2.275
 
             if os.path.exists(noisymsfile):
                 cu.removetable(noisymsfile)
             os.system("cp -r "+msfile+" "+noisymsfile)
-            # XXX check for and copy flagversions file as well
+            # RI todo check for and copy flagversions file as well
             
             sm.openfromms(noisymsfile);    # an existing MS
             sm.setdata();                # currently defaults to fld=0,spw=0
             # type = B BPOLY G GSPLINE D P T TOPAC GAINCURVE
-            sm.setapply(type='TOPAC',opacity=tau0);  # arrange opac corruption
-            # NewMSSimulator needs 2-temp formula not just t_atm
-            sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
-                        antefficiency=eta_a,trx=t_rx,
-                        tau=tau0,tatmos=t_atm,tcmb=t_cmb,
-                        mode="calculate")
+            # visibilities referenced to above atmosphere 
+            # sm.setapply(type='TOPAC',opacity=tau0);  # opac corruption
+#            sm.oldsetnoise(spillefficiency=eta_s,correfficiency=eta_q,
+#                        antefficiency=eta_a,trx=t_rx,
+#                        tau=tau0,tatmos=t_sky,tcmb=t_cmb,
+#                        mode="calculate")
+# use ANoise version
+            if noise_mode=="tsys-manual":
+                if verbose:
+                    msg("sm.setnoise(spillefficiency="+str(eta_s)+
+                        ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
+                        ",trx="+str(t_rx)+",tau="+str(tau0)+
+                        ",tatmos="+str(t_sky)+",tground="+str(t_ground)+
+                        ",tcmb="+str(t_cmb)+",mode='tsys-manual')");
+                    msg("** this may take a few minutes, but will be faster in the next CASA release")
+                sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+                            antefficiency=eta_a,trx=t_rx,
+                            tau=tau0,tatmos=t_sky,tground=t_ground,tcmb=t_cmb,
+                            mode="tsys-manual")
+            else:
+                if verbose:
+                    msg("sm.setnoise(spillefficiency="+str(eta_s)+
+                        ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
+                        ",trx="+str(t_rx)+",tground="+str(t_ground)+
+                        ",tcmb="+str(t_cmb)+",mode='tsys-atm'"+
+                        ",pground='650mb',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
+                    msg("** this may take a few minutes, but will be faster in the next CASA release")
+                sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+                            antefficiency=eta_a,trx=t_rx,
+                            tground=t_ground,tcmb=t_cmb,pwv=str(user_pwv)+"mm",
+                            mode="tsys-atm")
+            # don't set table, that way it won't save to disk
+#                        mode="calculate",table=noisymsroot)
             sm.corrupt();
             sm.done();
 
@@ -836,23 +838,28 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
 
         #####################################################################
-        # clean if desired, WILL use noisy image for further calculation if present!
+        # clean if desired, use noisy image for further calculation if present
         # do we want to invert the noiseless one anyway for comparison?
+
+        if psfmode.upper() == "NONE" or psfmode == "" :
+            doclean=False
+        else:
+            doclean=True
 
         if noise_any:
             mstoimage = noisymsfile
         else:
             mstoimage = msfile
 
-        if fidelity == True and psfmode == "none":
+        if fidelity == True and doclean == False:
             msg("WARN: You can't calculate fidelity without imaging, so change psfmode if you want a fidelity image calculated.",origin="deconvolve")
             fidelity=False
 
-        if display == True and psfmode == "none":
+        if display == True and doclean == False:
             msg("WARN: Without creating an image, there's very little to display, so I'm turning off display.  Change psfmode if you want to make an image.",origin="deconvolve")
             display=False
 
-        if psfmode != "none": 
+        if doclean: 
             if niter == 0:
                 image=project+'.dirty'
                 msg("inverting to "+image,origin="deconvolve")
@@ -866,30 +873,49 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             outertaper=[]
             innertaper=[]
 
-        #if verbose:
+        if nchan==1:
+            cleanmode="mfs"
+        else:
+            cleanmode="channel"
+        
         # print clean inputs no matter what, so user can use them.
         msg("clean inputs:",origin="deconvolve")
-        msg("clean(vis='"+mstoimage+"',imagename='"+image+"',field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode='channel',niter="+str(niter)+",gain=0.1,threshold='"+str(threshold)+"',psfmode='"+psfmode+"',imagermode='"+imagermode+"',ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan="+str(nchan)+",start=0,width=1,imsize="+str(imsize)+",cell='"+str(cell)+"',phasecenter='"+str(centralpointing)+"',restfreq='',stokes='"+stokes+"',weighting='"+weighting+"',robust="+str(robust)+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise="+str(noise)+",npixels="+str(npixels)+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
+        cleanstr="clean(vis='"+mstoimage+"',imagename='"+image+"'"
+        #+",field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',"
+        if nchan>1:
+            cleanstr=cleanstr+",mode='"+cleanmode+"',nchan="+str(nchan)
+        cleanstr=cleanstr+",niter="+str(niter)
+        #+",gain=0.1,"
+        cleanstr=cleanstr+",threshold='"+str(threshold)+"'"
+        if doclean and psfmode!="clark":
+            cleanstr=cleanstr+",psfmode='"+psfmode+"'"
+        if imagermode != "":
+            cleanstr=cleanstr+",imagermode='"+imagermode+"'"
+        cleanstr=cleanstr+",ftmachine='"+ftmachine+"'"
+        #",ftmachine='mosaic',mosweight=False,scaletype='SAULT',multiscale=[],negcomponent=-1,interactive=False,mask=[],start=0,width=1,"
+        cleanstr=cleanstr+",imsize="+str(imsize)+",cell='"+str(cell)+"',phasecenter='"+str(centralpointing)+"'"
+        #",restfreq=''"
+        if stokes != "I":
+            cleanstr=cleanstr+",stokes='"+stokes+"'"
+        if weighting != "natural":
+            cleanstr=cleanstr+",weighting='"+weighting+"',robust="+str(robust)+",noise='"+str(noise)+"',npixels="+str(npixels)
+        if uvtaper:
+            cleanstr=cleanstr+",uvtaper="+str(uvtaper)+",outertaper="+str(outertaper)+",innertaper="+str(innertaper)
+        #+",modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,"        
+        #+",npercycle=100,cyclefactor=1.5,cyclespeedup=-1)")
+        cleanstr=cleanstr+")"
+        msg(cleanstr,origin="deconvolve")
 
-        if psfmode != "none": 
-            if int(casalog.version().split()[2].split('.')[1]) <= 3:
-                # XXX 2.3.1 syntax:
-                clean(vis=mstoimage,imagename=image,field='',spw='',selectdata=False,timerange='',uvrange='',antenna='',scan='',mode="channel",niter=niter,gain=0.1,threshold=threshold,psfmode=psfmode,imagermode=imagermode,ftmachine="mosaic",mosweight=False,scaletype="SAULT",multiscale=[],negcomponent=-1,interactive=False,mask=[],nchan=nchan,start=0,width=1,imsize=imsize,cell=cell,phasecenter=centralpointing,restfreq='',stokes=stokes,weighting=weighting,robust=robust,uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,modelimage='',restoringbeam=[''],pbcor=False,minpb=0.1,noise=noise,npixels=npixels,npercycle=100,cyclefactor=1.5,cyclespeedup=-1)
-                # XXX 2.4.0 syntax:
-            else:
-                clean(vis=mstoimage, imagename=image, field='', spw='', selectdata=False,
-                      timerange='', uvrange='', antenna='', scan='', mode="channel",
-                      interpolation='nearest', niter=niter, gain=0.1, threshold=threshold,
-                      psfmode=psfmode, imagermode=imagermode, ftmachine="mosaic",
-                      mosweight=False, scaletype="SAULT", multiscale=[],
-                      negcomponent=-1, interactive=False, mask=[], nchan=nchan,
-                      start=0, width=1, imsize=imsize, cell=cell, phasecenter=centralpointing,
-                      restfreq='', stokes=stokes, weighting=weighting, robust=robust,
-                      uvtaper=uvtaper, outertaper=outertaper, innertaper=innertaper,
-                      modelimage='', restoringbeam=[''], pbcor=False, minpb=0.1,
-                      noise=noise, npixels=npixels, npercycle=100,
-                      cyclefactor=1.5, cyclespeedup=-1)
+        if doclean: 
+            clean(vis=mstoimage, imagename=image, mode=cleanmode, nchan=nchan,
+                  niter=niter, threshold=threshold, selectdata=False,
+                  psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
+                  imsize=imsize, cell=cell, phasecenter=centralpointing,
+                  stokes=stokes, weighting=weighting, robust=robust,
+                  uvtaper=uvtaper,outertaper=outertaper,innertaper=innertaper,
+                  noise=noise, npixels=npixels)
         else:
+            msg("(not actually cleaning or inverting, as requested by user)")
             image=project
 
 
@@ -902,7 +928,6 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
         #####################################################################
         # prepare for diff and fidelity and display by making a moment 0 image
-
 
         inspectax=modelcsys.findcoordinate('spectral')['pixel']
         innchan=modelsize[inspectax]
@@ -920,6 +945,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
             ia.done()
         else:            
+            if verbose: msg("removing degenerate input image axes",origin="analysis")
             # just remove degenerate axes from modelimage4d
             ia.newimagefromimage(infile=modelimage4d,outfile=modelflat,dropdeg=True,overwrite=True)
             if innstokes<=1:
@@ -938,25 +964,41 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
 
         # flat output -- needed even if fidelity is not calculated
-        if psfmode!="none" and (fidelity == True or display == True):
+        if doclean:
+            ia.open(image+".image")
+            outimsize=ia.shape()
+            outimcsys=ia.coordsys()
+            ia.done()
+            outspectax=outimcsys.findcoordinate('spectral')['pixel']
+            outnchan=outimsize[outspectax]
+            outstokesax=outimcsys.findcoordinate('stokes')['pixel']
+            outnstokes=outimsize[outstokesax]
+
             outflat=image+".flat"
-            if nchan>1:
-                # image is either .clean or .dirty
+            if outnchan>1:
                 if verbose: msg("creating moment zero output image",origin="analysis")
                 ia.open(image+".image")
                 ia.moments(moments=[-1],outfile=outflat,overwrite=True)
                 ia.done()
             else:
-                if verbose: msg("flattening output image to "+outflat,origin="analysis")
+                if verbose: msg("removing degenerate output image axes",origin="analysis")
                 # just remove degenerate axes from image
                 ia.newimagefromimage(infile=image+".image",outfile=outflat,dropdeg=True,overwrite=True)
-                # seems to not be a way to just drop the spectral and keep the stokes.  sigh.
+                # seems no way to just drop the spectral and keep the stokes. 
+                if outnstokes<=1:
+                    os.system("mv "+outflat+" "+outflat+".tmp")
+                    ia.open(outflat+".tmp")
+                    ia.adddegaxes(outfile=outflat,stokes='I',overwrite=True)
+                    ia.done()
+                    os.system("rm -rf "+outflat+".tmp")
+            if outnstokes>1:
                 os.system("mv "+outflat+" "+outflat+".tmp")
-                ia.open(outflat+".tmp")
-                ia.adddegaxes(outfile=outflat,stokes='I',overwrite=True)
-                ia.done()
+                po.open(outflat+".tmp")
+                foo=po.stokesi(outfile=outflat,stokes='I')
+                foo.done()
+                po.done()
                 os.system("rm -rf "+outflat+".tmp")
-                
+
             # be sure to get outflatcoordsys from outflat
             ia.open(outflat)
             outflatcoordsys=ia.coordsys()
@@ -967,10 +1009,17 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             ia.open(modelflat)
             imrr = ia.regrid(outfile=modelregrid, overwrite=True,
                              csys=outflatcoordsys.torecord(),shape=outflatshape)
+
+            # add clean components and model image; 
+            # it'll be convolved to restored beam in the fidelity calc below
+            if (os.path.exists(complist)):
+                cl.open(complist)
+                imrr.modify(cl.torecord(),subtract=False)
+                cl.done()
+
             imrr.done()
     
-            # XXX when we get to using both clean components and model image,
-            # we should add them together here if not before.
+
     
             ia.done()
             outflatcoordsys.done()
@@ -983,28 +1032,23 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                 
             msg("done inverting and cleaning")
 
-
-
-
-
-
-
-
-        #####################################################################
-        # fidelity  
-
-        if os.path.exists(modelimage) and (fidelity == True or display == True):
             # get beam from output clean image
             if verbose: msg("getting beam from "+image+".image",origin="analysis")
             ia.open(image+".image")
             beam=ia.restoringbeam()
             ia.done()
 
+
+
+        #####################################################################
+        # fidelity  
+
+
         if os.path.exists(modelimage) and fidelity == True: 
             # from math import sqrt
             
             # Convolve model with beam.
-            convolved = project + '.convolved'
+            convolved = project + '.convolved.im'
             ia.open(modelregrid)
             ia.convolve2d(convolved,major=beam['major'],minor=beam['minor'],
                           pa=beam['positionangle'],overwrite=True)
@@ -1038,7 +1082,6 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
 
 
 
-
         #####################################################################
         # display and statistics:
 
@@ -1050,8 +1093,8 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                 pl.subplot(232)
             else:
                 pl.subplot(222)
-        if psfmode != "none":
-            sim_min,sim_max,sim_rms = statim(outflat,plot=display)
+        if doclean:
+            sim_min,sim_max,sim_rms = util.statim(outflat,plot=display)
 
         # plot model image if exists
         if os.path.exists(modelimage) and display==True:
@@ -1061,13 +1104,13 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                 pl.subplot(221)
             # modelregrid might not exist if there's no display or fidelity
             if os.path.exists(modelregrid):
-                model_min,model_max, model_rms = statim(modelregrid,plot=display)
+                model_min,model_max, model_rms = util.statim(modelregrid,plot=display)
                 xlim=max(pl.xlim())
                 ylim=max(pl.ylim())
             if display==True:
                 tt=pl.array(range(25))*pl.pi/12
                 pb=1.2*0.3/qa.convert(qa.quantity(startfreq),'GHz')['value']/aveant*3600.*180/pl.pi
-                # XXX change this to use tb.open(ms/POINTINGS)/direction
+                # RI todo change this to use tb.open(ms/POINTINGS)/direction
                 # and them make it a helper function
                 for i in range(offsets.shape[1]):
                     pl.plot(pl.cos(tt)*pb/2+offsets[0,i]*3600,pl.sin(tt)*pb/2+offsets[1,i]*3600,'w')
@@ -1078,13 +1121,13 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             # fidelity image would only exist if there's a model image
             if modelimage != '' and fidelity == True:
                 if display: pl.subplot(233)
-                statim(project+".diff.im",plot=display)
+                util.statim(project+".diff.im",plot=display)
                 if display: pl.subplot(234)
-                fidel_min, fidel_max, fidel_rms = statim(project+".fidelity.im",plot=display)
+                fidel_min, fidel_max, fidel_rms = util.statim(project+".fidelity.im",plot=display)
 
         if display:
             tb.open(mstoimage)
-            # XXX use rob's FFT of the PB instead
+            # RI todo use rob's FFT of the PB instead
             rawdata=tb.getcol("UVW")
             tb.done()
             if fidelity == True:
@@ -1106,7 +1149,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
             pl.ylabel('v[klambda]',fontsize='x-small')
             pl.axis('equal')
 
-            if modelimage != '' and psfmode != "none":   
+            if modelimage != '' and doclean:   
                 if fidelity == True:
                     pl.subplot(236)
                 else:
@@ -1132,22 +1175,27 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                 pl.setp(l,fontsize="x-small")
                 l=ax.get_yticklabels()
                 pl.setp(l,fontsize="x-small")
-                from matplotlib.font_manager import fontManager, FontProperties
-                font= FontProperties(size='x-small');
-                pl.legend(("bmaj=%7.1e" % beam['major']['value'],"bmin=%7.1e" % beam['minor']['value']),prop=font)                
+                #from matplotlib.font_manager import fontManager, FontProperties
+                #font= FontProperties(size='x-small');
+                #pl.legend(("bmaj=%7.1e" % beam['major']['value'],"bmin=%7.1e" % beam['minor']['value']),prop=font)                
+                pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['major']['value'],beam['minor']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
                 ia.done()
 
                 
             pl.subplots_adjust(left=0.05,right=0.98,bottom=0.08,top=0.96,hspace=0.1,wspace=0.2)
         
         # if not displaying still print stats:
-        if psfmode != "none":
-            msg('Simulation rms: '+str(sim_rms),origin="analysis")
-            msg('Simulation max: '+str(sim_max),origin="analysis")
+        if doclean:
+            bmarea=beam['major']['value']*beam['minor']['value']*pl.pi/4 #arcsec2
+            bmarea=bmarea/(out_cell['value'])**2 # bm area in pix
+            msg('Simulation rms: '+str(sim_rms)+" Jy/pix = "+
+                str(sim_rms*bmarea)+" Jy/bm",origin="analysis")
+            msg('Simulation max: '+str(sim_max)+" Jy/pix = "+
+                str(sim_max*bmarea)+" Jy/bm",origin="analysis")
         
         if display == True or fidelity == True:
-            msg('Model rms: '+str(model_rms),origin="analysis")
-            msg('Model max: '+str(model_max),origin="analysis")
+            msg('Model rms: '+str(model_rms)+" Jy/pix",origin="analysis")
+            msg('Model max: '+str(model_max)+" Jy/pix",origin="analysis")
             msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']),origin="analysis")
 
 

@@ -42,17 +42,33 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the PolarizationType enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace PolarizationTypeMod
 {
+  //! PolarizationType.
+  //! The polarizations a single receptor can detect
+
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum PolarizationType
   { 
-    R ,
-    L ,
-    X ,
-    Y 
+    R /*!< Right-handed Circular */
+     ,
+    L /*!< Left-handed Circular */
+     ,
+    X /*!< X linear */
+     ,
+    Y /*!< Y linear */
+     
   };
   typedef PolarizationType &PolarizationType_out;
 } 
@@ -60,72 +76,95 @@ namespace PolarizationTypeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration PolarizationType.
+  * 
+  */
 class CPolarizationType {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the PolarizationType enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sR;
+	static const std::string& sR; /*!< A const string equal to "R".*/
 	
-	static const std::string& sL;
+	static const std::string& sL; /*!< A const string equal to "L".*/
 	
-	static const std::string& sX;
+	static const std::string& sX; /*!< A const string equal to "X".*/
 	
-	static const std::string& sY;
-	
-    static const std::vector<std::string> sPolarizationTypeSet();	 
-
+	static const std::string& sY; /*!< A const string equal to "Y".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in PolarizationTypeMod::PolarizationType.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of PolarizationTypeMod::PolarizationType.
+      * @return a string.
+      */
+	static std::string name(const PolarizationTypeMod::PolarizationType& e);
 	
-	// Explanations associated with the PolarizationType Enumeration.
-		
-	static const std::string& hR;
-		
-	static const std::string& hL;
-		
-	static const std::string& hX;
-		
-	static const std::string& hY;
-		
-	static const std::vector<std::string> hPolarizationTypeSet();
-   	
-
-   	// Is an integer number associated with the PolarizationType enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the PolarizationType enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  PolarizationType enumeration.
-	static std::string name(const PolarizationTypeMod::PolarizationType& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const PolarizationTypeMod::PolarizationType& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified PolarizationType enumeration.
-	static std::string help(const PolarizationTypeMod::PolarizationType& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a PolarizationType enumeration object by specifying its name.
    	static PolarizationTypeMod::PolarizationType newPolarizationType(const std::string& name);
    	
-   	// Create a PolarizationType enumeration object by specifying its name.
+   	/*! Return a PolarizationType's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a PolarizationTypeMod::PolarizationType's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static PolarizationTypeMod::PolarizationType literal(const std::string& name);
  	
-    // Create a PolarizationType enumeration object by specifying its position index (0 based).
+    /*! Return a PolarizationType's enumerator given an unsigned int.
+      * @param i the index of the enumerator in PolarizationTypeMod::PolarizationType.
+      * @return a PolarizationTypeMod::PolarizationType's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static PolarizationTypeMod::PolarizationType from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CPolarizationType();
     CPolarizationType(const CPolarizationType&);
     CPolarizationType& operator=(const CPolarizationType&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CPolarizationType_H*/

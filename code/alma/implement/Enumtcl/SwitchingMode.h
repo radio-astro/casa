@@ -38,19 +38,19 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<SwitchingMode,EnumPar<void> >
-     (SwitchingModeMod::NO_SWITCHING,ep((int)SwitchingModeMod::NO_SWITCHING,"NO_SWITCHING","No switching")));
+     (SwitchingModeMod::NO_SWITCHING,ep((int)SwitchingModeMod::NO_SWITCHING,"NO_SWITCHING","un-documented")));
     m_.insert(pair<SwitchingMode,EnumPar<void> >
-     (SwitchingModeMod::LOAD_SWITCHING,ep((int)SwitchingModeMod::LOAD_SWITCHING,"LOAD_SWITCHING","Receiver beam is switched between sky and load")));
+     (SwitchingModeMod::LOAD_SWITCHING,ep((int)SwitchingModeMod::LOAD_SWITCHING,"LOAD_SWITCHING","un-documented")));
     m_.insert(pair<SwitchingMode,EnumPar<void> >
-     (SwitchingModeMod::POSITION_SWITCHING,ep((int)SwitchingModeMod::POSITION_SWITCHING,"POSITION_SWITCHING","Antenna (main reflector) pointing direction  is switched ")));
+     (SwitchingModeMod::POSITION_SWITCHING,ep((int)SwitchingModeMod::POSITION_SWITCHING,"POSITION_SWITCHING","un-documented")));
     m_.insert(pair<SwitchingMode,EnumPar<void> >
-     (SwitchingModeMod::PHASE_SWITCHING,ep((int)SwitchingModeMod::PHASE_SWITCHING,"PHASE_SWITCHING","90 degrees phase switching  (switching mode used for sideband separation or rejection with DSB receivers)")));
+     (SwitchingModeMod::PHASE_SWITCHING,ep((int)SwitchingModeMod::PHASE_SWITCHING,"PHASE_SWITCHING","un-documented")));
     m_.insert(pair<SwitchingMode,EnumPar<void> >
-     (SwitchingModeMod::FREQUENCY_SWITCHING,ep((int)SwitchingModeMod::FREQUENCY_SWITCHING,"FREQUENCY_SWITCHING","LO frequency is switched (definition context sensitive: fast if cycle shrorter than the integration duration, slow if e.g. step one step per subscan)")));
+     (SwitchingModeMod::FREQUENCY_SWITCHING,ep((int)SwitchingModeMod::FREQUENCY_SWITCHING,"FREQUENCY_SWITCHING","un-documented")));
     m_.insert(pair<SwitchingMode,EnumPar<void> >
-     (SwitchingModeMod::NUTATOR_SWITCHING,ep((int)SwitchingModeMod::NUTATOR_SWITCHING,"NUTATOR_SWITCHING","Switching between different directions by nutating the sub-reflector")));
+     (SwitchingModeMod::NUTATOR_SWITCHING,ep((int)SwitchingModeMod::NUTATOR_SWITCHING,"NUTATOR_SWITCHING","un-documented")));
     m_.insert(pair<SwitchingMode,EnumPar<void> >
-     (SwitchingModeMod::CHOPPER_WHEEL,ep((int)SwitchingModeMod::CHOPPER_WHEEL,"CHOPPER_WHEEL","Switching using a chopper wheel")));
+     (SwitchingModeMod::CHOPPER_WHEEL,ep((int)SwitchingModeMod::CHOPPER_WHEEL,"CHOPPER_WHEEL","un-documented")));
     return true;
   }
   static map<SwitchingMode,EnumPar<void> > m_;

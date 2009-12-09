@@ -164,45 +164,39 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param calDeviceName. 
+	
  	 * @param sig. 
 	
  	 * @param ref. 
 	
  	 * @param onSky. 
 	
- 	 * @param calDeviceName. 
-	
- 	 * @param flagRow. 
-	
      */
-	StateRow* StateTable::newRow(bool sig, bool ref, bool onSky, CalibrationDeviceMod::CalibrationDevice calDeviceName, bool flagRow){
+	StateRow* StateTable::newRow(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky){
 		StateRow *row = new StateRow(*this);
+			
+		row->setCalDeviceName(calDeviceName);
 			
 		row->setSig(sig);
 			
 		row->setRef(ref);
 			
 		row->setOnSky(onSky);
-			
-		row->setCalDeviceName(calDeviceName);
-			
-		row->setFlagRow(flagRow);
 	
 		return row;		
 	}	
 
-	StateRow* StateTable::newRowFull(bool sig, bool ref, bool onSky, CalibrationDeviceMod::CalibrationDevice calDeviceName, bool flagRow)	{
+	StateRow* StateTable::newRowFull(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky)	{
 		StateRow *row = new StateRow(*this);
+			
+		row->setCalDeviceName(calDeviceName);
 			
 		row->setSig(sig);
 			
 		row->setRef(ref);
 			
 		row->setOnSky(onSky);
-			
-		row->setCalDeviceName(calDeviceName);
-			
-		row->setFlagRow(flagRow);
 	
 		return row;				
 	}
@@ -238,15 +232,13 @@ StateRow* StateTable::newRowCopy(StateRow* row) {
 			 
 		StateRow* aRow = lookup(
 				
+		x->getCalDeviceName()
+				,
 		x->getSig()
 				,
 		x->getRef()
 				,
 		x->getOnSky()
-				,
-		x->getCalDeviceName()
-				,
-		x->getFlagRow()
 				
 		);
 		if (aRow) return aRow;
@@ -280,21 +272,23 @@ StateRow* StateTable::newRowCopy(StateRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	StateRow*  StateTable::checkAndAdd(StateRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	StateRow*  StateTable::checkAndAdd(StateRow* x)  {
 	 
 		 
 		if (lookup(
 			
+			x->getCalDeviceName()
+		,
 			x->getSig()
 		,
 			x->getRef()
 		,
 			x->getOnSky()
-		,
-			x->getCalDeviceName()
-		,
-			x->getFlagRow()
 		
 		)) throw UniquenessViolationException("Uniqueness violation exception in table StateTable");
 		
@@ -361,22 +355,20 @@ StateRow* StateTable::newRowCopy(StateRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
+ * @param calDeviceName.
+ 	 		
  * @param sig.
  	 		
  * @param ref.
  	 		
  * @param onSky.
- 	 		
- * @param calDeviceName.
- 	 		
- * @param flagRow.
  	 		 
  */
-StateRow* StateTable::lookup(bool sig, bool ref, bool onSky, CalibrationDeviceMod::CalibrationDevice calDeviceName, bool flagRow) {
+StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky) {
 		StateRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(sig, ref, onSky, calDeviceName, flagRow)) return aRow;
+			if (aRow->compareNoAutoInc(calDeviceName, sig, ref, onSky)) return aRow;
 		}			
 		return 0;	
 } 
@@ -384,7 +376,6 @@ StateRow* StateTable::lookup(bool sig, bool ref, bool onSky, CalibrationDeviceMo
  	 	
 
 	
-
 
 
 
@@ -405,7 +396,7 @@ StateRow* StateTable::lookup(bool sig, bool ref, bool onSky, CalibrationDeviceMo
 #endif
 	
 #ifndef WITHOUT_ACS
-	void StateTable::fromIDL(StateTableIDL x) throw(DuplicateKey,ConversionException) {
+	void StateTable::fromIDL(StateTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			StateRow *tmp = newRow();
@@ -416,28 +407,27 @@ StateRow* StateTable::lookup(bool sig, bool ref, bool onSky, CalibrationDeviceMo
 	}
 #endif
 
-	char *StateTable::toFITS() const throw(ConversionException) {
+	char *StateTable::toFITS() const  {
 		throw ConversionException("Not implemented","State");
 	}
 
-	void StateTable::fromFITS(char *fits) throw(ConversionException) {
+	void StateTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","State");
 	}
 
-	string StateTable::toVOTable() const throw(ConversionException) {
+	string StateTable::toVOTable() const {
 		throw ConversionException("Not implemented","State");
 	}
 
-	void StateTable::fromVOTable(string vo) throw(ConversionException) {
+	void StateTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","State");
 	}
 
-	string StateTable::toXML()  throw(ConversionException) {
+	
+	string StateTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<StateTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/StateTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<StateTable> ");
+		buf.append("<StateTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/StateTable\" xsi:schemaLocation=\"http://Alma/XASDM/StateTable http://almaobservatory.org/XML/XASDM/2/StateTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -453,8 +443,9 @@ StateRow* StateTable::lookup(bool sig, bool ref, bool onSky, CalibrationDeviceMo
 		buf.append("</StateTable> ");
 		return buf;
 	}
+
 	
-	void StateTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void StateTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<StateTable")) 
 			error();
@@ -496,20 +487,110 @@ StateRow* StateTable::lookup(bool sig, bool ref, bool onSky, CalibrationDeviceMo
 			error();
 	}
 
-	void StateTable::error() throw(ConversionException) {
+	
+	void StateTable::error()  {
 		throw ConversionException("Invalid xml document","State");
 	}
 	
+	
 	string StateTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void StateTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "State");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			StateRow* aRow = StateRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "State");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "State");
+		} 		 	
+	}
+
 	
 	void StateTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -540,6 +621,7 @@ StateRow* StateTable::lookup(bool sig, bool ref, bool onSky, CalibrationDeviceMo
 				throw ConversionException("Could not close file " + fileName, "State");
 		}
 	}
+
 	
 	void StateTable::setFromFile(const string& directory) {
 		string tablename;
@@ -581,6 +663,11 @@ StateRow* StateTable::lookup(bool sig, bool ref, bool onSky, CalibrationDeviceMo
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

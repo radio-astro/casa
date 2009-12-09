@@ -94,6 +94,16 @@ namespace asdm {
 		
 		
 			
+		x->annotationId = annotationId.toIDLTag();
+			
+		
+	
+
+	
+  		
+		
+		
+			
 		x->time = time.toIDLArrayTime();
 			
 		
@@ -126,38 +136,12 @@ namespace asdm {
 	
   		
 		
-		x->intervalExists = intervalExists;
-		
-		
-			
-		x->interval = interval.toIDLInterval();
-			
-		
-	
-
-	
-  		
-		
 		x->numAntennaExists = numAntennaExists;
 		
 		
 			
 				
 		x->numAntenna = numAntenna;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->numBasebandExists = numBasebandExists;
-		
-		
-			
-				
-		x->numBaseband = numBaseband;
  				
  			
 		
@@ -178,6 +162,32 @@ namespace asdm {
 	 			
 	 		
 	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->numBasebandExists = numBasebandExists;
+		
+		
+			
+				
+		x->numBaseband = numBaseband;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->intervalExists = intervalExists;
+		
+		
+			
+		x->interval = interval.toIDLInterval();
 			
 		
 	
@@ -297,16 +307,6 @@ namespace asdm {
 	
 
 	
-  		
-		
-		
-			
-		x->annotationId = annotationId.toIDLTag();
-			
-		
-	
-
-	
 	
 		
 	
@@ -342,11 +342,21 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct AnnotationRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void AnnotationRow::setFromIDL (AnnotationRowIDL x) throw(ConversionException) {
+	void AnnotationRow::setFromIDL (AnnotationRowIDL x){
 		try {
 		// Fill the values from x.
 	
 		
+	
+		
+		
+			
+		setAnnotationId(Tag (x.annotationId));
+			
+ 		
+		
+	
+
 	
 		
 		
@@ -379,42 +389,12 @@ namespace asdm {
 
 	
 		
-		intervalExists = x.intervalExists;
-		if (x.intervalExists) {
-		
-		
-			
-		setInterval(Interval (x.interval));
-			
- 		
-		
-		}
-		
-	
-
-	
-		
 		numAntennaExists = x.numAntennaExists;
 		if (x.numAntennaExists) {
 		
 		
 			
 		setNumAntenna(x.numAntenna);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		numBasebandExists = x.numBasebandExists;
-		if (x.numBasebandExists) {
-		
-		
-			
-		setNumBaseband(x.numBaseband);
   			
  		
 		
@@ -437,6 +417,36 @@ namespace asdm {
 		}
 			
   		
+		
+		}
+		
+	
+
+	
+		
+		numBasebandExists = x.numBasebandExists;
+		if (x.numBasebandExists) {
+		
+		
+			
+		setNumBaseband(x.numBaseband);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		intervalExists = x.intervalExists;
+		if (x.intervalExists) {
+		
+		
+			
+		setInterval(Interval (x.interval));
+			
+ 		
 		
 		}
 		
@@ -563,16 +573,6 @@ namespace asdm {
 	
 
 	
-		
-		
-			
-		setAnnotationId(Tag (x.annotationId));
-			
- 		
-		
-	
-
-	
 	
 		
 	
@@ -596,7 +596,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Annotation");
+			throw ConversionException (err.getMessage(),"Annotation");
 		}
 	}
 #endif
@@ -611,6 +611,14 @@ namespace asdm {
 		
 	
 		
+  	
+ 		
+		
+		Parser::toXML(annotationId, "annotationId", buf);
+		
+		
+	
+
   	
  		
 		
@@ -637,10 +645,10 @@ namespace asdm {
 
   	
  		
-		if (intervalExists) {
+		if (numAntennaExists) {
 		
 		
-		Parser::toXML(interval, "interval", buf);
+		Parser::toXML(numAntenna, "numAntenna", buf);
 		
 		
 		}
@@ -649,10 +657,10 @@ namespace asdm {
 
   	
  		
-		if (numAntennaExists) {
+		if (basebandNameExists) {
 		
 		
-		Parser::toXML(numAntenna, "numAntenna", buf);
+			buf.append(EnumerationParser::toXML("basebandName", basebandName));
 		
 		
 		}
@@ -673,10 +681,10 @@ namespace asdm {
 
   	
  		
-		if (basebandNameExists) {
+		if (intervalExists) {
 		
 		
-			buf.append(EnumerationParser::toXML("basebandName", basebandName));
+		Parser::toXML(interval, "interval", buf);
 		
 		
 		}
@@ -755,14 +763,6 @@ namespace asdm {
 		
 	
 
-  	
- 		
-		
-		Parser::toXML(annotationId, "annotationId", buf);
-		
-		
-	
-
 	
 	
 		
@@ -792,12 +792,20 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void AnnotationRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void AnnotationRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
 	
 		
+	
+  		
+			
+	  	setAnnotationId(Parser::getTag("annotationId","Annotation",rowDoc));
+			
+		
+	
+
 	
   		
 			
@@ -824,29 +832,9 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<interval>")) {
-			
-	  		setInterval(Parser::getInterval("interval","Annotation",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
         if (row.isStr("<numAntenna>")) {
 			
 	  		setNumAntenna(Parser::getInteger("numAntenna","Annotation",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<numBaseband>")) {
-			
-	  		setNumBaseband(Parser::getInteger("numBaseband","Annotation",rowDoc));
 			
 		}
  		
@@ -865,6 +853,26 @@ namespace asdm {
 		basebandNameExists = true;
 	}
 		
+	
+
+	
+  		
+        if (row.isStr("<numBaseband>")) {
+			
+	  		setNumBaseband(Parser::getInteger("numBaseband","Annotation",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<interval>")) {
+			
+	  		setInterval(Parser::getInterval("interval","Annotation",rowDoc));
+			
+		}
+ 		
 	
 
 	
@@ -936,14 +944,6 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setAnnotationId(Parser::getTag("annotationId","Annotation",rowDoc));
-			
-		
-	
-
-	
 	
 		
 	
@@ -963,10 +963,522 @@ namespace asdm {
 		}
 	}
 	
+	void AnnotationRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	annotationId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	time.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(issue);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(details);
+				
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(numAntennaExists);
+	if (numAntennaExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numAntenna);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(basebandNameExists);
+	if (basebandNameExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) basebandName.size());
+		for (unsigned int i = 0; i < basebandName.size(); i++)
+				
+			eoss.writeInt(basebandName.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(numBasebandExists);
+	if (numBasebandExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numBaseband);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(intervalExists);
+	if (intervalExists) {
+	
+	
+	
+		
+	interval.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(dValueExists);
+	if (dValueExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(dValue);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(vdValueExists);
+	if (vdValueExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) vdValue.size());
+		for (unsigned int i = 0; i < vdValue.size(); i++)
+				
+			eoss.writeDouble(vdValue.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(vvdValuesExists);
+	if (vvdValuesExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) vvdValues.size());
+		eoss.writeInt((int) vvdValues.at(0).size());
+		for (unsigned int i = 0; i < vvdValues.size(); i++) 
+			for (unsigned int j = 0;  j < vvdValues.at(0).size(); j++) 
+							 
+				eoss.writeDouble(vvdValues.at(i).at(j));
+				
+	
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(llValueExists);
+	if (llValueExists) {
+	
+	
+	
+		
+						
+			eoss.writeLong(llValue);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(vllValueExists);
+	if (vllValueExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) vllValue.size());
+		for (unsigned int i = 0; i < vllValue.size(); i++)
+				
+			eoss.writeLong(vllValue.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(vvllValueExists);
+	if (vvllValueExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) vvllValue.size());
+		eoss.writeInt((int) vvllValue.at(0).size());
+		for (unsigned int i = 0; i < vvllValue.size(); i++) 
+			for (unsigned int j = 0;  j < vvllValue.at(0).size(); j++) 
+							 
+				eoss.writeLong(vvllValue.at(i).at(j));
+				
+	
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(antennaIdExists);
+	if (antennaIdExists) {
+	
+	
+	
+		
+	Tag::toBin(antennaId, eoss);
+		
+	
+
+	}
+
+	}
+	
+	AnnotationRow* AnnotationRow::fromBin(EndianISStream& eiss, AnnotationTable& table) {
+		AnnotationRow* row = new  AnnotationRow(table);
+		
+		
+		
+	
+		
+		
+		row->annotationId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->time =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->issue =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->details =  eiss.readString();
+			
+		
+	
+
+		
+		
+		
+	row->numAntennaExists = eiss.readBoolean();
+	if (row->numAntennaExists) {
+		
+	
+	
+		
+			
+		row->numAntenna =  eiss.readInt();
+			
+		
+	
+
+	}
+
+	row->basebandNameExists = eiss.readBoolean();
+	if (row->basebandNameExists) {
+		
+	
+	
+		
+			
+	
+		row->basebandName.clear();
+		
+		unsigned int basebandNameDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < basebandNameDim1; i++)
+			
+			row->basebandName.push_back(CBasebandName::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	}
+
+	row->numBasebandExists = eiss.readBoolean();
+	if (row->numBasebandExists) {
+		
+	
+	
+		
+			
+		row->numBaseband =  eiss.readInt();
+			
+		
+	
+
+	}
+
+	row->intervalExists = eiss.readBoolean();
+	if (row->intervalExists) {
+		
+	
+		
+		
+		row->interval =  Interval::fromBin(eiss);
+		
+	
+
+	}
+
+	row->dValueExists = eiss.readBoolean();
+	if (row->dValueExists) {
+		
+	
+	
+		
+			
+		row->dValue =  eiss.readDouble();
+			
+		
+	
+
+	}
+
+	row->vdValueExists = eiss.readBoolean();
+	if (row->vdValueExists) {
+		
+	
+	
+		
+			
+	
+		row->vdValue.clear();
+		
+		unsigned int vdValueDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < vdValueDim1; i++)
+			
+			row->vdValue.push_back(eiss.readDouble());
+			
+	
+
+		
+	
+
+	}
+
+	row->vvdValuesExists = eiss.readBoolean();
+	if (row->vvdValuesExists) {
+		
+	
+	
+		
+			
+	
+		row->vvdValues.clear();
+		
+		unsigned int vvdValuesDim1 = eiss.readInt();
+		unsigned int vvdValuesDim2 = eiss.readInt();
+		vector <double> vvdValuesAux1;
+		for (unsigned int i = 0; i < vvdValuesDim1; i++) {
+			vvdValuesAux1.clear();
+			for (unsigned int j = 0; j < vvdValuesDim2 ; j++)			
+			
+			vvdValuesAux1.push_back(eiss.readDouble());
+			
+			row->vvdValues.push_back(vvdValuesAux1);
+		}
+	
+	
+
+		
+	
+
+	}
+
+	row->llValueExists = eiss.readBoolean();
+	if (row->llValueExists) {
+		
+	
+	
+		
+			
+		row->llValue =  eiss.readLong();
+			
+		
+	
+
+	}
+
+	row->vllValueExists = eiss.readBoolean();
+	if (row->vllValueExists) {
+		
+	
+	
+		
+			
+	
+		row->vllValue.clear();
+		
+		unsigned int vllValueDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < vllValueDim1; i++)
+			
+			row->vllValue.push_back(eiss.readLong());
+			
+	
+
+		
+	
+
+	}
+
+	row->vvllValueExists = eiss.readBoolean();
+	if (row->vvllValueExists) {
+		
+	
+	
+		
+			
+	
+		row->vvllValue.clear();
+		
+		unsigned int vvllValueDim1 = eiss.readInt();
+		unsigned int vvllValueDim2 = eiss.readInt();
+		vector <long long> vvllValueAux1;
+		for (unsigned int i = 0; i < vvllValueDim1; i++) {
+			vvllValueAux1.clear();
+			for (unsigned int j = 0; j < vvllValueDim2 ; j++)			
+			
+			vvllValueAux1.push_back(eiss.readLong());
+			
+			row->vvllValue.push_back(vvllValueAux1);
+		}
+	
+	
+
+		
+	
+
+	}
+
+	row->antennaIdExists = eiss.readBoolean();
+	if (row->antennaIdExists) {
+		
+	
+		
+		
+			
+	
+	row->antennaId = Tag::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
+	
+
+	
+ 	/**
+ 	 * Get annotationId.
+ 	 * @return annotationId as Tag
+ 	 */
+ 	Tag AnnotationRow::getAnnotationId() const {
+	
+  		return annotationId;
+ 	}
+
+ 	/**
+ 	 * Set annotationId with the specified Tag.
+ 	 * @param annotationId The Tag value to which annotationId is to be set.
+ 	 
+ 	
+ 		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
+ 	 */
+ 	void AnnotationRow::setAnnotationId (Tag annotationId)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+			throw IllegalAccessException("annotationId", "Annotation");
+		
+  		}
+  	
+ 		this->annotationId = annotationId;
+	
+ 	}
+	
+	
+
 	
 
 	
@@ -1065,53 +1577,6 @@ namespace asdm {
 
 	
 	/**
-	 * The attribute interval is optional. Return true if this attribute exists.
-	 * @return true if and only if the interval attribute exists. 
-	 */
-	bool AnnotationRow::isIntervalExists() const {
-		return intervalExists;
-	}
-	
-
-	
- 	/**
- 	 * Get interval, which is optional.
- 	 * @return interval as Interval
- 	 * @throw IllegalAccessException If interval does not exist.
- 	 */
- 	Interval AnnotationRow::getInterval() const throw(IllegalAccessException) {
-		if (!intervalExists) {
-			throw IllegalAccessException("interval", "Annotation");
-		}
-	
-  		return interval;
- 	}
-
- 	/**
- 	 * Set interval with the specified Interval.
- 	 * @param interval The Interval value to which interval is to be set.
- 	 
- 	
- 	 */
- 	void AnnotationRow::setInterval (Interval interval) {
-	
- 		this->interval = interval;
-	
-		intervalExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark interval, which is an optional field, as non-existent.
-	 */
-	void AnnotationRow::clearInterval () {
-		intervalExists = false;
-	}
-	
-
-	
-	/**
 	 * The attribute numAntenna is optional. Return true if this attribute exists.
 	 * @return true if and only if the numAntenna attribute exists. 
 	 */
@@ -1126,7 +1591,7 @@ namespace asdm {
  	 * @return numAntenna as int
  	 * @throw IllegalAccessException If numAntenna does not exist.
  	 */
- 	int AnnotationRow::getNumAntenna() const throw(IllegalAccessException) {
+ 	int AnnotationRow::getNumAntenna() const  {
 		if (!numAntennaExists) {
 			throw IllegalAccessException("numAntenna", "Annotation");
 		}
@@ -1159,53 +1624,6 @@ namespace asdm {
 
 	
 	/**
-	 * The attribute numBaseband is optional. Return true if this attribute exists.
-	 * @return true if and only if the numBaseband attribute exists. 
-	 */
-	bool AnnotationRow::isNumBasebandExists() const {
-		return numBasebandExists;
-	}
-	
-
-	
- 	/**
- 	 * Get numBaseband, which is optional.
- 	 * @return numBaseband as int
- 	 * @throw IllegalAccessException If numBaseband does not exist.
- 	 */
- 	int AnnotationRow::getNumBaseband() const throw(IllegalAccessException) {
-		if (!numBasebandExists) {
-			throw IllegalAccessException("numBaseband", "Annotation");
-		}
-	
-  		return numBaseband;
- 	}
-
- 	/**
- 	 * Set numBaseband with the specified int.
- 	 * @param numBaseband The int value to which numBaseband is to be set.
- 	 
- 	
- 	 */
- 	void AnnotationRow::setNumBaseband (int numBaseband) {
-	
- 		this->numBaseband = numBaseband;
-	
-		numBasebandExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark numBaseband, which is an optional field, as non-existent.
-	 */
-	void AnnotationRow::clearNumBaseband () {
-		numBasebandExists = false;
-	}
-	
-
-	
-	/**
 	 * The attribute basebandName is optional. Return true if this attribute exists.
 	 * @return true if and only if the basebandName attribute exists. 
 	 */
@@ -1220,7 +1638,7 @@ namespace asdm {
  	 * @return basebandName as vector<BasebandNameMod::BasebandName >
  	 * @throw IllegalAccessException If basebandName does not exist.
  	 */
- 	vector<BasebandNameMod::BasebandName > AnnotationRow::getBasebandName() const throw(IllegalAccessException) {
+ 	vector<BasebandNameMod::BasebandName > AnnotationRow::getBasebandName() const  {
 		if (!basebandNameExists) {
 			throw IllegalAccessException("basebandName", "Annotation");
 		}
@@ -1253,6 +1671,100 @@ namespace asdm {
 
 	
 	/**
+	 * The attribute numBaseband is optional. Return true if this attribute exists.
+	 * @return true if and only if the numBaseband attribute exists. 
+	 */
+	bool AnnotationRow::isNumBasebandExists() const {
+		return numBasebandExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get numBaseband, which is optional.
+ 	 * @return numBaseband as int
+ 	 * @throw IllegalAccessException If numBaseband does not exist.
+ 	 */
+ 	int AnnotationRow::getNumBaseband() const  {
+		if (!numBasebandExists) {
+			throw IllegalAccessException("numBaseband", "Annotation");
+		}
+	
+  		return numBaseband;
+ 	}
+
+ 	/**
+ 	 * Set numBaseband with the specified int.
+ 	 * @param numBaseband The int value to which numBaseband is to be set.
+ 	 
+ 	
+ 	 */
+ 	void AnnotationRow::setNumBaseband (int numBaseband) {
+	
+ 		this->numBaseband = numBaseband;
+	
+		numBasebandExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark numBaseband, which is an optional field, as non-existent.
+	 */
+	void AnnotationRow::clearNumBaseband () {
+		numBasebandExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute interval is optional. Return true if this attribute exists.
+	 * @return true if and only if the interval attribute exists. 
+	 */
+	bool AnnotationRow::isIntervalExists() const {
+		return intervalExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get interval, which is optional.
+ 	 * @return interval as Interval
+ 	 * @throw IllegalAccessException If interval does not exist.
+ 	 */
+ 	Interval AnnotationRow::getInterval() const  {
+		if (!intervalExists) {
+			throw IllegalAccessException("interval", "Annotation");
+		}
+	
+  		return interval;
+ 	}
+
+ 	/**
+ 	 * Set interval with the specified Interval.
+ 	 * @param interval The Interval value to which interval is to be set.
+ 	 
+ 	
+ 	 */
+ 	void AnnotationRow::setInterval (Interval interval) {
+	
+ 		this->interval = interval;
+	
+		intervalExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark interval, which is an optional field, as non-existent.
+	 */
+	void AnnotationRow::clearInterval () {
+		intervalExists = false;
+	}
+	
+
+	
+	/**
 	 * The attribute dValue is optional. Return true if this attribute exists.
 	 * @return true if and only if the dValue attribute exists. 
 	 */
@@ -1267,7 +1779,7 @@ namespace asdm {
  	 * @return dValue as double
  	 * @throw IllegalAccessException If dValue does not exist.
  	 */
- 	double AnnotationRow::getDValue() const throw(IllegalAccessException) {
+ 	double AnnotationRow::getDValue() const  {
 		if (!dValueExists) {
 			throw IllegalAccessException("dValue", "Annotation");
 		}
@@ -1314,7 +1826,7 @@ namespace asdm {
  	 * @return vdValue as vector<double >
  	 * @throw IllegalAccessException If vdValue does not exist.
  	 */
- 	vector<double > AnnotationRow::getVdValue() const throw(IllegalAccessException) {
+ 	vector<double > AnnotationRow::getVdValue() const  {
 		if (!vdValueExists) {
 			throw IllegalAccessException("vdValue", "Annotation");
 		}
@@ -1361,7 +1873,7 @@ namespace asdm {
  	 * @return vvdValues as vector<vector<double > >
  	 * @throw IllegalAccessException If vvdValues does not exist.
  	 */
- 	vector<vector<double > > AnnotationRow::getVvdValues() const throw(IllegalAccessException) {
+ 	vector<vector<double > > AnnotationRow::getVvdValues() const  {
 		if (!vvdValuesExists) {
 			throw IllegalAccessException("vvdValues", "Annotation");
 		}
@@ -1408,7 +1920,7 @@ namespace asdm {
  	 * @return llValue as long long
  	 * @throw IllegalAccessException If llValue does not exist.
  	 */
- 	long long AnnotationRow::getLlValue() const throw(IllegalAccessException) {
+ 	long long AnnotationRow::getLlValue() const  {
 		if (!llValueExists) {
 			throw IllegalAccessException("llValue", "Annotation");
 		}
@@ -1455,7 +1967,7 @@ namespace asdm {
  	 * @return vllValue as vector<long long >
  	 * @throw IllegalAccessException If vllValue does not exist.
  	 */
- 	vector<long long > AnnotationRow::getVllValue() const throw(IllegalAccessException) {
+ 	vector<long long > AnnotationRow::getVllValue() const  {
 		if (!vllValueExists) {
 			throw IllegalAccessException("vllValue", "Annotation");
 		}
@@ -1502,7 +2014,7 @@ namespace asdm {
  	 * @return vvllValue as vector<vector<long long > >
  	 * @throw IllegalAccessException If vvllValue does not exist.
  	 */
- 	vector<vector<long long > > AnnotationRow::getVvllValue() const throw(IllegalAccessException) {
+ 	vector<vector<long long > > AnnotationRow::getVvllValue() const  {
 		if (!vvllValueExists) {
 			throw IllegalAccessException("vvllValue", "Annotation");
 		}
@@ -1534,42 +2046,6 @@ namespace asdm {
 	
 
 	
-
-	
- 	/**
- 	 * Get annotationId.
- 	 * @return annotationId as Tag
- 	 */
- 	Tag AnnotationRow::getAnnotationId() const {
-	
-  		return annotationId;
- 	}
-
- 	/**
- 	 * Set annotationId with the specified Tag.
- 	 * @param annotationId The Tag value to which annotationId is to be set.
- 	 
- 	
- 		
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 	
- 	 */
- 	void AnnotationRow::setAnnotationId (Tag annotationId)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-			throw IllegalAccessException("annotationId", "Annotation");
-		
-  		}
-  	
- 		this->annotationId = annotationId;
-	
- 	}
-	
-	
-
-	
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -1590,7 +2066,7 @@ namespace asdm {
  	 * @return antennaId as vector<Tag> 
  	 * @throw IllegalAccessException If antennaId does not exist.
  	 */
- 	vector<Tag>  AnnotationRow::getAntennaId() const throw(IllegalAccessException) {
+ 	vector<Tag>  AnnotationRow::getAntennaId() const  {
 		if (!antennaIdExists) {
 			throw IllegalAccessException("antennaId", "Annotation");
 		}
@@ -1717,11 +2193,13 @@ namespace asdm {
 	
 
 	
-		intervalExists = false;
-	
 
 	
 		numAntennaExists = false;
+	
+
+	
+		basebandNameExists = false;
 	
 
 	
@@ -1729,7 +2207,7 @@ namespace asdm {
 	
 
 	
-		basebandNameExists = false;
+		intervalExists = false;
 	
 
 	
@@ -1754,8 +2232,6 @@ namespace asdm {
 
 	
 		vvllValueExists = false;
-	
-
 	
 
 	
@@ -1809,11 +2285,13 @@ namespace asdm {
 	
 
 	
-		intervalExists = false;
-	
 
 	
 		numAntennaExists = false;
+	
+
+	
+		basebandNameExists = false;
 	
 
 	
@@ -1821,7 +2299,7 @@ namespace asdm {
 	
 
 	
-		basebandNameExists = false;
+		intervalExists = false;
 	
 
 	
@@ -1849,8 +2327,6 @@ namespace asdm {
 	
 
 	
-
-	
 	
 		antennaIdExists = false;
 	
@@ -1873,26 +2349,19 @@ namespace asdm {
 		
 		
 		
-		if (row.antennaIdExists) {
-			antennaId = row.antennaId;		
-			antennaIdExists = true;
-		}
-		else
-			antennaIdExists = false;
-		
-		if (row.intervalExists) {
-			interval = row.interval;		
-			intervalExists = true;
-		}
-		else
-			intervalExists = false;
-		
 		if (row.numAntennaExists) {
 			numAntenna = row.numAntenna;		
 			numAntennaExists = true;
 		}
 		else
 			numAntennaExists = false;
+		
+		if (row.basebandNameExists) {
+			basebandName = row.basebandName;		
+			basebandNameExists = true;
+		}
+		else
+			basebandNameExists = false;
 		
 		if (row.numBasebandExists) {
 			numBaseband = row.numBaseband;		
@@ -1901,12 +2370,12 @@ namespace asdm {
 		else
 			numBasebandExists = false;
 		
-		if (row.basebandNameExists) {
-			basebandName = row.basebandName;		
-			basebandNameExists = true;
+		if (row.intervalExists) {
+			interval = row.interval;		
+			intervalExists = true;
 		}
 		else
-			basebandNameExists = false;
+			intervalExists = false;
 		
 		if (row.dValueExists) {
 			dValue = row.dValue;		
@@ -1949,6 +2418,13 @@ namespace asdm {
 		}
 		else
 			vvllValueExists = false;
+		
+		if (row.antennaIdExists) {
+			antennaId = row.antennaId;		
+			antennaIdExists = true;
+		}
+		else
+			antennaIdExists = false;
 		
 		}	
 	}

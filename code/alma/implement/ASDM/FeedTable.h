@@ -85,12 +85,6 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
-
-	
 #include "CPolarizationType.h"
 using namespace PolarizationTypeMod;
 	
@@ -145,137 +139,139 @@ class ASDM;
 class FeedRow;
 /**
  * The FeedTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Contains characteristics of the feeds.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Feed </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> feedId </I></TD> 
+ 		
+ * <TD> antennaId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in AntennaTable. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> spectralWindowId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in SpectralWindowTable. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> timeInterval </TD>
+ 		 
+ * <TD> ArrayTimeInterval</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the time interval of validity of the content of the row. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD><I> feedId </I></TD>
+ 		 
  * <TD> int</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a collection of rows in the table. </TD>
  * </TR>
- 		
-	
- 		
- * <TR>
- * <TD> antennaId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
- 		
-	
- 		
- * <TR>
- * <TD> spectralWindowId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
- 		
-	
- 		
- * <TR>
- * <TD> timeInterval </TD> 
- * <TD> ArrayTimeInterval </TD>
- * <TD> &nbsp; </TD>
- * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> receiverId </TD> 
- * <TD> vector<int>  </TD>
- * <TD>  numReceptor </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> numReceptor </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of receptors. </TD>
  * </TR>
 	
  * <TR>
  * <TD> beamOffset </TD> 
  * <TD> vector<vector<double > > </TD>
  * <TD>  numReceptor, 2 </TD> 
+ * <TD> &nbsp;the offsets of the beam (one pair per receptor). </TD>
  * </TR>
 	
  * <TR>
  * <TD> focusReference </TD> 
  * <TD> vector<vector<Length > > </TD>
  * <TD>  numReceptor, 3 </TD> 
+ * <TD> &nbsp;the references for the focus position (one triple per receptor). </TD>
  * </TR>
 	
  * <TR>
  * <TD> polarizationTypes </TD> 
  * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
  * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;identifies the polarization types (one value per receptor). </TD>
  * </TR>
 	
  * <TR>
  * <TD> polResponse </TD> 
  * <TD> vector<vector<Complex > > </TD>
  * <TD>  numReceptor, numReceptor </TD> 
+ * <TD> &nbsp;the polarization response (one value per pair of receptors). </TD>
  * </TR>
 	
  * <TR>
  * <TD> receptorAngle </TD> 
  * <TD> vector<Angle > </TD>
  * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the receptors angles (one value per receptor). </TD>
  * </TR>
-	
-
-
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
- * <TD> beamId </TD> 
- * <TD> vector<Tag>  </TD>
- * <TD>  numReceptor  </TD>
+ * <TD> receiverId </TD> 
+ * <TD> vector<int>  </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;refers to one or more collections of rows in ReceiverTable. </TD>
  * </TR>
+	
+
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> feedNum </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the feed number to be used for multi-feed receivers. </TD>
  * </TR>
 	
  * <TR>
  * <TD> illumOffset </TD> 
- * <TD> float </TD>
- * <TD>  &nbsp; </TD>
+ * <TD> vector<Length > </TD>
+ * <TD>  2  </TD>
+ * <TD>&nbsp; the illumination offset. </TD>
  * </TR>
 	
  * <TR>
- * <TD> illumOffsetPa </TD> 
- * <TD> float </TD>
- * <TD>  &nbsp; </TD>
+ * <TD> position </TD> 
+ * <TD> vector<Length > </TD>
+ * <TD>  3  </TD>
+ * <TD>&nbsp; the position of the feed. </TD>
  * </TR>
 	
  * <TR>
- * <TD> xPosition </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> yPosition </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> zPosition </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp; </TD>
+ * <TD> beamId </TD> 
+ * <TD> vector<Tag>  </TD>
+ * <TD>  numReceptor  </TD>
+ * <TD>&nbsp; refers for each receptor to a unique row in BeamTable. </TD>
  * </TR>
 	
 
@@ -356,8 +352,6 @@ public:
 	
  	 * @param timeInterval. 
 	
- 	 * @param receiverId. 
-	
  	 * @param numReceptor. 
 	
  	 * @param beamOffset. 
@@ -370,14 +364,16 @@ public:
 	
  	 * @param receptorAngle. 
 	
+ 	 * @param receiverId. 
+	
      */
-	FeedRow *newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, vector<int>  receiverId, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle);
+	FeedRow *newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle, vector<int>  receiverId);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	FeedRow *newRowFull(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, vector<int>  receiverId, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle);
+	FeedRow *newRowFull(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle, vector<int>  receiverId);
 
 
 	/**
@@ -441,17 +437,17 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
-	 * @param feedId. 
-	
 	 * @param antennaId. 
 	
 	 * @param spectralWindowId. 
 	
 	 * @param timeInterval. 
 	
+	 * @param feedId. 
+	
  	 *
 	 */
- 	FeedRow* getRowByKey(int feedId, Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval);
+ 	FeedRow* getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId);
 
  	 	
  	
@@ -478,8 +474,6 @@ public:
  	 		
  	 * @param timeInterval.
  	 		
- 	 * @param receiverId.
- 	 		
  	 * @param numReceptor.
  	 		
  	 * @param beamOffset.
@@ -491,9 +485,11 @@ public:
  	 * @param polResponse.
  	 		
  	 * @param receptorAngle.
+ 	 		
+ 	 * @param receiverId.
  	 		 
  	 */
-	FeedRow* lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, vector<int>  receiverId, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle); 
+	FeedRow* lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle, vector<int>  receiverId); 
 
 
 #ifndef WITHOUT_ACS
@@ -513,43 +509,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(FeedTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(FeedTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for Feed (FeedTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a Feed (FeedTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -624,8 +626,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	FeedRow* checkAndAdd(FeedRow* x) throw (DuplicateKey, UniquenessViolationException);
+	FeedRow* checkAndAdd(FeedRow* x) ;
 
 
 	
@@ -674,7 +680,7 @@ private:
 	
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CCalDataOrigin::version() {
+	return CalDataOriginMod::version;
+	}
+	
+string CCalDataOrigin::revision () {
+	return CalDataOriginMod::revision;
+}
+
+unsigned int CCalDataOrigin::size() {
+	return 9;
+	}
+	
 	
 const std::string& CCalDataOrigin::sTOTAL_POWER = "TOTAL_POWER";
 	
@@ -54,7 +67,9 @@ const std::string& CCalDataOrigin::sOPTICAL_POINTING = "OPTICAL_POINTING";
 	
 const std::string& CCalDataOrigin::sHOLOGRAPHY = "HOLOGRAPHY";
 	
-const std::vector<std::string> CCalDataOrigin::sCalDataOriginSet() {
+const std::string& CCalDataOrigin::sNONE = "NONE";
+	
+const std::vector<std::string> CCalDataOrigin::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CCalDataOrigin::sTOTAL_POWER);
@@ -72,52 +87,11 @@ const std::vector<std::string> CCalDataOrigin::sCalDataOriginSet() {
     enumSet.insert(enumSet.end(), CCalDataOrigin::sOPTICAL_POINTING);
     
     enumSet.insert(enumSet.end(), CCalDataOrigin::sHOLOGRAPHY);
+    
+    enumSet.insert(enumSet.end(), CCalDataOrigin::sNONE);
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CCalDataOrigin::hTOTAL_POWER = "Total Power data (from detectors)";
-	
-const std::string& CCalDataOrigin::hWVR = "Water vapour radiometrers";
-	
-const std::string& CCalDataOrigin::hCHANNEL_AVERAGE_AUTO = "Autocorrelations from channel average data";
-	
-const std::string& CCalDataOrigin::hCHANNEL_AVERAGE_CROSS = "Crosscorrelations from channel average data";
-	
-const std::string& CCalDataOrigin::hFULL_RESOLUTION_AUTO = "Autocorrelations from full-resolution data";
-	
-const std::string& CCalDataOrigin::hFULL_RESOLUTION_CROSS = "Cross correlations from full-resolution data";
-	
-const std::string& CCalDataOrigin::hOPTICAL_POINTING = "Optical pointing data";
-	
-const std::string& CCalDataOrigin::hHOLOGRAPHY = "data from holography receivers";
-	
-const std::vector<std::string> CCalDataOrigin::hCalDataOriginSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CCalDataOrigin::hTOTAL_POWER);
-    
-    enumSet.insert(enumSet.end(), CCalDataOrigin::hWVR);
-    
-    enumSet.insert(enumSet.end(), CCalDataOrigin::hCHANNEL_AVERAGE_AUTO);
-    
-    enumSet.insert(enumSet.end(), CCalDataOrigin::hCHANNEL_AVERAGE_CROSS);
-    
-    enumSet.insert(enumSet.end(), CCalDataOrigin::hFULL_RESOLUTION_AUTO);
-    
-    enumSet.insert(enumSet.end(), CCalDataOrigin::hFULL_RESOLUTION_CROSS);
-    
-    enumSet.insert(enumSet.end(), CCalDataOrigin::hOPTICAL_POINTING);
-    
-    enumSet.insert(enumSet.end(), CCalDataOrigin::hHOLOGRAPHY);
-        
-    return enumSet;
-}
-   	
 
 std::string CCalDataOrigin::name(const CalDataOriginMod::CalDataOrigin& f) {
     switch (f) {
@@ -145,45 +119,14 @@ std::string CCalDataOrigin::name(const CalDataOriginMod::CalDataOrigin& f) {
     
     case CalDataOriginMod::HOLOGRAPHY:
       return CCalDataOrigin::sHOLOGRAPHY;
+    
+    case CalDataOriginMod::NONE:
+      return CCalDataOrigin::sNONE;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CCalDataOrigin::help(const CalDataOriginMod::CalDataOrigin& f) {
-    switch (f) {
-    
-    case CalDataOriginMod::TOTAL_POWER:
-      return CCalDataOrigin::hTOTAL_POWER;
-    
-    case CalDataOriginMod::WVR:
-      return CCalDataOrigin::hWVR;
-    
-    case CalDataOriginMod::CHANNEL_AVERAGE_AUTO:
-      return CCalDataOrigin::hCHANNEL_AVERAGE_AUTO;
-    
-    case CalDataOriginMod::CHANNEL_AVERAGE_CROSS:
-      return CCalDataOrigin::hCHANNEL_AVERAGE_CROSS;
-    
-    case CalDataOriginMod::FULL_RESOLUTION_AUTO:
-      return CCalDataOrigin::hFULL_RESOLUTION_AUTO;
-    
-    case CalDataOriginMod::FULL_RESOLUTION_CROSS:
-      return CCalDataOrigin::hFULL_RESOLUTION_CROSS;
-    
-    case CalDataOriginMod::OPTICAL_POINTING:
-      return CCalDataOrigin::hOPTICAL_POINTING;
-    
-    case CalDataOriginMod::HOLOGRAPHY:
-      return CCalDataOrigin::hHOLOGRAPHY;
-    	
-    }
-    return std::string("");
-}
-   	
 
 CalDataOriginMod::CalDataOrigin CCalDataOrigin::newCalDataOrigin(const std::string& name) {
 		
@@ -217,6 +160,10 @@ CalDataOriginMod::CalDataOrigin CCalDataOrigin::newCalDataOrigin(const std::stri
     	
     if (name == CCalDataOrigin::sHOLOGRAPHY) {
         return CalDataOriginMod::HOLOGRAPHY;
+    }
+    	
+    if (name == CCalDataOrigin::sNONE) {
+        return CalDataOriginMod::NONE;
     }
     
     throw badString(name);
@@ -255,17 +202,19 @@ CalDataOriginMod::CalDataOrigin CCalDataOrigin::literal(const std::string& name)
     if (name == CCalDataOrigin::sHOLOGRAPHY) {
         return CalDataOriginMod::HOLOGRAPHY;
     }
+    	
+    if (name == CCalDataOrigin::sNONE) {
+        return CalDataOriginMod::NONE;
+    }
     
     throw badString(name);
 }
 
 CalDataOriginMod::CalDataOrigin CCalDataOrigin::from_int(unsigned int i) {
-	vector<string> names = sCalDataOriginSet();
-	if (i >= names.size()) throw badInt(i);
-	return newCalDataOrigin(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newCalDataOrigin(names_.at(i));
 }
-
-	
 
 string CCalDataOrigin::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'CalDataOrigin'.";

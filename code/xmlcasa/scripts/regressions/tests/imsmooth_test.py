@@ -147,21 +147,21 @@ def input_test():
     #    2. Good file name, a file should be
     #######################################################################
     casalog.post( "The IMAGENAME parameter tests will cause errors to occur, do not be alarmed", 'WARN' )
-    
+
+    result = None    
     try:
-        result = None
         results = imsmooth( 'g192', outfile='input_test1' )
     except:
         no_op='noop'
     else:
-        if ( results != None and results!=False):
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Badfile, 'g192', was not reported as missing."
         
-    
+    results = None
     try:
-        results = None
         results = imsmooth( 'g192_a2.image', outfile='input_test1' )
 
     except:
@@ -169,7 +169,7 @@ def input_test():
         retValue['error_msgs']=retValue['error_msgs']\
                 +"\nError: Unable to smooth g192_a2.image"
         
-    if (  not os.path.exists( 'input_test1' ) and results != None ):
+    if (  not os.path.exists( 'input_test1' ) or results==False ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                 +"\nError: continuum files for 'input_test1' were not created."
@@ -183,21 +183,24 @@ def input_test():
     casalog.post( "The OUTFILE parameter tests will cause errors to occur, do not be alarmed", 'WARN' )
     
     results = None
-    results = imsmooth( 'g192_a2.image', outfile='input_test1' )
-    if ( results != None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Badfile, 'input_test1', was not reported as already existing."
-        
-    
     try:
-        results = None
+        results = imsmooth( 'g192_a2.image', outfile='input_test1' )
+    except:
+        pass
+    else:
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):
+            retValue['error_msgs']=retValue['error_msgs']\
+              +"\nError: Badfile, 'input_test1', was not reported as already existing."
+        
+    results = None
+    try:
         results=imsmooth( 'g192_a2.image', outfile='input_test2' )
     except:
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Unable to create smoothed image 'input_test2'"
-    if ( not os.path.exists( 'input_test2' ) and results != None ):
+    if ( not os.path.exists( 'input_test2' ) and results==False ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: output file, 'input_test2', was not created."
@@ -214,9 +217,10 @@ def input_test():
     try:
         results = imsmooth( 'g192_a2.image', kernel='', outfile='input_test3' )
     except:
-        no_op='noop'
+        pass
     else:
-        if ( results != None ):
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: No exception thrown for bad kernel value, ''"
@@ -225,9 +229,10 @@ def input_test():
     try:
         results = imsmooth( 'g192_a2.image', kernel='junk', outfile='input_test4' )
     except:
-        no_op='noop'
+        pass
     else:
-        if ( results != None ):
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: No exception thrown for bad kernel value, 'junk'"    
@@ -239,7 +244,7 @@ def input_test():
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Gaussian smoothing failed."
-    if ( not os.path.exists( 'input_test5' ) or results == None ): 
+    if ( not os.path.exists( 'input_test5' ) or results == False ): 
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: input_test5 output file was NOT created."\
@@ -255,7 +260,7 @@ def input_test():
                  +"\nError: Boxcar smoothing failed. " \
                  +str(err)
         
-    if ( not os.path.exists( 'input_test6' ) or results==None ): 
+    if ( not os.path.exists( 'input_test6' ) or results==False ): 
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: output file 'input_test6' was NOT created."
@@ -290,7 +295,7 @@ def input_test():
     except:
         no_op='noop'
     else:
-        if ( results != None ):
+        if ( results != None and results!=False ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Bad major value, 'bad', was not reported."
@@ -301,7 +306,7 @@ def input_test():
     except:
         no_op='noop'
     else:
-        if ( results != None ):
+        if ( results != None and results!=False ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Bad major value, '-5', was not reported."
@@ -314,7 +319,7 @@ def input_test():
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Unable to smooth with major=2 and minor=1 "
 
-    if ( not os.path.exists( 'input_test11' ) or results==None ): 
+    if ( not os.path.exists( 'input_test11' ) or results==False ): 
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Smoothing failed with numerical major/minor values."\
@@ -328,7 +333,7 @@ def input_test():
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Unable to smooth with major='2pix' and minor='1pix' "
 
-    if ( not os.path.exists( 'input_test12' ) or results==None ): 
+    if ( not os.path.exists( 'input_test12' ) or results==False ): 
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Smoothing failed with pixel major/minor values."
@@ -341,7 +346,7 @@ def input_test():
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Unable to smooth with major='1.5arcsec' and minor='1arcsec' "
 
-    if ( not os.path.exists( 'input_test13' ) or results==None ): 
+    if ( not os.path.exists( 'input_test13' ) or results==False ): 
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Smoothing failed with arcsecond major/minor values."
@@ -349,9 +354,9 @@ def input_test():
     try:
         results = imsmooth( 'g192_a2.image', major='0.5arcsec', minor='2arcsec', outfile='input_test14')
     except:
-        no_op='noop'
+        pass
     else:
-        if ( results != None ):
+        if ( results != None and results!=False ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Bad major value less than minor value was not reported."        
@@ -432,61 +437,102 @@ def input_test():
     casalog.post( "The BOX parameter tests will cause errors to occur, do not be alarmed", 'WARN' )
     
     results = None
-    results = imsmooth( 'g192_a2.image', box='-3,0,511,511' )
-    if ( results != None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad box value, 'x=-3', was not reported as bad."
+    try:
+        results = imsmooth( 'g192_a2.image', box='-3,0,511,511' )
+    except:
+        pass
+    else:
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):    
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                 +"\nError: Bad box value, 'x=-3', was not reported as bad."
 
-    results = None    
-    results = imsmooth( 'g192_a2.image', box='0,-3,511,511' )
-    if ( results != None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad box value, 'y=-3', was not reported as bad."
+    results = None
+    try:
+        results = imsmooth( 'g192_a2.image', box='0,-3,511,511' )
+    except:
+        pass
+    else:
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):    
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                +"\nError: Bad box value, 'y=-3', was not reported as bad."
     
     results = None
-    results = imsmooth( 'g192_a2.image', box='-2,0,511,511' )
-    if ( results != None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad box value, 'x=-2', was not reported."\
-             +"\n\tRESULTS: "+str(results)
+    try:
+        results = imsmooth( 'g192_a2.image', box='-2,0,511,511' )
+    except:
+        pass
+    else:
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):    
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                +"\nError: Bad box value, 'x=-2', was not reported."\
+                +"\n\tRESULTS: "+str(results)
 
     results = None
-    results = imsmooth( 'g192_a2.image', box='0,-2,511,511' )
-    if ( results != None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad box value, 'y=-2', was not reported as bad."
+    try:
+        results = imsmooth( 'g192_a2.image', box='0,-2,511,511' )
+    except:
+        pass
+    else:
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):    
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                 +"\nError: Bad box value, 'y=-2', was not reported as bad."
 
     results = None
-    results = imsmooth( 'g192_a2.image', box='0,0,512,511' )
-    if ( results != None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad box value, 'x=512', was not reported as bad."
-
-    results = None    
-    results = imsmooth( 'g192_a2.image', box='0,0,511,512' )
-    if ( results != None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad box value, 'y=512', was not reported as bad."
+    try:
+        results = imsmooth( 'g192_a2.image', box='0,0,512,511' )
+    except:
+        pass
+    else:
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):    
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+               +"\nError: Bad box value, 'x=512', was not reported as bad."
 
     results = None
-    results = imsmooth( 'g192_a2.image', box='0, 0,525,511' )
-    if ( results != None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad box value, 'x=525', was not reported as bad."
+    try:
+        results = imsmooth( 'g192_a2.image', box='0,0,511,512' )
+    except:
+        pass
+    else:
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):    
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+               +"\nError: Bad box value, 'y=512', was not reported as bad."
+            
 
     results = None
-    results = imsmooth( 'g192_a2.image', box='0,0,511,525' )
-    if ( results != None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad box value, 'y=525', was not reported as bad."
+    try:
+        results = imsmooth( 'g192_a2.image', box='0, 0,525,511' )
+    except:
+        pass
+    else:
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):    
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                +"\nError: Bad box value, 'x=525', was not reported as bad."
+
+    results = None
+    try:
+        results = imsmooth( 'g192_a2.image', box='0,0,511,525' )
+    except:
+        pass
+    else:
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):    
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                 +"\nError: Bad box value, 'y=525', was not reported as bad."
 
     x1=random.randint(0,511)
     x2=random.randint(x1,511)
@@ -494,14 +540,14 @@ def input_test():
     y2=random.randint(y1,511)
     boxstr=str(x1)+','+str(y1)+','+str(x2)+','+str(y2)
     
+    results = None
     try:
-        results = None
         results = imsmooth( 'g192_a2.image', box=boxstr, outfile='input_test16' )
     except:
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Unable to smooth in box="+boxstr
-    if ( not os.path.exists( 'input_test16' ) or results==None ):
+    if ( not os.path.exists( 'input_test16' ) or results==False ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: output file 'input_test_box16' was not "\
@@ -517,41 +563,65 @@ def input_test():
     #######################################################################
     casalog.post( "The CHANS parameter tests will cause errors to occur, do not be alarmed", 'WARN' )
     
-    results = None    
-    results = imsmooth( 'g192_a2.image', chans='-5' )
-    if ( results != None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad channel value, '-5', was not reported."
+    results = None
+    try:
+        results = imsmooth( 'g192_a2.image', chans='-5' )
+    except:
+        pass
+    else:
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):    
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                  +"\nError: Bad channel value, '-5', was not reported."
 
-    results = None    
-    results = imsmooth( 'g192_a2.image', chans='-2' )
-    if ( results != None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad channel value, '-2', was not reported."\
-             +"\n\tRESULTS: "+str(results)
+    results = None
+    try:
+        results = imsmooth( 'g192_a2.image', chans='-2' )
+    except:
+        pass
+    else:
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):    
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+              +"\nError: Bad channel value, '-2', was not reported."
 
-    results = None        
-    results = imsmooth( 'g192_a2.image', chans='-18' )
-    if ( results != None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad channel value of -18 was not reported."
+    results = None
+    try:
+        results = imsmooth( 'g192_a2.image', chans='-18' )
+    except:
+        pass
+    else:
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                 +"\nError: Bad channel value of -18 was not reported."
 
-    results = None        
-    results = imsmooth( 'g192_a2.image', chans='45' )
-    if ( results != None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad channel value of 45 was not reported."
+    results = None
+    try:
+        results = imsmooth( 'g192_a2.image', chans='45' )
+    except:
+        pass
+    else:
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                +"\nError: Bad channel value of 45 was not reported."
 
-    results = None        
-    results = imsmooth( 'g192_a2.image', chans='40' )
-    if ( results != None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-             +"\nError: Bad channel value of 40 was not reported."
+    results = None
+    try:
+        results = imsmooth( 'g192_a2.image', chans='40' )
+    except:
+        pass
+    else:
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']\
+                +"\nError: Bad channel value of 40 was not reported."
 
     
     results = None            
@@ -561,7 +631,7 @@ def input_test():
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Unable to smooth on chans=22~35 only "
-    if ( not os.path.exists( 'input_test17' ) or results==None ): 
+    if ( not os.path.exists( 'input_test17' ) or results==False ): 
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: output file, 'input_test17', was not created."
@@ -573,7 +643,7 @@ def input_test():
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Unable to create smooth chans=0 only"
-    if ( not os.path.exists( 'input_test17b' ) or results==None ): 
+    if ( not os.path.exists( 'input_test17b' ) or results==False ): 
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: output file 'input_test17b`' was not created."\
@@ -586,7 +656,7 @@ def input_test():
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Unable to smooth with chans=39 only"
-    if ( not os.path.exists( 'input_test18' ) or results==None ): 
+    if ( not os.path.exists( 'input_test18' ) or results==False ): 
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: output file 'input_test18' was not created."
@@ -602,9 +672,10 @@ def input_test():
     try:
         results = imsmooth( 'g192_a2.image', stokes='Q' )
     except:
-        no_op='noop'
+        pass
     else:
-        if ( results!=None ):
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Bad stokes value, 'Q', was not reported."
@@ -613,9 +684,10 @@ def input_test():
     try:
         results = imsmooth( 'g192_a2.image', stokes='yellow' )
     except:
-        no_op='noop'
+        pass
     else:
-        if ( results!=None ):
+        if ( results != None and \
+             ( not isinstance(results, bool) or results==True ) ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Bad stokes value, 'yellow', was not reported."
@@ -627,7 +699,7 @@ def input_test():
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Smmoothing failed with stokes=Q"
-    if ( not os.path.exists( 'input_test19' ) or results==None ):
+    if ( not os.path.exists( 'input_test19' ) or results==False ):
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: output file 'input_test19' was not created."
@@ -720,12 +792,13 @@ def smooth_test():
         # Now that we know something has been done lets check the results!
         #      1. Check that the sum of the values under the curve is 100
         #      2. Check that the max is at 212, 220, 0 , 20
-        allowedError = 0.0005
+        allowedError = 0.009
         
         ia.open( 'smooth_test1')
         stats = ia.statistics()
-        if ( stats['sum'][0] < (100-allowedError) \
-             or stats['sum'][0] > (100+allowedError) ):
+        sum = stats['sum'][0]
+        if ( ( sum < 100 and sum < ( 100-allowedError ) )
+             or ( sum > 100 and sum > ( 100+allowedError) ) ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                 +"\nError: Sum under Gaussian is "+str(stats['sum'][0])\
@@ -763,8 +836,8 @@ def smooth_test():
         #        2. That the points in the box are 0.125=(100/((10+10)*(20+20))
         ia.open( 'smooth_test2')
         stats = ia.statistics()
-        if ( stats['sum'][0] < (100-allowedError) \
-             or stats['sum'][0] > (100+allowedError) ):
+        if ( ( sum < 100 and sum < ( 100-allowedError ) )
+             or ( sum > 100 and sum > ( 100+allowedError) ) ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                 +"\nError: Sum under Gaussian is "+str(stats['sum'][0])\
@@ -776,7 +849,7 @@ def smooth_test():
         val4 = ia.pixelvalue( [ 222,201,0,20] )        
         midVal = ia.pixelvalue( [212,220,0,20] )
         for value in [val1, val2, val3, val4, midVal ]:
-            if ( value < (0.125-allowedError) or value > (0.125+allowedError)):
+            if ( value>(0.125-allowedError) and value<(0.125+allowedError)):
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']\
                     +"\nError: Values in the smoothed box are not all 0.125"\
@@ -831,9 +904,10 @@ def region_test():
         #
         # Note that 
         inputArray = numpy.zeros( (shape[0], shape[1], shape[2], shape[3]), 'float' )
-        
+
         inputArray[49,71,0,14] = 100     # For rgn file
-        inputArray[12,12,0,20] = 100     # For rgn in image
+        inputArray[233,276,0,20] = 100     # For rgn in image
+        inputArray[15,15,0,30] = 100     # For rgn in image
 
         
         # Now make the image!
@@ -858,7 +932,7 @@ def region_test():
     try:
         results=imsmooth( 'rgn.pointsrc.image', kernel='gauss', \
                           major=50, minor=25, outfile='rgn_test1', \
-                          box='250,250,275,290')
+                          box='350,350,375,390')
     except Exception, err:
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
@@ -916,7 +990,7 @@ def region_test():
     # Select a region that contains the point source
     #   1. using imsmooth parameters
     #   2. region defined in an image
-    #        g192_a.image:testregion (blc=10,10,0,0  trc=25,25,0,39)
+    #        g192_a.image:testregion (blc=166,222,0,0  trc=296,328,0,39)
     #   3. region file.
     #        g192_1.image.rgn      (blc=0,0,0,0 trc=511,511,0,14)
     #
@@ -949,27 +1023,32 @@ def region_test():
                 +str(stats['sum'][0]) +" expected value is 100."
         ia.done()
 
+        # Note that since we've selected a single plane then our
+        # output image has a single plane, 0, only!  Thus, unlike
+        # our original image the max point should be found on the
+        # 0th channel and NOT the 14th channel.
         maxpos=stats['maxpos'].tolist()
         if ( maxpos[0]!=49 or maxpos[1]!=71 or \
-             maxpos[2]!=0 or maxpos[3]!=14 ):
+             maxpos[2]!=0 or maxpos[3]!=0 ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                 +"\nError: Max position found at "+str(maxpos)\
-                +" expected it to be at 49,71,0,14."            
+                +" expected it to be at 49,71,0,0."            
 
 
     results = None
+    # This test was all screwed up when it fell in my lap. Fixing as best as I can - dmehring
+    output = 'rgn_test5'
     try:
         results=imsmooth( 'rgn.pointsrc.image', kernel='gauss', \
-                          major=12, minor=7, outfile='rgn_test5', \
-                          region='g192_a.image:testregion')
+                          major=2, minor=1, outfile = output, \
+                          region='g192_a2.image:testregion')
     except Exception, err:
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                  +"\nError: Smoothng failed with internal image region 'testregion'."
 
-        
-    if ( not os.path.exists( 'rgn_test5' ) or results==None ): 
+    if ( not os.path.exists(output) or results==None ): 
         retValue['success']=False
         retValue['error_msgs']=retValue['error_msgs']\
                    +"\nError: Smoothing failed internal image region 'testregion'."
@@ -977,25 +1056,29 @@ def region_test():
         # Now that we know something has been done lets check the results!
         #     1. Check that the sum of the values under the curve is 100
         #     2. Check that the max is at 49,71, 0, 14
-        ia.open( 'rgn_test5')
+        ia.open(output)
         stats = ia.statistics()
         ia.done()
-
-        if ( stats['sum'][0] < ( 100-allowedError) \
-             or stats['sum'][0] > ( 100+allowedError) ):
+        
+        sum = stats['sum'][0]
+        fluxDensity = 99.948 # not 100 because of flux located outside small image
+        allowedError=0.001
+        if (sum < (fluxDensity - allowedError) or sum > (fluxDensity + allowedError)):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
-                +"\nError: Sum on smoothed file rgn_test4 is "\
+                +"\nError: Sum on smoothed file " + output + " is "\
                 +str(stats['sum'][0]) +" expected value is 100."
 
+        # Max position = point src position - minx, miny of region    
         maxpos=stats['maxpos'].tolist()
-        if ( maxpos[0]!=12 or maxpos[1]!=12 or \
-             maxpos[2]!=0 or maxpos[3]!=20 ):
+        if ( maxpos[0] != 5 or maxpos[1] != 5 or \
+             maxpos[2] != 0 or maxpos[3] != 30 ):
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                 +"\nError: Max position found at "+str(maxpos)\
-                +" expected it to be at 12,12,0,20."            
+                +" expected it to be at 212,220,0,20."            
 
+    print "*** finishing " + str(retValue['success'])
     return retValue
 
 
@@ -1031,7 +1114,6 @@ def run():
     test_list = [ 'input_test()', 'smooth_test()', \
                   'region_test()' ]
 
-
     # This would be really, really, really, really nice to run in a loop
     # and use the eval() command to execute the various methods BUT for
     # some idiotic reason, which I do not know, when you do this. The
@@ -1057,5 +1139,6 @@ def run():
     print "PASSED: ", passed
     if ( not passed ):
         casalog.post( error_msgs, 'EXCEPTION' )
+        raise Exception, 'imsmooth test has failed!\n'+error_msgs
     
     return []

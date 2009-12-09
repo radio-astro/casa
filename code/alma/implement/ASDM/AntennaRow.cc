@@ -146,7 +146,7 @@ namespace asdm {
 		
 		
 			
-		x->xPosition = xPosition.toIDLLength();
+		x->dishDiameter = dishDiameter.toIDLLength();
 			
 		
 	
@@ -156,7 +156,12 @@ namespace asdm {
 		
 		
 			
-		x->yPosition = yPosition.toIDLLength();
+		x->position.length(position.size());
+		for (unsigned int i = 0; i < position.size(); ++i) {
+			
+			x->position[i] = position.at(i).toIDLLength();
+			
+	 	}
 			
 		
 	
@@ -166,7 +171,12 @@ namespace asdm {
 		
 		
 			
-		x->zPosition = zPosition.toIDLLength();
+		x->offset.length(offset.size());
+		for (unsigned int i = 0; i < offset.size(); ++i) {
+			
+			x->offset[i] = offset.at(i).toIDLLength();
+			
+	 	}
 			
 		
 	
@@ -178,58 +188,6 @@ namespace asdm {
 			
 		x->time = time.toIDLArrayTime();
 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->xOffset = xOffset.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->yOffset = yOffset.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->zOffset = zOffset.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->dishDiameter = dishDiameter.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->flagRow = flagRow;
- 				
- 			
 		
 	
 
@@ -279,7 +237,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct AntennaRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void AntennaRow::setFromIDL (AntennaRowIDL x) throw(ConversionException) {
+	void AntennaRow::setFromIDL (AntennaRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -328,76 +286,6 @@ namespace asdm {
 		
 		
 			
-		setXPosition(Length (x.xPosition));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setYPosition(Length (x.yPosition));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setZPosition(Length (x.zPosition));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setTime(ArrayTime (x.time));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setXOffset(Length (x.xOffset));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setYOffset(Length (x.yOffset));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setZOffset(Length (x.zOffset));
-			
- 		
-		
-	
-
-	
-		
-		
-			
 		setDishDiameter(Length (x.dishDiameter));
 			
  		
@@ -408,8 +296,38 @@ namespace asdm {
 		
 		
 			
-		setFlagRow(x.flagRow);
-  			
+		position .clear();
+		for (unsigned int i = 0; i <x.position.length(); ++i) {
+			
+			position.push_back(Length (x.position[i]));
+			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		offset .clear();
+		for (unsigned int i = 0; i <x.offset.length(); ++i) {
+			
+			offset.push_back(Length (x.offset[i]));
+			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setTime(ArrayTime (x.time));
+			
  		
 		
 	
@@ -449,7 +367,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Antenna");
+			throw ConversionException (err.getMessage(),"Antenna");
 		}
 	}
 #endif
@@ -499,62 +417,6 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(xPosition, "xPosition", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(yPosition, "yPosition", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(zPosition, "zPosition", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(time, "time", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(xOffset, "xOffset", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(yOffset, "yOffset", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(zOffset, "zOffset", buf);
-		
-		
-	
-
-  	
- 		
-		
 		Parser::toXML(dishDiameter, "dishDiameter", buf);
 		
 		
@@ -563,7 +425,23 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(flagRow, "flagRow", buf);
+		Parser::toXML(position, "position", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(offset, "offset", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(time, "time", buf);
 		
 		
 	
@@ -607,7 +485,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void AntennaRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void AntennaRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -652,62 +530,6 @@ namespace asdm {
 	
   		
 			
-	  	setXPosition(Parser::getLength("xPosition","Antenna",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setYPosition(Parser::getLength("yPosition","Antenna",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setZPosition(Parser::getLength("zPosition","Antenna",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setTime(Parser::getArrayTime("time","Antenna",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setXOffset(Parser::getLength("xOffset","Antenna",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setYOffset(Parser::getLength("yOffset","Antenna",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setZOffset(Parser::getLength("zOffset","Antenna",rowDoc));
-			
-		
-	
-
-	
-  		
-			
 	  	setDishDiameter(Parser::getLength("dishDiameter","Antenna",rowDoc));
 			
 		
@@ -716,7 +538,27 @@ namespace asdm {
 	
   		
 			
-	  	setFlagRow(Parser::getBoolean("flagRow","Antenna",rowDoc));
+					
+	  	setPosition(Parser::get1DLength("position","Antenna",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+					
+	  	setOffset(Parser::get1DLength("offset","Antenna",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setTime(Parser::getArrayTime("time","Antenna",rowDoc));
 			
 		
 	
@@ -751,6 +593,196 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"Antenna");
 		}
+	}
+	
+	void AntennaRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	antennaId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(name);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(antennaMake);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(antennaType);
+				
+		
+	
+
+	
+	
+		
+	dishDiameter.toBin(eoss);
+		
+	
+
+	
+	
+		
+	Length::toBin(position, eoss);
+		
+	
+
+	
+	
+		
+	Length::toBin(offset, eoss);
+		
+	
+
+	
+	
+		
+	time.toBin(eoss);
+		
+	
+
+	
+	
+		
+	stationId.toBin(eoss);
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(assocAntennaIdExists);
+	if (assocAntennaIdExists) {
+	
+	
+	
+		
+	assocAntennaId.toBin(eoss);
+		
+	
+
+	}
+
+	}
+	
+	AntennaRow* AntennaRow::fromBin(EndianISStream& eiss, AntennaTable& table) {
+		AntennaRow* row = new  AntennaRow(table);
+		
+		
+		
+	
+		
+		
+		row->antennaId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->name =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->antennaMake = CAntennaMake::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->antennaType = CAntennaType::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->dishDiameter =  Length::fromBin(eiss);
+		
+	
+
+	
+		
+		
+			
+	
+	row->position = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->offset = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+		
+		
+		row->time =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->stationId =  Tag::fromBin(eiss);
+		
+	
+
+		
+		
+		
+	row->assocAntennaIdExists = eiss.readBoolean();
+	if (row->assocAntennaIdExists) {
+		
+	
+		
+		
+		row->assocAntennaId =  Tag::fromBin(eiss);
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -893,29 +925,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get xPosition.
- 	 * @return xPosition as Length
+ 	 * Get dishDiameter.
+ 	 * @return dishDiameter as Length
  	 */
- 	Length AntennaRow::getXPosition() const {
+ 	Length AntennaRow::getDishDiameter() const {
 	
-  		return xPosition;
+  		return dishDiameter;
  	}
 
  	/**
- 	 * Set xPosition with the specified Length.
- 	 * @param xPosition The Length value to which xPosition is to be set.
+ 	 * Set dishDiameter with the specified Length.
+ 	 * @param dishDiameter The Length value to which dishDiameter is to be set.
  	 
  	
  		
  	 */
- 	void AntennaRow::setXPosition (Length xPosition)  {
+ 	void AntennaRow::setDishDiameter (Length dishDiameter)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->xPosition = xPosition;
+ 		this->dishDiameter = dishDiameter;
 	
  	}
 	
@@ -925,29 +957,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get yPosition.
- 	 * @return yPosition as Length
+ 	 * Get position.
+ 	 * @return position as vector<Length >
  	 */
- 	Length AntennaRow::getYPosition() const {
+ 	vector<Length > AntennaRow::getPosition() const {
 	
-  		return yPosition;
+  		return position;
  	}
 
  	/**
- 	 * Set yPosition with the specified Length.
- 	 * @param yPosition The Length value to which yPosition is to be set.
+ 	 * Set position with the specified vector<Length >.
+ 	 * @param position The vector<Length > value to which position is to be set.
  	 
  	
  		
  	 */
- 	void AntennaRow::setYPosition (Length yPosition)  {
+ 	void AntennaRow::setPosition (vector<Length > position)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->yPosition = yPosition;
+ 		this->position = position;
 	
  	}
 	
@@ -957,29 +989,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get zPosition.
- 	 * @return zPosition as Length
+ 	 * Get offset.
+ 	 * @return offset as vector<Length >
  	 */
- 	Length AntennaRow::getZPosition() const {
+ 	vector<Length > AntennaRow::getOffset() const {
 	
-  		return zPosition;
+  		return offset;
  	}
 
  	/**
- 	 * Set zPosition with the specified Length.
- 	 * @param zPosition The Length value to which zPosition is to be set.
+ 	 * Set offset with the specified vector<Length >.
+ 	 * @param offset The vector<Length > value to which offset is to be set.
  	 
  	
  		
  	 */
- 	void AntennaRow::setZPosition (Length zPosition)  {
+ 	void AntennaRow::setOffset (vector<Length > offset)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->zPosition = zPosition;
+ 		this->offset = offset;
 	
  	}
 	
@@ -1018,166 +1050,6 @@ namespace asdm {
 	
 
 	
-
-	
- 	/**
- 	 * Get xOffset.
- 	 * @return xOffset as Length
- 	 */
- 	Length AntennaRow::getXOffset() const {
-	
-  		return xOffset;
- 	}
-
- 	/**
- 	 * Set xOffset with the specified Length.
- 	 * @param xOffset The Length value to which xOffset is to be set.
- 	 
- 	
- 		
- 	 */
- 	void AntennaRow::setXOffset (Length xOffset)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->xOffset = xOffset;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get yOffset.
- 	 * @return yOffset as Length
- 	 */
- 	Length AntennaRow::getYOffset() const {
-	
-  		return yOffset;
- 	}
-
- 	/**
- 	 * Set yOffset with the specified Length.
- 	 * @param yOffset The Length value to which yOffset is to be set.
- 	 
- 	
- 		
- 	 */
- 	void AntennaRow::setYOffset (Length yOffset)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->yOffset = yOffset;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get zOffset.
- 	 * @return zOffset as Length
- 	 */
- 	Length AntennaRow::getZOffset() const {
-	
-  		return zOffset;
- 	}
-
- 	/**
- 	 * Set zOffset with the specified Length.
- 	 * @param zOffset The Length value to which zOffset is to be set.
- 	 
- 	
- 		
- 	 */
- 	void AntennaRow::setZOffset (Length zOffset)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->zOffset = zOffset;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get dishDiameter.
- 	 * @return dishDiameter as Length
- 	 */
- 	Length AntennaRow::getDishDiameter() const {
-	
-  		return dishDiameter;
- 	}
-
- 	/**
- 	 * Set dishDiameter with the specified Length.
- 	 * @param dishDiameter The Length value to which dishDiameter is to be set.
- 	 
- 	
- 		
- 	 */
- 	void AntennaRow::setDishDiameter (Length dishDiameter)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->dishDiameter = dishDiameter;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get flagRow.
- 	 * @return flagRow as bool
- 	 */
- 	bool AntennaRow::getFlagRow() const {
-	
-  		return flagRow;
- 	}
-
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 	 
- 	
- 		
- 	 */
- 	void AntennaRow::setFlagRow (bool flagRow)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->flagRow = flagRow;
-	
- 	}
-	
-	
-
-	
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -1198,7 +1070,7 @@ namespace asdm {
  	 * @return assocAntennaId as Tag
  	 * @throw IllegalAccessException If assocAntennaId does not exist.
  	 */
- 	Tag AntennaRow::getAssocAntennaId() const throw(IllegalAccessException) {
+ 	Tag AntennaRow::getAssocAntennaId() const  {
 		if (!assocAntennaIdExists) {
 			throw IllegalAccessException("assocAntennaId", "Antenna");
 		}
@@ -1286,7 +1158,7 @@ namespace asdm {
 	 * @return A row in Antenna table.
 	 * @throws NoSuchRow if there is no such row in table Antenna or the link does not exist.
 	 */
-	AntennaRow *AntennaRow::getAssociatedAntenna() const throw(NoSuchRow) {
+	AntennaRow *AntennaRow::getAssociatedAntenna() const {
 
 		if (!assocAntennaIdExists) {
 			throw NoSuchRow("Antenna","Antenna",true);
@@ -1360,16 +1232,6 @@ namespace asdm {
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
 	
 		assocAntennaIdExists = false;
 	
@@ -1391,16 +1253,6 @@ antennaMake = CAntennaMake::from_int(0);
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 antennaType = CAntennaType::from_int(0);
-	
-
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -1436,16 +1288,6 @@ antennaType = CAntennaType::from_int(0);
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
 	
 		assocAntennaIdExists = false;
 	
@@ -1461,31 +1303,21 @@ antennaType = CAntennaType::from_int(0);
 		
 		
 		
-			stationId = row.stationId;
-		
 			name = row.name;
 		
 			antennaMake = row.antennaMake;
 		
 			antennaType = row.antennaType;
 		
-			xPosition = row.xPosition;
+			dishDiameter = row.dishDiameter;
 		
-			yPosition = row.yPosition;
+			position = row.position;
 		
-			zPosition = row.zPosition;
+			offset = row.offset;
 		
 			time = row.time;
 		
-			xOffset = row.xOffset;
-		
-			yOffset = row.yOffset;
-		
-			zOffset = row.zOffset;
-		
-			dishDiameter = row.dishDiameter;
-		
-			flagRow = row.flagRow;
+			stationId = row.stationId;
 		
 		
 		
@@ -1501,17 +1333,10 @@ antennaType = CAntennaType::from_int(0);
 	}
 
 	
-	bool AntennaRow::compareNoAutoInc(Tag stationId, string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length xPosition, Length yPosition, Length zPosition, ArrayTime time, Length xOffset, Length yOffset, Length zOffset, Length dishDiameter, bool flagRow) {
+	bool AntennaRow::compareNoAutoInc(string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length dishDiameter, vector<Length > position, vector<Length > offset, ArrayTime time, Tag stationId) {
 		bool result;
 		result = true;
 		
-	
-		
-		result = result && (this->stationId == stationId);
-		
-		if (!result) return false;
-	
-
 	
 		
 		result = result && (this->name == name);
@@ -1535,21 +1360,21 @@ antennaType = CAntennaType::from_int(0);
 
 	
 		
-		result = result && (this->xPosition == xPosition);
+		result = result && (this->dishDiameter == dishDiameter);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->yPosition == yPosition);
+		result = result && (this->position == position);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->zPosition == zPosition);
+		result = result && (this->offset == offset);
 		
 		if (!result) return false;
 	
@@ -1563,35 +1388,7 @@ antennaType = CAntennaType::from_int(0);
 
 	
 		
-		result = result && (this->xOffset == xOffset);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->yOffset == yOffset);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->zOffset == zOffset);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->dishDiameter == dishDiameter);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->flagRow == flagRow);
+		result = result && (this->stationId == stationId);
 		
 		if (!result) return false;
 	
@@ -1601,14 +1398,10 @@ antennaType = CAntennaType::from_int(0);
 	
 	
 	
-	bool AntennaRow::compareRequiredValue(Tag stationId, string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length xPosition, Length yPosition, Length zPosition, ArrayTime time, Length xOffset, Length yOffset, Length zOffset, Length dishDiameter, bool flagRow) {
+	bool AntennaRow::compareRequiredValue(string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length dishDiameter, vector<Length > position, vector<Length > offset, ArrayTime time, Tag stationId) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->stationId == stationId)) return false;
-	
-
 	
 		if (!(this->name == name)) return false;
 	
@@ -1622,15 +1415,15 @@ antennaType = CAntennaType::from_int(0);
 	
 
 	
-		if (!(this->xPosition == xPosition)) return false;
+		if (!(this->dishDiameter == dishDiameter)) return false;
 	
 
 	
-		if (!(this->yPosition == yPosition)) return false;
+		if (!(this->position == position)) return false;
 	
 
 	
-		if (!(this->zPosition == zPosition)) return false;
+		if (!(this->offset == offset)) return false;
 	
 
 	
@@ -1638,23 +1431,7 @@ antennaType = CAntennaType::from_int(0);
 	
 
 	
-		if (!(this->xOffset == xOffset)) return false;
-	
-
-	
-		if (!(this->yOffset == yOffset)) return false;
-	
-
-	
-		if (!(this->zOffset == zOffset)) return false;
-	
-
-	
-		if (!(this->dishDiameter == dishDiameter)) return false;
-	
-
-	
-		if (!(this->flagRow == flagRow)) return false;
+		if (!(this->stationId == stationId)) return false;
 	
 
 		return result;
@@ -1672,31 +1449,21 @@ antennaType = CAntennaType::from_int(0);
 	bool AntennaRow::equalByRequiredValue(AntennaRow* x) {
 		
 			
-		if (this->stationId != x->stationId) return false;
-			
 		if (this->name != x->name) return false;
 			
 		if (this->antennaMake != x->antennaMake) return false;
 			
 		if (this->antennaType != x->antennaType) return false;
 			
-		if (this->xPosition != x->xPosition) return false;
+		if (this->dishDiameter != x->dishDiameter) return false;
 			
-		if (this->yPosition != x->yPosition) return false;
+		if (this->position != x->position) return false;
 			
-		if (this->zPosition != x->zPosition) return false;
+		if (this->offset != x->offset) return false;
 			
 		if (this->time != x->time) return false;
 			
-		if (this->xOffset != x->xOffset) return false;
-			
-		if (this->yOffset != x->yOffset) return false;
-			
-		if (this->zOffset != x->zOffset) return false;
-			
-		if (this->dishDiameter != x->dishDiameter) return false;
-			
-		if (this->flagRow != x->flagRow) return false;
+		if (this->stationId != x->stationId) return false;
 			
 		
 		return true;

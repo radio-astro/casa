@@ -125,6 +125,9 @@ private:
   // Hash function to return the row offset for an interferometer (ant1, ant2)
   Int baseline(const Int& ant1, const Int& ant2);
 
+  // Convert r/i to a/p
+  void convertToAP(Cube<Complex>& d);
+
   // Number of antennas, correlations, and channels
   Int nAnt_p, nCorr_p, nChan_p, nBlnMax_p;
 
@@ -139,6 +142,9 @@ private:
 
   // Are we averaging antennas together?
   Bool antAve_p;
+
+  // Are we incoherently averaging?
+  Bool inCoh_p;
 
   // Accumulation helpers...
   Double timeRef_p;

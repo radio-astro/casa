@@ -184,77 +184,59 @@ namespace asdm {
 	
  	 * @param timeInterval. 
 	
- 	 * @param numLo. 
-	
  	 * @param name. 
+	
+ 	 * @param numLO. 
 	
  	 * @param frequencyBand. 
 	
- 	 * @param freqLo. 
+ 	 * @param freqLO. 
 	
  	 * @param receiverSideband. 
 	
- 	 * @param sidebandLo. 
-	
- 	 * @param tDewar. 
-	
- 	 * @param stabilityDuration. 
-	
- 	 * @param stability. 
+ 	 * @param sidebandLO. 
 	
      */
-	ReceiverRow* ReceiverTable::newRow(Tag spectralWindowId, ArrayTimeInterval timeInterval, int numLo, string name, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLo, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<int > sidebandLo, Temperature tDewar, Interval stabilityDuration, double stability){
+	ReceiverRow* ReceiverTable::newRow(Tag spectralWindowId, ArrayTimeInterval timeInterval, string name, int numLO, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLO, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<NetSidebandMod::NetSideband > sidebandLO){
 		ReceiverRow *row = new ReceiverRow(*this);
 			
 		row->setSpectralWindowId(spectralWindowId);
 			
 		row->setTimeInterval(timeInterval);
 			
-		row->setNumLo(numLo);
-			
 		row->setName(name);
+			
+		row->setNumLO(numLO);
 			
 		row->setFrequencyBand(frequencyBand);
 			
-		row->setFreqLo(freqLo);
+		row->setFreqLO(freqLO);
 			
 		row->setReceiverSideband(receiverSideband);
 			
-		row->setSidebandLo(sidebandLo);
-			
-		row->setTDewar(tDewar);
-			
-		row->setStabilityDuration(stabilityDuration);
-			
-		row->setStability(stability);
+		row->setSidebandLO(sidebandLO);
 	
 		return row;		
 	}	
 
-	ReceiverRow* ReceiverTable::newRowFull(Tag spectralWindowId, ArrayTimeInterval timeInterval, int numLo, string name, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLo, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<int > sidebandLo, Temperature tDewar, Interval stabilityDuration, double stability)	{
+	ReceiverRow* ReceiverTable::newRowFull(Tag spectralWindowId, ArrayTimeInterval timeInterval, string name, int numLO, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLO, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<NetSidebandMod::NetSideband > sidebandLO)	{
 		ReceiverRow *row = new ReceiverRow(*this);
 			
 		row->setSpectralWindowId(spectralWindowId);
 			
 		row->setTimeInterval(timeInterval);
 			
-		row->setNumLo(numLo);
-			
 		row->setName(name);
+			
+		row->setNumLO(numLO);
 			
 		row->setFrequencyBand(frequencyBand);
 			
-		row->setFreqLo(freqLo);
+		row->setFreqLO(freqLO);
 			
 		row->setReceiverSideband(receiverSideband);
 			
-		row->setSidebandLo(sidebandLo);
-			
-		row->setTDewar(tDewar);
-			
-		row->setStabilityDuration(stabilityDuration);
-			
-		row->setStability(stability);
+		row->setSidebandLO(sidebandLO);
 	
 		return row;				
 	}
@@ -324,31 +306,22 @@ ReceiverRow* ReceiverTable::newRowCopy(ReceiverRow* row) {
 					if (context[k][i][j]->getTimeInterval().getStart().equals(startTime)) {
 						if (
 						
-						 (context[k][i][j]->getNumLo() == x->getNumLo())
+						 (context[k][i][j]->getName() == x->getName())
 						 && 
 
-						 (context[k][i][j]->getName() == x->getName())
+						 (context[k][i][j]->getNumLO() == x->getNumLO())
 						 && 
 
 						 (context[k][i][j]->getFrequencyBand() == x->getFrequencyBand())
 						 && 
 
-						 (context[k][i][j]->getFreqLo() == x->getFreqLo())
+						 (context[k][i][j]->getFreqLO() == x->getFreqLO())
 						 && 
 
 						 (context[k][i][j]->getReceiverSideband() == x->getReceiverSideband())
 						 && 
 
-						 (context[k][i][j]->getSidebandLo() == x->getSidebandLo())
-						 && 
-
-						 (context[k][i][j]->getTDewar() == x->getTDewar())
-						 && 
-
-						 (context[k][i][j]->getStabilityDuration() == x->getStabilityDuration())
-						 && 
-
-						 (context[k][i][j]->getStability() == x->getStability())
+						 (context[k][i][j]->getSidebandLO() == x->getSidebandLO())
 						
 						) {
 							// cout << "A row equal to x has been found, I return it " << endl;
@@ -401,8 +374,10 @@ ReceiverRow* ReceiverTable::newRowCopy(ReceiverRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 * @throws UniquenessViolationException 
 	 */
-	ReceiverRow*  ReceiverTable::checkAndAdd(ReceiverRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	ReceiverRow*  ReceiverTable::checkAndAdd(ReceiverRow* x) {
 		ArrayTime startTime = x->getTimeInterval().getStart();		
 		
 		// Determine the entry in the context map from the appropriate attributes.
@@ -417,31 +392,22 @@ ReceiverRow* ReceiverTable::newRowCopy(ReceiverRow* row) {
 					if (
 						(context[k][i][j]->getTimeInterval().getStart().equals(startTime)) 
 					
-						 && (context[k][i][j]->getNumLo() == x->getNumLo())
+						 && (context[k][i][j]->getName() == x->getName())
 					
 
-						 && (context[k][i][j]->getName() == x->getName())
+						 && (context[k][i][j]->getNumLO() == x->getNumLO())
 					
 
 						 && (context[k][i][j]->getFrequencyBand() == x->getFrequencyBand())
 					
 
-						 && (context[k][i][j]->getFreqLo() == x->getFreqLo())
+						 && (context[k][i][j]->getFreqLO() == x->getFreqLO())
 					
 
 						 && (context[k][i][j]->getReceiverSideband() == x->getReceiverSideband())
 					
 
-						 && (context[k][i][j]->getSidebandLo() == x->getSidebandLo())
-					
-
-						 && (context[k][i][j]->getTDewar() == x->getTDewar())
-					
-
-						 && (context[k][i][j]->getStabilityDuration() == x->getStabilityDuration())
-					
-
-						 && (context[k][i][j]->getStability() == x->getStability())
+						 && (context[k][i][j]->getSidebandLO() == x->getSidebandLO())
 					
 					)
 						throw UniquenessViolationException("Uniqueness violation exception in table ReceiverTable");			
@@ -574,26 +540,20 @@ ReceiverRow* ReceiverTable::newRowCopy(ReceiverRow* row) {
  	 		
  * @param <<ASDMAttribute>> timeInterval.
  	 		
- * @param <<ASDMAttribute>> numLo.
- 	 		
  * @param <<ASDMAttribute>> name.
+ 	 		
+ * @param <<ASDMAttribute>> numLO.
  	 		
  * @param <<ASDMAttribute>> frequencyBand.
  	 		
- * @param <<ArrayAttribute>> freqLo.
+ * @param <<ArrayAttribute>> freqLO.
  	 		
  * @param <<ASDMAttribute>> receiverSideband.
  	 		
- * @param <<ArrayAttribute>> sidebandLo.
- 	 		
- * @param <<ASDMAttribute>> tDewar.
- 	 		
- * @param <<ASDMAttribute>> stabilityDuration.
- 	 		
- * @param <<ASDMAttribute>> stability.
+ * @param <<ArrayAttribute>> sidebandLO.
  	 		 
  */
-ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeInterval, int numLo, string name, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLo, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<int > sidebandLo, Temperature tDewar, Interval stabilityDuration, double stability) {		
+ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeInterval, string name, int numLO, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLO, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<NetSidebandMod::NetSideband > sidebandLO) {		
 		using asdm::ArrayTimeInterval;
 		map<string, ID_TIME_ROWS >::iterator mapIter;
 		string k = Key(spectralWindowId);
@@ -603,7 +563,7 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 				vector <ReceiverRow*>::iterator rowIter;
 				for (rowIter = (*planeIter).begin(); rowIter != (*planeIter).end(); rowIter++) {
 					if ((*rowIter)->getTimeInterval().contains(timeInterval)
-					    && (*rowIter)->compareRequiredValue(numLo, name, frequencyBand, freqLo, receiverSideband, sidebandLo, tDewar, stabilityDuration, stability)) {
+					    && (*rowIter)->compareRequiredValue(name, numLO, frequencyBand, freqLO, receiverSideband, sidebandLO)) {
 						return *rowIter;
 					} 
 				}
@@ -633,7 +593,7 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 #endif
 	
 #ifndef WITHOUT_ACS
-	void ReceiverTable::fromIDL(ReceiverTableIDL x) throw(DuplicateKey,ConversionException) {
+	void ReceiverTable::fromIDL(ReceiverTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			ReceiverRow *tmp = newRow();
@@ -644,28 +604,27 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 	}
 #endif
 
-	char *ReceiverTable::toFITS() const throw(ConversionException) {
+	char *ReceiverTable::toFITS() const  {
 		throw ConversionException("Not implemented","Receiver");
 	}
 
-	void ReceiverTable::fromFITS(char *fits) throw(ConversionException) {
+	void ReceiverTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Receiver");
 	}
 
-	string ReceiverTable::toVOTable() const throw(ConversionException) {
+	string ReceiverTable::toVOTable() const {
 		throw ConversionException("Not implemented","Receiver");
 	}
 
-	void ReceiverTable::fromVOTable(string vo) throw(ConversionException) {
+	void ReceiverTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Receiver");
 	}
 
-	string ReceiverTable::toXML()  throw(ConversionException) {
+	
+	string ReceiverTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<ReceiverTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/ReceiverTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<ReceiverTable> ");
+		buf.append("<ReceiverTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/ReceiverTable\" xsi:schemaLocation=\"http://Alma/XASDM/ReceiverTable http://almaobservatory.org/XML/XASDM/2/ReceiverTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -681,8 +640,9 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 		buf.append("</ReceiverTable> ");
 		return buf;
 	}
+
 	
-	void ReceiverTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void ReceiverTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<ReceiverTable")) 
 			error();
@@ -724,20 +684,110 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 			error();
 	}
 
-	void ReceiverTable::error() throw(ConversionException) {
+	
+	void ReceiverTable::error()  {
 		throw ConversionException("Invalid xml document","Receiver");
 	}
 	
+	
 	string ReceiverTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void ReceiverTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Receiver");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			ReceiverRow* aRow = ReceiverRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Receiver");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Receiver");
+		} 		 	
+	}
+
 	
 	void ReceiverTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -768,6 +818,7 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 				throw ConversionException("Could not close file " + fileName, "Receiver");
 		}
 	}
+
 	
 	void ReceiverTable::setFromFile(const string& directory) {
 		string tablename;
@@ -809,6 +860,11 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 		

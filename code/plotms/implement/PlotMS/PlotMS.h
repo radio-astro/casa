@@ -27,9 +27,6 @@
 #ifndef PLOTMS_H_
 #define PLOTMS_H_
 
-#include <plotms/Actions/PlotMSAction.h>
-#include <plotms/Gui/PlotMSPlotter.qo.h>
-#include <plotms/PlotMS/PlotMSLogger.h>
 #include <plotms/PlotMS/PlotMSParameters.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
 
@@ -37,36 +34,28 @@ namespace casa {
 
 // Version definitions.
 // <group>
-#define PLOTMS_VERSION 0x001250;
-#define PLOTMS_VERSION_STR "1.25";
+#define PLOTMS_VERSION 0x002250;
+#define PLOTMS_VERSION_STR "2.25";
 // </group>
+
+
+//# Forward declarations.
+class PlotMSDBusApp;
+class PlotMSPlotter;
 
 
 // Controller class for plotms.  Handles interactions between the UI and plots.
 class PlotMS : public PlotMSParametersWatcher {
-public:
-    // Static //
+public:    
+    // Default constructor that uses default options.  If connectToDBus is
+    // true, then the application registers itself with CASA's DBus server
+    // using the PlotMSDBusApp::dbusName() with the current process ID.
+    PlotMS(bool connectToDBus = false);
     
-    // Convenient access to class name (PlotMS).
-    static const String CLASS_NAME;
-    
-    // Constants for origin names for logging measurement events.
-    // <group>
-    static const String LOG_INITIALIZE_GUI;
-    static const String LOG_LOAD_CACHE;
-    static const String LOG_LOCATE;
-    static const String LOG_FLAG;
-    static const String LOG_UNFLAG;
-    // </group>
-    
-    
-    // Non-Static //
-    
-    // Default constructor that uses default options.
-    PlotMS();
-    
-    // Constructor which takes the given parameters.
-    PlotMS(const PlotMSParameters& params);
+    // Constructor which takes the given parameters.  If connectToDBus is true,
+    // then the application registers itself with CASA's DBus server using the
+    // PlotMSDBusApp::dbusName() with the current process ID.
+    PlotMS(const PlotMSParameters& params, bool connectToDBus = false);
     
     // Destructor
     ~PlotMS();
@@ -75,69 +64,65 @@ public:
     // Plotter Methods //
     
     // Returns the PlotMSPlotter associated with this PlotMS. 
-    PlotMSPlotter* getPlotter() { return itsPlotter_; }
+    PlotMSPlotter* getPlotter();
     
     // See PlotMSPlotter::showGUI().
-    void showGUI(bool show = true) { itsPlotter_->showGUI(show); }
+    void showGUI(bool show = true);
     
     // See PlotMSPlotter::guiShown().
-    bool guiShown() const { return itsPlotter_->guiShown(); }
+    bool guiShown() const;
     
     // See PlotMSPlotter::execLoop().
-    int execLoop() { return itsPlotter_->execLoop(); }
+    int execLoop();
     
     // See PlotMSPlotter::showAndExec().
-    int showAndExec(bool show= true) { return itsPlotter_->showAndExec(show); }
+    int showAndExec(bool show= true);
     
     // See PlotMSPlotter::close().
-    void close() { itsPlotter_->close(); }
+    void close();
     
     // See PlotMSPlotter::showError().
     // <group>
     void showError(const String& message, const String& title = "PlotMS Error",
-                   bool isWarning = false) {
-        itsPlotter_->showError(message, title, isWarning); }
-    void showWarning(const String& msg, const String& tl = "PlotMS Warning") {
-        itsPlotter_->showError(msg, tl, true); }
+            bool isWarning = false);
+    void showWarning(const String& message,
+            const String& title = "PlotMS Warning");
     // </group>
     
     // See PlotMSPlotter::showMessage().
-    void showMessage(const String& msg, const String& tl = "PlotMS Message") {
-        itsPlotter_->showMessage(msg, tl); }
+    void showMessage(const String& message,
+            const String& title = "PlotMS Message");
     
     
     // Parameter Methods //
     
     // Gets/Sets the parameters for this PlotMS.
     // <group>
-    PlotMSParameters& getParameters() { return itsParameters_; }
-    void setParameters(const PlotMSParameters& params) {
-        itsParameters_ = params; }
+    PlotMSParameters& getParameters();
+    void setParameters(const PlotMSParameters& params);
     // </group>
     
     // Implements PlotMSParametersWatcher::parametersHaveChanged().
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
-                int updateFlag, bool redrawRequired);
+                int updateFlag);
     
     
     // Logger Methods //
     
-    // Gets the PlotMSLogger associated with this PlotMS.
-    PlotMSLogger& getLogger() { return itsLogger_; }
-    
-    // Returns this object's PlotMSLogger if logging for the given event is
-    // turned on, NULL otherwise.
-    PlotMSLogger* loggerFor(PlotMSLogger::Event event);
+    // Gets the logger associated with this PlotMS.
+    PlotLoggerPtr getLogger();
     
     
     // Plot Management Methods //
     
     // Returns the PlotMSPlotManager associated with this PlotMS.
-    PlotMSPlotManager& getPlotManager() { return itsPlotManager_; }
+    PlotMSPlotManager& getPlotManager();
     
     // See PlotMSPlotManager::addSinglePlot().
-    PlotMSSinglePlot* addSinglePlot(const PlotMSSinglePlotParameters* p= NULL) {
-        return itsPlotManager_.addSinglePlot(this, p); }
+    PlotMSSinglePlot* addSinglePlot(const PlotMSPlotParameters* p = NULL);
+    
+    // See PlotMSPlotManager::addMultiPlot();
+    PlotMSMultiPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
     
 private:
     // Plotter GUI.
@@ -147,17 +132,17 @@ private:
     PlotMSParameters itsParameters_;
     
     // Logger.
-    PlotMSLogger itsLogger_;
-    
-    // Log events flag.
-    int itsLogEventFlag_;
+    PlotLoggerPtr itsLogger_;
     
     // Plot manager.
     PlotMSPlotManager itsPlotManager_;
+    
+    // DBus application, or NULL if one is not needed.
+    PlotMSDBusApp* itsDBus_;
 
     
     // Initializes a new PlotMS object, to be called from constructor.
-    void initialize();    
+    void initialize(bool connectToDBus);    
     
     // Disable copy constructor and operator for now.
     // <group>

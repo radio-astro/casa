@@ -102,6 +102,7 @@ class testbase :
 
         if leFile[0:6] == 'tests/':
             leTest = __import__(testName)
+            reload(leTest)
             try:
                 # Fails if module does not
                 # define the description() function
@@ -113,7 +114,7 @@ class testbase :
         else:
             desc = None
         return desc
-               
+            
     def runtests(self, testName, testId=0, dry=False):
         try:
             leFile=self.testsToRun[testId]
@@ -158,6 +159,7 @@ class testbase :
 
                     # h121
                     theImages =  ['nrao150.3mm.image', 'h121.co10.image',  '0224b.3mm.image', 'h121b.co10.image', 'h121all.3mm.image', 'h121c.co10.image' ]
+
 
                 del leTest
 

@@ -36,25 +36,13 @@ default('flagdata')
 
 # Flag spec. 1          2          3          4
 
-field   = ['0,1,3',   '0',       '3',       '3']
+field   = ['0,1,3',   '0',       '3',       '3'      ]
 spw     = ['2:31~32', '2:33~34', '2:34~37', '2:34~37']
-antenna = ['',        '',        '1&3',     '2&4']
+antenna = ['',        '',        '1&3',     '2&4'    ]
 
-# Use flagdata() in vector mode => other parameters must be vectors too.
+# Use flagdata() in vector mode
 vis='ggtau_07feb97.ms'
 mode='manualflag'
-clipexpr=['ABS RR']*4
-clipminmax=[[0,0]]*4
-clipcolumn=['DATA']*4
-clipoutside=[true]*4
-autocorr=[false]*4
-unflag=[false]*4
-correlation=['']*4
-uvrange=['']*4
-timerange=['']*4
-scan=['']*4
-feed=['']*4
-array=['']*4
 
 flagdata()
 

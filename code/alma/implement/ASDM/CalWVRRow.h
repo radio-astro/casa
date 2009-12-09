@@ -80,14 +80,20 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
-
-	
 #include "CWVRMethod.h"
 using namespace WVRMethodMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -127,7 +133,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalWVR.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -145,7 +151,7 @@ class CalReductionRow;
 /**
  * The CalWVRRow class is a row of a CalWVRTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class CalWVRRow {
@@ -172,8 +178,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalWVRRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalWVRRowIDL x) throw(ConversionException);
+	void setFromIDL (CalWVRRowIDL x) ;
 #endif
 	
 	/**
@@ -186,105 +193,27 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalWVRTable to which the row built by deserialization will be parented.
+	  */
+	 static CalWVRRow* fromBin(EndianISStream& eiss, CalWVRTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
-	
-	// ===> Attribute antennaName
-	
-	
-	
-
-	
- 	/**
- 	 * Get antennaName.
- 	 * @return antennaName as string
- 	 */
- 	string getAntennaName() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set antennaName with the specified string.
- 	 * @param antennaName The string value to which antennaName is to be set.
- 	 
- 		
- 			
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 		
- 	 */
- 	void setAntennaName (string antennaName);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute numPoly
-	
-	
-	
-
-	
- 	/**
- 	 * Get numPoly.
- 	 * @return numPoly as int
- 	 */
- 	int getNumPoly() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numPoly with the specified int.
- 	 * @param numPoly The int value to which numPoly is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumPoly (int numPoly);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute numChan
-	
-	
-	
-
-	
- 	/**
- 	 * Get numChan.
- 	 * @return numChan as int
- 	 */
- 	int getNumChan() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numChan with the specified int.
- 	 * @param numChan The int value to which numChan is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumChan (int numChan);
-  		
-	
-	
-	
-
-
 	
 	// ===> Attribute startValidTime
 	
@@ -376,29 +305,31 @@ public:
 
 
 	
-	// ===> Attribute freqLimits
+	// ===> Attribute antennaName
 	
 	
 	
 
 	
  	/**
- 	 * Get freqLimits.
- 	 * @return freqLimits as vector<Frequency >
+ 	 * Get antennaName.
+ 	 * @return antennaName as string
  	 */
- 	vector<Frequency > getFreqLimits() const;
+ 	string getAntennaName() const;
 	
  
  	
  	
  	/**
- 	 * Set freqLimits with the specified vector<Frequency >.
- 	 * @param freqLimits The vector<Frequency > value to which freqLimits is to be set.
+ 	 * Set antennaName with the specified string.
+ 	 * @param antennaName The string value to which antennaName is to be set.
  	 
  		
  			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setFreqLimits (vector<Frequency > freqLimits);
+ 	void setAntennaName (string antennaName);
   		
 	
 	
@@ -406,29 +337,89 @@ public:
 
 
 	
-	// ===> Attribute pathCoeff
+	// ===> Attribute numInputAntennas
 	
 	
 	
 
 	
  	/**
- 	 * Get pathCoeff.
- 	 * @return pathCoeff as vector<vector<vector<float > > >
+ 	 * Get numInputAntennas.
+ 	 * @return numInputAntennas as int
  	 */
- 	vector<vector<vector<float > > > getPathCoeff() const;
+ 	int getNumInputAntennas() const;
 	
  
  	
  	
  	/**
- 	 * Set pathCoeff with the specified vector<vector<vector<float > > >.
- 	 * @param pathCoeff The vector<vector<vector<float > > > value to which pathCoeff is to be set.
+ 	 * Set numInputAntennas with the specified int.
+ 	 * @param numInputAntennas The int value to which numInputAntennas is to be set.
  	 
  		
  			
  	 */
- 	void setPathCoeff (vector<vector<vector<float > > > pathCoeff);
+ 	void setNumInputAntennas (int numInputAntennas);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute inputAntennaNames
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get inputAntennaNames.
+ 	 * @return inputAntennaNames as vector<string >
+ 	 */
+ 	vector<string > getInputAntennaNames() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set inputAntennaNames with the specified vector<string >.
+ 	 * @param inputAntennaNames The vector<string > value to which inputAntennaNames is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setInputAntennaNames (vector<string > inputAntennaNames);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numChan
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numChan.
+ 	 * @return numChan as int
+ 	 */
+ 	int getNumChan() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numChan with the specified int.
+ 	 * @param numChan The int value to which numChan is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumChan (int numChan);
   		
 	
 	
@@ -496,29 +487,29 @@ public:
 
 
 	
-	// ===> Attribute numInputAntenna
+	// ===> Attribute refTemp
 	
 	
 	
 
 	
  	/**
- 	 * Get numInputAntenna.
- 	 * @return numInputAntenna as int
+ 	 * Get refTemp.
+ 	 * @return refTemp as vector<vector<Temperature > >
  	 */
- 	int getNumInputAntenna() const;
+ 	vector<vector<Temperature > > getRefTemp() const;
 	
  
  	
  	
  	/**
- 	 * Set numInputAntenna with the specified int.
- 	 * @param numInputAntenna The int value to which numInputAntenna is to be set.
+ 	 * Set refTemp with the specified vector<vector<Temperature > >.
+ 	 * @param refTemp The vector<vector<Temperature > > value to which refTemp is to be set.
  	 
  		
  			
  	 */
- 	void setNumInputAntenna (int numInputAntenna);
+ 	void setRefTemp (vector<vector<Temperature > > refTemp);
   		
 	
 	
@@ -526,29 +517,59 @@ public:
 
 
 	
-	// ===> Attribute inputAntennaNames
+	// ===> Attribute numPoly
 	
 	
 	
 
 	
  	/**
- 	 * Get inputAntennaNames.
- 	 * @return inputAntennaNames as vector<string >
+ 	 * Get numPoly.
+ 	 * @return numPoly as int
  	 */
- 	vector<string > getInputAntennaNames() const;
+ 	int getNumPoly() const;
 	
  
  	
  	
  	/**
- 	 * Set inputAntennaNames with the specified vector<string >.
- 	 * @param inputAntennaNames The vector<string > value to which inputAntennaNames is to be set.
+ 	 * Set numPoly with the specified int.
+ 	 * @param numPoly The int value to which numPoly is to be set.
  	 
  		
  			
  	 */
- 	void setInputAntennaNames (vector<string > inputAntennaNames);
+ 	void setNumPoly (int numPoly);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute pathCoeff
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get pathCoeff.
+ 	 * @return pathCoeff as vector<vector<vector<float > > >
+ 	 */
+ 	vector<vector<vector<float > > > getPathCoeff() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set pathCoeff with the specified vector<vector<vector<float > > >.
+ 	 * @param pathCoeff The vector<vector<vector<float > > > value to which pathCoeff is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setPathCoeff (vector<vector<vector<float > > > pathCoeff);
   		
 	
 	
@@ -579,6 +600,96 @@ public:
  			
  	 */
  	void setPolyFreqLimits (vector<Frequency > polyFreqLimits);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute wetPath
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get wetPath.
+ 	 * @return wetPath as vector<float >
+ 	 */
+ 	vector<float > getWetPath() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set wetPath with the specified vector<float >.
+ 	 * @param wetPath The vector<float > value to which wetPath is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setWetPath (vector<float > wetPath);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute dryPath
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get dryPath.
+ 	 * @return dryPath as vector<float >
+ 	 */
+ 	vector<float > getDryPath() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set dryPath with the specified vector<float >.
+ 	 * @param dryPath The vector<float > value to which dryPath is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setDryPath (vector<float > dryPath);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute water
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get water.
+ 	 * @return water as Length
+ 	 */
+ 	Length getWater() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set water with the specified Length.
+ 	 * @param water The Length value to which water is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setWater (Length water);
   		
 	
 	
@@ -694,12 +805,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this CalWVRRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, int numPoly, int numChan, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > freqLimits, vector<vector<vector<float > > > pathCoeff, vector<Frequency > chanFreq, vector<Frequency > chanWidth, int numInputAntenna, vector<string > inputAntennaNames, vector<Frequency > polyFreqLimits);
+	bool compareNoAutoInc(string antennaName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, int numInputAntennas, vector<string > inputAntennaNames, int numChan, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<vector<Temperature > > refTemp, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<Frequency > polyFreqLimits, vector<float > wetPath, vector<float > dryPath, Length water);
 	
 	
 
 	
-	bool compareRequiredValue(int numPoly, int numChan, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > freqLimits, vector<vector<vector<float > > > pathCoeff, vector<Frequency > chanFreq, vector<Frequency > chanWidth, int numInputAntenna, vector<string > inputAntennaNames, vector<Frequency > polyFreqLimits); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, int numInputAntennas, vector<string > inputAntennaNames, int numChan, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<vector<Temperature > > refTemp, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<Frequency > polyFreqLimits, vector<float > wetPath, vector<float > dryPath, Length water); 
 		 
 	
 	/**
@@ -760,39 +871,6 @@ private:
 	////////////////////////////////
 	
 	
-	// ===> Attribute antennaName
-	
-	
-
-	string antennaName;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numPoly
-	
-	
-
-	int numPoly;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numChan
-	
-	
-
-	int numChan;
-
-	
-	
- 	
-
-	
 	// ===> Attribute startValidTime
 	
 	
@@ -826,22 +904,44 @@ private:
  	
 
 	
-	// ===> Attribute freqLimits
+	// ===> Attribute antennaName
 	
 	
 
-	vector<Frequency > freqLimits;
+	string antennaName;
 
 	
 	
  	
 
 	
-	// ===> Attribute pathCoeff
+	// ===> Attribute numInputAntennas
 	
 	
 
-	vector<vector<vector<float > > > pathCoeff;
+	int numInputAntennas;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute inputAntennaNames
+	
+	
+
+	vector<string > inputAntennaNames;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numChan
+	
+	
+
+	int numChan;
 
 	
 	
@@ -870,22 +970,33 @@ private:
  	
 
 	
-	// ===> Attribute numInputAntenna
+	// ===> Attribute refTemp
 	
 	
 
-	int numInputAntenna;
+	vector<vector<Temperature > > refTemp;
 
 	
 	
  	
 
 	
-	// ===> Attribute inputAntennaNames
+	// ===> Attribute numPoly
 	
 	
 
-	vector<string > inputAntennaNames;
+	int numPoly;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute pathCoeff
+	
+	
+
+	vector<vector<vector<float > > > pathCoeff;
 
 	
 	
@@ -897,6 +1008,39 @@ private:
 	
 
 	vector<Frequency > polyFreqLimits;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute wetPath
+	
+	
+
+	vector<float > wetPath;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute dryPath
+	
+	
+
+	vector<float > dryPath;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute water
+	
+	
+
+	Length water;
 
 	
 	

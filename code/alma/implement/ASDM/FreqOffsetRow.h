@@ -102,7 +102,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file FreqOffset.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -110,20 +110,20 @@ namespace asdm {
 //class asdm::FreqOffsetTable;
 
 
-// class asdm::FeedRow;
-class FeedRow;
-
 // class asdm::AntennaRow;
 class AntennaRow;
 
 // class asdm::SpectralWindowRow;
 class SpectralWindowRow;
+
+// class asdm::FeedRow;
+class FeedRow;
 	
 
 /**
  * The FreqOffsetRow class is a row of a FreqOffsetTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class FreqOffsetRow {
@@ -150,8 +150,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct FreqOffsetRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (FreqOffsetRowIDL x) throw(ConversionException);
+	void setFromIDL (FreqOffsetRowIDL x) ;
 #endif
 	
 	/**
@@ -164,8 +165,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the FreqOffsetTable to which the row built by deserialization will be parented.
+	  */
+	 static FreqOffsetRow* fromBin(EndianISStream& eiss, FreqOffsetTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -341,23 +356,6 @@ public:
 
 	
 		
-	// ===> Slice link from a row of FreqOffset table to a collection of row of Feed table.
-	
-	/**
-	 * Get the collection of row in the Feed table having feedId == this.feedId
-	 * 
-	 * @return a vector of FeedRow *
-	 */
-	vector <FeedRow *> getFeeds();
-	
-	
-
-	
-
-	
-
-	
-		
 	/**
 	 * antennaId pointer to the row in the Antenna table having Antenna.antennaId == antennaId
 	 * @return a AntennaRow*
@@ -385,13 +383,30 @@ public:
 	
 
 	
+
+	
+		
+	// ===> Slice link from a row of FreqOffset table to a collection of row of Feed table.
+	
+	/**
+	 * Get the collection of row in the Feed table having feedId == this.feedId
+	 * 
+	 * @return a vector of FeedRow *
+	 */
+	vector <FeedRow *> getFeeds();
+	
+	
+
+	
+
+	
 	
 	
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this FreqOffsetRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, Frequency offset);
+	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, Frequency offset);
 	
 	
 
@@ -522,12 +537,6 @@ private:
 	
 		
 
-
-	
-
-	
-		
-
 	 
 
 	
@@ -536,6 +545,12 @@ private:
 		
 
 	 
+
+	
+
+	
+		
+
 
 	
 

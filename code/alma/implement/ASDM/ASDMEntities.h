@@ -85,6 +85,8 @@
 
 #include <DataDescriptionRow.h>
 
+#include <DelayModelRow.h>
+
 #include <DopplerRow.h>
 
 #include <EphemerisRow.h>
@@ -128,8 +130,6 @@
 #include <SeeingRow.h>
 
 #include <SourceRow.h>
-
-#include <SourceParameterRow.h>
 
 #include <SpectralWindowRow.h>
 
@@ -209,6 +209,8 @@
 
 #include <DataDescriptionTable.h>
 
+#include <DelayModelTable.h>
+
 #include <DopplerTable.h>
 
 #include <EphemerisTable.h>
@@ -252,8 +254,6 @@
 #include <SeeingTable.h>
 
 #include <SourceTable.h>
-
-#include <SourceParameterTable.h>
 
 #include <SpectralWindowTable.h>
 

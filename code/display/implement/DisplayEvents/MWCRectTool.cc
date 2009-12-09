@@ -63,6 +63,8 @@ void MWCRectTool::keyPressed(const WCPositionEvent &ev) {
   Int x = ev.pixX();
   Int y = ev.pixY();
 
+  clicked(x, y);
+
   if (itsRectangleExists && ev.worldCanvas()==itsCurrentWC) {
 
     // press on the the WC that has the existing rectangle.
@@ -149,7 +151,15 @@ void MWCRectTool::moved(const WCMotionEvent &ev) {
 
 void MWCRectTool::keyReleased(const WCPositionEvent &ev) {
   Bool wasActive = itsActive; itsActive = False;
-  if (!itsRectangleExists) return;
+  if (!itsRectangleExists) {
+     if (ev.timeOfEvent() - its2ndLastPressTime < doubleClickInterval()) {
+        Int x = ev.pixX();
+        Int y = ev.pixY();
+        doubleClicked(x, y);
+     }
+     else 
+        return;
+  }
 
   if(ev.worldCanvas() != itsCurrentWC)
     { reset(); return;  }	// shouldn't happen.

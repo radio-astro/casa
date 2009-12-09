@@ -55,10 +55,13 @@ namespace asdm {
     */
     ConversionException(string m, string t);
 
+    /**
+     * The DTOR
+     */
     virtual ~ConversionException();
     
     /**
-     * Return the name of the exception followed by its cause.
+     * @return a text describing the exception.
      */
     string getMessage() const;
     
@@ -68,21 +71,6 @@ namespace asdm {
     string tableName;	
     
   };
-  
-  inline ConversionException::ConversionException() :
-    message(""), tableName("") {
-    ;
-  }
-
-  inline ConversionException::ConversionException (string m, string t) : 
-    message(m), tableName(t) {
-  }
-  
-  inline ConversionException::~ConversionException() { ; }
-
-  inline string ConversionException::getMessage() const {
-    return "ConversionException : cannot convert table " + tableName + ". " + message;
-  }
   
 } // End namespace asdm
 

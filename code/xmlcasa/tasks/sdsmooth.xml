@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdsmooth -->
 
-<task type="function" name="sdsmooth" startup="false">
+<task type="function" name="sdsmooth" startup="false" category="single dish">
 
   <shortdescription>ASAP SD task: do smoothing of spectra</shortdescription>
 
@@ -64,6 +64,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="int" name="kwidth" subparam="true">
 	    <description>width of spectral kernel in channels</description>
 	    <value>5</value>
+    </param>
+
+    <param type="bool" name="verify">
+            <description>verify the results of smoothing</description>
+            <value>False</value>
     </param>
 
     <param type="string" name="outfile">
@@ -147,13 +152,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	kernel -- type of spectral smoothing
 	        options: 'hanning','gaussian','boxcar'
 	        default: 'hanning'
-                &gt;&gt;&gt;kernel expandable parameter
+
+            &gt;&gt;&gt;kernel expandable parameter
                  kwidth -- width of spectral smoothing kernel
 	                 options: (int) in channels 
 	                 default: 5
 		         example: 5 or 10 seem to be popular for boxcar
 		                  ignored for hanning (fixed at 5 chans)
                                   (0 will turn off gaussian or boxcar)
+
+        verify -- verify the results of smoothing
+                options: (bool) True,False
+                default: False
+                WARNING: Currently this just asks whether you accept
+                         the displayed smoothing and if not, continues
+                         without smoothing.
 	outfile -- Name of output ASAP format(scantable) file
 	        default: '' (&lt;sdfile&gt;_sm)
 	outform -- format of output file

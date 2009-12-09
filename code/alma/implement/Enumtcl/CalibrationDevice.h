@@ -38,19 +38,19 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<CalibrationDevice,EnumPar<void> >
-     (CalibrationDeviceMod::AMBIENT_LOAD,ep((int)CalibrationDeviceMod::AMBIENT_LOAD,"AMBIENT_LOAD","An absorbing load at the ambient temperature.")));
+     (CalibrationDeviceMod::AMBIENT_LOAD,ep((int)CalibrationDeviceMod::AMBIENT_LOAD,"AMBIENT_LOAD","un-documented")));
     m_.insert(pair<CalibrationDevice,EnumPar<void> >
-     (CalibrationDeviceMod::COLD_LOAD,ep((int)CalibrationDeviceMod::COLD_LOAD,"COLD_LOAD","A cooled absorbing load.")));
+     (CalibrationDeviceMod::COLD_LOAD,ep((int)CalibrationDeviceMod::COLD_LOAD,"COLD_LOAD","un-documented")));
     m_.insert(pair<CalibrationDevice,EnumPar<void> >
-     (CalibrationDeviceMod::HOT_LOAD,ep((int)CalibrationDeviceMod::HOT_LOAD,"HOT_LOAD","A heated absorbing load.")));
+     (CalibrationDeviceMod::HOT_LOAD,ep((int)CalibrationDeviceMod::HOT_LOAD,"HOT_LOAD","un-documented")));
     m_.insert(pair<CalibrationDevice,EnumPar<void> >
-     (CalibrationDeviceMod::NOISE_TUBE_LOAD,ep((int)CalibrationDeviceMod::NOISE_TUBE_LOAD,"NOISE_TUBE_LOAD","A noise tube.")));
+     (CalibrationDeviceMod::NOISE_TUBE_LOAD,ep((int)CalibrationDeviceMod::NOISE_TUBE_LOAD,"NOISE_TUBE_LOAD","un-documented")));
     m_.insert(pair<CalibrationDevice,EnumPar<void> >
-     (CalibrationDeviceMod::QUARTER_WAVE_PLATE,ep((int)CalibrationDeviceMod::QUARTER_WAVE_PLATE,"QUARTER_WAVE_PLATE","A transparent plate that introduces a 90-degree phase difference between othogonal polarizations.")));
+     (CalibrationDeviceMod::QUARTER_WAVE_PLATE,ep((int)CalibrationDeviceMod::QUARTER_WAVE_PLATE,"QUARTER_WAVE_PLATE","un-documented")));
     m_.insert(pair<CalibrationDevice,EnumPar<void> >
-     (CalibrationDeviceMod::SOLAR_FILTER,ep((int)CalibrationDeviceMod::SOLAR_FILTER,"SOLAR_FILTER","An optical attenuator (to protect receiver from solar heat).")));
+     (CalibrationDeviceMod::SOLAR_FILTER,ep((int)CalibrationDeviceMod::SOLAR_FILTER,"SOLAR_FILTER","un-documented")));
     m_.insert(pair<CalibrationDevice,EnumPar<void> >
-     (CalibrationDeviceMod::NONE,ep((int)CalibrationDeviceMod::NONE,"NONE","No device, the receiver looks at the sky (through the telescope).")));
+     (CalibrationDeviceMod::NONE,ep((int)CalibrationDeviceMod::NONE,"NONE","un-documented")));
     return true;
   }
   static map<CalibrationDevice,EnumPar<void> > m_;

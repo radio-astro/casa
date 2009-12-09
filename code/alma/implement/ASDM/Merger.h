@@ -63,9 +63,6 @@
 #include "FeedTable.h"
 #include "FeedRow.h"
 
-#include "SourceParameterTable.h"
-#include "SourceParameterRow.h"
-
 #include "SpectralWindowTable.h"
 #include "SpectralWindowRow.h"
 
@@ -219,10 +216,13 @@
 #include "AnnotationTable.h"
 #include "AnnotationRow.h"
 
+#include "DelayModelTable.h"
+#include "DelayModelRow.h"
+
 
 
 /*\file "Merger.h"
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 using namespace std;
 
@@ -261,8 +261,6 @@ namespace asdm {
 			bool hasMergedSource;	
 
 			bool hasMergedFeed;	
-
-			bool hasMergedSourceParameter;	
 
 			bool hasMergedSpectralWindow;	
 
@@ -365,6 +363,8 @@ namespace asdm {
 			bool hasMergedCalWVR;	
 
 			bool hasMergedAnnotation;	
+
+			bool hasMergedDelayModel;	
 			
 
 
@@ -394,9 +394,6 @@ namespace asdm {
 
 			void mergeFeed();
 			void postMergeFeed();			
-
-			void mergeSourceParameter();
-			void postMergeSourceParameter();			
 
 			void mergeSpectralWindow();
 			void postMergeSpectralWindow();			
@@ -551,6 +548,9 @@ namespace asdm {
 			void mergeAnnotation();
 			void postMergeAnnotation();			
 
+			void mergeDelayModel();
+			void postMergeDelayModel();			
+
 
 
 		void (Merger::*mergeSBSummaryPtr) () ;
@@ -570,8 +570,6 @@ namespace asdm {
 		void (Merger::*mergeSourcePtr) () ;
 
 		void (Merger::*mergeFeedPtr) () ;
-
-		void (Merger::*mergeSourceParameterPtr) () ;
 
 		void (Merger::*mergeSpectralWindowPtr) () ;
 
@@ -674,6 +672,8 @@ namespace asdm {
 		void (Merger::*mergeCalWVRPtr) () ;
 
 		void (Merger::*mergeAnnotationPtr) () ;
+
+		void (Merger::*mergeDelayModelPtr) () ;
 
 	};
 } // End namespace asdm

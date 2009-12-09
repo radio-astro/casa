@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdlist -->
 
-<task type="function" name="sdlist" startup="false">
+<task type="function" name="sdlist" startup="false" category="single dish">
 
   <shortdescription>ASAP SD task: list summary of single dish data</shortdescription>
 

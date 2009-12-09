@@ -80,11 +80,13 @@ namespace asdm {
 	CalPointingTable::CalPointingTable(ASDM &c) : container(c) {
 
 	
+		key.push_back("antennaName");
+	
+		key.push_back("receiverBand");
+	
 		key.push_back("calDataId");
 	
 		key.push_back("calReductionId");
-	
-		key.push_back("antennaName");
 	
 
 
@@ -168,21 +170,35 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param antennaName. 
+	
+ 	 * @param receiverBand. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
-	
- 	 * @param antennaName. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param receiverBand. 
+ 	 * @param ambientTemperature. 
+	
+ 	 * @param antennaMake. 
+	
+ 	 * @param atmPhaseCorrection. 
+	
+ 	 * @param direction. 
 	
  	 * @param frequencyRange. 
 	
- 	 * @param direction. 
+ 	 * @param pointingModelMode. 
+	
+ 	 * @param pointingMethod. 
+	
+ 	 * @param numReceptor. 
+	
+ 	 * @param polarizationTypes. 
 	
  	 * @param collOffsetRelative. 
 	
@@ -190,31 +206,43 @@ namespace asdm {
 	
  	 * @param collError. 
 	
- 	 * @param pointingMethod. 
+ 	 * @param collOffsetTied. 
 	
- 	 * @param mode. 
-	
- 	 * @param ambientTemperature. 
+ 	 * @param reducedChiSquared. 
 	
      */
-	CalPointingRow* CalPointingTable::newRow(Tag calDataId, Tag calReductionId, string antennaName, ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Frequency > frequencyRange, vector<Angle > direction, vector<Angle > collOffsetRelative, vector<Angle > collOffsetAbsolute, vector<Angle > collError, PointingMethodMod::PointingMethod pointingMethod, PointingModelModeMod::PointingModelMode mode, Temperature ambientTemperature){
+	CalPointingRow* CalPointingTable::newRow(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AntennaMakeMod::AntennaMake antennaMake, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, vector<Angle > direction, vector<Frequency > frequencyRange, PointingModelModeMod::PointingModelMode pointingModelMode, PointingMethodMod::PointingMethod pointingMethod, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Angle > > collOffsetRelative, vector<vector<Angle > > collOffsetAbsolute, vector<vector<Angle > > collError, vector<vector<bool > > collOffsetTied, vector<double > reducedChiSquared){
 		CalPointingRow *row = new CalPointingRow(*this);
+			
+		row->setAntennaName(antennaName);
+			
+		row->setReceiverBand(receiverBand);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setAntennaName(antennaName);
-			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
-		row->setReceiverBand(receiverBand);
+		row->setAmbientTemperature(ambientTemperature);
+			
+		row->setAntennaMake(antennaMake);
+			
+		row->setAtmPhaseCorrection(atmPhaseCorrection);
+			
+		row->setDirection(direction);
 			
 		row->setFrequencyRange(frequencyRange);
 			
-		row->setDirection(direction);
+		row->setPointingModelMode(pointingModelMode);
+			
+		row->setPointingMethod(pointingMethod);
+			
+		row->setNumReceptor(numReceptor);
+			
+		row->setPolarizationTypes(polarizationTypes);
 			
 		row->setCollOffsetRelative(collOffsetRelative);
 			
@@ -222,33 +250,45 @@ namespace asdm {
 			
 		row->setCollError(collError);
 			
-		row->setPointingMethod(pointingMethod);
+		row->setCollOffsetTied(collOffsetTied);
 			
-		row->setMode(mode);
-			
-		row->setAmbientTemperature(ambientTemperature);
+		row->setReducedChiSquared(reducedChiSquared);
 	
 		return row;		
 	}	
 
-	CalPointingRow* CalPointingTable::newRowFull(Tag calDataId, Tag calReductionId, string antennaName, ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Frequency > frequencyRange, vector<Angle > direction, vector<Angle > collOffsetRelative, vector<Angle > collOffsetAbsolute, vector<Angle > collError, PointingMethodMod::PointingMethod pointingMethod, PointingModelModeMod::PointingModelMode mode, Temperature ambientTemperature)	{
+	CalPointingRow* CalPointingTable::newRowFull(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AntennaMakeMod::AntennaMake antennaMake, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, vector<Angle > direction, vector<Frequency > frequencyRange, PointingModelModeMod::PointingModelMode pointingModelMode, PointingMethodMod::PointingMethod pointingMethod, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Angle > > collOffsetRelative, vector<vector<Angle > > collOffsetAbsolute, vector<vector<Angle > > collError, vector<vector<bool > > collOffsetTied, vector<double > reducedChiSquared)	{
 		CalPointingRow *row = new CalPointingRow(*this);
+			
+		row->setAntennaName(antennaName);
+			
+		row->setReceiverBand(receiverBand);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
 			
-		row->setAntennaName(antennaName);
-			
 		row->setStartValidTime(startValidTime);
 			
 		row->setEndValidTime(endValidTime);
 			
-		row->setReceiverBand(receiverBand);
+		row->setAmbientTemperature(ambientTemperature);
+			
+		row->setAntennaMake(antennaMake);
+			
+		row->setAtmPhaseCorrection(atmPhaseCorrection);
+			
+		row->setDirection(direction);
 			
 		row->setFrequencyRange(frequencyRange);
 			
-		row->setDirection(direction);
+		row->setPointingModelMode(pointingModelMode);
+			
+		row->setPointingMethod(pointingMethod);
+			
+		row->setNumReceptor(numReceptor);
+			
+		row->setPolarizationTypes(polarizationTypes);
 			
 		row->setCollOffsetRelative(collOffsetRelative);
 			
@@ -256,11 +296,9 @@ namespace asdm {
 			
 		row->setCollError(collError);
 			
-		row->setPointingMethod(pointingMethod);
+		row->setCollOffsetTied(collOffsetTied);
 			
-		row->setMode(mode);
-			
-		row->setAmbientTemperature(ambientTemperature);
+		row->setReducedChiSquared(reducedChiSquared);
 	
 		return row;				
 	}
@@ -290,13 +328,15 @@ CalPointingRow* CalPointingTable::newRowCopy(CalPointingRow* row) {
 	CalPointingRow* CalPointingTable::add(CalPointingRow* x) {
 		
 		if (getRowByKey(
+						x->getAntennaName()
+						,
+						x->getReceiverBand()
+						,
 						x->getCalDataId()
 						,
 						x->getCalReductionId()
-						,
-						x->getAntennaName()
 						))
-			//throw DuplicateKey(x.getCalDataId() + "|" + x.getCalReductionId() + "|" + x.getAntennaName(),"CalPointing");
+			//throw DuplicateKey(x.getAntennaName() + "|" + x.getReceiverBand() + "|" + x.getCalDataId() + "|" + x.getCalReductionId(),"CalPointing");
 			throw DuplicateKey("Duplicate key exception in ","CalPointingTable");
 		
 		row.push_back(x);
@@ -323,17 +363,21 @@ CalPointingRow* CalPointingTable::newRowCopy(CalPointingRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalPointingRow*  CalPointingTable::checkAndAdd(CalPointingRow* x) throw (DuplicateKey) {
+	CalPointingRow*  CalPointingTable::checkAndAdd(CalPointingRow* x)  {
 		
 		
 		if (getRowByKey(
 	
+			x->getAntennaName()
+	,
+			x->getReceiverBand()
+	,
 			x->getCalDataId()
 	,
 			x->getCalReductionId()
-	,
-			x->getAntennaName()
 			
 		)) throw DuplicateKey("Duplicate key exception in ", "CalPointingTable");
 		
@@ -370,10 +414,18 @@ CalPointingRow* CalPointingTable::newRowCopy(CalPointingRow* row) {
  ** no row exists for that key.
  **
  */
- 	CalPointingRow* CalPointingTable::getRowByKey(Tag calDataId, Tag calReductionId, string antennaName)  {
+ 	CalPointingRow* CalPointingTable::getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId)  {
 	CalPointingRow* aRow = 0;
 	for (unsigned int i = 0; i < row.size(); i++) {
 		aRow = row.at(i);
+		
+			
+				if (aRow->antennaName != antennaName) continue;
+			
+		
+			
+				if (aRow->receiverBand != receiverBand) continue;
+			
 		
 			
 				if (aRow->calDataId != calDataId) continue;
@@ -381,10 +433,6 @@ CalPointingRow* CalPointingTable::newRowCopy(CalPointingRow* row) {
 		
 			
 				if (aRow->calReductionId != calReductionId) continue;
-			
-		
-			
-				if (aRow->antennaName != antennaName) continue;
 			
 		
 		return aRow;
@@ -400,21 +448,35 @@ CalPointingRow* CalPointingTable::newRowCopy(CalPointingRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
+ * @param antennaName.
+ 	 		
+ * @param receiverBand.
+ 	 		
  * @param calDataId.
  	 		
  * @param calReductionId.
- 	 		
- * @param antennaName.
  	 		
  * @param startValidTime.
  	 		
  * @param endValidTime.
  	 		
- * @param receiverBand.
+ * @param ambientTemperature.
+ 	 		
+ * @param antennaMake.
+ 	 		
+ * @param atmPhaseCorrection.
+ 	 		
+ * @param direction.
  	 		
  * @param frequencyRange.
  	 		
- * @param direction.
+ * @param pointingModelMode.
+ 	 		
+ * @param pointingMethod.
+ 	 		
+ * @param numReceptor.
+ 	 		
+ * @param polarizationTypes.
  	 		
  * @param collOffsetRelative.
  	 		
@@ -422,18 +484,16 @@ CalPointingRow* CalPointingTable::newRowCopy(CalPointingRow* row) {
  	 		
  * @param collError.
  	 		
- * @param pointingMethod.
+ * @param collOffsetTied.
  	 		
- * @param mode.
- 	 		
- * @param ambientTemperature.
+ * @param reducedChiSquared.
  	 		 
  */
-CalPointingRow* CalPointingTable::lookup(Tag calDataId, Tag calReductionId, string antennaName, ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Frequency > frequencyRange, vector<Angle > direction, vector<Angle > collOffsetRelative, vector<Angle > collOffsetAbsolute, vector<Angle > collError, PointingMethodMod::PointingMethod pointingMethod, PointingModelModeMod::PointingModelMode mode, Temperature ambientTemperature) {
+CalPointingRow* CalPointingTable::lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AntennaMakeMod::AntennaMake antennaMake, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, vector<Angle > direction, vector<Frequency > frequencyRange, PointingModelModeMod::PointingModelMode pointingModelMode, PointingMethodMod::PointingMethod pointingMethod, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Angle > > collOffsetRelative, vector<vector<Angle > > collOffsetAbsolute, vector<vector<Angle > > collError, vector<vector<bool > > collOffsetTied, vector<double > reducedChiSquared) {
 		CalPointingRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(calDataId, calReductionId, antennaName, startValidTime, endValidTime, receiverBand, frequencyRange, direction, collOffsetRelative, collOffsetAbsolute, collError, pointingMethod, mode, ambientTemperature)) return aRow;
+			if (aRow->compareNoAutoInc(antennaName, receiverBand, calDataId, calReductionId, startValidTime, endValidTime, ambientTemperature, antennaMake, atmPhaseCorrection, direction, frequencyRange, pointingModelMode, pointingMethod, numReceptor, polarizationTypes, collOffsetRelative, collOffsetAbsolute, collError, collOffsetTied, reducedChiSquared)) return aRow;
 		}			
 		return 0;	
 } 
@@ -441,7 +501,6 @@ CalPointingRow* CalPointingTable::lookup(Tag calDataId, Tag calReductionId, stri
  	 	
 
 	
-
 
 
 
@@ -462,7 +521,7 @@ CalPointingRow* CalPointingTable::lookup(Tag calDataId, Tag calReductionId, stri
 #endif
 	
 #ifndef WITHOUT_ACS
-	void CalPointingTable::fromIDL(CalPointingTableIDL x) throw(DuplicateKey,ConversionException) {
+	void CalPointingTable::fromIDL(CalPointingTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			CalPointingRow *tmp = newRow();
@@ -473,28 +532,27 @@ CalPointingRow* CalPointingTable::lookup(Tag calDataId, Tag calReductionId, stri
 	}
 #endif
 
-	char *CalPointingTable::toFITS() const throw(ConversionException) {
+	char *CalPointingTable::toFITS() const  {
 		throw ConversionException("Not implemented","CalPointing");
 	}
 
-	void CalPointingTable::fromFITS(char *fits) throw(ConversionException) {
+	void CalPointingTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","CalPointing");
 	}
 
-	string CalPointingTable::toVOTable() const throw(ConversionException) {
+	string CalPointingTable::toVOTable() const {
 		throw ConversionException("Not implemented","CalPointing");
 	}
 
-	void CalPointingTable::fromVOTable(string vo) throw(ConversionException) {
+	void CalPointingTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","CalPointing");
 	}
 
-	string CalPointingTable::toXML()  throw(ConversionException) {
+	
+	string CalPointingTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<CalPointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/CalPointingTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<CalPointingTable> ");
+		buf.append("<CalPointingTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalPointingTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPointingTable http://almaobservatory.org/XML/XASDM/2/CalPointingTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -510,8 +568,9 @@ CalPointingRow* CalPointingTable::lookup(Tag calDataId, Tag calReductionId, stri
 		buf.append("</CalPointingTable> ");
 		return buf;
 	}
+
 	
-	void CalPointingTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void CalPointingTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalPointingTable")) 
 			error();
@@ -553,20 +612,110 @@ CalPointingRow* CalPointingTable::lookup(Tag calDataId, Tag calReductionId, stri
 			error();
 	}
 
-	void CalPointingTable::error() throw(ConversionException) {
+	
+	void CalPointingTable::error()  {
 		throw ConversionException("Invalid xml document","CalPointing");
 	}
 	
+	
 	string CalPointingTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void CalPointingTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalPointing");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			CalPointingRow* aRow = CalPointingRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "CalPointing");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "CalPointing");
+		} 		 	
+	}
+
 	
 	void CalPointingTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -597,6 +746,7 @@ CalPointingRow* CalPointingTable::lookup(Tag calDataId, Tag calReductionId, stri
 				throw ConversionException("Could not close file " + fileName, "CalPointing");
 		}
 	}
+
 	
 	void CalPointingTable::setFromFile(const string& directory) {
 		string tablename;
@@ -638,6 +788,11 @@ CalPointingRow* CalPointingTable::lookup(Tag calDataId, Tag calReductionId, stri
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

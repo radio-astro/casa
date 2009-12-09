@@ -33,11 +33,14 @@
 #include <casa/BasicSL/Complex.h>
 #include <synthesis/MeasurementComponents/VisCal.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
+#include <synthesis/MeasurementComponents/CalCorruptor.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-// Forward declaration
+// Forward declarations
 class VisEquation;
+class TJonesCorruptor;
+
 
 // **********************************************************
 //  PJones
@@ -91,6 +94,16 @@ private:
   
 };
 
+
+
+
+
+
+
+
+
+
+
 // **********************************************************
 //  TJones
 //
@@ -123,6 +136,9 @@ public:
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);
 
+  // Set up corruptor
+  virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
+
 protected:
 
   // T has one trivial complex parameter
@@ -139,9 +155,56 @@ protected:
 
 private:
 
+  // object that can simulate the corruption terms - internal to T;
+  // public access is only to the CalCorruptor parts
+  AtmosCorruptor *tcorruptor_p;
+
+};
+
+
+
+
+
+
+
+
+// **********************************************************
+//  TfJones (freq-dep T)
+//
+
+class TfJones : public TJones {
+public:
+
+  // Constructor
+  TfJones(VisSet& vs);
+  TfJones(const Int& nAnt);
+
+  virtual ~TfJones();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::T; };
+
+  // Return type name as string
+  virtual String typeName()     { return "Tf Jones"; };
+  virtual String longTypeName() { return "Tf Jones (frequency-dependent atmospheric complex gain"; };
+
+  // This is the freq-dep version of T
+  //   (this is the ONLY fundamental difference from T)
+  virtual Bool freqDepPar() { return True; };
+
+protected:
+
+  // <nothing>
+
+private:
+
   // <nothing>
   
 };
+
+
+
+
 
 // **********************************************************
 //  GJones
@@ -175,6 +238,8 @@ public:
   // Hazard a guess at parameters
   virtual void guessPar(VisBuffer& vb);
 
+  virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
+
 protected:
 
   // G has two trivial Complex parameters
@@ -191,9 +256,11 @@ protected:
 
 private:
 
-  // <nothing>
+  GJonesCorruptor *gcorruptor_p;
   
 };
+
+
 
 // **********************************************************
 //  BJones  (freq-dep GJones)
@@ -306,6 +373,7 @@ public:
   // Method to list the D results
   virtual void logResults();
 
+  virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
 protected:
 
   // D has two Complex parameters
@@ -327,6 +395,8 @@ protected:
 private:
 
   Int solvePol_;
+  DJonesCorruptor *dcorruptor_p;
+  
 
   
 };
@@ -424,6 +494,7 @@ private:
 //  M: baseline-based (closure) 
 //
 
+
 class MMueller : public SolvableVisMueller {
 public:
 
@@ -460,6 +531,7 @@ public:
 
   virtual void keep(const Int& slot);
 
+  virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
 protected:
 
   // M currently has just 2 complex parameters, i.e., both parallel hands
@@ -469,10 +541,14 @@ protected:
   virtual Bool trivialMuellerElem() { return True; };
 
 private:
-
-  // <nothing>
+  AtmosCorruptor *atmcorruptor_p;
 
 };
+
+
+
+
+
 
 // **********************************************************
 //  MfMueller (freq-dep MMueller)
@@ -573,6 +649,45 @@ private:
 
 
 // **********************************************************
+//  TfOpac (freq-dep TOpac)
+//
+
+class TfOpac : public TOpac {
+public:
+
+  // Constructor
+  TfOpac(VisSet& vs);
+  //  TfOpac(const Int& nAnt);
+
+  virtual ~TfOpac();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::T; };
+
+  // Return type name as string
+  virtual String typeName()     { return "TfOpac"; };
+  virtual String longTypeName() { return "TfOpac (frequency-dependent opacity"; };
+
+  // This is the freq-dep version of TOpac
+  //   (this is the ONLY fundamental difference from TOpac)
+  virtual Bool freqDepPar() { return True; };
+
+protected:
+
+  // <nothing>
+
+private:
+
+  // <nothing>
+  
+};
+
+
+
+
+
+
+// **********************************************************
 //  X: position angle calibration (for circulars!)
 //    (rendered as a Mueller for now)
 
@@ -636,6 +751,156 @@ private:
 
 };
 
+
+
+// K Jones provides support for SBD delays
+class KJones : public GJones {
+public:
+
+  // Constructor
+  KJones(VisSet& vs);
+  KJones(const Int& nAnt);
+
+  virtual ~KJones();
+
+  // Local setApply to enforce calWt=F for delays
+  virtual void setApply(const Record& apply);
+  using GJones::setApply;
+
+  // Return the type enum
+  virtual Type type() { return VisCal::K; };
+
+  // Return type name as string
+  virtual String typeName()     { return "K Jones"; };
+  virtual String longTypeName() { return "K Jones (single-band delay)"; };
+
+  // Type of Jones matrix according to nPar()
+  virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
+
+  // Freq dependence (delays)
+  virtual Bool freqDepPar() { return False; };
+  virtual Bool freqDepMat() { return True; };
+
+  // Default parameter value
+  virtual Complex defaultPar() { return Complex(0.0); };
+
+  // Type-specific specify
+  virtual void specify(const Record& specify);
+
+  // This type is not yet accumulatable
+  virtual Bool accumulatable() { return False; };
+
+  // This type is not yet smoothable
+  virtual Bool smoothable() { return False; };
+
+  // Calculate phase(chan) from delay
+  virtual void calcAllJones();
+
+  // Delay to phase calculator
+  //  virtual void calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk, 
+  //                            const Vector<Complex>& par, const Vector<Bool>& pOk );
+
+
+  // Hazard a guess at parameters
+  virtual void guessPar(VisBuffer& vb) {};
+
+protected:
+
+  // K has two "real" parameters
+  virtual Int nPar() { return 2; };
+
+  // Jones matrix elements are trivial
+  virtual Bool trivialJonesElem() { return False; };
+
+  // dG/dp are trivial
+  virtual Bool trivialDJ() { return False; };
+
+  // Initialize trivial dJs
+  virtual void initTrivDJ() {};
+
+  // Reference frequencies
+  Vector<Double> KrefFreqs_;
+
+private:
+
+  
+};
+
+
+// KMBD Jones provides support for multi-band delays
+class KMBDJones : public KJones {
+public:
+
+  // Constructor
+  KMBDJones(VisSet& vs);
+  KMBDJones(const Int& nAnt);
+
+  virtual ~KMBDJones();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::K; };
+
+  // Return type name as string
+  virtual String typeName()     { return "KMBD Jones"; };
+  virtual String longTypeName() { return "KMBD Jones (multi-band delay)"; };
+
+ 
+};
+
+
+
+class KAntPosJones : public KJones {
+public:
+
+  // Constructor
+  KAntPosJones(VisSet& vs);
+  KAntPosJones(const Int& nAnt);
+
+  virtual ~KAntPosJones();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::KAntPos; };
+
+  // Return type name as string
+  virtual String typeName()     { return "KAntPos Jones"; };
+  virtual String longTypeName() { return "KAntPos Jones (antenna position errors)"; };
+
+  // This is a scalar Jones matrix
+  virtual Jones::JonesType jonesType() { return Jones::Scalar; };
+
+  virtual Bool timeDepMat() { return True; };
+
+  // Local setApply to enforce spwmap=0 for all spw
+  virtual void setApply(const Record& apply);
+  using KJones::setApply;
+
+  // Type-specific specify
+  virtual void specify(const Record& specify);
+
+  // Calculate phase(chan) from delay
+  virtual void calcAllJones();
+
+protected:
+
+  // AntPos has three "real" parameters (dBx, dBy, dBz)
+  virtual Int nPar() { return 3; };
+
+  // Jones matrix elements are not trivial
+  virtual Bool trivialJonesElem() { return False; };
+
+  // dG/dp are not trivial
+  virtual Bool trivialDJ() { return False; };
+
+  // Initialize trivial dJs
+  virtual void initTrivDJ() {};
+
+private:
+  
+  // Some info from the MS we need for Measures work
+  ArrayMeasColumn<MDirection> dirmeas_p;
+  String epochref_p;
+
+};
 
 } //# NAMESPACE CASA - END
 

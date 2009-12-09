@@ -299,4 +299,25 @@
 	</catch>
     </implement>
 
+    <python>
+	<include>xmlcasa/interrupt.h</include>
+	<prereturn>
+	    void (*old_handler)(int) = signal(SIGINT, casa::signal_handler);
+	    if ( sigsetjmp(casa::jmp_buf,1) ) {
+		casa::longjmp_ok = false;
+		signal(SIGINT, old_handler);
+		if ( old_handler != 0 &amp;&amp; old_handler != SIG_IGN )
+		    (*old_handler)(SIGINT);
+		else
+		    PyErr_SetString( PyExc_StandardError, "Control-C typed..." );
+		return NULL;
+	    }
+	    casa::longjmp_ok = true;
+	</prereturn>
+	<postreturn>
+	    casa::longjmp_ok = false;
+	    signal(SIGINT, old_handler);
+	</postreturn>
+    </python>
+
 </setup>

@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CInvalidatingCondition::version() {
+	return InvalidatingConditionMod::version;
+	}
+	
+string CInvalidatingCondition::revision () {
+	return InvalidatingConditionMod::revision;
+}
+
+unsigned int CInvalidatingCondition::size() {
+	return 5;
+	}
+	
 	
 const std::string& CInvalidatingCondition::sANTENNA_DISCONNECT = "ANTENNA_DISCONNECT";
 	
@@ -48,7 +61,7 @@ const std::string& CInvalidatingCondition::sRECEIVER_EXCHANGE = "RECEIVER_EXCHAN
 	
 const std::string& CInvalidatingCondition::sRECEIVER_POWER_DOWN = "RECEIVER_POWER_DOWN";
 	
-const std::vector<std::string> CInvalidatingCondition::sInvalidatingConditionSet() {
+const std::vector<std::string> CInvalidatingCondition::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CInvalidatingCondition::sANTENNA_DISCONNECT);
@@ -63,37 +76,6 @@ const std::vector<std::string> CInvalidatingCondition::sInvalidatingConditionSet
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CInvalidatingCondition::hANTENNA_DISCONNECT = "Antenna was disconnected";
-	
-const std::string& CInvalidatingCondition::hANTENNA_MOVE = "Antenna was moved";
-	
-const std::string& CInvalidatingCondition::hANTENNA_POWER_DOWN = "Antenna was powered down";
-	
-const std::string& CInvalidatingCondition::hRECEIVER_EXCHANGE = "Receiver was exchanged";
-	
-const std::string& CInvalidatingCondition::hRECEIVER_POWER_DOWN = "Receiver was powered down";
-	
-const std::vector<std::string> CInvalidatingCondition::hInvalidatingConditionSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CInvalidatingCondition::hANTENNA_DISCONNECT);
-    
-    enumSet.insert(enumSet.end(), CInvalidatingCondition::hANTENNA_MOVE);
-    
-    enumSet.insert(enumSet.end(), CInvalidatingCondition::hANTENNA_POWER_DOWN);
-    
-    enumSet.insert(enumSet.end(), CInvalidatingCondition::hRECEIVER_EXCHANGE);
-    
-    enumSet.insert(enumSet.end(), CInvalidatingCondition::hRECEIVER_POWER_DOWN);
-        
-    return enumSet;
-}
-   	
 
 std::string CInvalidatingCondition::name(const InvalidatingConditionMod::InvalidatingCondition& f) {
     switch (f) {
@@ -114,34 +96,9 @@ std::string CInvalidatingCondition::name(const InvalidatingConditionMod::Invalid
       return CInvalidatingCondition::sRECEIVER_POWER_DOWN;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CInvalidatingCondition::help(const InvalidatingConditionMod::InvalidatingCondition& f) {
-    switch (f) {
-    
-    case InvalidatingConditionMod::ANTENNA_DISCONNECT:
-      return CInvalidatingCondition::hANTENNA_DISCONNECT;
-    
-    case InvalidatingConditionMod::ANTENNA_MOVE:
-      return CInvalidatingCondition::hANTENNA_MOVE;
-    
-    case InvalidatingConditionMod::ANTENNA_POWER_DOWN:
-      return CInvalidatingCondition::hANTENNA_POWER_DOWN;
-    
-    case InvalidatingConditionMod::RECEIVER_EXCHANGE:
-      return CInvalidatingCondition::hRECEIVER_EXCHANGE;
-    
-    case InvalidatingConditionMod::RECEIVER_POWER_DOWN:
-      return CInvalidatingCondition::hRECEIVER_POWER_DOWN;
-    	
-    }
-    return std::string("");
-}
-   	
 
 InvalidatingConditionMod::InvalidatingCondition CInvalidatingCondition::newInvalidatingCondition(const std::string& name) {
 		
@@ -194,12 +151,10 @@ InvalidatingConditionMod::InvalidatingCondition CInvalidatingCondition::literal(
 }
 
 InvalidatingConditionMod::InvalidatingCondition CInvalidatingCondition::from_int(unsigned int i) {
-	vector<string> names = sInvalidatingConditionSet();
-	if (i >= names.size()) throw badInt(i);
-	return newInvalidatingCondition(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newInvalidatingCondition(names_.at(i));
 }
-
-	
 
 string CInvalidatingCondition::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'InvalidatingCondition'.";

@@ -226,9 +226,8 @@ protected:
     void detach();
     // </group>
     
-    // Provides access to QPCanvas's log measurement event methods for
-    // children.
-    PlotLoggerPtr loggerForEvent(PlotLogger::Event event) const;
+    // Provides access to the plotter's logger for children.
+    PlotLoggerPtr logger() const;
     
     // Provides access to logging destruction, for children.  Should be called
     // in children's destructor.

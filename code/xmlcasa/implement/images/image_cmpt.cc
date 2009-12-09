@@ -54,6 +54,7 @@
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
+#include <images/Images/ImageFitter.h>
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
@@ -419,46 +420,6 @@ image::fromfits(const std::string& outfile, const std::string& fitsfile,
        rstat= 
          itsImage->imagefromfits(outfile, fitsfile, whichrep, whichhdu, 
 	         		      zeroBlanks, overwrite);
-	 // Well this here be a work around until we get proper use of the cfitsio
-	 // routines by rewriting the underlying fits writer stuff.
-       /*
-    Table::relinquishAutoLocks(True);
-    if(!fork()){
-       try {
-       } catch (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-       } catch (...) {
-          *itsLog << LogIO::SEVERE << "Unknown Exception Reported " << LogIO::POST;
-       }
-        exit(rstat);
-    }
-    int dummy;
-    wait(&dummy);
-    if(dummy)
-	    rstat=true;
-	    */
-  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
-  }
-  return rstat;
-}
-
-// Convert foreign images to aips++ via FITS
-bool
-image::fromforeign(const std::string& outfile, const std::string& infile,
-			const std::string& format, const bool overwrite)
-{
-
-  bool rstat = false;
-  try {
-    if(itsLog==0)
-      itsLog=new LogIO();
-    if(itsImage==0)
-      itsImage=new ImageAnalysis();
-    *itsLog << LogOrigin("image", "fromforeign");
-    rstat=itsImage->imagefromforeign(outfile, infile, format, overwrite);
-
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
@@ -914,14 +875,14 @@ image::coordmeasures(const std::vector<double>&pixel)
   return rstat;
 }
 
-::casac::variant*
+::casac::record*
 image::decompose(const ::casac::record& region, const ::casac::variant& vmask,
 		 const bool simple, const double Threshold, const int nContour,
 		 const int minRange, const int nAxis, const bool fit,
 		 const double maxrms, const int maxRetry, const int maxIter,
 		 const double convCriteria)
 {
-  ::casac::variant *rstat = 0;
+  ::casac::record *rstat = 0;
   try {
     *itsLog << LogOrigin("image", "decompose");
     if (detached()) return rstat;
@@ -931,12 +892,15 @@ image::decompose(const ::casac::record& region, const ::casac::variant& vmask,
     if(mask == "[]")
 	    mask = "";
 
-    Matrix<Float> cl= itsImage->decompose(*Region, mask, simple, Threshold, 
+    Matrix<Int> blcs;
+    Matrix<Int> trcs;
+
+    Matrix<Float> cl= itsImage->decompose(blcs, trcs, *Region, mask, simple, Threshold, 
 					  nContour, minRange, nAxis, fit,
 					  maxrms, maxRetry, maxIter, 
 					  convCriteria);
 
-    std::vector<float> cl_v;
+    /*std::vector<float> cl_v;
     cl.tovector(cl_v);
     int nelem = cl_v.size();
     std::vector<double> cl_dv(nelem);
@@ -946,6 +910,14 @@ image::decompose(const ::casac::record& region, const ::casac::variant& vmask,
     std::vector<int> cl_shape;
     cl.shape().asVector().tovector(cl_shape);
     rstat = new ::casac::variant(cl_dv, cl_shape);
+    */
+    casa::Record outrec1;
+    outrec1.define("components", cl);
+    outrec1.define("blc", blcs);
+    outrec1.define("trc", trcs);
+    rstat = fromRecord(outrec1);
+
+
   } catch (AipsError x) {
         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
@@ -1043,7 +1015,7 @@ image::deconvolvefrombeam(const ::casac::variant& source,
 
 }
 bool
-image::remove(const bool finished)
+image::remove(const bool finished, const bool verbose)
 {
   bool rstat(false);
   try {
@@ -1051,7 +1023,7 @@ image::remove(const bool finished)
 
     if (detached()) return rstat;
 
-    if(itsImage->remove()){
+    if(itsImage->remove(verbose)){
       // Now done the image tool if desired.
       if (finished) done();
       rstat = true;
@@ -1102,14 +1074,14 @@ image::removefile(const std::string& filename)
 
 
 bool
-image::done(const bool remove)
+image::done(const bool remove, const bool verbose)
 {
   bool rstat(false);
   try {
     *itsLog << LogOrigin("image", "done");
 
     if (remove && !detached()) {
-      if(!itsImage->remove()){
+      if(!itsImage->remove(verbose)){
 	*itsLog << LogIO::WARN << "Failed to remove image file" << LogIO::POST;
       }
     }
@@ -1295,8 +1267,82 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
   return rstat;
 }
 
+
+::casac::record* image::fitcomponents(
+	const std::string& box, const ::casac::variant& region, const int chan,
+	const std::string& stokes, const ::casac::variant& vmask,
+	const std::vector<double>& in_includepix,
+	const std::vector<double>& in_excludepix,
+	const std::string& residual, const std::string& model,
+	const std::string& estimates, const std::string& logfile,
+	const bool append, const std::string& newestimates
+) {
+    if (detached()) {
+    	return 0;
+    }
+    int num = in_includepix.size();
+    Vector<Float> includepix(num);
+    num = in_excludepix.size();
+    Vector<Float> excludepix(num);
+    convertArray(includepix, Vector<Double>(in_includepix));
+    convertArray(excludepix, Vector<Double>(in_excludepix));
+    if (includepix.size() == 1 && includepix[0] == -1) {
+        includepix.resize();
+    }
+    if (excludepix.size() == 1 && excludepix[0] == -1) {
+        excludepix.resize();
+    }
+    ::casac::record *rstat = 0;
+	*itsLog << LogOrigin("image", "fitcomponent");
+    String mask = vmask.toString();
+    if(mask == "[]") {
+	    mask = "";
+    }
+	try {
+		ImageFitter *fitter = 0;
+		String imName = itsImage->name();
+		if (region.type() == ::casac::variant::STRING || region.size() == 0) {
+			String regionString = (region.size() == 0) ? "" : region.toString();
+			fitter = new ImageFitter(
+				imName, regionString, box, chan, stokes, mask, includepix, excludepix,
+				residual, model, estimates, logfile, append, newestimates
+			);
+		}
+		else if (region.type() == ::casac::variant::RECORD) {
+			::casac::variant regionCopy = region;
+			Record *regionRecord = toRecord(regionCopy.asRecord());
+			fitter = new ImageFitter(
+				imName, regionRecord, box, chan, stokes, mask, includepix, excludepix,
+				residual, model, estimates, logfile, append, newestimates
+			);
+		}
+		else {
+			*itsLog << "Unsupported type for region " << region.type() << LogIO::EXCEPTION;
+		}
+		ComponentList compList = fitter->fit();
+		bool converged = fitter->converged();
+		delete fitter;
+		Record returnRecord, compListRecord;
+		String error;
+	    if (! compList.toRecord(error, compListRecord)) {
+	        *itsLog << "Failed to generate output record from result. " << error
+	                << LogIO::POST;
+	    }
+		returnRecord.defineRecord("results", compListRecord);
+		returnRecord.define("converged", converged);
+	    rstat = fromRecord(returnRecord);
+
+	}catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+
+	return rstat;
+}
+
 ::casac::record*
 image::fitsky(const ::casac::record& region,
+          const int chan, const std::string& stokes, 
 	      const ::casac::variant& vmask,
 	      const std::vector<std::string>& in_models,
 	      const ::casac::record& in_estimate,
@@ -1311,8 +1357,6 @@ image::fitsky(const ::casac::record& region,
   try {
     *itsLog << LogOrigin("image", "fitsky");
     if (detached()) return rstat;
-
-    String error;
 
     Array<Float> residPixels;  // output in out_pixels
     Array<Bool> residMask;     // output in out_pixelmask
@@ -1345,10 +1389,12 @@ image::fitsky(const ::casac::record& region,
 
     //call the fitsky
     Bool converged;
-    Record outrec=itsImage->fitsky(residPixels, residMask, converged, *Region,
-				   mask, models, *Estimate, fixed, 
-				   includepix, 
-				   excludepix, fitIt, deconvolveIt, list);
+    ComponentList compList = itsImage->fitsky(
+        residPixels, residMask, converged, *Region,
+        chan, String(stokes), mask, models, *Estimate, fixed, 
+		includepix, excludepix, fitIt, deconvolveIt, list
+    );
+
 
     /*
     // Marshal residMask into output parameter out_pixelmask
@@ -1368,6 +1414,14 @@ image::fitsky(const ::casac::record& region,
     residPixels.shape().asVector().tovector(v_pshape);
     out_pixels = new ::casac::variant(vd_residPixels, v_pshape);
     */
+
+    Record outrec;
+    String error;
+    if (! compList.toRecord(error, outrec)) {
+        *itsLog << "Failed to generate output record from result. " << error
+                << LogIO::POST;
+    }    
+ 
     casa::Record outrec1;
     outrec1.define("converged", converged);
     outrec1.define("pixelmask", residMask);
@@ -2521,7 +2575,6 @@ image::statistics(const std::vector<int>& axes,
 
     Record *regionRec = toRecord(region);
     String mtmp = mask.toString();
-    //std::cerr << "Mask is *" <<mtmp<< "*" << std::endl;
     if(mtmp == "false" || mtmp == "[]")
 	    mtmp = "";
 

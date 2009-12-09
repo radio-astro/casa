@@ -9,6 +9,18 @@ static bool (*interrupt_cont_p)( ) = 0;
 static void (*interrupt_off_p)( ) = 0;
 static void (*interrupt_on_p)( ) = 0;
 
+
+sigjmp_buf casa::jmp_buf;
+bool casa::longjmp_ok = false;
+
+static void _casa_signal_handler_(int sig) {
+    if ( casa::longjmp_ok ) {
+	siglongjmp( casa::jmp_buf, 1 );
+    }
+}
+
+void (*casa::signal_handler)(int) = &_casa_signal_handler_;
+
 bool casa::interrupt::init( bool forward ) {
     if ( interrupt_initialized == false ) {
 

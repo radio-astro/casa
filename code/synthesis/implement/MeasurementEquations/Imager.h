@@ -45,10 +45,12 @@
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 #include <graphics/GenericPlotter/SimplePlotter.h>
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
 class VisSet;
+class VisImagingWeight_p;
 class MSHistoryHandler;
 class PBMath;
 class MeasurementSet;
@@ -57,6 +59,7 @@ class File;
 class VPSkyJones;
 class PGPlotter;
 class EPJones;
+class ViewerProxy;
 template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
@@ -69,7 +72,7 @@ class Imager
 
   Imager();
 
-  Imager(MeasurementSet& ms, Bool compress=False);
+  Imager(MeasurementSet& ms, Bool compress=False, Bool useModel=False);
   Imager(MeasurementSet& ms, PGPlotter& pgplotter, Bool compress=False);
 
   // Copy constructor and assignment operator
@@ -92,7 +95,7 @@ class Imager
 
   // Utility function to do channel selection
 
-  Bool selectDataChannel(VisSet& vs, Vector<Int>& spectralwindowids, 
+  Bool selectDataChannel(Vector<Int>& spectralwindowids, 
 				 String& dataMode, 
 				 Vector<Int>& dataNchan, 
 				 Vector<Int>& dataStart, Vector<Int>& dataStep,
@@ -100,17 +103,17 @@ class Imager
 				 MRadialVelocity& mDataStep);
   //Utility function to check coordinate match with existing image
 
-  virtual Bool checkCoord(CoordinateSystem& coordsys, 
-			  String& imageName); 
+  virtual Bool checkCoord(const CoordinateSystem& coordsys, 
+			  const String& imageName); 
 
   virtual void setImageParam(Int& nx, Int& ny, Int& npol, Int& nchan); 
 
   //VisSet and resort 
-  virtual void makeVisSet(VisSet* & vs, MeasurementSet& ms, 
-			  Bool compress=False, Bool mosaicOrder=False);
-  //Just to create the SORTED_TABLE
   virtual void makeVisSet(MeasurementSet& ms, 
 			  Bool compress=False, Bool mosaicOrder=False);
+  //Just to create the SORTED_TABLE if one can
+  //virtual void makeVisSet(MeasurementSet& ms, 
+  //			  Bool compress=False, Bool mosaicOrder=False);
 
   virtual void writeHistory(LogIO& os);
 
@@ -140,7 +143,7 @@ class Imager
 // Close the current ms, and replace it with the supplied ms.
   // Optionally compress the attached calibration data
   // columns if they are created here.
-  Bool open(MeasurementSet &thems, Bool compress=False);
+  Bool open(MeasurementSet &thems, Bool compress=False, Bool useModel=False);
   
   // Flush the ms to disk and detach from the ms file. All function
   // calls after this will be a no-op.
@@ -175,8 +178,10 @@ class Imager
 			   const MRadialVelocity& mStart, 
 			   const Quantity& qStep,
 			   const Vector<Int>& spectralwindowids, 
-			   const Quantity& restFreq,
-			   const Int facets, const Quantity& distance,
+			   const Int facets=1, 
+			   const Quantity& restFreq=Quantity(0,"Hz"),
+                           const MFrequency::Types& mFreqFrame=MFrequency::LSRK,
+			   const Quantity& distance=Quantity(0,"m"),
 			   const Bool trackSource=False, const MDirection& 
 			   trackDir=MDirection(Quantity(0.0, "deg"), 
 					       Quantity(90.0, "deg")));
@@ -195,7 +200,8 @@ class Imager
 			     const String& antnames="",
 			     const String& spwstring="",
 			     const String& uvdist="",
-			     const String& scan="");
+                             const String& scan="",
+                             const Bool useModelCol=False);
 
 
   Bool setdata(const String& mode, const Vector<Int>& nchan, 
@@ -211,12 +217,13 @@ class Imager
 	       const String& antnames="",
 	       const String& spwstring="",
 	       const String& uvdist="",
-	       const String& scan="");
+               const String& scan="",
+               const Bool usemodelCol=False);
   
   // Set the processing options
   Bool setoptions(const String& ftmachine, const Long cache, const Int tile,
 		  const String& gridfunction, const MPosition& mLocation,
-		  const Float padding, const Bool usemodelcol=True, 
+                  const Float padding,
 		  const Int wprojplanes=1,
 		  const String& epJTableName="",
 		  const Bool applyPointingOffsets=True,
@@ -228,7 +235,7 @@ class Imager
 
   // Set the single dish processing options
   Bool setsdoptions(const Float scale, const Float weight, 
-		    const Int convsupport=-1);
+		    const Int convsupport=-1, String pointingColToUse="DIRECTION");
 
   // Set the voltage pattern
   Bool setvp(const Bool dovp,
@@ -237,12 +244,16 @@ class Imager
 	     const Bool doSquint,
 	     const Quantity &parAngleInc,
 	     const Quantity &skyPosThreshold,
-	     String defaultTel="");
+	     String defaultTel="",
+             const Bool verbose=true);
 
   // Set the scales to be searched in Multi Scale clean
   Bool setscales(const String& scaleMethod,          // "nscales"  or  "uservector"
 		 const Int inscales,
 		 const Vector<Float>& userScaleSizes);
+  // set bias
+  Bool setSmallScaleBias(const Float inbias);
+
   // Set the number of taylor series terms in the expansion of the
   // image as a function of frequency.
   Bool settaylorterms(const Int intaylor, 
@@ -262,8 +273,14 @@ class Imager
   // Return the state of the object as a string
   String state();
   
+  // Return the # of visibilities accessible to *rvi, optionally excluding
+  // flagged ones (if unflagged_only is true) and/or ones without imaging
+  // weights (if must_have_imwt is true).
+  uInt count_visibilities(ROVisibilityIterator *rvi,
+                          const Bool unflagged_only, const Bool must_have_imwt);
+
   // Return the image coordinates
-  Bool imagecoordinates(CoordinateSystem& coordInfo);
+  Bool imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose=true);
 
   // Return the image shape
   IPosition imageshape() const;
@@ -283,12 +300,9 @@ class Imager
   // Sensitivity
   Bool sensitivity(Quantity& pointsourcesens, Double& relativesens, Double& sumwt);
   
-  // Make plain image
-  Bool makeimage(const String& type, const String& imageName);
-
-  // Make plain image: keep the complex image as well
+  // Make plain image + keep the complex image as well if complexImageName != "".
   Bool makeimage(const String& type, const String& imageName,
-	     const String& complexImageName);
+                 const String& complexImageName="", const Bool verbose=true);
   
   // Fill in a region of a mask
   Bool boxmask(const String& mask, const Vector<Int>& blc,
@@ -345,7 +359,8 @@ class Imager
 	     const Vector<String>& mask,
 	     const Vector<String>& restored,
 	     const Vector<String>& residual,
-	     const Vector<String>& psf=Vector<String>(0));
+	     const Vector<String>& psf=Vector<String>(0),
+             const Bool firstrun=true);
   
   // MEM algorithm
   Bool mem(const String& algorithm,
@@ -470,13 +485,19 @@ class Imager
 
 
   //Interactive mask drawing
+  //forceReload..forces the viewer to dump previous image that is being displayed
   Int interactivemask(const String& imagename, const String& maskname, 
-		      Int& niter, Int& ncycles, String& threshold);
+		      Int& niter, Int& ncycles, String& threshold, const Bool forceReload=False);
+
+
+  //helper function to copy a mask from one image to another
+
+  Bool copyMask(ImageInterface<Float>& out, const ImageInterface<Float>& in, String maskname="mask0", Bool setdefault=True); 
 
 protected:
 
-  MeasurementSet* ms_p;
-  MSHistoryHandler *hist_p;
+  CountedPtr<MeasurementSet> ms_p;
+  CountedPtr<MSHistoryHandler> hist_p;
   Table antab_p;
   Table datadesctab_p;
   Table feedtab_p;
@@ -502,8 +523,10 @@ protected:
 
 
   String msname_p;
-  MeasurementSet *mssel_p;
+  CountedPtr<MeasurementSet> mssel_p;
   VisSet *vs_p;
+  ROVisibilityIterator* rvi_p;
+  VisibilityIterator* wvi_p;
   FTMachine *ft_p;
   ComponentFTMachine *cft_p;
   SkyEquation* se_p;
@@ -519,7 +542,8 @@ protected:
   Int wprojPlanes_p;
   Quantity mcellx_p, mcelly_p;
   String stokes_p;
-  String dataMode_p, imageMode_p;
+  String dataMode_p;
+  String imageMode_p;           // channel, (optical)velocity, mfs, or frequency
   Vector<Int> dataNchan_p;
   Int imageNchan_p;
   Vector<Int> dataStart_p, dataStep_p;
@@ -527,6 +551,7 @@ protected:
   MRadialVelocity mDataStart_p, mImageStart_p;
   MRadialVelocity mDataStep_p,  mImageStep_p;
   MFrequency mfImageStart_p, mfImageStep_p;
+  MFrequency::Types freqFrame_p;
   MDirection phaseCenter_p;
   Quantity restFreq_p;
   Quantity distance_p;
@@ -659,7 +684,7 @@ protected:
   Double reffreq_p;
   Vector<Float> userScaleSizes_p;
   Bool scaleInfoValid_p;  // This means that we have set the information, not the scale beams
-
+  Float smallScaleBias_p; //ms-clean
   Int nmodels_p;
   // Everything here must be a real class since we make, handle and
   // destroy these.
@@ -687,31 +712,25 @@ protected:
   EPJones *epJ;
   String epJTableName_p, cfCacheDirName_p;
   Bool doPointing, doPBCorr;
-  SimplePlotterPtr plotter_p;
+  //SimplePlotterPtr plotter_p;
   Record interactiveState_p;
 
   //Track moving source stuff
   Bool doTrackSource_p;
   MDirection trackDir_p;
-    
+  String pointingDirCol_p;
+  VisImagingWeight imwgt_p;
 
+  // viewer connection
+  ViewerProxy *viewer_p;
+  int clean_panel_p;
+  int image_id_p;
+  int mask_id_p;
+  int prev_image_id_p;
+  int prev_mask_id_p;
 };
 
 
 } //# NAMESPACE CASA - END
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-

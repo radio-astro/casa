@@ -117,14 +117,13 @@ LAPACKLIBD  := $(LAPACKROOT)/lib64
 XERCESLIBD := $(XERCESROOT)/lib64
 READLINELIBD = $(READLINEROOT)/lib
 CFITSIOLIBD := $(CFITSIOROOT)/lib64
-QT4LIBD := $(QT4ROOT)/lib64
 JNIROOT := /usr/lib/jvm/java-1.5.0-sun.x86_64
 JNIINCD += $(JNIROOT)/include/linux
 JNILIBD := $(JNIROOT)/jre/lib/amd64
 
 
 QT4ROOT := /usr
-QT4LIBD  := $(QTROOT)/lib64
+QT4LIBD := $(QT4ROOT)/lib64
 MOC4     = $(QT4ROOT)/bin/moc-qt4 $(CPPSTD) $(QT4DEFS)
 UIC4     = $(QT4ROOT)/bin/uic-qt4
 
@@ -140,7 +139,7 @@ MotifROOT := $(X11ROOT)/LessTif/Motif2.1
 C++ROOT := /usr
 
 # Preprocessor flags for system debug/optimized compilations.
-CPPSTD   += -DAIPS_64B -DAIPS_STDLIB -DAIPS_AUTO_STL
+CPPSTD   += -DAIPS_64B -DAIPS_LINUX -DAIPS_STDLIB -DAIPS_AUTO_STL
 
 
 # C compiler flags for system debug/optimized compilations.

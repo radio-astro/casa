@@ -37,12 +37,25 @@
 #include <string>
 using namespace std;
 
+
+int CPositionMethod::version() {
+	return PositionMethodMod::version;
+	}
+	
+string CPositionMethod::revision () {
+	return PositionMethodMod::revision;
+}
+
+unsigned int CPositionMethod::size() {
+	return 2;
+	}
+	
 	
 const std::string& CPositionMethod::sDELAY_FITTING = "DELAY_FITTING";
 	
 const std::string& CPositionMethod::sPHASE_FITTING = "PHASE_FITTING";
 	
-const std::vector<std::string> CPositionMethod::sPositionMethodSet() {
+const std::vector<std::string> CPositionMethod::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CPositionMethod::sDELAY_FITTING);
@@ -51,25 +64,6 @@ const std::vector<std::string> CPositionMethod::sPositionMethodSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CPositionMethod::hDELAY_FITTING = "Delays are measured for each source; the delays are used for fitting antenna position errors.";
-	
-const std::string& CPositionMethod::hPHASE_FITTING = "Phases are measured for each source; these phases are used to fit antenna position errors.";
-	
-const std::vector<std::string> CPositionMethod::hPositionMethodSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CPositionMethod::hDELAY_FITTING);
-    
-    enumSet.insert(enumSet.end(), CPositionMethod::hPHASE_FITTING);
-        
-    return enumSet;
-}
-   	
 
 std::string CPositionMethod::name(const PositionMethodMod::PositionMethod& f) {
     switch (f) {
@@ -81,25 +75,9 @@ std::string CPositionMethod::name(const PositionMethodMod::PositionMethod& f) {
       return CPositionMethod::sPHASE_FITTING;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CPositionMethod::help(const PositionMethodMod::PositionMethod& f) {
-    switch (f) {
-    
-    case PositionMethodMod::DELAY_FITTING:
-      return CPositionMethod::hDELAY_FITTING;
-    
-    case PositionMethodMod::PHASE_FITTING:
-      return CPositionMethod::hPHASE_FITTING;
-    	
-    }
-    return std::string("");
-}
-   	
 
 PositionMethodMod::PositionMethod CPositionMethod::newPositionMethod(const std::string& name) {
 		
@@ -128,12 +106,10 @@ PositionMethodMod::PositionMethod CPositionMethod::literal(const std::string& na
 }
 
 PositionMethodMod::PositionMethod CPositionMethod::from_int(unsigned int i) {
-	vector<string> names = sPositionMethodSet();
-	if (i >= names.size()) throw badInt(i);
-	return newPositionMethod(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newPositionMethod(names_.at(i));
 }
-
-	
 
 string CPositionMethod::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'PositionMethod'.";

@@ -27,7 +27,6 @@
 #ifndef PLOTMSAVERAGING_H_
 #define PLOTMSAVERAGING_H_
 
-#include <casa/Containers/Record.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 
 #include <map>
@@ -46,6 +45,9 @@ public:
     // double value (see fieldHasValue()).  Fields are off by default, with a
     // default double value of 0 if applicable.  Some fields are in mutually
     // exclusive groups (see fieldMutuallyExclusiveGroup()).
+    // **If these are changed, also update: convenience methods below,
+    // xmlcasa/implement/plotms/plotms*, xmlcasa/tasks/plotms.xml,
+    // xmlcasa/scripts/task_plotms.py.**
     // <group>
     PMS_ENUM1(Field, fields, fieldStrings, field,
               CHANNEL, TIME, SCAN, FIELD, BASELINE, ANTENNA, SPW)
@@ -84,7 +86,7 @@ public:
     // name + "Value" (i.e. "channelValue" for CHANNEL) with a double value.
     // <group>
     void fromRecord(const RecordInterface& record);
-    Record toRecord() const;
+    Record toRecord(bool useStrings = false) const;
     // </group>
     
     // Gets/Sets the on/off flag for the given field.
@@ -101,13 +103,25 @@ public:
     void setValue(Field f, double value);
     // </group>
     
+    // Gets/Sets the value for the given field as a String.  Blank means a
+    // false value (or a field that does not have a double value); otherwise
+    // the double value in String form is used.
+    // <group>
+    String getValueStr(Field f) const;
+    void getValue(Field f, String& value) const { value = getValueStr(f); }
+    void setValue(Field f, const String& value);
+    // </group>
+    
+    
     
     // Convenience methods for returning the standard field values.
     // <group>
     bool channel() const { return getFlag(CHANNEL); }
     double channelValue() const { return getValue(CHANNEL); }
+    String channelStr() const { return getValueStr(CHANNEL); }
     bool time() const { return getFlag(TIME); }
     double timeValue() const { return getValue(TIME); }
+    String timeStr() const { return getValueStr(TIME); }
     bool scan() const { return getFlag(SCAN); }
     bool field() const { return getFlag(FIELD); }
     bool baseline() const { return getFlag(BASELINE); }
@@ -117,8 +131,10 @@ public:
     
     // Convenience methods for setting the standard field values.
     // <group>
+    void setChannel(const String& value) { setValue(CHANNEL, value); }
     void setChannel(bool flag) { setFlag(CHANNEL, flag); }
     void setChannelValue(double value) { setValue(CHANNEL, value); }
+    void setTime(const String& value) { setValue(TIME, value); }
     void setTime(bool flag) { setFlag(TIME, flag); }
     void setTimeValue(double value) { setValue(TIME, value); }
     void setScan(bool flag) { setFlag(SCAN, flag); }

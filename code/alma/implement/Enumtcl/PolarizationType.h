@@ -38,13 +38,13 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<PolarizationType,EnumPar<void> >
-     (PolarizationTypeMod::R,ep((int)PolarizationTypeMod::R,"R","Right-handed Circular")));
+     (PolarizationTypeMod::R,ep((int)PolarizationTypeMod::R,"R","un-documented")));
     m_.insert(pair<PolarizationType,EnumPar<void> >
-     (PolarizationTypeMod::L,ep((int)PolarizationTypeMod::L,"L","Left-handed Circular")));
+     (PolarizationTypeMod::L,ep((int)PolarizationTypeMod::L,"L","un-documented")));
     m_.insert(pair<PolarizationType,EnumPar<void> >
-     (PolarizationTypeMod::X,ep((int)PolarizationTypeMod::X,"X","X linear")));
+     (PolarizationTypeMod::X,ep((int)PolarizationTypeMod::X,"X","un-documented")));
     m_.insert(pair<PolarizationType,EnumPar<void> >
-     (PolarizationTypeMod::Y,ep((int)PolarizationTypeMod::Y,"Y","Y linear")));
+     (PolarizationTypeMod::Y,ep((int)PolarizationTypeMod::Y,"Y","un-documented")));
     return true;
   }
   static map<PolarizationType,EnumPar<void> > m_;

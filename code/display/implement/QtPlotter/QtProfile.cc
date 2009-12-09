@@ -56,7 +56,7 @@
 #include <QtGui>
 #include <iostream>
 #include <graphics/X11/X_exit.h>
-
+#include <QMessageBox>
 
 namespace casa { 
 
@@ -76,9 +76,12 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
         const char *name, QWidget *parent)
         :QWidget(parent), //MWCCrosshairTool(),
          pc(0), te(0), analysis(0), 
-         coordinate("world"), coordinateType("velocity"),
-         fileName(name), position(""), yUnit(""), xpos(""), ypos(""),
-	 cube(0), lastX(Vector<Double>()), lastY(Vector<Double>()) 
+         coordinate("world"), coordinateType(""),
+         fileName(name), position(""), yUnit(""), yUnitPrefix(""), 
+	 xpos(""), ypos(""),
+	 cube(0), lastX(Vector<Double>()), lastY(Vector<Double>()),
+         z_xval(Vector<Float>()), z_yval(Vector<Float>()),
+         region("") 
 {
 
     initPlotterResource();
@@ -194,10 +197,21 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     QLabel *label = new QLabel(this);
     label->setText("<font color=\"blue\">Coordinate:</font>");
     label->setAlignment((Qt::Alignment)(Qt::AlignBottom | Qt::AlignRight));
+ 
     ctype = new QComboBox(this);
-    ctype->addItem("velocity");
-    ctype->addItem("frequency");
-    ctype->addItem("pixel");
+
+    // get reference frame info for freq axis label
+    MFrequency::Types freqtype = determineRefFrame(img);
+
+    QString nativeRefFrameName = QString(MFrequency::showType(freqtype).c_str());
+    //    ctype->addItem("true velocity ("+nativeRefFrameName+")");
+    ctype->addItem("radio velocity ("+nativeRefFrameName+")"); 
+    ctype->addItem("optical velocity ("+nativeRefFrameName+")");
+    ctype->addItem("frequency ("+nativeRefFrameName+")");
+    ctype->addItem("channel");
+
+    coordinateType = String(ctype->itemText(0).toStdString());
+
     connect(ctype, SIGNAL(currentIndexChanged(const QString &)), 
             this, SLOT(changeCoordinateType(const QString &)));
     displayLayout->addWidget(label);
@@ -231,12 +245,71 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
                    "click/press+drag the assigned button on\n"
                    "the image to get a image profile");
     
-    yUnit = QString(img->units().getName().chars());
+    QString lbl = coordinateType.chars();
+    if (lbl.contains("freq")) lbl.append(" (GHz)");
+    if (lbl.contains("velo")) lbl.append(" (km/s)");
+    pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
 
-    pc->setYLabel("("+yUnit+")", 10, 0.5, "Helvetica [Cronyx]");
-    pc->setXLabel(QString(coordinateType.chars()), 10, 0.5, "Helvetica [Cronyx]");
+    yUnit = QString(img->units().getName().chars());
+    pc->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+
     pc->setAutoScale(autoScale->checkState());
        
+}
+
+MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool check_native_frame )
+{ 
+  MFrequency::Types freqtype;
+  
+  CoordinateSystem cSys=img->coordinates();
+  Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
+  SpectralCoordinate specCoor=cSys.spectralCoordinate(specAx);
+  MFrequency::Types tfreqtype;
+  MEpoch tepoch; 
+  MPosition tposition;
+  MDirection tdirection;
+  specCoor.getReferenceConversion(tfreqtype, tepoch, tposition, tdirection);
+  freqtype = specCoor.frequencySystem(False); // false means: get the native type
+  
+  if( check_native_frame && tfreqtype != freqtype ){ // there is an active conversion layer
+    // ask user if he/she wants to change to native frame
+    String title = "Change display reference frame?";
+    String message = "Native reference frame is " + MFrequency::showType(freqtype)
+      + ",\n display frame is " + MFrequency::showType(tfreqtype) + ".\n"
+      + "Change display frame permanently to " + MFrequency::showType(freqtype) + "?\n"
+      + "(Needs write access to image.)";
+    if(QMessageBox::question(this, title.c_str(), message.c_str(),
+			     QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes){
+      // user wants to change
+      try {
+	// set the reference conversion to the native type, effectively switching it off
+	if(!specCoor.setReferenceConversion(freqtype, tepoch, tposition, tdirection)
+	   || !cSys.replaceCoordinate(specCoor, specAx) 
+	   || !img->setCoordinateInfo(cSys)){
+	  
+	  img->coordinates().spectralCoordinate(specAx).getReferenceConversion(tfreqtype, tepoch, tposition, tdirection);
+	  title = "Failure";
+	  message = "casaviewer: Error setting reference frame conversion to native frame (" 
+	    + MFrequency::showType(freqtype) + ")\nWill use " + MFrequency::showType(tfreqtype) + " instead";
+	  QMessageBox::warning(this, title.c_str(), message.c_str(),
+			       QMessageBox::Ok, QMessageBox::NoButton);
+	  freqtype = tfreqtype;
+	}
+      } catch (AipsError x) {
+	title = "Failure";
+	message = "Error when trying to change display reference frame:\n" + x.getMesg();
+	QMessageBox::warning(this, title.c_str(), message.c_str(),
+			     QMessageBox::Ok, QMessageBox::NoButton);
+	freqtype = tfreqtype;
+      } 
+    }
+    else{ // user does not want to change
+      freqtype = tfreqtype;
+    }
+  } // end if there is a conv layer
+
+  return freqtype;
+
 }
 
 void QtProfile::zoomOut()
@@ -371,36 +444,23 @@ void QtProfile::writeText()
     fn = fn.section('/', -1);
 
 
-    char* t = "plt";
     QString ext = fn.section('.', -1);
-    if (ext == "txt" || ext == "plt")
-        t = (char*)ext.toLocal8Bit().constData();
-    else 
-        fn.append(".plt"); 
+    if (ext != "txt" && ext != "plt")
+        fn.append(".txt"); 
 
     QFile file(fn);
     if (!file.open(QFile::WriteOnly | QIODevice::Text))
         return ;
     QTextStream ts(&file);
     
-    Vector<Double> xy(2);
-    bool xv = 0, yv = 0; 
-    double x = xpos.toDouble(&xv);
-    double y = ypos.toDouble(&yv);
-    if (!xv || !yv) 
-       return;
-    xy[0]=x; xy[1]=y;
-    Vector<Float> z_xval;
-    Vector<Float> z_yval;
-    Bool ok = False;
-    ok=analysis->getFreqProfile(xy, z_xval, z_yval, 
-                          coordinate, coordinateType);
-
-    ts << "#title: Image profile - " << fileName << " " << position << "\n";
+    ts << "#title: Image profile - " << fileName << " " 
+       << region << "(" << position << ")\n";
     ts << "#coordintate: " << QString(coordinate.chars()) << "\n";
     ts << "#xLabel: " << QString(coordinateType.chars()) << "\n";
     ts << "#yLabel: " << "(" << yUnit << ")\n";
     
+    ts.setRealNumberNotation(QTextStream::ScientificNotation);
+
     for (uInt i = 0; i < z_xval.size(); i++) {
       ts << z_xval(i) << "    " << z_yval(i) << "\n";
     }
@@ -458,10 +518,12 @@ void QtProfile::changeCoordinateType(const QString &text) {
     position = QString("");
     te->setText(position);
     pc->clearCurve(0);
+
     QString lbl = text;
     if (text.contains("freq")) lbl.append(" (GHz)");
     if (text.contains("velo")) lbl.append(" (km/s)");
-    pc->setXLabel(lbl, 10, 0.5, "Helvetica [Cronyx]");
+    pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
+
     pc->setPlotSettings(QtPlotSettings());
     zoomInButton->setVisible(0);
     zoomOutButton->setVisible(0);
@@ -480,6 +542,8 @@ void QtProfile::closeEvent (QCloseEvent* event) {
    //qDebug() << "closeEvent";
   lastX.resize(0);
   lastY.resize(0);
+  z_xval.resize(0);
+  z_yval.resize(0);
   emit hideProfile();
 }
 
@@ -525,11 +589,29 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
     analysis = new ImageAnalysis(img);
     setWindowTitle(QString("Image Profile - ").append(name));
 
-    yUnit = QString(img->units().getName().chars());
+    // reset the combo box for selecting the coordinate type
+    ctype->clear();
+    // get reference frame info for freq axis label
+    MFrequency::Types freqtype = determineRefFrame(img);
 
-    pc->setYLabel("("+yUnit+")", 10, 0.5, "Helvetica [Cronyx]");
-    pc->setXLabel(QString(coordinateType.chars()), 10, 0.5, "Helvetica [Cronyx]");
-       
+    QString nativeRefFrameName = QString(MFrequency::showType(freqtype).c_str());
+    //    ctype->addItem("true velocity ("+nativeRefFrameName+")");
+    ctype->addItem("radio velocity ("+nativeRefFrameName+")"); 
+    ctype->addItem("optical velocity ("+nativeRefFrameName+")");
+    ctype->addItem("frequency ("+nativeRefFrameName+")");
+    ctype->addItem("channel");    
+
+    coordinateType = String(ctype->itemText(0).toStdString());
+
+    QString lbl = coordinateType.chars();
+    if (lbl.contains("freq")) lbl.append(" (GHz)");
+    if (lbl.contains("velo")) lbl.append(" (km/s)");
+    pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
+
+    yUnit = QString(img->units().getName().chars());
+    yUnitPrefix = "";
+    pc->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+
     xpos = "";
     ypos = "";
     lastX.resize(0);
@@ -559,36 +641,42 @@ void QtProfile::wcChanged(const String c,
        
     Int ns;
     x.shape(ns);
-    //cout << "ns=" << ns << endl;  
+    //cout << "ns =" << ns << endl;  
+    //cout << "cube =" << cube << endl;  
   
     Vector<Double> xv(ns);
     Vector<Double> yv(ns);
-    if (cube == -1)
-        for (Int i = 0; i < ns; i++) {
-            xv(i) = y(i);
-            yv(i) = x(i); 
+    if (cube == -1){
+	for (Int i = 0; i < ns; i++) {
+	    xv(i) = y(i);
+	    yv(i) = x(i); 
         }
-    else 
+    }
+    else{
         for (Int i = 0; i < ns; i++) {
             xv(i) = x(i);
             yv(i) = y(i); 
         }
+    }
 
     if (ns < 1) return;
     if (ns == 1) {
         pc->setTitle("Single Point Profile");
+        region = "Point";
     }
     else if (ns == 2) {
         pc->setTitle("Rectangle Region Profile");
+        region = "Rect";
     }
     else {
         pc->setTitle("Polygon Region Profile");
+        region = "Poly";
     }
     pc->setWelcome("");
 
     //xpos, ypos and position only used for display
-    xpos = QString::number(xv[0]);
-    ypos = QString::number(yv[0]);
+    xpos = QString::number(floor(xv[0]+0.5));
+    ypos = QString::number(floor(yv[0]+0.5));
     //qDebug() << c.chars() << "xpos:" 
     //           << xpos << "ypos:" << ypos;
 
@@ -601,26 +689,83 @@ void QtProfile::wcChanged(const String c,
     //qDebug() << "position:" << position;
     te->setText(position);
 
-    Vector<Float> z_xval;
-    Vector<Float> z_yval;
     //Get Profile Flux density v/s velocity
     Bool ok = False;
     ok=analysis->getFreqProfile(xv, yv, z_xval, z_yval, 
                 coordinate, coordinateType);
+
+    // scale for better display
+    // max absolute display numbers should be between 0.1 and 100.0
+    Double dmin = 0.1;
+    Double dmax = 100.;
+    Double ymin = min(z_yval);  	
+    Double ymax = max(z_yval);
+    ymax = max(abs(ymin), ymax);
+    Double symax;
+    Int ordersOfM = 0;
+
+    symax = ymax;
+    while(symax < dmin){
+	ordersOfM += 3;
+	symax = ymax * pow(10.,ordersOfM);
+    }
+    while(symax > dmax){
+	ordersOfM -= 3;
+	symax = ymax * pow(10.,ordersOfM);
+    }
+
+    if(ordersOfM!=0){
+	// correct display y axis values
+        for (uInt i = 0; i < z_yval.size(); i++) {
+            z_yval(i) *= pow(10.,ordersOfM);
+        }
+	// correct unit string 
+	if(yUnit.startsWith("(")||yUnit.startsWith("[")||yUnit.startsWith("\"")){
+	    // express factor as number
+	    ostringstream oss;
+	    oss << -ordersOfM;
+	    yUnitPrefix = "10E"+QString(oss.str().c_str())+" ";
+	}
+	else{
+	    // express factor as character
+	    switch(-ordersOfM){ // note the sign!
+	    case -9:
+		yUnitPrefix = "p";
+		break;
+	    case -6:
+		yUnitPrefix = "u";
+		break;
+	    case -3:
+		yUnitPrefix = "m";
+		break;
+	    case 3:
+		yUnitPrefix = "k";
+		break;
+	    case 6:
+		yUnitPrefix = "M";
+		break;
+	    case 9:
+		yUnitPrefix = "M";
+		break;
+	    default:
+		ostringstream oss;
+		oss << -ordersOfM;
+		yUnitPrefix = "10E"+QString(oss.str().c_str())+" ";
+		break;
+	    }
+	}
+    }
+    else{ // no correction
+	yUnitPrefix = "";
+    }
+	
+    pc->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+
+    // plot the graph 
     pc->plotPolyLine(z_xval, z_yval);
 
     lastX.assign(xv);
     lastY.assign(yv);
-
-    //cout << "ok=" << ok << endl;
-    //cout << "xv=" << xv << " yv=" << yv << endl;
-    //cout << "coordinate=" << coordinate 
-    //     << " coordinateType=" << coordinateType << endl;
-    
-    //cout << "z_xval=" << z_xval 
-    //     << " z_yval=" << z_yval << endl;
-    //QMessageBox::warning(this, "QtProfile",
-    //                "pauss to check the values\n");
 
 }
 

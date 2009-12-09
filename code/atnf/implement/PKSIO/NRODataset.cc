@@ -32,10 +32,12 @@
 
 #include <atnf/PKSIO/NRODataset.h>
 #include <casa/OS/Time.h>
-
-#include <casa/namespace.h>
+#include <scimath/Mathematics/InterpolateArray1D.h>
 
 #include <math.h>
+#include <fstream>
+
+//#include <casa/namespace.h>
 
 using namespace std ;
 
@@ -48,6 +50,8 @@ using namespace std ;
 // constructor 
 NRODataset::NRODataset( string name ) 
 {
+  LogIO os( LogOrigin( "NRODataset", "NRODataset()", WHERE ) ) ;
+
   // memory allocation
   initialize() ;
 
@@ -64,11 +68,11 @@ NRODataset::NRODataset( string name )
   endian_ = -1 ;
   if ( *reinterpret_cast<char *>(&i) == 1 ) {
     endian_ = LITTLE_ENDIAN ;
-    cout << "NRODataset::NRODataset()  LITTLE_ENDIAN " << endl ;
+    os << LogIO::NORMAL << "LITTLE_ENDIAN " << LogIO::POST ;
   }
   else {
     endian_ = BIG_ENDIAN ;
-    cout << "NRODataset::NRODataset()  BIG_ENDIAN " << endl ;
+    os << LogIO::NORMAL << "BIG_ENDIAN " << LogIO::POST ;
   }
   same_ = -1 ;
 }
@@ -77,7 +81,7 @@ NRODataset::NRODataset( string name )
 NRODataset::~NRODataset() 
 {
   // release memory
-  finalize() ;
+  releaseRecord() ;
 
   // close file
   close() ;
@@ -86,24 +90,6 @@ NRODataset::~NRODataset()
 // data initialization
 void NRODataset::initialize()
 {
-  LOFIL = new char[8] ;
-  VER = new char[8] ;
-  GROUP = new char[16] ;
-  PROJ = new char[16] ;
-  SCHED = new char[24] ;
-  OBSVR = new char[40] ;
-  LOSTM = new char[16] ;
-  LOETM = new char[16] ;
-  TITLE = new char[120] ;
-  OBJ = new char[16] ;
-  EPOCH = new char[8] ;
-  SCMOD = new char[120] ;
-  VREF = new char[4] ;
-  VDEF = new char[4] ;
-  SWMOD = new char[8] ;
-  CMTTM = new char[24] ;
-  SITE = new char[8] ;
-
   datasize_ = sizeof( char ) * 8   // LOFIL
     + sizeof( char ) * 8           // VER
     + sizeof( char ) * 16          // GROUP
@@ -134,30 +120,6 @@ void NRODataset::initialize()
   // NRODataRecord
   record_ = new NRODataRecord() ;
   record_->LDATA = NULL ;
-}
-
-// finalization
-void NRODataset::finalize() 
-{
-  delete LOFIL ;
-  delete VER ;
-  delete GROUP ;
-  delete PROJ ;
-  delete SCHED ;
-  delete OBSVR ;
-  delete LOSTM ;
-  delete LOETM ;
-  delete TITLE ;
-  delete OBJ ;
-  delete EPOCH ;
-  delete SCMOD ;
-  delete VREF ;
-  delete VDEF ;
-  delete SWMOD ;
-  delete CMTTM ;
-  delete SITE ;
-
-  releaseRecord() ;
 }
 
 void NRODataset::convertEndian( int &value )
@@ -280,11 +242,14 @@ void NRODataset::releaseRecord()
 // Get specified scan
 NRODataRecord *NRODataset::getRecord( int i )
 {
+  LogIO os( LogOrigin( "NRODataset", "getRecord()", WHERE ) ) ;
+
   // DEBUG
   //cout << "NRODataset::getRecord()  Start " << i << endl ;
   //
   if ( i < 0 || i >= rowNum_ ) {
-    cerr << "NRODataset::getRecord()  data index out of range." << endl ;
+    //cerr << "NRODataset::getRecord()  data index out of range." << endl ;
+    os << LogIO::SEVERE << "data index " << i << " out of range. return NULL." << LogIO::POST ;
     return NULL ;
   }
 
@@ -296,17 +261,15 @@ NRODataRecord *NRODataset::getRecord( int i )
   //cout << "NRODataset::getData()  Get new dataset" << endl ;
   //
   // read data 
-  //releaseData() ;
-  //record_ = new NRODataset() ;
   int status = fillRecord( i ) ;
   if ( status == 0 ) {
     dataid_ = i ;
   }
   else {
-    cerr << "NRODataset::getData()  error while reading data " << i << endl ;
+    //cerr << "NRODataset::getRecord()  error while reading data " << i << endl ;
+    os << LogIO::SEVERE << "error while reading data " << i << ". return NULL." << LogIO::POST ;
     dataid_ = -1 ;
     return NULL ;
-    //releaseData() ;
   }
 
   return record_ ;
@@ -314,6 +277,8 @@ NRODataRecord *NRODataset::getRecord( int i )
 
 int NRODataset::fillRecord( int i ) 
 {
+  LogIO os( LogOrigin( "NRODataset", "fillRecord()", WHERE ) ) ;
+
   int status = 0 ;
 
   status = open() ;
@@ -328,11 +293,13 @@ int NRODataset::fillRecord( int i )
   //cout << "NRODataset::fillRecord()  sizeof(NRODataRecord) = " << sizeof( NRODataRecord ) << " byte" << endl ;
   fseek( fp_, offset, SEEK_SET ) ;
   if ( (int)fread( record_, 1, SCAN_HEADER_SIZE, fp_ ) != SCAN_HEADER_SIZE ) {
-    cerr << "Failed to read scan header: " << i << endl ;
+    //cerr << "Failed to read scan header: " << i << endl ;
+    os << LogIO::SEVERE << "Failed to read scan header for " << i << "th row." << LogIO::POST ;
     return -1 ;
   }
   if ( (int)fread( record_->LDATA, 1, dataLen_, fp_ ) != dataLen_ ) {
-    cerr << "Failed to read spectral data: " << i << endl ;
+    //cerr << "Failed to read spectral data: " << i << endl ;
+    os << LogIO::SEVERE << "Failed to read spectral data for " << i << "th row." << LogIO::POST ;
     return -1 ;
   }
 
@@ -386,6 +353,8 @@ vector< vector<double> > NRODataset::getSpectrum()
 
 vector<double> NRODataset::getSpectrum( int i )
 {
+  LogIO os( LogOrigin( "NRODataset", "getSpectrum", WHERE ) ) ;
+  
   // DEBUG
   //cout << "NRODataset::getSpectrum() start process (" << i << ")" << endl ;
   //
@@ -472,7 +441,8 @@ vector<double> NRODataset::getSpectrum( int i )
     
     ispec[i] = u.ivalue ;
     if ( ( ispec[i] < 0 ) || ( ispec[i] > 4096 ) ) {
-      cerr << "NRODataset::getSpectrum()  ispec[" << i << "] is out of range" << endl ;
+      //cerr << "NRODataset::getSpectrum()  ispec[" << i << "] is out of range" << endl ;
+      os << LogIO::SEVERE << "ispec[" << i << "] is out of range" << LogIO::EXCEPTION ;
       return bspec ;
     }
     // DEBUG
@@ -661,9 +631,191 @@ vector<bool> NRODataset::getIFs()
     }
   }
 
+
   // DEBUG
   //cout << "NRODataset::getIFs()   number of IF is " << v.size() << endl ;
   //
 
   return v ;
+}
+
+vector<double> NRODataset::getFrequencies( int i )
+{
+  // return value
+  // v[0]  reference channel
+  // v[1]  reference frequency
+  // v[2]  frequency increment
+  vector<double> v( 3, 0.0 ) ;
+
+  NRODataRecord *record = getRecord( i ) ;
+  string arryt = string( record->ARRYT ) ;
+  //string sbeamno = arryt.substr( 1, arryt.size()-1 ) ;
+  //uInt ib = atoi( sbeamno.c_str() ) - 1 ; 
+  uInt ib = getArrayId( arryt ) ;
+
+  int ia = -1 ;
+  bool isAOS = false ;
+  //cout << "NRODataset::getFrequencies()  record->ARRYT=" << record->ARRYT << endl ;
+  //cout << "NRODataset::getFrequencies()  ib = " << ib << endl ;
+
+  if ( strncmp( record->ARRYT, "X", 1 ) == 0 ) {
+    // FX
+    if ( strncmp( (record->ARRYT)+1, "1", 1 ) == 0 
+         || strncmp( (record->ARRYT)+1, "3", 1 ) ) {
+      // FX1, 3
+      ia = 2 ;
+    }
+    else {
+      // FX2, 4
+      ia = 1 ;
+    }
+  }
+  else if ( strncmp( record->ARRYT, "A", 1 ) == 0 )
+    ia = 2 ;  // AC
+  else if ( strncmp( record->ARRYT, "W", 1 ) == 0 ) {
+    // AOS-W    
+    ia = 2 ;  
+    isAOS = true ;
+  }
+  else if ( strncmp( record->ARRYT, "U", 1 ) == 0 ) {
+    // AOS-U
+    ia = 2 ;  
+    isAOS = true ;
+  }
+  else if ( strncmp( record->ARRYT, "H", 1 ) == 0 ) {
+    // AOS-H
+    isAOS = true ;
+    //cout << record->ARRYT << " " <<  strlen(record->ARRYT) << endl ;
+    //cout << (record->ARRYT)+1 << endl ;
+    if ( strncmp( (record->ARRYT)+2, " ", 1 ) == 0 ) {
+      // H1-9
+      if ( strncmp( (record->ARRYT)+1, "9", 1 ) == 0 ) {
+        // H9
+        ia = 2 ;
+      }
+      else {
+        // H1-8
+        ia = 1 ;
+      }
+    }
+    else {
+      // H10-16
+      ia = 2 ;
+    }
+  }
+
+  int iu ;
+  if ( record->FQIF1 > 0 )
+    iu = 1 ;  // USB
+  else 
+    iu = 2 ;  // LSB
+
+  int ivdef = -1 ;
+  //if ( strncmp( (dataset_->getVDEF()).c_str(), "RAD", 3 ) == 0 )
+  if ( (getVDEF()).compare( 0, 3, "RAD" ) == 0 )
+    ivdef = 0 ;
+  //else if ( strncmp( dataset_->getVDEF(), "OPT", 3 ) == 0 )
+  else if ( (getVDEF()).compare( 0, 3, "OPT" ) == 0 )
+    ivdef = 1 ;
+  // DEBUG
+  //cout << "NRODataset::getFrequencies() ivdef = " << ivdef << endl ;
+  //
+  double vel = getURVEL() + record->VRAD ;
+  double cvel = 2.99792458e8 ; // speed of light [m/s]
+  double fq0 = record->FREQ0 ;
+  //double fq0 = record->FQTRK ;
+
+  int ncal = getNFCAL()[ib] ;
+  vector<double> freqs( ncal ) ;
+  double cw = 0.0 ;
+  vector<double> fqcal = getFQCAL()[ib] ;
+  vector<double> chcal = getCHCAL()[ib] ;
+
+  for ( int ii = 0 ; ii < ncal ; ii++ ) {
+    freqs[ii] = fqcal[ii] ;
+    freqs[ii] -= getF0CAL()[ib] ;
+    if ( ia == 1 ) {
+      if ( iu == 1 ) {
+        freqs[ii] = fq0 + freqs[ii] ;
+      }
+      else if ( iu == 2 ) {
+        freqs[ii] = fq0 - freqs[ii] ;
+      }
+    }
+    else if ( ia == 2 ) {
+      if ( iu == 1 ) {
+        freqs[ii] = fq0 - freqs[ii] ;
+      }
+      else if ( iu == 2 ) {
+        freqs[ii] = fq0 + freqs[ii] ;
+      }
+    }     
+//       if ( ivdef == 0 ) {
+//         double factor = 1.0 / ( 1.0 - vel / cvel ) ;
+//         freqs[ii] = freqs[ii] * factor - record->FQTRK * ( factor - 1.0 ) ;
+//       }
+//       else if ( ivdef == 1 ) {
+//         double factor = vel / cvel ;
+//         freqs[ii] = freqs[ii] * ( 1.0 + factor ) - record->FQTRK * factor ;
+//       }
+  }
+
+  if ( isAOS ) {
+    // regridding
+    while ( ncal < (int)chcal.size() ) {
+      chcal.pop_back() ;
+    }
+    Vector<Double> xin( chcal ) ;
+    Vector<Double> yin( freqs ) ;
+    int nchan = getNUMCH() ;
+    Vector<Double> xout( nchan ) ;
+    indgen( xout ) ;
+    Vector<Double> yout ;
+    InterpolateArray1D<Double, Double>::interpolate( yout, xout, xin, yin, InterpolateArray1D<Double,Double>::cubic ) ;
+    Double bw = abs( yout[nchan-1] - yout[0] ) ;
+    bw += 0.5 * abs( yout[nchan-1] - yout[nchan-2] + yout[1] - yout[0] ) ;
+    Double dz = bw / (Double) nchan ;
+    if ( yout[0] > yout[1] ) 
+      dz = - dz ;
+    v[0] = 0 ;
+    v[1] = yout[0] ;
+    v[2] = dz ;
+  }
+  else {
+    cw = getBERES()[ib] ;
+    
+    if ( cw == 0.0 ) {
+      cw = ( freqs[1] - freqs[0] ) 
+        / ( chcal[1] - chcal[0] ) ;
+//           if ( cw < 0.0 ) 
+//             cw = - cw ;
+    }
+    v[0] = chcal[0] - 1 ; // 0-base
+    v[1] = freqs[0] ;
+    v[2] = cw ;
+  }
+
+  return v ;
+}
+
+uInt NRODataset::getArrayId( string type )
+{
+  string sbeamno = type.substr( 1, type.size()-1 ) ;
+  uInt ib = atoi( sbeamno.c_str() ) - 1 ; 
+  return ib ;
+}
+
+void NRODataset::show()
+{
+  LogIO os( LogOrigin( "NRODataset", "show()", WHERE ) ) ;
+
+  os << LogIO::NORMAL << "------------------------------------------------------------" << endl ;
+  os << LogIO::NORMAL << "Number of scan = " << scanNum_ << endl ;
+  os << LogIO::NORMAL << "Number of data record = " << rowNum_ << endl ;
+  os << LogIO::NORMAL << "Length of data record = " << scanLen_ << " bytes" << endl ;
+  os << LogIO::NORMAL << "Allocated memory for spectral data = " << dataLen_ << " bytes" << endl ;
+  os << LogIO::NORMAL << "Max number of channel = " << chmax_ << endl ;
+  os << LogIO::NORMAL << "------------------------------------------------------------" << endl ;
+  os.post() ;
+
 }

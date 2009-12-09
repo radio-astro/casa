@@ -64,7 +64,17 @@ class simulator
 
     bool setauto(const double autocorrwt = 0.0);
 
-    bool setconfig(const std::string& telescopename = "VLA", const std::vector<double>& x = std::vector<double> (1, 0), const std::vector<double>& y = std::vector<double> (1, 0), const std::vector<double>& z = std::vector<double> (1, 0), const std::vector<double>& dishdiameter = std::vector<double> (1, 0), const std::vector<double>& offset = std::vector<double> (1, 0), const std::vector<std::string>& mount = std::vector<std::string> (1, "ALT-AZ"), const std::vector<std::string>& antname = std::vector<std::string> (1, "ALT-AZ"), const std::string& coordsystem = "global", const ::casac::variant& referencelocation = ::casac::initialize_variant("ALMA"));
+    bool setconfig(const std::string& telescopename = "ALMA", 
+		   const std::vector<double>& x = std::vector<double> (1, 0), 
+		   const std::vector<double>& y = std::vector<double> (1, 0), 
+		   const std::vector<double>& z = std::vector<double> (1, 0), 
+		   const std::vector<double>& dishdiameter = std::vector<double> (1, 0), 
+		   const std::vector<double>& offset = std::vector<double> (1, 0), 
+		   const std::vector<std::string>& mount = std::vector<std::string> (1, "ALT-AZ"), 
+		   const std::vector<std::string>& antname = std::vector<std::string> (1, "A"), 
+		   const std::vector<std::string>& padname = std::vector<std::string> (1, "P"), 
+		   const std::string& coordsystem = "global", 
+		   const ::casac::variant& referencelocation = ::casac::initialize_variant("ALMA"));
 
     bool setknownconfig(const std::string& arrayname = "VLA");
 
@@ -90,15 +100,44 @@ class simulator
 
     bool setbandpass(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& interval = ::casac::initialize_variant("3600s"), const std::vector<double>& amplitude = std::vector<double> (1, 0.0));
 
-    bool setapply(const std::string& type = "", const double t = 0.0, const std::string& table = "", const ::casac::variant& field = ::casac::initialize_variant(""), const std::string& interp = "linear", const std::string& select = "", const bool calwt = false, const std::vector<int>& spwmap = std::vector<int> (1, -1), const double opacity = 0.0);
+    bool setapply(const std::string& table = "", const std::string& type = "", const double t = 0.0, const ::casac::variant& field = ::casac::initialize_variant(""), const std::string& interp = "linear", const std::string& select = "", const bool calwt = false, const std::vector<int>& spwmap = std::vector<int> (1, -1), const double opacity = 0.0);
 
-    bool setgain(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& interval = ::casac::initialize_variant("10s"), const std::vector<double>& amplitude = std::vector<double> (1, 0));
+    bool setgain(const std::string& mode = "calculate", const std::string& table = "", 
+		 const ::casac::variant& interval = ::casac::initialize_variant("10s"), 
+		 const std::vector<double>& amplitude = std::vector<double> (2, 0.1));
+
+    bool settrop(const std::string& mode = "calculate", const std::string& table = "", const double pwv = 3.0, const double deltapwv = 0.5, const double beta = 2.6, const double windspeed = 7);
 
     bool setpointingerror(const std::string& epjtablename = "", const bool applypointingoffsets = false, const bool dopbcorrection = false);
 
-    bool setleakage(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& interval = ::casac::initialize_variant("18000s"), const double amplitude = 0.0);
+    bool setleakage(const std::string& mode = "calculate", 
+		    const std::string& table = "", 
+		    //const ::casac::variant& interval = ::casac::initialize_variant("18000s"), 
+		    const std::vector<double>& amplitude = std::vector<double> (2, 0.1),
+		    const std::vector<double>& offset = std::vector<double> (2, 0.));
 
-    bool setnoise(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& simplenoise = ::casac::initialize_variant("0.0Jy"), const double antefficiency = 0.8, const double correfficiency = 0.85, const double spillefficiency = 0.85, const double tau = 0.0, const double trx = 50, const double tatmos = 250.0, const double tcmb = 2.7);
+    bool oldsetnoise(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& simplenoise = ::casac::initialize_variant("0.0Jy"), const double antefficiency = 0.8, const double correfficiency = 0.85, const double spillefficiency = 0.85, const double tau = 0.0, const double trx = 50, const double tatmos = 250.0, const double tcmb = 2.7);
+
+    bool setnoise(const std::string& mode = "calculate", 
+		  const std::string& table = "", 
+		  const ::casac::variant& simplenoise = ::casac::initialize_variant("0.0Jy"), 
+		  // or atm parameters
+		  const ::casac::variant& pground = ::casac::initialize_variant("560mbar"),
+		  const double relhum = 20, //%
+		  const ::casac::variant& altitude = ::casac::initialize_variant("5000m"), 
+		  const ::casac::variant& waterheight = ::casac::initialize_variant("2km"),
+		  const ::casac::variant& pwv = ::casac::initialize_variant("1mm"),
+		  // specify tau and tatmos
+		  const double tatmos = 250.0, 
+		  const double tau = 0.0, 
+		  //
+		  const double antefficiency = 0.8, 
+		  const double spillefficiency = 0.85, 
+		  const double correfficiency = 0.85, 		  
+		  const double trx = 50, 
+		  const double tground = 250.0, 
+		  const double tcmb = 2.7
+);
 
     bool setpa(const std::string& mode = "calculate", const std::string& table = "", const ::casac::variant& interval = ::casac::initialize_variant("10s"));
 

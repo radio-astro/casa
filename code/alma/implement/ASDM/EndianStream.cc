@@ -15,6 +15,10 @@ void EndianOSStream::writeBoolean(bool b) {
 	write((const char*)&b,sizeof(bool));	
 }
 
+void EndianOSStream::writeBool(bool b) {
+	EndianOSStream::writeBoolean(b);	
+}
+
 void EndianOSStream::writeByte(char c) {
 	write((const char*)&c,sizeof(c));	
 }
@@ -91,6 +95,10 @@ void EndianOSStream::writeLongLong(long long int li) {
 //	write((const char*)&vn,sizeof(vn));
 	ByteSwap5(li);
 	write5(li);		
+}
+
+void EndianOSStream::writeLong(long long int li) {
+	writeLongLong(li);
 }
 
 void EndianOSStream::writeULongLong(unsigned long long int li) {
@@ -230,6 +238,10 @@ long long int EndianISStream::readLongLong() {
 	vn.c[1] = un.c[6];
 	vn.c[0] = un.c[7];	
 	return vn.i;
+}
+
+long long int EndianISStream::readLong() {
+	return readLongLong();
 }
 
 unsigned long long int EndianISStream::readULongLong() {

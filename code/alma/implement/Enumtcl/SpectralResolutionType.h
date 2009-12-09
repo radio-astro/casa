@@ -38,11 +38,11 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<SpectralResolutionType,EnumPar<void> >
-     (SpectralResolutionTypeMod::CHANNEL_AVERAGE,ep((int)SpectralResolutionTypeMod::CHANNEL_AVERAGE,"CHANNEL_AVERAGE","")));
+     (SpectralResolutionTypeMod::CHANNEL_AVERAGE,ep((int)SpectralResolutionTypeMod::CHANNEL_AVERAGE,"CHANNEL_AVERAGE","un-documented")));
     m_.insert(pair<SpectralResolutionType,EnumPar<void> >
-     (SpectralResolutionTypeMod::BASEBAND_WIDE,ep((int)SpectralResolutionTypeMod::BASEBAND_WIDE,"BASEBAND_WIDE","")));
+     (SpectralResolutionTypeMod::BASEBAND_WIDE,ep((int)SpectralResolutionTypeMod::BASEBAND_WIDE,"BASEBAND_WIDE","un-documented")));
     m_.insert(pair<SpectralResolutionType,EnumPar<void> >
-     (SpectralResolutionTypeMod::FULL_RESOLUTION,ep((int)SpectralResolutionTypeMod::FULL_RESOLUTION,"FULL_RESOLUTION","")));
+     (SpectralResolutionTypeMod::FULL_RESOLUTION,ep((int)SpectralResolutionTypeMod::FULL_RESOLUTION,"FULL_RESOLUTION","un-documented")));
     return true;
   }
   static map<SpectralResolutionType,EnumPar<void> > m_;

@@ -36,7 +36,7 @@
 
 // FTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 //                      const VisBuffer& vb)
-#include <synthesis/MeasurementComponents/FTMachine.h>
+//#include <synthesis/MeasurementComponents/FTMachine.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -80,19 +80,18 @@ class LogIO;
 //     - correlationMode filter (hopefully handled by SDM -> MS import routines).
 //       direction item in the field table.
 // @note The current limitations are set by the status of the ASDM
-//     - the use-case when the phase direction is not assumed to be J2000
 //     - OTF not supported due to a limitation in the model of the phase
 // </todo>
 class MSUVWGenerator
 {
 public:
   // Constructor 
-  //      @param ms_ref Reference to the MS.
+  //      @param ms_ref Reference to the MS's columns.
   //      @post - The relative positions for all the antennas in the Antenna
   //              table are in bl_an_p.
   //            - timeRes_p has been conservatively calculated using rough
   //              estimates of the maximum baseline length and field of view.
-  MSUVWGenerator(MS& ms_ref, const MBaseline::Types bltype,
+  MSUVWGenerator(MSColumns& ms_ref, const MBaseline::Types bltype,
 		 const Muvw::Types uvwtype);
 
   // Destructor
@@ -106,8 +105,8 @@ public:
   //	   @param ant1   Row number in the ANTENNA table of the 2nd antenna.
   //	   @param feed2  Row number in the FEED    table of the 2nd feed.
   //       @param uvw    The returned UVW coordinates.
-  void uvw_bl(const uInt ant1, const uInt feed1, const uInt ant2, const uInt feed2,
-	      Array<Double>& uvw);
+  void uvw_bl(const uInt ant1, const uInt feed1,
+              const uInt ant2, const uInt feed2, Array<Double>& uvw);
 
   // Calculate the uvws for the field IDs in flds that are not -1, and set
   // those phase directions according to phaseDirs.
@@ -120,23 +119,17 @@ public:
 private:
   // Sets up the antenna positions as baselines (bl_an_p), the number of
   // antennas (nant_p), and timeRes_p.
-  void fill_bl_an(Vector<MVBaseline>& bl_an_p, const MS &ms_ref);
+  void fill_bl_an(Vector<MVBaseline>& bl_an_p);
   
-  // Calculate ref_positions using ant_positions and ant_offsets, returning
-  // whether or not ref_positions needs to be updated whenever pointingdir
-  // changes (i.e. |ant_offsets| != 0).
-  //
-  // @todo: Currently it only uses the z component of ant_offsets.  Work out
-  //        and apply the full effect of x and y components, mount type
-  //        (possibly heterogeneous for VLBI), and parallactic angle.
-  //
-  Bool calc_ref_positions(const MDirection& pointingdir);
-
   // Determine antUVW_p for every member of the sequence of antennas
   // defining a (sub)array.
-  //     @param  timeCentroid An epoch, the 'when' characterization.
-  //     @param  fldID        The row number in the FIELD table which gives the
-  //                          phase direction.
+  //     @param  timeCentroid    An epoch, the 'when' characterization.
+  //     @param  fldID           The row number in the FIELD table which gives
+  //                             the phase tracking center.
+  //     @param  WSRTConvention  If true (WSRT only?), the l in the ul + vm
+  //                             phase calculation decreases toward increasing
+  //                             RA.  If false (VLA), it increases with
+  //                             increasing RA.  See the code for more info.
   //     @note This function only calculates UVWs for a single time and a
   //     single phase center.  Fields can potentially have multiple phase
   //     directions, so be prepared to call this function from within a loop
@@ -145,7 +138,8 @@ private:
   //       MEpoch timeCentroid(Quantity(<double>, "s"), MEpoch::TAI);
   //      but the accuracy is limited since there is no extra precision
   //      attribute (see Main table of MS v2).
-  void uvw_an(const MEpoch& timeCentroid, const Int fldID);
+  void uvw_an(const MEpoch& timeCentroid, const Int fldID,
+              const Bool WSRTConvention=false);
 
   // (Sub-)array parameters constraining order and size of the output vector 
   // of UVW coords triplets.
@@ -172,7 +166,7 @@ private:
   //**************** here in the same order ******************************
   //**************** as they do in the ctor. ******************************
 
-  MSColumns msc_p;  // Ptr. to the columns of the measurement set.
+  MSColumns& msc_p;  // the columns of the measurement set.
 
   // Coordinate system selectors.
   MBaseline::Ref bl_csys_p;
@@ -204,7 +198,6 @@ private:
 
   // The position of the first antenna.
   MPosition refpos_p;
-  MeasRef<MPosition> refposref_p;
   
   // Ditto for feed.
   //const ROMSFeedColumns *feedColumns_;
@@ -214,6 +207,8 @@ private:
   //  ant_positions_p(ant) + [rotation matrix](pointing) (ant_offsets_p[ant] +
   //							feed_offsets_p[ant])
   const ROScalarMeasColumn<MPosition>& feedOffset_p;
+
+  MBaseline::Types refposref_p;  
 
   // The antenna positions - refpos_p.getValue().
   Vector<MVBaseline> bl_an_p;

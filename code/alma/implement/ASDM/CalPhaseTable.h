@@ -80,16 +80,8 @@ using namespace BasebandNameMod;
 	
 
 	
-
-	
-
-	
-
-	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
-	
-
 	
 
 	
@@ -98,24 +90,32 @@ using namespace AtmPhaseCorrectionMod;
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
 #include "CPolarizationType.h"
 using namespace PolarizationTypeMod;
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -164,153 +164,183 @@ class ASDM;
 class CalPhaseRow;
 /**
  * The CalPhaseTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Result of the phase calibration performed by TelCal.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalPhase </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> basebandName </TD>
+ 		 
+ * <TD> BasebandNameMod::BasebandName</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies the baseband. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> receiverBand </TD>
+ 		 
+ * <TD> ReceiverBandMod::ReceiverBand</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies the receiver band. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> basebandName </TD> 
- * <TD> BasebandNameMod::BasebandName </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> atmPhaseCorrection </TD>
+ 		 
+ * <TD> AtmPhaseCorrectionMod::AtmPhaseCorrection</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp; describes how the atmospheric phase correction has been applied. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalReduction Table. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> numBaseline </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numAPC </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numReceptor </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> receiverBand </TD> 
- * <TD> ReceiverBandMod::ReceiverBand </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> antennaNames </TD> 
- * <TD> vector<vector<string > > </TD>
- * <TD>  numBaseline, 2 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> atmPhaseCorrections </TD> 
- * <TD> vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > </TD>
- * <TD>  numAPC </TD> 
- * </TR>
-	
- * <TR>
- * <TD> polarizationTypes </TD> 
- * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
- * <TD>  numReceptor </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> startValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the end time of result validity period. </TD>
  * </TR>
 	
  * <TR>
- * <TD> frequencyRange </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>  2 </TD> 
+ * <TD> numBaseline </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of baselines. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numReceptor </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of receptors. </TD>
  * </TR>
 	
  * <TR>
  * <TD> ampli </TD> 
- * <TD> vector<vector<vector<float > > > </TD>
- * <TD>  numBaseline, numAPC, numReceptor </TD> 
- * </TR>
-	
- * <TR>
- * <TD> phase </TD> 
- * <TD> vector<vector<vector<float > > > </TD>
- * <TD>  numBaseline, numAPC, numReceptor </TD> 
- * </TR>
-	
- * <TR>
- * <TD> phaseRms </TD> 
- * <TD> vector<vector<vector<Angle > > > </TD>
- * <TD>  numBaseline, numAPC, numReceptor </TD> 
- * </TR>
-	
- * <TR>
- * <TD> statPhaseRms </TD> 
- * <TD> vector<vector<Angle > > </TD>
- * <TD>  numBaseline, numReceptor </TD> 
- * </TR>
-	
- * <TR>
- * <TD> decorrelationFactor </TD> 
  * <TD> vector<vector<float > > </TD>
- * <TD>  numBaseline, numReceptor </TD> 
+ * <TD>  numReceptor, numBaseline </TD> 
+ * <TD> &nbsp;the amplitudes (one value per receptor per baseline). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> antennaNames </TD> 
+ * <TD> vector<vector<string > > </TD>
+ * <TD>  numBaseline, 2 </TD> 
+ * <TD> &nbsp;the names of the antennas (one pair of strings per baseline). </TD>
  * </TR>
 	
  * <TR>
  * <TD> baselineLengths </TD> 
  * <TD> vector<Length > </TD>
  * <TD>  numBaseline </TD> 
+ * <TD> &nbsp;the physical lengths of the baselines (one value per baseline). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> decorrelationFactor </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numBaseline </TD> 
+ * <TD> &nbsp;the decorrelation factors (one value per receptor per baseline). </TD>
  * </TR>
 	
  * <TR>
  * <TD> direction </TD> 
  * <TD> vector<Angle > </TD>
  * <TD>  2 </TD> 
+ * <TD> &nbsp;the direction of the source. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> frequencyRange </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  2 </TD> 
+ * <TD> &nbsp;the frequency range over which the result is valid. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> integrationTime </TD> 
+ * <TD> Interval </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the integration duration for a data point. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> phase </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numBaseline </TD> 
+ * <TD> &nbsp;the phases of the averaged interferometer signal (one value per receptor per baseline). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> polarizationTypes </TD> 
+ * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;identifies the polarization types of the receptors (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> phaseRMS </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numBaseline </TD> 
+ * <TD> &nbsp;the RMS of phase fluctuations relative to the average signal (one value per receptor per baseline). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> statPhaseRMS </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numBaseline </TD> 
+ * <TD> &nbsp;the RMS of phase deviations expected from the thermal fluctuations (one value per receptor per baseline). </TD>
  * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> correctionValidity </TD> 
  * <TD> vector<bool > </TD>
  * <TD>  numBaseline  </TD>
+ * <TD>&nbsp; the deduced validity of atmospheric path length correction (from water vapor radiometers). </TD>
  * </TR>
 	
 
@@ -385,54 +415,54 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param calDataId. 
-	
- 	 * @param calReductionId. 
-	
  	 * @param basebandName. 
-	
- 	 * @param numBaseline. 
-	
- 	 * @param numAPC. 
-	
- 	 * @param numReceptor. 
 	
  	 * @param receiverBand. 
 	
- 	 * @param antennaNames. 
+ 	 * @param atmPhaseCorrection. 
 	
- 	 * @param atmPhaseCorrections. 
+ 	 * @param calDataId. 
 	
- 	 * @param polarizationTypes. 
+ 	 * @param calReductionId. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param frequencyRange. 
+ 	 * @param numBaseline. 
+	
+ 	 * @param numReceptor. 
 	
  	 * @param ampli. 
 	
- 	 * @param phase. 
-	
- 	 * @param phaseRms. 
-	
- 	 * @param statPhaseRms. 
-	
- 	 * @param decorrelationFactor. 
+ 	 * @param antennaNames. 
 	
  	 * @param baselineLengths. 
 	
+ 	 * @param decorrelationFactor. 
+	
  	 * @param direction. 
 	
+ 	 * @param frequencyRange. 
+	
+ 	 * @param integrationTime. 
+	
+ 	 * @param phase. 
+	
+ 	 * @param polarizationTypes. 
+	
+ 	 * @param phaseRMS. 
+	
+ 	 * @param statPhaseRMS. 
+	
      */
-	CalPhaseRow *newRow(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numBaseline, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<vector<string > > antennaNames, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<vector<vector<float > > > ampli, vector<vector<vector<float > > > phase, vector<vector<vector<Angle > > > phaseRms, vector<vector<Angle > > statPhaseRms, vector<vector<float > > decorrelationFactor, vector<Length > baselineLengths, vector<Angle > direction);
+	CalPhaseRow *newRow(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numBaseline, int numReceptor, vector<vector<float > > ampli, vector<vector<string > > antennaNames, vector<Length > baselineLengths, vector<vector<float > > decorrelationFactor, vector<Angle > direction, vector<Frequency > frequencyRange, Interval integrationTime, vector<vector<float > > phase, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > phaseRMS, vector<vector<float > > statPhaseRMS);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalPhaseRow *newRowFull(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numBaseline, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<vector<string > > antennaNames, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<vector<vector<float > > > ampli, vector<vector<vector<float > > > phase, vector<vector<vector<Angle > > > phaseRms, vector<vector<Angle > > statPhaseRms, vector<vector<float > > decorrelationFactor, vector<Length > baselineLengths, vector<Angle > direction);
+	CalPhaseRow *newRowFull(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numBaseline, int numReceptor, vector<vector<float > > ampli, vector<vector<string > > antennaNames, vector<Length > baselineLengths, vector<vector<float > > decorrelationFactor, vector<Angle > direction, vector<Frequency > frequencyRange, Interval integrationTime, vector<vector<float > > phase, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > phaseRMS, vector<vector<float > > statPhaseRMS);
 
 
 	/**
@@ -498,15 +528,19 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param basebandName. 
+	
+	 * @param receiverBand. 
+	
+	 * @param atmPhaseCorrection. 
+	
 	 * @param calDataId. 
 	
 	 * @param calReductionId. 
 	
-	 * @param basebandName. 
-	
  	 *
 	 */
- 	CalPhaseRow* getRowByKey(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName);
+ 	CalPhaseRow* getRowByKey(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId);
 
  	 	
 
@@ -518,48 +552,48 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param calDataId.
- 	 		
- 	 * @param calReductionId.
- 	 		
  	 * @param basebandName.
- 	 		
- 	 * @param numBaseline.
- 	 		
- 	 * @param numAPC.
- 	 		
- 	 * @param numReceptor.
  	 		
  	 * @param receiverBand.
  	 		
- 	 * @param antennaNames.
+ 	 * @param atmPhaseCorrection.
  	 		
- 	 * @param atmPhaseCorrections.
+ 	 * @param calDataId.
  	 		
- 	 * @param polarizationTypes.
+ 	 * @param calReductionId.
  	 		
  	 * @param startValidTime.
  	 		
  	 * @param endValidTime.
  	 		
- 	 * @param frequencyRange.
+ 	 * @param numBaseline.
+ 	 		
+ 	 * @param numReceptor.
  	 		
  	 * @param ampli.
  	 		
- 	 * @param phase.
- 	 		
- 	 * @param phaseRms.
- 	 		
- 	 * @param statPhaseRms.
- 	 		
- 	 * @param decorrelationFactor.
+ 	 * @param antennaNames.
  	 		
  	 * @param baselineLengths.
  	 		
+ 	 * @param decorrelationFactor.
+ 	 		
  	 * @param direction.
+ 	 		
+ 	 * @param frequencyRange.
+ 	 		
+ 	 * @param integrationTime.
+ 	 		
+ 	 * @param phase.
+ 	 		
+ 	 * @param polarizationTypes.
+ 	 		
+ 	 * @param phaseRMS.
+ 	 		
+ 	 * @param statPhaseRMS.
  	 		 
  	 */
-	CalPhaseRow* lookup(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numBaseline, int numAPC, int numReceptor, ReceiverBandMod::ReceiverBand receiverBand, vector<vector<string > > antennaNames, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, vector<vector<vector<float > > > ampli, vector<vector<vector<float > > > phase, vector<vector<vector<Angle > > > phaseRms, vector<vector<Angle > > statPhaseRms, vector<vector<float > > decorrelationFactor, vector<Length > baselineLengths, vector<Angle > direction); 
+	CalPhaseRow* lookup(BasebandNameMod::BasebandName basebandName, ReceiverBandMod::ReceiverBand receiverBand, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numBaseline, int numReceptor, vector<vector<float > > ampli, vector<vector<string > > antennaNames, vector<Length > baselineLengths, vector<vector<float > > decorrelationFactor, vector<Angle > direction, vector<Frequency > frequencyRange, Interval integrationTime, vector<vector<float > > phase, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > phaseRMS, vector<vector<float > > statPhaseRMS); 
 
 
 #ifndef WITHOUT_ACS
@@ -579,43 +613,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalPhaseTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalPhaseTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalPhase (CalPhaseTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalPhase (CalPhaseTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -690,8 +730,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalPhaseRow* checkAndAdd(CalPhaseRow* x) throw (DuplicateKey);
+	CalPhaseRow* checkAndAdd(CalPhaseRow* x) ;
 
 
 
@@ -705,7 +747,7 @@ private:
 	vector<CalPhaseRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

@@ -95,8 +95,8 @@ VPSkyJones::VPSkyJones(MeasurementSet& ms, Table& tab,
 	String band;
 	PBMath::CommonPB whichPB;
 	String commonPBName;
-	MSColumns msc(ms);
-	ScalarColumn<String> telescopesCol(msc.observation().telescopeName());
+	ROMSColumns msc(ms);
+	ROScalarColumn<String> telescopesCol(msc.observation().telescopeName());
 	Quantity freq( msc.spectralWindow().refFrequency()(0), "Hz");	
 	String tele =  telCol(i);
 	if(tele=="") {
@@ -129,8 +129,8 @@ VPSkyJones::VPSkyJones(MeasurementSet& ms,
   LogIO os(LogOrigin("VPSkyJones", "VPSkyJones"));
 
   if (makePBs) {
-    MSColumns msc(ms);
-    ScalarColumn<String> telescopesCol(msc.observation().telescopeName());
+    ROMSColumns msc(ms);
+    ROScalarColumn<String> telescopesCol(msc.observation().telescopeName());
     
 
     for (uInt i=0; i < telescopesCol.nrow(); ++i) {
@@ -184,8 +184,8 @@ VPSkyJones::VPSkyJones(MeasurementSet& ms,
 {
   LogIO os(LogOrigin("VPSkyJones", "VPSkyJones"));
    
-  MSColumns msc(ms);
-  ScalarColumn<String> telescopesCol(msc.observation().telescopeName());
+  ROMSColumns msc(ms);
+  ROScalarColumn<String> telescopesCol(msc.observation().telescopeName());
 
   // we need a way to do this for multiple telescope cases
   String telescope_p = telescopesCol(0);
@@ -206,8 +206,8 @@ VPSkyJones::VPSkyJones(MeasurementSet& ms,
 { 
   LogIO os(LogOrigin("VPSkyJones", "VPSkyJones"));
    
-  MSColumns msc(ms);
-  ScalarColumn<String> telescopesCol(msc.observation().telescopeName());
+  ROMSColumns msc(ms);
+  ROScalarColumn<String> telescopesCol(msc.observation().telescopeName());
 
   // we need a way to do this for multiple telescope cases
   String telescope_p = telescopesCol(0);

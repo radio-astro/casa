@@ -27,15 +27,14 @@
 #ifndef PLOTMSLABELFORMAT_H_
 #define PLOTMSLABELFORMAT_H_
 
-#include <casa/BasicSL/String.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
 
-//# Forward Declarations.
-class PlotMSSinglePlotParameters;
+//# Forward declarations.
+class PlotMSPlotParameters;
 
 
 // Class for generating labels based upon axes, units, etc.  A format is a
@@ -140,13 +139,6 @@ public:
     String getLabel(PMS::Axis xAxis, PMS::Axis yAxis,
             bool xRefValueSet = false, double xRefValue = 0,
             bool yRefValueSet = false, double yRefValue = 0) const;
-    
-    // Generates a label, using the double axes and references values in the
-    // given plot parameters.  If any single axes tags are in the format, the x
-    // axis will be used for it if useX is true; otherwise the y axis will be
-    // used.
-    String getLabel(const PlotMSSinglePlotParameters& parameters,
-            bool useX = true) const;
     
     // Equality operators.
     // <group>

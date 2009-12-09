@@ -170,6 +170,8 @@ public:
             const String& title = "Masked Plot", bool smartDelete= true) const;
     virtual ErrorPlotPtr errorPlot(PlotErrorDataPtr data,
             const String& title = "Error Plot", bool smartDelete= true) const;
+    virtual ColoredPlotPtr coloredPlot(PlotBinnedDataPtr data,
+            const String& title = "Colored Plot", bool smartDelete=true) const;
     // </group>
     
     // Returns a new instance of a BarPlot for this implementation with the

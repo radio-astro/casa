@@ -38,9 +38,9 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<SyscalMethod,EnumPar<void> >
-     (SyscalMethodMod::TEMPERATURE_SCALE,ep((int)SyscalMethodMod::TEMPERATURE_SCALE,"TEMPERATURE_SCALE","Use single direction data to compute ta* scale")));
+     (SyscalMethodMod::TEMPERATURE_SCALE,ep((int)SyscalMethodMod::TEMPERATURE_SCALE,"TEMPERATURE_SCALE","un-documented")));
     m_.insert(pair<SyscalMethod,EnumPar<void> >
-     (SyscalMethodMod::SKYDIP,ep((int)SyscalMethodMod::SKYDIP,"SKYDIP","Use a skydip (observing the sky at various elevations) to get atmospheric opacity")));
+     (SyscalMethodMod::SKYDIP,ep((int)SyscalMethodMod::SKYDIP,"SKYDIP","un-documented")));
     return true;
   }
   static map<SyscalMethod,EnumPar<void> > m_;

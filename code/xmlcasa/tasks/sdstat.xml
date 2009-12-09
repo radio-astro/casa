@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for sdstat -->
 
-<task type="function" name="sdstat" startup="false">
+<task type="function" name="sdstat" startup="false" category="single dish">
 
   <shortdescription>ASAP SD task: list statistics of spectral region</shortdescription>
 
@@ -16,7 +16,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         ASAP SD spectral region statistics task:
 
 
-        Modified 2008-08-19 KS
+        Modified 2009-09-03 KS
         Modified 2008-06-23 TN
         Modified 2008-01-30 TT
         Task Version 2007-03-04 STM
@@ -103,6 +103,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="statfile">
             <description>name of output file for line statistics</description>
             <value></value>
+    </param>
+
+    <param type="string" name="format">
+            <description>format string to print statistic values</description>
+            <value>3.3f</value>
     </param>
 
     <param type="bool" name="overwrite">
@@ -214,25 +219,30 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         statfile -- name of output file for line statistics
                 default: '' (no output statistics file)
                 example: 'stat.txt'
+        format -- format string to print statistic values
+                default: '3.3f'
         overwrite -- overwrite the statistics file if already exists 
                 options: (bool) True,False
                 default: False
 
         -------------------------------------------------------------------
                 Returns: a Python dictionary of line statistics
-                   keys: 'rms','stddev','max','min','sum','median','mean',
-                         'totint','eqw'
+                   keys: 'rms','stddev','max','min','max_abscissa',
+                         'min_abscissa','sum','median','mean','totint','eqw'
                 example: xstat=sdstat(); print "rms = ",xstat['rms']
                          these can be used for testing in scripts or
                          for regression
 
+                         'max_abscissa' and 'min_abscissa' refer to the abscissa
+                         (channel/frequency/velocity) of max and min intensity.
                          'totint' is the integrated intensity (sum*dx)
                          where dx is the abscissa interval in 'specunit'.
                          'eqw' is equivalent width (totint/mag) where mag
                          is either max or min depending on which has
                          greater magnitude. 
-                         Note that both 'totint' and 'eqw' are quantities
-                         (dictionaries) with 'unit' and 'value'. 
+                         Note that 'max_abscissa', 'min_abscissa', 'totint' 
+                         and 'eqw' are quantities (python dictionaries with
+                         keys, 'unit' and 'value').
 
 
        DESCRIPTION:

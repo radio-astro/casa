@@ -29,28 +29,27 @@
 
 #include <plotms/Gui/PlotMSPlotter.ui.h>
 
-#include <plotms/Actions/PlotMSAction.h>
-#include <plotms/Actions/PlotMSThread.qo.h>
-#include <plotms/Data/PlotMSData.h>
-#include <plotms/Gui/PlotMSAnnotator.h>
-#include <plotms/GuiTabs/PlotMSAnnotatorTab.qo.h>
-#include <plotms/GuiTabs/PlotMSFlaggingTab.qo.h>
-#include <plotms/GuiTabs/PlotMSOptionsTab.qo.h>
-#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
-#include <plotms/GuiTabs/PlotMSToolsTab.qo.h>
-#include <plotms/PlotMS/PlotMSLogger.h>
-
-#include <casaqt/QtUtilities/QtProgressWidget.qo.h>
+#include <casaqt/QtUtilities/QtActionGroup.qo.h>
 #include <graphics/GenericPlotter/PlotFactory.h>
+#include <plotms/Actions/PlotMSAction.h>
+#include <plotms/Gui/PlotMSAnnotator.h>
 
-#include <QtGui>
+#include <QMainWindow>
+#include <QToolButton>
 
 #include <casa/namespace.h>
 
 namespace casa {
 
 //# Forward Declarations
+class QtProgressWidget;
 class PlotMS;
+class PlotMSAnnotatorTab;
+class PlotMSFlaggingTab;
+class PlotMSOptionsTab;
+class PlotMSPlotTab;
+class PlotMSThread;
+class PlotMSToolsTab;
 
 
 // High(ish)-level plotter class that manages the GUI (semi-) transparently to
@@ -169,6 +168,10 @@ public:
     // action, and the QAction will be kept properly checked as needed.
     const QMap<PlotMSAction::Type, QAction*>& plotActionMap() const;
     
+    // Synchronizes the given button with the given action type.  (See
+    // QtActionSynchronizer class.)
+    void synchronizeAction(PlotMSAction::Type action, QAbstractButton* button);
+    
     // Gets/Sets the text for the QAction associated with the given PlotMS
     // action.
     // <group>
@@ -246,6 +249,9 @@ private:
     
     // Map between PlotMS actions and QActions.
     QMap<PlotMSAction::Type, QAction*> itsActionMap_;
+    
+    // Action synchronizer.
+    QtActionSynchronizer itsActionSynchronizer_;
     
     // Annotator tool.
     PlotMSAnnotator itsAnnotator_;

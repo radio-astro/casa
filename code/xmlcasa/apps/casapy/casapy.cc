@@ -25,11 +25,11 @@
 //#
 //# $Id$
 
+#include <Python.h>
+#include <CCM_Python/Py.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <Python.h>
-#include <CCM_Python/Py.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -109,18 +109,22 @@ int main( int argc, char **argv ) {
 #endif
 	std::ostringstream oldlog;
 	oldlog.fill('0');
-	oldlog << logfile << "-" << 
+        casa::String beg = logname.before(".log");
+        if (beg == "")
+           beg = "casapy"; 
+	oldlog << beg << "-" << 
 		       	last_mod->tm_year+1900 << "-";
        	oldlog.width(2);
 	oldlog << last_mod->tm_mon+1 << "-";
        	oldlog.width(2);
 	oldlog << last_mod->tm_mday << "T";
        	oldlog.width(2);
-	oldlog << last_mod->tm_hour << ":";
+	oldlog << last_mod->tm_hour ;
        	oldlog.width(2);
-	oldlog << last_mod->tm_min << ":" ;
+	oldlog << last_mod->tm_min ;
        	oldlog.width(2);
  	oldlog << last_mod->tm_sec;
+        oldlog << ".log";
         if(rename(logfile, oldlog.str().c_str()))
 		perror("Oh no...");
     }
@@ -319,10 +323,12 @@ int main( int argc, char **argv ) {
     //
     */
 
+    /*
     std::cout << "CASA Version ";
     casa::VersionInfo::report(std::cout);
     std::cout << std::endl << "  Built on: "<< casa::VersionInfo::date() << std::endl;
     std::cout << std::endl;
+    */
     CCM_Python::Py::init( argc, argv_mod, path );
     CCM_Python::Py py;
 

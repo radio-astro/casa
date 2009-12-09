@@ -27,15 +27,19 @@
 #ifndef PLOTMSTHREAD_QO_H_
 #define PLOTMSTHREAD_QO_H_
 
-#include <casaqt/QtUtilities/QtProgressWidget.qo.h>
 #include <graphics/GenericPlotter/PlotOperation.h>
 
 #include <QMutex>
+#include <QObject>
 #include <QString>
 
 #include <casa/namespace.h>
 
 namespace casa {
+
+//# Forward declarations.
+class QtProgressWidget;
+
 
 // Useful macro for using post-thread methods.
 #define PMS_POST_THREAD_METHOD(CLASS, METHOD)                                 \

@@ -1,6 +1,8 @@
-#include <stdio.h>
+#include <casa/stdio.h>
+#include <cstdlib>
 #include "xmlcasa/variant.h"
 #include "xmlcasa/record.h"
+#include <cstring>
 
 namespace casac {
 
@@ -160,8 +162,8 @@ const std::string &variant::typeString( ) const {
     static std::string dvs("doublevec");
     static std::string cs("complex");
     static std::string cvs("complexvec");
-    static std::string ss("str");
-    static std::string svs("strvec");
+    static std::string ss("string");
+    static std::string svs("stringvec");
     static std::string rec("record");
     static std::string unknown("unknown");
 

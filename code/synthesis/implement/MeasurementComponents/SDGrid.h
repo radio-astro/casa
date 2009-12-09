@@ -257,6 +257,14 @@ private:
 
   Bool getXYPos(const VisBuffer& vb, Int row);
 
+  //get the MDirection from a chosen column of pointing table
+  MDirection directionMeas(const ROMSPointingColumns& mspc, const Int& index);
+  MDirection directionMeas(const ROMSPointingColumns& mspc, const Int& index, const Double& time);
+  MDirection interpolateDirectionMeas(const ROMSPointingColumns& mspc, const Double& time,
+                                  const Int& index, const Int& index1, const Int& index2);
+
+  //for debugging
+  //FILE *pfile;
 };
 
 } //# NAMESPACE CASA - END

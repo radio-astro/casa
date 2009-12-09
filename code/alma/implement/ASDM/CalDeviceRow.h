@@ -80,14 +80,16 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
-
-	
 #include "CCalibrationDevice.h"
 using namespace CalibrationDeviceMod;
+	
+
+	
+
+	
+
+	
+
 	
 
 
@@ -113,7 +115,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalDevice.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -134,7 +136,7 @@ class FeedRow;
 /**
  * The CalDeviceRow class is a row of a CalDeviceTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class CalDeviceRow {
@@ -161,8 +163,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalDeviceRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalDeviceRowIDL x) throw(ConversionException);
+	void setFromIDL (CalDeviceRowIDL x) ;
 #endif
 	
 	/**
@@ -175,8 +178,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalDeviceTable to which the row built by deserialization will be parented.
+	  */
+	 static CalDeviceRow* fromBin(EndianISStream& eiss, CalDeviceTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -245,6 +262,118 @@ public:
 
 
 	
+	// ===> Attribute calLoadNames
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get calLoadNames.
+ 	 * @return calLoadNames as vector<CalibrationDeviceMod::CalibrationDevice >
+ 	 */
+ 	vector<CalibrationDeviceMod::CalibrationDevice > getCalLoadNames() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set calLoadNames with the specified vector<CalibrationDeviceMod::CalibrationDevice >.
+ 	 * @param calLoadNames The vector<CalibrationDeviceMod::CalibrationDevice > value to which calLoadNames is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCalLoadNames (vector<CalibrationDeviceMod::CalibrationDevice > calLoadNames);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numReceptor, which is optional
+	
+	
+	
+	/**
+	 * The attribute numReceptor is optional. Return true if this attribute exists.
+	 * @return true if and only if the numReceptor attribute exists. 
+	 */
+	bool isNumReceptorExists() const;
+	
+
+	
+ 	/**
+ 	 * Get numReceptor, which is optional.
+ 	 * @return numReceptor as int
+ 	 * @throws IllegalAccessException If numReceptor does not exist.
+ 	 */
+ 	int getNumReceptor() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setNumReceptor (int numReceptor);
+		
+	
+	
+	
+	/**
+	 * Mark numReceptor, which is an optional field, as non-existent.
+	 */
+	void clearNumReceptor ();
+	
+
+
+	
+	// ===> Attribute calEff, which is optional
+	
+	
+	
+	/**
+	 * The attribute calEff is optional. Return true if this attribute exists.
+	 * @return true if and only if the calEff attribute exists. 
+	 */
+	bool isCalEffExists() const;
+	
+
+	
+ 	/**
+ 	 * Get calEff, which is optional.
+ 	 * @return calEff as vector<vector<float > >
+ 	 * @throws IllegalAccessException If calEff does not exist.
+ 	 */
+ 	vector<vector<float > > getCalEff() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set calEff with the specified vector<vector<float > >.
+ 	 * @param calEff The vector<vector<float > > value to which calEff is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setCalEff (vector<vector<float > > calEff);
+		
+	
+	
+	
+	/**
+	 * Mark calEff, which is an optional field, as non-existent.
+	 */
+	void clearCalEff ();
+	
+
+
+	
 	// ===> Attribute noiseCal, which is optional
 	
 	
@@ -262,7 +391,7 @@ public:
  	 * @return noiseCal as vector<double >
  	 * @throws IllegalAccessException If noiseCal does not exist.
  	 */
- 	vector<double > getNoiseCal() const throw(IllegalAccessException);
+ 	vector<double > getNoiseCal() const;
 	
  
  	
@@ -303,7 +432,7 @@ public:
  	 * @return temperatureLoad as vector<Temperature >
  	 * @throws IllegalAccessException If temperatureLoad does not exist.
  	 */
- 	vector<Temperature > getTemperatureLoad() const throw(IllegalAccessException);
+ 	vector<Temperature > getTemperatureLoad() const;
 	
  
  	
@@ -323,77 +452,6 @@ public:
 	 * Mark temperatureLoad, which is an optional field, as non-existent.
 	 */
 	void clearTemperatureLoad ();
-	
-
-
-	
-	// ===> Attribute calEff, which is optional
-	
-	
-	
-	/**
-	 * The attribute calEff is optional. Return true if this attribute exists.
-	 * @return true if and only if the calEff attribute exists. 
-	 */
-	bool isCalEffExists() const;
-	
-
-	
- 	/**
- 	 * Get calEff, which is optional.
- 	 * @return calEff as vector<vector<float > >
- 	 * @throws IllegalAccessException If calEff does not exist.
- 	 */
- 	vector<vector<float > > getCalEff() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set calEff with the specified vector<vector<float > >.
- 	 * @param calEff The vector<vector<float > > value to which calEff is to be set.
- 	 
- 		
- 	 */
- 	void setCalEff (vector<vector<float > > calEff);
-		
-	
-	
-	
-	/**
-	 * Mark calEff, which is an optional field, as non-existent.
-	 */
-	void clearCalEff ();
-	
-
-
-	
-	// ===> Attribute calLoadName
-	
-	
-	
-
-	
- 	/**
- 	 * Get calLoadName.
- 	 * @return calLoadName as vector<CalibrationDeviceMod::CalibrationDevice >
- 	 */
- 	vector<CalibrationDeviceMod::CalibrationDevice > getCalLoadName() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set calLoadName with the specified vector<CalibrationDeviceMod::CalibrationDevice >.
- 	 * @param calLoadName The vector<CalibrationDeviceMod::CalibrationDevice > value to which calLoadName is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setCalLoadName (vector<CalibrationDeviceMod::CalibrationDevice > calLoadName);
-  		
-	
-	
 	
 
 
@@ -555,12 +613,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this CalDeviceRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadName);
+	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadNames);
 	
 	
 
 	
-	bool compareRequiredValue(int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadName); 
+	bool compareRequiredValue(int numCalload, vector<CalibrationDeviceMod::CalibrationDevice > calLoadNames); 
 		 
 	
 	/**
@@ -643,6 +701,43 @@ private:
  	
 
 	
+	// ===> Attribute calLoadNames
+	
+	
+
+	vector<CalibrationDeviceMod::CalibrationDevice > calLoadNames;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numReceptor, which is optional
+	
+	
+	bool numReceptorExists;
+	
+
+	int numReceptor;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute calEff, which is optional
+	
+	
+	bool calEffExists;
+	
+
+	vector<vector<float > > calEff;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute noiseCal, which is optional
 	
 	
@@ -663,30 +758,6 @@ private:
 	
 
 	vector<Temperature > temperatureLoad;
-
-	
-	
- 	
-
-	
-	// ===> Attribute calEff, which is optional
-	
-	
-	bool calEffExists;
-	
-
-	vector<vector<float > > calEff;
-
-	
-	
- 	
-
-	
-	// ===> Attribute calLoadName
-	
-	
-
-	vector<CalibrationDeviceMod::CalibrationDevice > calLoadName;
 
 	
 	

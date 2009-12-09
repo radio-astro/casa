@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CCorrelationMode::version() {
+	return CorrelationModeMod::version;
+	}
+	
+string CCorrelationMode::revision () {
+	return CorrelationModeMod::revision;
+}
+
+unsigned int CCorrelationMode::size() {
+	return 3;
+	}
+	
 	
 const std::string& CCorrelationMode::sCROSS_ONLY = "CROSS_ONLY";
 	
@@ -44,7 +57,7 @@ const std::string& CCorrelationMode::sAUTO_ONLY = "AUTO_ONLY";
 	
 const std::string& CCorrelationMode::sCROSS_AND_AUTO = "CROSS_AND_AUTO";
 	
-const std::vector<std::string> CCorrelationMode::sCorrelationModeSet() {
+const std::vector<std::string> CCorrelationMode::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CCorrelationMode::sCROSS_ONLY);
@@ -55,29 +68,6 @@ const std::vector<std::string> CCorrelationMode::sCorrelationModeSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CCorrelationMode::hCROSS_ONLY = "Cross-correlations only [not for ALMA]";
-	
-const std::string& CCorrelationMode::hAUTO_ONLY = "Auto-correlations only";
-	
-const std::string& CCorrelationMode::hCROSS_AND_AUTO = "Auto-correlations and Cross-correlations";
-	
-const std::vector<std::string> CCorrelationMode::hCorrelationModeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CCorrelationMode::hCROSS_ONLY);
-    
-    enumSet.insert(enumSet.end(), CCorrelationMode::hAUTO_ONLY);
-    
-    enumSet.insert(enumSet.end(), CCorrelationMode::hCROSS_AND_AUTO);
-        
-    return enumSet;
-}
-   	
 
 std::string CCorrelationMode::name(const CorrelationModeMod::CorrelationMode& f) {
     switch (f) {
@@ -92,28 +82,9 @@ std::string CCorrelationMode::name(const CorrelationModeMod::CorrelationMode& f)
       return CCorrelationMode::sCROSS_AND_AUTO;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CCorrelationMode::help(const CorrelationModeMod::CorrelationMode& f) {
-    switch (f) {
-    
-    case CorrelationModeMod::CROSS_ONLY:
-      return CCorrelationMode::hCROSS_ONLY;
-    
-    case CorrelationModeMod::AUTO_ONLY:
-      return CCorrelationMode::hAUTO_ONLY;
-    
-    case CorrelationModeMod::CROSS_AND_AUTO:
-      return CCorrelationMode::hCROSS_AND_AUTO;
-    	
-    }
-    return std::string("");
-}
-   	
 
 CorrelationModeMod::CorrelationMode CCorrelationMode::newCorrelationMode(const std::string& name) {
 		
@@ -150,12 +121,10 @@ CorrelationModeMod::CorrelationMode CCorrelationMode::literal(const std::string&
 }
 
 CorrelationModeMod::CorrelationMode CCorrelationMode::from_int(unsigned int i) {
-	vector<string> names = sCorrelationModeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newCorrelationMode(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newCorrelationMode(names_.at(i));
 }
-
-	
 
 string CCorrelationMode::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'CorrelationMode'.";

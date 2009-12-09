@@ -14,12 +14,20 @@
 
 #include "SDMDataObject.h"
 
-#include "CCorrelationMode.h"
 #include "CAtmPhaseCorrection.h"
+#include "CCorrelationMode.h"
+#include "CCorrelatorType.h"
+#include "CNetSideband.h"
+#include "CProcessorType.h"
+
 
 using namespace std;
-using namespace CorrelationModeMod;
+
 using namespace AtmPhaseCorrectionMod;
+using namespace CorrelationModeMod;
+using namespace CorrelatorTypeMod;
+using namespace NetSidebandMod;
+using namespace ProcessorTypeMod;
 
 namespace asdmbinaries {
   /**
@@ -74,13 +82,14 @@ namespace asdmbinaries {
    * </ul>
    * </li>
    * <li> Total Power data.
+   * <li> Water Vapor Radiometer (WVR) data.
    * </ul>
    *
    * The MIME message is written on standard output, a disk file or a char buffer depending on the constructor
    * used to create an instance of SDMDataObjectWriter.
    *
    * @section how-to-use How to use an instance of SDMDataObjectWriter.
-   * Whatever is the type of binary data (total power, integration, subintegration) to write, the following 
+   * Whatever is the type of binary data (total power, WVR, integration, subintegration) to write, the following 
    * scheme must be respected when using an SDMDataObjectWriter.
    *
    * <ol>
@@ -117,7 +126,7 @@ namespace asdmbinaries {
    * // create an osstringstream
    * ostringstream oss;
    *
-   * // builds an SDMDataObjectWriter which will write the data in the file "myCorrData.dat".  
+   * // builds an SDMDataObjectWriter which will write the data in the string attached to oss.  
    * SDMDataObjectWriter sdmdow(&oss, "uid://X1/X2/X3", "ALMA Binary Data");
    * 
    * // Here produce the binary data by using one the sequences detailed below.
@@ -130,7 +139,7 @@ namespace asdmbinaries {
    * .
    * .
    * // And perhaps a good thing to erase the content of oss.
-   * osf.str("");
+   * oss.str("");
    * .
    * .
    * @endcode
@@ -153,6 +162,26 @@ namespace asdmbinaries {
    *                autoData);          // total power data values.
    * @endcode
    * One may also consider to use in that order the methods tpDataHeader and addTPSubscan.
+   *
+   * @subsection how-to-wvrData How to write WVR data.
+   * One single call to the wvrData() method.
+   * @code
+   *  sdmdow.wvrData("uid://X123/X4/X5", // execBlockUID,
+   *                 1,                  // execBlockNum,
+   *                 10,                 // scanNum,
+   *                 3,                  // subscanNum,
+   *                 100,                // number of time stamps (i.e. size along the TIM axis),
+   *                 8,                  // number of antennas,
+   *                 4,                  // number of channels,
+   *                 DSB,                // NetSideband characteristic,
+   *                 171450000,          // time, 
+   *                 96000000,           // interval,
+   *                 wvrData,            // the WVR data values,
+   *                 flags);             // flags associated to the WVR data.
+
+   * 
+   * @endcode
+   *
    * @subsection how-to-intData How to write integrations.
    * One single call to corrDataHeader() followed by one or more calls to addIntegration().
    * @code
@@ -165,6 +194,7 @@ namespace asdmbinaries {
    *                        2,                  // numAntenna        
    *                        correlationMode,    // the correlation mode.
    *                        spectralResolution, // the spectral resolution.
+   *                        correlatorType,     // the processor (correlator) type.
    *                        dataStruct);        // the description of the structure of the binary data.
    *
    * // And write the integrations (3 in that example).
@@ -198,6 +228,7 @@ namespace asdmbinaries {
    *                        2,                  // numAntenna        
    *                        correlationMode,    // the correlation mode.
    *                        spectralResolution, // the spectral resolution.
+   *                        processorType,      // the processor type.
    *                        dataStruct);        // the description of the structure of the binary data.
    *
    * // And write the subintegrations (6 in that example). 
@@ -228,10 +259,11 @@ namespace asdmbinaries {
    * <table>
    * <caption> Valid sequences of methods calls </caption>
    * <tr>
-   * <th> Total Power Data </th> <th> Integration </th> <th> subIntegration </th>
+   * <th> Total Power data </th> <th> WVR data </th> <th> Integration </th> <th> subIntegration </th>
    * </tr>
    * <tr>
-   * <td> ctor, tpData, done </td> 
+   * <td> ctor, tpData, done </td>
+   * <td rowspan=2> ctor, wvrData, done </td> 
    * <td rowspan=2> ctor, corrDataHeader, addIntegration (one or more times), done </td>
    * <td rowspan=2> ctor, corrDataHeader, addSubintegration (one or more times), done </td>
    * </tr>
@@ -349,6 +381,7 @@ namespace asdmbinaries {
      * @param actualDurations the values of actualDurations (see note).
      * @param autoDataAxes the ordered set of axes names for autoData.
      * @param autoData the values of autoData.
+     * @param autoDataNormalized 
      *
      * @throws SDMDataObjectWriterException
      *
@@ -413,6 +446,63 @@ namespace asdmbinaries {
 		const vector<float>& autoData);
 
     /**
+     * Writes water vapour radiometer (WVR) data in a  MIME message conform 
+     * with the BDF V2 format.
+     *
+     * @param execBlockUID the archive uid of the exec Block,
+     * @param execBlockNum the index of the exec Block,
+     * @param scanNum the number of the scan,
+     * @param subscanNum the number of the subscan,
+     * @param numTimes the number of time stamps (i.e. size along the TIM axis), 
+     * @param numAntennas the number of antennas producing WVR data,
+     * @param numChannels the number of channels in WVR data,
+     * @param netSideband the NetSideband characteristic attached to WVR data,
+     * @param time the mid-point of the time range containing all the WVR data,
+     * @param interval the duration of the time range containing all the WVR data,
+     * @param wvrData the WVR data,
+     * @param flags the flags associated to the WVR data.
+     *
+     * @throws SDMDataObjectWriterException
+     *
+     * @note
+     * 
+     * <ul>
+     * <li>see the constructor of the class and the done method for opening the 
+     * output stream where the MIME message is actually written (file, memory...) 
+     * and for closing it</li>
+     * <li>the "startTime" element of the global header in the resulting MIME document
+     * will be filled with a value equal to 'time' - 'interval'/2, </li>
+     * <li> 'time' and 'interval' express a number of nanoseconds. 'time' is an MJD, </li>
+     * <li> 'wvrData' and 'flags' are both 1D arrays. Nonetheless they are expected to
+     * be the linearized versions of multi dimensional arrays whose axes are defined 
+     * by the sequence TIM ANT SPP for the WVR data and TIM ANT for their flags, 
+     * (SPP varying before ANT varying itself before TIM),</li>
+     * <li> a vector of null size for the argument 'flags' will be interpreted as 'flags not available'.</li>
+     * <li> a null value in at least one of the arguments 'numTimes', 'numAntennas' or 'numChannels'
+     * will trigger an SDMDataObjectWriterException. </li>
+     * <li> a argument 'wvrData' with a size different from 'numTimes' * 'numAntennas' * 'numChannels' 
+     * will trigger an SDMDataObjectWriterException. </li>
+     * <li> an argument 'flags' with a size different from 0 and different from 'numTimes' * 'numAntennas'
+     * will trigger an SDMDataObjectWriterException. </li>
+     * </ul>
+     *
+     */
+    
+    void wvrData (const string & execBlockUID,
+		  unsigned int execBlockNum,
+		  unsigned int scanNum,
+		  unsigned int subscanNum,
+		  unsigned int numTimes,
+		  unsigned int numAntennas,
+		  unsigned int numChannels,
+		  NetSideband  netSideband,
+		  unsigned long long time,
+		  unsigned long long interval,
+		  const vector<float>& wvrData,
+		  const vector<unsigned long>& flags);
+  
+  
+    /**
      * Writes the XML global header on the MIME message stream, when binary data are (sub)integrations
      * produced by the correlator.
      * @param startime start time.
@@ -434,7 +524,7 @@ namespace asdmbinaries {
 			unsigned int subscanNum,
 			unsigned int numAntenna,
 			CorrelationMode correlationMode,
-			SpectralResolutionType spectralResolutionType,
+			const OptionalSpectralResolutionType& spectralResolutionType,
 			SDMDataObject::DataStruct& dataStruct);
 
 
@@ -560,15 +650,15 @@ namespace asdmbinaries {
      * 
      */
     void addSubintegration(unsigned int integrationNum,
-			unsigned int subintegrationNum,
-			unsigned long long time,
-			unsigned long long interval,
-			const vector<unsigned long>& flags,
-			const vector<long long>& actualTimes,
-			const vector<long long>& actualDurations,
-			const vector<float>& zeroLags,
-			const vector<int>& crossData,
-			const vector<float>& autoData);
+			   unsigned int subintegrationNum,
+			   unsigned long long time,
+			   unsigned long long interval,
+			   const vector<unsigned long>& flags,
+			   const vector<long long>& actualTimes,
+			   const vector<long long>& actualDurations,
+			   const vector<float>& zeroLags,
+			   const vector<int>& crossData,
+			   const vector<float>& autoData);
     
 
     /**
@@ -638,6 +728,22 @@ namespace asdmbinaries {
 			   const vector<float>& zeroLags,
 			   const vector<float>& crossData,
 			   const vector<float>& autoData);
+
+    /**
+     * Returns the number of bytes written so far.
+     * This method can be used at any time during the life of an instance of SDMDataObjectWriter.
+     * It returns the number of bytes emitted on the output (memory, standard output, disk file...)
+     * as the methods of this class, except done, are called.
+     * <ul>
+     * <li>This number is set to 0 at the creation of an SDMDataObjectWriter,</li>
+     * <li>it is incremented accordingly with the number of bytes emitted by the different methods, except done, </li>
+     * <li>it is reset to 0 by a call to the method done.</li>
+     * </ul>
+     *
+     * @return an unsigned long long.
+     */
+    unsigned long long numBytes(); 
+      
     
     void output   (const string& s);    
     void outputln (const string& s);
@@ -646,6 +752,7 @@ namespace asdmbinaries {
     void outputln (const long long* data, unsigned int numData);
 
     template <class T> void output(const vector<T>& data) {
+      numBytes_ += data.size()*sizeof(T);
       switch (otype_) {
 
       case STDOUT:
@@ -701,6 +808,9 @@ namespace asdmbinaries {
     static const bool initClass_;
     static bool initClass();
 
+    // The axes names definitions for WVR data and their related flags.
+    static vector<AxisName> WVRDATAAXES, WVRDATAFLAGSAXES;
+
     // A utility to fill a vector of <Enum> from a an array of c-strings.
     template <class Enum, class EnumHelper> static vector<Enum> enumvec(const string& strliterals) {
       vector<Enum> result;
@@ -738,9 +848,13 @@ namespace asdmbinaries {
     // Are we done with this ?
     bool done_;
 
+    // The number of bytes written so far.
+    unsigned long long numBytes_;
+
+
     // A small finite state automaton to control the usage of SDMDataObjectWriter.
-    enum States {START, S_TPDATA, S_TPDATAHEADER, S_ADDTPSUBSCAN, S_CORRDATAHEADER, S_ADDINTEGRATION, S_ADDSUBINTEGRATION, END};
-    enum Transitions {T_TPDATA, T_TPDATAHEADER, T_ADDTPSUBSCAN, T_CORRDATAHEADER, T_ADDINTEGRATION, T_ADDSUBINTEGRATION, T_DONE};
+    enum States {START, S_TPDATA, S_TPDATAHEADER, S_ADDTPSUBSCAN, S_WVRDATA, S_CORRDATAHEADER, S_ADDINTEGRATION, S_ADDSUBINTEGRATION, END};
+    enum Transitions {T_TPDATA, T_TPDATAHEADER, T_ADDTPSUBSCAN, T_WVRDATA, T_CORRDATAHEADER, T_ADDINTEGRATION, T_ADDSUBINTEGRATION, T_DONE};
     States currentState_;
 
     void checkState(Transitions t, const string& methodName);

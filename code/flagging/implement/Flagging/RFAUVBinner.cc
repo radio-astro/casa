@@ -125,7 +125,7 @@ Bool RFAUVBinner::newChunk (Int &maxmem)
 // init flag cube
   RFAFlagCubeBase::newChunk(maxmem);
 // create temp lattice for yvalues 
-  yvalue.init(num(CHAN),num(IFR),num(TIME),mmdiff,2);
+  yvalue.init(num(CHAN),num(IFR),num(TIME),num(CORR),nAgent,mmdiff,2);
 // init uvdist matrix
   uvdist.resize(num(IFR),num(TIME));
   uvdist.set(-1);

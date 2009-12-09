@@ -892,7 +892,10 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   else {
     Bool del;
-    IPosition s(flags.shape());
+    //    IPosition s(flags.shape());
+    const IPosition& fs=flags.shape();
+    std::vector<Int>s(fs.begin(), fs.end());
+    
     Bool uvwcopy; 
     const Double *uvwstor=uvw.getStorage(uvwcopy);
     Bool gridcopy;
@@ -904,13 +907,13 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     gmos(uvwstor,
 	   dphase.getStorage(del),
 	   datStorage,
-	   &s(0),
-	   &s(1),
+	   &s[0],
+	   &s[1],
 	   &idopsf,
 	   flags.getStorage(del),
 	   rowFlags.getStorage(del),
 	   wgtStorage,
-	   &s(2),
+	   &s[2],
 	   &row,
 	   uvScale.getStorage(del),
 	   uvOffset.getStorage(del),
@@ -1053,15 +1056,18 @@ void MosaicFT::get(VisBuffer& vb, Int row)
       for (Int i=0;i<2;i++) {
 	actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
       }
-      IPosition s(data.shape());
+      //      IPosition s(data.shape());
+      const IPosition& fs=data.shape();
+      std::vector<Int> s(fs.begin(), fs.end());
+
       dmos(uvw.getStorage(del),
 	     dphase.getStorage(del),
 	     datStorage,
-	     &s(0),
-	     &s(1),
+	     &s[0],
+	     &s[1],
 	     flags.getStorage(del),
 	     rowFlags.getStorage(del),
-	     &s(2),
+	     &s[2],
 	     &rownr,
 	     uvScale.getStorage(del),
 	     actualOffset.getStorage(del),
@@ -1091,15 +1097,17 @@ void MosaicFT::get(VisBuffer& vb, Int row)
      const Complex *gridstor=griddedData.getStorage(gridcopy);
      Bool convcopy;
      const Complex *convstor=convFunc.getStorage(convcopy);
-     IPosition s(data.shape());
+     //     IPosition s(data.shape());
+     const IPosition& fs=data.shape();
+     std::vector<Int> s(fs.begin(), fs.end());
      dmos(uvwstor,
 	    dphase.getStorage(del),
 	    datStorage,
-	    &s(0),
-	    &s(1),
+	    &s[0],
+	    &s[1],
 	    flags.getStorage(del),
 	    rowFlags.getStorage(del),
-	    &s(2),
+	    &s[2],
 	    &row,
 	    uvScale.getStorage(del),
 	    uvOffset.getStorage(del),

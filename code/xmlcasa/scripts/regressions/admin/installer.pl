@@ -56,10 +56,10 @@ elsif (`uname` eq "Linux\n") {
 	}
     }
     if ($arch eq "x86_64") {
-	$filename_regexp = "casapy-test-[0-9.-]*-64b.tar.gz";
+	$filename_regexp = "casapy-(test-)?[0-9.-]*-64b\\.tar\\.gz";
     }
     elsif ($arch eq "i386") {
-	$filename_regexp = "casapy-test-[0-9.-]*.tar.gz";
+	$filename_regexp = "casapy-(test-)?[0-9.-]*\\.tar\\.gz";
     }
     else {
 	die "Unknown architechture '$arch'\n";
@@ -74,7 +74,7 @@ if ($release_dir =~ /^http/) {
     $cmd = "curl $release_dir 2>/dev/null | egrep -o \"$filename_regexp\" | sort | tail -1";
 }
 else {
-    $cmd = "/bin/ls -1 $release_dir 2>/dev/null | egrep -o \"$filename_regexp\" | sort | tail -1";
+    $cmd = "/bin/ls -1t $release_dir 2>/dev/null | egrep -o \"$filename_regexp\" | head -1";
 }
 $latest_release = `$cmd`;
 $? == 0 or die "$cmd: $!";
@@ -112,10 +112,6 @@ sys_exe("echo 999999 0 > $scheduler_state");
 
 print "Going to install $latest_release in $install_dir ...\n";
 
-if (`uname` eq "Darwin\n") {
-    # Mac:  The "volumes" first have to be "ejected"
-    sys_exe("ls -1 $install_dir | grep CASA | sed 's/ /\\\\ /g' | xargs -Ixxx -n 1 hdiutil eject -force $install_dir/xxx");
-}
 sys_exe("rm -rf $install_dir");
 
 if (!-d $install_dir) {
@@ -124,7 +120,11 @@ if (!-d $install_dir) {
 chdir($install_dir) or die;
 
 if (`uname` eq "Darwin\n") {
-    system("hdiutil attach $prefix/$latest_release -mountroot $install_dir");
+    # Attach disk image, copy contents, unattach
+    sys_exe("mkdir $install_dir/tmp");
+    sys_exe("hdiutil attach $prefix/$latest_release -mountroot $install_dir/tmp");
+    system("cp -R $install_dir/tmp/* $install_dir/");  # might partially fail
+    sys_exe("ls -1 $install_dir/tmp | grep CASA | sed 's/ /\\\\ /g' | xargs -Ixxx -n 1 hdiutil eject -force $install_dir/tmp/xxx");
 }
 elsif (`uname` eq "Linux\n") {
     sys_exe("tar zxf $prefix/$latest_release");
@@ -136,7 +136,7 @@ rename("$prefix/cksum_new", "$prefix/cksum");
 
 sys_exe("rm -f $prefix/$latest_release");
 
-$unpacked_dir = `/bin/ls -1`;  # newly unpacked directory
+$unpacked_dir = `/bin/ls -1 | grep -E "(CASA|casapy-)"`;  # newly unpacked directory
 $? == 0 or die $!;
 chomp($unpacked_dir);
 chdir($unpacked_dir) or die $unpacked_dir;
@@ -164,8 +164,7 @@ if (`uname` eq "Linux\n") {
 
     system("./casapy < /dev/null"); # don't stop on error
 
-    sys_exe("rm -rf /opt/casa/data");
-    sys_exe("ln -s $data_dir /opt/casa/data");
+    sys_exe("ln -s $data_dir/regression ./Contents/data/regression");
 }
 
 sys_exe("echo 0 $first_test > $scheduler_state");
@@ -185,13 +184,13 @@ if (`uname` eq "Linux\n") {
     else {
 	die "Unknown architechture '$arch'\n";
     }
-    sys_exe("cp $install_dir/$unpacked_dir/$lib/python2.5/regressions/*.py \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/$lib/python2.5/regressions/admin/*.py \$HOME/admin/");
     sys_exe("cp $install_dir/$unpacked_dir/$lib/casapy/bin/*.sh \$HOME/admin/");
     sys_exe("cp $install_dir/$unpacked_dir/$lib/casapy/bin/*.txt \$HOME/admin/");
     sys_exe("cp $install_dir/$unpacked_dir/$lib/casapy/bin/*.pl \$HOME/admin/");
 }
 else {
-    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/*.py \$HOME/admin/");
+    sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/Resources/python/regressions/admin/*.py \$HOME/admin/");
     sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/MacOS/*.sh \$HOME/admin/");
     sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/MacOS/*.txt \$HOME/admin/");
     sys_exe("cp $install_dir/$unpacked_dir/CASA.app/Contents/MacOS/*.pl \$HOME/admin/");

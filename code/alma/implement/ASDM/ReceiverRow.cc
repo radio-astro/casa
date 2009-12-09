@@ -94,8 +94,10 @@ namespace asdm {
 		
 		
 			
-		x->timeInterval = timeInterval.toIDLArrayTimeInterval();
-			
+				
+		x->receiverId = receiverId;
+ 				
+ 			
 		
 	
 
@@ -104,10 +106,8 @@ namespace asdm {
 		
 		
 			
-				
-		x->numLo = numLo;
- 				
- 			
+		x->timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
 		
 	
 
@@ -129,6 +129,18 @@ namespace asdm {
 		
 			
 				
+		x->numLO = numLO;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
 		x->frequencyBand = frequencyBand;
  				
  			
@@ -140,10 +152,10 @@ namespace asdm {
 		
 		
 			
-		x->freqLo.length(freqLo.size());
-		for (unsigned int i = 0; i < freqLo.size(); ++i) {
+		x->freqLO.length(freqLO.size());
+		for (unsigned int i = 0; i < freqLO.size(); ++i) {
 			
-			x->freqLo[i] = freqLo.at(i).toIDLFrequency();
+			x->freqLO[i] = freqLO.at(i).toIDLFrequency();
 			
 	 	}
 			
@@ -167,87 +179,15 @@ namespace asdm {
 		
 		
 			
-		x->sidebandLo.length(sidebandLo.size());
-		for (unsigned int i = 0; i < sidebandLo.size(); ++i) {
+		x->sidebandLO.length(sidebandLO.size());
+		for (unsigned int i = 0; i < sidebandLO.size(); ++i) {
 			
 				
-			x->sidebandLo[i] = sidebandLo.at(i);
+			x->sidebandLO[i] = sidebandLO.at(i);
 	 			
 	 		
 	 	}
 			
-		
-	
-
-	
-  		
-		
-		x->dewarNameExists = dewarNameExists;
-		
-		
-			
-				
-		x->dewarName = CORBA::string_dup(dewarName.c_str());
-				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->tDewar = tDewar.toIDLTemperature();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->stabilityDuration = stabilityDuration.toIDLInterval();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->stability = stability;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->stabilityflagExists = stabilityflagExists;
-		
-		
-			
-				
-		x->stabilityflag = stabilityflag;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->receiverId = receiverId;
- 				
- 			
 		
 	
 
@@ -281,7 +221,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct ReceiverRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void ReceiverRow::setFromIDL (ReceiverRowIDL x) throw(ConversionException) {
+	void ReceiverRow::setFromIDL (ReceiverRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -290,8 +230,8 @@ namespace asdm {
 		
 		
 			
-		setTimeInterval(ArrayTimeInterval (x.timeInterval));
-			
+		setReceiverId(x.receiverId);
+  			
  		
 		
 	
@@ -300,8 +240,8 @@ namespace asdm {
 		
 		
 			
-		setNumLo(x.numLo);
-  			
+		setTimeInterval(ArrayTimeInterval (x.timeInterval));
+			
  		
 		
 	
@@ -320,6 +260,16 @@ namespace asdm {
 		
 		
 			
+		setNumLO(x.numLO);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
 		setFrequencyBand(x.frequencyBand);
   			
  		
@@ -330,10 +280,10 @@ namespace asdm {
 		
 		
 			
-		freqLo .clear();
-		for (unsigned int i = 0; i <x.freqLo.length(); ++i) {
+		freqLO .clear();
+		for (unsigned int i = 0; i <x.freqLO.length(); ++i) {
 			
-			freqLo.push_back(Frequency (x.freqLo[i]));
+			freqLO.push_back(Frequency (x.freqLO[i]));
 			
 		}
 			
@@ -355,84 +305,14 @@ namespace asdm {
 		
 		
 			
-		sidebandLo .clear();
-		for (unsigned int i = 0; i <x.sidebandLo.length(); ++i) {
+		sidebandLO .clear();
+		for (unsigned int i = 0; i <x.sidebandLO.length(); ++i) {
 			
-			sidebandLo.push_back(x.sidebandLo[i]);
+			sidebandLO.push_back(x.sidebandLO[i]);
   			
 		}
 			
   		
-		
-	
-
-	
-		
-		dewarNameExists = x.dewarNameExists;
-		if (x.dewarNameExists) {
-		
-		
-			
-		setDewarName(string (x.dewarName));
-			
- 		
-		
-		}
-		
-	
-
-	
-		
-		
-			
-		setTDewar(Temperature (x.tDewar));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setStabilityDuration(Interval (x.stabilityDuration));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setStability(x.stability);
-  			
- 		
-		
-	
-
-	
-		
-		stabilityflagExists = x.stabilityflagExists;
-		if (x.stabilityflagExists) {
-		
-		
-			
-		setStabilityflag(x.stabilityflag);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		
-			
-		setReceiverId(x.receiverId);
-  			
- 		
 		
 	
 
@@ -454,7 +334,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Receiver");
+			throw ConversionException (err.getMessage(),"Receiver");
 		}
 	}
 #endif
@@ -472,7 +352,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(timeInterval, "timeInterval", buf);
+		Parser::toXML(receiverId, "receiverId", buf);
 		
 		
 	
@@ -480,7 +360,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numLo, "numLo", buf);
+		Parser::toXML(timeInterval, "timeInterval", buf);
 		
 		
 	
@@ -496,6 +376,14 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(numLO, "numLO", buf);
+		
+		
+	
+
+  	
+ 		
+		
 			buf.append(EnumerationParser::toXML("frequencyBand", frequencyBand));
 		
 		
@@ -504,7 +392,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(freqLo, "freqLo", buf);
+		Parser::toXML(freqLO, "freqLO", buf);
 		
 		
 	
@@ -520,63 +408,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(sidebandLo, "sidebandLo", buf);
-		
-		
-	
-
-  	
- 		
-		if (dewarNameExists) {
-		
-		
-		Parser::toXML(dewarName, "dewarName", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(tDewar, "tDewar", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(stabilityDuration, "stabilityDuration", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(stability, "stability", buf);
-		
-		
-	
-
-  	
- 		
-		if (stabilityflagExists) {
-		
-		
-		Parser::toXML(stabilityflag, "stabilityflag", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(receiverId, "receiverId", buf);
+			buf.append(EnumerationParser::toXML("sidebandLO", sidebandLO));
 		
 		
 	
@@ -606,12 +438,20 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void ReceiverRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void ReceiverRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
 	
 		
+	
+  		
+			
+	  	setReceiverId(Parser::getInteger("receiverId","Receiver",rowDoc));
+			
+		
+	
+
 	
   		
 			
@@ -623,7 +463,7 @@ namespace asdm {
 	
   		
 			
-	  	setNumLo(Parser::getInteger("numLo","Receiver",rowDoc));
+	  	setName(Parser::getString("name","Receiver",rowDoc));
 			
 		
 	
@@ -631,7 +471,7 @@ namespace asdm {
 	
   		
 			
-	  	setName(Parser::getString("name","Receiver",rowDoc));
+	  	setNumLO(Parser::getInteger("numLO","Receiver",rowDoc));
 			
 		
 	
@@ -650,7 +490,7 @@ namespace asdm {
   		
 			
 					
-	  	setFreqLo(Parser::get1DFrequency("freqLo","Receiver",rowDoc));
+	  	setFreqLO(Parser::get1DFrequency("freqLO","Receiver",rowDoc));
 	  			
 	  		
 		
@@ -667,64 +507,12 @@ namespace asdm {
 	
 
 	
-  		
-			
-					
-	  	setSidebandLo(Parser::get1DInteger("sidebandLo","Receiver",rowDoc));
-	  			
-	  		
 		
-	
-
-	
-  		
-        if (row.isStr("<dewarName>")) {
-			
-	  		setDewarName(Parser::getString("dewarName","Receiver",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-			
-	  	setTDewar(Parser::getTemperature("tDewar","Receiver",rowDoc));
-			
 		
-	
-
-	
-  		
-			
-	  	setStabilityDuration(Parser::getInterval("stabilityDuration","Receiver",rowDoc));
-			
 		
-	
-
-	
-  		
-			
-	  	setStability(Parser::getDouble("stability","Receiver",rowDoc));
-			
+		sidebandLO = EnumerationParser::getNetSideband1D("sidebandLO","Receiver",rowDoc);			
 		
-	
-
-	
-  		
-        if (row.isStr("<stabilityflag>")) {
-			
-	  		setStabilityflag(Parser::getBoolean("stabilityflag","Receiver",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-			
-	  	setReceiverId(Parser::getInteger("receiverId","Receiver",rowDoc));
-			
+		
 		
 	
 
@@ -748,10 +536,234 @@ namespace asdm {
 		}
 	}
 	
+	void ReceiverRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+						
+			eoss.writeInt(receiverId);
+				
+		
+	
+
+	
+	
+		
+	spectralWindowId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	timeInterval.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(name);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numLO);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(frequencyBand);
+				
+		
+	
+
+	
+	
+		
+	Frequency::toBin(freqLO, eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(receiverSideband);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) sidebandLO.size());
+		for (unsigned int i = 0; i < sidebandLO.size(); i++)
+				
+			eoss.writeInt(sidebandLO.at(i));
+				
+				
+						
+		
+	
+
+
+	
+	
+	}
+	
+	ReceiverRow* ReceiverRow::fromBin(EndianISStream& eiss, ReceiverTable& table) {
+		ReceiverRow* row = new  ReceiverRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->receiverId =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+		row->spectralWindowId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->name =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numLO =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->frequencyBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->freqLO = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->receiverSideband = CReceiverSideband::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->sidebandLO.clear();
+		
+		unsigned int sidebandLODim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < sidebandLODim1; i++)
+			
+			row->sidebandLO.push_back(CNetSideband::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+		
+		
+		
+		
+		return row;
+	}
+	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
+	
+
+	
+ 	/**
+ 	 * Get receiverId.
+ 	 * @return receiverId as int
+ 	 */
+ 	int ReceiverRow::getReceiverId() const {
+	
+  		return receiverId;
+ 	}
+
+ 	/**
+ 	 * Set receiverId with the specified int.
+ 	 * @param receiverId The int value to which receiverId is to be set.
+ 	 
+ 	
+ 		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
+ 	 */
+ 	void ReceiverRow::setReceiverId (int receiverId)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+			throw IllegalAccessException("receiverId", "Receiver");
+		
+  		}
+  	
+ 		this->receiverId = receiverId;
+	
+ 	}
+	
+	
+
 	
 
 	
@@ -783,38 +795,6 @@ namespace asdm {
   		}
   	
  		this->timeInterval = timeInterval;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numLo.
- 	 * @return numLo as int
- 	 */
- 	int ReceiverRow::getNumLo() const {
-	
-  		return numLo;
- 	}
-
- 	/**
- 	 * Set numLo with the specified int.
- 	 * @param numLo The int value to which numLo is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ReceiverRow::setNumLo (int numLo)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numLo = numLo;
 	
  	}
 	
@@ -856,6 +836,38 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get numLO.
+ 	 * @return numLO as int
+ 	 */
+ 	int ReceiverRow::getNumLO() const {
+	
+  		return numLO;
+ 	}
+
+ 	/**
+ 	 * Set numLO with the specified int.
+ 	 * @param numLO The int value to which numLO is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void ReceiverRow::setNumLO (int numLO)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numLO = numLO;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get frequencyBand.
  	 * @return frequencyBand as ReceiverBandMod::ReceiverBand
  	 */
@@ -888,29 +900,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get freqLo.
- 	 * @return freqLo as vector<Frequency >
+ 	 * Get freqLO.
+ 	 * @return freqLO as vector<Frequency >
  	 */
- 	vector<Frequency > ReceiverRow::getFreqLo() const {
+ 	vector<Frequency > ReceiverRow::getFreqLO() const {
 	
-  		return freqLo;
+  		return freqLO;
  	}
 
  	/**
- 	 * Set freqLo with the specified vector<Frequency >.
- 	 * @param freqLo The vector<Frequency > value to which freqLo is to be set.
+ 	 * Set freqLO with the specified vector<Frequency >.
+ 	 * @param freqLO The vector<Frequency > value to which freqLO is to be set.
  	 
  	
  		
  	 */
- 	void ReceiverRow::setFreqLo (vector<Frequency > freqLo)  {
+ 	void ReceiverRow::setFreqLO (vector<Frequency > freqLO)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->freqLo = freqLo;
+ 		this->freqLO = freqLO;
 	
  	}
 	
@@ -952,255 +964,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get sidebandLo.
- 	 * @return sidebandLo as vector<int >
+ 	 * Get sidebandLO.
+ 	 * @return sidebandLO as vector<NetSidebandMod::NetSideband >
  	 */
- 	vector<int > ReceiverRow::getSidebandLo() const {
+ 	vector<NetSidebandMod::NetSideband > ReceiverRow::getSidebandLO() const {
 	
-  		return sidebandLo;
+  		return sidebandLO;
  	}
 
  	/**
- 	 * Set sidebandLo with the specified vector<int >.
- 	 * @param sidebandLo The vector<int > value to which sidebandLo is to be set.
+ 	 * Set sidebandLO with the specified vector<NetSidebandMod::NetSideband >.
+ 	 * @param sidebandLO The vector<NetSidebandMod::NetSideband > value to which sidebandLO is to be set.
  	 
  	
  		
  	 */
- 	void ReceiverRow::setSidebandLo (vector<int > sidebandLo)  {
+ 	void ReceiverRow::setSidebandLO (vector<NetSidebandMod::NetSideband > sidebandLO)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->sidebandLo = sidebandLo;
-	
- 	}
-	
-	
-
-	
-	/**
-	 * The attribute dewarName is optional. Return true if this attribute exists.
-	 * @return true if and only if the dewarName attribute exists. 
-	 */
-	bool ReceiverRow::isDewarNameExists() const {
-		return dewarNameExists;
-	}
-	
-
-	
- 	/**
- 	 * Get dewarName, which is optional.
- 	 * @return dewarName as string
- 	 * @throw IllegalAccessException If dewarName does not exist.
- 	 */
- 	string ReceiverRow::getDewarName() const throw(IllegalAccessException) {
-		if (!dewarNameExists) {
-			throw IllegalAccessException("dewarName", "Receiver");
-		}
-	
-  		return dewarName;
- 	}
-
- 	/**
- 	 * Set dewarName with the specified string.
- 	 * @param dewarName The string value to which dewarName is to be set.
- 	 
- 	
- 	 */
- 	void ReceiverRow::setDewarName (string dewarName) {
-	
- 		this->dewarName = dewarName;
-	
-		dewarNameExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark dewarName, which is an optional field, as non-existent.
-	 */
-	void ReceiverRow::clearDewarName () {
-		dewarNameExists = false;
-	}
-	
-
-	
-
-	
- 	/**
- 	 * Get tDewar.
- 	 * @return tDewar as Temperature
- 	 */
- 	Temperature ReceiverRow::getTDewar() const {
-	
-  		return tDewar;
- 	}
-
- 	/**
- 	 * Set tDewar with the specified Temperature.
- 	 * @param tDewar The Temperature value to which tDewar is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ReceiverRow::setTDewar (Temperature tDewar)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->tDewar = tDewar;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get stabilityDuration.
- 	 * @return stabilityDuration as Interval
- 	 */
- 	Interval ReceiverRow::getStabilityDuration() const {
-	
-  		return stabilityDuration;
- 	}
-
- 	/**
- 	 * Set stabilityDuration with the specified Interval.
- 	 * @param stabilityDuration The Interval value to which stabilityDuration is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ReceiverRow::setStabilityDuration (Interval stabilityDuration)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->stabilityDuration = stabilityDuration;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get stability.
- 	 * @return stability as double
- 	 */
- 	double ReceiverRow::getStability() const {
-	
-  		return stability;
- 	}
-
- 	/**
- 	 * Set stability with the specified double.
- 	 * @param stability The double value to which stability is to be set.
- 	 
- 	
- 		
- 	 */
- 	void ReceiverRow::setStability (double stability)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->stability = stability;
-	
- 	}
-	
-	
-
-	
-	/**
-	 * The attribute stabilityflag is optional. Return true if this attribute exists.
-	 * @return true if and only if the stabilityflag attribute exists. 
-	 */
-	bool ReceiverRow::isStabilityflagExists() const {
-		return stabilityflagExists;
-	}
-	
-
-	
- 	/**
- 	 * Get stabilityflag, which is optional.
- 	 * @return stabilityflag as bool
- 	 * @throw IllegalAccessException If stabilityflag does not exist.
- 	 */
- 	bool ReceiverRow::getStabilityflag() const throw(IllegalAccessException) {
-		if (!stabilityflagExists) {
-			throw IllegalAccessException("stabilityflag", "Receiver");
-		}
-	
-  		return stabilityflag;
- 	}
-
- 	/**
- 	 * Set stabilityflag with the specified bool.
- 	 * @param stabilityflag The bool value to which stabilityflag is to be set.
- 	 
- 	
- 	 */
- 	void ReceiverRow::setStabilityflag (bool stabilityflag) {
-	
- 		this->stabilityflag = stabilityflag;
-	
-		stabilityflagExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark stabilityflag, which is an optional field, as non-existent.
-	 */
-	void ReceiverRow::clearStabilityflag () {
-		stabilityflagExists = false;
-	}
-	
-
-	
-
-	
- 	/**
- 	 * Get receiverId.
- 	 * @return receiverId as int
- 	 */
- 	int ReceiverRow::getReceiverId() const {
-	
-  		return receiverId;
- 	}
-
- 	/**
- 	 * Set receiverId with the specified int.
- 	 * @param receiverId The int value to which receiverId is to be set.
- 	 
- 	
- 		
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 	
- 	 */
- 	void ReceiverRow::setReceiverId (int receiverId)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-			throw IllegalAccessException("receiverId", "Receiver");
-		
-  		}
-  	
- 		this->receiverId = receiverId;
+ 		this->sidebandLO = sidebandLO;
 	
  	}
 	
@@ -1298,20 +1084,6 @@ namespace asdm {
 	
 
 	
-		dewarNameExists = false;
-	
-
-	
-
-	
-
-	
-
-	
-		stabilityflagExists = false;
-	
-
-	
 
 	
 	
@@ -1319,6 +1091,8 @@ namespace asdm {
 	
 	
 	
+	
+
 	
 
 	
@@ -1335,18 +1109,6 @@ frequencyBand = CReceiverBand::from_int(0);
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 receiverSideband = CReceiverSideband::from_int(0);
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -1374,20 +1136,6 @@ receiverSideband = CReceiverSideband::from_int(0);
 	
 
 	
-		dewarNameExists = false;
-	
-
-	
-
-	
-
-	
-
-	
-		stabilityflagExists = false;
-	
-
-	
 
 	
 	
@@ -1405,46 +1153,26 @@ receiverSideband = CReceiverSideband::from_int(0);
 		
 		
 		
-			numLo = row.numLo;
-		
 			name = row.name;
+		
+			numLO = row.numLO;
 		
 			frequencyBand = row.frequencyBand;
 		
-			freqLo = row.freqLo;
+			freqLO = row.freqLO;
 		
 			receiverSideband = row.receiverSideband;
 		
-			sidebandLo = row.sidebandLo;
-		
-			tDewar = row.tDewar;
-		
-			stabilityDuration = row.stabilityDuration;
-		
-			stability = row.stability;
+			sidebandLO = row.sidebandLO;
 		
 		
 		
-		
-		if (row.dewarNameExists) {
-			dewarName = row.dewarName;		
-			dewarNameExists = true;
-		}
-		else
-			dewarNameExists = false;
-		
-		if (row.stabilityflagExists) {
-			stabilityflag = row.stabilityflag;		
-			stabilityflagExists = true;
-		}
-		else
-			stabilityflagExists = false;
 		
 		}	
 	}
 
 	
-	bool ReceiverRow::compareNoAutoInc(Tag spectralWindowId, ArrayTimeInterval timeInterval, int numLo, string name, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLo, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<int > sidebandLo, Temperature tDewar, Interval stabilityDuration, double stability) {
+	bool ReceiverRow::compareNoAutoInc(Tag spectralWindowId, ArrayTimeInterval timeInterval, string name, int numLO, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLO, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<NetSidebandMod::NetSideband > sidebandLO) {
 		bool result;
 		result = true;
 		
@@ -1464,14 +1192,14 @@ receiverSideband = CReceiverSideband::from_int(0);
 
 	
 		
-		result = result && (this->numLo == numLo);
+		result = result && (this->name == name);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->name == name);
+		result = result && (this->numLO == numLO);
 		
 		if (!result) return false;
 	
@@ -1485,7 +1213,7 @@ receiverSideband = CReceiverSideband::from_int(0);
 
 	
 		
-		result = result && (this->freqLo == freqLo);
+		result = result && (this->freqLO == freqLO);
 		
 		if (!result) return false;
 	
@@ -1499,28 +1227,7 @@ receiverSideband = CReceiverSideband::from_int(0);
 
 	
 		
-		result = result && (this->sidebandLo == sidebandLo);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->tDewar == tDewar);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->stabilityDuration == stabilityDuration);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->stability == stability);
+		result = result && (this->sidebandLO == sidebandLO);
 		
 		if (!result) return false;
 	
@@ -1530,16 +1237,16 @@ receiverSideband = CReceiverSideband::from_int(0);
 	
 	
 	
-	bool ReceiverRow::compareRequiredValue(int numLo, string name, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLo, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<int > sidebandLo, Temperature tDewar, Interval stabilityDuration, double stability) {
+	bool ReceiverRow::compareRequiredValue(string name, int numLO, ReceiverBandMod::ReceiverBand frequencyBand, vector<Frequency > freqLO, ReceiverSidebandMod::ReceiverSideband receiverSideband, vector<NetSidebandMod::NetSideband > sidebandLO) {
 		bool result;
 		result = true;
 		
 	
-		if (!(this->numLo == numLo)) return false;
+		if (!(this->name == name)) return false;
 	
 
 	
-		if (!(this->name == name)) return false;
+		if (!(this->numLO == numLO)) return false;
 	
 
 	
@@ -1547,7 +1254,7 @@ receiverSideband = CReceiverSideband::from_int(0);
 	
 
 	
-		if (!(this->freqLo == freqLo)) return false;
+		if (!(this->freqLO == freqLO)) return false;
 	
 
 	
@@ -1555,19 +1262,7 @@ receiverSideband = CReceiverSideband::from_int(0);
 	
 
 	
-		if (!(this->sidebandLo == sidebandLo)) return false;
-	
-
-	
-		if (!(this->tDewar == tDewar)) return false;
-	
-
-	
-		if (!(this->stabilityDuration == stabilityDuration)) return false;
-	
-
-	
-		if (!(this->stability == stability)) return false;
+		if (!(this->sidebandLO == sidebandLO)) return false;
 	
 
 		return result;
@@ -1585,23 +1280,17 @@ receiverSideband = CReceiverSideband::from_int(0);
 	bool ReceiverRow::equalByRequiredValue(ReceiverRow* x) {
 		
 			
-		if (this->numLo != x->numLo) return false;
-			
 		if (this->name != x->name) return false;
+			
+		if (this->numLO != x->numLO) return false;
 			
 		if (this->frequencyBand != x->frequencyBand) return false;
 			
-		if (this->freqLo != x->freqLo) return false;
+		if (this->freqLO != x->freqLO) return false;
 			
 		if (this->receiverSideband != x->receiverSideband) return false;
 			
-		if (this->sidebandLo != x->sidebandLo) return false;
-			
-		if (this->tDewar != x->tDewar) return false;
-			
-		if (this->stabilityDuration != x->stabilityDuration) return false;
-			
-		if (this->stability != x->stability) return false;
+		if (this->sidebandLO != x->sidebandLO) return false;
 			
 		
 		return true;

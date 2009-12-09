@@ -47,6 +47,7 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
+#include <images/Images/ImageRegrid.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Containers/Block.h>
 #include <casa/Containers/Record.h>
@@ -74,7 +75,6 @@
 #include <casa/OS/Timer.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/sstream.h>
-#include <fstream.h>
 
 #include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
@@ -84,10 +84,14 @@
 #include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasTable.h>
+#include <scimath/Mathematics/MathFunc.h>
 
 #include <casa/System/ProgressMeter.h>
 
-#define CONVSIZE (1024*2)
+#define CONVSIZE (1024*4)
+#define CONVWTSIZEFACTOR 4.0
+#define OVERSAMPLING 20
+#define THRESHOLD 1E-5
 #define USETABLES 0           // If equal to 1, use tabulated exp() and
 			      // complex exp() functions.
 #define MAXPOINTINGERROR 250.0 // Max. pointing error in arcsec used to
@@ -151,8 +155,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       mspc(0), msac(0), pointingToImage(0), usezero_p(usezero),
       doPBCorrection(doPBCorr),
       Second("s"),Radian("rad"),Day("d"), noOfPASteps(0),
-      pbNormalized(False),resetPBs(True),avgPBSaved(False),cfCache(), paChangeDetector(),
-      cfStokes(),Area()
+      pbNormalized(False),resetPBs(True),cfCache(), paChangeDetector(),
+      cfStokes(),Area(), avgPBSaved(False),avgPBReady(False)
   {
     epJ=NULL;
     convSize=0;
@@ -174,9 +178,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     cfCache.setCacheDir(cfCacheDirName.data());
     cfCache.initCache();
-    convSampling=10;
+    convSampling=OVERSAMPLING;
     convSize=CONVSIZE;
-    Long hostRAM = (HostInfo::memoryTotal()*1024); // In bytes
+    Long hostRAM = (HostInfo::memoryTotal(true)*1024); // In bytes
     hostRAM = hostRAM/(sizeof(Float)*2); // In complex pixels
     if (cachesize > hostRAM) cachesize=hostRAM;
   }
@@ -197,7 +201,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     bandID_p = -1;
     PAIndex = -1;
     maxConvSupport=-1;
-    convSampling=10;
+    convSampling=OVERSAMPLING;
     convSize=CONVSIZE;
   }
   //
@@ -306,7 +310,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	cfStokes=other.cfStokes;
 	Area=other.Area;
 	avgPB = other.avgPB;
-	freqInterpMethod_p=other.freqInterpMethod_p;
+	avgPBReady = other.avgPBReady;
       };
     return *this;
   };
@@ -317,7 +321,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     Double Freq;
     Vector<String> telescopeNames=vb.msColumns().observation().telescopeName().getColumn();
-    for(Int nt=0;nt<telescopeNames.nelements();nt++)
+    for(uInt nt=0;nt<telescopeNames.nelements();nt++)
       {
 	if (telescopeNames(nt) != "VLA")
 	  {
@@ -468,6 +472,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       Int NCF=convFuncCache.nelements();
       for(Int i=0;i<NCF;i++) delete convFuncCache[i];
+      NCF=convWeightsCache.nelements();
+      for(Int i=0;i<NCF;i++) delete convWeightsCache[i];
   }
   //
   //---------------------------------------------------------------
@@ -663,13 +669,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					Bool Evaluate)
   {
     Int NAnt = 0;
-
+    Float tmp;
     // TBD: adapt the following to VisCal mechanism:
     MEpoch LAST;
     
-    NAnt=pointingOffsets.shape()(2)-1;
-    l_off  = pointingOffsets(IPosition(3,0,0,0),IPosition(3,0,0,NAnt));
-    m_off = pointingOffsets(IPosition(3,1,0,0),IPosition(3,1,0,NAnt));
+    NAnt=pointingOffsets.shape()(2);
+    l_off.resize(IPosition(3,2,1,NAnt));
+    m_off.resize(IPosition(3,2,1,NAnt));
+    IPosition ndx(3,0,0,0),ndx1(3,0,0,0);
+    for(ndx(2)=0;ndx(2)<NAnt;ndx(2)++)
+      {
+	ndx1=ndx;
+	ndx(0)=0;ndx1(0)=0;	tmp=l_off(ndx)  = pointingOffsets(ndx1);//Axis_0,Pol_0,Ant_i
+	ndx(0)=1;ndx1(0)=1;	tmp=l_off(ndx)  = pointingOffsets(ndx1);//Axis_0,Pol_1,Ant_i
+	ndx(0)=0;ndx1(0)=2;	tmp=m_off(ndx)  = pointingOffsets(ndx1);//Axis_1,Pol_0,Ant_i
+	ndx(0)=1;ndx1(0)=3;	tmp=m_off(ndx)  = pointingOffsets(ndx1);//Axis_1,Pol_1,Ant_i
+      }
+
+//     l_off  = pointingOffsets(IPosition(3,0,0,0),IPosition(3,0,0,NAnt));
+//     m_off = pointingOffsets(IPosition(3,1,0,0),IPosition(3,1,0,NAnt));
     /*
     IPosition shp(pointingOffsets.shape());
     IPosition shp1(l_off.shape()),shp2(m_off.shape());
@@ -791,7 +809,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	Float pbMax = max(avgPBBuf);
 
-	if (fabs(pbMax-1.0) > 1E-5)
+	if (fabs(pbMax-1.0) > 1E-3)
 	  {
 	avgPBBuf = avgPBBuf/noOfPASteps;
 	for(ndx(3)=0;ndx(3)<avgPBShape(3);ndx(3)++)
@@ -824,7 +842,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     TempImage<Float> localPB;
     
-    logIO() << LogOrigin("PBWProjecFT","makeAveragePB")
+    logIO() << LogOrigin("nPBWProjecFT","makeAveragePB")
 	    << LogIO::NORMAL;
     
     localPB.resize(image.shape()); localPB.setCoordinateInfo(image.coordinates());
@@ -833,8 +851,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     if (resetPBs)
       {
-	logIO() << LogOrigin("PBWProjectFT", "makeAveragePB")  
-		<< "Initializing the average PBs"
+	logIO() << "Initializing the average PBs"
 		<< LogIO::NORMAL
 		<< LogIO::POST;
 	theavgPB.resize(localPB.shape()); 
@@ -864,8 +881,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     noOfPASteps++;
     NAnt=1;
    
-    logIO() << " Shape of localPB Cube : " << twoDPBShape << LogIO::POST;
-    logIO() << " Shape of avgPB Cube : " << theavgPB.shape() << LogIO::POST;
+//     logIO() << " Shape of localPB Cube : " << twoDPBShape << LogIO::POST;
+//     logIO() << " Shape of avgPB Cube : " << theavgPB.shape() << LogIO::POST;
 
     for(Int ant=0;ant<NAnt;ant++)
       { //Ant loop
@@ -938,16 +955,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	Vector<Float> sampling;
 	PAIndex=i;
-	if (cfCache.loadConvFunction(i,Nw,convFuncCache,convSupport,sampling,cfRefFreq_p))
+	//	CoordinateSystem csys;
+	if (cfCache.loadConvFunction(i,Nw,convFuncCache,convSupport,sampling,
+				     cfRefFreq_p,convFuncCS_p))
 	  {
 	    convSampling = (Int)sampling[0];
 	    convFunc.reference(*convFuncCache[PAIndex]);
-	    if (PAIndex < convFuncCache.nelements())
+	    cfCache.loadConvFunction(i,Nw,convWeightsCache,convSupport,sampling,cfRefFreq_p,
+				     convFuncCS_p, "/CFWT");
+	    convWeights.reference(*convWeightsCache[PAIndex]);
+	    if (PAIndex < (Int)convFuncCache.nelements())
 	      logIO() << "Loaded from disk cache: Conv. func. # "
 		      << PAIndex << LogIO::POST;
 	    return 1;
 	  }
 	convFunc.reference(*convFuncCache[PAIndex]);
+	convWeights.reference(*convWeightsCache[PAIndex]);
 	return 2;
       }
     return i;
@@ -960,7 +983,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     polM = -1;
 
     for(Int i=0;i<nPol;i++)
-      for(Int j=0;j<cfStokes.nelements();j++)
+      for(uInt j=0;j<cfStokes.nelements();j++)
 	if (cfStokes(j) == msStokes(i))
 	    {polM(i) = j;break;}
   }
@@ -1035,7 +1058,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
   void nPBWProjectFT::findConvFunction(const ImageInterface<Complex>& image,
-				      const VisBuffer& vb)
+				       const VisBuffer& vb)
   {
     if (!paChangeDetector.changed(vb,0)) return;
 
@@ -1087,6 +1110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	try
 	  {
 	    cfCache.loadAvgPB(avgPB);
+	    avgPBReady=True;
 	  }
 	catch (AipsError& err)
 	  {
@@ -1122,6 +1146,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    cfCache.loadAvgPB(avgPB);
 	    resetPBs = False;
+	    avgPBReady=True;
 	  }
 	catch(SynthesisFTMachineError &err)
 	  {
@@ -1141,8 +1166,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Vector<Double> refValue; refValue.resize(1);refValue(0)=cfRefFreq_p;
 	spCS.setReferenceValue(refValue);
 	coords.replaceCoordinate(spCS,index);
-	cfCache.cacheConvFunction(PAIndex, pa, convFunc, coords, convSize,
-				  convSupport,convSampling);
+	cfCache.cacheConvFunction(PAIndex, pa, convFunc, coords, convFuncCS_p, 
+				  convSize, convSupport,convSampling);
+	Cube<Int> convWtSize=convSupport*CONVWTSIZEFACTOR;
+	cfCache.cacheConvFunction(PAIndex, pa, convWeights, coords, convFuncCS_p,
+				  convSize, convWtSize,convSampling,"WT");
 	cfCache.finalize(); // Write the aux info file
 	if (pbMade) cfCache.finalize(avgPB); // Save the AVG PB and write the aux info.
       }
@@ -1162,10 +1190,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Compute the aggregate memory used by the cached convolution
 	// functions.
 	//
-	Int maxMemoryMB=HostInfo::memoryTotal()/1024;
+	Int maxMemoryMB=HostInfo::memoryTotal(true)/1024;
 	Float memoryKB=0;
 	String unit(" KB");
-	for(Int iPA=0;iPA<convFuncCache.nelements();iPA++)
+	for(uInt iPA=0;iPA<convFuncCache.nelements();iPA++)
 	  {
 	    Int volume=1;
 	    if (convFuncCache[iPA] != NULL)
@@ -1269,7 +1297,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	convSampling=4;
 	convSize=nx;
       }
-    convSampling=10;
+    convSampling=OVERSAMPLING;
     convSize=CONVSIZE;
     //
     // Make a two dimensional image to calculate auto-correlation of
@@ -1304,6 +1332,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int N=convFuncCache.nelements();
     convFuncCache.resize(PAIndex+1,True);
     for(Int i=N;i<PAIndex;i++) convFuncCache[i]=NULL;
+    convWeightsCache.resize(PAIndex+1,True);
+    for(Int i=N;i<PAIndex;i++) convWeightsCache[i]=NULL;
     //------------------------------------------------------------------
     //
     // Make the sky Stokes PB.  This will be used in the gridding
@@ -1311,9 +1341,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     //------------------------------------------------------------------
     IPosition pbShape(4, convSize, convSize, polInUse, 1);
-    TempImage<Complex> twoDPB(pbShape, coords);
+    TempImage<Complex> twoDPB(pbShape, coords),twoDPBSq(pbShape,coords);
     twoDPB.setMaximumCacheSize(cachesize);
     twoDPB.set(Complex(1.0,0.0));
+    twoDPBSq.setMaximumCacheSize(cachesize);
+    twoDPBSq.set(Complex(1.0,0.0));
     //
     // Accumulate the various terms that constitute the gridding
     // convolution function.
@@ -1329,7 +1361,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     convFuncCache[PAIndex] = new Array<Complex>(IPosition(4,convSize/2,convSize/2,
 							  wConvSize,polInUse));
+    convWeightsCache[PAIndex] = new Array<Complex>(IPosition(4,convSize/2,convSize/2,
+							     wConvSize,polInUse));
     convFunc.reference(*convFuncCache[PAIndex]);
+    convWeights.reference(*convWeightsCache[PAIndex]);
     convFunc=0.0;
     
     
@@ -1396,6 +1431,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Apply the PB...
 	//
 	vlaPB.applyPB(twoDPB, vb, bandID_p);
+	vlaPB.applyPBSq(twoDPBSq, vb, bandID_p);
+	/*
+	{
+	  String name("twoDPB.before.im");
+	  storeImg(name,twoDPB);
+	}
+	{
+	  //
+	  // Apply (multiply) by the Spheroidal functions
+	  //
+	  Vector<Float> maxVal(twoDPB.shape()(2));
+	  Vector<IPosition> posMax(twoDPB.shape()(2));
+	  
+	  SynthesisUtils::findLatticeMax(twoDPB,maxVal,posMax); 
+	  applyAntiAliasingOp(twoDPB,posMax,1);
+
+	  SynthesisUtils::findLatticeMax(twoDPBSq,maxVal,posMax); 
+	  applyAntiAliasingOp(twoDPBSq,posMax,1,True);
+	}
+	*/
+	Complex cpeak=max(twoDPB.get());
+	twoDPB.put(twoDPB.get()/cpeak);
+	cpeak=max(twoDPBSq.get());
+	twoDPBSq.put(twoDPBSq.get()/cpeak);
+	/*
+	{
+	  String name("twoDPBSq.im");
+	  storeImg(name,twoDPBSq);
+	}
+	{
+	  String name("twoDPB.im");
+	  storeImg(name,twoDPB);
+	}
+	*/
 	CoordinateSystem cs=twoDPB.coordinates();
 	Int index= twoDPB.coordinates().findCoordinate(Coordinate::SPECTRAL);
 	SpectralCoordinate SpCS = twoDPB.coordinates().spectralCoordinate(index);
@@ -1406,6 +1475,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 
 	LatticeFFT::cfft2d(twoDPB);
+	LatticeFFT::cfft2d(twoDPBSq);
 
 	//
 	// Fill the convolution function planes with the result.
@@ -1419,12 +1489,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  
 	  convFunc(Slicer(sliceStart,sliceLength)).nonDegenerate()
 	    =(twoDPB.getSlice(start, pbSlice, True));
+	  convWeights(Slicer(sliceStart,sliceLength)).nonDegenerate()
+	    =(twoDPBSq.getSlice(start, pbSlice, True));
 	}
       }
     
     {
       Complex cpeak = max(convFunc);
       convFunc/=cpeak;
+      //      cout << "#### max(convFunc) = " << cpeak << endl;
+      cpeak=max(convWeights);
+      //      cout << "#### max(convWeights) = " << cpeak << endl;
+      convWeights/=cpeak;
+      //      cout << "#### max(convWeights) = " << max(convWeights) << endl;
     }
 
     //
@@ -1444,46 +1521,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     Int ConvFuncOrigin=convSize/4;  // Conv. Func. is half that size of convSize
     IPosition ndx(4,ConvFuncOrigin,0,0,0);
+    //    Cube<Int> convWtSupport(convSupport.shape());
+    convWtSupport.resize(convSupport.shape(),True);
+    Int maxConvWtSupport=0, supportBuffer;
     for (Int iw=0;iw<wConvSize;iw++)
       {
 	Bool found=False;
-	ndx(2) = iw;
 	Float threshold;
+	Int R;
+	ndx(2) = iw;
 	
 	ndx(0)=ndx(1)=ConvFuncOrigin;
 	ndx(2) = iw;
-	Complex maxVal = max(convFunc);
-	threshold = abs(convFunc(ndx))*1E-3;
+	//	Complex maxVal = max(convFunc);
+	threshold = abs(convFunc(ndx))*THRESHOLD;
 	//
-	// The functions are not azimuthally symmetric - so compute
-	// the support size carefully.  Collect every PixInc pixel
-	// along a quarter circle of radius R (four-fold azimuthal
-	// symmetry is assumed), and check if any pixel in this list
-	// is above the threshold. If TRUE, then R is the support
-	// radius.  Else decrease R and check again.
+	// Find the support size of the conv. function in pixels
 	//
-	Vector<Complex> vals;
-	Int PixInc=1,NSteps;
-	IPosition cfShape=convFunc.shape();
-	Int R;
-	for(R=convSize/4;R>1;R--)
-	  {
-	    NSteps = 90*R/PixInc; //Check every PixInc pixel along a
-				  //circle of radious R
-	    vals.resize(NSteps);
-	    vals=0;
-	    for(Int th=0;th<NSteps;th++)
-	      {
-		ndx(0)=(int)(ConvFuncOrigin + R*sin(2.0*M_PI*th*PixInc/R));
-		ndx(1)=(int)(ConvFuncOrigin + R*cos(2.0*M_PI*th*PixInc/R));
-
-		if ((ndx(0) < cfShape(0)) && (ndx(1) < cfShape(1)))
-		    vals(th)=convFunc(ndx);
-	      }
-	    if (max(abs(vals)) > threshold)
-	      {found=True;break;}
-	  }
-	//	R *=1.5;
+	Int wtR;
+	found =findSupport(convWeights,threshold,ConvFuncOrigin,wtR);
+	//	cout << "Wts support = " << wtR << endl;
+	found = findSupport(convFunc,threshold,ConvFuncOrigin,R);
+	
+	//	R *=2.5;
 	//
 	// Set the support size for each W-plane and for all
 	// Pol-planes.  Assuming that support size for all Pol-planes
@@ -1491,14 +1551,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	if(found) 
 	  {
-	    Int maxR=R;//max(ndx(0),ndx(1));
+	    //	    Int maxR=R;//max(ndx(0),ndx(1));
 	    for(Int ipol=0;ipol<polInUse;ipol++)
 	      {
 		convSupport(iw,ipol,lastPASlot)=Int(R/Float(convSampling));
 		convSupport(iw,ipol,lastPASlot) += (convSupport(iw,ipol,lastPASlot)+1)%2;
+		convWtSupport(iw,ipol,lastPASlot)=Int(R*CONVWTSIZEFACTOR/Float(convSampling));
+		//		convWtSupport(iw,ipol,lastPASlot)=Int(wtR/Float(convSampling));
+		convWtSupport(iw,ipol,lastPASlot) += (convWtSupport(iw,ipol,lastPASlot)+1)%2;
 		if ((lastPASlot == 0) || (maxConvSupport == -1))
 		  if (convSupport(iw,ipol,lastPASlot) > maxConvSupport)
 		    maxConvSupport = convSupport(iw,ipol,lastPASlot);
+		maxConvWtSupport=convWtSupport(iw,ipol,lastPASlot);
 	      }
 	  }
       }
@@ -1512,16 +1576,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    << LogIO::POST;
     
     {
-      Int bot=ConvFuncOrigin-convSampling*maxConvSupport,//-convSampling/2, 
-      top=ConvFuncOrigin+convSampling*maxConvSupport;//+convSampling/2;
+      supportBuffer = OVERSAMPLING;
+      Int bot=ConvFuncOrigin-convSampling*maxConvSupport-supportBuffer,//-convSampling/2, 
+      top=ConvFuncOrigin+convSampling*maxConvSupport+supportBuffer;//+convSampling/2;
       
-      Array<Complex> tmp;
-      IPosition blc(4,bot,bot,0,0), trc(4,top,top,wConvSize-1,polInUse-1);
+      {
+	Array<Complex> tmp;
+	IPosition blc(4,bot,bot,0,0), trc(4,top,top,wConvSize-1,polInUse-1);
       
-      tmp = convFunc(blc,trc);
-      (*convFuncCache[lastPASlot]).resize(tmp.shape());
-      (*convFuncCache[lastPASlot]) = tmp; 
-      convFunc.reference(*convFuncCache[lastPASlot]);
+	tmp = convFunc(blc,trc);
+	(*convFuncCache[lastPASlot]).resize(tmp.shape());
+	(*convFuncCache[lastPASlot]) = tmp; 
+	convFunc.reference(*convFuncCache[lastPASlot]);
+      }
+      
+      supportBuffer = (Int)(OVERSAMPLING*CONVWTSIZEFACTOR);
+      bot=ConvFuncOrigin-convSampling*maxConvWtSupport-supportBuffer;
+      top=ConvFuncOrigin+convSampling*maxConvWtSupport+supportBuffer;
+      bot=max(0,bot);
+      top=min(top,convWeights.shape()(0)-1);
+      {
+	Array<Complex> tmp;
+	IPosition blc(4,bot,bot,0,0), trc(4,top,top,wConvSize-1,polInUse-1);
+
+	tmp = convWeights(blc,trc);
+	(*convWeightsCache[lastPASlot]).resize(tmp.shape());
+	(*convWeightsCache[lastPASlot]) = tmp; 
+	convWeights.reference(*convWeightsCache[lastPASlot]);
+      }
     }    
     
     //
@@ -1534,41 +1616,62 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     
     Complex pbSum=0.0;
+    IPosition peakPix(ndx);
     
+    Int Nx = convFunc.shape()(0), Ny=convFunc.shape()(1);
+	      
     for(Int nw=0;nw<wConvSize;nw++)
       for(Int np=0;np<polInUse;np++)
 	{
 	  ndx(2) = nw; ndx(3)=np;
-	  
-	  ConvFuncOrigin = convFunc.shape()(0)/2+1;
+	  {
+	    //
+	    // Locate the pixel with the peak value.  That's the
+	    // origin in pixel co-ordinates.
+	    //
+	    Float peak=0;
+	    peakPix = 0;
+	    for(ndx(1)=0;ndx(1)<convFunc.shape()(1);ndx(1)++)
+	      for(ndx(0)=0;ndx(0)<convFunc.shape()(0);ndx(0)++)
+		if (abs(convFunc(ndx)) > peak) {peakPix = ndx;peak=abs(convFunc(ndx));}
+	  }
+	   
+	  ConvFuncOrigin = peakPix(0);
+	 //	  ConvFuncOrigin = convFunc.shape()(0)/2+1;
 	  Int thisConvSupport=convSampling*convSupport(nw,np,lastPASlot);
 	  pbSum=0.0;
+
 	  for(Int iy=-thisConvSupport;iy<thisConvSupport;iy+=convSampling)
 	    for(Int ix=-thisConvSupport;ix<thisConvSupport;ix+=convSampling)
 	      {
 		ndx(0)=ix+ConvFuncOrigin;ndx(1)=iy+ConvFuncOrigin;
+		pbSum += real(convFunc(ndx));
+	      }
+	  /*
+	  for(Int iy=0;iy<Ny;iy++)
+	    for(Int ix=0;ix<Nx;ix++)
+	      {
+		ndx(0)=ix;ndx(1)=iy;
 		pbSum += convFunc(ndx);
 	      }
+	  */
 	  if(pbSum>0.0)  
 	    {
 	      //
 	      // Normalize each Poln. plane by the area under its convfunc.
 	      //
-	      Int Nx = convFunc.shape()(0), Ny=convFunc.shape()(1);
-	      
+	      Nx = convFunc.shape()(0), Ny = convFunc.shape()(1);
 	      for (ndx(1)=0;ndx(1)<Ny;ndx(1)++) 
 		for (ndx(0)=0;ndx(0)<Nx;ndx(0)++) 
 		  convFunc(ndx) /= pbSum;
+
+	      Nx = convWeights.shape()(0); Ny = convWeights.shape()(1);
+	      for (ndx(1)=0;    ndx(1)<Ny;  ndx(1)++) 
+		for (ndx(0)=0;  ndx(0)<Nx;  ndx(0)++) 
+		  convWeights(ndx) /= pbSum*pbSum;
 	    }
 	  else 
 	    throw(SynthesisFTMachineError("Convolution function integral is not positive"));
-	  pbSum=0.0;
-	  for(Int iy=-thisConvSupport;iy<thisConvSupport;iy+=convSampling)
-	    for(Int ix=-thisConvSupport;ix<thisConvSupport;ix+=convSampling)
-	      {
-		ndx(0)=ix+ConvFuncOrigin;ndx(1)=iy+ConvFuncOrigin;
-		pbSum += convFunc(ndx);
-	      }
 	}
   }
   //
@@ -1681,7 +1784,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  
 	  Vector<Float> PBCorrection(lipb.rwVectorCursor().shape());
 	  PBCorrection = lipb.rwVectorCursor();
-	  
+
 	  for(int ix=0;ix<nx;ix++) 
 	    {
 	      // PBCorrection(ix) = (FUNC(PBCorrection(ix)))/(sincConv(ix)*sincConv(iy));
@@ -1705,8 +1808,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      //
 	      if (doPBCorrection)
 		{
-		  //		  PBCorrection(ix) = FUNC(PBCorrection(ix))/(sincConv(ix)*sincConv(iy));
-		  		  PBCorrection(ix) = FUNC(PBCorrection(ix))*(sincConv(ix)*sincConv(iy));
+		  // PBCorrection(ix) = FUNC(PBCorrection(ix))/(sincConv(ix)*sincConv(iy));
+		  PBCorrection(ix) = FUNC(PBCorrection(ix))*(sincConv(ix)*sincConv(iy));
 //		  PBCorrection(ix) = (PBCorrection(ix))*(sincConv(ix)*sincConv(iy));
  		  if ((abs(PBCorrection(ix))) >= pbLimit_p)
 		    {lix.rwVectorCursor()(ix) /= (PBCorrection(ix));}
@@ -1721,13 +1824,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Now do the FFT2D in place
     //
-    {
-      Array<Complex> buf;
-      Bool isRef = lattice->get(buf);
-    }
+//     {
+//       Array<Complex> buf;
+//       Bool isRef = lattice->get(buf);
+//     }
     LatticeFFT::cfft2d(*lattice);
 
     logIO() << LogIO::DEBUGGING << "Finished FFT" << LogIO::POST;
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void nPBWProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
+				     const VisBuffer& vb,
+				     Array<Complex>& griddedVis,
+				     Vector<Double>& uvscale)
+  {
+    initializeToVis(iimage, vb);
+    griddedVis.assign(griddedData); //using the copy for storage
+    uvscale.assign(uvScale);
   }
   //
   //---------------------------------------------------------------
@@ -2027,6 +2142,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CFMap = polMap; ConjCFMap = polMap;
     for(Int i=0;i<N;i++) CFMap[i] = polMap[N-i-1];
     
+    Array<Complex> rotatedConvFunc;
+//     SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+// 				       rotatedConvFunc,(currentCFPA-actualPA),"CUBIC");
+    SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+				       rotatedConvFunc,0.0,"LINEAR");
 
     ConjCFMap = polMap;
     makeCFPolMap(vb,CFMap);
@@ -2046,9 +2166,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     uvScale_p       = uvScale.getStorage(deleteThem(UVSCALE));
     actualOffset_p  = actualOffset.getStorage(deleteThem(ACTUALOFFSET));
     dataPtr_p       = dataPtr->getStorage(deleteThem(DATAPTR));
-    vb_freq_p       = interpVisFreq_p.getStorage(deleteThem(VBFREQ));
+    vb_freq_p       = vb.frequency().getStorage(deleteThem(VBFREQ));
     convSupport_p   = convSupport.getStorage(deleteThem(CONVSUPPORT));
-    f_convFunc_p      = convFunc.getStorage(deleteThem(CONVFUNC));
+    //    f_convFunc_p      = convFunc.getStorage(deleteThem(CONVFUNC));
+    f_convFunc_p      = rotatedConvFunc.getStorage(deleteThem(CONVFUNC));
     chanMap_p       = chanMap.getStorage(deleteThem(CHANMAP));
     polMap_p        = polMap.getStorage(deleteThem(POLMAP));
     vb_ant1_p       = vb.antenna1().getStorage(deleteThem(VBANT1));
@@ -2066,8 +2187,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     dphase_p,
 	     //		  vb.modelVisCube().getStorage(del),
 	     visdata_p,
-	     &s(0),
-	     &s(1),
+	     &s.asVector()(0),
+	     &s.asVector()(1),
 	     //	   gradVisAzData_p,
 	     //	   gradVisElData_p,
 	     //	    &gradS(0),
@@ -2075,7 +2196,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     //	   &Conj,
 	     flags_p,
 	     rowFlags_p,
-	     &s(2),
+	     &s.asVector()(2),
 	     &rownr,
 	     uvScale_p,
 	     actualOffset_p,
@@ -2124,7 +2245,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     actualOffset.freeStorage((const Double*&)actualOffset_p,deleteThem(ACTUALOFFSET));
     dataPtr->freeStorage((const Complex *&)dataPtr_p,deleteThem(DATAPTR));
     uvScale.freeStorage((const Double*&) uvScale_p,deleteThem(UVSCALE));
-    interpVisFreq_p.freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
+    vb.frequency().freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
     convSupport.freeStorage((const Int*&)convSupport_p,deleteThem(CONVSUPPORT));
     convFunc.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVFUNC));
     chanMap.freeStorage((const Int*&)chanMap_p,deleteThem(CHANMAP));
@@ -2173,6 +2294,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeCFPolMap(vb,CFMap);
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
+    Array<Complex> rotatedConvFunc;
+//     SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+//  				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
+    SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+				       rotatedConvFunc,0.0);
+
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
     CFMap_p         = CFMap.getStorage(deleteThem(CFMAP));
     
@@ -2188,7 +2315,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     dataPtr_p       = dataPtr->getStorage(deleteThem(DATAPTR));
     vb_freq_p       = vb.frequency().getStorage(deleteThem(VBFREQ));
     convSupport_p   = convSupport.getStorage(deleteThem(CONVSUPPORT));
-    f_convFunc_p      = convFunc.getStorage(deleteThem(CONVFUNC));
+    //    f_convFunc_p      = convFunc.getStorage(deleteThem(CONVFUNC));
+    f_convFunc_p      = rotatedConvFunc.getStorage(deleteThem(CONVFUNC));
     chanMap_p       = chanMap.getStorage(deleteThem(CHANMAP));
     polMap_p        = polMap.getStorage(deleteThem(POLMAP));
     vb_ant1_p       = vb.antenna1().getStorage(deleteThem(VBANT1));
@@ -2206,8 +2334,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     dphase_p,
 	     //		  vb.modelVisCube().getStorage(del),
 	     visdata_p,
-	     &s(0),
-	     &s(1),
+	     &s.asVector()(0),
+	     &s.asVector()(1),
 	     gradVisAzData_p,
 	     gradVisElData_p,
 	     //	    &gradS(0),
@@ -2215,7 +2343,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     &Conj,
 	     flags_p,
 	     rowFlags_p,
-	     &s(2),
+	     &s.asVector()(2),
 	     &rownr,
 	     uvScale_p,
 	     actualOffset_p,
@@ -2318,6 +2446,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> ConjCFMap, CFMap;
     actualPA = getPA(vb);
     ConjCFMap = polMap;
+
+    Array<Complex> rotatedConvFunc;
+//    SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+//				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
+     SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+ 				       rotatedConvFunc,0.0,"LINEAR");
+
     /*
     CFMap = polMap; ConjCFMap = polMap;
     CFMap = makeConjPolMap(vb);
@@ -2338,9 +2473,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     uvScale_p       = uvScale.getStorage(deleteThem(UVSCALE));
     actualOffset_p  = actualOffset.getStorage(deleteThem(ACTUALOFFSET));
     dataPtr_p       = dataPtr.getStorage(deleteThem(DATAPTR));
-    vb_freq_p       = (Double *)(interpVisFreq_p.getStorage(deleteThem(VBFREQ)));
+    vb_freq_p       = (Double *)(vb.frequency().getStorage(deleteThem(VBFREQ)));
     convSupport_p   = convSupport.getStorage(deleteThem(CONVSUPPORT));
-    f_convFunc_p      = convFunc.getStorage(deleteThem(CONVFUNC));
+    //    f_convFunc_p      = convFunc.getStorage(deleteThem(CONVFUNC));
+    f_convFunc_p      = rotatedConvFunc.getStorage(deleteThem(CONVFUNC));
     chanMap_p       = chanMap.getStorage(deleteThem(CHANMAP));
     polMap_p        = polMap.getStorage(deleteThem(POLMAP));
     vb_ant1_p       = (Int *)(vb.antenna1().getStorage(deleteThem(VBANT1)));
@@ -2361,8 +2497,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     dphase_p,
 	     //		  vb.modelVisCube().getStorage(del),
 	     visdata_p,
-	     &s(0),
-	     &s(1),
+	     &s.asVector()(0),
+	     &s.asVector()(1),
 	     //	   gradVisAzData_p,
 	     //	   gradVisElData_p,
 	     //	    &gradS(0),
@@ -2372,7 +2508,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     flags_p,
 	     rowFlags_p,
 	     weight_p,
-	     &s(2),
+	     &s.asVector()(2),
 	     &rownr,
 	     uvScale_p,
 	     actualOffset_p,
@@ -2424,7 +2560,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     actualOffset.freeStorage((const Double*&)actualOffset_p,deleteThem(ACTUALOFFSET));
     dataPtr.freeStorage((const Complex *&)dataPtr_p,deleteThem(DATAPTR));
     uvScale.freeStorage((const Double*&) uvScale_p,deleteThem(UVSCALE));
-    interpVisFreq_p.freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
+    vb.frequency().freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
     convSupport.freeStorage((const Int*&)convSupport_p,deleteThem(CONVSUPPORT));
     convFunc.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVFUNC));
     chanMap.freeStorage((const Int*&)chanMap_p,deleteThem(CHANMAP));
@@ -2446,26 +2582,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makingPSF=dopsf;
     if(dopsf) idopsf=1;
     
-    //Check if ms has changed then cache new spw and chan selection
-    if(vb.newMS())
-    matchAllSpwChans(vb);
-    
-    //Here we redo the match or use previous match
-    
-    //Channel matching for the actual spectral window of buffer
-    if(doConversion_p[vb.spectralWindow()]){
-      matchChannel(vb.spectralWindow(), vb);
-    }
-    else{
-      chanMap.resize();
-      chanMap=multiChanMap_p[vb.spectralWindow()];
-    }
-    
-    //No point in reading data if its not matching in frequency
-    if(max(chanMap)==-1)
-      return;
-
-
     findConvFunction(*image, vb);
     
 
@@ -2475,17 +2591,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else
       imagingweight=&(vb.imagingWeight());
 
-    if(dopsf) type=FTMachine::PSF;
-    Cube<Complex> data;
-    //Fortran gridder need the flag as ints 
-    Cube<Int> flags;
-    Matrix<Float> elWeight;
-    interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
-
-
-
+    const Cube<Complex> *data;
+    if(type==FTMachine::MODEL)
+      data=&(vb.modelVisCube());
+    else if(type==FTMachine::CORRECTED)
+      data=&(vb.correctedVisCube());
+    else
+      data=&(vb.visCube());
+    
     Bool isCopy;
-    const casa::Complex *datStorage=data.getStorage(isCopy);
+    const casa::Complex *datStorage=data->getStorage(isCopy);
     Int NAnt = 0;
 
     if (doPointing) NAnt = findPointingOffsets(vb,l_offsets,m_offsets,True);
@@ -2530,6 +2645,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // This is the convention for dphase
     dphase*=-1.0;
     
+    Cube<Int> flags(vb.flagCube().shape());
+    flags=0;
+    flags(vb.flagCube())=True;
     
     Vector<Int> rowFlags(vb.nRow());
     rowFlags=0;
@@ -2537,8 +2655,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(!usezero_p) 
       for (Int rownr=startRow; rownr<=endRow; rownr++) 
 	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
-
-
+    //Check if ms has changed then cache new spw and chan selection
+    if(vb.newMS())
+      matchAllSpwChans(vb);  
+    
+    //Here we redo the match or use previous match
+    
+    //Channel matching for the actual spectral window of buffer
+    if(doConversion_p[vb.spectralWindow()])
+      matchChannel(vb.spectralWindow(), vb);
+    else
+      {
+	chanMap.resize();
+	chanMap=multiChanMap_p[vb.spectralWindow()];
+      }
+    
     if(isTiled) 
       {// Tiled Version
 	Double invLambdaC=vb.frequency()(0)/C::c;
@@ -2584,7 +2715,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int tmpPAI=PAIndex+1;
 		if (dopsf) doPSF=1; else doPSF=0;
 		runFortranPut(uvw,dphase,*datStorage,s,Conj,flags,rowFlags,
-			      elWeight,rownr,actualOffset,
+			      *imagingweight,rownr,actualOffset,
 			      *dataPtr,aNx,aNy,npol,nchan,vb,NAnt,ScanNo,sigma,
 			      l_offsets,m_offsets,sumWeight,area,doGrad,doPSF,tmpPAI);
 	      }
@@ -2601,13 +2732,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	Int tmpPAI=PAIndex+1;
 	runFortranPut(uvw,dphase,*datStorage,s,Conj,flags,rowFlags,
-		      elWeight,
+		      *imagingweight,
 		      row,uvOffset,
 		      griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
 		      l_offsets,m_offsets,sumWeight,area,doGrad,doPSF,tmpPAI);
       }
     
-    data.freeStorage(datStorage, isCopy);
+    data->freeStorage(datStorage, isCopy);
   }
   //
   //----------------------------------------------------------------------
@@ -2700,7 +2831,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       for (Int rownr=startRow; rownr<=endRow; rownr++) 
 	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
     
-    Bool del;
     IPosition s,gradS;
     Cube<Complex> visdata,gradVisAzData,gradVisElData;
     //
@@ -2872,7 +3002,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if (vb.antenna1()(rownr) != vb.antenna2()(rownr)) 
 	rowFlags(rownr) = (vb.flagRow()(rownr)==True);
     
-    Bool del;
     IPosition s,gradS;
     Cube<Complex> visdata,gradVisAzData,gradVisElData;
     if (whichVBColumn == FTMachine::MODEL) 
@@ -3016,29 +3145,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     dphase*=-1.0;
     
     
-
+    Cube<Int> flags(vb.flagCube().shape());
+    flags=0;
+    flags(vb.flagCube())=True;
+    
     //Check if ms has changed then cache new spw and chan selection
     if(vb.newMS())
       matchAllSpwChans(vb);
     
     //Here we redo the match or use previous match
-    
+    //
     //Channel matching for the actual spectral window of buffer
-    if(doConversion_p[vb.spectralWindow()]){
+    //
+    if(doConversion_p[vb.spectralWindow()])
       matchChannel(vb.spectralWindow(), vb);
-    }
-    else{
-      chanMap.resize();
-      chanMap=multiChanMap_p[vb.spectralWindow()];
-    }
-    //No point in reading data if its not matching in frequency
-    if(max(chanMap)==-1)
-      return;
-
-    Cube<Complex> data;
-    Cube<Int> flags;
-    getInterpolateArrays(vb, data, flags);
-    
+    else
+      {
+	chanMap.resize();
+	chanMap=multiChanMap_p[vb.spectralWindow()];
+      }
     
     Vector<Int> rowFlags(vb.nRow());
     rowFlags=0;
@@ -3084,12 +3209,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
 		
 		actualOffset(2)=uvOffset(2);
-		IPosition s(data.shape());
+		IPosition s(vb.modelVisCube().shape());
 		
 		Int Conj=0,doGrad=0,ScanNo=0;
 		Double area=1.0;
 		
-		runFortranGet(uvw,dphase,data,s,Conj,flags,rowFlags,rownr,
+		runFortranGet(uvw,dphase,vb.modelVisCube(),s,Conj,flags,rowFlags,rownr,
 			      actualOffset,dataPtr,aNx,aNy,npol,nchan,vb,NAnt,ScanNo,sigma,
 			      l_offsets,m_offsets,area,doGrad,PAIndex+1);
 	      }
@@ -3098,11 +3223,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else 
       {
 	
-	IPosition s(data.shape());
+	IPosition s(vb.modelVisCube().shape());
 	Int Conj=0,doGrad=0,ScanNo=0;
 	Double area=1.0;
 	
-	runFortranGet(uvw,dphase,data,s,Conj,flags,rowFlags,row,
+	runFortranGet(uvw,dphase,vb.modelVisCube(),s,Conj,flags,rowFlags,row,
 		      uvOffset,&griddedData,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
 		      l_offsets,m_offsets,area,doGrad,PAIndex+1);
 	/*
@@ -3126,8 +3251,95 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	junk++;
 	*/
       }
-    interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
-
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void nPBWProjectFT::get(VisBuffer& vb, Cube<Complex>& modelVis, 
+			 Array<Complex>& griddedVis, Vector<Double>& scale,
+			 Int row)
+  {
+    Int nX=griddedVis.shape()(0);
+    Int nY=griddedVis.shape()(1);
+    Vector<Double> offset(2);
+    offset(0)=Double(nX)/2.0;
+    offset(1)=Double(nY)/2.0;
+    // If row is -1 then we pass through all rows
+    Int startRow, endRow, nRow;
+    if (row==-1) 
+      {
+	nRow=vb.nRow();
+	startRow=0;
+	endRow=nRow-1;
+	modelVis.set(Complex(0.0,0.0));
+      } 
+    else 
+      {
+	nRow=1;
+	startRow=row;
+	endRow=row;
+	modelVis.xyPlane(row)=Complex(0.0,0.0);
+      }
+    
+    Int NAnt=0;
+    
+    if (doPointing) 
+      NAnt = findPointingOffsets(vb,l_offsets, m_offsets,True);
+    
+    
+    //  
+    // Get the uvws in a form that Fortran can use
+    //
+    Matrix<Double> uvw(3, vb.uvw().nelements());
+    uvw=0.0;
+    Vector<Double> dphase(vb.uvw().nelements());
+    dphase=0.0;
+    //
+    //NEGATING to correct for an image inversion problem
+    //
+    for (Int i=startRow;i<=endRow;i++) 
+      {
+	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
+	uvw(2,i)=vb.uvw()(i)(2);
+      }
+    
+    rotateUVW(uvw, dphase, vb);
+    refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
+    
+    // This is the convention for dphase
+    dphase*=-1.0;
+    
+    Cube<Int> flags(vb.flagCube().shape());
+    flags=0;
+    flags(vb.flagCube())=True;
+    
+    //Check if ms has changed then cache new spw and chan selection
+    if(vb.newMS())
+      matchAllSpwChans(vb);
+    
+    //Channel matching for the actual spectral window of buffer
+    if(doConversion_p[vb.spectralWindow()])
+      matchChannel(vb.spectralWindow(), vb);
+    else
+      {
+	chanMap.resize();
+	chanMap=multiChanMap_p[vb.spectralWindow()];
+      }
+    
+    Vector<Int> rowFlags(vb.nRow());
+    rowFlags=0;
+    rowFlags(vb.flagRow())=True;
+    if(!usezero_p) 
+      for (Int rownr=startRow; rownr<=endRow; rownr++) 
+	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
+    
+    IPosition s(modelVis.shape());
+    Int Conj=0,doGrad=0,ScanNo=0;
+    Double area=1.0;
+    
+    runFortranGet(uvw,dphase,vb.modelVisCube(),s,Conj,flags,rowFlags,row,
+		  offset,&griddedVis,nx,ny,npol,nchan,vb,NAnt,ScanNo,sigma,
+		  l_offsets,m_offsets,area,doGrad,PAIndex+1);
   }
   //
   //---------------------------------------------------------------
@@ -3477,7 +3689,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Loop over the visibilities, putting VisBuffers
     //
     paChangeDetector.reset();
-    Int rowsDone=0;
+
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
       {
 	for (vi.origin(); vi.more(); vi++) 
@@ -3534,6 +3746,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     return True;
     
+  }
+  //
+  // The functions are not azimuthally symmetric - so compute the
+  // support size carefully.  Collect every PixInc pixel along a
+  // quarter circle of radius R (four-fold azimuthal symmetry is
+  // assumed), and check if any pixel in this list is above the
+  // threshold. If TRUE, then R is the support radius.  Else decrease
+  // R and check again.
+  //
+  //
+  Bool nPBWProjectFT::findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R)
+  {
+    Double NSteps;
+    Int PixInc=1;
+    Vector<Complex> vals;
+    IPosition ndx(4,origin,0,0,0);
+    Bool found=False;
+    IPosition cfShape=func.shape();
+    for(R=convSize/4;R>1;R--)
+      {
+	NSteps = 90*R/PixInc; //Check every PixInc pixel along a
+	                      //circle of radious R
+	vals.resize((Int)(NSteps+0.5));
+	vals=0;
+	for(Int th=0;th<NSteps;th++)
+	  {
+	    ndx(0)=(int)(origin + R*sin(2.0*M_PI*th*PixInc/R));
+	    ndx(1)=(int)(origin + R*cos(2.0*M_PI*th*PixInc/R));
+	    
+	    if ((ndx(0) < cfShape(0)) && (ndx(1) < cfShape(1)))
+	      vals(th)=convFunc(ndx);
+	  }
+	if (max(abs(vals)) > threshold)
+	  {found=True;break;}
+      }
+    return found;
   }
   /*
   void nPBWProjectFT::makeAveragePB(const VisBuffer& vb, 
@@ -3698,5 +3946,168 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   */
 
+  void nPBWProjectFT::makeAntiAliasingOp(Vector<Complex>& op, const Int nx)
+  {
+    MathFunc<Float> sf(SPHEROIDAL);
+    if (op.nelements() != (uInt)nx)
+      {
+	op.resize(nx);
+	Float cfScale=uvScale(0)*30/(3.0*convSampling);
+	for(Int ix=-nx/4;ix<nx/4;ix++)
+	  op(ix+nx/2)=sf.value(abs((1-ix)*cfScale));
+// 	for(Int ix=-nx/2;ix<nx/2;ix++)
+// 	  cout << "SF: " << (1-ix)*cfScale << " " << real(op(ix+nx/2)) << " " << imag(op(ix+nx/2)) << endl;
+      }
+  }
+
+  void nPBWProjectFT::makeAntiAliasingCorrection(Vector<Complex>& correction, 
+						 const Vector<Complex>& op,
+						 const Int nx)
+  {
+    if (correction.nelements() != (uInt)nx)
+      {
+	correction.resize(nx);
+	correction=0.0;
+	Int opLen=op.nelements(), orig=nx/2;
+	for(Int i=-opLen;i<opLen;i++)
+	  {
+	    correction(i+orig) += op(abs(i));
+	  }
+	ArrayLattice<Complex> tmp(correction);
+	LatticeFFT::cfft(tmp,False);
+	correction=tmp.get();
+      }
+//     for(uInt i=0;i<correction.nelements();i++)
+//       cout << "FTSF: " << real(correction(i)) << " " << imag(correction(i)) << endl;
+  }
+
+  void nPBWProjectFT::correctAntiAliasing(Lattice<Complex>& image)
+  {
+    //  applyAntiAliasingOp(cf,2);
+    IPosition shape(image.shape());
+    IPosition ndx(shape);
+    ndx=0;
+    makeAntiAliasingCorrection(antiAliasingCorrection, 
+			       antiAliasingOp,shape(0));
+
+    Complex tmp,val;
+    for(Int i=0;i<polInUse;i++)
+      {
+	ndx(2)=i;
+	for (Int iy=0;iy<shape(1);iy++) 
+	  {
+	    for (Int ix=0;ix<shape(0);ix++) 
+	      {
+		ndx(0)=ix;
+		ndx(1)=iy;
+		tmp = image.getAt(ndx);
+		val=(antiAliasingCorrection(ix)*antiAliasingCorrection(iy));
+		if (abs(val) > 1e-5) tmp = tmp/val; else tmp=0.0;
+		image.putAt(tmp,ndx);
+	      }
+	  }
+      }
+  }
+
+  void nPBWProjectFT::applyAntiAliasingOp(ImageInterface<Complex>& cf, 
+					  Vector<IPosition>& maxPos,
+					  Int op, 
+					  Bool Square)
+  {
+    //
+    // First the spheroidal function
+    //
+    IPosition shape(cf.shape());
+    IPosition ndx(shape);
+    Vector<Double> refPixel=cf.coordinates().referencePixel();
+    ndx=0;
+    Int nx=shape(0),posX,posY;
+    makeAntiAliasingOp(antiAliasingOp, nx);
+
+    Complex tmp,gain;
+
+    for(Int i=0;i<polInUse;i++)
+      {
+	ndx(2)=i;
+	for (Int iy=-nx/2;iy<nx/2;iy++) 
+	  {
+	    for (Int ix=-nx/2;ix<nx/2;ix++) 
+	      {
+		ndx(0)=ix+nx/2;
+		ndx(1)=iy+nx/2;
+		tmp = cf.getAt(ndx);
+		posX=ndx(0)+(Int)(refPixel(0)-maxPos(i)(0))+1;
+		posY=ndx(1)+(Int)(refPixel(1)-maxPos(i)(1))+1;
+		if ((posX > 0) && (posX < nx) &&
+		    (posY > 0) && (posY < nx))
+		  gain = antiAliasingOp(posX)*antiAliasingOp(posY);
+		else
+		  if (op==2) gain = 1.0; else gain=0.0;
+		if (Square) gain *= gain;
+		switch (op)
+		  {
+		  case 0: tmp = tmp+gain;break;
+		  case 1: 
+		    {
+		      tmp = tmp*gain;
+		      break;
+		    }
+		  case 2: tmp = tmp/gain;break;
+		  }
+		cf.putAt(tmp,ndx);
+	      }
+	  }
+      }
+  };
+  void nPBWProjectFT::applyAntiAliasingOp(ImageInterface<Float>& cf, 
+					  Vector<IPosition>& maxPos,
+					  Int op, 
+					  Bool Square)
+  {
+    //
+    // First the spheroidal function
+    //
+    IPosition shape(cf.shape());
+    IPosition ndx(shape);
+    Vector<Double> refPixel=cf.coordinates().referencePixel();
+    ndx=0;
+    Int nx=shape(0),posX,posY;
+    makeAntiAliasingOp(antiAliasingOp, nx);
+
+    Float tmp,gain;
+
+    for(Int i=0;i<polInUse;i++)
+      {
+	ndx(2)=i;
+	for (Int iy=-nx/2;iy<nx/2;iy++) 
+	  {
+	    for (Int ix=-nx/2;ix<nx/2;ix++) 
+	      {
+		ndx(0)=ix+nx/2;
+		ndx(1)=iy+nx/2;
+		tmp = cf.getAt(ndx);
+		posX=ndx(0)+(Int)(refPixel(0)-maxPos(i)(0))+1;
+		posY=ndx(1)+(Int)(refPixel(1)-maxPos(i)(1))+1;
+		if ((posX > 0) && (posX < nx) &&
+		    (posY > 0) && (posY < nx))
+		  gain = real(antiAliasingOp(posX)*antiAliasingOp(posY));
+		else
+		  if (op==2) gain = 1.0; else gain=0.0;
+		if (Square) gain *= gain;
+		switch (op)
+		  {
+		  case 0: tmp = tmp+gain;break;
+		  case 1: 
+		    {
+		      tmp = tmp*gain;
+		      break;
+		    }
+		  case 2: tmp = tmp/gain;break;
+		  }
+		cf.putAt(tmp,ndx);
+	      }
+	  }
+      }
+  };
 } //# NAMESPACE CASA - END
 

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <ctype.h>
+#include <cstring>
 #include <setjmp.h>
 #include <casa/BasicSL/String.h>
     

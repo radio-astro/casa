@@ -280,8 +280,12 @@ SwitchCycleRow* SwitchCycleTable::newRowCopy(SwitchCycleRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	SwitchCycleRow*  SwitchCycleTable::checkAndAdd(SwitchCycleRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	SwitchCycleRow*  SwitchCycleTable::checkAndAdd(SwitchCycleRow* x)  {
 	 
 		 
 		if (lookup(
@@ -388,7 +392,6 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 
 
 
-
 #ifndef WITHOUT_ACS
 	// Conversion Methods
 
@@ -405,7 +408,7 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 #endif
 	
 #ifndef WITHOUT_ACS
-	void SwitchCycleTable::fromIDL(SwitchCycleTableIDL x) throw(DuplicateKey,ConversionException) {
+	void SwitchCycleTable::fromIDL(SwitchCycleTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			SwitchCycleRow *tmp = newRow();
@@ -416,28 +419,27 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 	}
 #endif
 
-	char *SwitchCycleTable::toFITS() const throw(ConversionException) {
+	char *SwitchCycleTable::toFITS() const  {
 		throw ConversionException("Not implemented","SwitchCycle");
 	}
 
-	void SwitchCycleTable::fromFITS(char *fits) throw(ConversionException) {
+	void SwitchCycleTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","SwitchCycle");
 	}
 
-	string SwitchCycleTable::toVOTable() const throw(ConversionException) {
+	string SwitchCycleTable::toVOTable() const {
 		throw ConversionException("Not implemented","SwitchCycle");
 	}
 
-	void SwitchCycleTable::fromVOTable(string vo) throw(ConversionException) {
+	void SwitchCycleTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","SwitchCycle");
 	}
 
-	string SwitchCycleTable::toXML()  throw(ConversionException) {
+	
+	string SwitchCycleTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<SwitchCycleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/SwitchCycleTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<SwitchCycleTable> ");
+		buf.append("<SwitchCycleTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/SwitchCycleTable\" xsi:schemaLocation=\"http://Alma/XASDM/SwitchCycleTable http://almaobservatory.org/XML/XASDM/2/SwitchCycleTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -453,8 +455,9 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 		buf.append("</SwitchCycleTable> ");
 		return buf;
 	}
+
 	
-	void SwitchCycleTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void SwitchCycleTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SwitchCycleTable")) 
 			error();
@@ -496,20 +499,110 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 			error();
 	}
 
-	void SwitchCycleTable::error() throw(ConversionException) {
+	
+	void SwitchCycleTable::error()  {
 		throw ConversionException("Invalid xml document","SwitchCycle");
 	}
 	
+	
 	string SwitchCycleTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void SwitchCycleTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "SwitchCycle");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			SwitchCycleRow* aRow = SwitchCycleRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "SwitchCycle");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "SwitchCycle");
+		} 		 	
+	}
+
 	
 	void SwitchCycleTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -540,6 +633,7 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 				throw ConversionException("Could not close file " + fileName, "SwitchCycle");
 		}
 	}
+
 	
 	void SwitchCycleTable::setFromFile(const string& directory) {
 		string tablename;
@@ -581,6 +675,11 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

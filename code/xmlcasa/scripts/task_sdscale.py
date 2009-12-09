@@ -47,7 +47,8 @@ def sdscale(sdfile, factor, scaletsys, outfile, overwrite):
                   format = 'SDFITS'
 
             if factor == 1.0:
-                  print "scaling factor is %s. No scaling" % factor
+                  #print "scaling factor is %s. No scaling" % factor
+                  casalog.post( "scaling factor is %s. No scaling" % factor )
                   return
             #if outfile == 'none':
             #  s.scale(factor, scaletsys, True)
@@ -60,37 +61,26 @@ def sdscale(sdfile, factor, scaletsys, outfile, overwrite):
             #  del s
             #else:
             s2 = s.scale(factor, scaletsys, False)
-            logfile='sdscale.log'
-            stdsave=sys.stdout
-            tsysfile=open(logfile, 'w')
             if scaletsys:
-                    sys.stdout=tsysfile
                     oldtsys=s._row_callback(s._gettsys, "Original Tsys")
-                    sys.stdout=stdsave
-                    print "Scaled spectra and Tsys by "+str(factor)
-                    sys.stdout=tsysfile
+                    #print "Scaled spectra and Tsys by "+str(factor)
+                    casalog.post( "Scaled spectra and Tsys by "+str(factor) )
                     newtsys=s2._row_callback(s2._gettsys, "Scaled Tsys")
-                    sys.stdout=stdsave
             else:
-                    print "Scaled spectra by "+str(factor)
-                    sys.stdout=tsysfile
+                    #print "Scaled spectra by "+str(factor)
+                    casalog.post( "Scaled spectra by "+str(factor) )
                     oldtsys=s2._row_callback(s2._gettsys, "Tsys (not scaled)")
-                    sys.stdout=stdsave
-            tsysfile.close()
-            tsysfile=open(logfile, 'r')
-            linelist=tsysfile.readlines()
-            for i in range( len(linelist) ):
-                    print linelist[i],
-            tsysfile.close()
 
             s2.save(outfile, format, overwrite)
-            print "Wrote scaled data to %s file, %s " % (format, outfile)
+            #print "Wrote scaled data to %s file, %s " % (format, outfile)
+            casalog.post( "Wrote scaled data to %s file, %s " % (format, outfile) )
             del s,s2
 
             # DONE
 
         except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
 
 

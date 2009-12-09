@@ -78,10 +78,6 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
 	
@@ -93,7 +89,22 @@ using namespace ReceiverBandMod;
 	
 
 	
+#include "CAntennaMake.h"
+using namespace AntennaMakeMod;
+	
 
+	
+#include "CAtmPhaseCorrection.h"
+using namespace AtmPhaseCorrectionMod;
+	
+
+	
+
+	
+
+	
+#include "CPointingModelMode.h"
+using namespace PointingModelModeMod;
 	
 
 	
@@ -104,6 +115,17 @@ using namespace PointingMethodMod;
 	
 
 	
+#include "CPolarizationType.h"
+using namespace PolarizationTypeMod;
+	
+
+	
+
+	
+
+	
+
+	
 
 	
 
@@ -114,8 +136,15 @@ using namespace PointingMethodMod;
 	
 
 	
-#include "CPointingModelMode.h"
-using namespace PointingModelModeMod;
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -149,7 +178,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalPointing.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -167,7 +196,7 @@ class CalReductionRow;
 /**
  * The CalPointingRow class is a row of a CalPointingTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class CalPointingRow {
@@ -194,8 +223,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalPointingRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalPointingRowIDL x) throw(ConversionException);
+	void setFromIDL (CalPointingRowIDL x) ;
 #endif
 	
 	/**
@@ -208,8 +238,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalPointingTable to which the row built by deserialization will be parented.
+	  */
+	 static CalPointingRow* fromBin(EndianISStream& eiss, CalPointingTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -241,6 +285,38 @@ public:
  	 		
  	 */
  	void setAntennaName (string antennaName);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute receiverBand
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 */
+ 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 
+ 		
+ 			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
   		
 	
 	
@@ -308,29 +384,29 @@ public:
 
 
 	
-	// ===> Attribute receiverBand
+	// ===> Attribute ambientTemperature
 	
 	
 	
 
 	
  	/**
- 	 * Get receiverBand.
- 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 * Get ambientTemperature.
+ 	 * @return ambientTemperature as Temperature
  	 */
- 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
+ 	Temperature getAmbientTemperature() const;
 	
  
  	
  	
  	/**
- 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
- 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 * Set ambientTemperature with the specified Temperature.
+ 	 * @param ambientTemperature The Temperature value to which ambientTemperature is to be set.
  	 
  		
  			
  	 */
- 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
+ 	void setAmbientTemperature (Temperature ambientTemperature);
   		
 	
 	
@@ -338,29 +414,59 @@ public:
 
 
 	
-	// ===> Attribute frequencyRange
+	// ===> Attribute antennaMake
 	
 	
 	
 
 	
  	/**
- 	 * Get frequencyRange.
- 	 * @return frequencyRange as vector<Frequency >
+ 	 * Get antennaMake.
+ 	 * @return antennaMake as AntennaMakeMod::AntennaMake
  	 */
- 	vector<Frequency > getFrequencyRange() const;
+ 	AntennaMakeMod::AntennaMake getAntennaMake() const;
 	
  
  	
  	
  	/**
- 	 * Set frequencyRange with the specified vector<Frequency >.
- 	 * @param frequencyRange The vector<Frequency > value to which frequencyRange is to be set.
+ 	 * Set antennaMake with the specified AntennaMakeMod::AntennaMake.
+ 	 * @param antennaMake The AntennaMakeMod::AntennaMake value to which antennaMake is to be set.
  	 
  		
  			
  	 */
- 	void setFrequencyRange (vector<Frequency > frequencyRange);
+ 	void setAntennaMake (AntennaMakeMod::AntennaMake antennaMake);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute atmPhaseCorrection
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
+ 	 */
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection getAtmPhaseCorrection() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection);
   		
 	
 	
@@ -398,29 +504,29 @@ public:
 
 
 	
-	// ===> Attribute collOffsetRelative
+	// ===> Attribute frequencyRange
 	
 	
 	
 
 	
  	/**
- 	 * Get collOffsetRelative.
- 	 * @return collOffsetRelative as vector<Angle >
+ 	 * Get frequencyRange.
+ 	 * @return frequencyRange as vector<Frequency >
  	 */
- 	vector<Angle > getCollOffsetRelative() const;
+ 	vector<Frequency > getFrequencyRange() const;
 	
  
  	
  	
  	/**
- 	 * Set collOffsetRelative with the specified vector<Angle >.
- 	 * @param collOffsetRelative The vector<Angle > value to which collOffsetRelative is to be set.
+ 	 * Set frequencyRange with the specified vector<Frequency >.
+ 	 * @param frequencyRange The vector<Frequency > value to which frequencyRange is to be set.
  	 
  		
  			
  	 */
- 	void setCollOffsetRelative (vector<Angle > collOffsetRelative);
+ 	void setFrequencyRange (vector<Frequency > frequencyRange);
   		
 	
 	
@@ -428,59 +534,29 @@ public:
 
 
 	
-	// ===> Attribute collOffsetAbsolute
+	// ===> Attribute pointingModelMode
 	
 	
 	
 
 	
  	/**
- 	 * Get collOffsetAbsolute.
- 	 * @return collOffsetAbsolute as vector<Angle >
+ 	 * Get pointingModelMode.
+ 	 * @return pointingModelMode as PointingModelModeMod::PointingModelMode
  	 */
- 	vector<Angle > getCollOffsetAbsolute() const;
+ 	PointingModelModeMod::PointingModelMode getPointingModelMode() const;
 	
  
  	
  	
  	/**
- 	 * Set collOffsetAbsolute with the specified vector<Angle >.
- 	 * @param collOffsetAbsolute The vector<Angle > value to which collOffsetAbsolute is to be set.
+ 	 * Set pointingModelMode with the specified PointingModelModeMod::PointingModelMode.
+ 	 * @param pointingModelMode The PointingModelModeMod::PointingModelMode value to which pointingModelMode is to be set.
  	 
  		
  			
  	 */
- 	void setCollOffsetAbsolute (vector<Angle > collOffsetAbsolute);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute collError
-	
-	
-	
-
-	
- 	/**
- 	 * Get collError.
- 	 * @return collError as vector<Angle >
- 	 */
- 	vector<Angle > getCollError() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set collError with the specified vector<Angle >.
- 	 * @param collError The vector<Angle > value to which collError is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setCollError (vector<Angle > collError);
+ 	void setPointingModelMode (PointingModelModeMod::PointingModelMode pointingModelMode);
   		
 	
 	
@@ -518,84 +594,253 @@ public:
 
 
 	
-	// ===> Attribute beamWidth, which is optional
+	// ===> Attribute numReceptor
 	
 	
-	
-	/**
-	 * The attribute beamWidth is optional. Return true if this attribute exists.
-	 * @return true if and only if the beamWidth attribute exists. 
-	 */
-	bool isBeamWidthExists() const;
 	
 
 	
  	/**
- 	 * Get beamWidth, which is optional.
- 	 * @return beamWidth as vector<Angle >
- 	 * @throws IllegalAccessException If beamWidth does not exist.
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
  	 */
- 	vector<Angle > getBeamWidth() const throw(IllegalAccessException);
+ 	int getNumReceptor() const;
 	
  
  	
  	
  	/**
- 	 * Set beamWidth with the specified vector<Angle >.
- 	 * @param beamWidth The vector<Angle > value to which beamWidth is to be set.
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
  	 
  		
+ 			
  	 */
- 	void setBeamWidth (vector<Angle > beamWidth);
-		
+ 	void setNumReceptor (int numReceptor);
+  		
 	
 	
-	
-	/**
-	 * Mark beamWidth, which is an optional field, as non-existent.
-	 */
-	void clearBeamWidth ();
 	
 
 
 	
-	// ===> Attribute beamWidthError, which is optional
+	// ===> Attribute polarizationTypes
 	
 	
-	
-	/**
-	 * The attribute beamWidthError is optional. Return true if this attribute exists.
-	 * @return true if and only if the beamWidthError attribute exists. 
-	 */
-	bool isBeamWidthErrorExists() const;
 	
 
 	
  	/**
- 	 * Get beamWidthError, which is optional.
- 	 * @return beamWidthError as vector<Angle >
- 	 * @throws IllegalAccessException If beamWidthError does not exist.
+ 	 * Get polarizationTypes.
+ 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
  	 */
- 	vector<Angle > getBeamWidthError() const throw(IllegalAccessException);
+ 	vector<PolarizationTypeMod::PolarizationType > getPolarizationTypes() const;
 	
  
  	
  	
  	/**
- 	 * Set beamWidthError with the specified vector<Angle >.
- 	 * @param beamWidthError The vector<Angle > value to which beamWidthError is to be set.
+ 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute collOffsetRelative
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get collOffsetRelative.
+ 	 * @return collOffsetRelative as vector<vector<Angle > >
+ 	 */
+ 	vector<vector<Angle > > getCollOffsetRelative() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set collOffsetRelative with the specified vector<vector<Angle > >.
+ 	 * @param collOffsetRelative The vector<vector<Angle > > value to which collOffsetRelative is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCollOffsetRelative (vector<vector<Angle > > collOffsetRelative);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute collOffsetAbsolute
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get collOffsetAbsolute.
+ 	 * @return collOffsetAbsolute as vector<vector<Angle > >
+ 	 */
+ 	vector<vector<Angle > > getCollOffsetAbsolute() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set collOffsetAbsolute with the specified vector<vector<Angle > >.
+ 	 * @param collOffsetAbsolute The vector<vector<Angle > > value to which collOffsetAbsolute is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCollOffsetAbsolute (vector<vector<Angle > > collOffsetAbsolute);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute collError
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get collError.
+ 	 * @return collError as vector<vector<Angle > >
+ 	 */
+ 	vector<vector<Angle > > getCollError() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set collError with the specified vector<vector<Angle > >.
+ 	 * @param collError The vector<vector<Angle > > value to which collError is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCollError (vector<vector<Angle > > collError);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute collOffsetTied
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get collOffsetTied.
+ 	 * @return collOffsetTied as vector<vector<bool > >
+ 	 */
+ 	vector<vector<bool > > getCollOffsetTied() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set collOffsetTied with the specified vector<vector<bool > >.
+ 	 * @param collOffsetTied The vector<vector<bool > > value to which collOffsetTied is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCollOffsetTied (vector<vector<bool > > collOffsetTied);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute reducedChiSquared
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get reducedChiSquared.
+ 	 * @return reducedChiSquared as vector<double >
+ 	 */
+ 	vector<double > getReducedChiSquared() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set reducedChiSquared with the specified vector<double >.
+ 	 * @param reducedChiSquared The vector<double > value to which reducedChiSquared is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setReducedChiSquared (vector<double > reducedChiSquared);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute averagedPolarizations, which is optional
+	
+	
+	
+	/**
+	 * The attribute averagedPolarizations is optional. Return true if this attribute exists.
+	 * @return true if and only if the averagedPolarizations attribute exists. 
+	 */
+	bool isAveragedPolarizationsExists() const;
+	
+
+	
+ 	/**
+ 	 * Get averagedPolarizations, which is optional.
+ 	 * @return averagedPolarizations as bool
+ 	 * @throws IllegalAccessException If averagedPolarizations does not exist.
+ 	 */
+ 	bool getAveragedPolarizations() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set averagedPolarizations with the specified bool.
+ 	 * @param averagedPolarizations The bool value to which averagedPolarizations is to be set.
  	 
  		
  	 */
- 	void setBeamWidthError (vector<Angle > beamWidthError);
+ 	void setAveragedPolarizations (bool averagedPolarizations);
 		
 	
 	
 	
 	/**
-	 * Mark beamWidthError, which is an optional field, as non-existent.
+	 * Mark averagedPolarizations, which is an optional field, as non-existent.
 	 */
-	void clearBeamWidthError ();
+	void clearAveragedPolarizations ();
 	
 
 
@@ -614,21 +859,21 @@ public:
 	
  	/**
  	 * Get beamPA, which is optional.
- 	 * @return beamPA as Angle
+ 	 * @return beamPA as vector<Angle >
  	 * @throws IllegalAccessException If beamPA does not exist.
  	 */
- 	Angle getBeamPA() const throw(IllegalAccessException);
+ 	vector<Angle > getBeamPA() const;
 	
  
  	
  	
  	/**
- 	 * Set beamPA with the specified Angle.
- 	 * @param beamPA The Angle value to which beamPA is to be set.
+ 	 * Set beamPA with the specified vector<Angle >.
+ 	 * @param beamPA The vector<Angle > value to which beamPA is to be set.
  	 
  		
  	 */
- 	void setBeamPA (Angle beamPA);
+ 	void setBeamPA (vector<Angle > beamPA);
 		
 	
 	
@@ -655,21 +900,21 @@ public:
 	
  	/**
  	 * Get beamPAError, which is optional.
- 	 * @return beamPAError as Angle
+ 	 * @return beamPAError as vector<Angle >
  	 * @throws IllegalAccessException If beamPAError does not exist.
  	 */
- 	Angle getBeamPAError() const throw(IllegalAccessException);
+ 	vector<Angle > getBeamPAError() const;
 	
  
  	
  	
  	/**
- 	 * Set beamPAError with the specified Angle.
- 	 * @param beamPAError The Angle value to which beamPAError is to be set.
+ 	 * Set beamPAError with the specified vector<Angle >.
+ 	 * @param beamPAError The vector<Angle > value to which beamPAError is to be set.
  	 
  		
  	 */
- 	void setBeamPAError (Angle beamPAError);
+ 	void setBeamPAError (vector<Angle > beamPAError);
 		
 	
 	
@@ -678,6 +923,293 @@ public:
 	 * Mark beamPAError, which is an optional field, as non-existent.
 	 */
 	void clearBeamPAError ();
+	
+
+
+	
+	// ===> Attribute beamPAWasFixed, which is optional
+	
+	
+	
+	/**
+	 * The attribute beamPAWasFixed is optional. Return true if this attribute exists.
+	 * @return true if and only if the beamPAWasFixed attribute exists. 
+	 */
+	bool isBeamPAWasFixedExists() const;
+	
+
+	
+ 	/**
+ 	 * Get beamPAWasFixed, which is optional.
+ 	 * @return beamPAWasFixed as bool
+ 	 * @throws IllegalAccessException If beamPAWasFixed does not exist.
+ 	 */
+ 	bool getBeamPAWasFixed() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set beamPAWasFixed with the specified bool.
+ 	 * @param beamPAWasFixed The bool value to which beamPAWasFixed is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setBeamPAWasFixed (bool beamPAWasFixed);
+		
+	
+	
+	
+	/**
+	 * Mark beamPAWasFixed, which is an optional field, as non-existent.
+	 */
+	void clearBeamPAWasFixed ();
+	
+
+
+	
+	// ===> Attribute beamWidth, which is optional
+	
+	
+	
+	/**
+	 * The attribute beamWidth is optional. Return true if this attribute exists.
+	 * @return true if and only if the beamWidth attribute exists. 
+	 */
+	bool isBeamWidthExists() const;
+	
+
+	
+ 	/**
+ 	 * Get beamWidth, which is optional.
+ 	 * @return beamWidth as vector<vector<Angle > >
+ 	 * @throws IllegalAccessException If beamWidth does not exist.
+ 	 */
+ 	vector<vector<Angle > > getBeamWidth() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set beamWidth with the specified vector<vector<Angle > >.
+ 	 * @param beamWidth The vector<vector<Angle > > value to which beamWidth is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setBeamWidth (vector<vector<Angle > > beamWidth);
+		
+	
+	
+	
+	/**
+	 * Mark beamWidth, which is an optional field, as non-existent.
+	 */
+	void clearBeamWidth ();
+	
+
+
+	
+	// ===> Attribute beamWidthError, which is optional
+	
+	
+	
+	/**
+	 * The attribute beamWidthError is optional. Return true if this attribute exists.
+	 * @return true if and only if the beamWidthError attribute exists. 
+	 */
+	bool isBeamWidthErrorExists() const;
+	
+
+	
+ 	/**
+ 	 * Get beamWidthError, which is optional.
+ 	 * @return beamWidthError as vector<vector<Angle > >
+ 	 * @throws IllegalAccessException If beamWidthError does not exist.
+ 	 */
+ 	vector<vector<Angle > > getBeamWidthError() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set beamWidthError with the specified vector<vector<Angle > >.
+ 	 * @param beamWidthError The vector<vector<Angle > > value to which beamWidthError is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setBeamWidthError (vector<vector<Angle > > beamWidthError);
+		
+	
+	
+	
+	/**
+	 * Mark beamWidthError, which is an optional field, as non-existent.
+	 */
+	void clearBeamWidthError ();
+	
+
+
+	
+	// ===> Attribute beamWidthWasFixed, which is optional
+	
+	
+	
+	/**
+	 * The attribute beamWidthWasFixed is optional. Return true if this attribute exists.
+	 * @return true if and only if the beamWidthWasFixed attribute exists. 
+	 */
+	bool isBeamWidthWasFixedExists() const;
+	
+
+	
+ 	/**
+ 	 * Get beamWidthWasFixed, which is optional.
+ 	 * @return beamWidthWasFixed as vector<bool >
+ 	 * @throws IllegalAccessException If beamWidthWasFixed does not exist.
+ 	 */
+ 	vector<bool > getBeamWidthWasFixed() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set beamWidthWasFixed with the specified vector<bool >.
+ 	 * @param beamWidthWasFixed The vector<bool > value to which beamWidthWasFixed is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setBeamWidthWasFixed (vector<bool > beamWidthWasFixed);
+		
+	
+	
+	
+	/**
+	 * Mark beamWidthWasFixed, which is an optional field, as non-existent.
+	 */
+	void clearBeamWidthWasFixed ();
+	
+
+
+	
+	// ===> Attribute offIntensity, which is optional
+	
+	
+	
+	/**
+	 * The attribute offIntensity is optional. Return true if this attribute exists.
+	 * @return true if and only if the offIntensity attribute exists. 
+	 */
+	bool isOffIntensityExists() const;
+	
+
+	
+ 	/**
+ 	 * Get offIntensity, which is optional.
+ 	 * @return offIntensity as vector<Temperature >
+ 	 * @throws IllegalAccessException If offIntensity does not exist.
+ 	 */
+ 	vector<Temperature > getOffIntensity() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set offIntensity with the specified vector<Temperature >.
+ 	 * @param offIntensity The vector<Temperature > value to which offIntensity is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setOffIntensity (vector<Temperature > offIntensity);
+		
+	
+	
+	
+	/**
+	 * Mark offIntensity, which is an optional field, as non-existent.
+	 */
+	void clearOffIntensity ();
+	
+
+
+	
+	// ===> Attribute offIntensityError, which is optional
+	
+	
+	
+	/**
+	 * The attribute offIntensityError is optional. Return true if this attribute exists.
+	 * @return true if and only if the offIntensityError attribute exists. 
+	 */
+	bool isOffIntensityErrorExists() const;
+	
+
+	
+ 	/**
+ 	 * Get offIntensityError, which is optional.
+ 	 * @return offIntensityError as vector<Temperature >
+ 	 * @throws IllegalAccessException If offIntensityError does not exist.
+ 	 */
+ 	vector<Temperature > getOffIntensityError() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set offIntensityError with the specified vector<Temperature >.
+ 	 * @param offIntensityError The vector<Temperature > value to which offIntensityError is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setOffIntensityError (vector<Temperature > offIntensityError);
+		
+	
+	
+	
+	/**
+	 * Mark offIntensityError, which is an optional field, as non-existent.
+	 */
+	void clearOffIntensityError ();
+	
+
+
+	
+	// ===> Attribute offIntensityWasFixed, which is optional
+	
+	
+	
+	/**
+	 * The attribute offIntensityWasFixed is optional. Return true if this attribute exists.
+	 * @return true if and only if the offIntensityWasFixed attribute exists. 
+	 */
+	bool isOffIntensityWasFixedExists() const;
+	
+
+	
+ 	/**
+ 	 * Get offIntensityWasFixed, which is optional.
+ 	 * @return offIntensityWasFixed as bool
+ 	 * @throws IllegalAccessException If offIntensityWasFixed does not exist.
+ 	 */
+ 	bool getOffIntensityWasFixed() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set offIntensityWasFixed with the specified bool.
+ 	 * @param offIntensityWasFixed The bool value to which offIntensityWasFixed is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setOffIntensityWasFixed (bool offIntensityWasFixed);
+		
+	
+	
+	
+	/**
+	 * Mark offIntensityWasFixed, which is an optional field, as non-existent.
+	 */
+	void clearOffIntensityWasFixed ();
 	
 
 
@@ -696,21 +1228,21 @@ public:
 	
  	/**
  	 * Get peakIntensity, which is optional.
- 	 * @return peakIntensity as Temperature
+ 	 * @return peakIntensity as vector<Temperature >
  	 * @throws IllegalAccessException If peakIntensity does not exist.
  	 */
- 	Temperature getPeakIntensity() const throw(IllegalAccessException);
+ 	vector<Temperature > getPeakIntensity() const;
 	
  
  	
  	
  	/**
- 	 * Set peakIntensity with the specified Temperature.
- 	 * @param peakIntensity The Temperature value to which peakIntensity is to be set.
+ 	 * Set peakIntensity with the specified vector<Temperature >.
+ 	 * @param peakIntensity The vector<Temperature > value to which peakIntensity is to be set.
  	 
  		
  	 */
- 	void setPeakIntensity (Temperature peakIntensity);
+ 	void setPeakIntensity (vector<Temperature > peakIntensity);
 		
 	
 	
@@ -737,21 +1269,21 @@ public:
 	
  	/**
  	 * Get peakIntensityError, which is optional.
- 	 * @return peakIntensityError as Temperature
+ 	 * @return peakIntensityError as vector<Temperature >
  	 * @throws IllegalAccessException If peakIntensityError does not exist.
  	 */
- 	Temperature getPeakIntensityError() const throw(IllegalAccessException);
+ 	vector<Temperature > getPeakIntensityError() const;
 	
  
  	
  	
  	/**
- 	 * Set peakIntensityError with the specified Temperature.
- 	 * @param peakIntensityError The Temperature value to which peakIntensityError is to be set.
+ 	 * Set peakIntensityError with the specified vector<Temperature >.
+ 	 * @param peakIntensityError The vector<Temperature > value to which peakIntensityError is to be set.
  	 
  		
  	 */
- 	void setPeakIntensityError (Temperature peakIntensityError);
+ 	void setPeakIntensityError (vector<Temperature > peakIntensityError);
 		
 	
 	
@@ -760,118 +1292,6 @@ public:
 	 * Mark peakIntensityError, which is an optional field, as non-existent.
 	 */
 	void clearPeakIntensityError ();
-	
-
-
-	
-	// ===> Attribute mode
-	
-	
-	
-
-	
- 	/**
- 	 * Get mode.
- 	 * @return mode as PointingModelModeMod::PointingModelMode
- 	 */
- 	PointingModelModeMod::PointingModelMode getMode() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set mode with the specified PointingModelModeMod::PointingModelMode.
- 	 * @param mode The PointingModelModeMod::PointingModelMode value to which mode is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setMode (PointingModelModeMod::PointingModelMode mode);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute beamWidthWasFixed, which is optional
-	
-	
-	
-	/**
-	 * The attribute beamWidthWasFixed is optional. Return true if this attribute exists.
-	 * @return true if and only if the beamWidthWasFixed attribute exists. 
-	 */
-	bool isBeamWidthWasFixedExists() const;
-	
-
-	
- 	/**
- 	 * Get beamWidthWasFixed, which is optional.
- 	 * @return beamWidthWasFixed as vector<bool >
- 	 * @throws IllegalAccessException If beamWidthWasFixed does not exist.
- 	 */
- 	vector<bool > getBeamWidthWasFixed() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set beamWidthWasFixed with the specified vector<bool >.
- 	 * @param beamWidthWasFixed The vector<bool > value to which beamWidthWasFixed is to be set.
- 	 
- 		
- 	 */
- 	void setBeamWidthWasFixed (vector<bool > beamWidthWasFixed);
-		
-	
-	
-	
-	/**
-	 * Mark beamWidthWasFixed, which is an optional field, as non-existent.
-	 */
-	void clearBeamWidthWasFixed ();
-	
-
-
-	
-	// ===> Attribute beamPAWasFixed, which is optional
-	
-	
-	
-	/**
-	 * The attribute beamPAWasFixed is optional. Return true if this attribute exists.
-	 * @return true if and only if the beamPAWasFixed attribute exists. 
-	 */
-	bool isBeamPAWasFixedExists() const;
-	
-
-	
- 	/**
- 	 * Get beamPAWasFixed, which is optional.
- 	 * @return beamPAWasFixed as bool
- 	 * @throws IllegalAccessException If beamPAWasFixed does not exist.
- 	 */
- 	bool getBeamPAWasFixed() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set beamPAWasFixed with the specified bool.
- 	 * @param beamPAWasFixed The bool value to which beamPAWasFixed is to be set.
- 	 
- 		
- 	 */
- 	void setBeamPAWasFixed (bool beamPAWasFixed);
-		
-	
-	
-	
-	/**
-	 * Mark beamPAWasFixed, which is an optional field, as non-existent.
-	 */
-	void clearBeamPAWasFixed ();
 	
 
 
@@ -893,7 +1313,7 @@ public:
  	 * @return peakIntensityWasFixed as bool
  	 * @throws IllegalAccessException If peakIntensityWasFixed does not exist.
  	 */
- 	bool getPeakIntensityWasFixed() const throw(IllegalAccessException);
+ 	bool getPeakIntensityWasFixed() const;
 	
  
  	
@@ -913,36 +1333,6 @@ public:
 	 * Mark peakIntensityWasFixed, which is an optional field, as non-existent.
 	 */
 	void clearPeakIntensityWasFixed ();
-	
-
-
-	
-	// ===> Attribute ambientTemperature
-	
-	
-	
-
-	
- 	/**
- 	 * Get ambientTemperature.
- 	 * @return ambientTemperature as Temperature
- 	 */
- 	Temperature getAmbientTemperature() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set ambientTemperature with the specified Temperature.
- 	 * @param ambientTemperature The Temperature value to which ambientTemperature is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setAmbientTemperature (Temperature ambientTemperature);
-  		
-	
-	
 	
 
 
@@ -1055,12 +1445,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this CalPointingRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Frequency > frequencyRange, vector<Angle > direction, vector<Angle > collOffsetRelative, vector<Angle > collOffsetAbsolute, vector<Angle > collError, PointingMethodMod::PointingMethod pointingMethod, PointingModelModeMod::PointingModelMode mode, Temperature ambientTemperature);
+	bool compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AntennaMakeMod::AntennaMake antennaMake, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, vector<Angle > direction, vector<Frequency > frequencyRange, PointingModelModeMod::PointingModelMode pointingModelMode, PointingMethodMod::PointingMethod pointingMethod, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Angle > > collOffsetRelative, vector<vector<Angle > > collOffsetAbsolute, vector<vector<Angle > > collError, vector<vector<bool > > collOffsetTied, vector<double > reducedChiSquared);
 	
 	
 
 	
-	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, ReceiverBandMod::ReceiverBand receiverBand, vector<Frequency > frequencyRange, vector<Angle > direction, vector<Angle > collOffsetRelative, vector<Angle > collOffsetAbsolute, vector<Angle > collError, PointingMethodMod::PointingMethod pointingMethod, PointingModelModeMod::PointingModelMode mode, Temperature ambientTemperature); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, AntennaMakeMod::AntennaMake antennaMake, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, vector<Angle > direction, vector<Frequency > frequencyRange, PointingModelModeMod::PointingModelMode pointingModelMode, PointingMethodMod::PointingMethod pointingMethod, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Angle > > collOffsetRelative, vector<vector<Angle > > collOffsetAbsolute, vector<vector<Angle > > collError, vector<vector<bool > > collOffsetTied, vector<double > reducedChiSquared); 
 		 
 	
 	/**
@@ -1132,6 +1522,17 @@ private:
  	
 
 	
+	// ===> Attribute receiverBand
+	
+	
+
+	ReceiverBandMod::ReceiverBand receiverBand;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute startValidTime
 	
 	
@@ -1154,22 +1555,33 @@ private:
  	
 
 	
-	// ===> Attribute receiverBand
+	// ===> Attribute ambientTemperature
 	
 	
 
-	ReceiverBandMod::ReceiverBand receiverBand;
+	Temperature ambientTemperature;
 
 	
 	
  	
 
 	
-	// ===> Attribute frequencyRange
+	// ===> Attribute antennaMake
 	
 	
 
-	vector<Frequency > frequencyRange;
+	AntennaMakeMod::AntennaMake antennaMake;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute atmPhaseCorrection
+	
+	
+
+	AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection;
 
 	
 	
@@ -1187,33 +1599,22 @@ private:
  	
 
 	
-	// ===> Attribute collOffsetRelative
+	// ===> Attribute frequencyRange
 	
 	
 
-	vector<Angle > collOffsetRelative;
-
-	
-	
- 	
-
-	
-	// ===> Attribute collOffsetAbsolute
-	
-	
-
-	vector<Angle > collOffsetAbsolute;
+	vector<Frequency > frequencyRange;
 
 	
 	
  	
 
 	
-	// ===> Attribute collError
+	// ===> Attribute pointingModelMode
 	
 	
 
-	vector<Angle > collError;
+	PointingModelModeMod::PointingModelMode pointingModelMode;
 
 	
 	
@@ -1231,26 +1632,90 @@ private:
  	
 
 	
-	// ===> Attribute beamWidth, which is optional
+	// ===> Attribute numReceptor
 	
-	
-	bool beamWidthExists;
 	
 
-	vector<Angle > beamWidth;
+	int numReceptor;
 
 	
 	
  	
 
 	
-	// ===> Attribute beamWidthError, which is optional
+	// ===> Attribute polarizationTypes
 	
-	
-	bool beamWidthErrorExists;
 	
 
-	vector<Angle > beamWidthError;
+	vector<PolarizationTypeMod::PolarizationType > polarizationTypes;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute collOffsetRelative
+	
+	
+
+	vector<vector<Angle > > collOffsetRelative;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute collOffsetAbsolute
+	
+	
+
+	vector<vector<Angle > > collOffsetAbsolute;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute collError
+	
+	
+
+	vector<vector<Angle > > collError;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute collOffsetTied
+	
+	
+
+	vector<vector<bool > > collOffsetTied;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute reducedChiSquared
+	
+	
+
+	vector<double > reducedChiSquared;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute averagedPolarizations, which is optional
+	
+	
+	bool averagedPolarizationsExists;
+	
+
+	bool averagedPolarizations;
 
 	
 	
@@ -1263,7 +1728,7 @@ private:
 	bool beamPAExists;
 	
 
-	Angle beamPA;
+	vector<Angle > beamPA;
 
 	
 	
@@ -1276,57 +1741,7 @@ private:
 	bool beamPAErrorExists;
 	
 
-	Angle beamPAError;
-
-	
-	
- 	
-
-	
-	// ===> Attribute peakIntensity, which is optional
-	
-	
-	bool peakIntensityExists;
-	
-
-	Temperature peakIntensity;
-
-	
-	
- 	
-
-	
-	// ===> Attribute peakIntensityError, which is optional
-	
-	
-	bool peakIntensityErrorExists;
-	
-
-	Temperature peakIntensityError;
-
-	
-	
- 	
-
-	
-	// ===> Attribute mode
-	
-	
-
-	PointingModelModeMod::PointingModelMode mode;
-
-	
-	
- 	
-
-	
-	// ===> Attribute beamWidthWasFixed, which is optional
-	
-	
-	bool beamWidthWasFixedExists;
-	
-
-	vector<bool > beamWidthWasFixed;
+	vector<Angle > beamPAError;
 
 	
 	
@@ -1346,6 +1761,110 @@ private:
  	
 
 	
+	// ===> Attribute beamWidth, which is optional
+	
+	
+	bool beamWidthExists;
+	
+
+	vector<vector<Angle > > beamWidth;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute beamWidthError, which is optional
+	
+	
+	bool beamWidthErrorExists;
+	
+
+	vector<vector<Angle > > beamWidthError;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute beamWidthWasFixed, which is optional
+	
+	
+	bool beamWidthWasFixedExists;
+	
+
+	vector<bool > beamWidthWasFixed;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute offIntensity, which is optional
+	
+	
+	bool offIntensityExists;
+	
+
+	vector<Temperature > offIntensity;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute offIntensityError, which is optional
+	
+	
+	bool offIntensityErrorExists;
+	
+
+	vector<Temperature > offIntensityError;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute offIntensityWasFixed, which is optional
+	
+	
+	bool offIntensityWasFixedExists;
+	
+
+	bool offIntensityWasFixed;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute peakIntensity, which is optional
+	
+	
+	bool peakIntensityExists;
+	
+
+	vector<Temperature > peakIntensity;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute peakIntensityError, which is optional
+	
+	
+	bool peakIntensityErrorExists;
+	
+
+	vector<Temperature > peakIntensityError;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute peakIntensityWasFixed, which is optional
 	
 	
@@ -1353,17 +1872,6 @@ private:
 	
 
 	bool peakIntensityWasFixed;
-
-	
-	
- 	
-
-	
-	// ===> Attribute ambientTemperature
-	
-	
-
-	Temperature ambientTemperature;
 
 	
 	

@@ -25,6 +25,7 @@
 //#
 //# $Id$
 //----------------------------------------------------------------------------
+#include <tableplot/TablePlot/TablePlot.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableInfo.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -51,7 +52,6 @@
 #include <casa/Quanta/MVTime.h>
 #include <casa/OS/Time.h>
 #include <casa/iostream.h>
-#include <tableplot/TablePlot/TablePlot.h>
 #include <graphics/Graphics/PGPlotterLocal.h>
 #include <graphics/Graphics/PGPLOT.h>
 #include <casa/Logging/LogIO.h>
@@ -456,7 +456,7 @@ Bool PlotCal::plot(String xaxis, String yaxis) {
     
   if(calType_p=="G" || calType_p=="T" || calType_p=="GSPLINE" || 
      calType_p=="B" || calType_p=="BPOLY"  ||
-     calType_p=="M" || calType_p=="MF" ||
+     calType_p=="M" || calType_p=="MF" || calType_p=="A" || 
      calType_p=="D")
     return doPlot();
 
@@ -468,7 +468,7 @@ Bool PlotCal::plot(String xaxis, String yaxis) {
     throw(AipsError("X plots are disabled for now."));
 
   else 
-    throw(AipsError("The cal table you specified is not supported yet."));
+    throw(AipsError("The cal table (type "+calType_p+") you specified is not supported yet."));
   
   return False;
 
@@ -609,7 +609,7 @@ void PlotCal::getAxisTaQL(const String& axis,
 	label = "Gain Phase POLN Difference (deg)";
       }
       else if (axis.contains("SNR") ) {
-	if (calType_p=="M" || 
+	if (calType_p=="M" || calType_p=="A" || 
 	    calType_p=="MF" || 
 	    calType_p=="BPOLY" || 
 	    calType_p=="GSPLINE")
@@ -650,7 +650,7 @@ void PlotCal::getAxisTaQL(const String& axis,
 	label = "Gain Phase (deg)";
       }
       else if (axis.contains("SNR") ) {
-	if (calType_p=="M" || calType_p=="MF")
+	if (calType_p=="M" || calType_p=="MF" || calType_p=="A")
 	  throw(AipsError("Baseline-based calibration types don't support SNR plots."));
 	taql = "(SNR["+polsel+",])";
 	label = "Solution SNR";
@@ -676,7 +676,7 @@ Bool PlotCal::doPlot(){
   if (xAxis_p=="")
     if(calType_p=="G" || 
        calType_p=="T" || 
-       calType_p=="M" || 
+       calType_p=="M" || calType_p=="A" || 
        calType_p=="GSPLINE") 
       xAxis_p="TIME";
     else if (calType_p=="D")
@@ -1095,7 +1095,13 @@ Int PlotCal::multiTables(const Table& tablein,
     } 
     else if(subType[0].contains("X")){
       calType_p="X";
-    } 
+    }
+    else if(subType[0].contains("A")){
+      calType_p="A";
+    }
+    else {
+      os << LogIO::POST << "Cal table type " << subType[0] << " unknown." << LogIO::POST;
+    }
 
     // Get meta data from CAL_DESC subtable
     msName_p="";
@@ -1379,7 +1385,7 @@ Int PlotCal::multiTables(const Table& tablein,
       MSSelection mssel;
 
       // Handle baseline-based types
-      if (calType_p=="M" || calType_p=="MF") {
+      if (calType_p=="M" || calType_p=="MF" || calType_p=="A") {
 
 	// Form the baseline list (which selects from ANTENNA1, currently
 

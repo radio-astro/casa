@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="uvsub">
+<task type="function" name="uvsub" category="modelling">
 	<shortdescription>Subtract/add model from/to the corrected visibility data.</shortdescription>
 	<description>
         This function subtracts model visibility data from corrected visibility

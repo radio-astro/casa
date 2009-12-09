@@ -43,7 +43,7 @@ class deconvolver
     deconvolver();
     virtual ~deconvolver();
 
-    bool open(const std::string& dirty = "", const std::string& psf = "");
+    bool open(const std::string& dirty = "", const std::string& psf = "", const bool warn = true);
 
     bool reopen();
 
@@ -60,6 +60,8 @@ class deconvolver
     bool clipimage(const std::string& clippedimage = "", const std::string& inputimage = "", const ::casac::variant& threshold = ::casac::initialize_variant("0.0Jy"));
 
     bool clarkclean(const int niter = 1000, const double gain = 0.1, const ::casac::variant& threshold = ::casac::initialize_variant("0Jy"), const bool displayprogress = false, const std::string& model = "", const std::string& mask = "", const int histbins = 500, const std::vector<int>& psfpatchsize = ::casac::initialize_vector( 2, (int) 51, (int) 51 ), const double maxextpsf = 0.2, const double speedup = 0.0, const int maxnumpix = 10000, const int maxnummajcycles = -1, const int maxnumminoriter = -1);
+
+    bool fullclarkclean(const int niter = 1000, const double gain = 0.1, const ::casac::variant& threshold = ::casac::initialize_variant("0Jy"), const std::string& model = "", const std::string& mask = "", const double cyclefactor = 1.5);
 
     std::string dirtyname();
 

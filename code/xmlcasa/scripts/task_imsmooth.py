@@ -80,32 +80,30 @@ from imregion import *
 
 
 def imsmooth( imagename, kernel, major, minor, region, box, chans, stokes, mask, outfile):
-    retValue=None
     casalog.origin( 'imsmooth' )
+    retValue = False
 
     # boxcar, tophat and user-defined kernel's are not supported
     # yet.
     if ( not ( kernel.startswith( 'gaus' ) or  kernel.startswith( 'boxc' ) ) ):
         casalog.post( 'Our deepest apologies gaussian kernels is the only'
-                      +' type supported at this time.', 'WARN' ) 
-        raise Exception, 'Unsupported smoothing kernel type.'
+                      +' type supported at this time.', 'SEVERE' )
+        return retValue
     
 
     # First check to see if the output file exists.  If it
     # does then we abort.  CASA doesn't allow files to be
     # over-written, just a policy.
-    if ( len( outfile ) > 0 and os.path.exists( outfile ) ):
-        raise Exception, 'Output file, '+outfile+\
-              ' exists. imsmooth can not proceed, please\n'+\
-              'remove it or change the output file name.'
-    elif ( len( outfile ) < 1 ):
+    if ( len( outfile ) < 1 ):
+        outfile = 'imsmooth_results.im'
         casalog.post( "The outfile paramter is empty, consequently the" \
-                      +" smoothed image will NOT be\nsaved on disk," \
-                      +" but an image tool (ia) will be returned and if the" \
-                      +" returned value\nis saved then you can used in" \
-                      +" the same way the image tool (ia). can", 'WARN' )
-                      
-
+                      +" smoothed image will be\nsaved on disk in file, " \
+                      + outfile, 'WARN' )
+    if ( len( outfile ) > 0 and os.path.exists( outfile ) ):
+        casalog.post( 'Output file, '+outfile+\
+                      ' exists. imsmooth can not proceed, please\n'+\
+                      'remove it or change the output file name.', 'SEVERE' )
+        return retValue
     
     # Get the region information, if the user has specified
     # a region file it is given higher priority.
@@ -135,10 +133,14 @@ def imsmooth( imagename, kernel, major, minor, region, box, chans, stokes, mask,
 	else: 
 	    reg=imregion( imagename, chans, stokes, box, '', '' )
     except Exception, instance:
-	print '*** Error *** \n\tUnable to get region information\n',instance
-	raise Exception, instance
-    if ( len( reg .keys() ) < 1 ):
-        raise Exception, 'Ill-formed region: '+str(reg)+'. can not continue.' 
+        casalog.post( 'Unable to construct specified region.', 'SEVERE' )
+	casalog.post( 'Exception thrown is: '+str(instance), 'NORMAL4' )
+        return retValue
+
+    if ( reg == {} ):
+        casalog.post( 'Ill-formed region: '+str(reg)+'. can not continue.',
+                      'SEVERE' )
+        return retValue
     
     casalog.post( 'Smoothing to be done in region: '+str(reg), 'DEBUG2' )
 
@@ -153,12 +155,16 @@ def imsmooth( imagename, kernel, major, minor, region, box, chans, stokes, mask,
     try:        
         if ( kernel.startswith( "gaus" ) ):
             # GAUSSIAN KERNEL
-            casalog.post( "Calling convolve2d with Gaussian kernel", 'NORMAL4' )
+            casalog.post( "Calling convolve2d with Gaussian kernel", 'NORMAL3' )
             ia.open( imagename )
             casalog.post( "ia.convolve2d( major="+str(major)+", minor="\
                           +str(minor)+", outfile="+outfile+")", 'DEBUG2' )
-            retValue = ia.convolve2d( axes=[0,1], region=reg, major=major, \
-                                      minor=minor, outfile=outfile )
+            #retValue = ia.convolve2d( axes=[0,1], region=reg, major=major, \
+            #                          minor=minor, outfile=outfile )
+            ia.convolve2d( axes=[0,1], region=reg, major=major, \
+                                         minor=minor, outfile=outfile )
+            ia.done()
+            retValue = True
 
         elif (kernel.startswith( "boxc" ) ):
             # BOXCAR KERNEL
@@ -178,17 +184,22 @@ def imsmooth( imagename, kernel, major, minor, region, box, chans, stokes, mask,
                           "widths=[ "+str(minor)+", "+str(major)+" ],"+ \
                           "region="+str(reg)+",outfile="+outfile+" )",\
                           'DEBUG2' )
-            retValue = ia.sepconvolve( axes=[0,1], types=['box','box' ],\
+            #retValue = ia.sepconvolve( axes=[0,1], types=['box','box' ],\
+            #                           widths=[ minor, major ], \
+            #                           region=reg,outfile=outfile )
+            ia.sepconvolve( axes=[0,1], types=['box','box' ],\
                                        widths=[ minor, major ], \
                                        region=reg,outfile=outfile )
+            ia.done()
+            retValue = True
         else:
-            raise Exception, 'Unrecognized kernel type: ' + kernel
+            casalog.post( 'Unrecognized kernel type: ' + kernel, 'SEVERE' )
+            retValue = False
         
-        # Close our image so others can use it.
-        ia.done()
-        
-    except Exception, instance:        
-	print '*** Error *** \n\tUnable to get perform smoothing\n',instance
-	raise Exception, instance
+    except Exception, instance:
+        casalog.post( 'Something has gone wrong with the smoothing. Try, try again, and ye shall suceed', 'SEVERE' )
+        casalog.post( 'Exception thrown is: '+str(instance), 'NORMAL4' )
+        return False
+
     
     return retValue

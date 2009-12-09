@@ -41,28 +41,28 @@ using std::set;
 #include <FreqOffsetRow.h>
 #include <FreqOffsetTable.h>
 
-#include <FeedTable.h>
-#include <FeedRow.h>
-
 #include <AntennaTable.h>
 #include <AntennaRow.h>
 
 #include <SpectralWindowTable.h>
 #include <SpectralWindowRow.h>
+
+#include <FeedTable.h>
+#include <FeedRow.h>
 	
 
 using asdm::ASDM;
 using asdm::FreqOffsetRow;
 using asdm::FreqOffsetTable;
 
-using asdm::FeedTable;
-using asdm::FeedRow;
-
 using asdm::AntennaTable;
 using asdm::AntennaRow;
 
 using asdm::SpectralWindowTable;
 using asdm::SpectralWindowRow;
+
+using asdm::FeedTable;
+using asdm::FeedRow;
 
 
 #include <Parser.h>
@@ -179,7 +179,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct FreqOffsetRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void FreqOffsetRow::setFromIDL (FreqOffsetRowIDL x) throw(ConversionException) {
+	void FreqOffsetRow::setFromIDL (FreqOffsetRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -246,7 +246,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"FreqOffset");
+			throw ConversionException (err.getMessage(),"FreqOffset");
 		}
 	}
 #endif
@@ -322,7 +322,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void FreqOffsetRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void FreqOffsetRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -382,6 +382,100 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"FreqOffset");
 		}
+	}
+	
+	void FreqOffsetRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	antennaId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	spectralWindowId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	timeInterval.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(feedId);
+				
+		
+	
+
+	
+	
+		
+	offset.toBin(eoss);
+		
+	
+
+
+	
+	
+	}
+	
+	FreqOffsetRow* FreqOffsetRow::fromBin(EndianISStream& eiss, FreqOffsetTable& table) {
+		FreqOffsetRow* row = new  FreqOffsetRow(table);
+		
+		
+		
+	
+		
+		
+		row->antennaId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->spectralWindowId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->feedId =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+		row->offset =  Frequency::fromBin(eiss);
+		
+	
+
+		
+		
+		
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -578,25 +672,6 @@ namespace asdm {
 	
 		
 
-	// ===> Slice link from a row of FreqOffset table to a collection of row of Feed table.
-	
-	/**
-	 * Get the collection of row in the Feed table having their attribut feedId == this->feedId
-	 */
-	vector <FeedRow *> FreqOffsetRow::getFeeds() {
-		
-			return table.getContainer().getFeed().getRowByFeedId(feedId);
-		
-	}
-	
-
-	
-
-	
-	
-	
-		
-
 	/**
 	 * Returns the pointer to the row in the Antenna table having Antenna.antennaId == antennaId
 	 * @return a AntennaRow*
@@ -627,6 +702,25 @@ namespace asdm {
 	 	return table.getContainer().getSpectralWindow().getRowByKey(spectralWindowId);
 	 }
 	 
+
+	
+
+	
+	
+	
+		
+
+	// ===> Slice link from a row of FreqOffset table to a collection of row of Feed table.
+	
+	/**
+	 * Get the collection of row in the Feed table having their attribut feedId == this->feedId
+	 */
+	vector <FeedRow *> FreqOffsetRow::getFeeds() {
+		
+			return table.getContainer().getFeed().getRowByFeedId(feedId);
+		
+	}
+	
 
 	
 
@@ -686,11 +780,11 @@ namespace asdm {
 		
 			antennaId = row.antennaId;
 		
-			feedId = row.feedId;
-		
 			spectralWindowId = row.spectralWindowId;
 		
 			timeInterval = row.timeInterval;
+		
+			feedId = row.feedId;
 		
 		
 		
@@ -704,20 +798,13 @@ namespace asdm {
 	}
 
 	
-	bool FreqOffsetRow::compareNoAutoInc(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, Frequency offset) {
+	bool FreqOffsetRow::compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, Frequency offset) {
 		bool result;
 		result = true;
 		
 	
 		
 		result = result && (this->antennaId == antennaId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->feedId == feedId);
 		
 		if (!result) return false;
 	
@@ -732,6 +819,13 @@ namespace asdm {
 	
 		
 		result = result && (this->timeInterval.overlaps(timeInterval));
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->feedId == feedId);
 		
 		if (!result) return false;
 	

@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="viewer">
+<task type="function" name="viewer" category="utility" async="never">
 	<shortdescription>View an image or visibility data set:</shortdescription>
 	<description>
         The viewer will display images in raster, contour, vector or
@@ -33,7 +33,7 @@
 	
 	</description>
 	<input>
-		<param type="string" name="infile">
+		<param type="string" name="infile" mustexist="true">
 			<description> (Optional)  Name of file to visualize.</description>
 			<value>.</value>
 		</param>
@@ -41,6 +41,11 @@
 		<param type="string" name="displaytype">
 			<description> (Optional)  Type of visual rendering (raster, contour, vector or marker).  lel  if an lel expression is given for infile  (advanced).</description>
 			<value>raster</value>
+		</param>
+
+		<param type="bool" name="connection">
+			<description> (Optional)  Return a connection object for the newly opened viewer.</description>
+			<value>False</value>
 		</param>
 
                 <constraints>

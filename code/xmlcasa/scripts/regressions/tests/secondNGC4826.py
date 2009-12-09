@@ -13,7 +13,7 @@ for k in range(len(a)):
 gl=sys._getframe(stacklevel).f_globals
 
 def description():
-    return "Based on ngc4826c_regression.py"
+    return "feather, import, clean, uses ngc4826c_regression.py"
 
 def run():
     lepath=locatescript('ngc4826c_regression.py')

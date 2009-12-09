@@ -49,16 +49,16 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-MSCleanImageSkyModel::MSCleanImageSkyModel(const Int nscales)
-: method_p(NSCALES), nscales_p(nscales), progress_p(0)
+MSCleanImageSkyModel::MSCleanImageSkyModel(const Int nscales, const Float& smallScaleBias)
+: method_p(NSCALES), nscales_p(nscales), smallScaleBias_p(smallScaleBias), progress_p(0)
 {
   modified_p=True;
   donePSF_p=False;
 
 };
 
-MSCleanImageSkyModel::MSCleanImageSkyModel(const Vector<Float>& userScaleSizes)
-: method_p(USERVECTOR), userScaleSizes_p(userScaleSizes), progress_p(0)
+MSCleanImageSkyModel::MSCleanImageSkyModel(const Vector<Float>& userScaleSizes, const Float& smallScaleBias)
+: method_p(USERVECTOR), userScaleSizes_p(userScaleSizes), smallScaleBias_p(smallScaleBias), progress_p(0)
 {
   modified_p=True;
   donePSF_p=False;
@@ -159,7 +159,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
     }
   }
   
-  Bool converged=True;
+  Int converged=0;
   // Loop over all channels and polarizations
   for (Int chan=0; chan<nchan; chan++) {
 
@@ -225,6 +225,8 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	  }
 	  else {
 	    cleaner.setMask( subMask );
+	    //Using mask so the user knows best.
+	    cleaner.ignoreCenterBox(True);
 	  }
 	}
 
@@ -238,6 +240,7 @@ Bool MSCleanImageSkyModel::solve(SkyEquation& se) {
 	  } else {
 	    cleaner.setscales(scaleSizes);   
 	  }
+          cleaner.setSmallScaleBias(smallScaleBias_p);
 	  cleaner.setcontrol(CleanEnums::MULTISCALE, numberIterations(), gain(), 
 			     Quantity(threshold(), "Jy"), True);
 	  

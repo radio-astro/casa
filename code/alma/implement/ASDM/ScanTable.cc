@@ -174,16 +174,20 @@ namespace asdm {
 	
  	 * @param endTime. 
 	
- 	 * @param numSubScan. 
-	
  	 * @param numIntent. 
 	
+ 	 * @param numSubScan. 
+	
  	 * @param scanIntent. 
+	
+ 	 * @param calDataType. 
+	
+ 	 * @param calibrationOnLine. 
 	
  	 * @param flagRow. 
 	
      */
-	ScanRow* ScanTable::newRow(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numSubScan, int numIntent, vector<ScanIntentMod::ScanIntent > scanIntent, bool flagRow){
+	ScanRow* ScanTable::newRow(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubScan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine, bool flagRow){
 		ScanRow *row = new ScanRow(*this);
 			
 		row->setExecBlockId(execBlockId);
@@ -194,18 +198,22 @@ namespace asdm {
 			
 		row->setEndTime(endTime);
 			
-		row->setNumSubScan(numSubScan);
-			
 		row->setNumIntent(numIntent);
 			
+		row->setNumSubScan(numSubScan);
+			
 		row->setScanIntent(scanIntent);
+			
+		row->setCalDataType(calDataType);
+			
+		row->setCalibrationOnLine(calibrationOnLine);
 			
 		row->setFlagRow(flagRow);
 	
 		return row;		
 	}	
 
-	ScanRow* ScanTable::newRowFull(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numSubScan, int numIntent, vector<ScanIntentMod::ScanIntent > scanIntent, bool flagRow)	{
+	ScanRow* ScanTable::newRowFull(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubScan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine, bool flagRow)	{
 		ScanRow *row = new ScanRow(*this);
 			
 		row->setExecBlockId(execBlockId);
@@ -216,11 +224,15 @@ namespace asdm {
 			
 		row->setEndTime(endTime);
 			
-		row->setNumSubScan(numSubScan);
-			
 		row->setNumIntent(numIntent);
 			
+		row->setNumSubScan(numSubScan);
+			
 		row->setScanIntent(scanIntent);
+			
+		row->setCalDataType(calDataType);
+			
+		row->setCalibrationOnLine(calibrationOnLine);
 			
 		row->setFlagRow(flagRow);
 	
@@ -283,8 +295,10 @@ ScanRow* ScanTable::newRowCopy(ScanRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
 	 */
-	ScanRow*  ScanTable::checkAndAdd(ScanRow* x) throw (DuplicateKey) {
+	ScanRow*  ScanTable::checkAndAdd(ScanRow* x)  {
 		
 		
 		if (getRowByKey(
@@ -362,20 +376,24 @@ ScanRow* ScanTable::newRowCopy(ScanRow* row) {
  	 		
  * @param endTime.
  	 		
- * @param numSubScan.
- 	 		
  * @param numIntent.
  	 		
+ * @param numSubScan.
+ 	 		
  * @param scanIntent.
+ 	 		
+ * @param calDataType.
+ 	 		
+ * @param calibrationOnLine.
  	 		
  * @param flagRow.
  	 		 
  */
-ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numSubScan, int numIntent, vector<ScanIntentMod::ScanIntent > scanIntent, bool flagRow) {
+ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime, ArrayTime endTime, int numIntent, int numSubScan, vector<ScanIntentMod::ScanIntent > scanIntent, vector<CalDataOriginMod::CalDataOrigin > calDataType, vector<bool > calibrationOnLine, bool flagRow) {
 		ScanRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(execBlockId, scanNumber, startTime, endTime, numSubScan, numIntent, scanIntent, flagRow)) return aRow;
+			if (aRow->compareNoAutoInc(execBlockId, scanNumber, startTime, endTime, numIntent, numSubScan, scanIntent, calDataType, calibrationOnLine, flagRow)) return aRow;
 		}			
 		return 0;	
 } 
@@ -383,7 +401,6 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
  	 	
 
 	
-
 
 
 
@@ -404,7 +421,7 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
 #endif
 	
 #ifndef WITHOUT_ACS
-	void ScanTable::fromIDL(ScanTableIDL x) throw(DuplicateKey,ConversionException) {
+	void ScanTable::fromIDL(ScanTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			ScanRow *tmp = newRow();
@@ -415,28 +432,27 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
 	}
 #endif
 
-	char *ScanTable::toFITS() const throw(ConversionException) {
+	char *ScanTable::toFITS() const  {
 		throw ConversionException("Not implemented","Scan");
 	}
 
-	void ScanTable::fromFITS(char *fits) throw(ConversionException) {
+	void ScanTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Scan");
 	}
 
-	string ScanTable::toVOTable() const throw(ConversionException) {
+	string ScanTable::toVOTable() const {
 		throw ConversionException("Not implemented","Scan");
 	}
 
-	void ScanTable::fromVOTable(string vo) throw(ConversionException) {
+	void ScanTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Scan");
 	}
 
-	string ScanTable::toXML()  throw(ConversionException) {
+	
+	string ScanTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<ScanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/ScanTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<ScanTable> ");
+		buf.append("<ScanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/ScanTable\" xsi:schemaLocation=\"http://Alma/XASDM/ScanTable http://almaobservatory.org/XML/XASDM/2/ScanTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -452,8 +468,9 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
 		buf.append("</ScanTable> ");
 		return buf;
 	}
+
 	
-	void ScanTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void ScanTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<ScanTable")) 
 			error();
@@ -495,20 +512,110 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
 			error();
 	}
 
-	void ScanTable::error() throw(ConversionException) {
+	
+	void ScanTable::error()  {
 		throw ConversionException("Invalid xml document","Scan");
 	}
 	
+	
 	string ScanTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void ScanTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Scan");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			ScanRow* aRow = ScanRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Scan");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Scan");
+		} 		 	
+	}
+
 	
 	void ScanTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -539,6 +646,7 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
 				throw ConversionException("Could not close file " + fileName, "Scan");
 		}
 	}
+
 	
 	void ScanTable::setFromFile(const string& directory) {
 		string tablename;
@@ -580,6 +688,11 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

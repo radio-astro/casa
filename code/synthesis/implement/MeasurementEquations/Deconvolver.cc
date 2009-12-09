@@ -88,6 +88,7 @@
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <coordinates/Coordinates/Projection.h>
 
+#include <synthesis/MeasurementComponents/ClarkCleanImageSkyModel.h>
 #include <synthesis/MeasurementEquations/CEMemProgress.h>
 #include <synthesis/MeasurementEquations/CEMemModel.h>
 #include <synthesis/MeasurementEquations/ClarkCleanLatModel.h>
@@ -201,7 +202,7 @@ Deconvolver::~Deconvolver()
   // pgplotter_p = 0;
 }
 
-Bool Deconvolver::open(const String& dirty, const String& psf)
+Bool Deconvolver::open(const String& dirty, const String& psf, Bool warn)
 {
   LogIO os(LogOrigin("Deconvolver", "open()", WHERE));
   
@@ -228,11 +229,13 @@ Bool Deconvolver::open(const String& dirty, const String& psf)
     
     if (psf_p) delete psf_p;  psf_p = 0;
     if (psf == ""){
-      os << LogIO::WARN 
-	 << "No psf given; please define one before deconvolving" << LogIO::POST;
-      os << LogIO::WARN
-	 << "Use the function open with the psf" << LogIO::POST;
-      return True;
+    	if(warn) {
+    		os << LogIO::WARN
+    			<< "No psf given; please define one before deconvolving" << LogIO::POST;
+    		os << LogIO::WARN
+    			<< "Use the function open with the psf" << LogIO::POST;
+    	}
+    	return True;
     }
     else{
       psf_p = new PagedImage<Float>(psf);
@@ -838,7 +841,36 @@ Bool Deconvolver::smooth(const String& model,
   psf_p->table().unlock();
   return True;
 }
+//will clean casa axes order images 
+Bool Deconvolver::clarkclean(const Int niter, 
+			     const Float gain, const Quantity& threshold, 
+			     const String& model, const String& maskName, 
+			     Float cycleFactor){
 
+  Bool retval=False;
+  Double thresh=threshold.get("Jy").getValue();
+  String imagename(model);
+  // Make first image with the required shape and coordinates only if
+  // it doesn't exist yet. Otherwise we'll throw an exception later
+  if(imagename=="") imagename=dirty_p->table().tableName()+".clarkclean";
+  if(!Table::isWritable(imagename)) {
+    make(imagename);
+  }
+  PagedImage<Float> modelImage(imagename);
+  Bool hasMask=False;
+  if(maskName !="")
+    hasMask=Table::isReadable(maskName);
+  if(hasMask){
+    PagedImage<Float> mask(maskName);
+    retval=ClarkCleanImageSkyModel::clean(modelImage, *dirty_p, *psf_p, mask, gain, niter, thresh, cycleFactor, True, True); 
+  }
+  else{
+    ImageInterface<Float> *tmpMask=0;
+    retval=ClarkCleanImageSkyModel::clean(modelImage, *dirty_p, *psf_p, *tmpMask, gain, niter, thresh, cycleFactor, False, True); 
+  }
+    
+  return retval;
+}
 // Clean algorithm
 Bool Deconvolver::clarkclean(const Int niter, 
 			     const Float gain, const Quantity& threshold, 

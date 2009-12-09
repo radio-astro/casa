@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+  
+<task type="function" name="sdsim" startup="false" category="simulation">
+
+  <shortdescription>single dish simulation task:</shortdescription>
+  <description>
+    This is a task which will simulate single dish data.  
+    Notice this is still a preliminary prototype task and only has 
+    limited functionality. 
+    !!!NOTICE!!! sdsim currently can simulate only 2D images and
+    not available for 3D and 4D data cubes. The functionality will 
+    be implemented in the next patch release (CASA 3.0.1). 
+  </description>
+  
+  <input>
+    
+<!--  INPUT  -->
+
+    <param type="string" name="modelimage" >
+      <description>input image name</description>
+      <value></value>
+    </param>
+
+
+<!--
+    <param type="bool" name="ignorecoord">
+      <description>scale model coordinates to output parameters</description>
+      <value>False</value>
+    </param>
+-->
+    <param type="bool" name="modifymodel">
+      <description>modify model image WCS or flux scale</description>
+      <value>False</value>
+    </param>
+
+    <param type="string" name="refdirection" subparam='true'>
+       <description>reference direction (CRVAL): "J2000 19h00m00 -40d00m00" or "direction" or "header"</description>
+       <value>direction</value>
+    </param>
+
+    <param type="string" name="refpixel" subparam='true'>
+       <description>reference pixel (CRPIX): "[100,100]" or "center" or "header"</description>
+       <!--<value>header</value>-->
+       <value>center</value>
+    </param>
+
+    <param type="string" name="incell" subparam='true'>
+       <description>pixel size: "0.1arcsec" or "header"</description>
+       <value>header</value>
+    </param>
+
+    <param type="string" name="inbright">
+<!--
+       <description>set peak surface brightness in Jy/pixel or "unchanged"</description>
+       <value>unchanged</value>
+-->
+       <description>set peak surface brightness in Jy/sq arcsec or "default"</description>
+       <value>default</value>
+    </param>
+
+<!--
+    <param type="string" name="complist">
+      <description>componentlist table to observe</description>
+      <value></value>
+    </param>
+-->
+
+<!--  ANTENNA  -->
+
+    <param type="string" name="antennalist" mustexist="true">
+      <description>antenna position file</description>
+      <value>aca.tp.cfg</value>
+    </param>
+
+    <param type="string" name="antenna">
+      <description>antenna ID</description>
+      <value></value>
+    </param>
+
+<!--
+    <param type="string" name="checkinputs">
+      <description>graphically verify parameters [yes|no|only]</description>
+      <value>no</value>
+	<allowed kind="enum">
+	  <value>yes</value>
+	  <value>no</value>
+	  <value>only</value>
+	</allowed>
+    </param>
+-->            
+
+<!--  OUTPUT  -->
+
+    <param type="string" name="project">
+      <description>root for output files</description>
+      <value>simsd</value>
+    </param>
+    
+    <param type="string" name="refdate">
+      <description>center time/date of observation *see help</description>
+      <value>2012/05/21/22:05:00</value>
+    </param>
+
+<!--    
+    <param type="string" name="totaltime">
+      <description>total time of observation</description>
+      <value>7200s</value>
+    </param>
+-->
+    
+    <param type="string" name="integration">
+      <description>integration (sampling) time</description>
+      <value>10s</value>
+    </param>
+
+<!--
+    <param type="int" name="scanlength">
+      <description>number of integrations per pointing in the mosaic</description>
+      <value type="int">5</value>
+    </param>
+-->
+
+    
+    <!-- having this an array implies a degree of complexity (multiple spws) that we don't 
+	 yet have :)  
+	 <param type="stringArray" name="startfreq">
+	   -->
+    <param type="string" name="startfreq">
+      <description>frequency of first channel</description>
+      <value>89GHz</value>
+    </param>
+    
+    <!--    <param type="stringArray" name="chanwidth">   -->
+    <param type="string" name="chanwidth">
+      <description>channel width</description>
+      <value>10MHz</value>
+    </param>
+    
+    <param type="int" name="nchan">
+      <description>number of channels</description>
+      <value type="int">1</value>
+      <allowed kind="range"><value range="min">1</value></allowed>
+    </param>
+    
+    
+    <param type="stringArray" name="direction">
+      <description>center of image, or list of pointings</description>
+      <value>J2000 19h00m00 -40d00m00</value>
+    </param>
+
+    <param type="string" name="pointingspacing">
+      <description>spacing between pointing</description>
+      <value>1arcmin</value>
+    </param>
+    
+    <param type="any" name="relmargin">
+      <any type="variant" limittypes="double int"/>
+      <description>space btw. pointings and edge, relative to pointingspacing</description>
+      <value type="double">1.0</value>
+    </param>
+
+
+    <param type="string" name="cell">
+      <description>output cell/pixel size</description>
+      <value>0.1arcsec</value>
+    </param>
+    
+
+    <param type="intArray" name="imsize">
+	    <description>output image size in pixels (x,y) </description>
+	    <value type="vector"><value>128</value><value>128</value></value>
+    </param>
+
+
+
+
+<!--  IMAGE   -->    
+
+    <param type="string" name="stokes">
+	    <description>Stokes params to image</description>
+	    <value>I</value>
+    <allowed kind="enum">
+	    <value>I</value>
+	    <value>IV</value>
+	    <value>QU</value>
+	    <value>IQUV</value>
+	    <value>RR</value>
+	    <value>LL</value>
+	    <value>RRLL</value>
+	    <value>XX</value>
+	    <value>YY</value>
+	    <value>XXYY</value>
+    </allowed>
+    </param>
+
+
+
+<!--  NOISE  -->
+
+    <param type="bool" name="noise_thermal">
+      <description>add thermal noise</description>
+      <!--<value>True</value>-->
+      <value>False</value>
+    </param>
+    <param type="double" name="t_atm" subparam="true">
+      <description>atmospheric temperature</description><value>260.</value>
+    </param>
+    <!--
+       <param type="double" name="t_ground" subparam="true">
+         <description>ambient temperature</description><value>270.
+       </value></param>
+    -->
+    <!--
+	<param type="double" name="t_sky" subparam="true">
+	  <description>atmospheric temperature</description><value>263.</value></param>
+    -->
+    <param type="double" name="tau0" subparam="true">
+      <description>zenith opacity</description><value>0.1</value></param>
+    
+
+
+    <param type="bool" name="verbose">
+      <description></description>
+      <value>False</value>
+    </param>
+
+        
+    
+<!--  CONSTRAINTS  -->    
+    
+    <constraints>
+      <when param="modifymodel">
+	<equals type="bool" value="False"/>
+	<equals type="bool" value="True">
+	  <default param="refdirection"><value type="string">direction</value></default>
+	  <default param="refpixel"><value type="string">center</value></default>
+	  <default param="incell"><value type="string">header</value></default>
+	</equals>
+      </when>
+
+      <when param="noise_thermal">
+	<equals type="bool" value="False"/>
+	<equals type="bool" value="True">
+	  <!--
+	      <default param="t_sky"><value>263.</value></default>
+	   -->
+	  <default param="t_atm"><value>260.</value></default>
+	  <!--
+	  <default param="t_ground"><value>270.</value></default>
+	   -->
+	  <default param="tau0"><value>0.1</value></default>
+	</equals>
+      </when>
+    </constraints>
+    
+    
+    
+  </input>
+  <returns type="void"/>
+  
+<example>
+single dish simulation task (prototype):	
+
+    This task simulates single dish observations. Note this is a 
+    preliminary prototype task and functionalities are limited. 
+    New functionality is actively  being added, so if you have changed 
+    versions of CASA, check the inputs carefully.
+    !!!NOTICE!!! sdsim currently can simulate only 2D images and
+    not available for 3D and 4D data cubes. The functionality will 
+    be implemented in the next patch release (CASA 3.0.1). 
+    -------------------------------
+    Keyword arguments:
+    -------------------------------
+    -- Input Model:
+    modelimage -- Name of an image to simulate.
+    modifymodel -- Modify model image WCS or flux scale
+                options: (bool) True,False
+                default: False 
+         >>> modifymodel expandable parameters
+                refdirection -- Reference direction of the model image. 
+                       options: (str) 'direction', 'header', or reference 
+                                direction, e.g., 'J2000 19h00m00 -40d00m00"'
+                       default: 'direction'
+                refpixcel -- Reference pixel in the model image. 
+                       options: (str) 'center', 'header' or reference pixel, 
+                                e.g. '[100,100]' 
+                       default: 'center'
+                incell -- Pixel size of the model image. 
+                       options: 'header' or pixel size, e.g. '0.1arcsec'
+                       default: 'header'
+    inbright -- Peak surface brightness to scale input image 
+                in Jy/square arcsec.
+                options: 'default' or surface brightness in Jy/sq. 
+                default: 'default'
+    antennalist -- Name of ascii file containing antenna positions.
+                each row has x y z coordinates and antenna diameter; 
+                header lines are required to specify the observatory name
+                and coordinate system e.g. 
+                # observatory=ALMA
+                # coordsys=UTM
+                # datum=WGS84
+                # zone=19
+    antenna -- Antenna id with which observed. 
+                default: ''
+    -------------------------------
+    -- Output Control:
+    project -- Name of project simulated; created ms and images will
+                start with this string. 
+                default: 'simsd'.
+    refdate -- Central time of simulated observation. 
+                default: '2012/05/21/22:05:00'
+                [alpha] ** observations are centered at the nearest transit **
+    integration --- Time interval for each integration
+                default: '10s'
+    startfreq -- Frequency of first channel
+                default: '89MHz'
+    chanwidth -- Channel width
+                default: '10MHz'
+    nchan -- number of channels (can be 1 for a continuum simulation)
+                options: (int)
+                default: 1
+    direction -- image center direction
+                * can optionally be a list of pointings, which will override
+                pointingspacing.  Otherwise sdsim will hexagonally
+                pack the input image with pointings.  When direction is a
+                list, the centroid of direction will be used as the center.
+                default: ['J2000 19h00m00 -40d00m00']
+    pointingspacing-- spacing in between beams
+                default: '1arcmin'        
+    relmargin -- how close pointing centers may approach the edge of the
+                output image, as a fraction of pointingspacing.
+                * ignored if direction is a list.
+                options: (float)
+                default: 1.0
+    cell -- output cell/pixel size
+                default: '0.1arcsec'
+    imsize -- output image size in pixels (x,y)
+                options: (list)
+                default: [128,128]
+    stokes -- Stokes parameters to image
+                default: 'I'
+    -------------------------------
+    -- Corrupting data:
+    noise_thermal -- add thermal noise 
+                options: (bool) True, False
+                default: False
+                * [alpha] currently only knows about ALMA receivers 
+         >>> noise_thermal expandable parameters
+                t_atm -- atmospheric temperature in K 
+                       default: 260.0
+                tau0 -- zenith opacity at observing frequency
+                       default: 0.1
+
+
+</example>
+</task>
+</casaxml>

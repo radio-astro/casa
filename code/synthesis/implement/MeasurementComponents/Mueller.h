@@ -41,7 +41,7 @@ class Mueller {
   
 public:
   
-  enum MuellerType{AddDiag2=5,General=4,Diagonal=3,Diag2=2,Scalar=1};
+  enum MuellerType{AddDiag2=6,AddDiag=5,General=4,Diagonal=3,Diag2=2,Scalar=1};
  
   // Construct 
   Mueller();
@@ -223,6 +223,8 @@ private:
 
 };
 
+
+// Parallel-hands only "additive Mueller"
 class AddMuellerDiag2 : public MuellerDiag2 {
   
 public:
@@ -236,10 +238,10 @@ public:
   // Return type id
   inline virtual MuellerType type() const { return Mueller::AddDiag2; };
 
-  // In-place invert
+  // In-place invert (negate)
   virtual void invert();
 
-  // In-place multiply onto a VisVector: optimized Diag2 version
+  // In-place add onto a VisVector: optimized Diag2 version
   virtual void apply(VisVector& v);
   using MuellerDiag2::apply;
 
@@ -247,6 +249,35 @@ protected:
   
   // Default/Copy ctors are protected 
   AddMuellerDiag2(const AddMuellerDiag2& mat);
+  
+};
+
+
+// Full polarization "additive Mueller"
+class AddMuellerDiag : public MuellerDiag {
+  
+public:
+
+  // Construct 
+  AddMuellerDiag();
+
+  // Dtor
+  virtual ~AddMuellerDiag() {};
+  
+  // Return type id
+  inline virtual MuellerType type() const { return Mueller::AddDiag; };
+
+  // In-place invert (negate)
+  virtual void invert();
+
+  // In-place add onto a VisVector:
+  virtual void apply(VisVector& v);
+  using MuellerDiag::apply;
+
+protected:
+  
+  // Default/Copy ctors are protected 
+  AddMuellerDiag(const AddMuellerDiag& mat);
   
 };
 
@@ -268,6 +299,7 @@ inline Int muellerNPar(const Mueller::MuellerType& mtype) {
     return 16;
     break;
   case Mueller::Diagonal:
+  case Mueller::AddDiag:
     return 4;
     break;
   case Mueller::Diag2:

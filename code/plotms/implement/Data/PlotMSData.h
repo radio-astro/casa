@@ -27,24 +27,26 @@
 #ifndef PLOTMSDATA_H_
 #define PLOTMSDATA_H_
 
-#include <plotms/Data/PlotMSCache.h>
-#include <plotms/PlotMS/PlotMSParameters.h>
-
-#include <casa/Arrays/Vector.h>
 #include <graphics/GenericPlotter/PlotData.h>
-#include <msvis/MSVis/VisSet.h>
+
+#include <plotms/Data/PlotMSCache.h>
+#include <plotms/Data/PlotMSCacheIndexer.h>
 
 #include <casa/namespace.h>
 using namespace std;
 
 namespace casa {
 
+//# Forward declarations.
+class PlotMS;
+
+
 // Layer between plot cache and the rest of PlotMS and the GenericPlotter
 // classes.
-class PlotMSData : public PlotMaskedPointData {
+class PlotMSData : public PlotMaskedPointData, public PlotBinnedData {
 public:
-    // Constructor.
-    PlotMSData();
+    // Constructor which takes the parent PlotMS.
+    PlotMSData(PlotMS* plotms);
     
     // Copy constructor.  See operator=().
     PlotMSData(const PlotMSData& copy);
@@ -69,26 +71,40 @@ public:
     bool minsMaxes(double& xMin, double& xMax, double& yMin, double& yMax);
     // </group>
     
-    // Implemented PlotMaskedPointData methods.  Not implemented for now until
-    // flagging is ready in the cache.
+    // Implemented PlotMaskedPointData methods.
+    // <group>
+    bool maskedAt(unsigned int index) const;
+    void xyAndMaskAt(unsigned int index, double& x, double& y,
+            bool& mask) const;
+    // </group>
+    
+    // Unimplemented PlotMaskedPointData methods.
     // <group>
     unsigned int sizeMasked() const { return 0; }
     unsigned int sizeUnmasked() const { return size(); }
-    bool maskedAt(unsigned int index) const { return itsCache_->getFlagMask((int)index); }
     bool maskedMinsMaxes(double& xMin, double& xMax, double& yMin,
             double& yMax) { return minsMaxes(xMin, xMax, yMin, yMax); }
     bool unmaskedMinsMaxes(double& xMin, double& xMax, double& yMin,
             double& yMax) { return minsMaxes(xMin, xMax, yMin, yMax); }
-    void xyAndMaskAt(unsigned int index, double& x, double& y,
-            bool& mask) const {
-      mask = itsCache_->getFlagMask((int)index);
-      xAndYAt(index, x, y);
-    }
+    // </group>
+    
+    // Implemented PlotBinnedData methods.
+    // <group>
+    unsigned int numBins() const;
+    unsigned int binAt(unsigned int i) const;
+    bool isBinned() const;
     // </group>
     
     
-    // See PlotMSCache::refTime().
-    double cacheReferenceTime() const;
+    // Tells the cache what to colorize on, on the next draw.  Returns whether
+    // the plot needs to be redrawn or not.
+    bool colorize(bool doColorize, PMS::Axis colorizeAxis);    
+    
+    // Returns the reference value for the given axis, if applicable.
+    // <group>
+    bool hasReferenceValue(PMS::Axis axis);
+    double referenceValue(PMS::Axis axis);
+    // </group>
     
     // See PlotMSCache::readyForPlotting().
     bool cacheReady() const;
@@ -99,26 +115,32 @@ public:
     // Loads values into the cache using the given vis set, with the given
     // axes used for x and y values.  See PlotMSCache::load().
     // <group>
-    void loadCache(VisSet& visSet, PMS::Axis xAxis, PMS::Axis yAxis,
-            PMS::DataColumn xData, PMS::DataColumn yData,
-            const PlotMSAveraging& averaging,
-            PlotMSCacheThread* thread = NULL);
-    void loadCache(VisSet& visSet, const vector<PMS::Axis>& axes,
-            const vector<PMS::DataColumn>& data,
-            const PlotMSAveraging& averaging,
-            PlotMSCacheThread* thread = NULL);
+    void loadCache(PMS::Axis xAxis, PMS::Axis yAxis,
+		   PMS::DataColumn xData, PMS::DataColumn yData,
+		   const String& msname,
+		   const PlotMSSelection& selection,
+		   const PlotMSAveraging& averaging,
+		   PlotMSCacheThread* thread = NULL);
+    void loadCache(const vector<PMS::Axis>& axes,
+		   const vector<PMS::DataColumn>& data,
+		   const String& msname,
+		   const PlotMSSelection& selection,
+		   const PlotMSAveraging& averaging,
+		   PlotMSCacheThread* thread = NULL);
     // </group>
     
     // See PlotMSCache::setUpPlot().
     void setupCache(PMS::Axis xAxis, PMS::Axis yAxis);
     
+    // See PlotMSCache::release().
+    void releaseCache(const vector<PMS::Axis>& axes);
+    
     // See PlotMSCache::locateRange().
-    PlotLogMessage* locateRange(double xMin, double xMax, double yMin,
-            double yMax);
+    PlotLogMessage* locateRange(const Vector<PlotRegion>& regions);
     
     // See PlotMSCache::flagRange().
-    PlotLogMessage* flagRange(const PlotMSFlagging& flagging, double xMin,
-            double xMax, double yMin, double yMax, bool flag = true);
+    PlotLogMessage* flagRange(const PlotMSFlagging& flagging,
+            const Vector<PlotRegion>& regions, bool flag = true);
     
     // See PlotMSCache::loadedAxes().
     vector<pair<PMS::Axis, unsigned int> > loadedAxes() const;
@@ -127,9 +149,22 @@ public:
     // Copy operator.
     PlotMSData& operator=(const PlotMSData& copy);
     
-private:    
+private:
+    // Parent.
+    PlotMS* itsPlotms_;
+    
     // Cache.
     PlotMSCachePtr itsCache_;
+
+    // Indexer
+    PlotMSCacheIndexerPtr itsIndexer_;
+    
+    // Last set colorizing parameters.
+    // <group>
+    bool itsColorize_;
+    PMS::Axis itsColorizeAxis_;
+    // </group>
+
 };
 
 }

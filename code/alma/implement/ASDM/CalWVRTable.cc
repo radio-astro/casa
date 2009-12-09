@@ -80,11 +80,11 @@ namespace asdm {
 	CalWVRTable::CalWVRTable(ASDM &c) : container(c) {
 
 	
+		key.push_back("antennaName");
+	
 		key.push_back("calDataId");
 	
 		key.push_back("calReductionId");
-	
-		key.push_back("antennaName");
 	
 
 
@@ -168,15 +168,11 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param antennaName. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
-	
- 	 * @param antennaName. 
-	
- 	 * @param numPoly. 
-	
- 	 * @param numChan. 
 	
  	 * @param startValidTime. 
 	
@@ -184,33 +180,39 @@ namespace asdm {
 	
  	 * @param wvrMethod. 
 	
- 	 * @param freqLimits. 
+ 	 * @param numInputAntennas. 
 	
- 	 * @param pathCoeff. 
+ 	 * @param inputAntennaNames. 
+	
+ 	 * @param numChan. 
 	
  	 * @param chanFreq. 
 	
  	 * @param chanWidth. 
 	
- 	 * @param numInputAntenna. 
+ 	 * @param refTemp. 
 	
- 	 * @param inputAntennaNames. 
+ 	 * @param numPoly. 
+	
+ 	 * @param pathCoeff. 
 	
  	 * @param polyFreqLimits. 
 	
+ 	 * @param wetPath. 
+	
+ 	 * @param dryPath. 
+	
+ 	 * @param water. 
+	
      */
-	CalWVRRow* CalWVRTable::newRow(Tag calDataId, Tag calReductionId, string antennaName, int numPoly, int numChan, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > freqLimits, vector<vector<vector<float > > > pathCoeff, vector<Frequency > chanFreq, vector<Frequency > chanWidth, int numInputAntenna, vector<string > inputAntennaNames, vector<Frequency > polyFreqLimits){
+	CalWVRRow* CalWVRTable::newRow(string antennaName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, int numInputAntennas, vector<string > inputAntennaNames, int numChan, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<vector<Temperature > > refTemp, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<Frequency > polyFreqLimits, vector<float > wetPath, vector<float > dryPath, Length water){
 		CalWVRRow *row = new CalWVRRow(*this);
+			
+		row->setAntennaName(antennaName);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
-			
-		row->setAntennaName(antennaName);
-			
-		row->setNumPoly(numPoly);
-			
-		row->setNumChan(numChan);
 			
 		row->setStartValidTime(startValidTime);
 			
@@ -218,35 +220,41 @@ namespace asdm {
 			
 		row->setWvrMethod(wvrMethod);
 			
-		row->setFreqLimits(freqLimits);
+		row->setNumInputAntennas(numInputAntennas);
 			
-		row->setPathCoeff(pathCoeff);
+		row->setInputAntennaNames(inputAntennaNames);
+			
+		row->setNumChan(numChan);
 			
 		row->setChanFreq(chanFreq);
 			
 		row->setChanWidth(chanWidth);
 			
-		row->setNumInputAntenna(numInputAntenna);
+		row->setRefTemp(refTemp);
 			
-		row->setInputAntennaNames(inputAntennaNames);
+		row->setNumPoly(numPoly);
+			
+		row->setPathCoeff(pathCoeff);
 			
 		row->setPolyFreqLimits(polyFreqLimits);
+			
+		row->setWetPath(wetPath);
+			
+		row->setDryPath(dryPath);
+			
+		row->setWater(water);
 	
 		return row;		
 	}	
 
-	CalWVRRow* CalWVRTable::newRowFull(Tag calDataId, Tag calReductionId, string antennaName, int numPoly, int numChan, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > freqLimits, vector<vector<vector<float > > > pathCoeff, vector<Frequency > chanFreq, vector<Frequency > chanWidth, int numInputAntenna, vector<string > inputAntennaNames, vector<Frequency > polyFreqLimits)	{
+	CalWVRRow* CalWVRTable::newRowFull(string antennaName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, int numInputAntennas, vector<string > inputAntennaNames, int numChan, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<vector<Temperature > > refTemp, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<Frequency > polyFreqLimits, vector<float > wetPath, vector<float > dryPath, Length water)	{
 		CalWVRRow *row = new CalWVRRow(*this);
+			
+		row->setAntennaName(antennaName);
 			
 		row->setCalDataId(calDataId);
 			
 		row->setCalReductionId(calReductionId);
-			
-		row->setAntennaName(antennaName);
-			
-		row->setNumPoly(numPoly);
-			
-		row->setNumChan(numChan);
 			
 		row->setStartValidTime(startValidTime);
 			
@@ -254,19 +262,29 @@ namespace asdm {
 			
 		row->setWvrMethod(wvrMethod);
 			
-		row->setFreqLimits(freqLimits);
+		row->setNumInputAntennas(numInputAntennas);
 			
-		row->setPathCoeff(pathCoeff);
+		row->setInputAntennaNames(inputAntennaNames);
+			
+		row->setNumChan(numChan);
 			
 		row->setChanFreq(chanFreq);
 			
 		row->setChanWidth(chanWidth);
 			
-		row->setNumInputAntenna(numInputAntenna);
+		row->setRefTemp(refTemp);
 			
-		row->setInputAntennaNames(inputAntennaNames);
+		row->setNumPoly(numPoly);
+			
+		row->setPathCoeff(pathCoeff);
 			
 		row->setPolyFreqLimits(polyFreqLimits);
+			
+		row->setWetPath(wetPath);
+			
+		row->setDryPath(dryPath);
+			
+		row->setWater(water);
 	
 		return row;				
 	}
@@ -296,13 +314,13 @@ CalWVRRow* CalWVRTable::newRowCopy(CalWVRRow* row) {
 	CalWVRRow* CalWVRTable::add(CalWVRRow* x) {
 		
 		if (getRowByKey(
+						x->getAntennaName()
+						,
 						x->getCalDataId()
 						,
 						x->getCalReductionId()
-						,
-						x->getAntennaName()
 						))
-			//throw DuplicateKey(x.getCalDataId() + "|" + x.getCalReductionId() + "|" + x.getAntennaName(),"CalWVR");
+			//throw DuplicateKey(x.getAntennaName() + "|" + x.getCalDataId() + "|" + x.getCalReductionId(),"CalWVR");
 			throw DuplicateKey("Duplicate key exception in ","CalWVRTable");
 		
 		row.push_back(x);
@@ -329,17 +347,19 @@ CalWVRRow* CalWVRTable::newRowCopy(CalWVRRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalWVRRow*  CalWVRTable::checkAndAdd(CalWVRRow* x) throw (DuplicateKey) {
+	CalWVRRow*  CalWVRTable::checkAndAdd(CalWVRRow* x)  {
 		
 		
 		if (getRowByKey(
 	
+			x->getAntennaName()
+	,
 			x->getCalDataId()
 	,
 			x->getCalReductionId()
-	,
-			x->getAntennaName()
 			
 		)) throw DuplicateKey("Duplicate key exception in ", "CalWVRTable");
 		
@@ -376,10 +396,14 @@ CalWVRRow* CalWVRTable::newRowCopy(CalWVRRow* row) {
  ** no row exists for that key.
  **
  */
- 	CalWVRRow* CalWVRTable::getRowByKey(Tag calDataId, Tag calReductionId, string antennaName)  {
+ 	CalWVRRow* CalWVRTable::getRowByKey(string antennaName, Tag calDataId, Tag calReductionId)  {
 	CalWVRRow* aRow = 0;
 	for (unsigned int i = 0; i < row.size(); i++) {
 		aRow = row.at(i);
+		
+			
+				if (aRow->antennaName != antennaName) continue;
+			
 		
 			
 				if (aRow->calDataId != calDataId) continue;
@@ -387,10 +411,6 @@ CalWVRRow* CalWVRTable::newRowCopy(CalWVRRow* row) {
 		
 			
 				if (aRow->calReductionId != calReductionId) continue;
-			
-		
-			
-				if (aRow->antennaName != antennaName) continue;
 			
 		
 		return aRow;
@@ -406,15 +426,11 @@ CalWVRRow* CalWVRTable::newRowCopy(CalWVRRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
+ * @param antennaName.
+ 	 		
  * @param calDataId.
  	 		
  * @param calReductionId.
- 	 		
- * @param antennaName.
- 	 		
- * @param numPoly.
- 	 		
- * @param numChan.
  	 		
  * @param startValidTime.
  	 		
@@ -422,26 +438,36 @@ CalWVRRow* CalWVRTable::newRowCopy(CalWVRRow* row) {
  	 		
  * @param wvrMethod.
  	 		
- * @param freqLimits.
+ * @param numInputAntennas.
  	 		
- * @param pathCoeff.
+ * @param inputAntennaNames.
+ 	 		
+ * @param numChan.
  	 		
  * @param chanFreq.
  	 		
  * @param chanWidth.
  	 		
- * @param numInputAntenna.
+ * @param refTemp.
  	 		
- * @param inputAntennaNames.
+ * @param numPoly.
+ 	 		
+ * @param pathCoeff.
  	 		
  * @param polyFreqLimits.
+ 	 		
+ * @param wetPath.
+ 	 		
+ * @param dryPath.
+ 	 		
+ * @param water.
  	 		 
  */
-CalWVRRow* CalWVRTable::lookup(Tag calDataId, Tag calReductionId, string antennaName, int numPoly, int numChan, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, vector<Frequency > freqLimits, vector<vector<vector<float > > > pathCoeff, vector<Frequency > chanFreq, vector<Frequency > chanWidth, int numInputAntenna, vector<string > inputAntennaNames, vector<Frequency > polyFreqLimits) {
+CalWVRRow* CalWVRTable::lookup(string antennaName, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, WVRMethodMod::WVRMethod wvrMethod, int numInputAntennas, vector<string > inputAntennaNames, int numChan, vector<Frequency > chanFreq, vector<Frequency > chanWidth, vector<vector<Temperature > > refTemp, int numPoly, vector<vector<vector<float > > > pathCoeff, vector<Frequency > polyFreqLimits, vector<float > wetPath, vector<float > dryPath, Length water) {
 		CalWVRRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(calDataId, calReductionId, antennaName, numPoly, numChan, startValidTime, endValidTime, wvrMethod, freqLimits, pathCoeff, chanFreq, chanWidth, numInputAntenna, inputAntennaNames, polyFreqLimits)) return aRow;
+			if (aRow->compareNoAutoInc(antennaName, calDataId, calReductionId, startValidTime, endValidTime, wvrMethod, numInputAntennas, inputAntennaNames, numChan, chanFreq, chanWidth, refTemp, numPoly, pathCoeff, polyFreqLimits, wetPath, dryPath, water)) return aRow;
 		}			
 		return 0;	
 } 
@@ -449,7 +475,6 @@ CalWVRRow* CalWVRTable::lookup(Tag calDataId, Tag calReductionId, string antenna
  	 	
 
 	
-
 
 
 
@@ -470,7 +495,7 @@ CalWVRRow* CalWVRTable::lookup(Tag calDataId, Tag calReductionId, string antenna
 #endif
 	
 #ifndef WITHOUT_ACS
-	void CalWVRTable::fromIDL(CalWVRTableIDL x) throw(DuplicateKey,ConversionException) {
+	void CalWVRTable::fromIDL(CalWVRTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			CalWVRRow *tmp = newRow();
@@ -481,28 +506,27 @@ CalWVRRow* CalWVRTable::lookup(Tag calDataId, Tag calReductionId, string antenna
 	}
 #endif
 
-	char *CalWVRTable::toFITS() const throw(ConversionException) {
+	char *CalWVRTable::toFITS() const  {
 		throw ConversionException("Not implemented","CalWVR");
 	}
 
-	void CalWVRTable::fromFITS(char *fits) throw(ConversionException) {
+	void CalWVRTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","CalWVR");
 	}
 
-	string CalWVRTable::toVOTable() const throw(ConversionException) {
+	string CalWVRTable::toVOTable() const {
 		throw ConversionException("Not implemented","CalWVR");
 	}
 
-	void CalWVRTable::fromVOTable(string vo) throw(ConversionException) {
+	void CalWVRTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","CalWVR");
 	}
 
-	string CalWVRTable::toXML()  throw(ConversionException) {
+	
+	string CalWVRTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<CalWVRTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/CalWVRTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<CalWVRTable> ");
+		buf.append("<CalWVRTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalWVRTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalWVRTable http://almaobservatory.org/XML/XASDM/2/CalWVRTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -518,8 +542,9 @@ CalWVRRow* CalWVRTable::lookup(Tag calDataId, Tag calReductionId, string antenna
 		buf.append("</CalWVRTable> ");
 		return buf;
 	}
+
 	
-	void CalWVRTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void CalWVRTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<CalWVRTable")) 
 			error();
@@ -561,20 +586,110 @@ CalWVRRow* CalWVRTable::lookup(Tag calDataId, Tag calReductionId, string antenna
 			error();
 	}
 
-	void CalWVRTable::error() throw(ConversionException) {
+	
+	void CalWVRTable::error()  {
 		throw ConversionException("Invalid xml document","CalWVR");
 	}
 	
+	
 	string CalWVRTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void CalWVRTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalWVR");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			CalWVRRow* aRow = CalWVRRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "CalWVR");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "CalWVR");
+		} 		 	
+	}
+
 	
 	void CalWVRTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -605,6 +720,7 @@ CalWVRRow* CalWVRTable::lookup(Tag calDataId, Tag calReductionId, string antenna
 				throw ConversionException("Could not close file " + fileName, "CalWVR");
 		}
 	}
+
 	
 	void CalWVRTable::setFromFile(const string& directory) {
 		string tablename;
@@ -646,6 +762,11 @@ CalWVRRow* CalWVRTable::lookup(Tag calDataId, Tag calReductionId, string antenna
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

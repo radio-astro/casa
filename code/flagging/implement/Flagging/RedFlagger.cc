@@ -969,7 +969,7 @@ void RedFlagger::run ( const RecordInterface &agents,const RecordInterface &opt,
               acc[ival]->startDry();
         // iterate over visbuffers
         for( vi.origin(); vi.more() && nactive; vi++,itime++ ) {
-	  progmeter.update(itime);
+	  progmeter.update(Double(itime));
           chunk.newTime();
 
           // now, call individual VisBuffer iterators
@@ -1029,7 +1029,7 @@ void RedFlagger::run ( const RecordInterface &agents,const RecordInterface &opt,
             acc[ival]->startDry();
         for( uInt itime=0; itime<chunk.num(TIME) && ndry; itime++ )
         {
-          progmeter.update(itime);
+          progmeter.update(Double(itime));
           // now, call individual VisBuffer iterators
           for( uInt ival = 0; ival<acc.nelements(); ival++ ) 
             if( iter_mode(ival) == RFA::DRY )
@@ -1098,7 +1098,7 @@ void RedFlagger::run ( const RecordInterface &agents,const RecordInterface &opt,
       uInt itime=0;
       for( vi.origin(); vi.more(); vi++,itime++ )
       {
-        progmeter.update(itime);
+        progmeter.update(Double(itime));
         chunk.newTime();
         for( uInt i = 0; i<acc.nelements(); i++ ) 
           if( active_init(i) )

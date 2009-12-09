@@ -2,7 +2,7 @@
 
 COMPONENTS := ms msplot
 
-XLIBLIST:= CCMTOOLS PYTHON
+XLIBLIST:= CCMTOOLS PYTHON ATM
 
 # Use the generic AIPS++ application makefile.
 #---------------------------------------------

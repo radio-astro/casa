@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CHolographyChannelType::version() {
+	return HolographyChannelTypeMod::version;
+	}
+	
+string CHolographyChannelType::revision () {
+	return HolographyChannelTypeMod::revision;
+}
+
+unsigned int CHolographyChannelType::size() {
+	return 6;
+	}
+	
 	
 const std::string& CHolographyChannelType::sQ2 = "Q2";
 	
@@ -50,7 +63,7 @@ const std::string& CHolographyChannelType::sRS = "RS";
 	
 const std::string& CHolographyChannelType::sS2 = "S2";
 	
-const std::vector<std::string> CHolographyChannelType::sHolographyChannelTypeSet() {
+const std::vector<std::string> CHolographyChannelType::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CHolographyChannelType::sQ2);
@@ -67,41 +80,6 @@ const std::vector<std::string> CHolographyChannelType::sHolographyChannelTypeSet
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CHolographyChannelType::hQ2 = "Quadrature channel auto-product";
-	
-const std::string& CHolographyChannelType::hQR = "Quadrature channel times Reference channel cross-product";
-	
-const std::string& CHolographyChannelType::hQS = "Quadrature channel times Signal channel cross-product";
-	
-const std::string& CHolographyChannelType::hR2 = "Reference channel auto-product";
-	
-const std::string& CHolographyChannelType::hRS = "Reference channel times Signal channel cross-product";
-	
-const std::string& CHolographyChannelType::hS2 = "Signal channel auto-product";
-	
-const std::vector<std::string> CHolographyChannelType::hHolographyChannelTypeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CHolographyChannelType::hQ2);
-    
-    enumSet.insert(enumSet.end(), CHolographyChannelType::hQR);
-    
-    enumSet.insert(enumSet.end(), CHolographyChannelType::hQS);
-    
-    enumSet.insert(enumSet.end(), CHolographyChannelType::hR2);
-    
-    enumSet.insert(enumSet.end(), CHolographyChannelType::hRS);
-    
-    enumSet.insert(enumSet.end(), CHolographyChannelType::hS2);
-        
-    return enumSet;
-}
-   	
 
 std::string CHolographyChannelType::name(const HolographyChannelTypeMod::HolographyChannelType& f) {
     switch (f) {
@@ -125,37 +103,9 @@ std::string CHolographyChannelType::name(const HolographyChannelTypeMod::Hologra
       return CHolographyChannelType::sS2;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CHolographyChannelType::help(const HolographyChannelTypeMod::HolographyChannelType& f) {
-    switch (f) {
-    
-    case HolographyChannelTypeMod::Q2:
-      return CHolographyChannelType::hQ2;
-    
-    case HolographyChannelTypeMod::QR:
-      return CHolographyChannelType::hQR;
-    
-    case HolographyChannelTypeMod::QS:
-      return CHolographyChannelType::hQS;
-    
-    case HolographyChannelTypeMod::R2:
-      return CHolographyChannelType::hR2;
-    
-    case HolographyChannelTypeMod::RS:
-      return CHolographyChannelType::hRS;
-    
-    case HolographyChannelTypeMod::S2:
-      return CHolographyChannelType::hS2;
-    	
-    }
-    return std::string("");
-}
-   	
 
 HolographyChannelTypeMod::HolographyChannelType CHolographyChannelType::newHolographyChannelType(const std::string& name) {
 		
@@ -216,12 +166,10 @@ HolographyChannelTypeMod::HolographyChannelType CHolographyChannelType::literal(
 }
 
 HolographyChannelTypeMod::HolographyChannelType CHolographyChannelType::from_int(unsigned int i) {
-	vector<string> names = sHolographyChannelTypeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newHolographyChannelType(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newHolographyChannelType(names_.at(i));
 }
-
-	
 
 string CHolographyChannelType::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'HolographyChannelType'.";

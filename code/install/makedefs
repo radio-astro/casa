@@ -107,6 +107,15 @@ else
 endif
 
 
+# OS Specific Setup Discovery
+#--------------------------------
+ifeq "$(shell echo -e)" "-e"
+   ECHOESC := ""
+else
+   ECHOESC := "-e"
+endif
+
+
 #=============================================================================
 #                        START OF DEFAULT DEFINITIONS
 #=============================================================================
@@ -122,7 +131,7 @@ C++DEFS  :=
 C++INCD   = $(C++ROOT)/include
 C++LIBD   = $(C++ROOT)/lib
 C++LIB   :=
-C++STD    :=  -pipe -Wall -Wno-non-template-friend -Woverloaded-virtual -Wcast-align -Wno-comment -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
+C++STD    :=  -pipe -Wall -Wno-non-template-friend -Wcast-align -Wno-comment -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 C++DBGLVL := -g
 C++DBG     = $(C++DBGLVL) $(C++STD)
 C++OPTLVL := -O2
@@ -162,6 +171,21 @@ PGPLOTDEFS :=
 PGPLOTINCD  = $(PGPLOTROOT)/include
 PGPLOTLIBD  = $(PGPLOTROOT)/lib
 PGPLOTLIB  := -lcpgplot -lpgplot
+
+# ATM libraries & include
+ATMROOT = /usr
+ATMINCD = $(ATMROOT)/include/ATM
+ATMLIBD = $(ATMROOT)/lib
+ATMLIB :=  -laatm
+
+# C++DBUS (C++ binding for DBUS).
+C++DBUSROOT := /usr
+C++DBUSDEFS :=
+C++DBUSLIBD  = $(C++DBUSROOT)/lib
+C++DBUSINCD  = $(C++DBUSROOT)/include/dbus-c++-1 $(C++DBUSROOT)/include/dbus-1.0 $(C++DBUSLIBD)/dbus-1.0/include
+C++DBUSLIB  := -ldbus-c++-1
+DBUSXML2CPP = $(C++DBUSROOT)/bin/dbusxx-xml2cpp
+
 
 # The preprocessor variable NEED_FORTRAN_UNDERSCORES is used by
 # aipsview to link against PGPLOT.
@@ -227,6 +251,13 @@ LAPACKDEFS :=
 LAPACKINCD  =
 LAPACKLIBD  = $(LAPACKROOT)/lib
 LAPACKLIB  := -llapack -lblas
+
+#FFTW libraries and include
+FFTWROOT = /usr
+FFTWINCD = $(FFTWROOT)/include
+FFTWLIBD = $(FFTWROOT)/lib
+FFTWLIB :=  -lfftw3f_threads -lfftw3_threads -lfftw3f -lfftw3 -lgomp
+#
 
 # FORTRAN compiler.
 F77ROOT  := $(C++ROOT)
@@ -301,21 +332,27 @@ MOC     := $(QTROOT)/bin/moc
 
 QT4ROOT := /usr/lib/qt-4.3.4
 QT4DEFS := -DAIPS_HAS_QWT
-QT4INCD  = /usr/include /usr/include/QtCore /usr/include/QtGui /usr/include/QtXml /usr/include/qwt
+QT4INCD  = /usr/include /usr/include/QtCore /usr/include/QtDBus /usr/include/QtGui /usr/include/QtXml /usr/include/qwt
 #QT4INCD  = $(QT4ROOT)/include $(QT4ROOT)/include/QtCore $(QT4ROOT)/include/QtGui $(QT4ROOT)/include/QtXml $(QT4ROOT)/include/qwt
 QT4LIBD  := 
-QT4LIB  := -lQtCore -lQtGui -lQtXml -lqwt
+QT4LIB  := -lQtCore -lQtDBus -lQtGui -lQtXml -lqwt
 MOC4     = $(QT4ROOT)/bin/moc $(CPPSTD) $(QT4DEFS)
 UIC4     = $(QT4ROOT)/bin/uic
 RCC4     = $(QT4ROOT)/bin/rcc
 QT4LDSTD   = -Wl,-rpath -Wl,$(QT4LIBD)
+
+OPENGLROOT := /usr
+OPENGLINCD = $(OPENGLROOT)/include/QtOpenGL
+OPENGLLIBD = 
+OPENGLLIB := -lQtOpenGL -lGLU -pthread
+
 
 # Boost
 BOOSTROOT  := /usr/local/boost
 BOOSTDEFS  := 
 BOOSTINCD   = $(BOOSTROOT)/include
 BOOSTLIBD   = $(BOOSTROOT)/lib
-BOOSTLIB   := -lboost_regex -lboost_program_options
+BOOSTLIB   := -lboost_regex -lboost_program_options -lboost_filesystem
 
 #Python
 PYTHONROOT := /usr/lib/casapy
@@ -371,6 +408,17 @@ KLUDGEASDMINCD += $(AIPSROOT)/code/include/alma/ASDM
 KLUDGEASDMDEFS := -DWITHOUT_ACS
 KLUDGEASDMLIB :=
 
+OLDKLUDGEASDMROOT := $(AIPSROOT)/code/oldalma/implement/asdm
+#KLUDGEASDMINCD := $(AIPSROOT)/code/include/alma/asdm
+OLDKLUDGEASDMINCD := $(AIPSROOT)/code/include/oldalma/Enumtcl
+OLDKLUDGEASDMINCD += $(AIPSROOT)/code/include/oldalma/Enumerations
+OLDKLUDGEASDMINCD += $(AIPSROOT)/code/include/oldalma/ASDMBinaries
+OLDKLUDGEASDMINCD += $(AIPSROOT)/code/include/oldalma/ASDM2MSFiller
+OLDKLUDGEASDMINCD += $(AIPSROOT)/code/include/oldalma/ASDM
+
+OLDKLUDGEASDMDEFS := -DWITHOUT_ACS
+OLDKLUDGEASDMLIB :=
+
 #XML2 needed by the asdm2MS filler.
 
 XML2ROOT := /usr
@@ -424,15 +472,18 @@ XLIBLIST_shared_ionosphere  := CORE LAPACK F77
 XLIBLIST_shared_flagging    := CORE LAPACK F77
 XLIBLIST_shared_dish        := CORE WCSLIB LAPACK F77 CFITSIO
 XLIBLIST_shared_simulators  := CORE LAPACK F77
-XLIBLIST_shared_synthesis   := CORE LAPACK F77 PGPLOT X11 CFITSIO
+XLIBLIST_shared_synthesis   := CORE LAPACK F77 PGPLOT X11 CFITSIO ATM C++DBUS QT4
 XLIBLIST_shared_plotms      := CORE QT4 XERCES LAPACK F77 PGPLOT X11 CFITSIO
-XLIBLIST_shared_casaqt      := CORE QT4 XERCES
-XLIBLIST_shared_display := QT4 CORE CFITSIO X11 MIRLIB WCSLIB LAPACK F77
+XLIBLIST_shared_casaqt      := CORE QT4 XERCES C++DBUS
+XLIBLIST_shared_display := QT4 CORE CFITSIO ATM X11 MIRLIB WCSLIB LAPACK F77
+XLIBLIST_shared_display3d := QT4 OPENGL CORE CFITSIO ATM X11 MIRLIB WCSLIB LAPACK F77
 XLIBLIST_shared_alma  := $(XLIBLIST_shared_display)
+XLIBLIST_shared_oldalma  := $(XLIBLIST_shared_display)
 XLIBLIST_shared_atnf  := CORE RPFITS MIRLIB WCSLIB CFITSIO LAPACK F77
 XLIBLIST_shared_nfra  := $(XLIBLIST_shared_display)
 XLIBLIST_shared_nrao  := $(XLIBLIST_shared_synthesis)
-XLIBLIST_shared_xmlcasa := CORE WCSLIB CFITSIO CCMTOOLS XERCES READLINE QT4
+XLIBLIST_shared_xmlcasa := CORE WCSLIB CFITSIO CCMTOOLS XERCES READLINE QT4 ATM
+XLIBLIST_shared_casadbus := C++DBUS
 
 # The shared library list may be defined in the including makefile either
 # before or after makedefs is included.
@@ -480,8 +531,8 @@ CPP       = $(C++) -E
 #
 #Seems we have an unknown issue with the unlock, so commented out for now
 #
-#CPPSTD   := -DAIPS_NEEDS_RETHROW -DCASACORE_UNLOCK_TABLE_ON_DESTRUCT
-CPPSTD   := -DAIPS_NEEDS_RETHROW  -DCASACORE_NEEDS_RETHROW -DAIPS_STDLIB -DAIPS_NO_LEAMALLOC -DAIPS_AUTO_STL -DAIPS_USEMATPLOTLIB  -DAIPS_HAS_QWT
+#CPPSTD   := -DCASACORE_NEEDS_RETHROW -DCASACORE_UNLOCK_TABLE_ON_DESTRUCT
+CPPSTD    := -DCASACORE_NEEDS_RETHROW -DCASACORE_NEEDS_RETHROW -DAIPS_STDLIB -DAIPS_NO_LEAMALLOC -DAIPS_AUTO_STL -DAIPS_USEMATPLOTLIB -DAIPS_HAS_QWT -DAIPS_USEATM
 CPPDBG    = $(CPPSTD) -DAIPS_DEBUG -DAIPS_ARRAY_INDEX_CHECK
 CPPOPT    = $(CPPSTD)
 
@@ -599,8 +650,10 @@ LIBvlbi       = defeat defeat defeat defeat defeat defeat
 #                                                          Auxiliary
 LIBcontrib    = defeat defeat defeat defeat defeat defeat
 LIBdisplay    = defeat shatic defeat defeat defeat defeat
+LIBdisplay3d    = defeat shatic defeat defeat defeat defeat
 #                                                          Consortia
 LIBalma       = defeat shatic defeat defeat defeat defeat
+LIBoldalma    = defeat shatic defeat defeat defeat defeat
 LIBatnf       = defeat shatic defeat defeat defeat defeat
 LIBbima       = defeat defeat defeat defeat defeat defeat
 LIBhia        = defeat defeat defeat defeat defeat defeat
@@ -611,24 +664,26 @@ LIBnral       = defeat defeat defeat defeat defeat defeat
 LIBnrao       = defeat shatic defeat defeat defeat defeat
 LIBtifr       = defeat defeat defeat defeat defeat defeat
 LIBxmlcasa     := defeat shatic defeat defeat defeat defeat
+LIBcasadbus       := defeat shatic defeat defeat defeat defeat
 
 # Control variables for constructing AIPS++ library link lists.  These consist
 # of a list of AIPS++ package names, the current package should be first with
 # "aips" last.  These variables describe dependencies between standard AIPS++
 # packages and should not need to be redefined in the site makedefs.
 LINKtableplot      := graphics 
-LINKcasaqt      := casaqt graphics 
+LINKcasaqt      := casaqt graphics
 LINKmsvis       := msvis
 LINKcalibration := calibration msvis tableplot graphics 
 LINKionosphere  := ionosphere tableplot graphics 
 LINKflagging    := flagging msvis tableplot graphics 
 LINKdish        := dish tableplot graphics 
 LINKsimulators  := simulators tableplot graphics 
-LINKsynthesis   := synthesis calibration graphics casaqt msvis tableplot flagging
+LINKsynthesis   := synthesis calibration graphics casaqt msvis tableplot flagging casadbus
 LINKplotms      :=  plotms casaqt synthesis calibration graphics msvis tableplot flagging 
 LINKxmlcasa     := xmlcasa nrao display casaqt synthesis calibration graphics msvis tableplot flagging plotms
 LINKgraphics    := graphics 
 LINKatmosphere  := atmosphere 
+LINKcasadbus     := casadbus
 
 
 LINKdemo := graphics synthesis simulators dish flagging ionosphere calibration tableplot msvis 
@@ -638,8 +693,10 @@ LINKvlbi      := vlbi synthesis
 
 LINKcontrib   := contrib vlbi synthesis dish aips
 LINKdisplay   := display graphics $(LINKsynthesis)
+LINKdisplay3d   := display3d graphics $(LINKsynthesis) display
 
 LINKalma      := alma $(LINKsynthesis) display
+LINKoldalma   := oldalma $(LINKsynthesis) display
 LINKbima      := bima $(LINKsynthesis)
 LINKhia       := hia  $(LINKsynthesis)
 LINKjive      := jive $(LINKsynthesis)
@@ -694,20 +751,23 @@ ICONS2LOCAL := $(AIPSARCH)/bin/redoicons.sh
 #
 TEXROOT        := $(TETEXROOT)/share/texmf
 TEXINPUTS      := $(TEXROOT)/tex//:$(TEXROOT)/pdftex//:$(TEXROOT)/tex4ht//
-TEXFONTS := $(TEXFONTS):$(TEXROOT)/fonts/tfm//:$(TEXROOT)/fonts/type1//:$(TEXROOT)/tex4ht/ht-fonts//
-TEXPKS         := $(TEXPKS):/var/tmp/texfonts/pk//:$(TEXROOT)/fontname//
+#
+# Commented out all these other to get pdfetex because they are not needed
+#
+#TEXFONTS := $(TEXFONTS):$(TEXROOT)/fonts/tfm//:$(TEXROOT)/fonts/type1//:$(TEXROOT)/tex4ht/ht-fonts//
+#TEXPKS         := $(TEXPKS):/var/tmp/texfonts/pk//:$(TEXROOT)/fontname//
 
-TEXFORMATS = $(TEXROOT)/web2c
-TEXPOOL    = $(TEXROOT)/web2c
+#TEXFORMATS = $(TEXROOT)/web2c
+#TEXPOOL    = $(TEXROOT)/web2c
 
-MFBASES    = $(TEXROOT)/web2c
-MFINPUTS   = $(TEXROOT)/metafont:$(TEXROOT)/fonts/source//
-MFPOOL     = $(TEXROOT)/web2c
+#MFBASES    = $(TEXROOT)/web2c
+#MFINPUTS   = $(TEXROOT)/metafont:$(TEXROOT)/fonts/source//
+#MFPOOL     = $(TEXROOT)/web2c
 
 # Variables which tell the makefiles what to do and how to do it
 #-----------------------------------------------------------------------------
 # Internally set command line options.
-INTRA_MAKEFLAGS := --no-print-directory -i
+INTRA_MAKEFLAGS := --no-print-directory
 
 # Command for benchmarking the rebuild (usually 'adate -l').
 # Unset this to defeat benchmarking.
@@ -724,18 +784,18 @@ DOCEXTR   := docdoxy
 DOCDOXY   := docdoxy
 
 # What standard packages to build (default is all including demo).
-PACKAGES  := graphics tableplot casaqt msvis calibration ionosphere flagging dish simulators synthesis demo
+PACKAGES  := casadbus graphics tableplot casaqt msvis calibration ionosphere flagging dish simulators synthesis demo
 
 
-SHAREDLIBS := tableplot msvis calibration ionosphere flagging synthesis plotms graphics xmlcasa
+SHAREDLIBS :=  casadbus tableplot msvis calibration ionosphere flagging synthesis plotms graphics xmlcasa
 
 CASAXMLPACKS := idl tableplot msvis calibration flagging synthesis plotms
 
 # What auxiliary packages to build
-AUXILIARY := casaqt display plotms 
+AUXILIARY := casaqt display display3d plotms
 
 # What consortium packages to build (atnf bima hia nfra nral nrao tifr).
-CONSORTIA := nrao atnf alma xmlcasa 
+CONSORTIA := nrao atnf alma oldalma xmlcasa 
 
 DOXYPACKAGES := $(PACKAGES) $(AUXILIARY) $(CONSORTIA)
 
@@ -1104,6 +1164,8 @@ else
    QTMOCS    := $(patsubst %.qo.h,%.moc.cc,$(QTMOCS))
    QTQRCS    := $(wildcard $(CODEDIR)/*/*.qrc)
    QTQRCS    := $(patsubst %.qrc,%.qrc.cc,$(QTQRCS))
+   DBUSPROXY   := $(wildcard $(CODEDIR)/*/*.dbusproxy.xml)
+   DBUSPROXY   := $(patsubst %.dbusproxy.xml,%.dbusproxy.h,$(DBUSPROXY))
    C++       += -DHAVE_QT4
    LDSTD     += $(QT4LDSTD)
    endif
@@ -1163,6 +1225,7 @@ export LDSOPTS  := $(LDSOPTS)
 export SFXSTAT  := $(SFXSTAT)
 export SFXSHAR  := $(SFXSHAR)
 export LIBxmlcasa     := $(LIBxmlcasa)
+export LIBcasadbus     := $(LIBcasadbus)
 export LIBtableplot      := $(LIBtableplot)
 export LIBgraphics    := $(LIBgraphics)
 export LIBmsvis       := $(LIBmsvis)
@@ -1174,9 +1237,11 @@ export LIBsimulators  := $(LIBsimulators)
 export LIBsynthesis   := $(LIBsynthesis)
 export LIBplotms      := $(LIBplotms)
 export LIBdisplay   := $(LIBdisplay)
+export LIBdisplay3d   := $(LIBdisplay3d)
 export LIBvlbi      := $(LIBvlbi)
 export LIBcontrib   := $(LIBcontrib)
 export LIBalma      := $(LIBalma)
+export LIBoldalma   := $(LIBoldalma)
 export LIBatnf      := $(LIBatnf)
 export LIBbima      := $(LIBbima)
 export LIBhia       := $(LIBhia)
@@ -1262,8 +1327,8 @@ null : ;
 ifdef AIPSRCS
    ifneq "$(wildcard $(AIPSRCS)/install/makedefs,v)" ""
       $(AIPSARCH)/makedefs : $(AIPSROOT)/rcs/install/makedefs,v
-	 -@ $(CO) $(COFLAGS) $< $@
-	 -@ chmod 664 $@
+	 @ $(CO) $(COFLAGS) $< $@
+	 @ chmod 664 $@
    endif
 
    ifneq "$(wildcard $(RCSDIR)/makefile,v)" ""
@@ -1274,9 +1339,9 @@ ifdef AIPSRCS
 else
    ifneq "$(wildcard $(AIPSROOT)/code/install/makedefs)" ""
       $(AIPSARCH)/makedefs : $(AIPSROOT)/code/install/makedefs
-	 -@ $(RM) $@
-	 -  cp $< $@
-	 -@ chmod 664 $@
+	 @ $(RM) $@
+	   cp $< $@
+	 @ chmod 664 $@
    endif
 endif
 
@@ -1320,7 +1385,12 @@ ifdef SUBDIRS
 	$(RCC4) -name $(word $(words $(subst /, ,$(dir $(dir $@)))),$(subst /, ,$(dir $(dir $@)))) -o $@ $<
    endif
 
-   $(CODESUBS) : $(QTUIS) $(QTMOCS) $(QTQRCS) FORCE
+   ifneq "$(DBUSPROXY)" ""
+   %.dbusproxy.h : %.dbusproxy.xml
+	$(DBUSXML2CPP) $< --proxy=$@
+   endif
+
+   $(CODESUBS) : $(QTUIS) $(QTMOCS) $(QTQRCS) $(DBUSPROXY) FORCE
 	 @ if [ ! -d $@ ] ; then \
 	      amkdir $@ ; \
 	      chmod ug=rwx,g+s,o=rx $@ ; \
@@ -1333,9 +1403,9 @@ ifdef SUBDIRS
 	      echo "Created symlink   $@/RCS" ; \
 	   fi
         endif
-	-@ echo ""
-	-@ echo gmake[$(MAKELEVEL)]: $(MAKE) -C $(@F) allsys
-	-@ $(MAKE) -C $@ allsys
+	@ echo ""
+	@ echo gmake[$(MAKELEVEL)]: $(MAKE) -C $(@F) allsys
+	@ $(MAKE) -C $@ allsys
 
    $(SUBDIRS) : FORCE
 	 @ if [ ! -d $@ ] ; then \
@@ -1368,10 +1438,10 @@ endif
 sysdirs : $(SYSDIRS)
 
 $(SYSDIRS) :
-	 @ [ -d $@ ] || mkdir $@
-	 @ chmod ug=rwx,g+s,o=rx $@
-	-@ echo ""
-	-@ echo "Created directory $@"
+	@ [ -d $@ ] || mkdir $@
+	@ chmod ug=rwx,g+s,o=rx $@
+	@ echo ""
+	@ echo "Created directory $@"
 
 
 # General rules for cleaning up.
@@ -1468,7 +1538,7 @@ runtests :
 
 # Print the environment as seen by makefile rules.
 printenv :
-	-@ printenv | sort
+	@ printenv | sort
 
 # Rule for eval'ing variable definitions into environment variables.
 eval_vars :
@@ -1481,18 +1551,18 @@ diagnostics : versions test_global ;
 
 # Report versions of installed software.
 versions :
-	-@ echo ""
-	-@ uname -a
-	-@ echo ""
-	-@ $(MAKE) --version | head -1
-	-@ echo ""
-	-@ gzip --version 2>&1 | head -1
-	-@ echo ""
-	-@ $(BISON) --version
-	-@ echo ""
-	-@ $(FLEX) -V
-	-@ echo ""
-	-  $(LATEX2HTMLBIN) -v
+	@ echo ""
+	@ uname -a
+	@ echo ""
+	@ $(MAKE) --version | head -1
+	@ echo ""
+	@ gzip --version 2>&1 | head -1
+	@ echo ""
+	@ $(BISON) --version
+	@ echo ""
+	@ $(FLEX) -V
+	@ echo ""
+	  $(LATEX2HTMLBIN) -v
 
 # Print specified variable definitions.
 show_vars :
@@ -1506,31 +1576,31 @@ test_all : test_global show_local
 
 # Print/test all makedefs variables.
 show_global :
-	-@ $(MAKE) TESTDEFS=show global
+	@ $(MAKE) TESTDEFS=show global
 
 test_global :
-	-@ $(MAKE) TESTDEFS=test global
+	@ $(MAKE) TESTDEFS=test global
 
 # Print/test makedefs variables used in system rebuilds.
 show_sys :
-	-@ $(MAKE) TESTDEFS=show system
+	@ $(MAKE) TESTDEFS=show system
 
 test_sys :
-	-@ $(MAKE) TESTDEFS=test system
+	@ $(MAKE) TESTDEFS=test system
 
 # Print/test makedefs variables of particular interest to programmers.
 show_prg :
-	-@ $(MAKE) TESTDEFS=show programmer
+	@ $(MAKE) TESTDEFS=show programmer
 
 test_prg :
-	-@ $(MAKE) TESTDEFS=test programmer
+	@ $(MAKE) TESTDEFS=test programmer
 
 # Print/test auxiliary makedefs variables used in system rebuilds.
 show_aux :
-	-@ $(MAKE) TESTDEFS=show auxiliary
+	@ $(MAKE) TESTDEFS=show auxiliary
 
 test_aux :
-	-@ $(MAKE) TESTDEFS=test auxiliary
+	@ $(MAKE) TESTDEFS=test auxiliary
 
 # Print all variables defined in the including makefile.
 show_local :

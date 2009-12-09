@@ -81,17 +81,18 @@ using namespace BasebandNameMod;
 	
 
 	
-
+#include "CNetSideband.h"
+using namespace NetSidebandMod;
 	
 
 	
-
+#include "CAtmPhaseCorrection.h"
+using namespace AtmPhaseCorrectionMod;
 	
 
 	
-
-	
-
+#include "CCalCurveType.h"
+using namespace CalCurveTypeMod;
 	
 
 	
@@ -104,17 +105,20 @@ using namespace ReceiverBandMod;
 	
 
 	
-#include "CAtmPhaseCorrection.h"
-using namespace AtmPhaseCorrectionMod;
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
 #include "CPolarizationType.h"
 using namespace PolarizationTypeMod;
-	
-
-	
-
 	
 
 	
@@ -148,7 +152,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalBandpass.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -166,7 +170,7 @@ class CalDataRow;
 /**
  * The CalBandpassRow class is a row of a CalBandpassTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class CalBandpassRow {
@@ -193,8 +197,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalBandpassRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalBandpassRowIDL x) throw(ConversionException);
+	void setFromIDL (CalBandpassRowIDL x) ;
 #endif
 	
 	/**
@@ -207,8 +212,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalBandpassTable to which the row built by deserialization will be parented.
+	  */
+	 static CalBandpassRow* fromBin(EndianISStream& eiss, CalBandpassTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -247,29 +266,31 @@ public:
 
 
 	
-	// ===> Attribute numAntenna
+	// ===> Attribute sideband
 	
 	
 	
 
 	
  	/**
- 	 * Get numAntenna.
- 	 * @return numAntenna as int
+ 	 * Get sideband.
+ 	 * @return sideband as NetSidebandMod::NetSideband
  	 */
- 	int getNumAntenna() const;
+ 	NetSidebandMod::NetSideband getSideband() const;
 	
  
  	
  	
  	/**
- 	 * Set numAntenna with the specified int.
- 	 * @param numAntenna The int value to which numAntenna is to be set.
+ 	 * Set sideband with the specified NetSidebandMod::NetSideband.
+ 	 * @param sideband The NetSidebandMod::NetSideband value to which sideband is to be set.
  	 
  		
  			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setNumAntenna (int numAntenna);
+ 	void setSideband (NetSidebandMod::NetSideband sideband);
   		
 	
 	
@@ -277,29 +298,31 @@ public:
 
 
 	
-	// ===> Attribute numBaseline
+	// ===> Attribute atmPhaseCorrection
 	
 	
 	
 
 	
  	/**
- 	 * Get numBaseline.
- 	 * @return numBaseline as int
+ 	 * Get atmPhaseCorrection.
+ 	 * @return atmPhaseCorrection as AtmPhaseCorrectionMod::AtmPhaseCorrection
  	 */
- 	int getNumBaseline() const;
+ 	AtmPhaseCorrectionMod::AtmPhaseCorrection getAtmPhaseCorrection() const;
 	
  
  	
  	
  	/**
- 	 * Set numBaseline with the specified int.
- 	 * @param numBaseline The int value to which numBaseline is to be set.
+ 	 * Set atmPhaseCorrection with the specified AtmPhaseCorrectionMod::AtmPhaseCorrection.
+ 	 * @param atmPhaseCorrection The AtmPhaseCorrectionMod::AtmPhaseCorrection value to which atmPhaseCorrection is to be set.
  	 
  		
  			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setNumBaseline (int numBaseline);
+ 	void setAtmPhaseCorrection (AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection);
   		
 	
 	
@@ -307,29 +330,31 @@ public:
 
 
 	
-	// ===> Attribute numAPC
+	// ===> Attribute typeCurve
 	
 	
 	
 
 	
  	/**
- 	 * Get numAPC.
- 	 * @return numAPC as int
+ 	 * Get typeCurve.
+ 	 * @return typeCurve as CalCurveTypeMod::CalCurveType
  	 */
- 	int getNumAPC() const;
+ 	CalCurveTypeMod::CalCurveType getTypeCurve() const;
 	
  
  	
  	
  	/**
- 	 * Set numAPC with the specified int.
- 	 * @param numAPC The int value to which numAPC is to be set.
+ 	 * Set typeCurve with the specified CalCurveTypeMod::CalCurveType.
+ 	 * @param typeCurve The CalCurveTypeMod::CalCurveType value to which typeCurve is to be set.
  	 
  		
  			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setNumAPC (int numAPC);
+ 	void setTypeCurve (CalCurveTypeMod::CalCurveType typeCurve);
   		
 	
 	
@@ -337,29 +362,31 @@ public:
 
 
 	
-	// ===> Attribute numReceptor
+	// ===> Attribute receiverBand
 	
 	
 	
 
 	
  	/**
- 	 * Get numReceptor.
- 	 * @return numReceptor as int
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
  	 */
- 	int getNumReceptor() const;
+ 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
 	
  
  	
  	
  	/**
- 	 * Set numReceptor with the specified int.
- 	 * @param numReceptor The int value to which numReceptor is to be set.
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
  	 
  		
  			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setNumReceptor (int numReceptor);
+ 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
   		
 	
 	
@@ -427,29 +454,29 @@ public:
 
 
 	
-	// ===> Attribute freqLimits
+	// ===> Attribute numAntenna
 	
 	
 	
 
 	
  	/**
- 	 * Get freqLimits.
- 	 * @return freqLimits as vector<Frequency >
+ 	 * Get numAntenna.
+ 	 * @return numAntenna as int
  	 */
- 	vector<Frequency > getFreqLimits() const;
+ 	int getNumAntenna() const;
 	
  
  	
  	
  	/**
- 	 * Set freqLimits with the specified vector<Frequency >.
- 	 * @param freqLimits The vector<Frequency > value to which freqLimits is to be set.
+ 	 * Set numAntenna with the specified int.
+ 	 * @param numAntenna The int value to which numAntenna is to be set.
  	 
  		
  			
  	 */
- 	void setFreqLimits (vector<Frequency > freqLimits);
+ 	void setNumAntenna (int numAntenna);
   		
 	
 	
@@ -457,29 +484,59 @@ public:
 
 
 	
-	// ===> Attribute receiverBand
+	// ===> Attribute numPoly
 	
 	
 	
 
 	
  	/**
- 	 * Get receiverBand.
- 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 * Get numPoly.
+ 	 * @return numPoly as int
  	 */
- 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
+ 	int getNumPoly() const;
 	
  
  	
  	
  	/**
- 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
- 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 * Set numPoly with the specified int.
+ 	 * @param numPoly The int value to which numPoly is to be set.
  	 
  		
  			
  	 */
- 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
+ 	void setNumPoly (int numPoly);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numReceptor
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
+ 	 */
+ 	int getNumReceptor() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumReceptor (int numReceptor);
   		
 	
 	
@@ -547,29 +604,29 @@ public:
 
 
 	
-	// ===> Attribute atmPhaseCorrections
+	// ===> Attribute freqLimits
 	
 	
 	
 
 	
  	/**
- 	 * Get atmPhaseCorrections.
- 	 * @return atmPhaseCorrections as vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >
+ 	 * Get freqLimits.
+ 	 * @return freqLimits as vector<Frequency >
  	 */
- 	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > getAtmPhaseCorrections() const;
+ 	vector<Frequency > getFreqLimits() const;
 	
  
  	
  	
  	/**
- 	 * Set atmPhaseCorrections with the specified vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >.
- 	 * @param atmPhaseCorrections The vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > value to which atmPhaseCorrections is to be set.
+ 	 * Set freqLimits with the specified vector<Frequency >.
+ 	 * @param freqLimits The vector<Frequency > value to which freqLimits is to be set.
  	 
  		
  			
  	 */
- 	void setAtmPhaseCorrections (vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections);
+ 	void setFreqLimits (vector<Frequency > freqLimits);
   		
 	
 	
@@ -607,29 +664,29 @@ public:
 
 
 	
-	// ===> Attribute numAmpliPoly
+	// ===> Attribute curve
 	
 	
 	
 
 	
  	/**
- 	 * Get numAmpliPoly.
- 	 * @return numAmpliPoly as int
+ 	 * Get curve.
+ 	 * @return curve as vector<vector<vector<float > > >
  	 */
- 	int getNumAmpliPoly() const;
+ 	vector<vector<vector<float > > > getCurve() const;
 	
  
  	
  	
  	/**
- 	 * Set numAmpliPoly with the specified int.
- 	 * @param numAmpliPoly The int value to which numAmpliPoly is to be set.
+ 	 * Set curve with the specified vector<vector<vector<float > > >.
+ 	 * @param curve The vector<vector<vector<float > > > value to which curve is to be set.
  	 
  		
  			
  	 */
- 	void setNumAmpliPoly (int numAmpliPoly);
+ 	void setCurve (vector<vector<vector<float > > > curve);
   		
 	
 	
@@ -637,29 +694,29 @@ public:
 
 
 	
-	// ===> Attribute ampliCurve
+	// ===> Attribute reducedChiSquared
 	
 	
 	
 
 	
  	/**
- 	 * Get ampliCurve.
- 	 * @return ampliCurve as vector<vector<vector<vector<float > > > >
+ 	 * Get reducedChiSquared.
+ 	 * @return reducedChiSquared as vector<double >
  	 */
- 	vector<vector<vector<vector<float > > > > getAmpliCurve() const;
+ 	vector<double > getReducedChiSquared() const;
 	
  
  	
  	
  	/**
- 	 * Set ampliCurve with the specified vector<vector<vector<vector<float > > > >.
- 	 * @param ampliCurve The vector<vector<vector<vector<float > > > > value to which ampliCurve is to be set.
+ 	 * Set reducedChiSquared with the specified vector<double >.
+ 	 * @param reducedChiSquared The vector<double > value to which reducedChiSquared is to be set.
  	 
  		
  			
  	 */
- 	void setAmpliCurve (vector<vector<vector<vector<float > > > > ampliCurve);
+ 	void setReducedChiSquared (vector<double > reducedChiSquared);
   		
 	
 	
@@ -667,122 +724,84 @@ public:
 
 
 	
-	// ===> Attribute ampliRms
+	// ===> Attribute numBaseline, which is optional
 	
 	
+	
+	/**
+	 * The attribute numBaseline is optional. Return true if this attribute exists.
+	 * @return true if and only if the numBaseline attribute exists. 
+	 */
+	bool isNumBaselineExists() const;
 	
 
 	
  	/**
- 	 * Get ampliRms.
- 	 * @return ampliRms as vector<vector<vector<float > > >
+ 	 * Get numBaseline, which is optional.
+ 	 * @return numBaseline as int
+ 	 * @throws IllegalAccessException If numBaseline does not exist.
  	 */
- 	vector<vector<vector<float > > > getAmpliRms() const;
+ 	int getNumBaseline() const;
 	
  
  	
  	
  	/**
- 	 * Set ampliRms with the specified vector<vector<vector<float > > >.
- 	 * @param ampliRms The vector<vector<vector<float > > > value to which ampliRms is to be set.
+ 	 * Set numBaseline with the specified int.
+ 	 * @param numBaseline The int value to which numBaseline is to be set.
  	 
  		
- 			
  	 */
- 	void setAmpliRms (vector<vector<vector<float > > > ampliRms);
-  		
+ 	void setNumBaseline (int numBaseline);
+		
 	
 	
+	
+	/**
+	 * Mark numBaseline, which is an optional field, as non-existent.
+	 */
+	void clearNumBaseline ();
 	
 
 
 	
-	// ===> Attribute numPhasePoly
+	// ===> Attribute rms, which is optional
 	
 	
+	
+	/**
+	 * The attribute rms is optional. Return true if this attribute exists.
+	 * @return true if and only if the rms attribute exists. 
+	 */
+	bool isRmsExists() const;
 	
 
 	
  	/**
- 	 * Get numPhasePoly.
- 	 * @return numPhasePoly as int
+ 	 * Get rms, which is optional.
+ 	 * @return rms as vector<vector<float > >
+ 	 * @throws IllegalAccessException If rms does not exist.
  	 */
- 	int getNumPhasePoly() const;
+ 	vector<vector<float > > getRms() const;
 	
  
  	
  	
  	/**
- 	 * Set numPhasePoly with the specified int.
- 	 * @param numPhasePoly The int value to which numPhasePoly is to be set.
+ 	 * Set rms with the specified vector<vector<float > >.
+ 	 * @param rms The vector<vector<float > > value to which rms is to be set.
  	 
  		
- 			
  	 */
- 	void setNumPhasePoly (int numPhasePoly);
-  		
+ 	void setRms (vector<vector<float > > rms);
+		
 	
 	
 	
-
-
-	
-	// ===> Attribute phaseCurve
-	
-	
-	
-
-	
- 	/**
- 	 * Get phaseCurve.
- 	 * @return phaseCurve as vector<vector<vector<vector<Angle > > > >
- 	 */
- 	vector<vector<vector<vector<Angle > > > > getPhaseCurve() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set phaseCurve with the specified vector<vector<vector<vector<Angle > > > >.
- 	 * @param phaseCurve The vector<vector<vector<vector<Angle > > > > value to which phaseCurve is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setPhaseCurve (vector<vector<vector<vector<Angle > > > > phaseCurve);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute phaseRms
-	
-	
-	
-
-	
- 	/**
- 	 * Get phaseRms.
- 	 * @return phaseRms as vector<vector<vector<float > > >
- 	 */
- 	vector<vector<vector<float > > > getPhaseRms() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set phaseRms with the specified vector<vector<vector<float > > >.
- 	 * @param phaseRms The vector<vector<vector<float > > > value to which phaseRms is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setPhaseRms (vector<vector<vector<float > > > phaseRms);
-  		
-	
-	
+	/**
+	 * Mark rms, which is an optional field, as non-existent.
+	 */
+	void clearRms ();
 	
 
 
@@ -895,12 +914,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this CalBandpassRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, BasebandNameMod::BasebandName basebandName, int numAntenna, int numBaseline, int numAPC, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > freqLimits, ReceiverBandMod::ReceiverBand receiverBand, vector<string > antennaNames, string refAntennaName, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numAmpliPoly, vector<vector<vector<vector<float > > > > ampliCurve, vector<vector<vector<float > > > ampliRms, int numPhasePoly, vector<vector<vector<vector<Angle > > > > phaseCurve, vector<vector<vector<float > > > phaseRms);
+	bool compareNoAutoInc(BasebandNameMod::BasebandName basebandName, NetSidebandMod::NetSideband sideband, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, CalCurveTypeMod::CalCurveType typeCurve, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<Frequency > freqLimits, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared);
 	
 	
 
 	
-	bool compareRequiredValue(int numAntenna, int numBaseline, int numAPC, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > freqLimits, ReceiverBandMod::ReceiverBand receiverBand, vector<string > antennaNames, string refAntennaName, vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numAmpliPoly, vector<vector<vector<vector<float > > > > ampliCurve, vector<vector<vector<float > > > ampliRms, int numPhasePoly, vector<vector<vector<vector<Angle > > > > phaseCurve, vector<vector<vector<float > > > phaseRms); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, int numAntenna, int numPoly, int numReceptor, vector<string > antennaNames, string refAntennaName, vector<Frequency > freqLimits, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<vector<float > > > curve, vector<double > reducedChiSquared); 
 		 
 	
 	/**
@@ -972,44 +991,44 @@ private:
  	
 
 	
-	// ===> Attribute numAntenna
+	// ===> Attribute sideband
 	
 	
 
-	int numAntenna;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numBaseline
-	
-	
-
-	int numBaseline;
+	NetSidebandMod::NetSideband sideband;
 
 	
 	
  	
 
 	
-	// ===> Attribute numAPC
+	// ===> Attribute atmPhaseCorrection
 	
 	
 
-	int numAPC;
+	AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection;
 
 	
 	
  	
 
 	
-	// ===> Attribute numReceptor
+	// ===> Attribute typeCurve
 	
 	
 
-	int numReceptor;
+	CalCurveTypeMod::CalCurveType typeCurve;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute receiverBand
+	
+	
+
+	ReceiverBandMod::ReceiverBand receiverBand;
 
 	
 	
@@ -1038,22 +1057,33 @@ private:
  	
 
 	
-	// ===> Attribute freqLimits
+	// ===> Attribute numAntenna
 	
 	
 
-	vector<Frequency > freqLimits;
+	int numAntenna;
 
 	
 	
  	
 
 	
-	// ===> Attribute receiverBand
+	// ===> Attribute numPoly
 	
 	
 
-	ReceiverBandMod::ReceiverBand receiverBand;
+	int numPoly;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numReceptor
+	
+	
+
+	int numReceptor;
 
 	
 	
@@ -1082,11 +1112,11 @@ private:
  	
 
 	
-	// ===> Attribute atmPhaseCorrections
+	// ===> Attribute freqLimits
 	
 	
 
-	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > atmPhaseCorrections;
+	vector<Frequency > freqLimits;
 
 	
 	
@@ -1104,66 +1134,48 @@ private:
  	
 
 	
-	// ===> Attribute numAmpliPoly
+	// ===> Attribute curve
 	
 	
 
-	int numAmpliPoly;
-
-	
-	
- 	
-
-	
-	// ===> Attribute ampliCurve
-	
-	
-
-	vector<vector<vector<vector<float > > > > ampliCurve;
+	vector<vector<vector<float > > > curve;
 
 	
 	
  	
 
 	
-	// ===> Attribute ampliRms
+	// ===> Attribute reducedChiSquared
 	
 	
 
-	vector<vector<vector<float > > > ampliRms;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numPhasePoly
-	
-	
-
-	int numPhasePoly;
+	vector<double > reducedChiSquared;
 
 	
 	
  	
 
 	
-	// ===> Attribute phaseCurve
+	// ===> Attribute numBaseline, which is optional
 	
+	
+	bool numBaselineExists;
 	
 
-	vector<vector<vector<vector<Angle > > > > phaseCurve;
+	int numBaseline;
 
 	
 	
  	
 
 	
-	// ===> Attribute phaseRms
+	// ===> Attribute rms, which is optional
 	
+	
+	bool rmsExists;
 	
 
-	vector<vector<vector<float > > > phaseRms;
+	vector<vector<float > > rms;
 
 	
 	

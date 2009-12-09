@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="plotxy">
+      <task type="function" name="plotxy" category="display/plot, data editing" async="never">
         <shortdescription>An X-Y plotter/interactive flagger for visibility data.</shortdescription>
 	
 	<description>
@@ -437,6 +437,7 @@
 				</equals>
 			</when>
 			<when param="averagemode">
+			        <equals value=""/>
 				<equals value="vector">
 					<default param="timebin"><value type="string">0</value></default>
 					<default param="crossscans"><value type="bool">False</value></default>

@@ -26,7 +26,9 @@
 //# $Id: $
 #include <plotms/Actions/PlotMSCacheThread.qo.h>
 
+#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Plots/PlotMSPlot.h>
 
 namespace casa {
 
@@ -34,33 +36,44 @@ namespace casa {
 // PLOTMSCACHETHREAD DEFINITIONS //
 ///////////////////////////////////
 
-PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot,
-        const vector<PMS::Axis>& axes, const vector<PMS::DataColumn>& data,
-        const PlotMSAveraging& averaging, bool setupPlot,
-        PMSPTMethod postThreadMethod, PMSPTObject postThreadObject) :
+PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot, PlotMSData* data,
+				     const vector<PMS::Axis>& axes, 
+				     const vector<PMS::DataColumn>& dataCols,
+				     const String& msname, 
+				     const PlotMSSelection& selection, 
+				     const PlotMSAveraging& averaging, 
+				     bool setupPlot,
+				     PMSPTMethod postThreadMethod, 
+				     PMSPTObject postThreadObject) :
         PlotMSThread(plot->parent()->getPlotter()->getProgressWidget(),
         postThreadMethod, postThreadObject), itsPlot_(plot),
-        itsData_(&plot->data()), itsVisSet_(plot->visSet()), itsAxes_(axes),
-        itsAxesData_(data), itsAveraging_(averaging),
+        itsData_(data), itsLoad_(true),
+        itsAxes_(axes), itsAxesData_(dataCols), 
+	itsMSName_(msname),itsSelection_(selection),itsAveraging_(averaging),
         itsSetupPlot_(setupPlot && axes.size() >= 2), wasCanceled_(false) {
     // Make sure axes data vector is same length as axes vector.
     if(itsAxesData_.size() != itsAxes_.size())
         itsAxesData_.resize(itsAxes_.size(), PMS::DEFAULT_DATACOLUMN);
 }
 
+PlotMSCacheThread::PlotMSCacheThread(PlotMSPlot* plot,
+        const vector<PMS::Axis>& axes, PMSPTMethod postThreadMethod,
+        PMSPTObject postThreadObject) :
+        PlotMSThread(plot->parent()->getPlotter()->getProgressWidget(),
+        postThreadMethod, postThreadObject), itsPlot_(plot),
+        itsData_(&plot->data()), itsLoad_(false),
+        itsAxes_(axes), itsSetupPlot_(false), wasCanceled_(false) { }
+
 PlotMSCacheThread::~PlotMSCacheThread() { }
 
 
 void PlotMSCacheThread::startOperation() {
-    if(itsVisSet_ == NULL) {
-        emit finishedOperation(this);
-        return;
-    }
 
     itsLastProgress_ = 0;
     itsLastStatus_ = "";
     
-    initializeProgressWidget("load_axes");
+    initializeProgressWidget(itsLoad_ ? PMS::LOG_ORIGIN_LOAD_CACHE :
+                                        PMS::LOG_ORIGIN_RELEASE_CACHE);
     setAllowedOperations(false, false, true);
     
     PlotMSCacheThreadHelper* th = new PlotMSCacheThreadHelper(*this);
@@ -104,7 +117,8 @@ void PlotMSCacheThread::threadFinished() {
     // Show error message if one occurred, and say the thread was canceled so
     // that the plot won't update the display.
     if(!itsCacheError_.empty()) {
-        itsPlot_->parent()->showError(itsCacheError_, "Load Error");
+        itsPlot_->parent()->showError(itsCacheError_,
+                itsLoad_ ? "Load Error" : "Release Error");
         wasCanceled_ = true;
     }
     
@@ -123,16 +137,31 @@ PlotMSCacheThreadHelper::~PlotMSCacheThreadHelper() { }
 
 void PlotMSCacheThreadHelper::run() {
     try {
-        itsParent_.itsData_->loadCache(*itsParent_.itsVisSet_,
-                itsParent_.itsAxes_, itsParent_.itsAxesData_,
-                itsParent_.itsAveraging_, &itsParent_);
-        if(itsParent_.itsSetupPlot_)
-            itsParent_.itsData_->setupCache(itsParent_.itsAxes_[0],
-                                            itsParent_.itsAxes_[1]);
+        // Load
+        if(itsParent_.itsLoad_) {
+            itsParent_.itsData_->loadCache(itsParent_.itsAxes_, 
+					   itsParent_.itsAxesData_,
+					   itsParent_.itsMSName_, 
+					   itsParent_.itsSelection_, 
+					   itsParent_.itsAveraging_, 
+					   &itsParent_);
+            if(itsParent_.itsSetupPlot_)
+                itsParent_.itsData_->setupCache(itsParent_.itsAxes_[0],
+                                                itsParent_.itsAxes_[1]);
+        
+        // Release
+        } else {
+            itsParent_.itsData_->releaseCache(itsParent_.itsAxes_);
+        }
+        
     } catch(AipsError& err) {
-        itsParent_.itsCacheError_ = "Error during cache loading: " + err.getMesg();
+        itsParent_.itsCacheError_ = "Error during cache ";
+        itsParent_.itsCacheError_+=itsParent_.itsLoad_? "loading": "releasing";
+        itsParent_.itsCacheError_ += ": " + err.getMesg();
     } catch(...) {
-        itsParent_.itsCacheError_ = "Unknown error during cache loading!";
+        itsParent_.itsCacheError_ = "Unknown error during cache ";
+        itsParent_.itsCacheError_+=itsParent_.itsLoad_? "loading": "releasing";
+        itsParent_.itsCacheError_+="!";
     }
 }
 

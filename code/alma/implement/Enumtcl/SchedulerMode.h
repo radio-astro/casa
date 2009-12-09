@@ -38,13 +38,13 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<SchedulerMode,EnumPar<void> >
-     (SchedulerModeMod::DYNAMIC,ep((int)SchedulerModeMod::DYNAMIC,"DYNAMIC","Dynamic scheduling")));
+     (SchedulerModeMod::DYNAMIC,ep((int)SchedulerModeMod::DYNAMIC,"DYNAMIC","un-documented")));
     m_.insert(pair<SchedulerMode,EnumPar<void> >
-     (SchedulerModeMod::INTERACTIVE,ep((int)SchedulerModeMod::INTERACTIVE,"INTERACTIVE","Interactive scheduling")));
+     (SchedulerModeMod::INTERACTIVE,ep((int)SchedulerModeMod::INTERACTIVE,"INTERACTIVE","un-documented")));
     m_.insert(pair<SchedulerMode,EnumPar<void> >
-     (SchedulerModeMod::MANUAL,ep((int)SchedulerModeMod::MANUAL,"MANUAL","Manual scheduling")));
+     (SchedulerModeMod::MANUAL,ep((int)SchedulerModeMod::MANUAL,"MANUAL","un-documented")));
     m_.insert(pair<SchedulerMode,EnumPar<void> >
-     (SchedulerModeMod::QUEUED,ep((int)SchedulerModeMod::QUEUED,"QUEUED","Queued scheduling")));
+     (SchedulerModeMod::QUEUED,ep((int)SchedulerModeMod::QUEUED,"QUEUED","un-documented")));
     return true;
   }
   static map<SchedulerMode,EnumPar<void> > m_;

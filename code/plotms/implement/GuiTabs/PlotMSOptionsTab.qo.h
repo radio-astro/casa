@@ -30,16 +30,18 @@
 #include <plotms/GuiTabs/PlotMSOptionsTab.ui.h>
 
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
-#include <plotms/PlotMS/PlotMSParameters.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
 
-// Subclass of PlotMSTab that handles options for PlotMSPlotter.  Currently:
-// * tool button style, and
-// * log level.
-// Watches PlotMS's PlotMSParameters for changes to update the GUI as needed.
+//# Forward declarations.
+class PlotMSLoggerWidget;
+class PlotMSParameters;
+
+
+// Subclass of PlotMSTab that handles options for PlotMSPlotter.   Watches
+// PlotMS's PlotMSParameters for changes to update the GUI as needed.
 class PlotMSOptionsTab : public PlotMSTab, Ui::OptionsTab {
     Q_OBJECT
     
@@ -54,14 +56,15 @@ public:
     // Implements PlotMSTab::tabName().
     QString tabName() const { return "Options"; }
     
-    // Implements PlotMSTab::toolButtons().
-    QList<QToolButton*> toolButtons() const;
-    
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Updates
     // the GUI as needed if the given parameters are the PlotMS parent's
     // parameters.
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
-            int updateFlag, bool redrawRequired);
+            int updateFlag);
+    
+    // Overrides PlotMSTab::setupForMaxWidth().  MUST be called before being
+    // used, as it sets up the logging widget with it.
+    void setupForMaxWidth(int maxWidth);
     
 private:
     // Watched parameters for PlotMS.
@@ -70,15 +73,15 @@ private:
     // Flag for changing the parameters.
     bool itsChangeFlag_;
     
+    // Logger widget.
+    PlotMSLoggerWidget* itsLoggerWidget_;
+    
 private slots:
     // When the user changes the tool button style on the GUI.
     void toolButtonStyleChanged(int newIndex);
     
-    // When the user changes the log level on the GUI.
-    void logLevelChanged(const QString& newLevel);
-    
-    // When the user changes the log debug checkbox on the GUI.
-    void logDebugChanged(bool value);
+    // When the user changes the log events or priority on the GUI.
+    void logChanged();
     
     // When the user changes the "clear selection" on the GUI.
     void clearSelectionChanged(bool value);
@@ -88,6 +91,9 @@ private slots:
     
     // When the user sets the cached image size to screen resolution.
     void cachedImageSizeScreenResolution();
+    
+    // When the user changes the file chooser history limit.
+    void historyLimitChanged();
 };
 
 }

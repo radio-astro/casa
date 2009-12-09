@@ -20,6 +20,8 @@ tptool = casac.homefinder.find_home_by_name('tableplotHome')
 tp = tptool.create()
 mptool = casac.homefinder.find_home_by_name('msplotHome')
 mp = mptool.create()
+pmtool = casac.homefinder.find_home_by_name('plotmsHome')
+pm = pmtool.create()
 cptool = casac.homefinder.find_home_by_name('calplotHome')
 cp = cptool.create()
 tbtool = casac.homefinder.find_home_by_name('tableHome')
@@ -315,7 +317,7 @@ def inp(taskname=None):
 
         try:
                 parameter_checktype(['taskname'],taskname,str)
-                parameter_checkmenu('taskname',taskname,['accum','bandpass','blcal','clean','contsub','correct','exportuvfits','feather','flagautocorr','flagdata','flagxy','fluxscale','fringecal','ft','gaincal','imhead','importvla','importasdm','importfits','importuvfits','clearcal','invert','listhistory','listobs','makemask','mosaic','plotants','plotcal','plotxy','pointcal','smooth','setjy','split','uvmodelfit','viewer','browsetable','restore'])
+                parameter_checkmenu('taskname',taskname,['accum','bandpass','blcal','clean','contsub','correct','exportuvfits','feather','flagautocorr','flagdata','flagxy','fluxscale','fringecal','ft','gaincal','imhead','importvla','importasdm','importgmrt','importfits','importuvfits','clearcal','listhistory','listobs','makemask','mosaic','plotants','plotcal','plotxy','pointcal','smooth','setjy','split','uvmodelfit','viewer','browsetable','restore'])
         except TypeError, e:
                 print "inp -- TypeError: ", e
                 return
@@ -627,6 +629,14 @@ def inp(taskname=None):
 		print 'importasdm -- Convert ALMA Science Data Model observation to CASA visibility set (MS):'
 		print ''
 		print 'asdm        = "'+str(asdm)+'"','\t# Name of ASDM on disk'
+
+	if taskname=='importgmrt':
+                print ''
+                print 'importgmrt -- Convert GMRT FITS file to CASA visibility data set (MS):'
+                print ''
+                print 'fitsfile    = "'+str(fitsfile)+'"','\t# Name of input UV FITS file'
+                print 'flagfile    = "'+str(flagfile)+'"','\t# Name of input flag file(s)'
+		print 'vis         = "'+str(vis)+'"','\t# Name of input visibility file (MS)'
 
 	if taskname=='importfits':
 		print ''

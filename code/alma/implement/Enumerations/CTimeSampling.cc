@@ -37,12 +37,25 @@
 #include <string>
 using namespace std;
 
+
+int CTimeSampling::version() {
+	return TimeSamplingMod::version;
+	}
+	
+string CTimeSampling::revision () {
+	return TimeSamplingMod::revision;
+}
+
+unsigned int CTimeSampling::size() {
+	return 2;
+	}
+	
 	
 const std::string& CTimeSampling::sSUBINTEGRATION = "SUBINTEGRATION";
 	
 const std::string& CTimeSampling::sINTEGRATION = "INTEGRATION";
 	
-const std::vector<std::string> CTimeSampling::sTimeSamplingSet() {
+const std::vector<std::string> CTimeSampling::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CTimeSampling::sSUBINTEGRATION);
@@ -51,25 +64,6 @@ const std::vector<std::string> CTimeSampling::sTimeSamplingSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CTimeSampling::hSUBINTEGRATION = "Part of an integration";
-	
-const std::string& CTimeSampling::hINTEGRATION = "Part of a subscan. An integration may be composed of several sub-integrations.";
-	
-const std::vector<std::string> CTimeSampling::hTimeSamplingSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CTimeSampling::hSUBINTEGRATION);
-    
-    enumSet.insert(enumSet.end(), CTimeSampling::hINTEGRATION);
-        
-    return enumSet;
-}
-   	
 
 std::string CTimeSampling::name(const TimeSamplingMod::TimeSampling& f) {
     switch (f) {
@@ -81,25 +75,9 @@ std::string CTimeSampling::name(const TimeSamplingMod::TimeSampling& f) {
       return CTimeSampling::sINTEGRATION;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CTimeSampling::help(const TimeSamplingMod::TimeSampling& f) {
-    switch (f) {
-    
-    case TimeSamplingMod::SUBINTEGRATION:
-      return CTimeSampling::hSUBINTEGRATION;
-    
-    case TimeSamplingMod::INTEGRATION:
-      return CTimeSampling::hINTEGRATION;
-    	
-    }
-    return std::string("");
-}
-   	
 
 TimeSamplingMod::TimeSampling CTimeSampling::newTimeSampling(const std::string& name) {
 		
@@ -128,12 +106,10 @@ TimeSamplingMod::TimeSampling CTimeSampling::literal(const std::string& name) {
 }
 
 TimeSamplingMod::TimeSampling CTimeSampling::from_int(unsigned int i) {
-	vector<string> names = sTimeSamplingSet();
-	if (i >= names.size()) throw badInt(i);
-	return newTimeSampling(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newTimeSampling(names_.at(i));
 }
-
-	
 
 string CTimeSampling::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'TimeSampling'.";

@@ -21,6 +21,12 @@ namespace sdmbin {
     correlationMode_(corrMode),
     v_atmPhaseCorrection_(v_atmPhaseCorrection)
   {
+    /*
+     * Do v_switchCycleId and v_dataDescriptionIdArray have the same size ?
+     */
+    if ( v_switchCycleId.size() != v_dataDescriptionIdArray.size() )
+      Error(FATAL, "It seems that the arrays 'switchCycleId' and 'dataDescriptionId' do not have the same size in one row of the ConfigDescription table !");
+
     bool coutest=false;
 
     e_cm_   = corrMode;
@@ -42,7 +48,7 @@ namespace sdmbin {
       DataDescriptionRow* ddPtr=rddSet.getRowByKey(v_dataDescriptionIdArray[n]);
       SwitchCycleRow*     scPtr=rscSet.getRowByKey(v_switchCycleId[n]);
       v_spwr.push_back(ddPtr->getSpectralWindowUsingSpectralWindowId());
-      if(v_spwr[n]->isBasebandNameExists()){
+      //      if(v_spwr[n]->isBasebandNameExists()){    mandatory since ASDMv1
 	BasebandName   bbn = ddPtr->getSpectralWindowUsingSpectralWindowId()->getBasebandName();
 	DataDescParams ddp;
 	ddp.ddIdx   = n;
@@ -66,10 +72,10 @@ namespace sdmbin {
 	v_spwId_.push_back(ddp.spwId);
 	v_numChan_.push_back(ddp.numChan);
 	v_numPol_.push_back(ddp.numCorr);
-      }else{
-	Error(SERIOUS,"BasebandName ASDM item missing when spectralWindowId=%d",
-	      atoi(ddPtr->getSpectralWindowId().toString().c_str()));
-      }
+//       }else{
+// 	Error(SERIOUS,"BasebandName ASDM item missing when spectralWindowId=%d",
+// 	      atoi(ddPtr->getSpectralWindowId().toString().c_str()));
+//       }
       /*
 	if(v_basebandNum_[n]<1||v_basebandNum_[n]>numBaseband_){
 	cout << "ERROR: bbcNo must have a value in the range [1,"<<numBaseband_<<"]"<<endl;
@@ -174,13 +180,15 @@ namespace sdmbin {
 	// for the cross correlations:
 	v_crossDataDescriptionId_.push_back(v_dataDescriptionIdArray[n]);
 
-	spwId =  v_spwr[n]->getSpectralWindowId();            //cout<<spwId.toString()<<endl;
+	spwId =  v_spwr[n]->getSpectralWindowId();            
+	if (coutest) cout<<spwId.toString()<<endl;
 	itf   =  s_imspwId.find(spwId);                
 	ite   =  s_imspwId.end();
 	
 	if(itf==ite){
 
-	  e_sbpm = v_spwr[n]->getSidebandProcessingMode();    //cout<<"SidebandProcessingMode: "<<e_sbpm.str()<<endl;
+	  if (coutest) cout<<"SidebandProcessingMode: "<<e_sbpm.str()<<endl;
+	  e_sbpm = v_spwr[n]->getSidebandProcessingMode();    
 	  if(e_sbpm[PHASE_SWITCH_SEPARATION]){
 	    if(v_spwr[n]->isImageSpectralWindowIdExists())
 	      s_imspwId.insert(v_spwr[n]->getSpectralWindowId());
@@ -190,7 +198,7 @@ namespace sdmbin {
 	      Error(SERIOUS,"The definition of the image sideband is missing");
 	    }
 	  }
-
+	  
 	  // for the auto correlations:
 	  v_corrType.clear();
 	  //cout << v_corrType.size() << endl;
@@ -199,6 +207,7 @@ namespace sdmbin {
 	  v_autoProduct.clear();
 	  autoPolar = false;
 	  for(unsigned int j=0; j<v_polPtr.size(); j++){                            // for every row in the Polarization table
+	    if (coutest) cout << "index in Polarization table = " << j << endl;
 	    if(v_polPtr[j]->getNumCorr()<=4){                                       //  this row could be for an auto-correlation
 	      vv_corrProduct = v_polPtr[j]->getCorrProduct();
 // 	      EnumSet<StokesParameter> es; es.set(v_corrType); cout<<es.str()<<endl;
@@ -231,14 +240,31 @@ namespace sdmbin {
 	      }
 	    }
 	  }
+	  if (coutest) cout << "autoPolarizationId=" << autoPolarizationId.toString() << endl;
+	  if (coutest) cout << "spectralWindowId=" << rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getSpectralWindowId().toString() << endl;
+	  if (autoPolarizationId.toString()=="null_0")
+	    Error(FATAL,"Missing row in the Polarization table for autocorrelation data.");
+	  if (coutest) cout << "Looking for a DataDescription row with polarizationId == "
+			    << autoPolarizationId.toString()
+			    << " and spectralWindowId = "
+			    << (rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getSpectralWindowId()).toString()
+			    << endl;
 	  ddRowPtr = rddSet.lookup( autoPolarizationId, 
 				    rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getSpectralWindowId());
+	  if (ddRowPtr == (DataDescriptionRow *) 0) {
+	    ostringstream oss;
+	    oss << "Could not find a row in the Polarization table with 'polarizationId=" << autoPolarizationId.toString()
+		<< "' and 'spectralWindowId=" << (rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getSpectralWindowId()).toString()
+		<< "'.";
+	    Error(FATAL, oss.str());
+	  }
 	  ddId = ddRowPtr->getDataDescriptionId();
 	  v_autoDataDescriptionId_.push_back(ddId);
 	  v_pairDataDescriptionId_.push_back(true);
 	  if(coutest)cout << "dataDesc cross-corr="<< v_crossDataDescriptionId_[n].toString()
 			  << " dataDescr auto-corr=" << v_autoDataDescriptionId_[n].toString() << endl;
-	}else{
+	}
+	else{
 	  v_pairDataDescriptionId_.push_back(false);   // this crossDataDescriptionId is not associated to an autoDescriptionId
 	}
       }
@@ -704,6 +730,11 @@ unsigned long     DataDescriptionsSet::getCrossSize(){
 unsigned int  DataDescriptionsSet::numChan(unsigned int ndd) throw(Error){
   if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
   return v_numChan_[ndd];
+}
+
+Tag DataDescriptionsSet::getSpwId(unsigned int ndd) throw (Error){
+  if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
+  return v_spwId_[ndd];
 }
 
 Frequency DataDescriptionsSet::totBandwidth(unsigned int ndd) throw(Error){

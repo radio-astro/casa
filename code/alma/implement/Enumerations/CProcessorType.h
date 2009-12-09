@@ -42,16 +42,30 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the ProcessorType enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace ProcessorTypeMod
 {
+  //! ProcessorType.
+  //!  [ASDM.Processor] Types of processors
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum ProcessorType
   { 
-    CORRELATOR ,
-    RADIOMETER ,
-    SPECTROMETER 
+    CORRELATOR /*!< A digital correlator */
+     ,
+    RADIOMETER /*!< A radiometer */
+     ,
+    SPECTROMETER /*!< An (analogue) multi-channel spectrometer */
+     
   };
   typedef ProcessorType &ProcessorType_out;
 } 
@@ -59,68 +73,93 @@ namespace ProcessorTypeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration ProcessorType.
+  * 
+  */
 class CProcessorType {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the ProcessorType enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sCORRELATOR;
+	static const std::string& sCORRELATOR; /*!< A const string equal to "CORRELATOR".*/
 	
-	static const std::string& sRADIOMETER;
+	static const std::string& sRADIOMETER; /*!< A const string equal to "RADIOMETER".*/
 	
-	static const std::string& sSPECTROMETER;
-	
-    static const std::vector<std::string> sProcessorTypeSet();	 
-
+	static const std::string& sSPECTROMETER; /*!< A const string equal to "SPECTROMETER".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in ProcessorTypeMod::ProcessorType.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of ProcessorTypeMod::ProcessorType.
+      * @return a string.
+      */
+	static std::string name(const ProcessorTypeMod::ProcessorType& e);
 	
-	// Explanations associated with the ProcessorType Enumeration.
-		
-	static const std::string& hCORRELATOR;
-		
-	static const std::string& hRADIOMETER;
-		
-	static const std::string& hSPECTROMETER;
-		
-	static const std::vector<std::string> hProcessorTypeSet();
-   	
-
-   	// Is an integer number associated with the ProcessorType enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the ProcessorType enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  ProcessorType enumeration.
-	static std::string name(const ProcessorTypeMod::ProcessorType& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const ProcessorTypeMod::ProcessorType& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified ProcessorType enumeration.
-	static std::string help(const ProcessorTypeMod::ProcessorType& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a ProcessorType enumeration object by specifying its name.
    	static ProcessorTypeMod::ProcessorType newProcessorType(const std::string& name);
    	
-   	// Create a ProcessorType enumeration object by specifying its name.
+   	/*! Return a ProcessorType's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a ProcessorTypeMod::ProcessorType's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static ProcessorTypeMod::ProcessorType literal(const std::string& name);
  	
-    // Create a ProcessorType enumeration object by specifying its position index (0 based).
+    /*! Return a ProcessorType's enumerator given an unsigned int.
+      * @param i the index of the enumerator in ProcessorTypeMod::ProcessorType.
+      * @return a ProcessorTypeMod::ProcessorType's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static ProcessorTypeMod::ProcessorType from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CProcessorType();
     CProcessorType(const CProcessorType&);
     CProcessorType& operator=(const CProcessorType&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CProcessorType_H*/

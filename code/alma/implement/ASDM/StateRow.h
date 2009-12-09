@@ -78,16 +78,14 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
-
-	
-
-	
 #include "CCalibrationDevice.h"
 using namespace CalibrationDeviceMod;
+	
+
+	
+
+	
+
 	
 
 	
@@ -115,7 +113,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file State.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -127,7 +125,7 @@ namespace asdm {
 /**
  * The StateRow class is a row of a StateTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class StateRow {
@@ -154,8 +152,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct StateRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (StateRowIDL x) throw(ConversionException);
+	void setFromIDL (StateRowIDL x) ;
 #endif
 	
 	/**
@@ -168,8 +167,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the StateTable to which the row built by deserialization will be parented.
+	  */
+	 static StateRow* fromBin(EndianISStream& eiss, StateTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -191,6 +204,36 @@ public:
  
  	
  	
+	
+	
+
+
+	
+	// ===> Attribute calDeviceName
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get calDeviceName.
+ 	 * @return calDeviceName as CalibrationDeviceMod::CalibrationDevice
+ 	 */
+ 	CalibrationDeviceMod::CalibrationDevice getCalDeviceName() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set calDeviceName with the specified CalibrationDeviceMod::CalibrationDevice.
+ 	 * @param calDeviceName The CalibrationDeviceMod::CalibrationDevice value to which calDeviceName is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setCalDeviceName (CalibrationDeviceMod::CalibrationDevice calDeviceName);
+  		
+	
 	
 	
 
@@ -256,47 +299,6 @@ public:
 
 
 	
-	// ===> Attribute weight, which is optional
-	
-	
-	
-	/**
-	 * The attribute weight is optional. Return true if this attribute exists.
-	 * @return true if and only if the weight attribute exists. 
-	 */
-	bool isWeightExists() const;
-	
-
-	
- 	/**
- 	 * Get weight, which is optional.
- 	 * @return weight as float
- 	 * @throws IllegalAccessException If weight does not exist.
- 	 */
- 	float getWeight() const throw(IllegalAccessException);
-	
- 
- 	
- 	
- 	/**
- 	 * Set weight with the specified float.
- 	 * @param weight The float value to which weight is to be set.
- 	 
- 		
- 	 */
- 	void setWeight (float weight);
-		
-	
-	
-	
-	/**
-	 * Mark weight, which is an optional field, as non-existent.
-	 */
-	void clearWeight ();
-	
-
-
-	
 	// ===> Attribute onSky
 	
 	
@@ -327,62 +329,43 @@ public:
 
 
 	
-	// ===> Attribute calDeviceName
+	// ===> Attribute weight, which is optional
 	
 	
+	
+	/**
+	 * The attribute weight is optional. Return true if this attribute exists.
+	 * @return true if and only if the weight attribute exists. 
+	 */
+	bool isWeightExists() const;
 	
 
 	
  	/**
- 	 * Get calDeviceName.
- 	 * @return calDeviceName as CalibrationDeviceMod::CalibrationDevice
+ 	 * Get weight, which is optional.
+ 	 * @return weight as float
+ 	 * @throws IllegalAccessException If weight does not exist.
  	 */
- 	CalibrationDeviceMod::CalibrationDevice getCalDeviceName() const;
+ 	float getWeight() const;
 	
  
  	
  	
  	/**
- 	 * Set calDeviceName with the specified CalibrationDeviceMod::CalibrationDevice.
- 	 * @param calDeviceName The CalibrationDeviceMod::CalibrationDevice value to which calDeviceName is to be set.
+ 	 * Set weight with the specified float.
+ 	 * @param weight The float value to which weight is to be set.
  	 
  		
- 			
  	 */
- 	void setCalDeviceName (CalibrationDeviceMod::CalibrationDevice calDeviceName);
-  		
+ 	void setWeight (float weight);
+		
 	
 	
 	
-
-
-	
-	// ===> Attribute flagRow
-	
-	
-	
-
-	
- 	/**
- 	 * Get flagRow.
- 	 * @return flagRow as bool
- 	 */
- 	bool getFlagRow() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setFlagRow (bool flagRow);
-  		
-	
-	
+	/**
+	 * Mark weight, which is an optional field, as non-existent.
+	 */
+	void clearWeight ();
 	
 
 
@@ -401,12 +384,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this StateRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(bool sig, bool ref, bool onSky, CalibrationDeviceMod::CalibrationDevice calDeviceName, bool flagRow);
+	bool compareNoAutoInc(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky);
 	
 	
 
 	
-	bool compareRequiredValue(bool sig, bool ref, bool onSky, CalibrationDeviceMod::CalibrationDevice calDeviceName, bool flagRow); 
+	bool compareRequiredValue(CalibrationDeviceMod::CalibrationDevice calDeviceName, bool sig, bool ref, bool onSky); 
 		 
 	
 	/**
@@ -490,6 +473,17 @@ private:
 	
 
 	
+	// ===> Attribute calDeviceName
+	
+	
+
+	CalibrationDeviceMod::CalibrationDevice calDeviceName;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute sig
 	
 	
@@ -512,19 +506,6 @@ private:
  	
 
 	
-	// ===> Attribute weight, which is optional
-	
-	
-	bool weightExists;
-	
-
-	float weight;
-
-	
-	
- 	
-
-	
 	// ===> Attribute onSky
 	
 	
@@ -536,22 +517,13 @@ private:
  	
 
 	
-	// ===> Attribute calDeviceName
+	// ===> Attribute weight, which is optional
 	
 	
-
-	CalibrationDeviceMod::CalibrationDevice calDeviceName;
-
-	
-	
- 	
-
-	
-	// ===> Attribute flagRow
-	
+	bool weightExists;
 	
 
-	bool flagRow;
+	float weight;
 
 	
 	

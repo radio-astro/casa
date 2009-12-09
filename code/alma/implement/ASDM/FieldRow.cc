@@ -41,28 +41,28 @@ using std::set;
 #include <FieldRow.h>
 #include <FieldTable.h>
 
-#include <FieldTable.h>
-#include <FieldRow.h>
-
 #include <EphemerisTable.h>
 #include <EphemerisRow.h>
 
 #include <SourceTable.h>
 #include <SourceRow.h>
+
+#include <FieldTable.h>
+#include <FieldRow.h>
 	
 
 using asdm::ASDM;
 using asdm::FieldRow;
 using asdm::FieldTable;
 
-using asdm::FieldTable;
-using asdm::FieldRow;
-
 using asdm::EphemerisTable;
 using asdm::EphemerisRow;
 
 using asdm::SourceTable;
 using asdm::SourceRow;
+
+using asdm::FieldTable;
+using asdm::FieldRow;
 
 
 #include <Parser.h>
@@ -132,16 +132,6 @@ namespace asdm {
 		x->code = CORBA::string_dup(code.c_str());
 				
  			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->time = time.toIDLArrayTime();
-			
 		
 	
 
@@ -220,13 +210,25 @@ namespace asdm {
 	
   		
 		
-		x->assocNatureExists = assocNatureExists;
+		x->timeExists = timeExists;
+		
+		
+			
+		x->time = time.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		x->directionCodeExists = directionCodeExists;
 		
 		
 			
 				
-		x->assocNature = CORBA::string_dup(assocNature.c_str());
-				
+		x->directionCode = directionCode;
+ 				
  			
 		
 	
@@ -234,11 +236,25 @@ namespace asdm {
 	
   		
 		
+		x->directionEquinoxExists = directionEquinoxExists;
+		
+		
+			
+		x->directionEquinox = directionEquinox.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		x->assocNatureExists = assocNatureExists;
+		
 		
 			
 				
-		x->flagRow = flagRow;
- 				
+		x->assocNature = CORBA::string_dup(assocNature.c_str());
+				
  			
 		
 	
@@ -253,13 +269,10 @@ namespace asdm {
 		x->assocFieldIdExists = assocFieldIdExists;
 		
 		
-		
-		x->assocFieldId.length(assocFieldId.size());
-		for (unsigned int i = 0; i < assocFieldId.size(); ++i) {
+	 	
 			
-			x->assocFieldId[i] = assocFieldId.at(i).toIDLTag();
+		x->assocFieldId = assocFieldId.toIDLTag();
 			
-	 	}
 	 	 		
   	
 
@@ -313,7 +326,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct FieldRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void FieldRow::setFromIDL (FieldRowIDL x) throw(ConversionException) {
+	void FieldRow::setFromIDL (FieldRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -343,16 +356,6 @@ namespace asdm {
 		
 			
 		setCode(string (x.code));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setTime(ArrayTime (x.time));
 			
  		
 		
@@ -430,6 +433,51 @@ namespace asdm {
 
 	
 		
+		timeExists = x.timeExists;
+		if (x.timeExists) {
+		
+		
+			
+		setTime(ArrayTime (x.time));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		directionCodeExists = x.directionCodeExists;
+		if (x.directionCodeExists) {
+		
+		
+			
+		setDirectionCode(x.directionCode);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		directionEquinoxExists = x.directionEquinoxExists;
+		if (x.directionEquinoxExists) {
+		
+		
+			
+		setDirectionEquinox(ArrayTime (x.directionEquinox));
+			
+ 		
+		
+		}
+		
+	
+
+	
+		
 		assocNatureExists = x.assocNatureExists;
 		if (x.assocNatureExists) {
 		
@@ -444,16 +492,6 @@ namespace asdm {
 	
 
 	
-		
-		
-			
-		setFlagRow(x.flagRow);
-  			
- 		
-		
-	
-
-	
 	
 		
 	
@@ -461,16 +499,15 @@ namespace asdm {
 		assocFieldIdExists = x.assocFieldIdExists;
 		if (x.assocFieldIdExists) {
 		
-		assocFieldId .clear();
-		for (unsigned int i = 0; i <x.assocFieldId.length(); ++i) {
+		
 			
-			assocFieldId.push_back(Tag (x.assocFieldId[i]));
+		setAssocFieldId(Tag (x.assocFieldId));
 			
-		}
+ 		
 		
 		}
 		
-  	
+	
 
 	
 		
@@ -511,7 +548,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Field");
+			throw ConversionException (err.getMessage(),"Field");
 		}
 	}
 #endif
@@ -553,14 +590,6 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(time, "time", buf);
-		
-		
-	
-
-  	
- 		
-		
 		Parser::toXML(numPoly, "numPoly", buf);
 		
 		
@@ -592,10 +621,10 @@ namespace asdm {
 
   	
  		
-		if (assocNatureExists) {
+		if (timeExists) {
 		
 		
-		Parser::toXML(assocNature, "assocNature", buf);
+		Parser::toXML(time, "time", buf);
 		
 		
 		}
@@ -604,9 +633,37 @@ namespace asdm {
 
   	
  		
+		if (directionCodeExists) {
 		
-		Parser::toXML(flagRow, "flagRow", buf);
 		
+			buf.append(EnumerationParser::toXML("directionCode", directionCode));
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (directionEquinoxExists) {
+		
+		
+		Parser::toXML(directionEquinox, "directionEquinox", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (assocNatureExists) {
+		
+		
+		Parser::toXML(assocNature, "assocNature", buf);
+		
+		
+		}
 		
 	
 
@@ -667,7 +724,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void FieldRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void FieldRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -693,14 +750,6 @@ namespace asdm {
   		
 			
 	  	setCode(Parser::getString("code","Field",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setTime(Parser::getArrayTime("time","Field",rowDoc));
 			
 		
 	
@@ -745,6 +794,41 @@ namespace asdm {
 
 	
   		
+        if (row.isStr("<time>")) {
+			
+	  		setTime(Parser::getArrayTime("time","Field",rowDoc));
+			
+		}
+ 		
+	
+
+	
+		
+	if (row.isStr("<directionCode>")) {
+		
+		
+		
+		directionCode = EnumerationParser::getDirectionReferenceCode("directionCode","Field",rowDoc);
+		
+		
+		
+		directionCodeExists = true;
+	}
+		
+	
+
+	
+  		
+        if (row.isStr("<directionEquinox>")) {
+			
+	  		setDirectionEquinox(Parser::getArrayTime("directionEquinox","Field",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
         if (row.isStr("<assocNature>")) {
 			
 	  		setAssocNature(Parser::getString("assocNature","Field",rowDoc));
@@ -754,23 +838,17 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setFlagRow(Parser::getBoolean("flagRow","Field",rowDoc));
-			
-		
-	
-
-	
 	
 		
 	
   		
-  		if (row.isStr("<assocFieldId>")) {
-  			setAssocFieldId(Parser::get1DTag("assocFieldId","Field",rowDoc));  		
-  		}
-  		
-  	
+        if (row.isStr("<assocFieldId>")) {
+			
+	  		setAssocFieldId(Parser::getTag("assocFieldId","Field",rowDoc));
+			
+		}
+ 		
+	
 
 	
   		
@@ -803,6 +881,328 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"Field");
 		}
+	}
+	
+	void FieldRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	fieldId.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(fieldName);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(code);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numPoly);
+				
+		
+	
+
+	
+	
+		
+	Angle::toBin(delayDir, eoss);
+		
+	
+
+	
+	
+		
+	Angle::toBin(phaseDir, eoss);
+		
+	
+
+	
+	
+		
+	Angle::toBin(referenceDir, eoss);
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(timeExists);
+	if (timeExists) {
+	
+	
+	
+		
+	time.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(directionCodeExists);
+	if (directionCodeExists) {
+	
+	
+	
+		
+					
+			eoss.writeInt(directionCode);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(directionEquinoxExists);
+	if (directionEquinoxExists) {
+	
+	
+	
+		
+	directionEquinox.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(assocNatureExists);
+	if (assocNatureExists) {
+	
+	
+	
+		
+						
+			eoss.writeString(assocNature);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(ephemerisIdExists);
+	if (ephemerisIdExists) {
+	
+	
+	
+		
+	ephemerisId.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(sourceIdExists);
+	if (sourceIdExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(sourceId);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(assocFieldIdExists);
+	if (assocFieldIdExists) {
+	
+	
+	
+		
+	assocFieldId.toBin(eoss);
+		
+	
+
+	}
+
+	}
+	
+	FieldRow* FieldRow::fromBin(EndianISStream& eiss, FieldTable& table) {
+		FieldRow* row = new  FieldRow(table);
+		
+		
+		
+	
+		
+		
+		row->fieldId =  Tag::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->fieldName =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->code =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numPoly =  eiss.readInt();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->delayDir = Angle::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->phaseDir = Angle::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->referenceDir = Angle::from2DBin(eiss);		
+	
+
+		
+	
+
+		
+		
+		
+	row->timeExists = eiss.readBoolean();
+	if (row->timeExists) {
+		
+	
+		
+		
+		row->time =  ArrayTime::fromBin(eiss);
+		
+	
+
+	}
+
+	row->directionCodeExists = eiss.readBoolean();
+	if (row->directionCodeExists) {
+		
+	
+	
+		
+			
+		row->directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
+			
+		
+	
+
+	}
+
+	row->directionEquinoxExists = eiss.readBoolean();
+	if (row->directionEquinoxExists) {
+		
+	
+		
+		
+		row->directionEquinox =  ArrayTime::fromBin(eiss);
+		
+	
+
+	}
+
+	row->assocNatureExists = eiss.readBoolean();
+	if (row->assocNatureExists) {
+		
+	
+	
+		
+			
+		row->assocNature =  eiss.readString();
+			
+		
+	
+
+	}
+
+	row->ephemerisIdExists = eiss.readBoolean();
+	if (row->ephemerisIdExists) {
+		
+	
+		
+		
+		row->ephemerisId =  Tag::fromBin(eiss);
+		
+	
+
+	}
+
+	row->sourceIdExists = eiss.readBoolean();
+	if (row->sourceIdExists) {
+		
+	
+	
+		
+			
+		row->sourceId =  eiss.readInt();
+			
+		
+	
+
+	}
+
+	row->assocFieldIdExists = eiss.readBoolean();
+	if (row->assocFieldIdExists) {
+		
+	
+		
+		
+		row->assocFieldId =  Tag::fromBin(eiss);
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -904,38 +1304,6 @@ namespace asdm {
   		}
   	
  		this->code = code;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get time.
- 	 * @return time as ArrayTime
- 	 */
- 	ArrayTime FieldRow::getTime() const {
-	
-  		return time;
- 	}
-
- 	/**
- 	 * Set time with the specified ArrayTime.
- 	 * @param time The ArrayTime value to which time is to be set.
- 	 
- 	
- 		
- 	 */
- 	void FieldRow::setTime (ArrayTime time)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->time = time;
 	
  	}
 	
@@ -1071,6 +1439,147 @@ namespace asdm {
 
 	
 	/**
+	 * The attribute time is optional. Return true if this attribute exists.
+	 * @return true if and only if the time attribute exists. 
+	 */
+	bool FieldRow::isTimeExists() const {
+		return timeExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get time, which is optional.
+ 	 * @return time as ArrayTime
+ 	 * @throw IllegalAccessException If time does not exist.
+ 	 */
+ 	ArrayTime FieldRow::getTime() const  {
+		if (!timeExists) {
+			throw IllegalAccessException("time", "Field");
+		}
+	
+  		return time;
+ 	}
+
+ 	/**
+ 	 * Set time with the specified ArrayTime.
+ 	 * @param time The ArrayTime value to which time is to be set.
+ 	 
+ 	
+ 	 */
+ 	void FieldRow::setTime (ArrayTime time) {
+	
+ 		this->time = time;
+	
+		timeExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark time, which is an optional field, as non-existent.
+	 */
+	void FieldRow::clearTime () {
+		timeExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute directionCode is optional. Return true if this attribute exists.
+	 * @return true if and only if the directionCode attribute exists. 
+	 */
+	bool FieldRow::isDirectionCodeExists() const {
+		return directionCodeExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get directionCode, which is optional.
+ 	 * @return directionCode as DirectionReferenceCodeMod::DirectionReferenceCode
+ 	 * @throw IllegalAccessException If directionCode does not exist.
+ 	 */
+ 	DirectionReferenceCodeMod::DirectionReferenceCode FieldRow::getDirectionCode() const  {
+		if (!directionCodeExists) {
+			throw IllegalAccessException("directionCode", "Field");
+		}
+	
+  		return directionCode;
+ 	}
+
+ 	/**
+ 	 * Set directionCode with the specified DirectionReferenceCodeMod::DirectionReferenceCode.
+ 	 * @param directionCode The DirectionReferenceCodeMod::DirectionReferenceCode value to which directionCode is to be set.
+ 	 
+ 	
+ 	 */
+ 	void FieldRow::setDirectionCode (DirectionReferenceCodeMod::DirectionReferenceCode directionCode) {
+	
+ 		this->directionCode = directionCode;
+	
+		directionCodeExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark directionCode, which is an optional field, as non-existent.
+	 */
+	void FieldRow::clearDirectionCode () {
+		directionCodeExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute directionEquinox is optional. Return true if this attribute exists.
+	 * @return true if and only if the directionEquinox attribute exists. 
+	 */
+	bool FieldRow::isDirectionEquinoxExists() const {
+		return directionEquinoxExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get directionEquinox, which is optional.
+ 	 * @return directionEquinox as ArrayTime
+ 	 * @throw IllegalAccessException If directionEquinox does not exist.
+ 	 */
+ 	ArrayTime FieldRow::getDirectionEquinox() const  {
+		if (!directionEquinoxExists) {
+			throw IllegalAccessException("directionEquinox", "Field");
+		}
+	
+  		return directionEquinox;
+ 	}
+
+ 	/**
+ 	 * Set directionEquinox with the specified ArrayTime.
+ 	 * @param directionEquinox The ArrayTime value to which directionEquinox is to be set.
+ 	 
+ 	
+ 	 */
+ 	void FieldRow::setDirectionEquinox (ArrayTime directionEquinox) {
+	
+ 		this->directionEquinox = directionEquinox;
+	
+		directionEquinoxExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark directionEquinox, which is an optional field, as non-existent.
+	 */
+	void FieldRow::clearDirectionEquinox () {
+		directionEquinoxExists = false;
+	}
+	
+
+	
+	/**
 	 * The attribute assocNature is optional. Return true if this attribute exists.
 	 * @return true if and only if the assocNature attribute exists. 
 	 */
@@ -1085,7 +1594,7 @@ namespace asdm {
  	 * @return assocNature as string
  	 * @throw IllegalAccessException If assocNature does not exist.
  	 */
- 	string FieldRow::getAssocNature() const throw(IllegalAccessException) {
+ 	string FieldRow::getAssocNature() const  {
 		if (!assocNatureExists) {
 			throw IllegalAccessException("assocNature", "Field");
 		}
@@ -1117,38 +1626,6 @@ namespace asdm {
 	
 
 	
-
-	
- 	/**
- 	 * Get flagRow.
- 	 * @return flagRow as bool
- 	 */
- 	bool FieldRow::getFlagRow() const {
-	
-  		return flagRow;
- 	}
-
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 	 
- 	
- 		
- 	 */
- 	void FieldRow::setFlagRow (bool flagRow)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->flagRow = flagRow;
-	
- 	}
-	
-	
-
-	
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -1166,10 +1643,10 @@ namespace asdm {
 	
  	/**
  	 * Get assocFieldId, which is optional.
- 	 * @return assocFieldId as vector<Tag> 
+ 	 * @return assocFieldId as Tag
  	 * @throw IllegalAccessException If assocFieldId does not exist.
  	 */
- 	vector<Tag>  FieldRow::getAssocFieldId() const throw(IllegalAccessException) {
+ 	Tag FieldRow::getAssocFieldId() const  {
 		if (!assocFieldIdExists) {
 			throw IllegalAccessException("assocFieldId", "Field");
 		}
@@ -1178,12 +1655,12 @@ namespace asdm {
  	}
 
  	/**
- 	 * Set assocFieldId with the specified vector<Tag> .
- 	 * @param assocFieldId The vector<Tag>  value to which assocFieldId is to be set.
+ 	 * Set assocFieldId with the specified Tag.
+ 	 * @param assocFieldId The Tag value to which assocFieldId is to be set.
  	 
  	
  	 */
- 	void FieldRow::setAssocFieldId (vector<Tag>  assocFieldId) {
+ 	void FieldRow::setAssocFieldId (Tag assocFieldId) {
 	
  		this->assocFieldId = assocFieldId;
 	
@@ -1216,7 +1693,7 @@ namespace asdm {
  	 * @return ephemerisId as Tag
  	 * @throw IllegalAccessException If ephemerisId does not exist.
  	 */
- 	Tag FieldRow::getEphemerisId() const throw(IllegalAccessException) {
+ 	Tag FieldRow::getEphemerisId() const  {
 		if (!ephemerisIdExists) {
 			throw IllegalAccessException("ephemerisId", "Field");
 		}
@@ -1263,7 +1740,7 @@ namespace asdm {
  	 * @return sourceId as int
  	 * @throw IllegalAccessException If sourceId does not exist.
  	 */
- 	int FieldRow::getSourceId() const throw(IllegalAccessException) {
+ 	int FieldRow::getSourceId() const  {
 		if (!sourceIdExists) {
 			throw IllegalAccessException("sourceId", "Field");
 		}
@@ -1298,78 +1775,6 @@ namespace asdm {
 	// Links //
 	///////////
 	
-	
- 		
- 	/**
- 	 * Set assocFieldId[i] with the specified Tag.
- 	 * @param i The index in assocFieldId where to set the Tag value.
- 	 * @param assocFieldId The Tag value to which assocFieldId[i] is to be set. 
- 	 * @throws OutOfBoundsException
-  	 */
-  	void FieldRow::setAssocFieldId (int i, Tag assocFieldId) {
-  		if ((i < 0) || (i > ((int) this->assocFieldId.size())))
-  			throw OutOfBoundsException("Index out of bounds during a set operation on attribute assocFieldId in table FieldTable");
-  		vector<Tag> ::iterator iter = this->assocFieldId.begin();
-  		int j = 0;
-  		while (j < i) {
-  			j++; iter++;
-  		}
-  		this->assocFieldId.insert(this->assocFieldId.erase(iter), assocFieldId); 	
-  	}
- 			
-	
-	
-	
-		
-/**
- * Append a Tag to assocFieldId.
- * @param id the Tag to be appended to assocFieldId
- */
- void FieldRow::addAssocFieldId(Tag id){
- 	assocFieldId.push_back(id);
-}
-
-/**
- * Append an array of Tag to assocFieldId.
- * @param id an array of Tag to be appended to assocFieldId
- */
- void FieldRow::addAssocFieldId(const vector<Tag> & id) {
- 	for (unsigned int i=0; i < id.size(); i++)
- 		assocFieldId.push_back(id.at(i));
- }
- 
-
- /**
-  * Returns the Tag stored in assocFieldId at position i.
-  *
-  */
- const Tag FieldRow::getAssocFieldId(int i) {
- 	return assocFieldId.at(i);
- }
- 
- /**
-  * Returns the FieldRow linked to this row via the Tag stored in assocFieldId
-  * at position i.
-  */
- FieldRow* FieldRow::getField(int i) {
- 	return table.getContainer().getField().getRowByKey(assocFieldId.at(i));
- } 
- 
- /**
-  * Returns the vector of FieldRow* linked to this row via the Tags stored in assocFieldId
-  *
-  */
- vector<FieldRow *> FieldRow::getFields() {
- 	vector<FieldRow *> result;
- 	for (unsigned int i = 0; i < assocFieldId.size(); i++)
- 		result.push_back(table.getContainer().getField().getRowByKey(assocFieldId.at(i)));
- 		
- 	return result;
- }
-  
-
-	
-
 	
 	
 	
@@ -1418,6 +1823,30 @@ namespace asdm {
 	
 
 	
+	
+	
+		
+
+	/**
+	 * Returns the pointer to the row in the Field table having Field.assocFieldId == assocFieldId
+	 * @return a FieldRow*
+	 * 
+	 
+	 * throws IllegalAccessException
+	 
+	 */
+	 FieldRow* FieldRow::getFieldUsingAssocFieldId() {
+	 
+	 	if (!assocFieldIdExists)
+	 		throw IllegalAccessException();	 		 
+	 
+	 	return table.getContainer().getField().getRowByKey(assocFieldId);
+	 }
+	 
+
+	
+
+	
 	/**
 	 * Create a FieldRow.
 	 * <p>
@@ -1445,11 +1874,19 @@ namespace asdm {
 	
 
 	
+		timeExists = false;
+	
+
+	
+		directionCodeExists = false;
+	
+
+	
+		directionEquinoxExists = false;
+	
 
 	
 		assocNatureExists = false;
-	
-
 	
 
 	
@@ -1482,6 +1919,11 @@ namespace asdm {
 
 	
 
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+directionCode = CDirectionReferenceCode::from_int(0);
 	
 
 	
@@ -1511,11 +1953,19 @@ namespace asdm {
 	
 
 	
+		timeExists = false;
+	
+
+	
+		directionCodeExists = false;
+	
+
+	
+		directionEquinoxExists = false;
+	
 
 	
 		assocNatureExists = false;
-	
-
 	
 
 	
@@ -1544,8 +1994,6 @@ namespace asdm {
 		
 			code = row.code;
 		
-			time = row.time;
-		
 			numPoly = row.numPoly;
 		
 			delayDir = row.delayDir;
@@ -1554,17 +2002,36 @@ namespace asdm {
 		
 			referenceDir = row.referenceDir;
 		
-			flagRow = row.flagRow;
 		
 		
 		
-		
-		if (row.assocFieldIdExists) {
-			assocFieldId = row.assocFieldId;		
-			assocFieldIdExists = true;
+		if (row.timeExists) {
+			time = row.time;		
+			timeExists = true;
 		}
 		else
-			assocFieldIdExists = false;
+			timeExists = false;
+		
+		if (row.directionCodeExists) {
+			directionCode = row.directionCode;		
+			directionCodeExists = true;
+		}
+		else
+			directionCodeExists = false;
+		
+		if (row.directionEquinoxExists) {
+			directionEquinox = row.directionEquinox;		
+			directionEquinoxExists = true;
+		}
+		else
+			directionEquinoxExists = false;
+		
+		if (row.assocNatureExists) {
+			assocNature = row.assocNature;		
+			assocNatureExists = true;
+		}
+		else
+			assocNatureExists = false;
 		
 		if (row.ephemerisIdExists) {
 			ephemerisId = row.ephemerisId;		
@@ -1580,18 +2047,18 @@ namespace asdm {
 		else
 			sourceIdExists = false;
 		
-		if (row.assocNatureExists) {
-			assocNature = row.assocNature;		
-			assocNatureExists = true;
+		if (row.assocFieldIdExists) {
+			assocFieldId = row.assocFieldId;		
+			assocFieldIdExists = true;
 		}
 		else
-			assocNatureExists = false;
+			assocFieldIdExists = false;
 		
 		}	
 	}
 
 	
-	bool FieldRow::compareNoAutoInc(string fieldName, string code, ArrayTime time, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir, bool flagRow) {
+	bool FieldRow::compareNoAutoInc(string fieldName, string code, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir) {
 		bool result;
 		result = true;
 		
@@ -1605,13 +2072,6 @@ namespace asdm {
 	
 		
 		result = result && (this->code == code);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->time == time);
 		
 		if (!result) return false;
 	
@@ -1644,19 +2104,12 @@ namespace asdm {
 		if (!result) return false;
 	
 
-	
-		
-		result = result && (this->flagRow == flagRow);
-		
-		if (!result) return false;
-	
-
 		return result;
 	}	
 	
 	
 	
-	bool FieldRow::compareRequiredValue(string fieldName, string code, ArrayTime time, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir, bool flagRow) {
+	bool FieldRow::compareRequiredValue(string fieldName, string code, int numPoly, vector<vector<Angle > > delayDir, vector<vector<Angle > > phaseDir, vector<vector<Angle > > referenceDir) {
 		bool result;
 		result = true;
 		
@@ -1666,10 +2119,6 @@ namespace asdm {
 
 	
 		if (!(this->code == code)) return false;
-	
-
-	
-		if (!(this->time == time)) return false;
 	
 
 	
@@ -1686,10 +2135,6 @@ namespace asdm {
 
 	
 		if (!(this->referenceDir == referenceDir)) return false;
-	
-
-	
-		if (!(this->flagRow == flagRow)) return false;
 	
 
 		return result;
@@ -1711,8 +2156,6 @@ namespace asdm {
 			
 		if (this->code != x->code) return false;
 			
-		if (this->time != x->time) return false;
-			
 		if (this->numPoly != x->numPoly) return false;
 			
 		if (this->delayDir != x->delayDir) return false;
@@ -1720,8 +2163,6 @@ namespace asdm {
 		if (this->phaseDir != x->phaseDir) return false;
 			
 		if (this->referenceDir != x->referenceDir) return false;
-			
-		if (this->flagRow != x->flagRow) return false;
 			
 		
 		return true;

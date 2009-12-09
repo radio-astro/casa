@@ -35,9 +35,9 @@
 
 //# Includes
 
+#include <Python.h>
 #include <iostream.h>
 #include <casa/aipstype.h>
-#include <Python.h>
 #include <casa/Arrays/Vector.h>
 
 #include <tableplot/TablePlot/TablePlot.h>

@@ -146,6 +146,8 @@ class MultiWCTool : public DisplayTool,
   virtual void otherKeyReleased(const WCPositionEvent &ev);
   virtual void moved(const WCMotionEvent &ev);
   virtual void updateRegion() {}
+  virtual void clicked(Int x, Int y) {}
+  virtual void doubleClicked(Int x, Int y) {}
   // </group>
 
   // Draw whatever should be drawn (if anything) on current WC.

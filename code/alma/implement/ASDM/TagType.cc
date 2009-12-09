@@ -110,6 +110,8 @@ const TagType* TagType:: DataDescription = new TagType("DataDescription") ;
 	
 
 	
+
+	
 const TagType* TagType:: Doppler = new TagType("Doppler") ;
 	
 
@@ -170,6 +172,8 @@ const TagType* TagType:: Receiver = new TagType("Receiver") ;
 	
 
 	
+const TagType* TagType:: SBSummary = new TagType("SBSummary") ;
+	
 
 	
 
@@ -177,10 +181,6 @@ const TagType* TagType:: Receiver = new TagType("Receiver") ;
 
 	
 const TagType* TagType:: Source = new TagType("Source") ;
-	
-
-	
-const TagType* TagType:: SourceParameter = new TagType("SourceParameter") ;
 	
 
 	
@@ -304,6 +304,8 @@ const TagType* TagType::getTagType(string name) {
 	
 
 	
+
+	
 	TagType::name2TagType["Doppler"] = TagType::Doppler ;
 	
 
@@ -364,6 +366,8 @@ const TagType* TagType::getTagType(string name) {
 	
 
 	
+	TagType::name2TagType["SBSummary"] = TagType::SBSummary ;
+	
 
 	
 
@@ -371,10 +375,6 @@ const TagType* TagType::getTagType(string name) {
 
 	
 	TagType::name2TagType["Source"] = TagType::Source ;
-	
-
-	
-	TagType::name2TagType["SourceParameter"] = TagType::SourceParameter ;
 	
 
 	

@@ -38,11 +38,11 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<AntennaType,EnumPar<void> >
-     (AntennaTypeMod::GROUND_BASED,ep((int)AntennaTypeMod::GROUND_BASED,"GROUND_BASED","Ground-based antenna")));
+     (AntennaTypeMod::GROUND_BASED,ep((int)AntennaTypeMod::GROUND_BASED,"GROUND_BASED","un-documented")));
     m_.insert(pair<AntennaType,EnumPar<void> >
-     (AntennaTypeMod::SPACE_BASED,ep((int)AntennaTypeMod::SPACE_BASED,"SPACE_BASED","Antenna in a spacecraft")));
+     (AntennaTypeMod::SPACE_BASED,ep((int)AntennaTypeMod::SPACE_BASED,"SPACE_BASED","un-documented")));
     m_.insert(pair<AntennaType,EnumPar<void> >
-     (AntennaTypeMod::TRACKING_STN,ep((int)AntennaTypeMod::TRACKING_STN,"TRACKING_STN","Space-tracking station antenna")));
+     (AntennaTypeMod::TRACKING_STN,ep((int)AntennaTypeMod::TRACKING_STN,"TRACKING_STN","un-documented")));
     return true;
   }
   static map<AntennaType,EnumPar<void> > m_;

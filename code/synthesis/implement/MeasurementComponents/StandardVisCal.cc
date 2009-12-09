@@ -25,16 +25,19 @@
 //#
 
 #include <synthesis/MeasurementComponents/StandardVisCal.h>
+#include <synthesis/MeasurementComponents/CalCorruptor.h>
 
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisBuffAccumulator.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
 #include <scimath/Fitting/LSQFit.h>
-
+#include <lattices/Lattices/ArrayLattice.h>
+#include <lattices/Lattices/LatticeFFT.h>
 #include <tables/Tables/ExprNode.h>
 
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/MatrixMath.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/GenSort.h>
@@ -44,8 +47,14 @@
 
 #include <casa/sstream.h>
 
+#include <measures/Measures/MCBaseline.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MeasTable.h>
+
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
+// math.h ?
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -161,14 +170,16 @@ void PJones::calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
 TJones::TJones(VisSet& vs) :
   VisCal(vs),             // virtual base
   VisMueller(vs),         // virtual base
-  SolvableVisJones(vs)    // immediate parent
+  SolvableVisJones(vs),    // immediate parent
+  tcorruptor_p(NULL)
 {
   if (prtlev()>2) cout << "T::T(vs)" << endl;
 }
 TJones::TJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
-  SolvableVisJones(nAnt)
+  SolvableVisJones(nAnt),
+  tcorruptor_p(NULL)
 {
   if (prtlev()>2) cout << "T::T(nAnt)" << endl;
 }
@@ -237,7 +248,7 @@ void TJones::guessPar(VisBuffer& vb) {
   Float amp(0.0),ampave(0.0);
   Int namp(0);
   solveCPar()=Complex(0.0);
-  for (Int irow=1;irow<vb.nRow();++irow) {
+  for (Int irow=1;irow<vb.nRow();++irow) {  // why not row zero? copied from Calibrator
 
     if (rowok(irow)) {
       Int a1=vb.antenna1()(irow);
@@ -307,6 +318,130 @@ void TJones::initTrivDJ() {
 
 }
 
+  
+
+
+
+
+
+//============================================================
+
+
+void TJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim) {
+  LogIO os(LogOrigin("T", "createCorruptor()", WHERE));
+
+  tcorruptor_p = new AtmosCorruptor(nSim);
+  corruptor_p=tcorruptor_p;
+
+  // call generic parent to set corr,spw,etc info
+  SolvableVisCal::createCorruptor(vi,simpar,nSim);
+  
+  Int Seed(1234);
+  if (simpar.isDefined("seed")) {    
+    Seed=simpar.asInt("seed");
+  }
+  
+  Float Beta(1.1); // exponent for generalized 1/f noise
+  if (simpar.isDefined("beta")) {    
+    Beta=simpar.asFloat("beta");
+  }
+  
+  if (simpar.isDefined("mean_pwv"))
+    tcorruptor_p->mean_pwv() = simpar.asFloat("mean_pwv");
+  
+  if (tcorruptor_p->mean_pwv()<=0)
+    throw(AipsError("AtmCorruptor attempted initialization with undefined PWV"));
+  
+  Float Scale(.15); // scale of fluctuations rel to mean
+  if (simpar.isDefined("delta_pwv") and simpar.isDefined("mean_pwv")) {    
+    Scale=simpar.asFloat("delta_pwv")/simpar.asFloat("mean_pwv");
+    if (Scale>.5) {
+      Scale=.5;  
+      os << LogIO::WARN << " decreasing PWV fluctuation magnitude to half of the mean PWV, " << simpar.asFloat("mean_pwv") << LogIO::POST;  
+    }
+  }
+
+  if (simpar.isDefined("mode")) {    
+    if (prtlev()>2) 
+      cout << "initializing T:Corruptor with mode " << simpar.asString("mode") << endl;
+    
+    if (simpar.asString("mode") == "test")
+      tcorruptor_p->initialize();
+    else {
+
+      // slot_times for a fBM-based corruption need to be even even if solTimes are not
+      // so will define startTime and stopTime and reset nsim() here.
+      
+      if (simpar.isDefined("startTime")) {    
+	corruptor_p->startTime() = simpar.asDouble("startTime");
+      } else {
+	throw(AipsError("start/stop time not defined"));
+      }
+      if (simpar.isDefined("stopTime")) {    
+	corruptor_p->stopTime() = simpar.asDouble("stopTime");
+      } else {
+	throw(AipsError("start/stop time not defined"));
+      }
+      
+      // RI todo T::createCorr make min screen granularity a user parameter
+      Float fBM_interval=max(interval(),10.); // generate screens on >10s intervals
+      corruptor_p->setEvenSlots(fBM_interval);
+
+      if (simpar.asString("mode") == "individual") 
+	tcorruptor_p->initialize(Seed,Beta,Scale);
+      else if (simpar.asString("mode") == "screen") {
+	const ROMSAntennaColumns& antcols(vi.msColumns().antenna());
+	if (simpar.isDefined("windspeed")) {
+	  tcorruptor_p->windspeed()=simpar.asFloat("windspeed");
+	  tcorruptor_p->initialize(Seed,Beta,Scale,antcols);
+	} else
+	  throw(AipsError("Unknown wind speed for T:Corruptor"));        
+      } else 
+	throw(AipsError("Unknown mode for T:Corruptor"));        
+    }
+  } else {
+    throw(AipsError("No Mode specified for T:Corruptor."));
+  }  
+}
+
+
+
+
+
+// **********************************************************
+//  TfJones Implementations
+//
+
+TfJones::TfJones(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  TJones(vs)              // immediate parent
+{
+  if (prtlev()>2) cout << "Tf::Tf(vs)" << endl;
+}
+
+TfJones::TfJones(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  TJones(nAnt)
+{
+  if (prtlev()>2) cout << "Tf::Tf(nAnt)" << endl;
+}
+
+TfJones::~TfJones() {
+  if (prtlev()>2) cout << "Tf::~Tf()" << endl;
+}
+
+
+
+
+
+
+
+
+
+
+
 // **********************************************************
 //  GJones Implementations
 //
@@ -314,7 +449,8 @@ void TJones::initTrivDJ() {
 GJones::GJones(VisSet& vs) :
   VisCal(vs),             // virtual base
   VisMueller(vs),         // virtual base
-  SolvableVisJones(vs)    // immediate parent
+  SolvableVisJones(vs),    // immediate parent
+  gcorruptor_p(NULL)
 {
   if (prtlev()>2) cout << "G::G(vs)" << endl;
 }
@@ -322,7 +458,8 @@ GJones::GJones(VisSet& vs) :
 GJones::GJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
-  SolvableVisJones(nAnt)
+  SolvableVisJones(nAnt),
+  gcorruptor_p(NULL)
 {
   if (prtlev()>2) cout << "G::G(nAnt)" << endl;
 }
@@ -472,6 +609,87 @@ void GJones::initTrivDJ() {
   }
 
 }
+
+
+void GJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim) {
+{
+
+  LogIO os(LogOrigin("G", "createCorruptor()", WHERE));  
+  if (prtlev()>2) cout << "   G::createCorruptor()" << endl;
+
+  gcorruptor_p = new GJonesCorruptor(nSim);
+  corruptor_p = gcorruptor_p;
+
+  // call generic parent to set corr,spw,etc info
+  SolvableVisCal::createCorruptor(vi,simpar,nSim);
+  
+  Int Seed(1234);
+  if (simpar.isDefined("seed")) {    
+    Seed=simpar.asInt("seed");
+  }
+
+  if (simpar.isDefined("tsys")) {
+    gcorruptor_p->tsys() = simpar.asFloat("tsys");
+  } 
+  
+  if (simpar.isDefined("mode")) {    
+    if (prtlev()>2)
+      cout << "initializing GCorruptor with mode " << simpar.asString("mode") << endl;
+    
+    // slot_times for a fBM-based corruption need to be even even if solTimes are not
+    // so will define startTime and stopTime and reset nsim() here.
+    
+    if (simpar.isDefined("startTime")) {    
+      corruptor_p->startTime() = simpar.asDouble("startTime");
+    } else {
+      throw(AipsError("start/stop time not defined"));
+    }
+    if (simpar.isDefined("stopTime")) {    
+      corruptor_p->stopTime() = simpar.asDouble("stopTime");
+    } else {
+      throw(AipsError("start/stop time not defined"));
+    }
+        
+    if (simpar.asString("mode")=="fbm") {
+
+      Float Beta(1.1); // exponent for generalized 1/f noise
+      if (simpar.isDefined("beta")) {    
+	Beta=simpar.asFloat("beta");
+      }
+      
+      Float Scale(.15); // scale of fluctuations 
+      if (simpar.isDefined("amplitude")) {
+	Scale=simpar.asFloat("amplitude");
+	if (Scale>=.9) {
+	  os << LogIO::WARN << " decreasing gain fluctuations from " << Scale << " to 0.9 " << LogIO::POST;  
+	  Scale=.9;
+	}
+      }
+
+      Float fBM_interval=max(interval(),5.); // generate screens on 5s intervals or longer
+      corruptor_p->setEvenSlots(fBM_interval);
+      gcorruptor_p->initialize(Seed,Beta,Scale);
+    
+    } else if (simpar.asString("mode")=="random") {
+
+      Complex Scale(0.1,0.1); // scale of fluctuations 
+      if (simpar.isDefined("camp")) {
+	Scale=simpar.asComplex("camp");
+      }
+      gcorruptor_p->initialize(Seed,Scale);
+
+    } else throw AipsError("incompatible mode "+simpar.asString("mode"));
+      
+    
+  } else 
+    throw(AipsError("Unknown mode for GJonesCorruptor"));        
+ }
+}
+
+
+
+
+
 
 
 // **********************************************************
@@ -653,6 +871,9 @@ void BJones::fillChanGapArray(Array<Complex>& sol,
   } // done
 
 }
+
+
+
 
 // **********************************************************
 //  DJones Implementations
@@ -1026,6 +1247,44 @@ void DJones::initTrivDJ() {
 }
 
 
+
+void DJones::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim)
+{
+  
+  LogIO os(LogOrigin("D", "createCorruptor()", WHERE));  
+  if (prtlev()>2) cout << "   D::createCorruptor()" << endl;
+  
+  // this may not be the best place for this:
+  solvePol_=2;
+
+  // no nSim since not time dependent (yet)
+  dcorruptor_p = new DJonesCorruptor();
+  corruptor_p = dcorruptor_p;
+
+  // call generic parent to set corr,spw,etc info
+  SolvableVisCal::createCorruptor(vi,simpar,nSim);
+  
+  Int Seed(1234);
+  if (simpar.isDefined("seed")) {    
+    Seed=simpar.asInt("seed");
+  }
+
+  Complex Scale(0.1,0.1); // scale of fluctuations 
+  if (simpar.isDefined("camp")) {
+    Scale=simpar.asComplex("camp");
+  }
+
+  Complex Offset(0.,0.); 
+  if (simpar.isDefined("offset")) {
+    Offset=simpar.asComplex("offset");
+  }
+
+  dcorruptor_p->initialize(Seed,Scale,Offset);
+   
+}
+
+
+
 // **********************************************************
 //  DfJones Implementations
 //
@@ -1049,6 +1308,13 @@ DfJones::DfJones(const Int& nAnt) :
 DfJones::~DfJones() {
   if (prtlev()>2) cout << "Df::~Df()" << endl;
 }
+
+
+
+
+
+
+
 
 // **********************************************************
 //  JJones Implementations
@@ -1164,6 +1430,10 @@ void JJones::initTrivDJ() {
 
 }
 
+
+
+
+
 // **********************************************************
 //  MMueller: baseline-based (closure) solution
 //
@@ -1219,6 +1489,9 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
 
   Vector<Int> slotidx(vs.numberSpw(),-1);
 
+
+  ve.state();
+
   Int nGood(0);
   vi.originChunks();
   for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
@@ -1253,6 +1526,10 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
         // If permitted/required by solvable component, normalize
         if (normalizable())
           vb.normalize();
+
+	// If this solve not freqdep, and channels not averaged yet, do so
+	if (!freqDepMat() && vb.nChannel()>1) 
+	  vb.freqAveCubes();
 
         // Accumulate collapsed vb in a time average
         vba.accumulate(vb);
@@ -1422,6 +1699,10 @@ void MMueller::oldselfSolve(VisSet& vs, VisEquation& ve) {
 
       vb.normalize();
 
+      // If this solve not freqdep, and channels not averaged yet, do so
+      if (!freqDepMat() && vb.nChannel()>1)
+	vb.freqAveCubes();
+
       // Accumulate collapsed vb in a time average
       vba.accumulate(vb);
      
@@ -1562,6 +1843,29 @@ void MMueller::keep(const Int& slot) {
     throw(AipsError("MMueller::keep: Attempt to store solution in non-existent CalSet slot"));
 
 }
+
+
+
+
+void MMueller::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim) 
+{
+  if (prtlev()>2) cout << "   MM::setSimulate()" << endl;
+
+  atmcorruptor_p = new AtmosCorruptor();
+  corruptor_p = atmcorruptor_p;
+
+  // call generic parent to set corr,spw,etc info
+  SolvableVisCal::createCorruptor(vi,simpar,nSim);
+
+  // RI TODO ::createCorr make sure this atmcorruptor initializer works as  intended
+  // this is the M type corruptor - maybe we should make the corruptor 
+  // take the VC as an argument
+  atmcorruptor_p->initialize(vi,simpar); 
+}
+
+
+
+
 
 
 // **********************************************************
@@ -1716,6 +2020,37 @@ void TOpac::calcAllJones() {
 }
 
 
+
+// **********************************************************
+//  TfOpac
+//
+
+TfOpac::TfOpac(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  TOpac(vs)              // immediate parent
+{
+  if (prtlev()>2) cout << "TfOpac::TfOpac(vs)" << endl;
+}
+
+//TfOpac::TfOpac(const Int& nAnt) :
+//  VisCal(nAnt), 
+//  VisMueller(nAnt),
+//  TOpac(nAnt)
+//{
+//  if (prtlev()>2) cout << "TfOpac::TfOpac(nAnt)" << endl;
+//}
+
+TfOpac::~TfOpac() {
+  if (prtlev()>2) cout << "TfOpac::~TfOpac()" << endl;
+}
+
+
+
+
+
+
+
 // **********************************************************
 //  XMueller: positiona angle for circulars
 //
@@ -1819,6 +2154,10 @@ void XMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
         // If permitted/required by solvable component, normalize
         //if (normalizable())
 	//          vb.normalize();
+
+	// If this solve not freqdep, and channels not averaged yet, do so
+	if (!freqDepMat() && vb.nChannel()>1)
+	  vb.freqAveCubes();
 
         // Accumulate collapsed vb in a time average
         vba.accumulate(vb);
@@ -1946,6 +2285,10 @@ void XMueller::oldselfSolve(VisSet& vs, VisEquation& ve) {
       ve.collapse(vb);
 
       //      vb.normalize();
+
+      // If this solve not freqdep, and channels not averaged yet, do so
+      if (!freqDepMat() && vb.nChannel()>1)
+	vb.freqAveCubes();
 
       // Accumulate collapsed vb in a time average
       vba.accumulate(vb);
@@ -2132,6 +2475,565 @@ void XMueller::solveOneVB(const VisBuffer& vb) {
   }
   
 }
+
+
+
+// **********************************************************
+//  KJones Implementations
+//
+
+KJones::KJones(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  GJones(vs)             // immediate parent
+{
+  if (prtlev()>2) cout << "K::K(vs)" << endl;
+
+  // Extract per-spw ref Freq for phase(delay) calculation
+  //  TBD: these should be in the caltable!!
+  MSSpectralWindow msSpw(vs.msName()+"/SPECTRAL_WINDOW");
+  MSSpWindowColumns msCol(msSpw);
+  msCol.refFrequency().getColumn(KrefFreqs_,True);
+  KrefFreqs_/=1.0e9;  // in GHz
+
+}
+
+KJones::KJones(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  GJones(nAnt)
+{
+  if (prtlev()>2) cout << "K::K(nAnt)" << endl;
+}
+
+KJones::~KJones() {
+  if (prtlev()>2) cout << "K::~K()" << endl;
+}
+
+void KJones::setApply(const Record& apply) {
+
+  // Call parent to do conventional things
+  GJones::setApply(apply);
+
+  if (calWt()) 
+    logSink() << " (" << this->typeName() << ": Enforcing calWt()=False for phase/delay-like terms)" << LogIO::POST;
+
+  // Enforce calWt() = False for delays
+  calWt()=False;
+
+}
+
+
+void KJones::specify(const Record& specify) {
+
+
+  LogMessage message(LogOrigin("SolvableVisCal","specify"));
+
+  Vector<Int> spws;
+  Vector<Int> antennas;
+  Vector<Int> pols;
+  Vector<Double> parameters;
+
+  Int Nspw(1);
+  Int Ntime(1);
+  Int Nant(0);
+  Int Npol(1);
+  
+  Bool repspw(False);
+  
+  IPosition ip0(4,0,0,0,0);
+  IPosition ip1(4,0,0,0,0);
+
+/*   Not yet supporting time....
+  if (specify.isDefined("time")) {
+    // TBD: the time label
+    cout << "time = " << specify.asString("time") << endl;
+    cout << "refTime() = " << refTime() << endl;
+  }
+*/
+
+  if (specify.isDefined("spw")) {
+    // TBD: the spws (in order) identifying the solutions
+    spws=specify.asArrayInt("spw");
+    cout << "spws = " << spws << endl;
+    Nspw=spws.nelements();
+    if (Nspw<1) {
+      // None specified, so loop over all, repetitively
+      //  (We need to optimize this...)
+      cout << "Specified parameters repeated on all spws." << endl;
+      repspw=True;
+      Nspw=nSpw();
+      spws.resize(Nspw);
+      indgen(spws);
+    }
+  }
+
+
+  if (specify.isDefined("antenna")) {
+    // TBD: the antennas (in order) identifying the solutions
+    antennas=specify.asArrayInt("antenna");
+    cout << "antenna indices = " << antennas << endl;
+    Nant=antennas.nelements();
+    if (Nant<1) {
+      // Use specified values for _all_ antennas implicitly
+      Nant=1;   // For the antenna loop below
+      ip0(2)=0;
+      ip1(2)=nAnt()-1;
+    }
+    else {
+      // Point to first antenna
+      ip0(2)=antennas(0);
+      ip1(2)=ip0(2);
+    }
+  }
+  if (specify.isDefined("pol")) {
+    // TBD: the pols (in order) identifying the solutions
+    String polstr=specify.asString("pol");
+    cout << "pol = " << polstr << endl;
+    if (polstr=="R" || polstr=="X") 
+      // Fill in only first pol
+      pols=Vector<Int>(1,0);
+    else if (polstr=="L" || polstr=="Y") 
+      // Fill in only second pol
+      pols=Vector<Int>(1,1);
+    else if (polstr=="R,L" || polstr=="X,Y") {
+      // Fill in both pols explicity
+      pols=Vector<Int>(2,0);
+      pols(1)=1;
+    }
+    else if (polstr=="L,R" || polstr=="Y,X") {
+      // Fill in both pols explicity
+      pols=Vector<Int>(2,0);
+      pols(0)=1;
+    }
+    else if (polstr=="")
+      // Fill in both pols implicitly
+      pols=Vector<Int>();
+    else
+      throw(AipsError("Invalid pol specification"));
+    
+    Npol=pols.nelements();
+    if (Npol<1) {
+      // No pol axis specified
+      Npol=1;
+      ip0(0)=0;
+      ip1(0)=nPar()-1;
+    }
+    else {
+      // Point to the first polarization
+      ip0(0)=pols(0);
+      ip1(0)=ip0(0);
+    }
+  }
+  if (specify.isDefined("parameter")) {
+    // TBD: the actual cal values
+    cout << "parameter = " << specify.asArrayDouble("parameter") << endl;
+
+    parameters=specify.asArrayDouble("parameter");
+
+  }
+
+  Int nparam=parameters.nelements();
+
+  // Test for correct number of specified parameters
+  //  Either all params are enumerated, or one is specified
+  //  for all, [TBD:or a polarization pair is specified for all]
+  //  else throw
+  if (nparam!=(repspw ? (Ntime*Nant*Npol) : (Nspw*Ntime*Nant*Npol)) && 
+      nparam!=1 )                // one for all
+    //      (Npol==2 && nparam%2!=0) )  // poln pair for all
+    throw(AipsError("Inconsistent number of parameters specified."));
+
+  Int ipar(0);
+  for (Int ispw=0;ispw<Nspw;++ispw) {
+    // reset par index if we are repeating for all spws
+    if (repspw) ipar=0;
+    
+    // Loop over specified timestamps
+    for (Int itime=0;itime<Ntime;++itime) {
+      ip1(3)=ip0(3)=itime;
+      
+      // Loop over specified antennas
+      for (Int iant=0;iant<Nant;++iant) {
+	if (Nant>1)
+	  ip1(2)=ip0(2)=antennas(iant);
+	
+	// Loop over specified polarizations
+	for (Int ipol=0;ipol<Npol;++ipol) {
+	  if (Npol>1)
+	    ip1(0)=ip0(0)=pols(ipol);
+	  
+	  Array<Complex> slice(cs().par(spws(ispw))(ip0,ip1));
+
+	  // Acccumulation is addition for delays
+	  slice+=Complex(parameters(ipar));
+	  ++ipar;
+	}
+      }
+    }
+  }
+}
+
+void KJones::calcAllJones() {
+
+  if (prtlev()>6) cout << "       VJ::calcAllJones()" << endl;
+
+  if (False) {
+    Vector<Complex> x(16,Complex(1.0));
+    cout << "x = " << x << endl;
+  
+    ArrayLattice<Complex> arx(x);
+  
+    LatticeFFT::cfft(arx);
+    cout << "x = " << x << endl;
+  }
+
+  // Should handle OK flags in this method, and only
+  //  do Jones calc if OK
+
+  Vector<Complex> oneJones;
+  Vector<Bool> oneJOK;
+  Vector<Complex> onePar;
+  Vector<Bool> onePOK;
+
+  ArrayIterator<Complex> Jiter(currJElem(),1);
+  ArrayIterator<Bool>    JOKiter(currJElemOK(),1);
+  ArrayIterator<Complex> Piter(currCPar(),1);
+  ArrayIterator<Bool>    POKiter(currParOK(),1);
+
+  Double phase(0.0);
+  for (Int iant=0; iant<nAnt(); iant++) {
+
+    for (Int ich=0; ich<nChanMat(); ich++) {
+      
+      oneJones.reference(Jiter.array());
+      oneJOK.reference(JOKiter.array());
+      onePar.reference(Piter.array());
+      onePOK.reference(POKiter.array());
+
+      for (Int ipar=0;ipar<nPar();++ipar) {
+	if (onePOK(ipar)) { 
+	  
+
+	  phase=2.0*C::pi*real(onePar(ipar))*(currFreq()(ich)-KrefFreqs_(currSpw()));
+	  oneJones(ipar)=Complex(cos(phase),sin(phase));
+	  oneJOK(ipar)=True;
+	}
+      }
+      
+      // Advance iterators
+      Jiter.next();
+      JOKiter.next();
+      if (freqDepPar()) {
+        Piter.next();
+        POKiter.next();
+      }
+
+    }
+    // Step to next antenns's pars if we didn't in channel loop
+    if (!freqDepPar()) {
+      Piter.next();
+      POKiter.next();
+    }
+  }
+}
+
+// **********************************************************
+//  KMBDJones Implementations
+//
+
+KMBDJones::KMBDJones(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  KJones(vs)             // immediate parent
+{
+  if (prtlev()>2) cout << "K::K(vs)" << endl;
+
+  // For MBD, the ref frequencies are zero
+  //  TBD: these should be in the caltable!!
+  KrefFreqs_.resize(nSpw());
+  KrefFreqs_.set(0.0);
+
+  /*  
+  MSSpectralWindow msSpw(vs.msName()+"/SPECTRAL_WINDOW");
+  MSSpWindowColumns msCol(msSpw);
+  msCol.refFrequency().getColumn(KrefFreqs_,True);
+  KrefFreqs_/=1.0e9;  // in GHz
+  */
+
+}
+
+KMBDJones::KMBDJones(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  KJones(nAnt)
+{
+
+  if (prtlev()>2) cout << "K::K(nAnt)" << endl;
+  // For MBD, the ref frequencies are zero
+  //  TBD: these should be in the caltable!!
+  KrefFreqs_.resize(nSpw());
+  KrefFreqs_.set(0.0);
+
+}
+
+KMBDJones::~KMBDJones() {
+  if (prtlev()>2) cout << "K::~K()" << endl;
+}
+
+
+
+
+
+
+// **********************************************************
+//  KAntPosJones Implementations
+//
+
+KAntPosJones::KAntPosJones(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  KJones(vs)             // immediate parent
+{
+  if (prtlev()>2) cout << "Kap::Kap(vs)" << endl;
+
+  // Extract the FIELD phase direction measure column
+  MSField msf(vs.msName()+"/FIELD");
+  MSFieldColumns msfc(msf);
+  dirmeas_p.reference(msfc.phaseDirMeasCol());
+
+  //  epochref_p = MSMainColumns(MeasurementSet(vs.msName())).time().columnMeasureType(MSMainEnums::TIME);
+
+  epochref_p="UTC";
+
+}
+
+KAntPosJones::KAntPosJones(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  KJones(nAnt)
+{
+  if (prtlev()>2) cout << "Kap::Kap(nAnt)" << endl;
+}
+
+KAntPosJones::~KAntPosJones() {
+  if (prtlev()>2) cout << "Kap::~Kap()" << endl;
+}
+
+void KAntPosJones::setApply(const Record& apply) {
+
+  // Call parent to do conventional things
+  KJones::setApply(apply);
+
+  //  cout << "spwMap() = " << spwMap();
+
+  // Reset spwmap to use spw 0 for all spws
+  if (cs().spwOK()(0)) {
+    spwMap() = Vector<Int>(nSpw(),0);
+    ci().setSpwMap(spwMap());
+  }
+  else
+    throw(AipsError("No KAntPos solutions available for spw 0"));
+
+  //  cout << "->" << spwMap() << endl;
+
+}
+
+
+void KAntPosJones::specify(const Record& specify) {
+
+
+  LogMessage message(LogOrigin("KAntPosJones","specify"));
+
+  Vector<Int> spws;
+  Vector<Int> antennas;
+  Vector<Double> parameters;
+
+  Int Nant(0);
+
+  // Handle old VLA rotation, if necessary
+  Bool doVLARot(False);
+  Matrix<Double> vlaRot=Rot3D(0,0.0);
+  if (specify.isDefined("caltype") ) {
+    String caltype=upcase(specify.asString("caltype"));
+    if (upcase(caltype).contains("VLA")) {
+      doVLARot=True;
+      MPosition vlaCenter;
+      AlwaysAssert(MeasTable::Observatory(vlaCenter,"VLA"),AipsError);
+      Double vlalong=vlaCenter.getValue().getLong();
+      //      vlalong=-107.617722*C::pi/180.0;
+      cout << "We will rotate specified offsets by VLA longitude = " 
+	   << vlalong*180.0/C::pi << endl;
+      vlaRot=Rot3D(2,vlalong);
+    }
+  }
+  
+  IPosition ip0(4,0,0,0,0);
+  IPosition ip1(4,2,0,0,0);
+
+  if (specify.isDefined("antenna")) {
+    // TBD: the antennas (in order) identifying the solutions
+    antennas=specify.asArrayInt("antenna");
+    //    cout << "antenna indices = " << antennas << endl;
+    Nant=antennas.nelements();
+    if (Nant<1) {
+      // Use specified values for _all_ antennas implicitly
+      Nant=1;   // For the antenna loop below
+      ip0(2)=0;
+      ip1(2)=nAnt()-1;
+    }
+    else {
+      // Point to first antenna
+      ip0(2)=antennas(0);
+      ip1(2)=ip0(2);
+    }
+  }
+
+  if (specify.isDefined("parameter")) {
+    // TBD: the actual cal values
+    parameters=specify.asArrayDouble("parameter");
+
+  }
+
+  Int npar=parameters.nelements();
+  
+  if (npar%3 != 0)
+    throw(AipsError("For antenna position corrections, 3 parameters per antenna are required."));
+
+  
+  //  cout << "Shapes = " << parameters.nelements() << " " 
+  //       << Nant*3 << endl;
+
+  //  cout << "parameters = " << parameters << endl;
+
+  // Loop over specified antennas
+  Int ipar(0);
+  for (Int iant=0;iant<Nant;++iant) {
+    if (Nant>1)
+      ip1(2)=ip0(2)=antennas(iant);
+
+    // make sure ipar doesn't exceed specified list
+    ipar=ipar%npar;
+    
+    // The current 3-vector of position corrections
+    Vector<Double> apar(parameters(IPosition(1,ipar),IPosition(1,ipar+2)));
+
+    // If old VLA, rotate them
+    if (doVLARot) {
+      cout << "id = " << antennas(iant) << " " << apar;
+      apar = product(vlaRot,apar);
+      cout << "--(rotation VLA to ITRF)-->" << apar << endl;
+    }
+
+    // Loop over 3 parameters, each antenna
+    for (Int ipar0=0;ipar0<3;++ipar0) {
+      ip1(0)=ip0(0)=ipar0;
+
+      Array<Complex> slice(cs().par(0)(ip0,ip1));
+    
+      // Acccumulation is addition for ant pos corrections
+      slice+=Complex(apar(ipar0),0.0);
+      ++ipar;
+    }
+  }
+  
+  //  cout << "Ant pos: cs().par(0) = " << cs().par(0) << endl;
+
+
+}
+
+void KAntPosJones::calcAllJones() {
+
+  if (prtlev()>6) cout << "       Kap::calcAllJones()" << endl;
+
+
+  // The relevant direction for the delay offset calculation
+  const MDirection& phasedir = vb().msColumns().field().phaseDirMeas(currField());
+
+  // The relevant timestamp 
+  MEpoch epoch(Quantity(currTime(),"s"));
+  epoch.setRefString(epochref_p);
+
+  //  cout << epoch.getValue() << ":" << endl;
+
+  // The frame in which we convert our MBaseline from earth to sky and to uvw
+  MeasFrame mframe(vb().msColumns().antenna().positionMeas()(0),epoch,phasedir);
+
+  // template MBaseline, that will be used in calculations below
+  MBaseline::Ref mbearthref(MBaseline::ITRF,mframe);
+  MBaseline mb;
+  MVBaseline mvb;
+  mb.set(mvb,mbearthref); 
+
+  // A converter that takes the MBaseline from earth to sky frame
+  MBaseline::Ref mbskyref(MBaseline::fromDirType(MDirection::castType(phasedir.myType())));
+  MBaseline::Convert mbcverter(mb,mbskyref);
+
+
+
+  Double phase(0.0);
+  for (Int iant=0; iant<nAnt(); iant++) {
+
+    Vector<Complex> pars(currCPar().xyPlane(iant).column(0));
+    Vector<Float> rpars=real(pars);
+    Vector<Double> dpars(rpars.nelements());
+    convertArray(dpars,rpars);
+
+    // Only do complicated calculation if there 
+    //   is a non-zero ant pos error
+    if (max(amplitude(pars))>0.0) {
+
+      //      cout << iant << " ";
+      //      cout << dpars << " ";
+      //      cout << flush;
+
+      // We need the w offset (in direction of source) implied
+      //  by the antenna position correction
+      Double dw(0.0);
+      
+      // The current antenna's error as an MBaseline (earth frame)
+      mvb=MVBaseline(dpars);
+      mb.set(mvb,mbearthref);
+      
+      // Convert to sky frame
+      MBaseline mbdir = mbcverter(mb);
+
+      // Get implied uvw
+      MVuvw uvw(mbdir.getValue(),phasedir.getValue());
+
+      // dw is third element
+      dw=uvw.getVector()(2);
+
+      // In time units 
+      dw/=C::c;    // to sec
+      dw*=1.0e9;   // to nsec
+
+      //      cout << " " << dw << flush;
+
+      // Form the complex corrections per chan (freq)
+      for (Int ich=0; ich<nChanMat(); ++ich) {
+        
+	// NB: currFreq() is in GHz
+	phase=2.0*C::pi*dw*currFreq()(ich);
+	currJElem()(0,ich,iant)=Complex(cos(phase),sin(phase));
+	currJElemOK()(0,ich,iant)=True;
+	
+	//	if (ich==0)
+	//	  cout << " " << cos(phase) << " " << sin(phase) << endl;
+
+      }
+    }
+    else {
+      // No correction
+      currJElem().xyPlane(iant)=Complex(1.0);
+      currJElemOK().xyPlane(iant)=True;
+    }
+
+  }
+
+}
+
+
 
 
 } //# NAMESPACE CASA - END

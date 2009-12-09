@@ -25,36 +25,41 @@
 //#
 //#
 //# $Id$
+#include <display/QtViewer/QtApp.h>
+#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/PlotMS/PlotMSDBusApp.h>
+#include <plotms/Plots/PlotMSMultiPlot.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
+#include <plotms/Plots/PlotMSSinglePlot.h>
+
+#include <signal.h>
 
 #include <casa/namespace.h>
 
-int main(int argc, char* argv[]) {
-    // Although the qwt plotter backend can manage the QApplication, since
-    // the PlotMSPlotter is a QMainWindow we need the QApplication regardless
-    // of the plotting backend.
-    QApplication app(argc, argv);
-    
+int main(int argc, char* argv[]) {    
     // Parameter defaults.
     String ms    = "",
            xaxis = PMS::axis(PMS::DEFAULT_XAXIS),
-           yaxis = PMS::axis(PMS::DEFAULT_YAXIS);
-    PlotMSLogger::Level log = PlotMSLogger::OFF;
-    bool logDebug = false;
+           yaxis = PMS::axis(PMS::DEFAULT_YAXIS),
+           logfile = "", logfilter = "";
     PlotMSSelection select;
     PlotMSAveraging averaging;
-    bool cachedImageSizeToScreenResolution = false, usePixels = false;
+    bool cachedImageSizeToScreenResolution = false, usePixels = false,
+         casapy = false, debug = false, multiPlot = false;
   
     // Parse arguments.
     String arg, arg2, arg3;
     size_t index;
-    bool ok;
     String ARG_HELP1 = "-h", ARG_HELP2 = "--help", ARG_VIS = "vis",
-           ARG_XAXIS = "xaxis", ARG_YAXIS = "yaxis", ARG_LOG1 = "-ll",
-           ARG_LOG2 = "--loglevel", ARG_LOGDEBUG1 = "-ld",
-           ARG_LOGDEBUG2 = "--logdebug", ARG_CISTSR = "-c",
+           ARG_XAXIS = "xaxis", ARG_YAXIS = "yaxis", ARG_CISTSR = "-c",
            ARG_CISTSR2 = "--cachedimagesizetoscreenresolution",
-           ARG_PIXELS1 = "-p", ARG_PIXELS2 = "--pixels";
+           ARG_PIXELS1 = "-p", ARG_PIXELS2 = "--pixels",
+           ARG_CASAPY = PlotMSDBusApp::APP_CASAPY_SWITCH,
+           ARG_DEBUG1 = "-d", ARG_DEBUG2 = "--debug",
+           ARG_LOGFILE = PlotMSDBusApp::APP_LOGFILENAME_SWITCH,
+           ARG_LOGFILTER = PlotMSDBusApp::APP_LOGFILTER_SWITCH,
+           ARG_MULTIPLOT = "-m";
     const vector<String>& selectFields = PlotMSSelection::fieldStrings(),
                           averagingFields = PlotMSAveraging::fieldStrings();
     
@@ -98,19 +103,30 @@ int main(int argc, char* argv[]) {
             if(averagingFields.size() > 0)
                 cout << "\n     MS Averaging parameters for initial plot.";
             
-            cout << "\n* " << ARG_PIXELS1 << " or " << ARG_PIXELS2 << "\n     "
+            cout << "\n* " << ARG_MULTIPLOT << "\n     "
+                 << "Have initial plot be multiplot instead of single plot."
+            
+                 << "\n* " << ARG_PIXELS1 << " or " << ARG_PIXELS2 << "\n     "
                  << "Use pixels instead of symbols for initial plot."
             
                  << "\n* " << ARG_CISTSR << " or " << ARG_CISTSR2 << "\n     "
                  << "Toggles setting the cached image size to screen "
                  << "resolution."
                  
-                 << "\n* "<<ARG_LOG1<<"=[lvl] or "<<ARG_LOG2<<"=[lvl]\n     "
-                 << "Sets the plotter's log level to the given (see "
-                 << "documentation)."
-            
-                 << "\n* " <<ARG_LOGDEBUG1<<" or "<<ARG_LOGDEBUG2<< "\n     "
-                 << "Turns on/off logging debug messages."
+                 /*
+                 // Don't advertise this switch...
+                 << "\n* " << ARG_CASAPY << "\n     "
+                 << "Sets up application to be controlled by casapy."
+                 */
+                 
+                 << "\n* " << ARG_LOGFILE << "=[filename]\n     "
+                 << "Sets the log file location (blank to use global)."
+                 
+                 << "\n* " << ARG_LOGFILTER << "=[priority]\n     "
+                 << "Sets the log minimum priority filter."
+                 
+                 << "\n* " << ARG_DEBUG1 << " or " << ARG_DEBUG2 << "\n     "
+                 << "Turn on debugging log messages."
             
                  << endl;
             return 0;
@@ -120,14 +136,20 @@ int main(int argc, char* argv[]) {
             arg2 = arg.before(index); arg2.downcase();
             arg3 = arg.after(index);
             
-        } else if(arg2 == ARG_LOGDEBUG1 || arg2 == ARG_LOGDEBUG2) {
-            logDebug = true;
-            
         } else if(arg2 == ARG_CISTSR || arg2 == ARG_CISTSR2) {
             cachedImageSizeToScreenResolution = true;
             
         } else if(arg2 == ARG_PIXELS1 || arg2 == ARG_PIXELS2) {
             usePixels = true;
+            
+        } else if(arg2 == ARG_MULTIPLOT) {
+            multiPlot = true;
+            
+        } else if(arg2 == ARG_CASAPY) {
+            casapy = true;
+            
+        } else if(arg2 == ARG_DEBUG1 || arg2 == ARG_DEBUG2) {
+            debug = true;
             
         } else if(i < argc - 1) {
             arg3 = argv[++i];
@@ -135,10 +157,6 @@ int main(int argc, char* argv[]) {
             if(arg3[0] == '=' && arg3.size() > 1) arg3 = arg3.after(0);
             else if(arg3 == "=" && i < argc - 1) arg3 = argv[++i];
             else if(index != arg.size() - 1) continue;
-            
-        } else if(arg2 == ARG_LOG1 || arg2 == ARG_LOG2) {
-            // log is last argument, use PlotMSLogger::MED
-            arg3 = PlotMSLogger::level(PlotMSLogger::MED);
             
         } else {
             arg3 = "";
@@ -154,10 +172,9 @@ int main(int argc, char* argv[]) {
         if(arg2 == ARG_VIS)         ms = arg3;
         else if(arg2 == ARG_XAXIS) xaxis = arg3;
         else if(arg2 == ARG_YAXIS) yaxis = arg3;
-        else if(arg2 == ARG_LOG1 || arg2 == ARG_LOG2) {
-            log = PlotMSLogger::level(arg3, &ok);
-            if(!ok) log = PlotMSLogger::OFF;
-        } else {
+        else if(arg2 == ARG_LOGFILE) logfile = arg3;
+        else if(arg2 == ARG_LOGFILTER) logfilter = arg3;
+        else {
             bool found = false;
             for(unsigned int i = 0; !found && i < selectFields.size(); i++) {
                 if(PMS::strEq(arg2, selectFields[i], true)) {
@@ -182,30 +199,64 @@ int main(int argc, char* argv[]) {
         }
     }
     
+    // WARNING ABOUT MULTIPLOT NOT WORKING
+    cout << "WARNING: Multi plots are currently in development and should probably not be used by non-developers." << endl;
+    
+    // If run from casapy, don't let Ctrl-C kill the application.
+    if(casapy) signal(SIGINT,SIG_IGN);
+    
+    // Although the qwt plotter backend can manage the QApplication, since
+    // the PlotMSPlotter is a QMainWindow we need the QApplication regardless
+    // of the plotting backend.
+    QtApp::init();
+    
+    // Get priority filter.
+    LogMessage::Priority p = debug? LogMessage::DEBUGGING: LogMessage::NORMAL;
+    if(!logfilter.empty()) {
+        for(int i = LogMessage::DEBUGGING; i < LogMessage::SEVERE; i++) {
+            if(LogMessage::toString(LogMessage::Priority(i)) == logfilter) {
+                p = LogMessage::Priority(i);
+                break;
+            }
+        }
+    }
+    
     // Set up parameters for plotms.
-    PlotMSParameters params(log, logDebug);
+    PlotMSParameters params(logfile, PlotLogger::FLAG_FROM_PRIORITY(p), p);
     
     if(cachedImageSizeToScreenResolution)
         params.setCachedImageSizeToResolution();
     
     // Set up plotms object.
-    PlotMS plotms(params);
-    plotms.showGUI(true);
+    PlotMS plotms(params, casapy);
+    if(!casapy) plotms.showGUI(true); // don't automatically show for casapy
     
-    // Set up parameters for single plot.
-    PlotMSSinglePlotParameters plotparams(&plotms, ms);
-    plotparams.setAxes(PMS::axis(xaxis), PMS::axis(yaxis));
-    plotparams.setSelection(select);
-    plotparams.setAveraging(averaging);
+    // Set up parameters for plot.
+    PlotMSPlotParameters plotparams = multiPlot ?
+            PlotMSMultiPlot::makeParameters(&plotms) :
+            PlotMSSinglePlot::makeParameters(&plotms);
+    PMS_PP_CALL(plotparams, PMS_PP_MSData, setFilename, ms)
+    PMS_PP_CALL(plotparams, PMS_PP_MSData, setSelection, select)
+    PMS_PP_CALL(plotparams, PMS_PP_MSData, setAveraging, averaging)
+    PMS_PP_CALL(plotparams, PMS_PP_Cache, setXAxis, PMS::axis(xaxis))
+    PMS_PP_CALL(plotparams, PMS_PP_Cache, setYAxis, PMS::axis(yaxis))
     
     if(usePixels) {
-        PlotSymbolPtr sym = plotparams.symbol();
+        PlotSymbolPtr sym = PMS_PP_RETCALL(plotparams, PMS_PP_Display,
+                unflaggedSymbol, NULL);
         sym->setSymbol(PlotSymbol::PIXEL);
-        plotparams.setSymbol(sym);
+        PMS_PP_CALL(plotparams, PMS_PP_Display, setUnflaggedSymbol, sym)
     }
     
-    // If single plot is set, add the plot to plotms.
-    plotms.addSinglePlot(&plotparams);
+    // Add the plot to plotms.
+    if(multiPlot) plotms.addMultiPlot(&plotparams);
+    else          plotms.addSinglePlot(&plotparams);
     
-    return plotms.execLoop();
+    // If we're connected to DBus, don't quite the application when the window
+    // is closed.  This is somewhat risky in that if the remote applications
+    // forget to tell this application to quit, it never will.
+    if(casapy) QApplication::setQuitOnLastWindowClosed(false);
+    
+    //return plotms.execLoop();
+    return QtApp::exec();
 }

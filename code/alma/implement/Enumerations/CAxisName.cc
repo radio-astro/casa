@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CAxisName::version() {
+	return AxisNameMod::version;
+	}
+	
+string CAxisName::revision () {
+	return AxisNameMod::revision;
+}
+
+unsigned int CAxisName::size() {
+	return 13;
+	}
+	
 	
 const std::string& CAxisName::sTIM = "TIM";
 	
@@ -60,9 +73,11 @@ const std::string& CAxisName::sSPP = "SPP";
 	
 const std::string& CAxisName::sPOL = "POL";
 	
+const std::string& CAxisName::sSTO = "STO";
+	
 const std::string& CAxisName::sHOL = "HOL";
 	
-const std::vector<std::string> CAxisName::sAxisNameSet() {
+const std::vector<std::string> CAxisName::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CAxisName::sTIM);
@@ -87,69 +102,12 @@ const std::vector<std::string> CAxisName::sAxisNameSet() {
     
     enumSet.insert(enumSet.end(), CAxisName::sPOL);
     
+    enumSet.insert(enumSet.end(), CAxisName::sSTO);
+    
     enumSet.insert(enumSet.end(), CAxisName::sHOL);
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CAxisName::hTIM = "Time axis";
-	
-const std::string& CAxisName::hBAL = "Baseline number axis";
-	
-const std::string& CAxisName::hANT = "ANtenna number axis";
-	
-const std::string& CAxisName::hBAB = "Baseband axis";
-	
-const std::string& CAxisName::hSPW = "SPectral window number axis";
-	
-const std::string& CAxisName::hSIB = "Sideband axis.";
-	
-const std::string& CAxisName::hSUB = "Subband axis";
-	
-const std::string& CAxisName::hBIN = "Bin axis";
-	
-const std::string& CAxisName::hAPC = "Atmosphere phase correction axis";
-	
-const std::string& CAxisName::hSPP = "Spectral data axis";
-	
-const std::string& CAxisName::hPOL = "Polarization axes (Stokes parameters)";
-	
-const std::string& CAxisName::hHOL = "Holography axis.";
-	
-const std::vector<std::string> CAxisName::hAxisNameSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CAxisName::hTIM);
-    
-    enumSet.insert(enumSet.end(), CAxisName::hBAL);
-    
-    enumSet.insert(enumSet.end(), CAxisName::hANT);
-    
-    enumSet.insert(enumSet.end(), CAxisName::hBAB);
-    
-    enumSet.insert(enumSet.end(), CAxisName::hSPW);
-    
-    enumSet.insert(enumSet.end(), CAxisName::hSIB);
-    
-    enumSet.insert(enumSet.end(), CAxisName::hSUB);
-    
-    enumSet.insert(enumSet.end(), CAxisName::hBIN);
-    
-    enumSet.insert(enumSet.end(), CAxisName::hAPC);
-    
-    enumSet.insert(enumSet.end(), CAxisName::hSPP);
-    
-    enumSet.insert(enumSet.end(), CAxisName::hPOL);
-    
-    enumSet.insert(enumSet.end(), CAxisName::hHOL);
-        
-    return enumSet;
-}
-   	
 
 std::string CAxisName::name(const AxisNameMod::AxisName& f) {
     switch (f) {
@@ -187,59 +145,16 @@ std::string CAxisName::name(const AxisNameMod::AxisName& f) {
     case AxisNameMod::POL:
       return CAxisName::sPOL;
     
+    case AxisNameMod::STO:
+      return CAxisName::sSTO;
+    
     case AxisNameMod::HOL:
       return CAxisName::sHOL;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CAxisName::help(const AxisNameMod::AxisName& f) {
-    switch (f) {
-    
-    case AxisNameMod::TIM:
-      return CAxisName::hTIM;
-    
-    case AxisNameMod::BAL:
-      return CAxisName::hBAL;
-    
-    case AxisNameMod::ANT:
-      return CAxisName::hANT;
-    
-    case AxisNameMod::BAB:
-      return CAxisName::hBAB;
-    
-    case AxisNameMod::SPW:
-      return CAxisName::hSPW;
-    
-    case AxisNameMod::SIB:
-      return CAxisName::hSIB;
-    
-    case AxisNameMod::SUB:
-      return CAxisName::hSUB;
-    
-    case AxisNameMod::BIN:
-      return CAxisName::hBIN;
-    
-    case AxisNameMod::APC:
-      return CAxisName::hAPC;
-    
-    case AxisNameMod::SPP:
-      return CAxisName::hSPP;
-    
-    case AxisNameMod::POL:
-      return CAxisName::hPOL;
-    
-    case AxisNameMod::HOL:
-      return CAxisName::hHOL;
-    	
-    }
-    return std::string("");
-}
-   	
 
 AxisNameMod::AxisName CAxisName::newAxisName(const std::string& name) {
 		
@@ -285,6 +200,10 @@ AxisNameMod::AxisName CAxisName::newAxisName(const std::string& name) {
     	
     if (name == CAxisName::sPOL) {
         return AxisNameMod::POL;
+    }
+    	
+    if (name == CAxisName::sSTO) {
+        return AxisNameMod::STO;
     }
     	
     if (name == CAxisName::sHOL) {
@@ -340,6 +259,10 @@ AxisNameMod::AxisName CAxisName::literal(const std::string& name) {
         return AxisNameMod::POL;
     }
     	
+    if (name == CAxisName::sSTO) {
+        return AxisNameMod::STO;
+    }
+    	
     if (name == CAxisName::sHOL) {
         return AxisNameMod::HOL;
     }
@@ -348,12 +271,10 @@ AxisNameMod::AxisName CAxisName::literal(const std::string& name) {
 }
 
 AxisNameMod::AxisName CAxisName::from_int(unsigned int i) {
-	vector<string> names = sAxisNameSet();
-	if (i >= names.size()) throw badInt(i);
-	return newAxisName(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newAxisName(names_.at(i));
 }
-
-	
 
 string CAxisName::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'AxisName'.";

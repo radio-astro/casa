@@ -42,18 +42,34 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the SidebandProcessingMode enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace SidebandProcessingModeMod
 {
+  //! SidebandProcessingMode.
+  //!  [ASDM.SpectralWindow] Real-time processing to derive sideband data
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum SidebandProcessingMode
   { 
-    NONE ,
-    PHASE_SWITCH_SEPARATION ,
-    FREQUENCY_OFFSET_SEPARATION ,
-    PHASE_SWITCH_REJECTION ,
-    FREQUENCY_OFFSET_REJECTION 
+    NONE /*!< No processing */
+     ,
+    PHASE_SWITCH_SEPARATION /*!< Side band separation using 90-degree phase switching */
+     ,
+    FREQUENCY_OFFSET_SEPARATION /*!< Side band separation using offsets of first ans second oscillators */
+     ,
+    PHASE_SWITCH_REJECTION /*!< Side band rejection 90-degree phase switching */
+     ,
+    FREQUENCY_OFFSET_REJECTION /*!< Side band rejection using offsets of first and second oscillators */
+     
   };
   typedef SidebandProcessingMode &SidebandProcessingMode_out;
 } 
@@ -61,76 +77,97 @@ namespace SidebandProcessingModeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration SidebandProcessingMode.
+  * 
+  */
 class CSidebandProcessingMode {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the SidebandProcessingMode enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sNONE;
+	static const std::string& sNONE; /*!< A const string equal to "NONE".*/
 	
-	static const std::string& sPHASE_SWITCH_SEPARATION;
+	static const std::string& sPHASE_SWITCH_SEPARATION; /*!< A const string equal to "PHASE_SWITCH_SEPARATION".*/
 	
-	static const std::string& sFREQUENCY_OFFSET_SEPARATION;
+	static const std::string& sFREQUENCY_OFFSET_SEPARATION; /*!< A const string equal to "FREQUENCY_OFFSET_SEPARATION".*/
 	
-	static const std::string& sPHASE_SWITCH_REJECTION;
+	static const std::string& sPHASE_SWITCH_REJECTION; /*!< A const string equal to "PHASE_SWITCH_REJECTION".*/
 	
-	static const std::string& sFREQUENCY_OFFSET_REJECTION;
-	
-    static const std::vector<std::string> sSidebandProcessingModeSet();	 
-
+	static const std::string& sFREQUENCY_OFFSET_REJECTION; /*!< A const string equal to "FREQUENCY_OFFSET_REJECTION".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in SidebandProcessingModeMod::SidebandProcessingMode.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of SidebandProcessingModeMod::SidebandProcessingMode.
+      * @return a string.
+      */
+	static std::string name(const SidebandProcessingModeMod::SidebandProcessingMode& e);
 	
-	// Explanations associated with the SidebandProcessingMode Enumeration.
-		
-	static const std::string& hNONE;
-		
-	static const std::string& hPHASE_SWITCH_SEPARATION;
-		
-	static const std::string& hFREQUENCY_OFFSET_SEPARATION;
-		
-	static const std::string& hPHASE_SWITCH_REJECTION;
-		
-	static const std::string& hFREQUENCY_OFFSET_REJECTION;
-		
-	static const std::vector<std::string> hSidebandProcessingModeSet();
-   	
-
-   	// Is an integer number associated with the SidebandProcessingMode enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the SidebandProcessingMode enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  SidebandProcessingMode enumeration.
-	static std::string name(const SidebandProcessingModeMod::SidebandProcessingMode& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const SidebandProcessingModeMod::SidebandProcessingMode& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified SidebandProcessingMode enumeration.
-	static std::string help(const SidebandProcessingModeMod::SidebandProcessingMode& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a SidebandProcessingMode enumeration object by specifying its name.
    	static SidebandProcessingModeMod::SidebandProcessingMode newSidebandProcessingMode(const std::string& name);
    	
-   	// Create a SidebandProcessingMode enumeration object by specifying its name.
+   	/*! Return a SidebandProcessingMode's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a SidebandProcessingModeMod::SidebandProcessingMode's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static SidebandProcessingModeMod::SidebandProcessingMode literal(const std::string& name);
  	
-    // Create a SidebandProcessingMode enumeration object by specifying its position index (0 based).
+    /*! Return a SidebandProcessingMode's enumerator given an unsigned int.
+      * @param i the index of the enumerator in SidebandProcessingModeMod::SidebandProcessingMode.
+      * @return a SidebandProcessingModeMod::SidebandProcessingMode's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static SidebandProcessingModeMod::SidebandProcessingMode from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CSidebandProcessingMode();
     CSidebandProcessingMode(const CSidebandProcessingMode&);
     CSidebandProcessingMode& operator=(const CSidebandProcessingMode&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CSidebandProcessingMode_H*/

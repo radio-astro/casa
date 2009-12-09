@@ -62,11 +62,11 @@ public:
 	virtual string toXML()   = 0;
 	virtual void fromXML(string xml) = 0;
 
-	virtual string toVOTable() const throw(ConversionException) = 0;
-	virtual void fromVOTable(string vo) throw(ConversionException) = 0;
+	virtual string toVOTable() const  = 0;
+	virtual void fromVOTable(string vo) = 0;
 
-	virtual char *toFITS() const throw(ConversionException) = 0;
-	virtual void fromFITS(char *fits) throw(ConversionException) = 0;
+	virtual char *toFITS() const = 0;
+	virtual void fromFITS(char *fits) = 0;
 
 	virtual void setEntity(Entity e) = 0;
 	virtual Entity getEntity() const = 0;

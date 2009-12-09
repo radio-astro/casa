@@ -41,11 +41,11 @@ using std::set;
 #include <GainTrackingRow.h>
 #include <GainTrackingTable.h>
 
-#include <SpectralWindowTable.h>
-#include <SpectralWindowRow.h>
-
 #include <AntennaTable.h>
 #include <AntennaRow.h>
+
+#include <SpectralWindowTable.h>
+#include <SpectralWindowRow.h>
 
 #include <FeedTable.h>
 #include <FeedRow.h>
@@ -55,11 +55,11 @@ using asdm::ASDM;
 using asdm::GainTrackingRow;
 using asdm::GainTrackingTable;
 
-using asdm::SpectralWindowTable;
-using asdm::SpectralWindowRow;
-
 using asdm::AntennaTable;
 using asdm::AntennaRow;
+
+using asdm::SpectralWindowTable;
+using asdm::SpectralWindowRow;
 
 using asdm::FeedTable;
 using asdm::FeedRow;
@@ -126,6 +126,158 @@ namespace asdm {
 	
   		
 		
+		
+			
+				
+		x->numLO = numLO;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->numReceptor = numReceptor;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->cableDelay.length(cableDelay.size());
+		for (unsigned int i = 0; i < cableDelay.size(); ++i) {
+			
+				
+			x->cableDelay[i] = cableDelay.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->crossPolarizationDelay = crossPolarizationDelay;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->loPropagationDelay.length(loPropagationDelay.size());
+		for (unsigned int i = 0; i < loPropagationDelay.size(); ++i) {
+			
+				
+			x->loPropagationDelay[i] = loPropagationDelay.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->polarizationTypes.length(polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); ++i) {
+			
+				
+			x->polarizationTypes[i] = polarizationTypes.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->receiverDelay.length(receiverDelay.size());
+		for (unsigned int i = 0; i < receiverDelay.size(); ++i) {
+			
+				
+			x->receiverDelay[i] = receiverDelay.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->delayOffsetExists = delayOffsetExists;
+		
+		
+			
+				
+		x->delayOffset = delayOffset;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->freqOffsetExists = freqOffsetExists;
+		
+		
+			
+		x->freqOffset.length(freqOffset.size());
+		for (unsigned int i = 0; i < freqOffset.size(); ++i) {
+			
+			x->freqOffset[i] = freqOffset.at(i).toIDLFrequency();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->phaseOffsetExists = phaseOffsetExists;
+		
+		
+			
+		x->phaseOffset.length(phaseOffset.size());
+		for (unsigned int i = 0; i < phaseOffset.size(); ++i) {
+			
+			x->phaseOffset[i] = phaseOffset.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
 		x->samplingLevelExists = samplingLevelExists;
 		
 		
@@ -140,9 +292,32 @@ namespace asdm {
 	
   		
 		
+		x->numAttFreqExists = numAttFreqExists;
+		
 		
 			
-		x->delayoff1 = delayoff1.toIDLInterval();
+				
+		x->numAttFreq = numAttFreq;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->attFreqExists = attFreqExists;
+		
+		
+			
+		x->attFreq.length(attFreq.size());
+		for (unsigned int i = 0; i < attFreq.size(); ++i) {
+			
+				
+			x->attFreq[i] = attFreq.at(i);
+	 			
+	 		
+	 	}
 			
 		
 	
@@ -150,61 +325,16 @@ namespace asdm {
 	
   		
 		
-		
-			
-		x->delayoff2 = delayoff2.toIDLInterval();
-			
-		
-	
-
-	
-  		
+		x->attSpectrumExists = attSpectrumExists;
 		
 		
 			
-		x->phaseoff1 = phaseoff1.toIDLAngle();
+		x->attSpectrum.length(attSpectrum.size());
+		for (unsigned int i = 0; i < attSpectrum.size(); ++i) {
 			
-		
-	
-
-	
-  		
-		
-		
+			x->attSpectrum[i] = attSpectrum.at(i).toIDLComplex();
 			
-		x->phaseoff2 = phaseoff2.toIDLAngle();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->rateoff1 = rateoff1.toIDLAngularRate();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->rateoff2 = rateoff2.toIDLAngularRate();
-			
-		
-	
-
-	
-  		
-		
-		x->phaseRefOffsetExists = phaseRefOffsetExists;
-		
-		
-			
-		x->phaseRefOffset = phaseRefOffset.toIDLAngle();
+	 	}
 			
 		
 	
@@ -267,7 +397,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct GainTrackingRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void GainTrackingRow::setFromIDL (GainTrackingRowIDL x) throw(ConversionException) {
+	void GainTrackingRow::setFromIDL (GainTrackingRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -294,6 +424,151 @@ namespace asdm {
 
 	
 		
+		
+			
+		setNumLO(x.numLO);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumReceptor(x.numReceptor);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		cableDelay .clear();
+		for (unsigned int i = 0; i <x.cableDelay.length(); ++i) {
+			
+			cableDelay.push_back(x.cableDelay[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setCrossPolarizationDelay(x.crossPolarizationDelay);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		loPropagationDelay .clear();
+		for (unsigned int i = 0; i <x.loPropagationDelay.length(); ++i) {
+			
+			loPropagationDelay.push_back(x.loPropagationDelay[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		polarizationTypes .clear();
+		for (unsigned int i = 0; i <x.polarizationTypes.length(); ++i) {
+			
+			polarizationTypes.push_back(x.polarizationTypes[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		receiverDelay .clear();
+		for (unsigned int i = 0; i <x.receiverDelay.length(); ++i) {
+			
+			receiverDelay.push_back(x.receiverDelay[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		delayOffsetExists = x.delayOffsetExists;
+		if (x.delayOffsetExists) {
+		
+		
+			
+		setDelayOffset(x.delayOffset);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		freqOffsetExists = x.freqOffsetExists;
+		if (x.freqOffsetExists) {
+		
+		
+			
+		freqOffset .clear();
+		for (unsigned int i = 0; i <x.freqOffset.length(); ++i) {
+			
+			freqOffset.push_back(Frequency (x.freqOffset[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		phaseOffsetExists = x.phaseOffsetExists;
+		if (x.phaseOffsetExists) {
+		
+		
+			
+		phaseOffset .clear();
+		for (unsigned int i = 0; i <x.phaseOffset.length(); ++i) {
+			
+			phaseOffset.push_back(Angle (x.phaseOffset[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
 		samplingLevelExists = x.samplingLevelExists;
 		if (x.samplingLevelExists) {
 		
@@ -309,74 +584,54 @@ namespace asdm {
 
 	
 		
+		numAttFreqExists = x.numAttFreqExists;
+		if (x.numAttFreqExists) {
+		
 		
 			
-		setDelayoff1(Interval (x.delayoff1));
-			
+		setNumAttFreq(x.numAttFreq);
+  			
  		
+		
+		}
 		
 	
 
 	
 		
+		attFreqExists = x.attFreqExists;
+		if (x.attFreqExists) {
+		
 		
 			
-		setDelayoff2(Interval (x.delayoff2));
+		attFreq .clear();
+		for (unsigned int i = 0; i <x.attFreq.length(); ++i) {
 			
- 		
+			attFreq.push_back(x.attFreq[i]);
+  			
+		}
+			
+  		
+		
+		}
 		
 	
 
 	
 		
-		
-			
-		setPhaseoff1(Angle (x.phaseoff1));
-			
- 		
-		
-	
-
-	
+		attSpectrumExists = x.attSpectrumExists;
+		if (x.attSpectrumExists) {
 		
 		
 			
-		setPhaseoff2(Angle (x.phaseoff2));
+		attSpectrum .clear();
+		for (unsigned int i = 0; i <x.attSpectrum.length(); ++i) {
 			
- 		
-		
-	
-
-	
-		
-		
+			attSpectrum.push_back(Complex (x.attSpectrum[i]));
 			
-		setRateoff1(AngularRate (x.rateoff1));
+		}
 			
- 		
-		
-	
-
-	
-		
-		
-			
-		setRateoff2(AngularRate (x.rateoff2));
-			
- 		
-		
-	
-
-	
-		
-		phaseRefOffsetExists = x.phaseRefOffsetExists;
-		if (x.phaseRefOffsetExists) {
-		
-		
-			
-		setPhaseRefOffset(Angle (x.phaseRefOffset));
-			
- 		
+  		
 		
 		}
 		
@@ -424,7 +679,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"GainTracking");
+			throw ConversionException (err.getMessage(),"GainTracking");
 		}
 	}
 #endif
@@ -457,6 +712,98 @@ namespace asdm {
 
   	
  		
+		
+		Parser::toXML(numLO, "numLO", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numReceptor, "numReceptor", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(cableDelay, "cableDelay", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(crossPolarizationDelay, "crossPolarizationDelay", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(loPropagationDelay, "loPropagationDelay", buf);
+		
+		
+	
+
+  	
+ 		
+		
+			buf.append(EnumerationParser::toXML("polarizationTypes", polarizationTypes));
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(receiverDelay, "receiverDelay", buf);
+		
+		
+	
+
+  	
+ 		
+		if (delayOffsetExists) {
+		
+		
+		Parser::toXML(delayOffset, "delayOffset", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (freqOffsetExists) {
+		
+		
+		Parser::toXML(freqOffset, "freqOffset", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (phaseOffsetExists) {
+		
+		
+		Parser::toXML(phaseOffset, "phaseOffset", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
 		if (samplingLevelExists) {
 		
 		
@@ -469,58 +816,34 @@ namespace asdm {
 
   	
  		
+		if (numAttFreqExists) {
 		
-		Parser::toXML(delayoff1, "delayoff1", buf);
+		
+		Parser::toXML(numAttFreq, "numAttFreq", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(delayoff2, "delayoff2", buf);
-		
+		}
 		
 	
 
   	
  		
+		if (attFreqExists) {
 		
-		Parser::toXML(phaseoff1, "phaseoff1", buf);
+		
+		Parser::toXML(attFreq, "attFreq", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(phaseoff2, "phaseoff2", buf);
-		
+		}
 		
 	
 
   	
  		
-		
-		Parser::toXML(rateoff1, "rateoff1", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(rateoff2, "rateoff2", buf);
+		if (attSpectrumExists) {
 		
 		
-	
-
-  	
- 		
-		if (phaseRefOffsetExists) {
-		
-		
-		Parser::toXML(phaseRefOffset, "phaseRefOffset", buf);
+		Parser::toXML(attSpectrum, "attSpectrum", buf);
 		
 		
 		}
@@ -572,7 +895,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void GainTrackingRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void GainTrackingRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -596,6 +919,104 @@ namespace asdm {
 
 	
   		
+			
+	  	setNumLO(Parser::getInteger("numLO","GainTracking",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setNumReceptor(Parser::getInteger("numReceptor","GainTracking",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+					
+	  	setCableDelay(Parser::get1DDouble("cableDelay","GainTracking",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setCrossPolarizationDelay(Parser::getDouble("crossPolarizationDelay","GainTracking",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+					
+	  	setLoPropagationDelay(Parser::get1DDouble("loPropagationDelay","GainTracking",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+		
+		
+		
+		polarizationTypes = EnumerationParser::getPolarizationType1D("polarizationTypes","GainTracking",rowDoc);			
+		
+		
+		
+	
+
+	
+  		
+			
+					
+	  	setReceiverDelay(Parser::get1DDouble("receiverDelay","GainTracking",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+        if (row.isStr("<delayOffset>")) {
+			
+	  		setDelayOffset(Parser::getDouble("delayOffset","GainTracking",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<freqOffset>")) {
+			
+								
+	  		setFreqOffset(Parser::get1DFrequency("freqOffset","GainTracking",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<phaseOffset>")) {
+			
+								
+	  		setPhaseOffset(Parser::get1DAngle("phaseOffset","GainTracking",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
         if (row.isStr("<samplingLevel>")) {
 			
 	  		setSamplingLevel(Parser::getFloat("samplingLevel","GainTracking",rowDoc));
@@ -606,58 +1027,34 @@ namespace asdm {
 
 	
   		
+        if (row.isStr("<numAttFreq>")) {
 			
-	  	setDelayoff1(Parser::getInterval("delayoff1","GainTracking",rowDoc));
+	  		setNumAttFreq(Parser::getInteger("numAttFreq","GainTracking",rowDoc));
 			
-		
+		}
+ 		
 	
 
 	
   		
+        if (row.isStr("<attFreq>")) {
 			
-	  	setDelayoff2(Parser::getInterval("delayoff2","GainTracking",rowDoc));
-			
-		
+								
+	  		setAttFreq(Parser::get1DDouble("attFreq","GainTracking",rowDoc));
+	  			
+	  		
+		}
+ 		
 	
 
 	
   		
+        if (row.isStr("<attSpectrum>")) {
 			
-	  	setPhaseoff1(Parser::getAngle("phaseoff1","GainTracking",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setPhaseoff2(Parser::getAngle("phaseoff2","GainTracking",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setRateoff1(Parser::getAngularRate("rateoff1","GainTracking",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setRateoff2(Parser::getAngularRate("rateoff2","GainTracking",rowDoc));
-			
-		
-	
-
-	
-  		
-        if (row.isStr("<phaseRefOffset>")) {
-			
-	  		setPhaseRefOffset(Parser::getAngle("phaseRefOffset","GainTracking",rowDoc));
-			
+								
+	  		setAttSpectrum(Parser::get1DComplex("attSpectrum","GainTracking",rowDoc));
+	  			
+	  		
 		}
  		
 	
@@ -700,6 +1097,496 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"GainTracking");
 		}
+	}
+	
+	void GainTrackingRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	antennaId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	spectralWindowId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	timeInterval.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(feedId);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeFloat(attenuator);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numLO);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numReceptor);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) cableDelay.size());
+		for (unsigned int i = 0; i < cableDelay.size(); i++)
+				
+			eoss.writeDouble(cableDelay.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeDouble(crossPolarizationDelay);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) loPropagationDelay.size());
+		for (unsigned int i = 0; i < loPropagationDelay.size(); i++)
+				
+			eoss.writeDouble(loPropagationDelay.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); i++)
+				
+			eoss.writeInt(polarizationTypes.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) receiverDelay.size());
+		for (unsigned int i = 0; i < receiverDelay.size(); i++)
+				
+			eoss.writeDouble(receiverDelay.at(i));
+				
+				
+						
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(delayOffsetExists);
+	if (delayOffsetExists) {
+	
+	
+	
+		
+						
+			eoss.writeDouble(delayOffset);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(freqOffsetExists);
+	if (freqOffsetExists) {
+	
+	
+	
+		
+	Frequency::toBin(freqOffset, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(phaseOffsetExists);
+	if (phaseOffsetExists) {
+	
+	
+	
+		
+	Angle::toBin(phaseOffset, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(samplingLevelExists);
+	if (samplingLevelExists) {
+	
+	
+	
+		
+						
+			eoss.writeFloat(samplingLevel);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(numAttFreqExists);
+	if (numAttFreqExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numAttFreq);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(attFreqExists);
+	if (attFreqExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) attFreq.size());
+		for (unsigned int i = 0; i < attFreq.size(); i++)
+				
+			eoss.writeDouble(attFreq.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	eoss.writeBoolean(attSpectrumExists);
+	if (attSpectrumExists) {
+	
+	
+	
+		
+	Complex::toBin(attSpectrum, eoss);
+		
+	
+
+	}
+
+	}
+	
+	GainTrackingRow* GainTrackingRow::fromBin(EndianISStream& eiss, GainTrackingTable& table) {
+		GainTrackingRow* row = new  GainTrackingRow(table);
+		
+		
+		
+	
+		
+		
+		row->antennaId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->spectralWindowId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->feedId =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->attenuator =  eiss.readFloat();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numLO =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numReceptor =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->cableDelay.clear();
+		
+		unsigned int cableDelayDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < cableDelayDim1; i++)
+			
+			row->cableDelay.push_back(eiss.readDouble());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->crossPolarizationDelay =  eiss.readDouble();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->loPropagationDelay.clear();
+		
+		unsigned int loPropagationDelayDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < loPropagationDelayDim1; i++)
+			
+			row->loPropagationDelay.push_back(eiss.readDouble());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->polarizationTypes.clear();
+		
+		unsigned int polarizationTypesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
+			
+			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->receiverDelay.clear();
+		
+		unsigned int receiverDelayDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < receiverDelayDim1; i++)
+			
+			row->receiverDelay.push_back(eiss.readDouble());
+			
+	
+
+		
+	
+
+		
+		
+		
+	row->delayOffsetExists = eiss.readBoolean();
+	if (row->delayOffsetExists) {
+		
+	
+	
+		
+			
+		row->delayOffset =  eiss.readDouble();
+			
+		
+	
+
+	}
+
+	row->freqOffsetExists = eiss.readBoolean();
+	if (row->freqOffsetExists) {
+		
+	
+		
+		
+			
+	
+	row->freqOffset = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->phaseOffsetExists = eiss.readBoolean();
+	if (row->phaseOffsetExists) {
+		
+	
+		
+		
+			
+	
+	row->phaseOffset = Angle::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->samplingLevelExists = eiss.readBoolean();
+	if (row->samplingLevelExists) {
+		
+	
+	
+		
+			
+		row->samplingLevel =  eiss.readFloat();
+			
+		
+	
+
+	}
+
+	row->numAttFreqExists = eiss.readBoolean();
+	if (row->numAttFreqExists) {
+		
+	
+	
+		
+			
+		row->numAttFreq =  eiss.readInt();
+			
+		
+	
+
+	}
+
+	row->attFreqExists = eiss.readBoolean();
+	if (row->attFreqExists) {
+		
+	
+	
+		
+			
+	
+		row->attFreq.clear();
+		
+		unsigned int attFreqDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < attFreqDim1; i++)
+			
+			row->attFreq.push_back(eiss.readDouble());
+			
+	
+
+		
+	
+
+	}
+
+	row->attSpectrumExists = eiss.readBoolean();
+	if (row->attSpectrumExists) {
+		
+	
+		
+		
+			
+	
+	row->attSpectrum = Complex::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -775,6 +1662,371 @@ namespace asdm {
 	
 
 	
+
+	
+ 	/**
+ 	 * Get numLO.
+ 	 * @return numLO as int
+ 	 */
+ 	int GainTrackingRow::getNumLO() const {
+	
+  		return numLO;
+ 	}
+
+ 	/**
+ 	 * Set numLO with the specified int.
+ 	 * @param numLO The int value to which numLO is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void GainTrackingRow::setNumLO (int numLO)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numLO = numLO;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
+ 	 */
+ 	int GainTrackingRow::getNumReceptor() const {
+	
+  		return numReceptor;
+ 	}
+
+ 	/**
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void GainTrackingRow::setNumReceptor (int numReceptor)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numReceptor = numReceptor;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get cableDelay.
+ 	 * @return cableDelay as vector<double >
+ 	 */
+ 	vector<double > GainTrackingRow::getCableDelay() const {
+	
+  		return cableDelay;
+ 	}
+
+ 	/**
+ 	 * Set cableDelay with the specified vector<double >.
+ 	 * @param cableDelay The vector<double > value to which cableDelay is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void GainTrackingRow::setCableDelay (vector<double > cableDelay)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->cableDelay = cableDelay;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get crossPolarizationDelay.
+ 	 * @return crossPolarizationDelay as double
+ 	 */
+ 	double GainTrackingRow::getCrossPolarizationDelay() const {
+	
+  		return crossPolarizationDelay;
+ 	}
+
+ 	/**
+ 	 * Set crossPolarizationDelay with the specified double.
+ 	 * @param crossPolarizationDelay The double value to which crossPolarizationDelay is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void GainTrackingRow::setCrossPolarizationDelay (double crossPolarizationDelay)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->crossPolarizationDelay = crossPolarizationDelay;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get loPropagationDelay.
+ 	 * @return loPropagationDelay as vector<double >
+ 	 */
+ 	vector<double > GainTrackingRow::getLoPropagationDelay() const {
+	
+  		return loPropagationDelay;
+ 	}
+
+ 	/**
+ 	 * Set loPropagationDelay with the specified vector<double >.
+ 	 * @param loPropagationDelay The vector<double > value to which loPropagationDelay is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void GainTrackingRow::setLoPropagationDelay (vector<double > loPropagationDelay)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->loPropagationDelay = loPropagationDelay;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get polarizationTypes.
+ 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
+ 	 */
+ 	vector<PolarizationTypeMod::PolarizationType > GainTrackingRow::getPolarizationTypes() const {
+	
+  		return polarizationTypes;
+ 	}
+
+ 	/**
+ 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void GainTrackingRow::setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->polarizationTypes = polarizationTypes;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get receiverDelay.
+ 	 * @return receiverDelay as vector<double >
+ 	 */
+ 	vector<double > GainTrackingRow::getReceiverDelay() const {
+	
+  		return receiverDelay;
+ 	}
+
+ 	/**
+ 	 * Set receiverDelay with the specified vector<double >.
+ 	 * @param receiverDelay The vector<double > value to which receiverDelay is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void GainTrackingRow::setReceiverDelay (vector<double > receiverDelay)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->receiverDelay = receiverDelay;
+	
+ 	}
+	
+	
+
+	
+	/**
+	 * The attribute delayOffset is optional. Return true if this attribute exists.
+	 * @return true if and only if the delayOffset attribute exists. 
+	 */
+	bool GainTrackingRow::isDelayOffsetExists() const {
+		return delayOffsetExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get delayOffset, which is optional.
+ 	 * @return delayOffset as double
+ 	 * @throw IllegalAccessException If delayOffset does not exist.
+ 	 */
+ 	double GainTrackingRow::getDelayOffset() const  {
+		if (!delayOffsetExists) {
+			throw IllegalAccessException("delayOffset", "GainTracking");
+		}
+	
+  		return delayOffset;
+ 	}
+
+ 	/**
+ 	 * Set delayOffset with the specified double.
+ 	 * @param delayOffset The double value to which delayOffset is to be set.
+ 	 
+ 	
+ 	 */
+ 	void GainTrackingRow::setDelayOffset (double delayOffset) {
+	
+ 		this->delayOffset = delayOffset;
+	
+		delayOffsetExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark delayOffset, which is an optional field, as non-existent.
+	 */
+	void GainTrackingRow::clearDelayOffset () {
+		delayOffsetExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute freqOffset is optional. Return true if this attribute exists.
+	 * @return true if and only if the freqOffset attribute exists. 
+	 */
+	bool GainTrackingRow::isFreqOffsetExists() const {
+		return freqOffsetExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get freqOffset, which is optional.
+ 	 * @return freqOffset as vector<Frequency >
+ 	 * @throw IllegalAccessException If freqOffset does not exist.
+ 	 */
+ 	vector<Frequency > GainTrackingRow::getFreqOffset() const  {
+		if (!freqOffsetExists) {
+			throw IllegalAccessException("freqOffset", "GainTracking");
+		}
+	
+  		return freqOffset;
+ 	}
+
+ 	/**
+ 	 * Set freqOffset with the specified vector<Frequency >.
+ 	 * @param freqOffset The vector<Frequency > value to which freqOffset is to be set.
+ 	 
+ 	
+ 	 */
+ 	void GainTrackingRow::setFreqOffset (vector<Frequency > freqOffset) {
+	
+ 		this->freqOffset = freqOffset;
+	
+		freqOffsetExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark freqOffset, which is an optional field, as non-existent.
+	 */
+	void GainTrackingRow::clearFreqOffset () {
+		freqOffsetExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute phaseOffset is optional. Return true if this attribute exists.
+	 * @return true if and only if the phaseOffset attribute exists. 
+	 */
+	bool GainTrackingRow::isPhaseOffsetExists() const {
+		return phaseOffsetExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get phaseOffset, which is optional.
+ 	 * @return phaseOffset as vector<Angle >
+ 	 * @throw IllegalAccessException If phaseOffset does not exist.
+ 	 */
+ 	vector<Angle > GainTrackingRow::getPhaseOffset() const  {
+		if (!phaseOffsetExists) {
+			throw IllegalAccessException("phaseOffset", "GainTracking");
+		}
+	
+  		return phaseOffset;
+ 	}
+
+ 	/**
+ 	 * Set phaseOffset with the specified vector<Angle >.
+ 	 * @param phaseOffset The vector<Angle > value to which phaseOffset is to be set.
+ 	 
+ 	
+ 	 */
+ 	void GainTrackingRow::setPhaseOffset (vector<Angle > phaseOffset) {
+	
+ 		this->phaseOffset = phaseOffset;
+	
+		phaseOffsetExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark phaseOffset, which is an optional field, as non-existent.
+	 */
+	void GainTrackingRow::clearPhaseOffset () {
+		phaseOffsetExists = false;
+	}
+	
+
+	
 	/**
 	 * The attribute samplingLevel is optional. Return true if this attribute exists.
 	 * @return true if and only if the samplingLevel attribute exists. 
@@ -790,7 +2042,7 @@ namespace asdm {
  	 * @return samplingLevel as float
  	 * @throw IllegalAccessException If samplingLevel does not exist.
  	 */
- 	float GainTrackingRow::getSamplingLevel() const throw(IllegalAccessException) {
+ 	float GainTrackingRow::getSamplingLevel() const  {
 		if (!samplingLevelExists) {
 			throw IllegalAccessException("samplingLevel", "GainTracking");
 		}
@@ -822,241 +2074,143 @@ namespace asdm {
 	
 
 	
-
-	
- 	/**
- 	 * Get delayoff1.
- 	 * @return delayoff1 as Interval
- 	 */
- 	Interval GainTrackingRow::getDelayoff1() const {
-	
-  		return delayoff1;
- 	}
-
- 	/**
- 	 * Set delayoff1 with the specified Interval.
- 	 * @param delayoff1 The Interval value to which delayoff1 is to be set.
- 	 
- 	
- 		
- 	 */
- 	void GainTrackingRow::setDelayoff1 (Interval delayoff1)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->delayoff1 = delayoff1;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get delayoff2.
- 	 * @return delayoff2 as Interval
- 	 */
- 	Interval GainTrackingRow::getDelayoff2() const {
-	
-  		return delayoff2;
- 	}
-
- 	/**
- 	 * Set delayoff2 with the specified Interval.
- 	 * @param delayoff2 The Interval value to which delayoff2 is to be set.
- 	 
- 	
- 		
- 	 */
- 	void GainTrackingRow::setDelayoff2 (Interval delayoff2)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->delayoff2 = delayoff2;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get phaseoff1.
- 	 * @return phaseoff1 as Angle
- 	 */
- 	Angle GainTrackingRow::getPhaseoff1() const {
-	
-  		return phaseoff1;
- 	}
-
- 	/**
- 	 * Set phaseoff1 with the specified Angle.
- 	 * @param phaseoff1 The Angle value to which phaseoff1 is to be set.
- 	 
- 	
- 		
- 	 */
- 	void GainTrackingRow::setPhaseoff1 (Angle phaseoff1)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->phaseoff1 = phaseoff1;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get phaseoff2.
- 	 * @return phaseoff2 as Angle
- 	 */
- 	Angle GainTrackingRow::getPhaseoff2() const {
-	
-  		return phaseoff2;
- 	}
-
- 	/**
- 	 * Set phaseoff2 with the specified Angle.
- 	 * @param phaseoff2 The Angle value to which phaseoff2 is to be set.
- 	 
- 	
- 		
- 	 */
- 	void GainTrackingRow::setPhaseoff2 (Angle phaseoff2)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->phaseoff2 = phaseoff2;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get rateoff1.
- 	 * @return rateoff1 as AngularRate
- 	 */
- 	AngularRate GainTrackingRow::getRateoff1() const {
-	
-  		return rateoff1;
- 	}
-
- 	/**
- 	 * Set rateoff1 with the specified AngularRate.
- 	 * @param rateoff1 The AngularRate value to which rateoff1 is to be set.
- 	 
- 	
- 		
- 	 */
- 	void GainTrackingRow::setRateoff1 (AngularRate rateoff1)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->rateoff1 = rateoff1;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get rateoff2.
- 	 * @return rateoff2 as AngularRate
- 	 */
- 	AngularRate GainTrackingRow::getRateoff2() const {
-	
-  		return rateoff2;
- 	}
-
- 	/**
- 	 * Set rateoff2 with the specified AngularRate.
- 	 * @param rateoff2 The AngularRate value to which rateoff2 is to be set.
- 	 
- 	
- 		
- 	 */
- 	void GainTrackingRow::setRateoff2 (AngularRate rateoff2)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->rateoff2 = rateoff2;
-	
- 	}
-	
-	
-
-	
 	/**
-	 * The attribute phaseRefOffset is optional. Return true if this attribute exists.
-	 * @return true if and only if the phaseRefOffset attribute exists. 
+	 * The attribute numAttFreq is optional. Return true if this attribute exists.
+	 * @return true if and only if the numAttFreq attribute exists. 
 	 */
-	bool GainTrackingRow::isPhaseRefOffsetExists() const {
-		return phaseRefOffsetExists;
+	bool GainTrackingRow::isNumAttFreqExists() const {
+		return numAttFreqExists;
 	}
 	
 
 	
  	/**
- 	 * Get phaseRefOffset, which is optional.
- 	 * @return phaseRefOffset as Angle
- 	 * @throw IllegalAccessException If phaseRefOffset does not exist.
+ 	 * Get numAttFreq, which is optional.
+ 	 * @return numAttFreq as int
+ 	 * @throw IllegalAccessException If numAttFreq does not exist.
  	 */
- 	Angle GainTrackingRow::getPhaseRefOffset() const throw(IllegalAccessException) {
-		if (!phaseRefOffsetExists) {
-			throw IllegalAccessException("phaseRefOffset", "GainTracking");
+ 	int GainTrackingRow::getNumAttFreq() const  {
+		if (!numAttFreqExists) {
+			throw IllegalAccessException("numAttFreq", "GainTracking");
 		}
 	
-  		return phaseRefOffset;
+  		return numAttFreq;
  	}
 
  	/**
- 	 * Set phaseRefOffset with the specified Angle.
- 	 * @param phaseRefOffset The Angle value to which phaseRefOffset is to be set.
+ 	 * Set numAttFreq with the specified int.
+ 	 * @param numAttFreq The int value to which numAttFreq is to be set.
  	 
  	
  	 */
- 	void GainTrackingRow::setPhaseRefOffset (Angle phaseRefOffset) {
+ 	void GainTrackingRow::setNumAttFreq (int numAttFreq) {
 	
- 		this->phaseRefOffset = phaseRefOffset;
+ 		this->numAttFreq = numAttFreq;
 	
-		phaseRefOffsetExists = true;
+		numAttFreqExists = true;
 	
  	}
 	
 	
 	/**
-	 * Mark phaseRefOffset, which is an optional field, as non-existent.
+	 * Mark numAttFreq, which is an optional field, as non-existent.
 	 */
-	void GainTrackingRow::clearPhaseRefOffset () {
-		phaseRefOffsetExists = false;
+	void GainTrackingRow::clearNumAttFreq () {
+		numAttFreqExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute attFreq is optional. Return true if this attribute exists.
+	 * @return true if and only if the attFreq attribute exists. 
+	 */
+	bool GainTrackingRow::isAttFreqExists() const {
+		return attFreqExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get attFreq, which is optional.
+ 	 * @return attFreq as vector<double >
+ 	 * @throw IllegalAccessException If attFreq does not exist.
+ 	 */
+ 	vector<double > GainTrackingRow::getAttFreq() const  {
+		if (!attFreqExists) {
+			throw IllegalAccessException("attFreq", "GainTracking");
+		}
+	
+  		return attFreq;
+ 	}
+
+ 	/**
+ 	 * Set attFreq with the specified vector<double >.
+ 	 * @param attFreq The vector<double > value to which attFreq is to be set.
+ 	 
+ 	
+ 	 */
+ 	void GainTrackingRow::setAttFreq (vector<double > attFreq) {
+	
+ 		this->attFreq = attFreq;
+	
+		attFreqExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark attFreq, which is an optional field, as non-existent.
+	 */
+	void GainTrackingRow::clearAttFreq () {
+		attFreqExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute attSpectrum is optional. Return true if this attribute exists.
+	 * @return true if and only if the attSpectrum attribute exists. 
+	 */
+	bool GainTrackingRow::isAttSpectrumExists() const {
+		return attSpectrumExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get attSpectrum, which is optional.
+ 	 * @return attSpectrum as vector<Complex >
+ 	 * @throw IllegalAccessException If attSpectrum does not exist.
+ 	 */
+ 	vector<Complex > GainTrackingRow::getAttSpectrum() const  {
+		if (!attSpectrumExists) {
+			throw IllegalAccessException("attSpectrum", "GainTracking");
+		}
+	
+  		return attSpectrum;
+ 	}
+
+ 	/**
+ 	 * Set attSpectrum with the specified vector<Complex >.
+ 	 * @param attSpectrum The vector<Complex > value to which attSpectrum is to be set.
+ 	 
+ 	
+ 	 */
+ 	void GainTrackingRow::setAttSpectrum (vector<Complex > attSpectrum) {
+	
+ 		this->attSpectrum = attSpectrum;
+	
+		attSpectrumExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark attSpectrum, which is an optional field, as non-existent.
+	 */
+	void GainTrackingRow::clearAttSpectrum () {
+		attSpectrumExists = false;
 	}
 	
 
@@ -1183,14 +2337,14 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the SpectralWindow table having SpectralWindow.spectralWindowId == spectralWindowId
-	 * @return a SpectralWindowRow*
+	 * Returns the pointer to the row in the Antenna table having Antenna.antennaId == antennaId
+	 * @return a AntennaRow*
 	 * 
 	 
 	 */
-	 SpectralWindowRow* GainTrackingRow::getSpectralWindowUsingSpectralWindowId() {
+	 AntennaRow* GainTrackingRow::getAntennaUsingAntennaId() {
 	 
-	 	return table.getContainer().getSpectralWindow().getRowByKey(spectralWindowId);
+	 	return table.getContainer().getAntenna().getRowByKey(antennaId);
 	 }
 	 
 
@@ -1202,14 +2356,14 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the Antenna table having Antenna.antennaId == antennaId
-	 * @return a AntennaRow*
+	 * Returns the pointer to the row in the SpectralWindow table having SpectralWindow.spectralWindowId == spectralWindowId
+	 * @return a SpectralWindowRow*
 	 * 
 	 
 	 */
-	 AntennaRow* GainTrackingRow::getAntennaUsingAntennaId() {
+	 SpectralWindowRow* GainTrackingRow::getSpectralWindowUsingSpectralWindowId() {
 	 
-	 	return table.getContainer().getAntenna().getRowByKey(antennaId);
+	 	return table.getContainer().getSpectralWindow().getRowByKey(spectralWindowId);
 	 }
 	 
 
@@ -1252,23 +2406,45 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+		delayOffsetExists = false;
+	
+
+	
+		freqOffsetExists = false;
+	
+
+	
+		phaseOffsetExists = false;
+	
+
+	
 		samplingLevelExists = false;
 	
 
 	
-
+		numAttFreqExists = false;
 	
 
 	
-
+		attFreqExists = false;
 	
 
 	
-
-	
-
-	
-		phaseRefOffsetExists = false;
+		attSpectrumExists = false;
 	
 
 	
@@ -1281,6 +2457,18 @@ namespace asdm {
 	
 	
 	
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -1314,23 +2502,45 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+		delayOffsetExists = false;
+	
+
+	
+		freqOffsetExists = false;
+	
+
+	
+		phaseOffsetExists = false;
+	
+
+	
 		samplingLevelExists = false;
 	
 
 	
-
+		numAttFreqExists = false;
 	
 
 	
-
+		attFreqExists = false;
 	
 
 	
-
-	
-
-	
-		phaseRefOffsetExists = false;
+		attSpectrumExists = false;
 	
 
 	
@@ -1346,31 +2556,54 @@ namespace asdm {
 		
 			antennaId = row.antennaId;
 		
-			feedId = row.feedId;
-		
 			spectralWindowId = row.spectralWindowId;
 		
 			timeInterval = row.timeInterval;
+		
+			feedId = row.feedId;
 		
 		
 		
 		
 			attenuator = row.attenuator;
 		
-			delayoff1 = row.delayoff1;
+			numLO = row.numLO;
 		
-			delayoff2 = row.delayoff2;
+			numReceptor = row.numReceptor;
 		
-			phaseoff1 = row.phaseoff1;
+			cableDelay = row.cableDelay;
 		
-			phaseoff2 = row.phaseoff2;
+			crossPolarizationDelay = row.crossPolarizationDelay;
 		
-			rateoff1 = row.rateoff1;
+			loPropagationDelay = row.loPropagationDelay;
 		
-			rateoff2 = row.rateoff2;
+			polarizationTypes = row.polarizationTypes;
+		
+			receiverDelay = row.receiverDelay;
 		
 		
 		
+		
+		if (row.delayOffsetExists) {
+			delayOffset = row.delayOffset;		
+			delayOffsetExists = true;
+		}
+		else
+			delayOffsetExists = false;
+		
+		if (row.freqOffsetExists) {
+			freqOffset = row.freqOffset;		
+			freqOffsetExists = true;
+		}
+		else
+			freqOffsetExists = false;
+		
+		if (row.phaseOffsetExists) {
+			phaseOffset = row.phaseOffset;		
+			phaseOffsetExists = true;
+		}
+		else
+			phaseOffsetExists = false;
 		
 		if (row.samplingLevelExists) {
 			samplingLevel = row.samplingLevel;		
@@ -1379,31 +2612,38 @@ namespace asdm {
 		else
 			samplingLevelExists = false;
 		
-		if (row.phaseRefOffsetExists) {
-			phaseRefOffset = row.phaseRefOffset;		
-			phaseRefOffsetExists = true;
+		if (row.numAttFreqExists) {
+			numAttFreq = row.numAttFreq;		
+			numAttFreqExists = true;
 		}
 		else
-			phaseRefOffsetExists = false;
+			numAttFreqExists = false;
+		
+		if (row.attFreqExists) {
+			attFreq = row.attFreq;		
+			attFreqExists = true;
+		}
+		else
+			attFreqExists = false;
+		
+		if (row.attSpectrumExists) {
+			attSpectrum = row.attSpectrum;		
+			attSpectrumExists = true;
+		}
+		else
+			attSpectrumExists = false;
 		
 		}	
 	}
 
 	
-	bool GainTrackingRow::compareNoAutoInc(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval, float attenuator, Interval delayoff1, Interval delayoff2, Angle phaseoff1, Angle phaseoff2, AngularRate rateoff1, AngularRate rateoff2) {
+	bool GainTrackingRow::compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, float attenuator, int numLO, int numReceptor, vector<double > cableDelay, double crossPolarizationDelay, vector<double > loPropagationDelay, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > receiverDelay) {
 		bool result;
 		result = true;
 		
 	
 		
 		result = result && (this->antennaId == antennaId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->feedId == feedId);
 		
 		if (!result) return false;
 	
@@ -1424,6 +2664,13 @@ namespace asdm {
 
 	
 		
+		result = result && (this->feedId == feedId);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->attenuator == attenuator);
 		
 		if (!result) return false;
@@ -1431,42 +2678,49 @@ namespace asdm {
 
 	
 		
-		result = result && (this->delayoff1 == delayoff1);
+		result = result && (this->numLO == numLO);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->delayoff2 == delayoff2);
+		result = result && (this->numReceptor == numReceptor);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->phaseoff1 == phaseoff1);
+		result = result && (this->cableDelay == cableDelay);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->phaseoff2 == phaseoff2);
+		result = result && (this->crossPolarizationDelay == crossPolarizationDelay);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->rateoff1 == rateoff1);
+		result = result && (this->loPropagationDelay == loPropagationDelay);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->rateoff2 == rateoff2);
+		result = result && (this->polarizationTypes == polarizationTypes);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->receiverDelay == receiverDelay);
 		
 		if (!result) return false;
 	
@@ -1476,7 +2730,7 @@ namespace asdm {
 	
 	
 	
-	bool GainTrackingRow::compareRequiredValue(float attenuator, Interval delayoff1, Interval delayoff2, Angle phaseoff1, Angle phaseoff2, AngularRate rateoff1, AngularRate rateoff2) {
+	bool GainTrackingRow::compareRequiredValue(float attenuator, int numLO, int numReceptor, vector<double > cableDelay, double crossPolarizationDelay, vector<double > loPropagationDelay, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > receiverDelay) {
 		bool result;
 		result = true;
 		
@@ -1485,27 +2739,31 @@ namespace asdm {
 	
 
 	
-		if (!(this->delayoff1 == delayoff1)) return false;
+		if (!(this->numLO == numLO)) return false;
 	
 
 	
-		if (!(this->delayoff2 == delayoff2)) return false;
+		if (!(this->numReceptor == numReceptor)) return false;
 	
 
 	
-		if (!(this->phaseoff1 == phaseoff1)) return false;
+		if (!(this->cableDelay == cableDelay)) return false;
 	
 
 	
-		if (!(this->phaseoff2 == phaseoff2)) return false;
+		if (!(this->crossPolarizationDelay == crossPolarizationDelay)) return false;
 	
 
 	
-		if (!(this->rateoff1 == rateoff1)) return false;
+		if (!(this->loPropagationDelay == loPropagationDelay)) return false;
 	
 
 	
-		if (!(this->rateoff2 == rateoff2)) return false;
+		if (!(this->polarizationTypes == polarizationTypes)) return false;
+	
+
+	
+		if (!(this->receiverDelay == receiverDelay)) return false;
 	
 
 		return result;
@@ -1525,17 +2783,19 @@ namespace asdm {
 			
 		if (this->attenuator != x->attenuator) return false;
 			
-		if (this->delayoff1 != x->delayoff1) return false;
+		if (this->numLO != x->numLO) return false;
 			
-		if (this->delayoff2 != x->delayoff2) return false;
+		if (this->numReceptor != x->numReceptor) return false;
 			
-		if (this->phaseoff1 != x->phaseoff1) return false;
+		if (this->cableDelay != x->cableDelay) return false;
 			
-		if (this->phaseoff2 != x->phaseoff2) return false;
+		if (this->crossPolarizationDelay != x->crossPolarizationDelay) return false;
 			
-		if (this->rateoff1 != x->rateoff1) return false;
+		if (this->loPropagationDelay != x->loPropagationDelay) return false;
 			
-		if (this->rateoff2 != x->rateoff2) return false;
+		if (this->polarizationTypes != x->polarizationTypes) return false;
+			
+		if (this->receiverDelay != x->receiverDelay) return false;
 			
 		
 		return true;

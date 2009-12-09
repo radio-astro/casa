@@ -299,7 +299,7 @@ simulator::setauto(const double autocorrwt)
 }
 
 bool
-simulator::setconfig(const std::string& telescopename, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, const std::vector<double>& dishdiameter, const std::vector<double>& offset, const std::vector<std::string>& mount, const std::vector<std::string>& antname, const std::string& coordsystem, const ::casac::variant& referencelocation)
+simulator::setconfig(const std::string& telescopename, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, const std::vector<double>& dishdiameter, const std::vector<double>& offset, const std::vector<std::string>& mount, const std::vector<std::string>& antname, const std::vector<std::string>& padname, const std::string& coordsystem, const ::casac::variant& referencelocation)
 {
   Bool rstat(False);
   try {
@@ -315,6 +315,7 @@ simulator::setconfig(const std::string& telescopename, const std::vector<double>
       }
       rstat=itsSim->setconfig(telescopename, x, y, z, dishdiameter, offset,  
 			      toVectorString(mount), toVectorString(antname), 
+			      toVectorString(padname), 
 			      coordsystem, mpos );
     }
 
@@ -568,11 +569,16 @@ simulator::setvp(const bool dovp, const bool usedefaultvp,
   try {
     
     if(itsSim !=0){
-      
-      casa::Quantity qparinc(casaQuantity(parangleinc));
-      casa::Quantity qskypos(casaQuantity(skyposthreshold));
-      rstat=itsSim->setvp(dovp, usedefaultvp, vptable, dosquint,qparinc, 
-			  qskypos, pblimit);
+      casa::Quantity skyposthr(180, "deg");
+      casa::Quantity parang(360, "deg");
+      if ((String(parangleinc.toString()) != casa::String("")) && 
+	  (String(parangleinc.toString()) != casa::String("[]")) )
+	parang=casaQuantity(parangleinc);
+      if ((String(skyposthreshold.toString()) != casa::String("")) && 
+	  (String(skyposthreshold.toString()) != casa::String("[]")))
+	skyposthr=casaQuantity(skyposthreshold);
+      rstat=itsSim->setvp(dovp, usedefaultvp, vptable, dosquint,parang, 
+			  skyposthr, pblimit);
     }
     
     
@@ -660,9 +666,9 @@ simulator::setbandpass(const std::string& mode, const std::string& table,
 }
 
 bool 
-simulator::setapply(const std::string& type, 
-		    const double t, 
-		    const std::string& table, 
+simulator::setapply(const std::string& table, 
+		    const std::string& type, 
+		    const double t, 		    
 		    const ::casac::variant& field,
 		    const std::string& interp,
 		    const std::string& select,
@@ -692,6 +698,39 @@ simulator::setapply(const std::string& type,
 
 }
 
+
+
+// RI TODO make pwv and windspeed variants here and quantities in Simulator.cc
+
+bool
+simulator::settrop(const std::string& mode, const std::string& table, 
+		   const double pwv, const double deltapwv, 
+		   const double beta, const double windspeed)
+{
+  Bool rstat(False);
+  try {
+    
+    if(itsSim !=0){  
+      //      casa::Quantity qinter(casaQuantity(interval));
+      rstat=itsSim->settrop(mode, table, pwv, deltapwv, beta, windspeed);
+    }
+    // RI TODO interpolation params have to get to SolvableVisCal::setApply.
+    // RI TODO do we make the user call sm.setapply to deal with that, 
+    // RI TODO or do we have it pass through here to VC::setApply? 
+      
+ } catch  (AipsError x) {
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	   << LogIO::POST;
+    RETHROW(x);
+ }
+ return rstat;  
+}
+
+
+
+
+
+
 bool
 simulator::setgain(const std::string& mode, const std::string& table, 
 		   const ::casac::variant& interval, 
@@ -702,8 +741,8 @@ simulator::setgain(const std::string& mode, const std::string& table,
     
     if(itsSim !=0){
       
-      casa::Quantity qinter(casaQuantity(interval));
-      rstat=itsSim->setgain(mode, table, qinter, amplitude);
+      casa::Quantity qint(casaQuantity(interval));
+      rstat=itsSim->setgain(mode, table, qint, amplitude);
     }
     
     
@@ -715,10 +754,9 @@ simulator::setgain(const std::string& mode, const std::string& table,
   
  return rstat;
    
-
-
-
 }
+
+
 
 
 bool 
@@ -746,9 +784,13 @@ simulator::setpointingerror(const std::string& epjtablename,
 
 }
 
+
+
 bool
 simulator::setleakage(const std::string& mode, const std::string& table, 
-		      const ::casac::variant& interval, const double amplitude)
+		      //const ::casac::variant& interval, 
+		      const std::vector<double>& amplitude,
+		      const std::vector<double>& offset)
 {
 
   Bool rstat(False);
@@ -756,8 +798,9 @@ simulator::setleakage(const std::string& mode, const std::string& table,
     
     if(itsSim !=0){
       
-      casa::Quantity qinter(casaQuantity(interval));
-      rstat=itsSim->setleakage(mode, table, qinter, amplitude);
+      //casa::Quantity qinter(casaQuantity(interval));
+      //rstat=itsSim->setleakage(mode, table, qinter, amplitude);
+      rstat=itsSim->setleakage(mode, table, amplitude, offset);
     }
     
     
@@ -773,7 +816,7 @@ simulator::setleakage(const std::string& mode, const std::string& table,
 }
 
 bool
-simulator::setnoise(const std::string& mode, const std::string& table, 
+simulator::oldsetnoise(const std::string& mode, const std::string& table, 
 		    const ::casac::variant& simplenoise, 
 		    const double antefficiency, const double correfficiency, 
 		    const double spillefficiency, const double tau, 
@@ -784,8 +827,11 @@ simulator::setnoise(const std::string& mode, const std::string& table,
     
     if(itsSim !=0){
       
+      LogIO os(LogOrigin("simulator", "oldsetnoise"));
+      os << LogIO::WARN << "Using deprecated ACoh Noise - this will dissapear in the future - please switch to sm.setnoise" << LogIO::POST;
+      
       casa::Quantity qnoise(casaQuantity(simplenoise));
-      rstat=itsSim->setnoise(mode, qnoise, table, antefficiency, correfficiency, spillefficiency, tau, trx, tatmos, tcmb);
+      rstat=itsSim->oldsetnoise(mode, table, qnoise, antefficiency, correfficiency, spillefficiency, tau, trx, tatmos, tcmb);
     }
     
     
@@ -793,13 +839,58 @@ simulator::setnoise(const std::string& mode, const std::string& table,
    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
 	   << LogIO::POST;
     RETHROW(x);
- }
-  
+ }  
  return rstat;
-   
-
-
 }
+
+
+bool
+simulator::setnoise(const std::string& mode, 
+		    const std::string& table, 
+		    const ::casac::variant& simplenoise, 
+		    // atm parameters
+		    const ::casac::variant& pground,
+		    const double relhum,
+		    const ::casac::variant& altitude,
+		    const ::casac::variant& waterheight,
+		    const ::casac::variant& pwv,
+		    // OR specify tau and tatmos 
+		    const double tatmos, 
+		    const double tau,
+		    // antenna parameters
+		    const double antefficiency, 
+		    const double spillefficiency, 
+		    const double correfficiency,	    
+		    const double trx, 
+		    const double tground, 
+		    const double tcmb
+		    ) {
+  Bool rstat(False);
+  try {
+    if(itsSim !=0){      
+      casa::Quantity qnoise(casaQuantity(simplenoise));
+      casa::Quantity qpress(casaQuantity(pground));
+      casa::Quantity qalt(casaQuantity(altitude));
+      casa::Quantity qwaterht(casaQuantity(waterheight));
+      casa::Quantity qpwv(casaQuantity(pwv));
+#ifdef RI_DEBUG
+      cout<<qnoise<<" "<<qpress<<" "<<qalt<<" "<<qwaterht<<" "<<qpwv<<endl;
+#endif
+      rstat=itsSim->setnoise(mode, table, qnoise, 
+			     qpress,relhum,qalt,qwaterht,qpwv,
+			     tatmos,tau,
+			     antefficiency, spillefficiency, correfficiency, 
+			     trx, tground, tcmb);
+    }    
+ } catch  (AipsError x) {
+   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	   << LogIO::POST;
+    RETHROW(x);
+ }  
+ return rstat;
+}
+
+
 
 bool
 simulator::setpa(const std::string& mode, const std::string& table, 

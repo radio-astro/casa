@@ -49,14 +49,17 @@ class WorldCanvas;
 extern "C" {
 #endif
 
-#if defined(__APPLE__)
+#if defined(__APPLE__)  && ! (defined(__MAC_10_6) || defined(__USE_WS_X11__))
   void wcdriv_(int * opc, float * rbuf, int * nbuf,
 	       char * chr, int * lchr, int len);
 #else
-  int grexec_(int *idev, int *ifunc, float *rbuf, int *nbuf,
-	      char *chr, int *lchr, int len);
   void wcdriv_(int * opc, float * rbuf, int * nbuf,
 	       char * chr, int * lchr, int *mode, int len);
+#endif
+
+#if ! defined(__APPLE__)
+  int grexec_(int *idev, int *ifunc, float *rbuf, int *nbuf,
+	      char *chr, int *lchr, int len);
 #endif
 
 #ifdef __cplusplus

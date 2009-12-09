@@ -268,10 +268,10 @@ QPSymbol::QPSymbol(const PlotSymbolPtr copy) : m_style(CIRCLE), m_char('o'),
 QPSymbol::~QPSymbol() { }
 
 
-pair<double, double> QPSymbol::size() const {
-    if(m_style == PIXEL) return pair<double, double>(1, 1);
+psize_t QPSymbol::size() const {
+    if(m_style == PIXEL) return psize_t(1, 1);
     const QSize& s = QwtSymbol::size();
-    return pair<double, double>(s.width(), s.height());
+    return psize_t(s.width(), s.height());
 }
 
 void QPSymbol::setSize(double width, double height, bool heightIsPixel) {

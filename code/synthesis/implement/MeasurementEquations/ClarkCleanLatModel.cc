@@ -349,7 +349,7 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
   // find its maximum value of the residual
   Float maxRes = maxResidual(*itsResidualPtr);
   Float maxResPrevious=maxRes;
-  itsLog << "Initial maximum residual: " << maxRes << LogIO::POST;
+  itsLog << LogIO::NORMAL1 << "Initial maximum residual: " << maxRes << LogIO::POST;
   // if flux limit or iteration limit reached then bail out. 
   Bool userHalt = False;
   Int numIt=numberIterations();
@@ -390,7 +390,7 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
 //     itsLog << "Fluxlimit determined using the maximum number active pixels: " 
 //  	   << minLimit << endl;
     //
-       //        fluxLimit = max(fluxLimit, minLimit);
+       //        fluxLimit = std::max(fluxLimit, minLimit);
 
 
 //     itsLog << "Final Fluxlimit: " << fluxLimit << LogIO::POST;
@@ -399,7 +399,7 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
     // management and quicker indexing.
 
     cacheActivePixels(activePixels, *itsResidualPtr,
-		      max(fluxLimit,threshold()));
+		      std::max(fluxLimit,threshold()));
     // The numpix calculated here frequently differs 
     // from the number calculated using the histogram, because of the
     // quantisation of the flux levels in the histogram, and the imposition
@@ -407,19 +407,19 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
     numPix = activePixels.nComp();
     if (numPix > 0) {
 //       itsLog <<"Major cycle has "<< numPix << " active residuals, "
-// 	     << "a Fluxlimit of " << max(fluxLimit,threshold()) << endl;
+// 	     << "a Fluxlimit of " << std::max(fluxLimit,threshold()) << endl;
       // Start of minor cycles
 
-      numMinorIterations = min(itsMaxNumberMinorIterations,
+      numMinorIterations = std::min(itsMaxNumberMinorIterations,
 			       numIt-numIterations);
       doMinorIterations(activePixels, 
   			psfPatch, fluxLimit, numMinorIterations, 
 			Fmn, numIterations, totalFlux);
       numIterations += numMinorIterations;
 //       itsLog << "Clean has used " << numIterations << " Iterations" ;
-      maxNumberMinorIterations = max(maxNumberMinorIterations,
+      maxNumberMinorIterations = std::max(maxNumberMinorIterations,
 				     numMinorIterations);
-      maxNumPix = max((Int)itsMaxNumPix, numPix);
+      maxNumPix = std::max((Int)itsMaxNumPix, numPix);
       // Now do a  major cycle
       eqn.residual(*itsResidualPtr, *this);
 
@@ -440,9 +440,9 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
       }
       maxResPrevious=maxRes;
 	
-      itsLog << "Iteration: " << numIterations
-	     << ", Maximum residual=" << maxRes << LogIO::POST;
-// 	     << " Flux limit=" << max(fluxLimit,threshold()) 
+      //      itsLog << "Iteration: " << numIterations
+      //     << ", Maximum residual=" << maxRes << LogIO::POST;
+// 	     << " Flux limit=" << std::max(fluxLimit,threshold()) 
 // 	     << ", " << numPix << " Active pixels" << LogIO::POST;
       
 //       itsLog << " to get to a maximum residual of " << maxRes << LogIO::POST;
@@ -555,7 +555,7 @@ Bool ClarkCleanLatModel::singleSolve(LatConvEquation & eqn, Lattice<Float>& resi
   //     itsLog << "Fluxlimit determined using the maximum number active pixels: " 
   //  	   << minLimit << endl;
   //
-  //        fluxLimit = max(fluxLimit, minLimit);
+  //        fluxLimit = std::max(fluxLimit, minLimit);
   
   
   //     itsLog << "Final Fluxlimit: " << fluxLimit << LogIO::POST;
@@ -563,7 +563,7 @@ Bool ClarkCleanLatModel::singleSolve(LatConvEquation & eqn, Lattice<Float>& resi
   // Copy all the active pixels into separate areas for better memory
   // management and quicker indexing.
   
-  cacheActivePixels(activePixels, residual, max(fluxLimit,threshold()));
+  cacheActivePixels(activePixels, residual, std::max(fluxLimit,threshold()));
   // The numpix calculated here frequently differs 
   // from the number calculated using the histogram, because of the
   // quantisation of the flux levels in the histogram, and the imposition
@@ -571,20 +571,20 @@ Bool ClarkCleanLatModel::singleSolve(LatConvEquation & eqn, Lattice<Float>& resi
   numPix = activePixels.nComp();
   if (numPix > 0) {
     //       itsLog <<"Major cycle has "<< numPix << " active residuals, "
-    // 	     << "a Fluxlimit of " << max(fluxLimit,threshold()) << endl;
+    // 	     << "a Fluxlimit of " << std::max(fluxLimit,threshold()) << endl;
     // Start of minor cycles
     
     
-    numMinorIterations = min(itsMaxNumberMinorIterations,
+    numMinorIterations = std::min(itsMaxNumberMinorIterations,
 			     numberIterations()-numIterations);
     doMinorIterations(activePixels, 
 		      psfPatch, fluxLimit, numMinorIterations, 
 		      Fmn, numIterations, totalFlux);
     numIterations += numMinorIterations;
     //       itsLog << "Clean has used " << numIterations << " Iterations" ;
-    maxNumberMinorIterations = max(maxNumberMinorIterations,
+    maxNumberMinorIterations = std::max(maxNumberMinorIterations,
 				   numMinorIterations);
-    maxNumPix = max((Int)itsMaxNumPix, numPix);
+    maxNumPix = std::max((Int)itsMaxNumPix, numPix);
     
   }
   else {
@@ -720,7 +720,7 @@ doMinorIterations(CCList & activePixels, Matrix<Float> & psfPatch,
   Block<Int> maxPos(2, maxPosPtr, False);
   // declare variables used inside the main loop
   Int curIter = 0;
-  Float iterFluxLimit = max(fluxLimit, threshold());
+  Float iterFluxLimit = std::max(fluxLimit, threshold());
   Float Fac = pow(fluxLimit/absRes, itsSpeedup);
 //   itsLog << "Initial maximum residual:" << maxRes 
 // 	 << " (" << absRes << ") "
@@ -743,7 +743,7 @@ doMinorIterations(CCList & activePixels, Matrix<Float> & psfPatch,
     maxPos.replaceStorage(2, maxPosPtr, False);
     // Update the uncertainty factors and fluxlimits
     Fmn += Fac/Float(totalIterations+curIter);
-    iterFluxLimit = max(fluxLimit * Fmn, threshold());
+    iterFluxLimit = std::max(fluxLimit * Fmn, threshold());
 
     if (itsProgressPtr) {
 	signedAbsRes = absRes * maxRes[0]/abs( maxRes[0] );
@@ -998,16 +998,16 @@ Float ClarkCleanLatModel::getPsfPatch(Matrix<Float> & psfPatch,
   IPosition modelShape(itsModelPtr->shape());
   AlwaysAssert(modelShape.nelements() >= 2, AipsError);
   IPosition maxShape(2, 1);
-  maxShape(0) = min(2*modelShape(0), psfShape(0));
-  maxShape(1) = min(2*modelShape(1), psfShape(1));
+  maxShape(0) = std::min(2*modelShape(0), psfShape(0));
+  maxShape(1) = std::min(2*modelShape(1), psfShape(1));
 
 
   // See if the user has set a psfPatch size, and if it is less than the
   // maximum size use it.
   if (itsPsfPatchSize.nelements() != 0) {
     IPosition psfPatchSize(2, 1, 1);
-    psfPatchSize(0) = min(maxShape(0), itsPsfPatchSize(0));
-    psfPatchSize(1) = min(maxShape(1), itsPsfPatchSize(1));
+    psfPatchSize(0) = std::min(maxShape(0), itsPsfPatchSize(0));
+    psfPatchSize(1) = std::min(maxShape(1), itsPsfPatchSize(1));
     itsPsfPatchSize = psfPatchSize;
   } else {
     itsPsfPatchSize = maxShape;
@@ -1046,7 +1046,7 @@ Float ClarkCleanLatModel::getPsfPatch(Matrix<Float> & psfPatch,
 	// value and the user supplied value
 	psf_p = eqn.evaluate(psfShape/2, Float(1), psfShape);
 	Float tempMax = absMaxBeyondDist(beyond, psfShape/2, *psf_p);
-	maxExtPsf = max(tempMax, itsMaxExtPsf);	
+	maxExtPsf = std::max(tempMax, itsMaxExtPsf);	
 
       }
   }

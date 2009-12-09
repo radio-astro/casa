@@ -30,7 +30,6 @@
 #include <plotms/Gui/PlotMSFlaggingWidget.ui.h>
 
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
-#include <plotms/Gui/PlotMSSelectionWidget.qo.h>
 #include <plotms/PlotMS/PlotMSFlagging.h>
 
 #include <casa/namespace.h>
@@ -39,6 +38,7 @@ namespace casa {
 
 //# Forward Declarations.
 class PlotMSPlot;
+class PlotMSSelectionWidget;
 
 
 // GUI widget for editing a PlotMSFlagging object.

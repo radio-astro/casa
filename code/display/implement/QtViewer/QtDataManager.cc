@@ -346,7 +346,7 @@ void QtDataManager::createButtonClicked() {
 
   if(path=="" || datatype=="" || displaytype=="") return;
     
-  
+
   viewer_->createDD(path, datatype, displaytype);
   
     
@@ -355,8 +355,8 @@ void QtDataManager::createButtonClicked() {
 }
 
 
-
-
+//<drs> Duplicate code for this functionality in QtDBusViewerAdaptor::restore(...)
+//      should try to find a way to make this available from QtViewer
 void QtDataManager::restoreToOld_() {
   // Restore viewer state to existing panel.
   // Use the first empty panel, or if none, the first panel.
@@ -381,6 +381,8 @@ void QtDataManager::restoreToOld_() {
 
 
 
+//<drs> Duplicate code for this functionality in QtDBusViewerAdaptor::restore(...)
+//      should try to find a way to make this available from QtViewer
 void QtDataManager::restoreToNew_() {
   // Create new display panel, restore viewer state to it.
   viewer_->createDPG();
@@ -397,6 +399,8 @@ void QtDataManager::restoreToNew_() {
 
   
     
+//<drs> Duplicate code for this functionality in QtDBusViewerAdaptor::restore(...)
+//      should try to find a way to make this available from QtViewer
 void QtDataManager::restoreTo_(QtDisplayPanel* dp) {
   // Restore viewer state to given panel.
   

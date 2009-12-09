@@ -42,24 +42,34 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the PrimitiveDataType enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace PrimitiveDataTypeMod
 {
+  //! PrimitiveDataType.
+  //!  [ASDM.Binaries] Primitive data types for binary MIME attachments
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum PrimitiveDataType
   { 
-    BOOL_TYPE ,
-    BYTE_TYPE ,
-    SHORT_TYPE ,
-    INT_TYPE ,
-    LONGLONG_TYPE ,
-    UNSIGNED_SHORT_TYPE ,
-    UNSIGNED_INT_TYPE ,
-    UNSIGNED_LONGLONG_TYPE ,
-    FLOAT_TYPE ,
-    DOUBLE_TYPE ,
-    STRING_TYPE 
+    INT16_TYPE /*!< 2 bytes signed integer (short). */
+     ,
+    INT32_TYPE /*!< 4 bytes signed integer (int). */
+     ,
+    INT64_TYPE /*!< 8 bytes signed integer (long long). */
+     ,
+    FLOAT32_TYPE /*!< 4 bytes float (float). */
+     ,
+    FLOAT64_TYPE /*!< 8 bytes float (double). */
+     
   };
   typedef PrimitiveDataType &PrimitiveDataType_out;
 } 
@@ -67,100 +77,97 @@ namespace PrimitiveDataTypeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration PrimitiveDataType.
+  * 
+  */
 class CPrimitiveDataType {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the PrimitiveDataType enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sBOOL_TYPE;
+	static const std::string& sINT16_TYPE; /*!< A const string equal to "INT16_TYPE".*/
 	
-	static const std::string& sBYTE_TYPE;
+	static const std::string& sINT32_TYPE; /*!< A const string equal to "INT32_TYPE".*/
 	
-	static const std::string& sSHORT_TYPE;
+	static const std::string& sINT64_TYPE; /*!< A const string equal to "INT64_TYPE".*/
 	
-	static const std::string& sINT_TYPE;
+	static const std::string& sFLOAT32_TYPE; /*!< A const string equal to "FLOAT32_TYPE".*/
 	
-	static const std::string& sLONGLONG_TYPE;
-	
-	static const std::string& sUNSIGNED_SHORT_TYPE;
-	
-	static const std::string& sUNSIGNED_INT_TYPE;
-	
-	static const std::string& sUNSIGNED_LONGLONG_TYPE;
-	
-	static const std::string& sFLOAT_TYPE;
-	
-	static const std::string& sDOUBLE_TYPE;
-	
-	static const std::string& sSTRING_TYPE;
-	
-    static const std::vector<std::string> sPrimitiveDataTypeSet();	 
-
+	static const std::string& sFLOAT64_TYPE; /*!< A const string equal to "FLOAT64_TYPE".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in PrimitiveDataTypeMod::PrimitiveDataType.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of PrimitiveDataTypeMod::PrimitiveDataType.
+      * @return a string.
+      */
+	static std::string name(const PrimitiveDataTypeMod::PrimitiveDataType& e);
 	
-	// Explanations associated with the PrimitiveDataType Enumeration.
-		
-	static const std::string& hBOOL_TYPE;
-		
-	static const std::string& hBYTE_TYPE;
-		
-	static const std::string& hSHORT_TYPE;
-		
-	static const std::string& hINT_TYPE;
-		
-	static const std::string& hLONGLONG_TYPE;
-		
-	static const std::string& hUNSIGNED_SHORT_TYPE;
-		
-	static const std::string& hUNSIGNED_INT_TYPE;
-		
-	static const std::string& hUNSIGNED_LONGLONG_TYPE;
-		
-	static const std::string& hFLOAT_TYPE;
-		
-	static const std::string& hDOUBLE_TYPE;
-		
-	static const std::string& hSTRING_TYPE;
-		
-	static const std::vector<std::string> hPrimitiveDataTypeSet();
-   	
-
-   	// Is an integer number associated with the PrimitiveDataType enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the PrimitiveDataType enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  PrimitiveDataType enumeration.
-	static std::string name(const PrimitiveDataTypeMod::PrimitiveDataType& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const PrimitiveDataTypeMod::PrimitiveDataType& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified PrimitiveDataType enumeration.
-	static std::string help(const PrimitiveDataTypeMod::PrimitiveDataType& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a PrimitiveDataType enumeration object by specifying its name.
    	static PrimitiveDataTypeMod::PrimitiveDataType newPrimitiveDataType(const std::string& name);
    	
-   	// Create a PrimitiveDataType enumeration object by specifying its name.
+   	/*! Return a PrimitiveDataType's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a PrimitiveDataTypeMod::PrimitiveDataType's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static PrimitiveDataTypeMod::PrimitiveDataType literal(const std::string& name);
  	
-    // Create a PrimitiveDataType enumeration object by specifying its position index (0 based).
+    /*! Return a PrimitiveDataType's enumerator given an unsigned int.
+      * @param i the index of the enumerator in PrimitiveDataTypeMod::PrimitiveDataType.
+      * @return a PrimitiveDataTypeMod::PrimitiveDataType's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static PrimitiveDataTypeMod::PrimitiveDataType from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CPrimitiveDataType();
     CPrimitiveDataType(const CPrimitiveDataType&);
     CPrimitiveDataType& operator=(const CPrimitiveDataType&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CPrimitiveDataType_H*/

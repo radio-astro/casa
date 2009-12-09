@@ -116,7 +116,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalGain.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -124,17 +124,17 @@ namespace asdm {
 //class asdm::CalGainTable;
 
 
-// class asdm::CalDataRow;
-class CalDataRow;
-
 // class asdm::CalReductionRow;
 class CalReductionRow;
+
+// class asdm::CalDataRow;
+class CalDataRow;
 	
 
 /**
  * The CalGainRow class is a row of a CalGainTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class CalGainRow {
@@ -161,8 +161,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalGainRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalGainRowIDL x) throw(ConversionException);
+	void setFromIDL (CalGainRowIDL x) ;
 #endif
 	
 	/**
@@ -175,8 +176,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalGainTable to which the row built by deserialization will be parented.
+	  */
+	 static CalGainRow* fromBin(EndianISStream& eiss, CalGainTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -251,21 +266,21 @@ public:
 	
  	/**
  	 * Get gain.
- 	 * @return gain as vector<vector<float > >
+ 	 * @return gain as float
  	 */
- 	vector<vector<float > > getGain() const;
+ 	float getGain() const;
 	
  
  	
  	
  	/**
- 	 * Set gain with the specified vector<vector<float > >.
- 	 * @param gain The vector<vector<float > > value to which gain is to be set.
+ 	 * Set gain with the specified float.
+ 	 * @param gain The float value to which gain is to be set.
  	 
  		
  			
  	 */
- 	void setGain (vector<vector<float > > gain);
+ 	void setGain (float gain);
   		
 	
 	
@@ -281,21 +296,21 @@ public:
 	
  	/**
  	 * Get gainValid.
- 	 * @return gainValid as vector<bool >
+ 	 * @return gainValid as bool
  	 */
- 	vector<bool > getGainValid() const;
+ 	bool getGainValid() const;
 	
  
  	
  	
  	/**
- 	 * Set gainValid with the specified vector<bool >.
- 	 * @param gainValid The vector<bool > value to which gainValid is to be set.
+ 	 * Set gainValid with the specified bool.
+ 	 * @param gainValid The bool value to which gainValid is to be set.
  	 
  		
  			
  	 */
- 	void setGainValid (vector<bool > gainValid);
+ 	void setGainValid (bool gainValid);
   		
 	
 	
@@ -311,21 +326,21 @@ public:
 	
  	/**
  	 * Get fit.
- 	 * @return fit as vector<vector<float > >
+ 	 * @return fit as float
  	 */
- 	vector<vector<float > > getFit() const;
+ 	float getFit() const;
 	
  
  	
  	
  	/**
- 	 * Set fit with the specified vector<vector<float > >.
- 	 * @param fit The vector<vector<float > > value to which fit is to be set.
+ 	 * Set fit with the specified float.
+ 	 * @param fit The float value to which fit is to be set.
  	 
  		
  			
  	 */
- 	void setFit (vector<vector<float > > fit);
+ 	void setFit (float fit);
   		
 	
 	
@@ -341,21 +356,21 @@ public:
 	
  	/**
  	 * Get fitWeight.
- 	 * @return fitWeight as vector<float >
+ 	 * @return fitWeight as float
  	 */
- 	vector<float > getFitWeight() const;
+ 	float getFitWeight() const;
 	
  
  	
  	
  	/**
- 	 * Set fitWeight with the specified vector<float >.
- 	 * @param fitWeight The vector<float > value to which fitWeight is to be set.
+ 	 * Set fitWeight with the specified float.
+ 	 * @param fitWeight The float value to which fitWeight is to be set.
  	 
  		
  			
  	 */
- 	void setFitWeight (vector<float > fitWeight);
+ 	void setFitWeight (float fitWeight);
   		
 	
 	
@@ -529,21 +544,6 @@ public:
 	
 		
 	/**
-	 * calDataId pointer to the row in the CalData table having CalData.calDataId == calDataId
-	 * @return a CalDataRow*
-	 * 
-	 
-	 */
-	 CalDataRow* getCalDataUsingCalDataId();
-	 
-
-	
-
-	
-
-	
-		
-	/**
 	 * calReductionId pointer to the row in the CalReduction table having CalReduction.calReductionId == calReductionId
 	 * @return a CalReductionRow*
 	 * 
@@ -555,18 +555,33 @@ public:
 	
 
 	
+
+	
+		
+	/**
+	 * calDataId pointer to the row in the CalData table having CalData.calDataId == calDataId
+	 * @return a CalDataRow*
+	 * 
+	 
+	 */
+	 CalDataRow* getCalDataUsingCalDataId();
+	 
+
+	
+
+	
 	
 	
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this CalGainRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<vector<float > > gain, vector<bool > gainValid, vector<vector<float > > fit, vector<float > fitWeight, bool totalGainValid, float totalFit, float totalFitWeight);
+	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, float gain, bool gainValid, float fit, float fitWeight, bool totalGainValid, float totalFit, float totalFitWeight);
 	
 	
 
 	
-	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, vector<vector<float > > gain, vector<bool > gainValid, vector<vector<float > > fit, vector<float > fitWeight, bool totalGainValid, float totalFit, float totalFitWeight); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, float gain, bool gainValid, float fit, float fitWeight, bool totalGainValid, float totalFit, float totalFitWeight); 
 		 
 	
 	/**
@@ -653,7 +668,7 @@ private:
 	
 	
 
-	vector<vector<float > > gain;
+	float gain;
 
 	
 	
@@ -664,7 +679,7 @@ private:
 	
 	
 
-	vector<bool > gainValid;
+	bool gainValid;
 
 	
 	
@@ -675,7 +690,7 @@ private:
 	
 	
 
-	vector<vector<float > > fit;
+	float fit;
 
 	
 	
@@ -686,7 +701,7 @@ private:
 	
 	
 
-	vector<float > fitWeight;
+	float fitWeight;
 
 	
 	

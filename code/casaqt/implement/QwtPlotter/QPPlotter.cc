@@ -81,8 +81,8 @@ bool QPPlotter::initColors() {
 // Constructors/Destructors //
 
 QPPlotter::QPPlotter(QPCanvas* canvas, int logEventFlags, QWidget* parent) :
-        QWidget(parent), m_layout(NULL), m_emitResize(true),
-        m_logEvents(logEventFlags) {
+        QWidget(parent), m_layout(NULL), m_emitResize(true) {
+    setLogFilterEventFlags(logEventFlags);
     logObject(CLASS_NAME, this, true);
     
     initialize();
@@ -95,7 +95,8 @@ QPPlotter::QPPlotter(QPCanvas* canvas, int logEventFlags, QWidget* parent) :
 
 QPPlotter::QPPlotter(PlotCanvasLayoutPtr layout, int logEventFlags,
         QWidget* parent) : QWidget(parent), m_layout(layout),
-        m_emitResize(true), m_logEvents(logEventFlags) {
+        m_emitResize(true) {
+    setLogFilterEventFlags(logEventFlags);
     logObject(CLASS_NAME, this, true);
     
     initialize();
@@ -373,10 +374,6 @@ String QPPlotter::fileChooserDialog(const String& title,
 }
 
 
-int QPPlotter::logEventFlags() const { return m_logEvents; }
-void QPPlotter::setLogEventFlags(int flags) { m_logEvents = flags; }
-
-
 void QPPlotter::registerResizeHandler(PlotResizeEventHandlerPtr handler) {
     if(!handler.null()) m_resizeHandlers.push_back(handler); }
 vector<PlotResizeEventHandlerPtr> QPPlotter::allResizeHandlers() const {
@@ -413,16 +410,14 @@ void QPPlotter::resizeEvent(QResizeEvent* event) {
 
 void QPPlotter::logObject(const String& className, void* address,
         bool creation, const String& message) {
-    if(m_logEvents & PlotLogger::OBJECTS_MAJOR)
-        logger()->postMessage(
-                PlotLogObject(className, address, creation, message));
+    logger()->postMessage(PlotLogObject(className, address, creation, message,
+                          PlotLogger::OBJECTS_MAJOR));
 }
 
 void QPPlotter::logMethod(const String& className, const String& methodName,
         bool entering, const String& message) {
-    if(m_logEvents & PlotLogger::METHODS_MAJOR)
-        logger()->postMessage(
-                PlotLogMethod(className, methodName, entering, message));
+    logger()->postMessage(PlotLogMethod(className, methodName, entering,
+                          message, PlotLogger::OBJECTS_MAJOR));
 }
 
 

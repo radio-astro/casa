@@ -56,7 +56,14 @@ void MWCPolyTool::keyPressed(const WCPositionEvent &ev) {
   Int y = ev.pixY();
   its2ndLastPressTime = itsLastPressTime;
   itsLastPressTime = ev.timeOfEvent();
+  
+  if (ev.timeOfEvent()-its2ndLastPressTime < doubleClickInterval())  {
+     //cout << "double-----" << endl;
+     doubleClicked(x, y);
+     //return;
+  }
 
+  clicked(x, y);
 
   if(itsMode==Def) {
 
@@ -121,7 +128,7 @@ void MWCPolyTool::keyPressed(const WCPositionEvent &ev) {
   if(itsMode==Move || itsMode==Resize) return;
 		// shouldn't happen; last button release should have
 		// taken it out of Move or Resize state.
-
+ 
 
   // no previously existing polygon,
   // or click in a different WC,
@@ -135,6 +142,7 @@ void MWCPolyTool::keyPressed(const WCPositionEvent &ev) {
   pushPoint(x, y);
   pushPoint(x, y);
   itsMode = Def;
+  polygonReady();
   return;
 }
 
@@ -176,11 +184,11 @@ void MWCPolyTool::keyReleased(const WCPositionEvent &ev) {
     itsMode=Ready;
     needsHandles=True;  }
 
-  if (itsMode==Ready &&
-      ev.worldCanvas()==itsCurrentWC && 
+  if (itsMode==Ready && ev.worldCanvas()==itsCurrentWC &&
       ev.timeOfEvent()-its2ndLastPressTime < doubleClickInterval() )  {
     Int x = ev.pixX();
     Int y = ev.pixY();
+
     if(itsCurrentWC->inDrawArea(x,y)) {
 
       // "double click" in draw area & polygon exists
@@ -198,7 +206,7 @@ void MWCPolyTool::keyReleased(const WCPositionEvent &ev) {
       if (inPolygon(x, y)) doubleInside();
       else doubleOutside();
 
-      return;  }  }
+      return;  }}
 
   if(needsHandles) {
     refresh();

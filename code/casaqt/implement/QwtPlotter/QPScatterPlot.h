@@ -42,9 +42,9 @@
 
 namespace casa {
 
-// Implementation of ScatterPlot, MaskedPlot, and ErrorPlot for Qwt plotter.
+// Implementation of MaskedPlot, ErrorPlot, and ColoredPlot for Qwt plotter.
 class QPScatterPlot : public QPPlotItem, public MaskedScatterPlot,
-                      public ErrorPlot {
+                      public ErrorPlot, public ColoredPlot {
 public:
     // Static //
     
@@ -180,6 +180,18 @@ public:
     // Implements ErrorPlot::setErrorCapSize().
     void setErrorCapSize(unsigned int capSize);
     
+    
+    // ColoredPlot Methods //
+    
+    // Implements ColoredPlot::binnedColorData().
+    PlotBinnedDataPtr binnedColorData() const;
+    
+    // Implements ColoredPlot::colorForBin().
+    PlotColorPtr colorForBin(unsigned int bin) const;
+    
+    // Implements ColoredPlot::setColorForBin().
+    void setColorForBin(unsigned int bin, const PlotColorPtr color);
+    
 protected:
     // Implements QPPlotItem::className().
     const String& className() const { return CLASS_NAME; }
@@ -195,6 +207,7 @@ private:
     PlotPointDataPtr m_data;
     PlotMaskedPointDataPtr m_maskedData;
     PlotErrorDataPtr m_errorData;
+    PlotBinnedDataPtr m_coloredData;
     // </group>
     
     // Customization objects.
@@ -206,6 +219,16 @@ private:
     QPLine m_errorLine;
     unsigned int m_errorCap;
     // </group>
+    
+    // Binned colors.
+    // <group>
+    QList<QPColor*> m_colors;
+    QList<QBrush> m_coloredBrushes;
+    // </group>
+    
+    
+    // Updates the binned color brushes.
+    void updateBrushes();
 };
 
 }

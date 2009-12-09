@@ -48,13 +48,14 @@
 #define TABLEPLOT_H
 
 //# Includes
+#include <tableplot/TablePlot/TPPlotter.h> /* TPPlotter.h includes Python.h which must
+                                              be included before any system headers */
 #include <casa/aips.h>
 #include <tables/Tables/TableIter.h>
 #include <tables/Tables/TableError.h>
 
 #include <tableplot/TablePlot/BasePlot.h>
 #include <tableplot/TablePlot/CrossPlot.h>
-#include <tableplot/TablePlot/TPPlotter.h>
 #include <tableplot/TablePlot/PanelParams.h>
 
 #include <tableplot/TablePlot/SLog.h>

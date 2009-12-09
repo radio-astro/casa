@@ -123,14 +123,14 @@ public:
 	static string getField(const string &xml, const string &field);
 
 	// The follwing is a special case.
-	static string getString(const string &name, const string &tableName, const string &xmlDoc) 
-		throw (ConversionException);
-	static vector<string> get1DString(const string &name, const string &tableName, const string &xmlDoc)
-		throw (ConversionException);
-	static vector <vector<string> > get2DString(const string &name, const string &tableName, const string &xmlDoc)
-		throw (ConversionException);
-	static vector <vector <vector<string> > > get3DString(const string &name, const string &tableName, const string &xmlDoc)
-		throw (ConversionException);
+	static string getString(const string &name, const string &tableName, const string &xmlDoc) ;
+	//  throw (ConversionException);
+	static vector<string> get1DString(const string &name, const string &tableName, const string &xmlDoc) ;
+	//	throw (ConversionException);
+	static vector <vector<string> > get2DString(const string &name, const string &tableName, const string &xmlDoc) ;
+	//	throw (ConversionException);
+	static vector <vector <vector<string> > > get3DString(const string &name, const string &tableName, const string &xmlDoc);
+	//	throw (ConversionException);
 
 	// Generated methods for conversion to and from XML
 	// data representations for all types, both primitive
@@ -163,20 +163,20 @@ public:
 	
 
 			
-	static int getInteger(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static int getInteger(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<int> get1DInteger(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<int> get1DInteger(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<int> > get2DInteger(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<int> > get2DInteger(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<int> > > get3DInteger(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<int> > > get3DInteger(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<int> > > >get4DInteger(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<int> > > >get4DInteger(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -202,20 +202,20 @@ public:
 	
 
 			
-	static short getShort(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static short getShort(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<short> get1DShort(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<short> get1DShort(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<short> > get2DShort(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<short> > get2DShort(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<short> > > get3DShort(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<short> > > get3DShort(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<short> > > >get4DShort(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<short> > > >get4DShort(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -241,20 +241,20 @@ public:
 	
 
 			
-	static long long getLong(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static long long getLong(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<long long> get1DLong(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<long long> get1DLong(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<long long> > get2DLong(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<long long> > get2DLong(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<long long> > > get3DLong(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<long long> > > get3DLong(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<long long> > > >get4DLong(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<long long> > > >get4DLong(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -280,20 +280,20 @@ public:
 	
 
 			
-	static char getByte(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static char getByte(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<char> get1DByte(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<char> get1DByte(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<char> > get2DByte(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<char> > get2DByte(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<char> > > get3DByte(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<char> > > get3DByte(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<char> > > >get4DByte(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<char> > > >get4DByte(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -319,20 +319,20 @@ public:
 	
 
 			
-	static float getFloat(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static float getFloat(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<float> get1DFloat(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<float> get1DFloat(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<float> > get2DFloat(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<float> > get2DFloat(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<float> > > get3DFloat(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<float> > > get3DFloat(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<float> > > >get4DFloat(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<float> > > >get4DFloat(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -358,20 +358,20 @@ public:
 	
 
 			
-	static double getDouble(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static double getDouble(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<double> get1DDouble(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<double> get1DDouble(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<double> > get2DDouble(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<double> > get2DDouble(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<double> > > get3DDouble(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<double> > > get3DDouble(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<double> > > >get4DDouble(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<double> > > >get4DDouble(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -397,20 +397,20 @@ public:
 	
 
 			
-	static unsigned char getCharacter(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static unsigned char getCharacter(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<unsigned char> get1DCharacter(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<unsigned char> get1DCharacter(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<unsigned char> > get2DCharacter(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<unsigned char> > get2DCharacter(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<unsigned char> > > get3DCharacter(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<unsigned char> > > get3DCharacter(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<unsigned char> > > >get4DCharacter(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<unsigned char> > > >get4DCharacter(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -436,20 +436,20 @@ public:
 	
 
 			
-	static bool getBoolean(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static bool getBoolean(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<bool> get1DBoolean(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<bool> get1DBoolean(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<bool> > get2DBoolean(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<bool> > get2DBoolean(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<bool> > > get3DBoolean(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<bool> > > get3DBoolean(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<bool> > > >get4DBoolean(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<bool> > > >get4DBoolean(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -493,20 +493,20 @@ public:
 	
 
 			
-	static Angle getAngle(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static Angle getAngle(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<Angle> get1DAngle(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<Angle> get1DAngle(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<Angle> > get2DAngle(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<Angle> > get2DAngle(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<Angle> > > get3DAngle(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<Angle> > > get3DAngle(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<Angle> > > >get4DAngle(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<Angle> > > >get4DAngle(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -532,20 +532,20 @@ public:
 	
 
 			
-	static AngularRate getAngularRate(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static AngularRate getAngularRate(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<AngularRate> get1DAngularRate(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<AngularRate> get1DAngularRate(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<AngularRate> > get2DAngularRate(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<AngularRate> > get2DAngularRate(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<AngularRate> > > get3DAngularRate(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<AngularRate> > > get3DAngularRate(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<AngularRate> > > >get4DAngularRate(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<AngularRate> > > >get4DAngularRate(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -571,20 +571,20 @@ public:
 	
 
 			
-	static ArrayTime getArrayTime(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static ArrayTime getArrayTime(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<ArrayTime> get1DArrayTime(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<ArrayTime> get1DArrayTime(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<ArrayTime> > get2DArrayTime(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<ArrayTime> > get2DArrayTime(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<ArrayTime> > > get3DArrayTime(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<ArrayTime> > > get3DArrayTime(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<ArrayTime> > > >get4DArrayTime(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<ArrayTime> > > >get4DArrayTime(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -610,20 +610,20 @@ public:
 	
 
 			
-	static ArrayTimeInterval getArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static ArrayTimeInterval getArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<ArrayTimeInterval> get1DArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<ArrayTimeInterval> get1DArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<ArrayTimeInterval> > get2DArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<ArrayTimeInterval> > get2DArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<ArrayTimeInterval> > > get3DArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<ArrayTimeInterval> > > get3DArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<ArrayTimeInterval> > > >get4DArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<ArrayTimeInterval> > > >get4DArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -649,20 +649,20 @@ public:
 	
 
 			
-	static Complex getComplex(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static Complex getComplex(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<Complex> get1DComplex(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<Complex> get1DComplex(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<Complex> > get2DComplex(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<Complex> > get2DComplex(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<Complex> > > get3DComplex(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<Complex> > > get3DComplex(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<Complex> > > >get4DComplex(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<Complex> > > >get4DComplex(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -688,20 +688,20 @@ public:
 	
 
 			
-	static Entity getEntity(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static Entity getEntity(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<Entity> get1DEntity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<Entity> get1DEntity(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<Entity> > get2DEntity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<Entity> > get2DEntity(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<Entity> > > get3DEntity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<Entity> > > get3DEntity(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<Entity> > > >get4DEntity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<Entity> > > >get4DEntity(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -727,20 +727,20 @@ public:
 	
 
 			
-	static EntityId getEntityId(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static EntityId getEntityId(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<EntityId> get1DEntityId(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<EntityId> get1DEntityId(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<EntityId> > get2DEntityId(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<EntityId> > get2DEntityId(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<EntityId> > > get3DEntityId(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<EntityId> > > get3DEntityId(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<EntityId> > > >get4DEntityId(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<EntityId> > > >get4DEntityId(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -766,20 +766,20 @@ public:
 	
 
 			
-	static EntityRef getEntityRef(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static EntityRef getEntityRef(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<EntityRef> get1DEntityRef(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<EntityRef> get1DEntityRef(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<EntityRef> > get2DEntityRef(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<EntityRef> > get2DEntityRef(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<EntityRef> > > get3DEntityRef(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<EntityRef> > > get3DEntityRef(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<EntityRef> > > >get4DEntityRef(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<EntityRef> > > >get4DEntityRef(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -805,20 +805,20 @@ public:
 	
 
 			
-	static Flux getFlux(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static Flux getFlux(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<Flux> get1DFlux(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<Flux> get1DFlux(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<Flux> > get2DFlux(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<Flux> > get2DFlux(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<Flux> > > get3DFlux(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<Flux> > > get3DFlux(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<Flux> > > >get4DFlux(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<Flux> > > >get4DFlux(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -844,20 +844,20 @@ public:
 	
 
 			
-	static Frequency getFrequency(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static Frequency getFrequency(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<Frequency> get1DFrequency(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<Frequency> get1DFrequency(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<Frequency> > get2DFrequency(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<Frequency> > get2DFrequency(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<Frequency> > > get3DFrequency(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<Frequency> > > get3DFrequency(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<Frequency> > > >get4DFrequency(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<Frequency> > > >get4DFrequency(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -883,20 +883,20 @@ public:
 	
 
 			
-	static Humidity getHumidity(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static Humidity getHumidity(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<Humidity> get1DHumidity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<Humidity> get1DHumidity(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<Humidity> > get2DHumidity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<Humidity> > get2DHumidity(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<Humidity> > > get3DHumidity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<Humidity> > > get3DHumidity(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<Humidity> > > >get4DHumidity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<Humidity> > > >get4DHumidity(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -922,20 +922,20 @@ public:
 	
 
 			
-	static Interval getInterval(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static Interval getInterval(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<Interval> get1DInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<Interval> get1DInterval(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<Interval> > get2DInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<Interval> > get2DInterval(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<Interval> > > get3DInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<Interval> > > get3DInterval(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<Interval> > > >get4DInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<Interval> > > >get4DInterval(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -961,20 +961,20 @@ public:
 	
 
 			
-	static Length getLength(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static Length getLength(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<Length> get1DLength(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<Length> get1DLength(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<Length> > get2DLength(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<Length> > get2DLength(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<Length> > > get3DLength(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<Length> > > get3DLength(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<Length> > > >get4DLength(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<Length> > > >get4DLength(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -1000,20 +1000,20 @@ public:
 	
 
 			
-	static Pressure getPressure(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static Pressure getPressure(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<Pressure> get1DPressure(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<Pressure> get1DPressure(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<Pressure> > get2DPressure(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<Pressure> > get2DPressure(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<Pressure> > > get3DPressure(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<Pressure> > > get3DPressure(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<Pressure> > > >get4DPressure(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<Pressure> > > >get4DPressure(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -1039,20 +1039,20 @@ public:
 	
 
 			
-	static Speed getSpeed(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static Speed getSpeed(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<Speed> get1DSpeed(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<Speed> get1DSpeed(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<Speed> > get2DSpeed(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<Speed> > get2DSpeed(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<Speed> > > get3DSpeed(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<Speed> > > get3DSpeed(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<Speed> > > >get4DSpeed(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<Speed> > > >get4DSpeed(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -1082,20 +1082,20 @@ public:
 	
 
 			
-	static Tag getTag(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static Tag getTag(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<Tag> get1DTag(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<Tag> get1DTag(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<Tag> > get2DTag(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<Tag> > get2DTag(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<Tag> > > get3DTag(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<Tag> > > get3DTag(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<Tag> > > >get4DTag(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<Tag> > > >get4DTag(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -1121,20 +1121,20 @@ public:
 	
 
 			
-	static Temperature getTemperature(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException);
+	static Temperature getTemperature(const string &name, const string &tableName, const string &xmlDoc) ;
+	// throw (ConversionException);
 
-	static vector<Temperature> get1DTemperature(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);
+	static vector<Temperature> get1DTemperature(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);
 		
-	static vector< vector<Temperature> > get2DTemperature(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector<Temperature> > get2DTemperature(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector< vector< vector<Temperature> > > get3DTemperature(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector< vector< vector<Temperature> > > get3DTemperature(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 	
-	static vector<vector< vector< vector<Temperature> > > >get4DTemperature(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException);	
+	static vector<vector< vector< vector<Temperature> > > >get4DTemperature(const string &name, const string &tableName, const string &xmlDoc);
+	// throw (ConversionException);	
 
 		
 
@@ -1155,20 +1155,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<int> > > >data, const string &name, string &buf);
 	
     
-	static vector<int>& get1DIntegerFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<int>& attribute)
-	throw (ConversionException);
+	static vector<int>& get1DIntegerFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<int>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<int> >& get2DIntegerFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<int> >& attribute)
-	throw (ConversionException);
+	static vector <vector<int> >& get2DIntegerFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<int> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<int> > >& get3DIntegerFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<int> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<int> > >& get3DIntegerFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<int> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<int> > > >& get4DIntegerFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<int> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<int> > > >& get4DIntegerFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<int> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1179,20 +1179,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<short> > > >data, const string &name, string &buf);
 	
     
-	static vector<short>& get1DShortFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<short>& attribute)
-	throw (ConversionException);
+	static vector<short>& get1DShortFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<short>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<short> >& get2DShortFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<short> >& attribute)
-	throw (ConversionException);
+	static vector <vector<short> >& get2DShortFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<short> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<short> > >& get3DShortFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<short> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<short> > >& get3DShortFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<short> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<short> > > >& get4DShortFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<short> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<short> > > >& get4DShortFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<short> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1203,20 +1203,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<long long> > > >data, const string &name, string &buf);
 	
     
-	static vector<long long>& get1DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<long long>& attribute)
-	throw (ConversionException);
+	static vector<long long>& get1DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<long long>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<long long> >& get2DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<long long> >& attribute)
-	throw (ConversionException);
+	static vector <vector<long long> >& get2DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<long long> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<long long> > >& get3DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<long long> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<long long> > >& get3DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<long long> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<long long> > > >& get4DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<long long> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<long long> > > >& get4DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<long long> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1227,20 +1227,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<char> > > >data, const string &name, string &buf);
 	
     
-	static vector<char>& get1DByteFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<char>& attribute)
-	throw (ConversionException);
+	static vector<char>& get1DByteFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<char>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<char> >& get2DByteFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<char> >& attribute)
-	throw (ConversionException);
+	static vector <vector<char> >& get2DByteFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<char> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<char> > >& get3DByteFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<char> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<char> > >& get3DByteFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<char> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<char> > > >& get4DByteFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<char> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<char> > > >& get4DByteFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<char> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1251,20 +1251,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<float> > > >data, const string &name, string &buf);
 	
     
-	static vector<float>& get1DFloatFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<float>& attribute)
-	throw (ConversionException);
+	static vector<float>& get1DFloatFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<float>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<float> >& get2DFloatFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<float> >& attribute)
-	throw (ConversionException);
+	static vector <vector<float> >& get2DFloatFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<float> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<float> > >& get3DFloatFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<float> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<float> > >& get3DFloatFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<float> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<float> > > >& get4DFloatFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<float> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<float> > > >& get4DFloatFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<float> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1275,20 +1275,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<double> > > >data, const string &name, string &buf);
 	
     
-	static vector<double>& get1DDoubleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<double>& attribute)
-	throw (ConversionException);
+	static vector<double>& get1DDoubleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<double>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<double> >& get2DDoubleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<double> >& attribute)
-	throw (ConversionException);
+	static vector <vector<double> >& get2DDoubleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<double> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<double> > >& get3DDoubleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<double> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<double> > >& get3DDoubleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<double> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<double> > > >& get4DDoubleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<double> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<double> > > >& get4DDoubleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<double> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1299,20 +1299,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<unsigned char> > > >data, const string &name, string &buf);
 	
     
-	static vector<unsigned char>& get1DCharacterFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<unsigned char>& attribute)
-	throw (ConversionException);
+	static vector<unsigned char>& get1DCharacterFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<unsigned char>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<unsigned char> >& get2DCharacterFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<unsigned char> >& attribute)
-	throw (ConversionException);
+	static vector <vector<unsigned char> >& get2DCharacterFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<unsigned char> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<unsigned char> > >& get3DCharacterFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<unsigned char> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<unsigned char> > >& get3DCharacterFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<unsigned char> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<unsigned char> > > >& get4DCharacterFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<unsigned char> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<unsigned char> > > >& get4DCharacterFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<unsigned char> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1323,20 +1323,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<bool> > > >data, const string &name, string &buf);
 	
     
-	static vector<bool>& get1DBooleanFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<bool>& attribute)
-	throw (ConversionException);
+	static vector<bool>& get1DBooleanFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<bool>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<bool> >& get2DBooleanFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<bool> >& attribute)
-	throw (ConversionException);
+	static vector <vector<bool> >& get2DBooleanFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<bool> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<bool> > >& get3DBooleanFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<bool> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<bool> > >& get3DBooleanFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<bool> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<bool> > > >& get4DBooleanFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<bool> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<bool> > > >& get4DBooleanFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<bool> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1350,20 +1350,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<Angle> > > >data, const string &name, string &buf);
 	
     
-	static vector<Angle>& get1DAngleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Angle>& attribute)
-	throw (ConversionException);
+	static vector<Angle>& get1DAngleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Angle>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<Angle> >& get2DAngleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Angle> >& attribute)
-	throw (ConversionException);
+	static vector <vector<Angle> >& get2DAngleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Angle> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<Angle> > >& get3DAngleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Angle> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<Angle> > >& get3DAngleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Angle> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<Angle> > > >& get4DAngleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Angle> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<Angle> > > >& get4DAngleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Angle> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1374,20 +1374,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<AngularRate> > > >data, const string &name, string &buf);
 	
     
-	static vector<AngularRate>& get1DAngularRateFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<AngularRate>& attribute)
-	throw (ConversionException);
+	static vector<AngularRate>& get1DAngularRateFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<AngularRate>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<AngularRate> >& get2DAngularRateFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<AngularRate> >& attribute)
-	throw (ConversionException);
+	static vector <vector<AngularRate> >& get2DAngularRateFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<AngularRate> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<AngularRate> > >& get3DAngularRateFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<AngularRate> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<AngularRate> > >& get3DAngularRateFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<AngularRate> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<AngularRate> > > >& get4DAngularRateFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<AngularRate> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<AngularRate> > > >& get4DAngularRateFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<AngularRate> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1398,20 +1398,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<ArrayTime> > > >data, const string &name, string &buf);
 	
     
-	static vector<ArrayTime>& get1DArrayTimeFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<ArrayTime>& attribute)
-	throw (ConversionException);
+	static vector<ArrayTime>& get1DArrayTimeFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<ArrayTime>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<ArrayTime> >& get2DArrayTimeFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<ArrayTime> >& attribute)
-	throw (ConversionException);
+	static vector <vector<ArrayTime> >& get2DArrayTimeFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<ArrayTime> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<ArrayTime> > >& get3DArrayTimeFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<ArrayTime> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<ArrayTime> > >& get3DArrayTimeFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<ArrayTime> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<ArrayTime> > > >& get4DArrayTimeFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<ArrayTime> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<ArrayTime> > > >& get4DArrayTimeFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<ArrayTime> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1437,20 +1437,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<Flux> > > >data, const string &name, string &buf);
 	
     
-	static vector<Flux>& get1DFluxFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Flux>& attribute)
-	throw (ConversionException);
+	static vector<Flux>& get1DFluxFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Flux>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<Flux> >& get2DFluxFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Flux> >& attribute)
-	throw (ConversionException);
+	static vector <vector<Flux> >& get2DFluxFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Flux> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<Flux> > >& get3DFluxFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Flux> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<Flux> > >& get3DFluxFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Flux> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<Flux> > > >& get4DFluxFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Flux> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<Flux> > > >& get4DFluxFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Flux> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1461,20 +1461,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<Frequency> > > >data, const string &name, string &buf);
 	
     
-	static vector<Frequency>& get1DFrequencyFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Frequency>& attribute)
-	throw (ConversionException);
+	static vector<Frequency>& get1DFrequencyFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Frequency>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<Frequency> >& get2DFrequencyFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Frequency> >& attribute)
-	throw (ConversionException);
+	static vector <vector<Frequency> >& get2DFrequencyFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Frequency> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<Frequency> > >& get3DFrequencyFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Frequency> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<Frequency> > >& get3DFrequencyFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Frequency> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<Frequency> > > >& get4DFrequencyFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Frequency> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<Frequency> > > >& get4DFrequencyFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Frequency> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1485,20 +1485,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<Humidity> > > >data, const string &name, string &buf);
 	
     
-	static vector<Humidity>& get1DHumidityFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Humidity>& attribute)
-	throw (ConversionException);
+	static vector<Humidity>& get1DHumidityFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Humidity>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<Humidity> >& get2DHumidityFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Humidity> >& attribute)
-	throw (ConversionException);
+	static vector <vector<Humidity> >& get2DHumidityFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Humidity> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<Humidity> > >& get3DHumidityFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Humidity> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<Humidity> > >& get3DHumidityFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Humidity> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<Humidity> > > >& get4DHumidityFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Humidity> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<Humidity> > > >& get4DHumidityFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Humidity> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1509,20 +1509,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<Interval> > > >data, const string &name, string &buf);
 	
     
-	static vector<Interval>& get1DIntervalFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Interval>& attribute)
-	throw (ConversionException);
+	static vector<Interval>& get1DIntervalFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Interval>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<Interval> >& get2DIntervalFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Interval> >& attribute)
-	throw (ConversionException);
+	static vector <vector<Interval> >& get2DIntervalFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Interval> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<Interval> > >& get3DIntervalFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Interval> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<Interval> > >& get3DIntervalFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Interval> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<Interval> > > >& get4DIntervalFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Interval> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<Interval> > > >& get4DIntervalFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Interval> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1533,20 +1533,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<Length> > > >data, const string &name, string &buf);
 	
     
-	static vector<Length>& get1DLengthFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Length>& attribute)
-	throw (ConversionException);
+	static vector<Length>& get1DLengthFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Length>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<Length> >& get2DLengthFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Length> >& attribute)
-	throw (ConversionException);
+	static vector <vector<Length> >& get2DLengthFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Length> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<Length> > >& get3DLengthFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Length> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<Length> > >& get3DLengthFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Length> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<Length> > > >& get4DLengthFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Length> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<Length> > > >& get4DLengthFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Length> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1557,20 +1557,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<Pressure> > > >data, const string &name, string &buf);
 	
     
-	static vector<Pressure>& get1DPressureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Pressure>& attribute)
-	throw (ConversionException);
+	static vector<Pressure>& get1DPressureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Pressure>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<Pressure> >& get2DPressureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Pressure> >& attribute)
-	throw (ConversionException);
+	static vector <vector<Pressure> >& get2DPressureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Pressure> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<Pressure> > >& get3DPressureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Pressure> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<Pressure> > >& get3DPressureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Pressure> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<Pressure> > > >& get4DPressureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Pressure> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<Pressure> > > >& get4DPressureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Pressure> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1581,20 +1581,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<Speed> > > >data, const string &name, string &buf);
 	
     
-	static vector<Speed>& get1DSpeedFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Speed>& attribute)
-	throw (ConversionException);
+	static vector<Speed>& get1DSpeedFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Speed>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<Speed> >& get2DSpeedFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Speed> >& attribute)
-	throw (ConversionException);
+	static vector <vector<Speed> >& get2DSpeedFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Speed> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<Speed> > >& get3DSpeedFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Speed> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<Speed> > >& get3DSpeedFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Speed> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<Speed> > > >& get4DSpeedFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Speed> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<Speed> > > >& get4DSpeedFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Speed> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	
@@ -1608,20 +1608,20 @@ public:
 	static void toXMLBase64(vector< vector< vector< vector<Temperature> > > >data, const string &name, string &buf);
 	
     
-	static vector<Temperature>& get1DTemperatureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Temperature>& attribute)
-	throw (ConversionException);
+	static vector<Temperature>& get1DTemperatureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Temperature>& attribute);
+	// throw (ConversionException);
 	
 	 
-	static vector <vector<Temperature> >& get2DTemperatureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Temperature> >& attribute)
-	throw (ConversionException);
+	static vector <vector<Temperature> >& get2DTemperatureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Temperature> >& attribute);
+	// throw (ConversionException);
 	
  	
-	static vector <vector <vector<Temperature> > >& get3DTemperatureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Temperature> > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector<Temperature> > >& get3DTemperatureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Temperature> > >& attribute);
+	// throw (ConversionException);
 	
 	
-	static vector <vector <vector <vector<Temperature> > > >& get4DTemperatureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Temperature> > > >& attribute)
-	throw (ConversionException);
+	static vector <vector <vector <vector<Temperature> > > >& get4DTemperatureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector <vector<Temperature> > > >& attribute);
+	// throw (ConversionException);
 	
 
 	

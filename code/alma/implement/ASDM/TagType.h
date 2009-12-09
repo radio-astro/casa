@@ -134,6 +134,8 @@ class TagType {
 	
 
 	
+
+	
 	/**
 	  * The TagType for a Doppler Tag.
 	  */
@@ -230,6 +232,11 @@ class TagType {
 	
 
 	
+	/**
+	  * The TagType for a SBSummary Tag.
+	  */
+	static const TagType*  SBSummary ;
+	
 
 	
 
@@ -240,13 +247,6 @@ class TagType {
 	  * The TagType for a Source Tag.
 	  */
 	static const TagType*  Source ;
-	
-
-	
-	/**
-	  * The TagType for a SourceParameter Tag.
-	  */
-	static const TagType*  SourceParameter ;
 	
 
 	
@@ -382,6 +382,8 @@ class TagType {
 	
 
 	
+
+	
 	if (TagType:: Doppler) { delete TagType::Doppler; TagType::Doppler = 0; }
 	
 
@@ -442,6 +444,8 @@ class TagType {
 	
 
 	
+	if (TagType:: SBSummary) { delete TagType::SBSummary; TagType::SBSummary = 0; }
+	
 
 	
 
@@ -449,10 +453,6 @@ class TagType {
 
 	
 	if (TagType:: Source) { delete TagType::Source; TagType::Source = 0; }
-	
-
-	
-	if (TagType:: SourceParameter) { delete TagType::SourceParameter; TagType::SourceParameter = 0; }
 	
 
 	

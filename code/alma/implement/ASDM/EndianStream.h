@@ -19,12 +19,14 @@ namespace asdm {
 			~EndianOSStream();
 		
 			void writeBoolean(bool b);
+			void writeBool(bool b);
 			void writeByte(char c);
 			void writeShort(short int s);
 			void writeUShort(unsigned short int s);
 			void writeInt(int i);
 			void writeUInt(unsigned int ui);
 			void writeLongLong(long long int li);
+			void writeLong(long long int li);
 			void writeULongLong(unsigned long long int li);
 			void writeFloat(float f);
 			void writeDouble(double d);	
@@ -43,6 +45,7 @@ namespace asdm {
 			int readInt();
 			unsigned int readUInt();
 			long long int readLongLong();
+			long long int readLong();
 			unsigned long long int readULongLong();
 			float readFloat();
 			double readDouble();

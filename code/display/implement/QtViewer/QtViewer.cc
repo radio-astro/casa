@@ -25,7 +25,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
-
+#include <display/QtViewer/QtDBusViewerAdaptor.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
 #include <display/QtViewer/QtDataManager.qo.h>
 #include <display/QtViewer/QtDataOptionsPanel.qo.h>
@@ -36,8 +36,17 @@ extern int qInitResources_QtViewer();
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-QtViewer::QtViewer() : QtViewerBase(), qdm_(0), qdo_(0),
-		       autoDDOptionsShow(True) {
+QString QtViewer::name_;
+
+const QString &QtViewer::name( ) {
+    return name_;
+}
+
+QtViewer::QtViewer( bool is_server ) : QtViewerBase(), qdm_(0), qdo_(0), dbus_(NULL),
+				       autoDDOptionsShow(True)
+ {
+
+  name_ = (is_server ? "view_server" : "viewer");
 
   qInitResources_QtViewer();
 	// Makes QtViewer icons, etc. available via Qt resource system.
@@ -57,13 +66,16 @@ QtViewer::QtViewer() : QtViewerBase(), qdm_(0), qdo_(0),
   
   qdo_ = new QtDataOptionsPanel(this);
 
+  dbus_ = new QtDBusViewerAdaptor(this);
+  dbus_->connectToDBus();
 }
 
 
 QtViewer::~QtViewer() {
   if(qdm_!=0) delete qdm_;
-  if(qdo_!=0) delete qdo_;  }
-  
+  if(qdo_!=0) delete qdo_;
+  // wonder if we need to delete dbus adaptor...
+}
   
   
 void QtViewer::showDataManager() {
@@ -93,7 +105,7 @@ void QtViewer::hideAllSubwindows() {
   hideDataOptionsPanel();  }
 
     
-void QtViewer::createDPG() {
+QtDisplayPanelGui *QtViewer::createDPG() {
   // Create a main display panel Gui.
   //
   QtDisplayPanelGui* dpg = new QtDisplayPanelGui(this);
@@ -111,7 +123,8 @@ void QtViewer::createDPG() {
 	// restarts of the Qt event loop.  In that case, QtClean manages
 	// its own dpg storage.
 
-  dpg->show();  }
+  dpg->show();
+  return dpg; }
   
   
 void QtViewer::quit() {  hideAllSubwindows(); QtViewerBase::quit();  }

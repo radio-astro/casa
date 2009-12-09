@@ -62,6 +62,8 @@ class logsink
 
     bool showconsole(const bool onconsole = false);
 
+    std::string logfile();
+
     private:
 
 #include <xmlcasa/casa/logsink_private.h>

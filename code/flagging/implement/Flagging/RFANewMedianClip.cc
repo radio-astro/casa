@@ -110,7 +110,7 @@ Bool RFANewMedianClip::newChunk (Int &maxmem)
     return active=False;
 
   // create temp lattice for evalues
-  evalue.init(num(CHAN),num(IFR),num(TIME), 0, mmdiff ,2);
+  evalue.init(num(CHAN),num(IFR),num(TIME), num(CORR), nAgent, 0, mmdiff ,2);
   //init stdev matrix
   stdev.resize(num(CHAN), num(IFR));
   stdev.set(0);

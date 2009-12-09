@@ -97,6 +97,15 @@ foreach $host (keys %dir) {
 		next;
 	    }
 
+            $unextracted_size = `gunzip -l result-*tar.gz | grep totals | awk '{print $2}'`;
+            chomp($unextracted_size);
+
+            if ($unextracted_size > 100*1024*1024) {
+                warn "$host: data is way too big!";
+                system("/bin/ls -1 *tar.gz 1>&2");
+                next;
+            }
+
 	    # Wanted to use in the following system call
 	    # tar's --keep-newer-files option
 	    # to overwrite previous Log/* files with later. But the
@@ -104,6 +113,7 @@ foreach $host (keys %dir) {
 	    #
 	    # Instead, sort the tar.gz files by date and extract
 	    # in that order.
+
 	    if (mysystem("/bin/ls -1tr result-*tar.gz | xargs -n 1 tar zxf")) {
 		warn "$host: $!";
 		# tolerate if one tgz file is invalid   next;

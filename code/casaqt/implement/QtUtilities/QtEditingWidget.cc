@@ -26,7 +26,7 @@
 //# $Id: $
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 
-#include <QFileDialog>
+#include <casaqt/QtUtilities/QtFileDialog.qo.h>
 
 namespace casa {
 
@@ -81,6 +81,13 @@ void QtLabelWidget::addRadioButtonsToGroup(QButtonGroup* group) const {
 void QtLabelWidget::labelChanged(bool check) {
     if(!check) return;
     
+    if(defaultButton->isChecked()) {
+        bool oldCheck = check;
+        check = false;
+        customEdit->setText(itsDefault_.c_str());
+        check = oldCheck;
+    }
+    
     emit changed();
     if(getValue() != itsValue_) emit differentFromSet();
 }
@@ -113,9 +120,9 @@ void QtFileWidget::setFile(const String& f) {
 
 void QtFileWidget::browse() {
     QString f;
-    if(isDirectory_) f = QFileDialog::getExistingDirectory();
-    else if(isSave_) f = QFileDialog::getSaveFileName();
-    else             f = QFileDialog::getOpenFileName();
+    if(isDirectory_) f = QtFileDialog::qgetExistingDir(this);
+    else if(isSave_) f = QtFileDialog::qgetAnyFile(this);
+    else             f = QtFileDialog::qgetExistingFile(this);
     if(!f.isEmpty()) file->setText(f);
 }
 

@@ -77,8 +77,19 @@ using namespace enumerations;
 	
 
 	
+#include "CReceiverBand.h"
+using namespace ReceiverBandMod;
+	
+
+	
+
+	
+
+	
 #include "CAntennaMake.h"
 using namespace AntennaMakeMod;
+	
+
 	
 
 	
@@ -88,15 +99,6 @@ using namespace AntennaMakeMod;
 using namespace PolarizationTypeMod;
 	
 
-	
-
-	
-
-	
-
-	
-#include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
@@ -143,95 +145,121 @@ class ASDM;
 class CalPrimaryBeamRow;
 /**
  * The CalPrimaryBeamTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Result of Primary Beam Map measurement.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalPrimaryBeam </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaName </TD>
+ 		 
+ * <TD> string</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the name of the antenna. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> receiverBand </TD>
+ 		 
+ * <TD> ReceiverBandMod::ReceiverBand</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies the receiver band. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> antennaName </TD> 
- * <TD> string </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalReduction Table. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> antennaMake </TD> 
- * <TD> AntennaMakeMod::AntennaMake </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numReceptor </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> polarizationTypes </TD> 
- * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
- * <TD>  numReceptor </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> startValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the end time of result validity period. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> antennaMake </TD> 
+ * <TD> AntennaMakeMod::AntennaMake </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the antenna make. </TD>
  * </TR>
 	
  * <TR>
  * <TD> frequencyRange </TD> 
  * <TD> vector<Frequency > </TD>
- * <TD>   </TD> 
+ * <TD>  2 </TD> 
+ * <TD> &nbsp;the range of frequencies over which the result is valid. </TD>
  * </TR>
 	
  * <TR>
- * <TD> receiverBand </TD> 
- * <TD> ReceiverBandMod::ReceiverBand </TD>
+ * <TD> numReceptor </TD> 
+ * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of receptors. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> polarizationTypes </TD> 
+ * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;identifies the polarizations types of the receptors (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> mainBeamEfficiency </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;the main beam efficiency as derived from the beam map. </TD>
  * </TR>
 	
  * <TR>
  * <TD> beamMapUID </TD> 
  * <TD> EntityRef </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;refers to the beam map image. </TD>
  * </TR>
 	
  * <TR>
  * <TD> relativeAmplitudeRms </TD> 
  * <TD> float </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the RMS fluctuations in terms of the relative beam amplitude. </TD>
  * </TR>
 	
 
@@ -307,38 +335,40 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param antennaName. 
+	
+ 	 * @param receiverBand. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
-	
- 	 * @param antennaName. 
-	
- 	 * @param antennaMake. 
-	
- 	 * @param numReceptor. 
-	
- 	 * @param polarizationTypes. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
+ 	 * @param antennaMake. 
+	
  	 * @param frequencyRange. 
 	
- 	 * @param receiverBand. 
+ 	 * @param numReceptor. 
+	
+ 	 * @param polarizationTypes. 
+	
+ 	 * @param mainBeamEfficiency. 
 	
  	 * @param beamMapUID. 
 	
  	 * @param relativeAmplitudeRms. 
 	
      */
-	CalPrimaryBeamRow *newRow(Tag calDataId, Tag calReductionId, string antennaName, AntennaMakeMod::AntennaMake antennaMake, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, float relativeAmplitudeRms);
+	CalPrimaryBeamRow *newRow(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, vector<Frequency > frequencyRange, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > mainBeamEfficiency, EntityRef beamMapUID, float relativeAmplitudeRms);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalPrimaryBeamRow *newRowFull(Tag calDataId, Tag calReductionId, string antennaName, AntennaMakeMod::AntennaMake antennaMake, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, float relativeAmplitudeRms);
+	CalPrimaryBeamRow *newRowFull(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, vector<Frequency > frequencyRange, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > mainBeamEfficiency, EntityRef beamMapUID, float relativeAmplitudeRms);
 
 
 	/**
@@ -404,15 +434,17 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param antennaName. 
+	
+	 * @param receiverBand. 
+	
 	 * @param calDataId. 
 	
 	 * @param calReductionId. 
 	
-	 * @param antennaName. 
-	
  	 *
 	 */
- 	CalPrimaryBeamRow* getRowByKey(Tag calDataId, Tag calReductionId, string antennaName);
+ 	CalPrimaryBeamRow* getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId);
 
  	 	
 
@@ -424,32 +456,34 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
+ 	 * @param antennaName.
+ 	 		
+ 	 * @param receiverBand.
+ 	 		
  	 * @param calDataId.
  	 		
  	 * @param calReductionId.
- 	 		
- 	 * @param antennaName.
- 	 		
- 	 * @param antennaMake.
- 	 		
- 	 * @param numReceptor.
- 	 		
- 	 * @param polarizationTypes.
  	 		
  	 * @param startValidTime.
  	 		
  	 * @param endValidTime.
  	 		
+ 	 * @param antennaMake.
+ 	 		
  	 * @param frequencyRange.
  	 		
- 	 * @param receiverBand.
+ 	 * @param numReceptor.
+ 	 		
+ 	 * @param polarizationTypes.
+ 	 		
+ 	 * @param mainBeamEfficiency.
  	 		
  	 * @param beamMapUID.
  	 		
  	 * @param relativeAmplitudeRms.
  	 		 
  	 */
-	CalPrimaryBeamRow* lookup(Tag calDataId, Tag calReductionId, string antennaName, AntennaMakeMod::AntennaMake antennaMake, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, float relativeAmplitudeRms); 
+	CalPrimaryBeamRow* lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, vector<Frequency > frequencyRange, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > mainBeamEfficiency, EntityRef beamMapUID, float relativeAmplitudeRms); 
 
 
 #ifndef WITHOUT_ACS
@@ -469,43 +503,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalPrimaryBeamTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalPrimaryBeamTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalPrimaryBeam (CalPrimaryBeamTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalPrimaryBeam (CalPrimaryBeamTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -580,8 +620,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalPrimaryBeamRow* checkAndAdd(CalPrimaryBeamRow* x) throw (DuplicateKey);
+	CalPrimaryBeamRow* checkAndAdd(CalPrimaryBeamRow* x) ;
 
 
 
@@ -595,7 +637,7 @@ private:
 	vector<CalPrimaryBeamRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

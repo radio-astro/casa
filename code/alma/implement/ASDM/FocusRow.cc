@@ -41,28 +41,22 @@ using std::set;
 #include <FocusRow.h>
 #include <FocusTable.h>
 
-#include <FocusModelTable.h>
-#include <FocusModelRow.h>
-
-#include <FeedTable.h>
-#include <FeedRow.h>
-
 #include <AntennaTable.h>
 #include <AntennaRow.h>
+
+#include <FocusModelTable.h>
+#include <FocusModelRow.h>
 	
 
 using asdm::ASDM;
 using asdm::FocusRow;
 using asdm::FocusTable;
 
-using asdm::FocusModelTable;
-using asdm::FocusModelRow;
-
-using asdm::FeedTable;
-using asdm::FeedRow;
-
 using asdm::AntennaTable;
 using asdm::AntennaRow;
+
+using asdm::FocusModelTable;
+using asdm::FocusModelRow;
 
 
 #include <Parser.h>
@@ -116,36 +110,6 @@ namespace asdm {
 		
 		
 			
-		x->xFocusPosition = xFocusPosition.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->yFocusPosition = yFocusPosition.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->zFocusPosition = zFocusPosition.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		
-			
 				
 		x->focusTracking = focusTracking;
  				
@@ -158,7 +122,12 @@ namespace asdm {
 		
 		
 			
-		x->xFocusOffset = xFocusOffset.toIDLLength();
+		x->focusOffset.length(focusOffset.size());
+		for (unsigned int i = 0; i < focusOffset.size(); ++i) {
+			
+			x->focusOffset[i] = focusOffset.at(i).toIDLLength();
+			
+	 	}
 			
 		
 	
@@ -166,19 +135,16 @@ namespace asdm {
 	
   		
 		
-		
-			
-		x->yFocusOffset = yFocusOffset.toIDLLength();
-			
-		
-	
-
-	
-  		
+		x->measuredFocusPositionExists = measuredFocusPositionExists;
 		
 		
 			
-		x->zFocusOffset = zFocusOffset.toIDLLength();
+		x->measuredFocusPosition.length(measuredFocusPosition.size());
+		for (unsigned int i = 0; i < measuredFocusPosition.size(); ++i) {
+			
+			x->measuredFocusPosition[i] = measuredFocusPosition.at(i).toIDLLength();
+			
+	 	}
 			
 		
 	
@@ -204,27 +170,14 @@ namespace asdm {
 	 	
 			
 				
-		x->feedId = feedId;
+		x->focusModelId = focusModelId;
  				
  			
 	 	 		
   	
 
 	
-  	
- 		
 		
-	 	
-			
-		x->focusModelId = focusModelId.toIDLTag();
-			
-	 	 		
-  	
-
-	
-		
-	
-
 	
 
 	
@@ -241,7 +194,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct FocusRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void FocusRow::setFromIDL (FocusRowIDL x) throw(ConversionException) {
+	void FocusRow::setFromIDL (FocusRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -251,36 +204,6 @@ namespace asdm {
 		
 			
 		setTimeInterval(ArrayTimeInterval (x.timeInterval));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setXFocusPosition(Length (x.xFocusPosition));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setYFocusPosition(Length (x.yFocusPosition));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setZFocusPosition(Length (x.zFocusPosition));
 			
  		
 		
@@ -300,29 +223,34 @@ namespace asdm {
 		
 		
 			
-		setXFocusOffset(Length (x.xFocusOffset));
+		focusOffset .clear();
+		for (unsigned int i = 0; i <x.focusOffset.length(); ++i) {
 			
- 		
+			focusOffset.push_back(Length (x.focusOffset[i]));
+			
+		}
+			
+  		
 		
 	
 
 	
 		
-		
-			
-		setYFocusOffset(Length (x.yFocusOffset));
-			
- 		
-		
-	
-
-	
+		measuredFocusPositionExists = x.measuredFocusPositionExists;
+		if (x.measuredFocusPositionExists) {
 		
 		
 			
-		setZFocusOffset(Length (x.zFocusOffset));
+		measuredFocusPosition .clear();
+		for (unsigned int i = 0; i <x.measuredFocusPosition.length(); ++i) {
 			
- 		
+			measuredFocusPosition.push_back(Length (x.measuredFocusPosition[i]));
+			
+		}
+			
+  		
+		
+		}
 		
 	
 
@@ -343,7 +271,7 @@ namespace asdm {
 		
 		
 			
-		setFeedId(x.feedId);
+		setFocusModelId(x.focusModelId);
   			
  		
 		
@@ -351,24 +279,12 @@ namespace asdm {
 
 	
 		
-		
-			
-		setFocusModelId(Tag (x.focusModelId));
-			
- 		
-		
-	
-
-	
-		
-	
-
 	
 
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Focus");
+			throw ConversionException (err.getMessage(),"Focus");
 		}
 	}
 #endif
@@ -394,30 +310,6 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(xFocusPosition, "xFocusPosition", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(yFocusPosition, "yFocusPosition", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(zFocusPosition, "zFocusPosition", buf);
-		
-		
-	
-
-  	
- 		
-		
 		Parser::toXML(focusTracking, "focusTracking", buf);
 		
 		
@@ -426,24 +318,20 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(xFocusOffset, "xFocusOffset", buf);
+		Parser::toXML(focusOffset, "focusOffset", buf);
 		
 		
 	
 
   	
  		
+		if (measuredFocusPositionExists) {
 		
-		Parser::toXML(yFocusOffset, "yFocusOffset", buf);
+		
+		Parser::toXML(measuredFocusPosition, "measuredFocusPosition", buf);
 		
 		
-	
-
-  	
- 		
-		
-		Parser::toXML(zFocusOffset, "zFocusOffset", buf);
-		
+		}
 		
 	
 
@@ -454,14 +342,6 @@ namespace asdm {
  		
 		
 		Parser::toXML(antennaId, "antennaId", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(feedId, "feedId", buf);
 		
 		
 	
@@ -480,8 +360,6 @@ namespace asdm {
 
 	
 
-	
-
 		
 		buf.append("</row>\n");
 		return buf;
@@ -492,7 +370,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void FocusRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void FocusRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -509,30 +387,6 @@ namespace asdm {
 	
   		
 			
-	  	setXFocusPosition(Parser::getLength("xFocusPosition","Focus",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setYFocusPosition(Parser::getLength("yFocusPosition","Focus",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setZFocusPosition(Parser::getLength("zFocusPosition","Focus",rowDoc));
-			
-		
-	
-
-	
-  		
-			
 	  	setFocusTracking(Parser::getBoolean("focusTracking","Focus",rowDoc));
 			
 		
@@ -541,25 +395,23 @@ namespace asdm {
 	
   		
 			
-	  	setXFocusOffset(Parser::getLength("xFocusOffset","Focus",rowDoc));
-			
+					
+	  	setFocusOffset(Parser::get1DLength("focusOffset","Focus",rowDoc));
+	  			
+	  		
 		
 	
 
 	
   		
+        if (row.isStr("<measuredFocusPosition>")) {
 			
-	  	setYFocusOffset(Parser::getLength("yFocusOffset","Focus",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setZFocusOffset(Parser::getLength("zFocusOffset","Focus",rowDoc));
-			
-		
+								
+	  		setMeasuredFocusPosition(Parser::get1DLength("measuredFocusPosition","Focus",rowDoc));
+	  			
+	  		
+		}
+ 		
 	
 
 	
@@ -576,23 +428,13 @@ namespace asdm {
 	
   		
 			
-	  	setFeedId(Parser::getInteger("feedId","Feed",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setFocusModelId(Parser::getTag("focusModelId","Focus",rowDoc));
+	  	setFocusModelId(Parser::getInteger("focusModelId","Focus",rowDoc));
 			
 		
 	
 
 	
 		
-	
-
 	
 
 	
@@ -600,6 +442,136 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"Focus");
 		}
+	}
+	
+	void FocusRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	antennaId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	timeInterval.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(focusTracking);
+				
+		
+	
+
+	
+	
+		
+	Length::toBin(focusOffset, eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(focusModelId);
+				
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(measuredFocusPositionExists);
+	if (measuredFocusPositionExists) {
+	
+	
+	
+		
+	Length::toBin(measuredFocusPosition, eoss);
+		
+	
+
+	}
+
+	}
+	
+	FocusRow* FocusRow::fromBin(EndianISStream& eiss, FocusTable& table) {
+		FocusRow* row = new  FocusRow(table);
+		
+		
+		
+	
+		
+		
+		row->antennaId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->focusTracking =  eiss.readBoolean();
+			
+		
+	
+
+	
+		
+		
+			
+	
+	row->focusOffset = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+		row->focusModelId =  eiss.readInt();
+			
+		
+	
+
+		
+		
+		
+	row->measuredFocusPositionExists = eiss.readBoolean();
+	if (row->measuredFocusPositionExists) {
+		
+	
+		
+		
+			
+	
+	row->measuredFocusPosition = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -646,102 +618,6 @@ namespace asdm {
 
 	
  	/**
- 	 * Get xFocusPosition.
- 	 * @return xFocusPosition as Length
- 	 */
- 	Length FocusRow::getXFocusPosition() const {
-	
-  		return xFocusPosition;
- 	}
-
- 	/**
- 	 * Set xFocusPosition with the specified Length.
- 	 * @param xFocusPosition The Length value to which xFocusPosition is to be set.
- 	 
- 	
- 		
- 	 */
- 	void FocusRow::setXFocusPosition (Length xFocusPosition)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->xFocusPosition = xFocusPosition;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get yFocusPosition.
- 	 * @return yFocusPosition as Length
- 	 */
- 	Length FocusRow::getYFocusPosition() const {
-	
-  		return yFocusPosition;
- 	}
-
- 	/**
- 	 * Set yFocusPosition with the specified Length.
- 	 * @param yFocusPosition The Length value to which yFocusPosition is to be set.
- 	 
- 	
- 		
- 	 */
- 	void FocusRow::setYFocusPosition (Length yFocusPosition)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->yFocusPosition = yFocusPosition;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get zFocusPosition.
- 	 * @return zFocusPosition as Length
- 	 */
- 	Length FocusRow::getZFocusPosition() const {
-	
-  		return zFocusPosition;
- 	}
-
- 	/**
- 	 * Set zFocusPosition with the specified Length.
- 	 * @param zFocusPosition The Length value to which zFocusPosition is to be set.
- 	 
- 	
- 		
- 	 */
- 	void FocusRow::setZFocusPosition (Length zFocusPosition)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->zFocusPosition = zFocusPosition;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
  	 * Get focusTracking.
  	 * @return focusTracking as bool
  	 */
@@ -774,96 +650,79 @@ namespace asdm {
 
 	
  	/**
- 	 * Get xFocusOffset.
- 	 * @return xFocusOffset as Length
+ 	 * Get focusOffset.
+ 	 * @return focusOffset as vector<Length >
  	 */
- 	Length FocusRow::getXFocusOffset() const {
+ 	vector<Length > FocusRow::getFocusOffset() const {
 	
-  		return xFocusOffset;
+  		return focusOffset;
  	}
 
  	/**
- 	 * Set xFocusOffset with the specified Length.
- 	 * @param xFocusOffset The Length value to which xFocusOffset is to be set.
+ 	 * Set focusOffset with the specified vector<Length >.
+ 	 * @param focusOffset The vector<Length > value to which focusOffset is to be set.
  	 
  	
  		
  	 */
- 	void FocusRow::setXFocusOffset (Length xFocusOffset)  {
+ 	void FocusRow::setFocusOffset (vector<Length > focusOffset)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->xFocusOffset = xFocusOffset;
+ 		this->focusOffset = focusOffset;
 	
  	}
 	
 	
 
 	
+	/**
+	 * The attribute measuredFocusPosition is optional. Return true if this attribute exists.
+	 * @return true if and only if the measuredFocusPosition attribute exists. 
+	 */
+	bool FocusRow::isMeasuredFocusPositionExists() const {
+		return measuredFocusPositionExists;
+	}
+	
 
 	
  	/**
- 	 * Get yFocusOffset.
- 	 * @return yFocusOffset as Length
+ 	 * Get measuredFocusPosition, which is optional.
+ 	 * @return measuredFocusPosition as vector<Length >
+ 	 * @throw IllegalAccessException If measuredFocusPosition does not exist.
  	 */
- 	Length FocusRow::getYFocusOffset() const {
+ 	vector<Length > FocusRow::getMeasuredFocusPosition() const  {
+		if (!measuredFocusPositionExists) {
+			throw IllegalAccessException("measuredFocusPosition", "Focus");
+		}
 	
-  		return yFocusOffset;
+  		return measuredFocusPosition;
  	}
 
  	/**
- 	 * Set yFocusOffset with the specified Length.
- 	 * @param yFocusOffset The Length value to which yFocusOffset is to be set.
+ 	 * Set measuredFocusPosition with the specified vector<Length >.
+ 	 * @param measuredFocusPosition The vector<Length > value to which measuredFocusPosition is to be set.
  	 
  	
- 		
  	 */
- 	void FocusRow::setYFocusOffset (Length yFocusOffset)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->yFocusOffset = yFocusOffset;
+ 	void FocusRow::setMeasuredFocusPosition (vector<Length > measuredFocusPosition) {
+	
+ 		this->measuredFocusPosition = measuredFocusPosition;
+	
+		measuredFocusPositionExists = true;
 	
  	}
 	
 	
-
-	
-
-	
- 	/**
- 	 * Get zFocusOffset.
- 	 * @return zFocusOffset as Length
- 	 */
- 	Length FocusRow::getZFocusOffset() const {
-	
-  		return zFocusOffset;
- 	}
-
- 	/**
- 	 * Set zFocusOffset with the specified Length.
- 	 * @param zFocusOffset The Length value to which zFocusOffset is to be set.
- 	 
- 	
- 		
- 	 */
- 	void FocusRow::setZFocusOffset (Length zFocusOffset)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->zFocusOffset = zFocusOffset;
-	
- 	}
-	
+	/**
+	 * Mark measuredFocusPosition, which is an optional field, as non-existent.
+	 */
+	void FocusRow::clearMeasuredFocusPosition () {
+		measuredFocusPositionExists = false;
+	}
 	
 
 	
@@ -911,58 +770,22 @@ namespace asdm {
 
 	
  	/**
- 	 * Get feedId.
- 	 * @return feedId as int
- 	 */
- 	int FocusRow::getFeedId() const {
-	
-  		return feedId;
- 	}
-
- 	/**
- 	 * Set feedId with the specified int.
- 	 * @param feedId The int value to which feedId is to be set.
- 	 
- 	
- 		
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 	
- 	 */
- 	void FocusRow::setFeedId (int feedId)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-			throw IllegalAccessException("feedId", "Focus");
-		
-  		}
-  	
- 		this->feedId = feedId;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
  	 * Get focusModelId.
- 	 * @return focusModelId as Tag
+ 	 * @return focusModelId as int
  	 */
- 	Tag FocusRow::getFocusModelId() const {
+ 	int FocusRow::getFocusModelId() const {
 	
   		return focusModelId;
  	}
 
  	/**
- 	 * Set focusModelId with the specified Tag.
- 	 * @param focusModelId The Tag value to which focusModelId is to be set.
+ 	 * Set focusModelId with the specified int.
+ 	 * @param focusModelId The int value to which focusModelId is to be set.
  	 
  	
  		
  	 */
- 	void FocusRow::setFocusModelId (Tag focusModelId)  {
+ 	void FocusRow::setFocusModelId (int focusModelId)  {
   	
   	
   		if (hasBeenAdded) {
@@ -985,44 +808,6 @@ namespace asdm {
 		
 
 	/**
-	 * Returns the pointer to the row in the FocusModel table having FocusModel.focusModelId == focusModelId
-	 * @return a FocusModelRow*
-	 * 
-	 
-	 */
-	 FocusModelRow* FocusRow::getFocusModelUsingFocusModelId() {
-	 
-	 	return table.getContainer().getFocusModel().getRowByKey(focusModelId);
-	 }
-	 
-
-	
-
-	
-	
-	
-		
-
-	// ===> Slice link from a row of Focus table to a collection of row of Feed table.
-	
-	/**
-	 * Get the collection of row in the Feed table having their attribut feedId == this->feedId
-	 */
-	vector <FeedRow *> FocusRow::getFeeds() {
-		
-			return table.getContainer().getFeed().getRowByFeedId(feedId);
-		
-	}
-	
-
-	
-
-	
-	
-	
-		
-
-	/**
 	 * Returns the pointer to the row in the Antenna table having Antenna.antennaId == antennaId
 	 * @return a AntennaRow*
 	 * 
@@ -1033,6 +818,25 @@ namespace asdm {
 	 	return table.getContainer().getAntenna().getRowByKey(antennaId);
 	 }
 	 
+
+	
+
+	
+	
+	
+		
+
+	// ===> Slice link from a row of Focus table to a collection of row of FocusModel table.
+	
+	/**
+	 * Get the collection of row in the FocusModel table having their attribut focusModelId == this->focusModelId
+	 */
+	vector <FocusModelRow *> FocusRow::getFocusModels() {
+		
+			return table.getContainer().getFocusModel().getRowByFocusModelId(focusModelId);
+		
+	}
+	
 
 	
 
@@ -1056,13 +860,7 @@ namespace asdm {
 	
 
 	
-
-	
-
-	
-
-	
-
+		measuredFocusPositionExists = false;
 	
 
 	
@@ -1071,18 +869,8 @@ namespace asdm {
 	
 
 	
-
 	
 	
-	
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -1106,18 +894,10 @@ namespace asdm {
 	
 
 	
-
+		measuredFocusPositionExists = false;
 	
 
 	
-
-	
-
-	
-
-	
-	
-
 	
 
 	
@@ -1128,50 +908,38 @@ namespace asdm {
 		
 			antennaId = row.antennaId;
 		
-			feedId = row.feedId;
-		
 			timeInterval = row.timeInterval;
 		
 		
 		
 		
-			focusModelId = row.focusModelId;
-		
-			xFocusPosition = row.xFocusPosition;
-		
-			yFocusPosition = row.yFocusPosition;
-		
-			zFocusPosition = row.zFocusPosition;
-		
 			focusTracking = row.focusTracking;
 		
-			xFocusOffset = row.xFocusOffset;
+			focusOffset = row.focusOffset;
 		
-			yFocusOffset = row.yFocusOffset;
-		
-			zFocusOffset = row.zFocusOffset;
+			focusModelId = row.focusModelId;
 		
 		
 		
+		
+		if (row.measuredFocusPositionExists) {
+			measuredFocusPosition = row.measuredFocusPosition;		
+			measuredFocusPositionExists = true;
+		}
+		else
+			measuredFocusPositionExists = false;
 		
 		}	
 	}
 
 	
-	bool FocusRow::compareNoAutoInc(Tag antennaId, int feedId, ArrayTimeInterval timeInterval, Tag focusModelId, Length xFocusPosition, Length yFocusPosition, Length zFocusPosition, bool focusTracking, Length xFocusOffset, Length yFocusOffset, Length zFocusOffset) {
+	bool FocusRow::compareNoAutoInc(Tag antennaId, ArrayTimeInterval timeInterval, bool focusTracking, vector<Length > focusOffset, int focusModelId) {
 		bool result;
 		result = true;
 		
 	
 		
 		result = result && (this->antennaId == antennaId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->feedId == feedId);
 		
 		if (!result) return false;
 	
@@ -1185,34 +953,6 @@ namespace asdm {
 
 	
 		
-		result = result && (this->focusModelId == focusModelId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->xFocusPosition == xFocusPosition);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->yFocusPosition == yFocusPosition);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->zFocusPosition == zFocusPosition);
-		
-		if (!result) return false;
-	
-
-	
-		
 		result = result && (this->focusTracking == focusTracking);
 		
 		if (!result) return false;
@@ -1220,21 +960,14 @@ namespace asdm {
 
 	
 		
-		result = result && (this->xFocusOffset == xFocusOffset);
+		result = result && (this->focusOffset == focusOffset);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->yFocusOffset == yFocusOffset);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->zFocusOffset == zFocusOffset);
+		result = result && (this->focusModelId == focusModelId);
 		
 		if (!result) return false;
 	
@@ -1244,40 +977,20 @@ namespace asdm {
 	
 	
 	
-	bool FocusRow::compareRequiredValue(Tag focusModelId, Length xFocusPosition, Length yFocusPosition, Length zFocusPosition, bool focusTracking, Length xFocusOffset, Length yFocusOffset, Length zFocusOffset) {
+	bool FocusRow::compareRequiredValue(bool focusTracking, vector<Length > focusOffset, int focusModelId) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->focusModelId == focusModelId)) return false;
-	
-
-	
-		if (!(this->xFocusPosition == xFocusPosition)) return false;
-	
-
-	
-		if (!(this->yFocusPosition == yFocusPosition)) return false;
-	
-
-	
-		if (!(this->zFocusPosition == zFocusPosition)) return false;
-	
-
 	
 		if (!(this->focusTracking == focusTracking)) return false;
 	
 
 	
-		if (!(this->xFocusOffset == xFocusOffset)) return false;
+		if (!(this->focusOffset == focusOffset)) return false;
 	
 
 	
-		if (!(this->yFocusOffset == yFocusOffset)) return false;
-	
-
-	
-		if (!(this->zFocusOffset == zFocusOffset)) return false;
+		if (!(this->focusModelId == focusModelId)) return false;
 	
 
 		return result;
@@ -1295,21 +1008,11 @@ namespace asdm {
 	bool FocusRow::equalByRequiredValue(FocusRow* x) {
 		
 			
-		if (this->focusModelId != x->focusModelId) return false;
-			
-		if (this->xFocusPosition != x->xFocusPosition) return false;
-			
-		if (this->yFocusPosition != x->yFocusPosition) return false;
-			
-		if (this->zFocusPosition != x->zFocusPosition) return false;
-			
 		if (this->focusTracking != x->focusTracking) return false;
 			
-		if (this->xFocusOffset != x->xFocusOffset) return false;
+		if (this->focusOffset != x->focusOffset) return false;
 			
-		if (this->yFocusOffset != x->yFocusOffset) return false;
-			
-		if (this->zFocusOffset != x->zFocusOffset) return false;
+		if (this->focusModelId != x->focusModelId) return false;
 			
 		
 		return true;

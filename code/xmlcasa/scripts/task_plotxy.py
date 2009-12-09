@@ -259,6 +259,20 @@ def plotxy(vis=None,xaxis=None,yaxis=None,datacolumn=None,iteration=None,
 
                 if ((type(vis)==str) & (os.path.exists(vis))):
 
+                        #Users requested to remove this because it would 
+                        #take too much time (in particular for large ms).
+                        #Originally, plotxy average would report exception
+                        #('could not add a column') if a scratch column was
+                        #corrupted. This happend mostly in the early alma/atf
+                        #test data. It adviced user to run 'clearcal' to
+                        #get rid of the corrupted column. The cb.open will
+                        #add scratch columns if missing. It did not repair
+                        #the corrupted columns.
+                        #this change will not go beyond active. (6/19/09) 
+                        
+
+                        #again, we put this back, because some external
+                        #people want to use interval devel. They want this.
 			casalog.post('Adding scratch columns, if necessary.')
 			cb.open(vis)
 			cb.close(vis)
@@ -428,10 +442,16 @@ def plotxy(vis=None,xaxis=None,yaxis=None,datacolumn=None,iteration=None,
                     raise Exception, 'Failure occured when averaging data!'
 
                 #print "scan=", scan, "uvrange=", uvrange
-                ok=mp.setdata(baseline=antenna,field=field,scan=scan,
-			      uvrange=uvrange,array=array,feed=feed,
-			      spw=spw,correlation=correlation,
-			      time=timerange)
+		if (selectdata):
+			ok=mp.setdata(baseline=antenna,field=field,scan=scan,
+				      uvrange=uvrange,array=array,feed=feed,
+				      spw=spw,correlation=correlation,
+				      time=timerange)
+		else:
+			ok=mp.setdata(baseline='',field=field,scan='',
+				      uvrange='',array='',feed='',
+				      spw=spw,correlation='',
+				      time='')			
                 # check if data selection was okay
                 if (not ok):
                    raise Exception, 'Data selection resulted in no data!'

@@ -21,6 +21,7 @@
 #include <xmlcasa/version.h>
 #include <unistd.h>
 #include <sys/param.h>
+#include <xmlcasa/utils/CasapyWatcher.h>
 
 using namespace std;
 using namespace casa;
@@ -34,6 +35,7 @@ static LogSinkInterface *thelogsink
   */
 static string theLogName;
 
+//logsink::logsink():thelogsink(0)
 logsink::logsink()
 {
   if(!theLogName.size()){
@@ -41,6 +43,7 @@ logsink::logsink()
      char *mybuff = getcwd(buff, MAXPATHLEN);
      theLogName = string(mybuff) + string("/casapy.log");
   }
+  //cout << "thelogsink=" << thelogsink << endl;
   thelogsink = new casa::TSLogSink();
   setlogfile(theLogName);
   itsorigin = new LogOrigin("casa");
@@ -58,6 +61,30 @@ std::string logsink::version(){
   casa::VersionInfo::report(os1);
   os2 << "  Built on: "<< casa::VersionInfo::date();
   std::string mymess = os1.str();
+
+  // Now here's a check to see if the code/VERSION file is at the same rev
+  // as VersionInfo
+  
+  istringstream casapath(getenv("CASAPATH"));
+  string casaroot;
+  casapath >> casaroot;
+  string versionFile( casaroot + "/code/VERSION");
+  ifstream codeVERSION(versionFile.c_str());
+  if(codeVERSION.good()){
+     string versionNumber;
+     codeVERSION >> versionNumber;
+     ostringstream osv;
+     osv << casa::VersionInfo::majorVersion() << "."
+         << casa::VersionInfo::minorVersion() << "."
+         << casa::VersionInfo::patch(); 
+     if(versionNumber != osv.str()){
+	string lookout("The version in casapy "+versionNumber
+			+"  is different than in code/VERSION " + osv.str());
+        thelogsink->postLocally(LogMessage(string(""), *itsorigin, LogMessage::WARN));
+        thelogsink->postLocally(LogMessage(lookout, *itsorigin, LogMessage::WARN));
+        thelogsink->postLocally(LogMessage(string(""), *itsorigin, LogMessage::WARN));
+     }
+  }
   thelogsink->postLocally(LogMessage(mymess, *itsorigin, LogMessage::NORMAL));
   thelogsink->postLocally(LogMessage(os2.str(), *itsorigin, LogMessage::NORMAL));
   return mymess;
@@ -80,6 +107,7 @@ bool logsink::origin(const std::string &fromwhere)
     }
     delete itsorigin;
     itsorigin = new LogOrigin("casa");
+    //String* taskname = new String(fromwhere);
     taskname = new String(fromwhere);
     itsorigin->taskName(*taskname);
     thelogsink->setTaskName(*taskname);
@@ -133,6 +161,9 @@ bool logsink::filter(const std::string &level)
 	if(rstat){
 	   LogFilter filter(priority);
 	   thelogsink->filter(filter);
+	   
+	   // Also set for any watchers.
+	   CasapyWatcher::logChanged_(priority);
 	}
 	return rstat;
 }
@@ -157,8 +188,11 @@ logsink::postLocally(const std::string& message,
     if(!itsorigin)
        itsorigin = new LogOrigin("casa");
     itsorigin->className(origin);
+    taskname = new String(origin);
+    //String* taskname = new String(origin);
+    //cout << "(*taskname==\"\")=" <<  (*taskname == "") << endl;
     thelogsink->setTaskName(*taskname);
-    LogSink().globalSink().setTaskName(*taskname);
+    //LogSink().globalSink().setTaskName(*taskname);
     if (priority == "DEBUG")
        messagePriority = LogMessage::DEBUGGING;
     else if (priority == "DEBUG1")
@@ -215,12 +249,19 @@ logsink::id()
 bool logsink::setglobal(const bool isglobal)
 {
    bool rstat(true);
+   
    if(isglobal){
+      //cout << "isglobal=" << isglobal << endl;
+      //cout << "thelogsink=" << thelogsink << endl;
       LogSink().globalSink(thelogsink);
       globalsink = isglobal;
+      //cout << "setglobal(True) ok" << endl;
    } else {
+      //cout << "isglobal=" << isglobal << endl;
       LogSinkInterface *dummy = new StreamLogSink(LogMessage::NORMAL, &cerr);
-      LogSink().globalSink(dummy);
+      //cout << "dummy==" << dummy << endl;
+      //LogSink().globalSink(dummy);
+      //cout << "setglobal(True) ok" << endl;
    }
    return rstat;
 }
@@ -232,6 +273,11 @@ bool logsink::setlogfile(const std::string& filename)
       static_cast<TSLogSink*>(thelogsink)->setLogSink(filename);
    else
       thelogsink = new NullLogSink();
+      
+   //
+   // Also set for any watchers.
+   CasapyWatcher::logChanged_(filename);
+      
    return rstat;
 }
 
@@ -243,6 +289,12 @@ logsink::showconsole(const bool onconsole)
       thelogsink->cerrToo(onconsole);
    return rstat;
 }
+std::string
+logsink::logfile()
+{
+  return theLogName;
+}
+
 
 } // casac namespace
 

@@ -27,7 +27,7 @@
 #ifndef PLOTMSPAGE_H_
 #define PLOTMSPAGE_H_
 
-#include <graphics/GenericPlotter/PlotFactory.h>
+#include <graphics/GenericPlotter/PlotCanvas.h>
 
 #include <casa/namespace.h>
 
@@ -43,6 +43,7 @@ class PlotMSPlotManager;
 class PlotMSPage {
     
     //# Friend class declarations.
+    friend class PlotMSMultiPlot;
     friend class PlotMSPages;
     friend class PlotMSSinglePlot;
     
@@ -120,9 +121,11 @@ private:
 class PlotMSPages {
     
     //# Friend class declarations.
+    friend class PlotMSMultiPlot;
     friend class PlotMSPage;
-    friend class PlotMSSinglePlot;
+    friend class PlotMSPlot;
     friend class PlotMSPlotManager;
+    friend class PlotMSSinglePlot;
     
 public:    
     // Copy constructor.

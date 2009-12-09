@@ -42,19 +42,36 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the HolographyChannelType enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace HolographyChannelTypeMod
 {
+  //! HolographyChannelType.
+  //!  [ASDM.Holography] Type sof holography receiver output channels
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum HolographyChannelType
   { 
-    Q2 ,
-    QR ,
-    QS ,
-    R2 ,
-    RS ,
-    S2 
+    Q2 /*!< Quadrature channel auto-product */
+     ,
+    QR /*!< Quadrature channel times Reference channel cross-product */
+     ,
+    QS /*!< Quadrature channel times Signal channel cross-product */
+     ,
+    R2 /*!< Reference channel auto-product */
+     ,
+    RS /*!< Reference channel times Signal channel cross-product */
+     ,
+    S2 /*!< Signal channel auto-product */
+     
   };
   typedef HolographyChannelType &HolographyChannelType_out;
 } 
@@ -62,80 +79,99 @@ namespace HolographyChannelTypeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration HolographyChannelType.
+  * 
+  */
 class CHolographyChannelType {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the HolographyChannelType enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sQ2;
+	static const std::string& sQ2; /*!< A const string equal to "Q2".*/
 	
-	static const std::string& sQR;
+	static const std::string& sQR; /*!< A const string equal to "QR".*/
 	
-	static const std::string& sQS;
+	static const std::string& sQS; /*!< A const string equal to "QS".*/
 	
-	static const std::string& sR2;
+	static const std::string& sR2; /*!< A const string equal to "R2".*/
 	
-	static const std::string& sRS;
+	static const std::string& sRS; /*!< A const string equal to "RS".*/
 	
-	static const std::string& sS2;
-	
-    static const std::vector<std::string> sHolographyChannelTypeSet();	 
-
+	static const std::string& sS2; /*!< A const string equal to "S2".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in HolographyChannelTypeMod::HolographyChannelType.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of HolographyChannelTypeMod::HolographyChannelType.
+      * @return a string.
+      */
+	static std::string name(const HolographyChannelTypeMod::HolographyChannelType& e);
 	
-	// Explanations associated with the HolographyChannelType Enumeration.
-		
-	static const std::string& hQ2;
-		
-	static const std::string& hQR;
-		
-	static const std::string& hQS;
-		
-	static const std::string& hR2;
-		
-	static const std::string& hRS;
-		
-	static const std::string& hS2;
-		
-	static const std::vector<std::string> hHolographyChannelTypeSet();
-   	
-
-   	// Is an integer number associated with the HolographyChannelType enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the HolographyChannelType enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  HolographyChannelType enumeration.
-	static std::string name(const HolographyChannelTypeMod::HolographyChannelType& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const HolographyChannelTypeMod::HolographyChannelType& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified HolographyChannelType enumeration.
-	static std::string help(const HolographyChannelTypeMod::HolographyChannelType& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a HolographyChannelType enumeration object by specifying its name.
    	static HolographyChannelTypeMod::HolographyChannelType newHolographyChannelType(const std::string& name);
    	
-   	// Create a HolographyChannelType enumeration object by specifying its name.
+   	/*! Return a HolographyChannelType's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a HolographyChannelTypeMod::HolographyChannelType's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static HolographyChannelTypeMod::HolographyChannelType literal(const std::string& name);
  	
-    // Create a HolographyChannelType enumeration object by specifying its position index (0 based).
+    /*! Return a HolographyChannelType's enumerator given an unsigned int.
+      * @param i the index of the enumerator in HolographyChannelTypeMod::HolographyChannelType.
+      * @return a HolographyChannelTypeMod::HolographyChannelType's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static HolographyChannelTypeMod::HolographyChannelType from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CHolographyChannelType();
     CHolographyChannelType(const CHolographyChannelType&);
     CHolographyChannelType& operator=(const CHolographyChannelType&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CHolographyChannelType_H*/

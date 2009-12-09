@@ -164,45 +164,39 @@ namespace asdm {
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param numCorr. 
-	
- 	 * @param type. 
-	
  	 * @param distance. 
 	
  	 * @param focus. 
 	
- 	 * @param flagRow. 
+ 	 * @param numCorr. 
+	
+ 	 * @param type. 
 	
      */
-	HolographyRow* HolographyTable::newRow(int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type, Length distance, Length focus, bool flagRow){
+	HolographyRow* HolographyTable::newRow(Length distance, Length focus, int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type){
 		HolographyRow *row = new HolographyRow(*this);
-			
-		row->setNumCorr(numCorr);
-			
-		row->setType(type);
 			
 		row->setDistance(distance);
 			
 		row->setFocus(focus);
 			
-		row->setFlagRow(flagRow);
+		row->setNumCorr(numCorr);
+			
+		row->setType(type);
 	
 		return row;		
 	}	
 
-	HolographyRow* HolographyTable::newRowFull(int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type, Length distance, Length focus, bool flagRow)	{
+	HolographyRow* HolographyTable::newRowFull(Length distance, Length focus, int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type)	{
 		HolographyRow *row = new HolographyRow(*this);
-			
-		row->setNumCorr(numCorr);
-			
-		row->setType(type);
 			
 		row->setDistance(distance);
 			
 		row->setFocus(focus);
 			
-		row->setFlagRow(flagRow);
+		row->setNumCorr(numCorr);
+			
+		row->setType(type);
 	
 		return row;				
 	}
@@ -238,15 +232,13 @@ HolographyRow* HolographyTable::newRowCopy(HolographyRow* row) {
 			 
 		HolographyRow* aRow = lookup(
 				
-		x->getNumCorr()
-				,
-		x->getType()
-				,
 		x->getDistance()
 				,
 		x->getFocus()
 				,
-		x->getFlagRow()
+		x->getNumCorr()
+				,
+		x->getType()
 				
 		);
 		if (aRow) return aRow;
@@ -280,21 +272,23 @@ HolographyRow* HolographyTable::newRowCopy(HolographyRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	HolographyRow*  HolographyTable::checkAndAdd(HolographyRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	HolographyRow*  HolographyTable::checkAndAdd(HolographyRow* x)  {
 	 
 		 
 		if (lookup(
 			
-			x->getNumCorr()
-		,
-			x->getType()
-		,
 			x->getDistance()
 		,
 			x->getFocus()
 		,
-			x->getFlagRow()
+			x->getNumCorr()
+		,
+			x->getType()
 		
 		)) throw UniquenessViolationException("Uniqueness violation exception in table HolographyTable");
 		
@@ -361,22 +355,20 @@ HolographyRow* HolographyTable::newRowCopy(HolographyRow* row) {
  * @return a pointer on this row if any, 0 otherwise.
  *
 			
- * @param numCorr.
- 	 		
- * @param type.
- 	 		
  * @param distance.
  	 		
  * @param focus.
  	 		
- * @param flagRow.
+ * @param numCorr.
+ 	 		
+ * @param type.
  	 		 
  */
-HolographyRow* HolographyTable::lookup(int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type, Length distance, Length focus, bool flagRow) {
+HolographyRow* HolographyTable::lookup(Length distance, Length focus, int numCorr, vector<HolographyChannelTypeMod::HolographyChannelType > type) {
 		HolographyRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(numCorr, type, distance, focus, flagRow)) return aRow;
+			if (aRow->compareNoAutoInc(distance, focus, numCorr, type)) return aRow;
 		}			
 		return 0;	
 } 
@@ -384,7 +376,6 @@ HolographyRow* HolographyTable::lookup(int numCorr, vector<HolographyChannelType
  	 	
 
 	
-
 
 
 
@@ -405,7 +396,7 @@ HolographyRow* HolographyTable::lookup(int numCorr, vector<HolographyChannelType
 #endif
 	
 #ifndef WITHOUT_ACS
-	void HolographyTable::fromIDL(HolographyTableIDL x) throw(DuplicateKey,ConversionException) {
+	void HolographyTable::fromIDL(HolographyTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			HolographyRow *tmp = newRow();
@@ -416,28 +407,27 @@ HolographyRow* HolographyTable::lookup(int numCorr, vector<HolographyChannelType
 	}
 #endif
 
-	char *HolographyTable::toFITS() const throw(ConversionException) {
+	char *HolographyTable::toFITS() const  {
 		throw ConversionException("Not implemented","Holography");
 	}
 
-	void HolographyTable::fromFITS(char *fits) throw(ConversionException) {
+	void HolographyTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Holography");
 	}
 
-	string HolographyTable::toVOTable() const throw(ConversionException) {
+	string HolographyTable::toVOTable() const {
 		throw ConversionException("Not implemented","Holography");
 	}
 
-	void HolographyTable::fromVOTable(string vo) throw(ConversionException) {
+	void HolographyTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Holography");
 	}
 
-	string HolographyTable::toXML()  throw(ConversionException) {
+	
+	string HolographyTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<HolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/HolographyTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<HolographyTable> ");
+		buf.append("<HolographyTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/HolographyTable\" xsi:schemaLocation=\"http://Alma/XASDM/HolographyTable http://almaobservatory.org/XML/XASDM/2/HolographyTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -453,8 +443,9 @@ HolographyRow* HolographyTable::lookup(int numCorr, vector<HolographyChannelType
 		buf.append("</HolographyTable> ");
 		return buf;
 	}
+
 	
-	void HolographyTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void HolographyTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<HolographyTable")) 
 			error();
@@ -496,20 +487,110 @@ HolographyRow* HolographyTable::lookup(int numCorr, vector<HolographyChannelType
 			error();
 	}
 
-	void HolographyTable::error() throw(ConversionException) {
+	
+	void HolographyTable::error()  {
 		throw ConversionException("Invalid xml document","Holography");
 	}
 	
+	
 	string HolographyTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void HolographyTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Holography");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			HolographyRow* aRow = HolographyRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Holography");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Holography");
+		} 		 	
+	}
+
 	
 	void HolographyTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -540,6 +621,7 @@ HolographyRow* HolographyTable::lookup(int numCorr, vector<HolographyChannelType
 				throw ConversionException("Could not close file " + fileName, "Holography");
 		}
 	}
+
 	
 	void HolographyTable::setFromFile(const string& directory) {
 		string tablename;
@@ -581,6 +663,11 @@ HolographyRow* HolographyTable::lookup(int numCorr, vector<HolographyChannelType
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

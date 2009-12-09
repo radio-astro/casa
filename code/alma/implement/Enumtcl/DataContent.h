@@ -38,19 +38,19 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<DataContent,EnumPar<void> >
-     (DataContentMod::CROSS_DATA,ep((int)DataContentMod::CROSS_DATA,"CROSS_DATA","Cross-correlation data")));
+     (DataContentMod::CROSS_DATA,ep((int)DataContentMod::CROSS_DATA,"CROSS_DATA","un-documented")));
     m_.insert(pair<DataContent,EnumPar<void> >
-     (DataContentMod::AUTO_DATA,ep((int)DataContentMod::AUTO_DATA,"AUTO_DATA","Auto-correlation data")));
+     (DataContentMod::AUTO_DATA,ep((int)DataContentMod::AUTO_DATA,"AUTO_DATA","un-documented")));
     m_.insert(pair<DataContent,EnumPar<void> >
-     (DataContentMod::ZERO_LAGS,ep((int)DataContentMod::ZERO_LAGS,"ZERO_LAGS","Zero-lag data")));
+     (DataContentMod::ZERO_LAGS,ep((int)DataContentMod::ZERO_LAGS,"ZERO_LAGS","un-documented")));
     m_.insert(pair<DataContent,EnumPar<void> >
-     (DataContentMod::ACTUAL_TIMES,ep((int)DataContentMod::ACTUAL_TIMES,"ACTUAL_TIMES",":Actual times (mid points of integrations)")));
+     (DataContentMod::ACTUAL_TIMES,ep((int)DataContentMod::ACTUAL_TIMES,"ACTUAL_TIMES","un-documented")));
     m_.insert(pair<DataContent,EnumPar<void> >
-     (DataContentMod::ACTUAL_DURATIONS,ep((int)DataContentMod::ACTUAL_DURATIONS,"ACTUAL_DURATIONS","Actual duration of integrations")));
+     (DataContentMod::ACTUAL_DURATIONS,ep((int)DataContentMod::ACTUAL_DURATIONS,"ACTUAL_DURATIONS","un-documented")));
     m_.insert(pair<DataContent,EnumPar<void> >
-     (DataContentMod::WEIGHTS,ep((int)DataContentMod::WEIGHTS,"WEIGHTS","Weights")));
+     (DataContentMod::WEIGHTS,ep((int)DataContentMod::WEIGHTS,"WEIGHTS","un-documented")));
     m_.insert(pair<DataContent,EnumPar<void> >
-     (DataContentMod::FLAGS,ep((int)DataContentMod::FLAGS,"FLAGS","Baseband based flags")));
+     (DataContentMod::FLAGS,ep((int)DataContentMod::FLAGS,"FLAGS","un-documented")));
     return true;
   }
   static map<DataContent,EnumPar<void> > m_;

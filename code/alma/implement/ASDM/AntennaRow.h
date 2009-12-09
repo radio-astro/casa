@@ -97,16 +97,6 @@ using namespace AntennaTypeMod;
 
 	
 
-	
-
-	
-
-	
-
-	
-
-	
-
 
 
 using asdm::Angle;
@@ -130,7 +120,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Antenna.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -148,7 +138,7 @@ class StationRow;
 /**
  * The AntennaRow class is a row of a AntennaTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class AntennaRow {
@@ -175,8 +165,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct AntennaRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (AntennaRowIDL x) throw(ConversionException);
+	void setFromIDL (AntennaRowIDL x) ;
 #endif
 	
 	/**
@@ -189,8 +180,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the AntennaTable to which the row built by deserialization will be parented.
+	  */
+	 static AntennaRow* fromBin(EndianISStream& eiss, AntennaTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -307,29 +312,29 @@ public:
 
 
 	
-	// ===> Attribute xPosition
+	// ===> Attribute dishDiameter
 	
 	
 	
 
 	
  	/**
- 	 * Get xPosition.
- 	 * @return xPosition as Length
+ 	 * Get dishDiameter.
+ 	 * @return dishDiameter as Length
  	 */
- 	Length getXPosition() const;
+ 	Length getDishDiameter() const;
 	
  
  	
  	
  	/**
- 	 * Set xPosition with the specified Length.
- 	 * @param xPosition The Length value to which xPosition is to be set.
+ 	 * Set dishDiameter with the specified Length.
+ 	 * @param dishDiameter The Length value to which dishDiameter is to be set.
  	 
  		
  			
  	 */
- 	void setXPosition (Length xPosition);
+ 	void setDishDiameter (Length dishDiameter);
   		
 	
 	
@@ -337,29 +342,29 @@ public:
 
 
 	
-	// ===> Attribute yPosition
+	// ===> Attribute position
 	
 	
 	
 
 	
  	/**
- 	 * Get yPosition.
- 	 * @return yPosition as Length
+ 	 * Get position.
+ 	 * @return position as vector<Length >
  	 */
- 	Length getYPosition() const;
+ 	vector<Length > getPosition() const;
 	
  
  	
  	
  	/**
- 	 * Set yPosition with the specified Length.
- 	 * @param yPosition The Length value to which yPosition is to be set.
+ 	 * Set position with the specified vector<Length >.
+ 	 * @param position The vector<Length > value to which position is to be set.
  	 
  		
  			
  	 */
- 	void setYPosition (Length yPosition);
+ 	void setPosition (vector<Length > position);
   		
 	
 	
@@ -367,29 +372,29 @@ public:
 
 
 	
-	// ===> Attribute zPosition
+	// ===> Attribute offset
 	
 	
 	
 
 	
  	/**
- 	 * Get zPosition.
- 	 * @return zPosition as Length
+ 	 * Get offset.
+ 	 * @return offset as vector<Length >
  	 */
- 	Length getZPosition() const;
+ 	vector<Length > getOffset() const;
 	
  
  	
  	
  	/**
- 	 * Set zPosition with the specified Length.
- 	 * @param zPosition The Length value to which zPosition is to be set.
+ 	 * Set offset with the specified vector<Length >.
+ 	 * @param offset The vector<Length > value to which offset is to be set.
  	 
  		
  			
  	 */
- 	void setZPosition (Length zPosition);
+ 	void setOffset (vector<Length > offset);
   		
 	
 	
@@ -426,156 +431,6 @@ public:
 	
 
 
-	
-	// ===> Attribute xOffset
-	
-	
-	
-
-	
- 	/**
- 	 * Get xOffset.
- 	 * @return xOffset as Length
- 	 */
- 	Length getXOffset() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set xOffset with the specified Length.
- 	 * @param xOffset The Length value to which xOffset is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setXOffset (Length xOffset);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute yOffset
-	
-	
-	
-
-	
- 	/**
- 	 * Get yOffset.
- 	 * @return yOffset as Length
- 	 */
- 	Length getYOffset() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set yOffset with the specified Length.
- 	 * @param yOffset The Length value to which yOffset is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setYOffset (Length yOffset);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute zOffset
-	
-	
-	
-
-	
- 	/**
- 	 * Get zOffset.
- 	 * @return zOffset as Length
- 	 */
- 	Length getZOffset() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set zOffset with the specified Length.
- 	 * @param zOffset The Length value to which zOffset is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setZOffset (Length zOffset);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute dishDiameter
-	
-	
-	
-
-	
- 	/**
- 	 * Get dishDiameter.
- 	 * @return dishDiameter as Length
- 	 */
- 	Length getDishDiameter() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set dishDiameter with the specified Length.
- 	 * @param dishDiameter The Length value to which dishDiameter is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setDishDiameter (Length dishDiameter);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute flagRow
-	
-	
-	
-
-	
- 	/**
- 	 * Get flagRow.
- 	 * @return flagRow as bool
- 	 */
- 	bool getFlagRow() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set flagRow with the specified bool.
- 	 * @param flagRow The bool value to which flagRow is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setFlagRow (bool flagRow);
-  		
-	
-	
-	
-
-
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -598,7 +453,7 @@ public:
  	 * @return assocAntennaId as Tag
  	 * @throws IllegalAccessException If assocAntennaId does not exist.
  	 */
- 	Tag getAssocAntennaId() const throw(IllegalAccessException);
+ 	Tag getAssocAntennaId() const;
 	
  
  	
@@ -674,7 +529,7 @@ public:
 	 * @return A row in Antenna table.
 	 * @throws NoSuchRow if there is no such row in table Antenna or the link does not exist.
 	 */
-	AntennaRow *getAssociatedAntenna() const throw(NoSuchRow);
+	AntennaRow *getAssociatedAntenna() const;
 	
 	/**
 	 * Set the values of the link attributes needed to link this row to a row in table Antenna.
@@ -708,12 +563,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this AntennaRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag stationId, string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length xPosition, Length yPosition, Length zPosition, ArrayTime time, Length xOffset, Length yOffset, Length zOffset, Length dishDiameter, bool flagRow);
+	bool compareNoAutoInc(string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length dishDiameter, vector<Length > position, vector<Length > offset, ArrayTime time, Tag stationId);
 	
 	
 
 	
-	bool compareRequiredValue(Tag stationId, string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length xPosition, Length yPosition, Length zPosition, ArrayTime time, Length xOffset, Length yOffset, Length zOffset, Length dishDiameter, bool flagRow); 
+	bool compareRequiredValue(string name, AntennaMakeMod::AntennaMake antennaMake, AntennaTypeMod::AntennaType antennaType, Length dishDiameter, vector<Length > position, vector<Length > offset, ArrayTime time, Tag stationId); 
 		 
 	
 	/**
@@ -830,83 +685,6 @@ private:
  	
 
 	
-	// ===> Attribute xPosition
-	
-	
-
-	Length xPosition;
-
-	
-	
- 	
-
-	
-	// ===> Attribute yPosition
-	
-	
-
-	Length yPosition;
-
-	
-	
- 	
-
-	
-	// ===> Attribute zPosition
-	
-	
-
-	Length zPosition;
-
-	
-	
- 	
-
-	
-	// ===> Attribute time
-	
-	
-
-	ArrayTime time;
-
-	
-	
- 	
-
-	
-	// ===> Attribute xOffset
-	
-	
-
-	Length xOffset;
-
-	
-	
- 	
-
-	
-	// ===> Attribute yOffset
-	
-	
-
-	Length yOffset;
-
-	
-	
- 	
-
-	
-	// ===> Attribute zOffset
-	
-	
-
-	Length zOffset;
-
-	
-	
- 	
-
-	
 	// ===> Attribute dishDiameter
 	
 	
@@ -918,11 +696,33 @@ private:
  	
 
 	
-	// ===> Attribute flagRow
+	// ===> Attribute position
 	
 	
 
-	bool flagRow;
+	vector<Length > position;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute offset
+	
+	
+
+	vector<Length > offset;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute time
+	
+	
+
+	ArrayTime time;
 
 	
 	

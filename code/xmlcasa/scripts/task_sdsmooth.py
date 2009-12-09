@@ -4,7 +4,7 @@ from taskinit import *
 import asap as sd
 from asap._asap import Scantable
 
-def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, outfile, outform, overwrite, plotlevel):
+def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, verify, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdsmooth')
 
@@ -41,8 +41,11 @@ def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwid
 
             if ( abs(plotlevel) > 1 ):
                     # print summary of input data
-                    print "Initial Scantable:"
-                    print s
+                    #print "Initial Scantable:"
+                    #print s
+                    casalog.post( "Initial Scantable:" )
+                    casalog.post( s._summary() )
+                    casalog.post( "--------------------------------------------------------------------------------" )
 
 
             # Select scan and field
@@ -90,8 +93,10 @@ def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwid
                 s.set_selection(sel)
                 del sel
             except Exception, instance:
-                print '***Error***',instance
-                print 'No output written.'
+                #print '***Error***',instance
+                #print 'No output written.'
+                casalog.post( instance.message, priority = 'ERROR' )
+                casalog.post( 'No output written.' )
                 return
 
             # Smooth the spectrum
@@ -112,8 +117,10 @@ def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwid
                                     # Hardcopy - currently no way w/o screen displayfirst
                                     pltfile=project+'_rawspec.eps'
                                     sd.plotter.save(pltfile)
-                    print "Smoothing spectrum with kernel "+kernel
-                    s.smooth(kernel,kwidth,insitu=True)
+                    #print "Smoothing spectrum with kernel "+kernel
+                    casalog.post( "Smoothing spectrum with kernel "+kernel )
+                    #s.smooth(kernel,kwidth,insitu=True)
+                    s.smooth(kernel,kwidth,plot=verify,insitu=True)
                     if ( abs(plotlevel) > 0 ):
                            # plot spectrum after smoothing
                             # each IF is separate panel, pols stacked
@@ -150,12 +157,15 @@ def sdsmooth(sdfile, scanaverage, scanlist, field, iflist, pollist, kernel, kwid
             # before saving.
             s2=s.copy()
             s2.save(smfile,outform,overwrite)
-            if outform!='ASCII':print "Writing output "+outform+" file "+smfile
+            if outform!='ASCII':
+                    #print "Writing output "+outform+" file "+smfile
+                    casalog.post( "Writing output "+outform+" file "+smfile )
             # Clean up scantable
             del s, s2
 
         except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
 
 

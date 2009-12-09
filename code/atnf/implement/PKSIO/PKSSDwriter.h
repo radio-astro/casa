@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
-//# PKSSDWriter.h: Class to write Parkes multibeam data to an SDFITS file.
+//# PKSSDwriter.h: Class to write Parkes multibeam data to an SDFITS file.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# Copyright (C) 2000-2007
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,7 +25,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: PKSSDwriter.h,v 19.16 2008-11-17 06:41:48 cal103 Exp $
 //# Original: 2000/07/21, Mark Calabretta, ATNF
 //#---------------------------------------------------------------------------
 
@@ -33,19 +33,22 @@
 #define ATNF_PKSSDWRITER_H
 
 #include <atnf/PKSIO/PKSwriter.h>
+#include <atnf/PKSIO/PKSrecord.h>
 #include <atnf/PKSIO/SDFITSwriter.h>
 
 #include <casa/aips.h>
+#include <casa/stdio.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/String.h>
 
+#include <casa/namespace.h>
+
 // <summary>
 // Class to write Parkes multibeam data to an SDFITS file.
 // </summary>
 
-#include <casa/namespace.h>
 class PKSSDwriter : public PKSwriter
 {
   public:
@@ -63,58 +66,21 @@ class PKSSDwriter : public PKSwriter
         const String antName,
         const Vector<Double> antPosition,
         const String obsMode,
+        const String bunit,
         const Float  equinox,
         const String dopplerFrame,
         const Vector<uInt> nChan,
         const Vector<uInt> nPol,
         const Vector<Bool> haveXPol,
-        const Bool   haveBase,
-        const String fluxUnit);
+        const Bool   haveBase);
 
     // Write the next data record.
     virtual Int write(
-        const Int             scanNo,
-        const Int             cycleNo,
-        const Double          mjd,
-        const Double          interval,
-        const String          fieldName,
-        const String          srcName,
-        const Vector<Double>  srcDir,
-        const Vector<Double>  srcPM,
-        const Double          srcVel,
-        const String          obsMode,
-        const Int             IFno,
-        const Double          refFreq,
-        const Double          bandwidth,
-        const Double          freqInc,
-        //const Double          restFreq,
-        const Vector<Double>  restFreq,
-        const Vector<Float>   tcal,
-        const String          tcalTime,
-        const Float           azimuth,
-        const Float           elevation,
-        const Float           parAngle,
-        const Float           focusAxi,
-        const Float           focusTan,
-        const Float           focusRot,
-        const Float           temperature,
-        const Float           pressure,
-        const Float           humidity,
-        const Float           windSpeed,
-        const Float           windAz,
-        const Int             refBeam,
-        const Int             beamNo,
-        const Vector<Double>  direction,
-        const Vector<Double>  scanRate,
-        const Vector<Float>   tsys,
-        const Vector<Float>   sigma,
-        const Vector<Float>   calFctr,
-        const Matrix<Float>   baselin,
-        const Matrix<Float>   basesub,
-        const Matrix<Float>   &spectra,
-        const Matrix<uChar>   &flagged,
-        const Complex         xCalFctr,
-        const Vector<Complex> &xPol);
+        const PKSrecord &pksrec);
+
+    // Write a history record.
+    virtual Int history(const String text);
+    virtual Int history(const char *text);
 
     // Close the SDFITS file.
     virtual void close();

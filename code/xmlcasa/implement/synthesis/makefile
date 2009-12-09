@@ -1,6 +1,6 @@
 # $Id$
 
-XLIBLIST:= CCMTOOLS PYTHON WCSLIB 
+XLIBLIST:= CCMTOOLS PYTHON WCSLIB ATM
 
 # Use the generic AIPS++ application makefile.
 #---------------------------------------------

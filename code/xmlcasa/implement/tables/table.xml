@@ -3019,5 +3019,46 @@ Failure (returning F) is a sign of a bug.
 <returns type="bool"/>
 </method>
 
+
+   <method type="function" name="statistics">
+   <shortdescription>Get statistics on the selected table column</shortdescription>
+   
+  <keyword>statistics</keyword>
+  <input>
+    
+     <param type="string" name="column">
+     <description>Column name</description>
+     </param>
+
+     <param type="string" name="complex_value">
+     <description>Which derived value to use for complex columns (amp, amplitude, phase, imag, real, imaginary)</description>
+     </param>
+    
+     <param type="bool" name="useflags">
+     <description>Use the data flags</description>
+     <value>true</value>
+     </param>
+
+  </input>
+  <returns type="any">
+    <any type="record"/>
+  </returns>
+
+  <description>
+    This function computes descriptive statistics on the table column.
+    It returns the statistical values as a dictionary.  The given 
+    column name must be a numerical column.
+    If it is a complex valued column, the parameter complex_value defines
+    which derived real value is used for the statistics computation.
+  </description>
+  <example>
+    \begin{verbatim}
+      
+      tb.open("ggtau.1mm.amp.gcal")
+      s = tb.statistics(column="GAIN", complex_value="phase")
+    \end{verbatim}
+  </example>
+</method>
+
 </tool>
 </casaxml>

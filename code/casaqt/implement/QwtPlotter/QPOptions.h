@@ -337,7 +337,7 @@ public:
     // PlotSymbol Methods //
     
     // Implements PlotSymbol::size().
-    pair<double, double> size() const;
+    psize_t size() const;
     
     // Implements PlotSymbol::setSize().  Note that the underlying QwtSymbol
     // only supports int sizes.

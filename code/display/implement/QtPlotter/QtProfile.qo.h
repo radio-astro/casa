@@ -75,6 +75,7 @@ class QtProfile : public QWidget//, public MWCCrosshairTool
 public:
     QtProfile(ImageInterface<Float>* img, const char *name = 0, QWidget *parent = 0);
     ~QtProfile();
+    MFrequency::Types determineRefFrame( ImageInterface<Float>* img, bool check_native_frame = false );
 public slots:
     void zoomIn();
     void zoomOut();
@@ -130,12 +131,16 @@ private:
     QString fileName;
     QString position;
     QString yUnit;
+    QString yUnitPrefix;
 
     QString xpos;
     QString ypos;
     int cube;
 
     Vector<Double> lastX, lastY;
+    Vector<Float> z_xval;
+    Vector<Float> z_yval;
+    QString region;
 
     QString getRaDec(double x, double y);
 };

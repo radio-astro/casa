@@ -78,8 +78,19 @@ using namespace enumerations;
 	
 
 	
+#include "CReceiverBand.h"
+using namespace ReceiverBandMod;
+	
+
+	
+
+	
+
+	
 #include "CAntennaMake.h"
 using namespace AntennaMakeMod;
+	
+
 	
 
 	
@@ -89,15 +100,6 @@ using namespace AntennaMakeMod;
 using namespace PolarizationTypeMod;
 	
 
-	
-
-	
-
-	
-
-	
-#include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
@@ -127,7 +129,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalPrimaryBeam.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -145,7 +147,7 @@ class CalDataRow;
 /**
  * The CalPrimaryBeamRow class is a row of a CalPrimaryBeamTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class CalPrimaryBeamRow {
@@ -172,8 +174,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalPrimaryBeamRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalPrimaryBeamRowIDL x) throw(ConversionException);
+	void setFromIDL (CalPrimaryBeamRowIDL x) ;
 #endif
 	
 	/**
@@ -186,8 +189,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalPrimaryBeamTable to which the row built by deserialization will be parented.
+	  */
+	 static CalPrimaryBeamRow* fromBin(EndianISStream& eiss, CalPrimaryBeamTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -226,89 +243,31 @@ public:
 
 
 	
-	// ===> Attribute antennaMake
+	// ===> Attribute receiverBand
 	
 	
 	
 
 	
  	/**
- 	 * Get antennaMake.
- 	 * @return antennaMake as AntennaMakeMod::AntennaMake
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
  	 */
- 	AntennaMakeMod::AntennaMake getAntennaMake() const;
+ 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
 	
  
  	
  	
  	/**
- 	 * Set antennaMake with the specified AntennaMakeMod::AntennaMake.
- 	 * @param antennaMake The AntennaMakeMod::AntennaMake value to which antennaMake is to be set.
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
  	 
  		
  			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
  	 */
- 	void setAntennaMake (AntennaMakeMod::AntennaMake antennaMake);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute numReceptor
-	
-	
-	
-
-	
- 	/**
- 	 * Get numReceptor.
- 	 * @return numReceptor as int
- 	 */
- 	int getNumReceptor() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numReceptor with the specified int.
- 	 * @param numReceptor The int value to which numReceptor is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumReceptor (int numReceptor);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute polarizationTypes
-	
-	
-	
-
-	
- 	/**
- 	 * Get polarizationTypes.
- 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
- 	 */
- 	vector<PolarizationTypeMod::PolarizationType > getPolarizationTypes() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
- 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes);
+ 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
   		
 	
 	
@@ -376,6 +335,36 @@ public:
 
 
 	
+	// ===> Attribute antennaMake
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get antennaMake.
+ 	 * @return antennaMake as AntennaMakeMod::AntennaMake
+ 	 */
+ 	AntennaMakeMod::AntennaMake getAntennaMake() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set antennaMake with the specified AntennaMakeMod::AntennaMake.
+ 	 * @param antennaMake The AntennaMakeMod::AntennaMake value to which antennaMake is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setAntennaMake (AntennaMakeMod::AntennaMake antennaMake);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute frequencyRange
 	
 	
@@ -406,29 +395,89 @@ public:
 
 
 	
-	// ===> Attribute receiverBand
+	// ===> Attribute numReceptor
 	
 	
 	
 
 	
  	/**
- 	 * Get receiverBand.
- 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
+ 	 * Get numReceptor.
+ 	 * @return numReceptor as int
  	 */
- 	ReceiverBandMod::ReceiverBand getReceiverBand() const;
+ 	int getNumReceptor() const;
 	
  
  	
  	
  	/**
- 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
- 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
+ 	 * Set numReceptor with the specified int.
+ 	 * @param numReceptor The int value to which numReceptor is to be set.
  	 
  		
  			
  	 */
- 	void setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand);
+ 	void setNumReceptor (int numReceptor);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute polarizationTypes
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get polarizationTypes.
+ 	 * @return polarizationTypes as vector<PolarizationTypeMod::PolarizationType >
+ 	 */
+ 	vector<PolarizationTypeMod::PolarizationType > getPolarizationTypes() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set polarizationTypes with the specified vector<PolarizationTypeMod::PolarizationType >.
+ 	 * @param polarizationTypes The vector<PolarizationTypeMod::PolarizationType > value to which polarizationTypes is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setPolarizationTypes (vector<PolarizationTypeMod::PolarizationType > polarizationTypes);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute mainBeamEfficiency
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get mainBeamEfficiency.
+ 	 * @return mainBeamEfficiency as vector<double >
+ 	 */
+ 	vector<double > getMainBeamEfficiency() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set mainBeamEfficiency with the specified vector<double >.
+ 	 * @param mainBeamEfficiency The vector<double > value to which mainBeamEfficiency is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setMainBeamEfficiency (vector<double > mainBeamEfficiency);
   		
 	
 	
@@ -604,12 +653,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this CalPrimaryBeamRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, AntennaMakeMod::AntennaMake antennaMake, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, float relativeAmplitudeRms);
+	bool compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, vector<Frequency > frequencyRange, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > mainBeamEfficiency, EntityRef beamMapUID, float relativeAmplitudeRms);
 	
 	
 
 	
-	bool compareRequiredValue(AntennaMakeMod::AntennaMake antennaMake, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ArrayTime startValidTime, ArrayTime endValidTime, vector<Frequency > frequencyRange, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, float relativeAmplitudeRms); 
+	bool compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, vector<Frequency > frequencyRange, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<double > mainBeamEfficiency, EntityRef beamMapUID, float relativeAmplitudeRms); 
 		 
 	
 	/**
@@ -681,33 +730,11 @@ private:
  	
 
 	
-	// ===> Attribute antennaMake
+	// ===> Attribute receiverBand
 	
 	
 
-	AntennaMakeMod::AntennaMake antennaMake;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numReceptor
-	
-	
-
-	int numReceptor;
-
-	
-	
- 	
-
-	
-	// ===> Attribute polarizationTypes
-	
-	
-
-	vector<PolarizationTypeMod::PolarizationType > polarizationTypes;
+	ReceiverBandMod::ReceiverBand receiverBand;
 
 	
 	
@@ -736,6 +763,17 @@ private:
  	
 
 	
+	// ===> Attribute antennaMake
+	
+	
+
+	AntennaMakeMod::AntennaMake antennaMake;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute frequencyRange
 	
 	
@@ -747,11 +785,33 @@ private:
  	
 
 	
-	// ===> Attribute receiverBand
+	// ===> Attribute numReceptor
 	
 	
 
-	ReceiverBandMod::ReceiverBand receiverBand;
+	int numReceptor;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute polarizationTypes
+	
+	
+
+	vector<PolarizationTypeMod::PolarizationType > polarizationTypes;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute mainBeamEfficiency
+	
+	
+
+	vector<double > mainBeamEfficiency;
 
 	
 	

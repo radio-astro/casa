@@ -66,7 +66,7 @@ imager.
 <returns type="imager"/>
 <example>
 \begin{verbatim}
-im:=imager('3C273XC1.MS')      
+im = imager('3C273XC1.MS')      
 im.setimage(nx=256, ny=256, cellx='0.7arcsec', celly='0.7arcsec')
 im.image(type='corrected', image='3C273XC1.dirty')
 im.close()
@@ -138,7 +138,7 @@ for the beam size both in the plane of the sky and along the $w$ axis.
      <description>Number of pixels on a side</description>
      </param>
 
-     <param type="double" direction="out" name="cell" units="arcsec">
+     <param type="record" direction="out" name="cell">
      <description>Recommended maximum cellsize</description>
      </param>
 
@@ -265,6 +265,43 @@ mask.
 
 </method>
 
+   <method type="function" name="calcuvw">
+   <shortdescription>Calculates (u, v, w) coordinates for the ms.</shortdescription>
+   
+   <keyword>calcuvw</keyword>
+   <description>
+     This calculates (u, v, w) positions for the visibilities using the antenna
+     and feed positions and offsets, the time, and the phase tracking center(s).
+   </description>
+   <input>
+     <param type="intArray" direction="in" name="fields">
+       <description>
+	 Field IDs (numbered relative to 0) to operate on.  Blank = all.
+       </description>
+       <value>-1</value>
+     </param>
+     <param type="string" name="refcode">
+       <description>
+         Reference frame to use for the generated (u, v, w)s.  WARNING: clean
+         and the im tool ignore the reference frame claimed by the UVW column
+         (it is often mislabelled as ITRF when it is really J2000) and instead
+         assume the (u, v, w)s are in the same frame as the phase tracking
+         center.  calcuvw does not yet force the UVW column and field centers to
+         use the same reference frame!  Blank = use the phase tracking frame of
+         vis.
+       </description>
+       <value></value>
+     </param>
+   </input>  
+   <returns type="bool"/>
+   <example>
+     \begin{verbatim}
+     im.open("3C273XC1.MS")
+     im.calcuvw()
+     im.done()
+     \end{verbatim}
+   </example>
+   </method>
  
    <method type="function" name="clean">
    <shortdescription>Calculate a deconvolved image with selected clean algorithm</shortdescription>
@@ -707,14 +744,14 @@ the image is made is not going to be the same as to the one as the one
 used in gridding the visibility and can lead to image artifacts.  For
 {\tt mode='velocity'} and {\tt mode='frequency'} the {\tt step}
 parameter has to be a measure/quantity of velocity or frequency,
-otherwise for {\tt model='channel'} step is the number of data
+otherwise for {\tt mode='channel'} step is the number of data
 channels to be averaged to make one image channel( see examples
 below).
 
 
 The phase center of the image defaults to that of the specified
 phasecenter (the first fieldid in the ms is taken if none is
-specified), this parameter can be a fieldid or a measue string or the
+specified), this parameter can be a fieldid or a measure string or the
 record output from the direction function of the measures tool( <link
  anchor="measures:measures.direction.function">direction</link> ).  
 This is important if you have multiple pointings in the data. The user 
@@ -803,9 +840,11 @@ the source is at the first time observed in the selected data.
 
 
      <param type="string" name="mode">
-     <description>Type of processing</description>
+     <description>Type of processing (velocity =radiovelocity)</description>
      <value>frequency</value>
-     <value>velocity</value>
+     <value>radiovelocity</value>
+     <value>opticalvelocity</value>
+     <value>truevelocity</value>
      <value>mfs</value>
      </param>
 
@@ -840,6 +879,25 @@ the source is at the first time observed in the selected data.
      </description>
      <any type="variant"/>
      <value></value>
+     </param>
+
+     <param type="string" name="outframe">
+     <description>frequency frame of output image (default "", same as input ms or LSRK in case of multiple ms's), options are LSRK, LSRD, BARY, GALACTO, LGROUP, CMB
+     </description>
+     <value>LSRK</value>
+     <value>LSRD</value>
+     <value>BARY</value>
+     <value>GALACTO</value>
+     <value>LGROUP</value>
+     <value>CMB</value>
+     <value></value>
+     </param>
+
+     <param type="string" name="veltype">
+     <description>velocity definition ('radio' or 'optical' or 'relativistic')</description>
+     <value>optical</value>
+     <value>relativistic</value>
+     <value>radio</value>
      </param>
 
      <param type="int" name="facets">
@@ -1238,15 +1296,15 @@ the weights. Use the function <link anchor="imager:imager.summary.function">summ
  
 </description>
 <output>
-     <param type="double" direction="out" name="bmaj" units="rad">
+     <param type="record" direction="out" name="bmaj">
      <description>Major axis of beam</description>
      </param>
 
-     <param type="double" direction="out" name="bmin" units="rad">
+     <param type="record" direction="out" name="bmin">
      <description>Minor axis of beam</description>
      </param>
 
-     <param type="double" direction="out" name="bpa" units="deg">
+     <param type="record" direction="out" name="bpa">
      <description>Position angle of beam</description>
      </param>
 </output>
@@ -1281,6 +1339,73 @@ Or if one wants to generate a psf from the uv coverage and use that subsequently
 </example>
 </method>
 
+   <method type="function" name="fixvis">
+   <shortdescription>Performs visibility adjustments.</shortdescription>
+   
+   <keyword>fixvis</keyword>
+   <description>
+     This corrects visibilities, and/or their (u, v, w) positions, for various
+     effects that can be calculated without fitting a model to the data.
+
+     The effects include:
+     \begin{itemize}
+       \item changing the phase tracking center(s),  (Not yet implemented)
+       \item correcting for differential aberration,  (Not yet implemented)
+       \item changing the equinox (i.e. B1950_VLA to J2000 or APP, etc.),
+       \item changing the projection, as in (-)NCP to SIN.  (Not yet implemented),
+       \item refocusing.  (Not yet implemented)
+     \end{itemize}
+   </description>
+   <input>
+     <param type="intArray" direction="in" name="fields">
+       <description>
+	 Field IDs (numbered relative to 0) to operate on.  Blank = all.
+       </description>
+       <value>-1</value> <!-- <value></value> does not work! -->
+     </param>	
+     <!-- <param type="any" direction="in" name="phasedirs"> -->
+     <!--  <any type="record"/>  -->
+     <param type="stringArray" direction="in" name="phasedirs">
+       <description>
+	 Phase tracking centers for each field in fields, in the same order.
+       </description>
+       <value></value>
+     </param>
+     <param type="string" direction="in" name="refcode">
+       <description>
+         Reference frame to use for the generated (u, v, w)s.  WARNING: clean
+         and the im tool ignore the reference frame claimed by the UVW column
+         (it is often mislabelled as ITRF when it is really J2000) and instead
+         assume the (u, v, w)s are in the same frame as the phase tracking
+         center.  calcuvw does not yet force the UVW column and field centers to
+         use the same reference frame!  Blank = use the phase tracking frame of
+         vis.
+       </description>
+       <value></value>
+     </param>
+     <param type="doubleArray" direction="in" name="distances">
+       <description>
+	 A list of distances (in m) for the fields listed in fields.  0 = infinity.
+       </description>
+       <value>0.0</value>
+     </param>	
+     <param type="string" direction="in" name="datacolumn">
+       <description>
+         Which of DATA, MODEL_DATA, and/or CORRECTED_DATA to operate on.
+         Default: "all".
+       </description>
+       <value>all</value>
+     </param>
+   </input>  
+   <returns type="bool"/>
+   <example>
+     \begin{verbatim}
+     im.open("3C273XC1.MS")
+     im.fixvis()
+     im.done()
+     \end{verbatim}
+   </example>
+   </method>
  
    <method type="function" name="ft">
    <shortdescription>Fourier transform the specified model and componentlist</shortdescription>
@@ -1361,7 +1486,7 @@ we specify the pointing center in terms of the row numbers of the FIELD subtable
      </param>
 
      <param type="intArray" name="fieldids">
-     <description>output component list after PB has been applied [optional]</description>
+     <description>List of field ids that correspond each of the  images,used to center the PB of each image. (0-based list)</description>
      <value>0</value>
      </param>
 
@@ -1501,7 +1626,7 @@ at some level. For example:
 
 ia.open('scanweight'); 
  ia.statistics(s);	
-threshold := s.max / 10.0;
+threshold = s.max / 10.0;
 #
 ia.imagecalc('sdimage',
 	      pixels=spaste('scanimage[scanweight&gt;', threshold,
@@ -1525,6 +1650,11 @@ ia.imagecalc('sdimage',
      <param type="string" name="compleximage">
      <description>Name of output complex image</description>
      <value></value>  
+     </param>
+
+     <param type="bool" name="verbose">
+     <description>Report things like the center frequency to the logger</description>
+     <value>true</value>
      </param>
 
      <param type="bool" name="async">
@@ -2000,6 +2130,11 @@ the data selection.
      <description>Compress calibration columns?</description>
      <value>false</value>
      </param>
+
+     <param type="bool" name="usescratch">
+     <description>If true: Imager will use corrected data column and make scratch columns of they donot exist</description>
+     <value>false</value>
+     </param>
 </input>
 <returns type="bool"/>
 </method>
@@ -2199,8 +2334,8 @@ versus time (after sorting).
 <returns type="bool"/>
 <example>
 \begin{verbatim}
-m:=fitstoms('3C273XC1.ms', '3C273XC1.fits'); m.close()
-im:=imager('3C273XC1.ms')
+m = fitstoms('3C273XC1.ms', '3C273XC1.fits'); m.close()
+im = imager('3C273XC1.ms')
 im.plotsummary()
 \end{verbatim}
 </example>
@@ -2388,9 +2523,9 @@ im.clean(mask='bigmask', model='3C273XC1.clean.masked', niter=1000)
 
 Another example using rg.wbox function: 
 ia.open('dirty')
-cs:=ia.coordsys()
+cs = ia.coordsys()
 rg.setcoordinates(cs.record())
-r1:=dg.wbox(blc=['173pix', '347pix'], trc=['183pix', '370pix'])
+r1 = dg.wbox(blc=['173pix', '347pix'], trc=['183pix', '370pix'])
 im.regionmask(mask='bigmask',region=r1)
 
 Or using a dict of regions:
@@ -2431,7 +2566,7 @@ allow us to pick the one we want.
 
 myregionoftoday
 
-- myoldregion:=drm.fromtabletoglobal('mytab.region', T, 'myregionoftoday')
+- myoldregion = drm.fromtabletoglobal('mytab.region', T, 'myregionoftoday')
 
 - imagr.regionmask(mask='newmask',region=myoldregion)
 
@@ -2503,9 +2638,9 @@ im.clean(mask='bigmask', model='3C273XC1.clean.masked', niter=1000)
 
 Another example using rg.wbox function: 
 ia.open('dirty')
-cs:=ia.coordsys()
+cs = ia.coordsys()
 rg.setcoordinates(cs.record())
-r1:=dg.wbox(blc=['173pix', '347pix'], trc=['183pix', '370pix'])
+r1 = dg.wbox(blc=['173pix', '347pix'], trc=['183pix', '370pix'])
 im.regionmask(mask='bigmask',region=r1)
 
 Or using a dict of regions:
@@ -2546,7 +2681,7 @@ allow us to pick the one we want.
 
 myregionoftoday
 
-- myoldregion:=drm.fromtabletoglobal('mytab.region', T, 'myregionoftoday')
+- myoldregion = drm.fromtabletoglobal('mytab.region', T, 'myregionoftoday')
 
 - imagr.regionmask(mask='newmask',region=myoldregion)
 
@@ -2657,7 +2792,7 @@ of <link anchor="imager:imager.weight.function">weight</link> and <link anchor="
 
 </description>
 <output>
-     <param type="double" direction="out" name="pointsource" units="Jy/beam">
+     <param type="record" direction="out" name="pointsource">
      <description>Calculated point source sensitivity (Jy/beam)</description>
      </param>
 
@@ -2912,7 +3047,7 @@ im.setimage(mode='velocity', nchan=200, mstart='20km/s',
 </input>
 <example>
 \begin{verbatim}
-im:=imager('3C273XC1.MS');
+im = imager('3C273XC1.MS');
 im.setdata(nchan=512,start=1,step=1, msselect='SCAN_NUMBER &gt; 10 &amp;&amp; FIELD_ID==2)
 \end{verbatim}
 </example>
@@ -2922,7 +3057,7 @@ im.setdata(nchan=512,start=1,step=1, msselect='SCAN_NUMBER &gt; 10 &amp;&amp; FI
 
  
    <method type="function" name="selectvis">
-   <shortdescription>Select visibility selection for subsequent processing</shortdescription>
+   <shortdescription>Select visibilities for subsequent processing</shortdescription>
    
 <description>
 This setup tool function selects which data are to be used 
@@ -2932,7 +3067,7 @@ data are gridded into an image, and in plotting, only the
 selected data are plotted.
 
 Data can be selected by field and spectral window ids. Note that
-all data thus selected are passed to the imaging, and may or
+all data thus selected are passed to imaging, and may or
 may not be imaged, depending on how the image was constructed
 using <link anchor="imager:imager.defineimage.function">defineimage</link>. For example,
 in mosaicing, use fieldid in setimage to control what pointing
@@ -3061,7 +3196,6 @@ im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
      <value>1</value>
      </param>
 
-
      <param type="any" name="spw">
      <description>Spectral Window Ids (0 relative) to select; -1 interpreted as all</description>
      <any type="variant"/>
@@ -3069,7 +3203,6 @@ im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
      </param>
 
      <param type="any" name="field">
-     <any type="variant"/>
      <description>Field Ids (0 relative) or Field names (msselection syntax and wilcards are used) to select</description>
      <any type="variant"/>
      <value>-1</value>
@@ -3104,10 +3237,21 @@ im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
      <description>For the TAQL experts, flexible data selection using the TAQL syntax</description>
      <value></value>
      </param>
+
+     <param type="bool" name="usescratch">
+     <description>If True: imager will use CORRECTED_DATA column and will make scratch columns and store Model visibilities
+      after deconvolution </description>
+     <value>false</value>
+     </param>
+      <param type="bool" name="datainmemory">
+     <description>If True: imager will load the selected ms memory; useful if imaging a few channels that fit in memory </description>
+     <value>false</value>
+     </param>
+
 </input>
 <example>
 \begin{verbatim}
-im:=imager('3C273XC1.MS');
+im = imager('3C273XC1.MS');
 im.selectvis(nchan=512,start=1,step=1, taql='SCAN_NUMBER &gt; 10 &amp;&amp; FIELD_ID==2')
 \end{verbatim}
 
@@ -3329,9 +3473,9 @@ myimager.clean(algorithm='mfclark', niter=1000, model='mosaic')
 
 ## Example 4
 
-dir1:=dm.direction('J2000', '20h00m00', '21d00m00')
-dir2:=dm.direction('J2000', '20h10m00', '21d00m00')
-dir3:=dm.direction('J2000', '20h00m00', '21d03m00')
+dir1 = dm.direction('J2000', '20h00m00', '21d00m00')
+dir2 = dm.direction('J2000', '20h10m00', '21d00m00')
+dir3 = dm.direction('J2000', '20h00m00', '21d03m00')
 im.setimage(nx=100, ny=100, cellx='0.1arcsec', celly='0.1arsec',
               doshift=T, phasecenter=dir1)
 im.make('box1')
@@ -3659,10 +3803,6 @@ especially in wide-field cleaning.
 	 <value>spline</value>
        </allowed>
      </param>
-     <param type="bool" name="usemodelcol">
-     <description>use MODEL\_DATA column or not</description>
-     <value>true</value>
-     </param>
 
      <param type="int" name="wprojplanes">
      <description>No of gridding convolution functions used in
@@ -3760,10 +3900,10 @@ an outlier field (or flanking) field is set on an interfering  source
 outside of the field of interest.
 
 \begin{verbatim}
-pim:=imager('coma.ms')
+pim = imager('coma.ms')
 
 pim.setdata(spwid=1, fieldid=1);
-mydir:=dm.direction('J2000', '12h30m48', '12d24m0')
+mydir = dm.direction('J2000', '12h30m48', '12d24m0')
 pim.setimage(nx=200, ny=200, cellx='30arcsec', celly='30arcsec', doshift=T, phasecenter=mydir); 
 pim.make('outlier1');
 pim.setimage(nx=3000, ny=3000, cellx='30arcsec',celly='30arcsec',facets=3);
@@ -3843,6 +3983,33 @@ it would be  equivalent to a Hogbom clean.
 </method>
 
 
+   <method type="function" name="setsmallscalebias">
+   <shortdescription>Set bias toward smaller scales for  MultiScale Clean</shortdescription>
+
+<description>
+
+</description>
+
+<input>
+
+     <param type="float" name="inbias">
+     <description>small scale bias</description>
+     <value>0.6</value>
+     </param>
+
+</input>
+<returns type="bool"/>
+<example>
+\begin{verbatim}
+- im.setsmallscalebias(inbias=0.6);
+\end{verbatim}
+
+
+</example>
+
+</method>
+
+
    <method type="function" name="settaylorterms">
    <shortdescription>Set the number of Taylor series terms for Multi-Frequency Clean</shortdescription>
    
@@ -3890,7 +4057,8 @@ factor.
 is multiplied by this factor.
 \end{description}
 \item[convsupport] This parameter can be used to change the support used in gridding single dish data in imaging. If 'PB' or 'pb' is used as the 'convtype' in 
- <link anchor="imager:imager.setoptions.function">setoptions</link> this parameter is ignored as the support is defined by the primary beam. The deafult of -1 means 1 as convsupport is used for 'box' convolution function and 3 is used for 'SF' convolution function.
+ <link anchor="imager:imager.setoptions.function">setoptions</link> this parameter is ignored as the support is defined by the primary beam. The deafult of -1 mans 1 as convsupport is used for 'box' convolution function and 3 is used for 'SF' convolution function.
+\item[pointingcolumntouse] This parameter is NOT to be changed under normal circumstances. This is to be used by those who know what they are doing and want to try to use different columns in the POINTING table especially if they believe their dish direction is wrong. And if any of the {\tt _OFFSET} columns is used do not expect to be able to use a different frame in the image setup in <link anchor="imager:imager.defineimage.function">defineimage</link>. Possible values are {\tt DIRECTION, TARGET, ENCODER, POINTING_OFFSET, SOURCE_OFFSET} 
 
 </description>
 
@@ -3910,6 +4078,20 @@ is multiplied by this factor.
      <description>number of pixel for convolution support</description>
      <value>-1</value>
      </param>
+
+     <param type="string" name="pointingcolumntouse">
+     <description>Which Pointing Table column to use to get direction</description>
+     <value>DIRECTION</value>
+     <allowed kind="enum">
+	    <value>DIRECTION</value>
+	    <value>TARGET</value>
+	    <value>ENCODER</value>
+	    <value>POINTING_OFFSET</value>
+	    <value>SOURCE_OFFSET</value>
+     </allowed>
+
+     </param>
+
 </input>
 <returns type="bool"/>
 <example>
@@ -3977,6 +4159,11 @@ This will be corrected shortly.
      <description>Which default telescope to use; if empty use the
   one in encoded in MS </description>
      <value></value>
+     </param>
+
+     <param type="bool" name="verbose">
+     <description>If false, suppress some messages from being sent to the logger.</description>
+     <value>true</value>
      </param>
 </input>
 <returns type="bool"/>
@@ -4084,14 +4271,14 @@ or <link anchor="imager:imager.setbeam.function">setbeam</link>.
 <returns type="bool"/>
 <example>
 \begin{verbatim}
-- im:=imager('3C273XC1.MS');
+- im = imager('3C273XC1.MS');
 - im.setimage(npix=[256,256])
 - im.summary()
 \end{verbatim}
 </example>
 </method>
 
- 
+
    <method type="function" name="uvrange">
    <shortdescription>Select data within the limit of a given range</shortdescription>
    

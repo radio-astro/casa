@@ -178,6 +178,8 @@ namespace asdm {
 	
  	 * @param endTime. 
 	
+ 	 * @param fieldName. 
+	
  	 * @param subscanIntent. 
 	
  	 * @param numberIntegration. 
@@ -186,10 +188,8 @@ namespace asdm {
 	
  	 * @param flagRow. 
 	
- 	 * @param fieldName. 
-	
      */
-	SubscanRow* SubscanTable::newRow(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow, string fieldName){
+	SubscanRow* SubscanTable::newRow(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow){
 		SubscanRow *row = new SubscanRow(*this);
 			
 		row->setExecBlockId(execBlockId);
@@ -202,6 +202,8 @@ namespace asdm {
 			
 		row->setEndTime(endTime);
 			
+		row->setFieldName(fieldName);
+			
 		row->setSubscanIntent(subscanIntent);
 			
 		row->setNumberIntegration(numberIntegration);
@@ -209,13 +211,11 @@ namespace asdm {
 		row->setNumberSubintegration(numberSubintegration);
 			
 		row->setFlagRow(flagRow);
-			
-		row->setFieldName(fieldName);
 	
 		return row;		
 	}	
 
-	SubscanRow* SubscanTable::newRowFull(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow, string fieldName)	{
+	SubscanRow* SubscanTable::newRowFull(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow)	{
 		SubscanRow *row = new SubscanRow(*this);
 			
 		row->setExecBlockId(execBlockId);
@@ -228,6 +228,8 @@ namespace asdm {
 			
 		row->setEndTime(endTime);
 			
+		row->setFieldName(fieldName);
+			
 		row->setSubscanIntent(subscanIntent);
 			
 		row->setNumberIntegration(numberIntegration);
@@ -235,8 +237,6 @@ namespace asdm {
 		row->setNumberSubintegration(numberSubintegration);
 			
 		row->setFlagRow(flagRow);
-			
-		row->setFieldName(fieldName);
 	
 		return row;				
 	}
@@ -299,8 +299,10 @@ SubscanRow* SubscanTable::newRowCopy(SubscanRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
 	 */
-	SubscanRow*  SubscanTable::checkAndAdd(SubscanRow* x) throw (DuplicateKey) {
+	SubscanRow*  SubscanTable::checkAndAdd(SubscanRow* x)  {
 		
 		
 		if (getRowByKey(
@@ -386,6 +388,8 @@ SubscanRow* SubscanTable::newRowCopy(SubscanRow* row) {
  	 		
  * @param endTime.
  	 		
+ * @param fieldName.
+ 	 		
  * @param subscanIntent.
  	 		
  * @param numberIntegration.
@@ -393,15 +397,13 @@ SubscanRow* SubscanTable::newRowCopy(SubscanRow* row) {
  * @param numberSubintegration.
  	 		
  * @param flagRow.
- 	 		
- * @param fieldName.
  	 		 
  */
-SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow, string fieldName) {
+SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNumber, ArrayTime startTime, ArrayTime endTime, string fieldName, SubscanIntentMod::SubscanIntent subscanIntent, int numberIntegration, vector<int > numberSubintegration, bool flagRow) {
 		SubscanRow* aRow;
 		for (unsigned int i = 0; i < size(); i++) {
 			aRow = row.at(i); 
-			if (aRow->compareNoAutoInc(execBlockId, scanNumber, subscanNumber, startTime, endTime, subscanIntent, numberIntegration, numberSubintegration, flagRow, fieldName)) return aRow;
+			if (aRow->compareNoAutoInc(execBlockId, scanNumber, subscanNumber, startTime, endTime, fieldName, subscanIntent, numberIntegration, numberSubintegration, flagRow)) return aRow;
 		}			
 		return 0;	
 } 
@@ -409,7 +411,6 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
  	 	
 
 	
-
 
 
 
@@ -430,7 +431,7 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 #endif
 	
 #ifndef WITHOUT_ACS
-	void SubscanTable::fromIDL(SubscanTableIDL x) throw(DuplicateKey,ConversionException) {
+	void SubscanTable::fromIDL(SubscanTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			SubscanRow *tmp = newRow();
@@ -441,28 +442,27 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 	}
 #endif
 
-	char *SubscanTable::toFITS() const throw(ConversionException) {
+	char *SubscanTable::toFITS() const  {
 		throw ConversionException("Not implemented","Subscan");
 	}
 
-	void SubscanTable::fromFITS(char *fits) throw(ConversionException) {
+	void SubscanTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Subscan");
 	}
 
-	string SubscanTable::toVOTable() const throw(ConversionException) {
+	string SubscanTable::toVOTable() const {
 		throw ConversionException("Not implemented","Subscan");
 	}
 
-	void SubscanTable::fromVOTable(string vo) throw(ConversionException) {
+	void SubscanTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Subscan");
 	}
 
-	string SubscanTable::toXML()  throw(ConversionException) {
+	
+	string SubscanTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<SubscanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/SubscanTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<SubscanTable> ");
+		buf.append("<SubscanTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/SubscanTable\" xsi:schemaLocation=\"http://Alma/XASDM/SubscanTable http://almaobservatory.org/XML/XASDM/2/SubscanTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -478,8 +478,9 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 		buf.append("</SubscanTable> ");
 		return buf;
 	}
+
 	
-	void SubscanTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void SubscanTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<SubscanTable")) 
 			error();
@@ -521,20 +522,110 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 			error();
 	}
 
-	void SubscanTable::error() throw(ConversionException) {
+	
+	void SubscanTable::error()  {
 		throw ConversionException("Invalid xml document","Subscan");
 	}
 	
+	
 	string SubscanTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void SubscanTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Subscan");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			SubscanRow* aRow = SubscanRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Subscan");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Subscan");
+		} 		 	
+	}
+
 	
 	void SubscanTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -565,6 +656,7 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 				throw ConversionException("Could not close file " + fileName, "Subscan");
 		}
 	}
+
 	
 	void SubscanTable::setFromFile(const string& directory) {
 		string tablename;
@@ -606,6 +698,11 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

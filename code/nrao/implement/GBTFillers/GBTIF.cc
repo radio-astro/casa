@@ -275,5 +275,5 @@ void GBTIF::clearCorrs()
 
 // Needed to avoid namespace conflicts
 #include <casa/Utilities/Copy.tcc>
-template void objcopy<GBTIF *>(GBTIF **, GBTIF * const *, uInt);
-template void objset<GBTIF *>(GBTIF **, GBTIF *, uInt);
+//template void objcopy<GBTIF *>(GBTIF **, GBTIF * const *, uInt);
+//template void objset<GBTIF *>(GBTIF **, GBTIF *, uInt);

@@ -462,14 +462,42 @@ bool LogViewer::load(const QString &f)
     }
 
     std::string name = fileName.toStdString();
-    logStream = new std::ifstream(name.c_str());
+    try {
+       logStream = new std::ifstream(name.c_str());
+    }
+    catch (std::bad_alloc &x) {
+       qDebug() << "Can't load the file. " << x.what();
+       return false;
+    }
 
     logStream->seekg(0,std::ios::end);
-    int length = logStream->tellg();
-    logStream->seekg(0,std::ios::beg);
-    char *buf = new char[length+1];
-    buf[0] = '\0';
+    unsigned int len = logStream->tellg();
+    //qDebug() << "#c=" << len;
+    int length = 100 * 500000; //500000 rows each 100 chars
+    if (len < (unsigned int)length) {
+       length = len;
+       logStream->seekg(0,std::ios::beg);
+    }
+    else {
+       logStream->seekg(len - length);
+    }
+    char *buf;
+    buf = new (std::nothrow) char[length+1];
+    if (!buf) {
+       qDebug() << "Can't allocate memory region of size=" << length ;
+       return false;
+    }
 
+    //same functionality as above
+    //try {
+    //   buf = new char[length+1];
+    //}
+    //catch (std::bad_alloc &x) {
+    //   qDebug() << "Can't allocate memory region: " << x.what();
+    //   return false;
+    //}
+
+    buf[0] = '\0';
     logStream->read(buf,length);
     buf[length] = '\0';
 	
@@ -553,12 +581,27 @@ bool LogViewer::fileSaveAs()
        QString(), tr("Casa Log Files (*.log)"));
     if (fn.isEmpty())
         return false;
-    fn = fn.section('/', -1);
-    //qDebug() << "fn=" << fn;
-    if (fn == "casapy.log")
-        fn.prepend("~");
-    if (fn.startsWith("-"))
-       fn.replace("-", "_");
+
+    int pos = fn.lastIndexOf('/');
+
+    if (pos < 0)
+       return false;
+
+    QString path = fn.left(pos);
+    QString fnm = fn.section('/', -1);
+    if (fnm == "casapy.log")
+       fnm.prepend("~");
+    if (fnm.startsWith("-"))
+       fnm.replace("-", "_");
+    //if (fnm == "")
+    //    fnm = "~casapy.log";
+    if (!fnm.endsWith(".log"))
+        fnm.append(".log");
+
+    fn = path + '/' + fnm;
+    
+    //qDebug() << "fn=" << fn << "fnm=" << fnm;
+    
     QFile file(fn);
     if (!file.open(QFile::WriteOnly))
         return false;
@@ -631,11 +674,28 @@ void LogViewer::filePrintPdf()
 void LogViewer::fileChanged(const QString& fileName)
 {
 	if (!logStream->eof()) {
-		int current_offset = logStream->tellg( );
+		unsigned int current_offset = logStream->tellg( );
 		logStream->seekg(0,std::ios::end);
-		int length = ((int)logStream->tellg()) - current_offset;
+                unsigned int now = logStream->tellg();
+		int length = now - current_offset;
+                //qDebug() << "current_offset=" << current_offset 
+                //         << " length=" << length;
 		logStream->seekg(current_offset,std::ios::beg);
-		char *buf = new char[length+1];
+		char *buf;
+                buf = new (std::nothrow) char[length+1];
+                if (!buf) {
+                   qDebug() << "Can't allocate more memory region" ;
+                   return;
+                }
+
+                //try {
+                //   buf = new char[length+1];
+                //}
+                //catch(...) {
+                //   qDebug() << "Can't allocate more memory region";
+                //   return;
+                //}
+
 		buf[0] = '\0';
 
 		logStream->read(buf,length);
@@ -775,12 +835,64 @@ void LogViewer::copy()
    //erase from memory the selected
    //board->clear(QClipboard::Selection);
 
+   QModelIndexList lst = logView->selectionModel()->selectedIndexes();
+   
+   QSet<int> idSet;
+   for (int i = 0; i < lst.count(); i++) {
+     QModelIndex s = proxyModel->mapToSource(lst.at(i));
+     //qDebug() << "selected/mapped row" << s.row();
+     idSet.insert(s.row());
+   }
+ 
+   int rowNum = idSet.size();
+   if (rowNum < 1)
+       return;
+
+   int rowId[rowNum];
+   int k = 0;
+   foreach (int value, idSet)            
+     rowId[k++] = value;
+
+   //for (int i = 0; i < rowNum; i++) {
+   //   qDebug() << "rowId=" << rowId[i];
+   //}
+
+   int sortedId[rowNum];
+   int last = 100000000;
+   for (int j = 0; j < rowNum; j++) {
+     int max = -1;
+     int t = -1;
+     for (int i = 0; i < rowNum; i++) {
+       if (rowId[i] > max && rowId[i] < last) {
+         max = rowId[i];
+         t = i;
+       }
+     }
+     sortedId[j] = rowId[t]; 
+     last = max;
+     //qDebug() << "max=" << last << "sorted" << j << sortedId[j];
+   }
+   
+   //for (int i = 0; i < rowNum; i++) {
+   //  qDebug() << "sorted row" << sortedId[i];
+   //}
+
+   QString clip = "";
+   for (int i = rowNum - 1; i > -1; i--) {
+     //qDebug() << "sorted row" << i;
+     QString str = logModel->stringData(sortedId[i]); 
+     //logModel->removeRow(sortedId[i], QModelIndex()); 
+     clip = clip + str;
+   }
+   board->setText(clip, QClipboard::Selection);
+
+   /*
    //4.2>>>>>>>>>>
    QModelIndexList lst = logView->selectionModel()->selectedIndexes();
    QString clip = "";
    for (int i = 0; i < lst.count(); i += 4) {
     QModelIndex s = proxyModel->mapToSource(lst.at(i));
-   //  qDebug() << "selected/mapped row" << s.row();
+     qDebug() << "selected/mapped row" << s.row();
     QString str = logModel->stringData(s.row()); 
     clip = clip + str;
    }
@@ -788,6 +900,7 @@ void LogViewer::copy()
    // qDebug() << "====cliplboard: " 
    //            << board->text(QClipboard::Selection);
    //4.2<<<<<<<<<<
+   */
 
    /* single selection mode
    QString str = logModel->stringData(currentLogRow.row()); 

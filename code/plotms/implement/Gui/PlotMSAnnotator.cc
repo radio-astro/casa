@@ -26,7 +26,9 @@
 //# $Id: $
 #include <plotms/Gui/PlotMSAnnotator.h>
 
+#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Plots/PlotMSPlot.h>
 
 #include <QInputDialog>
 

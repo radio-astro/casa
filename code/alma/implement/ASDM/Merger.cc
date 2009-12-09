@@ -59,8 +59,6 @@ namespace asdm {
 
 		Merger::mergeFeedPtr = &Merger::mergeFeed;
 
-		Merger::mergeSourceParameterPtr = &Merger::mergeSourceParameter;
-
 		Merger::mergeSpectralWindowPtr = &Merger::mergeSpectralWindow;
 
 		Merger::mergeFreqOffsetPtr = &Merger::mergeFreqOffset;
@@ -163,6 +161,8 @@ namespace asdm {
 
 		Merger::mergeAnnotationPtr = &Merger::mergeAnnotation;
 
+		Merger::mergeDelayModelPtr = &Merger::mergeDelayModel;
+
 	}
 	
 	Merger::~Merger() {
@@ -191,8 +191,6 @@ namespace asdm {
 		hasMergedSource = false;
 
 		hasMergedFeed = false;
-
-		hasMergedSourceParameter = false;
 
 		hasMergedSpectralWindow = false;
 
@@ -296,6 +294,8 @@ namespace asdm {
 
 		hasMergedAnnotation = false;
 
+		hasMergedDelayModel = false;
+
 
 		mergeSBSummary( );
 
@@ -314,8 +314,6 @@ namespace asdm {
 		mergeSource( );
 
 		mergeFeed( );
-
-		mergeSourceParameter( );
 
 		mergeSpectralWindow( );
 
@@ -419,6 +417,8 @@ namespace asdm {
 
 		mergeAnnotation( );
 
+		mergeDelayModel( );
+
 
 		postMergeSBSummary( );
 
@@ -437,8 +437,6 @@ namespace asdm {
 		postMergeSource( );
 
 		postMergeFeed( );
-
-		postMergeSourceParameter( );
 
 		postMergeSpectralWindow( );
 
@@ -541,6 +539,8 @@ namespace asdm {
 		postMergeCalWVR( );
 
 		postMergeAnnotation( );
+
+		postMergeDelayModel( );
 			
 	}
 	
@@ -639,6 +639,7 @@ namespace asdm {
 		ConfigDescriptionRow *row1 = 0;
 		for (unsigned int i = 0; i < rows1.size(); i++) {
 			row1 = rows1.at(i);
+
 		
 			
 			if (row1->isAssocConfigDescriptionIdExists()) {
@@ -676,19 +677,16 @@ namespace asdm {
 		FieldRow *row1 = 0;
 		for (unsigned int i = 0; i < rows1.size(); i++) {
 			row1 = rows1.at(i);
+
 		
 			
 			if (row1->isAssocFieldIdExists()) {
 				
 				
-				vector<Tag> assocFieldId1 = row1->getAssocFieldId();
-				vector<Tag> assocFieldId1_new;
-				for (unsigned int j = 0; j < assocFieldId1.size(); j++) {
+				
 					
-					assocFieldId1_new.push_back(getTag( assocFieldId1.at(j), 0));
+			row1->setAssocFieldId(getTag(row1->getAssocFieldId(), 0));
 					
-				}
-				row1->setAssocFieldId(	assocFieldId1_new);
 				
 			}
 			
@@ -771,6 +769,7 @@ namespace asdm {
 		AntennaRow *row1 = 0;
 		for (unsigned int i = 0; i < rows1.size(); i++) {
 			row1 = rows1.at(i);
+
 		
 			
 			if (row1->isAssocAntennaIdExists()) {
@@ -876,25 +875,6 @@ namespace asdm {
 	void Merger::postMergeSource() {
 		cout << "Entering Merger::postMergeSource" << endl;
 	
-		vector <SourceRow *> rows1 = ds1->getSource().get();
-		SourceRow *row1 = 0;
-		for (unsigned int i = 0; i < rows1.size(); i++) {
-			row1 = rows1.at(i);
-		
-			
-			if (row1->isSourceParameterIdExists()) {
-				
-				
-				
-					
-			row1->setSourceParameterId(getId("SourceParameter", row1->getSourceParameterId(), 0));
-					
-				
-			}
-			
-		
-		}
-	
 		cout << "Exiting Merger::postMergeSource" << endl;
 	}			
 
@@ -952,6 +932,7 @@ namespace asdm {
 		FeedRow *row1 = 0;
 		for (unsigned int i = 0; i < rows1.size(); i++) {
 			row1 = rows1.at(i);
+
 		
 			
 			if (row1->isBeamIdExists()) {
@@ -974,39 +955,6 @@ namespace asdm {
 		cout << "Exiting Merger::postMergeFeed" << endl;
 	}			
 
-	void Merger::mergeSourceParameter() {
-		cout << "Entering Merger::mergeSourceParameter" << endl;
-		if (hasMergedSourceParameter) return;
-	
-		vector <SourceParameterRow *> rows2 = ds2->getSourceParameter().get();
-		for (unsigned int i = 0; i < rows2.size(); i++) {
-			SourceParameterRow * row = ds1->getSourceParameter().newRow(rows2.at(i));
-		
-			
-				
-				
-			row->setSourceId(getId("Source", row->getSourceId(), mergeSourcePtr));
-				
-			
-		
-			SourceParameterRow * retRow = ds1->getSourceParameter().add(row);
-		
-			
-			idId.insert(make_pair("SourceParameter_"+Integer::toString(rows2.at(i)->getSourceParameterId()), retRow->getSourceParameterId()));
-			
-		
-		}
-	
-		hasMergedSourceParameter = true;
-		cout << "Exiting Merger::mergeSourceParameter" << endl;
-	}
-	
-	void Merger::postMergeSourceParameter() {
-		cout << "Entering Merger::postMergeSourceParameter" << endl;
-	
-		cout << "Exiting Merger::postMergeSourceParameter" << endl;
-	}			
-
 	void Merger::mergeSpectralWindow() {
 		cout << "Entering Merger::mergeSpectralWindow" << endl;
 		if (hasMergedSpectralWindow) return;
@@ -1022,6 +970,7 @@ namespace asdm {
 		SpectralWindowRow *row1 = 0;
 		for (unsigned int i = 0; i < rows1.size(); i++) {
 			row1 = rows1.at(i);
+
 		
 			
 			if (row1->isAssocSpectralWindowIdExists()) {
@@ -1212,26 +1161,6 @@ namespace asdm {
 		cout << "Entering Merger::mergeProcessor" << endl;
 		if (hasMergedProcessor) return;
 	
-		vector <ProcessorRow *> rows2 = ds2->getProcessor().get();
-		for (unsigned int i = 0; i < rows2.size(); i++) {
-			ProcessorRow * row = ds1->getProcessor().newRow(rows2.at(i));
-		
-			
-				
-				
-			Tag almaCorrelatorModeIdTag = getTag(row->getAlmaCorrelatorModeId(), mergeCorrelatorModePtr);
-			row->setAlmaCorrelatorModeId(almaCorrelatorModeIdTag);
-				
-			
-		
-			ProcessorRow * retRow = ds1->getProcessor().add(row);
-		
-			
-			tagTag.insert(make_pair(rows2.at(i)->getProcessorId().toString(), retRow->getProcessorId()));
-			
-		
-		}
-	
 		hasMergedProcessor = true;
 		cout << "Exiting Merger::mergeProcessor" << endl;
 	}
@@ -1334,15 +1263,7 @@ namespace asdm {
 			
 				
 				
-			row->setFeedId(getId("Feed", row->getFeedId(), mergeFeedPtr));
-				
-			
-		
-			
-				
-				
-			Tag focusModelIdTag = getTag(row->getFocusModelId(), mergeFocusModelPtr);
-			row->setFocusModelId(focusModelIdTag);
+			row->setFocusModelId(getId("FocusModel", row->getFocusModelId(), mergeFocusModelPtr));
 				
 			
 		
@@ -1658,6 +1579,14 @@ namespace asdm {
 			row->setAntennaId(	antennaId1);
 			
 		
+			
+				
+				
+			Tag sBSummaryIdTag = getTag(row->getSBSummaryId(), mergeSBSummaryPtr);
+			row->setSBSummaryId(sBSummaryIdTag);
+				
+			
+		
 			ExecBlockRow * retRow = ds1->getExecBlock().add(row);
 		
 			
@@ -1719,11 +1648,6 @@ namespace asdm {
 				
 			Tag execBlockIdTag = getTag(row->getExecBlockId(), mergeExecBlockPtr);
 			row->setExecBlockId(execBlockIdTag);
-				
-			
-		
-			
-				
 				
 			
 		
@@ -1802,6 +1726,33 @@ namespace asdm {
 		cout << "Entering Merger::mergeFocusModel" << endl;
 		if (hasMergedFocusModel) return;
 	
+		vector <FocusModelRow *> rows2 = ds2->getFocusModel().get();
+		for (unsigned int i = 0; i < rows2.size(); i++) {
+			FocusModelRow * row = ds1->getFocusModel().newRow(rows2.at(i));
+		
+			
+				
+				
+			Tag antennaIdTag = getTag(row->getAntennaId(), mergeAntennaPtr);
+			row->setAntennaId(antennaIdTag);
+				
+			
+		
+			
+				
+				
+			row->setAssocFocusModelId(getId("FocusModel", row->getAssocFocusModelId(), mergeFocusModelPtr));
+				
+			
+		
+			FocusModelRow * retRow = ds1->getFocusModel().add(row);
+		
+			
+			idId.insert(make_pair("FocusModel_"+Integer::toString(rows2.at(i)->getFocusModelId()), retRow->getFocusModelId()));
+			
+		
+		}
+	
 		hasMergedFocusModel = true;
 		cout << "Exiting Merger::mergeFocusModel" << endl;
 	}
@@ -1870,6 +1821,13 @@ namespace asdm {
 				
 			Tag antennaIdTag = getTag(row->getAntennaId(), mergeAntennaPtr);
 			row->setAntennaId(antennaIdTag);
+				
+			
+		
+			
+				
+				
+			row->setAssocPointingModelId(getId("PointingModel", row->getAssocPointingModelId(), mergePointingModelPtr));
 				
 			
 		
@@ -2286,6 +2244,30 @@ namespace asdm {
 	void Merger::postMergeAlmaRadiometer() {
 		cout << "Entering Merger::postMergeAlmaRadiometer" << endl;
 	
+		vector <AlmaRadiometerRow *> rows1 = ds1->getAlmaRadiometer().get();
+		AlmaRadiometerRow *row1 = 0;
+		for (unsigned int i = 0; i < rows1.size(); i++) {
+			row1 = rows1.at(i);
+
+		
+			
+			if (row1->isSpectralWindowIdExists()) {
+				
+				
+				vector<Tag> spectralWindowId1 = row1->getSpectralWindowId();
+				vector<Tag> spectralWindowId1_new;
+				for (unsigned int j = 0; j < spectralWindowId1.size(); j++) {
+					
+					spectralWindowId1_new.push_back(getTag( spectralWindowId1.at(j), 0));
+					
+				}
+				row1->setSpectralWindowId(	spectralWindowId1_new);
+				
+			}
+			
+		
+		}
+	
 		cout << "Exiting Merger::postMergeAlmaRadiometer" << endl;
 	}			
 
@@ -2636,6 +2618,7 @@ namespace asdm {
 		AnnotationRow *row1 = 0;
 		for (unsigned int i = 0; i < rows1.size(); i++) {
 			row1 = rows1.at(i);
+
 		
 			
 			if (row1->isAntennaIdExists()) {
@@ -2656,6 +2639,36 @@ namespace asdm {
 		}
 	
 		cout << "Exiting Merger::postMergeAnnotation" << endl;
+	}			
+
+	void Merger::mergeDelayModel() {
+		cout << "Entering Merger::mergeDelayModel" << endl;
+		if (hasMergedDelayModel) return;
+	
+		vector <DelayModelRow *> rows2 = ds2->getDelayModel().get();
+		for (unsigned int i = 0; i < rows2.size(); i++) {
+			DelayModelRow * row = ds1->getDelayModel().newRow(rows2.at(i));
+		
+			
+				
+				
+			Tag antennaIdTag = getTag(row->getAntennaId(), mergeAntennaPtr);
+			row->setAntennaId(antennaIdTag);
+				
+			
+		
+			DelayModelRow * retRow = ds1->getDelayModel().add(row);
+		
+		}
+	
+		hasMergedDelayModel = true;
+		cout << "Exiting Merger::mergeDelayModel" << endl;
+	}
+	
+	void Merger::postMergeDelayModel() {
+		cout << "Entering Merger::postMergeDelayModel" << endl;
+	
+		cout << "Exiting Merger::postMergeDelayModel" << endl;
 	}			
 
 

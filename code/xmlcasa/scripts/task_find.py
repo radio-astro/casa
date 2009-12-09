@@ -26,11 +26,13 @@ def find(matchstring=None):
 		arch=os.environ.get('CASAPATH').split()[1]
 		test=pathname.find('lib')
 		if (test != -1):
-			filepath=pathname+'/lib/python2.5/'
+                    filepath=pathname+'/lib/python2.5/'
 		else:
-			filepath=pathname+'/'+arch+'/python/2.5/'
+                    filepath=pathname+'/'+arch+'/python/2.5/'
+                if not os.path.exists(filepath) :
+                    filepath=pathname+'/Resources/python/'
 
-		# taskfiles = ['accum.py','simdata.py','applycal.py','bandpass.py','blcal.py','browsetable.py','clean.py','clearcal.py','clearplot.py','clearstat.py','concat.py','deconvolve.py','exportfits.py','exportuvfits.py','feather.py','filecatalog.py','flagautocorr.py','flagdata.py','flagmanager.py','fluxscale.py','fringecal.py','ft.py','gaincal.py','imhead.py','immoments.py','importasdm.py','importfits.py','importuvfits.py','importvla.py','invert.py','listcal.py','listhistory.py','listobs.py','makemask.py','mosaic.py','plotants.py','plotcal.py','plotxy.py','regridimage.py','setjy.py','smoothcal.py','split.py','uvcontsub.py','uvmodelfit.py','viewer.py']
+		# taskfiles = ['accum.py','simdata.py','applycal.py','bandpass.py','blcal.py','browsetable.py','clean.py','clearcal.py','clearplot.py','clearstat.py','concat.py','deconvolve.py','exportfits.py','exportuvfits.py','feather.py','filecatalog.py','flagautocorr.py','flagdata.py','flagmanager.py','fluxscale.py','fringecal.py','ft.py','gaincal.py','imhead.py','immoments.py','importasdm.py','importfits.py','importgmrt.py','importuvfits.py','importvla.py','invert.py','listcal.py','listhistory.py','listobs.py','makemask.py','mosaic.py','plotants.py','plotcal.py','plotms.py','plotxy.py','regridimage.py','setjy.py','smoothcal.py','split.py','uvcontsub.py','uvmodelfit.py','viewer.py']
 
 		taskfiles = []
 		for key in tasksum.keys() :

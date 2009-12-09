@@ -27,6 +27,7 @@
 #ifndef PLOTMSCONSTANTS_H_
 #define PLOTMSCONSTANTS_H_
 
+#include <casa/Containers/Record.h>
 #include <graphics/GenericPlotter/PlotFactory.h>
 
 #include <map>
@@ -105,6 +106,8 @@ class PMS {
 public:
     // Enum for the axis choices that are available to be plotted.  Used both
     // by the user to select what to plot and by the cache loading system.
+    // **If these are changed, also update: xmlcasa/tasks/plotms.xml,
+    // xmlcasa/scripts/task_plotms.py.**
     // <group>
     PMS_ENUM1(Axis, axes, axesStrings, axis,
 	      SCAN,FIELD,TIME,TIME_INTERVAL,
@@ -141,6 +144,7 @@ public:
     
     
     // Enum for the different data columns for data axes.
+    // **If these are changed, also update: xmlcasa/tasks/plotms.xml.**
     // <group>
     PMS_ENUM1(DataColumn, dataColumns, dataColumnStrings, dataColumn,
               DATA, CORRECTED, MODEL, RESIDUAL)
@@ -197,53 +201,90 @@ public:
     static bool strEq(const String& str1, const String& str2,
                       bool ignoreCase = false);
     
+    // Returns true if the given Records are equals, false otherwise.
+    static bool recEq(const Record& rec1, const Record& rec2);
+    
+    // Converts the given templated vector to/from an int Vector.
+    // <group>
+    template <class T>
+    static Vector<int> toIntVector(const vector<T>& v) {
+        Vector<int> v2(v.size());
+        for(unsigned int i = 0; i < v.size(); i++) v2[i] = (int)v[i];
+        return v2;
+    }
+    
+    template <class T>
+    static vector<T> fromIntVector(const Vector<int>& v) {
+        vector<T> v2(v.size());
+        for(unsigned int i = 0; i < v.size(); i++) v2[i] = (T)v[i];
+        return v2;
+    }
+    // </group>
+    
+    
+    // Enum for the different MS summary types.
+    // <group>
+    PMS_ENUM1(SummaryType, summaryTypes, summaryTypeStrings, summaryType,
+              S_ALL, S_WHERE, S_WHAT, S_HOW, S_MAIN, S_TABLES, S_ANTENNA,
+              S_FEED, S_FIELD, S_OBSERVATION, S_HISTORY, S_POLARIZATION,
+              S_SOURCE, S_SPW, S_SPW_POL,
+              S_SYSCAL, S_WEATHER)
+
+    PMS_ENUM2(SummaryType, summaryTypes, summaryTypeStrings, summaryType,
+              "All", "Where", "What", "How", "Main", "Tables", "Antenna",
+              "Feed", "Field", "Observation", "History", "Polarization",
+              "Source", "Spectral Window", "Spectral Window and Polarization",
+              "SysCal", "Weather")
+    // </group>
+              
+              
+    // Colorizing Values //
+              
+    // Returns the list of unique colors used to colorize plots.
+    static const vector<String>& COLORS_LIST();
+    
     
     // Default Parameter Values //
     
-    // Default axes for single plots.
+    // Default values for PlotMSParameters.
+    // <group>
+    static const String DEFAULT_LOG_FILENAME;
+    static const int DEFAULT_LOG_EVENTS;
+    static const LogMessage::Priority DEFAULT_LOG_PRIORITY;
+    static const bool DEFAULT_CLEAR_SELECTIONS;
+    static const int DEFAULT_CACHED_IMAGE_WIDTH;
+    static const int DEFAULT_CACHED_IMAGE_HEIGHT;
+    // </group>
+    
+    // Default values for PMS_PP_Cache.
     // <group>
     static const Axis DEFAULT_XAXIS;
     static const Axis DEFAULT_YAXIS;
+    static const DataColumn DEFAULT_DATACOLUMN;
+    static const Axis DEFAULT_COLOR_AXIS;
     // </group>
     
-    // Default data column for axes.
-    static const DataColumn DEFAULT_DATACOLUMN;
-    
-    // Default canvas axes.
+    // Default values for PMS_PP_Canvas.
     // <group>
     static const PlotAxis DEFAULT_CANVAS_XAXIS;
     static const PlotAxis DEFAULT_CANVAS_YAXIS;
-    // </group>
-    
-    // Default canvas axis label format, in String form.
     static const String DEFAULT_CANVAS_AXIS_LABEL_FORMAT;
-    
-    // Default flag to show/hide canvas axes.
     static const bool DEFAULT_SHOWAXIS;
-    
-    // Default legend flag and position.
-    // <group>
     static const bool DEFAULT_SHOWLEGEND;
     static const PlotCanvas::LegendPosition DEFAULT_LEGENDPOSITION;
+    static const bool DEFAULT_SHOW_GRID;
+    static PlotLinePtr DEFAULT_GRID_LINE(PlotFactoryPtr factory);
+    static const String DEFAULT_TITLE_FORMAT;
     // </group>
     
-    // Default symbols for normal and masked points.
+    // Default values for PMS_PP_Display.
     // <group>
-    static PlotSymbolPtr DEFAULT_SYMBOL(PlotFactoryPtr factory);
-    static PlotSymbolPtr DEFAULT_MASKED_SYMBOL(PlotFactoryPtr factory);
+    static PlotSymbolPtr DEFAULT_UNFLAGGED_SYMBOL(PlotFactoryPtr factory);
+    static PlotSymbolPtr DEFAULT_FLAGGED_SYMBOL(PlotFactoryPtr factory);
     // </group>
     
     // Returns the minimum visible sizes for plot symbol types.
     static map<PlotSymbol::Symbol, int> SYMBOL_MINIMUM_SIZES();
-    
-    // Default title (canvas, plot, etc.) format, in String form.
-    static const String DEFAULT_TITLE_FORMAT;
-    
-    // Default show grid flags.
-    static const bool DEFAULT_SHOW_GRID;
-    
-    // Default grid lines.
-    static PlotLinePtr DEFAULT_GRID_LINE(PlotFactoryPtr factory);
     
     // Default text annotation properties.
     // <group>
@@ -257,6 +298,38 @@ public:
     // <group>
     static PlotLinePtr DEFAULT_ANNOTATION_RECT_LINE(PlotFactoryPtr factory);
     static PlotAreaFillPtr DEFAULT_ANNOTATION_RECT_FILL(PlotFactoryPtr f);
+    // </group>
+    
+    
+    // Logging Constants //
+    
+    // Log class origin.
+    static const String LOG_ORIGIN;
+    
+    // Log event origin names.
+    // <group>
+    static const String LOG_ORIGIN_DBUS;
+    static const String LOG_ORIGIN_FLAG;
+    static const String LOG_ORIGIN_LOAD_CACHE;
+    static const String LOG_ORIGIN_LOCATE;
+    static const String LOG_ORIGIN_PARAMS_CHANGED;
+    static const String LOG_ORIGIN_PLOT;
+    static const String LOG_ORIGIN_RELEASE_CACHE;
+    static const String LOG_ORIGIN_UNFLAG;
+    static const String LOG_ORIGIN_SUMMARY;
+    // </group>
+    
+    // Log event flags.
+    // <group>
+    static const int LOG_EVENT_DBUS;
+    static const int LOG_EVENT_FLAG;
+    static const int LOG_EVENT_LOAD_CACHE;
+    static const int LOG_EVENT_LOCATE;
+    static const int LOG_EVENT_PARAMS_CHANGED;
+    static const int LOG_EVENT_PLOT;
+    static const int LOG_EVENT_RELEASE_CACHE;
+    static const int LOG_EVENT_UNFLAG;
+    static const int LOG_EVENT_SUMMARY;
     // </group>
 };
 

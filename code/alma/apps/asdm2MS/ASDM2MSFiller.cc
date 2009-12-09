@@ -27,33 +27,33 @@ void	timer( double *cpu_time ,		/* cpu timer */
 	       double *real_time ,		/* real timer */
 	       int  *mode )			/* the mode */
 {
-   clock_t	tc;				/* clock time */
-   double	ct;				/* cpu time in seconds */
-   double	rt = 0.0;			/* real time in seconds */
+  clock_t	tc;				/* clock time */
+  double	ct;				/* cpu time in seconds */
+  double	rt = 0.0;			/* real time in seconds */
 #if	defined(__sysv__)
-   struct timeval 	Tp;
-   struct timezone	Tzp;
+  struct timeval 	Tp;
+  struct timezone	Tzp;
 #elif	defined(__bsd__)
-   struct timeb tr;				/* struct from ftime */
+  struct timeb tr;				/* struct from ftime */
 #else
 #endif
-   tc = clock( );				/* get clock time */
-   ct = (double)(tc) / (double)CLOCKS_PER_SEC;	/* to seconds */
+  tc = clock( );				/* get clock time */
+  ct = (double)(tc) / (double)CLOCKS_PER_SEC;	/* to seconds */
 #if	defined(__sysv__)
-   gettimeofday( &Tp, &Tzp );			/* get timeofday */
-   rt = (double) Tp.tv_sec + 0.000001 * (double) Tp.tv_usec;
+  gettimeofday( &Tp, &Tzp );			/* get timeofday */
+  rt = (double) Tp.tv_sec + 0.000001 * (double) Tp.tv_usec;
 #elif	defined(__bsd__)
-   ftime( &tr );				/* get real time */
-   rt = (double) tr.time + 0.001 * (double) tr.millitm;	/* in seconds */
+  ftime( &tr );				/* get real time */
+  rt = (double) tr.time + 0.001 * (double) tr.millitm;	/* in seconds */
 #else
 #endif
-   if (*mode) {					/* calculate difference */
-      (*cpu_time)  = ct - (*cpu_time);		/* cpu time */
-      (*real_time) = rt - (*real_time);		/* real time */
-   } else {
-      (*cpu_time)  = ct;			/* set cpu time */
-      (*real_time) = rt;			/* set real time */
-   }
+  if (*mode) {					/* calculate difference */
+    (*cpu_time)  = ct - (*cpu_time);		/* cpu time */
+    (*real_time) = rt - (*real_time);		/* real time */
+  } else {
+    (*cpu_time)  = ct;			/* set cpu time */
+    (*real_time) = rt;			/* set real time */
+  }
 }
 
 
@@ -169,7 +169,8 @@ ASDM2MSFiller::ASDM2MSFiller(const char    *name_,
 			     double        creation_time_,
 			     Bool          withRadioMeters_,
 			     Bool          complexData,
-			     Bool          withCompression ):
+			     Bool          withCompression,
+			     Bool          withCorrectedData):
   itsFeedTimeMgr(0),
   itsFieldTimeMgr(0),
   itsObservationTimeMgr(0),
@@ -184,7 +185,7 @@ ASDM2MSFiller::ASDM2MSFiller(const char    *name_,
   itsMSMainRow(0),
   itsDataShapes(0),
   itsNCat(3)
- {
+{
   int status;
 
   itsName = name_;
@@ -196,7 +197,7 @@ ASDM2MSFiller::ASDM2MSFiller(const char    *name_,
   itsObservationTimeMgr = new timeMgr[1]; 
   itsScanNumber         = 0;
 
-  status = createMS(itsName, complexData, withCompression);
+  status = createMS(itsName, complexData, withCompression, withCorrectedData);
 
 }
 
@@ -205,7 +206,7 @@ ASDM2MSFiller::~ASDM2MSFiller() {
   ;
 }
 
-int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompression) {
+int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompression, Bool withCorrectedData) {
 
   String aName;
   aName = String(msName);
@@ -217,315 +218,313 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
   cat(2) = "USER";
 
 
-  try {
-    //cout << "Entering createMS : measurement set = "<< aName <<"\n";
+  //cout << "Entering createMS : measurement set = "<< aName <<"\n";
 
-    // Get the MS main default table description
-    TableDesc td = MS::requiredTableDesc();
-    //cout << "createMS TableDesc\n";
+  // Get the MS main default table description
+  TableDesc td = MS::requiredTableDesc();
+  //cout << "createMS TableDesc\n";
 
-    if (complexData) {
-      // Add the DATA column
-      MS::addColumnToDesc(td, MS::DATA,2);
+  if (complexData) {
+    // Add the DATA column
+    MS::addColumnToDesc(td, MS::DATA,2);
       
-      // Add the CORRECTED_DATA column
+    // Do we want a CORRECTED_DATA column ?
+    if (withCorrectedData) 
       MS::addColumnToDesc(td, MS::CORRECTED_DATA,2);
       
-      // Do we want a compressed DATA column ?
-      if (withCompression) MS::addColumnCompression(td, MS::DATA, true);
-    }
-    else {
-      // Add the FLOAT_DATA column
-      MS::addColumnToDesc(td, MS::FLOAT_DATA,2);
+    // Do we want a compressed DATA column ?
+    if (withCompression) MS::addColumnCompression(td, MS::DATA, true);
+  }
+  else {
+    // Add the FLOAT_DATA column
+    MS::addColumnToDesc(td, MS::FLOAT_DATA,2);
 
-      // Do we want a compressed DATA column ?
-      if (withCompression) MS::addColumnCompression(td, MS::FLOAT_DATA, true);
-    }
+    // Do we want a compressed DATA column ?
+    if (withCompression) MS::addColumnCompression(td, MS::FLOAT_DATA, true);
+  }
 
-    /*  
-    // Add MODEL_DATA, CORRECTED_DATA and IMAGING_WEIGHT columns
-    MS::addColumnToDesc(td, MS::MODEL_DATA,2);
-    MS::addColumnToDesc(td, MS::CORRECTED_DATA,2);
-    MS::addColumnToDesc(td, MS::IMAGING_WEIGHT,1);
-    */
+  /*  
+  // Add MODEL_DATA, CORRECTED_DATA and IMAGING_WEIGHT columns
+  MS::addColumnToDesc(td, MS::MODEL_DATA,2);
+  MS::addColumnToDesc(td, MS::CORRECTED_DATA,2);
+  MS::addColumnToDesc(td, MS::IMAGING_WEIGHT,1);
+  */
 
-    // Setup hypercolumns for the data/flag/flag_category/sigma & weight columns, model_data, corrected_data and imaging_weight.
-    const Vector<String> coordCols(0);
-    const Vector<String> idCols(0);
+  // Setup hypercolumns for the data/flag/flag_category/sigma & weight columns, model_data, corrected_data and imaging_weight.
+  const Vector<String> coordCols(0);
+  const Vector<String> idCols(0);
     
-    String colData;
-    String colFloatData;
+  String colData;
+  String colFloatData;
 
-    if (complexData) {
-      colData = MS::columnName(MS::DATA);
-      td.defineHypercolumn("TiledData", 3, stringToVector(colData),
-			   coordCols, idCols);
-    }
-    else {
-      colFloatData = MS::columnName(MS::FLOAT_DATA);
-      td.defineHypercolumn("TiledFloatData", 3, stringToVector(colFloatData),
-			   coordCols, idCols);
-    }
+  if (complexData) {
+    colData = MS::columnName(MS::DATA);
+    td.defineHypercolumn("TiledData", 3, stringToVector(colData),
+			 coordCols, idCols);
+  }
+  else {
+    colFloatData = MS::columnName(MS::FLOAT_DATA);
+    td.defineHypercolumn("TiledFloatData", 3, stringToVector(colFloatData),
+			 coordCols, idCols);
+  }
 
-    //cout << "defined float data Hypercolumn" << endl;
+  //cout << "defined float data Hypercolumn" << endl;
 
-    /*
+  /*
     String colModelData = MS::columnName(MS::MODEL_DATA);
     td.defineHypercolumn("TiledModelData", 3, stringToVector(colModelData),
-			 coordCols, idCols);
+    coordCols, idCols);
     //cout << "defined model data Hypercolumn" << endl;
 
     String colCorrData = MS::columnName(MS::CORRECTED_DATA);
     td.defineHypercolumn("TiledCorrectedData", 3,
-			 stringToVector(colCorrData),
-			 coordCols, idCols);
+    stringToVector(colCorrData),
+    coordCols, idCols);
     //cout << "defined corrected data Hypercolumn" << endl;
 
     String colImWgt = MS::columnName(MS::IMAGING_WEIGHT);
     td.defineHypercolumn("TiledImWgt", 2,
-			 stringToVector(colImWgt),
-			 coordCols, idCols);
+    stringToVector(colImWgt),
+    coordCols, idCols);
     //cout << "defined imaging weight Hypercolumn" << endl;
     */
     
 
-    td.defineHypercolumn("TiledFlag", 3,
-			 stringToVector(MS::columnName(MS::FLAG)));
-    //cout << "defined flag Hypercolumn" << endl;
+  td.defineHypercolumn("TiledFlag", 3,
+		       stringToVector(MS::columnName(MS::FLAG)));
+  //cout << "defined flag Hypercolumn" << endl;
 
 
-    if ( withCompression ) MS::addColumnCompression(td, MS::WEIGHT, true);
-    td.defineHypercolumn("TiledWeight", 2,
-			 stringToVector(MS::columnName(MS::WEIGHT)));
-    //cout << "defined Weight Hypercolumn" << endl;
+  if ( withCompression ) MS::addColumnCompression(td, MS::WEIGHT, true);
+  td.defineHypercolumn("TiledWeight", 2,
+		       stringToVector(MS::columnName(MS::WEIGHT)));
+  //cout << "defined Weight Hypercolumn" << endl;
 
-    if ( withCompression ) MS::addColumnCompression(td, MS::SIGMA, true);
-    td.defineHypercolumn("TiledSigma", 2,
-			 stringToVector(MS::columnName(MS::SIGMA)));
-    //cout << "defined Sigma Hypercolumn" << endl;
-
-
-    td.defineHypercolumn("TiledUVW", 2,
-			 stringToVector(MS::columnName(MS::UVW)));
-    //cout << "defined UVW Hypercolumn" << endl;
-
-    
-    td.defineHypercolumn("TiledFlagCategory", 4,
-			 stringToVector(MS::columnName(MS::FLAG_CATEGORY)));
-    //cout << "defined Flag Category Hypercolumn" << endl;
-
-    if (itsWithRadioMeters) {
-      // ALMA_PHAS_COOR hypercolumn
-      String colPhaseCorr = "ALMA_PHAS_CORR";
-      td.addColumn(ArrayColumnDesc<Complex>(colPhaseCorr,
-					    "Phase-corrected data",
-					    2));
-      td.defineHypercolumn("TiledPhaseCorr",
-			   3,
-			   stringToVector(colPhaseCorr),
-			   coordCols,
-			   idCols);
-
-      // ALMA_NO_PHAS_COOR hypercolumn
-      String colNoPhaseCorr = "ALMA_NO_PHAS_CORR";
-      td.addColumn(ArrayColumnDesc<Complex>(colNoPhaseCorr,
-					    "Phase-uncorrected data",
-					    2));
-      td.defineHypercolumn("TiledNoPhaseCorr",
-			   3,
-			   stringToVector(colNoPhaseCorr),
-			   coordCols,
-			   idCols);
-
-      // ALMA_PHAS_CORR_FLAG_ROW
-      String colPhaseCorrFlagRow = "ALMA_PHAS_CORR_FLAG_ROW";
-      td.addColumn(ScalarColumnDesc<Bool>(colPhaseCorrFlagRow,
-					  "Phase-corrected data present?"));
-    }
-    
-
-    SetupNewTable newTab(aName, td, Table::New);
-
-    //cout << "createMS SetupNewTable\n";
-    
-    // Choose the Tile size per column to be ~ 4096K
-    const Int nTileCorr = 1;
-    const Int nTileChan = 1024;
-    const Int tileSizeKBytes = 4096;
-    Int nTileRow;
-
-    // Create an incremental storage manager
-    IncrementalStMan      incrStMan;
-
-    // By default all the columns are bound to the Inc Stman
-    newTab.bindAll(incrStMan);    
-
-    // Define standard storage managers for scalar columns
-
-    // ANTENNA1
-    StandardStMan antenna1StMan("Antenna1 Standard Storage Manager", 32768);
-    newTab.bindColumn(MS::columnName(MS::ANTENNA1), antenna1StMan);
-
-    // ANTENNA2 
-    StandardStMan antenna2StMan("Antenna2 Standard Storage Manager", 32768);
-    newTab.bindColumn(MS::columnName(MS::ANTENNA2), antenna2StMan);
-
-    // FEED1
-    StandardStMan feed1StMan("Feed1 Standard Storage Manager", 32768);
-    newTab.bindColumn(MS::columnName(MS::FEED1), feed1StMan);
-
-    // FEED2 
-    StandardStMan feed2StMan("Feed2 Standard Storage Manager", 32768);
-    newTab.bindColumn(MS::columnName(MS::FEED2), feed2StMan);
+  if ( withCompression ) MS::addColumnCompression(td, MS::SIGMA, true);
+  td.defineHypercolumn("TiledSigma", 2,
+		       stringToVector(MS::columnName(MS::SIGMA)));
+  //cout << "defined Sigma Hypercolumn" << endl;
 
 
-    // DATA_DESC_ID 
-    StandardStMan dataDescriptionStMan("DataDescID Standard Storage Manager", 32768);
-    newTab.bindColumn(MS::columnName(MS::DATA_DESC_ID), dataDescriptionStMan);
-
-    // PROCESSOR_ID 
-    StandardStMan processorStMan("ProcessorID Standard Storage Manager", 32768);
-    newTab.bindColumn(MS::columnName(MS::PROCESSOR_ID), processorStMan);
-
-    // FIELD_ID 
-    StandardStMan fieldStMan("FieldID Standard Storage Manager", 32768);
-    newTab.bindColumn(MS::columnName(MS::FIELD_ID), fieldStMan);
-
-
-    // INTERVAL 
-    StandardStMan intervalStMan("Interval Standard Storage Manager", 32768);
-    newTab.bindColumn(MS::columnName(MS::INTERVAL), intervalStMan);
-
-    // EXPOSURE 
-    StandardStMan exposureStMan("Exposure Standard Storage Manager", 32768);
-    newTab.bindColumn(MS::columnName(MS::EXPOSURE), exposureStMan);
-
-    // TIME_CENTROID 
-    StandardStMan timeCentroidStMan("TimeCentroid Standard Storage Manager", 32768);
-    newTab.bindColumn(MS::columnName(MS::TIME_CENTROID), timeCentroidStMan);
-
-    // SCAN_NUMBER 
-    StandardStMan scanNumberStMan("ScanNumber Standard Storage Manager", 32768);
-    newTab.bindColumn(MS::columnName(MS::SCAN_NUMBER), scanNumberStMan);
-
-    // ARRAY_ID 
-    StandardStMan arrayIdStMan("ArrayId Standard Storage Manager", 32768);
-    newTab.bindColumn(MS::columnName(MS::ARRAY_ID), arrayIdStMan);
-    
-    // OBSERVATION_ID 
-    StandardStMan observationIdStMan("ObservationId Standard Storage Manager", 32768);
-    newTab.bindColumn(MS::columnName(MS::OBSERVATION_ID), observationIdStMan);
-
-    // STATE_ID 
-    StandardStMan stateIdStMan("StateId Standard Storage Manager", 32768);
-    newTab.bindColumn(MS::columnName(MS::STATE_ID), stateIdStMan);
-
-
+  td.defineHypercolumn("TiledUVW", 2,
+		       stringToVector(MS::columnName(MS::UVW)));
+  //cout << "defined UVW Hypercolumn" << endl;
 
     
-    if (complexData) {
-      // DATA hypercolumn
-      nTileRow = (tileSizeKBytes * 1024 / (2 * 4 * nTileCorr * nTileChan));
-      IPosition dataTileShape(3, nTileCorr, nTileChan, nTileRow);
+  td.defineHypercolumn("TiledFlagCategory", 4,
+		       stringToVector(MS::columnName(MS::FLAG_CATEGORY)));
+  //cout << "defined Flag Category Hypercolumn" << endl;
 
-      TiledShapeStMan dataStMan("TiledData", dataTileShape);
-      newTab.bindColumn(colData, dataStMan);
+  if (itsWithRadioMeters) {
+    // ALMA_PHAS_COOR hypercolumn
+    String colPhaseCorr = "ALMA_PHAS_CORR";
+    td.addColumn(ArrayColumnDesc<Complex>(colPhaseCorr,
+					  "Phase-corrected data",
+					  2));
+    td.defineHypercolumn("TiledPhaseCorr",
+			 3,
+			 stringToVector(colPhaseCorr),
+			 coordCols,
+			 idCols);
+
+    // ALMA_NO_PHAS_COOR hypercolumn
+    String colNoPhaseCorr = "ALMA_NO_PHAS_CORR";
+    td.addColumn(ArrayColumnDesc<Complex>(colNoPhaseCorr,
+					  "Phase-uncorrected data",
+					  2));
+    td.defineHypercolumn("TiledNoPhaseCorr",
+			 3,
+			 stringToVector(colNoPhaseCorr),
+			 coordCols,
+			 idCols);
+
+    // ALMA_PHAS_CORR_FLAG_ROW
+    String colPhaseCorrFlagRow = "ALMA_PHAS_CORR_FLAG_ROW";
+    td.addColumn(ScalarColumnDesc<Bool>(colPhaseCorrFlagRow,
+					"Phase-corrected data present?"));
+  }
+    
+
+  SetupNewTable newTab(aName, td, Table::New);
+
+  //cout << "createMS SetupNewTable\n";
+    
+  // Choose the Tile size per column to be ~ 4096K
+  const Int nTileCorr = 1;
+  const Int nTileChan = 1024;
+  const Int tileSizeKBytes = 16;
+  Int nTileRow;
+
+  // Create an incremental storage manager
+  IncrementalStMan      incrStMan;
+
+  // By default all the columns are bound to the Inc Stman
+  newTab.bindAll(incrStMan);    
+
+  // Define standard storage managers for scalar columns
+
+  // ANTENNA1
+  StandardStMan antenna1StMan("Antenna1 Standard Storage Manager", 32768);
+  newTab.bindColumn(MS::columnName(MS::ANTENNA1), antenna1StMan);
+
+  // ANTENNA2 
+  StandardStMan antenna2StMan("Antenna2 Standard Storage Manager", 32768);
+  newTab.bindColumn(MS::columnName(MS::ANTENNA2), antenna2StMan);
+
+  // FEED1
+  StandardStMan feed1StMan("Feed1 Standard Storage Manager", 32768);
+  newTab.bindColumn(MS::columnName(MS::FEED1), feed1StMan);
+
+  // FEED2 
+  StandardStMan feed2StMan("Feed2 Standard Storage Manager", 32768);
+  newTab.bindColumn(MS::columnName(MS::FEED2), feed2StMan);
+
+
+  // DATA_DESC_ID 
+  StandardStMan dataDescriptionStMan("DataDescID Standard Storage Manager", 32768);
+  newTab.bindColumn(MS::columnName(MS::DATA_DESC_ID), dataDescriptionStMan);
+
+  // PROCESSOR_ID 
+  StandardStMan processorStMan("ProcessorID Standard Storage Manager", 32768);
+  newTab.bindColumn(MS::columnName(MS::PROCESSOR_ID), processorStMan);
+
+  // FIELD_ID 
+  StandardStMan fieldStMan("FieldID Standard Storage Manager", 32768);
+  newTab.bindColumn(MS::columnName(MS::FIELD_ID), fieldStMan);
+
+
+  // INTERVAL 
+  StandardStMan intervalStMan("Interval Standard Storage Manager", 32768);
+  newTab.bindColumn(MS::columnName(MS::INTERVAL), intervalStMan);
+
+  // EXPOSURE 
+  StandardStMan exposureStMan("Exposure Standard Storage Manager", 32768);
+  newTab.bindColumn(MS::columnName(MS::EXPOSURE), exposureStMan);
+
+  // TIME_CENTROID 
+  StandardStMan timeCentroidStMan("TimeCentroid Standard Storage Manager", 32768);
+  newTab.bindColumn(MS::columnName(MS::TIME_CENTROID), timeCentroidStMan);
+
+  // SCAN_NUMBER 
+  StandardStMan scanNumberStMan("ScanNumber Standard Storage Manager", 32768);
+  newTab.bindColumn(MS::columnName(MS::SCAN_NUMBER), scanNumberStMan);
+
+  // ARRAY_ID 
+  StandardStMan arrayIdStMan("ArrayId Standard Storage Manager", 32768);
+  newTab.bindColumn(MS::columnName(MS::ARRAY_ID), arrayIdStMan);
+    
+  // OBSERVATION_ID 
+  StandardStMan observationIdStMan("ObservationId Standard Storage Manager", 32768);
+  newTab.bindColumn(MS::columnName(MS::OBSERVATION_ID), observationIdStMan);
+
+  // STATE_ID 
+  StandardStMan stateIdStMan("StateId Standard Storage Manager", 32768);
+  newTab.bindColumn(MS::columnName(MS::STATE_ID), stateIdStMan);
+
+
+
+    
+  if (complexData) {
+    // DATA hypercolumn
+    nTileRow = (tileSizeKBytes * 1024 / (2 * 4 * nTileCorr * nTileChan));
+    IPosition dataTileShape(3, nTileCorr, nTileChan, nTileRow);
+
+    TiledShapeStMan dataStMan("TiledData", dataTileShape);
+    newTab.bindColumn(colData, dataStMan);
       
+    if (withCorrectedData) {
       // CORRECTED DATA hypercolumn
       nTileRow = (tileSizeKBytes * 1024 / (2 * 4 * nTileCorr * nTileChan));
       IPosition corrDataTileShape(3, nTileCorr, nTileChan, nTileRow);
-      
+	
       TiledShapeStMan corrDataStMan("TiledCorrectedData", corrDataTileShape);
       newTab.bindColumn(MS::columnName(MS::CORRECTED_DATA), corrDataStMan);
     }
-    else {
-      // FLOAT_DATA hypercolumn
-      nTileRow = (tileSizeKBytes * 1024 / (2 * 4 * nTileCorr * nTileChan));
-      IPosition floatDataTileShape(3, nTileCorr, nTileChan, nTileRow);
-
-      TiledShapeStMan floatDataStMan("TiledFloatData", floatDataTileShape);
-      newTab.bindColumn(colFloatData, floatDataStMan);
-    }
-    /*
-    // MODEL DATA hypercolumn
+  }
+  else {
+    // FLOAT_DATA hypercolumn
     nTileRow = (tileSizeKBytes * 1024 / (2 * 4 * nTileCorr * nTileChan));
-    IPosition modelDataTileShape(3, nTileCorr, nTileChan, nTileRow);
+    IPosition floatDataTileShape(3, nTileCorr, nTileChan, nTileRow);
 
-    TiledShapeStMan modelDataStMan("TiledModelData", modelDataTileShape);
-    newTab.bindColumn(MS::columnName(MS::MODEL_DATA), modelDataStMan);
+    TiledShapeStMan floatDataStMan("TiledFloatData", floatDataTileShape);
+    newTab.bindColumn(colFloatData, floatDataStMan);
+  }
+  /*
+  // MODEL DATA hypercolumn
+  nTileRow = (tileSizeKBytes * 1024 / (2 * 4 * nTileCorr * nTileChan));
+  IPosition modelDataTileShape(3, nTileCorr, nTileChan, nTileRow);
 
-    // CORRECTED DATA hypercolumn
-    nTileRow = (tileSizeKBytes * 1024 / (2 * 4 * nTileCorr * nTileChan));
-    IPosition corrDataTileShape(3, nTileCorr, nTileChan, nTileRow);
+  TiledShapeStMan modelDataStMan("TiledModelData", modelDataTileShape);
+  newTab.bindColumn(MS::columnName(MS::MODEL_DATA), modelDataStMan);
 
-    TiledShapeStMan corrDataStMan("TiledCorrectedData", corrDataTileShape);
-    newTab.bindColumn(MS::columnName(MS::CORRECTED_DATA), corrDataStMan);
+  // CORRECTED DATA hypercolumn
+  nTileRow = (tileSizeKBytes * 1024 / (2 * 4 * nTileCorr * nTileChan));
+  IPosition corrDataTileShape(3, nTileCorr, nTileChan, nTileRow);
 
-    // IMAGING WEIGHT hypercolumn
-    nTileRow = (tileSizeKBytes * 1024 / (4 * nTileChan));
-    IPosition imWgtTileShape(2, nTileChan, nTileRow);
+  TiledShapeStMan corrDataStMan("TiledCorrectedData", corrDataTileShape);
+  newTab.bindColumn(MS::columnName(MS::CORRECTED_DATA), corrDataStMan);
 
-    TiledShapeStMan imWgtStMan("TiledImWgt", imWgtTileShape);
-    newTab.bindColumn(MS::columnName(MS::IMAGING_WEIGHT), imWgtStMan);
-    */
+  // IMAGING WEIGHT hypercolumn
+  nTileRow = (tileSizeKBytes * 1024 / (4 * nTileChan));
+  IPosition imWgtTileShape(2, nTileChan, nTileRow);
+
+  TiledShapeStMan imWgtStMan("TiledImWgt", imWgtTileShape);
+  newTab.bindColumn(MS::columnName(MS::IMAGING_WEIGHT), imWgtStMan);
+  */
     
-    // WEIGHT and SIGMA hypercolumn
+  // WEIGHT and SIGMA hypercolumn
 #if 0
-    nTileRow = (tileSizeKBytes * 1024 / (4 * nTileCorr));
-    IPosition weightTileShape(2, nTileCorr, nTileRow);
-    TiledShapeStMan weightStMan("TiledWeight", weightTileShape);
-    newTab.bindColumn(MS::columnName(MS::WEIGHT), weightStMan);
-    TiledShapeStMan sigmaStMan("TiledSigma", weightTileShape);
-    newTab.bindColumn(MS::columnName(MS::SIGMA), sigmaStMan);
+  nTileRow = (tileSizeKBytes * 1024 / (4 * nTileCorr));
+  IPosition weightTileShape(2, nTileCorr, nTileRow);
+  TiledShapeStMan weightStMan("TiledWeight", weightTileShape);
+  newTab.bindColumn(MS::columnName(MS::WEIGHT), weightStMan);
+  TiledShapeStMan sigmaStMan("TiledSigma", weightTileShape);
+  newTab.bindColumn(MS::columnName(MS::SIGMA), sigmaStMan);
 #else
-    StandardStMan weightStMan("StandardStManWeight");
-    newTab.bindColumn(MS::columnName(MS::WEIGHT), weightStMan);
-    StandardStMan sigmaStMan("StandardStManSigma");
-    newTab.bindColumn(MS::columnName(MS::SIGMA), sigmaStMan);
+  StandardStMan weightStMan("StandardStManWeight");
+  newTab.bindColumn(MS::columnName(MS::WEIGHT), weightStMan);
+  StandardStMan sigmaStMan("StandardStManSigma");
+  newTab.bindColumn(MS::columnName(MS::SIGMA), sigmaStMan);
 
 #endif
-    // UVW hyperColumn
-    nTileRow = (tileSizeKBytes * 1024 / (8 * 3));
-    IPosition uvwTileShape(2, 3, nTileRow);
-    TiledColumnStMan uvwStMan("TiledUVW", uvwTileShape);
-    newTab.bindColumn(MS::columnName(MS::UVW), uvwStMan);
+  // UVW hyperColumn
+  nTileRow = (tileSizeKBytes * 1024 / (8 * 3));
+  IPosition uvwTileShape(2, 3, nTileRow);
+  TiledColumnStMan uvwStMan("TiledUVW", uvwTileShape);
+  newTab.bindColumn(MS::columnName(MS::UVW), uvwStMan);
 
-    // FLAG hyperColumn
-    nTileRow = (tileSizeKBytes * 1024 / (nTileCorr * nTileChan));
-    IPosition flagTileShape(3, nTileCorr, nTileChan, nTileRow);
-    TiledShapeStMan flagStMan("TiledFlag", flagTileShape);
-    newTab.bindColumn(MS::columnName(MS::FLAG), flagStMan);
+  // FLAG hyperColumn
+  nTileRow = (tileSizeKBytes * 1024 / (nTileCorr * nTileChan));
+  IPosition flagTileShape(3, nTileCorr, nTileChan, nTileRow);
+  TiledShapeStMan flagStMan("TiledFlag", flagTileShape);
+  newTab.bindColumn(MS::columnName(MS::FLAG), flagStMan);
 
-    // FLAG CATEGORY hypercolumn
-    nTileRow = (tileSizeKBytes * 1024 / (nTileCorr * nTileChan * itsNCat));
-    IPosition flagCategoryTileShape(4, nTileCorr, nTileChan,
-				    itsNCat, nTileRow);
-    TiledShapeStMan flagCategoryStMan("TiledFlagCategory",
-				      flagCategoryTileShape);
-    newTab.bindColumn(MS::columnName(MS::FLAG_CATEGORY),
-		      flagCategoryStMan);
+  // FLAG CATEGORY hypercolumn
+  nTileRow = (tileSizeKBytes * 1024 / (nTileCorr * nTileChan * itsNCat));
+  IPosition flagCategoryTileShape(4, nTileCorr, nTileChan,
+				  itsNCat, nTileRow);
+  TiledShapeStMan flagCategoryStMan("TiledFlagCategory",
+				    flagCategoryTileShape);
+  newTab.bindColumn(MS::columnName(MS::FLAG_CATEGORY),
+		    flagCategoryStMan);
 
-    //cout << "createMS bindAll\n";
+  //cout << "createMS bindAll\n";
 
-    //cout << "createMS DATA, FLAG, UVW, WEIGHT and SIGMA bound to their storage managers\n";
+  //cout << "createMS DATA, FLAG, UVW, WEIGHT and SIGMA bound to their storage managers\n";
 
   
 
   // And finally create the Measurement Set and get access
   // to its columns
-    //Table::TableOption openOption = Table::New;
-    //itsMS = new MeasurementSet(newTab, openOption);
-    itsMS = new casa::MeasurementSet(newTab);
-    //cout << "createMS MeasurementSet, adress=" << (int) itsMS << endl;
-    if (! itsMS) {
-      return False;
-    }
-    //cout << "Measurement Set just created, main table nrow=" << itsMS->nrow()<< endl;
+  //Table::TableOption openOption = Table::New;
+  //itsMS = new MeasurementSet(newTab, openOption);
+  itsMS = new casa::MeasurementSet(newTab);
+  //cout << "createMS MeasurementSet, adress=" << (int) itsMS << endl;
+  if (! itsMS) {
+    return False;
+  }
+  //cout << "Measurement Set just created, main table nrow=" << itsMS->nrow()<< endl;
   
-  }
-  catch (AipsError& x) {
-    cout << "Exception : " << x.getMesg() << endl;
-  }
 
   itsMSCol = new casa::MSMainColumns(*itsMS);
 
@@ -659,14 +658,25 @@ int ASDM2MSFiller::createMS(const char* msName, Bool complexData, Bool withCompr
   // Weather
   {
     TableDesc td = MSWeather::requiredTableDesc();
-    MSWeather::addColumnToDesc (td, MSWeather::H2O);
-    MSWeather::addColumnToDesc (td, MSWeather::IONOS_ELECTRON);
     MSWeather::addColumnToDesc (td, MSWeather::PRESSURE);
+    MSWeather::addColumnToDesc (td, MSWeather::PRESSURE_FLAG);
     MSWeather::addColumnToDesc (td, MSWeather::REL_HUMIDITY);
+    MSWeather::addColumnToDesc (td, MSWeather::REL_HUMIDITY_FLAG);
     MSWeather::addColumnToDesc (td, MSWeather::TEMPERATURE);
+    MSWeather::addColumnToDesc (td, MSWeather::TEMPERATURE_FLAG);
     MSWeather::addColumnToDesc (td, MSWeather::DEW_POINT);
+    MSWeather::addColumnToDesc (td, MSWeather::DEW_POINT_FLAG);
     MSWeather::addColumnToDesc (td, MSWeather::WIND_DIRECTION);
+    MSWeather::addColumnToDesc (td, MSWeather::WIND_DIRECTION_FLAG);
     MSWeather::addColumnToDesc (td, MSWeather::WIND_SPEED);
+    MSWeather::addColumnToDesc (td, MSWeather::WIND_SPEED_FLAG);
+    td.addColumn(ScalarColumnDesc<int>("NS_WX_STATION_ID",
+				       "An identifier to identify uniquely a weather station"));
+    td.addColumn(ArrayColumnDesc<double>("NS_WX_STATION_POSITION",
+					 "The position of the station",
+					 IPosition(1,3),
+					 ColumnDesc::Direct));
+		 
     SetupNewTable tabSetup(itsMS->weatherTableName(), td, Table::New);
     itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::WEATHER),
 				      Table(tabSetup));   
@@ -722,14 +732,14 @@ const char** ASDM2MSFiller::getPolCombinations(int numCorr) {
 
 // Insert records in the table ANTENNA
 int ASDM2MSFiller::addAntenna( const char   *name_,
-			    const char   *station_,
-			    double lx_,
-			    double ly_,
-			    double lz_,
-			    double offset_x_,
-			    double offset_y_,
-			    double offset_z_,
-			    float  dish_diam_) {
+			       const char   *station_,
+			       double lx_,
+			       double ly_,
+			       double lz_,
+			       double offset_x_,
+			       double offset_y_,
+			       double offset_z_,
+			       float  dish_diam_) {
 
   uInt crow;
   //itsNumAntenna = num_antenna_;
@@ -768,155 +778,10 @@ int ASDM2MSFiller::addAntenna( const char   *name_,
   // cout << "addAntenna : table flushed \n";
   // cout << "addAntenna : exiting \n";
   // cout << "\n";
-  return crow-1;
+  return crow;
 }
 
 const casa::MeasurementSet* ASDM2MSFiller::ms() { return itsMS; }
-
-void ASDM2MSFiller::addData (bool                      complexData,
-			     double                    time_,
-			     vector<int>               &antennaId1_,
-			     vector<int>               &antennaId2_,
-			     vector<int>               &feedId1_,
-			     vector<int>               &feedId2_,
-			     vector<int>               &dataDescId_,
-			     int                       processorId_,
-			     int                       fieldId_,
-			     double                    interval_,
-			     vector<double>            &exposure_,
-			     vector<double>            &timeCentroid_,
-			     int                       scanNumber_,
-			     int                       arrayId_,
-			     int                       observationId_,
-			     vector<int>               &stateId_,
-			     vector<double*>           &uvw_,
-			     vector<vector<int> >      &dataShape_,
-			     vector<float *>           &data_,
-			     vector<unsigned int>      &flag_) {
-  
-  //  cout << "Entering addData" << endl;
-  int nBaselines = antennaId1_.size();
-  
-  double *uvw__     = new double[3*nBaselines];
-  Bool *flag_row__  = new Bool[nBaselines];
-
-  for (int i = 0; i < nBaselines; i++) {
-    uvw__[3*i]                 = uvw_.at(i)[0];
-    uvw__[3*i+1]               = uvw_.at(i)[1];
-    uvw__[3*i+2]               = uvw_.at(i)[2];
-    flag_row__[i]              = flag_.at(i)==0?false:true;
-  }
-
-  Vector<Double> time(IPosition(1, nBaselines), time_);
-  Vector<Int>    antenna1(IPosition(1, nBaselines), &antennaId1_.at(0), SHARE);
-  Vector<Int>    antenna2(IPosition(1, nBaselines), &antennaId2_.at(0), SHARE);
-  Vector<Int>    feed1(IPosition(1, nBaselines), &feedId1_.at(0) , SHARE);
-  Vector<Int>    feed2(IPosition(1, nBaselines), &feedId2_.at(0), SHARE);
-  Vector<Int>    dataDescriptionId(IPosition(1, nBaselines), &dataDescId_.at(0), SHARE);
-  Vector<Double> exposure(IPosition(1, nBaselines), &exposure_.at(0), SHARE);
-  Vector<Double> timeCentroid(IPosition(1, nBaselines), &timeCentroid_.at(0), SHARE);
-  Vector<Int>    processorId(IPosition(1, nBaselines), processorId_);
-  Vector<Int>    fieldId(IPosition(1, nBaselines),fieldId_);
-  Vector<Int>    stateId(IPosition(1, nBaselines), &stateId_.at(0), SHARE);
-  Vector<Double> interval(IPosition(1, nBaselines), interval_);
-  Vector<Int>    scanNumber(IPosition(1, nBaselines), scanNumber_);
-  Vector<Int>    arrayId(IPosition(1, nBaselines), arrayId_);
-  Vector<Int>    observationId(IPosition(1, nBaselines), observationId_);
-  Vector<Bool>   flagRow(IPosition(1, nBaselines), flag_row__, SHARE);
-  Matrix<Double> uvw(IPosition(2, 3, nBaselines), uvw__, SHARE);
-
-  
-  // UVW takes its contents directly from the argument uvw_.
-  // Matrix<Double> uvw(IPosition(2, 3, nBaselines), uvw_, SHARE);
-  
-  // The data column will be constructed row after row.
-  // The sigma               "
-  // The weight              "
-  // The flag                "
-  
-  try {
-    
-    // Define  a slicer to write blocks of values in each column of the main table.
-    Slicer slicer(IPosition(1,itsMSMainRow),
-		  IPosition(1, (itsMSMainRow+nBaselines-1)),
-		  Slicer::endIsLast);
-    
-    // Let's create nBaseLines empty rows into the main table.
-    itsMS->addRow(nBaselines);
-    
-    
-    //cout << "Adding blocks of rows" << endl;
-    // Now it's time to write all these Arrays into the relevant columns.
-    itsMSCol->time().putColumnRange(slicer, time);
-    itsMSCol->antenna1().putColumnRange(slicer, antenna1);
-    itsMSCol->antenna2().putColumnRange(slicer, antenna2);
-    itsMSCol->feed1().putColumnRange(slicer, feed1);
-    itsMSCol->feed2().putColumnRange(slicer, feed2);
-    itsMSCol->dataDescId().putColumnRange(slicer, dataDescriptionId);
-    itsMSCol->processorId().putColumnRange(slicer, processorId);
-    itsMSCol->fieldId().putColumnRange(slicer, fieldId);
-    itsMSCol->interval().putColumnRange(slicer, interval);
-    itsMSCol->exposure().putColumnRange(slicer, exposure);
-    itsMSCol->timeCentroid().putColumnRange(slicer, timeCentroid);
-    itsMSCol->scanNumber().putColumnRange(slicer, scanNumber);
-    itsMSCol->arrayId().putColumnRange(slicer, arrayId);
-    itsMSCol->observationId().putColumnRange(slicer, observationId);
-    itsMSCol->stateId().putColumnRange(slicer, stateId);
-    itsMSCol->uvw().putColumnRange(slicer, uvw);
-    itsMSCol->flagRow().putColumnRange(slicer, flagRow);
-
-       
-    // All the columns that could not be written in one shot are now filled row by row.
-    Matrix<Complex> data;
-    Matrix<Float>   float_data;
-    Matrix<Bool>    flag;
-
-    int cRow0 = 0;
-    for (unsigned int cRow = itsMSMainRow; cRow < itsMSMainRow+nBaselines; cRow++) {      
-      int numCorr = dataShape_.at(cRow0).at(0);
-      int numChan = dataShape_.at(cRow0).at(1);
-
-      Vector<float>   ones(IPosition(1, numCorr), 1.0);
-
-      if (complexData) {
-	// Complex data.
-	data.takeStorage(IPosition(2, numCorr, numChan), (Complex *)(data_.at(cRow0)), SHARE);
-	itsMSCol->data().put(cRow, data);
-	;
-      }
-      else {
-	// Float data.
-	float_data.takeStorage(IPosition(2, numCorr, numChan), data_.at(cRow0), SHARE);
-	itsMSCol->floatData().put(cRow, float_data);
-	;
-      }
-
-      // Sigma and Weight set to arrays of 1.0
-      itsMSCol->sigma().put(cRow, ones);
-      itsMSCol->weight().put(cRow, ones);
-
-      // The flag cell (an array) is put at false.
-      itsMSCol->flag().put(cRow, Matrix<Bool>(IPosition(2, numCorr, numChan), false));
-
-      
-      cRow0++;
-    }
-    
-    // Don't forget to increment itsMSMainRow.
-    itsMSMainRow += nBaselines;
-  }
-  catch (AipsError& x) {
-    cout << "\nException : " << x.getMesg() << endl;
-  }
-  
-  // Flush
-  // itsMS->flush();   
-  //cout << "Exiting addData" << endl;
-
-  delete[] uvw__;
-  delete[] flag_row__;
-}
-
 
 
 void ASDM2MSFiller::addData (bool                      complexData,
@@ -968,7 +833,7 @@ void ASDM2MSFiller::addData (bool                      complexData,
   Vector<Bool>   flagRow(IPosition(1, theSize), flag_row__, SHARE);
 
   /*
-  Matrix<Double> uvw(IPosition(2, 3, theSize), uvw__, SHARE);
+    Matrix<Double> uvw(IPosition(2, 3, theSize), uvw__, SHARE);
   */
   
   // UVW takes its contents directly from the argument uvw_.
@@ -979,92 +844,219 @@ void ASDM2MSFiller::addData (bool                      complexData,
   // The weight              "
   // The flag                "
   
-  try {
     
-    // Define  a slicer to write blocks of values in each column of the main table.
-    Slicer slicer(IPosition(1,itsMSMainRow),
-		  IPosition(1, (itsMSMainRow+theSize-1)),
-		  Slicer::endIsLast);
+  // Define  a slicer to write blocks of values in each column of the main table.
+  Slicer slicer(IPosition(1,itsMSMainRow),
+		IPosition(1, (itsMSMainRow+theSize-1)),
+		Slicer::endIsLast);
     
-    // Let's create nBaseLines empty rows into the main table.
-    itsMS->addRow(theSize);
+  // Let's create nBaseLines empty rows into the main table.
+  itsMS->addRow(theSize);
     
-    // Now it's time to write all these Arrays into the relevant columns.
-    itsMSCol->time().putColumnRange(slicer, time);
-    itsMSCol->antenna1().putColumnRange(slicer, antenna1);
-    itsMSCol->antenna2().putColumnRange(slicer, antenna2);
-    itsMSCol->feed1().putColumnRange(slicer, feed1);
-    itsMSCol->feed2().putColumnRange(slicer, feed2);
-    itsMSCol->dataDescId().putColumnRange(slicer, dataDescriptionId);
-    itsMSCol->processorId().putColumnRange(slicer, processorId);
-    itsMSCol->fieldId().putColumnRange(slicer, fieldId);
-    itsMSCol->interval().putColumnRange(slicer, interval);
-    itsMSCol->exposure().putColumnRange(slicer, exposure);
-    itsMSCol->timeCentroid().putColumnRange(slicer, timeCentroid);
-    itsMSCol->scanNumber().putColumnRange(slicer, scanNumber);
-    itsMSCol->arrayId().putColumnRange(slicer, arrayId);
-    itsMSCol->observationId().putColumnRange(slicer, observationId);
-    itsMSCol->stateId().putColumnRange(slicer, stateId);
-    itsMSCol->uvw().putColumnRange(slicer, uvw);
-    itsMSCol->flagRow().putColumnRange(slicer, flagRow);
+  // Now it's time to write all these Arrays into the relevant columns.
+  itsMSCol->time().putColumnRange(slicer, time);
+  itsMSCol->antenna1().putColumnRange(slicer, antenna1);
+  itsMSCol->antenna2().putColumnRange(slicer, antenna2);
+  itsMSCol->feed1().putColumnRange(slicer, feed1);
+  itsMSCol->feed2().putColumnRange(slicer, feed2);
+  itsMSCol->dataDescId().putColumnRange(slicer, dataDescriptionId);
+  itsMSCol->processorId().putColumnRange(slicer, processorId);
+  itsMSCol->fieldId().putColumnRange(slicer, fieldId);
+  itsMSCol->interval().putColumnRange(slicer, interval);
+  itsMSCol->exposure().putColumnRange(slicer, exposure);
+  itsMSCol->timeCentroid().putColumnRange(slicer, timeCentroid);
+  itsMSCol->scanNumber().putColumnRange(slicer, scanNumber);
+  itsMSCol->arrayId().putColumnRange(slicer, arrayId);
+  itsMSCol->observationId().putColumnRange(slicer, observationId);
+  itsMSCol->stateId().putColumnRange(slicer, stateId);
+  itsMSCol->uvw().putColumnRange(slicer, uvw);
+  itsMSCol->flagRow().putColumnRange(slicer, flagRow);
 
 #if 1     
-    // All the columns that could not be written in one shot are now filled row by row.
-    //Matrix<Complex> uncorrected_data;
-    Matrix<Complex> uncorrected_data;
-    Matrix<Complex> corrected_data;
-    Matrix<Float>   float_data;
-    Matrix<Bool>    flag;
+  // All the columns that could not be written in one shot are now filled row by row.
+  //Matrix<Complex> uncorrected_data;
+  Matrix<Complex> uncorrected_data;
+  Matrix<Complex> corrected_data;
+  Matrix<Float>   float_data;
+  Matrix<Bool>    flag;
 
-    int cRow0 = 0;
-    for (unsigned int cRow = itsMSMainRow; cRow < itsMSMainRow+theSize; cRow++) {      
-      int numCorr = dataShape_.at(cRow0).at(0);
-      int numChan = dataShape_.at(cRow0).at(1);
+  int cRow0 = 0;
+  for (unsigned int cRow = itsMSMainRow; cRow < itsMSMainRow+theSize; cRow++) {      
+    int numCorr = dataShape_.at(cRow0).at(0);
+    int numChan = dataShape_.at(cRow0).at(1);
 
-      Vector<float>   ones(IPosition(1, numCorr), 1.0);
+    Vector<float>   ones(IPosition(1, numCorr), 1.0);
 
-      if (complexData) {
-	// Uncorrected data
-	if ( uncorrectedData_.at(cRow0) != 0) {
-	  uncorrected_data.takeStorage(IPosition(2, numCorr, numChan), (Complex *)(uncorrectedData_.at(cRow0)), COPY);
-	}
-	else {
-	  uncorrected_data.resize(numCorr, numChan);
-	  uncorrected_data = 0.0;
-	}
-	itsMSCol->data().put(cRow, uncorrected_data);
-
-	// Corrected data
-	if ( correctedData_.at(cRow0) != 0) {
-	  corrected_data.takeStorage(IPosition(2, numCorr, numChan), (Complex *)(correctedData_.at(cRow0)), COPY);
-	}
-	else {
-	  corrected_data.resize(numCorr, numChan);
-	  corrected_data = 0.0;
-	}
-	itsMSCol->correctedData().put(cRow, corrected_data);
+    if (complexData) {
+      // Uncorrected data
+      if ( uncorrectedData_.at(cRow0) != 0) {
+	uncorrected_data.takeStorage(IPosition(2, numCorr, numChan), (Complex *)(uncorrectedData_.at(cRow0)), COPY);
       }
       else {
-	// Float data.
-	float_data.takeStorage(IPosition(2, numCorr, numChan), uncorrectedData_.at(cRow0), SHARE);
-	itsMSCol->floatData().put(cRow, float_data);
+	uncorrected_data.resize(numCorr, numChan);
+	uncorrected_data = 0.0;
       }
+      itsMSCol->data().put(cRow, uncorrected_data);
 
-      // Sigma and Weight set to arrays of 1.0
-      itsMSCol->sigma().put(cRow, ones);
-      itsMSCol->weight().put(cRow, ones);
-      // The flag cell (an array) is put at false.
-
-      itsMSCol->flag().put(cRow, Matrix<Bool>(IPosition(2, numCorr, numChan), false));
-      cRow0++;
+      // Corrected data
+      if ( correctedData_.at(cRow0) != 0) {
+	corrected_data.takeStorage(IPosition(2, numCorr, numChan), (Complex *)(correctedData_.at(cRow0)), COPY);
+      }
+      else {
+	corrected_data.resize(numCorr, numChan);
+	corrected_data = 0.0;
+      }
+      itsMSCol->correctedData().put(cRow, corrected_data);
     }
+    else {
+      // Float data.
+      float_data.takeStorage(IPosition(2, numCorr, numChan), uncorrectedData_.at(cRow0), SHARE);
+      itsMSCol->floatData().put(cRow, float_data);
+    }
+
+    // Sigma and Weight set to arrays of 1.0
+    itsMSCol->sigma().put(cRow, ones);
+    itsMSCol->weight().put(cRow, ones);
+    // The flag cell (an array) is put at false.
+
+    itsMSCol->flag().put(cRow, Matrix<Bool>(IPosition(2, numCorr, numChan), false));
+    cRow0++;
+  }
 #endif
-    // Don't forget to increment itsMSMainRow.
-    itsMSMainRow += theSize;
+  // Don't forget to increment itsMSMainRow.
+  itsMSMainRow += theSize;
+
+  
+  // Flush
+  // itsMS->flush();   
+  //cout << "Exiting addData" << endl;
+
+  delete[] flag_row__;
+}
+
+void ASDM2MSFiller::addData (bool                complexData,
+			     vector<double>     &time_,
+			     vector<int>        &antennaId1_,
+			     vector<int>        &antennaId2_,
+			     vector<int>        &feedId1_,
+			     vector<int>        &feedId2_,
+			     vector<int>        &dataDescId_,
+			     int                 processorId_,
+			     vector<int>        &fieldId_,
+			     vector<double>     &interval_,
+			     vector<double>     &exposure_,
+			     vector<double>     &timeCentroid_,
+			     int                 scanNumber_,
+			     int                 arrayId_,
+			     int                 observationId_,
+			     vector<int>        &stateId_,
+			     vector<double>     &uvw_,
+			     vector<vector<unsigned int> >  &dataShape_,
+			     vector<float *>    &data_,
+			     vector<unsigned int>      &flag_) {
+  
+  //cout << "Entering addData" << endl;
+
+  unsigned int theSize = time_.size();
+  Bool *flag_row__  = new Bool[theSize];
+  for (unsigned int i = 0; i < theSize; i++) {
+    flag_row__[i]              = flag_.at(i)==0?false:true;
   }
-  catch (AipsError& x) {
-    cout << "\nException : " << x.getMesg() << endl;
+
+  Vector<Double> time(IPosition(1, theSize), &time_.at(0), SHARE);
+  Vector<Int>    antenna1(IPosition(1, theSize), &antennaId1_.at(0), SHARE);
+  Vector<Int>    antenna2(IPosition(1, theSize), &antennaId2_.at(0), SHARE);
+  Vector<Int>    feed1(IPosition(1, theSize), &feedId1_.at(0) , SHARE);
+  Vector<Int>    feed2(IPosition(1, theSize), &feedId2_.at(0), SHARE);
+  Vector<Int>    dataDescriptionId(IPosition(1, theSize), &dataDescId_.at(0), SHARE);
+  Vector<Int>    processorId(IPosition(1, theSize), processorId_);
+  Vector<Int>    fieldId(IPosition(1, theSize), &fieldId_.at(0), SHARE);
+  Vector<Double> interval(IPosition(1, theSize), &interval_.at(0), SHARE);
+  Vector<Double> exposure(IPosition(1, theSize), &exposure_.at(0), SHARE);
+  Vector<Double> timeCentroid(IPosition(1, theSize), &timeCentroid_.at(0), SHARE);
+  Vector<Int>    scanNumber(IPosition(1, theSize), scanNumber_);
+  Vector<Int>    arrayId(IPosition(1, theSize), arrayId_);
+  Vector<Int>    observationId(IPosition(1, theSize), observationId_);
+  Vector<Int>    stateId(IPosition(1, theSize), &stateId_.at(0), SHARE);
+  Matrix<Double> uvw(IPosition(2, 3, theSize), &uvw_.at(0), SHARE);
+  Vector<Bool>   flagRow(IPosition(1, theSize), flag_row__, SHARE);
+
+  /*
+    Matrix<Double> uvw(IPosition(2, 3, theSize), uvw__, SHARE);
+  */
+  
+  // UVW takes its contents directly from the argument uvw_.
+  // Matrix<Double> uvw(IPosition(2, 3, nBaselines), uvw_, SHARE);
+  
+  // The data column will be constructed row after row.
+  // The sigma               "
+  // The weight              "
+  // The flag                "
+  
+    
+  // Define  a slicer to write blocks of values in each column of the main table.
+  Slicer slicer(IPosition(1,itsMSMainRow),
+		IPosition(1, (itsMSMainRow+theSize-1)),
+		Slicer::endIsLast);
+    
+  // Let's create nBaseLines empty rows into the main table.
+  itsMS->addRow(theSize);
+    
+  // Now it's time to write all these Arrays into the relevant columns.
+  itsMSCol->time().putColumnRange(slicer, time);
+  itsMSCol->antenna1().putColumnRange(slicer, antenna1);
+  itsMSCol->antenna2().putColumnRange(slicer, antenna2);
+  itsMSCol->feed1().putColumnRange(slicer, feed1);
+  itsMSCol->feed2().putColumnRange(slicer, feed2);
+  itsMSCol->dataDescId().putColumnRange(slicer, dataDescriptionId);
+  itsMSCol->processorId().putColumnRange(slicer, processorId);
+  itsMSCol->fieldId().putColumnRange(slicer, fieldId);
+  itsMSCol->interval().putColumnRange(slicer, interval);
+  itsMSCol->exposure().putColumnRange(slicer, exposure);
+  itsMSCol->timeCentroid().putColumnRange(slicer, timeCentroid);
+  itsMSCol->scanNumber().putColumnRange(slicer, scanNumber);
+  itsMSCol->arrayId().putColumnRange(slicer, arrayId);
+  itsMSCol->observationId().putColumnRange(slicer, observationId);
+  itsMSCol->stateId().putColumnRange(slicer, stateId);
+  itsMSCol->uvw().putColumnRange(slicer, uvw);
+  itsMSCol->flagRow().putColumnRange(slicer, flagRow);
+
+#if 1     
+  // All the columns that could not be written in one shot are now filled row by row.
+  //Matrix<Complex> uncorrected_data;
+  Matrix<Complex> data;
+  Matrix<Float>   float_data;
+  Matrix<Bool>    flag;
+
+  int cRow0 = 0;
+  for (unsigned int cRow = itsMSMainRow; cRow < itsMSMainRow+theSize; cRow++) {      
+    int numCorr = dataShape_.at(cRow0).at(0);
+    int numChan = dataShape_.at(cRow0).at(1);
+
+    Vector<float>   ones(IPosition(1, numCorr), 1.0);
+
+    if (complexData) {
+      data.takeStorage(IPosition(2, numCorr, numChan), (Complex *)(data_.at(cRow0)), COPY);
+      itsMSCol->data().put(cRow, data);
+    }
+    else {
+      // Float data.
+      float_data.takeStorage(IPosition(2, numCorr, numChan), data_.at(cRow0), SHARE);
+      itsMSCol->floatData().put(cRow, float_data);
+    }
+
+    // Sigma and Weight set to arrays of 1.0
+    itsMSCol->sigma().put(cRow, ones);
+    itsMSCol->weight().put(cRow, ones);
+    // The flag cell (an array) is put at false.
+
+    itsMSCol->flag().put(cRow, Matrix<Bool>(IPosition(2, numCorr, numChan), false));
+    cRow0++;
   }
+#endif
+  // Don't forget to increment itsMSMainRow.
+  itsMSMainRow += theSize;
+
   
   // Flush
   // itsMS->flush();   
@@ -1074,366 +1066,9 @@ void ASDM2MSFiller::addData (bool                      complexData,
 }
 
 
-void ASDM2MSFiller::addData(double time_,
-			    double interval_,
-			    double exposure_,
-			    double time_centroid_,
-			    int    nb_antenna_feed_,
-			    int    antenna_id_[],
-			    int    feed_id_[],
-			    int    data_desc_id_,
-			    int    field_id_,
-			    double uvw_[],
-			    float  vis_r_[],
-			    float  vis_i_[],
-			    float  sigma_[],
-			    float  weight_[],
-			    const char   flag_[]) {
-  int  i, j, k, l;
-
-  double cpu_time  = 0.0, ct;
-  double real_time = 0.0, rt;
-  double overall_cpu_time = 0.0;
-  double overall_real_time = 0.0;
-  int    mode;
-
-  // Start a chrono to measure the overall time spent into the method.
-  mode = 0; timer(&overall_cpu_time, &overall_real_time, &mode); 
- 
-  int numCorr = itsDDMgr.getNumCorr(data_desc_id_);
-  int numChan = itsDDMgr.getNumChan(data_desc_id_);
-
-  uInt nBaseLines = nb_antenna_feed_ * (nb_antenna_feed_ - 1) / 2;
-
-  if (numCorr <= 0 || numChan <= 0) {
-    cout << "\naddData : numCorr = " << numCorr
-	 << " , numChan = " << numChan
-	 << ". They should be both > 0\n";
-      return;
-  }
-
-
-  // Create Vector and Matrix properly dimensionned in order to fill the main table
-  // with blocks of values (i.e. using putColumnRange).
-
-  try {
-
-    if (nb_antenna_feed_ < 0) {
-      return;
-    }
-
-
-    // DATA can't take their contents directly from arguments from arguments because :
-    // 1) real and imaginary values are passed in different arrays
-    // 2) values have to be re-ordered.
-    // Then we have to loop over all baselines to build data.
-    // Let's use this loop to build other arrays like Antenna1, Antenna2 etc...
-    Vector<Double> time(IPosition(1, nBaseLines), time_);
-    Vector<Int>    antenna1(IPosition(1, nBaseLines));
-    Vector<Int>    antenna2(IPosition(1, nBaseLines));
-    Vector<Int>    feed1(IPosition(1, nBaseLines));
-    Vector<Int>    feed2(IPosition(1, nBaseLines));
-    Vector<Int>    dataDescriptionId(IPosition(1, nBaseLines), (data_desc_id_));
-    Vector<Int>    processorId(IPosition(1, nBaseLines), -1);
-    Vector<Int>    fieldId(IPosition(1, nBaseLines), (field_id_));
-    Vector<Double> interval(IPosition(1, nBaseLines), interval_);
-    Vector<Double> exposure(IPosition(1, nBaseLines), exposure_);
-    Vector<Double> timeCentroid(IPosition(1, nBaseLines), time_centroid_);
-    Vector<Int>    scanNumber(IPosition(1, nBaseLines), itsScanNumber);
-    Vector<Int>    arrayId(IPosition(1, nBaseLines), -1);
-    //    Vector<Int>    observationId(IPosition(1, nBaseLines), itsObservationTimeMgr[0].getIndex());
-    Vector<Int>    observationId(IPosition(1, nBaseLines), -1);
-    Vector<Int>    stateId(IPosition(1, nBaseLines), -1);
-
-    // UVW takes its contents directly from the argument uvw_.
-    Matrix<Double> uvw(IPosition(2, 3, nBaseLines), uvw_, SHARE);
-        
-    Cube<Complex>  data(IPosition(3, numCorr, numChan, nBaseLines));
-    Cube<Complex>  modelData(IPosition(3, numCorr, numChan, nBaseLines));
-    Cube<Complex>  correctedData(IPosition(3, numCorr, numChan, nBaseLines));
-
-    // SIGMA, WEIGHT can take their contents directly from the argument sigma_,
-    // weight_ .
-    Matrix<Float>   sigma(IPosition(2, numCorr, nBaseLines), sigma_, SHARE);
-    Matrix<Float>   weight(IPosition(2, numCorr, nBaseLines), weight_, SHARE);
-
-    // FLAG. Their contents can't be taken directly from the flag_ argument
-    // since each flag_ 's value contains a flag common to all channels and polarizations.
-
-    // For the moment let's put False in each flag's element.
-    Cube<Bool>      flag(IPosition(3, numCorr, numChan, nBaseLines), False);
-
-    // FLAGCAT. For the moment, all flagcat's elements are set to False.
-    Array<Bool>     flagCat(IPosition(4, numCorr, numChan, itsNCat, nBaseLines), False);
-
-    // FLAGROW. Should take its values from the contents of the flag_ parameters,
-    // for the moment all its elements are set to False.
-    Vector<Bool>    flagRow(IPosition(1, nBaseLines), False);
-    
-    // Imaging Weight. For the moment all its elements values are set to 1.0
-    Array<Double>   imagingWeight(IPosition(2, numChan, nBaseLines), 1.0);  
-
-    // Now it's time to fill all arrays whose elements are defined by looping
-    // over the baselines.
-    int iBaseLine = 0;
-    for (i=0; i < (nb_antenna_feed_ - 1); i++) {
-      for (j=i+1; j < nb_antenna_feed_; j++) {
-	antenna1(iBaseLine) = antenna_id_[i];
-	antenna2(iBaseLine) = antenna_id_[j];
-	feed1(iBaseLine)    = feed_id_[i];   
-	feed2(iBaseLine)    = feed_id_[j];   
-
-	// Prepare the Data, Model Data and Corrected Data vectors
-	int visPtr    = 0;
-
-	for (k = 0; k < numChan; k++) 
-	  for (l = 0; l < numCorr; l++) {
-	    visPtr = nBaseLines * numChan * l +  nBaseLines * k + iBaseLine; 
-	    modelData(l, k, iBaseLine) =
-	      correctedData(l,k, iBaseLine) =
-	      data(l, k, iBaseLine) = Complex(vis_r_[visPtr], vis_i_[visPtr]);
-	  }
-	iBaseLine++;
-      }
-    }
-    
-
-    // Define  a slicer to write blocks of values in each column of the main table.
-    Slicer slicer(IPosition(1,itsMSMainRow),
-		  IPosition(1, (itsMSMainRow+nBaseLines-1)),
-		  Slicer::endIsLast);
-
-    // Start a chrono to measure the time spent writing into the main table.
-    mode = 0; timer(&cpu_time, &real_time, &mode); 
-
-    // Let's create nBaseLines empty rows into the main table.
-    itsMS->addRow(nBaseLines);
-
-    // Now it's time to write all these arrays into the relevant tables
-    itsMSCol->time().putColumnRange(slicer, time);
-    itsMSCol->antenna1().putColumnRange(slicer, antenna1);
-    itsMSCol->antenna2().putColumnRange(slicer, antenna2);
-    itsMSCol->feed1().putColumnRange(slicer, feed1);
-    itsMSCol->feed2().putColumnRange(slicer, feed2);
-    itsMSCol->dataDescId().putColumnRange(slicer, dataDescriptionId);
-    itsMSCol->processorId().putColumnRange(slicer, processorId);
-    itsMSCol->fieldId().putColumnRange(slicer, fieldId);
-    itsMSCol->interval().putColumnRange(slicer, interval);
-    itsMSCol->exposure().putColumnRange(slicer, exposure);
-    itsMSCol->timeCentroid().putColumnRange(slicer, timeCentroid);
-    itsMSCol->scanNumber().putColumnRange(slicer, scanNumber);
-    itsMSCol->arrayId().putColumnRange(slicer, arrayId);
-    itsMSCol->observationId().putColumnRange(slicer, observationId);
-    itsMSCol->stateId().putColumnRange(slicer, stateId);
-    itsMSCol->uvw().putColumnRange(slicer, uvw);
-    itsMSCol->data().putColumnRange(slicer, data);
-    itsMSCol->sigma().putColumnRange(slicer, sigma);
-    itsMSCol->weight().putColumnRange(slicer, weight);
-    itsMSCol->flag().putColumnRange(slicer, flag);
-    itsMSCol->flagCategory().putColumnRange(slicer, flagCat);
-    itsMSCol->flagRow().putColumnRange(slicer, flagRow);
-
-    itsMSCol->modelData().putColumnRange(slicer, modelData);
-    itsMSCol->correctedData().putColumnRange(slicer, correctedData);
-    //itsMSCol->imagingWeight().putColumnRange(slicer, imagingWeight)
-
-    // Increment the number of rows
-    itsMSMainRow += nBaseLines;
-  }
-  catch (AipsError& x) {
-    cout << "\nException : " << x.getMesg() << endl;
-  }
-
-  mode = 0; timer(&ct, &rt, &mode);
-  // Increment scan number
-  itsScanNumber++;
-
-  // Flush
-
-  //itsMS->flush();
-  // Stop the chrono when we have finished to write into the main table.
-  mode = 1; timer(&cpu_time, &real_time, &mode); 
-
-  // Stop the chrono to measure the overall time spent into the method.
-  mode = 1; timer(&overall_cpu_time, &overall_real_time, &mode);
-  /*
-  cout << "addData : time spent in writing to tables : cpu =" << cpu_time <<", real =" << real_time << endl;
-  cout << "addData : time spent in the method: cpu =" << overall_cpu_time <<", real =" << overall_real_time << endl;
-  */
-}
-
-
-
-
-void ASDM2MSFiller::addRCData(double time_,
-			   double interval_,
-			   double exposure_,
-			   double time_centroid_,
-			   int    nb_antenna_feed_,
-			   int    antenna_id_[],
-			   int    feed_id_[],
-			   int    data_desc_id_,
-			   int    field_id_,
-			   double uvw_[],
-			   float  rvis_r_[],
-			   float  rvis_i_[],
-			   float  cvis_r_[],
-			   float  cvis_i_[],
-			   float  sigma_[],
-			   float  weight_[],
-			   const char   flag_[]) {
-  int  i, j, k, l;
-
-  int    visPtr = 0;
-  int    uvwPtr = 0;
-  int    sigPtr = 0;
-  int    weiPtr = 0;
-
-  
-  int numCorr = itsDDMgr.getNumCorr(data_desc_id_);
-  int numChan = itsDDMgr.getNumChan(data_desc_id_);
-  uInt nBaseLines = nb_antenna_feed_ * (nb_antenna_feed_ - 1) / 2;
-
-  if (numCorr <= 0 || numChan <= 0) {
-    cout << "\naddRCData : numCorr = " << numCorr
-	 << " , numChan = " << numChan
-	 << ". They should be both > 0\n";
-      return;
-  }
-
-  Vector<Double>  uvw(IPosition(1,3));
-  Matrix<Complex> rdata(IPosition(2, numCorr, numChan));
-  Matrix<Complex> cdata(IPosition(2, numCorr, numChan));
-  Matrix<Complex> modelData(IPosition(2, numCorr, numChan));
-  Matrix<Complex> correctedData(IPosition(2, numCorr, numChan));
-  Vector<Float>   imagingWeight(IPosition(1,numChan));
-  Vector<Float>   sigma(IPosition(1,numCorr));
-  Vector<Float>   weight(IPosition(1,numCorr));
-  Matrix<Bool>    flag(IPosition(2, numCorr, numChan));
-  Cube<Bool>      flagCat(numCorr, numChan, itsNCat, False);
-
-
-  // Create column accessors for non-standard columns individually
-  ArrayColumn<Complex> noPhaseCorrCol(*itsMS, "ALMA_NO_PHAS_CORR");
-  ArrayColumn<Complex> phaseCorrCol(*itsMS, "ALMA_PHAS_CORR");
-  ScalarColumn<Bool> phaseCorrFlagRowCol(*itsMS, "ALMA_PHAS_CORR_FLAG_ROW");
-
-
-  int iBaseLine = 0;
-
-  try {
-    
-    if (nb_antenna_feed_ < 0) {
-      return;
-    }
-    
-    //cout << "\naddData : numCorr = "<< numCorr << ", numChan=" << numChan << "\n";  
-    //cout << "\nShape of data & flag " << rdata.shape().asVector();
-    
-    for (i=0; i < (nb_antenna_feed_ - 1); i++) {
-      for (j=i+1; j < nb_antenna_feed_; j++) {
-
-	itsMS->addRow();
-
-
-	// Prepare the FLAG matrix
-	//flag = (flag_[iBaseLine])?True:False;
-	flag = False;
-
-	// Prepare the UVW vector
-	uvw(0) = uvw_[uvwPtr++];
-	uvw(1) = uvw_[uvwPtr++];
-	uvw(2) = uvw_[uvwPtr++];
-	
-	
-	// Prepare the Data, Model Data and Corrected Data vectors
-	for (k = 0; k < numChan; k++) 
-	  for (l = 0; l < numCorr; l++) {
-	    visPtr = nBaseLines * numChan * l +  nBaseLines * k + iBaseLine; 
-	    modelData(l, k) =
-	      correctedData(l,k) =
-	      cdata(l, k) = Complex(cvis_r_[visPtr], cvis_i_[visPtr]);
-	    rdata(l, k) = Complex(rvis_r_[visPtr], rvis_i_[visPtr]);
-	  }
-	iBaseLine++;
-	
-	// Prepare the Sigma vector
-	for (l = 0; l < numCorr; l++) {
-	  sigma(l) = sigma_[sigPtr++];
-	}
-	
-	// Prepare the Weight vector
-	for (l = 0; l < numCorr; l++) {
-	  weight(l) = weight_[weiPtr++];
-	}
-	
-	// Prepare the Imaging Weight vector
-	for (l = 0; l < numChan; l++) {
-	  imagingWeight(l) = 1.0;
-	}
-
-	// Write columns
-	itsMSCol->time().put(itsMSMainRow, time_);
-	itsMSCol->antenna1().put(itsMSMainRow, antenna_id_[i]-1);
-	itsMSCol->antenna2().put(itsMSMainRow, antenna_id_[j]-1);
-	itsMSCol->feed1().put(itsMSMainRow, feed_id_[i]-1);
-	itsMSCol->feed2().put(itsMSMainRow, feed_id_[j]-1);
-       
-	/*
-	  itsMSCol->feed1().put(itsMSMainRow, i);
-	  itsMSCol->feed2().put(itsMSMainRow, j);
-	*/
-	
-	itsMSCol->dataDescId().put(itsMSMainRow, data_desc_id_-1);
-	itsMSCol->processorId().put(itsMSMainRow, -1);
-	itsMSCol->fieldId().put(itsMSMainRow, field_id_-1);
-	itsMSCol->interval().put(itsMSMainRow, interval_);
-	itsMSCol->exposure().put(itsMSMainRow, exposure_);
-	itsMSCol->timeCentroid().put(itsMSMainRow, time_centroid_);
-	itsMSCol->scanNumber().put(itsMSMainRow, itsScanNumber);
-	itsMSCol->arrayId().put(itsMSMainRow, -1);
-	itsMSCol->observationId().put(itsMSMainRow, itsObservationTimeMgr[0].getIndex());
-	itsMSCol->stateId().put(itsMSMainRow, -1);
-	itsMSCol->uvw().put(itsMSMainRow, uvw);
-	itsMSCol->data().put(itsMSMainRow, cdata);
-
-	noPhaseCorrCol.setShape(itsMSMainRow, IPosition(2, numCorr, numChan));
-	noPhaseCorrCol.put(itsMSMainRow, rdata);
-	phaseCorrCol.setShape(itsMSMainRow, IPosition(2, numCorr, numChan));
-	phaseCorrCol.put(itsMSMainRow, cdata);
-	phaseCorrFlagRowCol.put(itsMSMainRow, False);
-	
-	itsMSCol->sigma().put(itsMSMainRow, sigma);
-	itsMSCol->weight().put(itsMSMainRow, weight);
-	itsMSCol->flag().put(itsMSMainRow, flag);
-	itsMSCol->flagCategory().put(itsMSMainRow, flagCat);
-	itsMSCol->flagRow().put(itsMSMainRow, False);
-
-	itsMSCol->modelData().put(itsMSMainRow, modelData);
-	itsMSCol->correctedData().put(itsMSMainRow, correctedData);
-	itsMSCol->imagingWeight().put(itsMSMainRow, imagingWeight);
-	
-	// Increment row number
-	itsMSMainRow++;
-      }
-    }
-  }
-  catch (AipsError& x) {
-    cout << "\nException : " << x.getMesg() << endl;
-  }
-
-  // Increment scan number
-  itsScanNumber++;
-
-  // Flush
-  itsMS->flush();
-  cout << "\n";
-}
-
-
 // Add a record in the table DataDescription
 int  ASDM2MSFiller::addDataDescription(int spectral_window_id_,
-				    int polarization_id_) {
+				       int polarization_id_) {
   uInt crow;
   MSDataDescription msdd = itsMS -> dataDescription();
   MSDataDescColumns msddCol(msdd);
@@ -1450,7 +1085,7 @@ int  ASDM2MSFiller::addDataDescription(int spectral_window_id_,
 
 // Add a record in the table DataDescription
 int  ASDM2MSFiller::addUniqueDataDescription( int spectral_window_id_,
-					   int polarization_id_ ) {
+					      int polarization_id_ ) {
   uInt crow;
   MSDataDescription msdd = itsMS -> dataDescription();
   MSDataDescColumns msddCol(msdd);
@@ -1516,18 +1151,18 @@ String ASDM2MSFiller::msPath() {
 
 // Add a record in the table FEED
 void ASDM2MSFiller::addFeed(int      antenna_id_,
-			 int      feed_id_,
-			 int      spectral_window_id_,
-			 double   time_,
-			 double   interval_,
-			 int      num_receptors_,
-			 int      beam_id_,
-			 double   beam_offset_[],
-			 const    vector<string>& pol_type_,
-			 double   polarization_responseR_[],
-			 double   polarization_responseI_[],
-			 double   position_[3],
-			 double   feed_angle_[]) {
+			    int      feed_id_,
+			    int      spectral_window_id_,
+			    double   time_,
+			    double   interval_,
+			    int      num_receptors_,
+			    int      beam_id_,
+			    double   beam_offset_[],
+			    const    vector<string>& pol_type_,
+			    double   polarization_responseR_[],
+			    double   polarization_responseI_[],
+			    double   position_[3],
+			    double   feed_angle_[]) {
   
 
   int crow;
@@ -1591,12 +1226,12 @@ void ASDM2MSFiller::addFeed(int      antenna_id_,
 
 // Adds a field record in the TABLE
 void ASDM2MSFiller::addField( const char   *name_,
-			   const char   *code_,
-			   double time_,
-			   double delay_dir_[2],
-			   double phase_dir_[2],
-			   double reference_dir_[2],
-			   int    source_id_) {
+			      const char   *code_,
+			      double time_,
+			      double delay_dir_[2],
+			      double phase_dir_[2],
+			      double reference_dir_[2],
+			      int    source_id_) {
   uInt crow;
   // cout << "\naddField : entering";
   Matrix<Double>  delayDir(2,1);
@@ -1627,7 +1262,7 @@ void ASDM2MSFiller::addField( const char   *name_,
   msfieldCol.referenceDir().put(crow, referenceDir);
   msfieldCol.sourceId().put(crow, source_id_);
   /*
-  msfieldCol.sourceId().put(crow, -1);
+    msfieldCol.sourceId().put(crow, -1);
   */
   msfieldCol.flagRow().put(crow, False);
   // cout << "\naddField : exiting";
@@ -1638,13 +1273,13 @@ void ASDM2MSFiller::addField( const char   *name_,
 
 // Add a record in the table FLAG_CMD;
 void ASDM2MSFiller::addFlagCmd(double    time_,
-			    double    interval_,
-			    const char      *type_,
-			    const char      *reason_,
-			    int       level_,
-			    int       severity_,
-			    int       applied_,
-			    const char      *command_) {
+			       double    interval_,
+			       const char      *type_,
+			       const char      *reason_,
+			       int       level_,
+			       int       severity_,
+			       int       applied_,
+			       const char      *command_) {
   uInt crow;
   MSFlagCmd msflagcmd = itsMS -> flagCmd();
   MSFlagCmdColumns msflagcmdCol(msflagcmd);
@@ -1667,14 +1302,14 @@ void ASDM2MSFiller::addFlagCmd(double    time_,
 			  
 // Add a record in the table HISTORY
 void ASDM2MSFiller::addHistory( double time_,
-			     int    observation_id_,
-			     const char   *message_,
-			     const char   *priority_,
-			     const char   *origin_,
-			     int    object_id_,
-			     const char   *application_,
-			     const char   *cli_command_,
-			     const char   *app_parms_ ) {
+				int    observation_id_,
+				const char   *message_,
+				const char   *priority_,
+				const char   *origin_,
+				int    object_id_,
+				const char   *application_,
+				const char   *cli_command_,
+				const char   *app_parms_ ) {
   uInt crow;
   MSHistory mshistory = itsMS -> history();
   MSHistoryColumns mshistoryCol(mshistory);
@@ -1704,14 +1339,14 @@ void ASDM2MSFiller::addHistory( double time_,
 	     
 // Adds a single observation record in the table OBSERVATION
 void ASDM2MSFiller::addObservation(const char   *telescopeName_,
-				double startTime_,
-				double endTime_,
-				const char   *observer_,
-				const char   **log_,
-				const char   *schedule_type_,
-				const char   **schedule_,
-				const char   *project_,
-				double release_date_) {
+				   double startTime_,
+				   double endTime_,
+				   const char   *observer_,
+				   const char   **log_,
+				   const char   *schedule_type_,
+				   const char   **schedule_,
+				   const char   *project_,
+				   double release_date_) {
 
   uInt crow;
   MSObservation msobs = itsMS -> observation();
@@ -1722,8 +1357,8 @@ void ASDM2MSFiller::addObservation(const char   *telescopeName_,
   Vector<String> log(1);
   int nLog = 0;  
   if (log_) {
-     while (log_[nLog++]); nLog--; log.resize(nLog);
-     for (int i = 0; i < nLog; i++) log(i) = log_[i];    
+    while (log_[nLog++]); nLog--; log.resize(nLog);
+    for (int i = 0; i < nLog; i++) log(i) = log_[i];    
   }
   else
     log(0) =  "" ;
@@ -1747,7 +1382,7 @@ void ASDM2MSFiller::addObservation(const char   *telescopeName_,
   // Fill the columns
   crow = msobs.nrow();
   /*
-  itsObservationTimeMgr[0].setIndex(crow);
+    itsObservationTimeMgr[0].setIndex(crow);
   */
   msobs.addRow();
 
@@ -1769,14 +1404,14 @@ void ASDM2MSFiller::addObservation(const char   *telescopeName_,
 
 // Adds a record in the table POINTING
 void ASDM2MSFiller::addPointing(int     antenna_id_,
-			     double  time_,
-			     double  interval_,
-			     const char    *name_,
-			     double  direction_[2],
-			     double  target_[2],
-			     double  pointing_offset_[2],
-			     double  encoder_[2],
-			     int    tracking_) {
+				double  time_,
+				double  interval_,
+				const char    *name_,
+				double  direction_[2],
+				double  target_[2],
+				double  pointing_offset_[2],
+				double  encoder_[2],
+				int    tracking_) {
   
   int crow;
   Matrix<Double>  direction(2,1);
@@ -1795,8 +1430,8 @@ void ASDM2MSFiller::addPointing(int     antenna_id_,
 
   // Keep the index in POINTING for this antenna for future time management.
   /*
-  itsPointingTimeMgr[antenna_id_-1].setIndex(crow);
-  itsPointingTimeMgr[antenna_id_-1].setStartTime(time_);
+    itsPointingTimeMgr[antenna_id_-1].setIndex(crow);
+    itsPointingTimeMgr[antenna_id_-1].setStartTime(time_);
   */
 
   mspointing.addRow();
@@ -1842,15 +1477,14 @@ void ASDM2MSFiller::addPointing(int     antenna_id_,
   
   //mspointing.flush();
 
-//   cout << "\n addPointing: exiting";
-//   cout << "\n";
+  //   cout << "\n addPointing: exiting";
+  //   cout << "\n";
 }
 
 void ASDM2MSFiller::addPointingSlice(unsigned int n_row_,
 				     int         *antenna_id_,
 				     double      *time_,
 				     double      *interval_,
-				     char       **name_,
 				     double      *direction_,
 				     double      *target_,
 				     double      *pointing_offset_,
@@ -1859,9 +1493,8 @@ void ASDM2MSFiller::addPointingSlice(unsigned int n_row_,
   Vector<Int>    antenna_id(IPosition(1, n_row_), antenna_id_, SHARE);
   Vector<Double> time(IPosition(1, n_row_), time_, SHARE);
   Vector<Double> interval(IPosition(1, n_row_), interval_, SHARE);
-  
-  Vector<String> name(IPosition(1, n_row_));
-  for (unsigned int i = 0; i < n_row_; i++) name(i) = String(name_[i]);
+
+  Vector<String> name(IPosition(1, n_row_), "");
 
   Vector<int>    num_poly(IPosition(1, n_row_), 0);
   Cube<Double>   direction(IPosition(3, 2, 1, n_row_), direction_, SHARE);
@@ -1874,39 +1507,34 @@ void ASDM2MSFiller::addPointingSlice(unsigned int n_row_,
   MSPointingColumns mspointingCol(mspointing);
   unsigned int crow = mspointing.nrow();
 
-  try {
-    // Define a slicer to write blocks of values in each column of the pointing table.
-    Slicer slicer(IPosition(1, crow),
-		  IPosition(1, crow + n_row_ - 1),
-		  Slicer::endIsLast);
+  // Define a slicer to write blocks of values in each column of the pointing table.
+  Slicer slicer(IPosition(1, crow),
+		IPosition(1, crow + n_row_ - 1),
+		Slicer::endIsLast);
 
-    // Let's create n_row_ empty rows into the pointing table.
-    mspointing.addRow(n_row_);
+  // Let's create n_row_ empty rows into the pointing table.
+  mspointing.addRow(n_row_);
 
-    // Fill the columns
-    mspointingCol.antennaId().putColumnRange(slicer, antenna_id);
-    mspointingCol.time().putColumnRange(slicer, time);
-    mspointingCol.interval().putColumnRange(slicer, interval);
-    mspointingCol.name().putColumnRange(slicer, name);
-    mspointingCol.numPoly().putColumnRange(slicer, num_poly);
-    mspointingCol.direction().putColumnRange(slicer, direction);
-    mspointingCol.target().putColumnRange(slicer, target);
-    mspointingCol.pointingOffset().putColumnRange(slicer, pointing_offset);
-    mspointingCol.encoder().putColumnRange(slicer, encoder);
-    mspointingCol.tracking().putColumnRange(slicer, tracking);
+  // Fill the columns
+  mspointingCol.antennaId().putColumnRange(slicer, antenna_id);
+  mspointingCol.time().putColumnRange(slicer, time);
+  mspointingCol.interval().putColumnRange(slicer, interval);
+  mspointingCol.name().putColumnRange(slicer, name);
+  mspointingCol.numPoly().putColumnRange(slicer, num_poly);
+  mspointingCol.direction().putColumnRange(slicer, direction);
+  mspointingCol.target().putColumnRange(slicer, target);
+  mspointingCol.pointingOffset().putColumnRange(slicer, pointing_offset);
+  mspointingCol.encoder().putColumnRange(slicer, encoder);
+  mspointingCol.tracking().putColumnRange(slicer, tracking);
 
-  }
-  catch (AipsError& x) {
-    cout << "\nException : " << x.getMesg() << endl;
-  }
 }
 
 
 		 
 // Adds a record in the table Polarization
 int ASDM2MSFiller::addPolarization(int num_corr_,
-				int corr_type_[],
-				int corr_product_[]) {
+				   int corr_type_[],
+				   int corr_product_[]) {
   uInt crow;
   int  i;
   Vector<Int>  corrType(num_corr_);
@@ -1961,10 +1589,10 @@ int ASDM2MSFiller::addUniquePolarization(int num_corr_,
   for (uInt i = 0; i < crow; i++) {
     Vector<Int> _corrType = mspolarCol.corrType()(i);
     Matrix<Int> _corrProduct = mspolarCol.corrProduct()(i);
-	   if ( (mspolarCol.numCorr()(i) == num_corr_)  &&
-		allEQ(_corrType,corrType) &&
-		allEQ(_corrProduct,corrProduct)
-		) return i;
+    if ( (mspolarCol.numCorr()(i) == num_corr_)  &&
+	 allEQ(_corrType,corrType) &&
+	 allEQ(_corrProduct,corrProduct)
+	 ) return i;
   }
 
   /*
@@ -1983,9 +1611,9 @@ int ASDM2MSFiller::addUniquePolarization(int num_corr_,
 
 // Adds a record in the table PROCESSOR
 void ASDM2MSFiller::addProcessor(const char *type_,
-			      const char *sub_type_,
-			      int  type_id_,
-			      int  mode_id_) {
+				 const char *sub_type_,
+				 int  type_id_,
+				 int  mode_id_) {
   uInt crow;
   MSProcessor msproc = itsMS -> processor();
   MSProcessorColumns msprocCol(msproc);
@@ -2008,12 +1636,12 @@ void ASDM2MSFiller::addProcessor(const char *type_,
 // Adds a single state record in the table STATE in such a way that there is no repeated row.
 // Returns the index of row added or found with these values. 
 int ASDM2MSFiller::addUniqueState(Bool sig_,
-			       Bool ref_,
-			       double cal_,
-			       double load_,
-			       unsigned int sub_scan_,
-			       const char* obs_mode_,
-			       Bool flag_row_) {
+				  Bool ref_,
+				  double cal_,
+				  double load_,
+				  unsigned int sub_scan_,
+				  const char* obs_mode_,
+				  Bool flag_row_) {
   MSState msstate = itsMS -> state();
   MSStateColumns msstateCol(msstate);
   uInt crow = msstate.nrow();
@@ -2047,19 +1675,19 @@ int ASDM2MSFiller::addUniqueState(Bool sig_,
 
 // Add a record in the table SOURCE
 void ASDM2MSFiller::addSource(int    source_id_,
-			   double time_,
-			   double interval_,
-			   int    spectral_window_id_,
-			   int    num_lines_,
-			   const char   *name_,
-			   int    calibration_group_,
-			   const char   *code_,
-			   double direction_[2],
-			   double position_[3],
-			   double proper_motion_[2],
-			   const char   *transition_[],
-			   double rest_frequency_[],
-			   double sysvel_[]){
+			      double time_,
+			      double interval_,
+			      int    spectral_window_id_,
+			      int    num_lines_,
+			      const char   *name_,
+			      int    calibration_group_,
+			      const char   *code_,
+			      double direction_[2],
+			      double position_[3],
+			      double proper_motion_[2],
+			      const char   *transition_[],
+			      double rest_frequency_[],
+			      double sysvel_[]){
   MSSource mssource = itsMS -> source();
   MSSourceColumns mssourceCol(mssource);
 
@@ -2074,9 +1702,9 @@ void ASDM2MSFiller::addSource(int    source_id_,
 
   Vector<Double> position(3);
   if (position_) {
-  position(0) = position_[0];
-  position(1) = position_[1];
-  position(2) = position_[2];
+    position(0) = position_[0];
+    position(1) = position_[1];
+    position(2) = position_[2];
   }
   
   Vector<Double>    properMotion(2);
@@ -2206,11 +1834,11 @@ int ASDM2MSFiller::addSpectralWindow(int    num_chan_,
 
 // Adds a single state record in the table STATE
 void ASDM2MSFiller::addState(Bool   sig_,
-			  Bool   ref_,
-			  double cal_,
-			  double load_,
-			  int    sub_scan_,
-			  const char   *obs_mode_) {
+			     Bool   ref_,
+			     double cal_,
+			     double load_,
+			     int    sub_scan_,
+			     const char   *obs_mode_) {
   uInt crow;
   MSState msstate = itsMS -> state();
   MSStateColumns msstateCol(msstate);
@@ -2232,126 +1860,61 @@ void ASDM2MSFiller::addState(Bool   sig_,
 
 
 // Adds a  record weather in the table WEATHER
-void ASDM2MSFiller::addWeather(int antenna_id_,
-			    double time_,
-			    double interval_,
-			    float h2o_,
-			    float rms_h2o_,
-			    float rms_h2o_flag_,
-			    float pressure_,
-			    float rel_humidity_,
-			    float temperature_,
-			    float dew_point_,
-			    float wind_direction_,
-			    float wind_speed_) {
-
-  // cout << "\nEntering addWeather";
+void ASDM2MSFiller::addWeather(int    antenna_id_,
+			       double time_,
+			       double interval_,
+			       float  pressure_,
+			       bool   pressure_flag_,
+			       float  rel_humidity_,
+			       bool   rel_humidity_flag_,
+			       float  temperature_,
+			       bool   temperature_flag_,
+			       float  wind_direction_,
+			       bool   wind_direction_flag_,
+			       float  wind_speed_,
+			       bool   wind_speed_flag_,
+			       bool   has_dew_point_,
+			       float  dew_point_,
+			       bool   dew_point_flag_,
+			       int    wx_station_id_,
+			       double* wx_station_position_) {
+  
   MSWeather msweather = itsMS -> weather();
   MSWeatherColumns msweatherCol(msweather);
 
-  // cout << "\nHandling msweatherCol";
   int crow;
-
-  // If necessary update TIME and INTERVAL.
-#if 0
-  if ((crow = itsWeatherTimeMgr[antenna_id_-1].getIndex()) != -1) {
-    float start = itsWeatherTimeMgr[antenna_id_-1].getStartTime();
-    double midpoint = (time_ + start)/2;
-    double interval = time_ - start;
-    msweatherCol.time().put(crow, midpoint);
-    msweatherCol.interval().put(crow, interval);
-  }
-#endif
-
+  
   crow = msweather.nrow();
-
-  // Keep the index in WEATHER for this antenna for future time management.
-  /*
-  itsWeatherTimeMgr[antenna_id_-1].setIndex(crow);
-  itsWeatherTimeMgr[antenna_id_-1].setStartTime(time_);
-  */
   msweather.addRow();
   
-  // cout << "\nAdding a row";
-  msweatherCol.antennaId().put(crow, antenna_id_-1);
+  msweatherCol.antennaId().put(crow, antenna_id_);
   msweatherCol.interval().put(crow, interval_);
   msweatherCol.time().put(crow, time_);
-#if 1
-  msweatherCol.H2O().put(crow, h2o_);
+
   msweatherCol.pressure().put(crow, pressure_);
+  msweatherCol.pressureFlag().put(crow, pressure_flag_);
   msweatherCol.relHumidity().put(crow, rel_humidity_);
+  msweatherCol.relHumidityFlag().put(crow, rel_humidity_flag_);
   msweatherCol.temperature().put(crow, temperature_);
-  msweatherCol.dewPoint().put(crow, dew_point_);
+  msweatherCol.temperatureFlag().put(crow, temperature_flag_);
   msweatherCol.windDirection().put(crow, wind_direction_);
+  msweatherCol.windDirectionFlag().put(crow, wind_direction_flag_);
   msweatherCol.windSpeed().put(crow, wind_speed_);
-#endif
+  msweatherCol.windSpeedFlag().put(crow, wind_speed_flag_);
+  if (has_dew_point_) {
+    msweatherCol.dewPoint().put(crow, dew_point_);
+    msweatherCol.dewPointFlag().put(crow, dew_point_flag_);
+  }
+
+  ScalarColumn<int> nsWXStationId(msweather, "NS_WX_STATION_ID");
+  nsWXStationId.put(crow, wx_station_id_);
+  ArrayColumn<double> nsWXStationPosition(msweather, "NS_WX_STATION_POSITION");
+  nsWXStationPosition.put(crow, Vector<double>(IPosition(1, 3), wx_station_position_, SHARE));
+
   msweather.flush();
-  // cout << "\nExiting addWeather";
-  // cout << "\n";
 }
 
 void ASDM2MSFiller::end(double time_) {
-
-#if 0  
-  int antenna_id;
-  int crow;
-
-
-  time_ = time_ + 1.0; /* To force a non null interval */
-
-  MSFeedColumns msfeedCol(itsMS->feed());
-  MSPointingColumns mspointingCol(itsMS->pointing());
-  MSObservationColumns msobsCol(itsMS->observation());
-
-  // Update time in FEED table. this is commented for now
-  // Code below is not correct
-  
-  //cout << "\nEntering end";
-  //cout << "\n";
-  for (antenna_id = 0; antenna_id < itsNumAntenna; antenna_id++) {
-    if ((crow = itsFeedTimeMgr[antenna_id].getIndex()) != -1) {
-      double start = itsFeedTimeMgr[antenna_id].getStartTime();
-      double midpoint = (time_ + start)/2;
-      double interval = time_ - start;
-      msfeedCol.time().put(crow, midpoint);
-      msfeedCol.interval().put(crow, interval);
-      /*
-      cout << "\nFeed time update midpoint = "
-	   << midpoint
-	   << ", interval = "
-	   << interval;
-      */
-    }
-  }
-  itsMS->feed().flush();
-
-
-  // Update time in POINTING table
-  // cout << "\nUpdating time in POINTING table";
-    for (antenna_id = 0; antenna_id < itsNumAntenna; antenna_id++) {
-      if ((crow = itsPointingTimeMgr[antenna_id].getIndex()) != -1) {
-	double start = itsPointingTimeMgr[antenna_id].getStartTime();
-	double midpoint = (time_ + start)/2;
-	double interval = time_ - start;
-	mspointingCol.time().put(crow, midpoint);
-	mspointingCol.interval().put(crow, interval);
-      }
-    }
-    itsMS->pointing().flush();
-    
-
-  // Update time in OBSERVATION table
-  // cout << "\nUpdating time in OBSERVATION table";
-  if ((crow = itsObservationTimeMgr[0].getIndex()) != -1) {
-    double start =  itsObservationTimeMgr[0].getStartTime();
-    double stop  =  time_;
-    Vector<Double> timeRange(2);
-    timeRange(0) = start;
-    timeRange(1) = stop;
-    msobsCol.timeRange().put(crow, timeRange);
-  };
-  itsMS->observation().flush();
-#endif
   itsMS->flush();
 }
 

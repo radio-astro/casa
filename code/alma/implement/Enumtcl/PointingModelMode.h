@@ -38,9 +38,9 @@ public:
   static bool   init(){
     EnumPar<void> ep;
     m_.insert(pair<PointingModelMode,EnumPar<void> >
-     (PointingModelModeMod::RADIO,ep((int)PointingModelModeMod::RADIO,"RADIO","Radio pointing model")));
+     (PointingModelModeMod::RADIO,ep((int)PointingModelModeMod::RADIO,"RADIO","un-documented")));
     m_.insert(pair<PointingModelMode,EnumPar<void> >
-     (PointingModelModeMod::OPTICAL,ep((int)PointingModelModeMod::OPTICAL,"OPTICAL","Optical Pointing Model")));
+     (PointingModelModeMod::OPTICAL,ep((int)PointingModelModeMod::OPTICAL,"OPTICAL","un-documented")));
     return true;
   }
   static map<PointingModelMode,EnumPar<void> > m_;

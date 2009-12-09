@@ -26,9 +26,15 @@
 //# $Id: $
 #include <plotms/Actions/PlotMSAction.h>
 
+#include <casa/Logging/LogFilter.h>
+#include <ms/MeasurementSets/MSSummary.h>
 #include <plotms/Actions/PlotMSExportThread.qo.h>
+#include <plotms/Gui/PlotMSPlotter.qo.h>
+#include <plotms/GuiTabs/PlotMSFlaggingTab.qo.h>
+#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlot.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
 namespace casa {
 
@@ -58,6 +64,8 @@ bool PlotMSAction::requires(Type type, const String& parameter) {
     case CACHE_LOAD: case CACHE_RELEASE:
         return parameter == P_PLOT || parameter == P_AXES;
 
+    case MS_SUMMARY: return parameter == P_PLOT;
+        
     case PLOT_EXPORT:
         return parameter == P_PLOT || parameter == P_FILE;
     
@@ -88,14 +96,17 @@ bool PlotMSAction::isValid() const {
 		return isDefinedPlot(P_PLOT) && valuePlot(P_PLOT) != NULL &&
 		       isDefinedAxes(P_AXES) && valueAxes(P_AXES).size() > 0;
 
+	case MS_SUMMARY:
+	    return isDefinedPlot(P_PLOT) && valuePlot(P_PLOT) != NULL;
+		       
 	case PLOT_EXPORT:
 		return isDefinedPlot(P_PLOT) && valuePlot(P_PLOT) != NULL &&
 		       isDefinedString(P_FILE) && !valueString(P_FILE).empty();
 
 	case SEL_FLAG: case SEL_UNFLAG: case SEL_LOCATE: case SEL_CLEAR_REGIONS:
 	case ITER_FIRST: case ITER_PREV: case ITER_NEXT: case ITER_LAST:
-	case STACK_BACK: case STACK_BASE: case STACK_FORWARD: case CLEAR_PLOTTER:
-	case QUIT:
+	case STACK_BACK: case STACK_BASE: case STACK_FORWARD: case PLOT:
+	case CLEAR_PLOTTER: case QUIT:
 		return true;
 
 	default: return false;
@@ -159,130 +170,117 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	switch(itsType_) {
 	
 	case SEL_FLAG: case SEL_UNFLAG: case SEL_LOCATE: {
+	    // Locate/Flag/Unflag on all visible canvases.
 	    const vector<PlotMSPlot*>& plots = plotms->getPlotManager().plots();
 	    vector<PlotCanvasPtr> visibleCanv = plotms->getPlotter()
                                             ->currentCanvases();
-	    PlotMSSinglePlot* plot;
-
-	    stringstream ss;
-	    stringstream tempx, tempy, temp;
-	    bool ssFlag = false;
-	    PlotLogMessage* m;
-	    LogMessage::Priority p = LogMessage::NORMAL;
 	    
-	    // TODO !distance from GUI
+	    // Get flagging parameters.
 	    PlotMSFlagging flagging = plotms->getPlotter()->getFlaggingTab()
 	                              ->getValue();
 
-	    vector<PlotCanvasPtr> canv;
-	    vector<PlotRegion> regions;
-	    vector<PlotMSSinglePlot*> redrawPlots;
-	    bool found;
+	    // Keep list of plots that have to be redrawn.
+	    vector<PlotMSPlot*> redrawPlots;
 
+	    PlotMSPlot* plot;
 	    for(unsigned int i = 0; i < plots.size(); i++) {
-	        // NOTE: for now, only works with single plots
-	        plot = dynamic_cast<PlotMSSinglePlot*>(plots[i]);
+	        plot = plots[i];
 	        if(plot == NULL) continue;
 
-	        if(i > 0) ss.str("");
-
-	        PlotMSSinglePlotParameters& params = plot->singleParameters();
+	        // Get parameters.
+	        PlotMSPlotParameters& params = plot->parameters();
+	        PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>();
 	        PlotMSData& data = plot->data();
 
-            if(itsType_ == SEL_FLAG || itsType_ == SEL_UNFLAG)
-                flagging.setMS(&plot->ms(),&plot->selectedMS(),plot->visSet());
-
-	        canv = plot->canvases();
+	        vector<PlotCanvasPtr> canv = plot->canvases();
 	        for(unsigned int j = 0; j < canv.size(); j++) {
-	            if(canv[j].null()) continue;
-
 	            // Only apply to visible canvases.
-	            found = false;
-	            for(unsigned int k = 0; !found && k < visibleCanv.size(); k++)
-	                if(canv[j] == visibleCanv[k]) found = true;
-	            if(!found) continue;
+	            bool visible = false;
+	            for(unsigned int k= 0; !visible && k < visibleCanv.size(); k++)
+	                if(canv[j] == visibleCanv[k]) visible = true;
+	            if(!visible) continue;
 
-	            regions = canv[j]->standardMouseTools()->selectTool()
-	                      ->getSelectedRects();
+	            // Get selected regions on that canvas.
+	            vector<PlotRegion> regions= canv[j]->standardMouseTools()
+                                            ->selectTool()->getSelectedRects();
 	            if(regions.size() == 0) continue;
-
-	            if(j > 0) {
-	                tempx.str(""); tempy.str(""); temp.str("");
-	            }
-
-	            for(unsigned int k = 0; k < regions.size(); k++) {
-	                if(k > 0) {
-	                    tempx << " or ";
-	                    tempy << " or ";
-	                    temp << '\n';
+	            
+	            // Actually do locate/flag/unflag...
+	            PlotLogMessage* m = NULL;
+	            try {
+	                if(itsType_ == SEL_LOCATE) {
+	                    m = data.locateRange(Vector<PlotRegion>(regions));
+	                    
+	                } else {
+	                    m = data.flagRange(flagging,
+	                            Vector<PlotRegion>(regions),
+	                            itsType_ == SEL_FLAG);
 	                }
-	                tempx << '[' << regions[k].left() << ' '
-	                      << regions[k].right()	<< ']';
-	                tempy << '[' << regions[k].bottom() << ' '
-	                      << regions[k].top() << ']';
-                    m = NULL;
+	                
+	            // ...and catch any reported errors.
+	            } catch(AipsError& err) {
+                    itsDoActionResult_ = "Error during ";
+                    if(itsType_ == SEL_LOCATE) itsDoActionResult_ += "locate";
+                    else if(itsType_==SEL_FLAG) itsDoActionResult_+="flagging";
+                    else itsDoActionResult_ += "unflagging";
+                    itsDoActionResult_ += ": " + err.getMesg();
+                    return false;
+	            } catch(...) {
+                    itsDoActionResult_ = "Unknown error during ";
+                    if(itsType_ == SEL_LOCATE) itsDoActionResult_ += "locate";
+                    else if(itsType_==SEL_FLAG) itsDoActionResult_+="flagging";
+                    else itsDoActionResult_ += "unflagging";
+                    itsDoActionResult_ += "!";
+                    return false;
+	            }
+
+	            // Log results.
+                if(m != NULL) {
+                    stringstream msg;
                     
-                    try {
-                    if(itsType_ == SEL_LOCATE) {
-                        m = data.locateRange(regions[k].left(),
-                                regions[k].right(), regions[k].bottom(),
-                                regions[k].top());
-                    } else {                        
-                        m = data.flagRange(flagging, regions[k].left(),
-                                regions[k].right(), regions[k].bottom(),
-                                regions[k].top(), itsType_ == SEL_FLAG);
+                    // For multiple plots or canvases, add a note at the
+                    // beginning to indicate which one this is.
+                    if(plots.size() > 1 || canv.size() > 1) {
+                        msg << "[";
+                        
+                        if(plots.size() > 1) msg << "Plot #" << i;
+                        if(plots.size() > 1 && canv.size() > 1) msg << ", ";
+                        if(canv.size() > 1) msg << "Canvas #" << j;
+                        
+                        msg << "]: ";
                     }
-                    } catch(AipsError& err) {
-                        itsDoActionResult_ = "Error during ";
-                        if(itsType_ == SEL_LOCATE)
-                            itsDoActionResult_ += "locate";
-                        else if(itsType_ == SEL_FLAG)
-                            itsDoActionResult_ += "flagging";
-                        else itsDoActionResult_ += "unflagging";
-                        itsDoActionResult_ += ": " + err.getMesg();
-                        return false;
-                    } catch(...) {
-                        itsDoActionResult_ = "Unknown error during ";
-                        if(itsType_ == SEL_LOCATE)
-                            itsDoActionResult_ += "locate";
-                        else if(itsType_ == SEL_FLAG)
-                            itsDoActionResult_ += "flagging";
-                        else itsDoActionResult_ += "unflagging";
-                        itsDoActionResult_ += "!";
-                        return false;
+                    
+                    // Append region values for x-axis.
+                    msg << PMS::axis(c->xAxis()) << " in ";                    
+                    for(unsigned int k = 0; k < regions.size(); k++) {
+                        if(k > 0) msg << " or ";
+                        msg << "[" << regions[k].left() << " "
+                            << regions[k].right() << "]";
                     }
-                    if(m != NULL) {
-                        m->message(temp);
-                        p = m->priority();
-                        delete m;
+                    
+                    // Append region values for y-axis.
+                    msg << ", " << PMS::axis(c->yAxis()) << " in ";
+                    for(unsigned int k = 0; k < regions.size(); k++) {
+                        if(k > 0) msg << " or ";
+                        msg << "[" << regions[k].bottom() << " "
+                            << regions[k].top() << "]";
                     }
-	            }
-
-	            if(!temp.str().empty()) {
-	                if(ssFlag) ss << "\n\n";
-	                else       ssFlag = true;
-
-	                if(itsType_ == SEL_LOCATE) ss << "Locate ";
-                    else if(itsType_ == SEL_FLAG) ss << "Flag ";
-                    else ss << "Unflag ";
-                    ss << PMS::axis(params.xAxis()) << " in " << tempx.str()
-                       << ", " << PMS::axis(params.yAxis()) << " in "
-                       << tempy.str() << ":\n" << temp.str();
-	            }
+                    
+                    // Append result as returned by cache.
+                    msg << ":\n" << m->message();
+                    m->message(msg.str(), true);
+                    
+                    // Log message.
+                    plotms->getLogger()->postMessage(*m);
+                    
+                    delete m;
+                    m = NULL;
+                }
 	            
 	            // If this plot was flagged/unflagged, add it to the redraw
 	            // list.
 	            if(itsType_ == SEL_FLAG || itsType_ == SEL_UNFLAG)
 	                redrawPlots.push_back(plot);
-	        }
-
-	        if(!ss.str().empty()) {
-                const String* method = NULL;
-                if(itsType_ == SEL_LOCATE) method = &PlotMS::LOG_LOCATE;
-                else if(itsType_ == SEL_FLAG) method = &PlotMS::LOG_FLAG;
-                else if(itsType_ == SEL_UNFLAG) method = &PlotMS::LOG_UNFLAG;
-                plotms->getLogger().postMessage(PlotMS::CLASS_NAME, *method,
-                        ss.str(), p);
 	        }
 	        
 	        // For a flag/unflag, need to tell the plots to redraw themselves,
@@ -294,16 +292,14 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	            for(unsigned int i = 0; i < redrawPlots.size(); i++) {
 	                redrawPlots[i]->plotDataChanged();
 	                
-	                canv = plot->canvases();
+	                vector<PlotCanvasPtr> canv = plot->canvases();
 	                for(unsigned int j = 0; j < canv.size(); j++) {
-	                    if(canv[j].null()) continue;
-	                    
 	                    // Only apply to visible canvases.
-	                     found = false;
+	                     bool visible = false;
 	                     for(unsigned int k = 0;
-	                         !found && k < visibleCanv.size(); k++)
-	                         if(canv[j] == visibleCanv[k]) found = true;
-	                     if(!found) continue;
+	                         !visible && k < visibleCanv.size(); k++)
+	                         if(canv[j] == visibleCanv[k]) visible = true;
+	                     if(!visible) continue;
 	                     
 	                     canv[j]->standardMouseTools()->selectTool()
 	                            ->clearSelectedRects();
@@ -422,9 +418,16 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 		vector<PMS::Axis> axes = valueAxes(P_AXES);
 
 	    PlotMSPlotParameters& params = plot->parameters();
-	    if(!params.isSet()) {
+	    PMS_PP_MSData* paramsData = params.typedGroup<PMS_PP_MSData>();
+	    PMS_PP_Cache* paramsCache = params.typedGroup<PMS_PP_Cache>();
+	    if(paramsData == NULL || paramsData->filename().empty()) {
 	    	itsDoActionResult_ = "MS has not been loaded into the cache!";
 	    	return false;
+	    }
+	    if(paramsCache == NULL) {
+	        itsDoActionResult_ = "Cache parameters not available!  (Shouldn't "
+	                             "happen.)";
+	        return false;
 	    }
 
 	    PlotMSData& data = plot->data();
@@ -454,44 +457,128 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 	        if(valid) a.push_back(axes[i]);
 	    }
 
-	    // Make sure that meta-data isn't being released (shouldn't happen).
+	    // Make sure that currently used axes and/or meta-data isn't being
+	    // released.
 	    if(itsType_ == CACHE_RELEASE) {
-	        bool hasMeta = false;
-	        for(unsigned int i = 0; !hasMeta && i < a.size(); i++)
-	            if(PlotMSCache::axisIsMetaData(a[i])) hasMeta = true;
-
-	        if(hasMeta) {
-	            bool keepMeta = plotms->getPlotter()->showQuestion("One or more of"
-	                    " the selected axes are meta-information!  Releasing these"
-	                    " axes may significantly affect functionality!  Do you "
-	                    "really want to release these axes?",
-	                    "Release Meta-Information");
-	            if(!keepMeta) {
-	                for(unsigned int i = 0; i < a.size(); i++) {
-	                    if(PlotMSCache::axisIsMetaData(a[i])) {
-	                        a.erase(a.begin() + i);
-	                        i--;
-	                    }
-	                }
+	        stringstream ss;
+	        ss << "The following axes could not be released because they are "
+	              "currently in use:";
+	        bool removed = false;
+	        PMS::Axis x = paramsCache->xAxis(), y = paramsCache->yAxis();
+	        for(int i = 0; i < (int)a.size(); i++) {
+	            if(a[i]== x || a[i]== y || PlotMSCache::axisIsMetaData(a[i])) {
+	                if(removed) ss << ',';
+	                ss << ' ' << PMS::axis(a[i]);
+	                a.erase(a.begin() + i);
+	                i--;
+	                removed = true;
 	            }
+	        }
+	        if(removed) {
+	            ss << '.';
+	            
+	               plotms->getLogger()->postMessage(PMS::LOG_ORIGIN,
+	                        PMS::LOG_ORIGIN_RELEASE_CACHE, ss.str(),
+	                        PlotLogger::MSG_WARN);
 	        }
 	    }
 
 	    if(a.size() > 0) {
+	        PlotMSCacheThread* ct;
+	        
 	        if(itsType_ == CACHE_LOAD) {
-	            data.loadCache(*plot->visSet(), a, vector<PMS::DataColumn>(
-	                           a.size(), PMS::DEFAULT_DATACOLUMN),
-	                           plot->parameters().averaging());
-
-	            // Notify watchers that cache has changed.  No redraw required.
-	            params.notifyWatchers(PlotMSWatchedParameters::CACHE, false);
+	            ct = new PlotMSCacheThread(plot, &plot->data(), a,
+	                    vector<PMS::DataColumn>(a.size(), PMS::DEFAULT_DATACOLUMN),
+	                    paramsData->filename(),paramsData->selection(),
+	                    paramsData->averaging(), false,
+	                    &PMS_PP_Cache::notifyWatchers, paramsCache);
 
 	        } else {
-	            itsDoActionResult_ = "Action type is currently unimplemented!";
-	            return false;
+	            ct = new PlotMSCacheThread(plot, a,
+	                    &PMS_PP_Cache::notifyWatchers, paramsCache);
 	        }
+	        
+	        plotms->getPlotter()->doThreadedOperation(ct);
 	    }
 
+	    return true;
+	}
+	
+	case MS_SUMMARY: {
+	    
+	    bool success = false, reenableGlobal = false;
+	    try {
+	        // Get MS.
+	        MeasurementSet ms;
+	        
+	        // Check if MS has already been opened.
+		
+		// Check if filename has been set but not plotted.
+		PlotMSPlotParameters currentlySet = plotms->getPlotter()
+		  ->getPlotTab()->currentlySetParameters();
+		String filename = PMS_PP_RETCALL(currentlySet, PMS_PP_MSData,
+						 filename, "");
+		
+		// If not, exit.
+		if(filename.empty()) {
+		  itsDoActionResult_ = "MS has not been opened/set yet!";
+		  return false;
+		}
+	        
+		ms= MeasurementSet(filename, TableLock(TableLock::AutoLocking),
+				   Table::Old);
+	        
+	        // Set up MSSummary object.
+	        MSSummary mss(ms);
+	        
+	        // Set up log objects.
+	        LogSink sink(LogFilter(plotms->getLogger()->filterMinPriority()));
+	        if(!plotms->getLogger()->usingGlobalSink()) {
+	            LogSinkInterface* ic = plotms->getLogger()->localSinkCopy();
+	            sink.localSink(ic);
+	            
+	            // Temporarily disable global log sink if we're not using it, since
+	            // MSSummary posts to both (how annoying).
+	            PlotLogger::disableGlobalSink();
+	            reenableGlobal = true;
+	        }
+	        LogIO log(LogOrigin(PMS::LOG_ORIGIN,PMS::LOG_ORIGIN_SUMMARY),sink);
+	        
+	        // Log summary of the appropriate type and verbosity.
+	        bool vb = plotms->getPlotter()->getPlotTab()->msSummaryVerbose();
+	        switch(plotms->getPlotter()->getPlotTab()->msSummaryType()) {
+	        case PMS::S_ALL:          mss.list(log, vb); break;
+	        case PMS::S_WHERE:        mss.listWhere(log, vb); break;
+	        case PMS::S_WHAT:         mss.listWhat(log, vb); break;
+	        case PMS::S_HOW:          mss.listHow(log, vb); break;
+	        case PMS::S_MAIN:         mss.listMain(log, vb); break;
+	        case PMS::S_TABLES:       mss.listTables(log, vb); break;
+	        case PMS::S_ANTENNA:      mss.listAntenna(log, vb); break;
+	        case PMS::S_FEED:         mss.listFeed(log, vb); break;
+	        case PMS::S_FIELD:        mss.listField(log, vb); break;
+	        case PMS::S_OBSERVATION:  mss.listObservation(log, vb); break;
+	        case PMS::S_HISTORY:      mss.listHistory(log); break;
+	        case PMS::S_POLARIZATION: mss.listPolarization(log, vb); break;
+	        case PMS::S_SOURCE:       mss.listSource(log, vb); break;
+	        case PMS::S_SPW:          mss.listSpectralWindow(log, vb); break;
+	        case PMS::S_SPW_POL:      mss.listSpectralAndPolInfo(log,vb);break;
+	        case PMS::S_SYSCAL:       mss.listSysCal(log, vb); break;
+	        case PMS::S_WEATHER:      mss.listWeather(log, vb); break;
+	        }
+	        success = true;
+	        
+	    } catch(AipsError x) {
+	        itsDoActionResult_ = x.getMesg();
+	    }
+	    
+	    // Cleanup.
+	    if(reenableGlobal) PlotLogger::enableGlobalSink();
+        return success;
+	    
+	}
+	
+	case PLOT: {
+	    plotms->getPlotter()->getPlotTab()->plot();
 	    return true;
 	}
 
@@ -540,6 +627,7 @@ bool PlotMSAction::doAction(PlotMS* plotms) {
 		return true;
 
 	case QUIT:
+	    //QApplication::setQuitOnLastWindowClosed(true);
 		plotms->close();
 		return true;
 

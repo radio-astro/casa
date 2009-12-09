@@ -26,20 +26,29 @@ def sdlist(sdfile, scanaverage, listfile, overwrite):
             #load the data with or without averaging
             s=sd.scantable(sdfile,scanaverage)
 
-            if ( listfile == '' ):
-                    sum = s.summary()
-            else:
-                    sum = s.summary(listfile)
+            sum = s._summary()
+            
+            #if ( listfile == '' ):
+                    #sum = s.summary()
+            #else:
+                    #sum = s.summary(listfile)
+            if ( listfile != '' ):
+                    f = open( listfile, 'w' )
+                    f.write( sum )
+                    f.close()
 
-            if ( sd.rcParams['verbose'] == 'False'):
+            #if ( sd.rcParams['verbose'] == 'False'):
                     # print the summary to the screen manually
-                    print sum
+                    #print sum
+            casalog.post( sum )
+            casalog.post( '--------------------------------------------------------------------------------' )
 
             # Clean up scantable
             del s
 
             # DONE
         except Exception, instance:
-                print '***Error***',instance
+                #print '***Error***',instance
+                casalog.post( instance.message, priority = 'ERROR' )
                 return
 

@@ -217,8 +217,12 @@ BeamRow* BeamTable::newRowCopy(BeamRow* row) {
 	 * Append x to its table.
 	 * @param x a pointer on the row to be appended.
 	 * @returns a pointer on x.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	BeamRow*  BeamTable::checkAndAdd(BeamRow* x) throw (DuplicateKey, UniquenessViolationException) {
+	BeamRow*  BeamTable::checkAndAdd(BeamRow* x)  {
 	 
 		
 		
@@ -285,7 +289,6 @@ BeamRow* BeamTable::newRowCopy(BeamRow* row) {
 
 
 
-
 #ifndef WITHOUT_ACS
 	// Conversion Methods
 
@@ -302,7 +305,7 @@ BeamRow* BeamTable::newRowCopy(BeamRow* row) {
 #endif
 	
 #ifndef WITHOUT_ACS
-	void BeamTable::fromIDL(BeamTableIDL x) throw(DuplicateKey,ConversionException) {
+	void BeamTable::fromIDL(BeamTableIDL x) {
 		unsigned int nrow = x.row.length();
 		for (unsigned int i = 0; i < nrow; ++i) {
 			BeamRow *tmp = newRow();
@@ -313,28 +316,27 @@ BeamRow* BeamTable::newRowCopy(BeamRow* row) {
 	}
 #endif
 
-	char *BeamTable::toFITS() const throw(ConversionException) {
+	char *BeamTable::toFITS() const  {
 		throw ConversionException("Not implemented","Beam");
 	}
 
-	void BeamTable::fromFITS(char *fits) throw(ConversionException) {
+	void BeamTable::fromFITS(char *fits)  {
 		throw ConversionException("Not implemented","Beam");
 	}
 
-	string BeamTable::toVOTable() const throw(ConversionException) {
+	string BeamTable::toVOTable() const {
 		throw ConversionException("Not implemented","Beam");
 	}
 
-	void BeamTable::fromVOTable(string vo) throw(ConversionException) {
+	void BeamTable::fromVOTable(string vo) {
 		throw ConversionException("Not implemented","Beam");
 	}
 
-	string BeamTable::toXML()  throw(ConversionException) {
+	
+	string BeamTable::toXML()  {
 		string buf;
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-//		buf.append("<BeamTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../../idl/BeamTable.xsd\"> ");
-		buf.append("<?xml-stylesheet type=\"text/xsl\" href=\"../asdm2html/table2html.xsl\"?> ");		
-		buf.append("<BeamTable> ");
+		buf.append("<BeamTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/BeamTable\" xsi:schemaLocation=\"http://Alma/XASDM/BeamTable http://almaobservatory.org/XML/XASDM/2/BeamTable.xsd\"> ");	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -350,8 +352,9 @@ BeamRow* BeamTable::newRowCopy(BeamRow* row) {
 		buf.append("</BeamTable> ");
 		return buf;
 	}
+
 	
-	void BeamTable::fromXML(string xmlDoc) throw(ConversionException) {
+	void BeamTable::fromXML(string xmlDoc)  {
 		Parser xml(xmlDoc);
 		if (!xml.isStr("<BeamTable")) 
 			error();
@@ -393,20 +396,110 @@ BeamRow* BeamTable::newRowCopy(BeamRow* row) {
 			error();
 	}
 
-	void BeamTable::error() throw(ConversionException) {
+	
+	void BeamTable::error()  {
 		throw ConversionException("Invalid xml document","Beam");
 	}
 	
+	
 	string BeamTable::toMIME() {
-	 // To be implemented
-		return "";
+		EndianOSStream eoss;
+		
+		string UID = getEntity().getEntityId().toString();
+		string execBlockUID = getContainer().getEntity().getEntityId().toString();
+		
+		// The MIME Header
+		eoss <<"MIME-Version: 1.0";
+		eoss << "\n";
+		eoss << "Content-Type: Multipart/Related; boundary='MIME_boundary'; type='text/xml'; start= '<header.xml>'";
+		eoss <<"\n";
+		eoss <<"Content-Description: Correlator";
+		eoss <<"\n";
+		eoss <<"alma-uid:" << UID;
+		eoss <<"\n";
+		eoss <<"\n";		
+		
+		// The MIME XML part header.
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: text/xml; charset='ISO-8859-1'";
+		eoss <<"\n";
+		eoss <<"Content-Transfer-Encoding: 8bit";
+		eoss <<"\n";
+		eoss <<"Content-ID: <header.xml>";
+		eoss <<"\n";
+		eoss <<"\n";
+		
+		// The MIME XML part content.
+		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		eoss << "\n";
+		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
+		eoss << "<ExecBlockUID>\n";
+		eoss << execBlockUID  << "\n";
+		eoss << "</ExecBlockUID>\n";
+		eoss << "</ASDMBinaryTable>\n";		
+
+		// The MIME binary part header
+		eoss <<"--MIME_boundary";
+		eoss <<"\n";
+		eoss <<"Content-Type: binary/octet-stream";
+		eoss <<"\n";
+		eoss <<"Content-ID: <content.bin>";
+		eoss <<"\n";
+		eoss <<"\n";	
+		
+		// The MIME binary content
+		entity.toBin(eoss);
+		container.getEntity().toBin(eoss);
+		eoss.writeInt((int) privateRows.size());
+		for (unsigned int i = 0; i < privateRows.size(); i++) {
+			privateRows.at(i)->toBin(eoss);	
+		}
+		
+		// The closing MIME boundary
+		eoss << "\n--MIME_boundary--";
+		eoss << "\n";
+		
+		return eoss.str();	
 	}
+
 	
 	void BeamTable::setFromMIME(const string & mimeMsg) {
-		// To be implemented
-		;
-	}
+		// cout << "Entering setFromMIME" << endl;
+	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+	 	
+	 	// Look for the string announcing the binary part.
+	 	string::size_type loc = mimeMsg.find( terminator, 0 );
+	 	
+	 	if ( loc == string::npos ) {
+	 		throw ConversionException("Failed to detect the beginning of the binary part", "Beam");
+	 	}
 	
+	 	// Create an EndianISStream from the substring containing the binary part.
+	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
+	 	
+	 	entity = Entity::fromBin(eiss);
+	 	
+	 	// We do nothing with that but we have to read it.
+	 	Entity containerEntity = Entity::fromBin(eiss);
+	 		 	
+	 	int numRows = eiss.readInt();
+	 	try {
+	 		for (int i = 0; i < numRows; i++) {
+	 			BeamRow* aRow = BeamRow::fromBin(eiss, *this);
+	 			checkAndAdd(aRow);
+	 		}
+	 	}
+	 	catch (DuplicateKey e) {
+	 		throw ConversionException("Error while writing binary data , the message was "
+	 					+ e.getMessage(), "Beam");
+	 	}
+		catch (TagFormatException e) {
+			throw ConversionException("Error while reading binary data , the message was "
+					+ e.getMessage(), "Beam");
+		} 		 	
+	}
+
 	
 	void BeamTable::toFile(string directory) {
 		if (!directoryExists(directory.c_str()) &&
@@ -437,6 +530,7 @@ BeamRow* BeamTable::newRowCopy(BeamRow* row) {
 				throw ConversionException("Could not close file " + fileName, "Beam");
 		}
 	}
+
 	
 	void BeamTable::setFromFile(const string& directory) {
 		string tablename;
@@ -478,6 +572,11 @@ BeamRow* BeamTable::newRowCopy(BeamRow* row) {
 		else
 			fromXML(ss.str());	
 	}			
+
+	
+
+	
+
 			
 	
 	

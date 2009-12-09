@@ -33,6 +33,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/MeasurementComponents/VisCal.h>
+#include <synthesis/MeasurementComponents/CalCorruptor.h>
 #include <synthesis/MeasurementComponents/Mueller.h>
 #include <synthesis/MeasurementComponents/Jones.h>
 #include <synthesis/MeasurementComponents/VisVector.h>
@@ -51,6 +52,7 @@
 #include <casa/OS/Timer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // **********************************************************
 //  SolvableVisCal
@@ -96,6 +98,10 @@ public:
   //  (if no CalInterp available, assume True)
   virtual Vector<Bool> spwOK() { 
     return cint_ ? ci().spwOK() : Vector<Bool>(nSpw(),True); };
+
+  void setSpwOK() {
+    if (cs_) cs().setSpwOK();
+    if (cint_) ci().setSpwOK(); }
 
   // Use standard VisCal solving mechanism?
   virtual Bool standardSolve() { return True; };
@@ -145,6 +151,15 @@ public:
 			     const String& select,
 			     const Double& t,
 			     const Int& refAnt=-1);
+
+  // Default value for parameters
+  virtual Complex defaultPar() { return Complex(1.0); };
+
+  // Arrange to build a cal table from specified values
+  virtual void setSpecify(const Record& specify);
+
+  // Fill a caltable with specified values
+  virtual void specify(const Record& specify);
 
   // Size up the solving arrays, etc.  (supports combine)
   Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
@@ -280,6 +295,30 @@ public:
 			     const Int fieldId, const Int spw, 
 			     const Int nSolutions);
   virtual void markTimer() {timer_p.mark();};
+
+
+  // -------------
+  // Set the simulation parameters
+  virtual void setSimulate(VisSet& vs, Record& simpar, Vector<Double>& solTimes);
+
+  // make a corruptor in a VC-specific way
+  virtual void createCorruptor(const VisIter& vi,const Record& simpar, const int nSim);
+
+  // access to simulation variables that are general to all VisCals
+  inline String& simint() { return simint_; };
+
+  // Simulation info/params, suitable for logging
+  virtual String siminfo();
+
+  // Is this calibration simulated?
+  inline Bool isSimulated() {return simulated_;};
+
+  // object that can simulate the corruption terms
+  CalCorruptor *corruptor_p;
+
+  // calculate # required slots to simulate this SVC
+  Int sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Double>& solTimes);
+
 protected:
 
   // Set to-be-solved-for flag
@@ -330,6 +369,7 @@ protected:
   LogIO& logSink() { return logsink_p; };
 
   void makeCalSet();
+  void makeCalSet(Bool newtable);
 
   // Check if a cal table is appropriate
   void verifyCalTable(const String& caltablename);
@@ -345,6 +385,12 @@ protected:
   Float userPrintActivityInterval_p, userPrintActivityFraction_p;
   uInt caiRC_p, cafRC_p;
   Timer timer_p;
+
+  // Set state flag to simulate cal terms
+  inline void setSimulated(const Bool& flag) {simulated_=flag;};
+
+
+
 private:
 
   // Default ctor is private
@@ -419,6 +465,13 @@ private:
 
   // LogIO
   LogIO logsink_p;
+
+  // Simulation flag
+  Bool simulated_;
+
+  // simulation interval
+  String simint_;
+
 
 };
 

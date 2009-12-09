@@ -356,13 +356,13 @@
   then
      echo ""
      echo "sneeze: Cleaning up the system areas..."
-     gmake NODEP=1 cleansys
+     gmake -i NODEP=1 cleansys
   fi
 
 # Rebuild the system.
   echo ""
   echo "sneeze: Rebuilding the system..."
-  gmake $TARGETS
+  gmake -i $TARGETS
 
 # Mark it as done.
   cd $AIPSARCH
@@ -428,7 +428,7 @@
         cp $AIPSROOT/aipshosts $BASEROOT
         ( CASAPATH="$BASEROOT $ARCH $SITE $HOST" ; \
           export CASAPATH ; \
-          gmake -C $BASEROOT/code/install aipsroot )
+          gmake -i -C $BASEROOT/code/install aipsroot )
      fi
 
 #    Preserve the base documentation but only if we build it. 
@@ -437,7 +437,7 @@
      if [ "$BASEDOCS" != false ]
      then
 #       Check that we build the documentation.
-        eval `gmake VARS=DOCSYS eval_vars`
+        eval `gmake -i VARS=DOCSYS eval_vars`
 
         if [ "$DOCSYS" = doc ]
         then
@@ -466,7 +466,7 @@
      echo "sneeze: System diagnostics."
      echo "---------------------------"
 
-     gmake -f $AIPSARCH/makedefs diagnostics
+     gmake -i -f $AIPSARCH/makedefs diagnostics
   fi
 
 # We're finished with this architecture.

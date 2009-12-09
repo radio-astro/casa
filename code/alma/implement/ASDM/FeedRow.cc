@@ -144,20 +144,6 @@ namespace asdm {
 	
   		
 		
-		x->feedNumExists = feedNumExists;
-		
-		
-			
-				
-		x->feedNum = feedNum;
- 				
- 			
-		
-	
-
-	
-  		
-		
 		
 			
 		x->beamOffset.length(beamOffset.size());
@@ -194,34 +180,6 @@ namespace asdm {
 									
 		
 			
-		
-	
-
-	
-  		
-		
-		x->illumOffsetExists = illumOffsetExists;
-		
-		
-			
-				
-		x->illumOffset = illumOffset;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->illumOffsetPaExists = illumOffsetPaExists;
-		
-		
-			
-				
-		x->illumOffsetPa = illumOffsetPa;
- 				
- 			
 		
 	
 
@@ -265,48 +223,60 @@ namespace asdm {
 	
   		
 		
-		x->xPositionExists = xPositionExists;
-		
-		
-			
-		x->xPosition = xPosition.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		x->yPositionExists = yPositionExists;
-		
-		
-			
-		x->yPosition = yPosition.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
-		x->zPositionExists = zPositionExists;
-		
-		
-			
-		x->zPosition = zPosition.toIDLLength();
-			
-		
-	
-
-	
-  		
-		
 		
 			
 		x->receptorAngle.length(receptorAngle.size());
 		for (unsigned int i = 0; i < receptorAngle.size(); ++i) {
 			
 			x->receptorAngle[i] = receptorAngle.at(i).toIDLAngle();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->feedNumExists = feedNumExists;
+		
+		
+			
+				
+		x->feedNum = feedNum;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->illumOffsetExists = illumOffsetExists;
+		
+		
+			
+		x->illumOffset.length(illumOffset.size());
+		for (unsigned int i = 0; i < illumOffset.size(); ++i) {
+			
+			x->illumOffset[i] = illumOffset.at(i).toIDLLength();
+			
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		x->positionExists = positionExists;
+		
+		
+			
+		x->position.length(position.size());
+		for (unsigned int i = 0; i < position.size(); ++i) {
+			
+			x->position[i] = position.at(i).toIDLLength();
 			
 	 	}
 			
@@ -393,7 +363,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct FeedRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void FeedRow::setFromIDL (FeedRowIDL x) throw(ConversionException) {
+	void FeedRow::setFromIDL (FeedRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -425,21 +395,6 @@ namespace asdm {
 		setNumReceptor(x.numReceptor);
   			
  		
-		
-	
-
-	
-		
-		feedNumExists = x.feedNumExists;
-		if (x.feedNumExists) {
-		
-		
-			
-		setFeedNum(x.feedNum);
-  			
- 		
-		
-		}
 		
 	
 
@@ -485,36 +440,6 @@ namespace asdm {
 
 	
 		
-		illumOffsetExists = x.illumOffsetExists;
-		if (x.illumOffsetExists) {
-		
-		
-			
-		setIllumOffset(x.illumOffset);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		illumOffsetPaExists = x.illumOffsetPaExists;
-		if (x.illumOffsetPaExists) {
-		
-		
-			
-		setIllumOffsetPa(x.illumOffsetPa);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
 		
 			
 		polarizationTypes .clear();
@@ -550,51 +475,6 @@ namespace asdm {
 
 	
 		
-		xPositionExists = x.xPositionExists;
-		if (x.xPositionExists) {
-		
-		
-			
-		setXPosition(Length (x.xPosition));
-			
- 		
-		
-		}
-		
-	
-
-	
-		
-		yPositionExists = x.yPositionExists;
-		if (x.yPositionExists) {
-		
-		
-			
-		setYPosition(Length (x.yPosition));
-			
- 		
-		
-		}
-		
-	
-
-	
-		
-		zPositionExists = x.zPositionExists;
-		if (x.zPositionExists) {
-		
-		
-			
-		setZPosition(Length (x.zPosition));
-			
- 		
-		
-		}
-		
-	
-
-	
-		
 		
 			
 		receptorAngle .clear();
@@ -605,6 +485,61 @@ namespace asdm {
 		}
 			
   		
+		
+	
+
+	
+		
+		feedNumExists = x.feedNumExists;
+		if (x.feedNumExists) {
+		
+		
+			
+		setFeedNum(x.feedNum);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		illumOffsetExists = x.illumOffsetExists;
+		if (x.illumOffsetExists) {
+		
+		
+			
+		illumOffset .clear();
+		for (unsigned int i = 0; i <x.illumOffset.length(); ++i) {
+			
+			illumOffset.push_back(Length (x.illumOffset[i]));
+			
+		}
+			
+  		
+		
+		}
+		
+	
+
+	
+		
+		positionExists = x.positionExists;
+		if (x.positionExists) {
+		
+		
+			
+		position .clear();
+		for (unsigned int i = 0; i <x.position.length(); ++i) {
+			
+			position.push_back(Length (x.position[i]));
+			
+		}
+			
+  		
+		
+		}
 		
 	
 
@@ -669,7 +604,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Feed");
+			throw ConversionException (err.getMessage(),"Feed");
 		}
 	}
 #endif
@@ -710,18 +645,6 @@ namespace asdm {
 
   	
  		
-		if (feedNumExists) {
-		
-		
-		Parser::toXML(feedNum, "feedNum", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
 		
 		Parser::toXML(beamOffset, "beamOffset", buf);
 		
@@ -733,30 +656,6 @@ namespace asdm {
 		
 		Parser::toXML(focusReference, "focusReference", buf);
 		
-		
-	
-
-  	
- 		
-		if (illumOffsetExists) {
-		
-		
-		Parser::toXML(illumOffset, "illumOffset", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (illumOffsetPaExists) {
-		
-		
-		Parser::toXML(illumOffsetPa, "illumOffsetPa", buf);
-		
-		
-		}
 		
 	
 
@@ -778,45 +677,45 @@ namespace asdm {
 
   	
  		
-		if (xPositionExists) {
-		
-		
-		Parser::toXML(xPosition, "xPosition", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (yPositionExists) {
-		
-		
-		Parser::toXML(yPosition, "yPosition", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (zPositionExists) {
-		
-		
-		Parser::toXML(zPosition, "zPosition", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
 		
 		Parser::toXML(receptorAngle, "receptorAngle", buf);
 		
+		
+	
+
+  	
+ 		
+		if (feedNumExists) {
+		
+		
+		Parser::toXML(feedNum, "feedNum", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (illumOffsetExists) {
+		
+		
+		Parser::toXML(illumOffset, "illumOffset", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (positionExists) {
+		
+		
+		Parser::toXML(position, "position", buf);
+		
+		
+		}
 		
 	
 
@@ -879,7 +778,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void FeedRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void FeedRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -911,16 +810,6 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<feedNum>")) {
-			
-	  		setFeedNum(Parser::getInteger("feedNum","Feed",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
 			
 					
 	  	setBeamOffset(Parser::get2DDouble("beamOffset","Feed",rowDoc));
@@ -937,26 +826,6 @@ namespace asdm {
 	  			
 	  		
 		
-	
-
-	
-  		
-        if (row.isStr("<illumOffset>")) {
-			
-	  		setIllumOffset(Parser::getFloat("illumOffset","Feed",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<illumOffsetPa>")) {
-			
-	  		setIllumOffsetPa(Parser::getFloat("illumOffsetPa","Feed",rowDoc));
-			
-		}
- 		
 	
 
 	
@@ -981,42 +850,46 @@ namespace asdm {
 
 	
   		
-        if (row.isStr("<xPosition>")) {
-			
-	  		setXPosition(Parser::getLength("xPosition","Feed",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<yPosition>")) {
-			
-	  		setYPosition(Parser::getLength("yPosition","Feed",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<zPosition>")) {
-			
-	  		setZPosition(Parser::getLength("zPosition","Feed",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
 			
 					
 	  	setReceptorAngle(Parser::get1DAngle("receptorAngle","Feed",rowDoc));
 	  			
 	  		
 		
+	
+
+	
+  		
+        if (row.isStr("<feedNum>")) {
+			
+	  		setFeedNum(Parser::getInteger("feedNum","Feed",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<illumOffset>")) {
+			
+								
+	  		setIllumOffset(Parser::get1DLength("illumOffset","Feed",rowDoc));
+	  			
+	  		
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<position>")) {
+			
+								
+	  		setPosition(Parser::get1DLength("position","Feed",rowDoc));
+	  			
+	  		
+		}
+ 		
 	
 
 	
@@ -1065,6 +938,375 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"Feed");
 		}
+	}
+	
+	void FeedRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	antennaId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	spectralWindowId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	timeInterval.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(feedId);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numReceptor);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) beamOffset.size());
+		eoss.writeInt((int) beamOffset.at(0).size());
+		for (unsigned int i = 0; i < beamOffset.size(); i++) 
+			for (unsigned int j = 0;  j < beamOffset.at(0).size(); j++) 
+							 
+				eoss.writeDouble(beamOffset.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+	Length::toBin(focusReference, eoss);
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) polarizationTypes.size());
+		for (unsigned int i = 0; i < polarizationTypes.size(); i++)
+				
+			eoss.writeInt(polarizationTypes.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+	Complex::toBin(polResponse, eoss);
+		
+	
+
+	
+	
+		
+	Angle::toBin(receptorAngle, eoss);
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) receiverId.size());
+		for (unsigned int i = 0; i < receiverId.size(); i++)
+				
+			eoss.writeInt(receiverId.at(i));
+				
+				
+						
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(feedNumExists);
+	if (feedNumExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(feedNum);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(illumOffsetExists);
+	if (illumOffsetExists) {
+	
+	
+	
+		
+	Length::toBin(illumOffset, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(positionExists);
+	if (positionExists) {
+	
+	
+	
+		
+	Length::toBin(position, eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(beamIdExists);
+	if (beamIdExists) {
+	
+	
+	
+		
+	Tag::toBin(beamId, eoss);
+		
+	
+
+	}
+
+	}
+	
+	FeedRow* FeedRow::fromBin(EndianISStream& eiss, FeedTable& table) {
+		FeedRow* row = new  FeedRow(table);
+		
+		
+		
+	
+		
+		
+		row->antennaId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->spectralWindowId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->feedId =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+		row->numReceptor =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->beamOffset.clear();
+		
+		unsigned int beamOffsetDim1 = eiss.readInt();
+		unsigned int beamOffsetDim2 = eiss.readInt();
+		vector <double> beamOffsetAux1;
+		for (unsigned int i = 0; i < beamOffsetDim1; i++) {
+			beamOffsetAux1.clear();
+			for (unsigned int j = 0; j < beamOffsetDim2 ; j++)			
+			
+			beamOffsetAux1.push_back(eiss.readDouble());
+			
+			row->beamOffset.push_back(beamOffsetAux1);
+		}
+	
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->focusReference = Length::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->polarizationTypes.clear();
+		
+		unsigned int polarizationTypesDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
+			
+			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->polResponse = Complex::from2DBin(eiss);		
+	
+
+		
+	
+
+	
+		
+		
+			
+	
+	row->receptorAngle = Angle::from1DBin(eiss);	
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->receiverId.clear();
+		
+		unsigned int receiverIdDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < receiverIdDim1; i++)
+			
+			row->receiverId.push_back(eiss.readInt());
+			
+	
+
+		
+	
+
+		
+		
+		
+	row->feedNumExists = eiss.readBoolean();
+	if (row->feedNumExists) {
+		
+	
+	
+		
+			
+		row->feedNum =  eiss.readInt();
+			
+		
+	
+
+	}
+
+	row->illumOffsetExists = eiss.readBoolean();
+	if (row->illumOffsetExists) {
+		
+	
+		
+		
+			
+	
+	row->illumOffset = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->positionExists = eiss.readBoolean();
+	if (row->positionExists) {
+		
+	
+		
+		
+			
+	
+	row->position = Length::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+	row->beamIdExists = eiss.readBoolean();
+	if (row->beamIdExists) {
+		
+	
+		
+		
+			
+	
+	row->beamId = Tag::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -1176,53 +1418,6 @@ namespace asdm {
 	
 
 	
-	/**
-	 * The attribute feedNum is optional. Return true if this attribute exists.
-	 * @return true if and only if the feedNum attribute exists. 
-	 */
-	bool FeedRow::isFeedNumExists() const {
-		return feedNumExists;
-	}
-	
-
-	
- 	/**
- 	 * Get feedNum, which is optional.
- 	 * @return feedNum as int
- 	 * @throw IllegalAccessException If feedNum does not exist.
- 	 */
- 	int FeedRow::getFeedNum() const throw(IllegalAccessException) {
-		if (!feedNumExists) {
-			throw IllegalAccessException("feedNum", "Feed");
-		}
-	
-  		return feedNum;
- 	}
-
- 	/**
- 	 * Set feedNum with the specified int.
- 	 * @param feedNum The int value to which feedNum is to be set.
- 	 
- 	
- 	 */
- 	void FeedRow::setFeedNum (int feedNum) {
-	
- 		this->feedNum = feedNum;
-	
-		feedNumExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark feedNum, which is an optional field, as non-existent.
-	 */
-	void FeedRow::clearFeedNum () {
-		feedNumExists = false;
-	}
-	
-
-	
 
 	
  	/**
@@ -1284,100 +1479,6 @@ namespace asdm {
 	
  	}
 	
-	
-
-	
-	/**
-	 * The attribute illumOffset is optional. Return true if this attribute exists.
-	 * @return true if and only if the illumOffset attribute exists. 
-	 */
-	bool FeedRow::isIllumOffsetExists() const {
-		return illumOffsetExists;
-	}
-	
-
-	
- 	/**
- 	 * Get illumOffset, which is optional.
- 	 * @return illumOffset as float
- 	 * @throw IllegalAccessException If illumOffset does not exist.
- 	 */
- 	float FeedRow::getIllumOffset() const throw(IllegalAccessException) {
-		if (!illumOffsetExists) {
-			throw IllegalAccessException("illumOffset", "Feed");
-		}
-	
-  		return illumOffset;
- 	}
-
- 	/**
- 	 * Set illumOffset with the specified float.
- 	 * @param illumOffset The float value to which illumOffset is to be set.
- 	 
- 	
- 	 */
- 	void FeedRow::setIllumOffset (float illumOffset) {
-	
- 		this->illumOffset = illumOffset;
-	
-		illumOffsetExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark illumOffset, which is an optional field, as non-existent.
-	 */
-	void FeedRow::clearIllumOffset () {
-		illumOffsetExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute illumOffsetPa is optional. Return true if this attribute exists.
-	 * @return true if and only if the illumOffsetPa attribute exists. 
-	 */
-	bool FeedRow::isIllumOffsetPaExists() const {
-		return illumOffsetPaExists;
-	}
-	
-
-	
- 	/**
- 	 * Get illumOffsetPa, which is optional.
- 	 * @return illumOffsetPa as float
- 	 * @throw IllegalAccessException If illumOffsetPa does not exist.
- 	 */
- 	float FeedRow::getIllumOffsetPa() const throw(IllegalAccessException) {
-		if (!illumOffsetPaExists) {
-			throw IllegalAccessException("illumOffsetPa", "Feed");
-		}
-	
-  		return illumOffsetPa;
- 	}
-
- 	/**
- 	 * Set illumOffsetPa with the specified float.
- 	 * @param illumOffsetPa The float value to which illumOffsetPa is to be set.
- 	 
- 	
- 	 */
- 	void FeedRow::setIllumOffsetPa (float illumOffsetPa) {
-	
- 		this->illumOffsetPa = illumOffsetPa;
-	
-		illumOffsetPaExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark illumOffsetPa, which is an optional field, as non-existent.
-	 */
-	void FeedRow::clearIllumOffsetPa () {
-		illumOffsetPaExists = false;
-	}
 	
 
 	
@@ -1445,147 +1546,6 @@ namespace asdm {
 	
 
 	
-	/**
-	 * The attribute xPosition is optional. Return true if this attribute exists.
-	 * @return true if and only if the xPosition attribute exists. 
-	 */
-	bool FeedRow::isXPositionExists() const {
-		return xPositionExists;
-	}
-	
-
-	
- 	/**
- 	 * Get xPosition, which is optional.
- 	 * @return xPosition as Length
- 	 * @throw IllegalAccessException If xPosition does not exist.
- 	 */
- 	Length FeedRow::getXPosition() const throw(IllegalAccessException) {
-		if (!xPositionExists) {
-			throw IllegalAccessException("xPosition", "Feed");
-		}
-	
-  		return xPosition;
- 	}
-
- 	/**
- 	 * Set xPosition with the specified Length.
- 	 * @param xPosition The Length value to which xPosition is to be set.
- 	 
- 	
- 	 */
- 	void FeedRow::setXPosition (Length xPosition) {
-	
- 		this->xPosition = xPosition;
-	
-		xPositionExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark xPosition, which is an optional field, as non-existent.
-	 */
-	void FeedRow::clearXPosition () {
-		xPositionExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute yPosition is optional. Return true if this attribute exists.
-	 * @return true if and only if the yPosition attribute exists. 
-	 */
-	bool FeedRow::isYPositionExists() const {
-		return yPositionExists;
-	}
-	
-
-	
- 	/**
- 	 * Get yPosition, which is optional.
- 	 * @return yPosition as Length
- 	 * @throw IllegalAccessException If yPosition does not exist.
- 	 */
- 	Length FeedRow::getYPosition() const throw(IllegalAccessException) {
-		if (!yPositionExists) {
-			throw IllegalAccessException("yPosition", "Feed");
-		}
-	
-  		return yPosition;
- 	}
-
- 	/**
- 	 * Set yPosition with the specified Length.
- 	 * @param yPosition The Length value to which yPosition is to be set.
- 	 
- 	
- 	 */
- 	void FeedRow::setYPosition (Length yPosition) {
-	
- 		this->yPosition = yPosition;
-	
-		yPositionExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark yPosition, which is an optional field, as non-existent.
-	 */
-	void FeedRow::clearYPosition () {
-		yPositionExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute zPosition is optional. Return true if this attribute exists.
-	 * @return true if and only if the zPosition attribute exists. 
-	 */
-	bool FeedRow::isZPositionExists() const {
-		return zPositionExists;
-	}
-	
-
-	
- 	/**
- 	 * Get zPosition, which is optional.
- 	 * @return zPosition as Length
- 	 * @throw IllegalAccessException If zPosition does not exist.
- 	 */
- 	Length FeedRow::getZPosition() const throw(IllegalAccessException) {
-		if (!zPositionExists) {
-			throw IllegalAccessException("zPosition", "Feed");
-		}
-	
-  		return zPosition;
- 	}
-
- 	/**
- 	 * Set zPosition with the specified Length.
- 	 * @param zPosition The Length value to which zPosition is to be set.
- 	 
- 	
- 	 */
- 	void FeedRow::setZPosition (Length zPosition) {
-	
- 		this->zPosition = zPosition;
-	
-		zPositionExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark zPosition, which is an optional field, as non-existent.
-	 */
-	void FeedRow::clearZPosition () {
-		zPositionExists = false;
-	}
-	
-
-	
 
 	
  	/**
@@ -1615,6 +1575,147 @@ namespace asdm {
 	
  	}
 	
+	
+
+	
+	/**
+	 * The attribute feedNum is optional. Return true if this attribute exists.
+	 * @return true if and only if the feedNum attribute exists. 
+	 */
+	bool FeedRow::isFeedNumExists() const {
+		return feedNumExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get feedNum, which is optional.
+ 	 * @return feedNum as int
+ 	 * @throw IllegalAccessException If feedNum does not exist.
+ 	 */
+ 	int FeedRow::getFeedNum() const  {
+		if (!feedNumExists) {
+			throw IllegalAccessException("feedNum", "Feed");
+		}
+	
+  		return feedNum;
+ 	}
+
+ 	/**
+ 	 * Set feedNum with the specified int.
+ 	 * @param feedNum The int value to which feedNum is to be set.
+ 	 
+ 	
+ 	 */
+ 	void FeedRow::setFeedNum (int feedNum) {
+	
+ 		this->feedNum = feedNum;
+	
+		feedNumExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark feedNum, which is an optional field, as non-existent.
+	 */
+	void FeedRow::clearFeedNum () {
+		feedNumExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute illumOffset is optional. Return true if this attribute exists.
+	 * @return true if and only if the illumOffset attribute exists. 
+	 */
+	bool FeedRow::isIllumOffsetExists() const {
+		return illumOffsetExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get illumOffset, which is optional.
+ 	 * @return illumOffset as vector<Length >
+ 	 * @throw IllegalAccessException If illumOffset does not exist.
+ 	 */
+ 	vector<Length > FeedRow::getIllumOffset() const  {
+		if (!illumOffsetExists) {
+			throw IllegalAccessException("illumOffset", "Feed");
+		}
+	
+  		return illumOffset;
+ 	}
+
+ 	/**
+ 	 * Set illumOffset with the specified vector<Length >.
+ 	 * @param illumOffset The vector<Length > value to which illumOffset is to be set.
+ 	 
+ 	
+ 	 */
+ 	void FeedRow::setIllumOffset (vector<Length > illumOffset) {
+	
+ 		this->illumOffset = illumOffset;
+	
+		illumOffsetExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark illumOffset, which is an optional field, as non-existent.
+	 */
+	void FeedRow::clearIllumOffset () {
+		illumOffsetExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute position is optional. Return true if this attribute exists.
+	 * @return true if and only if the position attribute exists. 
+	 */
+	bool FeedRow::isPositionExists() const {
+		return positionExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get position, which is optional.
+ 	 * @return position as vector<Length >
+ 	 * @throw IllegalAccessException If position does not exist.
+ 	 */
+ 	vector<Length > FeedRow::getPosition() const  {
+		if (!positionExists) {
+			throw IllegalAccessException("position", "Feed");
+		}
+	
+  		return position;
+ 	}
+
+ 	/**
+ 	 * Set position with the specified vector<Length >.
+ 	 * @param position The vector<Length > value to which position is to be set.
+ 	 
+ 	
+ 	 */
+ 	void FeedRow::setPosition (vector<Length > position) {
+	
+ 		this->position = position;
+	
+		positionExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark position, which is an optional field, as non-existent.
+	 */
+	void FeedRow::clearPosition () {
+		positionExists = false;
+	}
 	
 
 	
@@ -1674,7 +1775,7 @@ namespace asdm {
  	 * @return beamId as vector<Tag> 
  	 * @throw IllegalAccessException If beamId does not exist.
  	 */
- 	vector<Tag>  FeedRow::getBeamId() const throw(IllegalAccessException) {
+ 	vector<Tag>  FeedRow::getBeamId() const  {
 		if (!beamIdExists) {
 			throw IllegalAccessException("beamId", "Feed");
 		}
@@ -1979,11 +2080,17 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+
+	
 		feedNumExists = false;
-	
-
-	
-
 	
 
 	
@@ -1991,25 +2098,7 @@ namespace asdm {
 	
 
 	
-		illumOffsetPaExists = false;
-	
-
-	
-
-	
-
-	
-		xPositionExists = false;
-	
-
-	
-		yPositionExists = false;
-	
-
-	
-		zPositionExists = false;
-	
-
+		positionExists = false;
 	
 
 	
@@ -2026,12 +2115,6 @@ namespace asdm {
 	
 	
 	
-	
-
-	
-
-	
-
 	
 
 	
@@ -2069,11 +2152,17 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+
+	
 		feedNumExists = false;
-	
-
-	
-
 	
 
 	
@@ -2081,25 +2170,7 @@ namespace asdm {
 	
 
 	
-		illumOffsetPaExists = false;
-	
-
-	
-
-	
-
-	
-		xPositionExists = false;
-	
-
-	
-		yPositionExists = false;
-	
-
-	
-		zPositionExists = false;
-	
-
+		positionExists = false;
 	
 
 	
@@ -2117,18 +2188,16 @@ namespace asdm {
 		else {
 	
 		
-			feedId = row.feedId;
-		
 			antennaId = row.antennaId;
 		
 			spectralWindowId = row.spectralWindowId;
 		
 			timeInterval = row.timeInterval;
 		
+			feedId = row.feedId;
 		
 		
 		
-			receiverId = row.receiverId;
 		
 			numReceptor = row.numReceptor;
 		
@@ -2142,15 +2211,10 @@ namespace asdm {
 		
 			receptorAngle = row.receptorAngle;
 		
+			receiverId = row.receiverId;
 		
 		
 		
-		if (row.beamIdExists) {
-			beamId = row.beamId;		
-			beamIdExists = true;
-		}
-		else
-			beamIdExists = false;
 		
 		if (row.feedNumExists) {
 			feedNum = row.feedNum;		
@@ -2166,39 +2230,25 @@ namespace asdm {
 		else
 			illumOffsetExists = false;
 		
-		if (row.illumOffsetPaExists) {
-			illumOffsetPa = row.illumOffsetPa;		
-			illumOffsetPaExists = true;
+		if (row.positionExists) {
+			position = row.position;		
+			positionExists = true;
 		}
 		else
-			illumOffsetPaExists = false;
+			positionExists = false;
 		
-		if (row.xPositionExists) {
-			xPosition = row.xPosition;		
-			xPositionExists = true;
+		if (row.beamIdExists) {
+			beamId = row.beamId;		
+			beamIdExists = true;
 		}
 		else
-			xPositionExists = false;
-		
-		if (row.yPositionExists) {
-			yPosition = row.yPosition;		
-			yPositionExists = true;
-		}
-		else
-			yPositionExists = false;
-		
-		if (row.zPositionExists) {
-			zPosition = row.zPosition;		
-			zPositionExists = true;
-		}
-		else
-			zPositionExists = false;
+			beamIdExists = false;
 		
 		}	
 	}
 
 	
-	bool FeedRow::compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, vector<int>  receiverId, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle) {
+	bool FeedRow::compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle, vector<int>  receiverId) {
 		bool result;
 		result = true;
 		
@@ -2219,13 +2269,6 @@ namespace asdm {
 	
 		
 		result = result && (this->timeInterval.overlaps(timeInterval));
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->receiverId == receiverId);
 		
 		if (!result) return false;
 	
@@ -2272,19 +2315,22 @@ namespace asdm {
 		if (!result) return false;
 	
 
+	
+		
+		result = result && (this->receiverId == receiverId);
+		
+		if (!result) return false;
+	
+
 		return result;
 	}	
 	
 	
 	
-	bool FeedRow::compareRequiredValue(vector<int>  receiverId, int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle) {
+	bool FeedRow::compareRequiredValue(int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle, vector<int>  receiverId) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->receiverId == receiverId)) return false;
-	
-
 	
 		if (!(this->numReceptor == numReceptor)) return false;
 	
@@ -2309,6 +2355,10 @@ namespace asdm {
 		if (!(this->receptorAngle == receptorAngle)) return false;
 	
 
+	
+		if (!(this->receiverId == receiverId)) return false;
+	
+
 		return result;
 	}
 	
@@ -2324,8 +2374,6 @@ namespace asdm {
 	bool FeedRow::equalByRequiredValue(FeedRow* x) {
 		
 			
-		if (this->receiverId != x->receiverId) return false;
-			
 		if (this->numReceptor != x->numReceptor) return false;
 			
 		if (this->beamOffset != x->beamOffset) return false;
@@ -2337,6 +2385,8 @@ namespace asdm {
 		if (this->polResponse != x->polResponse) return false;
 			
 		if (this->receptorAngle != x->receptorAngle) return false;
+			
+		if (this->receiverId != x->receiverId) return false;
 			
 		
 		return true;

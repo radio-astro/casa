@@ -83,14 +83,6 @@ using namespace enumerations;
 
 	
 
-	
-
-	
-
-	
-
-	
-
 
 
 using asdm::Angle;
@@ -114,7 +106,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file Focus.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -122,20 +114,17 @@ namespace asdm {
 //class asdm::FocusTable;
 
 
-// class asdm::FocusModelRow;
-class FocusModelRow;
-
-// class asdm::FeedRow;
-class FeedRow;
-
 // class asdm::AntennaRow;
 class AntennaRow;
+
+// class asdm::FocusModelRow;
+class FocusModelRow;
 	
 
 /**
  * The FocusRow class is a row of a FocusTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class FocusRow {
@@ -162,8 +151,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct FocusRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (FocusRowIDL x) throw(ConversionException);
+	void setFromIDL (FocusRowIDL x) ;
 #endif
 	
 	/**
@@ -176,8 +166,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the FocusTable to which the row built by deserialization will be parented.
+	  */
+	 static FocusRow* fromBin(EndianISStream& eiss, FocusTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -216,96 +220,6 @@ public:
 
 
 	
-	// ===> Attribute xFocusPosition
-	
-	
-	
-
-	
- 	/**
- 	 * Get xFocusPosition.
- 	 * @return xFocusPosition as Length
- 	 */
- 	Length getXFocusPosition() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set xFocusPosition with the specified Length.
- 	 * @param xFocusPosition The Length value to which xFocusPosition is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setXFocusPosition (Length xFocusPosition);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute yFocusPosition
-	
-	
-	
-
-	
- 	/**
- 	 * Get yFocusPosition.
- 	 * @return yFocusPosition as Length
- 	 */
- 	Length getYFocusPosition() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set yFocusPosition with the specified Length.
- 	 * @param yFocusPosition The Length value to which yFocusPosition is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setYFocusPosition (Length yFocusPosition);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute zFocusPosition
-	
-	
-	
-
-	
- 	/**
- 	 * Get zFocusPosition.
- 	 * @return zFocusPosition as Length
- 	 */
- 	Length getZFocusPosition() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set zFocusPosition with the specified Length.
- 	 * @param zFocusPosition The Length value to which zFocusPosition is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setZFocusPosition (Length zFocusPosition);
-  		
-	
-	
-	
-
-
-	
 	// ===> Attribute focusTracking
 	
 	
@@ -336,29 +250,29 @@ public:
 
 
 	
-	// ===> Attribute xFocusOffset
+	// ===> Attribute focusOffset
 	
 	
 	
 
 	
  	/**
- 	 * Get xFocusOffset.
- 	 * @return xFocusOffset as Length
+ 	 * Get focusOffset.
+ 	 * @return focusOffset as vector<Length >
  	 */
- 	Length getXFocusOffset() const;
+ 	vector<Length > getFocusOffset() const;
 	
  
  	
  	
  	/**
- 	 * Set xFocusOffset with the specified Length.
- 	 * @param xFocusOffset The Length value to which xFocusOffset is to be set.
+ 	 * Set focusOffset with the specified vector<Length >.
+ 	 * @param focusOffset The vector<Length > value to which focusOffset is to be set.
  	 
  		
  			
  	 */
- 	void setXFocusOffset (Length xFocusOffset);
+ 	void setFocusOffset (vector<Length > focusOffset);
   		
 	
 	
@@ -366,62 +280,43 @@ public:
 
 
 	
-	// ===> Attribute yFocusOffset
+	// ===> Attribute measuredFocusPosition, which is optional
 	
 	
+	
+	/**
+	 * The attribute measuredFocusPosition is optional. Return true if this attribute exists.
+	 * @return true if and only if the measuredFocusPosition attribute exists. 
+	 */
+	bool isMeasuredFocusPositionExists() const;
 	
 
 	
  	/**
- 	 * Get yFocusOffset.
- 	 * @return yFocusOffset as Length
+ 	 * Get measuredFocusPosition, which is optional.
+ 	 * @return measuredFocusPosition as vector<Length >
+ 	 * @throws IllegalAccessException If measuredFocusPosition does not exist.
  	 */
- 	Length getYFocusOffset() const;
+ 	vector<Length > getMeasuredFocusPosition() const;
 	
  
  	
  	
  	/**
- 	 * Set yFocusOffset with the specified Length.
- 	 * @param yFocusOffset The Length value to which yFocusOffset is to be set.
+ 	 * Set measuredFocusPosition with the specified vector<Length >.
+ 	 * @param measuredFocusPosition The vector<Length > value to which measuredFocusPosition is to be set.
  	 
  		
- 			
  	 */
- 	void setYFocusOffset (Length yFocusOffset);
-  		
+ 	void setMeasuredFocusPosition (vector<Length > measuredFocusPosition);
+		
 	
 	
 	
-
-
-	
-	// ===> Attribute zFocusOffset
-	
-	
-	
-
-	
- 	/**
- 	 * Get zFocusOffset.
- 	 * @return zFocusOffset as Length
- 	 */
- 	Length getZFocusOffset() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set zFocusOffset with the specified Length.
- 	 * @param zFocusOffset The Length value to which zFocusOffset is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setZFocusOffset (Length zFocusOffset);
-  		
-	
-	
+	/**
+	 * Mark measuredFocusPosition, which is an optional field, as non-existent.
+	 */
+	void clearMeasuredFocusPosition ();
 	
 
 
@@ -462,38 +357,6 @@ public:
 
 
 	
-	// ===> Attribute feedId
-	
-	
-	
-
-	
- 	/**
- 	 * Get feedId.
- 	 * @return feedId as int
- 	 */
- 	int getFeedId() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set feedId with the specified int.
- 	 * @param feedId The int value to which feedId is to be set.
- 	 
- 		
- 			
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 		
- 	 */
- 	void setFeedId (int feedId);
-  		
-	
-	
-	
-
-
-	
 	// ===> Attribute focusModelId
 	
 	
@@ -502,21 +365,21 @@ public:
 	
  	/**
  	 * Get focusModelId.
- 	 * @return focusModelId as Tag
+ 	 * @return focusModelId as int
  	 */
- 	Tag getFocusModelId() const;
+ 	int getFocusModelId() const;
 	
  
  	
  	
  	/**
- 	 * Set focusModelId with the specified Tag.
- 	 * @param focusModelId The Tag value to which focusModelId is to be set.
+ 	 * Set focusModelId with the specified int.
+ 	 * @param focusModelId The int value to which focusModelId is to be set.
  	 
  		
  			
  	 */
- 	void setFocusModelId (Tag focusModelId);
+ 	void setFocusModelId (int focusModelId);
   		
 	
 	
@@ -527,38 +390,6 @@ public:
 	// Links //
 	///////////
 	
-	
-
-	
-		
-	/**
-	 * focusModelId pointer to the row in the FocusModel table having FocusModel.focusModelId == focusModelId
-	 * @return a FocusModelRow*
-	 * 
-	 
-	 */
-	 FocusModelRow* getFocusModelUsingFocusModelId();
-	 
-
-	
-
-	
-
-	
-		
-	// ===> Slice link from a row of Focus table to a collection of row of Feed table.
-	
-	/**
-	 * Get the collection of row in the Feed table having feedId == this.feedId
-	 * 
-	 * @return a vector of FeedRow *
-	 */
-	vector <FeedRow *> getFeeds();
-	
-	
-
-	
-
 	
 
 	
@@ -575,18 +406,35 @@ public:
 	
 
 	
+
+	
+		
+	// ===> Slice link from a row of Focus table to a collection of row of FocusModel table.
+	
+	/**
+	 * Get the collection of row in the FocusModel table having focusModelId == this.focusModelId
+	 * 
+	 * @return a vector of FocusModelRow *
+	 */
+	vector <FocusModelRow *> getFocusModels();
+	
+	
+
+	
+
+	
 	
 	
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this FocusRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(Tag antennaId, int feedId, ArrayTimeInterval timeInterval, Tag focusModelId, Length xFocusPosition, Length yFocusPosition, Length zFocusPosition, bool focusTracking, Length xFocusOffset, Length yFocusOffset, Length zFocusOffset);
+	bool compareNoAutoInc(Tag antennaId, ArrayTimeInterval timeInterval, bool focusTracking, vector<Length > focusOffset, int focusModelId);
 	
 	
 
 	
-	bool compareRequiredValue(Tag focusModelId, Length xFocusPosition, Length yFocusPosition, Length zFocusPosition, bool focusTracking, Length xFocusOffset, Length yFocusOffset, Length zFocusOffset); 
+	bool compareRequiredValue(bool focusTracking, vector<Length > focusOffset, int focusModelId); 
 		 
 	
 	/**
@@ -658,39 +506,6 @@ private:
  	
 
 	
-	// ===> Attribute xFocusPosition
-	
-	
-
-	Length xFocusPosition;
-
-	
-	
- 	
-
-	
-	// ===> Attribute yFocusPosition
-	
-	
-
-	Length yFocusPosition;
-
-	
-	
- 	
-
-	
-	// ===> Attribute zFocusPosition
-	
-	
-
-	Length zFocusPosition;
-
-	
-	
- 	
-
-	
 	// ===> Attribute focusTracking
 	
 	
@@ -702,33 +517,24 @@ private:
  	
 
 	
-	// ===> Attribute xFocusOffset
+	// ===> Attribute focusOffset
 	
 	
 
-	Length xFocusOffset;
-
-	
-	
- 	
-
-	
-	// ===> Attribute yFocusOffset
-	
-	
-
-	Length yFocusOffset;
+	vector<Length > focusOffset;
 
 	
 	
  	
 
 	
-	// ===> Attribute zFocusOffset
+	// ===> Attribute measuredFocusPosition, which is optional
 	
+	
+	bool measuredFocusPositionExists;
 	
 
-	Length zFocusOffset;
+	vector<Length > measuredFocusPosition;
 
 	
 	
@@ -750,22 +556,11 @@ private:
  	
 
 	
-	// ===> Attribute feedId
-	
-	
-
-	int feedId;
-
-	
-	
- 	
-
-	
 	// ===> Attribute focusModelId
 	
 	
 
-	Tag focusModelId;
+	int focusModelId;
 
 	
 	
@@ -785,13 +580,6 @@ private:
 	
 		
 
-
-	
-
-	
-		
-
-	 
 
 	
 

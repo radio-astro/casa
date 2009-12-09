@@ -77,34 +77,17 @@ using namespace enumerations;
 	
 
 	
+#include "CReceiverBand.h"
+using namespace ReceiverBandMod;
+	
+
+	
+
+	
+
+	
 #include "CAntennaMake.h"
 using namespace AntennaMakeMod;
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -113,8 +96,30 @@ using namespace PointingModelModeMod;
 	
 
 	
-#include "CReceiverBand.h"
-using namespace ReceiverBandMod;
+#include "CPolarizationType.h"
+using namespace PolarizationTypeMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 
@@ -157,142 +162,176 @@ class ASDM;
 class CalPointingModelRow;
 /**
  * The CalPointingModelTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Result of pointing model calibration performed by TelCal.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalPointingModel </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaName </TD>
+ 		 
+ * <TD> string</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the name of the antenna. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> receiverBand </TD>
+ 		 
+ * <TD> ReceiverBandMod::ReceiverBand</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies the receiver band. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> antennaName </TD> 
- * <TD> string </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> receiverBand </TD> 
- * <TD> ReceiverBandMod::ReceiverBand </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalReduction Table. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
-	
- * <TR>
- * <TD> antennaMake </TD> 
- * <TD> AntennaMakeMod::AntennaMake </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numObs </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numCoeff </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> startValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the start time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the end time of result validity period. </TD>
  * </TR>
 	
  * <TR>
- * <TD> numFormula </TD> 
- * <TD> int </TD>
+ * <TD> antennaMake </TD> 
+ * <TD> AntennaMakeMod::AntennaMake </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> azimuthRms </TD> 
- * <TD> Angle </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> elevationRms </TD> 
- * <TD> Angle </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> skyRms </TD> 
- * <TD> Angle </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> coeffName </TD> 
- * <TD> vector<string > </TD>
- * <TD>  numCoeff </TD> 
- * </TR>
-	
- * <TR>
- * <TD> coeffVal </TD> 
- * <TD> vector<float > </TD>
- * <TD>  numCoeff </TD> 
- * </TR>
-	
- * <TR>
- * <TD> coeffError </TD> 
- * <TD> vector<float > </TD>
- * <TD>  numCoeff </TD> 
- * </TR>
-	
- * <TR>
- * <TD> coeffFixed </TD> 
- * <TD> vector<bool > </TD>
- * <TD>  numCoeff </TD> 
- * </TR>
-	
- * <TR>
- * <TD> coeffFormula </TD> 
- * <TD> vector<string > </TD>
- * <TD>  numFormula </TD> 
+ * <TD> &nbsp;the antenna make. </TD>
  * </TR>
 	
  * <TR>
  * <TD> pointingModelMode </TD> 
  * <TD> PointingModelModeMod::PointingModelMode </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the pointing model mode. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> polarizationType </TD> 
+ * <TD> PolarizationTypeMod::PolarizationType </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the polarization type. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numCoeff </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of coefficients in the pointing model. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> coeffName </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numCoeff </TD> 
+ * <TD> &nbsp;the names of the coefficients (one string per coefficient). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> coeffVal </TD> 
+ * <TD> vector<float > </TD>
+ * <TD>  numCoeff </TD> 
+ * <TD> &nbsp;the values of the coefficients resulting from the pointing model fitting (one value per coefficient). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> coeffError </TD> 
+ * <TD> vector<float > </TD>
+ * <TD>  numCoeff </TD> 
+ * <TD> &nbsp;the uncertainties on the pointing model coefficients (one value per coefficient). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> coeffFixed </TD> 
+ * <TD> vector<bool > </TD>
+ * <TD>  numCoeff </TD> 
+ * <TD> &nbsp;indicates if one coefficient was fixed (true) or not fixed (false) (one boolean per coefficient). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> azimuthRMS </TD> 
+ * <TD> Angle </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;Azimuth RMS (on Sky) </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> elevationRms </TD> 
+ * <TD> Angle </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;Elevation rms (on Sky) </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> skyRMS </TD> 
+ * <TD> Angle </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;rms on sky </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> reducedChiSquared </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;measures the quality of the least square fit. </TD>
  * </TR>
 	
 
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
+	
+ * <TR>
+ * <TD> numObs </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the number of source directions observed to derive the pointing model. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> coeffFormula </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numCoeff  </TD>
+ * <TD>&nbsp; formulas used for the fitting (one string per coefficient). </TD>
+ * </TR>
+	
 
  * </TABLE>
  */
@@ -365,31 +404,25 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param calDataId. 
-	
- 	 * @param calReductionId. 
-	
  	 * @param antennaName. 
 	
  	 * @param receiverBand. 
 	
- 	 * @param antennaMake. 
+ 	 * @param calDataId. 
 	
- 	 * @param numObs. 
-	
- 	 * @param numCoeff. 
+ 	 * @param calReductionId. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
- 	 * @param numFormula. 
+ 	 * @param antennaMake. 
 	
- 	 * @param azimuthRms. 
+ 	 * @param pointingModelMode. 
 	
- 	 * @param elevationRms. 
+ 	 * @param polarizationType. 
 	
- 	 * @param skyRms. 
+ 	 * @param numCoeff. 
 	
  	 * @param coeffName. 
 	
@@ -399,18 +432,22 @@ public:
 	
  	 * @param coeffFixed. 
 	
- 	 * @param coeffFormula. 
+ 	 * @param azimuthRMS. 
 	
- 	 * @param pointingModelMode. 
+ 	 * @param elevationRms. 
+	
+ 	 * @param skyRMS. 
+	
+ 	 * @param reducedChiSquared. 
 	
      */
-	CalPointingModelRow *newRow(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand, AntennaMakeMod::AntennaMake antennaMake, int numObs, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, int numFormula, Angle azimuthRms, Angle elevationRms, Angle skyRms, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, vector<string > coeffFormula, PointingModelModeMod::PointingModelMode pointingModelMode);
+	CalPointingModelRow *newRow(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, PointingModelModeMod::PointingModelMode pointingModelMode, PolarizationTypeMod::PolarizationType polarizationType, int numCoeff, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, Angle azimuthRMS, Angle elevationRms, Angle skyRMS, double reducedChiSquared);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalPointingModelRow *newRowFull(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand, AntennaMakeMod::AntennaMake antennaMake, int numObs, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, int numFormula, Angle azimuthRms, Angle elevationRms, Angle skyRms, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, vector<string > coeffFormula, PointingModelModeMod::PointingModelMode pointingModelMode);
+	CalPointingModelRow *newRowFull(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, PointingModelModeMod::PointingModelMode pointingModelMode, PolarizationTypeMod::PolarizationType polarizationType, int numCoeff, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, Angle azimuthRMS, Angle elevationRms, Angle skyRMS, double reducedChiSquared);
 
 
 	/**
@@ -476,17 +513,17 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
-	 * @param calDataId. 
-	
-	 * @param calReductionId. 
-	
 	 * @param antennaName. 
 	
 	 * @param receiverBand. 
 	
+	 * @param calDataId. 
+	
+	 * @param calReductionId. 
+	
  	 *
 	 */
- 	CalPointingModelRow* getRowByKey(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand);
+ 	CalPointingModelRow* getRowByKey(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId);
 
  	 	
 
@@ -498,31 +535,25 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param calDataId.
- 	 		
- 	 * @param calReductionId.
- 	 		
  	 * @param antennaName.
  	 		
  	 * @param receiverBand.
  	 		
- 	 * @param antennaMake.
+ 	 * @param calDataId.
  	 		
- 	 * @param numObs.
- 	 		
- 	 * @param numCoeff.
+ 	 * @param calReductionId.
  	 		
  	 * @param startValidTime.
  	 		
  	 * @param endValidTime.
  	 		
- 	 * @param numFormula.
+ 	 * @param antennaMake.
  	 		
- 	 * @param azimuthRms.
+ 	 * @param pointingModelMode.
  	 		
- 	 * @param elevationRms.
+ 	 * @param polarizationType.
  	 		
- 	 * @param skyRms.
+ 	 * @param numCoeff.
  	 		
  	 * @param coeffName.
  	 		
@@ -532,12 +563,16 @@ public:
  	 		
  	 * @param coeffFixed.
  	 		
- 	 * @param coeffFormula.
+ 	 * @param azimuthRMS.
  	 		
- 	 * @param pointingModelMode.
+ 	 * @param elevationRms.
+ 	 		
+ 	 * @param skyRMS.
+ 	 		
+ 	 * @param reducedChiSquared.
  	 		 
  	 */
-	CalPointingModelRow* lookup(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand, AntennaMakeMod::AntennaMake antennaMake, int numObs, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, int numFormula, Angle azimuthRms, Angle elevationRms, Angle skyRms, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, vector<string > coeffFormula, PointingModelModeMod::PointingModelMode pointingModelMode); 
+	CalPointingModelRow* lookup(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, PointingModelModeMod::PointingModelMode pointingModelMode, PolarizationTypeMod::PolarizationType polarizationType, int numCoeff, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, Angle azimuthRMS, Angle elevationRms, Angle skyRMS, double reducedChiSquared); 
 
 
 #ifndef WITHOUT_ACS
@@ -557,43 +592,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalPointingModelTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalPointingModelTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalPointingModel (CalPointingModelTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalPointingModel (CalPointingModelTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -668,8 +709,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalPointingModelRow* checkAndAdd(CalPointingModelRow* x) throw (DuplicateKey);
+	CalPointingModelRow* checkAndAdd(CalPointingModelRow* x) ;
 
 
 
@@ -683,7 +726,7 @@ private:
 	vector<CalPointingModelRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

@@ -77,9 +77,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   FTMachine::FTMachine() : image(0), uvwMachine_p(0), 
 			   tangentSpecified_p(False), fixMovingSource_p(False),
 			 distance_p(0.0), lastFieldId_p(-1),lastMSId_p(-1), 
-			   freqFrameValid_p(False), freqInterpMethod_p(InterpolateArray1D<Float,Complex>::nearestNeighbour)
+			   freqFrameValid_p(False), freqInterpMethod_p(InterpolateArray1D<Float,Complex>::nearestNeighbour), pointingDirCol_p("DIRECTION")
 {
+
+
+  spectralCoord_p=SpectralCoordinate();
+  isIOnly=False;
 }
+
 
 LogIO& FTMachine::logIO() {return logIO_p;};
 
@@ -242,8 +247,11 @@ void FTMachine::initMaps(const VisBuffer& vb) {
   matchAllSpwChans(vb);
 
   chanMap.resize();
-  chanMap=multiChanMap_p[vb.spectralWindow()];
 
+  //  cout << "VBSPW " << vb.spectralWindow() << "  " << multiChanMap_p[vb.spectralWindow()] << endl;
+  chanMap=multiChanMap_p[vb.spectralWindow()];
+  if(chanMap.nelements() == 0)
+    chanMap=Vector<Int>(vb.frequency().nelements(), -1);
 
   {
     logIO() << LogIO::DEBUGGING << "Channel Map: " << chanMap << LogIO::POST;
@@ -329,9 +337,15 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 
     Cube<Complex> origdata;
     Vector<Float> visFreq(vb.frequency().nelements());
-
-    convertArray(visFreq, vb.frequency());
-
+    if(doConversion_p[vb.spectralWindow()]){
+      convertArray(visFreq, lsrFreq_p);
+    }
+    else{
+      
+      convertArray(visFreq, vb.frequency());
+      lsrFreq_p.resize();
+      lsrFreq_p=vb.frequency();
+    }
     if(type==FTMachine::MODEL){
       origdata.reference(vb.modelVisCube());
     }
@@ -357,7 +371,7 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
       flags(vb.flagCube())=True;
       weight.reference(wt);
       interpVisFreq_p.resize();
-      interpVisFreq_p=vb.frequency();
+      interpVisFreq_p=lsrFreq_p;
       return False;
     }
 
@@ -371,7 +385,7 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
       if(1){
 
 	//Need to get  new interpolate functions that interpolate explicitly on the 2nd axis
-    //2 swap of axes needed
+	//2 swap of axes needed
 	Cube<Complex> flipdata;
 	Cube<Bool> flipflag;
 	swapyz(flipflag,vb.flagCube());
@@ -396,18 +410,19 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
       //For now don't read data to just interpolate flags...need a interpolate 
       //flag only function
       flag.resize(vb.nCorr(), imageFreq_p.nelements(), vb.nRow());
-      flag.set(False);
+      flag.set(True);
       ArrayIterator<Bool> iter(flag, IPosition(2,0,2));
       ReadOnlyArrayIterator<Bool> origiter(vb.flagCube(), IPosition(2,0,2));
       Int channum=0;
       Float step=imageFreq_p[1]-imageFreq_p[0];
-      Float origstep=visFreq[1]-visFreq[0];
+      Float origstep=lsrFreq_p[1]-lsrFreq_p[0];
       while (!iter.pastEnd()){
-	Int closest=Int((imageFreq_p[channum]+step-visFreq[0])/origstep);
+	Int closest=Int((imageFreq_p[channum]+step-lsrFreq_p[0])/origstep);
 	//if(closest <0) closest=0;	
 	//if(closest >=vb.nChannel()) closest=vb.nChannel()-1;
         origiter.origin();
 	if((closest >=0) && (closest <  vb.nChannel())){
+	  iter.array().set(False);
 	  for (Int k=0; k < closest; ++k){
 	    origiter.next();
 	  }
@@ -416,7 +431,6 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 	iter.next();
 	++channum;
       }
-
     }
    
     Matrix<Float> flipweight;
@@ -436,9 +450,6 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
 
     chanMap.resize(imageFreq_p.nelements());
     indgen(chanMap);
-    
-
-
     return True;
   }
 
@@ -490,7 +501,12 @@ Bool FTMachine::interpolateFrequencyTogrid(const VisBuffer& vb,
     Cube<Complex> *origdata;
     Vector<Float> visFreq(vb.frequency().nelements());
 
-    convertArray(visFreq, vb.frequency());
+    if(doConversion_p[vb.spectralWindow()]){
+      convertArray(visFreq, lsrFreq_p);
+    }
+    else{
+      convertArray(visFreq, vb.frequency());
+    }
 
     if(type==FTMachine::MODEL){
       origdata=&(vb.modelVisCube());
@@ -690,6 +706,72 @@ Bool FTMachine::fromRecord(String& error, const RecordInterface& inRecord) {
   return False;
 };
 
+// Make a plain straightforward honest-to-FSM image. This returns
+// a complex image, without conversion to Stokes. The representation
+// is that required for the visibilities.
+//----------------------------------------------------------------------
+void FTMachine::makeImage(FTMachine::Type type, 
+		       ROVisibilityIterator& vi,
+		       ImageInterface<Complex>& theImage,
+		       Matrix<Float>& weight) {
+
+
+  logIO() << LogOrigin("FTMachine", "makeImage0") << LogIO::NORMAL;
+
+  // Loop over all visibilities and pixels
+  VisBuffer vb(vi);
+  
+  // Initialize put (i.e. transform to Sky) for this model
+  vi.origin();
+
+  if(vb.polFrame()==MSIter::Linear) {
+    StokesImageUtil::changeCStokesRep(theImage, SkyModel::LINEAR);
+  }
+  else {
+    StokesImageUtil::changeCStokesRep(theImage, SkyModel::CIRCULAR);
+  }
+  
+  initializeToSky(theImage,weight,vb);
+  Bool useCorrected= !(vi.msColumns().correctedData().isNull());
+  if((type==FTMachine::CORRECTED) && (!useCorrected))
+    type=FTMachine::OBSERVED;
+  // Loop over the visibilities, putting VisBuffers
+  for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+    for (vi.origin(); vi.more(); vi++) {
+      
+      switch(type) {
+      case FTMachine::RESIDUAL:
+	vb.visCube()=vb.correctedVisCube();
+	vb.visCube()-=vb.modelVisCube();
+        put(vb, -1, False);
+        break;
+      case FTMachine::MODEL:
+	put(vb, -1, False, FTMachine::MODEL);
+        break;
+      case FTMachine::CORRECTED:
+        put(vb, -1, False, FTMachine::CORRECTED);
+        break;
+      case FTMachine::PSF:
+	vb.visCube()=Complex(1.0,0.0);
+        put(vb, -1, True);
+        break;
+      case FTMachine::COVERAGE:
+	vb.visCube()=Complex(1.0);
+        put(vb, -1, True);
+        break;
+      case FTMachine::OBSERVED:
+      default:
+        put(vb, -1, False);
+        break;
+      }
+    }
+  }
+  finalizeToSky();
+  // Normalize by dividing out weights, etc.
+  getImage(weight, True);
+}
+
+
 // Make a plain straightforward honest-to-God image. This returns
 // a complex image, without conversion to Stokes. The representation
 // is that required for the visibilities. This version always works
@@ -760,6 +842,10 @@ void FTMachine::makeImage(FTMachine::Type type,
   }
   
   initializeToSky(theImage,weight,vb);
+  Bool useCorrected= !(vi.msColumns().correctedData().isNull());
+  if((type==FTMachine::CORRECTED) && (!useCorrected))
+    type=FTMachine::OBSERVED;
+   
 
   // Loop over the visibilities, putting VisBuffers
   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
@@ -814,6 +900,7 @@ Bool FTMachine::setSpw(Vector<Int>& spws, Bool validFrame){
 Bool FTMachine::matchAllSpwChans(const VisBuffer& vb){
 
   vb.allSelectedSpectralWindows(selectedSpw_p, nVisChan_p);
+
   doConversion_p.resize(max(selectedSpw_p)+1);
   doConversion_p.set(False);
   
@@ -848,27 +935,34 @@ Bool FTMachine::matchChannel(const Int& spw,
   chanMap.resize(nvischan);
   chanMap.set(-1);
   Vector<Double> lsrFreq(0);
-  Bool convert=False;
+  Bool condoo=False;
  
 
+  //cout << "Freqvalid " << freqFrameValid_p << endl;
+
   if(freqFrameValid_p){
-    vb.lsrFrequency(spw, lsrFreq, convert);
-    doConversion_p[spw]=convert;
+    vb.lsrFrequency(spw, lsrFreq, condoo);
+    doConversion_p[spw]=condoo;
   }
   else{
     lsrFreq=vb.lsrFrequency();
   }
+  lsrFreq_p.resize(lsrFreq.nelements());
+  lsrFreq_p=lsrFreq;
   
-
   Vector<Double> c(1);
   c=0.0;
   Vector<Double> f(1);
   Int nFound=0;
 
+  //cout << "lsrFreq " << endl;
+
+
   for (Int chan=0;chan<nvischan;chan++) {
     f(0)=lsrFreq[chan];
     if(spectralCoord_p.toPixel(c, f)) {
       Int pixel=Int(floor(c(0)+0.5));
+      // cout << "f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
       if(pixel>-1&&pixel<nchan) {
 	chanMap(chan)=pixel;
         nFound++;
@@ -886,6 +980,7 @@ Bool FTMachine::matchChannel(const Int& spw,
 
   multiChanMap_p[spw].resize();
   multiChanMap_p[spw]=chanMap;
+
 
   if(nFound==0) {
     /*
@@ -1014,6 +1109,24 @@ void FTMachine::setFreqInterpolation(const String& method){
   out.putStorage(pout,deleteOut);
   in.freeStorage(pin,deleteIn);
 }
+
+  void FTMachine::setPointingDirColumn(const String& column){
+    pointingDirCol_p=column;
+    pointingDirCol_p.upcase();
+    if( (pointingDirCol_p != "DIRECTION") &&(pointingDirCol_p != "TARGET") && (pointingDirCol_p != "ENCODER") && (pointingDirCol_p != "POINTING_OFFSET") && (pointingDirCol_p != "SOURCE_OFFSET")){
+
+      //basically at this stage you don't know what you're doing...so you get the default
+
+      pointingDirCol_p="DIRECTION";
+
+    }    
+  }
+
+  String FTMachine::getPointingDirColumnInUse(){
+
+    return pointingDirCol_p;
+
+  }
 
 
 } //# NAMESPACE CASA - END

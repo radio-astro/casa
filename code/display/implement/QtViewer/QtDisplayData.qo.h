@@ -202,7 +202,9 @@ class QtDisplayData : public QObject {
   //# be able to assume it will exist for the life of the QDD).
   ImageInterface<Float>* imageInterface() { return im_;  }
  
- 
+  // force unlocking of paged images
+  void unlock( );
+
  public slots:
   
   // (Should only be used by QtDisplayPanels to notify the QDD that it
@@ -226,6 +228,10 @@ class QtDisplayData : public QObject {
  
   
   virtual void checkAxis(); 
+ 
+ 
+  const String &getColormap( ) { return clrMapName_; }
+  void setColormap(const String& clrMapName) { setColormap_(clrMapName); }
  
  
  signals:
@@ -270,6 +276,8 @@ class QtDisplayData : public QObject {
 
  
   void axisChanged(String, String, String);
+  void axisChanged4(String, String, String, int);
+
  protected slots:
   
   // Set the color bar orientation option according to the master
@@ -278,8 +286,7 @@ class QtDisplayData : public QObject {
   // also called during initialization.
   virtual void setColorBarOrientation_();
  
- 
- 
+
  protected:
   
   // Heuristic used internally to set initial axes to display on X, Y and Z,

@@ -83,7 +83,8 @@ Bool RFATimeMedian::newChunk (Int &maxmem)
 {
   if( num(TIME) < halfwin*4 )
   {
-    os<<LogIO::WARN<<name()<<": too few time slots, ignoring this chunk\n"<<LogIO::POST;
+    os<<LogIO::WARN<<name()<<
+      ": too few (" << num(TIME) << ") time slots (" << halfwin*4 << " needed), ignoring this chunk\n"<<LogIO::POST;
     return active=False;
   }
 // if disk-based flag cube, reserve 2MB for local iterator
@@ -104,6 +105,7 @@ void RFATimeMedian::endChunk ()
 {
   RFADiffMapBase::endChunk();
 // create local flag iterator
+  flag_iter.cursor()->resize(IPosition(2, 0, 0));
   flag_iter = FlagCubeIterator();
   if( msl ) delete [] msl;
   msl = NULL;

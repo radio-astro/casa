@@ -1,7 +1,7 @@
 //#---------------------------------------------------------------------------
 //# PKSFITSreader.h: Class to read Parkes Multibeam data from a FITS file.
 //#---------------------------------------------------------------------------
-//# Copyright (C) 2000-2006
+//# Copyright (C) 2000-2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,7 +25,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: PKSFITSreader.h,v 19.17 2008-11-17 06:38:05 cal103 Exp $
 //#---------------------------------------------------------------------------
 //# This class is basically a wrapper class for reading data from either an
 //# MBFITS (single dish variant of RPFITS) or SDFITS file using the relevant
@@ -38,19 +38,22 @@
 #define ATNF_PKSFITSREADER_H
 
 #include <atnf/PKSIO/FITSreader.h>
+#include <atnf/PKSIO/PKSrecord.h>
 #include <atnf/PKSIO/PKSreader.h>
 
 #include <casa/aips.h>
+#include <casa/stdio.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/String.h>
 
+#include <casa/namespace.h>
+
 // <summary>
 // Class to read Parkes Multibeam data from a FITS file.
 // </summary>
 
-#include <casa/namespace.h>
 class PKSFITSreader : public PKSreader
 {
   public:
@@ -81,12 +84,12 @@ class PKSFITSreader : public PKSreader
         String &antName,
         Vector<Double> &antPosition,
         String &obsType,
+        String &bunit,
         Float  &equinox,
         String &dopplerFrame,
         Double &mjd,
         Double &refFreq,
-        Double &bandwidth,
-        String &fluxunit);
+        Double &bandwidth);
 
     // Get frequency parameters for each IF.
     virtual Int getFreqInfo(
@@ -104,7 +107,8 @@ class PKSFITSreader : public PKSreader
         const Bool getSpectra = True,
         const Bool getXPol    = False,
         const Bool getFeedPos = False,
-        const Bool getPointing = False);
+        const Bool getPointing = False,
+        const Int  coordSys   = 0);
 
     // Find the range of the data selected in time and position.
     virtual Int findRange(
@@ -114,58 +118,7 @@ class PKSFITSreader : public PKSreader
         Matrix<Double> &positions);
 
     // Read the next data record.
-    virtual Int read(
-        Int             &scanNo,
-        Int             &cycleNo,
-        Double          &mjd,
-        Double          &interval,
-        String          &fieldName,
-        String          &srcName,
-        Vector<Double>  &srcDir,
-        Vector<Double>  &srcPM,
-        Double          &srcVel,
-        String          &obsType,
-        Int             &IFno,
-        Double          &refFreq,
-        Double          &bandwidth,
-        Double          &freqInc,
-        Vector<Double>  &restFreq,
-        Vector<Float>   &tcal,
-        String          &tcalTime,
-        Float           &azimuth,
-        Float           &elevation,
-        Float           &parAngle,
-        Float           &focusAxi,
-        Float           &focusTan,
-        Float           &focusRot,
-        Float           &temperature,
-        Float           &pressure,
-        Float           &humidity,
-        Float           &windSpeed,
-        Float           &windAz,
-        Int             &refBeam,
-        Int             &beamNo,
-        Vector<Double>  &direction,
-        Vector<Double>  &scanRate,
-        Vector<Float>   &tsys,
-        Vector<Float>   &sigma,
-        Vector<Float>   &calFctr,
-        Matrix<Float>   &baseLin,
-        Matrix<Float>   &baseSub,
-        Matrix<Float>   &spectra,
-        Matrix<uChar>   &flagged,
-        Complex         &xCalFctr,
-        Vector<Complex> &xPol);
-
-    // Read the next data record, just the basics.
-    virtual Int read(
-        Int           &IFno,
-        Vector<Float> &tsys,
-        Vector<Float> &calFctr,
-        Matrix<Float> &baseLin,
-        Matrix<Float> &baseSub,
-        Matrix<Float> &spectra,
-        Matrix<uChar> &flagged);
+    virtual Int read(PKSrecord &pksrec);
 
     // Close the FITS file.
     virtual void close();
@@ -173,7 +126,7 @@ class PKSFITSreader : public PKSreader
   private:
     Int    *cBeams, *cIFs;
     uInt   cNBeam, cNIF;
-    PKSMBrecord cMBrec;
+    MBrecord cMBrec;
     FITSreader  *cReader;
 
     Char* trim(char *string);

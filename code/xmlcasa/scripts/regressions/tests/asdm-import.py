@@ -1,4 +1,4 @@
-# wrapper script for ASDM import regression test
+# wrapper script for ASDM v0.9 import regression test
 import sys
 import os
 import string
@@ -7,9 +7,9 @@ import inspect
 
 # Short description
 def description():
-    return "Test of importasdm() task, ASDM to MS data conversion"
+    return "Test of importoldasdm() task, ASDM to MS data conversion"
 
-pass_on = { "asdm_dataset_name" : "uid___X1eb_X59c0_X1" }
+pass_on = { "asdm_dataset_name" : "uid___X54_X1418_X1" }
 
 a=inspect.stack()
 stacklevel=0

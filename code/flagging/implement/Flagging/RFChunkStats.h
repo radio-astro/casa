@@ -88,7 +88,7 @@ class RFChunkStats : public FlaggerEnums
 protected:
   VisibilityIterator &visiter;
   VisBuffer          &visbuf;
-  Flagger         &flagger;
+  Flagger            &flagger;
   
   IPosition visshape;  
   uInt counts[Num_StatEnums];
@@ -105,10 +105,16 @@ protected:
   Int itime;
 
 //  Matrix<uInt> nf_corr_ifr, nf_chan_corr, nf_chan_time, nf_corr_time;
-  Cube<uInt> nf_chan_ifr_time;
   
   PGPlotterInterface *pgp_screen,*pgp_report;
+
+  std::vector<double> scan_start;      /* first time stamp in scan */
+  std::vector<double> scan_start_flag; /* first time stamp with any 
+                                          unflagged data in scan*/
+  std::vector<double> scan_end, scan_end_flag; /* as above */
   
+
+
 public:
 // constructor
   RFChunkStats( VisibilityIterator &vi,VisBuffer &vb,Flagger &rf,
@@ -126,6 +132,24 @@ public:
 // returns antenna names
   const Vector<String>  & antNames () const;
 
+  // scan start/end times
+  double get_scan_start(unsigned scan) const
+    { return scan_start[scan]; }
+
+  double get_scan_end(unsigned scan) const
+    { return scan_end[scan]; }
+
+  // scan start/end times for unflagged data
+  //
+  // returns: time stamps of first/last unflagged
+  // data in the given scan, or a negative number 
+  // if there's no unflagged data in the scan.
+  double get_scan_start_unflagged(unsigned scan) const
+    { return scan_start_flag[scan]; }
+
+  double get_scan_end_unflagged(unsigned scan) const
+    { return scan_end_flag[scan]; }
+
 // accessors to plotters
   PGPlotterInterface & pgpscr() const;
   PGPlotterInterface & pgprep() const;
@@ -133,7 +157,7 @@ public:
   void setReportPanels (Int nx,Int ny) const;
   
 // loads data for new chunk, resets all flag stat counters
-  void newChunk ();
+  void newChunk (bool init_quack);
 // loads data for new pass
   void newPass (uInt npass);
 // loads data for new iteration
@@ -219,10 +243,6 @@ public:
   //uInt & nfCorrTime( uInt icorr, uInt itime ) { return nf_corr_time(icorr,itime); }
   //const Matrix<uInt> & nfCorrTime () const { return nf_corr_time; }
   
-  uInt & nfChanIfrTime( uInt ichan, uInt ifr, uInt itime ) 
-                { return nf_chan_ifr_time(ichan,ifr,itime); }
-  const Cube<uInt> & nfChanIfrTime () const { return nf_chan_ifr_time; }
-
 // prints stats to stderr
   void printStats ();
 };

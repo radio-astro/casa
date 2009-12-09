@@ -44,6 +44,13 @@ include $(AIPSARCH)/makedefs
 #CPPOPT += -DAIPS_NO_TEMPLATE_SRC
 #CPPDBG += -DAIPS_NO_TEMPLATE_SRC
 
+
+BUILDTIME := $(shell date -u "+%a %Y/%m/%d %H:%M:%S UTC")
+SVNREVISION := $(shell cd $(AIPSROOT)/code && perl -e 'open(INFO,"svn info |"); while ( <INFO> ) { if ( s/^Revision:\s+// ) { print } }')
+SVNURL := $(shell cd $(AIPSROOT)/code && perl -e 'open(INFO,"svn info |"); while ( <INFO> ) { if ( s/^URL:\s+// ) { print } }')
+CASAVERSION := $(shell cd $(AIPSROOT)/code && perl -e 'open(VERSION,"\< VERSION"); $$_ = <VERSION>; s/^(\d+?)(\d)\.(\d+).*/$$1.$$2.$$3/; print')
+CASABUILD := $(shell cd $(AIPSROOT)/code && perl -e 'open(VERSION,"\< VERSION"); $$_ = <VERSION>; s/^\d+?\d\.\d+\.(\d+).*/$$1/; print')
+
 # Source lists.
 #--------------
 EXCLUDE  := $(sort $(EXCLUDE) makefile changelog %.help %.ps %.reference CVS)
@@ -107,7 +114,12 @@ $(PYEXECS) : % : $(PYLIBD)/%
 $(PYEXECS:%=$(PYLIBD)/%) : $(PYLIBD)/% : $(CODEDIR)/%
 	@ amkdir $(PYLIBD)
 	sed -e 's#/CASASUBST/task_directory/#$(PYTHON_TASKD)#' \
-	    -e 's#/CASASUBST/python_library_directory/#$(PYTHON_LIBD)#' $< > $@
+	    -e 's#/CASASUBST/python_library_directory/#$(PYTHON_LIBD)#' \
+	    -e 's#/CASASUBST/build_time#$(BUILDTIME)#' \
+	    -e 's#/CASASUBST/subversion_revision#$(SVNREVISION)#' \
+	    -e 's#/CASASUBST/subversion_url#$(SVNURL)#' \
+	    -e 's#/CASASUBST/casa_version#$(CASAVERSION)#' \
+	    -e 's#/CASASUBST/casa_build#$(CASABUILD)#' $< > $@
 
 # Scripts.
 $(LIBEXECS) : % : $(LIBEXECD)/% ;

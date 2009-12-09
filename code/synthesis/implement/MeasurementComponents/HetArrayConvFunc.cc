@@ -34,6 +34,8 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Containers/SimOrdMap.h>
+#include <scimath/Mathematics/MathFunc.h>
+#include <scimath/Mathematics/ConvolveGridder.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/CompositeNumber.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -60,6 +62,7 @@
 #include <msvis/MSVis/VisibilityIterator.h>
 
 #include <synthesis/MeasurementComponents/PBMath1DAiry.h>
+#include <synthesis/MeasurementComponents/PBMath1DNumeric.h>
 #include <synthesis/MeasurementComponents/HetArrayConvFunc.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -103,24 +106,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  antIndexToDiamIndex_p(k)=antDiam2IndexMap_p(dishDiam(k));
 	}
 	else{
-	  antDiam2IndexMap_p.define(dishDiam(k), diamIndex);
-	  antIndexToDiamIndex_p(k)=diamIndex;
-	  antMath_p.resize(diamIndex+1);
-	  if(pbClass_p== PBMathInterface::AIRY){
-	    Quantity qdiam(dishDiam(k),"m");
-	    //VLA ratio of blockage to dish
-	    Quantity blockDiam(dishDiam(k)/25.0*2.0, "m");
-	    
-	    antMath_p[diamIndex]=new PBMath1DAiry(qdiam, blockDiam,  
-						Quantity(70,"arcsec"), 
-						Quantity(100.0,"GHz"));
-	  }
-	  else{
+	  if(dishDiam[k] > 0.0){ //there may be stations with no dish on
+	    antDiam2IndexMap_p.define(dishDiam(k), diamIndex);
+	    antIndexToDiamIndex_p(k)=diamIndex;
+	    antMath_p.resize(diamIndex+1);
+	    if(pbClass_p== PBMathInterface::AIRY){
+	      Quantity qdiam(dishDiam(k),"m");
+	      
+	      //VLA ratio of blockage to dish
+	      Quantity blockDiam(dishDiam(k)/25.0*2.0, "m");	      
+	      antMath_p[diamIndex]=new PBMath1DAiry(qdiam, blockDiam,  
+						    Quantity(150,"arcsec"), 
+						    Quantity(100.0,"GHz"));
+	      
+	      
+	    }
+	    else{
 
-	    cout<< "Don't deal with non airy dishes yet " << endl;
-	  }
-	  ++diamIndex;
-	  
+	      cout<< "Don't deal with non airy dishes yet " << endl;
+	    }
+	    ++diamIndex;
+	  } 
 	}
 
       }
@@ -175,12 +181,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Set up the convolution function.
     Int nx=nx_p;
     Int ny=ny_p;
+    Int support=0;
     if(!doneMainConv_p){
-      Int support=0;
       for (uInt ii=0; ii < ndish; ++ii){
 	support=max((antMath_p[ii])->support(coords), support);
       }
-      convSize_p=2*support*convSampling;
+      convSize_p=support*convSampling;
       CompositeNumber cn(convSize_p);
       convSize_p=cn.nearestEven(convSize_p);
     }
@@ -215,6 +221,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       dc.setReferenceValue(fieldDir.getAngle().getValue());
       coords.replaceCoordinate(dc, directionIndex);
     
+
       IPosition pbShape(4, convSize_p, convSize_p, 1, 1);
       TempImage<Complex> twoDPB(pbShape, coords);    
     
@@ -256,8 +263,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  (antMath_p[k])->applyPB(pB2Screen, pB2Screen, vb.direction1()(0));
 	  //Then the other
 	  (antMath_p[j])->applyPB(pB2Screen, pB2Screen, vb.direction2()(0));
+	  
+
+	  pBScreen.copyData((LatticeExpr<Complex>) (iif(abs(pBScreen)> 5e-2, pBScreen, 0)));
+	  pB2Screen.copyData((LatticeExpr<Complex>) (iif(abs(pB2Screen)> 25e-4, pB2Screen, 0)));
+
 	  LatticeFFT::cfft2d(pBScreen);
 	  LatticeFFT::cfft2d(pB2Screen);
+	
+
 	  Int plane=0;
 	  for (uInt jj=0; jj < k; ++jj)
 	    plane=plane+ndish-jj-1;
@@ -265,11 +279,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	  convFunc_p.xyPlane(plane)=pBScreen.get(True);
 	  weightConvFunc_p.xyPlane(plane)=pB2Screen.get(True);
-	  
 	  supportAndNormalize(plane, convSampling);
 	  
 	}
-      
+	
       }
 
 
@@ -373,11 +386,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
 	  found=True;
 	  // if it drops by more than 2 magnitudes per pixel
-	  trial=3;
+	  trial=5;
 	}
 				 
 	if(found) {
 	  convSupport=Int(0.5+Float(trial)/Float(convSampling))+1;
+	  //support is really over the edge
+	  if( (convSupport*convSampling) >= convSize_p/2){
+	    convSupport=convSize_p/2/convSampling-1;
+	  }
 	}
 	else {
 	  os << "Convolution function is misbehaved - support seems to be zero\n"
@@ -489,7 +506,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     }
 
-    //cout << "rowmap " << rowMap.nelements() << " min " << min(rowMap) << " max " << max(rowMap) << endl;
   }
 
   ImageInterface<Float>&  HetArrayConvFunc::getFluxScaleImage(){
@@ -516,7 +532,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	}
       }
-
       filledFluxScale_p=True;  
     }
     

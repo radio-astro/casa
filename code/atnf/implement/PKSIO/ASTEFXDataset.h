@@ -57,9 +57,6 @@ class ASTEFXDataset : public NRODataset
   // data initialization 
   virtual void initialize() ;
 
-  // data finalization
-  virtual void finalize() ;
-  
   // fill header from file 
   virtual int fillHeader() ;
 

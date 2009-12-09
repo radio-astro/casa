@@ -18,6 +18,7 @@ def listvis(vis,options,datacolumn,field,spw,selectdata,antenna,timerange,correl
                 
         ms.lister(options,datacolumn,field,spw,antenna,timerange,correlation,scan,feed,array,uvrange,average,showflags,"",pagerows,listfile)
         
+        ms.close()
     except Exception, instance:
         print '*** Error *** ',instance
     # raise Exception, instance

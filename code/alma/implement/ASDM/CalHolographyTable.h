@@ -96,27 +96,37 @@ using namespace AntennaMakeMod;
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
 #include "CPolarizationType.h"
 using namespace PolarizationTypeMod;
 	
 
 	
+
+	
 #include "CReceiverBand.h"
 using namespace ReceiverBandMod;
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 
 	
@@ -163,158 +173,223 @@ class ASDM;
 class CalHolographyRow;
 /**
  * The CalHolographyTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Result of holography calibration performed by TelCal.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalHolography </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> calDataId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaName </TD>
+ 		 
+ * <TD> string</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;the name of the antenna. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> calReductionId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calDataId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalData Table. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> antennaName </TD> 
- * <TD> string </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> calReductionId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in CalReduction Table. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
  * <TD> antennaMake </TD> 
  * <TD> AntennaMakeMod::AntennaMake </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numScrew </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> numReceptor </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the antenna make. </TD>
  * </TR>
 	
  * <TR>
  * <TD> startValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;Start time of result validity period </TD>
  * </TR>
 	
  * <TR>
  * <TD> endValidTime </TD> 
  * <TD> ArrayTime </TD>
  * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> focusPosition </TD> 
- * <TD> vector<Length > </TD>
- * <TD>  3 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> rawRms </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> weightedRms </TD> 
- * <TD> Length </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> screwName </TD> 
- * <TD> vector<string > </TD>
- * <TD>  numScrew </TD> 
- * </TR>
-	
- * <TR>
- * <TD> screwMotion </TD> 
- * <TD> vector<Length > </TD>
- * <TD>  numScrew </TD> 
- * </TR>
-	
- * <TR>
- * <TD> screwMotionError </TD> 
- * <TD> vector<Length > </TD>
- * <TD>  numScrew </TD> 
- * </TR>
-	
- * <TR>
- * <TD> panelModes </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> frequencyRange </TD> 
- * <TD> vector<Frequency > </TD>
- * <TD>  2 </TD> 
- * </TR>
-	
- * <TR>
- * <TD> beamMapUID </TD> 
- * <TD> EntityRef </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> surfaceMapUID </TD> 
- * <TD> EntityRef </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> polarizationTypes </TD> 
- * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
- * <TD>  numReceptor </TD> 
- * </TR>
-	
- * <TR>
- * <TD> receiverBand </TD> 
- * <TD> ReceiverBandMod::ReceiverBand </TD>
- * <TD>  &nbsp;  </TD> 
- * </TR>
-	
- * <TR>
- * <TD> direction </TD> 
- * <TD> vector<Angle > </TD>
- * <TD>  2 </TD> 
+ * <TD> &nbsp;the end time of result validity period. </TD>
  * </TR>
 	
  * <TR>
  * <TD> ambientTemperature </TD> 
  * <TD> Temperature </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the ambient temperature. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> focusPosition </TD> 
+ * <TD> vector<Length > </TD>
+ * <TD>  3 </TD> 
+ * <TD> &nbsp;the focus position. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> frequencyRange </TD> 
+ * <TD> vector<Frequency > </TD>
+ * <TD>  2 </TD> 
+ * <TD> &nbsp;the range of frequencies for which the measurement is valid. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> illuminationTaper </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the amplitude illumination taper. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numReceptor </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of receptors. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> polarizationTypes </TD> 
+ * <TD> vector<PolarizationTypeMod::PolarizationType > </TD>
+ * <TD>  numReceptor </TD> 
+ * <TD> &nbsp;identifies the polarization types (one value per receptor). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numPanelModes </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number panel modes fitted. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> receiverBand </TD> 
+ * <TD> ReceiverBandMod::ReceiverBand </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the receiver band. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> beamMapUID </TD> 
+ * <TD> EntityRef </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;refers to the beam map image. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> rawRMS </TD> 
+ * <TD> Length </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the RMS of the pathlength residuals. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> weightedRMS </TD> 
+ * <TD> Length </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the weigthted RMS of the pathlength residuals. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> surfaceMapUID </TD> 
+ * <TD> EntityRef </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;refers to the resulting antenna surface map image. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> direction </TD> 
+ * <TD> vector<Angle > </TD>
+ * <TD>  2 </TD> 
+ * <TD> &nbsp;the direction of the source. </TD>
  * </TR>
 	
 
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
+	
+ * <TR>
+ * <TD> numScrew </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the number of screws. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> screwName </TD> 
+ * <TD> vector<string > </TD>
+ * <TD>  numScrew  </TD>
+ * <TD>&nbsp; the names of the screws (one value per screw). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> screwMotion </TD> 
+ * <TD> vector<Length > </TD>
+ * <TD>  numScrew  </TD>
+ * <TD>&nbsp; the prescribed screw motions (one value per screw). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> screwMotionError </TD> 
+ * <TD> vector<Length > </TD>
+ * <TD>  numScrew  </TD>
+ * <TD>&nbsp; the uncertainties on the prescribed screw  motions (one value per screw). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> gravCorrection </TD> 
+ * <TD> bool </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; indicates if a gravitational correction was applied (true) or not (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> gravOptRange </TD> 
+ * <TD> vector<Angle > </TD>
+ * <TD>  2  </TD>
+ * <TD>&nbsp; the range of gravitational optimization. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> tempCorrection </TD> 
+ * <TD> bool </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; indicates if a temperature correction was applied (true) or not (false). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> tempOptRange </TD> 
+ * <TD> vector<Temperature > </TD>
+ * <TD>  2  </TD>
+ * <TD>&nbsp; the range of temperature optimization. </TD>
+ * </TR>
+	
 
  * </TABLE>
  */
@@ -387,58 +462,52 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
+ 	 * @param antennaName. 
+	
  	 * @param calDataId. 
 	
  	 * @param calReductionId. 
 	
- 	 * @param antennaName. 
-	
  	 * @param antennaMake. 
-	
- 	 * @param numScrew. 
-	
- 	 * @param numReceptor. 
 	
  	 * @param startValidTime. 
 	
  	 * @param endValidTime. 
 	
+ 	 * @param ambientTemperature. 
+	
  	 * @param focusPosition. 
-	
- 	 * @param rawRms. 
-	
- 	 * @param weightedRms. 
-	
- 	 * @param screwName. 
-	
- 	 * @param screwMotion. 
-	
- 	 * @param screwMotionError. 
-	
- 	 * @param panelModes. 
 	
  	 * @param frequencyRange. 
 	
- 	 * @param beamMapUID. 
+ 	 * @param illuminationTaper. 
 	
- 	 * @param surfaceMapUID. 
+ 	 * @param numReceptor. 
 	
  	 * @param polarizationTypes. 
 	
+ 	 * @param numPanelModes. 
+	
  	 * @param receiverBand. 
+	
+ 	 * @param beamMapUID. 
+	
+ 	 * @param rawRMS. 
+	
+ 	 * @param weightedRMS. 
+	
+ 	 * @param surfaceMapUID. 
 	
  	 * @param direction. 
 	
- 	 * @param ambientTemperature. 
-	
      */
-	CalHolographyRow *newRow(Tag calDataId, Tag calReductionId, string antennaName, AntennaMakeMod::AntennaMake antennaMake, int numScrew, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusPosition, Length rawRms, Length weightedRms, vector<string > screwName, vector<Length > screwMotion, vector<Length > screwMotionError, int panelModes, vector<Frequency > frequencyRange, EntityRef beamMapUID, EntityRef surfaceMapUID, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ReceiverBandMod::ReceiverBand receiverBand, vector<Angle > direction, Temperature ambientTemperature);
+	CalHolographyRow *newRow(string antennaName, Tag calDataId, Tag calReductionId, AntennaMakeMod::AntennaMake antennaMake, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, vector<Length > focusPosition, vector<Frequency > frequencyRange, double illuminationTaper, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numPanelModes, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, Length rawRMS, Length weightedRMS, EntityRef surfaceMapUID, vector<Angle > direction);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	CalHolographyRow *newRowFull(Tag calDataId, Tag calReductionId, string antennaName, AntennaMakeMod::AntennaMake antennaMake, int numScrew, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusPosition, Length rawRms, Length weightedRms, vector<string > screwName, vector<Length > screwMotion, vector<Length > screwMotionError, int panelModes, vector<Frequency > frequencyRange, EntityRef beamMapUID, EntityRef surfaceMapUID, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ReceiverBandMod::ReceiverBand receiverBand, vector<Angle > direction, Temperature ambientTemperature);
+	CalHolographyRow *newRowFull(string antennaName, Tag calDataId, Tag calReductionId, AntennaMakeMod::AntennaMake antennaMake, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, vector<Length > focusPosition, vector<Frequency > frequencyRange, double illuminationTaper, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numPanelModes, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, Length rawRMS, Length weightedRMS, EntityRef surfaceMapUID, vector<Angle > direction);
 
 
 	/**
@@ -504,15 +573,15 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param antennaName. 
+	
 	 * @param calDataId. 
 	
 	 * @param calReductionId. 
 	
-	 * @param antennaName. 
-	
  	 *
 	 */
- 	CalHolographyRow* getRowByKey(Tag calDataId, Tag calReductionId, string antennaName);
+ 	CalHolographyRow* getRowByKey(string antennaName, Tag calDataId, Tag calReductionId);
 
  	 	
 
@@ -524,52 +593,46 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
+ 	 * @param antennaName.
+ 	 		
  	 * @param calDataId.
  	 		
  	 * @param calReductionId.
  	 		
- 	 * @param antennaName.
- 	 		
  	 * @param antennaMake.
- 	 		
- 	 * @param numScrew.
- 	 		
- 	 * @param numReceptor.
  	 		
  	 * @param startValidTime.
  	 		
  	 * @param endValidTime.
  	 		
+ 	 * @param ambientTemperature.
+ 	 		
  	 * @param focusPosition.
- 	 		
- 	 * @param rawRms.
- 	 		
- 	 * @param weightedRms.
- 	 		
- 	 * @param screwName.
- 	 		
- 	 * @param screwMotion.
- 	 		
- 	 * @param screwMotionError.
- 	 		
- 	 * @param panelModes.
  	 		
  	 * @param frequencyRange.
  	 		
- 	 * @param beamMapUID.
+ 	 * @param illuminationTaper.
  	 		
- 	 * @param surfaceMapUID.
+ 	 * @param numReceptor.
  	 		
  	 * @param polarizationTypes.
  	 		
+ 	 * @param numPanelModes.
+ 	 		
  	 * @param receiverBand.
  	 		
- 	 * @param direction.
+ 	 * @param beamMapUID.
  	 		
- 	 * @param ambientTemperature.
+ 	 * @param rawRMS.
+ 	 		
+ 	 * @param weightedRMS.
+ 	 		
+ 	 * @param surfaceMapUID.
+ 	 		
+ 	 * @param direction.
  	 		 
  	 */
-	CalHolographyRow* lookup(Tag calDataId, Tag calReductionId, string antennaName, AntennaMakeMod::AntennaMake antennaMake, int numScrew, int numReceptor, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > focusPosition, Length rawRms, Length weightedRms, vector<string > screwName, vector<Length > screwMotion, vector<Length > screwMotionError, int panelModes, vector<Frequency > frequencyRange, EntityRef beamMapUID, EntityRef surfaceMapUID, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, ReceiverBandMod::ReceiverBand receiverBand, vector<Angle > direction, Temperature ambientTemperature); 
+	CalHolographyRow* lookup(string antennaName, Tag calDataId, Tag calReductionId, AntennaMakeMod::AntennaMake antennaMake, ArrayTime startValidTime, ArrayTime endValidTime, Temperature ambientTemperature, vector<Length > focusPosition, vector<Frequency > frequencyRange, double illuminationTaper, int numReceptor, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, int numPanelModes, ReceiverBandMod::ReceiverBand receiverBand, EntityRef beamMapUID, Length rawRMS, Length weightedRMS, EntityRef surfaceMapUID, vector<Angle > direction); 
 
 
 #ifndef WITHOUT_ACS
@@ -589,43 +652,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(CalHolographyTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(CalHolographyTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for CalHolography (CalHolographyTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a CalHolography (CalHolographyTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -700,8 +769,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	CalHolographyRow* checkAndAdd(CalHolographyRow* x) throw (DuplicateKey);
+	CalHolographyRow* checkAndAdd(CalHolographyRow* x) ;
 
 
 
@@ -715,7 +786,7 @@ private:
 	vector<CalHolographyRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

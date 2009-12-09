@@ -6,7 +6,7 @@ ARCHLIB=`echo $CASAPATH | awk '{printf "%s/%s/lib", $1,$2}'`
 ARCH=`echo $CASAPATH | awk '{print $2}'`
 SITE=`echo $CASAPATH | awk '{print $3}'`
 MAKEDEFS=$AIPSROOT/$ARCH/$SITE/makedefs
-VARS="CPPSTD PYTHONLIBD PYTHONVER CCMTOOLSLIBD CCMTOOLSINCD CORELIB CORELIBD COREINCD WCSLIBLIBD WCSLIBINCD QT4LIBD QT4LIB QT4INCD CFITSIOLIBD CFITSIOINCD XTRNLIBS_rpath"
+VARS="CPPSTD PYTHONLIBD PYTHONVER CCMTOOLSLIBD CCMTOOLSINCD CORELIB CORELIBD COREINCD WCSLIBLIBD WCSLIBINCD QT4LIBD QT4LIB QT4INCD CFITSIOLIBD CFITSIOINCD ATMINCD XTRNLIBS_rpath"
 eval `gmake -f $AIPSROOT/$ARCH/makedefs VARS="$VARS" eval_vars`
 DEFINES2=`for i in $CPPSTD; do echo $i | grep "\-D"; done`
 DEFINES2="$DEFINES2 -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE_64_SOURCE"
@@ -101,7 +101,7 @@ if [ "$SETUPEXTRALINK" != "" ]; then
 echo "               extra_link_args = [$SETUPEXTRALINK])], " >> $SETUPDOTPY
 fi
 
-echo "       include_dirs = ['$AIPSROOT/code/include', '$AIPSROOT/code/casa', '$COREINCD', '$WCSLIBINCD', '.', '..', '$CCMTOOLSINCD', '$CFITSIOINCD', '../impl'" >> $SETUPDOTPY
+echo "       include_dirs = ['$AIPSROOT/code/include', '$AIPSROOT/code/casa', '$COREINCD', '$WCSLIBINCD', '.', '..', '$CCMTOOLSINCD', '$CFITSIOINCD', '$ATMINCD', '../impl'" >> $SETUPDOTPY
 if [ "$QT4INCD" != "" ]; then
    for i in $QT4INCD; do
       echo ", '$i'" >> $SETUPDOTPY

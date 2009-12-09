@@ -259,6 +259,15 @@ class Calibrater
 		  const String& interp="linear",
 		  const Double& t=-1.0,
 		  const Vector<Int>& spwmap=Vector<Int>(1,-1));
+  
+  // Generate cal table from specified values
+  void specifycal(const String& type,
+		  const String& caltable,
+		  const String& time,
+		  const String& spw,
+		  const String& antenna,
+		  const String& pol,
+		  const Vector<Double>& parameter);
 
   // Smooth  calibration
   Bool smooth(const String& infile,
@@ -287,7 +296,8 @@ class Calibrater
   // Optional compression of the calibration columns (MODEL_DATA,
   // CORRECTED_DATA and IMAGING_WEIGHT) is supported.
   Bool initialize(MeasurementSet& inputMS, 
-		  Bool compress=True);
+		  Bool compress=True,
+		  Bool addScratch=True);
 
   // Re-initialize the calibration scratch columns
   Bool initCalSet(const Int& calSet);
@@ -363,6 +373,9 @@ class Calibrater
   VisSet* vs_p;
   VisSet* rawvs_p;
   VisEquation* ve_p;
+
+  // Do we have scr cols to work with?
+  Bool scrOk_p;
 
   // VisCals for applying and solving:
   PtrBlock<VisCal*> vc_p;

@@ -86,7 +86,7 @@ public:
 #ifndef WITHOUT_ACS
 	IDLEntityRef toIDLEntityRef() const;
 #endif
-	void setFromXML(string xml) throw(InvalidArgumentException);
+	void setFromXML(string xml) ;
 	
    /**
 	 * Write the binary representation of this to a EndianOSStream.

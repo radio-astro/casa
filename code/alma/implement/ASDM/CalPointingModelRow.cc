@@ -113,31 +113,7 @@ namespace asdm {
 		
 			
 				
-		x->antennaMake = antennaMake;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->numObs = numObs;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->numCoeff = numCoeff;
+		x->receiverBand = receiverBand;
  				
  			
 		
@@ -169,7 +145,7 @@ namespace asdm {
 		
 			
 				
-		x->numFormula = numFormula;
+		x->antennaMake = antennaMake;
  				
  			
 		
@@ -180,8 +156,10 @@ namespace asdm {
 		
 		
 			
-		x->azimuthRms = azimuthRms.toIDLAngle();
-			
+				
+		x->pointingModelMode = pointingModelMode;
+ 				
+ 			
 		
 	
 
@@ -190,8 +168,10 @@ namespace asdm {
 		
 		
 			
-		x->elevationRms = elevationRms.toIDLAngle();
-			
+				
+		x->polarizationType = polarizationType;
+ 				
+ 			
 		
 	
 
@@ -200,8 +180,10 @@ namespace asdm {
 		
 		
 			
-		x->skyRms = skyRms.toIDLAngle();
-			
+				
+		x->numCoeff = numCoeff;
+ 				
+ 			
 		
 	
 
@@ -278,6 +260,64 @@ namespace asdm {
 		
 		
 			
+		x->azimuthRMS = azimuthRMS.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->elevationRms = elevationRms.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->skyRMS = skyRMS.toIDLAngle();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->reducedChiSquared = reducedChiSquared;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->numObsExists = numObsExists;
+		
+		
+			
+				
+		x->numObs = numObs;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->coeffFormulaExists = coeffFormulaExists;
+		
+		
+			
 		x->coeffFormula.length(coeffFormula.size());
 		for (unsigned int i = 0; i < coeffFormula.size(); ++i) {
 			
@@ -287,30 +327,6 @@ namespace asdm {
 	 		
 	 	}
 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->pointingModelMode = pointingModelMode;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		
-			
-				
-		x->receiverBand = receiverBand;
- 				
- 			
 		
 	
 
@@ -357,7 +373,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct CalPointingModelRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void CalPointingModelRow::setFromIDL (CalPointingModelRowIDL x) throw(ConversionException) {
+	void CalPointingModelRow::setFromIDL (CalPointingModelRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -376,27 +392,7 @@ namespace asdm {
 		
 		
 			
-		setAntennaMake(x.antennaMake);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumObs(x.numObs);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setNumCoeff(x.numCoeff);
+		setReceiverBand(x.receiverBand);
   			
  		
 		
@@ -426,7 +422,7 @@ namespace asdm {
 		
 		
 			
-		setNumFormula(x.numFormula);
+		setAntennaMake(x.antennaMake);
   			
  		
 		
@@ -436,8 +432,8 @@ namespace asdm {
 		
 		
 			
-		setAzimuthRms(Angle (x.azimuthRms));
-			
+		setPointingModelMode(x.pointingModelMode);
+  			
  		
 		
 	
@@ -446,8 +442,8 @@ namespace asdm {
 		
 		
 			
-		setElevationRms(Angle (x.elevationRms));
-			
+		setPolarizationType(x.polarizationType);
+  			
  		
 		
 	
@@ -456,8 +452,8 @@ namespace asdm {
 		
 		
 			
-		setSkyRms(Angle (x.skyRms));
-			
+		setNumCoeff(x.numCoeff);
+  			
  		
 		
 	
@@ -526,6 +522,64 @@ namespace asdm {
 		
 		
 			
+		setAzimuthRMS(Angle (x.azimuthRMS));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setElevationRms(Angle (x.elevationRms));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setSkyRMS(Angle (x.skyRMS));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setReducedChiSquared(x.reducedChiSquared);
+  			
+ 		
+		
+	
+
+	
+		
+		numObsExists = x.numObsExists;
+		if (x.numObsExists) {
+		
+		
+			
+		setNumObs(x.numObs);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		coeffFormulaExists = x.coeffFormulaExists;
+		if (x.coeffFormulaExists) {
+		
+		
+			
 		coeffFormula .clear();
 		for (unsigned int i = 0; i <x.coeffFormula.length(); ++i) {
 			
@@ -535,25 +589,7 @@ namespace asdm {
 			
   		
 		
-	
-
-	
-		
-		
-			
-		setPointingModelMode(x.pointingModelMode);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setReceiverBand(x.receiverBand);
-  			
- 		
+		}
 		
 	
 
@@ -587,7 +623,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"CalPointingModel");
+			throw ConversionException (err.getMessage(),"CalPointingModel");
 		}
 	}
 #endif
@@ -613,23 +649,7 @@ namespace asdm {
   	
  		
 		
-			buf.append(EnumerationParser::toXML("antennaMake", antennaMake));
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numObs, "numObs", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(numCoeff, "numCoeff", buf);
+			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
 		
 		
 	
@@ -653,7 +673,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(numFormula, "numFormula", buf);
+			buf.append(EnumerationParser::toXML("antennaMake", antennaMake));
 		
 		
 	
@@ -661,7 +681,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(azimuthRms, "azimuthRms", buf);
+			buf.append(EnumerationParser::toXML("pointingModelMode", pointingModelMode));
 		
 		
 	
@@ -669,7 +689,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(elevationRms, "elevationRms", buf);
+			buf.append(EnumerationParser::toXML("polarizationType", polarizationType));
 		
 		
 	
@@ -677,7 +697,7 @@ namespace asdm {
   	
  		
 		
-		Parser::toXML(skyRms, "skyRms", buf);
+		Parser::toXML(numCoeff, "numCoeff", buf);
 		
 		
 	
@@ -717,24 +737,56 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(azimuthRMS, "azimuthRMS", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(elevationRms, "elevationRms", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(skyRMS, "skyRMS", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(reducedChiSquared, "reducedChiSquared", buf);
+		
+		
+	
+
+  	
+ 		
+		if (numObsExists) {
+		
+		
+		Parser::toXML(numObs, "numObs", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (coeffFormulaExists) {
+		
+		
 		Parser::toXML(coeffFormula, "coeffFormula", buf);
 		
 		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("pointingModelMode", pointingModelMode));
-		
-		
-	
-
-  	
- 		
-		
-			buf.append(EnumerationParser::toXML("receiverBand", receiverBand));
-		
+		}
 		
 	
 
@@ -773,7 +825,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void CalPointingModelRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void CalPointingModelRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -791,25 +843,9 @@ namespace asdm {
 		
 		
 		
-		antennaMake = EnumerationParser::getAntennaMake("antennaMake","CalPointingModel",rowDoc);
+		receiverBand = EnumerationParser::getReceiverBand("receiverBand","CalPointingModel",rowDoc);
 		
 		
-		
-	
-
-	
-  		
-			
-	  	setNumObs(Parser::getInteger("numObs","CalPointingModel",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setNumCoeff(Parser::getInteger("numCoeff","CalPointingModel",rowDoc));
-			
 		
 	
 
@@ -830,33 +866,39 @@ namespace asdm {
 	
 
 	
-  		
-			
-	  	setNumFormula(Parser::getInteger("numFormula","CalPointingModel",rowDoc));
-			
+		
+		
+		
+		antennaMake = EnumerationParser::getAntennaMake("antennaMake","CalPointingModel",rowDoc);
+		
+		
+		
+	
+
+	
+		
+		
+		
+		pointingModelMode = EnumerationParser::getPointingModelMode("pointingModelMode","CalPointingModel",rowDoc);
+		
+		
+		
+	
+
+	
+		
+		
+		
+		polarizationType = EnumerationParser::getPolarizationType("polarizationType","CalPointingModel",rowDoc);
+		
+		
 		
 	
 
 	
   		
 			
-	  	setAzimuthRms(Parser::getAngle("azimuthRms","CalPointingModel",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setElevationRms(Parser::getAngle("elevationRms","CalPointingModel",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setSkyRms(Parser::getAngle("skyRms","CalPointingModel",rowDoc));
+	  	setNumCoeff(Parser::getInteger("numCoeff","CalPointingModel",rowDoc));
 			
 		
 	
@@ -904,31 +946,55 @@ namespace asdm {
 	
   		
 			
-					
-	  	setCoeffFormula(Parser::get1DString("coeffFormula","CalPointingModel",rowDoc));
+	  	setAzimuthRMS(Parser::getAngle("azimuthRMS","CalPointingModel",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setElevationRms(Parser::getAngle("elevationRms","CalPointingModel",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setSkyRMS(Parser::getAngle("skyRMS","CalPointingModel",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setReducedChiSquared(Parser::getDouble("reducedChiSquared","CalPointingModel",rowDoc));
+			
+		
+	
+
+	
+  		
+        if (row.isStr("<numObs>")) {
+			
+	  		setNumObs(Parser::getInteger("numObs","CalPointingModel",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<coeffFormula>")) {
+			
+								
+	  		setCoeffFormula(Parser::get1DString("coeffFormula","CalPointingModel",rowDoc));
 	  			
 	  		
-		
-	
-
-	
-		
-		
-		
-		pointingModelMode = EnumerationParser::getPointingModelMode("pointingModelMode","CalPointingModel",rowDoc);
-		
-		
-		
-	
-
-	
-		
-		
-		
-		receiverBand = EnumerationParser::getReceiverBand("receiverBand","CalPointingModel",rowDoc);
-		
-		
-		
+		}
+ 		
 	
 
 	
@@ -959,6 +1025,448 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"CalPointingModel");
 		}
+	}
+	
+	void CalPointingModelRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+						
+			eoss.writeString(antennaName);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(receiverBand);
+				
+		
+	
+
+	
+	
+		
+	calDataId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	calReductionId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	startValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+	endValidTime.toBin(eoss);
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(antennaMake);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(pointingModelMode);
+				
+		
+	
+
+	
+	
+		
+					
+			eoss.writeInt(polarizationType);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numCoeff);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) coeffName.size());
+		for (unsigned int i = 0; i < coeffName.size(); i++)
+				
+			eoss.writeString(coeffName.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) coeffVal.size());
+		for (unsigned int i = 0; i < coeffVal.size(); i++)
+				
+			eoss.writeFloat(coeffVal.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) coeffError.size());
+		for (unsigned int i = 0; i < coeffError.size(); i++)
+				
+			eoss.writeFloat(coeffError.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) coeffFixed.size());
+		for (unsigned int i = 0; i < coeffFixed.size(); i++)
+				
+			eoss.writeBoolean(coeffFixed.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+	azimuthRMS.toBin(eoss);
+		
+	
+
+	
+	
+		
+	elevationRms.toBin(eoss);
+		
+	
+
+	
+	
+		
+	skyRMS.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeDouble(reducedChiSquared);
+				
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(numObsExists);
+	if (numObsExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numObs);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(coeffFormulaExists);
+	if (coeffFormulaExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) coeffFormula.size());
+		for (unsigned int i = 0; i < coeffFormula.size(); i++)
+				
+			eoss.writeString(coeffFormula.at(i));
+				
+				
+						
+		
+	
+
+	}
+
+	}
+	
+	CalPointingModelRow* CalPointingModelRow::fromBin(EndianISStream& eiss, CalPointingModelTable& table) {
+		CalPointingModelRow* row = new  CalPointingModelRow(table);
+		
+		
+		
+	
+	
+		
+			
+		row->antennaName =  eiss.readString();
+			
+		
+	
+
+	
+	
+		
+			
+		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+
+	
+		
+		
+		row->calDataId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->calReductionId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->antennaMake = CAntennaMake::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->pointingModelMode = CPointingModelMode::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->polarizationType = CPolarizationType::from_int(eiss.readInt());
+			
+		
+	
+
+	
+	
+		
+			
+		row->numCoeff =  eiss.readInt();
+			
+		
+	
+
+	
+	
+		
+			
+	
+		row->coeffName.clear();
+		
+		unsigned int coeffNameDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < coeffNameDim1; i++)
+			
+			row->coeffName.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->coeffVal.clear();
+		
+		unsigned int coeffValDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < coeffValDim1; i++)
+			
+			row->coeffVal.push_back(eiss.readFloat());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->coeffError.clear();
+		
+		unsigned int coeffErrorDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < coeffErrorDim1; i++)
+			
+			row->coeffError.push_back(eiss.readFloat());
+			
+	
+
+		
+	
+
+	
+	
+		
+			
+	
+		row->coeffFixed.clear();
+		
+		unsigned int coeffFixedDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < coeffFixedDim1; i++)
+			
+			row->coeffFixed.push_back(eiss.readBoolean());
+			
+	
+
+		
+	
+
+	
+		
+		
+		row->azimuthRMS =  Angle::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->elevationRms =  Angle::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->skyRMS =  Angle::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->reducedChiSquared =  eiss.readDouble();
+			
+		
+	
+
+		
+		
+		
+	row->numObsExists = eiss.readBoolean();
+	if (row->numObsExists) {
+		
+	
+	
+		
+			
+		row->numObs =  eiss.readInt();
+			
+		
+	
+
+	}
+
+	row->coeffFormulaExists = eiss.readBoolean();
+	if (row->coeffFormulaExists) {
+		
+	
+	
+		
+			
+	
+		row->coeffFormula.clear();
+		
+		unsigned int coeffFormulaDim1 = eiss.readInt();
+		for (unsigned int  i = 0 ; i < coeffFormulaDim1; i++)
+			
+			row->coeffFormula.push_back(eiss.readString());
+			
+	
+
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -1005,93 +1513,33 @@ namespace asdm {
 
 	
  	/**
- 	 * Get antennaMake.
- 	 * @return antennaMake as AntennaMakeMod::AntennaMake
+ 	 * Get receiverBand.
+ 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
  	 */
- 	AntennaMakeMod::AntennaMake CalPointingModelRow::getAntennaMake() const {
+ 	ReceiverBandMod::ReceiverBand CalPointingModelRow::getReceiverBand() const {
 	
-  		return antennaMake;
+  		return receiverBand;
  	}
 
  	/**
- 	 * Set antennaMake with the specified AntennaMakeMod::AntennaMake.
- 	 * @param antennaMake The AntennaMakeMod::AntennaMake value to which antennaMake is to be set.
+ 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
+ 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
  	 
  	
  		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
  	 */
- 	void CalPointingModelRow::setAntennaMake (AntennaMakeMod::AntennaMake antennaMake)  {
+ 	void CalPointingModelRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
   	
   	
   		if (hasBeenAdded) {
  		
+			throw IllegalAccessException("receiverBand", "CalPointingModel");
+		
   		}
   	
- 		this->antennaMake = antennaMake;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numObs.
- 	 * @return numObs as int
- 	 */
- 	int CalPointingModelRow::getNumObs() const {
-	
-  		return numObs;
- 	}
-
- 	/**
- 	 * Set numObs with the specified int.
- 	 * @param numObs The int value to which numObs is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPointingModelRow::setNumObs (int numObs)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numObs = numObs;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get numCoeff.
- 	 * @return numCoeff as int
- 	 */
- 	int CalPointingModelRow::getNumCoeff() const {
-	
-  		return numCoeff;
- 	}
-
- 	/**
- 	 * Set numCoeff with the specified int.
- 	 * @param numCoeff The int value to which numCoeff is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPointingModelRow::setNumCoeff (int numCoeff)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->numCoeff = numCoeff;
+ 		this->receiverBand = receiverBand;
 	
  	}
 	
@@ -1165,29 +1613,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get numFormula.
- 	 * @return numFormula as int
+ 	 * Get antennaMake.
+ 	 * @return antennaMake as AntennaMakeMod::AntennaMake
  	 */
- 	int CalPointingModelRow::getNumFormula() const {
+ 	AntennaMakeMod::AntennaMake CalPointingModelRow::getAntennaMake() const {
 	
-  		return numFormula;
+  		return antennaMake;
  	}
 
  	/**
- 	 * Set numFormula with the specified int.
- 	 * @param numFormula The int value to which numFormula is to be set.
+ 	 * Set antennaMake with the specified AntennaMakeMod::AntennaMake.
+ 	 * @param antennaMake The AntennaMakeMod::AntennaMake value to which antennaMake is to be set.
  	 
  	
  		
  	 */
- 	void CalPointingModelRow::setNumFormula (int numFormula)  {
+ 	void CalPointingModelRow::setAntennaMake (AntennaMakeMod::AntennaMake antennaMake)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->numFormula = numFormula;
+ 		this->antennaMake = antennaMake;
 	
  	}
 	
@@ -1197,29 +1645,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get azimuthRms.
- 	 * @return azimuthRms as Angle
+ 	 * Get pointingModelMode.
+ 	 * @return pointingModelMode as PointingModelModeMod::PointingModelMode
  	 */
- 	Angle CalPointingModelRow::getAzimuthRms() const {
+ 	PointingModelModeMod::PointingModelMode CalPointingModelRow::getPointingModelMode() const {
 	
-  		return azimuthRms;
+  		return pointingModelMode;
  	}
 
  	/**
- 	 * Set azimuthRms with the specified Angle.
- 	 * @param azimuthRms The Angle value to which azimuthRms is to be set.
+ 	 * Set pointingModelMode with the specified PointingModelModeMod::PointingModelMode.
+ 	 * @param pointingModelMode The PointingModelModeMod::PointingModelMode value to which pointingModelMode is to be set.
  	 
  	
  		
  	 */
- 	void CalPointingModelRow::setAzimuthRms (Angle azimuthRms)  {
+ 	void CalPointingModelRow::setPointingModelMode (PointingModelModeMod::PointingModelMode pointingModelMode)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->azimuthRms = azimuthRms;
+ 		this->pointingModelMode = pointingModelMode;
 	
  	}
 	
@@ -1229,29 +1677,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get elevationRms.
- 	 * @return elevationRms as Angle
+ 	 * Get polarizationType.
+ 	 * @return polarizationType as PolarizationTypeMod::PolarizationType
  	 */
- 	Angle CalPointingModelRow::getElevationRms() const {
+ 	PolarizationTypeMod::PolarizationType CalPointingModelRow::getPolarizationType() const {
 	
-  		return elevationRms;
+  		return polarizationType;
  	}
 
  	/**
- 	 * Set elevationRms with the specified Angle.
- 	 * @param elevationRms The Angle value to which elevationRms is to be set.
+ 	 * Set polarizationType with the specified PolarizationTypeMod::PolarizationType.
+ 	 * @param polarizationType The PolarizationTypeMod::PolarizationType value to which polarizationType is to be set.
  	 
  	
  		
  	 */
- 	void CalPointingModelRow::setElevationRms (Angle elevationRms)  {
+ 	void CalPointingModelRow::setPolarizationType (PolarizationTypeMod::PolarizationType polarizationType)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->elevationRms = elevationRms;
+ 		this->polarizationType = polarizationType;
 	
  	}
 	
@@ -1261,29 +1709,29 @@ namespace asdm {
 
 	
  	/**
- 	 * Get skyRms.
- 	 * @return skyRms as Angle
+ 	 * Get numCoeff.
+ 	 * @return numCoeff as int
  	 */
- 	Angle CalPointingModelRow::getSkyRms() const {
+ 	int CalPointingModelRow::getNumCoeff() const {
 	
-  		return skyRms;
+  		return numCoeff;
  	}
 
  	/**
- 	 * Set skyRms with the specified Angle.
- 	 * @param skyRms The Angle value to which skyRms is to be set.
+ 	 * Set numCoeff with the specified int.
+ 	 * @param numCoeff The int value to which numCoeff is to be set.
  	 
  	
  		
  	 */
- 	void CalPointingModelRow::setSkyRms (Angle skyRms)  {
+ 	void CalPointingModelRow::setNumCoeff (int numCoeff)  {
   	
   	
   		if (hasBeenAdded) {
  		
   		}
   	
- 		this->skyRms = skyRms;
+ 		this->numCoeff = numCoeff;
 	
  	}
 	
@@ -1421,10 +1869,197 @@ namespace asdm {
 
 	
  	/**
- 	 * Get coeffFormula.
- 	 * @return coeffFormula as vector<string >
+ 	 * Get azimuthRMS.
+ 	 * @return azimuthRMS as Angle
  	 */
- 	vector<string > CalPointingModelRow::getCoeffFormula() const {
+ 	Angle CalPointingModelRow::getAzimuthRMS() const {
+	
+  		return azimuthRMS;
+ 	}
+
+ 	/**
+ 	 * Set azimuthRMS with the specified Angle.
+ 	 * @param azimuthRMS The Angle value to which azimuthRMS is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPointingModelRow::setAzimuthRMS (Angle azimuthRMS)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->azimuthRMS = azimuthRMS;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get elevationRms.
+ 	 * @return elevationRms as Angle
+ 	 */
+ 	Angle CalPointingModelRow::getElevationRms() const {
+	
+  		return elevationRms;
+ 	}
+
+ 	/**
+ 	 * Set elevationRms with the specified Angle.
+ 	 * @param elevationRms The Angle value to which elevationRms is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPointingModelRow::setElevationRms (Angle elevationRms)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->elevationRms = elevationRms;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get skyRMS.
+ 	 * @return skyRMS as Angle
+ 	 */
+ 	Angle CalPointingModelRow::getSkyRMS() const {
+	
+  		return skyRMS;
+ 	}
+
+ 	/**
+ 	 * Set skyRMS with the specified Angle.
+ 	 * @param skyRMS The Angle value to which skyRMS is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPointingModelRow::setSkyRMS (Angle skyRMS)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->skyRMS = skyRMS;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get reducedChiSquared.
+ 	 * @return reducedChiSquared as double
+ 	 */
+ 	double CalPointingModelRow::getReducedChiSquared() const {
+	
+  		return reducedChiSquared;
+ 	}
+
+ 	/**
+ 	 * Set reducedChiSquared with the specified double.
+ 	 * @param reducedChiSquared The double value to which reducedChiSquared is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void CalPointingModelRow::setReducedChiSquared (double reducedChiSquared)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->reducedChiSquared = reducedChiSquared;
+	
+ 	}
+	
+	
+
+	
+	/**
+	 * The attribute numObs is optional. Return true if this attribute exists.
+	 * @return true if and only if the numObs attribute exists. 
+	 */
+	bool CalPointingModelRow::isNumObsExists() const {
+		return numObsExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get numObs, which is optional.
+ 	 * @return numObs as int
+ 	 * @throw IllegalAccessException If numObs does not exist.
+ 	 */
+ 	int CalPointingModelRow::getNumObs() const  {
+		if (!numObsExists) {
+			throw IllegalAccessException("numObs", "CalPointingModel");
+		}
+	
+  		return numObs;
+ 	}
+
+ 	/**
+ 	 * Set numObs with the specified int.
+ 	 * @param numObs The int value to which numObs is to be set.
+ 	 
+ 	
+ 	 */
+ 	void CalPointingModelRow::setNumObs (int numObs) {
+	
+ 		this->numObs = numObs;
+	
+		numObsExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark numObs, which is an optional field, as non-existent.
+	 */
+	void CalPointingModelRow::clearNumObs () {
+		numObsExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute coeffFormula is optional. Return true if this attribute exists.
+	 * @return true if and only if the coeffFormula attribute exists. 
+	 */
+	bool CalPointingModelRow::isCoeffFormulaExists() const {
+		return coeffFormulaExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get coeffFormula, which is optional.
+ 	 * @return coeffFormula as vector<string >
+ 	 * @throw IllegalAccessException If coeffFormula does not exist.
+ 	 */
+ 	vector<string > CalPointingModelRow::getCoeffFormula() const  {
+		if (!coeffFormulaExists) {
+			throw IllegalAccessException("coeffFormula", "CalPointingModel");
+		}
 	
   		return coeffFormula;
  	}
@@ -1434,87 +2069,22 @@ namespace asdm {
  	 * @param coeffFormula The vector<string > value to which coeffFormula is to be set.
  	 
  	
- 		
  	 */
- 	void CalPointingModelRow::setCoeffFormula (vector<string > coeffFormula)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
+ 	void CalPointingModelRow::setCoeffFormula (vector<string > coeffFormula) {
+	
  		this->coeffFormula = coeffFormula;
 	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get pointingModelMode.
- 	 * @return pointingModelMode as PointingModelModeMod::PointingModelMode
- 	 */
- 	PointingModelModeMod::PointingModelMode CalPointingModelRow::getPointingModelMode() const {
-	
-  		return pointingModelMode;
- 	}
-
- 	/**
- 	 * Set pointingModelMode with the specified PointingModelModeMod::PointingModelMode.
- 	 * @param pointingModelMode The PointingModelModeMod::PointingModelMode value to which pointingModelMode is to be set.
- 	 
- 	
- 		
- 	 */
- 	void CalPointingModelRow::setPointingModelMode (PointingModelModeMod::PointingModelMode pointingModelMode)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->pointingModelMode = pointingModelMode;
+		coeffFormulaExists = true;
 	
  	}
 	
 	
-
-	
-
-	
- 	/**
- 	 * Get receiverBand.
- 	 * @return receiverBand as ReceiverBandMod::ReceiverBand
- 	 */
- 	ReceiverBandMod::ReceiverBand CalPointingModelRow::getReceiverBand() const {
-	
-  		return receiverBand;
- 	}
-
- 	/**
- 	 * Set receiverBand with the specified ReceiverBandMod::ReceiverBand.
- 	 * @param receiverBand The ReceiverBandMod::ReceiverBand value to which receiverBand is to be set.
- 	 
- 	
- 		
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 	
- 	 */
- 	void CalPointingModelRow::setReceiverBand (ReceiverBandMod::ReceiverBand receiverBand)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-			throw IllegalAccessException("receiverBand", "CalPointingModel");
-		
-  		}
-  	
- 		this->receiverBand = receiverBand;
-	
- 	}
-	
+	/**
+	 * Mark coeffFormula, which is an optional field, as non-existent.
+	 */
+	void CalPointingModelRow::clearCoeffFormula () {
+		coeffFormulaExists = false;
+	}
 	
 
 	
@@ -1682,6 +2252,12 @@ namespace asdm {
 	
 
 	
+		numObsExists = false;
+	
+
+	
+		coeffFormulaExists = false;
+	
 
 	
 	
@@ -1695,33 +2271,16 @@ namespace asdm {
 
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
+receiverBand = CReceiverBand::from_int(0);
+	
+
+	
+
+	
+
+	
+// This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
 antennaMake = CAntennaMake::from_int(0);
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
 	
 
 	
@@ -1731,7 +2290,29 @@ pointingModelMode = CPointingModelMode::from_int(0);
 
 	
 // This attribute is scalar and has an enumeration type. Let's initialize it to some valid value (the 1st of the enumeration).		
-receiverBand = CReceiverBand::from_int(0);
+polarizationType = CPolarizationType::from_int(0);
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
 	
 	
 	}
@@ -1775,6 +2356,12 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
+		numObsExists = false;
+	
+
+	
+		coeffFormulaExists = false;
+	
 
 	
 	
@@ -1785,34 +2372,28 @@ receiverBand = CReceiverBand::from_int(0);
 		else {
 	
 		
-			calDataId = row.calDataId;
-		
-			calReductionId = row.calReductionId;
-		
 			antennaName = row.antennaName;
 		
 			receiverBand = row.receiverBand;
 		
+			calDataId = row.calDataId;
+		
+			calReductionId = row.calReductionId;
 		
 		
 		
-			antennaMake = row.antennaMake;
-		
-			numObs = row.numObs;
-		
-			numCoeff = row.numCoeff;
 		
 			startValidTime = row.startValidTime;
 		
 			endValidTime = row.endValidTime;
 		
-			numFormula = row.numFormula;
+			antennaMake = row.antennaMake;
 		
-			azimuthRms = row.azimuthRms;
+			pointingModelMode = row.pointingModelMode;
 		
-			elevationRms = row.elevationRms;
+			polarizationType = row.polarizationType;
 		
-			skyRms = row.skyRms;
+			numCoeff = row.numCoeff;
 		
 			coeffName = row.coeffName;
 		
@@ -1822,35 +2403,39 @@ receiverBand = CReceiverBand::from_int(0);
 		
 			coeffFixed = row.coeffFixed;
 		
-			coeffFormula = row.coeffFormula;
+			azimuthRMS = row.azimuthRMS;
 		
-			pointingModelMode = row.pointingModelMode;
+			elevationRms = row.elevationRms;
+		
+			skyRMS = row.skyRMS;
+		
+			reducedChiSquared = row.reducedChiSquared;
 		
 		
 		
+		
+		if (row.numObsExists) {
+			numObs = row.numObs;		
+			numObsExists = true;
+		}
+		else
+			numObsExists = false;
+		
+		if (row.coeffFormulaExists) {
+			coeffFormula = row.coeffFormula;		
+			coeffFormulaExists = true;
+		}
+		else
+			coeffFormulaExists = false;
 		
 		}	
 	}
 
 	
-	bool CalPointingModelRow::compareNoAutoInc(Tag calDataId, Tag calReductionId, string antennaName, ReceiverBandMod::ReceiverBand receiverBand, AntennaMakeMod::AntennaMake antennaMake, int numObs, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, int numFormula, Angle azimuthRms, Angle elevationRms, Angle skyRms, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, vector<string > coeffFormula, PointingModelModeMod::PointingModelMode pointingModelMode) {
+	bool CalPointingModelRow::compareNoAutoInc(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, PointingModelModeMod::PointingModelMode pointingModelMode, PolarizationTypeMod::PolarizationType polarizationType, int numCoeff, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, Angle azimuthRMS, Angle elevationRms, Angle skyRMS, double reducedChiSquared) {
 		bool result;
 		result = true;
 		
-	
-		
-		result = result && (this->calDataId == calDataId);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->calReductionId == calReductionId);
-		
-		if (!result) return false;
-	
-
 	
 		
 		result = result && (this->antennaName == antennaName);
@@ -1867,21 +2452,14 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->antennaMake == antennaMake);
+		result = result && (this->calDataId == calDataId);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->numObs == numObs);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->numCoeff == numCoeff);
+		result = result && (this->calReductionId == calReductionId);
 		
 		if (!result) return false;
 	
@@ -1902,28 +2480,28 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->numFormula == numFormula);
+		result = result && (this->antennaMake == antennaMake);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->azimuthRms == azimuthRms);
+		result = result && (this->pointingModelMode == pointingModelMode);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->elevationRms == elevationRms);
+		result = result && (this->polarizationType == polarizationType);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->skyRms == skyRms);
+		result = result && (this->numCoeff == numCoeff);
 		
 		if (!result) return false;
 	
@@ -1958,14 +2536,28 @@ receiverBand = CReceiverBand::from_int(0);
 
 	
 		
-		result = result && (this->coeffFormula == coeffFormula);
+		result = result && (this->azimuthRMS == azimuthRMS);
 		
 		if (!result) return false;
 	
 
 	
 		
-		result = result && (this->pointingModelMode == pointingModelMode);
+		result = result && (this->elevationRms == elevationRms);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->skyRMS == skyRMS);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->reducedChiSquared == reducedChiSquared);
 		
 		if (!result) return false;
 	
@@ -1975,22 +2567,10 @@ receiverBand = CReceiverBand::from_int(0);
 	
 	
 	
-	bool CalPointingModelRow::compareRequiredValue(AntennaMakeMod::AntennaMake antennaMake, int numObs, int numCoeff, ArrayTime startValidTime, ArrayTime endValidTime, int numFormula, Angle azimuthRms, Angle elevationRms, Angle skyRms, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, vector<string > coeffFormula, PointingModelModeMod::PointingModelMode pointingModelMode) {
+	bool CalPointingModelRow::compareRequiredValue(ArrayTime startValidTime, ArrayTime endValidTime, AntennaMakeMod::AntennaMake antennaMake, PointingModelModeMod::PointingModelMode pointingModelMode, PolarizationTypeMod::PolarizationType polarizationType, int numCoeff, vector<string > coeffName, vector<float > coeffVal, vector<float > coeffError, vector<bool > coeffFixed, Angle azimuthRMS, Angle elevationRms, Angle skyRMS, double reducedChiSquared) {
 		bool result;
 		result = true;
 		
-	
-		if (!(this->antennaMake == antennaMake)) return false;
-	
-
-	
-		if (!(this->numObs == numObs)) return false;
-	
-
-	
-		if (!(this->numCoeff == numCoeff)) return false;
-	
-
 	
 		if (!(this->startValidTime == startValidTime)) return false;
 	
@@ -2000,19 +2580,19 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		if (!(this->numFormula == numFormula)) return false;
+		if (!(this->antennaMake == antennaMake)) return false;
 	
 
 	
-		if (!(this->azimuthRms == azimuthRms)) return false;
+		if (!(this->pointingModelMode == pointingModelMode)) return false;
 	
 
 	
-		if (!(this->elevationRms == elevationRms)) return false;
+		if (!(this->polarizationType == polarizationType)) return false;
 	
 
 	
-		if (!(this->skyRms == skyRms)) return false;
+		if (!(this->numCoeff == numCoeff)) return false;
 	
 
 	
@@ -2032,11 +2612,19 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
-		if (!(this->coeffFormula == coeffFormula)) return false;
+		if (!(this->azimuthRMS == azimuthRMS)) return false;
 	
 
 	
-		if (!(this->pointingModelMode == pointingModelMode)) return false;
+		if (!(this->elevationRms == elevationRms)) return false;
+	
+
+	
+		if (!(this->skyRMS == skyRMS)) return false;
+	
+
+	
+		if (!(this->reducedChiSquared == reducedChiSquared)) return false;
 	
 
 		return result;
@@ -2054,23 +2642,17 @@ receiverBand = CReceiverBand::from_int(0);
 	bool CalPointingModelRow::equalByRequiredValue(CalPointingModelRow* x) {
 		
 			
-		if (this->antennaMake != x->antennaMake) return false;
-			
-		if (this->numObs != x->numObs) return false;
-			
-		if (this->numCoeff != x->numCoeff) return false;
-			
 		if (this->startValidTime != x->startValidTime) return false;
 			
 		if (this->endValidTime != x->endValidTime) return false;
 			
-		if (this->numFormula != x->numFormula) return false;
+		if (this->antennaMake != x->antennaMake) return false;
 			
-		if (this->azimuthRms != x->azimuthRms) return false;
+		if (this->pointingModelMode != x->pointingModelMode) return false;
 			
-		if (this->elevationRms != x->elevationRms) return false;
+		if (this->polarizationType != x->polarizationType) return false;
 			
-		if (this->skyRms != x->skyRms) return false;
+		if (this->numCoeff != x->numCoeff) return false;
 			
 		if (this->coeffName != x->coeffName) return false;
 			
@@ -2080,9 +2662,13 @@ receiverBand = CReceiverBand::from_int(0);
 			
 		if (this->coeffFixed != x->coeffFixed) return false;
 			
-		if (this->coeffFormula != x->coeffFormula) return false;
+		if (this->azimuthRMS != x->azimuthRMS) return false;
 			
-		if (this->pointingModelMode != x->pointingModelMode) return false;
+		if (this->elevationRms != x->elevationRms) return false;
+			
+		if (this->skyRMS != x->skyRMS) return false;
+			
+		if (this->reducedChiSquared != x->reducedChiSquared) return false;
 			
 		
 		return true;

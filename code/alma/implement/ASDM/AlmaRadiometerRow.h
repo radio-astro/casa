@@ -102,19 +102,22 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file AlmaRadiometer.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
 
 //class asdm::AlmaRadiometerTable;
 
+
+// class asdm::SpectralWindowRow;
+class SpectralWindowRow;
 	
 
 /**
  * The AlmaRadiometerRow class is a row of a AlmaRadiometerTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class AlmaRadiometerRow {
@@ -141,8 +144,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct AlmaRadiometerRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (AlmaRadiometerRowIDL x) throw(ConversionException);
+	void setFromIDL (AlmaRadiometerRowIDL x) ;
 #endif
 	
 	/**
@@ -155,25 +159,39 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the AlmaRadiometerTable to which the row built by deserialization will be parented.
+	  */
+	 static AlmaRadiometerRow* fromBin(EndianISStream& eiss, AlmaRadiometerTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
 	////////////////////////////////
 	
 	
-	// ===> Attribute modeId
+	// ===> Attribute almaRadiometerId
 	
 	
 	
 
 	
  	/**
- 	 * Get modeId.
- 	 * @return modeId as Tag
+ 	 * Get almaRadiometerId.
+ 	 * @return almaRadiometerId as Tag
  	 */
- 	Tag getModeId() const;
+ 	Tag getAlmaRadiometerId() const;
 	
  
  	
@@ -183,32 +201,43 @@ public:
 
 
 	
-	// ===> Attribute numBand
+	// ===> Attribute numAntenna, which is optional
 	
 	
+	
+	/**
+	 * The attribute numAntenna is optional. Return true if this attribute exists.
+	 * @return true if and only if the numAntenna attribute exists. 
+	 */
+	bool isNumAntennaExists() const;
 	
 
 	
  	/**
- 	 * Get numBand.
- 	 * @return numBand as int
+ 	 * Get numAntenna, which is optional.
+ 	 * @return numAntenna as int
+ 	 * @throws IllegalAccessException If numAntenna does not exist.
  	 */
- 	int getNumBand() const;
+ 	int getNumAntenna() const;
 	
  
  	
  	
  	/**
- 	 * Set numBand with the specified int.
- 	 * @param numBand The int value to which numBand is to be set.
+ 	 * Set numAntenna with the specified int.
+ 	 * @param numAntenna The int value to which numAntenna is to be set.
  	 
  		
- 			
  	 */
- 	void setNumBand (int numBand);
-  		
+ 	void setNumAntenna (int numAntenna);
+		
 	
 	
+	
+	/**
+	 * Mark numAntenna, which is an optional field, as non-existent.
+	 */
+	void clearNumAntenna ();
 	
 
 
@@ -216,23 +245,107 @@ public:
 	// Extrinsic Table Attributes //
 	////////////////////////////////
 	
+	
+	// ===> Attribute spectralWindowId, which is optional
+	
+	
+	
+	/**
+	 * The attribute spectralWindowId is optional. Return true if this attribute exists.
+	 * @return true if and only if the spectralWindowId attribute exists. 
+	 */
+	bool isSpectralWindowIdExists() const;
+	
+
+	
+ 	/**
+ 	 * Get spectralWindowId, which is optional.
+ 	 * @return spectralWindowId as vector<Tag> 
+ 	 * @throws IllegalAccessException If spectralWindowId does not exist.
+ 	 */
+ 	vector<Tag>  getSpectralWindowId() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set spectralWindowId with the specified vector<Tag> .
+ 	 * @param spectralWindowId The vector<Tag>  value to which spectralWindowId is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setSpectralWindowId (vector<Tag>  spectralWindowId);
+		
+	
+	
+	
+	/**
+	 * Mark spectralWindowId, which is an optional field, as non-existent.
+	 */
+	void clearSpectralWindowId ();
+	
+
+
 	///////////
 	// Links //
 	///////////
 	
 	
-	
-	
-	/**
-	 * Compare each mandatory attribute except the autoincrementable one of this AlmaRadiometerRow with 
-	 * the corresponding parameters and return true if there is a match and false otherwise.
-	 */ 
-	bool compareNoAutoInc(int numBand);
-	
+ 		
+ 	/**
+ 	 * Set spectralWindowId[i] with the specified Tag.
+ 	 * @param i The index in spectralWindowId where to set the Tag value.
+ 	 * @param spectralWindowId The Tag value to which spectralWindowId[i] is to be set. 
+ 	 * @throws OutOfBoundsException
+  	 */
+  	void setSpectralWindowId (int i, Tag spectralWindowId)  ;
+ 			
 	
 
 	
-	bool compareRequiredValue(int numBand); 
+		 
+/**
+ * Append a Tag to spectralWindowId.
+ * @param id the Tag to be appended to spectralWindowId
+ */
+ void addSpectralWindowId(Tag id); 
+
+/**
+ * Append a vector of Tag to spectralWindowId.
+ * @param id an array of Tag to be appended to spectralWindowId
+ */
+ void addSpectralWindowId(const vector<Tag> & id); 
+ 
+
+ /**
+  * Returns the Tag stored in spectralWindowId at position i.
+  * @param i the position in spectralWindowId where the Tag is retrieved.
+  * @return the Tag stored at position i in spectralWindowId.
+  */
+ const Tag getSpectralWindowId(int i);
+ 
+ /**
+  * Returns the SpectralWindowRow linked to this row via the tag stored in spectralWindowId
+  * at position i.
+  * @param i the position in spectralWindowId.
+  * @return a pointer on a SpectralWindowRow whose key (a Tag) is equal to the Tag stored at position
+  * i in the spectralWindowId. 
+  */
+ SpectralWindowRow* getSpectralWindow(int i); 
+ 
+ /**
+  * Returns the vector of SpectralWindowRow* linked to this row via the Tags stored in spectralWindowId
+  * @return an array of pointers on SpectralWindowRow.
+  */
+ vector<SpectralWindowRow *> getSpectralWindows(); 
+  
+
+	
+
+	
+	
+	
+
 		 
 	
 	/**
@@ -293,34 +406,36 @@ private:
 	////////////////////////////////
 	
 	
-	// ===> Attribute modeId
+	// ===> Attribute almaRadiometerId
 	
 	
 
-	Tag modeId;
+	Tag almaRadiometerId;
 
 	
 	
  	
  	/**
- 	 * Set modeId with the specified Tag value.
- 	 * @param modeId The Tag value to which modeId is to be set.
+ 	 * Set almaRadiometerId with the specified Tag value.
+ 	 * @param almaRadiometerId The Tag value to which almaRadiometerId is to be set.
 		
  		
 			
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
  	 		
  	 */
- 	void setModeId (Tag modeId);
+ 	void setAlmaRadiometerId (Tag almaRadiometerId);
   		
 	
 
 	
-	// ===> Attribute numBand
+	// ===> Attribute numAntenna, which is optional
 	
+	
+	bool numAntennaExists;
 	
 
-	int numBand;
+	int numAntenna;
 
 	
 	
@@ -330,10 +445,29 @@ private:
 	// Extrinsic Table Attributes //
 	////////////////////////////////
 	
+	
+	// ===> Attribute spectralWindowId, which is optional
+	
+	
+	bool spectralWindowIdExists;
+	
+
+	vector<Tag>  spectralWindowId;
+
+	
+	
+ 	
+
 	///////////
 	// Links //
 	///////////
 	
+	
+		
+
+
+	
+
 
 };
 

@@ -77,6 +77,9 @@ public:
   // Spwmap-sensitive spwOK()
   inline Vector<Bool> spwOK() { return spwOK_; };
 
+  // Set spwOK_ according to spwmap  RI made public 200910
+  void setSpwOK();
+
 protected:
 
   // Find the reference timeslot for requested time
@@ -172,11 +175,7 @@ protected:
 
   void part(const Array<Complex>& c, const Int& which, Array<Float>& f);
 
-
 private:
-
-  // Set spwOK_ according to spwmap
-  void setSpwOK();
 
   // The CalSet from which we interpolate
   CalSet<Complex>* cs_;

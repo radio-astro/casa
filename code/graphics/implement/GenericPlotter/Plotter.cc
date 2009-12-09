@@ -188,8 +188,24 @@ void Plotter::setCanvas(PlotCanvasPtr canvas) {
         setCanvasLayout(PlotCanvasLayoutPtr(new PlotLayoutSingle(canvas)));
 }
 
-PlotLoggerPtr Plotter::logger() {
-    if(m_logger.null()) m_logger = new PlotLogger(this);
+LogMessage::Priority Plotter::logFilterMinPriority() const {
+    return logger()->filterMinPriority(); }
+void Plotter::setLogFilterMinPriority(PlotLogMessage::Priority minPriority) {
+    logger()->setFilterMinPriority(minPriority); }
+
+bool Plotter::logFilterEventFlag(int flag) const {
+    return logger()->filterEventFlag(flag); }
+void Plotter::setLogFilterEventFlag(int flag, bool on) {
+    logger()->setFilterEventFlag(flag, on); }
+
+int Plotter::logFilterEventFlags() const{ return logger()->filterEventFlags();}
+void Plotter::setLogFilterEventFlags(int flags) {
+    logger()->setFilterEventFlags(flags); }
+
+PlotLoggerPtr Plotter::logger() const {
+    if(m_logger.null())
+        const_cast<PlotLoggerPtr&>(m_logger) = new PlotLogger(
+                const_cast<Plotter*>(this));
     return m_logger;
 }
 

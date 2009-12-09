@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>531</width>
-    <height>435</height>
+    <width>256</width>
+    <height>565</height>
    </rect>
   </property>
   <property name="maximumSize" >
@@ -23,14 +23,14 @@
    <item row="0" column="0" >
     <widget class="QGroupBox" name="groupBox" >
      <property name="title" >
-      <string>Region Name</string>
+      <string>Region Groups</string>
      </property>
      <widget class="QComboBox" name="regName" >
       <property name="geometry" >
        <rect>
-        <x>11</x>
-        <y>49</y>
-        <width>241</width>
+        <x>10</x>
+        <y>20</y>
+        <width>221</width>
         <height>31</height>
        </rect>
       </property>
@@ -41,8 +41,8 @@
      <widget class="QPushButton" name="showOrHide" >
       <property name="geometry" >
        <rect>
-        <x>280</x>
-        <y>50</y>
+        <x>10</x>
+        <y>60</y>
         <width>75</width>
         <height>27</height>
        </rect>
@@ -57,8 +57,8 @@
      <widget class="QPushButton" name="deleteReg" >
       <property name="geometry" >
        <rect>
-        <x>380</x>
-        <y>50</y>
+        <x>150</x>
+        <y>60</y>
         <width>75</width>
         <height>27</height>
        </rect>
@@ -85,7 +85,7 @@
        <rect>
         <x>130</x>
         <y>40</y>
-        <width>374</width>
+        <width>101</width>
         <height>23</height>
        </rect>
       </property>
@@ -98,7 +98,7 @@
        <rect>
         <x>130</x>
         <y>70</y>
-        <width>374</width>
+        <width>101</width>
         <height>23</height>
        </rect>
       </property>
@@ -128,7 +128,7 @@
        <bool>false</bool>
       </property>
      </widget>
-     <widget class="QCheckBox" name="chanExt" >
+     <widget class="QLabel" name="chanExt" >
       <property name="geometry" >
        <rect>
         <x>10</x>
@@ -138,13 +138,13 @@
        </rect>
       </property>
       <property name="toolTip" >
-       <string>If checked region apply to all channels listed on the right</string>
+       <string>the channels this region applys to</string>
       </property>
       <property name="text" >
        <string>Channels:</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="polExt" >
+     <widget class="QLabel" name="polExt" >
       <property name="geometry" >
        <rect>
         <x>10</x>
@@ -154,41 +154,38 @@
        </rect>
       </property>
       <property name="toolTip" >
-       <string>if checked region apply to all polarizations listed on the right</string>
+       <string>the polarizations this region applys to</string>
       </property>
       <property name="text" >
        <string>Polarizations:</string>
       </property>
      </widget>
-    </widget>
-   </item>
-   <item row="2" column="0" >
-    <widget class="QGroupBox" name="groupBox_2" >
-     <property name="title" >
-      <string>Region Construction</string>
-     </property>
-     <widget class="QComboBox" name="drawing_mode" >
+     <widget class="QToolButton" name="helpButton" >
       <property name="geometry" >
        <rect>
-        <x>11</x>
-        <y>50</y>
-        <width>320</width>
-        <height>22</height>
+        <x>180</x>
+        <y>10</y>
+        <width>46</width>
+        <height>26</height>
        </rect>
       </property>
-      <property name="minimumContentsLength" >
-       <number>32</number>
-      </property>
-      <property name="frame" >
-       <bool>false</bool>
+      <property name="text" >
+       <string>Help</string>
       </property>
      </widget>
+    </widget>
+   </item>
+   <item row="3" column="0" >
+    <widget class="QGroupBox" name="groupBox_2" >
+     <property name="title" >
+      <string>Active Region</string>
+     </property>
      <widget class="QToolButton" name="resetregions" >
       <property name="geometry" >
        <rect>
-        <x>410</x>
-        <y>50</y>
-        <width>51</width>
+        <x>140</x>
+        <y>10</y>
+        <width>91</width>
         <height>26</height>
        </rect>
       </property>
@@ -199,50 +196,76 @@
        <string>Reset</string>
       </property>
      </widget>
+     <widget class="QPushButton" name="insertButton" >
+      <property name="geometry" >
+       <rect>
+        <x>20</x>
+        <y>70</y>
+        <width>101</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="toolTip" >
+       <string>Insert a region into this group</string>
+      </property>
+      <property name="text" >
+       <string>Insert</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="deleteButton" >
+      <property name="geometry" >
+       <rect>
+        <x>130</x>
+        <y>70</y>
+        <width>101</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="toolTip" >
+       <string>Delete a region from this group</string>
+      </property>
+      <property name="text" >
+       <string>Delete</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEdit" >
+      <property name="geometry" >
+       <rect>
+        <x>20</x>
+        <y>40</y>
+        <width>211</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="toolTip" >
+       <string>Current active region</string>
+      </property>
+     </widget>
+     <widget class="QToolButton" name="helpAct" >
+      <property name="geometry" >
+       <rect>
+        <x>90</x>
+        <y>10</y>
+        <width>46</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="text" >
+       <string>Help</string>
+      </property>
+     </widget>
     </widget>
    </item>
-   <item row="3" column="0" >
-    <widget class="QGroupBox" name="groupBox_3" >
+   <item row="2" column="0" >
+    <widget class="QGroupBox" name="groupBox_4" >
      <property name="title" >
       <string/>
      </property>
-     <widget class="QToolButton" name="loadFile" >
-      <property name="geometry" >
-       <rect>
-        <x>290</x>
-        <y>10</y>
-        <width>104</width>
-        <height>26</height>
-       </rect>
-      </property>
-      <property name="toolTip" >
-       <string>load a region from a file </string>
-      </property>
-      <property name="text" >
-       <string>Load from File</string>
-      </property>
-     </widget>
-     <widget class="QToolButton" name="saveRGNFile" >
-      <property name="geometry" >
-       <rect>
-        <x>160</x>
-        <y>10</y>
-        <width>89</width>
-        <height>26</height>
-       </rect>
-      </property>
-      <property name="toolTip" >
-       <string>save the region in to a file</string>
-      </property>
-      <property name="text" >
-       <string>Save to File</string>
-      </property>
-     </widget>
      <widget class="QToolButton" name="saveInImage" >
       <property name="geometry" >
        <rect>
-        <x>11</x>
-        <y>11</y>
+        <x>10</x>
+        <y>10</y>
         <width>103</width>
         <height>26</height>
        </rect>
@@ -254,17 +277,152 @@
        <string>Save in Image</string>
       </property>
      </widget>
+     <widget class="QToolButton" name="saveRGNFile" >
+      <property name="geometry" >
+       <rect>
+        <x>130</x>
+        <y>10</y>
+        <width>101</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="toolTip" >
+       <string>save the region in to a file</string>
+      </property>
+      <property name="text" >
+       <string>Save to File</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="polExt_2" >
+      <property name="geometry" >
+       <rect>
+        <x>20</x>
+        <y>40</y>
+        <width>91</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="toolTip" >
+       <string>the polarizations this region applys to</string>
+      </property>
+      <property name="text" >
+       <string>Region Name:</string>
+      </property>
+     </widget>
      <widget class="QLineEdit" name="savedName" >
       <property name="geometry" >
        <rect>
-        <x>10</x>
-        <y>60</y>
-        <width>361</width>
+        <x>110</x>
+        <y>40</y>
+        <width>121</width>
         <height>23</height>
        </rect>
       </property>
       <property name="toolTip" >
        <string>the name of the image region (to be saved or loaded)</string>
+      </property>
+     </widget>
+     <widget class="QToolButton" name="loadFile" >
+      <property name="geometry" >
+       <rect>
+        <x>130</x>
+        <y>70</y>
+        <width>103</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="toolTip" >
+       <string>load a region from a file </string>
+      </property>
+      <property name="text" >
+       <string>Load from File</string>
+      </property>
+     </widget>
+    </widget>
+   </item>
+   <item row="5" column="0" >
+    <widget class="QGroupBox" name="groupBox_3" >
+     <property name="toolTip" >
+      <string>Export regions to termianl</string>
+     </property>
+     <property name="title" >
+      <string/>
+     </property>
+     <widget class="QRadioButton" name="actOne" >
+      <property name="geometry" >
+       <rect>
+        <x>20</x>
+        <y>10</y>
+        <width>51</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="toolTip" >
+       <string>Select only the active region</string>
+      </property>
+      <property name="text" >
+       <string>One</string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="actGrp" >
+      <property name="geometry" >
+       <rect>
+        <x>90</x>
+        <y>10</y>
+        <width>61</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="toolTip" >
+       <string>Select regions in the active group</string>
+      </property>
+      <property name="text" >
+       <string>Group</string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="actAll" >
+      <property name="geometry" >
+       <rect>
+        <x>170</x>
+        <y>10</y>
+        <width>51</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="toolTip" >
+       <string>Select all shown regions</string>
+      </property>
+      <property name="text" >
+       <string>All</string>
+      </property>
+      <property name="checked" >
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="exportButton" >
+      <property name="geometry" >
+       <rect>
+        <x>150</x>
+        <y>40</y>
+        <width>75</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="text" >
+       <string>Export</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label" >
+      <property name="geometry" >
+       <rect>
+        <x>10</x>
+        <y>70</y>
+        <width>221</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="text" >
+       <string>demo only, will be removed</string>
       </property>
      </widget>
     </widget>

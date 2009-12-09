@@ -136,21 +136,21 @@ namespace asdm {
 	//////////////////////////////////////////////////////
 
 	string Parser::getString(const string &name, const string &tableName, const string &xmlDoc) 
-	throw(ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField == "")
-			throw new ConversionException("Error: Missing field \"" + 
+			throw  ConversionException("Error: Missing field \"" + 
 					name + "\" or invalid syntax",tableName);
 
 		return xmlField;
 	}
 
 	vector<string> Parser::get1DString(const string &name, const string &tableName, const string &xmlDoc)
-	throw(ConversionException) {
+	{
 		vector<string> x(2);
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField == "") {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 					name + "\": Invalid XML syntax", tableName);
 		}
 		StringTokenizer t(xmlField," ");
@@ -185,7 +185,7 @@ namespace asdm {
 	}
  
 	vector <vector<string> > Parser::get2DString(const string &name, const string &tableName, const string &xmlDoc)
-	throw(ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField == "") {
 			throw ConversionException("Error: Field \"" + 
@@ -231,7 +231,7 @@ namespace asdm {
 	}
  
 	vector <vector <vector<string> > > Parser::get3DString(const string &name, const string &tableName, const string &xmlDoc)
-	throw(ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField == "") {
 			throw ConversionException("Error: Field \"" + 
@@ -420,7 +420,7 @@ namespace asdm {
 		
 	
 	int Parser::getInteger(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
@@ -437,7 +437,7 @@ namespace asdm {
 	}
 
 	vector<int> Parser::get1DInteger(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -468,7 +468,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -477,7 +477,7 @@ namespace asdm {
 	}
 		
 	vector< vector<int> > Parser::get2DInteger(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -516,7 +516,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -525,7 +525,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<int> > > Parser::get3DInteger(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -569,7 +569,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -578,7 +578,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<int> > > >Parser::get4DInteger(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -628,7 +628,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -739,7 +739,7 @@ namespace asdm {
 		
 	
 	short Parser::getShort(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
@@ -756,7 +756,7 @@ namespace asdm {
 	}
 
 	vector<short> Parser::get1DShort(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -787,7 +787,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -796,7 +796,7 @@ namespace asdm {
 	}
 		
 	vector< vector<short> > Parser::get2DShort(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -835,7 +835,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -844,7 +844,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<short> > > Parser::get3DShort(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -888,7 +888,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -897,7 +897,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<short> > > >Parser::get4DShort(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -947,7 +947,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -1058,7 +1058,7 @@ namespace asdm {
 		
 	
 	long long Parser::getLong(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
@@ -1075,7 +1075,7 @@ namespace asdm {
 	}
 
 	vector<long long> Parser::get1DLong(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -1106,7 +1106,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -1115,7 +1115,7 @@ namespace asdm {
 	}
 		
 	vector< vector<long long> > Parser::get2DLong(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -1154,7 +1154,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -1163,7 +1163,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<long long> > > Parser::get3DLong(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -1207,7 +1207,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -1216,7 +1216,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<long long> > > >Parser::get4DLong(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -1266,7 +1266,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -1377,7 +1377,7 @@ namespace asdm {
 		
 	
 	char Parser::getByte(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
@@ -1394,7 +1394,7 @@ namespace asdm {
 	}
 
 	vector<char> Parser::get1DByte(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -1425,7 +1425,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -1434,7 +1434,7 @@ namespace asdm {
 	}
 		
 	vector< vector<char> > Parser::get2DByte(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -1473,7 +1473,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -1482,7 +1482,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<char> > > Parser::get3DByte(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -1526,7 +1526,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -1535,7 +1535,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<char> > > >Parser::get4DByte(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -1585,7 +1585,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -1696,7 +1696,7 @@ namespace asdm {
 		
 	
 	float Parser::getFloat(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
@@ -1713,7 +1713,7 @@ namespace asdm {
 	}
 
 	vector<float> Parser::get1DFloat(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -1744,7 +1744,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -1753,7 +1753,7 @@ namespace asdm {
 	}
 		
 	vector< vector<float> > Parser::get2DFloat(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -1792,7 +1792,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -1801,7 +1801,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<float> > > Parser::get3DFloat(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -1845,7 +1845,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -1854,7 +1854,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<float> > > >Parser::get4DFloat(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -1904,7 +1904,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -2015,7 +2015,7 @@ namespace asdm {
 		
 	
 	double Parser::getDouble(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
@@ -2032,7 +2032,7 @@ namespace asdm {
 	}
 
 	vector<double> Parser::get1DDouble(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -2063,7 +2063,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -2072,7 +2072,7 @@ namespace asdm {
 	}
 		
 	vector< vector<double> > Parser::get2DDouble(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -2111,7 +2111,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -2120,7 +2120,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<double> > > Parser::get3DDouble(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -2164,7 +2164,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -2173,7 +2173,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<double> > > >Parser::get4DDouble(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -2223,7 +2223,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -2334,7 +2334,7 @@ namespace asdm {
 		
 	
 	unsigned char Parser::getCharacter(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
@@ -2345,7 +2345,7 @@ namespace asdm {
 	}
 
 	vector<unsigned char> Parser::get1DCharacter(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -2376,7 +2376,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -2385,7 +2385,7 @@ namespace asdm {
 	}
 		
 	vector< vector<unsigned char> > Parser::get2DCharacter(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -2424,7 +2424,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -2433,7 +2433,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<unsigned char> > > Parser::get3DCharacter(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -2477,7 +2477,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -2486,7 +2486,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<unsigned char> > > >Parser::get4DCharacter(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -2536,7 +2536,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -2647,7 +2647,7 @@ namespace asdm {
 		
 	
 	bool Parser::getBoolean(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
@@ -2664,7 +2664,7 @@ namespace asdm {
 	}
 
 	vector<bool> Parser::get1DBoolean(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -2695,7 +2695,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -2704,7 +2704,7 @@ namespace asdm {
 	}
 		
 	vector< vector<bool> > Parser::get2DBoolean(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -2743,7 +2743,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -2752,7 +2752,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<bool> > > Parser::get3DBoolean(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -2796,7 +2796,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -2805,7 +2805,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<bool> > > >Parser::get4DBoolean(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -2855,7 +2855,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -3070,18 +3070,26 @@ namespace asdm {
 		
 	
 	Angle Parser::getAngle(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return Angle (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<Angle> Parser::get1DAngle(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -3112,7 +3120,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -3121,7 +3129,7 @@ namespace asdm {
 	}
 		
 	vector< vector<Angle> > Parser::get2DAngle(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -3160,7 +3168,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -3169,7 +3177,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<Angle> > > Parser::get3DAngle(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -3213,7 +3221,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -3222,7 +3230,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<Angle> > > >Parser::get4DAngle(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -3272,7 +3280,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -3383,18 +3391,26 @@ namespace asdm {
 		
 	
 	AngularRate Parser::getAngularRate(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return AngularRate (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<AngularRate> Parser::get1DAngularRate(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -3425,7 +3441,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -3434,7 +3450,7 @@ namespace asdm {
 	}
 		
 	vector< vector<AngularRate> > Parser::get2DAngularRate(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -3473,7 +3489,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -3482,7 +3498,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<AngularRate> > > Parser::get3DAngularRate(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -3526,7 +3542,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -3535,7 +3551,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<AngularRate> > > >Parser::get4DAngularRate(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -3585,7 +3601,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -3696,18 +3712,26 @@ namespace asdm {
 		
 	
 	ArrayTime Parser::getArrayTime(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return ArrayTime (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<ArrayTime> Parser::get1DArrayTime(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -3738,7 +3762,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -3747,7 +3771,7 @@ namespace asdm {
 	}
 		
 	vector< vector<ArrayTime> > Parser::get2DArrayTime(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -3786,7 +3810,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -3795,7 +3819,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<ArrayTime> > > Parser::get3DArrayTime(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -3839,7 +3863,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -3848,7 +3872,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<ArrayTime> > > >Parser::get4DArrayTime(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -3898,7 +3922,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -4009,7 +4033,7 @@ namespace asdm {
 		
 	
 	ArrayTimeInterval Parser::getArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
@@ -4023,7 +4047,7 @@ namespace asdm {
 	}
 
 	vector<ArrayTimeInterval> Parser::get1DArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -4056,7 +4080,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -4065,7 +4089,7 @@ namespace asdm {
 	}
 		
 	vector< vector<ArrayTimeInterval> > Parser::get2DArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -4106,7 +4130,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -4115,7 +4139,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<ArrayTimeInterval> > > Parser::get3DArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -4161,7 +4185,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -4170,7 +4194,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<ArrayTimeInterval> > > >Parser::get4DArrayTimeInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -4222,7 +4246,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -4333,18 +4357,26 @@ namespace asdm {
 		
 	
 	Complex Parser::getComplex(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return Complex (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<Complex> Parser::get1DComplex(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -4375,7 +4407,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -4384,7 +4416,7 @@ namespace asdm {
 	}
 		
 	vector< vector<Complex> > Parser::get2DComplex(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -4423,7 +4455,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -4432,7 +4464,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<Complex> > > Parser::get3DComplex(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -4476,7 +4508,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -4485,7 +4517,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<Complex> > > >Parser::get4DComplex(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -4535,7 +4567,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -4646,18 +4678,26 @@ namespace asdm {
 		
 	
 	Entity Parser::getEntity(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return Entity (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<Entity> Parser::get1DEntity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -4688,7 +4728,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -4697,7 +4737,7 @@ namespace asdm {
 	}
 		
 	vector< vector<Entity> > Parser::get2DEntity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -4736,7 +4776,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -4745,7 +4785,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<Entity> > > Parser::get3DEntity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -4789,7 +4829,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -4798,7 +4838,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<Entity> > > >Parser::get4DEntity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -4848,7 +4888,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -4959,18 +4999,26 @@ namespace asdm {
 		
 	
 	EntityId Parser::getEntityId(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return EntityId (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<EntityId> Parser::get1DEntityId(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -5001,7 +5049,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -5010,7 +5058,7 @@ namespace asdm {
 	}
 		
 	vector< vector<EntityId> > Parser::get2DEntityId(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -5049,7 +5097,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -5058,7 +5106,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<EntityId> > > Parser::get3DEntityId(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -5102,7 +5150,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -5111,7 +5159,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<EntityId> > > >Parser::get4DEntityId(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -5161,7 +5209,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -5272,18 +5320,26 @@ namespace asdm {
 		
 	
 	EntityRef Parser::getEntityRef(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return EntityRef (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<EntityRef> Parser::get1DEntityRef(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -5314,7 +5370,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -5323,7 +5379,7 @@ namespace asdm {
 	}
 		
 	vector< vector<EntityRef> > Parser::get2DEntityRef(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -5362,7 +5418,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -5371,7 +5427,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<EntityRef> > > Parser::get3DEntityRef(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -5415,7 +5471,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -5424,7 +5480,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<EntityRef> > > >Parser::get4DEntityRef(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -5474,7 +5530,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -5585,18 +5641,26 @@ namespace asdm {
 		
 	
 	Flux Parser::getFlux(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return Flux (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<Flux> Parser::get1DFlux(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -5627,7 +5691,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -5636,7 +5700,7 @@ namespace asdm {
 	}
 		
 	vector< vector<Flux> > Parser::get2DFlux(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -5675,7 +5739,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -5684,7 +5748,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<Flux> > > Parser::get3DFlux(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -5728,7 +5792,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -5737,7 +5801,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<Flux> > > >Parser::get4DFlux(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -5787,7 +5851,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -5898,18 +5962,26 @@ namespace asdm {
 		
 	
 	Frequency Parser::getFrequency(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return Frequency (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<Frequency> Parser::get1DFrequency(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -5940,7 +6012,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -5949,7 +6021,7 @@ namespace asdm {
 	}
 		
 	vector< vector<Frequency> > Parser::get2DFrequency(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -5988,7 +6060,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -5997,7 +6069,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<Frequency> > > Parser::get3DFrequency(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -6041,7 +6113,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -6050,7 +6122,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<Frequency> > > >Parser::get4DFrequency(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -6100,7 +6172,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -6211,18 +6283,26 @@ namespace asdm {
 		
 	
 	Humidity Parser::getHumidity(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return Humidity (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<Humidity> Parser::get1DHumidity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -6253,7 +6333,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -6262,7 +6342,7 @@ namespace asdm {
 	}
 		
 	vector< vector<Humidity> > Parser::get2DHumidity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -6301,7 +6381,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -6310,7 +6390,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<Humidity> > > Parser::get3DHumidity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -6354,7 +6434,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -6363,7 +6443,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<Humidity> > > >Parser::get4DHumidity(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -6413,7 +6493,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -6524,18 +6604,26 @@ namespace asdm {
 		
 	
 	Interval Parser::getInterval(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return Interval (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<Interval> Parser::get1DInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -6566,7 +6654,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -6575,7 +6663,7 @@ namespace asdm {
 	}
 		
 	vector< vector<Interval> > Parser::get2DInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -6614,7 +6702,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -6623,7 +6711,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<Interval> > > Parser::get3DInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -6667,7 +6755,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -6676,7 +6764,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<Interval> > > >Parser::get4DInterval(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -6726,7 +6814,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -6837,18 +6925,26 @@ namespace asdm {
 		
 	
 	Length Parser::getLength(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return Length (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<Length> Parser::get1DLength(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -6879,7 +6975,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -6888,7 +6984,7 @@ namespace asdm {
 	}
 		
 	vector< vector<Length> > Parser::get2DLength(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -6927,7 +7023,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -6936,7 +7032,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<Length> > > Parser::get3DLength(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -6980,7 +7076,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -6989,7 +7085,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<Length> > > >Parser::get4DLength(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -7039,7 +7135,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -7150,18 +7246,26 @@ namespace asdm {
 		
 	
 	Pressure Parser::getPressure(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return Pressure (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<Pressure> Parser::get1DPressure(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -7192,7 +7296,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -7201,7 +7305,7 @@ namespace asdm {
 	}
 		
 	vector< vector<Pressure> > Parser::get2DPressure(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -7240,7 +7344,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -7249,7 +7353,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<Pressure> > > Parser::get3DPressure(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -7293,7 +7397,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -7302,7 +7406,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<Pressure> > > >Parser::get4DPressure(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -7352,7 +7456,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -7463,18 +7567,26 @@ namespace asdm {
 		
 	
 	Speed Parser::getSpeed(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return Speed (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<Speed> Parser::get1DSpeed(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -7505,7 +7617,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -7514,7 +7626,7 @@ namespace asdm {
 	}
 		
 	vector< vector<Speed> > Parser::get2DSpeed(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -7553,7 +7665,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -7562,7 +7674,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<Speed> > > Parser::get3DSpeed(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -7606,7 +7718,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -7615,7 +7727,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<Speed> > > >Parser::get4DSpeed(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -7665,7 +7777,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -7809,7 +7921,7 @@ namespace asdm {
 		
 	
 	Tag Parser::getTag(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
@@ -7826,7 +7938,7 @@ namespace asdm {
 	}
 
 	vector<Tag> Parser::get1DTag(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -7857,7 +7969,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -7866,7 +7978,7 @@ namespace asdm {
 	}
 		
 	vector< vector<Tag> > Parser::get2DTag(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -7905,7 +8017,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -7914,7 +8026,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<Tag> > > Parser::get3DTag(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -7958,7 +8070,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -7967,7 +8079,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<Tag> > > >Parser::get4DTag(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -8017,7 +8129,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -8128,18 +8240,26 @@ namespace asdm {
 		
 	
 	Temperature Parser::getTemperature(const string &name, const string &tableName, const string &xmlDoc) 
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0)
 			throw ConversionException("Error: Missing field \"" + 
 				name + "\" or invalid syntax",tableName);
 	
+        try {	
 			return Temperature (xmlField);
+		}
+		catch (InvalidArgumentException e) {
+			throw ConversionException("Error: message was '"+ 
+			                           e.getMessage()+
+			                           "'",
+			                           tableName);
+		}
 		
 	}
 
 	vector<Temperature> Parser::get1DTemperature(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -8170,7 +8290,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -8179,7 +8299,7 @@ namespace asdm {
 	}
 		
 	vector< vector<Temperature> > Parser::get2DTemperature(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -8218,7 +8338,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -8227,7 +8347,7 @@ namespace asdm {
 	}	
 	
 	vector< vector< vector<Temperature> > > Parser::get3DTemperature(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -8271,7 +8391,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -8280,7 +8400,7 @@ namespace asdm {
 	}
 	
 	vector< vector< vector< vector<Temperature> > > >Parser::get4DTemperature(const string &name, const string &tableName, const string &xmlDoc)
-	throw (ConversionException) {
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -8330,7 +8450,7 @@ namespace asdm {
 			throw ConversionException("Error: Field \"" + 
 				name + "\": " + e.getMessage(), tableName);
 		} catch (OutOfBoundsException e) {
-			throw new ConversionException("Error: Field \"" + 
+			throw  ConversionException("Error: Field \"" + 
 				name + "\": Unexpected end of string", tableName);
 		} catch (TagFormatException e) {
 			throw ConversionException("Error: Field \"" + 
@@ -8485,7 +8605,7 @@ namespace asdm {
 		
     
 	vector<int>& Parser::get1DIntegerFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<int>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -8527,7 +8647,7 @@ namespace asdm {
 	
 	 
 	vector <vector<int> >& Parser::get2DIntegerFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<int> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -8580,7 +8700,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<int> > >& Parser::get3DIntegerFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<int> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -8644,7 +8764,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<int> > > >& Parser::get4DIntegerFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<int> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -8852,7 +8972,7 @@ namespace asdm {
 		
     
 	vector<short>& Parser::get1DShortFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<short>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -8894,7 +9014,7 @@ namespace asdm {
 	
 	 
 	vector <vector<short> >& Parser::get2DShortFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<short> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -8947,7 +9067,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<short> > >& Parser::get3DShortFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<short> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -9011,7 +9131,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<short> > > >& Parser::get4DShortFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<short> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -9219,7 +9339,7 @@ namespace asdm {
 		
     
 	vector<long long>& Parser::get1DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<long long>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -9261,7 +9381,7 @@ namespace asdm {
 	
 	 
 	vector <vector<long long> >& Parser::get2DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<long long> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -9314,7 +9434,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<long long> > >& Parser::get3DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<long long> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -9378,7 +9498,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<long long> > > >& Parser::get4DLongFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<long long> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -9586,7 +9706,7 @@ namespace asdm {
 		
     
 	vector<char>& Parser::get1DByteFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<char>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -9628,7 +9748,7 @@ namespace asdm {
 	
 	 
 	vector <vector<char> >& Parser::get2DByteFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<char> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -9681,7 +9801,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<char> > >& Parser::get3DByteFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<char> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -9745,7 +9865,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<char> > > >& Parser::get4DByteFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<char> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -9953,7 +10073,7 @@ namespace asdm {
 		
     
 	vector<float>& Parser::get1DFloatFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<float>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -9995,7 +10115,7 @@ namespace asdm {
 	
 	 
 	vector <vector<float> >& Parser::get2DFloatFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<float> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -10048,7 +10168,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<float> > >& Parser::get3DFloatFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<float> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -10112,7 +10232,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<float> > > >& Parser::get4DFloatFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<float> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -10320,7 +10440,7 @@ namespace asdm {
 		
     
 	vector<double>& Parser::get1DDoubleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<double>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -10362,7 +10482,7 @@ namespace asdm {
 	
 	 
 	vector <vector<double> >& Parser::get2DDoubleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<double> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -10415,7 +10535,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<double> > >& Parser::get3DDoubleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<double> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -10479,7 +10599,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<double> > > >& Parser::get4DDoubleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<double> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -10687,7 +10807,7 @@ namespace asdm {
 		
     
 	vector<unsigned char>& Parser::get1DCharacterFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<unsigned char>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -10729,7 +10849,7 @@ namespace asdm {
 	
 	 
 	vector <vector<unsigned char> >& Parser::get2DCharacterFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<unsigned char> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -10782,7 +10902,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<unsigned char> > >& Parser::get3DCharacterFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<unsigned char> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -10846,7 +10966,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<unsigned char> > > >& Parser::get4DCharacterFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<unsigned char> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -11054,7 +11174,7 @@ namespace asdm {
 		
     
 	vector<bool>& Parser::get1DBooleanFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<bool>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -11096,7 +11216,7 @@ namespace asdm {
 	
 	 
 	vector <vector<bool> >& Parser::get2DBooleanFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<bool> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -11149,7 +11269,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<bool> > >& Parser::get3DBooleanFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<bool> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -11213,7 +11333,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<bool> > > >& Parser::get4DBooleanFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<bool> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -11424,7 +11544,7 @@ namespace asdm {
 		
     
 	vector<Angle>& Parser::get1DAngleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Angle>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -11466,7 +11586,7 @@ namespace asdm {
 	
 	 
 	vector <vector<Angle> >& Parser::get2DAngleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Angle> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -11519,7 +11639,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<Angle> > >& Parser::get3DAngleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Angle> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -11583,7 +11703,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<Angle> > > >& Parser::get4DAngleFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<Angle> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -11791,7 +11911,7 @@ namespace asdm {
 		
     
 	vector<AngularRate>& Parser::get1DAngularRateFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<AngularRate>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -11833,7 +11953,7 @@ namespace asdm {
 	
 	 
 	vector <vector<AngularRate> >& Parser::get2DAngularRateFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<AngularRate> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -11886,7 +12006,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<AngularRate> > >& Parser::get3DAngularRateFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<AngularRate> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -11950,7 +12070,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<AngularRate> > > >& Parser::get4DAngularRateFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<AngularRate> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -12158,7 +12278,7 @@ namespace asdm {
 		
     
 	vector<ArrayTime>& Parser::get1DArrayTimeFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<ArrayTime>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -12200,7 +12320,7 @@ namespace asdm {
 	
 	 
 	vector <vector<ArrayTime> >& Parser::get2DArrayTimeFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<ArrayTime> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -12253,7 +12373,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<ArrayTime> > >& Parser::get3DArrayTimeFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<ArrayTime> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -12317,7 +12437,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<ArrayTime> > > >& Parser::get4DArrayTimeFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<ArrayTime> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -12540,7 +12660,7 @@ namespace asdm {
 		
     
 	vector<Flux>& Parser::get1DFluxFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Flux>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -12582,7 +12702,7 @@ namespace asdm {
 	
 	 
 	vector <vector<Flux> >& Parser::get2DFluxFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Flux> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -12635,7 +12755,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<Flux> > >& Parser::get3DFluxFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Flux> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -12699,7 +12819,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<Flux> > > >& Parser::get4DFluxFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<Flux> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -12907,7 +13027,7 @@ namespace asdm {
 		
     
 	vector<Frequency>& Parser::get1DFrequencyFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Frequency>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -12949,7 +13069,7 @@ namespace asdm {
 	
 	 
 	vector <vector<Frequency> >& Parser::get2DFrequencyFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Frequency> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -13002,7 +13122,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<Frequency> > >& Parser::get3DFrequencyFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Frequency> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -13066,7 +13186,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<Frequency> > > >& Parser::get4DFrequencyFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<Frequency> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -13274,7 +13394,7 @@ namespace asdm {
 		
     
 	vector<Humidity>& Parser::get1DHumidityFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Humidity>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -13316,7 +13436,7 @@ namespace asdm {
 	
 	 
 	vector <vector<Humidity> >& Parser::get2DHumidityFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Humidity> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -13369,7 +13489,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<Humidity> > >& Parser::get3DHumidityFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Humidity> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -13433,7 +13553,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<Humidity> > > >& Parser::get4DHumidityFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<Humidity> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -13641,7 +13761,7 @@ namespace asdm {
 		
     
 	vector<Interval>& Parser::get1DIntervalFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Interval>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -13683,7 +13803,7 @@ namespace asdm {
 	
 	 
 	vector <vector<Interval> >& Parser::get2DIntervalFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Interval> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -13736,7 +13856,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<Interval> > >& Parser::get3DIntervalFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Interval> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -13800,7 +13920,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<Interval> > > >& Parser::get4DIntervalFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<Interval> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -14008,7 +14128,7 @@ namespace asdm {
 		
     
 	vector<Length>& Parser::get1DLengthFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Length>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -14050,7 +14170,7 @@ namespace asdm {
 	
 	 
 	vector <vector<Length> >& Parser::get2DLengthFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Length> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -14103,7 +14223,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<Length> > >& Parser::get3DLengthFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Length> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -14167,7 +14287,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<Length> > > >& Parser::get4DLengthFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<Length> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -14375,7 +14495,7 @@ namespace asdm {
 		
     
 	vector<Pressure>& Parser::get1DPressureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Pressure>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -14417,7 +14537,7 @@ namespace asdm {
 	
 	 
 	vector <vector<Pressure> >& Parser::get2DPressureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Pressure> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -14470,7 +14590,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<Pressure> > >& Parser::get3DPressureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Pressure> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -14534,7 +14654,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<Pressure> > > >& Parser::get4DPressureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<Pressure> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -14742,7 +14862,7 @@ namespace asdm {
 		
     
 	vector<Speed>& Parser::get1DSpeedFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Speed>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -14784,7 +14904,7 @@ namespace asdm {
 	
 	 
 	vector <vector<Speed> >& Parser::get2DSpeedFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Speed> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -14837,7 +14957,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<Speed> > >& Parser::get3DSpeedFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Speed> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -14901,7 +15021,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<Speed> > > >& Parser::get4DSpeedFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<Speed> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -15112,7 +15232,7 @@ namespace asdm {
 		
     
 	vector<Temperature>& Parser::get1DTemperatureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector<Temperature>& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -15154,7 +15274,7 @@ namespace asdm {
 	
 	 
 	vector <vector<Temperature> >& Parser::get2DTemperatureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector<Temperature> >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -15207,7 +15327,7 @@ namespace asdm {
 		
  	
 	vector <vector <vector<Temperature> > >& Parser::get3DTemperatureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector <vector <vector<Temperature> > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 
@@ -15271,7 +15391,7 @@ namespace asdm {
 	
 	
 	vector <vector <vector <vector<Temperature> > > >& Parser::get4DTemperatureFromBase64(const string &name, const string &tableName, const string &xmlDoc, vector< vector <vector <vector<Temperature> > > >& attribute)
-	throw (ConversionException){
+	{
 		string xmlField = Parser::getField(xmlDoc,name);
 		if (xmlField.length() == 0) {
 			throw ConversionException("Error: Field \"" + 

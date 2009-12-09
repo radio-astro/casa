@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CDataContent::version() {
+	return DataContentMod::version;
+	}
+	
+string CDataContent::revision () {
+	return DataContentMod::revision;
+}
+
+unsigned int CDataContent::size() {
+	return 7;
+	}
+	
 	
 const std::string& CDataContent::sCROSS_DATA = "CROSS_DATA";
 	
@@ -52,7 +65,7 @@ const std::string& CDataContent::sWEIGHTS = "WEIGHTS";
 	
 const std::string& CDataContent::sFLAGS = "FLAGS";
 	
-const std::vector<std::string> CDataContent::sDataContentSet() {
+const std::vector<std::string> CDataContent::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CDataContent::sCROSS_DATA);
@@ -71,45 +84,6 @@ const std::vector<std::string> CDataContent::sDataContentSet() {
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CDataContent::hCROSS_DATA = "Cross-correlation data";
-	
-const std::string& CDataContent::hAUTO_DATA = "Auto-correlation data";
-	
-const std::string& CDataContent::hZERO_LAGS = "Zero-lag data";
-	
-const std::string& CDataContent::hACTUAL_TIMES = ":Actual times (mid points of integrations)";
-	
-const std::string& CDataContent::hACTUAL_DURATIONS = "Actual duration of integrations";
-	
-const std::string& CDataContent::hWEIGHTS = "Weights";
-	
-const std::string& CDataContent::hFLAGS = "Baseband based flags";
-	
-const std::vector<std::string> CDataContent::hDataContentSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CDataContent::hCROSS_DATA);
-    
-    enumSet.insert(enumSet.end(), CDataContent::hAUTO_DATA);
-    
-    enumSet.insert(enumSet.end(), CDataContent::hZERO_LAGS);
-    
-    enumSet.insert(enumSet.end(), CDataContent::hACTUAL_TIMES);
-    
-    enumSet.insert(enumSet.end(), CDataContent::hACTUAL_DURATIONS);
-    
-    enumSet.insert(enumSet.end(), CDataContent::hWEIGHTS);
-    
-    enumSet.insert(enumSet.end(), CDataContent::hFLAGS);
-        
-    return enumSet;
-}
-   	
 
 std::string CDataContent::name(const DataContentMod::DataContent& f) {
     switch (f) {
@@ -136,40 +110,9 @@ std::string CDataContent::name(const DataContentMod::DataContent& f) {
       return CDataContent::sFLAGS;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CDataContent::help(const DataContentMod::DataContent& f) {
-    switch (f) {
-    
-    case DataContentMod::CROSS_DATA:
-      return CDataContent::hCROSS_DATA;
-    
-    case DataContentMod::AUTO_DATA:
-      return CDataContent::hAUTO_DATA;
-    
-    case DataContentMod::ZERO_LAGS:
-      return CDataContent::hZERO_LAGS;
-    
-    case DataContentMod::ACTUAL_TIMES:
-      return CDataContent::hACTUAL_TIMES;
-    
-    case DataContentMod::ACTUAL_DURATIONS:
-      return CDataContent::hACTUAL_DURATIONS;
-    
-    case DataContentMod::WEIGHTS:
-      return CDataContent::hWEIGHTS;
-    
-    case DataContentMod::FLAGS:
-      return CDataContent::hFLAGS;
-    	
-    }
-    return std::string("");
-}
-   	
 
 DataContentMod::DataContent CDataContent::newDataContent(const std::string& name) {
 		
@@ -238,12 +181,10 @@ DataContentMod::DataContent CDataContent::literal(const std::string& name) {
 }
 
 DataContentMod::DataContent CDataContent::from_int(unsigned int i) {
-	vector<string> names = sDataContentSet();
-	if (i >= names.size()) throw badInt(i);
-	return newDataContent(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newDataContent(names_.at(i));
 }
-
-	
 
 string CDataContent::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'DataContent'.";

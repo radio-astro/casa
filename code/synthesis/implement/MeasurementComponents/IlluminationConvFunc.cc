@@ -56,7 +56,7 @@ namespace casa{
 					 )
   {
     DComplex Kij;
-    Double Rij,u,v,dra,ddec,s;
+    Double Rij,u,v,dra,ddec,s, MY_PI=M_PI;
     //    Double cpa,spa;
     //
     // If the PA of the convolution function changed, set up a new
@@ -82,7 +82,7 @@ namespace casa{
     ddec=(*decoff1 - *decoff2);
     Rij = (dra*dra + ddec*ddec)*s/2.0;
     //    Kij = Complex(0,M_PI*(u*(*raoff1+*raoff2) + v*(*decoff1+*decoff2)));
-    Kij = Complex(0,M_PI*(u*(*raoff1+*raoff2) + v*(*decoff1+*decoff2)));
+    Kij = Complex(0,MY_PI*(u*(*raoff1+*raoff2) + v*(*decoff1+*decoff2)));
     //    Eij0 = (u*u + v*v)*M_PI*M_PI/s;
 
     //    Rij = (dra*dra + ddec*ddec);
@@ -117,8 +117,8 @@ namespace casa{
         //
 	// Following 2 lines when Rij=0
 	//
-	dweight1 = (Complex(0,M_PI*u));//*weight;
-	dweight2 = (Complex(0,M_PI*v));//*weight;
+	dweight1 = (Complex(0,MY_PI*u));//*weight;
+	dweight2 = (Complex(0,MY_PI*v));//*weight;
       }
     //    cout << "Eij: " << weight << " " << dweight1 << " " << dweight2 << endl;
     return 1.0;
@@ -140,7 +140,7 @@ namespace casa{
 	    v *= v;
 #ifdef USETABLES	      
 	    area += ExpTable(-(u+v)/(4*sigma));
-#elif
+#else
 	    area += exp(-(u+v)/(4*sigma));
 #endif	      
 	  }

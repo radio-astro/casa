@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="applycal">
+<task type="function" name="applycal" category="calibration">
 <shortdescription>Apply calibrations solutions(s) to data</shortdescription>
 <description>
 Applycal reads the specified gain calibration tables, applies

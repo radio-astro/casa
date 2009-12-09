@@ -3,7 +3,11 @@ from vishead_util import *
 import re
 import shutil
 
-def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None, ptcs=None):
+def fixvis(vis, outputvis, fldids=None, refcode=None
+           #, proj=None, ptcs=None
+           ):
+    proj=None
+    ptcs=None
     casalog.origin('fixvis')
     for arg in ('vis', 'outputvis', 'fldids', 'refcode', 'proj', 'ptcs'):
         casalog.post("parameter %9s: %s" % (arg, eval(arg)), 'DEBUG1')
@@ -11,7 +15,6 @@ def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None, ptcs=None):
     if refcode or proj:
         badcsys = False
         csys = cs.newcoordsys(True)
-        tb.open(vis)
 
         if refcode:
             refcodes = csys.referencecode('dir', True)
@@ -28,30 +31,40 @@ def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None, ptcs=None):
                 badcsys = True
 
         csys.done()
-        tb.close()
         if badcsys:
             return
 
     if not refcode:   # measures must be told to use the one in vis.
-        tb.open(vis)
-        refcode = tb.getcolkeyword('UVW', 'MEASINFO')['Ref']
-        tb.close()
+        # UVW is often mislabelled as ITRF when it is really J2000.
+        #refcode = tb.getcolkeyword('UVW', 'MEASINFO')['Ref']
+
+        # Because of that bug, it is better to make UVW have the same frame as
+        # PHASE_DIR.  imager assumes that anyway.
+        try:
+            tb.open(vis + '/FIELD')
+            refcode = tb.getcolkeyword('PHASE_DIR', 'MEASINFO')['Ref']
+            tb.close()
+        except Exception, instance:
+            casalog.post("*** Error \'%s\' getting the reference frame from PHASE_DIR of %s/FIELD." % (instance, vis),
+                         'SEVERE')
+            return
+            
 
     if outputvis != vis:
         try:
             #if os.path.isdir(outputvis):
             #    shutil.
             shutil.copytree(vis, outputvis)
-            vis = outputvis
         except Exception, instance:
             casalog.post("*** Error %s copying %s to %s." % (instance,
                                                              vis, outputvis),
                          'SEVERE')
             return
+        vis = outputvis
     
     try:
         # Get field IDs before opening the ms so that tb doesn't interfere with
-        # ms.
+        # im.
         allflds = getput_keyw('get', vis, ['FIELD', 'NAME'], '')[0]
 
         # getput_keyw('get', vis, ['FIELD', 'PHASE_DIR'], '')   
@@ -89,9 +102,13 @@ def fixvis(vis, outputvis, fldids=None, refcode=None, proj=None, ptcs=None):
                     fldids[i] = i
 
         casalog.post("fldid vector: " + str(fldids), 'DEBUG1' )
-        ms.open(vis, nomodify=False)
-        ms.calcuvw(fldids, refcode)
-        ms.close()        
+
+        # We don't really want to create or use scratch columns, but im will
+        # open vis read-only unless usescratch is set to True.
+        im.open(vis, usescratch=True)
+        
+        im.calcuvw(fldids, refcode)
+        im.close()
     except Exception, instance:
         casalog.post('*** Error *** ' + str(instance), 'SEVERE')
     return

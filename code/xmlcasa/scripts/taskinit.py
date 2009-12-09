@@ -1,5 +1,23 @@
 import casac
+import inspect
+import sys
 import os
+
+def __taskinit_setlogfile( logger ) :
+	####
+	#### needed to allow pushing of the global 'casa' state dictionary
+	####
+	a=inspect.stack()
+	stacklevel=0    
+	for k in range(len(a)):
+		if a[k][1] == "<string>":
+			stacklevel=k
+
+	myf=sys._getframe(stacklevel).f_globals
+
+	if myf.has_key('casa') and myf['casa'].has_key('files') and myf['casa']['files'].has_key('logfile') :
+		logger.setlogfile(myf['casa']['files']['logfile'])
+
 
 #
 ##allow globals for taskby default
@@ -17,6 +35,8 @@ tptool = casac.homefinder.find_home_by_name('tableplotHome')
 tp = tptool.create()
 mptool = casac.homefinder.find_home_by_name('msplotHome')
 mp = mptool.create()
+pmtool = casac.homefinder.find_home_by_name('plotmsHome')
+pm = pmtool.create()
 cptool = casac.homefinder.find_home_by_name('calplotHome')
 cp = cptool.create()
 tbtool = casac.homefinder.find_home_by_name('tableHome')
@@ -52,6 +72,7 @@ vftask = vftaskhome.create()
 vlafiller=vftask.fill
 loghome =  casac.homefinder.find_home_by_name('logsinkHome')
 casalog = loghome.create()
+__taskinit_setlogfile(casalog)
 casalog.setglobal(True)
 attool = casac.homefinder.find_home_by_name('atmosphereHome')
 at = attool.create()
@@ -230,16 +251,15 @@ def announce_async_task(taskname):
 	casalog.origin(taskname)
 	casalog.post('')
 	casalog.post('###############################################')
-	casalog.post('###  Begin Task: " + taskname + " ###')
+	casalog.post('###  Begin Task: ' + taskname + ' ' * (27 - len(taskname)) + '###')
 	casalog.post("")
 	casalog.post("Use: ")
-	casalog.post("      tm.abort(return_value)    # to abort the asynchronous task ")
 	casalog.post("      tm.retrieve(return_value) # to retrieve the status")
 	casalog.post("")
 	
 def write_task_obit(taskname):
 	"""Eulogize the task in the logger."""
-	casalog.post('###  End Task: ' + taskname + '  ###')
+	casalog.post('###  End Task: ' + taskname + ' ' * (29 - len(taskname)) + '###')
 	casalog.post('###############################################')
 	casalog.post('')
 

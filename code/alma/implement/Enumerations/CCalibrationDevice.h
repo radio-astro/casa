@@ -42,20 +42,38 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the CalibrationDevice enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace CalibrationDeviceMod
 {
+  //! CalibrationDevice.
+  //! Devices that may be inserted in the optical path in front of the receiver.
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum CalibrationDevice
   { 
-    AMBIENT_LOAD ,
-    COLD_LOAD ,
-    HOT_LOAD ,
-    NOISE_TUBE_LOAD ,
-    QUARTER_WAVE_PLATE ,
-    SOLAR_FILTER ,
-    NONE 
+    AMBIENT_LOAD /*!< An absorbing load at the ambient temperature. */
+     ,
+    COLD_LOAD /*!< A cooled absorbing load. */
+     ,
+    HOT_LOAD /*!< A heated absorbing load. */
+     ,
+    NOISE_TUBE_LOAD /*!< A noise tube. */
+     ,
+    QUARTER_WAVE_PLATE /*!< A transparent plate that introduces a 90-degree phase difference between othogonal polarizations. */
+     ,
+    SOLAR_FILTER /*!< An optical attenuator (to protect receiver from solar heat). */
+     ,
+    NONE /*!< No device, the receiver looks at the sky (through the telescope). */
+     
   };
   typedef CalibrationDevice &CalibrationDevice_out;
 } 
@@ -63,84 +81,101 @@ namespace CalibrationDeviceMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration CalibrationDevice.
+  * 
+  */
 class CCalibrationDevice {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the CalibrationDevice enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sAMBIENT_LOAD;
+	static const std::string& sAMBIENT_LOAD; /*!< A const string equal to "AMBIENT_LOAD".*/
 	
-	static const std::string& sCOLD_LOAD;
+	static const std::string& sCOLD_LOAD; /*!< A const string equal to "COLD_LOAD".*/
 	
-	static const std::string& sHOT_LOAD;
+	static const std::string& sHOT_LOAD; /*!< A const string equal to "HOT_LOAD".*/
 	
-	static const std::string& sNOISE_TUBE_LOAD;
+	static const std::string& sNOISE_TUBE_LOAD; /*!< A const string equal to "NOISE_TUBE_LOAD".*/
 	
-	static const std::string& sQUARTER_WAVE_PLATE;
+	static const std::string& sQUARTER_WAVE_PLATE; /*!< A const string equal to "QUARTER_WAVE_PLATE".*/
 	
-	static const std::string& sSOLAR_FILTER;
+	static const std::string& sSOLAR_FILTER; /*!< A const string equal to "SOLAR_FILTER".*/
 	
-	static const std::string& sNONE;
-	
-    static const std::vector<std::string> sCalibrationDeviceSet();	 
-
+	static const std::string& sNONE; /*!< A const string equal to "NONE".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in CalibrationDeviceMod::CalibrationDevice.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of CalibrationDeviceMod::CalibrationDevice.
+      * @return a string.
+      */
+	static std::string name(const CalibrationDeviceMod::CalibrationDevice& e);
 	
-	// Explanations associated with the CalibrationDevice Enumeration.
-		
-	static const std::string& hAMBIENT_LOAD;
-		
-	static const std::string& hCOLD_LOAD;
-		
-	static const std::string& hHOT_LOAD;
-		
-	static const std::string& hNOISE_TUBE_LOAD;
-		
-	static const std::string& hQUARTER_WAVE_PLATE;
-		
-	static const std::string& hSOLAR_FILTER;
-		
-	static const std::string& hNONE;
-		
-	static const std::vector<std::string> hCalibrationDeviceSet();
-   	
-
-   	// Is an integer number associated with the CalibrationDevice enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the CalibrationDevice enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  CalibrationDevice enumeration.
-	static std::string name(const CalibrationDeviceMod::CalibrationDevice& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const CalibrationDeviceMod::CalibrationDevice& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified CalibrationDevice enumeration.
-	static std::string help(const CalibrationDeviceMod::CalibrationDevice& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a CalibrationDevice enumeration object by specifying its name.
    	static CalibrationDeviceMod::CalibrationDevice newCalibrationDevice(const std::string& name);
    	
-   	// Create a CalibrationDevice enumeration object by specifying its name.
+   	/*! Return a CalibrationDevice's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a CalibrationDeviceMod::CalibrationDevice's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static CalibrationDeviceMod::CalibrationDevice literal(const std::string& name);
  	
-    // Create a CalibrationDevice enumeration object by specifying its position index (0 based).
+    /*! Return a CalibrationDevice's enumerator given an unsigned int.
+      * @param i the index of the enumerator in CalibrationDeviceMod::CalibrationDevice.
+      * @return a CalibrationDeviceMod::CalibrationDevice's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static CalibrationDeviceMod::CalibrationDevice from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CCalibrationDevice();
     CCalibrationDevice(const CCalibrationDevice&);
     CCalibrationDevice& operator=(const CCalibrationDevice&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CCalibrationDevice_H*/

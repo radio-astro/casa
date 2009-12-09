@@ -28,6 +28,7 @@
 
 #include <casa/OS/Time.h>
 #include <plotms/PlotMS/PlotMSLabelFormat.h>
+#include <plotms/PlotMS/PlotMSWatchedParameters.h>
 
 #include <ctype.h>
 
@@ -114,26 +115,124 @@ bool PMS::strEq(const String& str1, const String& str2, bool ignoreCase) {
     return true;
 }
 
+#define PMS_RE(TYPE, ASTYPE) \
+    case TYPE: if(rec1.ASTYPE(name) != rec2.ASTYPE(name)) return false; break;
+
+#define PMS_REA(TYPE, ASTYPE, ATYPE)                                          \
+    case TYPE: {                                                              \
+        if(rec1. ASTYPE (name).shape() != rec2. ASTYPE (name).shape())        \
+            return false;                                                     \
+        const Array< ATYPE >& a1 = rec1.ASTYPE(name), &a2 = rec2.ASTYPE(name);\
+        Array< ATYPE >::const_iterator it1 = a1.begin(), it2 = a2.begin();    \
+        while(it1 != a1.end() && it2 != a2.end()) {                           \
+            if(*it1 != *it2) return false;                                    \
+            it1++; it2++;                                                     \
+        }                                                                     \
+        break; }
+
+bool PMS::recEq(const Record& rec1, const Record& rec2) {
+    if(rec1.nfields() != rec2.nfields()) return false;
+
+    String name;
+    for(unsigned int i = 0; i < rec1.nfields(); i++) {
+        name = rec1.name(i);
+        if(!rec2.isDefined(name) || rec1.dataType(name) != rec2.dataType(name))
+            return false;
+        
+        switch(rec1.dataType(name)) {
+        PMS_RE(TpBool, asBool)
+        // PMS_RE(TpChar, asChar) no asChar
+        PMS_RE(TpUChar, asuChar)
+        PMS_RE(TpShort, asShort)
+        PMS_RE(TpInt, asInt)
+        PMS_RE(TpUInt, asuInt)
+        PMS_RE(TpFloat, asFloat)
+        PMS_RE(TpDouble, asDouble)
+        PMS_RE(TpComplex, asComplex)
+        PMS_RE(TpDComplex, asDComplex)
+        PMS_RE(TpString, asString)
+        PMS_REA(TpArrayBool, asArrayBool, Bool)
+        //PMS_REA(TpArrayChar, asArrayChar, Char) no asArrayChar
+        PMS_REA(TpArrayUChar, asArrayuChar, uChar)
+        PMS_REA(TpArrayShort, asArrayShort, Short)
+        //PMS_REA(TpArrayUShort, asArrayuShort, uShort) no assArrayuShort
+        PMS_REA(TpArrayInt, asArrayInt, Int)
+        PMS_REA(TpArrayUInt, asArrayuInt, uInt)
+        PMS_REA(TpArrayFloat, asArrayFloat, Float)
+        PMS_REA(TpArrayDouble, asArrayDouble, Double)
+        PMS_REA(TpArrayComplex, asArrayComplex, Complex)
+        PMS_REA(TpArrayDComplex, asArrayDComplex, DComplex)
+        PMS_REA(TpArrayString, asArrayString, String)
+        
+        case TpRecord:
+            if(!recEq(rec1.asRecord(name), rec2.asRecord(name)))
+                return false;
+            break;
+
+        default: break;
+        }
+    }
+    
+    return true;
+}
+
+
+const vector<String>& PMS::COLORS_LIST() {
+    static vector<String> colors;
+    if(colors.size() == 0) {
+        colors.resize(9);
+        
+        // TODO !colors
+        
+        colors[0] = "black";
+        colors[1] = "red";
+        colors[2] = "green";
+        colors[3] = "blue";
+        colors[4] = "orange";
+        colors[5] = "purple";
+        colors[6] = "yellow";
+        colors[7] = "darkCyan";
+        colors[8] = "magenta";
+    }
+    return colors;
+}
+
+
+const String PMS::DEFAULT_LOG_FILENAME = "";
+const int PMS::DEFAULT_LOG_EVENTS = PlotLogger::NO_EVENTS;
+const LogMessage::Priority PMS::DEFAULT_LOG_PRIORITY = LogMessage::DEBUGGING;
+const bool PMS::DEFAULT_CLEAR_SELECTIONS = true;
+const int PMS::DEFAULT_CACHED_IMAGE_WIDTH = -1;
+const int PMS::DEFAULT_CACHED_IMAGE_HEIGHT = -1;
 
 const PMS::Axis PMS::DEFAULT_XAXIS = TIME;
 const PMS::Axis PMS::DEFAULT_YAXIS = AMP;
 const PMS::DataColumn PMS::DEFAULT_DATACOLUMN = DATA;
+const PMS::Axis PMS::DEFAULT_COLOR_AXIS = SPW;
 
 const PlotAxis PMS::DEFAULT_CANVAS_XAXIS = X_BOTTOM;
 const PlotAxis PMS::DEFAULT_CANVAS_YAXIS = Y_LEFT;
-
 const String PMS::DEFAULT_CANVAS_AXIS_LABEL_FORMAT =
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_AXIS()) +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_IF_REFVALUE()) + " (from " +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_REFVALUE()) + ")" +
     PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_ENDIF_REFVALUE());
-
 const bool PMS::DEFAULT_SHOWAXIS = true;
 const bool PMS::DEFAULT_SHOWLEGEND = false;
 const PlotCanvas::LegendPosition PMS::DEFAULT_LEGENDPOSITION =
     PlotCanvas::INT_URIGHT;
+const bool PMS::DEFAULT_SHOW_GRID = false;
 
-PlotSymbolPtr PMS::DEFAULT_SYMBOL(PlotFactoryPtr factory) {
+PlotLinePtr PMS::DEFAULT_GRID_LINE(PlotFactoryPtr factory) {
+    static PlotLinePtr line = factory->line("gray");
+    return factory->line(*line);
+}
+
+const String PMS::DEFAULT_TITLE_FORMAT =
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_YAXIS()) + " vs. " +
+    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_XAXIS());
+
+PlotSymbolPtr PMS::DEFAULT_UNFLAGGED_SYMBOL(PlotFactoryPtr factory) {
     static PlotSymbolPtr symbol = factory->symbol(PlotSymbol::CIRCLE);
     symbol->setSize(2, 2);
     symbol->setLine("#000000", PlotLine::NOLINE, 1.0);
@@ -141,7 +240,7 @@ PlotSymbolPtr PMS::DEFAULT_SYMBOL(PlotFactoryPtr factory) {
     return factory->symbol(*symbol);
 }
 
-PlotSymbolPtr PMS::DEFAULT_MASKED_SYMBOL(PlotFactoryPtr factory) {
+PlotSymbolPtr PMS::DEFAULT_FLAGGED_SYMBOL(PlotFactoryPtr factory) {
     static PlotSymbolPtr symbol = factory->symbol(PlotSymbol::NOSYMBOL);
     symbol->setSize(2, 2);
     symbol->setLine("#000000", PlotLine::NOLINE, 1.0);
@@ -156,17 +255,6 @@ map<PlotSymbol::Symbol, int> PMS::SYMBOL_MINIMUM_SIZES() {
     m[PlotSymbol::DIAMOND] = 3;
     
     return m;
-}
-
-const String PMS::DEFAULT_TITLE_FORMAT =
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_YAXIS()) + " vs. " +
-    PlotMSLabelFormat::TAG(PlotMSLabelFormat::TAG_XAXIS());
-
-const bool PMS::DEFAULT_SHOW_GRID = false;
-
-PlotLinePtr PMS::DEFAULT_GRID_LINE(PlotFactoryPtr factory) {
-    static PlotLinePtr line = factory->line("gray");
-    return factory->line(*line);
 }
 
 PlotFontPtr PMS::DEFAULT_ANNOTATION_TEXT_FONT(PlotFactoryPtr factory) {
@@ -193,5 +281,25 @@ PlotAreaFillPtr PMS::DEFAULT_ANNOTATION_RECT_FILL(PlotFactoryPtr f) {
     static PlotAreaFillPtr fill = f->areaFill("0000FF", PlotAreaFill::NOFILL);
     return f->areaFill(*fill);
 }
+
+
+const String PMS::LOG_ORIGIN = "PlotMS";
+
+// Macro to help with defining log names and flags.
+#define PMS_LOG(TYPE, NAME, PRIORITY)                                         \
+const String PMS::LOG_ORIGIN_##TYPE = NAME;                                   \
+const int PMS::LOG_EVENT_##TYPE =                                             \
+    PlotLogger::REGISTER_EVENT_TYPE("plotms_" + LOG_ORIGIN_##TYPE,            \
+                                    LogMessage::PRIORITY);
+
+PMS_LOG(DBUS, "dbus", NORMAL3)
+PMS_LOG(FLAG, "flag", NORMAL)
+PMS_LOG(LOAD_CACHE, "load_cache", NORMAL)
+PMS_LOG(LOCATE, "locate", NORMAL)
+PMS_LOG(PARAMS_CHANGED, "params_changed", NORMAL)
+PMS_LOG(PLOT, "plot", NORMAL)
+PMS_LOG(RELEASE_CACHE, "release_cache", NORMAL)
+PMS_LOG(UNFLAG, "unflag", NORMAL)
+PMS_LOG(SUMMARY, "summary", NORMAL)
 
 }

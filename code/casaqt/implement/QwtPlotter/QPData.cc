@@ -87,15 +87,14 @@ double QPRasterData::value(double x, double y) const {
 
 QwtDoubleInterval QPRasterData::range() const {
     if(m_data.null()) return QwtDoubleInterval();
-    pair<double, double> r = m_data->valueRange();
+    prange_t r = m_data->valueRange();
     return QwtDoubleInterval(r.first, r.second);
 }
 
 QwtDoubleRect QPRasterData::boundingRect() const {
     if(m_data.null()) return QwtDoubleRect();
     
-    pair<double, double> xrange = m_data->xRange(),
-                         yrange = m_data->yRange();
+    prange_t xrange = m_data->xRange(), yrange = m_data->yRange();
     
     // have to switch the min and max y values for some reason
     return QwtDoubleRect(xrange.first, yrange.first,

@@ -85,6 +85,7 @@ coordsys::coordsys() : itsParentImageName("unknown")
 
 coordsys::~coordsys()
 {
+  delete itsCoordSys;
   delete itsLog;
 }
 
@@ -779,6 +780,9 @@ coordsys::fromrecord(const ::casac::record& csys_record)
 	      << LogIO::EXCEPTION;
     }
     //
+    if(itsCoordSys){
+	    delete itsCoordSys;
+    }
     itsCoordSys=new CoordinateSystem(*pCS); // memory leak here??
     delete pCS;
     //
@@ -973,7 +977,7 @@ coordsys::referencecode(const std::string& cordtype, const bool list)
 
   if ((coordinateType != "") && (list==true)) {
     coordinateType.upcase();
-    if (coordinateType.matches("DI",-2)) {
+    if (coordinateType.matches(Regex("DI"),-2)) {
       MDirection md(MDirection::J2000);
       Int nall, nex;
       const uInt *typ;
@@ -988,7 +992,7 @@ coordsys::referencecode(const std::string& cordtype, const bool list)
       };
       //return fromVectorString(tcod);
       return rstat;
-    } else if (coordinateType.matches("SP",-2)) {
+    } else if (coordinateType.matches(Regex("SP"),-2)) {
       MFrequency mf(casa::Quantity(1.0,"Hz"), MFrequency::LSRK);
       Int nall, nex;
       const uInt *typ;
@@ -1000,10 +1004,11 @@ coordsys::referencecode(const std::string& cordtype, const bool list)
 	rstat[i]=tall[i];
 	//if (i<nall-nex) tcod(i) = tall[i];
 	//else text(i-nall+nex) = tall[i];
-      };
+      }
       //return fromVectorString(tcod);
       return rstat;
     } else {
+      cerr << "Match failed" << endl;
       return rstat;
     }
   }

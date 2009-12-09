@@ -29,7 +29,7 @@
 #define PROGRESSBAR_H
 
 #include <graphics/X11/X_enter.h>
-#include <fstream.h>
+#include <casa/fstream.h>
 #include <QProgressBar>
 #include <QTimer>
 #include <QLabel>

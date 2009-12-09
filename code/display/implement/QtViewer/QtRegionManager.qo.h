@@ -52,6 +52,7 @@ class QtViewer;
 class ImageRegion;
 class Record;
 class RSComposite;
+class WCUnion;
 template <class T> class PtrBlock;
 
 
@@ -62,15 +63,13 @@ class QtRegionManager : public QWidget, protected Ui::QtRegionMgr {
  
  public:
   
-  // This gui receives signals from, and sends commands to qdp;
-  // qdp must be valid.   parent is usually 0 though; QtRegionManager
-  // is a stand-alone auxiliary window to QtDisplayPanelGui.
   QtRegionManager(QtDisplayPanel* qdp, QWidget* parent=0);
   
   ~QtRegionManager() {  }
   
  public slots:
   void changeAxis(String, String, String);
+  void activate(Record);
 
  protected slots:
   //draw region on viewer
@@ -91,7 +90,10 @@ class QtRegionManager : public QWidget, protected Ui::QtRegionMgr {
   void removeRegion();
 
   void toggleImageRegion();
+  void zPlaneChanged();
   void currentRegionChanged(const QString &);
+  void showHelp();
+  void showHelpActive();
 
   //convert region to shape
   RSComposite *regionToShape(
@@ -99,6 +101,9 @@ class QtRegionManager : public QWidget, protected Ui::QtRegionMgr {
 
   // Cleanup on destruction
   void cleanup();
+
+  void deleteActiveBox();
+  void insertActiveBox();
 
   // set up plane only or extending by channel and pol
   void singlePlane();
@@ -111,11 +116,29 @@ class QtRegionManager : public QWidget, protected Ui::QtRegionMgr {
   DisplayData* getImageData(QString);
   DisplayData* getBoundingBoxData(QString);
 
+  //delete region from image
+  void deleteRegion();
+  //show/hide region
+  void showHideRegion();
+
+  void flashActive();
+  void exportRegions();
+
+ public:
+  bool planeAllowed(int, String&, String&);
+
  protected:
   void addRegionsToShape(RSComposite*& theShapes, 
                          const WCRegion*& wcreg);
+  WCUnion* unfoldCompositeRegionToSimpleUnion(const WCRegion*& wcreg);
   void displaySelectedRegion();
   void showRegion(const String& regName);
+
+  bool deleteBox(QString&, int);
+  bool insertBox(QString&);
+  void rotateBox(int);
+
+  void addRegionToMenu(const QString&, const QString&);
   
   QtDisplayPanel* qdp_;
   QWidget* parent_;
@@ -123,9 +146,19 @@ class QtRegionManager : public QWidget, protected Ui::QtRegionMgr {
  private:
   PtrBlock<const ImageRegion * >  unionRegions_p;
   List<RegionShape*> regShapes_p;
-
+  void unfoldIntoSimpleRegionPtrs(PtrBlock<const WCRegion*>& outRegPtrs, const WCRegion*& wcreg);
   QHash<QString, DisplayData*> regData;
   QHash<QString, bool> regState;
+  QMenu *showHideMenu;
+  QMenu *deleteMenu;
+
+  QString activeGroup;
+  int activeBox;
+  RegionShape* activeShape;
+  QTimer* timer;
+  bool flash;
+
+  int cb;
 
 signals:
   void extendRegion(String, String);

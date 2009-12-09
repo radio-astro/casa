@@ -532,7 +532,7 @@ and available in Glish as mycl.
      <param type="intArray" name="which">
      <description>indices of which component(s) to remove
      a vector containing unique integers between
-                          1 and the length of the list, -1 for all</description>
+     0 and one less than the length of the list, -1 for all</description>
      <value>-1</value>
      </param> 
     
@@ -764,7 +764,7 @@ and available in Glish as mycl.
     
      <param type="intArray" name="which">
      <description>A vector of indices
-     Indices must be between 1 and the list length</description>
+     Indices must be between 0 and one less than the list length, inclusively</description>
      <value>-1</value>
      </param>
   </input>
@@ -1092,16 +1092,15 @@ and available in Glish as mycl.
     
     
      <param type="string" name="spectrumtype">
-     <description>The new spectrum type.
-     A string that is either 'constant' or 'spectral index'</description>
+     <description>The spectrum type,
+     a string that is either 'constant' or 'spectral index'</description>
      <value>spectral index</value>
      <value>constant</value>
      </param>
     
-     <param type="doubleArray" name="index">
-     <description>The spectral indices
-     A 4-element vector or real numbers</description>
-     <value type="vector"><value>1</value><value>0</value><value>0</value><value>0</value></value>
+     <param type="double" name="index">
+     <description>The spectral index</description>
+     <value>1.0</value>
      </param>
     
      <param type="string" name="label">
@@ -1170,7 +1169,7 @@ and available in Glish as mycl.
     
      <param type="int" name="which">
      <description>An index specifying which component.
-An integer between 1 and the list length</description>
+       An integer between 0 and one less than the list length</description>
      <choice>no default</choice>
      </param>
     
@@ -1226,7 +1225,7 @@ An integer between 1 and the list length</description>
     
      <param type="int" name="which">
      <description>A vector of indices.
-Indices must be between 1 and the list length</description>
+Indices must be between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="bool"/>
@@ -1266,7 +1265,7 @@ Indices must be between 1 and the list length</description>
     
      <param type="int" name="which">
      <description>A vector of indices
-     Indices must be between 1 and the list length</description>
+     Indices must be between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="bool"/>
@@ -1303,7 +1302,7 @@ Indices must be between 1 and the list length</description>
     ``selected'' or not.
 
   </description>
-  <returns type="intArray"><description>A vector of integers between 1 and the list length</description></returns>
+  <returns type="intArray"><description>A vector of integers between 0 and one less than the list length</description></returns>
   <example>
     \begin{verbatim}
       include 'componentlist.g'
@@ -1334,7 +1333,7 @@ Indices must be between 1 and the list length</description>
     
      <param type="int" name="which">
 	     <description>An index specifying which component.
-		     An integer between 1 and the list length</description>
+		     An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="string"/>
@@ -1365,7 +1364,7 @@ Indices must be between 1 and the list length</description>
     
      <param type="int" name="which">
      <description>A vector of indices specifying the components to modify.
-     A vector with indices between 1 and the list length</description>
+     A vector with indices between 0 and one less than the list length, inclusively</description>
      <choice>no default</choice>
      </param>
     
@@ -1415,7 +1414,7 @@ Indices must be between 1 and the list length</description>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     An integer between 1 and the list length</description>
+     An integer between 0 and one less than the list length, inclusively</description>
      <choice>no default</choice>
      </param>
   </input>
@@ -1449,7 +1448,7 @@ Indices must be between 1 and the list length</description>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     An integer between 1 and the list length</description>
+     An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="string"><description>A string with the units of the flux for the specified component</description></returns>
@@ -1475,7 +1474,7 @@ Indices must be between 1 and the list length</description>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-An integer between 1 and the list length</description>
+An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="string"><description>A string containing either ``Stokes'', ``linear'' or 
@@ -1520,7 +1519,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     An integer between 1 and the list length</description>
+     An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="doubleArray"><description>A vector of length 4 with the errors in the flux values
@@ -1546,7 +1545,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>A vector of indices specifying the components to modify.
-     A vector with indices between 1 and the list length</description>
+     A vector with indices between 0 and one less than the list length, inclusively</description>
      </param>
     
      <param type="any" name="value">
@@ -1617,7 +1616,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>A vector of indices specifying the components to modify.
-     A vector with indices between 1 and the list length</description>
+     A vector with indices between 0 and one less than the list length, inclusively</description>
      </param>
     
      <param type="string" name="unit">
@@ -1658,7 +1657,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>A vector of indices specifying the components to modify.
-     A vector with indices between 1 and the list length</description>
+     A vector with indices between 0 and one less than the list length, inclusively</description>
      </param>
     
      <param type="string" name="polarization">
@@ -1702,7 +1701,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     An integer between 1 and the list length</description>
+     An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="any"><description>Workaround should return an MDirection</description><any type="record"/></returns>
@@ -1754,7 +1753,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     An integer between 1 and the list length</description>
+     An integer between 0 and one less than the list length, inclusively</description>
      </param>
     
      <param type="string" name="unit">
@@ -1809,7 +1808,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-	     An integer between 1 and the list length</description>
+	     An integer between 0 and one less than the list length, inclusively</description>
      </param>
     
      <param type="string" name="unit">
@@ -1847,7 +1846,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     An integer between 1 and the list length</description>
+     An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="string"><description>A formatted string containing the reference frame
@@ -1882,7 +1881,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>A vector of indices specifying the components to modify.
-     A vector with indices between 1 and the list length</description>
+     A vector with indices between 0 and one less than the list length, inclusively</description>
      <value>1</value>
      </param>
     
@@ -1946,7 +1945,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>A vector of indices specifying the components to modify.
-     A vector with indices between 1 and the list length</description>
+     A vector with indices between 0 and one less than the list length, inclusively</description>
      </param>
     
      <param type="string" name="frame">
@@ -1996,7 +1995,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>A vector of indices specifying the components to modify.
-     A vector with indices between 1 and the list length</description>
+     A vector with indices between 0 and one less than the list length, inclusively</description>
      </param>
     
      <param type="string" name="frame">
@@ -2038,7 +2037,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     An integer between 1 and the list length</description>
+     An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="string"><description>A string specifying the current component shape</description></returns>
@@ -2087,7 +2086,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     An integer between 1 and the list length</description>
+     An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="any">
@@ -2141,7 +2140,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>A vector of indices specifying the components to modify.
-     A vector with indices between 1 and the list length</description>
+     A vector with indices between 0 and one less than the list length, inclusively</description>
      </param>
     
      <param type="string" name="type">
@@ -2242,7 +2241,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>A vector of indices specifying the components to modify.
-     A vector with indices between 1 and the list length</description>
+     A vector with indices between 0 and one less than the list length, inclusively</description>
      </param>
     
      <param type="string" name="majoraxis">
@@ -2308,7 +2307,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     An integer between 1 and the list length</description>
+     An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="string">
@@ -2357,7 +2356,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     An integer between 1 and the list length</description>
+     An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="any"><any type="record"/>
@@ -2408,27 +2407,23 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>A vector of indices specifying the components to modify.
-     A vector with indices between 1 and the list length</description>
+     A vector with indices between 0 and one less than the list length, inclusively</description>
      </param>
     
      <param type="string" name="type">
      <description>The new spectrum type.
-     A string that is either 
-			'constant or 'spectral index'</description>
+     A string that is either 'constant or 'spectral index'</description>
      <value>spectral index</value>
      <value>Constant</value>
      </param>
     
-     <param type="doubleArray" name="index">
-     <description>The spectral indices.
-     A 4-element vector or real numbers</description>
-     <value type="vector"><value>1.0</value></value>
+     <!-- <param type="doubleArray" name="index"> -->
+     <param type="double" name="index">
+     <description>The spectral index.</description>
+     <!-- A 4-element vector or real numbers -->
+     <!-- <value type="vector"><value>1.0</value></value> -->
+     <value>0.0</value>
      </param>
-    
-     <param type="bool" name="log">
-     <description>Send a message to the logger</description>
-     <value>true</value>
-     </param> 
   </input>
   <returns type="bool"/>
   <example>
@@ -2467,7 +2462,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     An integer between 1 and the list length</description>
+     An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="any"><any type="record"/><description>A frequency measure (a record)</description></returns>
@@ -2506,7 +2501,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     An integer between 1 and the list length</description>
+     An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="double"><description>A number containing the value of the reference frequency.</description></returns>
@@ -2545,7 +2540,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     An integer between 1 and the list length</description>
+     An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="string"><description>A string containing the unit of the reference frequency.</description></returns>
@@ -2575,7 +2570,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     An integer between 1 and the list length</description>
+     An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
   <returns type="string"><description>A string containing the reference frame
@@ -2604,7 +2599,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>A vector of indices specifying the components to modify</description>
-     <value>A vector with indices between 1 and the list length</value>
+     <value>A vector with indices between 0 and one less than the list length, inclusively</value>
      <choice>no default</choice>
      </param>
     
@@ -2660,7 +2655,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>A vector of indices specifying the components to modify.
-     A vector with indices between 1 and the list length</description>
+     A vector with indices between 0 and one less than the list length, inclusively</description>
      </param>
     
      <param type="string" name="frame">
@@ -2713,7 +2708,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>A vector of indices specifying the components to modify.
-     A vector with indices between 1 and the list length</description>
+     A vector with indices between 0 and one less than the list length, inclusively</description>
      </param>
     
      <param type="string" name="unit">
@@ -2768,7 +2763,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>index of which component to extract.
-     integers between 1 and the length of the list</description>
+     integers between 0 and one less than the length of the list, inclusively</description>
      </param>
     
      <param type="bool" name="iknow">
@@ -2829,7 +2824,7 @@ specified component</shortdescription>
     
      <param type="int" name="which">
      <description>A vector of indices specifying the components to replace.
-     A vector with indices between 1 and the list length</description>
+     A vector with indices between 0 and one less than the list length, inclusively</description>
      </param>
     
      <param type="any" name="list">
@@ -2874,7 +2869,7 @@ list in the second argument</description>
     
      <param type="int" name="which">
      <description>An index specifying which component.
-     Unset or an integer between 1 and the list length</description>
+     Unset or an integer between 0 and one less than the list length, inclusively</description>
      <value>-1</value>
      </param>
   </input>

@@ -28,7 +28,6 @@
 #define PLOTMSSELECTION_H_
 
 #include <casa/Containers/Record.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 
 #include <map>
@@ -38,6 +37,10 @@ using namespace std;
 
 namespace casa {
 
+//# Forward declarations
+class MeasurementSet;
+
+
 // Specifies an MS selection.  See the mssSetData method in
 // ms/MeasurementSets/MSSelectionTools.h for details.
 class PlotMSSelection {
@@ -45,6 +48,9 @@ public:
     // Static //
     
     // Enum and methods to define the different fields for an MS selection.
+    // **If these are changed, also update: convenience methods below,
+    // xmlcasa/implement/plotms/plotms*, xmlcasa/tasks/plotms.xml,
+    // xmlcasa/scripts/task_plotms.py.**
     // <group>
     PMS_ENUM1(Field, fields, fieldStrings, field,
               FIELD, SPW, TIMERANGE, UVRANGE, ANTENNA, SCAN,
@@ -81,9 +87,9 @@ public:
     // Applies this selection using the first MS into the second MS.  (See the
     // mssSetData method in ms/MeasurementSets/MSSelectionTools.h for details.)
     void apply(MeasurementSet& ms, MeasurementSet& selectedMS,
-               Matrix<Int>& chansel) const;
-    
-    
+               Vector<Vector<Slice> >& chansel,
+	       Vector<Vector<Slice> >& corrsel) const;
+        
     // Gets/Sets the value for the given selection field.
     // <group>
     const String& getValue(Field f) const;

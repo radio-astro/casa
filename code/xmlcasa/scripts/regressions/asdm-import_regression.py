@@ -1,7 +1,7 @@
 #############################################################################
 # $Id:$
 # Test Name:                                                                #
-#    Regression Test Script for ASDM import to MS                           #
+#    Regression Test Script for ASDM "version 0.9"  import to MS            #
 #                                                                           #
 # Rationale for Inclusion:                                                  #
 #    The conversion of ASDM to MS needs to be verified.                     #
@@ -13,14 +13,14 @@
 #    4) Do the tables contain expected values                               #
 #                                                                           #
 # Input data:                                                               #
-#    a sample ASDM dataset                                                  #
+#     one dataset for the old filler (ASDM "0.9")                           #
 #                                                                           #
 #############################################################################
 
 myname = 'asdm-import_regression'
 
 # default ASDM dataset name
-myasdm_dataset_name = 'uid___X1eb_X59c0_X1'
+myasdm_dataset_name = 'uid___X54_X1418_X1'
 
 # get the dataset name from the wrapper if possible
 mydict = locals()
@@ -33,6 +33,8 @@ msname = myasdm_dataset_name+'.ms'
 def checktable(thename, theexpectation):
     global msname, myname
     tb.open(msname+"/"+thename)
+    if thename == "":
+        thename = "MAIN"
     for mycell in theexpectation:
         print myname, ": comparing ", mycell
         value = tb.getcell(mycell[0], mycell[1])
@@ -56,7 +58,7 @@ def checktable(thename, theexpectation):
         if not in_agreement:
             print myname, ":  Error in MS subtable", thename, ":"
             print "     column ", mycell[0], " row ", mycell[1], " contains ", value
-            print "     expected value is ", mycells[2]
+            print "     expected value is ", mycell[2]
             tb.close()
             raise
     tb.close()
@@ -64,7 +66,7 @@ def checktable(thename, theexpectation):
     return
 
 try:
-    importasdm(myasdm_dataset_name)
+    importoldasdm(myasdm_dataset_name)
 except:
     print myname, ": Error ", sys.exc_info()[0]
     raise
@@ -125,9 +127,16 @@ else:
         ms.close()
         print myname, ": OK. Checking tables in detail ..."
 
+        # check main table first
+        name = ""
+        #             col name, row number, expected value, tolerance
+        expected = [ ['UVW',       42, [1.9006977, -22.538636, 26.703018], 1E-6],
+                     ['EXPOSURE',  42, 1.008, 0],
+                     ['DATA',      42, [ [0.00025587+0.00000797j] ], 1E-8]
+                     ]
+        checktable(name, expected)
         
         name = "ANTENNA"
-        #             col name, row number, expected value, tolerance
         expected = [ ['OFFSET',       1, [ 0.,  0.,  0.], 0],
                      ['POSITION',     1, [-1601361.760577, -5042192.535329,  3554531.519329], 0],
                      ['DISH_DIAMETER',1, 12.0, 0]
@@ -135,13 +144,13 @@ else:
         checktable(name, expected)
         
         name = "POINTING"
-        expected = [ ['DIRECTION',       10, [[-2.21348836],[0.69419111]], 1E-8 ],
+        expected = [ ['DIRECTION',       10, [[0.958],[0.416791]], 1E-6 ],
                      ['INTERVAL',        10, 0.048, 0],
-                     ['TARGET',          10, [[ 4.06842324],[ 0.69534148]], 1E-8 ],
-                     ['TIME',            10, 4716228756.9840002, 0],
+                     ['TARGET',          10, [[ 0.95722],[ 0.4183]], 1E-6 ],
+                     ['TIME',            10, 4735409708, 1],
                      ['TIME_ORIGIN',     10, 0., 0],
                      ['POINTING_OFFSET', 10, [[ 0.],[ 0.]], 0],
-                     ['ENCODER',         10, [-2.21349349,  0.69419051], 1E-8 ]
+                     ['ENCODER',         10, [0.958002, 0.416791], 1E-6 ]
                      ]
         checktable(name, expected)
         

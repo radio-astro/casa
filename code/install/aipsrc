@@ -115,3 +115,6 @@
 # Preserve the system when a new base release is installed?
 # sneeze.base.<arch>.preserve:
   sneeze.base.*.preserve:	true
+
+# fraction(in %) of total memory to be used
+  system.resources.memfrac:	90

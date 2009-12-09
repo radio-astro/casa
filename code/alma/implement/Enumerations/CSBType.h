@@ -42,16 +42,30 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the SBType enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace SBTypeMod
 {
+  //! SBType.
+  //!  [ASDM.SBSummary] Types of Scheduling Block
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum SBType
   { 
-    OBSERVATORY ,
-    OBSERVER ,
-    EXPERT 
+    OBSERVATORY /*!< Observatory mode scheduling block */
+     ,
+    OBSERVER /*!< Observer mode scheduling block */
+     ,
+    EXPERT /*!< Expert mode scheduling block */
+     
   };
   typedef SBType &SBType_out;
 } 
@@ -59,68 +73,93 @@ namespace SBTypeMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration SBType.
+  * 
+  */
 class CSBType {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the SBType enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sOBSERVATORY;
+	static const std::string& sOBSERVATORY; /*!< A const string equal to "OBSERVATORY".*/
 	
-	static const std::string& sOBSERVER;
+	static const std::string& sOBSERVER; /*!< A const string equal to "OBSERVER".*/
 	
-	static const std::string& sEXPERT;
-	
-    static const std::vector<std::string> sSBTypeSet();	 
-
+	static const std::string& sEXPERT; /*!< A const string equal to "EXPERT".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in SBTypeMod::SBType.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of SBTypeMod::SBType.
+      * @return a string.
+      */
+	static std::string name(const SBTypeMod::SBType& e);
 	
-	// Explanations associated with the SBType Enumeration.
-		
-	static const std::string& hOBSERVATORY;
-		
-	static const std::string& hOBSERVER;
-		
-	static const std::string& hEXPERT;
-		
-	static const std::vector<std::string> hSBTypeSet();
-   	
-
-   	// Is an integer number associated with the SBType enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the SBType enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  SBType enumeration.
-	static std::string name(const SBTypeMod::SBType& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const SBTypeMod::SBType& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified SBType enumeration.
-	static std::string help(const SBTypeMod::SBType& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a SBType enumeration object by specifying its name.
    	static SBTypeMod::SBType newSBType(const std::string& name);
    	
-   	// Create a SBType enumeration object by specifying its name.
+   	/*! Return a SBType's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a SBTypeMod::SBType's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static SBTypeMod::SBType literal(const std::string& name);
  	
-    // Create a SBType enumeration object by specifying its position index (0 based).
+    /*! Return a SBType's enumerator given an unsigned int.
+      * @param i the index of the enumerator in SBTypeMod::SBType.
+      * @return a SBTypeMod::SBType's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static SBTypeMod::SBType from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CSBType();
     CSBType(const CSBType&);
     CSBType& operator=(const CSBType&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CSBType_H*/

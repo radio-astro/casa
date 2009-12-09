@@ -37,6 +37,19 @@
 #include <string>
 using namespace std;
 
+
+int CFilterMode::version() {
+	return FilterModeMod::version;
+	}
+	
+string CFilterMode::revision () {
+	return FilterModeMod::revision;
+}
+
+unsigned int CFilterMode::size() {
+	return 4;
+	}
+	
 	
 const std::string& CFilterMode::sFILTER_NA = "FILTER_NA";
 	
@@ -44,7 +57,9 @@ const std::string& CFilterMode::sFILTER_TDM = "FILTER_TDM";
 	
 const std::string& CFilterMode::sFILTER_TFB = "FILTER_TFB";
 	
-const std::vector<std::string> CFilterMode::sFilterModeSet() {
+const std::string& CFilterMode::sUNDEFINED = "UNDEFINED";
+	
+const std::vector<std::string> CFilterMode::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CFilterMode::sFILTER_NA);
@@ -52,32 +67,11 @@ const std::vector<std::string> CFilterMode::sFilterModeSet() {
     enumSet.insert(enumSet.end(), CFilterMode::sFILTER_TDM);
     
     enumSet.insert(enumSet.end(), CFilterMode::sFILTER_TFB);
+    
+    enumSet.insert(enumSet.end(), CFilterMode::sUNDEFINED);
         
     return enumSet;
 }
-
-	
-
-	
-	
-const std::string& CFilterMode::hFILTER_NA = " Not Applicable (2 antenna prototype). The Tunable Filter Banks are not implemented";
-	
-const std::string& CFilterMode::hFILTER_TDM = "Time Division Mode. In this mode the Tunable Filter banks are bypassed";
-	
-const std::string& CFilterMode::hFILTER_TFB = "The Tunable Filter Bank is implemented and used";
-	
-const std::vector<std::string> CFilterMode::hFilterModeSet() {
-    std::vector<std::string> enumSet;
-    
-    enumSet.insert(enumSet.end(), CFilterMode::hFILTER_NA);
-    
-    enumSet.insert(enumSet.end(), CFilterMode::hFILTER_TDM);
-    
-    enumSet.insert(enumSet.end(), CFilterMode::hFILTER_TFB);
-        
-    return enumSet;
-}
-   	
 
 std::string CFilterMode::name(const FilterModeMod::FilterMode& f) {
     switch (f) {
@@ -90,30 +84,14 @@ std::string CFilterMode::name(const FilterModeMod::FilterMode& f) {
     
     case FilterModeMod::FILTER_TFB:
       return CFilterMode::sFILTER_TFB;
+    
+    case FilterModeMod::UNDEFINED:
+      return CFilterMode::sUNDEFINED;
     	
     }
-    return std::string("");
+    // Impossible siutation but....who knows with C++ enums
+    throw badInt((int) f);
 }
-
-	
-
-	
-std::string CFilterMode::help(const FilterModeMod::FilterMode& f) {
-    switch (f) {
-    
-    case FilterModeMod::FILTER_NA:
-      return CFilterMode::hFILTER_NA;
-    
-    case FilterModeMod::FILTER_TDM:
-      return CFilterMode::hFILTER_TDM;
-    
-    case FilterModeMod::FILTER_TFB:
-      return CFilterMode::hFILTER_TFB;
-    	
-    }
-    return std::string("");
-}
-   	
 
 FilterModeMod::FilterMode CFilterMode::newFilterMode(const std::string& name) {
 		
@@ -127,6 +105,10 @@ FilterModeMod::FilterMode CFilterMode::newFilterMode(const std::string& name) {
     	
     if (name == CFilterMode::sFILTER_TFB) {
         return FilterModeMod::FILTER_TFB;
+    }
+    	
+    if (name == CFilterMode::sUNDEFINED) {
+        return FilterModeMod::UNDEFINED;
     }
     
     throw badString(name);
@@ -145,17 +127,19 @@ FilterModeMod::FilterMode CFilterMode::literal(const std::string& name) {
     if (name == CFilterMode::sFILTER_TFB) {
         return FilterModeMod::FILTER_TFB;
     }
+    	
+    if (name == CFilterMode::sUNDEFINED) {
+        return FilterModeMod::UNDEFINED;
+    }
     
     throw badString(name);
 }
 
 FilterModeMod::FilterMode CFilterMode::from_int(unsigned int i) {
-	vector<string> names = sFilterModeSet();
-	if (i >= names.size()) throw badInt(i);
-	return newFilterMode(names.at(i));
+	vector<string> names_ = names();
+	if (i >= names_.size()) throw badInt(i);
+	return newFilterMode(names_.at(i));
 }
-
-	
 
 string CFilterMode::badString(const string& name) {
 	return "'"+name+"' does not correspond to any literal in the enumeration 'FilterMode'.";

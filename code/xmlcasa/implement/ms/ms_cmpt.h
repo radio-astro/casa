@@ -34,13 +34,15 @@ namespace casac {
 class ms
 {
   private:
-  
+
+	
+
   public:
 
     ms();
     virtual ~ms();
 
-    bool fromfits(const std::string& msfile = "", const std::string& fitsfile = "", const bool nomodify = true, const bool lock = false, const int obstype = 0, const std::string& host = "", const bool forcenewserver = false, const std::string& antnamesceme="old");
+    bool fromfits(const std::string& msfile = "", const std::string& fitsfile = "", const bool nomodify = true, const bool lock = false, const int obstype = 0, const std::string& host = "", const bool forcenewserver = false, const std::string& antnamescheme = "old");
 
     int nrow(const bool selected = false);
 
@@ -60,6 +62,11 @@ class ms
 
     bool writehistory(const std::string& message = "", const std::string& parms = "", const std::string& origin = "MSHistoryHandler::addMessage()", const std::string& msname = "", const std::string& app = "ms");
 
+    ::casac::record* statistics(const std::string& column, 
+                                const std::string& complex_value,
+                                const bool useflags, const std::string& field, const std::string& spw, const std::string& array,
+                                const std::string& scan, const std::string& baseline, const std::string& uvrange, const std::string& time = """", const std::string& correlation = """");
+
     ::casac::record* range(const std::vector<std::string>& items, const bool useflags = true, const int blocksize = 10);
 
     bool lister(const std::string& options = "", const std::string& datacolumn = "data", const std::string& field = "", const std::string& spw = "", const std::string& antenna = "", const std::string& timerange = "", const std::string& correlation = "", const std::string& scan = "", const std::string& feed = "", const std::string& array = "", const std::string& uvrange = "", const std::string& average = "", const bool showflags = false, const std::string& msselect = "", const int pagerows = 50, const std::string& listfile = "");
@@ -74,6 +81,25 @@ class ms
 
     bool selectpolarization(const std::vector<std::string>& wantedpol);
 
+    bool regridspw(const std::string& outframe = "", 
+		   const std::string& regrid_quantity = "chan", 
+		   const double regrid_velo_restfrq = -9E99 , 
+		   const std::string& regrid_interp_meth = "LINEAR", 
+		   const double regrid_start = -9E99, 
+		   const double regrid_center = -9E99, 
+		   const double regrid_bandwidth = -1., 
+		   const double regrid_chan_width = -1.);
+
+    bool cvel(const std::string& mode = "channel", 
+	      const int nchan = -1, 
+	      const ::casac::variant& start = ::casac::initialize_variant("0"), 
+	      const ::casac::variant& width = ::casac::initialize_variant("1"), 
+	      const std::string& interp = "linear", 
+	      const ::casac::variant& phasec = ::casac::initialize_variant(""), 
+	      const ::casac::variant& restfreq = ::casac::initialize_variant(""), 
+	      const std::string& outframe = "", 
+	      const std::string& veltype = "radio");
+
     ::casac::record* getdata(const std::vector<std::string>& items, const bool ifraxis = false, const int ifraxisgap = 0, const int increment = 1, const bool average = false);
 
     bool putdata(const ::casac::record& items);
@@ -82,7 +108,20 @@ class ms
 
     bool timesort(const std::string& newmsname = "");
 
-    bool split(const std::string& outputms = "", const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& spw = ::casac::initialize_variant(""), const std::vector<int>& nchan = std::vector<int> (1, -1), const std::vector<int>& start = std::vector<int> (1, 0), const std::vector<int>& step = std::vector<int> (1, 1), const ::casac::variant& baseline = ::casac::initialize_variant(""), const ::casac::variant& timebin = ::casac::initialize_variant("-1s"), const std::string& time = "", const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& taql = "", const std::string& whichcol = "DATA");
+    bool split(const std::string&      outputms="",
+               const ::casac::variant& field=::casac::initialize_variant(""),
+               const ::casac::variant& spw=::casac::initialize_variant("*"),
+               const std::vector<int>& step=std::vector<int> (1, 1),
+               const ::casac::variant& baseline=::casac::initialize_variant(""),
+               const ::casac::variant& timebin=::casac::initialize_variant("-1s"),
+               const std::string&      time="",
+               const ::casac::variant& scan=::casac::initialize_variant(""),
+               const ::casac::variant& uvrange=::casac::initialize_variant(""),
+               const std::string&      taql="",
+               const std::string&      whichcol="DATA",
+               const ::casac::variant& tileshape=::casac::initialize_variant(""),
+               const ::casac::variant& subarray=::casac::initialize_variant(""),
+               const bool averchan=true);
 
     bool iterinit(const std::vector<std::string>& columns, const double interval, const int maxrows, const bool adddefaultsortcolumns = true);
 
@@ -110,21 +149,7 @@ class ms
 
     bool done();
 
-  bool calcuvw(const std::vector<int>& fields=std::vector<int>(),
-	       const std::string& refcode="");
-
-  bool fixvis(const std::vector<int>& fields=std::vector<int>(),
-	      const ::casac::variant& phaseDirs=::casac::initialize_variant(""),
-	      const std::string& refcode="");
-
-  ::casac::record* msseltoindex(const std::string& vis = "",
-				const ::casac::variant& spw = ::casac::initialize_variant(""),
-				const ::casac::variant& field = ::casac::initialize_variant(""),
-				const ::casac::variant& baseline = ::casac::initialize_variant(""),
-				const ::casac::variant& time = ::casac::initialize_variant(""),
-				const ::casac::variant& scan = ::casac::initialize_variant(""),
-				const ::casac::variant& uvrange = ::casac::initialize_variant(""),
-				const std::string& taql = "");
+    ::casac::record* msseltoindex(const std::string& vis = "", const ::casac::variant& spw = ::casac::initialize_variant(""), const ::casac::variant& field = ::casac::initialize_variant(""), const ::casac::variant& baseline = ::casac::initialize_variant(""), const ::casac::variant& time = ::casac::initialize_variant(""), const ::casac::variant& scan = ::casac::initialize_variant(""), const ::casac::variant& uvrange = ::casac::initialize_variant(""), const std::string& taql = "");
 
     bool hanningsmooth();
 

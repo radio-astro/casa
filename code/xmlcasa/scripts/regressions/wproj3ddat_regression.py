@@ -39,7 +39,7 @@ msfile = prefix + '.ms'
 # Use task importuvfits
 fitsfile = fitsdata
 vis = msfile
-anantnamescheme = 'new'
+antnamescheme = 'new'
 importuvfits()
 
 # Note that there will be a ngc5921.ms.flagversions
@@ -108,6 +108,13 @@ mask = ''
 #cleanbox='interactive'
 
 widefield()
+
+#
+# Following is should be the equivalent clean task setup
+#
+#clean(vis="n3ddat.ms",imagename="ttt",outlierfile="",field="0",spw="*",selectdata=False,timerange="",uvrange="",antenna="",scan="",mode="mfs",gridmode="widefield",wprojplanes=200,facets=1,cfcache="cfcache.dir",painc=360.0,epjtable="",interpolation="nearest",niter=6000,gain=0.1,threshold=0.0,psfmode="clark",imagermode="csclean",ftmachine="mosaic",mosweight=False,scaletype="SAULT",multiscale=[],negcomponent=-1,smallscalebias=0.6,interactive=False,mask=[],nchan=1,start=0,width=1,imsize=[3000, 3000],cell=['30arcsec', '30arcsec'],phasecenter="",restfreq="",stokes="I",weighting="natural",robust=0.0,uvtaper=False,outertaper=[],innertaper=[],modelimage="",restoringbeam=[''],pbcor=False,minpb=0.1,calready=False,noise="1.0Jy",npixels=0,npercycle=100,cyclefactor=3,cyclespeedup=-1,nterms=1,reffreq="")
+
+
 
 # Should find stuff in the logger like:
 #

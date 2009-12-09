@@ -108,62 +108,6 @@ using namespace enumerations;
 
 	
 
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
@@ -204,314 +148,174 @@ class ASDM;
 class SysCalRow;
 /**
  * The SysCalTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * System calibration. Gives information on the conversion  of data to temperature scale. This table is reduced to follow  the contents of the Measurement Set SysCal table. Use only spectral  values (use a single channel spectral window for single numbers).   \texttt{numChan} can be found in the SpectralWindow Table.  The contents of this table are used to scale the data in the filler.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of SysCal </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD> antennaId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> antennaId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row  in AntennaTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> feedId </TD> 
- * <TD> int </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> spectralWindowId </TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a unique row in SpectralWindowTable. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> spectralWindowId </TD> 
- * <TD> Tag </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> timeInterval </TD>
+ 		 
+ * <TD> ArrayTimeInterval</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;time interval for which the row's content is valid. </TD>
+ * </TR>
 	
- 		
  * <TR>
- * <TD> timeInterval </TD> 
- * <TD> ArrayTimeInterval </TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD> feedId </TD>
+ 		 
+ * <TD> int</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;refers to a collection of rows in FeedTable. </TD>
+ * </TR>
 	
 
 
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
+	
+ * <TR>
+ * <TD> numReceptor </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of receptors. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numChan </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of frequency channels. </TD>
+ * </TR>
+	
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
-	
- * <TR>
- * <TD> numLoad </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> calLoad </TD> 
- * <TD> vector<int > </TD>
- * <TD>  numLoad  </TD>
- * </TR>
-	
- * <TR>
- * <TD> feff </TD> 
- * <TD> vector<float > </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> aeff </TD> 
- * <TD> vector<float > </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> phaseDiff </TD> 
- * <TD> Angle </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> sbgain </TD> 
- * <TD> float </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> tau </TD> 
- * <TD> vector<Temperature > </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> tcal </TD> 
- * <TD> vector<Temperature > </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> trx </TD> 
- * <TD> vector<Temperature > </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> tsky </TD> 
- * <TD> vector<Temperature > </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> tsys </TD> 
- * <TD> vector<Temperature > </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> tant </TD> 
- * <TD> vector<Temperature > </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> tantTsys </TD> 
- * <TD> vector<float > </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> pwvPath </TD> 
- * <TD> vector<Length > </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> dpwvPath </TD> 
- * <TD> vector<float > </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> feffSpectrum </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>  ,   </TD>
- * </TR>
-	
- * <TR>
- * <TD> sbgainSpectrum </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>  ,   </TD>
- * </TR>
-	
- * <TR>
- * <TD> tauSpectrum </TD> 
- * <TD> vector<vector<Temperature > > </TD>
- * <TD>  ,   </TD>
- * </TR>
-	
- * <TR>
- * <TD> tcalSpectrum </TD> 
- * <TD> vector<vector<Temperature > > </TD>
- * <TD>  ,   </TD>
- * </TR>
-	
- * <TR>
- * <TD> trxSpectrum </TD> 
- * <TD> vector<Temperature > </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> tskySpectrum </TD> 
- * <TD> vector<vector<Temperature > > </TD>
- * <TD>  ,   </TD>
- * </TR>
-	
- * <TR>
- * <TD> tsysSpectrum </TD> 
- * <TD> vector<vector<Temperature > > </TD>
- * <TD>  ,   </TD>
- * </TR>
-	
- * <TR>
- * <TD> tantSpectrum </TD> 
- * <TD> vector<vector<Temperature > > </TD>
- * <TD>  ,   </TD>
- * </TR>
-	
- * <TR>
- * <TD> tantTsysSpectrum </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>  ,   </TD>
- * </TR>
-	
- * <TR>
- * <TD> pwvPathSpectrum </TD> 
- * <TD> vector<Length > </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> dpwvPathSpectrum </TD> 
- * <TD> vector<float > </TD>
- * <TD>    </TD>
- * </TR>
-	
- * <TR>
- * <TD> numPoly </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> numPolyFreq </TD> 
- * <TD> int </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> timeOrigin </TD> 
- * <TD> ArrayTime </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> freqOrigin </TD> 
- * <TD> Frequency </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> phaseCurve </TD> 
- * <TD> vector<vector<Angle > > </TD>
- * <TD>  numPoly,   </TD>
- * </TR>
-	
- * <TR>
- * <TD> delayCurve </TD> 
- * <TD> vector<vector<Interval > > </TD>
- * <TD>  numPoly,   </TD>
- * </TR>
-	
- * <TR>
- * <TD> ampliCurve </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>  numPoly,   </TD>
- * </TR>
-	
- * <TR>
- * <TD> bandpassCurve </TD> 
- * <TD> vector<vector<float > > </TD>
- * <TD>  numPolyFreq,   </TD>
- * </TR>
-	
- * <TR>
- * <TD> phasediffFlag </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> sbgainFlag </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
- * <TR>
- * <TD> tauFlag </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
  * <TD> tcalFlag </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the calibration temperature flag. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> tcalSpectrum </TD> 
+ * <TD> vector<vector<Temperature > > </TD>
+ * <TD>  numReceptor, numChan  </TD>
+ * <TD>&nbsp; the calibration temperatures (one value per receptor per channel). </TD>
  * </TR>
 	
  * <TR>
  * <TD> trxFlag </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the receiver temperature flag. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> trxSpectrum </TD> 
+ * <TD> vector<vector<Temperature > > </TD>
+ * <TD>  numReceptor, numChan  </TD>
+ * <TD>&nbsp; the receiver temperatures (one value per receptor per channel). </TD>
  * </TR>
 	
  * <TR>
  * <TD> tskyFlag </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the sky temperature flag. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> tskySpectrum </TD> 
+ * <TD> vector<vector<Temperature > > </TD>
+ * <TD>  numReceptor, numChan  </TD>
+ * <TD>&nbsp; the sky temperatures (one value per receptor per channel). </TD>
  * </TR>
 	
  * <TR>
  * <TD> tsysFlag </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the system temperature flag. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> tsysSpectrum </TD> 
+ * <TD> vector<vector<Temperature > > </TD>
+ * <TD>  numReceptor, numChan  </TD>
+ * <TD>&nbsp; the system temperatures (one value per receptor per channel). </TD>
  * </TR>
 	
  * <TR>
  * <TD> tantFlag </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the tant flag. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> tantSpectrum </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numChan  </TD>
+ * <TD>&nbsp; the Tant spectrum (one value per receptor per channel). </TD>
  * </TR>
 	
  * <TR>
  * <TD> tantTsysFlag </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the Tant/Tsys flag. </TD>
  * </TR>
 	
  * <TR>
- * <TD> pwvPathFlag </TD> 
+ * <TD> tantTsysSpectrum </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numChan  </TD>
+ * <TD>&nbsp; the Tant/Tsys spectrum(one value per receptor per channel) . </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> phaseDiffFlag </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the phase difference flag. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> phaseDiffSpectrum </TD> 
+ * <TD> vector<vector<float > > </TD>
+ * <TD>  numReceptor, numChan  </TD>
+ * <TD>&nbsp; the phase difference spectrum (one value per receptor per channel). </TD>
  * </TR>
 	
 
@@ -588,20 +392,24 @@ public:
 	
  	 * @param antennaId. 
 	
- 	 * @param feedId. 
-	
  	 * @param spectralWindowId. 
 	
  	 * @param timeInterval. 
 	
+ 	 * @param feedId. 
+	
+ 	 * @param numReceptor. 
+	
+ 	 * @param numChan. 
+	
      */
-	SysCalRow *newRow(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval);
+	SysCalRow *newRow(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numReceptor, int numChan);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	SysCalRow *newRowFull(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval);
+	SysCalRow *newRowFull(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numReceptor, int numChan);
 
 
 	/**
@@ -641,7 +449,7 @@ public:
 	 *
 	
 	 * @note The row is inserted in the table in such a way that all the rows having the same value of
-	 * ( antennaId, feedId, spectralWindowId ) are stored by ascending time.
+	 * ( antennaId, spectralWindowId, feedId ) are stored by ascending time.
 	 * @see method getByContext.
 	
 	 */
@@ -665,12 +473,12 @@ public:
 
 	/**
 	 * Returns all the rows sorted by ascending startTime for a given context. 
-	 * The context is defined by a value of ( antennaId, feedId, spectralWindowId ).
+	 * The context is defined by a value of ( antennaId, spectralWindowId, feedId ).
 	 *
 	 * @return a pointer on a vector<SysCalRow *>. A null returned value means that the table contains
-	 * no SysCalRow for the given ( antennaId, feedId, spectralWindowId ).
+	 * no SysCalRow for the given ( antennaId, spectralWindowId, feedId ).
 	 */
-	 vector <SysCalRow*> *getByContext(Tag antennaId, int feedId, Tag spectralWindowId);
+	 vector <SysCalRow*> *getByContext(Tag antennaId, Tag spectralWindowId, int feedId);
 	 
 
 
@@ -683,15 +491,15 @@ public:
 	
 	 * @param antennaId. 
 	
-	 * @param feedId. 
-	
 	 * @param spectralWindowId. 
 	
 	 * @param timeInterval. 
 	
+	 * @param feedId. 
+	
  	 *
 	 */
- 	SysCalRow* getRowByKey(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval);
+ 	SysCalRow* getRowByKey(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId);
 
  	 	
 
@@ -705,14 +513,18 @@ public:
 			
  	 * @param antennaId.
  	 		
- 	 * @param feedId.
- 	 		
  	 * @param spectralWindowId.
  	 		
  	 * @param timeInterval.
+ 	 		
+ 	 * @param feedId.
+ 	 		
+ 	 * @param numReceptor.
+ 	 		
+ 	 * @param numChan.
  	 		 
  	 */
-	SysCalRow* lookup(Tag antennaId, int feedId, Tag spectralWindowId, ArrayTimeInterval timeInterval); 
+	SysCalRow* lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numReceptor, int numChan); 
 
 
 #ifndef WITHOUT_ACS
@@ -732,43 +544,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(SysCalTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(SysCalTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for SysCal (SysCalTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a SysCal (SysCalTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -843,8 +661,10 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
 	 */
-	SysCalRow* checkAndAdd(SysCalRow* x) throw (DuplicateKey);
+	SysCalRow* checkAndAdd(SysCalRow* x) ;
 
 
 	
@@ -879,7 +699,7 @@ private:
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
 	 */
-	 string Key(Tag antennaId, int feedId, Tag spectralWindowId) ;
+	 string Key(Tag antennaId, Tag spectralWindowId, int feedId) ;
 		 
 		
 	
@@ -889,11 +709,11 @@ private:
 	 * whose attributes are equal to the corresponding parameters of the method.
 	 *
 	 */
-	void getByKeyNoAutoIncNoTime(vector <SysCalRow*>& vin, vector <SysCalRow*>& vout,  Tag antennaId, int feedId, Tag spectralWindowId);
+	void getByKeyNoAutoIncNoTime(vector <SysCalRow*>& vin, vector <SysCalRow*>& vout,  Tag antennaId, Tag spectralWindowId, int feedId);
 	
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

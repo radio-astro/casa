@@ -88,16 +88,16 @@ using namespace enumerations;
 	
 
 	
-
-	
-
-	
-
-	
-
-	
 #include "CInvalidatingCondition.h"
 using namespace InvalidatingConditionMod;
+	
+
+	
+
+	
+
+	
+
 	
 
 
@@ -123,7 +123,7 @@ using asdm::NoSuchRow;
 using asdm::IllegalAccessException;
 
 /*\file CalReduction.h
-    \brief Generated from model's revision "1.46", branch "HEAD"
+    \brief Generated from model's revision "1.52", branch "HEAD"
 */
 
 namespace asdm {
@@ -135,7 +135,7 @@ namespace asdm {
 /**
  * The CalReductionRow class is a row of a CalReductionTable.
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  */
 class CalReductionRow {
@@ -162,8 +162,9 @@ public:
 	/**
 	 * Fill the values of this row from the IDL struct CalReductionRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
 	 */
-	void setFromIDL (CalReductionRowIDL x) throw(ConversionException);
+	void setFromIDL (CalReductionRowIDL x) ;
 #endif
 	
 	/**
@@ -176,8 +177,22 @@ public:
 	 * Fill the values of this row from an XML string 
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
+	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) throw(ConversionException);
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @table the CalReductionTable to which the row built by deserialization will be parented.
+	  */
+	 static CalReductionRow* fromBin(EndianISStream& eiss, CalReductionTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -234,6 +249,36 @@ public:
 
 
 	
+	// ===> Attribute appliedCalibrations
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get appliedCalibrations.
+ 	 * @return appliedCalibrations as vector<string >
+ 	 */
+ 	vector<string > getAppliedCalibrations() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set appliedCalibrations with the specified vector<string >.
+ 	 * @param appliedCalibrations The vector<string > value to which appliedCalibrations is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setAppliedCalibrations (vector<string > appliedCalibrations);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute numParam
 	
 	
@@ -264,66 +309,6 @@ public:
 
 
 	
-	// ===> Attribute timeReduced
-	
-	
-	
-
-	
- 	/**
- 	 * Get timeReduced.
- 	 * @return timeReduced as ArrayTime
- 	 */
- 	ArrayTime getTimeReduced() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set timeReduced with the specified ArrayTime.
- 	 * @param timeReduced The ArrayTime value to which timeReduced is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setTimeReduced (ArrayTime timeReduced);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute calAppliedArray
-	
-	
-	
-
-	
- 	/**
- 	 * Get calAppliedArray.
- 	 * @return calAppliedArray as vector<string >
- 	 */
- 	vector<string > getCalAppliedArray() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set calAppliedArray with the specified vector<string >.
- 	 * @param calAppliedArray The vector<string > value to which calAppliedArray is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setCalAppliedArray (vector<string > calAppliedArray);
-  		
-	
-	
-	
-
-
-	
 	// ===> Attribute paramSet
 	
 	
@@ -347,6 +332,96 @@ public:
  			
  	 */
  	void setParamSet (vector<string > paramSet);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numInvalidConditions
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numInvalidConditions.
+ 	 * @return numInvalidConditions as int
+ 	 */
+ 	int getNumInvalidConditions() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numInvalidConditions with the specified int.
+ 	 * @param numInvalidConditions The int value to which numInvalidConditions is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumInvalidConditions (int numInvalidConditions);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute invalidConditions
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get invalidConditions.
+ 	 * @return invalidConditions as vector<InvalidatingConditionMod::InvalidatingCondition >
+ 	 */
+ 	vector<InvalidatingConditionMod::InvalidatingCondition > getInvalidConditions() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set invalidConditions with the specified vector<InvalidatingConditionMod::InvalidatingCondition >.
+ 	 * @param invalidConditions The vector<InvalidatingConditionMod::InvalidatingCondition > value to which invalidConditions is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setInvalidConditions (vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute timeReduced
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get timeReduced.
+ 	 * @return timeReduced as ArrayTime
+ 	 */
+ 	ArrayTime getTimeReduced() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set timeReduced with the specified ArrayTime.
+ 	 * @param timeReduced The ArrayTime value to which timeReduced is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setTimeReduced (ArrayTime timeReduced);
   		
 	
 	
@@ -443,66 +518,6 @@ public:
 	
 
 
-	
-	// ===> Attribute numInvalidConditions
-	
-	
-	
-
-	
- 	/**
- 	 * Get numInvalidConditions.
- 	 * @return numInvalidConditions as int
- 	 */
- 	int getNumInvalidConditions() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set numInvalidConditions with the specified int.
- 	 * @param numInvalidConditions The int value to which numInvalidConditions is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setNumInvalidConditions (int numInvalidConditions);
-  		
-	
-	
-	
-
-
-	
-	// ===> Attribute invalidConditions
-	
-	
-	
-
-	
- 	/**
- 	 * Get invalidConditions.
- 	 * @return invalidConditions as vector<InvalidatingConditionMod::InvalidatingCondition >
- 	 */
- 	vector<InvalidatingConditionMod::InvalidatingCondition > getInvalidConditions() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set invalidConditions with the specified vector<InvalidatingConditionMod::InvalidatingCondition >.
- 	 * @param invalidConditions The vector<InvalidatingConditionMod::InvalidatingCondition > value to which invalidConditions is to be set.
- 	 
- 		
- 			
- 	 */
- 	void setInvalidConditions (vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions);
-  		
-	
-	
-	
-
-
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -518,12 +533,12 @@ public:
 	 * Compare each mandatory attribute except the autoincrementable one of this CalReductionRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
 	 */ 
-	bool compareNoAutoInc(int numApplied, int numParam, ArrayTime timeReduced, vector<string > calAppliedArray, vector<string > paramSet, string messages, string software, string softwareVersion, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions);
+	bool compareNoAutoInc(int numApplied, vector<string > appliedCalibrations, int numParam, vector<string > paramSet, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions, ArrayTime timeReduced, string messages, string software, string softwareVersion);
 	
 	
 
 	
-	bool compareRequiredValue(int numApplied, int numParam, ArrayTime timeReduced, vector<string > calAppliedArray, vector<string > paramSet, string messages, string software, string softwareVersion, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions); 
+	bool compareRequiredValue(int numApplied, vector<string > appliedCalibrations, int numParam, vector<string > paramSet, int numInvalidConditions, vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions, ArrayTime timeReduced, string messages, string software, string softwareVersion); 
 		 
 	
 	/**
@@ -618,6 +633,17 @@ private:
  	
 
 	
+	// ===> Attribute appliedCalibrations
+	
+	
+
+	vector<string > appliedCalibrations;
+
+	
+	
+ 	
+
+	
 	// ===> Attribute numParam
 	
 	
@@ -629,33 +655,44 @@ private:
  	
 
 	
-	// ===> Attribute timeReduced
-	
-	
-
-	ArrayTime timeReduced;
-
-	
-	
- 	
-
-	
-	// ===> Attribute calAppliedArray
-	
-	
-
-	vector<string > calAppliedArray;
-
-	
-	
- 	
-
-	
 	// ===> Attribute paramSet
 	
 	
 
 	vector<string > paramSet;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numInvalidConditions
+	
+	
+
+	int numInvalidConditions;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute invalidConditions
+	
+	
+
+	vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute timeReduced
+	
+	
+
+	ArrayTime timeReduced;
 
 	
 	
@@ -689,28 +726,6 @@ private:
 	
 
 	string softwareVersion;
-
-	
-	
- 	
-
-	
-	// ===> Attribute numInvalidConditions
-	
-	
-
-	int numInvalidConditions;
-
-	
-	
- 	
-
-	
-	// ===> Attribute invalidConditions
-	
-	
-
-	vector<InvalidatingConditionMod::InvalidatingCondition > invalidConditions;
 
 	
 	

@@ -114,72 +114,20 @@ namespace asdm {
 		
 		
 			
-		x->relHumidity = relHumidity.toIDLHumidity();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->temperature = temperature.toIDLTemperature();
-			
-		
-	
-
-	
-  		
-		
-		x->dewPointExists = dewPointExists;
-		
-		
-			
-		x->dewPoint = dewPoint.toIDLTemperature();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->windDirection = windDirection.toIDLAngle();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->windSpeed = windSpeed.toIDLSpeed();
-			
-		
-	
-
-	
-  		
-		
-		
-			
-		x->windMax = windMax.toIDLSpeed();
-			
-		
-	
-
-	
-  		
-		
-		
-			
 				
 		x->pressureFlag = pressureFlag;
  				
  			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->relHumidity = relHumidity.toIDLHumidity();
+			
 		
 	
 
@@ -200,6 +148,16 @@ namespace asdm {
 		
 		
 			
+		x->temperature = temperature.toIDLTemperature();
+			
+		
+	
+
+	
+  		
+		
+		
+			
 				
 		x->temperatureFlag = temperatureFlag;
  				
@@ -210,14 +168,10 @@ namespace asdm {
 	
   		
 		
-		x->dewPointFlagExists = dewPointFlagExists;
-		
 		
 			
-				
-		x->dewPointFlag = dewPointFlag;
- 				
- 			
+		x->windDirection = windDirection.toIDLAngle();
+			
 		
 	
 
@@ -238,6 +192,16 @@ namespace asdm {
 		
 		
 			
+		x->windSpeed = windSpeed.toIDLSpeed();
+			
+		
+	
+
+	
+  		
+		
+		
+			
 				
 		x->windSpeedFlag = windSpeedFlag;
  				
@@ -250,8 +214,44 @@ namespace asdm {
 		
 		
 			
+		x->windMax = windMax.toIDLSpeed();
+			
+		
+	
+
+	
+  		
+		
+		
+			
 				
 		x->windMaxFlag = windMaxFlag;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->dewPointExists = dewPointExists;
+		
+		
+			
+		x->dewPoint = dewPoint.toIDLTemperature();
+			
+		
+	
+
+	
+  		
+		
+		x->dewPointFlagExists = dewPointFlagExists;
+		
+		
+			
+				
+		x->dewPointFlag = dewPointFlag;
  				
  			
 		
@@ -287,7 +287,7 @@ namespace asdm {
 	 * Fill the values of this row from the IDL struct WeatherRowIDL.
 	 * @param x The IDL struct containing the values used to fill this row.
 	 */
-	void WeatherRow::setFromIDL (WeatherRowIDL x) throw(ConversionException) {
+	void WeatherRow::setFromIDL (WeatherRowIDL x){
 		try {
 		// Fill the values from x.
 	
@@ -316,6 +316,16 @@ namespace asdm {
 		
 		
 			
+		setPressureFlag(x.pressureFlag);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
 		setRelHumidity(Humidity (x.relHumidity));
 			
  		
@@ -326,8 +336,88 @@ namespace asdm {
 		
 		
 			
+		setRelHumidityFlag(x.relHumidityFlag);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
 		setTemperature(Temperature (x.temperature));
 			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setTemperatureFlag(x.temperatureFlag);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setWindDirection(Angle (x.windDirection));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setWindDirectionFlag(x.windDirectionFlag);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setWindSpeed(Speed (x.windSpeed));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setWindSpeedFlag(x.windSpeedFlag);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setWindMax(Speed (x.windMax));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setWindMaxFlag(x.windMaxFlag);
+  			
  		
 		
 	
@@ -349,66 +439,6 @@ namespace asdm {
 
 	
 		
-		
-			
-		setWindDirection(Angle (x.windDirection));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setWindSpeed(Speed (x.windSpeed));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setWindMax(Speed (x.windMax));
-			
- 		
-		
-	
-
-	
-		
-		
-			
-		setPressureFlag(x.pressureFlag);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setRelHumidityFlag(x.relHumidityFlag);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setTemperatureFlag(x.temperatureFlag);
-  			
- 		
-		
-	
-
-	
-		
 		dewPointFlagExists = x.dewPointFlagExists;
 		if (x.dewPointFlagExists) {
 		
@@ -419,36 +449,6 @@ namespace asdm {
  		
 		
 		}
-		
-	
-
-	
-		
-		
-			
-		setWindDirectionFlag(x.windDirectionFlag);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setWindSpeedFlag(x.windSpeedFlag);
-  			
- 		
-		
-	
-
-	
-		
-		
-			
-		setWindMaxFlag(x.windMaxFlag);
-  			
- 		
 		
 	
 
@@ -470,7 +470,7 @@ namespace asdm {
 	
 
 		} catch (IllegalAccessException err) {
-			throw new ConversionException (err.getMessage(),"Weather");
+			throw ConversionException (err.getMessage(),"Weather");
 		}
 	}
 #endif
@@ -504,6 +504,14 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(pressureFlag, "pressureFlag", buf);
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(relHumidity, "relHumidity", buf);
 		
 		
@@ -512,7 +520,71 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(relHumidityFlag, "relHumidityFlag", buf);
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(temperature, "temperature", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(temperatureFlag, "temperatureFlag", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(windDirection, "windDirection", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(windDirectionFlag, "windDirectionFlag", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(windSpeed, "windSpeed", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(windSpeedFlag, "windSpeedFlag", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(windMax, "windMax", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(windMaxFlag, "windMaxFlag", buf);
 		
 		
 	
@@ -531,54 +603,6 @@ namespace asdm {
 
   	
  		
-		
-		Parser::toXML(windDirection, "windDirection", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(windSpeed, "windSpeed", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(windMax, "windMax", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(pressureFlag, "pressureFlag", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(relHumidityFlag, "relHumidityFlag", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(temperatureFlag, "temperatureFlag", buf);
-		
-		
-	
-
-  	
- 		
 		if (dewPointFlagExists) {
 		
 		
@@ -586,30 +610,6 @@ namespace asdm {
 		
 		
 		}
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(windDirectionFlag, "windDirectionFlag", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(windSpeedFlag, "windSpeedFlag", buf);
-		
-		
-	
-
-  	
- 		
-		
-		Parser::toXML(windMaxFlag, "windMaxFlag", buf);
-		
 		
 	
 
@@ -638,7 +638,7 @@ namespace asdm {
 	 * that was produced by the toXML() method.
 	 * @param x The XML string being used to set the values of this row.
 	 */
-	void WeatherRow::setFromXML (string rowDoc) throw(ConversionException) {
+	void WeatherRow::setFromXML (string rowDoc) {
 		Parser row(rowDoc);
 		string s = "";
 		try {
@@ -663,6 +663,14 @@ namespace asdm {
 	
   		
 			
+	  	setPressureFlag(Parser::getBoolean("pressureFlag","Weather",rowDoc));
+			
+		
+	
+
+	
+  		
+			
 	  	setRelHumidity(Parser::getHumidity("relHumidity","Weather",rowDoc));
 			
 		
@@ -671,7 +679,71 @@ namespace asdm {
 	
   		
 			
+	  	setRelHumidityFlag(Parser::getBoolean("relHumidityFlag","Weather",rowDoc));
+			
+		
+	
+
+	
+  		
+			
 	  	setTemperature(Parser::getTemperature("temperature","Weather",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setTemperatureFlag(Parser::getBoolean("temperatureFlag","Weather",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setWindDirection(Parser::getAngle("windDirection","Weather",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setWindDirectionFlag(Parser::getBoolean("windDirectionFlag","Weather",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setWindSpeed(Parser::getSpeed("windSpeed","Weather",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setWindSpeedFlag(Parser::getBoolean("windSpeedFlag","Weather",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setWindMax(Parser::getSpeed("windMax","Weather",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setWindMaxFlag(Parser::getBoolean("windMaxFlag","Weather",rowDoc));
 			
 		
 	
@@ -688,84 +760,12 @@ namespace asdm {
 
 	
   		
-			
-	  	setWindDirection(Parser::getAngle("windDirection","Weather",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setWindSpeed(Parser::getSpeed("windSpeed","Weather",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setWindMax(Parser::getSpeed("windMax","Weather",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setPressureFlag(Parser::getBoolean("pressureFlag","Weather",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setRelHumidityFlag(Parser::getBoolean("relHumidityFlag","Weather",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setTemperatureFlag(Parser::getBoolean("temperatureFlag","Weather",rowDoc));
-			
-		
-	
-
-	
-  		
         if (row.isStr("<dewPointFlag>")) {
 			
 	  		setDewPointFlag(Parser::getBoolean("dewPointFlag","Weather",rowDoc));
 			
 		}
  		
-	
-
-	
-  		
-			
-	  	setWindDirectionFlag(Parser::getBoolean("windDirectionFlag","Weather",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setWindSpeedFlag(Parser::getBoolean("windSpeedFlag","Weather",rowDoc));
-			
-		
-	
-
-	
-  		
-			
-	  	setWindMaxFlag(Parser::getBoolean("windMaxFlag","Weather",rowDoc));
-			
-		
 	
 
 	
@@ -786,6 +786,298 @@ namespace asdm {
 		} catch (IllegalAccessException err) {
 			throw ConversionException (err.getMessage(),"Weather");
 		}
+	}
+	
+	void WeatherRow::toBin(EndianOSStream& eoss) {
+	
+	
+	
+	
+		
+	stationId.toBin(eoss);
+		
+	
+
+	
+	
+		
+	timeInterval.toBin(eoss);
+		
+	
+
+	
+	
+		
+	pressure.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(pressureFlag);
+				
+		
+	
+
+	
+	
+		
+	relHumidity.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(relHumidityFlag);
+				
+		
+	
+
+	
+	
+		
+	temperature.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(temperatureFlag);
+				
+		
+	
+
+	
+	
+		
+	windDirection.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(windDirectionFlag);
+				
+		
+	
+
+	
+	
+		
+	windSpeed.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(windSpeedFlag);
+				
+		
+	
+
+	
+	
+		
+	windMax.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeBoolean(windMaxFlag);
+				
+		
+	
+
+
+	
+	
+	eoss.writeBoolean(dewPointExists);
+	if (dewPointExists) {
+	
+	
+	
+		
+	dewPoint.toBin(eoss);
+		
+	
+
+	}
+
+	eoss.writeBoolean(dewPointFlagExists);
+	if (dewPointFlagExists) {
+	
+	
+	
+		
+						
+			eoss.writeBoolean(dewPointFlag);
+				
+		
+	
+
+	}
+
+	}
+	
+	WeatherRow* WeatherRow::fromBin(EndianISStream& eiss, WeatherTable& table) {
+		WeatherRow* row = new  WeatherRow(table);
+		
+		
+		
+	
+		
+		
+		row->stationId =  Tag::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+
+	
+		
+		
+		row->pressure =  Pressure::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->pressureFlag =  eiss.readBoolean();
+			
+		
+	
+
+	
+		
+		
+		row->relHumidity =  Humidity::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->relHumidityFlag =  eiss.readBoolean();
+			
+		
+	
+
+	
+		
+		
+		row->temperature =  Temperature::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->temperatureFlag =  eiss.readBoolean();
+			
+		
+	
+
+	
+		
+		
+		row->windDirection =  Angle::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->windDirectionFlag =  eiss.readBoolean();
+			
+		
+	
+
+	
+		
+		
+		row->windSpeed =  Speed::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->windSpeedFlag =  eiss.readBoolean();
+			
+		
+	
+
+	
+		
+		
+		row->windMax =  Speed::fromBin(eiss);
+		
+	
+
+	
+	
+		
+			
+		row->windMaxFlag =  eiss.readBoolean();
+			
+		
+	
+
+		
+		
+		
+	row->dewPointExists = eiss.readBoolean();
+	if (row->dewPointExists) {
+		
+	
+		
+		
+		row->dewPoint =  Temperature::fromBin(eiss);
+		
+	
+
+	}
+
+	row->dewPointFlagExists = eiss.readBoolean();
+	if (row->dewPointFlagExists) {
+		
+	
+	
+		
+			
+		row->dewPointFlag =  eiss.readBoolean();
+			
+		
+	
+
+	}
+
+		
+		return row;
 	}
 	
 	////////////////////////////////
@@ -864,213 +1156,6 @@ namespace asdm {
 
 	
  	/**
- 	 * Get relHumidity.
- 	 * @return relHumidity as Humidity
- 	 */
- 	Humidity WeatherRow::getRelHumidity() const {
-	
-  		return relHumidity;
- 	}
-
- 	/**
- 	 * Set relHumidity with the specified Humidity.
- 	 * @param relHumidity The Humidity value to which relHumidity is to be set.
- 	 
- 	
- 		
- 	 */
- 	void WeatherRow::setRelHumidity (Humidity relHumidity)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->relHumidity = relHumidity;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get temperature.
- 	 * @return temperature as Temperature
- 	 */
- 	Temperature WeatherRow::getTemperature() const {
-	
-  		return temperature;
- 	}
-
- 	/**
- 	 * Set temperature with the specified Temperature.
- 	 * @param temperature The Temperature value to which temperature is to be set.
- 	 
- 	
- 		
- 	 */
- 	void WeatherRow::setTemperature (Temperature temperature)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->temperature = temperature;
-	
- 	}
-	
-	
-
-	
-	/**
-	 * The attribute dewPoint is optional. Return true if this attribute exists.
-	 * @return true if and only if the dewPoint attribute exists. 
-	 */
-	bool WeatherRow::isDewPointExists() const {
-		return dewPointExists;
-	}
-	
-
-	
- 	/**
- 	 * Get dewPoint, which is optional.
- 	 * @return dewPoint as Temperature
- 	 * @throw IllegalAccessException If dewPoint does not exist.
- 	 */
- 	Temperature WeatherRow::getDewPoint() const throw(IllegalAccessException) {
-		if (!dewPointExists) {
-			throw IllegalAccessException("dewPoint", "Weather");
-		}
-	
-  		return dewPoint;
- 	}
-
- 	/**
- 	 * Set dewPoint with the specified Temperature.
- 	 * @param dewPoint The Temperature value to which dewPoint is to be set.
- 	 
- 	
- 	 */
- 	void WeatherRow::setDewPoint (Temperature dewPoint) {
-	
- 		this->dewPoint = dewPoint;
-	
-		dewPointExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark dewPoint, which is an optional field, as non-existent.
-	 */
-	void WeatherRow::clearDewPoint () {
-		dewPointExists = false;
-	}
-	
-
-	
-
-	
- 	/**
- 	 * Get windDirection.
- 	 * @return windDirection as Angle
- 	 */
- 	Angle WeatherRow::getWindDirection() const {
-	
-  		return windDirection;
- 	}
-
- 	/**
- 	 * Set windDirection with the specified Angle.
- 	 * @param windDirection The Angle value to which windDirection is to be set.
- 	 
- 	
- 		
- 	 */
- 	void WeatherRow::setWindDirection (Angle windDirection)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->windDirection = windDirection;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get windSpeed.
- 	 * @return windSpeed as Speed
- 	 */
- 	Speed WeatherRow::getWindSpeed() const {
-	
-  		return windSpeed;
- 	}
-
- 	/**
- 	 * Set windSpeed with the specified Speed.
- 	 * @param windSpeed The Speed value to which windSpeed is to be set.
- 	 
- 	
- 		
- 	 */
- 	void WeatherRow::setWindSpeed (Speed windSpeed)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->windSpeed = windSpeed;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
- 	 * Get windMax.
- 	 * @return windMax as Speed
- 	 */
- 	Speed WeatherRow::getWindMax() const {
-	
-  		return windMax;
- 	}
-
- 	/**
- 	 * Set windMax with the specified Speed.
- 	 * @param windMax The Speed value to which windMax is to be set.
- 	 
- 	
- 		
- 	 */
- 	void WeatherRow::setWindMax (Speed windMax)  {
-  	
-  	
-  		if (hasBeenAdded) {
- 		
-  		}
-  	
- 		this->windMax = windMax;
-	
- 	}
-	
-	
-
-	
-
-	
- 	/**
  	 * Get pressureFlag.
  	 * @return pressureFlag as bool
  	 */
@@ -1094,6 +1179,38 @@ namespace asdm {
   		}
   	
  		this->pressureFlag = pressureFlag;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get relHumidity.
+ 	 * @return relHumidity as Humidity
+ 	 */
+ 	Humidity WeatherRow::getRelHumidity() const {
+	
+  		return relHumidity;
+ 	}
+
+ 	/**
+ 	 * Set relHumidity with the specified Humidity.
+ 	 * @param relHumidity The Humidity value to which relHumidity is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void WeatherRow::setRelHumidity (Humidity relHumidity)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->relHumidity = relHumidity;
 	
  	}
 	
@@ -1135,6 +1252,38 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get temperature.
+ 	 * @return temperature as Temperature
+ 	 */
+ 	Temperature WeatherRow::getTemperature() const {
+	
+  		return temperature;
+ 	}
+
+ 	/**
+ 	 * Set temperature with the specified Temperature.
+ 	 * @param temperature The Temperature value to which temperature is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void WeatherRow::setTemperature (Temperature temperature)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->temperature = temperature;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get temperatureFlag.
  	 * @return temperatureFlag as bool
  	 */
@@ -1164,50 +1313,35 @@ namespace asdm {
 	
 
 	
-	/**
-	 * The attribute dewPointFlag is optional. Return true if this attribute exists.
-	 * @return true if and only if the dewPointFlag attribute exists. 
-	 */
-	bool WeatherRow::isDewPointFlagExists() const {
-		return dewPointFlagExists;
-	}
-	
 
 	
  	/**
- 	 * Get dewPointFlag, which is optional.
- 	 * @return dewPointFlag as bool
- 	 * @throw IllegalAccessException If dewPointFlag does not exist.
+ 	 * Get windDirection.
+ 	 * @return windDirection as Angle
  	 */
- 	bool WeatherRow::getDewPointFlag() const throw(IllegalAccessException) {
-		if (!dewPointFlagExists) {
-			throw IllegalAccessException("dewPointFlag", "Weather");
-		}
+ 	Angle WeatherRow::getWindDirection() const {
 	
-  		return dewPointFlag;
+  		return windDirection;
  	}
 
  	/**
- 	 * Set dewPointFlag with the specified bool.
- 	 * @param dewPointFlag The bool value to which dewPointFlag is to be set.
+ 	 * Set windDirection with the specified Angle.
+ 	 * @param windDirection The Angle value to which windDirection is to be set.
  	 
  	
+ 		
  	 */
- 	void WeatherRow::setDewPointFlag (bool dewPointFlag) {
-	
- 		this->dewPointFlag = dewPointFlag;
-	
-		dewPointFlagExists = true;
+ 	void WeatherRow::setWindDirection (Angle windDirection)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->windDirection = windDirection;
 	
  	}
 	
-	
-	/**
-	 * Mark dewPointFlag, which is an optional field, as non-existent.
-	 */
-	void WeatherRow::clearDewPointFlag () {
-		dewPointFlagExists = false;
-	}
 	
 
 	
@@ -1237,6 +1371,38 @@ namespace asdm {
   		}
   	
  		this->windDirectionFlag = windDirectionFlag;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get windSpeed.
+ 	 * @return windSpeed as Speed
+ 	 */
+ 	Speed WeatherRow::getWindSpeed() const {
+	
+  		return windSpeed;
+ 	}
+
+ 	/**
+ 	 * Set windSpeed with the specified Speed.
+ 	 * @param windSpeed The Speed value to which windSpeed is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void WeatherRow::setWindSpeed (Speed windSpeed)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->windSpeed = windSpeed;
 	
  	}
 	
@@ -1278,6 +1444,38 @@ namespace asdm {
 
 	
  	/**
+ 	 * Get windMax.
+ 	 * @return windMax as Speed
+ 	 */
+ 	Speed WeatherRow::getWindMax() const {
+	
+  		return windMax;
+ 	}
+
+ 	/**
+ 	 * Set windMax with the specified Speed.
+ 	 * @param windMax The Speed value to which windMax is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void WeatherRow::setWindMax (Speed windMax)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->windMax = windMax;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
  	 * Get windMaxFlag.
  	 * @return windMaxFlag as bool
  	 */
@@ -1304,6 +1502,100 @@ namespace asdm {
 	
  	}
 	
+	
+
+	
+	/**
+	 * The attribute dewPoint is optional. Return true if this attribute exists.
+	 * @return true if and only if the dewPoint attribute exists. 
+	 */
+	bool WeatherRow::isDewPointExists() const {
+		return dewPointExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get dewPoint, which is optional.
+ 	 * @return dewPoint as Temperature
+ 	 * @throw IllegalAccessException If dewPoint does not exist.
+ 	 */
+ 	Temperature WeatherRow::getDewPoint() const  {
+		if (!dewPointExists) {
+			throw IllegalAccessException("dewPoint", "Weather");
+		}
+	
+  		return dewPoint;
+ 	}
+
+ 	/**
+ 	 * Set dewPoint with the specified Temperature.
+ 	 * @param dewPoint The Temperature value to which dewPoint is to be set.
+ 	 
+ 	
+ 	 */
+ 	void WeatherRow::setDewPoint (Temperature dewPoint) {
+	
+ 		this->dewPoint = dewPoint;
+	
+		dewPointExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark dewPoint, which is an optional field, as non-existent.
+	 */
+	void WeatherRow::clearDewPoint () {
+		dewPointExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute dewPointFlag is optional. Return true if this attribute exists.
+	 * @return true if and only if the dewPointFlag attribute exists. 
+	 */
+	bool WeatherRow::isDewPointFlagExists() const {
+		return dewPointFlagExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get dewPointFlag, which is optional.
+ 	 * @return dewPointFlag as bool
+ 	 * @throw IllegalAccessException If dewPointFlag does not exist.
+ 	 */
+ 	bool WeatherRow::getDewPointFlag() const  {
+		if (!dewPointFlagExists) {
+			throw IllegalAccessException("dewPointFlag", "Weather");
+		}
+	
+  		return dewPointFlag;
+ 	}
+
+ 	/**
+ 	 * Set dewPointFlag with the specified bool.
+ 	 * @param dewPointFlag The bool value to which dewPointFlag is to be set.
+ 	 
+ 	
+ 	 */
+ 	void WeatherRow::setDewPointFlag (bool dewPointFlag) {
+	
+ 		this->dewPointFlag = dewPointFlag;
+	
+		dewPointFlagExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark dewPointFlag, which is an optional field, as non-existent.
+	 */
+	void WeatherRow::clearDewPointFlag () {
+		dewPointFlagExists = false;
+	}
 	
 
 	
@@ -1392,29 +1684,29 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
 		dewPointExists = false;
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
 		dewPointFlagExists = false;
-	
-
-	
-
-	
-
 	
 
 	
@@ -1470,29 +1762,29 @@ namespace asdm {
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
 		dewPointExists = false;
 	
 
 	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
 		dewPointFlagExists = false;
-	
-
-	
-
-	
-
 	
 
 	
@@ -1511,25 +1803,25 @@ namespace asdm {
 		
 			pressure = row.pressure;
 		
-			relHumidity = row.relHumidity;
-		
-			temperature = row.temperature;
-		
-			windDirection = row.windDirection;
-		
-			windSpeed = row.windSpeed;
-		
-			windMax = row.windMax;
-		
 			pressureFlag = row.pressureFlag;
+		
+			relHumidity = row.relHumidity;
 		
 			relHumidityFlag = row.relHumidityFlag;
 		
+			temperature = row.temperature;
+		
 			temperatureFlag = row.temperatureFlag;
+		
+			windDirection = row.windDirection;
 		
 			windDirectionFlag = row.windDirectionFlag;
 		
+			windSpeed = row.windSpeed;
+		
 			windSpeedFlag = row.windSpeedFlag;
+		
+			windMax = row.windMax;
 		
 			windMaxFlag = row.windMaxFlag;
 		
@@ -1554,7 +1846,7 @@ namespace asdm {
 	}
 
 	
-	bool WeatherRow::compareNoAutoInc(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, Humidity relHumidity, Temperature temperature, Angle windDirection, Speed windSpeed, Speed windMax, bool pressureFlag, bool relHumidityFlag, bool temperatureFlag, bool windDirectionFlag, bool windSpeedFlag, bool windMaxFlag) {
+	bool WeatherRow::compareNoAutoInc(Tag stationId, ArrayTimeInterval timeInterval, Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag) {
 		bool result;
 		result = true;
 		
@@ -1581,42 +1873,14 @@ namespace asdm {
 
 	
 		
-		result = result && (this->relHumidity == relHumidity);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->temperature == temperature);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->windDirection == windDirection);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->windSpeed == windSpeed);
-		
-		if (!result) return false;
-	
-
-	
-		
-		result = result && (this->windMax == windMax);
-		
-		if (!result) return false;
-	
-
-	
-		
 		result = result && (this->pressureFlag == pressureFlag);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->relHumidity == relHumidity);
 		
 		if (!result) return false;
 	
@@ -1630,7 +1894,21 @@ namespace asdm {
 
 	
 		
+		result = result && (this->temperature == temperature);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->temperatureFlag == temperatureFlag);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->windDirection == windDirection);
 		
 		if (!result) return false;
 	
@@ -1644,7 +1922,21 @@ namespace asdm {
 
 	
 		
+		result = result && (this->windSpeed == windSpeed);
+		
+		if (!result) return false;
+	
+
+	
+		
 		result = result && (this->windSpeedFlag == windSpeedFlag);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->windMax == windMax);
 		
 		if (!result) return false;
 	
@@ -1661,7 +1953,7 @@ namespace asdm {
 	
 	
 	
-	bool WeatherRow::compareRequiredValue(Pressure pressure, Humidity relHumidity, Temperature temperature, Angle windDirection, Speed windSpeed, Speed windMax, bool pressureFlag, bool relHumidityFlag, bool temperatureFlag, bool windDirectionFlag, bool windSpeedFlag, bool windMaxFlag) {
+	bool WeatherRow::compareRequiredValue(Pressure pressure, bool pressureFlag, Humidity relHumidity, bool relHumidityFlag, Temperature temperature, bool temperatureFlag, Angle windDirection, bool windDirectionFlag, Speed windSpeed, bool windSpeedFlag, Speed windMax, bool windMaxFlag) {
 		bool result;
 		result = true;
 		
@@ -1670,27 +1962,11 @@ namespace asdm {
 	
 
 	
-		if (!(this->relHumidity == relHumidity)) return false;
-	
-
-	
-		if (!(this->temperature == temperature)) return false;
-	
-
-	
-		if (!(this->windDirection == windDirection)) return false;
-	
-
-	
-		if (!(this->windSpeed == windSpeed)) return false;
-	
-
-	
-		if (!(this->windMax == windMax)) return false;
-	
-
-	
 		if (!(this->pressureFlag == pressureFlag)) return false;
+	
+
+	
+		if (!(this->relHumidity == relHumidity)) return false;
 	
 
 	
@@ -1698,7 +1974,15 @@ namespace asdm {
 	
 
 	
+		if (!(this->temperature == temperature)) return false;
+	
+
+	
 		if (!(this->temperatureFlag == temperatureFlag)) return false;
+	
+
+	
+		if (!(this->windDirection == windDirection)) return false;
 	
 
 	
@@ -1706,7 +1990,15 @@ namespace asdm {
 	
 
 	
+		if (!(this->windSpeed == windSpeed)) return false;
+	
+
+	
 		if (!(this->windSpeedFlag == windSpeedFlag)) return false;
+	
+
+	
+		if (!(this->windMax == windMax)) return false;
 	
 
 	
@@ -1730,25 +2022,25 @@ namespace asdm {
 			
 		if (this->pressure != x->pressure) return false;
 			
-		if (this->relHumidity != x->relHumidity) return false;
-			
-		if (this->temperature != x->temperature) return false;
-			
-		if (this->windDirection != x->windDirection) return false;
-			
-		if (this->windSpeed != x->windSpeed) return false;
-			
-		if (this->windMax != x->windMax) return false;
-			
 		if (this->pressureFlag != x->pressureFlag) return false;
+			
+		if (this->relHumidity != x->relHumidity) return false;
 			
 		if (this->relHumidityFlag != x->relHumidityFlag) return false;
 			
+		if (this->temperature != x->temperature) return false;
+			
 		if (this->temperatureFlag != x->temperatureFlag) return false;
+			
+		if (this->windDirection != x->windDirection) return false;
 			
 		if (this->windDirectionFlag != x->windDirectionFlag) return false;
 			
+		if (this->windSpeed != x->windSpeed) return false;
+			
 		if (this->windSpeedFlag != x->windSpeedFlag) return false;
+			
+		if (this->windMax != x->windMax) return false;
 			
 		if (this->windMaxFlag != x->windMaxFlag) return false;
 			

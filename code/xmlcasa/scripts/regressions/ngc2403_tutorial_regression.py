@@ -1186,34 +1186,37 @@ except:
 canonical = {}
 canonical['exist'] = True
 
-canonical['date'] = '2008-07-24 (STM)'
-canonical['version'] = 'CASA Version 2.0 Rev 5767'
-canonical['user'] = 'smyers'
-canonical['host'] = 'imager-b'
-canonical['cwd'] = '/home/imager-b/smyers/CASA/Jul08/N2403'
+canonical['date'] = '2009-12-07 (GAM)'
+canonical['version'] = 'CASA Version 3.0.0 Rev 9751'
+canonical['user'] = 'gmoellen'
+canonical['host'] = 'penns'
+canonical['cwd'] = '/home/penns/gmoellen/CASA/REG/N2403'
 print "Canonical regression from "+canonical['version']+" on "+canonical['date']
 
 canonical_results = {}
 canonical_results['dirty_image_rms'] = {}
-canonical_results['dirty_image_rms']['value'] = 0.000597658207661
+canonical_results['dirty_image_rms']['value'] = 0.000588262734707
 
 canonical_results['clean_image_max'] = {}
-canonical_results['clean_image_max']['value'] = 0.0210574828088
+canonical_results['clean_image_max']['value'] = 0.0231359191239
 
 canonical_results['clean_image_offsrc_rms'] = {}
-canonical_results['clean_image_offsrc_rms']['value'] = 0.000537529625376
+canonical_results['clean_image_offsrc_rms']['value'] = 0.000533470036927
 
 canonical_results['clean_image_offline_rms'] = {}
-canonical_results['clean_image_offline_rms']['value'] = 0.000519047262542
+canonical_results['clean_image_offline_rms']['value'] = 0.000515150649237
 
 canonical_results['clean_momentzero_max'] = {}
-canonical_results['clean_momentzero_max']['value'] = 0.515659034252
+canonical_results['clean_momentzero_max']['value'] = 0.551860868931
 
 canonical_results['clean_momentzero_rms'] = {}
-canonical_results['clean_momentzero_rms']['value'] = 0.0803907588124
+canonical_results['clean_momentzero_rms']['value'] = 0.0878139138222
 
+# The following value is a velocity in BARY
+#  (in LSRK, the answer is ~132.47
 canonical_results['clean_momentone_median'] = {}
-canonical_results['clean_momentone_median']['value'] = 129.969772339
+canonical_results['clean_momentone_median']['value'] = 129.940628
+
 
 #
 ##########################################################################

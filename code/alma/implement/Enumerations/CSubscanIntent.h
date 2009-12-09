@@ -42,24 +42,42 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the SubscanIntent enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace SubscanIntentMod
 {
+  //! SubscanIntent.
+  //! [ASDM.Subscan] Precise the intent for a subscan
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum SubscanIntent
   { 
-    HOLOGRAPHY_RASTER ,
-    HOLOGRAPHY_PHASECAL ,
-    UNSPECIFIED ,
-    IN_FOCUS ,
-    OUT_OF_FOCUS ,
-    ON_SOURCE ,
-    OFF_SOURCE ,
-    MIXED_FOCUS ,
-    MIXED_POINTING ,
-    REFERENCE ,
-    RASTER 
+    ON_SOURCE /*!< on-source measurement */
+     ,
+    OFF_SOURCE /*!< off-source measurement */
+     ,
+    MIXED /*!< Pointing measurement, some antennas are on -ource, some off-source */
+     ,
+    REFERENCE /*!< reference measurement (used for boresight in holography). */
+     ,
+    SCANNING /*!< antennas are scanning. */
+     ,
+    HOT /*!< hot load measurement. */
+     ,
+    AMBIENT /*!< ambient load measurement. */
+     ,
+    TEST /*!< reserved for development. */
+     ,
+    UNSPECIFIED /*!< Unspecified */
+     
   };
   typedef SubscanIntent &SubscanIntent_out;
 } 
@@ -67,100 +85,105 @@ namespace SubscanIntentMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration SubscanIntent.
+  * 
+  */
 class CSubscanIntent {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the SubscanIntent enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sHOLOGRAPHY_RASTER;
+	static const std::string& sON_SOURCE; /*!< A const string equal to "ON_SOURCE".*/
 	
-	static const std::string& sHOLOGRAPHY_PHASECAL;
+	static const std::string& sOFF_SOURCE; /*!< A const string equal to "OFF_SOURCE".*/
 	
-	static const std::string& sUNSPECIFIED;
+	static const std::string& sMIXED; /*!< A const string equal to "MIXED".*/
 	
-	static const std::string& sIN_FOCUS;
+	static const std::string& sREFERENCE; /*!< A const string equal to "REFERENCE".*/
 	
-	static const std::string& sOUT_OF_FOCUS;
+	static const std::string& sSCANNING; /*!< A const string equal to "SCANNING".*/
 	
-	static const std::string& sON_SOURCE;
+	static const std::string& sHOT; /*!< A const string equal to "HOT".*/
 	
-	static const std::string& sOFF_SOURCE;
+	static const std::string& sAMBIENT; /*!< A const string equal to "AMBIENT".*/
 	
-	static const std::string& sMIXED_FOCUS;
+	static const std::string& sTEST; /*!< A const string equal to "TEST".*/
 	
-	static const std::string& sMIXED_POINTING;
-	
-	static const std::string& sREFERENCE;
-	
-	static const std::string& sRASTER;
-	
-    static const std::vector<std::string> sSubscanIntentSet();	 
-
+	static const std::string& sUNSPECIFIED; /*!< A const string equal to "UNSPECIFIED".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in SubscanIntentMod::SubscanIntent.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of SubscanIntentMod::SubscanIntent.
+      * @return a string.
+      */
+	static std::string name(const SubscanIntentMod::SubscanIntent& e);
 	
-	// Explanations associated with the SubscanIntent Enumeration.
-		
-	static const std::string& hHOLOGRAPHY_RASTER;
-		
-	static const std::string& hHOLOGRAPHY_PHASECAL;
-		
-	static const std::string& hUNSPECIFIED;
-		
-	static const std::string& hIN_FOCUS;
-		
-	static const std::string& hOUT_OF_FOCUS;
-		
-	static const std::string& hON_SOURCE;
-		
-	static const std::string& hOFF_SOURCE;
-		
-	static const std::string& hMIXED_FOCUS;
-		
-	static const std::string& hMIXED_POINTING;
-		
-	static const std::string& hREFERENCE;
-		
-	static const std::string& hRASTER;
-		
-	static const std::vector<std::string> hSubscanIntentSet();
-   	
-
-   	// Is an integer number associated with the SubscanIntent enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the SubscanIntent enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  SubscanIntent enumeration.
-	static std::string name(const SubscanIntentMod::SubscanIntent& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const SubscanIntentMod::SubscanIntent& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified SubscanIntent enumeration.
-	static std::string help(const SubscanIntentMod::SubscanIntent& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a SubscanIntent enumeration object by specifying its name.
    	static SubscanIntentMod::SubscanIntent newSubscanIntent(const std::string& name);
    	
-   	// Create a SubscanIntent enumeration object by specifying its name.
+   	/*! Return a SubscanIntent's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a SubscanIntentMod::SubscanIntent's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static SubscanIntentMod::SubscanIntent literal(const std::string& name);
  	
-    // Create a SubscanIntent enumeration object by specifying its position index (0 based).
+    /*! Return a SubscanIntent's enumerator given an unsigned int.
+      * @param i the index of the enumerator in SubscanIntentMod::SubscanIntent.
+      * @return a SubscanIntentMod::SubscanIntent's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static SubscanIntentMod::SubscanIntent from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CSubscanIntent();
     CSubscanIntent(const CSubscanIntent&);
     CSubscanIntent& operator=(const CSubscanIntent&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CSubscanIntent_H*/

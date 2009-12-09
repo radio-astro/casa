@@ -77,12 +77,15 @@ using namespace enumerations;
 	
 
 	
+
+	
 #include "CProcessorType.h"
 using namespace ProcessorTypeMod;
 	
 
 	
-
+#include "CProcessorSubType.h"
+using namespace ProcessorSubTypeMod;
 	
 
 
@@ -125,55 +128,55 @@ class ASDM;
 class ProcessorRow;
 /**
  * The ProcessorTable class is an Alma table.
+ * <BR>
  * 
- * Generated from model's revision "1.46", branch "HEAD"
+ * \par Role
+ * Processor characteristics. This table holds summary information for the  back-end processing devices used to generate the basic science  data.
+ * <BR>
+ 
+ * Generated from model's revision "1.52", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Processor </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> processorId </I></TD> 
+ 		
+ * <TD><I> processorId </I></TD>
+ 		 
  * <TD> Tag</TD>
  * <TD> &nbsp; </TD>
+ * <TD> &nbsp;Processor identifier </TD>
  * </TR>
- 		
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandarory) </TH></TR>
 	
  * <TR>
- * <TD> almaCorrelatorModeId </TD> 
+ * <TD> modeId </TD> 
  * <TD> Tag </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;refers to a unique row in CorrelatorModeTable or SquareLawDetectorTable or AlmaRadiometerTable. </TD>
  * </TR>
 	
  * <TR>
- * <TD> type </TD> 
+ * <TD> processorType </TD> 
  * <TD> ProcessorTypeMod::ProcessorType </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the generic type of the processor. </TD>
  * </TR>
 	
  * <TR>
- * <TD> subType </TD> 
- * <TD> string </TD>
+ * <TD> processorSubType </TD> 
+ * <TD> ProcessorSubTypeMod::ProcessorSubType </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;identifies the type of processor refered to by modeId. </TD>
  * </TR>
 	
 
-
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Optional) </TH></TR>
-	
- * <TR>
- * <TD> flagRow </TD> 
- * <TD> bool </TD>
- * <TD>  &nbsp; </TD>
- * </TR>
-	
 
  * </TABLE>
  */
@@ -246,20 +249,20 @@ public:
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param almaCorrelatorModeId. 
+ 	 * @param modeId. 
 	
- 	 * @param type. 
+ 	 * @param processorType. 
 	
- 	 * @param subType. 
+ 	 * @param processorSubType. 
 	
      */
-	ProcessorRow *newRow(Tag almaCorrelatorModeId, ProcessorTypeMod::ProcessorType type, string subType);
+	ProcessorRow *newRow(Tag modeId, ProcessorTypeMod::ProcessorType processorType, ProcessorSubTypeMod::ProcessorSubType processorSubType);
 	
 	/**
 	  * Has the same definition than the newRow method with the same signature.
 	  * Provided to facilitate the call from Python, otherwise the newRow method will be preferred.
 	  */
-	ProcessorRow *newRowFull(Tag almaCorrelatorModeId, ProcessorTypeMod::ProcessorType type, string subType);
+	ProcessorRow *newRowFull(Tag modeId, ProcessorTypeMod::ProcessorType processorType, ProcessorSubTypeMod::ProcessorSubType processorSubType);
 
 
 	/**
@@ -338,14 +341,14 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param almaCorrelatorModeId.
+ 	 * @param modeId.
  	 		
- 	 * @param type.
+ 	 * @param processorType.
  	 		
- 	 * @param subType.
+ 	 * @param processorSubType.
  	 		 
  	 */
-	ProcessorRow* lookup(Tag almaCorrelatorModeId, ProcessorTypeMod::ProcessorType type, string subType); 
+	ProcessorRow* lookup(Tag modeId, ProcessorTypeMod::ProcessorType processorType, ProcessorSubTypeMod::ProcessorSubType processorSubType); 
 
 
 #ifndef WITHOUT_ACS
@@ -365,43 +368,49 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(ProcessorTableIDL x) throw(DuplicateKey,ConversionException);
+	void fromIDL(ProcessorTableIDL x) ;
 #endif
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	char *toFITS() const throw(ConversionException);
+	char *toFITS() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromFITS(char *fits) throw(ConversionException);
+	void fromFITS(char *fits) ;
 
 	/**
 	 * To be implemented
+	 * @throw ConversionException
 	 */
-	string toVOTable() const throw(ConversionException);
+	string toVOTable() const ;
 
 	/**
 	 * To be implemented
+	 * @throws ConversionException
 	 */
-	void fromVOTable(string vo) throw(ConversionException);
+	void fromVOTable(string vo) ;
 
 	/**
 	 * Translate this table to an XML representation conform
 	 * to the schema defined for Processor (ProcessorTable.xsd).
 	 *
 	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
 	 */
-	string toXML()  throw(ConversionException);
+	string toXML()  ;
 	
 	/**
 	 * Populate this table from the content of a XML document that is required to
 	 * be conform to the XML schema defined for a Processor (ProcessorTable.xsd).
+	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string xmlDoc) throw(ConversionException);
+	void fromXML(string xmlDoc) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -480,8 +489,12 @@ private:
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	ProcessorRow* checkAndAdd(ProcessorRow* x) throw (DuplicateKey, UniquenessViolationException);
+	ProcessorRow* checkAndAdd(ProcessorRow* x) ;
 
 
 
@@ -495,7 +508,7 @@ private:
 	vector<ProcessorRow *> row;
 
 
-	void error() throw(ConversionException);
+	void error() ; //throw(ConversionException);
 
 };
 

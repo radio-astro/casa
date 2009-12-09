@@ -42,23 +42,30 @@
 
 #include <string>
 #include <vector>
+/**
+  * A namespace to encapsulate the CorrelatorCalibration enumeration.
+  */
 #ifndef WITHOUT_ACS
 #include <almaEnumerations_IFC.h>
 #else
+
+// This part mimics the behaviour of 
 namespace CorrelatorCalibrationMod
 {
+  //! CorrelatorCalibration.
+  //!  Internal correlator calibrations performed duting this subscan
+  
+  const char *const revision = "1.6";
+  const int version = 1;
+  
   enum CorrelatorCalibration
   { 
-    NONE ,
-    ACA_OBSERVE_CALIBATOR ,
-    ACA_CALIBRATE_CALIBRATOR ,
-    ACA_HFSC_REFRESH_CALIBRATOR ,
-    ACA_OBSERVE_TARGET ,
-    ACA_CALIBATE_TARGET ,
-    ACA_HFSC_REFRESH_TARGET ,
-    ACA_CORRELATOR_CALIBRATION ,
-    ACA_REAL_OBSERVATION ,
-    BL_CALC_TFB_SCALING_FACTORS 
+    NONE /*!< No internal correlator calibration */
+     ,
+    CORRELATOR_CALIBRATION /*!< Internal correlator calibration. */
+     ,
+    REAL_OBSERVATION /*!< A 'real' observation. */
+     
   };
   typedef CorrelatorCalibration &CorrelatorCalibration_out;
 } 
@@ -66,96 +73,93 @@ namespace CorrelatorCalibrationMod
 
 using namespace std;
 
+/** 
+  * A helper class for the enumeration CorrelatorCalibration.
+  * 
+  */
 class CCorrelatorCalibration {
   public:
-  	static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
-  	
-	// Names associated with the CorrelatorCalibration enumeration.  
+ 
+	/**
+	  * Enumerators as strings.
+	  */  
 	
-	static const std::string& sNONE;
+	static const std::string& sNONE; /*!< A const string equal to "NONE".*/
 	
-	static const std::string& sACA_OBSERVE_CALIBATOR;
+	static const std::string& sCORRELATOR_CALIBRATION; /*!< A const string equal to "CORRELATOR_CALIBRATION".*/
 	
-	static const std::string& sACA_CALIBRATE_CALIBRATOR;
-	
-	static const std::string& sACA_HFSC_REFRESH_CALIBRATOR;
-	
-	static const std::string& sACA_OBSERVE_TARGET;
-	
-	static const std::string& sACA_CALIBATE_TARGET;
-	
-	static const std::string& sACA_HFSC_REFRESH_TARGET;
-	
-	static const std::string& sACA_CORRELATOR_CALIBRATION;
-	
-	static const std::string& sACA_REAL_OBSERVATION;
-	
-	static const std::string& sBL_CALC_TFB_SCALING_FACTORS;
-	
-    static const std::vector<std::string> sCorrelatorCalibrationSet();	 
-
+	static const std::string& sREAL_OBSERVATION; /*!< A const string equal to "REAL_OBSERVATION".*/
 	
 
+	/**
+	  * Return the major version number as an int.
+	  * @return an int.
+	  */
+	  static int version() ;
+	  
+	  
+	  /**
+	    * Return the revision as a string.
+	    * @return a string
+	    *
+	    */
+	  static string revision() ;
+	  
+	  
+     /**
+       * Return the number of enumerators declared in CorrelatorCalibrationMod::CorrelatorCalibration.
+       * @return an unsigned int.
+       */
+       static unsigned int size() ;
+       
+       
+    /**
+      * Returns an enumerator as a string.
+      * @param e an enumerator of CorrelatorCalibrationMod::CorrelatorCalibration.
+      * @return a string.
+      */
+	static std::string name(const CorrelatorCalibrationMod::CorrelatorCalibration& e);
 	
-	// Explanations associated with the CorrelatorCalibration Enumeration.
-		
-	static const std::string& hNONE;
-		
-	static const std::string& hACA_OBSERVE_CALIBATOR;
-		
-	static const std::string& hACA_CALIBRATE_CALIBRATOR;
-		
-	static const std::string& hACA_HFSC_REFRESH_CALIBRATOR;
-		
-	static const std::string& hACA_OBSERVE_TARGET;
-		
-	static const std::string& hACA_CALIBATE_TARGET;
-		
-	static const std::string& hACA_HFSC_REFRESH_TARGET;
-		
-	static const std::string& hACA_CORRELATOR_CALIBRATION;
-		
-	static const std::string& hACA_REAL_OBSERVATION;
-		
-	static const std::string& hBL_CALC_TFB_SCALING_FACTORS;
-		
-	static const std::vector<std::string> hCorrelatorCalibrationSet();
-   	
-
-   	// Is an integer number associated with the CorrelatorCalibration enumeration?
-    static bool isNumber() { return false; }
-   	
-   	// Is a help text associated with the CorrelatorCalibration enumeration?
-    static bool isHelp() { return true; }
-    
-    // Get the string name associated with the specified  CorrelatorCalibration enumeration.
-	static std::string name(const CorrelatorCalibrationMod::CorrelatorCalibration& f);
+	/**
+	  * Equivalent to the name method.
+	  */
     static std::string toString(const CorrelatorCalibrationMod::CorrelatorCalibration& f) { return name(f); }
 
-	
-
-	
-	// Get the help text associated with the specified CorrelatorCalibration enumeration.
-	static std::string help(const CorrelatorCalibrationMod::CorrelatorCalibration& f);
-   	
+	/** 
+	  * Returns vector of  all the enumerators as strings. 
+	  * The strings are stored in the vector in the same order than the enumerators are declared in the enumeration. 
+	  * @return a vector of string.
+	  */
+     static const std::vector<std::string> names();	 
+    
    	
    	// Create a CorrelatorCalibration enumeration object by specifying its name.
    	static CorrelatorCalibrationMod::CorrelatorCalibration newCorrelatorCalibration(const std::string& name);
    	
-   	// Create a CorrelatorCalibration enumeration object by specifying its name.
+   	/*! Return a CorrelatorCalibration's enumerator  given a string.
+   	  * @param name the string representation of the enumerator.
+   	 *  @return a CorrelatorCalibrationMod::CorrelatorCalibration's enumerator.
+   	 *  @throws a string containing an error message if no enumerator could be found for this name.
+   	 */
  	static CorrelatorCalibrationMod::CorrelatorCalibration literal(const std::string& name);
  	
-    // Create a CorrelatorCalibration enumeration object by specifying its position index (0 based).
+    /*! Return a CorrelatorCalibration's enumerator given an unsigned int.
+      * @param i the index of the enumerator in CorrelatorCalibrationMod::CorrelatorCalibration.
+      * @return a CorrelatorCalibrationMod::CorrelatorCalibration's enumerator.
+      * @throws a string containing an error message if no enumerator could be found for this integer.
+      */
  	static CorrelatorCalibrationMod::CorrelatorCalibration from_int(unsigned int i);	
  	
-	
 
   private:
     /* Not Implemented.  This is a pure static class. */
     CCorrelatorCalibration();
     CCorrelatorCalibration(const CCorrelatorCalibration&);
     CCorrelatorCalibration& operator=(const CCorrelatorCalibration&);
+    
+    static string badString(const string& name) ;
+  	static string badInt(unsigned int i) ;
+  	
 };
  
 #endif /*!CCorrelatorCalibration_H*/
