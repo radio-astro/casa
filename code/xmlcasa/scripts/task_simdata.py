@@ -805,7 +805,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                         ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
                         ",trx="+str(t_rx)+",tground="+str(t_ground)+
                         ",tcmb="+str(t_cmb)+",mode='tsys-atm'"+
-                        ",pground='650mb',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
+                        ",pground='650mbar',altitude='5000m',waterheight='2km',relhum=20,pwv="+str(user_pwv)+"mm)");
                     msg("** this may take a few minutes, but will be faster in the next CASA release")
                 sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
                             antefficiency=eta_a,trx=t_rx,
@@ -1186,7 +1186,7 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         
         # if not displaying still print stats:
         if doclean:
-            bmarea=beam['major']['value']*beam['minor']['value']*pl.pi/4 #arcsec2
+            bmarea=beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
             bmarea=bmarea/(out_cell['value'])**2 # bm area in pix
             msg('Simulation rms: '+str(sim_rms)+" Jy/pix = "+
                 str(sim_rms*bmarea)+" Jy/bm",origin="analysis")

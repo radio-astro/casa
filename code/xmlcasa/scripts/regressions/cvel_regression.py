@@ -101,6 +101,7 @@ cleanonly_imstats = copy.deepcopy(cvel_imstats)
 # clean needs write access to the input MS.
 # For the clean-only path, make a copy of the input MS
 os.system('cp -RL '+dataset_name+' inputms_local_copy.ms')
+os.system('chmod -R u+w  inputms_local_copy.ms')
 clean_inputvis_local_copy = 'inputms_local_copy.ms'
 
 

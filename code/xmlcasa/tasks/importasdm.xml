@@ -17,8 +17,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
           <value></value>
     </param>
 
-    <param type="string" name="vis" kind="ms" >
-          <description>Root name of the ms to be created. Note the .ms is added </description>
+    <param type="string" name="vis" kind="ms">
+          <description>Root name of the ms to be created. Note the .ms is NOT added </description>
           <value></value>
     </param>
 
@@ -68,6 +68,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="bool" name="verbose">
 	    <description>Output lots of information while the filler is working</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="overwrite">
+	    <description>Over write an existing MS</description>
 	    <value>False</value>
     </param>
 
