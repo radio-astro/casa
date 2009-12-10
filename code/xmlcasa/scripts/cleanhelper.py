@@ -2,7 +2,7 @@ import casac
 import os
 import commands
 import math
-import pdb
+#import pdb
 
 ###some helper tools
 mstool = casac.homefinder.find_home_by_name('msHome')
@@ -86,7 +86,7 @@ class cleanhelper:
                 elstart=me.frequency(self.usespecframe, start)
             if(qa.quantity(width)['unit'].find('Hz') < 0):
                 raise TypeError, "width parameter is not a valid frequency quantity "	
-        elif(mode=='velocity'):
+        elif(mode=='velocity'): 
         ##check that start and step have units
             if(qa.quantity(start)['unit'].find('m/s') < 0):
                 raise TypeError, "start parameter is not a valid velocity quantity "
@@ -990,6 +990,10 @@ class cleanhelper:
             retnchan=nchan
             retstart=start
             retwidth=width 
+            ##do a dummy run to get the frame mainly
+            (dumfreqlist,dumfinc)=self.getfreqs(1,spw,'','', True)
+            if(self.usespecframe == ''):
+                self.usespecframe=self.dataspecframe
             return retnchan,retstart,retwidth
 
         if(mode=='channel'):
@@ -1148,7 +1152,7 @@ class cleanhelper:
         return ret 
 
 
-    def getfreqs(self,nchan,spw,start,width):
+    def getfreqs(self,nchan,spw,start,width, dummy=False):
         """
         returns a list of frequencies to be used in output clean image
         """
@@ -1184,6 +1188,8 @@ class cleanhelper:
                      "LGROUP",
                      "CMB"]
         self.dataspecframe=elspecframe[spwframe[spw0]];
+        if(dummy):
+            return freqlist, finc
         chanfreqs=chanfreqscol.transpose()
         chanfreqs1d=chanfreqs[spw0:].flatten() 
             

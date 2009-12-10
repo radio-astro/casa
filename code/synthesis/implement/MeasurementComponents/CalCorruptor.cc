@@ -183,7 +183,9 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
 	Double deltaNu = 
 	  vi.msColumns().spectralWindow().totalBandwidth()(iSpW) / 
 	  Float(vi.msColumns().spectralWindow().numChan()(iSpW));	    
-	factor = amp() / sqrt( 2 * deltaNu * tint ) ;
+	// Thompson Moran Swenson say factor of 2 here:?
+	// factor = amp() / sqrt( 2 * deltaNu * tint ) ;
+	factor = amp() / sqrt( deltaNu * tint ) ;
 	
 	// RI verify accuracy of how refTime set in SVC
 	Vector<MDirection> antazel(vi.azel(curr_time()));
@@ -224,8 +226,6 @@ void AtmosCorruptor::initAtm() {
 
   LogIO os(LogOrigin("AtmCorr", "initAtm", WHERE));
 
-#ifndef CASA_STANDALONE
-
   atm::Temperature  T( 270.0,"K" );   // Ground temperature  
   atm::Pressure     P( 560.0,"mb");   // Ground Pressure
   atm::Humidity     H(  20,"%" );     // Ground Relative Humidity (ind)
@@ -261,13 +261,16 @@ void AtmosCorruptor::initAtm() {
 
   // first SpW:
   double fRes(fWidth()[0]/fnChan()[0]);
-  itsSpecGrid = new atm::SpectralGrid(fnChan()[0],0, 
+  //  unsigned int SpectralGrid::add(unsigned int numChan, unsigned int refChan, Frequency refFreq, Frequency chanSep)
+  // refChan is 1-indexed!!!!!!!  WTF- channel index is otherwise 0-based
+  itsSpecGrid = new atm::SpectralGrid(fnChan()[0],1, 
 				      atm::Frequency(fRefFreq()[0],"Hz"),
 				      atm::Frequency(fRes,"Hz"));
   // any more?
   for (Int ispw=1;ispw<nSpw();ispw++) {
     fRes = fWidth()[ispw]/fnChan()[ispw];
-    itsSpecGrid->add(fnChan()[ispw],0,
+    // CHANINDEX
+    itsSpecGrid->add(fnChan()[ispw],1,
 		     atm::Frequency(fRefFreq()[ispw],"Hz"),
 		     atm::Frequency(fRes,"Hz"));
   }
@@ -282,12 +285,21 @@ void AtmosCorruptor::initAtm() {
      << " microns at " 
      << fRefFreq()[0]/1e9 << " GHz; dryOpacity = " 
      << itsRIP->getDryOpacity(currSpw(),focusChan()).get() << LogIO::POST;
-  os << "  Tebb = "
-     << itsSkyStatus->getTebbSky(currSpw(),focusChan(),mean_pwv(),1.0,
-				 spilleff(),tground()).get()
-     << LogIO::POST;
+  // CHANINDEX
+  atm::Temperature t0 = 
+    itsSkyStatus->getTebbSky(0,0,atm::Length(mean_pwv(),"mm"),1.0,spilleff(),tground());
+  atm::Temperature t1 = 
+    itsSkyStatus->getTebbSky(0,fnChan()[0]-1,atm::Length(mean_pwv(),"mm"),1.0,spilleff(),tground());
+  // CHANINDEX
+  atm::Frequency f0=itsSpecGrid->getChanFreq(0,0);
+  atm::Frequency f1=itsSpecGrid->getChanFreq(0,fnChan()[0]-1);
 
-#endif
+  os << "  Tebb @ ends of spw 0, for spill="<<spilleff()
+     << " Tground="<<tground()
+     << " pwv="<<mean_pwv()
+     << LogIO::POST;
+  os << " Tebb["<<f0.get("GHz")<<","<<f1.get("GHz")<<"]=["<<t0.get("K")<<","<<t1.get("K")<<"]" << LogIO::POST;
+
 }
 
 
@@ -380,10 +392,15 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar) {
     setFocusChan(floor(nChan()/2));
     
     os << LogIO::NORMAL 
-       << "Tsys at center of first Spectral Window = " << tsys(1.0) 
+       << "Tsys at center of first Spectral Window = " << tsys(1.0)
        << " tground=" << tground() << " spillover=" << spilleff()
        << LogIO::POST;      
-    if (tsys(1.0)>10000 or tsys(1.0)<=0) throw(AipsError("error in ATM setup - Tsys poorly defined - check inputs"));
+    if (tsys(1.0)>1e6 or tsys(1.0)<=0) {
+      ostringstream o; 
+      o << "error in ATM setup - Tsys " << tsys(1.0) << " poorly defined - check inputs";
+      throw(AipsError(o));
+      //      throw(AipsError("error in ATM setup - Tsys poorly defined - check inputs"));
+    }
     if (freqDepPar()) 
       os << " pwv="<< mean_pwv() << " tau=" << opac(focusChan()) << LogIO::POST;
     else
@@ -393,6 +410,8 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar) {
     amp() = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 / 		
       ( simpar.asFloat("antefficiency") * 
 	simpar.asFloat("correfficiency") * C::pi );
+
+    os << LogIO::DEBUG1 << " noise ~ " << amp()*1000 << "*Tsys/D^2/sqrt(dnu dt)/Nant" << LogIO::POST;
   }
 }
 
@@ -410,13 +429,10 @@ Float AtmosCorruptor::tsys(const Float& airmass) {
     if (mode()=="tsys-atm") {
       // most general accessor:
       atm::Temperature tatmosatm = 
-	itsSkyStatus->getTebbSky(currSpw(),focusChan(),mean_pwv(),airmass,
+	itsSkyStatus->getTebbSky(currSpw(),focusChan(),
+				 atm::Length(mean_pwv(),"mm"),airmass,
 				 spilleff(),tground());
-//      R = 1./(exp(hn_k/tcmb())-1.) +
-//	exp(tau) *
-//	( 1./(exp(hn_k/tatmosatm.get("K"))-1.) + 
-//	  1./(exp(hn_k/trx())-1.) );
-      // 1/e(hn/kt)-1 recalculated every setFocusChan
+      // 1/e(hn/kt)-1 recalculated for us by every setFocusChan
       R = Rtcmb() +
 	exp(tau) *
 	( 1./(exp(hn_k/tatmosatm.get("K"))-1.) + 
@@ -425,11 +441,6 @@ Float AtmosCorruptor::tsys(const Float& airmass) {
     } else {
       tau = tau*tauscale();
       // manual: tauscale = tau0/opac(band center)
-//      R = 1./(exp(hn_k/tcmb())-1.) +
-//	exp(tau) *
-//	( spilleff() * (1.-exp(-tau)) / (exp(hn_k/tatmos())-1.) + 
-//	  (1.-spilleff()) / (exp(hn_k/tground())-1.) +
-//	  1./(exp(hn_k/trx())- 1.) );
       R = Rtcmb() +
 	exp(tau) *
 	( spilleff() * (1.-exp(-tau)) * Rtatmos() + 
@@ -442,12 +453,6 @@ Float AtmosCorruptor::tsys(const Float& airmass) {
       throw(AipsError("non-freqDep AtmosCorr::tsys called in unsopported ATM mode"));
     else {
       tau=tauscale()*airmass; // no reference to ATM here - it's not initialized!
-      // manual: tauscale = tau0
-//      R = 1./(exp(hn_k/tcmb())-1.) +
-//	exp(tau) *
-//	( spilleff() * (1.-exp(-tau)) / (exp(hn_k/tatmos())-1.) + 
-//	  (1.-spilleff()) / (exp(hn_k/tground())-1.) +
-//	  1./(exp(hn_k/trx())- 1.) );
       R = Rtcmb() +
 	exp(tau) *
 	( spilleff() * (1.-exp(-tau)) / Rtatmos() + 
@@ -459,9 +464,12 @@ Float AtmosCorruptor::tsys(const Float& airmass) {
 }
 
 
+
+
 // opacity - for screens, we'll need other versions of this like 
 // the different cphase calls that multiply wetopacity by fluctuation in pwv
 Float AtmosCorruptor::opac(const Int ichan) {
+  // CHANINDEX
   Float opac = itsRIP->getDryOpacity(currSpw(),ichan).get() + 
     mean_pwv()*(itsRIP->getWetOpacity(currSpw(),ichan).get())  ;
   return opac;
@@ -680,6 +688,7 @@ Complex AtmosCorruptor::cphase(const Int ichan) {
     // so a fractional pwv fluctuation turns into a fractional wet phase 
     // fluctuation
       Float deltapwv = (*pwv_p[currAnt()])(curr_slot());
+      // CHANINDEX
       delay = itsRIP->getDispersiveWetPhaseDelay(currSpw(),ichan).get("rad") 
 	* deltapwv / 57.2958; // convert from deg to rad
       if (prtlev()>5) 

@@ -4451,7 +4451,6 @@ void SolvableVisJones::applyRefAnt() {
 	    
 	    // Zero initial refant phase
 	    if (refantph!=0.0) {
-	      cout << "refantph = " << refantph*180.0/C::pi << endl;
 	      rph=Complex(cos(refantph),sin(refantph));
 	      for (Int islot=0;islot<nslots;++islot)
 		for (Int iant=0;iant<nAnt();++iant) 

@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def importasdm(asdm=None, vis=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, verbose=None, showversion=None):
+def importasdm(asdm=None, vis=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, verbose=None, overwrite=None, showversion=None):
 	""" Convert an ALMA Science Data Model observation into a CASA visibility file (MS)
 	The conversion of the ALMA SDM archive format into a measurement set.  This version
 	is under development and is geared to handling many spectral windows of different
@@ -17,7 +17,7 @@ def importasdm(asdm=None, vis=None, corr_mode=None, srt=None, time_sampling=None
 		casalog.origin('importasdm')
 		viso = ''
 		if(len(vis) > 0) :
-		   viso = vis + '.ms'
+		   viso = vis
 		else :
 		   viso = asdm + '.ms'
 		   vis = asdm
@@ -28,13 +28,15 @@ def importasdm(asdm=None, vis=None, corr_mode=None, srt=None, time_sampling=None
 		   execute_string= execute_string +' --verbose'
 		if(showversion) :
 		   execute_string= execute_string +' --revision'
+		if not overwrite and os.path.exists(viso) :
+		   raise Exception, "You have specified and existing ms and have indicated you do not wish to overwrite it"
 		execute_string = execute_string + ' ' + asdm + ' ' + viso
 		casalog.post('Running the asdm2MS standalone invoked as:')
 		#print execute_string
 		casalog.post(execute_string)
         	os.system(execute_string)
 		if compression :
-			viso = vis + '.compressed.ms'
+			viso = viso + '.compressed'
                 ok=fg.open(viso);
                 ok=fg.saveflagversion('Original',comment='Original flags at import into CASA',merge='save')
                 ok=fg.done();
