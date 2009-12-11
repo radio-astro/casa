@@ -38,9 +38,11 @@ CalCorruptor::CalCorruptor(const Int nSim) :
   nSim_(nSim),
   times_initialized_(False),
   prtlev_(PRTLEV),
-  curr_slot_(-1),
+  curr_slot_(-1),curr_time_(0),starttime_(0),stoptime_(0),curr_freq_(1),
   curr_spw_(-1), nSpw_(0),
-  curr_ant_(-1), nAnt_(0) 
+  curr_ant_(-1), nAnt_(0),
+  freqdep_(False),
+  nPar_(0),amp_(0),mode_(""),curr_ant2_(0)
 {}
 
 CalCorruptor::~CalCorruptor() {}
