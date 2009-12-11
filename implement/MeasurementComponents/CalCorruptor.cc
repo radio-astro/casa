@@ -226,6 +226,9 @@ void AtmosCorruptor::initAtm() {
 
   LogIO os(LogOrigin("AtmCorr", "initAtm", WHERE));
 
+  os << LogIO::DEBUG1 << " defining observatory ground characteristics.."
+     << LogIO::POST;
+
   atm::Temperature  T( 270.0,"K" );   // Ground temperature  
   atm::Pressure     P( 560.0,"mb");   // Ground Pressure
   atm::Humidity     H(  20,"%" );     // Ground Relative Humidity (ind)

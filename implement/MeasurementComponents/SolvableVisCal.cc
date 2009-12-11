@@ -1882,12 +1882,13 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   
   // Inflate the CalSet - RI TODO redundant with create above?
   inflate(nChanParList(),startChanList(),nChunkPerSpw);
-
-  if (prtlev()>3) cout<<" calset inflated to "<<cs().par(currSpw()).shape()<<" created"<<endl;
   
+  os << LogIO::DEBUG1 <<" calset inflated to "<<cs().par(currSpw()).shape() 
+     << LogIO::POST;
+
   // Size the solvePar arrays
-  // fuckin' eh - Jones' insists on having 1 channel, but mullers have lots.  
-  //initSolvePar();
+  // Jones' insists on having 1 channel, but mullers have lots.  
+  // initSolvePar();
   // so i have to copy this from initsolvepar and make it all chans
 
   for (Int ispw=0;ispw<nSpw();++ispw) {
@@ -1898,6 +1899,10 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
       {
       case VisCalEnum::COMPLEX:
 	{
+	  os << LogIO::DEBUG1 << "spw " << currSpw() 
+	     << " nPar=" << nPar() << "nChanPar=" << nChanPar() 
+	     << " nElem=" << nElem() << LogIO::POST;
+	  
 	    solveCPar().resize(nPar(),nChanPar(),nElem());
 	   solveParOK().resize(nPar(),nChanPar(),nElem());
 	  solveParErr().resize(nPar(),nChanPar(),nElem());
@@ -1927,8 +1932,9 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
          break;
       }
   }
-
-  // cout << "calset shape = " << cs().shape(0) << " solveCPar shape = " << solveCPar().shape() << endl;
+  
+  os << LogIO::DEBUG1 << "calset shape = " << cs().shape(0) << " solveCPar shape = " << solveCPar().shape() 
+     << LogIO::POST;
 
   // Return the total number of solution intervals
   return nSol;

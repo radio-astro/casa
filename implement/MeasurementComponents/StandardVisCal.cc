@@ -1849,7 +1849,11 @@ void MMueller::keep(const Int& slot) {
 
 void MMueller::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim) 
 {
+  LogIO os(LogOrigin("MM", "createCorruptor()", WHERE));
+
   if (prtlev()>2) cout << "   MM::setSimulate()" << endl;
+  os << LogIO::DEBUG1 << "   MM::setSimulate()" 
+     << LogIO::POST;
 
   atmcorruptor_p = new AtmosCorruptor();
   corruptor_p = atmcorruptor_p;
@@ -1857,7 +1861,6 @@ void MMueller::createCorruptor(const VisIter& vi, const Record& simpar, const In
   // call generic parent to set corr,spw,etc info
   SolvableVisCal::createCorruptor(vi,simpar,nSim);
 
-  // RI TODO ::createCorr make sure this atmcorruptor initializer works as  intended
   // this is the M type corruptor - maybe we should make the corruptor 
   // take the VC as an argument
   atmcorruptor_p->initialize(vi,simpar); 
