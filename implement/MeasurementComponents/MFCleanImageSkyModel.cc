@@ -486,7 +486,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	      if(psfmax(model)>0.0) {
 
 		if(nchan>1) {
-		  os << LogIO::NORMAL2 // Loglevel PROGRESS
+		  os << LogIO::NORMAL // Loglevel PROGRESS
                      << "Processing channel "<<chan<<" of "<<nchan<<LogIO::POST;
 		}
 
@@ -652,7 +652,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	blankOverlappingModels();
 	for(Int model=0; model < numberOfModels(); ++model){
 	  image(model).copyData( LatticeExpr<Float>((image(model))+(deltaImage(model))));
-	  os << LogIO::NORMAL1 << LatticeExprNode(sum(image(model))).getFloat()  // Loglevel INFO
+	  os << LogIO::NORMAL << LatticeExprNode(sum(image(model))).getFloat()  // Loglevel INFO
 	     << " Jy <- sum of clean components of model " 
 	     << model << LogIO::POST;
 	}
