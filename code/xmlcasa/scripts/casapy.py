@@ -31,20 +31,20 @@ def termination_handler(signum, frame):
 
 # Clean up child processes and terminate if any
 # of the following POSIX signals happen
-signal.signal(signal.SIGFPE, termination_handler)
-signal.signal(signal.SIGILL, termination_handler)
 signal.signal(signal.SIGQUIT, termination_handler)
 signal.signal(signal.SIGABRT, termination_handler)
 signal.signal(signal.SIGTERM, termination_handler)
-signal.signal(signal.SIGBUS, termination_handler)
 signal.signal(signal.SIGHUP, termination_handler)
 
-# Unfortunately, trying to catch SIGSEGV (with even
+# Unfortunately, trying to catch SIGSEGV/SIGBUS (with even
 # the most trivial signal handler) might trigger a mode of
-# infinite looping where another SIGSEGV happens already
+# infinite looping where another SIGSEGV/-BUS happens already
 # before the user signal handler is invoked (in the python
 # interpreter?). The effect is infinite looping, which is
-# even worse than segfaulting. Therefore do not catch SIGSEGV.
+# even worse than segfaulting. Therefore do not catch SIGSEGV
+# or SIGBUS. Also SIGILL + SIGFPE may be unsafe to catch.
+# The remaining signals should be safe to handle because
+# they do not cause the process to go into an undefined state.
 
 # Do not handle the following POSIX signals
 #signal.signal(signal.SIGALRM, termination_handler)
