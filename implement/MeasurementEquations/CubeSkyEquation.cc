@@ -686,7 +686,6 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
       throw(AipsError(String(oss))); 
 
     }
-    cout << "MEM Total " << memtot << endl;
     Long pixInMem=(memtot/8)*1024;
     nslice=1;
 
