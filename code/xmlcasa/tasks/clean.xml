@@ -18,7 +18,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="clean" category="imaging">
 
-  <shortdescription>Convert visibilities to images  and deconvolve them</shortdescription>
+  <shortdescription>Invert images  and deconvolve them with selected algorithm</shortdescription>
 
   <description>Form images from visibilities. Handles continuum and spectral line cubes.</description>
 
@@ -75,7 +75,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     
 
     <param type="string" name="mode">
-      <description> Type of selection (mfs, channel, velocity,frequency)</description>
+      <description> Spectral image definition(mfs, channel, velocity,frequency)</description>
       <value>mfs</value>
       <allowed kind="enum">
 	<value>mfs</value>
@@ -86,7 +86,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="gridmode">
-      <description>The kind gridding kernel to be used for FFT-based transforms</description>
+      <description>Gridding kernel for FFT-based transforms, default=\'\' None</description>
       <value></value>
       <allowed kind="enum">
 	<value></value>
@@ -139,20 +139,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="double" name="threshold" units="mJy">
-      <description>Flux level to stop cleaning.  Must include units</description>
+      <description>Flux level to stop cleaning, must include units: \'1.0mJy\'</description>
       <value>0.0</value>
     </param>
 
-<!-- Getting rid of this
-    <param type="bool" name="csclean">
-      <description>Use Cotton-Schwab style reconciliation with UV-data</description>
-      <value>False</value>
-      
-    </param>
--->
-
     <param type="string" name="psfmode">
-      <description>method of PSF calculation to use during minor cycles</description>
+      <description>clean method to use during minor cycles</description>
       <value>clark</value>
       <allowed kind="enum">
 	<value>clark</value>
@@ -162,7 +154,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="imagermode">
-      <description> Use csclean or mosaic.  If \'\', use psfmode</description>
+      <description> Use \'csclean\' or \'mosaic\'; \'\' =&gt; one major cycle </description>
       <value></value>
       <allowed kind="enum">
 	<value></value>
@@ -284,7 +276,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="any" name="phasecenter">
-	    <description>Image phase center: position or field index</description>
+	    <description>Image phase center: direction or field index</description>
 	    <any type="variant"/>
 	    <value type="string"></value>
     </param>
@@ -295,7 +287,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="string" name="stokes">
-	    <description>Stokes params to image (eg I,IV, QU,IQUV)</description>
+	    <description>Stokes params to image (eg I,IV, QU,IQUV, RR, XX)</description>
 	    <value>I</value>
     <allowed kind="enum">
 	    <value>I</value>
@@ -414,7 +406,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="bool" name="chaniter" subparam="true">
-            <description>Do interactive CLEAN on spectral data cube per channel or jointly all channels? (\'True\' to clean per channel)</description>
+            <description>Do interactive CLEAN on spectral data cube per channel or jointly all channels? (True to clean per channel)</description>
             <value>False</value>
     </param>
 <!--========================================================= -->
@@ -476,14 +468,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	        <equals value="velocity">
 			<default param="nchan"><value>-1</value></default>
 			<default param="start"><value type="string"></value>
-			    <description>Velocity of first image channel: e.g \'0.0km/s\'(''=first channel specified in spw)</description>
+			    <description>Velocity of first image channel: e.g \'0.0km/s\'(\'\'=first channel specified in spw)</description>
 		    </default>
 		    <default param="width"><value type="string"></value>
-			    <description>image channel width in velocity units: e.g \'-1.0km/s\'(''=width of first channel specified in spw)</description>
+			    <description>image channel width in velocity units: e.g \'-1.0km/s\'(\'\'=width of first channel specified in spw)</description>
 		    </default>
 		    <default param="interpolation"><value type="string">nearest</value></default>
 		    <default param="outframe"><value type="string"></value>
-			    <description>velocity reference frame of output image</description>
+			    <description>velocity reference frame of output image; \'\' =input</description>
                     </default>
 		    <default param="veltype"><value type="string">radio</value>
 			    <description>velocity definition</description>
@@ -492,14 +484,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	        <equals value="frequency">
 			<default param="nchan"><value>-1</value></default>
 			<default param="start"><value type="string"></value>
-			    <description>Frequency of first image channel: e.q. \'1.4GHz\'(''= first channel specified in spw)</description>
+			    <description>Frequency of first image channel: e.q. \'1.4GHz\'(\'\'= first channel specified in spw)</description>
 		    </default>
 		    <default param="width"><value type="string"></value>
-			    <description>Image channel width in frequency units: e.g \'1.0kHz\'(''=width of first channel specified in spw)</description>
+			    <description>Image channel width in frequency units: e.g \'1.0kHz\'(\'\'=width of first channel specified in spw)</description>
 		    </default>
 		    <default param="interpolation"><value type="string">nearest</value></default>
 		    <default param="outframe"><value type="string"></value></default>
-			    <description>velocity reference frame of output image</description>
+			    <description>Frequency reference frame of output image; \'\'=input</description>
 	        </equals>
 	    </when>
 	    
@@ -610,15 +602,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
 
-       This is the main clean deconvolution task.  It contains many functions
+       The clean task has many options:
  
         1)  Make 'dirty' image and 'dirty' beam (psf)
         2)  Multi-frequency-continuum images or spectral channel imaging
         3)  Full Stokes imaging
         4)  Mosaicking of several pointings
         5)  Multi-scale cleaning
-        6)  Interactive clean boxing
-        7)  Use starting model (eg from single dish)
+	6) Widefield cleaning
+        7) Multiple field imaging (a.k.a flanking fields)
+        8)  Interactive clean boxing
+        9)  Use starting model (eg from single dish)
  
  
        vis -- Name of input visibility file
@@ -638,8 +632,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                To include outlier fields: 
                  imagename=['n5921','outlier1','outlier2'] 
        outlierfile --- Text file name which contains image names, sizes, field
-                       centers
-       field -- Select fields in mosaic.  Use field id(s) or field name(s).
+                       centers. 
+       field -- Select fields to image or mosaic.  Use field id(s) or field name(s).
                   ['go listobs' to obtain the list id's or names]
                default: ''= all fields
                  If field string is a non-negative integer, it is assumed to
@@ -650,7 +644,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  field='3C286,3C295'; field named 3C286 and 3C295
                  field = '3,4C*'; field id 3, all names starting with 4C
        spw -- Select spectral window/channels
-               NOTE: This selects the data and is independent of mode
+               NOTE: channels de-selected here will contain all zeros if
+               selected by the parameter mode subparameters 
                default: ''=all spectral windows and channels
                  spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
                  spw='0:5~61'; spw 0, channels 5 to 61
@@ -705,7 +700,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        mode -- Frequency Specification:
                NOTE: See examples below:
                default: 'mfs'
-                 mode = 'mfs' means produce one image from all 
+                 mode = 'mfs' means produce one  image from all 
  		      specified data.
                  mode = 'channel'; Use with nchan, start, width to specify
                          output image cube.  See examples below
@@ -726,30 +721,39 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                reffreq is the reference frequency about which the
                Taylor expansion is done.
 
-  &gt;&gt;&gt; mode expandable parameters (for modes other than 'mfs')
-               Start, width are given in units of channels, frequency 
- 		  or velocity as indicated by mode (note: only nearest neighbour 
-                  interpolation is available at this time).
-               nchan -- Number of channels (planes) in output image
-                 default: 1; example: nchan=3
-               start -- Start input channel (relative-0)
-                 default=0; example: start=5
-               width -- Output channel width in units of the input
- 		     channel width (&gt;1 indicates channel averaging)
-                 default=1; example: width=4
-               interpolation -- Interpolation type of spectral data when gridded on
-                  the uv-plane
-                 default = 'nearest'
-                    HOWEVER, 'linear' is recommended
-               outframe -- velocity reference frame of output image (for mode='velocity' or 'frequency')
+  &gt;&gt;&gt; mode='channel', 'velocity', and 'frequency' expandable parameters
+              nchan -- Total number of channels in the output image.
+                 default: -1; all channels, all spws. Example: nchan=100. It 
+                 is often easiest to leave nchan at the default value. 
+                 Note, with the default if there is overlap in the spws, you 
+                 may get some extra channels filled with zeros at the end.  
+                 Channels de-selected with spw parameter will be filled with 
+                 zeros if selected here.
+              start -- First channel, velocity, or frequency. 
+                 For mode='channel'; default=0; e.g. the first input channel; 
+                 example:start=5
+                 For mode='velocity' or 'frequency': default=''; 
+                 starts at first input channel of first input spw
+                 examples: start='5.0km/s', or start='22.3GHz'.
+              width -- Output channel width
+                 For mode='channel', default=1; &gt;1 indicates channel averaging.
+                 example: width=4.
+                 For mode=' 'velocity' or 'frequency', default=''; width of first 
+                 input channel, otherwise must give units
+                 examples: width='1.0km/s', or width='24.2kHz'.
+               interpolation -- Interpolation type for spectral gridding onto 
+                 the uv-plane. Options: 'nearest', 'linear', or 'cubic'.
+                 default = 'nearest'   HOWEVER, 'linear' is generally recommended
+               outframe -- Frequency or velocity reference frame of output image.
                  Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO','LGROUP','CMB'
-                 default: ''; same as input data; example: frame='bary' for Barycentric frame 
+                 default: ''; same as input data; 
+                 example: frame='bary' for Barycentric frame 
                veltype -- (for mode='velocity') velocity definition
-                 Options: 'radio','optical','true' (='relativistic')
-                 veltype='true' (or equivalently 'relativistic') 
-                 for velocity defined without approximations using the relativistic expression 
-                 default: 'radio'
-           examples:
+                 Options: 'radio','optical'
+                 default:'radio' 
+                NOTE: the viewer always defaults to displaying 'radio' frame, but can
+                 be changed in position tracking pull down.
+           mode='channel' examples:
                spw = '0,1'; mode = 'mfs'
                   will produce one image made from all channels in spw 
  		       0 and 1
@@ -761,12 +765,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   plane 1 contains data from channels (5+6+7+8)
                   plane 2 contains data from channels (9+10+11+12)
                   plane 3 contains data from channels (13+14+15+16)
-               spw = '0:0~63^3'; mode='channel'; nchan=21; start = 0; 
- 		   width = 1
+               spw = '0:0~63^3'; mode='channel'; nchan=20; start = 0; 
+ 		   width = 3
                   will produce an image with 20 output planes
-                  Plane 1 contains data from channel 0
-                  Plane 2 contains date from channel 2
-                  Plane 21 contains data from channel 61
+                  Plane 0 contains data from channel 0
+                  Plane 1 contains date from channel 3
+                  Plane 19 contains data from channel 57
                spw = '0:0~40^2'; mode = 'channel'; nchan = 3; start = 
  		   5; width = 4
                   will produce an image with three output planes
@@ -774,17 +778,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   plane 2 contains channels (13,15)
                   plane 3 contains channels (21,23)
 
-       psfmode -- method of PSF calculation to use during minor cycles:
+       psfmode -- method of clean to use during minor cycles:
                default: 'clark': Options: 'clark','clarkstokes', 'hogbom'
-               'clark'  use smaller beam (faster, usually good enough);
+               'clark'  use a psf over few side lobes only (faster, usually good enough);
                 for stokes images clean components peaks are searched in the I^2+Q^2+U^2+V^2 domain 
                'clarkstokes' locate clean components independently in each stokes image
                'hogbom' full-width of image (slower, better for poor 
  	       uv-coverage)
-               Note:  psfmode will be used to clean is imagermode = ''
+               Note:  psfmode will be used to clean is imagermode = '' or 'csclean'
        imagermode -- Advanced imaging e.g mosaic or Cotton-Schwab clean
                default: imagermode='': Options: '', 'csclean', 'mosaic'
-               default ''  =&gt; psfmode cleaning algorithm used
+               default ''  =&gt; single major cycle; except when multiple images are made
+               then a csclean is always done
 
   &gt;&gt;&gt; gridmode='' expandable parameters
 
@@ -803,16 +808,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    for each facet.
 
   &gt;&gt;&gt; gridmode='aprojection' expandable parameters
-
                Correct for the (E)VLA polarization squint using the
                A-Projection algorithm (Bhatnagar et al., AandA (2008)).
-
                cfcache is the name of the directory to be used to cache the
                    convolution functions.  These functions can be reused again if
                    the image parameters are unchanged.  If the image parameters
                    change, a new cache must be created (or the existing one
                    removed). 
-
                painc (in degrees) is the Parallactic Angle increment used to
                    compute the convolution functions.
 
@@ -820,19 +822,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                Image as a mosaic of the different pointings (uses csclean style too)
                mosweight -- Individually weight the fields of the mosaic
                    default: False; example: mosweight=True
-                   This can be useful if some of your fields are more
-                   sensitive than others (i.e. due to time spent 
- 		   on-source); this parameter will give more weight to 
- 		   higher sensitivity fields in the overlap regions.
-               ftmachine -- Gridding method for the image;
-                   Options: ft (standard interferometric gridding), sd
-                   (standard single dish) both (ft and sd as appropriate),
+                   This is rarely used. 
+                   Can be used to keep the relative sensitivity of different fields in uniform 
+                   weighting for example.
+               ftmachine -- Gridding method for the mosaic;
+                   Options: ft (standard interferometric gridding), 
                    mosaic (gridding use PB as convolution function)
                    default: 'mosaic'; example: ftmachine='ft'
-                   if imagermode mosaic is chosen and ftmachine is mosaic, 
-                   heterogenous arrays like Carma or Alma are recognized
-                   and the right Primary Beam (depending on the size of the dish)
-                   is used for each baseline. 
+		  ONLY if imagermode='mosaic' is chosen and ftmachine='mosaic', 
+                   is heterogeneous mosaicking (arrays with different primary beams
+                   e.g CARMA, ALMA) possible using the  right convolution of primary 
+                  beams for each baseline. 
                scaletype -- Controls scaling of pixels in the image plane.
                    (Not fully implemented...for now only controls 
  		   what is seen if interactive=True...but in the future will 
@@ -840,18 +840,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    default='SAULT'; example: scaletype='PBCOR'
                    Options: 'PBCOR','SAULT'
                      'SAULT' when interactive=True shows the residual
- 		             with constant noise across the mosaic. If
- 			     pbcor=False, the final output image is NOT
- 			     corrected for the PB pattern, and therefore is
- 			     not "flux correct". Division of SAULT
- 			     &lt;imagename&gt;.image by the &lt;imagename&gt;.flux image
- 			     will produce a "flux correct image", can also
+ 		             with constant noise across the mosaic. 
  			     be acheived by setting pbcor=True.
                      'PBCOR' uses the SAULT scaling scheme for
  			     deconvolution, but if interactive=True shows the
- 			     primary beam corrected image; the final PBCOR
- 			     image is "flux correct" if pbcor=True.
-
+ 			     primary beam corrected image during interactive.
+                     
   &gt;&gt;&gt; imagermode='csclean' expandable parameter(s): 
                Image using the Cotton-Schwab algorithm in between major cycles
  	       cyclefactor -- Change the threshold at which the deconvolution 
@@ -873,8 +867,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                scale should always be 0 (point), we suggest second on
                the order of synthesized beam, third 3-5 times
                synthesized beam, etc. For example if synthesized beam
-               is 10" and cell=2", try multscale = [0,5,15]. Note,
-               multiscale is currently a bit slow.
+               is 10" and cell=2", try multscale = [0,5,15]. As expected, multiscale is
+               slower than clark clean and also use more memory depending on number of 
+               scales.
  	       default: multiscale=[] (standard CLEAN using psfmode algorithm,
                no multi-scale). Example:  multiscale = [0,5,15] 
 
@@ -1034,22 +1029,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  		        FWHM 10" example:
  		        restoringbeam=['10.0','5.0','45.0deg'] 10"x5" 
  	                at 45 degrees
-       pbcor -- Output primary beam-corrected image 
+       pbcor -- Output primary beam-corrected image
+                If pbcor=False, the final output image is NOT corrected for the 
+                PB pattern (particularly important for mosaics), and therefore is
+                not "flux correct". Correction can also be done after the 
+                fact using immath to divide &lt;imagename&gt;.image by 
+                the &lt;imagename&gt;.flux image. 
  	       default: pbcor=False; output un-corrected image 
  	       example: pbcor=True; output pb-corrected image (masked outside
-                        minpb) Note: if you set pbcor=False, you can later
-                        recover the pbcor image by dividing by the .flux image
-                        (e.g. using immath)
+                        minpb) 
        minpb -- Minimum PB level to use default=0.1;
                The flux image is used to determine this
-	       except for the case of mosaic with ft='mosaic'
+	       except for the case of mosaic with ftmachine='mosaic'
 	       where the flux.pbcoverage image is used.
-               example:
-                        minpb=0.01 Note: this minpb is always in effect
+               example: minpb=0.01 Note: this minpb is always in effect
                         (regardless of pbcor=True/False) 
        calready -- if True will create scratch columns if they are 
                not there. And after clean completes the predicted model 
                visibility is from the clean components are written to the ms.
+               Set to False if imaging from a readonly MeasurementSet.
        async -- Run asynchronously 
   	       default = False; do not run asychronously
 

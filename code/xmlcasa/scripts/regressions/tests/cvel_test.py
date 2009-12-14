@@ -7,7 +7,7 @@ import inspect
 
 # Short description
 def description():
-    return "Test of the cvel() task: spectral regridding and transformation"
+    return "Test of the cvel() and clean() tasks: spectral regridding and transformation"
 
 pass_on = { "dataset_name" : "ANTEN_sort_hann_for_cvel_reg.ms" }
 

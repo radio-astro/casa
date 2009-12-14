@@ -5442,9 +5442,9 @@ Bool SubMS::fillAverMainTable(const Vector<String>& colNames)
 	    //----------------------------------------------------------------------
 
 	    msc_p->flag().putColumnCells(rowstoadd, locflag);
-            msc_p->weightSpectrum().putColumnCells(rowstoadd, spWeight);
+            if(doSpWeight)
+              msc_p->weightSpectrum().putColumnCells(rowstoadd, spWeight);
 	    rowsdone += rowsnow;
-
 	  }
       }
     
@@ -5943,9 +5943,8 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
 
   const Bool doSpWeight = !mscIn_p->weightSpectrum().isNull() &&
                            mscIn_p->weightSpectrum().isDefined(0) &&
-    mscIn_p->weightSpectrum().shape(0).isEqual(IPosition(2, npol_p[0],
-                                                         nchan_p[0]));
-    
+                           mscIn_p->weightSpectrum().shape(0) ==
+                           mscIn_p->data().shape(0);
   
   Vector<Double> outTime;
   outTime.resize(outNrow);
@@ -6010,7 +6009,6 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
   dataDesc.set(-1);
 
   Cube<Float> outSpWeight;
-  Vector<Float> outSpWtTmp(npol_p[0]);
   if(doSpWeight){
     outSpWeight.resize(npol_p[0], nchan_p[0], outNrow);
     outSpWeight.set(0.0);
@@ -6026,8 +6024,8 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
   outSigma.set(0.0);
 
   const ROArrayColumn<Float> inRowWeight(mscIn_p->weight());
-  os << LogIO::NORMAL << "outNrow = " << outNrow << LogIO::POST;
-  os << LogIO::NORMAL << "inUVW.nrow() = " << inUVW.nrow() << LogIO::POST;
+  os << LogIO::NORMAL2 << "outNrow = " << outNrow << LogIO::POST;
+  os << LogIO::NORMAL2 << "inUVW.nrow() = " << inUVW.nrow() << LogIO::POST;
   //os << LogIO::NORMAL << "npol_p = " << npol_p << LogIO::POST;
   //os << LogIO::NORMAL << "nchan_p = " << nchan_p << LogIO::POST;
 
@@ -6117,8 +6115,8 @@ Bool SubMS::fillTimeAverData(const Vector<String>& columnNames)
           //  	       << unflaggedwt.shape() << LogIO::POST;
           //  	    os << LogIO::DEBUG1 << "flag(*toikit).shape() = "
           //  	       << flag(*toikit).shape() << LogIO::POST;
-          //  	    os << LogIO::DEBUG1 << "data(*toikit).shape() = "
-          //  	       << data(*toikit).shape() << LogIO::POST;
+            	    // os << LogIO::DEBUG1 << "data(*toikit).shape() = "
+            	    //    << data(*toikit).shape() << LogIO::POST;
 
           outRowWeight.column(orn) = outRowWeight.column(orn) + unflaggedwt;
           

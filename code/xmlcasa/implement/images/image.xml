@@ -4045,7 +4045,7 @@ tool attached to the residual (continuum subtracted) image.
 
  
    <method type="function" name="fitsky">
-   <shortdescription>Fit 2-dimensional models to the sky</shortdescription>
+   <shortdescription>DEPRECATED USE FTICOMPONENTS() INSTEAD. Fit 2-dimensional models to the sky.</shortdescription>
    
 
 <input>
@@ -4117,6 +4117,9 @@ tool attached to the residual (continuum subtracted) image.
 Componentlist tool or fail</returns>
 
 <description>
+
+THIS METHOD HAS BEEN DEPRECATED AND WILL BE REMOVED IN A FUTURE VERSION
+OF CASA. USE FITCOMPONENTS() INSTEAD.
 
 This function fits 2-dimensional models to regions of the sky.  You
 can fit multiple models simulataneously, although only Gaussian models
@@ -4334,11 +4337,141 @@ estimate.
     </input>
     <returns type="any"><any type="record"/>Componentlist tool or fail</returns>
     <description>
-    My description goes here.
-    </description>
-    <example>
-    My example goes here
-    </example>
+    OVERVIEW
+
+fitcomponents() is used to fit one or more gaussians to sources in an image.
+Fitting is limited to a single spectral channel and a single polarization.
+If the image has a clean beam, the report will contain both the convolved
+and the deconvolved fit results.
+
+The method returns a dictionary with two keys, 'converged' and 'results'.
+The value of 'converged' is a boolean which indicates if the fit converged.
+The value of 'results' is a component list reflecting the fit results. In the
+case of a clean image, the results are the convolved results.
+
+The region can either be specified by a box (blc,trc) or a region (if both
+are given, the box is used). Ranges of pixel values can be included or
+excluded from the fit.
+
+If specified, the residual and/or model images for
+successful fits will be written.
+
+If an estimates file is not specified, an attempt is made to estimate
+initial parameters and fit a single Gaussian. If a multiple Gaussian fit
+is desired, the user must specify initial estimates via a text file
+(see below for details).
+
+The user has the option of writing the result of the fit to a log file,
+and has the option of either appending to or overwriting an existing file.
+
+The user has the option of writing the (convolved) parameters of a successful
+fit to a file which can be fed back to fitcomponents() as the estimates file for a
+subsequent run.
+
+MASK SPECIFICATION
+
+Mask specification can be done using an LEL expression. For example
+
+mask = '"myimage">5' will use only pixels with values greater than 5.
+
+INCLUDING AND EXCLUDING PIXELS
+
+Pixels can be included or excluded from the fit based on their values
+using these parameters. Note that specifying both is not permitted and
+will cause an error. If specified, both take an array of two numeric
+values.
+
+ESTIMATES
+
+Initial estimates of fit parameters may be specified via an estimates
+text file. Each line of this file should contain a set of parameters for
+a single gaussian. Optionally, some of these parameters can be fixed during
+the fit. The format of each line is
+
+peak intensity, peak x-pixel value, peak y-pixel value, major axis, minor axis, position angle, fixed
+
+The fixed parameter is optional. The peak intensity is assumed to be in the
+same units as the image pixel values (eg Jy/beam). The peak coordinates are specified
+by pixel values. The major and minor axes and the position angle are the convolved
+parameters if the image has been convolved with a clean beam and are specified as quantities.
+The fixed parameter is optional and is a string. It may contain any combination of the
+following characters 'f' (peak intensity), 'x' (peak x position), 'y' (peak y position),
+'a' (major axis), 'b' (minor axis), 'p' (position angle).
+
+In addition, lines in the file starting with a \# are considered comments.
+
+An example of such a file is:
+
+\begin{verbatim}
+# peak intensity must be in map units
+120, 150, 110, 23.5arcsec, 18.9arcsec, 120deg  
+90, 60, 200, 46arcsec, 23arcsec, 140deg, fxp
+\end{verbatim}
+
+This is a file which specifies that two gaussians are to be simultaneously fit,
+and for the second gaussian the specified peak intensity, x position, and position angle
+are to be held fixed during the fit.
+
+EXAMPLE: 
+
+Here is how one might fit two gaussians to multiple channels of a cube using the fit
+from the previous channel as the initial estimate for the next. It also illustrates
+how one can specify a region in the associated continuum image as the region to use
+as the fit for the channel.
+
+\begin{verbatim}
+imagename = "co_cube.im"
+# specify region using region from continuum
+region = "continuum.im:source.rgn"
+chan = 2
+# only use pixels with positive values in the fit
+excludepix = [-1e10,0]
+# estimates file contains initial parameters for two Gaussians in channel 2
+estimates = "initial_estimates.txt"
+logfile = "co_fit.log"
+# append results to the log file for all the channels
+append = "True"
+# write file to use as estimates for next channel
+newestimates = "estimates3.txt"
+imfit
+# now loop through channels
+for x in range(3,20):
+    chan = x
+    # feed initial estimates using results of last fit
+    estimates = "estimates" + str(x) + ".txt"
+    newestimates = "estimates" + str(x + 1) + ".txt"
+    imfit
+\end{verbatim}
+
+    
+</description>
+<example>
+Here is how one might fit two gaussians to multiple channels of a cube using the fit
+from the previous channel as the initial estimate for the next. It also illustrates
+how one can specify a region in the associated continuum image as the region to use
+as the fit for the channel.
+
+\begin{verbatim}
+
+imagename = "co_cube.im"
+# open the image analysis tool
+ia.open(imagename)
+# specify region using region from continuum
+# only use pixels with positive values in the fit
+# estimates file contains initial parameters for two Gaussians in channel 2
+# append results to the log file for all the channels
+# write file to use as estimates for next channel
+ia.fitcomponents(region="continuum.im:source.rgn", chan=2, excludepix=[-1e10,0], estimates="initial_estimates.txt", logfile="co_fit.log", append=True, newestimates="estimates3.txt")
+
+
+# now loop through channels
+for x in range(3,20):
+    # feed initial estimates using results of last fit
+    estimates = "estimates" + str(x) + ".txt"
+    newestimates = "estimates" + str(x + 1) + ".txt"
+    ia.fitcomponents(region="continuum.im:source.rgn", chan=x, excludepix=[-1e10,0], estimates="initial_estimates.txt", logfile="co_fit.log", append=True, newestimates=newestimates)
+\end{verbatim}
+</example>
 </method>
 
 

@@ -15,8 +15,8 @@ startProc = time.clock()
 print '--Running simdata of input672GHz_50pc.image--'
 
 #my_project="ppsim.pwv12"
-my_project="ppsim.pwv05"
-#my_project="psim"
+#my_project="ppsim.pwv05"
+my_project="psim"
 my_modelimage="diskmodel.im"
 
 # Clear out results from previous runs.
@@ -96,12 +96,12 @@ refstats = { 'flux': 0.0365,
 
 # tsys-atm
 refstats = { 'flux': 0.0365,
-             'max': 5.8e-04,
-             'min': -2.3e-04,
-             'rms': 1.5e-04,
-             'sigma': 1.2e-04 }
+             'max': 5.66e-04,
+             'min': -2.11e-04,
+             'rms': 1.46e-04,
+             'sigma': 1.14e-04 }
 
-reftol   = {'flux':  1e-2,
+reftol   = {'flux':  0.05,
             'max':   0.1,
             'min':   0.1,
             'rms':   0.1,

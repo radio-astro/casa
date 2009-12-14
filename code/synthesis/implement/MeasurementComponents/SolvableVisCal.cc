@@ -463,7 +463,7 @@ void SolvableVisCal::createCorruptor(const VisIter& vi,const Record& simpar, con
 
   const ROMSSpWindowColumns& spwcols = vi.msColumns().spectralWindow();  
   if (prtlev()>3) cout << " SpwCols accessed:" << endl;
-  if (prtlev()>3) cout << "   nSpw()= " << nSpw() << endl;
+  if (prtlev()>3) cout << "   nSpw()= " << nSpw() << " spwcols= " << nSpw() << endl;
   if (prtlev()>3) cout << "   spwcols.nrow()= " << spwcols.nrow() << endl;  
   AlwaysAssert(nSpw()==spwcols.nrow(),AipsError);
   // there's a member variable in Simulator nSpw, should we verify that 
@@ -595,9 +595,6 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
   }
   vs.resetVisIter(columns,iterInterval);
 
-  // assume only one ms attached to the VI. need vi for mscolumns.
-  VisIter& vi(vs.iter());
-  
   Vector<Int> nChunkPerSol;
   // independent of simpar details
   Int nSim = sizeUpSim(vs,nChunkPerSol,solTimes);
@@ -621,6 +618,15 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
   }
   simpar.define("stopTime",max(solTimes));
 
+  // assume only one ms attached to the VI. need vi for mscolumns in createCorruptor
+  // note - sizeUpSim seems to break the reference to mscolumns inside of VI, 
+  // so we're better off resetting it here, I think, just to make sure?
+  VisIter& vi(vs.iter());
+  os << LogIO::DEBUG1 << " number of spw in VI (checking validity of mscolumns) = " 
+     << vi.numberSpw() << LogIO::POST;  
+  vi.origin();
+  os << LogIO::DEBUG1 << " number of spw in VI (after resetting to origin = " 
+     << vi.numberSpw() << LogIO::POST;  
 
   // -------------------
   // create (and initialize) a corruptor in a VC-specific way - 
@@ -1882,12 +1888,13 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
   
   // Inflate the CalSet - RI TODO redundant with create above?
   inflate(nChanParList(),startChanList(),nChunkPerSpw);
-
-  if (prtlev()>3) cout<<" calset inflated to "<<cs().par(currSpw()).shape()<<" created"<<endl;
   
+  os << LogIO::DEBUG1 <<" calset inflated to "<<cs().par(currSpw()).shape() 
+     << LogIO::POST;
+
   // Size the solvePar arrays
-  // fuckin' eh - Jones' insists on having 1 channel, but mullers have lots.  
-  //initSolvePar();
+  // Jones' insists on having 1 channel, but mullers have lots.  
+  // initSolvePar();
   // so i have to copy this from initsolvepar and make it all chans
 
   for (Int ispw=0;ispw<nSpw();++ispw) {
@@ -1898,6 +1905,10 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
       {
       case VisCalEnum::COMPLEX:
 	{
+	  os << LogIO::DEBUG1 << "spw " << currSpw() 
+	     << " nPar=" << nPar() << "nChanPar=" << nChanPar() 
+	     << " nElem=" << nElem() << LogIO::POST;
+	  
 	    solveCPar().resize(nPar(),nChanPar(),nElem());
 	   solveParOK().resize(nPar(),nChanPar(),nElem());
 	  solveParErr().resize(nPar(),nChanPar(),nElem());
@@ -1927,8 +1938,9 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
          break;
       }
   }
-
-  // cout << "calset shape = " << cs().shape(0) << " solveCPar shape = " << solveCPar().shape() << endl;
+  
+  os << LogIO::DEBUG1 << "calset shape = " << cs().shape(0) << " solveCPar shape = " << solveCPar().shape() 
+     << LogIO::POST;
 
   // Return the total number of solution intervals
   return nSol;

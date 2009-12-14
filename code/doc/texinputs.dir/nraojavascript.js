@@ -1,4 +1,8 @@
 <link rel="stylesheet"  type="text/css" href="/common/nraostyle.css" > 
+<style type="text/css">
+body {margin-left: 5pt;}
+</style>
+
 <script language="Javascript" type="text/javascript">
 
 var dayNames = new Array ();

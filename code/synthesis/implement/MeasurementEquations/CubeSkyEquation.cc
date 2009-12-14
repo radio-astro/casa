@@ -474,11 +474,24 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 				  (gSSub/planeMax),0.0)));
 	    
 	  }
+	  else{
+	    psfSub.set(0.0);
+	  }
 	}
       }
       
       //
     }
+   
+    /*
+    if(0){
+      PagedImage<Float> thisScreen(psfs[model]->shape(), psfs[model]->coordinates(), String("ELPSF).psf"));
+	LatticeExpr<Float> le(*psfs[model]);
+	thisScreen.copyData(le);
+	
+
+      } 
+    */
     LatticeExprNode maxPSF=max(*psfs[model]);
     Float maxpsf=maxPSF.getFloat();
     if(abs(maxpsf-1.0) > 1e-3) {
@@ -1231,7 +1244,7 @@ void CubeSkyEquation::fixImageScale()
 
 	      //////////
 	      ///As we chop the image later...the weight can vary per channel
-	      ///lets be conservative and go to 1% of ggsmin2
+	      ///lets be conservative and go to 1% of ggsMin2
 	      if(planeMax !=0){
 		fscalesub.copyData( (LatticeExpr<Float>) 
 				    (iif(ggSSub < (ggSMin2/100.0), 
