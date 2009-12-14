@@ -6615,8 +6615,18 @@ ImageAnalysis::echo(Record& v, const bool godeep) {
 }
 
 Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
-		Vector<Float>& specVal, const CoordinateSystem& cSys,
-		const String& xunits) {
+		Vector<Float>& specVal, const CoordinateSystem& cs,
+				       const String& xunits, const String& specFrame) {
+
+        CoordinateSystem cSys=cs;
+	if(specFrame != ""){
+	  String errMsg;
+	  if(!CoordinateUtil::setSpectralConversion(errMsg, cSys, specFrame)){
+	    cerr << "Failed to convert with error: " << errMsg << endl; 
+
+	  }
+	  
+	}
 
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
 	Vector<Double> pix(specVal.nelements());
@@ -6626,7 +6636,7 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 	String axis = specaxis;
 	axis.downcase();
 	Bool ok = False;
-	if (axis.contains("vel") || axis.contains("freq")) { // need a conversion
+       	if (axis.contains("vel") || axis.contains("freq")) { // need a conversion
 
 		// first convert from pixels to frequencies
 		Vector<String> tmpstr(1);
@@ -6670,7 +6680,8 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 		Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
 		const String& xytype, const String& specaxis, const Int& whichStokes,
-		const Int& whichTabular, const Int& whichLinear, const String& xunits) {
+				   const Int& whichTabular, const Int& whichLinear, 
+				   const String& xunits, const String& specFrame) {
 
 	String whatXY = xytype;
 	Vector<Double> xypix(2);
@@ -6724,14 +6735,15 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 	}
 
 	zxaxisval.resize(zyaxisval.nelements());
-	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits);
+	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame);
 }
 
 Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,
 		const Vector<Double>& y, Vector<Float>& zxaxisval,
 		Vector<Float>& zyaxisval, const String& xytype, const String& specaxis,
 		const Int& whichStokes, const Int& whichTabular,
-		const Int& whichLinear, const String& xunits) {
+				   const Int& whichLinear, const String& xunits, const String& specFrame) {
+
 	Vector<Double> xy(2);
 	xy[0] = 0;
 	xy[1] = 0;
@@ -6748,7 +6760,7 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,
 		xy[0] = x[0];
 		xy[1] = y[0];
 		return getFreqProfile(xy, zxaxisval, zyaxisval, xytype, specaxis,
-				whichStokes, whichTabular, whichLinear, xunits);
+				      whichStokes, whichTabular, whichLinear, xunits, specFrame);
 	}
 	// n > 1, i.e. region to average over is a rectangle or polygon
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
@@ -6819,7 +6831,7 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,
 		//      }
 
 		zxaxisval.resize(zyaxisval.nelements());
-		return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits);
+		return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame);
 
 	} catch (std::exception& x) {
 		zxaxisval.resize(nchan);

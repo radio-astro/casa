@@ -512,6 +512,7 @@ class ImageAnalysis
     // xunits determines the units of the x-axis values...default is "GHz" for 
     // freq and "km/s" for vel
     //PLEASE note that the returned value of zyaxisval are the units of the image
+    //specframe can be a valid frame from MFrequency...i.e LSRK, LSRD etc...
     Bool getFreqProfile(const Vector<Double>& xy,  
                         Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
                         const String& xytype="world", 
@@ -519,7 +520,8 @@ class ImageAnalysis
                         const Int& whichStokes=0,
                         const Int& whichTabular=0,
                         const Int& whichLinear=0,
-                        const String& xunits="");
+                        const String& xunits="",
+			const String& specframe="");
 
     //how about using this ? 
     //for x.shape(xn) & y shape(yn)
@@ -534,7 +536,8 @@ class ImageAnalysis
                         const Int& whichStokes=0,
                         const Int& whichTabular=0,
                         const Int& whichLinear=0,
-                        const String& xunits="");
+                        const String& xunits="",
+			const String& specframe="");
 
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);
@@ -707,7 +710,8 @@ class ImageAnalysis
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already 
     Bool getSpectralAxisVal(const String& specaxis, Vector<Float>& specVal, 
-                            const CoordinateSystem& cSys, const String& xunits);
+                            const CoordinateSystem& cSys, const String& xunits, 
+			    const String& freqFrame="");
 
 
     // Set the include and/or exclude pixel range for fitsky(). The algorithm is:
