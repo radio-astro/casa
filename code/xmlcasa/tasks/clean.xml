@@ -938,8 +938,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    emission is encountered.
                chaniter -- specify how interactive CLEAN is performed, 
                    either by stepping through channels or do jointly for all channel
-                   default: chaniter='joint'; 
-                   example: chaniter='channel'; step through channels 
+                   default: chaniter=False; 
+                   example: chaniter=True; step through channels 
+                   WARNING: The interactive clean with chaniter=True for optical velocity
+                            mode (mode='velocity' and veltype='optical') is NOT YET IMPLEMENTED.
 
        mask -- Specification of cleanbox(es), mask image(s), and/or
                region(s) to be used for CLEANing. As long as the image has

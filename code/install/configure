@@ -1152,7 +1152,10 @@ EOT
   echo ""
   echo "Setting memory to $mem and number of processors to $psr"
   echo "in the $AIPSARCH/$SITE/aipsrc file."
-  echo "system.resources.memory: $mem" >>$AIPSARCH/$SITE/aipsrc
+  #
+  #Don't set the memory size as bad things can happen
+  #
+  #echo  "system.resources.memory: $mem" >>$AIPSARCH/$SITE/aipsrc
   echo "system.resources.numcpu: $psr" >>$AIPSARCH/$SITE/aipsrc
 
   echo ""

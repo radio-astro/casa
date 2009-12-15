@@ -680,7 +680,12 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
       if(memtot > 2000000)
 	memtot=2000000;
     }
+    if(memtot < 512000){
+      ostringstream oss;
+      oss << "The amount of memory reported " << memtot << " kB is too small to work with" << endl;
+      throw(AipsError(String(oss))); 
 
+    }
     Long pixInMem=(memtot/8)*1024;
     nslice=1;
 
@@ -690,8 +695,9 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
       //One plane is
       npix=theIm.shape()(0)*theIm.shape()(1)*theIm.shape()(2);
       nchanPerSlice_p=Int(floor(pixInMem/npix));
-      if (nchanPerSlice_p==0)
+      if (nchanPerSlice_p==0){
 	nchanPerSlice_p=1;
+      }
       nslice=theIm.shape()(3)/nchanPerSlice_p;
       if( (theIm.shape()(3) % nchanPerSlice_p) > 0)
 	++nslice;

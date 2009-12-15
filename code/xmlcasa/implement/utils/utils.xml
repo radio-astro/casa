@@ -207,6 +207,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <example></example>
 </method>
 
+
+<method type="function" name="hostinfo">
+
+	<shortdescription>returns host information</shortdescription>
+
+  <description></description>
+
+  <input></input>
+
+  <returns type="any">
+	  <any type="record"/>
+  </returns>
+  <example></example>
+
+</method>
+
 </tool>
 
 </casaxml>

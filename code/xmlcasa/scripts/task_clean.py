@@ -80,6 +80,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         #setup for 'per channel' clean
         dochaniter=False
         if interactive and chaniter:
+            if veltype=="optical":
+                raise Exception, 'The chaniter=True interactive clean for optical velocity mode is not implemented yet.'
             if localnchan > 1:
                 dochaniter=True
 

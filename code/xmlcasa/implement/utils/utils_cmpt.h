@@ -60,6 +60,9 @@ class utils
 
     ::casac::record* tableinfo(const std::string &tablename);
     std::vector<std::string> lockedtables( );
+
+    ::casac::record* hostinfo();
+
     
     private:
 

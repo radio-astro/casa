@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="exportuvfits" async="true" category="import/export">
+<task type="function" name="exportuvfits" category="import/export">
 <shortdescription>Convert a CASA visibility data set to a UVFITS file:</shortdescription>
 <description>
 </description>
