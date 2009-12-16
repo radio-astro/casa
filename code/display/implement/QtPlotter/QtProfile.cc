@@ -263,6 +263,9 @@ MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool 
   
   CoordinateSystem cSys=img->coordinates();
   Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
+
+  if ( specAx < 0 ) return MFrequency::DEFAULT;
+
   SpectralCoordinate specCoor=cSys.spectralCoordinate(specAx);
   MFrequency::Types tfreqtype;
   MEpoch tepoch; 
