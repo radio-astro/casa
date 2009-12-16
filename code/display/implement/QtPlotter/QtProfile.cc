@@ -264,7 +264,12 @@ MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool 
   CoordinateSystem cSys=img->coordinates();
   Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
 
-  if ( specAx < 0 ) return MFrequency::DEFAULT;
+  if ( specAx < 0 ) {
+    QMessageBox::information( this, "No spectral axis...",
+			      "Sorry, could not find a spectral axis for this image...",
+			      QMessageBox::Ok);
+    return MFrequency::DEFAULT;
+  }
 
   SpectralCoordinate specCoor=cSys.spectralCoordinate(specAx);
   MFrequency::Types tfreqtype;
