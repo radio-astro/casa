@@ -5,23 +5,27 @@ def startup():
       print """___________________________________________________________
 Available tasks:
 
-   accum         fixvis         listcal      sdimprocess  uvmodelfit
-   applycal      flagdata       listhistory  sdlist       viewer
-   bandpass      flagmanager    listobs      sdmath       vishead 
-   blcal         fluxscale      listvis      sdplot       visstat  
-   browsetable   ft             makemask     sdsave       widefield 
-   calstat       gaincal        mosaic       sdscale 
-   clean         hanningsmooth  plotants     sdsim
-   clearcal      imcontsub      plotcal      sdsmooth  
-   clearplot     imhead         plotms       sdstat
-   clearstat     immoments      plotxy       sdtpimaging
-   concat        importfits     sdaverage    setjy
-   deconvolve    importuvfits   sdbaseline   smoothcal
-   exportfits    importvla      sdcal        specfit 
-   exportuvfits  imregrid       sdcoadd      split
-   feather       imsmooth       sdfit        tget
-   filecatalog   imstat         sdflag       uvcontsub
-   find          imval          sdimaging    uvcontsub2 
+   accum	  flagmanager	    listobs	      sdscale
+   applycal	  fluxscale	    listvis	      sdsim
+   bandpass	  ft		    makemask	      sdsmooth
+   blcal	  gaincal	    plotants	      sdstat
+   browsetable	  gencal	    plotcal	      sdtpimaging
+   calstat	  hanningsmooth	    plotmsl	      setjyt
+   clean	  imcontsub	    plotxy	      smoothcal
+   clearcal	  imfit		    sdaverage	      specfit
+   clearplot	  imhead	    sdbaseline	      split
+   clearstat	  immoments	    sdcal	      tget
+   concat	  importfits	    sdcoadd	      tput
+   deconvolve	  importuvfits	    sdfit	      uvcontsub
+   exportfits	  importvla	    sdflag	      uvcontsub2
+   exportuvfits	  imregrid	    sdimaging	      uvmodelfit
+   feather	  imsmooth	    sdimprocess	      viewer
+   filecatalog	  imstat	    sdlist	      vishead
+   find		  imval		    sdmath	      visstat
+   fixvis	  listcal	    sdplot
+   flagdata	  listhistory	    sdsave
+
+
                 
 sd* tasks are available after asap_init() is run
 

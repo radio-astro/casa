@@ -1,5 +1,6 @@
 import os
 import shutil
+import numpy
 
 IMAGE = 'image.im'
 
@@ -39,6 +40,10 @@ im2 = ia.newimage('regridded')
 im1.statistics()
 im2.statistics()
 
+rec1 = im1.torecord()
+print '*************'
+print rec1['shape']
+print '*************'
 shape = im1.shape()
 print shape
 checked = 0
@@ -57,8 +62,10 @@ print str(checked) + ' values checked'
 
 # rescale by factors 3 x 2
 rec1 = im1.torecord()
-print rec1
-rec1['shape'] = [3*rec1['shape'][0], 2*rec1['shape'][1]]
+print '*************'
+print rec1['shape']
+print '*************'
+rec1['shape'] = numpy.array([3*rec1['shape'][0], 2*rec1['shape'][1]])
 rec1['coordsys']['coordsys']['direction0']['cdelt'] = [
     rec1['coordsys']['coordsys']['direction0']['cdelt'][0]/3.0,
     rec1['coordsys']['coordsys']['direction0']['cdelt'][1]/2.0]

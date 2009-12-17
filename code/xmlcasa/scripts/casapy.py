@@ -392,7 +392,7 @@ def inp(taskname=None):
         for k in range(len(a)):
             if (string.find(a[k][1], 'ipython console') > 0):
                 stacklevel=k
-        myf=sys._getframe(stacklevel).f_globals
+        myf=sys._getframe(len(inspect.stack())-1).f_globals
         if((taskname==None) and (not myf.has_key('taskname'))):
             print 'No task name defined for inputs display'
             return
@@ -1010,6 +1010,11 @@ except:
 
 casalog.showconsole(showconsole)
 casalog.version()
+
+##
+## warn when available memory is < 512M (clean throws and exception)
+if cu.hostinfo( )['memory']['available'] < 524288:
+    casalog.post( 'available memory less than 512MB (with casarc settings)\n...some things will not run correctly', 'SEVERE' )
 
 import shutil
 if ipython:

@@ -206,15 +206,11 @@ def importgmrt( fitsfile, flagfile, vis ):
     for file in flagfile:
         casalog.post( 'Reading flag file '+file, 'NORMAL2' )
         FLAG_FILE = open( file, 'r' )
-        line = 'junk'
+        line = FLAG_FILE.readline()
         
         while ( len( line ) > 0 ):
-            # Really need a do-while construct.  We get around
-            # this by making "line" not empty to start.  This
-            # way we don't need to be careful about reading a
-            # line before calling continue.
-            line = FLAG_FILE.readline()
-                    
+            casalog.post( 'Read from flag file: '+str(line), 'DEBUG1' )
+
             # Default antenna list and time range
             antennas  = []
             baselines = []
@@ -222,6 +218,7 @@ def importgmrt( fitsfile, flagfile, vis ):
 
             # Skip comment lines, and the end of file.
             if ( line[0] == '!' or len(line) < 1 ):
+                line = FLAG_FILE.readline()
                 continue
 
             # First divide lines up on spaces
@@ -229,6 +226,7 @@ def importgmrt( fitsfile, flagfile, vis ):
             step1=line.split(' ')   
             if ( len( step1 ) < 2 ):
                 # We want a line with something on it.
+                line = FLAG_FILE.readline()
                 continue
 
             # Parse each bit of the string looking for the
@@ -313,6 +311,7 @@ def importgmrt( fitsfile, flagfile, vis ):
                 return retValue
 
             line = FLAG_FILE.readline()
+            
         
         FLAG_FILE.close()
 
