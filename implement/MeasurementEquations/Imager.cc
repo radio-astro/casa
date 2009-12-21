@@ -289,6 +289,7 @@ traceEvent(1,"Entering imager::defaults",25);
   imwgt_p=VisImagingWeight();
   smallScaleBias_p=0.6;
   freqFrame_p=MFrequency::LSRK;
+  imageTileVol_p=0;
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
@@ -404,6 +405,7 @@ Imager &Imager::operator=(const Imager & other)
   if (pgplotter_p && this != &other) {
     *pgplotter_p = *(other.pgplotter_p);
   }
+  imageTileVol_p=other.imageTileVol_p;
   return *this;
 }
 
@@ -2427,7 +2429,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 			const Bool applyPointingOffsets,
 			const Bool doPointingCorrection,
 			const String& cfCacheDirName,const Float& paStep, 
-			const Float& pbLimit, const String& interpMeth)
+			const Float& pbLimit, const String& interpMeth, const Int imageTileVol)
 {
 
 #ifdef PABLO_IO
@@ -2475,6 +2477,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   paStep_p = paStep;
   pbLimit_p = pbLimit;
   freqInterpMethod_p=interpMeth;
+  imageTileVol_p=imageTileVol;
 
   if(cache>0) cache_p=cache;
   if(tile>0) tile_p=tile;
@@ -3250,7 +3253,7 @@ Bool Imager::pb(const String& inimage,
       }
       inImage_pointer = new PagedImage<Float>( inimage );
       if (outimage != "") {
-	outImage_pointer = new PagedImage<Float>( inImage_pointer->shape(), 
+	outImage_pointer = new PagedImage<Float>( TiledShape(inImage_pointer->shape(), inImage_pointer->niceCursorShape()), 
 						  inImage_pointer->coordinates(), outimage);
       }
     }
@@ -3403,9 +3406,9 @@ Bool Imager::linearmosaic(const String& mosaic,
   Double meminMB=Double(HostInfo::memoryTotal(true))/1024.0;
   PagedImage<Float> mosaicImage( mosaic );
   mosaicImage.set(0.0);
-  TempImage<Float>  numerator( mosaicImage.shape(), mosaicImage.coordinates(), meminMB/2.0);
+  TempImage<Float>  numerator( TiledShape(mosaicImage.shape(), mosaicImage.niceCursorShape()), mosaicImage.coordinates(), meminMB/2.0);
   numerator.set(0.0);
-  TempImage<Float>  denominator( mosaicImage.shape(), mosaicImage.coordinates(), meminMB/2.0);
+  TempImage<Float>  denominator( TiledShape(mosaicImage.shape(), mosaicImage.niceCursorShape()), mosaicImage.coordinates(), meminMB/2.0);
   numerator.set(0.0);
   IPosition iblcmos(mosaicImage.shape().nelements(),0);
   IPosition itrcmos(mosaicImage.shape());
@@ -4199,10 +4202,19 @@ Bool Imager::makeimage(const String& type, const String& image,
     
     // Now set up the tile size, here we guess only
     IPosition cimageShape(imageshape());
-    
-    IPosition tileShape(4, min(32, cimageShape(0)), min(32, cimageShape(1)),
-			min(4, cimageShape(2)), min(32, cimageShape(3)));
-    
+    Int tilex=32;
+    if(imageTileVol_p >0){
+      tilex=ceil(sqrt(imageTileVol_p/min(4, cimageShape(3))/min(32, cimageShape(4))));
+      if(tilex >0){
+	tilex=cimageShape(0)/Int(cImageShape(0)/tilex);
+      }
+      //Not too small in x-y tile
+      if(tilex < 10)
+	tilex=10;
+   
+    }
+    IPosition tileShape(4, min(tilex, cimageShape(0)), min(tilex, cimageShape(1)),
+			min(4, cimageShape(3)), min(32, cimageShape(4)));
     CoordinateSystem cimagecoords;
     if(!imagecoordinates(cimagecoords, false))
       {
@@ -4591,7 +4603,8 @@ Bool Imager::smooth(const Vector<String>& model,
         imageNames(thismodel)=model(thismodel)+".smoothed";
       }
       PagedImage<Float> modelImage(model(thismodel));
-      PagedImage<Float> imageImage(modelImage.shape(),
+      PagedImage<Float> imageImage(TiledShape(modelImage.shape(), 
+					      modelImage.niceCursorShape()),
 				   modelImage.coordinates(),
 				   imageNames(thismodel));
       imageImage.table().markForDelete();
@@ -6398,7 +6411,8 @@ Bool Imager::clone(const String& imageName, const String& newImageName)
   LogIO os(LogOrigin("imager", "clone()", WHERE));
   try {
     PagedImage<Float> oldImage(imageName);
-    PagedImage<Float> newImage(oldImage.shape(), oldImage.coordinates(),
+    PagedImage<Float> newImage(TiledShape(oldImage.shape(), 
+					  oldImage.niceCursorShape()), oldImage.coordinates(),
 			       newImageName);
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
@@ -8106,7 +8120,8 @@ Bool Imager::addResidualsToSkyEquation(const Vector<String>& imageNames) {
     if(imageNames(thismodel)!="") {
       removeTable(imageNames(thismodel));
       residuals_p[thismodel]=
-	new PagedImage<Float> (images_p[thismodel]->shape(),
+	new PagedImage<Float> (TiledShape(images_p[thismodel]->shape(), 
+images_p[thismodel]->niceCursorShape()),
 			       images_p[thismodel]->coordinates(),
 			       imageNames(thismodel));
       AlwaysAssert(!residuals_p[thismodel].null(), AipsError);
@@ -8933,8 +8948,8 @@ Bool Imager::makePBImage(const Table& vpTable, ImageInterface<Float>& pbImage){
 Bool Imager::makePBImage(const CoordinateSystem& imageCoord, PBMath& pbMath, 
 			 const String& diskPBName){
 
-  IPosition imShape(4, nx_p, ny_p, npol_p, imageNchan_p);
-  PagedImage<Float> pbImage(imShape, imageCoord, diskPBName);
+  make(diskPBName);
+  PagedImage<Float> pbImage(diskPBName);
   return makePBImage(pbMath, pbImage);
 }
 
@@ -9005,8 +9020,20 @@ ObsInfo& Imager::latestObsInfo(){
 
 Bool Imager::makeEmptyImage(CoordinateSystem& coords, String& name, Int fieldID){
 
+  Int tilex=32;
+  if(imageTileVol_p >0){
+    tilex=ceil(sqrt(imageTileVol_p/min(4, npol_p)/min(32, imageNchan_p)));
+    if(tilex >0){
+      tilex=nx_p/Int(nx_p/tilex);
+    }    
+    //Not too small in x-y tile
+    if(tilex < 10)
+      tilex=10;
+  }
+  IPosition tileShape(4, min(tilex, nx_p), min(tilex, ny_p),
+		     min(4, npol_p), min(32, imageNchan_p));
   IPosition imageShape(4, nx_p, ny_p, npol_p, imageNchan_p);
-  PagedImage<Float> modelImage(imageShape, coords, name);
+  PagedImage<Float> modelImage(TiledShape(imageShape, tileShape), coords, name);
   modelImage.set(0.0);
   modelImage.table().markForDelete();
     
