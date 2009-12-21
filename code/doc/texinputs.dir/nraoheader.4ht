@@ -1,11 +1,20 @@
+<div id="main">
+      <div id="topbar">
+	<div id="logo">
+	  <a href="http://www.nrao.edu/">
+	    <img align="left" src="../gif/nrao_logo_pms_51.png" alt="NRAO"
+		 border="0" width="39" height="51">
+	  </a>
+	  National Radio<br>Astronomy Observatory
+	</div>
+	<div id="search">
+	  <form name="gs" method="get" action="http://search.nrao.edu/search" style="display: inline;">
+	    <input type="text" name="q" size="15" maxlength="255"  />
+	    <input type="submit" name="btn" value="Search NRAO" />
+	  </form>
+	</div>
+</div>
 <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#000000">
-  <tr>
-    <td colspan="2" width="100%" height="50" align="left" bgcolor="#003366">
-        <a href="http://www.nrao.edu/">
-        <img src="../gif/nraotop2.gif" alt="nrao" border="0"><img src="../gif/nraotop.gif" alt="nrao" border="0">
-         </a>
-    </td>
-  </tr>
   <tr>
     <td width="100%" colspan="2" height="5" align="right" bgcolor="#000000">
         <table border="0" width="100%" cellpadding="0" cellspacing="0">

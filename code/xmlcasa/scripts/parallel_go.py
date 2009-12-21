@@ -83,7 +83,7 @@ class cluster(object):
       for i in range(1, num_engine+1):
          args='bash '+self.__prefix+self.__start_engine_file
          #print 'args=', args
-         q=Popen(['ssh', '-f', '-q', '-X', node_name, args])
+         q=Popen(['ssh', '-f', '-q', '-x', node_name, args])
          sts = os.waitpid(q.pid, 0)
          print "start engine %s on %s" % (i, node_name)
       self.__engines=self.__update_cluster_info(num_engine, work_dir)
@@ -291,7 +291,7 @@ class cluster(object):
       sts = os.waitpid(p.pid, 0)
       args='bash '+self.__prefix+self.__stop_engine_file
       #print 'args=', args
-      Popen(['ssh', '-f', '-q', '-X', node_name, args])
+      Popen(['ssh', '-f', '-q', '-x', node_name, args])
       print 'stop engine %d on %s\n' % (engine_id, node_name)
       self.__engines=self.__update_cluster_info(-1)
 
@@ -313,7 +313,7 @@ class cluster(object):
       sts = os.waitpid(p.pid, 0)
       args='bash '+self.__prefix+self.__stop_node_file
       #print 'args=', args
-      Popen(['ssh', '-f', '-q', '-X', node_name, args])
+      Popen(['ssh', '-f', '-q', '-x', node_name, args])
       print 'stop engines on %s\n' % node_name
       # what to do with client.kill() ?
 
@@ -348,7 +348,7 @@ class cluster(object):
       sts = os.waitpid(p.pid, 0)
       args='bash '+self.__prefix+self.__stop_controller_file
       #print 'args=', args
-      Popen(['ssh', '-f', '-q', '-X', node_name, args])
+      Popen(['ssh', '-f', '-q', '-x', node_name, args])
 
       #cmd="ps -ef | grep `whoami` | grep ipcontroller | grep -v grep | awk '{print $2}' | xargs kill -9"
       #print 'cmd=', cmd
@@ -463,6 +463,8 @@ class cluster(object):
      #self.__client.execute('scriptdir=phome+"/python/2.5/"', i)
      self.__client.push(dict(sdir=sdir), i)
      self.__client.execute('scriptdir=sdir', i)
+
+     #print self.__client.pull('scriptdir')
 
      self.__client.execute('sys.path.insert(2, scriptdir)', i)
      try:

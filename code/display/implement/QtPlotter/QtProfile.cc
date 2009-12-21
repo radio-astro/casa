@@ -192,6 +192,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     chk->addItem("pixel");
     connect(chk, SIGNAL(currentIndexChanged(const QString &)), 
             this, SLOT(changeCoordinate(const QString &)));
+    
     te = new QLineEdit(this);
     te->setReadOnly(true);  
     QLabel *label = new QLabel(this);
@@ -199,25 +200,35 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     label->setAlignment((Qt::Alignment)(Qt::AlignBottom | Qt::AlignRight));
  
     ctype = new QComboBox(this);
+    frameButton_p= new QComboBox(this);
 
     // get reference frame info for freq axis label
     MFrequency::Types freqtype = determineRefFrame(img);
 
-    QString nativeRefFrameName = QString(MFrequency::showType(freqtype).c_str());
+    frameType_p = String(MFrequency::showType(freqtype));
     //    ctype->addItem("true velocity ("+nativeRefFrameName+")");
-    ctype->addItem("radio velocity ("+nativeRefFrameName+")"); 
-    ctype->addItem("optical velocity ("+nativeRefFrameName+")");
-    ctype->addItem("frequency ("+nativeRefFrameName+")");
+    ctype->addItem("radio velocity"); 
+    ctype->addItem("optical velocity");
+    ctype->addItem("frequency ");
     ctype->addItem("channel");
+    frameButton_p->addItem("LSRK");
+    frameButton_p->addItem("BARY");
+    frameButton_p->addItem("GEO");
+    frameButton_p->addItem("TOPO");
+    Int frameindex=frameButton_p->findText(QString(frameType_p.c_str()));
+    frameButton_p->setCurrentIndex(frameindex);
 
     coordinateType = String(ctype->itemText(0).toStdString());
 
     connect(ctype, SIGNAL(currentIndexChanged(const QString &)), 
             this, SLOT(changeCoordinateType(const QString &)));
+    connect(frameButton_p, SIGNAL(currentIndexChanged(const QString &)), 
+            this, SLOT(changeFrame(const QString &)));
     displayLayout->addWidget(label);
     displayLayout->addWidget(chk);
     displayLayout->addWidget(te);
     displayLayout->addWidget(ctype);
+    displayLayout->addWidget(frameButton_p);
 
     layout()->addItem(displayLayout);
     layout()->addItem(buttonLayout);
@@ -263,6 +274,14 @@ MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool 
   
   CoordinateSystem cSys=img->coordinates();
   Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
+
+  if ( specAx < 0 ) {
+    QMessageBox::information( this, "No spectral axis...",
+			      "Sorry, could not find a spectral axis for this image...",
+			      QMessageBox::Ok);
+    return MFrequency::DEFAULT;
+  }
+
   SpectralCoordinate specCoor=cSys.spectralCoordinate(specAx);
   MFrequency::Types tfreqtype;
   MEpoch tepoch; 
@@ -506,6 +525,10 @@ void QtProfile::changeCoordinate(const QString &text) {
   emit coordinateChange(coordinate);
 }
 
+void QtProfile::changeFrame(const QString &text) {
+  frameType_p=String(text.toStdString());
+  changeCoordinateType(QString(coordinateType.c_str()));
+}
 void QtProfile::changeCoordinateType(const QString &text) {
     coordinateType = String(text.toStdString());
     //qDebug() << "coordinate:" << text; 
@@ -520,8 +543,8 @@ void QtProfile::changeCoordinateType(const QString &text) {
     pc->clearCurve(0);
 
     QString lbl = text;
-    if (text.contains("freq")) lbl.append(" (GHz)");
-    if (text.contains("velo")) lbl.append(" (km/s)");
+    if (text.contains("freq")) lbl.append(" (GHz) " + QString(frameType_p.c_str()));
+    if (text.contains("velo")) lbl.append(" (km/s) " + QString(frameType_p.c_str()));
     pc->setXLabel(lbl, 12, 0.5, "Helvetica [Cronyx]");
 
     pc->setPlotSettings(QtPlotSettings());
@@ -692,7 +715,7 @@ void QtProfile::wcChanged(const String c,
     //Get Profile Flux density v/s velocity
     Bool ok = False;
     ok=analysis->getFreqProfile(xv, yv, z_xval, z_yval, 
-                coordinate, coordinateType);
+				coordinate, coordinateType, 0, 0, 0, "", frameType_p);
 
     // scale for better display
     // max absolute display numbers should be between 0.1 and 100.0
@@ -760,6 +783,7 @@ void QtProfile::wcChanged(const String c,
     }
 	
     pc->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+
 
     // plot the graph 
     pc->plotPolyLine(z_xval, z_yval);

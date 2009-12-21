@@ -534,14 +534,14 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
     String sant;
     for( uInt i=0; i<num(ANT); i++) 
       if( sel_ant(i)) 
-        addString(sant,chunk.antNames()(i),",");
-    addString(desc_str,String(RF_ANT)+"="+sant);
+        addString(sant, chunk.antNames()(i),",");
+    addString(desc_str, String(RF_ANT)+"="+sant);
   }
 // parse input: baselines as "X-Y"
   sel_ifr = LogicalVector(num(IFR),False);
   String ifrdesc;
   const Vector<String> &names( chunk.antNames()) ;
-  if( fieldType(parm,RF_BASELINE,TpString,TpArrayString)) 
+  if( fieldType(parm, RF_BASELINE, TpString, TpArrayString)) 
   {
     Vector<String> ss(parm.asArrayString(RF_BASELINE));
     ss.apply(stringUpper);

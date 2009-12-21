@@ -75,6 +75,14 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
         (Note: in case of the RPFITS format input data, it will be written 
         to SDFITS format).
 
+        WARNING for the GBT raw SDFITS format data as input:
+        Currently, all SDtasks cannot handle GBT raw SDFITS format data
+        (in which the data are stored in multiple tables within SDFITS).
+        It may be still possible to reduce GBT data after some
+        preprocessing (outside CASA) of the raw SDFITS to a SDFITS with
+        a single data table or to other data formats handled by SDtasks.
+
+
   </example>
 
 </task>

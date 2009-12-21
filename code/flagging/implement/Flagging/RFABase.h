@@ -162,6 +162,7 @@ public:
   virtual Record getResult( ) { return Record(); };
 
   virtual void finalize() {};
+  // Initialize chunk
   virtual void initialize() {};
   virtual void initializeIter(uInt iter) {};
   virtual void finalizeIter(uInt iter) {};

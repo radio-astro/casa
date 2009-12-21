@@ -11,7 +11,7 @@ except ImportError, e:
     print "failed to load casa:\n", e
     exit(1)
 
-import matplotlib
+#import matplotlib
 
 
 ##
@@ -150,7 +150,7 @@ from polcal_pg import polcal_pg as polcal
 
 from clearcal_pg import clearcal_pg as clearcal
 from bandpass_pg import bandpass_pg as bandpass
-from clearplot_pg import clearplot_pg as clearplot
+#from clearplot_pg import clearplot_pg as clearplot
 from listvis_pg import listvis_pg as listvis_cl
 from accum_pg import accum_pg as accum
 from concat_pg import concat_pg as concat
@@ -158,7 +158,7 @@ from listobs_pg import listobs_pg as listobs
 from feather_pg import feather_pg as feather
 from imregrid_pg import imregrid_pg as imregrid
 from listcal_pg import listcal_pg as listcal
-from plotxy_pg import plotxy_pg as plotxy
+#from plotxy_pg import plotxy_pg as plotxy
 from ft_pg import ft_pg as ft
 from importuvfits_pg import importuvfits_pg as importuvfits
 from setjy_pg import setjy_pg  as setjy
@@ -169,9 +169,9 @@ from find_pg import find_pg as find
 from gaincal_pg import gaincal_pg as gaincal
 from fluxscale_pg import fluxscale_pg as fluxscale
 from applycal_pg import applycal_pg as applycal
-from plotants_pg import plotants_pg as plotants
+#from plotants_pg import plotants_pg as plotants
 from exportuvfits_pg import exportuvfits_pg as exportuvfits
-from plotcal_pg import plotcal_pg as plotcal
+#from plotcal_pg import plotcal_pg as plotcal
 from flagmanager_pg import flagmanager_pg as flagmanager
 from specfit_pg import specfit_pg  as specfit
 from viewer_pg import viewer_pg as viewer
@@ -231,8 +231,11 @@ except ImportError:
 # Check if the display environment is set if not
 # switch the backend to Agg only if it's TkAgg
 #
-if not os.environ.has_key('DISPLAY') and matplotlib.get_backend() == "TkAgg" :
-   matplotlib.use('Agg')
+
+if not os.environ.has_key('DISPLAY'):
+   nodisplay='no display'
+   #if matplotlib.get_backend() == "TkAgg" :
+   #   matplotlib.use('Agg')
 
 from time import strftime
 stamp=strftime("%Y%m%d%H%M%S")
@@ -927,7 +930,7 @@ def default(taskname=None):
 #    #print 'Use CNTRL-D to exit'
 #    #return
 
-import pylab as pl
+#import pylab as pl
 
 #
 # 
@@ -935,10 +938,10 @@ import platform
 ##
 ## CAS-951: matplotlib unresponsive on some 64bit systems
 ##
-if (platform.architecture()[0]=='64bit'):
-    pl.ioff( )
-    pl.clf( )
-    pl.ion( )
+#if (platform.architecture()[0]=='64bit'):
+#    pl.ioff( )
+#    pl.clf( )
+#    pl.ion( )
 ##
 ##
 

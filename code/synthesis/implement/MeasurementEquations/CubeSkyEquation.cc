@@ -474,11 +474,24 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 				  (gSSub/planeMax),0.0)));
 	    
 	  }
+	  else{
+	    psfSub.set(0.0);
+	  }
 	}
       }
       
       //
     }
+   
+    /*
+    if(0){
+      PagedImage<Float> thisScreen(psfs[model]->shape(), psfs[model]->coordinates(), String("ELPSF).psf"));
+	LatticeExpr<Float> le(*psfs[model]);
+	thisScreen.copyData(le);
+	
+
+      } 
+    */
     LatticeExprNode maxPSF=max(*psfs[model]);
     Float maxpsf=maxPSF.getFloat();
     if(abs(maxpsf-1.0) > 1e-3) {
@@ -667,7 +680,12 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
       if(memtot > 2000000)
 	memtot=2000000;
     }
+    if(memtot < 512000){
+      ostringstream oss;
+      oss << "The amount of memory reported " << memtot << " kB is too small to work with" << endl;
+      throw(AipsError(String(oss))); 
 
+    }
     Long pixInMem=(memtot/8)*1024;
     nslice=1;
 
@@ -677,8 +695,9 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
       //One plane is
       npix=theIm.shape()(0)*theIm.shape()(1)*theIm.shape()(2);
       nchanPerSlice_p=Int(floor(pixInMem/npix));
-      if (nchanPerSlice_p==0)
+      if (nchanPerSlice_p==0){
 	nchanPerSlice_p=1;
+      }
       nslice=theIm.shape()(3)/nchanPerSlice_p;
       if( (theIm.shape()(3) % nchanPerSlice_p) > 0)
 	++nslice;
@@ -1231,7 +1250,7 @@ void CubeSkyEquation::fixImageScale()
 
 	      //////////
 	      ///As we chop the image later...the weight can vary per channel
-	      ///lets be conservative and go to 1% of ggsmin2
+	      ///lets be conservative and go to 1% of ggsMin2
 	      if(planeMax !=0){
 		fscalesub.copyData( (LatticeExpr<Float>) 
 				    (iif(ggSSub < (ggSMin2/100.0), 

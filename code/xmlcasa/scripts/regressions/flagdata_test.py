@@ -77,14 +77,36 @@ if len(fg.getflagversionlist()) != 6:
 fg.done()
 
 
-print "Test of autoflag, algorithm=timemed"
+print "Test of flagging statistics and queries"
 vis='ngc5921.ms'
 os.system('rm -rf ' + vis)
 importuvfits(os.environ.get('CASAPATH').split()[0] + \
              '/data/regression/ngc5921/ngc5921.fits', \
              vis)
 
+flagdata(vis=vis, unflag=true)
+flagdata(vis=vis, correlation='LL')
+flagdata(vis=vis, spw='0:17~19')
+flagdata(vis=vis, antenna='5&&9')
+flagdata(vis=vis, antenna='14')
+flagdata(vis=vis, field='1')
+s = flagdata(vis=vis, mode='summary', minrel=0.9)
+assert s['antenna'].keys() == ['14']
+assert '5&&9' in s['baseline'].keys()
+assert set(s['channel'].keys()) == set(['17', '18', '19'])
+assert s['correlation'].keys() == ['1']  # LL
+assert s['field'].keys() == ['1']
+assert set(s['scan'].keys()) == set(['2', '4', '5', '7']) # field 1
+s = flagdata(vis=vis, mode='summary', maxrel=0.8)
+assert set(s['field'].keys()) == set(['0', '2'])
+s = flagdata(vis=vis, mode='summary', minabs=400000)
+assert set(s['scan'].keys()) == set(['3', '6'])
+s = flagdata(vis=vis, mode='summary', minabs=400000, maxabs=450000)
+assert s['scan'].keys() == ['3']
+flagdata(vis=vis, unflag=true)
 
+
+print "Test of autoflag, algorithm=timemed"
 flagdata(vis=vis, mode='autoflag', algorithm='timemed', window=3)
 test_eq(flagdata(vis=vis, mode='summary'), 2854278, 4725)
 flagdata(vis=vis, unflag=true)
@@ -186,6 +208,7 @@ test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 196434)
 flagdata(vis=vis, unflag=true)
 
 flagdata(vis=vis, correlation='LL')
+test_eq(flagdata(vis=vis, mode='summary', antenna='2'), 196434, 98217)
 flagdata(vis=vis, correlation='LL,RR')
 flagdata(vis=vis, correlation='LL RR')
 flagdata(vis=vis, correlation='LL ,, ,  ,RR')

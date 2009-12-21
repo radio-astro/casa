@@ -100,89 +100,104 @@ vpmanager = __vpmanagerhome__.create( )
 vlafillertask = __vlafillertaskhome__.create( )
 atmosphere = __atmospherehome__.create( )
 
-from accum import accum
-from applycal import applycal
-from bandpass import bandpass
-from blcal import blcal
-from browsetable import browsetable
-from calstat import calstat
-from clean import clean
-from clearcal import clearcal
-from clearplot import clearplot
-from clearstat import clearstat
-from concat import concat
-from deconvolve import deconvolve
-from exportfits import exportfits
-from exportuvfits import exportuvfits
-from feather import feather
-from find import find
-from flagautocorr import flagautocorr
-from flagdata import flagdata
-from flagmanager import flagmanager
-from fringecal import fringecal
-from ft import ft
-from fluxscale import fluxscale
-from gaincal import gaincal
-from hanningsmooth import hanningsmooth
-from imcontsub import imcontsub
-from imfit import imfit
-from imhead import imhead
-from immath import immath
-from immoments import immoments
-from importasdm import importasdm
-from importfits import importfits
-from importgmrt import importgmrt
-from importvla import importvla
-from importuvfits import importuvfits
-from imregrid import imregrid
-from imstat import imstat
-from imval import imval
-from listcal import listcal
-from listhistory import listhistory
-from listobs import listobs
-from listvis import listvis
-from makemask import makemask
-from mosaic import mosaic
-from newclean import newclean
-from newflagdata import newflagdata
-from oldclean import oldclean
-from plotants import plotants
-from plotcal import plotcal
-from plotxy import plotxy
-from polcal import polcal
-from plotms import plotms
-from setjy import setjy
-from simdata import simdata
-from smoothcal import smoothcal
-from specfit import specfit
-from split import split
-from uvcontsub import uvcontsub
-from uvmodelfit import uvmodelfit
-from uvsub import uvsub
-from viewer import viewer
-from vishead import vishead
-from visstat import visstat
-from widefield import widefield
+from accum import  accum
+from applycal import  applycal
+from autoclean import  autoclean
+from bandpass import  bandpass
+from blcal import  blcal
+from boxit import  boxit
+from browsetable import  browsetable
+from calstat import  calstat
+from clean import  clean
+from clearcal import  clearcal
+from clearplot import  clearplot
+from clearstat import  clearstat
+from concat import  concat
+from cvel import  cvel
+from deconvolve import  deconvolve
+from exportfits import  exportfits
+from exportuvfits import  exportuvfits
+from feather import  feather
+from find import  find
+from fixvis import  fixvis
+from flagautocorr import  flagautocorr
+from flagdata import  flagdata
+from flagmanager import  flagmanager
+from fluxscale import  fluxscale
+from fringecal import  fringecal
+from ft import  ft
+from gaincal import  gaincal
+from gencal import  gencal
+from hanningsmooth import  hanningsmooth
+from imcontsub import  imcontsub
+from imfit import  imfit
+from imhead import  imhead
+from immath import  immath
+from immoments import  immoments
+from importasdm import  importasdm
+from importfits import  importfits
+from importgmrt import  importgmrt
+from importoldasdm import  importoldasdm
+from importuvfits import  importuvfits
+from importvla import  importvla
+from imregrid import  imregrid
+from imsmooth import  imsmooth
+from imstat import  imstat
+from imval import  imval
+from listcal import  listcal
+from listhistory import  listhistory
+from listobs import  listobs
+from listvis import  listvis
+from makemask import  makemask
+from mosaic import  mosaic
+from newflagdata import  newflagdata
+from peel import  peel
+from plotants import  plotants
+from plotcal import  plotcal
+from plotms import  plotms
+from plotxy import  plotxy
+from polcal import  polcal
+from rmtables import  rmtables
+from setjy import  setjy
+from simdata import  simdata
+from smoothcal import  smoothcal
+from specfit import  specfit
+from split import  split
+from uvcontsub2 import  uvcontsub2
+from uvcontsub import  uvcontsub
+from uvmodelfit import  uvmodelfit
+from uvsub import  uvsub
+from viewerconnection import  viewerconnection
+from viewer import  viewer
+from vishead import  vishead
+from visstat import  visstat
+from widefield import  widefield
 
 
 ##
 ## asap may not be available with every casa installation
 ##
 try:
-    from sdcoadd import sdcoadd
-    from sdscale import sdscale
-    from sdtpimaging import sdtpimaging
-    from sdlist import sdlist
-    from sdfit import sdfit
-    from sdbaseline import sdbaseline
-    from sdstat import sdstat
-    from sdsave import sdsave
-    from sdflag import sdflag
+    import asap as sd
     from sdaverage import sdaverage
-    from sdplot import sdplot
     from sdsmooth import sdsmooth
+    from sdbaseline import sdbaseline
     from sdcal import sdcal
+    from sdcoadd import sdcoadd
+    from sdsave import sdsave
+    from sdscale import sdscale
+    from sdfit import sdfit
+    from sdplot import sdplot
+    from sdstat import sdstat
+    from sdlist import sdlist
+    from sdflag import sdflag
+    from sdtpimaging import sdtpimaging
+    from sdmath import sdmath
+    from sdimaging import sdimaging
+    from sdsim import sdsim
+    from sdimprocess import sdimprocess
 except ImportError:
+    sd = None
     sdcoadd = None
     sdscale = None
     sdtpimaging = None

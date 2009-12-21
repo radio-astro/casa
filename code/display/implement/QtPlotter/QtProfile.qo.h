@@ -90,6 +90,7 @@ public slots:
     void right();
     void setAutoScale(int);
     void changeCoordinate(const QString &text); 
+    void changeFrame(const QString &text);
     void changeCoordinateType(const QString &text); 
     void updateZoomer();
     //virtual void crosshairReady(const String& evtype);
@@ -124,10 +125,12 @@ private:
     QLineEdit *te;
     QComboBox *chk;
     QComboBox *ctype;
+    QComboBox *frameButton_p;
     
     ImageAnalysis* analysis;
     String coordinate;
     String coordinateType;
+    String frameType_p;
     QString fileName;
     QString position;
     QString yUnit;

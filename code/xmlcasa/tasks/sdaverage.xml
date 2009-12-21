@@ -386,6 +386,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         unit is missing, this task automatically fixes the default fluxunit
         to 'K' before the conversion.
 
+        WARNING for the GBT raw SDFITS format data as input:
+        Currently, all SDtasks cannot handle GBT raw SDFITS format data
+        (in which the data are stored in multiple tables within SDFITS).
+        It may be still possible to reduce GBT data after some 
+        preprocessing (outside CASA) of the raw SDFITS to a SDFITS with 
+        a single data table or to other data formats handled by SDtasks.
+         
+
 
   </example>
 

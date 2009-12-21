@@ -1037,7 +1037,8 @@ class cleanhelper:
                     loc_width=width
             (freqlist, finc)=self.getfreqs(nchan,spw,0,loc_width)
             ###use the bloody frame of the data to define the start for defaults
-            self.usespecframe=self.dataspecframe
+            if(self.usespecframe==''):
+                self.usespecframe=self.dataspecframe
             retnchan = len(freqlist)
         #    if(mode=='velocity' and nchan==-1):
         #       vmin=self.convertvf(str(freqlist[-1])+'Hz',frame,field) 
@@ -1188,6 +1189,7 @@ class cleanhelper:
                      "LGROUP",
                      "CMB"]
         self.dataspecframe=elspecframe[spwframe[spw0]];
+        #if dummy; just wanted the data frame
         if(dummy):
             return freqlist, finc
         chanfreqs=chanfreqscol.transpose()

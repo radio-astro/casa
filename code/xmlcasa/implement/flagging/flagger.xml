@@ -463,7 +463,7 @@ Defines data selection parameters.
 
    <method type="function" name="setflagsummary">
    <shortdescription>This function produces a summary of the flags. Statistics include
-   percentage of flagged data, ... .
+   percentage of flagged data.
    </shortdescription>
    
 <description>

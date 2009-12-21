@@ -18,7 +18,7 @@ is recommended in most applications.
 </description>
 <input>
 	<param type="string" name="vis" mustexist="true">
-		<description>Nome of input visibility file</description>
+		<description>Name of input visibility file</description>
 		<value></value>
 	</param>
 

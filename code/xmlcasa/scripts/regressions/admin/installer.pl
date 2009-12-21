@@ -34,7 +34,7 @@ if (! $first_test) {
 $scheduler_state = "$result_dir/tests_next.txt";
 
 if (`uname` eq "Darwin\n") {
-    $release_dir = "https://svn.cv.nrao.edu/casa/osx_distro/test/";
+    $release_dir = "https://svn.cv.nrao.edu/casa/osx_distro/test/10.5";
     $filename_regexp = "CASA-intel-[0-9]*\\.dmg"
 }
 elsif (`uname` eq "Linux\n") {
@@ -85,7 +85,7 @@ if ($release_dir =~ /^http/) {
     sys_exe("curl $release_dir/$latest_release > $prefix/$latest_release");
 }
 else {
-    sys_exe("cp $release_dir/$latest_release $prefix/$latest_release");
+    sys_exe("ln -s $release_dir/$latest_release $prefix/$latest_release");
 }
 
 if (! -d $result_dir) {

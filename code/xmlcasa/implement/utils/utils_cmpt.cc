@@ -22,7 +22,7 @@
 #include <casa/OS/DOos.h>
 #include <tables/Tables/Table.h>
 #include <casa/System/Aipsrc.h>
-
+#include <casa/OS/HostInfo.h>
 
 
 using namespace std;
@@ -271,6 +271,38 @@ std::vector<std::string> utils::lockedtables( ) {
     for (unsigned int x = 0; x < locks.nelements(); ++x ) {
 	result.push_back(locks[x]);
     }
+    return result;
+}
+
+
+typedef int SIZETCAST;
+::casac::record *utils::hostinfo( ) {
+    ::casac::record *result = new record( );
+
+    ::casac::record *swap = new record( );
+    swap->insert( "total", (SIZETCAST) HostInfo::swapTotal( ) );
+    swap->insert( "used", (SIZETCAST) HostInfo::swapUsed( ) );
+    swap->insert( "free", (SIZETCAST) HostInfo::swapFree( ) );
+    result->insert( "swap", swap );
+
+    ::casac::record *memory = new record( );
+    memory->insert( "total", (SIZETCAST) HostInfo::memoryTotal( ) );
+    memory->insert( "available", (SIZETCAST) HostInfo::memoryTotal(true) );
+    memory->insert( "used", (SIZETCAST) HostInfo::memoryUsed( ) );
+    memory->insert( "free", (SIZETCAST) HostInfo::memoryFree( ) );
+    result->insert( "memory", memory );
+
+    ::casac::record *cpus = new record( );
+    cpus->insert( "total", HostInfo::numCPUs( ) );
+    cpus->insert( "available", HostInfo::numCPUs(true) );
+    result->insert( "cpus", cpus );
+
+    result->insert( "endian", HostInfo::bigEndian( ) ? "big" : "little" );
+    result->insert( "hostname", HostInfo::hostName( ) );
+    result->insert( "pid", HostInfo::processID( ) );
+
+    result->insert( "seconds", HostInfo::secondsFrom1970( ) );
+    
     return result;
 }
 

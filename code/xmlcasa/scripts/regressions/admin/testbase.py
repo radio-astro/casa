@@ -302,13 +302,16 @@ class testbase :
     def locatedata(self, datafile):
         for repository in self.dataBaseDirectory :
 
+            # Skip hidden directories
+            filter_hidden = ' | grep -vE "^\\."  | grep -vE "/\\."'
+            
             # See if find understands -L or -follow (depends on find version)
             (err, a) = commands.getstatusoutput('find -L ' + repository+'/ 1>/dev/null 2>&1')
             if not err:
-                findstr='find -L '+repository+'/ -name '+datafile+' -print 2>/dev/null'
+                findstr='find -L '+repository+'/ -name '+datafile+' -print 2>/dev/null' + filter_hidden
             else:
-                findstr='find '+repository+'/ -follow -name '+datafile+' -print 2>/dev/null'
-            # A '/' is appended to the directory name; otherwise sometimes find doesn't find
+                findstr='find '+repository+'/ -follow -name '+datafile+' -print 2>/dev/null' + filter_hidden
+            # A '/' is appended to the directory name; otherwise sometimes find doesn't find.
             # Also, ignore error messages such as missing directory permissions
             
             (find_errorcode, a)=commands.getstatusoutput(findstr)   # stdout and stderr

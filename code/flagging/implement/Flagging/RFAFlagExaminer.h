@@ -1,4 +1,3 @@
-
 //# RFAFlagExaminer.h: this defines RFAFlagExaminer
 //# Copyright (C) 2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
@@ -72,11 +71,14 @@ public:
   RFAFlagExaminer ( RFChunkStats &ch,const RecordInterface &parm ); 
   virtual ~RFAFlagExaminer ();
   
-  virtual void iterFlag ( uInt it );
+  virtual void iterFlag( uInt it );
+  virtual IterMode iterRow( uInt irow );
+  virtual Bool newChunk(Int &maxmem);
+  virtual void endChunk();
+
 
   virtual void startData(){RFAFlagCubeBase::startData();return;};
   virtual void startFlag();
-    //virtual void iterFlag( uInt it , Bool resetFlags=True);
   virtual void endFlag();
   virtual void finalize();
   virtual void initialize();
@@ -89,7 +91,7 @@ public:
 //  virtual String getDesc ();
 //  static const RecordInterface & getDefaults ();
 
-protected:
+private:
     void processRow  ( uInt ifr,uInt it ) ;
     Int totalflags,totalcount;
     Int totalrowflags,totalrowcount;
@@ -99,12 +101,26 @@ protected:
       accumTotalFlags, accumTotalCount, accumRowFlags, 
       accumTotalRowCount, accumTotalRowFlags;
 
+    // per chunk
     Int inTotalFlags, inTotalCount, inTotalRowFlags, inTotalRowCount;
     Int outTotalFlags, outTotalCount, outTotalRowFlags, outTotalRowCount;
-};
+    
+    // Statistics per antenna, baseline, spw, etc.
+    // These maps of maps is used e.g. like:
+    //
+    //        accumflags["baseline"]["2&&7"] == 42
+    //        accumflags["spw"     ]["0"   ] == 17
+    //
+    // which means that there were 42 flags on baseline 2 - 7, etc.
+    std::map<std::string, std::map<std::string, unsigned int> > accumflags;
+    std::map<std::string, std::map<std::string, unsigned int> > accumtotal;
+    
+    std::vector<unsigned> accumflags_channel;
+    std::vector<unsigned> accumtotal_channel;
+    std::vector<unsigned> accumflags_correlation;
+    std::vector<unsigned> accumtotal_correlation;
 
-    
-    
+};
 
 } //# NAMESPACE CASA - END
 

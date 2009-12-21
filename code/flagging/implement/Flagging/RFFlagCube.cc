@@ -101,8 +101,8 @@ void RFFlagCube::init( RFlagWord corrmsk, uInt nAgent, const String &name)
  
     // setup some masks
     corrmask = corrmsk;
-    check_corrmask = pfpolicy==FL_HONOR ? corrmsk : 0;
-    check_rowmask = pfpolicy==FL_HONOR ? RowFlagged : 0;
+    check_corrmask = (pfpolicy == FL_HONOR) ? corrmsk : 0;
+    check_rowmask  = (pfpolicy == FL_HONOR) ? RowFlagged : 0;
  
     // clear stats  
     tot_fl_raised=tot_row_fl_raised=fl_raised=fl_cleared=
@@ -340,8 +340,6 @@ void RFFlagCube::getMSFlags()
     }
   }
   else // HONOR/IGNORE policy: faithfully copy flags from FLAG and FLAG_ROW
-       // TODO : Do this for real. for all flags.
-       //        Then can write them back too !!! ( beware of correlation flags )
   {
     const Cube<Bool>   & fc( chunk.visBuf().flagCube() );
 
@@ -360,13 +358,16 @@ void RFFlagCube::getMSFlags()
       
       ///... read in chan flags for all rows......
       ///...  because all may need to be written back.
-
+      
       for( uInt ich=0; ich<num(CHAN); ich++ ) {
-	  for( uInt icorr=0; icorr<num(CORR); icorr++ ) {
-	      if( !fc(icorr,ich,i) ) {
-		  (*flag.cursor())(ich,ifr) &= ~(1<<icorr); 
-	      }
-	  }
+        for( uInt icorr=0; icorr<num(CORR); icorr++ ) {
+          /* The lattice was initialized to all flags set,
+             Now clear as appropriate (if not FLAG_ROW and not FLAG)
+          */
+          if( !fl_row(ifr) && !fc(icorr,ich,i) ) {
+            (*flag.cursor())(ich,ifr) &= ~(1<<icorr); 
+          }
+        }
       }
     }
   }

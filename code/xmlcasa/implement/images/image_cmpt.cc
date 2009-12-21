@@ -1356,6 +1356,9 @@ image::fitsky(const ::casac::record& region,
   ::casac::record * rstat = 0;
   try {
     *itsLog << LogOrigin("image", "fitsky");
+    *itsLog << LogIO::WARN << "FITSKY() HAS BEEN DEPRECATED AND WILL BE REMOVED IN THE NEAR "
+    		<< "FUTURE, USE FITCOMPONENTS() INSTEAD" << LogIO::POST;
+
     if (detached()) return rstat;
 
     Array<Float> residPixels;  // output in out_pixels
