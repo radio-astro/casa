@@ -4206,7 +4206,7 @@ Bool Imager::makeimage(const String& type, const String& image,
     if(imageTileVol_p >0){
       tilex=ceil(sqrt(imageTileVol_p/min(4, cimageShape(3))/min(32, cimageShape(4))));
       if(tilex >0){
-	tilex=cimageShape(0)/Int(cImageShape(0)/tilex);
+	tilex=cimageShape(0)/Int(cimageShape(0)/tilex);
       }
       //Not too small in x-y tile
       if(tilex < 10)
