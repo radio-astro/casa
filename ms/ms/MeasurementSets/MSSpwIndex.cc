@@ -130,7 +130,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  Int counter=0;
 	  while((chanfreq(counter)+0.5*chanwidth(counter)) < f0)
 	    ++counter;
-	  start(nmatch-1)=counter;
+	  start(nmatch-1)= counter > 0 ? counter-1 : 0;
 	}
 	else{
 	  start(nmatch-1)=0;
