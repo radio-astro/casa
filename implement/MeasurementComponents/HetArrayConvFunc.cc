@@ -448,6 +448,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Int fieldid=vb.fieldId();
     Int msid=vb.msId();
+    //If channel or pol length has changed underneath...then its time to 
+    //restart the map
+    if(convFunctionMap_p.ndefined() > 0){
+      if ((fluxScale_p.shape()[3] != nchan_p) || (fluxScale_p.shape()[2] != npol_p)){
+	convFunctionMap_p.clear();
+      }
+    }
+
     String mapid=String::toString(msid)+String("_")+String::toString(fieldid);
     if(convFunctionMap_p.ndefined() == 0){
       convFunctionMap_p.define(mapid, 0);    
