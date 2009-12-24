@@ -319,10 +319,14 @@ void Coordinate::getPrecision(Int &precision,
       } else {
          precision = 6; 
       }
-   } else if (format == Coordinate::MIXED) {
-   
-// Auto format by STL formatter so precision not relevant
 
+      //   } else if (format == Coordinate::MIXED) {
+      // Auto format by STL formatter so precision not relevant
+
+   } else {   
+// RI 20091213 but we should still set it so its not later accessed uninitalized:
+// (also make this branch catch Coordinate::DEFAULT 
+     precision = 6;
    }
 }
    

@@ -785,11 +785,7 @@ bool NewMSSimulator::getSpWindows(Int& nSpw,
 				  Vector<String>& stokesString)
 {
 
-#ifdef RI_DEBUG  
   LogIO os(LogOrigin("MSsimulator", "getSpWindows()", WHERE)); 
-#else
-  LogIO os(LogOrigin("MSsimulator", "getSpWindows()")); 
-#endif
   
   MSColumns msc(*ms_p);
   MSSpWindowColumns& spwc=msc.spectralWindow();
@@ -1067,7 +1063,8 @@ void NewMSSimulator::observe(const String& sourceName,
 			     const Quantity& qStartTime, 
 			     const Quantity& qStopTime)
 {
-  LogIO os(LogOrigin("NewMSSimulator", "observe()", WHERE));
+  //LogIO os(LogOrigin("NewMSSimulator", "observe()", WHERE));
+  LogIO os(LogOrigin("NewMSSimulator", "observe()"));
 
   MSColumns msc(*ms_p);
   
