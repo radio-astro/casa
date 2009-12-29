@@ -258,6 +258,16 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
       }
     }
   }
+  if (ok) {
+    if (ms.weather().tableDesc().ncolumn() != 0) {
+      os << LogIO::NORMAL << "Writing AIPS WX table" << LogIO::POST;
+      ok = writeWX(fitsOutput, ms);
+      if (!ok) {
+        os << LogIO::SEVERE << "Could not write WX table\n" << LogIO::POST;
+      }
+    }
+  }
+
 
   // flush output to disk
   delete fitsOutput;
@@ -2004,6 +2014,140 @@ Bool MSFitsOutput::writeGC(FitsOutput *output, const MeasurementSet &ms,
       writer.write();
     }
     tabiter++;
+  }
+  return True;
+}
+
+Bool MSFitsOutput::writeWX(FitsOutput *output, const MeasurementSet &ms)
+{
+  LogIO os(LogOrigin("MSFitsOutput", "writeWX"));
+  const MSWeather subtable(ms.weather());
+  ROMSWeatherColumns weatherColumns(subtable);
+  const uInt nrow = subtable.nrow();
+
+  if (nrow == 0 )  {
+    os << LogIO::SEVERE << "No weather info" << LogIO::POST;
+    return False;
+  }
+  // Get reference time (i.e. start time) from the main table.
+  Double refTime;
+  //{                                // get starttime (truncated to days)
+  ROMSColumns mscol(ms);
+  refTime = floor(mscol.time()(0) / C::day) * C::day;
+  //}
+  //MEpoch measTime = ROMSColumns(ms).timeMeas()(0);
+  MEpoch measTime = mscol.timeMeas()(0);
+  // ##### Header
+  Record header;
+  header.define("EXTNAME", "AIPS WX");             // EXTNAME
+  header.define("EXTVER", 1);                      // EXTVER
+  header.define("OBSCODE", "");                    // PROGRAM CODE???
+  header.define("RDATE", toFITSDate(measTime.get("s")));  // OBSERVING DATE (YYYYMMDD) 
+  header.define("TABREV", 3);                   // REVISION
+
+  // Table description
+  RecordDesc desc;
+  Record stringLengths; // no strings
+  Record units;
+  desc.addField("TIME", TpFloat);
+  units.define ("TIME", "DAYS");
+  desc.addField("TIME INTERVAL", TpFloat);
+  units.define ("TIME INTERVAL", "DAYS");
+  desc.addField("ANTENNA NO.", TpInt);
+  desc.addField("SUBARRAY", TpInt);
+  desc.addField("TEMPERATURE", TpFloat);
+  units.define ("TEMPERATURE", "CENTIGRADE");
+  desc.addField("PRESSURE", TpFloat);
+  units.define ("PRESSURE", "MILLIBAR");
+  desc.addField("DEWPOINT", TpFloat);
+  units.define ("DEWPOINT", "CENTIGRADE");
+  desc.addField("WIND_VELOCITY", TpFloat);
+  units.define ("WIND_VELOCITY", "M/SEC");
+  desc.addField("WIND_DIRECTION", TpFloat);
+  units.define ("WIND_DIRECTION", "DEGREES");   // east from north
+  desc.addField("WVR_H2O", TpFloat);     // sometimes labeled as H2O COLUMN
+  units.define ("WVR_H2O", "m-2"); 
+  desc.addField("IONOS_ELECTRON", TpFloat);  //sometimes labeled as ELECTRON COL.
+  units.define ("IONOS_ELECTRON", "m-2"); 
+
+  FITSTableWriter writer(output, desc, stringLengths,
+			 nrow, header, units, False);
+  RecordFieldPtr<Float> time(writer.row(), "TIME");
+  RecordFieldPtr<Float> interval(writer.row(), "TIME INTERVAL");
+  RecordFieldPtr<Int> antenna(writer.row(), "ANTENNA NO.");
+  RecordFieldPtr<Int> arrayId(writer.row(), "SUBARRAY");
+  RecordFieldPtr<Float> temperature(writer.row(), "TEMPERATURE");
+  RecordFieldPtr<Float> pressure(writer.row(), "PRESSURE");
+  RecordFieldPtr<Float> dewpoint(writer.row(), "DEWPOINT");
+  RecordFieldPtr<Float> windvelocity(writer.row(), "WIND_VELOCITY");
+  RecordFieldPtr<Float> winddirection(writer.row(), "WIND_DIRECTION"); 
+  RecordFieldPtr<Float> wvrh2o(writer.row(), "WVR_H2O"); 
+  RecordFieldPtr<Float> ionoselectron(writer.row(), "IONOS_ELECTRON"); 
+
+  Vector<Int> antnums;
+  handleAntNumbers(ms,antnums);
+  //check optional columns
+  Bool hasTemperature=!(weatherColumns.temperature().isNull());
+  Bool hasPressure=!(weatherColumns.pressure().isNull());
+  Bool hasDewPoint=!(weatherColumns.dewPoint().isNull());
+  Bool hasWindVelocity=!(weatherColumns.windSpeed().isNull());
+  Bool hasWindDirection=!(weatherColumns.windDirection().isNull());
+  Bool hasWVRH2O=!(weatherColumns.H2O().isNull());
+  Bool hasIonosElectron=!(weatherColumns.ionosElectron().isNull());
+ 
+  for (uInt i=0; i<nrow; i++) {
+    Double tim = weatherColumns.time()(i);
+    *time = (tim - refTime) / C::day;
+    *interval = weatherColumns.interval()(i) / C::day;
+    *antenna = antnums( weatherColumns.antennaId()(i) );
+    //read optional columns
+    // default 0.0
+    // temperature, dewpoint in MS should be kelvin but 
+    // current WIDAR data looks like in C!
+    if (hasTemperature) {
+      *temperature = weatherColumns.temperature()(i) - 273.15;
+    }
+    else {
+      *temperature = 0.0;
+    }
+    if (hasPressure) {
+      *pressure = weatherColumns.pressure()(i);
+    }
+    else {
+      *pressure = 0.0;
+    }
+    if (hasDewPoint) {
+      *dewpoint = weatherColumns.dewPoint()(i) - 273.15;
+    }
+    else {
+      *dewpoint = 0.0;
+    }
+    if (hasWindVelocity) {
+      *windvelocity = weatherColumns.windSpeed()(i);
+    }
+    else {
+      *windvelocity = 0.0;
+    } 
+    // direction in MS should be in rad but looks like deg...
+    if (hasWindDirection) {
+      *winddirection = weatherColumns.windDirectionQuant()(i).getValue("deg");
+    }
+    else {
+      *winddirection = 0.0;
+    }
+    if (hasWVRH2O) {
+        *wvrh2o = weatherColumns.H2O()(i);
+    }
+    else {
+        *wvrh2o = 0.0;
+    }
+    if (hasIonosElectron) {
+        *ionoselectron = weatherColumns.ionosElectron()(i);
+    }
+    else {
+        *ionoselectron = 0.0;
+    }
+    writer.write();
   }
   return True;
 }
