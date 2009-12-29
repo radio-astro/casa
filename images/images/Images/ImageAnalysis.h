@@ -695,17 +695,17 @@ class ImageAnalysis
     // Some helper functions that needs to be in casa namespace coordsys
     
     Record toWorldRecord (const Vector<Double>& pixel, 
-                       const String& format); 
+                       const String& format) const;
 
     Record worldVectorToRecord (const Vector<Double>& world, 
                                 Int c, const String& format, 
-                                Bool isAbsolute, Bool showAsAbsolute);
+                                Bool isAbsolute, Bool showAsAbsolute) const;
 
     Record worldVectorToMeasures(const Vector<Double>& world, 
-                                 Int c, Bool abs);
+                                 Int c, Bool abs) const;
 
     void trim (Vector<Double>& inout, 
-               const Vector<Double>& replace);
+               const Vector<Double>& replace) const;
 
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already 

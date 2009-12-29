@@ -6845,7 +6845,7 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& x,
 // These should really go in a coordsys inside the casa name space
 
 Record ImageAnalysis::toWorldRecord(const Vector<Double>& pixel,
-		const String& format) {
+		const String& format) const {
 
 	*itsLog << LogOrigin("ImageAnalysis", "toWorldRecord");
 	//
@@ -6859,18 +6859,16 @@ Record ImageAnalysis::toWorldRecord(const Vector<Double>& pixel,
 	Vector<Double> world;
 	Record rec;
 	if (itsCSys.toWorld(world, pixel2)) {
-		Bool isAbsolute = True;
-		Bool showAsAbsolute = True;
-		Int c = -1;
-		rec = worldVectorToRecord(world, c, format, isAbsolute, showAsAbsolute);
-	} else {
+		rec = worldVectorToRecord(world, -1, format, True, True);
+	}
+	else {
 		*itsLog << itsCSys.errorMessage() << LogIO::EXCEPTION;
 	}
 	return rec;
 }
 
 Record ImageAnalysis::worldVectorToRecord(const Vector<Double>& world, Int c,
-		const String& format, Bool isAbsolute, Bool showAsAbsolute)
+		const String& format, Bool isAbsolute, Bool showAsAbsolute) const
 //
 // World vector must be in the native units of cSys
 // c = -1 means world must be length cSys.nWorldAxes
@@ -6951,7 +6949,7 @@ Record ImageAnalysis::worldVectorToRecord(const Vector<Double>& world, Int c,
 }
 
 Record ImageAnalysis::worldVectorToMeasures(const Vector<Double>& world, Int c,
-		Bool abs) {
+		Bool abs) const {
 	LogIO os(LogOrigin("ImageAnalysis", "worldVectorToMeasures(...)"));
 
 	//
@@ -7189,7 +7187,7 @@ Record ImageAnalysis::worldVectorToMeasures(const Vector<Double>& world, Int c,
 	return rec;
 }
 
-void ImageAnalysis::trim(Vector<Double>& inout, const Vector<Double>& replace) {
+void ImageAnalysis::trim(Vector<Double>& inout, const Vector<Double>& replace) const {
 	const Int nIn = inout.nelements();
 	const Int nOut = replace.nelements();
 	Vector<Double> out(nOut);
