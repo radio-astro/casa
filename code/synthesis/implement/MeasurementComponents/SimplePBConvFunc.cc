@@ -84,7 +84,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void SimplePBConvFunc::storeImageParams(const ImageInterface<Complex>& iimage){
-    if(nchan_p <= 0){
+    if((iimage.shape().product() != nx_p*ny_p*nchan_p*npol_p) || nchan_p < 1){
       csys_p=iimage.coordinates();
       Int coordIndex=csys_p.findCoordinate(Coordinate::DIRECTION);
       AlwaysAssert(coordIndex>=0, AipsError);
@@ -542,6 +542,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool SimplePBConvFunc::checkPBOfField(const VisBuffer& vb){
     Int fieldid=vb.fieldId();
     Int msid=vb.msId();
+    if(convFunctionMap_p.ndefined() > 0){
+      if ((fluxScale_p.shape()[3] != nchan_p) || (fluxScale_p.shape()[2] != npol_p)){
+	convFunctionMap_p.clear();
+      }
+    }
     String mapid=String::toString(msid)+String("_")+String::toString(fieldid);
     if(convFunctionMap_p.ndefined() == 0){
       convFunctionMap_p.define(mapid, 0);    

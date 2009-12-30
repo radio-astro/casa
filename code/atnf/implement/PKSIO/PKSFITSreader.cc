@@ -431,7 +431,7 @@ Int PKSFITSreader::read(PKSrecord &pksrec)
   pksrec.srcPM.resize(2);
   pksrec.srcPM(0)  = 0.0;
   pksrec.srcPM(1)  = 0.0;
-  pksrec.srcVel    = 0.0;
+  pksrec.srcVel    = cMBrec.srcVelocity;
   pksrec.obsType   = trim(cMBrec.obsType);
 
   pksrec.IFno = cMBrec.IFno[0];

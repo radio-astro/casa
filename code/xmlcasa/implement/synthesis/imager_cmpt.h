@@ -62,7 +62,7 @@ class imager
 
     bool correct(const bool doparallactic = true, const Quantity& timestep = Quantity(std::vector<double> (1, 10),"s"));
 
-    bool defineimage(const int nx = 128, const int ny = -1, const ::casac::variant& cellx = ::casac::initialize_variant("1.0"), const ::casac::variant& celly = ::casac::initialize_variant(""), const std::string& stokes = "I", const ::casac::variant& phasecenter = ::casac::initialize_variant("0"), const std::string& mode = "mfs", const int nchan = -1, const ::casac::variant& start = ::casac::initialize_variant("0"), const ::casac::variant& step = ::casac::initialize_variant("1"), const std::vector<int>& spw = std::vector<int> (1, 0), const ::casac::variant& restfreq = ::casac::initialize_variant(""), const std::string& outframe= "", const std::string& veltype="radio", const int facets = 1, const ::casac::variant& movingsource = ::casac::initialize_variant(""), const ::casac::variant& distance = ::casac::initialize_variant("0.0"));
+    bool defineimage(const int nx = 128, const int ny = -1, const ::casac::variant& cellx = ::casac::initialize_variant("1.0"), const ::casac::variant& celly = ::casac::initialize_variant(""), const std::string& stokes = "I", const ::casac::variant& phasecenter = ::casac::initialize_variant("0"), const std::string& mode = "mfs", const int nchan = -1, const ::casac::variant& start = ::casac::initialize_variant("0"), const ::casac::variant& step = ::casac::initialize_variant("1"), const std::vector<int>& spw = std::vector<int> (1, 0), const ::casac::variant& restfreq = ::casac::initialize_variant(""), const std::string& outframe = "", const std::string& veltype = "radio", const int facets = 1, const ::casac::variant& movingsource = ::casac::initialize_variant(""), const ::casac::variant& distance = ::casac::initialize_variant("0.0"));
 
     bool done();
 
@@ -130,7 +130,7 @@ class imager
 
     bool setmfcontrol(const double cyclefactor = 1.5, const double cyclespeedup = -1, const int stoplargenegatives = 2, const int stoppointmode = -1, const double minpb = 0.1, const std::string& scaletype = "NONE", const double constpb = 0.4, const std::vector<std::string>& fluxscale = std::vector<std::string> (1, ""));
 
-    bool setoptions(const std::string& ftmachine = "ft", const int cache = -1, const int tile = 16, const std::string& gridfunction = "SF", const ::casac::variant& location = ::casac::initialize_variant(""), const double padding = 1.0, const std::string& freqinterp = "nearest", const int wprojplanes = 1, const std::string& epjtablename = "", const bool applypointingoffsets = false, const bool dopbgriddingcorrections = true, const std::string& cfcachedirname = "", const double pastep = 1.0, const double pblimit = 0.05);
+    bool setoptions(const std::string& ftmachine = "ft", const int cache = -1, const int tile = 16, const std::string& gridfunction = "SF", const ::casac::variant& location = ::casac::initialize_variant(""), const double padding = 1.0, const std::string& freqinterp = "nearest", const int wprojplanes = 1, const std::string& epjtablename = "", const bool applypointingoffsets = false, const bool dopbgriddingcorrections = true, const std::string& cfcachedirname = "", const double pastep = 1.0, const double pblimit = 0.05, const int imagetilevol = 0);
 
     bool setscales(const std::string& scalemethod = "nscales", const int nscales = 5, const std::vector<double>& uservector = ::casac::initialize_vector( 3, (double) 0.0, (double) 3.0, (double) 10.0 ));
 
@@ -140,14 +140,14 @@ class imager
 
     bool setsdoptions(const double scale = 1.0, const double weight = 1.0, const int convsupport = -1, const std::string& pointingcolumntouse = "DIRECTION");
 
-  bool setvp(const bool dovp = false, const bool usedefaultvp = true, const std::string& vptable = "", const bool dosquint = false, const ::casac::variant& parangleinc = ::casac::initialize_variant("360deg"), const ::casac::variant& skyposthreshold = ::casac::initialize_variant("180deg"), const std::string& telescope = "", const bool verbose=true);
+    bool setvp(const bool dovp = false, const bool usedefaultvp = true, const std::string& vptable = "", const bool dosquint = false, const ::casac::variant& parangleinc = ::casac::initialize_variant("360deg"), const ::casac::variant& skyposthreshold = ::casac::initialize_variant("180deg"), const std::string& telescope = "", const bool verbose = true);
 
     bool smooth(const std::vector<std::string>& model = std::vector<std::string> (1, ""), const std::vector<std::string>& image = std::vector<std::string> (1, ""), const bool usefit = true, const ::casac::variant& bmaj = ::casac::initialize_variant("5.arcsec"), const ::casac::variant& bmin = ::casac::initialize_variant("5.arcsec"), const ::casac::variant& bpa = ::casac::initialize_variant("0deg"), const bool normalize = true, const bool async = false);
 
     bool stop();
 
     bool summary();
-   
+
     bool uvrange(const double uvmin = 0.0, const double uvmax = 0.0);
 
     bool weight(const std::string& type = "natural", const std::string& rmode = "none", const ::casac::variant& noise = ::casac::initialize_variant("0.0Jy"), const double robust = 0.0, const ::casac::variant& fieldofview = ::casac::initialize_variant("0.0arcsec"), const int npixels = 0, const bool mosaic = false, const bool async = false);

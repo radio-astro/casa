@@ -32,6 +32,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value>0.0</value>
     </param>
 
+    <param type="string" name="maskname">
+    <description>Output mask name (optional).</description>
+    <value></value>
+    </param>
+
     <param type="int" name="minsize">
     <description>Minimum number of pixels for a boxable island</description>
     <value>2</value>
@@ -75,6 +80,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: none; if not given uses imagename+'.rgn'
        threshold -- value (with units) to use for island threshold.
                default: 0.0.
+       maskname -- Optional output mask name.
+               default: '' (do not write mask image)
        minsize -- minimum size of island to get a box (in number of pixels)
                default: 2
        diag -- count diagonal connections as same island or not
@@ -82,7 +89,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        boxstretch -- number of pixels to increase outward size of each box; can
                range from -1 to 5.
                default: 1
-       overwrite -- Overwrite existing region file?
+       overwrite -- Overwrite existing region file and/or mask?
                default: False.  If False, gives warning if file exists.
 
   </example>

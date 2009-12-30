@@ -3848,6 +3848,12 @@ however not used yet.</description>
      <value>0.05</value>
      </param>
 
+     <param type="int" name="imagetilevol">
+     <description>Tile size on for image on disk  (in pixel, multiply by 
+            4 to get the byte size). It is safe to leave this as default, 
+           meant for usage on filesystem like Lustre, the default implies 32x32x4x32 tile shape</description>
+     <value>0</value>
+     </param>
 </input>
 <returns type="bool"/>
 <example>

@@ -4,23 +4,25 @@ import sys
 
 # Writes out regions above threshold to regionfile+'.rgn'
 
-def boxit(imagename, regionfile, threshold, minsize, diag, boxstretch, overwrite):
+def boxit(imagename, regionfile, threshold, maskname, minsize, diag, boxstretch, overwrite):
 
     casalog.origin('boxit')
 
     if not(regionfile):
-        regionfile = imagename
-    exten = '.rgn'
+        regionfile = imagename + '.rgn'
 
     if not(overwrite):
-        if(os.path.exists(regionfile+exten)):
-            casalog.post('file "'+regionfile+exten+'" already exists.', 'WARN')
+        if(os.path.exists(regionfile)):
+            casalog.post('file "' + regionfile + '" already exists.', 'WARN')
+            return
+        if(maskname and os.path.exists(maskname)):
+            casalog.post('output mask "' + maskname + '" already exists.', 'WARN')
             return
 
     # If no units, assume mJy for consistency with auto/clean tasks.
     # But convert to Jy, because that's what units the images are in.
     threshold = qa.getvalue(qa.convert(qa.quantity(threshold,'mJy'),'Jy'))
-    print "Setting threshold to " + str(threshold) + "Jy"
+    casalog.post("Setting threshold to " + str(threshold) + "Jy", "INFO")
 
     newIsland = numpy.zeros(1, dtype=[('box','4i4'),('npix','i4')])
     # Find all pixels above the threshold
@@ -29,6 +31,7 @@ def boxit(imagename, regionfile, threshold, minsize, diag, boxstretch, overwrite
     if not(fullmask.max()):
         casalog.post('Maximum flux in image is below threshold.', 'WARN')
         return
+    writemask = bool(maskname)
     csys = ia.coordsys()
 
     shape = fullmask.shape
@@ -41,7 +44,12 @@ def boxit(imagename, regionfile, threshold, minsize, diag, boxstretch, overwrite
         n2 = shape[2]
         n3 = shape[3]
 
+    f = open(regionfile, 'w')
     totregions = 0
+    outputmask = []
+    if writemask:
+        outputmask = ia.getchunk()
+        outputmask.fill(False)
     for i3 in xrange(n3):
         for i2 in xrange(n2):
 
@@ -105,7 +113,6 @@ def boxit(imagename, regionfile, threshold, minsize, diag, boxstretch, overwrite
                             boxRecord[newID] = newIsland.copy()
                         if(stretch):
                             stretchIsland( boxRecord, islandImage[x,y], x, y)
-
             for record in boxRecord.values():
                 box = record['box'][0]
                 npix = record['npix'][0]
@@ -123,42 +130,54 @@ def boxit(imagename, regionfile, threshold, minsize, diag, boxstretch, overwrite
                 if box[1] > box[3]:
                     box[1] += boxstretch
                     box[3] -= boxstretch
+                if writemask:
+                    # avoid pixels in boxes that have been stretched beyond the image limits
+                    for ii in range(max(0, box[0]), min(box[2], outputmask.shape[0] - 1)):
+                        for jj in range(max(0, box[1]), min(box[3], outputmask.shape[1] - 1)):
+                            outputmask[ii][jj][i2][i3] = True
                 blccoord = [box[0]-0.5, box[1]-0.5, i2, i3]
                 trccoord = [box[2]+0.5, box[3]+0.5, i2, i3]
-                blc = ia.toworld(blccoord, 's')['string']
-                trc = ia.toworld(trccoord, 's')['string']
-                regions[tuple(box)]= rg.wbox(blc=blc, trc=trc,
-                                             csys=csys.torecord())
-
-            # CAS-1666, if this check is not done, catastrophic memory use may occur
-            if len(regions) > 200:
-                raise ValueError, "Too many regions ("+str(len(regions))+"). Please increase the threshold and run again"
-            
-            if(len(regions)):
-                if len(regions)==1:
-                    union = regions.values()[0]
-                else:
-                    print "computing union of "+str(len(regions))+" regions"
-                    union = rg.makeunion(regions)
-                polfile = regionfile + '.pol.' + str(i2) + exten
-                if(os.path.exists(polfile)):
-                    os.system('rm -f ' + polfile)
-                rg.tofile(polfile, union)
-                casalog.post('Writing out %d region(s) to file %s'
-                             % (len(regions), polfile), 'INFO1')
-
-        # combine all polarization files for this frequency into one channel file
-        chanfile = regionfile + '.chan.' + str(i3) + exten
-        concat_regions(chanfile, regionfile+'.pol.', exten, n2)
-        #print 'combining pol files for chan '+str(i3)+' into file '+chanfile
-
-    # combine all frequency channel files into one final output file
-    concat_regions(regionfile+exten, regionfile+'.chan.', exten, n3)
-    #print 'combining chan files into final output file '+regionfile+exten
-    casalog.post('Found %d individual regions.' % totregions)
-    print 'Found %d individual regions.' % totregions
+                # Honglin prefers world to pixel coords for viewer handling, but note that
+                # the toworld() calls are likely very expensive for many boxes. But then again,
+                # the box-finding algorithm itself seems pretty inefficient, but resource
+                # constraints only permit a band aid fix at this time.
+                blc = ia.toworld(blccoord, 'm')['measure']
+                trc = ia.toworld(trccoord, 'm')['measure']
+                # RA/Dec reference frame
+                outstring = "worldbox " + blc['direction']['refer']
+                # RA blc/trc
+                outstring += " [" + quantity_to_string(blc["direction"]["m0"], "rad") + ", "
+                outstring += quantity_to_string(trc["direction"]["m0"], "rad") + "]"
+                # Dec blc/trc
+                outstring += " [" + quantity_to_string(blc["direction"]["m1"], "rad") + ", "
+                outstring += quantity_to_string(trc["direction"]["m1"], "rad") + "]"
+                # frequency blc/trc
+                freqref = blc["spectral"]['frequency']['refer']
+                outstring += " ['" + freqref + " " + quantity_to_string(blc["spectral"]["frequency"]["m0"], "Hz", False) + "', "
+                outstring += "'" + freqref + " " + quantity_to_string(trc["spectral"]["frequency"]["m0"], "Hz", False) + "']"
+                # Stokes blc/trc
+                outstring += " ['" + blc["stokes"] + "', '" + trc["stokes"] + "']"
+                # add the mask flag
+                outstring += " " + str(1)
+                f.write(outstring + "\n")
+    casalog.post("Wrote " + str(totregions) + " regions to file " + regionfile, 'INFO1')
+    if writemask:
+        ia.fromimage(infile=imagename, outfile=maskname, overwrite=True)
+        ia.done()
+        ia.open(maskname)
+        ia.putchunk(outputmask)
     ia.done()
-    return
+    f.close()
+    return True
+
+# there may be a way to do this with the qa tool, but I cannot figure it out
+def quantity_to_string(quantity, unit=None, quotes=True):
+    if unit != None:
+        quantity = qa.convert(quantity)
+    string = str(quantity['value']) + quantity['unit']
+    if quotes:
+        string = "'" + string + "'"
+    return string
 
 # two previously separate islands should have same numID
 def mergeIslands(boxRecord, islandImage, islandA, islandB):
@@ -185,19 +204,4 @@ def stretchIsland(boxRecord, islandNum, x, y):
     record['box'][0][3] = max(record['box'][0][3], y)
     record['npix'][0] += 1
 
-# read in multiple region (.rgn) files; save to one file
-def concat_regions(outfile='', fileroot='', exten='', number=0):
-    regions = {}
-    for infile in [fileroot + i + exten for i in map(str, range(number))]:
-        if(os.path.exists(infile)):
-            regions[infile] = rg.fromfiletorecord(infile)
-            os.system('rm -f ' + infile)
-    nregion = len(regions)
-    if(nregion):
-        if(os.path.exists(outfile)):
-            os.system('rm -f '+outfile)
-        casalog.post('Combining %d file(s) into single file %s' % (nregion, outfile), 'INFO1')
-        if nregion > 1:
-            rg.tofile(outfile, rg.makeunion(regions))
-        else:
-            rg.tofile(outfile, regions[infile])
+
