@@ -1,0 +1,133 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<?php include("base.inc"); ?>
+<title>ASAP - ATNF Spectral line Analysis Package</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="DC.Creator" lang="en" content="personalName=Marquarding,Malte" />
+<meta name="ATNF.Maintainer" content="contactName=Marquarding,Malte" />
+<meta name="DC.Title" lang="en" content="Homepage of Malte Marquarding" />
+<meta name="DC.Title.alt" lang="en" content="" />
+<meta name="DC.Subject" lang="en" content="spectral line" />
+<meta name="DC.Description" lang="en"
+content="Just some links and conatact details" />
+<meta name="DC.Date.created" scheme="ISO8601" content="2004-11-12" />
+<meta name="ATNF.Site" content="Marsfield" />
+<meta name="ATNF.AccessPermission" content="Public" />
+<meta name="ATNF.MetaVersion" content="1.0" />
+<?php standard_head(); ?>
+<STYLE TYPE="text/css">
+<!--
+B.asap {
+ text-align: center;
+ color: blue;
+}
+B.note {
+ color: red;
+}
+-->
+</STYLE>
+</head>
+<body bgcolor="#FFFFFF" text="#000000">
+<?php
+title_bar("atnf");
+?>
+<!-- Start Content -->
+<h1>ASAP Homepage</h1>
+<div align="center">
+<img src="images/asap.png">
+</div>
+<h2>Introduction</h2>
+The <b class='asap'>A</b>TNF <b class='asap'>S</b>pectral <b
+class='asap'>A</b>nalysis <b class='asap'>P</b>ackage is a new
+software package to reduce <em>single-dish, single-pointing spectral
+line observations</em>. At this stage it is tuned towards data from
+ATNF instruments and reads/writes <em>rpfits, sdfits and ms</em> data.
+<a href="intro.html">more...<a>
+
+<h2>Current Release</h2>
+<b class="asap">ASAP</b> latest stable version 2.2 was released on May, 2<sup>nd</sup> 2007. It can be obtained in the <a href="#download">Download</a> section.
+
+<h2>Screenshots</h2>
+<a href="screenshots.html">Here</a> are some example plots.
+
+<h2>How to run</h2>
+To get started, simply type "asap" at the *nix command line prompt.
+<pre style="color: blue">
+Loading ASAP...
+Welcome to ASAP v2.2.x (release date) - the ATNF Spectral Analysis Package
+
+Please report any bugs via:
+http://svn.atnf.csiro.au/trac/asap/newticket
+
+[IMPORTANT: ASAP is 0-based]
+Type commands() to get a list of all available ASAP commands.
+
+ASAP>
+</pre>
+
+<h2>Defects and enhancement requests</h2>
+Bugs and enhancement requests can be submitted online, via the <a href="http://svn.atnf.csiro.au//trac/asap/simpleticket">
+<b class="asap">ASAP</b> project tracking page</a>. Please also check if the defect has already been submitted under
+<a href="http://svn.atnf.csiro.au/trac/asap/report/1">current tickets</a>.
+If the trac system tells you that your submission has been considered spam, please log in with the username "bugs" and password "mops".
+
+<h2>Documentation</h2>
+<b class="asap">ASAP</b> has a user guide for general use and telescope specific examples,
+and a reference manual for people who want to write scripts to reduce
+and analyse their data.
+<ul>
+  <li> List of commands <a href="commands.html">(html)</a> </li>
+  <li> User Guide <a href="userguide/">(html)</a> <a href="userguide.pdf">(pdf)</a></li>
+  <li> Reference manual <a href="refman/">(html)</a> <a href="refman.pdf">(pdf)</a></li>
+  <li><a href="tutorials/">Tutorials</a></li>
+  <li>For FAQ's go to the <a href="http://svn.atnf.csiro.au/cgi-bin/trac/asap/wiki/AsapFaq"></a>
+</ul>
+<p>
+More detailed help is available via the <b>help</b> function.
+<p>
+The <a href="http://svn.atnf.csiro.au/trac/asap">Trac page</a>
+for <b class="asap">ASAP</b> also contains information about building from source and some more detailed information. It also shows information regarding release dates and milestones.
+
+
+<h2>ASAP Mailinglist </h2>
+
+There is an asap mailing list asap-users@atnf.csiro.au for users of
+asap. This list will be used to announce updates to the code and allow
+general user discussion (please send bug and feature requests to
+asap@atnf.csiro.au). Messages sent to this list are archived at
+<a href="http://www.atnf.csiro.au/lists/asap-users"> http://www.atnf.csiro.au/lists/asap-users</a>
+
+
+<p> You need to be suscribed to send and receive messages from this
+list. To subscribe, please send a message to <pre>
+asap-users-request@atnf.csiro.au </pre> with the single word
+"subscribe" in the body of the message. Send this from your normal
+email account. If you wish to be removed from this list send an email
+to asap-users-request@atnf.csiro.au with the single word
+"unsubscribe" in the body of the message.
+
+
+<a name="download"><h2>Download</h2></a>
+<b class="asap">ASAP</b> binaries are available in the <a href="ftp://ftp.atnf.csiro.au/pub/software/asap/current">ATNF ftp area</a>
+Please also consult the <a href="http://svn.atnf.csiro.au/trac/asap">wiki</a>
+<ul>
+  <li> We provide binaries for debian, fedora and OSX based systems. If yours isn't there
+  send a request giving details about your flavour of linux.
+  </li>
+  <li><b class="asap">ASAP</b> source code is available through our subversion repository
+    <pre>
+        svn co http://sourcecode.atnf.csiro.au/repos/asap/tags/asap2.2.0
+    </pre>
+  </li>
+</ul>
+<p>
+
+<h2>Important</h2>
+<b class="asap">ASAP</b> is 0-based, i.e. all ranges (vectors) go from
+0..n-1, if n is the number of elements.
+<br>
+<!-- End Content -->
+<?php footer(); ?>
+</body>
+</html>
