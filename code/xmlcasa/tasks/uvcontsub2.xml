@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="uvcontsub2" category="modelling" visibility="experimental">
+<shortdescription>Continuum fitting and subtraction in the uv plane CALIBRATION VERSION</shortdescription>
+<description>
+With this task, the continuum emission is estimated from the 
+spectral windows and channels selected by fitspw.  Currently,
+only a constant continuum (fitorder=0) is supported; this will
+be generalized in the near future.   The data may be averaged 
+in time to increase the signal to noise for each continuum
+estimate.  This fit represents a model of the continuum in 
+all channels.
+	
+The fitted continuum spectrum is subtracted from all channels 
+selected in spw, and the result (presumably only
+line emission) is stored in the	CORRECTED_DATA.  The
+continuum fit is stored in the MODEL_DATA.
+
+If desired, new MeasurementSets are generating containing
+the continuum and continuum-subtracted line data. 
+
+</description>
+<input>
+	<param type="string" name="vis" mustexist="true">
+		<description>Name of input visibility file</description>
+		<value></value>
+	</param>
+
+        <param type="any" name="field">
+                <description>Select field using field id(s) or field name(s)</description>
+		<any type="variant" limittypes="string stringArray int intArray"/>
+                <value type="string"></value>
+        </param>
+
+	<param type="string" name="fitspw">
+		<description>Spectral window/channel selection for fitting the continuum</description>
+		<value></value>
+	</param>
+
+        <param type="string" name="combine">
+                <description>Data axes which to combine for the continuum estimation (spw, scan, and/or field)</description>
+                <value></value>
+        </param>
+
+	<param type="any" name="solint">
+		<description>Continuum fit timescale</description>
+                <any type="variant"/>
+                <value type="string">int</value>
+	</param>
+
+	<param type="int" name="fitorder">
+		<description>Polynomial order for the fit (CURRENTLY, only 0 is supported)</description>
+		<value>0</value>
+	</param>
+
+	<param type="string" name="spw">
+		<description>Spectral window selection for subtraction/export</description>
+		<value></value>
+	</param>
+
+	<param type="bool" name="splitdata">
+		<description>Split out continuum, continuum-subtracted data</description>
+		<value>False</value>
+	</param>
+
+</input>
+<example>
+
+	Continuum fitting and subtraction in the uv plane:
+	
+	With this task, the continuum emission is estimated from the 
+        spectral windows and channels selected by fitspw.  Currently,
+        only a constant continuum (fitorder=0) is supported; this will
+        be generalized in the near future.   The data may be averaged 
+        in time to increase the signal to noise for each continuum
+        estimate.  This fit represents a model of the continuum in 
+        all channels.
+	
+	The fitted continuum spectrum is subtracted from all channels 
+        selected in spw, and the result (presumably only
+	line emission) is stored in the	CORRECTED_DATA.  The
+	continuum fit is stored in the MODEL_DATA.
+
+        If desired, new MeasurementSets are generating containing
+        the continuum and continuum-subtracted line data. 
+
+        The input MeasurementSet should have calibrated data in
+        its DATA column.
+
+	Keyword arguments:
+	vis -- Name of input visibility file
+		default: none; example: vis='ngc5921.ms'
+        field -- Field selection for continuum estimation, subtraction, and
+                (if splitdata=True) split
+                default: field = '' means select all fields
+                field = 1 # will get field_id=1 (if you give it an 
+                        integer, it will retrieve the source with that index.
+                field = '1328+307'  specifies source '1328+307'
+		field = '13*' will retrieve '1328+307' and any other fields
+		   beginning with '13'
+	fitspw -- Selection of spectral windows and channels to use in the
+	          fit for the continuum, using general spw syntax
+		default: (all); example: fitspw='0:5~30;40~55'
+        combine -- Data axes to combine for the continuum estimate
+                default: '' --> solutions will break at scan, field, and spw
+                      boundaries according to solint
+              Options: '','spw'','scan',field', or any comma-separated combination
+              example: combine='spw'  --> form spw-averaged continuum estimate
+	solint -- Timescale for per-baseline fit (units optional)
+		default: 'int' --&gt; no averaging, fit every integration;
+		example: solint='10s'  --&gt; average to 10s before fitting
+                         10 or '10' --&gt; '10s' (unitless: assumes seconds)
+                options: 'int' --&gt; per integration
+                         'inf' --&gt; per scan
+	fitorder -- Polynomial order for the fit of the continuum
+		default: 0 (constant); example: fitorder=1
+	spw -- Optional per spectral window selection of channels from
+	       which to subtract the continuum. 
+		default: spw='', means subtract from all channels for
+		  each spw that had a continuum estimated
+	       Also, this specifies which spw/chan will be split
+	       out if splitdata=True.
+	splitdata -- Split out continuum and continuum subtracted line data
+		default: 'False'; example: splitdata=True
+		The continuum data will be placed in: vis.cont
+		The continuum subtracted data will be placed in: vis.contsub
+        async -- Run task in a separate process (return CASA prompt)
+                default: False; example: async=True
+
+</example> 
+</task>
+</casaxml>

@@ -1,0 +1,3422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<!--   
+ ***************************************************************************
+ ** ms.xml:  defines the interface to the measurment set tool.
+ **
+ ** Copyright (C) 2007
+ ** Associated Universities, Inc. Washington DC, USA.
+ **
+ ** This library is free software; you can redistribute it and/or modify it
+ ** under the terms of the GNU Library General Public License as published by
+ ** the Free Software Foundation; either version 2 of the License, or (at your
+ ** option) any later version.
+ **
+ ** This library is distributed in the hope that it will be useful, but WITHOUT
+ ** ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ ** FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+ ** License for more details.
+ **
+ ** You should have received a copy of the GNU Library General Public License
+ ** along with this library; if not, write to the Free Software Foundation,
+ ** Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+ **
+ ** Correspondence concerning AIPS++ should be addressed as follows:
+ **        Internet email: aips2-request@nrao.edu.
+ **        Postal address: AIPS++ Project Office
+ **                        National Radio Astronomy Observatory
+ **                        520 Edgemont Road
+ **                        Charlottesville, VA 22903-2475 USA
+ **   
+ ***************************************************************************
+-->
+
+
+        <tool name="ms" module="ms">
+        <shortdescription>Operations on measurement sets</shortdescription>
+       
+
+<keyword>ms</keyword>
+<keyword>FITS</keyword>
+<keyword>UVFITS</keyword>
+<keyword>SDFITS</keyword>
+<code>
+<include>xmlcasa/ms/ms_forward.h</include>
+<private>
+#include &lt;xmlcasa/ms/ms_private.h&gt;
+</private>
+</code>
+
+
+<description>
+
+  The ms tool provides functions to manipulate the contents of
+  measurement set tables.
+  The functions can be categorised as shown below.
+
+<!--
+  It is easy to get an ms tool and a measurement set table
+  confused. The table is the disk files that contain your data. The
+  tool is a process on your computer that provides functions that
+  allow you access the data in the table. One tool can access only one
+  table at any time. If you want to access two measurement sets
+  simultaneously you need to create two ms \tools.
+
+  The ms tool is frequently used as a server of data for
+  higher-level \tools\ such as <link anchor="visplot:visplot">visplot</link>.
+-->
+
+
+  \medskip\noindent\textbf{Attaching to a Measurement Set}
+
+    <!-- A ms tool is usually associated with a measurement set
+    table.-->
+
+    The simplest and most common way to attach an ms tool to a
+    measurement set is to use the <link
+    anchor="ms:ms.open">ms.open</link> function which requires that
+    you specify the name of the measurement set table.
+
+    The function <link anchor="ms:ms.fromfits">ms.fromfits</link>
+    converts a \uvfits\ file to a measurement set table prior to
+    attaching the ms tool to the newly created measurement set.
+    <!-- , and the
+    <link anchor="ms:ms.sdfitstoms.constructor">sdfitstoms</link> constructor,
+    which reads a single dish \fits\ file. --> The conversion step may
+    take some time if the \fits\ file is large. However it only needs
+    to be done once. The measurement set table is not deleted when you
+    close the ms tool, using the close function, or exit \casa. And
+    once the measurement set table is created it is much faster to
+    attach an ms tool to it using the <link anchor="ms:ms.open">ms.open</link>
+    function.
+
+  \medskip\noindent\textbf{Getting summary information}
+
+    The summary function will display, in the logger, an overview of
+    the measurement set. This will include listings of the fields,
+    spectral windows \&amp; polarization setups used in the measurement
+    set.
+
+    The <link anchor="ms:ms.range.function">range</link> function will provide more
+    quantitative information on the minimum, maximum or used values of
+    specified parameters.  When using this function you may need to do
+    an initial selection, as described below, depending on whether the
+    parameters you ask for change their shape.  A list of parameters
+    accepted by the <link anchor="ms:ms.range.function">range</link> function is given in
+    table~\ref{ms:tblItems} and this table also indicates when an
+    initial selection is necessary.
+
+    The lister function provides a concise listing of the data in 
+    the measurement set.
+
+    The listhistory function lists the contents of the measurement set
+    history table.  The history table contains a record of changes
+    made to the measurement set by autoflag, calibrater, imager and
+    other tools.
+
+  \medskip\noindent\textbf{Selecting data}
+
+    As described in the <link anchor="ms">ms module</link> documentation a
+    measurement set can contain data with a variety of different
+    shapes. Some of the functions in this tool require the data to
+    be in a fixed shape. Before you can use these functions you need
+    to select a subset of the data in the measurement set where all
+    the data has a fixed shape.  There are two functions which can be
+    used to do this. These are the
+    <link anchor="ms:ms.selectinit.function">selectinit</link> and
+    <link anchor="ms:ms.command.function">command</link> functions. 
+
+    The select function can be used to further refine which subset of
+    the data will be used by the data access functions. This function
+    allows you to select specific rows in a measurement set using a
+    wide range of criteria.
+
+    The select function can only select whole rows in a measurement
+    set. To select specific channels within a row you use the
+    selectchannel function.  Similarly to select specific
+    polarizations you should use the selectpolarization function.
+
+  \medskip\noindent\textbf{Reading and writing data}
+
+    The getdata function is used to read data from the measurement set
+    into casapy variables. You can select which columns of the
+    measurement set main table you are interested in and only the
+    subset of data specified using the selection functions described
+    above will be retreived. Any frequency averaging (see the
+    selectfrequency function) and polarization conversion (see the
+    selectpolarization function) will be done when you retreive the
+    data. The full power of casapy and other \casa\ tasks and tools, like
+    plotxy, can then be used for adhoc inspection and calculations
+    involving the data.
+
+    If the measurement set was opened for writing then the putdata
+    function can be used to write the data back into the measurement
+    set. When writing data back into the measurement set you cannot
+    change the data shape or the coordinates of the data, only the
+    numerical values. This means that you cannot write data that has
+    been averaged in frequency or converted to different
+    polarizations.
+
+    When using the getdata function with a large measurement set you
+    need to be careful to not request too much data. The measurement
+    set is stored on disk but casapy variables are stored in
+    memory. To allow you to access large amounts of data in an ordered
+    way the ms tool provides functions that allow you to iterate through
+    the data in a convienient way. 
+
+   If you need to step through the data in an orderly fashion, you
+   can use the iteration functions.  These allow you to set up an
+   iteration order (<link anchor="ms:ms.iterinit.function">iterinit</link>), obtain the
+   first iteration (<link anchor="ms:ms.iterorigin.function">iterorigin</link>), go to the
+   next iteration (<link anchor="ms:ms.iternext.function">iternext</link>) and end the
+   iteration prematurely (<link anchor="ms:ms.iterend.function">iterend</link>).  The
+   <link anchor="ms:ms.iterorigin.function">iterorigin</link> and
+   <link anchor="ms:ms.iternext.function">iternext</link> function set the currently
+   selected table (as used by <link anchor="ms:ms.getdata.function">getdata</link> and
+   others) to the current iteration.  At the end of the iteration,
+   the original selection is restored.
+
+   You can iterate through a measurement set you have previously selected
+   using <link anchor="ms:ms.select.function">select</link>, but if you
+   use <link anchor="ms:ms.select.function">select</link> while iterating, you
+   cannot get back the unselected iteration (without reiterating through the
+   table until the current point).
+
+   The writehistory function allows messages to be appended to the measurement
+   set history table should you wish to do so.  The listhistory function lists
+   your messages and those created by autoflag, calibrater, imager and other
+   tools.
+
+  \medskip\noindent\textbf{Conversions to \fits}
+
+    Just as the fromfits function will convert a \uvfits\ file to a measurement
+    set the tofits function will convert a measurement set to a \uvfits\
+    file. Similarly a single dish measurement set ie., one with a FLOAT_DATA
+    column rather than a DATA column, can be converted to a single dish \fits\
+    file using the tosdfits function.
+
+    You cannot read a \uvfits\ file into a measurement set and write it
+    out as a single dish \fits\ file or vice-versa.
+
+  \medskip\noindent\textbf{Concatenation}
+
+    The concatenate function can be used to append the data from one
+    measurement set to the end of another. As all the data is copied this
+    function may take some time if the measurement set to be copied is
+    large. The measurement set needs to be opened for writing for this to work.
+
+  \medskip\noindent\textbf{Sorting the main table by time}
+
+    The timesort function permits you to sort the MS main table by time in
+    ascending order. This can be useful after a concatenation. 
+   
+
+  \medskip\noindent\textbf{Splitting}
+    The split function allows you to make a new ms from a subset of the 
+    actual ms.
+		
+
+  \medskip\noindent\textbf{Flagging data}
+
+    The flag and buffer functions all belong together.  The idea is to fill a
+    buffer of data
+    (<link anchor="ms:ms.fillbuffer.function">fillbuffer</link>), optionally
+    retrieve it as a record
+    (<link anchor="ms:ms.getbuffer.function">getbuffer</link>) and display it
+    in some data display tool, do operations like differencing
+    (<link anchor="ms:ms.diffbuffer.function">diffbuffer</link>), clipping
+    (<link anchor="ms:ms.clipbuffer.function">clipbuffer</link>) and manual
+    edits of the displayed data
+    (<link anchor="ms:ms.setbufferflags.function">setbufferflags</link>), and
+    then write the flags back to the MS
+    (<link anchor="ms:ms.writebufferflags.function">writebufferflags</link>),
+    into the appropriate flag level, so you can choose to apply or undo them.
+    The data is untouched by these functions.
+
+\def\bul{$+$}
+\def\all{$\ast$}
+\def\none{-}
+\setlongtables
+\begin{longtable}{|lccccl|}
+\caption{
+Items recognized by the range, select, getdata and\break putdata functions.
+Items marked with a \dag\ are only available in interferometric measurement sets.
+Items marked with a \ddag\ are only
+available in interferometric measurement sets that have been processed
+with calibrator or imager.
+Items marked with a \all\ do not require
+all the data in the selected measurement set to have the same shape.
+}
+\\ \hline
+                     &amp; range &amp; select &amp; getdata &amp; putdata &amp; comment\\ \hline
+\endfirsthead
+\hline
+\multicolumn{6}{|c|}{\slshape Continued from previous page}\\ \hline
+                     &amp; range &amp; select &amp; getdata &amp; putdata &amp; comment\\ \hline
+\endhead
+\label{ms:tblItems}
+amplitude\dag        &amp; \bul  &amp; \none  &amp; \bul    &amp; \none   &amp; amplitude of observed data \\
+corrected\_amplitude\ddag &amp;\bul  &amp;\none &amp;\bul   &amp; \none   &amp; amplitude of corrected data \\
+model\_amplitude\ddag &amp; \bul &amp; \none  &amp; \bul    &amp; \none   &amp; amplitude of model data \\
+ratio\_amplitude\ddag &amp; \none  &amp; \none  &amp; \bul  &amp; \none   &amp; amplitude of corrected/model \\
+residual\_amplitude\ddag &amp; \none &amp; \none &amp; \bul &amp; \none   &amp; amplitude of residual data \\
+obs\_residual\_amplitude\ddag &amp; \none &amp; \none &amp; \bul &amp; \none &amp; amplitude of obs residual data \\
+antenna1             &amp; \all  &amp; \bul   &amp; \bul    &amp; \none   &amp; 1st antenna id\\
+antenna2             &amp; \all  &amp; \bul   &amp; \bul    &amp; \none   &amp; 2nd antenna id\\
+antennas             &amp; \all  &amp; \none  &amp; \none   &amp; \none   &amp; list of antenna names\\
+array\_id            &amp; \all  &amp; \bul   &amp; \none   &amp; \none   &amp; \\
+axis\_info           &amp; \none &amp; \none  &amp; \bul    &amp; \none   &amp; description of data axes\\
+chan\_freq           &amp; \bul  &amp; \none  &amp; \none   &amp; \none   &amp; channel frequencies\\
+corr\_names          &amp; \bul  &amp; \none  &amp; \none   &amp; \none   &amp; list of polarization strings\\
+corr\_types          &amp; \bul  &amp; \none  &amp; \none   &amp; \none   &amp; list of polarization enum values\\
+data\dag             &amp; \none &amp; \none  &amp; \bul    &amp; \bul    &amp; complex observed data\\
+corrected\_data\ddag &amp; \none &amp; \none  &amp; \bul    &amp; \bul    &amp; complex corrected data\\
+model\_data\ddag     &amp; \none &amp; \none  &amp; \bul    &amp; \bul    &amp; complex model data\\
+ratio\_data\ddag     &amp; \none  &amp; \none  &amp; \bul    &amp; \none   &amp; complex corrected/model \\
+residual\_data\ddag  &amp; \none &amp; \none  &amp; \bul    &amp; \bul    &amp; complex residual data\\
+obs\_residual\_data\ddag&amp;\none&amp; \none &amp; \bul    &amp; \bul    &amp; complex observed residual data\\
+feed1                &amp; \all  &amp; \bul   &amp; \bul    &amp; \none   &amp; 1st feed in correlation\\
+feed2                &amp; \all  &amp; \bul   &amp; \bul    &amp; \none   &amp; 2nd feed in correlation\\
+field\_id            &amp; \all  &amp; \bul   &amp; \bul    &amp; \none   &amp; field number\\
+fields               &amp; \all  &amp; \none  &amp; \none   &amp; \none   &amp; list of field names\\
+flag                 &amp; \none &amp; \none  &amp; \bul    &amp; \bul    &amp; data flags\\
+flag\_row            &amp; \none &amp; \none  &amp; \bul    &amp; \bul    &amp; MS row flags\\
+flag\_sum            &amp; \none &amp; \none  &amp; \bul    &amp; \none   &amp; flag summary\\
+ha                   &amp; \none &amp; \none  &amp; \bul    &amp; \none   &amp; add hour angle to axis\_info\\
+ifr\_number          &amp; \all  &amp; \bul   &amp; \bul    &amp; \none   &amp; 1000*antenna1+antenna2\\
+imaginary\dag        &amp; \bul  &amp; \none  &amp; \bul    &amp; \none   &amp; imag part of observed data\\
+corrected\_imaginary\ddag&amp;\bul  &amp;\none&amp; \bul    &amp; \none   &amp; imag part of corrected data\\
+model\_imaginary\ddag &amp; \bul  &amp; \none &amp; \bul    &amp; \none   &amp; imag part of model data\\
+ratio\_imaginary\ddag &amp; \none &amp; \none &amp; \bul    &amp; \none   &amp; imag part of corrected/model \\
+residual\_imaginary\ddag&amp;\none  &amp;\none &amp; \bul    &amp; \none   &amp; imag part of residual data\\
+obs\_residual\_imaginary\ddag&amp;\none  &amp;\none&amp;\bul &amp; \none   &amp; imag part of obs residual data\\
+imaging\_weight\ddag  &amp; \bul  &amp; \none &amp; \bul    &amp; \bul    &amp; weights used for imaging\\
+last                 &amp; \none &amp; \none  &amp; \bul    &amp; \none   &amp; add LAST to axis\_info\\
+num\_corr            &amp; \bul  &amp; \none  &amp; \none   &amp; \none   &amp; number of polarizations\\
+num\_chan            &amp; \bul  &amp; \none  &amp; \none   &amp; \none   &amp; number of freq channels\\
+phase\dag            &amp; \bul  &amp; \none  &amp; \bul    &amp; \none   &amp; phase of observed data\\
+corrected\_phase\ddag&amp; \bul  &amp; \none  &amp; \bul    &amp; \none   &amp; phase of corrected data\\
+model\_phase\ddag    &amp; \bul  &amp; \none  &amp; \bul    &amp; \none   &amp; phase of model data\\
+ratio\_phase\ddag    &amp; \none &amp; \none  &amp; \bul    &amp; \none   &amp; phase of corrected/model \\
+residual\_phase\ddag &amp; \none  &amp; \none  &amp; \bul    &amp; \none   &amp; phase of residual data\\
+obs\_residual\_phase\ddag&amp;\none  &amp;\none&amp; \bul    &amp; \none   &amp; phase of observed residual data\\
+phase\_dir           &amp; \bul  &amp; \none  &amp; \none   &amp; \none   &amp; list of phase centers \&amp; epoch\\
+real\dag            &amp; \bul   &amp; \none  &amp; \bul    &amp; \none   &amp; real part of observed data\\
+corrected\_real\ddag &amp; \bul  &amp; \none  &amp; \bul    &amp; \none   &amp; real part of corrected data\\
+model\_real\ddag     &amp; \bul  &amp; \none  &amp; \bul    &amp; \none   &amp; real part of model data\\
+ratio\_real\ddag     &amp; \none &amp; \none  &amp; \bul    &amp; \none   &amp; real part of corrected/model \\
+residual\_real\ddag  &amp; \none  &amp; \none  &amp; \bul    &amp; \none   &amp; real part of residual data\\
+obs\_residual\_real\ddag&amp;\none  &amp;\none &amp; \bul    &amp; \none   &amp; real part of observed res. data\\
+ref\_frequency       &amp; \bul  &amp; \none  &amp; \none   &amp; \none   &amp; reference frequency\\
+rows                 &amp; \all  &amp; \bul   &amp; \none   &amp; \none   &amp; row numbers in {\it original} table\\
+scan\_number         &amp; \all  &amp; \bul   &amp; \bul    &amp; \none   &amp; \\
+sigma                &amp; \all  &amp; \none  &amp; \bul    &amp; \bul    &amp; sigma of the data\\
+data\_desc\_id       &amp; \all  &amp; \bul   &amp; \bul    &amp; \none   &amp; \\
+time                 &amp; \all  &amp; \bul   &amp; \bul    &amp; \none   &amp; MJD time range in seconds\\
+times                &amp; \all  &amp; \bul   &amp; \none   &amp; \none   &amp; list of MJD timeslots\\
+ut                   &amp; \none &amp; \none  &amp; \bul    &amp; \none   &amp; add UT to axis\_info\\
+uvw                  &amp; \none &amp; \none  &amp; \bul    &amp; \none   &amp; uvw vector\\
+u                    &amp; \all  &amp; \bul   &amp; \bul    &amp; \none   &amp; u coordinate\\
+v                    &amp; \all  &amp; \bul   &amp; \bul    &amp; \none   &amp; v coordinate\\
+w                    &amp; \all  &amp; \bul   &amp; \bul    &amp; \none   &amp; w coordinate\\
+uvdist               &amp; \all  &amp; \bul   &amp; \bul    &amp; \none   &amp; uv distance\\
+weight               &amp; \all  &amp; \none  &amp; \bul    &amp; \bul    &amp; weight of the data\\
+\hline
+\end{longtable}
+
+<example>
+Example:
+\begin{verbatim}
+ms.open("3C273XC1.MS",nomodify=False)
+ms.selectinit(datadescid=0)
+ms.select({'antenna1':[1,3,5],'uvdist':[1200.,1900.]})
+rec=ms.getdata(["weight","data"])
+# modify rec['weight'] and rec['data'] values as desired
+ms.putdata(rec)
+ms.close()
+\end{verbatim}
+
+We open the MS for writing, select an array and spectral window
+and then select a few antennas and a uv range. We then get out
+the weight values and the data. We change these
+values in casapy and then write them back to the measurement
+set. Finally, we close the ms, causing the values to be written
+back to disk.  <!-- Note: you cannot use the name ms as a casapy
+variable (e.g., ms=ms("MyMS")), because that would overwrite
+the ms definition itself. -->
+</example>
+
+</description>
+
+<!-- 
+   <method type="constructor" name="ms">
+   <shortdescription>Create an ms tool attached to a measurement set</shortdescription>
+   
+  <keyword>ms</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="filename">
+     <description>measurement set file-name</description>
+     <value></value>
+     </param>
+    
+     <param type="bool" direction="in" name="nomodify">
+     <description>open for read access only</description>
+     <value>true</value>
+     </param>
+    
+     <param type="bool" direction="in" name="lock">
+     <description>lock the table for exclusive use</description>
+     <value>false</value>
+     </param>
+    
+     <param type="string" direction="in" name="host">
+     <description>host to start ms tool on</description>
+     <value></value>
+     </param>
+    
+     <param type="bool" direction="in" name="forcenewserver">
+     <description>start a new server tool</description>
+     <value>false</value>
+     </param>
+  </input>
+  <returns type="msobject"/>
+
+  <description>
+    This is the most commonly used constructor. It creates an ms tool
+    which is attached to the specified measurement set table.
+
+    By default the table is opened read only to prevent you from
+    accidently making changes to the measurement set. Set nomodify to
+    False you you do intend to make changes.
+
+    Setting the lock argument to True will permanently lock the table
+    preventing other processes from writing to the measurement
+    set. Unless you expect this to happen, and want to prevent it, you
+    should leave the lock argument at the default value which implies
+    auto-locking.
+
+    The host argument specifies which machine the precompiled ms
+    process should be started on. The default value starts it on the
+    same machine as the one that casapy is running on. 
+
+    In order to run the ms tool on a remote machine you need to
+    satisfy all the following conditions.
+    \begin{itemize}
+    \item It must be possible to start \casa\ on the remote machine
+    \item You must be able to log onto the remote machine without
+          having to type a password
+    \item The CASAPATH environment variable must be defined on the
+          remote machine. You may want to set this up in the relevant
+          ``dot'' file eg., adding a line like 
+          \texttt{source~/usr/local/aips++/aipsinit.csh} in your 
+          .cshrc file (for csh).
+    \end{itemize}
+    One quick way to check if all three conditions are met is to type, 
+    on your local machine \texttt{rsh host 'echo \$CASAPATH'}
+    where host is replaced by the name of the remote machine. If the
+    value of the CASAPATH variable that is printed does not contain
+    something like \texttt{aips-root~architecture~site~host} and that
+    all the values are correct for the remote machine you can be
+    certain that starting the ms tool, or any \casa\ server, on the
+    remote host will not work
+
+    Each ms tool can only run one function at a time. To solve this
+    you start two servers. The forcenewserver argument allows you to
+    do this by overriding the default behaviour of having each ms tool
+    share the same server.
+ 
+    This function returns an ms tool or fail if something went wrong,
+    like an error in the measurement set name.
+
+  </description>
+
+  <example>
+    See the example for the <link anchor="ms:ms.nrow.function">nrow</link> function.
+  </example>
+</method>
+-->
+ 
+   <method type="function" name="fromfits">
+   <shortdescription>Create a measurement set from a uvfits file</shortdescription>
+   
+  <keyword>fromfits</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="msfile">
+     <description>Filename for the newly created measurement set</description>
+     <value></value>
+     </param>
+    
+     <param type="string" direction="in" name="fitsfile">
+     <description>uvfits file to read</description>
+     <value></value>
+     </param>
+    
+     <param type="bool" direction="in" name="nomodify">
+     <description>open for read access only</description>
+     <value>true</value>
+     </param>
+    
+     <param type="bool" direction="in" name="lock">
+     <description>lock the table for exclusive use</description>
+     <value>false</value>
+     </param>
+    
+     <param type="int" direction="in" name="obstype">
+     <description>specify the observation type: 0=standard,
+  1=fastmosaic, requiring small tiles in the measurement set</description>
+     <value>0</value>
+     </param>
+    
+     <param type="string" direction="in" name="host">
+     <description>host to start ms tool on (IGNORED!!!)</description>
+     <value></value>
+     </param>
+    
+     <param type="bool" direction="in" name="forcenewserver">
+     <description>start a new server tool (IGNORED!!!)</description>
+     <value>false</value>
+     </param>
+
+     <param type="string" name="antnamescheme">
+     <description>For VLA only, antenna name scheme, old style is just antenna number, new style prepends VA or EV</description>
+     <value>old</value>
+     <allowed type="enum">
+	     <value>old</value>
+	     <value>new</value>
+     </allowed>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function will convert a \uvfits\ file to a measurement set table and
+    then open the measurement set table. The newly created measurement set
+    table will continue to exist after the tool has been closed.
+
+    Setting the lock argument to True will permanently lock the table
+    preventing other processes from writing to the measurement set. Unless you
+    expect this to happen, and want to prevent it, you should leave the lock
+    argument at the default value which implies auto-locking.
+
+<!--
+    The host argument \tt{(currently ignored)} specifies which machine the
+    precompiled ms process should be started on. The default value starts it on
+    the same machine as the one that casapy is running on.
+
+    In order to run the ms tool on a remote machine you need to
+    satisfy all the following conditions.
+    \begin{itemize}
+    \item It must be possible to start \casa\ on the remote machine
+    \item You must be able to log onto the remote machine without
+          having to type a password
+    \item The CASAPATH environment variable must be defined on the
+          remote machine. You may want to set this up in the relevant
+          ``dot'' file eg., adding a line like 
+          \texttt{source~/usr/local/aips++/aipsinit.csh} in your 
+          .cshrc file (for csh).
+    \end{itemize}
+    One quick way to check if all three conditions are met is to type, 
+    on your local machine \texttt{rsh host 'echo \$CASAPATH'}
+    where host is replaced by the name of the remote machine. If the
+    value of the CASAPATH variable that is printed does not contain
+    something like \texttt{aips-root~architecture~site~host} and that
+    all the values are correct for the remote machine you can be
+    certain that starting the ms tool, or any \casa\ server, on the
+    remote host will not work
+
+    Each ms tool can only run one function at a time. To solve this
+    you start two servers. The forcenewserver argument allows you to
+    do this by overriding the default behaviour of having each ms tool
+    share the same server.
+-->
+
+    Note that the variety of fits files that fromfits is able to
+    interpret correctly is limited mostly to files similar to those
+    produced by classic AIPS. In particular, it understands only binary
+    table extensions for the antenna (AN), frequency (FQ) and source
+    (SU) information and ignores other extensions.
+
+    This function returns True if it successfully attachs the ms tool
+    to a newly created Measurement Set or False if something went
+    wrong, like an error in a file name.
+  </description>
+  <example>
+    \begin{verbatim}
+      ms.fromfits("3C273XC1.MS", "3C273XC1.fits")
+    \end{verbatim}
+  </example>
+</method>
+
+<!-- 
+   <method type="constructor" name="sdfitstoms">
+   <shortdescription>Create an ms tool from a SDFITS file</shortdescription>
+   
+  <keyword>sdfitstoms</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="msfile">
+     <description>Filename for the newly created measurement set</description>
+     <value></value>
+     </param>
+    
+     <param type="string" direction="in" name="fitsfile">
+     <description>SDFITS file to read</description>
+     <value></value>
+     </param>
+    
+     <param type="bool" direction="in" name="nomodify">
+     <description>open for read access only</description>
+     <value>true</value>
+     </param>
+    
+     <param type="bool" direction="in" name="lock">
+     <description>lock the table for exclusive use</description>
+     <value>false</value>
+     </param>
+    
+     <param type="string" direction="in" name="host">
+     <description>host to start ms tool on</description>
+     <value></value>
+     </param>
+    
+     <param type="bool" direction="in" name="forcenewserver">
+     <description>start a new server tool</description>
+     <value>false</value>
+     </param>
+  </input>
+  <returns type="msobject"/>
+
+  <description>
+    This constructor will convert a SDFITS file to a measurement set
+    table and then create an ms tool that is attached to the
+    measurement set table. The newly created measurement set table
+    will continue to exist after the tool has been shutdown.
+
+    The SDFITS binary table must be the first extension in the
+    indicated FITS file.  A brief description of SDFITS may be found
+    in the \htmladdnormallink{\textbf{dish} users manual}
+    {../../notes/225/225.html}.
+
+    The last four arguments of this constructor are identical in
+    behaviour to the <link anchor="ms:ms.ms.constructor">ms</link>
+    constructor. See the documentation for that function for more
+    details on their meaning.
+
+    This function returns an ms tool or fail if something went wrong,
+    like an error in a file name.
+
+  </description>
+  <example>
+    \begin{verbatim}
+      include 'ms.g'
+      myms = sdfitstoms("dishdemo1.ms", "dishdemo1.fits")
+    \end{verbatim}
+  </example>
+</method>
+-->
+ 
+   <method type="function" name="nrow">
+   <shortdescription>Returns the number of rows in the measurement set</shortdescription>
+   
+  <keyword>nrow</keyword>
+  <input>  
+    
+     <param type="bool" direction="in" name="selected">
+     <description>return number of selected rows</description>
+     <value>false</value>
+     </param>
+  </input>
+  <description>
+    This function returns the number of rows in the measurement
+    set. If the optional argument selected is set to True, it returns
+    the number of currently selected rows, otherwise it returns the 
+    the number of rows in the original measurement.
+  </description>
+  <returns type="int"/>
+  <example>
+    \begin{verbatim}
+      ms.open('3C273XC1.MS')
+      print "Number of rows in ms =", ms.nrow()
+      #Number of rows in ms = 7669
+    \end{verbatim}
+  </example>
+</method>
+
+ 
+   <method type="function" name="iswritable">
+   <shortdescription>Returns True is the underlying Table is
+  writable</shortdescription>
+   
+  <keyword>iswritable</keyword>
+  <description>
+    This function returns True if the underlying MeasurementSet
+  Table was opened for writing/update.
+  </description>
+  <returns type="bool"/>
+  <example>
+    \begin{verbatim}
+      ms.open('3C273XC1.MS',nomodify=False)
+      if ms.iswritable():
+        print "MeasurementSet is writable"
+      else:
+        print "MeasurementSet is readonly"
+      #MeasurementSet is writable
+    \end{verbatim}
+  </example>
+</method>
+
+ 
+   <method type="function" name="open">
+   <shortdescription>Attach the ms tool to a measurement set table</shortdescription>
+   
+  <keyword>open</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="thems">
+     <description>Name of the measurement set table to open</description>
+     <value></value>
+     </param>
+    
+     <param type="bool" direction="in" name="nomodify">
+     <description>prevent changes to the measurement set</description>
+     <value>true</value>
+     </param>
+    
+     <param type="bool" direction="in" name="lock">
+     <description>lock the table for exclusive use by this tool</description>
+     <value>false</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    Use this function when you have detached (using the
+    <link anchor="ms:ms.close.function">close</link> function) the ms tool from a
+    measurement set table and wish to reattach to another measurement
+    set table.  <!-- This is quicker than destroying the ms tool with the
+    <link anchor="ms:ms.done.function">done</link> function and starting up a new one as
+    the server does not have to be restarted.-->
+  </description>
+  <example>
+    \begin{verbatim}
+      ms.open('3C273XC1.MS')
+      ms.close()
+      ms.open("anotherms", nomodify=False, lock=False)
+    \end{verbatim}
+  </example>
+</method>
+
+ 
+   <method type="function" name="close">
+   <shortdescription>Detach the ms tool from the measurement set table</shortdescription>
+   
+  <keyword>close</keyword>
+  <description>
+    This function detaches the ms tool from the associated measurement
+    set table after flushing all the cached changes.  After calling
+    this function the ms tool is not associated with any measurement
+    set and using any function other than
+    <link anchor="ms:ms.open.function">open</link> or
+    <link anchor="ms:ms.fromfits.function">fromfits</link>
+    will result in an error message being sent to the logger.
+
+    This function can be useful to avoid synchronization problems
+    which can occur when different processes have the same ms open.
+  </description>
+  <returns type="bool"/>
+  <example>
+    See the example for the <link anchor="ms:ms.open.function">open</link> function.
+  </example>
+</method>
+
+ 
+   <method type="function" name="name">
+   <shortdescription>Name of the measurement set table the tool is attached to.</shortdescription>
+   
+  <keyword>name</keyword>
+  <description>
+    This function returns the name of the measurement set table that
+    is being manipulated. If the ms tool is not attached to any
+    measurement set then this function will return the string ``none''.
+  </description>
+  <returns type="string"/>
+  <example>
+    \begin{verbatim}
+      
+      ms.open('3C273XC1.MS')
+      print "Processing file", ms.name()
+    \end{verbatim}
+  </example>
+</method>
+
+<!-- 
+   <method type="function" name="command">
+   <shortdescription>(NOT IMPLEMENTED!!!) Construct a ms tool using a table query command</shortdescription>
+   
+  <keyword>command</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="msfile">
+     <description>name of selected measurement set table</description>
+     <value></value>
+     </param>
+    
+     <param type="string" direction="in" name="command">
+     <description>Query string, Any valid table command</description>
+     <value></value>
+     </param>
+    
+     <param type="bool" direction="in" name="nomodify">
+     <description>prevent changes to the measurement set</description>
+     <value>true</value>
+     </param>
+  </input>
+  <returns type="any">
+  <shortdescription> should return a casams not a record </shortdescription>
+  <any type="record"/>
+  </returns>
+
+  <description>
+
+    !!!NOT IMPLEMENTED!!!
+    Make a new measurement set table and a new ms \tool, from a subset
+    of the data in the measurement set the current ms tool is
+    attached to. The subset is selected using the qualification part
+    of the table command as described in 
+    \htmladdnormallink{note 199}{../../notes/199/199.html}.  This
+    function will return a new ms \tool. 
+
+    To use this function successfully it helps to have an
+    understanding of the column names used in a measurement set
+    table. These are described in 
+    \htmladdnormallink{note 229}{../../notes/229/229.html}.
+
+-->     <!-- Any
+    identifiers that are used to refer to rows in a subtable will be
+    zero based ie., the first row is row zero and not row one. This is
+    different to the convention used throught casapy and in other parts
+    of this tool. The example below illustrates this. --> <!--
+
+    The new measurement set must be given a name but it is not written
+    to disk until the <link anchor="ms:ms.close.function">close</link> or
+    <link anchor="ms:ms.done.function">done</link> functions are performed by the
+    associated tool.
+
+    The resulting measurement set is always a reference to the
+    original measurement set, therefore you should not delete the
+    original measurement set from disk unless you also intend to
+    delete the selected one. However the converse is not True, you
+    may delete the selected measurement set and keep the original one.
+  </description>
+  <example>
+    \begin{verbatim}
+      NOT IMPLEMENTED!!!
+      ms.open('3C273XC1.MS')
+      subms = ms.command('3C273XC1-dd1.ms', 'DATA_DESC_ID == 0')
+      print 'The original ms has', ms.nrow(), 'rows.'
+      print 'The selected one has', subms.nrow(), 'rows.'
+      subms.close()
+    \end{verbatim}
+    In this example a new ms \tool, called subms, is created that
+    accesses a newly created measurement set called
+    \verb|3C273XC1-dd1.ms|. The new tool provides access only to the
+    data where the value in the \verb|DATA_DESC_ID| column is
+    zero. 
+
+    This is equivalent to using the <link
+    anchor="ms:ms.selectinit.function">selectinit</link> function with
+    an argument of zero.--> <!-- This difference in indexing value, between the
+    command and the selectinit functions is illustrative of the
+    difference between zero and one based indexing.--> <!--
+
+    If the measurement set you are using contains data with different
+    spectral windows or polarization setups, then the selected
+    measurement set will have less rows than the original measurement
+    set.
+  </example>
+  <example>
+    \begin{verbatim}
+      NOT IMPLEMENTED
+      ms.open('3C273XC1.MS')
+      subms = ms.command('3C273XC1-a12.ms', 
+                         'ANTENNA1 == 0 &amp;&amp; ANTENNA2 == 1')
+      print 'The original ms has', ms.nrow(), 'rows.'
+      print 'The selected one has', subms.nrow(), 'rows.'
+      subms.close()
+    \end{verbatim}
+    This is identical to the previous example except that a more
+    complex command has been used. In this case all the data from one
+    baseline are selected. The baseline chosen corresponds to data
+    collected from the antennas defined in the first and second rows
+    of the antenna sub-table of the measurement set.
+  </example>
+  <example>
+    \begin{verbatim}
+      NOT IMPLEMENTED!!!
+      ms.open('3C273XC1.MS')
+      subms = ms.command('3C273XC1-a12.ms',
+                         'ANTENNA1 == ANTENNA2', nomodify=False)
+      subms.
+      subms.close()
+    \end{verbatim}
+    This example selects all the auto-correlations in the measurement
+    set. The resultant ms tool will allow you to modify the
+    data. Because the selected measurement set references the data in
+    the original measurement set modifying the data in the selected
+    measurement set will also change the auto-correlations in original
+    measurement set.
+  </example>
+</method>
+-->
+ 
+   <method type="function" name="tofits">
+   <shortdescription>Convert a measurement set to a uvfits file</shortdescription>
+   
+  <keyword>tofits</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="fitsfile">
+     <description>Name of the new uvfits  file</description>
+     <value></value>
+     </param>
+    
+     <param type="string" direction="in" name="column">
+     <description>Data column to write, see above for options</description>
+     <value>corrected</value>
+     </param>
+
+     <param type="any" direction="in" name="field">
+     <description>Field ids  (0-based) or fieldnames to split out</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+    
+     <param type="any" direction="in" name="spw">
+     <description>Spectral windows to split </description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+    
+     <param type="int" direction="in" name="nchan">
+     <description>number of channels in output, default of -1 implies 
+     all</description>
+     <value>-1</value>
+     </param>	
+    
+     <param type="int" direction="in" name="start">
+     <description>Start channel in input data</description>
+     <value>0</value>
+     </param>	
+    
+     <param type="int" direction="in" name="width">
+     <description>number of input channels to average</description>
+     <value>1</value>
+     </param>
+
+     <param type="any" direction="in" name="baseline">
+     <description>Antenna names or Antenna indices to select</description>
+     <any type="variant" />
+     <value></value>
+     </param>
+
+     
+         <param type="string" direction="in" name="time">
+     <description>Limit data selected to be within a given time range. Syntax is the defined in the msselection link</description>
+     <value></value>
+     </param>
+
+     <param type="any" name="scan">
+     <description>Limit data selected on scan numbers. Syntax is the defined in the msselection link</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+     
+     <param type="any" name="uvrange">
+     <description>Limit data selected on uv distance. Syntax is the defined in 
+     the msselection link</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="string" name="taql">
+     <description>For the TAQL experts, flexible data selection using the TAQL syntax</description>
+     <value></value>
+     </param>
+         
+    
+     <param type="bool" direction="in" name="writesyscal">
+     <description>Write GC and TY tables</description>
+     <value>false</value>
+     </param>
+    
+     <param type="bool" direction="in" name="multisource">
+     <description>Write in multisource format</description>
+     <value>false</value>
+     </param>
+    
+     <param type="bool" direction="in" name="combinespw">
+     <description>Handle spectral window as IF</description>
+     <value>false</value>
+     </param>
+    
+     <param type="bool" direction="in" name="writestation">
+     <description>Write station name instead of antenna name</description>
+     <value>false</value>
+     </param>    
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This functions writes a \uvfits\ file that contains the data in
+    the measurement set associated with this tool. The \fits\ file is
+    always written in floating point format and the data is always
+    stored in the primary array of the \fits\ file.
+
+    If the measurement set has been processed by many of the imaging
+    tools, including imager and calibrator, it may contain additional
+    data columns. You need to select which of these data columns will
+    be written to the \fits\ file. The possible options are:
+    \begin{description}
+      \item[observed] This is the raw data as collected by the
+                      telescope. All interferometric measurement sets must
+                      contain this column. A synonym for 'observed' is 'data'.
+      \item[corrected] This is the calibrated data. A synonym for
+                       'corrected' is 'corrected\_data'.
+      \item[model] This is the visibilites that would be measured using
+                   the current model of the sky. A synonym for
+                   'model' is 'model\_data'.
+    \end{description}
+    The parsing of these strings is case insensitive. If any other
+    option is specified then the observed data will be written.
+
+    By default a single-source \uvfits\ file is written, but if the
+    measurement set contains more than one field or if you set the
+    multisource argument to True a multi-source \uvfits\ file will be
+    written. Because of limitations in the \uvfits\ format you have to
+    ensure that the data shape is fixed for all the data you intend to
+    write to one \fits\ file. See the general description of this tool
+    for how you can select data to meet this condition.
+
+    The combinespw argument is used to control whether data from
+    different spectral windows will be written as different entries in
+    the \fits\ FQ (frequency) table or combined as different IF's
+    within one entry in the FQ table. You should set this to True only if
+    you know that the data from different spectral windows was
+    observed simultaneously, and the data in the measurement set can
+    be equally divided between all the spectral windows.
+    Use of this switch is recommended for data to be processed in classic
+    AIPS (if possible, e.g., standard dual IF observations).
+
+    The \fits\ GC (gain curve) and TY (system temperature) tables
+    can be optionally written by setting the writesyscal argument to
+    True.  This is a rather WSRT-specific operation at the moment and may
+    not work correctly for measurement sets from other telescopes.
+
+    The three parameters 'start', 'nchan', 'width' are for channel
+    averaging while outputing the data to the fits file. The default
+    values of -1 will copy the channels of the input as is.  'start'
+    is input channel number that will be the first channel of the
+    output. 'nchan' is the number of channels wanted in the output
+    data. 'width' is the number of channels of the input data to make
+    1 channel of the output data. Hence (nchan*width+start) should
+    not be larger than the number of channels in the original data.
+  </description>
+
+  <example>
+    \begin{verbatim}
+      
+      ms.open('3C273XC1.MS')
+      ms.tofits('3C273XC1.fits', column='DATA'); 
+      ms.done()
+    \end{verbatim}
+     This example writes  the observed data of a measurement set to a 
+     \uvfits\ file.
+\begin{verbatim}
+      
+      ms.open('big.ms')
+      ms.tofits('part.fits', column='CORRECTED', field=[0,1], spw=[2]); 
+      ms.done()
+    \end{verbatim}
+     This example writes part (the first 2 fields and the third spectral 
+     window) of the corrected data to the fits file.  
+    
+
+  </example>
+</method>
+
+ 
+   <method type="function" name="summary">
+   <shortdescription>(PARTIALLY IMPLEMENTED!!!) Summarize the measurement set</shortdescription>
+   
+  <keyword>summary</keyword>
+  <output>
+    
+     <param type="any" direction="out" name="header">
+     <any type="record"/>
+     <description>Header information (PARAMETER IGNORED!!!)</description>
+     </param>
+   </output>
+   <input> 
+     <param type="bool" direction="in" name="verbose">
+     <description>Produce verbose logging output</description>
+     <value>false</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function will print a summary of the measurement set to the
+    system logger. The verbose argument provides some control on how
+    much information is displayed.
+
+    RETURNING NON-EMPTY HEADER ARGUMENT NOT IMPLENTED!!!
+
+    This function can also return, in the header argument, a record
+    containing the following fields.
+    \begin{description}
+      \item[nrow]       Number of rows in the measurement set
+      \item[name]       Name of the measurement set
+    \end{description}
+  </description>
+  <example>
+    \begin{verbatim}
+      
+      ms.open('3C273XC1.MS')
+      ms.summary(verbose=True)
+    \end{verbatim}
+    This example will send a verbose summary of the measurement
+    set to the logger.
+  </example>
+</method>
+
+ 
+   <method type="function" name="listhistory">
+   <shortdescription>List history of the measurement set</shortdescription>
+  <keyword>listhistory</keyword>
+  <description>
+    This function lists the contents of the measurement set history
+    table.
+  </description>
+  <returns type="bool"/>
+  <example>
+    \begin{verbatim}
+      ms.open('3C273XC1.MS')
+      ms.listhistory()
+    \end{verbatim}
+    The history table contents are listed in the logger.
+  </example>
+</method>
+
+ 
+   <method type="function" name="writehistory">
+   <shortdescription>Add a row of arbitrary information to the measurement set history table</shortdescription>
+   
+  <keyword>writehistory</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="message">
+     <description>Message to be recorded in message field</description>
+     <value></value>
+     </param>
+    
+     <param type="string" direction="in" name="parms">
+     <description>String to be written to input parameter field</description>
+     <value></value>
+     </param>
+    
+     <param type="string" direction="in" name="origin">
+     <description>String to be written to origin field
+     </description>
+     <value>MSHistoryHandler::addMessage()</value>
+     </param>
+    
+     <param type="string" direction="in" name="msname">
+     <description>name of selected measurement set</description>
+     <value></value>
+     </param>
+    
+     <param type="string" direction="in" name="app">
+     <description>String to be written to application field</description>
+     <value>ms</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+  <description>
+    This function adds a row to the history table of the specified
+    measurement set containing any message that the user wishes to
+    record.  By default the history entry is written to the history
+    table of the measurement set that is currently open, the message
+    origin is recorded as 'MSHistoryHandler::addMessage()', the originating
+    application is 'ms' and the input parameters field is empty.
+  </description>
+  <example>
+    \begin{verbatim}
+      ms.open('3C273XC1.MS')
+      ms.writehistory('an arbitrary history message')
+      ms.listhistory()
+    \end{verbatim}
+    A row is appended to the measurement set history table.
+  </example>
+</method>
+
+ 
+   <method type="function" name="statistics">
+   <shortdescription>Get statistics on the selected measurement set</shortdescription>
+   
+  <keyword>statistics</keyword>
+  <input>
+    
+     <param type="string" name="column">
+     <description>Column name</description>
+     </param>
+
+     <param type="string" name="complex_value">
+     <description>Which derived value to use for complex columns (amp, amplitude, phase, imag, real, imaginary)</description>
+     </param>
+    
+     <param type="bool" name="useflags">
+     <description>Use the data flags</description>
+     <value>true</value>
+     </param>
+     
+     <param type="string" name="spw">
+     <description>Spectral Window Indices or names : example : '1,2' </description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="field">
+     <description>Field indices or source names : example : '2,3C48' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="baseline">
+     <description>Baseline number : example : '2-3,4-5,132 ????' </description>
+     <value>""</value>
+     </param>
+    
+     <param type="string" name="uvrange">
+     <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
+     <value>""</value>
+     </description>
+     </param>
+
+     <param type="string" name="time">
+     <description>Time range, as MJDs or date strings : example : 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="correlation">
+     <description>Correlations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="scan">
+     <description>Scan number : example : '1,2,3' </description>
+     <value>""</value>
+     </param>
+
+     <param type="string" name="array">
+     <description>Array Indices or names : example : 'VLAA' </description>
+     <value>""</value>
+     </param>
+
+  </input>
+  <returns type="any">
+    <any type="record"/>
+  </returns>
+
+  <description>
+    This function computes descriptive statistics on the measurement set.
+    It returns the statistical values as a python dictionary.  The given 
+    column name must be a numerical column.
+    If it is a complex valued column, the parameter complex_value defines
+    which derived real value is used for the statistics computation.
+  </description>
+  <example>
+    \begin{verbatim}
+      
+      ms.open("3C273XC1.MS")
+      ms.statistics(column="DATA", antenna="2")
+    \end{verbatim}
+  </example>
+</method>
+
+   <method type="function" name="range">
+   <shortdescription>Get the range of values in the measurement set</shortdescription>
+   
+  <keyword>range</keyword>
+  <input>
+    
+     <param type="stringArray" direction="in" name="items">
+     <description>Item names</description>
+     </param>
+    
+     <param type="bool" direction="in" name="useflags">
+     <description>Use the data flags</description>
+     <value>true</value>
+     </param>
+    
+     <param type="int" direction="in" name="blocksize">
+     <description>Set the blocksize in MB</description>
+     <value>10</value>
+     </param>
+  </input>
+  <returns type="any">
+<any type="record"/>
+</returns>
+
+  <description>
+    This function will return the range of values in the currently
+    selected measurement set for the items specified.  Possible items
+    include most scalar columns, interferometer number
+    (1000*antenna1+antenna2), uvdist(ance), u, v, w, amplitude, phase,
+    real and imaginary components of the data (and corrected and model
+    versions of these - if these columns are present). See the table
+    at the top of the document to find the exact list.
+
+    You specify items in which you are interested using a string
+    vector where each element is a case insensitive item name.  This
+    function will then return a record that has fields corresponding
+    to each of the specified items. Each field will contain the range
+    of the specified item. For many items the range will be the
+    minimum and maximum values but for some it will be a list of
+    unique values. Unrecognized items are ignored.
+    
+    By default the FLAG column is used to exclude flagged data before
+    any ranges are determined, but you can set useflags=False to include
+    flagged data in the range.  However, if you average in frequency, 
+    flagging will still be applied.
+
+    You can influence the memory use and the reading speed using 
+    the blocksize argument - it specifies how big a block of data
+    to read at once (in MB). For large datasets on machines with lots
+    of memory you may speed things up by setting this higher than the
+    default (10 MB).
+
+    For some items, as indicated with an \S\ in table
+    \ref{ms:tblItems} (in the general description of this tool), you
+    need to call selectinit to select a portion of the data with a
+    unique shape prior to calling this function.
+
+    Items prefixed with corrected, model, residual or
+    obs\_residual and the imaging\_weight item are not available unless
+    your measurement set has been processed either with the imager or
+    calibrator tools.
+  </description>
+  <example>
+    \begin{verbatim}
+      
+      ms.open("3C273XC1.MS")
+      ms.selectinit(datadescid=0)
+      ms.range(["time","uvdist","amplitude","antenna1"])
+#{'amplitude': array([  2.60339398e-02,   3.38518333e+01]),
+# 'antenna1': array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 11, 12, 13,
+#                    14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]),
+# 'time': array([  4.12162940e+09,   4.12164267e+09]),
+# 'uvdist': array([   46.26912101,  3727.97385983])}
+    \end{verbatim}
+    In this example the minimum and maximum observation times,
+    uvdistances, data amplitudes are returned as well as a list of all the
+    antennas in the antenna1 column. <!-- Note that the double quoted
+    string produces a string vector as the input argument. -->
+
+    For this dataset the selectinit function did not need to be
+    called as all the data is of one shape.
+  </example>
+</method>
+ 
+<method type="function" name="lister">
+  <shortdescription>List measurement set visibilities</shortdescription>
+   
+  <keyword>lister</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="options">
+     <description>Output options (not yet implemented)</description>
+     <value></value>
+     </param>
+     
+     <param type="string" direction="in" name="datacolumn">
+     <description>Column to list: data, model, corrected, residual</description>
+     <value>data</value>
+     </param>
+      
+     <param type="string" direction="in" name="field">
+     <description>Fields</description>
+     <value></value>
+     </param>
+    
+     <param type="string" direction="in" name="spw">
+     <description>Spectral Windows</description>
+     <value></value>
+     </param>
+      
+     <param type="string" direction="in" name="antenna">
+     <description>Antenna/Baselines</description>
+     <value></value>
+     </param>
+     
+     <param type="string" direction="in" name="timerange">
+     <description>Time range</description>
+     <value></value>
+     </param>
+     
+     <param type="string" direction="in" name="correlation">
+     <description>Polarization correlations</description>
+     <value></value>
+     </param>
+     
+     <param type="string" direction="in" name="scan">
+     <description>Scan</description>
+     <value></value>
+     </param>
+     
+     <param type="string" direction="in" name="feed">
+     <description>Feed (not yet implemented)</description>
+     <value></value>
+     </param>
+      
+     <param type="string" direction="in" name="array">
+     <description>Array</description>
+     <value></value>
+     </param>
+      
+     <param type="string" direction="in" name="uvrange">
+     <description>uv-distance (output units: wavelength)</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="average">
+     <description>Average mode (not yet implemented)</description>
+     <value></value>
+     </param>
+     
+     <param type="bool" direction="in" name="showflags">
+     <description>Showflags (not yet implemented)</description>
+     <value>false</value>
+     </param>
+    
+     <param type="string" direction="in" name="msselect">
+     <description>TaQL expression</description>
+     <value></value>
+     </param>
+      
+     <param type="int" direction="in" name="pagerows">
+     <description>Rows per page</description>
+     <value>50</value>
+     </param>
+    
+     <param type="string" direction="in" name="listfile">
+     <description>Output file</description>
+     <value></value>
+     </param>
+
+  </input>
+<returns type="bool"/>
+
+  <description>
+
+This tool lists measurement set visibility data under a number of
+input selection conditions.  The measurement set data columns that
+can be listed are: the raw data, corrected data, model data, and
+residual (corrected - model) data.
+
+The output table format is dynamic.  Field, Spectral Window, and
+Channel columns are not displayed if the column contents are uniform.
+For example, if ``spw = `1' '' is specified, the spw column will not be
+displayed.  When a column is not displayed, a message is sent to the
+logger and terminal indicating that the column values are uniform and
+listing the uniform value.
+
+Table column descriptions:
+
+\begin{tabular}{ll}
+\hline\hline
+Column Name &amp; Description \\
+\hline
+Date/Time   &amp; Average date and time of data sample interval \\
+Intrf       &amp; Interferometer baseline (antenna names) \\
+UVDist      &amp; uv-distance (units of wavelength) \\
+Fld         &amp; Field ID \\
+SpW         &amp; Spectral Window ID \\
+Chn         &amp; Channel number \\
+(Correlated &amp; Correlated polarizations (eg: RR, LL, XY) \\
+  polarization) &amp;   Sub-columns are: Amp, Phs, Wt, F \\
+Amp         &amp; Visibility amplitude \\
+Phs         &amp; Visibility phase \\
+Wt          &amp; Weight of visibility measurement \\
+F           &amp; Flag: `F' = flagged datum; ` ' = unflagged \\
+\hline\hline
+\end{tabular}
+  
+  </description>
+  <example>
+
+    \begin{verbatim}
+      ms.open('AZ136.ms')
+      ms.lister()
+    \end{verbatim}
+    These commands yeild the following listing: 
+    \begin{verbatim}
+Date/Time:                         RR:                      RL:                      LR:                      LL:                     
+2001/12/01/  Intrf UVDist Fld SpW      Amp   Phs       Wt F     Amp   Phs       Wt F     Amp   Phs       Wt F     Amp   Phs       Wt F
+------------|-----|------|---|---|-------------------------|------------------------|------------------------|------------------------
+  19:30:05.0  0- 1   1400   0   0:   0.002-102.7   229035 F   0.003-178.3   239694 F   0.001 136.0   208264 F   0.001 -79.7   263599 F
+  19:30:05.0  0- 2   7203   0   0:   0.002 127.3   267464 F   0.001 165.0   305192 F   0.003-118.2   265174 F   0.002  16.3   307829 F
+  19:30:05.0  0- 3   9621   0   0:   0.002 -55.9   179652 F   0.002 -27.1   230130 F   0.001 -94.9   199954 F   0.003 -89.3   206764 F
+  19:30:05.0  0- 4   1656   0   0:   0.001 133.3   199677 F   0.002  80.6   258140 F   0.001 -35.1   224291 F   0.003  23.9   229812 F
+  19:30:05.0  0- 5   3084   0   0:   0.002 -18.4   197565 F   0.001 -83.1   228541 F   0.002 -85.1   198574 F   0.002 -28.5   227381 F
+  19:30:05.0  0- 6   5020   0   0:   0.001-173.2   236475 F   0.002-104.0   257575 F   0.000   0.0   223800 F   0.000-142.5   272162 F
+  19:30:05.0  0- 7  12266   0   0:   0.003 -34.6   264977 F   0.002   5.3   280113 F   0.001-152.7   243383 F   0.002 -78.8   304966 F
+    .  
+    .  
+    .  
+    \end{verbatim}
+
+    Notice that the channel column is not displayed.  This measurement set
+    contains only one channel; since the channel column values are uniform,
+    the channel column is not displayed.  Instead, message 
+    "All selected data has CHANNEL = 0" is sent to the console.
+
+  </example>
+</method>
+
+ 
+   <method type="function" name="selectinit">
+   <shortdescription>Initialize the selection of an ms</shortdescription>
+   
+  <keyword>selectinit</keyword>
+  <input>
+    
+     <param type="int" direction="in" name="datadescid">
+     <description>Data description id</description>
+     <value>0</value>
+     </param>
+    
+     <param type="bool" direction="in" name="reset">
+     <description>Reset to unselected state</description>
+     <value>false</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    A measurement set can contain data with a variety of different
+    shapes (as described in the overall description to this tool).  To
+    allow functions to return data in fixed shape arrays you need to
+    select, using this function, rows that contain the same data
+    shape. You do not need to use this function if all the data in
+    your measurement set has only one shape.
+
+    The DATA_DESC_ID column in the measurement set contains a
+    value that maps to a particular row in the POLARIZATION and
+    SPECTRAL_WINDOW subtables. Hence all rows with the same
+    value in the DATA_DESC_ID column must have the same data
+    shape. To select all the data where the DATA_DESC_ID value
+    is $N$ you call this function with the datadescid argument set to
+    $N$. <!-- The examples below make this a bit clearer.-->
+
+    It is possible to have a measurement set with differing values in
+    the DATA_DESC_ID column but where all the data is a fixed
+    shape. For example this will occur if the reference frequency
+    changes but the number of spectral channels is fixed. In cases
+    like this all the data can be selected, using this function with
+    an argument of zero.  If the data shape does change and you call
+    this function with an datadescid set to zero <!-- it is equivalent to
+    calling this function with datadescid set to one. When this
+    happens --> the return value will be False. In all other cases it will be
+    True.
+
+    To return to the completely unselected measurement set, set the
+    reset argument to True. This will allow you to access the full
+    range of rows in the measurement set, rather than just the
+    selected measurement set.
+
+    The datadescid must always be a non-negative integer.
+  </description>
+  <example>
+    \begin{verbatim}
+      ms.open("3C273XC1.MS")
+      ms.selectinit(datadescid=0)
+      print ms.range(["uvdist"])
+      ms.selectinit(reset=True)
+      print ms.range("uvdist")
+    \end{verbatim}
+
+    In this example we display the range of uv distances for the data
+    in the specified measurement set. The first print statement will
+    only use data where the DATA_DESC_ID column is 0. This will
+    correspond to a specific spectral window and polarization
+    setup. The second print statement will print the range of uv
+    distances for all the data in the measurement set (which is the
+    same in this case).
+
+  </example>
+</method>
+
+ 
+   <method type="function" name="select">
+   <shortdescription>Select a subset of the measurement set.</shortdescription>
+   
+  <keyword>select</keyword>
+  <input>
+    
+     <param type="any" direction="in" name="items">
+     <any type="record"/>
+     <description>record with fields contain ranges and enumerations</description>
+     </param>	
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function will select a subset of the current measurement set
+    based on the range of values for each field in the input
+    record. The range function will return a record that can be
+    altered and used as the argument for this function.  A successful
+    selection returns True. Allowable fields are tabulated in
+    table~\ref{ms:tblItems} (in the general description of this
+    tool). Unrecognized fields are ignored.
+
+    You need to call <link anchor="ms:ms.selectinit.function">selectinit</link> before
+    calling this function. If you haven't then selectinit will be
+    called for you with default arguments.
+
+    Repeated use of this function, with different arguments, will
+    further refine the selection, resulting in a successively smaller
+    selected measurement set. If the selected measurement set does not
+    contain any rows then this function will return False and send a
+    warning message in the logger. Otherwise this function will return
+    True. To undo all the selections you need to use the selectinit
+    function (with reset=True).
+  </description>
+  <example>
+    \begin{verbatim}
+      ms.open("3C273XC1.MS")
+      ms.selectinit(datadescid=0)
+      ms.select({'antenna1':[1,3,5],'uvdist':[1200.,1900.]})
+      ms.select({'time':[4121629420.,4121638290.]})
+      start = qa.getvalue(qa.convert(qa.quantity('1989/06/27/01:03:40'),'s'))
+      stop = qa.getvalue(qa.convert(qa.quantity('1989/06/27/03:31:30'),'s'))
+      rec = {}
+      rec['time'] = [start, stop]
+      ms.select(items=rec)
+    \end{verbatim}
+    This example selects all the data from the measurement set where
+    the value in the DATA_DESC_ID column is zero. This
+    corresponds to a particular spectral window and polarization
+    setup. It then selects all the data where the first antenna in the
+    interferometer is number one, three or five and where the uv
+    distance is between 1200 and 1900 meters.  Finally it selects all
+    the data which was observed between 4121629420 seconds and
+    4121638290 seconds (since zero hours on the day where the modified
+    Julian day is zero). Since this time in seconds is quite obscure I
+    have also illustrated how to use the quanta tool to convert a
+    date/time string into seconds which can then be used to perform
+    the same time selection.
+
+    The selections are cumulative so that at the end of this example
+    only data in the specified time range, with the specified,
+    interferometers, uv distances, spectral window and polarization
+    setup are selected.
+  </example>
+</method>
+
+ 
+   <method type="function" name="selecttaql">
+   <shortdescription>Select a subset of the measurement set.</shortdescription>
+   
+  <keyword>selecttaql</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="msselect">
+     <description>TaQL selection string</description>
+     <value></value>
+     </param>	
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function will select a subset of the current measurement set
+    based on the standard TaQL selection string given.
+
+    Repeated use of this function, with different arguments, will
+    further refine the selection, resulting in a successively smaller
+    selected measurement set. If the selected measurement set does not
+    contain any rows then this function will return False and send a
+    warning message in the logger. Otherwise this function will return
+    True. To undo all the selections you need to use the selectinit
+    function (with reset=True).
+    Note that index values used in the TaQL string are zero-based
+    as are all tool indices.
+<!--    whereas the other commands in this tool use one-based indices. -->
+  </description>
+  <example>
+    \begin{verbatim}
+      
+      ms.open("3C273XC1.MS")
+      ms.selectinit(datadescid=0)
+      ms.select({'antenna1':[0,2,4],'uvdist':[1200.,1900.]})
+      ms.selecttaql('ANTENNA1==2')
+      ms.range(["ANTENNA1","ANTENNA2"])
+      # {'antenna1': array([2]),
+      #  'antenna2': array([ 6,  9, 11, 18, 20, 21, 24])}
+    \end{verbatim}
+    This example selects all the data from the measurement set where
+    the value in the DATA_DESC_ID column is zero. This
+    corresponds to a particular spectral window and polarization
+    setup. It then selects all the data where the first antenna in the
+    interferometer is number zero, two or four and where the uv
+    distance is between 1200 and 1900 meters.  Finally it uses a query
+    to select all the data for which the ANTENNA1 column is 2 (this
+    selects the middle antenna of the previous, zero-based, selection).
+    The selections are cumulative so that at the end of this example
+    only data in the specified time range, with the specified,
+    interferometers, uv distances, spectral window and polarization
+    setup are selected.
+  </example>
+</method>
+
+ 
+   <method type="function" name="selectchannel">
+   <shortdescription>Select and average frequency channels</shortdescription>
+   
+  <keyword>selectchannel</keyword>
+  <input>
+    
+     <param type="int" direction="in" name="nchan">
+     <description>Number of output channels, positive integer</description>
+     </param>
+    
+     <param type="int" direction="in" name="start">
+     <description>First input channel to use, positive integer</description>
+     </param>
+    
+     <param type="int" direction="in" name="width">
+     <description>
+       Number of input channels to average together, positive integer
+     </description>
+     </param>
+    
+     <param type="int" direction="in" name="inc">
+     <description>
+       Increment to next (group of) input channel(s), positive integer
+     </description>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function allows you to select a subset of the frequency
+    channels in the current measurement set.  This function can also
+    average, over frequency channels, prior to providing the values to
+    the user.
+
+    Selection on channels is not allowed using either the select or
+    command functions as they can only select entire rows in a
+    measurement set. Channel selection involves accessing only some of
+    the values in a row. Like all the selection functions this
+    function does not change the current measurement but updates the
+    measurement set selection parameters so that functions like
+    getdata will return the desired subset of the data.  Repeated use
+    of this function will overwrite any previous channel
+    selection.
+
+    There are four parameters, the number of output channels, the
+    first input channel to use, the number of input channels to
+    average into one output channel, and the increment in the input
+    spectrum for the next output channel. All four parameters need to
+    be specified. 
+
+    This function return True if the selection was successful, and False if
+    not. In the latter case an error message will also be sent to the
+    logger.
+
+    You need to call <link anchor="ms:ms.selectinit.function">selectinit</link> before
+    calling this function. If you haven't then selectinit will be
+    called for you with default arguments.
+  </description>
+  <example>
+    \begin{verbatim}
+      ms.fromfits("NGC5921.MS",
+                  "/usr/lib/casapy/data/demo/NGC5921.fits")
+      ms.selectinit(datadescid=0)
+      ms.selectchannel(3,2,5,3)
+    \end{verbatim}
+    This example selects all the data from the measurement set where
+    the value in the DATA_DESC_ID column is zero. This
+    corresponds to a particular spectral window and polarization
+    setup. It then selects on frequency channels to produce 3 output
+    channels, the first output channel is the average of channels
+    2,3,4,5,6 in the input, the second output channel is the average
+    of channel 5,6,7,8,9 and the third is the average of channels
+    8,9,10,11,12.
+  </example>
+</method>
+
+ 
+   <method type="function" name="selectpolarization">
+   <shortdescription>Selection and convertion of polarizations</shortdescription>
+   
+  <keyword>selectpolarization</keyword>
+  <input>
+    
+     <param type="stringArray" name="wantedpol">
+     <description>The polarizations wanted</description>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function allows you to select a subset of the polarizations
+    in the current measurement set.  This function can also setup
+    conversion to different polarization representations.
+
+    You specify the polarizations using a string vector. Allowable
+    strings are include I, Q, U, V, RR, RL, LR, LL, XX, YY, XY,
+    YX. These string must be specified in upper case. If the
+    polarizations match those present in the measurement set they will
+    be selected directly, otherwise all polarizations are read and
+    then a conversion step is done. If the conversion cannot be done
+    then an error will be produced when you try to access the data.
+
+    This function return True if the selection was successful, and False if
+    not.
+
+    You need to call <link anchor="ms:ms.selectinit.function">selectinit</link> before
+    calling this function. If you haven't then selectinit will be
+    called for you with default arguments.
+  </description>
+  <example>
+    \begin{verbatim}
+      
+      ms.open("3C273XC1.MS")
+      ms.selectinit(datadescid=0)
+      ms.selectpolarization(["I","V"])
+      rec = ms.getdata("data")
+    \end{verbatim}
+    This example selects all the data from the measurement set where
+    the value in the DATA_DESC_ID column is zero. This
+    corresponds to a particular spectral window and polarization
+    setup. It then selects the I and V polarizations and when the
+    getdata function is called the conversion from RR, LL, LR, RL
+    polarizations to I and V occurs.
+  </example>
+</method>
+
+<method type="function" name="regridspw">
+   <shortdescription>transform spectral data to different reference frame and/or regrid the frequency channels
+   </shortdescription>
+   
+  <keyword>regridspw</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="outframe">
+     <description>Name of the reference frame to transform to (LSRK, LSRD, BARY, GALACTO,  
+      LGROUP, CMB, GEO, or TOPO). If no reference frame is given, the present reference frame  
+      given by the data is used, i.e. the reference frame is not changed. The observatory
+      position is taken as the average of all antenna positions.
+      </description>
+     </param>
+
+     <param type="string" direction="in" name="mode">
+     <description> The quantity (radio velocity (m/s), optical velocity (m/s), frequency (Hz),  
+      wavelength (m), or original channels) in which the user would like to give the regridding  
+      parameters below ("center", "chanwidth", "bandwidth"): vrad, vopt,  
+      freq, wave, or chan.   
+     </description>
+     <value>chan</value>
+     </param>
+
+     <param type="double" direction="in" name="restfreq">
+     <description>Required in case the value of mode is "vrad" or "vopt": 
+      Rest frequency (Hz) for the conversion of the regrid parameters "center",  
+      "chanwidth", and "bandwidth" to frequencies.
+     </description>
+     <value>-3E30</value>     
+     </param>
+
+     <param type="string" direction="in" name="interpolation">
+     <description>
+      Name of the interpolation method (NEAREST, LINEAR, SPLINE, CUBIC) used in the regridding. 
+      Flagging information is combined using "inclusive or". 
+     </description>
+     <value>LINEAR</value>
+     </param>
+
+     <param type="double" direction="in" name="start">
+     <description>Desired lower edge of the spectral window after regridding in the units 
+      given by "mode" and in the reference frame given by "outframe". If no value is given, 
+      it is determined from "center" and "bandwidth".
+     </description>
+     <value>-3E30</value>     
+     </param>
+
+     <param type="double" direction="in" name="center">
+     <description>(Alternative to setting the parameter "start".) 
+      Desired center of the spectral window after regridding in the units given by "mode" and in 
+      the reference frame given by "outframe". If no value is given, the center is determined 
+      from "start" and "bandwidth" or, if "start" is not given either, it is kept as it is.
+     </description>
+     <value>-3E30</value>     
+     </param>
+
+     <param type="double" direction="in" name="bandwidth">
+     <description>Desired width of the entire spectral window after regridding in the  
+      units given by "mode" and in the reference frame given by "outframe". 
+      If no value is given or the given width is larger than the bandwidth of the data,  
+      the width will be truncated to the maximum width possible symmetrically around the  
+      value given by "center".
+     </description>
+     <value>-1.</value>     
+     </param>
+
+     <param type="double" direction="in" name="chanwidth">
+     <description>Desired width of the channels in the units given by "mode" 
+      and in the reference frame given by "outframe". This implies that channels will be 
+      equidistant in the unit given by "mode". If no value is given and 
+      "mode" is vrad or freq, the function will keep the resolution as it is. 
+      If "mode" is vopt or wave, the total number of channels will be kept as is.   
+     </description>
+     <value>-1.</value>     
+     </param>
+    
+  </input>
+  <returns type="bool"/>
+
+  <description>
+  This function permits you to transform the spectral data of your measurement set to a 
+  given reference frame. The present reference frame information in the MS is examined and 
+  the transformation performed accordingly. Since all such transformations are linear in 
+  frequency, a pure change of reference frame only affects the channel boundary definitions.
+
+  In addition, the function permits you to permanently regrid the data, i.e. reduce the 
+  channel number and/or move the boundaries using several interpolation methods (selected 
+  using parameter "interpolation"). The new channels are equidistant in frequency 
+  (if parameter "mode" is chosen to be vrad or freq, or equidistant in
+  wavelength if  parameter "mode" is chosen to be vopt or wave).
+  If "mode" is chosen to be "chan", the regridding is performed by combining
+  the existing channels, i.e. not moving but just eliminating channel boundaries where
+  necessary.
+
+  The regridding is applied to the channel definition and all data of the MS, i.e. all 
+  columns which contain arrays whose dimensions depend on the number of channels. 
+  The input parameters are verified before any modification is made to the MS.
+
+  The target reference frame can be set by providing the name of a standard reference 
+  frame (LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, TOPO, or GEO, default = no change of 
+  frame) in parameter "outframe".
+  For each field in the MS, the channel frequencies are transformed from their present 
+  reference frame to the one given by parameter "outframe".
+
+  If the regridding parameters are set, they are interpreted in the "outframe" reference
+  frame. The regridding is applied to the data after the reference frame transformation.
+
+  </description>
+  <example>
+    \begin{verbatim}
+      ms.fromfits("NGC5921.MS", "/usr/lib/casapy/data/demo/NGC5921.fits")
+      ms.regridspw(outframe="LSRK")
+    \end{verbatim}
+    This example reads a measurement set and transforms its spectral axis to
+    the LSRK reference frame.
+    \begin{verbatim}
+      ms.regridspw(outframe="BARY", mode="vrad", 
+      center=73961800., chanwidth=50., bandwidth=1000.,
+      restfreq=1420405750e6)
+    \end{verbatim}
+    In this example, all spectral windows in the MS will be transformed 
+    to the BARY reference frame and then be regridded such that the center of the 
+    new spectral window is at radio velocity = 73961800. m/s (BARY). If the bandwidth 
+    of the observation is large enough the total width of the spectral window will
+    be 1000 m/s, i.e. 20 channels of width 50 m/s, 10 on each side of the given
+    center.
+    \begin{verbatim}
+      ms.regridspw(mode="vopt", restfreq=1420405750e6)
+    \end{verbatim}
+    In this example the channels are regridded such that they are
+    equidistant in optical velocity. The reference frame and number of channels 
+    is kept as is.
+    \begin{verbatim}
+      ms.regridspw(mode="chan", center=64, chanwidth=2,
+      bandwidth=102)
+    \end{verbatim}
+    In this example, the channels are regridded such that the new bandwidth is
+    102 of the original channels centered on the original channel 64, and the new
+    channels are twice as wide as the original channels. 
+  </example>
+</method>
+
+<method type="function" name="cvel">
+   <shortdescription>transform spectral data to different reference frame and/or regrid the frequency channels
+   </shortdescription>
+   
+  <keyword>cvel</keyword>
+  <input>
+  
+     <param type="string" direction="in" name="mode">
+     <description> "channel", "velocity", "frequency", or "channel_b", default = "channel"
+     </description>
+     <value>channel</value>
+     </param>
+
+     <param type="int" direction="in" name="nchan">
+     <description> number of channels, default = -1 = all 
+     </description>
+     <value>-1</value>
+     </param>
+
+     <param type="any" direction="in" name="start">
+     <description> start channel, default = 0 
+     </description>
+     <any type="variant"/>
+     <value>0</value>
+     </param>
+
+     <param type="any" direction="in" name="width">
+     <description> new channel width, default = 1 
+     </description>
+     <any type="variant"/>
+     <value>1</value>
+     </param>
+
+     <param type="string" direction="in" name="interp">
+     <description> interpolation method, default = linear
+     </description>
+     <value>linear</value>
+     </param>
+
+     <param type="any" direction="in" name="phasec">
+     <description> phase center, default = first field
+     </description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" direction="in" name="restfreq">
+     <description> rest frequency, default = 1.4GHz 
+     </description>
+     <any type="variant"/>
+     <value>1.4GHz</value>
+     </param>
+
+     <param type="string" direction="in" name="outframe">
+     <description>LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO, default = "" = keep reference frame.</description>
+     </param>
+
+     <param type="string" direction="in" name="veltype">
+     <description>radio or optical, default = radio</description>
+     <value>radio</value>
+     </param>
+    
+  </input>
+  <returns type="bool"/>
+
+  <description>
+  This function permits you to transform the spectral data of your measurement set to a 
+  given reference frame and/or regrid it. It will combine all spectral windows of the MS into one.
+  </description>
+  <example>
+  </example>
+</method>
+
+
+ 
+   <method type="function" name="getdata">
+   <shortdescription>Read values from the measurement set.</shortdescription>
+   
+  <keyword>getdata</keyword>
+  <input>
+    
+     <param type="stringArray" direction="in" name="items">
+     <description>Item names</description>
+     </param>
+    
+     <param type="bool" direction="in" name="ifraxis">
+     <description>Create interferometer axis if True</description>
+     <value>false</value>
+     </param>
+    
+     <param type="int" direction="in" name="ifraxisgap">
+     <description>Gap size on ifr axis when antenna1 changes</description>
+     <value>0</value>
+     </param>
+    
+     <param type="int" direction="in" name="increment">
+     <description>Row increment for data access</description>
+     <value>1</value>
+     </param>
+    
+     <param type="bool" direction="in" name="average">
+     <description>Average the data in time or over rows</description>
+     <value>false</value>
+     </param>
+  </input>
+  <returns type="any">
+  <any type="record"/>
+  <shortdescription>record with fields containing arrays of data</shortdescription>
+  </returns>
+
+  <description>
+    This function will read the specified items from the currently
+    selected measurement set and returns them in fields of a record.
+    The main difference between this and direct access of the table,
+    using the table tool, is that this function reads data from the
+    \emph{selected} measurement set, it provides access to derived
+    quantities like amplitude \&amp; flag\_sum and it can reorder the
+    data.
+
+    The items to read are specified, as with the range function, using
+    a vector of strings. Table~\ref{ms:tblItems} shows the allowable
+    items. Unrecognized items will result in a warning being sent to
+    the logger.  Duplicate items are silently ignored.
+
+    The record that is returned contains fields that correspond to
+    each of the specified items. Most fields will contain an
+    array. The array may be one, two or three dimensional depending on
+    whether the corresponding row in the measurement set is a scalar,
+    one or two dimensional. Unless the ifraxis argument is set to T
+    the length of the last axis on these arrays will correspond to the
+    number of rows in the selected measurement set.
+
+    If the ifraxis argument is set to True, the row axis is split into an
+    interferometer axis and a time axis. For example a measurement set
+    with 90 rows, in an array with 6 telescopes (so that there are 15
+    interferometers), may have a data array of shape \verb|[4,32,90]|
+    if ifraxis is False or \verb|[4,32,15,6]|, if ifraxis is True (assuming
+    there are 4 correlations and 32 channels). If there are missing
+    rows as will happen if not all interferometers where used for all
+    time-slots then a default value will be inserted.
+    
+    This splitting of the row axis may not happen for items where
+    there is only a single value per row. For some items the returned
+    vector will contain only as many values as there are
+    interferometers and it is implicit that the same value should be
+    used for all time slots. The antenna1, antenna2, feed1, feed2 \&amp;
+    ifr\_number items fall in this category. For other items the
+    returned vector will have as many values as there are time slots
+    and it is implicit that the same value should be used for all
+    interefometers. The field\_id, scan\_number, data\_desc\_id \&amp;
+    time items fall into this category.
+
+    The axis\_info item provides data labelling information. It
+    returns a record with the following fields: corr\_axis,
+    freq\_axis, ifr\_axis \&amp; time\_axis. The latter two fields are not
+    present if ifr\_axis is set to False. The corr\_axis field contains a
+    string vector with elements like 'RR' or 'XY' that indicates which
+    polarizations where correlated together to produce the data. The
+    length of this vector will always be the same as the length of the
+    first axis of the data array. The freq\_axis field contains a
+    record with two fields, chan\_freq \&amp; resolution. Each of these
+    fields contains vectors which indicate the centre frequency and
+    spectral resolution (FWHM) of each channel. The length of these
+    vectors will be the same as the length of the second axis in the
+    data. The ifr\_axis field contains fields: ifr\_number,
+    ifr\_name, ifr\_shortname \&amp; baseline. The ifr\_number is the same
+    as returned by the ifr\_item, the ifr\_name \&amp; ifr\_shortname are
+    string vecors containing descriptions of the interferometer and
+    the baseline is the Euclidian distance, in meters between the two
+    antennas. All of these vectors have a length equal to the number
+    of interferometers in the selected measurement set ie., to the
+    length of the third axis in the data when ifraxis is True. The
+    time\_axis field contains the MJD seconds field and optionally the
+    HA, UT \&amp; LAST fields. To include the optional fields you need to
+    add the ha, last or ut strings to the list of requested items. All
+    the fields in the time\_axis record contain vectors that indicate
+    the time at the midpoint of the observation and are in
+    seconds. The MJD seconds field is since 0 hours on the day having a
+    modified julian day number of zero and the rest are since midnight
+    prior to the start of the observation.
+
+    An optional gap size can be specified to visually separate groups of 
+    interferometers with the same antenna1 index (handy for
+    identifying antennas in an interferometer vs time display). The
+    default is no gap.
+
+    An optional increment can be specified to return data from every
+    row matching the increment only.
+
+    When the average flag is set, the data will be averaged over the
+    time axis if the ifraxis is True or the row axis i.e., different
+    interferometers and times may be averaged together. In the latter
+    case, some of the coordinate information, like antenna\_id, will
+    no longer make sense.
+
+    You need to call <link anchor="ms:ms.selectinit.function">selectinit</link> before
+    calling this function. If you haven't then selectinit will be
+    called for you with default arguments.
+
+    Items prefixed with either; corrected, model, residual or
+    obs\_residual and the imaging\_weight item are not available unless
+    your measurement set has been processed either with the imager or
+    calibrator tools.
+  </description>
+  <example>
+    \begin{verbatim}
+ms.open("3C273XC1.MS")
+ms.selectinit(datadescid=0)
+# The following line causes an EXCEPTION
+# d = ms.getdata(["amplitude","axis_info","ha"],ifraxis=True)
+# so we settle for MJDseconds rather than HA in seconds
+d = ms.getdata(["amplitude","axis_info"],ifraxis=True)
+tstart = min(d["axis_info"]["time_axis"]["MJDseconds"])
+tstop  = max(d["axis_info"]["time_axis"]["MJDseconds"])
+maxamp = max(max(d["amplitude"][:,0,0,0]),max(d["amplitude"][0,:,0,0]),
+    max(d["amplitude"][0,0,:,0]),max(d["amplitude"][0,0,0,:]))
+print "MJD start time (seconds) =", tstart
+# MJD start time (seconds) = 4121629400.0
+print "MJD stop time (seconds) =", tstop
+# MJD stop time (seconds) = 4121642670.0
+# MJDseconds Correlation amplitude
+print "Maximum correlation amplitude =", maxamp
+# Maximum correlation amplitude = 33.5794372559
+chan = 0
+corr = 0
+freqGHz = d["axis_info"]["freq_axis"]["chan_freq"][chan]/1.0E9
+baselineStr = d["axis_info"]["ifr_axis"]["ifr_name"][corr]
+corrStr = d["axis_info"]["corr_axis"][corr]
+tcoord = d["axis_info"]["time_axis"]["MJDseconds"]
+acoord = d["amplitude"][0,0,0,:]
+print "Frequency", freqGHz, "GHz", "Baseline", baselineStr, "(", corrStr, ")"
+print "MJDseconds", "Correlation amplitude"
+for i in range(len(tcoord)):
+    print tcoord[i], acoord[i]
+#
+# Frequency [ 8.085] GHz Baseline 1-2 ( RR )
+# MJDseconds Correlation amplitude
+# 4121629400.0 29.2170944214
+# 4121629410.0 29.1688995361
+# 4121629420.0 29.2497825623
+# 4121629430.0 29.2029647827
+# 4121629440.0 29.166015625
+# 4121629450.0 29.2417526245
+# 4121629460.0 29.2867794037
+# 4121638270.0 0.0
+# 4121638280.0 29.4539775848
+# 4121638290.0 29.472661972
+# 4121638300.0 29.4424362183
+# 4121638310.0 29.4234466553
+# 4121638320.0 29.4018745422
+# 4121638330.0 29.3326053619
+# 4121638340.0 29.3575496674
+# 4121642600.0 31.1411132812
+# 4121642610.0 31.0726108551
+# 4121642620.0 31.1242599487
+# 4121642630.0 31.0505466461
+# 4121642640.0 31.0448284149
+# 4121642650.0 30.9974422455
+# 4121642660.0 31.0648326874
+# 4121642670.0 31.0638961792
+\end{verbatim}
+
+    This example selects all the data from the
+    measurement set where the value in the DATA_DESC_ID column is
+    zero. This corresponds to a particular spectral window and
+    polarization setup. It then gets the correlated amplitude, and the
+    axis information from this selected measurement set. This is
+    returned in the casapy variable d. The remainder of the example
+    prints a table of 'hour angle' and corresponding 'correlated
+    amplitude' for the first channel, correlation and baseline.
+  </example>
+</method>
+
+ 
+   <method type="function" name="putdata">
+   <shortdescription>Write new values into the measurement set</shortdescription>
+   
+  <keyword>putdata</keyword>
+  <input>
+    
+     <param type="any" direction="in" name="items">
+     <any type="record"/>
+     <description>Record with items and their new values</description>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function allows you to write values from casapy variables back
+    into the measurement set table. The main difference between this
+    and directly accessing the table using the table tool is that this
+    function writes data to the \emph{selected} measurement set.
+
+    Unlike the getdata function you can only put items that correspond
+    to actual table columns. You cannot change the data shape either
+    so that the number of correlations, channels and rows (or
+    intereferometers/time slots) must match the values in the selected
+    measurement set. If the values were obtained using the getdata
+    function with ifraxis argument set to True, then any default values
+    added to fill in missing intereferometer/timeslots pairs will be
+    ignored when writing the modified values back using this function.
+
+    The measurement set has to be opened for read/write access to be
+    able to use this function.
+
+    You need to call <link anchor="ms:ms.selectinit.function">selectinit</link> before
+    calling this function. If you haven't then selectinit will be
+    called for you with default arguments.
+
+    Items prefixed with either; corrected, model, residual or
+    obs\_residual and the imaging\_weight item are not available unless
+    your measurement set has been processed either with the imager or
+    calibrator tools.
+  </description>
+  <example>
+    \begin{verbatim}
+      
+      ms.open("3C273XC1.MS", nomodify=False)
+      ms.selectinit(datadescid=0)
+      rec = ms.getdata(["weight","data"])
+      rec['weight'][:,:] = 1
+      import Numeric
+      meanrec = Numeric.average(rec['data'],axis=None)
+      print "Mean data value = ", meanrec
+      rec['data'][:,:,:] -= meanrec
+      ms.putdata(rec)
+    \end{verbatim}
+    This example selects all the data from the measurement set where
+    the value in the DATA_DESC_ID column is zero. This
+    corresponds to a particular spectral window and polarization
+    setup. Note that the measurement set was opened for writing as
+    well as reading. The third line reads all the weights and the
+    data into the casapy variable rec. The weights are set
+    to one. The more obscure syntax is used as typing 
+    rec['weight'] = 1 will not preserve the shape of the weight
+    array. The data then has its mean subtracted from
+    it. The average function is defined in Numeric module. Finally the data
+    is written back into the measurement set table. (NOTE: normally
+    one should not modify the raw data column.  Such adjustments are more
+    appropriate for the corrected_data column, if it exists.)
+  </example>
+</method>
+
+ 
+   <method type="function" name="concatenate">
+   <shortdescription>Concatenate two measurement sets</shortdescription>
+   
+  <keyword>concatenate</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="msfile">
+     <description>The name of the measurement set to append</description>
+     <value></value>
+     </param>
+    
+     <param type="any" direction="in" name="freqtol">
+     <description>Frequency difference  within which 2
+ spectral windows are considered similar; e.g '10Hz'</description>
+     <any type="variant"/>
+     <value>1Hz</value>
+     </param>
+    
+     <param type="any" direction="in" name="dirtol">
+     <description>Direction difference within which 2
+ fields are considered the same; e.g '1mas'</description>
+     <any type="variant"/>
+     <value>1mas</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function concatenates two measurement sets together. 
+
+    The data is copied from the measurement set specified in the
+    msfile arguement to the end of the measurement set attached to the
+    ms tool. If a lot of data needs to be copied this function may
+    take some time. You need to open the measurement set for writing
+    in order to use this function.
+
+    This function is new to the ms tool and currently requires that
+    both the measurement sets involved in the concatenation were
+    originally derived from of a \uvfits\  file (and converted using the
+    fromfits function).
+  </description>
+  <example>
+    \begin{verbatim}
+      
+      ms.open("3C273XC1.MS", nomodify=False)
+      ms.concatenate("BLLAC.ms", '1GHz', '1arcsec')
+      ms.done()
+    \end{verbatim}
+    This example appends the data from the BLLAC measurement set to
+    the end of the 3C273 measurement set. Its going to assume a
+    frequency tolerance of 1GHz and position tolerance of 1 arcsec in
+    deciding if the spw and field in the measurementsets are
+    similar or not. 
+  </example>
+</method>
+
+   <method type="function" name="timesort">
+   <shortdescription>Sort the main table of an MS by time</shortdescription>
+   
+  <keyword>timesort</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="newmsname">
+     <description> Name of the output measurement set (default: overwrite original)</description>
+     <value></value>
+     </param>
+    
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function sorts the main table of the measurement set by the contents
+    of the column TIME in ascending order and writes a copy of the MS with the sorted
+    main table into newmsfile.
+
+    If no newmsname is given, a sorted copy of the MS is written into a new MS under the name
+    x.sorted (where x is the name of the original MS). The original MS is then closed and deleted.
+    The new MS is renamed to the name of the original MS and then reopened.
+  </description>
+  <example>
+    \begin{verbatim}
+      
+      ms.open("3C273XC1.MS", nomodify=False)
+      ms.timesort()
+      ms.done()
+    \end{verbatim}
+    This example sorts the main table of 3C273XC1.MS by time.
+    The original MS is overwritten by the sorted one.
+  </example>
+</method>
+
+ 
+   <method type="function" name="split">
+   <shortdescription>make a new ms from a subset of an existing ms</shortdescription>
+   
+  <keyword>split</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="outputms">
+     <description>The name of the measurement split into</description>
+     <value></value>
+     </param>
+    
+     <param type="variant" direction="in" name="field">
+     <description>Field ids  (0-based) or fieldnames to split out</description>
+     <value></value>
+     </param>
+    
+     <param type="variant" direction="in" name="spw">
+     <description>Spectral windows (and :channels) to select</description>
+     <value>"*"</value>
+     </param>
+    
+     <param type="intArray" direction="in" name="step">
+     <description>number of input channels to average to make 1
+     output channel - Int vector of length 1 or same as spw</description>
+     <value>1</value>
+     </param>
+
+     <param type="variant" direction="in" name="baseline">
+     <description>Antenna names or Antenna indices to select</description>
+     <value></value>
+     </param>
+
+     <param type="variant" direction="in" name="timebin">
+     <description>Value to average the data to, 0s means keep the data as is sampled, which is the  default</description>
+     <value>-1s</value>
+     </param>
+    
+     <param type="string" direction="in" name="time">
+     <description>Limit data selected to be within a given time range. Syntax is defined in the msselection link</description>
+     <value></value>
+     </param>
+
+     <param type="variant" name="scan">
+     <description>Limit data selected on scan numbers. Syntax is defined in the msselection link</description>
+     <value></value>
+     </param>
+     
+     <param type="variant" name="uvrange">
+     <description>Limit data selected on uv distance. Syntax is defined in 
+     the msselection link</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="taql">
+     <description>For the TAQL experts, flexible data selection using the TAQL syntax</description>
+     <value></value>
+     </param>
+      
+     <param type="string" direction="in" name="whichcol">
+     <description>'DATA', 'MODEL_DATA', 'CORRECTED_DATA'</description>
+     <value>DATA</value>
+     </param>
+
+     <param type="variant" name="tileshape">
+       <description>Tile shape of the disk data columns, most users should not need to touch this parameter 
+       [0] =&gt; normal tiling, [1] =&gt; fast mosaic style tile 
+       [4,15,351] =&gt; a tile shape of 4 pol 15 chan and 351 rows</description>
+       <value></value>
+     </param>
+
+     <param type="variant" name="subarray">
+     <description>Limit data to specific (sub)array numbers.</description>
+     <value></value>
+     </param>
+
+     <param type="bool" name="averchan">
+     <description>If true, width will be used to average channels.  Otherwise it will be used to skip channels.</description>
+     <value>true</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function splits out part of the MS into a new MS. Spectral
+    averaging is available on splitting. More transformations
+    are in the works (like time averaging). 
+    
+    When splitting multiple spectral windows, the parameters {\tt
+    nchan, start, step} can be vectors, so that each spectral window
+    has its own selection on averaging and number of output
+    channels. But the option of using only one value for each of these
+    parameters means that it will be replicated for all the spectral
+    windows selected.
+    
+   
+  </description>
+  <example>
+  
+  \begin{verbatim}
+      
+  ms.open("multiwin.ms", nomodify=False)
+  ms.split('subms.ms', field=[0], spw=[0], nchan=[10],
+           start=[0], step=[5], whichcol='CORRECTED_DATA') 
+  \end{verbatim}
+
+  In this example we split out data from the 1st field and 1st
+  spectral window. The output data will have 10 channels which is
+  taken from 50 channels from the input data starting at channel 0 and
+  averaging every 5.
+
+ \begin{verbatim}
+      
+  ms.open("multiwin.ms", nomodify=False)
+  ms.split('subms.ms', field=[0], spw=[0,1,2,3], nchan=[10],
+           start=[0], step=[5], whichcol='CORRECTED_DATA') 
+ \end{verbatim}
+
+In this example we split out data from the 1st field and four spectral
+windows. The output data will have 4 spectral windows each of 10
+channels which is taken from 50 channels from the input data starting
+at channel 0 and averaging every 5.
+
+\begin{verbatim}
+      
+  ms.open("multiwin.ms", nomodify=False)
+  ms.split('subms.ms', field=[0], spw=[0,1,2,3], nchan=[10,10,30,40],
+           start=[0,4,9,9], step=[1,10,5,2], whichcol='CORRECTED_DATA') 
+\end{verbatim}
+
+In this example we split out data from the 1st field and four spectral
+windows. There will be four spectral windows in the output data,
+with 10, 10, 30 and 40 channels respectively. These are averages
+of the input spectral windows. The first output spectral window
+will be formed by picking 10 channels, starting at 0 with no
+averaging, of the input spwid 0. The second output spectral window
+will consists of 10 channels and is formed by picking 100 channels
+from spwid 1 of the input data, starting at channel 4, and every
+10 channels to make one output channel.
+   
+  </example>
+</method>
+
+ 
+   <method type="function" name="iterinit">
+   <shortdescription>Initialize for iteration over an ms</shortdescription>
+   
+  <keyword>iterinit</keyword>
+  <input>
+    
+     <param type="stringArray" direction="in" name="columns">
+     <description>Vector of column names (case sensitive).</description>
+     </param>
+    
+     <param type="double" direction="in" name="interval">
+     <description>Time interval in seconds (greater than 0), to group together in iteration</description>
+     </param>
+    
+     <param type="int" direction="in" name="maxrows">
+     <description>Max number of rows (greater than 0) to return in iteration</description>
+     </param>
+    
+     <param type="bool" direction="in" name="adddefaultsortcolumns">
+     <description>Add the default sort columns</description>
+     <value>true</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    Specify the columns to iterate over and the time interval to use
+    for the TIME column iteration.  The columns are specified by their
+    MS column name.  Note that the following columns are always added
+    to the specified columns: array\_id, field\_id, data\_desc\_id and
+    time. This is so that the iterator can keep track of the
+    coordinates associated with the data (field direction, frequency
+    etc.) If you want to sort on these columns last instead of first
+    you need to include them in the columns specified. If you don't
+    want to sort on these columns at all, you can set
+    adddefaultsortcolumns to False.
+    You need to call <link anchor="ms:ms.selectinit.function">selectinit</link> before 
+    calling this.  See the example below.
+  </description>
+  <example>
+    See the example for the <link anchor="ms:ms.iterend.function">iterend</link> function.
+  </example>
+</method>
+
+ 
+   <method type="function" name="iterorigin">
+   <shortdescription>Set the iterator to the start of the data.</shortdescription>
+   
+  <keyword>iteriorigin</keyword>
+  <returns type="bool"/>
+
+  <description>
+    Set or reset the iterator to the start of the currently specified
+    iteration. You need to call this before attempting to retrieve
+    data with getdata. You can set the iteration back to the start
+    before you reach the end of the data.  You need to call iterinit
+    before calling this.  See the example below.
+  </description>
+  <example>
+    See the example for the <link anchor="ms:ms.iterend.function">iterend</link> function.
+  </example>
+</method>
+
+ 
+   <method type="function" name="iternext">
+   <shortdescription>Advance the iterator to the next lot of data</shortdescription>
+   
+  <keyword>iternext</keyword>
+  <returns type="bool">
+  <shortdescription>Bool, True if there was more data, False if we've reached the end
+  </shortdescription>
+</returns>
+
+  <description>
+    This sets the currently selected table (as accessed with getdata)
+    to the next iteration. If there is no more data, the function
+    returns False and the selection is reset to that before the
+    iteration started.  You need to call iterinit and iterorigin
+    before calling this.  See the example below.
+  </description>
+  <example>
+    See the example for the <link anchor="ms:ms.iterend.function">iterend</link> function.
+  </example>
+</method>
+
+ 
+   <method type="function" name="iterend">
+   <shortdescription>End the iteration and reset the selected table</shortdescription>
+   
+  <keyword>iterend</keyword>
+  <returns type="bool">
+  <shortdescription>Bool, True if iteration was in progress, False if not
+  </shortdescription>
+  </returns>
+
+  <description>
+    This sets the currently selected table (as accessed with
+    <link anchor="ms:ms.getdata.function">getdata</link>) to the table that was selected
+    before iteration started.  Use this to end the iteration
+    prematurely.  There is no need to call this if you continue
+    iterating until <link anchor="ms:ms.iternext.function">iternext</link> returns False.
+
+    See the example below.
+  </description>
+  <example>
+    \begin{verbatim}
+      
+      ms.open("3C273XC1.MS")
+      ms.selectinit(datadescid=0)
+      ms.iterinit(["ANTENNA1","ANTENNA2","TIME"],60.0)
+      ms.iterorigin()
+      rec=ms.getdata(["u","v","data"])
+      ms.iternext()
+      ms.iterend()
+    \end{verbatim}
+    We open the MS, select an array and spectral window and then
+    specify an iteration over interferometer and time, with a 60s time
+    interval.  We then set the iterator to the start of the data and
+    get out some data. Finally we advance the iterator to the next lot
+    of data and then end the iteration.
+  </example>
+</method>
+
+<!-- 
+   <method type="function" name="tosdfits">
+   <shortdescription>(NOT IMPLEMENTED!!!) Convert a single dish \casa\ measurement set to a SDFITS file</shortdescription>
+   
+<input>
+  
+     <param type="string" name="fitsfile">
+     <description>Name of the new SDFITS file</description>
+     </param>
+</input>
+  <returns type="bool"/>
+
+<description>
+
+This function turns an MS tool into a FITS file containing an SDFITS
+binary table.  This uses the \texttt{ms2sdfits} program to do the
+conversion.  It converts the entire underlying measurement set file
+even if the ms tool is the result of a selection.  This may be changed
+in the future. The ms tool must consist of single dish data only.  A
+brief description of SDFITS may be found in the
+\htmladdnormallink{\textbf{dish} users
+manual}{../../notes/225/225.html}.  Converting a measurement set into
+an SDFITS binary table will generally result in the loss of some
+information which can not be represented in an SDFITS binary table.
+</description>
+
+<example>
+\begin{verbatim}
+# NOT IMPLEMENTED!!!
+ms.open('myfile.ms')          # open the MS
+ms.tosdfits("myfile.sdfits")  # write SDFITS file
+\end{verbatim}
+</example>
+</method>
+
+ 
+   <method type="function" name="createflaghistory">
+   <shortdescription>(??? NON-FUNCTIONAL ???) Create and initialize the FLAG\_HISTORY column.</shortdescription>
+   
+<input>
+
+     <param type="int" name="numlevel">
+     <description>Number (greater than 0) of history levels</description>
+     <value>2</value>
+     </param>
+</input>
+<returns type="bool"/>
+
+<description>
+Create the FLAG\_HISTORY column and fill levels 1 and 2 with the
+current flagging states as given by FLAG and FLAG\_ROW.  Then set the
+current flagging level to 2.  In the event that the MS already has a
+FLAG\_CATEGORY column, a warning message is issued and the function
+returns False.
+
+</description>
+
+<example>
+\begin{verbatim}
+ms.open("3C273XC1.MS",nomodify=False)
+ms.createflaghistory(3)
+# 2008-05-27 22:28:03 WARN casa:::: FLAG_CATEGORY column already exists
+#  Out[13]: False
+
+\end{verbatim}
+
+We (try to) open the MS for writing and then create a FLAG\_HISTORY column with
+3 levels of flagging.
+
+</example>
+
+</method>
+
+ 
+   <method type="function" name="saveflags">
+   <shortdescription>(??? NON-FUNCTIONAL ???) Save the current flagging state to the FLAG\_HISTORY column.</shortdescription>
+   
+<input>
+
+     <param type="bool" name="newlevel">
+     <description>Copy to a new level?</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+
+<description>
+Copies the flags in the FLAG and FLAG\_ROW, to the FLAG\_HISTORY
+column. Copies to the current level by default and to a new level, if 
+available, when newlevel=True
+</description>
+<example>
+\begin{verbatim}
+ms.open("3C273XC1.MS",nomodify=False)
+ms.saveflags()
+# 2008-05-27 22:31:29 SEVERE  casa::ms::open 
+#   Exception Reported: RecordInterface: field FLAG_LEVEL is unknown
+#
+# type 'exceptions.StandardError'         Traceback (most recent call last)
+#
+# /home/aips2mgr/testing/ipython console in module()
+#
+# type 'exceptions.StandardError': RecordInterface: field FLAG_LEVEL is unknown
+
+
+\end{verbatim}
+
+We open the MS for writing and then (try to) copy the flags to the current
+level (see flaglevel() function) in the FLAG\_HISTORY column, 
+overwriting the previous values.
+
+</example>
+
+
+</method>
+
+ 
+   <method type="function" name="restoreflags">
+   <shortdescription>(??? NON-FUNCTIONAL ???) Restore the specified flagging level from the FLAG\_HISTORY column.</shortdescription>
+   
+<input>
+
+     <param type="int" name="level">
+     <description>History level to copy from; 0 = current level</description>
+     <value>0</value>
+     </param>
+</input>
+<returns type="bool"/>
+
+<description>
+Copies the flags in the FLAG\_HISTORY column (for the specified level)
+back to the FLAG and FLAG\_ROW columns.
+See the example below.
+</description>
+<example>
+\begin{verbatim}
+ms.open("3C273XC1.MS",nomodify=False)
+ms.restoreflags(2)
+# 2008-05-27 23:15:58 SEVERE  casa::ms::open 
+# Exception Reported: Table DataManager error: 
+# Invalid operation: TSM: no array in row 0 of column FLAG_CATEGORY
+# in /home/aips2mgr/testing/3C273XC1.MS/table.f4
+#
+# type 'exceptions.StandardError'         Traceback (most recent call last)
+#
+#/home/aips2mgr/testing/ipython console in module()
+#
+# type 'exceptions.StandardError': Table DataManager error:
+# Invalid operation: TSM: no array in row 0 of column FLAG_CATEGORY
+# in /home/aips2mgr/testing/3C273XC1.MS/table.f4
+\end{verbatim}
+
+We open the MS for writing and then (try to) copy the flags from level
+2 in the FLAG\_HISTORY column to the FLAG and FLAG\_ROW columns,
+overwriting the previous values.
+</example>
+</method>
+
+ 
+   <method type="function" name="flaglevel">
+ <shortdescription>(??? NON-FUNCTIONAL ???) return the current flagging level</shortdescription>
+   
+<returns type="int">
+<shortdescription>Int, the current flag level, or 0 if none exists
+</shortdescription></returns>
+
+<description>
+Return the currently active flagging level of the FLAG\_HISTORY
+column as specified by the FLAG\_LEVEL keyword of this column.
+</description>
+<example>
+\begin{verbatim}
+ms.open("3C273XC1.MS")
+flaglev=ms.flaglevel()
+#2008-05-28 16:21:16     SEVERE  casa::ms::open  Exception Reported: RecordInterface: field FLAG_LEVEL is unknown
+#
+#type 'exceptions.StandardError'         Traceback (most recent call last)
+#
+#/home/aips2mgr/testing/ipython console in module()
+#
+#type 'exceptions.StandardError': RecordInterface: field FLAG_LEVEL is unknown
+#
+\end{verbatim}
+
+We open the MS and ask for the current flag level.
+</example>
+
+</method>
+-->
+ 
+   <method type="function" name="fillbuffer">
+   <shortdescription>Fill the internal buffer with data and flags.</shortdescription>
+   
+<input>
+
+     <param type="string" name="item">
+     <description>data derived item</description>
+     </param>
+
+     <param type="bool" name="ifraxis">
+     <description>Create interferometer axis if True</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+
+<description>
+Read the specified data item from the table, including its flags
+and keep the results in an internal buffer
+</description>
+<example>
+\begin{verbatim}
+ms.open("3C273XC1.MS")
+ms.select({'antenna1':[3]})
+ms.fillbuffer("PHASE",True)
+\end{verbatim}
+
+<comments>
+We open the MS for reading, select a subset and then 
+read the DATA, FLAG and FLAG\_ROW column, extract the PHASE,
+reorder the data to add an interferometer axis,
+and keep the results around in an internal buffer.
+</comments>
+</example>
+
+</method>
+
+ 
+   <method type="function" name="diffbuffer">
+   <shortdescription>Differentiate or difference the internal buffer.</shortdescription>
+   
+<input>
+
+     <param type="string" name="direction">
+     <description>choose between time or channel direction: TIME or CHANNEL</description>
+     </param>
+
+     <param type="int" name="window">
+     <description>width of averaging window in timeslots or channels; integer greater than 0</description>
+     </param>
+</input>
+<returns type="any">
+  <any type="record"/>
+<shortdescription>Record, with statistics over the buffer if all went well
+</shortdescription></returns>
+
+<description>
+Subtract the previous point from each data point in the buffer (for
+window equal 2), or subtract the average over a window (for window
+greater than 2) from each point. The window can be in the time / row
+direction or the frequency / channel direction. The input data can be
+float or complex but the output is always float.  The function returns
+statistics over the buffer: median for each time and channel, the
+average absolute deviation from the median in time and channel
+direction and over all pixels.
+</description>
+
+<example>
+\begin{verbatim}
+ms.open("3C273XC1.MS")
+ms.select({'antenna1':[3]})
+ms.fillbuffer("DATA")
+ms.diffbuffer("TIME",15)
+# {'aad': array([[ 0.58959275],
+#       [ 0.20988081],
+#       [ 0.15907532],
+#       [ 0.58837521]]),
+# 'median': array([[ 2.67179847],
+#       [ 0.32471114],
+#       [ 0.37952924],
+#       [ 2.60897708]])}
+\end{verbatim}
+
+<comments>
+We open the MS for reading, select a subset and then 
+read the DATA, FLAG and FLAG\_ROW column, 
+we then subtract the average over a 15 point time-window from each
+data point.
+</comments>
+</example>
+</method>
+
+ 
+   <method type="function" name="getbuffer">
+   <shortdescription>Return the internal buffer as a Record for access from the intrepreter.</shortdescription>
+   
+<returns type="any">
+  <any type="record"/>
+<shortdescription>Record with data if operation successful
+</shortdescription></returns>
+
+<description>
+Returns the internal buffer with either 'raw' or differenced data,
+flags and buffer statistics (if a difference operation was performed).
+</description>
+
+<example>
+\begin{verbatim}
+ms.open("3C273XC1.MS")
+ms.select({'antenna1':[3]})
+ms.fillbuffer("PHASE")
+rec=ms.getbuffer()
+\end{verbatim}
+
+<comments>
+We open the MS for reading, select a subset and then 
+read the DATA, FLAG and FLAG\_ROW column, extract the PHASE
+and then obtain the results in a record.
+</comments>
+</example>
+</method>
+
+ 
+   <method type="function" name="clipbuffer">
+   <shortdescription>(NON-FUNCTIONAL???) Clip the internal buffer with specified limits.</shortdescription>
+   
+<input>
+
+     <param type="double" name="pixellevel">
+     <description>cliplevel for pixels (greater than 0)</description>
+     </param>
+
+     <param type="double" name="timelevel">
+     <description>cliplevel for time slots (greater than 0)</description>
+     </param>
+
+     <param type="double" name="channellevel">
+     <description>cliplevel for channels (greater than 0)</description>
+     </param>
+</input>
+<returns type="bool"/>
+
+<description>
+This sets flags in the internal buffer based on the clip levels
+specified. You can flag times, channels and individual pixels based on
+their deviation from the median. The cliplevel is specified in units of
+the corresponding average absolute deviation (a robust version of rms).
+</description>
+<example>
+\begin{verbatim}
+ms.open("3C273XC1.MS")
+ms.select({'antenna1':[3]})
+ms.fillbuffer("DATA")
+stats=ms.diffbuffer("TIME",15)
+ms.clipbuffer(6,5,5)
+#2008-05-28 17:15:27  SEVERE  casa::ms::open
+#  Exception Reported: RecordInterface: field medTmeF is unknown
+#---------------------------------------------------------------------------
+#type 'exceptions.StandardError'         Traceback (most recent call last)
+#
+#/home/aips2mgr/testing/ipython console in module()
+#
+#type 'exceptions.StandardError': RecordInterface: field medTmeF is unknown
+\end{verbatim}
+
+<comments>
+We open the MS for reading, select a subset and
+read the data into the buffer. We then remove the average over a 15
+point time window and clip the resulting data at 6 times the average
+absolute deviation from the median for individual pixels, and at 5
+times this for channels and timeslots.
+</comments>
+</example>
+</method>
+
+   <method type="function" name="setbufferflags">
+   <shortdescription>Set the flags in the buffer</shortdescription>
+   <input>
+     <param type="any" name="flags">
+       <any type="record"/>
+       <description>record with flag and flag\_row</description>
+     </param>
+   </input>
+   <returns type="bool"/>
+   <description>
+     Replace the flag and flag\_row fields in the internal
+     buffer with those in the input record.
+     The input record can be e.g., a modified version of the record
+     returned by getbuffer(). The other fields in the record are ignored.
+   </description>
+   <example>
+     \begin{verbatim}
+     ms.open("3C273XC1.MS",False)
+     ms.select({'antenna1':[3]})
+     ms.fillbuffer("PHASE")
+     rec=ms.getbuffer()
+     rec['flag_row'][17]=True
+     ms.setbufferflags(rec)
+     \end{verbatim}
+     <comments>
+       We open the MS for reading, select a subset and
+       read the data. We get the data into casapy, flag timeslot 17 and put
+       the modified flags back into the buffer.
+     </comments>
+   </example>
+   </method>
+ 
+   <method type="function" name="writebufferflags">
+     <shortdescription>Write the flags in the internal buffer back to the table.</shortdescription>
+     <returns type="bool"/>
+     <description>
+       Takes the flag and flag\_row field in the internal buffer and writes
+       them back to the FLAG and FLAG\_ROW column in the currently selected
+       table.
+     </description>
+     <example>
+       \begin{verbatim}
+       ms.open("3C273XC1.MS",False)
+       ms.select({'antenna1':[3]})
+       ms.fillbuffer("PHASE")
+       rec=ms.getbuffer()
+       rec['flag_row'][17]=True
+       ms.setbufferflags(rec)
+       ms.writebufferflags()
+       \end{verbatim}
+
+       <comments>
+	 We open the MS for reading, select a subset and
+	 read the data. We get the data into casapy, flag timeslot 17 and put
+	 the modified flags back into the buffer. We then write the buffer
+	 flags back to the table, causing the corresponding data to be
+	 marked flagged on subsequent access.
+       </comments>
+     </example>
+   </method>
+
+ 
+   <method type="function" name="clearbuffer">
+   <shortdescription>Clear the internal buffer.</shortdescription>
+   
+<returns type="bool"/>
+
+<description>
+Clears the internal buffer, returning the memory.
+This can be used after the (final) clipping/flagging operations have
+been performed.
+</description>
+<example>
+\begin{verbatim}
+ms.open("3C273XC1.MS",False)
+ms.select({'antenna1':[3]})
+ms.fillbuffer("PHASE")
+rec=ms.getbuffer()
+rec['flag_row'][17]=True
+ms.setbufferflags(rec)
+ms.writebufferflags()
+ms.clearbuffer()
+\end{verbatim}
+
+<comments>
+We open the MS for reading, select a subset and
+read the data. We get the data into casapy, flag timeslot 17 and put
+the modified flags back into the buffer. We then write the buffer
+flags back to the table, causing the corresponding data to be
+marked flagged on subsequent access. Finally we clear the internal
+buffer. This step can be omitted if you are about to do another fillbuffer().
+</comments>
+</example>
+</method>
+
+ 
+   <method type="function" name="continuumsub">
+   <shortdescription>Continuum fitting and subtraction in uv plane</shortdescription>
+   
+  <input>
+    
+     <param type="any" direction="in" name="field">
+     <description>Select fields to fit</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+    
+     <param type="any" direction="in" name="fitspw">
+     <description>Spectral windows/channels to use for fitting the continuum; default all spectral windows in all channels</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+    
+     <param type="any" direction="in" name="spw">
+     <description>Select spectral windows and channels from which to subtract a continuum estimate; default: all channels in all spectral windows for which the continuum was estimated</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" direction="in" name="solint">
+     <description>Continuum fit timescale (units optional)</description>
+     <any type="variant"/>
+     <value>int</value>
+     </param>
+    
+     <param type="int" direction="in" name="fitorder">
+     <description>Polynomial order for fit</description>
+     <value>0</value>
+     </param>
+    
+     <param type="string" direction="in" name="mode">
+     <description>Desired use of fit model (see below)</description>
+     <value>subtract</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description> 
+This function provides a means of continuum determination and
+subtraction by fitting a polynomial of desired order to a subset of
+channels in each time-averaged uv spectrum.  The fit is used to model
+the continuum in all channels (not just those used in the fit), for
+subtraction, if desired.  Use the {\tt fitspw} parameter to limit the
+spectral windows processed and the range of channels used to estimate 
+the continuum  in each (avoid channels containing spectral lines).  The 
+default solution interval 'int' will result in per-integration continuum
+fits for each baseline.  The {\tt mode} parameter indicates 
+how the continuum model (the result of the fit) should be used: 
+{\tt 'subtract'} will store the continuum
+model in the MODEL\_DATA column and subtract it from the CORRECTED\_DATA
+column; {\tt 'replace'} will replace the CORRECTED\_DATA column with
+the continuum model (useful if you want to image the continuum model
+result); and {\tt 'model'} will only store the continuum model in the
+MODEL\_DATA column (the CORRECTED\_DATA is unaffected).
+
+It is important to start the ms tool with {\tt nomodify=False} so that
+changes to the dataset will be allowed (see example below).
+
+For now, the only way to recover the un-subtracted CORRECTED\_DATA column
+is to use calibrater.correct() again.
+
+Note that the MODEL\_DATA and CORRECTED\_DATA columns must be present
+for {\tt continuumsub} to work correctly.  The function will warn the user
+if they are not present, and abort.  To add these scratch columns (for
+now), close the ms tool, then start a calibrater or an imager
+tool, which will add the scratch columns.  Then restart the ms tool,
+and try {\tt continuumsub} again.
+
+Options for shifting known bright sources to the phase center and
+for editing based on the rms fit will be added in the near future.
+
+  </description>
+  <example>
+    \begin{verbatim}
+ ms.fromfits('ngc5921.ms','/aips++/data/demo/NGC5921.fits')
+ ms.close()
+ cb.open('ngc5921.ms')  # add MODEL_DATA, CORRECTED_DATA columns
+ cb.close()
+ ms.open('ngc5921.ms',nomodify=False);    # writable!
+ ms.continuumsub(fldid=2,fitspw='0:5~9;50~59',
+                 solint=0.0,fitorder=1,mode='sub')
+ ms.done()
+    \end{verbatim}
+    This example will fit a linear continuum to channels 5-9 and 50-59 in 
+    spectral window 0 in each scan-averaged spectrum for field 2, and 
+    store the result in the MODEL\_DATA column and subtract it from the 
+    CORRECTED\_DATA column.
+
+  </example>
+</method>
+<!-- 
+   <method type="function" name="ptsrc">
+   <shortdescription>(NOT IMPLEMENTED!!!) Reports global average of visibilities per field</shortdescription>
+   
+  <keyword>ptsrc</keyword>
+  <input>
+    
+     <param type="intArray" direction="in" name="fldid">
+     <description>Desired fields, default all</description>
+     </param>
+    
+     <param type="intArray" direction="in" name="spwid">
+     <description>Desired spectral windows, default all</description>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description> 
+This function averages the data over all (unflagged) times and (non-zero) 
+baselines per field\_id and spectral\_window\_id, and reports the result in
+the Stokes polarization basis.  If present, the CORRECTED\_DATA column is
+averaged; otherwise the DATA column is used, in which case the results
+might be suspect if this DATA hasn't been calibrated.
+
+For multi-channel data, all channels are currently averaged as well.  
+Future versions of this function will have options for channel selection.
+
+This function is useful for obtaining a full-Stokes point source flux density
+estimate for polarization calibration or other purposes.  It is essentially
+calculating a single-pixel image at the observation's phase center, which
+for point sources, yields the correct flux density.  
+
+  </description>
+  <example>
+    \begin{verbatim}
+      
+      ms.open('ap366.ms'); 
+      ms.ptsrc(fldid=[9,11],spwid=1)
+      ms.done()
+    \end{verbatim}
+    This example calculates the point source flux density for field ids 9 \&amp; 11
+in spectral window 1.
+
+  </example>
+</method>
+-->
+ 
+   <method type="function" name="done">
+   <shortdescription>Closes the ms \tool</shortdescription>
+   
+  <keyword>done</keyword>
+  <description>
+    You should call close() when you are finished using the ms
+    \tool\  <!--. It frees up all the memory associated with an ms tool,-->
+    to close the measurement set table and free any associated file
+    locks. The measurement set is not deleted. <!-- It will also shut down
+    the server process if there are no other ms tools being used. -->
+  </description>
+<returns type="bool"/>
+  <example>
+    \begin{verbatim}
+      ms.open("3C273XC1.MS")
+      ...
+      ms.done()
+    \end{verbatim}
+  </example>
+</method>
+
+   <method type="function" name="msseltoindex">
+   <shortdescription>Returns ids of the selection used</shortdescription>
+   
+  <keyword>msseltoindex</keyword>
+  <input>
+    
+ 
+     <param type="string" name="vis">
+     <description>Measurementset for which this selection applies</description>
+     <value></value>
+     </param>
+ 
+
+     <param type="any" name="spw">
+     <description>Spectral Window Ids (0 relative) to select; -1 interpreted as all</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" name="field">
+     <any type="variant"/>
+     <description>Field Ids (0 relative) or Field names (msselection syntax and wilcards are used) to select</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" name="baseline">
+     <description>Antenna Ids (0 relative) or Antenna names (msselection syntax and wilcards are used) to select</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" name="time">
+     <description>Limit data selected to be within a given time range. Syntax is the defined in the msselection link</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" name="scan">
+     <description>Limit data selected on scan numbers. Syntax is the defined in the msselection link</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+     
+     <param type="any" name="uvrange">
+     <description>Limit data selected on uv distance. Syntax is the defined in 
+     the msselection link</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="string" name="taql">
+     <description>For the TAQL experts, flexible data selection using the TAQL syntax</description>
+     <value></value>
+     </param>
+ 
+  </input>
+  <returns type="any"><any type="record"/>record of indices selected</returns>
+
+  <description> 
+ Utility function that will return the ids of the selection used. 
+  </description>
+  <example>
+    \begin{verbatim}
+     a= ms.msseltoindex(vis='3C273XC1.MS', field='3C*')
+     print a['field']
+     # [0]
+     print a
+     #{'antenna1': array([], dtype=int32),
+     # 'antenna2': array([], dtype=int32),
+     #  'channel': array([], shape=(0, 0), dtype=int32),
+     #  'field': array([0]),
+     #  'scan': array([], dtype=int32),
+     #  'spw': array([], dtype=int32)}
+    \end{verbatim}
+
+  Field name '3C*', in this case 3C273, corresponds to field id 0.
+
+  </example>
+</method>
+
+   <method type="function" name="hanningsmooth">
+   <shortdescription>Hanning smooth the frequency channels to remove Gibbs ringing.</shortdescription>
+   
+  <keyword>hanningsmooth</keyword>
+  <returns type="bool"/>
+  <description>
+    This function Hanning smooths the frequency channels with a
+    weighted running average of smoothedData[i] =
+    0.25*correctedData[i-1] + 0.50*correctedData[i] +
+    0.25*correctedData[i-1].  The first and last channels are flagged.
+    Inclusion of a flagged value in an average causes that averaged data value
+    to be flagged.
+  </description>
+  <example>
+    \begin{verbatim}
+    ms.open('ngc5921.ms',nomodify=False)
+    ms.hanningsmooth()
+    ms.close()
+    \end{verbatim}
+  </example>
+</method>
+
+   <method type="function" name="uvsub">
+   <shortdescription>Subtract model from the corrected visibility data.</shortdescription>
+  <keyword>uvsub</keyword>
+  <keyword>residual</keyword>
+
+  <input> 
+     <param type="bool" name="reverse">
+     <description>When False subtracts model from visibility data; when True adds model to visibility data</description>
+     <value>false</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function subtracts model visibility data from corrected visibility
+    data leaving the residuals in the corrected data column.  If the parameter
+    reverse is set True, this process is reversed.
+  </description>
+  <example>
+  The following example subtracts a model from the visibility data leaving
+  the residuals in the corrected data column.
+    \begin{verbatim}
+   ms.open('ngc5921.ms',nomodify=False)
+   ms.uvsub()
+   ms.close()    
+    \end{verbatim}
+   The following example adds the model back into the residuals.
+    \begin{verbatim}
+   ms.open('ngc5921.ms',nomodify=False)
+   ms.uvsub(reverse=True)
+   ms.close()    
+    \end{verbatim}
+  </example>
+</method>
+
+
+</tool>
+
+</casaxml>

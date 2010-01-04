@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+      <task type="function" name="plotants" category="display/plot">
+	<shortdescription>Plot the antenna distribution in the local reference frame:</shortdescription>
+	<description>
+       The location of the antennas in the MS will be plotted with
+       X-toward local east; Y-toward local north.
+	</description>
+	<input>
+		<param type="string" name="vis" mustexist="true">
+			<description>Name of input visibility file (MS)</description>
+			<value></value>
+		</param>
+		<param type="string" name="figfile">
+			<description>Save the plotted figure to this file</description>
+			<value></value>
+		</param>
+
+	</input>
+<returns type="void"/>
+
+<example>
+       Plot the antenna distribution in the local reference frame:
+
+       The location of the antennas in the MS will be plotted with
+       X-toward local east; Y-toward local north.
+
+       Keyword arguments:
+       vis -- Name of input visibility file.
+               default: none. example: vis='ngc5921.ms'
+
+       figfile -- Save the plotted figure in this file.
+               default: ''. example: figfile='myFigure.png'
+
+               The name of each antenna (egs. vla=antenna number) is
+                  shown next to its respective location.
+
+               DO NOT use the buttons on the Mark Region line.  These are
+                  not implemented yet and might abort CASA.
+
+               You can zoom in by pressing the magnifier button (bottom,
+                  third from left) and making a rectangular region with
+                  the mouse.  Press the home button (left most button) to
+                  remove zoom.
+
+               A hard-copy of this plot can be obtained by pressing the
+                  button on the right at the bottom of the display.  This
+                  produces a png format file.
+ </example>
+ </task>
+ </casaxml>

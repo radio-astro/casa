@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for listvis -->
+<!-- This does the equivalent of -->
+<!-- ms.open('anyfile.ms'); -->
+<!-- ms.lister(); -->
+
+<task type="function" name="listvis" category="information">
+
+  <shortdescription>List measurement set visibilities.</shortdescription>
+
+  <description>
+
+This task lists measurement set visibility data under a number of
+input selection conditions.  The measurement set data columns that 
+can be listed are: the raw data, corrected data, model data, and 
+residual (corrected - model) data.
+
+The output table format is dynamic.  Field, Spectral Window, and
+Channel columns are not displayed if the column contents are uniform.
+For example, if "spw = '1'" is specified, the spw column will not be
+displayed.  When a column is not displayed, a message is sent to the
+logger and terminal indicating that the column values are uniform and 
+listing the uniform value.
+
+Table column descriptions:
+
+COLUMN NAME       DESCRIPTION
+-----------       -----------
+Date/Time         Time stamp of data sample
+Intrf             Interferometer baseline (antenna names)
+UVDist            uv-distance (units of wavelength)
+Fld               Field ID (if more than 1)
+SpW               Spectral Window ID (if more than 1)
+Chn               Channel number (if more than 1)
+(Correlated       Correlated polarizations (eg: RR, LL, XY)
+  polarization)     Sub-columns are: Amp, Phs, Wt, F
+Amp               Visibility amplitude
+Phs               Visibility phase (deg)
+Wt                Weight of visibility measurement
+F                 Flag: 'F' = flagged datum; ' ' = unflagged
+
+
+Input Parameters:
+vis         Name of input visibility file
+            default: none; example: vis='ngc5921.ms'
+
+options     List options: default = 'ap'
+            Not yet implemented for suboptions
+
+datacolumn  Visibility file data column:
+            default = 'data':  options are
+            data, corrected, model, residual (corrected-model)
+
+field       Select data based on field id(s) or name(s)
+            default: ''==>all; example: field='1'
+            field='0~2' field ids inclusive from 0 to 2
+            field='3C*' all field names starting with 3C
+
+spw         Select spectral window, channel to list
+            default: '0:0' --> spw=0, chan=0
+            spw='2:34' spectral window 2, channel 34
+
+selectdata  Toggle the following 7 selection parameters.
+            default: False; example: selectdata=True
+            If false, the following parameters are reset
+            to default values.
+
+      antenna     Select calibration data based on antenna
+                  default: ''-->all; examples: 
+                  antenna = '5,6'; antenna index 5 and 6 solutions
+                  antenna = '05,06'; antenna names '05' and '06 solutions
+                 
+      timerange   Select time range to list
+                  default: ''-->all; examples:
+                  timerange='10:37:50.1'; list data for this sampling interval
+                  timerange='&lt;10:37:25'; list data before 10:37:25
+      
+      correlation Select polarization correlations to list
+                  default: ''-->all; examples: 
+                  correlation='RR LL'; list RR and LL correlations
+                  correlation='XX XY'; list XX and XY correlations
+      
+      scan        Select scans to list
+                  default: ''-->all; examples:
+                  scan='2'; list scan 2
+                  scan='>2'; list scan numbers greater than 2
+      
+      feed        (not yet implemented)
+      
+      array       (not yet implemented)
+      
+      uvrange     Select baseline lengths to list.
+                  default: ''--> all; examples:
+                  uvrange='&lt;5klambda'; less than 5 kilo-wavelengths
+                  Caution: Input units default to meters.
+                  Listed units are always wavelengths.
+
+average     (not yet implemented)
+
+showflags   (not yet implemented)
+
+pagerows    rows per page of listing
+            default: 50; 0 --> do not paginate
+
+listfile    write output to disk; will not overwrite
+            default: '' --> write to screen
+            listfile = 'solutions.txt'
+
+async       Run asynchronously
+            default = False; do not run asychronously
+
+  </description>
+  
+  <input>
+
+    <param type="string" name="vis" kind="ms" mustexist="true">
+          <description>Name of input visibility file</description>
+          <value></value>
+    </param>
+
+    <param type="string" name="options">
+	    <description>List options: ap only </description>
+	    <value>ap</value>
+    </param>
+
+    <param type="string" name="datacolumn">
+	    <description>Column to list: data, corrected, model, residual</description>
+          <value>data</value>
+	    <allowed kind="enum">
+	          <value>data</value>
+	          <value>corrected</value>
+	          <value>model</value>
+	          <value>residual</value>
+          </allowed>
+    </param>
+
+    <param type="string" name="field">
+          <description>Field names or index to be listed: \'\'==>all</description>
+          <value></value>
+    </param>
+
+    <param type="string" name="spw">
+    <description>Spectral window:channels: \'\*\'==>all, spw=\'1:5~57\'</description>
+    <value>*</value>
+    </param>
+
+    <param type="bool" name="selectdata">
+	    <description>Other data selection parameters</description>
+	    <value>False</value>
+    </param>
+
+    <param type="string" name="antenna" subparam="true">
+	    <description>Antenna/baselines: \'\'==>all, antenna = \'3\'</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="timerange" subparam="true">
+	    <description>Time range: \'\'==>all</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="correlation" subparam="true">
+	    <description>Correlations: \'\'==>all, correlation = \'RR RL\'</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="scan" subparam="true">
+	    <description>Scan numbers</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="feed" subparam="true">
+	    <description>Multi-feed numbers (Not yet implemented)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="array" subparam="true">
+	    <description>Array numbers (Not yet implemented)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="uvrange" subparam="true">
+	    <description>uv range: \'\'==>all; not yet implemented </description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="average">
+	    <description>Averaging mode: ''==>none (Not yet implemented)</description>
+          <value></value>
+	    <allowed kind="enum">
+                <value></value>
+                <value>none</value>
+                <value>time</value>
+                <value>chan</value>
+                <value>both</value>
+          </allowed>
+    </param>
+
+    <param type="bool" name="showflags">
+          <description>Show flagged data (Not yet implemented)</description>
+          <value>False</value>
+    </param>
+
+    <param type="int" name="pagerows">
+          <description>Rows per page</description>
+          <value>50</value>
+    </param>
+
+    <param type="string" name="listfile">
+          <description>Output file</description>
+          <value></value>
+    </param>
+
+    <constraints>
+          <when param="selectdata">
+             <equals type="bool" value="False"/>
+             <equals type="bool" value="True">
+                   <default param="antenna"><value type="string"/></default>
+                   <default param="timerange"><value type="string"/></default>
+                   <default param="correlation"><value type="string"/></default>
+                   <default param="scan"><value type="string"/></default>
+                   <default param="feed"><value type="string"/></default>
+                   <default param="array"><value type="string"/></default>
+                   <default param="uvrange"><value type="string"/></default>
+             </equals>
+          </when>
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+
+This task lists measurement set visibility data under a number of
+input selection conditions.  The measurement set data columns that 
+can be listed are: the raw data, corrected data, model data, and 
+residual (corrected - model) data.
+
+The output table format is dynamic.  Field, Spectral Window, and
+Channel columns are not displayed if the column contents are uniform.
+For example, if "spw = '1'" is specified, the spw column will not be
+displayed.  When a column is not displayed, a message is sent to the
+logger and terminal indicating that the column values are uniform and 
+listing the uniform value.
+
+Table column descriptions:
+
+COLUMN NAME       DESCRIPTION
+-----------       -----------
+Date/Time         Time stamp of data sample
+Intrf             Interferometer baseline (antenna names)
+UVDist            uv-distance (units of wavelength)
+Fld               Field ID (if more than 1)
+SpW               Spectral Window ID (if more than 1)
+Chn               Channel number (if more than 1)
+(Correlated       Correlated polarizations (eg: RR, LL, XY)
+  polarization)     Sub-columns are: Amp, Phs, Wt, F
+Amp               Visibility amplitude
+Phs               Visibility phase (deg)
+Wt                Weight of visibility measurement
+F                 Flag: 'F' = flagged datum; ' ' = unflagged
+
+
+Input Parameters:
+vis         Name of input visibility file
+            default: none; example: vis='ngc5921.ms'
+
+options     List options: default = 'ap'
+            Not yet implemented for suboptions
+
+datacolumn  Visibility file data column:
+            default = 'data':  options are
+            data, corrected, model, residual (corrected-model)
+
+field       Select data based on field id(s) or name(s)
+            default: ''==>all; example: field='1'
+            field='0~2' field ids inclusive from 0 to 2
+            field='3C*' all field names starting with 3C
+
+spw         Select spectral window, channel to list
+            default: '0:0' --> spw=0, chan=0
+            spw='2:34' spectral window 2, channel 34
+
+selectdata  Toggle the following 7 selection parameters.
+            default: False; example: selectdata=True
+            If false, the following parameters are reset
+            to default values.
+
+      antenna     Select calibration data based on antenna
+                  default: ''-->all; examples: 
+                  antenna = '5,6'; antenna index 5 and 6 solutions
+                  antenna = '05,06'; antenna names '05' and '06 solutions
+                 
+      timerange   Select time range to list
+                  default: ''-->all; examples:
+                  timerange='10:37:50.1'; list data for this sampling interval
+                  timerange='&lt;10:37:25'; list data before 10:37:25
+      
+      correlation Select polarization correlations to list
+                  default: ''-->all; examples: 
+                  correlation='RR LL'; list RR and LL correlations
+                  correlation='XX XY'; list XX and XY correlations
+      
+      scan        Select scans to list
+                  default: ''-->all; examples:
+                  scan='2'; list scan 2
+                  scan='>2'; list scan numbers greater than 2
+      
+      feed        (not yet implemented)
+      
+      array       (not yet implemented)
+      
+      uvrange     Select baseline lengths to list.
+                  default: ''--> all; examples:
+                  uvrange='&lt;5kl'; less than 5 kilo-wavelengths
+                  Caution: Input units default to meters.
+                  Listed units are always wavelengths.
+
+average     (not yet implemented)
+
+showflags   (not yet implemented)
+
+pagerows    rows per page of listing
+            default: 50; 0 --> do not paginate
+
+listfile    write output to disk; will not overwrite
+            default: '' --> write to screen
+            listfile = 'solutions.txt'
+
+async       Run asynchronously
+            default = False; do not run asychronously
+
+   </example>
+
+</task>
+
+</casaxml>

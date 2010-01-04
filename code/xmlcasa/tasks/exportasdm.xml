@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="exportasdm" category="import/export" visibility="experimental">
+
+  <shortdescription>Convert a CASA visibility file (MS) into an ALMA Science Data Model</shortdescription>
+
+  <input>
+
+    <param type="string" name="vis" kind="ms" mustexist="true">
+          <description>MS name</description>
+          <value></value>
+    </param>
+
+
+    <param type="string" name="asdm" kind="asdm" mustexist="false">
+          <description>Name of output ASDM directory (on disk)</description>
+          <value></value>
+    </param>
+
+    <param type="string" name="datacolumn"  ignorecase="True">
+	    <description>specifies which MS data column is used to fill the visibilites in the ASDM</description>
+	    <value>DATA</value>
+	    <allowed kind="enum">
+	       <value>data</value>
+	       <value>corrected</value>
+	       <value>model</value>
+	    </allowed>
+    </param>
+    <param type="string" name="archiveid">
+	    <description>the X0 in uid://X0/X1/X&lt;running&gt;</description>
+	    <value>S0</value>
+    </param>
+    <param type="string" name="rangeid">
+	    <description>the X1 in uid://X0/X1/X&lt;running&gt;</description>
+	    <value>X1</value>
+    </param>
+
+    <param type="bool" name="verbose">
+	    <description>produce log output</description>
+	    <value>True</value>
+    </param>
+
+    <param type="bool" name="showversion">
+	    <description>Report the version of ASDM class set being used</description>
+	    <value>True</value>
+    </param>
+
+    </input>
+
+  <returns type="bool"/>
+
+  <example>
+
+  Keyword arguments:
+  vis       -- MS name,
+               default: none
+
+  asdm -- Name of output ASDM file (directory),
+          default: none; example: asdm='ExecBlock3'
+
+  datacolumn -- specifies which of the MS data columns (DATA,
+           CORRECTED_DATA, or MODEL_DATA) should be used as the
+           visibilities in the ASDM, default: DATA
+
+  archiveid -- the X0 in uid://X0/X1/X&lt;running&gt;
+               default: "S0"
+
+  rangeid -- the X1 in uid://X0/X1/X&lt;running&gt;
+               default: "X1"
+
+  verbose     -- produce log output, default: True
+
+  showversion -- report the version of the ASDM class set, 
+               default: True
+
+
+  exportasdm(vis='ngc4826.ms', asdm='uid___S021_X1418_X1', 
+  datacolumn='corrected', archiveid='S021', rangeid='X1418', 
+  verbose=False)
+  will produce an ASDM named 'uid___S021_X1418_X1' using the 
+  datacolumn 'CORRECTED_DATA' in the MS 'ngc4826.ms' with minimal
+  log output. 
+
+  </example>
+
+</task>
+
+</casaxml>

@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for sdfit -->
+
+<task type="function" name="sdfit" startup="false" category="single dish">
+
+  <shortdescription>ASAP SD task: fit a spectral line</shortdescription>
+
+  <description>
+        ASAP SD line-fitting task:
+
+        Modified 2008-01-29 TT
+        Task Version 2007-03-04 STM
+</description>
+
+  <input>
+
+    <param type="string" name="sdfile"  mustexist="true">
+    <description>name of input SD dataset</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="fluxunit">
+            <description>units for line flux (K,Jy) (''=current)</description>
+            <value></value>
+    </param>
+
+    <param type="any" name="telescopeparm" subparam='true'>
+            <description>param of telescope for flux conversion</description>
+            <any type='variant' limittype='string doubleArray'/>
+            <value type='string'/>
+    </param>
+
+    <param type="string" name="specunit">
+            <description>units for spectral axis (channel,km/s,GHz)</description>
+            <value></value>
+            <allowed kind="enum">
+            <value></value>
+            <value>channel</value>
+            <value>km/s</value>
+            <value>GHz</value>
+	    <value>MHz</value>
+            <value>kHz</value>
+            <value>Hz</value>
+    </allowed>
+    </param>
+
+    <param type="string" name="frame">
+            <description>frequency reference frame, e.g. LSRK (''=current)</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="doppler">
+            <description>doppler convention, e.g. RADIO (''=current)</description>
+            <value></value>
+    </param>
+
+
+    <param type="intArray" name="scanlist">
+            <description>list of scans to use (e.g. [1,2,3,4])</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="field">
+            <description>string for selection by source name</description>
+            <value></value>
+    </param>
+
+    <param type="intArray" name="iflist">
+            <description>list of IF ids to select (e.g. [0,1])</description>
+            <value></value>
+    </param>
+
+    <param type="intArray" name="pollist">
+            <description>list of polarization ids to select (e.g. [1])</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="fitmode">
+            <description>mode for fitting</description>
+            <value>auto</value>
+    </param>
+
+    <param type="any" name="maskline">
+            <description>list of mask regions to INCLUDE in LINE fitting</description>
+            <any type='variant' limittype='intArray doubleArray'/>
+            <value type='intArray'/>
+    </param>
+
+    <param type="bool" name="invertmask">
+            <description>invert mask (EXCLUDE masklist instead)</description>
+            <value>False</value>
+    </param>
+
+    <param type="intArray" name="nfit">
+            <description>list of number of gaussian lines to fit in in maskline region</description>
+            <value></value>
+    </param>
+
+    <param type="double" name="thresh" subparam='true'>
+            <description>S/N threshold for linefinder</description>
+            <value>5.0</value>
+    </param>
+
+    <param type="int" name="min_nchan" subparam='true'>
+            <description>minimum number of consecutive channels for linefinder</description>
+            <value>3</value>
+    </param>
+
+    <param type="int" name="avg_limit" subparam='true'>
+            <description>channel averaging for broad lines</description>
+            <value>4</value>
+    </param>
+
+    <param type="double" name="box_size" subparam='true'>
+            <description>running mean box size</description>
+            <value>0.2</value>
+    </param>
+
+    <param type="intArray" name="edge" subparam='true'>
+            <description>channels to drop at beginning and end of spectrum</description>
+            <value type='vector'><value>0</value></value>
+    </param>
+
+    <param type="string" name="fitfile">
+	    <description>name of output file for fit results</description>
+	    <value></value>
+    </param>
+
+    <param type="bool" name="overwrite">
+            <description>overwrite the fitfile if already exists</description>
+            <value>False</value>
+    </param>
+
+
+    <param type="int" name="plotlevel">
+	    <description>control for plotting of results</description>
+	    <value>0</value>
+    </param>
+
+
+    <constraints>
+            <when param="fluxunit">
+                <equals value=""/>
+                <equals value="K">
+                        <default param="telescopeparm"><value type='string'></value></default>
+                </equals>
+                <equals value="k">
+                        <default param="telescopeparm"><value type='string'></value></default>
+                </equals>
+                <equals value="Jy">
+                        <default param="telescopeparm"><value type='string'></value></default>
+                </equals>
+                <equals value="jy">
+                        <default param="telescopeparm"><value type='string'></value></default>
+                </equals>
+            </when>
+            <when param="fitmode">
+                <equals value="list"/>
+                <equals value="interact"/>
+                <equals value="auto">
+                        <default param="thresh"><value>5.0</value></default>
+                        <default param="min_nchan"><value>3</value></default>
+                        <default param="avg_limit"><value>4</value></default>
+                        <default param="box_size"><value>0.2</value></default>
+                        <default param="edge"><value type='vector'><value>0</value></value></default>
+                </equals>
+            </when>
+    </constraints>
+
+    </input>
+    <output>
+    <param type="any" name="xstat">
+	    <description>RETURN ONLY: a Python dictionary of line statistics</description>
+            <any type='variant'/>
+	    <value>{}</value>
+    </param>
+    </output>
+
+  <returns type="void"/>
+
+  <example>
+        Keyword arguments:
+        sdfile -- name of input SD dataset
+                default: none - must input file name
+                example: 'mysd.asap'
+                         See sdcal for allowed formats.
+        fluxunit -- units for line flux
+                options: (str) 'K','Jy',''
+                default: '' (keep current fluxunit)
+                WARNING: For GBT data, see description below.
+            &gt;&gt;&gt; fluxunit expandable parameter
+                 telescopeparm -- the telescope characteristics
+                        options: (str) name or (list) list of gain info
+                        default: '' (none set)
+                        example: if telescopeparm='', it tries to get the telescope
+                                 name from the data.
+                                 Full antenna parameters (diameter,ap.eff.) known
+                                 to ASAP are
+                                 'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
+                                 'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
+                                 to 'K' first then convert to a new fluxunit.
+                                 telescopeparm=[104.9,0.43] diameter(m), ap.eff.
+                                 telescopeparm=[0.743] gain in Jy/K
+                                 telescopeparm='FIX' to change default fluxunit
+                                 see description below
+
+        specunit -- units for spectral axis
+                options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
+                default: '' (=current)
+        frame -- frequency frame for spectral axis
+                options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
+                         'GEO','GALACTO','LGROUP','CMB'
+                default: currently set frame in scantable
+                WARNING: frame='REST' not yet implemented
+        doppler -- doppler mode
+                options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
+                default: currently set doppler in scantable
+        scanlist -- list of scan numbers to process
+                default: [] (use all scans)
+                example: [21,22,23,24]
+        field -- selection string for selecting scans by name
+                default: '' (no name selection)
+                example: 'FLS3a*'
+                         this selection is in addition to scanlist
+                         and iflist
+        iflist -- list of IF id numbers to select
+                default: [] (use all IFs)
+                example: [15]
+        pollist -- list of polarization id numbers to select
+                default: [] (use all polarizations)
+                example: [1]
+        fitmode -- mode for fitting
+                options: (str) 'list','auto','interact'
+                default: 'auto'
+                example: 'list' will use maskline to define regions to
+                                fit for lines with nfit in each
+                         'auto' will use the linefinder to fit for lines
+                                using the following parameters
+                         'interact' allows adding and deleting mask 
+                                regions by drawing rectangles on the plot 
+                                with mouse. Draw a rectangle with LEFT-mouse 
+                                to ADD the region to the mask and with RIGHT-mouse 
+                                to DELETE the region. 
+
+            &gt;&gt;&gt; fitmode expandable parameters             
+                 thresh -- S/N threshold for linefinder
+                         default: 5
+                         example: a single channel S/N ratio above which the channel is
+                                  considered to be a detection
+        	 min_nchan -- minimum number of consecutive channels for linefinder
+               	         default: 3
+                         example: minimum number of consecutive channels required to pass threshold
+                 avg_limit -- channel averaging for broad lines
+                         default: 4
+                         example: a number of consecutive channels not greater than
+                                  this parameter can be averaged to search for broad lines
+                 box_size -- running mean box size
+                         default: 0.2
+                         example: a running mean box size specified as a fraction
+                                  of the total spectrum length
+                 edge -- channels to drop at beginning and end of spectrum
+                         default: 0
+                         example: [1000] drops 1000 channels at beginning AND end
+                                  [1000,500] drops 1000 from beginning and 500 from end
+
+                 Note: For bad baselines threshold should be increased,
+                 and avg_limit decreased (or even switched off completely by
+                 setting this parameter to 1) to avoid detecting baseline
+                 undulations instead of real lines.
+
+        maskline -- list of mask regions to INCLUDE in LINE fitting
+                default: all
+                example: maskline=[[3900,4300]] for a single region, or
+                         maskline=[[3900,4300],[5000,5400]] for two, etc.
+        invertmask -- invert mask (EXCLUDE masklist instead)
+                options: (bool) True, False
+                default: False
+                example: invertmask=True, then will make one region that is
+                         the exclusion of the maskline regions
+        nfit -- list of number of gaussian lines to fit in in maskline region
+                default: 0 (no fitting)
+                example: nfit=[1] for single line in single region,
+                         nfit=[2] for two lines in single region,
+                         nfit=[1,1] for single lines in each of two regions, etc.
+        fitfile -- name of output file for fit results
+                default: no output fit file
+                example: 'mysd.fit'
+        overwrite -- overwrite the fitfile if already exists
+                options: (bool) True, False
+                default: False
+        plotlevel -- control for plotting of results
+                options: (int) 0=none, 1=some, 2=more
+                default: 0 (no plotting)
+                example: plotlevel=1 plots fit
+                         plotlevel=2 plots fit and residual 
+                         no hardcopy available for fitter
+                WARNING: be careful plotting OTF data with lots of fields
+
+        -------------------------------------------------------------------
+        Returns a Python dictionary of line statistics
+                keys:    'peak','cent','fwhm','nfit'
+                example: each value is a list of lists with one list of
+                         2 entries [fitvalue,error] per component.
+                         e.g. xstat['peak']=[[234.9, 4.8],[234.2, 5.3]]
+                         for 2 components.
+
+
+        DESCRIPTION:
+
+        Task sdfit is a basic line-fitter for single-dish spectra.
+        It assumes that the spectra have been calibrated in sdaverage
+        or sdcal.
+
+        Furthermore, it assumes that any selection of scans, IFs,
+        polarizations, and time and channel averaging/smoothing has
+        also already been done (in other sd tasks) as there are no controls
+        for these.  Note that you can use sdsave to do selection, writing
+        out a new scantable.
+
+        Note that multiple scans, IFs, and polarizations can in principle 
+        be handled, but we recommend that you use scanlist, field, iflist, 
+        and pollist to give a single selection for each fit.
+
+        For complicated spectra, sdfit does not do a good job of
+        "auto-guessing" the starting model for the fit.  We recommend
+        you use sd.fitter in the toolkit which has more options, such
+        as fixing components in the fit and supplying starting guesses
+        by hand.
+
+        WARNING: sdfit will currently return the fit for the first
+        row in the scantable.
+
+        ASAP recognizes the data of the "AT" telescopes, but currently
+        does not know about the GBT or any other telescope. This task
+        does know about GBT. Telescope name is obtained from the data.
+        If you wish to change the fluxunit (see below), and telescopeparm='',
+        for the AT telescopes it will use internal telescope parameters for
+        flux conversion. For GBT, it will use an approximate aperture
+        efficiency conversion.  If you give telescopeparm a list, then 
+        if the list has a single float it is assumed to be the gain in Jy/K, 
+        if two or more elements they are assumed to be telescope diameter (m) 
+        and aperture efficiency respectively.
+
+        WARNING for the GBT raw SDFITS format data as input:
+        Currently, all SDtasks cannot handle GBT raw SDFITS format data
+        (in which the data are stored in multiple tables within SDFITS).
+        It may be still possible to reduce GBT data after some
+        preprocessing (outside CASA) of the raw SDFITS to a SDFITS with
+        a single data table or to other data formats handled by SDtasks.
+                                                                            61
+  </example>
+
+</task>
+
+</casaxml>

@@ -1,0 +1,126 @@
+#!/bin/sh
+
+IAM=`basename $0`
+VERBOSE="off"
+WORKDIR=`pwd`
+XMLFILES=
+
+usage() {
+   echo "Usage: ${IAM} [-h|--help] [-v|--verbose] [-i|--installdir=<dir>] [-o|--outputfile=<file>] [<tasks>]"
+   echo "  -h|--help               : this help screen"
+   echo "  -v|--verbose            : print a diagnostic to standard output"
+   echo "  -i=|--installdir=<dir>  : directory where Casa local tasks were installed (default is \`pwd\`)"
+   echo "  -o=|--outputfile=<file> : name of the output file (default is \"mytasks.py\")"
+   echo "  <tasks>                 : list tasks (by default all tasks of the current directory)"
+}
+
+message() {
+   echo "${IAM}: $1"
+}
+
+verbose() {
+   [[ "$VERBOSE" == "on" ]] && message "$1"
+}
+while [ "$#" -gt 0 ]
+do
+   case $1 in
+      -h|--help)
+         usage
+         exit
+         ;;
+      -v|--verbose)
+         VERBOSE="on"
+         ;;
+      -i=*|--installdir=*)
+         TMP=$1
+         INSTALLDIR=`echo $TMP | sed 's/[-a-zA-Z0-9]*=//'`
+         ;;
+      -o=*|--outputfile=*)
+         TMP=$1
+         OUTPUTFILE=`echo $TMP | sed 's/[-a-zA-Z0-9]*=//'`
+         ;;
+      *)
+         XMLFILES="${XMLFILES} $1"
+         ;;
+   esac
+   shift
+done
+																    [[ -z $VERBOSE ]] && VERBOSE="off"
+[[ -z $INSTALLDIR ]] && INSTALLDIR=`pwd`
+[[ -z $OUTPUTFILE ]] && OUTPUTFILE="mytasks.py"
+[[ -z $XMLFILES ]] && XMLFILES=`ls *.xml`
+
+if [[ ${INSTALLDIR:0:1} != "/" ]]; then
+   verbose "converting ${INSTALLDIR} to an absolute path ..."
+   cd $INSTALLDIR
+   INSTALLDIR=`pwd`
+   cd $WORKDIR
+fi 
+
+verbose "install directory is $INSTALLDIR"
+if [[ ! -d "$INSTALLDIR" ]]; then
+   verbose "creating $INSTALLDIR ..."
+   amkdir $INSTALLDIR
+fi
+verbose "output file is $OUTPUTFILE"
+OUTFILE=$INSTALLDIR/$OUTPUTFILE
+CASAROOT=`echo $CASAPATH | awk '{print $1}'`
+CASAARCH=`echo $CASAPATH | awk '{printf "%s/%s", $1, $2}'`
+INFOFILE=/tmp/.casapy.taskinfo
+SAXONJAR=${CASAARCH}/lib/saxon8.jar
+if [[ ! -e ${SAXONJAR} ]]; then
+   SAXONJAR=${CASAROOT}/java/saxon8.jar
+fi
+SAXON="java -jar ${SAXONJAR}"
+cp /dev/null ${INFOFILE}
+
+for file in $XMLFILES
+do
+   xmlfile=${file%.xml}
+   verbose "generating `basename $xmlfile` task ... "
+   xmlgenpy $xmlfile
+   ${SAXON} ${xmlfile}.xml ${CASAROOT}/share/xml/casa2tsum2.xsl >> ${INFOFILE}
+   mv ${xmlfile}.py ${xmlfile}.py.bak
+   sed -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}.py.bak > ${xmlfile}.py
+   mv ${xmlfile}_cli.py ${xmlfile}_cli.py.bak
+   sed -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}_cli.py.bak > ${xmlfile}_cli.py
+   if [ -e ${xmlfile}_pg.py ] ; then
+      mv ${xmlfile}_pg.py ${xmlfile}_pg.py.bak
+      sed -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' ${xmlfile}_pg.py.bak > ${xmlfile}_pg.y
+   fi
+   if [[ "${INSTALLDIR}" != "${WORKDIR}" ]]; then
+      mv ${xmlfile}.py ${INSTALLDIR}
+      mv ${xmlfile}_cli.py ${INSTALLDIR}
+      mv ${xmlfile}_pg.py ${INSTALLDIR}
+      cp ${xmlfile}.xml ${INSTALLDIR}
+      cp task_${xmlfile}.py ${INSTALLDIR}
+   fi
+done
+
+verbose "generating `basename $OUTFILE` file ... "
+
+sed -i .bak -e s/^tasksum/mytasks/g ${INFOFILE}
+
+cat /dev/null > ${OUTFILE}
+echo "#" >> ${OUTFILE}
+echo "# User defined tasks setup." >> ${OUTFILE}
+echo "# Generated from buildmytask." >> ${OUTFILE}
+echo "#" >> ${OUTFILE}
+echo >> ${OUTFILE}
+echo "sys.path.insert(1, '"$INSTALLDIR"')" >> ${OUTFILE}
+echo "from odict import odict" >> ${OUTFILE}
+echo "if not globals().has_key('mytasks') :" >> ${OUTFILE}
+echo "   mytasks = odict()" >> ${OUTFILE}
+echo >> ${OUTFILE}
+grep "^mytasks" ${INFOFILE} >> ${OUTFILE}
+echo >> ${OUTFILE}
+echo "if not globals().has_key('task_location') :" >>${OUTFILE}
+echo "   task_location = odict()" >> ${OUTFILE}
+echo >> ${OUTFILE}
+echo "for key in mytasks.keys() :" >> ${OUTFILE}
+echo "   task_location[key] = '${INSTALLDIR}'" >> ${OUTFILE}
+echo "   tasksum[key] = mytasks[key]" >> ${OUTFILE}
+echo >> ${OUTFILE}
+grep "^from" ${INFOFILE} >> ${OUTFILE}
+rm -f ${INFOFILE}
+

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+ 
+	<tool name="sdfitter" module="singledish">
+        <shortdescription>tool for SD spectral fitter</shortdescription>
+       
+<code>
+	<include>xmlcasa/singledish/sdfitter_forward.h</include>
+<private>
+	#include &lt;xmlcasa/singledish/sdfitter_private.h&gt;
+</private>
+</code>
+
+ 
+   <method type="constructor" name="sdfitter">
+   <shortdescription>Construct a sdfitter tool</shortdescription>
+<returns type="sdfitter"/>
+</method>
+
+
+ 
+   <method type="function" name="setdata">
+   <shortdescription>Set the absissa and ordinate for the fit</shortdescription>
+   
+<input>
+     <param type="doubleArray" name="xdat">
+     <description>the abcissa values</description>
+     </param>
+
+     <param type="doubleArray" name="ydat">
+     <description>the ordinate values</description>
+     </param>
+ 
+     <param type="boolArray" name="mask" >
+     <description>an optional mask</description>
+     <value>false</value></param>
+
+</input>
+<returns type="bool"/>
+
+</method>
+
+
+
+ 
+   <method type="function" name="setexpression">
+   <shortdescription>Set a mathematical expression fo fit</shortdescription>
+   
+
+<input>
+     <param type="string" direction="in" name="expr">
+     <description>Type of the expression(gauss or poly)</description>
+     <value>gauss</value>
+     <value>poly</value>
+     </param>
+
+     <param type="int" direction="in" name="ncomp">
+     <description>Number of components</description>
+     <value>1</value>
+     </param>
+</input>
+<returns type="bool"/>
+</method>
+
+
+
+ 
+   <method type="function" name="getresidual">
+   <shortdescription>Returns residual of the fit</shortdescription>
+<returns type="doubleArray"/>
+</method>
+                                                                                
+
+ 
+   <method type="function" name="getfit">
+   <shortdescription>Returns the fitted ordinate values</shortdescription>
+<returns type="doubleArray"/>
+</method>
+                                                                                
+ 
+   <method type="function" name="getfixedparameters">
+   <shortdescription>Returns fixed parameters of the fit</shortdescription>
+<returns type="boolArray"/>
+</method>
+
+ 
+   <method type="function" name="setfixedparameters">
+   <shortdescription>Set the fixed parameters of the fit</shortdescription>
+    
+<input>
+     <param type="boolArray" direction="in" name="fxd">
+     <description>a vector of fixed parameters to be set</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+</method>
+ 
+ 
+ 
+  
+   <method type="function" name="getparameters">
+   <shortdescription>Returns the paramters used in the fit</shortdescription>
+<returns type="doubleArray"/> 
+</method>
+
+
+
+ 
+   <method type="function" name="setparameters">
+   <shortdescription>Set the parameters to the fit</shortdescription>
+   
+
+<input>
+     <param type="doubleArray" direction="in" name="params">
+     <description>a vector of parameters</description>
+     <value>0</value>
+     </param>
+</input>
+<returns type="bool"/>
+</method>
+
+
+
+
+ 
+   <method type="function" name="getestimate">
+   <shortdescription>Returns the paramter estimates</shortdescription>
+<returns type="doubleArray"/>
+</method>
+
+
+
+ 
+   <method type="function" name="estimate">
+   <shortdescription>Compute the parameter estimates</shortdescription>
+<returns type="bool"/>
+</method>
+
+
+
+ 
+   <method type="function" name="geterrors">
+   <shortdescription>Get errors to the fit</shortdescription>
+<returns type="doubleArray"/>
+</method>
+
+
+
+ 
+   <method type="function" name="getchi2">
+   <shortdescription>Get chi^2 values of the fit</shortdescription>
+<returns type="double"/>
+</method>
+   
+
+
+
+ 
+   <method type="function" name="reset">
+   <shortdescription>Reset fitter (initialize)</shortdescription>
+<returns type="bool"/>
+</method>
+
+
+
+ 
+   <method type="function" name="fit">
+   <shortdescription>Excute a fit</shortdescription>
+<returns type="bool"/>
+</method>
+   
+
+   <method type="function" name="evaluate">
+   <shortdescription>evaluate a component used in the fit</shortdescription>
+   
+
+<input>
+     <param type="int" direction="in" name="whichComp">
+     <description>Index of the component</description>
+     <value>0</value>
+     </param>
+</input>
+<returns type="doubleArray"/>
+</method>
+
+</tool>
+ 
+</casaxml>

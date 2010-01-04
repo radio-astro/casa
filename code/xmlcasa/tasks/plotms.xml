@@ -1,0 +1,647 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd">
+
+<task type="function" name="plotms" category="display/plot, data editing" async="never">
+<shortdescription>A plotter/interactive flagger for visibility data.</shortdescription>
+
+<returns type="void" />
+	
+<description>
+            Task for plotting and interacting with visibility data.  A variety
+        of axes choices (including data column) along with MS selection and
+        averaging options are provided for data selection.  Flag extension
+        parameters are also available for flagging operations in the plotter.
+        
+            All of the provided parameters can also be set using the GUI once
+        the application has been launched.  Additional and more specific
+        operations are available through the GUI and/or through the plotms
+        tool (pm).
+        
+</description>
+
+<input>
+
+<!--
+###############################################################################
+MS Parameters
+###############################################################################
+-->
+
+  <param type="string" name="vis" kind="ms">
+    <description>input visibility dataset (blank for none)</description>
+    <value />
+  </param>
+
+  <param type="string" name="xaxis">
+    <description>plot x-axis (blank for default/current)</description>
+    <value />
+    <allowed kind="enum">
+      <value />
+      <value>scan</value>
+      <value>field</value>
+      <value>time</value>
+      <value>time_interval</value><value>timeinterval</value><value>timeint</value>
+      <value>spw</value>
+      <value>channel</value><value>chan</value>
+      <value>frequency</value><value>freq</value>
+      <value>correlation</value><value>corr</value>
+      <value>antenna1</value><value>ant1</value>
+      <value>antenna2</value><value>ant2</value>
+      <value>baseline</value>
+      <value>uvdist</value>
+      <value>uvdist_l</value><value>uvdistl</value>
+      <value>u</value>
+      <value>v</value>
+      <value>w</value>
+      <value>amp</value><value>amplitude</value>
+      <value>phase</value>
+      <value>real</value>
+      <value>imag</value><value>imaginary</value>
+      <value>flag</value>
+      <value>antenna</value><value>ant</value>
+      <value>azimuth</value>
+      <value>elevation</value>
+      <value>parang</value><value>parallacticangle</value>
+      <value>row</value>
+      <value>flagrow</value>
+    </allowed>
+  </param>
+  
+    <param type="string" name="xdatacolumn" subparam="true">
+      <description>data column to use for x-axis (blank for default/current)</description>
+      <value />
+      <allowed kind="enum">
+        <value />
+        <value>data</value>
+        <value>corrected</value>
+        <value>model</value>
+        <value>residual</value>
+      </allowed>
+    </param>    
+
+  <param type="string" name="yaxis">    <description>plot y-axis (blank for default/current)</description>
+    <value />
+    <allowed kind="enum">
+      <value />
+      <value>scan</value>
+      <value>field</value>
+      <value>time</value>
+      <value>time_interval</value><value>timeinterval</value><value>timeint</value>
+      <value>spw</value>
+      <value>channel</value><value>chan</value>
+      <value>frequency</value><value>freq</value>
+      <value>correlation</value><value>corr</value>
+      <value>antenna1</value><value>ant1</value>
+      <value>antenna2</value><value>ant2</value>
+      <value>baseline</value>
+      <value>uvdist</value>
+      <value>uvdist_l</value><value>uvdistl</value>
+      <value>u</value>
+      <value>v</value>
+      <value>w</value>
+      <value>amp</value><value>amplitude</value>
+      <value>phase</value>
+      <value>real</value>
+      <value>imag</value><value>imaginary</value>
+      <value>flag</value>
+      <value>antenna</value><value>ant</value>
+      <value>azimuth</value>
+      <value>elevation</value>
+      <value>parang</value><value>parallacticangle</value>
+      <value>row</value>
+      <value>flagrow</value>
+    </allowed>  </param>
+    
+    <param type="string" name="ydatacolumn" subparam="true">
+      <description>data column to use for y-axis (blank for default/current)</description>
+      <value />
+      <allowed kind="enum">
+        <value />
+        <value>data</value>
+        <value>corrected</value>
+        <value>model</value>
+        <value>residual</value>
+      </allowed>
+    </param>
+
+
+<!--
+###############################################################################
+MS Selection parameters
+###############################################################################
+-->
+
+  <param type="bool" name="selectdata">
+    <description>data selection parameters</description>
+    <value>True</value>
+  </param>
+  
+    <param type="string" name="field" subparam="true">
+      <description>field names or field index numbers (blank for all)</description>
+      <value />
+    </param>
+    
+    <param type="string" name="spw" subparam="true">
+      <description>spectral windows:channels (blank for all)</description>
+      <value />
+    </param>
+    
+    <param type="string" name="timerange" subparam="true">
+      <description>time range (blank for all)</description>
+      <value />
+    </param>
+    
+    <param type="string" name="uvrange" subparam="true">
+      <description>uv range (blank for all)</description>
+      <value />
+    </param>
+    
+    <param type="string" name="antenna" subparam="true">
+      <description>antenna/baselines (blank for all)</description>
+      <value />
+    </param>
+    
+    <param type="string" name="scan" subparam="true">
+      <description>scan numbers (blank for all)</description>
+      <value />
+    </param>
+    
+    <param type="string" name="correlation" subparam="true">
+      <description>correlations (blank for all)</description>
+      <value />
+    </param>
+    
+    <param type="string" name="array" subparam="true">
+      <description>(sub)array numbers (blank for all)</description>
+      <value />
+    </param>
+    
+    <param type="string" name="msselect" subparam="true">
+      <description>MS selection (blank for all)</description>
+      <value />
+    </param>
+
+
+<!--
+###############################################################################
+MS Averaging Parameters
+###############################################################################
+-->
+
+  <param type="bool" name="averagedata">
+    <description>data averaging parameters</description>
+    <value>True</value>
+  </param>
+  
+    <param type="string" name="avgchannel" subparam="true">
+      <description>average over channel?  (blank = False, otherwise value in channels)</description>
+      <value />
+    </param>
+    
+    <param type="string" name="avgtime" subparam="true">
+      <description>average over time? (blank = False, other value in seconds)</description>
+      <value />
+    </param>
+    
+    <param type="bool" name="avgscan" subparam="true">
+      <description>only valid if time averaging is turned on.  average over scans?</description>
+      <value>False</value>
+    </param>
+    
+    <param type="bool" name="avgfield" subparam="true">
+      <description>only valid if time averaging is turned on.  average over fields?</description>
+      <value>False</value>
+    </param>
+    
+    <param type="bool" name="avgbaseline" subparam="true">
+      <description>average over all baselines?  (mutually exclusive with avgantenna)</description>
+      <value>False</value>
+    </param>
+    
+    <param type="bool" name="avgantenna" subparam="true">
+      <description>average by per-antenna?  (mutually exclusive with avgbaseline)</description>
+      <value>False</value>
+    </param>
+    
+    <param type="bool" name="avgspw" subparam="true">
+      <description>average over all spectral windows?</description>
+      <value>False</value>
+    </param>
+
+
+<!--
+###############################################################################
+Flag Extension Parameters
+###############################################################################
+-->
+
+  <param type="bool" name="extendflag">
+    <description>have flagging extend to other data points?</description>
+    <value>False</value>
+  </param>
+    
+    <param type="string" name="extcorrelation" subparam="true">
+      <description>extend flags based on correlation? (blank = none)</description>
+      <value />
+      <allowed kind="enum">
+        <value />
+        <value>all</value>
+        <value>poln-dep</value>
+      </allowed>
+    </param>
+    
+    <param type="bool" name="extchannel" subparam="true">
+      <description>extend flags based on channel?</description>
+      <value>False</value>
+    </param>
+    
+    <param type="bool" name="extspw" subparam="true">
+      <description>extend flags based on spw?</description>
+      <value>False</value>
+    </param>
+    
+    <param type="string" name="extantenna" subparam="true">
+      <description>extend flags based on antenna? (blank = none, \'all\' = all baselines, otherwise antenna-based value)</description>
+      <value />
+    </param>
+    
+    <param type="bool" name="exttime" subparam="true">
+      <description>extend flags based on time (within scans)?</description>
+      <value>False</value>
+    </param>
+    
+    <param type="bool" name="extscans" subparam="true">
+      <description>only valid if exttime is true.  extend flags based on scans?</description>
+      <value>False</value>
+    </param>
+    
+    <param type="bool" name="extfield" subparam="true">
+      <description>only valid if exttime is true.  extend flags based on field?</description>
+      <value>False</value>
+    </param>
+    
+<!--
+###############################################################################
+Plotxy Compliance Parameters
+###############################################################################
+-->
+
+  <param type="bool" name="plotxycomp">
+    <description>use plotxy compliance parameters?</description>
+    <value>False</value>
+  </param>
+  
+    <param type="string" name="datacolumn" subparam="true">
+      <description>PLOTXY COMPLIANCE PARAMETER; use xdatacolumn and ydatacolumn instead</description>
+      <value>data</value>
+      <allowed kind="enum">
+        <value>data</value>
+        <value>corrected</value>
+        <value>model</value>
+        <value>residual</value>
+      </allowed>
+    </param>
+    
+    <param type="string" name="timebin" subparam="true">
+      <description>PLOTXY COMPLIANCE PARAMETER; use avgtime instead</description>
+      <value>0</value>
+    </param>
+    
+    <param type="bool" name="crossscans" subparam="true">
+      <description>PLOTXY COMPLIANCE PARAMETER; use avgscan instead</description>
+      <value>False</value>
+    </param>
+    
+    <param type="bool" name="crossbls" subparam="true">
+      <description>PLOTXY COMPLIANCE PARAMETER; use avgbaseline instead</description>
+      <value>False</value>
+    </param>
+    
+    <param type="string" name="width" subparam="true">
+      <description>PLOTXY COMPLIANCE PARAMETER; use avgchannel or avgspw instead</description>
+      <value>1</value>
+    </param>
+    
+    <param type="string" name="extendcorr" subparam="true">
+      <description>PLOTXY COMPLIANCE PARAMETER; use extcorrelation instead</description>
+      <value />
+      <allowed kind="enum">
+        <value />
+        <value>all</value>
+        <value>half</value>
+      </allowed>
+    </param>
+    
+    <param type="string" name="extendchan" subparam="true">
+      <description>PLOYXY COMPLIANCE PARAMETER; use extchanngel instead</description>
+      <value />
+      <allowed kind="enum">
+        <value />
+        <value>all</value>
+      </allowed>
+    </param>
+    
+    <param type="string" name="extendspw" subparam="true">
+      <description>PLOTXY COMPLIANCE PARAMETER; use extspw instead</description>
+      <value />
+      <allowed kind="enum">
+        <value />
+        <value>all</value>
+      </allowed>
+    </param>
+    
+    <param type="string" name="extendant" subparam="true">
+      <description>PLOTXY COMPLIANCE PARAMETER; use extantenna instead</description>
+      <value />
+      <allowed kind="enum">
+        <value />
+        <value>all</value>
+      </allowed>
+    </param>
+    
+    <param type="string" name="extendtime" subparam="true">
+      <description>PLOTXY COMPLIANCE PARAMETER; use exttime, extscans, and extfield instead</description>
+      <value />
+      <allowed kind="enum">
+        <value />
+        <value>all</value>
+        <value>scan</value>
+        <value>field</value>
+      </allowed>
+    </param>
+
+
+<!--
+###############################################################################
+Constraints
+###############################################################################
+-->
+
+  <constraints>
+  
+    <when param="xaxis">
+      <equals type="string" value="" />
+      <equals type="string" value="amp">
+        <default param="xdatacolumn"><value type="string" /></default>
+      </equals>
+      <equals type="string" value="amplitude">
+        <default param="xdatacolumn"><value type="string" /></default>
+      </equals>
+      <equals type="string" value="phase">
+        <default param="xdatacolumn"><value type="string" /></default>
+      </equals>
+      <equals type="string" value="real">
+        <default param="xdatacolumn"><value type="string" /></default>
+      </equals>
+      <equals type="string" value="imag">
+        <default param="xdatacolumn"><value type="string" /></default>
+      </equals>
+      <equals type="string" value="imaginary">
+        <default param="xdatacolumn"><value type="string" /></default>
+      </equals>
+    </when>
+    
+    <when param="yaxis">
+      <equals type="string" value="" />
+      <equals type="string" value="amp">
+        <default param="ydatacolumn"><value type="string" /></default>
+      </equals>
+      <equals type="string" value="amplitude">
+        <default param="ydatacolumn"><value type="string" /></default>
+      </equals>
+      <equals type="string" value="phase">
+        <default param="ydatacolumn"><value type="string" /></default>
+      </equals>
+      <equals type="string" value="real">
+        <default param="ydatacolumn"><value type="string" /></default>
+      </equals>
+      <equals type="string" value="imag">
+        <default param="ydatacolumn"><value type="string" /></default>
+      </equals>
+      <equals type="string" value="imaginary">
+        <default param="ydatacolumn"><value type="string" /></default>
+      </equals>
+    </when>
+  
+    <when param="selectdata">
+      <equals type="bool" value="True">
+        <default param="field"><value type="string" /></default>
+        <default param="spw"><value type="string" /></default>
+        <default param="timerange"><value type="string" /></default>
+        <default param="uvrange"><value type="string" /></default>
+        <default param="antenna"><value type="string" /></default>
+        <default param="scan"><value type="string" /></default>
+        <default param="correlation"><value type="string" /></default>
+        <default param="array"><value type="string" /></default>
+        <default param="msselect"><value type="string" /></default>
+      </equals>
+      <equals type="bool" value="False" />
+    </when>
+    
+    <when param="averagedata">
+      <equals type="bool" value="True">
+        <default param="avgchannel"><value type="string" /></default>
+        <default param="avgtime"><value type="string" /></default>
+        <default param="avgscan"><value type="bool">False</value></default>
+        <default param="avgfield"><value type="bool">False</value></default>
+        <default param="avgbaseline"><value type="bool">False</value></default>
+        <default param="avgantenna"><value type="bool">False</value></default>
+        <default param="avgspw"><value type="bool">False</value></default>
+      </equals>
+      <equals type="bool" value="False" />
+    </when>
+        <when param="extendflag">
+      <equals type="bool" value="False" />
+      <equals type="bool" value="True">
+        <default param="extcorrelation"><value type="string" /></default>
+        <default param="extchannel"><value type="bool">False</value></default>
+        <default param="extspw"><value type="bool">False</value></default>
+        <default param="extantenna"><value type="string" /></default>
+        <default param="exttime"><value type="bool">False</value></default>
+        <default param="extscans"><value type="bool">False</value></default>
+        <default param="extfield"><value type="bool">False</value></default>
+      </equals>
+    </when>
+    
+    <when param="plotxycomp">
+      <equals type="bool" value="False" />
+      <equals type="bool" value="True">
+        <default param="datacolumn"><value type="string">data</value></default>
+        <default param="timebin"><value type="string">0</value></default>
+        <default param="crossscans"><value type="bool">False</value></default>
+        <default param="crossbls"><value type="bool">False</value></default>
+        <default param="width"><value type="string">0</value></default>
+        <default param="extendcorr"><value type="string" /></default>
+        <default param="extendchan"><value type="string" /></default>
+        <default param="extendspw"><value type="string" /></default>
+        <default param="extendant"><value type="string" /></default>
+        <default param="extendtime"><value type="string" /></default>
+      </equals>
+    </when>
+    
+  </constraints>
+</input>
+
+<example>
+
+            Task for plotting and interacting with visibility data.  A variety
+        of axes choices (including data column) along with MS selection and
+        averaging options are provided for data selection.  Flag extension
+        parameters are also available for flagging operations in the plotter.
+        
+            All of the provided parameters can also be set using the GUI once
+        the application has been launched.  Additional and more specific
+        operations are available through the GUI and/or through the plotms
+        tool (pm).
+        
+
+    Keyword arguments:
+    vis -- input visibility dataset
+           default: ''
+    xaxis, yaxis -- what to plot on the two axes
+                    default: '' (uses PlotMS defaults/current set).
+      &gt;&gt;&gt; xaxis, yaxis expandable parameters
+        xdatacolumn, ydatacolumn -- which data column to use for data axes
+                                    default: '' (uses PlotMS default/current
+                                    set).
+    
+    selectdata -- data selection parameters flag
+                  (see help par.selectdata for more detailed information)
+                  default: False
+      &gt;&gt;&gt; selectdata expandable parameters
+        field -- select using field ID(s) or field name(s)
+                 default: '' (all).
+        spw -- select using spectral window/channels
+               default: '' (all)
+        timerange -- select using time range
+                     default: '' (all).
+        uvrange -- select using uvrange
+                   default: '' (all).
+        antenna -- select using antenna/baseline
+                   default: '' (all).
+        scan -- select using scan number
+                default: '' (all).
+        correlation -- select using correlations
+                       default: '' (all).
+        array -- select using (sub)-array range
+                 default: '' (all).
+        msselect -- TaQL selection expression
+                    default: '' (all).
+    
+    averagedata -- data averaing parameters flag
+                   default: False.
+      &gt;&gt;&gt; averagedata expandable parameters
+        avgchannel -- average over channel?  either blank for none, or a value
+                      in channels.
+                      default: '' (none).
+        avgtime -- average over time?  either blank for none, or a value in
+                   seconds.
+                   default: '' (none).
+        avgscan -- average over scans?  only valid if time averaging is turned
+                   on.
+                   default: False.
+        avgfield -- average over fields?  only valid if time averaging is
+                    turned on.
+                    default: False.
+        avgbaseline -- average over all baselines?  mutually exclusive with
+                       avgantenna.
+                       default: False.
+        avgantenna -- average by per-antenna?  mutually exclusive with
+                      avgbaseline.
+                      default: False.
+        avgspw -- average over all spectral windows?
+                  default: False.
+    
+    extendflag -- have flagging extend to other data points?
+                  default: False.
+      &gt;&gt;&gt; extendflag expandable parameters
+        extcorrelation -- extend flags based on correlation?  blank = none.
+                          default: ''.
+        extchannel -- extend flags based on channel?
+                      default: False.
+        extspw -- extend flags based on spw?
+                  default: False.
+        extantenna -- extend flags based on antenna?  should be either blank,
+                      'all' for all baselines, or an antenna-based value.
+                      default: ''.
+        exttime -- extend flags based on time (within scans)?
+                   default: False.
+        extscans -- extend flags based on scans?  only valid if time extension
+                    is turned on.
+                    default: False.
+        extfield -- extend flags based on field?  only valid if time extension
+                    is turned on.
+                    default: False.
+    
+    plotxycomp -- use plotxy compliance parameters?  WARNING: if used,
+                  subparameters will override their corresponding plotms
+                  parameter values.
+                  default: False.
+      &gt;&gt;&gt; plotxycomp expandable parameters
+        datacolumn -- maps to xdatacolumn and ydatacolumn.
+                      default: 'data'.
+        timebin -- maps to avgtime.
+                   default: '0'.
+        crossscans -- maps to avgscan.
+                      default: False.
+        crossbls -- maps to avgbaseline.
+                    default: False.
+        width -- maps to avgchannel and/or avgspw.  'all' is ignored, 'allspw'
+                 sets avgspw to true, any other value is set for avgchannel.
+                 default: '1'.
+        extendcorr -- maps to extcorrelation.  'half' is mapped to 'poln-dep'.
+                      default: ''.
+        extendchan -- maps to extchannel.  '' means False, 'all' means True.
+                      default: ''.
+        extendspw -- maps to extspw.  '' means False, 'all' means True.
+                     default: ''.
+        extendant -- maps to extantenna.  '' means False, 'all' means True.
+                     default: ''.
+        extendtime -- maps to exttime and/or extscans and/or extfield.  ''
+                      means False for all, 'all' means True for exttime, 'scan'
+                      means True for exttime and extscans, 'field' means True
+                      for exttime and extfield.
+                      default: ''.
+
+</example>
+
+</task>
+
+<!--
+###############################################################################
+Unimplemented parameters from plotxy in plotms
+* iteration
+* feed
+* averagemode
+* crossarrays
+* stackspw
+* restfreq
+* frame
+* doppler
+* subplot
+* plotsymbol
+* plotcolor
+* markersize
+* linewidth
+* plotrange
+* multicolor
+* selectplot
+* overplot
+* newplot
+* clearpanel
+* skipnrows
+* title
+* xlabels
+* ylabels
+* fontsize
+* windowsize
+* showflags
+* interactive
+* figfile
+###############################################################################
+-->
+
+</casaxml>

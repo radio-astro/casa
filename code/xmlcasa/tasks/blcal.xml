@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="blcal" category="calibration">
+<shortdescription>Calculate a baseline-based calibration solution (gain or bandpass)</shortdescription>
+<description>
+
+
+</description>
+<input>
+	<param type="string" name="vis" mustexist="true">
+		<description>Name of input visibility file</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="caltable">
+		<description>Name of output gain calibration table</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="field">
+		<description>Select field using field id(s) or field name(s)</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="spw">
+		<description>Select spectral window/channels</description>
+		<value></value>
+	</param>
+
+	<param type="bool" name="selectdata">
+		<description>Other data selection parameters</description>
+		<value>True</value>
+	</param>
+
+	<param type="string" name="timerange" subparam="true">
+		<description>Select data based on time range</description>
+		<value></value>
+	</param>
+
+	<param type="any" name="uvrange" subparam="true">
+		<description>Select data within uvrange (default units meters)</description>
+		<any type="variant"/>
+		<value type="string"></value>
+	</param>
+
+	<param type="string" name="antenna" subparam="true">
+		<description>Select data based on antenna/baseline</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="scan" subparam="true">
+		<description>Scan number range</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="msselect" subparam="true">
+		<description>Optional complex data selection (ignore for now)</description>
+		<value></value>
+	</param>
+
+        <param type="any" name="solint">
+                <description>Solution interval</description>
+                <any type="variant"/>
+                <value type="string">inf</value>
+        </param>
+
+        <param type="string" name="combine">
+                <description>Data axes which to combine for solve (scan, spw, and/or field)</description>
+                <value>scan</value>
+        </param>
+
+	<param type="bool" name="freqdep">
+		<description>Solve for frequency dependent solutions</description>
+		<value>False</value>
+	</param>
+
+        <param type="string" name="calmode">
+                <description>Type of solution" (\'ap\', \'p\', \'a\')</description>
+                <value>ap</value>
+                <allowed kind="enum">
+                        <value>a</value>
+                        <value>p</value>
+                        <value>ap</value>
+                </allowed>
+        </param>
+
+        <param type="bool" name="solnorm">
+                <description>Normalize average solution amplitudes to 1.0</description>
+                <value>False</value>
+        </param>
+
+	<param type="stringArray" name="gaintable">
+		<description>Gain calibration table(s) to apply on the fly</description>
+		<value></value>
+	</param>
+
+	<param type="stringArray" name="gainfield">
+		<description>Select a subset of calibrators from gaintable(s)</description>
+		<value></value>
+	</param>
+
+	<param type="stringArray" name="interp">
+		<description>Interpolation mode (in time) to use for each gaintable</description>
+		<value></value>
+		<allowed kind="enum">
+			<value>nearest</value>
+			<value>linear</value>
+			<value>aipslin</value>
+			<value></value>
+		</allowed>
+	</param>
+
+	<param type="intArray" name="spwmap">
+		<description>Spectral windows combinations to form for gaintables(s)</description>
+		<value></value>
+	</param>
+
+	<param type="bool" name="gaincurve">
+		<description>Apply internal VLA antenna gain curve correction</description>
+		<value>False</value>
+	</param>
+
+	<param type="double" name="opacity">
+		<description>Opacity correction to apply (nepers)</description>
+		<value>0.0</value>
+	</param>
+	<param type="bool" name="parang">
+		<description>Apply parallactic angle correction</description>
+		<value>False</value>
+	</param>
+   <constraints>
+	<when param="selectdata">
+		<equals type="bool" value="False"/>
+		<equals type="bool" value="True">
+			<default param="timerange"><value type="string"/></default>
+			<default param="uvrange"><value type="string"/></default>
+			<default param="antenna"><value type="string"/></default>
+			<default param="scan"><value type="string"/></default>
+			<default param="msselect"><value type="string"/></default>
+		</equals>
+	</when>
+   </constraints>
+</input>
+<example>
+
+        This task determines a baseline by baseline gain (time) or bandpass (freq)
+        for all baseline pairs in the data set.   For the usual antenna-based calibration
+        of interferometric data, this task gaincal is recommended, even with only one
+        to three baselines.  For arrays with closure errors, use blcal
+
+	Keyword arguments:
+	vis -- Name of input visibility file
+		default: none; example: vis='ngc5921.ms'
+	caltable -- Name of output Gain calibration table
+		default: none; example: caltable='ngc5921.gcal'
+
+       --- Data Selection (see help par.selectdata for more detailed information)
+
+       	field -- Select field using field id(s) or field name(s).
+                  [run listobs to obtain the list id's or names]
+               default: ''=all fields
+               If field string is a non-negative integer, it is assumed a field index
+                 otherwise, it is assumed a field name
+               field='0~2'; field ids 0,1,2
+               field='0,4,5~7'; field ids 0,4,5,6,7
+               field='3C286,3C295'; field named 3C286 adn 3C295
+               field = '3,4C*'; field id 3, all names starting with 4C
+       	spw -- Select spectral window/channels
+               default: ''=all spectral windows and channels
+               spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+               spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
+               spw='0:5~61'; spw 0, channels 5 to 61
+               spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, channels 3 to 45.
+               spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+               spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
+               spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
+                        spw 1, channels 20-30, and spw 2, channels, 1,2 and 3
+       	selectdata -- Other data selection parameters
+               default: True
+       	timerange  -- Select data based on time range:
+               default = '' (all); examples,
+               timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+               Note: if YYYY/MM/DD is missing dat defaults to first day in data set
+               timerange='09:14:0~09:54:0' picks 40 min on first day
+               timerange= '25:00:00~27:30:00' picks 1 hr to 3 hr 30min on next day
+               timerange='09:44:00' data within one integration of time
+               timerange='&gt;10:24:00' data after this time
+        uvrange -- Select data within uvrange (default units kilo-lambda)
+               default: '' (all); example:
+               uvrange='0~1000kl'; uvrange from 0-1000 kilo-lamgda
+               uvrange='&gt;4kl';uvranges greater than 4 kilo lambda
+               uvrange='0~1000km'; uvrange in kilometers
+       	antenna -- Select data based on antenna/baseline
+               default: '' (all)
+               If antenna string is a non-negative integer, it is assumed an antenna index
+                 otherwise, it is assumed as an antenna name
+               antenna='5&amp;6'; baseline between antenna index 5 and index 6.
+               antenna='VA05&amp;VA06'; baseline between VLA antenna 5 and 6.
+               antenna='5&amp;6;7&amp;8'; baseline 5-6 and 7-8
+               antenna='5'; all baselines with antenna 5
+               antenna='5,6,10'; all baselines with antennas 5 and 6
+       	scan -- Scan number range - New, under developement
+       	msselect -- Optional complex data selection (ignore for now)
+
+        solint --  Solution interval (units optional) 
+              default: 'inf' (~infinite, up to boundaries controlled by combine); 
+              Options: 'inf' (~infinite), 'int' (per integration), any float
+                       or integer value with or without units
+              examples: solint='1m'; solint='60s', solint=60 --&gt; 1 minute
+                        solint='0s'; solint=0; solint='int' --&gt; per integration
+                        solint-'-1s'; solint='inf' --&gt; ~infinite, up to boundaries
+                        enforced by combine
+        combine -- Data axes to combine for solving
+              default: 'scan' --&gt; solutions will break at field and spw boundaries,
+                        but may extend over multiple scans (per field and spw) up
+                        to solint.
+              Options: '','scan','spw',field', or any comma-separated combination
+              example: combine='scan,spw'  --&gt; extend solutions over scan boundaries
+                       (up to the solint), and combine spws for solving
+       	freqdep -- Solve for frequency dependent solutions
+               default: False (gain; True=bandpass); example: freqdep=True
+        calmode -- Type of solution
+               default: 'ap' (amp and phase); example: calmode='p'
+               Options: 'p','a','ap'
+        solnorm -- Normalize solutions.  For freqdep=F, this is a global (per-spw) 
+                   normalization of amplitudes (only).  For freqdep=T, each baseline 
+                   solution spectrum is separately normalized by its (complex) mean.
+                default: False (no normalization)
+
+        gaintable -- Gain calibration table(s) to apply
+               default: '' (none);
+               examples: gaintable='ngc5921.gcal'
+                         gaintable=['ngc5921.ampcal','ngc5921.phcal']
+        gainfield -- Select a subset of calibrators from gaintable(s)
+               default:'' ==&gt; all sources in table;
+               same syntax as field
+               example: gainfield='0~3'
+                        gainfield=['0~3','4~6']
+	interp -- Interpolation mode (in time) to use for each gaintable
+                default: '' --&gt; 'linear' for all gaintable(s)
+                example: interp='nearest'
+                         interp=['nearest','linear']
+                Options: 'nearest', 'linear', 'aipslin'
+	spwmap -- Spectral windows combinations to form for gaintable(s)
+                default: [] (apply solutions from each spw to that spw only)
+                Example:  spwmap=[0,0,1,1] means apply the caltable solutions
+                          from spw = 0 to the spw 0,1 and spw 1 to spw 2,3.
+                          spwmap=[[0,0,1,1],[0,1,0,1]]
+        gaincurve -- Apply internal VLA antenna gain curve correction (True/False)
+               default: False; 
+               Use gaincurve=True ONLY for VLA data
+        opacity -- Opacity correction to apply (nepers)
+               default: 0.0 (no opacity correction)
+               example: opacity=0.051
+               Typical VLA values are: 5 GHz - 0.013, 8 GHz - 0.013
+               15 GHz - 0.016, 23 GHz - 0.051, 43 GHz - 0.07
+        parang -- If True, apply the parallactic angle correction (required
+               for polarization calibration)
+               default: False
+
+</example> 
+
+</task>
+</casaxml>
