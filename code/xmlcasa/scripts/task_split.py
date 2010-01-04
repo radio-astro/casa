@@ -78,6 +78,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
         if os.path.exists(outputvis):
+            ms.close()
             raise Exception, "Output MS %s already exists - will not overwrite." % outputvis
 
         # No longer needed.  When did it get put in?  Note that the default

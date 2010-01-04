@@ -52,77 +52,33 @@ def boxit(imagename, regionfile, threshold, maskname, minsize, diag, boxstretch,
         outputmask.fill(False)
     for i3 in xrange(n3):
         for i2 in xrange(n2):
-
             regions = {}
             boxRecord = {}
             if len(shape)==2:
                 mask = fullmask
             if len(shape)==4:
-                mask = fullmask[:,:,i2,i3]
-            islandImage = 0-mask  # -1: belongs in an island;  0: below threshold
-            # islandImage will become an image with each island's pixels labeled by number
-            for x in xrange(nx):
-                for y in xrange(ny):
-                    if(mask[x,y]):
-                        stretch = True # stretch: increase size of island
-
-                        if (y>0) and (mask[x,y-1]):
-                            islandImage[x,y] = islandImage[x,y-1]
-                            if (x != 0) and (mask[x-1,y]) and \
-                                   (islandImage[x,y] != islandImage[x-1,y]):
-                                mergeIslands(boxRecord, islandImage,
-                                             islandImage[x-1,y],
-                                             islandImage[x,y])
-                                stretch = False
-                            if (diag) and (y != ny-1):
-                                if (mask[x-1,y+1]) and \
-                                       (islandImage[x,y] != islandImage[x-1,y+1]):
-                                    mergeIslands(boxRecord, islandImage,
-                                                 islandImage[x-1,y+1],
-                                                 islandImage[x,y])
-                                    stretch = False
-
-                        elif (diag) and (x>0) and (y>0) and (mask[x-1,y-1]):
-                            islandImage[x,y] = islandImage[x-1,y-1]
-                            if y == ny-1 :
-                                pass
-                            else:
-                                if (mask[x-1,y+1]) and \
-                                       (islandImage[x,y] != islandImage[x-1,y+1]):
-                                    mergeIslands(boxRecord, islandImage,
-                                                 islandImage[x-1,y+1],
-                                                 islandImage[x,y])
-                                    stretch = False
-
-                        elif (x>0) and (mask[x-1,y]):
-                            islandImage[x,y] = islandImage[x-1,y]
-
-                        elif (diag) and (x>0) and (y<ny-1) and (mask[x-1,y+1]):
-                            islandImage[x,y] = islandImage[x-1,y+1]
-
-                        else:
-                            # make new island
-                            stretch = False
-                            if(boxRecord):
-                                newID = max(boxRecord.keys()) + 1
-                            else:
-                                newID = 1
-                            islandImage[x,y] = newID
-                            newIsland['box'] = x,y,x,y
-                            newIsland['npix'] = 1
-                            boxRecord[newID] = newIsland.copy()
-                        if(stretch):
-                            stretchIsland( boxRecord, islandImage[x,y], x, y)
-            for record in boxRecord.values():
-                box = record['box'][0]
-                npix = record['npix'][0]
+                mask = fullmask[:,:,i2,i3].reshape(shape[0], shape[1])
+            islands = []
+            pos = numpy.unravel_index(mask.argmax(), mask.shape)
+            while(mask[pos]):
+                # found pixel in new island
+                island = {}
+                island['box'] = [pos[0], pos[1], pos[0], pos[1]]
+                island['npix'] = 1
+                find_nearby_island_pixels(island, mask, pos, shape[0], shape[1], diag)
+                islands.append(island)
+                pos = numpy.unravel_index(mask.argmax(), mask.shape)
+            for record in islands:
+                box = record['box']
                 # check size of box
-                if npix < minsize:
+                if record['npix'] < minsize:
                     continue
                 totregions += 1
                 # need pixel corners, not pixel centers
-                box[0:2] -= boxstretch
-                box[2:4] += boxstretch
+                box[0] -= boxstretch
+                box[1] -= boxstretch
+                box[2] += boxstretch
+                box[3] += boxstretch
                 # in case we used boxstretch < 0 and a one-pixel sized box:
                 if box[0] > box[2]:
                     box[0] += boxstretch
@@ -152,15 +108,15 @@ def boxit(imagename, regionfile, threshold, maskname, minsize, diag, boxstretch,
                 outstring += " [" + quantity_to_string(blc["direction"]["m1"], "rad") + ", "
                 outstring += quantity_to_string(trc["direction"]["m1"], "rad") + "]"
                 # frequency blc/trc
-                freqref = blc["spectral"]['frequency']['refer']
-                outstring += " ['" + freqref + " " + quantity_to_string(blc["spectral"]["frequency"]["m0"], "Hz", False) + "', "
-                outstring += "'" + freqref + " " + quantity_to_string(trc["spectral"]["frequency"]["m0"], "Hz", False) + "']"
+                freq = blc["spectral"]['frequency']['refer'] + " "
+                freq += quantity_to_string(blc["spectral"]["frequency"]["m0"], "Hz", False)
+                outstring += " ['" + freq + "', '" + freq + "']"
                 # Stokes blc/trc
                 outstring += " ['" + blc["stokes"] + "', '" + trc["stokes"] + "']"
                 # add the mask flag
                 outstring += " " + str(1)
                 f.write(outstring + "\n")
-    casalog.post("Wrote " + str(totregions) + " regions to file " + regionfile, 'INFO1')
+    casalog.post("Wrote " + str(totregions) + " regions to file " + regionfile, 'INFO')
     if writemask:
         ia.fromimage(infile=imagename, outfile=maskname, overwrite=True)
         ia.done()
@@ -179,29 +135,28 @@ def quantity_to_string(quantity, unit=None, quotes=True):
         string = "'" + string + "'"
     return string
 
-# two previously separate islands should have same numID
-def mergeIslands(boxRecord, islandImage, islandA, islandB):
-    recordA = boxRecord[islandA][0]
-    recordB = boxRecord[islandB][0]
-    # make new box for combined island
-    xmin = min(recordA['box'][0], recordB['box'][0])
-    ymin = min(recordA['box'][1], recordB['box'][1])
-    xmax = max(recordA['box'][2], recordB['box'][2])
-    ymax = max(recordA['box'][3], recordB['box'][3])
-    # put new box into island with higher flux
-    islandImage[islandImage == islandB] = islandA
-    boxRecord[islandA]['box'] = [xmin,ymin,xmax,ymax]
-    boxRecord[islandA]['npix'] += boxRecord[islandB]['npix']
-    # eliminate island with lower peak flux
-    del boxRecord[islandB]
-
-def stretchIsland(boxRecord, islandNum, x, y):
-    # stretch box
-    record = boxRecord[islandNum]
-    record['box'][0][0] = min(record['box'][0][0], x)
-    record['box'][0][1] = min(record['box'][0][1], y)
-    record['box'][0][2] = max(record['box'][0][2], x)
-    record['box'][0][3] = max(record['box'][0][3], y)
-    record['npix'][0] += 1
+def find_nearby_island_pixels(island, mask, pos, xmax, ymax, diag):
+    # blank this position so we don't deal with it again
+    mask[pos] = False
+    xref = pos[0]
+    yref = pos[1]
+    for x in range(max(xref-1, 0), min(xref+2, xmax)):
+        for y in range(max(yref-1, 0), min(yref+2, ymax)):
+            if x == xref and y == yref:
+                # same position as reference
+                continue
+            if ( (not diag) and (x-xref != 0) and (y-yref != 0)):
+                # diagonal pixels only used if diag is true
+                continue
+            if mask[x][y]:
+                # found another pixel in this island
+                island['box'][0] = min(island['box'][0],x)
+                island['box'][1] = min(island['box'][1],y)
+                island['box'][2] = max(island['box'][2],x)
+                island['box'][3] = max(island['box'][3],y)
+                island['npix'] += 1
+                # look for island pixels next to this one
+                find_nearby_island_pixels(island, mask, (x,y), xmax, ymax, diag)
+    return
 
 
