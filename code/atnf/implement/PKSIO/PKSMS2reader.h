@@ -206,6 +206,7 @@ class PKSMS2reader : public PKSreader
     ROScalarColumn<Int>     cDataDescIdCol;
     ROScalarColumn<Int>     cSpWinIdCol;
     ROArrayColumn<Double>   cChanFreqCol;
+    ROScalarColumn<Double>   cTotBWCol;
     ROScalarColumn<Double>  cWeatherTimeCol;
     ROScalarColumn<Float>   cTemperatureCol;
     ROScalarColumn<Float>   cPressureCol;

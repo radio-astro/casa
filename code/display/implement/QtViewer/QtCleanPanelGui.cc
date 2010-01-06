@@ -253,10 +253,21 @@ namespace casa {
 
 	addDockWidget(Qt::TopDockWidgetArea, dock);
 
-	disabled_widgets.push_back(mouseToolBar_->button(QtMouseToolNames::POSITION));
-	disabled_widgets.push_back(mouseToolBar_->button(QtMouseToolNames::RECTANGLE));
-	disabled_widgets.push_back(mouseToolBar_->button(QtMouseToolNames::POLYGON));
-	disabled_widgets.push_back(mouseToolBar_->button(QtMouseToolNames::POLYLINE));
+	QWidget *rectangle_button = mouseToolBar_->button(QtMouseToolNames::RECTANGLE);
+	if ( rectangle_button ) {
+	    rectangle_button->setEnabled(false);
+	    disabled_widgets.push_back(rectangle_button);
+	}
+	QWidget *polygon_button = mouseToolBar_->button(QtMouseToolNames::POLYGON);
+	if ( polygon_button ) {
+	    polygon_button->setEnabled(false);
+	    disabled_widgets.push_back(polygon_button);
+	}
+
+	QWidget *position_button = mouseToolBar_->button(QtMouseToolNames::POSITION);
+	if ( position_button ) position_button->setEnabled(false);
+	QWidget *polyline_button = mouseToolBar_->button(QtMouseToolNames::POLYLINE);
+	if ( polyline_button ) polyline_button->setEnabled(false);
 
 	show( );
 	v_->autoDDOptionsShow = true;

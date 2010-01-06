@@ -8900,6 +8900,7 @@ LIBDIRS="/local/pgplot      \
          /usr/local/cfitsio \
          /usr/local/lib     \
          /opt/local/lib     \
+         /opt/casa/core2-apple-darwin8/3rd-party/lib     \
          /opt/SUNWspro/lib  \
          /sw/lib"
 
@@ -8935,6 +8936,7 @@ done
 INCDIRS="/local/include \
          /usr/local/include \
          /opt/local/include \
+         /opt/casa/core2-apple-darwin8/3rd-party/include \
          /sw/include        \
          /local             \
          /usr/include"
