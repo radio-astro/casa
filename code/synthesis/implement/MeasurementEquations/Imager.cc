@@ -4204,7 +4204,7 @@ Bool Imager::makeimage(const String& type, const String& image,
     IPosition cimageShape(imageshape());
     Int tilex=32;
     if(imageTileVol_p >0){
-      tilex=ceil(sqrt(imageTileVol_p/min(4, cimageShape(3))/min(32, cimageShape(4))));
+      tilex=ceil(sqrt(imageTileVol_p/min(4, cimageShape(2))/min(32, cimageShape(3))));
       if(tilex >0){
 	tilex=cimageShape(0)/Int(cimageShape(0)/tilex);
       }
@@ -4214,7 +4214,7 @@ Bool Imager::makeimage(const String& type, const String& image,
    
     }
     IPosition tileShape(4, min(tilex, cimageShape(0)), min(tilex, cimageShape(1)),
-			min(4, cimageShape(3)), min(32, cimageShape(4)));
+			min(4, cimageShape(2)), min(32, cimageShape(3)));
     CoordinateSystem cimagecoords;
     if(!imagecoordinates(cimagecoords, false))
       {
