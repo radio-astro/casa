@@ -966,7 +966,9 @@ def expr_test():
 #        error_msgs:  detailed message(s) of any error(s) that occured.
 ####################################################################
 def pol_test( imageList ):
-    retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+    success = True
+    errors = ''
+#    retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
     casalog.post( "Starting immath INPUT/OUTPUT tests.", 'NORMAL2' )
 
     # First make the I, Q, U, and V files.  This step may not be
@@ -977,46 +979,45 @@ def pol_test( imageList ):
     immath( imageList[3], expr='IM0', stokes='V', outfile='pol_test_V.im' )
 
     imList = ['pol_test_Q.im', 'pol_test_U.im', 'pol_test_V.im']
-    results = None
     try:
-        results = immath( imagename=imList, outfile='pol_test1', mode='poli' )
+        # total polarization intensity
+        outfile = 'pol_test1'
+        if(immath( imagename=imList, outfile=outfile, mode='poli' )):
+            ia.open(outfile)
+            if ia.coordsys().stokes() != 'Ptotal':
+                success = False
+                errors += "\nIncorrect stokes in polarization intensity image"
+            ia.done()
+        else:
+            success = False
+            errors += "\nimmath returned False when determining polarization intensity image"
     except:
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-                   +"\nError: Failed to create polarization intensity image."
-    if ( not os.path.exists( 'pol_test1' ) or results == None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-                   +"\nError: output file, 'pol_test1', was not created."
+        success = False
+        errors += "\nError: Failed to create polarization intensity image."
+        
+    try:
+        # linear polarization intensity
+        outfile = 'linear_pol_intensity_test'
+        if(immath( imagename=imList[0:2], outfile=outfile, mode='poli' )):
+            ia.open(outfile)
+            if ia.coordsys().stokes() != 'Plinear':
+                success = False
+                errors += "\nIncorrect stokes in linear polarization image"
+            ia.done()
+        else:
+            success = False
+            errors += "\nimmath returned False when determining linear polarization image"
+    except:
+        success = False
+        errors
 
     imList = ['pol_test_Q.im', 'pol_test_U.im']
-    results = None
     try:
         results = immath( imagename=imList, outfile='pol_test2', mode='pola' )
     except:
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-                   +"\nError: Failed to create polarization angle image."
-    if ( not os.path.exists( 'pol_test2' ) or results == None ):
-        retValue['success']=False
-        retValue['error_msgs']=retValue['error_msgs']\
-                   +"\nError: output file, 'pol_test2', was not created."
-        
-
-    #imList = [ Need at least two images at different frequencies]
-    #results = None
-    #try:
-    #    results = immath( imagenames=imList, outfile='pol_test3', mode='spix' )
-    #except:
-    #    retValue['success']=False
-    #    retValue['error_msgs']=retValue['error_msgs']\
-    #               +"\nError: Failed to create spectral index image."
-    #if ( not os.path.exists( 'pol_test3' ) or results == None ):
-    #    retValue['success']=False
-    #    retValue['error_msgs']=retValue['error_msgs']\
-    #               +"\nError: output file, 'pol_test3', was not created."
-    
-    return retValue
+        success = False
+        errors += "\nError: Failed to create polarization angle image."
+    return {'success': success, 'msgs': "", 'error_msgs': errors }
 
 # verification of fix to CAS-1678
 # https://bugs.aoc.nrao.edu/browse/CAS-1678

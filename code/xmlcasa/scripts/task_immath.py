@@ -64,8 +64,8 @@
 #
 #    Keyword arguments:
 #    outfile -- The file where the results of the image calculations 
-#		are stored.  Overwriting an existing outfile is not permitted.
-#	    Default: none;  Example: outfile='results.im'
+#                are stored.  Overwriting an existing outfile is not permitted.
+#            Default: none;  Example: outfile='results.im'
 #    mode -- mode for mathematical operation
 #            Default: evalexpr
 #            Options: 'evalexpr' : evalulate a mathematical expression defined in 'expr' 
@@ -74,9 +74,9 @@
 #                     'poli' : polarization intesity image 
 #           mode expandable parameters
 #            expr -- (for mode='evalexpr') A mathematical expression, with image file names.
-#	      Image file names MUST be enclosed in double quotes (&quot;)
-#	      Default: none 
-#	      Examples:
+#              Image file names MUST be enclosed in double quotes (&quot;)
+#              Default: none 
+#              Examples:
 #                 Make an image that is image1.im - image2.im
 #                   expr=' (&quot;image1.im&quot; - &quot;image2.im&quot; )'
 #                 Clip an image below a value (0.5 in this case)
@@ -114,11 +114,11 @@
 #            Default: none
 #            Example: region='myimage.im.rgn'
 #    box --  A box region on the directional plane
-#	    Only pixel values acceptable at this time.
-#	    Default: none (whole 2-D plane);  Example: box='10,10,50,50'
+#            Only pixel values acceptable at this time.
+#            Default: none (whole 2-D plane);  Example: box='10,10,50,50'
 #    chans -- channel numbers, velocity, and/or frequency
-#	    Only channel numbers acceptable at this time.
-#	    Default: none (all);  Example: chans='3~20'   
+#            Only channel numbers acceptable at this time.
+#            Default: none (all);  Example: chans='3~20'   
 #    stokes -- Stokes parameters to image, may or may not be separated
 #            by commas but best if you use commas.
 #            Default: none (all); Example: stokes='IQUV';
@@ -169,7 +169,7 @@ from taskinit import *
 from imregion import *
 
 def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
-	   region, box, chans, stokes ):
+           region, box, chans, stokes ):
     # Tell CASA who will be reporting
     casalog.origin('immath')
     retValue = False
@@ -224,16 +224,16 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
     # same size.  Is this
     tmpfilenames=''
     if mode=='evalexpr':
-	tmpfilenames=_immath_parse( expr )
-	filenames=imagename
+        tmpfilenames=_immath_parse( expr )
+        filenames=imagename
     else:
-	filenames=imagename
+        filenames=imagename
     if ( isinstance( filenames, str ) ):
         filenames= [ filenames ]
     casalog.post( 'List of input files is: '+str(filenames), 'DEBUG1' )
     #for i in range( len(filenames) ):
-    #	if ( not os.path.exists(filenames[i]) ):
-    #	    raise Exception, 'Image data set not found - please verify '+filenames[i]
+    #        if ( not os.path.exists(filenames[i]) ):
+    #            raise Exception, 'Image data set not found - please verify '+filenames[i]
 
     # Construct the variable name list.  We append to the list the
     # default variable names if the user hasn't supplied a full suite.
@@ -257,7 +257,7 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
             # check if it is one of varnames, if not check the files in expr exist 
             if(not varnamesSet.issuperset(imname)):
                if( not os.path.exists(imname)):
-	           raise Exception, 'Image data set not found - please verify '+imname
+                   raise Exception, 'Image data set not found - please verify '+imname
                else:
                    count=count+1            
         if len(tmpfilenames)==count:
@@ -280,134 +280,134 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
     # These are common, repetitive calculations that are handled for
     # the user.
     if mode=='spix':
-	# calculate a spectral index distribution image
-	if len(filenames) != 2:
-	    raise Exception, 'Requires two images at different frequencies'
-	#expr = 'spectralindex("%s","%s")' % (filenames[0],filenames[1])
+        # calculate a spectral index distribution image
+        if len(filenames) != 2:
+            raise Exception, 'Requires two images at different frequencies'
+        #expr = 'spectralindex("%s","%s")' % (filenames[0],filenames[1])
 
-	expr = 'spectralindex('+varnames[0]+', '+varnames[1]+')'
+        expr = 'spectralindex('+varnames[0]+', '+varnames[1]+')'
     elif mode=='pola':
-	# calculate a polarization position angle image
-	if len(filenames) < 2:
-	    raise Exception, 'Requires separate Stokes Q and U images'
-	else:
-	    if len(filenames) >2:
-		casalog.post( "More than two images. Take first two and ignore the rest. " ,'WARN' );
-	    stkslist=__check_stokes(filenames)
+        # calculate a polarization position angle image
+        if len(filenames) < 2:
+            raise Exception, 'Requires separate Stokes Q and U images'
+        else:
+            if len(filenames) >2:
+                casalog.post( "More than two images. Take first two and ignore the rest. " ,'WARN' );
+            stkslist=__check_stokes(filenames)
             Uimage=Qimage=''
-	    for i in range(2):
-		if type(stkslist[i])==list:
+            for i in range(2):
+                if type(stkslist[i])==list:
                            raise Exception, 'Cannot handle %s, a multi-Stokes image.' % filenames[i]
-		else:
-		    if stkslist[i]=='U':
-			#Uimage=filenames[i]
+                else:
+                    if stkslist[i]=='U':
+                        #Uimage=filenames[i]
                         Uimage=varnames[i]
-		    if stkslist[i]=='Q':
-			#Qimage=filenames[i]
+                    if stkslist[i]=='Q':
+                        #Qimage=filenames[i]
                         Qimage=varnames[i]
-	    if len(Uimage)<1 or len(Qimage)<1:
-		missing = []
-		if len(Qimage)<1: missing.append('Q')
-		if len(Uimage)<1: missing.append('U')
-		raise Exception, 'Missing Stokes %s image(s)' % missing
-	    expr = 'pa(%s,%s)' % (Uimage,Qimage)
+            if len(Uimage)<1 or len(Qimage)<1:
+                missing = []
+                if len(Qimage)<1: missing.append('Q')
+                if len(Uimage)<1: missing.append('U')
+                raise Exception, 'Missing Stokes %s image(s)' % missing
+            expr = 'pa(%s,%s)' % (Uimage,Qimage)
     elif mode=='poli':
-	# calculate a polarization intensity image
-	# if 3 files total pol intensity image
-	# if 2 files given linear pol intensity image
-	isQim = False
-	isUim = False
-	isVim = False
-	isLPol = False
-	isTPol = False
-	stkslist=__check_stokes(filenames)
-	if len(filenames) !=3 and len(filenames)!=2:
+        # calculate a polarization intensity image
+        # if 3 files total pol intensity image
+        # if 2 files given linear pol intensity image
+        isQim = False
+        isUim = False
+        isVim = False
+        isLPol = False
+        isTPol = False
+        stkslist=__check_stokes(filenames)
+        if len(filenames) !=3 and len(filenames)!=2:
             raise Exception, 'Requires at two or three Stokes images'
-        
         if len(filenames)==3:
             for i in range(len(stkslist)):
-		if type(stkslist[i])==list:
-		    raise Exception, 'Cannot handle %s, a multi-Stokes image.' % filenames[i]
+                if type(stkslist[i])==list:
+                    raise Exception, 'Cannot handle %s, a multi-Stokes image.' % filenames[i]
                 else:
                     if stkslist[i]=='Q':isQim=True
                     if stkslist[i]=='U':isUim=True
                     if stkslist[i]=='V':isVim=True
-	    if not (isUim and isQim and isVim):
-		missing = []
-		if not isQim: missing.append('Q')
-		if not isUim: missing.append('U')
-		if not isVim: missing.append('V')
-		raise Exception, 'Missing Stokes %s image(s)' % missing
+            if not (isUim and isQim and isVim):
+                missing = []
+                if not isQim: missing.append('Q')
+                if not isUim: missing.append('U')
+                if not isVim: missing.append('V')
+                raise Exception, 'Missing Stokes %s image(s)' % missing
             #expr='sqrt("%s"*"%s"+"%s"*"%s"+"%s"*"%s"' % (filenames[0],filenames[0], filenames[1],filenames[1],filenames[2],filenames[2])
-	    expr='sqrt('+varnames[0]+'*'+varnames[0]\
+            expr='sqrt('+varnames[0]+'*'+varnames[0]\
                   +'+'+varnames[1]+'*'+varnames[1]\
                   +'+'+varnames[2]+'*'+varnames[2]
-	    isTPol = True
-	elif len(filenames) ==2:
-	    for i in range(len(stkslist)):
-		if type(stkslist[i])==list:
-		    raise Exception, 'Cannot handle %s, a multi-Stokes image.' % filenames[i]
-		else:
-		    if stkslist[i]=='Q':isQim=True
-		    if stkslist[i]=='U':isUim=True
-	    if not (isUim and isQim):
-		missing = []
-		if not isQim: missing.append('Q')
-		if not isUim: missing.append('U')
-		raise Exception, 'Missing Stokes %s image(s)' % missing
-	    #expr='sqrt("%s"*"%s"+"%s"*"%s"' % (filenames[0],filenames[0], filenames[1],filenames[1])
+            isTPol = True
+        elif len(filenames) ==2:
+            for i in range(len(stkslist)):
+                if type(stkslist[i])==list:
+                    raise Exception, 'Cannot handle %s, a multi-Stokes image.' % filenames[i]
+                else:
+                    if stkslist[i]=='Q':isQim=True
+                    if stkslist[i]=='U':isUim=True
+            if not (isUim and isQim):
+                missing = []
+                if not isQim: missing.append('Q')
+                if not isUim: missing.append('U')
+                raise Exception, 'Missing Stokes %s image(s)' % missing
+            #expr='sqrt("%s"*"%s"+"%s"*"%s"' % (filenames[0],filenames[0], filenames[1],filenames[1])
             expr='sqrt('+varnames[0]+'*'+varnames[0]\
                   +'+'+varnames[1]+'*'+varnames[1]
-	    isLPol = True
-	
-	sigsq=0
+            isLPol = True
+        
+        sigsq=0
 
-	if len(sigma)>0:
-	    qsigma=qa.quantity(sigma)
-	    if qa.getvalue(qsigma) >0:
-		sigmaunit=qa.getunit(qsigma)
-		try:
-		    ia.open(filenames[0])
-		    iunit=ia.brightnessunit()
-		    ia.done()
-		except:
-		    raise Exception, 'Unable to get brightness unit from image file '+filenames[0]
-		if sigmaunit!=iunit:
-		    newsigma=qa.convert(qsigma,iunit)
-		else:
-		    newsigma=sigma
-		    sigsq=(qa.getvalue(newsigma))**2
-		expr+='-%s' % sigsq
-	    expr+=')'
-	# reset stokes selection for pola and poli
+        if len(sigma)>0:
+            qsigma=qa.quantity(sigma)
+            if qa.getvalue(qsigma) >0:
+                sigmaunit=qa.getunit(qsigma)
+                try:
+                    ia.open(filenames[0])
+                    iunit=ia.brightnessunit()
+                    ia.done()
+                except:
+                    raise Exception, 'Unable to get brightness unit from image file '+filenames[0]
+                if sigmaunit!=iunit:
+                    newsigma=qa.convert(qsigma,iunit)
+                else:
+                    newsigma=sigma
+                    sigsq=(qa.getvalue(newsigma))**2
+                expr+='-%s' % sigsq
+            expr+=')'
+        # reset stokes selection for pola and poli
     if (mode=='pola' or mode=='poli') and len(stokes)!=0:
         casalog.post( "Ignoring stokes parameters selection." ,'WARN' );
         stokes=''
-
 
     # PUT TRY BLOCK AROUND THIS PART
     #
     # NEED TO DO EXPRESSION FOR EXPR MODE
 
-	    
+            
     # If the user didn't give any region or mask information
     # then just evaluated the expression with the filenames in it.
 
     if ( len(box)<1 and len(chans)<1 and len(stokes)<1 and len(region)<1 and len(mask)<1):
-    	expr = _immath_expr_from_varnames(expr, varnames, filenames)
+        expr = _immath_expr_from_varnames(expr, varnames, filenames)
         casalog.post( 'Will evaluate expression: '+expr, 'DEBUG1' )
         try:
             ia.imagecalc(pixels=expr, outfile=outfile)
 
             # need to modify stokes type of output image for pol. intensity image
             if ( mode =="poli" ):
-                csys=results.coordsys()
+            	print (inspect.getlineno(inspect.currentframe()))
+            	ia.open(outfile)
+                csys=ia.coordsys()
                 if isTPol:
                     csys.setstokes('Ptotal')
                 elif isLPol:
                     csys.setstokes('Plinear')
                 ia.setcoordsys(csys.torecord())
-                
+                ia.done()
             ia.done()
             return True
         except Exception, error:
@@ -490,8 +490,6 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
             casalog.post( 'Unable to apply region to file: '\
                           +filenames[i], 'SEVERE' )
             return False
-        
-        
     # Make sure no problems happened
 
     if ( len(filenames) != len(subImages) ) :
@@ -502,7 +500,7 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
     
     # Put the subimage names into the expression
     try:
-    	expr = _immath_expr_from_varnames(expr, varnames, subImages)
+            expr = _immath_expr_from_varnames(expr, varnames, subImages)
     except Exception, e:
         casalog.post( 'Unable to construct pixel expression aborting immath.'
                       'SEVERE' )
@@ -556,35 +554,35 @@ def _immath_cleanup( filePrefix ):
     # a previous run of immath
     fileList=os.listdir( os.getcwd() )
     for file in fileList:
-	if ( file.startswith( filePrefix ) ):
-	    #recursivermdir( file )
+        if ( file.startswith( filePrefix ) ):
+            #recursivermdir( file )
             shutil.rmtree( file )
 
 
 def _immath_parse( expr='' ):
-	retValue=[]
-	
-	# Find out if the names are surrounded by single or double quotes
-	quote=''
-	if ( expr.find('"') > -1 ):
-	    quote='"'
-	if ( expr.find("'") > -1 ):
-	    quote="'"
+        retValue=[]
+        
+        # Find out if the names are surrounded by single or double quotes
+        quote=''
+        if ( expr.find('"') > -1 ):
+            quote='"'
+        if ( expr.find("'") > -1 ):
+            quote="'"
 
-	current=expr;
-	while( current.count(quote) > 1 ):
-	    start = current.index(quote)+1
-	    end   = current[start:].index(quote)+start
-	    if ( retValue.count( current[start:end] ) > 0 ) :
-		# We already have this file name so we won't add it
-		# to the list again.  This saves us work and disk space.
-		current=current[end+1:]
-		continue;
-	    
-	    retValue.append( current[start:end] )
-	    current=current[end+1:]
+        current=expr;
+        while( current.count(quote) > 1 ):
+            start = current.index(quote)+1
+            end   = current[start:].index(quote)+start
+            if ( retValue.count( current[start:end] ) > 0 ) :
+                # We already have this file name so we won't add it
+                # to the list again.  This saves us work and disk space.
+                current=current[end+1:]
+                continue;
+            
+            retValue.append( current[start:end] )
+            current=current[end+1:]
 
-	return retValue
+        return retValue
 
 # check stokes type for the list of images
 def __check_stokes(images):
@@ -601,16 +599,16 @@ def __check_stokes(images):
 # the substitutions to assure the substitution set is performed correctly
 # CAS-1678
 def _immath_expr_from_varnames(expr, varnames, filenames):
-	tmpfiles = {}
-	for i in range(len(filenames)):
-		tmpfiles[varnames[i]] = filenames[i]
-	tmpvars = tmpfiles.keys()
+        tmpfiles = {}
+        for i in range(len(filenames)):
+                tmpfiles[varnames[i]] = filenames[i]
+        tmpvars = tmpfiles.keys()
 
-	tmpvars.sort()
-	tmpvars.reverse()
+        tmpvars.sort()
+        tmpvars.reverse()
 
-	for varname in tmpvars:
-		expr = expr.replace(varname, '"' + tmpfiles[varname] + '"')
-	return(expr)
+        for varname in tmpvars:
+                expr = expr.replace(varname, '"' + tmpfiles[varname] + '"')
+        return(expr)
 
 
