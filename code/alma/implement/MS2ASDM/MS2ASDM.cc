@@ -82,9 +82,9 @@ namespace casa {
     // the Id to Tag maps
     asdmStationId_p(Tag()),
     asdmAntennaId_p(Tag()),
-    asdmSPWId_p(Tag()),
-    asdmPolId_p(Tag()),
-    asdmProcId_p(Tag()),
+    asdmSpectralWindowId_p(Tag()),
+    asdmPolarizationId_p(Tag()),
+    asdmProcessorId_p(Tag()),
     asdmFieldId_p(Tag())
   {
     ASDM_p = new ASDM();
@@ -161,6 +161,24 @@ namespace casa {
     }
       
     cout << " UID is " << getCurrentUid() << endl;
+
+    // write the ASDM tables
+
+    if(!writeStation()){
+      return False;
+    }
+
+    if(!writeAntenna()){
+      return False;
+    }
+
+    if(!writeSpectralWindow()){
+      return False;
+    }
+
+    if(!writePolarization()){
+      return False;
+    }
 
     if(!writeConfigDesc()){
       return False;
@@ -739,6 +757,7 @@ namespace casa {
   //     Entity ent = tT.getEntity();
   //     ent.setEntityId(theUid);
   //     tT.setEntity(ent);
+  //     os << LogIO::NORMAL << "Filled Station table " << getCurrentUid() << " ... " << LogIO::POST;
   //     incrementUid();
   
   //     return rstat;
@@ -793,6 +812,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled Station table " << getCurrentUid() << " ... " << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -857,6 +877,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled Antenna table " << getCurrentUid() << " ... " << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -871,14 +892,84 @@ namespace casa {
 
     asdm::SpectralWindowRow* tR = 0;
 
-    //    tR = tT.newRow();
+    for(uInt irow=0; irow<spectralWindow().nrow(); irow++){
 
-    tT.add(tR);
+      // parameters of the new row
+      BasebandNameMod::BasebandName basebandName = BasebandNameMod::NOBB;
+      if(!spectralWindow().bbcNo().isNull()){ // BBC_NO is an optional MS column
+	basebandName = ASDMBBName( spectralWindow().bbcNo()(irow) );
+      }
+      NetSidebandMod::NetSideband netSideband = ASDMNetSideBand( spectralWindow().netSideband()(irow) );
+      int numChan = spectralWindow().numChan()(irow);
+
+      Unit funit("Hz"); // ASDM frequency values need to be in Hz
+
+      Frequency refFreq  = Frequency( spectralWindow().refFrequencyQuant()(irow).get(funit).getValue() );
+      SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode = SidebandProcessingModeMod::NONE;
+      Frequency totBandwidth = Frequency( spectralWindow().totalBandwidthQuant()(irow).get(funit).getValue() );
+      WindowFunctionMod::WindowFunction windowFunction = WindowFunctionMod::UNIFORM;
+
+      tR = tT.newRow(basebandName, netSideband, numChan, refFreq, sidebandProcessingMode, totBandwidth, windowFunction);
+
+      Vector< Quantum<Double> > v;
+      vector< Frequency > chanFreqArray;
+      v.reference( spectralWindow().chanFreqQuant()(irow) );
+      for(uInt i=0; i<v.nelements(); i++){ 
+	chanFreqArray.push_back( Frequency( v[i].get(funit).getValue() ) );
+      }
+      tR->setChanFreqArray(chanFreqArray);
+
+      vector< Frequency > chanWidthArray;
+      v.reference( spectralWindow().chanWidthQuant()(irow) );
+      for(uInt i=0; i<v.nelements(); i++){ 
+	chanWidthArray.push_back( Frequency( v[i].get(funit).getValue() ) );
+      }
+      tR->setChanWidthArray(chanWidthArray);
+
+      vector< Frequency > effectiveBwArray;
+      v.reference( spectralWindow().effectiveBWQuant()(irow) );
+      for(uInt i=0; i<v.nelements(); i++){ 
+	effectiveBwArray.push_back( Frequency( v[i].get(funit).getValue() ) );
+      }
+      tR->setEffectiveBwArray(effectiveBwArray);
+
+      vector< Frequency > resolutionArray;
+      v.reference( spectralWindow().resolutionQuant()(irow) );
+      for(uInt i=0; i<v.nelements(); i++){ 
+	resolutionArray.push_back( Frequency( v[i].get(funit).getValue() ) );
+      }      
+      tR->setResolutionArray( resolutionArray );
+
+      MFrequency::Types refFrame = MFrequency::castType(spectralWindow().measFreqRef()(irow));
+      FrequencyReferenceCodeMod::FrequencyReferenceCode measFreqRef = ASDMFreqRefCode( refFrame );
+      tR->setMeasFreqRef( measFreqRef );
+
+      tR->setFreqGroup( spectralWindow().freqGroup()(irow) );
+
+      tR->setFreqGroupName( string( spectralWindow().freqGroupName()(irow).c_str() ) );	
+
+      if(!spectralWindow().dopplerId().isNull()){ // DOPPLER_ID is an optional MS column
+	tR->setDopplerId( spectralWindow().dopplerId()(irow) );
+      }
+
+      // add the row to the table
+      asdm::SpectralWindowRow* tR2 = 0;
+      tR2 = tT.add(tR);
+
+      if(tR2 == tR){ // adding this row caused a new tag to be defined
+	// enter tag into the map
+	asdmSpectralWindowId_p.define(irow, tR->getSpectralWindowId());
+      }
+      else{
+	os << LogIO::WARN << "Duplicate row in MS Spectral Window table :" << irow << LogIO::POST;
+      }
+    } // end loop over MS SPW table
 
     EntityId theUid(getCurrentUid());
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled SpectralWindow table " << getCurrentUid() << " ... " << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -892,14 +983,131 @@ namespace casa {
 
     asdm::PolarizationRow* tR = 0;
 
-    //    tR = tT.newRow();
+    for(uInt irow=0; irow<polarization().nrow(); irow++){
 
-    tT.add(tR);
+      // parameters of the new row
+
+      vector< StokesParameterMod::StokesParameter > corrTypeV;
+      vector< vector< PolarizationTypeMod::PolarizationType > > corrProduct;
+      
+      Vector< Int > v; // aux. vector
+      v.reference( polarization().corrType()(irow) );
+      for(uInt i=0; i<v.nelements(); i++){
+	Stokes::StokesTypes st = static_cast<Stokes::StokesTypes>(v[i]);
+	if(st == Stokes::LR){ // only add if RL is not also present
+	  if(!stokesTypePresent(v, Stokes::RL)){
+	    corrTypeV.push_back( ASDMStokesParameter( st ) );
+	  }
+	}
+	else if(st == Stokes::YX){ // only add if XY is not also present
+	  if(!stokesTypePresent(v, Stokes::XY)){
+	    corrTypeV.push_back( ASDMStokesParameter( st ) );
+	  }
+	}
+	else{
+	  corrTypeV.push_back( ASDMStokesParameter( st ) );
+	}
+      }
+      int numCorr = corrTypeV.size(); 
+
+      for(uInt i=0; i<corrTypeV.size(); i++){
+	vector< PolarizationTypeMod::PolarizationType > w;
+	switch(corrTypeV[i]){
+	case StokesParameterMod::RR:
+	  w.push_back(PolarizationTypeMod::R);
+	  w.push_back(PolarizationTypeMod::R);
+	  break;
+	case StokesParameterMod::RL:
+	  w.push_back(PolarizationTypeMod::R);
+	  w.push_back(PolarizationTypeMod::L);
+	  break;
+	case StokesParameterMod::LR:
+	  w.push_back(PolarizationTypeMod::L);
+	  w.push_back(PolarizationTypeMod::R);
+	  break;
+	case StokesParameterMod::LL:
+	  w.push_back(PolarizationTypeMod::L);
+	  w.push_back(PolarizationTypeMod::L);
+	  break;
+	case StokesParameterMod::XX:
+	  w.push_back(PolarizationTypeMod::X);
+	  w.push_back(PolarizationTypeMod::X);
+	  break;
+	case StokesParameterMod::XY:
+	  w.push_back(PolarizationTypeMod::X);
+	  w.push_back(PolarizationTypeMod::Y);
+	  break;
+	case StokesParameterMod::YX:
+	  w.push_back(PolarizationTypeMod::Y);
+	  w.push_back(PolarizationTypeMod::X);
+	  break;
+	case StokesParameterMod::YY:
+	  w.push_back(PolarizationTypeMod::Y);
+	  w.push_back(PolarizationTypeMod::Y);
+	  break;
+	case StokesParameterMod::RX:
+	  w.push_back(PolarizationTypeMod::R);
+	  w.push_back(PolarizationTypeMod::X);
+	  break;
+	case StokesParameterMod::RY:
+	  w.push_back(PolarizationTypeMod::R);
+	  w.push_back(PolarizationTypeMod::Y);
+	  break;
+	case StokesParameterMod::LX:
+	  w.push_back(PolarizationTypeMod::L);
+	  w.push_back(PolarizationTypeMod::X);
+	  break;
+	case StokesParameterMod::LY:
+	  w.push_back(PolarizationTypeMod::L);
+	  w.push_back(PolarizationTypeMod::Y);
+	  break;
+	case StokesParameterMod::XR:
+	  w.push_back(PolarizationTypeMod::X);
+	  w.push_back(PolarizationTypeMod::R);
+	  break;
+	case StokesParameterMod::XL:
+	  w.push_back(PolarizationTypeMod::X);
+	  w.push_back(PolarizationTypeMod::L);
+	  break;
+	case StokesParameterMod::YR:
+	  w.push_back(PolarizationTypeMod::Y);
+	  w.push_back(PolarizationTypeMod::R);
+	  break;
+	case StokesParameterMod::YL:
+	  w.push_back(PolarizationTypeMod::Y);
+	  w.push_back(PolarizationTypeMod::L);
+	  break;
+	default:
+	  os << LogIO::SEVERE << "Cannot store correlation product for stokes parameter " << CStokesParameter::name(corrTypeV[i]) << LogIO::POST;
+	  rstat = False;
+	  break;
+	}	  
+	corrProduct.push_back(w);
+      } // end loop over corrTypeV
+
+      tR = tT.newRow(numCorr, corrTypeV, corrProduct);
+
+      bool flagRow = polarization().flagRow()(irow);
+      tR->setFlagRow(flagRow);
+
+      // add the row to the table
+      asdm::PolarizationRow* tR2 = 0;
+      tR2 = tT.add(tR);
+
+      if(tR2 == tR){ // adding this row caused a new tag to be defined
+	// enter tag into the map
+	asdmPolarizationId_p.define(irow, tR->getPolarizationId());
+      }
+      else{
+	os << LogIO::WARN << "Duplicate row in MS Polarization table :" << irow << LogIO::POST;
+      }
+    } // end loop over MS Pol table
 
     EntityId theUid(getCurrentUid());
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled Polarization table " << getCurrentUid() << " ... " << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -921,6 +1129,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled Processor table " << getCurrentUid() << " ... " << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -942,6 +1151,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled Field table " << getCurrentUid() << " ... " << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -964,6 +1174,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled Feed table " << getCurrentUid() << " ... " << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -986,6 +1197,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled DataDescription table " << getCurrentUid() << " ... " << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -1214,12 +1426,13 @@ namespace casa {
 
     } // end loop over MS processor table
 
-    cout << "The configdescription table has now " << cdT.size() << " elements" << endl;
+    cout << "The ConfigDescription table has now " << cdT.size() << " elements" << endl;
 
     EntityId theUid(getCurrentUid());
     Entity ent = cdT.getEntity();
     ent.setEntityId(theUid);
     cdT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled ConfigDescription table " << getCurrentUid() << " ... " << LogIO::POST;
     incrementUid();
 
     return rstat;
@@ -1287,5 +1500,60 @@ namespace casa {
       return AntennaTypeMod::GROUND_BASED;
     }      
   } 
+
+  BasebandNameMod::BasebandName MS2ASDM::ASDMBBName( Int BBCNo ){
+    switch(BBCNo){
+    case 1: return BasebandNameMod::BB_1;
+    case 2: return BasebandNameMod::BB_2;
+    case 3: return BasebandNameMod::BB_3;
+    case 4: return BasebandNameMod::BB_4;
+    case 5: return BasebandNameMod::BB_5;
+    case 6: return BasebandNameMod::BB_6;
+    case 7: return BasebandNameMod::BB_7;
+    case 8: return BasebandNameMod::BB_8;
+    case 0: 
+    default:
+      return BasebandNameMod::NOBB;
+    }
+  }
+
+  NetSidebandMod::NetSideband MS2ASDM::ASDMNetSideBand( Int netSideB ){
+    switch(netSideB){
+    case 1: return NetSidebandMod::LSB;
+    case 2: return NetSidebandMod::USB;
+    case 3: return NetSidebandMod::DSB;
+    case 0:
+    default:
+      return NetSidebandMod::NOSB;
+    }
+  }
+
+  FrequencyReferenceCodeMod::FrequencyReferenceCode MS2ASDM::ASDMFreqRefCode( const MFrequency::Types refFrame ){
+    LogIO os(LogOrigin("MS2ASDM", "(ASDMFreqRefCode)"));
+    switch( refFrame ){
+    case MFrequency::LSRD: return FrequencyReferenceCodeMod::LSRD;
+    case MFrequency::LSRK: return FrequencyReferenceCodeMod::LSRK;
+    case MFrequency::BARY: return FrequencyReferenceCodeMod::BARY;
+    case MFrequency::REST: return FrequencyReferenceCodeMod::REST;
+    case MFrequency::GEO: return FrequencyReferenceCodeMod::GEO;
+    case MFrequency::GALACTO: return FrequencyReferenceCodeMod::GALACTO;
+    case MFrequency::TOPO: return FrequencyReferenceCodeMod::TOPO;
+    default:
+      os << LogIO::SEVERE << "Unsupported CASA reference frame " << MFrequency::showType(refFrame) 
+	 << ", assuming TOPO." << LogIO::POST;
+      return FrequencyReferenceCodeMod::TOPO; 
+    }
+  }
+
+  Bool MS2ASDM::stokesTypePresent( const Vector< Int > corrT, 
+				   const Stokes::StokesTypes st ){
+    Bool rval = False;
+    for(uInt j=0; j<corrT.size(); j++){
+      if(corrT[j]==static_cast<Int>(st)){
+	 rval = True;
+      }
+    }
+    return rval;
+  }
 
 } //#End casa namespace

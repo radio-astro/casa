@@ -35,6 +35,9 @@
 #include <alma/ASDM/Tag.h>
 #include <alma/Enumerations/CStokesParameter.h>
 #include <alma/Enumerations/CAntennaType.h>
+#include <alma/Enumerations/CBasebandName.h>
+#include <alma/Enumerations/CNetSideband.h>
+#include <alma/Enumerations/CFrequencyReferenceCode.h>
 
 
 #ifndef MSVIS_MS2ASDM_H
@@ -91,21 +94,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Double getSubScanDuration(){ return subscanDuration_p; }
 
   // convert CASA Stokes to ASDM Stokes
-  //  StokesParameterMod::StokesParameter ASDMStokesParameter( Stokes::StokesTypes s);
   StokesParameterMod::StokesParameter ASDMStokesParameter( Stokes::StokesTypes s);
 
+  // convert CASA antenna type string to ASDM antenna type enum
   AntennaTypeMod::AntennaType ASDMAntennaType( const String& type ); 
 
-  ArrayTime ASDMArrayTime( Double seconds ){ 
+  // convert time in seconds to an array time (in ns)
+  ArrayTime ASDMArrayTime( const Double seconds ){ 
     return ArrayTime((long long) (floor(seconds*1E9))); }
+
+  // convert a base band converter number to an ASDM base band name
+  BasebandNameMod::BasebandName ASDMBBName( const Int bbcNo );
+
+  // convert a MS net sideband no. to an ASDM enum
+  NetSidebandMod::NetSideband ASDMNetSideBand( const Int netSideband );
+
+  FrequencyReferenceCodeMod::FrequencyReferenceCode ASDMFreqRefCode( const MFrequency::Types refFrame ); 
 
   // write the entire ASDM from scratch
   Bool writeASDM(const String& asdmfile="", 
 		 const String& datacolumn="data", 
 		 const String& archiveid="S0", 
 		 const String& rangeid="X1", 
-		 Bool verbose=True,
-		 Double subscanDuration = 24.*3600. 
+		 const Bool verbose=True,
+		 const Double subscanDuration = 24.*3600. 
 		 );
 
  private:
@@ -114,6 +126,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool incrementUid(); // returns true if successful
 
   Bool setDirectory(const String& asdmfile);
+
 
   Bool writeStation();
 
@@ -141,6 +154,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool writeMainBinForOneDDId(const Int dataDescId,
 			   const String& datacolumn);
 
+  // *** Aux. methods ***
+
+  // check if vector corrT already contains a stokes type equivalent to st
+  Bool stokesTypePresent( const Vector< Int > corrT, const Stokes::StokesTypes st );
+
   // *** Member variables ***
 
   // Initialized* by ctors.  (Maintain order both here and in ctors.)
@@ -162,9 +180,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   SimpleOrderedMap <String, asdm::Tag> asdmStationId_p;  
   SimpleOrderedMap <Int, asdm::Tag> asdmAntennaId_p;
-  SimpleOrderedMap <Int, asdm::Tag> asdmSPWId_p;
-  SimpleOrderedMap <Int, asdm::Tag> asdmPolId_p;
-  SimpleOrderedMap <Int, asdm::Tag> asdmProcId_p;
+  SimpleOrderedMap <Int, asdm::Tag> asdmSpectralWindowId_p;
+  SimpleOrderedMap <Int, asdm::Tag> asdmPolarizationId_p;
+  SimpleOrderedMap <Int, asdm::Tag> asdmProcessorId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmFieldId_p;
 
 };
