@@ -170,16 +170,14 @@ from imregion import *
 
 def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
 	   region, box, chans, stokes ):
-    
     # Tell CASA who will be reporting
     casalog.origin('immath')
     retValue = False
-
     # NOTE: This step likely be eliminated
     # 
     # Remove any old tmp files that may be left from
     # a previous run of immath
-    tb.clearlocks()
+    tb.clearlocks()    
     tmpFilePrefix='_immath_tmp'
     try:
         _immath_cleanup( tmpFilePrefix )
@@ -204,7 +202,6 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
                  'FRACTILE1D(', 'FRACTILERANGE1D(', 'SUM(', 'NELEM(', 'ALL('\
                  'ANY(', 'IIF(', 'REPLACE(', 'LENGTH(', 'INDEXIN(', 'NDIM' ]
     upper_case=[ ]
-
     
     # First check to see if the output file exists.  If it
     # does then we abort.  CASA doesn't allow files to be
@@ -234,7 +231,6 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
     if ( isinstance( filenames, str ) ):
         filenames= [ filenames ]
     casalog.post( 'List of input files is: '+str(filenames), 'DEBUG1' )
-
     #for i in range( len(filenames) ):
     #	if ( not os.path.exists(filenames[i]) ):
     #	    raise Exception, 'Image data set not found - please verify '+filenames[i]
@@ -288,6 +284,7 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
 	if len(filenames) != 2:
 	    raise Exception, 'Requires two images at different frequencies'
 	#expr = 'spectralindex("%s","%s")' % (filenames[0],filenames[1])
+
 	expr = 'spectralindex('+varnames[0]+', '+varnames[1]+')'
     elif mode=='pola':
 	# calculate a polarization position angle image
@@ -364,6 +361,7 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
 	    isLPol = True
 	
 	sigsq=0
+
 	if len(sigma)>0:
 	    qsigma=qa.quantity(sigma)
 	    if qa.getvalue(qsigma) >0:
@@ -394,15 +392,13 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
 	    
     # If the user didn't give any region or mask information
     # then just evaluated the expression with the filenames in it.
-    if ( len(box)<1 and len(chans)<1 and len(stokes)<1 and len(region)<1 and len(mask)<1):
-        # Put all of the image names into the expression.
-        for index in range( 0,len(filenames) ):
-            expr=expr.replace(varnames[index], '"'+filenames[index]+'"')
 
+    if ( len(box)<1 and len(chans)<1 and len(stokes)<1 and len(region)<1 and len(mask)<1):
+    	expr = _immath_expr_from_varnames(expr, varnames, filenames)
         casalog.post( 'Will evaluate expression: '+expr, 'DEBUG1' )
-        
         try:
             ia.imagecalc(pixels=expr, outfile=outfile)
+
             # need to modify stokes type of output image for pol. intensity image
             if ( mode =="poli" ):
                 csys=results.coordsys()
@@ -428,6 +424,7 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
     # regions from the images before doing the calculations first.
     # Warning if user has given a region file plus other region
     # selection information
+
     if ( len(region)>1 ):
         if ( len(box)>1 or len(chans)>1 or len(stokes)>1 ):
             casalog.post( "Ignoring region selection\ninformation"\
@@ -496,6 +493,7 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
         
         
     # Make sure no problems happened
+
     if ( len(filenames) != len(subImages) ) :
         #raise Exception, 'Unable to create subimages for all image names given'
         casalog.post( 'Unable to create subimages for all image names given',\
@@ -504,8 +502,7 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
     
     # Put the subimage names into the expression
     try:
-        for index in range( 0, len(subImages) ):
-            expr=expr.replace(varnames[index], '"'+subImages[index]+'"')
+    	expr = _immath_expr_from_varnames(expr, varnames, subImages)
     except Exception, e:
         casalog.post( 'Unable to construct pixel expression aborting immath.'
                       'SEVERE' )
@@ -538,7 +535,6 @@ def immath(imagename, mode, outfile, expr, varnames, sigma, mask, \
             _immath_cleanup( tmpFilePrefix )
         except:
             pass
-        
         casalog.post( "Exception caught was: "+str(error), 'DEBUG2')
         #raise Exception, 'Unable to evaluate math expression: '\
         #      +expr+' on file(s) '+str(filenames)
@@ -600,4 +596,21 @@ def __check_stokes(images):
             ia.close()
             retValue.append(stks)
         return retValue
+       
+# it is important to sort the varnames in reverse order before doing
+# the substitutions to assure the substitution set is performed correctly
+# CAS-1678
+def _immath_expr_from_varnames(expr, varnames, filenames):
+	tmpfiles = {}
+	for i in range(len(filenames)):
+		tmpfiles[varnames[i]] = filenames[i]
+	tmpvars = tmpfiles.keys()
+
+	tmpvars.sort()
+	tmpvars.reverse()
+
+	for varname in tmpvars:
+		expr = expr.replace(varname, '"' + tmpfiles[varname] + '"')
+	return(expr)
+
 

@@ -100,6 +100,7 @@ import shutil
 import random
 import time
 import casac
+import numpy
 from tasks import *
 from taskinit import *
 
@@ -1016,6 +1017,62 @@ def pol_test( imageList ):
     #               +"\nError: output file, 'pol_test3', was not created."
     
     return retValue
+
+# verification of fix to CAS-1678
+# https://bugs.aoc.nrao.edu/browse/CAS-1678
+def many_image_test():
+    retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+    casalog.post( "Starting immath many (>9) image test.", 'NORMAL2' )
+
+    # First make the I, Q, U, and V files.  This step may not be
+    # needed if immath learns to do this for the user.
+ 
+
+    imagename = [
+        'immath0.im', 'immath1.im', 'immath2.im', 'immath3.im', 'immath4.im', 'immath5.im',
+        'immath6.im', 'immath7.im', 'immath8.im', 'immath9.im','immath10.im'
+    ]
+    expr = 'IM0+IM1+IM2+IM3+IM4+IM5+IM6+IM7+IM8+IM9+IM10'
+    try:
+        # full image test
+        outfile = 'full_image_sum.im'
+        if (immath(imagename=imagename, expr=expr, outfile=outfile)):
+            expected = numpy.ndarray([2,2])
+            expected.put(range(expected.size),66)
+            ia.open(outfile)
+            got = ia.getchunk()
+            ia.done()
+            casalog.post("here 6", "WARN")
+            if (not (got == expected).all()):
+                retValue['success'] = False
+                retValue['error_msgs'] += "\n Full image sum not correctly calculated"
+        else:
+            retValue['success'] = False
+            retValue['error_msgs'] += "\nimmath returned False for full image sum"            
+    except:
+        retValue['success'] = False
+        retValue['error_msgs'] += "\nFull image calculation threw an exception: " + str(sys.exc_info()[0])
+
+    try:
+        # subimage image test
+        outfile = 'subimage_sum.im'
+        if (immath(imagename=imagename, expr=expr, outfile=outfile, box='0,0,0,0')):
+            expected = numpy.ndarray([1,1])
+            expected.put(range(expected.size), 66)
+            ia.open(outfile)
+            got = ia.getchunk()
+            ia.done()
+            if (not (got == expected).all()):
+                retValue['success'] = False
+                retValue['error_msgs'] += "\n sub image sum not correctly calculated"
+        else:
+            retValue['success'] = False
+            retValue['error_msgs'] += "\nimmath returned False for sub image sum: " + str(sys.exc_info()[0])
+    except:
+        retValue['success'] = False
+        retValue['error_msgs'] += "\nSub image calculation threw an exception"
+    return retValue
+
 ####################################################################
 # Methods for the automated CASA testing
 ####################################################################
@@ -1047,12 +1104,15 @@ def data():
     # has 4 polarizations!
     # 3C129/reference/3C129BC.clean.image              2048x2048x4x1
     
-    return ['ngc5921.clean.image', 'n1333_both.image', 'n1333_both.image.rgn', '3C129BC.clean.image' ]
-
+    return [
+        'ngc5921.clean.image', 'n1333_both.image', 'n1333_both.image.rgn', '3C129BC.clean.image',
+        'immath0.im', 'immath1.im', 'immath2.im', 'immath3.im', 'immath4.im', 'immath5.im',
+        'immath6.im', 'immath7.im', 'immath8.im', 'immath9.im','immath10.im'
+    ]
 
 def doCopy():
     #print "\n\nIn IMMATH doCopy()\n\n"
-    return [1, 1, 1 ]
+    return [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
 def run():
     test_list = [ 'input_test()', 'math_test()', \
@@ -1070,7 +1130,8 @@ def run():
     testResults=[]
     testResults.append( input_test( data() ) )
     testResults.append( expr_test() )
-    testResults.append( pol_test( data() ) )    
+    testResults.append( pol_test( data() ) )
+    testResults.append(many_image_test())
     print "TEST RESULTS: ", testResults
 
     for results in testResults:
