@@ -33,6 +33,10 @@
 
 #include <alma/ASDM/ASDM.h>
 #include <alma/ASDM/Tag.h>
+#include <alma/ASDM/Complex.h>
+#include <alma/ASDM/Frequency.h>
+#include <alma/ASDM/Angle.h>
+#include <alma/ASDM/Length.h>
 #include <alma/Enumerations/CStokesParameter.h>
 #include <alma/Enumerations/CAntennaType.h>
 #include <alma/Enumerations/CBasebandName.h>
@@ -99,9 +103,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // convert CASA antenna type string to ASDM antenna type enum
   AntennaTypeMod::AntennaType ASDMAntennaType( const String& type ); 
 
-  // convert time in seconds to an array time (in ns)
+  // convert time in seconds to an array time
   ArrayTime ASDMArrayTime( const Double seconds ){ 
-    return ArrayTime((long long) (floor(seconds*1E9))); }
+    return ArrayTime((long long) (floor(seconds*ArrayTime::unitsInASecond))); }
+
+  asdm::Interval ASDMInterval( const Double seconds ){ 
+    return asdm::Interval((long) (floor(seconds*ArrayTime::unitsInASecond))); }
 
   // convert a base band converter number to an ASDM base band name
   BasebandNameMod::BasebandName ASDMBBName( const Int bbcNo );
@@ -110,6 +117,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   NetSidebandMod::NetSideband ASDMNetSideBand( const Int netSideband );
 
   FrequencyReferenceCodeMod::FrequencyReferenceCode ASDMFreqRefCode( const MFrequency::Types refFrame ); 
+
+  Unit ASDMFUnit(){ 
+    if(asdm::Frequency::unit()=="hz"){ // correct for the bad capitalization
+      return Unit("Hz");
+    }
+    else{
+      return Unit(String(asdm::Frequency::unit()));
+    }
+  }
+
+  Unit ASDMAUnit(){ return Unit(String(asdm::Angle::unit())); }
+
+  Unit ASDMLUnit(){ return Unit(String(asdm::Length::unit())); }
+
+  asdm::Complex ASDMComplex( casa::Complex x ){ return asdm::Complex(x.real(), x.imag()); }
 
   // write the entire ASDM from scratch
   Bool writeASDM(const String& asdmfile="", 
@@ -136,9 +158,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool writePolarization();
 
+  Bool writeCorrelatorMode(); // not called directly but optionally called by writeProcessor()
+  Bool writeAlmaRadiometer(); // optionally called by writeProcessor()
+  Bool writeHolography(); // optionally called by writeProcessor()
+
   Bool writeProcessor();
 
   Bool writeField();
+
+  Bool writeReceiver();
 
   Bool writeFeed();
 
@@ -178,12 +206,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   String asdmDir_p; // ASDM output directory name
 
+  String telName_p; // the name of the observatory from first row of MS observation table
+
   SimpleOrderedMap <String, asdm::Tag> asdmStationId_p;  
   SimpleOrderedMap <Int, asdm::Tag> asdmAntennaId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmSpectralWindowId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmPolarizationId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmProcessorId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmFieldId_p;
+  SimpleOrderedMap <Int, asdm::Tag> asdmEphemerisId_p;
+
+  SimpleOrderedMap <Int, int> asdmFeedId_p;
 
 };
 

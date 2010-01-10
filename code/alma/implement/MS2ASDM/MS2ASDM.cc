@@ -79,13 +79,20 @@ namespace casa {
     baseUid_p("uid://X0/X0/X"),
     runningId_p(0),
     currentUid_p("uid://X0/X0/X0"),
+    telName_p(""),
+
     // the Id to Tag maps
     asdmStationId_p(Tag()),
     asdmAntennaId_p(Tag()),
     asdmSpectralWindowId_p(Tag()),
     asdmPolarizationId_p(Tag()),
     asdmProcessorId_p(Tag()),
-    asdmFieldId_p(Tag())
+    asdmFieldId_p(Tag()),
+    asdmEphemerisId_p(Tag()),
+    
+    // other maps
+    asdmFeedId_p(-1)
+
   {
     ASDM_p = new ASDM();
   }
@@ -162,6 +169,13 @@ namespace casa {
       
     cout << " UID is " << getCurrentUid() << endl;
 
+    // initialize observatory name
+    if(observation().nrow()==0){
+      os << LogIO::SEVERE << "MS Observation table is empty." << LogIO::POST;
+      return False;
+    }
+    telName_p = observation().telescopeName()(0); // get name of observatory from first row of observation table
+
     // write the ASDM tables
 
     if(!writeStation()){
@@ -177,6 +191,22 @@ namespace casa {
     }
 
     if(!writePolarization()){
+      return False;
+    }
+
+    if(!writeProcessor()){
+      return False;
+    }
+
+    if(!writeField()){
+      return False;
+    }
+
+    if(!writeReceiver()){
+      return False;
+    }
+
+    if(!writeFeed()){
       return False;
     }
 
@@ -902,11 +932,9 @@ namespace casa {
       NetSidebandMod::NetSideband netSideband = ASDMNetSideBand( spectralWindow().netSideband()(irow) );
       int numChan = spectralWindow().numChan()(irow);
 
-      Unit funit("Hz"); // ASDM frequency values need to be in Hz
-
-      Frequency refFreq  = Frequency( spectralWindow().refFrequencyQuant()(irow).get(funit).getValue() );
+      Frequency refFreq  = Frequency( spectralWindow().refFrequencyQuant()(irow).getValue(ASDMFUnit()) );
       SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode = SidebandProcessingModeMod::NONE;
-      Frequency totBandwidth = Frequency( spectralWindow().totalBandwidthQuant()(irow).get(funit).getValue() );
+      Frequency totBandwidth = Frequency( spectralWindow().totalBandwidthQuant()(irow).getValue(ASDMFUnit()) );
       WindowFunctionMod::WindowFunction windowFunction = WindowFunctionMod::UNIFORM;
 
       tR = tT.newRow(basebandName, netSideband, numChan, refFreq, sidebandProcessingMode, totBandwidth, windowFunction);
@@ -915,28 +943,28 @@ namespace casa {
       vector< Frequency > chanFreqArray;
       v.reference( spectralWindow().chanFreqQuant()(irow) );
       for(uInt i=0; i<v.nelements(); i++){ 
-	chanFreqArray.push_back( Frequency( v[i].get(funit).getValue() ) );
+	chanFreqArray.push_back( Frequency( v[i].getValue(ASDMFUnit()) ) );
       }
       tR->setChanFreqArray(chanFreqArray);
 
       vector< Frequency > chanWidthArray;
       v.reference( spectralWindow().chanWidthQuant()(irow) );
       for(uInt i=0; i<v.nelements(); i++){ 
-	chanWidthArray.push_back( Frequency( v[i].get(funit).getValue() ) );
+	chanWidthArray.push_back( Frequency( v[i].getValue(ASDMFUnit()) ) );
       }
       tR->setChanWidthArray(chanWidthArray);
 
       vector< Frequency > effectiveBwArray;
       v.reference( spectralWindow().effectiveBWQuant()(irow) );
       for(uInt i=0; i<v.nelements(); i++){ 
-	effectiveBwArray.push_back( Frequency( v[i].get(funit).getValue() ) );
+	effectiveBwArray.push_back( Frequency( v[i].getValue(ASDMFUnit()) ) );
       }
       tR->setEffectiveBwArray(effectiveBwArray);
 
       vector< Frequency > resolutionArray;
       v.reference( spectralWindow().resolutionQuant()(irow) );
       for(uInt i=0; i<v.nelements(); i++){ 
-	resolutionArray.push_back( Frequency( v[i].get(funit).getValue() ) );
+	resolutionArray.push_back( Frequency( v[i].getValue(ASDMFUnit()) ) );
       }      
       tR->setResolutionArray( resolutionArray );
 
@@ -1010,6 +1038,7 @@ namespace casa {
       }
       int numCorr = corrTypeV.size(); 
 
+      // now read the just created corrTypeV and write the correlation products accordingly
       for(uInt i=0; i<corrTypeV.size(); i++){
 	vector< PolarizationTypeMod::PolarizationType > w;
 	switch(corrTypeV[i]){
@@ -1113,6 +1142,110 @@ namespace casa {
     return rstat;
   }
 
+  Bool MS2ASDM::writeCorrelatorMode(){
+    LogIO os(LogOrigin("MS2ASDM", "writeCorrelatorMode()"));
+
+    Bool rstat = True;
+    asdm::CorrelatorModeTable& tT = ASDM_p->getCorrelatorMode();
+
+    asdm::CorrelatorModeRow* tR = 0;
+
+    // create only one row
+
+    int numBaseband = 1;
+    vector<BasebandNameMod::BasebandName > basebandNames;
+    basebandNames.push_back(BasebandNameMod::NOBB);
+    vector<int > basebandConfig;
+    basebandConfig.push_back(0);
+    AccumModeMod::AccumMode accumMode = AccumModeMod::NORMAL;
+    int binMode = 1; // standard setting for interferometry
+    int numAxes = 4; // time, antenna, stokes, pol 
+    vector<AxisNameMod::AxisName > axesOrderArray;
+    axesOrderArray.push_back(AxisNameMod::TIM);
+    axesOrderArray.push_back(AxisNameMod::ANT);
+    axesOrderArray.push_back(AxisNameMod::SPP); 
+    axesOrderArray.push_back(AxisNameMod::POL);
+    vector<FilterModeMod::FilterMode > filterMode;
+    filterMode.push_back(FilterModeMod::UNDEFINED);
+
+    CorrelatorNameMod::CorrelatorName correlatorName = CorrelatorNameMod::ALMA_BASELINE; // the default
+    if(telName_p == "ALMA"){
+      correlatorName = CorrelatorNameMod::ALMA_BASELINE; //???
+    }
+    else if(telName_p == "ACA"){
+      correlatorName = CorrelatorNameMod::ALMA_ACA; //???
+    }
+    else if(telName_p == "VLA"){
+      correlatorName = CorrelatorNameMod::NRAO_VLA; //???
+    }
+    else if(telName_p == "EVLA"){
+      correlatorName = CorrelatorNameMod::NRAO_WIDAR; //???
+    }
+    else if(telName_p == "PDB"){
+      correlatorName = CorrelatorNameMod::IRAM_PDB; //???
+    }
+    else{
+      os << LogIO::WARN << "Unknown telescope name: " << telName_p << ". Assuming ALMA_BASELINE." << LogIO::POST;
+    }      
+
+    tR = tT.newRow(numBaseband, basebandNames, basebandConfig, accumMode, binMode, numAxes, axesOrderArray, filterMode, correlatorName);
+
+    tT.add(tR);
+
+    EntityId theUid(getCurrentUid());
+    Entity ent = tT.getEntity();
+    ent.setEntityId(theUid);
+    tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled CorrelatorMode table " << getCurrentUid() << " ... " << LogIO::POST;
+    incrementUid();
+
+    return rstat;
+  }
+
+  Bool MS2ASDM::writeAlmaRadiometer(){
+    LogIO os(LogOrigin("MS2ASDM", "writeAlmaRadiometer()"));
+
+    Bool rstat = True;
+    asdm::AlmaRadiometerTable& tT = ASDM_p->getAlmaRadiometer();
+
+    asdm::AlmaRadiometerRow* tR = 0;
+
+    //    tR = tT.newRow();
+
+    tT.add(tR);
+
+    EntityId theUid(getCurrentUid());
+    Entity ent = tT.getEntity();
+    ent.setEntityId(theUid);
+    tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled AlmaRadiometer table " << getCurrentUid() << " ... " << LogIO::POST;
+    incrementUid();
+
+    return rstat;
+  }
+
+  Bool MS2ASDM::writeHolography(){
+    LogIO os(LogOrigin("MS2ASDM", "writeHolography()"));
+
+    Bool rstat = True;
+    asdm::HolographyTable& tT = ASDM_p->getHolography();
+
+    asdm::HolographyRow* tR = 0;
+
+    //    tR = tT.newRow();
+
+    tT.add(tR);
+
+    EntityId theUid(getCurrentUid());
+    Entity ent = tT.getEntity();
+    ent.setEntityId(theUid);
+    tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled Holography table " << getCurrentUid() << " ... " << LogIO::POST;
+    incrementUid();
+
+    return rstat;
+  }
+
   Bool MS2ASDM::writeProcessor(){
     LogIO os(LogOrigin("MS2ASDM", "writeProcessor()"));
 
@@ -1121,9 +1254,132 @@ namespace casa {
 
     asdm::ProcessorRow* tR = 0;
 
-    //    tR = tT.newRow();
+    uInt nPRows = processor().nrow();
 
-    tT.add(tR);
+    if(nPRows > 0){ // need to test because MS processor table is obligatory but may be empty
+      for(uInt irow=0; irow<nPRows; irow++){
+	// parameters of the new row
+	Tag modeId;
+	ProcessorTypeMod::ProcessorType processorType;
+	ProcessorSubTypeMod::ProcessorSubType processorSubType;
+	if(processor().type()(irow) == "CORRELATOR"){
+	  processorType = ProcessorTypeMod::CORRELATOR; 
+	  if(processor().subType()(irow) == "ALMA_CORRELATOR_MODE"){
+	    processorSubType = ProcessorSubTypeMod::ALMA_CORRELATOR_MODE; 
+	  }
+	  else{
+	    os << LogIO::WARN << "Unsupported processor subType for type CORRELATOR " << processor().subType()(irow)
+	       << " assuming ALMA_CORRELATOR" << LogIO::POST;
+	    processorSubType = ProcessorSubTypeMod::ALMA_CORRELATOR_MODE; 
+	  }	    
+	}
+	else if(processor().type()(irow) == "SPECTROMETER"){
+	  processorType = ProcessorTypeMod::SPECTROMETER; 
+	  if(processor().subType()(irow) == "HOLOGRAPHY"){
+	    processorSubType = ProcessorSubTypeMod::HOLOGRAPHY; 
+	  }
+	  else{
+	    os << LogIO::WARN << "Unsupported processor subType for type SPECTROMETER " << processor().subType()(irow)
+	       << " assuming HOLOGRAPHY" << LogIO::POST;
+	    processorSubType = ProcessorSubTypeMod::HOLOGRAPHY; 
+	  }	    
+	}
+	else if(processor().type()(irow) == "RADIOMETER"){
+	  processorType = ProcessorTypeMod::RADIOMETER; 
+	  if(processor().subType()(irow) == "ALMA_RADIOMETER"){
+	    processorSubType = ProcessorSubTypeMod::ALMA_RADIOMETER; 
+	  }
+	  else{
+	    os << LogIO::WARN << "Unsupported processor type " << processor().subType()(irow)
+	       << " assuming ALMA_RADIOMETER" << LogIO::POST;
+	    processorSubType = ProcessorSubTypeMod::ALMA_RADIOMETER;
+	  }	    
+	}
+	else{
+	  os << LogIO::WARN << "Unsupported processor type " << processor().type()(irow)
+	     << " assuming CORRELATOR" << LogIO::POST;
+	  processorType = ProcessorTypeMod::CORRELATOR; 
+	  processorSubType = ProcessorSubTypeMod::ALMA_CORRELATOR_MODE; 
+	}
+
+	// the following three vectors need to be declared outside the switch statement below;
+	// otherwise the compiler complains
+	vector< asdm::CorrelatorModeRow* > corrModeRows;
+	vector< asdm::HolographyRow* > holographyRows;
+	vector< asdm::AlmaRadiometerRow* > almaRadiometerRows;
+	  
+	switch(processorSubType){
+	case ProcessorSubTypeMod::ALMA_CORRELATOR_MODE:
+	  if(!writeCorrelatorMode()){ // create the optional CorrelatorMode table
+	    return False;
+	  }
+	  corrModeRows = (ASDM_p->getCorrelatorMode()).get();
+	  if(corrModeRows.size()==0){
+	    os << LogIO::SEVERE << "Internal error: ASDM CorrelatorMode table is empty." << LogIO::POST;
+	    return False;
+	  }
+	  modeId = corrModeRows[0]->getCorrelatorModeId(); // get tag from first row of CorrelatorMode table (there is only one) ??? 
+	  break;
+	case ProcessorSubTypeMod::HOLOGRAPHY:
+	  if(!writeHolography()){ // create the optional Holography table
+	    return False;
+	  }
+	  holographyRows = (ASDM_p->getHolography()).get();
+	  if(holographyRows.size()==0){
+	    os << LogIO::SEVERE << "Internal error: ASDM Holography table is empty." << LogIO::POST;
+	    return False;
+	  }
+	  modeId = holographyRows[0]->getHolographyId(); // get tag from first row of Holography table (there is only one) ??? 
+	  break;
+	case ProcessorSubTypeMod::ALMA_RADIOMETER:
+	  if(!writeAlmaRadiometer()){ // create the optional AlmaRadiometer table
+	    return False;
+	  }
+	  almaRadiometerRows = (ASDM_p->getAlmaRadiometer()).get();
+	  if(almaRadiometerRows.size()==0){
+	    os << LogIO::SEVERE << "Internal error: ASDM AlmaRadiometer table is empty." << LogIO::POST;
+	    return False;
+	  }
+	  modeId = almaRadiometerRows[0]->getAlmaRadiometerId(); // get tag from first row of Holography table (there is only one) ??? 
+	  break;
+	default:
+	  os << LogIO::SEVERE << "Internal error: unsupported processor sub type." 
+	     << CProcessorSubType::name(processorSubType) << LogIO::POST;
+	  return False;
+	}
+	  
+	tR = tT.newRow(modeId, processorType, processorSubType);
+	// add the row to the table
+	asdm::ProcessorRow* tR2 = 0;
+	tR2 = tT.add(tR);
+
+	if(tR2 == tR){ // adding this row caused a new tag to be defined
+	  // enter tag into the map
+	  asdmProcessorId_p.define(irow, tR->getProcessorId());
+	}
+	else{
+	  os << LogIO::WARN << "Duplicate row in MS Processor table :" << irow << LogIO::POST;
+	}
+      } // end loop over MS processor table
+    }
+    else{ // MS processor table is empty
+      os << LogIO::WARN << "MS Processor table is empty. Will try to proceed assuming a standard ALMA Correlator." << LogIO::POST;
+      ProcessorTypeMod::ProcessorType processorType = ProcessorTypeMod::CORRELATOR;
+      ProcessorSubTypeMod::ProcessorSubType processorSubType = ProcessorSubTypeMod::ALMA_CORRELATOR_MODE;
+      if(!writeCorrelatorMode()){ // create the optional CorrelatorMode table
+	return False;
+      }
+      vector< asdm::CorrelatorModeRow* > corrModeRows = ASDM_p->getCorrelatorMode().get();
+      if(corrModeRows.size()==0){
+	os << LogIO::SEVERE << "Internal error: ASDM CorrelatorMode table is empty." << LogIO::POST;
+	return False;
+      }
+      Tag modeId = corrModeRows[0]->getCorrelatorModeId(); // get tag from first row of CorrelatorMode table (there is only one) ??? 
+      tR = tT.newRow(modeId, processorType, processorSubType);
+      tT.add(tR);
+      // enter tag into the map connecting it to "-1"
+      asdmProcessorId_p.define(-1, tR->getProcessorId());
+    } // end if
 
     EntityId theUid(getCurrentUid());
     Entity ent = tT.getEntity();
@@ -1135,6 +1391,7 @@ namespace casa {
     return rstat;
   }
 
+
   Bool MS2ASDM::writeField(){
     LogIO os(LogOrigin("MS2ASDM", "writeField()"));
 
@@ -1143,9 +1400,81 @@ namespace casa {
 
     asdm::FieldRow* tR = 0;
 
-    //    tR = tT.newRow();
+    for(uInt irow=0; irow<field().nrow(); irow++){
 
-    tT.add(tR);
+      // parameters of the new row
+      string fieldName = field().name()(irow).c_str();
+      string code = field().code()(irow).c_str();
+      int numPoly = field().numPoly()(irow);
+      if(numPoly>0){
+	os << LogIO::SEVERE << "Internal error: NUM_POLY > 0 not yet supported." << LogIO::POST;
+	return False;
+      }
+
+      String msAngUnit = "rad"; // MS uses radians here
+      Vector< Double > v; // aux. vector
+
+      vector< vector< Angle > > delayDirV;
+      v.reference(field().delayDir()(irow));
+      {
+	vector< Angle > dirV;
+	Quantity angle0(v[0], msAngUnit);
+	dirV.push_back(Angle(angle0.getValue(ASDMAUnit())));
+	Quantity angle1(v[1], msAngUnit);
+	dirV.push_back(Angle(angle1.getValue(ASDMAUnit())));
+	delayDirV.push_back(dirV);
+      }
+      vector< vector< Angle > > phaseDirV;
+      v.reference(field().phaseDir()(irow));
+      {
+	vector< Angle > dirV;
+	Quantity angle0(v[0], msAngUnit);
+	dirV.push_back(Angle(angle0.getValue(ASDMAUnit())));
+	Quantity angle1(v[1], msAngUnit);
+	dirV.push_back(Angle(angle1.getValue(ASDMAUnit())));
+	phaseDirV.push_back(dirV);
+      }
+      vector< vector< Angle > > referenceDirV;
+      v.reference(field().referenceDir()(irow));
+      {
+	vector< Angle > dirV;
+	Quantity angle0(v[0], msAngUnit);
+	dirV.push_back(Angle(angle0.getValue(ASDMAUnit())));
+	Quantity angle1(v[1], msAngUnit);
+	dirV.push_back(Angle(angle1.getValue(ASDMAUnit())));
+	referenceDirV.push_back(dirV);
+      }
+
+      tR = tT.newRow(fieldName, code, numPoly, delayDirV, phaseDirV, referenceDirV);
+
+      tR->setTime(ASDMArrayTime(field().time()(irow)));
+
+      int sid = field().sourceId()(irow);
+      if(sid>=0){
+	tR->setSourceId(sid);
+      }
+
+      if(!field().ephemerisId().isNull()){
+	Int eid = field().ephemerisId()(irow);
+	if(asdmEphemerisId_p.isDefined(eid)){
+	  tR->setEphemerisId(asdmEphemerisId_p(eid));
+	}
+	else{
+	  os << LogIO::WARN << "Undefined ephemeris id " << eid << " in MS field table row " << irow << LogIO::POST;
+	}
+      }
+
+      // add the row to the table
+      asdm::FieldRow* tR2 = 0;
+      tR2 = tT.add(tR);
+      if(tR2 == tR){ // adding this row caused a new tag to be defined
+	// enter tag into the map
+	asdmFieldId_p.define(irow, tR->getFieldId());
+      }
+      else{
+	os << LogIO::WARN << "Duplicate row in MS Field table :" << irow << LogIO::POST;
+      }
+    } // end loop over MS field table
 
     EntityId theUid(getCurrentUid());
     Entity ent = tT.getEntity();
@@ -1158,6 +1487,60 @@ namespace casa {
   }
 
 
+  Bool MS2ASDM::writeReceiver(){
+    LogIO os(LogOrigin("MS2ASDM", "writeReceiver()"));
+
+    Bool rstat = True;
+    asdm::ReceiverTable& tT = ASDM_p->getReceiver();
+
+    asdm::ReceiverRow* tR = 0;
+
+    // create one row for each spectral window Id and time interval (i.e. receiverId is always == 0) 
+
+    // loop over ASDM SPW table
+    vector< asdm::SpectralWindowRow* > SPWRows = (ASDM_p->getSpectralWindow()).get();
+
+    Bool informed = False;
+
+    for(uInt irow=0; irow<SPWRows.size(); irow++){
+   
+      // parameters for the new Recevier table row
+      Tag spectralWindowId = SPWRows[irow]->getSpectralWindowId();
+      if(!informed){
+	os << LogIO::NORMAL << "Taking validity time interval for all ASDM Receiver table entries from row 0 of MS Feed table." 
+	   << LogIO::POST;
+	informed = True;
+      }
+      asdm::ArrayTimeInterval timeInterval( ASDMArrayTime(feed().timeQuant()(0).getValue("s")),
+					    ASDMInterval(feed().intervalQuant()(0).getValue("s")) ); 
+      string name = "unspec. frontend";
+      ReceiverBandMod::ReceiverBand frequencyBand = ReceiverBandMod::UNSPECIFIED;
+      ReceiverSidebandMod::ReceiverSideband receiverSideband = ReceiverSidebandMod::NOSB; //???
+      if(telName_p == "ALMA"){
+	// add code to implement ALMA freq band names here !!!
+      }
+      int numLO = 0; // no information in the MS ???
+      vector<Frequency > freqLO;
+      //freqLO.push_back(Frequency(1.)); // ???
+      vector<NetSidebandMod::NetSideband > sidebandLO;
+      //sidebandLO.push_back(SPWRows[irow]->getNetSideband()); // ???
+
+      tR = tT.newRow(spectralWindowId, timeInterval, name, numLO, frequencyBand, freqLO, receiverSideband, sidebandLO);
+
+      // add the row to the table
+      tT.add(tR);
+    } // end loop over SPW rows
+
+    EntityId theUid(getCurrentUid());
+    Entity ent = tT.getEntity();
+    ent.setEntityId(theUid);
+    tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled Receiver table " << getCurrentUid() << " ... " << LogIO::POST;
+    incrementUid();
+
+    return rstat;
+  }
+
   Bool MS2ASDM::writeFeed(){
     LogIO os(LogOrigin("MS2ASDM", "writeFeed()"));
 
@@ -1166,9 +1549,138 @@ namespace casa {
 
     asdm::FeedRow* tR = 0;
 
-    //    tR = tT.newRow();
+    Bool warned = False;
+    Bool warned2 = False;
+    Bool warned3 = False;
 
-    tT.add(tR);
+    for(uInt irow=0; irow<feed().nrow(); irow++){
+
+      // parameters of the new row
+      Tag antennaId;
+      Int aid = feed().antennaId()(irow);
+      if(asdmAntennaId_p.isDefined(aid)){
+	antennaId = asdmAntennaId_p(aid);
+      }
+      else{
+	os << LogIO::SEVERE << "Undefined antenna id " << aid << " in MS feed table row "<< irow << LogIO::POST;
+	return False;
+      }
+      Tag spectralWindowId;
+      Int spwid = feed().spectralWindowId()(irow);
+      if(asdmSpectralWindowId_p.isDefined(spwid)){
+	spectralWindowId = asdmSpectralWindowId_p(spwid);
+      }
+      else{
+	os << LogIO::SEVERE << "Undefined SPW id " << spwid << " in MS feed table row "<< irow << LogIO::POST;
+	return False;
+      }
+      asdm::ArrayTimeInterval timeInterval( ASDMArrayTime(feed().timeQuant()(irow).getValue("s")),
+					    ASDMInterval(feed().intervalQuant()(irow).getValue("s")) );
+      
+      int numReceptor = feed().numReceptors()(irow);
+
+      vector< vector< double > > beamOffsetV;
+      vector< vector< Length > > focusReferenceV;
+      vector< PolarizationTypeMod::PolarizationType > polarizationTypesV;
+      vector< vector< asdm::Complex > > polResponseV;
+      vector< Angle > receptorAngleV;
+      vector< int > receiverIdV;
+
+      Matrix< Double > mboffset; // aux. matrix
+      mboffset.reference(feed().beamOffset()(irow));
+
+      Vector< String > polT; // aux. vector
+      polT.reference(feed().polarizationType()(irow));
+
+      Matrix< Complex > polR;
+      polR.reference(feed().polResponse()(irow));
+
+      Vector< Quantity > receptA;
+      receptA.reference(feed().receptorAngleQuant()(irow));
+
+      for(uInt rnum=0; rnum<(uInt)numReceptor; rnum++){ // loop over all receptors
+	vector< double > abo;
+	abo.push_back(mboffset(0,rnum));
+	abo.push_back(mboffset(1,rnum));
+	beamOffsetV.push_back(abo);
+
+	vector< Length > afr;
+	afr.push_back(0); // x
+	afr.push_back(0); // y
+	if(!feed().focusLength().isNull()){ // the FOCUS_LENGTH column is optional
+	  afr.push_back(Length(feed().focusLength()(irow))); // z  ???
+	}
+	else{
+	  afr.push_back(0); // z
+	} 
+	focusReferenceV.push_back(afr);
+
+	polarizationTypesV.push_back(CPolarizationType::literal(polT[rnum].c_str()));
+	
+	vector< asdm::Complex > apr;
+	for(uInt rnum2=0; rnum2<(uInt)numReceptor; rnum2++){
+	  apr.push_back( ASDMComplex( polR(rnum,rnum2) ) );
+	}
+	polResponseV.push_back(apr);
+
+	receptorAngleV.push_back( Angle( receptA[rnum].getValue( ASDMAUnit() ) ) );
+
+	if(telName_p=="ALMA" || telName_p=="ACA"){
+	  receiverIdV.push_back(0); // always zero for ALMA
+	}
+	else{
+	  receiverIdV.push_back(0);
+	  if(!warned){
+	    os << LogIO::WARN << "Setting receiver ID to zero (ALMA convention)." << LogIO::POST;
+	    warned = True;
+	  }
+	}
+      } // end loop over receptors
+
+
+      tR = tT.newRow(antennaId, spectralWindowId, timeInterval, numReceptor, beamOffsetV, focusReferenceV, 
+		     polarizationTypesV, polResponseV, receptorAngleV, receiverIdV);
+
+      if(telName_p=="ALMA" || telName_p=="ACA"){
+	tR->setFeedNum(1); // always 1 for ALMA
+      }
+      else{
+	tR->setFeedNum(1); 
+	if(!warned2){
+	  os << LogIO::WARN << "Assuming single-feed receivers. Setting FeedNum to 1 (as for ALMA)." << LogIO::POST;
+	  warned2 = True;
+	}
+      }
+
+      vector< Length > positionV;
+      Vector< Quantity > pos;
+      pos.reference(feed().positionQuant()(irow));
+      for(uInt i=0; i<3; i++){
+	positionV.push_back( Length( pos[0].getValue( ASDMLUnit() ) ) );
+      }
+      tR->setPosition(positionV);
+
+      if(feed().beamId()(irow)!=-1 && !warned3){ // there should be a beam table in the MS, but presently it is not implemented!!!
+	os << LogIO::WARN << "MS Feed table contains reference to a Beam table row " << feed().beamId()(irow)
+	   << " but a Beam table is not implemented in CASA. Ignoring." << LogIO::POST;
+      }
+
+      // add the row to the table
+      tT.add(tR);
+      int asdmFId = tR->getFeedId(); // the determination of the feed id was done by the add() method
+      Int fId = feed().feedId()(irow);
+      if(asdmFeedId_p.isDefined(fId)){ // there is already a mapping
+	if(asdmFId!=asdmFeedId_p(fId)){ // but it doesn't agree with the newly defined id
+	  os << LogIO::WARN << "Internal problem: field id map inconsistent for MS feed table row:" << irow 
+	     << ". MS FId " << fId << " is already mapped to ASDM FId" << asdmFeedId_p(fId)
+	     << " but should also be mapped to ASDM FId " << asdmFId << LogIO::POST;
+	}
+      }
+      else{
+	// enter id into the map
+	asdmFeedId_p.define(fId, asdmFId);
+      }
+    } // end loop over MS feed table
 
     EntityId theUid(getCurrentUid());
     Entity ent = tT.getEntity();
