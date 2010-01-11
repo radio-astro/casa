@@ -1410,44 +1410,47 @@ namespace casa {
 	os << LogIO::SEVERE << "Internal error: NUM_POLY > 0 not yet supported." << LogIO::POST;
 	return False;
       }
+      Int numpol = 0;
 
       String msAngUnit = "rad"; // MS uses radians here
-      Vector< Double > v; // aux. vector
+      Matrix< Double > mdir; // aux. matrix
 
       vector< vector< Angle > > delayDirV;
-      v.reference(field().delayDir()(irow));
+      mdir.reference(field().delayDir()(irow));
       {
 	vector< Angle > dirV;
-	Quantity angle0(v[0], msAngUnit);
+	Quantity angle0(mdir(0,numpol), msAngUnit);
 	dirV.push_back(Angle(angle0.getValue(ASDMAUnit())));
-	Quantity angle1(v[1], msAngUnit);
+	Quantity angle1(mdir(1,numpol), msAngUnit);
 	dirV.push_back(Angle(angle1.getValue(ASDMAUnit())));
 	delayDirV.push_back(dirV);
       }
+
       vector< vector< Angle > > phaseDirV;
-      v.reference(field().phaseDir()(irow));
+      mdir.reference(field().phaseDir()(irow));
       {
 	vector< Angle > dirV;
-	Quantity angle0(v[0], msAngUnit);
+	Quantity angle0(mdir(0,numpol), msAngUnit);
 	dirV.push_back(Angle(angle0.getValue(ASDMAUnit())));
-	Quantity angle1(v[1], msAngUnit);
+	Quantity angle1(mdir(1,numpol), msAngUnit);
 	dirV.push_back(Angle(angle1.getValue(ASDMAUnit())));
 	phaseDirV.push_back(dirV);
       }
+
       vector< vector< Angle > > referenceDirV;
-      v.reference(field().referenceDir()(irow));
+      mdir.reference(field().referenceDir()(irow));
       {
 	vector< Angle > dirV;
-	Quantity angle0(v[0], msAngUnit);
+	Quantity angle0(mdir(0,numpol), msAngUnit);
 	dirV.push_back(Angle(angle0.getValue(ASDMAUnit())));
-	Quantity angle1(v[1], msAngUnit);
+	Quantity angle1(mdir(0,numpol), msAngUnit);
 	dirV.push_back(Angle(angle1.getValue(ASDMAUnit())));
 	referenceDirV.push_back(dirV);
       }
 
       tR = tT.newRow(fieldName, code, numPoly, delayDirV, phaseDirV, referenceDirV);
 
-      tR->setTime(ASDMArrayTime(field().time()(irow)));
+      tR->setTime(ASDMArrayTime(field().timeQuant()(irow).getValue("s")));
 
       int sid = field().sourceId()(irow);
       if(sid>=0){
@@ -1565,15 +1568,6 @@ namespace casa {
 	os << LogIO::SEVERE << "Undefined antenna id " << aid << " in MS feed table row "<< irow << LogIO::POST;
 	return False;
       }
-      Tag spectralWindowId;
-      Int spwid = feed().spectralWindowId()(irow);
-      if(asdmSpectralWindowId_p.isDefined(spwid)){
-	spectralWindowId = asdmSpectralWindowId_p(spwid);
-      }
-      else{
-	os << LogIO::SEVERE << "Undefined SPW id " << spwid << " in MS feed table row "<< irow << LogIO::POST;
-	return False;
-      }
       asdm::ArrayTimeInterval timeInterval( ASDMArrayTime(feed().timeQuant()(irow).getValue("s")),
 					    ASDMInterval(feed().intervalQuant()(irow).getValue("s")) );
       
@@ -1637,8 +1631,30 @@ namespace casa {
 	}
       } // end loop over receptors
 
+      // look at SPW Id parameter last!
+      Tag spectralWindowId;
+      vector< Tag > spwIdV; // the spw ids fow which to insert rows for this feed
+      Int spwid = feed().spectralWindowId()(irow);
+      if(spwid == -1){ // this means the MS Feed row is valid for all SPWs => need to insert same row for each SPW!
+	// loop over all SPWs
+	for(Int ispw=0; ispw<(Int)spectralWindow().nrow(); ispw++){
+	  if(asdmSpectralWindowId_p.isDefined(ispw)){
+	    spectralWindowId = asdmSpectralWindowId_p(ispw);
+	    spwIdV.push_back(spectralWindowId); 
+	  }
+	}  
+      }
+      else if(asdmSpectralWindowId_p.isDefined(spwid)){
+	spectralWindowId = asdmSpectralWindowId_p(spwid);
+	spwIdV.push_back(spectralWindowId); // just one entry
+      }
+      else{
+	os << LogIO::SEVERE << "Undefined SPW id " << spwid << " in MS feed table row "<< irow << LogIO::POST;
+	return False;
+      }
 
-      tR = tT.newRow(antennaId, spectralWindowId, timeInterval, numReceptor, beamOffsetV, focusReferenceV, 
+      // create the row for the first of the SPW Ids
+      tR = tT.newRow(antennaId, spwIdV[0], timeInterval, numReceptor, beamOffsetV, focusReferenceV, 
 		     polarizationTypesV, polResponseV, receptorAngleV, receiverIdV);
 
       if(telName_p=="ALMA" || telName_p=="ACA"){
@@ -1666,8 +1682,9 @@ namespace casa {
       }
 
       // add the row to the table
-      tT.add(tR);
-      int asdmFId = tR->getFeedId(); // the determination of the feed id was done by the add() method
+      tT.add(tR);	
+
+      int asdmFId = tR->getFeedId(); // the determination of the feed id is done internally by the add() method
       Int fId = feed().feedId()(irow);
       if(asdmFeedId_p.isDefined(fId)){ // there is already a mapping
 	if(asdmFId!=asdmFeedId_p(fId)){ // but it doesn't agree with the newly defined id
@@ -1680,6 +1697,13 @@ namespace casa {
 	// enter id into the map
 	asdmFeedId_p.define(fId, asdmFId);
       }
+
+      // add the same row for the remaining SPW Ids in the vector accumulated above
+      for(uint i=1; i<spwIdV.size(); i++){
+	tR->setSpectralWindowId(spwIdV[i]);
+	tT.add(tR);	
+      }	
+
     } // end loop over MS feed table
 
     EntityId theUid(getCurrentUid());
