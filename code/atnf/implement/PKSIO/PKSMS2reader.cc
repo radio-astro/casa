@@ -769,21 +769,17 @@ Int PKSMS2reader::read(PKSrecord &pksrec)
           string obsMode2 = obsType.substr(epos+1,nextpos-epos-1);
      
           //cerr <<"obsMode2= "<<obsMode2<<endl;
-          if (!pksrec.srcName.contains("_ps") 
-              &&!pksrec.srcName.contains("_psr")
-              &&!pksrec.srcName.contains("_nod")
-              &&!pksrec.srcName.contains("_fs")
-              &&!pksrec.srcName.contains("_fsr")) {
-            // Current OBS_MODE format:
-	    //
-	    //     ON: OBSERVE_TARGET.ON_SOURCE
-	    //    OFF: OBSERVE_TARGET.OFF_SOURCE
-	    //
-            if (obsMode1 == "OBSERVE_TARGET") {
-              if (obsMode2 == "ON_SOURCE") pksrec.srcName.append("_pson");
-              if (obsMode2 == "OFF_SOURCE") pksrec.srcName.append("_psoff");
-            } 
-          }
+          // Current OBS_MODE format:
+          //
+          //     ON: OBSERVE_TARGET.ON_SOURCE
+          //    OFF: OBSERVE_TARGET.OFF_SOURCE
+          //
+          if (obsMode1 == "OBSERVE_TARGET") {
+            //if (obsMode2 == "ON_SOURCE") pksrec.srcName.append("_pson");
+            //if (obsMode2 == "OFF_SOURCE") pksrec.srcName.append("_psoff");
+            if (obsMode2 == "ON_SOURCE") pksrec.srcType = 1 ;
+            if (obsMode2 == "OFF_SOURCE") pksrec.srcType = 0 ;
+          } 
 	}
       } 
     }

@@ -96,6 +96,7 @@ class PKSrecord
     Complex         xCalFctr;
     Vector<Complex> xPol;
     Int             polNo ;
+    Int             srcType ;
 };
 
 #endif
