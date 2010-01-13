@@ -194,6 +194,13 @@ class SubMS
   // Declared static because it's used in setupMS().  Therefore it can't use
   // any member variables.  It is also used in MSFixvis.cc.
   static const Vector<String>& parseColumnNames(const String colNameList);
+  // This version uses the MeasurementSet to check what columns are present,
+  // i.e. it makes col=="all" smarter, and it is not necessary to call
+  // verifyColumns() after calling this.  Unlike the other version, it knows
+  // about FLOAT_DATA and LAG_DATA.  It throws an exception if a
+  // _specifically_ requested column is absent.
+  static const Vector<String>& parseColumnNames(const String colNameList,
+                                                const MeasurementSet& ms);
 
   void verifyColumns(const MeasurementSet& ms, const Vector<String>& colNames);
   Bool doWriteImagingWeight(const ROMSColumns& msc, const Vector<String>& colNames);
@@ -301,13 +308,16 @@ class SubMS
 
  private:
   // *** Private member functions ***
-
-  Bool putDataColumn(MSColumns& msc, ROArrayColumn<Complex>& data, 
-		     const String& colName, const Bool writeToDataCol=False);
-  Bool putDataColumn(MSColumns& msc, Cube<Complex>& data, 
-		     const String& colName, const Bool writeToDataCol=False);
-  Bool getDataColumn(ROArrayColumn<Complex>& data, 
-		     const String& colName);
+  Bool getDataColumn(ROArrayColumn<Complex>& data, const String& colName);
+  Bool getDataColumn(ROArrayColumn<Float>& data, const String& colName);
+  Bool putDataColumn(MSColumns& msc, ROArrayColumn<Complex>& data,
+                     const String& colName, const Bool writeToDataCol=False);
+  Bool putDataColumn(MSColumns& msc, ROArrayColumn<Float>& data,
+                     const String& colName, const Bool writeToDataCol=False);
+  Bool putDataColumn(MSColumns& msc, Cube<Complex>& data,
+                     const String& colName, const Bool writeToDataCol=False);
+  Bool putDataColumn(MSColumns& msc, Cube<Float>& data,
+                     const String& colName, const Bool writeToDataCol=False);
 
   //method that returns the selected ms (?! - but it's Boolean - RR)
   Bool makeSelection();
@@ -324,6 +334,20 @@ class SubMS
   Bool copyWeather();
   Bool writeDiffSpwShape(const Vector<String>& colNames);
   Bool writeSimilarSpwShape(const Vector<String>& colNames);
+
+  // The guts of writeSimilarSpwShape(), ripped out so they can handle either
+  // Float or Complex data.
+  template<class M>
+  void chanAvgSameShapes(const ROArrayColumn<M>& data,
+                         const String& columnName, const Bool doSpWeight,
+                         ROArrayColumn<Float>& wgtSpec,
+                         Cube<Float>& outspweight,
+                         Vector<Float>& outwgtspectmp,
+                         Matrix<Float>& inwgtspectmp, const Float *inwptr,
+                         ROArrayColumn<Bool>& flag, Matrix<Bool>& inflagtmp,
+                         const Bool *iflg, const Int nrow,
+                         Cube<Bool>& outflag, const Bool writeToDataCol);
+
   // return the number of unique antennas selected
   //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2, Bool includeAutoCorr=False);
   // Number of time bins to average into from selected data
@@ -333,14 +357,28 @@ class SubMS
   Double n_bytes() {return mssel_p.nrow() * nchan_p[0] * npol_p[0] *
                            sizeof(Complex);}
 
-  // Picks a reference to DATA, MODEL_DATA, or CORRECTED_DATA out of ms_p.
-  const ROArrayColumn<Complex>& right_column(const ROMSColumns *ms_p, const String& colName);
+  // Picks a reference to DATA, MODEL_DATA, CORRECTED_DATA, or LAG_DATA out
+  // of ms_p.  FLOAT_DATA is not included because it is not natively complex. 
+  const ROArrayColumn<Complex>& right_column(const ROMSColumns *ms_p,
+                                             const String& colName);
 
   // Figures out the number, maximum, and index of the selected antennas.
   uInt fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer);
 
   //Bool fillAverAntTime();
   Bool fillTimeAverData(const Vector<String>& colNames);
+
+  // Bits of fillTimeAverData() which were internal to it until they needed to
+  // be templated to support both FLOAT_DATA and the other data columns (all
+  // Complex).
+  template<class M>
+  void accumUnflgDataWS(Array<M>& data_toikit, const Array<Float>& unflgWtSpec,
+                        const Array<M>& inData, const Array<Bool>& flag,
+                        Cube<M>& outData, const uInt orn);
+  template<class M>
+  void accumUnflgData(Array<M>& data_toikit, const Vector<Float>& unflaggedwt,
+                      const Array<M>& inData, const Array<Bool>& flag,
+                      Cube<M>& outData, const uInt orn);
 
   // Returns whether or not all the elements of inNumChan_p are the
   // same, AND whether all the elements of nchan_p are the same.

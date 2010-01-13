@@ -69,7 +69,127 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     return nAdded;
   }
+
+template<class M>
+void SubMS::chanAvgSameShapes(const ROArrayColumn<M>& data,
+                              const String& columnName,
+                              const Bool doSpWeight,
+                              ROArrayColumn<Float>& wgtSpec,
+                              Cube<Float>& outspweight,
+                              Vector<Float>& outwgtspectmp,
+                              Matrix<Float>& inwgtspectmp,
+                              const Float *inwptr,
+                              ROArrayColumn<Bool>& flag,
+                              Matrix<Bool>& inflagtmp,
+                              const Bool *iflg,
+                              const Int nrow, Cube<Bool>& outflag,
+                              const Bool writeToDataCol)
+{
+  Bool deleteIptr;
+  Matrix<M> indatatmp(npol_p[0], inNumChan_p[0]);
+  const M *iptr = indatatmp.getStorage(deleteIptr);
+
+  // Sigh, iflg itself is const, but it points at the start of inflagtmp,
+  // which is continually refreshed by a row of flag.
   
+  Cube<M> outdata(npol_p[0], nchan_p[0], nrow);
+  Vector<M> outdatatmp(npol_p[0]);
+  //    const Complex *optr = outdatatmp.getStorage(deleteOptr);
+
+  for (Int row = 0; row < nrow; ++row){
+    data.get(row, indatatmp);
+    flag.get(row, inflagtmp);
+
+    if(doSpWeight)
+      wgtSpec.get(row, inwgtspectmp);
+
+    Int ck = 0;
+    Int chancounter = 0;
+    Vector<Int> avcounter(npol_p[0]);
+    outdatatmp.set(0); outwgtspectmp.set(0);
+    avcounter.set(0);
+      
+    for(Int k = chanStart_p[0]; k < (nchan_p[0] * chanStep_p[0] +
+                                     chanStart_p[0]); ++k){
+      if(chancounter == chanStep_p[0]){
+        outdatatmp.set(0); outwgtspectmp.set(0);
+        chancounter = 0;
+        avcounter.set(0);
+      }
+      ++chancounter;
+      for(Int j = 0; j < npol_p[0]; ++j){
+        Int offset = j + k * npol_p[0];
+        if(!iflg[offset]){
+          if(doSpWeight){
+            outdatatmp[j] += iptr[offset] * inwptr[offset];
+            outwgtspectmp[j] += inwptr[offset];
+          }
+          else
+            outdatatmp[j] += iptr[offset];	   
+          ++avcounter[j];
+        }
+
+        if(chancounter == chanStep_p[0]){
+          if(avcounter[j] != 0){
+            // Should there be a warning if one data column wants flagging
+            // and another does not?
+            if(doSpWeight){
+              if(outwgtspectmp[j] != 0.0)
+                outdata(j, ck, row) = outdatatmp[j] / outwgtspectmp[j];
+              else{
+                outdata(j, ck, row) = 0.0;
+                outflag(j, ck, row) = True;
+              }
+              outspweight(j, ck, row) = outwgtspectmp[j];
+            }
+            else{
+              outdata(j, ck, row) = outdatatmp[j] / avcounter[j];	    
+            }
+          }
+          else{
+            outdata(j, ck, row) = 0;
+            outflag(j, ck, row) = True;
+            if(doSpWeight)
+              outspweight(j, ck, row) = 0;
+          }	
+        }
+      }
+      if(chancounter == chanStep_p[0])
+        ++ck;
+    }
+  }
+    
+  putDataColumn(*msc_p, outdata, columnName, writeToDataCol);
+
+}
+
+template<class M>
+void SubMS::accumUnflgDataWS(Array<M>& data_toikit,
+                             const Array<Float>& unflgWtSpec,
+                             const Array<M>& inData, const Array<Bool>& flag,
+                             Cube<M>& outData, const uInt orn)
+{
+  data_toikit = inData * unflgWtSpec;
+
+  // It's already multiplied by a zero weight, but zero it again
+  // just in case some flagged NaNs or infinities snuck in there.
+  data_toikit(flag) = 0.0;
+              
+  outData.xyPlane(orn) = outData.xyPlane(orn) + data_toikit;
+}
+
+template<class M>
+void SubMS::accumUnflgData(Array<M>& data_toikit,
+                           const Vector<Float>& unflaggedwt,
+                           const Array<M>& inData, const Array<Bool>& flag,
+                           Cube<M>& outData, const uInt orn)
+{
+  data_toikit = inData;
+  binOpExpandInPlace(data_toikit, unflaggedwt, Multiplies<M, Float>());
+  data_toikit(flag) = 0.0;  // Do this AFTER the multiplication to catch NaNs.
+  outData.xyPlane(orn) = outData.xyPlane(orn) + data_toikit;
+}
+
 } //# NAMESPACE CASA - END
 
 
