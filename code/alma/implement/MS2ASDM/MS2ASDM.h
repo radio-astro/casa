@@ -170,9 +170,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool writeFeed();
 
-  Bool writeDataDesc();
+  Bool writeDataDescription();
 
-  Bool writeConfigDesc();
+  Bool writeSwitchCycleDummy(); // write a trivial table with numStep==1
+
+  Bool writeConfigDescription();
+
+  Bool writeConfigDesc(); // obsolete
 
   Bool writeMain();
 
@@ -215,6 +219,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SimpleOrderedMap <Int, asdm::Tag> asdmProcessorId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmFieldId_p;
   SimpleOrderedMap <Int, asdm::Tag> asdmEphemerisId_p;
+  SimpleOrderedMap <Int, asdm::Tag> asdmDataDescriptionId_p;
 
   SimpleOrderedMap <Int, int> asdmFeedId_p;
 

@@ -80,7 +80,6 @@ namespace casa {
     runningId_p(0),
     currentUid_p("uid://X0/X0/X0"),
     telName_p(""),
-
     // the Id to Tag maps
     asdmStationId_p(Tag()),
     asdmAntennaId_p(Tag()),
@@ -89,10 +88,9 @@ namespace casa {
     asdmProcessorId_p(Tag()),
     asdmFieldId_p(Tag()),
     asdmEphemerisId_p(Tag()),
-    
+    asdmDataDescriptionId_p(Tag()),
     // other maps
     asdmFeedId_p(-1)
-
   {
     ASDM_p = new ASDM();
   }
@@ -207,6 +205,14 @@ namespace casa {
     }
 
     if(!writeFeed()){
+      return False;
+    }
+
+    if(!writeDataDescription()){
+      return False;
+    }
+
+    if(!writeSwitchCycleDummy()){
       return False;
     }
 
@@ -1717,8 +1723,101 @@ namespace casa {
   }
 
 
-  Bool MS2ASDM::writeDataDesc(){
-    LogIO os(LogOrigin("MS2ASDM", "writeDataDesc()"));
+  Bool MS2ASDM::writeDataDescription(){
+    LogIO os(LogOrigin("MS2ASDM", "writeDataDescription()"));
+
+    Bool rstat = True;
+    asdm::DataDescriptionTable& tT = ASDM_p->getDataDescription();
+
+    asdm::DataDescriptionRow* tR = 0;
+
+    // loop over MS data description table
+    for(uInt irow=0; irow<dataDescription().nrow(); irow++){
+      // parameters for the new row
+      Tag polOrHoloId;
+      Tag spectralWindowId;
+      Int polId = dataDescription().polarizationId()(irow);
+      Int spwId = dataDescription().spectralWindowId()(irow);
+      if(asdmPolarizationId_p.isDefined(polId)){
+	polOrHoloId = asdmPolarizationId_p(polId);
+      }
+      else{
+	os << LogIO::SEVERE << "Inconsistent MS: undefined polarization id " << polId 
+	   << " in row " << irow << " of the DataDesc table." << LogIO::POST;
+	return False;
+      }
+      if(asdmSpectralWindowId_p.isDefined(spwId)){
+	spectralWindowId = asdmSpectralWindowId_p(spwId);
+      }
+      else{
+	os << LogIO::SEVERE << "Inconsistent MS: undefined SPW id " << spwId 
+	   << " in row " << irow << " of the DataDesc table." << LogIO::POST;
+	return False;
+      }
+
+      tR = tT.newRow(polOrHoloId, spectralWindowId);
+
+      asdm::DataDescriptionRow* tR2 = 0;
+
+      tR2 = tT.add(tR);
+      if(tR2 == tR){ // adding this row caused a new tag to be defined
+	// enter tag into the map
+	asdmDataDescriptionId_p.define(irow, tR->getDataDescriptionId());
+      }
+      else{
+	os << LogIO::WARN << "Duplicate row in MS DataDesc table :" << irow << LogIO::POST;
+      }
+    } // end loop over MS DD table
+
+    EntityId theUid(getCurrentUid());
+    Entity ent = tT.getEntity();
+    ent.setEntityId(theUid);
+    tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled DataDescription table " << getCurrentUid() << " ... " << LogIO::POST;
+    incrementUid();
+
+    return rstat;
+  }
+
+  Bool MS2ASDM::writeSwitchCycleDummy(){ 
+    LogIO os(LogOrigin("MS2ASDM", "writeSwitchCycleDummy()"));
+    
+    Bool rstat = True;
+    
+    asdm::SwitchCycleTable& tT = ASDM_p->getSwitchCycle();
+    
+    asdm::SwitchCycleRow* tR = 0;
+    
+    // parameters of the new row
+    int numStep = 1;
+    vector< float > weightArray;
+    weightArray.push_back(1.);
+    vector< vector< Angle > > dirOffsetArray;
+    vector< Angle > aV;
+    aV.push_back(Angle(0.));
+    aV.push_back(Angle(0.));
+    dirOffsetArray.push_back(aV);
+    vector< Frequency > freqOffsetArray;
+    freqOffsetArray.push_back(Frequency(0.));
+    vector< Interval > stepDurationArray;
+    stepDurationArray.push_back(Interval(0)); // set to zero ???
+
+    tR = tT.newRow(numStep, weightArray, dirOffsetArray, freqOffsetArray, stepDurationArray);
+    
+    tT.add(tR);
+    
+    EntityId theUid(getCurrentUid());
+    Entity ent = tT.getEntity();
+    ent.setEntityId(theUid);
+    tT.setEntity(ent);
+    os << LogIO::NORMAL << "Filled SwitchCycle table " << getCurrentUid() << " ... " << LogIO::POST;
+    incrementUid();
+    
+    return rstat;
+  }
+
+  Bool MS2ASDM::writeConfigDescription(){
+    LogIO os(LogOrigin("MS2ASDM", "writeConfigDesc()"));
 
     Bool rstat = True;
     asdm::DataDescriptionTable& tT = ASDM_p->getDataDescription();
@@ -1737,10 +1836,11 @@ namespace casa {
     incrementUid();
 
     return rstat;
+
   }
 
 
-  Bool MS2ASDM::writeConfigDesc(){
+  Bool MS2ASDM::writeConfigDesc(){ // obsolete
 
     LogIO os(LogOrigin("MS2ASDM", "writeConfigDesc()"));
 
