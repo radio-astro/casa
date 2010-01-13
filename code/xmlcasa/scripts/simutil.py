@@ -252,9 +252,51 @@ class simutil:
             pointings.append(direction)
         self.msg("using %i generated pointing(s)" % len(pointings))
         self.pointings=pointings
-        return len(pointings), pointings
+        return len(pointings), pointings, [0.]*len(pointings)
 
 
+
+    def read_pointings(self, filename):
+        """
+        read pointing list from file containing ra,dec [decimal degrees],
+        and scan time (optional,in sec)
+        """
+        f=open(filename)
+        line= '  '
+        time=[]
+        pointings=[]
+
+        epoch="J2000"
+        # add option of different epoch in a header line like read_antenna?
+
+        while (len(line)>0):
+            try: 
+                line=f.readline()
+                if not line.startswith('#'):
+                ### ignoring line that has less than 2 elements
+                     if(len(line.split()) >1):
+                        splitline=line.split()
+                        ra0=float(splitline[0])
+                        de0=float(splitline[1])
+                        if len(splitline)>2:
+                            time.append(float(splitline[2]))
+                        else:
+                            time.append(0.)
+                        xstr = qa.formxxx(qa.quantity(ra0,"deg"), format='hms')
+                        ystr = qa.formxxx(qa.quantity(de0,"deg"), format='dms')
+                        pointings.append("%s %s %s" % (epoch,xstr,ystr))
+            except:
+                break
+        f.close()
+
+        # need an error check here if zero valid pointings were read
+        
+        self.msg("read in %i pointing(s) from file" % len(pointings))
+        self.pointings=pointings
+                
+        return len(pointings), pointings, time
+
+    
 
     def average_direction(self, directions=None):
         # XXX make deal with list of measures as well as list of strings

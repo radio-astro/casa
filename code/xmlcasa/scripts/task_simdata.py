@@ -45,7 +45,6 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
         fband  = 'band'+startfreq
         msfile=project+'.ms'
 
-
         ##################################################################
         # read antenna file:
 
@@ -201,11 +200,13 @@ def simdata(modelimage=None, ignorecoord=None, inbright=None, complist=None, ant
                 if verbose: msg("You are inputing the precise pointings in 'direction' - if you want me to fill the mosaic, give a single direction")
             else:
                 # calculate pointings for the user 
-                nfld, pointings = util.calc_pointings(pointingspacing,out_size,out_cell,direction,relmargin)
+                nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,out_cell,direction,relmargin)
                 #if verbose: msg("Calculated %i pointings in an output image of %s pixels by %s" % (nfld,str(out_size),str(pointingspacing)))
         else:
+            # check here if "direction" is a filename, and load it in that case
+            # util.read_pointings(filename)
             # calculate pointings for the user 
-            nfld, pointings = util.calc_pointings(pointingspacing,out_size,out_cell,direction,relmargin)
+            nfld, pointings, etime = util.calc_pointings(pointingspacing,out_size,out_cell,direction,relmargin)
             #if verbose: msg("Calculated %i pointings in an output image of %s pixels by %s" % (nfld,str(out_size),str(pointingspacing)))
             
                 
