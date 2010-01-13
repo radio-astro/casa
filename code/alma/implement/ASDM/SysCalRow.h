@@ -46,93 +46,63 @@ using std::set;
 using asdmIDL::SysCalRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
+
+
 #include <Tag.h>
+using  asdm::Tag;
+
 #include <Temperature.h>
+using  asdm::Temperature;
+
+#include <ArrayTimeInterval.h>
+using  asdm::ArrayTimeInterval;
+
+
+
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
 #include <ConversionException.h>
 #include <NoSuchRow.h>
 #include <IllegalAccessException.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
- */
-
-
-
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
 
 /*\file SysCal.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -150,10 +120,13 @@ class FeedRow;
 class SpectralWindowRow;
 	
 
+class SysCalRow;
+typedef void (SysCalRow::*SysCalAttributeFromBin) (EndianISStream& eiss);
+
 /**
  * The SysCalRow class is a row of a SysCalTable.
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  */
 class SysCalRow {
@@ -168,49 +141,6 @@ public:
 	 */
 	SysCalTable &getTable() const;
 	
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a SysCalRowIDL struct.
-	 */
-	SysCalRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct SysCalRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 * @throws ConversionException
-	 */
-	void setFromIDL (SysCalRowIDL x) ;
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 * @throws ConversionException
-	 */
-	void setFromXML (string rowDoc) ;
-	
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
-	  * @table the SysCalTable to which the row built by deserialization will be parented.
-	  */
-	 static SysCalRow* fromBin(EndianISStream& eiss, SysCalTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -1039,12 +969,34 @@ public:
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this SysCalRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param antennaId
+	    
+	 * @param spectralWindowId
+	    
+	 * @param timeInterval
+	    
+	 * @param feedId
+	    
+	 * @param numReceptor
+	    
+	 * @param numChan
+	    
 	 */ 
 	bool compareNoAutoInc(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numReceptor, int numChan);
 	
 	
 
 	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param numReceptor
+	    
+	 * @param numChan
+	    
+	 */ 
 	bool compareRequiredValue(int numReceptor, int numChan); 
 		 
 	
@@ -1381,6 +1333,79 @@ private:
 
 	
 
+	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////
+	map<string, SysCalAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianISStream& eiss);
+void spectralWindowIdFromBin( EndianISStream& eiss);
+void timeIntervalFromBin( EndianISStream& eiss);
+void feedIdFromBin( EndianISStream& eiss);
+void numReceptorFromBin( EndianISStream& eiss);
+void numChanFromBin( EndianISStream& eiss);
+
+void tcalFlagFromBin( EndianISStream& eiss);
+void tcalSpectrumFromBin( EndianISStream& eiss);
+void trxFlagFromBin( EndianISStream& eiss);
+void trxSpectrumFromBin( EndianISStream& eiss);
+void tskyFlagFromBin( EndianISStream& eiss);
+void tskySpectrumFromBin( EndianISStream& eiss);
+void tsysFlagFromBin( EndianISStream& eiss);
+void tsysSpectrumFromBin( EndianISStream& eiss);
+void tantFlagFromBin( EndianISStream& eiss);
+void tantSpectrumFromBin( EndianISStream& eiss);
+void tantTsysFlagFromBin( EndianISStream& eiss);
+void tantTsysSpectrumFromBin( EndianISStream& eiss);
+void phaseDiffFlagFromBin( EndianISStream& eiss);
+void phaseDiffSpectrumFromBin( EndianISStream& eiss);
+	
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a SysCalRowIDL struct.
+	 */
+	SysCalRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct SysCalRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (SysCalRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @param table the SysCalTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static SysCalRow* fromBin(EndianISStream& eiss, SysCalTable& table, const vector<string>& attributesSeq);	 
 
 };
 

@@ -46,31 +46,19 @@ using std::set;
 using asdmIDL::MainRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
-#include <Tag.h>
-#include <Temperature.h>
-#include <ConversionException.h>
-#include <NoSuchRow.h>
-#include <IllegalAccessException.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
- */
+
+#include <ArrayTime.h>
+using  asdm::ArrayTime;
+
+#include <Interval.h>
+using  asdm::Interval;
+
+#include <Tag.h>
+using  asdm::Tag;
+
+#include <EntityRef.h>
+using  asdm::EntityRef;
 
 
 
@@ -100,28 +88,13 @@ using namespace TimeSamplingMod;
 
 
 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
+#include <ConversionException.h>
+#include <NoSuchRow.h>
+#include <IllegalAccessException.h>
+
 
 /*\file Main.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -142,10 +115,13 @@ class StateRow;
 class ExecBlockRow;
 	
 
+class MainRow;
+typedef void (MainRow::*MainAttributeFromBin) (EndianISStream& eiss);
+
 /**
  * The MainRow class is a row of a MainTable.
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  */
 class MainRow {
@@ -160,49 +136,6 @@ public:
 	 */
 	MainTable &getTable() const;
 	
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a MainRowIDL struct.
-	 */
-	MainRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct MainRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 * @throws ConversionException
-	 */
-	void setFromIDL (MainRowIDL x) ;
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 * @throws ConversionException
-	 */
-	void setFromXML (string rowDoc) ;
-	
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
-	  * @table the MainTable to which the row built by deserialization will be parented.
-	  */
-	 static MainRow* fromBin(EndianISStream& eiss, MainTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -757,12 +690,64 @@ public:
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this MainRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param time
+	    
+	 * @param configDescriptionId
+	    
+	 * @param fieldId
+	    
+	 * @param numAntenna
+	    
+	 * @param timeSampling
+	    
+	 * @param interval
+	    
+	 * @param numIntegration
+	    
+	 * @param scanNumber
+	    
+	 * @param subscanNumber
+	    
+	 * @param dataSize
+	    
+	 * @param dataOid
+	    
+	 * @param stateId
+	    
+	 * @param execBlockId
+	    
 	 */ 
 	bool compareNoAutoInc(ArrayTime time, Tag configDescriptionId, Tag fieldId, int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int dataSize, EntityRef dataOid, vector<Tag>  stateId, Tag execBlockId);
 	
 	
 
 	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param numAntenna
+	    
+	 * @param timeSampling
+	    
+	 * @param interval
+	    
+	 * @param numIntegration
+	    
+	 * @param scanNumber
+	    
+	 * @param subscanNumber
+	    
+	 * @param dataSize
+	    
+	 * @param dataOid
+	    
+	 * @param stateId
+	    
+	 * @param execBlockId
+	    
+	 */ 
 	bool compareRequiredValue(int numAntenna, TimeSamplingMod::TimeSampling timeSampling, Interval interval, int numIntegration, int scanNumber, int subscanNumber, int dataSize, EntityRef dataOid, vector<Tag>  stateId, Tag execBlockId); 
 		 
 	
@@ -1014,6 +999,73 @@ private:
 
 	
 
+	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////
+	map<string, MainAttributeFromBin> fromBinMethods;
+void timeFromBin( EndianISStream& eiss);
+void configDescriptionIdFromBin( EndianISStream& eiss);
+void fieldIdFromBin( EndianISStream& eiss);
+void numAntennaFromBin( EndianISStream& eiss);
+void timeSamplingFromBin( EndianISStream& eiss);
+void intervalFromBin( EndianISStream& eiss);
+void numIntegrationFromBin( EndianISStream& eiss);
+void scanNumberFromBin( EndianISStream& eiss);
+void subscanNumberFromBin( EndianISStream& eiss);
+void dataSizeFromBin( EndianISStream& eiss);
+void dataOidFromBin( EndianISStream& eiss);
+void stateIdFromBin( EndianISStream& eiss);
+void execBlockIdFromBin( EndianISStream& eiss);
+
+void flagRowFromBin( EndianISStream& eiss);
+	
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a MainRowIDL struct.
+	 */
+	MainRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct MainRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (MainRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @param table the MainTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static MainRow* fromBin(EndianISStream& eiss, MainTable& table, const vector<string>& attributesSeq);	 
 
 };
 

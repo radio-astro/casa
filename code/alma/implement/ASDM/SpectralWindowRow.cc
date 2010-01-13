@@ -74,7 +74,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	SpectralWindowRow::~SpectralWindowRow() {
 	}
 
@@ -2135,232 +2134,281 @@ namespace asdm {
 
 	}
 	
-	SpectralWindowRow* SpectralWindowRow::fromBin(EndianISStream& eiss, SpectralWindowTable& table) {
-		SpectralWindowRow* row = new  SpectralWindowRow(table);
-		
-		
+void SpectralWindowRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->spectralWindowId =  Tag::fromBin(eiss);
+		spectralWindowId =  Tag::fromBin(eiss);
 		
 	
+	
+}
+void SpectralWindowRow::basebandNameFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		basebandName = CBasebandName::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void SpectralWindowRow::netSidebandFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		netSideband = CNetSideband::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void SpectralWindowRow::numChanFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numChan =  eiss.readInt();
+			
+		
+	
+	
+}
+void SpectralWindowRow::refFreqFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		refFreq =  Frequency::fromBin(eiss);
+		
+	
+	
+}
+void SpectralWindowRow::sidebandProcessingModeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		sidebandProcessingMode = CSidebandProcessingMode::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void SpectralWindowRow::totBandwidthFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		totBandwidth =  Frequency::fromBin(eiss);
+		
+	
+	
+}
+void SpectralWindowRow::windowFunctionFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		windowFunction = CWindowFunction::from_int(eiss.readInt());
+			
+		
+	
+	
+}
 
-	
-	
+void SpectralWindowRow::chanFreqStartFromBin(EndianISStream& eiss) {
 		
-			
-		row->basebandName = CBasebandName::from_int(eiss.readInt());
-			
-		
-	
-
-	
-	
-		
-			
-		row->netSideband = CNetSideband::from_int(eiss.readInt());
-			
-		
-	
-
-	
-	
-		
-			
-		row->numChan =  eiss.readInt();
-			
-		
-	
-
-	
-		
-		
-		row->refFreq =  Frequency::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->sidebandProcessingMode = CSidebandProcessingMode::from_int(eiss.readInt());
-			
-		
-	
-
-	
-		
-		
-		row->totBandwidth =  Frequency::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->windowFunction = CWindowFunction::from_int(eiss.readInt());
-			
-		
-	
-
-		
-		
-		
-	row->chanFreqStartExists = eiss.readBoolean();
-	if (row->chanFreqStartExists) {
+	chanFreqStartExists = eiss.readBoolean();
+	if (chanFreqStartExists) {
 		
 	
 		
 		
-		row->chanFreqStart =  Frequency::fromBin(eiss);
+		chanFreqStart =  Frequency::fromBin(eiss);
 		
 	
 
 	}
-
-	row->chanFreqStepExists = eiss.readBoolean();
-	if (row->chanFreqStepExists) {
+	
+}
+void SpectralWindowRow::chanFreqStepFromBin(EndianISStream& eiss) {
+		
+	chanFreqStepExists = eiss.readBoolean();
+	if (chanFreqStepExists) {
 		
 	
 		
 		
-		row->chanFreqStep =  Frequency::fromBin(eiss);
+		chanFreqStep =  Frequency::fromBin(eiss);
 		
 	
 
 	}
-
-	row->chanFreqArrayExists = eiss.readBoolean();
-	if (row->chanFreqArrayExists) {
+	
+}
+void SpectralWindowRow::chanFreqArrayFromBin(EndianISStream& eiss) {
+		
+	chanFreqArrayExists = eiss.readBoolean();
+	if (chanFreqArrayExists) {
 		
 	
 		
 		
 			
 	
-	row->chanFreqArray = Frequency::from1DBin(eiss);	
-	
-
-		
-	
-
-	}
-
-	row->chanWidthExists = eiss.readBoolean();
-	if (row->chanWidthExists) {
-		
-	
-		
-		
-		row->chanWidth =  Frequency::fromBin(eiss);
-		
-	
-
-	}
-
-	row->chanWidthArrayExists = eiss.readBoolean();
-	if (row->chanWidthArrayExists) {
-		
-	
-		
-		
-			
-	
-	row->chanWidthArray = Frequency::from1DBin(eiss);	
+	chanFreqArray = Frequency::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->correlationBitExists = eiss.readBoolean();
-	if (row->correlationBitExists) {
-		
 	
-	
+}
+void SpectralWindowRow::chanWidthFromBin(EndianISStream& eiss) {
 		
-			
-		row->correlationBit = CCorrelationBit::from_int(eiss.readInt());
-			
-		
-	
-
-	}
-
-	row->effectiveBwExists = eiss.readBoolean();
-	if (row->effectiveBwExists) {
+	chanWidthExists = eiss.readBoolean();
+	if (chanWidthExists) {
 		
 	
 		
 		
-		row->effectiveBw =  Frequency::fromBin(eiss);
+		chanWidth =  Frequency::fromBin(eiss);
 		
 	
 
 	}
-
-	row->effectiveBwArrayExists = eiss.readBoolean();
-	if (row->effectiveBwArrayExists) {
+	
+}
+void SpectralWindowRow::chanWidthArrayFromBin(EndianISStream& eiss) {
+		
+	chanWidthArrayExists = eiss.readBoolean();
+	if (chanWidthArrayExists) {
 		
 	
 		
 		
 			
 	
-	row->effectiveBwArray = Frequency::from1DBin(eiss);	
+	chanWidthArray = Frequency::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->freqGroupExists = eiss.readBoolean();
-	if (row->freqGroupExists) {
+	
+}
+void SpectralWindowRow::correlationBitFromBin(EndianISStream& eiss) {
+		
+	correlationBitExists = eiss.readBoolean();
+	if (correlationBitExists) {
 		
 	
 	
 		
 			
-		row->freqGroup =  eiss.readInt();
-			
-		
-	
-
-	}
-
-	row->freqGroupNameExists = eiss.readBoolean();
-	if (row->freqGroupNameExists) {
-		
-	
-	
-		
-			
-		row->freqGroupName =  eiss.readString();
+		correlationBit = CCorrelationBit::from_int(eiss.readInt());
 			
 		
 	
 
 	}
+	
+}
+void SpectralWindowRow::effectiveBwFromBin(EndianISStream& eiss) {
+		
+	effectiveBwExists = eiss.readBoolean();
+	if (effectiveBwExists) {
+		
+	
+		
+		
+		effectiveBw =  Frequency::fromBin(eiss);
+		
+	
 
-	row->lineArrayExists = eiss.readBoolean();
-	if (row->lineArrayExists) {
+	}
+	
+}
+void SpectralWindowRow::effectiveBwArrayFromBin(EndianISStream& eiss) {
+		
+	effectiveBwArrayExists = eiss.readBoolean();
+	if (effectiveBwArrayExists) {
+		
+	
+		
+		
+			
+	
+	effectiveBwArray = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+	
+}
+void SpectralWindowRow::freqGroupFromBin(EndianISStream& eiss) {
+		
+	freqGroupExists = eiss.readBoolean();
+	if (freqGroupExists) {
+		
+	
+	
+		
+			
+		freqGroup =  eiss.readInt();
+			
+		
+	
+
+	}
+	
+}
+void SpectralWindowRow::freqGroupNameFromBin(EndianISStream& eiss) {
+		
+	freqGroupNameExists = eiss.readBoolean();
+	if (freqGroupNameExists) {
+		
+	
+	
+		
+			
+		freqGroupName =  eiss.readString();
+			
+		
+	
+
+	}
+	
+}
+void SpectralWindowRow::lineArrayFromBin(EndianISStream& eiss) {
+		
+	lineArrayExists = eiss.readBoolean();
+	if (lineArrayExists) {
 		
 	
 	
 		
 			
 	
-		row->lineArray.clear();
+		lineArray.clear();
 		
 		unsigned int lineArrayDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < lineArrayDim1; i++)
 			
-			row->lineArray.push_back(eiss.readBoolean());
+			lineArray.push_back(eiss.readBoolean());
 			
 	
 
@@ -2368,133 +2416,160 @@ namespace asdm {
 	
 
 	}
-
-	row->measFreqRefExists = eiss.readBoolean();
-	if (row->measFreqRefExists) {
+	
+}
+void SpectralWindowRow::measFreqRefFromBin(EndianISStream& eiss) {
+		
+	measFreqRefExists = eiss.readBoolean();
+	if (measFreqRefExists) {
 		
 	
 	
 		
 			
-		row->measFreqRef = CFrequencyReferenceCode::from_int(eiss.readInt());
-			
-		
-	
-
-	}
-
-	row->nameExists = eiss.readBoolean();
-	if (row->nameExists) {
-		
-	
-	
-		
-			
-		row->name =  eiss.readString();
+		measFreqRef = CFrequencyReferenceCode::from_int(eiss.readInt());
 			
 		
 	
 
 	}
-
-	row->oversamplingExists = eiss.readBoolean();
-	if (row->oversamplingExists) {
+	
+}
+void SpectralWindowRow::nameFromBin(EndianISStream& eiss) {
+		
+	nameExists = eiss.readBoolean();
+	if (nameExists) {
 		
 	
 	
 		
 			
-		row->oversampling =  eiss.readBoolean();
-			
-		
-	
-
-	}
-
-	row->quantizationExists = eiss.readBoolean();
-	if (row->quantizationExists) {
-		
-	
-	
-		
-			
-		row->quantization =  eiss.readBoolean();
+		name =  eiss.readString();
 			
 		
 	
 
 	}
-
-	row->refChanExists = eiss.readBoolean();
-	if (row->refChanExists) {
+	
+}
+void SpectralWindowRow::oversamplingFromBin(EndianISStream& eiss) {
+		
+	oversamplingExists = eiss.readBoolean();
+	if (oversamplingExists) {
 		
 	
 	
 		
 			
-		row->refChan =  eiss.readDouble();
-			
-		
-	
-
-	}
-
-	row->resolutionExists = eiss.readBoolean();
-	if (row->resolutionExists) {
-		
-	
-		
-		
-		row->resolution =  Frequency::fromBin(eiss);
-		
-	
-
-	}
-
-	row->resolutionArrayExists = eiss.readBoolean();
-	if (row->resolutionArrayExists) {
-		
-	
-		
-		
-			
-	
-	row->resolutionArray = Frequency::from1DBin(eiss);	
-	
-
-		
-	
-
-	}
-
-	row->numAssocValuesExists = eiss.readBoolean();
-	if (row->numAssocValuesExists) {
-		
-	
-	
-		
-			
-		row->numAssocValues =  eiss.readInt();
+		oversampling =  eiss.readBoolean();
 			
 		
 	
 
 	}
+	
+}
+void SpectralWindowRow::quantizationFromBin(EndianISStream& eiss) {
+		
+	quantizationExists = eiss.readBoolean();
+	if (quantizationExists) {
+		
+	
+	
+		
+			
+		quantization =  eiss.readBoolean();
+			
+		
+	
 
-	row->assocNatureExists = eiss.readBoolean();
-	if (row->assocNatureExists) {
+	}
+	
+}
+void SpectralWindowRow::refChanFromBin(EndianISStream& eiss) {
+		
+	refChanExists = eiss.readBoolean();
+	if (refChanExists) {
+		
+	
+	
+		
+			
+		refChan =  eiss.readDouble();
+			
+		
+	
+
+	}
+	
+}
+void SpectralWindowRow::resolutionFromBin(EndianISStream& eiss) {
+		
+	resolutionExists = eiss.readBoolean();
+	if (resolutionExists) {
+		
+	
+		
+		
+		resolution =  Frequency::fromBin(eiss);
+		
+	
+
+	}
+	
+}
+void SpectralWindowRow::resolutionArrayFromBin(EndianISStream& eiss) {
+		
+	resolutionArrayExists = eiss.readBoolean();
+	if (resolutionArrayExists) {
+		
+	
+		
+		
+			
+	
+	resolutionArray = Frequency::from1DBin(eiss);	
+	
+
+		
+	
+
+	}
+	
+}
+void SpectralWindowRow::numAssocValuesFromBin(EndianISStream& eiss) {
+		
+	numAssocValuesExists = eiss.readBoolean();
+	if (numAssocValuesExists) {
+		
+	
+	
+		
+			
+		numAssocValues =  eiss.readInt();
+			
+		
+	
+
+	}
+	
+}
+void SpectralWindowRow::assocNatureFromBin(EndianISStream& eiss) {
+		
+	assocNatureExists = eiss.readBoolean();
+	if (assocNatureExists) {
 		
 	
 	
 		
 			
 	
-		row->assocNature.clear();
+		assocNature.clear();
 		
 		unsigned int assocNatureDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < assocNatureDim1; i++)
 			
-			row->assocNature.push_back(CSpectralResolutionType::from_int(eiss.readInt()));
+			assocNature.push_back(CSpectralResolutionType::from_int(eiss.readInt()));
 			
 	
 
@@ -2502,50 +2577,72 @@ namespace asdm {
 	
 
 	}
-
-	row->assocSpectralWindowIdExists = eiss.readBoolean();
-	if (row->assocSpectralWindowIdExists) {
+	
+}
+void SpectralWindowRow::assocSpectralWindowIdFromBin(EndianISStream& eiss) {
+		
+	assocSpectralWindowIdExists = eiss.readBoolean();
+	if (assocSpectralWindowIdExists) {
 		
 	
 		
 		
 			
 	
-	row->assocSpectralWindowId = Tag::from1DBin(eiss);	
+	assocSpectralWindowId = Tag::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->imageSpectralWindowIdExists = eiss.readBoolean();
-	if (row->imageSpectralWindowIdExists) {
+	
+}
+void SpectralWindowRow::imageSpectralWindowIdFromBin(EndianISStream& eiss) {
+		
+	imageSpectralWindowIdExists = eiss.readBoolean();
+	if (imageSpectralWindowIdExists) {
 		
 	
 		
 		
-		row->imageSpectralWindowId =  Tag::fromBin(eiss);
+		imageSpectralWindowId =  Tag::fromBin(eiss);
 		
 	
 
 	}
-
-	row->dopplerIdExists = eiss.readBoolean();
-	if (row->dopplerIdExists) {
+	
+}
+void SpectralWindowRow::dopplerIdFromBin(EndianISStream& eiss) {
+		
+	dopplerIdExists = eiss.readBoolean();
+	if (dopplerIdExists) {
 		
 	
 	
 		
 			
-		row->dopplerId =  eiss.readInt();
+		dopplerId =  eiss.readInt();
 			
 		
 	
 
 	}
-
+	
+}
+	
+	
+	SpectralWindowRow* SpectralWindowRow::fromBin(EndianISStream& eiss, SpectralWindowTable& table, const vector<string>& attributesSeq) {
+		SpectralWindowRow* row = new  SpectralWindowRow(table);
 		
+		map<string, SpectralWindowAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SpectralWindowTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -4220,6 +4317,42 @@ measFreqRef = CFrequencyReferenceCode::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["spectralWindowId"] = &SpectralWindowRow::spectralWindowIdFromBin; 
+	 fromBinMethods["basebandName"] = &SpectralWindowRow::basebandNameFromBin; 
+	 fromBinMethods["netSideband"] = &SpectralWindowRow::netSidebandFromBin; 
+	 fromBinMethods["numChan"] = &SpectralWindowRow::numChanFromBin; 
+	 fromBinMethods["refFreq"] = &SpectralWindowRow::refFreqFromBin; 
+	 fromBinMethods["sidebandProcessingMode"] = &SpectralWindowRow::sidebandProcessingModeFromBin; 
+	 fromBinMethods["totBandwidth"] = &SpectralWindowRow::totBandwidthFromBin; 
+	 fromBinMethods["windowFunction"] = &SpectralWindowRow::windowFunctionFromBin; 
+		
+	
+	 fromBinMethods["chanFreqStart"] = &SpectralWindowRow::chanFreqStartFromBin; 
+	 fromBinMethods["chanFreqStep"] = &SpectralWindowRow::chanFreqStepFromBin; 
+	 fromBinMethods["chanFreqArray"] = &SpectralWindowRow::chanFreqArrayFromBin; 
+	 fromBinMethods["chanWidth"] = &SpectralWindowRow::chanWidthFromBin; 
+	 fromBinMethods["chanWidthArray"] = &SpectralWindowRow::chanWidthArrayFromBin; 
+	 fromBinMethods["correlationBit"] = &SpectralWindowRow::correlationBitFromBin; 
+	 fromBinMethods["effectiveBw"] = &SpectralWindowRow::effectiveBwFromBin; 
+	 fromBinMethods["effectiveBwArray"] = &SpectralWindowRow::effectiveBwArrayFromBin; 
+	 fromBinMethods["freqGroup"] = &SpectralWindowRow::freqGroupFromBin; 
+	 fromBinMethods["freqGroupName"] = &SpectralWindowRow::freqGroupNameFromBin; 
+	 fromBinMethods["lineArray"] = &SpectralWindowRow::lineArrayFromBin; 
+	 fromBinMethods["measFreqRef"] = &SpectralWindowRow::measFreqRefFromBin; 
+	 fromBinMethods["name"] = &SpectralWindowRow::nameFromBin; 
+	 fromBinMethods["oversampling"] = &SpectralWindowRow::oversamplingFromBin; 
+	 fromBinMethods["quantization"] = &SpectralWindowRow::quantizationFromBin; 
+	 fromBinMethods["refChan"] = &SpectralWindowRow::refChanFromBin; 
+	 fromBinMethods["resolution"] = &SpectralWindowRow::resolutionFromBin; 
+	 fromBinMethods["resolutionArray"] = &SpectralWindowRow::resolutionArrayFromBin; 
+	 fromBinMethods["numAssocValues"] = &SpectralWindowRow::numAssocValuesFromBin; 
+	 fromBinMethods["assocNature"] = &SpectralWindowRow::assocNatureFromBin; 
+	 fromBinMethods["assocSpectralWindowId"] = &SpectralWindowRow::assocSpectralWindowIdFromBin; 
+	 fromBinMethods["imageSpectralWindowId"] = &SpectralWindowRow::imageSpectralWindowIdFromBin; 
+	 fromBinMethods["dopplerId"] = &SpectralWindowRow::dopplerIdFromBin; 
 	
 	}
 	
@@ -4525,7 +4658,42 @@ measFreqRef = CFrequencyReferenceCode::from_int(0);
 		else
 			dopplerIdExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["spectralWindowId"] = &SpectralWindowRow::spectralWindowIdFromBin; 
+		 fromBinMethods["basebandName"] = &SpectralWindowRow::basebandNameFromBin; 
+		 fromBinMethods["netSideband"] = &SpectralWindowRow::netSidebandFromBin; 
+		 fromBinMethods["numChan"] = &SpectralWindowRow::numChanFromBin; 
+		 fromBinMethods["refFreq"] = &SpectralWindowRow::refFreqFromBin; 
+		 fromBinMethods["sidebandProcessingMode"] = &SpectralWindowRow::sidebandProcessingModeFromBin; 
+		 fromBinMethods["totBandwidth"] = &SpectralWindowRow::totBandwidthFromBin; 
+		 fromBinMethods["windowFunction"] = &SpectralWindowRow::windowFunctionFromBin; 
+			
+	
+		 fromBinMethods["chanFreqStart"] = &SpectralWindowRow::chanFreqStartFromBin; 
+		 fromBinMethods["chanFreqStep"] = &SpectralWindowRow::chanFreqStepFromBin; 
+		 fromBinMethods["chanFreqArray"] = &SpectralWindowRow::chanFreqArrayFromBin; 
+		 fromBinMethods["chanWidth"] = &SpectralWindowRow::chanWidthFromBin; 
+		 fromBinMethods["chanWidthArray"] = &SpectralWindowRow::chanWidthArrayFromBin; 
+		 fromBinMethods["correlationBit"] = &SpectralWindowRow::correlationBitFromBin; 
+		 fromBinMethods["effectiveBw"] = &SpectralWindowRow::effectiveBwFromBin; 
+		 fromBinMethods["effectiveBwArray"] = &SpectralWindowRow::effectiveBwArrayFromBin; 
+		 fromBinMethods["freqGroup"] = &SpectralWindowRow::freqGroupFromBin; 
+		 fromBinMethods["freqGroupName"] = &SpectralWindowRow::freqGroupNameFromBin; 
+		 fromBinMethods["lineArray"] = &SpectralWindowRow::lineArrayFromBin; 
+		 fromBinMethods["measFreqRef"] = &SpectralWindowRow::measFreqRefFromBin; 
+		 fromBinMethods["name"] = &SpectralWindowRow::nameFromBin; 
+		 fromBinMethods["oversampling"] = &SpectralWindowRow::oversamplingFromBin; 
+		 fromBinMethods["quantization"] = &SpectralWindowRow::quantizationFromBin; 
+		 fromBinMethods["refChan"] = &SpectralWindowRow::refChanFromBin; 
+		 fromBinMethods["resolution"] = &SpectralWindowRow::resolutionFromBin; 
+		 fromBinMethods["resolutionArray"] = &SpectralWindowRow::resolutionArrayFromBin; 
+		 fromBinMethods["numAssocValues"] = &SpectralWindowRow::numAssocValuesFromBin; 
+		 fromBinMethods["assocNature"] = &SpectralWindowRow::assocNatureFromBin; 
+		 fromBinMethods["assocSpectralWindowId"] = &SpectralWindowRow::assocSpectralWindowIdFromBin; 
+		 fromBinMethods["imageSpectralWindowId"] = &SpectralWindowRow::imageSpectralWindowIdFromBin; 
+		 fromBinMethods["dopplerId"] = &SpectralWindowRow::dopplerIdFromBin; 
+			
 	}
 
 	
@@ -4652,6 +4820,47 @@ measFreqRef = CFrequencyReferenceCode::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, SpectralWindowAttributeFromBin> SpectralWindowRow::initFromBinMethods() {
+		map<string, SpectralWindowAttributeFromBin> result;
+		
+		result["spectralWindowId"] = &SpectralWindowRow::spectralWindowIdFromBin;
+		result["basebandName"] = &SpectralWindowRow::basebandNameFromBin;
+		result["netSideband"] = &SpectralWindowRow::netSidebandFromBin;
+		result["numChan"] = &SpectralWindowRow::numChanFromBin;
+		result["refFreq"] = &SpectralWindowRow::refFreqFromBin;
+		result["sidebandProcessingMode"] = &SpectralWindowRow::sidebandProcessingModeFromBin;
+		result["totBandwidth"] = &SpectralWindowRow::totBandwidthFromBin;
+		result["windowFunction"] = &SpectralWindowRow::windowFunctionFromBin;
+		
+		
+		result["chanFreqStart"] = &SpectralWindowRow::chanFreqStartFromBin;
+		result["chanFreqStep"] = &SpectralWindowRow::chanFreqStepFromBin;
+		result["chanFreqArray"] = &SpectralWindowRow::chanFreqArrayFromBin;
+		result["chanWidth"] = &SpectralWindowRow::chanWidthFromBin;
+		result["chanWidthArray"] = &SpectralWindowRow::chanWidthArrayFromBin;
+		result["correlationBit"] = &SpectralWindowRow::correlationBitFromBin;
+		result["effectiveBw"] = &SpectralWindowRow::effectiveBwFromBin;
+		result["effectiveBwArray"] = &SpectralWindowRow::effectiveBwArrayFromBin;
+		result["freqGroup"] = &SpectralWindowRow::freqGroupFromBin;
+		result["freqGroupName"] = &SpectralWindowRow::freqGroupNameFromBin;
+		result["lineArray"] = &SpectralWindowRow::lineArrayFromBin;
+		result["measFreqRef"] = &SpectralWindowRow::measFreqRefFromBin;
+		result["name"] = &SpectralWindowRow::nameFromBin;
+		result["oversampling"] = &SpectralWindowRow::oversamplingFromBin;
+		result["quantization"] = &SpectralWindowRow::quantizationFromBin;
+		result["refChan"] = &SpectralWindowRow::refChanFromBin;
+		result["resolution"] = &SpectralWindowRow::resolutionFromBin;
+		result["resolutionArray"] = &SpectralWindowRow::resolutionArrayFromBin;
+		result["numAssocValues"] = &SpectralWindowRow::numAssocValuesFromBin;
+		result["assocNature"] = &SpectralWindowRow::assocNatureFromBin;
+		result["assocSpectralWindowId"] = &SpectralWindowRow::assocSpectralWindowIdFromBin;
+		result["imageSpectralWindowId"] = &SpectralWindowRow::imageSpectralWindowIdFromBin;
+		result["dopplerId"] = &SpectralWindowRow::dopplerIdFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

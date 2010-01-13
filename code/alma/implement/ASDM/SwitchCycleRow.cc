@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	SwitchCycleRow::~SwitchCycleRow() {
 	}
 
@@ -618,107 +617,136 @@ namespace asdm {
 
 	}
 	
-	SwitchCycleRow* SwitchCycleRow::fromBin(EndianISStream& eiss, SwitchCycleTable& table) {
-		SwitchCycleRow* row = new  SwitchCycleRow(table);
-		
-		
+void SwitchCycleRow::switchCycleIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->switchCycleId =  Tag::fromBin(eiss);
+		switchCycleId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
+}
+void SwitchCycleRow::numStepFromBin(EndianISStream& eiss) {
 		
-			
-		row->numStep =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
+		numStep =  eiss.readInt();
+			
+		
 	
-		row->weightArray.clear();
+	
+}
+void SwitchCycleRow::weightArrayFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+	
+		weightArray.clear();
 		
 		unsigned int weightArrayDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < weightArrayDim1; i++)
 			
-			row->weightArray.push_back(eiss.readFloat());
+			weightArray.push_back(eiss.readFloat());
 			
 	
 
 		
 	
-
+	
+}
+void SwitchCycleRow::dirOffsetArrayFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->dirOffsetArray = Angle::from2DBin(eiss);		
+	dirOffsetArray = Angle::from2DBin(eiss);		
 	
 
 		
 	
-
+	
+}
+void SwitchCycleRow::freqOffsetArrayFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->freqOffsetArray = Frequency::from1DBin(eiss);	
+	freqOffsetArray = Frequency::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void SwitchCycleRow::stepDurationArrayFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->stepDurationArray = Interval::from1DBin(eiss);	
+	stepDurationArray = Interval::from1DBin(eiss);	
 	
 
 		
 	
+	
+}
 
+void SwitchCycleRow::directionCodeFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->directionCodeExists = eiss.readBoolean();
-	if (row->directionCodeExists) {
+	directionCodeExists = eiss.readBoolean();
+	if (directionCodeExists) {
 		
 	
 	
 		
 			
-		row->directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
+		directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
 			
 		
 	
 
 	}
-
-	row->directionEquinoxExists = eiss.readBoolean();
-	if (row->directionEquinoxExists) {
+	
+}
+void SwitchCycleRow::directionEquinoxFromBin(EndianISStream& eiss) {
+		
+	directionEquinoxExists = eiss.readBoolean();
+	if (directionEquinoxExists) {
 		
 	
 		
 		
-		row->directionEquinox =  ArrayTime::fromBin(eiss);
+		directionEquinox =  ArrayTime::fromBin(eiss);
 		
 	
 
 	}
-
+	
+}
+	
+	
+	SwitchCycleRow* SwitchCycleRow::fromBin(EndianISStream& eiss, SwitchCycleTable& table, const vector<string>& attributesSeq) {
+		SwitchCycleRow* row = new  SwitchCycleRow(table);
 		
+		map<string, SwitchCycleAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SwitchCycleTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1080,6 +1108,19 @@ directionCode = CDirectionReferenceCode::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["switchCycleId"] = &SwitchCycleRow::switchCycleIdFromBin; 
+	 fromBinMethods["numStep"] = &SwitchCycleRow::numStepFromBin; 
+	 fromBinMethods["weightArray"] = &SwitchCycleRow::weightArrayFromBin; 
+	 fromBinMethods["dirOffsetArray"] = &SwitchCycleRow::dirOffsetArrayFromBin; 
+	 fromBinMethods["freqOffsetArray"] = &SwitchCycleRow::freqOffsetArrayFromBin; 
+	 fromBinMethods["stepDurationArray"] = &SwitchCycleRow::stepDurationArrayFromBin; 
+		
+	
+	 fromBinMethods["directionCode"] = &SwitchCycleRow::directionCodeFromBin; 
+	 fromBinMethods["directionEquinox"] = &SwitchCycleRow::directionEquinoxFromBin; 
 	
 	}
 	
@@ -1146,7 +1187,19 @@ directionCode = CDirectionReferenceCode::from_int(0);
 		else
 			directionEquinoxExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["switchCycleId"] = &SwitchCycleRow::switchCycleIdFromBin; 
+		 fromBinMethods["numStep"] = &SwitchCycleRow::numStepFromBin; 
+		 fromBinMethods["weightArray"] = &SwitchCycleRow::weightArrayFromBin; 
+		 fromBinMethods["dirOffsetArray"] = &SwitchCycleRow::dirOffsetArrayFromBin; 
+		 fromBinMethods["freqOffsetArray"] = &SwitchCycleRow::freqOffsetArrayFromBin; 
+		 fromBinMethods["stepDurationArray"] = &SwitchCycleRow::stepDurationArrayFromBin; 
+			
+	
+		 fromBinMethods["directionCode"] = &SwitchCycleRow::directionCodeFromBin; 
+		 fromBinMethods["directionEquinox"] = &SwitchCycleRow::directionEquinoxFromBin; 
+			
 	}
 
 	
@@ -1247,6 +1300,24 @@ directionCode = CDirectionReferenceCode::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, SwitchCycleAttributeFromBin> SwitchCycleRow::initFromBinMethods() {
+		map<string, SwitchCycleAttributeFromBin> result;
+		
+		result["switchCycleId"] = &SwitchCycleRow::switchCycleIdFromBin;
+		result["numStep"] = &SwitchCycleRow::numStepFromBin;
+		result["weightArray"] = &SwitchCycleRow::weightArrayFromBin;
+		result["dirOffsetArray"] = &SwitchCycleRow::dirOffsetArrayFromBin;
+		result["freqOffsetArray"] = &SwitchCycleRow::freqOffsetArrayFromBin;
+		result["stepDurationArray"] = &SwitchCycleRow::stepDurationArrayFromBin;
+		
+		
+		result["directionCode"] = &SwitchCycleRow::directionCodeFromBin;
+		result["directionEquinox"] = &SwitchCycleRow::directionEquinoxFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

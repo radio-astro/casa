@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalFocusRow::~CalFocusRow() {
 	}
 
@@ -1911,175 +1910,220 @@ namespace asdm {
 
 	}
 	
-	CalFocusRow* CalFocusRow::fromBin(EndianISStream& eiss, CalFocusTable& table) {
-		CalFocusRow* row = new  CalFocusRow(table);
-		
-		
+void CalFocusRow::antennaNameFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->antennaName =  eiss.readString();
+		antennaName =  eiss.readString();
 			
 		
 	
-
 	
-	
+}
+void CalFocusRow::receiverBandFromBin(EndianISStream& eiss) {
 		
-			
-		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
-			
-		
-	
-
-	
-		
-		
-		row->calDataId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->calReductionId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->ambientTemperature =  Temperature::fromBin(eiss);
-		
-	
-
 	
 	
 		
 			
-		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
+		receiverBand = CReceiverBand::from_int(eiss.readInt());
 			
 		
+	
+	
+}
+void CalFocusRow::calDataIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalFocusRow::calReductionIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalFocusRow::startValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalFocusRow::endValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalFocusRow::ambientTemperatureFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		ambientTemperature =  Temperature::fromBin(eiss);
+		
+	
+	
+}
+void CalFocusRow::atmPhaseCorrectionFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void CalFocusRow::focusMethodFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		focusMethod = CFocusMethod::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void CalFocusRow::frequencyRangeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	frequencyRange = Frequency::from1DBin(eiss);	
 	
 
-	
-	
-		
-			
-		row->focusMethod = CFocusMethod::from_int(eiss.readInt());
-			
 		
 	
-
+	
+}
+void CalFocusRow::pointingDirectionFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->frequencyRange = Frequency::from1DBin(eiss);	
+	pointingDirection = Angle::from1DBin(eiss);	
 	
 
 		
 	
-
 	
+}
+void CalFocusRow::numReceptorFromBin(EndianISStream& eiss) {
 		
-		
-			
-	
-	row->pointingDirection = Angle::from1DBin(eiss);	
-	
-
-		
-	
-
 	
 	
 		
 			
-		row->numReceptor =  eiss.readInt();
+		numReceptor =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void CalFocusRow::polarizationTypesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->polarizationTypes.clear();
+		polarizationTypes.clear();
 		
 		unsigned int polarizationTypesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void CalFocusRow::wereFixedFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->wereFixed.clear();
+		wereFixed.clear();
 		
 		unsigned int wereFixedDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < wereFixedDim1; i++)
 			
-			row->wereFixed.push_back(eiss.readBoolean());
+			wereFixed.push_back(eiss.readBoolean());
 			
 	
 
 		
 	
-
+	
+}
+void CalFocusRow::offsetFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->offset = Length::from2DBin(eiss);		
+	offset = Length::from2DBin(eiss);		
 	
 
 		
 	
-
+	
+}
+void CalFocusRow::offsetErrorFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->offsetError = Length::from2DBin(eiss);		
+	offsetError = Length::from2DBin(eiss);		
 	
 
 		
 	
-
+	
+}
+void CalFocusRow::offsetWasTiedFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->offsetWasTied.clear();
+		offsetWasTied.clear();
 		
 		unsigned int offsetWasTiedDim1 = eiss.readInt();
 		unsigned int offsetWasTiedDim2 = eiss.readInt();
@@ -2090,20 +2134,23 @@ namespace asdm {
 			
 			offsetWasTiedAux1.push_back(eiss.readBoolean());
 			
-			row->offsetWasTied.push_back(offsetWasTiedAux1);
+			offsetWasTied.push_back(offsetWasTiedAux1);
 		}
 	
 	
 
 		
 	
-
+	
+}
+void CalFocusRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->reducedChiSquared.clear();
+		reducedChiSquared.clear();
 		
 		unsigned int reducedChiSquaredDim1 = eiss.readInt();
 		unsigned int reducedChiSquaredDim2 = eiss.readInt();
@@ -2114,77 +2161,87 @@ namespace asdm {
 			
 			reducedChiSquaredAux1.push_back(eiss.readDouble());
 			
-			row->reducedChiSquared.push_back(reducedChiSquaredAux1);
+			reducedChiSquared.push_back(reducedChiSquaredAux1);
 		}
 	
 	
 
 		
 	
+	
+}
 
+void CalFocusRow::polarizationsAveragedFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->polarizationsAveragedExists = eiss.readBoolean();
-	if (row->polarizationsAveragedExists) {
+	polarizationsAveragedExists = eiss.readBoolean();
+	if (polarizationsAveragedExists) {
 		
 	
 	
 		
 			
-		row->polarizationsAveraged =  eiss.readBoolean();
+		polarizationsAveraged =  eiss.readBoolean();
 			
 		
 	
 
 	}
-
-	row->focusCurveWidthExists = eiss.readBoolean();
-	if (row->focusCurveWidthExists) {
+	
+}
+void CalFocusRow::focusCurveWidthFromBin(EndianISStream& eiss) {
+		
+	focusCurveWidthExists = eiss.readBoolean();
+	if (focusCurveWidthExists) {
 		
 	
 		
 		
 			
 	
-	row->focusCurveWidth = Length::from2DBin(eiss);		
-	
-
-		
-	
-
-	}
-
-	row->focusCurveWidthErrorExists = eiss.readBoolean();
-	if (row->focusCurveWidthErrorExists) {
-		
-	
-		
-		
-			
-	
-	row->focusCurveWidthError = Length::from2DBin(eiss);		
+	focusCurveWidth = Length::from2DBin(eiss);		
 	
 
 		
 	
 
 	}
+	
+}
+void CalFocusRow::focusCurveWidthErrorFromBin(EndianISStream& eiss) {
+		
+	focusCurveWidthErrorExists = eiss.readBoolean();
+	if (focusCurveWidthErrorExists) {
+		
+	
+		
+		
+			
+	
+	focusCurveWidthError = Length::from2DBin(eiss);		
+	
 
-	row->focusCurveWasFixedExists = eiss.readBoolean();
-	if (row->focusCurveWasFixedExists) {
+		
+	
+
+	}
+	
+}
+void CalFocusRow::focusCurveWasFixedFromBin(EndianISStream& eiss) {
+		
+	focusCurveWasFixedExists = eiss.readBoolean();
+	if (focusCurveWasFixedExists) {
 		
 	
 	
 		
 			
 	
-		row->focusCurveWasFixed.clear();
+		focusCurveWasFixed.clear();
 		
 		unsigned int focusCurveWasFixedDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < focusCurveWasFixedDim1; i++)
 			
-			row->focusCurveWasFixed.push_back(eiss.readBoolean());
+			focusCurveWasFixed.push_back(eiss.readBoolean());
 			
 	
 
@@ -2192,100 +2249,131 @@ namespace asdm {
 	
 
 	}
-
-	row->offIntensityExists = eiss.readBoolean();
-	if (row->offIntensityExists) {
+	
+}
+void CalFocusRow::offIntensityFromBin(EndianISStream& eiss) {
+		
+	offIntensityExists = eiss.readBoolean();
+	if (offIntensityExists) {
 		
 	
 		
 		
 			
 	
-	row->offIntensity = Temperature::from1DBin(eiss);	
+	offIntensity = Temperature::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->offIntensityErrorExists = eiss.readBoolean();
-	if (row->offIntensityErrorExists) {
+	
+}
+void CalFocusRow::offIntensityErrorFromBin(EndianISStream& eiss) {
+		
+	offIntensityErrorExists = eiss.readBoolean();
+	if (offIntensityErrorExists) {
 		
 	
 		
 		
 			
 	
-	row->offIntensityError = Temperature::from1DBin(eiss);	
+	offIntensityError = Temperature::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->offIntensityWasFixedExists = eiss.readBoolean();
-	if (row->offIntensityWasFixedExists) {
+	
+}
+void CalFocusRow::offIntensityWasFixedFromBin(EndianISStream& eiss) {
+		
+	offIntensityWasFixedExists = eiss.readBoolean();
+	if (offIntensityWasFixedExists) {
 		
 	
 	
 		
 			
-		row->offIntensityWasFixed =  eiss.readBoolean();
+		offIntensityWasFixed =  eiss.readBoolean();
 			
 		
 	
 
 	}
-
-	row->peakIntensityExists = eiss.readBoolean();
-	if (row->peakIntensityExists) {
+	
+}
+void CalFocusRow::peakIntensityFromBin(EndianISStream& eiss) {
+		
+	peakIntensityExists = eiss.readBoolean();
+	if (peakIntensityExists) {
 		
 	
 		
 		
 			
 	
-	row->peakIntensity = Temperature::from1DBin(eiss);	
-	
-
-		
-	
-
-	}
-
-	row->peakIntensityErrorExists = eiss.readBoolean();
-	if (row->peakIntensityErrorExists) {
-		
-	
-		
-		
-			
-	
-	row->peakIntensityError = Temperature::from1DBin(eiss);	
+	peakIntensity = Temperature::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
+	
+}
+void CalFocusRow::peakIntensityErrorFromBin(EndianISStream& eiss) {
+		
+	peakIntensityErrorExists = eiss.readBoolean();
+	if (peakIntensityErrorExists) {
+		
+	
+		
+		
+			
+	
+	peakIntensityError = Temperature::from1DBin(eiss);	
+	
 
-	row->peakIntensityWasFixedExists = eiss.readBoolean();
-	if (row->peakIntensityWasFixedExists) {
+		
+	
+
+	}
+	
+}
+void CalFocusRow::peakIntensityWasFixedFromBin(EndianISStream& eiss) {
+		
+	peakIntensityWasFixedExists = eiss.readBoolean();
+	if (peakIntensityWasFixedExists) {
 		
 	
 	
 		
 			
-		row->peakIntensityWasFixed =  eiss.readBoolean();
+		peakIntensityWasFixed =  eiss.readBoolean();
 			
 		
 	
 
 	}
-
+	
+}
+	
+	
+	CalFocusRow* CalFocusRow::fromBin(EndianISStream& eiss, CalFocusTable& table, const vector<string>& attributesSeq) {
+		CalFocusRow* row = new  CalFocusRow(table);
 		
+		map<string, CalFocusAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalFocusTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -3555,6 +3643,39 @@ focusMethod = CFocusMethod::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaName"] = &CalFocusRow::antennaNameFromBin; 
+	 fromBinMethods["receiverBand"] = &CalFocusRow::receiverBandFromBin; 
+	 fromBinMethods["calDataId"] = &CalFocusRow::calDataIdFromBin; 
+	 fromBinMethods["calReductionId"] = &CalFocusRow::calReductionIdFromBin; 
+	 fromBinMethods["startValidTime"] = &CalFocusRow::startValidTimeFromBin; 
+	 fromBinMethods["endValidTime"] = &CalFocusRow::endValidTimeFromBin; 
+	 fromBinMethods["ambientTemperature"] = &CalFocusRow::ambientTemperatureFromBin; 
+	 fromBinMethods["atmPhaseCorrection"] = &CalFocusRow::atmPhaseCorrectionFromBin; 
+	 fromBinMethods["focusMethod"] = &CalFocusRow::focusMethodFromBin; 
+	 fromBinMethods["frequencyRange"] = &CalFocusRow::frequencyRangeFromBin; 
+	 fromBinMethods["pointingDirection"] = &CalFocusRow::pointingDirectionFromBin; 
+	 fromBinMethods["numReceptor"] = &CalFocusRow::numReceptorFromBin; 
+	 fromBinMethods["polarizationTypes"] = &CalFocusRow::polarizationTypesFromBin; 
+	 fromBinMethods["wereFixed"] = &CalFocusRow::wereFixedFromBin; 
+	 fromBinMethods["offset"] = &CalFocusRow::offsetFromBin; 
+	 fromBinMethods["offsetError"] = &CalFocusRow::offsetErrorFromBin; 
+	 fromBinMethods["offsetWasTied"] = &CalFocusRow::offsetWasTiedFromBin; 
+	 fromBinMethods["reducedChiSquared"] = &CalFocusRow::reducedChiSquaredFromBin; 
+		
+	
+	 fromBinMethods["polarizationsAveraged"] = &CalFocusRow::polarizationsAveragedFromBin; 
+	 fromBinMethods["focusCurveWidth"] = &CalFocusRow::focusCurveWidthFromBin; 
+	 fromBinMethods["focusCurveWidthError"] = &CalFocusRow::focusCurveWidthErrorFromBin; 
+	 fromBinMethods["focusCurveWasFixed"] = &CalFocusRow::focusCurveWasFixedFromBin; 
+	 fromBinMethods["offIntensity"] = &CalFocusRow::offIntensityFromBin; 
+	 fromBinMethods["offIntensityError"] = &CalFocusRow::offIntensityErrorFromBin; 
+	 fromBinMethods["offIntensityWasFixed"] = &CalFocusRow::offIntensityWasFixedFromBin; 
+	 fromBinMethods["peakIntensity"] = &CalFocusRow::peakIntensityFromBin; 
+	 fromBinMethods["peakIntensityError"] = &CalFocusRow::peakIntensityErrorFromBin; 
+	 fromBinMethods["peakIntensityWasFixed"] = &CalFocusRow::peakIntensityWasFixedFromBin; 
 	
 	}
 	
@@ -3757,7 +3878,39 @@ focusMethod = CFocusMethod::from_int(0);
 		else
 			peakIntensityWasFixedExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaName"] = &CalFocusRow::antennaNameFromBin; 
+		 fromBinMethods["receiverBand"] = &CalFocusRow::receiverBandFromBin; 
+		 fromBinMethods["calDataId"] = &CalFocusRow::calDataIdFromBin; 
+		 fromBinMethods["calReductionId"] = &CalFocusRow::calReductionIdFromBin; 
+		 fromBinMethods["startValidTime"] = &CalFocusRow::startValidTimeFromBin; 
+		 fromBinMethods["endValidTime"] = &CalFocusRow::endValidTimeFromBin; 
+		 fromBinMethods["ambientTemperature"] = &CalFocusRow::ambientTemperatureFromBin; 
+		 fromBinMethods["atmPhaseCorrection"] = &CalFocusRow::atmPhaseCorrectionFromBin; 
+		 fromBinMethods["focusMethod"] = &CalFocusRow::focusMethodFromBin; 
+		 fromBinMethods["frequencyRange"] = &CalFocusRow::frequencyRangeFromBin; 
+		 fromBinMethods["pointingDirection"] = &CalFocusRow::pointingDirectionFromBin; 
+		 fromBinMethods["numReceptor"] = &CalFocusRow::numReceptorFromBin; 
+		 fromBinMethods["polarizationTypes"] = &CalFocusRow::polarizationTypesFromBin; 
+		 fromBinMethods["wereFixed"] = &CalFocusRow::wereFixedFromBin; 
+		 fromBinMethods["offset"] = &CalFocusRow::offsetFromBin; 
+		 fromBinMethods["offsetError"] = &CalFocusRow::offsetErrorFromBin; 
+		 fromBinMethods["offsetWasTied"] = &CalFocusRow::offsetWasTiedFromBin; 
+		 fromBinMethods["reducedChiSquared"] = &CalFocusRow::reducedChiSquaredFromBin; 
+			
+	
+		 fromBinMethods["polarizationsAveraged"] = &CalFocusRow::polarizationsAveragedFromBin; 
+		 fromBinMethods["focusCurveWidth"] = &CalFocusRow::focusCurveWidthFromBin; 
+		 fromBinMethods["focusCurveWidthError"] = &CalFocusRow::focusCurveWidthErrorFromBin; 
+		 fromBinMethods["focusCurveWasFixed"] = &CalFocusRow::focusCurveWasFixedFromBin; 
+		 fromBinMethods["offIntensity"] = &CalFocusRow::offIntensityFromBin; 
+		 fromBinMethods["offIntensityError"] = &CalFocusRow::offIntensityErrorFromBin; 
+		 fromBinMethods["offIntensityWasFixed"] = &CalFocusRow::offIntensityWasFixedFromBin; 
+		 fromBinMethods["peakIntensity"] = &CalFocusRow::peakIntensityFromBin; 
+		 fromBinMethods["peakIntensityError"] = &CalFocusRow::peakIntensityErrorFromBin; 
+		 fromBinMethods["peakIntensityWasFixed"] = &CalFocusRow::peakIntensityWasFixedFromBin; 
+			
 	}
 
 	
@@ -4003,6 +4156,44 @@ focusMethod = CFocusMethod::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalFocusAttributeFromBin> CalFocusRow::initFromBinMethods() {
+		map<string, CalFocusAttributeFromBin> result;
+		
+		result["antennaName"] = &CalFocusRow::antennaNameFromBin;
+		result["receiverBand"] = &CalFocusRow::receiverBandFromBin;
+		result["calDataId"] = &CalFocusRow::calDataIdFromBin;
+		result["calReductionId"] = &CalFocusRow::calReductionIdFromBin;
+		result["startValidTime"] = &CalFocusRow::startValidTimeFromBin;
+		result["endValidTime"] = &CalFocusRow::endValidTimeFromBin;
+		result["ambientTemperature"] = &CalFocusRow::ambientTemperatureFromBin;
+		result["atmPhaseCorrection"] = &CalFocusRow::atmPhaseCorrectionFromBin;
+		result["focusMethod"] = &CalFocusRow::focusMethodFromBin;
+		result["frequencyRange"] = &CalFocusRow::frequencyRangeFromBin;
+		result["pointingDirection"] = &CalFocusRow::pointingDirectionFromBin;
+		result["numReceptor"] = &CalFocusRow::numReceptorFromBin;
+		result["polarizationTypes"] = &CalFocusRow::polarizationTypesFromBin;
+		result["wereFixed"] = &CalFocusRow::wereFixedFromBin;
+		result["offset"] = &CalFocusRow::offsetFromBin;
+		result["offsetError"] = &CalFocusRow::offsetErrorFromBin;
+		result["offsetWasTied"] = &CalFocusRow::offsetWasTiedFromBin;
+		result["reducedChiSquared"] = &CalFocusRow::reducedChiSquaredFromBin;
+		
+		
+		result["polarizationsAveraged"] = &CalFocusRow::polarizationsAveragedFromBin;
+		result["focusCurveWidth"] = &CalFocusRow::focusCurveWidthFromBin;
+		result["focusCurveWidthError"] = &CalFocusRow::focusCurveWidthErrorFromBin;
+		result["focusCurveWasFixed"] = &CalFocusRow::focusCurveWasFixedFromBin;
+		result["offIntensity"] = &CalFocusRow::offIntensityFromBin;
+		result["offIntensityError"] = &CalFocusRow::offIntensityErrorFromBin;
+		result["offIntensityWasFixed"] = &CalFocusRow::offIntensityWasFixedFromBin;
+		result["peakIntensity"] = &CalFocusRow::peakIntensityFromBin;
+		result["peakIntensityError"] = &CalFocusRow::peakIntensityErrorFromBin;
+		result["peakIntensityWasFixed"] = &CalFocusRow::peakIntensityWasFixedFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

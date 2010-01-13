@@ -74,7 +74,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	SysCalRow::~SysCalRow() {
 	}
 
@@ -1552,205 +1551,245 @@ namespace asdm {
 
 	}
 	
-	SysCalRow* SysCalRow::fromBin(EndianISStream& eiss, SysCalTable& table) {
-		SysCalRow* row = new  SysCalRow(table);
-		
-		
+void SysCalRow::antennaIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->antennaId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eiss);
 		
 	
-
 	
+}
+void SysCalRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 		
-		
-		row->spectralWindowId =  Tag::fromBin(eiss);
-		
-	
-
 	
 		
 		
-		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		spectralWindowId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
-		
-			
-		row->feedId =  eiss.readInt();
-			
+}
+void SysCalRow::timeIntervalFromBin(EndianISStream& eiss) {
 		
 	
-
-	
-	
 		
-			
-		row->numReceptor =  eiss.readInt();
-			
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eiss);
 		
 	
-
 	
-	
-		
-			
-		row->numChan =  eiss.readInt();
-			
-		
-	
-
-		
-		
-		
-	row->tcalFlagExists = eiss.readBoolean();
-	if (row->tcalFlagExists) {
+}
+void SysCalRow::feedIdFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->tcalFlag =  eiss.readBoolean();
+		feedId =  eiss.readInt();
 			
 		
 	
-
-	}
-
-	row->tcalSpectrumExists = eiss.readBoolean();
-	if (row->tcalSpectrumExists) {
-		
 	
-		
-		
-			
-	
-	row->tcalSpectrum = Temperature::from2DBin(eiss);		
-	
-
-		
-	
-
-	}
-
-	row->trxFlagExists = eiss.readBoolean();
-	if (row->trxFlagExists) {
+}
+void SysCalRow::numReceptorFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->trxFlag =  eiss.readBoolean();
+		numReceptor =  eiss.readInt();
+			
+		
+	
+	
+}
+void SysCalRow::numChanFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numChan =  eiss.readInt();
+			
+		
+	
+	
+}
+
+void SysCalRow::tcalFlagFromBin(EndianISStream& eiss) {
+		
+	tcalFlagExists = eiss.readBoolean();
+	if (tcalFlagExists) {
+		
+	
+	
+		
+			
+		tcalFlag =  eiss.readBoolean();
 			
 		
 	
 
 	}
-
-	row->trxSpectrumExists = eiss.readBoolean();
-	if (row->trxSpectrumExists) {
+	
+}
+void SysCalRow::tcalSpectrumFromBin(EndianISStream& eiss) {
+		
+	tcalSpectrumExists = eiss.readBoolean();
+	if (tcalSpectrumExists) {
 		
 	
 		
 		
 			
 	
-	row->trxSpectrum = Temperature::from2DBin(eiss);		
+	tcalSpectrum = Temperature::from2DBin(eiss);		
 	
 
 		
 	
 
 	}
-
-	row->tskyFlagExists = eiss.readBoolean();
-	if (row->tskyFlagExists) {
+	
+}
+void SysCalRow::trxFlagFromBin(EndianISStream& eiss) {
+		
+	trxFlagExists = eiss.readBoolean();
+	if (trxFlagExists) {
 		
 	
 	
 		
 			
-		row->tskyFlag =  eiss.readBoolean();
-			
-		
-	
-
-	}
-
-	row->tskySpectrumExists = eiss.readBoolean();
-	if (row->tskySpectrumExists) {
-		
-	
-		
-		
-			
-	
-	row->tskySpectrum = Temperature::from2DBin(eiss);		
-	
-
-		
-	
-
-	}
-
-	row->tsysFlagExists = eiss.readBoolean();
-	if (row->tsysFlagExists) {
-		
-	
-	
-		
-			
-		row->tsysFlag =  eiss.readBoolean();
+		trxFlag =  eiss.readBoolean();
 			
 		
 	
 
 	}
-
-	row->tsysSpectrumExists = eiss.readBoolean();
-	if (row->tsysSpectrumExists) {
+	
+}
+void SysCalRow::trxSpectrumFromBin(EndianISStream& eiss) {
+		
+	trxSpectrumExists = eiss.readBoolean();
+	if (trxSpectrumExists) {
 		
 	
 		
 		
 			
 	
-	row->tsysSpectrum = Temperature::from2DBin(eiss);		
+	trxSpectrum = Temperature::from2DBin(eiss);		
 	
 
 		
 	
 
 	}
-
-	row->tantFlagExists = eiss.readBoolean();
-	if (row->tantFlagExists) {
+	
+}
+void SysCalRow::tskyFlagFromBin(EndianISStream& eiss) {
+		
+	tskyFlagExists = eiss.readBoolean();
+	if (tskyFlagExists) {
 		
 	
 	
 		
 			
-		row->tantFlag =  eiss.readBoolean();
+		tskyFlag =  eiss.readBoolean();
 			
 		
 	
 
 	}
+	
+}
+void SysCalRow::tskySpectrumFromBin(EndianISStream& eiss) {
+		
+	tskySpectrumExists = eiss.readBoolean();
+	if (tskySpectrumExists) {
+		
+	
+		
+		
+			
+	
+	tskySpectrum = Temperature::from2DBin(eiss);		
+	
 
-	row->tantSpectrumExists = eiss.readBoolean();
-	if (row->tantSpectrumExists) {
+		
+	
+
+	}
+	
+}
+void SysCalRow::tsysFlagFromBin(EndianISStream& eiss) {
+		
+	tsysFlagExists = eiss.readBoolean();
+	if (tsysFlagExists) {
+		
+	
+	
+		
+			
+		tsysFlag =  eiss.readBoolean();
+			
+		
+	
+
+	}
+	
+}
+void SysCalRow::tsysSpectrumFromBin(EndianISStream& eiss) {
+		
+	tsysSpectrumExists = eiss.readBoolean();
+	if (tsysSpectrumExists) {
+		
+	
+		
+		
+			
+	
+	tsysSpectrum = Temperature::from2DBin(eiss);		
+	
+
+		
+	
+
+	}
+	
+}
+void SysCalRow::tantFlagFromBin(EndianISStream& eiss) {
+		
+	tantFlagExists = eiss.readBoolean();
+	if (tantFlagExists) {
+		
+	
+	
+		
+			
+		tantFlag =  eiss.readBoolean();
+			
+		
+	
+
+	}
+	
+}
+void SysCalRow::tantSpectrumFromBin(EndianISStream& eiss) {
+		
+	tantSpectrumExists = eiss.readBoolean();
+	if (tantSpectrumExists) {
 		
 	
 	
 		
 			
 	
-		row->tantSpectrum.clear();
+		tantSpectrum.clear();
 		
 		unsigned int tantSpectrumDim1 = eiss.readInt();
 		unsigned int tantSpectrumDim2 = eiss.readInt();
@@ -1761,7 +1800,7 @@ namespace asdm {
 			
 			tantSpectrumAux1.push_back(eiss.readFloat());
 			
-			row->tantSpectrum.push_back(tantSpectrumAux1);
+			tantSpectrum.push_back(tantSpectrumAux1);
 		}
 	
 	
@@ -1770,30 +1809,36 @@ namespace asdm {
 	
 
 	}
-
-	row->tantTsysFlagExists = eiss.readBoolean();
-	if (row->tantTsysFlagExists) {
+	
+}
+void SysCalRow::tantTsysFlagFromBin(EndianISStream& eiss) {
+		
+	tantTsysFlagExists = eiss.readBoolean();
+	if (tantTsysFlagExists) {
 		
 	
 	
 		
 			
-		row->tantTsysFlag =  eiss.readBoolean();
+		tantTsysFlag =  eiss.readBoolean();
 			
 		
 	
 
 	}
-
-	row->tantTsysSpectrumExists = eiss.readBoolean();
-	if (row->tantTsysSpectrumExists) {
+	
+}
+void SysCalRow::tantTsysSpectrumFromBin(EndianISStream& eiss) {
+		
+	tantTsysSpectrumExists = eiss.readBoolean();
+	if (tantTsysSpectrumExists) {
 		
 	
 	
 		
 			
 	
-		row->tantTsysSpectrum.clear();
+		tantTsysSpectrum.clear();
 		
 		unsigned int tantTsysSpectrumDim1 = eiss.readInt();
 		unsigned int tantTsysSpectrumDim2 = eiss.readInt();
@@ -1804,7 +1849,7 @@ namespace asdm {
 			
 			tantTsysSpectrumAux1.push_back(eiss.readFloat());
 			
-			row->tantTsysSpectrum.push_back(tantTsysSpectrumAux1);
+			tantTsysSpectrum.push_back(tantTsysSpectrumAux1);
 		}
 	
 	
@@ -1813,30 +1858,36 @@ namespace asdm {
 	
 
 	}
-
-	row->phaseDiffFlagExists = eiss.readBoolean();
-	if (row->phaseDiffFlagExists) {
+	
+}
+void SysCalRow::phaseDiffFlagFromBin(EndianISStream& eiss) {
+		
+	phaseDiffFlagExists = eiss.readBoolean();
+	if (phaseDiffFlagExists) {
 		
 	
 	
 		
 			
-		row->phaseDiffFlag =  eiss.readBoolean();
+		phaseDiffFlag =  eiss.readBoolean();
 			
 		
 	
 
 	}
-
-	row->phaseDiffSpectrumExists = eiss.readBoolean();
-	if (row->phaseDiffSpectrumExists) {
+	
+}
+void SysCalRow::phaseDiffSpectrumFromBin(EndianISStream& eiss) {
+		
+	phaseDiffSpectrumExists = eiss.readBoolean();
+	if (phaseDiffSpectrumExists) {
 		
 	
 	
 		
 			
 	
-		row->phaseDiffSpectrum.clear();
+		phaseDiffSpectrum.clear();
 		
 		unsigned int phaseDiffSpectrumDim1 = eiss.readInt();
 		unsigned int phaseDiffSpectrumDim2 = eiss.readInt();
@@ -1847,7 +1898,7 @@ namespace asdm {
 			
 			phaseDiffSpectrumAux1.push_back(eiss.readFloat());
 			
-			row->phaseDiffSpectrum.push_back(phaseDiffSpectrumAux1);
+			phaseDiffSpectrum.push_back(phaseDiffSpectrumAux1);
 		}
 	
 	
@@ -1856,8 +1907,21 @@ namespace asdm {
 	
 
 	}
-
+	
+}
+	
+	
+	SysCalRow* SysCalRow::fromBin(EndianISStream& eiss, SysCalTable& table, const vector<string>& attributesSeq) {
+		SysCalRow* row = new  SysCalRow(table);
 		
+		map<string, SysCalAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "SysCalTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2915,6 +2979,31 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaId"] = &SysCalRow::antennaIdFromBin; 
+	 fromBinMethods["spectralWindowId"] = &SysCalRow::spectralWindowIdFromBin; 
+	 fromBinMethods["timeInterval"] = &SysCalRow::timeIntervalFromBin; 
+	 fromBinMethods["feedId"] = &SysCalRow::feedIdFromBin; 
+	 fromBinMethods["numReceptor"] = &SysCalRow::numReceptorFromBin; 
+	 fromBinMethods["numChan"] = &SysCalRow::numChanFromBin; 
+		
+	
+	 fromBinMethods["tcalFlag"] = &SysCalRow::tcalFlagFromBin; 
+	 fromBinMethods["tcalSpectrum"] = &SysCalRow::tcalSpectrumFromBin; 
+	 fromBinMethods["trxFlag"] = &SysCalRow::trxFlagFromBin; 
+	 fromBinMethods["trxSpectrum"] = &SysCalRow::trxSpectrumFromBin; 
+	 fromBinMethods["tskyFlag"] = &SysCalRow::tskyFlagFromBin; 
+	 fromBinMethods["tskySpectrum"] = &SysCalRow::tskySpectrumFromBin; 
+	 fromBinMethods["tsysFlag"] = &SysCalRow::tsysFlagFromBin; 
+	 fromBinMethods["tsysSpectrum"] = &SysCalRow::tsysSpectrumFromBin; 
+	 fromBinMethods["tantFlag"] = &SysCalRow::tantFlagFromBin; 
+	 fromBinMethods["tantSpectrum"] = &SysCalRow::tantSpectrumFromBin; 
+	 fromBinMethods["tantTsysFlag"] = &SysCalRow::tantTsysFlagFromBin; 
+	 fromBinMethods["tantTsysSpectrum"] = &SysCalRow::tantTsysSpectrumFromBin; 
+	 fromBinMethods["phaseDiffFlag"] = &SysCalRow::phaseDiffFlagFromBin; 
+	 fromBinMethods["phaseDiffSpectrum"] = &SysCalRow::phaseDiffSpectrumFromBin; 
 	
 	}
 	
@@ -3113,7 +3202,31 @@ namespace asdm {
 		else
 			phaseDiffSpectrumExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaId"] = &SysCalRow::antennaIdFromBin; 
+		 fromBinMethods["spectralWindowId"] = &SysCalRow::spectralWindowIdFromBin; 
+		 fromBinMethods["timeInterval"] = &SysCalRow::timeIntervalFromBin; 
+		 fromBinMethods["feedId"] = &SysCalRow::feedIdFromBin; 
+		 fromBinMethods["numReceptor"] = &SysCalRow::numReceptorFromBin; 
+		 fromBinMethods["numChan"] = &SysCalRow::numChanFromBin; 
+			
+	
+		 fromBinMethods["tcalFlag"] = &SysCalRow::tcalFlagFromBin; 
+		 fromBinMethods["tcalSpectrum"] = &SysCalRow::tcalSpectrumFromBin; 
+		 fromBinMethods["trxFlag"] = &SysCalRow::trxFlagFromBin; 
+		 fromBinMethods["trxSpectrum"] = &SysCalRow::trxSpectrumFromBin; 
+		 fromBinMethods["tskyFlag"] = &SysCalRow::tskyFlagFromBin; 
+		 fromBinMethods["tskySpectrum"] = &SysCalRow::tskySpectrumFromBin; 
+		 fromBinMethods["tsysFlag"] = &SysCalRow::tsysFlagFromBin; 
+		 fromBinMethods["tsysSpectrum"] = &SysCalRow::tsysSpectrumFromBin; 
+		 fromBinMethods["tantFlag"] = &SysCalRow::tantFlagFromBin; 
+		 fromBinMethods["tantSpectrum"] = &SysCalRow::tantSpectrumFromBin; 
+		 fromBinMethods["tantTsysFlag"] = &SysCalRow::tantTsysFlagFromBin; 
+		 fromBinMethods["tantTsysSpectrum"] = &SysCalRow::tantTsysSpectrumFromBin; 
+		 fromBinMethods["phaseDiffFlag"] = &SysCalRow::phaseDiffFlagFromBin; 
+		 fromBinMethods["phaseDiffSpectrum"] = &SysCalRow::phaseDiffSpectrumFromBin; 
+			
 	}
 
 	
@@ -3203,6 +3316,36 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, SysCalAttributeFromBin> SysCalRow::initFromBinMethods() {
+		map<string, SysCalAttributeFromBin> result;
+		
+		result["antennaId"] = &SysCalRow::antennaIdFromBin;
+		result["spectralWindowId"] = &SysCalRow::spectralWindowIdFromBin;
+		result["timeInterval"] = &SysCalRow::timeIntervalFromBin;
+		result["feedId"] = &SysCalRow::feedIdFromBin;
+		result["numReceptor"] = &SysCalRow::numReceptorFromBin;
+		result["numChan"] = &SysCalRow::numChanFromBin;
+		
+		
+		result["tcalFlag"] = &SysCalRow::tcalFlagFromBin;
+		result["tcalSpectrum"] = &SysCalRow::tcalSpectrumFromBin;
+		result["trxFlag"] = &SysCalRow::trxFlagFromBin;
+		result["trxSpectrum"] = &SysCalRow::trxSpectrumFromBin;
+		result["tskyFlag"] = &SysCalRow::tskyFlagFromBin;
+		result["tskySpectrum"] = &SysCalRow::tskySpectrumFromBin;
+		result["tsysFlag"] = &SysCalRow::tsysFlagFromBin;
+		result["tsysSpectrum"] = &SysCalRow::tsysSpectrumFromBin;
+		result["tantFlag"] = &SysCalRow::tantFlagFromBin;
+		result["tantSpectrum"] = &SysCalRow::tantSpectrumFromBin;
+		result["tantTsysFlag"] = &SysCalRow::tantTsysFlagFromBin;
+		result["tantTsysSpectrum"] = &SysCalRow::tantTsysSpectrumFromBin;
+		result["phaseDiffFlag"] = &SysCalRow::phaseDiffFlagFromBin;
+		result["phaseDiffSpectrum"] = &SysCalRow::phaseDiffSpectrumFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

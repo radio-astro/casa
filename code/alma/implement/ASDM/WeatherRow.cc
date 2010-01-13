@@ -62,7 +62,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	WeatherRow::~WeatherRow() {
 	}
 
@@ -932,151 +931,204 @@ namespace asdm {
 
 	}
 	
-	WeatherRow* WeatherRow::fromBin(EndianISStream& eiss, WeatherTable& table) {
+void WeatherRow::stationIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		stationId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void WeatherRow::timeIntervalFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		
+	
+	
+}
+void WeatherRow::pressureFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		pressure =  Pressure::fromBin(eiss);
+		
+	
+	
+}
+void WeatherRow::pressureFlagFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		pressureFlag =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void WeatherRow::relHumidityFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		relHumidity =  Humidity::fromBin(eiss);
+		
+	
+	
+}
+void WeatherRow::relHumidityFlagFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		relHumidityFlag =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void WeatherRow::temperatureFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		temperature =  Temperature::fromBin(eiss);
+		
+	
+	
+}
+void WeatherRow::temperatureFlagFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		temperatureFlag =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void WeatherRow::windDirectionFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		windDirection =  Angle::fromBin(eiss);
+		
+	
+	
+}
+void WeatherRow::windDirectionFlagFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		windDirectionFlag =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void WeatherRow::windSpeedFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		windSpeed =  Speed::fromBin(eiss);
+		
+	
+	
+}
+void WeatherRow::windSpeedFlagFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		windSpeedFlag =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void WeatherRow::windMaxFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		windMax =  Speed::fromBin(eiss);
+		
+	
+	
+}
+void WeatherRow::windMaxFlagFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		windMaxFlag =  eiss.readBoolean();
+			
+		
+	
+	
+}
+
+void WeatherRow::dewPointFromBin(EndianISStream& eiss) {
+		
+	dewPointExists = eiss.readBoolean();
+	if (dewPointExists) {
+		
+	
+		
+		
+		dewPoint =  Temperature::fromBin(eiss);
+		
+	
+
+	}
+	
+}
+void WeatherRow::dewPointFlagFromBin(EndianISStream& eiss) {
+		
+	dewPointFlagExists = eiss.readBoolean();
+	if (dewPointFlagExists) {
+		
+	
+	
+		
+			
+		dewPointFlag =  eiss.readBoolean();
+			
+		
+	
+
+	}
+	
+}
+	
+	
+	WeatherRow* WeatherRow::fromBin(EndianISStream& eiss, WeatherTable& table, const vector<string>& attributesSeq) {
 		WeatherRow* row = new  WeatherRow(table);
 		
-		
-		
-	
-		
-		
-		row->stationId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->pressure =  Pressure::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->pressureFlag =  eiss.readBoolean();
-			
-		
-	
-
-	
-		
-		
-		row->relHumidity =  Humidity::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->relHumidityFlag =  eiss.readBoolean();
-			
-		
-	
-
-	
-		
-		
-		row->temperature =  Temperature::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->temperatureFlag =  eiss.readBoolean();
-			
-		
-	
-
-	
-		
-		
-		row->windDirection =  Angle::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->windDirectionFlag =  eiss.readBoolean();
-			
-		
-	
-
-	
-		
-		
-		row->windSpeed =  Speed::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->windSpeedFlag =  eiss.readBoolean();
-			
-		
-	
-
-	
-		
-		
-		row->windMax =  Speed::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->windMaxFlag =  eiss.readBoolean();
-			
-		
-	
-
-		
-		
-		
-	row->dewPointExists = eiss.readBoolean();
-	if (row->dewPointExists) {
-		
-	
-		
-		
-		row->dewPoint =  Temperature::fromBin(eiss);
-		
-	
-
-	}
-
-	row->dewPointFlagExists = eiss.readBoolean();
-	if (row->dewPointFlagExists) {
-		
-	
-	
-		
-			
-		row->dewPointFlag =  eiss.readBoolean();
-			
-		
-	
-
-	}
-
-		
+		map<string, WeatherAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "WeatherTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1744,6 +1796,27 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["stationId"] = &WeatherRow::stationIdFromBin; 
+	 fromBinMethods["timeInterval"] = &WeatherRow::timeIntervalFromBin; 
+	 fromBinMethods["pressure"] = &WeatherRow::pressureFromBin; 
+	 fromBinMethods["pressureFlag"] = &WeatherRow::pressureFlagFromBin; 
+	 fromBinMethods["relHumidity"] = &WeatherRow::relHumidityFromBin; 
+	 fromBinMethods["relHumidityFlag"] = &WeatherRow::relHumidityFlagFromBin; 
+	 fromBinMethods["temperature"] = &WeatherRow::temperatureFromBin; 
+	 fromBinMethods["temperatureFlag"] = &WeatherRow::temperatureFlagFromBin; 
+	 fromBinMethods["windDirection"] = &WeatherRow::windDirectionFromBin; 
+	 fromBinMethods["windDirectionFlag"] = &WeatherRow::windDirectionFlagFromBin; 
+	 fromBinMethods["windSpeed"] = &WeatherRow::windSpeedFromBin; 
+	 fromBinMethods["windSpeedFlag"] = &WeatherRow::windSpeedFlagFromBin; 
+	 fromBinMethods["windMax"] = &WeatherRow::windMaxFromBin; 
+	 fromBinMethods["windMaxFlag"] = &WeatherRow::windMaxFlagFromBin; 
+		
+	
+	 fromBinMethods["dewPoint"] = &WeatherRow::dewPointFromBin; 
+	 fromBinMethods["dewPointFlag"] = &WeatherRow::dewPointFlagFromBin; 
 	
 	}
 	
@@ -1842,7 +1915,27 @@ namespace asdm {
 		else
 			dewPointFlagExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["stationId"] = &WeatherRow::stationIdFromBin; 
+		 fromBinMethods["timeInterval"] = &WeatherRow::timeIntervalFromBin; 
+		 fromBinMethods["pressure"] = &WeatherRow::pressureFromBin; 
+		 fromBinMethods["pressureFlag"] = &WeatherRow::pressureFlagFromBin; 
+		 fromBinMethods["relHumidity"] = &WeatherRow::relHumidityFromBin; 
+		 fromBinMethods["relHumidityFlag"] = &WeatherRow::relHumidityFlagFromBin; 
+		 fromBinMethods["temperature"] = &WeatherRow::temperatureFromBin; 
+		 fromBinMethods["temperatureFlag"] = &WeatherRow::temperatureFlagFromBin; 
+		 fromBinMethods["windDirection"] = &WeatherRow::windDirectionFromBin; 
+		 fromBinMethods["windDirectionFlag"] = &WeatherRow::windDirectionFlagFromBin; 
+		 fromBinMethods["windSpeed"] = &WeatherRow::windSpeedFromBin; 
+		 fromBinMethods["windSpeedFlag"] = &WeatherRow::windSpeedFlagFromBin; 
+		 fromBinMethods["windMax"] = &WeatherRow::windMaxFromBin; 
+		 fromBinMethods["windMaxFlag"] = &WeatherRow::windMaxFlagFromBin; 
+			
+	
+		 fromBinMethods["dewPoint"] = &WeatherRow::dewPointFromBin; 
+		 fromBinMethods["dewPointFlag"] = &WeatherRow::dewPointFlagFromBin; 
+			
 	}
 
 	
@@ -2048,6 +2141,32 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, WeatherAttributeFromBin> WeatherRow::initFromBinMethods() {
+		map<string, WeatherAttributeFromBin> result;
+		
+		result["stationId"] = &WeatherRow::stationIdFromBin;
+		result["timeInterval"] = &WeatherRow::timeIntervalFromBin;
+		result["pressure"] = &WeatherRow::pressureFromBin;
+		result["pressureFlag"] = &WeatherRow::pressureFlagFromBin;
+		result["relHumidity"] = &WeatherRow::relHumidityFromBin;
+		result["relHumidityFlag"] = &WeatherRow::relHumidityFlagFromBin;
+		result["temperature"] = &WeatherRow::temperatureFromBin;
+		result["temperatureFlag"] = &WeatherRow::temperatureFlagFromBin;
+		result["windDirection"] = &WeatherRow::windDirectionFromBin;
+		result["windDirectionFlag"] = &WeatherRow::windDirectionFlagFromBin;
+		result["windSpeed"] = &WeatherRow::windSpeedFromBin;
+		result["windSpeedFlag"] = &WeatherRow::windSpeedFlagFromBin;
+		result["windMax"] = &WeatherRow::windMaxFromBin;
+		result["windMaxFlag"] = &WeatherRow::windMaxFlagFromBin;
+		
+		
+		result["dewPoint"] = &WeatherRow::dewPointFromBin;
+		result["dewPointFlag"] = &WeatherRow::dewPointFlagFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

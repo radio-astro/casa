@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalAmpliRow::~CalAmpliRow() {
 	}
 
@@ -874,155 +873,199 @@ namespace asdm {
 
 	}
 	
-	CalAmpliRow* CalAmpliRow::fromBin(EndianISStream& eiss, CalAmpliTable& table) {
-		CalAmpliRow* row = new  CalAmpliRow(table);
-		
-		
+void CalAmpliRow::antennaNameFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->antennaName =  eiss.readString();
+		antennaName =  eiss.readString();
 			
 		
 	
-
 	
-	
+}
+void CalAmpliRow::atmPhaseCorrectionFromBin(EndianISStream& eiss) {
 		
-			
-		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
-			
-		
-	
-
 	
 	
 		
 			
-		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
+		atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
 			
 		
 	
-
 	
+}
+void CalAmpliRow::receiverBandFromBin(EndianISStream& eiss) {
 		
-		
-		row->calDataId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->calReductionId =  Tag::fromBin(eiss);
-		
-	
-
 	
 	
 		
 			
-		row->numReceptor =  eiss.readInt();
+		receiverBand = CReceiverBand::from_int(eiss.readInt());
 			
 		
 	
-
+	
+}
+void CalAmpliRow::calDataIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalAmpliRow::calReductionIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalAmpliRow::numReceptorFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numReceptor =  eiss.readInt();
+			
+		
+	
+	
+}
+void CalAmpliRow::polarizationTypesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->polarizationTypes.clear();
+		polarizationTypes.clear();
 		
 		unsigned int polarizationTypesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void CalAmpliRow::startValidTimeFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->startValidTime =  ArrayTime::fromBin(eiss);
+		startValidTime =  ArrayTime::fromBin(eiss);
 		
 	
-
+	
+}
+void CalAmpliRow::endValidTimeFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->endValidTime =  ArrayTime::fromBin(eiss);
+		endValidTime =  ArrayTime::fromBin(eiss);
 		
 	
-
+	
+}
+void CalAmpliRow::frequencyRangeFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->frequencyRange = Frequency::from1DBin(eiss);	
+	frequencyRange = Frequency::from1DBin(eiss);	
 	
 
 		
 	
-
+	
+}
+void CalAmpliRow::apertureEfficiencyFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->apertureEfficiency.clear();
+		apertureEfficiency.clear();
 		
 		unsigned int apertureEfficiencyDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < apertureEfficiencyDim1; i++)
 			
-			row->apertureEfficiency.push_back(eiss.readFloat());
+			apertureEfficiency.push_back(eiss.readFloat());
 			
 	
 
 		
 	
-
+	
+}
+void CalAmpliRow::apertureEfficiencyErrorFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->apertureEfficiencyError.clear();
+		apertureEfficiencyError.clear();
 		
 		unsigned int apertureEfficiencyErrorDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < apertureEfficiencyErrorDim1; i++)
 			
-			row->apertureEfficiencyError.push_back(eiss.readFloat());
+			apertureEfficiencyError.push_back(eiss.readFloat());
 			
 	
 
 		
 	
+	
+}
 
+void CalAmpliRow::correctionValidityFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->correctionValidityExists = eiss.readBoolean();
-	if (row->correctionValidityExists) {
+	correctionValidityExists = eiss.readBoolean();
+	if (correctionValidityExists) {
 		
 	
 	
 		
 			
-		row->correctionValidity =  eiss.readBoolean();
+		correctionValidity =  eiss.readBoolean();
 			
 		
 	
 
 	}
-
+	
+}
+	
+	
+	CalAmpliRow* CalAmpliRow::fromBin(EndianISStream& eiss, CalAmpliTable& table, const vector<string>& attributesSeq) {
+		CalAmpliRow* row = new  CalAmpliRow(table);
 		
+		map<string, CalAmpliAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalAmpliTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1600,6 +1643,24 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaName"] = &CalAmpliRow::antennaNameFromBin; 
+	 fromBinMethods["atmPhaseCorrection"] = &CalAmpliRow::atmPhaseCorrectionFromBin; 
+	 fromBinMethods["receiverBand"] = &CalAmpliRow::receiverBandFromBin; 
+	 fromBinMethods["calDataId"] = &CalAmpliRow::calDataIdFromBin; 
+	 fromBinMethods["calReductionId"] = &CalAmpliRow::calReductionIdFromBin; 
+	 fromBinMethods["numReceptor"] = &CalAmpliRow::numReceptorFromBin; 
+	 fromBinMethods["polarizationTypes"] = &CalAmpliRow::polarizationTypesFromBin; 
+	 fromBinMethods["startValidTime"] = &CalAmpliRow::startValidTimeFromBin; 
+	 fromBinMethods["endValidTime"] = &CalAmpliRow::endValidTimeFromBin; 
+	 fromBinMethods["frequencyRange"] = &CalAmpliRow::frequencyRangeFromBin; 
+	 fromBinMethods["apertureEfficiency"] = &CalAmpliRow::apertureEfficiencyFromBin; 
+	 fromBinMethods["apertureEfficiencyError"] = &CalAmpliRow::apertureEfficiencyErrorFromBin; 
+		
+	
+	 fromBinMethods["correctionValidity"] = &CalAmpliRow::correctionValidityFromBin; 
 	
 	}
 	
@@ -1679,7 +1740,24 @@ receiverBand = CReceiverBand::from_int(0);
 		else
 			correctionValidityExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaName"] = &CalAmpliRow::antennaNameFromBin; 
+		 fromBinMethods["atmPhaseCorrection"] = &CalAmpliRow::atmPhaseCorrectionFromBin; 
+		 fromBinMethods["receiverBand"] = &CalAmpliRow::receiverBandFromBin; 
+		 fromBinMethods["calDataId"] = &CalAmpliRow::calDataIdFromBin; 
+		 fromBinMethods["calReductionId"] = &CalAmpliRow::calReductionIdFromBin; 
+		 fromBinMethods["numReceptor"] = &CalAmpliRow::numReceptorFromBin; 
+		 fromBinMethods["polarizationTypes"] = &CalAmpliRow::polarizationTypesFromBin; 
+		 fromBinMethods["startValidTime"] = &CalAmpliRow::startValidTimeFromBin; 
+		 fromBinMethods["endValidTime"] = &CalAmpliRow::endValidTimeFromBin; 
+		 fromBinMethods["frequencyRange"] = &CalAmpliRow::frequencyRangeFromBin; 
+		 fromBinMethods["apertureEfficiency"] = &CalAmpliRow::apertureEfficiencyFromBin; 
+		 fromBinMethods["apertureEfficiencyError"] = &CalAmpliRow::apertureEfficiencyErrorFromBin; 
+			
+	
+		 fromBinMethods["correctionValidity"] = &CalAmpliRow::correctionValidityFromBin; 
+			
 	}
 
 	
@@ -1841,6 +1919,29 @@ receiverBand = CReceiverBand::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalAmpliAttributeFromBin> CalAmpliRow::initFromBinMethods() {
+		map<string, CalAmpliAttributeFromBin> result;
+		
+		result["antennaName"] = &CalAmpliRow::antennaNameFromBin;
+		result["atmPhaseCorrection"] = &CalAmpliRow::atmPhaseCorrectionFromBin;
+		result["receiverBand"] = &CalAmpliRow::receiverBandFromBin;
+		result["calDataId"] = &CalAmpliRow::calDataIdFromBin;
+		result["calReductionId"] = &CalAmpliRow::calReductionIdFromBin;
+		result["numReceptor"] = &CalAmpliRow::numReceptorFromBin;
+		result["polarizationTypes"] = &CalAmpliRow::polarizationTypesFromBin;
+		result["startValidTime"] = &CalAmpliRow::startValidTimeFromBin;
+		result["endValidTime"] = &CalAmpliRow::endValidTimeFromBin;
+		result["frequencyRange"] = &CalAmpliRow::frequencyRangeFromBin;
+		result["apertureEfficiency"] = &CalAmpliRow::apertureEfficiencyFromBin;
+		result["apertureEfficiencyError"] = &CalAmpliRow::apertureEfficiencyErrorFromBin;
+		
+		
+		result["correctionValidity"] = &CalAmpliRow::correctionValidityFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

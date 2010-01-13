@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	ObservationRow::~ObservationRow() {
 	}
 
@@ -200,22 +199,30 @@ namespace asdm {
 	
 	}
 	
-	ObservationRow* ObservationRow::fromBin(EndianISStream& eiss, ObservationTable& table) {
-		ObservationRow* row = new  ObservationRow(table);
-		
-		
+void ObservationRow::observationIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->observationId =  Tag::fromBin(eiss);
+		observationId =  Tag::fromBin(eiss);
 		
 	
+	
+}
 
 		
+	
+	ObservationRow* ObservationRow::fromBin(EndianISStream& eiss, ObservationTable& table, const vector<string>& attributesSeq) {
+		ObservationRow* row = new  ObservationRow(table);
 		
-		
-		
+		map<string, ObservationAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "ObservationTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -288,6 +295,12 @@ namespace asdm {
 	
 	
 	
+
+	
+	
+	 fromBinMethods["observationId"] = &ObservationRow::observationIdFromBin; 
+		
+	
 	
 	}
 	
@@ -312,7 +325,12 @@ namespace asdm {
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["observationId"] = &ObservationRow::observationIdFromBin; 
+			
+	
+			
 	}
 
 	
@@ -332,6 +350,17 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, ObservationAttributeFromBin> ObservationRow::initFromBinMethods() {
+		map<string, ObservationAttributeFromBin> result;
+		
+		result["observationId"] = &ObservationRow::observationIdFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

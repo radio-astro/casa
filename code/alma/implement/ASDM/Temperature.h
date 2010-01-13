@@ -1,3 +1,4 @@
+//Temperature.h generated on 'mer jan 13 11:28:27 CET 2010'. Edit at your own risk.
 /*
  * ALMA - Atacama Large Millimeter Array
  * (c) European Southern Observatory, 2002
@@ -23,78 +24,135 @@
  *
  * File Temperature.h
  */
-
 #ifndef Temperature_CLASS
 #define Temperature_CLASS
-
 #include <vector>
 #include <iostream>
 #include <string>
 using namespace std;
-
 #ifndef WITHOUT_ACS
 #include <asdmIDLTypesC.h>
 using asdmIDLTypes::IDLTemperature;
 #endif
-
 #include <StringTokenizer.h>
 #include <NumberFormatException.h>
 using asdm::StringTokenizer;
 using asdm::NumberFormatException;
-
 #include "EndianStream.h"
 using asdm::EndianOSStream;
 using asdm::EndianISStream;
-
 namespace asdm {
-
 class Temperature;
 Temperature operator * ( double , const Temperature & );
 ostream & operator << ( ostream &, const Temperature & );
-istream & operator >> ( istream &, Temperature&);
-
+istream & operator >> ( istream &, Temperature &);
 /**
- * The Temperature class implements a quantity of temperature in degrees Centigrade.
+ * The Temperature class implements a quantity of temperature in degrees Centigrade. class implements a quantity of angle in radians.
  * 
  * @version 1.00 Jan. 7, 2005
  * @author Allen Farris
+ * 
+ * @version 1.1 Aug 8, 2006
+ * @author Michel Caillat 
+ * added toBin/fromBin methods.
  */
 class Temperature {
-	friend Temperature operator * ( double , const Temperature & );
-    friend ostream & operator << ( ostream &, const Temperature & );
-	friend istream & operator >> ( istream &, Temperature&);
-
+  /**
+   * Overloading of multiplication operator.
+   * @param d a value in double precision .
+   * @param x a const reference to a Temperature .
+   * @return a Temperature 
+   */
+  friend Temperature operator * ( double d, const Temperature & x );
+  /**
+   * Overloading of << to output the value an Temperature on an ostream.
+   * @param os a reference to the ostream to be written on.
+   * @param x a const reference to a Temperature.
+   */
+  friend ostream & operator << ( ostream & os, const Temperature & x);
+  /**
+   * Overloading of >> to read an Temperature from an istream.
+   */
+  friend istream & operator >> ( istream & is, Temperature & x);
 public:
-	static double fromString(const string&);
-	static string toString(double);
-	static Temperature getTemperature(StringTokenizer &t) throw(NumberFormatException);
-
 	/**
-	 * Write the binary representation of this to a EndianOSStream.
+	 * The nullary constructor (default).
+	 */
+	Temperature();
+	/**
+	 * The copy constructor.
+	 */
+	Temperature(const Temperature &);
+	/**
+	 * A constructor from a string representation.
+	 * The string passed in argument must be parsable into a double precision
+	 * number to express the value in radian of the angle.
+	 *
+	 * @param s a string.
+	 */
+	Temperature(const string &s);
+#ifndef WITHOUT_ACS
+	/**
+	 *
+	 * A constructor from a CORBA/IDL representation.
+	 * 
+	 * @param a cons ref to an IDLTemperature.
+	 */
+	Temperature(const IDLTemperature & idlTemperature);
+#endif
+	/**
+	 * A constructor from a value in double precision.
+	 * The value passed in argument defines the value of the Temperature in radian.
+	 */
+	Temperature(double value);
+	/**
+	 * The destructor.
+	 */
+	virtual ~Temperature();
+	/**
+	 * A static method equivalent to the constructor from a string.
+	 * @param s a string?.
+	 */
+	static double fromString(const string& s);
+	/**
+	 * Conversion into string.
+	 * The resulting string contains the representation of the value of this Temperature.
+	 *
+	 * @return string
+	 */
+	static string toString(double);
+	/**
+	 * Parse the next (string) token of a StringTokenizer into an angle.
+	 * @param st a reference to a StringTokenizer.
+	 * @return an Temperature.
+	 */
+	static Temperature getTemperature(StringTokenizer &t) throw(NumberFormatException);
+			
+	/**
+	 * Write the binary representation of this to an EndianOSStream .
+	 * @param eoss a reference to an EndianOSStream .
 	 */		
 	void toBin(EndianOSStream& eoss);
-
 	/**
 	 * Write the binary representation of a vector of Temperature to a EndianOSStream.
-	 * @param temp the vector of Temperature to be written
+	 * @param angle the vector of Temperature to be written
 	 * @param eoss the EndianOSStream to be written to
 	 */
-	static void toBin(const vector<Temperature>& temp,  EndianOSStream& eoss);
+	static void toBin(const vector<Temperature>& angle,  EndianOSStream& eoss);
 	
 	/**
 	 * Write the binary representation of a vector of vector of Temperature to a EndianOSStream.
-	 * @param temp the vector of vector of Temperature to be written
+	 * @param angle the vector of vector of Temperature to be written
 	 * @param eoss the EndianOSStream to be written to
 	 */	
-	static void toBin(const vector<vector<Temperature> >& temp,  EndianOSStream& eoss);
+	static void toBin(const vector<vector<Temperature> >& angle,  EndianOSStream& eoss);
 	
 	/**
 	 * Write the binary representation of a vector of vector of vector of Temperature to a EndianOSStream.
-	 * @param temp the vector of vector of vector of Temperature to be written
+	 * @param angle the vector of vector of vector of Temperature to be written
 	 * @param eoss the EndianOSStream to be written to
 	 */
-	static void toBin(const vector<vector<vector<Temperature> > >& temp,  EndianOSStream& eoss);
-
+	static void toBin(const vector<vector<vector<Temperature> > >& angle,  EndianOSStream& eoss);
 	/**
 	 * Read the binary representation of an Temperature from a EndianISStream
 	 * and use the read value to set an  Temperature.
@@ -106,7 +164,7 @@ public:
 	/**
 	 * Read the binary representation of  a vector of  Temperature from an EndianISStream
 	 * and use the read value to set a vector of  Temperature.
-	 * @param dis the EndianISStream to be read
+	 * @param eiis the EndianISStream to be read
 	 * @return a vector of Temperature
 	 */	 
 	 static vector<Temperature> from1DBin(EndianISStream & eiss);
@@ -126,118 +184,188 @@ public:
 	 * @return a vector of vector of vector of Temperature
 	 */	 
 	 static vector<vector<vector<Temperature> > > from3DBin(EndianISStream & eiss);	 
-	 		
-	Temperature();                              		// default constructor
-	Temperature(const Temperature &);						// X const X& constructor
-	Temperature(const string &s);
-#ifndef WITHOUT_ACS
-	Temperature(const IDLTemperature &);
-#endif
-	Temperature(double value);
-	virtual ~Temperature();							// destructor
-
-	Temperature& operator = (const Temperature&);			// assignment operator
-	Temperature& operator = (const double);			// assignment operator
-
-	Temperature& operator += (const Temperature&);		// assignment with arithmetic
-	Temperature& operator -= (const Temperature&);		//	operators
-	Temperature& operator *= (const double);
-	Temperature& operator /= (const double);
-
-	Temperature operator + (const Temperature&) const;	// arithmetic operators
-	Temperature operator - (const Temperature&) const;
-	Temperature operator * (const double) const;
+	 
+	 /**
+	  * An assignment operator Temperature = Temperature.
+	  * @param x a const reference to an Temperature.
+	  */
+	 Temperature & operator = (const Temperature & x);
+	 
+	 /**
+	  * An assignment operator Temperature = double.
+	  * @param d a value in double precision.
+	  */
+	 Temperature & operator = (const double d);
+	 /**
+	  * Operator increment and assign.
+	  * @param x a const reference to an Temperature.
+	  */
+	Temperature & operator += (const Temperature & x);
+	/**
+	 * Operator decrement and assign.
+	 * @param x a const reference to an Temperature.
+	 */
+	Temperature & operator -= (const Temperature & x);
+	/**
+	 * Operator multiply and assign.
+	 * @param x a value in double precision.
+	 */
+	Temperature & operator *= (const double d);
+	/**
+	 * Operator divide and assign.
+	 * @param x a valye in double precision.
+	 */
+	Temperature & operator /= (const double d);
+	/**
+	 * Addition operator.
+	 * @param x a const reference to a Temperature.
+	 */
+	Temperature operator + (const Temperature & x) const;
+	/**
+	 * Substraction operator.
+	 * @param x a const reference to a Temperature.
+	 */
+	Temperature operator - (const Temperature &) const;
+	/**
+	 * Multiplication operator.
+	 * @param d a value in double precision.
+	 */
+	Temperature operator * (const double d) const;
+	/**
+	 * Division operator.
+	 * @param d a value in double precision.
+	 */
 	Temperature operator / (const double) const;
-
-	bool operator < (const Temperature&) const;		// comparison operators
-	bool operator > (const Temperature&) const;
-	bool operator <= (const Temperature&) const;
-	bool operator >= (const Temperature&) const;
-	bool operator == (const Temperature&) const;
-	bool equals(const Temperature&) const;
-	bool operator != (const Temperature&) const;
-
+	/**
+	 * Comparison operator. Less-than.
+	 * @param x a const reference to a Temperature.
+	 */
+	bool operator < (const Temperature & x) const;
+	/**
+	 * Comparison operator. Greater-than.
+	 * @param x a const reference to a Temperature.
+	 */
+	bool operator > (const Temperature &) const;
+	/**
+	 * Comparison operator. Less-than or equal.
+	 * @param x a const reference to a Temperature.
+	 */	
+	bool operator <= (const Temperature &) const;
+	/**
+	 * Comparison operator. Greater-than or equal.
+	 * @param x a const reference to a Temperature.
+	 */
+	bool operator >= (const Temperature &) const;
+	/**
+	 * Comparision operator. Equal-to.
+	 * @param x a const reference to a Temperature.
+	 */
+	bool operator == (const Temperature &) const;
+	/** 
+	 * Comparison method. Equality.
+	 * @param x a const reference to a Temperature.
+	 */
+	bool equals(const Temperature & x) const;
+	/**
+	 * Comparison operator. Not-equal.
+	 * @param x a const reference to a Temperature.
+	 */
+	bool operator != (const Temperature & x) const;
+	/**
+	 * Comparison method. Test nullity.
+	 * @param x a const reference to a Temperature.
+	 */
 	bool isZero() const;
-
-	Temperature operator - () const;					// unary minus
-	Temperature operator + () const; 				// unary plus
-
+	/**
+	 * Unary operator. Opposite.
+	 */
+	Temperature operator - () const;
+	/**
+	 * Unary operator. Unary plus.
+	 */
+	Temperature operator + () const;
+	/**
+	 * Converts into a string.
+	 * @return a string containing the representation of a the value in double precision.
+	 */
 	string toString() const;
+	/** 
+	 * Idem toString.
+	 */
 	string toStringI() const;
-
+	/**
+	 * Conversion operator.
+	 * Converts into a string.
+	 */
 	operator string () const;
+	/**
+	 * Return the double precision value of the Temperature.
+	 * @return double
+	 */
 	double get() const;
 #ifndef WITHOUT_ACS
+	/**
+	 * Return the IDLTemperature representation of the Temperature.
+	 * @return IDLTemperature 
+	 */
 	IDLTemperature toIDLTemperature() const;
 #endif
+	/**
+	 * Returns the abbreviated name of the unit implicitely associated to any Temperature.
+	 * @return string
+	 */
 	static string unit();
-
 private:
 	double value;
-
 };
-
 // Temperature constructors
 inline Temperature::Temperature() : value(0.0) {
 }
-
 inline Temperature::Temperature(const Temperature &t) : value(t.value) {
 }
-
 #ifndef WITHOUT_ACS
 inline Temperature::Temperature(const IDLTemperature &l) : value(l.value) {
 }
 #endif
-
 inline Temperature::Temperature(const string &s) : value(fromString(s)) {
 }
-
 inline Temperature::Temperature(double v) : value(v) {
 }
-
 // Temperature destructor
 inline Temperature::~Temperature() { }
-
 // assignment operator
-inline Temperature& Temperature::operator = ( const Temperature &t ) {
+inline Temperature & Temperature::operator = ( const Temperature &t ) {
 	value = t.value;
 	return *this;
 }
-
 // assignment operator
-inline Temperature& Temperature::operator = ( const double v ) {
+inline Temperature & Temperature::operator = ( const double v ) {
 	value = v;
 	return *this;
 }
-
 // assignment with arithmetic operators
-inline Temperature& Temperature::operator += ( const Temperature& t) {
+inline Temperature & Temperature::operator += ( const Temperature & t) {
 	value += t.value;
 	return *this;
 }
-
-inline Temperature& Temperature::operator -= ( const Temperature& t) {
+inline Temperature & Temperature::operator -= ( const Temperature & t) {
 	value -= t.value;
 	return *this;
 }
-
-inline Temperature& Temperature::operator *= ( const double n) {
+inline Temperature & Temperature::operator *= ( const double n) {
 	value *= n;
 	return *this;
 }
-
-inline Temperature& Temperature::operator /= ( const double n) {
+inline Temperature & Temperature::operator /= ( const double n) {
 	value /= n;
 	return *this;
 }
-
 // arithmetic functions
 inline Temperature Temperature::operator + ( const Temperature &t2 ) const {
 	Temperature tmp;
 	tmp.value = value + t2.value;
 	return tmp;
 }
-
 inline Temperature Temperature::operator - ( const Temperature &t2 ) const {
 	Temperature tmp;
 	tmp.value = value - t2.value;
@@ -248,71 +376,57 @@ inline Temperature Temperature::operator * ( const double n) const {
 	tmp.value = value * n;
 	return tmp;
 }
-
 inline Temperature Temperature::operator / ( const double n) const {
 	Temperature tmp;
 	tmp.value = value / n;
 	return tmp;
 }
-
 // comparison operators
-inline bool Temperature::operator < (const Temperature& x) const {
+inline bool Temperature::operator < (const Temperature & x) const {
 	return (value < x.value);
 }
-
-inline bool Temperature::operator > (const Temperature& x) const {
+inline bool Temperature::operator > (const Temperature & x) const {
 	return (value > x.value);
 }
-
-inline bool Temperature::operator <= (const Temperature& x) const {
+inline bool Temperature::operator <= (const Temperature & x) const {
 	return (value <= x.value);
 }
-
-inline bool Temperature::operator >= (const Temperature& x) const {
+inline bool Temperature::operator >= (const Temperature & x) const {
 	return (value >= x.value);
 }
-
-inline bool Temperature::operator == (const Temperature& x) const {
+inline bool Temperature::equals(const Temperature & x) const {
 	return (value == x.value);
 }
-inline bool Temperature::equals(const Temperature& x) const {
+inline bool Temperature::operator == (const Temperature & x) const {
 	return (value == x.value);
 }
-
-inline bool Temperature::operator != (const Temperature& x) const {
+inline bool Temperature::operator != (const Temperature & x) const {
 	return (value != x.value);
 }
-
 // unary - and + operators
 inline Temperature Temperature::operator - () const {
 	Temperature tmp;
         tmp.value = -value;
 	return tmp;
 }
-
 inline Temperature Temperature::operator + () const {
 	Temperature tmp;
     tmp.value = value;
 	return tmp;
 }
-
 // Conversion functions
 inline Temperature::operator string () const {
 	return toString();
 }
-
 inline string Temperature::toString() const {
 	return toString(value);
 }
-
 inline string Temperature::toStringI() const {
 	return toString(value);
 }
-
 inline double Temperature::get() const {
 	return value;
 }
-
 #ifndef WITHOUT_ACS
 inline IDLTemperature Temperature::toIDLTemperature() const {
 	IDLTemperature tmp;
@@ -320,29 +434,22 @@ inline IDLTemperature Temperature::toIDLTemperature() const {
 	return tmp;
 }
 #endif
-
 // Friend functions
-
 inline Temperature operator * ( double n, const Temperature &x) {
 	Temperature tmp;
 	tmp.value = x.value * n;
 	return tmp;
 }
-
 inline ostream & operator << ( ostream &o, const Temperature &x ) {
 	o << x.value;
 	return o;
 }
-
 inline istream & operator >> ( istream &i, Temperature &x ) {
 	i >> x.value;
 	return i;
 }
-
 inline string Temperature::unit() {
-	return string ("degC");
+	return string ("°C");
 }
-
 } // End namespace asdm
-
 #endif /* Temperature_CLASS */

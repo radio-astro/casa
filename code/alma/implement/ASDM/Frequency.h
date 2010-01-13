@@ -1,3 +1,4 @@
+//Frequency.h generated on 'mer jan 13 11:28:27 CET 2010'. Edit at your own risk.
 /*
  * ALMA - Atacama Large Millimeter Array
  * (c) European Southern Observatory, 2002
@@ -23,78 +24,135 @@
  *
  * File Frequency.h
  */
-
 #ifndef Frequency_CLASS
 #define Frequency_CLASS
-
 #include <vector>
 #include <iostream>
 #include <string>
 using namespace std;
-
 #ifndef WITHOUT_ACS
 #include <asdmIDLTypesC.h>
 using asdmIDLTypes::IDLFrequency;
 #endif
-
 #include <StringTokenizer.h>
 #include <NumberFormatException.h>
 using asdm::StringTokenizer;
 using asdm::NumberFormatException;
-
 #include "EndianStream.h"
 using asdm::EndianOSStream;
 using asdm::EndianISStream;
-
 namespace asdm {
-
 class Frequency;
 Frequency operator * ( double , const Frequency & );
 ostream & operator << ( ostream &, const Frequency & );
-istream & operator >> ( istream &, Frequency&);
-
+istream & operator >> ( istream &, Frequency &);
 /**
- * The Frequency class implements a quantity of frequency in hertz.
+ * The Frequency class implements a quantity of frequency in hertz. class implements a quantity of angle in radians.
  * 
  * @version 1.00 Jan. 7, 2005
  * @author Allen Farris
+ * 
+ * @version 1.1 Aug 8, 2006
+ * @author Michel Caillat 
+ * added toBin/fromBin methods.
  */
 class Frequency {
-	friend Frequency operator * ( double , const Frequency & );
-    friend ostream & operator << ( ostream &, const Frequency & );
-	friend istream & operator >> ( istream &, Frequency&);
-
+  /**
+   * Overloading of multiplication operator.
+   * @param d a value in double precision .
+   * @param x a const reference to a Frequency .
+   * @return a Frequency 
+   */
+  friend Frequency operator * ( double d, const Frequency & x );
+  /**
+   * Overloading of << to output the value an Frequency on an ostream.
+   * @param os a reference to the ostream to be written on.
+   * @param x a const reference to a Frequency.
+   */
+  friend ostream & operator << ( ostream & os, const Frequency & x);
+  /**
+   * Overloading of >> to read an Frequency from an istream.
+   */
+  friend istream & operator >> ( istream & is, Frequency & x);
 public:
-	static double fromString(const string&);
+	/**
+	 * The nullary constructor (default).
+	 */
+	Frequency();
+	/**
+	 * The copy constructor.
+	 */
+	Frequency(const Frequency &);
+	/**
+	 * A constructor from a string representation.
+	 * The string passed in argument must be parsable into a double precision
+	 * number to express the value in radian of the angle.
+	 *
+	 * @param s a string.
+	 */
+	Frequency(const string &s);
+#ifndef WITHOUT_ACS
+	/**
+	 *
+	 * A constructor from a CORBA/IDL representation.
+	 * 
+	 * @param a cons ref to an IDLFrequency.
+	 */
+	Frequency(const IDLFrequency & idlFrequency);
+#endif
+	/**
+	 * A constructor from a value in double precision.
+	 * The value passed in argument defines the value of the Frequency in radian.
+	 */
+	Frequency(double value);
+	/**
+	 * The destructor.
+	 */
+	virtual ~Frequency();
+	/**
+	 * A static method equivalent to the constructor from a string.
+	 * @param s a string?.
+	 */
+	static double fromString(const string& s);
+	/**
+	 * Conversion into string.
+	 * The resulting string contains the representation of the value of this Frequency.
+	 *
+	 * @return string
+	 */
 	static string toString(double);
+	/**
+	 * Parse the next (string) token of a StringTokenizer into an angle.
+	 * @param st a reference to a StringTokenizer.
+	 * @return an Frequency.
+	 */
 	static Frequency getFrequency(StringTokenizer &t) throw(NumberFormatException);
-	
-		/**
-	 * Write the binary representation of this to a EndianOSStream.
+			
+	/**
+	 * Write the binary representation of this to an EndianOSStream .
+	 * @param eoss a reference to an EndianOSStream .
 	 */		
 	void toBin(EndianOSStream& eoss);
-
 	/**
 	 * Write the binary representation of a vector of Frequency to a EndianOSStream.
-	 * @param frequency the vector of Frequency to be written
+	 * @param angle the vector of Frequency to be written
 	 * @param eoss the EndianOSStream to be written to
 	 */
-	static void toBin(const vector<Frequency>& frequency,  EndianOSStream& eoss);
+	static void toBin(const vector<Frequency>& angle,  EndianOSStream& eoss);
 	
 	/**
 	 * Write the binary representation of a vector of vector of Frequency to a EndianOSStream.
-	 * @param frequency the vector of vector of Frequency to be written
+	 * @param angle the vector of vector of Frequency to be written
 	 * @param eoss the EndianOSStream to be written to
 	 */	
-	static void toBin(const vector<vector<Frequency> >& frequency,  EndianOSStream& eoss);
+	static void toBin(const vector<vector<Frequency> >& angle,  EndianOSStream& eoss);
 	
 	/**
 	 * Write the binary representation of a vector of vector of vector of Frequency to a EndianOSStream.
-	 * @param frequency the vector of vector of vector of Frequency to be written
+	 * @param angle the vector of vector of vector of Frequency to be written
 	 * @param eoss the EndianOSStream to be written to
 	 */
-	static void toBin(const vector<vector<vector<Frequency> > >& frequency,  EndianOSStream& eoss);
-
+	static void toBin(const vector<vector<vector<Frequency> > >& angle,  EndianOSStream& eoss);
 	/**
 	 * Read the binary representation of an Frequency from a EndianISStream
 	 * and use the read value to set an  Frequency.
@@ -106,7 +164,7 @@ public:
 	/**
 	 * Read the binary representation of  a vector of  Frequency from an EndianISStream
 	 * and use the read value to set a vector of  Frequency.
-	 * @param dis the EndianISStream to be read
+	 * @param eiis the EndianISStream to be read
 	 * @return a vector of Frequency
 	 */	 
 	 static vector<Frequency> from1DBin(EndianISStream & eiss);
@@ -125,119 +183,189 @@ public:
 	 * @param eiss the EndianISStream to be read
 	 * @return a vector of vector of vector of Frequency
 	 */	 
-	 static vector<vector<vector<Frequency> > > from3DBin(EndianISStream & eiss);	
-
-	Frequency();                              		// default constructor
-	Frequency(const Frequency &);						// X const X& constructor
-	Frequency(const string &s);
-#ifndef WITHOUT_ACS
-	Frequency(const IDLFrequency &);
-#endif
-	Frequency(double value);
-	virtual ~Frequency();							// destructor
-
-	Frequency& operator = (const Frequency&);			// assignment operator
-	Frequency& operator = (const double);			// assignment operator
-
-	Frequency& operator += (const Frequency&);		// assignment with arithmetic
-	Frequency& operator -= (const Frequency&);		//	operators
-	Frequency& operator *= (const double);
-	Frequency& operator /= (const double);
-
-	Frequency operator + (const Frequency&) const;	// arithmetic operators
-	Frequency operator - (const Frequency&) const;
-	Frequency operator * (const double) const;
+	 static vector<vector<vector<Frequency> > > from3DBin(EndianISStream & eiss);	 
+	 
+	 /**
+	  * An assignment operator Frequency = Frequency.
+	  * @param x a const reference to an Frequency.
+	  */
+	 Frequency & operator = (const Frequency & x);
+	 
+	 /**
+	  * An assignment operator Frequency = double.
+	  * @param d a value in double precision.
+	  */
+	 Frequency & operator = (const double d);
+	 /**
+	  * Operator increment and assign.
+	  * @param x a const reference to an Frequency.
+	  */
+	Frequency & operator += (const Frequency & x);
+	/**
+	 * Operator decrement and assign.
+	 * @param x a const reference to an Frequency.
+	 */
+	Frequency & operator -= (const Frequency & x);
+	/**
+	 * Operator multiply and assign.
+	 * @param x a value in double precision.
+	 */
+	Frequency & operator *= (const double d);
+	/**
+	 * Operator divide and assign.
+	 * @param x a valye in double precision.
+	 */
+	Frequency & operator /= (const double d);
+	/**
+	 * Addition operator.
+	 * @param x a const reference to a Frequency.
+	 */
+	Frequency operator + (const Frequency & x) const;
+	/**
+	 * Substraction operator.
+	 * @param x a const reference to a Frequency.
+	 */
+	Frequency operator - (const Frequency &) const;
+	/**
+	 * Multiplication operator.
+	 * @param d a value in double precision.
+	 */
+	Frequency operator * (const double d) const;
+	/**
+	 * Division operator.
+	 * @param d a value in double precision.
+	 */
 	Frequency operator / (const double) const;
-
-	bool operator < (const Frequency&) const;		// comparison operators
-	bool operator > (const Frequency&) const;
-	bool operator <= (const Frequency&) const;
-	bool operator >= (const Frequency&) const;
-	bool operator == (const Frequency&) const;
-	bool equals(const Frequency&) const;
-	bool operator != (const Frequency&) const;
-
+	/**
+	 * Comparison operator. Less-than.
+	 * @param x a const reference to a Frequency.
+	 */
+	bool operator < (const Frequency & x) const;
+	/**
+	 * Comparison operator. Greater-than.
+	 * @param x a const reference to a Frequency.
+	 */
+	bool operator > (const Frequency &) const;
+	/**
+	 * Comparison operator. Less-than or equal.
+	 * @param x a const reference to a Frequency.
+	 */	
+	bool operator <= (const Frequency &) const;
+	/**
+	 * Comparison operator. Greater-than or equal.
+	 * @param x a const reference to a Frequency.
+	 */
+	bool operator >= (const Frequency &) const;
+	/**
+	 * Comparision operator. Equal-to.
+	 * @param x a const reference to a Frequency.
+	 */
+	bool operator == (const Frequency &) const;
+	/** 
+	 * Comparison method. Equality.
+	 * @param x a const reference to a Frequency.
+	 */
+	bool equals(const Frequency & x) const;
+	/**
+	 * Comparison operator. Not-equal.
+	 * @param x a const reference to a Frequency.
+	 */
+	bool operator != (const Frequency & x) const;
+	/**
+	 * Comparison method. Test nullity.
+	 * @param x a const reference to a Frequency.
+	 */
 	bool isZero() const;
-
-	Frequency operator - () const;					// unary minus
-	Frequency operator + () const; 				// unary plus
-
+	/**
+	 * Unary operator. Opposite.
+	 */
+	Frequency operator - () const;
+	/**
+	 * Unary operator. Unary plus.
+	 */
+	Frequency operator + () const;
+	/**
+	 * Converts into a string.
+	 * @return a string containing the representation of a the value in double precision.
+	 */
 	string toString() const;
+	/** 
+	 * Idem toString.
+	 */
 	string toStringI() const;
-
+	/**
+	 * Conversion operator.
+	 * Converts into a string.
+	 */
 	operator string () const;
+	/**
+	 * Return the double precision value of the Frequency.
+	 * @return double
+	 */
 	double get() const;
 #ifndef WITHOUT_ACS
+	/**
+	 * Return the IDLFrequency representation of the Frequency.
+	 * @return IDLFrequency 
+	 */
 	IDLFrequency toIDLFrequency() const;
 #endif
+	/**
+	 * Returns the abbreviated name of the unit implicitely associated to any Frequency.
+	 * @return string
+	 */
 	static string unit();
-
 private:
 	double value;
-
 };
-
 // Frequency constructors
 inline Frequency::Frequency() : value(0.0) {
 }
-
 inline Frequency::Frequency(const Frequency &t) : value(t.value) {
 }
-
 #ifndef WITHOUT_ACS
 inline Frequency::Frequency(const IDLFrequency &l) : value(l.value) {
 }
 #endif
-
 inline Frequency::Frequency(const string &s) : value(fromString(s)) {
 }
-
 inline Frequency::Frequency(double v) : value(v) {
 }
-
 // Frequency destructor
 inline Frequency::~Frequency() { }
-
 // assignment operator
-inline Frequency& Frequency::operator = ( const Frequency &t ) {
+inline Frequency & Frequency::operator = ( const Frequency &t ) {
 	value = t.value;
 	return *this;
 }
-
 // assignment operator
-inline Frequency& Frequency::operator = ( const double v ) {
+inline Frequency & Frequency::operator = ( const double v ) {
 	value = v;
 	return *this;
 }
-
 // assignment with arithmetic operators
-inline Frequency& Frequency::operator += ( const Frequency& t) {
+inline Frequency & Frequency::operator += ( const Frequency & t) {
 	value += t.value;
 	return *this;
 }
-
-inline Frequency& Frequency::operator -= ( const Frequency& t) {
+inline Frequency & Frequency::operator -= ( const Frequency & t) {
 	value -= t.value;
 	return *this;
 }
-
-inline Frequency& Frequency::operator *= ( const double n) {
+inline Frequency & Frequency::operator *= ( const double n) {
 	value *= n;
 	return *this;
 }
-
-inline Frequency& Frequency::operator /= ( const double n) {
+inline Frequency & Frequency::operator /= ( const double n) {
 	value /= n;
 	return *this;
 }
-
 // arithmetic functions
 inline Frequency Frequency::operator + ( const Frequency &t2 ) const {
 	Frequency tmp;
 	tmp.value = value + t2.value;
 	return tmp;
 }
-
 inline Frequency Frequency::operator - ( const Frequency &t2 ) const {
 	Frequency tmp;
 	tmp.value = value - t2.value;
@@ -248,71 +376,57 @@ inline Frequency Frequency::operator * ( const double n) const {
 	tmp.value = value * n;
 	return tmp;
 }
-
 inline Frequency Frequency::operator / ( const double n) const {
 	Frequency tmp;
 	tmp.value = value / n;
 	return tmp;
 }
-
 // comparison operators
-inline bool Frequency::operator < (const Frequency& x) const {
+inline bool Frequency::operator < (const Frequency & x) const {
 	return (value < x.value);
 }
-
-inline bool Frequency::operator > (const Frequency& x) const {
+inline bool Frequency::operator > (const Frequency & x) const {
 	return (value > x.value);
 }
-
-inline bool Frequency::operator <= (const Frequency& x) const {
+inline bool Frequency::operator <= (const Frequency & x) const {
 	return (value <= x.value);
 }
-
-inline bool Frequency::operator >= (const Frequency& x) const {
+inline bool Frequency::operator >= (const Frequency & x) const {
 	return (value >= x.value);
 }
-
-inline bool Frequency::operator == (const Frequency& x) const {
+inline bool Frequency::equals(const Frequency & x) const {
 	return (value == x.value);
 }
-inline bool Frequency::equals(const Frequency& x) const {
+inline bool Frequency::operator == (const Frequency & x) const {
 	return (value == x.value);
 }
-
-inline bool Frequency::operator != (const Frequency& x) const {
+inline bool Frequency::operator != (const Frequency & x) const {
 	return (value != x.value);
 }
-
 // unary - and + operators
 inline Frequency Frequency::operator - () const {
 	Frequency tmp;
         tmp.value = -value;
 	return tmp;
 }
-
 inline Frequency Frequency::operator + () const {
 	Frequency tmp;
     tmp.value = value;
 	return tmp;
 }
-
 // Conversion functions
 inline Frequency::operator string () const {
 	return toString();
 }
-
 inline string Frequency::toString() const {
 	return toString(value);
 }
-
 inline string Frequency::toStringI() const {
 	return toString(value);
 }
-
 inline double Frequency::get() const {
 	return value;
 }
-
 #ifndef WITHOUT_ACS
 inline IDLFrequency Frequency::toIDLFrequency() const {
 	IDLFrequency tmp;
@@ -320,29 +434,22 @@ inline IDLFrequency Frequency::toIDLFrequency() const {
 	return tmp;
 }
 #endif
-
 // Friend functions
-
 inline Frequency operator * ( double n, const Frequency &x) {
 	Frequency tmp;
 	tmp.value = x.value * n;
 	return tmp;
 }
-
 inline ostream & operator << ( ostream &o, const Frequency &x ) {
 	o << x.value;
 	return o;
 }
-
 inline istream & operator >> ( istream &i, Frequency &x ) {
 	i >> x.value;
 	return i;
 }
-
 inline string Frequency::unit() {
-	return string ("hz");
+	return string ("Hz");
 }
-
 } // End namespace asdm
-
 #endif /* Frequency_CLASS */

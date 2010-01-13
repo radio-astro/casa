@@ -56,6 +56,11 @@ using namespace std;
 #include <Misc.h>
 using namespace asdm;
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+#include "boost/filesystem/operations.hpp"
+
 
 namespace asdm {
 
@@ -123,12 +128,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-
 	unsigned int CalPositionTable::size() {
-		return row.size();
-	}	
+		return privateRows.size();
+	}
 	
-	
+
 	/**
 	 * Return the name of this table.
 	 */
@@ -161,52 +165,48 @@ namespace asdm {
 		return new CalPositionRow (*this);
 	}
 	
-	CalPositionRow *CalPositionTable::newRowEmpty() {
-		return newRow ();
-	}
-
 
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param antennaName. 
+ 	 * @param antennaName 
 	
- 	 * @param atmPhaseCorrection. 
+ 	 * @param atmPhaseCorrection 
 	
- 	 * @param calDataId. 
+ 	 * @param calDataId 
 	
- 	 * @param calReductionId. 
+ 	 * @param calReductionId 
 	
- 	 * @param startValidTime. 
+ 	 * @param startValidTime 
 	
- 	 * @param endValidTime. 
+ 	 * @param endValidTime 
 	
- 	 * @param antennaPosition. 
+ 	 * @param antennaPosition 
 	
- 	 * @param stationName. 
+ 	 * @param stationName 
 	
- 	 * @param stationPosition. 
+ 	 * @param stationPosition 
 	
- 	 * @param positionMethod. 
+ 	 * @param positionMethod 
 	
- 	 * @param receiverBand. 
+ 	 * @param receiverBand 
 	
- 	 * @param numAntenna. 
+ 	 * @param numAntenna 
 	
- 	 * @param refAntennaNames. 
+ 	 * @param refAntennaNames 
 	
- 	 * @param axesOffset. 
+ 	 * @param axesOffset 
 	
- 	 * @param axesOffsetErr. 
+ 	 * @param axesOffsetErr 
 	
- 	 * @param axesOffsetFixed. 
+ 	 * @param axesOffsetFixed 
 	
- 	 * @param positionOffset. 
+ 	 * @param positionOffset 
 	
- 	 * @param positionErr. 
+ 	 * @param positionErr 
 	
- 	 * @param reducedChiSquared. 
+ 	 * @param reducedChiSquared 
 	
      */
 	CalPositionRow* CalPositionTable::newRow(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > antennaPosition, string stationName, vector<Length > stationPosition, PositionMethodMod::PositionMethod positionMethod, ReceiverBandMod::ReceiverBand receiverBand, int numAntenna, vector<string > refAntennaNames, Length axesOffset, Length axesOffsetErr, bool axesOffsetFixed, vector<Length > positionOffset, vector<Length > positionErr, double reducedChiSquared){
@@ -252,58 +252,10 @@ namespace asdm {
 	
 		return row;		
 	}	
-
-	CalPositionRow* CalPositionTable::newRowFull(string antennaName, AtmPhaseCorrectionMod::AtmPhaseCorrection atmPhaseCorrection, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, vector<Length > antennaPosition, string stationName, vector<Length > stationPosition, PositionMethodMod::PositionMethod positionMethod, ReceiverBandMod::ReceiverBand receiverBand, int numAntenna, vector<string > refAntennaNames, Length axesOffset, Length axesOffsetErr, bool axesOffsetFixed, vector<Length > positionOffset, vector<Length > positionErr, double reducedChiSquared)	{
-		CalPositionRow *row = new CalPositionRow(*this);
-			
-		row->setAntennaName(antennaName);
-			
-		row->setAtmPhaseCorrection(atmPhaseCorrection);
-			
-		row->setCalDataId(calDataId);
-			
-		row->setCalReductionId(calReductionId);
-			
-		row->setStartValidTime(startValidTime);
-			
-		row->setEndValidTime(endValidTime);
-			
-		row->setAntennaPosition(antennaPosition);
-			
-		row->setStationName(stationName);
-			
-		row->setStationPosition(stationPosition);
-			
-		row->setPositionMethod(positionMethod);
-			
-		row->setReceiverBand(receiverBand);
-			
-		row->setNumAntenna(numAntenna);
-			
-		row->setRefAntennaNames(refAntennaNames);
-			
-		row->setAxesOffset(axesOffset);
-			
-		row->setAxesOffsetErr(axesOffsetErr);
-			
-		row->setAxesOffsetFixed(axesOffsetFixed);
-			
-		row->setPositionOffset(positionOffset);
-			
-		row->setPositionErr(positionErr);
-			
-		row->setReducedChiSquared(reducedChiSquared);
-	
-		return row;				
-	}
 	
 
 
 CalPositionRow* CalPositionTable::newRow(CalPositionRow* row) {
-	return new CalPositionRow(*this, *row);
-}
-
-CalPositionRow* CalPositionTable::newRowCopy(CalPositionRow* row) {
 	return new CalPositionRow(*this, *row);
 }
 
@@ -524,27 +476,13 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 	}
 #endif
 
-	char *CalPositionTable::toFITS() const  {
-		throw ConversionException("Not implemented","CalPosition");
-	}
-
-	void CalPositionTable::fromFITS(char *fits)  {
-		throw ConversionException("Not implemented","CalPosition");
-	}
-
-	string CalPositionTable::toVOTable() const {
-		throw ConversionException("Not implemented","CalPosition");
-	}
-
-	void CalPositionTable::fromVOTable(string vo) {
-		throw ConversionException("Not implemented","CalPosition");
-	}
-
 	
 	string CalPositionTable::toXML()  {
 		string buf;
+
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/2/CalPositionTable.xsd\"> ");	
+		buf.append("<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/2/CalPositionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -602,6 +540,10 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		}
 		if (!xml.isStr("</CalPositionTable>")) 
 			error();
+			
+		archiveAsBin = false;
+		fileAsBin = false;
+		
 	}
 
 	
@@ -610,11 +552,51 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 	}
 	
 	
-	string CalPositionTable::toMIME() {
-		EndianOSStream eoss;
+	string CalPositionTable::MIMEXMLPart(const asdm::ByteOrder* byteOrder) {
+		string UID = getEntity().getEntityId().toString();
+		string withoutUID = UID.substr(6);
+		string containerUID = getContainer().getEntity().getEntityId().toString();
+		ostringstream oss;
+		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		oss << "\n";
+		oss << "<CalPositionTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clposn=\"http://Alma/XASDM/CalPositionTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalPositionTable http://almaobservatory.org/XML/XASDM/2/CalPositionTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalPositionTable' schemaVersion='1' documentVersion='1'/>\n";
+		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
+		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
+		oss << "<Attributes>\n";
+
+		oss << "<antennaName/>\n"; 
+		oss << "<atmPhaseCorrection/>\n"; 
+		oss << "<calDataId/>\n"; 
+		oss << "<calReductionId/>\n"; 
+		oss << "<startValidTime/>\n"; 
+		oss << "<endValidTime/>\n"; 
+		oss << "<antennaPosition/>\n"; 
+		oss << "<stationName/>\n"; 
+		oss << "<stationPosition/>\n"; 
+		oss << "<positionMethod/>\n"; 
+		oss << "<receiverBand/>\n"; 
+		oss << "<numAntenna/>\n"; 
+		oss << "<refAntennaNames/>\n"; 
+		oss << "<axesOffset/>\n"; 
+		oss << "<axesOffsetErr/>\n"; 
+		oss << "<axesOffsetFixed/>\n"; 
+		oss << "<positionOffset/>\n"; 
+		oss << "<positionErr/>\n"; 
+		oss << "<reducedChiSquared/>\n"; 
+
+		oss << "<delayRms/>\n"; 
+		oss << "<phaseRms/>\n"; 
+		oss << "</Attributes>\n";		
+		oss << "</CalPositionTable>\n";
+
+		return oss.str();				
+	}
+	
+	string CalPositionTable::toMIME(const asdm::ByteOrder* byteOrder) {
+		EndianOSStream eoss(byteOrder);
 		
 		string UID = getEntity().getEntityId().toString();
-		string execBlockUID = getContainer().getEntity().getEntityId().toString();
 		
 		// The MIME Header
 		eoss <<"MIME-Version: 1.0";
@@ -639,13 +621,7 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		eoss <<"\n";
 		
 		// The MIME XML part content.
-		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
-		eoss << "\n";
-		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
-		eoss << "<ExecBlockUID>\n";
-		eoss << execBlockUID  << "\n";
-		eoss << "</ExecBlockUID>\n";
-		eoss << "</ASDMBinaryTable>\n";		
+		eoss << MIMEXMLPart(byteOrder);
 
 		// The MIME binary part header
 		eoss <<"--MIME_boundary";
@@ -673,39 +649,165 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 
 	
 	void CalPositionTable::setFromMIME(const string & mimeMsg) {
-		// cout << "Entering setFromMIME" << endl;
-	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
-	 	
-	 	// Look for the string announcing the binary part.
-	 	string::size_type loc = mimeMsg.find( terminator, 0 );
-	 	
-	 	if ( loc == string::npos ) {
-	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalPosition");
-	 	}
-	
-	 	// Create an EndianISStream from the substring containing the binary part.
-	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
-	 	
-	 	entity = Entity::fromBin(eiss);
-	 	
-	 	// We do nothing with that but we have to read it.
-	 	Entity containerEntity = Entity::fromBin(eiss);
-	 		 	
-	 	int numRows = eiss.readInt();
-	 	try {
-	 		for (int i = 0; i < numRows; i++) {
-	 			CalPositionRow* aRow = CalPositionRow::fromBin(eiss, *this);
-	 			checkAndAdd(aRow);
-	 		}
-	 	}
-	 	catch (DuplicateKey e) {
-	 		throw ConversionException("Error while writing binary data , the message was "
-	 					+ e.getMessage(), "CalPosition");
-	 	}
-		catch (TagFormatException e) {
-			throw ConversionException("Error while reading binary data , the message was "
-					+ e.getMessage(), "CalPosition");
-		} 		 	
+    string xmlPartMIMEHeader = "Content-ID: <header.xml>\n\n";
+    
+    string binPartMIMEHeader = "--MIME_boundary\nContent-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+    
+    // Detect the XML header.
+    string::size_type loc0 = mimeMsg.find(xmlPartMIMEHeader, 0);
+    if ( loc0 == string::npos) {
+      throw ConversionException("Failed to detect the beginning of the XML header", "CalPosition");
+    }
+    loc0 += xmlPartMIMEHeader.size();
+    
+    // Look for the string announcing the binary part.
+    string::size_type loc1 = mimeMsg.find( binPartMIMEHeader, loc0 );
+    
+    if ( loc1 == string::npos ) {
+      throw ConversionException("Failed to detect the beginning of the binary part", "CalPosition");
+    }
+    
+    //
+    // Extract the xmlHeader and analyze it to find out what is the byte order and the sequence
+    // of attribute names.
+    //
+    string xmlHeader = mimeMsg.substr(loc0, loc1-loc0);
+    xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "CalPosition");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq;
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "CalPosition");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+      
+ 	 //
+    // Let's consider a  default order for the sequence of attributes.
+    //
+     
+    attributesSeq.push_back("antennaName") ; 
+     
+    attributesSeq.push_back("atmPhaseCorrection") ; 
+     
+    attributesSeq.push_back("calDataId") ; 
+     
+    attributesSeq.push_back("calReductionId") ; 
+     
+    attributesSeq.push_back("startValidTime") ; 
+     
+    attributesSeq.push_back("endValidTime") ; 
+     
+    attributesSeq.push_back("antennaPosition") ; 
+     
+    attributesSeq.push_back("stationName") ; 
+     
+    attributesSeq.push_back("stationPosition") ; 
+     
+    attributesSeq.push_back("positionMethod") ; 
+     
+    attributesSeq.push_back("receiverBand") ; 
+     
+    attributesSeq.push_back("numAntenna") ; 
+     
+    attributesSeq.push_back("refAntennaNames") ; 
+     
+    attributesSeq.push_back("axesOffset") ; 
+     
+    attributesSeq.push_back("axesOffsetErr") ; 
+     
+    attributesSeq.push_back("axesOffsetFixed") ; 
+     
+    attributesSeq.push_back("positionOffset") ; 
+     
+    attributesSeq.push_back("positionErr") ; 
+     
+    attributesSeq.push_back("reducedChiSquared") ; 
+    
+     
+    attributesSeq.push_back("delayRms") ; 
+     
+    attributesSeq.push_back("phaseRms") ; 
+              
+     }
+    else if (string("CalPositionTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/CalPositionTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "CalPosition");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/CalPositionTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "CalPosition");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/CalPositionTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "CalPosition");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/CalPositionTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "CalPosition");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
+    
+    entity = Entity::fromBin(eiss);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin(eiss);
+    
+    int numRows = eiss.readInt();
+    try {
+      for (int i = 0; i < numRows; i++) {
+	CalPositionRow* aRow = CalPositionRow::fromBin(eiss, *this, attributesSeq);
+	checkAndAdd(aRow);
+      }
+    }
+    catch (DuplicateKey e) {
+      throw ConversionException("Error while writing binary data , the message was "
+				+ e.getMessage(), "CalPosition");
+    }
+    catch (TagFormatException e) {
+      throw ConversionException("Error while reading binary data , the message was "
+				+ e.getMessage(), "CalPosition");
+    }
+    archiveAsBin = true;
+    fileAsBin = true;
 	}
 
 	
@@ -714,7 +816,19 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 			!createPath(directory.c_str())) {
 			throw ConversionException("Could not create directory " , directory);
 		}
-		
+
+		string fileName = directory + "/CalPosition.xml";
+		ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not open file " + fileName + " to write ", "CalPosition");
+		if (fileAsBin) 
+			tableout << MIMEXMLPart();
+		else
+			tableout << toXML() << endl;
+		tableout.close();
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not close file " + fileName, "CalPosition");
+
 		if (fileAsBin) {
 			// write the bin serialized
 			string fileName = directory + "/CalPosition.bin";
@@ -726,60 +840,75 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 			if (tableout.rdstate() == ostream::failbit)
 				throw ConversionException("Could not close file " + fileName, "CalPosition");
 		}
-		else {
-			// write the XML
-			string fileName = directory + "/CalPosition.xml";
-			ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not open file " + fileName + " to write ", "CalPosition");
-			tableout << toXML() << endl;
-			tableout.close();
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not close file " + fileName, "CalPosition");
-		}
 	}
 
 	
 	void CalPositionTable::setFromFile(const string& directory) {
-		string tablename;
-		if (fileAsBin)
-			tablename = directory + "/CalPosition.bin";
-		else
-			tablename = directory + "/CalPosition.xml";
-			
-		// Determine the file size.
-		ifstream::pos_type size;
-		ifstream tablefile(tablename.c_str(), ios::in|ios::binary|ios::ate);
-
- 		if (tablefile.is_open()) { 
-  				size = tablefile.tellg(); 
-  		}
-		else {
-				throw ConversionException("Could not open file " + tablename, "CalPosition");
-		}
-		
-		// Re position to the beginning.
-		tablefile.seekg(0);
-		
-		// Read in a stringstream.
-		stringstream ss;
-		ss << tablefile.rdbuf();
-
-		if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
-			throw ConversionException("Error reading file " + tablename,"CalPosition");
-		}
-
-		// And close
-		tablefile.close();
-		if (tablefile.rdstate() == istream::failbit)
-			throw ConversionException("Could not close file " + tablename,"CalPosition");
-					
-		// And parse the content with the appropriate method
-		if (fileAsBin) 
-			setFromMIME(ss.str());
-		else
-			fromXML(ss.str());	
+    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalPosition.xml")))
+      setFromXMLFile(directory);
+    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalPosition.bin")))
+      setFromMIMEFile(directory);
+    else
+      throw ConversionException("No file found for the CalPosition table", "CalPosition");
 	}			
+
+	
+  void CalPositionTable::setFromMIMEFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/CalPosition.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "CalPosition");
+    }
+    // Read in a stringstream.
+    stringstream ss; ss << tablefile.rdbuf();
+    
+    if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file " + tablePath,"CalPosition");
+    }
+    
+    // And close.
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file " + tablePath,"CalPosition");
+    
+    setFromMIME(ss.str());
+  }	
+
+	
+void CalPositionTable::setFromXMLFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/CalPosition.xml";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "CalPosition");
+    }
+      // Read in a stringstream.
+    stringstream ss;
+    ss << tablefile.rdbuf();
+    
+    if  (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file '" + tablePath + "'", "CalPosition");
+    }
+    
+    // And close
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file '" + tablePath + "'", "CalPosition");
+
+    // Let's make a string out of the stringstream content and empty the stringstream.
+    string xmlDocument = ss.str(); ss.str("");
+
+    // Let's make a very primitive check to decide
+    // whether the XML content represents the table
+    // or refers to it via a <BulkStoreRef element.
+    if (xmlDocument.find("<BulkStoreRef") != string::npos)
+      setFromMIMEFile(directory);
+    else
+      fromXML(xmlDocument);
+  }
 
 	
 

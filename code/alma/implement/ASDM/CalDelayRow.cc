@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalDelayRow::~CalDelayRow() {
 	}
 
@@ -1342,252 +1341,304 @@ namespace asdm {
 
 	}
 	
-	CalDelayRow* CalDelayRow::fromBin(EndianISStream& eiss, CalDelayTable& table) {
-		CalDelayRow* row = new  CalDelayRow(table);
-		
-		
+void CalDelayRow::antennaNameFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->antennaName =  eiss.readString();
+		antennaName =  eiss.readString();
 			
 		
 	
-
 	
-	
+}
+void CalDelayRow::atmPhaseCorrectionFromBin(EndianISStream& eiss) {
 		
-			
-		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
-			
-		
-	
-
 	
 	
 		
 			
-		row->basebandName = CBasebandName::from_int(eiss.readInt());
+		atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
 			
 		
 	
-
 	
-	
+}
+void CalDelayRow::basebandNameFromBin(EndianISStream& eiss) {
 		
-			
-		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
-			
-		
-	
-
-	
-		
-		
-		row->calDataId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->calReductionId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
 	
 	
 		
 			
-		row->refAntennaName =  eiss.readString();
+		basebandName = CBasebandName::from_int(eiss.readInt());
 			
 		
 	
-
 	
-	
+}
+void CalDelayRow::receiverBandFromBin(EndianISStream& eiss) {
 		
-			
-		row->numReceptor =  eiss.readInt();
-			
-		
-	
-
 	
 	
 		
 			
+		receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
 	
-		row->delayError.clear();
+	
+}
+void CalDelayRow::calDataIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalDelayRow::calReductionIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalDelayRow::startValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalDelayRow::endValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalDelayRow::refAntennaNameFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		refAntennaName =  eiss.readString();
+			
+		
+	
+	
+}
+void CalDelayRow::numReceptorFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numReceptor =  eiss.readInt();
+			
+		
+	
+	
+}
+void CalDelayRow::delayErrorFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+	
+		delayError.clear();
 		
 		unsigned int delayErrorDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < delayErrorDim1; i++)
 			
-			row->delayError.push_back(eiss.readDouble());
+			delayError.push_back(eiss.readDouble());
 			
 	
 
 		
 	
-
+	
+}
+void CalDelayRow::delayOffsetFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->delayOffset.clear();
+		delayOffset.clear();
 		
 		unsigned int delayOffsetDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < delayOffsetDim1; i++)
 			
-			row->delayOffset.push_back(eiss.readDouble());
+			delayOffset.push_back(eiss.readDouble());
 			
 	
 
 		
 	
-
+	
+}
+void CalDelayRow::polarizationTypesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->polarizationTypes.clear();
+		polarizationTypes.clear();
 		
 		unsigned int polarizationTypesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void CalDelayRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->reducedChiSquared.clear();
+		reducedChiSquared.clear();
 		
 		unsigned int reducedChiSquaredDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < reducedChiSquaredDim1; i++)
 			
-			row->reducedChiSquared.push_back(eiss.readDouble());
+			reducedChiSquared.push_back(eiss.readDouble());
 			
 	
 
 		
 	
+	
+}
 
+void CalDelayRow::crossDelayOffsetFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->crossDelayOffsetExists = eiss.readBoolean();
-	if (row->crossDelayOffsetExists) {
+	crossDelayOffsetExists = eiss.readBoolean();
+	if (crossDelayOffsetExists) {
 		
 	
 	
 		
 			
-		row->crossDelayOffset =  eiss.readDouble();
-			
-		
-	
-
-	}
-
-	row->crossDelayOffsetErrorExists = eiss.readBoolean();
-	if (row->crossDelayOffsetErrorExists) {
-		
-	
-	
-		
-			
-		row->crossDelayOffsetError =  eiss.readDouble();
+		crossDelayOffset =  eiss.readDouble();
 			
 		
 	
 
 	}
-
-	row->numSidebandExists = eiss.readBoolean();
-	if (row->numSidebandExists) {
+	
+}
+void CalDelayRow::crossDelayOffsetErrorFromBin(EndianISStream& eiss) {
+		
+	crossDelayOffsetErrorExists = eiss.readBoolean();
+	if (crossDelayOffsetErrorExists) {
 		
 	
 	
 		
 			
-		row->numSideband =  eiss.readInt();
+		crossDelayOffsetError =  eiss.readDouble();
 			
 		
 	
 
 	}
-
-	row->refFreqExists = eiss.readBoolean();
-	if (row->refFreqExists) {
+	
+}
+void CalDelayRow::numSidebandFromBin(EndianISStream& eiss) {
+		
+	numSidebandExists = eiss.readBoolean();
+	if (numSidebandExists) {
 		
 	
-		
+	
 		
 			
-	
-	row->refFreq = Frequency::from1DBin(eiss);	
-	
-
+		numSideband =  eiss.readInt();
+			
 		
 	
 
 	}
-
-	row->refFreqPhaseExists = eiss.readBoolean();
-	if (row->refFreqPhaseExists) {
+	
+}
+void CalDelayRow::refFreqFromBin(EndianISStream& eiss) {
+		
+	refFreqExists = eiss.readBoolean();
+	if (refFreqExists) {
 		
 	
 		
 		
 			
 	
-	row->refFreqPhase = Angle::from1DBin(eiss);	
+	refFreq = Frequency::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
+	
+}
+void CalDelayRow::refFreqPhaseFromBin(EndianISStream& eiss) {
+		
+	refFreqPhaseExists = eiss.readBoolean();
+	if (refFreqPhaseExists) {
+		
+	
+		
+		
+			
+	
+	refFreqPhase = Angle::from1DBin(eiss);	
+	
 
-	row->sidebandsExists = eiss.readBoolean();
-	if (row->sidebandsExists) {
+		
+	
+
+	}
+	
+}
+void CalDelayRow::sidebandsFromBin(EndianISStream& eiss) {
+		
+	sidebandsExists = eiss.readBoolean();
+	if (sidebandsExists) {
 		
 	
 	
 		
 			
 	
-		row->sidebands.clear();
+		sidebands.clear();
 		
 		unsigned int sidebandsDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < sidebandsDim1; i++)
 			
-			row->sidebands.push_back(CReceiverSideband::from_int(eiss.readInt()));
+			sidebands.push_back(CReceiverSideband::from_int(eiss.readInt()));
 			
 	
 
@@ -1595,8 +1646,21 @@ namespace asdm {
 	
 
 	}
-
+	
+}
+	
+	
+	CalDelayRow* CalDelayRow::fromBin(EndianISStream& eiss, CalDelayTable& table, const vector<string>& attributesSeq) {
+		CalDelayRow* row = new  CalDelayRow(table);
 		
+		map<string, CalDelayAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalDelayTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -2518,6 +2582,31 @@ receiverBand = CReceiverBand::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaName"] = &CalDelayRow::antennaNameFromBin; 
+	 fromBinMethods["atmPhaseCorrection"] = &CalDelayRow::atmPhaseCorrectionFromBin; 
+	 fromBinMethods["basebandName"] = &CalDelayRow::basebandNameFromBin; 
+	 fromBinMethods["receiverBand"] = &CalDelayRow::receiverBandFromBin; 
+	 fromBinMethods["calDataId"] = &CalDelayRow::calDataIdFromBin; 
+	 fromBinMethods["calReductionId"] = &CalDelayRow::calReductionIdFromBin; 
+	 fromBinMethods["startValidTime"] = &CalDelayRow::startValidTimeFromBin; 
+	 fromBinMethods["endValidTime"] = &CalDelayRow::endValidTimeFromBin; 
+	 fromBinMethods["refAntennaName"] = &CalDelayRow::refAntennaNameFromBin; 
+	 fromBinMethods["numReceptor"] = &CalDelayRow::numReceptorFromBin; 
+	 fromBinMethods["delayError"] = &CalDelayRow::delayErrorFromBin; 
+	 fromBinMethods["delayOffset"] = &CalDelayRow::delayOffsetFromBin; 
+	 fromBinMethods["polarizationTypes"] = &CalDelayRow::polarizationTypesFromBin; 
+	 fromBinMethods["reducedChiSquared"] = &CalDelayRow::reducedChiSquaredFromBin; 
+		
+	
+	 fromBinMethods["crossDelayOffset"] = &CalDelayRow::crossDelayOffsetFromBin; 
+	 fromBinMethods["crossDelayOffsetError"] = &CalDelayRow::crossDelayOffsetErrorFromBin; 
+	 fromBinMethods["numSideband"] = &CalDelayRow::numSidebandFromBin; 
+	 fromBinMethods["refFreq"] = &CalDelayRow::refFreqFromBin; 
+	 fromBinMethods["refFreqPhase"] = &CalDelayRow::refFreqPhaseFromBin; 
+	 fromBinMethods["sidebands"] = &CalDelayRow::sidebandsFromBin; 
 	
 	}
 	
@@ -2660,7 +2749,31 @@ receiverBand = CReceiverBand::from_int(0);
 		else
 			sidebandsExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaName"] = &CalDelayRow::antennaNameFromBin; 
+		 fromBinMethods["atmPhaseCorrection"] = &CalDelayRow::atmPhaseCorrectionFromBin; 
+		 fromBinMethods["basebandName"] = &CalDelayRow::basebandNameFromBin; 
+		 fromBinMethods["receiverBand"] = &CalDelayRow::receiverBandFromBin; 
+		 fromBinMethods["calDataId"] = &CalDelayRow::calDataIdFromBin; 
+		 fromBinMethods["calReductionId"] = &CalDelayRow::calReductionIdFromBin; 
+		 fromBinMethods["startValidTime"] = &CalDelayRow::startValidTimeFromBin; 
+		 fromBinMethods["endValidTime"] = &CalDelayRow::endValidTimeFromBin; 
+		 fromBinMethods["refAntennaName"] = &CalDelayRow::refAntennaNameFromBin; 
+		 fromBinMethods["numReceptor"] = &CalDelayRow::numReceptorFromBin; 
+		 fromBinMethods["delayError"] = &CalDelayRow::delayErrorFromBin; 
+		 fromBinMethods["delayOffset"] = &CalDelayRow::delayOffsetFromBin; 
+		 fromBinMethods["polarizationTypes"] = &CalDelayRow::polarizationTypesFromBin; 
+		 fromBinMethods["reducedChiSquared"] = &CalDelayRow::reducedChiSquaredFromBin; 
+			
+	
+		 fromBinMethods["crossDelayOffset"] = &CalDelayRow::crossDelayOffsetFromBin; 
+		 fromBinMethods["crossDelayOffsetError"] = &CalDelayRow::crossDelayOffsetErrorFromBin; 
+		 fromBinMethods["numSideband"] = &CalDelayRow::numSidebandFromBin; 
+		 fromBinMethods["refFreq"] = &CalDelayRow::refFreqFromBin; 
+		 fromBinMethods["refFreqPhase"] = &CalDelayRow::refFreqPhaseFromBin; 
+		 fromBinMethods["sidebands"] = &CalDelayRow::sidebandsFromBin; 
+			
 	}
 
 	
@@ -2842,6 +2955,36 @@ receiverBand = CReceiverBand::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalDelayAttributeFromBin> CalDelayRow::initFromBinMethods() {
+		map<string, CalDelayAttributeFromBin> result;
+		
+		result["antennaName"] = &CalDelayRow::antennaNameFromBin;
+		result["atmPhaseCorrection"] = &CalDelayRow::atmPhaseCorrectionFromBin;
+		result["basebandName"] = &CalDelayRow::basebandNameFromBin;
+		result["receiverBand"] = &CalDelayRow::receiverBandFromBin;
+		result["calDataId"] = &CalDelayRow::calDataIdFromBin;
+		result["calReductionId"] = &CalDelayRow::calReductionIdFromBin;
+		result["startValidTime"] = &CalDelayRow::startValidTimeFromBin;
+		result["endValidTime"] = &CalDelayRow::endValidTimeFromBin;
+		result["refAntennaName"] = &CalDelayRow::refAntennaNameFromBin;
+		result["numReceptor"] = &CalDelayRow::numReceptorFromBin;
+		result["delayError"] = &CalDelayRow::delayErrorFromBin;
+		result["delayOffset"] = &CalDelayRow::delayOffsetFromBin;
+		result["polarizationTypes"] = &CalDelayRow::polarizationTypesFromBin;
+		result["reducedChiSquared"] = &CalDelayRow::reducedChiSquaredFromBin;
+		
+		
+		result["crossDelayOffset"] = &CalDelayRow::crossDelayOffsetFromBin;
+		result["crossDelayOffsetError"] = &CalDelayRow::crossDelayOffsetErrorFromBin;
+		result["numSideband"] = &CalDelayRow::numSidebandFromBin;
+		result["refFreq"] = &CalDelayRow::refFreqFromBin;
+		result["refFreqPhase"] = &CalDelayRow::refFreqPhaseFromBin;
+		result["sidebands"] = &CalDelayRow::sidebandsFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

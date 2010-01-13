@@ -80,7 +80,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	MainRow::~MainRow() {
 	}
 
@@ -877,136 +876,183 @@ namespace asdm {
 
 	}
 	
-	MainRow* MainRow::fromBin(EndianISStream& eiss, MainTable& table) {
-		MainRow* row = new  MainRow(table);
-		
-		
+void MainRow::timeFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->time =  ArrayTime::fromBin(eiss);
+		time =  ArrayTime::fromBin(eiss);
 		
 	
-
 	
+}
+void MainRow::configDescriptionIdFromBin(EndianISStream& eiss) {
 		
-		
-		row->configDescriptionId =  Tag::fromBin(eiss);
-		
-	
-
 	
 		
 		
-		row->fieldId =  Tag::fromBin(eiss);
+		configDescriptionId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
+}
+void MainRow::fieldIdFromBin(EndianISStream& eiss) {
 		
-			
-		row->numAntenna =  eiss.readInt();
-			
-		
-	
-
-	
-	
-		
-			
-		row->timeSampling = CTimeSampling::from_int(eiss.readInt());
-			
-		
-	
-
 	
 		
 		
-		row->interval =  Interval::fromBin(eiss);
+		fieldId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
-		
-			
-		row->numIntegration =  eiss.readInt();
-			
-		
-	
-
-	
-	
-		
-			
-		row->scanNumber =  eiss.readInt();
-			
-		
-	
-
-	
-	
-		
-			
-		row->subscanNumber =  eiss.readInt();
-			
-		
-	
-
-	
-	
-		
-			
-		row->dataSize =  eiss.readInt();
-			
-		
-	
-
-	
-		
-		
-		row->dataOid =  EntityRef::fromBin(eiss);
-		
-	
-
-	
-		
-		
-			
-	
-	row->stateId = Tag::from1DBin(eiss);	
-	
-
-		
-	
-
-	
-		
-		
-		row->execBlockId =  Tag::fromBin(eiss);
-		
-	
-
-		
-		
-		
-	row->flagRowExists = eiss.readBoolean();
-	if (row->flagRowExists) {
+}
+void MainRow::numAntennaFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->flagRow =  eiss.readBoolean();
+		numAntenna =  eiss.readInt();
+			
+		
+	
+	
+}
+void MainRow::timeSamplingFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		timeSampling = CTimeSampling::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void MainRow::intervalFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		interval =  Interval::fromBin(eiss);
+		
+	
+	
+}
+void MainRow::numIntegrationFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numIntegration =  eiss.readInt();
+			
+		
+	
+	
+}
+void MainRow::scanNumberFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		scanNumber =  eiss.readInt();
+			
+		
+	
+	
+}
+void MainRow::subscanNumberFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		subscanNumber =  eiss.readInt();
+			
+		
+	
+	
+}
+void MainRow::dataSizeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		dataSize =  eiss.readInt();
+			
+		
+	
+	
+}
+void MainRow::dataOidFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		dataOid =  EntityRef::fromBin(eiss);
+		
+	
+	
+}
+void MainRow::stateIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	stateId = Tag::from1DBin(eiss);	
+	
+
+		
+	
+	
+}
+void MainRow::execBlockIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		execBlockId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+
+void MainRow::flagRowFromBin(EndianISStream& eiss) {
+		
+	flagRowExists = eiss.readBoolean();
+	if (flagRowExists) {
+		
+	
+	
+		
+			
+		flagRow =  eiss.readBoolean();
 			
 		
 	
 
 	}
-
+	
+}
+	
+	
+	MainRow* MainRow::fromBin(EndianISStream& eiss, MainTable& table, const vector<string>& attributesSeq) {
+		MainRow* row = new  MainRow(table);
 		
+		map<string, MainAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "MainTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1700,6 +1746,25 @@ timeSampling = CTimeSampling::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["time"] = &MainRow::timeFromBin; 
+	 fromBinMethods["configDescriptionId"] = &MainRow::configDescriptionIdFromBin; 
+	 fromBinMethods["fieldId"] = &MainRow::fieldIdFromBin; 
+	 fromBinMethods["numAntenna"] = &MainRow::numAntennaFromBin; 
+	 fromBinMethods["timeSampling"] = &MainRow::timeSamplingFromBin; 
+	 fromBinMethods["interval"] = &MainRow::intervalFromBin; 
+	 fromBinMethods["numIntegration"] = &MainRow::numIntegrationFromBin; 
+	 fromBinMethods["scanNumber"] = &MainRow::scanNumberFromBin; 
+	 fromBinMethods["subscanNumber"] = &MainRow::subscanNumberFromBin; 
+	 fromBinMethods["dataSize"] = &MainRow::dataSizeFromBin; 
+	 fromBinMethods["dataOid"] = &MainRow::dataOidFromBin; 
+	 fromBinMethods["stateId"] = &MainRow::stateIdFromBin; 
+	 fromBinMethods["execBlockId"] = &MainRow::execBlockIdFromBin; 
+		
+	
+	 fromBinMethods["flagRow"] = &MainRow::flagRowFromBin; 
 	
 	}
 	
@@ -1783,7 +1848,25 @@ timeSampling = CTimeSampling::from_int(0);
 		else
 			flagRowExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["time"] = &MainRow::timeFromBin; 
+		 fromBinMethods["configDescriptionId"] = &MainRow::configDescriptionIdFromBin; 
+		 fromBinMethods["fieldId"] = &MainRow::fieldIdFromBin; 
+		 fromBinMethods["numAntenna"] = &MainRow::numAntennaFromBin; 
+		 fromBinMethods["timeSampling"] = &MainRow::timeSamplingFromBin; 
+		 fromBinMethods["interval"] = &MainRow::intervalFromBin; 
+		 fromBinMethods["numIntegration"] = &MainRow::numIntegrationFromBin; 
+		 fromBinMethods["scanNumber"] = &MainRow::scanNumberFromBin; 
+		 fromBinMethods["subscanNumber"] = &MainRow::subscanNumberFromBin; 
+		 fromBinMethods["dataSize"] = &MainRow::dataSizeFromBin; 
+		 fromBinMethods["dataOid"] = &MainRow::dataOidFromBin; 
+		 fromBinMethods["stateId"] = &MainRow::stateIdFromBin; 
+		 fromBinMethods["execBlockId"] = &MainRow::execBlockIdFromBin; 
+			
+	
+		 fromBinMethods["flagRow"] = &MainRow::flagRowFromBin; 
+			
 	}
 
 	
@@ -1970,6 +2053,30 @@ timeSampling = CTimeSampling::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, MainAttributeFromBin> MainRow::initFromBinMethods() {
+		map<string, MainAttributeFromBin> result;
+		
+		result["time"] = &MainRow::timeFromBin;
+		result["configDescriptionId"] = &MainRow::configDescriptionIdFromBin;
+		result["fieldId"] = &MainRow::fieldIdFromBin;
+		result["numAntenna"] = &MainRow::numAntennaFromBin;
+		result["timeSampling"] = &MainRow::timeSamplingFromBin;
+		result["interval"] = &MainRow::intervalFromBin;
+		result["numIntegration"] = &MainRow::numIntegrationFromBin;
+		result["scanNumber"] = &MainRow::scanNumberFromBin;
+		result["subscanNumber"] = &MainRow::subscanNumberFromBin;
+		result["dataSize"] = &MainRow::dataSizeFromBin;
+		result["dataOid"] = &MainRow::dataOidFromBin;
+		result["stateId"] = &MainRow::stateIdFromBin;
+		result["execBlockId"] = &MainRow::execBlockIdFromBin;
+		
+		
+		result["flagRow"] = &MainRow::flagRowFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	HolographyRow::~HolographyRow() {
 	}
 
@@ -398,62 +397,82 @@ namespace asdm {
 	
 	}
 	
-	HolographyRow* HolographyRow::fromBin(EndianISStream& eiss, HolographyTable& table) {
-		HolographyRow* row = new  HolographyRow(table);
-		
-		
+void HolographyRow::holographyIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->holographyId =  Tag::fromBin(eiss);
+		holographyId =  Tag::fromBin(eiss);
 		
 	
-
 	
+}
+void HolographyRow::distanceFromBin(EndianISStream& eiss) {
 		
-		
-		row->distance =  Length::fromBin(eiss);
-		
-	
-
 	
 		
 		
-		row->focus =  Length::fromBin(eiss);
+		distance =  Length::fromBin(eiss);
 		
 	
-
 	
-	
-		
-			
-		row->numCorr =  eiss.readInt();
-			
+}
+void HolographyRow::focusFromBin(EndianISStream& eiss) {
 		
 	
-
+		
+		
+		focus =  Length::fromBin(eiss);
+		
+	
+	
+}
+void HolographyRow::numCorrFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
+		numCorr =  eiss.readInt();
+			
+		
 	
-		row->type.clear();
+	
+}
+void HolographyRow::typeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+	
+		type.clear();
 		
 		unsigned int typeDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < typeDim1; i++)
 			
-			row->type.push_back(CHolographyChannelType::from_int(eiss.readInt()));
+			type.push_back(CHolographyChannelType::from_int(eiss.readInt()));
 			
 	
 
 		
 	
+	
+}
 
 		
+	
+	HolographyRow* HolographyRow::fromBin(EndianISStream& eiss, HolographyTable& table, const vector<string>& attributesSeq) {
+		HolographyRow* row = new  HolographyRow(table);
 		
-		
-		
+		map<string, HolographyAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "HolographyTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -670,6 +689,16 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["holographyId"] = &HolographyRow::holographyIdFromBin; 
+	 fromBinMethods["distance"] = &HolographyRow::distanceFromBin; 
+	 fromBinMethods["focus"] = &HolographyRow::focusFromBin; 
+	 fromBinMethods["numCorr"] = &HolographyRow::numCorrFromBin; 
+	 fromBinMethods["type"] = &HolographyRow::typeFromBin; 
+		
+	
 	
 	}
 	
@@ -710,7 +739,16 @@ namespace asdm {
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["holographyId"] = &HolographyRow::holographyIdFromBin; 
+		 fromBinMethods["distance"] = &HolographyRow::distanceFromBin; 
+		 fromBinMethods["focus"] = &HolographyRow::focusFromBin; 
+		 fromBinMethods["numCorr"] = &HolographyRow::numCorrFromBin; 
+		 fromBinMethods["type"] = &HolographyRow::typeFromBin; 
+			
+	
+			
 	}
 
 	
@@ -798,6 +836,21 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, HolographyAttributeFromBin> HolographyRow::initFromBinMethods() {
+		map<string, HolographyAttributeFromBin> result;
+		
+		result["holographyId"] = &HolographyRow::holographyIdFromBin;
+		result["distance"] = &HolographyRow::distanceFromBin;
+		result["focus"] = &HolographyRow::focusFromBin;
+		result["numCorr"] = &HolographyRow::numCorrFromBin;
+		result["type"] = &HolographyRow::typeFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

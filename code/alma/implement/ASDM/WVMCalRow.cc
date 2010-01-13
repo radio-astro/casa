@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	WVMCalRow::~WVMCalRow() {
 	}
 
@@ -664,76 +663,94 @@ namespace asdm {
 	
 	}
 	
-	WVMCalRow* WVMCalRow::fromBin(EndianISStream& eiss, WVMCalTable& table) {
-		WVMCalRow* row = new  WVMCalRow(table);
-		
-		
+void WVMCalRow::antennaIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->antennaId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eiss);
 		
 	
-
 	
+}
+void WVMCalRow::spectralWindowIdFromBin(EndianISStream& eiss) {
 		
-		
-		row->spectralWindowId =  Tag::fromBin(eiss);
-		
-	
-
 	
 		
 		
-		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
+		spectralWindowId =  Tag::fromBin(eiss);
 		
 	
-
 	
-	
+}
+void WVMCalRow::timeIntervalFromBin(EndianISStream& eiss) {
 		
-			
-		row->wvrMethod = CWVRMethod::from_int(eiss.readInt());
-			
-		
-	
-
 	
 		
 		
-			
-	
-	row->polyFreqLimits = Frequency::from1DBin(eiss);	
-	
-
+		timeInterval =  ArrayTimeInterval::fromBin(eiss);
 		
 	
-
+	
+}
+void WVMCalRow::wvrMethodFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numChan =  eiss.readInt();
+		wvrMethod = CWVRMethod::from_int(eiss.readInt());
 			
 		
+	
+	
+}
+void WVMCalRow::polyFreqLimitsFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	polyFreqLimits = Frequency::from1DBin(eiss);	
 	
 
+		
+	
+	
+}
+void WVMCalRow::numChanFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numPoly =  eiss.readInt();
+		numChan =  eiss.readInt();
 			
 		
 	
-
+	
+}
+void WVMCalRow::numPolyFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numPoly =  eiss.readInt();
+			
+		
+	
+	
+}
+void WVMCalRow::pathCoeffFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->pathCoeff.clear();
+		pathCoeff.clear();
 		
 		unsigned int pathCoeffDim1 = eiss.readInt();
 		unsigned int pathCoeffDim2 = eiss.readInt();
@@ -744,35 +761,49 @@ namespace asdm {
 			
 			pathCoeffAux1.push_back(eiss.readDouble());
 			
-			row->pathCoeff.push_back(pathCoeffAux1);
+			pathCoeff.push_back(pathCoeffAux1);
 		}
 	
 	
 
 		
 	
-
+	
+}
+void WVMCalRow::refTempFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->refTemp.clear();
+		refTemp.clear();
 		
 		unsigned int refTempDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < refTempDim1; i++)
 			
-			row->refTemp.push_back(eiss.readDouble());
+			refTemp.push_back(eiss.readDouble());
 			
 	
 
 		
 	
+	
+}
 
 		
+	
+	WVMCalRow* WVMCalRow::fromBin(EndianISStream& eiss, WVMCalTable& table, const vector<string>& attributesSeq) {
+		WVMCalRow* row = new  WVMCalRow(table);
 		
-		
-		
+		map<string, WVMCalAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "WVMCalTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1178,6 +1209,20 @@ wvrMethod = CWVRMethod::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaId"] = &WVMCalRow::antennaIdFromBin; 
+	 fromBinMethods["spectralWindowId"] = &WVMCalRow::spectralWindowIdFromBin; 
+	 fromBinMethods["timeInterval"] = &WVMCalRow::timeIntervalFromBin; 
+	 fromBinMethods["wvrMethod"] = &WVMCalRow::wvrMethodFromBin; 
+	 fromBinMethods["polyFreqLimits"] = &WVMCalRow::polyFreqLimitsFromBin; 
+	 fromBinMethods["numChan"] = &WVMCalRow::numChanFromBin; 
+	 fromBinMethods["numPoly"] = &WVMCalRow::numPolyFromBin; 
+	 fromBinMethods["pathCoeff"] = &WVMCalRow::pathCoeffFromBin; 
+	 fromBinMethods["refTemp"] = &WVMCalRow::refTempFromBin; 
+		
+	
 	
 	}
 	
@@ -1234,7 +1279,20 @@ wvrMethod = CWVRMethod::from_int(0);
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaId"] = &WVMCalRow::antennaIdFromBin; 
+		 fromBinMethods["spectralWindowId"] = &WVMCalRow::spectralWindowIdFromBin; 
+		 fromBinMethods["timeInterval"] = &WVMCalRow::timeIntervalFromBin; 
+		 fromBinMethods["wvrMethod"] = &WVMCalRow::wvrMethodFromBin; 
+		 fromBinMethods["polyFreqLimits"] = &WVMCalRow::polyFreqLimitsFromBin; 
+		 fromBinMethods["numChan"] = &WVMCalRow::numChanFromBin; 
+		 fromBinMethods["numPoly"] = &WVMCalRow::numPolyFromBin; 
+		 fromBinMethods["pathCoeff"] = &WVMCalRow::pathCoeffFromBin; 
+		 fromBinMethods["refTemp"] = &WVMCalRow::refTempFromBin; 
+			
+	
+			
 	}
 
 	
@@ -1369,6 +1427,25 @@ wvrMethod = CWVRMethod::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, WVMCalAttributeFromBin> WVMCalRow::initFromBinMethods() {
+		map<string, WVMCalAttributeFromBin> result;
+		
+		result["antennaId"] = &WVMCalRow::antennaIdFromBin;
+		result["spectralWindowId"] = &WVMCalRow::spectralWindowIdFromBin;
+		result["timeInterval"] = &WVMCalRow::timeIntervalFromBin;
+		result["wvrMethod"] = &WVMCalRow::wvrMethodFromBin;
+		result["polyFreqLimits"] = &WVMCalRow::polyFreqLimitsFromBin;
+		result["numChan"] = &WVMCalRow::numChanFromBin;
+		result["numPoly"] = &WVMCalRow::numPolyFromBin;
+		result["pathCoeff"] = &WVMCalRow::pathCoeffFromBin;
+		result["refTemp"] = &WVMCalRow::refTempFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	StateRow::~StateRow() {
 	}
 
@@ -455,72 +454,95 @@ namespace asdm {
 
 	}
 	
-	StateRow* StateRow::fromBin(EndianISStream& eiss, StateTable& table) {
-		StateRow* row = new  StateRow(table);
-		
-		
+void StateRow::stateIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->stateId =  Tag::fromBin(eiss);
+		stateId =  Tag::fromBin(eiss);
 		
 	
+	
+}
+void StateRow::calDeviceNameFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		calDeviceName = CCalibrationDevice::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void StateRow::sigFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		sig =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void StateRow::refFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		ref =  eiss.readBoolean();
+			
+		
+	
+	
+}
+void StateRow::onSkyFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		onSky =  eiss.readBoolean();
+			
+		
+	
+	
+}
 
-	
-	
+void StateRow::weightFromBin(EndianISStream& eiss) {
 		
-			
-		row->calDeviceName = CCalibrationDevice::from_int(eiss.readInt());
-			
-		
-	
-
-	
-	
-		
-			
-		row->sig =  eiss.readBoolean();
-			
-		
-	
-
-	
-	
-		
-			
-		row->ref =  eiss.readBoolean();
-			
-		
-	
-
-	
-	
-		
-			
-		row->onSky =  eiss.readBoolean();
-			
-		
-	
-
-		
-		
-		
-	row->weightExists = eiss.readBoolean();
-	if (row->weightExists) {
+	weightExists = eiss.readBoolean();
+	if (weightExists) {
 		
 	
 	
 		
 			
-		row->weight =  eiss.readFloat();
+		weight =  eiss.readFloat();
 			
 		
 	
 
 	}
-
+	
+}
+	
+	
+	StateRow* StateRow::fromBin(EndianISStream& eiss, StateTable& table, const vector<string>& attributesSeq) {
+		StateRow* row = new  StateRow(table);
 		
+		map<string, StateAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "StateTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -793,6 +815,17 @@ calDeviceName = CCalibrationDevice::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["stateId"] = &StateRow::stateIdFromBin; 
+	 fromBinMethods["calDeviceName"] = &StateRow::calDeviceNameFromBin; 
+	 fromBinMethods["sig"] = &StateRow::sigFromBin; 
+	 fromBinMethods["ref"] = &StateRow::refFromBin; 
+	 fromBinMethods["onSky"] = &StateRow::onSkyFromBin; 
+		
+	
+	 fromBinMethods["weight"] = &StateRow::weightFromBin; 
 	
 	}
 	
@@ -844,7 +877,17 @@ calDeviceName = CCalibrationDevice::from_int(0);
 		else
 			weightExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["stateId"] = &StateRow::stateIdFromBin; 
+		 fromBinMethods["calDeviceName"] = &StateRow::calDeviceNameFromBin; 
+		 fromBinMethods["sig"] = &StateRow::sigFromBin; 
+		 fromBinMethods["ref"] = &StateRow::refFromBin; 
+		 fromBinMethods["onSky"] = &StateRow::onSkyFromBin; 
+			
+	
+		 fromBinMethods["weight"] = &StateRow::weightFromBin; 
+			
 	}
 
 	
@@ -932,6 +975,22 @@ calDeviceName = CCalibrationDevice::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, StateAttributeFromBin> StateRow::initFromBinMethods() {
+		map<string, StateAttributeFromBin> result;
+		
+		result["stateId"] = &StateRow::stateIdFromBin;
+		result["calDeviceName"] = &StateRow::calDeviceNameFromBin;
+		result["sig"] = &StateRow::sigFromBin;
+		result["ref"] = &StateRow::refFromBin;
+		result["onSky"] = &StateRow::onSkyFromBin;
+		
+		
+		result["weight"] = &StateRow::weightFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

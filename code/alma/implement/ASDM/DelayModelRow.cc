@@ -62,7 +62,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	DelayModelRow::~DelayModelRow() {
 	}
 
@@ -865,126 +864,145 @@ namespace asdm {
 
 	}
 	
-	DelayModelRow* DelayModelRow::fromBin(EndianISStream& eiss, DelayModelTable& table) {
-		DelayModelRow* row = new  DelayModelRow(table);
-		
-		
+void DelayModelRow::antennaIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->antennaId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eiss);
 		
 	
-
 	
+}
+void DelayModelRow::timeIntervalFromBin(EndianISStream& eiss) {
 		
-		
-		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
-		
-	
-
 	
 		
 		
-		row->timeOrigin =  ArrayTime::fromBin(eiss);
+		timeInterval =  ArrayTimeInterval::fromBin(eiss);
 		
 	
-
 	
-	
-		
-			
-		row->numPoly =  eiss.readInt();
-			
+}
+void DelayModelRow::timeOriginFromBin(EndianISStream& eiss) {
 		
 	
-
+		
+		
+		timeOrigin =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void DelayModelRow::numPolyFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
+		numPoly =  eiss.readInt();
+			
+		
 	
-		row->atmDryDelay.clear();
+	
+}
+void DelayModelRow::atmDryDelayFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+	
+		atmDryDelay.clear();
 		
 		unsigned int atmDryDelayDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < atmDryDelayDim1; i++)
 			
-			row->atmDryDelay.push_back(eiss.readDouble());
+			atmDryDelay.push_back(eiss.readDouble());
 			
 	
 
 		
 	
-
+	
+}
+void DelayModelRow::atmWetDelayFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->atmWetDelay.clear();
+		atmWetDelay.clear();
 		
 		unsigned int atmWetDelayDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < atmWetDelayDim1; i++)
 			
-			row->atmWetDelay.push_back(eiss.readDouble());
+			atmWetDelay.push_back(eiss.readDouble());
 			
 	
 
 		
 	
-
+	
+}
+void DelayModelRow::clockDelayFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->clockDelay.clear();
+		clockDelay.clear();
 		
 		unsigned int clockDelayDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < clockDelayDim1; i++)
 			
-			row->clockDelay.push_back(eiss.readDouble());
+			clockDelay.push_back(eiss.readDouble());
 			
 	
 
 		
 	
-
+	
+}
+void DelayModelRow::geomDelayFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->geomDelay.clear();
+		geomDelay.clear();
 		
 		unsigned int geomDelayDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < geomDelayDim1; i++)
 			
-			row->geomDelay.push_back(eiss.readDouble());
+			geomDelay.push_back(eiss.readDouble());
 			
 	
 
 		
 	
+	
+}
 
+void DelayModelRow::dispDelayFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->dispDelayExists = eiss.readBoolean();
-	if (row->dispDelayExists) {
+	dispDelayExists = eiss.readBoolean();
+	if (dispDelayExists) {
 		
 	
 	
 		
 			
 	
-		row->dispDelay.clear();
+		dispDelay.clear();
 		
 		unsigned int dispDelayDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < dispDelayDim1; i++)
 			
-			row->dispDelay.push_back(eiss.readDouble());
+			dispDelay.push_back(eiss.readDouble());
 			
 	
 
@@ -992,21 +1010,24 @@ namespace asdm {
 	
 
 	}
-
-	row->groupDelayExists = eiss.readBoolean();
-	if (row->groupDelayExists) {
+	
+}
+void DelayModelRow::groupDelayFromBin(EndianISStream& eiss) {
+		
+	groupDelayExists = eiss.readBoolean();
+	if (groupDelayExists) {
 		
 	
 	
 		
 			
 	
-		row->groupDelay.clear();
+		groupDelay.clear();
 		
 		unsigned int groupDelayDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < groupDelayDim1; i++)
 			
-			row->groupDelay.push_back(eiss.readDouble());
+			groupDelay.push_back(eiss.readDouble());
 			
 	
 
@@ -1014,21 +1035,24 @@ namespace asdm {
 	
 
 	}
-
-	row->phaseDelayExists = eiss.readBoolean();
-	if (row->phaseDelayExists) {
+	
+}
+void DelayModelRow::phaseDelayFromBin(EndianISStream& eiss) {
+		
+	phaseDelayExists = eiss.readBoolean();
+	if (phaseDelayExists) {
 		
 	
 	
 		
 			
 	
-		row->phaseDelay.clear();
+		phaseDelay.clear();
 		
 		unsigned int phaseDelayDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < phaseDelayDim1; i++)
 			
-			row->phaseDelay.push_back(eiss.readDouble());
+			phaseDelay.push_back(eiss.readDouble());
 			
 	
 
@@ -1036,8 +1060,21 @@ namespace asdm {
 	
 
 	}
-
+	
+}
+	
+	
+	DelayModelRow* DelayModelRow::fromBin(EndianISStream& eiss, DelayModelTable& table, const vector<string>& attributesSeq) {
+		DelayModelRow* row = new  DelayModelRow(table);
 		
+		map<string, DelayModelAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "DelayModelTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1542,6 +1579,22 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaId"] = &DelayModelRow::antennaIdFromBin; 
+	 fromBinMethods["timeInterval"] = &DelayModelRow::timeIntervalFromBin; 
+	 fromBinMethods["timeOrigin"] = &DelayModelRow::timeOriginFromBin; 
+	 fromBinMethods["numPoly"] = &DelayModelRow::numPolyFromBin; 
+	 fromBinMethods["atmDryDelay"] = &DelayModelRow::atmDryDelayFromBin; 
+	 fromBinMethods["atmWetDelay"] = &DelayModelRow::atmWetDelayFromBin; 
+	 fromBinMethods["clockDelay"] = &DelayModelRow::clockDelayFromBin; 
+	 fromBinMethods["geomDelay"] = &DelayModelRow::geomDelayFromBin; 
+		
+	
+	 fromBinMethods["dispDelay"] = &DelayModelRow::dispDelayFromBin; 
+	 fromBinMethods["groupDelay"] = &DelayModelRow::groupDelayFromBin; 
+	 fromBinMethods["phaseDelay"] = &DelayModelRow::phaseDelayFromBin; 
 	
 	}
 	
@@ -1627,7 +1680,22 @@ namespace asdm {
 		else
 			phaseDelayExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaId"] = &DelayModelRow::antennaIdFromBin; 
+		 fromBinMethods["timeInterval"] = &DelayModelRow::timeIntervalFromBin; 
+		 fromBinMethods["timeOrigin"] = &DelayModelRow::timeOriginFromBin; 
+		 fromBinMethods["numPoly"] = &DelayModelRow::numPolyFromBin; 
+		 fromBinMethods["atmDryDelay"] = &DelayModelRow::atmDryDelayFromBin; 
+		 fromBinMethods["atmWetDelay"] = &DelayModelRow::atmWetDelayFromBin; 
+		 fromBinMethods["clockDelay"] = &DelayModelRow::clockDelayFromBin; 
+		 fromBinMethods["geomDelay"] = &DelayModelRow::geomDelayFromBin; 
+			
+	
+		 fromBinMethods["dispDelay"] = &DelayModelRow::dispDelayFromBin; 
+		 fromBinMethods["groupDelay"] = &DelayModelRow::groupDelayFromBin; 
+		 fromBinMethods["phaseDelay"] = &DelayModelRow::phaseDelayFromBin; 
+			
 	}
 
 	
@@ -1755,6 +1823,27 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, DelayModelAttributeFromBin> DelayModelRow::initFromBinMethods() {
+		map<string, DelayModelAttributeFromBin> result;
+		
+		result["antennaId"] = &DelayModelRow::antennaIdFromBin;
+		result["timeInterval"] = &DelayModelRow::timeIntervalFromBin;
+		result["timeOrigin"] = &DelayModelRow::timeOriginFromBin;
+		result["numPoly"] = &DelayModelRow::numPolyFromBin;
+		result["atmDryDelay"] = &DelayModelRow::atmDryDelayFromBin;
+		result["atmWetDelay"] = &DelayModelRow::atmWetDelayFromBin;
+		result["clockDelay"] = &DelayModelRow::clockDelayFromBin;
+		result["geomDelay"] = &DelayModelRow::geomDelayFromBin;
+		
+		
+		result["dispDelay"] = &DelayModelRow::dispDelayFromBin;
+		result["groupDelay"] = &DelayModelRow::groupDelayFromBin;
+		result["phaseDelay"] = &DelayModelRow::phaseDelayFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

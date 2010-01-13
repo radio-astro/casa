@@ -56,6 +56,11 @@ using namespace std;
 #include <Misc.h>
 using namespace asdm;
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+#include "boost/filesystem/operations.hpp"
+
 
 namespace asdm {
 
@@ -123,12 +128,11 @@ namespace asdm {
 	/**
 	 * Return the number of rows in the table.
 	 */
-
 	unsigned int CalAtmosphereTable::size() {
-		return row.size();
-	}	
+		return privateRows.size();
+	}
 	
-	
+
 	/**
 	 * Return the name of this table.
 	 */
@@ -161,72 +165,68 @@ namespace asdm {
 		return new CalAtmosphereRow (*this);
 	}
 	
-	CalAtmosphereRow *CalAtmosphereTable::newRowEmpty() {
-		return newRow ();
-	}
-
 
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param antennaName. 
+ 	 * @param antennaName 
 	
- 	 * @param receiverBand. 
+ 	 * @param receiverBand 
 	
- 	 * @param calDataId. 
+ 	 * @param calDataId 
 	
- 	 * @param calReductionId. 
+ 	 * @param calReductionId 
 	
- 	 * @param startValidTime. 
+ 	 * @param startValidTime 
 	
- 	 * @param endValidTime. 
+ 	 * @param endValidTime 
 	
- 	 * @param numFreq. 
+ 	 * @param numFreq 
 	
- 	 * @param numLoad. 
+ 	 * @param numLoad 
 	
- 	 * @param numReceptor. 
+ 	 * @param numReceptor 
 	
- 	 * @param forwardEffSpectrum. 
+ 	 * @param forwardEffSpectrum 
 	
- 	 * @param frequencyRange. 
+ 	 * @param frequencyRange 
 	
- 	 * @param groundPressure. 
+ 	 * @param groundPressure 
 	
- 	 * @param groundRelHumidity. 
+ 	 * @param groundRelHumidity 
 	
- 	 * @param frequencySpectrum. 
+ 	 * @param frequencySpectrum 
 	
- 	 * @param groundTemperature. 
+ 	 * @param groundTemperature 
 	
- 	 * @param polarizationTypes. 
+ 	 * @param polarizationTypes 
 	
- 	 * @param powerSkySpectrum. 
+ 	 * @param powerSkySpectrum 
 	
- 	 * @param powerLoadSpectrum. 
+ 	 * @param powerLoadSpectrum 
 	
- 	 * @param syscalType. 
+ 	 * @param syscalType 
 	
- 	 * @param tAtmSpectrum. 
+ 	 * @param tAtmSpectrum 
 	
- 	 * @param tRecSpectrum. 
+ 	 * @param tRecSpectrum 
 	
- 	 * @param tSysSpectrum. 
+ 	 * @param tSysSpectrum 
 	
- 	 * @param tauSpectrum. 
+ 	 * @param tauSpectrum 
 	
- 	 * @param tAtm. 
+ 	 * @param tAtm 
 	
- 	 * @param tRec. 
+ 	 * @param tRec 
 	
- 	 * @param tSys. 
+ 	 * @param tSys 
 	
- 	 * @param tau. 
+ 	 * @param tau 
 	
- 	 * @param water. 
+ 	 * @param water 
 	
- 	 * @param waterError. 
+ 	 * @param waterError 
 	
      */
 	CalAtmosphereRow* CalAtmosphereTable::newRow(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError){
@@ -292,78 +292,10 @@ namespace asdm {
 	
 		return row;		
 	}	
-
-	CalAtmosphereRow* CalAtmosphereTable::newRowFull(string antennaName, ReceiverBandMod::ReceiverBand receiverBand, Tag calDataId, Tag calReductionId, ArrayTime startValidTime, ArrayTime endValidTime, int numFreq, int numLoad, int numReceptor, vector<vector<float > > forwardEffSpectrum, vector<Frequency > frequencyRange, Pressure groundPressure, Humidity groundRelHumidity, vector<Frequency > frequencySpectrum, Temperature groundTemperature, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<float > > powerSkySpectrum, vector<vector<vector<float > > > powerLoadSpectrum, SyscalMethodMod::SyscalMethod syscalType, vector<vector<Temperature > > tAtmSpectrum, vector<vector<Temperature > > tRecSpectrum, vector<vector<Temperature > > tSysSpectrum, vector<vector<float > > tauSpectrum, vector<Temperature > tAtm, vector<Temperature > tRec, vector<Temperature > tSys, vector<float > tau, vector<Length > water, vector<Length > waterError)	{
-		CalAtmosphereRow *row = new CalAtmosphereRow(*this);
-			
-		row->setAntennaName(antennaName);
-			
-		row->setReceiverBand(receiverBand);
-			
-		row->setCalDataId(calDataId);
-			
-		row->setCalReductionId(calReductionId);
-			
-		row->setStartValidTime(startValidTime);
-			
-		row->setEndValidTime(endValidTime);
-			
-		row->setNumFreq(numFreq);
-			
-		row->setNumLoad(numLoad);
-			
-		row->setNumReceptor(numReceptor);
-			
-		row->setForwardEffSpectrum(forwardEffSpectrum);
-			
-		row->setFrequencyRange(frequencyRange);
-			
-		row->setGroundPressure(groundPressure);
-			
-		row->setGroundRelHumidity(groundRelHumidity);
-			
-		row->setFrequencySpectrum(frequencySpectrum);
-			
-		row->setGroundTemperature(groundTemperature);
-			
-		row->setPolarizationTypes(polarizationTypes);
-			
-		row->setPowerSkySpectrum(powerSkySpectrum);
-			
-		row->setPowerLoadSpectrum(powerLoadSpectrum);
-			
-		row->setSyscalType(syscalType);
-			
-		row->setTAtmSpectrum(tAtmSpectrum);
-			
-		row->setTRecSpectrum(tRecSpectrum);
-			
-		row->setTSysSpectrum(tSysSpectrum);
-			
-		row->setTauSpectrum(tauSpectrum);
-			
-		row->setTAtm(tAtm);
-			
-		row->setTRec(tRec);
-			
-		row->setTSys(tSys);
-			
-		row->setTau(tau);
-			
-		row->setWater(water);
-			
-		row->setWaterError(waterError);
-	
-		return row;				
-	}
 	
 
 
 CalAtmosphereRow* CalAtmosphereTable::newRow(CalAtmosphereRow* row) {
-	return new CalAtmosphereRow(*this, *row);
-}
-
-CalAtmosphereRow* CalAtmosphereTable::newRowCopy(CalAtmosphereRow* row) {
 	return new CalAtmosphereRow(*this, *row);
 }
 
@@ -604,27 +536,13 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 	}
 #endif
 
-	char *CalAtmosphereTable::toFITS() const  {
-		throw ConversionException("Not implemented","CalAtmosphere");
-	}
-
-	void CalAtmosphereTable::fromFITS(char *fits)  {
-		throw ConversionException("Not implemented","CalAtmosphere");
-	}
-
-	string CalAtmosphereTable::toVOTable() const {
-		throw ConversionException("Not implemented","CalAtmosphere");
-	}
-
-	void CalAtmosphereTable::fromVOTable(string vo) {
-		throw ConversionException("Not implemented","CalAtmosphere");
-	}
-
 	
 	string CalAtmosphereTable::toXML()  {
 		string buf;
+
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/2/CalAtmosphereTable.xsd\"> ");	
+		buf.append("<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/2/CalAtmosphereTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n");
+	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
 		// Change the "Entity" tag to "ContainerEntity".
@@ -682,6 +600,10 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 		}
 		if (!xml.isStr("</CalAtmosphereTable>")) 
 			error();
+			
+		archiveAsBin = false;
+		fileAsBin = false;
+		
 	}
 
 	
@@ -690,11 +612,65 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 	}
 	
 	
-	string CalAtmosphereTable::toMIME() {
-		EndianOSStream eoss;
+	string CalAtmosphereTable::MIMEXMLPart(const asdm::ByteOrder* byteOrder) {
+		string UID = getEntity().getEntityId().toString();
+		string withoutUID = UID.substr(6);
+		string containerUID = getContainer().getEntity().getEntityId().toString();
+		ostringstream oss;
+		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
+		oss << "\n";
+		oss << "<CalAtmosphereTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clatm=\"http://Alma/XASDM/CalAtmosphereTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalAtmosphereTable http://almaobservatory.org/XML/XASDM/2/CalAtmosphereTable.xsd\" schemaVersion=\"2\" schemaRevision=\"1.53\">\n";
+		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalAtmosphereTable' schemaVersion='1' documentVersion='1'/>\n";
+		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
+		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
+		oss << "<Attributes>\n";
+
+		oss << "<antennaName/>\n"; 
+		oss << "<receiverBand/>\n"; 
+		oss << "<calDataId/>\n"; 
+		oss << "<calReductionId/>\n"; 
+		oss << "<startValidTime/>\n"; 
+		oss << "<endValidTime/>\n"; 
+		oss << "<numFreq/>\n"; 
+		oss << "<numLoad/>\n"; 
+		oss << "<numReceptor/>\n"; 
+		oss << "<forwardEffSpectrum/>\n"; 
+		oss << "<frequencyRange/>\n"; 
+		oss << "<groundPressure/>\n"; 
+		oss << "<groundRelHumidity/>\n"; 
+		oss << "<frequencySpectrum/>\n"; 
+		oss << "<groundTemperature/>\n"; 
+		oss << "<polarizationTypes/>\n"; 
+		oss << "<powerSkySpectrum/>\n"; 
+		oss << "<powerLoadSpectrum/>\n"; 
+		oss << "<syscalType/>\n"; 
+		oss << "<tAtmSpectrum/>\n"; 
+		oss << "<tRecSpectrum/>\n"; 
+		oss << "<tSysSpectrum/>\n"; 
+		oss << "<tauSpectrum/>\n"; 
+		oss << "<tAtm/>\n"; 
+		oss << "<tRec/>\n"; 
+		oss << "<tSys/>\n"; 
+		oss << "<tau/>\n"; 
+		oss << "<water/>\n"; 
+		oss << "<waterError/>\n"; 
+
+		oss << "<alphaSpectrum/>\n"; 
+		oss << "<forwardEfficiency/>\n"; 
+		oss << "<forwardEfficiencyError/>\n"; 
+		oss << "<sbGain/>\n"; 
+		oss << "<sbGainError/>\n"; 
+		oss << "<sbGainSpectrum/>\n"; 
+		oss << "</Attributes>\n";		
+		oss << "</CalAtmosphereTable>\n";
+
+		return oss.str();				
+	}
+	
+	string CalAtmosphereTable::toMIME(const asdm::ByteOrder* byteOrder) {
+		EndianOSStream eoss(byteOrder);
 		
 		string UID = getEntity().getEntityId().toString();
-		string execBlockUID = getContainer().getEntity().getEntityId().toString();
 		
 		// The MIME Header
 		eoss <<"MIME-Version: 1.0";
@@ -719,13 +695,7 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 		eoss <<"\n";
 		
 		// The MIME XML part content.
-		eoss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
-		eoss << "\n";
-		eoss<< "<ASDMBinaryTable  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'  xsi:noNamespaceSchemaLocation='ASDMBinaryTable.xsd' ID='None'  version='1.0'>\n";
-		eoss << "<ExecBlockUID>\n";
-		eoss << execBlockUID  << "\n";
-		eoss << "</ExecBlockUID>\n";
-		eoss << "</ASDMBinaryTable>\n";		
+		eoss << MIMEXMLPart(byteOrder);
 
 		// The MIME binary part header
 		eoss <<"--MIME_boundary";
@@ -753,39 +723,193 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 
 	
 	void CalAtmosphereTable::setFromMIME(const string & mimeMsg) {
-		// cout << "Entering setFromMIME" << endl;
-	 	string terminator = "Content-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
-	 	
-	 	// Look for the string announcing the binary part.
-	 	string::size_type loc = mimeMsg.find( terminator, 0 );
-	 	
-	 	if ( loc == string::npos ) {
-	 		throw ConversionException("Failed to detect the beginning of the binary part", "CalAtmosphere");
-	 	}
-	
-	 	// Create an EndianISStream from the substring containing the binary part.
-	 	EndianISStream eiss(mimeMsg.substr(loc+terminator.size()));
-	 	
-	 	entity = Entity::fromBin(eiss);
-	 	
-	 	// We do nothing with that but we have to read it.
-	 	Entity containerEntity = Entity::fromBin(eiss);
-	 		 	
-	 	int numRows = eiss.readInt();
-	 	try {
-	 		for (int i = 0; i < numRows; i++) {
-	 			CalAtmosphereRow* aRow = CalAtmosphereRow::fromBin(eiss, *this);
-	 			checkAndAdd(aRow);
-	 		}
-	 	}
-	 	catch (DuplicateKey e) {
-	 		throw ConversionException("Error while writing binary data , the message was "
-	 					+ e.getMessage(), "CalAtmosphere");
-	 	}
-		catch (TagFormatException e) {
-			throw ConversionException("Error while reading binary data , the message was "
-					+ e.getMessage(), "CalAtmosphere");
-		} 		 	
+    string xmlPartMIMEHeader = "Content-ID: <header.xml>\n\n";
+    
+    string binPartMIMEHeader = "--MIME_boundary\nContent-Type: binary/octet-stream\nContent-ID: <content.bin>\n\n";
+    
+    // Detect the XML header.
+    string::size_type loc0 = mimeMsg.find(xmlPartMIMEHeader, 0);
+    if ( loc0 == string::npos) {
+      throw ConversionException("Failed to detect the beginning of the XML header", "CalAtmosphere");
+    }
+    loc0 += xmlPartMIMEHeader.size();
+    
+    // Look for the string announcing the binary part.
+    string::size_type loc1 = mimeMsg.find( binPartMIMEHeader, loc0 );
+    
+    if ( loc1 == string::npos ) {
+      throw ConversionException("Failed to detect the beginning of the binary part", "CalAtmosphere");
+    }
+    
+    //
+    // Extract the xmlHeader and analyze it to find out what is the byte order and the sequence
+    // of attribute names.
+    //
+    string xmlHeader = mimeMsg.substr(loc0, loc1-loc0);
+    xmlDoc *doc;
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    if ( doc == NULL ) 
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "CalAtmosphere");
+    
+   // This vector will be filled by the names of  all the attributes of the table
+   // in the order in which they are expected to be found in the binary representation.
+   //
+    vector<string> attributesSeq;
+      
+    xmlNode* root_element = xmlDocGetRootElement(doc);
+    if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "CalAtmosphere");
+    
+    const ByteOrder* byteOrder;
+    if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
+      // Then it's an "old fashioned" MIME file for tables.
+      // Just try to deserialize it with Big_Endian for the bytes ordering.
+      byteOrder = asdm::ByteOrder::Big_Endian;
+      
+ 	 //
+    // Let's consider a  default order for the sequence of attributes.
+    //
+     
+    attributesSeq.push_back("antennaName") ; 
+     
+    attributesSeq.push_back("receiverBand") ; 
+     
+    attributesSeq.push_back("calDataId") ; 
+     
+    attributesSeq.push_back("calReductionId") ; 
+     
+    attributesSeq.push_back("startValidTime") ; 
+     
+    attributesSeq.push_back("endValidTime") ; 
+     
+    attributesSeq.push_back("numFreq") ; 
+     
+    attributesSeq.push_back("numLoad") ; 
+     
+    attributesSeq.push_back("numReceptor") ; 
+     
+    attributesSeq.push_back("forwardEffSpectrum") ; 
+     
+    attributesSeq.push_back("frequencyRange") ; 
+     
+    attributesSeq.push_back("groundPressure") ; 
+     
+    attributesSeq.push_back("groundRelHumidity") ; 
+     
+    attributesSeq.push_back("frequencySpectrum") ; 
+     
+    attributesSeq.push_back("groundTemperature") ; 
+     
+    attributesSeq.push_back("polarizationTypes") ; 
+     
+    attributesSeq.push_back("powerSkySpectrum") ; 
+     
+    attributesSeq.push_back("powerLoadSpectrum") ; 
+     
+    attributesSeq.push_back("syscalType") ; 
+     
+    attributesSeq.push_back("tAtmSpectrum") ; 
+     
+    attributesSeq.push_back("tRecSpectrum") ; 
+     
+    attributesSeq.push_back("tSysSpectrum") ; 
+     
+    attributesSeq.push_back("tauSpectrum") ; 
+     
+    attributesSeq.push_back("tAtm") ; 
+     
+    attributesSeq.push_back("tRec") ; 
+     
+    attributesSeq.push_back("tSys") ; 
+     
+    attributesSeq.push_back("tau") ; 
+     
+    attributesSeq.push_back("water") ; 
+     
+    attributesSeq.push_back("waterError") ; 
+    
+     
+    attributesSeq.push_back("alphaSpectrum") ; 
+     
+    attributesSeq.push_back("forwardEfficiency") ; 
+     
+    attributesSeq.push_back("forwardEfficiencyError") ; 
+     
+    attributesSeq.push_back("sbGain") ; 
+     
+    attributesSeq.push_back("sbGainError") ; 
+     
+    attributesSeq.push_back("sbGainSpectrum") ; 
+              
+     }
+    else if (string("CalAtmosphereTable").compare((const char*) root_element->name) == 0) {
+      // It's a new (and correct) MIME file for tables.
+      //
+      // 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
+      //
+      xmlNode* bulkStoreRef = 0;
+      xmlNode* child = root_element->children;
+      
+      // Skip the two first children (Entity and ContainerEntity).
+      bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
+      
+      if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
+      	throw ConversionException ("Could not find the element '/CalAtmosphereTable/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", "CalAtmosphere");
+      	
+      // We found BulkStoreRef, now look for its attribute byteOrder.
+      _xmlAttr* byteOrderAttr = 0;
+      for (struct _xmlAttr* attr = bulkStoreRef->properties; attr; attr = attr->next) 
+	  if (string("byteOrder").compare((const char*) attr->name) == 0) {
+	   byteOrderAttr = attr;
+	   break;
+	 }
+      
+      if (byteOrderAttr == 0) 
+	     throw ConversionException("Could not find the element '/CalAtmosphereTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", "CalAtmosphere");
+      
+      string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+      if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
+		throw ConversionException("No valid value retrieved for the element '/CalAtmosphereTable/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", "CalAtmosphere");
+		
+	 //
+	 // 2nd) Look for the Attributes element and grab the names of the elements it contains.
+	 //
+	 xmlNode* attributes = bulkStoreRef->next;
+     if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
+       	throw ConversionException ("Could not find the element '/CalAtmosphereTable/Attributes'. Invalid XML header '"+ xmlHeader + "'.", "CalAtmosphere");
+ 
+ 	xmlNode* childOfAttributes = attributes->children;
+ 	
+ 	while ( childOfAttributes != 0 && (childOfAttributes->type == XML_ELEMENT_NODE) ) {
+ 		attributesSeq.push_back(string((const char*) childOfAttributes->name));
+ 		childOfAttributes = childOfAttributes->next;
+    }
+    }
+    // Create an EndianISStream from the substring containing the binary part.
+    EndianISStream eiss(mimeMsg.substr(loc1+binPartMIMEHeader.size()), byteOrder);
+    
+    entity = Entity::fromBin(eiss);
+    
+    // We do nothing with that but we have to read it.
+    Entity containerEntity = Entity::fromBin(eiss);
+    
+    int numRows = eiss.readInt();
+    try {
+      for (int i = 0; i < numRows; i++) {
+	CalAtmosphereRow* aRow = CalAtmosphereRow::fromBin(eiss, *this, attributesSeq);
+	checkAndAdd(aRow);
+      }
+    }
+    catch (DuplicateKey e) {
+      throw ConversionException("Error while writing binary data , the message was "
+				+ e.getMessage(), "CalAtmosphere");
+    }
+    catch (TagFormatException e) {
+      throw ConversionException("Error while reading binary data , the message was "
+				+ e.getMessage(), "CalAtmosphere");
+    }
+    archiveAsBin = true;
+    fileAsBin = true;
 	}
 
 	
@@ -794,7 +918,19 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 			!createPath(directory.c_str())) {
 			throw ConversionException("Could not create directory " , directory);
 		}
-		
+
+		string fileName = directory + "/CalAtmosphere.xml";
+		ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not open file " + fileName + " to write ", "CalAtmosphere");
+		if (fileAsBin) 
+			tableout << MIMEXMLPart();
+		else
+			tableout << toXML() << endl;
+		tableout.close();
+		if (tableout.rdstate() == ostream::failbit)
+			throw ConversionException("Could not close file " + fileName, "CalAtmosphere");
+
 		if (fileAsBin) {
 			// write the bin serialized
 			string fileName = directory + "/CalAtmosphere.bin";
@@ -806,60 +942,75 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 			if (tableout.rdstate() == ostream::failbit)
 				throw ConversionException("Could not close file " + fileName, "CalAtmosphere");
 		}
-		else {
-			// write the XML
-			string fileName = directory + "/CalAtmosphere.xml";
-			ofstream tableout(fileName.c_str(),ios::out|ios::trunc);
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not open file " + fileName + " to write ", "CalAtmosphere");
-			tableout << toXML() << endl;
-			tableout.close();
-			if (tableout.rdstate() == ostream::failbit)
-				throw ConversionException("Could not close file " + fileName, "CalAtmosphere");
-		}
 	}
 
 	
 	void CalAtmosphereTable::setFromFile(const string& directory) {
-		string tablename;
-		if (fileAsBin)
-			tablename = directory + "/CalAtmosphere.bin";
-		else
-			tablename = directory + "/CalAtmosphere.xml";
-			
-		// Determine the file size.
-		ifstream::pos_type size;
-		ifstream tablefile(tablename.c_str(), ios::in|ios::binary|ios::ate);
-
- 		if (tablefile.is_open()) { 
-  				size = tablefile.tellg(); 
-  		}
-		else {
-				throw ConversionException("Could not open file " + tablename, "CalAtmosphere");
-		}
-		
-		// Re position to the beginning.
-		tablefile.seekg(0);
-		
-		// Read in a stringstream.
-		stringstream ss;
-		ss << tablefile.rdbuf();
-
-		if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
-			throw ConversionException("Error reading file " + tablename,"CalAtmosphere");
-		}
-
-		// And close
-		tablefile.close();
-		if (tablefile.rdstate() == istream::failbit)
-			throw ConversionException("Could not close file " + tablename,"CalAtmosphere");
-					
-		// And parse the content with the appropriate method
-		if (fileAsBin) 
-			setFromMIME(ss.str());
-		else
-			fromXML(ss.str());	
+    if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalAtmosphere.xml")))
+      setFromXMLFile(directory);
+    else if (boost::filesystem::exists(boost::filesystem::path(directory + "/CalAtmosphere.bin")))
+      setFromMIMEFile(directory);
+    else
+      throw ConversionException("No file found for the CalAtmosphere table", "CalAtmosphere");
 	}			
+
+	
+  void CalAtmosphereTable::setFromMIMEFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/CalAtmosphere.bin";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "CalAtmosphere");
+    }
+    // Read in a stringstream.
+    stringstream ss; ss << tablefile.rdbuf();
+    
+    if (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file " + tablePath,"CalAtmosphere");
+    }
+    
+    // And close.
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file " + tablePath,"CalAtmosphere");
+    
+    setFromMIME(ss.str());
+  }	
+
+	
+void CalAtmosphereTable::setFromXMLFile(const string& directory) {
+    string tablePath ;
+    
+    tablePath = directory + "/CalAtmosphere.xml";
+    ifstream tablefile(tablePath.c_str(), ios::in|ios::binary);
+    if (!tablefile.is_open()) { 
+      throw ConversionException("Could not open file " + tablePath, "CalAtmosphere");
+    }
+      // Read in a stringstream.
+    stringstream ss;
+    ss << tablefile.rdbuf();
+    
+    if  (tablefile.rdstate() == istream::failbit || tablefile.rdstate() == istream::badbit) {
+      throw ConversionException("Error reading file '" + tablePath + "'", "CalAtmosphere");
+    }
+    
+    // And close
+    tablefile.close();
+    if (tablefile.rdstate() == istream::failbit)
+      throw ConversionException("Could not close file '" + tablePath + "'", "CalAtmosphere");
+
+    // Let's make a string out of the stringstream content and empty the stringstream.
+    string xmlDocument = ss.str(); ss.str("");
+
+    // Let's make a very primitive check to decide
+    // whether the XML content represents the table
+    // or refers to it via a <BulkStoreRef element.
+    if (xmlDocument.find("<BulkStoreRef") != string::npos)
+      setFromMIMEFile(directory);
+    else
+      fromXML(xmlDocument);
+  }
 
 	
 

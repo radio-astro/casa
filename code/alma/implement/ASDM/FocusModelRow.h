@@ -46,31 +46,10 @@ using std::set;
 using asdmIDL::FocusModelRowIDL;
 #endif
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <Complex.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <Pressure.h>
-#include <Speed.h>
-#include <Tag.h>
-#include <Temperature.h>
-#include <ConversionException.h>
-#include <NoSuchRow.h>
-#include <IllegalAccessException.h>
 
-/*
-#include <Enumerations.h>
-using namespace enumerations;
- */
+
+#include <Tag.h>
+using  asdm::Tag;
 
 
 
@@ -99,28 +78,13 @@ using namespace ReceiverBandMod;
 
 
 
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::IllegalAccessException;
+#include <ConversionException.h>
+#include <NoSuchRow.h>
+#include <IllegalAccessException.h>
+
 
 /*\file FocusModel.h
-    \brief Generated from model's revision "1.52", branch "HEAD"
+    \brief Generated from model's revision "1.53", branch "HEAD"
 */
 
 namespace asdm {
@@ -135,10 +99,13 @@ class AntennaRow;
 class FocusModelRow;
 	
 
+class FocusModelRow;
+typedef void (FocusModelRow::*FocusModelAttributeFromBin) (EndianISStream& eiss);
+
 /**
  * The FocusModelRow class is a row of a FocusModelTable.
  * 
- * Generated from model's revision "1.52", branch "HEAD"
+ * Generated from model's revision "1.53", branch "HEAD"
  *
  */
 class FocusModelRow {
@@ -153,49 +120,6 @@ public:
 	 */
 	FocusModelTable &getTable() const;
 	
-#ifndef WITHOUT_ACS
-	/**
-	 * Return this row in the form of an IDL struct.
-	 * @return The values of this row as a FocusModelRowIDL struct.
-	 */
-	FocusModelRowIDL *toIDL() const;
-#endif
-	
-#ifndef WITHOUT_ACS
-	/**
-	 * Fill the values of this row from the IDL struct FocusModelRowIDL.
-	 * @param x The IDL struct containing the values used to fill this row.
-	 * @throws ConversionException
-	 */
-	void setFromIDL (FocusModelRowIDL x) ;
-#endif
-	
-	/**
-	 * Return this row in the form of an XML string.
-	 * @return The values of this row as an XML string.
-	 */
-	string toXML() const;
-
-	/**
-	 * Fill the values of this row from an XML string 
-	 * that was produced by the toXML() method.
-	 * @param x The XML string being used to set the values of this row.
-	 * @throws ConversionException
-	 */
-	void setFromXML (string rowDoc) ;
-	
-	/**
-	 * Serialize this into a stream of bytes written to an EndianOSStream.
-	 * @param eoss the EndianOSStream to be written to
-	 */
-	 void toBin(EndianOSStream& eoss);
-	 
-	 /**
-	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
-	  * @param eiss the EndianISStream to be read.
-	  * @table the FocusModelTable to which the row built by deserialization will be parented.
-	  */
-	 static FocusModelRow* fromBin(EndianISStream& eiss, FocusModelTable& table);	 
 	
 	////////////////////////////////
 	// Intrinsic Table Attributes //
@@ -539,12 +463,52 @@ public:
 	/**
 	 * Compare each mandatory attribute except the autoincrementable one of this FocusModelRow with 
 	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param antennaId
+	    
+	 * @param polarizationType
+	    
+	 * @param receiverBand
+	    
+	 * @param numCoeff
+	    
+	 * @param coeffName
+	    
+	 * @param coeffFormula
+	    
+	 * @param coeffVal
+	    
+	 * @param assocNature
+	    
+	 * @param assocFocusModelId
+	    
 	 */ 
 	bool compareNoAutoInc(Tag antennaId, PolarizationTypeMod::PolarizationType polarizationType, ReceiverBandMod::ReceiverBand receiverBand, int numCoeff, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffVal, string assocNature, int assocFocusModelId);
 	
 	
 
 	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param polarizationType
+	    
+	 * @param receiverBand
+	    
+	 * @param numCoeff
+	    
+	 * @param coeffName
+	    
+	 * @param coeffFormula
+	    
+	 * @param coeffVal
+	    
+	 * @param assocNature
+	    
+	 * @param assocFocusModelId
+	    
+	 */ 
 	bool compareRequiredValue(PolarizationTypeMod::PolarizationType polarizationType, ReceiverBandMod::ReceiverBand receiverBand, int numCoeff, vector<string > coeffName, vector<string > coeffFormula, vector<float > coeffVal, string assocNature, int assocFocusModelId); 
 		 
 	
@@ -748,6 +712,69 @@ private:
 
 	
 
+	
+	///////////////////////////////
+	// binary-deserialization material//
+	///////////////////////////////
+	map<string, FocusModelAttributeFromBin> fromBinMethods;
+void antennaIdFromBin( EndianISStream& eiss);
+void focusModelIdFromBin( EndianISStream& eiss);
+void polarizationTypeFromBin( EndianISStream& eiss);
+void receiverBandFromBin( EndianISStream& eiss);
+void numCoeffFromBin( EndianISStream& eiss);
+void coeffNameFromBin( EndianISStream& eiss);
+void coeffFormulaFromBin( EndianISStream& eiss);
+void coeffValFromBin( EndianISStream& eiss);
+void assocNatureFromBin( EndianISStream& eiss);
+void assocFocusModelIdFromBin( EndianISStream& eiss);
+
+		
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Return this row in the form of an IDL struct.
+	 * @return The values of this row as a FocusModelRowIDL struct.
+	 */
+	FocusModelRowIDL *toIDL() const;
+#endif
+	
+#ifndef WITHOUT_ACS
+	/**
+	 * Fill the values of this row from the IDL struct FocusModelRowIDL.
+	 * @param x The IDL struct containing the values used to fill this row.
+	 * @throws ConversionException
+	 */
+	void setFromIDL (FocusModelRowIDL x) ;
+#endif
+	
+	/**
+	 * Return this row in the form of an XML string.
+	 * @return The values of this row as an XML string.
+	 */
+	string toXML() const;
+
+	/**
+	 * Fill the values of this row from an XML string 
+	 * that was produced by the toXML() method.
+	 * @param rowDoc the XML string being used to set the values of this row.
+	 * @throws ConversionException
+	 */
+	void setFromXML (string rowDoc) ;
+	
+	/**
+	 * Serialize this into a stream of bytes written to an EndianOSStream.
+	 * @param eoss the EndianOSStream to be written to
+	 */
+	 void toBin(EndianOSStream& eoss);
+	 	 
+	 /**
+	  * Deserialize a stream of bytes read from an EndianISStream to build a PointingRow.
+	  * @param eiss the EndianISStream to be read.
+	  * @param table the FocusModelTable to which the row built by deserialization will be parented.
+	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
+	  * in which the attributes are written in the binary serialization.
+	  */
+	 static FocusModelRow* fromBin(EndianISStream& eiss, FocusModelTable& table, const vector<string>& attributesSeq);	 
 
 };
 

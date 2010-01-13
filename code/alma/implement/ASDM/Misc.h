@@ -26,49 +26,89 @@
  *
  * File Misc.h
  */
- 
- namespace asdm {
- 	/**
-	 * Some utility methods to manipulate directories.
-	 */
+
+#include <string> 
+using namespace std;
+
+namespace asdm {
+  /**
+   * Some utility methods to manipulate directories.
+   */
 	 
-	/**
-	 * Returns whether the specified directory exists.
-	 *
-	 * Example:
-	 * --------
-	 *          if (!directoryExists("output"))
-	 *          {
-	 *              createDirectory("output");
-	 *          }
-	 */ 
-	bool directoryExists(const char* dir);
+  /**
+   * Returns whether the specified directory exists.
+   *
+   * Example:
+   * --------
+   *          if (!directoryExists("output"))
+   *          {
+   *              createDirectory("output");
+   *          }
+   */ 
+  bool directoryExists(const char* dir);
 	
-	/**
-	 * Creates the specified directory. Fails if the path leading to
-	 * this directory does not exist.
-	 *
-	 * Example:
-	 * --------
-	 *          createDirectory("output");	
-	 */
-	bool createDirectory(const char* dir);
+  /**
+   * Creates the specified directory. Fails if the path leading to
+   * this directory does not exist.
+   *
+   * Example:
+   * --------
+   *          createDirectory("output");	
+   */
+  bool createDirectory(const char* dir);
 	
-	/**
-	 * Creates a complete path.
-	 *
-	 * Example:
-	 * --------
-	 *           ("output/sample1/temperature0/");
-	 */
-	bool createPath(const char* path);
+  /**
+   * Creates a complete path.
+   *
+   * Example:
+   * --------
+   *           ("output/sample1/temperature0/");
+   */
+  bool createPath(const char* path);
 	
 	
-	/**
-	 * Swap bytes 
-	 */
+  /**
+   * Swap bytes 
+   */
 #define ByteSwap5(x) ByteSwap((unsigned char *) &x,sizeof(x))	 
-	void ByteSwap(unsigned char * b, int n);
- 	
- } // end namespace asdm
- #endif  // MISC_H
+  void ByteSwap(unsigned char * b, int n);
+
+  /**
+   * A class to represent byte order information.
+   *
+   */
+  class ByteOrder {
+  public:
+    static const ByteOrder* Little_Endian; /*< A unique object to represent a little endian byte order. */
+    static const ByteOrder* Big_Endian;    /*< A unique object to represent a big endian byte order. */
+    static const ByteOrder* Machine_Endianity; /*< A unique object storing the endianity of the machine. */
+
+    /**
+     * Returns a string representation of this.
+     *
+     * <ul>
+     * <li> Little_Endian is returned as "Little_Endian", </li>
+     * <li> Big_Endian is returned as "Big_Endian", </li>
+     * </ul>
+     */
+    string toString() const ;
+
+    /**
+     * Convert a string to a const ByteOrder*.
+     *
+     * @param s the input string.
+     * @return a const pointer to a ByteOrder for which the toString() method returns
+     * a string == to the input string, or 0 if no such instance of ByteOrder exists.
+     */
+    static const ByteOrder* fromString(const string & s);
+
+  private:
+    string name_;
+    int endianity_;
+
+    ByteOrder(const string & name, int endianity);
+    virtual ~ByteOrder();
+    static const ByteOrder* machineEndianity(); 
+  }; 	
+} // end namespace asdm
+#endif  // MISC_H

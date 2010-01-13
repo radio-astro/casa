@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	FocusRow::~FocusRow() {
 	}
 
@@ -503,74 +502,97 @@ namespace asdm {
 
 	}
 	
-	FocusRow* FocusRow::fromBin(EndianISStream& eiss, FocusTable& table) {
-		FocusRow* row = new  FocusRow(table);
-		
-		
+void FocusRow::antennaIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->antennaId =  Tag::fromBin(eiss);
+		antennaId =  Tag::fromBin(eiss);
 		
 	
-
 	
+}
+void FocusRow::timeIntervalFromBin(EndianISStream& eiss) {
 		
-		
-		row->timeInterval =  ArrayTimeInterval::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->focusTracking =  eiss.readBoolean();
-			
-		
-	
-
 	
 		
 		
-			
-	
-	row->focusOffset = Length::from1DBin(eiss);	
-	
-
+		timeInterval =  ArrayTimeInterval::fromBin(eiss);
 		
 	
-
+	
+}
+void FocusRow::focusTrackingFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->focusModelId =  eiss.readInt();
+		focusTracking =  eiss.readBoolean();
 			
 		
 	
-
-		
-		
-		
-	row->measuredFocusPositionExists = eiss.readBoolean();
-	if (row->measuredFocusPositionExists) {
+	
+}
+void FocusRow::focusOffsetFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
 			
 	
-	row->measuredFocusPosition = Length::from1DBin(eiss);	
+	focusOffset = Length::from1DBin(eiss);	
+	
+
+		
+	
+	
+}
+void FocusRow::focusModelIdFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		focusModelId =  eiss.readInt();
+			
+		
+	
+	
+}
+
+void FocusRow::measuredFocusPositionFromBin(EndianISStream& eiss) {
+		
+	measuredFocusPositionExists = eiss.readBoolean();
+	if (measuredFocusPositionExists) {
+		
+	
+		
+		
+			
+	
+	measuredFocusPosition = Length::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
+	
+}
+	
+	
+	FocusRow* FocusRow::fromBin(EndianISStream& eiss, FocusTable& table, const vector<string>& attributesSeq) {
+		FocusRow* row = new  FocusRow(table);
 		
+		map<string, FocusAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FocusTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -878,6 +900,17 @@ namespace asdm {
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaId"] = &FocusRow::antennaIdFromBin; 
+	 fromBinMethods["timeInterval"] = &FocusRow::timeIntervalFromBin; 
+	 fromBinMethods["focusTracking"] = &FocusRow::focusTrackingFromBin; 
+	 fromBinMethods["focusOffset"] = &FocusRow::focusOffsetFromBin; 
+	 fromBinMethods["focusModelId"] = &FocusRow::focusModelIdFromBin; 
+		
+	
+	 fromBinMethods["measuredFocusPosition"] = &FocusRow::measuredFocusPositionFromBin; 
 	
 	}
 	
@@ -929,7 +962,17 @@ namespace asdm {
 		else
 			measuredFocusPositionExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaId"] = &FocusRow::antennaIdFromBin; 
+		 fromBinMethods["timeInterval"] = &FocusRow::timeIntervalFromBin; 
+		 fromBinMethods["focusTracking"] = &FocusRow::focusTrackingFromBin; 
+		 fromBinMethods["focusOffset"] = &FocusRow::focusOffsetFromBin; 
+		 fromBinMethods["focusModelId"] = &FocusRow::focusModelIdFromBin; 
+			
+	
+		 fromBinMethods["measuredFocusPosition"] = &FocusRow::measuredFocusPositionFromBin; 
+			
 	}
 
 	
@@ -1018,6 +1061,22 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, FocusAttributeFromBin> FocusRow::initFromBinMethods() {
+		map<string, FocusAttributeFromBin> result;
+		
+		result["antennaId"] = &FocusRow::antennaIdFromBin;
+		result["timeInterval"] = &FocusRow::timeIntervalFromBin;
+		result["focusTracking"] = &FocusRow::focusTrackingFromBin;
+		result["focusOffset"] = &FocusRow::focusOffsetFromBin;
+		result["focusModelId"] = &FocusRow::focusModelIdFromBin;
+		
+		
+		result["measuredFocusPosition"] = &FocusRow::measuredFocusPositionFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

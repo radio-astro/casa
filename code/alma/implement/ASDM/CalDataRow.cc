@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalDataRow::~CalDataRow() {
 	}
 
@@ -1005,126 +1004,151 @@ namespace asdm {
 
 	}
 	
-	CalDataRow* CalDataRow::fromBin(EndianISStream& eiss, CalDataTable& table) {
-		CalDataRow* row = new  CalDataRow(table);
-		
-		
+void CalDataRow::calDataIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->calDataId =  Tag::fromBin(eiss);
+		calDataId =  Tag::fromBin(eiss);
 		
 	
-
 	
+}
+void CalDataRow::startTimeObservedFromBin(EndianISStream& eiss) {
 		
-		
-		row->startTimeObserved =  ArrayTime::fromBin(eiss);
-		
-	
-
 	
 		
 		
-		row->endTimeObserved =  ArrayTime::fromBin(eiss);
+		startTimeObserved =  ArrayTime::fromBin(eiss);
 		
 	
-
+	
+}
+void CalDataRow::endTimeObservedFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
-		row->execBlockUID =  EntityRef::fromBin(eiss);
+		endTimeObserved =  ArrayTime::fromBin(eiss);
 		
 	
-
 	
-	
-		
-			
-		row->calDataType = CCalDataOrigin::from_int(eiss.readInt());
-			
+}
+void CalDataRow::execBlockUIDFromBin(EndianISStream& eiss) {
 		
 	
-
-	
-	
 		
-			
-		row->calType = CCalType::from_int(eiss.readInt());
-			
+		
+		execBlockUID =  EntityRef::fromBin(eiss);
 		
 	
-
+	
+}
+void CalDataRow::calDataTypeFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
-		row->numScan =  eiss.readInt();
+		calDataType = CCalDataOrigin::from_int(eiss.readInt());
 			
 		
 	
-
+	
+}
+void CalDataRow::calTypeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		calType = CCalType::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void CalDataRow::numScanFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numScan =  eiss.readInt();
+			
+		
+	
+	
+}
+void CalDataRow::scanSetFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->scanSet.clear();
+		scanSet.clear();
 		
 		unsigned int scanSetDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < scanSetDim1; i++)
 			
-			row->scanSet.push_back(eiss.readInt());
+			scanSet.push_back(eiss.readInt());
 			
 	
 
 		
 	
+	
+}
 
+void CalDataRow::assocCalDataIdFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->assocCalDataIdExists = eiss.readBoolean();
-	if (row->assocCalDataIdExists) {
+	assocCalDataIdExists = eiss.readBoolean();
+	if (assocCalDataIdExists) {
 		
 	
 		
 		
-		row->assocCalDataId =  Tag::fromBin(eiss);
+		assocCalDataId =  Tag::fromBin(eiss);
 		
 	
 
 	}
-
-	row->assocCalNatureExists = eiss.readBoolean();
-	if (row->assocCalNatureExists) {
+	
+}
+void CalDataRow::assocCalNatureFromBin(EndianISStream& eiss) {
+		
+	assocCalNatureExists = eiss.readBoolean();
+	if (assocCalNatureExists) {
 		
 	
 	
 		
 			
-		row->assocCalNature = CAssociatedCalNature::from_int(eiss.readInt());
+		assocCalNature = CAssociatedCalNature::from_int(eiss.readInt());
 			
 		
 	
 
 	}
-
-	row->fieldNameExists = eiss.readBoolean();
-	if (row->fieldNameExists) {
+	
+}
+void CalDataRow::fieldNameFromBin(EndianISStream& eiss) {
+		
+	fieldNameExists = eiss.readBoolean();
+	if (fieldNameExists) {
 		
 	
 	
 		
 			
 	
-		row->fieldName.clear();
+		fieldName.clear();
 		
 		unsigned int fieldNameDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < fieldNameDim1; i++)
 			
-			row->fieldName.push_back(eiss.readString());
+			fieldName.push_back(eiss.readString());
 			
 	
 
@@ -1132,21 +1156,24 @@ namespace asdm {
 	
 
 	}
-
-	row->sourceNameExists = eiss.readBoolean();
-	if (row->sourceNameExists) {
+	
+}
+void CalDataRow::sourceNameFromBin(EndianISStream& eiss) {
+		
+	sourceNameExists = eiss.readBoolean();
+	if (sourceNameExists) {
 		
 	
 	
 		
 			
 	
-		row->sourceName.clear();
+		sourceName.clear();
 		
 		unsigned int sourceNameDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < sourceNameDim1; i++)
 			
-			row->sourceName.push_back(eiss.readString());
+			sourceName.push_back(eiss.readString());
 			
 	
 
@@ -1154,21 +1181,24 @@ namespace asdm {
 	
 
 	}
-
-	row->sourceCodeExists = eiss.readBoolean();
-	if (row->sourceCodeExists) {
+	
+}
+void CalDataRow::sourceCodeFromBin(EndianISStream& eiss) {
+		
+	sourceCodeExists = eiss.readBoolean();
+	if (sourceCodeExists) {
 		
 	
 	
 		
 			
 	
-		row->sourceCode.clear();
+		sourceCode.clear();
 		
 		unsigned int sourceCodeDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < sourceCodeDim1; i++)
 			
-			row->sourceCode.push_back(eiss.readString());
+			sourceCode.push_back(eiss.readString());
 			
 	
 
@@ -1176,21 +1206,24 @@ namespace asdm {
 	
 
 	}
-
-	row->scanIntentExists = eiss.readBoolean();
-	if (row->scanIntentExists) {
+	
+}
+void CalDataRow::scanIntentFromBin(EndianISStream& eiss) {
+		
+	scanIntentExists = eiss.readBoolean();
+	if (scanIntentExists) {
 		
 	
 	
 		
 			
 	
-		row->scanIntent.clear();
+		scanIntent.clear();
 		
 		unsigned int scanIntentDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < scanIntentDim1; i++)
 			
-			row->scanIntent.push_back(CScanIntent::from_int(eiss.readInt()));
+			scanIntent.push_back(CScanIntent::from_int(eiss.readInt()));
 			
 	
 
@@ -1198,8 +1231,21 @@ namespace asdm {
 	
 
 	}
-
+	
+}
+	
+	
+	CalDataRow* CalDataRow::fromBin(EndianISStream& eiss, CalDataTable& table, const vector<string>& attributesSeq) {
+		CalDataRow* row = new  CalDataRow(table);
 		
+		map<string, CalDataAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalDataTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1851,6 +1897,25 @@ assocCalNature = CAssociatedCalNature::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["calDataId"] = &CalDataRow::calDataIdFromBin; 
+	 fromBinMethods["startTimeObserved"] = &CalDataRow::startTimeObservedFromBin; 
+	 fromBinMethods["endTimeObserved"] = &CalDataRow::endTimeObservedFromBin; 
+	 fromBinMethods["execBlockUID"] = &CalDataRow::execBlockUIDFromBin; 
+	 fromBinMethods["calDataType"] = &CalDataRow::calDataTypeFromBin; 
+	 fromBinMethods["calType"] = &CalDataRow::calTypeFromBin; 
+	 fromBinMethods["numScan"] = &CalDataRow::numScanFromBin; 
+	 fromBinMethods["scanSet"] = &CalDataRow::scanSetFromBin; 
+		
+	
+	 fromBinMethods["assocCalDataId"] = &CalDataRow::assocCalDataIdFromBin; 
+	 fromBinMethods["assocCalNature"] = &CalDataRow::assocCalNatureFromBin; 
+	 fromBinMethods["fieldName"] = &CalDataRow::fieldNameFromBin; 
+	 fromBinMethods["sourceName"] = &CalDataRow::sourceNameFromBin; 
+	 fromBinMethods["sourceCode"] = &CalDataRow::sourceCodeFromBin; 
+	 fromBinMethods["scanIntent"] = &CalDataRow::scanIntentFromBin; 
 	
 	}
 	
@@ -1969,7 +2034,25 @@ assocCalNature = CAssociatedCalNature::from_int(0);
 		else
 			scanIntentExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["calDataId"] = &CalDataRow::calDataIdFromBin; 
+		 fromBinMethods["startTimeObserved"] = &CalDataRow::startTimeObservedFromBin; 
+		 fromBinMethods["endTimeObserved"] = &CalDataRow::endTimeObservedFromBin; 
+		 fromBinMethods["execBlockUID"] = &CalDataRow::execBlockUIDFromBin; 
+		 fromBinMethods["calDataType"] = &CalDataRow::calDataTypeFromBin; 
+		 fromBinMethods["calType"] = &CalDataRow::calTypeFromBin; 
+		 fromBinMethods["numScan"] = &CalDataRow::numScanFromBin; 
+		 fromBinMethods["scanSet"] = &CalDataRow::scanSetFromBin; 
+			
+	
+		 fromBinMethods["assocCalDataId"] = &CalDataRow::assocCalDataIdFromBin; 
+		 fromBinMethods["assocCalNature"] = &CalDataRow::assocCalNatureFromBin; 
+		 fromBinMethods["fieldName"] = &CalDataRow::fieldNameFromBin; 
+		 fromBinMethods["sourceName"] = &CalDataRow::sourceNameFromBin; 
+		 fromBinMethods["sourceCode"] = &CalDataRow::sourceCodeFromBin; 
+		 fromBinMethods["scanIntent"] = &CalDataRow::scanIntentFromBin; 
+			
 	}
 
 	
@@ -2096,6 +2179,30 @@ assocCalNature = CAssociatedCalNature::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalDataAttributeFromBin> CalDataRow::initFromBinMethods() {
+		map<string, CalDataAttributeFromBin> result;
+		
+		result["calDataId"] = &CalDataRow::calDataIdFromBin;
+		result["startTimeObserved"] = &CalDataRow::startTimeObservedFromBin;
+		result["endTimeObserved"] = &CalDataRow::endTimeObservedFromBin;
+		result["execBlockUID"] = &CalDataRow::execBlockUIDFromBin;
+		result["calDataType"] = &CalDataRow::calDataTypeFromBin;
+		result["calType"] = &CalDataRow::calTypeFromBin;
+		result["numScan"] = &CalDataRow::numScanFromBin;
+		result["scanSet"] = &CalDataRow::scanSetFromBin;
+		
+		
+		result["assocCalDataId"] = &CalDataRow::assocCalDataIdFromBin;
+		result["assocCalNature"] = &CalDataRow::assocCalNatureFromBin;
+		result["fieldName"] = &CalDataRow::fieldNameFromBin;
+		result["sourceName"] = &CalDataRow::sourceNameFromBin;
+		result["sourceCode"] = &CalDataRow::sourceCodeFromBin;
+		result["scanIntent"] = &CalDataRow::scanIntentFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

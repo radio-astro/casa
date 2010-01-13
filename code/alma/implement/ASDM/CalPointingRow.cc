@@ -68,7 +68,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	CalPointingRow::~CalPointingRow() {
 	}
 
@@ -2208,187 +2207,238 @@ namespace asdm {
 
 	}
 	
-	CalPointingRow* CalPointingRow::fromBin(EndianISStream& eiss, CalPointingTable& table) {
-		CalPointingRow* row = new  CalPointingRow(table);
-		
-		
+void CalPointingRow::antennaNameFromBin(EndianISStream& eiss) {
 		
 	
 	
 		
 			
-		row->antennaName =  eiss.readString();
+		antennaName =  eiss.readString();
 			
 		
+	
+	
+}
+void CalPointingRow::receiverBandFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		receiverBand = CReceiverBand::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void CalPointingRow::calDataIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calDataId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalPointingRow::calReductionIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		calReductionId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void CalPointingRow::startValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		startValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalPointingRow::endValidTimeFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		endValidTime =  ArrayTime::fromBin(eiss);
+		
+	
+	
+}
+void CalPointingRow::ambientTemperatureFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		ambientTemperature =  Temperature::fromBin(eiss);
+		
+	
+	
+}
+void CalPointingRow::antennaMakeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		antennaMake = CAntennaMake::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void CalPointingRow::atmPhaseCorrectionFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
+			
+		
+	
+	
+}
+void CalPointingRow::directionFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	direction = Angle::from1DBin(eiss);	
 	
 
-	
-	
-		
-			
-		row->receiverBand = CReceiverBand::from_int(eiss.readInt());
-			
 		
 	
-
 	
+}
+void CalPointingRow::frequencyRangeFromBin(EndianISStream& eiss) {
 		
-		
-		row->calDataId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->calReductionId =  Tag::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->startValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->endValidTime =  ArrayTime::fromBin(eiss);
-		
-	
-
-	
-		
-		
-		row->ambientTemperature =  Temperature::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->antennaMake = CAntennaMake::from_int(eiss.readInt());
-			
-		
-	
-
-	
-	
-		
-			
-		row->atmPhaseCorrection = CAtmPhaseCorrection::from_int(eiss.readInt());
-			
-		
-	
-
 	
 		
 		
 			
 	
-	row->direction = Angle::from1DBin(eiss);	
+	frequencyRange = Frequency::from1DBin(eiss);	
 	
 
 		
 	
-
 	
+}
+void CalPointingRow::pointingModelModeFromBin(EndianISStream& eiss) {
 		
-		
-			
-	
-	row->frequencyRange = Frequency::from1DBin(eiss);	
-	
-
-		
-	
-
 	
 	
 		
 			
-		row->pointingModelMode = CPointingModelMode::from_int(eiss.readInt());
+		pointingModelMode = CPointingModelMode::from_int(eiss.readInt());
 			
 		
 	
-
 	
-	
+}
+void CalPointingRow::pointingMethodFromBin(EndianISStream& eiss) {
 		
-			
-		row->pointingMethod = CPointingMethod::from_int(eiss.readInt());
-			
-		
-	
-
 	
 	
 		
 			
-		row->numReceptor =  eiss.readInt();
+		pointingMethod = CPointingMethod::from_int(eiss.readInt());
 			
 		
 	
-
+	
+}
+void CalPointingRow::numReceptorFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numReceptor =  eiss.readInt();
+			
+		
+	
+	
+}
+void CalPointingRow::polarizationTypesFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->polarizationTypes.clear();
+		polarizationTypes.clear();
 		
 		unsigned int polarizationTypesDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < polarizationTypesDim1; i++)
 			
-			row->polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
+			polarizationTypes.push_back(CPolarizationType::from_int(eiss.readInt()));
 			
 	
 
 		
 	
-
+	
+}
+void CalPointingRow::collOffsetRelativeFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->collOffsetRelative = Angle::from2DBin(eiss);		
+	collOffsetRelative = Angle::from2DBin(eiss);		
 	
 
 		
 	
-
+	
+}
+void CalPointingRow::collOffsetAbsoluteFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->collOffsetAbsolute = Angle::from2DBin(eiss);		
+	collOffsetAbsolute = Angle::from2DBin(eiss);		
 	
 
 		
 	
-
+	
+}
+void CalPointingRow::collErrorFromBin(EndianISStream& eiss) {
+		
 	
 		
 		
 			
 	
-	row->collError = Angle::from2DBin(eiss);		
+	collError = Angle::from2DBin(eiss);		
 	
 
 		
 	
-
+	
+}
+void CalPointingRow::collOffsetTiedFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->collOffsetTied.clear();
+		collOffsetTied.clear();
 		
 		unsigned int collOffsetTiedDim1 = eiss.readInt();
 		unsigned int collOffsetTiedDim2 = eiss.readInt();
@@ -2399,140 +2449,162 @@ namespace asdm {
 			
 			collOffsetTiedAux1.push_back(eiss.readBoolean());
 			
-			row->collOffsetTied.push_back(collOffsetTiedAux1);
+			collOffsetTied.push_back(collOffsetTiedAux1);
 		}
 	
 	
 
 		
 	
-
+	
+}
+void CalPointingRow::reducedChiSquaredFromBin(EndianISStream& eiss) {
+		
 	
 	
 		
 			
 	
-		row->reducedChiSquared.clear();
+		reducedChiSquared.clear();
 		
 		unsigned int reducedChiSquaredDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < reducedChiSquaredDim1; i++)
 			
-			row->reducedChiSquared.push_back(eiss.readDouble());
+			reducedChiSquared.push_back(eiss.readDouble());
 			
 	
 
 		
 	
+	
+}
 
+void CalPointingRow::averagedPolarizationsFromBin(EndianISStream& eiss) {
 		
-		
-		
-	row->averagedPolarizationsExists = eiss.readBoolean();
-	if (row->averagedPolarizationsExists) {
+	averagedPolarizationsExists = eiss.readBoolean();
+	if (averagedPolarizationsExists) {
 		
 	
 	
 		
 			
-		row->averagedPolarizations =  eiss.readBoolean();
+		averagedPolarizations =  eiss.readBoolean();
 			
 		
 	
 
 	}
-
-	row->beamPAExists = eiss.readBoolean();
-	if (row->beamPAExists) {
+	
+}
+void CalPointingRow::beamPAFromBin(EndianISStream& eiss) {
+		
+	beamPAExists = eiss.readBoolean();
+	if (beamPAExists) {
 		
 	
 		
 		
 			
 	
-	row->beamPA = Angle::from1DBin(eiss);	
-	
-
-		
-	
-
-	}
-
-	row->beamPAErrorExists = eiss.readBoolean();
-	if (row->beamPAErrorExists) {
-		
-	
-		
-		
-			
-	
-	row->beamPAError = Angle::from1DBin(eiss);	
+	beamPA = Angle::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->beamPAWasFixedExists = eiss.readBoolean();
-	if (row->beamPAWasFixedExists) {
-		
 	
-	
+}
+void CalPointingRow::beamPAErrorFromBin(EndianISStream& eiss) {
 		
-			
-		row->beamPAWasFixed =  eiss.readBoolean();
-			
-		
-	
-
-	}
-
-	row->beamWidthExists = eiss.readBoolean();
-	if (row->beamWidthExists) {
+	beamPAErrorExists = eiss.readBoolean();
+	if (beamPAErrorExists) {
 		
 	
 		
 		
 			
 	
-	row->beamWidth = Angle::from2DBin(eiss);		
+	beamPAError = Angle::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
+	
+}
+void CalPointingRow::beamPAWasFixedFromBin(EndianISStream& eiss) {
+		
+	beamPAWasFixedExists = eiss.readBoolean();
+	if (beamPAWasFixedExists) {
+		
+	
+	
+		
+			
+		beamPAWasFixed =  eiss.readBoolean();
+			
+		
+	
 
-	row->beamWidthErrorExists = eiss.readBoolean();
-	if (row->beamWidthErrorExists) {
+	}
+	
+}
+void CalPointingRow::beamWidthFromBin(EndianISStream& eiss) {
+		
+	beamWidthExists = eiss.readBoolean();
+	if (beamWidthExists) {
 		
 	
 		
 		
 			
 	
-	row->beamWidthError = Angle::from2DBin(eiss);		
+	beamWidth = Angle::from2DBin(eiss);		
 	
 
 		
 	
 
 	}
+	
+}
+void CalPointingRow::beamWidthErrorFromBin(EndianISStream& eiss) {
+		
+	beamWidthErrorExists = eiss.readBoolean();
+	if (beamWidthErrorExists) {
+		
+	
+		
+		
+			
+	
+	beamWidthError = Angle::from2DBin(eiss);		
+	
 
-	row->beamWidthWasFixedExists = eiss.readBoolean();
-	if (row->beamWidthWasFixedExists) {
+		
+	
+
+	}
+	
+}
+void CalPointingRow::beamWidthWasFixedFromBin(EndianISStream& eiss) {
+		
+	beamWidthWasFixedExists = eiss.readBoolean();
+	if (beamWidthWasFixedExists) {
 		
 	
 	
 		
 			
 	
-		row->beamWidthWasFixed.clear();
+		beamWidthWasFixed.clear();
 		
 		unsigned int beamWidthWasFixedDim1 = eiss.readInt();
 		for (unsigned int  i = 0 ; i < beamWidthWasFixedDim1; i++)
 			
-			row->beamWidthWasFixed.push_back(eiss.readBoolean());
+			beamWidthWasFixed.push_back(eiss.readBoolean());
 			
 	
 
@@ -2540,100 +2612,131 @@ namespace asdm {
 	
 
 	}
-
-	row->offIntensityExists = eiss.readBoolean();
-	if (row->offIntensityExists) {
+	
+}
+void CalPointingRow::offIntensityFromBin(EndianISStream& eiss) {
+		
+	offIntensityExists = eiss.readBoolean();
+	if (offIntensityExists) {
 		
 	
 		
 		
 			
 	
-	row->offIntensity = Temperature::from1DBin(eiss);	
+	offIntensity = Temperature::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->offIntensityErrorExists = eiss.readBoolean();
-	if (row->offIntensityErrorExists) {
+	
+}
+void CalPointingRow::offIntensityErrorFromBin(EndianISStream& eiss) {
+		
+	offIntensityErrorExists = eiss.readBoolean();
+	if (offIntensityErrorExists) {
 		
 	
 		
 		
 			
 	
-	row->offIntensityError = Temperature::from1DBin(eiss);	
+	offIntensityError = Temperature::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
-
-	row->offIntensityWasFixedExists = eiss.readBoolean();
-	if (row->offIntensityWasFixedExists) {
+	
+}
+void CalPointingRow::offIntensityWasFixedFromBin(EndianISStream& eiss) {
+		
+	offIntensityWasFixedExists = eiss.readBoolean();
+	if (offIntensityWasFixedExists) {
 		
 	
 	
 		
 			
-		row->offIntensityWasFixed =  eiss.readBoolean();
+		offIntensityWasFixed =  eiss.readBoolean();
 			
 		
 	
 
 	}
-
-	row->peakIntensityExists = eiss.readBoolean();
-	if (row->peakIntensityExists) {
+	
+}
+void CalPointingRow::peakIntensityFromBin(EndianISStream& eiss) {
+		
+	peakIntensityExists = eiss.readBoolean();
+	if (peakIntensityExists) {
 		
 	
 		
 		
 			
 	
-	row->peakIntensity = Temperature::from1DBin(eiss);	
-	
-
-		
-	
-
-	}
-
-	row->peakIntensityErrorExists = eiss.readBoolean();
-	if (row->peakIntensityErrorExists) {
-		
-	
-		
-		
-			
-	
-	row->peakIntensityError = Temperature::from1DBin(eiss);	
+	peakIntensity = Temperature::from1DBin(eiss);	
 	
 
 		
 	
 
 	}
+	
+}
+void CalPointingRow::peakIntensityErrorFromBin(EndianISStream& eiss) {
+		
+	peakIntensityErrorExists = eiss.readBoolean();
+	if (peakIntensityErrorExists) {
+		
+	
+		
+		
+			
+	
+	peakIntensityError = Temperature::from1DBin(eiss);	
+	
 
-	row->peakIntensityWasFixedExists = eiss.readBoolean();
-	if (row->peakIntensityWasFixedExists) {
+		
+	
+
+	}
+	
+}
+void CalPointingRow::peakIntensityWasFixedFromBin(EndianISStream& eiss) {
+		
+	peakIntensityWasFixedExists = eiss.readBoolean();
+	if (peakIntensityWasFixedExists) {
 		
 	
 	
 		
 			
-		row->peakIntensityWasFixed =  eiss.readBoolean();
+		peakIntensityWasFixed =  eiss.readBoolean();
 			
 		
 	
 
 	}
-
+	
+}
+	
+	
+	CalPointingRow* CalPointingRow::fromBin(EndianISStream& eiss, CalPointingTable& table, const vector<string>& attributesSeq) {
+		CalPointingRow* row = new  CalPointingRow(table);
 		
+		map<string, CalPointingAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "CalPointingTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -4140,6 +4243,44 @@ pointingMethod = CPointingMethod::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["antennaName"] = &CalPointingRow::antennaNameFromBin; 
+	 fromBinMethods["receiverBand"] = &CalPointingRow::receiverBandFromBin; 
+	 fromBinMethods["calDataId"] = &CalPointingRow::calDataIdFromBin; 
+	 fromBinMethods["calReductionId"] = &CalPointingRow::calReductionIdFromBin; 
+	 fromBinMethods["startValidTime"] = &CalPointingRow::startValidTimeFromBin; 
+	 fromBinMethods["endValidTime"] = &CalPointingRow::endValidTimeFromBin; 
+	 fromBinMethods["ambientTemperature"] = &CalPointingRow::ambientTemperatureFromBin; 
+	 fromBinMethods["antennaMake"] = &CalPointingRow::antennaMakeFromBin; 
+	 fromBinMethods["atmPhaseCorrection"] = &CalPointingRow::atmPhaseCorrectionFromBin; 
+	 fromBinMethods["direction"] = &CalPointingRow::directionFromBin; 
+	 fromBinMethods["frequencyRange"] = &CalPointingRow::frequencyRangeFromBin; 
+	 fromBinMethods["pointingModelMode"] = &CalPointingRow::pointingModelModeFromBin; 
+	 fromBinMethods["pointingMethod"] = &CalPointingRow::pointingMethodFromBin; 
+	 fromBinMethods["numReceptor"] = &CalPointingRow::numReceptorFromBin; 
+	 fromBinMethods["polarizationTypes"] = &CalPointingRow::polarizationTypesFromBin; 
+	 fromBinMethods["collOffsetRelative"] = &CalPointingRow::collOffsetRelativeFromBin; 
+	 fromBinMethods["collOffsetAbsolute"] = &CalPointingRow::collOffsetAbsoluteFromBin; 
+	 fromBinMethods["collError"] = &CalPointingRow::collErrorFromBin; 
+	 fromBinMethods["collOffsetTied"] = &CalPointingRow::collOffsetTiedFromBin; 
+	 fromBinMethods["reducedChiSquared"] = &CalPointingRow::reducedChiSquaredFromBin; 
+		
+	
+	 fromBinMethods["averagedPolarizations"] = &CalPointingRow::averagedPolarizationsFromBin; 
+	 fromBinMethods["beamPA"] = &CalPointingRow::beamPAFromBin; 
+	 fromBinMethods["beamPAError"] = &CalPointingRow::beamPAErrorFromBin; 
+	 fromBinMethods["beamPAWasFixed"] = &CalPointingRow::beamPAWasFixedFromBin; 
+	 fromBinMethods["beamWidth"] = &CalPointingRow::beamWidthFromBin; 
+	 fromBinMethods["beamWidthError"] = &CalPointingRow::beamWidthErrorFromBin; 
+	 fromBinMethods["beamWidthWasFixed"] = &CalPointingRow::beamWidthWasFixedFromBin; 
+	 fromBinMethods["offIntensity"] = &CalPointingRow::offIntensityFromBin; 
+	 fromBinMethods["offIntensityError"] = &CalPointingRow::offIntensityErrorFromBin; 
+	 fromBinMethods["offIntensityWasFixed"] = &CalPointingRow::offIntensityWasFixedFromBin; 
+	 fromBinMethods["peakIntensity"] = &CalPointingRow::peakIntensityFromBin; 
+	 fromBinMethods["peakIntensityError"] = &CalPointingRow::peakIntensityErrorFromBin; 
+	 fromBinMethods["peakIntensityWasFixed"] = &CalPointingRow::peakIntensityWasFixedFromBin; 
 	
 	}
 	
@@ -4383,7 +4524,44 @@ pointingMethod = CPointingMethod::from_int(0);
 		else
 			peakIntensityWasFixedExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["antennaName"] = &CalPointingRow::antennaNameFromBin; 
+		 fromBinMethods["receiverBand"] = &CalPointingRow::receiverBandFromBin; 
+		 fromBinMethods["calDataId"] = &CalPointingRow::calDataIdFromBin; 
+		 fromBinMethods["calReductionId"] = &CalPointingRow::calReductionIdFromBin; 
+		 fromBinMethods["startValidTime"] = &CalPointingRow::startValidTimeFromBin; 
+		 fromBinMethods["endValidTime"] = &CalPointingRow::endValidTimeFromBin; 
+		 fromBinMethods["ambientTemperature"] = &CalPointingRow::ambientTemperatureFromBin; 
+		 fromBinMethods["antennaMake"] = &CalPointingRow::antennaMakeFromBin; 
+		 fromBinMethods["atmPhaseCorrection"] = &CalPointingRow::atmPhaseCorrectionFromBin; 
+		 fromBinMethods["direction"] = &CalPointingRow::directionFromBin; 
+		 fromBinMethods["frequencyRange"] = &CalPointingRow::frequencyRangeFromBin; 
+		 fromBinMethods["pointingModelMode"] = &CalPointingRow::pointingModelModeFromBin; 
+		 fromBinMethods["pointingMethod"] = &CalPointingRow::pointingMethodFromBin; 
+		 fromBinMethods["numReceptor"] = &CalPointingRow::numReceptorFromBin; 
+		 fromBinMethods["polarizationTypes"] = &CalPointingRow::polarizationTypesFromBin; 
+		 fromBinMethods["collOffsetRelative"] = &CalPointingRow::collOffsetRelativeFromBin; 
+		 fromBinMethods["collOffsetAbsolute"] = &CalPointingRow::collOffsetAbsoluteFromBin; 
+		 fromBinMethods["collError"] = &CalPointingRow::collErrorFromBin; 
+		 fromBinMethods["collOffsetTied"] = &CalPointingRow::collOffsetTiedFromBin; 
+		 fromBinMethods["reducedChiSquared"] = &CalPointingRow::reducedChiSquaredFromBin; 
+			
+	
+		 fromBinMethods["averagedPolarizations"] = &CalPointingRow::averagedPolarizationsFromBin; 
+		 fromBinMethods["beamPA"] = &CalPointingRow::beamPAFromBin; 
+		 fromBinMethods["beamPAError"] = &CalPointingRow::beamPAErrorFromBin; 
+		 fromBinMethods["beamPAWasFixed"] = &CalPointingRow::beamPAWasFixedFromBin; 
+		 fromBinMethods["beamWidth"] = &CalPointingRow::beamWidthFromBin; 
+		 fromBinMethods["beamWidthError"] = &CalPointingRow::beamWidthErrorFromBin; 
+		 fromBinMethods["beamWidthWasFixed"] = &CalPointingRow::beamWidthWasFixedFromBin; 
+		 fromBinMethods["offIntensity"] = &CalPointingRow::offIntensityFromBin; 
+		 fromBinMethods["offIntensityError"] = &CalPointingRow::offIntensityErrorFromBin; 
+		 fromBinMethods["offIntensityWasFixed"] = &CalPointingRow::offIntensityWasFixedFromBin; 
+		 fromBinMethods["peakIntensity"] = &CalPointingRow::peakIntensityFromBin; 
+		 fromBinMethods["peakIntensityError"] = &CalPointingRow::peakIntensityErrorFromBin; 
+		 fromBinMethods["peakIntensityWasFixed"] = &CalPointingRow::peakIntensityWasFixedFromBin; 
+			
 	}
 
 	
@@ -4655,6 +4833,49 @@ pointingMethod = CPointingMethod::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, CalPointingAttributeFromBin> CalPointingRow::initFromBinMethods() {
+		map<string, CalPointingAttributeFromBin> result;
+		
+		result["antennaName"] = &CalPointingRow::antennaNameFromBin;
+		result["receiverBand"] = &CalPointingRow::receiverBandFromBin;
+		result["calDataId"] = &CalPointingRow::calDataIdFromBin;
+		result["calReductionId"] = &CalPointingRow::calReductionIdFromBin;
+		result["startValidTime"] = &CalPointingRow::startValidTimeFromBin;
+		result["endValidTime"] = &CalPointingRow::endValidTimeFromBin;
+		result["ambientTemperature"] = &CalPointingRow::ambientTemperatureFromBin;
+		result["antennaMake"] = &CalPointingRow::antennaMakeFromBin;
+		result["atmPhaseCorrection"] = &CalPointingRow::atmPhaseCorrectionFromBin;
+		result["direction"] = &CalPointingRow::directionFromBin;
+		result["frequencyRange"] = &CalPointingRow::frequencyRangeFromBin;
+		result["pointingModelMode"] = &CalPointingRow::pointingModelModeFromBin;
+		result["pointingMethod"] = &CalPointingRow::pointingMethodFromBin;
+		result["numReceptor"] = &CalPointingRow::numReceptorFromBin;
+		result["polarizationTypes"] = &CalPointingRow::polarizationTypesFromBin;
+		result["collOffsetRelative"] = &CalPointingRow::collOffsetRelativeFromBin;
+		result["collOffsetAbsolute"] = &CalPointingRow::collOffsetAbsoluteFromBin;
+		result["collError"] = &CalPointingRow::collErrorFromBin;
+		result["collOffsetTied"] = &CalPointingRow::collOffsetTiedFromBin;
+		result["reducedChiSquared"] = &CalPointingRow::reducedChiSquaredFromBin;
+		
+		
+		result["averagedPolarizations"] = &CalPointingRow::averagedPolarizationsFromBin;
+		result["beamPA"] = &CalPointingRow::beamPAFromBin;
+		result["beamPAError"] = &CalPointingRow::beamPAErrorFromBin;
+		result["beamPAWasFixed"] = &CalPointingRow::beamPAWasFixedFromBin;
+		result["beamWidth"] = &CalPointingRow::beamWidthFromBin;
+		result["beamWidthError"] = &CalPointingRow::beamWidthErrorFromBin;
+		result["beamWidthWasFixed"] = &CalPointingRow::beamWidthWasFixedFromBin;
+		result["offIntensity"] = &CalPointingRow::offIntensityFromBin;
+		result["offIntensityError"] = &CalPointingRow::offIntensityErrorFromBin;
+		result["offIntensityWasFixed"] = &CalPointingRow::offIntensityWasFixedFromBin;
+		result["peakIntensity"] = &CalPointingRow::peakIntensityFromBin;
+		result["peakIntensityError"] = &CalPointingRow::peakIntensityErrorFromBin;
+		result["peakIntensityWasFixed"] = &CalPointingRow::peakIntensityWasFixedFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

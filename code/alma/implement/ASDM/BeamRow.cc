@@ -56,7 +56,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	BeamRow::~BeamRow() {
 	}
 
@@ -200,22 +199,30 @@ namespace asdm {
 	
 	}
 	
-	BeamRow* BeamRow::fromBin(EndianISStream& eiss, BeamTable& table) {
-		BeamRow* row = new  BeamRow(table);
-		
-		
+void BeamRow::beamIdFromBin(EndianISStream& eiss) {
 		
 	
 		
 		
-		row->beamId =  Tag::fromBin(eiss);
+		beamId =  Tag::fromBin(eiss);
 		
 	
+	
+}
 
 		
+	
+	BeamRow* BeamRow::fromBin(EndianISStream& eiss, BeamTable& table, const vector<string>& attributesSeq) {
+		BeamRow* row = new  BeamRow(table);
 		
-		
-		
+		map<string, BeamAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "BeamTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -288,6 +295,12 @@ namespace asdm {
 	
 	
 	
+
+	
+	
+	 fromBinMethods["beamId"] = &BeamRow::beamIdFromBin; 
+		
+	
 	
 	}
 	
@@ -312,7 +325,12 @@ namespace asdm {
 		
 		
 		
-		}	
+		}
+		
+		 fromBinMethods["beamId"] = &BeamRow::beamIdFromBin; 
+			
+	
+			
 	}
 
 	
@@ -332,6 +350,17 @@ namespace asdm {
 		return true;
 	}	
 	
-
+/*
+	 map<string, BeamAttributeFromBin> BeamRow::initFromBinMethods() {
+		map<string, BeamAttributeFromBin> result;
+		
+		result["beamId"] = &BeamRow::beamIdFromBin;
+		
+		
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  

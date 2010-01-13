@@ -74,7 +74,6 @@ using asdm::Parser;
 using asdm::InvalidArgumentException;
 
 namespace asdm {
-
 	FieldRow::~FieldRow() {
 	}
 
@@ -1036,172 +1035,219 @@ namespace asdm {
 
 	}
 	
-	FieldRow* FieldRow::fromBin(EndianISStream& eiss, FieldTable& table) {
+void FieldRow::fieldIdFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+		fieldId =  Tag::fromBin(eiss);
+		
+	
+	
+}
+void FieldRow::fieldNameFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		fieldName =  eiss.readString();
+			
+		
+	
+	
+}
+void FieldRow::codeFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		code =  eiss.readString();
+			
+		
+	
+	
+}
+void FieldRow::numPolyFromBin(EndianISStream& eiss) {
+		
+	
+	
+		
+			
+		numPoly =  eiss.readInt();
+			
+		
+	
+	
+}
+void FieldRow::delayDirFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	delayDir = Angle::from2DBin(eiss);		
+	
+
+		
+	
+	
+}
+void FieldRow::phaseDirFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	phaseDir = Angle::from2DBin(eiss);		
+	
+
+		
+	
+	
+}
+void FieldRow::referenceDirFromBin(EndianISStream& eiss) {
+		
+	
+		
+		
+			
+	
+	referenceDir = Angle::from2DBin(eiss);		
+	
+
+		
+	
+	
+}
+
+void FieldRow::timeFromBin(EndianISStream& eiss) {
+		
+	timeExists = eiss.readBoolean();
+	if (timeExists) {
+		
+	
+		
+		
+		time =  ArrayTime::fromBin(eiss);
+		
+	
+
+	}
+	
+}
+void FieldRow::directionCodeFromBin(EndianISStream& eiss) {
+		
+	directionCodeExists = eiss.readBoolean();
+	if (directionCodeExists) {
+		
+	
+	
+		
+			
+		directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
+			
+		
+	
+
+	}
+	
+}
+void FieldRow::directionEquinoxFromBin(EndianISStream& eiss) {
+		
+	directionEquinoxExists = eiss.readBoolean();
+	if (directionEquinoxExists) {
+		
+	
+		
+		
+		directionEquinox =  ArrayTime::fromBin(eiss);
+		
+	
+
+	}
+	
+}
+void FieldRow::assocNatureFromBin(EndianISStream& eiss) {
+		
+	assocNatureExists = eiss.readBoolean();
+	if (assocNatureExists) {
+		
+	
+	
+		
+			
+		assocNature =  eiss.readString();
+			
+		
+	
+
+	}
+	
+}
+void FieldRow::ephemerisIdFromBin(EndianISStream& eiss) {
+		
+	ephemerisIdExists = eiss.readBoolean();
+	if (ephemerisIdExists) {
+		
+	
+		
+		
+		ephemerisId =  Tag::fromBin(eiss);
+		
+	
+
+	}
+	
+}
+void FieldRow::sourceIdFromBin(EndianISStream& eiss) {
+		
+	sourceIdExists = eiss.readBoolean();
+	if (sourceIdExists) {
+		
+	
+	
+		
+			
+		sourceId =  eiss.readInt();
+			
+		
+	
+
+	}
+	
+}
+void FieldRow::assocFieldIdFromBin(EndianISStream& eiss) {
+		
+	assocFieldIdExists = eiss.readBoolean();
+	if (assocFieldIdExists) {
+		
+	
+		
+		
+		assocFieldId =  Tag::fromBin(eiss);
+		
+	
+
+	}
+	
+}
+	
+	
+	FieldRow* FieldRow::fromBin(EndianISStream& eiss, FieldTable& table, const vector<string>& attributesSeq) {
 		FieldRow* row = new  FieldRow(table);
 		
-		
-		
-	
-		
-		
-		row->fieldId =  Tag::fromBin(eiss);
-		
-	
-
-	
-	
-		
-			
-		row->fieldName =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->code =  eiss.readString();
-			
-		
-	
-
-	
-	
-		
-			
-		row->numPoly =  eiss.readInt();
-			
-		
-	
-
-	
-		
-		
-			
-	
-	row->delayDir = Angle::from2DBin(eiss);		
-	
-
-		
-	
-
-	
-		
-		
-			
-	
-	row->phaseDir = Angle::from2DBin(eiss);		
-	
-
-		
-	
-
-	
-		
-		
-			
-	
-	row->referenceDir = Angle::from2DBin(eiss);		
-	
-
-		
-	
-
-		
-		
-		
-	row->timeExists = eiss.readBoolean();
-	if (row->timeExists) {
-		
-	
-		
-		
-		row->time =  ArrayTime::fromBin(eiss);
-		
-	
-
-	}
-
-	row->directionCodeExists = eiss.readBoolean();
-	if (row->directionCodeExists) {
-		
-	
-	
-		
-			
-		row->directionCode = CDirectionReferenceCode::from_int(eiss.readInt());
-			
-		
-	
-
-	}
-
-	row->directionEquinoxExists = eiss.readBoolean();
-	if (row->directionEquinoxExists) {
-		
-	
-		
-		
-		row->directionEquinox =  ArrayTime::fromBin(eiss);
-		
-	
-
-	}
-
-	row->assocNatureExists = eiss.readBoolean();
-	if (row->assocNatureExists) {
-		
-	
-	
-		
-			
-		row->assocNature =  eiss.readString();
-			
-		
-	
-
-	}
-
-	row->ephemerisIdExists = eiss.readBoolean();
-	if (row->ephemerisIdExists) {
-		
-	
-		
-		
-		row->ephemerisId =  Tag::fromBin(eiss);
-		
-	
-
-	}
-
-	row->sourceIdExists = eiss.readBoolean();
-	if (row->sourceIdExists) {
-		
-	
-	
-		
-			
-		row->sourceId =  eiss.readInt();
-			
-		
-	
-
-	}
-
-	row->assocFieldIdExists = eiss.readBoolean();
-	if (row->assocFieldIdExists) {
-		
-	
-		
-		
-		row->assocFieldId =  Tag::fromBin(eiss);
-		
-	
-
-	}
-
-		
+		map<string, FieldAttributeFromBin>::iterator iter ;
+		for (unsigned int i = 0; i < attributesSeq.size(); i++) {
+			iter = row->fromBinMethods.find(attributesSeq.at(i));
+			if (iter == row->fromBinMethods.end()) {
+				throw ConversionException("There is not method to read an attribute '"+attributesSeq.at(i)+"'.", "FieldTable");
+			}
+			(row->*(row->fromBinMethods[ attributesSeq.at(i) ] ))(eiss);
+		}				
 		return row;
 	}
 	
@@ -1929,6 +1975,25 @@ directionCode = CDirectionReferenceCode::from_int(0);
 	
 
 	
+
+	
+	
+	 fromBinMethods["fieldId"] = &FieldRow::fieldIdFromBin; 
+	 fromBinMethods["fieldName"] = &FieldRow::fieldNameFromBin; 
+	 fromBinMethods["code"] = &FieldRow::codeFromBin; 
+	 fromBinMethods["numPoly"] = &FieldRow::numPolyFromBin; 
+	 fromBinMethods["delayDir"] = &FieldRow::delayDirFromBin; 
+	 fromBinMethods["phaseDir"] = &FieldRow::phaseDirFromBin; 
+	 fromBinMethods["referenceDir"] = &FieldRow::referenceDirFromBin; 
+		
+	
+	 fromBinMethods["time"] = &FieldRow::timeFromBin; 
+	 fromBinMethods["directionCode"] = &FieldRow::directionCodeFromBin; 
+	 fromBinMethods["directionEquinox"] = &FieldRow::directionEquinoxFromBin; 
+	 fromBinMethods["assocNature"] = &FieldRow::assocNatureFromBin; 
+	 fromBinMethods["ephemerisId"] = &FieldRow::ephemerisIdFromBin; 
+	 fromBinMethods["sourceId"] = &FieldRow::sourceIdFromBin; 
+	 fromBinMethods["assocFieldId"] = &FieldRow::assocFieldIdFromBin; 
 	
 	}
 	
@@ -2054,7 +2119,25 @@ directionCode = CDirectionReferenceCode::from_int(0);
 		else
 			assocFieldIdExists = false;
 		
-		}	
+		}
+		
+		 fromBinMethods["fieldId"] = &FieldRow::fieldIdFromBin; 
+		 fromBinMethods["fieldName"] = &FieldRow::fieldNameFromBin; 
+		 fromBinMethods["code"] = &FieldRow::codeFromBin; 
+		 fromBinMethods["numPoly"] = &FieldRow::numPolyFromBin; 
+		 fromBinMethods["delayDir"] = &FieldRow::delayDirFromBin; 
+		 fromBinMethods["phaseDir"] = &FieldRow::phaseDirFromBin; 
+		 fromBinMethods["referenceDir"] = &FieldRow::referenceDirFromBin; 
+			
+	
+		 fromBinMethods["time"] = &FieldRow::timeFromBin; 
+		 fromBinMethods["directionCode"] = &FieldRow::directionCodeFromBin; 
+		 fromBinMethods["directionEquinox"] = &FieldRow::directionEquinoxFromBin; 
+		 fromBinMethods["assocNature"] = &FieldRow::assocNatureFromBin; 
+		 fromBinMethods["ephemerisId"] = &FieldRow::ephemerisIdFromBin; 
+		 fromBinMethods["sourceId"] = &FieldRow::sourceIdFromBin; 
+		 fromBinMethods["assocFieldId"] = &FieldRow::assocFieldIdFromBin; 
+			
 	}
 
 	
@@ -2168,6 +2251,30 @@ directionCode = CDirectionReferenceCode::from_int(0);
 		return true;
 	}	
 	
-
+/*
+	 map<string, FieldAttributeFromBin> FieldRow::initFromBinMethods() {
+		map<string, FieldAttributeFromBin> result;
+		
+		result["fieldId"] = &FieldRow::fieldIdFromBin;
+		result["fieldName"] = &FieldRow::fieldNameFromBin;
+		result["code"] = &FieldRow::codeFromBin;
+		result["numPoly"] = &FieldRow::numPolyFromBin;
+		result["delayDir"] = &FieldRow::delayDirFromBin;
+		result["phaseDir"] = &FieldRow::phaseDirFromBin;
+		result["referenceDir"] = &FieldRow::referenceDirFromBin;
+		
+		
+		result["time"] = &FieldRow::timeFromBin;
+		result["directionCode"] = &FieldRow::directionCodeFromBin;
+		result["directionEquinox"] = &FieldRow::directionEquinoxFromBin;
+		result["assocNature"] = &FieldRow::assocNatureFromBin;
+		result["ephemerisId"] = &FieldRow::ephemerisIdFromBin;
+		result["sourceId"] = &FieldRow::sourceIdFromBin;
+		result["assocFieldId"] = &FieldRow::assocFieldIdFromBin;
+			
+		
+		return result;	
+	}
+*/	
 } // End namespace asdm
  
