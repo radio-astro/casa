@@ -564,6 +564,9 @@ void MSIter::setFeedInfo()
   // last entry.
   if ((spwDepFeed_p && newSpectralWindow_p) || first) {
     Vector<Int> antennaId=msc_p->feed().antennaId().getColumn();
+    if(antennaId.nelements() == 0)                  // Triggered by CAS-1875.
+      throw AipsError("The FEED table is empty.");  // Don't do max() below.
+    
     Vector<Int> feedId=msc_p->feed().feedId().getColumn();
     Int maxAntId=max(antennaId);
     Int maxFeedId=max(feedId);

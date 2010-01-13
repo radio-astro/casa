@@ -235,7 +235,7 @@ public:
     // </group>
 
 
-    // Extract a plane as a cube. We could have xzPlane, etc also if that
+    // Extract a plane of a cube. We could have xzPlane, etc also if that
     // would be of use to anyone. Of course you could also use a Matrix
     // iterator on the cube.
     // <group>
