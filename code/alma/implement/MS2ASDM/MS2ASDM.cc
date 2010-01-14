@@ -938,9 +938,9 @@ namespace casa {
       NetSidebandMod::NetSideband netSideband = ASDMNetSideBand( spectralWindow().netSideband()(irow) );
       int numChan = spectralWindow().numChan()(irow);
 
-      Frequency refFreq  = Frequency( spectralWindow().refFrequencyQuant()(irow).getValue(ASDMFUnit()) );
+      Frequency refFreq  = Frequency( spectralWindow().refFrequencyQuant()(irow).getValue(unitASDMFreq()) );
       SidebandProcessingModeMod::SidebandProcessingMode sidebandProcessingMode = SidebandProcessingModeMod::NONE;
-      Frequency totBandwidth = Frequency( spectralWindow().totalBandwidthQuant()(irow).getValue(ASDMFUnit()) );
+      Frequency totBandwidth = Frequency( spectralWindow().totalBandwidthQuant()(irow).getValue(unitASDMFreq()) );
       WindowFunctionMod::WindowFunction windowFunction = WindowFunctionMod::UNIFORM;
 
       tR = tT.newRow(basebandName, netSideband, numChan, refFreq, sidebandProcessingMode, totBandwidth, windowFunction);
@@ -949,28 +949,28 @@ namespace casa {
       vector< Frequency > chanFreqArray;
       v.reference( spectralWindow().chanFreqQuant()(irow) );
       for(uInt i=0; i<v.nelements(); i++){ 
-	chanFreqArray.push_back( Frequency( v[i].getValue(ASDMFUnit()) ) );
+	chanFreqArray.push_back( Frequency( v[i].getValue(unitASDMFreq()) ) );
       }
       tR->setChanFreqArray(chanFreqArray);
 
       vector< Frequency > chanWidthArray;
       v.reference( spectralWindow().chanWidthQuant()(irow) );
       for(uInt i=0; i<v.nelements(); i++){ 
-	chanWidthArray.push_back( Frequency( v[i].getValue(ASDMFUnit()) ) );
+	chanWidthArray.push_back( Frequency( v[i].getValue(unitASDMFreq()) ) );
       }
       tR->setChanWidthArray(chanWidthArray);
 
       vector< Frequency > effectiveBwArray;
       v.reference( spectralWindow().effectiveBWQuant()(irow) );
       for(uInt i=0; i<v.nelements(); i++){ 
-	effectiveBwArray.push_back( Frequency( v[i].getValue(ASDMFUnit()) ) );
+	effectiveBwArray.push_back( Frequency( v[i].getValue(unitASDMFreq()) ) );
       }
       tR->setEffectiveBwArray(effectiveBwArray);
 
       vector< Frequency > resolutionArray;
       v.reference( spectralWindow().resolutionQuant()(irow) );
       for(uInt i=0; i<v.nelements(); i++){ 
-	resolutionArray.push_back( Frequency( v[i].getValue(ASDMFUnit()) ) );
+	resolutionArray.push_back( Frequency( v[i].getValue(unitASDMFreq()) ) );
       }      
       tR->setResolutionArray( resolutionArray );
 
@@ -1346,7 +1346,7 @@ namespace casa {
 	    os << LogIO::SEVERE << "Internal error: ASDM AlmaRadiometer table is empty." << LogIO::POST;
 	    return False;
 	  }
-	  modeId = almaRadiometerRows[0]->getAlmaRadiometerId(); // get tag from first row of Holography table (there is only one) ??? 
+	  modeId = almaRadiometerRows[0]->getAlmaRadiometerId(); // get tag from first row of AlmaRadiometer table (there is only one) ??? 
 	  break;
 	default:
 	  os << LogIO::SEVERE << "Internal error: unsupported processor sub type." 
@@ -1426,9 +1426,9 @@ namespace casa {
       {
 	vector< Angle > dirV;
 	Quantity angle0(mdir(0,numpol), msAngUnit);
-	dirV.push_back(Angle(angle0.getValue(ASDMAUnit())));
+	dirV.push_back(Angle(angle0.getValue(unitASDMAngle())));
 	Quantity angle1(mdir(1,numpol), msAngUnit);
-	dirV.push_back(Angle(angle1.getValue(ASDMAUnit())));
+	dirV.push_back(Angle(angle1.getValue(unitASDMAngle())));
 	delayDirV.push_back(dirV);
       }
 
@@ -1437,9 +1437,9 @@ namespace casa {
       {
 	vector< Angle > dirV;
 	Quantity angle0(mdir(0,numpol), msAngUnit);
-	dirV.push_back(Angle(angle0.getValue(ASDMAUnit())));
+	dirV.push_back(Angle(angle0.getValue(unitASDMAngle())));
 	Quantity angle1(mdir(1,numpol), msAngUnit);
-	dirV.push_back(Angle(angle1.getValue(ASDMAUnit())));
+	dirV.push_back(Angle(angle1.getValue(unitASDMAngle())));
 	phaseDirV.push_back(dirV);
       }
 
@@ -1448,9 +1448,9 @@ namespace casa {
       {
 	vector< Angle > dirV;
 	Quantity angle0(mdir(0,numpol), msAngUnit);
-	dirV.push_back(Angle(angle0.getValue(ASDMAUnit())));
+	dirV.push_back(Angle(angle0.getValue(unitASDMAngle())));
 	Quantity angle1(mdir(0,numpol), msAngUnit);
-	dirV.push_back(Angle(angle1.getValue(ASDMAUnit())));
+	dirV.push_back(Angle(angle1.getValue(unitASDMAngle())));
 	referenceDirV.push_back(dirV);
       }
 
@@ -1623,7 +1623,7 @@ namespace casa {
 	}
 	polResponseV.push_back(apr);
 
-	receptorAngleV.push_back( Angle( receptA[rnum].getValue( ASDMAUnit() ) ) );
+	receptorAngleV.push_back( Angle( receptA[rnum].getValue( unitASDMAngle() ) ) );
 
 	if(telName_p=="ALMA" || telName_p=="ACA"){
 	  receiverIdV.push_back(0); // always zero for ALMA
@@ -1678,7 +1678,7 @@ namespace casa {
       Vector< Quantity > pos;
       pos.reference(feed().positionQuant()(irow));
       for(uInt i=0; i<3; i++){
-	positionV.push_back( Length( pos[0].getValue( ASDMLUnit() ) ) );
+	positionV.push_back( Length( pos[0].getValue( unitASDMLength() ) ) );
       }
       tR->setPosition(positionV);
 
@@ -1810,7 +1810,7 @@ namespace casa {
     Entity ent = tT.getEntity();
     ent.setEntityId(theUid);
     tT.setEntity(ent);
-    os << LogIO::NORMAL << "Filled SwitchCycle table " << getCurrentUid() << " ... " << LogIO::POST;
+    os << LogIO::NORMAL << "Filled SwitchCycle table " << getCurrentUid() << " with one dummy entry ... " << LogIO::POST;
     incrementUid();
     
     return rstat;
@@ -1823,6 +1823,10 @@ namespace casa {
     asdm::DataDescriptionTable& tT = ASDM_p->getDataDescription();
 
     asdm::DataDescriptionRow* tR = 0;
+
+    // loop over main table
+
+    
 
     //    tR = tT.newRow();
 

@@ -118,7 +118,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   FrequencyReferenceCodeMod::FrequencyReferenceCode ASDMFreqRefCode( const MFrequency::Types refFrame ); 
 
-  Unit ASDMFUnit(){ 
+  Unit unitASDMFreq(){ 
     if(asdm::Frequency::unit()=="hz"){ // correct for the bad capitalization
       return Unit("Hz");
     }
@@ -127,9 +127,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
 
-  Unit ASDMAUnit(){ return Unit(String(asdm::Angle::unit())); }
+  Unit unitASDMAngle(){ return Unit(String(asdm::Angle::unit())); }
 
-  Unit ASDMLUnit(){ return Unit(String(asdm::Length::unit())); }
+  Unit unitASDMLength(){ return Unit(String(asdm::Length::unit())); }
 
   asdm::Complex ASDMComplex( casa::Complex x ){ return asdm::Complex(x.real(), x.imag()); }
 
